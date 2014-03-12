@@ -171,9 +171,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   rmcrt_ps->getWithDefault( "CCRays"    ,       d_CCRays,          false );            // if true, forces rays to always have CC origins
   rmcrt_ps->getWithDefault( "VirtRadiometer" ,  d_virtRad,         false );            // if true, at least one virtual radiometer exists
   rmcrt_ps->getWithDefault( "VRViewAngle"    ,  d_viewAng,         180 );              // view angle of the radiometer in degrees
-  rmcrt_ps->getWithDefault( "VROrientation"  ,  orient,          Vector(0,0,1) );     // Normal vector of the radiometer orientation (Cartesian)
-  rmcrt_ps->getWithDefault( "VRLocationsMin" ,  d_VRLocationsMin,  IntVector(0,0,0) ); // minimum extent of the string or block of virtual radiometers
-  rmcrt_ps->getWithDefault( "VRLocationsMax" ,  d_VRLocationsMax,  IntVector(0,0,0) ); // maximum extent of the string or block or virtual radiometers
+  rmcrt_ps->getWithDefault( "VROrientation"  ,  orient,          Vector(0,0,1) );       // Normal vector of the radiometer orientation (Cartesian)
   rmcrt_ps->getWithDefault( "nRadRays"  ,       d_nRadRays ,       1000 );
   rmcrt_ps->getWithDefault( "nFluxRays" ,       d_nFluxRays,       1 );                 // number of rays per cell for computation of boundary fluxes
   rmcrt_ps->getWithDefault( "sigmaScat"  ,      d_sigmaScat  ,      0 );                // scattering coefficient
@@ -181,6 +179,10 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   rmcrt_ps->getWithDefault( "allowReflect"   ,  d_allowReflect,     true );             // Allow for ray reflections. Make false for DOM comparisons.
   rmcrt_ps->getWithDefault( "solveDivQ"      ,  d_solveDivQ,        true );             // Allow for solving of divQ for flow cells.
   rmcrt_ps->getWithDefault( "applyFilter"    ,  d_applyFilter,      false );            // Allow filtering of boundFlux and divQ.
+  
+  rmcrt_ps->get(            "VRLocationsMin" ,  d_VRLocationsMin );                     // minimum extent of the string or block of virtual radiometers in physical units
+  rmcrt_ps->get(            "VRLocationsMax" ,  d_VRLocationsMax );                     // maximum extent
+
 
   //__________________________________
   //  Warnings and bulletproofing
@@ -233,7 +235,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   // orient[0,1,2] represent the user specified vector normal of the radiometer.
   // These will be converted to rotations about the x,y, and z axes, respectively.
   // Each rotation is counterclockwise when the observer is looking from the
-  // positive axis about which the rotation is occurring.
+  // positive axis about which the rotation is occurring. d
   for(int d = 0; d<3; d++){
     if(orient[d] == 0){      // WARNING WARNING this conditional only works for integers, not doubles, and should be fixed.
       orient[d] =1e-16;      // to avoid divide by 0.
@@ -252,22 +254,23 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   d_VR.thetaRot  = acos(orient[2]/sqrt(orient[0]*orient[0]+orient[1]*orient[1] +orient[2]*orient[2]));
   double psiRot = acos(orient[0]/sqrt(orient[0]*orient[0]+orient[1]*orient[1]));
 
-  //� The calculated rotations must be adjusted if the x and y components of the normal vector
-  //� are in the 3rd or 4th quadrants due to the constraints on arccos
-  if (orient[0] < 0 && orient[1] < 0)       // quadrant 3
+  // The calculated rotations must be adjusted if the x and y components of the normal vector
+  // are in the 3rd or 4th quadrants due to the constraints on arccos
+  if (orient[0] < 0 && orient[1] < 0){       // quadrant 3
     psiRot = (M_PI/2 + psiRot);
-
-  if (orient[0] > 0 && orient[1] < 0)       // quadrant 4
+  }
+  if (orient[0] > 0 && orient[1] < 0){       // quadrant 4
     psiRot = (2*M_PI - psiRot);
-
+  }
+  
   d_VR.psiRot = psiRot;
-  //  phiRot is always  0. There will never be a need for a rotation about the x axis.� All
+  //  phiRot is always  0. There will never be a need for a rotation about the x axis. All
   //  possible rotations can be accomplished using the other two.
   d_VR.phiRot = 0;
 
   double deltaTheta = d_viewAng/360*M_PI;       // divides view angle by two and converts to radians
   double range      = 1 - cos(deltaTheta);      // cos(0) to cos(deltaTheta) gives the range of possible vals
-  d_VR.sldAngl       = 2*M_PI*range;            // the solid angle that the radiometer can view  
+  d_VR.sldAngl      = 2*M_PI*range;             // the solid angle that the radiometer can view  
   d_VR.deltaTheta = deltaTheta;
   d_VR.range      = range;
   
@@ -593,47 +596,53 @@ Ray::rayTrace( const ProcessorGroup* pc,
     double DzDx = Dx.z() / Dx.x();                //noncubic 
     
     //______________________________________________________________________
-    //           R A D I O M E T E R
+    //           R A D I O M E T E R 
     //______________________________________________________________________
-    if (d_virtRad){
+    IntVector lo = patch->getCellLowIndex();
+    IntVector hi = patch->getCellHighIndex();
+    
+    IntVector VR_posLo  = level->getCellIndex( d_VRLocationsMin );
+    IntVector VR_posHi  = level->getCellIndex( d_VRLocationsMax );
+       
+    if ( d_virtRad && doesIntersect( VR_posLo, VR_posHi, lo, hi ) ){
+    
+      lo = Max(lo, VR_posLo);  // form an iterator for this patch
+      hi = Min(hi, VR_posHi);  // this is an intersection     
 
-      for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){ 
+      for(CellIterator iter(lo,hi); !iter.done(); iter++){
        
         IntVector origin = *iter; 
-            
-        if( greater_Eq( origin, d_VRLocationsMin ) && less_Eq( origin, d_VRLocationsMax) ){ 
  
-          double sumI      = 0;
-          double sumProjI  = 0;
-          double sumI_prev = 0;
-                    
-          //__________________________________
-          // ray loop
-          for (int iRay=0; iRay < d_nRadRays; iRay++){
-            
-            Vector ray_location;
-            bool useCCRays = true;
-            rayLocation(mTwister, origin, DyDx, DzDx, useCCRays, ray_location);
-            
+        double sumI      = 0;
+        double sumProjI  = 0;
+        double sumI_prev = 0;
 
-            double cosVRTheta;
-            Vector direction_vector;
-            rayDirection_VR( mTwister, origin, iRay, d_VR, DyDx, DzDx, direction_vector, cosVRTheta);
-            
-            // get the intensity for this ray
-            updateSumI( direction_vector, ray_location, origin, Dx, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
-            
-            sumProjI += cosVRTheta * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
-                                                         // from all the rays up to that point
-            sumI_prev = sumI;
+        //__________________________________
+        // ray loop
+        for (int iRay=0; iRay < d_nRadRays; iRay++){
 
-          } // end VR ray loop
-       
-          //__________________________________
-          //  Compute VRFlux
-          VRFlux[origin] = sumProjI * d_VR.sldAngl/d_nRadRays;
+          Vector ray_location;
+          bool useCCRays = true;
+          rayLocation(mTwister, origin, DyDx, DzDx, useCCRays, ray_location);
 
-        }  // end if VR extents
+
+          double cosVRTheta;
+          Vector direction_vector;
+          rayDirection_VR( mTwister, origin, iRay, d_VR, DyDx, DzDx, direction_vector, cosVRTheta);
+
+          // get the intensity for this ray
+          updateSumI( direction_vector, ray_location, origin, Dx, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
+
+          sumProjI += cosVRTheta * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
+                                                       // from all the rays up to that point
+          sumI_prev = sumI;
+
+        } // end VR ray loop
+
+        //__________________________________
+        //  Compute VRFlux
+        VRFlux[origin] = sumProjI * d_VR.sldAngl/d_nRadRays;
+
       }  // end VR cell iterator
     }  // end if d_virtRad
     
