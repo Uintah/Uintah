@@ -200,25 +200,23 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 
 #ifdef RAY_SCATTER
   if(d_sigmaScat<1e-99){
-    ostringstream warn;
-    warn << "WARNING:  You are running a non-scattering case, yet you have the following in your configure line..." << endl;
-    warn << "--enable-ray-scatter" << endl;
-    warn << "As such, this task will run slower than is necessary." << endl;
-    warn << "If you wish to run a scattering case, please specify a positive value greater than 1e-99 for the scattering coefficient." << endl;
-    warn << "If you wish to run a non-scattering case, please remove --enable-ray-scatter from your configure line and re-configure and re-compile" << endl;
+    proc0cout << "WARNING:  You are running a non-scattering case, yet you have the following in your configure line..." << endl;
+    proc0cout << "--enable-ray-scatter" << endl;
+    proc0cout << "As such, this task will run slower than is necessary." << endl;
+    proc0cout << "If you wish to run a scattering case, please specify a positive value greater than 1e-99 for the scattering coefficient." << endl;
+    proc0cout << "If you wish to run a non-scattering case, please remove --enable-ray-scatter from your configure line and re-configure and re-compile" << endl;
   }
   proc0cout<< endl << "RAY_SCATTER IS DEFINED" << endl;
 #endif
 
-  if( d_nDivQRays==1 ){
-    ostringstream warn;
-    warn << "WARNING: You have specified only 1 ray to compute the radiative flux divergence." << endl;
-    warn << "For better accuracy and stability, specify nDivQRays greater than 2." << endl;
+  if( d_nDivQRays == 1 ){
+    proc0cout << "RMCRT: WARNING: You have specified only 1 ray to compute the radiative flux divergence." << endl;
+    proc0cout << "For better accuracy and stability, specify nDivQRays greater than 2." << endl;
   }
-  if(d_nFluxRays==1){
-    ostringstream warn;
-    warn << "WARNING: You have specified only 1 ray to compute radiative fluxes." << endl;
-    warn << "For better accuracy and stability, specify nFluxRays greater than 2." << endl;
+  
+  if( d_nFluxRays == 1 ){
+    proc0cout << "RMCRT: WARNING: You have specified only 1 ray to compute radiative fluxes." << endl;
+    proc0cout << "For better accuracy and stability, specify nFluxRays greater than 2." << endl;
   }
 
   if ( d_viewAng > 360 ){
@@ -228,8 +226,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   }
 
   if (d_virtRad && d_nRadRays < int(15 + pow(5.4, d_viewAng/40) ) ){
-    ostringstream warn;
-    warn << "Number of radiometer rays:  ("<< d_nRadRays <<") is less than the recommended number of ("<< int(15 + pow(5.4, d_viewAng/40) ) <<"). Errors will exceed 1%. " << endl;
+    proc0cout << "RMCRT: WARNING Number of radiometer rays:  ("<< d_nRadRays <<") is less than the recommended number of ("<< int(15 + pow(5.4, d_viewAng/40) ) <<"). Errors will exceed 1%. " << endl;
   } 
 
   // orient[0,1,2] represent the user specified vector normal of the radiometer.
@@ -250,9 +247,9 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   //  The azimuthal angle represents the negative of the
   //  counterclockwise rotation about the z axis.
   //  Convert the user specified radiometer vector normal into three axial
-  //  rotations about the x,y, and z axes.
-  d_VR.thetaRot  = acos(orient[2]/sqrt(orient[0]*orient[0]+orient[1]*orient[1] +orient[2]*orient[2]));
-  double psiRot = acos(orient[0]/sqrt(orient[0]*orient[0]+orient[1]*orient[1]));
+  //  rotations about the x, y, and z axes.
+  d_VR.thetaRot = acos( orient[2] / orient.length() );
+  double psiRot = acos( orient[0] / sqrt( orient[0]*orient[0] + orient[1]*orient[1] ) );
 
   // The calculated rotations must be adjusted if the x and y components of the normal vector
   // are in the 3rd or 4th quadrants due to the constraints on arccos
