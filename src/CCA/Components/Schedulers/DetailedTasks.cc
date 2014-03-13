@@ -491,7 +491,7 @@ void DetailedTasks::addScrubCount(const VarLabel* var,
   ScrubItem* result;
   result = (first ? first->scrubCountTable_ : scrubCountTable_).lookup(&key);
   if (!result) {
-    result = scinew ScrubItem(var, matlindex, patch, dw);
+    result = ::new ScrubItem(var, matlindex, patch, dw);
     (first ? first->scrubCountTable_ : scrubCountTable_).insert(result);
   }
   result->count++;
