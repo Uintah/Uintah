@@ -256,7 +256,7 @@ WARNING
      LoadBalancer* lb;
      const ProcessorGroup* d_myworld;
      Scheduler::tgType type_;
-     DetailedTasks         * dts_;
+     DetailedTasks* dts_;
 
      // how many times this taskgraph has executed this timestep
      int currentIteration;
