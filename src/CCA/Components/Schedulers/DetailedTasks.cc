@@ -106,6 +106,9 @@ DetailedTasks::DetailedTasks(SchedulerCommon* sc,
 
 DetailedTasks::~DetailedTasks()
 {
+  // Free dynamically allocated SrubItems
+  (first ? first->scrubCountTable_ : scrubCountTable_).remove_all();
+
   for (int i = 0; i < (int)batches_.size(); i++) {
     delete batches_[i];
   }
@@ -488,14 +491,15 @@ void DetailedTasks::addScrubCount(const VarLabel* var,
   ScrubItem* result;
   result = (first ? first->scrubCountTable_ : scrubCountTable_).lookup(&key);
   if (!result) {
-    result = ::new ScrubItem(var, matlindex, patch, dw);
+    result = scinew ScrubItem(var, matlindex, patch, dw);
     (first ? first->scrubCountTable_ : scrubCountTable_).insert(result);
   }
   result->count++;
   if (scrubout.active() && (var->getName() == dbgScrubVar || dbgScrubVar == "")
-      && (dbgScrubPatch == patch->getID() || dbgScrubPatch == -1))
+      && (dbgScrubPatch == patch->getID() || dbgScrubPatch == -1)) {
     scrubout << Parallel::getMPIRank() << " Adding Scrub count for req of " << dw << "/" << patch->getID() << "/" << matlindex
              << "/" << *var << ": " << result->count << endl;
+  }
 }
 
 void DetailedTasks::setScrubCount(const Task::Dependency* req,
@@ -538,7 +542,9 @@ bool DetailedTasks::getScrubCount(const VarLabel* label,
 }
 void DetailedTasks::createScrubCounts()
 {
+  // Clear old ScrubItems
   (first ? first->scrubCountTable_ : scrubCountTable_).remove_all();
+
   // Go through each of the tasks and determine which variables it will require
   for (int i = 0; i < (int)localtasks_.size(); i++) {
     DetailedTask* dtask = localtasks_[i];
@@ -562,6 +568,8 @@ void DetailedTasks::createScrubCounts()
         }
       }
     }
+
+    // determine which variables this task will modify
     for (const Task::Dependency* req = task->getModifies(); req != 0; req = req->next) {
       constHandle<PatchSubset> patches = req->getPatchesUnderDomain(dtask->getPatches());
       constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain(dtask->getMaterials());
@@ -729,10 +737,11 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
 
   if (dbg.active()) {
     dbg << d_myworld->myrank() << "          " << *to << " depends on " << *from << "\n";
-    if (comp)
+    if (comp) {
       dbg << d_myworld->myrank() << "            From comp " << *comp;
-    else
+    } else {
       dbg << d_myworld->myrank() << "            From OldDW ";
+    }
     dbg << " to req " << *req << '\n';
   }
 
@@ -768,8 +777,9 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
 
   //find dependancy batch that is to the same processor as this dependency
   for (; batch != 0; batch = batch->comp_next) {
-    if (batch->to == toresource)
+    if (batch->to == toresource) {
       break;
+    }
   }
 
   //if batch doesn't exist then create it
@@ -791,8 +801,9 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
       // to the batch's toTasks.
       batch->toTasks.push_back(to);
     }
-    if (dbg.active())
+    if (dbg.active()) {
       dbg << d_myworld->myrank() << "          USING PREVIOUSLY CREATED BATCH!\n";
+    }
   }
 
   IntVector varRangeLow(INT_MAX, INT_MAX, INT_MAX), varRangeHigh(INT_MIN, INT_MIN, INT_MIN);
@@ -820,10 +831,12 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
           << Min(new_dep->low, matching_dep->low) << " " << Max(new_dep->high, matching_dep->high) << "\n";
       dbg << *req->var << '\n';
       dbg << *new_dep->req->var << '\n';
-      if (comp)
+      if (comp) {
         dbg << *comp->var << '\n';
-      if (new_dep->comp)
+      }
+      if (new_dep->comp) {
         dbg << *new_dep->comp->var << '\n';
+      }
     }
 
     //extend the dependency range
@@ -847,10 +860,11 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     if (req->var->typeDescription()->getType() == TypeDescription::ParticleVariable && req->whichdw == Task::OldDW) {
       PSPatchMatlGhostRange pmg(fromPatch, matl, matching_dep->low, matching_dep->high, (int)cond);
 
-      if (req->var->getName() == "p.x")
+      if (req->var->getName() == "p.x") {
         dbg << d_myworld->myrank() << " erasing particles from " << fromresource << " to " << toresource << " var " << *req->var
             << " on patch " << fromPatch->getID() << " matl " << matl << " range " << matching_dep->low << " " << matching_dep->high
-            << " cond " << cond << " dw " << req->mapDataWarehouse() << endl;
+            << " cond " << cond << " dw " << req->mapDataWarehouse() << std::endl;
+      }
 
       if (fromresource == d_myworld->myrank()) {
         std::set<PSPatchMatlGhostRange>::iterator iter = particleSends_[toresource].find(pmg);
@@ -890,8 +904,9 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
                                            parent_dep);
 
     //if the matching dep is the current insert dep then we must move the insert dep to the new parent dep
-    if (matching_dep == insert_dep)
+    if (matching_dep == insert_dep) {
       insert_dep = parent_dep;
+    }
   }
 
   // the total range of my dep and any deps later in the list with the same var/fromPatch/matl/dw
@@ -904,7 +919,7 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     batch->head = new_dep;
     new_dep->next = NULL;
   } else {
-    //depedencies already exist so add it at the insert location.
+    //dependencies already exist so add it at the insert location.
     new_dep->next = insert_dep->next;
     insert_dep->next = new_dep;
   }
@@ -916,8 +931,7 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
 
     if (fromresource == d_myworld->myrank()) {
       std::set<PSPatchMatlGhostRange>::iterator iter = particleSends_[toresource].find(pmg);
-      if (iter == particleSends_[toresource].end())  //if does not exist
-          {
+      if (iter == particleSends_[toresource].end()) { //if does not exist
         //add to the sends list
         particleSends_[toresource].insert(pmg);
       } else {
@@ -935,18 +949,20 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
       }
 
     }
-    if (req->var->getName() == "p.x")
+    if (req->var->getName() == "p.x") {
       dbg << d_myworld->myrank() << " scheduling particles from " << fromresource << " to " << toresource << " on patch "
           << fromPatch->getID() << " matl " << matl << " range " << low << " " << high << " cond " << cond << " dw "
-          << req->mapDataWarehouse() << endl;
+          << req->mapDataWarehouse() << std::endl;
+    }
   }
 
   if (dbg.active()) {
     dbg << d_myworld->myrank() << "            ADDED " << low << " " << high << ", fromPatch = ";
-    if (fromPatch)
+    if (fromPatch) {
       dbg << fromPatch->getID() << '\n';
-    else
+    } else {
       dbg << "NULL\n";
+    }
   }
 }
 
