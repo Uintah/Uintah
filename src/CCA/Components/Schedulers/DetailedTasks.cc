@@ -491,7 +491,7 @@ void DetailedTasks::addScrubCount(const VarLabel* var,
   ScrubItem* result;
   result = (first ? first->scrubCountTable_ : scrubCountTable_).lookup(&key);
   if (!result) {
-    result = ::new ScrubItem(var, matlindex, patch, dw);
+    result = scinew ScrubItem(var, matlindex, patch, dw);
     (first ? first->scrubCountTable_ : scrubCountTable_).insert(result);
   }
   result->count++;
@@ -510,16 +510,18 @@ void DetailedTasks::setScrubCount(const Task::Dependency* req,
   ASSERT(!patch->isVirtual());
   DataWarehouse::ScrubMode scrubmode = dws[req->mapDataWarehouse()]->getScrubMode();
   const set<const VarLabel*, VarLabel::Compare>& initialRequires = getSchedulerCommon()->getInitialRequiredVars();
-  if (scrubmode == DataWarehouse::ScrubComplete
-      || (scrubmode == DataWarehouse::ScrubNonPermanent && initialRequires.find(req->var) == initialRequires.end())) {
+  if (scrubmode == DataWarehouse::ScrubComplete || (scrubmode == DataWarehouse::ScrubNonPermanent
+      && initialRequires.find(req->var) == initialRequires.end())) {
     int scrubcount;
     if (!getScrubCount(req->var, matl, patch, req->whichdw, scrubcount)) {
       SCI_THROW(InternalError("No scrub count for received MPIVariable: "+req->var->getName(), __FILE__, __LINE__));
     }
+
     if (scrubout.active() && (req->var->getName() == dbgScrubVar || dbgScrubVar == "")
-        && (dbgScrubPatch == patch->getID() || dbgScrubPatch == -1))
+        && (dbgScrubPatch == patch->getID() || dbgScrubPatch == -1)) {
       scrubout << Parallel::getMPIRank() << " setting scrubcount for recv of " << req->mapDataWarehouse() << "/" << patch->getID()
                << "/" << matl << "/" << req->var->getName() << ": " << scrubcount << '\n';
+    }
     dws[req->mapDataWarehouse()]->setScrubCount(req->var, matl, patch, scrubcount);
   }
 }
@@ -685,10 +687,11 @@ DetailedDep* DetailedTasks::findMatchingDetailedDep(DependencyBatch* batch,
           }
         } else if (dbg.active()) {
           dbg << d_myworld->myrank() << "            Ignoring: " << dep->low << " " << dep->high << ", fromPatch = ";
-          if (fromPatch)
+          if (fromPatch) {
             dbg << fromPatch->getID() << '\n';
-          else
+          } else {
             dbg << "NULL\n";
+          }
           dbg << d_myworld->myrank() << " TP: " << totalLow << " " << totalHigh << endl;
         }
       } else {
@@ -703,8 +706,9 @@ DetailedDep* DetailedTasks::findMatchingDetailedDep(DependencyBatch* batch,
     //pointer to dependency before this dep so insertion/deletion can be done quicker
     last_dep = dep;
   }
-  if (valid_dep == 0)
+  if (valid_dep == 0) {
     parent_dep = last_dep;
+  }
 
   return valid_dep;
 }
@@ -971,8 +975,7 @@ DetailedTask* DetailedTasks::getOldDWSendTask(int proc)
 
 #if SCI_ASSERTION_LEVEL>0
   //verify the map entry has been created
-  if(sendoldmap.find(proc)==sendoldmap.end())
-  {
+  if(sendoldmap.find(proc)==sendoldmap.end()) {
     cout << d_myworld->myrank() << " Error trying to get oldDWSendTask for processor: " << proc << " but it does not exist\n";
     throw InternalError("oldDWSendTask does not exist",__FILE__,__LINE__);
   }
@@ -1143,20 +1146,23 @@ namespace Uintah {
     const MaterialSubset* matls = task.getMaterials();
     if (matls) {
       out << ", on material";
-      if (matls->size() > 1)
+      if (matls->size() > 1) {
         out << "s";
+      }
       out << " ";
       for (int i = 0; i < matls->size(); i++) {
-        if (i > 0)
+        if (i > 0) {
           out << ",";
+        }
         out << matls->get(i);
       }
     }
     out << ", resource ";
-    if (task.getAssignedResourceIndex() == -1)
+    if (task.getAssignedResourceIndex() == -1) {
       out << "unassigned";
-    else
+    } else {
       out << task.getAssignedResourceIndex();
+    }
     return out;
   }
 
@@ -1165,10 +1171,12 @@ namespace Uintah {
              const DetailedDep& dep)
   {
     out << dep.req->var->getName();
-    if (dep.isNonDataDependency())
+    if (dep.isNonDataDependency()) {
       out << " non-data dependency";
-    else
+    }
+    else {
       out << " on patch " << dep.fromPatch->getID();
+    }
     out << ", matl " << dep.matl << ", low=" << dep.low << ", high=" << dep.high;
     return out;
   }
@@ -1433,8 +1441,9 @@ void DetailedTasks::logMemoryUse(ostream& out,
   logMemory(out, total, tag, "batches", "DependencyBatch", 0, -1, elems2.str(), batches_.size() * sizeof(DependencyBatch), 0);
   int ndeps = 0;
   for (int i = 0; i < (int)batches_.size(); i++) {
-    for (DetailedDep* p = batches_[i]->head; p != 0; p = p->next)
+    for (DetailedDep* p = batches_[i]->head; p != 0; p = p->next) {
       ndeps++;
+    }
   }
   ostringstream elems3;
   elems3 << ndeps;
@@ -1512,8 +1521,9 @@ class PatchIDIterator {
 
 string DetailedTask::getName() const
 {
-  if (name_ != "")
+  if (name_ != "") {
     return name_;
+  }
 
   name_ = string(task->getName());
 
@@ -1540,16 +1550,22 @@ bool DetailedTaskPriorityComparison::operator()(DetailedTask*& ltask,
   QueueAlg alg = ltask->getTaskGroup()->getTaskPriorityAlg();
   ASSERT(alg == rtask->getTaskGroup()->getTaskPriorityAlg());
 
-  if (alg == FCFS)
+  if (alg == FCFS) {
     return false;               //First Come First Serve;
-  if (alg == Stack)
+  }
+
+  if (alg == Stack) {
     return true;               //Fist Come Last Serve, for robust testing;
-  if (alg == Random)
+  }
+
+  if (alg == Random) {
     return (random() % 2 == 0);   //Random;
+  }
 
   if (ltask->getTask()->getSortedOrder() > rtask->getTask()->getSortedOrder()) {
     return true;
   }
+
   if (ltask->getTask()->getSortedOrder() < rtask->getTask()->getSortedOrder()) {
     return false;
   }
@@ -1566,50 +1582,61 @@ bool DetailedTaskPriorityComparison::operator()(DetailedTask*& ltask,
     int ll2 = 0;
     int rl2 = 0;
     set<Task*>::iterator it;
-    for (it = ltask->getTask()->childTasks.begin(); it != ltask->getTask()->childTasks.end(); it++)
+    for (it = ltask->getTask()->childTasks.begin(); it != ltask->getTask()->childTasks.end(); it++) {
       ll2 += (*it)->childTasks.size();
-    for (it = rtask->getTask()->childTasks.begin(); it != rtask->getTask()->childTasks.end(); it++)
+    }
+    for (it = rtask->getTask()->childTasks.begin(); it != rtask->getTask()->childTasks.end(); it++) {
       rl2 += (*it)->childTasks.size();
-    if (alg == MostL2Children)
+    }
+    if (alg == MostL2Children) {
       return ll2 < rl2;
-    else
+    } else {
       return ll2 > rl2;
+    }
   } else if (alg == MostMessages || alg == LeastMessages) {
     int lmsg = 0;
     int rmsg = 0;
     for (DependencyBatch* batch = ltask->getComputes(); batch != 0; batch = batch->comp_next) {
-      for (DetailedDep* dep = batch->head; dep != 0; dep = dep->next)
+      for (DetailedDep* dep = batch->head; dep != 0; dep = dep->next) {
         lmsg++;
+      }
     }
     for (DependencyBatch* batch = rtask->getComputes(); batch != 0; batch = batch->comp_next) {
-      for (DetailedDep* dep = batch->head; dep != 0; dep = dep->next)
+      for (DetailedDep* dep = batch->head; dep != 0; dep = dep->next) {
         rmsg++;
+      }
     }
     if (alg == MostMessages) {
       // cout << "msg " <<  lmsg << "<>" << rmsg << endl;
       return lmsg < rmsg;
-    } else
+    } else {
       return lmsg > rmsg;
+    }
   } else if (alg == PatchOrder) {  //smaller level, larger size, smaller patchied, smaller tasksortid
     const PatchSubset* lpatches = ltask->getPatches();
     const PatchSubset* rpatches = rtask->getPatches();
     if (getLevel(lpatches) == getLevel(rpatches)) {
       if (lpatches->size() == rpatches->size()) {
         return lpatches->get(0)->getID() > rpatches->get(0)->getID();
-      } else
+      } else {
         return lpatches->size() < rpatches->size();
-    } else
+      }
+    } else {
       return getLevel(lpatches) > getLevel(rpatches);
+    }
   } else if (alg == PatchOrderRandom) {  //smaller level, larger size, smaller patchied, smaller tasksortid
     const PatchSubset* lpatches = ltask->getPatches();
     const PatchSubset* rpatches = rtask->getPatches();
     if (getLevel(lpatches) == getLevel(rpatches)) {
       if (lpatches->size() == rpatches->size()) {
         return (random() % 2 == 0);
-      } else
+      } else {
         return lpatches->size() < rpatches->size();
-    } else
+      }
+    } else {
       return getLevel(lpatches) > getLevel(rpatches);
-  } else
+    }
+  } else {
     return false;
+  }
 }
