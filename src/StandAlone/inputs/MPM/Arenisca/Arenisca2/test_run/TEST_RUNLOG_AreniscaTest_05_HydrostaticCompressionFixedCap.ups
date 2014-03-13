@@ -1,0 +1,2036 @@
+Date:    Wed Mar 12 15:22:37 2014
+Machine: ubuntu
+SVN: $Revision: 51394 $
+SVN: $Date: 2013-12-17 15:36:21 -0700 (Tue, 17 Dec 2013) $
+Assertion level: 0
+CFLAGS: -fPIC  -fopenmp -Wall -msse -msse2 -O3 -mfpmath=sse -DNDEBUG 
+Implicit Solver: 	CGSolver
+Simulation Component: 	'mpm'
+Load Balancer: 		SingleProcessorLoadBalancer
+Scheduler: 		UnifiedScheduler
+	Using "MostMessages" Algorithm
+	Using Unified Scheduler without threads (Single-Processor mode)
+Patch layout: 		(1,1,1)
+Grid statistics:
+Number of levels:		1
+Level 0:
+  Number of patches:		1
+  Total number of cells:	125 (125 avg. per patch)
+Total patches in grid:		1
+Total cells in grid:		125 (125 avg. per patch)
+
+In Arenisca ver1,JC_ZETA_HARDENING,JC_KAPPA_HARDENING,JC_USE_BB_DEFGRAD_UPDATE=2,JC_FREEZE_PARTICLE
+WeibMed=0
+DataArchiver created verifAreniscaTest_05_HydrostaticCompressionFixedCap.uda.000
+
+WARNING: 'svn diff' file '/home/uintah/opt/svn_diff.txt' does not appear to exist!
+
+Saving original .ups file in UDA...
+Compiling initialization taskgraph...
+done taskgraph compile (0.000836 seconds)
+Created 1 total particles
+WARNING (c): lowering delt from 299.7 to maximum: 0.001
+Compiling taskgraph...
+DONE TASKGRAPH RE-COMPILE (0.001577 seconds)
+Time=0 (timestep 0), delT=0.001, elap T = 0.00, Mem Use (MB)= 19.75
+WARNING (c): lowering delt from 0.0793809 to maximum: 0.001
+Time=0.001 (timestep 1), delT=0.001, elap T = 0.01, Mem Use (MB)= 20.12
+WARNING (c): lowering delt from 0.0793892 to maximum: 0.001
+Time=0.002 (timestep 2), delT=0.001, elap T = 0.01, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0793975 to maximum: 0.001
+Time=0.003 (timestep 3), delT=0.001, elap T = 0.01, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0794059 to maximum: 0.001
+Time=0.004 (timestep 4), delT=0.001, elap T = 0.02, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0794142 to maximum: 0.001
+Time=0.005 (timestep 5), delT=0.001, elap T = 0.02, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0794226 to maximum: 0.001
+Time=0.006 (timestep 6), delT=0.001, elap T = 0.02, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0794309 to maximum: 0.001
+Time=0.007 (timestep 7), delT=0.001, elap T = 0.02, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0794393 to maximum: 0.001
+Time=0.008 (timestep 8), delT=0.001, elap T = 0.03, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0794476 to maximum: 0.001
+Time=0.009 (timestep 9), delT=0.001, elap T = 0.03, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.079456 to maximum: 0.001
+Time=0.01 (timestep 10), delT=0.001, elap T = 0.03, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0794643 to maximum: 0.001
+Time=0.011 (timestep 11), delT=0.001, elap T = 0.04, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0794727 to maximum: 0.001
+Time=0.012 (timestep 12), delT=0.001, elap T = 0.04, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.079481 to maximum: 0.001
+Time=0.013 (timestep 13), delT=0.001, elap T = 0.04, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0794894 to maximum: 0.001
+Time=0.014 (timestep 14), delT=0.001, elap T = 0.05, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0794977 to maximum: 0.001
+Time=0.015 (timestep 15), delT=0.001, elap T = 0.05, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0795061 to maximum: 0.001
+Time=0.016 (timestep 16), delT=0.001, elap T = 0.05, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0795144 to maximum: 0.001
+Time=0.017 (timestep 17), delT=0.001, elap T = 0.05, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0795228 to maximum: 0.001
+Time=0.018 (timestep 18), delT=0.001, elap T = 0.05, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0795311 to maximum: 0.001
+Time=0.019 (timestep 19), delT=0.001, elap T = 0.06, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0795395 to maximum: 0.001
+Time=0.02 (timestep 20), delT=0.001, elap T = 0.06, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0795479 to maximum: 0.001
+Time=0.021 (timestep 21), delT=0.001, elap T = 0.06, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0795562 to maximum: 0.001
+Time=0.022 (timestep 22), delT=0.001, elap T = 0.06, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0795646 to maximum: 0.001
+Time=0.023 (timestep 23), delT=0.001, elap T = 0.07, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.079573 to maximum: 0.001
+Time=0.024 (timestep 24), delT=0.001, elap T = 0.07, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0795813 to maximum: 0.001
+Time=0.025 (timestep 25), delT=0.001, elap T = 0.07, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0795897 to maximum: 0.001
+Time=0.026 (timestep 26), delT=0.001, elap T = 0.07, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0795981 to maximum: 0.001
+Time=0.027 (timestep 27), delT=0.001, elap T = 0.07, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0796065 to maximum: 0.001
+Time=0.028 (timestep 28), delT=0.001, elap T = 0.08, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0796148 to maximum: 0.001
+Time=0.029 (timestep 29), delT=0.001, elap T = 0.08, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0796232 to maximum: 0.001
+Time=0.03 (timestep 30), delT=0.001, elap T = 0.08, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0796316 to maximum: 0.001
+Time=0.031 (timestep 31), delT=0.001, elap T = 0.08, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.07964 to maximum: 0.001
+Time=0.032 (timestep 32), delT=0.001, elap T = 0.09, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0796484 to maximum: 0.001
+Time=0.033 (timestep 33), delT=0.001, elap T = 0.09, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0796567 to maximum: 0.001
+Time=0.034 (timestep 34), delT=0.001, elap T = 0.09, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0796651 to maximum: 0.001
+Time=0.035 (timestep 35), delT=0.001, elap T = 0.09, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0796735 to maximum: 0.001
+Time=0.036 (timestep 36), delT=0.001, elap T = 0.09, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0796819 to maximum: 0.001
+Time=0.037 (timestep 37), delT=0.001, elap T = 0.10, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0796903 to maximum: 0.001
+Time=0.038 (timestep 38), delT=0.001, elap T = 0.10, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0796987 to maximum: 0.001
+Time=0.039 (timestep 39), delT=0.001, elap T = 0.10, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0797071 to maximum: 0.001
+Time=0.04 (timestep 40), delT=0.001, elap T = 0.10, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0797155 to maximum: 0.001
+Time=0.041 (timestep 41), delT=0.001, elap T = 0.11, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0797239 to maximum: 0.001
+Time=0.042 (timestep 42), delT=0.001, elap T = 0.11, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0797322 to maximum: 0.001
+Time=0.043 (timestep 43), delT=0.001, elap T = 0.11, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0797406 to maximum: 0.001
+Time=0.044 (timestep 44), delT=0.001, elap T = 0.11, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.079749 to maximum: 0.001
+Time=0.045 (timestep 45), delT=0.001, elap T = 0.12, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0797574 to maximum: 0.001
+Time=0.046 (timestep 46), delT=0.001, elap T = 0.12, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0797658 to maximum: 0.001
+Time=0.047 (timestep 47), delT=0.001, elap T = 0.12, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0797742 to maximum: 0.001
+Time=0.048 (timestep 48), delT=0.001, elap T = 0.12, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0797827 to maximum: 0.001
+Time=0.049 (timestep 49), delT=0.001, elap T = 0.12, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0797911 to maximum: 0.001
+Time=0.05 (timestep 50), delT=0.001, elap T = 0.13, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0797995 to maximum: 0.001
+Time=0.051 (timestep 51), delT=0.001, elap T = 0.13, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0798079 to maximum: 0.001
+Time=0.052 (timestep 52), delT=0.001, elap T = 0.13, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0798163 to maximum: 0.001
+Time=0.053 (timestep 53), delT=0.001, elap T = 0.13, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0798247 to maximum: 0.001
+Time=0.054 (timestep 54), delT=0.001, elap T = 0.14, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0798331 to maximum: 0.001
+Time=0.055 (timestep 55), delT=0.001, elap T = 0.14, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0798415 to maximum: 0.001
+Time=0.056 (timestep 56), delT=0.001, elap T = 0.14, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0798499 to maximum: 0.001
+Time=0.057 (timestep 57), delT=0.001, elap T = 0.15, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0798584 to maximum: 0.001
+Time=0.058 (timestep 58), delT=0.001, elap T = 0.15, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0798668 to maximum: 0.001
+Time=0.059 (timestep 59), delT=0.001, elap T = 0.15, mean: 0.00, Mem Use (MB)= 20.13
+WARNING (c): lowering delt from 0.0798752 to maximum: 0.001
+Time=0.06 (timestep 60), delT=0.001, elap T = 0.16, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0798836 to maximum: 0.001
+Time=0.061 (timestep 61), delT=0.001, elap T = 0.16, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0798921 to maximum: 0.001
+Time=0.062 (timestep 62), delT=0.001, elap T = 0.16, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0799005 to maximum: 0.001
+Time=0.063 (timestep 63), delT=0.001, elap T = 0.17, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0799089 to maximum: 0.001
+Time=0.064 (timestep 64), delT=0.001, elap T = 0.17, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0799173 to maximum: 0.001
+Time=0.065 (timestep 65), delT=0.001, elap T = 0.17, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0799258 to maximum: 0.001
+Time=0.066 (timestep 66), delT=0.001, elap T = 0.17, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0799342 to maximum: 0.001
+Time=0.067 (timestep 67), delT=0.001, elap T = 0.17, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0799426 to maximum: 0.001
+Time=0.068 (timestep 68), delT=0.001, elap T = 0.18, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0799511 to maximum: 0.001
+Time=0.069 (timestep 69), delT=0.001, elap T = 0.18, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0799595 to maximum: 0.001
+Time=0.07 (timestep 70), delT=0.001, elap T = 0.18, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0799679 to maximum: 0.001
+Time=0.071 (timestep 71), delT=0.001, elap T = 0.18, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0799764 to maximum: 0.001
+Time=0.072 (timestep 72), delT=0.001, elap T = 0.19, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0799848 to maximum: 0.001
+Time=0.073 (timestep 73), delT=0.001, elap T = 0.19, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0799933 to maximum: 0.001
+Time=0.074 (timestep 74), delT=0.001, elap T = 0.19, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0800017 to maximum: 0.001
+Time=0.075 (timestep 75), delT=0.001, elap T = 0.19, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0800101 to maximum: 0.001
+Time=0.076 (timestep 76), delT=0.001, elap T = 0.19, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0800186 to maximum: 0.001
+Time=0.077 (timestep 77), delT=0.001, elap T = 0.20, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.080027 to maximum: 0.001
+Time=0.078 (timestep 78), delT=0.001, elap T = 0.20, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0800355 to maximum: 0.001
+Time=0.079 (timestep 79), delT=0.001, elap T = 0.20, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0800439 to maximum: 0.001
+Time=0.08 (timestep 80), delT=0.001, elap T = 0.20, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0800524 to maximum: 0.001
+Time=0.081 (timestep 81), delT=0.001, elap T = 0.21, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0800608 to maximum: 0.001
+Time=0.082 (timestep 82), delT=0.001, elap T = 0.21, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0800693 to maximum: 0.001
+Time=0.083 (timestep 83), delT=0.001, elap T = 0.21, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0800778 to maximum: 0.001
+Time=0.084 (timestep 84), delT=0.001, elap T = 0.22, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0800862 to maximum: 0.001
+Time=0.085 (timestep 85), delT=0.001, elap T = 0.22, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0800947 to maximum: 0.001
+Time=0.086 (timestep 86), delT=0.001, elap T = 0.22, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0801031 to maximum: 0.001
+Time=0.087 (timestep 87), delT=0.001, elap T = 0.22, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0801116 to maximum: 0.001
+Time=0.088 (timestep 88), delT=0.001, elap T = 0.22, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0801201 to maximum: 0.001
+Time=0.089 (timestep 89), delT=0.001, elap T = 0.23, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0801285 to maximum: 0.001
+Time=0.09 (timestep 90), delT=0.001, elap T = 0.23, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.080137 to maximum: 0.001
+Time=0.091 (timestep 91), delT=0.001, elap T = 0.23, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0801455 to maximum: 0.001
+Time=0.092 (timestep 92), delT=0.001, elap T = 0.23, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0801539 to maximum: 0.001
+Time=0.093 (timestep 93), delT=0.001, elap T = 0.24, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0801624 to maximum: 0.001
+Time=0.094 (timestep 94), delT=0.001, elap T = 0.24, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0801709 to maximum: 0.001
+Time=0.095 (timestep 95), delT=0.001, elap T = 0.24, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0801794 to maximum: 0.001
+Time=0.096 (timestep 96), delT=0.001, elap T = 0.24, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0801878 to maximum: 0.001
+Time=0.097 (timestep 97), delT=0.001, elap T = 0.25, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0801963 to maximum: 0.001
+Time=0.098 (timestep 98), delT=0.001, elap T = 0.25, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0802048 to maximum: 0.001
+Time=0.099 (timestep 99), delT=0.001, elap T = 0.25, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0802133 to maximum: 0.001
+Time=0.1 (timestep 100), delT=0.001, elap T = 0.25, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0802218 to maximum: 0.001
+Time=0.101 (timestep 101), delT=0.001, elap T = 0.26, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0802302 to maximum: 0.001
+Time=0.102 (timestep 102), delT=0.001, elap T = 0.26, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0802387 to maximum: 0.001
+Time=0.103 (timestep 103), delT=0.001, elap T = 0.26, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0802472 to maximum: 0.001
+Time=0.104 (timestep 104), delT=0.001, elap T = 0.26, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0802557 to maximum: 0.001
+Time=0.105 (timestep 105), delT=0.001, elap T = 0.27, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0802642 to maximum: 0.001
+Time=0.106 (timestep 106), delT=0.001, elap T = 0.27, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0802727 to maximum: 0.001
+Time=0.107 (timestep 107), delT=0.001, elap T = 0.27, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0802812 to maximum: 0.001
+Time=0.108 (timestep 108), delT=0.001, elap T = 0.27, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0802897 to maximum: 0.001
+Time=0.109 (timestep 109), delT=0.001, elap T = 0.28, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0802982 to maximum: 0.001
+Time=0.11 (timestep 110), delT=0.001, elap T = 0.28, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0803067 to maximum: 0.001
+Time=0.111 (timestep 111), delT=0.001, elap T = 0.28, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0803152 to maximum: 0.001
+Time=0.112 (timestep 112), delT=0.001, elap T = 0.28, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0803237 to maximum: 0.001
+Time=0.113 (timestep 113), delT=0.001, elap T = 0.29, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0803322 to maximum: 0.001
+Time=0.114 (timestep 114), delT=0.001, elap T = 0.29, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0803407 to maximum: 0.001
+Time=0.115 (timestep 115), delT=0.001, elap T = 0.29, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0803492 to maximum: 0.001
+Time=0.116 (timestep 116), delT=0.001, elap T = 0.29, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0803577 to maximum: 0.001
+Time=0.117 (timestep 117), delT=0.001, elap T = 0.30, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0803662 to maximum: 0.001
+Time=0.118 (timestep 118), delT=0.001, elap T = 0.30, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0803747 to maximum: 0.001
+Time=0.119 (timestep 119), delT=0.001, elap T = 0.30, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0803832 to maximum: 0.001
+Time=0.12 (timestep 120), delT=0.001, elap T = 0.30, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0803917 to maximum: 0.001
+Time=0.121 (timestep 121), delT=0.001, elap T = 0.31, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0804002 to maximum: 0.001
+Time=0.122 (timestep 122), delT=0.001, elap T = 0.31, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0804087 to maximum: 0.001
+Time=0.123 (timestep 123), delT=0.001, elap T = 0.31, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0804173 to maximum: 0.001
+Time=0.124 (timestep 124), delT=0.001, elap T = 0.32, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0804258 to maximum: 0.001
+Time=0.125 (timestep 125), delT=0.001, elap T = 0.32, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0804343 to maximum: 0.001
+Time=0.126 (timestep 126), delT=0.001, elap T = 0.32, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0804428 to maximum: 0.001
+Time=0.127 (timestep 127), delT=0.001, elap T = 0.32, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0804513 to maximum: 0.001
+Time=0.128 (timestep 128), delT=0.001, elap T = 0.33, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0804599 to maximum: 0.001
+Time=0.129 (timestep 129), delT=0.001, elap T = 0.33, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0804684 to maximum: 0.001
+Time=0.13 (timestep 130), delT=0.001, elap T = 0.33, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0804769 to maximum: 0.001
+Time=0.131 (timestep 131), delT=0.001, elap T = 0.33, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0804854 to maximum: 0.001
+Time=0.132 (timestep 132), delT=0.001, elap T = 0.34, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.080494 to maximum: 0.001
+Time=0.133 (timestep 133), delT=0.001, elap T = 0.34, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0805025 to maximum: 0.001
+Time=0.134 (timestep 134), delT=0.001, elap T = 0.34, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.080511 to maximum: 0.001
+Time=0.135 (timestep 135), delT=0.001, elap T = 0.34, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0805196 to maximum: 0.001
+Time=0.136 (timestep 136), delT=0.001, elap T = 0.35, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0805281 to maximum: 0.001
+Time=0.137 (timestep 137), delT=0.001, elap T = 0.35, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0805367 to maximum: 0.001
+Time=0.138 (timestep 138), delT=0.001, elap T = 0.35, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0805452 to maximum: 0.001
+Time=0.139 (timestep 139), delT=0.001, elap T = 0.35, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0805537 to maximum: 0.001
+Time=0.14 (timestep 140), delT=0.001, elap T = 0.36, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0805623 to maximum: 0.001
+Time=0.141 (timestep 141), delT=0.001, elap T = 0.36, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0805708 to maximum: 0.001
+Time=0.142 (timestep 142), delT=0.001, elap T = 0.36, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0805794 to maximum: 0.001
+Time=0.143 (timestep 143), delT=0.001, elap T = 0.37, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0805879 to maximum: 0.001
+Time=0.144 (timestep 144), delT=0.001, elap T = 0.37, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0805965 to maximum: 0.001
+Time=0.145 (timestep 145), delT=0.001, elap T = 0.37, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.080605 to maximum: 0.001
+Time=0.146 (timestep 146), delT=0.001, elap T = 0.37, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0806136 to maximum: 0.001
+Time=0.147 (timestep 147), delT=0.001, elap T = 0.38, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0806221 to maximum: 0.001
+Time=0.148 (timestep 148), delT=0.001, elap T = 0.38, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0806307 to maximum: 0.001
+Time=0.149 (timestep 149), delT=0.001, elap T = 0.38, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0806392 to maximum: 0.001
+Time=0.15 (timestep 150), delT=0.001, elap T = 0.38, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0806478 to maximum: 0.001
+Time=0.151 (timestep 151), delT=0.001, elap T = 0.39, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0806563 to maximum: 0.001
+Time=0.152 (timestep 152), delT=0.001, elap T = 0.39, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0806649 to maximum: 0.001
+Time=0.153 (timestep 153), delT=0.001, elap T = 0.39, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0806735 to maximum: 0.001
+Time=0.154 (timestep 154), delT=0.001, elap T = 0.39, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.080682 to maximum: 0.001
+Time=0.155 (timestep 155), delT=0.001, elap T = 0.40, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0806906 to maximum: 0.001
+Time=0.156 (timestep 156), delT=0.001, elap T = 0.40, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0806992 to maximum: 0.001
+Time=0.157 (timestep 157), delT=0.001, elap T = 0.40, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0807077 to maximum: 0.001
+Time=0.158 (timestep 158), delT=0.001, elap T = 0.40, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0807163 to maximum: 0.001
+Time=0.159 (timestep 159), delT=0.001, elap T = 0.41, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0807249 to maximum: 0.001
+Time=0.16 (timestep 160), delT=0.001, elap T = 0.41, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0807334 to maximum: 0.001
+Time=0.161 (timestep 161), delT=0.001, elap T = 0.41, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.080742 to maximum: 0.001
+Time=0.162 (timestep 162), delT=0.001, elap T = 0.42, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0807506 to maximum: 0.001
+Time=0.163 (timestep 163), delT=0.001, elap T = 0.42, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0807592 to maximum: 0.001
+Time=0.164 (timestep 164), delT=0.001, elap T = 0.42, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0807677 to maximum: 0.001
+Time=0.165 (timestep 165), delT=0.001, elap T = 0.43, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0807763 to maximum: 0.001
+Time=0.166 (timestep 166), delT=0.001, elap T = 0.43, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0807849 to maximum: 0.001
+Time=0.167 (timestep 167), delT=0.001, elap T = 0.43, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0807935 to maximum: 0.001
+Time=0.168 (timestep 168), delT=0.001, elap T = 0.43, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0808021 to maximum: 0.001
+Time=0.169 (timestep 169), delT=0.001, elap T = 0.44, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0808107 to maximum: 0.001
+Time=0.17 (timestep 170), delT=0.001, elap T = 0.44, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0808192 to maximum: 0.001
+Time=0.171 (timestep 171), delT=0.001, elap T = 0.44, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0808278 to maximum: 0.001
+Time=0.172 (timestep 172), delT=0.001, elap T = 0.44, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0808364 to maximum: 0.001
+Time=0.173 (timestep 173), delT=0.001, elap T = 0.45, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.080845 to maximum: 0.001
+Time=0.174 (timestep 174), delT=0.001, elap T = 0.45, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0808536 to maximum: 0.001
+Time=0.175 (timestep 175), delT=0.001, elap T = 0.45, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0808622 to maximum: 0.001
+Time=0.176 (timestep 176), delT=0.001, elap T = 0.46, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0808708 to maximum: 0.001
+Time=0.177 (timestep 177), delT=0.001, elap T = 0.46, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0808794 to maximum: 0.001
+Time=0.178 (timestep 178), delT=0.001, elap T = 0.46, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.080888 to maximum: 0.001
+Time=0.179 (timestep 179), delT=0.001, elap T = 0.46, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0808966 to maximum: 0.001
+Time=0.18 (timestep 180), delT=0.001, elap T = 0.47, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0809052 to maximum: 0.001
+Time=0.181 (timestep 181), delT=0.001, elap T = 0.47, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0809138 to maximum: 0.001
+Time=0.182 (timestep 182), delT=0.001, elap T = 0.47, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0809224 to maximum: 0.001
+Time=0.183 (timestep 183), delT=0.001, elap T = 0.48, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.080931 to maximum: 0.001
+Time=0.184 (timestep 184), delT=0.001, elap T = 0.48, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0809396 to maximum: 0.001
+Time=0.185 (timestep 185), delT=0.001, elap T = 0.48, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0809482 to maximum: 0.001
+Time=0.186 (timestep 186), delT=0.001, elap T = 0.49, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0809569 to maximum: 0.001
+Time=0.187 (timestep 187), delT=0.001, elap T = 0.49, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0809655 to maximum: 0.001
+Time=0.188 (timestep 188), delT=0.001, elap T = 0.49, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0809741 to maximum: 0.001
+Time=0.189 (timestep 189), delT=0.001, elap T = 0.49, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0809827 to maximum: 0.001
+Time=0.19 (timestep 190), delT=0.001, elap T = 0.50, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0809913 to maximum: 0.001
+Time=0.191 (timestep 191), delT=0.001, elap T = 0.50, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0809999 to maximum: 0.001
+Time=0.192 (timestep 192), delT=0.001, elap T = 0.50, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0810086 to maximum: 0.001
+Time=0.193 (timestep 193), delT=0.001, elap T = 0.51, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0810172 to maximum: 0.001
+Time=0.194 (timestep 194), delT=0.001, elap T = 0.51, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0810258 to maximum: 0.001
+Time=0.195 (timestep 195), delT=0.001, elap T = 0.51, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0810344 to maximum: 0.001
+Time=0.196 (timestep 196), delT=0.001, elap T = 0.51, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0810431 to maximum: 0.001
+Time=0.197 (timestep 197), delT=0.001, elap T = 0.52, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0810517 to maximum: 0.001
+Time=0.198 (timestep 198), delT=0.001, elap T = 0.52, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0810603 to maximum: 0.001
+Time=0.199 (timestep 199), delT=0.001, elap T = 0.52, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.081069 to maximum: 0.001
+Time=0.2 (timestep 200), delT=0.001, elap T = 0.53, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0810776 to maximum: 0.001
+Time=0.201 (timestep 201), delT=0.001, elap T = 0.53, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0810862 to maximum: 0.001
+Time=0.202 (timestep 202), delT=0.001, elap T = 0.53, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0810949 to maximum: 0.001
+Time=0.203 (timestep 203), delT=0.001, elap T = 0.54, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0811035 to maximum: 0.001
+Time=0.204 (timestep 204), delT=0.001, elap T = 0.54, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0811121 to maximum: 0.001
+Time=0.205 (timestep 205), delT=0.001, elap T = 0.54, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0811208 to maximum: 0.001
+Time=0.206 (timestep 206), delT=0.001, elap T = 0.55, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0811294 to maximum: 0.001
+Time=0.207 (timestep 207), delT=0.001, elap T = 0.55, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0811381 to maximum: 0.001
+Time=0.208 (timestep 208), delT=0.001, elap T = 0.55, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0811467 to maximum: 0.001
+Time=0.209 (timestep 209), delT=0.001, elap T = 0.56, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0811554 to maximum: 0.001
+Time=0.21 (timestep 210), delT=0.001, elap T = 0.56, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.081164 to maximum: 0.001
+Time=0.211 (timestep 211), delT=0.001, elap T = 0.56, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0811727 to maximum: 0.001
+Time=0.212 (timestep 212), delT=0.001, elap T = 0.56, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0811813 to maximum: 0.001
+Time=0.213 (timestep 213), delT=0.001, elap T = 0.57, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.08119 to maximum: 0.001
+Time=0.214 (timestep 214), delT=0.001, elap T = 0.57, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0811986 to maximum: 0.001
+Time=0.215 (timestep 215), delT=0.001, elap T = 0.57, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0812073 to maximum: 0.001
+Time=0.216 (timestep 216), delT=0.001, elap T = 0.58, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0812159 to maximum: 0.001
+Time=0.217 (timestep 217), delT=0.001, elap T = 0.58, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0812246 to maximum: 0.001
+Time=0.218 (timestep 218), delT=0.001, elap T = 0.58, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0812333 to maximum: 0.001
+Time=0.219 (timestep 219), delT=0.001, elap T = 0.59, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0812419 to maximum: 0.001
+Time=0.22 (timestep 220), delT=0.001, elap T = 0.59, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0812506 to maximum: 0.001
+Time=0.221 (timestep 221), delT=0.001, elap T = 0.59, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0812592 to maximum: 0.001
+Time=0.222 (timestep 222), delT=0.001, elap T = 0.60, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0812679 to maximum: 0.001
+Time=0.223 (timestep 223), delT=0.001, elap T = 0.60, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0812766 to maximum: 0.001
+Time=0.224 (timestep 224), delT=0.001, elap T = 0.60, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0812853 to maximum: 0.001
+Time=0.225 (timestep 225), delT=0.001, elap T = 0.61, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0812939 to maximum: 0.001
+Time=0.226 (timestep 226), delT=0.001, elap T = 0.61, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0813026 to maximum: 0.001
+Time=0.227 (timestep 227), delT=0.001, elap T = 0.61, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0813113 to maximum: 0.001
+Time=0.228 (timestep 228), delT=0.001, elap T = 0.61, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.08132 to maximum: 0.001
+Time=0.229 (timestep 229), delT=0.001, elap T = 0.62, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0813286 to maximum: 0.001
+Time=0.23 (timestep 230), delT=0.001, elap T = 0.62, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0813373 to maximum: 0.001
+Time=0.231 (timestep 231), delT=0.001, elap T = 0.62, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.081346 to maximum: 0.001
+Time=0.232 (timestep 232), delT=0.001, elap T = 0.63, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0813547 to maximum: 0.001
+Time=0.233 (timestep 233), delT=0.001, elap T = 0.63, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0813634 to maximum: 0.001
+Time=0.234 (timestep 234), delT=0.001, elap T = 0.63, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.081372 to maximum: 0.001
+Time=0.235 (timestep 235), delT=0.001, elap T = 0.64, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0813807 to maximum: 0.001
+Time=0.236 (timestep 236), delT=0.001, elap T = 0.64, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0813894 to maximum: 0.001
+Time=0.237 (timestep 237), delT=0.001, elap T = 0.64, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0813981 to maximum: 0.001
+Time=0.238 (timestep 238), delT=0.001, elap T = 0.64, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0814068 to maximum: 0.001
+Time=0.239 (timestep 239), delT=0.001, elap T = 0.65, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0814155 to maximum: 0.001
+Time=0.24 (timestep 240), delT=0.001, elap T = 0.65, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0814242 to maximum: 0.001
+Time=0.241 (timestep 241), delT=0.001, elap T = 0.66, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0814329 to maximum: 0.001
+Time=0.242 (timestep 242), delT=0.001, elap T = 0.66, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0814416 to maximum: 0.001
+Time=0.243 (timestep 243), delT=0.001, elap T = 0.66, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0814503 to maximum: 0.001
+Time=0.244 (timestep 244), delT=0.001, elap T = 0.67, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.081459 to maximum: 0.001
+Time=0.245 (timestep 245), delT=0.001, elap T = 0.67, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0814677 to maximum: 0.001
+Time=0.246 (timestep 246), delT=0.001, elap T = 0.67, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0814764 to maximum: 0.001
+Time=0.247 (timestep 247), delT=0.001, elap T = 0.67, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0814851 to maximum: 0.001
+Time=0.248 (timestep 248), delT=0.001, elap T = 0.68, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0814938 to maximum: 0.001
+Time=0.249 (timestep 249), delT=0.001, elap T = 0.68, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0815025 to maximum: 0.001
+Time=0.25 (timestep 250), delT=0.001, elap T = 0.68, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0815112 to maximum: 0.001
+Time=0.251 (timestep 251), delT=0.001, elap T = 0.69, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0815199 to maximum: 0.001
+Time=0.252 (timestep 252), delT=0.001, elap T = 0.69, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0815287 to maximum: 0.001
+Time=0.253 (timestep 253), delT=0.001, elap T = 0.69, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0815374 to maximum: 0.001
+Time=0.254 (timestep 254), delT=0.001, elap T = 0.70, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0815461 to maximum: 0.001
+Time=0.255 (timestep 255), delT=0.001, elap T = 0.70, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0815548 to maximum: 0.001
+Time=0.256 (timestep 256), delT=0.001, elap T = 0.70, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0815635 to maximum: 0.001
+Time=0.257 (timestep 257), delT=0.001, elap T = 0.71, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0815722 to maximum: 0.001
+Time=0.258 (timestep 258), delT=0.001, elap T = 0.71, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.081581 to maximum: 0.001
+Time=0.259 (timestep 259), delT=0.001, elap T = 0.71, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0815897 to maximum: 0.001
+Time=0.26 (timestep 260), delT=0.001, elap T = 0.72, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0815984 to maximum: 0.001
+Time=0.261 (timestep 261), delT=0.001, elap T = 0.72, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0816071 to maximum: 0.001
+Time=0.262 (timestep 262), delT=0.001, elap T = 0.72, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0816159 to maximum: 0.001
+Time=0.263 (timestep 263), delT=0.001, elap T = 0.73, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0816246 to maximum: 0.001
+Time=0.264 (timestep 264), delT=0.001, elap T = 0.73, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0816333 to maximum: 0.001
+Time=0.265 (timestep 265), delT=0.001, elap T = 0.73, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0816421 to maximum: 0.001
+Time=0.266 (timestep 266), delT=0.001, elap T = 0.74, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0816508 to maximum: 0.001
+Time=0.267 (timestep 267), delT=0.001, elap T = 0.74, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0816595 to maximum: 0.001
+Time=0.268 (timestep 268), delT=0.001, elap T = 0.74, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0816683 to maximum: 0.001
+Time=0.269 (timestep 269), delT=0.001, elap T = 0.75, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.081677 to maximum: 0.001
+Time=0.27 (timestep 270), delT=0.001, elap T = 0.75, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0816858 to maximum: 0.001
+Time=0.271 (timestep 271), delT=0.001, elap T = 0.75, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0816945 to maximum: 0.001
+Time=0.272 (timestep 272), delT=0.001, elap T = 0.76, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0817033 to maximum: 0.001
+Time=0.273 (timestep 273), delT=0.001, elap T = 0.76, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.081712 to maximum: 0.001
+Time=0.274 (timestep 274), delT=0.001, elap T = 0.76, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0817208 to maximum: 0.001
+Time=0.275 (timestep 275), delT=0.001, elap T = 0.77, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0817295 to maximum: 0.001
+Time=0.276 (timestep 276), delT=0.001, elap T = 0.77, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0817383 to maximum: 0.001
+Time=0.277 (timestep 277), delT=0.001, elap T = 0.77, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.081747 to maximum: 0.001
+Time=0.278 (timestep 278), delT=0.001, elap T = 0.78, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0817558 to maximum: 0.001
+Time=0.279 (timestep 279), delT=0.001, elap T = 0.78, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0817645 to maximum: 0.001
+Time=0.28 (timestep 280), delT=0.001, elap T = 0.78, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0817733 to maximum: 0.001
+Time=0.281 (timestep 281), delT=0.001, elap T = 0.79, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.081782 to maximum: 0.001
+Time=0.282 (timestep 282), delT=0.001, elap T = 0.79, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0817908 to maximum: 0.001
+Time=0.283 (timestep 283), delT=0.001, elap T = 0.79, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0817996 to maximum: 0.001
+Time=0.284 (timestep 284), delT=0.001, elap T = 0.80, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0818083 to maximum: 0.001
+Time=0.285 (timestep 285), delT=0.001, elap T = 0.80, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0818171 to maximum: 0.001
+Time=0.286 (timestep 286), delT=0.001, elap T = 0.80, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0818258 to maximum: 0.001
+Time=0.287 (timestep 287), delT=0.001, elap T = 0.81, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0818346 to maximum: 0.001
+Time=0.288 (timestep 288), delT=0.001, elap T = 0.81, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0818434 to maximum: 0.001
+Time=0.289 (timestep 289), delT=0.001, elap T = 0.81, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0818522 to maximum: 0.001
+Time=0.29 (timestep 290), delT=0.001, elap T = 0.82, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0818609 to maximum: 0.001
+Time=0.291 (timestep 291), delT=0.001, elap T = 0.82, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0818697 to maximum: 0.001
+Time=0.292 (timestep 292), delT=0.001, elap T = 0.83, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0818785 to maximum: 0.001
+Time=0.293 (timestep 293), delT=0.001, elap T = 0.83, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0818873 to maximum: 0.001
+Time=0.294 (timestep 294), delT=0.001, elap T = 0.83, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.081896 to maximum: 0.001
+Time=0.295 (timestep 295), delT=0.001, elap T = 0.84, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0819048 to maximum: 0.001
+Time=0.296 (timestep 296), delT=0.001, elap T = 0.84, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0819136 to maximum: 0.001
+Time=0.297 (timestep 297), delT=0.001, elap T = 0.84, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0819224 to maximum: 0.001
+Time=0.298 (timestep 298), delT=0.001, elap T = 0.85, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0819312 to maximum: 0.001
+Time=0.299 (timestep 299), delT=0.001, elap T = 0.85, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.08194 to maximum: 0.001
+Time=0.3 (timestep 300), delT=0.001, elap T = 0.85, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0819487 to maximum: 0.001
+Time=0.301 (timestep 301), delT=0.001, elap T = 0.86, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0819575 to maximum: 0.001
+Time=0.302 (timestep 302), delT=0.001, elap T = 0.86, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0819663 to maximum: 0.001
+Time=0.303 (timestep 303), delT=0.001, elap T = 0.86, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0819751 to maximum: 0.001
+Time=0.304 (timestep 304), delT=0.001, elap T = 0.87, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0819839 to maximum: 0.001
+Time=0.305 (timestep 305), delT=0.001, elap T = 0.87, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0819927 to maximum: 0.001
+Time=0.306 (timestep 306), delT=0.001, elap T = 0.87, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0820015 to maximum: 0.001
+Time=0.307 (timestep 307), delT=0.001, elap T = 0.88, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0820103 to maximum: 0.001
+Time=0.308 (timestep 308), delT=0.001, elap T = 0.88, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0820191 to maximum: 0.001
+Time=0.309 (timestep 309), delT=0.001, elap T = 0.88, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0820279 to maximum: 0.001
+Time=0.31 (timestep 310), delT=0.001, elap T = 0.89, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0820367 to maximum: 0.001
+Time=0.311 (timestep 311), delT=0.001, elap T = 0.89, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0820455 to maximum: 0.001
+Time=0.312 (timestep 312), delT=0.001, elap T = 0.90, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0820543 to maximum: 0.001
+Time=0.313 (timestep 313), delT=0.001, elap T = 0.90, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0820631 to maximum: 0.001
+Time=0.314 (timestep 314), delT=0.001, elap T = 0.90, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.082072 to maximum: 0.001
+Time=0.315 (timestep 315), delT=0.001, elap T = 0.91, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0820808 to maximum: 0.001
+Time=0.316 (timestep 316), delT=0.001, elap T = 0.91, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0820896 to maximum: 0.001
+Time=0.317 (timestep 317), delT=0.001, elap T = 0.91, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0820984 to maximum: 0.001
+Time=0.318 (timestep 318), delT=0.001, elap T = 0.92, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0821072 to maximum: 0.001
+Time=0.319 (timestep 319), delT=0.001, elap T = 0.92, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.082116 to maximum: 0.001
+Time=0.32 (timestep 320), delT=0.001, elap T = 0.92, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0821249 to maximum: 0.001
+Time=0.321 (timestep 321), delT=0.001, elap T = 0.93, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0821337 to maximum: 0.001
+Time=0.322 (timestep 322), delT=0.001, elap T = 0.93, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0821425 to maximum: 0.001
+Time=0.323 (timestep 323), delT=0.001, elap T = 0.94, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0821513 to maximum: 0.001
+Time=0.324 (timestep 324), delT=0.001, elap T = 0.94, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0821602 to maximum: 0.001
+Time=0.325 (timestep 325), delT=0.001, elap T = 0.94, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.082169 to maximum: 0.001
+Time=0.326 (timestep 326), delT=0.001, elap T = 0.95, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0821778 to maximum: 0.001
+Time=0.327 (timestep 327), delT=0.001, elap T = 0.95, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0821866 to maximum: 0.001
+Time=0.328 (timestep 328), delT=0.001, elap T = 0.95, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0821955 to maximum: 0.001
+Time=0.329 (timestep 329), delT=0.001, elap T = 0.96, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0822043 to maximum: 0.001
+Time=0.33 (timestep 330), delT=0.001, elap T = 0.96, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0822131 to maximum: 0.001
+Time=0.331 (timestep 331), delT=0.001, elap T = 0.96, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.082222 to maximum: 0.001
+Time=0.332 (timestep 332), delT=0.001, elap T = 0.97, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0822308 to maximum: 0.001
+Time=0.333 (timestep 333), delT=0.001, elap T = 0.97, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0822397 to maximum: 0.001
+Time=0.334 (timestep 334), delT=0.001, elap T = 0.97, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0822485 to maximum: 0.001
+Time=0.335 (timestep 335), delT=0.001, elap T = 0.98, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0822573 to maximum: 0.001
+Time=0.336 (timestep 336), delT=0.001, elap T = 0.98, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0822662 to maximum: 0.001
+Time=0.337 (timestep 337), delT=0.001, elap T = 0.99, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.082275 to maximum: 0.001
+Time=0.338 (timestep 338), delT=0.001, elap T = 0.99, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0822839 to maximum: 0.001
+Time=0.339 (timestep 339), delT=0.001, elap T = 0.99, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0822927 to maximum: 0.001
+Time=0.34 (timestep 340), delT=0.001, elap T = 1.00, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0823016 to maximum: 0.001
+Time=0.341 (timestep 341), delT=0.001, elap T = 1.00, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0823104 to maximum: 0.001
+Time=0.342 (timestep 342), delT=0.001, elap T = 1.01, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0823193 to maximum: 0.001
+Time=0.343 (timestep 343), delT=0.001, elap T = 1.01, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0823282 to maximum: 0.001
+Time=0.344 (timestep 344), delT=0.001, elap T = 1.01, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.082337 to maximum: 0.001
+Time=0.345 (timestep 345), delT=0.001, elap T = 1.02, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0823459 to maximum: 0.001
+Time=0.346 (timestep 346), delT=0.001, elap T = 1.02, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0823547 to maximum: 0.001
+Time=0.347 (timestep 347), delT=0.001, elap T = 1.02, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0823636 to maximum: 0.001
+Time=0.348 (timestep 348), delT=0.001, elap T = 1.03, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0823725 to maximum: 0.001
+Time=0.349 (timestep 349), delT=0.001, elap T = 1.03, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0823813 to maximum: 0.001
+Time=0.35 (timestep 350), delT=0.001, elap T = 1.04, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0823902 to maximum: 0.001
+Time=0.351 (timestep 351), delT=0.001, elap T = 1.04, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0823991 to maximum: 0.001
+Time=0.352 (timestep 352), delT=0.001, elap T = 1.04, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0824079 to maximum: 0.001
+Time=0.353 (timestep 353), delT=0.001, elap T = 1.05, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0824168 to maximum: 0.001
+Time=0.354 (timestep 354), delT=0.001, elap T = 1.05, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0824257 to maximum: 0.001
+Time=0.355 (timestep 355), delT=0.001, elap T = 1.05, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0824346 to maximum: 0.001
+Time=0.356 (timestep 356), delT=0.001, elap T = 1.06, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0824434 to maximum: 0.001
+Time=0.357 (timestep 357), delT=0.001, elap T = 1.06, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0824523 to maximum: 0.001
+Time=0.358 (timestep 358), delT=0.001, elap T = 1.06, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0824612 to maximum: 0.001
+Time=0.359 (timestep 359), delT=0.001, elap T = 1.07, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0824701 to maximum: 0.001
+Time=0.36 (timestep 360), delT=0.001, elap T = 1.07, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.082479 to maximum: 0.001
+Time=0.361 (timestep 361), delT=0.001, elap T = 1.08, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0824878 to maximum: 0.001
+Time=0.362 (timestep 362), delT=0.001, elap T = 1.08, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0824967 to maximum: 0.001
+Time=0.363 (timestep 363), delT=0.001, elap T = 1.09, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0825056 to maximum: 0.001
+Time=0.364 (timestep 364), delT=0.001, elap T = 1.09, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0825145 to maximum: 0.001
+Time=0.365 (timestep 365), delT=0.001, elap T = 1.09, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0825234 to maximum: 0.001
+Time=0.366 (timestep 366), delT=0.001, elap T = 1.10, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0825323 to maximum: 0.001
+Time=0.367 (timestep 367), delT=0.001, elap T = 1.10, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0825412 to maximum: 0.001
+Time=0.368 (timestep 368), delT=0.001, elap T = 1.10, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0825501 to maximum: 0.001
+Time=0.369 (timestep 369), delT=0.001, elap T = 1.11, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.082559 to maximum: 0.001
+Time=0.37 (timestep 370), delT=0.001, elap T = 1.11, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0825679 to maximum: 0.001
+Time=0.371 (timestep 371), delT=0.001, elap T = 1.12, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0825768 to maximum: 0.001
+Time=0.372 (timestep 372), delT=0.001, elap T = 1.12, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0825857 to maximum: 0.001
+Time=0.373 (timestep 373), delT=0.001, elap T = 1.12, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0825946 to maximum: 0.001
+Time=0.374 (timestep 374), delT=0.001, elap T = 1.13, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0826035 to maximum: 0.001
+Time=0.375 (timestep 375), delT=0.001, elap T = 1.13, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0826124 to maximum: 0.001
+Time=0.376 (timestep 376), delT=0.001, elap T = 1.13, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0826213 to maximum: 0.001
+Time=0.377 (timestep 377), delT=0.001, elap T = 1.14, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0826302 to maximum: 0.001
+Time=0.378 (timestep 378), delT=0.001, elap T = 1.14, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0826391 to maximum: 0.001
+Time=0.379 (timestep 379), delT=0.001, elap T = 1.15, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0826481 to maximum: 0.001
+Time=0.38 (timestep 380), delT=0.001, elap T = 1.15, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.082657 to maximum: 0.001
+Time=0.381 (timestep 381), delT=0.001, elap T = 1.16, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0826659 to maximum: 0.001
+Time=0.382 (timestep 382), delT=0.001, elap T = 1.16, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0826748 to maximum: 0.001
+Time=0.383 (timestep 383), delT=0.001, elap T = 1.16, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0826837 to maximum: 0.001
+Time=0.384 (timestep 384), delT=0.001, elap T = 1.17, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0826926 to maximum: 0.001
+Time=0.385 (timestep 385), delT=0.001, elap T = 1.17, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0827016 to maximum: 0.001
+Time=0.386 (timestep 386), delT=0.001, elap T = 1.18, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0827105 to maximum: 0.001
+Time=0.387 (timestep 387), delT=0.001, elap T = 1.18, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0827194 to maximum: 0.001
+Time=0.388 (timestep 388), delT=0.001, elap T = 1.18, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0827284 to maximum: 0.001
+Time=0.389 (timestep 389), delT=0.001, elap T = 1.19, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0827373 to maximum: 0.001
+Time=0.39 (timestep 390), delT=0.001, elap T = 1.19, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0827462 to maximum: 0.001
+Time=0.391 (timestep 391), delT=0.001, elap T = 1.20, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0827551 to maximum: 0.001
+Time=0.392 (timestep 392), delT=0.001, elap T = 1.20, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0827641 to maximum: 0.001
+Time=0.393 (timestep 393), delT=0.001, elap T = 1.20, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.082773 to maximum: 0.001
+Time=0.394 (timestep 394), delT=0.001, elap T = 1.21, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.082782 to maximum: 0.001
+Time=0.395 (timestep 395), delT=0.001, elap T = 1.21, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0827909 to maximum: 0.001
+Time=0.396 (timestep 396), delT=0.001, elap T = 1.21, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0827998 to maximum: 0.001
+Time=0.397 (timestep 397), delT=0.001, elap T = 1.22, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0828088 to maximum: 0.001
+Time=0.398 (timestep 398), delT=0.001, elap T = 1.22, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0828177 to maximum: 0.001
+Time=0.399 (timestep 399), delT=0.001, elap T = 1.23, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0828267 to maximum: 0.001
+Time=0.4 (timestep 400), delT=0.001, elap T = 1.23, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0828356 to maximum: 0.001
+Time=0.401 (timestep 401), delT=0.001, elap T = 1.24, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0828446 to maximum: 0.001
+Time=0.402 (timestep 402), delT=0.001, elap T = 1.24, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0828535 to maximum: 0.001
+Time=0.403 (timestep 403), delT=0.001, elap T = 1.24, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0828625 to maximum: 0.001
+Time=0.404 (timestep 404), delT=0.001, elap T = 1.25, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0828714 to maximum: 0.001
+Time=0.405 (timestep 405), delT=0.001, elap T = 1.25, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0828804 to maximum: 0.001
+Time=0.406 (timestep 406), delT=0.001, elap T = 1.26, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0828893 to maximum: 0.001
+Time=0.407 (timestep 407), delT=0.001, elap T = 1.26, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0828983 to maximum: 0.001
+Time=0.408 (timestep 408), delT=0.001, elap T = 1.26, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0829073 to maximum: 0.001
+Time=0.409 (timestep 409), delT=0.001, elap T = 1.27, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0829162 to maximum: 0.001
+Time=0.41 (timestep 410), delT=0.001, elap T = 1.27, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0829252 to maximum: 0.001
+Time=0.411 (timestep 411), delT=0.001, elap T = 1.28, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0829342 to maximum: 0.001
+Time=0.412 (timestep 412), delT=0.001, elap T = 1.28, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0829431 to maximum: 0.001
+Time=0.413 (timestep 413), delT=0.001, elap T = 1.28, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0829521 to maximum: 0.001
+Time=0.414 (timestep 414), delT=0.001, elap T = 1.29, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0829611 to maximum: 0.001
+Time=0.415 (timestep 415), delT=0.001, elap T = 1.29, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.08297 to maximum: 0.001
+Time=0.416 (timestep 416), delT=0.001, elap T = 1.30, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.082979 to maximum: 0.001
+Time=0.417 (timestep 417), delT=0.001, elap T = 1.30, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.082988 to maximum: 0.001
+Time=0.418 (timestep 418), delT=0.001, elap T = 1.30, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.082997 to maximum: 0.001
+Time=0.419 (timestep 419), delT=0.001, elap T = 1.31, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0830059 to maximum: 0.001
+Time=0.42 (timestep 420), delT=0.001, elap T = 1.31, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0830149 to maximum: 0.001
+Time=0.421 (timestep 421), delT=0.001, elap T = 1.32, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0830239 to maximum: 0.001
+Time=0.422 (timestep 422), delT=0.001, elap T = 1.32, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0830329 to maximum: 0.001
+Time=0.423 (timestep 423), delT=0.001, elap T = 1.33, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0830419 to maximum: 0.001
+Time=0.424 (timestep 424), delT=0.001, elap T = 1.33, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0830509 to maximum: 0.001
+Time=0.425 (timestep 425), delT=0.001, elap T = 1.34, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0830598 to maximum: 0.001
+Time=0.426 (timestep 426), delT=0.001, elap T = 1.34, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0830688 to maximum: 0.001
+Time=0.427 (timestep 427), delT=0.001, elap T = 1.34, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0830778 to maximum: 0.001
+Time=0.428 (timestep 428), delT=0.001, elap T = 1.35, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0830868 to maximum: 0.001
+Time=0.429 (timestep 429), delT=0.001, elap T = 1.35, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0830958 to maximum: 0.001
+Time=0.43 (timestep 430), delT=0.001, elap T = 1.35, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0831048 to maximum: 0.001
+Time=0.431 (timestep 431), delT=0.001, elap T = 1.36, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0831138 to maximum: 0.001
+Time=0.432 (timestep 432), delT=0.001, elap T = 1.36, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0831228 to maximum: 0.001
+Time=0.433 (timestep 433), delT=0.001, elap T = 1.37, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0831318 to maximum: 0.001
+Time=0.434 (timestep 434), delT=0.001, elap T = 1.37, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0831408 to maximum: 0.001
+Time=0.435 (timestep 435), delT=0.001, elap T = 1.37, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0831498 to maximum: 0.001
+Time=0.436 (timestep 436), delT=0.001, elap T = 1.38, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0831588 to maximum: 0.001
+Time=0.437 (timestep 437), delT=0.001, elap T = 1.38, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0831678 to maximum: 0.001
+Time=0.438 (timestep 438), delT=0.001, elap T = 1.39, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0831768 to maximum: 0.001
+Time=0.439 (timestep 439), delT=0.001, elap T = 1.39, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0831858 to maximum: 0.001
+Time=0.44 (timestep 440), delT=0.001, elap T = 1.40, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0831949 to maximum: 0.001
+Time=0.441 (timestep 441), delT=0.001, elap T = 1.40, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0832039 to maximum: 0.001
+Time=0.442 (timestep 442), delT=0.001, elap T = 1.41, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0832129 to maximum: 0.001
+Time=0.443 (timestep 443), delT=0.001, elap T = 1.41, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0832219 to maximum: 0.001
+Time=0.444 (timestep 444), delT=0.001, elap T = 1.41, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0832309 to maximum: 0.001
+Time=0.445 (timestep 445), delT=0.001, elap T = 1.42, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0832399 to maximum: 0.001
+Time=0.446 (timestep 446), delT=0.001, elap T = 1.42, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.083249 to maximum: 0.001
+Time=0.447 (timestep 447), delT=0.001, elap T = 1.43, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.083258 to maximum: 0.001
+Time=0.448 (timestep 448), delT=0.001, elap T = 1.43, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.083267 to maximum: 0.001
+Time=0.449 (timestep 449), delT=0.001, elap T = 1.43, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.083276 to maximum: 0.001
+Time=0.45 (timestep 450), delT=0.001, elap T = 1.44, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0832851 to maximum: 0.001
+Time=0.451 (timestep 451), delT=0.001, elap T = 1.44, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0832941 to maximum: 0.001
+Time=0.452 (timestep 452), delT=0.001, elap T = 1.45, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0833031 to maximum: 0.001
+Time=0.453 (timestep 453), delT=0.001, elap T = 1.45, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0833122 to maximum: 0.001
+Time=0.454 (timestep 454), delT=0.001, elap T = 1.45, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0833212 to maximum: 0.001
+Time=0.455 (timestep 455), delT=0.001, elap T = 1.46, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0833302 to maximum: 0.001
+Time=0.456 (timestep 456), delT=0.001, elap T = 1.46, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0833393 to maximum: 0.001
+Time=0.457 (timestep 457), delT=0.001, elap T = 1.47, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0833483 to maximum: 0.001
+Time=0.458 (timestep 458), delT=0.001, elap T = 1.47, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0833574 to maximum: 0.001
+Time=0.459 (timestep 459), delT=0.001, elap T = 1.47, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0833664 to maximum: 0.001
+Time=0.46 (timestep 460), delT=0.001, elap T = 1.48, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0833755 to maximum: 0.001
+Time=0.461 (timestep 461), delT=0.001, elap T = 1.49, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0833845 to maximum: 0.001
+Time=0.462 (timestep 462), delT=0.001, elap T = 1.49, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0833935 to maximum: 0.001
+Time=0.463 (timestep 463), delT=0.001, elap T = 1.49, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0834026 to maximum: 0.001
+Time=0.464 (timestep 464), delT=0.001, elap T = 1.50, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0834117 to maximum: 0.001
+Time=0.465 (timestep 465), delT=0.001, elap T = 1.50, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0834207 to maximum: 0.001
+Time=0.466 (timestep 466), delT=0.001, elap T = 1.51, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0834298 to maximum: 0.001
+Time=0.467 (timestep 467), delT=0.001, elap T = 1.51, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0834388 to maximum: 0.001
+Time=0.468 (timestep 468), delT=0.001, elap T = 1.51, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0834479 to maximum: 0.001
+Time=0.469 (timestep 469), delT=0.001, elap T = 1.52, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0834569 to maximum: 0.001
+Time=0.47 (timestep 470), delT=0.001, elap T = 1.52, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.083466 to maximum: 0.001
+Time=0.471 (timestep 471), delT=0.001, elap T = 1.53, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0834751 to maximum: 0.001
+Time=0.472 (timestep 472), delT=0.001, elap T = 1.53, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0834841 to maximum: 0.001
+Time=0.473 (timestep 473), delT=0.001, elap T = 1.54, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0834932 to maximum: 0.001
+Time=0.474 (timestep 474), delT=0.001, elap T = 1.54, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0835023 to maximum: 0.001
+Time=0.475 (timestep 475), delT=0.001, elap T = 1.54, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0835113 to maximum: 0.001
+Time=0.476 (timestep 476), delT=0.001, elap T = 1.55, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0835204 to maximum: 0.001
+Time=0.477 (timestep 477), delT=0.001, elap T = 1.55, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0835295 to maximum: 0.001
+Time=0.478 (timestep 478), delT=0.001, elap T = 1.56, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0835385 to maximum: 0.001
+Time=0.479 (timestep 479), delT=0.001, elap T = 1.56, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0835476 to maximum: 0.001
+Time=0.48 (timestep 480), delT=0.001, elap T = 1.57, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0835567 to maximum: 0.001
+Time=0.481 (timestep 481), delT=0.001, elap T = 1.57, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0835658 to maximum: 0.001
+Time=0.482 (timestep 482), delT=0.001, elap T = 1.58, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0835749 to maximum: 0.001
+Time=0.483 (timestep 483), delT=0.001, elap T = 1.58, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0835839 to maximum: 0.001
+Time=0.484 (timestep 484), delT=0.001, elap T = 1.59, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.083593 to maximum: 0.001
+Time=0.485 (timestep 485), delT=0.001, elap T = 1.59, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0836021 to maximum: 0.001
+Time=0.486 (timestep 486), delT=0.001, elap T = 1.59, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0836112 to maximum: 0.001
+Time=0.487 (timestep 487), delT=0.001, elap T = 1.60, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0836203 to maximum: 0.001
+Time=0.488 (timestep 488), delT=0.001, elap T = 1.60, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0836294 to maximum: 0.001
+Time=0.489 (timestep 489), delT=0.001, elap T = 1.61, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0836385 to maximum: 0.001
+Time=0.49 (timestep 490), delT=0.001, elap T = 1.61, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0836476 to maximum: 0.001
+Time=0.491 (timestep 491), delT=0.001, elap T = 1.62, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0836567 to maximum: 0.001
+Time=0.492 (timestep 492), delT=0.001, elap T = 1.62, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0836658 to maximum: 0.001
+Time=0.493 (timestep 493), delT=0.001, elap T = 1.62, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0836749 to maximum: 0.001
+Time=0.494 (timestep 494), delT=0.001, elap T = 1.63, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.083684 to maximum: 0.001
+Time=0.495 (timestep 495), delT=0.001, elap T = 1.63, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0836931 to maximum: 0.001
+Time=0.496 (timestep 496), delT=0.001, elap T = 1.64, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0837022 to maximum: 0.001
+Time=0.497 (timestep 497), delT=0.001, elap T = 1.64, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0837113 to maximum: 0.001
+Time=0.498 (timestep 498), delT=0.001, elap T = 1.65, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0837204 to maximum: 0.001
+Time=0.499 (timestep 499), delT=0.001, elap T = 1.65, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0837295 to maximum: 0.001
+Time=0.5 (timestep 500), delT=0.001, elap T = 1.65, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0837386 to maximum: 0.001
+Time=0.501 (timestep 501), delT=0.001, elap T = 1.66, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0837477 to maximum: 0.001
+Time=0.502 (timestep 502), delT=0.001, elap T = 1.67, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0837568 to maximum: 0.001
+Time=0.503 (timestep 503), delT=0.001, elap T = 1.67, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0837659 to maximum: 0.001
+Time=0.504 (timestep 504), delT=0.001, elap T = 1.67, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0837751 to maximum: 0.001
+Time=0.505 (timestep 505), delT=0.001, elap T = 1.68, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0837842 to maximum: 0.001
+Time=0.506 (timestep 506), delT=0.001, elap T = 1.68, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0837933 to maximum: 0.001
+Time=0.507 (timestep 507), delT=0.001, elap T = 1.69, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0838024 to maximum: 0.001
+Time=0.508 (timestep 508), delT=0.001, elap T = 1.69, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0838116 to maximum: 0.001
+Time=0.509 (timestep 509), delT=0.001, elap T = 1.70, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0838207 to maximum: 0.001
+Time=0.51 (timestep 510), delT=0.001, elap T = 1.70, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0838298 to maximum: 0.001
+Time=0.511 (timestep 511), delT=0.001, elap T = 1.71, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0838389 to maximum: 0.001
+Time=0.512 (timestep 512), delT=0.001, elap T = 1.71, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0838481 to maximum: 0.001
+Time=0.513 (timestep 513), delT=0.001, elap T = 1.71, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0838572 to maximum: 0.001
+Time=0.514 (timestep 514), delT=0.001, elap T = 1.72, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0838663 to maximum: 0.001
+Time=0.515 (timestep 515), delT=0.001, elap T = 1.72, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0838755 to maximum: 0.001
+Time=0.516 (timestep 516), delT=0.001, elap T = 1.73, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0838846 to maximum: 0.001
+Time=0.517 (timestep 517), delT=0.001, elap T = 1.73, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0838937 to maximum: 0.001
+Time=0.518 (timestep 518), delT=0.001, elap T = 1.74, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0839029 to maximum: 0.001
+Time=0.519 (timestep 519), delT=0.001, elap T = 1.74, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.083912 to maximum: 0.001
+Time=0.52 (timestep 520), delT=0.001, elap T = 1.75, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0839212 to maximum: 0.001
+Time=0.521 (timestep 521), delT=0.001, elap T = 1.75, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0839303 to maximum: 0.001
+Time=0.522 (timestep 522), delT=0.001, elap T = 1.76, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0839395 to maximum: 0.001
+Time=0.523 (timestep 523), delT=0.001, elap T = 1.76, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0839486 to maximum: 0.001
+Time=0.524 (timestep 524), delT=0.001, elap T = 1.77, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0839578 to maximum: 0.001
+Time=0.525 (timestep 525), delT=0.001, elap T = 1.77, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0839669 to maximum: 0.001
+Time=0.526 (timestep 526), delT=0.001, elap T = 1.78, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0839761 to maximum: 0.001
+Time=0.527 (timestep 527), delT=0.001, elap T = 1.78, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0839852 to maximum: 0.001
+Time=0.528 (timestep 528), delT=0.001, elap T = 1.79, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0839944 to maximum: 0.001
+Time=0.529 (timestep 529), delT=0.001, elap T = 1.79, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0840035 to maximum: 0.001
+Time=0.53 (timestep 530), delT=0.001, elap T = 1.79, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0840127 to maximum: 0.001
+Time=0.531 (timestep 531), delT=0.001, elap T = 1.80, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0840219 to maximum: 0.001
+Time=0.532 (timestep 532), delT=0.001, elap T = 1.80, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.084031 to maximum: 0.001
+Time=0.533 (timestep 533), delT=0.001, elap T = 1.81, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0840402 to maximum: 0.001
+Time=0.534 (timestep 534), delT=0.001, elap T = 1.81, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0840494 to maximum: 0.001
+Time=0.535 (timestep 535), delT=0.001, elap T = 1.82, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0840585 to maximum: 0.001
+Time=0.536 (timestep 536), delT=0.001, elap T = 1.82, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0840677 to maximum: 0.001
+Time=0.537 (timestep 537), delT=0.001, elap T = 1.83, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0840769 to maximum: 0.001
+Time=0.538 (timestep 538), delT=0.001, elap T = 1.83, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0840861 to maximum: 0.001
+Time=0.539 (timestep 539), delT=0.001, elap T = 1.84, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0840952 to maximum: 0.001
+Time=0.54 (timestep 540), delT=0.001, elap T = 1.84, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0841044 to maximum: 0.001
+Time=0.541 (timestep 541), delT=0.001, elap T = 1.85, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0841136 to maximum: 0.001
+Time=0.542 (timestep 542), delT=0.001, elap T = 1.85, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0841228 to maximum: 0.001
+Time=0.543 (timestep 543), delT=0.001, elap T = 1.86, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0841319 to maximum: 0.001
+Time=0.544 (timestep 544), delT=0.001, elap T = 1.86, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0841411 to maximum: 0.001
+Time=0.545 (timestep 545), delT=0.001, elap T = 1.86, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0841503 to maximum: 0.001
+Time=0.546 (timestep 546), delT=0.001, elap T = 1.87, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0841595 to maximum: 0.001
+Time=0.547 (timestep 547), delT=0.001, elap T = 1.87, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0841687 to maximum: 0.001
+Time=0.548 (timestep 548), delT=0.001, elap T = 1.88, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0841779 to maximum: 0.001
+Time=0.549 (timestep 549), delT=0.001, elap T = 1.88, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0841871 to maximum: 0.001
+Time=0.55 (timestep 550), delT=0.001, elap T = 1.89, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0841963 to maximum: 0.001
+Time=0.551 (timestep 551), delT=0.001, elap T = 1.89, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0842055 to maximum: 0.001
+Time=0.552 (timestep 552), delT=0.001, elap T = 1.90, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0842147 to maximum: 0.001
+Time=0.553 (timestep 553), delT=0.001, elap T = 1.90, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0842239 to maximum: 0.001
+Time=0.554 (timestep 554), delT=0.001, elap T = 1.91, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0842331 to maximum: 0.001
+Time=0.555 (timestep 555), delT=0.001, elap T = 1.91, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0842423 to maximum: 0.001
+Time=0.556 (timestep 556), delT=0.001, elap T = 1.92, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0842515 to maximum: 0.001
+Time=0.557 (timestep 557), delT=0.001, elap T = 1.92, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0842607 to maximum: 0.001
+Time=0.558 (timestep 558), delT=0.001, elap T = 1.93, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0842699 to maximum: 0.001
+Time=0.559 (timestep 559), delT=0.001, elap T = 1.93, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0842791 to maximum: 0.001
+Time=0.56 (timestep 560), delT=0.001, elap T = 1.94, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0842883 to maximum: 0.001
+Time=0.561 (timestep 561), delT=0.001, elap T = 1.95, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0842975 to maximum: 0.001
+Time=0.562 (timestep 562), delT=0.001, elap T = 1.95, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0843067 to maximum: 0.001
+Time=0.563 (timestep 563), delT=0.001, elap T = 1.95, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0843159 to maximum: 0.001
+Time=0.564 (timestep 564), delT=0.001, elap T = 1.96, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0843252 to maximum: 0.001
+Time=0.565 (timestep 565), delT=0.001, elap T = 1.96, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0843344 to maximum: 0.001
+Time=0.566 (timestep 566), delT=0.001, elap T = 1.97, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0843436 to maximum: 0.001
+Time=0.567 (timestep 567), delT=0.001, elap T = 1.97, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0843528 to maximum: 0.001
+Time=0.568 (timestep 568), delT=0.001, elap T = 1.98, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0843621 to maximum: 0.001
+Time=0.569 (timestep 569), delT=0.001, elap T = 1.98, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0843713 to maximum: 0.001
+Time=0.57 (timestep 570), delT=0.001, elap T = 1.99, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0843805 to maximum: 0.001
+Time=0.571 (timestep 571), delT=0.001, elap T = 1.99, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0843897 to maximum: 0.001
+Time=0.572 (timestep 572), delT=0.001, elap T = 2.00, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.084399 to maximum: 0.001
+Time=0.573 (timestep 573), delT=0.001, elap T = 2.00, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0844082 to maximum: 0.001
+Time=0.574 (timestep 574), delT=0.001, elap T = 2.01, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0844174 to maximum: 0.001
+Time=0.575 (timestep 575), delT=0.001, elap T = 2.01, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0844267 to maximum: 0.001
+Time=0.576 (timestep 576), delT=0.001, elap T = 2.02, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0844359 to maximum: 0.001
+Time=0.577 (timestep 577), delT=0.001, elap T = 2.02, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0844451 to maximum: 0.001
+Time=0.578 (timestep 578), delT=0.001, elap T = 2.03, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0844544 to maximum: 0.001
+Time=0.579 (timestep 579), delT=0.001, elap T = 2.03, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0844636 to maximum: 0.001
+Time=0.58 (timestep 580), delT=0.001, elap T = 2.04, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0844729 to maximum: 0.001
+Time=0.581 (timestep 581), delT=0.001, elap T = 2.05, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0844821 to maximum: 0.001
+Time=0.582 (timestep 582), delT=0.001, elap T = 2.05, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0844914 to maximum: 0.001
+Time=0.583 (timestep 583), delT=0.001, elap T = 2.05, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0845006 to maximum: 0.001
+Time=0.584 (timestep 584), delT=0.001, elap T = 2.06, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0845099 to maximum: 0.001
+Time=0.585 (timestep 585), delT=0.001, elap T = 2.06, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0845191 to maximum: 0.001
+Time=0.586 (timestep 586), delT=0.001, elap T = 2.07, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0845284 to maximum: 0.001
+Time=0.587 (timestep 587), delT=0.001, elap T = 2.07, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0845376 to maximum: 0.001
+Time=0.588 (timestep 588), delT=0.001, elap T = 2.08, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0845469 to maximum: 0.001
+Time=0.589 (timestep 589), delT=0.001, elap T = 2.08, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0845562 to maximum: 0.001
+Time=0.59 (timestep 590), delT=0.001, elap T = 2.09, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0845654 to maximum: 0.001
+Time=0.591 (timestep 591), delT=0.001, elap T = 2.09, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0845747 to maximum: 0.001
+Time=0.592 (timestep 592), delT=0.001, elap T = 2.10, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0845839 to maximum: 0.001
+Time=0.593 (timestep 593), delT=0.001, elap T = 2.10, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0845932 to maximum: 0.001
+Time=0.594 (timestep 594), delT=0.001, elap T = 2.11, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0846025 to maximum: 0.001
+Time=0.595 (timestep 595), delT=0.001, elap T = 2.11, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0846117 to maximum: 0.001
+Time=0.596 (timestep 596), delT=0.001, elap T = 2.12, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.084621 to maximum: 0.001
+Time=0.597 (timestep 597), delT=0.001, elap T = 2.12, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0846303 to maximum: 0.001
+Time=0.598 (timestep 598), delT=0.001, elap T = 2.13, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0846396 to maximum: 0.001
+Time=0.599 (timestep 599), delT=0.001, elap T = 2.13, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0846488 to maximum: 0.001
+Time=0.6 (timestep 600), delT=0.001, elap T = 2.14, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0846581 to maximum: 0.001
+Time=0.601 (timestep 601), delT=0.001, elap T = 2.15, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0846674 to maximum: 0.001
+Time=0.602 (timestep 602), delT=0.001, elap T = 2.15, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0846767 to maximum: 0.001
+Time=0.603 (timestep 603), delT=0.001, elap T = 2.16, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.084686 to maximum: 0.001
+Time=0.604 (timestep 604), delT=0.001, elap T = 2.16, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0846952 to maximum: 0.001
+Time=0.605 (timestep 605), delT=0.001, elap T = 2.17, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0847045 to maximum: 0.001
+Time=0.606 (timestep 606), delT=0.001, elap T = 2.17, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0847138 to maximum: 0.001
+Time=0.607 (timestep 607), delT=0.001, elap T = 2.18, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0847231 to maximum: 0.001
+Time=0.608 (timestep 608), delT=0.001, elap T = 2.18, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0847324 to maximum: 0.001
+Time=0.609 (timestep 609), delT=0.001, elap T = 2.18, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0847417 to maximum: 0.001
+Time=0.61 (timestep 610), delT=0.001, elap T = 2.19, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.084751 to maximum: 0.001
+Time=0.611 (timestep 611), delT=0.001, elap T = 2.19, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0847603 to maximum: 0.001
+Time=0.612 (timestep 612), delT=0.001, elap T = 2.20, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0847696 to maximum: 0.001
+Time=0.613 (timestep 613), delT=0.001, elap T = 2.20, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0847789 to maximum: 0.001
+Time=0.614 (timestep 614), delT=0.001, elap T = 2.21, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0847882 to maximum: 0.001
+Time=0.615 (timestep 615), delT=0.001, elap T = 2.21, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0847975 to maximum: 0.001
+Time=0.616 (timestep 616), delT=0.001, elap T = 2.22, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0848068 to maximum: 0.001
+Time=0.617 (timestep 617), delT=0.001, elap T = 2.22, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0848161 to maximum: 0.001
+Time=0.618 (timestep 618), delT=0.001, elap T = 2.23, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0848254 to maximum: 0.001
+Time=0.619 (timestep 619), delT=0.001, elap T = 2.23, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0848347 to maximum: 0.001
+Time=0.62 (timestep 620), delT=0.001, elap T = 2.24, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.084844 to maximum: 0.001
+Time=0.621 (timestep 621), delT=0.001, elap T = 2.25, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0848534 to maximum: 0.001
+Time=0.622 (timestep 622), delT=0.001, elap T = 2.25, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0848627 to maximum: 0.001
+Time=0.623 (timestep 623), delT=0.001, elap T = 2.26, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.084872 to maximum: 0.001
+Time=0.624 (timestep 624), delT=0.001, elap T = 2.26, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0848813 to maximum: 0.001
+Time=0.625 (timestep 625), delT=0.001, elap T = 2.27, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0848906 to maximum: 0.001
+Time=0.626 (timestep 626), delT=0.001, elap T = 2.27, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0849 to maximum: 0.001
+Time=0.627 (timestep 627), delT=0.001, elap T = 2.28, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0849093 to maximum: 0.001
+Time=0.628 (timestep 628), delT=0.001, elap T = 2.28, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0849186 to maximum: 0.001
+Time=0.629 (timestep 629), delT=0.001, elap T = 2.29, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0849279 to maximum: 0.001
+Time=0.63 (timestep 630), delT=0.001, elap T = 2.29, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0849373 to maximum: 0.001
+Time=0.631 (timestep 631), delT=0.001, elap T = 2.30, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0849466 to maximum: 0.001
+Time=0.632 (timestep 632), delT=0.001, elap T = 2.30, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0849559 to maximum: 0.001
+Time=0.633 (timestep 633), delT=0.001, elap T = 2.31, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0849653 to maximum: 0.001
+Time=0.634 (timestep 634), delT=0.001, elap T = 2.31, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0849746 to maximum: 0.001
+Time=0.635 (timestep 635), delT=0.001, elap T = 2.32, mean: 0.00, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0849839 to maximum: 0.001
+Time=0.636 (timestep 636), delT=0.001, elap T = 2.37, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0849933 to maximum: 0.001
+Time=0.637 (timestep 637), delT=0.001, elap T = 2.48, mean: 0.03, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0850026 to maximum: 0.001
+Time=0.638 (timestep 638), delT=0.001, elap T = 2.49, mean: 0.03, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.085012 to maximum: 0.001
+Time=0.639 (timestep 639), delT=0.001, elap T = 2.50, mean: 0.02, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0850213 to maximum: 0.001
+Time=0.64 (timestep 640), delT=0.001, elap T = 2.50, mean: 0.02, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0850306 to maximum: 0.001
+Time=0.641 (timestep 641), delT=0.001, elap T = 2.51, mean: 0.02, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.08504 to maximum: 0.001
+Time=0.642 (timestep 642), delT=0.001, elap T = 2.51, mean: 0.02, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0850493 to maximum: 0.001
+Time=0.643 (timestep 643), delT=0.001, elap T = 2.52, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0850587 to maximum: 0.001
+Time=0.644 (timestep 644), delT=0.001, elap T = 2.52, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.085068 to maximum: 0.001
+Time=0.645 (timestep 645), delT=0.001, elap T = 2.53, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0850774 to maximum: 0.001
+Time=0.646 (timestep 646), delT=0.001, elap T = 2.53, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0850868 to maximum: 0.001
+Time=0.647 (timestep 647), delT=0.001, elap T = 2.54, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0850961 to maximum: 0.001
+Time=0.648 (timestep 648), delT=0.001, elap T = 2.54, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0851055 to maximum: 0.001
+Time=0.649 (timestep 649), delT=0.001, elap T = 2.55, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0851148 to maximum: 0.001
+Time=0.65 (timestep 650), delT=0.001, elap T = 2.55, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0851242 to maximum: 0.001
+Time=0.651 (timestep 651), delT=0.001, elap T = 2.56, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0851336 to maximum: 0.001
+Time=0.652 (timestep 652), delT=0.001, elap T = 2.56, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0851429 to maximum: 0.001
+Time=0.653 (timestep 653), delT=0.001, elap T = 2.57, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0851523 to maximum: 0.001
+Time=0.654 (timestep 654), delT=0.001, elap T = 2.57, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0851617 to maximum: 0.001
+Time=0.655 (timestep 655), delT=0.001, elap T = 2.58, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.085171 to maximum: 0.001
+Time=0.656 (timestep 656), delT=0.001, elap T = 2.59, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0851804 to maximum: 0.001
+Time=0.657 (timestep 657), delT=0.001, elap T = 2.59, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0851898 to maximum: 0.001
+Time=0.658 (timestep 658), delT=0.001, elap T = 2.60, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0851992 to maximum: 0.001
+Time=0.659 (timestep 659), delT=0.001, elap T = 2.60, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0852086 to maximum: 0.001
+Time=0.66 (timestep 660), delT=0.001, elap T = 2.61, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0852179 to maximum: 0.001
+Time=0.661 (timestep 661), delT=0.001, elap T = 2.61, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0852273 to maximum: 0.001
+Time=0.662 (timestep 662), delT=0.001, elap T = 2.62, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0852367 to maximum: 0.001
+Time=0.663 (timestep 663), delT=0.001, elap T = 2.62, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0852461 to maximum: 0.001
+Time=0.664 (timestep 664), delT=0.001, elap T = 2.63, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0852555 to maximum: 0.001
+Time=0.665 (timestep 665), delT=0.001, elap T = 2.63, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0852649 to maximum: 0.001
+Time=0.666 (timestep 666), delT=0.001, elap T = 2.64, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0852743 to maximum: 0.001
+Time=0.667 (timestep 667), delT=0.001, elap T = 2.65, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0852836 to maximum: 0.001
+Time=0.668 (timestep 668), delT=0.001, elap T = 2.65, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.085293 to maximum: 0.001
+Time=0.669 (timestep 669), delT=0.001, elap T = 2.66, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0853024 to maximum: 0.001
+Time=0.67 (timestep 670), delT=0.001, elap T = 2.66, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0853118 to maximum: 0.001
+Time=0.671 (timestep 671), delT=0.001, elap T = 2.67, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0853212 to maximum: 0.001
+Time=0.672 (timestep 672), delT=0.001, elap T = 2.67, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0853306 to maximum: 0.001
+Time=0.673 (timestep 673), delT=0.001, elap T = 2.68, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.08534 to maximum: 0.001
+Time=0.674 (timestep 674), delT=0.001, elap T = 2.68, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0853494 to maximum: 0.001
+Time=0.675 (timestep 675), delT=0.001, elap T = 2.69, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0853589 to maximum: 0.001
+Time=0.676 (timestep 676), delT=0.001, elap T = 2.69, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0853683 to maximum: 0.001
+Time=0.677 (timestep 677), delT=0.001, elap T = 2.70, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0853777 to maximum: 0.001
+Time=0.678 (timestep 678), delT=0.001, elap T = 2.70, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0853871 to maximum: 0.001
+Time=0.679 (timestep 679), delT=0.001, elap T = 2.71, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0853965 to maximum: 0.001
+Time=0.68 (timestep 680), delT=0.001, elap T = 2.71, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0854059 to maximum: 0.001
+Time=0.681 (timestep 681), delT=0.001, elap T = 2.72, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0854153 to maximum: 0.001
+Time=0.682 (timestep 682), delT=0.001, elap T = 2.73, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0854247 to maximum: 0.001
+Time=0.683 (timestep 683), delT=0.001, elap T = 2.73, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0854342 to maximum: 0.001
+Time=0.684 (timestep 684), delT=0.001, elap T = 2.74, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0854436 to maximum: 0.001
+Time=0.685 (timestep 685), delT=0.001, elap T = 2.74, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.085453 to maximum: 0.001
+Time=0.686 (timestep 686), delT=0.001, elap T = 2.75, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0854624 to maximum: 0.001
+Time=0.687 (timestep 687), delT=0.001, elap T = 2.75, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0854719 to maximum: 0.001
+Time=0.688 (timestep 688), delT=0.001, elap T = 2.76, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0854813 to maximum: 0.001
+Time=0.689 (timestep 689), delT=0.001, elap T = 2.76, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0854907 to maximum: 0.001
+Time=0.69 (timestep 690), delT=0.001, elap T = 2.77, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0855002 to maximum: 0.001
+Time=0.691 (timestep 691), delT=0.001, elap T = 2.77, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0855096 to maximum: 0.001
+Time=0.692 (timestep 692), delT=0.001, elap T = 2.78, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.085519 to maximum: 0.001
+Time=0.693 (timestep 693), delT=0.001, elap T = 2.78, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0855285 to maximum: 0.001
+Time=0.694 (timestep 694), delT=0.001, elap T = 2.79, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0855379 to maximum: 0.001
+Time=0.695 (timestep 695), delT=0.001, elap T = 2.80, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0855473 to maximum: 0.001
+Time=0.696 (timestep 696), delT=0.001, elap T = 2.80, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0855568 to maximum: 0.001
+Time=0.697 (timestep 697), delT=0.001, elap T = 2.81, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0855662 to maximum: 0.001
+Time=0.698 (timestep 698), delT=0.001, elap T = 2.81, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0855757 to maximum: 0.001
+Time=0.699 (timestep 699), delT=0.001, elap T = 2.82, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0855851 to maximum: 0.001
+Time=0.7 (timestep 700), delT=0.001, elap T = 2.82, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0855946 to maximum: 0.001
+Time=0.701 (timestep 701), delT=0.001, elap T = 2.83, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.085604 to maximum: 0.001
+Time=0.702 (timestep 702), delT=0.001, elap T = 2.84, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0856135 to maximum: 0.001
+Time=0.703 (timestep 703), delT=0.001, elap T = 2.84, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0856229 to maximum: 0.001
+Time=0.704 (timestep 704), delT=0.001, elap T = 2.85, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0856324 to maximum: 0.001
+Time=0.705 (timestep 705), delT=0.001, elap T = 2.85, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0856419 to maximum: 0.001
+Time=0.706 (timestep 706), delT=0.001, elap T = 2.86, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0856513 to maximum: 0.001
+Time=0.707 (timestep 707), delT=0.001, elap T = 2.87, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0856608 to maximum: 0.001
+Time=0.708 (timestep 708), delT=0.001, elap T = 2.87, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0856702 to maximum: 0.001
+Time=0.709 (timestep 709), delT=0.001, elap T = 2.88, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0856797 to maximum: 0.001
+Time=0.71 (timestep 710), delT=0.001, elap T = 2.88, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0856892 to maximum: 0.001
+Time=0.711 (timestep 711), delT=0.001, elap T = 2.89, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0856986 to maximum: 0.001
+Time=0.712 (timestep 712), delT=0.001, elap T = 2.89, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0857081 to maximum: 0.001
+Time=0.713 (timestep 713), delT=0.001, elap T = 2.90, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0857176 to maximum: 0.001
+Time=0.714 (timestep 714), delT=0.001, elap T = 2.91, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0857271 to maximum: 0.001
+Time=0.715 (timestep 715), delT=0.001, elap T = 2.91, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0857365 to maximum: 0.001
+Time=0.716 (timestep 716), delT=0.001, elap T = 2.92, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.085746 to maximum: 0.001
+Time=0.717 (timestep 717), delT=0.001, elap T = 2.92, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0857555 to maximum: 0.001
+Time=0.718 (timestep 718), delT=0.001, elap T = 2.93, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.085765 to maximum: 0.001
+Time=0.719 (timestep 719), delT=0.001, elap T = 2.93, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0857745 to maximum: 0.001
+Time=0.72 (timestep 720), delT=0.001, elap T = 2.94, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0857839 to maximum: 0.001
+Time=0.721 (timestep 721), delT=0.001, elap T = 2.95, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0857934 to maximum: 0.001
+Time=0.722 (timestep 722), delT=0.001, elap T = 2.95, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0858029 to maximum: 0.001
+Time=0.723 (timestep 723), delT=0.001, elap T = 2.96, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0858124 to maximum: 0.001
+Time=0.724 (timestep 724), delT=0.001, elap T = 2.96, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0858219 to maximum: 0.001
+Time=0.725 (timestep 725), delT=0.001, elap T = 2.97, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0858314 to maximum: 0.001
+Time=0.726 (timestep 726), delT=0.001, elap T = 2.97, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0858409 to maximum: 0.001
+Time=0.727 (timestep 727), delT=0.001, elap T = 2.98, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0858504 to maximum: 0.001
+Time=0.728 (timestep 728), delT=0.001, elap T = 2.98, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0858599 to maximum: 0.001
+Time=0.729 (timestep 729), delT=0.001, elap T = 2.99, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0858694 to maximum: 0.001
+Time=0.73 (timestep 730), delT=0.001, elap T = 3.00, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0858789 to maximum: 0.001
+Time=0.731 (timestep 731), delT=0.001, elap T = 3.00, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0858884 to maximum: 0.001
+Time=0.732 (timestep 732), delT=0.001, elap T = 3.01, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0858979 to maximum: 0.001
+Time=0.733 (timestep 733), delT=0.001, elap T = 3.01, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0859074 to maximum: 0.001
+Time=0.734 (timestep 734), delT=0.001, elap T = 3.02, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0859169 to maximum: 0.001
+Time=0.735 (timestep 735), delT=0.001, elap T = 3.02, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0859264 to maximum: 0.001
+Time=0.736 (timestep 736), delT=0.001, elap T = 3.03, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0859359 to maximum: 0.001
+Time=0.737 (timestep 737), delT=0.001, elap T = 3.03, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0859455 to maximum: 0.001
+Time=0.738 (timestep 738), delT=0.001, elap T = 3.04, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.085955 to maximum: 0.001
+Time=0.739 (timestep 739), delT=0.001, elap T = 3.05, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0859645 to maximum: 0.001
+Time=0.74 (timestep 740), delT=0.001, elap T = 3.05, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.085974 to maximum: 0.001
+Time=0.741 (timestep 741), delT=0.001, elap T = 3.06, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0859835 to maximum: 0.001
+Time=0.742 (timestep 742), delT=0.001, elap T = 3.06, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0859931 to maximum: 0.001
+Time=0.743 (timestep 743), delT=0.001, elap T = 3.07, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0860026 to maximum: 0.001
+Time=0.744 (timestep 744), delT=0.001, elap T = 3.08, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0860121 to maximum: 0.001
+Time=0.745 (timestep 745), delT=0.001, elap T = 3.08, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0860216 to maximum: 0.001
+Time=0.746 (timestep 746), delT=0.001, elap T = 3.09, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0860312 to maximum: 0.001
+Time=0.747 (timestep 747), delT=0.001, elap T = 3.09, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0860407 to maximum: 0.001
+Time=0.748 (timestep 748), delT=0.001, elap T = 3.10, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0860502 to maximum: 0.001
+Time=0.749 (timestep 749), delT=0.001, elap T = 3.10, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0860598 to maximum: 0.001
+Time=0.75 (timestep 750), delT=0.001, elap T = 3.11, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0860693 to maximum: 0.001
+Time=0.751 (timestep 751), delT=0.001, elap T = 3.11, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0860788 to maximum: 0.001
+Time=0.752 (timestep 752), delT=0.001, elap T = 3.12, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0860884 to maximum: 0.001
+Time=0.753 (timestep 753), delT=0.001, elap T = 3.13, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0860979 to maximum: 0.001
+Time=0.754 (timestep 754), delT=0.001, elap T = 3.13, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0861075 to maximum: 0.001
+Time=0.755 (timestep 755), delT=0.001, elap T = 3.14, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.086117 to maximum: 0.001
+Time=0.756 (timestep 756), delT=0.001, elap T = 3.14, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0861266 to maximum: 0.001
+Time=0.757 (timestep 757), delT=0.001, elap T = 3.15, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0861361 to maximum: 0.001
+Time=0.758 (timestep 758), delT=0.001, elap T = 3.15, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0861457 to maximum: 0.001
+Time=0.759 (timestep 759), delT=0.001, elap T = 3.16, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0861552 to maximum: 0.001
+Time=0.76 (timestep 760), delT=0.001, elap T = 3.17, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0861648 to maximum: 0.001
+Time=0.761 (timestep 761), delT=0.001, elap T = 3.17, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0861743 to maximum: 0.001
+Time=0.762 (timestep 762), delT=0.001, elap T = 3.18, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0861839 to maximum: 0.001
+Time=0.763 (timestep 763), delT=0.001, elap T = 3.18, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0861935 to maximum: 0.001
+Time=0.764 (timestep 764), delT=0.001, elap T = 3.19, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.086203 to maximum: 0.001
+Time=0.765 (timestep 765), delT=0.001, elap T = 3.20, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0862126 to maximum: 0.001
+Time=0.766 (timestep 766), delT=0.001, elap T = 3.20, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0862221 to maximum: 0.001
+Time=0.767 (timestep 767), delT=0.001, elap T = 3.21, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0862317 to maximum: 0.001
+Time=0.768 (timestep 768), delT=0.001, elap T = 3.21, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0862413 to maximum: 0.001
+Time=0.769 (timestep 769), delT=0.001, elap T = 3.22, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0862509 to maximum: 0.001
+Time=0.77 (timestep 770), delT=0.001, elap T = 3.22, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0862604 to maximum: 0.001
+Time=0.771 (timestep 771), delT=0.001, elap T = 3.23, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.08627 to maximum: 0.001
+Time=0.772 (timestep 772), delT=0.001, elap T = 3.24, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0862796 to maximum: 0.001
+Time=0.773 (timestep 773), delT=0.001, elap T = 3.24, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0862892 to maximum: 0.001
+Time=0.774 (timestep 774), delT=0.001, elap T = 3.25, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0862987 to maximum: 0.001
+Time=0.775 (timestep 775), delT=0.001, elap T = 3.25, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0863083 to maximum: 0.001
+Time=0.776 (timestep 776), delT=0.001, elap T = 3.26, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0863179 to maximum: 0.001
+Time=0.777 (timestep 777), delT=0.001, elap T = 3.26, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0863275 to maximum: 0.001
+Time=0.778 (timestep 778), delT=0.001, elap T = 3.27, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0863371 to maximum: 0.001
+Time=0.779 (timestep 779), delT=0.001, elap T = 3.28, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0863467 to maximum: 0.001
+Time=0.78 (timestep 780), delT=0.001, elap T = 3.28, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0863563 to maximum: 0.001
+Time=0.781 (timestep 781), delT=0.001, elap T = 3.29, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0863658 to maximum: 0.001
+Time=0.782 (timestep 782), delT=0.001, elap T = 3.30, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0863754 to maximum: 0.001
+Time=0.783 (timestep 783), delT=0.001, elap T = 3.30, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.086385 to maximum: 0.001
+Time=0.784 (timestep 784), delT=0.001, elap T = 3.31, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0863946 to maximum: 0.001
+Time=0.785 (timestep 785), delT=0.001, elap T = 3.31, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0864042 to maximum: 0.001
+Time=0.786 (timestep 786), delT=0.001, elap T = 3.32, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0864138 to maximum: 0.001
+Time=0.787 (timestep 787), delT=0.001, elap T = 3.33, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0864234 to maximum: 0.001
+Time=0.788 (timestep 788), delT=0.001, elap T = 3.33, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.086433 to maximum: 0.001
+Time=0.789 (timestep 789), delT=0.001, elap T = 3.34, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0864426 to maximum: 0.001
+Time=0.79 (timestep 790), delT=0.001, elap T = 3.34, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0864523 to maximum: 0.001
+Time=0.791 (timestep 791), delT=0.001, elap T = 3.35, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0864619 to maximum: 0.001
+Time=0.792 (timestep 792), delT=0.001, elap T = 3.35, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0864715 to maximum: 0.001
+Time=0.793 (timestep 793), delT=0.001, elap T = 3.36, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0864811 to maximum: 0.001
+Time=0.794 (timestep 794), delT=0.001, elap T = 3.37, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0864907 to maximum: 0.001
+Time=0.795 (timestep 795), delT=0.001, elap T = 3.37, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0865003 to maximum: 0.001
+Time=0.796 (timestep 796), delT=0.001, elap T = 3.38, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0865099 to maximum: 0.001
+Time=0.797 (timestep 797), delT=0.001, elap T = 3.38, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0865196 to maximum: 0.001
+Time=0.798 (timestep 798), delT=0.001, elap T = 3.39, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0865292 to maximum: 0.001
+Time=0.799 (timestep 799), delT=0.001, elap T = 3.39, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0865388 to maximum: 0.001
+Time=0.8 (timestep 800), delT=0.001, elap T = 3.40, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0865484 to maximum: 0.001
+Time=0.801 (timestep 801), delT=0.001, elap T = 3.41, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0865581 to maximum: 0.001
+Time=0.802 (timestep 802), delT=0.001, elap T = 3.41, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0865677 to maximum: 0.001
+Time=0.803 (timestep 803), delT=0.001, elap T = 3.42, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0865773 to maximum: 0.001
+Time=0.804 (timestep 804), delT=0.001, elap T = 3.43, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.086587 to maximum: 0.001
+Time=0.805 (timestep 805), delT=0.001, elap T = 3.43, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0865966 to maximum: 0.001
+Time=0.806 (timestep 806), delT=0.001, elap T = 3.44, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0866062 to maximum: 0.001
+Time=0.807 (timestep 807), delT=0.001, elap T = 3.44, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0866159 to maximum: 0.001
+Time=0.808 (timestep 808), delT=0.001, elap T = 3.45, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0866255 to maximum: 0.001
+Time=0.809 (timestep 809), delT=0.001, elap T = 3.46, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0866352 to maximum: 0.001
+Time=0.81 (timestep 810), delT=0.001, elap T = 3.46, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0866448 to maximum: 0.001
+Time=0.811 (timestep 811), delT=0.001, elap T = 3.47, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0866544 to maximum: 0.001
+Time=0.812 (timestep 812), delT=0.001, elap T = 3.47, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0866641 to maximum: 0.001
+Time=0.813 (timestep 813), delT=0.001, elap T = 3.48, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0866737 to maximum: 0.001
+Time=0.814 (timestep 814), delT=0.001, elap T = 3.49, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0866834 to maximum: 0.001
+Time=0.815 (timestep 815), delT=0.001, elap T = 3.49, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.086693 to maximum: 0.001
+Time=0.816 (timestep 816), delT=0.001, elap T = 3.50, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0867027 to maximum: 0.001
+Time=0.817 (timestep 817), delT=0.001, elap T = 3.50, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0867124 to maximum: 0.001
+Time=0.818 (timestep 818), delT=0.001, elap T = 3.51, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.086722 to maximum: 0.001
+Time=0.819 (timestep 819), delT=0.001, elap T = 3.51, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0867317 to maximum: 0.001
+Time=0.82 (timestep 820), delT=0.001, elap T = 3.52, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0867413 to maximum: 0.001
+Time=0.821 (timestep 821), delT=0.001, elap T = 3.53, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.086751 to maximum: 0.001
+Time=0.822 (timestep 822), delT=0.001, elap T = 3.54, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0867607 to maximum: 0.001
+Time=0.823 (timestep 823), delT=0.001, elap T = 3.54, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0867703 to maximum: 0.001
+Time=0.824 (timestep 824), delT=0.001, elap T = 3.55, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.08678 to maximum: 0.001
+Time=0.825 (timestep 825), delT=0.001, elap T = 3.55, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0867897 to maximum: 0.001
+Time=0.826 (timestep 826), delT=0.001, elap T = 3.56, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0867993 to maximum: 0.001
+Time=0.827 (timestep 827), delT=0.001, elap T = 3.57, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.086809 to maximum: 0.001
+Time=0.828 (timestep 828), delT=0.001, elap T = 3.57, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0868187 to maximum: 0.001
+Time=0.829 (timestep 829), delT=0.001, elap T = 3.58, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0868284 to maximum: 0.001
+Time=0.83 (timestep 830), delT=0.001, elap T = 3.58, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0868381 to maximum: 0.001
+Time=0.831 (timestep 831), delT=0.001, elap T = 3.59, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0868477 to maximum: 0.001
+Time=0.832 (timestep 832), delT=0.001, elap T = 3.60, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0868574 to maximum: 0.001
+Time=0.833 (timestep 833), delT=0.001, elap T = 3.60, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0868671 to maximum: 0.001
+Time=0.834 (timestep 834), delT=0.001, elap T = 3.61, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0868768 to maximum: 0.001
+Time=0.835 (timestep 835), delT=0.001, elap T = 3.61, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0868865 to maximum: 0.001
+Time=0.836 (timestep 836), delT=0.001, elap T = 3.62, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0868962 to maximum: 0.001
+Time=0.837 (timestep 837), delT=0.001, elap T = 3.63, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0869059 to maximum: 0.001
+Time=0.838 (timestep 838), delT=0.001, elap T = 3.63, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0869156 to maximum: 0.001
+Time=0.839 (timestep 839), delT=0.001, elap T = 3.64, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0869253 to maximum: 0.001
+Time=0.84 (timestep 840), delT=0.001, elap T = 3.64, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.086935 to maximum: 0.001
+Time=0.841 (timestep 841), delT=0.001, elap T = 3.65, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0869447 to maximum: 0.001
+Time=0.842 (timestep 842), delT=0.001, elap T = 3.66, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0869544 to maximum: 0.001
+Time=0.843 (timestep 843), delT=0.001, elap T = 3.66, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0869641 to maximum: 0.001
+Time=0.844 (timestep 844), delT=0.001, elap T = 3.67, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0869738 to maximum: 0.001
+Time=0.845 (timestep 845), delT=0.001, elap T = 3.68, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0869835 to maximum: 0.001
+Time=0.846 (timestep 846), delT=0.001, elap T = 3.68, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0869932 to maximum: 0.001
+Time=0.847 (timestep 847), delT=0.001, elap T = 3.69, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0870029 to maximum: 0.001
+Time=0.848 (timestep 848), delT=0.001, elap T = 3.70, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0870126 to maximum: 0.001
+Time=0.849 (timestep 849), delT=0.001, elap T = 3.70, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0870223 to maximum: 0.001
+Time=0.85 (timestep 850), delT=0.001, elap T = 3.71, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.087032 to maximum: 0.001
+Time=0.851 (timestep 851), delT=0.001, elap T = 3.71, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0870417 to maximum: 0.001
+Time=0.852 (timestep 852), delT=0.001, elap T = 3.72, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0870515 to maximum: 0.001
+Time=0.853 (timestep 853), delT=0.001, elap T = 3.73, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0870612 to maximum: 0.001
+Time=0.854 (timestep 854), delT=0.001, elap T = 3.73, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0870709 to maximum: 0.001
+Time=0.855 (timestep 855), delT=0.001, elap T = 3.74, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0870806 to maximum: 0.001
+Time=0.856 (timestep 856), delT=0.001, elap T = 3.74, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0870904 to maximum: 0.001
+Time=0.857 (timestep 857), delT=0.001, elap T = 3.75, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0871001 to maximum: 0.001
+Time=0.858 (timestep 858), delT=0.001, elap T = 3.76, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0871098 to maximum: 0.001
+Time=0.859 (timestep 859), delT=0.001, elap T = 3.76, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0871196 to maximum: 0.001
+Time=0.86 (timestep 860), delT=0.001, elap T = 3.77, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0871293 to maximum: 0.001
+Time=0.861 (timestep 861), delT=0.001, elap T = 3.78, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.087139 to maximum: 0.001
+Time=0.862 (timestep 862), delT=0.001, elap T = 3.78, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0871488 to maximum: 0.001
+Time=0.863 (timestep 863), delT=0.001, elap T = 3.79, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0871585 to maximum: 0.001
+Time=0.864 (timestep 864), delT=0.001, elap T = 3.80, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0871682 to maximum: 0.001
+Time=0.865 (timestep 865), delT=0.001, elap T = 3.80, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.087178 to maximum: 0.001
+Time=0.866 (timestep 866), delT=0.001, elap T = 3.81, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0871877 to maximum: 0.001
+Time=0.867 (timestep 867), delT=0.001, elap T = 3.81, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0871975 to maximum: 0.001
+Time=0.868 (timestep 868), delT=0.001, elap T = 3.82, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0872072 to maximum: 0.001
+Time=0.869 (timestep 869), delT=0.001, elap T = 3.83, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.087217 to maximum: 0.001
+Time=0.87 (timestep 870), delT=0.001, elap T = 3.83, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0872267 to maximum: 0.001
+Time=0.871 (timestep 871), delT=0.001, elap T = 3.84, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0872365 to maximum: 0.001
+Time=0.872 (timestep 872), delT=0.001, elap T = 3.85, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0872462 to maximum: 0.001
+Time=0.873 (timestep 873), delT=0.001, elap T = 3.85, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.087256 to maximum: 0.001
+Time=0.874 (timestep 874), delT=0.001, elap T = 3.86, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0872658 to maximum: 0.001
+Time=0.875 (timestep 875), delT=0.001, elap T = 3.86, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0872755 to maximum: 0.001
+Time=0.876 (timestep 876), delT=0.001, elap T = 3.87, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0872853 to maximum: 0.001
+Time=0.877 (timestep 877), delT=0.001, elap T = 3.88, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.087295 to maximum: 0.001
+Time=0.878 (timestep 878), delT=0.001, elap T = 3.88, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0873048 to maximum: 0.001
+Time=0.879 (timestep 879), delT=0.001, elap T = 3.89, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0873146 to maximum: 0.001
+Time=0.88 (timestep 880), delT=0.001, elap T = 3.90, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0873244 to maximum: 0.001
+Time=0.881 (timestep 881), delT=0.001, elap T = 3.90, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0873341 to maximum: 0.001
+Time=0.882 (timestep 882), delT=0.001, elap T = 3.91, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0873439 to maximum: 0.001
+Time=0.883 (timestep 883), delT=0.001, elap T = 3.92, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0873537 to maximum: 0.001
+Time=0.884 (timestep 884), delT=0.001, elap T = 3.92, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0873635 to maximum: 0.001
+Time=0.885 (timestep 885), delT=0.001, elap T = 3.93, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0873732 to maximum: 0.001
+Time=0.886 (timestep 886), delT=0.001, elap T = 3.94, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.087383 to maximum: 0.001
+Time=0.887 (timestep 887), delT=0.001, elap T = 3.94, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0873928 to maximum: 0.001
+Time=0.888 (timestep 888), delT=0.001, elap T = 3.95, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0874026 to maximum: 0.001
+Time=0.889 (timestep 889), delT=0.001, elap T = 3.95, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0874124 to maximum: 0.001
+Time=0.89 (timestep 890), delT=0.001, elap T = 3.96, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0874222 to maximum: 0.001
+Time=0.891 (timestep 891), delT=0.001, elap T = 3.97, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0874319 to maximum: 0.001
+Time=0.892 (timestep 892), delT=0.001, elap T = 3.97, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0874417 to maximum: 0.001
+Time=0.893 (timestep 893), delT=0.001, elap T = 3.98, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0874515 to maximum: 0.001
+Time=0.894 (timestep 894), delT=0.001, elap T = 3.99, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0874613 to maximum: 0.001
+Time=0.895 (timestep 895), delT=0.001, elap T = 3.99, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0874711 to maximum: 0.001
+Time=0.896 (timestep 896), delT=0.001, elap T = 4.00, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0874809 to maximum: 0.001
+Time=0.897 (timestep 897), delT=0.001, elap T = 4.00, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0874907 to maximum: 0.001
+Time=0.898 (timestep 898), delT=0.001, elap T = 4.01, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0875005 to maximum: 0.001
+Time=0.899 (timestep 899), delT=0.001, elap T = 4.02, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0875103 to maximum: 0.001
+Time=0.9 (timestep 900), delT=0.001, elap T = 4.02, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0875201 to maximum: 0.001
+Time=0.901 (timestep 901), delT=0.001, elap T = 4.03, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.08753 to maximum: 0.001
+Time=0.902 (timestep 902), delT=0.001, elap T = 4.04, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0875398 to maximum: 0.001
+Time=0.903 (timestep 903), delT=0.001, elap T = 4.04, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0875496 to maximum: 0.001
+Time=0.904 (timestep 904), delT=0.001, elap T = 4.05, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0875594 to maximum: 0.001
+Time=0.905 (timestep 905), delT=0.001, elap T = 4.06, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0875692 to maximum: 0.001
+Time=0.906 (timestep 906), delT=0.001, elap T = 4.06, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.087579 to maximum: 0.001
+Time=0.907 (timestep 907), delT=0.001, elap T = 4.07, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0875888 to maximum: 0.001
+Time=0.908 (timestep 908), delT=0.001, elap T = 4.08, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0875987 to maximum: 0.001
+Time=0.909 (timestep 909), delT=0.001, elap T = 4.08, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0876085 to maximum: 0.001
+Time=0.91 (timestep 910), delT=0.001, elap T = 4.09, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0876183 to maximum: 0.001
+Time=0.911 (timestep 911), delT=0.001, elap T = 4.10, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0876281 to maximum: 0.001
+Time=0.912 (timestep 912), delT=0.001, elap T = 4.10, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.087638 to maximum: 0.001
+Time=0.913 (timestep 913), delT=0.001, elap T = 4.11, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0876478 to maximum: 0.001
+Time=0.914 (timestep 914), delT=0.001, elap T = 4.11, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0876576 to maximum: 0.001
+Time=0.915 (timestep 915), delT=0.001, elap T = 4.12, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0876675 to maximum: 0.001
+Time=0.916 (timestep 916), delT=0.001, elap T = 4.13, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0876773 to maximum: 0.001
+Time=0.917 (timestep 917), delT=0.001, elap T = 4.13, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0876871 to maximum: 0.001
+Time=0.918 (timestep 918), delT=0.001, elap T = 4.14, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.087697 to maximum: 0.001
+Time=0.919 (timestep 919), delT=0.001, elap T = 4.15, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0877068 to maximum: 0.001
+Time=0.92 (timestep 920), delT=0.001, elap T = 4.15, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0877167 to maximum: 0.001
+Time=0.921 (timestep 921), delT=0.001, elap T = 4.16, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0877265 to maximum: 0.001
+Time=0.922 (timestep 922), delT=0.001, elap T = 4.17, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0877364 to maximum: 0.001
+Time=0.923 (timestep 923), delT=0.001, elap T = 4.17, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0877462 to maximum: 0.001
+Time=0.924 (timestep 924), delT=0.001, elap T = 4.18, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0877561 to maximum: 0.001
+Time=0.925 (timestep 925), delT=0.001, elap T = 4.19, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0877659 to maximum: 0.001
+Time=0.926 (timestep 926), delT=0.001, elap T = 4.19, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0877758 to maximum: 0.001
+Time=0.927 (timestep 927), delT=0.001, elap T = 4.20, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0877856 to maximum: 0.001
+Time=0.928 (timestep 928), delT=0.001, elap T = 4.21, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0877955 to maximum: 0.001
+Time=0.929 (timestep 929), delT=0.001, elap T = 4.21, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0878053 to maximum: 0.001
+Time=0.93 (timestep 930), delT=0.001, elap T = 4.22, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0878152 to maximum: 0.001
+Time=0.931 (timestep 931), delT=0.001, elap T = 4.23, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0878251 to maximum: 0.001
+Time=0.932 (timestep 932), delT=0.001, elap T = 4.23, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0878349 to maximum: 0.001
+Time=0.933 (timestep 933), delT=0.001, elap T = 4.24, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0878448 to maximum: 0.001
+Time=0.934 (timestep 934), delT=0.001, elap T = 4.25, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0878547 to maximum: 0.001
+Time=0.935 (timestep 935), delT=0.001, elap T = 4.25, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0878645 to maximum: 0.001
+Time=0.936 (timestep 936), delT=0.001, elap T = 4.26, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0878744 to maximum: 0.001
+Time=0.937 (timestep 937), delT=0.001, elap T = 4.27, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0878843 to maximum: 0.001
+Time=0.938 (timestep 938), delT=0.001, elap T = 4.27, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0878942 to maximum: 0.001
+Time=0.939 (timestep 939), delT=0.001, elap T = 4.28, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.087904 to maximum: 0.001
+Time=0.94 (timestep 940), delT=0.001, elap T = 4.29, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0879139 to maximum: 0.001
+Time=0.941 (timestep 941), delT=0.001, elap T = 4.29, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0879238 to maximum: 0.001
+Time=0.942 (timestep 942), delT=0.001, elap T = 4.30, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0879337 to maximum: 0.001
+Time=0.943 (timestep 943), delT=0.001, elap T = 4.31, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0879436 to maximum: 0.001
+Time=0.944 (timestep 944), delT=0.001, elap T = 4.31, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0879535 to maximum: 0.001
+Time=0.945 (timestep 945), delT=0.001, elap T = 4.32, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0879634 to maximum: 0.001
+Time=0.946 (timestep 946), delT=0.001, elap T = 4.33, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0879733 to maximum: 0.001
+Time=0.947 (timestep 947), delT=0.001, elap T = 4.33, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0879831 to maximum: 0.001
+Time=0.948 (timestep 948), delT=0.001, elap T = 4.34, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.087993 to maximum: 0.001
+Time=0.949 (timestep 949), delT=0.001, elap T = 4.35, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0880029 to maximum: 0.001
+Time=0.95 (timestep 950), delT=0.001, elap T = 4.35, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0880128 to maximum: 0.001
+Time=0.951 (timestep 951), delT=0.001, elap T = 4.36, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0880227 to maximum: 0.001
+Time=0.952 (timestep 952), delT=0.001, elap T = 4.37, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0880326 to maximum: 0.001
+Time=0.953 (timestep 953), delT=0.001, elap T = 4.37, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0880425 to maximum: 0.001
+Time=0.954 (timestep 954), delT=0.001, elap T = 4.38, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0880525 to maximum: 0.001
+Time=0.955 (timestep 955), delT=0.001, elap T = 4.39, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0880624 to maximum: 0.001
+Time=0.956 (timestep 956), delT=0.001, elap T = 4.39, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0880723 to maximum: 0.001
+Time=0.957 (timestep 957), delT=0.001, elap T = 4.40, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0880822 to maximum: 0.001
+Time=0.958 (timestep 958), delT=0.001, elap T = 4.41, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0880921 to maximum: 0.001
+Time=0.959 (timestep 959), delT=0.001, elap T = 4.41, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.088102 to maximum: 0.001
+Time=0.96 (timestep 960), delT=0.001, elap T = 4.42, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0881119 to maximum: 0.001
+Time=0.961 (timestep 961), delT=0.001, elap T = 4.43, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0881218 to maximum: 0.001
+Time=0.962 (timestep 962), delT=0.001, elap T = 4.44, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0881318 to maximum: 0.001
+Time=0.963 (timestep 963), delT=0.001, elap T = 4.44, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0881417 to maximum: 0.001
+Time=0.964 (timestep 964), delT=0.001, elap T = 4.45, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0881516 to maximum: 0.001
+Time=0.965 (timestep 965), delT=0.001, elap T = 4.46, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0881615 to maximum: 0.001
+Time=0.966 (timestep 966), delT=0.001, elap T = 4.46, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0881715 to maximum: 0.001
+Time=0.967 (timestep 967), delT=0.001, elap T = 4.47, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0881814 to maximum: 0.001
+Time=0.968 (timestep 968), delT=0.001, elap T = 4.48, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0881913 to maximum: 0.001
+Time=0.969 (timestep 969), delT=0.001, elap T = 4.48, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0882013 to maximum: 0.001
+Time=0.97 (timestep 970), delT=0.001, elap T = 4.49, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0882112 to maximum: 0.001
+Time=0.971 (timestep 971), delT=0.001, elap T = 4.50, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0882211 to maximum: 0.001
+Time=0.972 (timestep 972), delT=0.001, elap T = 4.50, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0882311 to maximum: 0.001
+Time=0.973 (timestep 973), delT=0.001, elap T = 4.51, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.088241 to maximum: 0.001
+Time=0.974 (timestep 974), delT=0.001, elap T = 4.52, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.088251 to maximum: 0.001
+Time=0.975 (timestep 975), delT=0.001, elap T = 4.52, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0882609 to maximum: 0.001
+Time=0.976 (timestep 976), delT=0.001, elap T = 4.53, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0882709 to maximum: 0.001
+Time=0.977 (timestep 977), delT=0.001, elap T = 4.54, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0882808 to maximum: 0.001
+Time=0.978 (timestep 978), delT=0.001, elap T = 4.54, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0882908 to maximum: 0.001
+Time=0.979 (timestep 979), delT=0.001, elap T = 4.55, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0883007 to maximum: 0.001
+Time=0.98 (timestep 980), delT=0.001, elap T = 4.56, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0883107 to maximum: 0.001
+Time=0.981 (timestep 981), delT=0.001, elap T = 4.57, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0883206 to maximum: 0.001
+Time=0.982 (timestep 982), delT=0.001, elap T = 4.57, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0883306 to maximum: 0.001
+Time=0.983 (timestep 983), delT=0.001, elap T = 4.58, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0883406 to maximum: 0.001
+Time=0.984 (timestep 984), delT=0.001, elap T = 4.59, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0883505 to maximum: 0.001
+Time=0.985 (timestep 985), delT=0.001, elap T = 4.59, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0883605 to maximum: 0.001
+Time=0.986 (timestep 986), delT=0.001, elap T = 4.60, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0883704 to maximum: 0.001
+Time=0.987 (timestep 987), delT=0.001, elap T = 4.61, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0883804 to maximum: 0.001
+Time=0.988 (timestep 988), delT=0.001, elap T = 4.61, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0883904 to maximum: 0.001
+Time=0.989 (timestep 989), delT=0.001, elap T = 4.62, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0884004 to maximum: 0.001
+Time=0.99 (timestep 990), delT=0.001, elap T = 4.63, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0884103 to maximum: 0.001
+Time=0.991 (timestep 991), delT=0.001, elap T = 4.63, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0884203 to maximum: 0.001
+Time=0.992 (timestep 992), delT=0.001, elap T = 4.64, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0884303 to maximum: 0.001
+Time=0.993 (timestep 993), delT=0.001, elap T = 4.65, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0884403 to maximum: 0.001
+Time=0.994 (timestep 994), delT=0.001, elap T = 4.65, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0884502 to maximum: 0.001
+Time=0.995 (timestep 995), delT=0.001, elap T = 4.66, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0884602 to maximum: 0.001
+Time=0.996 (timestep 996), delT=0.001, elap T = 4.67, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0884702 to maximum: 0.001
+Time=0.997 (timestep 997), delT=0.001, elap T = 4.67, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0884802 to maximum: 0.001
+Time=0.998 (timestep 998), delT=0.001, elap T = 4.68, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0884902 to maximum: 0.001
+Time=0.999 (timestep 999), delT=0.001, elap T = 4.69, mean: 0.01, Mem Use (MB)= 20.15
+WARNING (c): lowering delt from 0.0885002 to maximum: 0.001
+Time=1 (timestep 1000), delT=0.001, elap T = 4.69, mean: 0.01, Mem Use (MB)= 20.15
+Sus: going down successfully
