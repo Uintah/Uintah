@@ -59,7 +59,7 @@
       <Viscosity>
         <NameTag name="viscosity" state="STATE_NONE"/>
       </Viscosity>
-      
+      <ComputeMassResidual/>
       <Pressure>
         <Parameters>
  	 	 	 	 	 	 <skip>1</skip>
@@ -99,6 +99,7 @@
     <save label="w"/>        
     <save label="pressure"/>
     <save label="dilatation"/>
+    <save label="ContinuityResidual"/>    
   </DataArchiver> 
 
   <Grid>
@@ -108,58 +109,17 @@
 <!-- 
       <Face circle = "x-" origin = "0.0 0.0 0.0" radius = "0.1">
  -->
-    <Face rectangle="x-" lower="0.0 -0.025 -0.025" upper="0 0.025 0.025">
+    <Face rectangle="x-" lower="0.0 -0.025 -0.025" upper="0 0.025 0.025" type="Velocity">
         <BCType label="x-mom" var="Dirichlet" value="x-turbulent-inlet"/>
         <BCType label="y-mom" var="Dirichlet" value="y-turbulent-inlet"/>
         <BCType label="z-mom" var="Dirichlet" value="z-turbulent-inlet"/>
-        <BCType label="y-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="z-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="x-mom_rhs_partial" var="Dirichlet" value="0.0"/>
-        <BCType label="x-mom_rhs" var="Dirichlet" value="0.0"/>
       </Face>
-      <Face side="x-">
-        <BCType label="x-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="y-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="z-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="x-mom_rhs_partial" var="Dirichlet" value="0.0"/>
-        <BCType label="x-mom_rhs" var="Dirichlet" value="0.0"/>
-      </Face>
-      <Face side="x+">
-        <BCType label="pressure" var="Dirichlet" value="0.0"/>
-        <BCType label="y-mom" var="Neumann" value="0.0"/>
-        <BCType label="v" var="Neumann" value="0.0"/>
-        <BCType label="z-mom" var="Neumann" value="0.0"/>
-        <BCType label="w" var="Neumann" value="0.0"/>
-        <BCType label="x-mom_rhs_partial" var="Dirichlet" value="0.0"/>
-      </Face>
-      <Face side="y-">
-        <BCType label="x-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="y-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="z-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="y-mom_rhs_partial" var="Dirichlet" value="0.0"/>
-        <BCType label="y-mom_rhs" var="Dirichlet" value="0.0"/>
-      </Face>
-      <Face side="y+">
-        <BCType label="x-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="y-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="z-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="y-mom_rhs_partial" var="Dirichlet" value="0.0"/>
-        <BCType label="y-mom_rhs" var="Dirichlet" value="0.0"/>
-      </Face>
-      <Face side="z-">
-        <BCType label="x-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="y-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="z-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="z-mom_rhs_partial" var="Dirichlet" value="0.0"/>
-        <BCType label="z-mom_rhs" var="Dirichlet" value="0.0"/>
-      </Face>
-      <Face side="z+">
-        <BCType label="x-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="y-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="z-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="z-mom_rhs_partial" var="Dirichlet" value="0.0"/>
-        <BCType label="z-mom_rhs" var="Dirichlet" value="0.0"/>
-      </Face>
+      <Face side="x-" type="Wall"/>
+      <Face side="x+" type="Outflow"/>
+      <Face side="y-" type="Wall"/>
+      <Face side="y+" type="Wall"/>
+      <Face side="z-" type="Wall"/>
+      <Face side="z+" type="Wall"/>
       </BoundaryConditions>
       <Level>
       <Box label="1">

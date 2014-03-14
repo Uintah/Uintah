@@ -85,28 +85,15 @@
 
   <Grid>
       <BoundaryConditions>
-      <DefaultMaterial>all</DefaultMaterial>
-      <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
-      <Face side="z-" name="z-">
-        <BCType label="x-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="z-mom" var="Dirichlet" value="1.0"/>
-        <BCType label="z-mom_rhs_partial" var="Dirichlet" value="0.0"/>
-      </Face>
-      <Face side="z+" name="z+">
-        <BCType label="x-mom" var="Neumann" value="0.0"/>
-        <BCType label="pressure" var="Dirichlet" value="0.0"/>
-        <BCType label="z-mom_rhs_partial" var="Dirichlet" value="0.0"/>
-      </Face>
-      <Face side="x-" name="x-">
-        <BCType label="x-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="z-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="x-mom_rhs_partial" var="Dirichlet" value="0.0"/>
-      </Face>
-      <Face side="x+" name="x+">
-        <BCType label="x-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="z-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="x-mom_rhs_partial" var="Dirichlet" value="0.0"/>
-      </Face>
+				<DefaultMaterial>all</DefaultMaterial>
+				<!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
+				<Face side="z-" name="z-" type="Velocity">
+					<BCType label="x-mom" var="Dirichlet" value="0.0"/>
+					<BCType label="z-mom" var="Dirichlet" value="1.0"/>
+				</Face>
+				<Face side="z+" name="z+" type="Outflow"/>
+				<Face side="x-" name="x-" type="Wall"/>
+				<Face side="x+" name="x+" type="Wall"/>
       </BoundaryConditions>
       <Level>
       <Box label="1">

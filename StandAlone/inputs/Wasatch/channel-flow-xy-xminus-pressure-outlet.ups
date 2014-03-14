@@ -107,28 +107,15 @@
 
   <Grid>
       <BoundaryConditions>
-      <DefaultMaterial>all</DefaultMaterial>
-      <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
-      <Face side="x+">
-        <BCType label="x-mom" var="Dirichlet" value="-1.0"/>
-        <BCType label="y-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="x-mom_rhs_partial" var="Dirichlet" value="0.0"/>
-      </Face>
-      <Face side="x-">
-        <BCType label="y-mom" var="Neumann" value="0.0"/>
-        <BCType label="pressure" var="Dirichlet" value="0.0"/>
-        <BCType label="x-mom_rhs_partial" var="Dirichlet" value="0.0"/>
-      </Face>
-      <Face side="y-">
-        <BCType label="x-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="y-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="y-mom_rhs_partial" var="Dirichlet" value="0.0"/>
-      </Face>
-      <Face side="y+">
-        <BCType label="x-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="y-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="y-mom_rhs_partial" var="Dirichlet" value="0.0"/>
-      </Face>
+				<DefaultMaterial>all</DefaultMaterial>
+				<!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
+				<Face side="x+" type="Velocity">
+					<BCType label="x-mom" var="Dirichlet" value="-1.0"/>
+					<BCType label="y-mom" var="Dirichlet" value="0.0"/>
+				</Face>
+				<Face side="x-" type="Outflow"/>
+				<Face side="y-" type="Wall"/>
+				<Face side="y+" type="Wall"/>
       </BoundaryConditions>
       <Level>
       <Box label="1">
