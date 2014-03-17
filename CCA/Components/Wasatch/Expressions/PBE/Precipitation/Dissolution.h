@@ -25,9 +25,8 @@
 #ifndef Dissolution_Expr_h
 #define Dissolution_Expr_h
 
+#define KAYDISSOLUTION 30.0 * 0.25 * (1.0 - erf(8.0 * log(**abscissaeIterator / rMin_))) * (1.0 - erf(5.0 * (-2.5-log10(**weightsIterator)))) * (**weightsIterator) * pow((**abscissaeIterator),momentOrder_)
 #include <expression/Expression.h>
-#include <cmath>  // log
-#include <boost/math/special_functions/erf.hpp> // erf
 
 /**
  *  \class  Dissolution
@@ -179,45 +178,16 @@ evaluate()
   using namespace SpatialOps;
   FieldT& result = this->value();
   result <<= 0.0;
-
-  typename FieldT::interior_iterator resultsIter = result.interior_begin();
-  const size_t nEnv = weights_.size();
-  const FieldT* sampleField = weights_[0];
-  typename FieldT::const_interior_iterator sampleIterator = sampleField->interior_begin();
   
-  std::vector<typename FieldT::const_interior_iterator> weightIterators;
-  std::vector<typename FieldT::const_interior_iterator> abscissaeIterators;
-  for( size_t i=0; i<nEnv; ++i ){
-    typename FieldT::const_interior_iterator thisIterator = weights_[i]->interior_begin();
-    weightIterators.push_back(thisIterator);
+  typename FieldVec::const_iterator abscissaeIterator = abscissae_.begin();
+  for( typename FieldVec::const_iterator weightsIterator=weights_.begin();
+      weightsIterator!=weights_.end();
+      ++weightsIterator, ++abscissaeIterator) {
+    const FieldT& w = **weightsIterator;
+    const FieldT& a = **abscissaeIterator;
+	  result <<= result - cond( *sBar_ > *superSat_ && a < rMin_ && a > 0.0 && w > 1e-3, deathCoef_ * KAYDISSOLUTION)
+                            (  0.0 );
     
-    typename FieldT::const_interior_iterator otherIterator = abscissae_[i]->interior_begin();
-    abscissaeIterators.push_back(otherIterator);
-  }
-  typename FieldT::const_interior_iterator sBarIterator = sBar_->interior_begin();
-  typename FieldT::const_interior_iterator superSatIterator = superSat_->interior_begin();
-  
-  while( sampleIterator != sampleField->interior_end() ){
-    double sum = 0.0;
-    
-    for( size_t i = 0; i<nEnv; ++i ){
-      if (*sBarIterator > *superSatIterator && *abscissaeIterators[i] < rMin_ &&
-          *weightIterators[i] > 1.0e-3 && *abscissaeIterators[i] > 0.0) {
-        const double k = 0.25 * (1.0 - boost::math::erf(8.0*std::log(*abscissaeIterators[i]/rMin_))) *
-                                (1.0 - boost::math::erf(5.0*(-2.5-std::log10(*weightIterators[i]))) );
-        sum = sum  -30.0 * k * *weightIterators[i] * pow(*abscissaeIterators[i], momentOrder_);
-      }
-    }
-    *resultsIter = sum * deathCoef_;
-    
-    ++superSatIterator;
-    ++sBarIterator;
-    ++sampleIterator;
-    ++resultsIter;
-    for( size_t i = 0; i<nEnv; ++i ){
-      ++weightIterators[i];
-      ++abscissaeIterators[i];
-    }
   }
 }
 
