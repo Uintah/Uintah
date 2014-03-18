@@ -38,10 +38,15 @@
 #include <iostream>
 
 #ifdef HAVE_PETSC
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR < 4))
 extern "C" {
 #include "petscksp.h"
 #include "petscmat.h"
 }
+#else
+#include "petscksp.h"
+#include "petscmat.h"
+#endif
 #endif
 
 
