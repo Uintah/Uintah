@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Uintah_timestep>
+  <Meta>
+    <endianness>little_endian</endianness>
+    <nBits>64</nBits>
+    <numProcs>1</numProcs>
+  </Meta>
+  <Time>
+    <timestepNumber>326</timestepNumber>
+    <currentTime>0.30927075516446828</currentTime>
+    <oldDelt>0.00094868329805051382</oldDelt>
+  </Time>
+  <Grid>
+    <numLevels>1</numLevels>
+    <Level>
+      <numPatches>1</numPatches>
+      <totalCells>792</totalCells>
+      <extraCells>[1, 1, 1]</extraCells>
+      <anchor>[0, 0, 0]</anchor>
+      <id>0</id>
+      <cellspacing>[0.001, 0.001, 0.001]</cellspacing>
+      <Patch>
+        <id>0</id>
+        <proc>0</proc>
+        <lowIndex>[-1, -1, -1]</lowIndex>
+        <highIndex>[21, 5, 5]</highIndex>
+        <interiorLowIndex>[0, 0, 0]</interiorLowIndex>
+        <interiorHighIndex>[20, 4, 4]</interiorHighIndex>
+        <nnodes>1127</nnodes>
+        <lower>[-0.001, -0.001, -0.001]</lower>
+        <upper>[0.021000000000000001, 0.0050000000000000001, 0.0050000000000000001]</upper>
+        <totalCells>792</totalCells>
+      </Patch>
+    </Level>
+  </Grid>
+  <Data>
+    <Datafile href="l0/p00000.xml" proc="0"/>
+  </Data>
+  <MPM>
+    <gravity>[0, 0, 0]</gravity>
+    <time_integrator>explicit</time_integrator>
+    <interpolator>gimp</interpolator>
+    <cpdi_lcrit>10000000000</cpdi_lcrit>
+    <AMR>false</AMR>
+    <axisymmetric>false</axisymmetric>
+    <withColor>false</withColor>
+    <artificial_damping_coeff>0</artificial_damping_coeff>
+    <artificial_viscosity>false</artificial_viscosity>
+    <artificial_viscosity_heating>false</artificial_viscosity_heating>
+    <artificial_viscosity_coeff1>0.20000000000000001</artificial_viscosity_coeff1>
+    <artificial_viscosity_coeff2>2</artificial_viscosity_coeff2>
+    <use_cohesive_zones>false</use_cohesive_zones>
+    <use_load_curves>false</use_load_curves>
+    <use_CBDI_boundary_condition>false</use_CBDI_boundary_condition>
+    <exactDeformation>false</exactDeformation>
+    <ForceBC_force_increment_factor>1</ForceBC_force_increment_factor>
+    <create_new_particles>false</create_new_particles>
+    <DoImplicitHeatConduction>false</DoImplicitHeatConduction>
+    <DoTransientImplicitHeatConduction>true</DoTransientImplicitHeatConduction>
+    <DoExplicitHeatConduction>true</DoExplicitHeatConduction>
+    <DoPressureStabilization>false</DoPressureStabilization>
+    <computeNodalHeatFlux>false</computeNodalHeatFlux>
+    <computeScaleFactor>false</computeScaleFactor>
+    <DoThermalExpansion>true</DoThermalExpansion>
+    <do_grid_reset>true</do_grid_reset>
+    <minimum_particle_mass>2.9999999999999998e-15</minimum_particle_mass>
+    <minimum_subcycles_for_F>1</minimum_subcycles_for_F>
+    <minimum_mass_for_acc>0</minimum_mass_for_acc>
+    <maximum_particle_velocity>3.0000000000000001e+105</maximum_particle_velocity>
+    <UsePrescribedDeformation>false</UsePrescribedDeformation>
+    <RunMMSProblem/>
+    <InsertParticles>false</InsertParticles>
+    <do_contact_friction_heating>false</do_contact_friction_heating>
+    <delete_rogue_particles>false</delete_rogue_particles>
+    <erosion algorithm="none"/>
+    <extra_solver_flushes>0</extra_solver_flushes>
+    <boundary_traction_faces>[]</boundary_traction_faces>
+    <CellBasedSmoothing>false</CellBasedSmoothing>
+    <UseMomentumForm>false</UseMomentumForm>
+  </MPM>
+  <MaterialProperties>
+    <MPM>
+      <material index="0">
+        <density>10000</density>
+        <thermal_conductivity>237</thermal_conductivity>
+        <specific_heat>903</specific_heat>
+        <C_p>903</C_p>
+        <room_temp>294</room_temp>
+        <melt_temp>295</melt_temp>
+        <is_rigid>false</is_rigid>
+        <includeFlowWork>false</includeFlowWork>
+        <constitutive_model type="UCNH">
+          <bulk_modulus>2000</bulk_modulus>
+          <shear_modulus>1500</shear_modulus>
+          <useModifiedEOS>false</useModifiedEOS>
+          <usePlasticity>false</usePlasticity>
+          <useDamage>false</useDamage>
+          <useInitialStress>false</useInitialStress>
+          <equation_of_state type="default_hyper"/>
+        </constitutive_model>
+        <geom_object>
+          <box label="gp1">
+            <min>[0, 0, 0]</min>
+            <max>[0.02, 0.0040000000000000001, 0.0040000000000000001]</max>
+          </box>
+          <temperature>100</temperature>
+          <affineTransformation_A0>[1, 0, 0]</affineTransformation_A0>
+          <affineTransformation_A1>[0, 1, 0]</affineTransformation_A1>
+          <affineTransformation_A2>[0, 0, 1]</affineTransformation_A2>
+          <affineTransformation_b>[0, 0, 0]</affineTransformation_b>
+          <velocity>[0, 0, 0]</velocity>
+          <res>[2, 2, 2]</res>
+        </geom_object>
+      </material>
+      <contact>
+        <type>null</type>
+        <materials>[]</materials>
+      </contact>
+      <thermal_contact/>
+    </MPM>
+  </MaterialProperties>
+  <PhysicalBC>
+    <MPM/>
+  </PhysicalBC>
+</Uintah_timestep>

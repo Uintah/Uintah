@@ -664,6 +664,27 @@ MPMLabel::MPMLabel()
   pCellNACZIDLabel =
     VarLabel::create("cellNACZID", CCVariable<short int>::getTypeDescription());
 
+  // For Reactive Flow
+  pConcentrationLabel = VarLabel::create("p.concentration",
+		  	NCVariable<double>::getTypeDescription());
+  gConcentrationLabel = VarLabel::create("g.concentration",
+  			NCVariable<double>::getTypeDescription());
+  gConcentrationRateLabel = VarLabel::create("g.concentrationRate",
+  			NCVariable<double>::getTypeDescription());
+  gConcentrationFluxLabel = VarLabel::create("g.ConcentrationFlux",
+		  	NCVariable<Vector>::getTypeDescription());
+  gExternalDiffusionRateLabel = VarLabel::create("g.externalDiffusionRate",
+			NCVariable<double>::getTypeDescription());
+  gConcentrationContactDiffusionRateLabel =
+       VarLabel::create("g.concentrationContactDiffusionRate",
+       NCVariable<double>::getTypeDescription());
+  gConcentrationNoBCLabel = VarLabel::create("g.concentrationnobc",
+  			NCVariable<double>::getTypeDescription());
+
+  gConcentrationStarLabel = VarLabel::create("g.concentrationStar",
+  			NCVariable<double>::getTypeDescription());
+
+
 } 
 
 MPMLabel::~MPMLabel()

@@ -285,6 +285,16 @@ namespace Uintah {
       const VarLabel* czIDLabel_preReloc; 
       const VarLabel* pCellNACZIDLabel;
 
+      // For Reactive Flow
+      const VarLabel* pConcentrationLabel;
+      const VarLabel* gConcentrationLabel;
+      const VarLabel* gConcentrationRateLabel;
+      const VarLabel* gConcentrationFluxLabel;
+      const VarLabel* gExternalDiffusionRateLabel;
+      const VarLabel* gConcentrationContactDiffusionRateLabel;
+      const VarLabel* gConcentrationNoBCLabel;
+      const VarLabel* gConcentrationStarLabel;
+
     };
 } // End namespace Uintah
 
