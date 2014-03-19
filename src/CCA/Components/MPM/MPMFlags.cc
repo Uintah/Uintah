@@ -110,6 +110,8 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_reductionVars->volDeformed      = false;
   d_reductionVars->centerOfMass     = false;
 
+  d_computeNodalConcentrationFlux = false;
+
 // MMS
 if(d_mms_type=="AxisAligned"){
     d_mms_type = "AxisAligned";
@@ -263,6 +265,12 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
       if(labelName["label"] == "g.HeatFlux"){
         d_computeNodalHeatFlux = true;
       }
+
+      // for ConcentrationDiffusion, set to true if g.ConcentrationFlux
+
+      if(labelName["labal"] == "g.ConcentrationFlux"){
+    	  d_computeNodalConcentrationFlux = true;
+      }
       if(labelName["label"] == "p.scalefactor"){
         d_computeScaleFactor = true;
       }
@@ -285,6 +293,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   }
   // restart problem spec
   mpm_flag_ps->get("computeNodalHeatFlux",d_computeNodalHeatFlux);
+  mpm_flag_ps->get("computeNodalConcentrationFlux",d_computeNodalConcentrationFlux);
   mpm_flag_ps->get("computeScaleFactor",  d_computeScaleFactor);
   
   delete d_interpolator;

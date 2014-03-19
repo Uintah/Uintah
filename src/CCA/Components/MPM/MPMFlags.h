@@ -114,6 +114,8 @@ namespace Uintah {
     bool        d_use_momentum_form;
     std::string d_mms_type;  // MMS Flag
     
+    bool		d_computeNodalConcentrationFlux;	// compute the auxiliary nodal concentration flux
+
     // flags for turning on/off the reduction variable calculations
     struct reductionVars{
      bool mass;
