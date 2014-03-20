@@ -661,6 +661,7 @@ namespace Wasatch{
       const TreeList treeList = tree->split_tree();
 
       if( ip==0 ){
+        const bool writeTreeDetails = dbg_tasks_on;
         trLstTrns.resize( treeList.size() );
         if( Uintah::Parallel::getMPIRank() == 0 ){
           if( treeList.size() > 1 ){
@@ -668,13 +669,13 @@ namespace Wasatch{
             fnam << tree->name() << "_original.dot";
             proc0cout << "writing pre-cleave tree to " << fnam.str() << endl;
             std::ofstream fout( fnam.str().c_str() );
-            tree->write_tree(fout);
+            tree->write_tree(fout,false,writeTreeDetails);
           }
           BOOST_FOREACH( TreePtr tr, treeList ){
             std::ostringstream fnam;
             fnam << tr->name() << ".dot";
             std::ofstream fout( fnam.str().c_str() );
-            tr->write_tree(fout);
+            tr->write_tree(fout,false,writeTreeDetails);
           }
         }
       }
