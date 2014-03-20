@@ -30,7 +30,7 @@ class TurbulentViscosity
 {
   
   const bool isConstSmag_;
-  Wasatch::TurbulenceParameters turbParams_;
+  const Wasatch::TurbulenceParameters turbParams_;
   const Expr::Tag strTsrSqTag_, waleTsrMagTag_, vremanTsrMagTag_, dynCoefTag_, rhoTag_;
 
   // gradient operators are only here to extract spacing information out of them
@@ -52,7 +52,7 @@ class TurbulentViscosity
                       const Expr::Tag waleTsrMagTag,
                       const Expr::Tag vremanTsrMagTag,
                       const Expr::Tag dynamicSmagCoefTag,
-                      const Wasatch::TurbulenceParameters turbParams);
+                      const Wasatch::TurbulenceParameters& turbParams);
   
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -82,7 +82,7 @@ public:
              const Expr::Tag waleTsrMagTag,
              const Expr::Tag vremanTsrMagTag,
              const Expr::Tag dynamicSmagCoefTag,
-             const Wasatch::TurbulenceParameters turbParams )
+             const Wasatch::TurbulenceParameters& turbParams )
       : ExpressionBuilder(result),
         isConstSmag_   ( true                ),
         turbParams_    ( turbParams          ),
