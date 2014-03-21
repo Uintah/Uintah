@@ -387,7 +387,7 @@ template<class LOCS> template<int DIM>
 void SFC<LOCS>::ProfileMergeParameters(int repeat)
 {
 #if SCI_ASSERTION_LEVEL >= 3
-  ASSERT(BulletProof(Parallel));
+  ASSERT(BulletProof(PARALLEL));
 #endif
 
   rank=d_myworld->myrank();
