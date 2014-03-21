@@ -124,7 +124,7 @@ namespace Uintah{
       void sched_CoarsenAll( const LevelP& coarseLevel, 
                              SchedulerP& sched,
                              const bool modifies_abskg,
-                             const bool modifies_sigmaT4,
+                             const bool modifiesd_sigmaT4,
                              const int radCalc_freq );
                              
 
@@ -161,42 +161,42 @@ namespace Uintah{
       //           -x      +x       -y       +y     -z     +z
       enum FACE {EAST=0, WEST=1, NORTH=2, SOUTH=3, TOP=4, BOT=5, nFACES=6};
       
-      double _Threshold;
-      double _sigma;
-      double _sigmaScat;
-      double _sigmaT4_thld;                 // threshold values for determining the extents of ROI
-      double _abskg_thld;
+      double d_threshold;
+      double d_sigma;
+      double d_sigmaScat;
+      double d_sigmaT4_thld;                 // threshold values for determining the extents of ROI
+      double d_abskg_thld;
       
        
-      int    _nDivQRays;                    // number of rays per cell used to compute divQ
-      int    _nRadRays;                     // number of rays per radiometer used to compute radiative flux
-      int    _nFluxRays;                    // number of rays per cell used to compute radiative flux
+      int    d_nDivQRays;                    // number of rays per cell used to compute divQ
+      int    d_nRadRays;                     // number of rays per radiometer used to compute radiative flux
+      int    d_nFluxRays;                    // number of rays per cell used to compute radiative flux
       int    d_matl;
       int    d_orderOfInterpolation;        // Order of interpolation for interior fine patch
       
       MaterialSet* d_matlSet;
       IntVector _halo;                      // number of cells surrounding a coarse patch on coarser levels
       
-      double _sigma_over_pi;                // Stefan Boltzmann divided by pi (W* m-2* K-4)
-      bool _isSeedRandom;
-      bool _solveBoundaryFlux;
-      bool _solveDivQ;          
-      bool _allowReflect;                // specify as false when doing DOM comparisons
-      bool _CCRays;
-      bool _onOff_SetBCs;                // switch for setting boundary conditions                    
-      bool _isDbgOn;
-      bool _applyFilter;                 // Allow for filtering of boundFlux and divQ results
+      double d_sigma_over_pi;                // Stefan Boltzmann divided by pi (W* m-2* K-4)
+      bool d_isSeedRandom;
+      bool d_solveBoundaryFlux;
+      bool d_solveDivQ;          
+      bool d_allowReflect;                // specify as false when doing DOM comparisons
+      bool d_CCRays;
+      bool d_onOff_SetBCs;                // switch for setting boundary conditions                    
+      bool d_isDbgOn;
+      bool d_applyFilter;                 // Allow for filtering of boundFlux and divQ results
       
       enum ROI_algo{fixed, dynamic, patch_based};
-      ROI_algo  _whichROI_algo;
-      Point _ROI_minPt;
-      Point _ROI_maxPt;
+      ROI_algo  d_whichROI_algo;
+      Point d_ROI_minPt;
+      Point d_ROI_maxPt;
 
       // Virtual Radiometer parameters
-      bool _virtRad;
-      double _viewAng;
-      IntVector _VRLocationsMin;        // These should be physical points in the domain   --Todd
-      IntVector _VRLocationsMax;        // What happens if the resolution changes
+      bool d_virtRad;
+      double d_viewAng;
+      Point d_VRLocationsMin;
+      Point d_VRLocationsMax;
       
       struct VR_variables{
         double thetaRot;
@@ -206,13 +206,13 @@ namespace Uintah{
         double range;
         double sldAngl;
       };
-      VR_variables _VR;
+      VR_variables d_VR;
       
       // Boundary flux constant variables  (consider using array container when C++ 11 is used)
-      std::map <int,IntVector> _dirIndexOrder;
-      std::map <int,IntVector> _dirSignSwap;
-      std::map <int,IntVector> _locationIndexOrder;
-      std::map <int,IntVector> _locationShift;
+      std::map <int,IntVector> d_dirIndexOrder;
+      std::map <int,IntVector> d_dirSignSwap;
+      std::map <int,IntVector> d_locationIndexOrder;
+      std::map <int,IntVector> d_locationShift;
 
       Ghost::GhostType d_gn;
       Ghost::GhostType d_gac;
@@ -243,7 +243,7 @@ namespace Uintah{
                      DataWarehouse* new_dw,
                      bool modifies_divQ,
                      Task::WhichDW which_abskg_dw,
-                     Task::WhichDW which_sigmaT4_dw,
+                     Task::WhichDW whichd_sigmaT4_dw,
                      Task::WhichDW which_celltype_dw,
                      const int radCalc_freq );
 
@@ -257,7 +257,7 @@ namespace Uintah{
                         void* stream,
                         bool modifies_divQ,
                         Task::WhichDW which_abskg_dw,
-                        Task::WhichDW which_sigmaT4_dw,
+                        Task::WhichDW whichd_sigmaT4_dw,
                         Task::WhichDW which_celltype_dw,
                         const int radCalc_freq);
 
@@ -269,7 +269,7 @@ namespace Uintah{
                                DataWarehouse* new_dw,
                                bool modifies_divQ,
                                Task::WhichDW which_abskg_dw,
-                               Task::WhichDW which_sigmaT4_dw,
+                               Task::WhichDW whichd_sigmaT4_dw,
                                const int radCalc_freq );
                                
                                
@@ -477,8 +477,7 @@ namespace Uintah{
     }
     bool greater_Eq( const IntVector& a, const IntVector& b ){
       return ( a.x() >= b.x() && a.y() >= b.y() && a.z() >= b.z() );
-    }                    
-                        
+    }         
 
   }; // class Ray
 

@@ -650,8 +650,10 @@ DataArchiver::reduceUdaSetup(Dir& fromDir)
     
     // copy checkpoints
     Dir checkpointsFromDir = fromDir.getSubdir("checkpoints");
+    Dir checkpointsToDir   = d_dir.getSubdir("checkpoints");
     string me = checkpointsFromDir.getName();
     if( validDir(me) ){
+      checkpointsToDir.remove( "index.xml", false);  // this file is created upstream when it shouldn't have
       checkpointsFromDir.copy( d_dir );
       proc0cout << "\n*** Copied checkpoints to: " << d_checkpointsDir.getName() << endl;
       proc0cout << "    Only using 1 processor to copy so this will be slow for large checkpoint directories\n" << endl;
@@ -1353,10 +1355,12 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
   
   // start dumping files to disk
   vector<Dir*> baseDirs;
-  if (d_isOutputTimestep)
+  if (d_isOutputTimestep){
     baseDirs.push_back(&d_dir);
-  if (d_isCheckpointTimestep)
+  }    
+  if (d_isCheckpointTimestep){
     baseDirs.push_back(&d_checkpointsDir);
+  }
 
   ostringstream tname;
   tname << "t" << setw(5) << setfill('0') << dir_timestep;

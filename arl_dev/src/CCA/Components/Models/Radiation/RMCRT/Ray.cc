@@ -78,46 +78,46 @@ Ray::Ray()
   d_radiationVolqLabel   = VarLabel::create( "radiationVolq",    CCVariable<double>::getTypeDescription() );
    
   d_matlSet       = 0;
-  _isDbgOn        = dbg2.active();
+  d_isDbgOn        = dbg2.active();
   
   d_gac           = Ghost::AroundCells;
   d_gn            = Ghost::None;
   d_orderOfInterpolation = -9;
-  _onOff_SetBCs   = true;
+  d_onOff_SetBCs   = true;
   
   //_____________________________________________
   //   Ordering for Surface Method
   // This block of code is used to properly place ray origins, and orient ray directions
   // onto the correct face.  This is necessary, because by default, the rays are placed
   // and oriented onto a default face, then require adjustment onto the proper face.
-  _dirIndexOrder[EAST]   = IntVector(2, 1, 0);
-  _dirIndexOrder[WEST]   = IntVector(2, 1, 0);
-  _dirIndexOrder[NORTH]  = IntVector(0, 2, 1);
-  _dirIndexOrder[SOUTH]  = IntVector(0, 2, 1);
-  _dirIndexOrder[TOP]    = IntVector(0, 1, 2);
-  _dirIndexOrder[BOT]    = IntVector(0, 1, 2);
+  d_dirIndexOrder[EAST]   = IntVector(2, 1, 0);
+  d_dirIndexOrder[WEST]   = IntVector(2, 1, 0);
+  d_dirIndexOrder[NORTH]  = IntVector(0, 2, 1);
+  d_dirIndexOrder[SOUTH]  = IntVector(0, 2, 1);
+  d_dirIndexOrder[TOP]    = IntVector(0, 1, 2);
+  d_dirIndexOrder[BOT]    = IntVector(0, 1, 2);
 
   // Ordering is slightly different from 6Flux since here, rays pass through origin cell from the inside faces.
-  _dirSignSwap[EAST]     = IntVector(-1, 1,  1);
-  _dirSignSwap[WEST]     = IntVector( 1, 1,  1);
-  _dirSignSwap[NORTH]    = IntVector( 1, -1, 1);
-  _dirSignSwap[SOUTH]    = IntVector( 1, 1,  1);
-  _dirSignSwap[TOP]      = IntVector( 1, 1, -1);
-  _dirSignSwap[BOT]      = IntVector( 1, 1,  1);
+  d_dirSignSwap[EAST]     = IntVector(-1, 1,  1);
+  d_dirSignSwap[WEST]     = IntVector( 1, 1,  1);
+  d_dirSignSwap[NORTH]    = IntVector( 1, -1, 1);
+  d_dirSignSwap[SOUTH]    = IntVector( 1, 1,  1);
+  d_dirSignSwap[TOP]      = IntVector( 1, 1, -1);
+  d_dirSignSwap[BOT]      = IntVector( 1, 1,  1);
 
-  _locationIndexOrder[EAST]  = IntVector(1,0,2);
-  _locationIndexOrder[WEST]  = IntVector(1,0,2);
-  _locationIndexOrder[NORTH] = IntVector(0,1,2);
-  _locationIndexOrder[SOUTH] = IntVector(0,1,2);
-  _locationIndexOrder[TOP]   = IntVector(0,2,1);
-  _locationIndexOrder[BOT]   = IntVector(0,2,1);
+  d_locationIndexOrder[EAST]  = IntVector(1,0,2);
+  d_locationIndexOrder[WEST]  = IntVector(1,0,2);
+  d_locationIndexOrder[NORTH] = IntVector(0,1,2);
+  d_locationIndexOrder[SOUTH] = IntVector(0,1,2);
+  d_locationIndexOrder[TOP]   = IntVector(0,2,1);
+  d_locationIndexOrder[BOT]   = IntVector(0,2,1);
 
-  _locationShift[EAST]   = IntVector(1, 0, 0);
-  _locationShift[WEST]   = IntVector(0, 0, 0);
-  _locationShift[NORTH]  = IntVector(0, 1, 0);
-  _locationShift[SOUTH]  = IntVector(0, 0, 0);
-  _locationShift[TOP]    = IntVector(0, 0, 1);
-  _locationShift[BOT]    = IntVector(0, 0, 0);
+  d_locationShift[EAST]   = IntVector(1, 0, 0);
+  d_locationShift[WEST]   = IntVector(0, 0, 0);
+  d_locationShift[NORTH]  = IntVector(0, 1, 0);
+  d_locationShift[SOUTH]  = IntVector(0, 0, 0);
+  d_locationShift[TOP]    = IntVector(0, 0, 1);
+  d_locationShift[BOT]    = IntVector(0, 0, 0);
 }
 
 //---------------------------------------------------------------------------
@@ -163,30 +163,32 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   d_sharedState = sharedState;
   ProblemSpecP rmcrt_ps = rmcrtps;
   Vector orient;
-  rmcrt_ps->getWithDefault( "nDivQRays" ,       _nDivQRays ,        10 );             // Number of rays per cell used to compute divQ 
-  rmcrt_ps->getWithDefault( "Threshold" ,       _Threshold ,      0.01 );             // When to terminate a ray
-  rmcrt_ps->getWithDefault( "randomSeed",       _isSeedRandom,    true );             // random or deterministic seed. 
-  rmcrt_ps->getWithDefault( "StefanBoltzmann",  _sigma,           5.67051e-8);        // Units are W/(m^2-K)
-  rmcrt_ps->getWithDefault( "solveBoundaryFlux" , _solveBoundaryFlux, false );
-  rmcrt_ps->getWithDefault( "CCRays"    ,       _CCRays,          false );            // if true, forces rays to always have CC origins
-  rmcrt_ps->getWithDefault( "VirtRadiometer" ,  _virtRad,         false );            // if true, at least one virtual radiometer exists
-  rmcrt_ps->getWithDefault( "VRViewAngle"    ,  _viewAng,         180 );              // view angle of the radiometer in degrees
-  rmcrt_ps->getWithDefault( "VROrientation"  ,  orient,          Vector(0,0,1) );     // Normal vector of the radiometer orientation (Cartesian)
-  rmcrt_ps->getWithDefault( "VRLocationsMin" ,  _VRLocationsMin,  IntVector(0,0,0) ); // minimum extent of the string or block of virtual radiometers
-  rmcrt_ps->getWithDefault( "VRLocationsMax" ,  _VRLocationsMax,  IntVector(0,0,0) ); // maximum extent of the string or block or virtual radiometers
-  rmcrt_ps->getWithDefault( "nRadRays"  ,       _nRadRays ,       1000 );
-  rmcrt_ps->getWithDefault( "nFluxRays" ,       _nFluxRays,       1 );                 // number of rays per cell for computation of boundary fluxes
-  rmcrt_ps->getWithDefault( "sigmaScat"  ,      _sigmaScat  ,      0 );                // scattering coefficient
-  rmcrt_ps->get(             "shouldSetBCs" ,   _onOff_SetBCs );                       // ignore applying boundary conditions
-  rmcrt_ps->getWithDefault( "allowReflect"   ,  _allowReflect,     true );             // Allow for ray reflections. Make false for DOM comparisons.
-  rmcrt_ps->getWithDefault( "solveDivQ"      ,  _solveDivQ,        true );             // Allow for solving of divQ for flow cells.
-  rmcrt_ps->getWithDefault( "applyFilter"    ,  _applyFilter,      false );            // Allow filtering of boundFlux and divQ.
+  rmcrt_ps->getWithDefault( "nDivQRays" ,       d_nDivQRays ,        10 );             // Number of rays per cell used to compute divQ 
+  rmcrt_ps->getWithDefault( "Threshold" ,       d_threshold ,      0.01 );             // When to terminate a ray
+  rmcrt_ps->getWithDefault( "randomSeed",       d_isSeedRandom,    true );             // random or deterministic seed. 
+  rmcrt_ps->getWithDefault( "StefanBoltzmann",  d_sigma,           5.67051e-8);        // Units are W/(m^2-K)
+  rmcrt_ps->getWithDefault( "solveBoundaryFlux" , d_solveBoundaryFlux, false );
+  rmcrt_ps->getWithDefault( "CCRays"    ,       d_CCRays,          false );            // if true, forces rays to always have CC origins
+  rmcrt_ps->getWithDefault( "VirtRadiometer" ,  d_virtRad,         false );            // if true, at least one virtual radiometer exists
+  rmcrt_ps->getWithDefault( "VRViewAngle"    ,  d_viewAng,         180 );              // view angle of the radiometer in degrees
+  rmcrt_ps->getWithDefault( "VROrientation"  ,  orient,          Vector(0,0,1) );       // Normal vector of the radiometer orientation (Cartesian)
+  rmcrt_ps->getWithDefault( "nRadRays"  ,       d_nRadRays ,       1000 );
+  rmcrt_ps->getWithDefault( "nFluxRays" ,       d_nFluxRays,       1 );                 // number of rays per cell for computation of boundary fluxes
+  rmcrt_ps->getWithDefault( "sigmaScat"  ,      d_sigmaScat  ,      0 );                // scattering coefficient
+  rmcrt_ps->get(             "shouldSetBCs" ,   d_onOff_SetBCs );                       // ignore applying boundary conditions
+  rmcrt_ps->getWithDefault( "allowReflect"   ,  d_allowReflect,     true );             // Allow for ray reflections. Make false for DOM comparisons.
+  rmcrt_ps->getWithDefault( "solveDivQ"      ,  d_solveDivQ,        true );             // Allow for solving of divQ for flow cells.
+  rmcrt_ps->getWithDefault( "applyFilter"    ,  d_applyFilter,      false );            // Allow filtering of boundFlux and divQ.
+  
+  rmcrt_ps->get(            "VRLocationsMin" ,  d_VRLocationsMin );                     // minimum extent of the string or block of virtual radiometers in physical units
+  rmcrt_ps->get(            "VRLocationsMax" ,  d_VRLocationsMax );                     // maximum extent
+
 
   //__________________________________
   //  Warnings and bulletproofing
 #ifndef RAY_SCATTER
-  proc0cout<< "sigmaScat: " << _sigmaScat << endl;
-  if(_sigmaScat>0){
+  proc0cout<< "sigmaScat: " << d_sigmaScat << endl;
+  if(d_sigmaScat>0){
     ostringstream warn;
     warn << "ERROR:  In order to run a scattering case, you must use the following in your configure line..." << endl;
     warn << "--enable-ray-scatter" << endl;
@@ -197,43 +199,40 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 #endif
 
 #ifdef RAY_SCATTER
-  if(_sigmaScat<1e-99){
-    ostringstream warn;
-    warn << "WARNING:  You are running a non-scattering case, yet you have the following in your configure line..." << endl;
-    warn << "--enable-ray-scatter" << endl;
-    warn << "As such, this task will run slower than is necessary." << endl;
-    warn << "If you wish to run a scattering case, please specify a positive value greater than 1e-99 for the scattering coefficient." << endl;
-    warn << "If you wish to run a non-scattering case, please remove --enable-ray-scatter from your configure line and re-configure and re-compile" << endl;
+  if(d_sigmaScat<1e-99){
+    proc0cout << "WARNING:  You are running a non-scattering case, yet you have the following in your configure line..." << endl;
+    proc0cout << "--enable-ray-scatter" << endl;
+    proc0cout << "As such, this task will run slower than is necessary." << endl;
+    proc0cout << "If you wish to run a scattering case, please specify a positive value greater than 1e-99 for the scattering coefficient." << endl;
+    proc0cout << "If you wish to run a non-scattering case, please remove --enable-ray-scatter from your configure line and re-configure and re-compile" << endl;
   }
   proc0cout<< endl << "RAY_SCATTER IS DEFINED" << endl;
 #endif
 
-  if(_nDivQRays==1){
-    ostringstream warn;
-    warn << "WARNING: You have specified only 1 ray to compute the radiative flux divergence." << endl;
-    warn << "For better accuracy and stability, specify nDivQRays greater than 2." << endl;
+  if( d_nDivQRays == 1 ){
+    proc0cout << "RMCRT: WARNING: You have specified only 1 ray to compute the radiative flux divergence." << endl;
+    proc0cout << "For better accuracy and stability, specify nDivQRays greater than 2." << endl;
   }
-  if(_nFluxRays==1){
-    ostringstream warn;
-    warn << "WARNING: You have specified only 1 ray to compute radiative fluxes." << endl;
-    warn << "For better accuracy and stability, specify nFluxRays greater than 2." << endl;
+  
+  if( d_nFluxRays == 1 ){
+    proc0cout << "RMCRT: WARNING: You have specified only 1 ray to compute radiative fluxes." << endl;
+    proc0cout << "For better accuracy and stability, specify nFluxRays greater than 2." << endl;
   }
 
-  if ( _viewAng > 360 ){
+  if ( d_viewAng > 360 ){
     ostringstream warn;
-    warn << "ERROR:  VRViewAngle ("<< _viewAng <<") exceeds the maximum acceptable value of 360 degrees." << endl;
+    warn << "ERROR:  VRViewAngle ("<< d_viewAng <<") exceeds the maximum acceptable value of 360 degrees." << endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 
-  if (_virtRad && _nRadRays < int(15 + pow(5.4, _viewAng/40) ) ){
-    ostringstream warn;
-    warn << "Number of radiometer rays:  ("<< _nRadRays <<") is less than the recommended number of ("<< int(15 + pow(5.4, _viewAng/40) ) <<"). Errors will exceed 1%. " << endl;
+  if (d_virtRad && d_nRadRays < int(15 + pow(5.4, d_viewAng/40) ) ){
+    proc0cout << "RMCRT: WARNING Number of radiometer rays:  ("<< d_nRadRays <<") is less than the recommended number of ("<< int(15 + pow(5.4, d_viewAng/40) ) <<"). Errors will exceed 1%. " << endl;
   } 
 
   // orient[0,1,2] represent the user specified vector normal of the radiometer.
   // These will be converted to rotations about the x,y, and z axes, respectively.
   // Each rotation is counterclockwise when the observer is looking from the
-  // positive axis about which the rotation is occurring.
+  // positive axis about which the rotation is occurring. d
   for(int d = 0; d<3; d++){
     if(orient[d] == 0){      // WARNING WARNING this conditional only works for integers, not doubles, and should be fixed.
       orient[d] =1e-16;      // to avoid divide by 0.
@@ -248,28 +247,29 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   //  The azimuthal angle represents the negative of the
   //  counterclockwise rotation about the z axis.
   //  Convert the user specified radiometer vector normal into three axial
-  //  rotations about the x,y, and z axes.
-  _VR.thetaRot  = acos(orient[2]/sqrt(orient[0]*orient[0]+orient[1]*orient[1] +orient[2]*orient[2]));
-  double psiRot = acos(orient[0]/sqrt(orient[0]*orient[0]+orient[1]*orient[1]));
+  //  rotations about the x, y, and z axes.
+  d_VR.thetaRot = acos( orient[2] / orient.length() );
+  double psiRot = acos( orient[0] / sqrt( orient[0]*orient[0] + orient[1]*orient[1] ) );
 
-  //� The calculated rotations must be adjusted if the x and y components of the normal vector
-  //� are in the 3rd or 4th quadrants due to the constraints on arccos
-  if (orient[0] < 0 && orient[1] < 0)       // quadrant 3
+  // The calculated rotations must be adjusted if the x and y components of the normal vector
+  // are in the 3rd or 4th quadrants due to the constraints on arccos
+  if (orient[0] < 0 && orient[1] < 0){       // quadrant 3
     psiRot = (M_PI/2 + psiRot);
-
-  if (orient[0] > 0 && orient[1] < 0)       // quadrant 4
+  }
+  if (orient[0] > 0 && orient[1] < 0){       // quadrant 4
     psiRot = (2*M_PI - psiRot);
-
-  _VR.psiRot = psiRot;
-  //  phiRot is always  0. There will never be a need for a rotation about the x axis.� All
+  }
+  
+  d_VR.psiRot = psiRot;
+  //  phiRot is always  0. There will never be a need for a rotation about the x axis. All
   //  possible rotations can be accomplished using the other two.
-  _VR.phiRot = 0;
+  d_VR.phiRot = 0;
 
-  double deltaTheta = _viewAng/360*M_PI;       // divides view angle by two and converts to radians
-  double range      = 1 - cos(deltaTheta);    // cos(0) to cos(deltaTheta) gives the range of possible vals
-  _VR.sldAngl       = 2*M_PI*range;            // the solid angle that the radiometer can view  
-  _VR.deltaTheta = deltaTheta;
-  _VR.range      = range;
+  double deltaTheta = d_viewAng/360*M_PI;       // divides view angle by two and converts to radians
+  double range      = 1 - cos(deltaTheta);      // cos(0) to cos(deltaTheta) gives the range of possible vals
+  d_VR.sldAngl      = 2*M_PI*range;             // the solid angle that the radiometer can view  
+  d_VR.deltaTheta = deltaTheta;
+  d_VR.range      = range;
   
   //__________________________________
   //  Read in the algorithm section
@@ -294,18 +294,18 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 
       if(type == "fixed" ) {
         
-        _whichROI_algo = fixed;
-        ROI_ps->get("min", _ROI_minPt );
-        ROI_ps->get("max", _ROI_maxPt );
+        d_whichROI_algo = fixed;
+        ROI_ps->get("min", d_ROI_minPt );
+        ROI_ps->get("max", d_ROI_maxPt );
         
       } else if ( type == "dynamic" ) {
         
-        _whichROI_algo = dynamic;
-        ROI_ps->getWithDefault( "abskg_threshold",   _abskg_thld,   DBL_MAX);
-        ROI_ps->getWithDefault( "sigmaT4_threshold", _sigmaT4_thld, DBL_MAX);
+        d_whichROI_algo = dynamic;
+        ROI_ps->getWithDefault( "abskgd_threshold",   d_abskg_thld,   DBL_MAX);
+        ROI_ps->getWithDefault( "sigmaT4d_threshold", d_sigmaT4_thld, DBL_MAX);
         
       } else if ( type == "patch_based" ){
-        _whichROI_algo = patch_based;
+        d_whichROI_algo = patch_based;
       }
       
     //__________________________________
@@ -315,7 +315,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     }
   }
 
-  _sigma_over_pi = _sigma/M_PI;
+  d_sigma_over_pi = d_sigma/M_PI;
 
   //__________________________________
   // BC bulletproofing  
@@ -325,7 +325,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   ProblemSpecP root_ps = rmcrt_ps->getRootNode();
   const MaterialSubset* mss = d_matlSet->getUnion();
   
-  if( ignore_BC_bulletproofing == true || _onOff_SetBCs == false) {
+  if( ignore_BC_bulletproofing == true || d_onOff_SetBCs == false) {
     proc0cout << "\n\n______________________________________________________________________" << endl;
     proc0cout << "  WARNING: bulletproofing of the boundary conditions specs is off!";
     proc0cout << "   You're free to set any BC you'd like " << endl;
@@ -425,7 +425,7 @@ Ray::sigmaT4( const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches,patch,dbg,"Doing Ray::sigmaT4");
 
-    double sigma_over_pi = _sigma/M_PI;
+    double sigma_over_pi = d_sigma/M_PI;
 
     constCCVariable<double> temp;
     CCVariable<double> sigmaT4;             // sigma T ^4/pi
@@ -513,7 +513,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
                DataWarehouse* new_dw,
                bool modifies_divQ,
                Task::WhichDW which_abskg_dw,
-               Task::WhichDW which_sigmaT4_dw,
+               Task::WhichDW whichd_sigmaT4_dw,
                Task::WhichDW which_celltype_dw,
                const int radCalc_freq )
 { 
@@ -544,7 +544,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
   level->findCellIndexRange(domainLo_EC, domainHi_EC);       // including extraCells
   
   DataWarehouse* abskg_dw    = new_dw->getOtherDataWarehouse(which_abskg_dw);
-  DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
+  DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(whichd_sigmaT4_dw);
   DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
 
   constCCVariable<double> sigmaT4OverPi;
@@ -593,55 +593,61 @@ Ray::rayTrace( const ProcessorGroup* pc,
     double DzDx = Dx.z() / Dx.x();                //noncubic 
     
     //______________________________________________________________________
-    //           R A D I O M E T E R
+    //           R A D I O M E T E R 
     //______________________________________________________________________
-    if (_virtRad){
+    IntVector lo = patch->getCellLowIndex();
+    IntVector hi = patch->getCellHighIndex();
+    
+    IntVector VR_posLo  = level->getCellIndex( d_VRLocationsMin );
+    IntVector VR_posHi  = level->getCellIndex( d_VRLocationsMax );
+       
+    if ( d_virtRad && doesIntersect( VR_posLo, VR_posHi, lo, hi ) ){
+    
+      lo = Max(lo, VR_posLo);  // form an iterator for this patch
+      hi = Min(hi, VR_posHi);  // this is an intersection     
 
-      for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){ 
+      for(CellIterator iter(lo,hi); !iter.done(); iter++){
        
         IntVector origin = *iter; 
-            
-        if( greater_Eq( origin, _VRLocationsMin ) && less_Eq( origin, _VRLocationsMax) ){ 
  
-          double sumI      = 0;
-          double sumProjI  = 0;
-          double sumI_prev = 0;
-                    
-          //__________________________________
-          // ray loop
-          for (int iRay=0; iRay < _nRadRays; iRay++){
-            
-            Vector ray_location;
-            bool useCCRays = true;
-            rayLocation(mTwister, origin, DyDx, DzDx, useCCRays, ray_location);
-            
+        double sumI      = 0;
+        double sumProjI  = 0;
+        double sumI_prev = 0;
 
-            double cosVRTheta;
-            Vector direction_vector;
-            rayDirection_VR( mTwister, origin, iRay, _VR, DyDx, DzDx, direction_vector, cosVRTheta);
-            
-            // get the intensity for this ray
-            updateSumI( direction_vector, ray_location, origin, Dx, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
-            
-            sumProjI += cosVRTheta * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
-                                                         // from all the rays up to that point
-            sumI_prev = sumI;
+        //__________________________________
+        // ray loop
+        for (int iRay=0; iRay < d_nRadRays; iRay++){
 
-          } // end VR ray loop
-       
-          //__________________________________
-          //  Compute VRFlux
-          VRFlux[origin] = sumProjI * _VR.sldAngl/_nRadRays;
+          Vector ray_location;
+          bool useCCRays = true;
+          rayLocation(mTwister, origin, DyDx, DzDx, useCCRays, ray_location);
 
-        }  // end if VR extents
+
+          double cosVRTheta;
+          Vector direction_vector;
+          rayDirection_VR( mTwister, origin, iRay, d_VR, DyDx, DzDx, direction_vector, cosVRTheta);
+
+          // get the intensity for this ray
+          updateSumI( direction_vector, ray_location, origin, Dx, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
+
+          sumProjI += cosVRTheta * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
+                                                       // from all the rays up to that point
+          sumI_prev = sumI;
+
+        } // end VR ray loop
+
+        //__________________________________
+        //  Compute VRFlux
+        VRFlux[origin] = sumProjI * d_VR.sldAngl/d_nRadRays;
+
       }  // end VR cell iterator
-    }  // end if _virtRad
+    }  // end if d_virtRad
     
 
     //______________________________________________________________________
     //          B O U N D A R Y F L U X
     //______________________________________________________________________
-    if( _solveBoundaryFlux){
+    if( d_solveBoundaryFlux){
 
       //__________________________________
       //
@@ -707,11 +713,11 @@ Ray::rayTrace( const ProcessorGroup* pc,
        while(i_s<40) {
 
         _abskgBench4 = kappa[i_s];
-        _sigmaScat = sigma_s[i_s];
+        d_sigmaScat = sigma_s[i_s];
         i_s++;
 
 
-        //cout << _sigmaScat << endl;
+        //cout << d_sigmaScat << endl;
         //cout << _abskgBench4 << endl;
 
         FILE * f = NULL;
@@ -734,14 +740,14 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
           //__________________________________
           // Flux ray loop
-          for (int iRay=0; iRay < _nFluxRays; iRay++){
+          for (int iRay=0; iRay < d_nFluxRays; iRay++){
 
             Vector direction_vector, ray_location; 
             double cosTheta;
-            rayDirection_cellFace( mTwister, origin, _dirIndexOrder[RayFace], _dirSignSwap[RayFace], iRay,
+            rayDirection_cellFace( mTwister, origin, d_dirIndexOrder[RayFace], d_dirSignSwap[RayFace], iRay,
                                    direction_vector, cosTheta );
                                    
-            rayLocation_cellFace( mTwister, origin, _locationIndexOrder[RayFace], _locationShift[RayFace], 
+            rayLocation_cellFace( mTwister, origin, d_locationIndexOrder[RayFace], d_locationShift[RayFace], 
                                   DyDx, DzDx, ray_location);            
             
             updateSumI( direction_vector, ray_location, origin, Dx, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
@@ -755,7 +761,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
           //__________________________________
           //  Compute Net Flux to the boundary
           int face = UintahFace[RayFace];            
-          boundFlux[origin][ face ] = sumProjI * 2 *M_PI/_nFluxRays;
+          boundFlux[origin][ face ] = sumProjI * 2 *M_PI/d_nFluxRays;
                
 /*`==========TESTING==========*/
 #if DEBUG == 2
@@ -784,25 +790,25 @@ Ray::rayTrace( const ProcessorGroup* pc,
       // Implement fancy 2D filtering for boundFluxFilt here
       // Will need a smart algorithm to determine in which plane to do the filtering
 
-    }   // end if _solveBoundaryFlux
+    }   // end if d_solveBoundaryFlux
         
          
     //______________________________________________________________________
     //         S O L V E   D I V Q
     //______________________________________________________________________
-  if( _solveDivQ){
+  if( d_solveDivQ){
     for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){ 
       IntVector origin = *iter; 
 
       double sumI = 0;
 
       // ray loop
-      for (int iRay=0; iRay < _nDivQRays; iRay++){
+      for (int iRay=0; iRay < d_nDivQRays; iRay++){
         
-        Vector direction_vector =findRayDirection(mTwister,_isSeedRandom, origin, iRay );
+        Vector direction_vector =findRayDirection(mTwister, d_isSeedRandom, origin, iRay );
         
         Vector ray_location;
-        rayLocation( mTwister, origin, DyDx,  DzDx, _CCRays, ray_location);
+        rayLocation( mTwister, origin, DyDx,  DzDx, d_CCRays, ray_location);
 
         updateSumI( direction_vector, ray_location, origin, Dx,  sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
         
@@ -810,10 +816,10 @@ Ray::rayTrace( const ProcessorGroup* pc,
       
       //__________________________________
       //  Compute divQ
-      divQ[origin] = 4.0 * M_PI * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/_nDivQRays) );
+      divQ[origin] = 4.0 * M_PI * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/d_nDivQRays) );
 
       // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used 
-      radiationVolq[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/_nDivQRays) ; 
+      radiationVolq[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/d_nDivQRays) ; 
 /*`==========TESTING==========*/
 #if DEBUG == 1
           printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n", 
@@ -879,7 +885,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   tsk->requires( Task::OldDW, d_radiationVolqLabel,  d_gn, 0 );
   
   
-  if( _whichROI_algo == dynamic ){
+  if( d_whichROI_algo == dynamic ){
     tsk->requires(Task::NewDW, d_ROI_LoCellLabel);
     tsk->requires(Task::NewDW, d_ROI_HiCellLabel);
   }
@@ -920,7 +926,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
                          DataWarehouse* new_dw,
                          bool modifies_divQ,
                          Task::WhichDW which_abskg_dw,
-                         Task::WhichDW which_sigmaT4_dw,
+                         Task::WhichDW whichd_sigmaT4_dw,
                          const int radCalc_freq )
 { 
 
@@ -952,7 +958,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
   constCCVariable<double> sigmaT4OverPi_fine;
     
   DataWarehouse* abskg_dw   = new_dw->getOtherDataWarehouse(which_abskg_dw);
-  DataWarehouse* sigmaT4_dw = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
+  DataWarehouse* sigmaT4_dw = new_dw->getOtherDataWarehouse(whichd_sigmaT4_dw);
 
   vector<Vector> Dx(maxLevels);
   double DyDx[maxLevels];
@@ -982,7 +988,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
                  
   //__________________________________
   //  retrieve fine level data & compute the extents (dynamic and fixed )
-  if ( _whichROI_algo == fixed || _whichROI_algo == dynamic ){
+  if ( d_whichROI_algo == fixed || d_whichROI_algo == dynamic ){
     int L = maxLevels - 1;
     
     const Patch* notUsed=0;
@@ -1013,7 +1019,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
 
      //__________________________________
     //  retrieve fine level data ( patch_based )
-    if ( _whichROI_algo == patch_based ){
+    if ( d_whichROI_algo == patch_based ){
     
       computeExtents(level_0, fineLevel, finePatch, maxLevels, new_dw,        
                      fineLevel_ROI_Lo, fineLevel_ROI_Hi,  
@@ -1050,7 +1056,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       IntVector origin = *iter; 
       
 /*`==========TESTING==========*/
-      if(origin == IntVector(10,10,0) && _isDbgOn ){
+      if(origin == IntVector(10,10,0) && d_isDbgOn ){
         dbg2.setActive(true);
       }else{
         dbg2.setActive(false);
@@ -1061,12 +1067,12 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
 
       //__________________________________
       //  ray loop
-      for (int iRay=0; iRay < _nDivQRays; iRay++){
+      for (int iRay=0; iRay < d_nDivQRays; iRay++){
         
         Vector ray_location;
         //rayLocation( mTwister, origin, DyDx,  DzDx, _CCRays, ray_location);            // THIS IS NOT RIGHT!!!!
 
-        Vector ray_direction = findRayDirection( mTwister,_isSeedRandom, origin, iRay ); 
+        Vector ray_direction = findRayDirection( mTwister,d_isSeedRandom, origin, iRay ); 
                
         updateSumI_ML( ray_direction, ray_location, origin, Dx, domain_BB, maxLevels, fineLevel, DyDx,DzDx,
                        fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo, regionHi, sigmaT4OverPi, abskg, nRaySteps, sumI, mTwister);
@@ -1076,10 +1082,10 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
 
       //__________________________________
       //  Compute divQ
-      divQ_fine[origin] = 4.0 * M_PI * abskg_fine[origin] * ( sigmaT4OverPi_fine[origin] - (sumI/_nDivQRays) );
+      divQ_fine[origin] = 4.0 * M_PI * abskg_fine[origin] * ( sigmaT4OverPi_fine[origin] - (sumI/d_nDivQRays) );
       
       // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used 
-      radiationVolq_fine[origin] = 4.0 * M_PI * abskg_fine[origin] *  (sumI/_nDivQRays) ;
+      radiationVolq_fine[origin] = 4.0 * M_PI * abskg_fine[origin] *  (sumI/d_nDivQRays) ;
 
       //dbg2 << origin << "    divQ: " << divQ_fine[origin] << " term2 " << abskg_fine[origin] << " sumI term " << (sumI/_nDivQRays) << endl;
     }  // end cell iterator
@@ -1115,7 +1121,7 @@ Ray::computeExtents(LevelP level_0,
 {
   //__________________________________
   //   fine level region of interest ROI
-  if( _whichROI_algo == dynamic ){
+  if( d_whichROI_algo == dynamic ){
   
     minvec_vartype lo;
     maxvec_vartype hi;
@@ -1124,18 +1130,18 @@ Ray::computeExtents(LevelP level_0,
     fineLevel_ROI_Lo = roundNearest( Vector(lo) );
     fineLevel_ROI_Hi = roundNearest( Vector(hi) );
     
-  } else if ( _whichROI_algo == fixed ){
+  } else if ( d_whichROI_algo == fixed ){
   
-    fineLevel_ROI_Lo = fineLevel->getCellIndex( _ROI_minPt );
-    fineLevel_ROI_Hi = fineLevel->getCellIndex( _ROI_maxPt );
+    fineLevel_ROI_Lo = fineLevel->getCellIndex( d_ROI_minPt );
+    fineLevel_ROI_Hi = fineLevel->getCellIndex( d_ROI_maxPt );
     
     if( !fineLevel->containsCell( fineLevel_ROI_Lo ) || 
         !fineLevel->containsCell( fineLevel_ROI_Hi ) ){
       ostringstream warn;
-      warn << "ERROR:  the fixed ROI extents " << _ROI_minPt << " " << _ROI_maxPt << " are not contained on the fine level."<< endl;
+      warn << "ERROR:  the fixed ROI extents " << d_ROI_minPt << " " << d_ROI_maxPt << " are not contained on the fine level."<< endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);    
     }
-  } else if ( _whichROI_algo == patch_based ){
+  } else if ( d_whichROI_algo == patch_based ){
   
     IntVector patchLo = patch->getCellLowIndex();
     IntVector patchHi = patch->getCellHighIndex();
@@ -1271,7 +1277,7 @@ void Ray::rayDirection_cellFace( MTRand& mTwister,
                                  double& cosTheta)
 {
 
-  if(_isSeedRandom == false){                 // !! This could use a compiler directive for speed-up
+  if( d_isSeedRandom == false ){                 // !! This could use a compiler directive for speed-up
     mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
   }
 
@@ -1305,7 +1311,7 @@ void Ray::rayDirection_VR( MTRand& mTwister,
                            Vector& direction_vector,
                            double& cosVRTheta)
 {
-  if(_isSeedRandom == false){
+  if( d_isSeedRandom == false ){
     mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
   }
   
@@ -1512,7 +1518,7 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
     return;
   }
   
-  if ( _onOff_SetBCs == false )
+  if ( d_onOff_SetBCs == false )
     return;
 
   for (int p=0; p < patches->size(); p++){
@@ -1526,7 +1532,7 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
     
       printTask(patches,patch,dbg,"Doing Ray::setBoundaryConditions");
 
-      double sigma_over_pi = _sigma/M_PI;
+      double sigma_over_pi = d_sigma/M_PI;
       
       CCVariable<double> temp;
       CCVariable<double> abskg;
@@ -1595,7 +1601,7 @@ void Ray::setBC(CCVariable<T>& Q_CC,
                 const Patch* patch,
                 const int mat_id)
 {
-  if(patch->hasBoundaryFaces() == false || _onOff_SetBCs == false){
+  if(patch->hasBoundaryFaces() == false || d_onOff_SetBCs == false){
     return;
   }
 
@@ -1771,7 +1777,7 @@ void Ray::sched_ROI_Extents ( const LevelP& level,
   int maxLevels = level->getGrid()->numLevels() -1;
   int L_indx = level->getIndex();
   
-  if( (L_indx != maxLevels ) || ( _whichROI_algo != dynamic ) ){     // only schedule on the finest level and dynamic
+  if( (L_indx != maxLevels ) || ( d_whichROI_algo != dynamic ) ){     // only schedule on the finest level and dynamic
     return;
   }
   
@@ -1837,7 +1843,7 @@ void Ray::ROI_Extents ( const ProcessorGroup*,
     for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
 
-      if( mag_grad_abskg[c] > _abskg_thld || mag_grad_sigmaT4[c] > _sigmaT4_thld ){
+      if( mag_grad_abskg[c] > d_abskg_thld || mag_grad_sigmaT4[c] > d_sigmaT4_thld ){
         flaggedCells[c] = true;
         flaggedPatch = true;
       }
@@ -1862,13 +1868,13 @@ void Ray::ROI_Extents ( const ProcessorGroup*,
 void Ray::sched_CoarsenAll( const LevelP& coarseLevel, 
                             SchedulerP& sched,
                             const bool modifies_abskg,
-                            const bool modifies_sigmaT4,
+                            const bool modifiesd_sigmaT4,
                             const int radCalc_freq)
 {
   if(coarseLevel->hasFinerLevel()){
     printSchedule(coarseLevel,dbg,"Ray::sched_CoarsenAll");
     sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_abskg,   d_abskgLabel,    radCalc_freq );
-    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_sigmaT4, d_sigmaT4_label, radCalc_freq );
+    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifiesd_sigmaT4, d_sigmaT4_label, radCalc_freq );
   }
 }
 
@@ -2019,7 +2025,7 @@ void Ray::updateSumI ( Vector& ray_direction,
 
 
 #ifdef RAY_SCATTER
-   double scatCoeff = _sigmaScat;          //[m^-1]  !! HACK !! This needs to come from data warehouse
+   double scatCoeff = d_sigmaScat;          //[m^-1]  !! HACK !! This needs to come from data warehouse
    if (scatCoeff == 0) scatCoeff = 1e-99;  // avoid division by zero
 
    // Determine the length at which scattering will occur
@@ -2030,7 +2036,7 @@ void Ray::updateSumI ( Vector& ray_direction,
 
    //+++++++Begin ray tracing+++++++++++++++++++
    //Threshold while loop
-   while ( intensity > _Threshold ){
+   while ( intensity > d_threshold ){
     
      DIR face = NONE;
 
@@ -2110,7 +2116,7 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0){
          // get new scatLength for each scattering event
          scatLength = -log(mTwister.randDblExc() ) / scatCoeff; 
          
-         ray_direction     =  findRayDirection( mTwister, _isSeedRandom, cur ); 
+         ray_direction     =  findRayDirection( mTwister, d_isSeedRandom, cur ); 
          inv_ray_direction = Vector(1.0)/ray_direction;
 
          // get new step and sign
@@ -2156,20 +2162,20 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0){
      intensity = intensity * fs;
      
      // when a ray reaches the end of the domain, we force it to terminate. 
-     if(!_allowReflect) intensity = 0;
+     if(!d_allowReflect) intensity = 0;
                                  
 /*`==========TESTING==========*/
 #if DEBUG == 1
 if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0 ){
     printf( "            cur [%d,%d,%d] intensity: %g expOptThick: %g, fs: %g allowReflect: %i\n", 
-           cur.x(), cur.y(), cur.z(), intensity,  exp(-optical_thickness), fs, _allowReflect );
+           cur.x(), cur.y(), cur.z(), intensity,  exp(-optical_thickness), fs, d_allowReflect );
     
 } 
 #endif 
 /*===========TESTING==========`*/     
      //__________________________________
      //  Reflections
-     if ( (intensity > _Threshold) && _allowReflect){
+     if ( (intensity > d_threshold) && d_allowReflect){
        reflect( fs, cur, prevCell, abskg[cur], in_domain, step[face], sign[face], ray_direction[face]);
        ++nReflect;
      }
@@ -2245,7 +2251,7 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0 ){
 
   //______________________________________________________________________
   //  Threshold  loop
-  while (intensity > _Threshold){
+  while (intensity > d_threshold){
     DIR dir = NONE;
     while (in_domain){
 
@@ -2372,11 +2378,11 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0 ){
     intensity = intensity * fs;  
     
      // when a ray reaches the end of the domain, we force it to terminate. 
-     if(!_allowReflect) intensity = 0;
+     if(!d_allowReflect) intensity = 0;
     
     //__________________________________
     //  Reflections
-    if (intensity > _Threshold && _allowReflect ){
+    if (intensity > d_threshold && d_allowReflect ){
       ++nReflect;
       reflect( fs, cur, prevCell, abskg[L][cur], in_domain, step[dir], sign[dir], inv_direction[dir] );
 
@@ -2490,56 +2496,4 @@ Ray::filter( const ProcessorGroup*,
 // Explicit template instantiations:
 
 template void Ray::setBC<int>(    CCVariable<int>&    Q_CC, const string& desc, const Patch* patch, const int mat_id);
-template void Ray::setBC<double>( CCVariable<double>& Q_CC, const string& desc, const Patch* patch, const int mat_id);
-
-//______________________________________________________________________
-// ISAAC's NOTES: 
-//Jan 6. Began work on solving for boundary fluxes
-//Jan 5. Changed containsCell method to only need to compare two faces rather than 6
-//Dec 15. Now uses interactive BCs correctly from input file
-//Dec 1. Clean up (removed ray viz stuff.
-//Nov 30. Modified so user can specify in the input file either benchmark_13pt2, benchmark_1, or no benchmark (real case)
-//Nov 18. Put in visualization stuff. It worked well.
-//Nov 16. Realized that the "correct" method for reflections is no different from Paula's (using fs). Reverted back to Paula's
-//Nov 9, 2011.  Added in reflections based on correct method of attenuating I for each reflection.
-//Jun 9. Ray_noncubic.cc now handles non-cubic cells. Created from Ray.cc as it was in the repository on Jun 9, 2011.
-//May 18. cleaned up comments
-//May 6. Changed to cell iterator
-//Created Jan 31. Cleaned up comments, removed hard coding of T and abskg 
-// Jan 19// I changed cx to be lagging.  This changed nothing in the RMS error, but may be important...
-//when referencing a non-uniform temperature.
-//Created Jan13. //  Ray_PW_const.cc Making this piecewise constant by using CC values. not interpolating
-//Removed symmetry test. 
-//Has a new equation for absorb_coef for chi and optical thickness calculations...
-//I did this based on my findings in my intepolator
-//Just commented out a few unnecessary vars
-//No more hitch!  Fixed cx to not be incremented the first march, and...
-//fixed the formula for absorb_coef and chi which reference ray_location
-//Now can do a DelDotqline in each of the three coordinate directions, through the center
-//Ray Visualization works, and is correct
-//To plot out the rays in matlab
-//Now we use an average of two values for a more precise value of absorb_coef rather...
-//than using the cell centered absorb_coef
-//Using the exact absorb_coef for chi by using formula.Beautiful results...
-//see chi_is_exact_absorb_coef.eps in runcases folder
-//FIXED THE VARIANCE REDUCTION PROBLEM BY GETTING NEW CHI FOR EACH RAY goes with Chi Fixed folder
-//BENCHMARK CASE 99. 
-//with error msg if slice is too big
-//Based on Ray_bak_Oct15.cc which was Created Oct 13.
-// Using Woo (and Amanatides) method//and it works!
-//efficiency of approx 20Msteps/sec
-//I try to wait to declare each variable until I need it
-//Incorporates Steve's sperical way of generating a direction vector
-//Back to ijk from cell iterator
-//Now absorb_coef is hard coded in because abskg in DW is simply zero
-//Now gets abskg from Dw
-// with capability to print temperature profile to a file
-//Now gets T from DW.  accounts for intensity coming back from surfaces. calculates
-// the net Intensity for each cell. Still needs to send rays out from surfaces.Chi is inside while 
-//loop. I took out the double domain while loop simply for readability.  I should put it back in 
-//when running cases. if(sign[xyorz]) else. See Ray_bak_Aug10.cc for correct implementation. ix 
-//is just (NxNyNz) rather than (xNxxNyxNz).  absorbing media. reflections, and simplified while 
-//(w/precompute) loop. ray_location now represents what was formally called emiss_point.  It is by
-// cell index, not by physical location.
-//NOTE equations are from the dissertation of Xiaojing Sun... 
-//"REVERSE MONTE CARLO RAY-TRACING FOR RADIATIVE HEAT TRANSFER IN COMBUSTION SYSTEMS 
+template void Ray::setBC<double>( CCVariable<double>& Q_CC, const string& desc, const Patch* patch, const int mat_id); 

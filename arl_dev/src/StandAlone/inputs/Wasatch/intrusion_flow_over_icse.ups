@@ -277,42 +277,24 @@
 
   <Grid>
       <BoundaryConditions>
-      <DefaultMaterial>all</DefaultMaterial>
-      <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
-      <Face side="x-">
-        <BCType label="phi-scalar" var="Dirichlet" value="1.0"/>
-        <BCType label="x-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="y-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="u" var="Dirichlet" value="0.0"/>
-        <BCType label="v" var="Dirichlet" value="0.0"/>
-        <BCType label="x-mom_rhs" var="Dirichlet" value="0.0"/>
-        <BCType label="x-mom_rhs_partial" var="Dirichlet" value="0.0"/>
-      </Face>
-      <Face side="x+">
-        <BCType label="phi-scalar" var="Dirichlet" value="1.0"/>
-        <BCType label="u" var="Dirichlet" value="0.0"/>
-        <BCType label="v" var="Dirichlet" value="0.0"/>
-        <BCType label="x-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="y-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="x-mom_rhs_partial" var="Dirichlet" value="0.0"/>
-        <BCType label="x-mom_rhs" var="Dirichlet" value="0.0"/>
-      </Face>
-      <Face side="y-">
-        <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
-        <BCType label="x-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="y-mom" var="Dirichlet" value="1.0"/>
-        <BCType label="u" var="Dirichlet" value="0.0"/>
-        <BCType label="v" var="Dirichlet" value="1.0"/>
-        <BCType label="y-mom_rhs_partial" var="Dirichlet" value="0.0"/>
-        <BCType label="y-mom_rhs" var="Dirichlet" value="0.0"/>
-      </Face>
-      <Face side="y+">
-        <BCType label="phi-scalar" var="Neumann" value="0.0"/>
-        <BCType label="x-mom" var="Neumann" value="0.0"/>
-        <BCType label="u" var="Neumann" value="0.0"/>
-        <BCType label="pressure" var="Dirichlet" value="0.0"/>
-        <BCType label="y-mom_rhs_partial" var="Dirichlet" value="0.0"/>
-      </Face>
+				<DefaultMaterial>all</DefaultMaterial>
+				<!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
+				<Face side="x-" type="Wall">
+					<BCType label="phi-scalar" var="Dirichlet" value="1.0"/>
+				</Face>
+				<Face side="x+" type="Wall">
+					<BCType label="phi-scalar" var="Dirichlet" value="1.0"/>
+				</Face>
+				<Face side="y-" type="Velocity">
+					<BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
+					<BCType label="x-mom" var="Dirichlet" value="0.0"/>
+					<BCType label="y-mom" var="Dirichlet" value="1.0"/>
+					<BCType label="u" var="Dirichlet" value="0.0"/>
+					<BCType label="v" var="Dirichlet" value="1.0"/>
+				</Face>
+				<Face side="y+" type="Outflow">
+					<BCType label="phi-scalar" var="Neumann" value="0.0"/>
+				</Face>
       </BoundaryConditions>
       <Level>
       <Box label="1">

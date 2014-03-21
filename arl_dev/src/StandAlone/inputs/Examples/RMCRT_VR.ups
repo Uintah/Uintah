@@ -98,7 +98,7 @@
          <lower>      [0,0,0]     </lower>         
          <upper>      [1, 1, 1]   </upper>         
          <resolution> [21,21,21]  </resolution>    
-         <patches>    [1,1,1]     </patches> 
+         <patches>    [2,2,2]     </patches> 
          <extraCells> [1,1,1]     </extraCells>
       </Box>
       <periodic> [0,0,0] </periodic>                                     
@@ -129,11 +129,14 @@
     <StefanBoltzmann>   5.67051e-8  </StefanBoltzmann>
     <solveBoundaryFlux> false       </solveBoundaryFlux>
     <CCRays>            false       </CCRays>
+    
     <VirtRadiometer>    true        </VirtRadiometer>
     <VRViewAngle>       180         </VRViewAngle>
     <VROrientation>     [-1,0,0]    </VROrientation>
+    
     <VRLocationsMin>    [0,0,0]     </VRLocationsMin>
-    <VRLocationsMax>    [20,20,20]  </VRLocationsMax>
+    <VRLocationsMax>    [1,1,1]     </VRLocationsMax>
+    
     <nRadRays>          10          </nRadRays>
   </RMCRT>
 </Uintah_specification>

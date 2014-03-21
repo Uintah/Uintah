@@ -59,6 +59,8 @@
 #include <CCA/Components/MPM/ConstitutiveModel/ViscoPlastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/NonLocalDruckerPrager.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Arenisca.h>
+#include <CCA/Components/MPM/ConstitutiveModel/Arenisca3.h>
+#include <CCA/Components/MPM/ConstitutiveModel/Arenisca4.h>
 #include <CCA/Components/MPM/ConstitutiveModel/JWLppMPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Biswajit/CamClay.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Arena.h>
@@ -84,14 +86,14 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   string mat_type;
   if(!child->getAttribute("type", mat_type))
     throw ProblemSetupException("No type for constitutive_model", __FILE__, __LINE__);
-   
-  if (flags->d_integrator_type != "implicit" && 
-      flags->d_integrator_type != "explicit" && 
+
+  if (flags->d_integrator_type != "implicit" &&
+      flags->d_integrator_type != "explicit" &&
       flags->d_integrator_type != "fracture"){
     string txt="MPM: time integrator [explicit or implicit] hasn't been set.";
     throw ProblemSetupException(txt, __FILE__, __LINE__);
   }
-  
+
   if(flags->d_integrator_type == "implicit" && ( mat_type == "comp_neo_hook_plastic" ) ){
     string txt="MPM:  You cannot use implicit MPM and comp_neo_hook_plastic";
     throw ProblemSetupException(txt, __FILE__, __LINE__);
@@ -106,26 +108,30 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     return(scinew NonLocalDruckerPrager(child,flags));
   else if (mat_type == "Arenisca")
     return(scinew Arenisca(child,flags));
+  else if (mat_type == "Arenisca3")
+    return(scinew Arenisca3(child,flags));
+  else if (mat_type == "Arenisca4")
+    return(scinew Arenisca4(child,flags));
   else if (mat_type == "arena")
     return(scinew Arena(child,flags));
 
   else if (mat_type ==  "comp_neo_hook") {
-    if (flags->d_integrator_type == "explicit" || 
+    if (flags->d_integrator_type == "explicit" ||
         flags->d_integrator_type == "fracture")
       return(scinew UCNH(child,flags,false,false));
     else if (flags->d_integrator_type == "implicit")
       return(scinew UCNH(child,flags));
   }
-  else if (mat_type ==  "cnh_damage") 
+  else if (mat_type ==  "cnh_damage")
     return(scinew UCNH(child,flags,false,true));
-  
-  else if (mat_type ==  "UCNH") 
+
+  else if (mat_type ==  "UCNH")
     return(scinew UCNH(child,flags));
 
-  else if (mat_type ==  "cnh_mms") 
+  else if (mat_type ==  "cnh_mms")
     return(scinew CNH_MMS(child,flags));
 
-  else if (mat_type ==  "cnhp_damage") 
+  else if (mat_type ==  "cnhp_damage")
     return(scinew UCNH(child,flags,true,true));
 
   else if (mat_type ==  "trans_iso_hyper") {
@@ -135,7 +141,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     else if (flags->d_integrator_type == "implicit")
       return(scinew TransIsoHyperImplicit(child,flags));
   }
-  
+
   else if (mat_type ==  "visco_trans_iso_hyper") {
     if (flags->d_integrator_type == "explicit" ||
         flags->d_integrator_type == "fracture")
@@ -143,7 +149,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     else if (flags->d_integrator_type == "implicit")
     return(scinew ViscoTransIsoHyperImplicit(child,flags));
   }
-  
+
   else if (mat_type ==  "ideal_gas")
     return(scinew IdealGasMP(child,flags));
 
@@ -158,20 +164,20 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   else if (mat_type == "comp_neo_hook_plastic")
     return(scinew UCNH(child,flags,true,false));
-   
+
   else if (mat_type ==  "visco_scram"){
-    if (flags->d_integrator_type == "explicit" || 
+    if (flags->d_integrator_type == "explicit" ||
         flags->d_integrator_type == "fracture")
       return(scinew ViscoScram(child,flags));
     else if (flags->d_integrator_type == "implicit")
       return(scinew ViscoScramImplicit(child,flags));
   }
-   
+
   else if (mat_type ==  "viscoSCRAM_hs")
     return(scinew ViscoSCRAMHotSpot(child,flags));
-   
+
   else if (mat_type ==  "hypo_elastic") {
-    if (flags->d_integrator_type == "explicit" || 
+    if (flags->d_integrator_type == "explicit" ||
         flags->d_integrator_type == "fracture")
       return(scinew HypoElastic(child,flags));
     else if (flags->d_integrator_type == "implicit"){
@@ -198,7 +204,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   else if (mat_type ==  "mw_visco_elastic")
     return(scinew MWViscoElastic(child,flags));
-   
+
   else if (mat_type ==  "murnaghanMPM")
     return(scinew MurnaghanMPM(child,flags));
 
@@ -207,7 +213,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   else if (mat_type ==  "shell_CNH")
     return(scinew ShellMaterial(child,flags));
-   
+
   else if (mat_type ==  "elastic_plastic")
     return(scinew ElasticPlasticHP(child,flags));
 
@@ -219,17 +225,17 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   else if (mat_type ==  "visco_plastic")
     return(scinew ViscoPlastic(child,flags));
-  
+
   else if (mat_type ==  "murnaghanMPM")
     return(scinew MurnaghanMPM(child,flags));
-  
+
   else if (mat_type ==  "jwlpp_mpm")
     return(scinew JWLppMPM(child,flags));
-  
+
   else if (mat_type ==  "camclay")
     return(scinew CamClay(child,flags));
-  
-  else 
+
+  else
     throw ProblemSetupException("Unknown Material Type R ("+mat_type+")", __FILE__, __LINE__);
 
   return 0;

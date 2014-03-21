@@ -166,39 +166,22 @@
       <BoundaryConditions>
       <DefaultMaterial>all</DefaultMaterial>
       <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
-      <Face side="x-">
+      <Face side="x-" type="Velocity">
         <BCType var="Dirichlet" label="x-mom" value="2.0"/>        
         <BCType var="Dirichlet" label="y-mom" value="0.0"/>                                                  
-        <BCType var="Dirichlet" label="x-mom_rhs_partial" value="0.0"/>
-        <BCType var="Dirichlet" label="x-mom_rhs" value="0.0"/>
         <BCType var="Dirichlet" label="phi-scalar" value="10.0"/>
-        <BCType var="Dirichlet" label="phi-scalar_rhs" value="0.0"/>
       </Face>
       
-      <Face side="x+">
-        <BCType var="Neumann" label="y-mom" value="0.0"/>
-        <BCType var="Dirichlet" label="pressure" value="0.0"/>
-        <BCType var="Dirichlet" label="x-mom_rhs_partial" value="0.0"/>
+      <Face side="x+" type="Outflow">
         <BCType var="Neumann" label="phi-scalar" value="0.0"/>
-        <BCType var="Dirichlet" label="phi-scalar_rhs" value="0.0"/>        
       </Face>
       
-      <Face side="y-">      
-        <BCType var="Dirichlet" label="x-mom" value="0.0"/>
-        <BCType var="Dirichlet" label="y-mom" value="0.0"/>
-        <BCType var="Dirichlet" label="y-mom_rhs" value="0.0"/>
-        <BCType var="Dirichlet" label="y-mom_rhs_partial" value="0.0"/>
+      <Face side="y-" type="Wall">      
         <BCType var="Dirichlet" label="phi-scalar" value="1.0"/>
-        <BCType var="Dirichlet" label="phi-scalar_rhs" value="0.0"/>        
       </Face>
       
-      <Face side="y+">      
-        <BCType var="Dirichlet" label="x-mom" value="0.0"/>
-        <BCType var="Dirichlet" label="y-mom" value="0.0"/>
-        <BCType var="Dirichlet" label="y-mom_rhs" value="0.0"/>
-        <BCType var="Dirichlet" label="y-mom_rhs_partial" value="0.0"/>
+      <Face side="y+" type="Wall">      
         <BCType var="Dirichlet" label="phi-scalar" value="1.0"/>
-        <BCType var="Dirichlet" label="phi-scalar_rhs" value="0.0"/>        
       </Face>
 
       </BoundaryConditions>

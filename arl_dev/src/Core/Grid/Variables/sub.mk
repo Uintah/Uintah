@@ -51,7 +51,6 @@ SRCS += \
         $(SRCDIR)/PSPatchMatlGhostRange.cc      \
         $(SRCDIR)/ReductionVariableBase.cc      \
         $(SRCDIR)/ReductionVariable_special.cc  \
-        $(SRCDIR)/ScrubItem.cc                  \
         $(SRCDIR)/SoleVariableBase.cc           \
         $(SRCDIR)/Stencil7.cc                   \
         $(SRCDIR)/Stencil4.cc                   \
@@ -60,7 +59,7 @@ SRCS += \
         $(SRCDIR)/VarLabel.cc                   \
         $(SRCDIR)/Variable.cc                   
 
-#
+#         $(SRCDIR)/ScrubItem.cc                  \
 #         $(SRCDIR)/ParticleVariable_templates.cc \
 #         $(SRCDIR)/NCVariable_templates.cc \
 #         $(SRCDIR)/CCVariable_templates.cc \

@@ -9,9 +9,6 @@ import subprocess as sub_proc
 
 from AreniscaTestSuite_PostProc import *
 
-RUN_TESTS = True
-CLEAN_UDA = True
-
 #Automated script for running and post processing Arenisca verification tetsts. 
 # Requires that ../opt/StandAlone/ and ../opt/StandAlone/tools/extractors/ be on working PATH
 # If you would like to run tests with more than one processor than mpirun must also be on PATH
@@ -34,17 +31,17 @@ POST_PROCESS_LIST = [
   'AreniscaTest_07_HydrostaticCompressionCapEvolution.ups',
   'AreniscaTest_08_LoadingUnloading.ups',
   'AreniscaTest_09_FluidFilledPoreSpace.ups',
-  'AreniscaTest_10_TransientStressEigenvaluesConstVectors.ups',
+  'AreniscaTest_10_PureIsochoricStrainRates.ups',
   'AreniscaTest_11_UniaxialStrainJ2plasticity.ups',
-  'AreniscaTest_12_PureIsochoricStrainRatesInDiffDirs.ups',
+  'AreniscaTest_12_NonlinearElasticity.ups',
 ]
 
 #get uintah/src path as enviornmental variable
 uintah_src_path = os.path.abspath(os.environ['UINTAH_SRC'])
 
 #construct default paths based on location of uintah_src_path
-default_inputs_path = uintah_src_path+'/StandAlone/inputs/MPM/Arenisca'
-default_working_dir = uintah_src_path+'/StandAlone/inputs/MPM/Arenisca/test_run'
+default_inputs_path = uintah_src_path+'/StandAlone/inputs/MPM/Arenisca/Arenisca3/'
+default_working_dir = uintah_src_path+'/StandAlone/inputs/MPM/Arenisca/Arenisca3/test_run'
 #If the working directory does not exist then make it.
 if not os.path.exists(default_working_dir):
   os.makedirs(default_working_dir)
@@ -54,36 +51,34 @@ default_plot_dir = default_working_dir+'/Plots'
 if not os.path.exists(default_plot_dir):
   os.makedirs(default_plot_dir)
 
-#Build list of tests in the default inputs directory
-#TEST_LIST = []
-#tmp_test_list = os.listdir(default_inputs_path)
-#for item in tmp_test_list:
-  #if os.path.isfile(item):
-    #if '.ups' in item:
-      #TEST_LIST.append(os.path.abspath(item))
-#TEST_LIST.sort()
-#for test in TEST_LIST:
-  #print test
+#Build list of tets in the default inputs directory
+TEST_LIST = []
+tmp_test_list = os.listdir(default_inputs_path)
+for item in tmp_test_list:
+  if os.path.isfile(item):
+    if '.ups' in item:
+      TEST_LIST.append(os.path.abspath(item))
+TEST_LIST.sort()
+
+for test in TEST_LIST:
+  print test
 
 ### COMMENT ME OUT!!!!!!! ###
-TEST_LIST = []
-for test in POST_PROCESS_LIST:
-  TEST_LIST.append(default_inputs_path+'/'+test)
 TEST_LIST = [
-  TEST_LIST[0],  #Test 01
+  #TEST_LIST[0],  #Test 01
   TEST_LIST[1],  #Test 02
-  TEST_LIST[2],  #Test 03a
-  TEST_LIST[3],  #Test 03b
-  TEST_LIST[4],  #Test 03c
-  TEST_LIST[5],  #Test 04
-  TEST_LIST[6],  #Test 05
-  TEST_LIST[7],  #Test 06
-  TEST_LIST[8],  #Test 07
-  TEST_LIST[9],  #Test 08
-  TEST_LIST[10], #Test 09
-  TEST_LIST[11], #Test 10
-  TEST_LIST[12], #Test 11
-  TEST_LIST[13], #Test 12
+  #TEST_LIST[2],  #Test 03a
+  #TEST_LIST[3],  #Test 03b
+  #TEST_LIST[4],  #Test 03c
+  #TEST_LIST[5],  #Test 04
+  #TEST_LIST[6],  #Test 05
+  #TEST_LIST[7],  #Test 06
+  #TEST_LIST[8],  #Test 07
+  #TEST_LIST[9],  #Test 08
+  #TEST_LIST[10], #Test 09
+  #TEST_LIST[11], #Test 10
+  #TEST_LIST[12], #Test 11
+  #TEST_LIST[13], #Test 12
   
   ]
 ### --------------------- ###
@@ -143,48 +138,46 @@ def run_test(ups_path,WITH_MPI=False,NUM_PROCS=1,RESTART=False,DAMPING_OFF_NEW_E
   ups_lines = F_ups.read()
   uda_path = './'+ups_lines.split('<filebase>')[1].split('</filebase>')[0].strip()
   F_ups.close()    
-
+  
   #Determine root path
   root_path = os.path.split(os.path.abspath(ups_path))[0]
   #Change current working directory to root path
   os.chdir(root_path)
-
-  if RUN_TESTS:
-    #Open runlog
-    F_log = open(root_path+'/TEST_RUNLOG_'+os.path.split(ups_path)[1],"w")
-    #Construct the argument list for subprocess to use.
-    if not(WITH_MPI) or int(NUM_PROCS)<=1:
-      args = ['sus',os.path.split(ups_path)[1]]
-    else:
-      args = ['mpirun','-np',str(int(NUM_PROCS)),'sus','-mpi',os.path.split(ups_path)[1]]
-    #Run the test and wait for it to complete
-    tmp = sub_proc.Popen(args,stdout=F_log,stderr=sub_proc.PIPE)
-    dummy = tmp.wait()
-    F_log.close()
-    #If test calls for retstart
-    if RESTART:
-      #If turn damping off and run to new end time
-      if DAMPING_OFF_NEW_END_TIME:
-	#Setup the restart by setting damping to zero and modifying end time
-	print 'Setting <artificial_damping_coeff> to zero and restarting with new end time of ',format(NEW_END_TIME,'1.4e')
-	setup_restart(uda_path,DAMPING_OFF_NEW_END_TIME)
-	print 'Done.\nRestarting...'
-	#Open new runlog
-	F_log = open(root_path+'/TEST_RUNLOG_RESTART_'+os.split(ups_path)[1],"w")
-	#Construct the argument list
-	if not(WITH_MPI) or NUM_PROCS<=1:
-	  args = ['sus','-restart','-move',uda_path+'.000']
-	else:
-	  args = ['mpirun','-np',str(int(NUM_PROCS)),'sus','-mpi','-restart','-move',uda_path+'.000']
-	#Run the test and wait for it to complete
-	tmp = sub_proc.Popen(args,stdout=F_log,stderr=sub_proc.PIPE)
-	dummy = tmp.wait()
-	F_log.close()
+  #Open runlog
+  F_log = open(root_path+'/TEST_RUNLOG_'+os.path.split(ups_path)[1],"w")
+  #Construct the argument list for subprocess to use.
+  if not(WITH_MPI) or int(NUM_PROCS)<=1:
+    args = ['sus',os.path.split(ups_path)[1]]
+  else:
+    args = ['mpirun','-np',str(int(NUM_PROCS)),'sus','-mpi',os.path.split(ups_path)[1]]
+  #Run the test and wait for it to complete
+  tmp = sub_proc.Popen(args,stdout=F_log,stderr=sub_proc.PIPE)
+  dummy = tmp.wait()
+  F_log.close()
+  #If test calls for retstart
   if RESTART:
-    uda_path = uda_path+'.001'
+    #If turn damping off and run to new end time
+    if DAMPING_OFF_NEW_END_TIME:
+      #Setup the restart by setting damping to zero and modifying end time
+      print 'Setting <artificial_damping_coeff> to zero and restarting with new end time of ',format(NEW_END_TIME,'1.4e')
+      setup_restart(uda_path,DAMPING_OFF_NEW_END_TIME)
+      print 'Done.\nRestarting...'
+      #Open new runlog
+      F_log = open(root_path+'/TEST_RUNLOG_RESTART_'+os.split(ups_path)[1],"w")
+      #Construct the argument list
+      if not(WITH_MPI) or NUM_PROCS<=1:
+	args = ['sus','-restart','-move',uda_path+'.000']
+      else:
+        args = ['mpirun','-np',str(int(NUM_PROCS)),'sus','-mpi','-restart','-move',uda_path+'.000']
+      #Run the test and wait for it to complete
+      tmp = sub_proc.Popen(args,stdout=F_log,stderr=sub_proc.PIPE)
+      dummy = tmp.wait()
+      F_log.close()
+      uda_path = uda_path+'.001'
   else:
     uda_path = uda_path+'.000'
-  print('Test done.')
+
+  print('Test done.')  
   return uda_path
 
 def clear_uda(uda_path):
@@ -197,7 +190,7 @@ def clear_uda(uda_path):
 
 def run_all_tests(TEST_METHODS=False):
   global default_working_dir,TEST_LIST,RESTART_LIST,MPI_FLAG,NUM_CPUS,POST_PROCESS_LIST
-  print '#-- Running All Tests --#'   
+  print '#-- Running All Tests --#'
   for test in TEST_LIST:
     #Copy to working directory
     ups_path=copy_test_to(test,default_working_dir+'/'+os.path.split(test)[1])
@@ -206,14 +199,14 @@ def run_all_tests(TEST_METHODS=False):
       uda_path = run_test(ups_path,WITH_MPI=MPI_FLAG,NUM_PROCS=NUM_CPUS)
     else:
       new_end_time = RESTART_LIST[1][RESTART_LIST[0].index(test)]
-      uda_path = run_test(ups_path,WITH_MPI=MPI_FLAG,NUM_PROCS=NUM_CPUS,DAMPING_OFF_NEW_END_TIME=new_end_time)	
+      uda_path = run_test(ups_path,WITH_MPI=MPI_FLAG,NUM_PROCS=NUM_CPUS,DAMPING_OFF_NEW_END_TIME=new_end_time)
     #Post process if called for
     if TEST_METHODS:
       test_yield_surface(uda_path)
     else:
       post_proc(test,uda_path,default_plot_dir)
-    if RUN_TESTS and CLEAN_UDA:
-      clear_uda(uda_path)
+    #Clean up the uda
+    clear_uda(uda_path)
     
     
 def post_proc(test,uda_path,save_path):
@@ -242,12 +235,12 @@ def post_proc(test,uda_path,save_path):
       test08_postProc(uda_path,save_path)
     if test_name == 'AreniscaTest_09_FluidFilledPoreSpace.ups':
       test09_postProc(uda_path,save_path)
-    if test_name == 'AreniscaTest_10_TransientStressEigenvaluesConstVectors.ups':
+    if test_name == 'AreniscaTest_10_PureIsochoricStrainRates.ups':
       test10_postProc(uda_path,save_path,WORKING_PATH=default_working_dir)       
     if test_name == 'AreniscaTest_11_UniaxialStrainJ2plasticity.ups':
-      test11_postProc(uda_path,save_path,WORKING_PATH=default_working_dir)
-    if test_name == 'AreniscaTest_12_PureIsochoricStrainRatesInDiffDirs.ups':
-      test12_postProc(uda_path,save_path,WORKING_PATH=default_working_dir)       
+      test11_postProc(uda_path,save_path,WORKING_PATH=default_working_dir)       
+    if test_name == 'AreniscaTest_12_NonlinearElasticity.ups':
+      test12_postProc(uda_path,save_path,WORKING_PATH=default_working_dir)   
   else:
     print '\nERROR: test: ',test,'\n\tNot on post processing list.\n'
 

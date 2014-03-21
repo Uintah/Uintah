@@ -146,7 +146,7 @@ namespace Wasatch{
      *   in the momentum transport equation.
      */
     void verify_boundary_conditions( BCHelper& bcHelper,
-                                     GraphCategories& graphCat ){}
+                                    GraphCategories& graphCat );
     
     /**
      *  \brief setup the boundary conditions associated with this transport equation

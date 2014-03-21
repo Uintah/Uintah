@@ -151,7 +151,7 @@ namespace Uintah {
         dir = dir + ", y";
         failed = true;
       }
-      if( periodic[2]==1 && ( is_BC_set["z-"] == true || is_BC_set["x+"] == true)){
+      if( periodic[2]==1 && ( is_BC_set["z-"] == true || is_BC_set["z+"] == true)){
         dir = dir + ", z";
         failed = true;
       }

@@ -131,7 +131,7 @@
     <VRViewAngle>       180        </VRViewAngle>
     <VROrientation>     [-1,0,0]   </VROrientation>
     <VRLocationsMin>    [0,0,0]    </VRLocationsMin>
-    <VRLocationsMax>    [20,20,20] </VRLocationsMax>
+    <VRLocationsMax>    [0.5,0.5,0.5] </VRLocationsMax>
     
   </RMCRT>
 </Uintah_specification>
