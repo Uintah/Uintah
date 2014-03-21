@@ -285,6 +285,62 @@ namespace Wasatch{
   }
 
   //------------------------------------------------------------------
+  template< typename FieldT >
+  void ScalarTransportEquation<FieldT>::
+  verify_boundary_conditions( BCHelper& bcHelper,
+                             GraphCategories& graphCat )
+  {
+    Expr::ExpressionFactory& advSlnFactory = *(graphCat[ADVANCE_SOLUTION]->exprFactory);
+    
+    const TagNames& tagNames = TagNames::self();
+    const Expr::Tag rhsStarTag = tagNames.make_star_rhs( this->solution_variable_tag() );
+    
+    // make logical decisions based on the specified boundary types
+    BOOST_FOREACH( BndMapT::value_type& bndPair, bcHelper.get_boundary_information() )
+    {
+      const std::string& bndName = bndPair.first;
+      BndSpec& myBndSpec = bndPair.second;
+      
+      switch (myBndSpec.type) {
+        case WALL:
+        case VELOCITY:
+        case OUTFLOW:
+        case OPEN:
+        {
+          // first check if the user specified boundary conditions at the wall
+          if( myBndSpec.has_field(rhs_name()) || myBndSpec.has_field(rhsStarTag.name()) ){
+            std::ostringstream msg;
+            msg << "ERROR: You cannot specify scalar rhs boundary conditions unless you specify USER "
+                << "as the type for the boundary condition. Please revise your input file. "
+                << "This error occured while trying to analyze boundary " << bndName
+                << std::endl;
+            throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+          }
+          
+          BndCondSpec rhsBCSpec = {rhs_name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE };
+          bcHelper.add_boundary_condition(bndName, rhsBCSpec);
+          
+          if (!isConstDensity_) {
+            BndCondSpec rhsStarBCSpec = {rhsStarTag.name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE };
+            bcHelper.add_boundary_condition(bndName, rhsStarBCSpec);
+          }
+          
+          break;
+        }
+        case USER:
+        {
+          // prase through the list of user specified BCs that are relevant to this transport equation
+          break;
+        }
+          
+        default:
+          break;
+      }
+    }
+    
+  }
+
+  //------------------------------------------------------------------
   
   template< typename FieldT >
   void ScalarTransportEquation<FieldT>::
@@ -295,7 +351,7 @@ namespace Wasatch{
     const Category taskCat = ADVANCE_SOLUTION;
     bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
     
-    bcHelper.apply_boundary_condition<FieldT>( rhs_tag(), taskCat, false );
+    bcHelper.apply_boundary_condition<FieldT>( rhs_tag(), taskCat, true ); // apply the rhs bc directly inside the extra cell
   
     if( !isConstDensity_ ){
       // set bcs for solnVar_*
