@@ -56,6 +56,7 @@ using namespace SCIRun;
 class ThermalContact;
 class HeatConduction;
 class AnalysisModule;
+class ConcentrationDiffusion;
 
 /**************************************
 
@@ -90,9 +91,10 @@ public:
   SerialMPM(const ProcessorGroup* myworld);
   virtual ~SerialMPM();
 
-  Contact*         contactModel;
-  ThermalContact*  thermalContactModel;
-  HeatConduction* heatConductionModel;
+  Contact*         			contactModel;
+  ThermalContact*  			thermalContactModel;
+  HeatConduction* 			heatConductionModel;
+  ConcentrationDiffusion* 	concentrationDiffusionModel;
  
   //////////
   // Insert Documentation Here:
@@ -437,6 +439,17 @@ protected:
 
   virtual void scheduleSolveHeatEquations(SchedulerP&, const PatchSet*,
                                           const MaterialSet*);
+
+  // Start Reaction Diffusion Methods
+  virtual void scheduleComputeInternalDiffusionRate(SchedulerP&, const PatchSet*,
+                                                   const MaterialSet*);
+
+  virtual void scheduleComputeNodalConcentrationFlux(SchedulerP&, const PatchSet*,
+                                                const MaterialSet*);
+
+  virtual void scheduleSolveDiffusionEquations(SchedulerP&, const PatchSet*,
+                                              const MaterialSet*);
+  // End Reaction Diffusion Methods
 
   virtual void scheduleComputeAndIntegrateAcceleration(SchedulerP&,
                                                        const PatchSet*,

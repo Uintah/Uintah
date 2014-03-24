@@ -27,6 +27,7 @@
 #include <CCA/Components/MPM/Contact/ContactFactory.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <CCA/Components/MPM/HeatConduction/HeatConduction.h>
+#include <CCA/Components/MPM/ReactiveFlow/ConcentrationDiffusion.h>
 #include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
@@ -1020,6 +1021,7 @@ void SerialMPM::scheduleComputeInternalHeatRate(SchedulerP& sched,
   printSchedule(patches,cout_doing,"MPM::scheduleComputeInternalHeatRate");
   heatConductionModel->scheduleComputeInternalHeatRate(sched,patches,matls);
 }
+
 void SerialMPM::scheduleComputeNodalHeatFlux(SchedulerP& sched,
                                                 const PatchSet* patches,
                                                 const MaterialSet* matls)
@@ -1040,6 +1042,39 @@ void SerialMPM::scheduleSolveHeatEquations(SchedulerP& sched,
     return;
   printSchedule(patches,cout_doing,"MPM::scheduleSolveHeatEquations");
   heatConductionModel->scheduleSolveHeatEquations(sched,patches,matls);
+}
+
+void SerialMPM::scheduleComputeInternalDiffusionRate(SchedulerP& sched,
+                                                const PatchSet* patches,
+                                                const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+  printSchedule(patches,cout_doing,"MPM::scheduleComputeInternalDiffusionRate");
+  concentrationDiffusionModel->scheduleComputeInternalDiffusionRate(sched,patches,matls);
+}
+
+void SerialMPM::scheduleComputeNodalConcentrationFlux(SchedulerP& sched,
+                                                const PatchSet* patches,
+                                                const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+  printSchedule(patches,cout_doing,"MPM::scheduleComputeNodalConcentrationFlux");
+  concentrationDiffusionModel->scheduleComputeNodalConcentrationFlux(sched,patches,matls);
+}
+
+void SerialMPM::scheduleSolveDiffusionEquations(SchedulerP& sched,
+                                           const PatchSet* patches,
+                                           const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+  printSchedule(patches,cout_doing,"MPM::scheduleSolveDiffusionEquations");
+  concentrationDiffusionModel->scheduleSolveDiffusionEquations(sched,patches,matls);
 }
 
 void SerialMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
