@@ -114,7 +114,7 @@ void AnalyticNonBonded::newCalculate(const ProcessorGroup* pg,
   int CUTOFF_CELLS = d_system->getNonbondedGhostCells();
 
   // TODO fixme [APH]
-//  Uintah_MD::Forcefield* d_system->getForcefieldReference();
+//  Forcefield* d_system->getForcefieldReference();
 
   size_t numPatches = patches->size();
   size_t numMaterials = materials->size();
@@ -145,19 +145,21 @@ void AnalyticNonBonded::newCalculate(const ProcessorGroup* pg,
           for (size_t neighborAtomIdx=0; neighborAtomIdx < neighborAtomCount; ++neighborAtomIdx) {
             if (localID[localAtomIdx] != neighborID[neighborAtomIdx]) { // Make sure we're not seeing the same atom
               SCIRun::Vector atomicDistanceVector = neighborPositions[neighborAtomIdx].asVector() - localPositions[localAtomIdx].asVector();
-              double tempEnergy;
-              SCIRun::Vector tempForce;
+              if (atomicDistanceVector.length2() <= cutoff2) {
+                double tempEnergy;
+                SCIRun::Vector tempForce;
               // TODO fixme [APH]
-//              currentPotential->fillEnergyAndForce(tempForce, tempEnergy, &atomicDistanceVector);
-              nbEnergy += tempEnergy;
-              pForce[localAtomIdx] += tempForce;
-              stressTensor += OuterProduct(atomicDistanceVector,tempForce);
-            }
-          }
-        }
-      }
-    }
-  }
+//                currentPotential->fillEnergyAndForce(tempForce, tempEnergy, &atomicDistanceVector);
+                nbEnergy += tempEnergy;
+                pForce[localAtomIdx] += tempForce;
+                stressTensor += OuterProduct(atomicDistanceVector,tempForce);
+              }  // atomicDistanceVector.length2() <= cutoff2
+            }  // localID[localAtomIdx] != neighborID[neighborAtomIdx]
+          }  // loop over neighborAtomIdx
+        }  // loop over localAtomIdx
+      }  // loop over neighbor materials
+    }  // loop over local materials
+  }  // loop over patches
   new_dw->put(sum_vartype(0.5 * nbEnergy), d_lb->nonbondedEnergyLabel);
   new_dw->put(matrix_sum(0.5 * stressTensor), d_lb->nonbondedStressLabel);
   return;

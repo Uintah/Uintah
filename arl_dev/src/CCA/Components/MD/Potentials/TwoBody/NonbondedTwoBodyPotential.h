@@ -38,13 +38,13 @@
 
 #include <string>
 
-namespace UintahMD {
+namespace Uintah {
 
   using namespace SCIRun;
 
-  class NonbondedTwoBodyPotential : public NonbondedPotential {
-
+    class NonbondedTwoBodyPotential : public NonbondedPotential {
     public:
+      NonbondedTwoBodyPotential() {}
       virtual void fillEnergyAndForce(SCIRun::Vector& force,
                                       double& energy,
                                       const SCIRun::Vector& offSet) const = 0;
@@ -71,6 +71,9 @@ namespace UintahMD {
       const std::string getPotentialBaseType() const {
         return d_potentialBaseType;
       }
+
+      // Returns potential specific label
+      virtual const std::string getLabel() const = 0;
 
     private:
       static const std::string d_potentialBaseType;

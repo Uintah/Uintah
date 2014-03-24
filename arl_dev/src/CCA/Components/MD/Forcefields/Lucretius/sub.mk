@@ -30,7 +30,9 @@
 
 SRCDIR	:= CCA/Components/MD/Forcefields/Lucretius
 
-SRCS += $(SRCDIR)/LucretiusExp6.cc
+SRCS += $(SRCDIR)/LucretiusParsing.cc \
+        $(SRCDIR)/LucretiusForcefield.cc \
+        $(SRCDIR)/LucretiusMaterial.cc
 
 PSELIBS :=       
 

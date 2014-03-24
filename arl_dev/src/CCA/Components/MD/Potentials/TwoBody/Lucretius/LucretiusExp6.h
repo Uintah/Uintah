@@ -35,22 +35,15 @@
 #include <CCA/Components/MD/Potentials/TwoBody/NonbondedTwoBodyPotential.h>
 #include <assert.h>
 
-namespace UintahMD {
+namespace Uintah {
   using namespace SCIRun;
 
   class LucretiusExp6 : public NonbondedTwoBodyPotential {
 
     public:
-      LucretiusExp6() {}
-      LucretiusExp6(double _Rmin,
-                    double _eps,
-                    double _lambda) : Rmin(_Rmin), epsilon(_eps), lambda(_lambda) {
-        A = 6.0 * epsilon * exp(lambda) / (lambda - 6);
-        B = lambda / Rmin;
-        C = epsilon * lambda * pow(Rmin, 6.0) / (lambda - 6);
-        D = 0.00005 * pow((12.0 / B), 12.0);  // D(12/(B*r_ij))^12 term; D = 5e-5 kCal/mol
+      //LucretiusExp6() {}
+      LucretiusExp6(double, double, double, const std::string&, const std::string& defaultComment = "");
 
-      }
       ~LucretiusExp6() {
       }
 
@@ -60,38 +53,53 @@ namespace UintahMD {
 
       inline void fillEnergyAndForce(SCIRun::Vector& force,
                                      double& energy,
-                                     const SCIRun::Vector& P1,
-                                     const SCIRun::Vector& P2) const {
+                                     const SCIRun::Point& P1,
+                                     const SCIRun::Point& P2) const {
         fillEnergyAndForce(force, energy, P2 - P1);
         return;
       }
 
-      void fillEnergy(double& energy,
-                      const SCIRun::Vector& offSet) const;
-      inline void fillEnergy(SCIRun::Vector& force,
-                             double& energy,
-                             const SCIRun::Vector& P1,
-                             const SCIRun::Vector& P2) const {
+      void fillEnergy(double&,
+                      const SCIRun::Vector&) const;
+
+      inline void fillEnergy(double& energy,
+                             const SCIRun::Point& P1,
+                             const SCIRun::Point& P2) const {
         fillEnergy(energy, P2 - P1);
         return;
       }
 
-      void fillForce(SCIRun::Vector& force,
-                     const SCIRun::Vector& offSet) const;
+      void fillForce(SCIRun::Vector&,
+                     const SCIRun::Vector&) const;
 
       void fillForce(SCIRun::Vector& force,
-                     const SCIRun::Vector& P1,
-                     const SCIRun::Vector& P2) const {
+                     const SCIRun::Point& P1,
+                     const SCIRun::Point& P2) const {
         fillForce(force, P2 - P1);
         return;
       }
 
-      std::string& getPotentialDescriptor() const;
+      const std::string getPotentialDescriptor() const {
+        return d_potentialDescriptor;
+      }
+
+      const std::string getComment() const {
+        return d_comment;
+      }
+
+      const std::string getLabel() const {
+        return d_label;
+      }
 
     private:
-      static const std::string d_potentialName = "Buckingham_Variant";
+      static const std::string d_potentialSubtype;
+      mutable std::string d_potentialDescriptor;
+      const std::string d_comment;
+      const std::string d_label;
+      bool REL_format;
       double Rmin, epsilon, lambda;
       double A, B, C, D;
+      bool findAlternativeRepresentation(const double, const double, const double, double&, double&, double&);
   };
 }
 

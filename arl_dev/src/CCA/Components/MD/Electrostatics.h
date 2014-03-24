@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_MD_ELECTROSTATICS_H
-#define UINTAH_MD_ELECTROSTATICS_H
+#ifndef UINTAHMD_ELECTROSTATICS_H
+#define UINTAHMD_ELECTROSTATICS_H
 
 #include <CCA/Components/MD/MDSystem.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>

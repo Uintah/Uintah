@@ -111,6 +111,14 @@ void Matrix3::set(int i, int j, double value)
   mat3[i][j] = value;
 }
 
+//inline SCIRun::Vector Matrix3::getRow(int i) const {
+//  return (Vector(mat3[i][0],mat3[i][1],mat3[i][2]));
+//}
+//
+//inline SCIRun::Vector Matrix3::getColumn(int i) const {
+//  return (Vector(mat3[0][i],mat3[1][i],mat3[2][i]));
+//}
+
 Matrix3 Matrix3::Inverse() const
 {
   // Return the inverse of a 3x3 matrix

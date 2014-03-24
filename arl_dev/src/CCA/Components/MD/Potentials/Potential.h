@@ -10,12 +10,13 @@
 
 #include <Core/Geometry/Vector.h>
 
-namespace UintahMD {
+namespace Uintah {
 
   // Defines the necessary base interface for a potential of any type (nonbonded, valence, electrostatic
   class Potential {
 
     public:
+      Potential() {}
       virtual void fillEnergyAndForce(SCIRun::Vector& force, double& energy) const = 0;
       virtual void fillEnergy(double& energy) const = 0;
       virtual void fillForce(SCIRun::Vector& force) const = 0;

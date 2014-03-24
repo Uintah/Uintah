@@ -49,7 +49,8 @@ SRCS += $(SRCDIR)/MD.cc                           \
         $(SRCDIR)/SimpleGrid.cc                   \
         $(SRCDIR)/ShiftedCardinalBSpline.cc
 
-SUBDIRS := $(SRCDIR)/Potentials
+SUBDIRS := $(SRCDIR)/Potentials  \
+           $(SRCDIR)/Forcefields
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
@@ -64,7 +65,8 @@ PSELIBS := \
        Core/Parallel                   \
        Core/ProblemSpec                \
        Core/Thread                     \
-       Core/Util             
+       Core/Util                       \
+       Core/Containers
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
 	      $(THREAD_LIBRARY) $(FFTW_LIBRARY)

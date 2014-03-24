@@ -174,20 +174,51 @@ void SPME::calculateRealspace(const ProcessorGroup* pg,
   return;
 } // End method
 
-
-void SPME::updateFieldAndStress(const ProcessorGroup* pg,
-                          const PatchSubset* patches,
-                          const MaterialSubset* materials,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw) {
-  // TODO fixme [APH]
-}
-
 void SPME::calculateNewDipoles(const ProcessorGroup* pg,
                          const PatchSubset* patches,
                          const MaterialSubset* materials,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw) {
+
+  size_t numPatches = patches->size();
+  size_t numMaterials = materials->size();
+
+  // Step through all the patches on this thread
+  for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) {
+    const Patch* patch = patches->get(patchIndex);
+
+    // step through the materials for the reference sites
+    for (size_t localIndex = 0; localIndex < numMaterials; ++localIndex) {
+      int atomType = materials->get(localIndex);
+      ParticleSubset* localSet = old_dw->getParticleSubset(atomType, patch);
+      constParticleVariable<Vector> oldDipoles;
+      old_dw->get(oldDipoles, d_lb->pRealDipoles, localSet);
+      ParticleVariable<Vector> newDipoles;
+      new_dw->getModifiable(newDipoles, d_lb->pRealDipoles_preReloc, localSet);
+      size_t localAtoms = localSet->numParticles();
+      for (size_t Index = 0; Index < localAtoms; ++ Index) {
+        newDipoles[Index] *= (1.0 - d_dipoleMixRatio);
+        newDipoles[Index] += d_dipoleMixRatio * oldDipoles[Index];
+      }
+    }
+  }
+
   // TODO fixme [APH]
+}
+
+bool SPME::checkConvergence() const
+{
+  // Subroutine determines if polarizable component has converged
+  if (!d_polarizable) {
+    return true;
+  } else {
+    // throw an exception for now, but eventually will check convergence here.
+    throw InternalError("Error: Polarizable force field not yet implemented!", __FILE__, __LINE__);
+  }
+
+  // TODO keep an eye on this to make sure it works like we think it should
+  if (Thread::self()->myid() == 0) {
+    d_Q_nodeLocal->initialize(dblcomplex(0.0, 0.0));
+  }
 }
 

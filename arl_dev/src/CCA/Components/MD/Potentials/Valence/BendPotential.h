@@ -38,7 +38,7 @@
 
 #include <string>
 
-namespace UintahMD {
+namespace Uintah {
   class BendPotential : public Potential {
     public:
       const std::string getPotentialSuperType() {
@@ -62,7 +62,7 @@ namespace UintahMD {
 
   };
 
-  const std::string BendPotential::d_potentialSuperType = "Bend::";
+//  const std::string BendPotential::d_potentialSuperType = "Bend::";
 
 }
 

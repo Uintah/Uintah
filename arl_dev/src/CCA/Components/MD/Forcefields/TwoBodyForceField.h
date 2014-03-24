@@ -38,30 +38,38 @@
 
 #include <vector>
 
-namespace UintahMD {
+namespace Uintah {
 
-  class TwoBodyForcefield : public Forcefield {
+   class TwoBodyForcefield : public Forcefield {
+//      class TwoBodyForcefield : public Forcefield {
 
       public:
         TwoBodyForcefield() {}
-       ~TwoBodyForcefield() {}
-        inline NonbondedPotential* getNonbondedPotential(int Index1, int Index2) {
+        virtual ~TwoBodyForcefield() {}
+        inline NonbondedPotential* getNonbondedPotential(int Index1, int Index2) const {
           return nonbonded(Index1, Index2);
         }
-        inline BondPotential* getBondPotential(int Index) {
+        inline BondPotential* getBondPotential(int Index) const {
           return bonds[Index];
         }
-        inline BendPotential* getBendPotential(int Index) {
+        inline BendPotential* getBendPotential(int Index) const {
           return bends[Index];
         }
-        BondPotential& getBondReference() const = 0;
+        inline DihedralPotential* getDihedralPotential(int Index) const {
+          return dihedrals[Index];
+        }
 
-      protected:
-        virtual void addNonbondedPotential(NonbondedTwoBodyPotential*) = 0;
-        virtual void addBondPotential(BondPotential*) = 0;
-        virtual void addBendPotential(BendPotential*) = 0;
-        virtual void addDihedralPotential(DihedralPotential*) = 0;
-        virtual void addImproperDihedralPotential(ImproperDihedralPotential*) = 0;
+        inline ImproperDihedralPotential* getImproperDihedralPotential(int Index) const {
+          return improper[Index];
+        }
+
+        virtual std::string getForcefieldDescriptor() const = 0;
+//      protected:
+//        virtual void addNonbondedPotential(NonbondedTwoBodyPotential*) = 0;
+//        virtual void addBondPotential(BondPotential*) = 0;
+//        virtual void addBendPotential(BendPotential*) = 0;
+//        virtual void addDihedralPotential(DihedralPotential*) = 0;
+//        virtual void addImproperDihedralPotential(ImproperDihedralPotential*) = 0;
 
       private:
         Array2<NonbondedTwoBodyPotential*> nonbonded;
@@ -69,7 +77,6 @@ namespace UintahMD {
         std::vector<BendPotential*> bends;
         std::vector<DihedralPotential*> dihedrals;
         std::vector<ImproperDihedralPotential*> improper;
-
 
   };
 

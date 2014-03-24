@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_MD_SPMEGRID_H
-#define UINTAH_MD_SPMEGRID_H
+#ifndef UINTAHMD_SPMEGRID_H
+#define UINTAHMD_SPMEGRID_H
 
 #include <CCA/Components/MD/SimpleGrid.h>
 #include <CCA/Components/MD/MapPoint.h>

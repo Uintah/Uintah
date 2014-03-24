@@ -23,14 +23,23 @@
  */
 
 #include <CCA/Components/MD/MD.h>
-#include <CCA/Components/MD/ElectrostaticsFactory.h>
 #include <CCA/Components/MD/SPME.h>
 #include <CCA/Components/MD/NonBondedFactory.h>
 #include <CCA/Components/MD/AnalyticNonBonded.h>
+
+#include <CCA/Components/MD/ElectrostaticsFactory.h>
+#include <CCA/Components/MD/Forcefields/ForcefieldFactory.h>
+#include <CCA/Components/MD/Integrators/IntegratorFactory.h>
+
 #include <CCA/Ports/Scheduler.h>
+
 #include <Core/Parallel/Parallel.h>
+#include <Core/Parallel/ProcessorGroup.h>
+
 #include <Core/Thread/Thread.h>
+
 #include <Core/ProblemSpec/ProblemSpec.h>
+
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Task.h>
@@ -39,12 +48,16 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
+
 #include <Core/Exceptions/ProblemSetupException.h>
+
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
-#include <Core/Parallel/ProcessorGroup.h>
+
 #include <Core/Malloc/Allocator.h>
+
 #include <Core/Util/DebugStream.h>
+
 #include <Core/Thread/Mutex.h>
 
 #include <iostream>
@@ -78,18 +91,26 @@ void MD::problemSetup(const ProblemSpecP& params,
                       SimulationStateP& shared_state)
 {
   printTask(md_cout, "MD::problemSetup");
-
+  // Inherit shared state from the framework
   d_sharedState = shared_state;
 
+  // Construct handle to output stream
   d_dataArchiver = dynamic_cast<Output*>(getPort("output"));
   if (!d_dataArchiver) {
     throw InternalError("MD: couldn't get output port", __FILE__, __LINE__);
   }
 
+  // Register the particle position variable with the scheduler
   dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(d_lb->pXLabel);
 
-  // get path and name of the file with atom information
+  // Extract the MD specific information from the input file
   ProblemSpecP md_ps = params->findBlock("MD");
+
+  // Load/parse the forcefield we'll be using
+  d_forcefield = ForcefieldFactory::create(params, d_system);
+
+  // Determine the forcefield model we'll be using
+
   md_ps->get("coordinateFile", d_coordinateFile);
 
   // create and populate the MD System object

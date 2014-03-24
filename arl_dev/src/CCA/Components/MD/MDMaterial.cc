@@ -24,6 +24,7 @@
 
 #include <CCA/Components/MD/MDMaterial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/SimulationState.h>
 
 using namespace Uintah;
 
@@ -36,6 +37,11 @@ MDMaterial::MDMaterial()
 MDMaterial::~MDMaterial()
 {
 
+}
+
+ProblemSpecP MDMaterial::outputProblemSpec(ProblemSpecP& ps) {
+  ProblemSpecP md_ps = Material::outputProblemSpec(ps);
+  return md_ps;
 }
 
 

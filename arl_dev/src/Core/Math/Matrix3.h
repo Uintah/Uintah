@@ -81,6 +81,12 @@ namespace Uintah {
     // assign a value to components of the Matrix3
      void set(int i, int j, double val);
 
+    // sub-vector extraction
+    inline SCIRun::Vector getRow(int i) const;
+    inline SCIRun::Vector getColumn(int i) const;
+
+
+
     // assignment operator
     inline void operator = (const Matrix3 &m3);
 
@@ -474,6 +480,16 @@ namespace Uintah {
       }
     }
 
+  inline SCIRun::Vector Matrix3::getRow(int i) const {
+    return (Vector(mat3[i][0],mat3[i][1],mat3[i][2]));
+  }
+
+  inline SCIRun::Vector Matrix3::getColumn(int i) const {
+    return (Vector(mat3[0][i],mat3[1][i],mat3[2][i]));
+  }
+
+
+
   inline void Matrix3::operator *= (const double value)
     {
       // Multiply each component of the Matrix3 by the value
@@ -747,9 +763,7 @@ namespace Uintah {
 
   inline Matrix3 OuterProduct(const SCIRun::Vector& v1, SCIRun::Vector& v2)
   {
-    return Matrix3(v1.x()*v2.x(), v1.x()*v2.y(), v1.x()*v2.z(),
-                   v1.y()*v2.x(), v1.y()*v2.y(), v1.y()*v2.z(),
-                   v1.z()*v2.x(), v1.z()*v2.y(), v1.z()*v2.z());
+    return Matrix3(v1, v2);
   }
 
 } // End namespace Uintah

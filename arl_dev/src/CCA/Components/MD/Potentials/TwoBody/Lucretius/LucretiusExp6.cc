@@ -23,16 +23,46 @@
  */
 
 /*
- * Buckingham.cc
+ * LucretiusExp6.cc
  *
  *  Created on: Feb 1, 2014
  *      Author: jbhooper
  */
 
-#include <CCA/Components/MD/Forcefields/Lucretius/LucretiusExp6.h>
+#include <CCA/Components/MD/Potentials/TwoBody/Lucretius/LucretiusExp6.h>
 
-using namespace UintahMD;
+using namespace Uintah;
 using namespace SCIRun;
+
+const std::string LucretiusExp6::d_potentialSubtype = "Lucretius_Exp6";
+
+bool LucretiusExp6::findAlternativeRepresentation(const double A,
+                                             const double B,
+                                             const double C,
+                                             double& Rmin,
+                                             double& epsilon,
+                                             double& lambda) {
+  // FIXME
+  return (false);
+}
+
+LucretiusExp6::LucretiusExp6(double _first,
+                             double _second,
+                             double _third,
+                             const std::string& _label,
+                             const std::string& _comment)
+                            :A(_first),
+                             B(_second),
+                             C(_third),
+                             d_label(_label),
+                             d_comment(_comment) {
+
+  // Determine Rmin, epsilon, and lambda
+    REL_format = this->findAlternativeRepresentation(A,B,C,Rmin,epsilon,lambda);
+
+    D = 0.0005 * pow((12.0 / B), 12.0);  // D(12/(B*r_ij))^12 term; D = 5e-5 kCal/mol
+    d_potentialDescriptor = this->getPotentialSuperType() + this->getPotentialBaseType() + d_potentialSubtype;
+  }
 
 void LucretiusExp6::fillEnergyAndForce(SCIRun::Vector& force,
                                        double& energy,

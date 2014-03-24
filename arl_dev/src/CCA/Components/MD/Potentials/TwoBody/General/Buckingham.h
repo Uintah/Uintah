@@ -35,21 +35,19 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <CCA/Components/MD/Potentials/TwoBody/NonbondedTwoBodyPotential.h>
+#include <CCA/Components/MD/Potentials/NonbondedPotential.h>
 
 #include <string>
 
-namespace UintahMD {
+namespace Uintah {
 
   using namespace SCIRun;
 
   class Buckingham : public NonbondedTwoBodyPotential {
 
     public:
-      Buckingham() {}
-
-      Buckingham(double,
-                 double,
-                 double);
+      //Buckingham() {}
+      Buckingham(double, double, double, const std::string&, const std::string& defaultComment = "");
       ~Buckingham() {}
 
       void fillEnergyAndForce(SCIRun::Vector& force,
@@ -67,8 +65,7 @@ namespace UintahMD {
       void fillEnergy(double& energy,
                       const SCIRun::Vector& offSet) const;
 
-      inline void fillEnergy(SCIRun::Vector& force,
-                             double& energy,
+      inline void fillEnergy(double& energy,
                              const SCIRun::Point& P1,
                              const SCIRun::Point& P2) const {
         fillEnergy(energy, P2 - P1);
@@ -85,13 +82,22 @@ namespace UintahMD {
         return;
       }
 
-      const std::string getPotentialDescriptor() const {
-        return d_potentialDescriptor;
+      inline const std::string getPotentialDescriptor() const {
+        return this->getPotentialSuperType() + this->getPotentialBaseType() + d_potentialSubtype;
+      }
+
+      inline const std::string getComment() const {
+        return d_comment;
+      }
+
+      inline const std::string getLabel() const {
+        return d_label;
       }
 
     private:
       static const std::string d_potentialSubtype;
-      mutable std::string d_potentialDescriptor;
+      const std::string& d_comment;
+      const std::string& d_label;
       double Rmin, epsilon, lambda;
       double A, B, C;
   };
