@@ -5,28 +5,28 @@
     <Forcefield                   spec="REQUIRED NO_DATA"
                                   attribute1 = "type REQUIRED STRING 'Lucretius'">
           <!-- Lucretius has a coordinate input file, a forcefield input file, and a molecular connectivity/ff mapping file -->
-          <coordinate_file          spec="REQUIRED STRING"       need_applies_to="type Lucretius" />
-          <forcefield_file          spec="REQUIRED STRING"       need_applies_to="type Lucretius" />
-          <connectivity_file        spec="OPTIONAL STRING"       need_applies_to="type Lucretius" />
+          <coordinate_file          spec="REQUIRED STRING"		need_applies_to = "type Lucretius" />
+          <forcefield_file          spec="REQUIRED STRING"		need_applies_to = "type Lucretius" />
+          <connectivity_file        spec="OPTIONAL STRING"      need_applies_to = "type Lucretius" />
     </Forcefield>    
 
     <System                     spec="REQUIRED NO_DATA"
                                   attribute1 = "ensemble REQUIRED STRING 'NVE NVT NPT Isokinetic'">    
-      <pressure                     spec="REQUIRED VECTOR"       need_applies_to="ensemble NPT" />
-      <temperature                  spec="REQUIRED DOUBLE"       need_applies_to="ensemble NPT NVT Isokinetic" />
+      <pressure                     spec="REQUIRED VECTOR"		need_applies_to = "ensemble NPT" />
+      <temperature                  spec="REQUIRED DOUBLE"		need_applies_to = "ensemble NPT NVT Isokinetic" />
 
       <unit_cell                spec="OPTIONAL NO_DATA"
                                   attribute1 = "format REQUIRED STRING 'Isotropic Length-Angle Basis_Vectors'" />
                                   
                                 <!-- Isotropic requires only a single box length -->
-          <box                      spec="REQUIRED DOUBLE 'positive'"       need_applies_to="format Isotropic" />
+          <boxSize                   spec="REQUIRED DOUBLE 'positive'"		need_applies_to = "format Isotropic" />
           
                                 <!-- Enter unit cell as (a,b,c) basis vector lengths and alpha,beta,gamma angles -->
-          <a_b_c                    spec="REQUIRED VECTOR"                  need_applies_to="format Length-Angle" />
-          <alpha_beta_gamma         spec="REQUIRED VECTOR"                  need_applies_to="format Length-Angle" />
+          <a_b_c                    spec="REQUIRED VECTOR"		need_applies_to = "format Length-Angle" />
+          <alpha_beta_gamma         spec="REQUIRED VECTOR"      need_applies_to = "format Length-Angle" />
 
                                 <!-- Explicitly enter individual basis vectors -->
-          <basis_vectors            spec="REQUIRED MULTIPLE_VECTORS" need_applies_to "format Basis_Vectors" /> 
+          <basis_vectors            spec="REQUIRED MULTIPLE_VECTORS"		need_applies_to "format Basis_Vectors" /> 
 
       <!-- Cutoff radius is the only strictly required component of the system definition -->
       <cutoffRadius             spec="REQUIRED DOUBLE 'positive'"/>
@@ -44,9 +44,9 @@
                                 <!-- SPME requires a scaling parameter, fourier space grid density, and spline order. 
                                      Optionally, a seperate realspace/fourier space cutoff radius can be specified specifically
                                      for the electrostatic calculation.  If not, it is inherited from the global calculation. -->
-      <ewaldBeta                spec="REQUIRED DOUBLE  'positive'"          need_applies_to="type SPME" />
-      <kGrids                   spec="REQUIRED VECTOR  'positive'"          need_applies_to="type SPME" />
-      <splineOrder              spec="REQUIRED INTEGER 'positive'"          need_applies_to="type SPME" />
+      <ewaldBeta                spec="REQUIRED DOUBLE  'positive'"		need_applies_to = "type SPME" />
+      <kGrids                   spec="REQUIRED VECTOR  'positive'"      need_applies_to = "type SPME" />
+      <splineOrder              spec="REQUIRED INTEGER 'positive'"      need_applies_to = "type SPME" />
       <cutoffRadius             spec="OPTIONAL DOUBLE  'positive'"/>
 
                                 <!-- Additionally we may choose to run with polarizability.
@@ -54,8 +54,8 @@
                                      number of iterations to ensure convergence does not hang the simulation. -->
         <polarizable              spec="REQUIRED NO_DATA" need_applies_to "type SPME"
                                 attribute1 = "enabled REQUIRED STRING 'true false'" >
-        <polarizationTolerance    spec="REQUIRED DOUBLE 'positive'" need_applies_to= "enabled true"/>
-        <maxiterations            spec="REQUIRED INTEGER 'positive'" need_applies_to "enabled true"/>
+        <polarizationTolerance    spec="REQUIRED DOUBLE  'positive'"		need_applies_to = "enabled true"/>
+        <maxiterations            spec="REQUIRED INTEGER 'positive'" 		need_applies_to = "enabled true"/>
     </Electrostatics>
 
           
@@ -78,8 +78,6 @@
     </forcefield>      
 -->        
 
-
-    
   </MD>
 
 </Uintah_Include>
