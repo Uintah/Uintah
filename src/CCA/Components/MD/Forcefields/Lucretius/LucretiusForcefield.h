@@ -18,7 +18,9 @@
 
 #include <CCA/Components/MD/Potentials/TwoBody/nonbondedTwoBodyPotential.h>
 #include <CCA/Components/MD/Forcefields/Lucretius/nonbondedLucretius.h>
-
+/*
+ * ....................................................................................................................*
+ */
 
 namespace Uintah {
 
@@ -32,6 +34,7 @@ namespace Uintah {
       }
     private:
       NonbondedTwoBodyPotential* parseHomoatomicNonbonded(std::string&, const forcefieldType, double);
+      NonbondedTwoBodyPotential* parseHeteroatomicNonbonded(std::string&, const forcefieldType);
       bool skipComments(std::ifstream&, std::string&);
       void generateUnexpectedEOFString(const std::string&, const std::string&, std::string&);
       void parseNonbondedPotentials(std::ifstream&, const std::string&, std::string&, SimulationStateP&);

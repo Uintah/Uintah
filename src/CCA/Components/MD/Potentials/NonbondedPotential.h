@@ -49,6 +49,7 @@ namespace Uintah {
 		// returns potential energy of NonbondedPotential with input parameters
       virtual const std::string getPotentialBaseType() const = 0;
       virtual const std::string getPotentialDescriptor() const = 0;
+      virtual const std::string getLabel() const = 0;
       const std::string getPotentialSuperType() const {
         return d_potentialSuperType;
       }
