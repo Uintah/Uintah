@@ -39,10 +39,13 @@
 #include <sstream>
 #include <iomanip>
 
-namespace UintahMD {
+namespace Uintah {
 
-  class NonbondedPotential : public Potential {
+//  class NonbondedPotential : public Potential {
+    class NonbondedPotential {
     public:
+      NonbondedPotential() {}
+      virtual ~NonbondedPotential() {}
 		// returns potential energy of NonbondedPotential with input parameters
       virtual const std::string getPotentialBaseType() const = 0;
       virtual const std::string getPotentialDescriptor() const = 0;

@@ -313,7 +313,7 @@ namespace Uintah {
                                  const std::vector<SPMEMapPoint>* gridMap,
                                  ParticleSubset* pset,
                                  double charge,
-                                 ParticleVariable<Vector>& p_Dipole);
+                                 constParticleVariable<Vector>& p_Dipole);
 
       /**
        * @brief Map forces from grid back to points.
@@ -345,11 +345,11 @@ namespace Uintah {
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw);
 
-      void updateFieldAndStress(const ProcessorGroup* pg,
-                                const PatchSubset* patches,
-                                const MaterialSubset* materials,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw);
+      void dipoleUpdateFieldAndStress(const ProcessorGroup* pg,
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* materials,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw);
 
       void calculateNewDipoles(const ProcessorGroup* pg,
                                const PatchSubset* patches,
@@ -581,8 +581,12 @@ namespace Uintah {
       MDLabel* d_lb;                                    //!< A handle on the set of MD specific labels
       double d_ewaldBeta;						                    //!< The Ewald calculation damping coefficient
       double d_electrostaticRadius;                     //!< Radius for realspace electrostatic interactions
-      bool d_polarizable;				                    	  //!< Use polarizable Ewald formulation
+
+      // Dipole related variables
+      bool d_polarizable;				                //!< Use polarizable Ewald formulation
       double d_polarizationTolerance;                   //!< Tolerance threshold for polarizable system
+      static const double d_dipoleMixRatio;              //!< Amount of old dipole to mix into new dipole for convergence
+
       IntVector d_kLimits;                              //!< Number of grid divisions in each direction
       int d_maxPolarizableIterations;                   //!< Max number of polarization iterations to do
       ShiftedCardinalBSpline d_interpolatingSpline;     //!< Spline object to hold info for spline calculation

@@ -32,11 +32,11 @@
 #ifndef LUCRETIUSPARSING_H_
 #define LUCRETIUSPARSING_H_
 
-namespace UintahMD {
-  namespace Lucretius{
+#include <iostream>
+#include <vector>
+#include <string>
 
-    bool constrainOOPOnNegativeConstant = true;
-
+namespace Uintah {
 
   // Classes for reading connectivity.dat
 
@@ -46,7 +46,7 @@ namespace UintahMD {
         bondConnectivityMap() {}
         ~bondConnectivityMap() {}
         friend std::istream& operator>>(std::istream&, bondConnectivityMap&);
-        private:
+      private:
         size_t firstAtom;
         size_t secondAtom;
         size_t bondPotentialIndex;
@@ -109,7 +109,7 @@ namespace UintahMD {
       public:
         nonbondedChargeMap() {}
         ~nonbondedChargeMap() {}
-        friend std::istream& operator>>(std::istream&, NonbondedChargeType&);
+        //friend std::istream& operator>>(std::istream&, NonbondedChargeType&);
       private:
         double Charge;
         double Polarizability;
@@ -178,7 +178,7 @@ namespace UintahMD {
 
     class torsionPotentialMap {
       public:
-        torsionPotentialMap() {
+        torsionPotentialMap() {}
         torsionPotentialMap(size_t _numParams, std::vector<double>& _parameters, std::string _comment)
             : numberOfTerms(_numParams), parameters(_parameters), comment(_comment) {
           if (numberOfTerms != parameters.size()) {
@@ -198,23 +198,15 @@ namespace UintahMD {
     class oopPotentialMap {
       public:
         oopPotentialMap() {}
-        oopPotentialMap(double _energeticConstant, std::string _comment)
-            : planarityConstant(_energeticConstant), comment(_comment) {
-          if ((planarityConstant <= 0.0) && Lucretius::constrainOOPOnNegativeConstant) constrainToPlanar = true;
-          if (!Lucretius::constrainOOPOnNegativeConstant) {
-            // !JBH  Should print out a warning here that negative OOP constants aren't constraining to planar
-            // !     This is a very specific and esoteric concern, so can wait.  !FIXME
-          }
-        }
+        oopPotentialMap(double _energeticConstant, std::string _comment);
         ~oopPotentialMap() {}
         friend std::istream& operator>>(std::istream&, oopPotentialMap&);
         private:
         double planarityConstant;
         std::string comment;
-        bool constrainToPlanar = false;
+        bool constrainToPlanar;
     };
 
-  }
 }
 
 

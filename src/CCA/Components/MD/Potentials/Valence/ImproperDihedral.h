@@ -34,7 +34,7 @@
 
 #include <string>
 
-namespace UintahMD {
+namespace Uintah {
 
 
   class ImproperDihedralPotential : public Potential {
@@ -50,7 +50,7 @@ namespace UintahMD {
 
   };
 
-  const std::string ImproperDihedralPotential::d_potentialSuperType = "ImproperDihedral::";
+//  const std::string ImproperDihedralPotential::d_potentialSuperType = "ImproperDihedral::";
 
 }
 

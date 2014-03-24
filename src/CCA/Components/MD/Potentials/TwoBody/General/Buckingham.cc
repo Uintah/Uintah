@@ -31,18 +31,23 @@
 
 #include <CCA/Components/MD/Potentials/TwoBody/General/Buckingham.h>
 
-namespace UintahMD {
+namespace Uintah {
 
   const std::string Buckingham::d_potentialSubtype = "Buckingham";
 
   Buckingham::Buckingham(double _Rmin,
                          double _eps,
-                         double _lambda) :
-      Rmin(_Rmin), epsilon(_eps), lambda(_lambda) {
+                         double _lambda,
+                         const std::string& _label,
+                         const std::string& _comment)
+                        :Rmin(_Rmin),
+                         epsilon(_eps),
+                         lambda(_lambda),
+                         d_label(_label),
+                         d_comment(_comment) {
     A = 6.0 * epsilon * exp(lambda) / (lambda - 6);
     B = lambda / Rmin;
     C = epsilon * lambda * pow(Rmin, 6.0) / (lambda - 6);
-    d_potentialDescriptor = this->getPotentialSuperType() + this->getPotentialBaseType() + d_potentialSubtype;
 
   }
 

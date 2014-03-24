@@ -33,16 +33,23 @@
 #include <Core/Util/Assert.h>
 #include <Core/Util/FancyAssert.h>
 
-namespace UintahMD {
+namespace Uintah {
 
   const int LennardJonesPotential::sc_maxIntegralPower = 15;
   const std::string LennardJonesPotential::d_potentialSubtype = "Lennard-Jones";
 
   LennardJonesPotential::LennardJonesPotential(double _sigma,
                                                double _eps,
-                                               size_t _repulsive = 12,
-                                               size_t _attractive = 6) :
-      sigma(_sigma), epsilon(_eps), m(_repulsive), n(_attractive) {
+                                               const std::string& _label,
+                                               size_t _repulsive,
+                                               size_t _attractive,
+                                               const std::string& _comment)
+                                              :sigma(_sigma),
+                                               epsilon(_eps),
+                                               d_label(_label),
+                                               m(_repulsive),
+                                               n(_attractive),
+                                               d_comment(_comment) {
     ASSERTRANGE(m, 0, sc_maxIntegralPower);
     ASSERTRANGE(n, 0, sc_maxIntegralPower);
     A = 4.0 * epsilon * pow(sigma, static_cast<double>(m));

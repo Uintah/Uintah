@@ -32,8 +32,10 @@
 #ifndef LUCRETIUS_H_
 #define LUCRETIUS_MATERIAL_H
 
-#include </CCA/Components/MD/MDMaterial.h>
-#include </CCA/Components/MD/Potentials/TwoBody/NonbondedTwoBodyPotential.h>
+
+
+#include <CCA/Components/MD/MDMaterial.h>
+#include <CCA/Components/MD/Potentials/TwoBody/NonbondedTwoBodyPotential.h>
 
 namespace Uintah {
 
@@ -42,97 +44,52 @@ namespace Uintah {
   class LucretiusMaterial : public MDMaterial {
     public:
       LucretiusMaterial();
-      LucretiusMaterial(ProblemSpecP&,
-                        SimulationStateP& sharedState);
-      ~LucretiusMaterial();
+//      LucretiusMaterial(ProblemSpecP&,
+//                        SimulationStateP& sharedState);
+      LucretiusMaterial(NonbondedTwoBodyPotential*, double, double, double, size_t);
+      virtual ~LucretiusMaterial();
 
-      ProblemSpecP outputProblemSpec(ProblemSpecP& ps);
+      virtual ProblemSpecP outputProblemSpec(ProblemSpecP& ps);
 
-      inline void calculateForce(SCIRun::Vector& Force,
-                                 const SCIRun::Vector& R) const {
-        nonBondedPotential->fillForce(Force, R);
-        return;
+      virtual std::string getMaterialDescriptor() const {
+        return ( materialClassDescriptor + "_" + nonbonded->getPotentialDescriptor() );
       }
 
-      inline void calculateForce(SCIRun::Vector& Force,
-                                 const SCIRun::Vector& R1,
-                                 const SCIRun::Vector& R2) const {
-        nonBondedPotential->fillForce(Force, R1, R2);
-        return;
+      virtual double getCharge() const {
+        return d_charge;
       }
 
-      inline void calculateEnergy(double& Energy,
-                                  const SCIRun::Vector& R) const {
-        nonBondedPotential->fillEnergy(Energy, R);
-        return;
+      virtual double getPolarizability() const {
+        return d_polarizability;
       }
 
-      inline void calculateEnergy(double& Energy,
-                                  const SCIRun::Vector& R1,
-                                  const SCIRun::Vector& R2) const {
-        nonBondedPotential->fillEnergy(Energy, R1, R2);
-        return;
+      virtual double getMass() const {
+        return d_mass;
       }
 
-      inline void calculateForceAndEnergy(SCIRun::Vector& Force,
-                                          double& Energy,
-                                          const SCIRun::Vector& R) const {
-        nonBondedPotential->fillEnergyAndForce(Force, Energy, R);
-        return;
+      virtual std::string getMapLabel() const {
+        return nonbonded->getLabel();
       }
 
-      inline void calculateForceAndEnergy(SCIRun::Vector& Force,
-                                          double& Energy,
-                                          const SCIRun::Vector& R1,
-                                          const SCIRun::Vector& R2) const {
-        nonBondedPotential->fillEnergyAndForce(Force, Energy, R1, R2);
-        return;
+      virtual std::string getMaterialLabel() const {
+        std::ostringstream outString;
+        outString << nonbonded->getLabel() << std::setw(2) << std::ios::left << d_subtypeNumber;
+        return outString.str();
       }
 
-      inline SCIRun::Vector getForce(const SCIRun::Vector& offSet) const {
-        SCIRun::Vector Force;
-        nonBondedPotential->fillForce(Force, offSet);
-        return Force;
+      virtual NonbondedPotential* getPotentialHandle() const {
+        return nonbonded;
       }
 
-      inline SCIRun::Vector getForce(const SCIRun::Vector& P1,
-                                     const SCIRun::Vector& P2) const {
-        SCIRun::Vector Force;
-        nonBondedPotential->fillForce(Force, P1, P2);
-        return Force;
-      }
-
-      inline double getEnergy(const SCIRun::Vector& offSet) const {
-        double Energy;
-        nonBondedPotential->fillEnergy(Energy, offSet);
-        return Energy;
-      }
-
-      inline double getEnergy(const SCIRun::Vector& P1,
-                              const SCIRun::Vector& P2) const {
-        double Energy;
-        nonBondedPotential->fillEnergy(Energy, P1, P2);
-        return Energy;
-      }
-
-      inline double getCharge() const {
-        return d_atomCharge;
-      }
-
-      inline double getPolarizability() const {
-        return d_atomPolarizability;
-      }
-
-      inline std::string getNonbondedType() const {
-        return nonBondedPotential->getPotentialDescriptor();
-      }
 
     private:
-      double d_atomCharge;
-      double d_atomPolarizability;
-      static const std::string materialClassDescriptor = "Lucretius";
+      double d_mass;
+      double d_charge;
+      double d_polarizability;
+      size_t d_subtypeNumber;
+      NonbondedTwoBodyPotential* nonbonded;
 
-      Uintah_MD::NonbondedTwoBodyPotential* nonBondedPotential;
+      static const std::string materialClassDescriptor;
 
       // Prevent copying or assignment
       LucretiusMaterial(const LucretiusMaterial& material);

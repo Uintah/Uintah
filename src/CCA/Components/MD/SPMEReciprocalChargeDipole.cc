@@ -42,6 +42,7 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MiscMath.h>
+#include <Core/Math/Matrix3.h>
 #include <Core/Util/DebugStream.h>
 
 #include <iostream>
@@ -183,8 +184,8 @@ void SPME::dipoleCalculatePreTransform(const ProcessorGroup* pg,
 			int atomType = materials->get(currAtomType);
 			ParticleSubset* pset = old_dw->getParticleSubset(atomType, patch);
 			double atomCharge = d_system->getAtomicCharge(atomType);
-			ParticleVariable<Vector> p_Dipole;
-			new_dw->getModifiable(p_Dipole, d_lb->pReciprocalDipoles, pset);
+			constParticleVariable<Vector> p_Dipole;
+			new_dw->get(p_Dipole, d_lb->pReciprocalDipoles, pset);
 			std::vector<SPMEMapPoint>* gridMap = currentSPMEPatch->getChargeMap(atomType);
 			SPME::dipoleMapChargeToGrid(currentSPMEPatch, gridMap, pset, atomCharge, p_Dipole);
 		} // end Atom Type Loop
@@ -204,12 +205,12 @@ void SPME::dipoleMapChargeToGrid(SPMEPatch* spmePatch,
                                  const std::vector<SPMEMapPoint>* gridMap,
 		                         ParticleSubset* pset,
                                  double charge,
-		                         ParticleVariable<Vector>& p_Dipole) {
+		                         constParticleVariable<Vector>& p_Dipole) {
 
   // grab local Q grid
   SimpleGrid<dblcomplex>* Q_patchLocal 	= spmePatch->getQ();
   IntVector 				patchOffset = spmePatch->getGlobalOffset();
-  IntVector 				patchExtent = Q_patchLocal->getExtentWithGhost();
+  //IntVector 				patchExtent = Q_patchLocal->getExtentWithGhost();
 
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); ++iter) {
     particleIndex atom = *iter;
@@ -230,7 +231,7 @@ void SPME::dipoleMapChargeToGrid(SPMEPatch* spmePatch,
     int yExtent = supportExtent[1];
     int zExtent = supportExtent[2];
 
-    Vector d_dot_nabla = dipole * d_system->getInverseCell();
+    Vector d_dot_nabla = dipole * d_inverseUnitCell;
 
     for (int xmask = 0; xmask < xExtent; ++xmask) {
       int x_anchor = x_Base + xmask;
@@ -244,6 +245,55 @@ void SPME::dipoleMapChargeToGrid(SPMEPatch* spmePatch,
       }
     }
   }
+}
+
+void SPME::dipoleUpdateFieldAndStress(const ProcessorGroup* pg,
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* materials,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw) {
+
+  size_t numPatches = patches->size();
+  size_t numAtomTypes = materials->size();
+
+
+  SCIRun::Vector delU0 = d_inverseUnitCell.getRow(0);
+  SCIRun::Vector delU1 = d_inverseUnitCell.getRow(1);
+  SCIRun::Vector delU2 = d_inverseUnitCell.getRow(2);
+
+  // Step through all the patches on this thread
+  for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) {
+    const Patch* patch = patches->get(patchIndex);
+    SPMEPatch* currentSPMEPatch = d_spmePatchMap.find(patch->getID())->second;
+    SimpleGrid<dblcomplex>* QConvoluted = currentSPMEPatch->getQ();
+    IntVector patchOffset = currentSPMEPatch->getGlobalOffset();
+
+    // step through the materials on this patch
+    for (size_t currAtomType = 0; currAtomType < numAtomTypes; ++currAtomType) {
+      int atomType = materials->get(currAtomType);
+      std::vector<SPMEMapPoint>* gridMap = currentSPMEPatch->getChargeMap(atomType);
+      ParticleSubset* pset = old_dw->getParticleSubset(atomType, patch);
+      ParticleVariable<Vector> p_ReciprocalField;
+      new_dw->getModifiable(p_ReciprocalField, d_lb->pElectrostaticsReciprocalField, pset);
+      for (ParticleSubset::iterator pIter = pset->begin(); pIter != pset->end(); ++pIter) {
+        particleIndex atom = *pIter;
+        p_ReciprocalField[atom] = SCIRun::Vector(0.0); // Zero out field
+        const SimpleGrid<Vector> potentialDerivMap = (*gridMap)[atom].getPotentialDerivativeGrid();
+        IntVector QAnchor = potentialDerivMap.getOffset();
+        IntVector supportExtent = potentialDerivMap.getExtents();
+        IntVector Base = QAnchor - patchOffset;
+        int x_Base = Base[0];
+        int y_Base = Base[1];
+        int z_Base = Base[2];
+
+        int xExtent = supportExtent[0];
+        int yExtent = supportExtent[1];
+        int zExtent = supportExtent[2];
+
+      }
+    }
+  }
+  // TODO fixme [APH]
 }
 
 void SPME::calculatePreTransform(const ProcessorGroup* pg,
@@ -508,19 +558,5 @@ void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
   }
 }
 
-bool SPME::checkConvergence() const
-{
-  // Subroutine determines if polarizable component has converged
-  if (!d_polarizable) {
-    return true;
-  } else {
-    // throw an exception for now, but eventually will check convergence here.
-    throw InternalError("Error: Polarizable force field not yet implemented!", __FILE__, __LINE__);
-  }
 
-  // TODO keep an eye on this to make sure it works like we think it should
-  if (Thread::self()->myid() == 0) {
-    d_Q_nodeLocal->initialize(dblcomplex(0.0, 0.0));
-  }
-}
 

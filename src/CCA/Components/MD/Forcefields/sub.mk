@@ -29,6 +29,8 @@
 
 SRCDIR	:= CCA/Components/MD/Forcefields
 
+SRCS += $(SRCDIR)/ForcefieldFactory.cc
+
 SUBDIRS := $(SRCDIR)/Lucretius                  \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

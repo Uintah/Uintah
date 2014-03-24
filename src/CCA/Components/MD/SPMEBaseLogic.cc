@@ -65,6 +65,8 @@ using namespace Uintah;
 //
 // This file also contains the scheduling logic for the subscheduler in the calculate interface
 
+const double SPME::d_dipoleMixRatio = 0.2;
+
 SPME::SPME() :
     d_Qlock("node-local Q lock"), d_spmeLock("SPMEPatch data structures lock")
 {
@@ -89,6 +91,7 @@ SPME::SPME(MDSystem* system,
       d_Qlock("node-local Q lock"),
       d_spmeLock("SPME shared data structure lock")
 {
+
   d_interpolatingSpline = ShiftedCardinalBSpline(splineOrder);
   d_electrostaticMethod = Electrostatics::SPME;
 }
@@ -322,6 +325,8 @@ void SPME::calculate(const ProcessorGroup* pg,
   //!FIXME Shouldn't the subscheduler taskgraph compilation go here?
   subscheduler->initialize(3,1);
 
+  //
+
   // Realspace portion of SPME
   scheduleCalculateRealspace(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW);
 
@@ -342,6 +347,7 @@ void SPME::calculate(const ProcessorGroup* pg,
 
   // Redistribute Q grid
   scheduleDistributeNodeLocalQ(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW);
+
   if (d_polarizable) {
 	  // Update field for new dipole prediction and stress tensor
 	  scheduleUpdateFieldandStress(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW);
@@ -443,7 +449,7 @@ void SPME::scheduleUpdateFieldandStress(SchedulerP& sched,
 {
   printSchedule(patches, spme_cout, "SPME::scheduleUpdateFieldandStress");
 
-  Task* task = scinew Task("SPME::updateFieldAndStress", this, &SPME::updateFieldAndStress);
+  Task* task = scinew Task("SPME::updateFieldAndStress", this, &SPME::dipoleUpdateFieldAndStress);
 
   // Requires converged dipoles from both reciprocal and realspace calculation
   task->requires(Task::OldDW, d_lb->pTotalDipoles);

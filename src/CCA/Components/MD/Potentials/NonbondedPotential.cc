@@ -24,7 +24,7 @@
 
 #include <CCA/Components/MD/Potentials/NonbondedPotential.h>
 
-using namespace UintahMD;
+using namespace Uintah;
 
 const std::string NonbondedPotential::d_potentialSuperType = "Nonbonded::";
 

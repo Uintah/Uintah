@@ -38,7 +38,7 @@
 
 #include <string>
 
-namespace UintahMD {
+namespace Uintah {
 
   class DihedralPotential : public Potential {
 
@@ -58,7 +58,7 @@ namespace UintahMD {
 
   };
 
-  const std::string DihedralPotential::d_potentialSuperType = "Dihedral::";
+//  const std::string DihedralPotential::d_potentialSuperType = "Dihedral::";
 
 }
 

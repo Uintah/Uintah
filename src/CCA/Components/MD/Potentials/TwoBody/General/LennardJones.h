@@ -38,7 +38,7 @@
 
 #include <string>
 
-namespace UintahMD {
+namespace Uintah {
 
 	using namespace SCIRun;
 
@@ -52,8 +52,13 @@ namespace UintahMD {
 	  //   F(r) = - ---  -----
 	  //            |r|	   dr
       public:
-		LennardJonesPotential() {}
-		LennardJonesPotential(double, double, size_t, size_t);
+		//LennardJonesPotential() {}
+		LennardJonesPotential(double,
+		                      double,
+                              const std::string&,
+		                      size_t m = 6,
+		                      size_t n = 6,
+		                      const std::string& defaultComment = "");
 
 		~LennardJonesPotential() {}
 
@@ -79,12 +84,22 @@ namespace UintahMD {
 		  return d_potentialDescriptor;
 		}
 
+		const std::string getComment() const {
+		  return d_comment;
+		}
+
+		const std::string getLabel() const {
+		  return d_label;
+		}
+
   private:
 
 		double RToPower(double r, double r2, int b) const;
 		static const std::string d_potentialSubtype;
 		static const int sc_maxIntegralPower;
 		mutable std::string d_potentialDescriptor;
+		const std::string d_comment;
+		const std::string d_label;
 		double sigma, epsilon;
 		int m, n;
 		double A, C;

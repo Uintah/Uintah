@@ -40,16 +40,16 @@
 
 #include <vector>
 
-
-namespace UintahMD {
+namespace Uintah {
   class Forcefield {
     public:
-      virtual NonbondedPotential& getNonbondedReference() const = 0;
-      virtual BondPotential& getBondReference() const = 0;
-      virtual BendPotential& getBendReference() const = 0;
-      virtual DihedralPotential& getDihedralReference() const = 0;
-      virtual ImproperDihedralPotential& getImproperReference() const = 0;
-      virtual ~Forcefield() = 0;
+      Forcefield () {}
+      virtual ~Forcefield () {}
+//      virtual inline NonbondedPotential* getNonbondedPotential() const = 0;
+//      virtual inline BondPotential* getBondPotential() const = 0;
+//      virtual inline BendPotential* getBendPotential() const = 0;
+//      virtual inline DihedralPotential* getDihedralPotential() const = 0;
+//      virtual inline ImproperDihedralPotential* getImproperPotential() const = 0;
     private:
   };
 }

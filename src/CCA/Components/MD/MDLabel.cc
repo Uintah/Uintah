@@ -56,6 +56,9 @@ MDLabel::MDLabel()
   //pReciprocalDipoles_preReloc             = VarLabel::create("p.recipDipole+", ParticleVariable<Vector>::getTypeDescription());
   pElectrostaticsReciprocalForce          = VarLabel::create("p.recipElectrostaticsForce", ParticleVariable<Vector>::getTypeDescription());
   //pElectrostaticsReciprocalForce_preReloc = VarLabel::create("p.recipElectrostaticsForce+", ParticleVariable<Vector>::getTypeDescription());
+  pElectrostaticsReciprocalField          = VarLabel::create("p.recipElectrostaticsField", ParticleVariable<Vector>::getTypeDescription());
+  pElectrostaticsReciprocalField_preReloc = VarLabel::create("p.recipElectrostaticsField+", ParticleVariable<Vector>::getTypeDescription());
+
   //1.1.3-> total dipoles
   pTotalDipoles                           = VarLabel::create("p.totalDipole", ParticleVariable<Vector>::getTypeDescription());
   pTotalDipoles_preReloc                  = VarLabel::create("p.totalDipole+", ParticleVariable<Vector>::getTypeDescription());

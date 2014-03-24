@@ -38,7 +38,7 @@
 
 #include <string>
 
-namespace UintahMD {
+namespace Uintah {
 
   class BondPotential : public Potential {
 
@@ -66,7 +66,7 @@ namespace UintahMD {
 
   };
 
-  const std::string BondPotential::d_potentialSuperType = "Bond::";
+//  const std::string BondPotential::d_potentialSuperType = "Bond::";
 
 }
 

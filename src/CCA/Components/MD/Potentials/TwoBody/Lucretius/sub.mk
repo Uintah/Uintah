@@ -27,17 +27,13 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR	:= CCA/Components/MD/Potentials/TwoBody
 
-SRCS     += $(SRCDIR)/NonbondedTwoBodyPotential.cc \
-            $(SRCDIR)/TwoBodyPotentialFactory.cc 
 
-SUBDIRS := $(SRCDIR)/General     \
-           $(SRCDIR)/Lucretius
+SRCDIR	:= CCA/Components/MD/Potentials/TwoBody/Lucretius
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+SRCS += $(SRCDIR)/LucretiusExp6.cc
 
 PSELIBS :=
 
-LIBS := 
+LIBS :=
 

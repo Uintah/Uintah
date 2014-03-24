@@ -38,7 +38,7 @@
 
 namespace Uintah {
 
-  using namespace UintahMD;
+  using namespace Uintah;
   using namespace SCIRun;
 
   /**

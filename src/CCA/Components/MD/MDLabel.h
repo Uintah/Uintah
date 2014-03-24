@@ -77,6 +77,8 @@ namespace Uintah {
       const VarLabel* pReciprocalDipoles_preReloc;
       const VarLabel* pElectrostaticsReciprocalForce;
       const VarLabel* pElectrostaticsReciprocalForce_preReloc;
+      const VarLabel* pElectrostaticsReciprocalField;
+      const VarLabel* pElectrostaticsReciprocalField_preReloc;
       //// Total converged dipoles
       const VarLabel* pTotalDipoles;
       const VarLabel* pTotalDipoles_preReloc;

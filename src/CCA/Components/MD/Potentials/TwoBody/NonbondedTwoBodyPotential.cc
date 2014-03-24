@@ -24,7 +24,7 @@
 
 #include <CCA/Components/MD/Potentials/TwoBody/NonbondedTwoBodyPotential.h>
 
-using namespace UintahMD;
+using namespace Uintah;
 
 const std::string NonbondedTwoBodyPotential::d_potentialBaseType = "TwoBody::";
 

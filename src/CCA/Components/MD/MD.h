@@ -26,11 +26,15 @@
 #define UINTAH_MD_H
 
 #include <Core/Parallel/UintahParallelComponent.h>
+
 #include <CCA/Ports/SimulationInterface.h>
 #include <CCA/Ports/Output.h>
+
 #include <CCA/Components/MD/MDLabel.h>
 #include <CCA/Components/MD/NonBonded.h>
 #include <CCA/Components/MD/Electrostatics.h>
+#include <CCA/Components/MD/Forcefields/Forcefield.h>
+#include <CCA/Components/MD/Integrators/Integrator.h>
 
 #include <vector>
 
@@ -404,20 +408,31 @@ namespace Uintah {
           double charge;
       };
 
-      MDLabel* d_lb;                       //!< Uintah VarLabels specific to Uintah::MD
+      // Information related to melding the MD to the Uintah back-end
       Output* d_dataArchiver;              //!< Handle to the Uintah data archiver
-      SimulationStateP d_sharedState;      //!< Shared simulation state (global)
-      SimpleMaterial* d_material;          //!< For now, this is a single material
-      IntegratorType d_integrator;         //!< Timestep integrator
-      double delt;                         //!< Simulation delta T
 
-      SchedulerP d_subScheduler;           //!< Subscheduler for SPME::calculate() convergence loop
+      // An MD component represents an entire system necessary for MD simulation
+      MDLabel* d_lb;                       //!< Variable labels for the per-particle Uintah MD variables
+
+      SimulationStateP d_sharedState;      //!< Shared simulation state (global)
+      Electrostatics*  d_electrostatics;   //!< The simulation Electrostatics model instance
+      Integrator*      d_integrator;       //!< MD style integrator object
+      Forcefield*      d_forcefield;       //!< Currently employed MD forcefield
+
+
+      //  Does this need to exist here?  Can it be stuffed in the electrostatics object?
+      SchedulerP d_electrostaticSubscheduler;           //!< Subscheduler for SPME::calculate() convergence loop
       bool d_recompileSubscheduler;        //!< Whether or not the subscheduler taskgraph needs recompilation
 
-      std::string d_coordinateFile;             //!< Name of file with coordinates and charges of all atoms
+      //  The material list should exist in the forcefield held by the system...?
+      SimpleMaterial* d_material;          //!< For now, this is a single material
+      //IntegratorType d_integrator;         //!< Timestep integrator
+      double delt;                         //!< Simulation delta T
+
+
+      std::string d_coordinateFile;        //!< Name of file with coordinates and charges of all atoms
       std::vector<Atom> d_atomList;        //!< Individual atom neighbor list
 
-      Electrostatics* d_electrostatics;    //!< The simulation Electrostatics instance
       NonBonded* d_nonbonded;              //!< The simulation NonBonded instance
       MDSystem* d_system;                  //!< The global MD system
 
