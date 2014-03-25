@@ -54,7 +54,7 @@ ifeq ($(IS_STATIC_BUILD),yes)
 else
   LIBS := $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) \
 	  $(MPI_LIBRARY) \
-          $(TEEM_LIBRARY) $(PNG_LIBRARY) $(XML2_LIBRARY)
+          $(TEEM_LIBRARY) $(XML2_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk

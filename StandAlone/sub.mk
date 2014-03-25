@@ -167,7 +167,7 @@ else
           $(M_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) \
           $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
           $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
-          $(TEEM_LIBRARY) $(PNG_LIBRARY) \
+          $(TEEM_LIBRARY) \
           $(BOOST_LIBRARY) $(CUDA_LIBRARY) \
           $(PAPI_LIBRARY) $(GPERFTOOLS_LIBRARY)
 endif
