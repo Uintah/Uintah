@@ -52,7 +52,7 @@ PSELIBS :=
 #           Core/Exceptions Core/Util \
 #           Core/Exceptions Core/Util Core/Math
 
-LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(DEFAULT_LIBRARY) $(M_LIBRARY)
+LIBS := $(TEEM_LIBRARY) $(Z_LIBRARY) $(DEFAULT_LIBRARY) $(M_LIBRARY)
 
 # See commit message for while hacking in the MPI_LIBRARY is necessary.
 ifeq ($(IS_OSX),yes)
