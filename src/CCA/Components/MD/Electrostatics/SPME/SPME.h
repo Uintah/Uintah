@@ -25,11 +25,7 @@
 #ifndef UINTAH_MD_ELECTROSTATICS_SPME_H
 #define UINTAH_MD_ELECTROSTATICS_SPME_H
 
-#include <CCA/Components/MD/Electrostatics.h>
-#include <CCA/Components/MD/ShiftedCardinalBSpline.h>
-#include <CCA/Components/MD/SimpleGrid.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
-#include <CCA/Components/MD/SPMEPatch.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Thread/ConditionVariable.h>
@@ -38,6 +34,12 @@
 #include <vector>
 
 #include <sci_defs/fftw_defs.h>
+
+#include <CCA/Components/MD/SimpleGrid.h>
+#include <CCA/Components/MD/Electrostatics/Electrostatics.h>
+#include <CCA/Components/MD/Electrostatics/SPME/ShiftedCardinalBSpline.h>
+#include <CCA/Components/MD/Electrostatics/SPME/SPMEPatch.h>
+
 
 namespace Uintah {
 

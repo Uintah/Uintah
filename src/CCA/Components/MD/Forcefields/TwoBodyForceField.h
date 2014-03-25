@@ -46,37 +46,17 @@ namespace Uintah {
       public:
         TwoBodyForcefield() {}
         virtual ~TwoBodyForcefield() {}
-        inline NonbondedPotential* getNonbondedPotential(int Index1, int Index2) const {
-          return nonbonded(Index1, Index2);
-        }
-        inline BondPotential* getBondPotential(int Index) const {
-          return bonds[Index];
-        }
-        inline BendPotential* getBendPotential(int Index) const {
-          return bends[Index];
-        }
-        inline DihedralPotential* getDihedralPotential(int Index) const {
-          return dihedrals[Index];
-        }
-
-        inline ImproperDihedralPotential* getImproperDihedralPotential(int Index) const {
-          return improper[Index];
-        }
 
         virtual std::string getForcefieldDescriptor() const = 0;
-//      protected:
-//        virtual void addNonbondedPotential(NonbondedTwoBodyPotential*) = 0;
-//        virtual void addBondPotential(BondPotential*) = 0;
-//        virtual void addBendPotential(BendPotential*) = 0;
-//        virtual void addDihedralPotential(DihedralPotential*) = 0;
-//        virtual void addImproperDihedralPotential(ImproperDihedralPotential*) = 0;
+
+        // Inherited from parent class
+        inline forcefieldInteractionClass getInteractionClass() const {
+          return d_forcefieldClass;
+        }
 
       private:
-        Array2<NonbondedTwoBodyPotential*> nonbonded;
-        std::vector<BondPotential*> bonds;
-        std::vector<BendPotential*> bends;
-        std::vector<DihedralPotential*> dihedrals;
-        std::vector<ImproperDihedralPotential*> improper;
+        static const forcefieldInteractionClass d_forcefieldClass;
+
 
   };
 

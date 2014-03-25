@@ -22,26 +22,26 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MD/SPME.h>
-#include <CCA/Components/MD/ShiftedCardinalBSpline.h>
-#include <CCA/Components/MD/SPMEMapPoint.h>
-#include <CCA/Components/MD/MDSystem.h>
-#include <CCA/Components/MD/MDLabel.h>
-#include <CCA/Components/MD/SimpleGrid.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/Patch.h>
+
 #include <Core/Parallel/Parallel.h>
+
 #include <Core/Thread/Thread.h>
+
+#include <Core/Grid/Box.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/ParticleSubset.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/Box.h>
-#include <Core/Grid/DbgOutput.h>
+
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Point.h>
+
 #include <Core/Math/MiscMath.h>
+
 #include <Core/Util/DebugStream.h>
 
 #include <iostream>
@@ -51,6 +51,14 @@
 
 #include <sci_values.h>
 #include <sci_defs/fftw_defs.h>
+
+#include <CCA/Components/MD/MDSystem.h>
+#include <CCA/Components/MD/MDLabel.h>
+#include <CCA/Components/MD/SimpleGrid.h>
+#include <CCA/Components/MD/Electrostatics/SPME/SPME.h>
+#include <CCA/Components/MD/Electrostatics/SPME/ShiftedCardinalBSpline.h>
+#include <CCA/Components/MD/Electrostatics/SPME/SPMEMapPoint.h>
+
 
 #ifdef DEBUG
 #include <Core/Util/FancyAssert.h>

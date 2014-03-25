@@ -35,10 +35,9 @@ namespace Uintah {
        * @brief   Factory method for instantiating and parsing the proper forcefield based on input file specifications
        *
        * @param   spec   ->  ProblemSpecP& :  Handle to the problem spec with info from input file
-       *          system ->  MDSystem*     :  Handle to the simulation system information necessary for creation
+       *          shared_state -> SimulationStateP& :  Handle to the simulation state to register materials on FF creation
        */
       static Forcefield* create (const ProblemSpecP& spec,
-                                 MDSystem* system,
                                  SimulationStateP& shared_state);
   };
 

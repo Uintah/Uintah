@@ -32,7 +32,7 @@
 
 #include <CCA/Components/MD/MDLabel.h>
 #include <CCA/Components/MD/NonBonded.h>
-#include <CCA/Components/MD/Electrostatics.h>
+#include <CCA/Components/MD/Electrostatics/Electrostatics.h>
 #include <CCA/Components/MD/Forcefields/Forcefield.h>
 #include <CCA/Components/MD/Integrators/Integrator.h>
 

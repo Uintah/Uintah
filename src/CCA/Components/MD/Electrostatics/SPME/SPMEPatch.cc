@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MD/SPMEPatch.h>
+#include <CCA/Components/MD/Electrostatics/SPME/SPMEPatch.h>
 #include <Core/Geometry/IntVector.h>
 
 #include <iostream>

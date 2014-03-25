@@ -22,11 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MD/MD.h>
-#include <CCA/Components/MD/ElectrostaticsFactory.h>
-#include <CCA/Components/MD/SPME.h>
-#include <CCA/Components/MD/NonBondedFactory.h>
-#include <CCA/Components/MD/AnalyticNonBonded.h>
+
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Thread/Thread.h>
@@ -50,6 +46,15 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+
+#include <CCA/Components/MD/MD.h>
+#include <CCA/Components/MD/Electrostatics/ElectrostaticsFactory.h>
+#include <CCA/Components/MD/Electrostatics/SPME/SPME.h>
+#include <CCA/Components/MD/Forcefields/Forcefield.h>
+#include <CCA/Components/MD/Forcefields/ForcefieldFactory.h>
+#include <CCA/Components/MD/Forcefields/TwoBodyForcefield.h>
+#include <CCA/Components/MD/NonBondedFactory.h>
+#include <CCA/Components/MD/AnalyticNonBonded.h>
 
 using namespace Uintah;
 
@@ -79,14 +84,35 @@ void MD::problemSetup(const ProblemSpecP& params,
 {
   printTask(md_cout, "MD::problemSetup");
 
+  // Inherit shared state into the component
   d_sharedState = shared_state;
 
+  // Initialize output stream
   d_dataArchiver = dynamic_cast<Output*>(getPort("output"));
   if (!d_dataArchiver) {
     throw InternalError("MD: couldn't get output port", __FILE__, __LINE__);
   }
 
+  // Initialize base scheduler and attach the position variable
   dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(d_lb->pXLabel);
+
+  // Parse the forcefield
+  Forcefield* tempFF = ForcefieldFactory::create(params, shared_state);
+  switch(tempFF->getInteractionClass()) {
+    case(TwoBody):
+      d_forcefield=dynamic_cast<TwoBodyForcefield*> (tempFF);
+      break;
+    case(ThreeBody):
+    case(NBody):
+    default:
+      throw InternalError("MD:  Attempted to instantiate a forcefield type which is not yet implemented", __FILE__, __LINE__);
+  }
+
+  // Pull the newly registered materials into a material set
+  const MaterialSet* materials = d_sharedState->allMaterials();
+
+  // Parse the input coordinates
+
 
   // get path and name of the file with atom information
   ProblemSpecP md_ps = params->findBlock("MD");

@@ -22,10 +22,10 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MD/ElectrostaticsFactory.h>
-#include <CCA/Components/MD/Electrostatics.h>
+#include <CCA/Components/MD/Electrostatics/ElectrostaticsFactory.h>
+#include <CCA/Components/MD/Electrostatics/Electrostatics.h>
+#include <CCA/Components/MD/Electrostatics/DefinedElectrostaticsTypes.h>
 #include <CCA/Components/MD/MDSystem.h>
-#include <CCA/Components/MD/SPME.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DebugStream.h>

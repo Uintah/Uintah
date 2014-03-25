@@ -29,20 +29,44 @@ namespace Uintah {
       LucretiusForcefield() {};
       LucretiusForcefield(const ProblemSpecP& ps, SimulationStateP& sharedState);
      ~LucretiusForcefield() {};
-      std::string getForcefieldDescriptor() const {
+     inline BondPotential* getBondPotential(int Index) const {
+       return bonds[Index];
+     }
+     inline BendPotential* getBendPotential(int Index) const {
+       return bends[Index];
+     }
+     inline DihedralPotential* getDihedralPotential(int Index) const {
+       return dihedrals[Index];
+     }
+
+     inline ImproperDihedralPotential* getImproperDihedralPotential(int Index) const {
+       return improper[Index];
+     }
+
+     NonbondedTwoBodyPotential* getNonbondedPotential(const std::string& label1, const std::string& label2) const;
+
+     inline std::string getForcefieldDescriptor() const {
         return d_forcefieldNameString;
       }
+
     private:
+      // Private functions related to parsing of the input forcefield file
       NonbondedTwoBodyPotential* parseHomoatomicNonbonded(std::string&, const forcefieldType, double);
       NonbondedTwoBodyPotential* parseHeteroatomicNonbonded(std::string&, const forcefieldType);
+      void parseNonbondedPotentials(std::ifstream&, const std::string&, std::string&, SimulationStateP&);
       bool skipComments(std::ifstream&, std::string&);
       void generateUnexpectedEOFString(const std::string&, const std::string&, std::string&);
-      void parseNonbondedPotentials(std::ifstream&, const std::string&, std::string&, SimulationStateP&);
 
+      // Data members
       static const std::string d_forcefieldNameString;
       bool hasPolarizability;
       double tholeParameter;
       nonbondedTwoBodyMapType potentialMap;
+      std::vector<BondPotential*> bonds;
+      std::vector<BendPotential*> bends;
+      std::vector<DihedralPotential*> dihedrals;
+      std::vector<ImproperDihedralPotential*> improper;
+
   };
 }
 
