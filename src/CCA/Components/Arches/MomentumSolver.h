@@ -328,6 +328,52 @@ private:
   };  
 
   // constant initialization ------------------------
+  class InputfileInit : public VelocityInitBase { 
+
+    public: 
+
+      InputfileInit(){ 
+        _const_u = 0.0;
+        _const_v = 0.0;
+        _const_w = 0.0;
+      };
+      ~InputfileInit(){}; 
+
+      void problemSetup( ProblemSpecP db ){ 
+
+        db->getWithDefault( "const_u", _const_u, 0.0 ); 
+        db->getWithDefault( "const_v", _const_v, 0.0 ); 
+        db->getWithDefault( "const_w", _const_w, 0.0 ); 
+
+      }; 
+
+      void setXVel( const Patch* patch, SFCXVariable<double>& uvel ){ 
+
+        uvel.initialize( _const_u ); 
+
+      }; 
+      
+      void setYVel( const Patch* patch, SFCYVariable<double>& vvel ){ 
+
+        vvel.initialize( _const_v ); 
+
+      }; 
+
+      void setZVel( const Patch* patch, SFCZVariable<double>& wvel ){ 
+
+        wvel.initialize( _const_w ); 
+
+      }; 
+
+    private: 
+
+      double _const_u;
+      double _const_v; 
+      double _const_w;  
+
+  };  
+
+  // Atmospheric Boundary Layer initialization ------------------------
   class StABLVel : public VelocityInitBase { 
 
     public: 

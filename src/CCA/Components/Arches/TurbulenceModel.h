@@ -121,6 +121,15 @@ public:
                                                const MaterialSet* matls,
                                                const TimeIntegratorLabel* timelabels) = 0;
 
+      void sched_computeFilterVol( SchedulerP& sched, 
+                                   const PatchSet* patches, 
+                                   const MaterialSet* matls );
+
+      void sched_carryForwardFilterVol( SchedulerP& sched, 
+                                        const PatchSet* patches, 
+                                        const MaterialSet* matls );
+
+
  protected:
 
       const ArchesLabel* d_lab;
@@ -133,8 +142,25 @@ public:
 
       void problemSetupCommon( const ProblemSpecP& params ); 
 
-private:
-bool d_mixedModel;
+  private:
+
+    bool d_mixedModel;
+
+    bool d_use_old_filter;
+    int d_filter_width; 
+    std::string d_filter_type; 
+
+    void computeFilterVol( const ProcessorGroup*,
+                           const PatchSubset* patches,
+                           const MaterialSubset*,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw );
+
+    void carryForwardFilterVol( const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset*,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw );
 
 }; // End class TurbulenceModel
 } // End namespace Uintah
