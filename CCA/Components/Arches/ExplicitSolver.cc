@@ -303,6 +303,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   sched_setInitialGuess(sched, patches, matls);
 
   d_boundaryCondition->sched_setAreaFraction(sched, patches, matls, 0, false );
+  d_turbModel->sched_carryForwardFilterVol(sched, patches, matls); 
 
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
   if (dqmomFactory.get_quad_nodes() > 0)

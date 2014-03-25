@@ -999,6 +999,8 @@ Arches::scheduleInitialize(const LevelP& level,
   //AF must be called again to account for intrusions (can this be the ONLY call?) 
   d_boundaryCondition->sched_setAreaFraction( sched, patches, matls, 1, true ); 
 
+  d_turbModel->sched_computeFilterVol( sched, patches, matls ); 
+
   // base initialization of all scalars
   sched_scalarInit(level, sched);
 

@@ -1298,10 +1298,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
             double filter = pow(delta, 1.0/3.0);
 
             Cs[currCell] = Min(Cs[currCell],10.0);
-            Cs[currCell] = factor * sqrt(Cs[currCell]);
-
-            viscosity[currCell] =  Cs[currCell] * Cs[currCell] *
-              filter * filter *
+            viscosity[currCell] =  Cs[currCell] * filter*filter* 
               IsI[currCell] * den[currCell] +
               viscos*voidFraction[currCell];
 
@@ -1321,9 +1318,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
             double filter = pow(delta, 1.0/3.0);
 
             Cs[currCell] = Min(Cs[currCell],10.0);
-            Cs[currCell] = factor * sqrt(Cs[currCell]);
-            viscosity[currCell] =  Cs[currCell] * Cs[currCell] *
-              filter * filter *
+            viscosity[currCell] =  Cs[currCell] * filter*filter*
               IsI[currCell] * den[currCell] + viscos;
 
             turbViscosity[currCell] = viscosity[currCell] - viscos; 

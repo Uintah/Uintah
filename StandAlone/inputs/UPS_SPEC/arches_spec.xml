@@ -157,6 +157,11 @@
           <!-- density_label            spec above --> 
           <variance_coefficient         spec="REQUIRED DOUBLE 'positive'"
                                         need_applies_to="type scalsim_variance"/> <!-- Multiplier (Cf) on the variance, var = Cf * (filter(z^2)- filter(z)^2) --> 
+
+          <filter_width                 spec="OPTIONAL INTEGER" 
+                                        need_applies_to="type scalsim_variance"/> <!-- Test filter width in # of cells. Default: 3 --> 
+          <filter_type                  spec="OPTIONAL STRING 'moin98, box'"
+                                        need_applies_to="type scalsim_variance"/> <!-- Filter type. See Filter.h. Default: moin98 --> 
                                         
           <!-- Normalized Scalar Variance for use with transport eqn models -->                              
           <!-- mixture_fraction_label    spec above -->
@@ -219,10 +224,16 @@
         <cf                             spec="OPTIONAL DOUBLE 'positive'" />  
         <fac_mesh                       spec="OPTIONAL DOUBLE 'positive'" />
         <filterl                        spec="OPTIONAL DOUBLE 'positive'" />
+
         <!--dyn. smagorinsky -->
-        <filter_cs_squared              spec="OPTIONAL BOOLEAN" />
-        <!-- going to leave complocal out based on the 'this model is a mess' comment-->
-        <use_new_filter                 spec="OPTIONAL NO_DATA"/> <!-- Don't adjust filter weights near boundaries --> 
+        <filter_cs_squared              spec="OPTIONAL BOOLEAN" /> <!-- filter the dynamic Cs constant --> 
+
+
+        <!-- setup filter for dynamic filtering --> 
+        <ignore_filter_bc               spec="OPTIONAL NO_DATA"/> <!-- Don't adjust filter weights near boundaries. Default: FALSE --> 
+        <filter_width                   spec="OPTIONAL INTEGER"/> <!-- Test filter width in # of cells. Default: 3 --> 
+        <filter_type                    spec="OPTIONAL STRING 'moin98, box'"/> <!-- Filter type. See Filter.h. Default: moin98 [for historic reasons] --> 
+
       </Turbulence>
 
       <Properties                       spec="REQUIRED NO_DATA"
