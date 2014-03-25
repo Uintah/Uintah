@@ -25,11 +25,14 @@
 #ifndef UINTAH_MD_SPMEPatch_H
 #define UINTAH_MD_SPMEPatch_H
 
-#include <CCA/Components/MD/SimpleGrid.h>
+
 #include <Core/Grid/Patch.h>
+
 #include <Core/Math/Matrix3.h>
-#include <CCA/Components/MD/SPMEMapPoint.h>
+
 #include <CCA/Components/MD/MDSystem.h>
+#include <CCA/Components/MD/SimpleGrid.h>
+#include <CCA/Components/MD/Electrostatics/SPME/SPMEMapPoint.h>
 
 #include <complex>
 

@@ -16,6 +16,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Exceptions/InvalidState.h>
 
 #include <fstream>
 #include <iostream>
@@ -162,7 +163,6 @@ bool LucretiusForcefield::skipComments(std::ifstream& fileHandle, std::string& b
   }
   return false; // Ran out of file
 }
-
 
 void LucretiusForcefield::generateUnexpectedEOFString(const std::string& filename,
                                                       const std::string& addendum,
@@ -443,4 +443,16 @@ LucretiusForcefield::LucretiusForcefield(const ProblemSpecP& spec,
   else {  // Couldn't find the forcefield block in the PS
     throw ProblemSetupException("Could not find the Forcefield block in the input file.", __FILE__, __LINE__);
   }
+}
+
+NonbondedTwoBodyPotential* LucretiusForcefield::getNonbondedPotential(const std::string& label1, const std::string& label2) const {
+  nonbondedTwoBodyMapType::iterator potentialLocation;
+  if (potentialLocation != potentialMap.end()) {
+    return potentialLocation->second;
+  }
+  std::ostringstream ErrorOut;
+  ErrorOut << "ERROR:  Attempt to index an unreferenced nonbonded potential:" << std::endl
+           << "  Label1:  " << label1 << std::endl
+           << "  Label2:  " << label2 << std::endl;
+  throw InvalidState(ErrorOut.str(), __FILE__, __LINE__);
 }

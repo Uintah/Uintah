@@ -27,15 +27,16 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR	:= CCA/Components/MD/Forcefields
+SRCDIR	:= CCA/Components/MD/Electrostatics/SPME
 
-SRCS += $(SRCDIR)/ForcefieldFactory.cc   \
-        $(SRCDIR)/TwoBodyForcefield.cc
-
-SUBDIRS := $(SRCDIR)/Lucretius                  \
-
-include $(SCIRUN_SCRIPTS)/recurse.mk
-
+SRCS += $(SRCDIR)/SPMEMapPoint.cc                 \
+        $(SRCDIR)/SPMEPatch.cc                    \
+        $(SRCDIR)/SPMERealspaceChargeDipole.cc	  \
+        $(SRCDIR)/SPMEBaseLogic.cc                \
+        $(SRCDIR)/SPMEReciprocalChargeDipole.cc   \
+        $(SRCDIR)/SPMEReciprocalGeneric.cc        \
+        $(SRCDIR)/ShiftedCardinalBSpline.cc
+        
 PSELIBS :=
 
 LIBS := 

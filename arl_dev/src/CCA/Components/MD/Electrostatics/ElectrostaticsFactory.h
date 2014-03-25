@@ -26,7 +26,7 @@
 #define UINTAH_MD_ELECTROSTATICSFACTORY_h
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <CCA/Components/MD/Electrostatics.h>
+#include <CCA/Components/MD/Electrostatics/Electrostatics.h>
 
 namespace Uintah {
 

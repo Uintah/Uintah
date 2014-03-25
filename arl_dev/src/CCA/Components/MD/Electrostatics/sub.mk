@@ -27,12 +27,12 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR	:= CCA/Components/MD/Forcefields
+SRCDIR	:= CCA/Components/MD/Electrostatics
 
-SRCS += $(SRCDIR)/ForcefieldFactory.cc   \
-        $(SRCDIR)/TwoBodyForcefield.cc
+SRCS += $(SRCDIR)/Electrostatics.cc         \
+        $(SRCDIR)/ElectrostaticsFactory.cc   
 
-SUBDIRS := $(SRCDIR)/Lucretius                  \
+SUBDIRS := $(SRCDIR)/SPME
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

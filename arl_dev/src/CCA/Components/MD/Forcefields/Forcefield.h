@@ -41,16 +41,16 @@
 #include <vector>
 
 namespace Uintah {
+  enum forcefieldInteractionClass { TwoBody, ThreeBody, NBody };
+
   class Forcefield {
     public:
       Forcefield () {}
       virtual ~Forcefield () {}
-//      virtual inline NonbondedPotential* getNonbondedPotential() const = 0;
-//      virtual inline BondPotential* getBondPotential() const = 0;
-//      virtual inline BendPotential* getBendPotential() const = 0;
-//      virtual inline DihedralPotential* getDihedralPotential() const = 0;
-//      virtual inline ImproperDihedralPotential* getImproperPotential() const = 0;
+      virtual forcefieldInteractionClass getInteractionClass() const = 0;
+
     private:
+
   };
 }
 

@@ -35,22 +35,14 @@ SRCS += $(SRCDIR)/MD.cc                           \
         $(SRCDIR)/MDLabel.cc                      \
         $(SRCDIR)/MDMaterial.cc                   \
         $(SRCDIR)/MDSystem.cc                     \
-        $(SRCDIR)/ElectrostaticsFactory.cc        \
-        $(SRCDIR)/Electrostatics.cc               \
-        $(SRCDIR)/SPMERealspaceChargeDipole.cc	  \
-        $(SRCDIR)/SPMEBaseLogic.cc                \
-        $(SRCDIR)/SPMEReciprocalChargeDipole.cc   \
-        $(SRCDIR)/SPMEReciprocalGeneric.cc        \
         $(SRCDIR)/NonBondedFactory.cc             \
         $(SRCDIR)/NonBonded.cc                    \
         $(SRCDIR)/AnalyticNonBonded.cc            \
-        $(SRCDIR)/SPMEMapPoint.cc                 \
-        $(SRCDIR)/SPMEPatch.cc                    \
-        $(SRCDIR)/SimpleGrid.cc                   \
-        $(SRCDIR)/ShiftedCardinalBSpline.cc
+        $(SRCDIR)/SimpleGrid.cc                   
 
 SUBDIRS := $(SRCDIR)/Potentials  \
-           $(SRCDIR)/Forcefields
+           $(SRCDIR)/Forcefields \
+           $(SRCDIR)/Electrostatics 
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

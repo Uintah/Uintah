@@ -20,7 +20,6 @@
 using namespace Uintah;
 
 Forcefield* ForcefieldFactory::create(const ProblemSpecP& ps,
-                                      MDSystem* system,
                                       SimulationStateP& sharedState)
 {
   Forcefield* forcefield = 0;
