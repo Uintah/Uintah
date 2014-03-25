@@ -72,7 +72,7 @@ public:
       }
 
     } else { 
-      throw InvalidValue("Error: Filter not defined.", __FILE__, __LINE__);
+      throw InvalidValue("Error: Filter type not defined.", __FILE__, __LINE__);
     }
 
     if ( _filter_type == MOIN98 ){ 

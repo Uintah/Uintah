@@ -60,25 +60,26 @@ TurbulenceModel::problemSetupCommon( const ProblemSpecP& params )
   ProblemSpecP db = params; 
   ProblemSpecP db_turb; 
 
+  d_filter_type = "moin98"; 
+  d_filter_width = 3; 
+
   if ( db->findBlock("Turbulence") ){ 
     db_turb = db->findBlock("Turbulence"); 
-  }
 
-  //setup the filter: 
-  d_use_old_filter = true; 
-  if ( db_turb->findBlock("ignore_filter_bc") ) {
-    //Will not adjust filter weights for the presence of any BC. 
-    d_use_old_filter = false; 
-  } 
+    //setup the filter: 
+    d_use_old_filter = true; 
+    if ( db_turb->findBlock("ignore_filter_bc") ) {
+      //Will not adjust filter weights for the presence of any BC. 
+      d_use_old_filter = false; 
+    } 
 
-  d_filter_type = "moin98"; 
-  if ( db_turb->findBlock("filter_type")){ 
-    db_turb->getWithDefault("filter_type", d_filter_type, "moin98");
-  }
+    if ( db_turb->findBlock("filter_type")){ 
+      db_turb->getWithDefault("filter_type", d_filter_type, "moin98");
+    }
 
-  d_filter_width = 3; 
-  if ( db_turb->findBlock("filter_width")){ 
-    db_turb->getWithDefault("filter_width",d_filter_width,3);
+    if ( db_turb->findBlock("filter_width")){ 
+      db_turb->getWithDefault("filter_width",d_filter_width,3);
+    }
   }
 
   d_filter = scinew Filter( d_use_old_filter, d_filter_type, d_filter_width ); 
