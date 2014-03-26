@@ -37,6 +37,7 @@ POST_PROCESS_LIST = [
   'AreniscaTest_10_TransientStressEigenvaluesConstVectors.ups',
   'AreniscaTest_11_UniaxialStrainJ2plasticity.ups',
   'AreniscaTest_12_PureIsochoricStrainRatesInDiffDirs.ups',
+  'AreniscaTest_13_UniaxialStrainRateDependence.ups',
 ]
 
 #get uintah/src path as enviornmental variable
@@ -84,7 +85,7 @@ TEST_LIST = [
   TEST_LIST[11], #Test 10
   TEST_LIST[12], #Test 11
   TEST_LIST[13], #Test 12
-  
+  TEST_LIST[14], #Test 13 Rate Dependence
   ]
 ### --------------------- ###
 
@@ -247,7 +248,9 @@ def post_proc(test,uda_path,save_path):
     if test_name == 'AreniscaTest_11_UniaxialStrainJ2plasticity.ups':
       test11_postProc(uda_path,save_path,WORKING_PATH=default_working_dir)
     if test_name == 'AreniscaTest_12_PureIsochoricStrainRatesInDiffDirs.ups':
-      test12_postProc(uda_path,save_path,WORKING_PATH=default_working_dir)       
+      test12_postProc(uda_path,save_path,WORKING_PATH=default_working_dir)
+    if test_name == 'AreniscaTest_13_UniaxialStrainRateDependence.ups':
+      test13_postProc(uda_path,save_path,WORKING_PATH=default_working_dir)
   else:
     print '\nERROR: test: ',test,'\n\tNot on post processing list.\n'
 

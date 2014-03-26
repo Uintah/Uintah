@@ -95,6 +95,8 @@ namespace Uintah {
     const VarLabel* pepLabel_preReloc;
     const VarLabel* pevpLabel;              //Plastic Volumetric Strain
     const VarLabel* pevpLabel_preReloc;
+    const VarLabel* peqpsLabel;              //Plastic Volumetric Strain
+    const VarLabel* peqpsLabel_preReloc;
     const VarLabel* peveLabel;              //Elastic Volumetric Strain
     const VarLabel* peveLabel_preReloc;
     const VarLabel* pCapXLabel;
