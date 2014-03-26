@@ -2429,8 +2429,7 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
      new_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 ); 
     }
 
-    coutLock.lock();
-    std::cout << "\nDomain boundary condition summary: \n";
+    proc0cout << "\nDomain boundary condition summary: \n";
 
     for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
           bc_iter != d_bc_information.end(); bc_iter++){
@@ -2510,14 +2509,13 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
         }
       }
 
-    std::cout << "  ----> BC Label: " << bc_iter->second.name << std::endl;
-    std::cout << "            area: " << area << std::endl;
-    std::cout << "           m_dot: " << bc_iter->second.mass_flow_rate << std::endl;
-    std::cout << "               U: " << bc_iter->second.velocity[0] << ", " << bc_iter->second.velocity[1] << ", " << bc_iter->second.velocity[2] << std::endl;
+      proc0cout << "  ----> BC Label: " << bc_iter->second.name << std::endl;
+      proc0cout << "            area: " << area << std::endl;
+      proc0cout << "           m_dot: " << bc_iter->second.mass_flow_rate << std::endl;
+      proc0cout << "               U: " << bc_iter->second.velocity[0] << ", " << bc_iter->second.velocity[1] << ", " << bc_iter->second.velocity[2] << std::endl;
 
     }
-    std::cout << std::endl;
-    coutLock.unlock();
+    proc0cout << std::endl;
   }
 }
 //--------------------------------------------------------------------------------
