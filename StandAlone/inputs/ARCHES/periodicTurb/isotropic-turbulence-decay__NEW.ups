@@ -63,7 +63,7 @@
         <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
 
-      <set_initial_vel_condition inputfile="inputs/ARCHES/periodicTurb/cbc32_uvw_arches.gz"/>
+      <set_initial_vel_condition inputfile="cbc32_uvw_arches.gz"/>
 
       <Turbulence model="compdynamicprocedure"/>
 

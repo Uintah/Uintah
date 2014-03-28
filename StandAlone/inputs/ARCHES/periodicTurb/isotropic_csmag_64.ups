@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <Uintah_specification>
   <Meta>
-    <title>Arches Decay of Isotropic Turbulence - Dynamic Model: dynamicprocedure - 32x32x32</title>
+    <title>Arches Decay of Isotropic Turbulence - Constant Smagorinsky - 32x32x32</title>
   </Meta>
 
   <SimulationComponent type="arches"/>
@@ -20,7 +20,7 @@
 
 <!--__________________________________-->
   <DataArchiver>
-    <filebase>arhces-decay-isotropic-turbulence-dyn-32.uda</filebase>
+    <filebase>arhces-decay-isotropic-turbulence-csmag-64.uda</filebase>
 	<outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>    
     <save label="totalKineticEnergy"/>
@@ -30,7 +30,7 @@
     <save label="continuityResidual"/>    
 <!-- 
     <save label="pressurePS"/>
-    <save label="CCVelocity"/>
+    <save label="CCVelocity"/>    
     <save label="scalarSP"/>
     <save label="densityCP"/>
     <save label="viscosityCTS"/>
@@ -46,7 +46,7 @@
       <Box label="1">
         <lower>       [0,0,0]         </lower>
         <upper>       [0.56548668,0.56548668,0.56548668]</upper>
-        <resolution>  [32,32,32]      </resolution>
+        <resolution>  [64,64,64]      </resolution>
         <patches>     [2,2,2]         </patches>
       </Box>
       <periodic>[1,1,1]</periodic>
@@ -68,8 +68,12 @@
       </TimeIntegrator>
 
 
-      <set_initial_vel_condition inputfile="inputs/ARCHES/periodicTurb/cbc32_uvw_arches.gz"/>
-      <Turbulence model="dynamicprocedure"/>
+      <set_initial_vel_condition inputfile="cbc64_uvw_arches.gz"/>
+      <Turbulence model="smagorinsky">
+        <cf>0.2</cf>
+        <fac_mesh>1</fac_mesh>        
+        <filterl>0</filterl>
+      </Turbulence>
 
       <Properties>
         <ConstantProps>
@@ -98,7 +102,6 @@
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
-
 
       </ExplicitSolver>
     </ARCHES>

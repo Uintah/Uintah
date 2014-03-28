@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <Uintah_specification>
   <Meta>
-    <title>Arches Decay of Isotropic Turbulence - Dynamic Model: compdynamic - 32x32x32</title>
+    <title>Arches Decay of Isotropic Turbulence - Constant Smagorinsky - 32x32x32</title>
   </Meta>
 
   <SimulationComponent type="arches"/>
@@ -20,7 +20,7 @@
 
 <!--__________________________________-->
   <DataArchiver>
-    <filebase>arhces-decay-isotropic-turbulence-compdyn-32.uda</filebase>
+    <filebase>arhces-decay-isotropic-turbulence-csmag-32.uda</filebase>
 	<outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>    
     <save label="totalKineticEnergy"/>
@@ -68,8 +68,12 @@
       </TimeIntegrator>
 
 
-      <set_initial_vel_condition inputfile="inputs/ARCHES/periodicTurb/cbc32_uvw_arches.gz"/>
-      <Turbulence model="compdynamicprocedure"/>
+      <set_initial_vel_condition inputfile="cbc32_uvw_arches.gz"/>
+      <Turbulence model="smagorinsky">
+        <cf>0.2</cf>
+        <fac_mesh>1</fac_mesh>        
+        <filterl>0</filterl>
+      </Turbulence>
 
       <Properties>
         <ConstantProps>
