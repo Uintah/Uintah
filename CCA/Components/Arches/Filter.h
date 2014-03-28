@@ -116,6 +116,89 @@ public:
 
 /* @brief Apply a filter to a Uintah::CCVariable<double> */
 template<class T>
+bool applyFilter( const ProcessorGroup* ,
+                  const Patch* patch,               
+                  T& var,                           
+                  constCCVariable<double>& filterVol, 
+                  constCCVariable<double>& eps, 
+                  Array3<double>& filterVar )        
+{
+  int shift = (_filter_width-1)/2;
+  int fstart = -1*shift;
+  int fend   = shift;
+
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
+    IntVector c = *iter; 
+    filterVar[c] = 0.0;
+
+    for ( int i = fstart; i <= fend; i++ ){
+      for ( int j = fstart; j <= fend; j++ ){
+        for ( int k = fstart; k <= fend; k++ ){
+
+          IntVector offset = c + IntVector(i,j,k);
+          filterVar[c] += eps[offset] * 
+            _filter_array[i+shift][j+shift][k+shift] * var[c + IntVector(i,j,k)]; 
+
+        }
+      }
+    }
+
+    filterVar[c] /= filterVol[c]; 
+
+  }
+  return true;
+}
+
+/* @brief Apply a filter to a RHO*Uintah::SFCX,Y,ZVariable<double> */ 
+template<class T, class constT>
+bool applyFilter( const ProcessorGroup* ,
+                  CellIterator iter, 
+                  constT& var,                           
+                  constCCVariable<double>& rho, 
+                  constCCVariable<double>& filterVol, 
+                  constCCVariable<double>& eps, 
+                  T& filterVar,
+                  int dim )        
+{
+  int shift = (_filter_width-1)/2;
+  int fstart = -1*shift;
+  int fend   = shift;
+
+  iter.reset(); 
+
+  IntVector neigh = IntVector(0,0,0); 
+  neigh[dim] = 1; 
+
+  for (; !iter.done(); iter++){
+
+    IntVector c = *iter; 
+    filterVar[c] = 0.0;
+
+    for ( int i = fstart; i <= fend; i++ ){
+      for ( int j = fstart; j <= fend; j++ ){
+        for ( int k = fstart; k <= fend; k++ ){
+
+          IntVector offset   = c + IntVector(i,j,k);
+          IntVector offset_2 = offset - neigh;  
+          double vf = std::floor((eps[offset]+eps[offset_2])/2.0);
+
+          filterVar[c] += vf * 
+            _filter_array[i+shift][j+shift][k+shift] * 
+            (rho[c]+rho[c+neigh])/2.0 * var[c + IntVector(i,j,k)]; 
+
+        }
+      }
+    }
+
+    filterVar[c] /= filterVol[c]; 
+
+  }
+  return true;
+}
+
+/* @brief Apply a filter to a Uintah::CCVariable<double> */
+template<class T>
 bool applyFilter_noPetsc(const ProcessorGroup* ,
                          const Patch* patch,               
                          T& var,                           
@@ -123,17 +206,19 @@ bool applyFilter_noPetsc(const ProcessorGroup* ,
                          constCCVariable<int>& cellType, 
                          Array3<double>& filterVar)        
 {
+  int shift = (_filter_width-1)/2;
+  int fstart = -1*shift;
+  int fend   = shift;
 
   for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
     IntVector c = *iter; 
-    int shift = (_filter_width-1)/2;
 
     filterVar[c] = 0.0; 
 
-    for ( int i = -(_filter_width-1)/2; i <= (_filter_width-1)/2; i++ ){
-      for ( int j = -(_filter_width-1)/2; j <= (_filter_width-1)/2; j++ ){
-        for ( int k = -(_filter_width-1)/2; k <= (_filter_width-1)/2; k++ ){
+    for ( int i = fstart; i <= fend; i++ ){
+      for ( int j = fstart; j <= fend; j++ ){
+        for ( int k = fstart; k <= fend; k++ ){
 
           IntVector offset = c + IntVector(i,j,k);
           if ( cellType[offset] == -1 ){ 
