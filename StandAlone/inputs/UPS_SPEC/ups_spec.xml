@@ -355,6 +355,9 @@
       <sinusoidalInitialize      spec="OPTIONAL BOOLEAN"/>
       <slope                     spec="OPTIONAL VECTOR"/>
       <triangularInitialize      spec="OPTIONAL BOOLEAN"/>
+      <quadraticInitialize       spec="OPTIONAL BOOLEAN"/>
+      <exponentialInitialize_1D  spec="OPTIONAL BOOLEAN"/>
+      <exponentialInitialize_2D  spec="OPTIONAL BOOLEAN"/>
     </geom_object>
       
     <SimulationComponent          spec="REQUIRED NO_DATA"
