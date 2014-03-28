@@ -144,8 +144,11 @@ print 'Going to query UDA: ', uda_name
 L = U0 - L0
 L = 2.0*np.pi*9.0/100.0
 
-TS = [0,28,66]
-#TS = [0,28]
+# compatible with a dt=0.01 timestep and output every 2 steps. 
+TS = [0,14,33]
+
+# compatible with a dt=0.001 timestep and output every 10 steps. 
+#TS = [0,28,66]
 
 cbc = np.loadtxt('cbc_spectrum.txt')
 
