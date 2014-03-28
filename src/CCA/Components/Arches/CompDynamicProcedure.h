@@ -134,9 +134,31 @@ private:
                           const TimeIntegratorLabel* timelabels);
 
 
- protected:
   bool d_filter_cs_squared; //option for filtering Cs^2 in CompDynamic Procedure
   bool d_3d_periodic;
+
+  void apply_zero_neumann( const Patch* patch, CCVariable<double>& var, 
+                           CCVariable<double>& var2, constCCVariable<double> vol_fraction ){ 
+
+    std::vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
+    Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
+
+    for( std::vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+
+      Patch::FaceType face = *itr;
+      IntVector f_dir = patch->getFaceDirection(face);
+
+      for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
+        IntVector c = *iter;
+
+        if ( vol_fraction[c] > 1e-10 ){
+          var[c] = var[c-f_dir];
+          var2[c] = var2[c-f_dir];
+        }
+      }
+    }
+  }
 
  private:
 

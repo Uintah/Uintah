@@ -128,6 +128,7 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
     tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 2);
     tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,      gac, 2);
+    tsk->requires(Task::NewDW, d_lab->d_volFractionLabel,   gac, 2);
     tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
     tsk->requires(Task::NewDW, d_lab->d_filterVolumeLabel, gn); 
 
@@ -209,6 +210,7 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
     tsk->requires(Task::NewDW, d_lab->d_filterVolumeLabel, gn); 
     tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 2);
+    tsk->requires(Task::NewDW, d_lab->d_volFractionLabel, gac, 1); 
 
     tsk->requires(Task::NewDW, d_lab->d_strainTensorCompLabel,
         d_lab->d_symTensorMatl, oams,gac, 1);
@@ -251,6 +253,7 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
     tsk->requires(Task::NewDW, d_lab->d_filterVolumeLabel, gn); 
     tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 1);
+    tsk->requires(Task::NewDW, d_lab->d_volFractionLabel, gac, 1);
 
     // for multimaterial
     if (d_MAlab){
@@ -295,6 +298,7 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     constCCVariable<double> density;
     constCCVariable<int> cellType;
     constCCVariable<double> filterVolume; 
+    constCCVariable<double> vol_fraction; 
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -311,15 +315,14 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     new_dw->get(filterVolume, d_lab->d_filterVolumeLabel, indx, patch, Ghost::None, 0); 
 
     new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, gac, 2);
+    new_dw->get(vol_fraction, d_lab->d_volFractionLabel, indx, patch, gac, 2);
 
 
     SFCXVariable<double> filterRhoU;
     SFCYVariable<double> filterRhoV;
     SFCZVariable<double> filterRhoW;
     CCVariable<double> filterRho;
-    CCVariable<double> filterRhoF;
-    CCVariable<double> filterRhoE;
-    CCVariable<double> filterRhoRF;
+
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       new_dw->allocateAndPut(filterRhoU, d_lab->d_filterRhoULabel, indx, patch);
       new_dw->allocateAndPut(filterRhoV, d_lab->d_filterRhoVLabel, indx, patch);
@@ -345,221 +348,256 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
-    IntVector indexLowU = patch->getSFCXFORTLowIndex__Old();
-    IntVector indexHighU = patch->getSFCXFORTHighIndex__Old();
-    IntVector indexLowV = patch->getSFCYFORTLowIndex__Old();
-    IntVector indexHighV = patch->getSFCYFORTHighIndex__Old();
-    IntVector indexLowW = patch->getSFCZFORTLowIndex__Old();
-    IntVector indexHighW = patch->getSFCZFORTHighIndex__Old();
+//    IntVector indexLowU = patch->getSFCXFORTLowIndex__Old();
+//    IntVector indexHighU = patch->getSFCXFORTHighIndex__Old();
+//    IntVector indexLowV = patch->getSFCYFORTLowIndex__Old();
+//    IntVector indexHighV = patch->getSFCYFORTHighIndex__Old();
+//    IntVector indexLowW = patch->getSFCZFORTLowIndex__Old();
+//    IntVector indexHighW = patch->getSFCZFORTHighIndex__Old();
 
-    if (xminus) indexLowU -= IntVector(1,0,0); 
-    if (yminus) indexLowV -= IntVector(0,1,0); 
-    if (zminus) indexLowW -= IntVector(0,0,1); 
-    if (xplus) indexHighU += IntVector(1,0,0); 
-    if (yplus) indexHighV += IntVector(0,1,0); 
-    if (zplus) indexHighW += IntVector(0,0,1); 
+//    if (xminus) indexLowU -= IntVector(1,0,0); 
+//    if (yminus) indexLowV -= IntVector(0,1,0); 
+//    if (zminus) indexLowW -= IntVector(0,0,1); 
+//    if (xplus) indexHighU += IntVector(1,0,0); 
+//    if (yplus) indexHighV += IntVector(0,1,0); 
+//    if (zplus) indexHighW += IntVector(0,0,1); 
 
-    int flowID = -1;
+
+    IntVector low;
+    if ( xminus ){ 
+      low  = patch->getCellLowIndex()+IntVector(1,0,0); 
+    }else{ 
+      low  = patch->getCellLowIndex(); 
+    }
+    IntVector high = patch->getCellHighIndex();  
+
+    CellIterator iter = CellIterator(low,high); 
+
+    double dim = 0;
+    d_filter->applyFilter( pc, iter, uVel, density, filterVolume, vol_fraction, filterRhoU, dim );
+
+    if ( yminus ){ 
+      low = patch->getCellLowIndex()+IntVector(0,1,0); 
+    } else { 
+      low = patch->getCellLowIndex(); 
+    }
+
+    iter = CellIterator(low,high); 
+    dim = 1;
+    d_filter->applyFilter( pc, iter, vVel, density, filterVolume, vol_fraction, filterRhoV, dim );
+
+    if ( zminus ){ 
+      low = patch->getCellLowIndex()+IntVector(0,0,1); 
+    } else { 
+      low = patch->getCellLowIndex(); 
+    }
+
+    iter = CellIterator(low,high); 
+    dim = 2;
+    d_filter->applyFilter( pc, iter, wVel, density, filterVolume, vol_fraction, filterRhoW, dim );
+
     int mmWallID = d_boundaryCondition->getMMWallId();
-    for (int colZ = indexLowU.z(); colZ <= indexHighU.z(); colZ ++) {
-      for (int colY = indexLowU.y(); colY <= indexHighU.y(); colY ++) {
-        for (int colX = indexLowU.x(); colX <= indexHighU.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ);
-          IntVector shift(0,0,0);
-          if ((xplus)&&((colX == indexHighU.x())||(colX == indexHighU.x()-1)))
-            shift = IntVector(-1,0,0);
-          int bndry_count=0;
-          if  (!(cellType[currCell + shift - IntVector(1,0,0)] == flowID))
-            bndry_count++;
-          if  (!(cellType[currCell + shift + IntVector(1,0,0)] == flowID))
-            bndry_count++;
-          if  (!(cellType[currCell + shift - IntVector(0,1,0)] == flowID))
-            bndry_count++;
-          if  (!(cellType[currCell + shift + IntVector(0,1,0)] == flowID))
-            bndry_count++;
-          if  (!(cellType[currCell + shift - IntVector(0,0,1)] == flowID))
-            bndry_count++;
-          if  (!(cellType[currCell + shift + IntVector(0,0,1)] == flowID))
-            bndry_count++;
-          bool corner = (bndry_count==3);
-          double totalVol = 0.0;
-          if ((cellType[currCell+shift] == flowID)&&
-              (cellType[currCell+shift-IntVector(1,0,0)] != mmWallID)) {
-            for (int kk = -1; kk <= 1; kk ++) {
-              for (int jj = -1; jj <= 1; jj ++) {
-                for (int ii = -1; ii <= 1; ii ++) {
-                  IntVector filterCell = IntVector(colX+ii,colY+jj,colZ+kk);
-                  // on the boundary
-                  if (cellType[filterCell+shift] != flowID) {
-                    // intrusion
-                    if (filterCell+shift == currCell+shift) {
-                      // do nothing here, assuming intrusion velocity is 0
-                    }
-                  }
-                  // inside the domain
-                  else
-                    if (cellType[filterCell+shift-IntVector(1,0,0)] != mmWallID) {
-                      double vol = cellinfo->sewu[colX+ii]*
-                        cellinfo->sns[colY+jj]*
-                        cellinfo->stb[colZ+kk];
-                      if (!(corner)) vol *= (1.0-0.5*abs(ii))*
-                        (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
-                      filterRhoU[currCell] += vol*uVel[filterCell]*
-                        0.5*(density[filterCell]+
-                            density[filterCell-IntVector(1,0,0)]);
-                      totalVol += vol;
-                    }
-                }
-              }
-            }
-            filterRhoU[currCell] /= totalVol;
-          }
-        }
-      }
-    }
-    // assuming SFCY still stored with z being outer index and x inner index
-    for (int colZ = indexLowV.z(); colZ <= indexHighV.z(); colZ ++) {
-      for (int colY = indexLowV.y(); colY <= indexHighV.y(); colY ++) {
-        for (int colX = indexLowV.x(); colX <= indexHighV.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ);
-          IntVector shift(0,0,0);
-          if ((yplus)&&((colY == indexHighV.y())||(colY == indexHighV.y()-1)))
-            shift = IntVector(0,-1,0);
-          int bndry_count=0;
-          if  (!(cellType[currCell + shift - IntVector(1,0,0)] == flowID))
-            bndry_count++;
-          if  (!(cellType[currCell + shift + IntVector(1,0,0)] == flowID))
-            bndry_count++;
-          if  (!(cellType[currCell + shift - IntVector(0,1,0)] == flowID))
-            bndry_count++;
-          if  (!(cellType[currCell + shift + IntVector(0,1,0)] == flowID))
-            bndry_count++;
-          if  (!(cellType[currCell + shift - IntVector(0,0,1)] == flowID))
-            bndry_count++;
-          if  (!(cellType[currCell + shift + IntVector(0,0,1)] == flowID))
-            bndry_count++;
-          bool corner = (bndry_count==3);
-          double totalVol = 0.0;
-          if ((cellType[currCell+shift] == flowID)&&
-              (cellType[currCell+shift-IntVector(0,1,0)] != mmWallID)) {
-            for (int kk = -1; kk <= 1; kk ++) {
-              for (int jj = -1; jj <= 1; jj ++) {
-                for (int ii = -1; ii <= 1; ii ++) {
-                  IntVector filterCell = IntVector(colX+ii,colY+jj,colZ+kk);
-                  // on the boundary
-                  if (cellType[filterCell+shift] != flowID) {
-                    // intrusion
-                    if (filterCell+shift == currCell+shift) {
-                      // do nothing here, assuming intrusion velocity is 0
-                    }
-                  }
-                  // inside the domain
-                  else
-                    if (cellType[filterCell+shift-IntVector(0,1,0)] != mmWallID) {
-                      double vol = cellinfo->sew[colX+ii]*
-                        cellinfo->snsv[colY+jj]*
-                        cellinfo->stb[colZ+kk];
-                      if (!(corner)) vol *= (1.0-0.5*abs(ii))*
-                        (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
-                      filterRhoV[currCell] += vol*vVel[filterCell]*
-                        0.5*(density[filterCell]+
-                            density[filterCell-IntVector(0,1,0)]);
-                      totalVol += vol;
-                    }
-                }
-              }
-            }
+//    int flowID = -1;
+//    for (int colZ = indexLowU.z(); colZ <= indexHighU.z(); colZ ++) {
+//      for (int colY = indexLowU.y(); colY <= indexHighU.y(); colY ++) {
+//        for (int colX = indexLowU.x(); colX <= indexHighU.x(); colX ++) {
+//          IntVector currCell(colX, colY, colZ);
+//          IntVector shift(0,0,0);
+//          if ((xplus)&&((colX == indexHighU.x())||(colX == indexHighU.x()-1)))
+//            shift = IntVector(-1,0,0);
+//          int bndry_count=0;
+//          if  (!(cellType[currCell + shift - IntVector(1,0,0)] == flowID))
+//            bndry_count++;
+//          if  (!(cellType[currCell + shift + IntVector(1,0,0)] == flowID))
+//            bndry_count++;
+//          if  (!(cellType[currCell + shift - IntVector(0,1,0)] == flowID))
+//            bndry_count++;
+//          if  (!(cellType[currCell + shift + IntVector(0,1,0)] == flowID))
+//            bndry_count++;
+//          if  (!(cellType[currCell + shift - IntVector(0,0,1)] == flowID))
+//            bndry_count++;
+//          if  (!(cellType[currCell + shift + IntVector(0,0,1)] == flowID))
+//            bndry_count++;
+//          bool corner = (bndry_count==3);
+//          double totalVol = 0.0;
+//          if ((cellType[currCell+shift] == flowID)&&
+//              (cellType[currCell+shift-IntVector(1,0,0)] != mmWallID)) {
+//            for (int kk = -1; kk <= 1; kk ++) {
+//              for (int jj = -1; jj <= 1; jj ++) {
+//                for (int ii = -1; ii <= 1; ii ++) {
+//                  IntVector filterCell = IntVector(colX+ii,colY+jj,colZ+kk);
+//                  // on the boundary
+//                  if (cellType[filterCell+shift] != flowID) {
+//                    // intrusion
+//                    if (filterCell+shift == currCell+shift) {
+//                      // do nothing here, assuming intrusion velocity is 0
+//                    }
+//                  }
+//                  // inside the domain
+//                  else
+//                    if (cellType[filterCell+shift-IntVector(1,0,0)] != mmWallID) {
+//                      double vol = cellinfo->sewu[colX+ii]*
+//                        cellinfo->sns[colY+jj]*
+//                        cellinfo->stb[colZ+kk];
+//                      if (!(corner)) vol *= (1.0-0.5*abs(ii))*
+//                        (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
+//                      filterRhoU[currCell] += vol*uVel[filterCell]*
+//                        0.5*(density[filterCell]+
+//                            density[filterCell-IntVector(1,0,0)]);
+//                      totalVol += vol;
+//                    }
+//                }
+//              }
+//            }
+//            filterRhoU[currCell] /= totalVol;
+//          }
+//        }
+//      }
+//    }
+//    // assuming SFCY still stored with z being outer index and x inner index
+//    for (int colZ = indexLowV.z(); colZ <= indexHighV.z(); colZ ++) {
+//      for (int colY = indexLowV.y(); colY <= indexHighV.y(); colY ++) {
+//        for (int colX = indexLowV.x(); colX <= indexHighV.x(); colX ++) {
+//          IntVector currCell(colX, colY, colZ);
+//          IntVector shift(0,0,0);
+//          if ((yplus)&&((colY == indexHighV.y())||(colY == indexHighV.y()-1)))
+//            shift = IntVector(0,-1,0);
+//          int bndry_count=0;
+//          if  (!(cellType[currCell + shift - IntVector(1,0,0)] == flowID))
+//            bndry_count++;
+//          if  (!(cellType[currCell + shift + IntVector(1,0,0)] == flowID))
+//            bndry_count++;
+//          if  (!(cellType[currCell + shift - IntVector(0,1,0)] == flowID))
+//            bndry_count++;
+//          if  (!(cellType[currCell + shift + IntVector(0,1,0)] == flowID))
+//            bndry_count++;
+//          if  (!(cellType[currCell + shift - IntVector(0,0,1)] == flowID))
+//            bndry_count++;
+//          if  (!(cellType[currCell + shift + IntVector(0,0,1)] == flowID))
+//            bndry_count++;
+//          bool corner = (bndry_count==3);
+//          double totalVol = 0.0;
+//          if ((cellType[currCell+shift] == flowID)&&
+//              (cellType[currCell+shift-IntVector(0,1,0)] != mmWallID)) {
+//            for (int kk = -1; kk <= 1; kk ++) {
+//              for (int jj = -1; jj <= 1; jj ++) {
+//                for (int ii = -1; ii <= 1; ii ++) {
+//                  IntVector filterCell = IntVector(colX+ii,colY+jj,colZ+kk);
+//                  // on the boundary
+//                  if (cellType[filterCell+shift] != flowID) {
+//                    // intrusion
+//                    if (filterCell+shift == currCell+shift) {
+//                      // do nothing here, assuming intrusion velocity is 0
+//                    }
+//                  }
+//                  // inside the domain
+//                  else
+//                    if (cellType[filterCell+shift-IntVector(0,1,0)] != mmWallID) {
+//                      double vol = cellinfo->sew[colX+ii]*
+//                        cellinfo->snsv[colY+jj]*
+//                        cellinfo->stb[colZ+kk];
+//                      if (!(corner)) vol *= (1.0-0.5*abs(ii))*
+//                        (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
+//                      filterRhoV[currCell] += vol*vVel[filterCell]*
+//                        0.5*(density[filterCell]+
+//                            density[filterCell-IntVector(0,1,0)]);
+//                      totalVol += vol;
+//                    }
+//                }
+//              }
+//            }
+//
+//            filterRhoV[currCell] /= totalVol;
+//          }
+//        }
+//      }
+//    }
+//    // assuming SFCZ still stored with z being outer index and x inner index
+//    for (int colZ = indexLowW.z(); colZ <= indexHighW.z(); colZ ++) {
+//      for (int colY = indexLowW.y(); colY <= indexHighW.y(); colY ++) {
+//        for (int colX = indexLowW.x(); colX <= indexHighW.x(); colX ++) {
+//          IntVector currCell(colX, colY, colZ);
+//          IntVector shift(0,0,0);
+//          if ((zplus)&&((colZ == indexHighW.z())||(colZ == indexHighW.z()-1))) 
+//            shift = IntVector(0,0,-1);
+//          int bndry_count=0;
+//          if  (!(cellType[currCell + shift - IntVector(1,0,0)] == flowID))
+//            bndry_count++;
+//          if  (!(cellType[currCell + shift + IntVector(1,0,0)] == flowID))
+//            bndry_count++;
+//          if  (!(cellType[currCell + shift - IntVector(0,1,0)] == flowID))
+//            bndry_count++;
+//          if  (!(cellType[currCell + shift + IntVector(0,1,0)] == flowID))
+//            bndry_count++;
+//          if  (!(cellType[currCell + shift - IntVector(0,0,1)] == flowID))
+//            bndry_count++;
+//          if  (!(cellType[currCell + shift + IntVector(0,0,1)] == flowID))
+//            bndry_count++;
+//          bool corner = (bndry_count==3);
+//          double totalVol = 0.0;
+//          if ((cellType[currCell+shift] == flowID)&&
+//              (cellType[currCell+shift-IntVector(0,0,1)] != mmWallID)) {
+//            for (int kk = -1; kk <= 1; kk ++) {
+//              for (int jj = -1; jj <= 1; jj ++) {
+//                for (int ii = -1; ii <= 1; ii ++) {
+//                  IntVector filterCell = IntVector(colX+ii,colY+jj,colZ+kk);
+//                  // on the boundary
+//                  if (cellType[filterCell+shift] != flowID) {
+//                    // intrusion
+//                    if (filterCell+shift == currCell+shift) {
+//                      // do nothing here, assuming intrusion velocity is 0
+//                    }
+//                  }
+//                  // inside the domain
+//                  else
+//                    if (cellType[filterCell+shift-IntVector(0,0,1)] != mmWallID) {
+//                      double vol = cellinfo->sew[colX+ii]*
+//                        cellinfo->sns[colY+jj]*
+//                        cellinfo->stbw[colZ+kk];
+//                      if (!(corner)) vol *= (1.0-0.5*abs(ii))*
+//                        (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
+//                      filterRhoW[currCell] += vol*wVel[filterCell]*
+//                        0.5*(density[filterCell]+
+//                            density[filterCell-IntVector(0,0,1)]);
+//                      totalVol += vol;
+//                    }
+//                }
+//              }
+//            }
+//
+//            filterRhoW[currCell] /= totalVol;
+//          }
+//        }
+//      }
+//    }
 
-            filterRhoV[currCell] /= totalVol;
-          }
-        }
-      }
-    }
-    // assuming SFCZ still stored with z being outer index and x inner index
-    for (int colZ = indexLowW.z(); colZ <= indexHighW.z(); colZ ++) {
-      for (int colY = indexLowW.y(); colY <= indexHighW.y(); colY ++) {
-        for (int colX = indexLowW.x(); colX <= indexHighW.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ);
-          IntVector shift(0,0,0);
-          if ((zplus)&&((colZ == indexHighW.z())||(colZ == indexHighW.z()-1))) 
-            shift = IntVector(0,0,-1);
-          int bndry_count=0;
-          if  (!(cellType[currCell + shift - IntVector(1,0,0)] == flowID))
-            bndry_count++;
-          if  (!(cellType[currCell + shift + IntVector(1,0,0)] == flowID))
-            bndry_count++;
-          if  (!(cellType[currCell + shift - IntVector(0,1,0)] == flowID))
-            bndry_count++;
-          if  (!(cellType[currCell + shift + IntVector(0,1,0)] == flowID))
-            bndry_count++;
-          if  (!(cellType[currCell + shift - IntVector(0,0,1)] == flowID))
-            bndry_count++;
-          if  (!(cellType[currCell + shift + IntVector(0,0,1)] == flowID))
-            bndry_count++;
-          bool corner = (bndry_count==3);
-          double totalVol = 0.0;
-          if ((cellType[currCell+shift] == flowID)&&
-              (cellType[currCell+shift-IntVector(0,0,1)] != mmWallID)) {
-            for (int kk = -1; kk <= 1; kk ++) {
-              for (int jj = -1; jj <= 1; jj ++) {
-                for (int ii = -1; ii <= 1; ii ++) {
-                  IntVector filterCell = IntVector(colX+ii,colY+jj,colZ+kk);
-                  // on the boundary
-                  if (cellType[filterCell+shift] != flowID) {
-                    // intrusion
-                    if (filterCell+shift == currCell+shift) {
-                      // do nothing here, assuming intrusion velocity is 0
-                    }
-                  }
-                  // inside the domain
-                  else
-                    if (cellType[filterCell+shift-IntVector(0,0,1)] != mmWallID) {
-                      double vol = cellinfo->sew[colX+ii]*
-                        cellinfo->sns[colY+jj]*
-                        cellinfo->stbw[colZ+kk];
-                      if (!(corner)) vol *= (1.0-0.5*abs(ii))*
-                        (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
-                      filterRhoW[currCell] += vol*wVel[filterCell]*
-                        0.5*(density[filterCell]+
-                            density[filterCell-IntVector(0,0,1)]);
-                      totalVol += vol;
-                    }
-                }
-              }
-            }
-
-            filterRhoW[currCell] /= totalVol;
-          }
-        }
-      }
-    }
-
-    int ngc = 1;
-    IntVector idxLo = patch->getExtraCellLowIndex(ngc);
-    IntVector idxHi = patch->getExtraCellHighIndex(ngc);
-    Array3<double> rhoF(idxLo, idxHi);
-    Array3<double> rhoE(idxLo, idxHi);
-    Array3<double> rhoRF(idxLo, idxHi);
-    rhoF.initialize(0.0);
-    rhoE.initialize(0.0);
-    rhoRF.initialize(0.0);
-
-    int startZ = idxLo.z();
-    if (zminus) startZ++;
-    int endZ = idxHi.z();
-    if (zplus) endZ--;
-    int startY = idxLo.y();
-    if (yminus) startY++;
-    int endY = idxHi.y();
-    if (yplus) endY--;
-    int startX = idxLo.x();
-    if (xminus) startX++;
-    int endX = idxHi.x();
-    if (xplus) endX--;
-
-    filterRho.copy(density, patch->getExtraCellLowIndex(),
-        patch->getExtraCellHighIndex());
-    d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, density, filterVolume, cellType, filterRho); 
+//    int ngc = 1;
+//    IntVector idxLo = patch->getExtraCellLowIndex(ngc);
+//    IntVector idxHi = patch->getExtraCellHighIndex(ngc);
+//    Array3<double> rhoF(idxLo, idxHi);
+//    Array3<double> rhoE(idxLo, idxHi);
+//    Array3<double> rhoRF(idxLo, idxHi);
+//    rhoF.initialize(0.0);
+//    rhoE.initialize(0.0);
+//    rhoRF.initialize(0.0);
+//
+//    int startZ = idxLo.z();
+//    if (zminus) startZ++;
+//    int endZ = idxHi.z();
+//    if (zplus) endZ--;
+//    int startY = idxLo.y();
+//    if (yminus) startY++;
+//    int endY = idxHi.y();
+//    if (yplus) endY--;
+//    int startX = idxLo.x();
+//    if (xminus) startX++;
+//    int endX = idxHi.x();
+//    if (xplus) endX--;
+//
+//    filterRho.copy(density, patch->getExtraCellLowIndex(),
+//        patch->getExtraCellHighIndex());
+//    d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, density, filterVolume, cellType, filterRho); 
+    d_filter->applyFilter<constCCVariable<double> >(pc, patch, density, filterVolume, vol_fraction, filterRho); 
 
     // making filterRho nonzero 
     if (mmWallID > 0) {
@@ -567,8 +605,8 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
       constCCVariable<double> ref_density; 
       new_dw->get(ref_density, d_lab->d_denRefArrayLabel, indx, patch, Ghost::None, 0); 
 
-      idxLo = patch->getExtraCellLowIndex();
-      idxHi = patch->getExtraCellHighIndex();
+      IntVector idxLo = patch->getExtraCellLowIndex();
+      IntVector idxHi = patch->getExtraCellHighIndex();
 
       for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
         for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
@@ -650,179 +688,337 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
 
-    for (int colZ =indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ);
-          double sewcur = cellinfo->sew[colX];
-          double snscur = cellinfo->sns[colY];
-          double stbcur = cellinfo->stb[colZ];
-          double efaccur = cellinfo->efac[colX];
-          double wfaccur = cellinfo->wfac[colX];
-          double nfaccur = cellinfo->nfac[colY];
-          double sfaccur = cellinfo->sfac[colY];
-          double tfaccur = cellinfo->tfac[colZ];
-          double bfaccur = cellinfo->bfac[colZ];
 
-          double uep, uwp, unp, usp, utp, ubp;
-          double vnp, vsp, vep, vwp, vtp, vbp;
-          double wtp, wbp, wep, wwp, wnp, wsp;
+    Vector Dx = patch->dCell(); 
+    double dx = Dx.x(); 
+    double dy = Dx.y(); 
+    double dz = Dx.z(); 
+    double uep, uwp, unp, usp, utp, ubp;
+    double vnp, vsp, vep, vwp, vtp, vbp;
+    double wtp, wbp, wep, wwp, wnp, wsp;
+    double fuep, fuwp, funp, fusp, futp, fubp;
+    double fvnp, fvsp, fvep, fvwp, fvtp, fvbp;
+    double fwtp, fwbp, fwep, fwwp, fwnp, fwsp;
 
-          uep = uVel[IntVector(colX+1,colY,colZ)];
-          uwp = uVel[currCell];
-          // colX,coly,colZ component cancels out when computing derivative,
-          // so it has been ommited
-          unp = 0.5*VelCC[IntVector(colX,colY+1,colZ)].x();
-          usp = 0.5*VelCC[IntVector(colX,colY-1,colZ)].x();
-          utp = 0.5*VelCC[IntVector(colX,colY,colZ+1)].x();
-          ubp = 0.5*VelCC[IntVector(colX,colY,colZ-1)].x();
+    for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){ 
 
-          vnp = vVel[IntVector(colX,colY+1,colZ)];
-          vsp = vVel[currCell];
-          // colX,coly,colZ component cancels out when computing derivative,
-          // so it has been ommited
-          vep = 0.5*VelCC[IntVector(colX+1,colY,colZ)].y();
-          vwp = 0.5*VelCC[IntVector(colX-1,colY,colZ)].y();
-          vtp = 0.5*VelCC[IntVector(colX,colY,colZ+1)].y();
-          vbp = 0.5*VelCC[IntVector(colX,colY,colZ-1)].y();
+      IntVector c = *iter;
+      IntVector ce = c + IntVector(1,0,0); 
+      IntVector cw = c + IntVector(-1,0,0); 
+      IntVector cn = c + IntVector(0,1,0); 
+      IntVector cs = c + IntVector(0,-1,0); 
+      IntVector ct = c + IntVector(0,0,1); 
+      IntVector cb = c + IntVector(0,0,-1); 
+      IntVector cne = c + IntVector(1,1,0); 
+      IntVector cnw = c + IntVector(-1,1,0); 
+      IntVector cse = c + IntVector(1,-1,0); 
+      IntVector csw = c + IntVector(-1,-1,0); 
+      IntVector cte = c + IntVector(1,0,1); 
+      IntVector ctw = c + IntVector(-1,0,1); 
+      IntVector cbe = c + IntVector(1,0,-1); 
+      IntVector cbw = c + IntVector(-1,0,-1); 
+      IntVector ctn = c + IntVector(0,1,1); 
+      IntVector cbn = c + IntVector(0,1,-1); 
+      IntVector cts = c + IntVector(0,-1,1); 
+      IntVector cbs = c + IntVector(0,-1,-1); 
 
-          wtp = wVel[IntVector(colX,colY,colZ+1)];
-          wbp = wVel[currCell];
-          // colX,coly,colZ component cancels out when computing derivative,
-          // so it has been ommited
-          wep = 0.5*VelCC[IntVector(colX+1,colY,colZ)].z();
-          wwp = 0.5*VelCC[IntVector(colX-1,colY,colZ)].z();
-          wnp = 0.5*VelCC[IntVector(colX,colY+1,colZ)].z();
-          wsp = 0.5*VelCC[IntVector(colX,colY-1,colZ)].z();
+      uep = uVel[ce]; 
+      uwp = uVel[c]; 
+      unp = 0.5*VelCC[cn].x();
+      usp = 0.5*VelCC[cs].x();
+      utp = 0.5*VelCC[ct].x();
+      ubp = 0.5*VelCC[cb].x();
 
-          //     calculate the grid strain rate tensor
-          (SIJ[0])[currCell] = (uep-uwp)/sewcur;
-          (SIJ[1])[currCell] = (vnp-vsp)/snscur;
-          (SIJ[2])[currCell] = (wtp-wbp)/stbcur;
-          (SIJ[3])[currCell] = 0.5*((unp-usp)/snscur + 
-              (vep-vwp)/sewcur);
-          (SIJ[4])[currCell] = 0.5*((utp-ubp)/stbcur + 
-              (wep-wwp)/sewcur);
-          (SIJ[5])[currCell] = 0.5*((vtp-vbp)/stbcur + 
-              (wnp-wsp)/snscur);
+      vnp = vVel[cn];
+      vsp = vVel[c];
+      vep = 0.5*VelCC[ce].y();
+      vwp = 0.5*VelCC[cw].y();
+      vtp = 0.5*VelCC[ct].y();
+      vbp = 0.5*VelCC[cb].y();
 
-          double fuep, fuwp, funp, fusp, futp, fubp;
-          double fvnp, fvsp, fvep, fvwp, fvtp, fvbp;
-          double fwtp, fwbp, fwep, fwwp, fwnp, fwsp;
+      wtp = wVel[ct];
+      wbp = wVel[c];
+      wep = 0.5*VelCC[ce].z();
+      wwp = 0.5*VelCC[cw].z();
+      wnp = 0.5*VelCC[cn].z();
+      wsp = 0.5*VelCC[cs].z();
 
-          fuep = filterRhoU[IntVector(colX+1,colY,colZ)]/
-            (0.5*(filterRho[currCell] +
-                  filterRho[IntVector(colX+1,colY,colZ)]));
-          fuwp = filterRhoU[currCell]/
-            (0.5*(filterRho[currCell] +
-                  filterRho[IntVector(colX-1,colY,colZ)]));
-          // colX,coly,colZ component cancels out when computing derivative,
-          // so it has been ommited
-          funp = 0.5*(efaccur * filterRhoU[IntVector(colX+1,colY+1,colZ)]/
-              (0.5*(filterRho[IntVector(colX,colY+1,colZ)] +
-                    filterRho[IntVector(colX+1,colY+1,colZ)])) +
-              wfaccur * filterRhoU[IntVector(colX,colY+1,colZ)]/
-              (0.5*(filterRho[IntVector(colX,colY+1,colZ)] +
-                    filterRho[IntVector(colX-1,colY+1,colZ)])));
-          fusp = 0.5*(efaccur * filterRhoU[IntVector(colX+1,colY-1,colZ)]/
-              (0.5*(filterRho[IntVector(colX,colY-1,colZ)] +
-                    filterRho[IntVector(colX+1,colY-1,colZ)])) +
-              wfaccur * filterRhoU[IntVector(colX,colY-1,colZ)]/
-              (0.5*(filterRho[IntVector(colX,colY-1,colZ)] +
-                    filterRho[IntVector(colX-1,colY-1,colZ)])));
-          futp = 0.5*(efaccur * filterRhoU[IntVector(colX+1,colY,colZ+1)]/
-              (0.5*(filterRho[IntVector(colX,colY,colZ+1)] +
-                    filterRho[IntVector(colX+1,colY,colZ+1)])) +
-              wfaccur * filterRhoU[IntVector(colX,colY,colZ+1)]/
-              (0.5*(filterRho[IntVector(colX,colY,colZ+1)] +
-                    filterRho[IntVector(colX-1,colY,colZ+1)])));
-          fubp = 0.5*(efaccur * filterRhoU[IntVector(colX+1,colY,colZ-1)]/
-              (0.5*(filterRho[IntVector(colX,colY,colZ-1)] +
-                    filterRho[IntVector(colX+1,colY,colZ-1)])) +
-              wfaccur * filterRhoU[IntVector(colX,colY,colZ-1)]/
-              (0.5*(filterRho[IntVector(colX,colY,colZ-1)] +
-                    filterRho[IntVector(colX-1,colY,colZ-1)])));
+      //SIJ: grid strain rate tensor
+      (SIJ[0])[c] = (uep-uwp) / dx;
+      (SIJ[1])[c] = (vnp-vsp) / dy;
+      (SIJ[2])[c] = (wtp-wbp) / dz;
+      (SIJ[3])[c] = 0.5*((unp-usp) / dy + 
+                         (vep-vwp) / dx );
+      (SIJ[4])[c] = 0.5*((utp-ubp) / dz + 
+                         (wep-wwp) / dx );
+      (SIJ[5])[c] = 0.5*((vtp-vbp) / dz + 
+                         (wnp-wsp) / dy );
 
-          fvnp = filterRhoV[IntVector(colX,colY+1,colZ)]/
-            (0.5*(filterRho[currCell] +
-                  filterRho[IntVector(colX,colY+1,colZ)]));
-          fvsp = filterRhoV[currCell]/
-            (0.5*(filterRho[currCell] +
-                  filterRho[IntVector(colX,colY-1,colZ)]));
-          // colX,coly,colZ component cancels out when computing derivative,
-          // so it has been ommited
-          fvep = 0.5*(nfaccur * filterRhoV[IntVector(colX+1,colY+1,colZ)]/
-              (0.5*(filterRho[IntVector(colX+1,colY,colZ)] +
-                    filterRho[IntVector(colX+1,colY+1,colZ)])) +
-              sfaccur * filterRhoV[IntVector(colX+1,colY,colZ)]/
-              (0.5*(filterRho[IntVector(colX+1,colY,colZ)] +
-                    filterRho[IntVector(colX+1,colY-1,colZ)])));
-          fvwp = 0.5*(nfaccur * filterRhoV[IntVector(colX-1,colY+1,colZ)]/
-              (0.5*(filterRho[IntVector(colX-1,colY,colZ)] +
-                    filterRho[IntVector(colX-1,colY+1,colZ)])) +
-              sfaccur * filterRhoV[IntVector(colX-1,colY,colZ)]/
-              (0.5*(filterRho[IntVector(colX-1,colY,colZ)] +
-                    filterRho[IntVector(colX-1,colY-1,colZ)])));
-          fvtp = 0.5*(nfaccur * filterRhoV[IntVector(colX,colY+1,colZ+1)]/
-              (0.5*(filterRho[IntVector(colX,colY,colZ+1)] +
-                    filterRho[IntVector(colX,colY+1,colZ+1)])) +
-              sfaccur * filterRhoV[IntVector(colX,colY,colZ+1)]/
-              (0.5*(filterRho[IntVector(colX,colY,colZ+1)] +
-                    filterRho[IntVector(colX,colY-1,colZ+1)])));
-          fvbp = 0.5*(nfaccur * filterRhoV[IntVector(colX,colY+1,colZ-1)]/
-              (0.5*(filterRho[IntVector(colX,colY,colZ-1)] +
-                    filterRho[IntVector(colX,colY+1,colZ-1)])) +
-              sfaccur * filterRhoV[IntVector(colX,colY,colZ-1)]/
-              (0.5*(filterRho[IntVector(colX,colY,colZ-1)] +
-                    filterRho[IntVector(colX,colY-1,colZ-1)])));
+      fuep = filterRhoU[ce] /
+             (0.5 * (filterRho[c] + filterRho[ce]));
 
-          fwtp = filterRhoW[IntVector(colX,colY,colZ+1)]/
-            (0.5*(filterRho[currCell] +
-                  filterRho[IntVector(colX,colY,colZ+1)]));
-          fwbp = filterRhoW[currCell]/
-            (0.5*(filterRho[currCell] +
-                  filterRho[IntVector(colX,colY,colZ-1)]));
-          // colX,coly,colZ component cancels out when computing derivative,
-          // so it has been ommited
-          fwep = 0.5*(tfaccur * filterRhoW[IntVector(colX+1,colY,colZ+1)]/
-              (0.5*(filterRho[IntVector(colX+1,colY,colZ)] +
-                    filterRho[IntVector(colX+1,colY,colZ+1)])) +
-              bfaccur * filterRhoW[IntVector(colX+1,colY,colZ)]/
-              (0.5*(filterRho[IntVector(colX+1,colY,colZ)] +
-                    filterRho[IntVector(colX+1,colY,colZ-1)])));
-          fwwp = 0.5*(tfaccur * filterRhoW[IntVector(colX-1,colY,colZ+1)]/
-              (0.5*(filterRho[IntVector(colX-1,colY,colZ)] +
-                    filterRho[IntVector(colX-1,colY,colZ+1)])) +
-              bfaccur * filterRhoW[IntVector(colX-1,colY,colZ)]/
-              (0.5*(filterRho[IntVector(colX-1,colY,colZ)] +
-                    filterRho[IntVector(colX-1,colY,colZ-1)])));
-          fwnp = 0.5*(tfaccur * filterRhoW[IntVector(colX,colY+1,colZ+1)]/
-              (0.5*(filterRho[IntVector(colX,colY+1,colZ)] +
-                    filterRho[IntVector(colX,colY+1,colZ+1)])) +
-              bfaccur * filterRhoW[IntVector(colX,colY+1,colZ)]/
-              (0.5*(filterRho[IntVector(colX,colY+1,colZ)] +
-                    filterRho[IntVector(colX,colY+1,colZ-1)])));
-          fwsp = 0.5*(tfaccur * filterRhoW[IntVector(colX,colY-1,colZ+1)]/
-              (0.5*(filterRho[IntVector(colX,colY-1,colZ)] +
-                    filterRho[IntVector(colX,colY-1,colZ+1)])) +
-              bfaccur * filterRhoW[IntVector(colX,colY-1,colZ)]/
-              (0.5*(filterRho[IntVector(colX,colY-1,colZ)] +
-                    filterRho[IntVector(colX,colY-1,colZ-1)])));
+      fuwp = filterRhoU[c]/
+             (0.5 * (filterRho[c] + filterRho[cw]));
 
-          //     calculate the filtered strain rate tensor
-          (filterSIJ[0])[currCell] = (fuep-fuwp)/sewcur;
-          (filterSIJ[1])[currCell] = (fvnp-fvsp)/snscur;
-          (filterSIJ[2])[currCell] = (fwtp-fwbp)/stbcur;
-          (filterSIJ[3])[currCell] = 0.5*((funp-fusp)/snscur + 
-              (fvep-fvwp)/sewcur);
-          (filterSIJ[4])[currCell] = 0.5*((futp-fubp)/stbcur + 
-              (fwep-fwwp)/sewcur);
-          (filterSIJ[5])[currCell] = 0.5*((fvtp-fvbp)/stbcur + 
-              (fwnp-fwsp)/snscur);
+      //note: we have removed the (1/2) from the denom. because
+      //we are multiplying by (1/2) for Sij 
+      funp = ( 0.5 * filterRhoU[cne] /
+             ( (filterRho[cn] + filterRho[cne])) 
+             + 0.5 * filterRhoU[cn] /
+             ( (filterRho[cn] + filterRho[IntVector(cnw)])));
 
-        }
-      }
+      fusp = ( 0.5 * filterRhoU[cse] /
+             ( (filterRho[cs] + filterRho[cse]) ) 
+             + 0.5 * filterRhoU[cs] /
+             ( (filterRho[cs] + filterRho[csw])));
+
+      futp = ( 0.5 * filterRhoU[cte] / 
+             ( (filterRho[ct] + filterRho[cte]) ) 
+             + 0.5 * filterRhoU[ct] /
+             ( (filterRho[ct] + filterRho[ctw])));
+
+      fubp = ( 0.5 * filterRhoU[cbe] /
+             ( ( filterRho[cb] + filterRho[cbe])) 
+             + 0.5 * filterRhoU[cb] /
+             ( (filterRho[cb] + filterRho[cbw])));
+
+      fvnp = filterRhoV[cn] /
+             ( 0.5 * (filterRho[c] + filterRho[cn]));
+
+      fvsp = filterRhoV[c] /
+             ( 0.5 * (filterRho[c] + filterRho[cs]));
+
+      fvep = ( 0.5 * filterRhoV[cne]/
+             ( (filterRho[ce] +filterRho[cne])) 
+             + 0.5 * filterRhoV[ce]/
+             ( (filterRho[ce] + filterRho[cse])));
+
+      fvwp = ( 0.5 * filterRhoV[cnw]/
+             ( (filterRho[cw] + filterRho[cnw])) 
+             + 0.5 * filterRhoV[cw]/
+             ( (filterRho[cw] + filterRho[csw])));
+
+      fvtp = ( 0.5 * filterRhoV[ctn] /
+             ( (filterRho[ct] + filterRho[ctn])) 
+             + 0.5 * filterRhoV[ct] / 
+             ( (filterRho[ct] + filterRho[cts])));
+
+      fvbp = ( 0.5 * filterRhoV[cbn]/
+             ( (filterRho[cb] + filterRho[cbn])) 
+             + 0.5 * filterRhoV[cb] /
+             ( (filterRho[cb] + filterRho[cbs])));
+
+      fwtp = filterRhoW[ct] /
+             ( 0.5 * (filterRho[c] + filterRho[ct]));
+
+      fwbp = filterRhoW[c] / 
+             ( 0.5 * (filterRho[c] + filterRho[cb]));
+
+      fwep = ( 0.5 * filterRhoW[cte] /
+             ( (filterRho[ce] + filterRho[cte])) 
+             + 0.5 * filterRhoW[ce] /
+             ( (filterRho[ce] + filterRho[cbe])));
+
+      fwwp = ( 0.5 * filterRhoW[ctw] /
+             ( (filterRho[cw] + filterRho[ctw])) 
+             + 0.5 * filterRhoW[cw] /
+             ( (filterRho[cw] + filterRho[cbw])));
+
+      fwnp = ( 0.5 * filterRhoW[ctn]/
+             ( (filterRho[cn] + filterRho[ctn])) 
+             + 0.5 * filterRhoW[cn] /
+             ( (filterRho[cn] + filterRho[cbn])));
+
+      fwsp = ( 0.5 * filterRhoW[cts]/
+             ( (filterRho[cs] + filterRho[cts])) 
+             + 0.5 * filterRhoW[cs]/
+             ( (filterRho[cs] + filterRho[cbs])));
+
+      //calculate the filtered strain rate tensor
+      (filterSIJ[0])[c] = (fuep-fuwp)/dx;
+      (filterSIJ[1])[c] = (fvnp-fvsp)/dy;
+      (filterSIJ[2])[c] = (fwtp-fwbp)/dz;
+      (filterSIJ[3])[c] = 0.5*((funp-fusp)/dy + (fvep-fvwp)/dx);
+      (filterSIJ[4])[c] = 0.5*((futp-fubp)/dz + (fwep-fwwp)/dx);
+      (filterSIJ[5])[c] = 0.5*((fvtp-fvbp)/dz + (fwnp-fwsp)/dy);
+
+
     }
+
+//    for (int colZ =indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+//      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+//        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+//
+//          IntVector currCell(colX, colY, colZ);
+//          double sewcur = cellinfo->sew[colX];
+//          double snscur = cellinfo->sns[colY];
+//          double stbcur = cellinfo->stb[colZ];
+//          double efaccur = cellinfo->efac[colX];
+//          double wfaccur = cellinfo->wfac[colX];
+//          double nfaccur = cellinfo->nfac[colY];
+//          double sfaccur = cellinfo->sfac[colY];
+//          double tfaccur = cellinfo->tfac[colZ];
+//          double bfaccur = cellinfo->bfac[colZ];
+//
+//          double uep, uwp, unp, usp, utp, ubp;
+//          double vnp, vsp, vep, vwp, vtp, vbp;
+//          double wtp, wbp, wep, wwp, wnp, wsp;
+//
+//          uep = uVel[IntVector(colX+1,colY,colZ)];
+//          uwp = uVel[currCell];
+//          // colX,coly,colZ component cancels out when computing derivative,
+//          // so it has been ommited
+//          unp = 0.5*VelCC[IntVector(colX,colY+1,colZ)].x();
+//          usp = 0.5*VelCC[IntVector(colX,colY-1,colZ)].x();
+//          utp = 0.5*VelCC[IntVector(colX,colY,colZ+1)].x();
+//          ubp = 0.5*VelCC[IntVector(colX,colY,colZ-1)].x();
+//
+//          vnp = vVel[IntVector(colX,colY+1,colZ)];
+//          vsp = vVel[currCell];
+//          // colX,coly,colZ component cancels out when computing derivative,
+//          // so it has been ommited
+//          vep = 0.5*VelCC[IntVector(colX+1,colY,colZ)].y();
+//          vwp = 0.5*VelCC[IntVector(colX-1,colY,colZ)].y();
+//          vtp = 0.5*VelCC[IntVector(colX,colY,colZ+1)].y();
+//          vbp = 0.5*VelCC[IntVector(colX,colY,colZ-1)].y();
+//
+//          wtp = wVel[IntVector(colX,colY,colZ+1)];
+//          wbp = wVel[currCell];
+//          // colX,coly,colZ component cancels out when computing derivative,
+//          // so it has been ommited
+//          wep = 0.5*VelCC[IntVector(colX+1,colY,colZ)].z();
+//          wwp = 0.5*VelCC[IntVector(colX-1,colY,colZ)].z();
+//          wnp = 0.5*VelCC[IntVector(colX,colY+1,colZ)].z();
+//          wsp = 0.5*VelCC[IntVector(colX,colY-1,colZ)].z();
+//
+//          //     calculate the grid strain rate tensor
+//          (SIJ[0])[currCell] = (uep-uwp)/sewcur;
+//          (SIJ[1])[currCell] = (vnp-vsp)/snscur;
+//          (SIJ[2])[currCell] = (wtp-wbp)/stbcur;
+//          (SIJ[3])[currCell] = 0.5*((unp-usp)/snscur + 
+//              (vep-vwp)/sewcur);
+//          (SIJ[4])[currCell] = 0.5*((utp-ubp)/stbcur + 
+//              (wep-wwp)/sewcur);
+//          (SIJ[5])[currCell] = 0.5*((vtp-vbp)/stbcur + 
+//              (wnp-wsp)/snscur);
+//
+//          double fuep, fuwp, funp, fusp, futp, fubp;
+//          double fvnp, fvsp, fvep, fvwp, fvtp, fvbp;
+//          double fwtp, fwbp, fwep, fwwp, fwnp, fwsp;
+//
+//          fuep = filterRhoU[IntVector(colX+1,colY,colZ)]/
+//            (0.5*(filterRho[currCell] +
+//                  filterRho[IntVector(colX+1,colY,colZ)]));
+//          fuwp = filterRhoU[currCell]/
+//            (0.5*(filterRho[currCell] +
+//                  filterRho[IntVector(colX-1,colY,colZ)]));
+//          // colX,coly,colZ component cancels out when computing derivative,
+//          // so it has been ommited
+//          funp = 0.5*(efaccur * filterRhoU[IntVector(colX+1,colY+1,colZ)]/
+//              (0.5*(filterRho[IntVector(colX,colY+1,colZ)] +
+//                    filterRho[IntVector(colX+1,colY+1,colZ)])) +
+//              wfaccur * filterRhoU[IntVector(colX,colY+1,colZ)]/
+//              (0.5*(filterRho[IntVector(colX,colY+1,colZ)] +
+//                    filterRho[IntVector(colX-1,colY+1,colZ)])));
+//          fusp = 0.5*(efaccur * filterRhoU[IntVector(colX+1,colY-1,colZ)]/
+//              (0.5*(filterRho[IntVector(colX,colY-1,colZ)] +
+//                    filterRho[IntVector(colX+1,colY-1,colZ)])) +
+//              wfaccur * filterRhoU[IntVector(colX,colY-1,colZ)]/
+//              (0.5*(filterRho[IntVector(colX,colY-1,colZ)] +
+//                    filterRho[IntVector(colX-1,colY-1,colZ)])));
+//          futp = 0.5*(efaccur * filterRhoU[IntVector(colX+1,colY,colZ+1)]/
+//              (0.5*(filterRho[IntVector(colX,colY,colZ+1)] +
+//                    filterRho[IntVector(colX+1,colY,colZ+1)])) +
+//              wfaccur * filterRhoU[IntVector(colX,colY,colZ+1)]/
+//              (0.5*(filterRho[IntVector(colX,colY,colZ+1)] +
+//                    filterRho[IntVector(colX-1,colY,colZ+1)])));
+//          fubp = 0.5*(efaccur * filterRhoU[IntVector(colX+1,colY,colZ-1)]/
+//              (0.5*(filterRho[IntVector(colX,colY,colZ-1)] +
+//                    filterRho[IntVector(colX+1,colY,colZ-1)])) +
+//              wfaccur * filterRhoU[IntVector(colX,colY,colZ-1)]/
+//              (0.5*(filterRho[IntVector(colX,colY,colZ-1)] +
+//                    filterRho[IntVector(colX-1,colY,colZ-1)])));
+//
+//          fvnp = filterRhoV[IntVector(colX,colY+1,colZ)]/
+//            (0.5*(filterRho[currCell] +
+//                  filterRho[IntVector(colX,colY+1,colZ)]));
+//          fvsp = filterRhoV[currCell]/
+//            (0.5*(filterRho[currCell] +
+//                  filterRho[IntVector(colX,colY-1,colZ)]));
+//          // colX,coly,colZ component cancels out when computing derivative,
+//          // so it has been ommited
+//          fvep = 0.5*(nfaccur * filterRhoV[IntVector(colX+1,colY+1,colZ)]/
+//              (0.5*(filterRho[IntVector(colX+1,colY,colZ)] +
+//                    filterRho[IntVector(colX+1,colY+1,colZ)])) +
+//              sfaccur * filterRhoV[IntVector(colX+1,colY,colZ)]/
+//              (0.5*(filterRho[IntVector(colX+1,colY,colZ)] +
+//                    filterRho[IntVector(colX+1,colY-1,colZ)])));
+//          fvwp = 0.5*(nfaccur * filterRhoV[IntVector(colX-1,colY+1,colZ)]/
+//              (0.5*(filterRho[IntVector(colX-1,colY,colZ)] +
+//                    filterRho[IntVector(colX-1,colY+1,colZ)])) +
+//              sfaccur * filterRhoV[IntVector(colX-1,colY,colZ)]/
+//              (0.5*(filterRho[IntVector(colX-1,colY,colZ)] +
+//                    filterRho[IntVector(colX-1,colY-1,colZ)])));
+//          fvtp = 0.5*(nfaccur * filterRhoV[IntVector(colX,colY+1,colZ+1)]/
+//              (0.5*(filterRho[IntVector(colX,colY,colZ+1)] +
+//                    filterRho[IntVector(colX,colY+1,colZ+1)])) +
+//              sfaccur * filterRhoV[IntVector(colX,colY,colZ+1)]/
+//              (0.5*(filterRho[IntVector(colX,colY,colZ+1)] +
+//                    filterRho[IntVector(colX,colY-1,colZ+1)])));
+//          fvbp = 0.5*(nfaccur * filterRhoV[IntVector(colX,colY+1,colZ-1)]/
+//              (0.5*(filterRho[IntVector(colX,colY,colZ-1)] +
+//                    filterRho[IntVector(colX,colY+1,colZ-1)])) +
+//              sfaccur * filterRhoV[IntVector(colX,colY,colZ-1)]/
+//              (0.5*(filterRho[IntVector(colX,colY,colZ-1)] +
+//                    filterRho[IntVector(colX,colY-1,colZ-1)])));
+//
+//          fwtp = filterRhoW[IntVector(colX,colY,colZ+1)]/
+//            (0.5*(filterRho[currCell] +
+//                  filterRho[IntVector(colX,colY,colZ+1)]));
+//          fwbp = filterRhoW[currCell]/
+//            (0.5*(filterRho[currCell] +
+//                  filterRho[IntVector(colX,colY,colZ-1)]));
+//          // colX,coly,colZ component cancels out when computing derivative,
+//          // so it has been ommited
+//          fwep = 0.5*(tfaccur * filterRhoW[IntVector(colX+1,colY,colZ+1)]/
+//              (0.5*(filterRho[IntVector(colX+1,colY,colZ)] +
+//                    filterRho[IntVector(colX+1,colY,colZ+1)])) +
+//              bfaccur * filterRhoW[IntVector(colX+1,colY,colZ)]/
+//              (0.5*(filterRho[IntVector(colX+1,colY,colZ)] +
+//                    filterRho[IntVector(colX+1,colY,colZ-1)])));
+//          fwwp = 0.5*(tfaccur * filterRhoW[IntVector(colX-1,colY,colZ+1)]/
+//              (0.5*(filterRho[IntVector(colX-1,colY,colZ)] +
+//                    filterRho[IntVector(colX-1,colY,colZ+1)])) +
+//              bfaccur * filterRhoW[IntVector(colX-1,colY,colZ)]/
+//              (0.5*(filterRho[IntVector(colX-1,colY,colZ)] +
+//                    filterRho[IntVector(colX-1,colY,colZ-1)])));
+//          fwnp = 0.5*(tfaccur * filterRhoW[IntVector(colX,colY+1,colZ+1)]/
+//              (0.5*(filterRho[IntVector(colX,colY+1,colZ)] +
+//                    filterRho[IntVector(colX,colY+1,colZ+1)])) +
+//              bfaccur * filterRhoW[IntVector(colX,colY+1,colZ)]/
+//              (0.5*(filterRho[IntVector(colX,colY+1,colZ)] +
+//                    filterRho[IntVector(colX,colY+1,colZ-1)])));
+//          fwsp = 0.5*(tfaccur * filterRhoW[IntVector(colX,colY-1,colZ+1)]/
+//              (0.5*(filterRho[IntVector(colX,colY-1,colZ)] +
+//                    filterRho[IntVector(colX,colY-1,colZ+1)])) +
+//              bfaccur * filterRhoW[IntVector(colX,colY-1,colZ)]/
+//              (0.5*(filterRho[IntVector(colX,colY-1,colZ)] +
+//                    filterRho[IntVector(colX,colY-1,colZ-1)])));
+//
+//          //     calculate the filtered strain rate tensor
+//          (filterSIJ[0])[currCell] = (fuep-fuwp)/sewcur;
+//          (filterSIJ[1])[currCell] = (fvnp-fvsp)/snscur;
+//          (filterSIJ[2])[currCell] = (fwtp-fwbp)/stbcur;
+//          (filterSIJ[3])[currCell] = 0.5*((funp-fusp)/snscur + 
+//              (fvep-fvwp)/sewcur);
+//          (filterSIJ[4])[currCell] = 0.5*((futp-fubp)/stbcur + 
+//              (fwep-fwwp)/sewcur);
+//          (filterSIJ[5])[currCell] = 0.5*((fvtp-fvbp)/stbcur + 
+//              (fwnp-fwsp)/snscur);
+//
+//        }
+//      }
+//    }
   }
 }
 
@@ -840,6 +1036,7 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
+
     TAU_PROFILE_TIMER(compute1, "Compute1", "[reComputeFilterValues::compute1]" , TAU_USER);
     TAU_PROFILE_TIMER(compute2, "Compute2", "[reComputeFilterValues::compute2]" , TAU_USER);
     const Patch* patch = patches->get(p);
@@ -854,12 +1051,14 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     constCCVariable<double> filterRhoRF;
     constCCVariable<double> filterVolume; 
     constCCVariable<int> cellType; 
+    constCCVariable<double> vol_fraction; 
 
 
     // Get the velocity and density
     Ghost::GhostType  gac = Ghost::AroundCells;
     new_dw->get(filterVolume, d_lab->d_filterVolumeLabel, indx, patch, Ghost::None, 0); 
     new_dw->get(cellType,     d_lab->d_cellTypeLabel,     indx, patch, gac, 2);
+    new_dw->get(vol_fraction, d_lab->d_volFractionLabel,     indx, patch, gac, 1);
     new_dw->get(ccVel,     d_lab->d_CCVelocityLabel, indx, patch, gac, 1);
     new_dw->get(den,       d_lab->d_densityCPLabel,      indx, patch, gac, 1);
     new_dw->get(filterRho, d_lab->d_filterRhoLabel,      indx, patch, gac, 1);
@@ -910,12 +1109,6 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     IsImag.initialize(0.0);
     MLI.initialize(0.0);
     MMI.initialize(0.0);
-
-    // compute test filtered velocities, density and product 
-    // (den*u*u, den*u*v, den*u*w, den*v*v,
-    // den*v*w, den*w*w)
-    // using a box filter, generalize it to use other filters such as Gaussian
-
 
     Array3<double> IsI(idxLo, idxHi); // magnitude of strain rate
     Array3<double> rhoU(idxLo, idxHi);
@@ -981,8 +1174,6 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
           double isi_cur = sqrt(2.0*(sij0*sij0 + sij1*sij1 + sij2*sij2 +
                 2.0*(sij3*sij3 + sij4*sij4 + sij5*sij5)));
           // trace has been neglected
-          //        double trace = (sij0 + sij1 + sij2)/3.0;
-          double trace = 0.0;
           double uvel_cur = ccVel[currCell].x();
           double vvel_cur = ccVel[currCell].y();
           double wvel_cur = ccVel[currCell].z();
@@ -992,9 +1183,9 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 
           //    calculate the grid filtered stress tensor, beta
 
-          (betaIJ[0])[currCell] = den_cur*isi_cur*(sij0-trace);
-          (betaIJ[1])[currCell] = den_cur*isi_cur*(sij1-trace);
-          (betaIJ[2])[currCell] = den_cur*isi_cur*(sij2-trace);
+          (betaIJ[0])[currCell] = den_cur*isi_cur*(sij0);
+          (betaIJ[1])[currCell] = den_cur*isi_cur*(sij1);
+          (betaIJ[2])[currCell] = den_cur*isi_cur*(sij2);
           (betaIJ[3])[currCell] = den_cur*isi_cur*sij3;
           (betaIJ[4])[currCell] = den_cur*isi_cur*sij4;
           (betaIJ[5])[currCell] = den_cur*isi_cur*sij5;
@@ -1044,20 +1235,31 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
+
     double start_turbTime = Time::currentSeconds();
 
-    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoU,   filterVolume, cellType, filterRhoU);
-    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoV,   filterVolume, cellType, filterRhoV);
-    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoW,   filterVolume, cellType, filterRhoW);
-    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoUU,  filterVolume, cellType,  filterRhoUU);
-    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoUV,  filterVolume, cellType,  filterRhoUV);
-    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoUW,  filterVolume, cellType,  filterRhoUW);
-    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoVV,  filterVolume, cellType,  filterRhoVV);
-    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoVW,  filterVolume, cellType,  filterRhoVW);
-    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoWW,  filterVolume, cellType,  filterRhoWW);
+    d_filter->applyFilter<Array3<double> >(pc, patch, rhoU,   filterVolume, vol_fraction, filterRhoU);
+    d_filter->applyFilter<Array3<double> >(pc, patch, rhoV,   filterVolume, vol_fraction, filterRhoV);
+    d_filter->applyFilter<Array3<double> >(pc, patch, rhoW,   filterVolume, vol_fraction, filterRhoW);
+    d_filter->applyFilter<Array3<double> >(pc, patch, rhoUU,  filterVolume, vol_fraction,  filterRhoUU);
+    d_filter->applyFilter<Array3<double> >(pc, patch, rhoUV,  filterVolume, vol_fraction,  filterRhoUV);
+    d_filter->applyFilter<Array3<double> >(pc, patch, rhoUW,  filterVolume, vol_fraction,  filterRhoUW);
+    d_filter->applyFilter<Array3<double> >(pc, patch, rhoVV,  filterVolume, vol_fraction,  filterRhoVV);
+    d_filter->applyFilter<Array3<double> >(pc, patch, rhoVW,  filterVolume, vol_fraction,  filterRhoVW);
+    d_filter->applyFilter<Array3<double> >(pc, patch, rhoWW,  filterVolume, vol_fraction,  filterRhoWW);
+//    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoU,   filterVolume, cellType, filterRhoU);
+//    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoV,   filterVolume, cellType, filterRhoV);
+//    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoW,   filterVolume, cellType, filterRhoW);
+//    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoUU,  filterVolume, cellType,  filterRhoUU);
+//    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoUV,  filterVolume, cellType,  filterRhoUV);
+//    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoUW,  filterVolume, cellType,  filterRhoUW);
+//    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoVV,  filterVolume, cellType,  filterRhoVV);
+//    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoVW,  filterVolume, cellType,  filterRhoVW);
+//    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoWW,  filterVolume, cellType,  filterRhoWW);
 
     for (int ii = 0; ii < d_lab->d_symTensorMatl->size(); ii++) {
-      d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, betaIJ[ii], filterVolume, cellType, betaHATIJ[ii]);
+      d_filter->applyFilter<Array3<double> >(pc, patch, betaIJ[ii], filterVolume, vol_fraction, betaHATIJ[ii]);
+//      d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, betaIJ[ii], filterVolume, cellType, betaHATIJ[ii]);
     }
 
     string msg = "Time for the Filter operation in Turbulence Model: ";
@@ -1069,100 +1271,92 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 
     TAU_PROFILE_START(compute2);
 
-    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ);
-          double delta = cellinfo->sew[colX]*
-            cellinfo->sns[colY]*cellinfo->stb[colZ];
-          double filter = pow(delta, 1.0/3.0);
+    Vector Dx = patch->dCell(); 
+    double fhat = 3.0;
+    double filter = pow(Dx.x()*Dx.y()*Dx.z(),1.0/3.0);
+    double filter2 = filter*filter; 
 
-          // test filter width is assumed to be twice that of the basic filter
-          // needs following modifications:
-          // a) make the test filter work for anisotropic grid
-          // b) generalize the filter operation
-          double shatij0 = (SHATIJ[0])[currCell];
-          double shatij1 = (SHATIJ[1])[currCell];
-          double shatij2 = (SHATIJ[2])[currCell];
-          double shatij3 = (SHATIJ[3])[currCell];
-          double shatij4 = (SHATIJ[4])[currCell];
-          double shatij5 = (SHATIJ[5])[currCell];
-          double IshatIcur = sqrt(2.0*(shatij0*shatij0 + shatij1*shatij1 +
-                shatij2*shatij2 + 2.0*(shatij3*shatij3 + 
-                  shatij4*shatij4 + shatij5*shatij5)));
-          double filterDencur = filterRho[currCell];
-          //        ignoring the trace
-          //        double trace = (shatij0 + shatij1 + shatij2)/3.0;
-          double trace = 0.0;
+    for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){ 
 
-          IsImag[currCell] = IsI[currCell]; 
+      IntVector c = *iter;
 
-          double MIJ0cur = 2.0*filter*filter*
-            ((betaHATIJ[0])[currCell]-
-             2.0*2.0*filterDencur*IshatIcur*(shatij0-trace));
-          double MIJ1cur = 2.0*filter*filter*
-            ((betaHATIJ[1])[currCell]-
-             2.0*2.0*filterDencur*IshatIcur*(shatij1-trace));
-          double MIJ2cur = 2.0*filter*filter*
-            ((betaHATIJ[2])[currCell]-
-             2.0*2.0*filterDencur*IshatIcur*(shatij2-trace));
-          double MIJ3cur = 2.0*filter*filter*
-            ((betaHATIJ[3])[currCell]-
-             2.0*2.0*filterDencur*IshatIcur*shatij3);
-          double MIJ4cur = 2.0*filter*filter*
-            ((betaHATIJ[4])[currCell]-
-             2.0*2.0*filterDencur*IshatIcur*shatij4);
-          double MIJ5cur =  2.0*filter*filter*
-            ((betaHATIJ[5])[currCell]-
-             2.0*2.0*filterDencur*IshatIcur*shatij5);
+      double shatij0 = (SHATIJ[0])[c];
+      double shatij1 = (SHATIJ[1])[c];
+      double shatij2 = (SHATIJ[2])[c];
+      double shatij3 = (SHATIJ[3])[c];
+      double shatij4 = (SHATIJ[4])[c];
+      double shatij5 = (SHATIJ[5])[c];
+      double IshatIcur = sqrt( 2.0*(shatij0*shatij0 + shatij1*shatij1 + shatij2*shatij2 
+                             + 2.0*(shatij3*shatij3 + shatij4*shatij4 + shatij5*shatij5)));
+      double filterDencur = filterRho[c];
+
+      //ignoring the trace
+      IsImag[c] = IsI[c]; 
+
+      double MIJ0cur = 2.0 * filter2 *
+                       ( (betaHATIJ[0])[c]-
+                         2.0*fhat*filterDencur*IshatIcur*(shatij0));
+      double MIJ1cur = 2.0 * filter2 *
+                       ( (betaHATIJ[1])[c]-
+                         2.0*fhat*filterDencur*IshatIcur*(shatij1));
+      double MIJ2cur = 2.0 * filter2 *
+                       ( (betaHATIJ[2])[c]-
+                         2.0*fhat*filterDencur*IshatIcur*(shatij2));
+      double MIJ3cur = 2.0 * filter2 *
+                       ( (betaHATIJ[3])[c]-
+                         2.0*fhat*filterDencur*IshatIcur*shatij3);
+      double MIJ4cur = 2.0 * filter2 *
+                       ( (betaHATIJ[4])[c]-
+                         2.0*fhat*filterDencur*IshatIcur*shatij4);
+      double MIJ5cur = 2.0 * filter2 *
+                       ( (betaHATIJ[5])[c]-
+                         2.0*fhat*filterDencur*IshatIcur*shatij5);
 
 
-          // compute Leonard stress tensor
-          // index 0: L11, 1:L22, 2:L33, 3:L12, 4:L13, 5:L23
-          double filterRhoUcur = filterRhoU[currCell];
-          double filterRhoVcur = filterRhoV[currCell];
-          double filterRhoWcur = filterRhoW[currCell];
-          double LIJ0cur = filterRhoUU[currCell] -
-            filterRhoUcur*filterRhoUcur/filterDencur;
-          double LIJ1cur = filterRhoVV[currCell] -
-            filterRhoVcur*filterRhoVcur/filterDencur;
-          double LIJ2cur = filterRhoWW[currCell] -
-            filterRhoWcur*filterRhoWcur/filterDencur;
-          double LIJ3cur = filterRhoUV[currCell] -
-            filterRhoUcur*filterRhoVcur/filterDencur;
-          double LIJ4cur = filterRhoUW[currCell] -
-            filterRhoUcur*filterRhoWcur/filterDencur;
-          double LIJ5cur = filterRhoVW[currCell] -
-            filterRhoVcur*filterRhoWcur/filterDencur;
+      // compute Leonard stress tensor
+      double filterRhoUcur = filterRhoU[c];
+      double filterRhoVcur = filterRhoV[c];
+      double filterRhoWcur = filterRhoW[c];
+      double LIJ0cur = filterRhoUU[c] -
+                       filterRhoUcur*filterRhoUcur/filterDencur;
+      double LIJ1cur = filterRhoVV[c] -
+                       filterRhoVcur*filterRhoVcur/filterDencur;
+      double LIJ2cur = filterRhoWW[c] -
+                       filterRhoWcur*filterRhoWcur/filterDencur;
+      double LIJ3cur = filterRhoUV[c] -
+                       filterRhoUcur*filterRhoVcur/filterDencur;
+      double LIJ4cur = filterRhoUW[c] -
+                       filterRhoUcur*filterRhoWcur/filterDencur;
+      double LIJ5cur = filterRhoVW[c] -
+                       filterRhoVcur*filterRhoWcur/filterDencur;
 
-          // Explicitly making LIJ traceless here
-          // Actually, trace has been ignored          
-          //        double LIJtrace = (LIJ0cur + LIJ1cur + LIJ2cur)/3.0;
-          double LIJtrace = 0.0;
-          LIJ0cur = LIJ0cur - LIJtrace;
-          LIJ1cur = LIJ1cur - LIJtrace;
-          LIJ2cur = LIJ2cur - LIJtrace;
+      //Again, ignoring the trace
+      LIJ0cur = LIJ0cur;
+      LIJ1cur = LIJ1cur;
+      LIJ2cur = LIJ2cur;
 
-          // compute the magnitude of ML and MM
-          MLI[currCell] = MIJ0cur*LIJ0cur +
-            MIJ1cur*LIJ1cur +
-            MIJ2cur*LIJ2cur +
-            2.0*(MIJ3cur*LIJ3cur +
-                MIJ4cur*LIJ4cur +
-                MIJ5cur*LIJ5cur );
-          // calculate absolute value of the grid strain rate
-          MMI[currCell] = MIJ0cur*MIJ0cur +
-            MIJ1cur*MIJ1cur +
-            MIJ2cur*MIJ2cur +
-            2.0*(MIJ3cur*MIJ3cur +
-                MIJ4cur*MIJ4cur +
-                MIJ5cur*MIJ5cur );
+      // compute the magnitude of ML and MM
+      MLI[c] = MIJ0cur * LIJ0cur +
+                      MIJ1cur * LIJ1cur +
+                      MIJ2cur * LIJ2cur +
+                      2.0 * (
+                      MIJ3cur * LIJ3cur +
+                      MIJ4cur * LIJ4cur +
+                      MIJ5cur * LIJ5cur 
+                      );
 
-        }
-      }
+      // calculate absolute value of the grid strain rate
+      MMI[c] = MIJ0cur * MIJ0cur +
+                      MIJ1cur * MIJ1cur +
+                      MIJ2cur * MIJ2cur +
+                      2.0 * (
+                      MIJ3cur * MIJ3cur +
+                      MIJ4cur * MIJ4cur +
+                      MIJ5cur * MIJ5cur 
+                      );
+
     }
     TAU_PROFILE_STOP(compute2);
-
   }
 }
 
@@ -1178,22 +1372,22 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     DataWarehouse* new_dw,
     const TimeIntegratorLabel* timelabels)
 {
-  //  double time = d_lab->d_sharedState->getElapsedTime();
+
   for (int p = 0; p < patches->size(); p++) {
+
     const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
+    int archIndex = 0; 
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
     // Variables
     constCCVariable<double> IsI;
     constCCVariable<double> MLI;
     constCCVariable<double> MMI;
-    CCVariable<double> Cs; //smag coeff 
-    CCVariable<double> ShF; //Shmidt number 
-    CCVariable<double> ShE; //Shmidt number 
-    CCVariable<double> ShRF; //Shmidt number 
+    CCVariable<double> Cs;
     constCCVariable<double> den;
     constCCVariable<double> voidFraction;
     constCCVariable<int> cellType;
+    constCCVariable<double> vol_fraction;
     CCVariable<double> viscosity;
     CCVariable<double> turbViscosity; 
     constCCVariable<double> filterVolume; 
@@ -1212,7 +1406,6 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     Ghost::GhostType  gac = Ghost::AroundCells;
 
     new_dw->get(IsI, d_lab->d_strainMagnitudeLabel,   indx, patch,   gn, 0);
-    // using a box filter of 2*delta...will require more ghost cells if the size of filter is increased
     new_dw->get(MLI, d_lab->d_strainMagnitudeMLLabel, indx, patch, gac, 1);
     new_dw->get(MMI, d_lab->d_strainMagnitudeMMLabel, indx, patch, gac, 1);
     new_dw->get(filterVolume, d_lab->d_filterVolumeLabel, indx, patch, gn, 0); 
@@ -1223,6 +1416,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     }
 
     new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, gac, 1);
+    new_dw->get(vol_fraction, d_lab->d_volFractionLabel, indx, patch, gac, 1);
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -1245,181 +1439,159 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
 
-    d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, MLI, filterVolume, cellType, MLHatI);
-    d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, MMI, filterVolume, cellType, MMHatI);
+//    d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, MLI, filterVolume, cellType, MLHatI);
+//    d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, MMI, filterVolume, cellType, MMHatI);
+    d_filter->applyFilter<constCCVariable<double> >(pc, patch, MLI, filterVolume, vol_fraction, MLHatI);
+    d_filter->applyFilter<constCCVariable<double> >(pc, patch, MMI, filterVolume, vol_fraction, MMHatI);
 
     CCVariable<double> tempCs;
     tempCs.allocate(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     tempCs.initialize(0.0);
-    CCVariable<double> tempShF;
-    CCVariable<double> tempShE;
-    CCVariable<double> tempShRF;
-    //     calculate the local Smagorinsky coefficient
-    //     perform "clipping" in case MLij is negative...
-    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ);
 
-          double value;
-          if ((MMHatI[currCell] < 1.0e-10)||(MLHatI[currCell] < 1.0e-7))
-            value = 0.0;
-          else
-            value = MLHatI[currCell]/MMHatI[currCell];
-          tempCs[currCell] = value;
+    Vector Dx = patch->dCell(); 
+    double filter = pow(Dx.x()*Dx.y()*Dx.z(),1.0/3.0);
+    double filter2 = filter*filter; 
 
+    if ( d_filter_cs_squared ){
+      //FILTER CS^2
+      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){ 
+        IntVector c = *iter; 
+        double value; 
+
+        if ( MMHatI[c] < 1.0e-10 || MLHatI[c] < 1.0e-7 ){ 
+          value = 0.0; 
+        } else { 
+          value = MLHatI[c] / MMHatI[c]; 
         }
+
+        tempCs[c] = value; 
+      }
+
+      d_filter->applyFilter<Array3<double> >(pc, patch, tempCs, filterVolume, vol_fraction, Cs ); 
+
+      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){ 
+
+        IntVector c = *iter; 
+
+        Cs[c] = Min(tempCs[c],10.0);
+        viscosity[c] =  ( Cs[c] * filter2 * IsI[c] * den[c] + viscos ) * vol_fraction[c];
+        turbViscosity[c] = viscosity[c] - viscos; 
+
+      }
+
+    } else { 
+
+      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){ 
+
+        IntVector c = *iter; 
+        double value; 
+
+        if ( MMHatI[c] < 1.0e-10 || MLHatI[c] < 1.0e-7 ){ 
+          value = 0.0; 
+        } else { 
+          value = MLHatI[c] / MMHatI[c]; 
+        }
+
+        Cs[c] = Min(value,10.0);
+        viscosity[c] =  ( Cs[c] * filter2 * IsI[c] * den[c] + viscos ) * vol_fraction[c];
+        turbViscosity[c] = viscosity[c] - viscos; 
+
       }
     }
 
-    if ((d_filter_cs_squared)&&(!(d_3d_periodic))) {
-      // filtering for periodic case is not implemented 
-      // if it needs to be then tempCs will require 1 layer of boundary cells to be computed
-      d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, tempCs, filterVolume, cellType, Cs);
-    }
-    else
-      Cs.copy(tempCs, tempCs.getLowIndex(),
-          tempCs.getHighIndex());
+    apply_zero_neumann( patch, turbViscosity, viscosity, vol_fraction ); 
 
-    double factor = 1.0;
-#if 0
-    if (time < 2.0)
-      factor = (time+0.000001)*0.5;
-#endif
-
-    if (d_MAlab) {
-
-      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-            IntVector currCell(colX, colY, colZ);
-            double delta = cellinfo->sew[colX]*
-              cellinfo->sns[colY]*cellinfo->stb[colZ];
-            double filter = pow(delta, 1.0/3.0);
-
-            Cs[currCell] = Min(Cs[currCell],10.0);
-            viscosity[currCell] =  Cs[currCell] * filter*filter* 
-              IsI[currCell] * den[currCell] +
-              viscos*voidFraction[currCell];
-
-            turbViscosity[currCell] = viscosity[currCell] - viscos*voidFraction[currCell]; 
-
-          }
-        }
-      }
-    }
-    else {
-      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-            IntVector currCell(colX, colY, colZ);
-            double delta = cellinfo->sew[colX]*
-              cellinfo->sns[colY]*cellinfo->stb[colZ];
-            double filter = pow(delta, 1.0/3.0);
-
-            Cs[currCell] = Min(Cs[currCell],10.0);
-            viscosity[currCell] =  Cs[currCell] * filter*filter*
-              IsI[currCell] * den[currCell] + viscos;
-
-            turbViscosity[currCell] = viscosity[currCell] - viscos; 
-
-          }
-        }
-      }
-    }
-
-    // boundary conditions...make a separate function apply Boundary
-    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-    int wall_celltypeval = BoundaryCondition::WALL; //d_boundaryCondition->wallCellType();
-    if (xminus) {
-      int colX = indexLow.x();
-      for (int colZ = indexLow.z(); colZ <=  indexHigh.z(); colZ ++) {
-        for (int colY = indexLow.y(); colY <=  indexHigh.y(); colY ++) {
-          IntVector currCell(colX-1, colY, colZ);
-          if (cellType[currCell] != wall_celltypeval) {
-            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
-            //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
-            //                             *den[currCell]/den[IntVector(colX,colY,colZ)];
-          }          
-        }
-      }
-    }
-    if (xplus) {
-      int colX =  indexHigh.x();
-      for (int colZ = indexLow.z(); colZ <=  indexHigh.z(); colZ ++) {
-        for (int colY = indexLow.y(); colY <=  indexHigh.y(); colY ++) {
-          IntVector currCell(colX+1, colY, colZ);
-          if (cellType[currCell] != wall_celltypeval) {
-            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
-            //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
-            //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
-          }          
-        }
-      }
-    }
-    if (yminus) {
-      int colY = indexLow.y();
-      for (int colZ = indexLow.z(); colZ <=  indexHigh.z(); colZ ++) {
-        for (int colX = indexLow.x(); colX <=  indexHigh.x(); colX ++) {
-          IntVector currCell(colX, colY-1, colZ);
-          if (cellType[currCell] != wall_celltypeval) {
-            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
-            //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
-            //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
-          }          
-        }
-      }
-    }
-    if (yplus) {
-      int colY =  indexHigh.y();
-      for (int colZ = indexLow.z(); colZ <=  indexHigh.z(); colZ ++) {
-        for (int colX = indexLow.x(); colX <=  indexHigh.x(); colX ++) {
-          IntVector currCell(colX, colY+1, colZ);
-          if (cellType[currCell] != wall_celltypeval) {
-            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
-            //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
-            //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
-          }          
-        }
-      }
-    }
-    if (zminus) {
-      int colZ = indexLow.z();
-      for (int colY = indexLow.y(); colY <=  indexHigh.y(); colY ++) {
-        for (int colX = indexLow.x(); colX <=  indexHigh.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ-1);
-          if (cellType[currCell] != wall_celltypeval) {
-            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
-            //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
-            //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
-          }          
-        }
-      }
-    }
-    if (zplus) {
-      int colZ =  indexHigh.z();
-      for (int colY = indexLow.y(); colY <=  indexHigh.y(); colY ++) {
-        for (int colX = indexLow.x(); colX <=  indexHigh.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ+1);
-          if (cellType[currCell] != wall_celltypeval) {
-            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
-            //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
-            //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
-          }          
-        }
-      }
-    }
-
+//    // boundary conditions...make a separate function apply Boundary
+//    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+//    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+//    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+//    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+//    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+//    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+//    int wall_celltypeval = BoundaryCondition::WALL; 
+//    if (xminus) {
+//      int colX = indexLow.x();
+//      for (int colZ = indexLow.z(); colZ <=  indexHigh.z(); colZ ++) {
+//        for (int colY = indexLow.y(); colY <=  indexHigh.y(); colY ++) {
+//          IntVector currCell(colX-1, colY, colZ);
+//          if (cellType[currCell] != wall_celltypeval) {
+//            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+//            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
+//            //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
+//            //                             *den[currCell]/den[IntVector(colX,colY,colZ)];
+//          }          
+//        }
+//      }
+//    }
+//    if (xplus) {
+//      int colX =  indexHigh.x();
+//      for (int colZ = indexLow.z(); colZ <=  indexHigh.z(); colZ ++) {
+//        for (int colY = indexLow.y(); colY <=  indexHigh.y(); colY ++) {
+//          IntVector currCell(colX+1, colY, colZ);
+//          if (cellType[currCell] != wall_celltypeval) {
+//            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+//            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
+//            //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
+//            //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
+//          }          
+//        }
+//      }
+//    }
+//    if (yminus) {
+//      int colY = indexLow.y();
+//      for (int colZ = indexLow.z(); colZ <=  indexHigh.z(); colZ ++) {
+//        for (int colX = indexLow.x(); colX <=  indexHigh.x(); colX ++) {
+//          IntVector currCell(colX, colY-1, colZ);
+//          if (cellType[currCell] != wall_celltypeval) {
+//            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+//            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
+//            //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
+//            //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
+//          }          
+//        }
+//      }
+//    }
+//    if (yplus) {
+//      int colY =  indexHigh.y();
+//      for (int colZ = indexLow.z(); colZ <=  indexHigh.z(); colZ ++) {
+//        for (int colX = indexLow.x(); colX <=  indexHigh.x(); colX ++) {
+//          IntVector currCell(colX, colY+1, colZ);
+//          if (cellType[currCell] != wall_celltypeval) {
+//            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+//            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
+//            //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
+//            //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
+//          }          
+//        }
+//      }
+//    }
+//    if (zminus) {
+//      int colZ = indexLow.z();
+//      for (int colY = indexLow.y(); colY <=  indexHigh.y(); colY ++) {
+//        for (int colX = indexLow.x(); colX <=  indexHigh.x(); colX ++) {
+//          IntVector currCell(colX, colY, colZ-1);
+//          if (cellType[currCell] != wall_celltypeval) {
+//            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+//            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
+//            //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
+//            //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
+//          }          
+//        }
+//      }
+//    }
+//    if (zplus) {
+//      int colZ =  indexHigh.z();
+//      for (int colY = indexLow.y(); colY <=  indexHigh.y(); colY ++) {
+//        for (int colX = indexLow.x(); colX <=  indexHigh.x(); colX ++) {
+//          IntVector currCell(colX, colY, colZ+1);
+//          if (cellType[currCell] != wall_celltypeval) {
+//            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+//            turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
+//            //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
+//            //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
+//          }          
+//        }
+//      }
+//    }
   }
 }
