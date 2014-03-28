@@ -10,8 +10,8 @@
   <Time>
     <maxTime>     0.67   </maxTime>
     <initTime>    0.0     </initTime>
-    <delt_min>    1e-3 </delt_min>
-    <delt_max>    1e-3     </delt_max>
+    <delt_min>    1e-2 </delt_min>
+    <delt_max>    1e-2     </delt_max>
 <!-- 
     <max_Timesteps> 5 </max_Timesteps>
  -->
@@ -21,7 +21,7 @@
 <!--__________________________________-->
   <DataArchiver>
     <filebase>arhces-decay-isotropic-turbulence-dyn-64.uda</filebase>
-	<outputTimestepInterval>10</outputTimestepInterval>
+	<outputTimestepInterval>2</outputTimestepInterval>
     <outputInitTimestep/>    
     <save label="totalKineticEnergy"/>
     <save label="uVelocitySPBC"/>    
