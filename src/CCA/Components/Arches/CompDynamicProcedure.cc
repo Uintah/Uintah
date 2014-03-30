@@ -366,21 +366,39 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     d_filter->applyFilter<constCCVariable<double> >(pc, patch, density, filterVolume, vol_fraction, filterRho); 
 
     // making filterRho nonzero 
-    constCCVariable<double> ref_density; 
-    new_dw->get(ref_density, d_lab->d_denRefArrayLabel, indx, patch, Ghost::None, 0); 
+    int mmWallID = d_boundaryCondition->getMMWallId();
+    if (mmWallID > 0) {
 
-    IntVector idxLo = patch->getExtraCellLowIndex();
-    IntVector idxHi = patch->getExtraCellHighIndex();
-
-    for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){ 
-
-      IntVector c = *iter;
-
-      //assuming a 0 or 1 volume fraction
-      filterRho[c] = (1.0-vol_fraction[c]) * ref_density[c] + 
-                      vol_fraction[c] * filterRho[c];
-
+      constCCVariable<double> ref_density; 
+      new_dw->get(ref_density, d_lab->d_denRefArrayLabel, indx, patch, Ghost::None, 0); 
+      IntVector idxLo = patch->getExtraCellLowIndex();
+      IntVector idxHi = patch->getExtraCellHighIndex();
+      for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
+        for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
+          for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
+            IntVector currCell(colX, colY, colZ);
+            if (filterRho[currCell] < 1.0e-15) 
+              filterRho[currCell]=ref_density[currCell];
+          }
+        }
+      }
     }
+
+//    constCCVariable<double> ref_density; 
+//    new_dw->get(ref_density, d_lab->d_denRefArrayLabel, indx, patch, Ghost::None, 0); 
+//
+//    IntVector idxLo = patch->getExtraCellLowIndex();
+//    IntVector idxHi = patch->getExtraCellHighIndex();
+//
+//    for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){ 
+//
+//      IntVector c = *iter;
+//
+//      //assuming a 0 or 1 volume fraction
+//      filterRho[c] = (1.0-vol_fraction[c]) * ref_density[c] + 
+//                      vol_fraction[c] * filterRho[c];
+//
+//    }
   }
 }
 //****************************************************************************
