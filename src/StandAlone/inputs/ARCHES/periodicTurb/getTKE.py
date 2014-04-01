@@ -139,16 +139,28 @@ for node in xmldoc.getElementsByTagName('upper'):
 for node in xmldoc.getElementsByTagName('filebase'):
     uda_name = str(node.firstChild.data)
 
+for node in xmldoc.getElementsByTagName('delt_min'):
+    dt_min = str(node.firstChild.data)
+
+for node in xmldoc.getElementsByTagName('delt_max'):
+    dt_max = str(node.firstChild.data)
+
+if float(dt_min) != float(dt_max):
+  print 'DT min and DT max in the UPS must be equal and be either 1e-2 or 1e-3.'
+  sys.exit()
+
 print 'Going to query UDA: ', uda_name
     
 L = U0 - L0
-L = 2.0*np.pi*9.0/100.0
+#L = 2.0*np.pi*9.0/100.0
 
-# compatible with a dt=0.01 timestep and output every 2 steps. 
-TS = [0,14,33]
-
-# compatible with a dt=0.001 timestep and output every 10 steps. 
-#TS = [0,28,66]
+print 'DT = '+dt_min
+if float(dt_min) < 5.0e-3:
+  # compatible with a dt=0.001 timestep and output every 2 steps. 
+  TS = [0,28,66]
+else: 
+  # compatible with a dt=0.01 timestep and output every 10 steps. 
+  TS = [0,14,33]
 
 cbc = np.loadtxt('cbc_spectrum.txt')
 

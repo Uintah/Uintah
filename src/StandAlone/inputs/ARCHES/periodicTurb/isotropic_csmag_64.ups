@@ -20,7 +20,7 @@
 
 <!--__________________________________-->
   <DataArchiver>
-    <filebase>arhces-decay-isotropic-turbulence-csmag-64.uda</filebase>
+    <filebase>csmag-64.uda</filebase>
 	<outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>    
     <save label="totalKineticEnergy"/>
