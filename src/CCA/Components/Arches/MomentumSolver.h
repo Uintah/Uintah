@@ -70,7 +70,10 @@ WARNING
 #include <CCA/Components/Arches/ArchesConstVariables.h>
 #include <CCA/Components/Arches/Discretization.h>
 #include <Core/Exceptions/ParameterNotFound.h>
+#include <Core/IO/UintahZlibUtil.h>
+
 namespace Uintah {
+
 class ArchesLabel;
 class MPMArchesLabel;
 class ProcessorGroup;
@@ -327,49 +330,174 @@ private:
 
   };  
 
-  // constant initialization ------------------------
+  // read in a CC velocity field and interpolate it to the staggered positions.
   class InputfileInit : public VelocityInitBase { 
 
     public: 
 
       InputfileInit(){ 
-        _const_u = 0.0;
-        _const_v = 0.0;
-        _const_w = 0.0;
       };
       ~InputfileInit(){}; 
 
       void problemSetup( ProblemSpecP db ){ 
 
-        db->getWithDefault( "const_u", _const_u, 0.0 ); 
-        db->getWithDefault( "const_v", _const_v, 0.0 ); 
-        db->getWithDefault( "const_w", _const_w, 0.0 ); 
+        db->require("input_file",_input_file);
+
 
       }; 
 
       void setXVel( const Patch* patch, SFCXVariable<double>& uvel ){ 
 
-        uvel.initialize( _const_u ); 
+        gzFile file = gzopen( _input_file.c_str(), "r" );
+
+        if ( file == NULL ) { 
+          proc0cout << "Error opening file: " << _input_file << " for velocity initialization." << std::endl;
+          throw ProblemSetupException("Unable to open the given input file: " + _input_file, __FILE__, __LINE__);
+        }
+            
+        int nx,ny,nz;
+        nx = getInt(file); 
+        ny = getInt(file); 
+        nz = getInt(file); 
+        
+        const Level* level = patch->getLevel();
+        IntVector low, high;
+        level->findCellIndexRange(low, high);
+        IntVector range = high-low;
+        
+        if (!(range == IntVector(nx,ny,nz))) {
+          std::ostringstream warn;
+          warn << "ERROR: \n Wrong grid size in input file for velocities." << range;
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+        }
+
+        int size = 0;
+        double uvel_in,tmp;
+        IntVector idxLo = patch->getFortranCellLowIndex();
+        IntVector idxHi = patch->getFortranCellHighIndex();
+        for (int colZ = 1; colZ <= nz; colZ ++) {
+          for (int colY = 1; colY <= ny; colY ++) {
+            for (int colX = 1; colX <= nx; colX ++) {
+
+              IntVector currCell(colX-1, colY-1, colZ-1);          
+              uvel_in = getDouble(file);
+              tmp =  getDouble(file);
+              tmp =  getDouble(file);          
+              if ((currCell.x() <= idxHi.x() && currCell.y() <= idxHi.y() && currCell.z() <= idxHi.z()) &&
+                  (currCell.x() >= idxLo.x() && currCell.y() >= idxLo.y() && currCell.z() >= idxLo.z())) {
+                uvel[currCell] = uvel_in;
+                size++;
+              }
+            }
+          }
+        }
+        gzclose( file );     
 
       }; 
       
       void setYVel( const Patch* patch, SFCYVariable<double>& vvel ){ 
 
-        vvel.initialize( _const_v ); 
+        gzFile file = gzopen( _input_file.c_str(), "r" );
+
+        if ( file == NULL ) { 
+          proc0cout << "Error opening file: " << _input_file << " for velocity initialization." << std::endl;
+          throw ProblemSetupException("Unable to open the given input file: " + _input_file, __FILE__, __LINE__);
+        }
+            
+        int nx,ny,nz;
+        nx = getInt(file); 
+        ny = getInt(file); 
+        nz = getInt(file); 
+        
+        const Level* level = patch->getLevel();
+        IntVector low, high;
+        level->findCellIndexRange(low, high);
+        IntVector range = high-low;
+        
+        if (!(range == IntVector(nx,ny,nz))) {
+          std::ostringstream warn;
+          warn << "ERROR: \n Wrong grid size in input file for velocities." << range;
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+        }
+
+        int size = 0;
+        double vvel_in,tmp;
+        IntVector idxLo = patch->getFortranCellLowIndex();
+        IntVector idxHi = patch->getFortranCellHighIndex();
+        for (int colZ = 1; colZ <= nz; colZ ++) {
+          for (int colY = 1; colY <= ny; colY ++) {
+            for (int colX = 1; colX <= nx; colX ++) {
+
+              IntVector currCell(colX-1, colY-1, colZ-1);          
+              tmp = getDouble(file);
+              vvel_in =  getDouble(file);
+              tmp =  getDouble(file);          
+              if ((currCell.x() <= idxHi.x() && currCell.y() <= idxHi.y() && currCell.z() <= idxHi.z()) &&
+                  (currCell.x() >= idxLo.x() && currCell.y() >= idxLo.y() && currCell.z() >= idxLo.z())) {
+                vvel[currCell] = vvel_in;
+                size++;
+              }
+            }
+          }
+        }
+        gzclose( file );     
+
 
       }; 
 
       void setZVel( const Patch* patch, SFCZVariable<double>& wvel ){ 
 
-        wvel.initialize( _const_w ); 
+        gzFile file = gzopen( _input_file.c_str(), "r" );
+
+        if ( file == NULL ) { 
+          proc0cout << "Error opening file: " << _input_file << " for velocity initialization." << std::endl;
+          throw ProblemSetupException("Unable to open the given input file: " + _input_file, __FILE__, __LINE__);
+        }
+            
+        int nx,ny,nz;
+        nx = getInt(file); 
+        ny = getInt(file); 
+        nz = getInt(file); 
+        
+        const Level* level = patch->getLevel();
+        IntVector low, high;
+        level->findCellIndexRange(low, high);
+        IntVector range = high-low;
+        
+        if (!(range == IntVector(nx,ny,nz))) {
+          std::ostringstream warn;
+          warn << "ERROR: \n Wrong grid size in input file for velocities." << range;
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+        }
+
+        int size = 0;
+        double wvel_in,tmp;
+        IntVector idxLo = patch->getFortranCellLowIndex();
+        IntVector idxHi = patch->getFortranCellHighIndex();
+        for (int colZ = 1; colZ <= nz; colZ ++) {
+          for (int colY = 1; colY <= ny; colY ++) {
+            for (int colX = 1; colX <= nx; colX ++) {
+
+              IntVector currCell(colX-1, colY-1, colZ-1);          
+              tmp = getDouble(file);
+              tmp =  getDouble(file);
+              wvel_in =  getDouble(file);          
+              if ((currCell.x() <= idxHi.x() && currCell.y() <= idxHi.y() && currCell.z() <= idxHi.z()) &&
+                  (currCell.x() >= idxLo.x() && currCell.y() >= idxLo.y() && currCell.z() >= idxLo.z())) {
+                wvel[currCell] = wvel_in;
+                size++;
+              }
+            }
+          }
+        }
+        gzclose( file );     
+
 
       }; 
 
     private: 
 
-      double _const_u;
-      double _const_v; 
-      double _const_w;  
+      std::string _input_file; 
 
   };  
 

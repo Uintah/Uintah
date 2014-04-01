@@ -151,6 +151,10 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
     } else if ( _init_type == "StABL" ){ 
 
       _init_function = scinew StABLVel(); 
+
+    } else if ( _init_type == "input"){
+
+      _init_function = scinew InputfileInit(); 
     
     } else { 
 
