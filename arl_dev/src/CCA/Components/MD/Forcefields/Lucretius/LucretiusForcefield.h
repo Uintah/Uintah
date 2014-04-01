@@ -54,8 +54,6 @@ namespace Uintah {
       NonbondedTwoBodyPotential* parseHomoatomicNonbonded(std::string&, const forcefieldType, double);
       NonbondedTwoBodyPotential* parseHeteroatomicNonbonded(std::string&, const forcefieldType);
       void parseNonbondedPotentials(std::ifstream&, const std::string&, std::string&, SimulationStateP&);
-      bool skipComments(std::ifstream&, std::string&);
-      void generateUnexpectedEOFString(const std::string&, const std::string&, std::string&);
 
       // Data members
       static const std::string d_forcefieldNameString;

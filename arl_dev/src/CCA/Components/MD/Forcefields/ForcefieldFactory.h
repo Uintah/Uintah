@@ -19,9 +19,6 @@
 
 namespace Uintah {
 
-//  class ProcessorGroup;
-  class MDSystem;
-
   /**
    * @class   ForcefieldFactor
    * @ingroup MD

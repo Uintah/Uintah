@@ -146,32 +146,6 @@ NonbondedTwoBodyPotential* LucretiusForcefield::parseHeteroatomicNonbonded(std::
   return potential;
 }
 
-bool LucretiusForcefield::skipComments(std::ifstream& fileHandle, std::string& buffer) {
-
-  if (!fileHandle) return false; // file was EOF on entry
-
-  getline(fileHandle,buffer); // Prime the buffer
-  if (!fileHandle && (buffer[0] != '*')) return true; // The single line exhausted our buffer, but we have a valid line
-
-  while (fileHandle) {
-    if (buffer[0] == '*') {
-      getline(fileHandle,buffer);
-    }
-    else {
-      return true; // Found a non-comment line
-    }
-  }
-  return false; // Ran out of file
-}
-
-void LucretiusForcefield::generateUnexpectedEOFString(const std::string& filename,
-                                                      const std::string& addendum,
-                                                      std::string& buffer) {
-  std::stringstream errorBuffer;
-  errorBuffer << "ERROR:  Unexpected end of file " << filename << std::endl
-              << "   -- Unable to locate the " << addendum << " section of the Lucretius forcefield file. ";
-  buffer = errorBuffer.str();
-}
 
 void LucretiusForcefield::parseNonbondedPotentials(std::ifstream& fileHandle,
                                                    const std::string& filename,
@@ -181,16 +155,16 @@ void LucretiusForcefield::parseNonbondedPotentials(std::ifstream& fileHandle,
   forcefieldType currentForcefieldType = Lucretius;
   size_t numberNonbondedTypes = 0;
   std::string error_msg;
-  if (skipComments(fileHandle,buffer)) { // Locate the number of homo-atomic nonbonded potentials
+  if (lucretiusParse::skipComments(fileHandle,buffer)) { // Locate the number of homo-atomic nonbonded potentials
     numberNonbondedTypes = Parse::stringToInt(buffer);
   }
   else {
-    this->generateUnexpectedEOFString(filename,"NUMBER OF HETEROATOMIC REPULSION-DISPERSION POTENTIALS",error_msg);
+    lucretiusParse::generateUnexpectedEOFString(filename,"NUMBER OF HETEROATOMIC REPULSION-DISPERSION POTENTIALS",error_msg);
     throw ProblemSetupException(error_msg, __FILE__, __LINE__);
   }
 
 // ---> Definition of homoatomic Potentials
-  if (skipComments(fileHandle,buffer)) { // Locate the section which defines nonbonded homoatomic potentials, charges, and polarizabilities
+  if (lucretiusParse::skipComments(fileHandle,buffer)) { // Locate the section which defines nonbonded homoatomic potentials, charges, and polarizabilities
     double currentMass = -1.0;
     size_t numberNonbondedFound = 0;
     size_t currentChargeSubindex = 0;
@@ -239,13 +213,13 @@ void LucretiusForcefield::parseNonbondedPotentials(std::ifstream& fileHandle,
     }
   } // end of nonbonded homoatomic section
   else {
-      this->generateUnexpectedEOFString(filename,"HOMOATOMIC REPULSION-DISPERSION AND CHARGE DEFINITIONS",error_msg);
+      lucretiusParse::generateUnexpectedEOFString(filename,"HOMOATOMIC REPULSION-DISPERSION AND CHARGE DEFINITIONS",error_msg);
       throw ProblemSetupException(error_msg, __FILE__, __LINE__);
   }
 // ---> End of homoatomic potentials
 
 // ---> Definition of heteroatomic Potentials
-  if (skipComments(fileHandle,buffer)) { // Locate the section which defines heteroatomic potentials
+  if (lucretiusParse::skipComments(fileHandle,buffer)) { // Locate the section which defines heteroatomic potentials
     while (buffer[0] != '*') { // Found a heteroatomic nonbonded type
       std::string label1 = buffer.substr(0,3);
       std::string label2 = buffer.substr(4, 3);
@@ -285,7 +259,7 @@ void LucretiusForcefield::parseNonbondedPotentials(std::ifstream& fileHandle,
     }
   }
   else {  // EOF before end of heteroatomic potential inputs
-    this->generateUnexpectedEOFString(filename,"HETEROATOMIC REPULSION-DISPERSION DEFINITIONS", error_msg);
+    lucretiusParse::generateUnexpectedEOFString(filename,"HETEROATOMIC REPULSION-DISPERSION DEFINITIONS", error_msg);
     throw ProblemSetupException(error_msg, __FILE__, __LINE__);
   }
   //  Now let's double check that we have definitions for all possible heteroatomic potentials
@@ -342,19 +316,19 @@ LucretiusForcefield::LucretiusForcefield(const ProblemSpecP& spec,
 
 // ---> Number of bond potentials
     size_t numberBondTypes = 0;
-    if (skipComments(ffFile,buffer)) { // Locate the section with expected number of Bond potentials
+    if (lucretiusParse::skipComments(ffFile,buffer)) { // Locate the section with expected number of Bond potentials
       numberBondTypes = Parse::stringToInt(buffer);
     }
     else {                             // EOF before number of bond potentials found
-      this->generateUnexpectedEOFString(ffFilename,"NUMBER OF BOND POTENTIALS",error_msg);
+      lucretiusParse::generateUnexpectedEOFString(ffFilename,"NUMBER OF BOND POTENTIALS",error_msg);
       throw ProblemSetupException(error_msg, __FILE__, __LINE__);
     }
     if (numberBondTypes != 0) {        // --> Bonds indicated, so parse them
-      if (skipComments(ffFile,buffer)) {   // Locate the section which describes bond potentials
+      if (lucretiusParse::skipComments(ffFile,buffer)) {   // Locate the section which describes bond potentials
       // parseBondPotentials(ffFile, ffFilename, buffer);
       }
       else {                               // EOF before bond potentials
-        this->generateUnexpectedEOFString(ffFilename,"BOND POTENTIALS",error_msg);
+        lucretiusParse::generateUnexpectedEOFString(ffFilename,"BOND POTENTIALS",error_msg);
         throw ProblemSetupException(error_msg, __FILE__, __LINE__);
       }
     }
@@ -362,19 +336,19 @@ LucretiusForcefield::LucretiusForcefield(const ProblemSpecP& spec,
 
 // ---> Number of bend potentials
     size_t numberBendTypes = 0;
-    if (skipComments(ffFile,buffer)) { // Locate the section with expected number of Bend potentials
+    if (lucretiusParse::skipComments(ffFile,buffer)) { // Locate the section with expected number of Bend potentials
       numberBendTypes = Parse::stringToInt(buffer);
     }
     else {                             // EOF before number of bend potentials found
-      this->generateUnexpectedEOFString(ffFilename,"NUMBER OF BEND POTENTIALS",error_msg);
+      lucretiusParse::generateUnexpectedEOFString(ffFilename,"NUMBER OF BEND POTENTIALS",error_msg);
       throw ProblemSetupException(error_msg, __FILE__, __LINE__);
     }
     if (numberBendTypes != 0) {        // --> Bends indicated, so parse them
-      if (skipComments(ffFile,buffer)) {   // Locate the section which describes bend potentials
+      if (lucretiusParse::skipComments(ffFile,buffer)) {   // Locate the section which describes bend potentials
       // parseBendPotentials(ffFile, ffFilename, buffer);
       }
       else {                               // EOF before bend potentials
-        this->generateUnexpectedEOFString(ffFilename,"BEND POTENTIALS",error_msg);
+        lucretiusParse::generateUnexpectedEOFString(ffFilename,"BEND POTENTIALS",error_msg);
         throw ProblemSetupException(error_msg, __FILE__, __LINE__);
       }
     }
@@ -382,19 +356,19 @@ LucretiusForcefield::LucretiusForcefield(const ProblemSpecP& spec,
 
 // ---> Number of Torsional potentials
     size_t numberTorsionTypes = 0;
-    if (skipComments(ffFile,buffer)) { // Locate section with expected number of torsional potentials
+    if (lucretiusParse::skipComments(ffFile,buffer)) { // Locate section with expected number of torsional potentials
       numberTorsionTypes = Parse::stringToInt(buffer);
     }
     else {                             // EOF before number of torsional potentials found
-      this->generateUnexpectedEOFString(ffFilename,"NUMBER OF DIHEDRAL POTENTIALS",error_msg);
+      lucretiusParse::generateUnexpectedEOFString(ffFilename,"NUMBER OF DIHEDRAL POTENTIALS",error_msg);
       throw ProblemSetupException(error_msg, __FILE__, __LINE__);
     }
     if (numberTorsionTypes != 0) {     // --> Torsions indicated, so parse them
-      if (skipComments(ffFile,buffer)) {   // Locate the section which describes torsional potentials
+      if (lucretiusParse::skipComments(ffFile,buffer)) {   // Locate the section which describes torsional potentials
       // parseTorsionalPotentials(ffFile, ffFilename, buffer);
       }
       else {                               // EOF before torsional potentials
-        this->generateUnexpectedEOFString(ffFilename,"DIHEDRAL POTENTIALS",error_msg);
+        lucretiusParse::generateUnexpectedEOFString(ffFilename,"DIHEDRAL POTENTIALS",error_msg);
         throw ProblemSetupException(error_msg, __FILE__, __LINE__);
       }
     }
@@ -402,19 +376,19 @@ LucretiusForcefield::LucretiusForcefield(const ProblemSpecP& spec,
 
 // ---> Number of OOP potentials
     size_t numberOOPTypes = 0;
-    if (skipComments(ffFile,buffer)) { // Locate section with number of OOP potentials
+    if (lucretiusParse::skipComments(ffFile,buffer)) { // Locate section with number of OOP potentials
       numberOOPTypes = Parse::stringToInt(buffer);
     }
     else {                             // EOF before reading number of OOP potentials
-      this->generateUnexpectedEOFString(ffFilename,"NUMBER OF IMPROPER DIHEDRAL (OOP) POTENTIALS",error_msg);
+      lucretiusParse::generateUnexpectedEOFString(ffFilename,"NUMBER OF IMPROPER DIHEDRAL (OOP) POTENTIALS",error_msg);
       throw ProblemSetupException(error_msg, __FILE__, __LINE__);
     }
     if (numberOOPTypes != 0) {         // --> OOP potentials indicated, so parse them
-      if (skipComments(ffFile,buffer)) {   // Find the OOP potential descriptions
+      if (lucretiusParse::skipComments(ffFile,buffer)) {   // Find the OOP potential descriptions
       // parseOOPPotentials(ffFile, ffFilename, buffer);
       }
       else {                               // EOF before OOP potentials
-        this->generateUnexpectedEOFString(ffFilename,"IMPROPER DIHEDRAL (OOP) POTENTIALS",error_msg);
+        lucretiusParse::generateUnexpectedEOFString(ffFilename,"IMPROPER DIHEDRAL (OOP) POTENTIALS",error_msg);
         throw ProblemSetupException(error_msg, __FILE__, __LINE__);
       }
     }
@@ -422,19 +396,19 @@ LucretiusForcefield::LucretiusForcefield(const ProblemSpecP& spec,
 
 // ---> Number of lone pair (LP) types
     size_t numberLPTypes = 0;
-    if (skipComments(ffFile,buffer)) { // Locate section with number of expected LP
+    if (lucretiusParse::skipComments(ffFile,buffer)) { // Locate section with number of expected LP
       numberLPTypes = Parse::stringToInt(buffer);
     }
     else {                             // EOF before reading number of lone pairs
-      this->generateUnexpectedEOFString(ffFilename,"NUMBER OF LONE PAIR TYPES",error_msg);
+      lucretiusParse::generateUnexpectedEOFString(ffFilename,"NUMBER OF LONE PAIR TYPES",error_msg);
       throw ProblemSetupException(error_msg, __FILE__, __LINE__);
     }
     if (numberOOPTypes != 0) {         // --> Lone pairs indicated, so parse them
-      if (skipComments(ffFile,buffer)) {   // Locate the section which describes lone pairs
+      if (lucretiusParse::skipComments(ffFile,buffer)) {   // Locate the section which describes lone pairs
       // parseLPTypes(ffFile, ffFilename, buffer);
       }
       else {                               // EOF before Lone Pair description
-        this->generateUnexpectedEOFString(ffFilename,"LONE PAIR DESCRIPTIONS",error_msg);
+        lucretiusParse::generateUnexpectedEOFString(ffFilename,"LONE PAIR DESCRIPTIONS",error_msg);
         throw ProblemSetupException(error_msg, __FILE__, __LINE__);
       }
     }

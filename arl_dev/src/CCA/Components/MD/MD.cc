@@ -109,9 +109,10 @@ void MD::problemSetup(const ProblemSpecP& params,
   }
 
   // Pull the newly registered materials into a material set
-  const MaterialSet* materials = d_sharedState->allMaterials();
+  const MaterialSet* allMaterials = d_sharedState->allMaterials();
 
   // Parse the input coordinates
+ // parsedCoordinates = coordinateFactory::create(params, shared_state);
 
 
   // get path and name of the file with atom information

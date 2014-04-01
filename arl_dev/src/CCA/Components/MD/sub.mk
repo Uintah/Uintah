@@ -38,7 +38,8 @@ SRCS += $(SRCDIR)/MD.cc                           \
         $(SRCDIR)/NonBondedFactory.cc             \
         $(SRCDIR)/NonBonded.cc                    \
         $(SRCDIR)/AnalyticNonBonded.cc            \
-        $(SRCDIR)/SimpleGrid.cc                   
+        $(SRCDIR)/SimpleGrid.cc                   \
+        $(SRCDIR)/atomFactory.cc
 
 SUBDIRS := $(SRCDIR)/Potentials  \
            $(SRCDIR)/Forcefields \
