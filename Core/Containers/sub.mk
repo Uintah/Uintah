@@ -33,12 +33,12 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Core/Containers
 
 SRCS     += $(SRCDIR)/ConsecutiveRangeSet.cc \
-	    $(SRCDIR)/Sort.cc \
-	    $(SRCDIR)/StringUtil.cc \
-	    $(SRCDIR)/TrivialAllocator.cc \
-	    $(SRCDIR)/templates.cc
+	        $(SRCDIR)/Sort.cc \
+	        $(SRCDIR)/StringUtil.cc \
+	        $(SRCDIR)/templates.cc
 
 PSELIBS := Core/Exceptions Core/Thread
+
 LIBS :=
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
