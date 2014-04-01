@@ -33,10 +33,49 @@
 #define LUCRETIUSPARSING_H_
 
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <vector>
 #include <string>
 
-namespace Uintah {
+namespace lucretiusParse {
+
+  inline bool skipComments(std::ifstream& fileHandle, std::string& buffer) {
+
+    if (!fileHandle) return false; // file was EOF on entry
+
+    std::getline(fileHandle,buffer); // Prime the buffer
+    if (!fileHandle && (buffer[0] != '*')) return true; // The single line exhausted our buffer, but we have a valid line
+
+    while (fileHandle) {
+      if (buffer[0] == '*') {
+        getline(fileHandle,buffer);
+      }
+      else {
+        return true; // Found a non-comment line
+      }
+    }
+    return false; // Ran out of file
+  }
+
+  inline void generateUnexpectedEOFString(const std::string& filename,
+                                   const std::string& addendum,
+                                   std::string& buffer) {
+    std::stringstream errorBuffer;
+    errorBuffer << "ERROR:  Unexpected end of file " << filename << std::endl
+                << "   -- Unable to locate the " << addendum << " section of the Lucretius forcefield file. ";
+    buffer = errorBuffer.str();
+  }
+
+  inline void generateUnexpectedCoordinateEOF(const std::string& filename,
+                                       const std::string& addendum,
+                                       std::string& buffer) {
+    std::stringstream errorBuffer;
+    errorBuffer << "ERROR:  Unexpected end of file " << filename << std::endl
+                << "   -- Unable to locate the " << addendum << " section of the Lucretius coordinate file. ";
+    buffer = errorBuffer.str();
+
+  }
 
   // Classes for reading connectivity.dat
 
