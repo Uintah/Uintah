@@ -9,11 +9,6 @@
 
     <ARCHES                             spec="OPTIONAL NO_DATA" >
 
-      <set_initial_vel_condition        spec="OPTIONAL NO_DATA"
-                                        attribute1="inputfile REQUIRED STRING"/>
-          
-      <set_initial_condition             spec="OPTIONAL NO_DATA"
-                                        attribute1="inputfile REQUIRED STRING"/>
       <new_BC_on_restart                spec="OPTIONAL NO_DATA" />
       <turnonMixedModel                 spec="OPTIONAL BOOLEAN" /> <!-- Move to Properties? not sure what this model is-->
       <recompileTaskgraph               spec="OPTIONAL BOOLEAN" />
@@ -546,7 +541,9 @@
                                         attribute1="label REQUIRED STRING"/>
 
           <initialization               spec="OPTIONAL NO_DATA"           
-                                        attribute1="type REQUIRED STRING 'constant, taylor-green, almgren, exponentialvortex, StABL'">
+                                        attribute1="type REQUIRED STRING 'constant, 
+                                        taylor-green, almgren, exponentialvortex, StABL,
+                                        input'">
 
            <const_u                     spec="REQUIRED DOUBLE" need_applies_to="type constant"/>
            <const_v                     spec="REQUIRED DOUBLE" need_applies_to="type constant"/>
@@ -567,6 +564,8 @@
            <V                           spec="REQUIRED DOUBLE" need_applies_to="type exponentialvortex"/>           
 
            <which_bc                    spec="REQUIRED STRING" need_applies_to="type StABL"/>
+
+           <input_file                  spec="REQUIRED STRING" need_applies_to="type input"/> <!-- reads a simple input file for u,v,w --> 
            
           </initialization>
         </MomentumSolver>
