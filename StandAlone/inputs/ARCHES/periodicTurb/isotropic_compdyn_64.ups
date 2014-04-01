@@ -20,7 +20,7 @@
 
 <!--__________________________________-->
   <DataArchiver>
-    <filebase>arhces-decay-isotropic-turbulence-compdyn-64.uda</filebase>
+    <filebase>compdyn-64.uda</filebase>
 	<outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>    
     <save label="totalKineticEnergy"/>
