@@ -1429,10 +1429,9 @@ void DDT1::computeModelSources(const ProcessorGroup*,
         //  Convective Burning 
         }  else if (BurningCriteria[c] == CONVECTIVE){
           burningCell[c]=CONVECTIVE;
-          Vector rhoGradVector = computeDensityGradientVector(nodeIdx,
-                                                              rctMass_NC, NC_CCweight,dx);
-
-          double surfArea = computeSurfaceArea(rhoGradVector, dx);
+          
+          double surfArea = cell_vol/ 0.002; //divided by 2mm so burning will match what has already been run at 2mm and so the
+                                            // burned mass is not depended on the resolution 
           if(surfArea < 1e-12)
             surfArea = 1e-12;
           double Tsurf = 850.0;  // initial guess for the surface temperature.
