@@ -69,9 +69,6 @@
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
 
-
-      <set_initial_vel_condition inputfile="inputs/ARCHES/periodicTurb/cbc32_uvw_arches.gz"/>
-
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff>true</doDiff>
@@ -115,6 +112,9 @@
         <MomentumSolver>
  	 	 	 	 	 	 <use_wasatch_momentum_rhs/>
           <convection_scheme>central</convection_scheme>
+          <initialization type="input">
+            <input_file>inputs/ARCHES/periodicTurb/cbc32_uvw_arches.gz</input_file>
+          </initialization>
         </MomentumSolver>
 
 
