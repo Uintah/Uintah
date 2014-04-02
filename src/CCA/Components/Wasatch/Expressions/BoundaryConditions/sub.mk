@@ -31,6 +31,6 @@ SRCDIR := CCA/Components/Wasatch/Expressions/BoundaryConditions
 
 SRCS	+=                             \
 	$(SRCDIR)/BoundaryConditions.cc \
-	$(SRCDIR)/PressureBC.cc   \
+	$(SRCDIR)/OpenBC.cc   \
 	$(SRCDIR)/OutflowBC.cc  \
 	$(SRCDIR)/VardenMMSBCs.cc  

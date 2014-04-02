@@ -22,18 +22,18 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef PressureBC_Expr_h
-#define PressureBC_Expr_h
+#ifndef OpenBC_Expr_h
+#define OpenBC_Expr_h
 
 #include <expression/Expression.h>
 #include <CCA/Components/Wasatch/TagNames.h>
 #include "BoundaryConditionBase.h"
 
 template< typename FieldT >
-class PressureBC
+class OpenBC
 : public BoundaryConditionBase<FieldT>
 {
-  PressureBC( const Expr::Tag& velTag ) : velTag_ (velTag)
+  OpenBC( const Expr::Tag& velTag ) : velTag_ (velTag)
   {
     this->set_gpu_runnable(false);
   }
@@ -46,12 +46,12 @@ public:
     : ExpressionBuilder(resultTag),
       velTag_ (velTag)
     {}
-    Expr::ExpressionBase* build() const{ return new PressureBC(velTag_); }
+    Expr::ExpressionBase* build() const{ return new OpenBC(velTag_); }
   private:
     const Expr::Tag velTag_;
   };
   
-  ~PressureBC(){}
+  ~OpenBC(){}
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
@@ -63,4 +63,4 @@ private:
   const Expr::Tag velTag_;
 };
 
-#endif // PressureBC_Expr_h
+#endif // OpenBC_Expr_h
