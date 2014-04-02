@@ -228,7 +228,7 @@ AMRSimulationController::run()
     // For Jacqueline:  Regrid on the 5th timestep if 
     // regridOnce flag is set
     counter ++;
-
+//cout<<" counter "<<counter<< " regrid once? "<<d_regridder->doRegridOnce()<<endl;
     if(d_regridder && d_regridder->doRegridOnce() && counter == 5){
       doRegridding(currentGrid, false);
       d_regridder->setAdaptivity(false);
@@ -718,7 +718,7 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
       // No scrubbing for initial step
       d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
       d_scheduler->execute();
-
+cout<<"  here __ "<<endl;
       needNewLevel = d_regridder && d_regridder->isAdaptive() && grid->numLevels()<d_regridder->maxLevels() && doRegridding(grid, true);
     } while (needNewLevel);
 
