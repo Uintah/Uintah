@@ -58,11 +58,3 @@ SRCS += \
         $(SRCDIR)/ugc_templates.cc              \
         $(SRCDIR)/VarLabel.cc                   \
         $(SRCDIR)/Variable.cc                   
-
-#         $(SRCDIR)/ScrubItem.cc                  \
-#         $(SRCDIR)/ParticleVariable_templates.cc \
-#         $(SRCDIR)/NCVariable_templates.cc \
-#         $(SRCDIR)/CCVariable_templates.cc \
-#         $(SRCDIR)/SFCXVariable_templates.cc \
-#         $(SRCDIR)/SFCYVariable_templates.cc \
-#         $(SRCDIR)/SFCZVariable_templates.cc
