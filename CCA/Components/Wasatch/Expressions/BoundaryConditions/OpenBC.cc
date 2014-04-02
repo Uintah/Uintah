@@ -22,11 +22,11 @@
  * IN THE SOFTWARE.
  */
 
-#include "PressureBC.h"
+#include "OpenBC.h"
 
 template<typename FieldT>
 void
-PressureBC<FieldT>::
+OpenBC<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( velTag_ );
@@ -36,7 +36,7 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
 
 template<typename FieldT>
 void
-PressureBC<FieldT>::
+OpenBC<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
   u_ = &fml.template field_ref<FieldT>( velTag_ );
@@ -46,7 +46,7 @@ bind_fields( const Expr::FieldManagerList& fml )
 
 template<typename FieldT>
 void
-PressureBC<FieldT>::
+OpenBC<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
@@ -97,6 +97,6 @@ evaluate()
   }
 }
 
-template class PressureBC<XVolField>;
-template class PressureBC<YVolField>;
-template class PressureBC<ZVolField>;
+template class OpenBC<XVolField>;
+template class OpenBC<YVolField>;
+template class OpenBC<ZVolField>;

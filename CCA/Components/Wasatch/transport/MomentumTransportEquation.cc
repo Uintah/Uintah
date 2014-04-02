@@ -45,7 +45,7 @@
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/OutflowBC.h>
-#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/PressureBC.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/OpenBC.h>
 #include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h>
 #include <CCA/Components/Wasatch/Expressions/PrimVar.h>
 #include <CCA/Components/Wasatch/Expressions/PressureSource.h>
@@ -902,8 +902,8 @@ namespace Wasatch{
             bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
           }
           
-          BndCondSpec pressureBCSpec = {pressure_tag().name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
-          bcHelper.add_boundary_condition(bndName, pressureBCSpec);
+          BndCondSpec openBCSpec = {pressure_tag().name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
+          bcHelper.add_boundary_condition(bndName, openBCSpec);
           break;
         }
         case OUTFLOW:
@@ -927,19 +927,19 @@ namespace Wasatch{
             bcHelper.add_boundary_condition(bndName, velBCSpec);
           }
 
-          BndCondSpec pressureBCSpec = {pressure_tag().name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
-          bcHelper.add_boundary_condition(bndName, pressureBCSpec);
+          BndCondSpec openBCSpec = {pressure_tag().name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
+          bcHelper.add_boundary_condition(bndName, openBCSpec);
           break;
         }
         case OPEN:
         {
           if (isNormal) {
             // register pressurebc functor for this boundary. we'll register one functor per boundary
-            const Expr::Tag atmBCTag(bndName + "_open", Expr::STATE_NONE);
-            typedef typename PressureBC<FieldT>::Builder Builder;
-            //bcHelper.register_functor_expression( scinew Builder( atmBCTag, thisVelTag_ ), ADVANCE_SOLUTION );
-            advSlnFactory.register_expression( scinew Builder( atmBCTag, thisVelTag_ ) );
-            BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(solnVarName_))).name(),atmBCTag.name(), 0.0, DIRICHLET,FUNCTOR_TYPE};
+            const Expr::Tag openBCTag(bndName + "_open", Expr::STATE_NONE);
+            typedef typename OpenBC<FieldT>::Builder Builder;
+            //bcHelper.register_functor_expression( scinew Builder( openBCTag, thisVelTag_ ), ADVANCE_SOLUTION );
+            advSlnFactory.register_expression( scinew Builder( openBCTag, thisVelTag_ ) );
+            BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(solnVarName_))).name(),openBCTag.name(), 0.0, DIRICHLET,FUNCTOR_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
           } else {
             BndCondSpec rhsFullBCSpec = {rhs_name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
@@ -951,8 +951,8 @@ namespace Wasatch{
             bcHelper.add_boundary_condition(bndName, velBCSpec);
           }
 
-          BndCondSpec pressureBCSpec = {pressure_tag().name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
-          bcHelper.add_boundary_condition(bndName, pressureBCSpec);
+          BndCondSpec openBCSpec = {pressure_tag().name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
+          bcHelper.add_boundary_condition(bndName, openBCSpec);
           break;
         }
         case USER:
