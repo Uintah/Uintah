@@ -913,7 +913,6 @@
                                         attribute2="intercept REQUIRED DOUBLE"/> <!-- Defines the line for the upper flammability limit --> 
 
             </flammability_limit>
-            <n2_label                   spec="OPTIONAL STRING" need_applies_to="type bowman_nox"/> <!-- N2 label (default = O2) --> 
             <o2_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- o2 label (default = O2) --> 
             <temperature_label          spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- temperature label (default = temperature) --> 
             <density_label              spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- density label (default = "density) --> 

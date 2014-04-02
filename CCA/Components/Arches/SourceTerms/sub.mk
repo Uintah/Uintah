@@ -9,6 +9,7 @@ SRCS += \
         $(SRCDIR)/CoalGasOxi.cc \
         $(SRCDIR)/CoalGasHeat.cc \
         $(SRCDIR)/ConstSrcTerm.cc \
+        $(SRCDIR)/WarchesSrc.cc \
         $(SRCDIR)/UnweightedSrcTerm.cc \
         $(SRCDIR)/WestbrookDryer.cc \
         $(SRCDIR)/CoalGasMomentum.cc \
