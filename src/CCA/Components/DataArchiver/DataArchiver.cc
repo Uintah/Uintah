@@ -1694,6 +1694,7 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
   int *number_of_materials;
   int amr_levels;
   
+  int levelid = type != CHECKPOINT_REDUCTION ? getLevel(patches)->getIndex() : -1;
 #if SCI_ASSERTION_LEVEL >= 2
   // double-check to make sure only called once per level
   int levelid = type != CHECKPOINT_REDUCTION ? getLevel(patches)->getIndex() : -1;
