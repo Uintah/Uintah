@@ -98,7 +98,9 @@ using namespace std;
 using namespace SCIRun;
 
 static DebugStream dbg("DataArchiver", false);
+#if HAVE_PIDX
 static PIDXOutputContext pc;
+#endif
 bool DataArchiver::wereSavesAndCheckpointsInitialized = false;
 
 DataArchiver::DataArchiver(const ProcessorGroup* myworld, int udaSuffix)
