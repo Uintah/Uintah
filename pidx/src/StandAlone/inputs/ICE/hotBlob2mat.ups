@@ -136,9 +136,10 @@
               <lower>        [0,0,0]         </lower>
               <upper>        [1.0,1.0,1.0]   </upper>
               <extraCells>   [1,1,1]         </extraCells>
-              <patches>      [1,1,1]         </patches>
+              <resolution>	[62,62,62]	</resolution>
+              <patches>      [2,2,2]         </patches>
            </Box>
-           <spacing>          [0.1,0.1,0.1]  </spacing>
+<!--            <spacing>          [0.1,0.1,0.1]  </spacing> -->
        </Level>
     </Grid>
    
@@ -148,10 +149,10 @@
    <DataArchiver>
       <filebase>hotBlob2mat.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
-      <save label="press_equil_CC"/>
+<!--       <save label="press_equil_CC"/> -->
       <save label="vol_frac_CC"/>
       <save label="sp_vol_CC"/>
-      <save label="uvel_FC"/>
+      <!--<save label="uvel_FC"/>
       <save label="vvel_FC"/>
       <save label="wvel_FC"/>
       <save label="uvel_FCME"/>
@@ -161,11 +162,11 @@
       <save label="press_CC"/>
       <save label="mom_L_ME_CC"/>
       <save label="vel_CC"/> 
-      <save label="rho_CC"/>
-      <save label="temp_CC"/>
+      <save label="rho_CC"/>-->
+<!--       <save label="temp_CC"/> -->
      <!-- needed for regression tester dat comparisons  -->       
-      <save label="KineticEnergy"/>
-      <save label="TotalIntEng"/>
+      <!--<save label="KineticEnergy"/>
+      <save label="TotalIntEng"/>-->
 
       <checkpoint interval="0.0005" cycle="2"/>     
    </DataArchiver>

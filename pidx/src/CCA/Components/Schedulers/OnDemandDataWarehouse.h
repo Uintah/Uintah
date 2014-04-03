@@ -299,9 +299,8 @@ public:
    virtual void emit(OutputContext&, const VarLabel* label,
 		     int matlIndex, const Patch* patch);
 #if HAVE_PIDX
-   virtual void emit(PIDXOutputContext&, int vc, double* buffer, char* var_name,
-                     int* offset, int* count,const VarLabel* label, int matlIndex, 
-                     const Patch* patch);
+   virtual void emit(PIDXOutputContext&, const VarLabel* label, int matlIndex, 
+                     const Patch* patch, double *patch_buffer);
 #endif
 
    void exchangeParticleQuantities(DetailedTasks* dts, LoadBalancer* lb, 

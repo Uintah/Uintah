@@ -20,7 +20,7 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-3      </delt_init>
-        <max_Timesteps>   1000      </max_Timesteps>
+        <max_Timesteps>   1      </max_Timesteps>
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
    
@@ -136,33 +136,40 @@
        <Level>
            <Box label="1">
               <lower>        [0,0,0]            </lower>
-              <upper>        [1,1,1]            </upper>
+              <upper>        [5,5,5]            </upper>
               <extraCells>   [1,1,1]            </extraCells>
-              <patches>      [1,1,1]            </patches>
+              <patches>      [2,2,2]            </patches>
+<!--               <resolution>   [50,50,50]	</resolution> -->
            </Box>
-           <spacing>         [.1,.1,.1]         </spacing>
+            <spacing>         [.1,.1,.1]         </spacing>
        </Level>
        
        <Level>
            <Box label="2">
-              <lower>        [.2,.2,.2]         </lower>
-              <upper>        [0.8,0.8,0.8]      </upper>
+              <lower>        [1,1,1]         </lower>
+              <upper>        [2,2,2]      </upper>
               <extraCells>   [1,1,1]            </extraCells>
-              <patches>      [1,1,1]            </patches>
+              <patches>      [2,2,2]            </patches>
+           </Box>
+           <Box label="3">
+              <lower>        [3,3,3]         </lower>
+              <upper>        [4,4,4]      </upper>
+              <extraCells>   [1,1,1]            </extraCells>
+              <patches>      [2,2,2]            </patches>
            </Box>
            <spacing>         [0.05,0.05,0.05]   </spacing>
        </Level>
-<!--      
-        <Level>
+
+<!--        <Level>
            <Box label="3">
-              <lower>        [.35,.35,.35]         </lower>       
-              <upper>        [0.65,0.65,0.65]      </upper>       
+              <lower>        [1.75,1.75,1.75]         </lower>       
+              <upper>        [3.25,3.25,3.25]      </upper>       
               <extraCells>   [1,1,1]               </extraCells>  
               <patches>      [2,2,2]               </patches>     
            </Box>
            <spacing>         [0.025,0.025,0.025]   </spacing>
-       </Level>
- 
+       </Level>-->
+<!--       
         <Level>
            <Box label="4">
               <lower>        [.425,.425,.425]         </lower>
@@ -191,6 +198,7 @@
       <filebase>advectAMR.uda</filebase>
       <outputTimestepInterval>10</outputTimestepInterval>
       <save label="press_equil_CC"/>
+      <!--
       <save label="uvel_FC"/>
       <save label="vvel_FC"/>
       <save label="wvel_FC"/>
@@ -201,7 +209,7 @@
       <save label="press_CC"/>
       <save label="mom_L_ME_CC"/>
       <save label="rho_CC"/>
-      <save label="vel_CC"/>      
+      <save label="vel_CC"/>-->      
       <checkpoint interval="0.005" cycle="2"/>
    </DataArchiver>
 
@@ -260,7 +268,7 @@
     </MaterialProperties>    
     
     <!--____________________________________________________________________-->
-    <DataAnalysis>
+    <!--<DataAnalysis>
        <Module name="lineExtract">
        
         <material>Atmosphere</material>
@@ -293,5 +301,5 @@
           </line>
         </lines>
       </Module>
-    </DataAnalysis>       
+    </DataAnalysis>-->       
 </Uintah_specification>

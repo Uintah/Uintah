@@ -237,8 +237,7 @@ public:
                     const Patch* patch) = 0;
 
 #if HAVE_PIDX
-  virtual void emit(PIDXOutputContext&,int vc, double* buffer, char* var_name, int* offset, int* count,
-                    const VarLabel* label, int matlIndex, const Patch* patch) = 0;
+  virtual void emit(PIDXOutputContext&, const VarLabel* label, int matlIndex, const Patch* patch, double* buffer) = 0;
 #endif
 
   // Scrubbing

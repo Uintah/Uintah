@@ -208,10 +208,11 @@ Variable::emit( OutputContext& oc,
 
 #if HAVE_PIDX
 void
-Variable::emit(PIDXOutputContext& pc,int vc, int mc, double* pidx_buffer, char * var_name,int* offset,
-                int* count,
+Variable::emit(PIDXOutputContext& pc,
                 const IntVector& l,
-                const IntVector& h, const string& compressionModeHint )
+                const IntVector& h, const string& compressionModeHint,
+		 double* pidx_buffer
+	      )
 {
 
   // cout << "Start of PIDX emit" << endl;
@@ -228,10 +229,24 @@ Variable::emit(PIDXOutputContext& pc,int vc, int mc, double* pidx_buffer, char *
 
   //cout << "write buffer size = " << writebufferSize/8 << " Name: " << var_name << endl;
  
+  int i,zeroCount=0, nonZeroCount=0;
   if(writebufferSize>0) {
 
     //pidx_buffer = (double *) malloc((writebufferSize/8)*sizeof(double));
     memcpy(pidx_buffer, writebuffer, (writebufferSize/8)*sizeof(double));
+    
+    //printf("PIDX : %f %f %f %f %f %f %f\n", pidx_buffer[0], pidx_buffer[1], pidx_buffer[2], pidx_buffer[3], pidx_buffer[4], pidx_buffer[5], pidx_buffer[6]);
+    //printf("UINTAH : %f %f %f %f %f %f %f\n", (double)writebuffer[0], (double)writebuffer[1], (double)writebuffer[2], (double)writebuffer[3], (double)writebuffer[4], (double)writebuffer[5], (double)writebuffer[6]);
+    
+//     for(i = 0 ; i < writebufferSize/8 ; i++)
+//     {
+// 	if((double)pidx_buffer[i] == 0.0)
+// 	  zeroCount++;
+// 	else
+// 	  nonZeroCount++;
+// 	printf("Element = %16.16f\n", (double)pidx_buffer[i]);
+//     }
+    //printf("Zero Count = %d and Non Zero Count %d\n", zeroCount, nonZeroCount);
     
 
     //    cout << "offsets: " << offset[0] << " " << offset[1] << " " << offset[2] << " "
