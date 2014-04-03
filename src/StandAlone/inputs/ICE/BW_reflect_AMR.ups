@@ -29,7 +29,7 @@
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-7      </delt_init>
        <max_delt_increase>  2.0         </max_delt_increase>
-       <!--<max_Timesteps>     120       </max_Timesteps> -->
+       <max_Timesteps>     120       </max_Timesteps>
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
     <!--____________________________________________________________________-->
@@ -159,19 +159,19 @@
    <DataArchiver>
       <filebase>AMR_reflectingBlastWave.uda</filebase>
       <outputTimestepInterval>10</outputTimestepInterval>
-      <save label="press_equil_CC"/>
+<!--       <save label="press_equil_CC"/> -->
       <save label="rho_CC"/>
-      <save label="vel_CC"/>
+<!--       <save label="vel_CC"/> -->
       <save label="temp_CC"/>
-      <save label="sp_vol_CC"/>
-      <save label="press_CC"/>
-      <save label="vol_frac_CC"/>
-      <save label="delP_Dilatate"/>
-      <save label="mag_div_vel_CC"/>
-      <save label="mag_grad_rho_CC"/>
+<!--       <save label="sp_vol_CC"/> -->
+<!--       <save label="press_CC"/> -->
+      <save label="vol_frac_CC"/> 
+<!--       <save label="delP_Dilatate"/> -->
+<!--       <save label="mag_div_vel_CC"/> -->
+<!--       <save label="mag_grad_rho_CC"/> -->
       <save label="mag_grad_temp_CC"/>
-      <save label="mag_grad_press_CC"/>
-      <save label="refineFlag"/> 
+<!--       <save label="mag_grad_press_CC"/> -->
+<!--       <save label="refineFlag"/>  -->
       <checkpoint timestepInterval="15" cycle="2"/>
    </DataArchiver>
    

@@ -43870,10 +43870,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "$MPI_LIB_FLAG PIDX PIDX_agg PIDX_hz_encode PIDX_io PIDX_rst"; then
+if test -n "$MPI_LIB_FLAG PIDX PIDX_agg PIDX_hz_encode PIDX_io"; then
 
    found_framework=no
-   for lib in $MPI_LIB_FLAG PIDX PIDX_agg PIDX_hz_encode PIDX_io PIDX_rst; do
+   for lib in $MPI_LIB_FLAG PIDX PIDX_agg PIDX_hz_encode PIDX_io; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -44165,7 +44165,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" $MPI_LIB_FLAG PIDX PIDX_agg PIDX_hz_encode PIDX_io PIDX_rst; do
+  for i in "" $MPI_LIB_FLAG PIDX PIDX_agg PIDX_hz_encode PIDX_io; do
     if test -z "$i"; then
        continue
     fi

@@ -48,10 +48,10 @@ namespace Uintah {
     
 class PIDXOutputContext {
 public:
-  PIDXOutputContext(std::string filename, unsigned int timeStep,
-                    int globalExtent[5] ,MPI_Comm comm);
+  PIDXOutputContext();
   ~PIDXOutputContext();
 
+  void initialize(std::string filename, unsigned int timeStep, int globalExtent[5] ,MPI_Comm comm, int amr_levels, int** refinement_ratio);
   std::string filename;
   unsigned int timestep;
   int total_dimension;
@@ -59,6 +59,8 @@ public:
   int global_dimension[5];
   PIDX_file idx_ptr;
   MPI_Comm comm;
+  int amr_levels;
+  int** refinement_ratio;
   
   /* added from test_pidx_writer.c */
   PIDX_variable **variable;

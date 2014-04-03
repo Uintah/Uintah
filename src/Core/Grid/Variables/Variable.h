@@ -93,9 +93,8 @@ public:
   void emit(OutputContext&, const IntVector& l, const IntVector& h,
             const std::string& compressionModeHint);
 #if HAVE_PIDX
-  void emit(PIDXOutputContext&,int vc, int mc, double* buffer, char* var_name, int* offset, int* count,
-            const IntVector& l, const IntVector& h,
-            const std::string& compressionModeHint);
+  void emit(PIDXOutputContext&, const IntVector& l, const IntVector& h,
+            const std::string& compressionModeHint, double* buffer);
 #endif
   void read(InputContext&, long end, bool swapbytes, int nByteMode,
             const std::string& compressionMode);
