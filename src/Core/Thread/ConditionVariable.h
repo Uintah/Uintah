@@ -46,8 +46,8 @@ struct timespec;
 
 namespace SCIRun {
 
-class ConditionVariable_private;
-class CrowdMonitor_private;
+struct ConditionVariable_private;
+struct CrowdMonitor_private;
 
 /**************************************
  

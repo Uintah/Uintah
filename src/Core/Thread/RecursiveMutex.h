@@ -41,7 +41,7 @@
 
 namespace SCIRun {
 
-class RecursiveMutex_private;
+struct RecursiveMutex_private;
 /**************************************
 
  CLASS

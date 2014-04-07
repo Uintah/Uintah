@@ -235,7 +235,7 @@ FileGeometryPiece::read_bbox(std::istream & source, Point & min,
 bool
 FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
 {
-  double x1,x2,x3;
+  double x1=0.,x2=0.,x3=0.;
   //__________________________________
   //  TEXT FILE
   if(d_file_format=="text") {

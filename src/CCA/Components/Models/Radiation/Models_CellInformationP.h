@@ -29,7 +29,7 @@
 namespace Uintah {
 
 template<class T> class Handle;
-class Models_CellInformation;
+struct Models_CellInformation;
 typedef Handle<Models_CellInformation> Models_CellInformationP;
 
 } // End namespace Uintah

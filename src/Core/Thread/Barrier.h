@@ -41,7 +41,7 @@
 
 namespace SCIRun {
 
-class Barrier_private;
+struct Barrier_private;
 
 /**************************************
  

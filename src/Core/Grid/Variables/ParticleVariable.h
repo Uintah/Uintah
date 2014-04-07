@@ -424,7 +424,6 @@ template<class T>
       }
     }
     ASSERT(dstiter+extra == pset->end());
-    extra = extra;   // This is to shut up the REMARKS from the MIPS compiler
   }
   
   template<class T>
