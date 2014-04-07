@@ -1467,7 +1467,7 @@ main(int argc, char** argv)
             
             if (matls != da2->queryMaterials( var, patch, tstep )) {
               cerr << "Inconsistent material sets for variable "
-                   << var << " on patch2 = " << patch->getID()
+                   << var << " on patch = " << patch->getID()
                    << ", time " << time1 << endl;
               cerr << d_filebase1 << " (1) has material set: " << matls << ".\n";
               cerr << d_filebase2 << " (2) has material set: "
