@@ -34,7 +34,7 @@
 namespace Uintah {
 
   class Patch;
-  class Stencil7;
+  struct Stencil7;
   using SCIRun::Vector;
   using SCIRun::IntVector;
   using SCIRun::Point;
@@ -49,12 +49,17 @@ namespace Uintah {
     virtual ParticleInterpolator* clone(const Patch*) = 0;
 
     virtual void setLcrit(double d_cpdi_lcrit){};
-    
+
     virtual void findCellAndWeights(const Point& p,
                                     std::vector<IntVector>& ni,
                                     std::vector<double>& S,
                                     const Matrix3& size, 
                                     const Matrix3& defgrad) = 0;
+
+    
+    virtual void findCellAndWeights(const Point& p,
+                                    std::vector<IntVector>& ni,
+                                    std::vector<double>& S) {};
                                     
 
                                     

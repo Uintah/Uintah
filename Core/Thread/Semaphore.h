@@ -41,7 +41,7 @@
 
 namespace SCIRun {
 
-class Semaphore_private;
+struct Semaphore_private;
 
 /**************************************
  
