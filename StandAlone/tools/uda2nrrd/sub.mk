@@ -36,7 +36,6 @@ PROGRAM := $(SRCDIR)/uda2nrrd
   else
     PSELIBS := \
         Core/Datatypes                      \
-        Core/Basis                          \
         $(CORE_STATIC_PSELIBS)              \
         CCA/Components/ProblemSpecification 
   endif
