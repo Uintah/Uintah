@@ -33,7 +33,7 @@ include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 SRCDIR := Core
 
 SUBDIRS := \
-	$(SRCDIR)/Basis \
+#	$(SRCDIR)/Basis \
 	$(SRCDIR)/Containers \
 	$(SRCDIR)/DataArchive \
 	$(SRCDIR)/Datatypes \
