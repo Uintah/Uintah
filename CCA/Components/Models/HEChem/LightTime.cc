@@ -93,14 +93,15 @@ void LightTime::outputProblemSpec(ProblemSpecP& ps)
   lt_ps->appendElement("react_mixed_cells",    d_react_mixed_cells);
 }
 //__________________________________
-void LightTime::problemSetup(GridP&, SimulationStateP& sharedState,
+void LightTime::problemSetup(GridP&, 
+                             SimulationStateP& sharedState,
                              ModelSetup*)
 {
   d_sharedState = sharedState;
   
-  ProblemSpecP lt_ps = params->findBlock("LightTime");
+  ProblemSpecP lt_ps = params;
   if (!lt_ps){
-    throw ProblemSetupException("LightTime: Couldn't find (LightTime) tag", __FILE__, __LINE__);    
+    throw ProblemSetupException("LightTime: Couldn't find (Models) tag", __FILE__, __LINE__);    
   }
   matl0 = sharedState->parseAndLookupMaterial(lt_ps, "fromMaterial");
   matl1 = sharedState->parseAndLookupMaterial(lt_ps, "toMaterial");

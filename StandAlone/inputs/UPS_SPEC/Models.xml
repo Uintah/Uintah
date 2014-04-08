@@ -75,15 +75,12 @@
       
       <!--__________________________________-->
       <!-- LightTime -->
-      <LightTime              spec="OPTIONAL NO_DATA">            
-        <fromMaterial         spec="OPTIONAL STRING" />           
-        <toMaterial           spec="OPTIONAL STRING" />           
-        <D                    spec="REQUIRED DOUBLE 'positive'"/>  
-        <E0                   spec="REQUIRED DOUBLE 'positive'"/>
-        <starting_location    spec="REQUIRED VECTOR" />           
-        <react_mixed_cells    spec="REQUIRED BOOLEAN"/>              
-        <direction_if_plane   spec="REQUIRED VECTOR"/>            
-      </LightTime>
+        <fromMaterial         spec="OPTIONAL STRING"            need_applies_to="type LightTime"/>
+        <D                    spec="REQUIRED DOUBLE 'positive'" need_applies_to="type LightTime"/> 
+        <E0                   spec="REQUIRED DOUBLE 'positive'" need_applies_to="type LightTime"/>
+        <starting_location    spec="REQUIRED VECTOR"            need_applies_to="type LightTime"/>          
+        <react_mixed_cells    spec="REQUIRED BOOLEAN"           need_applies_to="type LightTime"/>             
+        <direction_if_plane   spec="REQUIRED VECTOR"            need_applies_to="type LightTime"/>           
       
       <!--__________________________________-->
       <!--  SimpleRxn -->
@@ -138,7 +135,7 @@
       <!--______________________________________________________________________-->
       <!--  COMMON VARIABLES FOR BURN MODELS -->
       <rho0                   spec="REQUIRED DOUBLE"            need_applies_to="type Gruneisen JWL JWLC JWLpp Murnaghan Tillotson" />
-      <toMaterial             spec="OPTIONAL STRING"            need_applies_to="type DDT0 DDT1 JWLpp Simple_Burn SolidReactionModel Steady_Burn Unsteady_Burn ZeroOrder"/>
+      <toMaterial             spec="OPTIONAL STRING"            need_applies_to="type DDT0 DDT1 JWLpp Simple_Burn SolidReactionModel Steady_Burn Unsteady_Burn ZeroOrder LightTime"/>
       <refPressure            spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT0 Simple_Burn" />
       <SpecificHeatBoth       spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT1 Steady_Burn Unsteady_Burn"/>
       <ThresholdPressure      spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT1 JWLpp Simple_Burn Steady_Burn Unsteady_Burn ZeroOrder"/>
