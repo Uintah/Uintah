@@ -37,6 +37,7 @@ else
   PSELIBS := \
       CCA/Ports         \
       CCA/Components/ProblemSpecification \
+      Core/Basis        \
       Core/Containers   \
       Core/DataArchive  \
       Core/Datatypes    \
