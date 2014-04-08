@@ -44,10 +44,6 @@
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/TypeUtils.h>
 #include <Core/IO/SpecializedRunLengthEncoder.h>
-
-#ifndef _WIN32
-#include <unistd.h>
-#endif
 #include <iostream>
 #include <cstring>
 

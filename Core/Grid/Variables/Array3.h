@@ -38,9 +38,6 @@
 
 #include <iosfwd>
 
-#ifdef _WIN32
-typedef long ssize_t;
-#endif
 
 namespace Uintah {
 
