@@ -33,7 +33,6 @@ include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 SRCDIR := Core
 
 SUBDIRS := \
-#	$(SRCDIR)/Basis \
 	$(SRCDIR)/Containers \
 	$(SRCDIR)/DataArchive \
 	$(SRCDIR)/Datatypes \
@@ -53,6 +52,7 @@ SUBDIRS := \
 	$(SRCDIR)/Thread \
 	$(SRCDIR)/Tracker \
 	$(SRCDIR)/Util \
+#	$(SRCDIR)/Basis \
 #	$(SRCDIR)/ICom \
 #	$(SRCDIR)/2d \
 #	$(SRCDIR)/Util/Comm \
