@@ -49,7 +49,8 @@ using namespace Uintah;
 DebugStream rdbg("Regridder", false);
 DebugStream dilate_dbg("Regridder_dilate", false);
 DebugStream rreason("RegridReason",false);
-
+//______________________________________________________________________
+//
 RegridderCommon::RegridderCommon(const ProcessorGroup* pg) : Regridder(), UintahParallelComponent(pg)
 {
   rdbg << "RegridderCommon::RegridderCommon() BGN" << endl;
@@ -59,25 +60,21 @@ RegridderCommon::RegridderCommon(const ProcessorGroup* pg) : Regridder(), Uintah
   d_newGrid = true;
   d_dilatedCellsStabilityLabel  = VarLabel::create("DilatedCellsStability",
                              CCVariable<int>::getTypeDescription());
+
   d_dilatedCellsRegridLabel  = VarLabel::create("DilatedCellsRegrid",
                              CCVariable<int>::getTypeDescription());
-#if 0
-  d_dilatedCellsStablityOldLabel  = VarLabel::create("DilatedCellsStablityOld",
-                             CCVariable<int>::getTypeDescription());
-#endif
+
   d_dilatedCellsDeletionLabel = VarLabel::create("DilatedCellsDeletion",
                              CCVariable<int>::getTypeDescription());
 
   rdbg << "RegridderCommon::RegridderCommon() END" << endl;
 }
-
+//______________________________________________________________________
+//
 RegridderCommon::~RegridderCommon()
 {
   VarLabel::destroy(d_dilatedCellsStabilityLabel);
   VarLabel::destroy(d_dilatedCellsRegridLabel);
-#if 0
-  VarLabel::destroy(d_dilatedCellsStabilityOldLabel);
-#endif
   VarLabel::destroy(d_dilatedCellsDeletionLabel);
 
   //delete all filters that were created
@@ -112,16 +109,16 @@ RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*
         {
           int dim=activeDims[d];
           //do not exceed maximum dilation
-          if(d_cellRegridDilation[dim]+d_cellStabilityDilation[dim]<d_maxDilation[dim])
+          if(d_cellRegridDilation[dim]+d_cellStabilityDilation[dim]<d_maxDilation[dim]) {
             newDilation[dim]=d_cellRegridDilation[dim]+1;
-          else
+          }else {
             newDilation[dim]=d_cellRegridDilation[dim];
+          }
         }
-        if(newDilation!=d_cellRegridDilation)
-        {
-          if(d_myworld->myrank()==0)
-            cout << "Increasing Regrid Dilation to:" << newDilation << endl;
-          d_cellRegridDilation=newDilation;
+        
+        if(newDilation!=d_cellRegridDilation){
+           proc0cout << "Increasing Regrid Dilation to:" << newDilation << endl;
+           d_cellRegridDilation=newDilation;
            //reset the dilation overhead
            d_dilationTimestep=d_sharedState->getCurrentTopLevelTimeStep();
            retval=true;
@@ -138,15 +135,14 @@ RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*
         {
           int dim=activeDims[d];
           //do not lower dilation to be less than 0
-          if(d_cellRegridDilation[dim]>0)
+          if(d_cellRegridDilation[dim]>0) {
             newDilation[dim]=d_cellRegridDilation[dim]-1;
-          else
+          }else{
             newDilation[dim]=d_cellRegridDilation[dim];
+          }
         }
-        if(newDilation!=d_cellRegridDilation)
-        {
-          if(d_myworld->myrank()==0)
-            cout << "Decreasing Regrid Dilation to:" << newDilation << endl;
+        if(newDilation!=d_cellRegridDilation){
+          proc0cout << "Decreasing Regrid Dilation to:" << newDilation << endl;
           d_cellRegridDilation=newDilation;
           //reset the dilation overhead
           d_dilationTimestep=d_sharedState->getCurrentTopLevelTimeStep();
@@ -170,13 +166,14 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
   int retval = false;
   
   if (!d_isAdaptive || timeStepsSinceRegrid < d_minTimestepsBetweenRegrids) {
+    retval = false;
     if(d_myworld->myrank()==0)
       rreason << "Not regridding because timesteps since regrid is less than min timesteps between regrid\n";
-    retval = false;
+
   } else if ( timeStepsSinceRegrid  > d_maxTimestepsBetweenRegrids ) {
+    retval = true;
     if(d_myworld->myrank()==0)
       rreason << "Regridding because timesteps since regrid is more than max timesteps between regrid\n";
-    retval = true;
   }
   else //check if flags are contained within the finer levels patches
   {
@@ -279,6 +276,7 @@ bool RegridderCommon::flaggedCellsOnFinestLevel(const GridP& grid)
       PerPatch<PatchFlagP> flaggedPatchCells;
       newDW->get(flaggedPatchCells, d_sharedState->get_refinePatchFlag_label(), 0, *iter);
       rdbg << "  finest level, patch " << (*iter)->getID() << flaggedPatchCells.get() << endl;
+      
       if (flaggedPatchCells.get().get_rep()->flag) {
         rdbg << "RegridderCommon::flaggedCellsOnFinestLevel( true ) END" << endl;
         return true;
@@ -330,6 +328,7 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
 
   ProblemSpecP amr_spec = params->findBlock("AMR");
   ProblemSpecP regrid_spec = amr_spec->findBlock("Regridder");
+  
   d_isAdaptive = true;  // use if "adaptive" not there
   regrid_spec->get("adaptive", d_isAdaptive);
   
@@ -345,16 +344,18 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   int simpleRatio = -1;
   int size;
   regrid_spec->get("simple_refinement_ratio", simpleRatio);
-  regrid_spec->get("cell_refinement_ratio", d_cellRefinementRatio);
+  regrid_spec->get("cell_refinement_ratio",   d_cellRefinementRatio);
   size = (int) d_cellRefinementRatio.size();
 
-  if (simpleRatio != -1 && size > 0)
+  if (simpleRatio != -1 && size > 0) {
     throw ProblemSetupException("Cannot specify both simple_refinement_ratio"
                                 " and cell_refinement_ratio\n", __FILE__, __LINE__);
-  if (simpleRatio == -1 && size == 0)
+  }
+  
+  if (simpleRatio == -1 && size == 0) {
     throw ProblemSetupException("Must specify either simple_refinement_ratio"
                                 " or cell_refinement_ratio\n", __FILE__, __LINE__);
-
+  }
   // as it is not required to have cellRefinementRatio specified to all levels,
   // expand it to all levels here for convenience in looking up later.
   if (simpleRatio != -1) {
@@ -365,8 +366,9 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   IntVector lastRatio = d_cellRefinementRatio[size - 1];
   if (size < d_maxLevels) {
     d_cellRefinementRatio.resize(d_maxLevels);
-    for (int i = size; i < d_maxLevels; i++)
+    for (int i = size; i < d_maxLevels; i++){
       d_cellRefinementRatio[i] = lastRatio;
+    }
   }
   
   // get other init parameters
@@ -380,34 +382,30 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   }
   
 
-  d_maxDilation = IntVector(4,4,4);
-  d_cellStabilityDilation = IntVector(1,1,1);
-  d_cellRegridDilation = IntVector(0,0,0);
-  d_cellDeletionDilation = IntVector(1,1,1);
-  d_minBoundaryCells = IntVector(1,1,1);
+  d_maxDilation             = IntVector(4,4,4);
+  d_cellStabilityDilation   = IntVector(1,1,1);
+  d_cellRegridDilation      = IntVector(0,0,0);
+  d_cellDeletionDilation    = IntVector(1,1,1);
+  d_minBoundaryCells        = IntVector(1,1,1);
   d_maxTimestepsBetweenRegrids = 50;
   d_minTimestepsBetweenRegrids = 1;
-  d_amrOverheadLow=.05;
-  d_amrOverheadHigh=.15;
+  d_amrOverheadLow    =.05;
+  d_amrOverheadHigh   =.15;
 
   d_dynamicDilation=false;
   regrid_spec->get("cell_stability_dilation", d_cellStabilityDilation);
-  regrid_spec->get("cell_regrid_dilation", d_cellRegridDilation);
-  regrid_spec->get("cell_deletion_dilation", d_cellDeletionDilation);
-  regrid_spec->get("min_boundary_cells", d_minBoundaryCells);
-  regrid_spec->get("max_timestep_interval", d_maxTimestepsBetweenRegrids);
-  regrid_spec->get("min_timestep_interval", d_minTimestepsBetweenRegrids);
-  regrid_spec->get("dynamic_dilation",d_dynamicDilation);
-  regrid_spec->get("amr_overhead_low",d_amrOverheadLow);
-  regrid_spec->get("amr_overhead_high",d_amrOverheadHigh);
-  regrid_spec->get("max_dilation",d_maxDilation);
+  regrid_spec->get("cell_regrid_dilation",    d_cellRegridDilation);
+  regrid_spec->get("cell_deletion_dilation",  d_cellDeletionDilation);
+  regrid_spec->get("min_boundary_cells",      d_minBoundaryCells);
+  regrid_spec->get("max_timestep_interval",   d_maxTimestepsBetweenRegrids);
+  regrid_spec->get("min_timestep_interval",   d_minTimestepsBetweenRegrids);
+  regrid_spec->get("dynamic_dilation",        d_dynamicDilation);
+  regrid_spec->get("amr_overhead_low",        d_amrOverheadLow);
+  regrid_spec->get("amr_overhead_high",       d_amrOverheadHigh);
+  regrid_spec->get("max_dilation",            d_maxDilation);
   ASSERT(d_amrOverheadLow<=d_amrOverheadHigh);
 
   // set up filters
-  /* 
-  dilate_dbg << "Initializing cell deletion filter\n";
-  initFilter(d_deletionFilter, d_filterType, d_cellDeletionDilation);
-  */
   dilate_dbg << "Initializing patch extension filter\n";
   initFilter(d_patchFilter, FILTER_BOX, d_minBoundaryCells);
 
@@ -467,15 +465,13 @@ bool RegridderCommon::flaggedCellsExist(constCCVariable<int>& flaggedCells, IntV
   for ( CellIterator iter( low, newHigh ); !iter.done(); iter++ ) {
     IntVector idx( *iter );
     if (flaggedCells[idx]) {
-      //    rdbg << "RegridderCommon::flaggedCellsExist( true ) END " << idx << endl;
       return true;
     }
   }
-
-  //  rdbg << "RegridderCommon::flaggedCellsExist( false ) END" << endl;
   return false;
 }
-
+//______________________________________________________________________
+//  Helpers
 IntVector RegridderCommon::Less( const IntVector& a, const IntVector& b )
 {
   return IntVector(a.x() < b.x(), a.y() < b.y(), a.z() < b.z());
@@ -521,10 +517,10 @@ void RegridderCommon::GetFlaggedCells ( const GridP& oldGrid, int levelIdx, Data
     maxIdx = Max( maxIdx, patch->getExtraCellHighIndex() );
   }
 
-  d_flaggedCells[levelIdx] = scinew CCVariable<int>;
+  d_flaggedCells[levelIdx]          = scinew CCVariable<int>;
   d_dilatedCellsStability[levelIdx] = scinew CCVariable<int>;
-  d_dilatedCellsRegrid[levelIdx] = scinew CCVariable<int>;
-  d_dilatedCellsDeleted[levelIdx] = scinew CCVariable<int>;
+  d_dilatedCellsRegrid[levelIdx]    = scinew CCVariable<int>;
+  d_dilatedCellsDeleted[levelIdx]   = scinew CCVariable<int>;
   
   d_flaggedCells[levelIdx]->rewindow( minIdx, maxIdx );
   d_dilatedCellsStability[levelIdx]->rewindow( minIdx, maxIdx );
@@ -550,8 +546,9 @@ void RegridderCommon::GetFlaggedCells ( const GridP& oldGrid, int levelIdx, Data
 
     for(CellIterator iter(l, h); !iter.done(); iter++){
       IntVector idx(*iter);
-      if (refineFlag[idx])
+      if (refineFlag[idx]){
         (*d_flaggedCells[levelIdx])[idx] = true;
+      }
     }
   }
 
@@ -561,8 +558,10 @@ void RegridderCommon::GetFlaggedCells ( const GridP& oldGrid, int levelIdx, Data
 //
 void RegridderCommon::initFilter(CCVariable<int>& filter, FilterType ft, IntVector& depth)
 {
-  if ((depth.x() < 0) || (depth.y() < 0) || (depth.z() < 0))  throw InternalError("Regridder given a bad dilation depth!", __FILE__, __LINE__);
-
+  if ((depth.x() < 0) || (depth.y() < 0) || (depth.z() < 0)){
+    throw InternalError("Regridder given a bad dilation depth!", __FILE__, __LINE__);
+  }
+  
   filter.rewindow(IntVector(0,0,0), IntVector(2,2,2)*depth+IntVector(2,2,2));
   filter.initialize(0);
 
@@ -574,9 +573,9 @@ void RegridderCommon::initFilter(CCVariable<int>& filter, FilterType ft, IntVect
       for (int x = 0; x < 2*depth.x()+1; x++) {
         for (int y = 0; y < 2*depth.y()+1; y++) {
           for (int z = 0; z < 2*depth.z()+1; z++) {
-            if ((fabs(static_cast<float>(x - depth.x()))/(depth.x()+1e-16) +
-                       fabs(static_cast<float>(y - depth.y()))/(depth.y()+1e-16) +
-                       fabs(static_cast<float>(z - depth.z()))/(depth.z()+1e-16)) <= 1.0) {
+            if ( (fabs(static_cast<float>(x - depth.x()))/(depth.x()+1e-16) +
+                  fabs(static_cast<float>(y - depth.y()))/(depth.y()+1e-16) +
+                  fabs(static_cast<float>(z - depth.z()))/(depth.z()+1e-16)) <= 1.0) {
               filter[IntVector(x,y,z)] = 1;
             }
           }
@@ -623,7 +622,6 @@ void RegridderCommon::scheduleDilation(const LevelP& level)
   IntVector regrid_depth   =d_cellRegridDilation;
   //IntVector delete_depth=d_cellDeletionDilation;
 
-#if 1
   if(d_sharedState->d_lockstepAMR)
   {
     //scale regrid dilation according to level
@@ -638,7 +636,7 @@ void RegridderCommon::scheduleDilation(const LevelP& level)
     }
     regrid_depth=Ceil(regrid_depth.asVector()/div);
   }
-#endif  
+
   regrid_depth=regrid_depth+stability_depth;
   
   
@@ -815,6 +813,8 @@ void RegridderCommon::Dilate(const ProcessorGroup*,
     }
 
   rdbg << "G\n";
+    //__________________________________
+    //  DEBUGGING CODE
     if (dilate_dbg.active() && patch->getLevel()->getIndex() == 1) {
       IntVector low  = patch->getCellLowIndex();
       IntVector high = patch->getCellHighIndex();
@@ -855,9 +855,10 @@ void RegridderCommon::scheduleInitializeErrorEstimate(const LevelP& level)
   Task* task = scinew Task("RegridderCommon::initializeErrorEstimate", this,
                            &RegridderCommon::initializeErrorEstimate);
  
-  task->computes(d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials());
-  task->computes(d_sharedState->get_oldRefineFlag_label(), d_sharedState->refineFlagMaterials());
+  task->computes(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials());
+  task->computes(d_sharedState->get_oldRefineFlag_label(),   d_sharedState->refineFlagMaterials());
   task->computes(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
+  
   sched_->addTask(task, level->eachPatch(), d_sharedState->allMaterials());
   
 }
@@ -869,19 +870,18 @@ void RegridderCommon::initializeErrorEstimate(const ProcessorGroup*,
                                               DataWarehouse*,
                                               DataWarehouse* new_dw)
 {
-  // only make one refineFlag per patch.  Do not loop over matls!
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+    
     CCVariable<int> refineFlag;
-    new_dw->allocateAndPut(refineFlag, d_sharedState->get_refineFlag_label(),
-                           0, patch);
+    new_dw->allocateAndPut(refineFlag,    d_sharedState->get_refineFlag_label(), 0, patch);
     refineFlag.initialize(0);
+    
     CCVariable<int> oldRefineFlag;
-    new_dw->allocateAndPut(oldRefineFlag, d_sharedState->get_oldRefineFlag_label(),
-                           0, patch);
+    new_dw->allocateAndPut(oldRefineFlag, d_sharedState->get_oldRefineFlag_label(), 0, patch);
     oldRefineFlag.initialize(0);
+    
     PerPatch<PatchFlagP> refinePatchFlag(new PatchFlag);
-    new_dw->put(refinePatchFlag, d_sharedState->get_refinePatchFlag_label(),
-                0, patch);
+    new_dw->put(refinePatchFlag, d_sharedState->get_refinePatchFlag_label(), 0, patch);
   }
 }
