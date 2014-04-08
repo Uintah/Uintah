@@ -70,12 +70,12 @@ public:
     ASSERTRANGE(r, 0, nrows_)
     return data[r];
   }
-  double* get_data() const {return data;}
-  void set_data(double* d) {data = d;} 
-  double  get(int r) const      { ASSERTRANGE(r, 0, nrows_); return data[r]; };
-  void    put(int r, double val) { ASSERTRANGE(r, 0, nrows_); data[r] = val; };
+  double * get_data() const         { return data; }
+  void     set_data( double * d )   { data = d; }
+  double   get( int r ) const       { ASSERTRANGE(r, 0, nrows_); return data[r]; }
+  void     put( int r, double val ) { ASSERTRANGE(r, 0, nrows_); data[r] = val; }
 
-  void resize(int);
+  void resize( int new_rows );
 
   virtual void zero();
   virtual double get(int, int) const;
