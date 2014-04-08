@@ -38,10 +38,6 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Malloc/Allocator.h>
-
-#ifndef _WIN32
-#  include <unistd.h>
-#endif
 #include <cstring>
 
 namespace Uintah {

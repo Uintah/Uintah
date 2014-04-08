@@ -29,10 +29,6 @@
 #include <Core/Grid/Variables/constGridVariable.h>
 #include <Core/Grid/Patch.h>
 
-#ifndef _WIN32
-#include <unistd.h>
-#endif
-
 namespace Uintah {
 
   class TypeDescription;

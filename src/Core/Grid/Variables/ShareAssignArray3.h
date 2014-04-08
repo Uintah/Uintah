@@ -26,10 +26,6 @@
 #define UINTAH_HOMEBREW_SHAREASSIGNARRAY3_H
 
 #include <Core/Grid/Variables/Array3.h>
-
-#ifndef _WIN32
-#include <unistd.h>
-#endif
 #include <cerrno>
 
 namespace Uintah {

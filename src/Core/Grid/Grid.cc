@@ -60,15 +60,6 @@ struct StretchSpec {
   void fillCells(int& start, int lowCells, int highCells, OffsetArray1<double>& faces) const;
 };
 
-#ifdef _WIN32
-inline double remainder(double x,double y) 
-{
-  double z = x/y;
-  int mult = (int) z+.5;
-  return x-y*mult;
-}
-#endif
-
 int StretchSpec::countCells() const
 {
   if(shape == "uniform"){
