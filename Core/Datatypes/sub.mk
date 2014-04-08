@@ -58,6 +58,7 @@ ifeq ($(HAVE_TEEM),yes)
 endif
 
 PSELIBS := \
+	Core/Basis	  \
         Core/Containers   \
         Core/Disclosure   \
         Core/Exceptions   \
