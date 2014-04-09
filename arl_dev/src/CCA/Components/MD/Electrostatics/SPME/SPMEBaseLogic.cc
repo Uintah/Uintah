@@ -312,7 +312,7 @@ void SPME::calculate(const ProcessorGroup* pg,
 
   // transfer data from parentOldDW to subDW
   subNewDW->transferFrom(parentOldDW, d_lb->pXLabel, perProcPatches, allMaterialsUnion);
-  subNewDW->transferFrom(parentOldDW, d_lb->pChargeLabel, perProcPatches, allMaterialsUnion);
+//  subNewDW->transferFrom(parentOldDW, d_lb->pChargeLabel, perProcPatches, allMaterialsUnion);
   subNewDW->transferFrom(parentOldDW, d_lb->pParticleIDLabel, perProcPatches, allMaterialsUnion);
 
   // reduction variables
@@ -477,13 +477,16 @@ void SPME::scheduleCalculateNewDipoles(SchedulerP& sched,
 	Task* task = scinew Task("SPME::calculateNewDipoles", this, &SPME::calculateNewDipoles);
 
 	// Requires dipoles from both the realspace and the reciprocal calculation
-	task->requires(Task::OldDW, d_lb->pRealDipoles, Ghost::None, 0);  // Should pull from the sub old DW
-	task->requires(Task::OldDW, d_lb->pReciprocalDipoles, Ghost::None, 0);
+//	task->requires(Task::OldDW, d_lb->pRealDipoles, Ghost::None, 0);  // Should pull from the sub old DW
+//	task->requires(Task::OldDW, d_lb->pReciprocalDipoles, Ghost::None, 0);
+      task->requires(Task::NewDW, d_lb->pElectrostaticsRealField, Ghost::None, 0);
+      task->requires(Task::NewDW, d_lb->pElectrostaticsReciprocalField, Ghost::None, 0);
 
 	// Overwrites each dipole array at iteration n with the full estimate of dipole array at iteration n+1
-	task->computes(d_lb->pRealDipoles);
-	task->computes(d_lb->pReciprocalDipoles);
+//	task->computes(d_lb->pRealDipoles);
+//	task->computes(d_lb->pReciprocalDipoles);
 
+      task->computes(d_lb->pTotalDipoles);
 	sched->addTask(task, patches, materials);
 
 
@@ -521,12 +524,12 @@ void SPME::scheduleCalculatePreTransform(SchedulerP& sched,
   int CUTOFF_RADIUS = d_system->getElectrostaticGhostCells();
 
   task->requires(Task::ParentNewDW, d_lb->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
-  task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
+//  task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
   task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
 
   task->computes(d_lb->subSchedulerDependencyLabel);
   task->computes(d_lb->pXLabel);
-  task->computes(d_lb->pChargeLabel);
+//  task->computes(d_lb->pChargeLabel);
   task->computes(d_lb->pParticleIDLabel);
 
   sched->addTask(task, patches, materials);

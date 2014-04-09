@@ -17,7 +17,7 @@
 using namespace Uintah;
 
 atomMap* atomFactory::create(const ProblemSpecP&        spec,
-                                 const SimulationStateP&    shared_state) {
+                             const SimulationStateP&    shared_state) {
 
   atomMap* atomList = 0;
   std::string type = "";

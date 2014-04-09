@@ -37,13 +37,13 @@ SRCS += $(SRCDIR)/MD.cc                           \
         $(SRCDIR)/MDSystem.cc                     \
         $(SRCDIR)/NonBondedFactory.cc             \
         $(SRCDIR)/NonBonded.cc                    \
-        $(SRCDIR)/AnalyticNonBonded.cc            \
         $(SRCDIR)/SimpleGrid.cc                   \
         $(SRCDIR)/atomFactory.cc
 
 SUBDIRS := $(SRCDIR)/Potentials  \
            $(SRCDIR)/Forcefields \
-           $(SRCDIR)/Electrostatics 
+           $(SRCDIR)/Electrostatics \
+           $(SRCDIR)/Nonbonded
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

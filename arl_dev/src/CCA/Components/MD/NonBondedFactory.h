@@ -27,6 +27,9 @@
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Components/MD/NonBonded.h>
+#include <CCA/Components/MD/MDLabel.h>
+#include <CCA/Components/MD/Forcefields/Forcefield.h>
+#include <CCA/Components/MD/Integrators/Integrator.h>
 
 namespace Uintah {
 
@@ -53,8 +56,11 @@ namespace Uintah {
        * @param ps The ProblemSpec handle with which to get non-bonded properties from the input file.
        * @param system The MD system handle to pass off to the appropriate NonBonded constructor.
        */
-      static NonBonded* create(const ProblemSpecP& ps,
-                               MDSystem* system);
+      static NonBonded* create(const ProblemSpecP&,
+                               MDSystem*,
+                               MDLabel*,
+                               forcefieldInteractionClass,
+                               interactionModel);
   };
 }  // End namespace Uintah
 

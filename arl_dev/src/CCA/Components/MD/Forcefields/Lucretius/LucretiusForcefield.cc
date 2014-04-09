@@ -33,10 +33,14 @@ NonbondedTwoBodyPotential* LucretiusForcefield::parseHomoatomicNonbonded(std::st
 // First three characters form the label for this specific interaction type
   std::string nbLabel;
   nbLabel = parseLine.substr(0,3);  // First three characters form the specific interaction label
-
+//  std::cerr << "\t" << " Label parsed: " << "\"" << nbLabel << "\"" << std::endl;
   std::vector<std::string> token_list;
+//  std::cerr << "\t" << " Remainder of line: " << parseLine.substr(3,std::string::npos) << std::endl;
   Parse::tokenizeAtMost(parseLine.substr(3,std::string::npos),token_list,6);
-
+//  std::cerr << "\t" << " Tokens found: " << token_list.size() << std::endl;
+//  for (size_t idx = 0; idx < token_list.size(); ++idx) {
+//    std::cerr << "\t\t" << " Token " << std::left << idx << " : " << token_list[idx] << std::endl;
+//  }
 // Token map:  A = 0, B = 1, C = 2, D = 3, Mass = 4, potential type = 5, comments = rest
   size_t numTokens = token_list.size();
   if (numTokens < 6) { // We should always have this info no matter what
@@ -53,7 +57,7 @@ NonbondedTwoBodyPotential* LucretiusForcefield::parseHomoatomicNonbonded(std::st
   std::string potentialType = token_list[5];
   std::string fullComment = "";
   if (numTokens > 6) {
-    fullComment = token_list[7];
+    fullComment = token_list[6];
   }
 
 // Create our potential
@@ -163,19 +167,24 @@ void LucretiusForcefield::parseNonbondedPotentials(std::ifstream& fileHandle,
     throw ProblemSetupException(error_msg, __FILE__, __LINE__);
   }
 
+//  std::cerr << "1..";
 // ---> Definition of homoatomic Potentials
   if (lucretiusParse::skipComments(fileHandle,buffer)) { // Locate the section which defines nonbonded homoatomic potentials, charges, and polarizabilities
+//    std::cerr << "<--a: " << buffer;
     double currentMass = -1.0;
     size_t numberNonbondedFound = 0;
     size_t currentChargeSubindex = 0;
     NonbondedTwoBodyPotential* nonbondedHomoatomic;
     while (buffer[0] != '*') { // Parse until we hit a new comment section
-      getline(fileHandle,buffer);
+//      std::cerr << " O: ";
+//      getline(fileHandle,buffer);
       if (buffer[0] != ' ') { // Found a nonbonded type
         nonbondedHomoatomic = parseHomoatomicNonbonded(buffer, currentForcefieldType, currentMass);
+//        std::cerr << " 1: ";
         if (nonbondedHomoatomic) { // Created homoatomic potential
           ++numberNonbondedFound;
           currentChargeSubindex = 1;
+//          std::cerr << " 1a: ";
         }
         else { // Could not create homoatomic potential
           std::ostringstream errorOut;
@@ -184,26 +193,37 @@ void LucretiusForcefield::parseNonbondedPotentials(std::ifstream& fileHandle,
                    << buffer << std::endl;
           throw ProblemSetupException(errorOut.str(),__FILE__,__LINE__);
         }
+//        std::cerr << " :a-->" << std::endl;
       }
       else { // Line starts with a space so represents a charge / polarization / comment
+//        std::cerr << "<--b: " << buffer;
         std::vector<std::string> chargeLineTokens;
+//        std::cerr << " 1. ";
         Parse::tokenizeAtMost(buffer, chargeLineTokens, 2); // return 2 tokens and the rest of the line with leading spaces stripped
+//        std::cerr << " 2. ";
         double charge = Parse::stringToInt(chargeLineTokens[0]);
         double polarizability = Parse::stringToInt(chargeLineTokens[1]);
+//        std::cerr << " 3. ";
         std::string chargeLineComment = "";
         if (chargeLineTokens.size() == 3) {
           chargeLineComment = chargeLineTokens[2];
         }
+//        std::cerr << " 4: " << chargeLineTokens.size();
         MDMaterial* currentMaterial = scinew LucretiusMaterial(nonbondedHomoatomic,
                                                                currentMass,
                                                                charge,
                                                                polarizability,
                                                                currentChargeSubindex);
         ++currentChargeSubindex;
+//        std::cerr << " 5: ";
         sharedState->registerMDMaterial(currentMaterial);
+//        std::cerr << " 6: ";
         nonbondedTwoBodyKey potentialKey(nonbondedHomoatomic->getLabel(),nonbondedHomoatomic->getLabel());
+//        std::cerr << " 7: ";
         potentialMap.insert(twoBodyPotentialMapPair(potentialKey,nonbondedHomoatomic));
+//        std::cerr << " :b-->" << std::endl;
       }
+      getline(fileHandle,buffer);
     }
     if (numberNonbondedFound != numberNonbondedTypes) { // Check for expected number of potentials
       std::ostringstream error_stream;
@@ -217,16 +237,17 @@ void LucretiusForcefield::parseNonbondedPotentials(std::ifstream& fileHandle,
       throw ProblemSetupException(error_msg, __FILE__, __LINE__);
   }
 // ---> End of homoatomic potentials
-
+//  std::cerr << "2.." << std::endl;
 // ---> Definition of heteroatomic Potentials
   if (lucretiusParse::skipComments(fileHandle,buffer)) { // Locate the section which defines heteroatomic potentials
-    while (buffer[0] != '*') { // Found a heteroatomic nonbonded type
+    while (buffer[0] != '!') { // Found a heteroatomic nonbonded type
       std::string label1 = buffer.substr(0,3);
       std::string label2 = buffer.substr(4, 3);
       // Ensure the base material potentials exist
       nonbondedTwoBodyKey key1(label1, label1);
       nonbondedTwoBodyKey key2(label2, label2);
       nonbondedTwoBodyMapType::iterator location1, location2;
+//      std::cerr << "\t" << "Forming potential from homoatomic potentials: \"" << label1 << "\" and \"" << label2 << "\"" << std::endl;
       if (potentialMap.count(key1) != 0 && potentialMap.count(key2) != 0) { // Corresponds to homoatomic types
         NonbondedTwoBodyPotential* nonbondedHeteroatomic = parseHeteroatomicNonbonded(buffer, currentForcefieldType);
         if (nonbondedHeteroatomic) { // Successfully created potential, so insert it into our map
@@ -256,14 +277,17 @@ void LucretiusForcefield::parseNonbondedPotentials(std::ifstream& fileHandle,
                  << std::endl;
         throw ProblemSetupException(errorOut.str(), __FILE__, __LINE__);
       }
+      getline(fileHandle,buffer);
     }
   }
   else {  // EOF before end of heteroatomic potential inputs
     lucretiusParse::generateUnexpectedEOFString(filename,"HETEROATOMIC REPULSION-DISPERSION DEFINITIONS", error_msg);
     throw ProblemSetupException(error_msg, __FILE__, __LINE__);
   }
+//  std::cerr << "3..";
   //  Now let's double check that we have definitions for all possible heteroatomic potentials
   int numHomoatomic = sharedState->getNumMDMatls();
+  std::cout << "Registered " << numHomoatomic << " different charge types." << std::endl;
   for (int index1 = 0; index1 < numHomoatomic; ++index1) {
     std::string label1 = sharedState->getMDMaterial(index1)->getPotentialHandle()->getLabel();
     for (int index2 = 0; index2 < numHomoatomic; ++index2) {
@@ -300,19 +324,24 @@ LucretiusForcefield::LucretiusForcefield(const ProblemSpecP& spec,
 
     // Read file name and open the required forcefield file (Lucretius format)
     std::string ffFilename;
-    ffspec->get("forcefield_file", ffFilename);
+    ffspec->require("forcefieldFile", ffFilename);
     std::ifstream ffFile;
     ffFile.open(ffFilename.c_str(), std::ifstream::in);
     if (!ffFile) {
-      throw ProblemSetupException("Could not open the Lucretius forcefield input file.", __FILE__ , __LINE__);
+      std::stringstream errorOut;
+      errorOut << "ERROR:  Could not open the Lucretius forcefield input file: \"" << ffFilename << "\"" << std::endl << "\t";
+      throw ProblemSetupException(errorOut.str(), __FILE__ , __LINE__);
     }
 
 //-> BEGIN PARSING FORCEFIELD
     std::string buffer;
     std::string error_msg;
 
+//    std::cerr << "Got Here" << std::endl;
     // Parse the nonbonded potentials
     parseNonbondedPotentials(ffFile, ffFilename, buffer, sharedState);
+
+//    std::cerr << "Got Here Too" << std::endl;
 
 // ---> Number of bond potentials
     size_t numberBondTypes = 0;
@@ -417,6 +446,7 @@ LucretiusForcefield::LucretiusForcefield(const ProblemSpecP& spec,
   else {  // Couldn't find the forcefield block in the PS
     throw ProblemSetupException("Could not find the Forcefield block in the input file.", __FILE__, __LINE__);
   }
+//  std::cerr << "Constructed the Lucretius Forcefield. YAY!" << std::endl;
 }
 
 NonbondedTwoBodyPotential* LucretiusForcefield::getNonbondedPotential(const std::string& label1, const std::string& label2) const {

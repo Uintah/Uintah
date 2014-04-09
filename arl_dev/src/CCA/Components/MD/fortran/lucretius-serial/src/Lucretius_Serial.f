@@ -2559,6 +2559,7 @@ C
           tz(jat) = tz(jat) + pir*rzij + pz(iat)*tfact
 C
         end do
+C  WTEverlivingF?
         pxnew(iat) = pol(itype)*(elf(1,iat)+tx(iat)+arf*px(iat))
         pynew(iat) = pol(itype)*(elf(2,iat)+ty(iat)+arf*py(iat))
         pznew(iat) = pol(itype)*(elf(3,iat)+tz(iat)+arf*pz(iat))

@@ -11,6 +11,7 @@
 #include <CCA/Components/MD/Forcefields/forcefieldTypes.h>
 #include <Core/Exceptions/InvalidValue.h>
 
+#include <iostream>
 #include <sstream>
 #include <vector>
 #include <string>
@@ -37,7 +38,7 @@ lucretiusAtomData::lucretiusAtomData(double _X1, double _X2, double _X3,
   for (size_t index=0; index < _nbLabel.size(); ++index) {
     tempLabel[index]=_nbLabel[index];
   }
-  lucretiusLabel << tempLabel << std::ios::left << _chargeIndex;
+  lucretiusLabel << tempLabel << _chargeIndex;
   d_Label = lucretiusLabel.str();
 
 }
@@ -61,7 +62,7 @@ lucretiusAtomData::lucretiusAtomData(const SCIRun::Point _X,
   for (size_t index=0; index < _nbLabel.size(); ++index) {  // Copy over the nonbonded label while leaving padding spaces
     tempLabel[index]=_nbLabel[index];
   }
-  lucretiusLabel << tempLabel << std::ios::left << _chargeIndex;
+  lucretiusLabel << tempLabel << _chargeIndex;
   d_Label = lucretiusLabel.str();
 
 }

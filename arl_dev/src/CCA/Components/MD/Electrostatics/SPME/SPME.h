@@ -168,6 +168,9 @@ namespace Uintah {
         d_lb = lb;
       }
 
+      inline double getRealspaceCutoff() {
+        return d_electrostaticRadius;
+      }
     private:
 
       /*
@@ -325,7 +328,7 @@ namespace Uintah {
       void mapForceFromGrid(SPMEPatch* spmePatch,
                             const std::vector<SPMEMapPoint>* gridMap,
                             ParticleSubset* pset,
-                            constParticleVariable<double>& charges,
+                            double charge,
                             ParticleVariable<Vector>& pforcenew);
 
       void dipoleMapForceFromGrid(SPMEPatch* spmePatch,

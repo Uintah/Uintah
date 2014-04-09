@@ -22,13 +22,16 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MD/MDSystem.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimulationStateP.h>
-#include <Core/Grid/SimulationState.h>
+
+#include <CCA/Components/MD/Forcefields/Forcefield.h>
+#include <CCA/Components/MD/MDSystem.h>
 
 #include <iostream>
 #include <cmath>
@@ -41,6 +44,8 @@ namespace Uintah {
   static const double PI = acos(-1.0);
   static const double degToRad = PI/180.0;
 
+
+
   MDSystem::MDSystem()
   {
 
@@ -51,123 +56,152 @@ namespace Uintah {
 
   }
 
-  MDSystem::MDSystem(ProblemSpecP& ps,
+  MDSystem::MDSystem(const ProblemSpecP& ps,
                      GridP& grid,
-                     SimulationStateP& shared_state)
+                     SimulationStateP& _state,
+                     Forcefield* _ff) : d_simState(_state),d_forcefield(_ff)
   {
     //std::vector<int> d_atomTypeList;
-    ProblemSpecP mdsystem_ps = ps->findBlock("MDSystem");
-    mdsystem_ps->require("numAtoms", d_numAtoms);
-    mdsystem_ps->require("pressure", d_pressure);
-    mdsystem_ps->require("temperature", d_temperature);
-    mdsystem_ps->require("orthorhombic", d_orthorhombic);
+    ProblemSpecP mdsystem_ps = ps->findBlock("MD")->findBlock("System");
+    std::string ensembleLabel;
 
-    if (d_orthorhombic) {
-      mdsystem_ps->get("boxSize", d_box);
-      d_unitCell *= 0.0; // Initialize
-      d_unitCell(0, 0) = d_box[0];
-      d_unitCell(1, 1) = d_box[1];
-      d_unitCell(2, 2) = d_box[2];
+    if (!mdsystem_ps) {
+      throw ProblemSetupException("Could not find \"System\" subsection of MD block.", __FILE__, __LINE__);
     }
-    else {
-      d_unitCell *= 0.0; // Initialize
-      //  Assume one of two forms:
-      //  Coordinate Magnitude/Angle:
-      //  a, b, c:  Vector magnitudes
-      //  alpha_deg, beta_deg, gamma_deg:  Cell angles
-      std::string generalFormat;
-      mdsystem_ps->require("generalFormat",generalFormat);
-      if (generalFormat == "Axis-Angle") {
-        SCIRun::Vector abc;
-        SCIRun::Vector alphabetagamma;
-        mdsystem_ps->require("magnitudes", abc);
-        mdsystem_ps->require("angles", alphabetagamma);
-        double a = abc[0];
-        double b = abc[1];
-        double c = abc[2];
-        double alphaRad = alphabetagamma[0]*degToRad;
-        double betaRad = alphabetagamma[1]*degToRad;
-        double gammaRad = alphabetagamma[2]*degToRad;
-        d_unitCell(0, 0) = a;
-        d_unitCell(0, 1) = b * cos(gammaRad);
-        d_unitCell(1, 1) = b * sin(gammaRad);
-        d_unitCell(0, 2) = c * cos(betaRad);
-        d_unitCell(1, 2) = c * (cos(alphaRad) - cos(betaRad) * cos(gammaRad))/sin(gammaRad);
-        d_unitCell(2, 2) = sqrt(c * c - d_unitCell(0, 2) * d_unitCell(0, 2) - d_unitCell(1, 2) * d_unitCell(1, 2));
-      }
-      else { // Assume matrix representation
-        SCIRun::Vector row;
-        mdsystem_ps->require("row 1", row);
-        d_unitCell(0, 0) = row[0];
-        d_unitCell(0, 1) = row[1];
-        d_unitCell(0, 2) = row[2];
-        mdsystem_ps->require("row 2", row);
-        d_unitCell(1, 0) = row[0];
-        d_unitCell(1, 1) = row[1];
-        d_unitCell(1, 2) = row[2];
-        mdsystem_ps->require("row 3", row);
-        d_unitCell(2, 0) = row[0];
-        d_unitCell(2, 1) = row[1];
-        d_unitCell(2, 2) = row[2];
-      }
-      // Read in non orthorhombic unit cell
+    mdsystem_ps->getAttribute("ensemble",ensembleLabel);
+    if ("NVE" == ensembleLabel) {
+      d_ensemble = NVE;
     }
+    else if ("NVT" == ensembleLabel) {
+      d_ensemble = NVT;
+      mdsystem_ps->require("temperature", d_temperature);
+    }
+    else if ("NPT" == ensembleLabel) {
+      d_ensemble = NPT;
+      mdsystem_ps->require("temperature", d_temperature);
+      mdsystem_ps->require("pressure", d_pressure);
+    }
+    else if ("Isokinetic" == ensembleLabel) {
+      d_ensemble = ISOKINETIC;
+      mdsystem_ps->require("temperature", d_temperature);
+    }
+    else { // Unknown ensemble listed
+      std::stringstream errorOut;
+      errorOut << "ERROR in the System section of the MD specification block!" << std::endl
+               << "  Unknown ensemble requested: " << ensembleLabel << std::endl
+               << "  Available ensembles are:  \"NVE  NVT   NPT   Isokinetic\"" << std::endl;
+      throw ProblemSetupException(errorOut.str(), __FILE__, __LINE__);
+    }
+
+    std::cerr << "MDSystem::MDSystem --> Parsed ensemble information" << std::endl;
+    ProblemSpecP unitcell_ps = mdsystem_ps->findBlock("unitCell");
+    if (!unitcell_ps) {
+      throw ProblemSetupException("Could not find \"unitCell\" subsection of MD block.", __FILE__, __LINE__);
+    }
+    std::string unitCellType;
+    unitcell_ps->getAttribute("format",unitCellType);
+    d_orthorhombic = false;
+    if ("Isotropic" == unitCellType) {  // Cubic unit cell is orthorhombic
+      double boxLength;
+      unitcell_ps->require("boxSize",boxLength);
+      d_unitCell = Matrix3(0.0);
+      d_unitCell(0,0) = boxLength;
+      d_unitCell(1,1) = boxLength;
+      d_unitCell(2,2) = boxLength;
+      d_orthorhombic = true;
+    }
+    else if ("Length-Angle" == unitCellType) { // Enter unit cell as three basis vector lengths and angles between them
+      double zeroTol = 1e-10;  // Tolerance for angles being "close enough" to zero
+      SCIRun::Vector lengths, angles;
+      unitcell_ps->require("abc",lengths);
+      unitcell_ps->require("AlphaBetaGamma",angles);
+      SCIRun::Vector angleOrthoDeviation(90.0);
+      angleOrthoDeviation -= angles;
+      if ( abs(angleOrthoDeviation[0]) <= zeroTol    // Orthorhombic
+        && abs(angleOrthoDeviation[1]) <= zeroTol
+        && abs(angleOrthoDeviation[2]) <= zeroTol) { // All angles are 90 degrees
+        d_orthorhombic = true;
+        d_unitCell(0,0) = lengths[0];
+        d_unitCell(1,1) = lengths[1];
+        d_unitCell(2,2) = lengths[2];
+      }
+      else { // General
+        d_unitCell = Matrix3(0.0);
+        double a=lengths[0];
+        double b=lengths[1];
+        double c=lengths[2];
+        double alpha=angles[0];
+        double beta=angles[1];
+        double gamma=angles[2];
+
+        d_unitCell(0,0) = a;
+        d_unitCell(0,1) = b*cos(gamma);
+        d_unitCell(1,1) = b*sin(gamma);
+        d_unitCell(0,2) = c*cos(beta);
+        d_unitCell(1,2) = c*(cos(alpha) - cos(beta)*cos(gamma))/sin(gamma);
+        d_unitCell(2,2) = sqrt(c*c - d_unitCell(0,2)*d_unitCell(0,2) - d_unitCell(1,2)*d_unitCell(1,2));
+      }
+    }
+    else if ("basisVectors") { // Explicit basis vectors
+      // Need to write a std::vector<SCIRun::Vector> parser in ProblemSpec.cc before this will work
+      throw ProblemSetupException("Entering a unit cell via basis_vectors is not yet supported", __FILE__, __LINE__);
+    }
+    else { // Unrecognized unit cell option
+      throw ProblemSetupException("Unrecognized option for specifying the unit cell.", __FILE__, __LINE__);
+    }
+
+    std::cerr << "MDSystem::MDSystem --> Parsed unit cell information" << std::endl;
+
+
     calcCellVolume();
     d_inverseCell = d_unitCell.Inverse();
+    // FIXME JBH We should set d_Cell somewhere around here
 
     // Determine the total number of cells in the system so we can map dimensions
     IntVector lowIndex, highIndex;
-    grid->getLevel(0)->findCellIndexRange(lowIndex, highIndex);
+    LevelP gridLevel0 = grid->getLevel(0);
+    gridLevel0->findCellIndexRange(lowIndex, highIndex);
     d_totalCellExtent = highIndex - lowIndex;
+    d_periodicVector = gridLevel0->getPeriodicBoundaries();
 
     // Determine number of ghost cells tasks should request for neighbor calculations
     IntVector resolution;
-    ProblemSpecP root_ps = ps->getRootNode();
-    root_ps->findBlock("Grid")->findBlock("Level")->findBlock("Box")->require("resolution", resolution);
+    ps->findBlock("Grid")->findBlock("Level")->findBlock("Box")->require("resolution", resolution);
     Vector resInverse = resolution.asVector() * d_inverseCell;
 
+//    std::cerr << " 1..." << std::endl;
+    // We require a cutoff radius somewhere.  Initially we bind the cutoff to both the nonbonded and the electrostatic cutoff
     double nonbondedRadius = -1.0;
     double electrostaticRadius = -1.0;
-    ProblemSpecP universalCutoff = root_ps->findBlock("MD")->findBlock("MDSystem")->get("cutoffRadius", nonbondedRadius);
-    if (universalCutoff) {  // Same cutoff for nonbonded and electrostatics
-      Vector normalized = Vector(nonbondedRadius) * resInverse;
-      IntVector maxDimValues(ceil(normalized.x()), ceil(normalized.y()), ceil(normalized.z()));
-      d_nonbondedGhostCells = max(maxDimValues.x(), maxDimValues.y(), maxDimValues.z());
-      d_electrostaticGhostCells = d_nonbondedGhostCells;
-    }
-    else // Cutoff for each component
-    {
-      // Find ghost cells for nonbonded
-      root_ps->findBlock("MD")->findBlock("Nonbonded")->require("cutoffRadius", nonbondedRadius);
-      Vector normalized = Vector(nonbondedRadius) * resInverse;
-      IntVector maxDimValues(ceil(normalized.x()), ceil(normalized.y()), ceil(normalized.z()));
-      d_nonbondedGhostCells = max(maxDimValues.x(), maxDimValues.y(), maxDimValues.z());
+    mdsystem_ps->require("cutoffRadius",nonbondedRadius);
+    Vector normalized = Vector(nonbondedRadius) * resInverse;
+    IntVector maxDimValues(ceil(normalized.x()), ceil(normalized.y()), ceil(normalized.z()));
+    d_nonbondedGhostCells = max(maxDimValues.x(), maxDimValues.y(), maxDimValues.z());
+    d_electrostaticGhostCells = d_nonbondedGhostCells;
+//    std::cerr << " 2..." << std::endl;
 
-      // Find ghost cells for electrostatic
-      root_ps->findBlock("MD")->findBlock("Electrostatics")->require("cutoffRadius", electrostaticRadius);
-      normalized = Vector(electrostaticRadius, electrostaticRadius, electrostaticRadius) * resInverse;
+    ProblemSpecP electrostatics_ps = ps->findBlock("MD")->findBlock("Electrostatics")->get("cutoffRadius",electrostaticRadius);
+
+    if (electrostatics_ps) {  // cutoffRadius specification found in Electrostatics block so use it for electrostatic cutoff
+//      std::cerr << "Found an electrostatic only cutoff Radius of " << electrostaticRadius << std::endl;
+      normalized = Vector(electrostaticRadius) * resInverse;
       maxDimValues = IntVector(ceil(normalized.x()), ceil(normalized.y()), ceil(normalized.z()));
       d_electrostaticGhostCells = max(maxDimValues.x(), maxDimValues.y(), maxDimValues.z());
     }
 
-//  int numAtomTypes = 1; //shared_state->getNumMatls();
-//  std::vector<size_t> tempAtomTypeList(numAtomTypes);
-//  d_atomTypeList = tempAtomTypeList;
-    //d_atomTypeList.resize(shared_state->getNumMatls());
-    d_atomTypeList.resize(1);  // Hard coded for our simple Material case
-    // Not so easy to do.
-//  const MaterialSet* materialList = shared_state->allMaterials();
-//  size_t numberMaterials = materialList->size();
-//  for (size_t matlIndex=0; matlIndex < numberMaterials; ++matlIndex) {
-//    d_atomTypeList.push_back()
-//  }
-//  // Determine the total number of atom types (from the system material list)
-//  d_numAtomType = shared_state->getNumMatls();
+    std::cerr << "MDSystem::MDSystem --> Parsed cutoff neighbor cell information" << std::endl;
 
-    d_numMolecules = 0;
-    d_moleculeTypeList.resize(d_numMolecules);
-    // Determine total number of molecule types (looking ahead)
-    //d_numMoleculeType = shared_state->getNumMolecules();  ???
+
+    int numAtomTypes = d_simState->getNumMatls();
+    d_atomTypeList = std::vector<size_t> (numAtomTypes,0);
+
+    std::cerr << "MDSystem::MDSystem --> Parsed atom type list information" << std::endl;
+
+    // Reference the atomMap here to get number of atoms of Type into system
+
+//    d_numMolecules = 0;
+//    d_moleculeTypeList = std::vector<size_t> (d_numMolecules,0);
+//    d_moleculeTypeList.resize(d_numMolecules);
 
     d_boxChanged = true;
     d_cellVolume = 0.0;

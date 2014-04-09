@@ -64,17 +64,20 @@ namespace Uintah {
       //--------------------------------------------------------------
       // Particle Variables
 
+      // Particle variables broken down by component they're needed for
+      // --> GLOBAL; Initialize in global MD initializer
+      const VarLabel* pXLabel;
+      const VarLabel* pXLabel_preReloc;  // Technically only need this for integrator since that is only location it should change
+      const VarLabel* pParticleIDLabel;
+      const VarLabel* pParticleIDLabel_preReloc;
+
       //  Particle variables for electrostatic calculation
       ////  Realspace
-      const VarLabel* pRealDipoles;
-      const VarLabel* pRealDipoles_preReloc;
       const VarLabel* pElectrostaticsRealForce;
       const VarLabel* pElectrostaticsRealForce_preReloc;
       const VarLabel* pElectrostaticsRealField;
       const VarLabel* pElectrostaticsRealField_preReloc;
       ////  ReciprocalSpace
-      const VarLabel* pReciprocalDipoles;
-      const VarLabel* pReciprocalDipoles_preReloc;
       const VarLabel* pElectrostaticsReciprocalForce;
       const VarLabel* pElectrostaticsReciprocalForce_preReloc;
       const VarLabel* pElectrostaticsReciprocalField;
@@ -92,31 +95,26 @@ namespace Uintah {
       const VarLabel* pValenceForceLabel_preReloc;
 
       //  Particle variables for Integrator
-      const VarLabel* pAccelLabel;
-      const VarLabel* pAccelLabel_preReloc;
+//      const VarLabel* pAccelLabel;
+//      const VarLabel* pAccelLabel_preReloc;
+      // Do we need per particle acceleration which tracks the particles?  I don't think so, but not sure
       const VarLabel* pVelocityLabel;
       const VarLabel* pVelocityLabel_preReloc;
 
-      // Particle variables needed across all modules
-      const VarLabel* pParticleIDLabel;
-      const VarLabel* pParticleIDLabel_preReloc;
-      const VarLabel* pXLabel;
-      const VarLabel* pXLabel_preReloc;  // Technically only need this for integrator since that is only location it should change
-
       // !!Slated for removal!!
       //!!  The following should be folded into the material system
-      const VarLabel* pMassLabel;
-      const VarLabel* pMassLabel_preReloc;
-      const VarLabel* pChargeLabel;
-      const VarLabel* pChargeLabel_preReloc;
+//      const VarLabel* pMassLabel;
+//      const VarLabel* pMassLabel_preReloc;
+//      const VarLabel* pChargeLabel;
+//      const VarLabel* pChargeLabel_preReloc;
 
       //!! Replaced by pElectrostaticsReciprocalForce above
-      const VarLabel* pElectrostaticsForceLabel;
-      const VarLabel* pElectrostaticsForceLabel_preReloc;
+//      const VarLabel* pElectrostaticsForceLabel;
+//      const VarLabel* pElectrostaticsForceLabel_preReloc;
 
       //!!  Energy is a collective, not a per-particle property.
-      const VarLabel* pEnergyLabel;
-      const VarLabel* pEnergyLabel_preReloc;
+//      const VarLabel* pEnergyLabel;
+//      const VarLabel* pEnergyLabel_preReloc;
 
       // ------------------------------------------
       // Reduction Variables

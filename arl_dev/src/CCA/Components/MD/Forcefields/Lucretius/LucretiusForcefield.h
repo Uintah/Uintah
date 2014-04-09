@@ -46,7 +46,7 @@ namespace Uintah {
      NonbondedTwoBodyPotential* getNonbondedPotential(const std::string& label1, const std::string& label2) const;
 
      inline std::string getForcefieldDescriptor() const {
-        return d_forcefieldNameString;
+       return d_forcefieldNameString;
       }
 
     private:

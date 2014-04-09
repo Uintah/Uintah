@@ -24,64 +24,102 @@
 
 #include <CCA/Components/MD/NonBondedFactory.h>
 #include <CCA/Components/MD/NonBonded.h>
+#include <CCA/Components/MD/MDLabel.h>
+#include <CCA/Components/MD/Forcefields/Forcefield.h>
+#include <CCA/Components/MD/Integrators/Integrator.h>
+
 #include <CCA/Components/MD/MDSystem.h>
-#include <CCA/Components/MD/AnalyticNonBonded.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+
+#include <CCA/Components/MD/Nonbonded/TwoBodyDeterministic.h>
+
+
 #include <Core/Util/DebugStream.h>
 
 #include <iostream>
 
-using namespace std;
 using namespace Uintah;
 
-static DebugStream analytic_lj12_6("LJ12_6", false);
+
+static DebugStream nbFactory("nonbondedFactory", false);
 
 NonBonded* NonBondedFactory::create(const ProblemSpecP& ps,
-                                    MDSystem* system)
-{
+                                           MDSystem* system,
+                                           MDLabel* label,
+                                           forcefieldInteractionClass ffType,
+                                           interactionModel imType) {
   NonBonded* nonbonded = 0;
-  string type = "";
+  std::string type = "";
 
-  ProblemSpecP electrostatics_ps = ps->findBlock("MD")->findBlock("Nonbonded");
-  if (electrostatics_ps) {
-    electrostatics_ps->getAttribute("type", type);
-  }
+  double nonbondedCutoff;
+  ps->findBlock("MD")->findBlock("System")->require("cutoffRadius",nonbondedCutoff);
 
-  // Default settings
-  if (type == "") {
-    if (analytic_lj12_6.active()) {
-      type = "LJ12_6";
-    } else {
-      throw ProblemSetupException("Must specify Non-bonded type in input file ", __FILE__, __LINE__);
-    }
-  }
-  double cutoffRadius = -1.0;
-  ProblemSpecP universalCutoff = ps->findBlock("MD")->findBlock("MDSystem")->get("cutoffRadius",cutoffRadius);
-
-  // Check for specific non-bonded interaction request
-  if (type == "LJ12_6" || type == "lj12_6") {
-    ProblemSpecP lj12_6_ps = ps->findBlock("MD")->findBlock("Nonbonded");
-    double r12;
-    double r6;
-
-    lj12_6_ps->require("r12", r12);
-    lj12_6_ps->require("r6", r6);
-    if (!universalCutoff) {
-    	lj12_6_ps->require("cutoffRadius", cutoffRadius);
-    }
-
-    nonbonded = scinew AnalyticNonBonded(system, r12, r6, cutoffRadius);
-  } else {
-    throw ProblemSetupException("Unknown NonBonded type", __FILE__, __LINE__);
-  }
-
-  // Output which non-bonded interactions will be used
-  const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
-  if (world->myrank() == 0) {
-    cout << "Non-bonded Interactions: \t" << type << endl;
+  switch (ffType) {
+    case(TwoBody):
+      switch(imType) {
+        case(Deterministic):
+          nonbonded = scinew TwoBodyDeterministic(system, label, nonbondedCutoff);
+          break;
+        default:
+          throw ProblemSetupException("Only the two-body deterministic integrator is defined at this time.", __FILE__, __LINE__);
+      }
+      break;
+    default:
+      throw ProblemSetupException("Only the two-body deterministic integrator is defined at this time.", __FILE__, __LINE__);
   }
 
   return nonbonded;
-
 }
+
+//static DebugStream analytic_lj12_6("LJ12_6", false);
+//
+//NonBonded* NonBondedFactory::create(const ProblemSpecP& ps,
+//                                    MDSystem* system)
+//{
+//  NonBonded* nonbonded = 0;
+//  string type = "";
+//
+//  ProblemSpecP electrostatics_ps = ps->findBlock("MD")->findBlock("Nonbonded");
+//  if (electrostatics_ps) {
+//    electrostatics_ps->getAttribute("type", type);
+//  }
+//
+//  // Default settings
+//  if (type == "") {
+//    if (analytic_lj12_6.active()) {
+//      type = "LJ12_6";
+//    } else {
+//      throw ProblemSetupException("Must specify Non-bonded type in input file ", __FILE__, __LINE__);
+//    }
+//  }
+//  double cutoffRadius = -1.0;
+//  ProblemSpecP universalCutoff = ps->findBlock("MD")->findBlock("MDSystem")->get("cutoffRadius",cutoffRadius);
+//
+//  // Check for specific non-bonded interaction request
+//  if (type == "LJ12_6" || type == "lj12_6") {
+//    ProblemSpecP lj12_6_ps = ps->findBlock("MD")->findBlock("Nonbonded");
+//    double r12;
+//    double r6;
+//
+//    lj12_6_ps->require("r12", r12);
+//    lj12_6_ps->require("r6", r6);
+//    if (!universalCutoff) {
+//    	lj12_6_ps->require("cutoffRadius", cutoffRadius);
+//    }
+//
+//    nonbonded = scinew AnalyticNonBonded(system, r12, r6, cutoffRadius);
+//  } else {
+//    throw ProblemSetupException("Unknown NonBonded type", __FILE__, __LINE__);
+//  }
+//
+//  // Output which non-bonded interactions will be used
+//  const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
+//  if (world->myrank() == 0) {
+//    cout << "Non-bonded Interactions: \t" << type << endl;
+//  }
+//
+//  return nonbonded;
+//
+//}
