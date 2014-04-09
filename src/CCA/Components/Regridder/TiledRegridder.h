@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -105,6 +105,7 @@ WARNING
     SizeList d_numCells;            //the maximum number of cells in each dimension for each level
 
     bool     d_dynamic_size;        //dynamically grow or shrink the tile size
+    bool     d_regrid_Level_0;      // switch for regridding on the coarsest level.
   };
 
 } // End namespace Uintah

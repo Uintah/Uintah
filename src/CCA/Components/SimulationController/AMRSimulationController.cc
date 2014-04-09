@@ -220,7 +220,7 @@ AMRSimulationController::run()
 #endif
      
      if (d_regridder && d_regridder->needsToReGrid(currentGrid) && (!first || (!d_restarting))) {
-       proc0cout << "** AMRSimulatiionController: checking if we need to regrid" << endl;
+//       proc0cout << "** AMRSimulatiionController: checking if we need to regrid" << endl;
        doRegridding(currentGrid, false);
      }
     
