@@ -770,7 +770,24 @@ planeExtract::createDirectory(string& planeName, string& timestep, const double 
     // write out physical time
     string filename = planeName + "/" + timestep + "/physicalTime";
     FILE *fp;
-    fp = fopen(filename.c_str(), "w");
+    
+    bool done = false;
+    int tries = 0;
+    
+    // On larger machines (stampede) you need to try more than once
+    while ( !done ){
+      tries ++;
+
+      fp = fopen(filename.c_str(), "w");
+
+      if (fp != NULL ){
+        done = true;
+      }
+      if ( tries > 100){
+        throw InternalError( "planeExtract::createDirectory(): Unable to create file!", __FILE__, __LINE__ );
+      }
+    } 
+    
     fprintf( fp, "%16.15E\n",now);
     fclose(fp);
     
