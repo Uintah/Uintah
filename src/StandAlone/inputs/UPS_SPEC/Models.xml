@@ -75,7 +75,6 @@
       
       <!--__________________________________-->
       <!-- LightTime -->
-        <fromMaterial         spec="OPTIONAL STRING"            need_applies_to="type LightTime"/>
         <D                    spec="REQUIRED DOUBLE 'positive'" need_applies_to="type LightTime"/> 
         <E0                   spec="REQUIRED DOUBLE 'positive'" need_applies_to="type LightTime"/>
         <starting_location    spec="REQUIRED VECTOR"            need_applies_to="type LightTime"/>          
@@ -136,6 +135,7 @@
       <!--  COMMON VARIABLES FOR BURN MODELS -->
       <rho0                   spec="REQUIRED DOUBLE"            need_applies_to="type Gruneisen JWL JWLC JWLpp Murnaghan Tillotson" />
       <toMaterial             spec="OPTIONAL STRING"            need_applies_to="type DDT0 DDT1 JWLpp Simple_Burn SolidReactionModel Steady_Burn Unsteady_Burn ZeroOrder LightTime"/>
+      <fromMaterial           spec="OPTIONAL STRING"            need_applies_to="type DDT0 DDT1 JWLpp Simple_Burn SolidReactionModel Steady_Burn Unsteady_Burn ZeroOrder LightTime"/>
       <refPressure            spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT0 Simple_Burn" />
       <SpecificHeatBoth       spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT1 Steady_Burn Unsteady_Burn"/>
       <ThresholdPressure      spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT1 JWLpp Simple_Burn Steady_Burn Unsteady_Burn ZeroOrder"/>
@@ -161,7 +161,6 @@
       <Cv                     spec="OPTIONAL DOUBLE" />
       
       <Enthalpy               spec="OPTIONAL DOUBLE" />
-      <fromMaterial           spec="OPTIONAL STRING" />
       <GasPhaseHeat           spec="OPTIONAL DOUBLE" />
       <GasUnsteadyCoef        spec="OPTIONAL DOUBLE" />
       <Gcrack                 spec="OPTIONAL DOUBLE" />
