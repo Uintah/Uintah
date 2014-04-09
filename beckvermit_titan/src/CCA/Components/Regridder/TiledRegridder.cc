@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,19 +27,20 @@
 //#define AG_HACK  
 
 
-
 #include <TauProfilerForSCIRun.h>
+
 #include <CCA/Components/Regridder/TiledRegridder.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Grid/Variables/CellIterator.h>
 #include <CCA/Ports/LoadBalancer.h>
-#include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Exceptions/InternalError.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Util/DebugStream.h>
+
+#include <Core/Exceptions/InternalError.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/Grid.h>
 #include <Core/Grid/PatchBVH/PatchBVH.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Thread/Time.h>
+#include <Core/Util/DebugStream.h>
 using namespace Uintah;
 
 #include <iomanip>
@@ -56,6 +57,7 @@ int Product(const IntVector &i)
 
 TiledRegridder::TiledRegridder(const ProcessorGroup* pg) : RegridderCommon(pg)
 {
+  d_regrid_Level_0 = false;
 }
 
 TiledRegridder::~TiledRegridder()
@@ -176,29 +178,67 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
 
   vector< vector<IntVector> > tiles(min(oldGrid->numLevels()+1,d_maxLevels));
 
+  //______________________________________________________________________
+  //  compute tiles on L-0
+  //  sometimes the user wants to change the coarse level patch layout
+  //  on a restart
+  bool computed_Level_0_tiles = false;
+  
+  if( d_regrid_Level_0 ) {
+    
+    computed_Level_0_tiles = true;
+    d_regrid_Level_0 = false;       // only regrid once on level 0
+    
+    const LevelP level_0 = oldGrid->getLevel(0);
+    const PatchSubset *patchSS=lb_->getPerProcessorPatchSet(level_0)->getSubset(d_myworld->myrank());
+    vector<IntVector> mytiles;
+
+    //for each patch I own
+    for(int p=0; p<patchSS->size(); p++) {
+
+      const Patch* patch=patchSS ->get(p);  
+      //compute patch extents
+      IntVector patchLow  = patch->getCellLowIndex();
+      IntVector patchHigh = patch->getCellHighIndex();
+
+      //compute tile indices
+      IntVector tileLow  = computeTileIndex(patchLow, d_tileSize[0]);
+      IntVector tileHigh = computeTileIndex(patchHigh,d_tileSize[0]);
+
+      for (CellIterator ti(tileLow,tileHigh); !ti.done(); ti++){
+        mytiles.push_back(*ti);
+      }  // tile loop
+    }  // patch loop
+
+    GatherTiles(mytiles,tiles[0]);
+  }
+  
+
+  //______________________________________________________________________
   //for each level fine to coarse 
-  for(int l=min(oldGrid->numLevels()-1,d_maxLevels-2); l >= 0;l--)
+  int maxLevel = min(oldGrid->numLevels()-1,d_maxLevels-2);
+  int minLevel = 0;
+
+  for(int l=maxLevel; l >= minLevel;l--)
   {
     //MPI_Barrier(d_myworld->getComm());
     rtimes[15+l]+=Time::currentSeconds()-start;
     start=Time::currentSeconds();
     const LevelP level=oldGrid->getLevel(l);
 
-    vector<IntVector> mytiles;
-    vector<IntVector> myoldtiles;
-
     rtimes[0]+=Time::currentSeconds()-start;
     start=Time::currentSeconds();
     
     //compute volume using minimum tile size
+    vector<IntVector> mytiles;
     ComputeTiles( mytiles, level, d_minTileSize[l+1], d_cellRefinementRatio[l] );
+    
     rtimes[1]+=Time::currentSeconds()-start;
     start=Time::currentSeconds();
 
     GatherTiles(mytiles,tiles[l+1]);
 
-    if(l>0) 
-    {
+    if(l>0) {
       //add flags to the coarser level to ensure that boundary layers exist and that fine patches have a coarse patches above them.
       CoarsenFlags(oldGrid,l,tiles[l+1]);
     }
@@ -206,10 +246,13 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
     start=Time::currentSeconds();
   }
 
-  //level 0 does not change so just copy the patches over.
-  for (Level::const_patchIterator p = oldGrid->getLevel(0)->patchesBegin(); p != oldGrid->getLevel(0)->patchesEnd(); p++)
-  {
-    tiles[0].push_back( computeTileIndex((*p)->getCellLowIndex(), d_tileSize[0]) );
+
+  // level 0 does not change so just copy the patches if
+  // the tiles weren't already computed
+  if( computed_Level_0_tiles == false) {
+    for (Level::const_patchIterator p = oldGrid->getLevel(0)->patchesBegin(); p != oldGrid->getLevel(0)->patchesEnd(); p++){
+      tiles[0].push_back( computeTileIndex((*p)->getCellLowIndex(), d_tileSize[0]) );
+    }
   }
 
   //Create the grid
@@ -384,14 +427,15 @@ void TiledRegridder::problemSetup(const ProblemSpecP& params,
                                   const SimulationStateP& state)
 {
   RegridderCommon::problemSetup(params, oldGrid, state);
-  d_sharedState = state;
-
+  d_sharedState  = state;
+  
   ProblemSpecP amr_spec = params->findBlock("AMR");
   ProblemSpecP regrid_spec = amr_spec->findBlock("Regridder");
   
   if (!regrid_spec) {
-    return; // already warned about it in RC::problemSetup
+    return; 
   }
+  
   // get min patch size
   regrid_spec->require("min_patch_size", d_minTileSize);
   int size=d_minTileSize.size();
@@ -399,6 +443,7 @@ void TiledRegridder::problemSetup(const ProblemSpecP& params,
   //it is not required to specifiy the minimum patch size on each level
   //if every level is not specified reuse the lowest level minimum patch size
   IntVector lastSize = d_minTileSize[size - 1];
+  
   if (size < d_maxLevels) {
     d_minTileSize.reserve(d_maxLevels);
     for (int i = size; i < d_maxLevels-1; i++){
@@ -408,11 +453,13 @@ void TiledRegridder::problemSetup(const ProblemSpecP& params,
   
   d_inputMinTileSize = d_minTileSize;
   
-  LevelP level=oldGrid->getLevel(0);
+  LevelP level_0=oldGrid->getLevel(0);
 
-  d_numCells.reserve(d_maxLevels);
   IntVector lowIndex, highIndex;
-  level->findInteriorCellIndexRange(lowIndex,highIndex);
+  level_0->findInteriorCellIndexRange(lowIndex,highIndex);
+  
+  // compute number of cells on all levels
+  d_numCells.reserve(d_maxLevels);
   d_numCells[0]=highIndex-lowIndex;
   
   for(int l=1;l<d_maxLevels;l++){
@@ -421,13 +468,29 @@ void TiledRegridder::problemSetup(const ProblemSpecP& params,
   
   //calculate the patch size on level 0
   IntVector patch_size(0,0,0);
+  for(Level::patchIterator patch=level_0->patchesBegin();patch<level_0->patchesEnd();patch++){
 
-  for(Level::patchIterator patch=level->patchesBegin();patch<level->patchesEnd();patch++)
-  {
-    IntVector size=(*patch)->getCellHighIndex()-(*patch)->getCellLowIndex();
-    if(patch_size==IntVector(0,0,0))
+    if(patch_size==IntVector(0,0,0)){
+      IntVector low  = (*patch)->getCellLowIndex();
+      IntVector high = (*patch)->getCellHighIndex();
+      IntVector size = high-low;
       patch_size=size;
+    }
   }
+
+  // Let user change the coarse level patch layout
+  // This can be especially useful on restarts where
+  // you need to increase the number of coarse level patches
+  IntVector L0_patches(1,1,1);
+  regrid_spec->get("coarse_level_patch_layout", L0_patches);
+  
+  IntVector myPatchSize = d_numCells[0]/L0_patches;
+  
+  if( myPatchSize != patch_size ){
+    patch_size = myPatchSize;
+    d_regrid_Level_0 = true;
+  } 
+  
   d_minTileSize.insert(d_minTileSize.begin(),patch_size);
 
   d_tileSize=d_minTileSize;
@@ -437,9 +500,7 @@ void TiledRegridder::problemSetup(const ProblemSpecP& params,
   {
     //if there is only 1 processor attempt for minimum number of patches
     target_patches_=1;
-  }
-  else
-  {
+  } else {
     int patches_per_proc=4;
     regrid_spec->get("patches_per_level_per_proc",patches_per_proc);
     if (patches_per_proc<1)
