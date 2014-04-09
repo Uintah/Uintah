@@ -31,6 +31,8 @@
 #include <Core/Util/DebugStream.h>
 
 #include <iostream>
+#include <string>
+#include <cstring>
 
 using namespace std;
 using namespace Uintah;
@@ -57,30 +59,42 @@ Electrostatics* ElectrostaticsFactory::create(const ProblemSpecP& ps,
     }
   }
 
+  // Pull cutoff radius from upstream in case there's not a specific one in the electrostatics specification
   double cutoffRadius = -1.0;
-  ProblemSpecP universalCutoff = ps->findBlock("MD")->findBlock("MDSystem")->get("cutoffRadius",cutoffRadius);
-
+  ps->findBlock("MD")->findBlock("System")->require("cutoffRadius",cutoffRadius);
   // Check for specific electrostatics request
   if (type == "SPME" || type == "spme") {
     ProblemSpecP spme_ps = ps->findBlock("MD")->findBlock("Electrostatics");
     double ewaldBeta;
-    bool polarizable;
-    double polTolerance;
-    IntVector kLimits;
-    int splineOrder;
-    int maxPolarizableIterations;
-
     spme_ps->require("ewaldBeta", ewaldBeta);
-    spme_ps->require("polarizable", polarizable);
-    spme_ps->require("polarizationTolerance", polTolerance);
-    spme_ps->require("kLimits", kLimits);
-    spme_ps->require("splineOrder", splineOrder);
-    spme_ps->require("maxiterations", maxPolarizableIterations);
-    if (!universalCutoff) {
-    	spme_ps->require("cutoffRadius", cutoffRadius);
+    IntVector kGrids;
+    spme_ps->require("kGrids",kGrids);
+    int splineOrder;
+    spme_ps->require("splineOrder",splineOrder);
+    std::string polarizableEnabled;
+    ProblemSpecP pol_ps = spme_ps->findBlock("polarizable");
+    double polTolerance;
+    int polMaxIterations;
+    bool polarizable = false;
+    if (pol_ps) {
+      pol_ps->getAttribute("enabled",polarizableEnabled);
+      std::string polCheck;
+      std::transform(polarizableEnabled.begin(),polarizableEnabled.end(),polCheck.begin(),::toupper);
+      if ( "true" == polCheck) {
+        polarizable = true;
+        pol_ps->require("polarizationTolerance",polTolerance);
+        pol_ps->require("maxIterations",polMaxIterations);
+      }
+    }
+    else {
+      throw ProblemSetupException("ERROR:  No polarizable block found in the Electrostatics block", __FILE__, __LINE__);
+    }
+    double tempCutoff;
+    if (spme_ps->get("cutoffRadius",tempCutoff)) {
+      cutoffRadius = tempCutoff;
     }
 
-    electrostatics = scinew SPME(system, ewaldBeta, cutoffRadius, polarizable, polTolerance, kLimits, splineOrder, maxPolarizableIterations);
+    electrostatics = scinew SPME(system, ewaldBeta, cutoffRadius, polarizable, polTolerance, kGrids, splineOrder, polMaxIterations);
 
   } else {
     throw ProblemSetupException("Unknown Electrostatics type", __FILE__, __LINE__);
@@ -90,6 +104,7 @@ Electrostatics* ElectrostaticsFactory::create(const ProblemSpecP& ps,
   const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
   if (world->myrank() == 0) {
     cout << "Electrostatics Method: \t\t" << type << endl;
+
   }
 
   return electrostatics;

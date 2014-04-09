@@ -9,6 +9,8 @@
 #define INTEGRATOR_H_
 
 namespace Uintah {
+  enum interactionModel { Deterministic, Langevin };
+
   enum MDIntegrator {
     velocityVerlet
   };
@@ -16,8 +18,10 @@ namespace Uintah {
 
   class Integrator {
     public:
+      Integrator() {};
       virtual void advanceTime() const = 0;
       virtual std::string getType() const = 0;
+      virtual ~Integrator() {};
     private:
       MDIntegrator type;
   };

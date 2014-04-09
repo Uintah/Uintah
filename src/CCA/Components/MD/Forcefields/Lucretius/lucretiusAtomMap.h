@@ -28,6 +28,7 @@ namespace Uintah {
 
   class lucretiusAtomMap : public atomMap {
     public:
+     ~lucretiusAtomMap();
       lucretiusAtomMap(const ProblemSpecP&, const SimulationStateP&);
       inline std::vector<atomData*>* operator[](const std::string& searchLabel) {
         lucretiusMapIterator labelLocation = findValidAtomList(searchLabel);
@@ -59,10 +60,16 @@ namespace Uintah {
         }
       }
 
-      size_t addAtomToList(const std::string&, atomData*);
+      inline size_t getNumberAtomTypes() const {
+        return atomSet.size();
+      }
+
+      void outputStatistics() const;
 
     private:
       lucretiusMapIterator findValidAtomList(const std::string&);
+      size_t addAtomToList(const std::string&, atomData*);
+
       lucretiusMap atomSet;
   };
 }

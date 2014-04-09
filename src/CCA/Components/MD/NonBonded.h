@@ -46,13 +46,6 @@ namespace Uintah {
     public:
 
       /**
-       * @brief Enumeration of all supported Non-bonded interaction types.
-       */
-      enum NonBondedType {
-        LJ12_6, LJ9_6, EXP6, NONE
-      };
-
-      /**
        * @brief Default constructor.
        * @param None.
        */
@@ -111,7 +104,7 @@ namespace Uintah {
        * @param
        * @return
        */
-      virtual NonBondedType getType() const = 0;
+      virtual std::string getNonbondedType() const = 0;
 
     private:
 

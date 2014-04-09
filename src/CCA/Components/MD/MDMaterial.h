@@ -59,6 +59,11 @@ namespace Uintah {
       // Provides the mass of the atom type (required)
       virtual double getMass() const = 0;
 
+      // Provides the label the material uses to access potential maps
+      virtual std::string getMapLabel() const = 0;
+
+      // Provides the label the material uses to access this material itself
+      virtual std::string getMaterialLabel() const = 0;
 
       // These labels differ as follows:
       //   getMapLabel will provide one part of a two-label nonbonded potential key pair.
@@ -73,12 +78,6 @@ namespace Uintah {
       //   a material label must contain additional information to disambiguate the charge types; however, regardless of
       //   charge type, the map label will always point to the base nonbonded type and use that to determine the appropriate
       //   nonbonded potential.
-
-      // Provides the label used to construct nonbonded potential map keys
-      virtual std::string getMapLabel() const = 0;
-
-      // Provides the label used to differentiate individual materials
-      virtual std::string getMaterialLabel() const = 0;
 
       virtual NonbondedPotential* getPotentialHandle() const = 0;
 

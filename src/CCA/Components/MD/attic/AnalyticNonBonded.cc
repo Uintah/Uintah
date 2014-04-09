@@ -24,6 +24,8 @@
 
 #include <CCA/Components/MD/AnalyticNonBonded.h>
 #include <CCA/Components/MD/Forcefields/Forcefield.h>
+#include <CCA/Components/MD/Forcefields/TwoBodyForcefield.h>
+
 #include <CCA/Components/MD/MDSystem.h>
 #include <CCA/Components/MD/MDLabel.h>
 #include <Core/Grid/Patch.h>
@@ -97,73 +99,164 @@ void AnalyticNonBonded::setup(const ProcessorGroup* pg,
 	
 }
 
-void AnalyticNonBonded::newCalculate(const ProcessorGroup* pg,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset* materials,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw,
-                                     SchedulerP& subscheduler,
-                                     const LevelP& level) {
-  Vector box = d_system->getBox();
-  double cutoff2 = d_nonbondedRadius * d_nonbondedRadius;
-  double nbEnergy = 0;
-  Matrix3 stressTensor(0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0);
+void AnalyticNonBonded::TwoBodyCalculate(const PatchSubset* patches,
+                                         const MaterialSubset* materials,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw) {
 
+  double cutoff2 = d_nonbondedRadius * d_nonbondedRadius;
   int CUTOFF_CELLS = d_system->getNonbondedGhostCells();
 
-  // TODO fixme [APH]
-//  Forcefield* d_system->getForcefieldReference();
+  SimulationStateP simState = d_system->getStatePointer();
+  TwoBodyForcefield* currentForcefield;
+  currentForcefield = dynamic_cast<TwoBodyForcefield*> (d_system->getForcefieldPointer());
+
+  // Initialize local accumulators
+  double nbEnergy_patchLocal = 0;
+  Matrix3 stressTensor_patchLocal(0.0, 0.0, 0.0,
+                                  0.0, 0.0, 0.0,
+                                  0.0, 0.0, 0.0);
 
   size_t numPatches = patches->size();
   size_t numMaterials = materials->size();
 
-  for (size_t patchIdx = 0; patchIdx < numPatches; ++patchIdx) {
-    const Patch* currPatch = patches->get(patchIdx);
-    for (size_t localMatIdx = 0; localMatIdx < numMaterials; ++localMatIdx) {
-      int localMaterial = materials->get(localMatIdx);
-      ParticleSubset* localAtoms = old_dw->getParticleSubset(localMaterial, currPatch);
-      constParticleVariable<long64> localID;
-      old_dw->get(localID, d_lb->pParticleIDLabel, localAtoms);
+  for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) { // Loop over all patches
+    const Patch* currPatch = patches->get(patchIndex);
+    for (size_t localMaterialIndex = 0; localMaterialIndex < numMaterials; ++localMaterialIndex) { // Loop over internal patch materials
+
+      // Build particle set for on-patch atoms
+      int localMaterialID = materials->get(localMaterialIndex);
+      ParticleSubset* localAtoms = old_dw->getParticleSubset(localMaterialID, currPatch);
+      size_t localAtomCount = localAtoms->numParticles();
+
+      // Get atom ID and positions
+      constParticleVariable<long64> localParticleID;
+      old_dw->get(localParticleID, d_lb->pParticleIDLabel, localAtoms);
       constParticleVariable<Point> localPositions;
       old_dw->get(localPositions, d_lb->pXLabel, localAtoms);
-      ParticleVariable<Vector> pForce;
+
+      // Get material map label for source atom type
+      std::string localMaterialLabel = simState->getMDMaterial(localMaterialID)->getMapLabel();
+
+      // Initialize force variable
+      ParticleVariable<Vector>pForce;
       new_dw->allocateAndPut(pForce, d_lb->pNonbondedForceLabel_preReloc, localAtoms);
-      for (size_t neighborMatIdx = 0; neighborMatIdx < numMaterials; ++neighborMatIdx) {
-        int neighborMaterial = materials->get(neighborMatIdx);
-        ParticleSubset* neighborAtoms = old_dw->getParticleSubset(neighborMaterial, currPatch, Ghost::AroundNodes, CUTOFF_CELLS, d_lb->pXLabel);
-        constParticleVariable<long64> neighborID;
-        old_dw->get(neighborID, d_lb->pParticleIDLabel, neighborAtoms);
+      for (size_t localAtomIndex = 0; localAtomIndex < localAtomCount; ++localAtomIndex) {
+        pForce[localAtomIndex] = 0.0;
+      }
+
+      for (size_t neighborMaterialIndex = 0; neighborMaterialIndex < numMaterials; ++neighborMaterialIndex) { // Loop over internal + ghost patch materials
+
+        // Build particle set for on patch + nearby atoms
+        int neighborMaterialID = materials->get(neighborMaterialIndex);
+        ParticleSubset* neighborAtoms = old_dw->getParticleSubset(neighborMaterialID, currPatch, Ghost::AroundNodes, CUTOFF_CELLS, d_lb->pXLabel);
+        constParticleVariable<long64> neighborParticleID;
+        size_t neighborAtomCount = neighborAtoms->numParticles();
+
+        // Get atom ID and positions
+        old_dw->get(neighborParticleID, d_lb->pParticleIDLabel, neighborAtoms);
         constParticleVariable<Point> neighborPositions;
         old_dw->get(neighborPositions, d_lb->pXLabel, neighborAtoms);
-        // TODO fixme [APH]
-//        NonbondedTwoBodyPotential* currentPotential = Forcefield->getNonbondedPotential(localMaterial, neighborMaterial);
-        size_t localAtomCount = localAtoms->numParticles();
-        size_t neighborAtomCount = neighborAtoms->numParticles();
-        for (size_t localAtomIdx=0; localAtomIdx < localAtomCount; ++localAtomIdx ) {
-          for (size_t neighborAtomIdx=0; neighborAtomIdx < neighborAtomCount; ++neighborAtomIdx) {
-            if (localID[localAtomIdx] != neighborID[neighborAtomIdx]) { // Make sure we're not seeing the same atom
-              SCIRun::Vector atomicDistanceVector = neighborPositions[neighborAtomIdx].asVector() - localPositions[localAtomIdx].asVector();
-              if (atomicDistanceVector.length2() <= cutoff2) {
-                double tempEnergy;
+        std::string neighborMaterialLabel = simState->getMDMaterial(neighborMaterialID)->getMapLabel();
+
+        // Determine potential for specific current interaction type
+        NonbondedTwoBodyPotential* currentPotential = currentForcefield->getNonbondedPotential(localMaterialLabel,neighborMaterialLabel);
+
+        for (size_t localAtomIndex = 0; localAtomIndex < localAtomCount; ++localAtomIndex) { // All atoms strictly on patch
+          for (size_t neighborAtomIndex = 0; neighborAtomIndex < neighborAtomCount; ++neighborAtomIndex) { // All neighboring atoms including ghost
+            if (localParticleID[localAtomIndex] != neighborParticleID[neighborAtomIndex]) { // Ensure we're not calculating with the same atom
+              SCIRun::Vector atomOffsetVector = neighborPositions[neighborAtomIndex] - localPositions[localAtomIndex];
+              // FIXME!! JBH -- Check for minimum image convention here!
+              //MinimumImageTransform(atomOffsetVector,d_system->getUnitCell());
+              if (atomOffsetVector.length2() <= cutoff2) { // Ensure distance is within the cutoff radius
                 SCIRun::Vector tempForce;
-              // TODO fixme [APH]
-//                currentPotential->fillEnergyAndForce(tempForce, tempEnergy, &atomicDistanceVector);
-                nbEnergy += tempEnergy;
-                pForce[localAtomIdx] += tempForce;
-                stressTensor += OuterProduct(atomicDistanceVector,tempForce);
-              }  // atomicDistanceVector.length2() <= cutoff2
-            }  // localID[localAtomIdx] != neighborID[neighborAtomIdx]
-          }  // loop over neighborAtomIdx
-        }  // loop over localAtomIdx
-      }  // loop over neighbor materials
-    }  // loop over local materials
-  }  // loop over patches
-  new_dw->put(sum_vartype(0.5 * nbEnergy), d_lb->nonbondedEnergyLabel);
-  new_dw->put(matrix_sum(0.5 * stressTensor), d_lb->nonbondedStressLabel);
-  return;
-}
+                double tempEnergy;
+                currentPotential->fillEnergyAndForce(tempForce,tempEnergy,atomOffsetVector);
+                nbEnergy_patchLocal += tempEnergy;
+                stressTensor_patchLocal += OuterProduct(atomOffsetVector,tempForce);
+              } // Within cutoff radius
+            } // Not the same atom
+          } // Loop over neighbor atoms
+        } // Loop over patch atoms
+      } // neighborMaterialIndex loop
+    } // localMaterialIndex loop
+  } // patchIndex loop
+  new_dw->put(sum_vartype(0.5 * nbEnergy_patchLocal), d_lb->nonbondedEnergyLabel);
+  new_dw->put(matrix_sum(0.5 * stressTensor_patchLocal), d_lb->nonbondedStressLabel);
+} // AnalyticNonBonded::TwoBodyCalculate
+
+//void AnalyticNonBonded::newCalculate(const ProcessorGroup* pg,
+//                                     const PatchSubset* patches,
+//                                     const MaterialSubset* materials,
+//                                     DataWarehouse* old_dw,
+//                                     DataWarehouse* new_dw,
+//                                     SchedulerP& subscheduler,
+//                                     const LevelP& level) {
+//  Vector box = d_system->getBox();
+//  double cutoff2 = d_nonbondedRadius * d_nonbondedRadius;
+//  double nbEnergy = 0;
+//  Matrix3 stressTensor(0.0, 0.0, 0.0,
+//                       0.0, 0.0, 0.0,
+//                       0.0, 0.0, 0.0);
+//
+//  int CUTOFF_CELLS = d_system->getNonbondedGhostCells();
+//
+//  // TODO fixme [APH]
+////  Forcefield* d_system->getForcefieldReference();
+//
+//  size_t numPatches = patches->size();
+//  size_t numMaterials = materials->size();
+//
+//  for (size_t patchIdx = 0; patchIdx < numPatches; ++patchIdx) {
+//    const Patch* currPatch = patches->get(patchIdx);
+//    for (size_t localIdx = 0; localIdx < numMaterials; ++localIdx) {
+//      int localMaterialIndex = materials->get(localIdx);
+//      ParticleSubset* localAtoms = old_dw->getParticleSubset(localMaterialIndex, currPatch);
+//      constParticleVariable<long64> localID;
+//      old_dw->get(localID, d_lb->pParticleIDLabel, localAtoms);
+//      constParticleVariable<Point> localPositions;
+//      old_dw->get(localPositions, d_lb->pXLabel, localAtoms);
+//      //  Get material map label for this material
+//      MDMaterial* localMaterial = d_system->getStatePointer()->getMDMaterial(localMaterialIndex);
+//      std::string localMaterialLabel = localMaterial->getMapLabel();
+//      ParticleVariable<Vector> pForce;
+//      new_dw->allocateAndPut(pForce, d_lb->pNonbondedForceLabel_preReloc, localAtoms);
+//      for (size_t neighborIdx = 0; neighborIdx < numMaterials; ++neighborIdx) {
+//        int neighborMaterialIndex = materials->get(neighborIdx);
+//        ParticleSubset* neighborAtoms = old_dw->getParticleSubset(neighborMaterialIndex, currPatch, Ghost::AroundNodes, CUTOFF_CELLS, d_lb->pXLabel);
+//        constParticleVariable<long64> neighborID;
+//        old_dw->get(neighborID, d_lb->pParticleIDLabel, neighborAtoms);
+//        constParticleVariable<Point> neighborPositions;
+//        old_dw->get(neighborPositions, d_lb->pXLabel, neighborAtoms);
+//        MDMaterial* neighborMaterial = d_system->getStatePointer()->getMDMaterial(neighborMaterialIndex);
+//        std::string neighborMaterialLabel = neighborMaterial->getMapLabel();
+//        // TODO fixme [APH]
+////        NonbondedTwoBodyPotential* currentPotential = d_forcefield->getPotentialHandle(localMaterialLabel,neighborMaterialLabel);
+//        size_t localAtomCount = localAtoms->numParticles();
+//        size_t neighborAtomCount = neighborAtoms->numParticles();
+//        for (size_t localAtomIdx=0; localAtomIdx < localAtomCount; ++localAtomIdx ) {
+//          for (size_t neighborAtomIdx=0; neighborAtomIdx < neighborAtomCount; ++neighborAtomIdx) {
+//            if (localID[localAtomIdx] != neighborID[neighborAtomIdx]) { // Make sure we're not seeing the same atom
+//              SCIRun::Vector atomicDistanceVector = neighborPositions[neighborAtomIdx].asVector() - localPositions[localAtomIdx].asVector();
+//              if (atomicDistanceVector.length2() <= cutoff2) {
+//                double tempEnergy;
+//                SCIRun::Vector tempForce;
+//              // TODO fixme [APH]
+//                //currentPotential->fillEnergyAndForce(tempForce, tempEnergy, atomicDistanceVector);
+//                nbEnergy += tempEnergy;
+//                pForce[localAtomIdx] += tempForce;
+//                stressTensor += OuterProduct(atomicDistanceVector,tempForce);
+//              }  // atomicDistanceVector.length2() <= cutoff2
+//            }  // localID[localAtomIdx] != neighborID[neighborAtomIdx]
+//          }  // loop over neighborAtomIdx
+//        }  // loop over localAtomIdx
+//      }  // loop over neighbor materials
+//    }  // loop over local materials
+//  }  // loop over patches
+//  new_dw->put(sum_vartype(0.5 * nbEnergy), d_lb->nonbondedEnergyLabel);
+//  new_dw->put(matrix_sum(0.5 * stressTensor), d_lb->nonbondedStressLabel);
+//  return;
+//}
 
 void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
 		const PatchSubset* patches,

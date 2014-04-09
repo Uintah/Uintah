@@ -47,12 +47,15 @@ namespace Uintah {
         TwoBodyForcefield() {}
         virtual ~TwoBodyForcefield() {}
 
-        virtual std::string getForcefieldDescriptor() const = 0;
+        virtual std::string getForcefieldDescriptor() {
+          return "TwoBody";
+        }
 
         // Inherited from parent class
         inline forcefieldInteractionClass getInteractionClass() const {
           return d_forcefieldClass;
         }
+        virtual NonbondedTwoBodyPotential* getNonbondedPotential(const std::string&, const std::string&) const = 0;
 
       private:
         static const forcefieldInteractionClass d_forcefieldClass;

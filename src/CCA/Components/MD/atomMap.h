@@ -20,6 +20,7 @@ namespace Uintah {
       virtual std::vector<atomData*>* getAtomList(const std::string&) = 0;
       virtual size_t getAtomListSize(const std::string&) = 0;
       virtual size_t addAtomToList(const std::string&, atomData*) = 0;
+      virtual size_t getNumberAtomTypes() const = 0;
     private:
   };
 

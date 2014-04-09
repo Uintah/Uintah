@@ -377,12 +377,12 @@ namespace Uintah {
        */
       void registerPermanentParticleState(SimpleMaterial* matl);
 
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      void extractCoordinates();
+//      /**
+//       * @brief
+//       * @param
+//       * @return
+//       */
+//      void extractCoordinates();
 
       /**
        * @brief
@@ -398,43 +398,45 @@ namespace Uintah {
 
     private:
 
-      struct Atom {
-          Atom(Point pnt,
-               double charge) :
-              coords(pnt), charge(charge)
-          {
-          }
-          Point coords;
-          double charge;
-      };
+//      struct Atom {
+//          Atom(Point pnt,
+//               double charge) :
+//              coords(pnt), charge(charge)
+//          {
+//          }
+//          Point coords;
+//          double charge;
+//      };
 
-      // Information related to melding the MD to the Uintah back-end
+      // Member pointers inherited from Uintah
+
       Output* d_dataArchiver;              //!< Handle to the Uintah data archiver
-
-      // An MD component represents an entire system necessary for MD simulation
       MDLabel* d_lb;                       //!< Variable labels for the per-particle Uintah MD variables
-
       SimulationStateP d_sharedState;      //!< Shared simulation state (global)
+      ProblemSpecP     d_problemSpec;      //!< Problem spec since we need to parse our coordinates, and it's either storing this pointer or the whole parsed coordinate set
+      ProblemSpecP     d_restartSpec;
+
+      // Member pointers constructed specifically for this component
       Electrostatics*  d_electrostatics;   //!< The simulation Electrostatics model instance
       Integrator*      d_integrator;       //!< MD style integrator object
       Forcefield*      d_forcefield;       //!< Currently employed MD forcefield
+      MDSystem*        d_system;           //!< The global MD system
 
 
       //  Does this need to exist here?  Can it be stuffed in the electrostatics object?
       SchedulerP d_electrostaticSubscheduler;           //!< Subscheduler for SPME::calculate() convergence loop
       bool d_recompileSubscheduler;        //!< Whether or not the subscheduler taskgraph needs recompilation
 
-      //  The material list should exist in the forcefield held by the system...?
-      SimpleMaterial* d_material;          //!< For now, this is a single material
+//      //  The material list should exist in the forcefield held by the system...?
+//      SimpleMaterial* d_material;          //!< For now, this is a single material
       //IntegratorType d_integrator;         //!< Timestep integrator
       double delt;                         //!< Simulation delta T
 
 
-      std::string d_coordinateFile;        //!< Name of file with coordinates and charges of all atoms
-      std::vector<Atom> d_atomList;        //!< Individual atom neighbor list
+//      std::string d_coordinateFile;        //!< Name of file with coordinates and charges of all atoms
+//      std::vector<Atom> d_atomList;        //!< Individual atom neighbor list
 
       NonBonded* d_nonbonded;              //!< The simulation NonBonded instance
-      MDSystem* d_system;                  //!< The global MD system
 
       std::vector<const VarLabel*> d_particleState;            //!< Atom (particle) state prior to relocation
       std::vector<const VarLabel*> d_particleState_preReloc;   //!< For atom (particle) relocation

@@ -48,6 +48,7 @@ namespace Uintah {
       Forcefield () {}
       virtual ~Forcefield () {}
       virtual forcefieldInteractionClass getInteractionClass() const = 0;
+      virtual std::string getForcefieldDescriptor() const = 0;
 
     private:
 

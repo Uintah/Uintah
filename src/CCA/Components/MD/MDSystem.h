@@ -32,11 +32,13 @@
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Containers/Array2.h>
-//#include <CCA/Components/MD/Forcefields/Lucretius/Lucretius.h>
+#include <CCA/Components/MD/Forcefields/Forcefield.h>
 #include <CCA/Components/MD/Potentials/TwoBody/NonbondedTwoBodyPotential.h>
 #include <CCA/Components/MD/MDMaterial.h>
 
 namespace Uintah {
+
+  enum ensembleType { NVE, NVT, NPT, ISOKINETIC };
 
   using namespace Uintah;
   using namespace SCIRun;
@@ -71,9 +73,10 @@ namespace Uintah {
        * @brief
        * @param
        */
-      MDSystem(ProblemSpecP& ps,
-               GridP& grid,
-               SimulationStateP& shared_state);
+      MDSystem(const ProblemSpecP&,
+               GridP&,
+               SimulationStateP&,
+               Forcefield*);
 
       /**
        * @brief
@@ -145,6 +148,11 @@ namespace Uintah {
        */
       inline IntVector getCellExtent() const { return d_totalCellExtent; }
 
+      /*
+       *
+       */
+      inline IntVector getPeriodic() const { return d_periodicVector; }
+
       /**
        * @brief
        * @param
@@ -166,12 +174,12 @@ namespace Uintah {
        */
       inline size_t getNumAtomTypes() const { return d_atomTypeList.size(); }
 
-      /*
-       * @brief
-       * @param
-       * @return
-       */
-      inline size_t getNumMoleculeType() const { return d_moleculeTypeList.size(); }
+//      /*
+//       * @brief
+//       * @param
+//       * @return
+//       */
+//      inline size_t getNumMoleculeType() const { return d_moleculeTypeList.size(); }
 
       /*
        * @brief
@@ -180,12 +188,12 @@ namespace Uintah {
        */
       inline size_t getNumAtomsOfType(size_t TypeIndex) const { return d_atomTypeList[TypeIndex]; }
 
-      /*
-       * @brief
-       * @param
-       * @return
-       */
-      inline size_t getNumMoleculesOfType(size_t TypeIndex) const { return d_moleculeTypeList[TypeIndex]; }
+//      /*
+//       * @brief
+//       * @param
+//       * @return
+//       */
+//      inline size_t getNumMoleculesOfType(size_t TypeIndex) const { return d_moleculeTypeList[TypeIndex]; }
 
       /*
        * @brief
@@ -201,16 +209,26 @@ namespace Uintah {
        */
       inline size_t getElectrostaticGhostCells() const { return d_electrostaticGhostCells; }
 
-      inline double getAtomicCharge(size_t atomType) const {
-    	return homoAtoms[atomType]->getCharge();
+      inline double getAtomicCharge(size_t MaterialIndex) const {
+    	  return d_simState->getMDMaterial(MaterialIndex)->getCharge();
       }
+
+      inline SimulationStateP getStatePointer() { return d_simState; };
+
+      inline Forcefield* getForcefieldPointer() { return d_forcefield; };
 
     private:
 
-      std::vector<size_t> d_atomTypeList;     //!< List of total number of each atom type in the simulation
-      std::vector<size_t> d_moleculeTypeList; //!< List of total number of each molecule type in the simulation
+      ensembleType d_ensemble;                // Variable holding the type of the simulation ensemble
+
+      Forcefield* d_forcefield;               //! Pointer to the established forcefield
+      SimulationStateP d_simState;            //! Pointer to the simulation state (for material access)
+
       unsigned int d_numAtoms;                //!< Total number of atoms in the simulation
-      unsigned int d_numMolecules;            //!< Total number of molecules in the simulation
+      std::vector<size_t> d_atomTypeList;     //!< List of total number of each atom type in the simulation
+
+//      unsigned int d_numMolecules;            //!< Total number of molecules in the simulation
+//      std::vector<size_t> d_moleculeTypeList; //!< List of total number of each molecule type in the simulation
       
       Vector d_pressure;                //!< Total MD system pressure
       double d_temperature;             //!< Total MD system temperature
@@ -228,9 +246,8 @@ namespace Uintah {
       IntVector d_totalCellExtent;      //!< Number of sub-cells in the global unit cell
       size_t d_nonbondedGhostCells;     //!< Number of ghost cells for nonbonded realspace neighbor calculations
       size_t d_electrostaticGhostCells; //!< Number of ghost cells for electrostatic realspace neighbor calculations
+      IntVector d_periodicVector;       //!< Grid's periodic vector
 
-      std::vector<MDMaterial*> homoAtoms;
-      SCIRun::Array2<NonbondedTwoBodyPotential*> forceField;
       inline size_t max(int a, int b){ return (a > b ? a : b); }
       inline double max(int a, int b, int c) { return (max(max(a,b),c)); }
 

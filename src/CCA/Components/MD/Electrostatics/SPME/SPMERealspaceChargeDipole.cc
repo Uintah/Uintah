@@ -97,8 +97,9 @@ void SPME::calculateRealspace(const ProcessorGroup* pg,
       old_dw->get(localX, d_lb->pXLabel, atomSubset);
       constParticleVariable<long64> localID;
       old_dw->get(localID, d_lb->pParticleIDLabel, atomSubset);
-      ParticleVariable<Vector> dipolesLocal;
-      new_dw->getModifiable(dipolesLocal, d_lb->pRealDipoles, atomSubset);
+      constParticleVariable<Vector> dipolesLocal;
+//      new_dw->getModifiable(dipolesLocal, d_lb->pRealDipoles, atomSubset);
+      old_dw->get(dipolesLocal, d_lb->pTotalDipoles, atomSubset);
       size_t localAtoms = atomSubset->numParticles();
       ParticleVariable<SCIRun::Vector> localForce;
       new_dw->allocateAndPut(localForce, d_lb->pElectrostaticsRealForce_preReloc, atomSubset);
@@ -111,7 +112,7 @@ void SPME::calculateRealspace(const ProcessorGroup* pg,
 
       for (size_t neighborIndex = 0; neighborIndex < numMaterials; ++neighborIndex) {
         int neighborType = materials->get(neighborIndex);
-        double neighborCharge = d_system->getAtomicCharge(atomType);
+        double neighborCharge = d_system->getAtomicCharge(neighborType);
         ParticleSubset* neighborSubset = old_dw->getParticleSubset(neighborType, patch, Ghost::AroundNodes, ELECTROSTATIC_RADIUS, d_lb->pXLabel);
         // Map neighbor atoms to their positions
         constParticleVariable<Point> neighborX;
@@ -120,7 +121,7 @@ void SPME::calculateRealspace(const ProcessorGroup* pg,
         constParticleVariable<long64> neighborID;
         old_dw->get(neighborID, d_lb->pParticleIDLabel, neighborSubset);
         constParticleVariable<Vector> dipolesNeighbor;
-        new_dw->get(dipolesNeighbor, d_lb->pRealDipoles, neighborSubset);
+        old_dw->get(dipolesNeighbor, d_lb->pTotalDipoles, neighborSubset);
 
         size_t neighborAtoms = neighborSubset->numParticles();
 
@@ -186,6 +187,7 @@ void SPME::calculateNewDipoles(const ProcessorGroup* pg,
   size_t numPatches = patches->size();
   size_t numMaterials = materials->size();
 
+  double newMix = 1.0 - d_dipoleMixRatio;
   // Step through all the patches on this thread
   for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) {
     const Patch* patch = patches->get(patchIndex);
@@ -195,12 +197,17 @@ void SPME::calculateNewDipoles(const ProcessorGroup* pg,
       int atomType = materials->get(localIndex);
       ParticleSubset* localSet = old_dw->getParticleSubset(atomType, patch);
       constParticleVariable<Vector> oldDipoles;
-      old_dw->get(oldDipoles, d_lb->pRealDipoles, localSet);
-      ParticleVariable<Vector> newDipoles;
-      new_dw->getModifiable(newDipoles, d_lb->pRealDipoles_preReloc, localSet);
+      old_dw->get(oldDipoles, d_lb->pTotalDipoles, localSet);
+      constParticleVariable<SCIRun::Vector> reciprocalField, realField;
+      old_dw->get(reciprocalField, d_lb->pElectrostaticsReciprocalField, localSet);
+      old_dw->get(realField, d_lb->pElectrostaticsRealField, localSet);
+      ParticleVariable<SCIRun::Vector> newDipoles;
+      new_dw->allocateAndPut(newDipoles, d_lb->pTotalDipoles_preReloc, localSet);
       size_t localAtoms = localSet->numParticles();
       for (size_t Index = 0; Index < localAtoms; ++ Index) {
-        newDipoles[Index] *= (1.0 - d_dipoleMixRatio);
+        //FIXME JBH -->  Put proper terms in here to actually calculate the new dipole contribution
+        // Thole damping from Lucretius_Serial.f lines 2192-2202, 2291,
+        newDipoles[Index] = reciprocalField[Index]+realField[Index];
         newDipoles[Index] += d_dipoleMixRatio * oldDipoles[Index];
       }
     }

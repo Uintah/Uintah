@@ -186,7 +186,7 @@ void SPME::dipoleCalculatePreTransform(const ProcessorGroup* pg,
 			ParticleSubset* pset = old_dw->getParticleSubset(atomType, patch);
 			double atomCharge = d_system->getAtomicCharge(atomType);
 			constParticleVariable<Vector> p_Dipole;
-			new_dw->get(p_Dipole, d_lb->pReciprocalDipoles, pset);
+			new_dw->get(p_Dipole, d_lb->pTotalDipoles, pset);
 			std::vector<SPMEMapPoint>* gridMap = currentSPMEPatch->getChargeMap(atomType);
 			SPME::dipoleMapChargeToGrid(currentSPMEPatch, gridMap, pset, atomCharge, p_Dipole);
 		} // end Atom Type Loop
@@ -454,6 +454,7 @@ void SPME::calculatePostTransform(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
+  SimulationStateP simState = d_system->getStatePointer();
   size_t numPatches = patches->size();
   size_t numLocalAtomTypes = materials->size();
   for (size_t p = 0; p < numPatches; ++p) {
@@ -462,23 +463,16 @@ void SPME::calculatePostTransform(const ProcessorGroup* pg,
 
     for (size_t localAtomTypeIndex = 0; localAtomTypeIndex < numLocalAtomTypes; ++localAtomTypeIndex) {
       int globalAtomType = materials->get(localAtomTypeIndex);
+      double currentCharge = simState->getMDMaterial(globalAtomType)->getCharge();
 
       ParticleSubset* pset = old_dw->getParticleSubset(globalAtomType, patch);
-
       constParticleVariable<double> pcharge;
       ParticleVariable<Vector> pforcenew;
-      old_dw->get(pcharge, d_lb->pChargeLabel, pset);
-      new_dw->allocateAndPut(pforcenew, d_lb->pElectrostaticsForceLabel_preReloc, pset);
-
+      new_dw->allocateAndPut(pforcenew, d_lb->pElectrostaticsReciprocalForce_preReloc, pset);
       std::vector<SPMEMapPoint>* gridMap = currentSPMEPatch->getChargeMap(globalAtomType);
 
       // Calculate electrostatic contribution to f_ij(r)
-      SPME::mapForceFromGrid(currentSPMEPatch, gridMap, pset, pcharge, pforcenew);
-
-      ParticleVariable<double> pchargenew;
-      new_dw->allocateAndPut(pchargenew, d_lb->pChargeLabel_preReloc, pset);
-      // carry these values over for now
-      pchargenew.copyData(pcharge);
+      SPME::mapForceFromGrid(currentSPMEPatch, gridMap, pset, currentCharge, pforcenew);
     }
   }
 }
@@ -486,7 +480,7 @@ void SPME::calculatePostTransform(const ProcessorGroup* pg,
 void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
                             const std::vector<SPMEMapPoint>* gridMap,
                             ParticleSubset* pset,
-                            constParticleVariable<double>& charges,
+                            double charge,
                             ParticleVariable<Vector>& pforcenew)
 {
   SimpleGrid<std::complex<double> >* Q_patchLocal = spmePatch->getQ();
@@ -497,7 +491,6 @@ void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
     particleIndex pidx = *iter;
 
     SimpleGrid<SCIRun::Vector> forceMap = (*gridMap)[pidx].getForceGrid();
-    double charge = charges[pidx];
 
     SCIRun::Vector newForce = Vector(0, 0, 0);
     IntVector QAnchor = forceMap.getOffset();         // Location of the 0,0,0 origin for the force map grid

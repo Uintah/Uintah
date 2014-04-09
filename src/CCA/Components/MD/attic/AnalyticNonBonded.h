@@ -105,13 +105,13 @@ namespace Uintah {
                  DataWarehouse* old_dw,
                  DataWarehouse* new_dw);
 
-      void newCalculate(const ProcessorGroup* pg,
-                        const PatchSubset* patches,
-                        const MaterialSubset* materials,
-                        DataWarehouse* old_dw,
-                        DataWarehouse* new_dw,
-                        SchedulerP& subscheduler,
-                        const LevelP& level);
+//      void newCalculate(const ProcessorGroup* pg,
+//                        const PatchSubset* patches,
+//                        const MaterialSubset* materials,
+//                        DataWarehouse* old_dw,
+//                        DataWarehouse* new_dw,
+//                        SchedulerP& subscheduler,
+//                        const LevelP& level);
       /**
        * @brief
        * @param
@@ -125,6 +125,10 @@ namespace Uintah {
                      SchedulerP& subscheduler,
                      const LevelP& level);
 
+      void TwoBodyCalculate(const PatchSubset* patches,
+                            const MaterialSubset* materials,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw);
       /**
        * @brief
        * @param None

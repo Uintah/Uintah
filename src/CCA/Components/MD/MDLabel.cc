@@ -44,7 +44,7 @@ MDLabel::MDLabel()
   //1>Force calculation variables (main simulation body)
   //1.1-> for electrostatic calculation
   //1.1.1-> real space
-  pRealDipoles                            = VarLabel::create("p.realDipole", ParticleVariable<Vector>::getTypeDescription());
+//  pRealDipoles                            = VarLabel::create("p.realDipole", ParticleVariable<Vector>::getTypeDescription());
   //pRealDipoles_preReloc                   = VarLabel::create("p.realDipole+", ParticleVariable<Vector>::getTypeDescription());
   pElectrostaticsRealForce                = VarLabel::create("p.electrostaticsRealForce", ParticleVariable<Vector>::getTypeDescription());
   pElectrostaticsRealForce_preReloc       = VarLabel::create("p.electrostaticsRealForce+", ParticleVariable<Vector>::getTypeDescription());
@@ -52,7 +52,7 @@ MDLabel::MDLabel()
   pElectrostaticsRealField_preReloc       = VarLabel::create("p.electrostaticsRealField+", ParticleVariable<Vector>::getTypeDescription());
 
   //1.1.2-> reciprocal space
-  pReciprocalDipoles                      = VarLabel::create("p.recipDipole", ParticleVariable<Vector>::getTypeDescription());
+//  pReciprocalDipoles                      = VarLabel::create("p.recipDipole", ParticleVariable<Vector>::getTypeDescription());
   //pReciprocalDipoles_preReloc             = VarLabel::create("p.recipDipole+", ParticleVariable<Vector>::getTypeDescription());
   pElectrostaticsReciprocalForce          = VarLabel::create("p.recipElectrostaticsForce", ParticleVariable<Vector>::getTypeDescription());
   //pElectrostaticsReciprocalForce_preReloc = VarLabel::create("p.recipElectrostaticsForce+", ParticleVariable<Vector>::getTypeDescription());
@@ -74,8 +74,8 @@ MDLabel::MDLabel()
                                              IntVector(0, 0, 0), VarLabel::PositionVariable);
   pXLabel_preReloc        = VarLabel::create("p.x+", ParticleVariable<Point>::getTypeDescription(),
                                              IntVector(0, 0, 0), VarLabel::PositionVariable);
-  pAccelLabel             = VarLabel::create("p.accel", ParticleVariable<Vector>::getTypeDescription());
-  pAccelLabel_preReloc    = VarLabel::create("p.accel+", ParticleVariable<Vector>::getTypeDescription());
+//  pAccelLabel             = VarLabel::create("p.accel", ParticleVariable<Vector>::getTypeDescription());
+//  pAccelLabel_preReloc    = VarLabel::create("p.accel+", ParticleVariable<Vector>::getTypeDescription());
   pVelocityLabel          = VarLabel::create("p.velocity", ParticleVariable<Vector>::getTypeDescription());
   pVelocityLabel_preReloc = VarLabel::create("p.velocity+", ParticleVariable<Vector>::getTypeDescription());
   //3>General particle quantities
@@ -89,8 +89,8 @@ MDLabel::MDLabel()
   //pMassLabel = VarLabel::create("p.mass", ParticleVariable<double>::getTypeDescription());
   //pMassLabel_preReloc = VarLabel::create("p.mass+", ParticleVariable<double>::getTypeDescription());
 
-  pChargeLabel = VarLabel::create("p.charge", ParticleVariable<double>::getTypeDescription());
-  pChargeLabel_preReloc = VarLabel::create("p.charge+", ParticleVariable<double>::getTypeDescription());
+//  pChargeLabel = VarLabel::create("p.charge", ParticleVariable<double>::getTypeDescription());
+//  pChargeLabel_preReloc = VarLabel::create("p.charge+", ParticleVariable<double>::getTypeDescription());
 
   // PER SYSTEM VARIABLES (reduction variables)
   // ********************
@@ -137,12 +137,12 @@ MDLabel::~MDLabel()
 {
 	// PER PARTICLE VARIABLES
 	//   Force calculation Variables
-	VarLabel::destroy(pRealDipoles);
-	VarLabel::destroy(pRealDipoles_preReloc);
+//	VarLabel::destroy(pRealDipoles);
+//	VarLabel::destroy(pRealDipoles_preReloc);
 	VarLabel::destroy(pElectrostaticsRealForce);
 	VarLabel::destroy(pElectrostaticsRealForce_preReloc);
-	VarLabel::destroy(pReciprocalDipoles);
-	VarLabel::destroy(pReciprocalDipoles_preReloc);
+//	VarLabel::destroy(pReciprocalDipoles);
+//	VarLabel::destroy(pReciprocalDipoles_preReloc);
 	VarLabel::destroy(pElectrostaticsReciprocalForce);
 	VarLabel::destroy(pTotalDipoles);
 	VarLabel::destroy(pTotalDipoles_preReloc);
@@ -154,8 +154,8 @@ MDLabel::~MDLabel()
 	//   Integrator variables
 	VarLabel::destroy(pXLabel);
 	VarLabel::destroy(pXLabel_preReloc);
-	VarLabel::destroy(pAccelLabel);
-	VarLabel::destroy(pAccelLabel_preReloc);
+//	VarLabel::destroy(pAccelLabel);
+//	VarLabel::destroy(pAccelLabel_preReloc);
 	VarLabel::destroy(pVelocityLabel);
 	VarLabel::destroy(pVelocityLabel_preReloc);
 	//   General
@@ -181,12 +181,12 @@ MDLabel::~MDLabel()
 
 
 // !!!!! TO BE DELETED
-  VarLabel::destroy(pEnergyLabel);
-  VarLabel::destroy(pEnergyLabel_preReloc);
-  VarLabel::destroy(pMassLabel);
-  VarLabel::destroy(pMassLabel_preReloc);
-  VarLabel::destroy(pChargeLabel);
-  VarLabel::destroy(pChargeLabel_preReloc);
+//  VarLabel::destroy(pEnergyLabel);
+//  VarLabel::destroy(pEnergyLabel_preReloc);
+//  VarLabel::destroy(pMassLabel);
+//  VarLabel::destroy(pMassLabel_preReloc);
+//  VarLabel::destroy(pChargeLabel);
+//  VarLabel::destroy(pChargeLabel_preReloc);
 // !!!!! TO BE DELETED (end)
 
 
