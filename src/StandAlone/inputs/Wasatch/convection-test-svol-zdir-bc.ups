@@ -112,7 +112,7 @@
     <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
     <BasicExpression type="ZVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="advective-velocity-z" state="STATE_N"/>
+      <NameTag name="w" state="STATE_NONE"/>
       <ParabolicFunction a="-4.0" b="4.0" c="0.0">
          <NameTag name="YZVOL" state="STATE_NONE"/>
        </ParabolicFunction>
@@ -126,7 +126,7 @@
         <Method>CENTRAL</Method> 
         <Direction>Z</Direction>
         <AdvectiveVelocity>
-            <NameTag name="advective-velocity-z" state="STATE_N"/>
+            <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
       </ConvectiveFluxExpression>
 
@@ -141,7 +141,7 @@
         <Method>UPWIND</Method> 
         <Direction>Z</Direction>
         <AdvectiveVelocity>
-            <NameTag name="advective-velocity-z" state="STATE_N"/>
+            <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
       </ConvectiveFluxExpression>
 
@@ -156,7 +156,7 @@
         <Method>SUPERBEE</Method> 
         <Direction>Z</Direction>
         <AdvectiveVelocity>
-            <NameTag name="advective-velocity-z" state="STATE_N"/>
+            <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
       </ConvectiveFluxExpression>
 
@@ -172,7 +172,7 @@
         <Method>CHARM</Method> 
         <Direction>Z</Direction>
         <AdvectiveVelocity>
-            <NameTag name="advective-velocity-z" state="STATE_N"/>
+            <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
       </ConvectiveFluxExpression>
 
@@ -187,7 +187,7 @@
         <Method>KOREN</Method> 
         <Direction>Z</Direction>
         <AdvectiveVelocity>
-            <NameTag name="advective-velocity-z" state="STATE_N"/>
+            <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
       </ConvectiveFluxExpression>
 
@@ -203,7 +203,7 @@
         <Method>MC</Method> 
         <Direction>Z</Direction>
         <AdvectiveVelocity>
-            <NameTag name="advective-velocity-z" state="STATE_N"/>
+            <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
       </ConvectiveFluxExpression>
 
@@ -219,7 +219,7 @@
         <Method>OSPRE</Method> 
         <Direction>Z</Direction>
         <AdvectiveVelocity>
-            <NameTag name="advective-velocity-z" state="STATE_N"/>
+            <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
       </ConvectiveFluxExpression>
 
@@ -235,7 +235,7 @@
         <Method>SMART</Method> 
         <Direction>Z</Direction>
         <AdvectiveVelocity>
-            <NameTag name="advective-velocity-z" state="STATE_N"/>
+            <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
       </ConvectiveFluxExpression>
 
@@ -250,7 +250,7 @@
         <Method>VANLEER</Method> 
         <Direction>Z</Direction>
         <AdvectiveVelocity>
-            <NameTag name="advective-velocity-z" state="STATE_N"/>
+            <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
       </ConvectiveFluxExpression>
 
@@ -265,7 +265,7 @@
         <Method>HCUS</Method> 
         <Direction>Z</Direction>
         <AdvectiveVelocity>
-            <NameTag name="advective-velocity-z" state="STATE_N"/>
+            <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
       </ConvectiveFluxExpression>
 
@@ -280,7 +280,7 @@
         <Method>MINMOD</Method> 
         <Direction>Z</Direction>
         <AdvectiveVelocity>
-            <NameTag name="advective-velocity-z" state="STATE_N"/>
+            <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
       </ConvectiveFluxExpression>
 
@@ -295,7 +295,7 @@
         <Method>HQUICK</Method> 
         <Direction>Z</Direction>
         <AdvectiveVelocity>
-            <NameTag name="advective-velocity-z" state="STATE_N"/>
+            <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
       </ConvectiveFluxExpression>
 
