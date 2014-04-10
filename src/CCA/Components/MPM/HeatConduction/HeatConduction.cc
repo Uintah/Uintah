@@ -36,6 +36,7 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Util/DebugStream.h>
 
+#include <iostream>
 using namespace std;
 using namespace Uintah;
 
@@ -323,6 +324,7 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
         // Calculate k/(rho*Cv)
         double alpha = kappa*pvol[idx]/Cv; 
         Vector dT_dx = pTemperatureGradient[idx];
+
         double Tdot_cond = 0.0;
         IntVector node(0,0,0);
 
@@ -340,6 +342,7 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
                         << " gdTdt = " << gdTdt[node] 
                         << endl;
            } // cout_heat
+           //cout << node << " gdTdt: " << gdTdt[node] << endl;
           } // if patch contains node
         } // Loop over local nodes
 
@@ -360,7 +363,6 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
             } // if patch contains node
           } // Loop over local nodes
         }
-
       } // Loop over particles 
     }  // End of loop over materials
     delete interpolator;
@@ -374,6 +376,7 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw)
 {
+	cout << "entering heatflux" << endl;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -476,6 +479,7 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
         IntVector n = *iter;
         gHeatFlux[n] = -kappa * gpdTdx[n]/gMass[n];
+        cout << n << " gHeatFlux: " << gHeatFlux[n] << endl;
       }
     }  // End of loop over materials
     delete interpolator;
@@ -536,6 +540,9 @@ void HeatConduction::solveHeatEquations(const ProcessorGroup*,
       for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
         IntVector c = *iter;
+        //cout << c << " tempmass " << mass[c] << endl;
+        //cout << c << " gdTdt: " << gdTdt[c] << endl;
+        //cout << c << " extHeatRate: " << externalHeatRate[c] << endl;
         tempRate[c] = gdTdt[c]*((mass[c]-1.e-200)/mass[c]) +
            (externalHeatRate[c])/(mass[c]*Cv)+thermalContactTemperatureRate[c];
       } // End of loop over iter
@@ -602,7 +609,10 @@ void HeatConduction::integrateTemperatureRate(const ProcessorGroup*,
       for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
         IntVector c = *iter;
+        //cout << "temperature: " << c << temp_old[c] << endl;
         tempStar[c] = temp_old[c] + temp_rate[c] * delT;
+        //cout << c << " temprate: " << temp_rate[c] << endl;
+        //cout << c << " tempStar: " << tempStar[c] << endl;
       }
       // Apply grid boundary conditions to the temperature 
       bc.setBoundaryCondition(  patch,dwi,"Temperature",tempStar,interp_type);
@@ -623,6 +633,7 @@ void HeatConduction::integrateTemperatureRate(const ProcessorGroup*,
                        !iter.done();iter++){
         IntVector c = *iter;
         temp_rate[c] = (tempStar[c] - temp_oldNoBC[c]) / delT;
+
       }
 
       if(d_flag->d_fracture) { // for FractureMPM

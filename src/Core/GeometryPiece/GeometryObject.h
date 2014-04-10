@@ -31,6 +31,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+#include <iostream>
 
 #include   <list>
 #include   <string>
@@ -106,6 +107,7 @@ public:
     if(d_double_data.find(data_string)==d_double_data.end())
     {
       std::stringstream msg;
+
       msg << "Geometry Object string '" << data_string << "' was not read during problemSetup";
       throw InternalError(msg.str(),__FILE__,__LINE__);
     }

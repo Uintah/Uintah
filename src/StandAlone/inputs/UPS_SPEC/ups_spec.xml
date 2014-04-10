@@ -825,7 +825,9 @@
                                 attribute1="type REQUIRED STRING 'CGSolver, direct, hypre, hypreamr'" />
 
   <!--  MD            -->
+  <!--
   <include href="md_spec.xml" section="MD" />
+  -->
 
   <!--______________________________________________________________________-->
   <!--                 EXAMPLES                                             -->

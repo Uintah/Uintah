@@ -107,6 +107,8 @@ FileGeometryPiece::FileGeometryPiece( ProblemSpecP & ps )
       proc0cout << " and  fiberdirn";
     } else if(*vit=="p.velocity") {
       proc0cout << " and  velocity";
+    } else if(*vit=="p.concentration") {
+      proc0cout << " and  concentration";
     }
   }
   proc0cout << endl;
@@ -268,11 +270,15 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
       } else if(*vit=="p.fiberdir") {
         if(is >> v1 >> v2 >> v3){
           d_fiberdirs.push_back(Vector(v1,v2,v3));
-	}  
+        }
       } else if(*vit=="p.velocity") {
         if(is >> v1 >> v2 >> v3){
           d_velocity.push_back(Vector(v1,v2,v3));
         }
+      } else if(*vit=="p.concentration") {
+          if(is >> v1){
+            d_concentration.push_back(v1);
+          }
       }
 
       if(!is) {
@@ -324,6 +330,13 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
             swapbytes(v[0]);
           }
           d_temperature.push_back(v[0]);
+        }
+      } else if(*vit=="p.concentration") {
+         if(is.read((char*)&v[0], sizeof(double))) {
+            if(needflip){
+              swapbytes(v[0]);
+            }
+            d_concentration.push_back(v[0]);
         }
       } else if(*vit=="p.color") {
         if(is.read((char*)&v[0], sizeof(double))) {

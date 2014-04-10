@@ -123,6 +123,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
   list<GeometryObject::DataItem> geom_obj_data;
   geom_obj_data.push_back(GeometryObject::DataItem("res",                    GeometryObject::IntVector));
   geom_obj_data.push_back(GeometryObject::DataItem("temperature",            GeometryObject::Double));
+  geom_obj_data.push_back(GeometryObject::DataItem("concentration",          GeometryObject::Double));
   geom_obj_data.push_back(GeometryObject::DataItem("velocity",               GeometryObject::Vector));
   geom_obj_data.push_back(GeometryObject::DataItem("affineTransformation_A0",GeometryObject::Vector));
   geom_obj_data.push_back(GeometryObject::DataItem("affineTransformation_A1",GeometryObject::Vector));

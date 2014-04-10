@@ -227,6 +227,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
          d_saveP_x = true;
       }
 
+
       string::size_type pos = saveItem.labelName.find("p.");
       if ( pos != string::npos &&  saveItem.labelName != "p.x") {
         d_saveParticleVariables = true;
@@ -2244,7 +2245,6 @@ DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
     //   make sure that the scheduler shows that that it has been scheduled
     //   to be computed.  Then save it to saveItems.
     VarLabel* var = VarLabel::find((*it).labelName);    
-    
     if (var == NULL) {
       if (initTimestep){
         continue;
@@ -2256,7 +2256,7 @@ DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
     if ((*it).compressionMode != ""){
       var->setCompressionMode((*it).compressionMode);
     }
-      
+
     Scheduler::VarLabelMaterialMap::iterator found = pLabelMatlMap->find(var->getName());
 
     if (found == pLabelMatlMap->end()) {
