@@ -42,21 +42,21 @@
     <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
     <BasicExpression type="XVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="advective-velocity-x" state="STATE_N" />
+      <NameTag name="u" state="STATE_NONE"/>
       <Constant>1.0</Constant>
     </BasicExpression>
     
     <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
     <BasicExpression type="YVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="advective-velocity-y" state="STATE_N" />
+      <NameTag name="v" state="STATE_NONE"/>
       <Constant>1.0</Constant>
     </BasicExpression>
     
     <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
     <BasicExpression type="ZVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="advective-velocity-z" state="STATE_N" />
+      <NameTag name="w" state="STATE_NONE"/>
       <Constant>1.0</Constant>
     </BasicExpression>
     
@@ -69,7 +69,7 @@
         <Method>SUPERBEE</Method> 
         <Direction>X</Direction>
         <AdvectiveVelocity>
-            <NameTag name="advective-velocity-x" state="STATE_N"/>
+            <NameTag name="u" state="STATE_NONE"/>
         </AdvectiveVelocity>
       </ConvectiveFluxExpression>
     
@@ -84,7 +84,7 @@
         <Method>SUPERBEE</Method>
         <Direction>Y</Direction>
         <AdvectiveVelocity>
-            <NameTag name="advective-velocity-y" state="STATE_N"/>
+            <NameTag name="v" state="STATE_NONE"/>
         </AdvectiveVelocity>
       </ConvectiveFluxExpression>
       
@@ -99,7 +99,7 @@
         <Method>SUPERBEE</Method>
         <Direction>Z</Direction>
         <AdvectiveVelocity>
-            <NameTag name="advective-velocity-z" state="STATE_N"/>
+            <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
       </ConvectiveFluxExpression>
 
