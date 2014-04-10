@@ -302,7 +302,6 @@ namespace Uintah {
 
           bool sf_transform = false; 
           ProblemSpecP p = ps; 
-          typedef std::map<std::string,double> key_map;
 
           bool cold_flow; 
           p->getWithDefault( "cold_flow",cold_flow,false); 
@@ -395,7 +394,6 @@ namespace Uintah {
 
           bool sf_transform = false; 
           ProblemSpecP p = ps; 
-          typedef std::map<std::string,double> key_map;
 
           if ( p->findBlock("standard_flamelet" )){
 
@@ -542,7 +540,6 @@ namespace Uintah {
           ProblemSpecP p = ps; 
           bool doit = false; 
           _is_acidbase = false; 
-          typedef std::map<std::string,double> key_map;
 
           std::map<std::string,double>::iterator iter = _keys.find( "transform_constant" ); 
           if ( iter == _keys.end() ){ 
@@ -765,7 +762,6 @@ namespace Uintah {
           ProblemSpecP p = ps; 
 
           bool doit = false; 
-          typedef std::map<std::string,double> key_map;
 
           std::map<std::string,double>::iterator iter = _keys.find( "transform_constant" ); 
           if ( iter == _keys.end() ){ 
@@ -896,8 +892,7 @@ namespace Uintah {
 
           bool rcce_table_on = false; 
           ProblemSpecP p = ps; 
-          typedef std::map<std::string,double> key_map;
-
+ 
           _rcce_fp  = false; 
           _rcce_eta = false; 
 

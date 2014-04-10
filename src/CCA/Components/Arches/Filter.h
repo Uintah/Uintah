@@ -56,8 +56,9 @@ public:
 
   enum FILTER_TYPE { BOX, MOIN98 };
 
-  Filter( bool use_old_filter, std::string filter_type, int filter_width ) 
-    : _use_old_filter(use_old_filter), _filter_width(filter_width){
+  Filter( bool use_old_filter, std::string filter_type, int filter_width ){
+    _use_old_filter = use_old_filter;
+    _filter_width  = filter_width;
 
     if ( filter_type == "moin98" ){ 
       _filter_type = MOIN98; 
@@ -96,8 +97,6 @@ public:
     } else if ( _filter_type == BOX ) { 
 
       //Run-of-the-mill box filter.  
-      double box = std::pow(_filter_width, 3.0);
-
       for ( int i = -(_filter_width-1)/2; i <= (_filter_width-1)/2; i++ ){
         for ( int j = -(_filter_width-1)/2; j <= (_filter_width-1)/2; j++ ){
           for ( int k = -(_filter_width-1)/2; k <= (_filter_width-1)/2; k++ ){
@@ -320,8 +319,6 @@ void computeFilterVolume( const Patch* patch,
           for ( int k = -(_filter_width-1)/2; k <= (_filter_width-1)/2; k++ ){
 
             IntVector offset = c + IntVector(i,j,k);
-            int fil_off = abs(i) + abs(j) + abs(k); 
-            double my_value = fil_off + 3; 
 
             //using the old filter volume renomalizes the coefficients 
             //for the presence of boundaries. 

@@ -218,11 +218,7 @@ RHSSolver::explicitUpdate_stencilMatrix(CellIterator iter,
   for (; !iter.done(); iter++) {
 
     IntVector c = *iter;                                                            
-    IntVector adj = c + shift;
-
-    int i = c.x();
-    int j = c.y();
-    int k = c.z();                                                 
+    IntVector adj = c + shift;                                                 
 
     double apo = 0.5 * (density[c] + density[adj])*vol/delta_t;
 

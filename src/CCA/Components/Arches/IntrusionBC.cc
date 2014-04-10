@@ -414,8 +414,6 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
     const int patchID = patch->getID(); 
 
     typedef std::vector<std::string> StringVec; 
-    typedef std::map<std::string, double> StringDoubleMap;
-
     std::vector<double> iv;
 
     for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){ 
