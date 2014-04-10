@@ -449,6 +449,9 @@ protected:
 
   virtual void scheduleSolveDiffusionEquations(SchedulerP&, const PatchSet*,
                                               const MaterialSet*);
+
+  virtual void scheduleIntegrateDiffusionRate(SchedulerP&, const PatchSet*,
+                                                  const MaterialSet*);
   // End Reaction Diffusion Methods
 
   virtual void scheduleComputeAndIntegrateAcceleration(SchedulerP&,

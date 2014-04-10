@@ -110,6 +110,7 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
   task->requires(Task::OldDW, d_lb->pMassLabel,        matlset, gnone);
   task->requires(Task::OldDW, d_lb->pVolumeLabel,      matlset, gnone);
   task->requires(Task::OldDW, d_lb->pTemperatureLabel, matlset, gnone);
+  task->requires(Task::OldDW, d_lb->pConcentrationLabel, matlset, gnone);
   task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,
                                                        matlset, gnone);
   task->requires(Task::OldDW, d_lb->pStressLabel,      matlset, gnone);
@@ -123,6 +124,7 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
   task->computes(d_lb->pDeformationMeasureLabel_preReloc, matlset);
   task->computes(d_lb->pVolumeDeformedLabel,              matlset);
   task->computes(d_lb->pdTdtLabel_preReloc,               matlset);
+  task->computes(d_lb->pdCdtLabel_preReloc,               matlset);
 }
 
 void
@@ -152,6 +154,7 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
     task->requires(Task::ParentOldDW, d_lb->pMassLabel,        matlset, gnone);
     task->requires(Task::ParentOldDW, d_lb->pVolumeLabel,      matlset, gnone);
     task->requires(Task::ParentOldDW, d_lb->pTemperatureLabel, matlset, gnone);
+    task->requires(Task::ParentOldDW, d_lb->pConcentrationLabel, matlset, gnone);
     task->requires(Task::ParentOldDW, d_lb->pDeformationMeasureLabel,
                                                                matlset, gnone);
 
@@ -159,6 +162,7 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
     task->computes(d_lb->pDeformationMeasureLabel_preReloc,     matlset);
     task->computes(d_lb->pVolumeDeformedLabel,                  matlset);
     task->computes(d_lb->pdTdtLabel_preReloc,                   matlset);
+    task->computes(d_lb->pdCdtLabel_preReloc,                   matlset);
     if(reset){
       task->requires(Task::OldDW,     d_lb->dispNewLabel,      matlset, gac,1);
     }else {
@@ -172,6 +176,7 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
     task->requires(Task::OldDW, d_lb->pMassLabel,               matlset, gnone);
     task->requires(Task::OldDW, d_lb->pVolumeLabel,             matlset, gnone);
     task->requires(Task::OldDW, d_lb->pTemperatureLabel,        matlset, gnone);
+    task->requires(Task::OldDW, d_lb->pConcentrationLabel,        matlset, gnone);
     task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel, matlset, gnone);
   }
 

@@ -42,6 +42,31 @@ using namespace Uintah;
 #define EROSION
 #undef EROSION
 
+#define StartCompInDiff
+#undef StartCompInDiff
+#define CompIntDiffPCon //pConcentrationGradient
+#undef CompIntDiffPCon
+#define EndCompInDiff
+#undef EndCompInDiff
+#define StartSolveDiffEq
+#undef StartSolveDiffEq
+#define BeforeConRateSolveDiffEq
+#undef BeforeConRateSolveDiffEq
+#define ExtDiffRateSolveDiffEq
+#undef ExtDiffRateSolveDiffEq
+#define AfterConRateSolveDiffEq
+#undef AfterConRateSolveDiffEq
+#define IntDiffRateGCL
+#undef IntDiffRateGCL
+#define IntDiffRateNOBC
+#undef IntDiffRateNOBC
+#define BeforeIntDiffRateConStar
+#undef BeforeIntDiffRateConStar
+#define AfterIntDiffRateConStar
+#undef AfterIntDiffRateConStar
+#define IntDiffRateConRate
+#undef IntDiffRateConRate
+
 static DebugStream cout_doing("ConcentrationDiffusion", false);
 static DebugStream cout_concentration("MPMConcentration", false);
 
@@ -82,8 +107,15 @@ void ConcentrationDiffusion::scheduleComputeInternalDiffusionRate(SchedulerP& sc
   t->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,        gan, NGP);
   t->requires(Task::NewDW, d_lb->gConcentrationLabel,             gan, 2*NGN);
   t->requires(Task::NewDW, d_lb->gMassLabel,                      gnone);
-  t->computes(d_lb->gdTdtLabel);
+  t->computes(d_lb->gdCdtLabel);
   
+  if(d_flag->d_fracture) { // for FractureMPM
+      t->requires(Task::NewDW, d_lb->pgCodeLabel,                   gan, NGP);
+      t->requires(Task::NewDW, d_lb->GConcentrationLabel,             gac, 2*NGN);
+      t->requires(Task::NewDW, d_lb->GMassLabel,                    gnone);
+      t->computes(d_lb->GdCdtLabel);
+    }
+
   sched->addTask(t, patches, matls);
 }
 //__________________________________
@@ -130,10 +162,18 @@ void ConcentrationDiffusion::scheduleSolveDiffusionEquations(SchedulerP& sched,
   t->requires(Task::NewDW, d_lb->gMassLabel,                           gnone);
   t->requires(Task::NewDW, d_lb->gVolumeLabel,                         gnone);
   t->requires(Task::NewDW, d_lb->gExternalDiffusionRateLabel,          gnone);
-  t->requires(Task::NewDW, d_lb->gdTdtLabel,                           gnone);
-  t->requires(Task::NewDW, d_lb->gConcentrationContactDiffusionRateLabel,  gnone);
+  t->requires(Task::NewDW, d_lb->gdCdtLabel,                           gnone);
+  //t->requires(Task::NewDW, d_lb->gConcentrationContactDiffusionRateLabel,  gnone);
   t->modifies(d_lb->gConcentrationRateLabel);
 
+  if(d_flag->d_fracture) { // for FractureMPM
+      t->requires(Task::NewDW, d_lb->GMassLabel,                         gnone);
+      t->requires(Task::NewDW, d_lb->GVolumeLabel,                       gnone);
+      t->requires(Task::NewDW, d_lb->GExternalDiffusionRateLabel,        gnone);
+      t->requires(Task::NewDW, d_lb->GdTdtLabel,                         gnone);
+      //t->requires(Task::NewDW, d_lb->GConcentrationContactDiffusionRateLabel,gnone);
+      t->computes(d_lb->GTemperatureRateLabel);
+    }
   sched->addTask(t, patches, matls);
 }
 
@@ -157,7 +197,13 @@ void ConcentrationDiffusion::scheduleIntegrateDiffusionRate(SchedulerP& sched,
   t->requires(Task::NewDW, d_lb->gConcentrationNoBCLabel, Ghost::None);
   t->modifies(             d_lb->gConcentrationRateLabel, mss);
   t->computes(d_lb->gConcentrationStarLabel);
-                     
+
+  if(d_flag->d_fracture) { // for FractureMPM
+      t->requires(Task::NewDW, d_lb->GConcentrationLabel,     Ghost::None);
+      t->requires(Task::NewDW, d_lb->GConcentrationNoBCLabel, Ghost::None);
+      t->modifies(             d_lb->GConcentrationRateLabel, mss);
+      t->computes(d_lb->GTemperatureStarLabel);
+    }
   sched->addTask(t, patches, matls);
 }
 
@@ -204,7 +250,7 @@ void ConcentrationDiffusion::computeInternalDiffusionRate(const ProcessorGroup*,
       constParticleVariable<Matrix3> deformationGradient;
       ParticleVariable<Vector>      pConcentrationGradient;
       constNCVariable<double>       gConcentration,gMass;
-      NCVariable<double>            gdTdt;
+      NCVariable<double>            gdCdt;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        Ghost::AroundNodes, NGP,
@@ -217,10 +263,30 @@ void ConcentrationDiffusion::computeInternalDiffusionRate(const ProcessorGroup*,
       old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
       new_dw->get(gConcentration, d_lb->gConcentrationLabel, dwi, patch, gac,2*NGN);
       new_dw->get(gMass,        d_lb->gMassLabel,        dwi, patch, gnone, 0);
-      new_dw->allocateAndPut(gdTdt, d_lb->gdTdtLabel,    dwi, patch);
+      new_dw->allocateAndPut(gdCdt, d_lb->gdCdtLabel,    dwi, patch);
       new_dw->allocateTemporary(pConcentrationGradient, pset);
   
-      gdTdt.initialize(0.);
+#ifdef StartCompInDiff
+      cout << "Start Compute Internal Diffusion Rate" << endl;
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+          IntVector n = *iter;
+          cout << n << " gConcentration: " << gConcentration[n] << endl;
+      }
+#endif
+      gdCdt.initialize(0.);
+
+      // for FractureMPM
+      constParticleVariable<Short27> pgCode;
+      constNCVariable<double> GConcentration;
+      constNCVariable<double> GMass;
+      NCVariable<double> GdCdt;
+      if(d_flag->d_fracture) {
+    	  new_dw->get(pgCode,       d_lb->pgCodeLabel, pset);
+          new_dw->get(GConcentration, d_lb->GConcentrationLabel, dwi,patch,gac,2*NGN);
+          new_dw->get(GMass,        d_lb->GMassLabel,        dwi,patch,gnone, 0);
+          new_dw->allocateAndPut(GdCdt, d_lb->GdCdtLabel,    dwi,patch);
+          GdCdt.initialize(0.);
+      }
 
       // Compute the concentration gradient at each particle and project
       // the particle plastic work temperature rate to the grid
@@ -229,10 +295,12 @@ void ConcentrationDiffusion::computeInternalDiffusionRate(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
+
         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
 
         pConcentrationGradient[idx] = Vector(0.0,0.0,0.0);
         for (int k = 0; k < d_flag->d_8or27; k++){
+        	//cout << ni[k] << " gConc: " << gConcentration[ni[k]] << endl;
           for (int j = 0; j<3; j++) {
             pConcentrationGradient[idx][j] +=
                   gConcentration[ni[k]] * d_S[k][j] * oodx[j];
@@ -241,7 +309,7 @@ void ConcentrationDiffusion::computeInternalDiffusionRate(const ProcessorGroup*,
               cout_concentration << "   node = " << ni[k]
                                  << " gConcentration = " << gConcentration[ni[k]]
                                  << " idx = " << idx
-                                 << " pTempGrad = " << pConcentrationGradient[idx][j]
+                                 << " pConcentrationGrad = " << pConcentrationGradient[idx][j]
                                  << endl;
             }
           }
@@ -249,7 +317,14 @@ void ConcentrationDiffusion::computeInternalDiffusionRate(const ProcessorGroup*,
           // rate to the grid
         } // Loop over local nodes
       } // Loop over particles
-
+#ifdef CompIntDiffPCon
+      cout << "List of computed pConcGradients in Compute Internal Diff Rate" << endl;
+      for (ParticleSubset::iterator iter = pset->begin();
+           iter != pset->end(); iter++){
+           particleIndex idx = *iter;
+           cout << idx << " pConcGrad1: " << pConcentrationGradient[idx] << endl;
+      }
+#endif
       // Compute rate of temperature change at the grid due to conduction
       // and plastic work
       for(ParticleSubset::iterator iter = pset->begin();
@@ -261,28 +336,38 @@ void ConcentrationDiffusion::computeInternalDiffusionRate(const ProcessorGroup*,
 
         // Calculate k/(rho*Cv)
         double alpha = kappa*pvol[idx]/Cv; 
-        Vector dT_dx = pConcentrationGradient[idx];
-        double Tdot_cond = 0.0;
+        Vector dC_dx = pConcentrationGradient[idx];
+
+        double Cdot_cond = 0.0;
         IntVector node(0,0,0);
+
+        //cout << idx << " pConcGrad: " << pConcentrationGradient[idx] << endl;
 
         for (int k = 0; k < d_flag->d_8or27; k++){
           node = ni[k];
           if(patch->containsNode(node)){
+        	  //cout << node << " conc_gMass: " << gMass[node] << endl;
            Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
-           Tdot_cond = Dot(div, dT_dx)*(alpha/gMass[node]);
-           gdTdt[node] -= Tdot_cond;
+           Cdot_cond = Dot(div, dC_dx)*(alpha/gMass[node]);
+           gdCdt[node] -= Cdot_cond;
 
            if (cout_concentration.active()) {
               cout_concentration << "   node = " << node << " div = " << div
-                        		 << " dT_dx = " << dT_dx << " alpha = " << alpha*Cv
-                        		 << " Tdot_cond = " << Tdot_cond*Cv*gMass[node]
-                        		 << " gdTdt = " << gdTdt[node]
+                        		 << " dC_dx = " << dC_dx << " alpha = " << alpha*Cv
+                        		 << " Cdot_cond = " << Cdot_cond*Cv*gMass[node]
+                        		 << " gdCdt = " << gdCdt[node]
                         		 << endl;
            } // cout_concentration
           } // if patch contains node
         } // Loop over local nodes
-
-      } // Loop over particles 
+      } // Loop over particles
+#ifdef EndCompInDiff
+      cout << "End Compute Internal Diffusion Rate" << endl;
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+          IntVector n = *iter;
+          cout << n << " gdCdt: " << gdCdt[n] << endl;
+      }
+#endif
     }  // End of loop over materials
     delete interpolator;
   }  // End of loop over patches
@@ -295,14 +380,15 @@ void ConcentrationDiffusion::computeNodalConcentrationFlux(const ProcessorGroup*
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw)
 {
+	cout << "entering concflux" << endl;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    // This task only exists to compute the diagnostic gHeatFluxLabel
+    // This task only exists to compute the diagnostic gConcentrationFluxLabel
     // which is not used in any of the subsequent calculations
 
     if (cout_doing.active())
-      cout_doing <<"Doing computeNodalHeatFlux on patch " << patch->getID()<<"\t\t MPM"<< endl;
+      cout_doing <<"Doing computeNodalConcentrationFlux on patch " << patch->getID()<<"\t\t MPM"<< endl;
     if (cout_concentration.active())
       cout_concentration << " Patch = " << patch->getID() << endl;
       
@@ -352,25 +438,25 @@ void ConcentrationDiffusion::computeNodalConcentrationFlux(const ProcessorGroup*
 
       //__________________________________
       // Create a temporary variables for the mass weighted nodal
-      // temperature gradient
-      NCVariable<Vector> gpdTdx;
-      ParticleVariable<Vector> pdTdx;
-      new_dw->allocateTemporary(gpdTdx, patch, gnone, 0);
-      new_dw->allocateTemporary(pdTdx, pset);
+      // concentration gradient
+      NCVariable<Vector> gpdCdx;
+      ParticleVariable<Vector> pdCdx;
+      new_dw->allocateTemporary(gpdCdx, patch, gnone, 0);
+      new_dw->allocateTemporary(pdCdx, pset);
       
-      gpdTdx.initialize(Vector(0.,0.,0.));
+      gpdCdx.initialize(Vector(0.,0.,0.));
 
       // Compute the concentration gradient at each particle
       for (ParticleSubset::iterator iter = pset->begin();
            iter != pset->end(); iter++){
         particleIndex idx = *iter;
-        pdTdx[idx] = Vector(0,0,0);
+        pdCdx[idx] = Vector(0,0,0);
         
         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
 
         for (int k = 0; k < d_flag->d_8or27; k++){
           for (int j = 0; j<3; j++) {
-            pdTdx[idx][j] += gConcentration[ni[k]] * d_S[k][j] * oodx[j];
+            pdCdx[idx][j] += gConcentration[ni[k]] * d_S[k][j] * oodx[j];
           } 
         }
       }  // particles
@@ -383,11 +469,11 @@ void ConcentrationDiffusion::computeNodalConcentrationFlux(const ProcessorGroup*
         // Get the node indices that surround the cell
         interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],deformationGradient[idx]);
                                                             
-        Vector pdTdx_massWt = pdTdx[idx] * pMass[idx];
+        Vector pdCdx_massWt = pdCdx[idx] * pMass[idx];
         
         for (int k = 0; k < d_flag->d_8or27; k++){
           if(patch->containsNode(ni[k])){
-            gpdTdx[ni[k]] +=  (pdTdx_massWt*S[k]);        
+            gpdCdx[ni[k]] +=  (pdCdx_massWt*S[k]);
           } 
         }
       }  // particles
@@ -396,7 +482,8 @@ void ConcentrationDiffusion::computeNodalConcentrationFlux(const ProcessorGroup*
       // gpdTdx by the grid mass
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
         IntVector n = *iter;
-        gConcentrationFlux[n] = -kappa * gpdTdx[n]/gMass[n];
+        gConcentrationFlux[n] = -kappa * gpdCdx[n]/gMass[n];
+        cout << n << " gConcentrationFlux: " << gConcentrationFlux[n] << endl;
       }
     }  // End of loop over materials
     delete interpolator;
@@ -424,28 +511,60 @@ void ConcentrationDiffusion::solveDiffusionEquations(const ProcessorGroup*,
       double Cv = mpm_matl->getSpecificHeat();
      
       // Get required variables for this patch
-      constNCVariable<double> mass,externalConcentrationRate,gvolume;
-      constNCVariable<double> concentrationContactDiffusionRate,gdTdt;
+      constNCVariable<double> mass,externalDiffusionRate,gvolume;
+      constNCVariable<double> concentrationContactDiffusionRate,gdCdt;
             
       new_dw->get(mass,    d_lb->gMassLabel,      dwi, patch, Ghost::None, 0);
       new_dw->get(gvolume, d_lb->gVolumeLabel,    dwi, patch, Ghost::None, 0);
-      new_dw->get(externalConcentrationRate, d_lb->gExternalDiffusionRateLabel,
+      new_dw->get(externalDiffusionRate, d_lb->gExternalDiffusionRateLabel,
                   dwi, patch, Ghost::None, 0);
-      new_dw->get(gdTdt,   d_lb->gdTdtLabel,      dwi, patch, Ghost::None, 0);
-      new_dw->get(concentrationContactDiffusionRate,
-                  d_lb->gConcentrationContactDiffusionRateLabel,
-                                                  dwi, patch, Ghost::None, 0);
+      new_dw->get(gdCdt,   d_lb->gdCdtLabel,      dwi, patch, Ghost::None, 0);
+      //new_dw->get(concentrationContactDiffusionRate,d_lb->gConcentrationContactDiffusionRateLabel,
+                                                  //dwi, patch, Ghost::None, 0);
 
+#ifdef StartSolveDiffEq
+      cout << "Start Solve Diffusion Equation" << endl;
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+          IntVector n = *iter;
+          cout << n << " gdCdt: " << gdCdt[n] << endl;
+      }
+#endif
       // Create variables for the results
-      NCVariable<double> tempRate, GtempRate;
-      new_dw->getModifiable(tempRate, d_lb->gConcentrationRateLabel,dwi,patch);
+      NCVariable<double> concentrationRate, GconcentrationRate;
+      new_dw->getModifiable(concentrationRate, d_lb->gConcentrationRateLabel,dwi,patch);
+
+#ifdef BeforeConRateSolveDiffEq
+      cout << "Before concRate Solve Diffusion Equation" << endl;
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+          IntVector n = *iter;
+          cout << n << " concentrationRate: " << concentrationRate[n] << endl;
+      }
+#endif
+
+#ifdef ExtConRateSolveDiffEq
+      cout << "ExtDiffusionRate Solve Diffusion Equation" << endl;
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+          IntVector n = *iter;
+          cout << n << " externalDiffusionRate: " << externalDiffusionRate[n] << endl;
+      }
+#endif
 
       for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
         IntVector c = *iter;
-        tempRate[c] = gdTdt[c]*((mass[c]-1.e-200)/mass[c]) +
-           (externalConcentrationRate[c])/(mass[c]*Cv)+concentrationContactDiffusionRate[c];
+        //cout << c << " conmass " << mass[c] << endl;
+        //cout << c << " gdCdt: " << gdCdt[c] << endl;
+        //cout << c << " extDiffRate: " << externalDiffusionRate[c] << endl;
+        concentrationRate[c] = gdCdt[c]*((mass[c]-1.e-200)/mass[c]) +
+           (externalDiffusionRate[c])/(mass[c]*Cv);
       } // End of loop over iter
+#ifdef AfterConRateSolveDiffEq
+      cout << "After concRate Solve Diffusion Equation" << endl;
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+          IntVector n = *iter;
+          cout << n << " concentrationRate: " << concentrationRate[n] << endl;
+      }
+#endif
     }
   }
 }
@@ -480,18 +599,51 @@ void ConcentrationDiffusion::integrateDiffusionRate(const ProcessorGroup*,
       new_dw->getModifiable(conc_rate, d_lb->gConcentrationRateLabel, dwi,patch);
       new_dw->allocateAndPut(concStar, d_lb->gConcentrationStarLabel, dwi,patch);
       concStar.initialize(0.0);
-      
+#ifdef IntDiffRateGCL
+      cout << "Integrate Diffusion Rate" << endl;
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+          IntVector n = *iter;
+          cout << n << " conc_old: " << conc_old[n] << endl;
+      }
+#endif
+
+#ifdef IntDiffRateNOBC
+      cout << "Integrate Diffusion Rate" << endl;
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+          IntVector n = *iter;
+          cout << n << " conc_oldNoBC: " << conc_oldNoBC[n] << endl;
+      }
+#endif
+
+
+
       MPMBoundCond bc;
 
       for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
         IntVector c = *iter;
+        //cout << "concentration: " << c << conc_old[c] << endl;
         concStar[c] = conc_old[c] + conc_rate[c] * delT;
+        //cout << c << " concrate: " << conc_rate[c] << endl;
+        //cout << c << " conStar: " << concStar[c] << endl;
       }
-      // Apply grid boundary conditions to the temperature 
+
+#ifdef BeforeIntDiffRateConStar
+      cout << "Integrate Diffusion Rate" << endl;
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+          IntVector n = *iter;
+          cout << n << " Before concStar: " << concStar[n] << endl;
+      }
+#endif
+      // Apply grid boundary conditions to the concentration
       bc.setBoundaryCondition(  patch,dwi,"Concentration",concStar,interp_type);
-
-
+#ifdef AfterIntDiffRateConStar
+      cout << "Integrate Diffusion Rate" << endl;
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+          IntVector n = *iter;
+          cout << n << " After concStar: " << concStar[n] << endl;
+      }
+#endif
       // Now recompute temp_rate as the difference between the temperature
       // interpolated to the grid (no bcs applied) and the new tempStar
       for(NodeIterator iter=patch->getExtraNodeIterator();
@@ -499,6 +651,13 @@ void ConcentrationDiffusion::integrateDiffusionRate(const ProcessorGroup*,
         IntVector c = *iter;
         conc_rate[c] = (concStar[c] - conc_oldNoBC[c]) / delT;
       }
+#ifdef IntDiffRateConRate
+      cout << "Integrate Diffusion Rate" << endl;
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+          IntVector n = *iter;
+          cout << n << " conc_rate: " << conc_rate[n] << endl;
+      }
+#endif
     } // matls
   } // patches
 }

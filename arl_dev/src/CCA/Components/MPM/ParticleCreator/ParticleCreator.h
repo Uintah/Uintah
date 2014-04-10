@@ -80,6 +80,7 @@ namespace Uintah {
     geompoints d_object_points;
     geomvols d_object_vols;
     geomvols d_object_temps;
+    geomvols d_object_concentrations;
     geomvols d_object_colors;
     geomvecs d_object_forces;
     geomvecs d_object_fibers;  
@@ -104,6 +105,7 @@ namespace Uintah {
     ParticleVariable<double> pExternalHeatFlux;
     //MembraneParticleCreator
     ParticleVariable<Vector> pTang1, pTang2, pNorm;
+    ParticleVariable<double> pconcentration, pconcentrationPrevious;
     } ParticleVars;
 
   protected:

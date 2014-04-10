@@ -111,6 +111,8 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_reductionVars->centerOfMass     = false;
 
   d_computeNodalConcentrationFlux = false;
+  d_doImplicitConcentrationDiffusion = false;
+  d_doExplicitConcentrationDiffusion = true;
 
 // MMS
 if(d_mms_type=="AxisAligned"){

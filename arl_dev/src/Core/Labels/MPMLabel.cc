@@ -665,26 +665,66 @@ MPMLabel::MPMLabel()
     VarLabel::create("cellNACZID", CCVariable<short int>::getTypeDescription());
 
   // For Reactive Flow
+  pConcentrationGradientLabel = VarLabel::create( "p.concentrationGradient",
+  			ParticleVariable<Vector>::getTypeDescription() );
   pConcentrationLabel = VarLabel::create("p.concentration",
 		  	NCVariable<double>::getTypeDescription());
-  gConcentrationLabel = VarLabel::create("g.concentration",
-  			NCVariable<double>::getTypeDescription());
+  pConcentrationLabel_preReloc = VarLabel::create( "p.concentration+",
+    	    ParticleVariable<double>::getTypeDescription() );
+  pConcentrationCurrentLabel = VarLabel::create( "p.concentrationCurrent",
+            ParticleVariable<double>::getTypeDescription() );
+  pConcentrationPreviousLabel = VarLabel::create( "p.concentrationPrevious",
+    		ParticleVariable<double>::getTypeDescription() );
+  pConcentrationPreviousLabel_preReloc = VarLabel::create( "p.concentrationPrevious+",
+            ParticleVariable<double>::getTypeDescription() );
+  pdCdtLabel = VarLabel::create( "p.dCdt",
+    		ParticleVariable<double>::getTypeDescription() );
+  pdCdtLabel_preReloc = VarLabel::create( "p.dCdt+",
+    		ParticleVariable<double>::getTypeDescription() );
+  pExternalDiffusionRateLabel = VarLabel::create( "p.externalDiffusionRate",
+     	    ParticleVariable<double>::getTypeDescription() );
+  pExternalDiffusionRateLabel_preReloc = VarLabel::create( "p.externalDiffusionRate+",
+     		ParticleVariable<double>::getTypeDescription() );
+  pExternalConcentrationFluxLabel = VarLabel::create( "p.externalConcentrationFlux",
+  			ParticleVariable<double>::getTypeDescription() );
+  pExternalConcentrationFluxLabel_preReloc = VarLabel::create( "p.externalConcentrationFlux+",
+    		ParticleVariable<double>::getTypeDescription() );
   gConcentrationRateLabel = VarLabel::create("g.concentrationRate",
   			NCVariable<double>::getTypeDescription());
+  gConcentrationLabel = VarLabel::create("g.concentration",
+    	    NCVariable<double>::getTypeDescription());
+  gConcentrationNoBCLabel = VarLabel::create("g.concentrationnobc",
+    		NCVariable<double>::getTypeDescription());
+  gConcentrationStarLabel = VarLabel::create("g.concentrationStar",
+    		NCVariable<double>::getTypeDescription());
+  gdCdtLabel = VarLabel::create("g.dCdt",
+    	    NCVariable<double>::getTypeDescription());
   gConcentrationFluxLabel = VarLabel::create("g.ConcentrationFlux",
 		  	NCVariable<Vector>::getTypeDescription());
   gExternalDiffusionRateLabel = VarLabel::create("g.externalDiffusionRate",
-			NCVariable<double>::getTypeDescription());
+    		NCVariable<double>::getTypeDescription());
+  gExternalConcentrationFluxLabel = VarLabel::create("g.externalConcentrationFlux",
+            NCVariable<double>::getTypeDescription());
+  GConcentrationLabel = VarLabel::create("G.concentration",
+            NCVariable<double>::getTypeDescription());
+  GConcentrationNoBCLabel = VarLabel::create("G.concentrationNoBC",
+            NCVariable<double>::getTypeDescription());
+  GExternalDiffusionRateLabel= VarLabel::create("G.externaldiffusionrate",
+            NCVariable<double>::getTypeDescription());
+  GConcentrationContactDiffusionRateLabel = VarLabel::create(
+            "G.concentrationContactDiffusionRate",
+            NCVariable<double>::getTypeDescription());
+  GdCdtLabel = VarLabel::create("G.dCdt",
+          	NCVariable<double>::getTypeDescription()); ;
+  GConcentrationRateLabel = VarLabel::create("G.concentrationRate",
+            NCVariable<double>::getTypeDescription());;
+  GConcentrationStarLabel = VarLabel::create("G.concentrationStar",
+            NCVariable<double>::getTypeDescription());
+  dCdt_NCLabel = VarLabel::create("dCdt_NC",
+  			NCVariable<double>::getTypeDescription());
   gConcentrationContactDiffusionRateLabel =
-       VarLabel::create("g.concentrationContactDiffusionRate",
-       NCVariable<double>::getTypeDescription());
-  gConcentrationNoBCLabel = VarLabel::create("g.concentrationnobc",
-  			NCVariable<double>::getTypeDescription());
-
-  gConcentrationStarLabel = VarLabel::create("g.concentrationStar",
-  			NCVariable<double>::getTypeDescription());
-
-
+         VarLabel::create("g.concentrationContactDiffusionRate",
+         NCVariable<double>::getTypeDescription());
 } 
 
 MPMLabel::~MPMLabel()
@@ -924,4 +964,35 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(czBotMatLabel_preReloc);
   VarLabel::destroy(czFailedLabel);
   VarLabel::destroy(czFailedLabel_preReloc);
+
+  // For Reactive Flow
+  VarLabel::destroy(pConcentrationGradientLabel);
+  VarLabel::destroy(pConcentrationLabel);
+  VarLabel::destroy(pConcentrationLabel_preReloc);
+  VarLabel::destroy(pConcentrationCurrentLabel);
+  VarLabel::destroy(pConcentrationPreviousLabel);
+  VarLabel::destroy(pConcentrationPreviousLabel_preReloc);
+  VarLabel::destroy(pdCdtLabel);
+  VarLabel::destroy(pdCdtLabel_preReloc);
+  VarLabel::destroy(pExternalDiffusionRateLabel);
+  VarLabel::destroy(pExternalDiffusionRateLabel_preReloc);
+  VarLabel::destroy(pExternalConcentrationFluxLabel);
+  VarLabel::destroy(pExternalConcentrationFluxLabel);
+  VarLabel::destroy(gConcentrationRateLabel);
+  VarLabel::destroy(gConcentrationLabel);
+  VarLabel::destroy(gConcentrationNoBCLabel);
+  VarLabel::destroy(gConcentrationStarLabel);
+  VarLabel::destroy(gdCdtLabel);
+  VarLabel::destroy(gConcentrationFluxLabel);
+  VarLabel::destroy(gExternalDiffusionRateLabel);
+  VarLabel::destroy(gExternalConcentrationFluxLabel);
+  VarLabel::destroy(GConcentrationLabel);
+  VarLabel::destroy(GConcentrationNoBCLabel);
+  VarLabel::destroy(GExternalDiffusionRateLabel);
+  VarLabel::destroy(GConcentrationContactDiffusionRateLabel);
+  VarLabel::destroy(GdCdtLabel); ;
+  VarLabel::destroy(GConcentrationRateLabel);
+  VarLabel::destroy(GConcentrationStarLabel);
+
+  VarLabel::destroy(gConcentrationContactDiffusionRateLabel);
 }

@@ -75,6 +75,14 @@
 
 //#define GE_Proj
 #undef GE_Proj
+#define IntToGrid
+#undef IntToGrid
+#define IntToGridGConc
+#undef IntToGridGConc
+#define IntToGridGConcAfterBC
+#undef IntToGridGConcAfterBC
+#define IntToGridGlobalConc
+#undef IntToGridGlobalConc
 
 using namespace Uintah;
 
@@ -84,7 +92,9 @@ static DebugStream cout_doing("MPM", false);
 static DebugStream cout_dbg("SerialMPM", false);
 static DebugStream cout_convert("MPMConv", false);
 static DebugStream cout_heat("MPMHeat", false);
+static DebugStream cout_concentration("MPMConcentration", false);
 static DebugStream amr_doing("AMRMPM", false);
+static DebugStream cout_reflow("ReFlow", false);
 
 // From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
 extern Mutex cerrLock;
@@ -115,6 +125,7 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   contactModel        = 0;
   thermalContactModel = 0;
   heatConductionModel = 0;
+  concentrationDiffusionModel = 0;
   NGP     = 1;
   NGN     = 1;
   d_recompile = false;
@@ -130,6 +141,7 @@ SerialMPM::~SerialMPM()
   delete contactModel;
   delete thermalContactModel;
   delete heatConductionModel;
+  delete concentrationDiffusionModel;
   MPMPhysicalBCFactory::clean();
   
   if(d_analysisModules.size() != 0){
@@ -239,6 +251,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   heatConductionModel = scinew HeatConduction(sharedState,lb,flags);
 
+  concentrationDiffusionModel = scinew ConcentrationDiffusion(sharedState,lb,flags);
+
   materialProblemSetup(restart_mat_ps, d_sharedState,flags);
 
   cohesiveZoneProblemSetup(restart_mat_ps, d_sharedState,flags);
@@ -337,6 +351,11 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(d_sharedState->get_delt_label(),level.get_rep());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
   t->computes(lb->NC_CCweightLabel,zeroth_matl);
+
+  // Reactive Flow
+  t->computes(lb->pConcentrationLabel);
+  t->computes(lb->pConcentrationPreviousLabel);
+  t->computes(lb->pdCdtLabel);
 
   if(!flags->d_doGridReset){
     t->computes(lb->gDisplacementLabel);
@@ -590,6 +609,12 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleSolveHeatEquations(           sched, patches, matls);
     scheduleIntegrateTemperatureRate(     sched, patches, matls);
   }
+  if(flags->d_doExplicitConcentrationDiffusion){
+      scheduleComputeInternalDiffusionRate(      sched, patches, matls);
+      scheduleComputeNodalConcentrationFlux(         sched, patches, matls);
+      scheduleSolveDiffusionEquations(           sched, patches, matls);
+      scheduleIntegrateDiffusionRate(     sched, patches, matls);
+    }
   if(!flags->d_use_momentum_form){
     scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
     scheduleComputeStressTensor(            sched, patches, matls);
@@ -710,6 +735,7 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pXLabel,                gan,NGP);
   t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,gan,NGP);
   t->requires(Task::OldDW, lb->pTemperatureLabel,      gan,NGP);
+  t->requires(Task::OldDW, lb->pConcentrationLabel,      gan,NGP);
   t->requires(Task::OldDW, lb->pSizeLabel,             gan,NGP);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,gan,NGP);
   if (flags->d_useCBDI) {
@@ -727,6 +753,8 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
               Task::OutOfDomain);
   t->computes(lb->gTemperatureLabel, d_sharedState->getAllInOneMatl(),
               Task::OutOfDomain);
+  t->computes(lb->gConcentrationLabel, d_sharedState->getAllInOneMatl(),
+                  Task::OutOfDomain);
   t->computes(lb->gVolumeLabel,      d_sharedState->getAllInOneMatl(),
               Task::OutOfDomain);
   t->computes(lb->gVelocityLabel,    d_sharedState->getAllInOneMatl(),
@@ -739,6 +767,12 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gTemperatureNoBCLabel);
   t->computes(lb->gTemperatureRateLabel);
   t->computes(lb->gExternalHeatRateLabel);
+
+  // Reactive flow
+  t->computes(lb->gConcentrationLabel);
+  t->computes(lb->gConcentrationNoBCLabel);
+  t->computes(lb->gConcentrationRateLabel);
+  t->computes(lb->gExternalDiffusionRateLabel);
 
   if(flags->d_with_ice){
     t->computes(lb->gVelocityBCLabel);
@@ -1040,6 +1074,7 @@ void SerialMPM::scheduleSolveHeatEquations(SchedulerP& sched,
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
                            getLevel(patches)->getGrid()->numLevels()))
     return;
+
   printSchedule(patches,cout_doing,"MPM::scheduleSolveHeatEquations");
   heatConductionModel->scheduleSolveHeatEquations(sched,patches,matls);
 }
@@ -1112,6 +1147,17 @@ void SerialMPM::scheduleIntegrateTemperatureRate(SchedulerP& sched,
     return;
   printSchedule(patches,cout_doing,"MPM::scheduleIntegrateTemperatureRate");
   heatConductionModel->scheduleIntegrateTemperatureRate(sched,patches,matls);
+}
+
+void SerialMPM::scheduleIntegrateDiffusionRate(SchedulerP& sched,
+                                                 const PatchSet* patches,
+                                                 const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+  printSchedule(patches,cout_doing,"MPM::scheduleIntegrateDiffusionRate");
+  concentrationDiffusionModel->scheduleIntegrateDiffusionRate(sched,patches,matls);
 }
 
 void SerialMPM::scheduleExMomIntegrated(SchedulerP& sched,
@@ -1199,9 +1245,14 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
   t->requires(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
 
+  // Reactive Flow require
+  t->requires(Task::NewDW, lb->gConcentrationRateLabel,         gac,NGN);
+  t->requires(Task::OldDW, lb->pConcentrationLabel,             gnone);
+
   if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
     t->requires(Task::NewDW, lb->massBurnFractionLabel,gac,NGN);
+    t->requires(Task::NewDW, lb->dCdt_NCLabel,         gac,NGN);
   }
 
   t->computes(lb->pDispLabel_preReloc);
@@ -1216,6 +1267,10 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pVelGradLabel_preReloc);
   t->computes(lb->pDeformationMeasureLabel_preReloc);
   t->computes(lb->pXXLabel);
+
+  // Reactive Flow computes
+  t->computes(lb->pConcentrationLabel_preReloc);
+  t->computes(lb->pConcentrationPreviousLabel_preReloc);
 
   //__________________________________
   //  reduction variables
@@ -1277,8 +1332,10 @@ void SerialMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pdTdtLabel_preReloc,             gnone);
   t->requires(Task::NewDW, lb->pLocalizedMPMLabel_preReloc,     gnone);
   t->requires(Task::NewDW, lb->pMassLabel_preReloc,             gnone);
+  t->requires(Task::NewDW, lb->pdCdtLabel_preReloc,             gnone);
 
   t->modifies(lb->pTemperatureLabel_preReloc);
+  t->modifies(lb->pConcentrationLabel_preReloc);
 
   sched->addTask(t, patches, matls);
 }
@@ -1361,8 +1418,13 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pdTdtLabel_preReloc,             gnone);
   t->requires(Task::NewDW, lb->pLocalizedMPMLabel_preReloc,     gnone);
 
+  // Reactive Flow requires
+  t->requires(Task::OldDW, lb->pConcentrationLabel,             gnone);
+  t->requires(Task::NewDW, lb->pdCdtLabel_preReloc,             gnone);
+
   if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
+    t->requires(Task::NewDW, lb->dCdt_NCLabel,         gac,NGN);
     t->requires(Task::NewDW, lb->massBurnFractionLabel,gac,NGN);
   }
 
@@ -1373,6 +1435,10 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP& sched,
   t->computes(lb->pTempPreviousLabel_preReloc); // for thermal stress 
   t->computes(lb->pMassLabel_preReloc);
   t->computes(lb->pSizeLabel_preReloc);
+
+  // Reactive Flow computes
+  t->computes(lb->pConcentrationLabel_preReloc);
+  t->computes(lb->pConcentrationPreviousLabel_preReloc);
 
   //__________________________________
   //  reduction variables
@@ -1579,6 +1645,11 @@ void SerialMPM::scheduleRefine(const PatchSet* patches,
   t->computes(lb->pLocalizedMPMLabel);
   t->computes(lb->NC_CCweightLabel);
   t->computes(d_sharedState->get_delt_label(),getLevel(patches));
+
+  // Reactive Flow computes
+  t->computes(lb->pConcentrationLabel);
+  t->computes(lb->pConcentrationPreviousLabel);
+  t->computes(lb->pdCdtLabel);
 
   // Debugging Scalar
   if (flags->d_with_color) {
@@ -2037,11 +2108,14 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     string interp_type = flags->d_interpolator_type;
 
     NCVariable<double> gmassglobal,gtempglobal,gvolumeglobal;
+    NCVariable<double> gconcentrationglobal;
     NCVariable<Vector> gvelglobal;
     new_dw->allocateAndPut(gmassglobal, lb->gMassLabel,
                            d_sharedState->getAllInOneMatl()->get(0), patch);
     new_dw->allocateAndPut(gtempglobal, lb->gTemperatureLabel,
                            d_sharedState->getAllInOneMatl()->get(0), patch);
+    new_dw->allocateAndPut(gconcentrationglobal, lb->gConcentrationLabel,
+                               d_sharedState->getAllInOneMatl()->get(0), patch);
     new_dw->allocateAndPut(gvolumeglobal, lb->gVolumeLabel,
                            d_sharedState->getAllInOneMatl()->get(0), patch);
     new_dw->allocateAndPut(gvelglobal, lb->gVelocityLabel,
@@ -2049,6 +2123,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     gmassglobal.initialize(d_SMALL_NUM_MPM);
     gvolumeglobal.initialize(d_SMALL_NUM_MPM);
     gtempglobal.initialize(0.0);
+    gconcentrationglobal.initialize(0.0);
     gvelglobal.initialize(Vector(0.0));
     Ghost::GhostType  gan = Ghost::AroundNodes;
     for(int m = 0; m < numMatls; m++){
@@ -2058,6 +2133,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // Create arrays for the particle data
       constParticleVariable<Point>  px;
       constParticleVariable<double> pmass, pvolume, pTemperature;
+      constParticleVariable<double> pConcentration;
       constParticleVariable<Vector> pvelocity, pexternalforce;
       constParticleVariable<Point> pExternalForceCorner1, pExternalForceCorner2,
                                    pExternalForceCorner3, pExternalForceCorner4;
@@ -2076,9 +2152,11 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pVelGrad,       lb->pVelGradLabel,       pset);
 #endif
       old_dw->get(pTemperature,   lb->pTemperatureLabel,   pset);
+      old_dw->get(pConcentration, lb->pConcentrationLabel, pset);
       old_dw->get(psize,          lb->pSizeLabel,          pset);
       old_dw->get(pFOld,          lb->pDeformationMeasureLabel,pset);
       new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
+
       constParticleVariable<int> pLoadCurveID;
       if (flags->d_useCBDI) {
         new_dw->get(pExternalForceCorner1,
@@ -2102,6 +2180,10 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<double> gTemperatureNoBC;
       NCVariable<double> gTemperatureRate;
       //NCVariable<double> gnumnearparticles;
+      NCVariable<double> gexternaldiffusionrate;
+      NCVariable<double> gConcentration;
+      NCVariable<double> gConcentrationNoBC;
+      NCVariable<double> gConcentrationRate;
 
       new_dw->allocateAndPut(gmass,            lb->gMassLabel,       dwi,patch);
       new_dw->allocateAndPut(gSp_vol,          lb->gSp_volLabel,     dwi,patch);
@@ -2116,6 +2198,10 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                              dwi,patch);
       new_dw->allocateAndPut(gexternalheatrate,lb->gExternalHeatRateLabel,
                              dwi,patch);
+      new_dw->allocateAndPut(gConcentration,     lb->gConcentrationLabel,dwi,patch);
+      new_dw->allocateAndPut(gConcentrationNoBC, lb->gConcentrationNoBCLabel,dwi,patch);
+      new_dw->allocateAndPut(gConcentrationRate, lb->gConcentrationRateLabel,dwi,patch);
+      new_dw->allocateAndPut(gexternaldiffusionrate,lb->gExternalDiffusionRateLabel,dwi,patch);
 
       gmass.initialize(d_SMALL_NUM_MPM);
       gvolume.initialize(d_SMALL_NUM_MPM);
@@ -2125,6 +2211,10 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gTemperatureNoBC.initialize(0);
       gTemperatureRate.initialize(0);
       gexternalheatrate.initialize(0);
+      gConcentration.initialize(0);
+      gConcentrationNoBC.initialize(0);
+      gConcentrationRate.initialize(0);
+      gexternaldiffusionrate.initialize(0);
       gSp_vol.initialize(0.);
       //gnumnearparticles.initialize(0.);
 
@@ -2133,7 +2223,16 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // Need to compute the lumped global mass matrix and velocity
       // Vector from the individual mass matrix and velocity vector
       // GridMass * GridVelocity =  S^T*M_D*ParticleVelocity
+#ifdef IntToGrid
+      cout << "Start of Interpolate to Grid" << endl;
+      for (ParticleSubset::iterator iter = pset->begin();
+                 iter != pset->end();
+                 iter++){
+    	  particleIndex idx = *iter;
+    	  cout << idx << " pConcentration: " << pConcentration[idx] << endl;
 
+      }
+#endif
       Vector total_mom(0.0,0.0,0.0);
       Vector pmom;
       int n8or27=flags->d_8or27;
@@ -2166,11 +2265,13 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
               gexternalforce[node] += pexternalforce[idx]          * S[k];
             }
             gTemperature[node]   += pTemperature[idx] * pmass[idx] * S[k];
+            gConcentration[node] += pConcentration[idx] * pmass[idx] * S[k];
             gSp_vol[node]        += pSp_vol           * pmass[idx] * S[k];
             //gnumnearparticles[node] += 1.0;
             //gexternalheatrate[node] += pexternalheatrate[idx]      * S[k];
           }
         }
+
         if (flags->d_useCBDI && pLoadCurveID[idx]>0) {
           vector<IntVector> niCorner1(linear_interpolator->size());
           vector<IntVector> niCorner2(linear_interpolator->size());
@@ -2208,8 +2309,18 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
           }
         }
       } // End of particle loop
+
+#ifdef IntToGridGConc
+      cout << "Interpolate to Grid, gConcentration" << endl;
       for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
+    	  IntVector c = *iter;
+    	  cout << c << " gconc: " << gConcentration[c] << endl;
+      }
+#endif
+
+      for(NodeIterator iter=patch->getExtraNodeIterator();
+                             !iter.done();iter++){
         IntVector c = *iter; 
         gmassglobal[c]    += gmass[c];
         gvolumeglobal[c]  += gvolume[c];
@@ -2218,13 +2329,26 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         gtempglobal[c]    += gTemperature[c];
         gTemperature[c]   /= gmass[c];
         gTemperatureNoBC[c] = gTemperature[c];
+        gconcentrationglobal[c]    += gConcentration[c];
+        gConcentration[c]   /= gmass[c];
+        gConcentrationNoBC[c] = gConcentration[c];
         gSp_vol[c]        /= gmass[c];
       }
 
-      // Apply boundary conditions to the temperature and velocity (if symmetry)
+      // Apply boundary conditions to the temperature, concentration, and velocity (if symmetry)
       MPMBoundCond bc;
       bc.setBoundaryCondition(patch,dwi,"Temperature",gTemperature,interp_type);
+      bc.setBoundaryCondition(patch,dwi,"Concentration",gConcentration,interp_type);
       bc.setBoundaryCondition(patch,dwi,"Symmetric",  gvelocity,   interp_type);
+
+#ifdef IntToGridGConcAfterBC
+      cout << "Interpolate to Grid, gConcentration" << endl;
+      for(NodeIterator iter=patch->getExtraNodeIterator();
+                       !iter.done();iter++){
+    	  IntVector c = *iter;
+    	  cout << c << " gconc_after_bc: " << gConcentration[c] << endl;
+      }
+#endif
 
       // If an MPMICE problem, create a velocity with BCs variable for NCToCC_0
       if(flags->d_with_ice){
@@ -2239,8 +2363,18 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter;
       gtempglobal[c] /= gmassglobal[c];
+      gconcentrationglobal[c] /= gmassglobal[c];
       gvelglobal[c] /= gmassglobal[c];
     }
+#ifdef IntToGridGlobalConc
+      cout << "Interpolate to Grid, globalconcentration" << endl;
+      for(NodeIterator iter=patch->getExtraNodeIterator();
+                             !iter.done();iter++){
+          	  IntVector c = *iter;
+          	  cout << c << " global: " << gconcentration[c] << endl;
+            }
+
+#endif
     delete interpolator;
     delete linear_interpolator;
   }  // End loop over patches
@@ -3303,7 +3437,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       ParticleVariable<Vector> pvelocitynew;
       ParticleVariable<Matrix3> psizeNew;
       constParticleVariable<double> pmass, pTemperature;
+      constParticleVariable<double> pConcentration;
       ParticleVariable<double> pmassNew,pvolume,pTempNew;
+      ParticleVariable<double> pConcentrationNew;
       constParticleVariable<long64> pids;
       ParticleVariable<long64> pids_new;
       constParticleVariable<Vector> pdisp;
@@ -3314,11 +3450,15 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       // for thermal stress analysis
       ParticleVariable<double> pTempPreNew; 
+      ParticleVariable<double> pConcentrationPreNew;
 
       // Get the arrays of grid data on which the new part. values depend
       constNCVariable<Vector> gvelocity_star, gacceleration;
       constNCVariable<double> gTemperatureRate;
+      constNCVariable<double> gConcentrationRate;
       constNCVariable<double> dTdt, massBurnFrac, frictionTempRate;
+      constNCVariable<double> dCdt;
+
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
@@ -3327,6 +3467,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pmass,        lb->pMassLabel,                      pset);
       old_dw->get(pvelocity,    lb->pVelocityLabel,                  pset);
       old_dw->get(pTemperature, lb->pTemperatureLabel,               pset);
+      old_dw->get(pConcentration, lb->pConcentrationLabel,           pset);
       old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
       old_dw->get(pLocalized,   lb->pLocalizedMPMLabel,              pset);
 
@@ -3341,6 +3482,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                                                           pset);
       new_dw->allocateAndPut(pTempPreNew, lb->pTempPreviousLabel_preReloc,pset);
       new_dw->allocateAndPut(pTempNew,    lb->pTemperatureLabel_preReloc, pset);
+      new_dw->allocateAndPut(pConcentrationPreNew, lb->pConcentrationPreviousLabel_preReloc,pset);
+      new_dw->allocateAndPut(pConcentrationNew,    lb->pConcentrationLabel_preReloc, pset);
 
       //Carry forward ParticleID and pSize
       old_dw->get(pids,                lb->pParticleIDLabel,          pset);
@@ -3371,18 +3514,24 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
       new_dw->get(gacceleration,   lb->gAccelerationLabel,   dwi,patch,gac,NGP);
       new_dw->get(gTemperatureRate,lb->gTemperatureRateLabel,dwi,patch,gac,NGP);
+      new_dw->get(gConcentrationRate,lb->gConcentrationRateLabel,dwi,patch,gac,NGP);
       new_dw->get(frictionTempRate,lb->frictionalWorkLabel,  dwi,patch,gac,NGP);
       if(flags->d_with_ice){
         new_dw->get(dTdt,          lb->dTdt_NCLabel,         dwi,patch,gac,NGP);
         new_dw->get(massBurnFrac,  lb->massBurnFractionLabel,dwi,patch,gac,NGP);
+        new_dw->get(dCdt,          lb->dCdt_NCLabel,         dwi,patch,gac,NGP);
       }
       else{
         NCVariable<double> dTdt_create,massBurnFrac_create;
+        NCVariable<double> dCdt_create;
         new_dw->allocateTemporary(dTdt_create,                   patch,gac,NGP);
+        new_dw->allocateTemporary(dCdt_create,                   patch,gac,NGP);
         new_dw->allocateTemporary(massBurnFrac_create,           patch,gac,NGP);
         dTdt_create.initialize(0.);
+        dCdt_create.initialize(0.);
         massBurnFrac_create.initialize(0.);
         dTdt = dTdt_create;                         // reference created data
+        dCdt = dCdt_create;
         massBurnFrac = massBurnFrac_create;         // reference created data
       }
 
@@ -3406,6 +3555,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         double fricTempRate = 0.0;
         double tempRate = 0.0;
         double burnFraction = 0.0;
+        double concentrationRate = 0.0;
 
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < flags->d_8or27; k++) {
@@ -3416,8 +3566,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           fricTempRate = frictionTempRate[node]*flags->d_addFrictionWork;
           tempRate += (gTemperatureRate[node] + dTdt[node] +
                        fricTempRate)   * S[k];
+          concentrationRate += (gConcentrationRate[node] + dCdt[node])*S[k];
           burnFraction += massBurnFrac[node]     * S[k];
+          //cout << "gTemp: " << gTemperatureRate[node] << " gConc: " << gConcentrationRate[node] << endl;
+          //cout << "tempRate: " << tempRate << " concRate " << concentrationRate<< endl;
         }
+        //cout << "tempRate: " << tempRate << " concRate " << concentrationRate<< endl;
         // Update the particle's position and velocity
         pxnew[idx]           = px[idx]    + vel*delT*move_particles;
         pdispnew[idx]        = pdisp[idx] + vel*delT;
@@ -3426,6 +3580,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pxx[idx]             = px[idx]    + pdispnew[idx];
         pTempNew[idx]        = pTemperature[idx] + tempRate*delT;
         pTempPreNew[idx]     = pTemperature[idx]; // for thermal stress
+        pConcentrationNew[idx] = pConcentration[idx] + concentrationRate*delT;
+        pConcentrationPreNew[idx] = pConcentration[idx];
 
         if (cout_heat.active()) {
           cout_heat << "MPM::Particle = " << pids[idx]
@@ -3433,6 +3589,14 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                     << " Tdot = " << tempRate
                     << " dT = " << (tempRate*delT)
                     << " T_new = " << pTempNew[idx] << endl;
+        }
+
+        if (cout_concentration.active()) {
+          cout_concentration << "MPM::Particle = " << pids[idx]
+                             << " C_old = " << pConcentration[idx]
+                             << " Cdot = " << concentrationRate
+                             << " dC = " << (concentrationRate*delT)
+                             << " C_new = " << pConcentrationNew[idx] << endl;
         }
 
         pmassNew[idx]     = Max(pmass[idx]*(1.    - burnFraction),0.);
@@ -3517,7 +3681,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           // get the volumetric part of the deformation
           double J = pFNew[idx].Determinant();
           
-          IntVector cell_index,temp_cell_index;
+          IntVector cell_index,temp_cell_index,conc_cell_index;
           patch->findCell(px[idx],cell_index);
           
           F_CC[cell_index] += pFNew[idx]*pvolume[idx]/J;
@@ -3688,6 +3852,8 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
       constParticleVariable<int> pLocalized;
       constParticleVariable<double> pdTdt,pmassNew;
       ParticleVariable<double> pTempNew;
+      constParticleVariable<double> pdCdt;
+      ParticleVariable<double> pConcentrationNew;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
       ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
@@ -3698,11 +3864,14 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
 
       new_dw->getModifiable(pTempNew, lb->pTemperatureLabel_preReloc,pset);
 
+      new_dw->get(pdCdt,        lb->pdCdtLabel_preReloc,             pset);
+      new_dw->getModifiable(pConcentrationNew, lb->pConcentrationLabel_preReloc,pset);
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
         pTempNew[idx] += pdTdt[idx]*delT;
+        pConcentrationNew[idx] += pdCdt[idx]*delT;
 
         // Delete particles whose mass is too small (due to combustion),
         // whose pLocalized flag has been set to -999 or who have a negative temperature
@@ -3895,7 +4064,9 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
       constParticleVariable<Matrix3> psize;
       ParticleVariable<Matrix3> psizeNew;
       constParticleVariable<double> pmass, pTemperature, pdTdt;
+      constParticleVariable<double> pConcentration, pdCdt;
       ParticleVariable<double> pmassNew,pvolume,pTempNew;
+      ParticleVariable<double> pConcentrationNew;
       constParticleVariable<long64> pids;
       ParticleVariable<long64> pids_new;
       constParticleVariable<int> pLocalized;
@@ -3908,6 +4079,10 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
       constNCVariable<double> gTemperatureRate;
       constNCVariable<double> dTdt, massBurnFrac, frictionTempRate;
 
+      //for Reactive Flow
+      ParticleVariable<double> pConcentrationPreNew;
+      constNCVariable<double> gConcentrationRate, dCdt;
+
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
       old_dw->get(px,           lb->pXLabel,                         pset);
@@ -3918,14 +4093,21 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
       new_dw->get(pFNew,        lb->pDeformationMeasureLabel_preReloc, pset);
       new_dw->get(pLocalized,   lb->pLocalizedMPMLabel_preReloc,     pset);
 
+      old_dw->get(pConcentration, lb->pConcentrationLabel,           pset);
+      new_dw->get(pdCdt,        lb->pdCdtLabel_preReloc,             pset);
+
       new_dw->getModifiable(pvolume,  lb->pVolumeLabel_preReloc,     pset);
 
       new_dw->allocateAndPut(pmassNew,     lb->pMassLabel_preReloc,       pset);
       new_dw->allocateAndPut(pids_new,     lb->pParticleIDLabel_preReloc, pset);
       new_dw->allocateAndPut(pTempNew,     lb->pTemperatureLabel_preReloc,pset);
+      new_dw->allocateAndPut(pConcentrationNew,    lb->pConcentrationLabel_preReloc,pset);
 
       // for thermal stress analysis
       new_dw->allocateAndPut(pTempPreNew, lb->pTempPreviousLabel_preReloc,pset);
+
+      // for reactive flow
+      new_dw->allocateAndPut(pConcentrationPreNew, lb->pConcentrationPreviousLabel_preReloc,pset);
 
       //Carry forward NC_CCweight
       constNCVariable<double> NC_CCweight;
@@ -3945,18 +4127,24 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
       Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(gTemperatureRate,lb->gTemperatureRateLabel,dwi,patch,gac,NGP);
       new_dw->get(frictionTempRate,lb->frictionalWorkLabel,  dwi,patch,gac,NGP);
+      new_dw->get(gConcentrationRate,lb->gConcentrationRateLabel,dwi,patch,gac,NGP);
       if(flags->d_with_ice){
         new_dw->get(dTdt,          lb->dTdt_NCLabel,         dwi,patch,gac,NGP);
         new_dw->get(massBurnFrac,  lb->massBurnFractionLabel,dwi,patch,gac,NGP);
+        new_dw->get(dCdt,          lb->dCdt_NCLabel,         dwi,patch,gac,NGP);
       }
       else{
         NCVariable<double> dTdt_create,massBurnFrac_create;
+        NCVariable<double> dCdt_create;
         new_dw->allocateTemporary(dTdt_create,                   patch,gac,NGP);
+        new_dw->allocateTemporary(dCdt_create,                   patch,gac,NGP);
         new_dw->allocateTemporary(massBurnFrac_create,           patch,gac,NGP);
         dTdt_create.initialize(0.);
+        dCdt_create.initialize(0.);
         massBurnFrac_create.initialize(0.);
         dTdt = dTdt_create;                         // reference created data
         massBurnFrac = massBurnFrac_create;         // reference created data
+        dCdt = dCdt_create;
       }
 
       double Cp=mpm_matl->getSpecificHeat();
@@ -3979,6 +4167,7 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
         double fricTempRate = 0.0;
         double tempRate = 0.0;
         double burnFraction = 0.0;
+        double concentrationRate = 0.0;
 
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < flags->d_8or27; k++) {
@@ -3988,11 +4177,14 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
           tempRate += (gTemperatureRate[node] + dTdt[node] +
                        fricTempRate)   * S[k];
           burnFraction += massBurnFrac[node]     * S[k];
+          concentrationRate += (gConcentrationRate[node] + dCdt[node]) * S[k];
         }
 
         // Update the particle's position and velocity
         pTempNew[idx]        = pTemperature[idx] + (tempRate+pdTdt[idx])*delT;
         pTempPreNew[idx]     = pTemperature[idx]; // for thermal stress
+        pConcentrationNew[idx]        = pConcentration[idx] + (concentrationRate+pdCdt[idx])*delT;
+        pConcentrationPreNew[idx]     = pConcentration[idx];
 
         if (cout_heat.active()) {
           cout_heat << "MPM::Particle = " << idx
@@ -4000,6 +4192,14 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
                     << " Tdot = " << tempRate
                     << " dT = " << (tempRate*delT)
                     << " T_new = " << pTempNew[idx] << endl;
+        }
+
+        if (cout_concentration.active()) {
+          cout_concentration << "MPM::Particle = " << idx
+                    << " C_old = " << pConcentration[idx]
+                    << " Cdot = " << concentrationRate
+                    << " dC = " << (concentrationRate*delT)
+                    << " C_new = " << pConcentrationNew[idx] << endl;
         }
 
         double rho;
@@ -4729,6 +4929,7 @@ SerialMPM::refine(const ProcessorGroup*,
         ParticleVariable<int>    pLoadCurve,pLoc;
         ParticleVariable<long64> pID;
         ParticleVariable<Matrix3> pdeform, pstress;
+        ParticleVariable<double> pConcentration, pConcentrationPrev;
         
         new_dw->allocateAndPut(px,             lb->pXLabel,             pset);
         new_dw->allocateAndPut(p_q,            lb->p_qLabel,            pset);
@@ -4746,6 +4947,8 @@ SerialMPM::refine(const ProcessorGroup*,
           new_dw->allocateAndPut(pLoadCurve,   lb->pLoadCurveIDLabel,   pset);
         }
         new_dw->allocateAndPut(psize,          lb->pSizeLabel,          pset);
+        new_dw->allocateAndPut(pConcentration,   lb->pConcentrationLabel,   pset);
+        new_dw->allocateAndPut(pConcentrationPrev,      lb->pConcentrationPreviousLabel,  pset);
 
         mpm_matl->getConstitutiveModel()->initializeCMData(patch,
                                                            mpm_matl,new_dw);

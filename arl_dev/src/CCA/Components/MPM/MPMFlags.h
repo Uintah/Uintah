@@ -115,6 +115,8 @@ namespace Uintah {
     std::string d_mms_type;  // MMS Flag
     
     bool		d_computeNodalConcentrationFlux;	// compute the auxiliary nodal concentration flux
+    bool        d_doImplicitConcentrationDiffusion;
+    bool        d_doExplicitConcentrationDiffusion;
 
     // flags for turning on/off the reduction variable calculations
     struct reductionVars{

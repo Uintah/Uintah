@@ -634,10 +634,12 @@ void UCNH::initializeCMData(const Patch* patch,
   else {
     //initSharedDataForExplicit(patch, matl, new_dw);
     ParticleVariable<double>  pdTdt;
+    ParticleVariable<double>  pdCdt;
     ParticleVariable<Matrix3> pDefGrad;
     ParticleVariable<Matrix3> pStress;
 
     new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel,               pset);
+    new_dw->allocateAndPut(pdCdt,       lb->pdCdtLabel,               pset);
     new_dw->allocateAndPut(pDefGrad,    lb->pDeformationMeasureLabel, pset);
     new_dw->allocateAndPut(pStress,     lb->pStressLabel,             pset);
 
@@ -647,6 +649,7 @@ void UCNH::initializeCMData(const Patch* patch,
       for(; iter != pset->end(); iter++){
         particleIndex idx = *iter;
         pdTdt[idx] = 0.0;
+        pdCdt[idx] = 0.0;
         pDefGrad[idx] = Identity;
         pStress[idx] = zero;
       }
@@ -659,6 +662,7 @@ void UCNH::initializeCMData(const Patch* patch,
       for(;iter != pset->end(); iter++){
         particleIndex idx = *iter;
         pdTdt[idx] = 0.0;
+        pdCdt[idx] = 0.0;
         pDefGrad[idx] = Matrix3(diag, 0.,0.,0.,diag,0.,0.,0.,diag);
         pStress[idx] = sigInit;
       }
@@ -1109,6 +1113,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<double>       pFailureStrain_new, pDamage_new;
     ParticleVariable<double>       pdTdt,p_q;
     ParticleVariable<Matrix3>      pStress,bElBar_new;
+    ParticleVariable<double>       pdCdt;
     
     // Plasticity gets
     if(d_usePlasticity) {
@@ -1163,6 +1168,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(bElBar_new,  bElBarLabel_preReloc,      pset);
     new_dw->allocateAndPut(pStress,     lb->pStressLabel_preReloc, pset);
     new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pdCdt,       lb->pdCdtLabel_preReloc,   pset);
     new_dw->allocateAndPut(p_q,         lb->p_qLabel_preReloc,     pset);
 
     ParticleSubset::iterator iter = pset->begin();
@@ -1171,6 +1177,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
+      pdCdt[idx] = 0.0;
 
       pDefGradInc = pDefGrad_new[idx]*pDefGrad[idx].Inverse();
       Jinc    = pDefGradInc.Determinant();
@@ -1865,6 +1872,7 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
   ParticleVariable<double>       pFailureStrain_new, pDamage_new;
   ParticleVariable<double>       pVolume_new, pdTdt, pPlasticStrain_new;
   ParticleVariable<Matrix3>      pDefGrad_new, pBeBar_new, pStress_new;
+  ParticleVariable<double>       pdCdt;
 
   // Local variables 
   Matrix3 dispGrad(0.0), tauDev(0.0), defGradInc(0.0);
@@ -1926,6 +1934,8 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
                            lb->pVolumeDeformedLabel,              pset);
     new_dw->allocateAndPut(pdTdt, 
                            lb->pdTdtLabel_preReloc,               pset);
+    new_dw->allocateAndPut(pdCdt,
+                               lb->pdCdtLabel_preReloc,               pset);
     new_dw->allocateAndPut(pDefGrad_new,
                            lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(pBeBar_new, 
@@ -1938,6 +1948,7 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
         particleIndex idx = *iter;
         // Assign zero internal heating by default - modify if necessary.
         pdTdt[idx]        = 0.0;
+        pdCdt[idx]        = 0.0;
         pStress_new[idx]  = Matrix3(0.0);
         pDefGrad_new[idx] = Identity;
         pVolume_new[idx]  = pMass[idx]/rho_orig;

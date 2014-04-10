@@ -1197,5 +1197,4 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
   if (pg->size() > 1){
     finalizeCommunication();
   }
-
 } // end relocateParticles()
