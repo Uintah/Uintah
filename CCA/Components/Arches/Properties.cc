@@ -215,7 +215,6 @@ Properties::computeDenRefArray(const ProcessorGroup*,
       sum_vartype den_ref_var;
       new_dw->get(den_ref_var, d_lab->d_refDensity_label);
 
-      double den_Ref = den_ref_var;
       new_dw->allocateAndPut(denRefArray, d_lab->d_denRefArrayLabel,  indx, patch);
 
       denRefArray.initialize( den_ref_var ); 

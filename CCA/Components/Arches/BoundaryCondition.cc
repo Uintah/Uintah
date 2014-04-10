@@ -845,8 +845,6 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
 {
   //double time = d_lab->d_sharedState->getElapsedTime();
   //double current_time = time + time_shift;
-  Vector Dx = patch->dCell(); 
-
   // Get the low and high index for the patch and the variables
   IntVector idxLo = patch->getFortranCellLowIndex();
   IntVector idxHi = patch->getFortranCellHighIndex();
@@ -1975,7 +1973,6 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
           
           //compute the density:
           typedef std::vector<std::string> StringVec; 
-          typedef std::map<std::string, double> StringDoubleMap;
           MixingRxnModel* mixingTable = d_props->getMixRxnModel(); 
           StringVec iv_var_names = mixingTable->getAllIndepVars(); 
           vector<double> iv; 
