@@ -68,7 +68,7 @@ AC_INIT([Uintah],[1.5],[uintah-developer@gforge.sci.utah.edu])
 ##
 ##     type "autoconf --version" to find out what version you have.
 ##
-AC_PREREQ(2.69)
+AC_PREREQ(2.50)
 
 AC_COPYRIGHT(
 ##
@@ -479,13 +479,19 @@ SCI_ARG_WITH(visit,
                  Turn on VisIt visualization tool support.  Point to VisIt installation.),
   [with_visit="$withval"],
   [with_visit=""])
+  
+SCI_ARG_WITH(pidx,
+  AC_HELP_STRING(--with-pidx=DIR,
+                 Turn on ViSUS Parallel IDX support.  Point to PIDX installation.),
+  [with_pidx="$withval"],
+  [with_pidx=""])
 
 SCI_ARG_ENABLE(wasatch_3p,
   AC_HELP_STRING(--enable-wasatch_3p,
                  Download and build the Wasatch Thirdparty libraries - TabProps ExprLibs SpatialOps RadProps.),
   [wasatch_3p="yes"],
   [wasatch_3p="no"])
-
+  
 SCI_ARG_ENABLE(wasatch_in_arches,
   AC_HELP_STRING(--enable-wasatch-in-arches,
                  Turn on the use of Wasatch objects in the Arches component.),
@@ -4034,6 +4040,40 @@ AC_SUBST(INC_TEEM_H)
 AC_SUBST(TEEM_LIB_FLAG)
 AC_SUBST(TEEM_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/teem_testdefs.h"
+
+##  --  search for pidx  -------------------------------------------------
+AC_LANG(C++)
+
+# Default values:
+_sci_optional=optional
+_sci_lib=
+_sci_inc=
+
+if test "$with_pidx"; then
+  if test "$with_pidx" = "yes"; then
+    AC_MSG_WARN(PIDX is already required - you do not need to specify --with-pidx.)
+  else
+    # If --with-pidx has a parameter, then use it
+    _sci_lib="$with_pidx"
+    _sci_inc="$with_pidx"
+    BASE_LIB_PATH(_sci_lib,$_sci_lib)
+    _sci_optional=required
+  fi 
+
+  SCI_TRY_LINK(PIDX,pidx library and headers,PIDX.h,$_sci_inc $INC_MPI_H,$MPI_LIB_FLAG PIDX PIDX_agg PIDX_hz_encode PIDX_io,$MPI_LIB_DIR_FLAG $_sci_lib,-DMPIPP_H,,$_sci_optional)
+
+  if test "$HAVE_PIDX" = "yes"; then
+     DEF_PIDX="#define HAVE_PIDX 1"
+  fi
+fi
+
+AC_SUBST(HAVE_PIDX)
+AC_SUBST(DEF_PIDX)
+AC_SUBST(INC_PIDX_H)
+AC_SUBST(PIDX_LIB_FLAG)
+AC_SUBST(PIDX_LIB_DIR_FLAG)
+sci_defs_files="$sci_defs_files include/sci_defs/pidx_testdefs.h"
+AC_LANG(C)
 
 ##  --  search for hdf5  -------------------------------------------------
 AC_LANG(C++)
