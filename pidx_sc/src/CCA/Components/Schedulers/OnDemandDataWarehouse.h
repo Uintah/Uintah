@@ -303,6 +303,11 @@ public:
    virtual void emit(OutputContext&, const VarLabel* label,
 		     int matlIndex, const Patch* patch);
 
+#if HAVE_PIDX
+   virtual void emit(PIDXOutputContext&, const VarLabel* label, int matlIndex, 
+                     const Patch* patch, double *patch_buffer);
+#endif
+   
    void exchangeParticleQuantities(DetailedTasks* dts, LoadBalancer* lb, 
                                    const VarLabel* pos_var, int iteration);
    void sendMPI(DependencyBatch* batch, const VarLabel* pos_var, BufferInfo& buffer, 
