@@ -1,0 +1,527 @@
+#!/bin/bash
+#Store root path to reference from
+export ROOT_PATH=$(pwd)
+#Put python scripts on path
+export PATH=$ROOT_PATH:$PATH
+#export image folder enviormental variable
+export TESTS_2D_IMG_DIR=$ROOT_PATH/images
+#Store different commands for machines with mpirun and more than one core.
+#Ask if mpirun
+check=false
+MPI_RUN_FLAG=false
+LOW_CORE_FLAG=true
+
+echo 'Press Ctr-C any time to ABORT'
+
+while [ $check == false ]
+do
+  echo 'Do you have mpirun on your working path? (Y/N)'
+  read mpi_run
+  if [ "$mpi_run" = "Y" ] 
+  then
+    base_string='mpirun -np '
+    MPI_RUN_FLAG=true
+    check=true
+  elif [ "$mpi_run" = "N" ]
+  then
+    base_string='sus'
+    check=true
+  else
+    check=false
+  fi
+done
+
+check=false
+#if mpirun ask number of cores
+if [ $MPI_RUN_FLAG == true ]
+then
+  while [ $check == false ]
+  do
+    echo 'How many cores would you like to run on? (enter number 1-8)'
+    read num_cores
+    if [ "$num_cores" -gt 0 ] && [ "$num_cores" -le 4 ]
+    then
+      base_string="$base_string $num_cores sus -mpi"
+      check=true
+    elif [ "$num_cores" -gt 4 ] && [ "$num_cores" -le 8 ]
+    then
+      base_string="$base_string $num_cores sus -mpi"
+      LOW_CORE_FLAG=false
+      check=true
+    elif [ "$num_cores" -gt 8 ]
+    then
+      echo 'Number of cores requested greater than 8. Running on maxomum of 8 cores.'
+      base_string="$base_string 8 sus -mpi"
+      LOW_CORE_FLAG=false
+      check=true
+    else
+      check=false
+    fi
+  done
+  #Build sus strings
+  #if mpirun and 4 or less
+  if [ $LOW_CORE_FLAG == true ]
+  then
+    LOW_CORE_STRING=$base_string
+    HIGH_CORE_STRING=$LOW_CORE_STRING
+  #if mpirun and 5 but less than 8
+  else
+    LOW_CORE_STRING='mpirun -np 4 sus -mpi'
+    HIGH_CORE_STRING=$base_string
+  fi
+#If no mpirun then build the strings as just sus
+#FYI: REQUIRES SUS BE ON WORKING PATH
+else
+  LOW_CORE_STRING='sus'
+  HIGH_CORE_STRING=$LOW_CORE_STRING
+fi
+
+#Remove the old error log
+rm err_tracking.txt
+
+
+#Run 20mm cell spacing tests (4 patch tests)
+#-----------------------------------------
+cd $ROOT_PATH/cell_spacing_20.0mm/aluminum
+$LOW_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$LOW_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0200 70.28e9 26.23e9
+#Now do all modified bulk modulus tests
+cd $ROOT_PATH/cell_spacing_20.0mm/modified_bulk_modulus/nu_0.100
+$LOW_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$LOW_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0200 2.4044e+10 26.23e9
+cd $ROOT_PATH/cell_spacing_20.0mm/modified_bulk_modulus/nu_0.150
+$LOW_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$LOW_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0200 2.8728e+10 26.23e9
+cd $ROOT_PATH/cell_spacing_20.0mm/modified_bulk_modulus/nu_0.200
+$LOW_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$LOW_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0200 3.4973e+10 26.23e9
+cd $ROOT_PATH/cell_spacing_20.0mm/modified_bulk_modulus/nu_0.250
+$LOW_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$LOW_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0200 4.3717e+10 26.23e9
+cd $ROOT_PATH/cell_spacing_20.0mm/modified_bulk_modulus/nu_0.300
+$LOW_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$LOW_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0200 5.6832e+10 26.23e9
+cd $ROOT_PATH/cell_spacing_20.0mm/modified_bulk_modulus/nu_0.350
+$LOW_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$LOW_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0200 7.8690e+10 26.23e9
+cd $ROOT_PATH/cell_spacing_20.0mm/modified_bulk_modulus/nu_0.400
+$LOW_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$LOW_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0200 1.2241e+11 26.23e9
+cd $ROOT_PATH/cell_spacing_20.0mm/modified_bulk_modulus/nu_0.450
+$LOW_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$LOW_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0200 2.5356e+11 26.23e9
+cd $ROOT_PATH/cell_spacing_20.0mm/modified_bulk_modulus/nu_0.495
+$LOW_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$LOW_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0200 2.6143e12 26.23e9
+cd $ROOT_PATH/cell_spacing_20.0mm/modified_bulk_modulus/nu_0.499
+$LOW_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$LOW_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0200 1.3106e+13 26.23e9
+#Now do all modified shear modulus tests
+cd $ROOT_PATH/cell_spacing_20.0mm/modified_shear_modulus/nu_0.100
+$LOW_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$LOW_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0200 70.28e9 7.6669e+10
+cd $ROOT_PATH/cell_spacing_20.0mm/modified_shear_modulus/nu_0.150
+$LOW_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$LOW_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0200 70.28e9 6.4169e+10
+cd $ROOT_PATH/cell_spacing_20.0mm/modified_shear_modulus/nu_0.200
+$LOW_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$LOW_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0200 70.28e9 5.2710e+10
+cd $ROOT_PATH/cell_spacing_20.0mm/modified_shear_modulus/nu_0.250
+$LOW_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$LOW_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0200 70.28e9 4.2168e+10
+cd $ROOT_PATH/cell_spacing_20.0mm/modified_shear_modulus/nu_0.300
+$LOW_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$LOW_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0200 70.28e9 3.2437e+10
+cd $ROOT_PATH/cell_spacing_20.0mm/modified_shear_modulus/nu_0.350
+$LOW_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$LOW_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0200 70.28e9 2.3427e+10
+cd $ROOT_PATH/cell_spacing_20.0mm/modified_shear_modulus/nu_0.400
+$LOW_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$LOW_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0200 70.28e9 1.5060e+10
+cd $ROOT_PATH/cell_spacing_20.0mm/modified_shear_modulus/nu_0.450
+$LOW_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$LOW_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0200 70.28e9 7.2703e+09
+cd $ROOT_PATH/cell_spacing_20.0mm/modified_shear_modulus/nu_0.495
+$LOW_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$LOW_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0200 70.28e9 7.0515e+08
+cd $ROOT_PATH/cell_spacing_20.0mm/modified_shear_modulus/nu_0.499
+$LOW_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$LOW_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0200 70.28e9 1.4065e+08
+
+#Run 10mm cell spacing tests (8 patch tests)
+#-----------------------------------------
+cd $ROOT_PATH/cell_spacing_10.0mm/aluminum
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0100 70.28e9 26.23e9
+#Now do all modified bulk modulus tests
+cd $ROOT_PATH/cell_spacing_10.0mm/modified_bulk_modulus/nu_0.100
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0100 2.4044e+10 26.23e9
+cd $ROOT_PATH/cell_spacing_10.0mm/modified_bulk_modulus/nu_0.150
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0100 2.8728e+10 26.23e9
+cd $ROOT_PATH/cell_spacing_10.0mm/modified_bulk_modulus/nu_0.200
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0100 3.4973e+10 26.23e9
+cd $ROOT_PATH/cell_spacing_10.0mm/modified_bulk_modulus/nu_0.250
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0100 4.3717e+10 26.23e9
+cd $ROOT_PATH/cell_spacing_10.0mm/modified_bulk_modulus/nu_0.300
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0100 5.6832e+10 26.23e9
+cd $ROOT_PATH/cell_spacing_10.0mm/modified_bulk_modulus/nu_0.350
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0100 7.8690e+10 26.23e9
+cd $ROOT_PATH/cell_spacing_10.0mm/modified_bulk_modulus/nu_0.400
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0100 1.2241e+11 26.23e9
+cd $ROOT_PATH/cell_spacing_10.0mm/modified_bulk_modulus/nu_0.450
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0100 2.5356e+11 26.23e9
+cd $ROOT_PATH/cell_spacing_10.0mm/modified_bulk_modulus/nu_0.495
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0100 2.6143e12 26.23e9
+cd $ROOT_PATH/cell_spacing_10.0mm/modified_bulk_modulus/nu_0.499
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0100 1.3106e+13 26.23e9
+#Now do all modified shear modulus tests
+cd $ROOT_PATH/cell_spacing_10.0mm/modified_shear_modulus/nu_0.100
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0100 70.28e9 7.6669e+10
+cd $ROOT_PATH/cell_spacing_10.0mm/modified_shear_modulus/nu_0.150
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0100 70.28e9 6.4169e+10
+cd $ROOT_PATH/cell_spacing_10.0mm/modified_shear_modulus/nu_0.200
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0100 70.28e9 5.2710e+10
+cd $ROOT_PATH/cell_spacing_10.0mm/modified_shear_modulus/nu_0.250
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0100 70.28e9 4.2168e+10
+cd $ROOT_PATH/cell_spacing_10.0mm/modified_shear_modulus/nu_0.300
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0100 70.28e9 3.2437e+10
+cd $ROOT_PATH/cell_spacing_10.0mm/modified_shear_modulus/nu_0.350
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0100 70.28e9 2.3427e+10
+cd $ROOT_PATH/cell_spacing_10.0mm/modified_shear_modulus/nu_0.400
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0100 70.28e9 1.5060e+10
+cd $ROOT_PATH/cell_spacing_10.0mm/modified_shear_modulus/nu_0.450
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0100 70.28e9 7.2703e+09
+cd $ROOT_PATH/cell_spacing_10.0mm/modified_shear_modulus/nu_0.495
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0100 70.28e9 7.0515e+08
+cd $ROOT_PATH/cell_spacing_10.0mm/modified_shear_modulus/nu_0.499
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0100 70.28e9 1.4065e+08
+
+#Run 5mm cell spacing tests (8 patch tests)
+#-----------------------------------------
+cd $ROOT_PATH/cell_spacing_05.0mm/aluminum
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0050 70.28e9 26.23e9
+#Now do all modified bulk modulus tests
+cd $ROOT_PATH/cell_spacing_05.0mm/modified_bulk_modulus/nu_0.100
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0050 2.4044e+10 26.23e9
+cd $ROOT_PATH/cell_spacing_05.0mm/modified_bulk_modulus/nu_0.150
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0050 2.8728e+10 26.23e9
+cd $ROOT_PATH/cell_spacing_05.0mm/modified_bulk_modulus/nu_0.200
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0050 3.4973e+10 26.23e9
+cd $ROOT_PATH/cell_spacing_05.0mm/modified_bulk_modulus/nu_0.250
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0050 4.3717e+10 26.23e9
+cd $ROOT_PATH/cell_spacing_05.0mm/modified_bulk_modulus/nu_0.300
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0050 5.6832e+10 26.23e9
+cd $ROOT_PATH/cell_spacing_05.0mm/modified_bulk_modulus/nu_0.350
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0050 7.8690e+10 26.23e9
+cd $ROOT_PATH/cell_spacing_05.0mm/modified_bulk_modulus/nu_0.400
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0050 1.2241e+11 26.23e9
+cd $ROOT_PATH/cell_spacing_05.0mm/modified_bulk_modulus/nu_0.450
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0050 2.5356e+11 26.23e9
+cd $ROOT_PATH/cell_spacing_05.0mm/modified_bulk_modulus/nu_0.495
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0050 2.6143e12 26.23e9
+cd $ROOT_PATH/cell_spacing_05.0mm/modified_bulk_modulus/nu_0.499
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0050 1.3106e+13 26.23e9
+#Now do all modified shear modulus tests
+cd $ROOT_PATH/cell_spacing_05.0mm/modified_shear_modulus/nu_0.100
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0050 70.28e9 7.6669e+10
+cd $ROOT_PATH/cell_spacing_05.0mm/modified_shear_modulus/nu_0.150
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0050 70.28e9 6.4169e+10
+cd $ROOT_PATH/cell_spacing_05.0mm/modified_shear_modulus/nu_0.200
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0050 70.28e9 5.2710e+10
+cd $ROOT_PATH/cell_spacing_05.0mm/modified_shear_modulus/nu_0.250
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0050 70.28e9 4.2168e+10
+cd $ROOT_PATH/cell_spacing_05.0mm/modified_shear_modulus/nu_0.300
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0050 70.28e9 3.2437e+10
+cd $ROOT_PATH/cell_spacing_05.0mm/modified_shear_modulus/nu_0.350
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0050 70.28e9 2.3427e+10
+cd $ROOT_PATH/cell_spacing_05.0mm/modified_shear_modulus/nu_0.400
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0050 70.28e9 1.5060e+10
+cd $ROOT_PATH/cell_spacing_05.0mm/modified_shear_modulus/nu_0.450
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0050 70.28e9 7.2703e+09
+cd $ROOT_PATH/cell_spacing_05.0mm/modified_shear_modulus/nu_0.495
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0050 70.28e9 7.0515e+08
+cd $ROOT_PATH/cell_spacing_05.0mm/modified_shear_modulus/nu_0.499
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0050 70.28e9 1.4065e+08
+
+#Run 2.5mm cell spacing tests (8 patch tests)
+#-----------------------------------------
+cd $ROOT_PATH/cell_spacing_02.5mm/aluminum
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0025 70.28e9 26.23e9
+#Now do all modified bulk modulus tests
+cd $ROOT_PATH/cell_spacing_02.5mm/modified_bulk_modulus/nu_0.100
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0025 2.4044e+10 26.23e9
+cd $ROOT_PATH/cell_spacing_02.5mm/modified_bulk_modulus/nu_0.150
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0025 2.8728e+10 26.23e9
+cd $ROOT_PATH/cell_spacing_02.5mm/modified_bulk_modulus/nu_0.200
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0025 3.4973e+10 26.23e9
+cd $ROOT_PATH/cell_spacing_02.5mm/modified_bulk_modulus/nu_0.250
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0025 4.3717e+10 26.23e9
+cd $ROOT_PATH/cell_spacing_02.5mm/modified_bulk_modulus/nu_0.300
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0025 5.6832e+10 26.23e9
+cd $ROOT_PATH/cell_spacing_02.5mm/modified_bulk_modulus/nu_0.350
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0025 7.8690e+10 26.23e9
+cd $ROOT_PATH/cell_spacing_02.5mm/modified_bulk_modulus/nu_0.400
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0025 1.2241e+11 26.23e9
+cd $ROOT_PATH/cell_spacing_02.5mm/modified_bulk_modulus/nu_0.450
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0025 2.5356e+11 26.23e9
+cd $ROOT_PATH/cell_spacing_02.5mm/modified_bulk_modulus/nu_0.495
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0025 2.6143e12 26.23e9
+cd $ROOT_PATH/cell_spacing_02.5mm/modified_bulk_modulus/nu_0.499
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0025 1.3106e+13 26.23e9
+#Now do all modified shear modulus tests
+cd $ROOT_PATH/cell_spacing_02.5mm/modified_shear_modulus/nu_0.100
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0025 70.28e9 7.6669e+10
+cd $ROOT_PATH/cell_spacing_02.5mm/modified_shear_modulus/nu_0.150
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0025 70.28e9 6.4169e+10
+cd $ROOT_PATH/cell_spacing_02.5mm/modified_shear_modulus/nu_0.200
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0025 70.28e9 5.2710e+10
+cd $ROOT_PATH/cell_spacing_02.5mm/modified_shear_modulus/nu_0.250
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0025 70.28e9 4.2168e+10
+cd $ROOT_PATH/cell_spacing_02.5mm/modified_shear_modulus/nu_0.300
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0025 70.28e9 3.2437e+10
+cd $ROOT_PATH/cell_spacing_02.5mm/modified_shear_modulus/nu_0.350
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0025 70.28e9 2.3427e+10
+cd $ROOT_PATH/cell_spacing_02.5mm/modified_shear_modulus/nu_0.400
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0025 70.28e9 1.5060e+10
+cd $ROOT_PATH/cell_spacing_02.5mm/modified_shear_modulus/nu_0.450
+$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+setup_restart.py ./volumetric_locking_test.uda.000/
+$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+2D_Tests_post_proc.py ./volumetric_locking_test.uda.001/ 0.0025 70.28e9 7.2703e+09
+
+###
+#  These tests could not be run as a result of what appears to be shear locking. 
+###
+#cd $ROOT_PATH/cell_spacing_02.5mm/modified_shear_modulus/nu_0.495
+#$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+#setup_restart.py ./volumetric_locking_test.uda.000/
+#$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+#2D_Tests_post_proc.py ./volumetric_locking_test.uda.000/ 0.0025 70.28e9 7.0515e+08
+#cd $ROOT_PATH/cell_spacing_02.5mm/modified_shear_modulus/nu_0.499
+#$HIGH_CORE_STRING pressure_cylinder_volumetric_locking_test.ups |& tee runlog.log
+#setup_restart.py ./volumetric_locking_test.uda.000/
+#$HIGH_CORE_STRING -restart -move ./volumetric_locking_test.uda.000/ |& tee restart_runlog.log
+#2D_Tests_post_proc.py ./volumetric_locking_test.uda.000/ 0.0025 70.28e9 1.4065e+08
+
+
