@@ -2058,9 +2058,9 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
     
     for(int i = 0 ; i < amr_levels ; i++)
     {
-      refinement_ratio[i][0] = 2;
-      refinement_ratio[i][1] = 2;
-      refinement_ratio[i][2] = 2;
+      refinement_ratio[i][0] = 4;
+      refinement_ratio[i][1] = 4;
+      refinement_ratio[i][2] = 4;
     }
     
     if(levelid == 0)
