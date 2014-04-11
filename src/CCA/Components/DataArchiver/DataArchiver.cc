@@ -98,9 +98,7 @@ using namespace std;
 using namespace SCIRun;
 
 static DebugStream dbg("DataArchiver", false);
-#if HAVE_PIDX
 static PIDXOutputContext pc;
-#endif
 bool DataArchiver::wereSavesAndCheckpointsInitialized = false;
 
 DataArchiver::DataArchiver(const ProcessorGroup* myworld, int udaSuffix)
@@ -1699,7 +1697,7 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
   int levelid = type != CHECKPOINT_REDUCTION ? getLevel(patches)->getIndex() : -1;
 #if SCI_ASSERTION_LEVEL >= 2
   // double-check to make sure only called once per level
-  int levelid = type != CHECKPOINT_REDUCTION ? getLevel(patches)->getIndex() : -1;
+  levelid = type != CHECKPOINT_REDUCTION ? getLevel(patches)->getIndex() : -1;
 //   printf("Levelid = %d\n", levelid);
 //   if(levelid == 1)
 //   {
@@ -1849,7 +1847,7 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
   { // make sure doc's constructor is called after the lock.
     if (uda_io == true) {
       
-      start_time = MPI_Wtime();
+      //start_time = MPI_Wtime();
       filename = (char*) dataFilename.c_str();
       ProblemSpecP doc; 
 
@@ -2026,6 +2024,7 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
       }
 
       doc->output(xmlFilename.c_str());
+      /*
       end_time = MPI_Wtime();
       io_time = end_time - start_time;
       
@@ -2039,7 +2038,7 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
 	      << (globalExtents[0]*globalExtents[1]*globalExtents[2]*number_of_variables*sizeof(double))/(1024.*1024.*max_time) << " MiB/sec " << " Max Time = " << max_time  
 	      << " Number of variables = " << number_of_variables 
 	      << endl;
-      
+      */
     }
   }
   d_outputLock.unlock(); 
@@ -2205,6 +2204,8 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
 	    hi = patch->getCellHighIndex();
 	    hiE = patch->getExtraCellHighIndex();
 	    lowE = patch->getExtraCellLowIndex();
+	    
+	    
 #if 0
 	    std::cout << "ELSE: Patch info: \nPatch number " << p << "\n";
 	    std::cout << "Patch extent " << low.x() << ", " << low.y() << ", " << low.z() << " " << hi.x() << ", " << hi.y() << ", " << hi.z() << "\n";
@@ -2221,13 +2222,14 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
 	    v_count[2] = hiE.z() - lowE.z() + 0;
 	    v_count[3] = 1;
 	    v_count[4] = 1;
+	    if(vc == 0)
+		printf("%d: (%d %d %d) (%d %d %d)\n", levelid, v_offset[0], v_offset[1], v_offset[2], v_count[0], v_count[1], v_count[2]);
 	    double *patch_buffer = (double*)malloc(sizeof(double) * v_count[0] * v_count[1] * v_count[2]);
 	    
 	    int v=0,u=0,j=0,k=0, i1;
 	    new_dw->emit(pc, var, matlIndex, patch, patch_buffer);
-	    /*
-	    if(rank == 0)
-	    printf("Variable Index: %d\n", vc);
+	    
+	    
 	    for (v = 0; v < v_count[4]; v++)
 	      for (u = 0; u < v_count[3]; u++)
 		  for (k = 0; k < v_count[2]; k++)
@@ -2238,9 +2240,9 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
 			      if(vc == 0)
 			      {
 				  if(levelid == 0)
-				      patch_buffer[index] = 1;//100 + (globalExtents[0] * globalExtents[1] * globalExtents[2] * globalExtents[3] * (v_offset[4] + v)) + (globalExtents[0] * globalExtents[1] * globalExtents[2] * (v_offset[3] + u)) + (globalExtents[0] * globalExtents[1]*(v_offset[2] + k))+(globalExtents[0]*(v_offset[1] + j)) + (v_offset[0] + i1);
+				      patch_buffer[index] = 101325;//100 + (globalExtents[0] * globalExtents[1] * globalExtents[2] * globalExtents[3] * (v_offset[4] + v)) + (globalExtents[0] * globalExtents[1] * globalExtents[2] * (v_offset[3] + u)) + (globalExtents[0] * globalExtents[1]*(v_offset[2] + k))+(globalExtents[0]*(v_offset[1] + j)) + (v_offset[0] + i1);
 				  else
-				      patch_buffer[index] = 0;//100 + (globalExtents[0] * globalExtents[1] * globalExtents[2] * globalExtents[3] * (v_offset[4] + v)) + (globalExtents[0] * globalExtents[1] * globalExtents[2] * (v_offset[3] + u)) + (globalExtents[0] * globalExtents[1]*(v_offset[2] + k))+(globalExtents[0]*(v_offset[1] + j)) + (v_offset[0] + i1);
+				      patch_buffer[index] = 101325;//100 + (globalExtents[0] * globalExtents[1] * globalExtents[2] * globalExtents[3] * (v_offset[4] + v)) + (globalExtents[0] * globalExtents[1] * globalExtents[2] * (v_offset[3] + u)) + (globalExtents[0] * globalExtents[1]*(v_offset[2] + k))+(globalExtents[0]*(v_offset[1] + j)) + (v_offset[0] + i1);
 			      }
 			      if(vc == 1)
 			      {
@@ -2252,19 +2254,20 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
 			      else if(vc == 2)
 			      {
 				  if(levelid == 0)
-				      patch_buffer[index] = rank; //100 + (globalExtents[0] * globalExtents[1] * globalExtents[2] * globalExtents[3] * (p_offset[4] + v)) + (globalExtents[0] * globalExtents[1] * globalExtents[2] * (p_offset[3] + u)) + (globalExtents[0] * globalExtents[1]*(p_offset[2] + k))+(globalExtents[0]*(p_offset[1] + j)) + (p_offset[0] + i1);
+				      patch_buffer[index] = rank+1; //100 + (globalExtents[0] * globalExtents[1] * globalExtents[2] * globalExtents[3] * (p_offset[4] + v)) + (globalExtents[0] * globalExtents[1] * globalExtents[2] * (p_offset[3] + u)) + (globalExtents[0] * globalExtents[1]*(p_offset[2] + k))+(globalExtents[0]*(p_offset[1] + j)) + (p_offset[0] + i1);
 				  else
-				      patch_buffer[index] = rank;
+				      patch_buffer[index] = rank+1;
 			      }
 			      else if(vc == 3)
 			      {
 				  if(levelid == 0)
-				      patch_buffer[index] = 0;//rank; //100 + (globalExtents[0] * globalExtents[1] * globalExtents[2] * globalExtents[3] * (p_offset[4] + v)) + (globalExtents[0] * globalExtents[1] * globalExtents[2] * (p_offset[3] + u)) + (globalExtents[0] * globalExtents[1]*(p_offset[2] + k))+(globalExtents[0]*(p_offset[1] + j)) + (p_offset[0] + i1);
+				      patch_buffer[index] = 100 + (globalExtents[0] * globalExtents[1] * globalExtents[2] * globalExtents[3] * (v_offset[4] + v)) + (globalExtents[0] * globalExtents[1] * globalExtents[2] * (v_offset[3] + u)) + (globalExtents[0] * globalExtents[1]*(v_offset[2] + k))+(globalExtents[0]*(v_offset[1] + j)) + (v_offset[0] + i1);
 				  else
-				      patch_buffer[index] = 1;//rank;
+				      patch_buffer[index] = 100 + (globalExtents[0] * globalExtents[1] * globalExtents[2] * globalExtents[3] * (v_offset[4] + v)) + (globalExtents[0] * globalExtents[1] * globalExtents[2] * (v_offset[3] + u)) + (globalExtents[0] * globalExtents[1]*(v_offset[2] + k))+(globalExtents[0]*(v_offset[1] + j)) + (v_offset[0] + i1);
 			      }
 			  }
-	    */
+	    
+	    
  	    //printf("[%d] : Archiver [%d %d] %d %d %d -- %d %d %d\n", rank, levelid, p,  v_offset[0], v_offset[1], v_offset[2], v_count[0], v_count[1], v_count[2]);
 	    PIDX_AMR_variable_local_add(pc.idx_ptr, pc.variable[vc][m], levelid, p, (int*) v_offset, (int*) v_count);
 	    PIDX_AMR_variable_local_layout(pc.idx_ptr, pc.variable[vc][m], (double*)patch_buffer, MPI_DOUBLE, levelid, p);
@@ -2277,15 +2280,15 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
 	} //  Patches
       }   //  Materials
     }     //  Variables
-//     if(levelid == 1)
+    //if(levelid == 0)
     //PIDX_AMR_write(pc.idx_ptr, levelid, patches->size());
     //PIDX_AMR_close(pc.idx_ptr,levelid);
     
     
     if(levelid == amr_levels-1)
     {
-      //PIDX_AMR_adaptive_write_AGG(pc.idx_ptr, 0, amr_levels-1);
-      PIDX_AMR_adaptive_write(pc.idx_ptr, 0, amr_levels-1);
+      PIDX_AMR_adaptive_write_AGG(pc.idx_ptr, 0, amr_levels-1);
+      //PIDX_AMR_adaptive_write(pc.idx_ptr, 0, amr_levels-1);
       PIDX_AMR_adaptive_close(pc.idx_ptr);
     }
     
