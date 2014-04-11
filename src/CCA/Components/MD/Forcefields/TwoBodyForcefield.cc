@@ -5,7 +5,7 @@
  *      Author: jbhooper
  */
 
-#include <CCA/Components/MD/Forcefields/TwoBodyForcefield.h>
+#include <CCA/Components/MD/Forcefields/TwoBodyForceField.h>
 
 namespace Uintah {
 
