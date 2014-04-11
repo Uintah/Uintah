@@ -16,7 +16,7 @@
 #include <CCA/Components/MD/Forcefields/forcefieldTypes.h>
 #include <CCA/Components/MD/Forcefields/nonbondedPotentialMapKey.h>
 
-#include <CCA/Components/MD/Potentials/TwoBody/nonbondedTwoBodyPotential.h>
+#include <CCA/Components/MD/Potentials/TwoBody/NonbondedTwoBodyPotential.h>
 #include <CCA/Components/MD/Forcefields/Lucretius/nonbondedLucretius.h>
 /*
  * ....................................................................................................................*

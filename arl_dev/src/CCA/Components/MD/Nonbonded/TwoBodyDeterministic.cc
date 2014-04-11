@@ -8,7 +8,7 @@
 #include <CCA/Components/MD/MDLabel.h>
 #include <CCA/Components/MD/MDSystem.h>
 #include <CCA/Components/MD/Nonbonded/TwoBodyDeterministic.h>
-#include <CCA/Components/MD/Forcefields/TwoBodyForcefield.h>
+#include <CCA/Components/MD/Forcefields/TwoBodyForceField.h>
 
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/LevelP.h>

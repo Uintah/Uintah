@@ -52,7 +52,7 @@
 #include <CCA/Components/MD/Electrostatics/SPME/SPME.h>
 #include <CCA/Components/MD/Forcefields/Forcefield.h>
 #include <CCA/Components/MD/Forcefields/ForcefieldFactory.h>
-#include <CCA/Components/MD/Forcefields/TwoBodyForcefield.h>
+#include <CCA/Components/MD/Forcefields/TwoBodyForceField.h>
 #include <CCA/Components/MD/Nonbonded/TwoBodyDeterministic.h>
 #include <CCA/Components/MD/atomMap.h>
 #include <CCA/Components/MD/atomFactory.h>
@@ -198,6 +198,14 @@ void MD::scheduleInitialize(const LevelP& level,
   task->computes(d_lb->pXLabel);
   task->computes(d_lb->pVelocityLabel);
   task->computes(d_lb->pParticleIDLabel);
+
+  task->computes(d_lb->pNonbondedForceLabel);
+  task->computes(d_lb->pElectrostaticsRealForce);
+  task->computes(d_lb->pElectrostaticsReciprocalForce);
+  task->computes(d_lb->pValenceForceLabel);
+  task->computes(d_lb->pTotalDipoles);
+  task->computes(d_lb->pElectrostaticsRealField);
+  task->computes(d_lb->pElectrostaticsReciprocalField);
 
   std::cerr << "MD::Schedule computes particleID" << std::endl;
 

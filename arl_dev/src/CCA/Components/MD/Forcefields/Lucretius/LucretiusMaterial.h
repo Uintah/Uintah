@@ -73,7 +73,7 @@ namespace Uintah {
 
       virtual std::string getMaterialLabel() const {
         std::ostringstream outString;
-        outString << nonbonded->getLabel() << std::setw(2) << std::ios::left << d_subtypeNumber;
+        outString << nonbonded->getLabel() << d_subtypeNumber;
         return outString.str();
       }
 

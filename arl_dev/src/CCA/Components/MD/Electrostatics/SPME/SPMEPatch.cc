@@ -100,7 +100,8 @@ SPMEPatch::SPMEPatch(IntVector extents,
   const IntVector IV_SPLINE(splineSupport,splineSupport,splineSupport);
   const int estimatedMaximumMultiplier = 2;
   size_t numAtomTypes = system->getNumAtomTypes();
-  d_chargeMapVector.resize(numAtomTypes);
+  // FIXME 04/11/14
+  d_chargeMapVector = std::vector<std::vector<SPMEMapPoint> >(numAtomTypes);
   SimpleGrid<double> sg_doubleNull(IV_SPLINE, IV_FLAG, IV_FLAG, 0);
   sg_doubleNull.fill(0.0);
   SimpleGrid<Vector> sg_VectorNull(IV_SPLINE, IV_FLAG, IV_FLAG, 0);
@@ -109,14 +110,14 @@ SPMEPatch::SPMEPatch(IntVector extents,
   sg_Matrix3Null.fill(Matrix3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
 
   for (size_t AtomType = 0; AtomType < numAtomTypes; ++AtomType) {
-	size_t totalNumberOfType = system->getNumAtomsOfType(AtomType);
-	size_t numberBuffered = totalNumberOfType * estimatedMaximumMultiplier * patchVolumeFraction;
-	for (size_t mapIndex = 0; mapIndex < numberBuffered; ++mapIndex) {
-	  // Instantiate a null map point to reserve the appropriate memory
-	  SPMEMapPoint tempMapPoint(-1,IV_FLAG,sg_doubleNull,sg_VectorNull,sg_Matrix3Null);
-	  // And build vector directly
-	  d_chargeMapVector[AtomType].push_back(tempMapPoint);
-	}
+    size_t totalNumberOfType = system->getNumAtomsOfType(AtomType);
+    size_t numberBuffered = totalNumberOfType * estimatedMaximumMultiplier * patchVolumeFraction;
+    for (size_t mapIndex = 0; mapIndex < numberBuffered; ++mapIndex) {
+      // Instantiate a null map point to reserve the appropriate memory
+      SPMEMapPoint tempMapPoint(-1, IV_FLAG, sg_doubleNull, sg_VectorNull, sg_Matrix3Null);
+      // And build vector directly
+      d_chargeMapVector[AtomType].push_back(tempMapPoint);
+    }
   }
 ////  const int estimatedMaximumMultiplier = 2;
 //  size_t numAtomTypes = system->getNumAtomTypes();
