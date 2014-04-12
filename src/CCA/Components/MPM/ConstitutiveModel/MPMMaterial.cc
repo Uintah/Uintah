@@ -98,6 +98,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
   ps->require("density",d_density);
   ps->require("thermal_conductivity",d_thermalConductivity);
   ps->require("specific_heat",d_specificHeat);
+  ps->require("diffusivity",d_diffusivity);
   
   // Assume the the centered specific heat is C_v
   d_Cv = d_specificHeat;
@@ -185,6 +186,7 @@ ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP mpm_ps = Material::outputProblemSpec(ps);
   mpm_ps->appendElement("density",d_density);
   mpm_ps->appendElement("thermal_conductivity",d_thermalConductivity);
+  mpm_ps->appendElement("diffusivity",d_diffusivity);
   mpm_ps->appendElement("specific_heat",d_specificHeat);
   mpm_ps->appendElement("C_p",d_Cp);
   mpm_ps->appendElement("room_temp",d_troom);
@@ -208,6 +210,7 @@ MPMMaterial::copyWithoutGeom(ProblemSpecP& ps,const MPMMaterial* mat,
   d_cm = mat->d_cm->clone();
   d_density = mat->d_density;
   d_thermalConductivity = mat->d_thermalConductivity;
+  d_diffusivity = mat->d_diffusivity;
   d_specificHeat = mat->d_specificHeat;
   d_Cv = mat->d_Cv;
   d_Cp = mat->d_Cp;
@@ -300,6 +303,10 @@ double MPMMaterial::getThermalConductivity() const
   return d_thermalConductivity;
 }
 
+double MPMMaterial::getDiffusivity() const
+{
+  return d_diffusivity;
+}
 
 /* --------------------------------------------------------------------- 
  Function~  MPMMaterial::initializeCells--

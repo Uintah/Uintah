@@ -324,6 +324,7 @@
       <velocity                spec="OPTIONAL VECTOR" /> <!--           eg, ARCHES doesn't use them... -->
       <level                   spec="OPTIONAL INTEGER"/> 
       <temperature             spec="OPTIONAL DOUBLE" />
+      <concentration             spec="OPTIONAL DOUBLE" />
       <color                   spec="OPTIONAL DOUBLE" />
       <density                 spec="OPTIONAL DOUBLE" />
       <pressure                spec="OPTIONAL DOUBLE" />
