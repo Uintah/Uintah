@@ -130,6 +130,7 @@ WARNING
    bool getIncludeFlowWork() const;
    double getSpecificHeat() const;
    double getThermalConductivity() const;
+   double getDiffusivity() const;
 
    int nullGeomObject() const;
 
@@ -160,6 +161,7 @@ WARNING
    bool d_includeFlowWork;
    double d_specificHeat;
    double d_thermalConductivity;
+   double d_diffusivity;
 
    // Specific heats at constant pressure and constant volume
    // (values at room temperature - [273.15 + 20] K)

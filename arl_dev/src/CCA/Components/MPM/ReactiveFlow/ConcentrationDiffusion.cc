@@ -243,7 +243,10 @@ void ConcentrationDiffusion::computeInternalDiffusionRate(const ProcessorGroup*,
       int dwi = mpm_matl->getDWIndex();
       double kappa = mpm_matl->getThermalConductivity();
       double Cv = mpm_matl->getSpecificHeat();
-      
+      double diffusivity = mpm_matl->getDiffusivity();
+      //cout << "diffusivity: " << diffusivity << endl;
+      //cout << "h: " << dx.x() << endl;
+
       constParticleVariable<Point>  px;
       constParticleVariable<double> pvol,pMass;
       constParticleVariable<Matrix3> psize;
@@ -276,7 +279,7 @@ void ConcentrationDiffusion::computeInternalDiffusionRate(const ProcessorGroup*,
       gdCdt.initialize(0.);
 
       // for FractureMPM
-      constParticleVariable<Short27> pgCode;
+      /*constParticleVariable<Short27> pgCode;
       constNCVariable<double> GConcentration;
       constNCVariable<double> GMass;
       NCVariable<double> GdCdt;
@@ -287,6 +290,7 @@ void ConcentrationDiffusion::computeInternalDiffusionRate(const ProcessorGroup*,
           new_dw->allocateAndPut(GdCdt, d_lb->GdCdtLabel,    dwi,patch);
           GdCdt.initialize(0.);
       }
+	  */
 
       // Compute the concentration gradient at each particle and project
       // the particle plastic work temperature rate to the grid
@@ -316,6 +320,8 @@ void ConcentrationDiffusion::computeInternalDiffusionRate(const ProcessorGroup*,
           // Project the mass weighted particle plastic work temperature
           // rate to the grid
         } // Loop over local nodes
+        pConcentrationGradient[idx] *= diffusivity;
+        //cout << idx << " pConcentrationGradient: " << pConcentrationGradient[idx] << endl;
       } // Loop over particles
 #ifdef CompIntDiffPCon
       cout << "List of computed pConcGradients in Compute Internal Diff Rate" << endl;
@@ -336,7 +342,7 @@ void ConcentrationDiffusion::computeInternalDiffusionRate(const ProcessorGroup*,
 
         // Calculate k/(rho*Cv)
         double alpha = kappa*pvol[idx]/Cv; 
-        Vector dC_dx = pConcentrationGradient[idx];
+        Vector dC_dx = pConcentrationGradient[idx]*pMass[idx];
 
         double Cdot_cond = 0.0;
         IntVector node(0,0,0);
@@ -348,7 +354,7 @@ void ConcentrationDiffusion::computeInternalDiffusionRate(const ProcessorGroup*,
           if(patch->containsNode(node)){
         	  //cout << node << " conc_gMass: " << gMass[node] << endl;
            Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
-           Cdot_cond = Dot(div, dC_dx)*(alpha/gMass[node]);
+           Cdot_cond = Dot(div, dC_dx);
            gdCdt[node] -= Cdot_cond;
 
            if (cout_concentration.active()) {
@@ -361,6 +367,10 @@ void ConcentrationDiffusion::computeInternalDiffusionRate(const ProcessorGroup*,
           } // if patch contains node
         } // Loop over local nodes
       } // Loop over particles
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+          IntVector n = *iter;
+          gdCdt[n] /= gMass[n];
+      }
 #ifdef EndCompInDiff
       cout << "End Compute Internal Diffusion Rate" << endl;
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
@@ -555,8 +565,9 @@ void ConcentrationDiffusion::solveDiffusionEquations(const ProcessorGroup*,
         //cout << c << " conmass " << mass[c] << endl;
         //cout << c << " gdCdt: " << gdCdt[c] << endl;
         //cout << c << " extDiffRate: " << externalDiffusionRate[c] << endl;
-        concentrationRate[c] = gdCdt[c]*((mass[c]-1.e-200)/mass[c]) +
-           (externalDiffusionRate[c])/(mass[c]*Cv);
+        concentrationRate[c] = gdCdt[c]*((mass[c]-1.e-200)/mass[c]); //+
+        //cout << "masscalc: " << (mass[c]-1.e-200)/mass[c] << endl;
+           //(externalDiffusionRate[c])/(mass[c]*Cv);
       } // End of loop over iter
 #ifdef AfterConRateSolveDiffEq
       cout << "After concRate Solve Diffusion Equation" << endl;
@@ -649,7 +660,8 @@ void ConcentrationDiffusion::integrateDiffusionRate(const ProcessorGroup*,
       for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
         IntVector c = *iter;
-        conc_rate[c] = (concStar[c] - conc_oldNoBC[c]) / delT;
+        //conc_rate[c] = (concStar[c] - conc_oldNoBC[c]) / delT;
+        conc_rate[c] = concStar[c];
       }
 #ifdef IntDiffRateConRate
       cout << "Integrate Diffusion Rate" << endl;

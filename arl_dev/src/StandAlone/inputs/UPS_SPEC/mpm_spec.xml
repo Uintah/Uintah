@@ -141,6 +141,7 @@
 
         <specific_heat                   spec="REQUIRED DOUBLE 'positive'" /> 
         <thermal_conductivity            spec="REQUIRED DOUBLE 'positive'" />
+        <diffusivity                     spec="REQUIRED DOUBLE 'positive'" />
         <geom_object                     spec="MULTIPLE" />
         <is_rigid                        spec="OPTIONAL BOOLEAN" />
         <C_p                             spec="OPTIONAL DOUBLE" />
