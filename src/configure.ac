@@ -68,7 +68,7 @@ AC_INIT([Uintah],[1.5],[uintah-developer@gforge.sci.utah.edu])
 ##
 ##     type "autoconf --version" to find out what version you have.
 ##
-AC_PREREQ(2.50)
+AC_PREREQ(2.69)
 
 AC_COPYRIGHT(
 ##
@@ -479,7 +479,13 @@ SCI_ARG_WITH(visit,
                  Turn on VisIt visualization tool support.  Point to VisIt installation.),
   [with_visit="$withval"],
   [with_visit=""])
-  
+
+SCI_ARG_WITH(visus,
+  AC_HELP_STRING(--with-visus=DIR,
+                 Turn on ViSUS IDX support.  Point to ViSUS installation.),
+  [with_visus="$withval"],
+  [with_visus=""])
+
 SCI_ARG_WITH(pidx,
   AC_HELP_STRING(--with-pidx=DIR,
                  Turn on ViSUS Parallel IDX support.  Point to PIDX installation.),
@@ -4040,6 +4046,44 @@ AC_SUBST(INC_TEEM_H)
 AC_SUBST(TEEM_LIB_FLAG)
 AC_SUBST(TEEM_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/teem_testdefs.h"
+
+##  --  search for visus  -------------------------------------------------
+AC_LANG(C++)
+
+# Default values:
+_sci_optional=optional
+_sci_lib=
+_sci_inc=
+
+if test "$with_visus"; then
+  if test "$with_visus" = "yes"; then
+    AC_MSG_WARN(ViSUS is already required - you do not need to specify --with-visus.)
+  else
+    # If --with-visus has a parameter, then use it
+    _sci_lib="$with_visus"
+    _sci_inc="$with_visus/include $with_visus"
+    BASE_LIB_PATH(_sci_lib,$_sci_lib)
+    _sci_optional=required
+  fi 
+
+  if test "$IS_OSX" = "yes"; then
+     VISUS_OSX="-framework Foundation"
+  fi
+
+  SCI_TRY_LINK(VISUS,visus library and headers,visuscpp/kernel/visus_kernel.h,$_sci_inc,ttmath visusidx curl libz FreeImage tinyxml visusdb visusscenegraph visuskernel curl visusdataflow $VISUS_OSX,$_sci_lib,,,$_sci_optional)
+
+  if test "$HAVE_VISUS" = "yes"; then
+     DEF_VISUS="#define HAVE_VISUS 1"
+  fi
+fi
+
+AC_SUBST(HAVE_VISUS)
+AC_SUBST(DEF_VISUS)
+AC_SUBST(INC_VISUS_H)
+AC_SUBST(VISUS_LIB_FLAG)
+AC_SUBST(VISUS_LIB_DIR_FLAG)
+sci_defs_files="$sci_defs_files include/sci_defs/visus_testdefs.h"
+AC_LANG(C)
 
 ##  --  search for pidx  -------------------------------------------------
 AC_LANG(C++)
