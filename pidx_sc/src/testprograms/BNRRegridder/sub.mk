@@ -51,7 +51,7 @@ else # Non-static build
 endif
 
 ifeq ($(IS_STATIC_BUILD),yes)
-  LIBS := $(CORE_STATIC_LIBS)
+  LIBS := $(CORE_STATIC_LIBS) $(PIDX_LIBRARY)
 else
   LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) \
           $(TEEM_LIBRARY) $(XML2_LIBRARY)
