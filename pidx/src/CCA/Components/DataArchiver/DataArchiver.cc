@@ -2046,7 +2046,7 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
     
 #if HAVE_PIDX
   if (pidx_io == true) 
-  {
+  {    
     start_time = MPI_Wtime();
     string idxFilename(dir.getName());
     idxFilename = idxFilename + ".idx";
@@ -2058,9 +2058,9 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
     
     for(int i = 0 ; i < amr_levels ; i++)
     {
-      refinement_ratio[i][0] = 4;
-      refinement_ratio[i][1] = 4;
-      refinement_ratio[i][2] = 4;
+      refinement_ratio[i][0] = 2;
+      refinement_ratio[i][1] = 2;
+      refinement_ratio[i][2] = 2;
     }
     
     if(levelid == 0)
@@ -2281,18 +2281,10 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
       }   //  Materials
     }     //  Variables
     //if(levelid == 0)
-    //PIDX_AMR_write(pc.idx_ptr, levelid, patches->size());
+#if 0   
+    start_time = MPI_Wtime();
+    PIDX_AMR_write(pc.idx_ptr, levelid, patches->size());
     //PIDX_AMR_close(pc.idx_ptr,levelid);
-    
-    
-    if(levelid == amr_levels-1)
-    {
-      PIDX_AMR_adaptive_write_AGG(pc.idx_ptr, 0, amr_levels-1);
-      //PIDX_AMR_adaptive_write(pc.idx_ptr, 0, amr_levels-1);
-      PIDX_AMR_adaptive_close(pc.idx_ptr);
-    }
-    
-    
     end_time = MPI_Wtime();
     io_time = end_time - start_time;
     
@@ -2306,6 +2298,32 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
 	    << (globalExtents[0]*globalExtents[1]*globalExtents[2]*number_of_variables*sizeof(double))/(1024.*1024.*max_time) << " MiB/sec " << " Max Time = " << max_time  
 	    << " Number of variables = " << number_of_variables 
 	    << endl;
+#endif
+    
+#if 1    
+    if(levelid == amr_levels-1)
+    {
+	start_time = MPI_Wtime();
+	PIDX_AMR_adaptive_write_AGG(pc.idx_ptr, 0, amr_levels-1);
+	//PIDX_AMR_adaptive_write(pc.idx_ptr, 0, amr_levels-1);
+	PIDX_AMR_adaptive_close(pc.idx_ptr);
+	end_time = MPI_Wtime();
+	io_time = end_time - start_time;
+	
+	MPI_Allreduce(&io_time,&max_time, 1,MPI_DOUBLE,MPI_MAX, 
+		      d_myworld->getComm() );
+	if (io_time == max_time)
+	  cout << "Timestep = " << timeStep 
+		<< " Global Volume = " << globalExtents[0] << "," << globalExtents[1]
+		<< "," << globalExtents[2] << "," 
+		<< " Throughput = " 
+		<< (globalExtents[0]*globalExtents[1]*globalExtents[2]*number_of_variables*sizeof(double))/(1024.*1024.*max_time) << " MiB/sec " << " Max Time = " << max_time  
+		<< " Number of variables = " << number_of_variables 
+		<< endl;
+    }
+#endif
+    
+    
 	    
   }
 #endif
