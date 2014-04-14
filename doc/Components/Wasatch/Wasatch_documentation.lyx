@@ -7961,6 +7961,62 @@ Field Expressions
 \end_layout
 
 \begin_layout Section*
+Constant
+\end_layout
+
+\begin_layout Standard
+The 
+\begin_inset listings
+inline true
+status open
+
+\begin_layout Plain Layout
+
+Constant
+\end_layout
+
+\end_inset
+
+ expression is the most elemental type of expression used in Wasatch.
+ As the name designates, this expression creates a constant field for any
+ quantity.
+ For example, 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+prettyref{lst:wasatch-const-expr}
+\end_layout
+
+\end_inset
+
+ shows the input specification for a constant expression that initializes
+ a field 
+\begin_inset Formula $\phi$
+\end_inset
+
+ to 
+\begin_inset Formula $1.0$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "listings/Constant-example.xml"
+lstparams "caption={Specification of a Constant expression.},label={lst:wasatch-const-expr}"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section*
 ExprAlgebra
 \end_layout
 
@@ -8082,7 +8138,7 @@ ExprAlgebra
 \end_layout
 
 \begin_layout Section*
-Linear Function
+LinearFunction
 \end_layout
 
 \begin_layout Standard
@@ -8152,7 +8208,7 @@ lstparams "caption={Specification of a LinearFunction as an initial condition fo
 \end_layout
 
 \begin_layout Section*
-Parabolic Function
+ParabolicFunction
 \end_layout
 
 \begin_layout Standard
@@ -8204,6 +8260,327 @@ ParabolicFunction
 LatexCommand lstinputlisting
 filename "listings/LinearFunction-example.xml"
 lstparams "caption={Specification of a ParabolicFunction as an initial condition for a scalar field $\\phi$.},label={lst:wasatch-parabolic-function}"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section*
+SineFunction
+\end_layout
+
+\begin_layout Standard
+As the name implies, the 
+\begin_inset listings
+inline true
+status open
+
+\begin_layout Plain Layout
+
+SineFunction
+\end_layout
+
+\end_inset
+
+ expression generates a field of the form
+\begin_inset Formula 
+\begin{equation}
+\phi=A\sin(\omega x)+\psi.
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $A$
+\end_inset
+
+ is the amplitude, 
+\begin_inset Formula $\omega$
+\end_inset
+
+ is the frequency, and 
+\begin_inset Formula $\psi$
+\end_inset
+
+ is the offset.
+ The specification of a 
+\begin_inset listings
+inline true
+status open
+
+\begin_layout Plain Layout
+
+SineFunction
+\end_layout
+
+\end_inset
+
+ takes three attributes and the nametag of an independent variable (e.g.
+ 
+\begin_inset Formula $x$
+\end_inset
+
+).
+ The following listing shows how to initialize a field with a 
+\begin_inset listings
+inline true
+status open
+
+\begin_layout Plain Layout
+
+SineFunction
+\end_layout
+
+\end_inset
+
+ as 
+\begin_inset Formula $f=2\sin(10x)+3$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "listings/SineFunction-example.xml"
+lstparams "caption={Specification of a SineFunction as an initial condition for a scalar field $f$.},label={lst:wasatch-sinefunction-example}"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section*
+GaussianFunction
+\end_layout
+
+\begin_layout Standard
+Generates a field of the form
+\begin_inset Formula 
+\begin{equation}
+f(x)=y_{0}+a\exp\left[\frac{\left(x-\mu\right)^{2}}{2\sigma^{2}}\right]
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $a$
+\end_inset
+
+ is the amplitude, 
+\begin_inset Formula $\mu$
+\end_inset
+
+ is the mean, and 
+\begin_inset Formula $\sigma$
+\end_inset
+
+ is the deviation, and 
+\begin_inset Formula $y_{0}$
+\end_inset
+
+ is the baseline.
+ The specification of a 
+\begin_inset listings
+inline true
+status open
+
+\begin_layout Plain Layout
+
+GaussianFunction
+\end_layout
+
+\end_inset
+
+ takes four attributes and the nametag of an independent variable (e.g.
+ 
+\begin_inset Formula $x$
+\end_inset
+
+).
+ The following listing shows how to initialize a field with a 
+\begin_inset listings
+inline true
+status open
+
+\begin_layout Plain Layout
+
+GaussianFunction
+\end_layout
+
+\end_inset
+
+ as 
+\begin_inset Formula $f=1+20\exp\left[\frac{\left(x-5\right)^{2}}{8}\right]$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "listings/GaussianFunction-example.xml"
+lstparams "caption={Specification of a GaussianFunction as an initial condition for a scalar field $f$.},label={lst:wasatch-gaussianfunction-example}"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section*
+DoubleTanhFunction
+\end_layout
+
+\begin_layout Standard
+Generates a field of the form
+\begin_inset Formula 
+\begin{equation}
+f(x)=\frac{A}{2}\left(1+\tanh\left(\frac{x-L_{1}}{w}\right)\right)\left(1-\frac{1}{2}\tanh\left(\frac{x-L_{2}}{w}\right)\right)
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $w$
+\end_inset
+
+ is the width of the transition, 
+\begin_inset Formula $A$
+\end_inset
+
+ is the amplitude of the transition, 
+\begin_inset Formula $L_{1}$
+\end_inset
+
+ is the midpoint for the upward transition, and 
+\begin_inset Formula $L_{2}$
+\end_inset
+
+ is the midpoint for the downward transition.
+ The following listing shows how to initialize a field with a 
+\begin_inset listings
+inline true
+status open
+
+\begin_layout Plain Layout
+
+DoubleTanhFunction
+\end_layout
+
+\end_inset
+
+ as 
+\begin_inset Formula $f(x)=5\left(1+\tanh\left(\frac{x-1}{4}\right)\right)\left(1-\frac{1}{2}\tanh\left(\frac{x-2}{4}\right)\right)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "listings/DoubleTanhFunction-example.xml"
+lstparams "caption={Specification of a DoubleTanhFunction as an initial condition for a scalar field $f$.},label={lst:wasatch-doubletanhfunction-example}"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section*
+StepFunction
+\end_layout
+
+\begin_layout Standard
+Generates a Heaviside step function of the form
+\begin_inset Formula 
+\begin{equation}
+f(x)=\begin{cases}
+l & x<x_{0}\\
+g & x\geq x_{0}
+\end{cases}
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $x_{0}$
+\end_inset
+
+ is the transition point, 
+\begin_inset Formula $l$
+\end_inset
+
+ is referred to as the low value and denotes the value of 
+\begin_inset Formula $f$
+\end_inset
+
+ below the transition point, and 
+\begin_inset Formula $g$
+\end_inset
+
+ is referred to as the high value and denotes the value of 
+\begin_inset Formula $f$
+\end_inset
+
+ above the transition point.
+ The following listing shows how to initialize a field with a 
+\begin_inset listings
+inline true
+status open
+
+\begin_layout Plain Layout
+
+StepFunction
+\end_layout
+
+\end_inset
+
+ as 
+\begin_inset Formula $f(x)=\begin{cases}
+2 & x<0.1\\
+1 & x\geq0.1
+\end{cases}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "listings/StepFunction-example.xml"
+lstparams "caption={Specification of a StepFunction as an initial condition for a scalar field $f$.},label={lst:wasatch-stepfunction-example}"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section*
+ReadFromFile
+\end_layout
+
+\begin_layout Standard
+Creates an expression that reads data from a file.
+ The file is formatted as 
+\begin_inset Quotes eld
+\end_inset
+
+x y z value
+\begin_inset Quotes erd
+\end_inset
+
+ ASCII and then zipped.
+ A sample file is found in the Wasatch inputs directory.
+ The specification is shown below.
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "listings/ReadFromFile-example.xml"
+lstparams "caption={ReadFromFile specification as an initial condition for a scalar field $f$.},label={lst:wasatch-readfromfile-example}"
 
 \end_inset
 
@@ -9179,6 +9556,123 @@ reference "lst:wasatch-reduction-example"
 \end_inset
 
 , use the following in the DataArchiver <save label="u_max_uintah"/>.
+\end_layout
+
+\begin_layout Section*
+RayleighTaylor
+\end_layout
+
+\begin_layout Standard
+Generates an initial condition for a Rayleigh-Taylor instability simulation
+ with a perturbed interface.
+ The formula is
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+f(y)=\begin{cases}
+l & y<y_{0}+A\sin(2\pi x_{1})\sin(2\pi x_{2})\\
+g & \text{otherwise}
+\end{cases}
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $l$
+\end_inset
+
+ and 
+\begin_inset Formula $g$
+\end_inset
+
+ are constants, 
+\begin_inset Formula $y$
+\end_inset
+
+, 
+\begin_inset Formula $x_{1}$
+\end_inset
+
+, and 
+\begin_inset Formula $x_{2}$
+\end_inset
+
+ are coordinates.
+ An example of the RayleighTaylor expression is shown below
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "listings/RayleighTaylor-example.xml"
+lstparams "caption={Specification of a RayleighTaylor expression.},label={lst:wasatch-rayleightaylor-example}"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section*
+GeometryBased
+\end_layout
+
+\begin_layout Standard
+The 
+\begin_inset listings
+inline true
+status open
+
+\begin_layout Plain Layout
+
+GeometryBased
+\end_layout
+
+\end_inset
+
+ expression is a very powerful tool for setting values on fields using complex
+ gometrical shapes.
+ This expression uses geometry primitives to build complicated shapes with
+ different values inside those primitives.
+ The specification is shown in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "lst:wasatch-geometrybased-spec"
+
+\end_inset
+
+.
+ An example is shown in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "lst:wasatch-geometrybased-example"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "listings/GeometryBased-spec.xml"
+lstparams "caption={Specification of a GeometryBased expression.},label={lst:wasatch-geometrybased-spec}"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "listings/GeometryBased-example.xml"
+lstparams "caption={Example of a GometryBased expression.},label={lst:wasatch-geometrybased-example}"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section
