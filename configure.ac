@@ -3287,8 +3287,7 @@ if test "$sci_required_mpi" = "yes" -a "$with_mpi" != "built-in"; then
 
         num_libs=${#test_libs[*]}
 
-        for (( num=0; num<$num_libs; num++ ));
-        do
+        for (( num=0; num<$num_libs; num++ )); do
 
            # After each attempt to locate mpi, we need to verify that the mpi it
            # chose is in the path we specified.  This is because some machines
@@ -3314,8 +3313,48 @@ if test "$sci_required_mpi" = "yes" -a "$with_mpi" != "built-in"; then
                  break
               fi
            fi
-        done                                                                
+        done
 
+	######################################################################
+	# If we didn't find mpi above, try it again, but this time hack in 
+	# /usr/include/mpi/ into the path.  (This is necessary as some (many?)
+	# linux distributions place the mpi lib in /usr/lib, but put mpi.h
+	# in /usr/include/mpi/... The problem with hardcoding /usr/include/mpi
+	# into the link test path is that it can (in some situations) cause
+	# the wrong mpi.h to be used with non-matching libraries...
+	# Not sure I like this hack, but don't have a better fix off hand. -Dd
+
+        if test "$HAVE_MPI" != "yes"; then
+          _sci_inc="$_sci_inc /usr/include/mpi"
+          for (( num=0; num<$num_libs; num++ )); do
+
+           # After each attempt to locate mpi, we need to verify that the mpi it
+           # chose is in the path we specified.  This is because some machines
+           # have MPI installed in a standard location and sometimes will choose
+           # that one over the one we specified.
+
+           the_libs=${test_libs[[$num]]}
+           other=${other[[$num]]}
+
+           the_file="lib`echo "${test_libs[[$num]]}" | cut -f1 -d" "`"
+
+           SCI_TRY_LINK(MPI,${num}: mpi library and header (mpi.h hack) ($the_libs),mpi.h,
+                        $_sci_inc, $the_libs $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,$other,,optional)
+
+           if test "$HAVE_MPI" = "yes"; then
+              if test "$_sci_optional" = "specific" &&
+                 test ! -e $_sci_lib/$the_file.so &&
+                 test ! -e $_sci_lib/$the_file.a &&
+                 test ! -e $_sci_lib/$the_file.dylib; then
+                    AC_MSG_WARN(Found libmpi but not in requested directory: $_sci_lib)
+                    HAVE_MPI="no"
+              else
+                 break
+              fi
+           fi
+          done
+        fi
+	######################################################################
         
         if test "$HAVE_MPI" = "yes"; then
            if test "$HAVE_MPICH" != "yes"; then
@@ -3395,7 +3434,7 @@ else
          _sci_inc="$with_petsc/include"
       else
          version_file=/usr/include/petsc/petscversion.h
-         lib_dir=/usr/lib
+         lib_dir=/usr
          _sci_inc=/usr/include/petsc
          BASE_LIB_PATH(_sci_lib_dir,$lib_dir)
       fi
