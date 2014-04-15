@@ -199,6 +199,10 @@ WARNING
         Methods involving node's attributes
       *************/
 
+       //////////
+       // If 'attribute' is found, this function returns true, otherwise it returns false.
+       bool findAttribute(const std::string& attribute) const;
+
       //////////
       // passes back a map of the attributes of this node into value
       void getAttributes(std::map<std::string,std::string>& value) const;

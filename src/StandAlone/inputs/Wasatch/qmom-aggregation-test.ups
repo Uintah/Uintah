@@ -14,31 +14,31 @@
 
     <BasicExpression type="SVOL"> 
       <TaskList> advance_solution </TaskList>
-      <NameTag name="dissipation" state="STATE_N" />
+      <NameTag name="dissipation" state="STATE_N"/>
       <Constant> 0.05 </Constant>
     </BasicExpression>
 
     <BasicExpression type="SVOL"> 
       <TaskList> advance_solution </TaskList>
-      <NameTag name="kinviscos" state="STATE_N" />
+      <NameTag name="kinviscos" state="STATE_N"/>
       <Constant> 0.1 </Constant>
     </BasicExpression> 
 
     <BasicExpression type="SVOL">
       <TaskList> advance_solution </TaskList>
-      <NameTag name="density" state="STATE_N" />
+      <NameTag name="density" state="STATE_N"/>
       <Constant> 1.0 </Constant>
     </BasicExpression>
 
     <BasicExpression type="SVOL"> 
       <TaskList> advance_solution </TaskList>
-      <NameTag name="growthCoef" state="STATE_N" />
+      <NameTag name="growthCoef" state="STATE_N"/>
       <Constant> 1500.0 </Constant>
     </BasicExpression> 
 
     <PrecipitationBasicExpression type="SVOL">
       <TaskList> advance_solution </TaskList>
-      <NameTag name ="Turb_agg" state="STATE_NONE" />
+      <NameTag name="Turb_agg" state="STATE_NONE"/>
       <TurbulentAggregationCoefficient>
         <KinematicViscosity>
           <NameTag name="kinviscos" state="STATE_N"/>
@@ -82,10 +82,10 @@
             <GrowthModel> BULK_DIFFUSION </GrowthModel>
             <LengthParam> 1.5 </LengthParam>
             <Density>
-              <NameTag name="density" state="STATE_N" />
+              <NameTag name="density" state="STATE_N"/>
             </Density>
             <EnergyDissipation>
-              <NameTag name="dissipation" state="STATE_N" />
+              <NameTag name="dissipation" state="STATE_N"/>
             </EnergyDissipation>
             <GrowthCoefficientExpression>
               <NameTag name="growthCoef" state="STATE_N"/>
@@ -131,7 +131,7 @@
     <filebase>qmom-aggregation-test.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.00001"/>
+    <checkpoint cycle="2" interval="0.00001"/>
     <compression>gzip</compression>
     <save label="m_CACO3_0"/>
     <save label="m_CACO3_1"/>

@@ -50,7 +50,7 @@
     <filebase>qmom-test.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.00001"/>
+    <checkpoint cycle="2" interval="0.00001"/>
     <compression>gzip</compression>
     <save label="m_CACO3_0"/>
     <save label="m_CACO3_1"/>

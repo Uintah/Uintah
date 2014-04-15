@@ -14,9 +14,9 @@
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="mixture fraction" state="STATE_N" />
+      <NameTag name="mixture fraction" state="STATE_N"/>
       <SineFunction amplitude="0.5" frequency="0.5" offset="0.5">
-        <NameTag name="XSVOL" state="STATE_NONE" />    
+        <NameTag name="XSVOL" state="STATE_NONE"/>    
       </SineFunction>
     </BasicExpression>
 
@@ -25,22 +25,22 @@
       <FileNamePrefix>inputs/Wasatch/AdEquilCH4</FileNamePrefix>
       <TaskList>advance_solution</TaskList>
       <IndependentVariable>
-        <NameTag name="mixture fraction" state="STATE_N" />
+        <NameTag name="mixture fraction" state="STATE_N"/>
         <NameInTable>MixtureFraction</NameInTable>
       </IndependentVariable>
       <ExtractVariable>
         <NameInTable>Temperature</NameInTable>
-        <NameTag name="temperature" state="STATE_NONE" />
+        <NameTag name="temperature" state="STATE_NONE"/>
         <Type>SVOL</Type>
       </ExtractVariable>
       <ExtractVariable>
         <NameInTable>CO2_molefrac</NameInTable>
-        <NameTag name="CO2" state="STATE_NONE" />
+        <NameTag name="CO2" state="STATE_NONE"/>
         <Type>SVOL</Type>
       </ExtractVariable>
       <ExtractVariable>
         <NameInTable>H2O_molefrac</NameInTable>
-        <NameTag name="H2O" state="STATE_NONE" />
+        <NameTag name="H2O" state="STATE_NONE"/>
         <Type>SVOL</Type>
       </ExtractVariable>
     </TabProps>
@@ -48,7 +48,7 @@
     <RadProps>
       <GreyGasAbsCoef>
         <FileName>inputs/Wasatch/AbsCoefCH4.txt</FileName>
-        <NameTag name="AbsCoef" state="STATE_NONE" />
+        <NameTag name="AbsCoef" state="STATE_NONE"/>
         <SpeciesMoleFraction name="CO2"><NameTag name="CO2" state="STATE_NONE"/></SpeciesMoleFraction>    
         <SpeciesMoleFraction name="H2O"><NameTag name="H2O" state="STATE_NONE"/></SpeciesMoleFraction>
         <Temperature><NameTag name="temperature" state="STATE_NONE"/></Temperature>    
@@ -56,35 +56,18 @@
     </RadProps>
 
     <ForceOnGraph tasklist="advance_solution">
-      <NameTag name="AbsCoef" state="STATE_NONE" />
+      <NameTag name="AbsCoef" state="STATE_NONE"/>
     </ForceOnGraph>
 
 
     <!-- Build a scalar transport equation -->
     <TransportEquation equation="generic">
-
       <SolutionVariable>mixture fraction</SolutionVariable>
-
-      <DiffusiveFluxExpression>
-        <Direction>X</Direction>
-        <ConstantDiffusivity>2.0</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Y</Direction>
-        <ConstantDiffusivity>1.0</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Z</Direction>
-        <ConstantDiffusivity>3.0</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
+      <DiffusiveFluxExpression direction="X" coefficient="2.0"/>
+      <DiffusiveFluxExpression direction="Y" coefficient="1.0"/>
+      <DiffusiveFluxExpression direction="Z" coefficient="3.0"/>
     </TransportEquation>
-
-
-
-  </Wasatch>
+    </Wasatch>
 
   <Time>
     <maxTime>2.0</maxTime>
@@ -98,7 +81,7 @@
     <filebase>wasatch_test.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.01"/>
+    <checkpoint cycle="2" interval="0.01"/>
     <compression>gzip</compression>
     <save label="mixture fraction"/>
     <save label="AbsCoef"/>

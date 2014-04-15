@@ -50,17 +50,10 @@
 
     <!-- Build a non-staggered scalar transport equation -->
     <TransportEquation equation="generic">
-
       <SolutionVariable>phi-dirichlet-dirichlet-a</SolutionVariable>
-
-      <DiffusiveFluxExpression>
-        <Direction>X</Direction>
-        <ConstantDiffusivity>1.0</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
+      <DiffusiveFluxExpression direction="X" coefficient="1.0"/>
     </TransportEquation>
-    
-  </Wasatch>
+    </Wasatch>
 
 
   <Time>

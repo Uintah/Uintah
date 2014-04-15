@@ -50,66 +50,30 @@
     
     <!-- Build a non-staggered scalar transport equation -->
     <TransportEquation equation="generic">
-
       <SolutionVariable>phi-dirichlet-dirichlet-a</SolutionVariable>
-
-      <DiffusiveFluxExpression>
-        <Direction>Z</Direction>
-        <ConstantDiffusivity>1.0</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
+      <DiffusiveFluxExpression direction="Z" coefficient="1.0"/>
     </TransportEquation>
-    
     <!-- Build a non-staggered scalar transport equation -->
     <TransportEquation equation="generic">
-
       <SolutionVariable>phi-dirichlet-dirichlet-b</SolutionVariable>
-
-      <DiffusiveFluxExpression>
-        <Direction>Z</Direction>
-        <ConstantDiffusivity>1.0</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
+      <DiffusiveFluxExpression direction="Z" coefficient="1.0"/>
     </TransportEquation>
-    
     <!-- Build a non-staggered scalar transport equation -->
     <TransportEquation equation="generic">
-
       <SolutionVariable>phi-dirichlet-neumann</SolutionVariable>
-
-      <DiffusiveFluxExpression>
-        <Direction>Z</Direction>
-        <ConstantDiffusivity>1.0</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
+      <DiffusiveFluxExpression direction="Z" coefficient="1.0"/>
     </TransportEquation>
-    
     <!-- Build a non-staggered scalar transport equation -->
     <TransportEquation equation="generic">
-
       <SolutionVariable>phi-neumann-dirichlet</SolutionVariable>
-
-      <DiffusiveFluxExpression>
-        <Direction>Z</Direction>
-        <ConstantDiffusivity>1.0</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
+      <DiffusiveFluxExpression direction="Z" coefficient="1.0"/>
     </TransportEquation>
-    
     <!-- Build a non-staggered scalar transport equation -->
     <TransportEquation equation="generic">
-
       <SolutionVariable>phi-neumann-neumann</SolutionVariable>
-
-      <DiffusiveFluxExpression>
-        <Direction>Z</Direction>
-        <ConstantDiffusivity>1.0</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
+      <DiffusiveFluxExpression direction="Z" coefficient="1.0"/>
     </TransportEquation>
-
-
-  </Wasatch>
+    </Wasatch>
 
 
   <Time>
