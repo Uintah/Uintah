@@ -51,7 +51,6 @@ SRCS += \
         $(SRCDIR)/PSPatchMatlGhostRange.cc      \
         $(SRCDIR)/ReductionVariableBase.cc      \
         $(SRCDIR)/ReductionVariable_special.cc  \
-        $(SRCDIR)/ScrubItem.cc                  \
         $(SRCDIR)/SoleVariableBase.cc           \
         $(SRCDIR)/Stencil7.cc                   \
         $(SRCDIR)/Stencil4.cc                   \
