@@ -74,9 +74,7 @@
       <SolutionVariable>rhof</SolutionVariable>
       <PrimitiveVariable>f</PrimitiveVariable>
       
-      <ConvectiveFluxExpression>
-        <Method>UPWIND</Method> 
-        <Direction>Y</Direction>
+      <ConvectiveFluxExpression direction="Y" method="UPWIND">
         <AdvectiveVelocity>
             <NameTag name="v" state="STATE_NONE"/>
         </AdvectiveVelocity>

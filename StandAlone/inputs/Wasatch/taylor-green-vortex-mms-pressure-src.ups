@@ -16,7 +16,7 @@
     <!-- Set the initial condition expression for x-momentum -->
     <TaylorVortexMMS type="XVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="psrcx" state="STATE_NONE" />
+      <NameTag name="psrcx" state="STATE_NONE"/>
       <GradPX amplitude="1.0" viscosity="0.001">
         <XCoordinate> <NameTag name="XXVOL" state="STATE_NONE"/> </XCoordinate>
         <YCoordinate> <NameTag name="YXVOL" state="STATE_NONE"/> </YCoordinate>
@@ -26,7 +26,7 @@
     <!-- Set the initial condition expression for x-momentum -->
     <TaylorVortexMMS type="YVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="psrcy" state="STATE_NONE" />
+      <NameTag name="psrcy" state="STATE_NONE"/>
       <GradPY amplitude="1.0" viscosity="0.001">
         <XCoordinate> <NameTag name="XYVOL" state="STATE_NONE"/> </XCoordinate>
         <YCoordinate> <NameTag name="YYVOL" state="STATE_NONE"/> </YCoordinate>
@@ -34,14 +34,14 @@
     </TaylorVortexMMS>
 
     <ForceOnGraph tasklist="initialization">
-      <NameTag name="psrcx" state="STATE_NONE" />    
-      <NameTag name="psrcy" state="STATE_NONE" />
+      <NameTag name="psrcx" state="STATE_NONE"/>    
+      <NameTag name="psrcy" state="STATE_NONE"/>
     </ForceOnGraph>
 
     <!-- Set the initial condition expression for x-momentum -->
     <TaylorVortexMMS type="XVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="psrcx" state="STATE_NONE" />
+      <NameTag name="psrcx" state="STATE_NONE"/>
       <GradPX amplitude="1.0" viscosity="0.001">
         <XCoordinate> <NameTag name="XXVOL" state="STATE_NONE"/> </XCoordinate>
         <YCoordinate> <NameTag name="YXVOL" state="STATE_NONE"/> </YCoordinate>
@@ -51,7 +51,7 @@
     <!-- Set the initial condition expression for x-momentum -->
     <TaylorVortexMMS type="YVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="psrcy" state="STATE_NONE" />
+      <NameTag name="psrcy" state="STATE_NONE"/>
       <GradPY amplitude="1.0" viscosity="0.001">
         <XCoordinate> <NameTag name="XYVOL" state="STATE_NONE"/> </XCoordinate>
         <YCoordinate> <NameTag name="YYVOL" state="STATE_NONE"/> </YCoordinate>
@@ -61,7 +61,7 @@
     <!-- Set the initial condition expression for x-momentum -->
     <TaylorVortexMMS type="XVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="x-mom" state="STATE_N" />
+      <NameTag name="x-mom" state="STATE_N"/>
       <VelocityX amplitude="1.0" viscosity="0.001">
         <XCoordinate> <NameTag name="XXVOL" state="STATE_NONE"/> </XCoordinate>
         <YCoordinate> <NameTag name="YXVOL" state="STATE_NONE"/> </YCoordinate>
@@ -71,8 +71,8 @@
     <!-- Set the initial condition for y-momentum -->
     <TaylorVortexMMS type="YVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="y-mom" state="STATE_N" />
-      <VelocityY amplitude="1.0" viscosity="0.001" >
+      <NameTag name="y-mom" state="STATE_N"/>
+      <VelocityY amplitude="1.0" viscosity="0.001">
         <XCoordinate> <NameTag name="XYVOL" state="STATE_NONE"/> </XCoordinate>
         <YCoordinate> <NameTag name="YYVOL" state="STATE_NONE"/> </YCoordinate>
       </VelocityY>
@@ -80,7 +80,7 @@
 
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_NONE" />
+      <NameTag name="viscosity" state="STATE_NONE"/>
       <Constant>0.001</Constant>
     </BasicExpression>
 
@@ -94,15 +94,15 @@
       <DisablePressureSolve/>
       <SourceTerm>
         <Direction>X</Direction>
-        <NameTag name="psrcx" state="STATE_NONE" />
+        <NameTag name="psrcx" state="STATE_NONE"/>
       </SourceTerm>
       <SourceTerm>
         <Direction>Y</Direction>
-        <NameTag name="psrcy" state="STATE_NONE" />
+        <NameTag name="psrcy" state="STATE_NONE"/>
       </SourceTerm>
 
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE" />
+        <NameTag name="viscosity" state="STATE_NONE"/>
       </Viscosity>
       
       <Pressure>
@@ -140,7 +140,7 @@
     <filebase>momentum-test-TGVortex-pressure-src.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.001"/>
+    <checkpoint cycle="2" interval="0.001"/>
     <compression>gzip</compression>
     <save label="x-mom"/>
     <save label="y-mom"/>

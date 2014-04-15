@@ -9,6 +9,34 @@
               attribute1="name REQUIRED STRING"
               attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD'" />
 
+		<!-- ================================================================================== -->            
+		<!-- Specification of the diffusive flux -->
+		<DiffusiveFluxExpression  spec="OPTIONAL NO_DATA"
+															attribute1="direction REQUIRED STRING 'X,Y,Z'"																														
+															attribute2="coefficient OPTIONAL DOUBLE" > <!-- The coefficient attribute will always take precedence over the DiffusionCoefficient below-->
+
+			<!-- specify an expression for the diffusion coefficient. A diffusive flux expression will be built. -->
+			<DiffusionCoefficient   spec="OPTIONAL NO_DATA">
+				<NameTag              spec="REQUIRED" />
+			</DiffusionCoefficient>
+
+			<!-- specify an expression for the diffusive flux -->
+			<NameTag                spec="OPTIONAL" />
+
+		</DiffusiveFluxExpression>
+
+		<!-- ================================================================================== -->            
+		<!-- CONVECTIVE FLUX -->
+		<ConvectiveFluxExpression spec="MULTIPLE NO_DATA"
+		                          attribute1="direction REQUIRED STRING 'X,Y,Z'"																														
+															attribute2="method REQUIRED STRING 'CENTRAL, UPWIND, SUPERBEE,
+																CHARM, KOREN, MC, OSPRE, SMART, VANLEER, HCUS, MINMOD, HQUICK'" >
+			<NameTag            spec="OPTIONAL" /> <!-- SPECIFY THE NAME OF A BASIC EXPRESSION, IF PROVIDED -->
+			<AdvectiveVelocity  spec="OPTIONAL NO_DATA"> <!-- SPECIFY THE ADVECTIVE VELOCITY -->
+					<NameTag        spec="REQUIRED"/> <!-- IF AN EXPRESSION FOR THE VELOCITY WAS SPECIFIED, THEN USE THAT -->
+			</AdvectiveVelocity>
+		</ConvectiveFluxExpression>
+
    <!-- Geometry Expression provides support for creating special embedded geometries through wasatch-->
    <GeometryExpression  spec="MULTIPLE NO_DATA"
                         children1="ONE_OF(CHILD OscillatingCylinder)" >
@@ -736,37 +764,12 @@
       <DisableTurbulenceModel spec="OPTIONAL NO_DATA" />
       <!-- ================================================================================== -->            
       <!-- CONVECTIVE FLUX -->
-      <ConvectiveFluxExpression spec="MULTIPLE NO_DATA">
-        <NameTag            spec="OPTIONAL" /> <!-- SPECIFY THE NAME OF A BASIC EXPRESSION, IF PROVIDED -->
-        <Method             spec="REQUIRED STRING 'CENTRAL, UPWIND, SUPERBEE,
-                                  CHARM, KOREN, MC, OSPRE, SMART, VANLEER, HCUS, MINMOD, HQUICK'" /> <!-- SPECIFY THE INTERPOLATION METHOD -->
-        <Direction          spec="REQUIRED STRING 'X,Y,Z'"/> <!-- SPECIFY THE DIRECTION OF THE FLUX -->
-        <AdvectiveVelocity  spec="OPTIONAL NO_DATA"> <!-- SPECIFY THE ADVECTIVE VELOCITY -->
-            <NameTag        spec="REQUIRED"/> <!-- IF AN EXPRESSION FOR THE VELOCITY WAS SPECIFIED, THEN USE THAT -->
-        </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
+      <ConvectiveFluxExpression spec="MULTIPLE"/>
       
       <!-- ================================================================================== -->            
       <!-- Specification of the diffusive flux -->
-      <DiffusiveFluxExpression  spec="MULTIPLE NO_DATA"
-                                children1="ONE_OF(CHILD ConstantDiffusivity, DiffusionCoefficient, NameTag)"
-                                children2="ONE_OF(CHILD Direction)"
-                                need_applies_to="equation generic" >
-
-        <Direction                      spec="REQUIRED STRING 'X,Y,Z'" />
-
-        <!-- Specify a constant diffusion coefficient. -->
-        <ConstantDiffusivity  spec="OPTIONAL DOUBLE" />
-
-        <!-- an expression for the diffusion coefficient. -->
-        <DiffusionCoefficient spec="OPTIONAL NO_DATA">
-          <NameTag            spec="REQUIRED" />
-        </DiffusionCoefficient>
-
-        <!-- specify an expression for the diffusive flux -->
-        <NameTag  spec="OPTIONAL" />
-      </DiffusiveFluxExpression>
-            
+      <DiffusiveFluxExpression  spec="MULTIPLE"/>
+                  
       <!-- The enthalpy equation does special treatment for diffusive
            fluxes, and requires the thermal conductivity and viscosity.
         -->
@@ -1217,37 +1220,12 @@
       
       <!-- ================================================================================== -->            
       <!-- CONVECTIVE FLUX -->
-      <ConvectiveFluxExpression spec="MULTIPLE NO_DATA">
-        <NameTag            spec="OPTIONAL" /> <!-- SPECIFY THE NAME OF A BASIC EXPRESSION, IF PROVIDED -->
-        <Method             spec="REQUIRED STRING 'CENTRAL, UPWIND, SUPERBEE,
-                                  CHARM, KOREN, MC, OSPRE, SMART, VANLEER, HCUS, MINMOD, HQUICK'" /> <!-- SPECIFY THE INTERPOLATION METHOD -->
-        <Direction          spec="REQUIRED STRING 'X,Y,Z'"/> <!-- SPECIFY THE DIRECTION OF THE FLUX -->
-        <AdvectiveVelocity  spec="OPTIONAL NO_DATA"> <!-- SPECIFY THE ADVECTIVE VELOCITY -->
-            <NameTag        spec="REQUIRED"/> <!-- IF AN EXPRESSION FOR THE VELOCITY WAS SPECIFIED, THEN USE THAT -->
-        </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
-                  
+      <ConvectiveFluxExpression spec="MULTIPLE"/>
+                        
       <!-- ================================================================================== -->            
       <!-- Specification of the diffusive flux -->
-      <DiffusiveFluxExpression  spec="MULTIPLE NO_DATA"
-                                children1="ONE_OF(CHILD ConstantDiffusivity, DiffusionCoefficient, NameTag)"
-                                children2="ONE_OF(CHILD Direction)" >
-
-        <Direction              spec="REQUIRED STRING 'X,Y,Z'" />
-
-        <!-- Specify a constant diffusion coefficient.  A diffusive flux expression will be built. -->
-        <ConstantDiffusivity    spec="OPTIONAL DOUBLE" />
-
-        <!-- specify an expression for the diffusion coefficient. A diffusive flux expression will be built. -->
-        <DiffusionCoefficient   spec="OPTIONAL NO_DATA">
-          <NameTag              spec="REQUIRED" />
-        </DiffusionCoefficient>
-
-        <!-- specify an expression for the diffusive flux -->
-        <NameTag                spec="OPTIONAL" />
-
-      </DiffusiveFluxExpression>
-            
+      <DiffusiveFluxExpression  spec="MULTIPLE"/>
+                  
       <!-- ================================================================================== -->            
       <!-- Specification of the source term -->
       <SourceTermExpression     spec="MULTIPLE NO_DATA">

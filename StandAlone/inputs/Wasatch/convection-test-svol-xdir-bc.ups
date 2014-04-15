@@ -123,9 +123,7 @@
 
       <SolutionVariable>phi_central</SolutionVariable>
 
-      <ConvectiveFluxExpression>
-        <Method>CENTRAL</Method> 
-        <Direction>X</Direction>
+      <ConvectiveFluxExpression direction="X" method="CENTRAL">
         <AdvectiveVelocity>
             <NameTag name="u" state="STATE_NONE"/>
         </AdvectiveVelocity>
@@ -138,9 +136,7 @@
 
       <SolutionVariable>phi_upwind</SolutionVariable>
 
-      <ConvectiveFluxExpression>
-        <Method>UPWIND</Method> 
-        <Direction>X</Direction>
+      <ConvectiveFluxExpression direction="X" method="UPWIND">
         <AdvectiveVelocity>
             <NameTag name="u" state="STATE_NONE"/>
         </AdvectiveVelocity>
@@ -153,9 +149,7 @@
 
       <SolutionVariable>phi_superbee</SolutionVariable>
 
-      <ConvectiveFluxExpression>
-        <Method>SUPERBEE</Method> 
-        <Direction>X</Direction>
+      <ConvectiveFluxExpression direction="X" method="SUPERBEE">
         <AdvectiveVelocity>
             <NameTag name="u" state="STATE_NONE"/>
         </AdvectiveVelocity>
@@ -169,9 +163,7 @@
 
       <SolutionVariable>phi_charm</SolutionVariable>
 
-      <ConvectiveFluxExpression>
-        <Method>CHARM</Method> 
-        <Direction>X</Direction>
+      <ConvectiveFluxExpression direction="X" method="CHARM">
         <AdvectiveVelocity>
             <NameTag name="u" state="STATE_NONE"/>
         </AdvectiveVelocity>
@@ -184,9 +176,7 @@
 
       <SolutionVariable>phi_koren</SolutionVariable>
 
-      <ConvectiveFluxExpression>
-        <Method>KOREN</Method> 
-        <Direction>X</Direction>
+      <ConvectiveFluxExpression direction="X" method="KOREN">
         <AdvectiveVelocity>
             <NameTag name="u" state="STATE_NONE"/>
         </AdvectiveVelocity>
@@ -200,9 +190,7 @@
 
       <SolutionVariable>phi_mc</SolutionVariable>
 
-      <ConvectiveFluxExpression>
-        <Method>MC</Method> 
-        <Direction>X</Direction>
+      <ConvectiveFluxExpression direction="X" method="MC">
         <AdvectiveVelocity>
             <NameTag name="u" state="STATE_NONE"/>
         </AdvectiveVelocity>
@@ -216,9 +204,7 @@
 
       <SolutionVariable>phi_ospre</SolutionVariable>
 
-      <ConvectiveFluxExpression>
-        <Method>OSPRE</Method> 
-        <Direction>X</Direction>
+      <ConvectiveFluxExpression direction="X" method="OSPRE">
         <AdvectiveVelocity>
             <NameTag name="u" state="STATE_NONE"/>
         </AdvectiveVelocity>
@@ -232,9 +218,7 @@
 
       <SolutionVariable>phi_smart</SolutionVariable>
 
-      <ConvectiveFluxExpression>
-        <Method>SMART</Method> 
-        <Direction>X</Direction>
+      <ConvectiveFluxExpression direction="X" method="SMART">
         <AdvectiveVelocity>
             <NameTag name="u" state="STATE_NONE"/>
         </AdvectiveVelocity>
@@ -247,9 +231,7 @@
 
       <SolutionVariable>phi_vanleer</SolutionVariable>
 
-      <ConvectiveFluxExpression>
-        <Method>VANLEER</Method> 
-        <Direction>X</Direction>
+      <ConvectiveFluxExpression direction="X" method="VANLEER">
         <AdvectiveVelocity>
             <NameTag name="u" state="STATE_NONE"/>
         </AdvectiveVelocity>
@@ -262,9 +244,7 @@
 
       <SolutionVariable>phi_hcus</SolutionVariable>
 
-      <ConvectiveFluxExpression>
-        <Method>HCUS</Method> 
-        <Direction>X</Direction>
+      <ConvectiveFluxExpression direction="X" method="HCUS">
         <AdvectiveVelocity>
             <NameTag name="u" state="STATE_NONE"/>
         </AdvectiveVelocity>
@@ -277,9 +257,7 @@
 
       <SolutionVariable>phi_minmod</SolutionVariable>
 
-      <ConvectiveFluxExpression>
-        <Method>MINMOD</Method> 
-        <Direction>X</Direction>
+      <ConvectiveFluxExpression direction="X" method="MINMOD">
         <AdvectiveVelocity>
             <NameTag name="u" state="STATE_NONE"/>
         </AdvectiveVelocity>
@@ -292,9 +270,7 @@
 
       <SolutionVariable>phi_hquick</SolutionVariable>
 
-      <ConvectiveFluxExpression>
-        <Method>HQUICK</Method> 
-        <Direction>X</Direction>
+      <ConvectiveFluxExpression direction="X" method="HQUICK">
         <AdvectiveVelocity>
             <NameTag name="u" state="STATE_NONE"/>
         </AdvectiveVelocity>

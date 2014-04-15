@@ -21,27 +21,12 @@
     
     <!-- Build a non-staggered scalar transport equation -->
     <TransportEquation equation="generic">
-
       <SolutionVariable>phi-scalar</SolutionVariable>
-
-      <DiffusiveFluxExpression>
-        <Direction>X</Direction>
-        <ConstantDiffusivity>1.0</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Y</Direction>
-        <ConstantDiffusivity>1.0</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Z</Direction>
-        <ConstantDiffusivity>1.0</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
+      <DiffusiveFluxExpression direction="X" coefficient="1.0"/>
+      <DiffusiveFluxExpression direction="Y" coefficient="1.0"/>
+      <DiffusiveFluxExpression direction="Z" coefficient="1.0"/>
     </TransportEquation>
-    
-  </Wasatch>
+    </Wasatch>
 
 
   <Time>

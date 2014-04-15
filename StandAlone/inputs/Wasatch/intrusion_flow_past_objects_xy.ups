@@ -22,37 +22,20 @@
     
     <!-- Build a cell-centered scalar transport equation -->
     <TransportEquation equation="generic">
-
       <SolutionVariable>phi-scalar</SolutionVariable>
-
-      <DiffusiveFluxExpression>
-        <Direction>X</Direction>
-        <ConstantDiffusivity>0.0001</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Y</Direction>
-        <ConstantDiffusivity>0.0001</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <ConvectiveFluxExpression>
-        <Method>UPWIND</Method> 
-        <Direction>X</Direction>
+      <ConvectiveFluxExpression direction="X" method="UPWIND">
         <AdvectiveVelocity>
-            <NameTag name="u" state="STATE_NONE"/>
+          <NameTag name="u" state="STATE_NONE"/>
         </AdvectiveVelocity>
       </ConvectiveFluxExpression>
-
-      <ConvectiveFluxExpression>
-        <Method>UPWIND</Method> 
-        <Direction>Y</Direction>
+      <ConvectiveFluxExpression direction="Y" method="UPWIND">
         <AdvectiveVelocity>
-            <NameTag name="v" state="STATE_NONE"/>
+          <NameTag name="v" state="STATE_NONE"/>
         </AdvectiveVelocity>
       </ConvectiveFluxExpression>
-
+      <DiffusiveFluxExpression direction="X" coefficient="0.0001"/>
+      <DiffusiveFluxExpression direction="Y" coefficient="0.0001"/>
     </TransportEquation>
-      
     <EmbeddedGeometry>
      <Intrusion>
         <geom_object>

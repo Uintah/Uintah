@@ -107,31 +107,25 @@
       <SolutionVariable>rhof</SolutionVariable>
       <PrimitiveVariable>f</PrimitiveVariable>
 
-      <DiffusiveFluxExpression>
-        <Direction>X</Direction>
+      <DiffusiveFluxExpression direction="X">
         <DiffusionCoefficient>
-          <NameTag name="diffcoef" state="STATE_NONE" />
+          <NameTag name="diffcoef" state="STATE_NONE"/>
         </DiffusionCoefficient>
       </DiffusiveFluxExpression>
 
-      <ConvectiveFluxExpression>
-        <Method>UPWIND</Method>
-        <Direction>X</Direction>
+      <ConvectiveFluxExpression direction="X" method="UPWIND">
         <AdvectiveVelocity>
             <NameTag name="u" state="STATE_NONE"/>
         </AdvectiveVelocity>
       </ConvectiveFluxExpression>
       
-      <DiffusiveFluxExpression>
-        <Direction>Y</Direction>
+      <DiffusiveFluxExpression direction="Y">
         <DiffusionCoefficient>
-          <NameTag name="diffcoef" state="STATE_NONE" />
+          <NameTag name="diffcoef" state="STATE_NONE"/>
         </DiffusionCoefficient>
       </DiffusiveFluxExpression>
 
-      <ConvectiveFluxExpression>
-        <Method>UPWIND</Method> 
-        <Direction>Y</Direction>
+      <ConvectiveFluxExpression direction="Y" method="UPWIND">
         <AdvectiveVelocity>
             <NameTag name="v" state="STATE_NONE"/>
         </AdvectiveVelocity>
@@ -308,10 +302,10 @@
         <BCType var="Dirichlet" label="u" value="u-bottom"/>      
         <BCType var="Dirichlet" label="u*" value="u*-bottom"/>              
         
-        <BCType var="Dirichlet" label="v"   value="0.5"/>     
+        <BCType var="Dirichlet" label="v" value="0.5"/>     
         <BCType var="Dirichlet" label="v*" value="0.5"/>     
         
-        <BCType var="Dirichlet" label="y-mom" value = "ymom-inlet"/>
+        <BCType var="Dirichlet" label="y-mom" value="ymom-inlet"/>
         
         <BCType var="Dirichlet" label="rhof_rhs" value="0.0"/>
         <BCType var="Dirichlet" label="rhof_rhs*" value="0.0"/>

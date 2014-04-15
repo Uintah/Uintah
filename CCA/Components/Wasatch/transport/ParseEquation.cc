@@ -829,8 +829,8 @@ namespace Wasatch{
     Expr::Tag convFluxTag, advVelocityTag, advVelocityCorrectedTag;
 
     std::string dir, interpMethod;
-    convFluxParams->get("Direction",dir);
-    convFluxParams->get("Method",interpMethod);
+    convFluxParams->getAttribute("direction",dir);
+    convFluxParams->getAttribute("method",interpMethod);
 
     // get the tag for the advective velocity
     Uintah::ProblemSpecP advVelocityTagParam = convFluxParams->findBlock( "AdvectiveVelocity" );
@@ -866,9 +866,9 @@ namespace Wasatch{
   {
     typedef typename DiffusiveFlux<FluxT>::Builder Flux;
     
-    if( diffFluxParams->findBlock("ConstantDiffusivity") ){
+    if( diffFluxParams->findAttribute("coefficient") ){
       double coef;
-      diffFluxParams->get("ConstantDiffusivity",coef);
+      diffFluxParams->getAttribute("coefficient",coef);
       return scinew Flux( diffFluxTag, primVarTag, coef, turbDiffTag, densityTag );
     }
     else if( diffFluxParams->findBlock("DiffusionCoefficient") ){
@@ -903,7 +903,7 @@ namespace Wasatch{
     Expr::Tag diffFluxTag;  // we will populate this.
 
     std::string dir;
-    diffFluxParams->get("Direction",dir);
+    diffFluxParams->getAttribute("direction",dir);
 
     // see if we have an expression set for the diffusive flux.
     Uintah::ProblemSpecP nameTagParam = diffFluxParams->findBlock("NameTag");
@@ -956,9 +956,9 @@ namespace Wasatch{
   {
     typedef typename DiffusiveVelocity<VelT>::Builder Velocity;
     
-    if( diffVelParams->findBlock("ConstantDiffusivity") ){
+    if( diffVelParams->findAttribute("coefficient") ){
       double coef;
-      diffVelParams->get("ConstantDiffusivity",coef);
+      diffVelParams->getAttribute("coefficient",coef);
       return scinew Velocity( diffVelTag, primVarTag, coef, turbDiffTag );
     }
     else if( diffVelParams->findBlock("DiffusionCoefficient") ){
@@ -992,7 +992,7 @@ namespace Wasatch{
     Expr::Tag diffVelTag;  // we will populate this.
 
     std::string dir;
-    diffVelParams->get("Direction",dir);
+    diffVelParams->getAttribute("direction",dir);
 
     // see if we have an expression set for the diffusive velocity.
     Uintah::ProblemSpecP nameTagParam = diffVelParams->findBlock("NameTag");
