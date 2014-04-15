@@ -106,6 +106,10 @@ DetailedTasks::DetailedTasks(SchedulerCommon* sc,
 
 DetailedTasks::~DetailedTasks()
 {
+
+  // Free dynamically allocated SrubItems
+  (first ? first->scrubCountTable_ : scrubCountTable_).remove_all();
+
   for (int i = 0; i < (int)batches_.size(); i++) {
     delete batches_[i];
   }
@@ -487,14 +491,15 @@ void DetailedTasks::addScrubCount(const VarLabel* var,
   ScrubItem* result;
   result = (first ? first->scrubCountTable_ : scrubCountTable_).lookup(&key);
   if (!result) {
-    result = ::new ScrubItem(var, matlindex, patch, dw);
+    result = scinew ScrubItem(var, matlindex, patch, dw);
     (first ? first->scrubCountTable_ : scrubCountTable_).insert(result);
   }
   result->count++;
   if (scrubout.active() && (var->getName() == dbgScrubVar || dbgScrubVar == "")
-      && (dbgScrubPatch == patch->getID() || dbgScrubPatch == -1))
+      && (dbgScrubPatch == patch->getID() || dbgScrubPatch == -1)) {
     scrubout << Parallel::getMPIRank() << " Adding Scrub count for req of " << dw << "/" << patch->getID() << "/" << matlindex
              << "/" << *var << ": " << result->count << endl;
+  }
 }
 
 void DetailedTasks::setScrubCount(const Task::Dependency* req,
@@ -537,7 +542,9 @@ bool DetailedTasks::getScrubCount(const VarLabel* label,
 }
 void DetailedTasks::createScrubCounts()
 {
+  // Clear old ScrubItems
   (first ? first->scrubCountTable_ : scrubCountTable_).remove_all();
+
   // Go through each of the tasks and determine which variables it will require
   for (int i = 0; i < (int)localtasks_.size(); i++) {
     DetailedTask* dtask = localtasks_[i];
@@ -561,6 +568,8 @@ void DetailedTasks::createScrubCounts()
         }
       }
     }
+
+    // determine which variables this task will modify
     for (const Task::Dependency* req = task->getModifies(); req != 0; req = req->next) {
       constHandle<PatchSubset> patches = req->getPatchesUnderDomain(dtask->getPatches());
       constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain(dtask->getMaterials());
