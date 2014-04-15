@@ -46,12 +46,10 @@
 #include <iostream>
 #include <map>
 
-#include <Core/Datatypes/share.h>
-
 namespace SCIRun {
 
 
-class SCISHARE PropertyBase : public Datatype {
+class PropertyBase : public Datatype {
 public:
   PropertyBase(bool trans) : transient_(trans) {} 
   //PropertyBase(const PropertyBase &p) : transient_(p.transient_) {} 
@@ -78,7 +76,7 @@ protected:
 };
 
 
-class SCISHARE PropertyManager;
+class PropertyManager;
 
 template<class T>
 class Property : public PropertyBase {

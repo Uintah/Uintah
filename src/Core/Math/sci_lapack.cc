@@ -37,11 +37,14 @@
 #include <sci_defs/magma_defs.h>
 #include <sci_defs/cuda_defs.h>
 
-#include <cmath>
 #include <Core/Math/sci_lapack.h>
 #include <Core/Util/Assert.h>
 
-//Functions to switch between Fortran and C style matrices
+#include <cmath>
+
+#include <stdio.h>
+
+// Functions to switch between Fortran and C style matrices
 
 namespace SCIRun {
 
@@ -95,19 +98,30 @@ void sort_eigens(double *Er, double *Ei, int N, double **Evecs=0)
 
 #if defined(HAVE_LAPACK)
 
+#  if defined( FORTRAN_UNDERSCORE_END ) 
+#    define FIX_NAME(fun) fun ## _  // This ## magic (apparently) concatenates the _ to the 'fun' varaible.
+#  else
+#    define FIX_NAME(fun) fun
+#  endif
+#  define DGETRF FIX_NAME(dgetrf)
+#  define DGETRI FIX_NAME(dgetri)
+#  define DGESVD FIX_NAME(dgesvd)
+#  define DGEEV  FIX_NAME(dgeev)
+
 extern "C" {
-  int dgetrf_(int *m, int *n, double *a, int *lda, int *ipiv, int *info);
-  int dgetri_(int *m, double *a, int *lda, int *ipiv, 
-	      double *work, int *lwork, int *info);
-  int dgesvd_(char *jobu, char *jobvt, int *m, int *n, double *a, int *lda, 
+  int DGETRF( int *m, int *n, double *a, int *lda, int *ipiv, int *info );
+  int DGETRI( int *m, double *a, int *lda, int *ipiv, 
+	      double *work, int *lwork, int *info );
+  int DGESVD( char *jobu, char *jobvt, int *m, int *n, double *a, int *lda, 
 	      double *S, double *u, int *ldu, double *vt, int *ldvt, 
-	      double *work, int *lwork, int *info);
-  int dgeev_(char *jobvl, char *jobvr, int *n, double *a, int *lda,
+	      double *work, int *lwork, int *info );
+  int DGEEV( char *jobvl, char *jobvr, int *n, double *a, int *lda,
 	     double *Er, double *Ei, double *vl, int *ldvl, double *vr, 
-	     int *ldvr, double *work, int *lwork, int *info);
+	     int *ldvr, double *work, int *lwork, int *info );
 }
 
-bool lapackinvert(double *A, int n)
+bool
+lapackinvert(double *A, int n)
 {
   
 #if defined(HAVE_MAGMA)
@@ -191,8 +205,8 @@ bool lapackinvert(double *A, int n)
   lda = n;
   lwork = n;
 
-  dgetrf_(&n, &n, A, &lda, P, &info);
-  dgetri_(&n, A, &lda, P, work, &lwork, &info);
+  DGETRF(&n, &n, A, &lda, P, &info);
+  DGETRI(&n, A, &lda, P, work, &lwork, &info);
 
   delete [] work;
   delete [] P;
@@ -206,10 +220,12 @@ bool lapackinvert(double *A, int n)
 
 }
 
+// This is for Vulcan@LLNL:
+#undef HAVE_DGESVD
 
-void lapacksvd(double **A, int m, int n, double *S, double **U, double **VT)
+void
+lapacksvd( double **A, int m, int n, double *S, double **U, double **VT )
 {
-
 #if defined(HAVE_MAGMA)
 
 //  magma_dgesvd(char jobu,
@@ -230,8 +246,11 @@ void lapacksvd(double **A, int m, int n, double *S, double **U, double **VT)
 //  magma_dgesvd(jobu, jobvt, m, n, a, lda, S, u,
 //               ldu, vt, ldvt, work, lwork, &info);
 
+  printf( "!!!WARNING!!! (magma) lapacksvd (in sci_lapack.cc) called, but not implemented!!!\n" );
+
 #else
 
+# if defined( HAVE_DGESVD )
   char jobu, jobvt;
   int lda, ldu, ldvt, lwork, info;
   double *a, *u, *vt, *work;
@@ -278,8 +297,8 @@ void lapacksvd(double **A, int m, int n, double *S, double **U, double **VT)
   lwork = 5*maxmn; // Set up the work array, larger than needed.
   work = new double[lwork];
 
-  dgesvd_(&jobu, &jobvt, &m, &n, a, &lda, S, u,
-	        &ldu, vt, &ldvt, work, &lwork, &info);
+  DGESVD( &jobu, &jobvt, &m, &n, a, &lda, S, u,
+	  &ldu, vt, &ldvt, work, &lwork, &info );
 
   ftoc(u, U, ldu, m);
   ftoc(vt, VT, ldvt, n);
@@ -288,7 +307,9 @@ void lapacksvd(double **A, int m, int n, double *S, double **U, double **VT)
   delete [] u;
   delete [] vt;
   delete [] work;
-
+# else
+  printf( "!!!WARNING!!! lapacksvd (in sci_lapack.cc) called, but not implemented!!!\n" );
+# endif
 #endif
 
 }
@@ -346,8 +367,8 @@ void lapackeigen(double **H, int n, double *Er, double *Ei, double **Evecs)
 
 #else
 
-  dgeev_(&jobvl, &jobvr, &n, a, &lda, Er, Ei, vl,
-	       &ldvl, vr, &ldvr, work, &lwork, &info);
+  DGEEV( &jobvl, &jobvr, &n, a, &lda, Er, Ei, vl,
+	 &ldvl, vr, &ldvr, work, &lwork, &info );
 
 #endif
 

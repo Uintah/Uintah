@@ -33,6 +33,8 @@
  *
  */
 
+#define SCI_ASSERTION_LEVEL 1
+
 #include <cstdio>
 
 #include <sci_defs/lapack_defs.h>

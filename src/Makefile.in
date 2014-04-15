@@ -203,7 +203,8 @@ endif
 	  do if test -d $$fname; then rm -rf $$fname; fi; done
 	rm -f $(patsubst %,%/*~, $(ALLOBJSUBDIRS))
 	rm -f $(LIBDIR)/so_locations ./so_locations
-       
+	rm -f $(LIBDIR)/*.$(SO_OR_A_FILE)
+
 reallyclean:: cleanreally
 
 ifeq ($(CC_DEPEND_EXT),depend.mk)

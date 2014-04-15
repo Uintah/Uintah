@@ -42,11 +42,9 @@
 #include <Core/Math/MiscMath.h>
 #include <vector>
 
-#include <Core/Datatypes/share.h>
-
 namespace SCIRun {
 
-class SCISHARE DenseColMajMatrix : public Matrix
+class DenseColMajMatrix : public Matrix
 {
   double*  dataptr_;
 

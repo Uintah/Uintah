@@ -37,14 +37,12 @@
 #ifndef SCI_project_Color_h
 #define SCI_project_Color_h 1
 
-#include <Core/Datatypes/share.h>
-
 namespace SCIRun {
   class Piostream;
 
 class HSVColor;
 
-class SCISHARE Color {
+class Color {
 protected:
     double _r, _g, _b;
 public:
@@ -101,7 +99,7 @@ public:
       }
     }
 
-    SCISHARE friend void Pio( Piostream&, Color& );
+    friend void Pio( Piostream&, Color& );
 
     friend class HSVColor;
 };
@@ -125,7 +123,7 @@ public:
   // should be enough for now - this is less bandwidth...
 };
 
-class SCISHARE HSVColor {
+class HSVColor {
     double _hue;
     double _sat;
     double _val;

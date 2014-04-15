@@ -50,7 +50,7 @@ SRCS := \
 
 
 ifeq ($(IS_STATIC_BUILD),yes)
-  PSELIBS := $(CORE_STATIC_PSELIBS)
+  PSELIBS := Core/Datatypes $(CORE_STATIC_PSELIBS) 
 else # Non-static build
   ifeq ($(LARGESOS),yes)
     PSELIBS := Datflow Packages/Uintah

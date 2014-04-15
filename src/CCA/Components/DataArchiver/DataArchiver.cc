@@ -57,18 +57,18 @@
 #include <Core/Util/Endian.h>
 #include <Core/Thread/Time.h>
 
-#include   <iomanip>
-#include   <cerrno>
-#include   <fstream>
-#include   <iostream>
-#include   <cstdio>
-#include   <sstream>
-#include   <vector>
-#include   <sys/types.h>
-#include   <sys/stat.h>
-#include   <fcntl.h>
-#include   <cmath>
-#include   <cstring>
+#include <iomanip>
+#include <cerrno>
+#include <fstream>
+#include <iostream>
+#include <cstdio>
+#include <sstream>
+#include <vector>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <cmath>
+#include <cstring>
 
 #include <time.h>
 
@@ -85,11 +85,11 @@
 //TODO - BJW - if multilevel reduction doesn't work, fix all
 //       getMaterialSet(0)
 
-#define PADSIZE 1024L
-#define ALL_LEVELS 99
+#define PADSIZE    1024L
+#define ALL_LEVELS   99
 
-#define OUTPUT 0
-#define CHECKPOINT 1
+#define OUTPUT               0
+#define CHECKPOINT           1
 #define CHECKPOINT_REDUCTION 2
 
 using namespace Uintah;
@@ -425,21 +425,26 @@ DataArchiver::initializeOutput(const ProblemSpecP& params)
        makeVersionedDir();
        string fname = myname.str();
        FILE* tmpout = fopen(fname.c_str(), "w");
-       if(!tmpout)
+       if(!tmpout) {
          throw ErrnoException("fopen", errno, __FILE__, __LINE__);
+       }
        string dirname = d_dir.getName();
        fprintf(tmpout, "%s\n", dirname.c_str());
-       if(fflush(tmpout) != 0)
+       if(fflush(tmpout) != 0) {
          throw ErrnoException("fflush", errno, __FILE__, __LINE__);
+       }
 #if defined(__APPLE__)
-       if(fsync(fileno(tmpout)) != 0)
+       if(fsync(fileno(tmpout)) != 0) {
          throw ErrnoException("fsync", errno, __FILE__, __LINE__);
-#elif !defined(_WIN32)
-       if(fdatasync(fileno(tmpout)) != 0)
+       }
+#elif !defined(_WIN32) && !defined(__bgq__) // __bgq__ is defined on Blue Gene Q computers...
+       if(fdatasync(fileno(tmpout)) != 0) {
          throw ErrnoException("fdatasync", errno, __FILE__, __LINE__);
+       }
 #endif
-       if(fclose(tmpout) != 0)
+       if(fclose(tmpout) != 0) {
          throw ErrnoException("fclose", errno, __FILE__, __LINE__);
+       }
      }
      MPI_Barrier(d_myworld->getComm());
      if(!d_writeMeta){

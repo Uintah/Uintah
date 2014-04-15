@@ -159,16 +159,16 @@ ifeq ($(IS_STATIC_BUILD),yes)
           $(HDF5_LIBRARY) $(BOOST_LIBRARY)         \
           $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
           $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
-	  $(PAPI_LIBRARY) 
+          $(PAPI_LIBRARY) $(M_LIBRARY)
 else
-  LIBS := $(MPI_LIBRARY) $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY)      \
-          $(CANTERA_LIBRARY) $(ZOLTAN_LIBRARY)               \
-          $(PETSC_LIBRARY) $(LAPACK_LIBRARY) $(BLAS_LIBRARY) \
-          $(M_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) \
-          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
-          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
-          $(TEEM_LIBRARY) \
-          $(BOOST_LIBRARY) $(CUDA_LIBRARY) \
+  LIBS := $(MPI_LIBRARY) $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY)  \
+          $(CANTERA_LIBRARY) $(ZOLTAN_LIBRARY)                          \
+          $(PETSC_LIBRARY) $(LAPACK_LIBRARY) $(BLAS_LIBRARY)            \
+          $(M_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY)                   \
+          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)                      \
+          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)                       \
+          $(TEEM_LIBRARY)                                               \
+          $(BOOST_LIBRARY) $(CUDA_LIBRARY)                              \
           $(PAPI_LIBRARY) $(GPERFTOOLS_LIBRARY)
 endif
 

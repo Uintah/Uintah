@@ -24,17 +24,26 @@
 #include <iostream>
 #include <cstdlib>
 #include <cstdio>
+
 #include <Core/Parallel/Parallel.h>
+#include <sci_defs/uintah_defs.h>
 
 using namespace std;
 using namespace Uintah;
 
 extern "C" {
 
+#if defined( FORTRAN_UNDERSCORE_END )
+   // This ## magic (apparently) concatenates the _ to the 'fun' varaible.
+#  define FIX_NAME(fun) fun ## _
+#else // NONE
+#  define FIX_NAME(fun) fun
+#endif
+
 // These functions are called from fortran and thus need to be
 // compiled using "C" naming conventions for the symbols.
 
-void bombed_(char *mes, int len_mes)
+void FIX_NAME(bombed)(char *mes, int len_mes)
 {
   cerr <<  "Code bombed with the following message:" << endl;
   for(int i=0;i<len_mes;i++){
@@ -45,7 +54,7 @@ void bombed_(char *mes, int len_mes)
   return;
 }
 
-void logmes_(char *mes, int len_mes)
+void FIX_NAME(logmes)(char *mes, int len_mes)
 {
  if( Uintah::Parallel::getMPIRank() == 0 ){
   for(int i=0;i<len_mes;i++){
@@ -57,7 +66,7 @@ void logmes_(char *mes, int len_mes)
   return;
 }
 
-void faterr_(char *mes1, char *mes2, int len_mes1, int len_mes2)
+void FIX_NAME(faterr)(char *mes1, char *mes2, int len_mes1, int len_mes2)
 {
   cerr << "FATAL ERROR DETECTED BY ";
   for(int i=0;i<len_mes1;i++){
