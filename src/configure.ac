@@ -1295,9 +1295,7 @@ if test $? = 0; then
       CFLAGS="$CFLAGS -fopenmp"
       CXXFLAGS="$CXXFLAGS -fopenmp"
    else
-      add_important_warning "Automatically removing the openmp compiler option to C/CXXFLAGS."
-      CFLAGS="$CFLAGS"
-      CXXFLAGS="$CXXFLAGS"
+      add_important_warning "On Mac: Not adding the openmp compiler option (-fopenmp) to C/CXXFLAGS."
    fi
 else
    rm -f conftest-openmp conftest-openmp.cc
