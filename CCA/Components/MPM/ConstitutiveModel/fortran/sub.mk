@@ -30,13 +30,17 @@
 
 SRCDIR   := CCA/Components/MPM/ConstitutiveModel/fortran
 
-FFLAGS += -DI1SOFTLIM -DNEWXSV -DDILAT_LIM
+ifneq ($(IS_BGQ),yes)
+  FFLAGS += -DI1SOFTLIM -DNEWXSV -DDILAT_LIM
+endif
+
 # REMOVED FOR TESTING 
 #FFLAGS += -DNOEOSMOd
+
 SRCS     += \
-	$(SRCDIR)/Hooke.F	\
-	$(SRCDIR)/Kayenta_calcs.F	\
-	$(SRCDIR)/MIGUtilsF.F	\
-	$(SRCDIR)/MIGUtils.cc   \
-	$(SRCDIR)/diamm.F
+        $(SRCDIR)/Hooke.F          \
+        $(SRCDIR)/Kayenta_calcs.F  \
+        $(SRCDIR)/MIGUtilsF.F      \
+        $(SRCDIR)/MIGUtils.cc      \
+        $(SRCDIR)/diamm.F
 

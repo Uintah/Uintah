@@ -43,19 +43,19 @@ LIBNAME := $(LIBDIR)/lib$(subst /,_,$(SRCDIR)).$(SO_OR_A_FILE)
 
 # We always link against the internal Dataflow malloc
 ifneq ($(SRCDIR),Core/Malloc)
-ifeq ($(LARGESOS),yes)
-else
-ifneq ($(IS_WIN),yes)
-PSELIBS := $(PSELIBS) $(MALLOCLIB)
-endif
-endif
+  ifeq ($(LARGESOS),yes)
+  else
+    ifneq ($(IS_WIN),yes)
+      PSELIBS := $(PSELIBS) $(MALLOCLIB)
+    endif
+  endif
 endif
 
 # The libraries are specified like Core/Thread but get
 # name-mangled to Core_Thread
 PSELIBS := $(subst /,_,$(PSELIBS))
 ifneq ($(REPOSITORY_FLAGS),)
-REPOSITORIES_$(LIBNAME) := $(REPOSITORY_FLAGS) $(SRCDIR)/ptrepository $(patsubst %,$(REPOSITORY_FLAGS) %/ptrepository, $(PSELIBS))
+  REPOSITORIES_$(LIBNAME) := $(REPOSITORY_FLAGS) $(SRCDIR)/ptrepository $(patsubst %,$(REPOSITORY_FLAGS) %/ptrepository, $(PSELIBS))
 endif
 
 #  These targets will be used to "make all"

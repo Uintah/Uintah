@@ -41,11 +41,9 @@
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Containers/Array1.h>
 
-#include <Core/Datatypes/share.h>
-
 namespace SCIRun {
 
-class SCISHARE SparseRowMatrix : public Matrix {
+class SparseRowMatrix : public Matrix {
 private:
   SparseRowMatrix(); // This is only used by the maker function.
 

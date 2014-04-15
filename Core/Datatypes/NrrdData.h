@@ -40,13 +40,11 @@
 #include <Core/Containers/LockingHandle.h>
 #include <teem/nrrd.h>
 
-#include <Core/Datatypes/share.h>
-
 namespace SCIRun {
 
 /////////
 // Structure to hold NrrdData
-class SCISHARE NrrdData : public PropertyManager {
+class NrrdData : public PropertyManager {
 public:  
   // GROUP: public data
   //////////
@@ -105,40 +103,40 @@ typedef LockingHandle<NrrdData> NrrdDataHandle;
 //  nrrdTypeDouble,
 
 
-SCISHARE unsigned int string_to_nrrd_type(const string &str);
+unsigned int string_to_nrrd_type(const string &str);
 
 template <class T>
-SCISHARE unsigned int get_nrrd_type();
+unsigned int get_nrrd_type();
 
 template <>
-SCISHARE unsigned int get_nrrd_type<char>();
+unsigned int get_nrrd_type<char>();
 
 template <>
-SCISHARE unsigned int get_nrrd_type<unsigned char>();
+unsigned int get_nrrd_type<unsigned char>();
 
 template <>
-SCISHARE unsigned int get_nrrd_type<short>();
+unsigned int get_nrrd_type<short>();
 
 template <>
-SCISHARE unsigned int get_nrrd_type<unsigned short>();
+unsigned int get_nrrd_type<unsigned short>();
 
 template <>
-SCISHARE unsigned int get_nrrd_type<int>();
+unsigned int get_nrrd_type<int>();
 
 template <>
-SCISHARE unsigned int get_nrrd_type<unsigned int>();
+unsigned int get_nrrd_type<unsigned int>();
 
 template <>
-SCISHARE unsigned int get_nrrd_type<long long>();
+unsigned int get_nrrd_type<long long>();
 
 template <>
-SCISHARE unsigned int get_nrrd_type<unsigned long long>();
+unsigned int get_nrrd_type<unsigned long long>();
 
 template <>
-SCISHARE unsigned int get_nrrd_type<float>();
+unsigned int get_nrrd_type<float>();
 
 template <>
-SCISHARE unsigned int get_nrrd_type<Tensor>();
+unsigned int get_nrrd_type<Tensor>();
 
 template <class T>
 unsigned int get_nrrd_type()
@@ -146,10 +144,10 @@ unsigned int get_nrrd_type()
   return nrrdTypeDouble;
 }
 
-SCISHARE void get_nrrd_compile_type( const unsigned int type,
-			    string & typeStr,
-			    string & typeName );
-
+void get_nrrd_compile_type( const unsigned int   type,
+			          string       & typeStr,
+			          string       & typeName );
+  
 } // end namespace SCIRun
 
 #endif // SCI_Teem_NrrdData_h

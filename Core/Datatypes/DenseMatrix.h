@@ -42,12 +42,10 @@
 #include <Core/Math/MiscMath.h>
 #include <vector>
 
-#include <Core/Datatypes/share.h>
-
 namespace SCIRun {
 
 
-class SCISHARE DenseMatrix : public Matrix {
+class DenseMatrix : public Matrix {
   double** data;
   double*  dataptr_;
 
@@ -144,15 +142,15 @@ public:
 
 
 //! Friend functions
-SCISHARE void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-SCISHARE void Sub(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-SCISHARE void Add(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-SCISHARE void Add(DenseMatrix&, double, const DenseMatrix&, double, const DenseMatrix&);
-SCISHARE void Add(double, DenseMatrix&, double, const DenseMatrix&);
-SCISHARE void Mult_trans_X(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-SCISHARE void Mult_X_trans(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-SCISHARE void Concat_rows(DenseMatrix&, const DenseMatrix&, const DenseMatrix&); // Added by Saeed Babaeizadeh, Jan. 2006
-SCISHARE void Concat_cols(DenseMatrix&, const DenseMatrix&, const DenseMatrix&); // Added by Saeed Babaeizadeh, Jan. 2006
+void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+void Sub(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+void Add(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+void Add(DenseMatrix&, double, const DenseMatrix&, double, const DenseMatrix&);
+void Add(double, DenseMatrix&, double, const DenseMatrix&);
+void Mult_trans_X(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+void Mult_X_trans(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+void Concat_rows(DenseMatrix&, const DenseMatrix&, const DenseMatrix&); // Added by Saeed Babaeizadeh, Jan. 2006
+void Concat_cols(DenseMatrix&, const DenseMatrix&, const DenseMatrix&); // Added by Saeed Babaeizadeh, Jan. 2006
 
 } // End namespace SCIRun
 
