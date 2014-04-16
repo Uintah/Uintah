@@ -501,7 +501,7 @@ namespace Wasatch{
     for( Uintah::ProblemSpecP bodyForceParams=params->findBlock("BodyForce");
         bodyForceParams != 0;
         bodyForceParams=bodyForceParams->findNextBlock("BodyForce") ){
-      bodyForceParams->get("Direction", bodyForceDir );
+      bodyForceParams->getAttribute("direction", bodyForceDir );
       if (bodyForceDir == "X") xBodyForceTag = parse_nametag( bodyForceParams->findBlock("NameTag") );
       if (bodyForceDir == "Y") yBodyForceTag = parse_nametag( bodyForceParams->findBlock("NameTag") );
       if (bodyForceDir == "Z") zBodyForceTag = parse_nametag( bodyForceParams->findBlock("NameTag") );
@@ -513,7 +513,7 @@ namespace Wasatch{
     for( Uintah::ProblemSpecP srcTermParams=params->findBlock("SourceTerm");
         srcTermParams != 0;
         srcTermParams=srcTermParams->findNextBlock("SourceTerm") ){
-      srcTermParams->get("Direction", srcTermDir );
+      srcTermParams->getAttribute("direction", srcTermDir );
       if (srcTermDir == "X") xSrcTermTag = parse_nametag( srcTermParams->findBlock("NameTag") );
       if (srcTermDir == "Y") ySrcTermTag = parse_nametag( srcTermParams->findBlock("NameTag") );
       if (srcTermDir == "Z") zSrcTermTag = parse_nametag( srcTermParams->findBlock("NameTag") );
