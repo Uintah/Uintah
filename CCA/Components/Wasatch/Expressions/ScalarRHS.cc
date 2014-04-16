@@ -62,6 +62,14 @@ ScalarRHS<FieldT>::ScalarRHS( const FieldTagInfo& fieldTags,
     haveConvection_( convTagX_ != Expr::Tag() || convTagY_ != Expr::Tag() || convTagZ_ != Expr::Tag() ),
     haveDiffusion_ ( diffTagX_ != Expr::Tag() || diffTagY_ != Expr::Tag() || diffTagZ_ != Expr::Tag() ),
 
+    doXConv_( convTagX_ != Expr::Tag() ),
+    doYConv_( convTagY_ != Expr::Tag() ),
+    doZConv_( convTagZ_ != Expr::Tag() ),
+
+    doXDiff_( diffTagX_ != Expr::Tag() ),
+    doYDiff_( diffTagY_ != Expr::Tag() ),
+    doZDiff_( diffTagZ_ != Expr::Tag() ),
+
     doXDir_( convTagX_ != Expr::Tag() || diffTagX_ != Expr::Tag() ),
     doYDir_( convTagY_ != Expr::Tag() || diffTagY_ != Expr::Tag() ),
     doZDir_( convTagZ_ != Expr::Tag() || diffTagZ_ != Expr::Tag() ),
@@ -148,17 +156,13 @@ void ScalarRHS<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
   const typename Expr::FieldMgrSelector<ZVolField>::type& zVolFM   = fml.field_manager<ZVolField>();
   const typename Expr::FieldMgrSelector<SVolField>::type& sVolFM   = fml.field_manager<SVolField>();
 
-  if( haveConvection_ ){
-    if( doXDir_ )  xConvFlux_ = &xFluxFM.field_ref( convTagX_ );
-    if( doYDir_ )  yConvFlux_ = &yFluxFM.field_ref( convTagY_ );
-    if( doZDir_ )  zConvFlux_ = &zFluxFM.field_ref( convTagZ_ );
-  }
-
-  if( haveDiffusion_ ){
-    if( doXDir_ )  xDiffFlux_ = &xFluxFM.field_ref( diffTagX_ );
-    if( doYDir_ )  yDiffFlux_ = &yFluxFM.field_ref( diffTagY_ );
-    if( doZDir_ )  zDiffFlux_ = &zFluxFM.field_ref( diffTagZ_ );
-  }
+  if( doXConv_ )  xConvFlux_ = &xFluxFM.field_ref( convTagX_ );
+  if( doYConv_ )  yConvFlux_ = &yFluxFM.field_ref( convTagY_ );
+  if( doZConv_ )  zConvFlux_ = &zFluxFM.field_ref( convTagZ_ );
+  
+  if( doXDiff_ )  xDiffFlux_ = &xFluxFM.field_ref( diffTagX_ );
+  if( doYDiff_ )  yDiffFlux_ = &yFluxFM.field_ref( diffTagY_ );
+  if( doZDiff_ )  zDiffFlux_ = &zFluxFM.field_ref( diffTagZ_ );
 
   if ( haveVolFrac_ ) {
     volfrac_ = &sVolFM.field_ref( volFracTag_ );
@@ -189,17 +193,13 @@ void ScalarRHS<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
 template< typename FieldT >
 void ScalarRHS<FieldT>::advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  if( haveConvection_ ){
-    if( doXDir_ )  exprDeps.requires_expression( convTagX_ );
-    if( doYDir_ )  exprDeps.requires_expression( convTagY_ );
-    if( doZDir_ )  exprDeps.requires_expression( convTagZ_ );
-  }
+  if( doXConv_ )  exprDeps.requires_expression( convTagX_ );
+  if( doYConv_ )  exprDeps.requires_expression( convTagY_ );
+  if( doZConv_ )  exprDeps.requires_expression( convTagZ_ );
 
-  if( haveDiffusion_ ){
-    if( doXDir_ )  exprDeps.requires_expression( diffTagX_ );
-    if( doYDir_ )  exprDeps.requires_expression( diffTagY_ );
-    if( doZDir_ )  exprDeps.requires_expression( diffTagZ_ );
-  }
+  if( doXDiff_ )  exprDeps.requires_expression( diffTagX_ );
+  if( doYDiff_ )  exprDeps.requires_expression( diffTagY_ );
+  if( doZDiff_ )  exprDeps.requires_expression( diffTagZ_ );
 
   if( haveVolFrac_              ) exprDeps.requires_expression( volFracTag_   );
   if( doXDir_ && haveXAreaFrac_ ) exprDeps.requires_expression( xAreaFracTag_ );
@@ -212,7 +212,6 @@ void ScalarRHS<FieldT>::advertise_dependents( Expr::ExprDeps& exprDeps )
       if( isConstDensity_ ) exprDeps.requires_expression( densityTag_ );
     }
   }
-
 
   if( !strongForm_ ){
     exprDeps.requires_expression( densityTag_ );
@@ -254,7 +253,7 @@ void ScalarRHS<FieldT>::evaluate()
   // actual calculations we can be more efficient (eliminate temporaries,
   // inline things, etc.)
 
-  if( doXDir_ && doYDir_ && doZDir_ && haveConvection_ && haveDiffusion_ ){
+  if( doXConv_ &&  doYConv_ && doZConv_ && doXDiff_ && doYDiff_ && doZDiff_ ){
     // inline everything
     if( haveXAreaFrac_ ){ // previous error checking enforces that y and z area fractions are also present
       rhs <<= -(*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * ( *xConvFlux_ + *xDiffFlux_ ) )
@@ -270,52 +269,40 @@ void ScalarRHS<FieldT>::evaluate()
   else{
     // handle 2D and 1D cases - not quite as efficient since we won't be
     // running as many production scale calculations in these configurations
-    if( doXDir_ ){
-      if( haveConvection_ && haveDiffusion_ ){
-        if( haveXAreaFrac_ ) rhs <<= -(*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * (*xConvFlux_ + *xDiffFlux_) );
-        else                 rhs <<= -(*divOpX_)( *xConvFlux_ + *xDiffFlux_ );
-      }
-      else if( haveConvection_ ){
-        if( haveXAreaFrac_ ) rhs <<= -(*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * *xConvFlux_ );
-        else                 rhs <<= -(*divOpX_)( *xConvFlux_ );
-      }
-      else if( haveDiffusion_ ){
-        if( haveXAreaFrac_ ) rhs <<= -(*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * *xDiffFlux_ );
-        else                 rhs <<= -(*divOpX_)( *xDiffFlux_ );
-      }
-    }
-    else{
+    
+    if (doXConv_ && doXDiff_) {
+      if( haveXAreaFrac_ ) rhs <<= -(*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * (*xConvFlux_ + *xDiffFlux_) );
+      else                 rhs <<= -(*divOpX_)( *xConvFlux_ + *xDiffFlux_ );
+    } else if (doXConv_) {
+      if( haveXAreaFrac_ ) rhs <<= -(*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * *xConvFlux_ );
+      else                 rhs <<= -(*divOpX_)( *xConvFlux_ );
+    } else if (doXDiff_) {
+      if( haveXAreaFrac_ ) rhs <<= -(*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * *xDiffFlux_ );
+      else                 rhs <<= -(*divOpX_)( *xDiffFlux_ );
+    } else{
       rhs <<= 0.0; // zero so that we can sum in Y and Z contributions as necessary
     }
 
-    if( doYDir_ ){
-      if( haveConvection_ && haveDiffusion_ ){
-        if( haveYAreaFrac_ ) rhs <<= rhs -(*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * (*yConvFlux_ + *yDiffFlux_) );
-        else                 rhs <<= rhs -(*divOpY_)( *yConvFlux_ + *yDiffFlux_ );
-      }
-      else if( haveConvection_ ){
-        if( haveYAreaFrac_ ) rhs <<= rhs - (*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * *yConvFlux_ );
-        else                 rhs <<= rhs - (*divOpY_)( *yConvFlux_ );
-      }
-      else if( haveDiffusion_ ){
-        if( haveYAreaFrac_ ) rhs <<= rhs -(*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * *yDiffFlux_ );
-        else                 rhs <<= rhs -(*divOpY_)( *yDiffFlux_ );
-      }
+    if (doYConv_ && doYDiff_) {
+      if( haveYAreaFrac_ ) rhs <<= rhs -(*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * (*yConvFlux_ + *yDiffFlux_) );
+      else                 rhs <<= rhs -(*divOpY_)( *yConvFlux_ + *yDiffFlux_ );
+    } else if (doYConv_) {
+      if( haveYAreaFrac_ ) rhs <<= rhs - (*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * *yConvFlux_ );
+      else                 rhs <<= rhs - (*divOpY_)( *yConvFlux_ );
+    } else if (doYDiff_) {
+      if( haveYAreaFrac_ ) rhs <<= rhs -(*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * *yDiffFlux_ );
+      else                 rhs <<= rhs -(*divOpY_)( *yDiffFlux_ );
     }
 
-    if( doZDir_ ){
-      if( haveConvection_ && haveDiffusion_ ){
-        if( haveZAreaFrac_ ) rhs <<= rhs -(*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * (*zConvFlux_ + *zDiffFlux_) );
-        else                 rhs <<= rhs -(*divOpZ_)( *zConvFlux_ + *zDiffFlux_ );
-      }
-      else if( haveConvection_ ){
-        if( haveZAreaFrac_ ) rhs <<= rhs - (*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * *zConvFlux_ );
-        else                 rhs <<= rhs - (*divOpZ_)( *zConvFlux_ );
-      }
-      else if( haveDiffusion_ ){
-        if( haveZAreaFrac_ ) rhs <<= rhs -(*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * *zDiffFlux_ );
-        else                 rhs <<= rhs -(*divOpZ_)( *zDiffFlux_ );
-      }
+    if (doZConv_ && doZDiff_) {
+      if( haveZAreaFrac_ ) rhs <<= rhs -(*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * (*zConvFlux_ + *zDiffFlux_) );
+      else                 rhs <<= rhs -(*divOpZ_)( *zConvFlux_ + *zDiffFlux_ );
+    } else if (doZConv_) {
+      if( haveZAreaFrac_ ) rhs <<= rhs - (*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * *zConvFlux_ );
+      else                 rhs <<= rhs - (*divOpZ_)( *zConvFlux_ );
+    } else if (doZDiff_) {
+      if( haveZAreaFrac_ ) rhs <<= rhs -(*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * *zDiffFlux_ );
+      else                 rhs <<= rhs -(*divOpZ_)( *zDiffFlux_ );
     }
   } // 2D and 1D cases
 
