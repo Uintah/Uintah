@@ -33,7 +33,9 @@
  *
  */
 
-#define SCI_ASSERTION_LEVEL 1
+#ifdef __bgq__
+#  define SCI_ASSERTION_LEVEL 1
+#endif
 
 #include <cstdio>
 
