@@ -183,6 +183,8 @@ protected:
 
   const bool haveConvection_, haveDiffusion_;
   const bool doXDir_, doYDir_, doZDir_;
+  const bool doXConv_, doYConv_, doZConv_;
+  const bool doXDiff_, doYDiff_, doZDiff_;
 
   const Expr::Tag volFracTag_, xAreaFracTag_, yAreaFracTag_, zAreaFracTag_;
   const bool haveVolFrac_, haveXAreaFrac_, haveYAreaFrac_, haveZAreaFrac_;
