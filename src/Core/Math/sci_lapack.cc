@@ -33,9 +33,10 @@
  *
 */
 
+#include <sci_defs/cuda_defs.h>
 #include <sci_defs/lapack_defs.h>
 #include <sci_defs/magma_defs.h>
-#include <sci_defs/cuda_defs.h>
+#include <sci_defs/uintah_defs.h> // For FORTRAN_UNDERSCORE_END
 
 #include <Core/Math/sci_lapack.h>
 #include <Core/Util/Assert.h>
@@ -103,6 +104,7 @@ void sort_eigens(double *Er, double *Ei, int N, double **Evecs=0)
 #  else
 #    define FIX_NAME(fun) fun
 #  endif
+
 #  define DGETRF FIX_NAME(dgetrf)
 #  define DGETRI FIX_NAME(dgetri)
 #  define DGESVD FIX_NAME(dgesvd)
