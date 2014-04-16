@@ -23,6 +23,7 @@
  */
 
 #include <CCA/Components/MPM/ReactiveFlow/ConcentrationDiffusion.h>
+#include <CCA/Components/MPM/ReactiveFlow/PotentialField.h>
 #include <Core/Math/Short27.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -106,6 +107,8 @@ void ConcentrationDiffusion::scheduleComputeInternalDiffusionRate(SchedulerP& sc
   t->requires(Task::OldDW, d_lb->pVolumeLabel,                    gan, NGP);
   t->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,        gan, NGP);
   t->requires(Task::NewDW, d_lb->gConcentrationLabel,             gan, 2*NGN);
+  t->requires(Task::NewDW, d_lb->gMeanStressLabel,                gan, 2*NGN);
+  t->requires(Task::NewDW, d_lb->gDetDeformationGradLabel,        gan, 2*NGN);
   t->requires(Task::NewDW, d_lb->gMassLabel,                      gnone);
   t->computes(d_lb->gdCdtLabel);
   
@@ -244,8 +247,12 @@ void ConcentrationDiffusion::computeInternalDiffusionRate(const ProcessorGroup*,
       double kappa = mpm_matl->getThermalConductivity();
       double Cv = mpm_matl->getSpecificHeat();
       double diffusivity = mpm_matl->getDiffusivity();
+      double bolt = mpm_matl->getBoltzmann();
+      double satM = mpm_matl->getSaturationMax();
       //cout << "diffusivity: " << diffusivity << endl;
       //cout << "h: " << dx.x() << endl;
+      double potential = 0;
+      double omega = mpm_matl->getOmega();
 
       constParticleVariable<Point>  px;
       constParticleVariable<double> pvol,pMass;
@@ -254,6 +261,8 @@ void ConcentrationDiffusion::computeInternalDiffusionRate(const ProcessorGroup*,
       ParticleVariable<Vector>      pConcentrationGradient;
       constNCVariable<double>       gConcentration,gMass;
       NCVariable<double>            gdCdt;
+      constNCVariable<double>       detF;
+      constNCVariable<double>       mStress;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        Ghost::AroundNodes, NGP,
@@ -266,6 +275,8 @@ void ConcentrationDiffusion::computeInternalDiffusionRate(const ProcessorGroup*,
       old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
       new_dw->get(gConcentration, d_lb->gConcentrationLabel, dwi, patch, gac,2*NGN);
       new_dw->get(gMass,        d_lb->gMassLabel,        dwi, patch, gnone, 0);
+      new_dw->get(detF,         d_lb->gDetDeformationGradLabel, dwi, patch, gnone, 0);
+      new_dw->get(mStress,   d_lb->gMeanStressLabel, dwi, patch, gnone, 0);
       new_dw->allocateAndPut(gdCdt, d_lb->gdCdtLabel,    dwi, patch);
       new_dw->allocateTemporary(pConcentrationGradient, pset);
   
@@ -306,8 +317,11 @@ void ConcentrationDiffusion::computeInternalDiffusionRate(const ProcessorGroup*,
         for (int k = 0; k < d_flag->d_8or27; k++){
         	//cout << ni[k] << " gConc: " << gConcentration[ni[k]] << endl;
           for (int j = 0; j<3; j++) {
-            pConcentrationGradient[idx][j] +=
-                  gConcentration[ni[k]] * d_S[k][j] * oodx[j];
+        	potential = PotentialField::gaoPotential(gConcentration[ni[k]], satM, bolt,
+        										detF[ni[k]], omega, mStress[ni[k]], 0.0);
+            //pConcentrationGradient[idx][j] +=
+                  //gConcentration[ni[k]] * d_S[k][j] * oodx[j];
+        	pConcentrationGradient[idx][j] += potential * d_S[k][j] * oodx[j];
     
             if (cout_concentration.active()) {
               cout_concentration << "   node = " << ni[k]

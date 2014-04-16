@@ -732,6 +732,7 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
 #ifdef GE_Proj
   t->requires(Task::OldDW, lb->pVelGradLabel,          gan,NGP);
 #endif
+  t->requires(Task::OldDW, lb->pStressLabel,		   gan,NGP);
   t->requires(Task::OldDW, lb->pXLabel,                gan,NGP);
   t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,gan,NGP);
   t->requires(Task::OldDW, lb->pTemperatureLabel,      gan,NGP);
@@ -773,6 +774,8 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gConcentrationNoBCLabel);
   t->computes(lb->gConcentrationRateLabel);
   t->computes(lb->gExternalDiffusionRateLabel);
+  t->computes(lb->gDetDeformationGradLabel);
+  t->computes(lb->gMeanStressLabel);
 
   if(flags->d_with_ice){
     t->computes(lb->gVelocityBCLabel);
@@ -2140,6 +2143,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> pFOld;
       constParticleVariable<Matrix3> pVelGrad;
+      constParticleVariable<Matrix3> pStress;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        gan, NGP, lb->pXLabel);
@@ -2151,6 +2155,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 #ifdef GE_Proj
       old_dw->get(pVelGrad,       lb->pVelGradLabel,       pset);
 #endif
+      old_dw->get(pStress,  	  lb->pStressLabel,   	   pset);
       old_dw->get(pTemperature,   lb->pTemperatureLabel,   pset);
       old_dw->get(pConcentration, lb->pConcentrationLabel, pset);
       old_dw->get(psize,          lb->pSizeLabel,          pset);
@@ -2184,6 +2189,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<double> gConcentration;
       NCVariable<double> gConcentrationNoBC;
       NCVariable<double> gConcentrationRate;
+      NCVariable<double> gDetDeformationGrad;
+      NCVariable<double> gMeanStress;
 
       new_dw->allocateAndPut(gmass,            lb->gMassLabel,       dwi,patch);
       new_dw->allocateAndPut(gSp_vol,          lb->gSp_volLabel,     dwi,patch);
@@ -2202,6 +2209,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->allocateAndPut(gConcentrationNoBC, lb->gConcentrationNoBCLabel,dwi,patch);
       new_dw->allocateAndPut(gConcentrationRate, lb->gConcentrationRateLabel,dwi,patch);
       new_dw->allocateAndPut(gexternaldiffusionrate,lb->gExternalDiffusionRateLabel,dwi,patch);
+      new_dw->allocateAndPut(gDetDeformationGrad, lb->gDetDeformationGradLabel,dwi, patch);
+      new_dw->allocateAndPut(gMeanStress, lb->gMeanStressLabel,dwi, patch);
+
 
       gmass.initialize(d_SMALL_NUM_MPM);
       gvolume.initialize(d_SMALL_NUM_MPM);
@@ -2216,6 +2226,11 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gConcentrationRate.initialize(0);
       gexternaldiffusionrate.initialize(0);
       gSp_vol.initialize(0.);
+      gDetDeformationGrad.initialize(0);
+      gMeanStress.initialize(0);
+
+
+
       //gnumnearparticles.initialize(0.);
 
       // Interpolate particle data to Grid data.
@@ -2235,6 +2250,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 #endif
       Vector total_mom(0.0,0.0,0.0);
       Vector pmom;
+      double detF;
+      double meanStress;
+
       int n8or27=flags->d_8or27;
       double pSp_vol = 1./mpm_matl->getInitialDensity();
       //loop over all particles in the patch:
@@ -2245,6 +2263,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
         pmom = pvelocity[idx]*pmass[idx];
         total_mom += pmom;
+        detF = pFOld[idx].Determinant();
+        meanStress = pStress[idx].Trace()/3;
 
         // Add each particles contribution to the local mass & velocity 
         // Must use the node indices
@@ -2267,6 +2287,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
             gTemperature[node]   += pTemperature[idx] * pmass[idx] * S[k];
             gConcentration[node] += pConcentration[idx] * pmass[idx] * S[k];
             gSp_vol[node]        += pSp_vol           * pmass[idx] * S[k];
+            gDetDeformationGrad[node]  += detF * pmass[idx]		   * S[k];
+            gMeanStress[node]    += meanStress * pmass[idx]		   * S[k];
             //gnumnearparticles[node] += 1.0;
             //gexternalheatrate[node] += pexternalheatrate[idx]      * S[k];
           }
@@ -2333,6 +2355,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         gConcentration[c]   /= gmass[c];
         gConcentrationNoBC[c] = gConcentration[c];
         gSp_vol[c]        /= gmass[c];
+        gDetDeformationGrad[c] /=gmass[c];
+        gMeanStress[c]		  /= gmass[c];
       }
 
       // Apply boundary conditions to the temperature, concentration, and velocity (if symmetry)
@@ -2737,6 +2761,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 
     NCVariable<Matrix3>       gstressglobal;
     constNCVariable<double>   gvolumeglobal;
+
     new_dw->get(gvolumeglobal,  lb->gVolumeLabel,
                 d_sharedState->getAllInOneMatl()->get(0), patch, Ghost::None,0);
     new_dw->allocateAndPut(gstressglobal, lb->gStressForSavingLabel, 
@@ -2772,6 +2797,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 
       new_dw->allocateAndPut(gstress,      lb->gStressForSavingLabel,dwi,patch);
       new_dw->allocateAndPut(internalforce,lb->gInternalForceLabel,  dwi,patch);
+
 
       if(flags->d_with_ice){
         new_dw->get(p_pressure,lb->pPressureLabel, pset);

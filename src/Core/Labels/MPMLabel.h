@@ -316,13 +316,8 @@ namespace Uintah {
       const VarLabel* dCdt_NCLabel;
 
       const VarLabel* gConcentrationContactDiffusionRateLabel;
-
-
-
-
-
-
-
+      const VarLabel* gDetDeformationGradLabel;
+      const VarLabel* gMeanStressLabel;
     };
 } // End namespace Uintah
 

@@ -31,4 +31,5 @@
 SRCDIR   := CCA/Components/MPM/ReactiveFlow
 
 SRCS     += \
-	$(SRCDIR)/ConcentrationDiffusion.cc
+	$(SRCDIR)/ConcentrationDiffusion.cc \
+	$(SRCDIR)/PotentialField.cc

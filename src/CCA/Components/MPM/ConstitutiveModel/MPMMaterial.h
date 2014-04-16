@@ -131,6 +131,9 @@ WARNING
    double getSpecificHeat() const;
    double getThermalConductivity() const;
    double getDiffusivity() const;
+   double getBoltzmann() const;
+   double getSaturationMax() const;
+   double getOmega() const;
 
    int nullGeomObject() const;
 
@@ -162,6 +165,9 @@ WARNING
    double d_specificHeat;
    double d_thermalConductivity;
    double d_diffusivity;
+   double d_boltzmannConstant;
+   double d_saturationMax;
+   double d_omega;
 
    // Specific heats at constant pressure and constant volume
    // (values at room temperature - [273.15 + 20] K)
