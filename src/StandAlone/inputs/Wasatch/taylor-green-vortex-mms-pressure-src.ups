@@ -92,12 +92,10 @@
       <Y-Velocity>v</Y-Velocity>
       <Y-Momentum>y-mom</Y-Momentum>
       <DisablePressureSolve/>
-      <SourceTerm>
-        <Direction>X</Direction>
+      <SourceTerm direction="X">
         <NameTag name="psrcx" state="STATE_NONE"/>
       </SourceTerm>
-      <SourceTerm>
-        <Direction>Y</Direction>
+      <SourceTerm direction="Y">
         <NameTag name="psrcy" state="STATE_NONE"/>
       </SourceTerm>
 

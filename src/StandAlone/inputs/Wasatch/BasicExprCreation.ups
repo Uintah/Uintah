@@ -9,6 +9,10 @@
 
    <Wasatch>
 
+    <Density>
+      <Constant value="1.0" name="density"/>
+    </Density>
+
      <BasicExpression type="SVOL">
        <TaskList>initialization</TaskList>
        <NameTag name="temperature" state="STATE_N"/>
