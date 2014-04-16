@@ -715,9 +715,9 @@ MPMLabel::MPMLabel()
             "G.concentrationContactDiffusionRate",
             NCVariable<double>::getTypeDescription());
   GdCdtLabel = VarLabel::create("G.dCdt",
-          	NCVariable<double>::getTypeDescription()); ;
+          	NCVariable<double>::getTypeDescription());
   GConcentrationRateLabel = VarLabel::create("G.concentrationRate",
-            NCVariable<double>::getTypeDescription());;
+            NCVariable<double>::getTypeDescription());
   GConcentrationStarLabel = VarLabel::create("G.concentrationStar",
             NCVariable<double>::getTypeDescription());
   dCdt_NCLabel = VarLabel::create("dCdt_NC",
@@ -725,6 +725,11 @@ MPMLabel::MPMLabel()
   gConcentrationContactDiffusionRateLabel =
          VarLabel::create("g.concentrationContactDiffusionRate",
          NCVariable<double>::getTypeDescription());
+
+  gDetDeformationGradLabel = VarLabel::create("g.detDeformationGrad",
+		    NCVariable<double>::getTypeDescription());
+  gMeanStressLabel = VarLabel::create("g.meanStress",
+		    NCVariable<double>::getTypeDescription());
 } 
 
 MPMLabel::~MPMLabel()
@@ -995,4 +1000,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(GConcentrationStarLabel);
 
   VarLabel::destroy(gConcentrationContactDiffusionRateLabel);
+  VarLabel::destroy(gDetDeformationGradLabel);
+  VarLabel::destroy(gMeanStressLabel);
 }

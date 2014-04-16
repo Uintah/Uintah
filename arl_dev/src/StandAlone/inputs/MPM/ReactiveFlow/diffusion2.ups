@@ -17,7 +17,7 @@
        <delt_min>0.0001</delt_min>
        <delt_max>0.01</delt_max>
        <timestep_multiplier>0.6</timestep_multiplier>
-       <max_Timesteps>10</max_Timesteps>
+       <max_Timesteps>1000</max_Timesteps>
    </Time>
 
    <DataArchiver>
@@ -47,7 +47,7 @@
 
 
     <PhysicalConstants>
-       <gravity>[0,0,0]</gravity>
+       <gravity>[1,0,0]</gravity>
     </PhysicalConstants>
 
     <MaterialProperties>
@@ -57,6 +57,9 @@
                 <thermal_conductivity>237.0</thermal_conductivity>
                 <specific_heat>903</specific_heat>
                 <diffusivity>.00000000001</diffusivity>
+                <boltzmann>1</boltzmann>
+                <saturationMax>320</saturationMax>
+                <omega>1</omega>
                 <constitutive_model type="comp_neo_hook">
                     <bulk_modulus>2000.0</bulk_modulus>
                     <shear_modulus>1500.0</shear_modulus>
@@ -69,7 +72,7 @@
                   <res>[2,2,2]</res>
                   <velocity>[0.,0.,0.]</velocity>
                   <temperature>0.</temperature>
-                  <concentration>0.</concentration>
+                  <concentration>1.</concentration>
                 </geom_object>
            </material>
 
@@ -85,37 +88,55 @@
          <BCType id = "all" var = "Dirichlet" label = "Concentration">
                 <value> 300. </value>
          </BCType>
+         <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                <value> [0.0, 0.0, 0.0] </value>
+         </BCType>
        </Face>
        <Face side = "x+">
          <BCType id = "all" var = "Dirichlet" label = "Concentration">
-              <value> 0. </value>
+              <value> 1. </value>
+         </BCType>
+         <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                <value> [0.0, 0.0, 0.0] </value>
          </BCType>
        </Face>
        <Face side = "y-">
          <BCType id = "all" var = "Neumann" label = "Concentration">
-              <value> 0. </value>
+              <value> [0.0, 0.0, 0.0] </value>
+         </BCType>
+         <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                <value> [0.0, 0.0, 0.0] </value>
          </BCType>
        </Face>
        <Face side = "y+">
          <BCType id = "all" var = "Neumann" label = "Concentration">
               <value> 0. </value>
          </BCType>
+         <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                <value> [0.0, 0.0, 0.0] </value>
+         </BCType>
        </Face>
        <Face side = "z-">
        <BCType id = "all" var = "Neumann" label = "Concentration">
               <value> 0. </value>
+         </BCType>
+         <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                <value> [0.0, 0.0, 0.0] </value>
          </BCType>
        </Face>
        <Face side = "z+">
          <BCType id = "all" var = "Neumann" label = "Concentration">
               <value> 0. </value>
          </BCType>
+         <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                <value> [0.0, 0.0, 0.0] </value>
+         </BCType>
        </Face>
        </BoundaryConditions>       
        <Level>
            <Box label="1">
               <lower>[0,0,0]</lower>
-              <upper>[.004,.002,.002]</upper>
+              <upper>[.008,.002,.002]</upper>
                <resolution>[50,1,2]</resolution>
               <patches>[1,1,1]</patches>
               <extraCells>[0,0,0]</extraCells>

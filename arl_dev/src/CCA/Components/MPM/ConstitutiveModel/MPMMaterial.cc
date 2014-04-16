@@ -99,6 +99,9 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
   ps->require("thermal_conductivity",d_thermalConductivity);
   ps->require("specific_heat",d_specificHeat);
   ps->require("diffusivity",d_diffusivity);
+  ps->require("boltzmann",d_boltzmannConstant);
+  ps->require("saturationMax",d_saturationMax);
+  ps->require("omega",d_omega);
   
   // Assume the the centered specific heat is C_v
   d_Cv = d_specificHeat;
@@ -187,7 +190,10 @@ ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
   mpm_ps->appendElement("density",d_density);
   mpm_ps->appendElement("thermal_conductivity",d_thermalConductivity);
   mpm_ps->appendElement("diffusivity",d_diffusivity);
+  mpm_ps->appendElement("boltzmann",d_boltzmannConstant);
+  mpm_ps->appendElement("omega",d_omega);
   mpm_ps->appendElement("specific_heat",d_specificHeat);
+  mpm_ps->appendElement("saturationMax",d_saturationMax);
   mpm_ps->appendElement("C_p",d_Cp);
   mpm_ps->appendElement("room_temp",d_troom);
   mpm_ps->appendElement("melt_temp",d_tmelt);
@@ -212,6 +218,9 @@ MPMMaterial::copyWithoutGeom(ProblemSpecP& ps,const MPMMaterial* mat,
   d_thermalConductivity = mat->d_thermalConductivity;
   d_diffusivity = mat->d_diffusivity;
   d_specificHeat = mat->d_specificHeat;
+  d_boltzmannConstant = mat->d_boltzmannConstant;
+  d_omega = mat->d_omega;
+  d_saturationMax = mat->d_saturationMax;
   d_Cv = mat->d_Cv;
   d_Cp = mat->d_Cp;
   d_troom = mat->d_troom;
@@ -308,6 +317,20 @@ double MPMMaterial::getDiffusivity() const
   return d_diffusivity;
 }
 
+double MPMMaterial::getBoltzmann() const
+{
+  return d_boltzmannConstant;
+}
+
+double MPMMaterial::getOmega() const
+{
+  return d_omega;
+}
+
+double MPMMaterial::getSaturationMax() const
+{
+  return d_saturationMax;
+}
 /* --------------------------------------------------------------------- 
  Function~  MPMMaterial::initializeCells--
  Notes:  This function initializeCCVariables.  Reasonable values for 
