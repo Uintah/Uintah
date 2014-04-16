@@ -49,7 +49,7 @@
 
 #include <boost/filesystem/operations.hpp>
 
-#if BOOST_FILESYSTEM_VERSION == 2
+#ifndef __bgq__
   namespace bfs = boost::filesystem;
 #else
   namespace bfs = boost::filesystem3;
