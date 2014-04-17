@@ -365,7 +365,7 @@ namespace SCIRun {
  
   // locate for Point 
   template <>
-    SCISHARE double getnextx3(std::vector<double> &x,  
+    double getnextx3(std::vector<double> &x,
 		     const Point& y, const std::vector<Point>& yd);
       
   // locate for scalar value 
