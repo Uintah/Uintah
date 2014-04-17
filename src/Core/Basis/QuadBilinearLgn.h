@@ -31,21 +31,19 @@
 
 #include <Core/Basis/CrvLinearLgn.h>
 
-#include <Core/Basis/share.h>
-
 namespace SCIRun {
 
 //! Class for describing unit geometry of QuadBilinearLgn 
 class QuadBilinearLgnUnitElement {
 public: 
   //! Parametric coordinates of vertices of unit edge
-  static SCISHARE double unit_vertices[4][2];
+  static double unit_vertices[4][2];
   //! References to vertices of unit edge  
-  static SCISHARE int unit_edges[4][2]; 
+  static int unit_edges[4][2];
   //! References to vertices of unit face 
-  static SCISHARE int unit_faces[1][4]; 
+  static int unit_faces[1][4];
   //! References to normal of unit face
-  static SCISHARE double unit_face_normals[1][3];
+  static double unit_face_normals[1][3];
 
   QuadBilinearLgnUnitElement() {}
   virtual ~QuadBilinearLgnUnitElement() {}

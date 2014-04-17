@@ -31,23 +31,21 @@
 
 #include <Core/Basis/TriLinearLgn.h>
 
-#include <Core/Basis/share.h>
-
 namespace SCIRun {
 
 //! Class for describing unit geometry of TetLinearLgn 
 class TetLinearLgnUnitElement {
 public:
   //! Parametric coordinates of vertices of unit edge
-  static SCISHARE double unit_vertices[4][3];
+  static double unit_vertices[4][3];
   //! References to vertices of unit edge 
-  static SCISHARE int unit_edges[6][2]; 
+  static int unit_edges[6][2];
   //! References to vertices of unit face
-  static SCISHARE int unit_faces[4][3];  
+  static int unit_faces[4][3];
   //! Normals of unit faces
-  static SCISHARE double unit_face_normals[4][3];
+  static double unit_face_normals[4][3];
   //! Precalculated area of faces
-  static SCISHARE double unit_face_areas[4];
+  static double unit_face_areas[4];
 
   TetLinearLgnUnitElement() {}
   virtual ~TetLinearLgnUnitElement() {}
