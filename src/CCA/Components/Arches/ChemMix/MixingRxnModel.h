@@ -198,7 +198,6 @@ namespace Uintah {
 
       int FLOW = -1; 
 
-
       if ( d_user_ref_density ){ 
         return d_reference_density; 
       } else { 
