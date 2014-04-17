@@ -45,7 +45,6 @@
 #include <string>
 
 #include <sci_defs/error_defs.h>
-#include <Core/Exceptions/share.h>
 
 namespace SCIRun {
 
@@ -61,7 +60,7 @@ namespace SCIRun {
   //
   ///////////////////////////////////////////////////////////////////////////////////
 
-  class SCISHARE Exception {
+  class Exception {
   public:
     Exception(bool ignoreWait=false);
     virtual ~Exception();
@@ -79,7 +78,7 @@ namespace SCIRun {
     Exception& operator=(const Exception&);
   };
 
-  SCISHARE std::string getStackTrace(void* context = 0);
+  std::string getStackTrace(void* context = 0);
 } // End namespace SCIRun
 
 #endif
