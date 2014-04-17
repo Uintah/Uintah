@@ -40,56 +40,54 @@
 #include <string>
 #include <vector>
 
-#include <Core/Containers/share.h>
-
 namespace SCIRun {
 
-SCISHARE bool string_to_int(const std::string &str, int &result);
-SCISHARE bool string_to_double(const std::string &str, double &result);
-SCISHARE bool string_to_unsigned_long(const std::string &str, unsigned long &res);
+bool string_to_int(const std::string &str, int &result);
+bool string_to_double(const std::string &str, double &result);
+bool string_to_unsigned_long(const std::string &str, unsigned long &res);
 
-SCISHARE std::string to_string(int val);
-SCISHARE std::string to_string(unsigned int val);
-SCISHARE std::string to_string(unsigned long val);
-SCISHARE std::string to_string(double val);
+std::string to_string(int val);
+std::string to_string(unsigned int val);
+std::string to_string(unsigned long val);
+std::string to_string(double val);
 
-SCISHARE std::string string_toupper( const std::string & inString );
-SCISHARE std::string string_tolower( const std::string & inString );
+std::string string_toupper( const std::string & inString );
+std::string string_tolower( const std::string & inString );
 
 //////////
 // Remove directory name
-SCISHARE std::string basename(const std::string &path);
+std::string basename(const std::string &path);
 
 //////////
 // Return directory name
-SCISHARE std::string pathname(const std::string &path);
+std::string pathname(const std::string &path);
 
 // Split a std::string into multiple parts, separated by any of the separator characters.
-SCISHARE std::vector<std::string> split_string( const std::string & str, const std::vector<char> & separators );
-SCISHARE std::string concatStrings( const std::vector<std::string> strings );
+std::vector<std::string> split_string( const std::string & str, const std::vector<char> & separators );
+std::string concatStrings( const std::vector<std::string> strings );
 
 /////////
 // C++ify a std::string, turn newlines into \n, use \t, \r, \\ \", etc.
-SCISHARE std::string string_Cify(const std::string &str);
+std::string string_Cify(const std::string &str);
 
 //////////
 // Remove leading and trailing white space (blanks, tabs, \n, \r) from std::string.
-SCISHARE void collapse( std::string & str );
+void collapse( std::string & str );
 
 //////////
 // Unsafe cast from std::string to char *, used to export strings to C functions.
-SCISHARE char* ccast_unsafe( const std::string & str );
+char* ccast_unsafe( const std::string & str );
 
 // replaces all occurances of 'substr' in 'str' with 'replacement'.  'str' is updated in place.
-SCISHARE void replace_substring( std::string & str,
+void replace_substring( std::string & str,
                                  const std::string &substr,
                                  const std::string &replacement );
 
 // Returns true if 'str' ends with the std::string 'substr'
-SCISHARE bool ends_with( const std::string & str, const std::string & substr );
+bool ends_with( const std::string & str, const std::string & substr );
 
 // Returns the number of 'substr' in 'str'.  (ie: if str is 'aaaa' and substr is 'aaa', then 2 is returned.)
-SCISHARE unsigned int count_substrs( const std::string & str, const std::string & substr );
+unsigned int count_substrs( const std::string & str, const std::string & substr );
 
 } // End namespace SCIRun
 

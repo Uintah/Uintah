@@ -45,7 +45,6 @@
 
 #include <Core/Util/Assert.h>
 #include <Core/Exceptions/Exception.h>
-#include <Core/Containers/share.h>
 
 namespace SCIRun {
 
@@ -107,7 +106,7 @@ private:
 
 class ConsecutiveRangeSet
 {
-  SCISHARE friend std::ostream& operator<<(std::ostream& out,
+  friend std::ostream& operator<<(std::ostream& out,
 				  const ConsecutiveRangeSet& set);
 public:
   
@@ -132,7 +131,7 @@ public:
     bool operator!=(const iterator& it2) const
     { return !(*this == it2); }
 
-    SCISHARE iterator& operator++();
+    iterator& operator++();
     inline iterator operator++(int);
   private:
     const ConsecutiveRangeSet* set_;
@@ -168,19 +167,19 @@ public:
   };
 
 public:
-  SCISHARE ConsecutiveRangeSet(std::list<int>& set);
+  ConsecutiveRangeSet(std::list<int>& set);
 
-  SCISHARE ConsecutiveRangeSet(int low, int high); // single consecutive range
+  ConsecutiveRangeSet(int low, int high); // single consecutive range
 
-  SCISHARE ConsecutiveRangeSet() : size_(0) {} // empty set
+  ConsecutiveRangeSet() : size_(0) {} // empty set
   
   // initialize a range set with a string formatted like: "1, 2-8, 10, 15-30"
-  SCISHARE ConsecutiveRangeSet(const std::string& setstr) throw(ConsecutiveRangeSetException);
+  ConsecutiveRangeSet(const std::string& setstr) throw(ConsecutiveRangeSetException);
 
-  SCISHARE ConsecutiveRangeSet(const ConsecutiveRangeSet& set2)
+  ConsecutiveRangeSet(const ConsecutiveRangeSet& set2)
     : rangeSet_(set2.rangeSet_), size_(set2.size_) { }
   
-  SCISHARE ~ConsecutiveRangeSet() {}
+  ~ConsecutiveRangeSet() {}
 
   ConsecutiveRangeSet& operator=(const ConsecutiveRangeSet& set2)
   { rangeSet_ = set2.rangeSet_; size_ = set2.size_; return *this; }
@@ -188,27 +187,27 @@ public:
   // Add to the range set, asserting that value is greater or equal
   // to anything already in the set (if it is equal to something already
   // in teh set then the value is simply discarded).
-  SCISHARE void addInOrder(int value) throw(ConsecutiveRangeSetException);
+  void addInOrder(int value) throw(ConsecutiveRangeSetException);
   
   template <class AnyIterator>
   void addInOrder(const AnyIterator& begin, const AnyIterator& end)
   { for (AnyIterator it = begin; it != end; ++it) addInOrder(*it); }
   
-  SCISHARE bool operator==(const ConsecutiveRangeSet& set2) const;
+  bool operator==(const ConsecutiveRangeSet& set2) const;
   bool operator!=(const ConsecutiveRangeSet& set2) const
   { return !(*this == set2); }
       
   // obtain the intersection of two sets
-  SCISHARE ConsecutiveRangeSet intersected(const ConsecutiveRangeSet& set2) const;
+  ConsecutiveRangeSet intersected(const ConsecutiveRangeSet& set2) const;
 
   // obtain the union of two sets
-  SCISHARE ConsecutiveRangeSet unioned(const ConsecutiveRangeSet& set2) const;
+  ConsecutiveRangeSet unioned(const ConsecutiveRangeSet& set2) const;
 
   // Could implement binary search on the range set, but this
   // wasn't needed so I didn't do it.  Perhaps in the future if
   // needed. -- Wayne
   // I needed it, so I implemented it.  -- Bryan
-  SCISHARE iterator find(int n);
+  iterator find(int n);
   
   inline iterator begin() const
   { return iterator(this, 0, 0); }
@@ -219,17 +218,17 @@ public:
   unsigned long size() const
   { return size_; }
 
-  SCISHARE std::string toString() const;
+  std::string toString() const;
  
   // return a space separated list of integers
-  SCISHARE std::string expandedString() const;
+  std::string expandedString() const;
 
   // used for debugging
   int getNumRanges()
   { return (int)rangeSet_.size(); }
 
-  SCISHARE static const ConsecutiveRangeSet empty;
-  SCISHARE static const ConsecutiveRangeSet all;  
+  static const ConsecutiveRangeSet empty;
+  static const ConsecutiveRangeSet all;
   friend class ConsecutiveRangeSet::iterator;
 private:
   template <class InputIterator>

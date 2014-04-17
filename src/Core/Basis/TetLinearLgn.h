@@ -240,11 +240,6 @@ public:
   static T GaussianWeights[1];
 };
 
-#ifdef _WIN32
-// force the instantiation of TetGaussian1<double>
-template class TetGaussian1<double>;
-#endif
-
 template <class T>
 int TetGaussian1<T>::GaussianNum = 1;
 
@@ -265,11 +260,6 @@ public:
   static T GaussianPoints[4][3];
   static T GaussianWeights[4];
 };
-
-#ifdef _WIN32
-// force the instantiation of TetGaussian2<double>
-template class TetGaussian2<double>;
-#endif
 
 template <class T>
 int TetGaussian2<T>::GaussianNum = 4;
