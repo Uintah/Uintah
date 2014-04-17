@@ -36,6 +36,8 @@
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
 #include <CCA/Components/Arches/DQMOM.h>
+//#include <CCA/Components/Arches/Task/TaskInterface.h>
+//i#include <CCA/Components/Arches/Task/SampleTask.h>
 
 #include <CCA/Components/Arches/ExplicitSolver.h>
 #include <Core/Containers/StaticArray.h>
@@ -268,6 +270,10 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params, SimulationStateP & st
   if ( !check_calculator ){ 
     proc0cout << "Notice: No efficiency calculators found." << endl;
   } 
+
+//  TaskInterface* _sample_task = scinew SampleTask("a_test_task", 0); 
+//  _sample_task->print_task_name(); 
+
 }
 
 void 
@@ -437,7 +443,11 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     if ( hl_model != 0 )
       hl_model->sched_computeProp( level, sched, curr_level ); 
-    
+
+//    std::cout << " The task = " << _sample_task << std::endl;
+//    TaskInterface* sample_task = scinew SampleTask("test_task",0); 
+//    sample_task->print_task_name(); 
+//    sample_task->schedule_task( level, sched, matls, curr_level ); 
 
     //1st TABLE LOOKUP
     bool initialize_it  = false;
