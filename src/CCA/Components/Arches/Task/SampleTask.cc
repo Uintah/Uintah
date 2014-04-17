@@ -25,8 +25,11 @@ void
 SampleTask::eval( const Patch* patch, UintahVarMap& var_map, ConstUintahVarMap& const_var_map ){ 
 
   CCVariable<double>*      temp = get_var<CCVariable<double> >("a_sample_variable", var_map);
-  constSFCXVariable<double>*  u = get_const_var<constSFCXVariable<double> >("uVelocitySPBC", const_var_map); 
-  constSFCYVariable<double>*  v = get_const_var<constSFCYVariable<double> >("vVelocitySPBC", const_var_map); 
+  constSFCXVariable<double>*  u = get_var<constSFCXVariable<double> >("uVelocitySPBC", const_var_map); 
+  constSFCYVariable<double>*  v = get_var<constSFCYVariable<double> >("vVelocitySPBC", const_var_map); 
+
+  std::cout << (*u)[IntVector(1,1,1)] << std::endl;
+  std::cout << (*v)[IntVector(1,1,1)] << std::endl;
 
   temp->initialize(3.0); 
 
