@@ -39,10 +39,8 @@
 #include <Core/Exceptions/Exception.h>
 #include <string>
 
-#include <Core/Exceptions/share.h>
-
 namespace SCIRun {
-  class SCISHARE PapiInitializationError : public Exception {
+  class PapiInitializationError : public Exception {
 
   public:
 	PapiInitializationError(const std::string&, const char* file, int line);

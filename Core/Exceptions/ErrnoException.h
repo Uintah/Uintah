@@ -39,10 +39,9 @@
 #include <Core/Exceptions/Exception.h>
 #include <string>
 
-#include <Core/Exceptions/share.h>
 namespace SCIRun {
 
-class SCISHARE ErrnoException : public Exception {
+class ErrnoException : public Exception {
 public:
   ErrnoException(const std::string&, int err, const char* file, int line);
   ErrnoException(const ErrnoException&);
