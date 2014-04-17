@@ -122,6 +122,7 @@ SUBDIRS := $(SRCDIR)/ChemMix            \
            $(SRCDIR)/Radiation/fortran  \
            $(SRCDIR)/SourceTerms        \
            $(SRCDIR)/TransportEqns      \
+###					 $(SRCDIR)/Task 
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 #### End handle subdirs

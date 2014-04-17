@@ -141,13 +141,9 @@ protected:
     /** @brief The actual work done within the derived class **/ 
     virtual void eval( const Patch* patch, UintahVarMap& var_map, ConstUintahVarMap& const_var_map ) = 0; 
 
-    /** @brief Return the grid variable by string name for non-const computing **/ 
-    template<class T>
-    T* get_var(std::string name, UintahVarMap& var_map); 
-
-    /** @brief Return the grid variable by string name for non-const computing **/ 
-    template<class T>
-    T* get_const_var(std::string name, ConstUintahVarMap& const_var_map); 
+    /** @brief Return the UINTAH grid variable by string name. **/ 
+    template<class T, class M>
+    T* get_uintah_var(std::string name, M& var_map); 
 
     std::string _task_name; 
     const int _matl_index; 
@@ -170,144 +166,15 @@ private:
   //====================================================================================
   // GRID VARIABLE ACCESS
   //====================================================================================
-  template<class T>
-  inline T* TaskInterface::get_var(std::string name, UintahVarMap& var_map ){ };
+  template<class T, class M>
+  inline T* TaskInterface::get_uintah_var(std::string name, M& var_map ){
 
-  template<class T>
-  inline T* TaskInterface::get_const_var(std::string name, ConstUintahVarMap& const_var_map){ }; 
+    if ( var_map.find(name) != var_map.end() ) return dynamic_cast<T* >(var_map.find(name)->second); 
 
-  //CCVARIABLE DOUBLE 
-  template<>
-  inline CCVariable<double>* TaskInterface::get_var( std::string name, UintahVarMap& var_map ){ 
+    throw InvalidValue("Arches Task Error: Cannot resolve grid variable "+name, __FILE__, __LINE__); 
+  
+  };
 
-    UintahVarMap::iterator itr = var_map.find(name);    
-
-    if ( itr != var_map.end() ) return dynamic_cast<CCVariable<double>* >(itr->second); 
-
-    throw InvalidValue("Arches Task Error: Cannot resolve grid variable (CC_DOUBLE) "+name, __FILE__, __LINE__); 
-
-  }
-
-  template<>
-  inline constCCVariable<double>* TaskInterface::get_const_var( std::string name, ConstUintahVarMap& var_map ){ 
-
-    ConstUintahVarMap::iterator itr = var_map.find(name);    
-
-    if ( itr != var_map.end() ) return dynamic_cast<constCCVariable<double>* >(itr->second); 
-
-    throw InvalidValue("Arches Task Error: Cannot resolve grid variable (CONST CC_DOUBLE) "+name, __FILE__, __LINE__); 
-
-  }
-  //CCVARIABLE INT
-  template<>
-  inline CCVariable<int>* TaskInterface::get_var( std::string name, UintahVarMap& var_map ){ 
-
-    UintahVarMap::iterator itr = var_map.find(name);    
-
-    if ( itr != var_map.end() ) return dynamic_cast<CCVariable<int>* >(itr->second); 
-
-    throw InvalidValue("Arches Task Error: Cannot resolve grid variable (CC_INT) "+name, __FILE__, __LINE__); 
-
-  }
-
-  template<>
-  inline constCCVariable<int>* TaskInterface::get_const_var( std::string name, ConstUintahVarMap& var_map ){ 
-
-    ConstUintahVarMap::iterator itr = var_map.find(name);    
-
-    if ( itr != var_map.end() ) return dynamic_cast<constCCVariable<int>* >(itr->second); 
-
-    throw InvalidValue("Arches Task Error: Cannot resolve grid variable (CONST CC_DOUBLE) "+name, __FILE__, __LINE__); 
-
-  }
-  //CCVARIABLE VECTOR
-  template<>
-  inline CCVariable<Vector>* TaskInterface::get_var( std::string name, UintahVarMap& var_map ){ 
-
-    UintahVarMap::iterator itr = var_map.find(name);    
-
-    if ( itr != var_map.end() ) return dynamic_cast<CCVariable<Vector>* >(itr->second); 
-
-    throw InvalidValue("Arches Task Error: Cannot resolve grid variable (CC_VECTOR) "+name, __FILE__, __LINE__); 
-
-  }
-
-  template<>
-  inline constCCVariable<Vector>* TaskInterface::get_const_var( std::string name, ConstUintahVarMap& var_map ){ 
-
-    ConstUintahVarMap::iterator itr = var_map.find(name);    
-
-    if ( itr != var_map.end() ) return dynamic_cast<constCCVariable<Vector>* >(itr->second); 
-
-    throw InvalidValue("Arches Task Error: Cannot resolve grid variable (CONST CC_VECTOR) "+name, __FILE__, __LINE__); 
-
-  }
-  //SFCXVARIABLE DOUBLE
-  template<>
-  inline SFCXVariable<double>* TaskInterface::get_var( std::string name, UintahVarMap& var_map ){ 
-
-    UintahVarMap::iterator itr = var_map.find(name);    
-
-    if ( itr != var_map.end() ) return dynamic_cast<SFCXVariable<double>* >(itr->second); 
-
-    throw InvalidValue("Arches Task Error: Cannot resolve grid variable (FACEX) "+name, __FILE__, __LINE__); 
-
-  }
-
-  template<>
-  inline constSFCXVariable<double>* TaskInterface::get_const_var( std::string name, ConstUintahVarMap& var_map ){ 
-
-    ConstUintahVarMap::iterator itr = var_map.find(name);    
-
-    if ( itr != var_map.end() ) return dynamic_cast<constSFCXVariable<double>* >(itr->second); 
-
-    throw InvalidValue("Arches Task Error: Cannot resolve grid variable (CONST FACEX) "+name, __FILE__, __LINE__); 
-
-  }
-  //SFCYVARIABLE DOUBLE
-  template<>
-  inline SFCYVariable<double>* TaskInterface::get_var( std::string name, UintahVarMap& var_map ){ 
-
-    UintahVarMap::iterator itr = var_map.find(name);    
-
-    if ( itr != var_map.end() ) return dynamic_cast<SFCYVariable<double>* >(itr->second); 
-
-    throw InvalidValue("Arches Task Error: Cannot resolve grid variable (FACEY) "+name, __FILE__, __LINE__); 
-
-  }
-
-  template<>
-  inline constSFCYVariable<double>* TaskInterface::get_const_var( std::string name, ConstUintahVarMap& var_map ){ 
-
-    ConstUintahVarMap::iterator itr = var_map.find(name);    
-
-    if ( itr != var_map.end() ) return dynamic_cast<constSFCYVariable<double>* >(itr->second); 
-
-    throw InvalidValue("Arches Task Error: Cannot resolve grid variable (CONST FACEY) "+name, __FILE__, __LINE__); 
-
-  }
-  //SFCZVARIABLE DOUBLE
-  template<>
-  inline SFCZVariable<double>* TaskInterface::get_var( std::string name, UintahVarMap& var_map ){ 
-
-    UintahVarMap::iterator itr = var_map.find(name);    
-
-    if ( itr != var_map.end() ) return dynamic_cast<SFCZVariable<double>* >(itr->second); 
-
-    throw InvalidValue("Arches Task Error: Cannot resolve grid variable (FACEZ) "+name, __FILE__, __LINE__); 
-
-  }
-
-  template<>
-  inline constSFCZVariable<double>* TaskInterface::get_const_var( std::string name, ConstUintahVarMap& var_map ){ 
-
-    ConstUintahVarMap::iterator itr = var_map.find(name);    
-
-    if ( itr != var_map.end() ) return dynamic_cast<constSFCZVariable<double>* >(itr->second); 
-
-    throw InvalidValue("Arches Task Error: Cannot resolve grid variable (CONST FACEZ) "+name, __FILE__, __LINE__); 
-
-  }
 
 }
 
