@@ -31,14 +31,12 @@
 
 #include <Core/Basis/PrismLinearLgn.h>
 
-#include <Core/Basis/share.h>
-
 namespace SCIRun {
 
 //! Class for describing unit geometry of PrismQuadraticLgn 
   class PrismQuadraticLgnUnitElement : public PrismLinearLgnUnitElement {
 public:
-  static SCISHARE double unit_vertices[15][3]; //!< Parametric coordinates of vertices of unit edge
+  static double unit_vertices[15][3]; //!< Parametric coordinates of vertices of unit edge
  
   PrismQuadraticLgnUnitElement() {}
   virtual ~PrismQuadraticLgnUnitElement() {}

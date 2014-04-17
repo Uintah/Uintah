@@ -32,12 +32,10 @@
 #include <Core/Basis/CrvLinearLgn.h>
 #include <Core/Basis/QuadBilinearLgn.h>
 
-#include <Core/Basis/share.h>
-
 namespace SCIRun {
 
 //! Class for describing unit geometry of HexTrilinearLgn 
-class SCISHARE HexTrilinearLgnUnitElement {
+class HexTrilinearLgnUnitElement {
 public:
   //! Parametric coordinates of vertices of unit edge 
   static double unit_vertices[8][3];

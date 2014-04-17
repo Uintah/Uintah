@@ -31,11 +31,10 @@
 
 #include <Core/Basis/TriLinearLgn.h>
 
-#include <Core/Basis/share.h>
 namespace SCIRun {
 
 //! Class for describing unit geometry of TriCubicHmt
-  class SCISHARE TriCubicHmtUnitElement : public TriLinearLgnUnitElement {
+  class TriCubicHmtUnitElement : public TriLinearLgnUnitElement {
   public:
   //! Parametric coordinates of vertices of unit edge
   static double unit_vertices[4][2];
