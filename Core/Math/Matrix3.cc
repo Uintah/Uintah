@@ -45,10 +45,6 @@
 #include <iostream>
 #include <fstream>
 
-#ifdef _WIN32
-#define copysign _copysign
-#endif
-
 using namespace Uintah;
 using namespace std;
 using SCIRun::Vector;

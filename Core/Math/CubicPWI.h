@@ -36,15 +36,13 @@
 
 #include   <iostream>
 
-#include <Core/Math/share.h>
-
 namespace SCIRun {
 
 enum EndCondition {natural_ends, clamped_ends, bessel_ends, quadratic_ends};
 
 template <class T> class Cubic3DPWI;
 
-class SCISHARE CubicPWI: public PiecewiseInterp<double>
+class CubicPWI: public PiecewiseInterp<double>
 {
 public:
   CubicPWI();
@@ -118,7 +116,7 @@ template <class T> inline bool Cubic3DPWI<T>::get_value(double w, T& res){
 }
 
 
-SCISHARE bool set_tangents(const Array1<double>&, const Array1<double>&, 
+bool set_tangents(const Array1<double>&, const Array1<double>&,
 			       Array1<double>&, EndCondition);
 
 template <class T> bool 

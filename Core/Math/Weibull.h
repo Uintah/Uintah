@@ -42,13 +42,12 @@
 #define SCI_WEIBULL_H__
 
 #include <Core/Math/MusilRNG.h>
-#include <cmath>
 
-#include <Core/Math/share.h>
+#include <cmath>
 
 namespace SCIRun {
 
-class SCISHARE Weibull {
+class Weibull {
 public:
   double WeibMean_;
   double WeibMod_;

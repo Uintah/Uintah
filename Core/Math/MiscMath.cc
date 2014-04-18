@@ -44,10 +44,6 @@ using namespace std;
 #ifdef __digital__
 #  include <fp_class.h>
 #endif
-#ifdef _WIN32
-#  include <cfloat>
-#  define finite _finite
-#endif
 
 namespace SCIRun {
 
