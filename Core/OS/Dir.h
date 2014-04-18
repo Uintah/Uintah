@@ -30,16 +30,6 @@
 
 #include <sys/stat.h>
 
-#ifdef _WIN32
-#  include <io.h>
-#  include <direct.h>
-#  define S_IRUSR 0x0100
-#  define S_ISDIR(m)      (((m) & S_IFMT) == S_IFDIR)
-#  define S_ISREG(m)      (((m) & S_IFMT) == S_IFREG)
-#endif
-
-#include <Core/OS/share.h>
-
 namespace SCIRun {
    
 /**************************************
@@ -68,7 +58,7 @@ namespace SCIRun {
       
 ****************************************/
     
-class SCISHARE Dir {
+class Dir {
 public:
   Dir();
   Dir(const Dir&);
@@ -116,12 +106,7 @@ private:
 
 } // End namespace SCIRun
 
-#ifdef _WIN32
-#  define MKDIR(dir, perm) mkdir(dir)       // windows mkdir doesn't take permissions
-#  define LSTAT(file, buf) stat(file, buf)  // windows doesn't have lstat
-#else
-#  define MKDIR(dir, perm) mkdir(dir, perm)
-#  define LSTAT(file, buf) lstat(file, buf)
-#endif
+#define MKDIR(dir, perm) mkdir(dir, perm)
+#define LSTAT(file, buf) lstat(file, buf)
 
 #endif // Core_OS_Dir_H
