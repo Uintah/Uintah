@@ -51,27 +51,27 @@
     <!-- Build a non-staggered scalar transport equation -->
     <TransportEquation equation="generic">
       <SolutionVariable>phi-dirichlet-dirichlet-a</SolutionVariable>
-      <DiffusiveFluxExpression direction="Y" coefficient="1.0"/>
+      <DiffusiveFlux direction="Y" coefficient="1.0"/>
     </TransportEquation>
     <!-- Build a non-staggered scalar transport equation -->
     <TransportEquation equation="generic">
       <SolutionVariable>phi-dirichlet-dirichlet-b</SolutionVariable>
-      <DiffusiveFluxExpression direction="Y" coefficient="1.0"/>
+      <DiffusiveFlux direction="Y" coefficient="1.0"/>
     </TransportEquation>
     <!-- Build a non-staggered scalar transport equation -->
     <TransportEquation equation="generic">
       <SolutionVariable>phi-dirichlet-neumann</SolutionVariable>
-      <DiffusiveFluxExpression direction="Y" coefficient="1.0"/>
+      <DiffusiveFlux direction="Y" coefficient="1.0"/>
     </TransportEquation>
     <!-- Build a non-staggered scalar transport equation -->
     <TransportEquation equation="generic">
       <SolutionVariable>phi-neumann-dirichlet</SolutionVariable>
-      <DiffusiveFluxExpression direction="Y" coefficient="1.0"/>
+      <DiffusiveFlux direction="Y" coefficient="1.0"/>
     </TransportEquation>
     <!-- Build a non-staggered scalar transport equation -->
     <TransportEquation equation="generic">
       <SolutionVariable>phi-neumann-neumann</SolutionVariable>
-      <DiffusiveFluxExpression direction="Y" coefficient="1.0"/>
+      <DiffusiveFlux direction="Y" coefficient="1.0"/>
     </TransportEquation>
     </Wasatch>
 

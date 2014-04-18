@@ -165,7 +165,7 @@ namespace Wasatch {
 
     // if doing convection, we will likely have a pressure solve that requires
     // predicted scalar values to approximate the density time derivatives
-    if( params_->findBlock("ConvectiveFluxExpression") ){
+    if( params_->findBlock("ConvectiveFlux") ){
       const std::string& suffix = tagNames.star;
       const Expr::Tag xFluxTagNew  ( solnVarName_ + suffix + tagNames.diffusiveflux + "x", Expr::STATE_NONE    );
       const Expr::Tag yFluxTagNew  ( solnVarName_ + suffix + tagNames.diffusiveflux + "y", Expr::STATE_NONE    );

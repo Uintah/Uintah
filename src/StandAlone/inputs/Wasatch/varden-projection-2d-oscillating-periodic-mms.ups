@@ -48,29 +48,29 @@
       <SolutionVariable>rhof</SolutionVariable>
       <PrimitiveVariable>f</PrimitiveVariable>
 
-      <DiffusiveFluxExpression direction="X">
+      <DiffusiveFlux direction="X">
         <DiffusionCoefficient>
           <NameTag name="diffcoef" state="STATE_NONE"/>
         </DiffusionCoefficient>
-      </DiffusiveFluxExpression>
+      </DiffusiveFlux>
 
-      <ConvectiveFluxExpression direction="X" method="UPWIND">
+      <ConvectiveFlux direction="X" method="UPWIND">
         <AdvectiveVelocity>
             <NameTag name="u" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
+      </ConvectiveFlux>
       
-      <DiffusiveFluxExpression direction="Y">
+      <DiffusiveFlux direction="Y">
         <DiffusionCoefficient>
           <NameTag name="diffcoef" state="STATE_NONE"/>
         </DiffusionCoefficient>
-      </DiffusiveFluxExpression>
+      </DiffusiveFlux>
 
-      <ConvectiveFluxExpression direction="Y" method="UPWIND">
+      <ConvectiveFlux direction="Y" method="UPWIND">
         <AdvectiveVelocity>
             <NameTag name="v" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
+      </ConvectiveFlux>
       
     </TransportEquation>   
     

@@ -34,8 +34,8 @@
     <!-- Build a cell-centered scalar transport equation -->
     <TransportEquation equation="generic">
       <SolutionVariable>phi-dirichlet-dirichlet-a</SolutionVariable>
-      <DiffusiveFluxExpression direction="X" coefficient="0.1"/>
-      <DiffusiveFluxExpression direction="Y" coefficient="0.1"/>
+      <DiffusiveFlux direction="X" coefficient="0.1"/>
+      <DiffusiveFlux direction="Y" coefficient="0.1"/>
     </TransportEquation>
     </Wasatch>
 

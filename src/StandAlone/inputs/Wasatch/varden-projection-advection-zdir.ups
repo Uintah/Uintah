@@ -74,11 +74,11 @@
       <SolutionVariable>rhof</SolutionVariable>
       <PrimitiveVariable>f</PrimitiveVariable>
       
-      <ConvectiveFluxExpression direction="Z" method="UPWIND">
+      <ConvectiveFlux direction="Z" method="UPWIND">
         <AdvectiveVelocity>
             <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
+      </ConvectiveFlux>
 
     </TransportEquation>   
     

@@ -78,32 +78,32 @@
     <TransportEquation equation="generic">
       <SolutionVariable>f</SolutionVariable>
       <!-- 
-      <DiffusiveFluxExpression>
+      <DiffusiveFlux>
         <Direction>Z</Direction>
         <ConstantDiffusivity>0.0001</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
+      </DiffusiveFlux>
  -->
-      <ConvectiveFluxExpression direction="X" method="UPWIND">
+      <ConvectiveFlux direction="X" method="UPWIND">
         <AdvectiveVelocity>
           <NameTag name="u" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
-      <ConvectiveFluxExpression direction="Y" method="UPWIND">
+      </ConvectiveFlux>
+      <ConvectiveFlux direction="Y" method="UPWIND">
         <AdvectiveVelocity>
           <NameTag name="v" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
+      </ConvectiveFlux>
       <!-- 
-      <ConvectiveFluxExpression>
+      <ConvectiveFlux>
         <Method>UPWIND</Method> 
         <Direction>Z</Direction>
         <AdvectiveVelocity>
             <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
+      </ConvectiveFlux>
  -->
-      <DiffusiveFluxExpression direction="X" coefficient="0.0001"/>
-      <DiffusiveFluxExpression direction="Y" coefficient="0.0001"/>
+      <DiffusiveFlux direction="X" coefficient="0.0001"/>
+      <DiffusiveFlux direction="Y" coefficient="0.0001"/>
     </TransportEquation>
     <EmbeddedGeometry>
      <Intrusion>

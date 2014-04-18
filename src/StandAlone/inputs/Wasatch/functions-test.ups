@@ -22,9 +22,9 @@
     </BasicExpression>
     <TransportEquation equation="generic">
       <SolutionVariable>phi0-scalar</SolutionVariable>
-      <DiffusiveFluxExpression direction="X" coefficient="0.01"/>
-      <DiffusiveFluxExpression direction="Y" coefficient="0.01"/>
-      <DiffusiveFluxExpression direction="Z" coefficient="0.01"/>
+      <DiffusiveFlux direction="X" coefficient="0.01"/>
+      <DiffusiveFlux direction="Y" coefficient="0.01"/>
+      <DiffusiveFlux direction="Z" coefficient="0.01"/>
     </TransportEquation>
     <!-- ************************************************** -->
     <!-- Set the initial condition for non-staggered scalar -->
@@ -39,9 +39,9 @@
 
     <TransportEquation equation="generic">
       <SolutionVariable>phi1-scalar</SolutionVariable>
-      <DiffusiveFluxExpression direction="X" coefficient="0.01"/>
-      <DiffusiveFluxExpression direction="Y" coefficient="0.01"/>
-      <DiffusiveFluxExpression direction="Z" coefficient="0.01"/>
+      <DiffusiveFlux direction="X" coefficient="0.01"/>
+      <DiffusiveFlux direction="Y" coefficient="0.01"/>
+      <DiffusiveFlux direction="Z" coefficient="0.01"/>
     </TransportEquation>
     <!-- ************************************************** -->
     <!-- Set the initial condition for non-staggered scalar -->
@@ -55,9 +55,9 @@
     </BasicExpression>
     <TransportEquation equation="generic">
       <SolutionVariable>phi2-scalar</SolutionVariable>
-      <DiffusiveFluxExpression direction="X" coefficient="0.01"/>
-      <DiffusiveFluxExpression direction="Y" coefficient="0.01"/>
-      <DiffusiveFluxExpression direction="Z" coefficient="0.01"/>
+      <DiffusiveFlux direction="X" coefficient="0.01"/>
+      <DiffusiveFlux direction="Y" coefficient="0.01"/>
+      <DiffusiveFlux direction="Z" coefficient="0.01"/>
     </TransportEquation>
     <!-- ************************************************** -->
     <!-- Set the initial condition for non-staggered scalar -->
@@ -71,9 +71,9 @@
     </BasicExpression>
     <TransportEquation equation="generic">
       <SolutionVariable>phi3-scalar</SolutionVariable>
-      <DiffusiveFluxExpression direction="X" coefficient="0.01"/>
-      <DiffusiveFluxExpression direction="Y" coefficient="0.01"/>
-      <DiffusiveFluxExpression direction="Z" coefficient="0.01"/>
+      <DiffusiveFlux direction="X" coefficient="0.01"/>
+      <DiffusiveFlux direction="Y" coefficient="0.01"/>
+      <DiffusiveFlux direction="Z" coefficient="0.01"/>
     </TransportEquation>
     <!-- ************************************************** -->
     <!-- Set the initial condition for non-staggered scalar -->
@@ -87,9 +87,9 @@
     </BasicExpression>
     <TransportEquation equation="generic">
       <SolutionVariable>phi4-scalar</SolutionVariable>
-      <DiffusiveFluxExpression direction="X" coefficient="0.01"/>
-      <DiffusiveFluxExpression direction="Y" coefficient="0.01"/>
-      <DiffusiveFluxExpression direction="Z" coefficient="0.01"/>
+      <DiffusiveFlux direction="X" coefficient="0.01"/>
+      <DiffusiveFlux direction="Y" coefficient="0.01"/>
+      <DiffusiveFlux direction="Z" coefficient="0.01"/>
     </TransportEquation>
     </Wasatch>
 

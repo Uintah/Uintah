@@ -902,47 +902,68 @@ namespace Wasatch{
     const std::string& primVarName = primVarTag.name();
     Expr::Tag diffFluxTag;  // we will populate this.
 
-    std::string dir;
-    diffFluxParams->getAttribute("direction",dir);
+    std::string direction;
+    diffFluxParams->getAttribute("direction",direction);
 
+    const bool singleDirection = (direction == "X" || direction == "Y" || direction == "Z");
     // see if we have an expression set for the diffusive flux.
     Uintah::ProblemSpecP nameTagParam = diffFluxParams->findBlock("NameTag");
     if( nameTagParam ){
-      diffFluxTag = parse_nametag( nameTagParam );
+      if (singleDirection) diffFluxTag = parse_nametag( nameTagParam );
+      else {
+        std::ostringstream msg;
+        msg << "You cannot build a diffusive flux expression with a specified nametag for '" << primVarName << "' in multiple directions" << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      FieldSelector fs;
+      if     ( direction == "X" ) fs=DIFFUSIVE_FLUX_X;
+      else if( direction == "Y" ) fs=DIFFUSIVE_FLUX_Y;
+      else if( direction == "Z" ) fs=DIFFUSIVE_FLUX_Z;
+      else{
+        std::ostringstream msg;
+        msg << "Invalid direction selection for diffusive flux expression" << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      
+      info[ fs ] = diffFluxTag;
     }
     else{ // build an expression for the diffusive flux.
 
-      const TagNames& tagNames = TagNames::self();
-      diffFluxTag = Expr::Tag( primVarName + suffix + tagNames.diffusiveflux + dir, Expr::STATE_NONE );
-      // make new Tags for density and primVar by adding the appropriate suffix ( "_*" or nothing ). This
-      // is because we need the ScalarRHS at time step n+1 for our pressure projection method
-      const Expr::Tag densityCorrectedTag = Expr::Tag(densityTag.name() + suffix, Expr::CARRY_FORWARD);
-      const Expr::Tag primVarCorrectedTag = Expr::Tag(primVarTag.name() + suffix, Expr::STATE_NONE);
-
-      Expr::ExpressionBuilder* builder = NULL;
-      if     ( dir=="X" ) builder = build_diff_flux_expr<XFaceT>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
-      else if( dir=="Y" ) builder = build_diff_flux_expr<YFaceT>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
-      else if( dir=="Z" ) builder = build_diff_flux_expr<ZFaceT>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
-
-      if( builder == NULL ){
-        std::ostringstream msg;
-        msg << "Could not build a diffusive flux expression for '" << primVarName << "'" << std::endl;
-        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      for (std::string::iterator it = direction.begin(); it != direction.end(); ++it)
+      {
+        std::string dir(1,*it);
+        const TagNames& tagNames = TagNames::self();
+        diffFluxTag = Expr::Tag( primVarName + suffix + tagNames.diffusiveflux + dir, Expr::STATE_NONE );
+        // make new Tags for density and primVar by adding the appropriate suffix ( "_*" or nothing ). This
+        // is because we need the ScalarRHS at time step n+1 for our pressure projection method
+        const Expr::Tag densityCorrectedTag = Expr::Tag(densityTag.name() + suffix, Expr::CARRY_FORWARD);
+        const Expr::Tag primVarCorrectedTag = Expr::Tag(primVarTag.name() + suffix, Expr::STATE_NONE);
+        
+        Expr::ExpressionBuilder* builder = NULL;
+        if     ( dir=="X" ) builder = build_diff_flux_expr<XFaceT>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
+        else if( dir=="Y" ) builder = build_diff_flux_expr<YFaceT>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
+        else if( dir=="Z" ) builder = build_diff_flux_expr<ZFaceT>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
+        
+        if( builder == NULL ){
+          std::ostringstream msg;
+          msg << "Could not build a diffusive flux expression for '" << primVarName << "'" << std::endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }
+        factory.register_expression( builder );
+        
+        FieldSelector fs;
+        if     ( dir=="X" ) fs=DIFFUSIVE_FLUX_X;
+        else if( dir=="Y" ) fs=DIFFUSIVE_FLUX_Y;
+        else if( dir=="Z" ) fs=DIFFUSIVE_FLUX_Z;
+        else{
+          std::ostringstream msg;
+          msg << "Invalid direction selection for diffusive flux expression" << std::endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }
+        
+        info[ fs ] = diffFluxTag;
       }
-      factory.register_expression( builder );
     }
-
-    FieldSelector fs;
-    if     ( dir=="X" ) fs=DIFFUSIVE_FLUX_X;
-    else if( dir=="Y" ) fs=DIFFUSIVE_FLUX_Y;
-    else if( dir=="Z" ) fs=DIFFUSIVE_FLUX_Z;
-    else{
-      std::ostringstream msg;
-      msg << "Invalid direction selection for diffusive flux expression" << std::endl;
-      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-    }
-
-    info[ fs ] = diffFluxTag;
   }
 
   //------------------------------------------------------------------
@@ -991,42 +1012,64 @@ namespace Wasatch{
     const std::string& primVarName = primVarTag.name();
     Expr::Tag diffVelTag;  // we will populate this.
 
-    std::string dir;
-    diffVelParams->getAttribute("direction",dir);
+    std::string direction;
+    diffVelParams->getAttribute("direction",direction);
 
+    const bool singleDirection = (direction == "X" || direction == "Y" || direction == "Z");
     // see if we have an expression set for the diffusive velocity.
     Uintah::ProblemSpecP nameTagParam = diffVelParams->findBlock("NameTag");
     if( nameTagParam ){
-      diffVelTag = parse_nametag( nameTagParam );
-    }
-    else{ // build an expression for the diffusive velocity.
-
-      diffVelTag = Expr::Tag( primVarName+"_diffVelocity_"+dir, Expr::STATE_NONE );
-
-      Expr::ExpressionBuilder* builder = NULL;
-      if     ( dir=="X" )  builder = build_diff_vel_expr<XFaceT>(diffVelParams,diffVelTag,primVarTag,turbDiffTag);
-      else if( dir=="Y" )  builder = build_diff_vel_expr<YFaceT>(diffVelParams,diffVelTag,primVarTag,turbDiffTag);
-      else if( dir=="Z" )  builder = build_diff_vel_expr<ZFaceT>(diffVelParams,diffVelTag,primVarTag,turbDiffTag);
- 
-      if( builder == NULL ){
+      if (singleDirection) diffVelTag = parse_nametag( nameTagParam );
+      else {
         std::ostringstream msg;
-        msg << "Could not build a diffusive velocity expression for '"
-            << primVarName << "'" << std::endl;
+        msg << "You cannot build a diffusive velocity expression with a specified nametag for '" << primVarName << "' in multiple directions" << std::endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-      factory.register_expression( builder );
+      
+      FieldSelector fs;
+      if     ( direction == "X" ) fs=DIFFUSIVE_FLUX_X;
+      else if( direction == "Y" ) fs=DIFFUSIVE_FLUX_Y;
+      else if( direction == "Z" ) fs=DIFFUSIVE_FLUX_Z;
+      else{
+        std::ostringstream msg;
+        msg << "Invalid direction selection for diffusive velocity expression" << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      info[ fs ] = diffVelTag;
+
+    } else { // build an expression for the diffusive velocity.
+
+      for (std::string::iterator it = direction.begin(); it != direction.end(); ++it)
+      {
+        std::string dir(1,*it);
+        diffVelTag = Expr::Tag( primVarName+"_diffVelocity_"+dir, Expr::STATE_NONE );
+        
+        Expr::ExpressionBuilder* builder = NULL;
+        if     ( dir=="X" )  builder = build_diff_vel_expr<XFaceT>(diffVelParams,diffVelTag,primVarTag,turbDiffTag);
+        else if( dir=="Y" )  builder = build_diff_vel_expr<YFaceT>(diffVelParams,diffVelTag,primVarTag,turbDiffTag);
+        else if( dir=="Z" )  builder = build_diff_vel_expr<ZFaceT>(diffVelParams,diffVelTag,primVarTag,turbDiffTag);
+        
+        if( builder == NULL ){
+          std::ostringstream msg;
+          msg << "Could not build a diffusive velocity expression for '"
+          << primVarName << "'" << std::endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }
+        factory.register_expression( builder );
+        
+        FieldSelector fs;
+        if     ( dir=="X" ) fs=DIFFUSIVE_FLUX_X;
+        else if( dir=="Y" ) fs=DIFFUSIVE_FLUX_Y;
+        else if( dir=="Z" ) fs=DIFFUSIVE_FLUX_Z;
+        else{
+          std::ostringstream msg;
+          msg << "Invalid direction selection for diffusive velocity expression" << std::endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }
+        info[ fs ] = diffVelTag;
+      }
     }
 
-    FieldSelector fs;
-    if     ( dir=="X" ) fs=DIFFUSIVE_FLUX_X;
-    else if( dir=="Y" ) fs=DIFFUSIVE_FLUX_Y;
-    else if( dir=="Z" ) fs=DIFFUSIVE_FLUX_Z;
-    else{
-      std::ostringstream msg;
-      msg << "Invalid direction selection for diffusive velocity expression" << std::endl;
-      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-    }
-    info[ fs ] = diffVelTag;
   }
 
   //------------------------------------------------------------------

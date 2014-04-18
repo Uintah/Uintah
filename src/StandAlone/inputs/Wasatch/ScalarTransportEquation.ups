@@ -32,14 +32,14 @@
     <!-- Build a non-staggered scalar transport equation -->
     <TransportEquation equation="generic">
       <SolutionVariable>phi-scalar</SolutionVariable>
-      <DiffusiveFluxExpression direction="X">
+      <DiffusiveFlux direction="X">
         <DiffusionCoefficient>
           <NameTag name="phi-diffusivity" state="STATE_NONE"/>
         </DiffusionCoefficient>
         <!-- ConstantDiffusivity>0.3</ConstantDiffusivity -->
-      </DiffusiveFluxExpression>
-      <DiffusiveFluxExpression direction="Y" coefficient="0.2"/>
-      <DiffusiveFluxExpression direction="Z" coefficient="0.1"/>
+      </DiffusiveFlux>
+      <DiffusiveFlux direction="Y" coefficient="0.2"/>
+      <DiffusiveFlux direction="Z" coefficient="0.1"/>
     </TransportEquation>
     </Wasatch>
 
