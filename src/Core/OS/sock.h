@@ -35,11 +35,6 @@
 
 #include <cstring>
 
-#ifdef _WIN32
-#include <winsock2.h>
-
-#else
-
 #define SOCKET int
 #define SOCKET_ERROR -1
 #define INVALID_SOCKET -1
@@ -53,7 +48,6 @@
 #include <netdb.h>
 #include <sys/ioctl.h>
 #include <sys/errno.h>
-#endif
 
 namespace SCIRun {
 
@@ -201,8 +195,7 @@ protected:
 				// true if socket is currently connected
   bool connected;
 
-				// true if socket blocks on read when
-				// no data is ready
+				// true if socket blocks on read when no data is ready
   bool synchronous;
 
 private:
