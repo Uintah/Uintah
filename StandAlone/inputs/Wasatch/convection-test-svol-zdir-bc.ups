@@ -122,11 +122,11 @@
 
       <SolutionVariable>phi_central</SolutionVariable>
 
-      <ConvectiveFluxExpression direction="Z" method="CENTRAL">
+      <ConvectiveFlux direction="Z" method="CENTRAL">
         <AdvectiveVelocity>
             <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
+      </ConvectiveFlux>
 
     </TransportEquation>
 
@@ -135,11 +135,11 @@
 
       <SolutionVariable>phi_upwind</SolutionVariable>
 
-      <ConvectiveFluxExpression direction="Z" method="UPWIND">
+      <ConvectiveFlux direction="Z" method="UPWIND">
         <AdvectiveVelocity>
             <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
+      </ConvectiveFlux>
 
     </TransportEquation>
 
@@ -148,11 +148,11 @@
 
       <SolutionVariable>phi_superbee</SolutionVariable>
 
-      <ConvectiveFluxExpression direction="Z" method="SUPERBEE">
+      <ConvectiveFlux direction="Z" method="SUPERBEE">
         <AdvectiveVelocity>
             <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
+      </ConvectiveFlux>
 
     </TransportEquation>
 
@@ -162,11 +162,11 @@
 
       <SolutionVariable>phi_charm</SolutionVariable>
 
-      <ConvectiveFluxExpression direction="Z" method="CHARM">
+      <ConvectiveFlux direction="Z" method="CHARM">
         <AdvectiveVelocity>
             <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
+      </ConvectiveFlux>
 
     </TransportEquation>
 
@@ -175,11 +175,11 @@
 
       <SolutionVariable>phi_koren</SolutionVariable>
 
-      <ConvectiveFluxExpression direction="Z" method="KOREN">
+      <ConvectiveFlux direction="Z" method="KOREN">
         <AdvectiveVelocity>
             <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
+      </ConvectiveFlux>
 
     </TransportEquation>
 
@@ -189,11 +189,11 @@
 
       <SolutionVariable>phi_mc</SolutionVariable>
 
-      <ConvectiveFluxExpression direction="Z" method="MC">
+      <ConvectiveFlux direction="Z" method="MC">
         <AdvectiveVelocity>
             <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
+      </ConvectiveFlux>
 
     </TransportEquation>
 
@@ -203,11 +203,11 @@
 
       <SolutionVariable>phi_ospre</SolutionVariable>
 
-      <ConvectiveFluxExpression direction="Z" method="OSPRE">
+      <ConvectiveFlux direction="Z" method="OSPRE">
         <AdvectiveVelocity>
             <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
+      </ConvectiveFlux>
 
     </TransportEquation>
 
@@ -217,11 +217,11 @@
 
       <SolutionVariable>phi_smart</SolutionVariable>
 
-      <ConvectiveFluxExpression direction="Z" method="SMART">
+      <ConvectiveFlux direction="Z" method="SMART">
         <AdvectiveVelocity>
             <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
+      </ConvectiveFlux>
 
     </TransportEquation>
 
@@ -230,11 +230,11 @@
 
       <SolutionVariable>phi_vanleer</SolutionVariable>
 
-      <ConvectiveFluxExpression direction="Z" method="VANLEER">
+      <ConvectiveFlux direction="Z" method="VANLEER">
         <AdvectiveVelocity>
             <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
+      </ConvectiveFlux>
 
     </TransportEquation>
 
@@ -243,11 +243,11 @@
 
       <SolutionVariable>phi_hcus</SolutionVariable>
 
-      <ConvectiveFluxExpression direction="Z" method="HCUS">
+      <ConvectiveFlux direction="Z" method="HCUS">
         <AdvectiveVelocity>
             <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
+      </ConvectiveFlux>
 
     </TransportEquation>
 
@@ -256,11 +256,11 @@
 
       <SolutionVariable>phi_minmod</SolutionVariable>
 
-      <ConvectiveFluxExpression direction="Z" method="MINMOD">
+      <ConvectiveFlux direction="Z" method="MINMOD">
         <AdvectiveVelocity>
             <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
+      </ConvectiveFlux>
 
     </TransportEquation>
 
@@ -269,11 +269,11 @@
 
       <SolutionVariable>phi_hquick</SolutionVariable>
 
-      <ConvectiveFluxExpression direction="Z" method="HQUICK">
+      <ConvectiveFlux direction="Z" method="HQUICK">
         <AdvectiveVelocity>
             <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
+      </ConvectiveFlux>
 
     </TransportEquation>
 

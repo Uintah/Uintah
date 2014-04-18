@@ -108,7 +108,7 @@
     <TransportEquation equation="generic">
       <SolutionVariable>rhof</SolutionVariable>
       <PrimitiveVariable>f</PrimitiveVariable>
-      <DiffusiveFluxExpression direction="X" coefficient="1.0e-4"/>
+      <DiffusiveFlux direction="X" coefficient="1.0e-4"/>
     </TransportEquation>
     <!-- Build an equation for the enthalpy -->
     <TransportEquation equation="enthalpy">

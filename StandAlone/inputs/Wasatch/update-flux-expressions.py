@@ -8,27 +8,27 @@ This script will convert the specification of Convective and Diffusive flux
 expressions into the newer, attribute-based format. The attribute based format
 is shorter and more concise.
 For example:
-      <ConvectiveFluxExpression>
+      <ConvectiveFlux>
         <Method>KOREN</Method> 
         <Direction>X</Direction>
         <AdvectiveVelocity>
             <NameTag name="u" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
+      </ConvectiveFlux>
 will be converted to
-      <ConvectiveFluxExpression direction="X" method="KOREN">
+      <ConvectiveFlux direction="X" method="KOREN">
         <AdvectiveVelocity>
             <NameTag name="u" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
+      </ConvectiveFlux>
 
 and
-	<DiffusiveFluxExpression>
+	<DiffusiveFlux>
 		<Direction>X</Direction>
 		<ConstantDiffusivity>0.1</ConstantDiffusivity>
-	</DiffusiveFluxExpression>
+	</DiffusiveFlux>
  will be converted to
- 	<DiffusiveFluxExpression direction="X" coefficient="0.1"/>
+ 	<DiffusiveFlux direction="X" coefficient="0.1"/>
 
 ***************
 USAGE:
@@ -104,7 +104,7 @@ def update_flux_expressions(fname):
     tree = et.parse(fname)
     root = tree.getroot()
               
-    for diffFlux in root.iter('DiffusiveFluxExpression'):
+    for diffFlux in root.iter('DiffusiveFlux'):
       dirBlock = diffFlux.find('Direction')
       if dirBlock is not None:
         mydir = dirBlock.text
@@ -123,9 +123,9 @@ def update_flux_expressions(fname):
         indent(parent,2)
         
     for temp in root.iter('temp'):
-      temp.tag = 'DiffusiveFluxExpression'
+      temp.tag = 'DiffusiveFlux'
     
-    for convFlux in root.iter('ConvectiveFluxExpression'):
+    for convFlux in root.iter('ConvectiveFlux'):
       dirBlock = convFlux.find('Direction')
       if dirBlock is not None:
         mydir = dirBlock.text

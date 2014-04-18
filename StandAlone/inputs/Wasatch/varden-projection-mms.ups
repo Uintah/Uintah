@@ -146,12 +146,12 @@
     <TransportEquation equation="generic">
       <SolutionVariable>rhof</SolutionVariable>
       <PrimitiveVariable>f</PrimitiveVariable>
-      <ConvectiveFluxExpression direction="X" method="CENTRAL">
+      <ConvectiveFlux direction="X" method="CENTRAL">
         <AdvectiveVelocity>
           <NameTag name="u" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
-      <DiffusiveFluxExpression direction="X" coefficient="0.0658"/>
+      </ConvectiveFlux>
+      <DiffusiveFlux direction="X" coefficient="0.0658"/>
     </TransportEquation>
     <FieldClipping tasklist="advance_solution">
       <FieldExpression type="SVOL" min="0.0" max="1.0">

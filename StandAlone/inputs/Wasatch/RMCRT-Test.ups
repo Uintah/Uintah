@@ -75,9 +75,9 @@
     <!-- Build a scalar transport equation -->
     <TransportEquation equation="generic">
       <SolutionVariable>mixture fraction</SolutionVariable>
-      <DiffusiveFluxExpression direction="X" coefficient="0.025"/>
-      <DiffusiveFluxExpression direction="Y" coefficient="0.025"/>
-      <DiffusiveFluxExpression direction="Z" coefficient="0.025"/>
+      <DiffusiveFlux direction="X" coefficient="0.025"/>
+      <DiffusiveFlux direction="Y" coefficient="0.025"/>
+      <DiffusiveFlux direction="Z" coefficient="0.025"/>
     </TransportEquation>
     </Wasatch>
 

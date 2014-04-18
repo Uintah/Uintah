@@ -250,24 +250,24 @@
     <!-- Build a cell-centered scalar transport equation -->
     <TransportEquation equation="generic">
       <SolutionVariable>phi-scalar</SolutionVariable>
-      <ConvectiveFluxExpression direction="X" method="UPWIND">
+      <ConvectiveFlux direction="X" method="UPWIND">
         <AdvectiveVelocity>
           <NameTag name="u" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
-      <ConvectiveFluxExpression direction="Y" method="UPWIND">
+      </ConvectiveFlux>
+      <ConvectiveFlux direction="Y" method="UPWIND">
         <AdvectiveVelocity>
           <NameTag name="v" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
-      <ConvectiveFluxExpression direction="Z" method="UPWIND">
+      </ConvectiveFlux>
+      <ConvectiveFlux direction="Z" method="UPWIND">
         <AdvectiveVelocity>
           <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
-      <DiffusiveFluxExpression direction="X" coefficient="0.0001"/>
-      <DiffusiveFluxExpression direction="Y" coefficient="0.0001"/>
-      <DiffusiveFluxExpression direction="Z" coefficient="0.0001"/>
+      </ConvectiveFlux>
+      <DiffusiveFlux direction="X" coefficient="0.0001"/>
+      <DiffusiveFlux direction="Y" coefficient="0.0001"/>
+      <DiffusiveFlux direction="Z" coefficient="0.0001"/>
     </TransportEquation>
     <!-- Set the initial condition expression for x-momentum -->
     <BasicExpression type="XVOL">

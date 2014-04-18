@@ -24,9 +24,9 @@
     <!-- Build a non-staggered scalar transport equation -->
     <TransportEquation equation="generic">
       <SolutionVariable>phi-scalar</SolutionVariable>
-      <DiffusiveFluxExpression direction="X" coefficient="0.1"/>
-      <DiffusiveFluxExpression direction="Y" coefficient="0.1"/>
-      <DiffusiveFluxExpression direction="Z" coefficient="0.1"/>
+      <DiffusiveFlux direction="X" coefficient="0.1"/>
+      <DiffusiveFlux direction="Y" coefficient="0.1"/>
+      <DiffusiveFlux direction="Z" coefficient="0.1"/>
     </TransportEquation>
     </Wasatch>
 

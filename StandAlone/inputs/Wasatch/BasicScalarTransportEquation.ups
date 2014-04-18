@@ -40,20 +40,16 @@
         gaussian function of the scalar.
       -->
     <TransportEquation equation="generic">
-      <SolutionVariable>phi1</SolutionVariable>
-      <DiffusiveFluxExpression direction="X">
+      <SolutionVariable>phi1</SolutionVariable>      
+      <DiffusiveFlux direction="XY">
         <DiffusionCoefficient>
           <NameTag name="phi1-diffcoef" state="STATE_NONE"/>
         </DiffusionCoefficient>
-      </DiffusiveFluxExpression>
-      <DiffusiveFluxExpression direction="Y">
-        <DiffusionCoefficient>
-          <NameTag name="phi1-diffcoef" state="STATE_NONE"/>
-        </DiffusionCoefficient>
-      </DiffusiveFluxExpression>
+      </DiffusiveFlux>
       <!-- here we use a constant diffusivity in the z-direction. this is an anisotropic diffusion coefficient... -->
-      <DiffusiveFluxExpression direction="Z" coefficient="0.3"/>
+      <DiffusiveFlux direction="Z" coefficient="0.3"/>
     </TransportEquation>
+    
     <!-- Set the initial condition for phi2 -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
@@ -65,9 +61,9 @@
 
     <TransportEquation equation="generic">
       <SolutionVariable>phi2</SolutionVariable>
-      <DiffusiveFluxExpression direction="X" coefficient="0.1"/>
-      <DiffusiveFluxExpression direction="Y" coefficient="0.2"/>
-      <DiffusiveFluxExpression direction="Z" coefficient="0.3"/>
+      <DiffusiveFlux direction="X" coefficient="0.1"/>
+      <DiffusiveFlux direction="Y" coefficient="0.2"/>
+      <DiffusiveFlux direction="Z" coefficient="0.3"/>
     </TransportEquation>
     <!-- Set the initial condition for phi3 -->
     <BasicExpression type="SVOL">
@@ -80,9 +76,9 @@
 
     <TransportEquation equation="generic">
       <SolutionVariable>phi3</SolutionVariable>
-      <DiffusiveFluxExpression direction="X" coefficient="0.1"/>
-      <DiffusiveFluxExpression direction="Y" coefficient="0.2"/>
-      <DiffusiveFluxExpression direction="Z" coefficient="0.3"/>
+      <DiffusiveFlux direction="X" coefficient="0.1"/>
+      <DiffusiveFlux direction="Y" coefficient="0.2"/>
+      <DiffusiveFlux direction="Z" coefficient="0.3"/>
     </TransportEquation>
     <!-- Set the initial condition for phi4 -->
     <BasicExpression type="SVOL">
@@ -106,7 +102,7 @@
       <SourceTermExpression>
         <NameTag name="phi4 source term" state="STATE_NONE"/>
       </SourceTermExpression>
-      <DiffusiveFluxExpression direction="X" coefficient="0.1"/>
+      <DiffusiveFlux direction="X" coefficient="0.1"/>
     </TransportEquation>
     </Wasatch>
 

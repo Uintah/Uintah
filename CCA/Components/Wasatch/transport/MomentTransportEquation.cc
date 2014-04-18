@@ -491,9 +491,9 @@ namespace Wasatch {
   MomentTransportEquation<FieldT>::setup_diffusive_flux( FieldTagInfo& info )
   {
     Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
-    for( Uintah::ProblemSpecP diffFluxParams=params_->findBlock("DiffusiveFluxExpression");
+    for( Uintah::ProblemSpecP diffFluxParams=params_->findBlock("DiffusiveFlux");
         diffFluxParams != 0;
-        diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFluxExpression") )
+        diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") )
     {
       const Expr::Tag turbDiffTag = Expr::Tag();
       setup_diffusive_velocity_expression<FieldT>( diffFluxParams, solnVarTag_, turbDiffTag, factory, info );
@@ -507,9 +507,9 @@ namespace Wasatch {
   MomentTransportEquation<FieldT>::setup_convective_flux( FieldTagInfo& info )
   {
     Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
-    for( Uintah::ProblemSpecP convFluxParams=params_->findBlock("ConvectiveFluxExpression");
+    for( Uintah::ProblemSpecP convFluxParams=params_->findBlock("ConvectiveFlux");
          convFluxParams != 0;
-         convFluxParams=convFluxParams->findNextBlock("ConvectiveFluxExpression") )
+         convFluxParams=convFluxParams->findNextBlock("ConvectiveFlux") )
     {
        setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag_, "", factory, info );
      }

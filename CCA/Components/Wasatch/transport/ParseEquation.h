@@ -211,7 +211,7 @@ namespace Wasatch{
   /**
    * \brief Register diffusive flux calculation, \f$J_\phi = -\rho \Gamma_\phi \nabla \phi\f$,
    *        for the scalar quantity \f$ \phi \f$.
-   * \param convFluxParams Parser block "DiffusiveFluxExpression"
+   * \param convFluxParams Parser block "DiffusiveFlux"
    * \param solnVarTag the solution variable to be advected (\f$ \phi \f$).
    * \param volFracTag volume fraction tag - okay if empty for no volume fraction specification
    * \param suffix a string containing the "_*" suffix or not, according to wether we 
@@ -259,7 +259,7 @@ namespace Wasatch{
 
   /**
    * \brief Register convective flux calculation for the given scalar quantity
-   * \param convFluxParams Parser block "ConvectiveFluxExpression"
+   * \param convFluxParams Parser block "ConvectiveFlux"
    * \param solnVarTag the solution variable to be advected
    * \param suffix a string containing the "_*" suffix or not, according to wether we 
    *        want to calculate the convection term at time step "n+1" or the current time step 

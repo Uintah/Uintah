@@ -41,13 +41,13 @@
     <!-- Build a scalar transport equation -->
     <TransportEquation equation="generic">
       <SolutionVariable>mixture fraction</SolutionVariable>
-      <DiffusiveFluxExpression direction="X">
+      <DiffusiveFlux direction="X">
         <DiffusionCoefficient>
           <NameTag name="thermal conductivity" state="STATE_NONE"/>
         </DiffusionCoefficient>
-      </DiffusiveFluxExpression>
-      <DiffusiveFluxExpression direction="Y" coefficient="2.0"/>
-      <DiffusiveFluxExpression direction="Z" coefficient="3.0"/>
+      </DiffusiveFlux>
+      <DiffusiveFlux direction="Y" coefficient="2.0"/>
+      <DiffusiveFlux direction="Z" coefficient="3.0"/>
     </TransportEquation>
     </Wasatch>
 

@@ -67,11 +67,11 @@
 
       <SolutionVariable>phi0-scalar</SolutionVariable>
       
-      <ConvectiveFluxExpression direction="X" method="SUPERBEE">
+      <ConvectiveFlux direction="X" method="SUPERBEE">
         <AdvectiveVelocity>
             <NameTag name="u" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
+      </ConvectiveFlux>
     
     </TransportEquation>
     
@@ -80,11 +80,11 @@
 
       <SolutionVariable>phi1-scalar</SolutionVariable>
       
-      <ConvectiveFluxExpression direction="Y" method="SUPERBEE">
+      <ConvectiveFlux direction="Y" method="SUPERBEE">
         <AdvectiveVelocity>
             <NameTag name="v" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
+      </ConvectiveFlux>
       
     </TransportEquation>
 
@@ -93,11 +93,11 @@
 
       <SolutionVariable>phi2-scalar</SolutionVariable>
 
-      <ConvectiveFluxExpression direction="Z" method="SUPERBEE">
+      <ConvectiveFlux direction="Z" method="SUPERBEE">
         <AdvectiveVelocity>
             <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
+      </ConvectiveFlux>
 
     </TransportEquation>
 
