@@ -38,7 +38,7 @@
 #define Geometry_Point_h 1
 
 #include <Core/Math/MinMax.h>
-#include <Core/Geometry/share.h>
+
 #include <float.h>
 
 #include   <string>
@@ -56,11 +56,11 @@ class Point {
 public:
   inline explicit Point(const Vector& v);
   inline Point(double x, double y, double z): x_(x), y_(y), z_(z) {}
-  SCISHARE Point(double, double, double, double);
+  Point(double, double, double, double);
   inline Point(const Point&);
   inline Point();
-  SCISHARE int operator==(const Point&) const;
-  SCISHARE int operator!=(const Point&) const;
+  int operator==(const Point&) const;
+  int operator!=(const Point&) const;
   inline Point& operator=(const Point&);
   inline Vector operator+(const Point&) const;
   inline Vector operator-(const Point&) const;
@@ -89,7 +89,7 @@ public:
   inline Vector &asVector() const;
   inline Vector toVector() const;
 
-  SCISHARE std::string get_string() const;
+  std::string get_string() const;
 
   //! support dynamic compilation
   static const std::string& get_h_file_path();
@@ -101,44 +101,44 @@ public:
   //    friend inline double Dot(const Point&, const Vector&);
   friend inline Point Min(const Point&, const Point&);
   friend inline Point Max(const Point&, const Point&);
-  SCISHARE friend Point Interpolate(const Point&, const Point&, double);
-  SCISHARE friend Point AffineCombination(const Point&, double,
+  friend Point Interpolate(const Point&, const Point&, double);
+  friend Point AffineCombination(const Point&, double,
 					      const Point&, double,
 					      const Point&, double,
 					      const Point&, double);
-  SCISHARE friend Point AffineCombination(const Point&, double,
+  friend Point AffineCombination(const Point&, double,
 					      const Point&, double,
 					      const Point&, double);
-  SCISHARE friend Point AffineCombination(const Point&, double,
+  friend Point AffineCombination(const Point&, double,
 					      const Point&, double);
-  SCISHARE friend void Pio( Piostream&, Point& );
+  friend void Pio( Piostream&, Point& );
 
 
 
   // is one point within a small interval of another?
 
-  SCISHARE int Overlap( double a, double b, double e );
-  SCISHARE int InInterval( Point a, double epsilon );
+  int Overlap( double a, double b, double e );
+  int InInterval( Point a, double epsilon );
     
-  SCISHARE static void test_rigorous(RigorousTest* __test);
+  static void test_rigorous(RigorousTest* __test);
 
-  SCISHARE friend std::ostream& operator<<(std::ostream& os, const Point& p);
-  SCISHARE friend std::istream& operator>>(std::istream& os, Point& p);
+  friend std::ostream& operator<<(std::ostream& os, const Point& p);
+  friend std::istream& operator>>(std::istream& os, Point& p);
 
 }; // end class Point
 
 
 // Actual declarations of these functions as 'friend' above doesn't
 // (depending on the compiler) actually declare them.
-SCISHARE Point Interpolate(const Point&, const Point&, double);
-SCISHARE Point AffineCombination(const Point&, double, const Point&, double,
+Point Interpolate(const Point&, const Point&, double);
+Point AffineCombination(const Point&, double, const Point&, double,
                                  const Point&, double, const Point&, double);
-SCISHARE Point AffineCombination(const Point&, double, const Point&, double, const Point&, double);
-SCISHARE Point AffineCombination(const Point&, double, const Point&, double);
-SCISHARE void Pio( Piostream&, Point& );
+Point AffineCombination(const Point&, double, const Point&, double, const Point&, double);
+Point AffineCombination(const Point&, double, const Point&, double);
+void Pio( Piostream&, Point& );
 
-SCISHARE std::ostream& operator<<(std::ostream& os, const Point& p);
-SCISHARE std::istream& operator>>(std::istream& os, Point& p);
+std::ostream& operator<<(std::ostream& os, const Point& p);
+std::istream& operator>>(std::istream& os, Point& p);
 
 inline 
 Point operator*(double d, const Point &p) {
@@ -331,7 +331,7 @@ inline double Dot(const Point& p1, const Point& p2)
   return p1.x_*p2.x_ + p1.y_*p2.y_ + p1.z_*p2.z_;
 }
 
-SCISHARE const TypeDescription* get_type_description(Point*);
+const TypeDescription* get_type_description(Point*);
 
 } // End namespace SCIRun
 
