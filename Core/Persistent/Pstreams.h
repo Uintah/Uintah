@@ -44,11 +44,10 @@
 
 #include <iosfwd>
 
-#include <Core/Persistent/share.h>
 
 namespace SCIRun {
 
-class SCISHARE BinaryPiostream : public Piostream {
+class BinaryPiostream : public Piostream {
 protected:
   FILE* fp_;
 
@@ -84,7 +83,7 @@ public:
 };
 
 
-class SCISHARE BinarySwapPiostream : public BinaryPiostream {
+class BinarySwapPiostream : public BinaryPiostream {
 protected:
   virtual const char *endianness();
 private:
@@ -113,7 +112,7 @@ public:
 };
 
 
-class SCISHARE TextPiostream : public Piostream {
+class TextPiostream : public Piostream {
 private:
   std::istream* istr;
   std::ostream* ostr;
@@ -157,7 +156,7 @@ public:
 
 //! The Fast stream is binary, its results can only safely be used
 //! on the architecture where the file is generated.
-class SCISHARE FastPiostream : public Piostream {
+class FastPiostream : public Piostream {
 private:
   FILE* fp_;
 
