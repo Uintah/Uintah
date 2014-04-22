@@ -862,6 +862,7 @@ TIME_IMPL
 LARGESOS
 EXENAME
 NOPRINTDIR
+IS_BGQ
 ac_ct_CXX
 LONG_LONG_SWAP
 EGREP
@@ -873,7 +874,6 @@ IS_AIX
 IS_WIN
 DEF_OSX
 IS_OSX
-IS_BGQ
 DEF_MEMORY_INIT_NUMBER
 DEF_MEMORY_INIT
 host_os
@@ -4169,34 +4169,6 @@ $as_echo "$as_me: WARNING: !!!!!! This system is untested - You are on your own 
 esac
 
 
-## -- Begin Test for Bluegene Q --
-cat > conftest-bgq.cc <<EOF
-int
-main()
-{
-#ifdef __bgq__
-  return 0;
-#else
-  return 1;
-#endif
-}
-EOF
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if this is a BGQ system" >&5
-$as_echo_n "checking if this is a BGQ system... " >&6; }
-$CXX $CXXFLAGS conftest-bgq.cc -o conftest-bgq
-./conftest-bgq
-if test $? == 0; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-  IS_BGQ=yes
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-fi
-## -- End Test for Bluegene Q --
-
-
 
 
 
@@ -5959,8 +5931,6 @@ $as_echo "$as_me: WARNING: C compiler not specified with 'CC' environment variab
               Using default... $CC" >&2;}
 fi
 
-
-
 if test "$CXX" = ""; then
 
   case "$host" in
@@ -6235,6 +6205,40 @@ $as_echo "$as_me: WARNING: C++ compiler not specified with 'CXX' environment var
         ;;
   esac
 fi
+
+## -- Begin Test for Bluegene Q --
+
+cat > conftest-bgq.cc <<EOF
+#include <stdio.h>
+int
+main()
+{
+#ifdef __bgq__
+  return 0;
+#else
+  return 1;
+#endif
+}
+EOF
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if this is a BGQ system" >&5
+$as_echo_n "checking if this is a BGQ system... " >&6; }
+$CXX $CXXFLAGS conftest-bgq.cc -o conftest-bgq
+
+./conftest-bgq
+
+if test $? == 0; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+  IS_BGQ=yes
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+
+######### -- End Test for Bluegene Q --
 
 
 # Most fortran compilers need an "_" for C function names.
@@ -6595,13 +6599,12 @@ fi
 
 
 
-if test "$BUILD_ARCHES" = no -a "$BUILD_MODELS_RADIATION" = no; then
+if test \("$BUILD_ARCHES" = no -a "$BUILD_MODELS_RADIATION" = no\) -o \( "$with_fortran" = no \) ; then
   sci_required_fortran=no
 else
-  if test "$with_fortran" != no; then
-    sci_required_fortran=yes
-    if test "$F77" = ""; then
-      ac_ext=f
+  sci_required_fortran=yes
+  if test "$F77" = ""; then
+    ac_ext=f
 ac_compile='$F77 -c $FFLAGS conftest.$ac_ext >&5'
 ac_link='$F77 -o conftest$ac_exeext $FFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_f77_compiler_gnu
@@ -6812,13 +6815,13 @@ ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
-      if test "$F77" = ""; then
-        as_fn_error $? "Could not find a fortran compiler!  Please set the F77 environment variable to point to a fortran compiler." "$LINENO" 5
-      fi
-      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Fortran compiler not specified with 'F77' environment variable. Using default... $F77" >&5
+    if test "$F77" = ""; then
+      as_fn_error $? "Could not find a fortran compiler!  Please set the F77 environment variable to point to a fortran compiler." "$LINENO" 5
+    fi
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Fortran compiler not specified with 'F77' environment variable. Using default... $F77" >&5
 $as_echo "$as_me: WARNING: Fortran compiler not specified with 'F77' environment variable. Using default... $F77" >&2;}
-    else
-      if test ! -e "`type $F77 | sed 's%^.* /%/%'`"; then
+  else
+    if test ! -e "`type $F77 | sed 's%^.* /%/%'`"; then
 
 ## SCI_MSG_ERROR
 if test -z "$verbose"; then
@@ -6848,7 +6851,6 @@ fi
 
 as_fn_error $? "Could not find the specified Fortran compiler: '$F77' " "$LINENO" 5
 
-      fi
     fi
   fi
 fi
@@ -8694,7 +8696,7 @@ $as_echo "yes.  Mode: $CC_DEPEND_MODE.  Ext: $CC_DEPEND_EXT" >&6; }
 rm -f configure-test.*
 rm -rf configure-test-dir
 
-if test `basename "$F77"` = "pgf77"; then
+if test "`basename "$F77"`" = "pgf77"; then
   F77_DEPEND_REGEN=-Mcpp=mm
   F77_DEPEND_MODE=stdout
   F77_DEPEND_EXT=d
@@ -24720,11 +24722,16 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 # Clean up all the fortran flags that don't have individual without-fortran guards on them...
+#
 if test "$with_fortran" = no; then
-  FFLAGS="fortran_disabled";
-  extra_fflags="fortran_disabled";
-  FORTRAN_UNDERSCORE="// FORTRAN_UNDERSCORE => fortran_disabled";
-  DEF_FORTRAN_UNDERSCORE="// DEF_FORTRAN_UNDERSCORE => fortran_disabled";
+
+  FFLAGS="fortran_disabled"
+  extra_fflags="fortran_disabled"
+  FORTRAN_UNDERSCORE="// FORTRAN_UNDERSCORE not set. Fortran is disabled..."
+
+  DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_END /* Fortran disabled, but need for sci_lapack.cc. */"
+  msg="Though Fortran is not being used, assuming FORTRAN_UNDERSCORE=end for Core/Math/sci_lapack.cc..."
+  add_important_warning "$msg"
 fi
 
 ##  --  Electric Fence  -------------------------------------
