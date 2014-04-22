@@ -731,36 +731,11 @@ case $host in
     ;;
 esac
 
-
-## -- Begin Test for Bluegene Q --
-cat > conftest-bgq.cc <<EOF
-int
-main()
-{
-#ifdef __bgq__
-  return 0;
-#else
-  return 1;
-#endif
-}
-EOF
-
-AC_MSG_CHECKING(if this is a BGQ system)
-$CXX $CXXFLAGS conftest-bgq.cc -o conftest-bgq
-./conftest-bgq
-if test $? == 0; then
-  AC_MSG_RESULT(yes)
-  IS_BGQ=yes
-else
-  AC_MSG_RESULT(yes)
-fi
-## -- End Test for Bluegene Q --
-
-AC_SUBST(IS_BGQ)
 AC_SUBST(IS_OSX)
 AC_SUBST(DEF_OSX)
 AC_SUBST(IS_WIN)
 AC_SUBST(IS_AIX)
+
 sci_defs_files="$sci_defs_files include/sci_defs/osx_testdefs.h"
 
 AC_MSG_CHECKING(physical processor count)
@@ -852,8 +827,6 @@ if test "$CC" = ""; then
               Using default... $CC)
 fi
 
-
-
 if test "$CXX" = ""; then
 
   case "$host" in 
@@ -870,6 +843,37 @@ if test "$CXX" = ""; then
         ;;
   esac
 fi
+
+## -- Begin Test for Bluegene Q --
+
+cat > conftest-bgq.cc <<EOF
+#include <stdio.h>
+int
+main()
+{
+#ifdef __bgq__
+  return 0;
+#else
+  return 1;
+#endif
+}
+EOF
+
+AC_MSG_CHECKING(if this is a BGQ system)
+$CXX $CXXFLAGS conftest-bgq.cc -o conftest-bgq
+
+./conftest-bgq
+
+if test $? == 0; then
+  AC_MSG_RESULT(yes)
+  IS_BGQ=yes
+else
+  AC_MSG_RESULT(no)
+fi
+
+AC_SUBST(IS_BGQ)
+
+######### -- End Test for Bluegene Q --
 
 
 # Most fortran compilers need an "_" for C function names.
@@ -1134,21 +1138,19 @@ AC_SUBST(DEF_MODELS_RADIATION)
 AC_SUBST(DEF_WASATCH)
 AC_SUBST(NO_FORTRAN)
 
-if test "$BUILD_ARCHES" = no -a "$BUILD_MODELS_RADIATION" = no; then
+if test \("$BUILD_ARCHES" = no -a "$BUILD_MODELS_RADIATION" = no\) -o \( "$with_fortran" = no \) ; then
   sci_required_fortran=no
 else
-  if test "$with_fortran" != no; then
-    sci_required_fortran=yes
+  sci_required_fortran=yes
+  if test "$F77" = ""; then
+    AC_PROG_F77()
     if test "$F77" = ""; then
-      AC_PROG_F77()
-      if test "$F77" = ""; then
-        AC_MSG_ERROR(Could not find a fortran compiler!  Please set the F77 environment variable to point to a fortran compiler.)
-      fi
-      AC_MSG_WARN(Fortran compiler not specified with 'F77' environment variable. Using default... $F77)
-    else
-      if test ! -e "`type $F77 | sed 's%^.* /%/%'`"; then
-        SCI_MSG_ERROR(Could not find the specified Fortran compiler: '$F77' )
-      fi
+      AC_MSG_ERROR(Could not find a fortran compiler!  Please set the F77 environment variable to point to a fortran compiler.)
+    fi
+    AC_MSG_WARN(Fortran compiler not specified with 'F77' environment variable. Using default... $F77)
+  else
+    if test ! -e "`type $F77 | sed 's%^.* /%/%'`"; then
+      SCI_MSG_ERROR(Could not find the specified Fortran compiler: '$F77' )
     fi
   fi
 fi
@@ -1653,15 +1655,12 @@ case $host in
     fi
 
     if test "$CC" != "pgcc"; then
-      SCI_CHECK_VERSION($CC,--version,2.95.3,,
-        echo configure: error: wrong $CC version.; exit)
+      SCI_CHECK_VERSION($CC,--version,2.95.3,,echo configure: error: wrong $CC version.; exit)
 
       if test "$sci_required_fortran" = "yes"; then
-        SCI_CHECK_VERSION($F77,--version,0.5.25,,
-          echo configure: error: wrong $F77 version.; exit)
+        SCI_CHECK_VERSION($F77,--version,0.5.25,,echo configure: error: wrong $F77 version.; exit)
       fi
-      SCI_CHECK_VERSION($CXX,--version,2.95.3,,
-        echo configure: error: wrong $CXX version.; exit)
+      SCI_CHECK_VERSION($CXX,--version,2.95.3,,echo configure: error: wrong $CXX version.; exit)
     fi
     AC_PROG_CPP
     AC_PROG_CXXCPP
@@ -1860,7 +1859,7 @@ AC_MSG_RESULT(yes.  Mode: $CC_DEPEND_MODE.  Ext: $CC_DEPEND_EXT)
 rm -f configure-test.*
 rm -rf configure-test-dir
 
-if test `basename "$F77"` = "pgf77"; then
+if test "`basename "$F77"`" = "pgf77"; then
   F77_DEPEND_REGEN=-Mcpp=mm
   F77_DEPEND_MODE=stdout
   F77_DEPEND_EXT=d
@@ -2723,11 +2722,16 @@ MPI_EXTRA_LIB_DIR="$MPI_EXTRA_LIB_DIR $F_LIB_DIR_FLAG"
 AC_LANG(C)
 
 # Clean up all the fortran flags that don't have individual without-fortran guards on them...
+#
 if test "$with_fortran" = no; then 
-  FFLAGS="fortran_disabled";
-  extra_fflags="fortran_disabled";
-  FORTRAN_UNDERSCORE="// FORTRAN_UNDERSCORE => fortran_disabled";
-  DEF_FORTRAN_UNDERSCORE="// DEF_FORTRAN_UNDERSCORE => fortran_disabled";
+
+  FFLAGS="fortran_disabled"
+  extra_fflags="fortran_disabled"
+  FORTRAN_UNDERSCORE="// FORTRAN_UNDERSCORE not set. Fortran is disabled..."
+
+  DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_END /* Fortran disabled, but need for sci_lapack.cc. */"
+  msg="Though Fortran is not being used, assuming FORTRAN_UNDERSCORE=end for Core/Math/sci_lapack.cc..."
+  add_important_warning "$msg"
 fi
 
 ##  --  Electric Fence  -------------------------------------
