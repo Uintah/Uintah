@@ -1211,13 +1211,11 @@ DataArchiver::beginOutputTimestep( double time,
 //______________________________________________________________________
 //
 void
-DataArchiver::makeTimestepDirs(Dir& baseDir,
-                               vector<DataArchiver::SaveItem>&,
-                               const GridP& grid,
-                               string* pTimestepDir )
-{ 
-  
-
+DataArchiver::makeTimestepDirs(       Dir                            & baseDir,
+                                      vector<DataArchiver::SaveItem> & saveLabels ,
+                                const GridP                          & grid,
+                                      string                         * pTimestepDir /* passed back */ )
+{
   int numLevels = grid->numLevels();
   // time should be currentTime+delt
   
@@ -1238,29 +1236,71 @@ DataArchiver::makeTimestepDirs(Dir& baseDir,
   // So every rank should try to create dir.
   //if(d_writeMeta){
     Dir tdir;
-    try {
-      tdir = baseDir.createSubdir(tname.str());
- 
-    } catch(ErrnoException& e) {
-      if(e.getErrno() != EEXIST)
-        throw;
-      tdir = baseDir.getSubdir(tname.str());
+
+    bool done = false;
+    int  tries = 0;
+
+    while( !done ) {
+
+      try {
+        tries++;
+
+        if( tries > 500 ) {
+          cout << "Tries is " << tries << "\n";
+          throw InternalError( "DataArchiver::outputTimstep(): Unable to create timestep directory!", __FILE__, __LINE__ );
+        }
+
+        tdir = baseDir.createSubdir(tname.str());
+        done = true;
+      }
+      catch( ErrnoException & e ) {
+        if( e.getErrno() == EEXIST ) {
+          done = true;
+          tdir = baseDir.getSubdir( tname.str() );
+        }
+      }
+    }
+
+    if( tries > 1 ) {
+      cout << d_myworld->myrank() << " - tries: " << tries << "\n";
     }
     
     // Create the directory for this level, if necessary
-    for(int l=0;l<numLevels;l++){
+
+    for( int l = 0; l < numLevels; l++ ) {
+
+      tries = 0;
       ostringstream lname;
       lname << "l" << l;
       Dir ldir;
-      try {
-        ldir = tdir.createSubdir(lname.str());
-      } catch(ErrnoException& e) {
-        if(e.getErrno() != EEXIST)
-          throw;
-        ldir = tdir.getSubdir(lname.str());
+      
+      done = false;
+      while( !done ) {
+
+        try {
+          tries++;
+
+          if( tries > 500 ) {
+            cout << "2) Tries is " << tries << "\n";
+            throw InternalError( "DataArchiver::outputTimstep(): 2) Unable to create timestep directory!", __FILE__, __LINE__ );
+          }
+          
+          ldir = tdir.createSubdir( lname.str() );
+          done = true;
+        }
+        catch( ErrnoException & e ) {
+          if( e.getErrno() == EEXIST ) {
+            done = true;
+            ldir = tdir.getSubdir( lname.str() );
+          }
+        }
       }
-    }
-  //}
+      if( tries > 1 ) {
+        cout << d_myworld->myrank() << ": " << l << " - tries: " << tries << "\n";
+      }
+
+    } // end for( int l = 0 )
+//}
 }
 
 
