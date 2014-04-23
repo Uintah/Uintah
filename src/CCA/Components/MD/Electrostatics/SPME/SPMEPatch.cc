@@ -39,10 +39,12 @@ SPMEPatch::SPMEPatch()
 SPMEPatch::~SPMEPatch()
 {
   delete d_Q_patchLocal;
-  // FIXME - This delete causes "*** glibc detected *** free(): invalid pointer: 0x00007ff9e07c4018 ***"
-//  delete d_stressPrefactor;
 
-  if (d_theta) { delete d_theta; }
+  delete d_stressPrefactor;
+
+  if (d_theta) {
+    delete d_theta;
+  }
 
 //  for (int AtomTypeIndex=0; AtomTypeIndex < d_chargeMapVector.size(); ++AtomTypeIndex) {
 //    delete d_chargeMapVector[AtomTypeIndex];
@@ -65,7 +67,7 @@ SPMEPatch::SPMEPatch(IntVector extents,
 {
   d_Q_patchLocal        = scinew SimpleGrid<dblcomplex>(extents, offset, IV_ZERO, splineSupport);
   d_stressPrefactor     = scinew SimpleGrid<Matrix3>(extents, offset, IV_ZERO, 0);
-  d_theta                      = scinew SimpleGrid<double>(extents, offset, IV_ZERO, 0);
+  d_theta               = scinew SimpleGrid<double>(extents, offset, IV_ZERO, 0);
 
   // Pre-allocate memory for charge maps.
   size_t numAtomTypes = system->getNumAtomTypes();
