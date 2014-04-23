@@ -68,11 +68,11 @@ namespace Uintah {
        * @param
        * @return
        */
-      SPMEMapPoint(particleIndex particleID,
-                   IntVector gridOffset,
-                   SimpleGrid<double> chargeGrid,
-                   SimpleGrid<SCIRun::Vector> forceGrid,
-                   SimpleGrid<Matrix3> dipoleForceGrid);
+      SPMEMapPoint(const particleIndex&,
+                                  const IntVector&,
+                                  const SimpleGrid<double>&,
+                                  const SimpleGrid<SCIRun::Vector>&,
+                                  const SimpleGrid<Matrix3>&);
 
       /**
        * @brief

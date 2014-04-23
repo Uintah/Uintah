@@ -51,7 +51,7 @@ namespace Uintah {
                             const int numGhostCells) :
       d_internalExtents(extents), d_gridOffset(offset), d_internalOrigin(origin), d_numGhostCells(numGhostCells)
   {
-    d_values.resize(extents.x()+numGhostCells, extents.y()+numGhostCells, extents.z()+numGhostCells);
+    d_values.resize(d_internalExtents.x()+d_numGhostCells, d_internalExtents.y()+d_numGhostCells, d_internalExtents.z()+d_numGhostCells);
   }
 
   template<typename T>

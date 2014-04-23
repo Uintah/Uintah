@@ -46,6 +46,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <sstream>
 
 #include <CCA/Components/MD/MD.h>
 #include <CCA/Components/MD/Electrostatics/ElectrostaticsFactory.h>
@@ -507,6 +508,25 @@ void MD::initialize(const ProcessorGroup* pg,
 
   // Input coordinates from problem spec
   atomMap* parsedCoordinates = atomFactory::create(d_problemSpec, d_sharedState);
+  size_t numTypesParsed = parsedCoordinates->getNumberAtomTypes();
+  size_t numMaterialTypes = d_system->getNumAtomTypes();
+
+  if (numTypesParsed != numMaterialTypes) {
+    std::stringstream errorOut;
+    errorOut << " ERROR:  Expected to find " << numMaterialTypes << " types of materials in the coordinate file." << std::endl;
+    errorOut << "     However, the coordinate file only parsed " << numTypesParsed << std::endl;
+    throw ProblemSetupException(errorOut.str(), __FILE__, __LINE__);
+  }
+
+  for (size_t matlIndex = 0; matlIndex < numMaterialTypes; ++matlIndex) {
+    std::string materialLabel = d_sharedState->getMDMaterial(matlIndex)->getMaterialLabel();
+
+    std::vector<atomData*>* currAtomList = parsedCoordinates->getAtomList(materialLabel);
+    size_t numAtoms = currAtomList->size();
+
+    d_system->registerAtomCount(numAtoms,matlIndex);
+
+  }
 
   std::cerr << "Constructed particle map in MD::initialize" << std::endl;
   SCIRun::Vector VectorZero(0.0, 0.0, 0.0);

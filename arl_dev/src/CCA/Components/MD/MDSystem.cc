@@ -205,6 +205,7 @@ namespace Uintah {
 
     d_boxChanged = true;
     d_cellVolume = 0.0;
+    d_numAtoms=0;
     calcCellVolume();
   }
 

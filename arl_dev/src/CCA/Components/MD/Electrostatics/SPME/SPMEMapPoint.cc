@@ -37,13 +37,28 @@ SPMEMapPoint::~SPMEMapPoint()
 
 }
 
-SPMEMapPoint::SPMEMapPoint(particleIndex _particleID,
-                           IntVector _gridOffset,
-                           SimpleGrid<double> _chargeGrid,
-                           SimpleGrid<SCIRun::Vector> _forceGrid,
-                           SimpleGrid<Matrix3> _polarizableGrid) :
-    d_particleID(_particleID), d_gridOffset(_gridOffset), d_chargeGrid(_chargeGrid), d_forceGrid(_forceGrid),
-    d_polarizableForceGrid(_polarizableGrid)
+SPMEMapPoint::SPMEMapPoint(const particleIndex& _particleID,
+                                                          const IntVector& _gridOffset,
+                                                          const SimpleGrid<double>& _chargeGrid,
+                                                          const SimpleGrid<SCIRun::Vector>& _forceGrid,
+                                                          const SimpleGrid<Matrix3>& _polarizableGrid)
+                                                         :d_particleID(_particleID),
+                                                          d_gridOffset(_gridOffset),
+                                                          d_chargeGrid(_chargeGrid),
+                                                          d_forceGrid(_forceGrid),
+                                                          d_polarizableForceGrid(_polarizableGrid)
 {
 
 }
+
+
+//SPMEMapPoint::SPMEMapPoint(particleIndex _particleID,
+//                           IntVector _gridOffset,
+//                           SimpleGrid<double> _chargeGrid,
+//                           SimpleGrid<SCIRun::Vector> _forceGrid,
+//                           SimpleGrid<Matrix3> _polarizableGrid) :
+//    d_particleID(_particleID), d_gridOffset(_gridOffset), d_chargeGrid(_chargeGrid), d_forceGrid(_forceGrid),
+//    d_polarizableForceGrid(_polarizableGrid)
+//{
+//
+//}

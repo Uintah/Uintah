@@ -63,11 +63,52 @@ SPMEPatch::SPMEPatch(IntVector extents,
       d_negGhostExtents(minusGhostExtents),
       d_patch(patch)
 {
-  d_Q_patchLocal    = scinew SimpleGrid<dblcomplex>(extents, offset, IV_ZERO, splineSupport);
-  d_stressPrefactor = scinew SimpleGrid<Matrix3>(extents, offset, IV_ZERO, 0);
-  d_theta           = scinew SimpleGrid<double>(extents, offset, IV_ZERO, 0);
+  d_Q_patchLocal        = scinew SimpleGrid<dblcomplex>(extents, offset, IV_ZERO, splineSupport);
+  d_stressPrefactor     = scinew SimpleGrid<Matrix3>(extents, offset, IV_ZERO, 0);
+  d_theta                      = scinew SimpleGrid<double>(extents, offset, IV_ZERO, 0);
 
   // Pre-allocate memory for charge maps.
+  size_t numAtomTypes = system->getNumAtomTypes();
+  const int estimatedMaximumMultiplier = 2;
+  const IntVector IV_FLAG(-1,-1,-1);
+  const IntVector IV_SPLINE(splineSupport,splineSupport,splineSupport);
+  SimpleGrid<double> sg_doubleNull(IV_SPLINE, IV_FLAG, IV_FLAG, 0);
+   sg_doubleNull.fill(0.0);
+   SimpleGrid<SCIRun::Vector> sg_VectorNull(IV_SPLINE, IV_FLAG, IV_FLAG, 0);
+   sg_VectorNull.fill(Vector(0.0, 0.0, 0.0));
+   SimpleGrid<Matrix3> sg_Matrix3Null(IV_SPLINE, IV_FLAG, IV_FLAG, 0);
+   sg_Matrix3Null.fill(Matrix3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+   SPMEMapPoint nullMap(-1, IV_FLAG, sg_doubleNull, sg_VectorNull, sg_Matrix3Null);
+
+   Uintah::Matrix3 m3ZERO = Uintah::Matrix3(0.0,0.0,0.0,  0.0,0.0,0.0,  0.0,0.0,0.0);
+   {
+   // Test 1
+//   SimpleGrid<double> doubleCopy(sg_doubleNull);
+//   // Test 2
+//   SimpleGrid<SCIRun::Vector> VectorCopy(sg_VectorNull);
+//   // Test 3
+//   SimpleGrid<Matrix3> Matrix3Copy(sg_Matrix3Null);
+//   // Test 4 for crashing of SimpleGrid vs. crashing of Matrix3
+//   std::vector<SimpleGrid<double> > vSGDouble(10,sg_doubleNull);
+//   // Test 5
+//   std::vector<SimpleGrid<SCIRun::Vector> > vSGVector(10,sg_VectorNull);
+     // Test 6.1
+     std::vector<Uintah::Matrix3> vMatrix3(10, m3ZERO );
+     // Test 6.2
+     LinearArray3<Uintah::Matrix3> laMatrix3(2,2,2, m3ZERO );
+   // Test 6
+//   std::vector<SimpleGrid<Uintah::Matrix3> > vSGMatrix(10,sg_Matrix3Null);
+   }
+
+
+  d_chargeMapVector = std::vector< std::vector<SPMEMapPoint> >(numAtomTypes);
+  for (size_t AtomType = 0; AtomType < numAtomTypes; ++AtomType) {
+    // Initial buffer is 2*relative fraction patch comprises of entire system*total number of atoms of type
+    size_t totalNumberOfType = system->getNumAtomsOfType(AtomType);
+    size_t numberBuffered = totalNumberOfType * estimatedMaximumMultiplier * patchVolumeFraction;
+    d_chargeMapVector[AtomType] = std::vector<SPMEMapPoint> (numberBuffered, nullMap);
+  }
+
   /*
    * --------------------------------------------------------------------------
    * Reserve charge-map memory for each patch/material set
@@ -96,29 +137,23 @@ SPMEPatch::SPMEPatch(IntVector extents,
    * systems.
    */
 
-  const IntVector IV_FLAG(-1,-1,-1);
-  const IntVector IV_SPLINE(splineSupport,splineSupport,splineSupport);
-  const int estimatedMaximumMultiplier = 2;
-  size_t numAtomTypes = system->getNumAtomTypes();
-  // FIXME 04/11/14
-  d_chargeMapVector = std::vector<std::vector<SPMEMapPoint> >(numAtomTypes);
-  SimpleGrid<double> sg_doubleNull(IV_SPLINE, IV_FLAG, IV_FLAG, 0);
-  sg_doubleNull.fill(0.0);
-  SimpleGrid<Vector> sg_VectorNull(IV_SPLINE, IV_FLAG, IV_FLAG, 0);
-  sg_VectorNull.fill(Vector(0.0, 0.0, 0.0));
-  SimpleGrid<Matrix3> sg_Matrix3Null(IV_SPLINE, IV_FLAG, IV_FLAG, 0);
-  sg_Matrix3Null.fill(Matrix3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+//  // FIXME TODO All of this crap can be removed if we simply make a particle variable for the SPME Map Point
+//  const int estimatedMaximumMultiplier = 2;
+//  size_t numAtomTypes = system->getNumAtomTypes();
+//  // FIXME 04/11/14
+//  d_chargeMapVector = std::vector<std::vector<SPMEMapPoint> >(numAtomTypes);
+//
+//  for (size_t AtomType = 0; AtomType < numAtomTypes; ++AtomType) {
+//    size_t totalNumberOfType = system->getNumAtomsOfType(AtomType);
+//    size_t numberBuffered = totalNumberOfType * estimatedMaximumMultiplier * patchVolumeFraction;
+//    for (size_t mapIndex = 0; mapIndex < numberBuffered; ++mapIndex) {
+//      // Instantiate a null map point to reserve the appropriate memory
+//      SPMEMapPoint tempMapPoint(-1, IV_FLAG, sg_doubleNull, sg_VectorNull, sg_Matrix3Null);
+//      // And build vector directly
+//      d_chargeMapVector[AtomType].push_back(tempMapPoint);
+//    }
+//  }
 
-  for (size_t AtomType = 0; AtomType < numAtomTypes; ++AtomType) {
-    size_t totalNumberOfType = system->getNumAtomsOfType(AtomType);
-    size_t numberBuffered = totalNumberOfType * estimatedMaximumMultiplier * patchVolumeFraction;
-    for (size_t mapIndex = 0; mapIndex < numberBuffered; ++mapIndex) {
-      // Instantiate a null map point to reserve the appropriate memory
-      SPMEMapPoint tempMapPoint(-1, IV_FLAG, sg_doubleNull, sg_VectorNull, sg_Matrix3Null);
-      // And build vector directly
-      d_chargeMapVector[AtomType].push_back(tempMapPoint);
-    }
-  }
 ////  const int estimatedMaximumMultiplier = 2;
 //  size_t numAtomTypes = system->getNumAtomTypes();
 //  d_chargeMapVector.resize(numAtomTypes);
@@ -145,7 +180,6 @@ void SPMEPatch::verifyChargeMapAllocation(const int dataSize, const int globalAt
   if (dataSize <= currentVectorSize) { return; }
   int newVectorSize = currentVectorSize * 2;
   while (dataSize > newVectorSize) { newVectorSize *= 2; }
-  std::vector<SPMEMapPoint> tempStorage(newVectorSize);
 
   // Pre-allocate memory for entire new vector
   IntVector currentMapPointExtents = ((d_chargeMapVector[globalAtomTypeIndex][0]).getChargeGrid()).getExtents();
@@ -156,11 +190,9 @@ void SPMEPatch::verifyChargeMapAllocation(const int dataSize, const int globalAt
   sg_VectorNull.fill(Vector(0.0, 0.0, 0.0));
   SimpleGrid<Matrix3> sg_Matrix3Null(currentMapPointExtents, IV_FLAG, IV_FLAG, 0);
   sg_Matrix3Null.fill(Matrix3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
-  for (size_t vectorIndex = 0; vectorIndex < newVectorSize; ++vectorIndex) {
-	  SPMEMapPoint tempMapPoint(-1,IV_FLAG,sg_doubleNull,sg_VectorNull,sg_Matrix3Null);
-      tempStorage[vectorIndex]=tempMapPoint;
-  }
-  d_chargeMapVector[globalAtomTypeIndex].swap(tempStorage);
+  SPMEMapPoint nullMap(-1, IV_FLAG, sg_doubleNull, sg_VectorNull, sg_Matrix3Null);
+
+  d_chargeMapVector[globalAtomTypeIndex].resize(newVectorSize,nullMap);
 
   return;
 }
