@@ -37,8 +37,8 @@
  *  \brief The GeometryBased expression provides a conveninent mechanism to set values on a field
  using geometry primities. This could be useful for setting complicated spatially varying conditions.
  */
-
-class GeometryBased : public Expr::Expression<SVolField>
+template< typename FieldT >
+class GeometryBased : public Expr::Expression<FieldT>
 {
 public:
   
@@ -56,6 +56,7 @@ public:
   
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
+  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
   
 private:
@@ -67,13 +68,20 @@ private:
   const SVolField* x_;
   const SVolField* y_;
   const SVolField* z_;
+  
+  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, FieldT >::type InpterpSrcT2DestT;
+  const InpterpSrcT2DestT* interpSrcT2DestTOp_;
+
+  void compute_volume_fraction(SVolField& volFrac);
 };
 
+//--------------------------------------------------------------------
 
-GeometryBased::
+template< typename FieldT >
+GeometryBased<FieldT>::
 GeometryBased( GeomValueMapT geomObjects,
                const double outsideValue)
-: Expr::Expression<SVolField>(),
+: Expr::Expression<FieldT>(),
 geomObjects_(geomObjects),
 outsideValue_(outsideValue),
 xTag_(Expr::Tag("XSVOL",Expr::STATE_NONE)),
@@ -83,8 +91,9 @@ zTag_(Expr::Tag("ZSVOL",Expr::STATE_NONE))
 
 //--------------------------------------------------------------------
 
+template< typename FieldT >
 void
-GeometryBased::
+GeometryBased<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( xTag_ );
@@ -94,8 +103,9 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
 
 //--------------------------------------------------------------------
 
+template< typename FieldT >
 void
-GeometryBased::
+GeometryBased<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
   const Expr::FieldMgrSelector<SVolField>::type& fm = fml.field_manager<SVolField>();
@@ -106,26 +116,35 @@ bind_fields( const Expr::FieldManagerList& fml )
 
 //--------------------------------------------------------------------
 
+template<typename FieldT >
 void
-GeometryBased::
-evaluate()
+GeometryBased<FieldT>::
+bind_operators( const SpatialOps::OperatorDatabase& opDB )
+{
+  interpSrcT2DestTOp_ = opDB.retrieve_operator<InpterpSrcT2DestT>();
+}
+
+//--------------------------------------------------------------------
+template<typename FieldT>
+void
+GeometryBased<FieldT>::
+compute_volume_fraction(SVolField& volFrac)
 {
   using namespace SpatialOps;
-  SVolField& result = this->value();
-  result <<= outsideValue_;
-  SVolField::iterator resultIter = result.begin();
+  volFrac <<= outsideValue_;
+  SVolField::iterator resultIter = volFrac.begin();
   
   GeomValueMapT::iterator geomIter;
-
+  
   int i = 0;
   int ix,iy,iz;
   double x,y,z;
   bool isInside = false;
   SpatialOps::structured::IntVec localCellIJK;
   
-  while ( resultIter != result.end() ) {
-    i = resultIter - result.begin();
-    localCellIJK  = result.window_with_ghost().ijk_index_from_local(i);
+  while ( resultIter != volFrac.end() ) {
+    i = resultIter - volFrac.begin();
+    localCellIJK  = volFrac.window_with_ghost().ijk_index_from_local(i);
     ix = x_->window_with_ghost().flat_index(localCellIJK);
     x = (*x_)[ix];
     iy = y_->window_with_ghost().flat_index(localCellIJK);
@@ -133,7 +152,7 @@ evaluate()
     iz = z_->window_with_ghost().flat_index(localCellIJK);
     z = (*z_)[iz];
     Uintah::Point p(x,y,z);
-
+    
     // loop over all geometry objects
     geomIter = geomObjects_.begin();
     
@@ -142,7 +161,7 @@ evaluate()
       if (isInside) *resultIter = geomIter->second;
       ++geomIter;
     }
-
+    
     isInside = false;
     ++resultIter;
   }
@@ -150,7 +169,39 @@ evaluate()
 
 //--------------------------------------------------------------------
 
-GeometryBased::Builder::
+template<>
+void
+GeometryBased<SVolField>::
+evaluate()
+{
+  using namespace SpatialOps;
+  SVolField& result = this->value();
+  compute_volume_fraction(result);
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+GeometryBased<FieldT>::
+evaluate()
+{
+  using namespace SpatialOps;
+  FieldT& result = this->value();
+  result <<= outsideValue_;
+
+  SpatFldPtr<SVolField> tmp = SpatialFieldStore::get<SVolField>( result );
+  SVolField& svolTmp = *tmp;
+  compute_volume_fraction(svolTmp);
+  
+  // interpolate to get area fractions
+  result <<= (*interpSrcT2DestTOp_)(svolTmp);
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+GeometryBased<FieldT>::Builder::
 Builder( const Expr::Tag& result,
         GeomValueMapT geomObjects,
         const double outsideValue)
@@ -161,11 +212,12 @@ outsideValue_(outsideValue)
 
 //--------------------------------------------------------------------
 
+template< typename FieldT >
 Expr::ExpressionBase*
-GeometryBased::Builder::
+GeometryBased<FieldT>::Builder::
 build() const
 {
-  return new GeometryBased( geomObjects_, outsideValue_ );
+  return new GeometryBased<FieldT>( geomObjects_, outsideValue_ );
 }
 
 
