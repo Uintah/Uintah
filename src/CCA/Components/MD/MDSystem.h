@@ -217,6 +217,16 @@ namespace Uintah {
 
       inline Forcefield* getForcefieldPointer() { return d_forcefield; };
 
+      inline size_t registerAtomCount(const size_t count, const size_t matlIndex) {
+        size_t numMatls = d_atomTypeList.size();
+        if (matlIndex < numMatls) {
+          d_atomTypeList[matlIndex] = count;
+          d_numAtoms += count;
+        };
+        return count;
+
+      }
+
     private:
 
       ensembleType d_ensemble;                // Variable holding the type of the simulation ensemble
