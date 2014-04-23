@@ -39,8 +39,6 @@
 
 #include <Core/Geometry/Point.h>
 
-#include <Core/Geometry/share.h>
-
 #include   <ostream>
 
 // some compilers define the min and max macro, and the BBox::min/max will get confused.
@@ -56,10 +54,10 @@ namespace SCIRun {
   class Vector;
   class Piostream;
 
-  class SCISHARE BBox {
+  class BBox {
     
   protected:
-    SCISHARE friend void Pio( Piostream &, BBox& );
+    friend void Pio( Piostream &, BBox& );
 
   public:
     BBox();

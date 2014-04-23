@@ -38,7 +38,7 @@
     <filebase>rmcrt-burns-christon.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.01"/>
+    <checkpoint cycle="2" interval="0.01"/>
     <compression>gzip</compression>
     <save label="AbsCoef"/>
     <save label="Temperature"/>    
@@ -52,69 +52,69 @@
   <Grid>
   
       <BoundaryConditions>
-      <Face side = "x-">
-        <BCType id = "0"   label = "Temperature"     var = "Dirichlet"> 
+      <Face side="x-">
+        <BCType id="0" label="Temperature" var="Dirichlet"> 
                             <value> 0. </value> 
         </BCType> 
-        <BCType id = "0"   label = "AbsCoef"     var = "Dirichlet">
+        <BCType id="0" label="AbsCoef" var="Dirichlet">
                             <value> 1. </value>
         </BCType>
-        <BCType id = "0"   label = "CellType"   var = "Dirichlet" type = "int">
+        <BCType id="0" label="CellType" var="Dirichlet" type="int">
                            <value> 8 </value>
         </BCType>
       </Face>
-      <Face side = "x+">
-        <BCType id = "0"   label = "Temperature"     var = "Dirichlet">
+      <Face side="x+">
+        <BCType id="0" label="Temperature" var="Dirichlet">
                            <value> 0. </value>                
         </BCType>
-        <BCType id = "0"   label = "AbsCoef"     var = "Dirichlet">
+        <BCType id="0" label="AbsCoef" var="Dirichlet">
                            <value> 1. </value>
         </BCType>
-        <BCType id = "0"   label = "CellType"   var = "Dirichlet" type = "int">
+        <BCType id="0" label="CellType" var="Dirichlet" type="int">
                            <value> 8 </value>
         </BCType>
       </Face>
-      <Face side = "y-">
-        <BCType id = "0"   label = "Temperature"     var = "Dirichlet">
+      <Face side="y-">
+        <BCType id="0" label="Temperature" var="Dirichlet">
                            <value> 0. </value>
         </BCType>
-        <BCType id = "0"   label = "AbsCoef"     var = "Dirichlet">
+        <BCType id="0" label="AbsCoef" var="Dirichlet">
                            <value> 1. </value>
         </BCType>
-        <BCType id = "0"   label = "CellType"   var = "Dirichlet" type = "int">
+        <BCType id="0" label="CellType" var="Dirichlet" type="int">
                            <value> 8 </value>
         </BCType> 
       </Face>               
-      <Face side = "y+">
-        <BCType id = "0"   label = "Temperature"     var = "Dirichlet">
+      <Face side="y+">
+        <BCType id="0" label="Temperature" var="Dirichlet">
                             <value> 0. </value>
         </BCType>
-        <BCType id = "0"   label = "AbsCoef"     var = "Dirichlet">
+        <BCType id="0" label="AbsCoef" var="Dirichlet">
                            <value> 1. </value>
         </BCType>
-        <BCType id = "0"   label = "CellType"   var = "Dirichlet" type = "int">
+        <BCType id="0" label="CellType" var="Dirichlet" type="int">
                            <value> 8 </value>
         </BCType>
       </Face>
-      <Face side = "z-">
-        <BCType id = "0"   label = "Temperature"     var = "Dirichlet">
+      <Face side="z-">
+        <BCType id="0" label="Temperature" var="Dirichlet">
                            <value> 0. </value>
         </BCType>
-        <BCType id = "0"   label = "AbsCoef"     var = "Dirichlet">
+        <BCType id="0" label="AbsCoef" var="Dirichlet">
                            <value> 1. </value>
         </BCType>
-        <BCType id = "0"   label = "CellType"   var = "Dirichlet" type = "int">
+        <BCType id="0" label="CellType" var="Dirichlet" type="int">
                            <value> 8 </value>
         </BCType>
       </Face>
-      <Face side = "z+">
-        <BCType id = "0"   label = "Temperature"     var = "Dirichlet">
+      <Face side="z+">
+        <BCType id="0" label="Temperature" var="Dirichlet">
                            <value> 0. </value>
         </BCType>
-        <BCType id = "0"   label = "AbsCoef"     var = "Dirichlet">
+        <BCType id="0" label="AbsCoef" var="Dirichlet">
                            <value> 1. </value>
         </BCType>
-        <BCType id = "0"   label = "CellType"   var = "Dirichlet" type = "int">
+        <BCType id="0" label="CellType" var="Dirichlet" type="int">
                            <value> 8 </value>
         </BCType>
       </Face>

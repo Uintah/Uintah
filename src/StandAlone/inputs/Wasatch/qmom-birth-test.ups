@@ -38,32 +38,32 @@
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="S" state="STATE_N" />
+      <NameTag name="S" state="STATE_N"/>
       <Constant>7</Constant>
     </BasicExpression>
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="S" state="STATE_N" />
+      <NameTag name="S" state="STATE_N"/>
       <Constant>7</Constant>
     </BasicExpression>
     
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="ceq" state="STATE_N" />
+      <NameTag name="ceq" state="STATE_N"/>
       <Constant>.1</Constant>
     </BasicExpression>
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="ceq" state="STATE_N" />
+      <NameTag name="ceq" state="STATE_N"/>
       <Constant>.1</Constant>
     </BasicExpression>
 
    <PrecipitationBasicExpression type="SVOL">
      <TaskList> advance_solution </TaskList>
-     <NameTag name="RStarExpr" state="STATE_N" />
+     <NameTag name="RStarExpr" state="STATE_N"/>
      <PrecipitationClassicRStarValue Surf_Eng="0.04" Molec_Vol="3.693e-5" Temperature="298" Conversion_Fac="1e9">
        <Supersaturation>
-         <NameTag name="S" state="STATE_N" />
+         <NameTag name="S" state="STATE_N"/>
        </Supersaturation>
     </PrecipitationClassicRStarValue>
   </PrecipitationBasicExpression>
@@ -72,8 +72,8 @@
       <TaskList> advance_solution </TaskList>
       <NameTag name="ClassicBirth" state="STATE_N"/>
       <PrecipitationClassicNucleationCoefficient Molec_Vol="3.693e-5" Surf_Eng="0.04" Temperature="298">
-        <Supersaturation >
-          <NameTag name="S" state="STATE_N" />  
+        <Supersaturation>
+          <NameTag name="S" state="STATE_N"/>  
         </Supersaturation> 
      </PrecipitationClassicNucleationCoefficient>
     </PrecipitationBasicExpression>
@@ -82,8 +82,8 @@
       <TaskList> advance_solution </TaskList>
       <NameTag name="NewBirth" state="STATE_N"/>
       <HomogeneousNucleationCoefficient Molar_Vol="3.693e-5" Surf_Eng="0.04" Temperature="298" Diff_Coef="1.0e-9" S_Ratio="1">
-        <Supersaturation >
-          <NameTag name="S" state="STATE_N" />  
+        <Supersaturation>
+          <NameTag name="S" state="STATE_N"/>  
         </Supersaturation> 
         <EquilibriumConcentration>
           <NameTag name="ceq" state="STATE_N"/>
@@ -104,10 +104,10 @@
 
         <PreBirthCoefficient> 1.0e30 </PreBirthCoefficient>
         <BirthCoefficientExpression>
-          <NameTag name="ClassicBirth" state="STATE_N" />
+          <NameTag name="ClassicBirth" state="STATE_N"/>
         </BirthCoefficientExpression> 
         <RStarExpression>
-          <NameTag name="RStarExpr" state="STATE_N" />
+          <NameTag name="RStarExpr" state="STATE_N"/>
         </RStarExpression> 
 
         </BirthExpression>
@@ -133,10 +133,10 @@
 
         <!--PreBirthCoefficient> 1.0e30 </PreBirthCoefficient-->
         <BirthCoefficientExpression>
-          <NameTag name="NewBirth" state="STATE_N" />
+          <NameTag name="NewBirth" state="STATE_N"/>
         </BirthCoefficientExpression> 
         <RStarExpression>
-          <NameTag name="RStarExpr" state="STATE_N" />
+          <NameTag name="RStarExpr" state="STATE_N"/>
         </RStarExpression> 
 
         </BirthExpression>
@@ -156,7 +156,7 @@
     <filebase>qmom-birth-test.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.00001"/>
+    <checkpoint cycle="2" interval="0.00001"/>
     <compression>gzip</compression>
     <save label="m_Calcite_1_0"/>
     <save label="m_Calcite_1_1"/>

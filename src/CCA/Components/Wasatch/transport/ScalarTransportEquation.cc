@@ -134,9 +134,9 @@ namespace Wasatch{
     Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
 
     if( !isConstDensity_ ){
-      for( Uintah::ProblemSpecP diffFluxParams=params_->findBlock("DiffusiveFluxExpression");
+      for( Uintah::ProblemSpecP diffFluxParams=params_->findBlock("DiffusiveFlux");
            diffFluxParams != 0;
-           diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFluxExpression") )
+           diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") )
       {
         setup_diffusive_flux_expression<FieldT>( diffFluxParams,
                                                  densityTag_,
@@ -148,7 +148,7 @@ namespace Wasatch{
 
         // if doing convection, we will likely have a pressure solve that requires
         // predicted scalar values to approximate the density time derivatives
-        if( params_->findBlock("ConvectiveFluxExpression") ){
+        if( params_->findBlock("ConvectiveFlux") ){
           setup_diffusive_flux_expression<FieldT>( diffFluxParams,
                                                    densityTag_,
                                                    primVarTag_,
@@ -160,9 +160,9 @@ namespace Wasatch{
       } // loop over each flux specification
     }
     else{ // constant density
-      for( Uintah::ProblemSpecP diffVelParams=params_->findBlock("DiffusiveFluxExpression");
+      for( Uintah::ProblemSpecP diffVelParams=params_->findBlock("DiffusiveFlux");
           diffVelParams != 0;
-          diffVelParams=diffVelParams->findNextBlock("DiffusiveFluxExpression") )
+          diffVelParams=diffVelParams->findNextBlock("DiffusiveFlux") )
       {
         setup_diffusive_velocity_expression<FieldT>( diffVelParams,
                                                      primVarTag_,
@@ -181,9 +181,9 @@ namespace Wasatch{
   {
     Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
     const Expr::Tag solnVarTag = solution_variable_tag();
-    for( Uintah::ProblemSpecP convFluxParams=params_->findBlock("ConvectiveFluxExpression");
+    for( Uintah::ProblemSpecP convFluxParams=params_->findBlock("ConvectiveFlux");
         convFluxParams != 0;
-        convFluxParams=convFluxParams->findNextBlock("ConvectiveFluxExpression") )
+        convFluxParams=convFluxParams->findNextBlock("ConvectiveFlux") )
     {
       setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, "", factory, info );
       if( !isConstDensity_ ){
@@ -224,7 +224,7 @@ namespace Wasatch{
     if( !isConstDensity_ || !isStrong_ ){
       factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarTag_, solnVarTag_, densityTag_) );
 
-      const bool hasConvection_ = params_->findBlock("ConvectiveFluxExpression");
+      const bool hasConvection_ = params_->findBlock("ConvectiveFlux");
       if( hasConvection_ ){
         const Expr::Tag rhsStarTag = tagNames.make_star_rhs(solnVarName_);
         const Expr::Tag densityStarTag = tagNames.make_star(densityTag_, Expr::CARRY_FORWARD);

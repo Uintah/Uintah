@@ -9,39 +9,43 @@
 
    <Wasatch>
 
+    <Density>
+      <Constant value="1.0" name="density"/>
+    </Density>
+
      <BasicExpression type="SVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="temperature" state="STATE_N" />
+       <NameTag name="temperature" state="STATE_N"/>
        <Constant>543.21</Constant>
      </BasicExpression>
 
      <BasicExpression type="SVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="MyTestVariable" state="STATE_NONE" />
+       <NameTag name="MyTestVariable" state="STATE_NONE"/>
        <Constant>123.456</Constant>
      </BasicExpression>
 
      <BasicExpression type="SVOL">
        <TaskList>advance_solution</TaskList>
-       <NameTag name="beta" state="STATE_NONE" />
+       <NameTag name="beta" state="STATE_NONE"/>
        <Constant>5.4321</Constant>
      </BasicExpression>
 
      <BasicExpression type="SVOL">
        <TaskList>advance_solution</TaskList>
-       <NameTag name="alpha" state="STATE_NONE" />
+       <NameTag name="alpha" state="STATE_NONE"/>
        <Constant>5.4321</Constant>
      </BasicExpression>
      
      <BasicExpression type="SVOL">
        <TaskList>advance_solution</TaskList>
-       <NameTag name="phi1" state="STATE_NONE" />
+       <NameTag name="phi1" state="STATE_NONE"/>
        <Constant>2.3</Constant>
      </BasicExpression>
 
      <BasicExpression type="SVOL">
        <TaskList>advance_solution</TaskList>
-       <NameTag name="phi2" state="STATE_NONE" />
+       <NameTag name="phi2" state="STATE_NONE"/>
        <Constant>4.5</Constant>
      </BasicExpression>
 
@@ -51,11 +55,11 @@
       -->
      <AttachDependency tasklist="advance_solution">
        <Source> <NameTag name="alpha" state="STATE_NONE"/> </Source>   
-       <Target> <NameTag name="phi1"  state="STATE_NONE"/> </Target>   
+       <Target> <NameTag name="phi1" state="STATE_NONE"/> </Target>   
      </AttachDependency>
      <AttachDependency tasklist="advance_solution">
        <Source> <NameTag name="alpha" state="STATE_NONE"/> </Source>   
-       <Target> <NameTag name="phi2"  state="STATE_NONE"/> </Target>   
+       <Target> <NameTag name="phi2" state="STATE_NONE"/> </Target>   
      </AttachDependency>
 
      <!--
@@ -92,9 +96,9 @@
 
   <DataArchiver>
     <filebase>wasatch_test.uda</filebase>
-    <outputInitTimestep />
+    <outputInitTimestep/>
     <outputTimestepInterval>10</outputTimestepInterval>
-    <checkpoint cycle = "1" interval = "0.01"/>
+    <checkpoint cycle="1" interval="0.01"/>
     <!--save label="phi1"/>
     <save label="phi2"/>
     <save label="alpha"/-->

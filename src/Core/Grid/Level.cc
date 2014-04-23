@@ -60,10 +60,6 @@
 #include <map>
 #include <cmath>
 
-#ifdef _WIN32
-#define rint(x) (int)((x>0) ? x+.5 : x-.5)
-#endif
-
 using namespace std;
 using namespace Uintah;
 using namespace SCIRun;

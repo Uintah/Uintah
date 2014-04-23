@@ -207,11 +207,11 @@ sci_arg_enable_list=""
 
 # Setting variables to 'no' isn't required, but is useful in displaying
 # some error condition information to the user.
-HAVE_HDF5="no"
-HAVE_BOOST="no"
-HAVE_TABPROPS="no"
-HAVE_SPATIALOPS="no"
-HAVE_EXPRLIB="no"
+HAVE_HDF5=no
+HAVE_BOOST=no
+HAVE_TABPROPS=no
+HAVE_SPATIALOPS=no
+HAVE_EXPRLIB=no
 
 ##  --------------------------------------------------------------------
 ##  ------------------  check for all arguments     --------------------
@@ -235,6 +235,13 @@ SCI_ARG_WITH(mkl,
   [with_mkl="$withval"
    sci_required_mkl=yes],
   [with_mkl=""])
+  
+SCI_ARG_WITH(essl,
+  AC_HELP_STRING(--with-essl=DIR,
+                 Use the essl (for lapack/blas) installation in DIR),
+  [with_essl="$withval"
+   sci_required_essl=yes],
+  [with_essl=""])
   
 SCI_ARG_WITH(acml,
   AC_HELP_STRING(--with-acml=DIR,
@@ -505,11 +512,11 @@ SCI_ARG_ENABLE(static,
   [static="$enableval"],
   [static="no"])
   
-SCI_ARG_ENABLE(verbosity,
-  AC_HELP_STRING(--enable-verbosity,
+SCI_ARG_ENABLE(verbose,
+  AC_HELP_STRING(--enable-verbose,
                  Turn on verbose configure output),
-  [verbosity="yes"],
-  [verbosity="no"])
+  [verbose="yes"],
+  [verbose="no"])
   
 SCI_ARG_ENABLE(threads,
   AC_HELP_STRING(--enable-threads,
@@ -681,11 +688,11 @@ fi
 ##  -----  determine host type, processor count and OS version  --------
 ##  --------------------------------------------------------------------
 
-echo 
 IS_OSX="no"
 IS_WIN="no"
 IS_VC="no"
 IS_AIX="no"
+
 unset NUM_CPUS
 
 MAKE_ARCHIVES="no"
@@ -740,6 +747,7 @@ AC_SUBST(IS_OSX)
 AC_SUBST(DEF_OSX)
 AC_SUBST(IS_WIN)
 AC_SUBST(IS_AIX)
+
 sci_defs_files="$sci_defs_files include/sci_defs/osx_testdefs.h"
 
 AC_MSG_CHECKING(physical processor count)
@@ -831,8 +839,6 @@ if test "$CC" = ""; then
               Using default... $CC)
 fi
 
-
-
 if test "$CXX" = ""; then
 
   case "$host" in 
@@ -849,6 +855,37 @@ if test "$CXX" = ""; then
         ;;
   esac
 fi
+
+## -- Begin Test for Bluegene Q --
+
+cat > conftest-bgq.cc <<EOF
+#include <stdio.h>
+int
+main()
+{
+#ifdef __bgq__
+  return 0;
+#else
+  return 1;
+#endif
+}
+EOF
+
+AC_MSG_CHECKING(if this is a BGQ system)
+$CXX $CXXFLAGS conftest-bgq.cc -o conftest-bgq
+
+./conftest-bgq
+
+if test $? == 0; then
+  AC_MSG_RESULT(yes)
+  IS_BGQ=yes
+else
+  AC_MSG_RESULT(no)
+fi
+
+AC_SUBST(IS_BGQ)
+
+######### -- End Test for Bluegene Q --
 
 
 # Most fortran compilers need an "_" for C function names.
@@ -1060,10 +1097,10 @@ if test $ASSERTION_LEVEL != "0" -a $ASSERTION_LEVEL != "1" -a $ASSERTION_LEVEL !
   AC_MSG_ERROR([--enable-assertion-level was set to '$ASSERTION_LEVEL', but must be 0, 1, 2, or 3.])
 fi
 
-if test ! -e "`type $CC | sed 's%^.* /%/%'`"; then
+if test ! -e "`which $CC`"; then
   SCI_MSG_ERROR(Could not find the specified C compiler ($CC))
 fi
-if test ! -e "`type $CXX | sed 's%^.* /%/%'`"; then
+if test ! -e "`which $CXX`"; then
   SCI_MSG_ERROR(Could not find the specified C++ compiler (CC))
 fi
 
@@ -1121,21 +1158,19 @@ AC_SUBST(DEF_MODELS_RADIATION)
 AC_SUBST(DEF_WASATCH)
 AC_SUBST(NO_FORTRAN)
 
-if test "$BUILD_ARCHES" = no -a "$BUILD_MODELS_RADIATION" = no; then
+if test \("$BUILD_ARCHES" = no -a "$BUILD_MODELS_RADIATION" = no\) -o \( "$with_fortran" = no \) ; then
   sci_required_fortran=no
 else
-  if test "$with_fortran" != no; then
-    sci_required_fortran=yes
+  sci_required_fortran=yes
+  if test "$F77" = ""; then
+    AC_PROG_F77()
     if test "$F77" = ""; then
-      AC_PROG_F77()
-      if test "$F77" = ""; then
-        AC_MSG_ERROR(Could not find a fortran compiler!  Please set the F77 environment variable to point to a fortran compiler.)
-      fi
-      AC_MSG_WARN(Fortran compiler not specified with 'F77' environment variable. Using default... $F77)
-    else
-      if test ! -e "`type $F77 | sed 's%^.* /%/%'`"; then
-        SCI_MSG_ERROR(Could not find the specified Fortran compiler: '$F77' )
-      fi
+      AC_MSG_ERROR(Could not find a fortran compiler!  Please set the F77 environment variable to point to a fortran compiler.)
+    fi
+    AC_MSG_WARN(Fortran compiler not specified with 'F77' environment variable. Using default... $F77)
+  else
+    if test ! -e "`type $F77 | sed 's%^.* /%/%'`"; then
+      SCI_MSG_ERROR(Could not find the specified Fortran compiler: '$F77' )
     fi
   fi
 fi
@@ -1275,10 +1310,15 @@ EOF
 
 # Verify that the compiler accepts the -fopenmp flag:
 $CXX $CXXFLAGS -fopenmp conftest-openmp.cc -o conftest-openmp 2>&5
+
 if test $? = 0; then
-   add_important_warning "Automatically added -fopenmp compiler option to C/CXXFLAGS."
-   CFLAGS="$CFLAGS -fopenmp"
-   CXXFLAGS="$CXXFLAGS -fopenmp"
+   if test "$IS_OSX" = "no"; then
+      add_important_warning "Automatically added -fopenmp compiler option to C/CXXFLAGS."
+      CFLAGS="$CFLAGS -fopenmp"
+      CXXFLAGS="$CXXFLAGS -fopenmp"
+   else
+      add_important_warning "On Mac: Not adding the openmp compiler option (-fopenmp) to C/CXXFLAGS."
+   fi
 else
    rm -f conftest-openmp conftest-openmp.cc
    AC_MSG_WARN( Tried to add the -fopenmp flag but the compiler ($CXX) failed to accept it...\n )
@@ -1594,14 +1634,14 @@ case $host in
           FFLAGS="-fPIC $FFLAGS"
           CXXFLAGS="-fPIC $CXXFLAGS"
        # for BG/Q XL compilers
-       elif test [`uname -m` = "ppc64" -a $CC != mpicc -a $CC != gcc]; then
+       elif test [`uname -m` = "ppc64" -a $CC != mpicc -a $CC != gcc -a $CC != mpigcc ]; then
           CFLAGS="-qpic $CFLAGS"
           FFLAGS="-qpic $FFLAGS"
           CXXFLAGS="-qpic $CXXFLAGS"
        else
           if test "$enable_64bit" = "yes"; then
              # for BG/Q XL compilers
-             if test [`uname -m` = "ppc64" -a $CC != mpicc -a $CC != gcc]; then
+             if test [`uname -m` = "ppc64" -a $CC != mpicc -a $CC != gcc -a $CC != mpigcc ]; then
                CFLAGS="-qpic $CFLAGS"
                FFLAGS="-qpic $FFLAGS"
                CXXFLAGS="-qpic $CXXFLAGS"
@@ -1635,15 +1675,12 @@ case $host in
     fi
 
     if test "$CC" != "pgcc"; then
-      SCI_CHECK_VERSION($CC,--version,2.95.3,,
-        echo configure: error: wrong $CC version.; exit)
+      SCI_CHECK_VERSION($CC,--version,2.95.3,,echo configure: error: wrong $CC version.; exit)
 
       if test "$sci_required_fortran" = "yes"; then
-        SCI_CHECK_VERSION($F77,--version,0.5.25,,
-          echo configure: error: wrong $F77 version.; exit)
+        SCI_CHECK_VERSION($F77,--version,0.5.25,,echo configure: error: wrong $F77 version.; exit)
       fi
-      SCI_CHECK_VERSION($CXX,--version,2.95.3,,
-        echo configure: error: wrong $CXX version.; exit)
+      SCI_CHECK_VERSION($CXX,--version,2.95.3,,echo configure: error: wrong $CXX version.; exit)
     fi
     AC_PROG_CPP
     AC_PROG_CXXCPP
@@ -1679,6 +1716,10 @@ case $host in
          FORTRAN_UNDERSCORE=end
          DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_END"
          ;;       
+      *xlf*)
+         FORTRAN_UNDERSCORE=none
+         DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_NONE"
+         ;;
       *)
          FFLAGS="$FFLAGS $extra_cflags"
          ;;
@@ -1722,13 +1763,13 @@ CC_DEPEND_EXT=unknown
 for flag in -qmakedep; do
   if test $CC_DEPEND_MODE = unknown; then
     AC_MSG_CHECKING( 1 - if depend mode flag '$flag' works for '$CXX')
-    rm -f configure-test.o configure-test-dir/configure-test.o
+    rm -f configure-test.o configure-test-dir/configure-test.o configure-test-dir/configure-test.d
     ac_try="$CXX $CFLAGS -c $flag configure-test-dir/configure-test.d -o configure-test-dir/configure-test.o configure-test-dir/configure-test.cc >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
     if test -f configure-test-dir/configure-test.d ; then
       CC_DEPEND_MODE=normal
       CC_DEPEND_REGEN=$flag
-      CC_DEPEND_EXT=depend.mk
+      CC_DEPEND_EXT=.d
     else 
       AC_MSG_RESULT( no )
 #      echo ""
@@ -1838,7 +1879,7 @@ AC_MSG_RESULT(yes.  Mode: $CC_DEPEND_MODE.  Ext: $CC_DEPEND_EXT)
 rm -f configure-test.*
 rm -rf configure-test-dir
 
-if test `basename "$F77"` = "pgf77"; then
+if test "`basename "$F77"`" = "pgf77"; then
   F77_DEPEND_REGEN=-Mcpp=mm
   F77_DEPEND_MODE=stdout
   F77_DEPEND_EXT=d
@@ -1992,12 +2033,20 @@ sci_defs_files="$sci_defs_files include/sci_defs/config_testdefs.h"
 ##  --  search for the math library  -------------------------------------
 AC_LANG(C)
 
+M_LIB_DIR=
 if test "$IS_VC" = "yes"; then
   M_LIB=""
 else
   M_LIB=m
 fi
-SCI_TRY_LINK(M,math libraries and headers,math.h,,$M_LIB,,,[
+
+if test "$IS_BGQ" = "yes"; then
+   # Fixme... this should be a configure flag... This is for LLNL's Vulcan
+   M_LIB_DIR=/opt/ibmcmp/xlmass/bg/7.3/bglib64
+   M_LIB=mass
+fi
+
+SCI_TRY_LINK(M,math libraries and headers,math.h,,$M_LIB,$M_LIB_DIR,,[
   double d = fabs(69.05);
 ],required)
 
@@ -2534,100 +2583,12 @@ AC_SUBST(HAVE_TIFF)
 
 ##  --  search for png --------------------------------------
 
-# Default values:
-_sci_optional=optional
-_sci_lib=
-_sci_inc=
 
-if test "$with_png" = "yes"; then
-  # If --with-png is specified without a parameter, then it makes it required
-  _sci_optional=required
-else 
-  if test "$with_png"; then
-    # If --with-png has a parameter, then use it
-    #   The BASE_LIB_PATH below will add /lib or /lib{64,32} to the sci_lib
-    _sci_lib="$with_png" 
-    _sci_inc="$with_png/include"
-    BASE_LIB_PATH(_sci_lib,$_sci_lib)
-    _sci_optional=specific
-  fi 
+if test "$with_png"; then
+
+    AC_MSG_ERROR(--with-png is not used by Uintah any more.)
+
 fi
-
-SCI_TRY_LINK(PNG,png library and headers,png.h,$_sci_inc,png,$_sci_lib,$Z_LIB_DIR_FLAG $Z_LIB_FLAG,,optional)
-
-# Now check for the correct version.
-if test "$HAVE_PNG" = "yes"; then
-
-    AC_MSG_CHECKING(for PNG version 1.0.2 or better.)
-    cat > conftest-png.c <<EOF
-
-         #include <png.h>
-         #include <stdio.h>
-
-         int main() {
-
-           if (PNG_LIBPNG_VER < 10002) {
-	       printf("1\n");
-	   } else {
-	       printf("0\n");
-           }	   
-          return 0;
-         }
-EOF
-    #echo "$CC $INC_PNG_H conftest-png.c -o conftest-png"
-    $CC $INC_PNG_H conftest-png.c -o conftest-png
-    #ls -l conftest-png
-    png_error=`./conftest-png`
-    rm -f conftest-png conftest-png.c
-
-    if test "$png_error" != "0"; then
-       AC_MSG_RESULT(PNG library too old.  Need at least 1.0.2.  Turning off PNG.)
-       DEF_PNG=""
-       HAVE_PNG="no"
-       PNG_LIB_FLAG=""
-       PNG_LIB_DIR_FLAG=""
-       INC_PNG_H=""
-       DEF_PNG=""
-    else
-       AC_MSG_RESULT(yes.)
-       DEF_PNG="#define HAVE_PNG 1"
-    fi
-
-    break
-fi
- 
-if test "$HAVE_PNG" = "no"; then
-  # Try looking in a sci specific location (but only if it exists)
-  if test -d /usr/sci/local; then
-    BASE_LIB_PATH(png_lib_dir,/usr/sci/local)
-    SCI_TRY_LINK(PNG,png library and headers (SCI),png.h,/usr/sci/local/include,png,
-                 $png_lib_dir,$Z_LIB_DIR_FLAG $Z_LIB_FLAG,,optional)
-  fi
-else
-  if test "$_sci_optional" = "specific"; then
-       AC_MSG_CHECKING(that PNG is in the requested location '$with_png/lib')
-       # verify that it was found in the location requested.
-       if test ! -e $with_png/lib/libpng.so &&
-          test ! -e $with_png/lib/libpng.a &&
-          test ! -e $with_png/lib/libpng.dylib; then
-            echo
-            AC_MSG_ERROR(Found libpng but not in requested directory: $with_png/lib)
-       fi
-       AC_MSG_RESULT(yes.)
-    fi
-fi
-
-if test "$with_png" && test ! "$DEF_PNG"; then
-  echo
-  AC_MSG_ERROR(One or more of the png components is missing.)
-  echo
-fi
-
-AC_SUBST(PNG_LIB_FLAG)
-AC_SUBST(PNG_LIB_DIR_FLAG)
-AC_SUBST(INC_PNG_H)
-AC_SUBST(DEF_PNG)
-AC_SUBST(HAVE_PNG)
 
 ##  --  check if exceptions work properly --------------------------------
 
@@ -2660,32 +2621,6 @@ EOF
 
     rm -f conftest-exc.cc conftest-exc
 AC_SUBST(EXCEPTIONS_CRASH_DEF)
-
-##  --  search for mpeg  -------------------------------------------------
-
-_sci_optional=optional
-if test "$with_mpeg"; then
-  _sci_lib="$with_mpeg/lib"
-  _sci_optional=specific
-fi
-
-SCI_TRY_LINK(MPEGE,MPEG library,,,mpege,$_sci_lib,,,$_sci_optional)
-
-if test "$HAVE_MPEGE" = "yes"; then
-  DEF_MPEG="#define HAVE_MPEG 1"
-fi
-
-if test "$with_mpeg" && test ! "$DEF_MPEG"; then
-  echo
-  AC_MSG_ERROR(One or more of the MPEG components is missing.)
-  echo
-fi
-
-AC_SUBST(MPEGE_LIB_FLAG)
-AC_SUBST(MPEGE_LIB_DIR_FLAG)
-AC_SUBST(DEF_MPEG)
-
-sci_defs_files="$sci_defs_files include/sci_defs/image_testdefs.h"
 
 ##  --  search for scisock --------------------------------------
 
@@ -2759,8 +2694,9 @@ if test "$with_fortran" != "no"; then
         *gfortran* | *mpif77* )
           SCI_TRY_LINK(F,fortran libraries,,,gfortran,$_sci_lib,,,$_sci_optional)
           ;;
-        *xlf* | *bgxlf* )
-          SCI_TRY_LINK(F,fortran libraries,,,xlf90,$_sci_lib,,,$_sci_optional)
+        *xlf* )
+	  # bgxlf and /usr/local/tools/toolchain-4.7.2/gnu-linux-4.7.2/powerpc64-bgq-linux/lib
+          SCI_TRY_LINK(F,fortran libraries,,,xlf90_r xl xlopt dl,$_sci_lib,,,optional)
           ;;
         *ifort*)
           SCI_TRY_LINK(F,fortran libraries,,,ifcore,$_sci_lib,,,$_sci_optional)
@@ -2806,11 +2742,16 @@ MPI_EXTRA_LIB_DIR="$MPI_EXTRA_LIB_DIR $F_LIB_DIR_FLAG"
 AC_LANG(C)
 
 # Clean up all the fortran flags that don't have individual without-fortran guards on them...
+#
 if test "$with_fortran" = no; then 
-  FFLAGS="fortran_disabled";
-  extra_fflags="fortran_disabled";
-  FORTRAN_UNDERSCORE="// FORTRAN_UNDERSCORE => fortran_disabled";
-  DEF_FORTRAN_UNDERSCORE="// DEF_FORTRAN_UNDERSCORE => fortran_disabled";
+
+  FFLAGS="fortran_disabled"
+  extra_fflags="fortran_disabled"
+  FORTRAN_UNDERSCORE="// FORTRAN_UNDERSCORE not set. Fortran is disabled..."
+
+  DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_END /* Fortran disabled, but need for sci_lapack.cc. */"
+  msg="Though Fortran is not being used, assuming FORTRAN_UNDERSCORE=end for Core/Math/sci_lapack.cc..."
+  add_important_warning "$msg"
 fi
 
 ##  --  Electric Fence  -------------------------------------
@@ -2848,6 +2789,9 @@ if test "$with_acml"; then
   fi
   if test "$with_mkl"; then
     AC_MSG_ERROR(You cannot use both --with-mkl and --with-acml.)
+  fi
+  if test "$with_essl"; then
+    AC_MSG_ERROR(You cannot use both --with-essl and --with-acml.)
   fi
 
   if test "$with_acml" = "yes"; then
@@ -2887,6 +2831,9 @@ if test "$with_mkl"; then
   fi
   if test "$with_atlas"; then
     AC_MSG_ERROR(You cannot use both --with-atlas and --with-mkl.)
+  fi
+  if test "$with_essl"; then
+    AC_MSG_ERROR(You cannot use both --with-essl and --with-mkl.)
   fi
 
   if test "$with_mkl" = "yes"; then
@@ -2946,6 +2893,66 @@ if test "$with_mkl"; then
   CBLAS_H="mkl_cblas.h"
   HAVE_CBLAS=$HAVE_BLAS
   DEF_CBLAS="#define HAVE_CBLAS 1"
+  DEF_BLAS="#define HAVE_BLAS 1"
+  DEF_LAPACK="#define HAVE_LAPACK 1"
+  sci_required_blas=no
+fi
+
+##  --  search for essl (optimized blas/lapack) stuff  -------------------------------------
+
+if test "$with_essl"; then
+
+  if test "$with_blas"; then
+    AC_MSG_ERROR(You cannot use both --with-blas and --with-essl.)
+  fi
+  if test "$with_atlas"; then
+    AC_MSG_ERROR(You cannot use both --with-atlas and --with-essl.)
+  fi
+
+  if test "$with_essl" = "yes"; then
+    AC_MSG_ERROR(You must specify a directory with --with-essl=DIR)
+  elif test "$with_essl"; then
+    _sci_lib="$with_essl/lib"
+    _sci_inc="$with_essl/include"
+    
+    # _sci_optional=specific TESTING FOR SPECIFIC NOT IMPLEMENTED!!!
+  fi
+
+  case $host in
+    *-darwin*)
+       AC_MSG_ERROR(We recommend that you don't use ESSL on a Mac... use the default vecLib instead.)
+       ;;
+     *)
+       unset test_libs
+       test_libs[[0]]="essl"   # 
+       test_libs[[1]]="esslbg" # Line for LLNL's Vulcan computer (3/10/2014)
+
+       num_libs=${#test_libs[*]}
+
+       for (( num=0; num<$num_libs; num++ ));
+       do
+          the_libs=${test_libs[[$num]]}
+          SCI_TRY_LINK(BLAS,${num} - essl version of (blas/lapack) libraries and headers ($the_libs),essl.h,
+                       $_sci_inc,dl $the_libs,/usr/local/tools/toolchain-4.7.2/gnu-linux-4.7.2/powerpc64-bgq-linux/lib $_sci_lib,
+                       $THREAD_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,
+                       [
+                       float x[]={0.7f};
+                       float y[]={0.8f};
+                       float test=sdot(1,x,1,y,-1);
+                       ],
+                       optional)
+          if test "$HAVE_BLAS" = "yes"; then
+             # FIXME: Really need to do 'specific' test here...
+             break
+          fi
+       done								    
+
+       ;;
+  esac
+
+  HAVE_LAPACK=$HAVE_BLAS
+
+  HAVE_CBLAS=no
   DEF_BLAS="#define HAVE_BLAS 1"
   DEF_LAPACK="#define HAVE_LAPACK 1"
   sci_required_blas=no
@@ -3024,10 +3031,6 @@ if test "$HAVE_BLAS" != "yes"; then
   fi
   
   case $host in
-    *aix*)
-       SCI_TRY_LINK(BLAS,essl library,,,
-                      essl,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,required)
-       ;;
     *dec*)
        SCI_TRY_LINK(BLAS,cxml library,,,
                       cxml,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,required)
@@ -3206,8 +3209,13 @@ if test "$with_mpi_extra_libs"; then
 fi
 
 ##  --  search for mpi  --------------------------------------------------
+
 sci_required_mpi="yes"
-if test "$sci_required_mpi" = "yes"; then
+if test "$with_mpi" = "built-in"; then
+  HAVE_MPI=yes
+  AC_MSG_WARN( MPI specified as built-in... not checking for it... )
+fi
+if test "$sci_required_mpi" = "yes" -a "$with_mpi" != "built-in"; then
   echo
   AS_MESSAGE(checking for required MPI components......)
   echo
@@ -3260,6 +3268,9 @@ if test "$sci_required_mpi" = "yes"; then
            if test "$with_mpi" = "yes"; then
               _sci_optional=required
            else
+              if ! test -d "$with_mpi"; then
+                AC_MSG_ERROR( [The directory specified for --with-mpi=DIR is not valid: $with_mpi] )
+              fi
               _sci_optional=specific
               _sci_inc="$with_mpi/include"
               # Account for lib64 or lib32 or just lib...
@@ -3272,109 +3283,105 @@ if test "$sci_required_mpi" = "yes"; then
           fi
         fi
 
-	# After each attempt to locate mpi, we need to verify that the mpi it
-	# chose is in the path we specified.  This is because some machines
-	# have MPI installed in a standard location and sometimes will choose
-	# that one over the one we specified.
-	the_file=libmpi
-	
-        # /usr/include/mpi is the standard location of mpi on some linux dists.
-        SCI_TRY_LINK(MPI,mpi library and header-1,mpi.h,
-                     $_sci_inc /usr/include/mpi,mpi lam util pmpi $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,,,optional)
+        unset test_libs
+        test_libs[[0]]="mpi lam util pmpi" 
+        test_libs[[1]]="mpi lam util $THREAD_LIB_FLAG"
+        test_libs[[2]]="lam mpi"                         # Newer LAM on OSX, pthreads and util not needed.
+        test_libs[[3]]="mpi"
+        test_libs[[4]]="mpich_threadm mpl"               # Try mpich with mpich_threadm and mpl library.
+        test_libs[[5]]="mpich_threadm"                   # Same as above, but wihtout mpl
+        test_libs[[6]]="mpich mpl"                       
+        test_libs[[7]]="mpich"
+        test_libs[[8]]="mpich pmpich"
+        test_libs[[9]]="mpi_mt"
+	test_libs[[10]]="mpich-xl opa-xl mpl-xl pami-gcc SPI SPI_cnk rt pthread stdc++" # Vulcan@LLNL
 
-        if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
-           test ! -e $_sci_lib/$the_file.so &&
-           test ! -e $_sci_lib/$the_file.a &&
-           test ! -e $_sci_lib/$the_file.dylib; then
-             AC_MSG_WARN(Found libmpi but not in requested directory: $_sci_lib)
-	     HAVE_MPI="no"
-        fi
+        unset other
+        other[[0]]=""
+        other[[1]]="-DMPIPP_H"
+        other[[2]]="-DMPIPP_H"
+        other[[3]]="-DMPIPP_H"
+        other[[4]]=""
+        other[[5]]=""
+        other[[6]]=""
+        other[[7]]=""
+        other[[8]]=""
+        other[[9]]=""
+        other[[10]]=""
+
+        num_libs=${#test_libs[*]}
+
+        for (( num=0; num<$num_libs; num++ )); do
+
+           # After each attempt to locate mpi, we need to verify that the mpi it
+           # chose is in the path we specified.  This is because some machines
+           # have MPI installed in a standard location and sometimes will choose
+           # that one over the one we specified.
+
+           the_libs=${test_libs[[$num]]}
+           other=${other[[$num]]}
+
+           the_file="lib`echo "${test_libs[[$num]]}" | cut -f1 -d" "`"
+
+           SCI_TRY_LINK(MPI,${num}: mpi library and header ($the_libs),mpi.h,
+                        $_sci_inc, $the_libs $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,$other,,optional)
+
+           if test "$HAVE_MPI" = "yes"; then
+              if test "$_sci_optional" = "specific" &&
+                 test ! -e $_sci_lib/$the_file.so &&
+                 test ! -e $_sci_lib/$the_file.a &&
+                 test ! -e $_sci_lib/$the_file.dylib; then
+                    AC_MSG_WARN(Found libmpi but not in requested directory: $_sci_lib)
+                    HAVE_MPI="no"
+              else
+                 break
+              fi
+           fi
+        done
+
+	######################################################################
+	# If we didn't find mpi above, try it again, but this time hack in 
+	# /usr/include/mpi/ into the path.  (This is necessary as some (many?)
+	# linux distributions place the mpi lib in /usr/lib, but put mpi.h
+	# in /usr/include/mpi/... The problem with hardcoding /usr/include/mpi
+	# into the link test path is that it can (in some situations) cause
+	# the wrong mpi.h to be used with non-matching libraries...
+	# Not sure I like this hack, but don't have a better fix off hand. -Dd
 
         if test "$HAVE_MPI" != "yes"; then
-          # Try without pmpi (and with $THREAD_LIB_FLAG) for the newer version
-          # of lam mpi.
-          # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
+          _sci_inc="$_sci_inc /usr/include/mpi"
+          for (( num=0; num<$num_libs; num++ )); do
 
-          SCI_TRY_LINK(MPI,mpi library and header-2,mpi.h,
-                       $_sci_inc /usr/include/mpi,mpi lam util $THREAD_LIB_FLAG $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,-DMPIPP_H,,optional)
+           # After each attempt to locate mpi, we need to verify that the mpi it
+           # chose is in the path we specified.  This is because some machines
+           # have MPI installed in a standard location and sometimes will choose
+           # that one over the one we specified.
 
-          # verify that it was found in the location requested.
-          if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
-             test ! -e $_sci_lib/$the_file.so &&
-             test ! -e $_sci_lib/$the_file.a &&
-             test ! -e $_sci_lib/$the_file.dylib; then
-             AC_MSG_WARN(Found libmpi but not in requested directory: $_sci_lib)
-	     HAVE_MPI="no"
-          fi
+           the_libs=${test_libs[[$num]]}
+           other=${other[[$num]]}
 
-          if test "$HAVE_MPI" != "yes"; then
-             # If building with newer LAM on OSX, pthreads and util not needed.
-             SCI_TRY_LINK(MPI,mpi library and header-3,mpi.h,
-                          $_sci_inc /usr/include/mpi,lam mpi $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,-DMPIPP_H,,optional)
+           the_file="lib`echo "${test_libs[[$num]]}" | cut -f1 -d" "`"
 
-             # verify that it was found in the location requested
-             if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
-                test ! -e $_sci_lib/$the_file.so &&
-                test ! -e $_sci_lib/$the_file.a &&
-                test ! -e $_sci_lib/$the_file.dylib; then
-                AC_MSG_WARN(Found libmpi but not in the requested directory: $_sci_lib)
-                HAVE_MPI="no"
-             fi                        
+           SCI_TRY_LINK(MPI,${num}: mpi library and header (mpi.h hack) ($the_libs),mpi.h,
+                        $_sci_inc, $the_libs $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,$other,,optional)
 
-             if test "$HAVE_MPI" != "yes"; then
-                SCI_TRY_LINK(MPI,mpi library and header-4,mpi.h,
-                             $_sci_inc /usr/include/mpi,mpi $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,-DMPIPP_H,,optional)
-
-                # verify that it was found in the location requested.
-                if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
-                   test ! -e $_sci_lib/$the_file.so &&
-                   test ! -e $_sci_lib/$the_file.a &&
-                   test ! -e $_sci_lib/$the_file.dylib; then
-                   AC_MSG_WARN(Found libmpi but not in requested directory: $_sci_lib)
-                   HAVE_MPI="no"
-                fi
-
-                if test "$HAVE_MPI" != "yes"; then
-		   # try mpich with mpich_threadm and mpl library
-                   SCI_TRY_LINK(MPI,1. mpich library and header-2,mpi.h,
-                                  $_sci_inc /usr/include/mpi,mpich_threadm mpl $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,,,optional)
-
-                   # try mpich_threadm again without mpl library 
-                   if test "$HAVE_MPI" != "yes"; then
-                      SCI_TRY_LINK(MPI,2. mpich library and header,mpi.h,
-                                  $_sci_inc /usr/include/mpi,mpich_threadm $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,,,optional)
-                   fi
-                   # try mpich with mpl library  
-                   if test "$HAVE_MPI" != "yes"; then
-                      SCI_TRY_LINK(MPI,3. mpich library and header,mpi.h,
-                                  $_sci_inc /usr/include/mpi,mpich mpl $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,,,optional)
-
-                   fi        
-                   # try just plain mpich  
-                   if test "$HAVE_MPI" != "yes"; then
-                      SCI_TRY_LINK(MPI,4. mpich library and header,mpi.h,
-                                  $_sci_inc /usr/include/mpi,mpich $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,,,optional)
-                   fi
-                   # try mpich again with pmpich
-                   if test "$HAVE_MPI" != "yes"; then
-                      SCI_TRY_LINK(MPI,5. mpich library and header,mpi.h,
-                                  $_sci_inc /usr/include/mpi,mpich pmpich $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,,,optional)
-                   fi
-                   # try mpi again with mpi_mt
-                   if test "$HAVE_MPI" != "yes"; then
-                      SCI_TRY_LINK(MPI,6. mpi_mt library and header,mpi.h,
-                                  $_sci_inc /usr/include/mpi,mpi_mt  $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,,,optional)
-                   fi
-                   if test "$HAVE_MPI" = "yes"; then
-                      HAVE_MPICH="yes"
-                   fi
-                fi
-             fi
-          fi
+           if test "$HAVE_MPI" = "yes"; then
+              if test "$_sci_optional" = "specific" &&
+                 test ! -e $_sci_lib/$the_file.so &&
+                 test ! -e $_sci_lib/$the_file.a &&
+                 test ! -e $_sci_lib/$the_file.dylib; then
+                    AC_MSG_WARN(Found libmpi but not in requested directory: $_sci_lib)
+                    HAVE_MPI="no"
+              else
+                 break
+              fi
+           fi
+          done
         fi
+	######################################################################
         
         if test "$HAVE_MPI" = "yes"; then
-	   if test "$HAVE_MPICH" != "yes"; then
+           if test "$HAVE_MPICH" != "yes"; then
              ########################################################################
              ## Determine if mpi is actually mpich...
              cat > conftest-mpich.cc <<EOF
@@ -3387,32 +3394,11 @@ int main(int argc, char **argv)
 EOF
              $CC $INC_MPI_H -c conftest-mpich.cc > /dev/null 2>&1
              if test -f conftest-mpich.o; then
-		 AC_MSG_WARN(Note: found what looked like mpi but was actually mpich.)
+                 AC_MSG_WARN(Note: found what looked like mpi but was actually mpich.)
                  HAVE_MPICH=yes
              fi
              rm -rf conftest-mpich*
              ########################################################################
-           fi
-
-           if test "$IS_WIN" = "yes"; then
-             header=""
-           else
-             header="lib"
-           fi
-           if test "$_sci_optional" = "specific"; then
-              the_file="$header"mpi
-              if test "$HAVE_MPICH" = "yes"; then
-                the_file="$header"mpich
-              fi
-
-              # verify that it was found in the location requested.
-              if test ! -e $_sci_lib/$the_file.so &&
-                 test ! -e $_sci_lib/$the_file.a &&
-                 test ! -e $_sci_lib/$the_file.lib &&
-                 test ! -e $_sci_lib/$the_file.dylib; then
-                   echo
-                   AC_MSG_ERROR(Found libmpi but not in requested directory: $_sci_lib)
-              fi
            fi
 
            if test "$HAVE_MPICH" = "yes"; then
@@ -3427,7 +3413,7 @@ EOF
           AC_MSG_ERROR(One or more of the MPI components is missing.)
           echo
         fi
-	
+        
   esac
   
   if test ! "$DEF_MPI"; then
@@ -3465,12 +3451,14 @@ else
       if test "$with_petsc"; then
          if test "$with_petsc" = "yes"; then
             AC_MSG_ERROR(--with-petsc=DIR requires a DIRectory to be specified.)
+         elif test ! -d "$with_petsc"; then
+	    AC_MSG_ERROR(--with-petsc: Directory '$with_petsc' does not exist! )
          fi
          version_file=$with_petsc/include/petscversion.h
          _sci_inc="$with_petsc/include"
       else
          version_file=/usr/include/petsc/petscversion.h
-         lib_dir=/usr/lib
+         lib_dir=/usr
          _sci_inc=/usr/include/petsc
          BASE_LIB_PATH(_sci_lib_dir,$lib_dir)
       fi
@@ -3502,35 +3490,44 @@ else
           fi
         fi
 
+        if test $CC = mpigcc -a "$IS_BGQ" = "yes"; then
+           msg="Updating CFLAGS with PETSc required flags due to using xlC compiled PETSC with gcc compiler..."
+           add_important_warning "$msg"
+           #CFLAGS="  $CFLAGS   -DPETSC_RESTRICT=__restrict__ -DPETSC_DEPRECATED(why)= "
+	   ORIG_CXXFLAGS=$CXXFLAGS
+           CXXFLAGS="$CXXFLAGS -DPETSC_RESTRICT=__restrict__ -DPETSC_DEPRECATED(why)= "
+        fi
+
         SCI_TRY_LINK( PETSC,
-                      petsc libraries and headers - first try,
+                      petsc libraries and headers - multi-lib version,
                       petsc.h,
                       $_sci_inc,
                       petsc petscvec petscmat petscdm petscsnes petscts petscksp,
                       $_sci_lib_dir,
-                      $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                      $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
                       ,
                       optional)
 
         # Test a number of petsc library options if the above didn't work
         if test "$HAVE_PETSC" != "yes"; then
            unset test_libs
-           test_libs[[0]]="petsc"                       # standard single petsc lib
-           test_libs[[1]]="craypetsc_intel_real"        # cray petsc-real - for DOD Open Research Systems 
-           test_libs[[2]]="craypetsc_intel_complex"     # cray petsc-complex - for DOD Open Research Systems 
+           test_libs[[0]]="petsc superlu_dist_3.3 amd.2.2.2 dmumps superlu_4.3 umfpack triangle spai parmetis chaco metis mumps_common scalapack pord"         # Vulcan (tempoary?)
+           test_libs[[1]]="petsc"                       # standard single petsc lib
+           test_libs[[2]]="craypetsc_intel_real"        # cray petsc-real - for DOD Open Research Systems 
+           test_libs[[3]]="craypetsc_intel_complex"     # cray petsc-complex - for DOD Open Research Systems 
                                                                   
            num_libs=${#test_libs[*]}
 
-           for (( num=0; num<$num_libs; num++ ));
+           for (( num=1; num<=$num_libs; num++ ));
            do
-               the_libs=${test_libs[[$num]]}
+               the_libs=${test_libs[[$num-1]]}
                SCI_TRY_LINK(PETSC,
-                            petsc library and header - $num try,
+                            petsc library and header - try $num ($the_libs),
                             petsc.h,
                             $_sci_inc,
                             $the_libs,
                             $_sci_lib_dir,
-                            $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                            $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
                             ,
                             optional)
                # bail if a suitable library is found
@@ -3567,6 +3564,18 @@ AC_SUBST(INC_PETSC_H)
 sci_defs_files="$sci_defs_files include/sci_defs/petsc_testdefs.h"
 
 AC_LANG([C])
+
+
+# Reset CFLAGS as necessary... 
+#
+# This hack is necessary because we are using the xlc compiled Petsc on
+# Vulcan with the gcc compilers... And the compilicated CFLAGS will not
+# pass through configure into configVars.mk correctly... sigh.
+#
+if test $CC = mpigcc -a "$IS_BGQ" = "yes"; then
+   CXXFLAGS=$ORIG_CXXFLAGS
+fi
+
 
 ##  --  search for xalan  ---------------------------------------------------
 if test "$sci_required_xalan" ; then
@@ -4077,9 +4086,11 @@ if test "$with_teem"; then
     AC_MSG_ERROR(Please fix this problem and then configure again.)
   fi
 
-  SCI_TRY_LINK(TEEM,teem library and headers,teem/nrrd.h teem/ten.h,$_sci_inc,teem,$_sci_lib,$M_LIB_FLAG,[
-               float a[3], b[9], c[7];
-               tenEigensolve_f(a,b,c);
+  SCI_TRY_LINK(TEEM,teem library and headers,teem/nrrd.h teem/ten.h,$_sci_inc,teem,$_sci_lib,
+               $M_LIB_DIR_FLAG $M_LIB_FLAG,
+               [
+                 float a[3], b[9], c[7];
+                 tenEigensolve_f(a,b,c);
                ]
                ,$_sci_optional)
 
@@ -4158,16 +4169,20 @@ if test "$with_boost"; then
 
   if test "$HAVE_BOOST" = "no"; then
      SCI_TRY_LINK(BOOST, boost library (non-mt) and include headers,$_boost_incl,$BOOST_INCLUDE_DIR,$_boost_libs,$BOOST_LIBRARY_DIR,,,optional)
-  fi                  
-
+  fi
 
   if test "$HAVE_BOOST" = "yes"; then
      DEF_BOOST="#define HAVE_BOOST 1"              
+  else
+     AC_MSG_ERROR( Did not find boost in: '$with_boost'. )
   fi
+
   if test "$with_boost" != "/usr"; then
-    # If with_boost points to /usr, then we don't need to explicitly point to it...
-      INC_BOOST_H="-I$with_boost/include"
-      BOOST_LIB_DIR_FLAG="$LDRUN_PREFIX$BOOST_LIB_DIR -L$BOOST_LIB_DIR"
+     # If with_boost points to /usr, then we don't need to explicitly point to it...
+     INC_BOOST_H="-I$with_boost/include"
+     if test "$IS_STATIC_BUILD" != "yes"; then
+        BOOST_LIB_DIR_FLAG="$LDRUN_PREFIX$BOOST_LIB_DIR -L$BOOST_LIB_DIR"
+     fi
   fi
 fi
 AC_SUBST(HAVE_BOOST)
@@ -4521,7 +4536,7 @@ else
      SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
                         HYPRE HYPRE_utilities HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_parcsr_ls HYPRE_krylov HYPRE_parcsr_mv,
                         $_sci_lib,
-                        $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                        $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
                         ,
                         optional)
 
@@ -4529,7 +4544,7 @@ else
         SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
                            HYPRE,
                            $_sci_lib,
-                           $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                           $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
                            ,
                            optional)
      fi

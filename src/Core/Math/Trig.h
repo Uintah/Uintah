@@ -34,15 +34,6 @@
 
 const double Pi=M_PI;
 
-#ifdef _WIN32
-
-inline double acosh(double x)
-{
-	return (x<1) ? log(-1.0) : log(x+sqrt(x*x-1));
-}
-
-#endif
-
 inline double Cos(double d)
 {
     return cos(d);

@@ -69,7 +69,7 @@ SmoothCylGeomPiece::SmoothCylGeomPiece(ProblemSpecP& ps)
   if (d_numAxial < 1)
     SCI_THROW(ProblemSetupException("SmoothCylGeom: Axial Divs < 1", __FILE__, __LINE__));
 
-  d_numAngular = 0.0;
+  d_numAngular = 0;
   ps->get("num_angular", d_numAngular);
   if (d_discretization == "constant_particle_volumes") {
     cout << "**WARNING** num_angular ignored for constant_particle_volumes discretization" << endl;

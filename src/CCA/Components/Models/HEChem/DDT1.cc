@@ -1394,16 +1394,13 @@ void DDT1::computeModelSources(const ProcessorGroup*,
           double surfArea = computeSurfaceArea(rhoGradVector, dx); 
           double Tsurf = 850.0;  // initial guess for the surface temperature.
 
-          double solidMass  = rctRho[c]/rctVolFrac[c];
+          double solidMass  = rctRho[c]*rctVolFrac[c]*cell_vol;
           double burnedMass = 0.0;
 
           burnedMass = computeBurnedMass(Tzero, Tsurf, productPress,
                               rctSpvol[c], surfArea, delT,
                               solidMass, min_mass_in_a_cell);
-          // Clamp burned mass to total convertable mass in cell
-          if(burnedMass + min_mass_in_a_cell > solidMass){
-             burnedMass = solidMass - min_mass_in_a_cell;
-          }
+          
           // Store debug variables
           onSurface[c] = surfArea;
           surfTemp[c]  = Tsurf;
@@ -1432,15 +1429,14 @@ void DDT1::computeModelSources(const ProcessorGroup*,
         //  Convective Burning 
         }  else if (BurningCriteria[c] == CONVECTIVE){
           burningCell[c]=CONVECTIVE;
-          Vector rhoGradVector = computeDensityGradientVector(nodeIdx,
-                                                              rctMass_NC, NC_CCweight,dx);
-
-          double surfArea = computeSurfaceArea(rhoGradVector, dx);
+          
+          double surfArea = cell_vol/ 0.002; //divided by 2mm so burning will match what has already been run at 2mm and so the
+                                            // burned mass is not depended on the resolution 
           if(surfArea < 1e-12)
             surfArea = 1e-12;
           double Tsurf = 850.0;  // initial guess for the surface temperature.
 
-          double solidMass = rctRho[c]/rctVolFrac[c];
+          double solidMass = rctRho[c]*rctVolFrac[c]*cell_vol;
           double burnedMass = 0.0;
 
           burnedMass = computeBurnedMass(Tzero, Tsurf, productPress,
@@ -1456,11 +1452,7 @@ void DDT1::computeModelSources(const ProcessorGroup*,
 
           */
 
-          // Clamp burned mass to total convertable mass in cell
-          if(burnedMass + min_mass_in_a_cell > solidMass){
-             burnedMass = solidMass - min_mass_in_a_cell;
-          }
-
+          
           /* conservation of mass, momentum and energy   */
           mass_src_0[c]      -= burnedMass;
           mass_src_1[c]      += burnedMass;
@@ -1566,8 +1558,10 @@ double DDT1::computeBurnedMass(double To, double& Ts, double P, double Vc, doubl
   Ts = BisectionNewton(Ts, &iterVar);
   double m =  m_Ts(Ts, &iterVar);
   double burnedMass = delT * surfArea * m;
-  if (burnedMass + min_mass_in_a_cell > solidMass) 
+ // Clamp burned mass to total convertable mass in cell
+  if (burnedMass + min_mass_in_a_cell > solidMass){ 
       burnedMass = solidMass - min_mass_in_a_cell;  
+      }
   return burnedMass;
   
 }

@@ -115,50 +115,26 @@
 
     <!-- Build a scalar transport equation for mixture fraction -->
     <TransportEquation equation="generic">
-
       <SolutionVariable>f</SolutionVariable>
-
-      <DiffusiveFluxExpression>
-        <Direction>X</Direction>
-        <ConstantDiffusivity>0.0001</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Y</Direction>
-        <ConstantDiffusivity>0.0001</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Z</Direction>
-        <ConstantDiffusivity>0.0001</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <ConvectiveFluxExpression>
-        <Method>UPWIND</Method> 
-        <Direction>X</Direction>
+      <ConvectiveFlux direction="X" method="UPWIND">
         <AdvectiveVelocity>
-            <NameTag name="u" state="STATE_NONE"/>
+          <NameTag name="u" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
-
-      <ConvectiveFluxExpression>
-        <Method>UPWIND</Method>
-        <Direction>Y</Direction>
+      </ConvectiveFlux>
+      <ConvectiveFlux direction="Y" method="UPWIND">
         <AdvectiveVelocity>
-            <NameTag name="v" state="STATE_NONE"/>
+          <NameTag name="v" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
-
-      <ConvectiveFluxExpression>
-        <Method>UPWIND</Method>
-        <Direction>Z</Direction>
+      </ConvectiveFlux>
+      <ConvectiveFlux direction="Z" method="UPWIND">
         <AdvectiveVelocity>
-            <NameTag name="w" state="STATE_NONE"/>
+          <NameTag name="w" state="STATE_NONE"/>
         </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
-      
-    </TransportEquation>  
-
+      </ConvectiveFlux>
+      <DiffusiveFlux direction="X" coefficient="0.0001"/>
+      <DiffusiveFlux direction="Y" coefficient="0.0001"/>
+      <DiffusiveFlux direction="Z" coefficient="0.0001"/>
+    </TransportEquation>
     <FieldClipping tasklist="advance_solution">
       <FieldExpression type="SVOL" min="0.0" max="1.0">
         <NameTag name="f" state="STATE_N"/>        

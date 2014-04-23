@@ -36,7 +36,6 @@ SRCS     += $(SRCDIR)/ConsecutiveRangeSet.cc \
             $(SRCDIR)/LinearArray3.cc \
 	          $(SRCDIR)/Sort.cc \
 	          $(SRCDIR)/StringUtil.cc \
-	          $(SRCDIR)/TrivialAllocator.cc \
 	          $(SRCDIR)/templates.cc
 
 PSELIBS := Core/Exceptions Core/Thread

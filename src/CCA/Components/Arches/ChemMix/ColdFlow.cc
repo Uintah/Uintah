@@ -505,7 +505,7 @@ ColdFlow::getState( const ProcessorGroup* pc,
 
           getBCKind( patch, face, child, variable_name, matlIndex, bc_kind, face_name ); 
 
-          bool foundIterator = "false"; 
+          bool foundIterator = false; 
           if ( bc_kind == "FromFile" ){ 
             foundIterator = 
               getIteratorBCValue<std::string>( patch, face, child, variable_name, matlIndex, bc_s_value, bound_ptr ); 

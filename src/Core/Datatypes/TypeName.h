@@ -41,8 +41,6 @@
 #include <Core/Datatypes/FieldIndex.h>
 #include <Core/Containers/LockingHandle.h>
 
-#include <Core/Datatypes/share.h>
-
 #ifndef TYPENAME_H
 #define TYPENAME_H
 
@@ -71,29 +69,29 @@ class Matrix;
 class NrrdData;
 class Field;
 
-template<> SCISHARE const std::string find_type_name(float*);
-template<> SCISHARE const std::string find_type_name(double*);
-template<> SCISHARE const std::string find_type_name(long double*);
-template<> SCISHARE const std::string find_type_name(short*);
-template<> SCISHARE const std::string find_type_name(unsigned short*);
-template<> SCISHARE const std::string find_type_name(int*);
-template<> SCISHARE const std::string find_type_name(unsigned int*);
-template<> SCISHARE const std::string find_type_name(long*);
-template<> SCISHARE const std::string find_type_name(unsigned long*);
-template<> SCISHARE const std::string find_type_name(long long*);
-template<> SCISHARE const std::string find_type_name(unsigned long long*);
-template<> SCISHARE const std::string find_type_name(char*);
-template<> SCISHARE const std::string find_type_name(unsigned char*);
-template<> SCISHARE const std::string find_type_name(bool*);
-template<> SCISHARE const std::string find_type_name(Vector*);
-template<> SCISHARE const std::string find_type_name(IntVector*);
-template<> SCISHARE const std::string find_type_name(Point*);
-template<> SCISHARE const std::string find_type_name(Transform*);
-template<> SCISHARE const std::string find_type_name(std::string*);
+template<> const std::string find_type_name(float*);
+template<> const std::string find_type_name(double*);
+template<> const std::string find_type_name(long double*);
+template<> const std::string find_type_name(short*);
+template<> const std::string find_type_name(unsigned short*);
+template<> const std::string find_type_name(int*);
+template<> const std::string find_type_name(unsigned int*);
+template<> const std::string find_type_name(long*);
+template<> const std::string find_type_name(unsigned long*);
+template<> const std::string find_type_name(long long*);
+template<> const std::string find_type_name(unsigned long long*);
+template<> const std::string find_type_name(char*);
+template<> const std::string find_type_name(unsigned char*);
+template<> const std::string find_type_name(bool*);
+template<> const std::string find_type_name(Vector*);
+template<> const std::string find_type_name(IntVector*);
+template<> const std::string find_type_name(Point*);
+template<> const std::string find_type_name(Transform*);
+template<> const std::string find_type_name(std::string*);
 
-template<> SCISHARE const std::string find_type_name(LockingHandle<Matrix> *);
-template<> SCISHARE const std::string find_type_name(LockingHandle<NrrdData> *);
-template<> SCISHARE const std::string find_type_name(LockingHandle<Field> *);
+template<> const std::string find_type_name(LockingHandle<Matrix> *);
+template<> const std::string find_type_name(LockingHandle<NrrdData> *);
+template<> const std::string find_type_name(LockingHandle<Field> *);
 
 //////////
 // Function overloading for templates 

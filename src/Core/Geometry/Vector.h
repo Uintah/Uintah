@@ -44,8 +44,6 @@
 #include   <string>
 #include   <iosfwd>
 
-#include <Core/Geometry/share.h>
-
 namespace SCIRun {
 
 class Piostream;
@@ -102,8 +100,8 @@ public:
   }
 
   // checks if one vector is exactly the same as another
-  SCISHARE int operator==(const Vector&) const;
-  SCISHARE int operator!=(const Vector&) const;
+  int operator==(const Vector&) const;
+  int operator!=(const Vector&) const;
 
   inline Vector operator*(const double) const;
   inline Vector operator*(const Vector&) const;
@@ -120,8 +118,8 @@ public:
   inline Vector& operator-=(const Vector&);
   inline double normalize();
   inline double safe_normalize();
-  SCISHARE Vector normal() const;
-  SCISHARE Vector vec_rint() const;
+  Vector normal() const;
+  Vector vec_rint() const;
   friend inline Vector Cross(const Vector&, const Vector&);
   friend inline Vector Abs(const Vector&);
   inline void x(double);
@@ -150,10 +148,10 @@ public:
     
   friend inline Vector Interpolate(const Vector&, const Vector&, double);
     
-  SCISHARE void find_orthogonal(Vector&, Vector&) const;
-  SCISHARE bool check_find_orthogonal(Vector&, Vector&) const;
+  void find_orthogonal(Vector&, Vector&) const;
+  bool check_find_orthogonal(Vector&, Vector&) const;
 
-  SCISHARE friend void Pio( Piostream&, Vector& );
+  friend void Pio( Piostream&, Vector& );
 
   inline const Point &point() const;
   inline Point &asPoint() const;
@@ -191,16 +189,16 @@ public:
       z_ = z;
     }
       
-  SCISHARE friend std::ostream& operator<<(std::ostream& os, const Vector& p);
-  SCISHARE friend std::istream& operator>>(std::istream& os, Vector& p);
+  friend std::ostream& operator<<(std::ostream& os, const Vector& p);
+  friend std::istream& operator>>(std::istream& os, Vector& p);
 
 }; // end class Vector
 
 // Actual declarations of these functions as 'friend' above doesn't
 // (depending on the compiler) actually declare them.
-SCISHARE void Pio( Piostream&, Vector& );
-SCISHARE std::ostream& operator<<(std::ostream& os, const Vector& p);
-SCISHARE std::istream& operator>>(std::istream& os, Vector& p);
+void Pio( Piostream&, Vector& );
+std::ostream& operator<<(std::ostream& os, const Vector& p);
+std::istream& operator>>(std::istream& os, Vector& p);
   
 } // End namespace SCIRun
 
@@ -515,7 +513,7 @@ inline Vector Max(const Vector &v1, const Vector &v2)
 		Max(v1.z(), v2.z()));
 }
 
-SCISHARE const TypeDescription* get_type_description(Vector*);
+const TypeDescription* get_type_description(Vector*);
 
 } // End namespace SCIRun
 

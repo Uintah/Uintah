@@ -34,15 +34,13 @@
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Basis/Locate.h>
 
-#include <Core/Basis/share.h>
-
 namespace SCIRun {
 
 //! Class for describing unit geometry of CrvLinearLgn 
 class CrvLinearLgnUnitElement {
 public: 
-  static SCISHARE double unit_vertices[2][1]; //!< Parametric coordinates of vertices 
-  static SCISHARE int unit_edges[1][2];    //!< References to vertices of unit edge 
+  static double unit_vertices[2][1]; //!< Parametric coordinates of vertices
+  static int unit_edges[1][2];    //!< References to vertices of unit edge
 
   CrvLinearLgnUnitElement() {}
   virtual ~CrvLinearLgnUnitElement() {}

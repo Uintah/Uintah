@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 2012 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,14 +22,45 @@
  * IN THE SOFTWARE.
  */
 
-#undef SCISHARE
+#ifndef OpenBC_Expr_h
+#define OpenBC_Expr_h
 
-#ifdef _WIN32
-#ifdef BUILD_Core_OS
-#define SCISHARE __declspec(dllexport)
-#else
-#define SCISHARE __declspec(dllimport)
-#endif
-#else
-#define SCISHARE
-#endif
+#include <expression/Expression.h>
+#include <CCA/Components/Wasatch/TagNames.h>
+#include "BoundaryConditionBase.h"
+
+template< typename FieldT >
+class OpenBC
+: public BoundaryConditionBase<FieldT>
+{
+  OpenBC( const Expr::Tag& velTag ) : velTag_ (velTag)
+  {
+    this->set_gpu_runnable(false);
+  }
+public:
+  class Builder : public Expr::ExpressionBuilder
+  {
+  public:
+    Builder( const Expr::Tag& resultTag,
+             const Expr::Tag& velTag )
+    : ExpressionBuilder(resultTag),
+      velTag_ (velTag)
+    {}
+    Expr::ExpressionBase* build() const{ return new OpenBC(velTag_); }
+  private:
+    const Expr::Tag velTag_;
+  };
+  
+  ~OpenBC(){}
+
+  void advertise_dependents( Expr::ExprDeps& exprDeps );
+  void bind_fields( const Expr::FieldManagerList& fml );
+  void evaluate();
+  
+private:
+  const FieldT* u_;
+  const SpatialOps::structured::SingleValueField* dt_;
+  const Expr::Tag velTag_;
+};
+
+#endif // OpenBC_Expr_h

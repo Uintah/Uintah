@@ -33,23 +33,21 @@
 #include <Core/Basis/TriLinearLgn.h>
 #include <Core/Basis/QuadBilinearLgn.h>
 
-#include <Core/Basis/share.h>
-
 namespace SCIRun {
 
 //! Class for describing unit geometry of PrismLinearLgn 
 class PrismLinearLgnUnitElement {
 public:
   //! Parametric coordinates of vertices of unit edge
-  static SCISHARE double unit_vertices[6][3];
+  static double unit_vertices[6][3];
   //! References to vertices of unit edge 
-  static SCISHARE int unit_edges[9][2]; 
+  static int unit_edges[9][2];
   //! References to vertices of unit face
-  static SCISHARE int unit_faces[5][4]; 
+  static int unit_faces[5][4];
   //! Normals of unit face
-  static SCISHARE double unit_face_normals[5][3];
+  static double unit_face_normals[5][3];
   //! Precalculated area of faces
-  static SCISHARE double unit_face_areas[5];
+  static double unit_face_areas[5];
 
   PrismLinearLgnUnitElement() {};
   virtual ~PrismLinearLgnUnitElement() {}
@@ -249,11 +247,6 @@ public:
   static T GaussianWeights[1];
 };
 
-#ifdef _WIN32
-// force the instantiation of PrismGaussian1<double>
-template class PrismGaussian1<double>;
-#endif
-
 template <class T>
 int PrismGaussian1<T>::GaussianNum = 1;
 
@@ -274,11 +267,6 @@ public:
   static T GaussianPoints[6][3];
   static T GaussianWeights[6];
 };
-
-#ifdef _WIN32
-// force the instantiation of TetGaussian2<double>
-template class PrismGaussian2<double>;
-#endif
 
 template <class T>
 int PrismGaussian2<T>::GaussianNum = 6;

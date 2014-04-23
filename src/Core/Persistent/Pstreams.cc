@@ -59,9 +59,6 @@ using namespace std;
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <cstring>
-#ifdef _WIN32
-#include <io.h>
-#endif
 
 
 namespace SCIRun {

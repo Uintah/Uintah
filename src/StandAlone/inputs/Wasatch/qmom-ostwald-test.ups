@@ -28,12 +28,12 @@
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="S" state="STATE_N" />
+      <NameTag name="S" state="STATE_N"/>
       <Constant>5</Constant>
     </BasicExpression>
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="S" state="STATE_N" />
+      <NameTag name="S" state="STATE_N"/>
       <Constant>5</Constant>
     </BasicExpression>
 
@@ -45,10 +45,10 @@
 
     <PrecipitationBasicExpression type="SVOL">
       <TaskList> advance_solution </TaskList>
-      <NameTag name="GrowthCoefficient" state="STATE_N" />
+      <NameTag name="GrowthCoefficient" state="STATE_N"/>
       <PrecipitationBulkDiffusionCoefficient Diff_Coef="1" Molec_Vol="1">
         <Supersaturation>
-          <NameTag name="S" state="STATE_N" />
+          <NameTag name="S" state="STATE_N"/>
         </Supersaturation>
         <EquilibriumConcentration>
           <NameTag name="ceq" state="STATE_N"/>
@@ -101,7 +101,7 @@
     <filebase>qmom-ostwald-test.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.00001"/>
+    <checkpoint cycle="2" interval="0.00001"/>
     <compression>gzip</compression>
     <save label="m_CACO3_0"/>
     <save label="m_CACO3_1"/>
@@ -112,7 +112,7 @@
     <save label="a_CACO3_0"/>    
     <save label="a_CACO3_1"/>    
     <save label="m_CACO3_1_rhs"/>   
-    <save label="SBar_CACO3" />     
+    <save label="SBar_CACO3"/>     
     <save label="GrowthCoefficient"/>
     <save label="S"/>   
   </DataArchiver> 

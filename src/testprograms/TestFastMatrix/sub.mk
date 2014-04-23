@@ -44,7 +44,7 @@ else
         $(F_LIBRARY)                      \
         $(LAPACK_LIBRARY) $(BLAS_LIBRARY) \
         $(THREAD_LIBRARY)                 \
-	$(TEEM_LIBRARY) $(PNG_LIBRARY)    \
+	$(TEEM_LIBRARY)                    \
         $(Z_LIBRARY)
 endif
 

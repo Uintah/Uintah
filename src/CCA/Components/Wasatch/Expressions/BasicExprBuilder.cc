@@ -372,9 +372,9 @@ namespace Wasatch{
         Uintah::GeometryPieceFactory::create(intrusionParams->findBlock("geom_object"),geomObjects);
         double insideValue = 0.0;
         intrusionParams->getAttribute("value", insideValue);
-        geomObjectsMap.insert(std::pair<Uintah::GeometryPieceP, double>(geomObjects.back(), insideValue));
+        geomObjectsMap.insert(std::pair<Uintah::GeometryPieceP, double>(geomObjects.back(), insideValue)); // set a value inside the geometry object
       }
-      builder = scinew GeometryBased::Builder(tag, geomObjectsMap, outsideValue);
+      builder = scinew typename GeometryBased<FieldT>::Builder(tag, geomObjectsMap, outsideValue);
     }
 
     return builder;

@@ -15,45 +15,33 @@
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi-scalar" state="STATE_N" />
+      <NameTag name="phi-scalar" state="STATE_N"/>
       <LinearFunction slope="0.1" intercept="0.1">
-        <NameTag name="XSVOL" state="STATE_NONE" />
+        <NameTag name="XSVOL" state="STATE_NONE"/>
       </LinearFunction>
     </BasicExpression>
 
-    <BasicExpression type="SVOL" >
+    <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="phi-diffusivity" state="STATE_NONE" />
-      <GaussianFunction amplitude="4e-3" deviation="2" mean="5" baseline="1e-3" >
-        <NameTag name="XSVOL" state="STATE_NONE" />
+      <NameTag name="phi-diffusivity" state="STATE_NONE"/>
+      <GaussianFunction amplitude="4e-3" deviation="2" mean="5" baseline="1e-3">
+        <NameTag name="XSVOL" state="STATE_NONE"/>
       </GaussianFunction>
     </BasicExpression>
 
     <!-- Build a non-staggered scalar transport equation -->
     <TransportEquation equation="generic">
-
       <SolutionVariable>phi-scalar</SolutionVariable>
-
-      <DiffusiveFluxExpression>
-        <Direction>X</Direction>
+      <DiffusiveFlux direction="X">
         <DiffusionCoefficient>
-          <NameTag name="phi-diffusivity" state="STATE_NONE" />
+          <NameTag name="phi-diffusivity" state="STATE_NONE"/>
         </DiffusionCoefficient>
         <!-- ConstantDiffusivity>0.3</ConstantDiffusivity -->
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Y</Direction>
-        <ConstantDiffusivity>0.2</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Z</Direction>
-        <ConstantDiffusivity>0.1</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
+      </DiffusiveFlux>
+      <DiffusiveFlux direction="Y" coefficient="0.2"/>
+      <DiffusiveFlux direction="Z" coefficient="0.1"/>
     </TransportEquation>
-  </Wasatch>
+    </Wasatch>
 
 
   <Time>
@@ -69,9 +57,9 @@
     <filebase>wasatch_test.uda</filebase>
     <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "1" interval = "5"/>
+    <checkpoint cycle="1" interval="5"/>
     <compression>gzip</compression>
-    <save label="phi-scalar" />
+    <save label="phi-scalar"/>
   </DataArchiver> 
 
   <Grid>

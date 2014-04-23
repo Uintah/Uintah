@@ -43,13 +43,11 @@
 #include <list>
 #include <vector>
 
-#include <Core/Datatypes/share.h>
-
 namespace SCIRun {
 
 typedef unsigned int under_type;
 
-class SCISHARE SearchGridBase
+class SearchGridBase
 {
 public:
 
@@ -89,7 +87,7 @@ protected:
 };
 
 
-class SCISHARE SearchGridConstructor : public Datatype, public SearchGridBase
+class SearchGridConstructor : public Datatype, public SearchGridBase
 {
   friend class SearchGrid;
   
@@ -114,7 +112,7 @@ protected:
 
 
 
-class SCISHARE SearchGrid : public Datatype, public SearchGridBase
+class SearchGrid : public Datatype, public SearchGridBase
 {
 public:
   SearchGrid(const SearchGridConstructor &c);

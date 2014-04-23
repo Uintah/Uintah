@@ -57,18 +57,18 @@
 #include <Core/Util/Endian.h>
 #include <Core/Thread/Time.h>
 
-#include   <iomanip>
-#include   <cerrno>
-#include   <fstream>
-#include   <iostream>
-#include   <cstdio>
-#include   <sstream>
-#include   <vector>
-#include   <sys/types.h>
-#include   <sys/stat.h>
-#include   <fcntl.h>
-#include   <cmath>
-#include   <cstring>
+#include <iomanip>
+#include <cerrno>
+#include <fstream>
+#include <iostream>
+#include <cstdio>
+#include <sstream>
+#include <vector>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <cmath>
+#include <cstring>
 
 #include <time.h>
 
@@ -85,11 +85,11 @@
 //TODO - BJW - if multilevel reduction doesn't work, fix all
 //       getMaterialSet(0)
 
-#define PADSIZE 1024L
-#define ALL_LEVELS 99
+#define PADSIZE    1024L
+#define ALL_LEVELS   99
 
-#define OUTPUT 0
-#define CHECKPOINT 1
+#define OUTPUT               0
+#define CHECKPOINT           1
 #define CHECKPOINT_REDUCTION 2
 
 using namespace Uintah;
@@ -426,21 +426,26 @@ DataArchiver::initializeOutput(const ProblemSpecP& params)
        makeVersionedDir();
        string fname = myname.str();
        FILE* tmpout = fopen(fname.c_str(), "w");
-       if(!tmpout)
+       if(!tmpout) {
          throw ErrnoException("fopen", errno, __FILE__, __LINE__);
+       }
        string dirname = d_dir.getName();
        fprintf(tmpout, "%s\n", dirname.c_str());
-       if(fflush(tmpout) != 0)
+       if(fflush(tmpout) != 0) {
          throw ErrnoException("fflush", errno, __FILE__, __LINE__);
+       }
 #if defined(__APPLE__)
-       if(fsync(fileno(tmpout)) != 0)
+       if(fsync(fileno(tmpout)) != 0) {
          throw ErrnoException("fsync", errno, __FILE__, __LINE__);
-#elif !defined(_WIN32)
-       if(fdatasync(fileno(tmpout)) != 0)
+       }
+#elif !defined(_WIN32) && !defined(__bgq__) // __bgq__ is defined on Blue Gene Q computers...
+       if(fdatasync(fileno(tmpout)) != 0) {
          throw ErrnoException("fdatasync", errno, __FILE__, __LINE__);
+       }
 #endif
-       if(fclose(tmpout) != 0)
+       if(fclose(tmpout) != 0) {
          throw ErrnoException("fclose", errno, __FILE__, __LINE__);
+       }
      }
      MPI_Barrier(d_myworld->getComm());
      if(!d_writeMeta){
@@ -1207,13 +1212,11 @@ DataArchiver::beginOutputTimestep( double time,
 //______________________________________________________________________
 //
 void
-DataArchiver::makeTimestepDirs(Dir& baseDir,
-                               vector<DataArchiver::SaveItem>&,
-                               const GridP& grid,
-                               string* pTimestepDir )
-{ 
-  
-
+DataArchiver::makeTimestepDirs(       Dir                            & baseDir,
+                                      vector<DataArchiver::SaveItem> & saveLabels ,
+                                const GridP                          & grid,
+                                      string                         * pTimestepDir /* passed back */ )
+{
   int numLevels = grid->numLevels();
   // time should be currentTime+delt
   
@@ -1234,29 +1237,71 @@ DataArchiver::makeTimestepDirs(Dir& baseDir,
   // So every rank should try to create dir.
   //if(d_writeMeta){
     Dir tdir;
-    try {
-      tdir = baseDir.createSubdir(tname.str());
- 
-    } catch(ErrnoException& e) {
-      if(e.getErrno() != EEXIST)
-        throw;
-      tdir = baseDir.getSubdir(tname.str());
+
+    bool done = false;
+    int  tries = 0;
+
+    while( !done ) {
+
+      try {
+        tries++;
+
+        if( tries > 500 ) {
+          cout << "Tries is " << tries << "\n";
+          throw InternalError( "DataArchiver::outputTimstep(): Unable to create timestep directory!", __FILE__, __LINE__ );
+        }
+
+        tdir = baseDir.createSubdir(tname.str());
+        done = true;
+      }
+      catch( ErrnoException & e ) {
+        if( e.getErrno() == EEXIST ) {
+          done = true;
+          tdir = baseDir.getSubdir( tname.str() );
+        }
+      }
+    }
+
+    if( tries > 1 ) {
+      cout << d_myworld->myrank() << " - tries: " << tries << "\n";
     }
     
     // Create the directory for this level, if necessary
-    for(int l=0;l<numLevels;l++){
+
+    for( int l = 0; l < numLevels; l++ ) {
+
+      tries = 0;
       ostringstream lname;
       lname << "l" << l;
       Dir ldir;
-      try {
-        ldir = tdir.createSubdir(lname.str());
-      } catch(ErrnoException& e) {
-        if(e.getErrno() != EEXIST)
-          throw;
-        ldir = tdir.getSubdir(lname.str());
+      
+      done = false;
+      while( !done ) {
+
+        try {
+          tries++;
+
+          if( tries > 500 ) {
+            cout << "2) Tries is " << tries << "\n";
+            throw InternalError( "DataArchiver::outputTimstep(): 2) Unable to create timestep directory!", __FILE__, __LINE__ );
+          }
+          
+          ldir = tdir.createSubdir( lname.str() );
+          done = true;
+        }
+        catch( ErrnoException & e ) {
+          if( e.getErrno() == EEXIST ) {
+            done = true;
+            ldir = tdir.getSubdir( lname.str() );
+          }
+        }
       }
-    }
-  //}
+      if( tries > 1 ) {
+        cout << d_myworld->myrank() << ": " << l << " - tries: " << tries << "\n";
+      }
+
+    } // end for( int l = 0 )
+//}
 }
 
 

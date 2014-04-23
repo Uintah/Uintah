@@ -36,7 +36,7 @@ namespace SCIRun {
 //! Class for describing unit geometry of QuadBiquadraticLgn 
   class QuadBiquadraticLgnUnitElement : public QuadBilinearLgnUnitElement {
 public: 
-  static SCISHARE double unit_vertices[8][2]; //!< Parametric coordinates of vertices of unit edge
+  static double unit_vertices[8][2]; //!< Parametric coordinates of vertices of unit edge
 
   QuadBiquadraticLgnUnitElement() {}
   virtual ~QuadBiquadraticLgnUnitElement() {}

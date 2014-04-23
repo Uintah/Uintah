@@ -845,8 +845,6 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
 {
   //double time = d_lab->d_sharedState->getElapsedTime();
   //double current_time = time + time_shift;
-  Vector Dx = patch->dCell(); 
-
   // Get the low and high index for the patch and the variables
   IntVector idxLo = patch->getFortranCellLowIndex();
   IntVector idxHi = patch->getFortranCellHighIndex();
@@ -1713,7 +1711,6 @@ void BoundaryCondition::sched_setAreaFraction( SchedulerP& sched,
   if ( timesubstep == 0 ){
 
     tsk->computes( d_lab->d_areaFractionLabel );
-    tsk->computes( d_lab->d_filterVolumeLabel ); 
     tsk->computes( d_lab->d_volFractionLabel );
 #ifdef WASATCH_IN_ARCHES
     tsk->computes(d_lab->d_areaFractionFXLabel); 
@@ -1726,7 +1723,6 @@ void BoundaryCondition::sched_setAreaFraction( SchedulerP& sched,
     //only in cases where geometry moves. 
     tsk->modifies( d_lab->d_areaFractionLabel );
     tsk->modifies( d_lab->d_volFractionLabel); 
-    tsk->modifies( d_lab->d_filterVolumeLabel ); 
 #ifdef WASATCH_IN_ARCHES
     tsk->modifies(d_lab->d_areaFractionFXLabel); 
     tsk->modifies(d_lab->d_areaFractionFYLabel); 
@@ -1739,7 +1735,6 @@ void BoundaryCondition::sched_setAreaFraction( SchedulerP& sched,
 
     tsk->requires( Task::OldDW, d_lab->d_areaFractionLabel, Ghost::None, 0 );
     tsk->requires( Task::OldDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
-    tsk->requires( Task::OldDW, d_lab->d_filterVolumeLabel, Ghost::None, 0 );
 
 #ifdef WASATCH_IN_ARCHES
     tsk->requires( Task::OldDW, d_lab->d_areaFractionFXLabel, Ghost::None, 0 );
@@ -1766,9 +1761,6 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
 
   for (int p = 0; p < patches->size(); p++) {
 
-    bool use_old_filter = false; 
-    Filter* my_filter = scinew Filter(use_old_filter);  
-
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
@@ -1781,7 +1773,6 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
 #endif
     CCVariable<double>   volFraction; 
     constCCVariable<int> cellType; 
-    CCVariable<double>   filterVolume; 
 
     new_dw->get( cellType, d_lab->d_cellTypeLabel, indx, patch, Ghost::AroundCells, 1 ); 
 
@@ -1789,9 +1780,7 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
 
       new_dw->allocateAndPut( areaFraction, d_lab->d_areaFractionLabel, indx, patch );
       new_dw->allocateAndPut( volFraction,  d_lab->d_volFractionLabel, indx, patch );
-      new_dw->allocateAndPut( filterVolume, d_lab->d_filterVolumeLabel, indx, patch ); 
       volFraction.initialize(1.0);
-      filterVolume.initialize(1.0);
 
       for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
         areaFraction[*iter] = Vector(1.0,1.0,1.0);
@@ -1810,7 +1799,6 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
 
       new_dw->getModifiable( areaFraction, d_lab->d_areaFractionLabel, indx, patch );  
       new_dw->getModifiable( volFraction, d_lab->d_volFractionLabel, indx, patch );  
-      new_dw->getModifiable( filterVolume, d_lab->d_filterVolumeLabel, indx, patch );
 
 #ifdef WASATCH_IN_ARCHES
       new_dw->getModifiable( areaFractionFX, d_lab->d_areaFractionFXLabel, indx, patch );  
@@ -1827,11 +1815,9 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
       constCCVariable<double> old_filter_vol; 
       old_dw->get( old_area_frac, d_lab->d_areaFractionLabel, indx, patch, Ghost::None, 0 );
       old_dw->get( old_vol_frac,  d_lab->d_volFractionLabel, indx, patch, Ghost::None, 0 );
-      old_dw->get( old_filter_vol,  d_lab->d_filterVolumeLabel, indx, patch, Ghost::None, 0 );
 
       areaFraction.copyData( old_area_frac );
       volFraction.copyData( old_vol_frac );
-      filterVolume.copyData( old_filter_vol );
 
 #ifdef WASATCH_IN_ARCHES
       constSFCXVariable<double> old_Fx;
@@ -1860,9 +1846,6 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
 
       d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, wall_type, flowType ); 
 
-      int filter_width = 3; 
-      my_filter->computeFilterVolume( patch, cellType, filterVolume, filter_width ); 
-
 #ifdef WASATCH_IN_ARCHES
       //copy for wasatch-arches: 
       for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
@@ -1873,7 +1856,6 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
       }
 #endif 
     }
-    delete my_filter; 
   }
 }
 
@@ -1991,7 +1973,6 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
           
           //compute the density:
           typedef std::vector<std::string> StringVec; 
-          typedef std::map<std::string, double> StringDoubleMap;
           MixingRxnModel* mixingTable = d_props->getMixRxnModel(); 
           StringVec iv_var_names = mixingTable->getAllIndepVars(); 
           vector<double> iv; 
@@ -2445,8 +2426,7 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
      new_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 ); 
     }
 
-    coutLock.lock();
-    std::cout << "\nDomain boundary condition summary: \n";
+    proc0cout << "\nDomain boundary condition summary: \n";
 
     for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
           bc_iter != d_bc_information.end(); bc_iter++){
@@ -2526,14 +2506,13 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
         }
       }
 
-    std::cout << "  ----> BC Label: " << bc_iter->second.name << std::endl;
-    std::cout << "            area: " << area << std::endl;
-    std::cout << "           m_dot: " << bc_iter->second.mass_flow_rate << std::endl;
-    std::cout << "               U: " << bc_iter->second.velocity[0] << ", " << bc_iter->second.velocity[1] << ", " << bc_iter->second.velocity[2] << std::endl;
+      proc0cout << "  ----> BC Label: " << bc_iter->second.name << std::endl;
+      proc0cout << "            area: " << area << std::endl;
+      proc0cout << "           m_dot: " << bc_iter->second.mass_flow_rate << std::endl;
+      proc0cout << "               U: " << bc_iter->second.velocity[0] << ", " << bc_iter->second.velocity[1] << ", " << bc_iter->second.velocity[2] << std::endl;
 
     }
-    std::cout << std::endl;
-    coutLock.unlock();
+    proc0cout << std::endl;
   }
 }
 //--------------------------------------------------------------------------------

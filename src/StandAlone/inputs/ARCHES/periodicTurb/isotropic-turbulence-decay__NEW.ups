@@ -63,8 +63,6 @@
         <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
 
-      <set_initial_vel_condition inputfile="inputs/ARCHES/periodicTurb/cbc32_uvw_arches.gz"/>
-
       <Turbulence model="compdynamicprocedure"/>
 
       <Properties>
@@ -92,6 +90,9 @@
 
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
+          <initialization type="input">
+            <input_file>inputs/ARCHES/periodicTurb/cbc32_uvw_arches.gz</input_file>
+          </initialization>
         </MomentumSolver>
 
       </ExplicitSolver>

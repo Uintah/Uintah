@@ -18,21 +18,21 @@
     <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
     <BasicExpression type="XVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="x-vel" state="STATE_N" />
+      <NameTag name="x-vel" state="STATE_N"/>
       <Constant>1.0</Constant>
     </BasicExpression>
     
     <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
     <BasicExpression type="YVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="y-vel" state="STATE_N" />
+      <NameTag name="y-vel" state="STATE_N"/>
       <Constant>1.0</Constant>
     </BasicExpression>
     
     <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
     <BasicExpression type="ZVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="z-vel" state="STATE_N" />
+      <NameTag name="z-vel" state="STATE_N"/>
       <Constant>1.0</Constant>
     </BasicExpression>
 
@@ -47,7 +47,7 @@
         <Y-Velocity>
             <NameTag name="y-vel" state="STATE_N"/>
         </Y-Velocity>
-        <Z-Velocity > 
+        <Z-Velocity> 
             <NameTag name="z-vel" state="STATE_N"/>
         </Z-Velocity>        
         <DoDiffusion>true</DoDiffusion>
@@ -71,7 +71,7 @@
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <compression>gzip</compression>
-    <save label="phi0" />
+    <save label="phi0"/>
   </DataArchiver> 
 
   <Grid>

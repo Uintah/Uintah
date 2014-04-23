@@ -79,8 +79,8 @@
       <ExtractDensity>
         <NameTag name="density" state="CARRY_FORWARD"/>
         <ModelBasedOnMixtureFractionAndHeatLoss>
-          <DensityWeightedMixtureFraction><NameTag name="rhof"  state="STATE_N"      /></DensityWeightedMixtureFraction>    
-          <DensityWeightedEnthalpy>       <NameTag name="rhoh"  state="STATE_N"      /></DensityWeightedEnthalpy>
+          <DensityWeightedMixtureFraction><NameTag name="rhof" state="STATE_N"/></DensityWeightedMixtureFraction>    
+          <DensityWeightedEnthalpy>       <NameTag name="rhoh" state="STATE_N"/></DensityWeightedEnthalpy>
           <HeatLoss>                      <NameTag name="gamma" state="CARRY_FORWARD"/></HeatLoss>
         </ModelBasedOnMixtureFractionAndHeatLoss>
       </ExtractDensity>
@@ -106,17 +106,10 @@
     
     <!-- Build a scalar transport equation for mixture fraction -->
     <TransportEquation equation="generic">
-
       <SolutionVariable>rhof</SolutionVariable>
       <PrimitiveVariable>f</PrimitiveVariable>
-      
-      <DiffusiveFluxExpression>
-        <Direction>X</Direction>
-        <ConstantDiffusivity>1.0e-4</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-      
-    </TransportEquation>   
-
+      <DiffusiveFlux direction="X" coefficient="1.0e-4"/>
+    </TransportEquation>
     <!-- Build an equation for the enthalpy -->
     <TransportEquation equation="enthalpy">
 

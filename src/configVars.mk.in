@@ -90,6 +90,7 @@ IS_OSX := @IS_OSX@
 IS_WIN := @IS_WIN@
 IS_AIX := @IS_AIX@
 IS_REDSTORM := no
+IS_BGQ := @IS_BGQ@
 MAKE_ARCHIVES := @MAKE_ARCHIVES@
 IS_DEBUG := @DEBUG@
 
@@ -126,8 +127,6 @@ FTGL_INCLUDE := @INC_FREETYPE_H@ @INC_FTGL_H@
 
 SCISOCK_LIBRARY := @SCISOCK_LIB_DIR_FLAG@ @SCISOCK_LIB_FLAG@
 SCISOCK_INCLUDE := @INC_SCISOCK_H@
-
-MPEG_LIBRARY := @MPEGE_LIB_DIR_FLAG@ @MPEGE_LIB_FLAG@
 
 # MallocTrace
 MALLOC_TRACE_INCLUDE = @INC_MALLOC_TRACE_H@
@@ -183,6 +182,11 @@ ifneq ($(TAU_MAKEFILE),)
   TAU_LIBRARY := $(LDRUN_PREFIX)$(TAU_LIB_DIR) -L$(TAU_LIB_DIR) $(TAU_LIB_FLAG)
 else
   TAU_LIBRARY :=
+endif
+
+ifeq ($(IS_BGQ),yes)
+  CFLAGS   := $(CFLAGS) -DPETSC_RESTRICT=__restrict__ -DPETSC_DEPRECATED\(why\)= 
+  CXXFLAGS := $(CXXFLAGS) -DPETSC_RESTRICT=__restrict__ -DPETSC_DEPRECATED\(why\)= 
 endif
 
 PAPI_INCLUDE     := @INC_PAPI_H@
@@ -250,13 +254,9 @@ Z_LIBRARY := @Z_LIB_DIR_FLAG@ @Z_LIB_FLAG@
 XML2_LIBRARY := @XML2_LIB_DIR_FLAG@ @XML2_LIB_FLAG@
 XML2_INCLUDE := @INC_XML2_H@
 
+HAVE_TIFF := @HAVE_TIFF@
 JPEG_LIBRARY := @JPEG_LIB_FLAG@ @JPEG_LIB_DIR_FLAG@
 TIFF_LIBRARY := @TIFF_LIB_FLAG@ @TIFF_LIB_DIR_FLAG@
-HAVE_TIFF := @HAVE_TIFF@
-
-PNG_INCLUDE := @INC_PNG_H@
-PNG_LIBRARY := @PNG_LIB_DIR_FLAG@ @PNG_LIB_FLAG@
-HAVE_PNG := @HAVE_PNG@
 
 HAVE_KEPLER := @HAVE_KEPLER@
 
@@ -264,6 +264,7 @@ VDT_INCLUDE := @INC_VDT_H@
 VDT_LIBRARY := @VDT_LIB_DIR_FLAG@ @VDT_LIB_FLAG@
 
 HAVE_HYPRE     := @HAVE_HYPRE@
+HYPRE_INCLUDE  := @INC_HYPRE_H@
 HYPRE_LIBRARY  := @HYPRE_LIB_DIR_FLAG@ @HYPRE_LIB_FLAG@
 
 HAVE_PETSC     := @HAVE_PETSC@
@@ -273,7 +274,7 @@ PETSC_LIBRARY  := @PETSC_LIB_DIR_FLAG@ @PETSC_LIB_FLAG@
 
 ELECTRIC_FENCE := @ELECTRIC_FENCE_LIB_DIR_FLAG@ @ELECTRIC_FENCE_LIB_FLAG@
 
-INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I$(OBJTOP)/include @INC_XML2_H@ @INC_PETSC_H@ $(MPI_INCLUDE) $(PAPI_INCLUDE) $(FFTW_INCLUDE) $(GPERFTOOLS_INCLUDE) $(CUDA_INCLUDE) $(MAGMA_INCLUDE) @INC_Z_H@ @INC_HYPRE_H@ $(TAUINC) @INC_PNG_H@ $(ZOLTAN_INCLUDE) $(TABPROPS_INCLUDE) ${MALLOC_TRACE_INCLUDE}
+INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I$(OBJTOP)/include $(XML2_INCLUDE) $(MPI_INCLUDE) $(PAPI_INCLUDE) $(FFTW_INCLUDE) $(GPERFTOOLS_INCLUDE) $(CUDA_INCLUDE) $(MAGMA_INCLUDE) @INC_Z_H@ $(TAUINC) $(ZOLTAN_INCLUDE) $(TABPROPS_INCLUDE) ${MALLOC_TRACE_INCLUDE}
 FINCLUDES += -I$(SRCTOP) -I$(OBJTOP) -I$(OBJTOP)/include
 
 BUILD_ICE=@BUILD_ICE@
@@ -289,20 +290,9 @@ ifeq ($(SSTREAM_COMPAT),yes)
   INCLUDES := $(INCLUDES) -I$(SRCTOP)/include/compat
 endif
 
-# When building a static executable, these are the basic PSE libraries that are needed.  (Order matters!)
-# Note, for some of the Uintah executables (most importantly, for 'sus') many more libraries are needed
-# and these libraries are listed in the individual sub.mk file for that executable.
-CORE_STATIC_PSELIBS := \
-    Core_DataArchive Core_Grid Core_ProblemSpec Core_GeometryPiece CCA_Components_ProblemSpecification CCA_Ports \
-    Core_Parallel Core_Math Core_Disclosure Core_Util Core_Thread Core_Persistent Core_Exceptions Core_Containers \
-    Core_Malloc Core_IO Core_OS                             
-CORE_STATIC_LIBS := \
-    $(TEEM_LIBRARY) $(XML2_LIBRARY) $(Z_LIBRARY) $(F_LIBRARY) $(PETSC_LIBRARY) $(HYPRE_LIBRARY) \
-    $(LAPACK_LIBRARY) $(BLAS_LIBRARY)  $(MPI_LIBRARY) $(THREAD_LIBRARY) $(X_LIBRARY) $(M_LIBRARY) \
-    $(DL_LIBRARY) $(CUDA_LIBRARY) $(MAGMA_LIBRARY) $(FFTW_LIBRARY) $(GPERFTOOLS_LIBRARY)
-
-# variables and suffix rules for module transformation
-#------------------------------------------------------------------------------
+################################################################
+# Variables and suffix rules for module transformation:
+#
 
 CC              := @CC@
 CXX             := @CXX@
@@ -326,9 +316,25 @@ endif
 ASFLAGS         := @ASFLAGS@  $(ASFLAGS)
 F77		:= @F77@
 FFLAGS		:= @FFLAGS@ $(FFLAGS)
+
+# Fortran Library:
 F_LIBRARY	:= @F_LIB_DIR_FLAG@ @F_LIB_FLAG@ @RT_LIB_FLAG@
 REPOSITORY_FLAGS := @REPOSITORY_FLAGS@
 OBJEXT := @OBJEXT@
+
+################################################################
+# When building a static executable, these are the basic PSE libraries that are needed.  (Order matters!)
+# Note, for some of the Uintah executables (most importantly, for 'sus') many more libraries are needed
+# and these libraries are listed in the individual sub.mk file for that executable.
+#
+CORE_STATIC_PSELIBS := \
+    Core_DataArchive Core_Grid Core_ProblemSpec Core_GeometryPiece CCA_Components_ProblemSpecification CCA_Ports \
+    Core_Parallel Core_Math Core_Disclosure Core_Util Core_Thread Core_Persistent Core_Exceptions Core_Containers \
+    Core_Malloc Core_IO Core_OS                             
+CORE_STATIC_LIBS := \
+    $(TEEM_LIBRARY) $(XML2_LIBRARY) $(Z_LIBRARY) $(PETSC_LIBRARY) $(HYPRE_LIBRARY) \
+    $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY) $(MPI_LIBRARY) $(THREAD_LIBRARY) $(X_LIBRARY) $(M_LIBRARY) \
+    $(DL_LIBRARY) $(CUDA_LIBRARY) $(MAGMA_LIBRARY) $(GPERFTOOLS_LIBRARY)
 
 ################################################################
 # Auto dependency generation flags

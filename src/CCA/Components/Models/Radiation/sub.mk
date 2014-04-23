@@ -31,7 +31,7 @@
 SRCDIR   := CCA/Components/Models/Radiation
 
 SUBDIRS := $(SRCDIR)/RMCRT
-           
+
 ifneq ($(NO_FORTRAN),yes)
   SRCS += \
        $(SRCDIR)/Models_CellInformation.cc \
@@ -45,16 +45,18 @@ ifneq ($(NO_FORTRAN),yes)
 
   ifeq ($(HAVE_PETSC),yes)
     SRCS += $(SRCDIR)/Models_PetscSolver.cc
+    INCLUDES += $(PETSC_INCLUDE)
   else
     SRCS += $(SRCDIR)/Models_FakePetscSolver.cc
   endif
 
   ifeq ($(HAVE_HYPRE),yes)
     SRCS += $(SRCDIR)/Models_HypreSolver.cc
+    INCLUDES += $(HYPRE_INCLUDE)
   endif
 
   SUBDIRS += $(SRCDIR)/fortran
-  
+
   $(SRCDIR)/Models_CellInformation.$(OBJEXT): $(SRCDIR)/fortran/m_cellg_fort.h
 
   $(SRCDIR)/Models_DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/m_rordr_fort.h
@@ -71,7 +73,7 @@ ifneq ($(NO_FORTRAN),yes)
   $(SRCDIR)/Models_DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/m_rdomvolq_fort.h
   $(SRCDIR)/Models_DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/m_rshsolve_fort.h
   $(SRCDIR)/Models_DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/m_rshresults_fort.h
-  
+
 endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

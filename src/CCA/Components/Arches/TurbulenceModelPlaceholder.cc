@@ -87,6 +87,7 @@ void
 TurbulenceModelPlaceholder::problemSetup(const ProblemSpecP& params)
 {
   d_turbPrNo = 0.4;
+  problemSetupCommon( params ); 
 }
 
 //****************************************************************************

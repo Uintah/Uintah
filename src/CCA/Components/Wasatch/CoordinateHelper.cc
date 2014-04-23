@@ -67,53 +67,58 @@ namespace Wasatch{
   
   //------------------------------------------------------------------
   
-  CoordinateNames&
+  const CoordinateNames&
   CoordinateNames::self()
   {
     static CoordinateNames s;
     return s;
   }
   
+  const CoordinateNames::CoordMap&
+  CoordinateNames::coordinate_map()
+  {
+    return self().coordMap_;
+  }
+
   //------------------------------------------------------------------
 
-  void register_coordinate_expressions(GraphCategories& gc,
-                                       const bool isPeriodic)
+  void register_coordinate_expressions( GraphCategories& gc,
+                                        const bool isPeriodic )
   {
     using namespace std;
-    GraphHelper* const initgh = gc[INITIALIZATION];
-    GraphHelper* const slngh = gc[ADVANCE_SOLUTION];
+    const GraphHelper& initgh = *gc[INITIALIZATION  ];
+    const GraphHelper& slngh  = *gc[ADVANCE_SOLUTION];
     
-    typedef map<Expr::Tag, string> CoordMapT;
-    const CoordMapT& coordMap = CoordinateNames::self().coordinate_map();
+    const CoordinateNames::CoordMap& coordMap = CoordinateNames::coordinate_map();
     // make logical decisions based on the specified boundary types
-    BOOST_FOREACH( const CoordMapT::value_type& coordPair, coordMap )
+    BOOST_FOREACH( const CoordinateNames::CoordMap::value_type& coordPair, coordMap )
     {
-      const Expr::Tag coordTag = coordPair.first;
-      const string coordFieldT = coordPair.second;
+      const Expr::Tag& coordTag = coordPair.first;
+      const string& coordFieldT = coordPair.second;
       
       // OldVariable& oldVar = OldVariable::self();
       Expr::ExpressionID coordID;
       if (coordFieldT == "SVOL") {
-        initgh->exprFactory->register_expression( scinew Coordinates<SVolField>::Builder( coordTag ) );
-        coordID = slngh->exprFactory->register_expression( scinew Coordinates<SVolField>::Builder( coordTag ) );
+        initgh         .exprFactory->register_expression( scinew Coordinates<SVolField>::Builder( coordTag ) );
+        coordID = slngh.exprFactory->register_expression( scinew Coordinates<SVolField>::Builder( coordTag ) );
       }
       
       if (coordFieldT == "XVOL") {
-        initgh->exprFactory->register_expression( scinew Coordinates<XVolField>::Builder( coordTag ) );
-        coordID = slngh->exprFactory->register_expression( scinew Coordinates<XVolField>::Builder( coordTag ) );
+        initgh         .exprFactory->register_expression( scinew Coordinates<XVolField>::Builder( coordTag ) );
+        coordID = slngh.exprFactory->register_expression( scinew Coordinates<XVolField>::Builder( coordTag ) );
       }
       
       if (coordFieldT == "YVOL") {
-        initgh->exprFactory->register_expression( scinew Coordinates<YVolField>::Builder( coordTag ) );
-        coordID = slngh->exprFactory->register_expression( scinew Coordinates<YVolField>::Builder( coordTag ) );
+        initgh         .exprFactory->register_expression( scinew Coordinates<YVolField>::Builder( coordTag ) );
+        coordID = slngh.exprFactory->register_expression( scinew Coordinates<YVolField>::Builder( coordTag ) );
       }
       
       if (coordFieldT == "ZVOL") {
-        initgh->exprFactory->register_expression( scinew Coordinates<ZVolField>::Builder( coordTag ) );
-        coordID = slngh->exprFactory->register_expression( scinew Coordinates<ZVolField>::Builder( coordTag ) );
+        initgh         .exprFactory->register_expression( scinew Coordinates<ZVolField>::Builder( coordTag ) );
+        coordID = slngh.exprFactory->register_expression( scinew Coordinates<ZVolField>::Builder( coordTag ) );
       }
       
-      slngh->exprFactory->cleave_from_parents(coordID);
+      slngh.exprFactory->cleave_from_parents(coordID);
     }
   }
 } // namespace Wasatch

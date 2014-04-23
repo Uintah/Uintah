@@ -41,7 +41,7 @@
 
 namespace SCIRun {
 
-class AtomicCounter_private;
+struct AtomicCounter_private;
 
 /**************************************
  
