@@ -73,7 +73,7 @@ template<class T>
 LinearArray3<T>::~LinearArray3()
 {
   if (objs) {
-    delete objs;
+    delete[] objs;
   }
 }
 
@@ -81,7 +81,7 @@ template<class T>
 void LinearArray3<T>::allocate()
 {
   if (dm1 && dm2 && dm3) {
-    objs = new T[(dm1 * dm2 * dm3 * sizeof(T))];
+    objs = new T[(dm1 * dm2 * dm3)];
   } else {
     objs = 0;
   }
@@ -95,12 +95,15 @@ void LinearArray3<T>::resize(int d1,
   if (objs && (dm1 == d1) && (dm2 == d2) && (dm3 == d3)) {
     return;
   }
+
   dm1 = d1;
   dm2 = d2;
   dm3 = d3;
+
   if (objs) {
-    delete objs;
+    delete[] objs;
   }
+
   allocate();
 }
 
@@ -125,8 +128,8 @@ void LinearArray3<T>::initialize(const T& t)
 }
 
 // Explicit template instantiations:
+template class LinearArray3<double> ;
 template class LinearArray3<std::complex<double> > ;
 template class LinearArray3<Uintah::Matrix3> ;
-template class LinearArray3<double> ;
 template class LinearArray3<SCIRun::Vector> ;
 

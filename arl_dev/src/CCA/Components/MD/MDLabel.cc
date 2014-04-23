@@ -55,7 +55,7 @@ MDLabel::MDLabel()
 //  pReciprocalDipoles                      = VarLabel::create("p.recipDipole", ParticleVariable<Vector>::getTypeDescription());
   //pReciprocalDipoles_preReloc             = VarLabel::create("p.recipDipole+", ParticleVariable<Vector>::getTypeDescription());
   pElectrostaticsReciprocalForce          = VarLabel::create("p.recipElectrostaticsForce", ParticleVariable<Vector>::getTypeDescription());
-  //pElectrostaticsReciprocalForce_preReloc = VarLabel::create("p.recipElectrostaticsForce+", ParticleVariable<Vector>::getTypeDescription());
+  pElectrostaticsReciprocalForce_preReloc = VarLabel::create("p.recipElectrostaticsForce+", ParticleVariable<Vector>::getTypeDescription());
   pElectrostaticsReciprocalField          = VarLabel::create("p.recipElectrostaticsField", ParticleVariable<Vector>::getTypeDescription());
   pElectrostaticsReciprocalField_preReloc = VarLabel::create("p.recipElectrostaticsField+", ParticleVariable<Vector>::getTypeDescription());
 
@@ -65,10 +65,12 @@ MDLabel::MDLabel()
 
   //1.2-> for nonbonded calculation
   pNonbondedForceLabel          = VarLabel::create("p.nonbonded_force", ParticleVariable<Vector>::getTypeDescription());
-  //pNonbondedForceLabel_preReloc = VarLabel::create("p.nonbonded_force+", ParticleVariable<Vector>::getTypeDescription());
+  pNonbondedForceLabel_preReloc = VarLabel::create("p.nonbonded_force+", ParticleVariable<Vector>::getTypeDescription());
+
   //1.3-> for valence calculation
   pValenceForceLabel          = VarLabel::create("p.valence_force", ParticleVariable<Vector>::getTypeDescription());
-  //pValenceForceLabel_preReloc = VarLabel::create("p.valence_force+", ParticleVariable<Vector>::getTypeDescription());
+  pValenceForceLabel_preReloc = VarLabel::create("p.valence_force+", ParticleVariable<Vector>::getTypeDescription());
+
   //2>Integrator related variables
   pXLabel                 = VarLabel::create("p.x", ParticleVariable<Point>::getTypeDescription(),
                                              IntVector(0, 0, 0), VarLabel::PositionVariable);
@@ -76,8 +78,10 @@ MDLabel::MDLabel()
                                              IntVector(0, 0, 0), VarLabel::PositionVariable);
 //  pAccelLabel             = VarLabel::create("p.accel", ParticleVariable<Vector>::getTypeDescription());
 //  pAccelLabel_preReloc    = VarLabel::create("p.accel+", ParticleVariable<Vector>::getTypeDescription());
+
   pVelocityLabel          = VarLabel::create("p.velocity", ParticleVariable<Vector>::getTypeDescription());
   pVelocityLabel_preReloc = VarLabel::create("p.velocity+", ParticleVariable<Vector>::getTypeDescription());
+
   //3>General particle quantities
   pParticleIDLabel          = VarLabel::create("p.particleID", ParticleVariable<long64>::getTypeDescription());
   pParticleIDLabel_preReloc = VarLabel::create("p.particleID+", ParticleVariable<long64>::getTypeDescription());
@@ -161,23 +165,24 @@ MDLabel::~MDLabel()
 	//   General
 	VarLabel::destroy(pParticleIDLabel);
 	VarLabel::destroy(pParticleIDLabel_preReloc);
+
 	// PER SYSTEM VARIABLES
-    VarLabel::destroy(nonbondedEnergyLabel);
-    VarLabel::destroy(nonbondedStressLabel);
-    VarLabel::destroy(electrostaticRealEnergyLabel);
-    VarLabel::destroy(electrostaticRealStressLabel);
-    VarLabel::destroy(electrostaticReciprocalEnergyLabel);
-    VarLabel::destroy(electrostaticReciprocalStressLabel);
-    VarLabel::destroy(bondEnergyLabel);
-    VarLabel::destroy(bondStressLabel);
-    VarLabel::destroy(bendEnergyLabel);
-    VarLabel::destroy(bendStressLabel);
-    VarLabel::destroy(torsionEnergyLabel);
-    VarLabel::destroy(torsionStressLabel);
-    VarLabel::destroy(oopEnergyLabel);
-    VarLabel::destroy(oopStressLabel);
-    VarLabel::destroy(valenceEnergyLabel);
-    VarLabel::destroy(valenceStressLabel);
+  VarLabel::destroy(nonbondedEnergyLabel);
+  VarLabel::destroy(nonbondedStressLabel);
+  VarLabel::destroy(electrostaticRealEnergyLabel);
+  VarLabel::destroy(electrostaticRealStressLabel);
+  VarLabel::destroy(electrostaticReciprocalEnergyLabel);
+  VarLabel::destroy(electrostaticReciprocalStressLabel);
+  VarLabel::destroy(bondEnergyLabel);
+  VarLabel::destroy(bondStressLabel);
+  VarLabel::destroy(bendEnergyLabel);
+  VarLabel::destroy(bendStressLabel);
+  VarLabel::destroy(torsionEnergyLabel);
+  VarLabel::destroy(torsionStressLabel);
+  VarLabel::destroy(oopEnergyLabel);
+  VarLabel::destroy(oopStressLabel);
+  VarLabel::destroy(valenceEnergyLabel);
+  VarLabel::destroy(valenceStressLabel);
 
 
 // !!!!! TO BE DELETED
