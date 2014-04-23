@@ -837,9 +837,6 @@ PressureSolver::calculatePressureCoeff(const Patch* patch,
 
   for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) { 
     IntVector c = *iter;
-    int i = c.x();
-    int j = c.y();
-    int k = c.z();
 
     IntVector E  = c + IntVector(1,0,0);   IntVector W  = c - IntVector(1,0,0); 
     IntVector N  = c + IntVector(0,1,0);   IntVector S  = c - IntVector(0,1,0);

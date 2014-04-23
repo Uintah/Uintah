@@ -92,6 +92,8 @@ SmagorinskyModel::problemSetup(const ProblemSpecP& params)
   db->require("fac_mesh", d_factorMesh);
   db->require("filterl", d_filterl);
 
+  problemSetupCommon( params ); 
+
   // actually, Shmidt number, not Prandtl number
   d_turbPrNo = 0.0;
   if (db->findBlock("turbulentPrandtlNumber")){

@@ -66,15 +66,17 @@
 #  include "MallocTraceOff.h"
 #endif
 
-#ifndef __APPLE__
-extern "C" {
-  void* malloc(size_t size) THROWCLAUSE;
-  void free(void* ptr) THROWCLAUSE;
-  void* calloc(size_t, size_t) THROWCLAUSE;
-  void* realloc(void* p, size_t s) THROWCLAUSE;
-  void* memalign(size_t, size_t) THROWCLAUSE;
-  void* valloc(size_t) THROWCLAUSE;
-}
+#ifndef __APPLE__ 
+#  ifndef DISABLE_SCI_MALLOC
+     extern "C" {
+       void* malloc(size_t size) THROWCLAUSE;
+       void free(void* ptr) THROWCLAUSE;
+       void* calloc(size_t, size_t) THROWCLAUSE;
+       void* realloc(void* p, size_t s) THROWCLAUSE;
+       void* memalign(size_t, size_t) THROWCLAUSE;
+       void* valloc(size_t) THROWCLAUSE;
+     }
+#  endif
 #endif
 
 #ifdef MALLOC_TRACE

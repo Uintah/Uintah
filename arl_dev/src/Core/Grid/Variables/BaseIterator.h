@@ -25,9 +25,7 @@
 
 #ifndef UINTAH_BaseIterator_H
 #define UINTAH_BaseIterator_H
-
 #include <ostream>
-
 #include <Core/Geometry/IntVector.h>
 
 namespace Uintah {

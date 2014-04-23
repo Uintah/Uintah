@@ -44,10 +44,6 @@
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/TypeUtils.h>
 #include <Core/IO/SpecializedRunLengthEncoder.h>
-
-#ifndef _WIN32
-#include <unistd.h>
-#endif
 #include <iostream>
 #include <cstring>
 
@@ -424,7 +420,6 @@ template<class T>
       }
     }
     ASSERT(dstiter+extra == pset->end());
-    extra = extra;   // This is to shut up the REMARKS from the MIPS compiler
   }
   
   template<class T>

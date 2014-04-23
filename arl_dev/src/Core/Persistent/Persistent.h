@@ -41,13 +41,13 @@
 
 #include <Core/Util/Assert.h>
 #include <Core/Util/ProgressReporter.h>
-#include <Core/Persistent/share.h>
+
 namespace SCIRun {
 
 class Persistent;
 
 //----------------------------------------------------------------------
-struct SCISHARE PersistentTypeID {
+struct PersistentTypeID {
   std::string type;
   std::string parent;
   Persistent* (*maker)();
@@ -62,7 +62,7 @@ struct SCISHARE PersistentTypeID {
 };
 
 //----------------------------------------------------------------------
-class SCISHARE Piostream {
+class Piostream {
   
 public:
 
@@ -147,20 +147,20 @@ public:
   // Returns true if bkock_io was supported (even on error).
   virtual bool block_io(void*, size_t, size_t) { return false; }
 
-  SCISHARE friend Piostream* auto_istream(const std::string& filename,
+  friend Piostream* auto_istream(const std::string& filename,
                                  ProgressReporter *pr);
-  SCISHARE friend Piostream* auto_ostream(const std::string& filename, const std::string& type,
+  friend Piostream* auto_ostream(const std::string& filename, const std::string& type,
                                  ProgressReporter *pr);
 };
 
-  SCISHARE Piostream* auto_istream(const std::string& filename,
+  Piostream* auto_istream(const std::string& filename,
                                    ProgressReporter *pr = 0);
-  SCISHARE Piostream* auto_ostream(const std::string& filename, const std::string& type,
+  Piostream* auto_ostream(const std::string& filename, const std::string& type,
                                    ProgressReporter *pr = 0);
 
 
 //----------------------------------------------------------------------
-class SCISHARE Persistent {
+class Persistent {
 public:
   virtual ~Persistent();
   virtual void io(Piostream&) = 0;

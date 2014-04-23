@@ -26,10 +26,6 @@
 #define UINTAH_HOMEBREW_SHAREASSIGNPARTICLEVARIABLE_H
 
 #include <Core/Grid/Variables/ParticleVariable.h>
-
-#ifndef _WIN32
-#include <unistd.h>
-#endif
 #include <cerrno>
 
 namespace Uintah {

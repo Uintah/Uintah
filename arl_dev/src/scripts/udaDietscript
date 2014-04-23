@@ -29,6 +29,7 @@ getopt -Q -q --long np,uda,other -- $argv:q >& /dev/null
 
 set udas   = ""
 set other = ""
+@ nProcs = -1
 
 if( $#argv == 0 ) then
   set argv = "-h"
@@ -41,7 +42,7 @@ while ($#argv)
    switch ($1:q)
    
      case --np:
-        set n_procs = "$2"
+        @ nProcs = $2
         shift; shift;
         breaksw
      case --uda:
@@ -79,8 +80,10 @@ end
 #______________________________________________________________________
 # bulletproofing
 
-if ( $n_procs < 1 ) then
-  echo " The numer of processors is negative $proc"
+if ( $nProcs < 1 ) then
+  echo "__________________________________"
+  echo "ERROR: udaDiet"
+  echo " The number of processors (--np X) has not been defined or is negative $nProcs"
   echo " Now exiting ...... "
   exit (1)
 endif
@@ -98,7 +101,7 @@ if( ! -e NewDataArchive ) then
   echo "ERROR: udaDiet: The file 'NewDataArchive' doesn't not exist"
   echo "                This file must consist of "
   echo "                     <filebase> VIV_3D_new.uda </filebase>"
-  echo "                     <save label="press_CC"/>
+  echo '                     <save label="press_CC"/>'
   echo "                             ."
   echo "                             ."
   echo "                             ."
@@ -158,8 +161,11 @@ foreach X ( $udas[*]:q )
   
   # delete all of the save label lines and filebase
   sed '/save/d;/filebase/d' input.xml > tmp
+ 
+  # delete any <DataArchive lines in NewDataArchive file
+  sed -i '/DataArchiv/d' ../NewDataArchive
   
-  
+  #__________________________________
   # copy the contents of NewDataArchieve 
   sed  -i -e "/<DataArchiver/ r ../NewDataArchive" tmp
   
@@ -171,28 +177,44 @@ foreach X ( $udas[*]:q )
   mv tmp input.xml
   cd ..
     
-
+  #__________________________________
   # Now reduce the uda  
   echo ""
   echo "  running reduce uda"
-  mpirun -np $n_procs ./sus -mpi -reduce_uda $X |tee -a reduce_uda.out
+  mpirun -np $nProcs ./sus -mpi -reduce_uda $X |tee -a reduce_uda.out
+  
+  set rc = $status
+  
+  #__________________________________
+  # copy the original input.xml file back in case the command crashed
+  cp  $X/input.xml.orig $X/input.xml
+  
+  # bulletproofing
+  if ( $rc != "0" ) then
+    echo "______________________________________________________________"
+    echo "ERROR: udaDietScript: There was a problem running the command"
+    echo "        mpirun -np $nProcs ./sus -mpi -reduce_uda $X "
+    echo "       Look at the error message above."
+    echo "       Now exiting.............."
+    echo "______________________________________________________________"
+    exit (1)
+  endif
   
   #__________________________________
   # copy other files and directories to the new uda
   set newUda = `grep "DataArchiver created" reduce_uda.out | awk '{print $3}'`
   mv reduce_uda.out $newUda
-  
+
   #copy output file to new uda
   set out = `find $X/ -maxdepth 1 -type f -exec grep --files-with-match -i taskgraph {} \;`
   cp $out $newUda
-  
+
   echo "out: $out newUda: $newUda"
-  
+
   foreach Y ( $other[*]:q )
     echo "  Now moving files/directories to $Y to $newUda"
     cp -r $X/$Y $newUda
   end
-  
 end
 
 exit

@@ -39,16 +39,14 @@
 
 #include <Core/Datatypes/Matrix.h>
 
-#include <Core/Datatypes/share.h>
-
 namespace SCIRun {
 
 
-SCISHARE MatrixHandle operator+(MatrixHandle A, MatrixHandle B);
-SCISHARE MatrixHandle operator-(MatrixHandle A, MatrixHandle B);
-SCISHARE MatrixHandle operator*(MatrixHandle A, MatrixHandle B);
-SCISHARE MatrixHandle operator*(double a, MatrixHandle B);
-SCISHARE MatrixHandle operator*(MatrixHandle A, double b);
+MatrixHandle operator+(MatrixHandle A, MatrixHandle B);
+MatrixHandle operator-(MatrixHandle A, MatrixHandle B);
+MatrixHandle operator*(MatrixHandle A, MatrixHandle B);
+MatrixHandle operator*(double a, MatrixHandle B);
+MatrixHandle operator*(MatrixHandle A, double b);
 
 } // End namespace SCIRun
 

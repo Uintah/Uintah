@@ -38,10 +38,9 @@
 #define Core_Exceptions_ArrayIndexOutOfBounds_h
 
 #include <Core/Exceptions/Exception.h>
-#include <Core/Exceptions/share.h>
 
 namespace SCIRun {
-	class SCISHARE ArrayIndexOutOfBounds : public Exception {
+	class ArrayIndexOutOfBounds : public Exception {
 	public:
 	    ArrayIndexOutOfBounds(long value, long lower, long upper, 
                                   const char* file, int line);

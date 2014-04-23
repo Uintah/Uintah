@@ -43,14 +43,12 @@
 
 #include <string>
 
-#include <Core/Datatypes/share.h>
-
 namespace SCIRun {
 
 class String;
 typedef LockingHandle<String> StringHandle;
 
-class SCISHARE String : public PropertyManager {
+class String : public PropertyManager {
 
   std::string str_;
 

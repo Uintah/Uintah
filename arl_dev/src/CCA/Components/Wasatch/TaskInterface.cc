@@ -139,7 +139,7 @@ namespace Wasatch{
 
     /**
      *  \brief Construct a TreeTaskExecute object.
-     *  \param trees - the trees that this object is associated with (one per patch)
+     *  \param treeMap - the trees that this object is associated with (one per patch)
      *  \param taskName - the name of this task
      *  \param scheduler - the scheduler that this task is associated with
      *  \param patches 	- the list of patches that this TreeTaskExecute object is to be executed on.
@@ -148,7 +148,7 @@ namespace Wasatch{
      *  \param rkStage - the stage of the RK integrator that this is associated with
      *  \param ioFieldSet - the set of fields that are requested for IO.  This prevents these fields from being recycled internally.
      */
-    TreeTaskExecute( TreeMap& trees,
+    TreeTaskExecute( TreeMap& treeMap,
                      const std::string taskName,
                      Uintah::SchedulerP& scheduler,
                      const Uintah::PatchSet* const patches,
@@ -577,45 +577,39 @@ namespace Wasatch{
 
             // Pass patch information to the coordinate expressions
             typedef std::map<Expr::Tag, std::string> CoordMapT;
-            const CoordMapT& coordMap = CoordinateNames::self().coordinate_map();
             // OldVariable& oldVar = OldVariable::self();
-            BOOST_FOREACH( const CoordMapT::value_type& coordPair, coordMap )
+            BOOST_FOREACH( const CoordMapT::value_type& coordPair, CoordinateNames::coordinate_map() )
             {
-              const Expr::Tag coordTag = coordPair.first;
-              const std::string coordFieldT = coordPair.second;
+              const Expr::Tag& coordTag = coordPair.first;
+              const std::string& coordFieldT = coordPair.second;
 
-              if (!(tree->computes_field(coordTag))) continue;
+              if( !(tree->computes_field(coordTag)) ) continue;
 
-              if (coordFieldT == "SVOL")
-              {
+              if( coordFieldT == "SVOL"){
                 Coordinates<SVolField>& coordExpr = dynamic_cast<Coordinates<SVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
                 coordExpr.set_patch(patches->get(ip));
                 // In case we want to copy coordinates instead of recomputing them, uncomment the following line
   //              oldVar.add_variable<SVolField>( ADVANCE_SOLUTION, coordTag, true);
               }
-              if (coordFieldT == "XVOL")
-              {
+              else if( coordFieldT == "XVOL" ){
                 Coordinates<XVolField>& coordExpr = dynamic_cast<Coordinates<XVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
                 coordExpr.set_patch(patches->get(ip));
                 // In case we want to copy coordinates instead of recomputing them, uncomment the following line
   //              oldVar.add_variable<XVolField>( ADVANCE_SOLUTION, coordTag, true);
               }
-              if (coordFieldT == "YVOL")
-              {
+              else if( coordFieldT == "YVOL" ){
                 Coordinates<YVolField>& coordExpr = dynamic_cast<Coordinates<YVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
                 coordExpr.set_patch(patches->get(ip));
                 // In case we want to copy coordinates instead of recomputing them, uncomment the following line
   //              oldVar.add_variable<YVolField>( ADVANCE_SOLUTION, coordTag, true);
               }
-              if (coordFieldT == "ZVOL")
-              {
+              else if( coordFieldT == "ZVOL" ){
                 Coordinates<ZVolField>& coordExpr = dynamic_cast<Coordinates<ZVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
                 coordExpr.set_patch(patches->get(ip));
                 // In case we want to copy coordinates instead of recomputing them, uncomment the following line
   //              oldVar.add_variable<ZVolField>( ADVANCE_SOLUTION, coordTag, true);
               }
             }
-
 
             tree->bind_fields( *fml_ );
             tree->bind_operators( opdb );
@@ -653,30 +647,29 @@ namespace Wasatch{
     const Uintah::PatchSet*  perproc_patchset = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
     const Uintah::PatchSubset* const localPatches = perproc_patchset->getSubset(Uintah::Parallel::getMPIRank());
 
-    std::vector<TreeMap> trLstTrns(localPatches->size());
+    typedef std::map<int,TreeMap> TreeMapTranspose;
+    TreeMapTranspose trLstTrns;
 
     for( int ip=0; ip<localPatches->size(); ++ip ){
       const int patchID = localPatches->get(ip)->getID();
       TreePtr tree( scinew Expr::ExpressionTree(roots,factory,patchID,taskName) );
       const TreeList treeList = tree->split_tree();
 
-      if( ip==0 ){
+      // write out graph information.
+      if( Uintah::Parallel::getMPIRank() == 0 && ip == 0 ){
         const bool writeTreeDetails = dbg_tasks_on;
-        trLstTrns.resize( treeList.size() );
-        if( Uintah::Parallel::getMPIRank() == 0 ){
-          if( treeList.size() > 1 ){
-            std::ostringstream fnam;
-            fnam << tree->name() << "_original.dot";
-            proc0cout << "writing pre-cleave tree to " << fnam.str() << endl;
-            std::ofstream fout( fnam.str().c_str() );
-            tree->write_tree(fout,false,writeTreeDetails);
-          }
-          BOOST_FOREACH( TreePtr tr, treeList ){
-            std::ostringstream fnam;
-            fnam << tr->name() << ".dot";
-            std::ofstream fout( fnam.str().c_str() );
-            tr->write_tree(fout,false,writeTreeDetails);
-          }
+        if( treeList.size() > 1 ){
+          std::ostringstream fnam;
+          fnam << tree->name() << "_original.dot";
+          proc0cout << "writing pre-cleave tree to " << fnam.str() << endl;
+          std::ofstream fout( fnam.str().c_str() );
+          tree->write_tree(fout,false,writeTreeDetails);
+        }
+        BOOST_FOREACH( TreePtr tr, treeList ){
+          std::ostringstream fnam;
+          fnam << tr->name() << ".dot";
+          std::ofstream fout( fnam.str().c_str() );
+          tr->write_tree(fout,false,writeTreeDetails);
         }
       }
 
@@ -689,10 +682,12 @@ namespace Wasatch{
     } // patch loop
 
     // create a TreeTaskExecute for each tree (on all patches)
-    BOOST_FOREACH( TreeMap& tl, trLstTrns ){
+    BOOST_FOREACH( TreeMapTranspose::value_type& tlpair, trLstTrns ){
+      TreeMap& tl = tlpair.second;
       execList_.push_back( scinew TreeTaskExecute( tl, tl.begin()->second->name(),
                                                    sched, patches, materials,
-                                                   info, rkStage, state, ioFieldSet, lockAllFields ) );
+                                                   info, rkStage, state,
+                                                   ioFieldSet, lockAllFields ) );
     }
 
   }

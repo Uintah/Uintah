@@ -45,10 +45,8 @@
 
 #include   <string>
 
-#include <Core/Exceptions/share.h>
-
 namespace SCIRun {
-class SCISHARE AssertionFailed : public Exception {
+class AssertionFailed : public Exception {
 public:
   AssertionFailed(const char* msg,
 		  const char* file,

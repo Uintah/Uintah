@@ -2001,7 +2001,7 @@ WARNING
         use the other more descriptive queries.
        *********************/
 
-      friend class SCIRun::InternalAreaSuperBoxEvaluator<const Uintah::Patch*, int>;
+      friend struct SCIRun::InternalAreaSuperBoxEvaluator<const Uintah::Patch*, int>;
       friend class SCIRun::SuperBox<const Patch*, IntVector, int, int,
              SCIRun::InternalAreaSuperBoxEvaluator<const Patch*, int> >;
       friend class SCIRun::BasicBox<const Patch*, IntVector, int, int, 

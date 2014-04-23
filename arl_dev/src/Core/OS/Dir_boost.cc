@@ -49,7 +49,11 @@
 
 #include <boost/filesystem/operations.hpp>
 
-namespace bfs = boost::filesystem;
+#ifndef __bgq__
+  namespace bfs = boost::filesystem;
+#else
+  namespace bfs = boost::filesystem3;
+#endif
 namespace bsys = boost::system;
 
 using namespace std;

@@ -36,19 +36,17 @@
 #ifndef Math_LinAlg_h
 #define Math_LinAlg_h 1
 
-#include <Core/Math/share.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-    SCISHARE double linalg_norm2(int n, const double* data);
-    SCISHARE void linalg_mult(int n, double* result, double* a, double* b);
-    SCISHARE void linalg_sub(int n, double* result, double* a, double* b);
-    SCISHARE void linalg_add(int n, double* result, double* a, double* b);
-    SCISHARE double linalg_dot(int n, double* a, double* b);
-    SCISHARE void linalg_smadd(int n, double* result, double s, double* a, double* b);
-    SCISHARE typedef double LinAlg_TriDiagRow[3];
-    SCISHARE void linalg_tridiag(int n, LinAlg_TriDiagRow* data, double* c);
+    double linalg_norm2(int n, const double* data);
+    void linalg_mult(int n, double* result, double* a, double* b);
+    void linalg_sub(int n, double* result, double* a, double* b);
+    void linalg_add(int n, double* result, double* a, double* b);
+    double linalg_dot(int n, double* a, double* b);
+    void linalg_smadd(int n, double* result, double s, double* a, double* b);
+    typedef double LinAlg_TriDiagRow[3];
+    void linalg_tridiag(int n, LinAlg_TriDiagRow* data, double* c);
 #ifdef __cplusplus
 }
 #endif

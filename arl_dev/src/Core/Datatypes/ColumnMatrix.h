@@ -43,11 +43,9 @@
 
 #include <iosfwd>  // Forward declarations for KCC C++ I/O routines
 
-#include <Core/Datatypes/share.h>
-
 namespace SCIRun {
 
-class SCISHARE ColumnMatrix : public Matrix {
+class ColumnMatrix : public Matrix {
   double* data;
 
 public:
@@ -70,12 +68,12 @@ public:
     ASSERTRANGE(r, 0, nrows_)
     return data[r];
   }
-  double* get_data() const {return data;}
-  void set_data(double* d) {data = d;} 
-  double  get(int r) const      { ASSERTRANGE(r, 0, nrows_); return data[r]; };
-  void    put(int r, double val) { ASSERTRANGE(r, 0, nrows_); data[r] = val; };
+  double * get_data() const         { return data; }
+  void     set_data( double * d )   { data = d; }
+  double   get( int r ) const       { ASSERTRANGE(r, 0, nrows_); return data[r]; }
+  void     put( int r, double val ) { ASSERTRANGE(r, 0, nrows_); data[r] = val; }
 
-  void resize(int);
+  void resize( int new_rows );
 
   virtual void zero();
   virtual double get(int, int) const;
@@ -116,38 +114,38 @@ public:
   static PersistentTypeID type_id;
 
 
-  SCISHARE friend void Mult(ColumnMatrix&, const ColumnMatrix&, double s);
-  SCISHARE friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
-  SCISHARE friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
-				int& flops, int& memrefs);
-  SCISHARE friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
-				int& flops, int& memrefs, int beg, int end);
-  SCISHARE friend void Sub(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
-  SCISHARE friend void Sub(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
-			       int& flops, int& memrefs);
-  SCISHARE friend double Dot(const ColumnMatrix&, const ColumnMatrix&);
-  SCISHARE friend double Dot(const ColumnMatrix&, const ColumnMatrix&,
-				 int& flops, int& memrefs);
-  SCISHARE friend double Dot(const ColumnMatrix&, const ColumnMatrix&,
-				 int& flops, int& memrefs, int beg, int end);
-  SCISHARE friend void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
-				      const ColumnMatrix&);
-  SCISHARE friend void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
-				      const ColumnMatrix&, int& flops, int& memrefs);
-  SCISHARE friend void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
-				      const ColumnMatrix&, int& flops, int& memrefs,
-				      int beg, int end);
+  friend void Mult(ColumnMatrix&, const ColumnMatrix&, double s);
+  friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
+  friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
+		   int& flops, int& memrefs);
+  friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
+		   int& flops, int& memrefs, int beg, int end);
+  friend void Sub(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
+  friend void Sub(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
+		  int& flops, int& memrefs);
+  friend double Dot(const ColumnMatrix&, const ColumnMatrix&);
+  friend double Dot(const ColumnMatrix&, const ColumnMatrix&,
+		    int& flops, int& memrefs);
+  friend double Dot(const ColumnMatrix&, const ColumnMatrix&,
+		    int& flops, int& memrefs, int beg, int end);
+  friend void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
+			 const ColumnMatrix&);
+  friend void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
+			 const ColumnMatrix&, int& flops, int& memrefs);
+  friend void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
+			 const ColumnMatrix&, int& flops, int& memrefs,
+			 int beg, int end);
   
-  SCISHARE friend void Copy(ColumnMatrix&, const ColumnMatrix&);
-  SCISHARE friend void Copy(ColumnMatrix&, const ColumnMatrix&, 
-				int& flops, int& refs);
-  SCISHARE friend void Copy(ColumnMatrix&, const ColumnMatrix&, 
-				int& flops, int& refs,
-				int beg, int end);
-  SCISHARE friend void AddScMult(ColumnMatrix&, const ColumnMatrix&, 
+  friend void Copy(ColumnMatrix&, const ColumnMatrix&);
+  friend void Copy(ColumnMatrix&, const ColumnMatrix&, 
+		   int& flops, int& refs);
+  friend void Copy(ColumnMatrix&, const ColumnMatrix&, 
+		   int& flops, int& refs,
+		   int beg, int end);
+  friend void AddScMult(ColumnMatrix&, const ColumnMatrix&, 
 			double s, const ColumnMatrix&);
-  SCISHARE friend void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
-  SCISHARE friend void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&, 
+  friend void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
+  friend void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&, 
 		  const ColumnMatrix&);
 };
 

@@ -44,7 +44,7 @@ class LoadBalancer;
 class RadiationVariables;
 class RadiationConstVariables;
 class ICELabel;
-class Models_CellInformation;
+struct Models_CellInformation;
 
 using namespace SCIRun;
 

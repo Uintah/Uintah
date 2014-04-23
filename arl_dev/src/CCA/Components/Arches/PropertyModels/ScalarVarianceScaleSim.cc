@@ -48,8 +48,15 @@ void ScalarVarianceScaleSim::problemSetup( const ProblemSpecP& inputdb )
   db->require( "mixture_fraction_label", _mf_label_name ); 
   db->require( "density_label", _density_label_name ); 
   db->require( "variance_coefficient", _Cf ); 
+  std::string filter_type="moin98";
+  if ( db->findBlock("filter_type")){ 
+    db->getWithDefault("filter_type",filter_type, "moin98"); 
+  }
 
-  _filter = scinew Filter( use_old_filter );
+  int filter_width=3; 
+  db->getWithDefault("filter_width",filter_width,3);
+
+  _filter = scinew Filter( use_old_filter, filter_type, filter_width );
 
 }
 

@@ -53,9 +53,8 @@
       <Y-Momentum>y-mom</Y-Momentum>
       <Z-Velocity>w</Z-Velocity>
       <Z-Momentum>z-mom</Z-Momentum>
-      <BodyForce>
-            <Direction>Z</Direction>
-            <NameTag name="gravity" state="STATE_NONE"/>
+      <BodyForce direction="Z">
+      	<NameTag name="gravity" state="STATE_NONE"/>
       </BodyForce>
       <Viscosity>
         <NameTag name="viscosity" state="STATE_NONE"/>

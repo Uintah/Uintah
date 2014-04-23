@@ -33,7 +33,6 @@
 #include <vector>
 
 #include <Core/Geometry/Point.h>
-#include <Core/Basis/share.h>
 
 namespace SCIRun {
 
@@ -302,7 +301,7 @@ namespace SCIRun {
   }
 
   template <>
-    SCISHARE Point difference(const Point& interp, const Point& value);
+    Point difference(const Point& interp, const Point& value);
  
 
 
@@ -311,7 +310,7 @@ namespace SCIRun {
 		     const T& y, const std::vector<T>& yd);
 
   template <>
-    SCISHARE double getnextx1(std::vector<double> &x, 
+    double getnextx1(std::vector<double> &x,
 		     const Point& y, const std::vector<Point>& yd);
 
   template <class T>
@@ -333,7 +332,7 @@ namespace SCIRun {
 		     const T& y, const std::vector<T>& yd);
 
   template <>
-    SCISHARE double getnextx2(std::vector<double> &x, 
+    double getnextx2(std::vector<double> &x,
 		     const Point& y, const std::vector<Point>& yd);
 
   template <class T>
@@ -366,7 +365,7 @@ namespace SCIRun {
  
   // locate for Point 
   template <>
-    SCISHARE double getnextx3(std::vector<double> &x,  
+    double getnextx3(std::vector<double> &x,
 		     const Point& y, const std::vector<Point>& yd);
       
   // locate for scalar value 
@@ -537,7 +536,7 @@ class Dim1Locate {
   }
 
   template <>
-    SCISHARE bool compare_distance(const Point &interp, const Point &val, 
+    bool compare_distance(const Point &interp, const Point &val,
 			  double &cur_d, double dist);
 
   template <class T>
@@ -553,7 +552,7 @@ class Dim1Locate {
   }
 
   template <>
-    SCISHARE bool check_zero(const std::vector<Point> &val); 
+    bool check_zero(const std::vector<Point> &val);
 
 }
 #endif

@@ -202,8 +202,6 @@ Arches::Arches(const ProcessorGroup* myworld, const bool doAMR) :
 
   nofTimeSteps                     =  0;
   init_timelabel_allocated         =  false;
-  d_set_initial_condition          =  false;
-  d_set_init_vel_condition         =  false; 
   DQMOMEqnFactory&  dqmomfactory   =  DQMOMEqnFactory::self();
   dqmomfactory.set_quad_nodes(0);
   d_doDQMOM                        =  false;
@@ -275,16 +273,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_newBC_on_Restart = true;
   else
     d_newBC_on_Restart = false;
-
-  if (db->findBlock("set_initial_condition")) {
-    d_set_initial_condition = true;
-    db->findBlock("set_initial_condition")->getAttribute("inputfile",d_init_inputfile);
-  }
-  
-  if (db->findBlock("set_initial_vel_condition")) {
-    d_set_init_vel_condition = true;
-    db->findBlock("set_initial_vel_condition")->getAttribute("inputfile",d_init_vel_inputfile);
-  }  
 
   db->getWithDefault("turnonMixedModel",    d_mixedModel,false);
   db->getWithDefault("recompileTaskgraph",  d_lab->recompile_taskgraph,false);
@@ -977,16 +965,6 @@ Arches::scheduleInitialize(const LevelP& level,
   //Check for hand-off momentum BCs and perform mapping
   d_nlSolver->checkMomBCs( sched, patches, matls ); 
 
-  //Sets initial condition to momentum only (for constant density). 
-  //Note this should be moved into the momentum standard initialization. 
-  if (d_set_initial_condition) {
-    sched_readCCInitialCondition(level, sched);
-    sched_interpInitialConditionToStaggeredGrid(level, sched);
-  }
-  if (d_set_init_vel_condition) {
-    sched_readUVWInitialCondition(level, sched);
-  }  
-
   //initialize cell type
   d_boundaryCondition->sched_cellTypeInit__NEW( sched, level, patches, matls );
 
@@ -998,6 +976,8 @@ Arches::scheduleInitialize(const LevelP& level,
 
   //AF must be called again to account for intrusions (can this be the ONLY call?) 
   d_boundaryCondition->sched_setAreaFraction( sched, patches, matls, 1, true ); 
+
+  d_turbModel->sched_computeFilterVol( sched, patches, matls ); 
 
   // base initialization of all scalars
   sched_scalarInit(level, sched);
@@ -1614,185 +1594,6 @@ bool Arches::needRecompile(double time, double dt,
     return d_lab->recompile_taskgraph;
 }
 
-// ****************************************************************************
-// schedule reading of initial condition for velocity and pressure
-// ****************************************************************************
-void
-Arches::sched_readUVWInitialCondition(const LevelP& level,
-                                     SchedulerP& sched)
-{
-  // primitive variable initialization
-  Task* tsk = scinew Task( "Arches::readUVWInitialCondition",
-                          this, &Arches::readUVWInitialCondition);
-  
-  printSchedule(level,dbg,"Arches::readUVWInitialCondition");
-  
-  tsk->modifies(d_lab->d_uVelocitySPBCLabel);
-  tsk->modifies(d_lab->d_vVelocitySPBCLabel);
-  tsk->modifies(d_lab->d_wVelocitySPBCLabel);
-  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
-  
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());  
-}
-
-// ****************************************************************************
-// Actual read
-// ****************************************************************************
-void
-Arches::readUVWInitialCondition(const ProcessorGroup* ,
-                            const PatchSubset* patches,
-                            const MaterialSubset*,
-                            DataWarehouse* ,
-                            DataWarehouse* new_dw)
-{
-  
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int indx = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    SFCXVariable<double> uVelocity;
-    SFCYVariable<double> vVelocity;
-    SFCZVariable<double> wVelocity;
-    
-    new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
-    new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch);
-    new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch);
-
-    gzFile file = gzopen( d_init_vel_inputfile.c_str(), "r" );
-
-    if ( file == NULL ) { 
-      proc0cout << "Error opening file: " << d_init_vel_inputfile << " for velocity initialization." << endl;
-      throw ProblemSetupException("Unable to open the given input file: " + d_init_vel_inputfile, __FILE__, __LINE__);
-    }
-        
-    int nx,ny,nz;
-    nx = getInt(file); 
-    ny = getInt(file); 
-    nz = getInt(file); 
-    
-    const Level* level = patch->getLevel();
-    IntVector low, high;
-    level->findCellIndexRange(low, high);
-    IntVector range = high-low;
-    
-    if (!(range == IntVector(nx,ny,nz))) {
-      ostringstream warn;
-      warn << "ERROR Arches::periodicTurbInitialCondition: \n Wrong grid size in input file " << range;
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
-    int size = 0;
-    double uvel,vvel,wvel;
-    IntVector idxLo = patch->getFortranCellLowIndex();
-    IntVector idxHi = patch->getFortranCellHighIndex();
-    for (int colZ = 1; colZ <= nz; colZ ++) {
-      for (int colY = 1; colY <= ny; colY ++) {
-        for (int colX = 1; colX <= nx; colX ++) {
-          IntVector currCell(colX-1, colY-1, colZ-1);          
-          uvel = getDouble(file);
-          vvel = getDouble(file);
-          wvel = getDouble(file);          
-          if ((currCell.x() <= idxHi.x() && currCell.y() <= idxHi.y() && currCell.z() <= idxHi.z()) &&
-              (currCell.x() >= idxLo.x() && currCell.y() >= idxLo.y() && currCell.z() >= idxLo.z())) {
-            uVelocity[currCell] = uvel;
-            vVelocity[currCell] = vvel;
-            wVelocity[currCell] = wvel;
-            size++;
-          }
-        }
-      }
-    }
-    gzclose( file );     
-  }
-}
-
-
-// ****************************************************************************
-// schedule reading of initial condition for velocity and pressure
-// ****************************************************************************
-void
-Arches::sched_readCCInitialCondition(const LevelP& level,
-                                     SchedulerP& sched)
-{
-    // primitive variable initialization
-    Task* tsk = scinew Task( "Arches::readCCInitialCondition",
-                            this, &Arches::readCCInitialCondition);
-
-    printSchedule(level,dbg,"Arches::readCCInitialCondition");
-
-    tsk->modifies(d_lab->d_CCVelocityLabel);
-
-    tsk->modifies(d_lab->d_pressurePSLabel);
-    sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
-
-}
-
-// ****************************************************************************
-// Actual read
-// ****************************************************************************
-void
-Arches::readCCInitialCondition(const ProcessorGroup* ,
-                                 const PatchSubset* patches,
-                               const MaterialSubset*,
-                                DataWarehouse* ,
-                               DataWarehouse* new_dw)
-{
-  for (int p = 0; p < patches->size(); p++) {
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int indx = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-
-    CCVariable<Vector> VelocityCC;
-    CCVariable<double> pressure;
-
-    new_dw->getModifiable(VelocityCC, d_lab->d_CCVelocityLabel, indx, patch);
-    new_dw->getModifiable(pressure,    d_lab->d_pressurePSLabel,     indx, patch);
-
-    ifstream fd(d_init_inputfile.c_str());
-    if(fd.fail()) {
-      ostringstream warn;
-      warn << "ERROR Arches::readCCInitialCondition: \nUnable to open the given input file " << d_init_inputfile;
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
-
-    int nx,ny,nz;
-    fd >> nx >> ny >> nz;
-    const Level* level = patch->getLevel();
-    IntVector low, high;
-    level->findCellIndexRange(low, high);
-    IntVector range = high-low;//-IntVector(2,2,2);
-
-    if (!(range == IntVector(nx,ny,nz))) {
-      ostringstream warn;
-      warn << "ERROR Arches::readCCInitialCondition: \nWrong grid size in input file " << range;
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
-
-    double tmp;
-    fd >> tmp >> tmp >> tmp;
-    fd >> tmp >> tmp >> tmp;
-    double uvel,vvel,wvel,pres;
-    IntVector idxLo = patch->getFortranCellLowIndex();
-    IntVector idxHi = patch->getFortranCellHighIndex();
-    for (int colZ = 1; colZ <= nz; colZ ++) {
-      for (int colY = 1; colY <= ny; colY ++) {
-        for (int colX = 1; colX <= nx; colX ++) {
-          IntVector currCell(colX-1, colY-1, colZ-1);
-
-          fd >> uvel >> vvel >> wvel >> pres >> tmp;
-          if ((currCell.x() <= idxHi.x() && currCell.y() <= idxHi.y() && currCell.z() <= idxHi.z()) &&
-              (currCell.x() >= idxLo.x() && currCell.y() >= idxLo.y() && currCell.z() >= idxLo.z())) {
-            VelocityCC[currCell][0] = 0.01*uvel;
-            VelocityCC[currCell][1] = 0.01*vvel;
-            VelocityCC[currCell][2] = 0.01*wvel;
-            pressure[currCell] = 0.1*pres;
-          }
-        }
-      }
-    }
-    fd.close();
-  }
-}
 //___________________________________________________________________________
 //
 void
@@ -2196,76 +1997,6 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
   proc0cout << endl;
 }
 
-// ****************************************************************************
-// schedule interpolation of initial condition for velocity to staggered
-// ****************************************************************************
-void
-Arches::sched_interpInitialConditionToStaggeredGrid(const LevelP& level,
-                                                    SchedulerP& sched)
-{
-  // primitive variable initialization
-  Task* tsk = scinew Task( "Arches::interpInitialConditionToStaggeredGrid",
-                     this, &Arches::interpInitialConditionToStaggeredGrid);
-
-  printSchedule(level,dbg,"Arches::interpInitialConditionToStaggeredGrid");
-
-  Ghost::GhostType  gac = Ghost::AroundCells;
-
-  tsk->requires(Task::NewDW, d_lab->d_CCVelocityLabel, gac, 1);
-  tsk->modifies(d_lab->d_uVelocitySPBCLabel);
-  tsk->modifies(d_lab->d_vVelocitySPBCLabel);
-  tsk->modifies(d_lab->d_wVelocitySPBCLabel);
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
-
-}
-
-// ****************************************************************************
-// Actual interpolation
-// ****************************************************************************
-void
-Arches::interpInitialConditionToStaggeredGrid(const ProcessorGroup* ,
-                                              const PatchSubset* patches,
-                                              const MaterialSubset*,
-                                              DataWarehouse* ,
-                                              DataWarehouse* new_dw)
-{
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int indx = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    constCCVariable<Vector> CCVelocity;
-    SFCXVariable<double> uVelocity;
-    SFCYVariable<double> vVelocity;
-    SFCZVariable<double> wVelocity;
-
-    Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->get(CCVelocity, d_lab->d_CCVelocityLabel, indx, patch, gac, 1);
-
-    new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
-    new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch);
-    new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch);
-
-    IntVector idxLo, idxHi;
-
-    for(CellIterator iter = patch->getSFCXIterator(); !iter.done(); iter++) {
-      IntVector c = *iter;
-      IntVector L = c - IntVector(1,0,0);
-      uVelocity[c] = 0.5 * (CCVelocity[c][0] + CCVelocity[L][0]);
-    }
-
-    for(CellIterator iter = patch->getSFCYIterator(); !iter.done(); iter++) {
-      IntVector c = *iter;
-      IntVector L = c - IntVector(0,1,0);
-      vVelocity[c] = 0.5 * (CCVelocity[c][1] + CCVelocity[L][1]);
-    }
-
-    for(CellIterator iter = patch->getSFCXIterator(); !iter.done(); iter++) {
-      IntVector c = *iter;
-      IntVector L = c - IntVector(0,0,1);
-      wVelocity[c] = 0.5 * (CCVelocity[c][2] + CCVelocity[L][2]);
-    }
-  }
-}
 // ****************************************************************************
 // Schedule Interpolate from SFCX, SFCY, SFCZ to CC
 // ****************************************************************************

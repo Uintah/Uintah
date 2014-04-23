@@ -47,19 +47,21 @@ namespace Wasatch{
   {
   public:
     
+    typedef std::map<Expr::Tag, std::string> CoordMap;
+
     /**
      *  Access the VolumeFraction names and tags.
      */
-    static CoordinateNames& self();
-    std::map<Expr::Tag, std::string>& coordinate_map(){return coordMap_;}
+    static const std::map<Expr::Tag, std::string>& coordinate_map();
     
   private:
-    std::map<Expr::Tag, std::string> coordMap_;
+    static const CoordinateNames& self();
+    CoordMap coordMap_;
     CoordinateNames();
   };
 
-  void register_coordinate_expressions(GraphCategories& gc,
-                                       const bool isPeriodic);
+  void register_coordinate_expressions( GraphCategories& gc,
+                                        const bool isPeriodic );
 
 } // namespace Wasatch
 

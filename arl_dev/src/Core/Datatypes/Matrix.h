@@ -42,7 +42,6 @@
 #include <Core/Geometry/Transform.h>
 #include <Core/Containers/LockingHandle.h>
 #include <iosfwd>
-#include <Core/Datatypes/share.h>
 
 namespace SCIRun {
 
@@ -54,7 +53,7 @@ class DenseColMajMatrix;
 class Matrix;
 typedef LockingHandle<Matrix> MatrixHandle;
 
-class SCISHARE Matrix : public PropertyManager
+class Matrix : public PropertyManager
 {
 public:
   Matrix(int nrows = 0, int ncols = 0) :
@@ -174,7 +173,7 @@ protected:
 };
 
 
-SCISHARE void Mult(ColumnMatrix&, const Matrix&, const ColumnMatrix&);
+void Mult(ColumnMatrix&, const Matrix&, const ColumnMatrix&);
 
 } // End namespace SCIRun
 

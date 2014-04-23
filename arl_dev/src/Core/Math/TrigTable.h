@@ -37,9 +37,7 @@
 #ifndef SCI_Math_TrigTable_h
 #define SCI_Math_TrigTable_h 1
 
-#include <Core/Math/share.h>
-
-class SCISHARE SinCosTable {
+class SinCosTable {
     double* sindata;
     double* cosdata;
     int n;

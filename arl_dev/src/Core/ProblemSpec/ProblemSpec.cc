@@ -1383,6 +1383,24 @@ ProblemSpec::require(const string& name, Point  &value)
 
 //______________________________________________________________________
 //
+bool
+ProblemSpec::findAttribute(const string& attribute) const
+{
+  map<string, string> attributes;
+  getAttributes(attributes);
+  
+  map<string,string>::iterator iter = attributes.find(attribute);
+  
+  if (iter != attributes.end()) {
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
+//______________________________________________________________________
+//
 void
 ProblemSpec::getAttributes(map<string,string>& attributes) const
 {

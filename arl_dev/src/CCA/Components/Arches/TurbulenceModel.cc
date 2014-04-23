@@ -58,16 +58,107 @@ TurbulenceModel::problemSetupCommon( const ProblemSpecP& params )
 {
 
   ProblemSpecP db = params; 
+  ProblemSpecP db_turb; 
 
-  //setup the filter: 
-  bool use_old_filter = true; 
-  if ( db->findBlock("Turbulence")->findBlock("use_new_filter") ) {
-    use_old_filter = false; 
-  } 
+  d_filter_type = "moin98"; 
+  d_filter_width = 3; 
 
-  d_filter = scinew Filter( use_old_filter ); 
+  if ( db->findBlock("Turbulence") ){ 
+    db_turb = db->findBlock("Turbulence"); 
+
+    //setup the filter: 
+    d_use_old_filter = true; 
+    if ( db_turb->findBlock("ignore_filter_bc") ) {
+      //Will not adjust filter weights for the presence of any BC. 
+      d_use_old_filter = false; 
+    } 
+
+    if ( db_turb->findBlock("filter_type")){ 
+      db_turb->getWithDefault("filter_type", d_filter_type, "moin98");
+    }
+
+    if ( db_turb->findBlock("filter_width")){ 
+      db_turb->getWithDefault("filter_width",d_filter_width,3);
+    }
+  }
+
+  d_filter = scinew Filter( d_use_old_filter, d_filter_type, d_filter_width ); 
+
+}
+void TurbulenceModel::sched_computeFilterVol( SchedulerP& sched, 
+                                              const PatchSet* patches, 
+                                              const MaterialSet* matls )
+{
+
+  Task* tsk = scinew Task( "TurbulenceModel::computeFilterVol",this, &TurbulenceModel::computeFilterVol);
+  tsk->computes( d_lab->d_filterVolumeLabel ); 
+  tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells, 1 ); 
+ 
+  sched->addTask(tsk, patches, matls);
 
 }
 
+void 
+TurbulenceModel::computeFilterVol( const ProcessorGroup*,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset*,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw )
+{
 
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double>   filter_volume; 
+    constCCVariable<int> cell_type; 
+
+    new_dw->get( cell_type, d_lab->d_cellTypeLabel, indx, patch, Ghost::AroundCells, 1 ); 
+    new_dw->allocateAndPut( filter_volume, d_lab->d_filterVolumeLabel, indx, patch ); 
+
+    filter_volume.initialize(0.0);
+
+    d_filter->computeFilterVolume( patch, cell_type, filter_volume );
+
+  }
+}
+
+void TurbulenceModel::sched_carryForwardFilterVol( SchedulerP& sched, 
+                                                   const PatchSet* patches, 
+                                                   const MaterialSet* matls )
+{
+  Task* tsk = scinew Task( "TurbulenceModel::carryForwardFilterVol", 
+      this, &TurbulenceModel::carryForwardFilterVol);
+  tsk->computes( d_lab->d_filterVolumeLabel ); 
+  tsk->requires( Task::OldDW, d_lab->d_filterVolumeLabel, Ghost::None, 0 );
+ 
+  sched->addTask(tsk, patches, matls);
+}
+
+void 
+TurbulenceModel::carryForwardFilterVol( const ProcessorGroup*,
+                                        const PatchSubset* patches,
+                                        const MaterialSubset*,
+                                        DataWarehouse* old_dw,
+                                        DataWarehouse* new_dw )
+{
+
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double>   filter_vol; 
+    constCCVariable<double> old_filter_vol; 
+
+    new_dw->allocateAndPut( filter_vol, d_lab->d_filterVolumeLabel, indx, patch ); 
+    old_dw->get( old_filter_vol,  d_lab->d_filterVolumeLabel, indx, patch, Ghost::None, 0 );
+
+    filter_vol.copyData(old_filter_vol); 
+
+  }
+}
 

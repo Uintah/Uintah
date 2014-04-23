@@ -182,6 +182,8 @@ protected:
   const Expr::Tag diffTagX_, diffTagY_, diffTagZ_;
 
   const bool haveConvection_, haveDiffusion_;
+  const bool doXConv_, doYConv_, doZConv_;
+  const bool doXDiff_, doYDiff_, doZDiff_;
   const bool doXDir_, doYDir_, doZDir_;
 
   const Expr::Tag volFracTag_, xAreaFracTag_, yAreaFracTag_, zAreaFracTag_;

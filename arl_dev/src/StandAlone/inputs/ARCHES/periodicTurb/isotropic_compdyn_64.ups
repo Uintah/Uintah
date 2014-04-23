@@ -20,7 +20,7 @@
 
 <!--__________________________________-->
   <DataArchiver>
-    <filebase>arhces-decay-isotropic-turbulence-compdyn-64.uda</filebase>
+    <filebase>compdyn-64.uda</filebase>
 	<outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>    
     <save label="totalKineticEnergy"/>
@@ -68,7 +68,7 @@
       </TimeIntegrator>
 
 
-      <set_initial_vel_condition inputfile="inputs/ARCHES/periodicTurb/cbc64_uvw_arches.gz"/>
+      <set_initial_vel_condition inputfile="cbc64_uvw_arches.gz"/>
       <Turbulence model="compdynamicprocedure"/>
 
       <Properties>
@@ -97,6 +97,9 @@
 
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
+          <initialization type="input">
+            <input_file>cbc64_uvw_arches.gz</input_file>
+          </initialization>
         </MomentumSolver>
 
       </ExplicitSolver>

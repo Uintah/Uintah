@@ -46,8 +46,8 @@ using SCIRun::Point;
 using SCIRun::Vector;
 
 class Matrix3;
-class Stencil7;
-class Stencil4;
+struct Stencil7;
+struct Stencil4;
 class ConnectionList;
 class Short27;
 class TypeDescription;

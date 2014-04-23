@@ -17,152 +17,81 @@
     <!-- ************************************************** -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi0-scalar" state="STATE_N" />
+      <NameTag name="phi0-scalar" state="STATE_N"/>
       <Constant> 100.0 </Constant>      
     </BasicExpression>
     <TransportEquation equation="generic">
-
       <SolutionVariable>phi0-scalar</SolutionVariable>
-
-      <DiffusiveFluxExpression>
-        <Direction>X</Direction>
-        <ConstantDiffusivity>0.01</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Y</Direction>
-        <ConstantDiffusivity>0.01</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Z</Direction>
-        <ConstantDiffusivity>0.01</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
+      <DiffusiveFlux direction="X" coefficient="0.01"/>
+      <DiffusiveFlux direction="Y" coefficient="0.01"/>
+      <DiffusiveFlux direction="Z" coefficient="0.01"/>
     </TransportEquation>
     <!-- ************************************************** -->
     <!-- Set the initial condition for non-staggered scalar -->
     <!-- ************************************************** -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi1-scalar" state="STATE_N" />
+      <NameTag name="phi1-scalar" state="STATE_N"/>
       <LinearFunction slope="1.0" intercept="5.0">
           <NameTag name="XSVOL" state="STATE_NONE"/>
       </LinearFunction>      
     </BasicExpression>
 
     <TransportEquation equation="generic">
-
       <SolutionVariable>phi1-scalar</SolutionVariable>
-
-      <DiffusiveFluxExpression>
-        <Direction>X</Direction>
-        <ConstantDiffusivity>0.01</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Y</Direction>
-        <ConstantDiffusivity>0.01</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Z</Direction>
-        <ConstantDiffusivity>0.01</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-    </TransportEquation>  
+      <DiffusiveFlux direction="X" coefficient="0.01"/>
+      <DiffusiveFlux direction="Y" coefficient="0.01"/>
+      <DiffusiveFlux direction="Z" coefficient="0.01"/>
+    </TransportEquation>
     <!-- ************************************************** -->
     <!-- Set the initial condition for non-staggered scalar -->
     <!-- ************************************************** -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi2-scalar" state="STATE_N" />
+      <NameTag name="phi2-scalar" state="STATE_N"/>
       <SineFunction amplitude="10.0" frequency="2.0" offset="0.0">
-         <NameTag name="XSVOL" state="STATE_NONE" />
+         <NameTag name="XSVOL" state="STATE_NONE"/>
        </SineFunction>
     </BasicExpression>
     <TransportEquation equation="generic">
-
       <SolutionVariable>phi2-scalar</SolutionVariable>
-
-      <DiffusiveFluxExpression>
-        <Direction>X</Direction>
-        <ConstantDiffusivity>0.01</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Y</Direction>
-        <ConstantDiffusivity>0.01</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Z</Direction>
-        <ConstantDiffusivity>0.01</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-    </TransportEquation>    
+      <DiffusiveFlux direction="X" coefficient="0.01"/>
+      <DiffusiveFlux direction="Y" coefficient="0.01"/>
+      <DiffusiveFlux direction="Z" coefficient="0.01"/>
+    </TransportEquation>
     <!-- ************************************************** -->
     <!-- Set the initial condition for non-staggered scalar -->
     <!-- ************************************************** -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi3-scalar" state="STATE_N" />
+      <NameTag name="phi3-scalar" state="STATE_N"/>
       <DoubleTanhFunction amplitude="10.0" width="4.0" midpointUp="1.0" midpointDown="2.0">
           <NameTag name="XSVOL" state="STATE_NONE"/>
       </DoubleTanhFunction>
     </BasicExpression>
     <TransportEquation equation="generic">
-
       <SolutionVariable>phi3-scalar</SolutionVariable>
-
-      <DiffusiveFluxExpression>
-        <Direction>X</Direction>
-        <ConstantDiffusivity>0.01</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Y</Direction>
-        <ConstantDiffusivity>0.01</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Z</Direction>
-        <ConstantDiffusivity>0.01</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-    </TransportEquation>    
+      <DiffusiveFlux direction="X" coefficient="0.01"/>
+      <DiffusiveFlux direction="Y" coefficient="0.01"/>
+      <DiffusiveFlux direction="Z" coefficient="0.01"/>
+    </TransportEquation>
     <!-- ************************************************** -->
     <!-- Set the initial condition for non-staggered scalar -->
     <!-- ************************************************** -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi4-scalar" state="STATE_N" />
+      <NameTag name="phi4-scalar" state="STATE_N"/>
       <GaussianFunction amplitude="5.0" deviation="2.0" mean="2.0" baseline="0.0">
           <NameTag name="XSVOL" state="STATE_NONE"/>
       </GaussianFunction>
     </BasicExpression>
     <TransportEquation equation="generic">
-
       <SolutionVariable>phi4-scalar</SolutionVariable>
-
-      <DiffusiveFluxExpression>
-        <Direction>X</Direction>
-        <ConstantDiffusivity>0.01</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Y</Direction>
-        <ConstantDiffusivity>0.01</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Z</Direction>
-        <ConstantDiffusivity>0.01</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-    </TransportEquation>    
-
-  </Wasatch>
+      <DiffusiveFlux direction="X" coefficient="0.01"/>
+      <DiffusiveFlux direction="Y" coefficient="0.01"/>
+      <DiffusiveFlux direction="Z" coefficient="0.01"/>
+    </TransportEquation>
+    </Wasatch>
 
 
   <Time>
@@ -178,7 +107,7 @@
     <filebase>wasatch-functions-test.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.01"/>
+    <checkpoint cycle="2" interval="0.01"/>
     <compression>gzip</compression>
     <save label="phi0-scalar"/>
     <save label="phi1-scalar"/>

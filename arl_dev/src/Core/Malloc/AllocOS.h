@@ -40,7 +40,7 @@
 #include <cstdlib>
 
 namespace SCIRun {
-  class Allocator;
+  struct Allocator;
 struct OSHunk {
     static OSHunk* alloc(size_t size, bool returnable, Allocator* allocator);
     static void free(OSHunk*);

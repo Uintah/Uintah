@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <Uintah_specification>
   <Meta>
-    <title>Arches Decay of Isotropic Turbulence - Constant Smagorinsky - 32x32x32</title>
+    <title>Arches Decay of Isotropic Turbulence - Dynamic Model: compdynamic - 32x32x32</title>
   </Meta>
 
   <SimulationComponent type="arches"/>
@@ -10,8 +10,8 @@
   <Time>
     <maxTime>     0.67   </maxTime>
     <initTime>    0.0     </initTime>
-    <delt_min>    1e-3 </delt_min>
-    <delt_max>    1e-3     </delt_max>
+    <delt_min>    1e-2 </delt_min>
+    <delt_max>    1e-2     </delt_max>
 <!-- 
     <max_Timesteps> 5 </max_Timesteps>
  -->
@@ -20,8 +20,8 @@
 
 <!--__________________________________-->
   <DataArchiver>
-    <filebase>arhces-decay-isotropic-turbulence-csmag-32.uda</filebase>
-	<outputTimestepInterval>10</outputTimestepInterval>
+    <filebase>compdyn-32.uda</filebase>
+	<outputTimestepInterval>2</outputTimestepInterval>
     <outputInitTimestep/>    
     <save label="totalKineticEnergy"/>
     <save label="uVelocitySPBC"/>    
@@ -67,13 +67,7 @@
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
 
-
-      <set_initial_vel_condition inputfile="inputs/ARCHES/periodicTurb/cbc32_uvw_arches.gz"/>
-      <Turbulence model="smagorinsky">
-        <cf>0.2</cf>
-        <fac_mesh>1</fac_mesh>        
-        <filterl>0</filterl>
-      </Turbulence>
+      <Turbulence model="compdynamicprocedure"/>
 
       <Properties>
         <ConstantProps>
@@ -101,6 +95,9 @@
 
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
+          <initialization type="input">
+            <input_file>cbc32_uvw_arches.gz</input_file>
+          </initialization>
         </MomentumSolver>
 
       </ExplicitSolver>

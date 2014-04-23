@@ -44,7 +44,7 @@
 
 AC_DEFUN([SCI_MSG_ERROR], [
 ## SCI_MSG_ERROR
-if test -z "$debugging"; then
+if test -z "$verbose"; then
   AC_MSG_WARN([
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
@@ -62,7 +62,7 @@ AC_MSG_ERROR($1)
 ])
 
 AC_DEFUN([SCI_MSG_DEBUG], [
-if test "$debugging" = "yes"; then
+if test "$verbose" = "yes"; then
   AC_MSG_NOTICE([
 debug info:
 $1
@@ -391,7 +391,7 @@ for inc in $4; do
      has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
      if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
-        if test "$debugging" = "yes"; then
+        if test "$verbose" = "yes"; then
           echo
           AC_MSG_WARN(Only -I options are allowed in arg 4 ($4) of $1 check.  Skipping $inc.)
         fi
@@ -441,7 +441,7 @@ if test -n "$5"; then
 
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
-            if test "$debugging" = "yes"; then
+            if test "$verbose" = "yes"; then
               echo
               AC_MSG_WARN(Only -l options are allowed in arg 5 of $1 check (disregarding $lib).)
             fi
@@ -481,7 +481,7 @@ if test -n "$6"; then
          has_minus_L=`echo $path | sed 's/-L.*//'`
          if test -n "$has_minus_L"; then
             # Has some other -?.
-            if test "$debugging" = "yes"; then
+            if test "$verbose" = "yes"; then
               echo
               AC_MSG_WARN(Only -L options are allowed in arg 6 of $1 check (disregarding $path).)
             fi
@@ -492,7 +492,11 @@ if test -n "$6"; then
       # Remove the '-L' (if it has one).
       the_path=`echo $path | sed 's/-L//'`
       if test -d "$the_path"; then
-         _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$the_path -L$the_path"
+         if test "$IS_STATIC_BUILD" = "yes"; then
+            _sci_lib_path="$_sci_lib_path -L$the_path"
+         else
+            _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$the_path -L$the_path"
+         fi
       else
          echo
          AC_MSG_WARN(The path given $the_path is not a valid directory... ignoring.)
@@ -762,14 +766,22 @@ done
 _sci_lib_path=
 ifelse([$6],[],,[
 for i in $6; do
-  # make sure it exists
-  if test -d $i; then
-    if test -z "$_sci_lib_path"; then
-      _sci_lib_path="$LDRUN_PREFIX$i -L$i"
-    else
-      _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$i -L$i"
-    fi
-  fi
+   # make sure it exists
+   if test -d $i; then
+      if test -z "$_sci_lib_path"; then
+         if test "$IS_STATIC_BUILD" = "yes"; then
+            _sci_lib_path="-L$i"
+         else
+            _sci_lib_path="$LDRUN_PREFIX$i -L$i"
+         fi
+      else
+         if test "$IS_STATIC_BUILD" = "yes"; then
+            _sci_lib_path="$_sci_lib_path -L$i"
+         else
+            _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$i -L$i"
+         fi
+      fi
+   fi
 done
 ])dnl
 

@@ -42,7 +42,7 @@
 #include <StandAlone/tools/uda2nrrd/QueryInfo.h>
 
 #include <Core/Math/Matrix3.h>
-#include <Core/Basis/Constant.h>
+//#include <Core/Basis/Constant.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/GenericField.h>

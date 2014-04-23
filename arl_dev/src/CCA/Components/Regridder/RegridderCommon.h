@@ -174,7 +174,6 @@ WARNING
 
     // var labels for interior task graph
     const VarLabel* d_dilatedCellsStabilityLabel;
-    const VarLabel* d_dilatedCellsStabilityOldLabel;
     const VarLabel* d_dilatedCellsRegridLabel;
     const VarLabel* d_dilatedCellsDeletionLabel;
 

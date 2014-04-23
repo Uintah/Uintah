@@ -40,7 +40,7 @@
 #include <Core/Thread/share.h>
 
 namespace SCIRun {
-  class CrowdMonitor_private;
+  struct CrowdMonitor_private;
 /**************************************
  
 CLASS

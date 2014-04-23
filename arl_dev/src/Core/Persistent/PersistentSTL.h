@@ -35,6 +35,7 @@
 #define SCI_project_PersistentSTL_h 1
 
 #include <Core/Persistent/Persistent.h>
+
 #include <map>
 #include <vector>
 #include <list>
@@ -42,8 +43,6 @@
 namespace SCIRun {
 
 #define MAP_VERSION 1
-
-#include <Core/Persistent/share.h>
 
 
 // Persistent IO for maps
@@ -122,21 +121,21 @@ void Pio(Piostream& stream, std::vector<bool>& data);
 
 // Optimize these four, heavily used in the field classes.
 template <>
-SCISHARE void Pio(Piostream& stream, std::vector<char>& data);
+void Pio(Piostream& stream, std::vector<char>& data);
 template <>
-SCISHARE void Pio(Piostream& stream, std::vector<unsigned char>& data);
+void Pio(Piostream& stream, std::vector<unsigned char>& data);
 template <>
-SCISHARE void Pio(Piostream& stream, std::vector<short>& data);
+void Pio(Piostream& stream, std::vector<short>& data);
 template <>
-SCISHARE void Pio(Piostream& stream, std::vector<unsigned short>& data);
+void Pio(Piostream& stream, std::vector<unsigned short>& data);
 template <>
-SCISHARE void Pio(Piostream& stream, std::vector<int>& data);
+void Pio(Piostream& stream, std::vector<int>& data);
 template <>
-SCISHARE void Pio(Piostream& stream, std::vector<unsigned int>& data);
+void Pio(Piostream& stream, std::vector<unsigned int>& data);
 template <>
-SCISHARE void Pio(Piostream& stream, std::vector<float>& data);
+void Pio(Piostream& stream, std::vector<float>& data);
 template <>
-SCISHARE void Pio(Piostream& stream, std::vector<double>& data);
+void Pio(Piostream& stream, std::vector<double>& data);
 
 template <class T> 
 void Pio(Piostream& stream, std::vector<T>& data)

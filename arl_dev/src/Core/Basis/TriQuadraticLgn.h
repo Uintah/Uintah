@@ -36,7 +36,7 @@ namespace SCIRun {
 //! Class for describing unit geometry of TriQuadraticLgn 
   class TriQuadraticLgnUnitElement : public TriLinearLgnUnitElement {
 public: 
-  static SCISHARE double unit_vertices[6][2]; //!< Parametric coordinates of vertices of unit edge
+  static double unit_vertices[6][2]; //!< Parametric coordinates of vertices of unit edge
   
   TriQuadraticLgnUnitElement() {}
   virtual ~TriQuadraticLgnUnitElement() {}

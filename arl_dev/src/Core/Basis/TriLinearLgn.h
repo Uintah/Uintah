@@ -39,13 +39,13 @@ namespace SCIRun {
 class TriLinearLgnUnitElement {
 public:
   //! Parametric coordinates of vertices of unit edge
-  static SCISHARE double unit_vertices[3][2];
+  static double unit_vertices[3][2];
   //! References to vertices of unit edge 
-  static SCISHARE int unit_edges[3][2]; 
+  static int unit_edges[3][2];
   //! References to vertices of unit face
-  static SCISHARE int unit_faces[1][3]; 
+  static int unit_faces[1][3];
   //! References to normal of unit face
-  static SCISHARE double unit_face_normals[1][3];
+  static double unit_face_normals[1][3];
 
   TriLinearLgnUnitElement() {}
   virtual ~TriLinearLgnUnitElement() {}
@@ -268,13 +268,6 @@ T TriGaussian3<T>::GaussianPoints[7][2] = {
 template <class T>
 T TriGaussian3<T>::GaussianWeights[7] = 
   {0.1259391805, 0.1259391805, 0.1259391805, 0.1323941527, 0.1323941527, 0.1323941527, 0.225};
-
-#ifdef _WIN32
-// force the instantiation of TriGaussian3<double>
-template class TriGaussian1<double>;
-template class TriGaussian2<double>;
-template class TriGaussian3<double>;
-#endif
 
 
 //! Class for handling of element of type triangle with 

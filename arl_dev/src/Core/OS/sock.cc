@@ -42,16 +42,7 @@
 
 #include <Core/OS/sock.h>
 
-#ifdef _WIN32
-				// make sure socketinitializer
-				// constructor gets called before any
-				// socket constructor can
-//#pragma init_seg(lib)
-#else
 #include <cerrno>
-				// do I need to do this under unix &
-				// how?
-#endif
 
 //----------------------------------------------------------------------
 
@@ -59,10 +50,6 @@ using namespace std;
 
 namespace SCIRun {
   
-#ifdef _WIN32
-static void prError(int err);
-#endif
-
 // MAX -----------------------------------------------------------------
 template <class T>
 inline T MMAX(T a, T b) { 
@@ -74,26 +61,8 @@ SocketInitializer Socket::si;
 
 //----------------------------------------------------------------------
 SocketInitializer::SocketInitializer() {
-#ifdef _WIN32
-  WORD wVersionRequested;
-  WSADATA wsaData;
-
-				// look for winsock 2.0
-  wVersionRequested = MAKEWORD( 2, 0 );
-
-				// attempt to locate the winsock dll
-				// and start up sockets.
-  errno = WSAStartup( wVersionRequested, &wsaData );
-
-				// panic if we can't find it
-  if ( errno != 0 ) {
-    cerr << "SocketInitializer::SocketInitializer: " <<
-      "Could not find usable socket dll" << endl; 
-    return;
-  }
-#else
   /* This ignores the SIGPIPE signal.  This is usually a good idea, since
-     the default behaviour is to terminate the application.  SIGPIPE is
+     the default behavior is to terminate the application.  SIGPIPE is
      sent when you try to write to an unconnected socket.  You should
      check your return codes to make sure you catch this error! */
 
@@ -104,17 +73,12 @@ SocketInitializer::SocketInitializer() {
   sigemptyset(&sig.sa_mask);
   sigaction(SIGPIPE,&sig,NULL);
 
-#endif
-
 }
 
 //----------------------------------------------------------------------
 SocketInitializer::~SocketInitializer() {
-				// shut down all socket resources for
-				// this application
-#ifdef _WIN32
-  WSACleanup();
-#endif
+
+    // shut down all socket resources for this application
 }
 
 
@@ -184,23 +148,13 @@ int Socket::isReadyToRead() {
 Socket::Socket() {
   fd = socket(AF_INET, SOCK_STREAM, 0);
   if (fd == INVALID_SOCKET) {
-#ifdef _WIN32
-    cerr << "Socket::Socket ";
-    prError(WSAGetLastError());
-#else
     perror("Socket::Socket: Could not create socket");
-#endif
   }
 
-				// So that we can re-bind to it
-				// without TIME_WAIT problems
+  // So that we can re-bind to it without TIME_WAIT problems
   
-				// sources say to use this sparingly
-#ifdef _WIN32
-  char reuse_addr = 1;
-#else
+  // sources say to use this sparingly
   int reuse_addr = 1;
-#endif
   setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse_addr,
     sizeof(reuse_addr));
 
@@ -228,10 +182,6 @@ Socket::Block(int block) {
   unsigned long bogus = (block) ? 0 : 1;
   synchronous = block;
 
-
-#ifdef _WIN32
-  ioctlsocket(fd, FIONBIO, &bogus);
-#else
   ioctl(fd, FIONBIO, &bogus);
 
 				// these are apparently  valid,
@@ -242,21 +192,17 @@ Socket::Block(int block) {
   //if (fcntl(s, F_SETFL, O_NOBLOCK) < 0) {
   //perror("fcntl F_SETFL, O_NOBLOCK");
   //}
-#endif
 }
 
 //----------------------------------------------------------------------
 void
 Socket::Close() {
-  if (!connected) return;
+  if (!connected) {
+    return;
+  }
   
   shutdown(fd, SD_SEND);
-  
-#ifdef _WIN32
-  closesocket(fd);
-#else
   close(fd);
-#endif
   connected = false;
   
 }
@@ -270,13 +216,7 @@ Socket::Reset() {
   fd = socket(AF_INET, SOCK_STREAM, 0);
 
   if (fd == INVALID_SOCKET) {
-    
-#ifdef _WIN32
-    cerr << "Socket::Reset: ";
-    prError(WSAGetLastError());
-#else
     perror("Socket::Reset: Could not create socket");
-#endif
     
   }
 }
@@ -285,9 +225,6 @@ Socket::Reset() {
 int
 Socket::ConnectTo(char* hostname, int port) {
   int err;
-#ifdef _WIN32
-  WSASetLastError(0);
-#endif
   struct hostent* hostentry;
   hostentry = gethostbyname(hostname);
   struct sockaddr_in address;
@@ -301,16 +238,10 @@ Socket::ConnectTo(char* hostname, int port) {
   err = connect(fd, (sockaddr *)(&address), sizeof(address));
   
   if (err == SOCKET_ERROR) {
-  
-#ifdef _WIN32
-    cerr << "Couldn't connect to " << hostname << ":" << port << endl;
-    prError(WSAGetLastError());
-#else
     char errormsg[256];
     sprintf(errormsg,
       "Couldn't connect to %s:%d", hostname, port);
     perror(errormsg);
-#endif
     Close();
     return false;
   }
@@ -333,19 +264,11 @@ Socket::ListenTo(char* hostname, int port) {
     address.sin_zero[i] = 0;
   }
 
-  if (bind(fd,(sockaddr *)(&address),sizeof(address)) == SOCKET_ERROR)
-    {
-      
-#ifdef _WIN32
-    cerr << "Socket::ListenTo: Could not listen to "
-	 << hostname << ":" << port << endl;
-    prError(WSAGetLastError());
-#else
+  if (bind(fd,(sockaddr *)(&address),sizeof(address)) == SOCKET_ERROR) {
     char errormsg[256];
     sprintf(errormsg,
       "Socket::ListenTo: Could not listen to %s:%d", hostname, port);
     perror(errormsg);
-#endif
     Close();
     return false;
   }
@@ -361,28 +284,15 @@ Socket::AcceptConnection()
 {
   
   SOCKET s = accept(fd, 0, 0);
-  
+
   if (s == SOCKET_ERROR) {
-#ifdef _WIN32
-    errno = WSAGetLastError();
-    if (errno == WSAEWOULDBLOCK) {
-      return NULL;
-    }
-    else {
-      cerr << "Socket::AcceptConnection: Error accepting socket:"
-	   << errno << endl;
-      prError(errno);
-      return NULL;
-    }
-#else
     if (synchronous == false && errno == EWOULDBLOCK) {
       return NULL;
     }
     perror("Socket::AcceptConnection: Error accepting socket");
     return NULL;
-#endif
   }
-  
+
   Socket* sock = new Socket(s);
   sock->connected = true;
   return sock;
@@ -422,35 +332,30 @@ union doubleintintchar {
 int
 Socket::Read(char* location, int numBytes) {
   
-  if (!connected) return SOCKET_ERROR;
-  
+  if (!connected) {
+    return SOCKET_ERROR;
+  }
+
   int r = 0;
   int amt;
 
-				// recv may take multiple tries to get
-				// all the data
+  // recv may take multiple tries to get all the data
   while (r < numBytes) {
-				// attempt to read
-    amt = recv(fd, (location+r), numBytes-r, 0);
+    // attempt to read
+    amt = recv(fd, (location + r), numBytes - r, 0);
 
-				// return if there was an error
+    // return if there was an error
     if (amt == SOCKET_ERROR || amt == 0) {
-				// if there was an error, then we are
-				// probably no longer connected, unless
-				// blocking is turned off
-#ifdef _WIN32
-      if (synchronous == false && WSAGetLastError() == WSAEWOULDBLOCK) {
-#else
+      // if there was an error, then we are probably no longer connected, unless
+      // blocking is turned off
       if (synchronous == false && errno == EWOULDBLOCK) {
-#endif
-	return 0;
-      }
-      else {
-	Close();
-	return SOCKET_ERROR;
+        return 0;
+      } else {
+        Close();
+        return SOCKET_ERROR;
       }
     }
-      
+
     r += amt;
   }
   return r;
@@ -461,28 +366,24 @@ Socket::Read(char* location, int numBytes) {
 int
 Socket::Write(char* location, int numBytes) {
 
-  if (!connected) return SOCKET_ERROR;
-  
+  if (!connected) {
+    return SOCKET_ERROR;
+  }
+
   int s = 0;
   int amt;
-				// send may take multiple tries
+  // send may take multiple tries
   while (s < numBytes) {
-				// attempt to send
-    amt = send(fd, (location+s), numBytes-s, 0);
-				// return if there was an error
+    // attempt to send
+    amt = send(fd, (location + s), numBytes - s, 0);
+    // return if there was an error
     if (amt == SOCKET_ERROR || amt == 0) {
-				// if there was an error, then we are
-				// no longer connected
-#ifdef _WIN32
-      if (synchronous == false && WSAGetLastError() == WSAEWOULDBLOCK) {
-#else
+      // if there was an error, then we are no longer connected
       if (synchronous == false && errno == EWOULDBLOCK) {
-#endif
-	return 0;
-      }
-      else {
-	Close();
-	return SOCKET_ERROR;
+        return 0;
+      } else {
+        Close();
+        return SOCKET_ERROR;
       }
     }
     s += amt;
@@ -712,96 +613,5 @@ Socket::Write(double n) {
   return Write(&diin.c, sizeof(double));
 }
 
-
-//----------------------------------------------------------------------
-#ifdef _WIN32
-static void prError(int err) {
-  switch(err) {
-  case WSANOTINITIALISED :
-    cerr << " A successful WSAStartup must occur "
-	 << "before using this function. ";
-    break;
-  case WSAENETDOWN :
-    cerr << " The network subsystem has failed. ";
-    break;
-  case WSAEADDRINUSE :
-    cerr << " The specified address is already in use. ";
-    break;
-  case WSAEINTR :
-    cerr
-      << " The (blocking) call was canceled through WSACancelBlockingCall. ";
-    break;
-  case WSAEINPROGRESS :
-    cerr << " A blocking Windows Sockets 1.1 call is in progress, or "
-	 << "the service provider is still processing a callback function. ";
-      break;
-  case WSAEALREADY :
-    cerr << " A nonblocking connect call is in progress "
-	 << "on the specified socket. ";
-    break;
-  case WSAEADDRNOTAVAIL :
-    cerr << " The specified address is not available "
-	 << "from the local machine. ";
-    break; 
-  case WSAEAFNOSUPPORT :
-    cerr << " Addresses in the specified family cannot "
-	 << "be used with this socket. ";
-    break;
-  case WSAECONNREFUSED :
-    cerr << " The attempt to connect was forcefully rejected. ";
-    break;
-  case WSAEFAULT :
-    cerr << " The name or the namelen parameter is not a valid part"
-	 << "of the user address space, the namelen parameter is "
-	 << "too small, or the name parameter contains incorrect "
-	 <<"address format for the associated address family. ";
-    break;
-  case WSAEINVAL :
-    cerr << " The parameter is a listening socket, the "
-	 << "socket has not been bound with bind, or the "
-	 << "destination address specified is not consistent with "
-	 << "that of the constrained group the socket belongs to. ";
-    break;
-  case WSAEISCONN :
-    cerr << " The socket is already connected (connection-oriented "
-	 << "sockets only). ";
-    break;
-  case WSAEMFILE :
-    cerr << " No more socket descriptors are available. \n";
-    break;
-  case WSAENETUNREACH :
-    cerr << " The network cannot be reached from this host at this time. ";
-    break;
-  case WSAENOBUFS :
-    cerr << " No buffer space is available. The socket cannot be connected. ";
-    break;
-  case WSAENOTSOCK :
-    cerr << " The descriptor is not a socket. ";
-    break;
-  case WSAEOPNOTSUPP :
-    cerr << " The referenced socket is not of a type that supports "
-	 << "the offending operation. (listen?)\n";
-    break;
-  case WSAETIMEDOUT :
-    cerr << " Attempt to connect timed out without "
-	 << "establishing a connection. ";
-    break;
-  case WSAEWOULDBLOCK :
-    cerr << " The socket is marked as nonblocking and the "
-	 << "connection cannot be completed immediately. Use select "
-	 << "to determine the completion of the connection request "
-	 << "by checking to see if the socket is writable. ";
-    break;
-  case WSAEACCES :
-    cerr << " Attempt to connect datagram socket to broadcast "
-	 << "address failed because setsockopt option "
-	 << "SO_BROADCAST is not enabled. ";
-    break;
-  default:
-    cerr << "unknown error " << err << "\n";
-    break;
-  }  
-}
-#endif // _WIN32
 
 } // End namespace SCIRun

@@ -120,75 +120,43 @@ class Arches : public UintahParallelComponent, public SimulationInterface {
 
 public:
 
-  // GROUP: Static Variables:
-  ////////////////////////////////////////////////////////////////////////
-  // Number of dimensions in the problem
   static const int NDIM;
-  // GROUP: Constants:
-  ////////////////////////////////////////////////////////////////////////
+
   enum d_eqnType { PRESSURE, MOMENTUM, SCALAR };
   enum d_dirName { NODIR, XDIR, YDIR, ZDIR };
   enum d_stencilName { AP, AE, AW, AN, AS, AT, AB };
   enum d_numGhostCells {ZEROGHOSTCELLS , ONEGHOSTCELL, TWOGHOSTCELLS,
                         THREEGHOSTCELLS, FOURGHOSTCELLS, FIVEGHOSTCELLS };
   int nofTimeSteps;
-  // GROUP: Constructors:
-  ////////////////////////////////////////////////////////////////////////
-  // Arches constructor
+
   Arches(const ProcessorGroup* myworld, const bool doAMR);
 
-  // GROUP: Destructors:
-  ////////////////////////////////////////////////////////////////////////
-  // Virtual destructor
   virtual ~Arches();
 
-  // GROUP: Problem Setup :
-  ///////////////////////////////////////////////////////////////////////
-  // Set up the problem specification database
   virtual void problemSetup(const ProblemSpecP& params,
                             const ProblemSpecP& materials_ps,
                             GridP& grid, SimulationStateP&);
 
-  // GROUP: Schedule Action :
-  ///////////////////////////////////////////////////////////////////////
-  // Schedule initialization
   virtual void scheduleInitialize(const LevelP& level,
                                   SchedulerP&);
 
   virtual void restartInitialize();
 
-  ///////////////////////////////////////////////////////////////////////
-  // Schedule parameter initialization
   virtual void sched_paramInit(const LevelP& level,
                                SchedulerP&);
 
-  ///////////////////////////////////////////////////////////////////////
-  // Schedule Compute if Stable time step
   virtual void scheduleComputeStableTimestep(const LevelP& level,
                                              SchedulerP&);
   void 
   MPMArchesIntrusionSetupForResart( const LevelP& level, SchedulerP& sched, 
       bool& recompile, bool doing_restart );
 
-  ///////////////////////////////////////////////////////////////////////
-  // Schedule time advance
   virtual void scheduleTimeAdvance( const LevelP& level,
                                     SchedulerP&);
 
-  ///////////////////////////////////////////////////////////////////////
-   // Function to return boolean for recompiling taskgraph
+  virtual bool needRecompile(double time, double dt,
+                             const GridP& grid);
 
-    virtual bool needRecompile(double time, double dt,
-                        const GridP& grid);
-
-  virtual void sched_readCCInitialCondition(const LevelP& level,
-                                            SchedulerP&);
- 
-  virtual void sched_readUVWInitialCondition(const LevelP& level,
-                                            SchedulerP&);
- 
-  virtual void sched_interpInitialConditionToStaggeredGrid(const LevelP& level,
-                                                           SchedulerP&);
   virtual void sched_getCCVelocities(const LevelP& level,
                                      SchedulerP&);
   virtual void sched_weightInit( const LevelP& level,
@@ -206,6 +174,7 @@ public:
   virtual void scheduleRefineInterface(const Uintah::LevelP& /*fineLevel*/,
                                        Uintah::SchedulerP& /*scheduler*/,
                                        bool, bool);
+
 
   // for multimaterial
   void setMPMArchesLabel(const MPMArchesLabel* MAlb){
@@ -239,23 +208,12 @@ protected:
 
 private:
 
-  // GROUP: Constructors (Private):
-  ////////////////////////////////////////////////////////////////////////
-  // Default Arches constructor
   Arches();
 
-  ////////////////////////////////////////////////////////////////////////
-  // Arches copy constructor
   Arches(const Arches&);
 
-  // GROUP: Overloaded Operators (Private):
-  ////////////////////////////////////////////////////////////////////////
-  // Arches assignment constructor
   Arches& operator=(const Arches&);
 
-  // GROUP: Action Methods (Private):
-  ////////////////////////////////////////////////////////////////////////
-  // Arches assignment constructor
   void paramInit(const ProcessorGroup*,
                  const PatchSubset* patches,
                  const MaterialSubset*,
@@ -268,24 +226,12 @@ private:
                              DataWarehouse* ,
                              DataWarehouse* new_dw);
 
-  void readCCInitialCondition(const ProcessorGroup*,
-                              const PatchSubset* patches,
-                              const MaterialSubset*,
-                              DataWarehouse* ,
-                              DataWarehouse* new_dw);
-
   void readUVWInitialCondition(const ProcessorGroup*,
                               const PatchSubset* patches,
                               const MaterialSubset*,
                               DataWarehouse* ,
                               DataWarehouse* new_dw);
   
-  void interpInitialConditionToStaggeredGrid(const ProcessorGroup*,
-                                             const PatchSubset* patches,
-                                             const MaterialSubset*,
-                                             DataWarehouse* ,
-                                             DataWarehouse* new_dw);
-
   void getCCVelocities(const ProcessorGroup*,
                        const PatchSubset* patches,
                        const MaterialSubset*,
@@ -361,11 +307,7 @@ private:
 
   std::vector<AnalysisModule*> d_analysisModules;
 
-  bool d_set_initial_condition;
   std::string d_init_inputfile;
-
-  bool d_set_init_vel_condition;    
-  std::string d_init_vel_inputfile;
 
   TimeIntegratorLabel* init_timelabel;
   bool init_timelabel_allocated;

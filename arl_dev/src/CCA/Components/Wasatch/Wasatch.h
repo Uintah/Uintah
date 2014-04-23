@@ -53,18 +53,17 @@
    are using Uintah functionality.
 
    There is extensive usage of two external libraries: ExprLib and
-   SpatialOps.  These have been developed by James C. Sutherland and
-   support graph construction as well as field/operator operations,
-   respectively.
+   SpatialOps.  These have been developed by James C. Sutherland and his
+   collaborators and support graph construction as well as field/operator
+   operations, respectively.
 
 
    \par Development in Wasatch
 
-   Most developers will need to focus on the Expression library and
-   not on Wasatch directly.  Typically, development should focus on
-   creating Expressions that encapsulate a concise bit of
-   functionality.  These should be written to be as generic as
-   possible.  Notably:
+   Most developers will need to focus on writing Expressions and not on
+   Wasatch internals directly. Typically, development should focus on
+   creating Expressions that encapsulate a concise bit of functionality.
+   These should be written to be as generic as possible. Notably:
 
     - Expressions should NOT be cognizant of ANYTHING within Uintah.
       This includes parser objects, exception handling, etc.  They are

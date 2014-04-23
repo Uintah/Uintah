@@ -38,8 +38,6 @@
 #include <Core/Math/MusilRNG.h>
 #include <vector>
 
-#include <Core/Geometry/share.h>
-
 namespace SCIRun {
 
 
@@ -47,22 +45,22 @@ namespace SCIRun {
 // where the line is specified by two end points.  This function
 // actually computes the distance to the line segment
 // between the given points and not to the line itself.
-SCISHARE double
+double
 distance_to_line2(const Point &p, const Point &a, const Point &b);
 
 
 // Compute the point on the triangle closest to the given point.
 // The distance to the triangle will be (P - result).length())
-SCISHARE void
+void
 closest_point_on_tri(Point &result, const Point &P,
                      const Point &A, const Point &B, const Point &C);
 
-SCISHARE double
+double
 RayPlaneIntersection(const Point &p,  const Vector &dir,
 		     const Point &p0, const Vector &pn);
 
 
-SCISHARE bool
+bool
 RayTriangleIntersection(double &t, double &u, double &v, bool backface_cull,
                         const Point &orig,  const Vector &dir,
                         const Point &p0, const Point &p1, const Point &p2);
@@ -71,20 +69,20 @@ RayTriangleIntersection(double &t, double &u, double &v, bool backface_cull,
 // Compute s and t such that the distance between A0 + s * (A1 - AO)
 // and B0 + t * (B1 - B0) is minimal.  Return false if the lines are
 // parallel, true otherwise.
-SCISHARE bool
+bool
 closest_line_to_line(double &s, double &t,
                      const Point &A0, const Point &A1,
                      const Point &B0, const Point &B1);
 
 
-SCISHARE void
+void
 TriTriIntersection(const Point &A0, const Point &A1, const Point &A2,
                    const Point &B0, const Point &B1, const Point &B2,
                    std::vector<Point> &results);
 
 
 
-SCISHARE void
+void
 uniform_sample_triangle(Point &p, const Point &p0,
                         const Point &p1, const Point &p2,
                         MusilRNG &rng);
@@ -95,7 +93,7 @@ tetrahedra_volume(const Point &p0, const Point &p1,
                   const Point &p2, const Point &p3);
 
 
-SCISHARE void
+void
 uniform_sample_tetrahedra(Point &p, const Point &p0, const Point &p1,
                           const Point &p2, const Point &p3,
                           MusilRNG &rng);

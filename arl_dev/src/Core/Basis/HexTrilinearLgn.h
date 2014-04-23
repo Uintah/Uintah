@@ -32,12 +32,10 @@
 #include <Core/Basis/CrvLinearLgn.h>
 #include <Core/Basis/QuadBilinearLgn.h>
 
-#include <Core/Basis/share.h>
-
 namespace SCIRun {
 
 //! Class for describing unit geometry of HexTrilinearLgn 
-class SCISHARE HexTrilinearLgnUnitElement {
+class HexTrilinearLgnUnitElement {
 public:
   //! Parametric coordinates of vertices of unit edge 
   static double unit_vertices[8][3];
@@ -233,11 +231,6 @@ public:
   static T GaussianWeights[1];
 };
 
-#ifdef _WIN32
-// force the instantiation of TetGaussian2<double>
-template class HexGaussian1<double>;
-#endif
-
 template <class T>
 int HexGaussian1<T>::GaussianNum = 1;
   
@@ -258,11 +251,6 @@ public:
   static T GaussianPoints[8][3];
   static T GaussianWeights[8];
 };
-
-#ifdef _WIN32
-// force the instantiation of TetGaussian2<double>
-template class HexGaussian2<double>;
-#endif
 
 template <class T>
 int HexGaussian2<T>::GaussianNum = 8;

@@ -78,7 +78,6 @@ apply_to_field( const SrcT& src, DestT& dest )
   using namespace SpatialOps::structured;
 
   typedef typename OperatorTypeBuilder<Interpolant,SrcT,DestT>::type::PointCollectionType StencilPts;
-  typedef typename StencilPts::Point HighStPt;
   typedef typename StencilPts::Collection::Point LowStPt;
 
   typedef IndexTriplet<0,0,0>           S1Offset;
@@ -86,7 +85,6 @@ apply_to_field( const SrcT& src, DestT& dest )
   typedef typename LowStPt::Negate      S2Offset;
   typedef S1Extent                      S2Extent;
   typedef typename S1Extent::Negate     DOffset;
-  typedef S1Extent                      DExtent;
 
   const MemoryWindow& ws = src.window_with_ghost();
   const MemoryWindow ws1( ws.glob_dim(),

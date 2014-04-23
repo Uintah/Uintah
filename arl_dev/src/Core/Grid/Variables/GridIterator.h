@@ -27,11 +27,8 @@
 #define UINTAH_HOMEBREW_GridIterator_H
 
 #include <Core/Geometry/IntVector.h>
-
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/NodeIterator.h>
-
-
 #include   <iostream>
 
 namespace Uintah {

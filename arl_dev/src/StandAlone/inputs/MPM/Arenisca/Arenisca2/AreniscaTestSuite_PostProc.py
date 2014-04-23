@@ -14,7 +14,7 @@ from matplotlib import ticker
 
 SHOW_ON_MAKE = False
 BIG_FIGURE = True
-DEFAULT_FORMAT = 'pdf'
+DEFAULT_FORMAT = 'png'
 
 #Useful constants
 sqrtTwo = np.sqrt(2.0)
@@ -303,8 +303,12 @@ def get_totalStrainVol(uda_path):
 
 def get_defTable(uda_path,working_dir):
   #Determine the defTable file
-  ups_file = uda_path+'/input.xml'
-  F = open(ups_file,'r')
+  try:
+    ups_file = os.path.abspath(uda_path)+'/input.xml.orig'
+    F = open(ups_file,"r")
+  except:
+    ups_file = os.path.abspath(uda_path)+'/input.xml'
+    F = open(ups_file,"r")
   for line in F:
     if '<PrescribedDeformationFile>' in line and '</PrescribedDeformationFile>' in line:
       def_file = line.split('<PrescribedDeformationFile>')[1].split('</PrescribedDeformationFile>')[0].strip()
@@ -1644,7 +1648,125 @@ def test12_postProc(uda_path,save_path,**kwargs):
       plt.rcParams['legend.fontsize']=tmp
     if SHOW_ON_MAKE:
       plt.show()
-  
+
   else:
     print '\nERROR: need working directory to post process this problem'  
+
+def test13_postProc(uda_path,save_path,**kwargs):
+  COLORS = ['Black','Blue','Magenta','Red','Green']
+  if 'WORKING_PATH' in kwargs:
+    working_dir = kwargs['WORKING_PATH']  
+
+
+    #Plot Constants
+    Xlims = (-450,50)
+    Ylims = (-100,100)  
+    formatter = ticker.FormatStrFormatter('$\mathbf{%g}$')  
+    plt.figure(1)
+    plt.hold(True)
+    plt.clf()
+
+    material_dict = get_yield_surface(uda_path)    
+    PEAKI1 = material_dict['PEAKI1']
+    FSLOPE = material_dict['FSLOPE']
+    T1 = material_dict['T1']
+    T2 = material_dict['T2']    
+
+    def_times,Fs = get_defTable(uda_path,working_dir)
+    A = Fs[1][0][0]
+    #As = Fs[10][0][0]
+    K = material_dict['B0']
+    G = material_dict['G0']
+    C = K+(4.0/3.0)*G
+    Y = FSLOPE*PEAKI1*1.732
+    YS = FSLOPE*PEAKI1
+    
+    #uniaxial strain (unscaled)
+    analytical_exx = [0.0,
+		      (Y/(2.0*G)),
+		      np.log(A),
+		      ]  
+    
+    analytical_Sxx=[0.0,
+		(C*Y)/(2.0*G),
+		((C-K)*Y)/(2*G)+K*np.log(A),
+		]      
+    
+    #uniaxial strain (scaled)
+    #analytical_exx = np.array([0.0,
+			      #(Y/(2.0*G)),
+			      #np.log(A),
+			      #np.log(A)-(Y)/(G),
+			      #0.0
+			      #])/(Y/(2.0*G))
+
+    #analytical_Sxx = np.array([0.0,
+			      #(C*Y)/(2.0*G),
+			      #((C-K)*Y)/(2*G)+K*np.log(A),
+			      #K*np.log(A)-((C+K)*Y)/(2*G),
+			      #(K-C)*Y/(2*G)
+			      #])/((C*Y)/(2.0*G))
+    
+    #pure shear (unscaled)
+    #analytical_exx = np.array([0.0,
+	#		      (YS/(2.0*G)),
+	#		      np.log(As),
+	#		      ])
+    #analytical_Sxx = np.array([0.0,
+	#		      (YS),
+	#		      (YS),
+	#		      ])
+
+
+    #Extract stress history
+    print "Post Processing Test: 13 "
+    times,sigmas = get_pStress(uda_path)
+    times,epsils = get_epsilons(uda_path)
+    exx = []
+    eyy = []
+    ezz = []
+    exy = []
+    for epsil in epsils:
+      exx.append(epsil[0][0])
+      eyy.append(epsil[1][1])
+      ezz.append(epsil[2][2])
+      exy.append(epsil[0][1])
+    Sxx = []
+    Syy = []
+    Szz = []
+    Sxy = []
+    for sigma in sigmas:
+      Sxx.append(sigma[0][0])
+      Syy.append(sigma[1][1])
+      Szz.append(sigma[2][2])
+      Sxy.append(sigma[0][1])
+      
+    scaled_exx = ((2.0*G)/Y)*np.array(exx)
+    scaled_Sxx = ((2.0*G)/(C*Y))*np.array(Sxx)
+    scaled_Syy = ((2.0*G)/(C*Y))*np.array(Syy)
+    #S = np.array(Sxx) - np.array(Syy)
+    S = np.array(Sxx)
+    #E = np.array(exy)
+    ###PLOTTING
+
+    ax1 = plt.subplot(111)
+    plt.subplots_adjust(right=0.75)
+    #param_text = material_dict['material string']
+    #plt.figtext(0.77,0.70,param_text,ha='left',va='top',size='x-small')   
+    eqShear_vs_meanStress(exx,S,LINE_LABEL = 'T1='+format(T1,'1.3e')+' T2='+format(T2,'1.3e'))
+    #eqShear_vs_meanStress(E,S,LINE_LABEL = 'T1='+format(T1,'1.3e')+' T2='+format(T2,'1.3e'),COLOR=COLORS[idx])
+    plt.plot(analytical_exx,analytical_Sxx,'--',color='Red',label='Analytical solution for rate independent case.')
+    plt.title('AreniscaTest 13:')
+    plt.ylabel(str_to_mathbf('\sigma_{xx}'))
+    plt.xlabel(str_to_mathbf('\epsilon_{xx}'))  
+    #plt.ylabel(str_to_mathbf('\sigma_{xy}'))
+    #plt.xlabel(str_to_mathbf('\epsilon_{xy}'))
+    ax1.xaxis.set_major_formatter(formatter)
+    ax1.yaxis.set_major_formatter(formatter)   
+    plt.legend()
+    saveIMG(save_path+'/Test13_verificationPlot','1280x960')
+    if SHOW_ON_MAKE:
+      plt.show()   
   
+  else:
+    print '\nERROR: need working directory to post process this problem'

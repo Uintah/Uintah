@@ -63,7 +63,7 @@ porosity).
 #define JC_KAPPA_HARDENING
 //#define JC_ARENISCA_VERSION 0.1  //120826.1339
 //#define JC_ARENISCA_VERSION 0.2  //120826.0827
-#define JC_ARENISCA_VERSION 1.0  //121215.2310 JC & MH
+#define JC_ARENISCA_VERSION 2  //121215.2310 JC & MH
 #define JC_USE_BB_DEFGRAD_UPDATE 2
 //#define CSM_PRESSURE_STABILIZATION
 //#define CSM_PORE_PRESSURE_INITIAL
@@ -113,7 +113,7 @@ using namespace std;
 Arenisca::Arenisca(ProblemSpecP& ps, MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)
 {
-  cout << "In Arenisca ver"<< JC_ARENISCA_VERSION;
+  proc0cout << "In_Arenisca_version="<< JC_ARENISCA_VERSION;
   //cout << endl
   //     << "                                        ;1BB@B@B@@@B@8u:                        " << endl
   //     << "                                   .Y@@@B@B@BB8GZMB@B@B@B@Mr                    " << endl
@@ -162,42 +162,42 @@ Arenisca::Arenisca(ProblemSpecP& ps, MPMFlags* Mflag)
   //     << "    University of Utah, Mechanical Engineering, Computational Solid Mechanics   " << endl << endl;
 
 #ifdef JC_ZETA_HARDENING
-  cout << ",JC_ZETA_HARDENING";
+  proc0cout << ",JC_ZETA_HARDENING";
 #endif
 #ifdef JC_KAPPA_HARDENING
-  cout << ",JC_KAPPA_HARDENING";
+  proc0cout << ",JC_KAPPA_HARDENING";
 #endif
 #ifdef JC_DEBUG_PARTICLE
-  cout << ",JC_DEBUG_PARTICLE=" << JC_DEBUG_PARTICLE ;
+  proc0cout << ",JC_DEBUG_PARTICLE=" << JC_DEBUG_PARTICLE ;
 #endif
 #ifdef JC_USE_BB_DEFGRAD_UPDATE
-  cout << ",JC_USE_BB_DEFGRAD_UPDATE=" << JC_USE_BB_DEFGRAD_UPDATE;
+  proc0cout << ",JC_USE_BB_DEFGRAD_UPDATE=" << JC_USE_BB_DEFGRAD_UPDATE;
 #endif
 #ifdef CSM_PORE_PRESSURE_INITIAL
-  cout << ",PORE_PRESSURE_INITIAL";
+  proc0cout << ",PORE_PRESSURE_INITIAL";
 #endif
 #ifdef JC_DEBUG_SMALL_TIMESTEP
-  cout << ",JC_DEBUG_SMALL_TIMESTEP";
+  proc0cout << ",JC_DEBUG_SMALL_TIMESTEP";
 #endif
 #ifdef JC_EPV
-  cout << ",JC_EPV";
+  proc0cout << ",JC_EPV";
 #endif
 #ifdef JC_FREEZE_PARTICLE
-  cout << ",JC_FREEZE_PARTICLE";
+  proc0cout << ",JC_FREEZE_PARTICLE";
 #endif
 #ifdef JC_MAX_NESTED_RETURN
-  cout << ",JC_MAX_NESTED_RETURN";
+  proc0cout << ",JC_MAX_NESTED_RETURN";
 #endif
 #ifdef JC_DEBUG_FR_OUTSIDE_CAP
-  cout << ",JC_DEBUG_FR_OUTSIDE_CAP";
+  proc0cout << ",JC_DEBUG_FR_OUTSIDE_CAP";
 #endif
 #ifdef CSM_DEBUG_BISECTION
-  cout << ",CSM_DEBUG_BISECTION";
+  proc0cout << ",CSM_DEBUG_BISECTION";
 #endif
 #ifdef JC_LIMITER_PRINT
-  cout << ",JC_LIMITER_PRINT";
+  proc0cout << ",JC_LIMITER_PRINT";
 #endif
-  cout << endl;
+  proc0cout << endl;
 
   one_third      = 1.0/(3.0);
   two_third      = 2.0/(3.0);
@@ -226,8 +226,8 @@ Arenisca::Arenisca(ProblemSpecP& ps, MPMFlags* Mflag)
   
   ps->get("PEAKI1IDIST",wdist.WeibDist);
   WeibullParser(wdist);
-  cout<<"WeibMed="<<wdist.WeibMed<<endl;
-  
+  proc0cout <<"WeibMed="<<wdist.WeibMed<<endl;
+
   initializeLocalMPMLabels();
 }
 Arenisca::Arenisca(const Arenisca* cm)
@@ -289,6 +289,8 @@ Arenisca::~Arenisca()
   VarLabel::destroy(pepLabel_preReloc);
   VarLabel::destroy(pevpLabel);              //Plastic Volumetric Strain
   VarLabel::destroy(pevpLabel_preReloc);
+  VarLabel::destroy(peqpsLabel);              //Hamid:Equivalent plastic shear Strain
+  VarLabel::destroy(peqpsLabel_preReloc);
   VarLabel::destroy(peveLabel);              //Elastic Volumetric Strain
   VarLabel::destroy(peveLabel_preReloc);
   VarLabel::destroy(pCapXLabel);
@@ -396,6 +398,7 @@ void Arenisca::initializeCMData(const Patch* patch,
                             pPorePressure,   // Plottable fluid pressure
                             peakI1IDist,     // Holder for particles PEAKI1 value
                             pevp,            // Plastic Volumetric Strain
+                            peqps,           // Hamid Equivalent Plastic Shear strain
                             peve,            // Elastic Volumetric Strain
                             pCapX,           // I1 of cap intercept
                             pCapXQS,         // I1 of cap intercept, quasistatic
@@ -416,6 +419,7 @@ void Arenisca::initializeCMData(const Patch* patch,
   new_dw->allocateAndPut(peakI1IDist,     peakI1IDistLabel,     pset);
   new_dw->allocateAndPut(pep,             pepLabel,             pset);
   new_dw->allocateAndPut(pevp,            pevpLabel,            pset);
+  new_dw->allocateAndPut(peqps,           peqpsLabel,           pset);
   new_dw->allocateAndPut(peve,            peveLabel,            pset);
   new_dw->allocateAndPut(pCapX,           pCapXLabel,           pset);
   new_dw->allocateAndPut(pCapXQS,         pCapXQSLabel,         pset);
@@ -436,6 +440,7 @@ void Arenisca::initializeCMData(const Patch* patch,
     pPorePressure[*iter] = d_cm.fluid_pressure_initial;
     peakI1IDist[*iter] = d_cm.PEAKI1;
     pevp[*iter] = 0.0;
+    peqps[*iter] = 0.0;
     peve[*iter] = 0.0;
     pCapX[*iter] = computeX(0.0);
     pCapXQS[*iter] = computeX(0.0);
@@ -592,15 +597,8 @@ void Arenisca::computeStableTimestep(const Patch* patch,
     cout << "ERROR in JC_DEBUG_SMALL_TIMESTEP" <<endl;
 #endif
 
-  //double delT_new = WaveSpeed.minComponent();
-  //new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
-
-  //cout<<"CST:delT_new="<<delT_new<<endl;
-
-  //if(delT_new < 1.e-12) //T2D: Should this be here?
-  //  new_dw->put(delt_vartype(DBL_MAX), lb->delTLabel, patch->getLevel());
-  //else
-  //  new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
+  double delT_new = WaveSpeed.minComponent();
+  new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
 }
 
 // ------------------------------------- BEGIN COMPUTE STRESS TENSOR FUNCTION
@@ -632,7 +630,6 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                subcycling_characteristic_number = d_cm.subcycling_characteristic_number,
                //fluid_B0 = d_cm.fluid_B0,
                //kinematic_hardening_constant = d_cm.kinematic_hardening_constant,
-               PEAKI1 = d_cm.PEAKI1,
                B0 = d_cm.B0,
                //XXB1 = d_cm.p4_fluid_effect,
                G0 = d_cm.G0;
@@ -667,6 +664,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                                    pPorePressure,
                                    pmass,           //used for stable timestep
                                    pevp,
+                                   peqps,           //Hamid
                                    peve,
                                    pCapX, pCapXQS,
                                    pKappa,
@@ -690,6 +688,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pPorePressure,   pPorePressureLabel,           pset); //initializeCMData()
     old_dw->get(pmass,           lb->pMassLabel,               pset);
     old_dw->get(pevp,            pevpLabel,                    pset); //initializeCMData()
+    old_dw->get(peqps,           peqpsLabel,                   pset); //Hamid
     old_dw->get(peve,            peveLabel,                    pset); //initializeCMData()
     old_dw->get(pCapX,           pCapXLabel,                   pset); //initializeCMData()
     old_dw->get(pCapXQS,         pCapXQSLabel,                 pset); //initializeCMData()
@@ -734,6 +733,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                               pScratchDouble2_new,
                               pPorePressure_new,
                               pevp_new,
+                              peqps_new,
                               peve_new,
                               pCapX_new, pCapXQS_new,
                               pKappa_new,
@@ -749,6 +749,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pScratchDouble2_new, pScratchDouble2Label_preReloc, pset);
     new_dw->allocateAndPut(pPorePressure_new,   pPorePressureLabel_preReloc,   pset);
     new_dw->allocateAndPut(pevp_new,            pevpLabel_preReloc,            pset);
+    new_dw->allocateAndPut(peqps_new,           peqpsLabel_preReloc,           pset); //hamid
     new_dw->allocateAndPut(peve_new,            peveLabel_preReloc,            pset);
     new_dw->allocateAndPut(pCapX_new,           pCapXLabel_preReloc,           pset);
     new_dw->allocateAndPut(pCapXQS_new,         pCapXQSLabel_preReloc,         pset);
@@ -854,9 +855,11 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         //--------------------------------------------------------------------//
         //-------------Rate Dependence / Duvaut Lions-------------------------//
         Matrix3 unrotated_stress;
+        Matrix3 unrotated_stressQS;
         // With Rate Dependence if T1 or T2 is not equal to zero
         if (d_cm.T1_rate_dependence != 0 || d_cm.T2_rate_dependence != 0){
-          unrotated_stress = (tensorR.Transpose())*(pStressQS_old[idx]*tensorR);
+          unrotated_stressQS = (tensorR.Transpose())*(pStressQS_old[idx]*tensorR);
+          unrotated_stress = (tensorR.Transpose())*(pStress_old[idx]*tensorR);
           //cout << "unrotated_stress =  " << unrotated_stress << endl;
           //cout << "pStressQS_old[idx] " << pStressQS_old[idx] << endl;
           //cout << "pStress_old[idx] =  " << pStress_old[idx] << endl;
@@ -878,7 +881,8 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 
         // Compute the unrotated stress at the first of the current timestep
         //Matrix3 
-	unrotated_stress = (tensorR.Transpose())*(pStress_old[idx]*tensorR);
+        unrotated_stressQS = (tensorR.Transpose())*(pStressQS_old[idx]*tensorR);
+        unrotated_stress = (tensorR.Transpose())*(pStress_old[idx]*tensorR);
 
 
 
@@ -926,6 +930,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         // and the backstress. tentative assumption of elasticity
         pevp_new[idx]   = pevp[idx];
         peve_new[idx]   = peve[idx] + D.Trace()*delT;
+        peqps_new[idx]  = peqps[idx]; //Hamid
         pCapX_new[idx]  = pCapX[idx];
         pKappa_new[idx] = pKappa[idx];
         pZeta_new[idx]  = pZeta[idx];
@@ -935,6 +940,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 
         // allocate and assign step values
         double  evp_new_step    = pevp_new[idx],
+                eqps_new_step   = peqps_new[idx], //Hamid
                 eve_new_step    = peve_new[idx],
                 X_new_step      = pCapX_new[idx],
                 Kappa_new_step  = pKappa_new[idx],
@@ -1168,7 +1174,14 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
           //}
         }
 
+        //T2D: Move declarations to beginning and use compute invariants
+        Matrix3 ep_inc = ep_new_step-pep_new[idx];
+        double I1_s = ep_inc.Trace();
+        Matrix3 Dev_s = ep_inc-Identity*(one_third*I1_s);
+	
+        eqps_new_step    = sqrt(2*Dev_s.Contract(Dev_s));
         pevp_new[idx]    = evp_new_step;
+        peqps_new[idx]   = peqps_new[idx]+eqps_new_step; //Hamid
         peve_new[idx]    = eve_new_step;
         pCapX_new[idx]   = X_new_step;
         pKappa_new[idx]  = Kappa_new_step;
@@ -1177,27 +1190,17 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         pep_new[idx]     = ep_new_step;
         pStress_new[idx] = stress_new_step;
 
-        // T2D: Cindy ADD RATE DEPENDENCE CODE HERE
+        //Rate dependence
         pCapXQS_new[idx]   = pCapX_new[idx];
         pZetaQS_new[idx]   = pZeta_new[idx];
         pIotaQS_new[idx]   = pIota_new[idx];
         pStressQS_new[idx] = pStress_new[idx];
-        //d_cm.T1_rate_dependence
-        //d_cm.T2_rate_dependence
-
-//cout << "pStressQS_new = " << pStressQS_new << endl;
-        
+      
         //--------------------------------------------------------------------//
         // --------------Rate Dependence Code Continued-----------------------//
-        // T2D: Hamid 
         // Determination if Rate Dependence / Duvaut-Lions will be used
         // d.cm.T1_rate_dependence and d.cm.T2_rate_dependence are defined by the user input
-        // tau is the material characteristic response time to deformation
-
-
-      #ifdef CSM_RATE_DEPENDENCE
-        cout << "We made it! Line:" << __LINE__;
-      #endif  
+        // tau is the material characteristic response time to deformation  
 
         if (d_cm.T1_rate_dependence != 0 || d_cm.T2_rate_dependence != 0){
           //cout << "Rate Dependence Part 2" << endl;
@@ -1206,112 +1209,76 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
           pIotaQS_new[idx]   = pIota_new[idx];
           pStressQS_new[idx] = pStress_new[idx];
 		  
-      //d_cm.T1_rate_dependence
-      //d_cm.T2_rate_dependence
-      //cout << "T1 = " << d_cm.T1_rate_dependence << endl;
-      //cout << "T2 = " << d_cm.T2_rate_dependence << endl;
-      //cout << "Trial Stress = " << S_trial_step << endl;
-      // Initializing tau, RAT, pRH, prh for Duvaut Lions Rate Dependence
+          // Initializing tau, RAT, pRH, prh for Duvaut Lions Rate Dependence
 
-	double tau1 = 0,
-               tau = 0,
-	       RAT = 0,
-	       pRH = 0,
-	       prh = 0,
-               trace = 0;
+          double tau1 = 0,
+                 tau = 0,
+	             RAT = 0,
+	             pRH = 0,
+	             prh = 0,
+                 trace = 0;
           
-	// Calculating Material Characteristic, for T2=0
-	  if (d_cm.T2_rate_dependence == 0 && d_cm.T1_rate_dependence != 0){
-	  tau1 = d_cm.T1_rate_dependence;
-          tau = max(tau1 , 1E-15); // asking non-zero tau 
-        //cout << "D(0,1) = " << D(0,1) << endl;
-        //cout << "D(0,0) = " << D(0,0) << endl;
-        //cout << "D(1,1) = " << D(1,1) << endl;
-        //cout << "D(2,2) = " << D(2,2) << endl;
-        //cout << "Part 2 T2=0, T1!=0, Tau = " << tau << endl;
-        //cout << "pStressQS_new[idx] = " << pStressQS_new[idx] << endl;
-        //cout << "pStress_new[idx] = " << pStress_new[idx] << endl;
+	      // Calculating Material Characteristic, for T2=0
+	      if (d_cm.T2_rate_dependence == 0 && d_cm.T1_rate_dependence != 0){
+	        tau1 = d_cm.T1_rate_dependence;
+            tau = max(tau1 , 1E-15); // asking non-zero tau 
           }
           else{
-        //cout << "D(0,1) = " << D(0,1) << endl;
-        //cout << "D(0,0) = " << D(0,0) << endl;
-        //cout << "D(1,1) = " << D(1,1) << endl;
-        //cout << "D(2,2) = " << D(2,2) << endl;
-        // Compute the norm of strain rate
-        double Dnormsq = D(0,0)*D(0,0) +
-                         D(1,1)*D(1,1) +
-                         D(2,2)*D(2,2) +
-                         2.0*(D(0,1)*D(0,1) +
-                         D(0,2)*D(0,2) +
-                         D(1,2)*D(1,2));
-       //cout << "D(0,0) = " << D(0,0) << endl;
-         double Dnorm1 = Pow(Dnormsq,0.5);
-         double Dnorm = max(Dnorm1 , 1e-15); // print result to observe the range
-       //cout <<"Dnorm="<<Dnorm << endl;
-         double inv_eqstrain = 1.0/Dnorm;
+            // Compute the norm of strain rate
+            double Dnormsq = D(0,0)*D(0,0) +
+                             D(1,1)*D(1,1) +
+                             D(2,2)*D(2,2) +
+                             2.0*(D(0,1)*D(0,1) +
+                             D(0,2)*D(0,2) +
+                             D(1,2)*D(1,2));
 
-        tau1 = d_cm.T1_rate_dependence*Pow(inv_eqstrain,d_cm.T2_rate_dependence);
-        tau = max(tau1 , 1e-15); // asking non-zero tau
+            double Dnorm1 = Pow(Dnormsq,0.5);
+            double Dnorm = max(Dnorm1 , 1e-15); // print result to observe the range
 
+            double inv_eqstrain = 1.0/Dnorm;
 
-		    //tau = d_cm.T1_rate_dependence*Pow((1.0/D.Trace()),d_cm.T2_rate_dependence);
-		    // tau is actually equal to T1*(1/(tauref*D.Trace()))^T2. But as long as 
-		    // Arenisca is run using seconds as the time unit, tauref does not effect calculations.
-        //cout << "T1 and T2 != 0   Tau = " << tau << endl;
-        //cout << "D.Trace() = " << D.Trace() << endl;
-        //cout << "D.Trace() = " << trace << endl;
-        //cout << "pStressQS_new[idx] = " << pStressQS_new[idx] << endl;
-        //cout << "pStress_new[idx] = " << pStress_new[idx] << endl;
-        }
+            tau1 = d_cm.T1_rate_dependence*Pow(inv_eqstrain,d_cm.T2_rate_dependence);
+            tau = max(tau1 , 1e-15); // asking non-zero tau
+          }
 
-        // RH Calculations
-        RAT   = delT/tau;					
-        pRH   = (1.0-exp(-RAT))/RAT;
-        prh   = exp(-RAT) -pRH; 
+          // RH Calculations
+          RAT   = delT/tau;					
+          pRH   = (1.0-exp(-RAT))/RAT;
+          prh   = exp(-RAT) -pRH; 
 
-        //cout << "RAT = " << RAT << endl;
-        //cout << "pRH = " << pRH << endl;
-        //cout << "prh = " << prh << endl;
-        
-        
-        // Stress Calculations
-	// sigHi = stress_diff_step + pStress_old = C:edot*delT + sigmaHi0
-	// sigLo = pStressQS_new[idx]
-	// sigHi0 = pStress_old
-	// sigLo0 = pStressQS_old[idx]
+          pStress_new[idx] = pStressQS_new[idx] + pRH*(stress_diff_step + unrotated_stress) 
+                   - pRH*pStressQS_new[idx] + prh*unrotated_stress - prh*unrotated_stressQS;
 
-	pStress_new[idx] = pStressQS_new[idx] + pRH*(stress_diff_step + pStress_old[idx]) 
-        - pRH*pStressQS_new[idx] + prh*pStress_old[idx] - prh*pStressQS_old[idx];
-        //cout << "Stress Calc pStress_new[idx] = " << pStress_new[idx] << endl;
-        //cout << "Stress Calc pStressQS_new[idx] = " << pStressQS_new[idx] << endl;
-        //cout << "Stress Calc pStress_old[idx] = " << pStress_old[idx] << endl;
-        //cout << "Stress Calc stress_diff_step = " << stress_diff_step << endl;
-        //cout << "Stress Calc pStressQS_old[idx] = " << pStressQS_old[idx] << endl;
-        
-        
-		  // Internal State Variables		
-		  
+          // Internal State Variables
+               
+          pCapX_new[idx] = pCapXQS_new[idx] + pRH* pCapX[idx] - pRH*pCapXQS_new[idx];
+          pZeta_new[idx] = pZetaQS_new[idx] + pRH* pZeta[idx] - pRH*pZetaQS_new[idx];
+          pIota_new[idx] = pIotaQS_new[idx] + pRH* pIota[idx] - pRH*pIotaQS_new[idx];
         } 
         else {
-        double tau1 = 0,
-               tau = 0,
-	       RAT = 0,
-	       pRH = 0,
-	       prh = 0,
-               trace = 0;
+          double tau1 = 0,
+                 tau = 0,
+	             RAT = 0,
+	             pRH = 0,
+	             prh = 0,
+                 trace = 0;
           pCapXQS_new[idx]   = pCapX_new[idx];
           pZetaQS_new[idx]   = pZeta_new[idx];
           pIotaQS_new[idx]   = pIota_new[idx];
           pStressQS_new[idx] = pStress_new[idx];
           
-          tau = 1e-15;
+          tau = 1e-15;  //T2D: generally small value
           RAT   = delT/tau;					
           pRH   = (1.0-exp(-RAT))/RAT;
           prh   = exp(-RAT) -pRH;
-          
-          pStress_new[idx] = pStressQS_new[idx] + pRH*(stress_diff_step + pStress_old[idx]) 
-          - pRH*pStressQS_new[idx] + prh*pStress_old[idx] - prh*pStressQS_old[idx];
-        
+            
+          pCapX_new[idx] = pCapXQS_new[idx] + pRH* pCapX[idx] - pRH*pCapXQS_new[idx];
+          pZeta_new[idx] = pZetaQS_new[idx] + pRH* pZeta[idx] - pRH*pZetaQS_new[idx];
+          pIota_new[idx] = pIotaQS_new[idx] + pRH* pIota[idx] - pRH*pIotaQS_new[idx];
+
+          pStress_new[idx] = pStressQS_new[idx] + pRH*(stress_diff_step + unrotated_stress) 
+                       - pRH*pStressQS_new[idx] + prh*unrotated_stress - prh*unrotated_stressQS;
+ 
         }
 		  
 		//----------End Rate Dependence ----------------------------//
@@ -1325,6 +1292,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 
         // Compute the rotated stress at the end of the current timestep
         pStress_new[idx] = (rotation[idx]*pStress_new[idx])*(rotation[idx].Transpose());
+        pStressQS_new[idx] = (rotation[idx]*pStressQS_new[idx])*(rotation[idx].Transpose());
 
         // Compute wave speed + particle velocity at each particle,
         // store the maximum
@@ -2074,6 +2042,7 @@ void Arenisca::addParticleState(std::vector<const VarLabel*>& from,
   from.push_back(pPorePressureLabel);
   from.push_back(pepLabel);
   from.push_back(pevpLabel);
+  from.push_back(peqpsLabel);//Hamid
   from.push_back(peveLabel);
   from.push_back(pCapXLabel);
   from.push_back(pCapXQSLabel);
@@ -2092,6 +2061,7 @@ void Arenisca::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(  pPorePressureLabel_preReloc);
   to.push_back(  pepLabel_preReloc);
   to.push_back(  pevpLabel_preReloc);
+  to.push_back(  peqpsLabel_preReloc);//Hamid
   to.push_back(  peveLabel_preReloc);
   to.push_back(  pCapXLabel_preReloc);
   to.push_back(  pCapXQSLabel_preReloc);
@@ -2123,6 +2093,7 @@ void Arenisca::addInitialComputesAndRequires(Task* task,
   task->computes(pPorePressureLabel,   matlset);
   task->computes(pepLabel,             matlset);
   task->computes(pevpLabel,            matlset);
+  task->computes(peqpsLabel,           matlset);//Hamid
   task->computes(peveLabel,            matlset);
   task->computes(pCapXLabel,           matlset);
   task->computes(pCapXQSLabel,         matlset);
@@ -2152,6 +2123,7 @@ void Arenisca::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, pPorePressureLabel,   matlset, Ghost::None);
   task->requires(Task::OldDW, pepLabel,             matlset, Ghost::None);
   task->requires(Task::OldDW, pevpLabel,            matlset, Ghost::None);
+  task->requires(Task::OldDW, peqpsLabel,           matlset, Ghost::None);//Hamid
   task->requires(Task::OldDW, peveLabel,            matlset, Ghost::None);
   task->requires(Task::OldDW, pCapXLabel,           matlset, Ghost::None);
   task->requires(Task::OldDW, pCapXQSLabel,         matlset, Ghost::None);
@@ -2171,6 +2143,7 @@ void Arenisca::addComputesAndRequires(Task* task,
   task->computes(pPorePressureLabel_preReloc,   matlset);
   task->computes(pepLabel_preReloc,             matlset);
   task->computes(pevpLabel_preReloc,            matlset);
+  task->computes(peqpsLabel_preReloc,           matlset);//Hamid
   task->computes(peveLabel_preReloc,            matlset);
   task->computes(pCapXLabel_preReloc,           matlset);
   task->computes(pCapXQSLabel_preReloc,         matlset);
@@ -2285,6 +2258,11 @@ void Arenisca::initializeLocalMPMLabels()
   pevpLabel = VarLabel::create("p.evp",
     ParticleVariable<double>::getTypeDescription());
   pevpLabel_preReloc = VarLabel::create("p.evp+",
+    ParticleVariable<double>::getTypeDescription());
+  //peqps Hamid
+  peqpsLabel = VarLabel::create("p.eqps",
+    ParticleVariable<double>::getTypeDescription());
+  peqpsLabel_preReloc = VarLabel::create("p.eqps+",
     ParticleVariable<double>::getTypeDescription());
   //peve
   peveLabel = VarLabel::create("p.eve",
