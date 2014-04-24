@@ -2102,15 +2102,22 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
   
   IntVector diff(high-low);
 
+  //__________________________________
+  //  This is not a valid check on non-cubic domains
   if (diff.x()*diff.y()*diff.z() > totalCells && missing_patches.size() > 0) {
     cout << d_myworld->myrank() << "  Unknown Variable " << *label << ", matl " << matlIndex 
          << ", L-" << level->getIndex() << ", for patch(es): ";
-    for (size_t i = 0; i < missing_patches.size(); i++) 
+    
+    for (size_t i = 0; i < missing_patches.size(); i++) {
       cout << *missing_patches[i] << " ";
+    }
+    
     cout << endl << " Original region: " << low << " " << high << endl;
     cout << " copied cells: " << totalCells << " requested cells: " << diff.x()*diff.y()*diff.z() << endl;
+    cout << "  *** If the computational domain is non-cubic, (L-shaped or necked down)  you can remove this bulletproofing" << endl; 
     throw InternalError("Missing patches in getRegion", __FILE__, __LINE__);
   }
+
   if (dbg.active()) {
     cerrLock.lock();
     dbg << d_myworld->myrank() << "  Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex() 
