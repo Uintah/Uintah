@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <StandAlone/tools/puda/monica1.h>
+#include <StandAlone/tools/puda/pressure.h>
 #include <StandAlone/tools/puda/util.h>
 #include <Core/DataArchive/DataArchive.h>
 #include <iomanip>
@@ -34,13 +34,14 @@ using namespace SCIRun;
 using namespace std;
 
 ////////////////////////////////////////////////////////////////////////
-//              M O N I C A 1   O P T I O N
+//              P R E S S U R E   O P T I O N
 //   This function will output the maximum pressure achieved during the
-//   simulation as well as the maximum pressure at each timestep.  Time-
-//   step pressures are output to a file called "maxPressures.dat".
+//   simulation as well as the average pressure and themaximum pressure 
+//   at each timestep.   Timestep pressures are output to a file called
+//   "Pressure.dat".
 
 void
-Uintah::monica1( DataArchive * da, CommandLineFlags & clf )
+Uintah::pressure( DataArchive * da, CommandLineFlags & clf )
 {
   vector<string> vars;
   vector<const Uintah::TypeDescription*> types;
@@ -62,16 +63,18 @@ Uintah::monica1( DataArchive * da, CommandLineFlags & clf )
   findTimestep_loopLimits( clf.tslow_set, clf.tsup_set, times, clf.time_step_lower, clf.time_step_upper);
 
   ostringstream fnum;
-  string filename("maxPressures.dat");
+  string filename("Pressure.dat");
   ofstream outfile(filename.c_str());
+  outfile << "Time    " << "Average Pressure    " << "Maximum Pressure" << endl;
 
-  double maxPressure = -9999999;  // the max pressure at any time
 
   for(unsigned long t=clf.time_step_lower;t<=clf.time_step_upper;t+=clf.time_step_inc){
     double time = times[t];
     cout << "time = " << time << endl;
     GridP grid = da->queryGrid(t);
-
+    double sumpressure = 0.00000;
+    double ncells = 0.00000;
+    double avgPress = 0.00000;
       double pressure = -9999999.0;  // the max pressure during the timestep
       LevelP level = grid->getLevel(grid->numLevels()-1);
       cout << "Level: " << grid->numLevels() - 1 <<  endl;
@@ -79,29 +82,38 @@ Uintah::monica1( DataArchive * da, CommandLineFlags & clf )
           iter != level->patchesEnd(); iter++){
         const Patch* patch = *iter;
         int matl = clf.matl_jim; // material number
-        
+
         CCVariable<double> press_CC;
         // get all the pressures from the patch
         da->query(press_CC, "press_CC",        matl, patch, t);
+        
+        CCVariable<double> vol_frac_CC;
+        // get all the Volume Fractions from the patch
+        da->query(vol_frac_CC, "vol_frac_CC",        0, patch, t);
 
         for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
-           IntVector c = *iter;  // get teh coordinates of the cell
+           IntVector c = *iter;  // get the coordinates of the cell
+           
+	   if(vol_frac_CC[c] > 0.5){
+              sumpressure += press_CC[c]; //Solve for total pressure 
+              ncells += 1; //Solve for total number of cells
+           } // end if volume fraction
 
-           if(press_CC[c] > pressure){
+	   if(press_CC[c] > pressure){
               pressure = press_CC[c];
-           }
-           if(press_CC[c] > maxPressure){
-              maxPressure = press_CC[c];
-           }
+	   }   
+
+          
         } // for cells
       }  // for patches
-   
+   avgPress = sumpressure/ncells; // solve for average pressure over all cells
+
    cout << "Max pressure for timestep was:\t" << pressure << endl;
+   cout << "Average pressure for timestep was:\t" << avgPress << "\n" << endl;
 
    outfile.precision(15);
-   outfile << time << " " << pressure << endl; 
+   outfile << time << " " << avgPress << " " <<pressure << endl; 
 
-  }
-  cout << "Max pressure overall was:\t" << maxPressure << endl;
-} // end jim2()
+  } // for time
+} // end pressure()
 

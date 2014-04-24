@@ -34,6 +34,7 @@ SRCS := \
 	$(SRCDIR)/asci.cc        \
 	$(SRCDIR)/jacquie.cc     \
 	$(SRCDIR)/monica1.cc     \
+	$(SRCDIR)/pressure.cc    \
 	$(SRCDIR)/monica2.cc     \
 	$(SRCDIR)/jim1.cc        \
 	$(SRCDIR)/jim2.cc        \
