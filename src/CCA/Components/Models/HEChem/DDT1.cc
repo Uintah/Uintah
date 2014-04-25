@@ -1112,12 +1112,18 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
     //__________________________________
     // Update either the output and/or checkpoint intervals
     // pressure exceeding threshold detected
-    if( d_adj_IO_Press->onOff || d_adj_IO_Det->onOff ){
+     if( d_adj_IO_Press->onOff || d_adj_IO_Det->onOff ){
     
       max_vartype me;
       old_dw->get( me,  adjOutIntervalsLabel );
       double hasSwitched = me; 
     
+      // for readability
+      const VarLabel* outIntervalLabel      = d_sharedState->get_outputInterval_label();
+      const VarLabel* chkpointIntervalLabel = d_sharedState->get_checkpointInterval_label();
+      
+      //__________________________________
+      // Pressure
       if ( press_switch_adj_IO && d_adj_IO_Press->onOff && isDoubleEqual( hasSwitched, ZERO) ){
 
         double newOUT  = d_adj_IO_Press->output_interval;
@@ -1128,12 +1134,12 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
         cout << *patch << endl;
         cout << "    new outputInterval: " << newOUT << " new checkpoint Interval: " << newCKPT << "\n\n"<<  endl;
 
-        new_dw->put( min_vartype( newOUT ),  d_sharedState->get_outputInterval_label() );
-        new_dw->put( min_vartype( newCKPT ), d_sharedState->get_checkpointInterval_label() );
-      }
-
-      // detonation detected
-      if ( det_switch_adj_IO && d_adj_IO_Det->onOff && isDoubleEqual(hasSwitched, PRESSURE_EXCEEDED) ){
+        new_dw->put( min_vartype( newOUT ),  outIntervalLabel );
+        new_dw->put( min_vartype( newCKPT ), chkpointIntervalLabel );
+      }             
+      //__________________________________
+      //  DETONATON
+      else if ( det_switch_adj_IO && d_adj_IO_Det->onOff && isDoubleEqual(hasSwitched, PRESSURE_EXCEEDED) ){
 
         double newOUT  = d_adj_IO_Det->output_interval;
         double newCKPT = d_adj_IO_Det->chkPt_interval;
@@ -1143,8 +1149,19 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
         cout << *patch << endl;
         cout << "    new outputInterval: " << newOUT << " new checkpoint Interval: " << newCKPT << "\n\n"<< endl;
 
-        new_dw->put( min_vartype( newOUT ),  d_sharedState->get_outputInterval_label() );
-        new_dw->put( min_vartype( newCKPT ), d_sharedState->get_checkpointInterval_label() );
+        new_dw->put( min_vartype( newOUT ),  outIntervalLabel );
+        new_dw->put( min_vartype( newCKPT ), chkpointIntervalLabel );
+      }
+      else {        
+      //__________________________________
+      //  DEFAULT
+        min_vartype oldOUT;
+        min_vartype oldCKPT;
+        oldOUT.setBenignValue();
+        oldCKPT.setBenignValue();
+
+        new_dw->put( oldOUT,  outIntervalLabel );
+        new_dw->put( oldCKPT, chkpointIntervalLabel );
       }
       new_dw->put( max_vartype(hasSwitched), adjOutIntervalsLabel );
     }
