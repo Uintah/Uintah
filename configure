@@ -958,6 +958,8 @@ with_cuda
 with_hypre
 with_petsc
 with_boost
+with_boost_library
+with_boost_include
 with_spatialops
 with_exprlib
 with_tabprops
@@ -1696,7 +1698,11 @@ Optional Packages:
                           if explicit linking of hypre is NOT required.
 --with-petsc=DIR        Use the petsc installation in DIR (or set to
                           'built-in').
---with-boost=DIR        Use the Boost library in DIR
+--with-boost=DIR        Use the Boost library in DIR/lib
+--with-boost-library=DIR
+                          Use the Boost library in DIR
+--with-boost-include=DIR
+                          Use the Boost include files in DIR
 --with-spatialops=DIR   Use the SpatialOps library in DIR
 --with-exprlib=DIR      Use the ExprLib library in DIR
 --with-tabprops=DIR     Use the TabProps library in DIR
@@ -3425,6 +3431,40 @@ fi
   sci_arg_with_list="$sci_arg_with_list --with-boost --without-boost"
   if test -n "$boost" -a ! -e "$boost"; then
     as_fn_error $? "The file or directory parameter ($boost) specified for --with-boost does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  fi
+
+
+
+
+
+# Check whether --with-boost_library was given.
+if test "${with_boost_library+set}" = set; then :
+  withval=$with_boost_library; with_boost_library="$withval"
+   sci_required_boost=yes
+else
+  with_boost_library=""
+fi
+
+  sci_arg_with_list="$sci_arg_with_list --with-boost_library --without-boost_library"
+  if test -n "$boost_library" -a ! -e "$boost_library"; then
+    as_fn_error $? "The file or directory parameter ($boost_library) specified for --with-boost_library does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  fi
+
+
+
+
+
+# Check whether --with-boost_include was given.
+if test "${with_boost_include+set}" = set; then :
+  withval=$with_boost_include; with_boost_include="$withval"
+   sci_required_boost=yes
+else
+  with_boost_include=""
+fi
+
+  sci_arg_with_list="$sci_arg_with_list --with-boost_include --without-boost_include"
+  if test -n "$boost_include" -a ! -e "$boost_include"; then
+    as_fn_error $? "The file or directory parameter ($boost_include) specified for --with-boost_include does not exist!  Please verify that the path and file are correct." "$LINENO" 5
   fi
 
 
@@ -11066,17 +11106,46 @@ if test "$ray_scatter" = "yes"; then
 fi
 
 
+##  --  Verify CMake -----------------------------
+
+if test "$with_visit" -o "$wasatch_3p" = "yes"; then
+   which cmake > /dev/null 2>&1
+   if test $? != 0; then
+      as_fn_error $? "VisIt requires CMake. Please make sure 'cmake' is in your path!" "$LINENO" 5
+   fi
+   CMAKE_LOCATION=`which cmake`
+
+   # Verify that cmake is new enough:
+   #
+   # Need this ugly hack to handle different types of version strings returned by cmake's different versions... sigh.
+   # The first 'sed' removes all alphabetical characters (leaves numbers, spaces, and periods).  The second 'sed'
+   # removes leading and trailing space.  The final 'sed' replaces (potential) spaces with a perions (.).
+   # Eg: The version string from cmake 2.4.8 is 'cmake version 2.4-patch 8'.
+   # Note: autoconf removes one set of [], thus the below sed commands have one extra set of [] around each portion.
+   CMAKE_VERSION_STRING=`cmake --version | sed 's/[^0-9. ]//g' | sed 's/^[[:space:]]*\(.*\)[[:space:]]*$/\1/' | sed 's/ /./g'`
+
+   CMAKE_VERSION_MAJOR=`echo "$CMAKE_VERSION_STRING" | awk -F. '{print $1}'`
+   CMAKE_VERSION_MINOR=`echo "$CMAKE_VERSION_STRING" | awk -F. '{print $2}'`
+   CMAKE_VERSION_PATCH=`echo "$CMAKE_VERSION_STRING" | awk -F. '{print $3}'`
+
+   if   test "$CMAKE_VERSION_MAJOR" -ge 3; then
+      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Have not tried using cmake v3.x... It might work..." >&5
+$as_echo "$as_me: WARNING: Have not tried using cmake v3.x... It might work..." >&2;}
+   elif test "$CMAKE_VERSION_MAJOR" -lt 2; then
+      as_fn_error $? "CMake must be version 2.8.7 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING." "$LINENO" 5
+   elif test "$CMAKE_VERSION_MINOR" -lt 8; then
+      as_fn_error $? "CMake must be version 2.8.7 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING." "$LINENO" 5
+   elif test "$CMAKE_VERSION_PATCH" -lt 7; then
+      as_fn_error $? "CMake must be version 2.8.7 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING." "$LINENO" 5
+   fi
+fi
+
 ##  --  With VisIt -----------------------------
 
 if test "$with_visit"; then
 
    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for VisIt" >&5
 $as_echo_n "checking for VisIt... " >&6; }
-
-   which cmake > /dev/null 2>&1
-   if test $? != 0; then
-      as_fn_error $? "VisIt requires CMake. Please make sure 'cmake' is in your path!" "$LINENO" 5
-   fi
 
    if test "$with_visit" = "yes"; then
       as_fn_error $? "You must provide a DIRECTORY when using --with-visit=DIR. " "$LINENO" 5
@@ -11092,29 +11161,6 @@ $as_echo_n "checking for VisIt... " >&6; }
 $as_echo "$as_me: WARNING: VisIt target directory has changed - removing old VisIt build directory..." >&2;}
 	 rm -rf ./VisIt
       fi
-   fi
-
-   CMAKE_LOCATION=`which cmake`
-
-   # Verify that cmake is new enough:
-   #
-   # Need this ugly hack to handle different types of version strings returned by cmake's different versions... sigh.
-   # The first 'sed' removes all alphabetical characters (leaves numbers, spaces, and periods).  The second 'sed'
-   # removes leading and trailing space.  The final 'sed' replaces (potential) spaces with a perions (.).
-   # Eg: The version string from cmake 2.4.8 is 'cmake version 2.4-patch 8'.
-   # Note: autoconf removes one set of [], thus the below sed commands have one extra set of [] around each portion.
-   CMAKE_VERSION_STRING=`cmake --version | sed 's/[^0-9. ]//g' | sed 's/^[[:space:]]*\(.*\)[[:space:]]*$/\1/' | sed 's/ /./g'`
-
-   CMAKE_VERSION_MAJOR=`echo "$CMAKE_VERSION_STRING" | awk -F. '{print $1}'`
-   CMAKE_VERSION_MINOR=`echo "$CMAKE_VERSION_STRING" | awk -F. '{print $2}'`
-
-   if   test "$CMAKE_VERSION_MAJOR" -ge 3; then
-      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Have not tried using cmake v3.x... It might work..." >&5
-$as_echo "$as_me: WARNING: Have not tried using cmake v3.x... It might work..." >&2;}
-   elif test "$CMAKE_VERSION_MAJOR" -lt 2; then
-      as_fn_error $? "CMake must be version 2.8 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING." "$LINENO" 5
-   elif test "$CMAKE_VERSION_MINOR" -lt 8; then
-      as_fn_error $? "CMake must be version 2.8 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING." "$LINENO" 5
    fi
 
    sci_defs_files="$sci_defs_files VisIt/udaReaderMTMD/avtudaReaderMTMDFileFormat.C"
@@ -39122,28 +39168,41 @@ ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
+
+BOOST_INCLUDE_DIR=
+BOOST_LIBRARY_DIR=
+
 if test "$with_boost"; then
+
    if test "$with_boost" = "yes"; then
        as_fn_error $? "--with-boost=DIR requires a DIRectory be provided. " "$LINENO" 5
    elif test ! -d $with_boost; then
-        echo ""
-        as_fn_error $? "'$with_boost' directory does not exist. " "$LINENO" 5
+      as_fn_error $? "'$with_boost' directory does not exist. " "$LINENO" 5
+   elif test "$with_boost_library" -o "$with_boost_include" ; then
+      as_fn_error $? "You cannot use --with-boost and --with-boost-include/--with-boost-library. " "$LINENO" 5
    elif test "$with_boost" = "/usr"; then
         # Check for header files
         BOOST_INCLUDE_DIR=$with_boost/include/boost
         BOOST_LIBRARY_DIR=$with_boost/lib
-
    else
         BOOST_INCLUDE_DIR=$with_boost/include
         BOOST_LIBRARY_DIR=$with_boost/lib
-
    fi
+fi
 
-    _boost_incl="boost/signal.hpp boost/shared_ptr.hpp boost/bind.hpp boost/signal.hpp boost/ref.hpp boost/graph/adjacency_list.hpp boost/graph/graph_traits.hpp boost/graph/topological_sort.hpp boost/graph/graphviz.hpp boost/graph/breadth_first_search.hpp boost/graph/visitors.hpp boost/graph/transpose_graph.hpp boost/any.hpp boost/filesystem.hpp"
+if test "$with_boost_library" -o "$with_boost_include" ; then
+   if test ! "$with_boost_library" -o ! "$with_boost_include" ; then
+      as_fn_error $? "You must specify both --with-boost-include and --with-boost-library. " "$LINENO" 5
+   elif test ! -d $with_boost_include; then
+      as_fn_error $? "Directory does not exist: '$with_boost_include' " "$LINENO" 5
+   elif test ! -d $with_boost_library; then
+      as_fn_error $? "Directory does not exist: '$with_boost_library' " "$LINENO" 5
+   fi
+   BOOST_INCLUDE_DIR=$with_boost_include
+   BOOST_LIBRARY_DIR=$with_boost_library
+fi
 
-    _boost_libs_mt="boost_thread-mt boost_signals-mt boost_serialization-mt boost_system-mt boost_program_options-mt boost_filesystem-mt"
-
-   _boost_libs="boost_thread boost_signals boost_serialization boost_system boost_program_options boost_filesystem"
+if test "$BOOST_INCLUDE_DIR" ; then
 
 
 ##
@@ -40039,7 +40098,7 @@ _sci_includes=''
      as_fn_error $? "Did not find boost in: '$with_boost'. " "$LINENO" 5
   fi
 
-  if test "$with_boost" != "/usr"; then
+  if test "$with_boost" -a "$with_boost" != "/usr"; then
      # If with_boost points to /usr, then we don't need to explicitly point to it...
      INC_BOOST_H="-I$with_boost/include"
      if test "$IS_STATIC_BUILD" != "yes"; then
@@ -40243,7 +40302,7 @@ if test "$wasatch_3p" = "yes"; then
 
   mkdir -p Wasatch3P
 
-  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` "$with_boost" "$debug" "$IS_STATIC_BUILD" "$sci_required_cuda"
+  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` "$BOOST_LIBRARY_DIR" "$BOOST_INCLUDE_DIR" "$debug" "$IS_STATIC_BUILD" "$sci_required_cuda"
 
   if test $? != 0; then
      as_fn_error $? "Failed to build Wasatch 3p libraries... " "$LINENO" 5
