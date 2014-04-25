@@ -349,10 +349,24 @@ SCI_ARG_WITH(petsc,
   
 SCI_ARG_WITH(boost,
   AC_HELP_STRING(--with-boost=DIR,
-                 Use the Boost library in DIR),
+                 Use the Boost library in DIR/lib),
   [with_boost="$withval"
    sci_required_boost=yes],
   [with_boost=""])
+  
+SCI_ARG_WITH(boost_library,
+  AC_HELP_STRING(--with-boost-library=DIR,
+                 Use the Boost library in DIR),
+  [with_boost_library="$withval"
+   sci_required_boost=yes],
+  [with_boost_library=""])
+  
+SCI_ARG_WITH(boost_include,
+  AC_HELP_STRING(--with-boost-include=DIR,
+                 Use the Boost include files in DIR),
+  [with_boost_include="$withval"
+   sci_required_boost=yes],
+  [with_boost_include=""])
   
 SCI_ARG_WITH(spatialops,
   AC_HELP_STRING(--with-spatialops=DIR,
@@ -2154,16 +2168,44 @@ if test "$ray_scatter" = "yes"; then
 fi
 AC_SUBST(DEF_RAY_SCATTER)
 
+##  --  Verify CMake -----------------------------
+
+if test "$with_visit" -o "$wasatch_3p" = "yes"; then
+   which cmake > /dev/null 2>&1
+   if test $? != 0; then
+      AC_MSG_ERROR( VisIt requires CMake. Please make sure 'cmake' is in your path!)
+   fi
+   CMAKE_LOCATION=`which cmake`
+
+   # Verify that cmake is new enough:
+   #
+   # Need this ugly hack to handle different types of version strings returned by cmake's different versions... sigh.
+   # The first 'sed' removes all alphabetical characters (leaves numbers, spaces, and periods).  The second 'sed'
+   # removes leading and trailing space.  The final 'sed' replaces (potential) spaces with a perions (.).
+   # Eg: The version string from cmake 2.4.8 is 'cmake version 2.4-patch 8'.
+   # Note: autoconf removes one set of [], thus the below sed commands have one extra set of [] around each portion.
+   CMAKE_VERSION_STRING=`cmake --version | sed 's/[[^0-9. ]]//g' | sed 's/^[[[:space:]]]*\(.*\)[[[:space:]]]*$/\1/' | sed 's/ /./g'`
+
+   CMAKE_VERSION_MAJOR=`echo "$CMAKE_VERSION_STRING" | awk -F. '{print $1}'`
+   CMAKE_VERSION_MINOR=`echo "$CMAKE_VERSION_STRING" | awk -F. '{print $2}'`
+   CMAKE_VERSION_PATCH=`echo "$CMAKE_VERSION_STRING" | awk -F. '{print $3}'`
+
+   if   test "$CMAKE_VERSION_MAJOR" -ge 3; then
+      AC_MSG_WARN(Have not tried using cmake v3.x... It might work...)
+   elif test "$CMAKE_VERSION_MAJOR" -lt 2; then
+      AC_MSG_ERROR(CMake must be version 2.8.7 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING.)
+   elif test "$CMAKE_VERSION_MINOR" -lt 8; then
+      AC_MSG_ERROR(CMake must be version 2.8.7 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING.)
+   elif test "$CMAKE_VERSION_PATCH" -lt 7; then
+      AC_MSG_ERROR(CMake must be version 2.8.7 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING.)
+   fi
+fi
+
 ##  --  With VisIt -----------------------------
 
 if test "$with_visit"; then
 
    AC_MSG_CHECKING(for VisIt)
-
-   which cmake > /dev/null 2>&1
-   if test $? != 0; then
-      AC_MSG_ERROR( VisIt requires CMake. Please make sure 'cmake' is in your path!)
-   fi
 
    if test "$with_visit" = "yes"; then 
       AC_MSG_ERROR( You must provide a DIRECTORY when using --with-visit=DIR. )
@@ -2178,28 +2220,6 @@ if test "$with_visit"; then
       	 AC_MSG_WARN(VisIt target directory has changed - removing old VisIt build directory...)
 	 rm -rf ./VisIt
       fi
-   fi
-
-   CMAKE_LOCATION=`which cmake`
-
-   # Verify that cmake is new enough:
-   #
-   # Need this ugly hack to handle different types of version strings returned by cmake's different versions... sigh.
-   # The first 'sed' removes all alphabetical characters (leaves numbers, spaces, and periods).  The second 'sed'
-   # removes leading and trailing space.  The final 'sed' replaces (potential) spaces with a perions (.).
-   # Eg: The version string from cmake 2.4.8 is 'cmake version 2.4-patch 8'.
-   # Note: autoconf removes one set of [], thus the below sed commands have one extra set of [] around each portion.
-   CMAKE_VERSION_STRING=`cmake --version | sed 's/[[^0-9. ]]//g' | sed 's/^[[[:space:]]]*\(.*\)[[[:space:]]]*$/\1/' | sed 's/ /./g'`
-
-   CMAKE_VERSION_MAJOR=`echo "$CMAKE_VERSION_STRING" | awk -F. '{print $1}'`
-   CMAKE_VERSION_MINOR=`echo "$CMAKE_VERSION_STRING" | awk -F. '{print $2}'`
-
-   if   test "$CMAKE_VERSION_MAJOR" -ge 3; then
-      AC_MSG_WARN(Have not tried using cmake v3.x... It might work...)
-   elif test "$CMAKE_VERSION_MAJOR" -lt 2; then
-      AC_MSG_ERROR(CMake must be version 2.8 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING.)
-   elif test "$CMAKE_VERSION_MINOR" -lt 8; then
-      AC_MSG_ERROR(CMake must be version 2.8 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING.)
    fi
 
    sci_defs_files="$sci_defs_files VisIt/udaReaderMTMD/avtudaReaderMTMDFileFormat.C"
@@ -4075,29 +4095,42 @@ AC_LANG(C)
 
 ##  --  search for Boost ------------------------
 AC_LANG([C++])
+
+BOOST_INCLUDE_DIR=
+BOOST_LIBRARY_DIR=
+
 if test "$with_boost"; then
+
    if test "$with_boost" = "yes"; then
        AC_MSG_ERROR( --with-boost=DIR requires a DIRectory be provided. )
    elif test ! -d $with_boost; then
-        echo ""
-        AC_MSG_ERROR( '$with_boost' directory does not exist. )
+      AC_MSG_ERROR( '$with_boost' directory does not exist. )
+   elif test "$with_boost_library" -o "$with_boost_include" ; then
+      AC_MSG_ERROR( You cannot use --with-boost and --with-boost-include/--with-boost-library. )
    elif test "$with_boost" = "/usr"; then
         # Check for header files
         BOOST_INCLUDE_DIR=$with_boost/include/boost
         BOOST_LIBRARY_DIR=$with_boost/lib
- 
    else
         BOOST_INCLUDE_DIR=$with_boost/include
         BOOST_LIBRARY_DIR=$with_boost/lib
-   
    fi
-   
-    _boost_incl="boost/signal.hpp boost/shared_ptr.hpp boost/bind.hpp boost/signal.hpp boost/ref.hpp boost/graph/adjacency_list.hpp boost/graph/graph_traits.hpp boost/graph/topological_sort.hpp boost/graph/graphviz.hpp boost/graph/breadth_first_search.hpp boost/graph/visitors.hpp boost/graph/transpose_graph.hpp boost/any.hpp boost/filesystem.hpp"
+fi
 
-    _boost_libs_mt="boost_thread-mt boost_signals-mt boost_serialization-mt boost_system-mt boost_program_options-mt boost_filesystem-mt"
+if test "$with_boost_library" -o "$with_boost_include" ; then
+   if test ! "$with_boost_library" -o ! "$with_boost_include" ; then
+      AC_MSG_ERROR( You must specify both --with-boost-include and --with-boost-library. )
+   elif test ! -d $with_boost_include; then
+      AC_MSG_ERROR( Directory does not exist: '$with_boost_include' )
+   elif test ! -d $with_boost_library; then
+      AC_MSG_ERROR( Directory does not exist: '$with_boost_library' )
+   fi
+   BOOST_INCLUDE_DIR=$with_boost_include
+   BOOST_LIBRARY_DIR=$with_boost_library
+fi
 
-   _boost_libs="boost_thread boost_signals boost_serialization boost_system boost_program_options boost_filesystem"
-  
+if test "$BOOST_INCLUDE_DIR" ; then
+
   SCI_TRY_LINK(BOOST,boost library and include headers,$_boost_incl,$BOOST_INCLUDE_DIR,$_boost_libs_mt,$BOOST_LIBRARY_DIR,,,optional)
 
   if test "$HAVE_BOOST" = "no"; then
@@ -4110,7 +4143,7 @@ if test "$with_boost"; then
      AC_MSG_ERROR( Did not find boost in: '$with_boost'. )
   fi
 
-  if test "$with_boost" != "/usr"; then
+  if test "$with_boost" -a "$with_boost" != "/usr"; then
      # If with_boost points to /usr, then we don't need to explicitly point to it...
      INC_BOOST_H="-I$with_boost/include"
      if test "$IS_STATIC_BUILD" != "yes"; then
@@ -4217,7 +4250,7 @@ if test "$wasatch_3p" = "yes"; then
 
   mkdir -p Wasatch3P
 
-  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` "$with_boost" "$debug" "$IS_STATIC_BUILD" "$sci_required_cuda"
+  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` "$BOOST_LIBRARY_DIR" "$BOOST_INCLUDE_DIR" "$debug" "$IS_STATIC_BUILD" "$sci_required_cuda"
 
   if test $? != 0; then
      AC_MSG_ERROR( Failed to build Wasatch 3p libraries... )
