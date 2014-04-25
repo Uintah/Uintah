@@ -717,13 +717,6 @@ case $host in
     NUM_CPUS=2
     IS_OSX="yes"
     DEF_OSX="#define IS_OSX 1"
-
-    # New Mac Clang comiler does not support the -faltivec flag...
-    altivec="-faltivec"
-    $CC --version | grep -q -i clang > /dev/null 2>&1
-    if test $? = 0; then
-      altivec="" 
-    fi
     ;;
   *-aix*)
     NUM_CPUS=4
@@ -953,6 +946,12 @@ TEMPLATE_TAG=
 TEMPLATE_BOX="<>"
 case $host in
      *-darwin*)
+        # New Mac Clang comiler does not support the -faltivec flag...
+        altivec="-faltivec"
+        $CC --version | grep -q -i clang > /dev/null 2>&1
+        if test $? = 0; then
+           altivec="" 
+        fi
 	SO_OR_ARCHIVE_EXTENSION=dylib
         if test "$enable_sci_malloc" = "yes"; then
            AC_MSG_ERROR(sci_malloc does not work under mac osx. Though you can try to use: --enable-sci-malloc=force)
@@ -4129,7 +4128,13 @@ if test "$with_boost_library" -o "$with_boost_include" ; then
    BOOST_LIBRARY_DIR=$with_boost_library
 fi
 
-if test "$BOOST_INCLUDE_DIR" ; then
+if test "$BOOST_INCLUDE_DIR"; then
+
+  _boost_incl="boost/signal.hpp boost/shared_ptr.hpp boost/bind.hpp boost/signal.hpp boost/ref.hpp boost/graph/adjacency_list.hpp boost/graph/graph_traits.hpp boost/graph/topological_sort.hpp boost/graph/graphviz.hpp boost/graph/breadth_first_search.hpp boost/graph/visitors.hpp boost/graph/transpose_graph.hpp boost/any.hpp boost/filesystem.hpp"
+
+  _boost_libs_mt="boost_thread-mt boost_signals-mt boost_serialization-mt boost_system-mt boost_program_options-mt boost_filesystem-mt"
+
+  _boost_libs="boost_thread boost_signals boost_serialization boost_system boost_program_options boost_filesystem"
 
   SCI_TRY_LINK(BOOST,boost library and include headers,$_boost_incl,$BOOST_INCLUDE_DIR,$_boost_libs_mt,$BOOST_LIBRARY_DIR,,,optional)
 
