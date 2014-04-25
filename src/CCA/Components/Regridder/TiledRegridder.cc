@@ -403,6 +403,20 @@ void TiledRegridder::OutputGridStats(Grid* newGrid)
         sum_of_cells_squared+=cells*cells;
       }
       
+/*`==========TESTING==========*/
+#if 0
+        for(unsigned int p=0;p<num_patches;p++){
+          const Patch* patch=level->getPatch(p);      
+          IntVector low =  patch->getCellLowIndex();
+          IntVector high = patch->getCellHighIndex();
+
+          IntVector size = high - low;
+          proc0cout << "L-" << level->getIndex() << " newPatch Low: " << low << " high; " << high << " size: " << size << endl;
+        }
+#endif
+/*===========TESTING==========`*/
+      
+      
       //calculate conversion factor into simulation coordinates
       double factor=1;
       for(int d=0;d<3;d++)
@@ -477,19 +491,19 @@ void TiledRegridder::problemSetup(const ProblemSpecP& params,
       patch_size=size;
     }
   }
-
+/*`==========TESTING==========*/
   // Let user change the coarse level patch layout
   // This can be especially useful on restarts where
   // you need to increase the number of coarse level patches
-  IntVector L0_patches(1,1,1);
+  IntVector L0_patches(-9,-9,-9);
   regrid_spec->get("coarse_level_patch_layout", L0_patches);
   
-  IntVector myPatchSize = d_numCells[0]/L0_patches;
-  
-  if( myPatchSize != patch_size ){
-    patch_size = myPatchSize;
+  if( L0_patches != IntVector(-9,-9,-9) ){
+    patch_size = d_numCells[0]/L0_patches;
     d_regrid_Level_0 = true;
-  } 
+  }
+  
+/*===========TESTING==========`*/
   
   d_minTileSize.insert(d_minTileSize.begin(),patch_size);
 
