@@ -813,9 +813,9 @@ namespace Wasatch{
         //______________________________________________________
         // set up initial boundary conditions on this transport equation
         try{
-          transEq->verify_boundary_conditions( *bcHelperMap_[level->getID()], graphCategories_);
+          transEq->setup_boundary_conditions( *bcHelperMap_[level->getID()], graphCategories_);
           proc0cout << "Setting Initial BCs for transport equation '" << eqnLabel << "'" << std::endl;
-          transEq->setup_initial_boundary_conditions( *icGraphHelper, *bcHelperMap_[level->getID()]);
+          transEq->apply_initial_boundary_conditions( *icGraphHelper, *bcHelperMap_[level->getID()]);
         }
         catch( std::runtime_error& e ){
           std::ostringstream msg;
@@ -1010,9 +1010,9 @@ namespace Wasatch{
         // set up boundary conditions on this transport equation
         try{
           // only verify boundary conditions on the first stage!
-          if( isRestarting_ && iStage < 2 ) transEq->verify_boundary_conditions(*bcHelperMap_[level->getID()], graphCategories_);
+          if( isRestarting_ && iStage < 2 ) transEq->setup_boundary_conditions(*bcHelperMap_[level->getID()], graphCategories_);
           proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
-          transEq->setup_boundary_conditions(*advSolGraphHelper, *bcHelperMap_[level->getID()]);
+          transEq->apply_boundary_conditions(*advSolGraphHelper, *bcHelperMap_[level->getID()]);
         }
         catch( std::runtime_error& e ){
           std::ostringstream msg;

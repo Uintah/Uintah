@@ -438,7 +438,7 @@ namespace Wasatch {
   
   template< typename FieldT >
   void MomentTransportEquation<FieldT>::
-  setup_initial_boundary_conditions( const GraphHelper& graphHelper,
+  apply_initial_boundary_conditions( const GraphHelper& graphHelper,
                                      BCHelper& bcHelper )
   {
     const Category taskCat = INITIALIZATION;
@@ -477,7 +477,7 @@ namespace Wasatch {
   
   template< typename FieldT >
   void MomentTransportEquation<FieldT>::
-  setup_boundary_conditions( const GraphHelper& graphHelper,
+  apply_boundary_conditions( const GraphHelper& graphHelper,
                              BCHelper& bcHelper )
   {
     const Category taskCat = ADVANCE_SOLUTION;
