@@ -681,7 +681,7 @@ namespace Wasatch{
     //__________________
     // Pressure source term
     
-    if( !isConstDensity ){
+    if( !isConstDensity_ ){
       // calculating velocity at the next time step
       const Expr::Tag thisVelStarTag = tagNames.make_star(thisVelTag_);
       const Expr::Tag convTermWeak   = Expr::Tag( thisVelTag_.name() + "_weak_convective_term", Expr::STATE_NONE);
@@ -883,6 +883,22 @@ namespace Wasatch{
             bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
           }
           
+          // Variable Density:
+          // apply 0 dirichlet on velocity estimates @ walls
+          if (!isConstDensity_) {
+            const Expr::Tag thisVelStarTag = TagNames::self().make_star(thisVelTag_);
+            // first check if the user specified momentum boundary conditions at the wall
+            if( myBndSpec.has_field(thisVelStarTag.name()) ){
+              std::ostringstream msg;
+              msg << "ERROR: You cannot specify any momentum-related boundary conditions at a stationary wall. "
+              << "This error occured while trying to analyze boundary " << bndName
+              << std::endl;
+              throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+            }
+            BndCondSpec velStarBCSpec = {thisVelStarTag.name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
+            bcHelper.add_boundary_condition(bndName, velStarBCSpec);
+          }
+
           break;
         }
         case VELOCITY:
@@ -902,23 +918,79 @@ namespace Wasatch{
             bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
           }
           
-          BndCondSpec openBCSpec = {pressure_tag().name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
-          bcHelper.add_boundary_condition(bndName, openBCSpec);
+          BndCondSpec pressureBCSpec = {pressure_tag().name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
+          bcHelper.add_boundary_condition(bndName, pressureBCSpec);
+          
+          // Variable Density:
+          // For variable density flows, copy the velocity estimate values from the velocity
+          // use a BCCopier to do this. This must be done AT EVERY boundary where there is a velocity
+          // specification
+          if (!isConstDensity_) {
+            // if the velocity specification is a constant - then use a simple constant value on the velocity estimates
+            const Expr::Tag thisVelStarTag = TagNames::self().make_star(thisVelTag_);
+            
+            // check if this boundary has velocity specification on it. it better have!
+            if (myBndSpec.has_field(thisVelTag_.name())) {
+              // grab the bc specification of the velocity on this boundary. Note that here we
+              // should guarantee that the spec is found!
+              const BndCondSpec* velBCSpec = myBndSpec.find(thisVelTag_.name());
+              assert(velBCSpec);
+              if (!velBCSpec->is_functor() ) {
+                // if the boundary condition is not a functor (i.e. a constant value), then simply
+                // copy that value into a new BCSpec for the velocity estimate
+                BndCondSpec velStarBCSpec = *velBCSpec; // copy the spec from the velocity
+                velStarBCSpec.varName = thisVelStarTag.name(); // change the name to the starred velocity
+                bcHelper.add_boundary_condition(bndName, velStarBCSpec);
+              } else {
+                // if it is a functor type, then create a BCCopier
+                // create tagname for the bc copier
+                const Expr::Tag velStarBCTag(thisVelStarTag.name() + "_" + bndName + "_copier", Expr::STATE_NONE);
+                // create and register the BCCopier
+                typedef typename BCCopier<FieldT>::Builder Copier;
+                advSlnFactory.register_expression(scinew Copier(velStarBCTag,thisVelTag_));
+                // specify the bc on velstart using the bc copier functor
+                BndCondSpec velStarBCSpec = {thisVelStarTag.name(), velStarBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
+                // add it to the boundary conditions!
+                bcHelper.add_boundary_condition(bndName, velStarBCSpec);
+              }
+            }
+          }
           break;
         }
         case OUTFLOW:
         {
           if(isNormal) {
             // register outflow functor for this boundary. we'll register one functor per boundary
-            const Expr::Tag outBCTag(bndName + "_outflow", Expr::STATE_NONE);
+            const Expr::Tag outBCTag(bndName + "_outflow_bc", Expr::STATE_NONE);
             typedef typename OutflowBC<FieldT>::Builder Builder;
             //bcHelper.register_functor_expression( scinew Builder( outBCTag, thisVelTag_ ), ADVANCE_SOLUTION );
             advSlnFactory.register_expression( scinew Builder( outBCTag, thisVelTag_ ) );            
             BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(solnVarName_))).name(),outBCTag.name(), 0.0, DIRICHLET,FUNCTOR_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
+            
+            // variable density:
+            // for variable density outflows, change the velocity estimate at the outflow boundary.
+            // instead of using an outflow boundary condition similar to that applied on momentum (see above)
+            // simply use the old velocity value at the outflow boundary, i.e. u*_at_outflow = un_at_outflow (old velocity)
+            if (!isConstDensity_) {
+              const Expr::Tag velStarTag = TagNames::self().make_star(thisVelTag_);
+              const Expr::Tag velStarBCTag( velStarTag.name() + bndName + "_outflow_bc",Expr::STATE_NONE);
+              advSlnFactory.register_expression ( new typename BCCopier<FieldT>::Builder(velStarBCTag, thisVelTag_) );
+              BndCondSpec velStarBCSpec = {velStarTag.name(), velStarBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
+              bcHelper.add_boundary_condition(bndName, velStarBCSpec);
+            }
+            
           } else {
             BndCondSpec rhsFullBCSpec = {rhs_name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
+            
+            // Variable Density:
+            // For the tangential velocity estimates, apply simple Neumann conditions at the outflow
+            if (!isConstDensity_) {
+              const Expr::Tag velStarTag = TagNames::self().make_star(thisVelTag_);
+              BndCondSpec velStarBCSpec = {velStarTag.name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
+              bcHelper.add_boundary_condition(bndName, velStarBCSpec);
+            }
           }
           
           // after the correction has been made, update the momentum and velocities in the extra cells using simple Neumann conditions
@@ -1027,7 +1099,7 @@ namespace Wasatch{
 
     if( !isConstDensity_ ){
       const TagNames& tagNames = TagNames::self();
-      // set bcs for starred velocities, if any
+      // set bcs for starred velocities. Those are now set through setup_boundary_conditions
       const Expr::Tag velStarTag = tagNames.make_star(thisVelTag_);
       bcHelper.apply_boundary_condition<FieldT>(velStarTag, taskCat);
 
