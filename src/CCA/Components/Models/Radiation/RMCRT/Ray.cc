@@ -45,10 +45,52 @@
 // TURN ON debug flag in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
 #define DEBUG -9 // 1: divQ, 2: boundFlux, 3: scattering
 
-//______________________________________________________________________
-//  TO DO
-//  create a vector (isComputedVarLabels) that contains boundryFlux, VRFlux, radiationVolq
-//  and use it for scheduling.  Add logic to what is actually in that vector.
+/*______________________________________________________________________
+  TO DO
+  create a vector (isComputedVarLabels) that contains boundryFlux, VRFlux, radiationVolq
+  and use it for scheduling.  Add logic to what is actually in that vector.
+ 
+ ISSUES:
+   For GPU code to run you must comment out sched_rayTrace()
+      tsk->requires( Task::OldDW, d_divQLabel,           d_gn, 0 );
+      tsk->requires( Task::OldDW, d_VRFluxLabel,         d_gn, 0 );
+      tsk->requires( Task::OldDW, d_boundFluxLabel,      d_gn, 0 );
+      tsk->requires( Task::OldDW, d_radiationVolqLabel,  d_gn, 0 );
+      
+  RMCRT_bm1_ML.ups:
+     - It crashes when you uncomment the 3rd level.  The pathology 
+       is 1) a ray is next to a domain boundary and is moving parallel to it.  It hits the edge of the fine patch
+      and drops down a level.  The coarsening the cell index, now moves the ray closer to the edge of the domain.
+      The ray now travels into the extra cell on the coarsest level, reflects and crashes.
+      Here is some diagnostic info
+
+
+      [int 1, 8, 35] **jumpFinetoCoarserLevel 0 jumpCoarsetoCoarserLevel 0 containsCell: 1
+          origin [int 2, 4, 16]dir 2 cur [int 1, 8, 35] prevCell [int 1, 8, 34] sumI 0.0527691 in_domain 1
+          tmaxX 22.1192 tmaxY 22.042 tmaxZ 20.1616
+          direction [-0.0700541 0.196376 0.978023]
+
+      [int 1, 8, 36] **jumpFinetoCoarserLevel 1 jumpCoarsetoCoarserLevel 0 containsCell: 0
+       ** Jumping off fine patch switching Levels:  prev L: 2 cur L 1 cur [int 0, 4, 18]
+          origin [int 2, 4, 16]dir 2 cur [int 0, 4, 18] prevCell [int 1, 8, 35] sumI 0.0533102 in_domain 1
+          tmaxX 22.1192 tmaxY 27.1343 tmaxZ 22.2066
+          direction [-0.0700541 0.196376 0.978023]
+
+      [int -1, 4, 18] **jumpFinetoCoarserLevel 0 jumpCoarsetoCoarserLevel 1 containsCell: 1
+       ** Switching Levels:  prev L: 1 cur L 0 cur [int -1, 2, 9] c_old [int -1, 4, 18]
+          origin [int 2, 4, 16]dir 0 cur [int -1, 2, 9] prevCell [int 0, 4, 18] sumI 0.0553113 in_domain 0
+          tmaxX 22.1192 tmaxY 32.2266 tmaxZ 22.2066
+          direction [-0.0700541 0.196376 0.978023]
+
+       REFLECTING
+      [int 1, 4, 18] **jumpFinetoCoarserLevel 0 jumpCoarsetoCoarserLevel 0 containsCell: 1
+
+      <crash> 
+
+
+______________________________________________________________________*/
+   
+
 
 //______________________________________________________________________
 //
@@ -286,7 +328,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     //  Data Onion
     if (type == "dataOnion" ) {
 
-      alg_ps->getWithDefault( "halo",  _halo,  IntVector(10,10,10));
+      alg_ps->getWithDefault( "halo",  d_halo,  IntVector(10,10,10));
       
       //  Method for deteriming the extents of the ROI
       ProblemSpecP ROI_ps = alg_ps->findBlock("ROI_extents");
@@ -877,8 +919,15 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   Ghost::GhostType  gac  = Ghost::AroundCells;
 
   // finest level:
-  tsk->requires(abskg_dw, d_abskgLabel,     gac, SHRT_MAX);
-  tsk->requires(sigma_dw, d_sigmaT4_label,  gac, SHRT_MAX);
+  if ( d_whichROI_algo == patch_based ) {          // patch_based we know the number of ghostCells
+    
+    int maxElem = Max( d_halo.x(), d_halo.y(), d_halo.z() );
+    tsk->requires(abskg_dw, d_abskgLabel,     gac, maxElem);
+    tsk->requires(sigma_dw, d_sigmaT4_label,  gac, maxElem);
+  } else {                                        // we don't know the number of ghostCells so get everything
+    tsk->requires(abskg_dw, d_abskgLabel,     gac, SHRT_MAX);
+    tsk->requires(sigma_dw, d_sigmaT4_label,  gac, SHRT_MAX);
+  }
   
   // needed for carry Forward
   tsk->requires( Task::OldDW, d_divQLabel,           d_gn, 0 );
@@ -1056,7 +1105,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       IntVector origin = *iter; 
       
 /*`==========TESTING==========*/
-      if(origin == IntVector(10,10,0) && d_isDbgOn ){
+      if(origin == IntVector(2,4,16) && d_isDbgOn ){
         dbg2.setActive(true);
       }else{
         dbg2.setActive(false);
@@ -1069,8 +1118,10 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       //  ray loop
       for (int iRay=0; iRay < d_nDivQRays; iRay++){
         
+        //dbg2 << "iRay: " << iRay << " " ;
+        
         Vector ray_location;
-        //rayLocation( mTwister, origin, DyDx,  DzDx, _CCRays, ray_location);            // THIS IS NOT RIGHT!!!!
+        //rayLocation( mTwister, origin, DyDx,  DzDx, d_CCRays, ray_location);            // THIS IS NOT RIGHT!!!!
 
         Vector ray_direction = findRayDirection( mTwister,d_isSeedRandom, origin, iRay ); 
                
@@ -1087,7 +1138,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used 
       radiationVolq_fine[origin] = 4.0 * M_PI * abskg_fine[origin] *  (sumI/d_nDivQRays) ;
 
-      //dbg2 << origin << "    divQ: " << divQ_fine[origin] << " term2 " << abskg_fine[origin] << " sumI term " << (sumI/_nDivQRays) << endl;
+      //dbg2 << origin << "    divQ: " << divQ_fine[origin] << " term2 " << abskg_fine[origin] << " sumI term " << (sumI/d_nDivQRays) << endl;
     }  // end cell iterator
 
     //__________________________________
@@ -1146,8 +1197,8 @@ Ray::computeExtents(LevelP level_0,
     IntVector patchLo = patch->getCellLowIndex();
     IntVector patchHi = patch->getCellHighIndex();
     
-    fineLevel_ROI_Lo = patchLo - _halo;
-    fineLevel_ROI_Hi = patchHi + _halo; 
+    fineLevel_ROI_Lo = patchLo - d_halo;
+    fineLevel_ROI_Hi = patchHi + d_halo; 
     dbg << "  patch: " << patchLo << " " << patchHi << endl;
 
   }
@@ -1177,8 +1228,8 @@ Ray::computeExtents(LevelP level_0,
 
     if( level->hasCoarserLevel() ){
 
-      regionLo[L] = level->mapCellToCoarser(regionLo[L+1]) - _halo;
-      regionHi[L] = level->mapCellToCoarser(regionHi[L+1]) + _halo;
+      regionLo[L] = level->mapCellToCoarser(regionLo[L+1]) - d_halo;
+      regionHi[L] = level->mapCellToCoarser(regionHi[L+1]) + d_halo;
 
       // region must be within a level
       IntVector levelLo, levelHi;
@@ -2291,8 +2342,8 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0 ){
       bool jumpFinetoCoarserLevel   = ( onFineLevel && containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) == false );
       bool jumpCoarsetoCoarserLevel = ( onFineLevel == false && containsCell(regionLo[L], regionHi[L], cur, dir) == false && L > 0 );
 
-      //dbg2 << cur << " jumpFinetoCoarserLevel " << jumpFinetoCoarserLevel << " jumpCoarsetoCoarserLevel " << jumpCoarsetoCoarserLevel
-      //     << " containsCell: " << containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) << endl; 
+      //dbg2 << cur << " **jumpFinetoCoarserLevel " << jumpFinetoCoarserLevel << " jumpCoarsetoCoarserLevel " << jumpCoarsetoCoarserLevel
+      //    << " containsCell: " << containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) << endl; 
 
       if( jumpFinetoCoarserLevel ){
         cur   = level->mapCellToCoarser(cur); 
@@ -2301,7 +2352,7 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0 ){
         onFineLevel = false;
 
         // NEVER UNCOMMENT EXCEPT FOR DEBUGGING, it is EXTREMELY SLOW
-        //dbg2 << " Jumping off fine patch switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << endl;
+        //dbg2 << " ** Jumping off fine patch switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << endl;
       } else if ( jumpCoarsetoCoarserLevel ){
 
         IntVector c_old = cur;
@@ -2309,7 +2360,7 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0 ){
         level = level->getCoarserLevel().get_rep();
         L     = level->getIndex();
 
-        //dbg2 << " Switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << " c_old " << c_old << endl;
+        //dbg2 << " ** Switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << " c_old " << c_old << endl;
       }
 
       //__________________________________
@@ -2361,7 +2412,7 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0 ){
       // NEVER UNCOMMENT EXCEPT FOR DEBUGGING IT IS EXTREMELY SLOW  
       //dbg2 << "    origin " << origin << "dir " << dir << " cur " << cur <<" prevCell " << prevCell << " sumI " << sumI << " in_domain " << in_domain << endl;
       //dbg2 << "    tmaxX " << tMax.x() << " tmaxY " << tMax.y() << " tmaxZ " << tMax.z() << endl;
-      //dbg2 << "    direction " << direction << endl;
+      //dbg2 << "    direction " << ray_direction << endl;
 
     } //end domain while loop.  ++++++++++++++
 
