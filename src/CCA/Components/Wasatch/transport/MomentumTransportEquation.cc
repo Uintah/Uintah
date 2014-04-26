@@ -1014,9 +1014,30 @@ namespace Wasatch{
             advSlnFactory.register_expression( scinew Builder( openBCTag, thisVelTag_ ) );
             BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(solnVarName_))).name(),openBCTag.name(), 0.0, DIRICHLET,FUNCTOR_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
+            
+            // variable density:
+            // for variable density outflows, change the velocity estimate at the outflow boundary.
+            // instead of using an outflow boundary condition similar to that applied on momentum (see above)
+            // simply use the old velocity value at the outflow boundary, i.e. u*_at_outflow = un_at_outflow (old velocity)
+            if (!isConstDensity_) {
+              const Expr::Tag velStarTag = TagNames::self().make_star(thisVelTag_);
+              const Expr::Tag velStarBCTag( velStarTag.name() + bndName + "_open_bc",Expr::STATE_NONE);
+              advSlnFactory.register_expression ( new typename BCCopier<FieldT>::Builder(velStarBCTag, thisVelTag_) );
+              BndCondSpec velStarBCSpec = {velStarTag.name(), velStarBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
+              bcHelper.add_boundary_condition(bndName, velStarBCSpec);
+            }
+            
           } else {
             BndCondSpec rhsFullBCSpec = {rhs_name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
+            
+            // Variable Density:
+            // For the tangential velocity estimates, apply simple Neumann conditions at the outflow
+            if (!isConstDensity_) {
+              const Expr::Tag velStarTag = TagNames::self().make_star(thisVelTag_);
+              BndCondSpec velStarBCSpec = {velStarTag.name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
+              bcHelper.add_boundary_condition(bndName, velStarBCSpec);
+            }            
           }
 
           // after the correction has been made, update the momentum and velocities in the extra cells using simple Neumann conditions
