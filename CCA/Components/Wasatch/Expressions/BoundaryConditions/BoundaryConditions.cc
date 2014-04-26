@@ -165,7 +165,7 @@ evaluate()
     if (this->isStaggered_) {
       for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
         f(*ig) = (*src_)(*ig);
-        //f(*ii) = (*src_)(*ii);
+        f(*ii) = (*src_)(*ii);
       }
     } else {
       for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
