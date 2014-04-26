@@ -279,7 +279,6 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
         int mgs = 0;
         std::map<int,int>::const_iterator iter;
         iter = maxGhostCells.find(l);
-        ASSERT(iter != maxGhostCells.end());
         if (!(iter == maxGhostCells.end())) {
           mgs = iter->second;
         }
