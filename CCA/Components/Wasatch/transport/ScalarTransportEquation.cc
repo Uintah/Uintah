@@ -251,7 +251,7 @@ namespace Wasatch{
 
   template< typename FieldT >
   void ScalarTransportEquation<FieldT>::
-  setup_initial_boundary_conditions( const GraphHelper& graphHelper,
+  apply_initial_boundary_conditions( const GraphHelper& graphHelper,
                                      BCHelper& bcHelper )
   {
     const Category taskCat = INITIALIZATION;
@@ -287,7 +287,7 @@ namespace Wasatch{
   //------------------------------------------------------------------
   template< typename FieldT >
   void ScalarTransportEquation<FieldT>::
-  verify_boundary_conditions( BCHelper& bcHelper,
+  setup_boundary_conditions( BCHelper& bcHelper,
                              GraphCategories& graphCat )
   {
     Expr::ExpressionFactory& advSlnFactory = *(graphCat[ADVANCE_SOLUTION]->exprFactory);
@@ -344,7 +344,7 @@ namespace Wasatch{
   
   template< typename FieldT >
   void ScalarTransportEquation<FieldT>::
-  setup_boundary_conditions( const GraphHelper& graphHelper,
+  apply_boundary_conditions( const GraphHelper& graphHelper,
                              BCHelper& bcHelper )
   {            
     namespace SS = SpatialOps::structured;

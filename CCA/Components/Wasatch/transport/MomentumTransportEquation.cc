@@ -844,7 +844,7 @@ namespace Wasatch{
 
   template< typename FieldT >
   void MomentumTransportEquation<FieldT>::
-  verify_boundary_conditions( BCHelper& bcHelper, GraphCategories& graphCat )
+  setup_boundary_conditions( BCHelper& bcHelper, GraphCategories& graphCat )
   {
     Expr::ExpressionFactory& advSlnFactory = *(graphCat[ADVANCE_SOLUTION]->exprFactory);
     
@@ -859,7 +859,7 @@ namespace Wasatch{
       switch (myBndSpec.type) {
         case WALL:
         {
-          // first check if the user specified boundary conditions at the wall
+          // first check if the user specified momentum boundary conditions at the wall
           if( myBndSpec.has_field(thisVelTag_.name()) || myBndSpec.has_field(solnVarName_) ||
               myBndSpec.has_field(rhs_name()) || myBndSpec.has_field(solnVarName_ + "_rhs_part") ){
             std::ostringstream msg;
@@ -868,7 +868,7 @@ namespace Wasatch{
             << std::endl;
             throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
           }
-          
+
           BndCondSpec momBCSpec = {solution_variable_name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
           bcHelper.add_boundary_condition(bndName, momBCSpec);
           
@@ -974,7 +974,7 @@ namespace Wasatch{
   
   template< typename FieldT >
   void MomentumTransportEquation<FieldT>::
-  setup_initial_boundary_conditions( const GraphHelper& graphHelper,
+  apply_initial_boundary_conditions( const GraphHelper& graphHelper,
                                      BCHelper& bcHelper )
   {
     namespace SS = SpatialOps::structured;
@@ -1010,7 +1010,7 @@ namespace Wasatch{
   
   template< typename FieldT >
   void MomentumTransportEquation<FieldT>::
-  setup_boundary_conditions( const GraphHelper& graphHelper,
+  apply_boundary_conditions( const GraphHelper& graphHelper,
                              BCHelper& bcHelper )
   {
     namespace SS = SpatialOps::structured;

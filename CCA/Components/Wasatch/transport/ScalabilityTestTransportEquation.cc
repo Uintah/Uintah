@@ -245,7 +245,7 @@ namespace Wasatch{
 
   template< typename FieldT >
   void ScalabilityTestTransportEquation<FieldT>::
-  setup_initial_boundary_conditions( const GraphHelper& graphHelper,
+  apply_initial_boundary_conditions( const GraphHelper& graphHelper,
                                     BCHelper& bcHelper )
   {}
   
@@ -253,7 +253,7 @@ namespace Wasatch{
   
   template< typename FieldT >
   void ScalabilityTestTransportEquation<FieldT>::
-  setup_boundary_conditions( const GraphHelper& graphHelper,
+  apply_boundary_conditions( const GraphHelper& graphHelper,
                              BCHelper& bcHelper )
   {}
 

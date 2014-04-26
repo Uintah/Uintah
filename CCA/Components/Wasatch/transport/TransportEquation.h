@@ -157,7 +157,7 @@ namespace Wasatch{
      *   the user has specified any velocity BCs at that boundary. See examples
      *   in the momentum transport equation.
      */
-    virtual void verify_boundary_conditions( BCHelper& bcHelper,
+    virtual void setup_boundary_conditions( BCHelper& bcHelper,
                                              GraphCategories& graphCat)=0;
     
     /**
@@ -168,7 +168,7 @@ namespace Wasatch{
      *  This is done by attaching a functor to the applicable expression
      *  via the <code>Expression::process_after_evaluate</code> method.
      */
-    virtual void setup_initial_boundary_conditions( const GraphHelper& graphHelper,
+    virtual void apply_initial_boundary_conditions( const GraphHelper& graphHelper,
                                                    BCHelper& bcHelper ) = 0;
 
     /**
@@ -179,7 +179,7 @@ namespace Wasatch{
      *  This is done by attaching a functor to the applicable expression
      *  via the <code>Expression::process_after_evaluate</code> method.
      */
-    virtual void setup_boundary_conditions( const GraphHelper& graphHelper,
+    virtual void apply_boundary_conditions( const GraphHelper& graphHelper,
                                             BCHelper& bcHelper ) = 0;
 
     /**
