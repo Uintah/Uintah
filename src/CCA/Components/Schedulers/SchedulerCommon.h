@@ -222,7 +222,7 @@ WARNING
     
     const VarLabel * reloc_new_posLabel_;
     
-    int getMaxGhost() {return maxGhost;}
+    const std::map<int, int>& getMaxGhostCells() {return maxGhostCells;}
     
     int getMaxLevelOffset() {return maxLevelOffset;}
 
@@ -326,6 +326,7 @@ WARNING
     // whether or not to send a small message (takes more work to organize)
     // or a larger one (more communication time)
     bool d_useSmallMessages;
+
     //! These are to store which vars we have to copy to the new grid
     //! in a copy data task.  Set in scheduleDataCopy and used in
     //! copyDataToNewGrid.
@@ -337,10 +338,12 @@ WARNING
     std::set<const VarLabel*, VarLabel::Compare> d_initRequiredVars;
     std::set<const VarLabel*, VarLabel::Compare> d_computedVars;
 
-    //max ghost cells of all tasks - will be used for loadbalancer to create neighborhood
-    int maxGhost;
+    // max ghost cells of all tasks (per level) - will be used for loadbalancer to create neighborhood
+    // map levelIndex to maxGhostCells on that level
+    std::map<int, int> maxGhostCells;
     
-    //max level offset of all tasks - will be used for loadbalancer to create neighborhood
+    // max level offset of all tasks - will be used for loadbalancer to create neighborhood
+    // TODO this may eventually have to be considered per level (Alan H. - 04/25/14)
     int maxLevelOffset;
     
   };

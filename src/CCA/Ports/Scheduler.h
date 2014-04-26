@@ -195,7 +195,7 @@ WARNING
     // variable is valid (at least according to d_allcomps).
     typedef std::map< std::string, std::list<int> > VarLabelMaterialMap;
     virtual VarLabelMaterialMap* makeVarLabelMaterialMap() = 0;
-    virtual int getMaxGhost() = 0;
+    virtual const std::map<int, int>& getMaxGhostCells() = 0;
     virtual int getMaxLevelOffset() = 0;
   private:
     Scheduler(const Scheduler&);
