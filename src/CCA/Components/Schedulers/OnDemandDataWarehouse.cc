@@ -98,6 +98,9 @@ struct ParticleSend : public RefCounted {
 #define PARTICLESET_TAG 0x4000|batch->messageTag
 #define DAV_DEBUG 0
 
+#define  BULLETPROOFING_FOR_CUBIC_DOMAINS  // comment out when running on non-cubic domains.
+                                           // The getRegion() exceptions don't apply.
+
 bool OnDemandDataWarehouse::d_combineMemory=true;
 
 OnDemandDataWarehouse::OnDemandDataWarehouse(const ProcessorGroup* myworld,
@@ -2102,6 +2105,7 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
   
   IntVector diff(high-low);
 
+#ifdef  BULLETPROOFING_FOR_CUBIC_DOMAINS
   //__________________________________
   //  This is not a valid check on non-cubic domains
   if (diff.x()*diff.y()*diff.z() > totalCells && missing_patches.size() > 0) {
@@ -2117,7 +2121,7 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
     cout << "  *** If the computational domain is non-cubic, (L-shaped or necked down)  you can remove this bulletproofing" << endl; 
     throw InternalError("Missing patches in getRegion", __FILE__, __LINE__);
   }
-
+#endif
   if (dbg.active()) {
     cerrLock.lock();
     dbg << d_myworld->myrank() << "  Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex() 
@@ -2235,6 +2239,10 @@ OnDemandDataWarehouse::getRegion(GridVariableBase& var,
 
   IntVector diff(high-low);
 
+
+#ifdef  BULLETPROOFING_FOR_CUBIC_DOMAINS
+  //__________________________________
+  //  Not valid for non-cubic domains
   if (diff.x()*diff.y()*diff.z() > totalCells && missing_patches.size() > 0) {
     cout << d_myworld->myrank() << "  Unknown Variable " << *label << ", matl " << matlIndex
          << ", L-" << level->getIndex() << ", for patch(es): ";
@@ -2244,6 +2252,7 @@ OnDemandDataWarehouse::getRegion(GridVariableBase& var,
     cout << " copied cells: " << totalCells << " requested cells: " << diff.x()*diff.y()*diff.z() << endl;
     throw InternalError("Missing patches in getRegion", __FILE__, __LINE__);
   }
+#endif
   if (dbg.active()) {
     cerrLock.lock();
     dbg << d_myworld->myrank() << "  Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
