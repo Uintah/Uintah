@@ -1071,7 +1071,7 @@ DataArchiver::sched_allOutputTasks(double delt,
     sched->addTask(t, 0, 0);
     
     dbg << "  scheduled output tasks (reduction variables)" << endl;
-    if (delt != 0 || d_outputInitTimestep) {
+    if (delt != 0 || d_outputInitTimestep){
       scheduleOutputTimestep(d_saveLabels, grid, sched, false);
     }
   }
@@ -1798,9 +1798,8 @@ DataArchiver::outputReductionVars(const ProcessorGroup*,
                               DataWarehouse* new_dw)
 {
 
-  if (new_dw->timestepRestarted()) {
+  if (new_dw->timestepRestarted())
     return;
-  }
     
   double start = Time::currentSeconds();
   // Dump the stuff in the reduction saveset into files in the uda
@@ -1817,12 +1816,10 @@ DataArchiver::outputReductionVars(const ProcessorGroup*,
       dbg << "    Reduction " << var->getName() << " matl: " << matlIndex << endl;
       ostringstream filename;
       filename << d_dir.getName() << "/" << var->getName();
-      if (matlIndex < 0) {
+      if (matlIndex < 0)
         filename << ".dat\0";
-      }
-      else {
+      else
         filename << "_" << matlIndex << ".dat\0";
-      }
 
 #ifdef __GNUG__
       ofstream out(filename.str().c_str(), ios::app);
