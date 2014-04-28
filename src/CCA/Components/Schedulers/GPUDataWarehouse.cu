@@ -111,7 +111,7 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, char const* name, int patchID, i
   //__________________________________
   //cpu code 
   if (d_numItems==MAX_ITEM) {
-    printf("out of GPUDataWarehouse space");
+    printf("out of GPUDataWarehouse space  You can try increasing GPUDataWarehouse.h: #define MAX_ITEMS.");
     exit(-1);
   }
   
@@ -231,7 +231,7 @@ GPUDataWarehouse::put(GPUParticleVariableBase& var, char const* name, int patchI
   //__________________________________
   //cpu code
   if (d_numItems==MAX_ITEM) {
-    printf("out of GPUDataWarehouse space");
+    printf("out of GPUDataWarehouse space.  You can try increasing GPUDataWarehouse.h: #define MAX_ITEMS");
     exit(-1);
   }
 
@@ -348,7 +348,7 @@ GPUDataWarehouse::put(GPUReductionVariableBase& var, char const* name, int patch
   //__________________________________
   //cpu code
   if (d_numItems==MAX_ITEM) {
-    printf("out of GPUDataWarehouse space");
+    printf("out of GPUDataWarehouse space.  You can try increasing GPUDataWarehouse.h: #define MAX_ITEMS");
     exit(-1);
   }
 
