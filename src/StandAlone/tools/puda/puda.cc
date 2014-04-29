@@ -58,7 +58,6 @@
 #include <StandAlone/tools/puda/monica1.h>
 #include <StandAlone/tools/puda/monica2.h>
 #include <StandAlone/tools/puda/todd1.h>
-#include <StandAlone/tools/puda/pressure.h>
 
 #include <StandAlone/tools/puda/util.h>
 #include <StandAlone/tools/puda/varsummary.h>
@@ -112,7 +111,6 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -jacquie              (finds burn rate vs pressure)\n";
   cerr << "  -monica1             (Finds the maximum pressure in the domain.)\n";
   cerr << "  -monica2             (Finds the sum of the cell centered kinetic energy in the domain.)\n";
-  cerr << "  -pressure            (Finds the maximum pressure and average pressure in the domain.)\n";
   cerr << "  -AA_MMS_1            (1D periodic bar MMS)\n";
   cerr << "  -AA_MMS_2            (3D Axis aligned MMS)\n";
   cerr << "  -GV_MMS              (GeneralizedVortex MMS)\n"; //MMS
@@ -265,8 +263,6 @@ main(int argc, char** argv)
       clf.be_brief = true;
     } else if(s == "-monica1"){
       clf.do_monica1 = true;
-    } else if(s == "-pressure"){
-      clf.do_pressure = true;
     } else if(s == "-monica2"){
       clf.do_monica2 = true;
       } else if(s == "-jacquie"){
@@ -525,10 +521,6 @@ main(int argc, char** argv)
 
     if( clf.do_monica1 ){
       monica1( da, clf );
-    }
-
-    if( clf.do_pressure ){
-      pressure( da, clf );
     }
 
     if( clf.do_monica2 ){
