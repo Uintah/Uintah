@@ -291,15 +291,55 @@ namespace Wasatch{
                              GraphCategories& graphCat )
   {
     Expr::ExpressionFactory& advSlnFactory = *(graphCat[ADVANCE_SOLUTION]->exprFactory);
-    
+    Expr::ExpressionFactory& initFactory = *(graphCat[INITIALIZATION]->exprFactory);
+
     const TagNames& tagNames = TagNames::self();
     const Expr::Tag rhsStarTag = tagNames.make_star_rhs( this->solution_variable_tag() );
+  
+    // add dummy functors on ALL patches
+    if (!isConstDensity_)
+    {
+      const Expr::Tag solnVarStarTag = tagNames.make_star(this->solution_variable_name());
+      bcHelper.create_dummy_dependency<FieldT>(solnVarStarTag, tag_list(solution_variable_tag()), ADVANCE_SOLUTION);
+    }
     
     // make logical decisions based on the specified boundary types
     BOOST_FOREACH( BndMapT::value_type& bndPair, bcHelper.get_boundary_information() )
     {
       const std::string& bndName = bndPair.first;
       BndSpec& myBndSpec = bndPair.second;
+                  
+      if (!isConstDensity_) {
+        // set bcs for solnVar_*
+        const Expr::Tag solnVarStarTag = tagNames.make_star(this->solution_variable_name());
+        
+        // check if this boundary has velocity specification on it. it better have!
+        if (myBndSpec.has_field(solution_variable_name())) {
+          // grab the bc specification of the velocity on this boundary. Note that here we
+          // should guarantee that the spec is found!
+          const BndCondSpec* phiBCSpec = myBndSpec.find(solution_variable_name());
+          assert(phiBCSpec);
+          std::cout << "functor type " << solution_variable_name() << " = " << phiBCSpec->is_functor() << std::endl;
+          if (!phiBCSpec->is_functor() ) {
+            // if the boundary condition is not a functor (i.e. a constant value), then simply
+            // copy that value into a new BCSpec for the velocity estimate
+            BndCondSpec phiStarBCSpec = *phiBCSpec; // copy the spec from the velocity
+            phiStarBCSpec.varName = solnVarStarTag.name(); // change the name to the starred velocity
+            bcHelper.add_boundary_condition(bndName, phiStarBCSpec);
+          } else {
+            // if it is a functor type, then create a BCCopier
+            // create tagname for the bc copier
+            const Expr::Tag solnVarStarBCTag( solnVarStarTag.name() + "_" + bndName + "_bccopier",Expr::STATE_NONE);
+            // create and register the BCCopier
+            typedef typename BCCopier<FieldT>::Builder Copier;
+            advSlnFactory.register_expression(scinew Copier(solnVarStarBCTag,solution_variable_tag()));
+            // specify the bc on velstart using the bc copier functor
+            BndCondSpec phiStarBCSpec = {solnVarStarTag.name(), solnVarStarBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
+            // add it to the boundary conditions!
+            bcHelper.add_boundary_condition(bndName, phiStarBCSpec);
+          }
+        }
+      }
       
       switch (myBndSpec.type) {
         case WALL:
@@ -357,15 +397,7 @@ namespace Wasatch{
       // set bcs for solnVar_*
       const TagNames& tagNames = TagNames::self();
       const Expr::Tag solnVarStarTag = tagNames.make_star(this->solution_variable_name());
-      const Expr::Tag solnVarStarBCTag( solnVarStarTag.name()+"_bc",Expr::STATE_NONE);
-      Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
-      if( !factory.have_entry(solnVarStarBCTag) ){
-        factory.register_expression ( new typename BCCopier<SVolField>::Builder(solnVarStarBCTag, Expr::Tag( this->solution_variable_name(),Expr::STATE_N )) );
-      }
-      
-      bcHelper.add_auxiliary_boundary_condition( this->solution_variable_name(), solnVarStarTag.name(), solnVarStarBCTag.name(), Wasatch::DIRICHLET );
       bcHelper.apply_boundary_condition<FieldT>( solnVarStarTag, taskCat );
-
       bcHelper.apply_boundary_condition<FieldT>( Expr::Tag(rhs_tag().name() + tagNames.star, Expr::STATE_NONE), taskCat, true );
       bcHelper.apply_boundary_condition<FieldT>( primVarTag_, taskCat );
     }

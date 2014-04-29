@@ -38,7 +38,7 @@
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCondBase.h>
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
-
+#include <CCA/Components/Wasatch/Expressions/NullExpression.h>
 //-- ExprLib Includes --//
 #include <expression/ExprLib.h>
 #include <expression/ExpressionFactory.h>
@@ -396,7 +396,7 @@ namespace Wasatch {
                       const Uintah::MaterialSet* const materials,
                       const PatchInfoMap& patchInfoMap,
                       GraphCategories& grafCat,
-                      const BCFunctorMap& bcFunctorMap )
+                      BCFunctorMap& bcFunctorMap )
   : localPatches_(localPatches),
     materials_   (materials   ),
     patchInfoMap_(patchInfoMap),
@@ -761,6 +761,39 @@ namespace Wasatch {
   {
     return bndNameBndSpecMap_;
   }
+
+  //------------------------------------------------------------------------------------------------
+  
+  bool BCHelper::has_boundaries()
+  {
+    return !bndNameBndSpecMap_.empty();
+  }
+
+  //------------------------------------------------------------------------------------------------
+  template<typename FieldT>
+  void BCHelper::create_dummy_dependency( const Expr::Tag& attachDepToThisTag,
+                                          const Expr::TagList dependencies,
+                                          const Category taskCat)
+  {
+    Expr::ExpressionFactory& factory = *(grafCat_[taskCat]->exprFactory);
+    std::string phiName = attachDepToThisTag.name();
+    // create null dependency
+    typedef typename NullExpression<FieldT>::Builder NullExpr;
+    const Expr::Tag dummyTag(phiName + "_dummy_dependency", Expr::STATE_NONE );
+    const std::string functorName = dummyTag.name();
+    factory.register_expression(scinew NullExpr(dummyTag, dependencies));
+    // check if we already have an entry for phiname
+    BCFunctorMap::iterator iter = bcFunctorMap_.find(phiName);
+    
+    if ( iter != bcFunctorMap_.end() ) {
+      (*iter).second.insert(functorName);
+    }
+    else{
+      BCFunctorMap::mapped_type functorSet;
+      functorSet.insert( functorName );
+      bcFunctorMap_.insert( BCFunctorMap::value_type(phiName,functorSet) );
+    }
+  }
   
   //------------------------------------------------------------------------------------------------
   
@@ -771,8 +804,7 @@ namespace Wasatch {
 
   {            
     using namespace std;
-    std::string fieldName = varTag.name();
-
+    string fieldName = varTag.name();
     Expr::ExpressionFactory& factory = *(grafCat_[taskCat]->exprFactory);
     
     //_____________________________________________________________________________________
@@ -795,7 +827,7 @@ namespace Wasatch {
           BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() )
           {
             const int patchID = patch->getID();
-            BCFunctorMap::const_iterator iter = bcFunctorMap_.begin();
+            BCFunctorMap::iterator iter = bcFunctorMap_.begin();
             while ( iter != bcFunctorMap_.end() ) {
               string functorPhiName = (*iter).first;
               if ( functorPhiName.compare(fieldName) == 0 ) {
@@ -1109,7 +1141,10 @@ namespace Wasatch {
 #define INSTANTIATE_BC_TYPES(VOLT) \
   template void BCHelper::apply_boundary_condition< VOLT >( const Expr::Tag& varTag, \
                                                             const Category& taskCat, \
-                                                            bool setOnExtraOnly);
+                                                            bool setOnExtraOnly);    \
+  template void BCHelper::create_dummy_dependency< VOLT >( const Expr::Tag& attachDepToThisTag, \
+                                                          const Expr::TagList dependencies,     \
+                                                          const Category taskCat );             
   INSTANTIATE_BC_TYPES(SpatialOps::structured::SVolField);
   INSTANTIATE_BC_TYPES(SpatialOps::structured::XVolField);
   INSTANTIATE_BC_TYPES(SpatialOps::structured::YVolField);
