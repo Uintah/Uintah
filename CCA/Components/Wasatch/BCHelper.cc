@@ -781,7 +781,12 @@ namespace Wasatch {
     typedef typename NullExpression<FieldT>::Builder NullExpr;
     const Expr::Tag dummyTag(phiName + "_dummy_dependency", Expr::STATE_NONE );
     const std::string functorName = dummyTag.name();
-    factory.register_expression(scinew NullExpr(dummyTag, dependencies));
+    
+    if (factory.have_entry(dummyTag)) {
+      return;
+    }
+    
+    factory.register_expression(scinew NullExpr(dummyTag, dependencies), true);
     // check if we already have an entry for phiname
     BCFunctorMap::iterator iter = bcFunctorMap_.find(phiName);
     
