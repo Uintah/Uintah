@@ -29,7 +29,7 @@
  *      Author: jbhooper
  */
 
-#ifndef LUCRETIUS_H_
+#ifndef LUCRETIUS_MATERIAL_H_
 #define LUCRETIUS_MATERIAL_H
 
 

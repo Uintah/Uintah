@@ -94,17 +94,22 @@ void SPME::calculateRealspace(const ProcessorGroup* pg,
       double atomCharge = d_system->getAtomicCharge(atomType);
       ParticleSubset* atomSubset = old_dw->getParticleSubset(atomType, patch);
       constParticleVariable<Point> localX;
-      old_dw->get(localX, d_lb->pXLabel, atomSubset);
+      old_dw->get(localX, d_label->global->pX, atomSubset);
+//      old_dw->get(localX, d_label->pXLabel, atomSubset);
       constParticleVariable<long64> localID;
-      old_dw->get(localID, d_lb->pParticleIDLabel, atomSubset);
+      old_dw->get(localID, d_label->global->pID, atomSubset);
+//      old_dw->get(localID, d_label->pParticleIDLabel, atomSubset);
       constParticleVariable<Vector> dipolesLocal;
 //      new_dw->getModifiable(dipolesLocal, d_lb->pRealDipoles, atomSubset);
-      old_dw->get(dipolesLocal, d_lb->pTotalDipoles, atomSubset);
+      old_dw->get(dipolesLocal, d_label->electrostatic->pMu, atomSubset);
+//      old_dw->get(dipolesLocal, d_label->pTotalDipoles, atomSubset);
       size_t localAtoms = atomSubset->numParticles();
       ParticleVariable<SCIRun::Vector> localForce;
-      new_dw->allocateAndPut(localForce, d_lb->pElectrostaticsRealForce_preReloc, atomSubset);
+      new_dw->allocateAndPut(localForce, d_label->electrostatic->pF_electroReal_preReloc, atomSubset);
+//      new_dw->allocateAndPut(localForce, d_label->pElectrostaticsRealForce_preReloc, atomSubset);
       ParticleVariable<SCIRun::Vector> localField;
-      new_dw->allocateAndPut(localField, d_lb->pElectrostaticsRealField_preReloc, atomSubset);
+      new_dw->allocateAndPut(localField, d_label->electrostatic->pE_electroReal_preReloc, atomSubset);
+//      new_dw->allocateAndPut(localField, d_label->pElectrostaticsRealField_preReloc, atomSubset);
       for (size_t Index = 0; Index < localAtoms; ++ Index) {
         localForce[Index] = ZERO_VECTOR;
         localField[Index] = ZERO_VECTOR;
@@ -113,15 +118,15 @@ void SPME::calculateRealspace(const ProcessorGroup* pg,
       for (size_t neighborIndex = 0; neighborIndex < numMaterials; ++neighborIndex) {
         int neighborType = materials->get(neighborIndex);
         double neighborCharge = d_system->getAtomicCharge(neighborType);
-        ParticleSubset* neighborSubset = old_dw->getParticleSubset(neighborType, patch, Ghost::AroundNodes, ELECTROSTATIC_RADIUS, d_lb->pXLabel);
+        ParticleSubset* neighborSubset = old_dw->getParticleSubset(neighborType, patch, Ghost::AroundNodes, ELECTROSTATIC_RADIUS, d_label->global->pX);
         // Map neighbor atoms to their positions
         constParticleVariable<Point> neighborX;
-        old_dw->get(neighborX, d_lb->pXLabel, neighborSubset);
+        old_dw->get(neighborX, d_label->global->pX, neighborSubset);
         // Map neighbor atoms to their IDs
         constParticleVariable<long64> neighborID;
-        old_dw->get(neighborID, d_lb->pParticleIDLabel, neighborSubset);
+        old_dw->get(neighborID, d_label->global->pID, neighborSubset);
         constParticleVariable<Vector> dipolesNeighbor;
-        old_dw->get(dipolesNeighbor, d_lb->pTotalDipoles, neighborSubset);
+        old_dw->get(dipolesNeighbor, d_label->electrostatic->pMu, neighborSubset);
 
         size_t neighborAtoms = neighborSubset->numParticles();
 
@@ -173,8 +178,10 @@ void SPME::calculateRealspace(const ProcessorGroup* pg,
   } // Loop over patches
   //!FIXME  Store energy and stress tensor here
   // put updated values for reduction variables into the DW
-  new_dw->put(sum_vartype(0.5 * realElectrostaticEnergy), d_lb->electrostaticRealEnergyLabel);
-  new_dw->put(matrix_sum(0.5 * realElectrostaticStress), d_lb->electrostaticRealStressLabel);
+  new_dw->put(sum_vartype(0.5 * realElectrostaticEnergy), d_label->electrostatic->rElectrostaticRealEnergy);
+//  new_dw->put(sum_vartype(0.5 * realElectrostaticEnergy), d_label->electrostaticRealEnergyLabel);
+  new_dw->put(matrix_sum(0.5 * realElectrostaticStress), d_label->electrostatic->rElectrostaticRealStress);
+//  new_dw->put(matrix_sum(0.5 * realElectrostaticStress), d_label->electrostaticRealStressLabel);
   return;
 } // End method
 
@@ -197,12 +204,19 @@ void SPME::calculateNewDipoles(const ProcessorGroup* pg,
       int atomType = materials->get(localIndex);
       ParticleSubset* localSet = old_dw->getParticleSubset(atomType, patch);
       constParticleVariable<Vector> oldDipoles;
-      old_dw->get(oldDipoles, d_lb->pTotalDipoles, localSet);
+      // We may want to mix with the old dipoles instead of replacing
+      old_dw->get(oldDipoles, d_label->electrostatic->pMu, localSet);
+//      old_dw->get(oldDipoles, d_label->pTotalDipoles, localSet);
+      // We need the field estimation from the current iteration
       constParticleVariable<SCIRun::Vector> reciprocalField, realField;
-      old_dw->get(reciprocalField, d_lb->pElectrostaticsReciprocalField, localSet);
-      old_dw->get(realField, d_lb->pElectrostaticsRealField, localSet);
+      old_dw->get(reciprocalField, d_label->electrostatic->pE_electroInverse_preReloc, localSet);
+      old_dw->get(realField, d_label->electrostatic->pE_electroReal_preReloc, localSet);
+//      old_dw->get(reciprocalField, d_label->pElectrostaticsReciprocalField, localSet);
+//      old_dw->get(realField, d_label->pElectrostaticsRealField, localSet);
       ParticleVariable<SCIRun::Vector> newDipoles;
-      new_dw->allocateAndPut(newDipoles, d_lb->pTotalDipoles_preReloc, localSet);
+      // And we'll be calculating into the new dipole container
+      new_dw->allocateAndPut(newDipoles, d_label->electrostatic->pMu_preReloc, localSet);
+//      new_dw->allocateAndPut(newDipoles, d_label->pTotalDipoles_preReloc, localSet);
       size_t localAtoms = localSet->numParticles();
       for (size_t Index = 0; Index < localAtoms; ++ Index) {
         //FIXME JBH -->  Put proper terms in here to actually calculate the new dipole contribution

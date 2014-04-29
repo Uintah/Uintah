@@ -168,11 +168,11 @@ void SPME::initialize(const ProcessorGroup* pg,
   d_backwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, complexData, complexData, pg->getComm(), FFTW_BACKWARD, FFTW_MEASURE);
 
   // Initially register sole and reduction variables in the DW (initial timestep)
-  new_dw->put(sum_vartype(0.0), d_lb->electrostaticReciprocalEnergyLabel);
-  new_dw->put(matrix_sum(0.0), d_lb->electrostaticReciprocalStressLabel);
+  new_dw->put(sum_vartype(0.0), d_label->electrostaticReciprocalEnergyLabel);
+  new_dw->put(matrix_sum(0.0), d_label->electrostaticReciprocalStressLabel);
 
   SoleVariable<double> dependency;
-  new_dw->put(dependency, d_lb->electrostaticsDependencyLabel);
+  new_dw->put(dependency, d_label->electrostaticsDependencyLabel);
 
   // ------------------------------------------------------------------------
   // Allocate and map the SPME patches
@@ -269,8 +269,8 @@ void SPME::setup(const ProcessorGroup* pg,
     }
   }
   SoleVariable<double> dependency;
-  old_dw->get(dependency, d_lb->electrostaticsDependencyLabel);
-  new_dw->put(dependency, d_lb->electrostaticsDependencyLabel);
+  old_dw->get(dependency, d_label->electrostaticsDependencyLabel);
+  new_dw->put(dependency, d_label->electrostaticsDependencyLabel);
 }
 
 void SPME::calculate(const ProcessorGroup* pg,
@@ -301,9 +301,9 @@ void SPME::calculate(const ProcessorGroup* pg,
   DataWarehouse* subNewDW = subscheduler->get_dw(3);
 
   // transfer data from parentOldDW to subDW
-  subNewDW->transferFrom(parentOldDW, d_lb->pXLabel, perProcPatches, allMaterialsUnion);
-  subNewDW->transferFrom(parentOldDW, d_lb->pChargeLabel, perProcPatches, allMaterialsUnion);
-  subNewDW->transferFrom(parentOldDW, d_lb->pParticleIDLabel, perProcPatches, allMaterialsUnion);
+  subNewDW->transferFrom(parentOldDW, d_label->pXLabel, perProcPatches, allMaterialsUnion);
+  subNewDW->transferFrom(parentOldDW, d_label->pChargeLabel, perProcPatches, allMaterialsUnion);
+  subNewDW->transferFrom(parentOldDW, d_label->pParticleIDLabel, perProcPatches, allMaterialsUnion);
 
   // reduction variables
 
@@ -313,8 +313,8 @@ void SPME::calculate(const ProcessorGroup* pg,
 //    parentOldDW->get(spmeFourierStress, d_lb->spmeFourierStressLabel);
 //    subNewDW->put(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
 //    subNewDW->put(spmeFourierStress, d_lb->spmeFourierStressLabel);
-  parentNewDW->put(sum_vartype(0.0), d_lb->spmeFourierEnergyLabel);
-  parentNewDW->put(matrix_sum(0.0), d_lb->spmeFourierStressLabel);
+  parentNewDW->put(sum_vartype(0.0), d_label->spmeFourierEnergyLabel);
+  parentNewDW->put(matrix_sum(0.0), d_label->spmeFourierStressLabel);
 
   // compile task graph (once)
   subscheduler->initialize(3, 1);
@@ -373,10 +373,10 @@ void SPME::calculate(const ProcessorGroup* pg,
   // Push Reduction Variables up to the parent DW
   sum_vartype spmeFourierEnergyNew;
   matrix_sum spmeFourierStressNew;
-  subNewDW->get(spmeFourierEnergyNew, d_lb->electrostaticReciprocalEnergyLabel);
-  subNewDW->get(spmeFourierStressNew, d_lb->electrostaticReciprocalStressLabel);
-  parentNewDW->put(spmeFourierEnergyNew, d_lb->electrostaticReciprocalEnergyLabel);
-  parentNewDW->put(spmeFourierStressNew, d_lb->electrostaticReciprocalStressLabel);
+  subNewDW->get(spmeFourierEnergyNew, d_label->electrostaticReciprocalEnergyLabel);
+  subNewDW->get(spmeFourierStressNew, d_label->electrostaticReciprocalStressLabel);
+  parentNewDW->put(spmeFourierEnergyNew, d_label->electrostaticReciprocalEnergyLabel);
+  parentNewDW->put(spmeFourierStressNew, d_label->electrostaticReciprocalStressLabel);
 
   //  Turn scrubbing back on
   parentOldDW->setScrubbing(parentOldDW_scrubmode);
@@ -406,14 +406,14 @@ void SPME::scheduleCalculatePreTransform(SchedulerP& sched,
 
   int CUTOFF_RADIUS = d_system->getElectrostaticGhostCells();
 
-  task->requires(Task::ParentNewDW, d_lb->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
-  task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
-  task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
+  task->requires(Task::ParentNewDW, d_label->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
+  task->requires(Task::OldDW, d_label->pChargeLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
+  task->requires(Task::OldDW, d_label->pParticleIDLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
 
-  task->computes(d_lb->subSchedulerDependencyLabel);
-  task->computes(d_lb->pXLabel);
-  task->computes(d_lb->pChargeLabel);
-  task->computes(d_lb->pParticleIDLabel);
+  task->computes(d_label->subSchedulerDependencyLabel);
+  task->computes(d_label->pXLabel);
+  task->computes(d_label->pChargeLabel);
+  task->computes(d_label->pParticleIDLabel);
 
   sched->addTask(task, patches, materials);
 }
@@ -429,8 +429,8 @@ void SPME::scheduleReduceNodeLocalQ(SchedulerP& sched,
 
   Task* task = scinew Task("SPME::reduceNodeLocalQ", this, &SPME::reduceNodeLocalQ);
 
-  task->requires(Task::NewDW, d_lb->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
-  task->modifies(d_lb->subSchedulerDependencyLabel);
+  task->requires(Task::NewDW, d_label->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
+  task->modifies(d_label->subSchedulerDependencyLabel);
 
   sched->addTask(task, patches, materials);
 }
@@ -449,9 +449,9 @@ void SPME::scheduleTransformRealToFourier(SchedulerP& sched,
   task->setType(Task::OncePerProc);
   task->usesMPI(true);
 
-  task->requires(Task::NewDW, d_lb->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
+  task->requires(Task::NewDW, d_label->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
 
-  task->modifies(d_lb->subSchedulerDependencyLabel);
+  task->modifies(d_label->subSchedulerDependencyLabel);
 
   LoadBalancer* loadBal = sched->getLoadBalancer();
   const PatchSet* perproc_patches = loadBal->getPerProcessorPatchSet(level);
@@ -470,11 +470,11 @@ void SPME::scheduleCalculateInFourierSpace(SchedulerP& sched,
 
   Task* task = scinew Task("SPME::calculateInFourierSpace", this, &SPME::calculateInFourierSpace);
 
-  task->requires(Task::NewDW, d_lb->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
+  task->requires(Task::NewDW, d_label->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
 
-  task->modifies(d_lb->subSchedulerDependencyLabel);
-  task->computes(d_lb->electrostaticReciprocalEnergyLabel);
-  task->computes(d_lb->electrostaticReciprocalStressLabel);
+  task->modifies(d_label->subSchedulerDependencyLabel);
+  task->computes(d_label->electrostaticReciprocalEnergyLabel);
+  task->computes(d_label->electrostaticReciprocalStressLabel);
 
   sched->addTask(task, patches, materials);
 }
@@ -493,9 +493,9 @@ void SPME::scheduleTransformFourierToReal(SchedulerP& sched,
   task->setType(Task::OncePerProc);
   task->usesMPI(true);
 
-  task->requires(Task::NewDW, d_lb->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
+  task->requires(Task::NewDW, d_label->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
 
-  task->modifies(d_lb->subSchedulerDependencyLabel);
+  task->modifies(d_label->subSchedulerDependencyLabel);
 
   LoadBalancer* loadBal = sched->getLoadBalancer();
   const PatchSet* perproc_patches =  loadBal->getPerProcessorPatchSet(level);
@@ -678,8 +678,8 @@ void SPME::scheduleDistributeNodeLocalQ(SchedulerP& sched,
 
   Task* task = scinew Task("SPME::distributeNodeLocalQ-force", this, &SPME::distributeNodeLocalQ);
 
-  task->requires(Task::NewDW, d_lb->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
-  task->modifies(d_lb->subSchedulerDependencyLabel);
+  task->requires(Task::NewDW, d_label->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
+  task->modifies(d_label->subSchedulerDependencyLabel);
 
   sched->addTask(task, patches, materials);
 }
@@ -709,7 +709,7 @@ void SPME::calculatePreTransform(const ProcessorGroup* pg,
 
       ParticleSubset* pset = old_dw->getParticleSubset(globalAtomType, patch);
       constParticleVariable<Point> px;
-      old_dw->get(px, d_lb->pXLabel, pset);
+      old_dw->get(px, d_label->pXLabel, pset);
 
       // When we have a material iterator in here, we should store/get charge by material.
       // Charge represents the static charge on a particle, which is set by particle type.
@@ -719,9 +719,9 @@ void SPME::calculatePreTransform(const ProcessorGroup* pg,
       constParticleVariable<double> pcharge;
       constParticleVariable<long64> pids;
       CCVariable<int> dependency;
-      old_dw->get(pcharge, d_lb->pChargeLabel, pset);
-      old_dw->get(pids, d_lb->pParticleIDLabel, pset);
-      new_dw->allocateAndPut(dependency, d_lb->subSchedulerDependencyLabel, globalAtomType, patch, Ghost::None, 0);
+      old_dw->get(pcharge, d_label->pChargeLabel, pset);
+      old_dw->get(pids, d_label->pParticleIDLabel, pset);
+      new_dw->allocateAndPut(dependency, d_label->subSchedulerDependencyLabel, globalAtomType, patch, Ghost::None, 0);
 
 
       // Verify the charge map can contain the necessary data and get it
@@ -742,9 +742,9 @@ void SPME::calculatePreTransform(const ProcessorGroup* pg,
 
   // these need to be transfered forward each timestep so they can ultimately be passed back to the parent DW
   bool replace = true;
-  new_dw->transferFrom(old_dw, d_lb->pXLabel, patches, materials, replace);
-  new_dw->transferFrom(old_dw, d_lb->pChargeLabel, patches, materials, replace);
-  new_dw->transferFrom(old_dw, d_lb->pParticleIDLabel, patches, materials, replace);
+  new_dw->transferFrom(old_dw, d_label->pXLabel, patches, materials, replace);
+  new_dw->transferFrom(old_dw, d_label->pChargeLabel, patches, materials, replace);
+  new_dw->transferFrom(old_dw, d_label->pParticleIDLabel, patches, materials, replace);
 }
 
 void SPME::reduceNodeLocalQ(const ProcessorGroup* pg,
@@ -906,8 +906,8 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
   }  // end SPME Patch loop
 
   // put updated values for reduction variables into the DW
-  new_dw->put(sum_vartype(0.5 * spmeFourierEnergy), d_lb->electrostaticReciprocalEnergyLabel);
-  new_dw->put(matrix_sum(0.5 * spmeFourierStress), d_lb->electrostaticReciprocalStressLabel);
+  new_dw->put(sum_vartype(0.5 * spmeFourierEnergy), d_label->electrostaticReciprocalEnergyLabel);
+  new_dw->put(matrix_sum(0.5 * spmeFourierStress), d_label->electrostaticReciprocalStressLabel);
 
 }
 
@@ -1299,8 +1299,8 @@ void SPME::calculatePostTransform(const ProcessorGroup* pg,
 
       constParticleVariable<double> pcharge;
       ParticleVariable<Vector> pforcenew;
-      old_dw->get(pcharge, d_lb->pChargeLabel, pset);
-      new_dw->allocateAndPut(pforcenew, d_lb->pElectrostaticsForceLabel_preReloc, pset);
+      old_dw->get(pcharge, d_label->pChargeLabel, pset);
+      new_dw->allocateAndPut(pforcenew, d_label->pElectrostaticsForceLabel_preReloc, pset);
 
       std::vector<SPMEMapPoint>* gridMap = currentSPMEPatch->getChargeMap(globalAtomType);
 
@@ -1308,7 +1308,7 @@ void SPME::calculatePostTransform(const ProcessorGroup* pg,
       SPME::mapForceFromGrid(currentSPMEPatch, gridMap, pset, pcharge, pforcenew);
 
       ParticleVariable<double> pchargenew;
-      new_dw->allocateAndPut(pchargenew, d_lb->pChargeLabel_preReloc, pset);
+      new_dw->allocateAndPut(pchargenew, d_label->pChargeLabel_preReloc, pset);
       // carry these values over for now
       pchargenew.copyData(pcharge);
     }

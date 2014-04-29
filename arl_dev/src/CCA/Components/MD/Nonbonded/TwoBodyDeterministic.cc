@@ -42,10 +42,11 @@ void TwoBodyDeterministic::initialize(const ProcessorGroup* pg,
                                       DataWarehouse* newDW) {
 
   // global sum reduction of nonbonded energy
-  newDW->put(sum_vartype(0.0), d_Label->nonbondedEnergyLabel);
+  newDW->put(sum_vartype(0.0), d_Label->nonbonded->rNonbondedEnergy);
+  newDW->put(matrix_sum(0.0), d_Label->nonbonded->rNonbondedStress);
 
   SoleVariable<double> dependency;
-  newDW->put(dependency, d_Label->nonbondedDependencyLabel);
+  newDW->put(dependency, d_Label->nonbonded->dNonbondedDependency);
 
 }
 
@@ -90,16 +91,19 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup* pg,
 
       // Get atom ID and positions
       constParticleVariable<long64> localParticleID;
-      oldDW->get(localParticleID, d_Label->pParticleIDLabel, localAtoms);
+      oldDW->get(localParticleID, d_Label->global->pID, localAtoms);
+//      oldDW->get(localParticleID, d_Label->pParticleIDLabel, localAtoms);
       constParticleVariable<Point> localPositions;
-      oldDW->get(localPositions, d_Label->pXLabel, localAtoms);
+      oldDW->get(localPositions, d_Label->global->pX, localAtoms);
+//      oldDW->get(localPositions, d_Label->pXLabel, localAtoms);
 
       // Get material map label for source atom type
       std::string localMaterialLabel = simState->getMDMaterial(localMaterialID)->getMapLabel();
 
       // Initialize force variable
       ParticleVariable<Vector> pForce;
-      newDW->allocateAndPut(pForce, d_Label->pNonbondedForceLabel_preReloc, localAtoms);
+      newDW->allocateAndPut(pForce, d_Label->nonbonded->pF_nonbonded_preReloc, localAtoms);
+//      newDW->allocateAndPut(pForce, d_Label->pNonbondedForceLabel_preReloc, localAtoms);
       for (size_t localAtomIndex = 0; localAtomIndex < localAtomCount; ++localAtomIndex) { // Initialize force array
         pForce[localAtomIndex] = 0.0;
       }
@@ -108,14 +112,17 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup* pg,
 
         // Build particle set for on patch + nearby atoms
         int neighborMaterialID = materials->get(neighborMaterialIndex);
-        ParticleSubset* neighborAtoms = oldDW->getParticleSubset(neighborMaterialID, currPatch, Ghost::AroundNodes, nbGhostCells, d_Label->pXLabel);
+        ParticleSubset* neighborAtoms = oldDW->getParticleSubset(neighborMaterialID, currPatch, Ghost::AroundNodes, nbGhostCells, d_Label->global->pX);
+//        ParticleSubset* neighborAtoms = oldDW->getParticleSubset(neighborMaterialID, currPatch, Ghost::AroundNodes, nbGhostCells, d_Label->pXLabel);
         size_t neighborAtomCount = neighborAtoms->numParticles();
 
         // Get atom ID and positions
         constParticleVariable<long64> neighborParticleID;
-        oldDW->get(neighborParticleID, d_Label->pParticleIDLabel, neighborAtoms);
+        oldDW->get(neighborParticleID, d_Label->global->pID, neighborAtoms);
+//        oldDW->get(neighborParticleID, d_Label->pParticleIDLabel, neighborAtoms);
         constParticleVariable<Point> neighborPositions;
-        oldDW->get(neighborPositions, d_Label->pXLabel, neighborAtoms);
+        oldDW->get(neighborPositions, d_Label->global->pX, neighborAtoms);
+//        oldDW->get(neighborPositions, d_Label->pXLabel, neighborAtoms);
 
         // Get material map label for source atom type
         std::string neighborMaterialLabel = simState->getMDMaterial(neighborMaterialID)->getMapLabel();
@@ -143,8 +150,10 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup* pg,
       }  // Loop over neighbor materials
     }  // Loop over local materials
   }  // Loop over patches
-  newDW->put(sum_vartype(0.5 * nbEnergy_patchLocal), d_Label->nonbondedEnergyLabel);
-  newDW->put(matrix_sum(0.5 * stressTensor_patchLocal), d_Label->nonbondedStressLabel);
+  newDW->put(sum_vartype(0.5 * nbEnergy_patchLocal), d_Label->nonbonded->rNonbondedEnergy);
+  newDW->put(matrix_sum(0.5 * stressTensor_patchLocal), d_Label->nonbonded->rNonbondedStress);
+//  newDW->put(sum_vartype(0.5 * nbEnergy_patchLocal), d_Label->nonbondedEnergyLabel);
+//  newDW->put(matrix_sum(0.5 * stressTensor_patchLocal), d_Label->nonbondedStressLabel);
 } // TwoBodyDeterministic::calculate
 
 

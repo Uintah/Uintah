@@ -12,12 +12,17 @@
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 
+#include <CCA/Components/MD/MDLabel.h>
+
 #include <CCA/Components/MD/Forcefields/TwoBodyForceField.h>
 #include <CCA/Components/MD/Forcefields/forcefieldTypes.h>
 #include <CCA/Components/MD/Forcefields/nonbondedPotentialMapKey.h>
 
 #include <CCA/Components/MD/Potentials/TwoBody/NonbondedTwoBodyPotential.h>
 #include <CCA/Components/MD/Forcefields/Lucretius/nonbondedLucretius.h>
+#include <CCA/Components/MD/Forcefields/Lucretius/LucretiusMaterial.h>
+
+#include <vector>
 /*
  * ....................................................................................................................*
  */
@@ -49,16 +54,27 @@ namespace Uintah {
        return d_forcefieldNameString;
       }
 
+     virtual size_t registerParticleStates(std::vector<const VarLabel*>&,
+                                           std::vector<const VarLabel*>&,
+                                           MDLabel&) const;
+
     private:
       // Private functions related to parsing of the input forcefield file
-      NonbondedTwoBodyPotential* parseHomoatomicNonbonded(std::string&, const forcefieldType, double);
-      NonbondedTwoBodyPotential* parseHeteroatomicNonbonded(std::string&, const forcefieldType);
-      void parseNonbondedPotentials(std::ifstream&, const std::string&, std::string&, SimulationStateP&);
+      NonbondedTwoBodyPotential* parseHomoatomicNonbonded(std::string&,
+                                                          const forcefieldType,
+                                                          double);
+      NonbondedTwoBodyPotential* parseHeteroatomicNonbonded(std::string&,
+                                                            const forcefieldType);
+      void parseNonbondedPotentials(std::ifstream&,
+                                    const std::string&,
+                                    std::string&,
+                                    SimulationStateP&);
 
       // Data members
       static const std::string d_forcefieldNameString;
       bool hasPolarizability;
       double tholeParameter;
+      std::vector<LucretiusMaterial*> materialArray;
       nonbondedTwoBodyMapType potentialMap;
       std::vector<BondPotential*> bonds;
       std::vector<BendPotential*> bends;

@@ -5,11 +5,14 @@
  *      Author: jbhooper
  */
 
+#include <CCA/Components/MD/MDLabel.h>
 #include <CCA/Components/MD/MDMaterial.h>
+
 #include <CCA/Components/MD/Forcefields/parseUtils.h>
 #include <CCA/Components/MD/Forcefields/Lucretius/LucretiusForcefield.h>
-#include <CCA/Components/MD/Forcefields/Lucretius/LucretiusMaterial.h>
+//#include <CCA/Components/MD/Forcefields/Lucretius/LucretiusMaterial.h>
 #include <CCA/Components/MD/Forcefields/Lucretius/LucretiusParsing.h>
+
 #include <CCA/Components/MD/Potentials/TwoBody/TwoBodyPotentialFactory.h>
 
 #include <Core/Grid/SimulationStateP.h>
@@ -20,6 +23,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <vector>
 
 using namespace Uintah;
 /*
@@ -167,24 +171,17 @@ void LucretiusForcefield::parseNonbondedPotentials(std::ifstream& fileHandle,
     throw ProblemSetupException(error_msg, __FILE__, __LINE__);
   }
 
-//  std::cerr << "1..";
-// ---> Definition of homoatomic Potentials
   if (lucretiusParse::skipComments(fileHandle,buffer)) { // Locate the section which defines nonbonded homoatomic potentials, charges, and polarizabilities
-//    std::cerr << "<--a: " << buffer;
     double currentMass = -1.0;
     size_t numberNonbondedFound = 0;
     size_t currentChargeSubindex = 0;
     NonbondedTwoBodyPotential* nonbondedHomoatomic;
     while (buffer[0] != '*') { // Parse until we hit a new comment section
-//      std::cerr << " O: ";
-//      getline(fileHandle,buffer);
       if (buffer[0] != ' ') { // Found a nonbonded type
         nonbondedHomoatomic = parseHomoatomicNonbonded(buffer, currentForcefieldType, currentMass);
-//        std::cerr << " 1: ";
         if (nonbondedHomoatomic) { // Created homoatomic potential
           ++numberNonbondedFound;
           currentChargeSubindex = 1;
-//          std::cerr << " 1a: ";
         }
         else { // Could not create homoatomic potential
           std::ostringstream errorOut;
@@ -193,35 +190,26 @@ void LucretiusForcefield::parseNonbondedPotentials(std::ifstream& fileHandle,
                    << buffer << std::endl;
           throw ProblemSetupException(errorOut.str(),__FILE__,__LINE__);
         }
-//        std::cerr << " :a-->" << std::endl;
       }
       else { // Line starts with a space so represents a charge / polarization / comment
-//        std::cerr << "<--b: " << buffer;
         std::vector<std::string> chargeLineTokens;
-//        std::cerr << " 1. ";
         Parse::tokenizeAtMost(buffer, chargeLineTokens, 2); // return 2 tokens and the rest of the line with leading spaces stripped
-//        std::cerr << " 2. ";
         double charge = Parse::stringToInt(chargeLineTokens[0]);
         double polarizability = Parse::stringToInt(chargeLineTokens[1]);
-//        std::cerr << " 3. ";
         std::string chargeLineComment = "";
         if (chargeLineTokens.size() == 3) {
           chargeLineComment = chargeLineTokens[2];
-        }
-//        std::cerr << " 4: " << chargeLineTokens.size();
-        MDMaterial* currentMaterial = scinew LucretiusMaterial(nonbondedHomoatomic,
-                                                               currentMass,
-                                                               charge,
-                                                               polarizability,
-                                                               currentChargeSubindex);
+       }
+       LucretiusMaterial* currentMaterial = scinew LucretiusMaterial(nonbondedHomoatomic,
+                                                                     currentMass,
+                                                                     charge,
+                                                                     polarizability,
+                                                                     currentChargeSubindex);
+       materialArray.push_back(currentMaterial);
         ++currentChargeSubindex;
-//        std::cerr << " 5: ";
-        sharedState->registerMDMaterial(currentMaterial);
-//        std::cerr << " 6: ";
+//        sharedState->registerMDMaterial(currentMaterial);
         nonbondedTwoBodyKey potentialKey(nonbondedHomoatomic->getLabel(),nonbondedHomoatomic->getLabel());
-//        std::cerr << " 7: ";
         potentialMap.insert(twoBodyPotentialMapPair(potentialKey,nonbondedHomoatomic));
-//        std::cerr << " :b-->" << std::endl;
       }
       getline(fileHandle,buffer);
     }
@@ -336,12 +324,35 @@ LucretiusForcefield::LucretiusForcefield(const ProblemSpecP& spec,
 //-> BEGIN PARSING FORCEFIELD
     std::string buffer;
     std::string error_msg;
+    SCIRun::IntVector IV_ZERO(0, 0, 0);
 
-//    std::cerr << "Got Here" << std::endl;
+    // ---> Set necessary particle VarLabels for registration of a forcefield of this type
+    // --->  Variables for current iteration data storage (time n)
+//    pX          = VarLabel::create("p.x", ParticleVariable<Point>::getTypeDescription(),
+//                                   IV_ZERO, VarLabel::PositionVariable);
+//    pVelocity   = VarLabel::create("p.v", ParticleVariable<SCIRun::Vector>::getTypeDescription());
+//    pParticleID = VarLabel::create("p.ID", ParticleVariable<long64>::getTypeDescription());
+//    pDipole     = VarLabel::create("p.dipole", ParticleVariable<SCIRun::Vector>::getTypeDescription());
+//
+//    pLabelArray.push_back(pX);
+//    pLabelArray.push_back(pVelocity);
+//    pLabelArray.push_back(pParticleID);
+//    pLabelArray.push_back(pDipole);
+//
+//    // ---> Set variables for next iteration data storage (time n+1)
+//    pX_preReloc          = VarLabel::create("p.x+", ParticleVariable<Point>::getTypeDescription(),
+//                                            IV_ZERO, VarLabel::PositionVariable);
+//    pVelocity_preReloc   = VarLabel::create("p.v+", ParticleVariable<SCIRun::Vector>::getTypeDescription());
+//    pParticleID_preReloc = VarLabel::create("p.ID+", ParticleVariable<long64>::getTypeDescription());
+//    pDipole_preReloc     = VarLabel::create("p.dipole+", ParticleVariable<SCIRun::Vector>::getTypeDescription());
+//
+//    pLabelArray_preReloc.push_back(pX_preReloc);
+//    pLabelArray_preReloc.push_back(pVelocity_preReloc);
+//    pLabelArray_preReloc.push_back(pParticleID_preReloc);
+//    pLabelArray_preReloc.push_back(pDipole_preReloc);
+
     // Parse the nonbonded potentials
     parseNonbondedPotentials(ffFile, ffFilename, buffer, sharedState);
-
-//    std::cerr << "Got Here Too" << std::endl;
 
 // ---> Number of bond potentials
     size_t numberBondTypes = 0;
@@ -442,6 +453,7 @@ LucretiusForcefield::LucretiusForcefield(const ProblemSpecP& spec,
       }
     }
 // ---> End of lone pair parsing
+
   }
   else {  // Couldn't find the forcefield block in the PS
     throw ProblemSetupException("Could not find the Forcefield block in the input file.", __FILE__, __LINE__);
@@ -450,7 +462,11 @@ LucretiusForcefield::LucretiusForcefield(const ProblemSpecP& spec,
 }
 
 NonbondedTwoBodyPotential* LucretiusForcefield::getNonbondedPotential(const std::string& label1, const std::string& label2) const {
-  nonbondedTwoBodyMapType::iterator potentialLocation;
+  nonbondedTwoBodyMapType::const_iterator potentialLocation;
+
+  nonbondedTwoBodyKey mapKey(label1,label2);
+  potentialLocation = potentialMap.find(mapKey);
+
   if (potentialLocation != potentialMap.end()) {
     return potentialLocation->second;
   }
@@ -460,3 +476,14 @@ NonbondedTwoBodyPotential* LucretiusForcefield::getNonbondedPotential(const std:
            << "  Label2:  " << label2 << std::endl;
   throw InvalidState(ErrorOut.str(), __FILE__, __LINE__);
 }
+
+size_t LucretiusForcefield::registerParticleStates(std::vector<const VarLabel*>& particleState,
+                                                   std::vector<const VarLabel*>& particleState_preReloc,
+                                                   MDLabel& label) const {
+
+  particleState.push_back(label.nonbonded->pF_nonbonded);
+  particleState_preReloc.push_back(label.nonbonded->pF_nonbonded_preReloc);
+  return(particleState.size());
+
+}
+

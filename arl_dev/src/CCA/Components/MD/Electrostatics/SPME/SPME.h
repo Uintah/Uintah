@@ -165,7 +165,7 @@ namespace Uintah {
        */
       inline void setMDLabel(MDLabel* lb)
       {
-        d_lb = lb;
+        d_label = lb;
       }
 
       inline double getRealspaceCutoff() {
@@ -583,7 +583,7 @@ namespace Uintah {
       // Values fixed on instantiation
       ElectrostaticsType d_electrostaticMethod;         //!< Implementation type for long range electrostatics
       MDSystem* d_system;                               //!< A handle to the MD simulation system object
-      MDLabel* d_lb;                                    //!< A handle on the set of MD specific labels
+      MDLabel* d_label;                                    //!< A handle on the set of MD specific labels
       double d_ewaldBeta;						                    //!< The Ewald calculation damping coefficient
       double d_electrostaticRadius;                     //!< Radius for realspace electrostatic interactions
 

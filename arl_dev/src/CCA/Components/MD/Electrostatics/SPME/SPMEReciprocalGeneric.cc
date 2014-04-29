@@ -323,8 +323,10 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
   }  // end SPME Patch loop
 
   // put updated values for reduction variables into the DW
-  new_dw->put(sum_vartype(0.5 * spmeFourierEnergy), d_lb->electrostaticReciprocalEnergyLabel);
-  new_dw->put(matrix_sum(0.5 * spmeFourierStress), d_lb->electrostaticReciprocalStressLabel);
+  new_dw->put(sum_vartype(0.5 * spmeFourierEnergy), d_label->electrostatic->rElectrostaticInverseEnergy);
+  new_dw->put(matrix_sum(0.5 * spmeFourierStress), d_label->electrostatic->rElectrostaticInverseStress);
+//  new_dw->put(sum_vartype(0.5 * spmeFourierEnergy), d_label->electrostaticReciprocalEnergyLabel);
+//  new_dw->put(matrix_sum(0.5 * spmeFourierStress), d_label->electrostaticReciprocalStressLabel);
 
 }
 
