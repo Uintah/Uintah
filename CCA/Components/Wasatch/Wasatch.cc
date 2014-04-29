@@ -464,31 +464,6 @@ namespace Wasatch{
       }
     }
     
-    // Here we add the functors name of the "*" stage variables BC to the functormap
-    if( wasatchSpec_->findBlock("MomentumEquations") &&
-        wasatchSpec_->findBlock("Density") &&
-        wasatchSpec_->findBlock("TransportEquation") )
-    {
-      for( Uintah::ProblemSpecP transEqnParams=wasatchSpec_->findBlock("TransportEquation");
-          transEqnParams != 0;
-          transEqnParams=transEqnParams->findNextBlock("TransportEquation") )
-      {
-        std::string solnVarName;
-        transEqnParams->get("SolutionVariable",solnVarName);
-        BCFunctorMap::mapped_type functorSet;
-        BCFunctorMap::key_type functorName = solnVarName+TagNames::self().star+"_bc";
-        BCFunctorMap::key_type phiName     = solnVarName+TagNames::self().star;
-        functorSet.insert(functorName);
-        bcFunctorMap_.insert( BCFunctorMap::value_type(phiName,functorSet) );
-      }
-
-      BCFunctorMap::mapped_type functorSet;
-      BCFunctorMap::key_type functorName = densityTag.name()+TagNames::self().star+"_bc";
-      BCFunctorMap::key_type phiName     = densityTag.name()+TagNames::self().star;
-      functorSet.insert(functorName);
-      bcFunctorMap_.insert( BCFunctorMap::value_type(phiName,functorSet) );
-    }
-
     // PARSE IO FIELDS
     Uintah::ProblemSpecP archiverParams = params->findBlock("DataArchiver");
     for( Uintah::ProblemSpecP saveLabelParams=archiverParams->findBlock("save");

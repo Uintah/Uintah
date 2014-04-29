@@ -418,7 +418,7 @@ namespace Wasatch {
     const Uintah::PatchSet*    const localPatches_;
     const Uintah::MaterialSet* const materials_   ;
     const PatchInfoMap&        patchInfoMap_      ;
-    const BCFunctorMap&        bcFunctorMap_      ;
+    BCFunctorMap&        bcFunctorMap_      ;
     GraphCategories&           grafCat_           ;
     
     // This map stores the iterators associated with each boundary condition name.
@@ -432,6 +432,10 @@ namespace Wasatch {
     
     EdgeCellsMapT            bndNameEdgeCellsMap_;
 
+    // appliedBCOnField is maps a field name and whether boundary conditions have been applied
+    // on it or not. This will be useful to avoid extra work done by the apply_boundary_condition
+    std::map< Category,std::vector<Expr::Tag> > appliedBCOnField_;
+    
     template<typename FieldT>
     const std::vector<IntVecT>* get_extra_bnd_mask( const BndSpec& myBndSpec,
                                                     const int& patchID ) const;
@@ -474,7 +478,7 @@ namespace Wasatch {
              const Uintah::MaterialSet* const materials,
              const PatchInfoMap& patchInfoMap,
              GraphCategories& grafCat,
-             const BCFunctorMap& bcFunctorMap );
+             BCFunctorMap& bcFunctorMap );
         
     ~BCHelper();
     
@@ -602,7 +606,23 @@ namespace Wasatch {
      *  BCHelper
      */
     BndMapT& get_boundary_information();
+
+    /**
+     *  \brief Returns true of the BCHelper on this patch has any physical boundaries
+     */
+    bool has_boundaries();
     
+    /**
+     *  \brief Allows one to inject dummy dependencies to help with boundary condition expressions.
+     *  \param targetTag    The Expression tag on which we want to attach a new dependency
+     *  \param dependencies A TagList of new dependencies to attach to targetTag
+     *  \param taskCat      The task in which the dependencies are to be added
+     *
+     */
+    template<typename FieldT>
+    void create_dummy_dependency(const Expr::Tag& targetTag,
+                                 const Expr::TagList dependencies,
+                                 const Category taskCat);
     /**
      *  \brief Print boundary conditions summary.
      *
