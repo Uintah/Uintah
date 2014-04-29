@@ -176,13 +176,16 @@ void SPME::initialize(const ProcessorGroup* pg,
   d_backwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, complexData, complexData, pg->getComm(), FFTW_BACKWARD, FFTW_MEASURE);
 
   // Initially register sole and reduction variables in the DW (initial timestep)
-  new_dw->put(sum_vartype(0.0), d_lb->electrostaticReciprocalEnergyLabel);
-  new_dw->put(matrix_sum(0.0), d_lb->electrostaticReciprocalStressLabel);
+  new_dw->put(sum_vartype(0.0), d_label->electrostatic->rElectrostaticInverseEnergy);
+  new_dw->put(matrix_sum(0.0), d_label->electrostatic->rElectrostaticInverseStress);
+//  new_dw->put(sum_vartype(0.0), d_label->electrostaticReciprocalEnergyLabel);
+//  new_dw->put(matrix_sum(0.0), d_label->electrostaticReciprocalStressLabel);
   //!FIXME JBH
-  // new_dw->put(vector_sum(0.0), d_lb->spmeDipoleVectorLabel);
+  // new_dw->put(vector_sum(0.0), d_label->spmeDipoleVectorLabel);
 
   SoleVariable<double> dependency;
-  new_dw->put(dependency, d_lb->electrostaticsDependencyLabel);
+  new_dw->put(dependency, d_label->electrostatic->dElectrostaticDependency);
+//  new_dw->put(dependency, d_lb->electrostaticsDependencyLabel);
 
   // ------------------------------------------------------------------------
   // Allocate and map the SPME patches
@@ -279,8 +282,10 @@ void SPME::setup(const ProcessorGroup* pg,
     }
   }
   SoleVariable<double> dependency;
-  old_dw->get(dependency, d_lb->electrostaticsDependencyLabel);
-  new_dw->put(dependency, d_lb->electrostaticsDependencyLabel);
+  old_dw->get(dependency, d_label->electrostatic->dElectrostaticDependency);
+  new_dw->put(dependency, d_label->electrostatic->dElectrostaticDependency);
+//  old_dw->get(dependency, d_label->electrostaticsDependencyLabel);
+//  new_dw->put(dependency, d_label->electrostaticsDependencyLabel);
 }
 
 void SPME::calculate(const ProcessorGroup* pg,
@@ -311,9 +316,11 @@ void SPME::calculate(const ProcessorGroup* pg,
   DataWarehouse* subNewDW = subscheduler->get_dw(3);
 
   // transfer data from parentOldDW to subDW
-  subNewDW->transferFrom(parentOldDW, d_lb->pXLabel, perProcPatches, allMaterialsUnion);
+  subNewDW->transferFrom(parentOldDW, d_label->global->pX, perProcPatches, allMaterialsUnion);
+//  subNewDW->transferFrom(parentOldDW, d_label->pXLabel, perProcPatches, allMaterialsUnion);
 //  subNewDW->transferFrom(parentOldDW, d_lb->pChargeLabel, perProcPatches, allMaterialsUnion);
-  subNewDW->transferFrom(parentOldDW, d_lb->pParticleIDLabel, perProcPatches, allMaterialsUnion);
+  subNewDW->transferFrom(parentOldDW, d_label->global->pID, perProcPatches, allMaterialsUnion);
+//  subNewDW->transferFrom(parentOldDW, d_label->pParticleIDLabel, perProcPatches, allMaterialsUnion);
 
   // reduction variables
   //  sum_vartype spmeFourierEnergy;
@@ -321,19 +328,19 @@ void SPME::calculate(const ProcessorGroup* pg,
   //  parentOldDW->get(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
   //  parentOldDW->get(spmeFourierStress, d_lb->spmeFourierStressLabel);
   //  subNewDW->put(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
-  //  subNewDW->put(spmeFourierStress, d_lb->spmeFourierStressLabel);
-    parentNewDW->put(sum_vartype(0.0), d_lb->electrostaticReciprocalEnergyLabel);
-    parentNewDW->put(matrix_sum(0.0), d_lb->electrostaticReciprocalStressLabel);
+  //  subNewDW->put(spmeFourierStress, d_label->spmeFourierStressLabel);
+  parentNewDW->put(sum_vartype(0.0), d_label->electrostatic->rElectrostaticInverseEnergy);
+  parentNewDW->put(matrix_sum(0.0), d_label->electrostatic->rElectrostaticInverseStress);
+//    parentNewDW->put(sum_vartype(0.0), d_label->electrostaticReciprocalEnergyLabel);
+//    parentNewDW->put(matrix_sum(0.0), d_label->electrostaticReciprocalStressLabel);
 
 
   bool converged = false;
   int numIterations = 0;
-  bool recompileSubscheduler = true;
+//  bool recompileSubscheduler = true;
 
   //!FIXME Shouldn't the subscheduler taskgraph compilation go here?
   subscheduler->initialize(3,1);
-
-  //
 
   // Realspace portion of SPME
   scheduleCalculateRealspace(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW);
@@ -428,10 +435,14 @@ void SPME::calculate(const ProcessorGroup* pg,
   // Push Reduction Variables up to the parent DW
   sum_vartype spmeFourierEnergyNew;
   matrix_sum spmeFourierStressNew;
-  subNewDW->get(spmeFourierEnergyNew, d_lb->electrostaticReciprocalEnergyLabel);
-  subNewDW->get(spmeFourierStressNew, d_lb->electrostaticReciprocalStressLabel);
-  parentNewDW->put(spmeFourierEnergyNew, d_lb->electrostaticReciprocalEnergyLabel);
-  parentNewDW->put(spmeFourierStressNew, d_lb->electrostaticReciprocalStressLabel);
+  subNewDW->get(spmeFourierEnergyNew, d_label->electrostatic->rElectrostaticInverseEnergy);
+  subNewDW->get(spmeFourierStressNew, d_label->electrostatic->rElectrostaticInverseStress);
+//  subNewDW->get(spmeFourierEnergyNew, d_label->electrostaticReciprocalEnergyLabel);
+//  subNewDW->get(spmeFourierStressNew, d_label->electrostaticReciprocalStressLabel);
+  parentNewDW->put(spmeFourierEnergyNew, d_label->electrostatic->rElectrostaticInverseEnergy);
+  parentNewDW->put(spmeFourierStressNew, d_label->electrostatic->rElectrostaticInverseStress);
+//  parentNewDW->put(spmeFourierEnergyNew, d_label->electrostaticReciprocalEnergyLabel);
+//  parentNewDW->put(spmeFourierStressNew, d_label->electrostaticReciprocalStressLabel);
 
   //  Turn scrubbing back on
   parentOldDW->setScrubbing(parentOldDW_scrubmode);
@@ -459,10 +470,14 @@ void SPME::scheduleUpdateFieldandStress(SchedulerP& sched,
 
   Task* task = scinew Task("SPME::updateFieldAndStress", this, &SPME::dipoleUpdateFieldAndStress);
 
-  // Requires converged dipoles from both reciprocal and realspace calculation
-  task->requires(Task::OldDW, d_lb->pTotalDipoles);
+  // Requires the dipoles from the last iteration
+  task->requires(Task::OldDW, d_label->electrostatic->pMu);
+  task->requires(Task::OldDW, d_label->electrostatic->pE_electroInverse_preReloc);
 
-  task->computes(d_lb->pTotalDipoles_preReloc);
+  // Calculates the new inverse space field prediction and updates the inverse space stress tensor
+  task->computes(d_label->electrostatic->pE_electroInverse_preReloc);
+  task->modifies(d_label->electrostatic->rElectrostaticInverseStress);
+
 }
 
 void SPME::scheduleCalculateNewDipoles(SchedulerP& sched,
@@ -476,17 +491,15 @@ void SPME::scheduleCalculateNewDipoles(SchedulerP& sched,
 
 	Task* task = scinew Task("SPME::calculateNewDipoles", this, &SPME::calculateNewDipoles);
 
-	// Requires dipoles from both the realspace and the reciprocal calculation
-//	task->requires(Task::OldDW, d_lb->pRealDipoles, Ghost::None, 0);  // Should pull from the sub old DW
-//	task->requires(Task::OldDW, d_lb->pReciprocalDipoles, Ghost::None, 0);
-      task->requires(Task::NewDW, d_lb->pElectrostaticsRealField, Ghost::None, 0);
-      task->requires(Task::NewDW, d_lb->pElectrostaticsReciprocalField, Ghost::None, 0);
+	// Requires the updated field from both the realspace and reciprocal calculation
+	// Also may want the dipoles from the previous iteration
+	task->requires(Task::OldDW, d_label->electrostatic->pMu, Ghost::None, 0);
+	task->requires(Task::NewDW, d_label->electrostatic->pE_electroReal_preReloc, Ghost::None, 0);
+	task->requires(Task::NewDW, d_label->electrostatic->pE_electroInverse_preReloc, Ghost::None, 0);
 
 	// Overwrites each dipole array at iteration n with the full estimate of dipole array at iteration n+1
-//	task->computes(d_lb->pRealDipoles);
-//	task->computes(d_lb->pReciprocalDipoles);
+	task->computes(d_label->electrostatic->pMu_preReloc);
 
-      task->computes(d_lb->pTotalDipoles);
 	sched->addTask(task, patches, materials);
 
 
@@ -504,10 +517,17 @@ void SPME::scheduleCalculateRealspace(SchedulerP& sched,
 	Task* task = scinew Task("SPME::calculateRealspace", this, &SPME::calculateRealspace);
 
 	int CUTOFF_RADIUS = d_system->getElectrostaticGhostCells();
-	task->requires(Task::ParentNewDW, d_lb->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
-	task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
-	//FIXME Not complete!
-	task->requires(Task::ParentNewDW, d_lb->pTotalDipoles, Ghost::AroundNodes, CUTOFF_RADIUS);
+	// Requires the location and ID of all atom positions, which don't change for the polarizability iteration
+	task->requires(Task::ParentOldDW, d_label->global->pX, Ghost::AroundNodes, CUTOFF_RADIUS);
+	task->requires(Task::ParentOldDW, d_label->global->pID, Ghost::AroundNodes, CUTOFF_RADIUS);
+	// Also requires the last iteration's dipole guess, which does change for the polarizability iteration
+    task->requires(Task::OldDW, d_label->electrostatic->pMu, Ghost::AroundNodes, CUTOFF_RADIUS);
+
+    // Computes the realspace contribution to the electrostatic field, force, and stress tensor
+    task->computes(d_label->electrostatic->pE_electroReal_preReloc);
+    task->computes(d_label->electrostatic->rElectrostaticRealEnergy);
+    task->computes(d_label->electrostatic->rElectrostaticRealStress);
+
 }
 
 void SPME::scheduleCalculatePreTransform(SchedulerP& sched,
@@ -523,14 +543,21 @@ void SPME::scheduleCalculatePreTransform(SchedulerP& sched,
 
   int CUTOFF_RADIUS = d_system->getElectrostaticGhostCells();
 
-  task->requires(Task::ParentNewDW, d_lb->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
-//  task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
-  task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
+  // Setup requires the position and ID arrays from the parent process
+  task->requires(Task::ParentOldDW, d_label->global->pX, Ghost::AroundNodes, CUTOFF_RADIUS);
+  task->requires(Task::ParentOldDW, d_label->global->pID, Ghost::AroundNodes, CUTOFF_RADIUS);
 
-  task->computes(d_lb->subSchedulerDependencyLabel);
-  task->computes(d_lb->pXLabel);
-//  task->computes(d_lb->pChargeLabel);
-  task->computes(d_lb->pParticleIDLabel);
+//  task->requires(Task::ParentNewDW, d_label->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
+//  task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
+//  task->requires(Task::OldDW, d_label->pParticleIDLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
+
+  // Computes (copies from parent to local) position and ID, sets dependency flag
+  task->computes(d_label->electrostatic->dSubschedulerDependency);
+  task->computes(d_label->global->pX);
+  task->computes(d_label->global->pID);
+
+  // May also want to initialize things like field, force, etc.. here since it's outside the polarization loop
+  // !FIXME
 
   sched->addTask(task, patches, materials);
 }
@@ -546,8 +573,11 @@ void SPME::scheduleReduceNodeLocalQ(SchedulerP& sched,
 
   Task* task = scinew Task("SPME::reduceNodeLocalQ", this, &SPME::reduceNodeLocalQ);
 
-  task->requires(Task::NewDW, d_lb->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
-  task->modifies(d_lb->subSchedulerDependencyLabel);
+  // FIXME!  Is this redundant with the following "modifies"?
+  task->requires(Task::NewDW, d_label->electrostatic->dSubschedulerDependency, Ghost::None, 0);
+//  task->requires(Task::NewDW, d_label->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
+  task->modifies(d_label->electrostatic->dSubschedulerDependency);
+//  task->modifies(d_label->subSchedulerDependencyLabel);
 
   sched->addTask(task, patches, materials);
 }
@@ -566,9 +596,12 @@ void SPME::scheduleTransformRealToFourier(SchedulerP& sched,
   task->setType(Task::OncePerProc);
   task->usesMPI(true);
 
-  task->requires(Task::NewDW, d_lb->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
+  task->requires(Task::NewDW, d_label->electrostatic->dSubschedulerDependency, Ghost::None, 0);
 
-  task->modifies(d_lb->subSchedulerDependencyLabel);
+//  task->requires(Task::NewDW, d_label->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
+
+  task->modifies(d_label->electrostatic->dSubschedulerDependency);
+//  task->modifies(d_label->subSchedulerDependencyLabel);
 
   LoadBalancer* loadBal = sched->getLoadBalancer();
   const PatchSet* perproc_patches = loadBal->getPerProcessorPatchSet(level);
@@ -587,11 +620,15 @@ void SPME::scheduleCalculateInFourierSpace(SchedulerP& sched,
 
   Task* task = scinew Task("SPME::calculateInFourierSpace", this, &SPME::calculateInFourierSpace);
 
-  task->requires(Task::NewDW, d_lb->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
+  task->requires(Task::NewDW, d_label->electrostatic->dSubschedulerDependency, Ghost:: Ghost::None, 0);
 
-  task->modifies(d_lb->subSchedulerDependencyLabel);
-  task->computes(d_lb->electrostaticReciprocalEnergyLabel);
-  task->computes(d_lb->electrostaticReciprocalStressLabel);
+//  task->requires(Task::NewDW, d_label->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
+  task->modifies(d_label->electrostatic->dSubschedulerDependency);
+  task->computes(d_label->electrostatic->rElectrostaticInverseEnergy);
+  task->computes(d_label->electrostatic->rElectrostaticInverseStress);
+//  task->modifies(d_label->subSchedulerDependencyLabel);
+//  task->computes(d_label->electrostaticReciprocalEnergyLabel);
+//  task->computes(d_label->electrostaticReciprocalStressLabel);
 
   sched->addTask(task, patches, materials);
 }
@@ -610,9 +647,10 @@ void SPME::scheduleTransformFourierToReal(SchedulerP& sched,
   task->setType(Task::OncePerProc);
   task->usesMPI(true);
 
-  task->requires(Task::NewDW, d_lb->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
-
-  task->modifies(d_lb->subSchedulerDependencyLabel);
+  task->requires(Task::NewDW, d_label->electrostatic->dSubschedulerDependency, Ghost::None, 0);
+//  task->requires(Task::NewDW, d_label->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
+  task->modifies(d_label->electrostatic->dSubschedulerDependency);
+//  task->modifies(d_label->subSchedulerDependencyLabel);
 
   LoadBalancer* loadBal = sched->getLoadBalancer();
   const PatchSet* perproc_patches =  loadBal->getPerProcessorPatchSet(level);
@@ -631,8 +669,11 @@ void SPME::scheduleDistributeNodeLocalQ(SchedulerP& sched,
 
   Task* task = scinew Task("SPME::distributeNodeLocalQ-force", this, &SPME::distributeNodeLocalQ);
 
-  task->requires(Task::NewDW, d_lb->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
-  task->modifies(d_lb->subSchedulerDependencyLabel);
+  task->requires(Task::NewDW, d_label->electrostatic->dSubschedulerDependency, Ghost::None, 0);
+
+  task->modifies(d_label->electrostatic->dSubschedulerDependency);
+  //  task->requires(Task::NewDW, d_label->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
+//  task->modifies(d_label->subSchedulerDependencyLabel);
 
   sched->addTask(task, patches, materials);
 }

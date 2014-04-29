@@ -270,7 +270,7 @@ void SimulationState::finalizeMaterials()
   all_wasatch_matls->addAll(tmp_wasatch_matls);
   
   if (all_md_matls && all_md_matls->removeReference())
-    delete all_mpm_matls;
+    delete all_md_matls;
   all_md_matls = scinew MaterialSet();
   all_md_matls->addReference();
   vector<int> tmp_md_matls(md_matls.size());

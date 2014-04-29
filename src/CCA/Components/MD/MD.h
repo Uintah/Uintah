@@ -375,7 +375,7 @@ namespace Uintah {
        * @param
        * @return
        */
-      void registerPermanentParticleState(SimpleMaterial* matl);
+      void registerPermanentParticleState();
 
 //      /**
 //       * @brief
@@ -411,7 +411,7 @@ namespace Uintah {
       // Member pointers inherited from Uintah
 
       Output* d_dataArchiver;              //!< Handle to the Uintah data archiver
-      MDLabel* d_lb;                       //!< Variable labels for the per-particle Uintah MD variables
+      MDLabel* d_label;                       //!< Variable labels for the per-particle Uintah MD variables
       SimulationStateP d_sharedState;      //!< Shared simulation state (global)
       ProblemSpecP     d_problemSpec;      //!< Problem spec since we need to parse our coordinates, and it's either storing this pointer or the whole parsed coordinate set
       ProblemSpecP     d_restartSpec;

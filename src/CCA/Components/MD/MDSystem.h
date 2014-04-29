@@ -224,7 +224,10 @@ namespace Uintah {
           d_numAtoms += count;
         };
         return count;
+      }
 
+      inline ensembleType getEnsemble() const {
+        return d_ensemble;
       }
 
     private:

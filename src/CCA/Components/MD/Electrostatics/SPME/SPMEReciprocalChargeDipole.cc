@@ -86,8 +86,10 @@ void SPME::dipoleGenerateChargeMap(const ProcessorGroup* pg,
 			constParticleVariable<Point> atomPositions;
 			constParticleVariable<long64> atomIDs;
 
-			old_dw->get(atomPositions, d_lb->pXLabel, atomSubset);
-			old_dw->get(atomIDs, d_lb->pParticleIDLabel, atomSubset);
+			old_dw->get(atomPositions, d_label->global->pX, atomSubset);
+			old_dw->get(atomIDs, d_label->global->pID, atomSubset);
+//			old_dw->get(atomPositions, d_label->pXLabel, atomSubset);
+//			old_dw->get(atomIDs, d_label->pParticleIDLabel, atomSubset);
 
 			// Verify we have enough memory to hold the charge map for the current atom type
 			currentSPMEPatch->verifyChargeMapAllocation(atomSubset->numParticles(),materialIndex);
@@ -186,7 +188,8 @@ void SPME::dipoleCalculatePreTransform(const ProcessorGroup* pg,
 			ParticleSubset* pset = old_dw->getParticleSubset(atomType, patch);
 			double atomCharge = d_system->getAtomicCharge(atomType);
 			constParticleVariable<Vector> p_Dipole;
-			new_dw->get(p_Dipole, d_lb->pTotalDipoles, pset);
+			new_dw->get(p_Dipole, d_label->electrostatic->pMu, pset);
+//			new_dw->get(p_Dipole, d_label->pTotalDipoles, pset);
 			std::vector<SPMEMapPoint>* gridMap = currentSPMEPatch->getChargeMap(atomType);
 			SPME::dipoleMapChargeToGrid(currentSPMEPatch, gridMap, pset, atomCharge, p_Dipole);
 		} // end Atom Type Loop
@@ -198,7 +201,8 @@ void SPME::dipoleCalculatePreTransform(const ProcessorGroup* pg,
 	}
 
 	bool replace = true;
-	new_dw->transferFrom(old_dw, d_lb->pXLabel, patches, materials, replace);
+	new_dw->transferFrom(old_dw, d_label->global->pX, patches, materials, replace);
+//	new_dw->transferFrom(old_dw, d_label->pXLabel, patches, materials, replace);
 
 }
 
@@ -275,7 +279,8 @@ void SPME::dipoleUpdateFieldAndStress(const ProcessorGroup* pg,
       std::vector<SPMEMapPoint>* gridMap = currentSPMEPatch->getChargeMap(atomType);
       ParticleSubset* pset = old_dw->getParticleSubset(atomType, patch);
       ParticleVariable<Vector> p_ReciprocalField;
-      new_dw->getModifiable(p_ReciprocalField, d_lb->pElectrostaticsReciprocalField, pset);
+      new_dw->getModifiable(p_ReciprocalField, d_label->electrostatic->pE_electroInverse, pset);
+//      new_dw->getModifiable(p_ReciprocalField, d_label->pElectrostaticsReciprocalField, pset);
       for (ParticleSubset::iterator pIter = pset->begin(); pIter != pset->end(); ++pIter) {
         particleIndex atom = *pIter;
         p_ReciprocalField[atom] = SCIRun::Vector(0.0); // Zero out field
@@ -333,7 +338,8 @@ void SPME::calculatePreTransform(const ProcessorGroup* pg,
   }
 
   bool replace = true;
-  new_dw->transferFrom(old_dw, d_lb->pXLabel, patches, materials, replace);
+  new_dw->transferFrom(old_dw, d_label->global->pX, patches, materials, replace);
+//  new_dw->transferFrom(old_dw, d_label->pXLabel, patches, materials, replace);
 }
 
 void SPME::generateChargeMap(std::vector<SPMEMapPoint>* chargeMap,
@@ -468,7 +474,8 @@ void SPME::calculatePostTransform(const ProcessorGroup* pg,
       ParticleSubset* pset = old_dw->getParticleSubset(globalAtomType, patch);
       constParticleVariable<double> pcharge;
       ParticleVariable<Vector> pforcenew;
-      new_dw->allocateAndPut(pforcenew, d_lb->pElectrostaticsReciprocalForce_preReloc, pset);
+      new_dw->allocateAndPut(pforcenew, d_label->electrostatic->pF_electroInverse_preReloc, pset);
+//      new_dw->allocateAndPut(pforcenew, d_label->pElectrostaticsReciprocalForce_preReloc, pset);
       std::vector<SPMEMapPoint>* gridMap = currentSPMEPatch->getChargeMap(globalAtomType);
 
       // Calculate electrostatic contribution to f_ij(r)

@@ -32,11 +32,17 @@
 #ifndef UINTAH_MD_FORCEFIELD_H_
 #define UINTAH_MD_FORCEFIELD_H_
 
+#include <CCA/Components/MD/MDLabel.h>
+
 #include <CCA/Components/MD/Potentials/NonbondedPotential.h>
 #include <CCA/Components/MD/Potentials/Valence/BondPotential.h>
 #include <CCA/Components/MD/Potentials/Valence/BendPotential.h>
 #include <CCA/Components/MD/Potentials/Valence/DihedralPotential.h>
 #include <CCA/Components/MD/Potentials/Valence/ImproperDihedral.h>
+
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/VarLabel.h>
 
 #include <vector>
 
@@ -49,6 +55,9 @@ namespace Uintah {
       virtual ~Forcefield () {}
       virtual forcefieldInteractionClass getInteractionClass() const = 0;
       virtual std::string getForcefieldDescriptor() const = 0;
+      virtual size_t registerParticleStates(std::vector<const VarLabel*>&,
+                                            std::vector<const VarLabel*>&,
+                                            MDLabel&) const = 0;
 
     private:
 
