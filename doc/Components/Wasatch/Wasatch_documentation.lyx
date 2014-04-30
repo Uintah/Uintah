@@ -5069,8 +5069,8 @@ absorption
 \begin_inset Formula 
 \begin{equation}
 \begin{cases}
-u_{i+\tfrac{1}{2}}^{n}\geq0 & \frac{\partial u^{*}}{\partial x}=0\\
-u_{i+\tfrac{1}{2}}^{n}<0 & u^{*}=0
+\rho u_{i+\tfrac{1}{2}}^{n}\geq0 & \frac{\partial\widehat{\rho u}}{\partial x}=0\\
+\rho u_{i+\tfrac{1}{2}}^{n}<0 & \widehat{\rho u}=0
 \end{cases}
 \end{equation}
 
@@ -5082,7 +5082,7 @@ where
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-u^{*}=u^{n}+\Delta tF^{n}
+\widehat{\rho u}=(\rho u)^{n}+\Delta tF^{n}
 \end{equation}
 
 \end_inset
@@ -5094,7 +5094,7 @@ is the uncorrected velocity field that does not satisfy mass conservation.
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial u^{*}}{\partial x}\approx\frac{u_{i+\tfrac{1}{2}}^{*}-u_{i-\tfrac{1}{2}}^{*}}{\Delta x}=0
+\frac{\partial\widehat{\rho u}}{\partial x}\approx\frac{(\widehat{\rho u})_{i+\tfrac{1}{2}}^{n}-(\widehat{\rho u})_{i-\tfrac{1}{2}}^{n}}{\Delta x}=0
 \end{equation}
 
 \end_inset
@@ -5105,7 +5105,7 @@ or
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-u_{i+\tfrac{1}{2}}^{*}=u_{i-\tfrac{1}{2}}^{*}
+(\widehat{\rho u})_{i+\tfrac{1}{2}}^{n}=(\widehat{\rho u})_{i-\tfrac{1}{2}}^{n}
 \end{equation}
 
 \end_inset
@@ -5116,7 +5116,7 @@ in other words
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-u_{i+\tfrac{1}{2}}^{n}+\Delta tF_{i+\tfrac{1}{2}}^{n}=u_{i-\tfrac{1}{2}}^{n}+\Delta tF_{i-\tfrac{1}{2}}^{n}
+(\rho u)_{i+\tfrac{1}{2}}^{n}+\Delta tF_{i+\tfrac{1}{2}}^{n}=(\rho u)_{i-\tfrac{1}{2}}^{n}+\Delta tF_{i-\tfrac{1}{2}}^{n}
 \end{equation}
 
 \end_inset
@@ -5132,7 +5132,7 @@ All quantities are known except for
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-F_{i+\tfrac{1}{2}}^{n}=-\frac{1}{\Delta t}u_{i+\tfrac{1}{2}}^{n}+\frac{1}{\Delta t}u_{i-\tfrac{1}{2}}^{n}+F_{i-\tfrac{1}{2}}^{n}
+F_{i+\tfrac{1}{2}}^{n}=-\frac{1}{\Delta t}(\rho u)_{i+\tfrac{1}{2}}^{n}+\frac{1}{\Delta t}(\rho u)_{i-\tfrac{1}{2}}^{n}+F_{i-\tfrac{1}{2}}^{n}
 \end{equation}
 
 \end_inset
@@ -5147,7 +5147,7 @@ The remaining boundary condition is simple and implies that
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-F_{i+\tfrac{1}{2}}^{n}=-\frac{1}{\Delta t}u_{i+\tfrac{1}{2}}^{n}
+F_{i+\tfrac{1}{2}}^{n}=-\frac{1}{\Delta t}(\rho u)_{i+\tfrac{1}{2}}^{n}
 \end{equation}
 
 \end_inset
@@ -5163,8 +5163,8 @@ In summary, we have the following
 \begin_inset Formula 
 \begin{equation}
 \begin{cases}
-u_{i+\tfrac{1}{2}}^{n}\geq0 & F_{i+\tfrac{1}{2}}^{n}=-\frac{1}{\Delta t}u_{i+\tfrac{1}{2}}^{n}+\frac{1}{\Delta t}u_{i-\tfrac{1}{2}}^{n}+F_{i-\tfrac{1}{2}}^{n}\\
-u_{i+\tfrac{1}{2}}^{n}<0 & F_{i+\tfrac{1}{2}}^{n}=-\frac{1}{\Delta t}u_{i+\tfrac{1}{2}}^{n}
+(\rho u)_{i+\tfrac{1}{2}}^{n}\geq0 & F_{i+\tfrac{1}{2}}^{n}=-\frac{1}{\Delta t}(\rho u)_{i+\tfrac{1}{2}}^{n}+\frac{1}{\Delta t}(\rho u)_{i-\tfrac{1}{2}}^{n}+F_{i-\tfrac{1}{2}}^{n}\\
+(\rho u)_{i+\tfrac{1}{2}}^{n}<0 & F_{i+\tfrac{1}{2}}^{n}=-\frac{1}{\Delta t}(\rho u)_{i+\tfrac{1}{2}}^{n}
 \end{cases}
 \end{equation}
 
@@ -5187,8 +5187,8 @@ The open boundary condition is the oposite of the outflow BC and is thought
 \begin_inset Formula 
 \begin{equation}
 \begin{cases}
-u_{i+\tfrac{1}{2}}^{n}\leq0 & F_{i+\tfrac{1}{2}}^{n}=-\frac{1}{\Delta t}u_{i+\tfrac{1}{2}}^{n}+\frac{1}{\Delta t}u_{i-\tfrac{1}{2}}^{n}+F_{i-\tfrac{1}{2}}^{n}\\
-u_{i+\tfrac{1}{2}}^{n}>0 & F_{i+\tfrac{1}{2}}^{n}=-\frac{1}{\Delta t}u_{i+\tfrac{1}{2}}^{n}
+(\rho u)_{i+\tfrac{1}{2}}^{n}\leq0 & F_{i+\tfrac{1}{2}}^{n}=-\frac{1}{\Delta t}(\rho u)_{i+\tfrac{1}{2}}^{n}+\frac{1}{\Delta t}(\rho u)_{i-\tfrac{1}{2}}^{n}+F_{i-\tfrac{1}{2}}^{n}\\
+(\rho u)_{i+\tfrac{1}{2}}^{n}>0 & F_{i+\tfrac{1}{2}}^{n}=-\frac{1}{\Delta t}(\rho u)_{i+\tfrac{1}{2}}^{n}
 \end{cases}
 \end{equation}
 
