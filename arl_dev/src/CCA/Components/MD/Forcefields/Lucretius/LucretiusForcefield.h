@@ -54,9 +54,9 @@ namespace Uintah {
        return d_forcefieldNameString;
       }
 
-     virtual size_t registerParticleStates(std::vector<const VarLabel*>&,
-                                           std::vector<const VarLabel*>&,
-                                           MDLabel&) const;
+     virtual void registerProvidedParticleStates(std::vector<const VarLabel*>&,
+                                                   std::vector<const VarLabel*>&,
+                                                   MDLabel*) const;
 
     private:
       // Private functions related to parsing of the input forcefield file

@@ -22,16 +22,16 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MD/NonBonded.h>
+#include <CCA/Components/MD/Nonbonded/Nonbonded.h>
 
 using namespace Uintah;
 
-NonBonded::NonBonded()
+Nonbonded::Nonbonded()
 {
 
 }
 
-NonBonded::~NonBonded()
+Nonbonded::~Nonbonded()
 {
 
 }

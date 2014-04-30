@@ -26,10 +26,10 @@
 #define UINTAH_MD_NONBONDEDFACTORY_h
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <CCA/Components/MD/NonBonded.h>
 #include <CCA/Components/MD/MDLabel.h>
 #include <CCA/Components/MD/Forcefields/Forcefield.h>
 #include <CCA/Components/MD/Integrators/Integrator.h>
+#include <CCA/Components/MD/Nonbonded/Nonbonded.h>
 
 namespace Uintah {
 
@@ -37,7 +37,7 @@ namespace Uintah {
   class MDSystem;
 
   /**
-   *  @class NonBondedFactory
+   *  @class NonbondedFactory
    *  @ingroup MD
    *  @author Alan Humphrey and Justin Hooper
    *  @date   June, 2013
@@ -46,17 +46,17 @@ namespace Uintah {
    *
    *  @param
    */
-  class NonBondedFactory {
+  class NonbondedFactory {
 
     public:
 
       /**
-       * @brief Simply create the appropriate NonBonded object.
+       * @brief Simply create the appropriate Nonbonded object.
        *         This method has a switch for all known Non-bonded types.
        * @param ps The ProblemSpec handle with which to get non-bonded properties from the input file.
-       * @param system The MD system handle to pass off to the appropriate NonBonded constructor.
+       * @param system The MD system handle to pass off to the appropriate Nonbonded constructor.
        */
-      static NonBonded* create(const ProblemSpecP&,
+      static Nonbonded* create(const ProblemSpecP&,
                                MDSystem*,
                                MDLabel*,
                                forcefieldInteractionClass,

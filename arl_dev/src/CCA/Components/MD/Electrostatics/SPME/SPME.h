@@ -171,6 +171,12 @@ namespace Uintah {
       inline double getRealspaceCutoff() {
         return d_electrostaticRadius;
       }
+
+      virtual void registerRequiredParticleStates(std::vector<const VarLabel*>&,
+                                                  std::vector<const VarLabel*>&,
+                                                  MDLabel* ) const;
+
+
     private:
 
       /*

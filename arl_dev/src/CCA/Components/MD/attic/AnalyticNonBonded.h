@@ -25,7 +25,7 @@
 #ifndef UINTAH_MD_NONBONDED_ANALYTIC_H
 #define UINTAH_MD_NONBONDED_ANALYTIC_H
 
-#include <CCA/Components/MD/NonBonded.h>
+#include <CCA/Components/MD/Nonbonded.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
@@ -44,7 +44,7 @@ namespace Uintah {
   class MDLabel;
 
   /**
-   *  @class AnalyticNonBonded
+   *  @class AnalyticNonbonded
    *  @ingroup MD
    *  @author Alan Humphrey and Justin Hooper
    *  @date   June, 2013
@@ -53,7 +53,7 @@ namespace Uintah {
    *
    *  @param
    */
-  class AnalyticNonBonded : public NonBonded {
+  class AnalyticNonbonded : public Nonbonded {
 
     public:
 
@@ -61,13 +61,13 @@ namespace Uintah {
        * @brief
        * @param
        */
-      AnalyticNonBonded();
+      AnalyticNonbonded();
 
       /**
        * @brief
        * @param
        */
-      ~AnalyticNonBonded();
+      ~AnalyticNonbonded();
 
       /**
        * @brief
@@ -76,7 +76,7 @@ namespace Uintah {
        * @param
        * @param
        */
-      AnalyticNonBonded(MDSystem* system,
+      AnalyticNonbonded(MDSystem* system,
                         const double r12,
                         const double r6,
                         const double cutoffRadius);
@@ -145,7 +145,7 @@ namespace Uintah {
        * @param None
        * @return
        */
-      inline NonBondedType getType() const
+      inline NonbondedType getType() const
       {
         return d_nonBondedInteractionType;
       }
@@ -173,7 +173,7 @@ namespace Uintah {
 
     private:
 
-      NonBondedType d_nonBondedInteractionType;  //!< Implementation type for the non-bonded interactions
+      NonbondedType d_nonBondedInteractionType;  //!< Implementation type for the non-bonded interactions
       MDSystem* d_system;                        //!< A handle to the MD simulation system object
       MDLabel* d_lb;                             //!< A handle on the set of MD specific labels
       double d_r12;						                   //!< The van der Waals repulsive parameter

@@ -32,7 +32,7 @@
 namespace Uintah {
 
   /**
-   *  @class NonBonded
+   *  @class Nonbonded
    *  @ingroup MD
    *  @author Alan Humphrey and Justin Hooper
    *  @date   June, 2013
@@ -41,7 +41,7 @@ namespace Uintah {
    *
    *  @param
    */
-  class NonBonded {
+  class Nonbonded {
 
     public:
 
@@ -49,13 +49,13 @@ namespace Uintah {
        * @brief Default constructor.
        * @param None.
        */
-      NonBonded();
+      Nonbonded();
 
       /**
        * @brief Default destructor
        * @param None
        */
-      virtual ~NonBonded();
+      virtual ~Nonbonded();
 
       /**
        * @brief
@@ -106,6 +106,10 @@ namespace Uintah {
        */
       virtual std::string getNonbondedType() const = 0;
 
+      virtual void registerRequiredParticleStates(std::vector<const VarLabel*>&,
+                                                  std::vector<const VarLabel*>&,
+                                                  MDLabel* d_label) const = 0;
+
     private:
 
       /**
@@ -113,14 +117,14 @@ namespace Uintah {
        * @param
        * @return
        */
-      NonBonded(const NonBonded&);
+      Nonbonded(const Nonbonded&);
 
       /**
        * @brief
        * @param
        * @return
        */
-      NonBonded& operator=(const NonBonded&);
+      Nonbonded& operator=(const Nonbonded&);
 
   };
 

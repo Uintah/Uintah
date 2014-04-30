@@ -35,8 +35,6 @@ SRCS += $(SRCDIR)/MD.cc                           \
         $(SRCDIR)/MDLabel.cc                      \
         $(SRCDIR)/MDMaterial.cc                   \
         $(SRCDIR)/MDSystem.cc                     \
-        $(SRCDIR)/NonBondedFactory.cc             \
-        $(SRCDIR)/NonBonded.cc                    \
         $(SRCDIR)/SimpleGrid.cc                   \
         $(SRCDIR)/atomFactory.cc
 

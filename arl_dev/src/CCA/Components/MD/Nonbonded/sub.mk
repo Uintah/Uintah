@@ -29,7 +29,9 @@
 
 SRCDIR	:= CCA/Components/MD/Nonbonded
 
-SRCS += $(SRCDIR)/TwoBodyDeterministic.cc         
+SRCS += $(SRCDIR)/TwoBodyDeterministic.cc         \
+        $(SRCDIR)/NonbondedFactory.cc             \
+        $(SRCDIR)/Nonbonded.cc                    
 
 PSELIBS :=
 

@@ -22,11 +22,11 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MD/NonBondedFactory.h>
-#include <CCA/Components/MD/NonBonded.h>
 #include <CCA/Components/MD/MDLabel.h>
 #include <CCA/Components/MD/Forcefields/Forcefield.h>
 #include <CCA/Components/MD/Integrators/Integrator.h>
+#include <CCA/Components/MD/Nonbonded/NonbondedFactory.h>
+#include <CCA/Components/MD/Nonbonded/Nonbonded.h>
 
 #include <CCA/Components/MD/MDSystem.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -45,12 +45,12 @@ using namespace Uintah;
 
 static DebugStream nbFactory("nonbondedFactory", false);
 
-NonBonded* NonBondedFactory::create(const ProblemSpecP& ps,
+Nonbonded* NonbondedFactory::create(const ProblemSpecP& ps,
                                            MDSystem* system,
                                            MDLabel* label,
                                            forcefieldInteractionClass ffType,
                                            interactionModel imType) {
-  NonBonded* nonbonded = 0;
+  Nonbonded* nonbonded = 0;
   std::string type = "";
 
   double nonbondedCutoff;
@@ -75,10 +75,10 @@ NonBonded* NonBondedFactory::create(const ProblemSpecP& ps,
 
 //static DebugStream analytic_lj12_6("LJ12_6", false);
 //
-//NonBonded* NonBondedFactory::create(const ProblemSpecP& ps,
+//Nonbonded* NonbondedFactory::create(const ProblemSpecP& ps,
 //                                    MDSystem* system)
 //{
-//  NonBonded* nonbonded = 0;
+//  Nonbonded* nonbonded = 0;
 //  string type = "";
 //
 //  ProblemSpecP electrostatics_ps = ps->findBlock("MD")->findBlock("Nonbonded");
@@ -109,9 +109,9 @@ NonBonded* NonBondedFactory::create(const ProblemSpecP& ps,
 //    	lj12_6_ps->require("cutoffRadius", cutoffRadius);
 //    }
 //
-//    nonbonded = scinew AnalyticNonBonded(system, r12, r6, cutoffRadius);
+//    nonbonded = scinew AnalyticNonbonded(system, r12, r6, cutoffRadius);
 //  } else {
-//    throw ProblemSetupException("Unknown NonBonded type", __FILE__, __LINE__);
+//    throw ProblemSetupException("Unknown Nonbonded type", __FILE__, __LINE__);
 //  }
 //
 //  // Output which non-bonded interactions will be used

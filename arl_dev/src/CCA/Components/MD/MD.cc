@@ -58,7 +58,7 @@
 #include <CCA/Components/MD/Nonbonded/TwoBodyDeterministic.h>
 #include <CCA/Components/MD/atomMap.h>
 #include <CCA/Components/MD/atomFactory.h>
-#include <CCA/Components/MD/NonBondedFactory.h>
+#include <CCA/Components/MD/Nonbonded/NonbondedFactory.h>
 
 using namespace Uintah;
 
@@ -118,7 +118,6 @@ void MD::problemSetup(const ProblemSpecP& params,
       throw InternalError("MD:  Attempted to instantiate a forcefield type which is not yet implemented", __FILE__, __LINE__);
   }
 
-  // Add labels from our forcefield (nonbonded)
 
   std::cerr << "Forcefield created: " << d_forcefield->getForcefieldDescriptor() << std::endl;
 // // Loop through all materials and create the local particle set
@@ -138,16 +137,33 @@ void MD::problemSetup(const ProblemSpecP& params,
 
   std::cerr << "Created system object" << std::endl;
 
-  // For now set the interaction model explicitly
-  interactionModel deterministicModel = Deterministic;
+  // Instantiate the integrator
+//  Integrator* tempIntegrator = IntegratorFactory::create(XXX);
+//  switch(tempIntegrator->getInteractionModel()) { // Set generic interface based on integrator type
+//    case(Deterministic):
+//      d_Integrator=dynamic_cast<DeterministicIntegrator*> (tempIntegrator);
+//      break;
+//    case(Stochastic):
+//    case(Mixed):
+//    default:
+//      throw InternalError("MD:  Attempted to instantiate an integrator type which is not yet implemented", __FILE__, __LINE__);
+//  }
 
-  // create the NonBonded object via factory method
-  NonBonded* tempNB = NonBondedFactory::create(params, d_system, d_label, d_forcefield->getInteractionClass(), deterministicModel);
+  // For now set the interaction model explicitly
+  //   Full implementation would have us inheriting this from the integrator:
+  //     i.e. a Langevin-Dynamics simulation would be interactionModel = Mixed
+  //          a Monte-Carlo model would be interactionModel = Stochastic
+  //          basic MD is interactionModel = Deterministic
+  interactionModel integratorModel = Deterministic;
+
+  //bool doesFFSupportInteractionModel = d_forcefield->checkInteractionModelSupport(integratorModel);
+
+  // create the Nonbonded object via factory method
+  Nonbonded* tempNB = NonbondedFactory::create(params, d_system, d_label, d_forcefield->getInteractionClass(), integratorModel);
 
   if (tempNB->getNonbondedType() == "TwoBodyDeterministic") {
     d_nonbonded = dynamic_cast<TwoBodyDeterministic*> (tempNB);
   }
-
   std::cerr << "Created nonbonded object" << std::endl;
 
   // create the Electrostatics object via factory method
@@ -170,6 +186,14 @@ void MD::problemSetup(const ProblemSpecP& params,
 
   std::cerr << "created electrostatic object" << std::endl;
 
+  // Register the general labels that all MD simulations will use
+  createBasePermanentParticleState();
+
+  // Add labels from our forcefield (nonbonded)
+   d_forcefield->registerProvidedParticleStates(d_particleState, d_particleState_preReloc, d_label);
+   d_electrostatics->registerRequiredParticleStates(d_particleState, d_particleState_preReloc, d_label);
+   d_nonbonded->registerRequiredParticleStates(d_particleState, d_particleState_preReloc, d_label);
+   //d_integrator->registerRequiredParticleState(d_particleState, d_particleState_preReloc, d_label);
 //  // register permanent particle state; for relocation, etc
   //registerPermanentParticleState();
 
@@ -1041,59 +1065,22 @@ void MD::updatePosition(const ProcessorGroup* pg,
   d_system->clearBoxChanged();
 }
 
-void MD::registerPermanentParticleState()
-{
-  // The ONLY things which need to absolutely be registered are things which we must track the
-  //   state of from time step to time step.  This means position, force, ID (because we can't really
-  //   have an easy constant representation of this), and dipoles if we're seeding one iteration's
-  //   dipole prediction with the next.
+void MD::createBasePermanentParticleState() {
+  // The base particle state which must be tracked when particles move across patch boundaries are
+  //   the position and velocity.  Everything else bears some dependence on the form of the forcefield,
+  //   electrostatic interaction, and valence interactions employed.
+  //
+  // Note that position is registered elsewhere since it is the position variable.
 
-  // Note that coordinates are tracked implicitly since it is declared as the position variable.
-
-  // Quantities from timestep n
   d_particleState.push_back(d_label->global->pID);
   d_particleState.push_back(d_label->global->pV);
 
-  // Quantities from timestep n+1
   d_particleState_preReloc.push_back(d_label->global->pID_preReloc);
   d_particleState_preReloc.push_back(d_label->global->pV_preReloc);
+}
 
-  // Register nonbonded and valence particle variables
-//  d_forcefield->registerParticleStates(d_particleState, d_particleState_preReloc);
-  // Register electrostatic specific particle variables
-  // NOTE:  There needs to be some communication between electrostatics and forcefield at some
-  //   point to ensure that the particle variables electrostatics needs are provided by the forcefield
-  // I.e. dipoles, charges, etc...  We skip over this for now
-//  d_electrostatics->registerParticleStates(d_particleState, d_particleState_preReloc);
-
-
-//  // Theoretically, all of the remaining labels should be superfluous and can be tracked by placing
-//  //   a per patch array of size(numberOfMaterials,atomsPerMaterialOnPatch) and accumulating into this
-//  //   array.
-////Electrostatics
-//// --> Realspace
-//  d_particleState.push_back(d_label->pElectrostaticsRealField);
-//  d_particleState.push_back(d_label->pElectrostaticsRealForce);
-//
-//  d_particleState_preReloc.push_back(d_label->pElectrostaticsRealField_preReloc);
-//  d_particleState_preReloc.push_back(d_label->pElectrostaticsRealForce_preReloc);
-//// --> Reciprocal
-//  d_particleState.push_back(d_label->pElectrostaticsReciprocalField);
-//  d_particleState.push_back(d_label->pElectrostaticsReciprocalForce);
-//
-//  d_particleState_preReloc.push_back(d_label->pElectrostaticsReciprocalField_preReloc);
-//  d_particleState_preReloc.push_back(d_label->pElectrostaticsReciprocalForce_preReloc);
-//
-////Nonbonded
-//  d_particleState.push_back(d_label->pNonbondedForceLabel);
-//
-//  d_particleState_preReloc.push_back(d_label->pNonbondedForceLabel_preReloc);
-//
-////Valence (future)
-//  d_particleState.push_back(d_label->pValenceForceLabel);
-//
-//  d_particleState_preReloc.push_back(d_label->pValenceForceLabel_preReloc);
-//
+void MD::registerPermanentParticleState()
+{
   // register the particle states with the shared SimulationState for persistence across timesteps
   d_sharedState->d_particleState_preReloc.push_back(d_particleState_preReloc);
   d_sharedState->d_particleState.push_back(d_particleState);

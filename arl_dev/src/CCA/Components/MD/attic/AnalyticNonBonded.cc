@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MD/AnalyticNonBonded.h>
+#include <CCA/Components/MD/AnalyticNonbonded.h>
 #include <CCA/Components/MD/Forcefields/Forcefield.h>
 #include <CCA/Components/MD/Forcefields/TwoBodyForcefield.h>
 
@@ -55,29 +55,29 @@ extern SCIRun::Mutex coutLock;
 static DebugStream analytic_dbg("AnalyticNonbondedDbg", false);
 static DebugStream analytic_cout("AnalyticNonbondedCout", false);
 
-AnalyticNonBonded::AnalyticNonBonded()
+AnalyticNonbonded::AnalyticNonbonded()
 {
 	
 }
 
-AnalyticNonBonded::~AnalyticNonBonded()
+AnalyticNonbonded::~AnalyticNonbonded()
 {
 	
 }
 
-AnalyticNonBonded::AnalyticNonBonded(MDSystem* system,
+AnalyticNonbonded::AnalyticNonbonded(MDSystem* system,
 		const double r12,
 		const double r6,
 		const double cutoffRadius)
 		:
 				d_system(system), d_r12(r12), d_r6(r6), d_nonbondedRadius(cutoffRadius)
 {
-	d_nonBondedInteractionType = NonBonded::LJ12_6;
+	d_nonBondedInteractionType = Nonbonded::LJ12_6;
 }
 
 //-----------------------------------------------------------------------------
 // Interface implementations
-void AnalyticNonBonded::initialize(const ProcessorGroup* pg,
+void AnalyticNonbonded::initialize(const ProcessorGroup* pg,
 		const PatchSubset* patches,
 		const MaterialSubset* materials,
 		DataWarehouse* old_dw,
@@ -90,7 +90,7 @@ void AnalyticNonBonded::initialize(const ProcessorGroup* pg,
 	new_dw->put(dependency, d_lb->nonbondedDependencyLabel);
 }
 
-void AnalyticNonBonded::setup(const ProcessorGroup* pg,
+void AnalyticNonbonded::setup(const ProcessorGroup* pg,
 		const PatchSubset* patches,
 		const MaterialSubset* materials,
 		DataWarehouse* old_dw,
@@ -99,7 +99,7 @@ void AnalyticNonBonded::setup(const ProcessorGroup* pg,
 	
 }
 
-void AnalyticNonBonded::TwoBodyCalculate(const PatchSubset* patches,
+void AnalyticNonbonded::TwoBodyCalculate(const PatchSubset* patches,
                                          const MaterialSubset* materials,
                                          DataWarehouse* old_dw,
                                          DataWarehouse* new_dw) {
@@ -183,9 +183,9 @@ void AnalyticNonBonded::TwoBodyCalculate(const PatchSubset* patches,
   } // patchIndex loop
   new_dw->put(sum_vartype(0.5 * nbEnergy_patchLocal), d_lb->nonbondedEnergyLabel);
   new_dw->put(matrix_sum(0.5 * stressTensor_patchLocal), d_lb->nonbondedStressLabel);
-} // AnalyticNonBonded::TwoBodyCalculate
+} // AnalyticNonbonded::TwoBodyCalculate
 
-//void AnalyticNonBonded::newCalculate(const ProcessorGroup* pg,
+//void AnalyticNonbonded::newCalculate(const ProcessorGroup* pg,
 //                                     const PatchSubset* patches,
 //                                     const MaterialSubset* materials,
 //                                     DataWarehouse* old_dw,
@@ -258,7 +258,7 @@ void AnalyticNonBonded::TwoBodyCalculate(const PatchSubset* patches,
 //  return;
 //}
 
-void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
+void AnalyticNonbonded::calculate(const ProcessorGroup* pg,
 		const PatchSubset* patches,
 		const MaterialSubset* materials,
 		DataWarehouse* old_dw,
@@ -396,7 +396,7 @@ void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
 	
 }
 
-void AnalyticNonBonded::finalize(const ProcessorGroup* pg,
+void AnalyticNonbonded::finalize(const ProcessorGroup* pg,
 		const PatchSubset* patches,
 		const MaterialSubset* materials,
 		DataWarehouse* old_dw,
@@ -405,7 +405,7 @@ void AnalyticNonBonded::finalize(const ProcessorGroup* pg,
 // for now, do nothing
 }
 
-void AnalyticNonBonded::generateNeighborList(ParticleSubset* local_pset,
+void AnalyticNonbonded::generateNeighborList(ParticleSubset* local_pset,
 		ParticleSubset* neighbor_pset,
 		constParticleVariable<Point>& px_local,
 		constParticleVariable<Point>& px_neighbors,

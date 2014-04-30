@@ -24,8 +24,8 @@
 
 #include <CCA/Components/MD/MD.h>
 #include <CCA/Components/MD/SPME.h>
-#include <CCA/Components/MD/NonBondedFactory.h>
-#include <CCA/Components/MD/AnalyticNonBonded.h>
+#include <CCA/Components/MD/NonbondedFactory.h>
+#include <CCA/Components/MD/AnalyticNonbonded.h>
 
 #include <CCA/Components/MD/ElectrostaticsFactory.h>
 #include <CCA/Components/MD/Forcefields/ForcefieldFactory.h>
@@ -117,10 +117,10 @@ void MD::problemSetup(const ProblemSpecP& params,
   d_system = scinew MDSystem(md_ps, grid, shared_state);
   d_system->markBoxChanged();
 
-  // create the NonBonded object via factory method
-  d_nonbonded = NonBondedFactory::create(params, d_system);
-  if (d_nonbonded->getType() == NonBonded::LJ12_6) {
-    dynamic_cast<AnalyticNonBonded*>(d_nonbonded)->setMDLabel(d_label);
+  // create the Nonbonded object via factory method
+  d_nonbonded = NonbondedFactory::create(params, d_system);
+  if (d_nonbonded->getType() == Nonbonded::LJ12_6) {
+    dynamic_cast<AnalyticNonbonded*>(d_nonbonded)->setMDLabel(d_label);
   }
 
   // create the Electrostatics object via factory method

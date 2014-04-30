@@ -56,9 +56,9 @@ namespace Uintah {
           return d_forcefieldClass;
         }
         virtual NonbondedTwoBodyPotential* getNonbondedPotential(const std::string&, const std::string&) const = 0;
-        virtual size_t registerParticleStates(std::vector<const VarLabel*>&,
-                                              std::vector<const VarLabel*>&,
-                                              MDLabel&) const = 0;
+        virtual void registerProvidedParticleStates(std::vector<const VarLabel*>&,
+                                                      std::vector<const VarLabel*>&,
+                                                      MDLabel*) const = 0;
 
       private:
         static const forcefieldInteractionClass d_forcefieldClass;

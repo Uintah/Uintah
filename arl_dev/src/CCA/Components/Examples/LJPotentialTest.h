@@ -92,7 +92,7 @@ namespace Uintah {
 
     protected:
 
-      void scheduleCalculateNonBondedForces(SchedulerP& sched,
+      void scheduleCalculateNonbondedForces(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls);
 
@@ -130,7 +130,7 @@ namespace Uintah {
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw);
 
-      void calculateNonBondedForces(const ProcessorGroup* pg,
+      void calculateNonbondedForces(const ProcessorGroup* pg,
                                     const PatchSubset* patches,
                                     const MaterialSubset* matls,
                                     DataWarehouse* old_dw,
