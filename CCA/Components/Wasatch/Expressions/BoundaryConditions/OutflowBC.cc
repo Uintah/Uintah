@@ -29,7 +29,7 @@ void
 OutflowBC<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  exprDeps.requires_expression( velTag_ );
+  exprDeps.requires_expression( momTag_ );
   const Wasatch::TagNames& tagNames = Wasatch::TagNames::self();
   exprDeps.requires_expression( tagNames.dt );
 }
@@ -39,7 +39,7 @@ void
 OutflowBC<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  u_ = &fml.template field_ref<FieldT>( velTag_ );
+  u_ = &fml.template field_ref<FieldT>( momTag_ );
   const Wasatch::TagNames& tagNames = Wasatch::TagNames::self();
   dt_ = &fml.template field_ref<SpatialOps::structured::SingleValueField>( tagNames.dt );
 }
