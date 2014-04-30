@@ -9,7 +9,7 @@
 #define INTEGRATOR_H_
 
 namespace Uintah {
-  enum interactionModel { Deterministic, Langevin };
+  enum interactionModel { Deterministic, Stochastic, Mixed };
 
   enum MDIntegrator {
     velocityVerlet

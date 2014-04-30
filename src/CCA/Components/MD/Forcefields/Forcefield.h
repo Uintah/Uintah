@@ -55,9 +55,9 @@ namespace Uintah {
       virtual ~Forcefield () {}
       virtual forcefieldInteractionClass getInteractionClass() const = 0;
       virtual std::string getForcefieldDescriptor() const = 0;
-      virtual size_t registerParticleStates(std::vector<const VarLabel*>&,
-                                            std::vector<const VarLabel*>&,
-                                            MDLabel&) const = 0;
+      virtual void registerProvidedParticleStates(std::vector<const VarLabel*>&,
+                                                    std::vector<const VarLabel*>&,
+                                                    MDLabel*) const = 0;
 
     private:
 

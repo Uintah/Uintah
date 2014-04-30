@@ -477,13 +477,12 @@ NonbondedTwoBodyPotential* LucretiusForcefield::getNonbondedPotential(const std:
   throw InvalidState(ErrorOut.str(), __FILE__, __LINE__);
 }
 
-size_t LucretiusForcefield::registerParticleStates(std::vector<const VarLabel*>& particleState,
-                                                   std::vector<const VarLabel*>& particleState_preReloc,
-                                                   MDLabel& label) const {
+void LucretiusForcefield::registerProvidedParticleStates(std::vector<const VarLabel*>& particleState,
+                                                           std::vector<const VarLabel*>& particleState_preReloc,
+                                                           MDLabel* label) const {
 
-  particleState.push_back(label.nonbonded->pF_nonbonded);
-  particleState_preReloc.push_back(label.nonbonded->pF_nonbonded_preReloc);
-  return(particleState.size());
+  particleState.push_back(label->nonbonded->pF_nonbonded);
+  particleState_preReloc.push_back(label->nonbonded->pF_nonbonded_preReloc);
 
 }
 

@@ -31,7 +31,8 @@
 #include <CCA/Ports/Output.h>
 
 #include <CCA/Components/MD/MDLabel.h>
-#include <CCA/Components/MD/NonBonded.h>
+
+#include <CCA/Components/MD/Nonbonded/Nonbonded.h>
 #include <CCA/Components/MD/Electrostatics/Electrostatics.h>
 #include <CCA/Components/MD/Forcefields/Forcefield.h>
 #include <CCA/Components/MD/Integrators/Integrator.h>
@@ -377,6 +378,8 @@ namespace Uintah {
        */
       void registerPermanentParticleState();
 
+      void createBasePermanentParticleState();
+
 //      /**
 //       * @brief
 //       * @param
@@ -436,7 +439,7 @@ namespace Uintah {
 //      std::string d_coordinateFile;        //!< Name of file with coordinates and charges of all atoms
 //      std::vector<Atom> d_atomList;        //!< Individual atom neighbor list
 
-      NonBonded* d_nonbonded;              //!< The simulation NonBonded instance
+      Nonbonded* d_nonbonded;              //!< The simulation Nonbonded instance
 
       std::vector<const VarLabel*> d_particleState;            //!< Atom (particle) state prior to relocation
       std::vector<const VarLabel*> d_particleState_preReloc;   //!< For atom (particle) relocation

@@ -167,7 +167,7 @@ void LJPotentialTest::scheduleTimeAdvance(const LevelP& level,
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_sharedState_->allMaterials();
 
-  scheduleCalculateNonBondedForces(sched, patches, matls);
+  scheduleCalculateNonbondedForces(sched, patches, matls);
   scheduleUpdatePosition(sched, patches, matls);
 
   sched->scheduleParticleRelocation(level, pXLabel_preReloc, d_sharedState_->d_particleState_preReloc, pXLabel,
@@ -191,11 +191,11 @@ void LJPotentialTest::computeStableTimestep(const ProcessorGroup* pg,
   new_dw->put(delt_vartype(1), d_sharedState_->get_delt_label(), getLevel(patches));
 }
 
-void LJPotentialTest::scheduleCalculateNonBondedForces(SchedulerP& sched,
+void LJPotentialTest::scheduleCalculateNonbondedForces(SchedulerP& sched,
                                                        const PatchSet* patches,
                                                        const MaterialSet* matls)
 {
-  Task* task = scinew Task("calculateNonBondedForces", this, &LJPotentialTest::calculateNonBondedForces);
+  Task* task = scinew Task("calculateNonbondedForces", this, &LJPotentialTest::calculateNonbondedForces);
 
   task->requires(Task::OldDW, pXLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, pForceLabel, Ghost::AroundNodes, SHRT_MAX);
@@ -420,7 +420,7 @@ void LJPotentialTest::registerPermanentParticleState(SimpleMaterial* matl)
   d_sharedState_->d_particleState.push_back(d_particleState);
 }
 
-void LJPotentialTest::calculateNonBondedForces(const ProcessorGroup* pg,
+void LJPotentialTest::calculateNonbondedForces(const ProcessorGroup* pg,
                                                const PatchSubset* patches,
                                                const MaterialSubset* matls,
                                                DataWarehouse* old_dw,

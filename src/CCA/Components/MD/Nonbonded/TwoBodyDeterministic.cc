@@ -164,3 +164,12 @@ void TwoBodyDeterministic::finalize(const ProcessorGroup* pg,
                                     DataWarehouse* newDW) {
   // Nothing to put here now
 }
+
+void TwoBodyDeterministic::registerRequiredParticleStates(std::vector<const VarLabel*>& particleState,
+                                                          std::vector<const VarLabel*>& particleState_preReloc,
+                                                          MDLabel* d_label) const {
+  //  We probably don't need these for relocation, but it may be easier to set them up that way than to do it any other way
+  particleState.push_back(d_label->nonbonded->pF_nonbonded);
+  particleState_preReloc.push_back(d_label->nonbonded->pF_nonbonded_preReloc);
+
+}

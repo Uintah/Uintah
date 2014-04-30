@@ -8,15 +8,15 @@
 #ifndef TWOBODYDETERMINISTIC_H_
 #define TWOBODYDETERMINISTIC_H_
 
-#include <CCA/Components/MD/NonBonded.h>
 #include <CCA/Components/MD/MDLabel.h>
+#include <CCA/Components/MD/Nonbonded/Nonbonded.h>
 
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 
 namespace Uintah {
 
-  class TwoBodyDeterministic : public NonBonded {
+  class TwoBodyDeterministic : public Nonbonded {
     public:
      ~TwoBodyDeterministic() {}
       TwoBodyDeterministic(MDSystem*, MDLabel*, double);
@@ -55,6 +55,10 @@ namespace Uintah {
       inline std::string getNonbondedType() const {
         return nonbondedType;
       }
+
+      void registerRequiredParticleStates(std::vector<const VarLabel*>&,
+                                          std::vector<const VarLabel*>&,
+                                          MDLabel*) const;
     private:
       static const std::string nonbondedType;
       MDSystem* d_System;

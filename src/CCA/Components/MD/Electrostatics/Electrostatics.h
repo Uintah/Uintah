@@ -114,6 +114,10 @@ namespace Uintah {
        */
       virtual ElectrostaticsType getType() const = 0;
 
+      virtual void registerRequiredParticleStates(std::vector<const VarLabel*>&,
+                                                  std::vector<const VarLabel*>&,
+                                                  MDLabel* ) const = 0;
+
     private:
 
       /**

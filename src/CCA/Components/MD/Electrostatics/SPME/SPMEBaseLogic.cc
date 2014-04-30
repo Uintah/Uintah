@@ -678,3 +678,29 @@ void SPME::scheduleDistributeNodeLocalQ(SchedulerP& sched,
   sched->addTask(task, patches, materials);
 }
 
+void SPME::registerRequiredParticleStates(std::vector<const VarLabel*>& particleState,
+                                          std::vector<const VarLabel*>& particleState_preReloc,
+                                          MDLabel* d_label) const {
+
+  // We absolutely need per-particle information to implement polarizable SPME
+  if (d_polarizable) {
+    particleState.push_back(d_label->electrostatic->pMu);
+    particleState_preReloc.push_back(d_label->electrostatic->pMu_preReloc);
+    particleState.push_back(d_label->electrostatic->pE_electroReal);
+    particleState.push_back(d_label->electrostatic->pE_electroInverse);
+    particleState_preReloc.push_back(d_label->electrostatic->pE_electroReal_preReloc);
+    particleState_preReloc.push_back(d_label->electrostatic->pE_electroInverse_preReloc);
+  }
+
+  // We -probably- don't need relocatable Force information, however it may be the easiest way to
+  //   implement the required per-particle Force information.
+  particleState.push_back(d_label->electrostatic->pF_electroInverse);
+  particleState.push_back(d_label->electrostatic->pF_electroReal);
+  particleState_preReloc.push_back(d_label->electrostatic->pF_electroInverse_preReloc);
+  particleState_preReloc.push_back(d_label->electrostatic->pF_electroReal_preReloc);
+
+  // Note:  Per particle charges may be required in some FF implementations (i.e. ReaxFF), however we will let
+  //        the FF themselves register these variables if these are present and needed.
+
+}
+
