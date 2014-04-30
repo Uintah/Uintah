@@ -1003,8 +1003,8 @@ namespace Wasatch{
             const Expr::Tag outBCTag(bndName + "_outflow_bc", Expr::STATE_NONE);
             typedef typename OutflowBC<FieldT>::Builder Builder;
             //bcHelper.register_functor_expression( scinew Builder( outBCTag, thisVelTag_ ), ADVANCE_SOLUTION );
-            advSlnFactory.register_expression( scinew Builder( outBCTag, thisVelTag_ ) );            
-            BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(solnVarName_))).name(),outBCTag.name(), 0.0, DIRICHLET,FUNCTOR_TYPE};
+            advSlnFactory.register_expression( scinew Builder( outBCTag, solution_variable_tag() ) );
+            BndCondSpec rhsPartBCSpec = {(rhs_part_tag(solution_variable_tag())).name(),outBCTag.name(), 0.0, DIRICHLET,FUNCTOR_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
             
             // variable density:
@@ -1047,11 +1047,10 @@ namespace Wasatch{
         {
           if (isNormal) {
             // register pressurebc functor for this boundary. we'll register one functor per boundary
-            const Expr::Tag openBCTag(bndName + "_open", Expr::STATE_NONE);
+            const Expr::Tag openBCTag(bndName + "_open_bc", Expr::STATE_NONE);
             typedef typename OpenBC<FieldT>::Builder Builder;
-            //bcHelper.register_functor_expression( scinew Builder( openBCTag, thisVelTag_ ), ADVANCE_SOLUTION );
-            advSlnFactory.register_expression( scinew Builder( openBCTag, thisVelTag_ ) );
-            BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(solnVarName_))).name(),openBCTag.name(), 0.0, DIRICHLET,FUNCTOR_TYPE};
+            advSlnFactory.register_expression( scinew Builder( openBCTag, solution_variable_tag() ) );
+            BndCondSpec rhsPartBCSpec = {(rhs_part_tag(solution_variable_tag())).name(),openBCTag.name(), 0.0, DIRICHLET,FUNCTOR_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
             
             // variable density:
