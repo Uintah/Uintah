@@ -253,7 +253,7 @@ level you end up with.
 
 (D) During the next regrid, the next level can create error flags as
 well. These are some example error flags that are dilated, with the
-subpatches for the next level. (E) shows the reulting level with the
+subpatches for the next level. (E) shows the resulting level with the
 other levels. However there are some patch boundaries that span more
 than one level. So in (F) we must expand out the middle level to
 compensate.
@@ -267,6 +267,22 @@ the Regridder wants to put them.
 Static grids can be defined by simply not including a Regridder
 section in the input file. See the multiple level example in
 Grid~\ref{Sec:Grid}.
+
+\subsubsection{Ideal Patch Configuration for Good Scaling}
+The patch configuration on multiple levels has been shown to greatly
+effect the scalability and mean time per time step. 
+Here are some guidelines to follow when trying to get good scaling with multilevel AMR.
+This example is for a 3 Level simulation.
+\begin{itemize}
+\item On Level 0 and 1 $\frac{\# cells}{patch} = 8$ \\	
+	i.e. min\_patch\_size [8,8,8] 
+\item On finer levels (level 2)
+\begin{itemize}
+	\item min\_patch\_size MUST be greater than or equal to 8,8,8!! This is very important!
+	\item $\frac{\# cores}{2} $ $\leq$ $\#$ patches on the finest level $\leq$ $\#$ cores
+	\item The min\_patch\_size on L-2 must be divisible by the min\_patch\_size on L-1
+\end{itemize}
+\end{itemize}
 
 \subsection{AMR Cycle}
 
@@ -289,7 +305,7 @@ In short, there are 3 main AMR operations
   interpolated with the nearest cells on the coarser level (so the
   finer level stays in sync with the coarser levels).
 \item Refine - This occurs for new patches created by the regrid
-  operation. Variables that are necesary will be created on those
+  operation. Variables that are necessary will be created on those
   patches by interpolation from the coarser level. 
 \end{itemize}
 
