@@ -89,11 +89,7 @@ template<class DomainType>
    int lookup(const VarLabel* label, int matlIndex, const DomainType* dom);
    void merge(const KeyDatabase<DomainType>& newDB);
   private:
-#ifdef HAVE_GNU_HASHMAP
-   typedef __gnu_cxx::hash_map<VarLabelMatl<DomainType>, int> keyDBtype;
-#else
-   typedef std::tr1::unordered_map<VarLabelMatl<DomainType>, int> keyDBtype;
-#endif
+   typedef hashmap<VarLabelMatl<DomainType>, int>  keyDBtype;
    keyDBtype keys;  
    int keycount;
 };
