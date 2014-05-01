@@ -197,6 +197,8 @@ WARNING
     virtual VarLabelMaterialMap* makeVarLabelMaterialMap() = 0;
     virtual int getMaxGhost() = 0;
     virtual int getMaxLevelOffset() = 0;
+    virtual bool isCopyDataTimestep() = 0;
+    virtual void setInitTimestep(bool) = 0;
   private:
     Scheduler(const Scheduler&);
     Scheduler& operator=(const Scheduler&);

@@ -226,6 +226,9 @@ WARNING
     
     int getMaxLevelOffset() {return maxLevelOffset;}
 
+    bool isCopyDataTimestep() {return d_sharedState->isCopyDataTimestep()||d_isInitTimestep;}
+    void setInitTimestep(bool is_cdt) { d_isInitTimestep = is_cdt; }
+
     typedef std::map<VarLabelMatl<Level>, Task*> ReductionTasksMap;
     ReductionTasksMap reductionTasks;
 
@@ -241,6 +244,7 @@ WARNING
     enum { PRINT_BEFORE_COMM = 1, PRINT_BEFORE_EXEC = 2, PRINT_AFTER_EXEC = 4};
     void printTrackedVars(DetailedTask* dt, int when);
     
+    bool d_isInitTimestep;
    
     /**
     * output the task name and the level it's executing on.

@@ -146,7 +146,8 @@ AMRSimulationController::run()
 
    d_scheduler->initialize(1, 1);
    d_scheduler->advanceDataWarehouse(currentGrid, true);
-    
+   d_scheduler->setInitTimestep(true);
+
    double time;
 
    // set up sim, regridder, and finalize sharedState
@@ -188,6 +189,7 @@ AMRSimulationController::run()
    double start;
   
    d_lb->resetCostForecaster();
+   d_scheduler->setInitTimestep(false);
    while( ( time < d_timeinfo->maxTime ) &&
           ( iterations < d_timeinfo->maxTimestep ) && 
           ( d_timeinfo->max_wall_time == 0 || getWallTime() < d_timeinfo->max_wall_time )  ) {
