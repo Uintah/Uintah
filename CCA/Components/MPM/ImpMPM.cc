@@ -1637,6 +1637,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
   GridP grid = level->getGrid();
   d_subsched->setParentDWs(old_dw, new_dw);
   d_subsched->advanceDataWarehouse(grid);
+  d_subsched->setInitTimestep(true);
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
 
   if (d_recompileSubsched) {
@@ -1711,6 +1712,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
 
   d_subsched->get_dw(3)->finalize();
   d_subsched->advanceDataWarehouse(grid);
+  d_subsched->setInitTimestep(false);
 
   d_numIterations = 0;
   while(!(dispInc && dispIncQ)) {

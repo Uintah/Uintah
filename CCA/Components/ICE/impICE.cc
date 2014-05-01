@@ -943,6 +943,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   GridP grid = level->getGrid();
   d_subsched->setParentDWs(ParentOldDW, ParentNewDW);
   d_subsched->advanceDataWarehouse(grid);
+  d_subsched->setInitTimestep(true);
 
   bool recursion  = true;
   bool modifies_X = true;
@@ -1001,6 +1002,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   double vol = dx.x() * dx.y() * dx.z();
   d_solver_parameters->setResidualNormalizationFactor(vol);
 
+  d_subsched->setInitTimestep(false);
   
   while( counter < d_max_iter_implicit && max_RHS > d_outer_iter_tolerance && !restart) {
   //__________________________________

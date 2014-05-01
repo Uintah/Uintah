@@ -364,7 +364,7 @@ void UnifiedScheduler::runTask(DetailedTask * task,
 void UnifiedScheduler::execute(int tgnum /*=0*/,
                                int iteration /*=0*/)
 {
-  if (Uintah::Parallel::usingMPI() && d_sharedState->isCopyDataTimestep()) {
+  if (Uintah::Parallel::usingMPI() && isCopyDataTimestep()) {
     MPIScheduler::execute(tgnum, iteration);
     return;
   }

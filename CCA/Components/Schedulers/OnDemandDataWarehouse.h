@@ -26,7 +26,7 @@
 #define UINTAH_COMPONENTS_SCHEDULERS_ONDEMANDDATAWAREHOUSE_H
 
 #include <Core/Thread/CrowdMonitor.h>
-
+#include <Core/Containers/FastHashTable.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <CCA/Components/Schedulers/DWDatabase.h>
@@ -52,6 +52,7 @@ namespace Uintah {
   using SCIRun::CrowdMonitor;
   using SCIRun::Max;
   using SCIRun::Thread;
+  using SCIRun::FastHashTable;
 
   class BufferInfo;
   class DependencyBatch;
@@ -100,6 +101,10 @@ public:
    virtual ~OnDemandDataWarehouse();
    
    virtual bool exists(const VarLabel*, int matIndex, const Patch*) const; 
+   
+   void copyKeyDB(KeyDatabase<Patch>& varkeyDB, KeyDatabase<Level>& levekeyDB); 
+
+   virtual void doReserve(); 
    
    // Returns a (const) pointer to the grid.  This pointer can then be
    // used to (for example) get the number of levels in the grid.
@@ -431,8 +436,10 @@ private:
    void insertPSetRecord(psetDBType &subsetDB,const Patch* patch, IntVector low, IntVector high, int matlIndex, ParticleSubset *psubset);
 
    DWDatabase<Patch>  d_varDB;
-   DWDatabase<Patch>  d_pvarDB;
    DWDatabase<Level>  d_levelDB;
+   KeyDatabase<Patch> d_varkeyDB;
+   KeyDatabase<Level> d_levelkeyDB;
+
    psetDBType                        d_psetDB;
    psetDBType                        d_delsetDB;
    psetAddDBType d_addsetDB;
@@ -458,7 +465,6 @@ private:
    mutable CrowdMonitor    d_lock;
    mutable CrowdMonitor    d_lvlock;
    mutable CrowdMonitor    d_plock;
-   mutable CrowdMonitor    d_pvlock;
    mutable CrowdMonitor    d_pslock;
    bool                    d_finalized;
    GridP                   d_grid;

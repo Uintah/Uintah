@@ -25,6 +25,7 @@
 #include <CCA/Components/Schedulers/TaskGraph.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <Core/Exceptions/TypeMismatchException.h>
@@ -737,7 +738,6 @@ TaskGraph::createDetailedTasks(bool useInternalDeps,
 
   TAU_PROFILE_STOP(dttimer);
 
-
   lb->assignResources(*dts_);
 
   // use this, even on a single processor, if for nothing else than to get scrub counts
@@ -757,6 +757,7 @@ TaskGraph::createDetailedTasks(bool useInternalDeps,
   }
 
   dts_->computeLocalTasks(d_myworld->myrank());
+  dts_->makeDWKeyDatabase();
 
   if (!doDetailed) {
     // the createDetailedDependencies will take care of scrub counts, otherwise do it here.

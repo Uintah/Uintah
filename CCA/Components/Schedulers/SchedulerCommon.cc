@@ -96,7 +96,7 @@ SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
   // Default mapping...
   dwmap[Task::OldDW]=0;
   dwmap[Task::NewDW]=1;
-
+  d_isInitTimestep = false;
   m_locallyComputedPatchVarMap = scinew LocallyComputedPatchVarMap;
   reloc_new_posLabel_ = 0;
   maxGhost=0;
@@ -827,6 +827,12 @@ void SchedulerCommon::fillDataWarehouses(const GridP& grid)
 void SchedulerCommon::replaceDataWarehouse(int index, const GridP& grid, bool initialization /*=false*/)
 {
   dws[index] = scinew OnDemandDataWarehouse(d_myworld, this, d_generation++, grid, initialization);
+  if (initialization) return;
+  for (unsigned i = 0; i < graphs.size(); i++) { 
+        DetailedTasks* dts = graphs[i]->getDetailedTasks();
+        if (dts) dts->copyoutDWKeyDatabase(dws[index]);
+  }
+  dws[index]->doReserve();
 }
 
 void SchedulerCommon::setRestartable(bool restartable)
@@ -998,6 +1004,15 @@ void SchedulerCommon::compile()
     }
   }
 #endif
+  for(unsigned int dw=0;dw<dws.size();dw++) {
+    if (dws[dw].get_rep()) {
+      for (unsigned i = 0; i < graphs.size(); i++) { 
+        DetailedTasks* dts = graphs[i]->getDetailedTasks();
+        dts->copyoutDWKeyDatabase(dws[dw]);
+      }
+      dws[dw]->doReserve();
+    }
+  }
   m_locallyComputedPatchVarMap->makeGroups();
 }
 
@@ -1111,7 +1126,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
   }
 
   this->initialize(1, 1);
-  this->advanceDataWarehouse(grid);
+  this->advanceDataWarehouse(grid,true);
   this->clearMappings();
   this->mapDataWarehouse(Task::OldDW, 0);
   this->mapDataWarehouse(Task::NewDW, 1);
@@ -1281,13 +1296,11 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
   AllocatorSetDefaultTag(tag);
 #endif
 
-  d_sharedState->setCopyDataTimestep(false);
 
   vector<VarLabelMatl<Level> > levelVariableInfo;
   oldDataWarehouse->getVarLabelMatlLevelTriples(levelVariableInfo);
   
   // copy reduction variables
-  
   newDataWarehouse->unfinalize();
   for ( unsigned int i = 0; i < levelVariableInfo.size(); i++ ) {
     VarLabelMatl<Level> currentReductionVar = levelVariableInfo[i];
@@ -1316,6 +1329,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
   d_sharedState->taskGlobalCommTime = globalCommTime;
   d_sharedState->taskLocalCommTime = localCommTime;
   TAU_PROFILE_STOP(copy_timer);
+  d_sharedState->setCopyDataTimestep(false);
 }
 
 
@@ -1423,7 +1437,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
                   GridVariableBase* newVariable = v->cloneType();
                   newVariable->rewindow( newLowIndex, newHighIndex );
                   newVariable->copyPatch( v, srclow, srchigh);
-                  newDataWarehouse->d_varDB.put(label, matl, newPatch, newVariable, false);
+                  newDataWarehouse->d_varDB.put(label, matl, newPatch, newVariable, isCopyDataTimestep(), false);
                 } else {
                   GridVariableBase* newVariable = 
                     dynamic_cast<GridVariableBase*>(newDataWarehouse->d_varDB.get(label, matl, newPatch ));
