@@ -463,63 +463,7 @@ namespace Wasatch{
     
     return builder;
   }
-  //------------------------------------------------------------------
-  
-  template<typename FieldT>
-  Expr::ExpressionBuilder*
-  build_shunn_varden_2d_mms_expr( Uintah::ProblemSpecP params,
-                                  Uintah::ProblemSpecP varDens2DMMSParams)
-  {
-    const Expr::Tag tag = parse_nametag( params->findBlock("NameTag") );
-    
-    const TagNames& tagNames = TagNames::self();
-    
-    Expr::ExpressionBuilder* builder = NULL;
-        
-    double rho0=1.29985, rho1=0.081889, uf, vf, k, w, d;
-    varDens2DMMSParams->getAttribute("rho0",rho0);
-    varDens2DMMSParams->getAttribute("rho1",rho1);
-    varDens2DMMSParams->getAttribute("uf",uf);
-    varDens2DMMSParams->getAttribute("vf",vf);
-    varDens2DMMSParams->getAttribute("k",k);
-    varDens2DMMSParams->getAttribute("w",w);
-    varDens2DMMSParams->getAttribute("d",d);
-    
-    if( params->findBlock("VelocityX") ){
-      Uintah::ProblemSpecP valParams = params->findBlock("VelocityX");
-      const Expr::Tag indepVarTag1 = parse_nametag( valParams->findBlock("XCoordinate")->findBlock("NameTag") );
-      const Expr::Tag indepVarTag2 = parse_nametag( valParams->findBlock("YCoordinate")->findBlock("NameTag") );
-      const Expr::Tag densityTag = parse_nametag( valParams->findBlock("Density")->findBlock("NameTag") );
-      typedef typename VarDenOscillatingMMSxVel<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, densityTag, indepVarTag1, indepVarTag2, tagNames.time, rho0, rho1, w, k, uf, vf );
-    }
-    
-    else if( params->findBlock("VelocityY") ){
-      Uintah::ProblemSpecP valParams = params->findBlock("VelocityY");
-      const Expr::Tag indepVarTag1 = parse_nametag( valParams->findBlock("XCoordinate")->findBlock("NameTag") );
-      const Expr::Tag indepVarTag2 = parse_nametag( valParams->findBlock("YCoordinate")->findBlock("NameTag") );
-      const Expr::Tag densityTag = parse_nametag( valParams->findBlock("Density")->findBlock("NameTag") );
-      typedef typename VarDenOscillatingMMSyVel<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, densityTag, indepVarTag1, indepVarTag2, tagNames.time, rho0, rho1, w, k, uf, vf );
-    }
-    
-    else if( params->findBlock("MixtureFraction") ){
-      Uintah::ProblemSpecP valParams = params->findBlock("MixtureFraction");
-      const Expr::Tag indepVarTag1 = parse_nametag( valParams->findBlock("XCoordinate")->findBlock("NameTag") );
-      const Expr::Tag indepVarTag2 = parse_nametag( valParams->findBlock("YCoordinate")->findBlock("NameTag") );
-      typedef typename VarDenOscillatingMMSMixFrac<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, indepVarTag1, indepVarTag2, tagNames.time, rho0, rho1, w, k, uf, vf );
-    }
 
-    else if( params->findBlock("DiffusiveConstant") ){
-      Uintah::ProblemSpecP valParams = params->findBlock("DiffusiveConstant");
-      const Expr::Tag densityTag = parse_nametag( valParams->findBlock("Density")->findBlock("NameTag") );
-      typedef typename DiffusiveConstant<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, densityTag, d );
-    }
-
-    return builder;
-  }
   //------------------------------------------------------------------
   
   template<typename FieldT>
@@ -1182,32 +1126,6 @@ namespace Wasatch{
         case XVOL : builder = build_taylor_vortex_mms_expr< XVolField >( exprParams );  break;
         case YVOL : builder = build_taylor_vortex_mms_expr< YVolField >( exprParams );  break;
         case ZVOL : builder = build_taylor_vortex_mms_expr< ZVolField >( exprParams );  break;
-        default:
-          std::ostringstream msg;
-          msg << "ERROR: unsupported field type '" << fieldType << "'" << std::endl;
-          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-      }
-      
-      const Category cat = parse_tasklist(exprParams,false);
-      gc[cat]->exprFactory->register_expression( builder );
-    }
-    
-    //________________________________________
-    // parse and build Shunn's 2D VarDen MMS
-    for( Uintah::ProblemSpecP exprParams = parser->findBlock("ShunnVarden2DMMS");
-        exprParams != 0;
-        exprParams = exprParams->findNextBlock("ShunnVarden2DMMS") ){
-      
-      Uintah::ProblemSpecP varDens2DMMSParams = parser->findBlock("VariableDensity2DMMS");
-
-      std::string fieldType;
-      exprParams->getAttribute("type",fieldType);
-      
-      switch( get_field_type(fieldType) ){
-        case SVOL : builder = build_shunn_varden_2d_mms_expr< SVolField >( exprParams, varDens2DMMSParams );  break;
-        case XVOL : builder = build_shunn_varden_2d_mms_expr< XVolField >( exprParams, varDens2DMMSParams );  break;
-        case YVOL : builder = build_shunn_varden_2d_mms_expr< YVolField >( exprParams, varDens2DMMSParams );  break;
-        case ZVOL : builder = build_shunn_varden_2d_mms_expr< ZVolField >( exprParams, varDens2DMMSParams );  break;
         default:
           std::ostringstream msg;
           msg << "ERROR: unsupported field type '" << fieldType << "'" << std::endl;
