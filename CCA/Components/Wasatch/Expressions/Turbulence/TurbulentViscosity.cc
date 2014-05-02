@@ -40,7 +40,7 @@ TurbulentViscosity( const Expr::Tag rhoTag,
                     const Expr::Tag dynamicSmagCoefTag,
                     const Wasatch::TurbulenceParameters& turbParams )
 : Expr::Expression<SVolField>(),
-  isConstSmag_( turbParams.turbModelName != Wasatch::DYNAMIC ),
+  isConstSmag_( turbParams.turbModelName != Wasatch::TurbulenceParameters::DYNAMIC ),
   turbParams_      ( turbParams         ),
   strTsrSqTag_     ( strTsrSqTag        ),
   waleTsrMagTag_   ( waleTsrMagTag      ),
@@ -63,18 +63,18 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( rhoTag_ );
   
-  if (turbParams_.turbModelName == Wasatch::SMAGORINSKY)
+  if (turbParams_.turbModelName == Wasatch::TurbulenceParameters::SMAGORINSKY)
     exprDeps.requires_expression( strTsrSqTag_ );  
   
-  else if (turbParams_.turbModelName == Wasatch::VREMAN)
+  else if (turbParams_.turbModelName == Wasatch::TurbulenceParameters::VREMAN)
     exprDeps.requires_expression( vremanTsrMagTag_ );  
   
-  else if (turbParams_.turbModelName == Wasatch::WALE) {
+  else if (turbParams_.turbModelName == Wasatch::TurbulenceParameters::WALE) {
     exprDeps.requires_expression( strTsrSqTag_ );
     exprDeps.requires_expression( waleTsrMagTag_ );
   }
   
-  else if( turbParams_.turbModelName == Wasatch::DYNAMIC ) {
+  else if( turbParams_.turbModelName == Wasatch::TurbulenceParameters::DYNAMIC ) {
     exprDeps.requires_expression( strTsrSqTag_ );
     exprDeps.requires_expression( dynCoefTag_ );
   }
@@ -92,21 +92,21 @@ bind_fields( const Expr::FieldManagerList& fml )
   rho_ = &scalarfm.field_ref( rhoTag_ );
   
   switch( turbParams_.turbModelName ){
-  case Wasatch::SMAGORINSKY :
+  case Wasatch::TurbulenceParameters::SMAGORINSKY :
     strTsrSq_ = &scalarfm.field_ref( strTsrSqTag_ );
     break;
-  case Wasatch::WALE :
+  case Wasatch::TurbulenceParameters::WALE :
     strTsrSq_ = &scalarfm.field_ref( strTsrSqTag_ );
     waleTsrMag_ = &scalarfm.field_ref( waleTsrMagTag_ );
     break;
-  case Wasatch::DYNAMIC :
+  case Wasatch::TurbulenceParameters::DYNAMIC :
     strTsrSq_ = &scalarfm.field_ref( strTsrSqTag_ );
     dynCoef_ = &scalarfm.field_ref ( dynCoefTag_ );
     break;
-  case Wasatch::VREMAN :
+  case Wasatch::TurbulenceParameters::VREMAN :
     vremanTsrMag_ = &scalarfm.field_ref( vremanTsrMagTag_ );
     break;
-  case Wasatch::NOTURBULENCE :
+  case Wasatch::TurbulenceParameters::NOTURBULENCE :
     assert(false);
     break;
   }
@@ -145,16 +145,16 @@ evaluate()
   
   switch ( turbParams_.turbModelName ) {
 
-    case Wasatch::SMAGORINSKY:
+    case Wasatch::TurbulenceParameters::SMAGORINSKY:
       result <<= *rho_ * mixingLengthSq  * sqrt(2.0 * *strTsrSq_) ; // rho * (Cs * delta)^2 * |S|, Cs is the Smagorinsky constant
       break;
 
-    case Wasatch::DYNAMIC:
+    case Wasatch::TurbulenceParameters::DYNAMIC:
       // tsaad.Note: When the dynamic model is used, the DynamicSmagorinskyCoefficient expression calculates both the coefficient and the StrainTensorMagnitude = sqrt(2*Sij*Sij). Unlike the StrainTensorMagnitude.cc Expression, which calculates SijSij instead. That's why for the constant smagorinsky case, we have take the sqrt() of that quanitity. In the Dynamic model case, we don't.
       result <<= *rho_ * *dynCoef_ * *strTsrSq_;//*rho_ * *dynCoef_ * sqrt(2.0 * *strTsrSq_);
       break;
 
-    case Wasatch::WALE:
+    case Wasatch::TurbulenceParameters::WALE:
     {
       SpatFldPtr<SVolField> denom = SpatialFieldStore::get<SVolField>( result );
       *denom <<= pow(*strTsrSq_, 2.5) + pow(*waleTsrMag_, 1.25);
@@ -163,7 +163,7 @@ evaluate()
     }
       break;
 
-    case Wasatch::VREMAN:
+    case Wasatch::TurbulenceParameters::VREMAN:
       // NOTE: the constant used in the Vreman model input corresponds to the
       // best Smagorinsky constant when using the constant Smagorinsky model
       // for the problem being simulated. The Vreman constant is estimated at Cv ~ 2.5 Cs

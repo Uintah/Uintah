@@ -30,22 +30,6 @@
 namespace Wasatch{
   /**
    *  \ingroup WasatchCore
-   *  \enum TurbulenceModelsNames
-   *  \author Tony Saad, Amir Biglari
-   *  \date   June, 2012
-   *
-   *  \brief An enum listing the supported turbulence models. 
-   */  
-  enum TurbulenceModelsNames {
-    SMAGORINSKY,
-    DYNAMIC,
-    WALE,
-    VREMAN,
-    NOTURBULENCE
-  };
-  
-  /**
-   *  \ingroup WasatchCore
    *  \struct TurbulenceParameters
    *  \author Tony Saad, Amir Biglari
    *  \date   June, 2012
@@ -53,6 +37,23 @@ namespace Wasatch{
    *  \brief Holds some key parameters for supported turbulence models.
    */
   struct TurbulenceParameters {
+
+    /**
+     *  \ingroup WasatchCore
+     *  \enum TurbulenceModelsNames
+     *  \author Tony Saad, Amir Biglari
+     *  \date   June, 2012
+     *
+     *  \brief An enum listing the supported turbulence models.
+     */
+    enum TurbulenceModelsNames {
+      SMAGORINSKY,
+      DYNAMIC,
+      WALE,
+      VREMAN,
+      NOTURBULENCE
+    };
+    
     TurbulenceParameters();
     double turbSchmidt;
     double turbPrandtl;
