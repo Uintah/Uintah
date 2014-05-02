@@ -3,7 +3,7 @@
 
 #include <expression/Expression.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-
+#include <CCA/Components/Wasatch/VardenParameters.h>
 #include <limits>
 #include <iostream>
 #include <fstream>
@@ -104,14 +104,18 @@ public:
     Builder( const Expr::Tag& result,
             const double rho0,
             const double rho1,
+            const Expr::Tag densTag,
+            const Expr::Tag dens2StarTag,            
             const Expr::Tag& xTag,
             const Expr::Tag& tTag,
-            const Expr::Tag& timestepTag );
+            const Expr::Tag& timestepTag,
+            const Wasatch::VarDenParameters varDenParams );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
     const double rho0_, rho1_;
-    const Expr::Tag xTag_, tTag_, timestepTag_;
+    const Expr::Tag densTag_, dens2StarTag_, xTag_, tTag_, timestepTag_;
+    const Wasatch::VarDenParameters varDenParams_;
   };
   
   void advertise_dependents( Expr::ExprDeps& exprDeps );
@@ -123,12 +127,18 @@ private:
   
   VarDen1DMMSContinuitySrc( const double rho0,
                           const double rho1,
+                          const Expr::Tag densTag,
+                          const Expr::Tag dens2StarTag,
                           const Expr::Tag& xTag,
                           const Expr::Tag& tTag,
-                          const Expr::Tag& timestepTag );
+                          const Expr::Tag& timestepTag,
+                          const Wasatch::VarDenParameters varDenParams);
   const double rho0_, rho1_;
-  const Expr::Tag xTag_, tTag_, timestepTag_;
+  const Expr::Tag densTag_, dens2StarTag_, xTag_, tTag_, timestepTag_;
+  const double a0_;
+  const Wasatch::VarDenParameters::VariableDensityModels model_;
   const FieldT* x_;
+  const SVolField *dens_, *dens2Star_;
   const TimeField *t_, *timestep_;
 };
 

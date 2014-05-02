@@ -682,7 +682,14 @@
                 attribute1="value REQUIRED DOUBLE"
                 attribute2="name REQUIRED STRING" />          
       <NameTag  spec="OPTIONAL" />
-    </Density>    
+    </Density>   
+    
+    <!-- =========================================================================== -->
+    <!-- CAUTION! FOR DEVELOPER USE ONLY -->
+    <!-- =========================================================================== -->
+    <VariableDensity spec="OPTIONAL NO_DATA" 
+                     attribute1="model REQUIRED STRING 'CONSTANT, IMPULSE'"
+                     attribute2="coefficient REQUIRED DOUBLE"/>
     
     <!-- ============================ -->
     <!-- Spec for a TransportEquation -->

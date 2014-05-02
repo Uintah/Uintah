@@ -565,6 +565,7 @@ namespace Wasatch{
                              GraphCategories& gc,
                              Uintah::ProblemSpecP params,
                              TurbulenceParameters turbulenceParams,
+                             VarDenParameters varDenParams,
                              Uintah::SolverInterface& linSolver,
                              Uintah::SimulationStateP sharedState)
     : TransportEquation( gc,
@@ -714,7 +715,7 @@ namespace Wasatch{
           psrcTagList.push_back(tagNames.drhodtstar );
         }
       std::cout << "registering pressure source \n";
-        factory.register_expression( new typename PressureSource::Builder( psrcTagList, momTags_, velStarTags, isConstDensity, densTag, densStarTag, dens2StarTag) );
+        factory.register_expression( new typename PressureSource::Builder( psrcTagList, momTags_, velStarTags, isConstDensity, densTag, densStarTag, dens2StarTag, varDenParams) );
     }
     
     //__________________

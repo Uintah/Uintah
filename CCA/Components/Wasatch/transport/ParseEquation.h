@@ -34,6 +34,7 @@
 #include <CCA/Components/Wasatch/transport/TransportEquation.h>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
+#include <CCA/Components/Wasatch/VardenParameters.h>
 
 #include <CCA/Components/Wasatch/Expressions/RHSTerms.h>
 
@@ -123,8 +124,9 @@ namespace Wasatch{
    *          plug this transport equation into a TimeStepper.
    */
   std::vector<EqnTimestepAdaptorBase*>
-  parse_momentum_equations( Uintah::ProblemSpecP params,
+  parse_momentum_equations( Uintah::ProblemSpecP momentumSpec,
                             const TurbulenceParameters turbParams,
+                            const VarDenParameters varDenParams,
                             const bool useAdaptiveDt,
                             const bool isConstDensity,
                             const Expr::Tag densityTag,
