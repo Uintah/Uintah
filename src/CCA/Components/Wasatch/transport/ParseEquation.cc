@@ -27,7 +27,7 @@
 #include <CCA/Components/Wasatch/TimeStepper.h>
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
-
+#include <CCA/Components/Wasatch/VardenParameters.h>
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 
 //-- Add headers for individual transport equations here --//
@@ -341,7 +341,17 @@ namespace Wasatch{
     
     const Expr::Tag varDensMMSPressureContSrc = Expr::Tag( "mms_pressure_continuity_src", Expr::STATE_NONE);
    
-    slngraphHelper->exprFactory->register_expression( new VarDen1DMMSContinuitySrc<SVolField>::Builder( tagNames.mms_continuitysrc, rho0, rho1, tagNames.xsvolcoord, tagNames.time, tagNames.dt));
+
+    Uintah::ProblemSpecP densityParams  = wasatchParams->findBlock("Density");
+    Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
+    Expr::Tag dens2StarTag = tagNames.make_double_star(densityTag, Expr::CARRY_FORWARD);
+
+    // get the variable density model information from the input file
+    Uintah::ProblemSpecP varDenModelParams = wasatchParams->findBlock("VariableDensity");
+    VarDenParameters varDenParams;
+    parse_varden_input(varDenModelParams, varDenParams);
+    
+    slngraphHelper->exprFactory->register_expression( new VarDen1DMMSContinuitySrc<SVolField>::Builder( tagNames.mms_continuitysrc, rho0, rho1, densityTag, dens2StarTag, tagNames.xsvolcoord, tagNames.time, tagNames.dt, varDenParams));
     slngraphHelper->exprFactory->register_expression( new VarDen1DMMSPressureContSrc<SVolField>::Builder( tagNames.mms_pressurecontsrc, tagNames.mms_continuitysrc, tagNames.dt));
     
     slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_pressurecontsrc, tagNames.pressuresrc);
@@ -410,7 +420,12 @@ namespace Wasatch{
     //      alphaParams->get("b",b);
     //    }
     
-    slngraphHelper->exprFactory->register_expression( new VarDenMMSOscillatingContinuitySrc<SVolField>::Builder( tagNames.mms_continuitysrc, densityTag, densStarTag, dens2StarTag, velStarTags, rho0, rho1,w, k, uf, vf, tagNames.xsvolcoord, tagNames.ysvolcoord, tagNames.time, tagNames.dt));
+    // get the variable density model information from the input file
+    Uintah::ProblemSpecP varDenModelParams = wasatchParams->findBlock("VariableDensity");
+    VarDenParameters varDenParams;
+    parse_varden_input(varDenModelParams, varDenParams);
+
+    slngraphHelper->exprFactory->register_expression( new VarDenMMSOscillatingContinuitySrc<SVolField>::Builder( tagNames.mms_continuitysrc, densityTag, densStarTag, dens2StarTag, velStarTags, rho0, rho1,w, k, uf, vf, tagNames.xsvolcoord, tagNames.ysvolcoord, tagNames.time, tagNames.dt, varDenParams));
     slngraphHelper->exprFactory->register_expression( new VarDen1DMMSPressureContSrc<SVolField>::Builder( tagNames.mms_pressurecontsrc, tagNames.mms_continuitysrc, tagNames.dt));
     
     std::cout << "attaching dependency to psrc \n";
@@ -466,8 +481,9 @@ namespace Wasatch{
   //==================================================================
   
   std::vector<EqnTimestepAdaptorBase*>
-  parse_momentum_equations( Uintah::ProblemSpecP params,
+  parse_momentum_equations( Uintah::ProblemSpecP momentumSpec,
                             const TurbulenceParameters turbParams,
+                            const VarDenParameters varDenParams,
                             const bool useAdaptiveDt,
                             const bool isConstDensity,
                             const Expr::Tag densityTag,
@@ -478,14 +494,14 @@ namespace Wasatch{
     EquationAdaptors adaptors;
 
     std::string xvelname, yvelname, zvelname;
-    const Uintah::ProblemSpecP doxvel = params->get( "X-Velocity", xvelname );
-    const Uintah::ProblemSpecP doyvel = params->get( "Y-Velocity", yvelname );
-    const Uintah::ProblemSpecP dozvel = params->get( "Z-Velocity", zvelname );
+    const Uintah::ProblemSpecP doxvel = momentumSpec->get( "X-Velocity", xvelname );
+    const Uintah::ProblemSpecP doyvel = momentumSpec->get( "Y-Velocity", yvelname );
+    const Uintah::ProblemSpecP dozvel = momentumSpec->get( "Z-Velocity", zvelname );
 
     std::string xmomname, ymomname, zmomname;
-    const Uintah::ProblemSpecP doxmom = params->get( "X-Momentum", xmomname );
-    const Uintah::ProblemSpecP doymom = params->get( "Y-Momentum", ymomname );
-    const Uintah::ProblemSpecP dozmom = params->get( "Z-Momentum", zmomname );
+    const Uintah::ProblemSpecP doxmom = momentumSpec->get( "X-Momentum", xmomname );
+    const Uintah::ProblemSpecP doymom = momentumSpec->get( "Y-Momentum", ymomname );
+    const Uintah::ProblemSpecP dozmom = momentumSpec->get( "Z-Momentum", zmomname );
 
     // check if none of the momentum directions were specified
     if( !(doxvel || doyvel || dozvel) ){
@@ -498,7 +514,7 @@ namespace Wasatch{
     // parse body force expression
     std::string bodyForceDir;
     Expr::Tag xBodyForceTag, yBodyForceTag, zBodyForceTag;
-    for( Uintah::ProblemSpecP bodyForceParams=params->findBlock("BodyForce");
+    for( Uintah::ProblemSpecP bodyForceParams=momentumSpec->findBlock("BodyForce");
         bodyForceParams != 0;
         bodyForceParams=bodyForceParams->findNextBlock("BodyForce") ){
       bodyForceParams->getAttribute("direction", bodyForceDir );
@@ -510,7 +526,7 @@ namespace Wasatch{
     // parse source expression
     std::string srcTermDir;
     Expr::Tag xSrcTermTag, ySrcTermTag, zSrcTermTag;
-    for( Uintah::ProblemSpecP srcTermParams=params->findBlock("SourceTerm");
+    for( Uintah::ProblemSpecP srcTermParams=momentumSpec->findBlock("SourceTerm");
         srcTermParams != 0;
         srcTermParams=srcTermParams->findNextBlock("SourceTerm") ){
       srcTermParams->getAttribute("direction", srcTermDir );
@@ -538,8 +554,9 @@ namespace Wasatch{
                                                          xBodyForceTag,
                                                          xSrcTermTag,
                                                          gc,
-                                                         params,
+                                                         momentumSpec,
                                                          turbParams,
+                                                         varDenParams,
                                                          linSolver, sharedState );
       adaptors.push_back( scinew EqnTimestepAdaptor<XVolField>(momtranseq) );
     }
@@ -554,8 +571,9 @@ namespace Wasatch{
                                                          yBodyForceTag,
                                                          ySrcTermTag,
                                                          gc,
-                                                         params,
+                                                         momentumSpec,
                                                          turbParams,
+                                                         varDenParams,
                                                          linSolver,sharedState );
       adaptors.push_back( scinew EqnTimestepAdaptor<YVolField>(momtranseq) );
     }
@@ -570,8 +588,9 @@ namespace Wasatch{
                                                          zBodyForceTag,
                                                          zSrcTermTag,
                                                          gc,
-                                                         params,
+                                                         momentumSpec,
                                                          turbParams,
+                                                         varDenParams,
                                                          linSolver,sharedState );
       adaptors.push_back( scinew EqnTimestepAdaptor<ZVolField>(momtranseq) );
     }
@@ -582,7 +601,7 @@ namespace Wasatch{
       const Expr::Tag xVelTag = doxvel ? Expr::Tag(xvelname, Expr::STATE_NONE) : Expr::Tag();
       const Expr::Tag yVelTag = doyvel ? Expr::Tag(yvelname, Expr::STATE_NONE) : Expr::Tag();
       const Expr::Tag zVelTag = dozvel ? Expr::Tag(zvelname, Expr::STATE_NONE) : Expr::Tag();
-      const Expr::Tag viscTag = (params->findBlock("Viscosity")) ? parse_nametag( params->findBlock("Viscosity")->findBlock("NameTag") ) : Expr::Tag();
+      const Expr::Tag viscTag = (momentumSpec->findBlock("Viscosity")) ? parse_nametag( momentumSpec->findBlock("Viscosity")->findBlock("NameTag") ) : Expr::Tag();
       const Expr::ExpressionID stabDtID = solnGraphHelper->exprFactory->register_expression(scinew StableTimestep::Builder( TagNames::self().stableTimestep,
                                                                                                                            densityTag,
                                                                                                                            viscTag,

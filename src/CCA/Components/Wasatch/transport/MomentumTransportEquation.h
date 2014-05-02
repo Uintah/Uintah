@@ -32,6 +32,7 @@
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/BCHelperTools.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
+#include <CCA/Components/Wasatch/VardenParameters.h>
 #include <CCA/Components/Wasatch/transport/TransportEquation.h>
 
 //-- Uintah includes --//
@@ -90,6 +91,7 @@ namespace Wasatch{
                                GraphCategories& grafCat,
                                Uintah::ProblemSpecP params,
                                TurbulenceParameters turbulenceParams,
+                               VarDenParameters varDenParams,
                                Uintah::SolverInterface& linSolver,
                                Uintah::SimulationStateP sharedState );
 

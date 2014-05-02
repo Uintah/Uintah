@@ -134,15 +134,22 @@ template<typename FieldT>
 VarDen1DMMSContinuitySrc<FieldT>::
 VarDen1DMMSContinuitySrc( const double rho0,
                         const double rho1,
+                         const Expr::Tag densTag,
+                         const Expr::Tag dens2StarTag,
                         const Expr::Tag& xTag,
                         const Expr::Tag& tTag,
-                        const Expr::Tag& timestepTag)
+                        const Expr::Tag& timestepTag,
+                        const Wasatch::VarDenParameters varDenParams)
 : Expr::Expression<FieldT>(),
 rho0_( rho0 ),
 rho1_( rho1 ),
+densTag_(densTag),
+dens2StarTag_(dens2StarTag),
 xTag_( xTag ),
 tTag_( tTag ),
-timestepTag_( timestepTag )
+timestepTag_( timestepTag ),
+a0_(varDenParams.alpha0),
+model_(varDenParams.model)
 {
   this->set_gpu_runnable( true );
 }
@@ -157,6 +164,10 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
   exprDeps.requires_expression( xTag_ );
   exprDeps.requires_expression( tTag_ );
   exprDeps.requires_expression( timestepTag_ );
+  if (model_ != Wasatch::VarDenParameters::CONSTANT) {
+    exprDeps.requires_expression( densTag_ );
+    exprDeps.requires_expression( dens2StarTag_ );
+  }
 }
 
 //--------------------------------------------------------------------
@@ -171,6 +182,13 @@ bind_fields( const Expr::FieldManagerList& fml )
   const typename Expr::FieldMgrSelector<TimeField>::type& tfm = fml.field_manager<TimeField>();
   t_        = &tfm.field_ref( tTag_        );
   timestep_ = &tfm.field_ref( timestepTag_ );
+  
+  if (model_ != Wasatch::VarDenParameters::CONSTANT) {
+    const typename Expr::FieldMgrSelector<SVolField>::type& sfm = fml.field_manager<SVolField>();
+    dens_ = &sfm.field_ref( densTag_ );
+    dens2Star_ = &sfm.field_ref( dens2StarTag_ );
+  }
+
 }
 
 //--------------------------------------------------------------------
@@ -183,12 +201,29 @@ evaluate()
   using namespace SpatialOps;
   FieldT& result = this->value();
   
-  const double alpha = 0.1;   // the continuity equation weighting factor
-  
   SpatFldPtr<TimeField> t = SpatialFieldStore::get<TimeField>( *t_ );
   *t <<= *t_ + *timestep_;
   
-  result <<= alpha *
+
+  SpatialOps::SpatFldPtr<SVolField> alpha = SpatialOps::SpatialFieldStore::get<SVolField>( result );
+
+  switch (model_) {
+    case Wasatch::VarDenParameters::CONSTANT:
+      *alpha <<= a0_;
+      break;
+    case Wasatch::VarDenParameters::IMPULSE:
+    {
+      SpatialOps::SpatFldPtr<SVolField> drhodtstar = SpatialOps::SpatialFieldStore::get<SVolField>( result );
+      *drhodtstar <<= (*dens2Star_ - *dens_)/(2. * *timestep_);
+      *alpha <<= cond(*drhodtstar == 0.0, 1.0)(a0_);
+    }
+      break;
+    default:
+      *alpha <<= 0.1;
+      break;
+  }
+
+  result <<= *alpha *
   (
    (
     ( 10/( exp((5 * (*x_ * *x_))/( *t + 10)) * ((2 * *t + 5) * (2 * *t + 5)) )
@@ -233,15 +268,21 @@ VarDen1DMMSContinuitySrc<FieldT>::Builder::
 Builder( const Expr::Tag& result,
         const double rho0,
         const double rho1,
+        const Expr::Tag densTag,
+        const Expr::Tag dens2StarTag,
         const Expr::Tag& xTag,
         const Expr::Tag& tTag,
-        const Expr::Tag& timestepTag )
+        const Expr::Tag& timestepTag,
+        const Wasatch::VarDenParameters varDenParams)
 : ExpressionBuilder(result),
 rho0_( rho0 ),
 rho1_( rho1 ),
+densTag_(densTag),
+dens2StarTag_(dens2StarTag),
 xTag_( xTag ),
 tTag_( tTag ),
-timestepTag_( timestepTag )
+timestepTag_( timestepTag ),
+varDenParams_(varDenParams)
 {}
 
 //--------------------------------------------------------------------
@@ -251,7 +292,7 @@ Expr::ExpressionBase*
 VarDen1DMMSContinuitySrc<FieldT>::Builder::
 build() const
 {
-  return new VarDen1DMMSContinuitySrc<FieldT>( rho0_, rho1_, xTag_, tTag_, timestepTag_ );
+  return new VarDen1DMMSContinuitySrc<FieldT>( rho0_, rho1_, densTag_, dens2StarTag_, xTag_, tTag_, timestepTag_, varDenParams_ );
 }
 
 //--------------------------------------------------------------------

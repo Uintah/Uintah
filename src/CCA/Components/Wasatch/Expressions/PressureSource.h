@@ -8,7 +8,7 @@
 
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVStaggeredOperatorTypes.h>
-
+#include <CCA/Components/Wasatch/VardenParameters.h>
 
 /**
  *  \ingroup WasatchExpressions
@@ -64,6 +64,9 @@ class PressureSource : public Expr::Expression<SVolField>
   const Expr::Tag xMomt_, yMomt_, zMomt_;
   const Expr::Tag xVelStart_, yVelStart_, zVelStart_, denst_, densStart_, dens2Start_, dilt_, timestept_;
   
+  const double a0_;
+  const Wasatch::VarDenParameters::VariableDensityModels model_;
+  
   const GradXT* gradXOp_;
   const GradYT* gradYOp_;
   const GradZT* gradZOp_;
@@ -76,7 +79,8 @@ class PressureSource : public Expr::Expression<SVolField>
                   const bool isConstDensity,
                   const Expr::Tag densTag,
                   const Expr::Tag densStarTag,
-                  const Expr::Tag dens2StarTag );
+                  const Expr::Tag dens2StarTag,
+                  const Wasatch::VarDenParameters varDenParams);
 public:
   
   /**
@@ -115,7 +119,8 @@ public:
              const bool isConstDensity,
              const Expr::Tag densTag,
              const Expr::Tag densStarTag,
-             const Expr::Tag dens2StarTag );
+             const Expr::Tag dens2StarTag,
+             const Wasatch::VarDenParameters varDenParams);
     
     ~Builder(){}
     
@@ -125,6 +130,7 @@ public:
     const bool isConstDens_;
     const Expr::TagList momTs_, velStarTs_;
     const Expr::Tag denst_, densStart_, dens2Start_;
+    const Wasatch::VarDenParameters varDenParams_;
   };
   
   ~PressureSource();

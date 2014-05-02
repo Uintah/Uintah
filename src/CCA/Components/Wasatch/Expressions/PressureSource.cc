@@ -11,7 +11,8 @@ PressureSource::PressureSource( const Expr::TagList& momTags,
                                 const bool isConstDensity,
                                 const Expr::Tag densTag,
                                 const Expr::Tag densStarTag,
-                                const Expr::Tag dens2StarTag )
+                                const Expr::Tag dens2StarTag,
+                                const Wasatch::VarDenParameters varDenParams)
 : Expr::Expression<SVolField>(),
   isConstDensity_( isConstDensity ),
   doX_      ( momTags[0]!=Expr::Tag() ),
@@ -28,7 +29,9 @@ PressureSource::PressureSource( const Expr::TagList& momTags,
   densStart_  ( densStarTag==Expr::Tag() ? Expr::Tag() : densStarTag    ),
   dens2Start_ ( densStarTag==Expr::Tag() ? Expr::Tag() : dens2StarTag   ),
   dilt_       ( Wasatch::TagNames::self().dilatation ),
-  timestept_  ( Wasatch::TagNames::self().dt )
+  timestept_  ( Wasatch::TagNames::self().dt ),
+  a0_( varDenParams.alpha0),
+  model_(varDenParams.model)
 {
   set_gpu_runnable( true );
 }
@@ -137,7 +140,7 @@ void PressureSource::evaluate()
   
   SVolField& psrc = *results[0];
 
-  if( isConstDensity_ ){
+  if( isConstDensity_ ) {
     
     psrc <<= *dens_ * *dil_ / *timestep_;
     
@@ -179,7 +182,17 @@ void PressureSource::evaluate()
     // INSTEAD OF SCALING WITH BETA, TRY DRHODT
 //    alpha <<=  0.9/(abs(drhodtstar) + 1.0) + 0.1 ;
 
-    alpha <<= 0.1; // use this for the moment until we figure out the proper model for alpha
+    switch (model_) {
+      case Wasatch::VarDenParameters::CONSTANT:
+        alpha <<= a0_;
+        break;
+      case Wasatch::VarDenParameters::IMPULSE:
+        alpha <<= cond(drhodtstar == 0.0, 1.0)(a0_);
+        break;
+      default:
+        alpha <<= 0.1;
+        break;
+    }
 
     drhodt <<= alpha * drhodtstar - (1.0 - alpha) * divmomstar;
     
@@ -209,14 +222,16 @@ PressureSource::Builder::Builder( const Expr::TagList& results,
                                   const bool isConstDensity,
                                   const Expr::Tag densTag,
                                   const Expr::Tag densStarTag,
-                                  const Expr::Tag dens2StarTag )
+                                  const Expr::Tag dens2StarTag,
+                                  const Wasatch::VarDenParameters varDenParams)
 : ExpressionBuilder(results),
   isConstDens_( isConstDensity ),
   momTs_      ( densStarTag==Expr::Tag() ? Expr::TagList() : momTags     ),
   velStarTs_  ( densStarTag==Expr::Tag() ? Expr::TagList() : velStarTags ),
   denst_     ( densTag      ),
   densStart_ ( densStarTag  ),
-  dens2Start_( dens2StarTag )
+  dens2Start_( dens2StarTag ),
+  varDenParams_(varDenParams)
 {}
 
 //------------------------------------------------------------------
@@ -224,7 +239,7 @@ PressureSource::Builder::Builder( const Expr::TagList& results,
 Expr::ExpressionBase*
 PressureSource::Builder::build() const
 {
-  return new PressureSource( momTs_, velStarTs_, isConstDens_, denst_, densStart_, dens2Start_ );
+  return new PressureSource( momTs_, velStarTs_, isConstDens_, denst_, densStart_, dens2Start_, varDenParams_ );
 }
 //------------------------------------------------------------------
 

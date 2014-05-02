@@ -520,7 +520,14 @@ namespace Wasatch{
     Uintah::ProblemSpecP turbulenceModelParams = wasatchSpec_->findBlock("Turbulence");
     TurbulenceParameters turbParams;
     parse_turbulence_input(turbulenceModelParams, turbParams);
-    
+
+    //
+    // get the variable density model params, if any, and parse them.
+    //
+    Uintah::ProblemSpecP varDenModelParams = wasatchSpec_->findBlock("VariableDensity");
+    VarDenParameters varDenParams;
+    parse_varden_input(varDenModelParams, varDenParams);
+
     //
     // Build transport equations.  This registers all expressions as
     // appropriate for solution of each transport equation.
@@ -576,6 +583,7 @@ namespace Wasatch{
       try{
           const EquationAdaptors adaptors = parse_momentum_equations( momEqnParams,
                                                                       turbParams,
+                                                                      varDenParams,
                                                                       useAdaptiveDt,
                                                                       isConstDensity,
                                                                       densityTag,
