@@ -62,7 +62,6 @@
 
 #include <iostream>
 
-
 namespace Wasatch{
 
 
@@ -1120,14 +1119,14 @@ namespace Wasatch{
         Expr::Tag convFluxTag,                                  \
         const ConvInterpMethods convMethod,                     \
         const Expr::Tag advVelocityTag,                         \
-        const std::string suffix,                                \
+        const std::string suffix,                               \
         Expr::ExpressionFactory& factory,                       \
         FieldTagInfo& info );                                   \
                                                                 \
     template void setup_convective_flux_expression<FIELDT>(     \
         Uintah::ProblemSpecP convFluxParams,                    \
         const Expr::Tag solnVarName,                            \
-        const std::string suffix,                                \
+        const std::string suffix,                               \
         Expr::ExpressionFactory& factory,                       \
         FieldTagInfo& info );
 

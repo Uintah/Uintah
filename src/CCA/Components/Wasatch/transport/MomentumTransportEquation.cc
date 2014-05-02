@@ -100,7 +100,7 @@ namespace Wasatch{
     switch (turbParams.turbModelName) {
         
         // ---------------------------------------------------------------------
-      case SMAGORINSKY: {
+      case TurbulenceParameters::SMAGORINSKY: {
         strTsrMagTag = tagNames.straintensormag;//( "StrainTensorMagnitude", Expr::STATE_NONE );
         if( !factory.have_entry( strTsrMagTag ) ){
           typedef StrainTensorSquare::Builder StrTsrMagT;
@@ -113,7 +113,7 @@ namespace Wasatch{
         break;
 
         // ---------------------------------------------------------------------
-      case VREMAN: {
+      case TurbulenceParameters::VREMAN: {
         vremanTsrMagTag = tagNames.vremantensormag;
         if( !factory.have_entry( vremanTsrMagTag ) ){
           typedef VremanTensorMagnitude::Builder VremanTsrMagT;
@@ -123,7 +123,7 @@ namespace Wasatch{
         break;
         
         // ---------------------------------------------------------------------
-      case WALE: {
+      case TurbulenceParameters::WALE: {
         strTsrMagTag = tagNames.straintensormag;
         if( !factory.have_entry( strTsrMagTag ) ){
           typedef StrainTensorSquare::Builder StrTsrMagT;
@@ -143,7 +143,7 @@ namespace Wasatch{
         break;
         
         // ---------------------------------------------------------------------
-      case DYNAMIC: {
+      case TurbulenceParameters::DYNAMIC: {
         strTsrMagTag = tagNames.straintensormag;//( "StrainTensorMagnitude", Expr::STATE_NONE );
 
         Expr::TagList dynamicSmagTagList;
@@ -574,7 +574,7 @@ namespace Wasatch{
                          get_staggered_location<FieldT>(),
                          isConstDensity ),
       isViscous_       ( params->findBlock("Viscosity") ? true : false ),
-      isTurbulent_     ( turbulenceParams.turbModelName != NOTURBULENCE ),
+      isTurbulent_     ( turbulenceParams.turbModelName != TurbulenceParameters::NOTURBULENCE ),
       thisVelTag_      ( Expr::Tag(velName, Expr::STATE_NONE) ),
       densityTag_      ( densTag                              ),
       normalStrainID_  ( Expr::ExpressionID::null_id()        ),

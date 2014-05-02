@@ -68,7 +68,7 @@ namespace Wasatch{
                                   get_staggered_location<FieldT>(),
                                   isConstDensity ),
       densityTag_( densityTag ),
-      enableTurbulence_( !params->findBlock("DisableTurbulenceModel") && (turbulenceParams.turbModelName != NOTURBULENCE) )
+      enableTurbulence_( !params->findBlock("DisableTurbulenceModel") && (turbulenceParams.turbModelName != TurbulenceParameters::NOTURBULENCE) )
   {
     //_____________
     // Turbulence
