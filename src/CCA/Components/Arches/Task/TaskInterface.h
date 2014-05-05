@@ -4,6 +4,7 @@
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/MemoryWindow.h>
 
+#include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -11,6 +12,7 @@
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/Task.h>
@@ -56,6 +58,7 @@ public:
       const VarLabel* label; 
       Task::WhichDW uintah_task_dw; 
       Ghost::GhostType ghost_type; 
+      bool        local;  
     
     };
 
@@ -70,9 +73,40 @@ public:
       std::cout << "Task: " << _task_name << std::endl; 
     }
 
+    /** @brief Get the type for templated tasks **/ 
+    template <class T> 
+    void set_type(){
+
+      if ( typeid(T) == typeid(CCVariable<double>) ){
+        _mytype = CC_DOUBLE; 
+      } else if ( typeid(T) == typeid(SFCXVariable<double>)){ 
+        _mytype = FACEX; 
+      } else if ( typeid(T) == typeid(SFCYVariable<double>)){ 
+        _mytype = FACEY; 
+      } else if ( typeid(T) == typeid(SFCZVariable<double>)){ 
+        _mytype = FACEZ; 
+      } else if ( typeid(T) == typeid(SpatialOps::structured::SVolField)){ 
+        _mytype = CC_DOUBLE; 
+      } else if ( typeid(T) == typeid(SpatialOps::structured::SSurfXField)){ 
+        _mytype = FACEX; 
+      } else if ( typeid(T) == typeid(SpatialOps::structured::SSurfYField)){ 
+        _mytype = FACEY; 
+      } else if ( typeid(T) == typeid(SpatialOps::structured::SSurfZField)){ 
+        _mytype = FACEZ; 
+      }
+
+    }
+
+
     /** @brief Registers all variables with pertinent information for the 
      *         uintah dw interface **/ 
     virtual void register_all_variables( std::vector<VariableInformation>& variable_registry ) = 0; 
+
+    /** @brief Input file interface **/ 
+    virtual void problemSetup( ProblemSpecP& db ) = 0; 
+
+    /** @brief Initialization method **/ 
+    virtual void register_initialize( std::vector<VariableInformation>& variable_registry ) = 0; 
 
     /** @brief Matches labels to variables in the registry **/ 
     void resolve_labels( std::vector<VariableInformation>& variable_registry ); 
@@ -101,6 +135,20 @@ public:
                   DataWarehouse* new_dw, 
                   std::vector<VariableInformation> variable_registry, 
                   int time_substep );
+
+    /** @brief Add this task to the Uintah task scheduler **/ 
+    void schedule_init( const LevelP& level, 
+                        SchedulerP& sched, 
+                        const MaterialSet* matls );
+
+    /** @brief The actual task interface function that references the 
+     *         derived class implementation **/ 
+    void do_init( const ProcessorGroup* pc, 
+                  const PatchSubset* patches, 
+                  const MaterialSubset* matls, 
+                  DataWarehouse* old_dw, 
+                  DataWarehouse* new_dw, 
+                  std::vector<VariableInformation> variable_registry );
 
     //Shamelessly stolen from Wasatch: 
     /**
@@ -160,6 +208,22 @@ public:
                          deviceIndex );
     }
 
+    /** @brief Builder class containing instructions on how to build the task **/ 
+    class TaskBuilder { 
+
+      public: 
+
+        TaskBuilder(){}; 
+
+        virtual ~TaskBuilder() {}
+
+        virtual TaskInterface* build() = 0; 
+
+      protected: 
+
+    }; 
+
+
 
 protected: 
 
@@ -200,7 +264,12 @@ protected:
                          const int time_substep );
 
     /** @brief The actual work done within the derived class **/ 
-    virtual void eval( const Patch* patch, UintahVarMap& var_map, ConstUintahVarMap& const_var_map ) = 0; 
+    virtual void eval( const Patch* patch, UintahVarMap& var_map, 
+                       ConstUintahVarMap& const_var_map, SpatialOps::OperatorDatabase& opr, const int time_substep ) = 0; 
+
+    /** @brief The actual work done within the derived class **/ 
+    virtual void initialize( const Patch* patch, UintahVarMap& var_map, 
+                             ConstUintahVarMap& const_var_map, SpatialOps::OperatorDatabase& opr ) = 0; 
 
     /** @brief Return the UINTAH grid variable by string name. **/ 
     template<class T, class M>
@@ -317,21 +386,10 @@ protected:
     };
 
 
-    /** @brief Builder class containing instructions on how to build the task **/ 
-    class TaskBuilder { 
-
-      public: 
-
-        virtual ~TaskBuilder() {}
-
-        virtual TaskInterface* build() = 0; 
-
-      protected: 
-
-    }; 
-
     std::string _task_name; 
     const int _matl_index; 
+    VAR_TYPE _mytype;
+    std::vector<const VarLabel*> _local_labels;
    
 private: 
 

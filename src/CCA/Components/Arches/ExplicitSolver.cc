@@ -39,6 +39,7 @@
 //#include <CCA/Components/Arches/Task/TaskInterface.h>
 //#include <CCA/Components/Arches/Task/SampleTask.h>
 //#include <CCA/Components/Arches/Task/TemplatedSampleTask.h>
+//#include <CCA/Components/Arches/Task/SampleFactory.h>
 
 #include <CCA/Components/Arches/ExplicitSolver.h>
 #include <Core/Containers/StaticArray.h>
@@ -134,6 +135,7 @@ ExplicitSolver::~ExplicitSolver()
   if ( d_wall_ht_models != 0 ){ 
     delete d_wall_ht_models; 
   }
+  //delete _test_factory; 
 }
 
 // ****************************************************************************
@@ -145,6 +147,10 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params, SimulationStateP & st
 
   ProblemSpecP db = params->findBlock("ExplicitSolver");
   ProblemSpecP db_parent = params; 
+
+  //_test_factory = scinew SampleFactory(); 
+  //_test_factory->register_all_tasks( db ); 
+  //_test_factory->build_all_tasks( db ); 
 
   if ( db->findBlock( "print_total_ke" ) ){ 
     d_printTotalKE = true; 
@@ -442,11 +448,11 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     if ( hl_model != 0 )
       hl_model->sched_computeProp( level, sched, curr_level ); 
 
+//    TaskInterface& tsk1 = _test_factory->retrieve_task("sample_task"); 
+//    tsk1.schedule_task( level, sched, matls, curr_level ); 
 
-//    TaskInterface* sample_task = scinew SampleTask("test_task",0); 
-//    TaskInterface* templated_sample_task = scinew TemplatedSampleTask<CCVariable<double> >("template_task",0);
-//    sample_task->print_task_name(); 
-//    sample_task->schedule_task( level, sched, matls, curr_level ); 
+//    TaskInterface& tsk2 = _test_factory->retrieve_task("templated_task"); 
+//    tsk2.schedule_task( level, sched, matls, curr_level ); 
 
     //1st TABLE LOOKUP
     bool initialize_it  = false;

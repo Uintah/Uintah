@@ -203,6 +203,13 @@ public:
     d_with_mpmarches = true;
   };
 
+//  void sched_create_patch_operators( const LevelP& level, SchedulerP& sched ); 
+//  void create_patch_operators( const ProcessorGroup* pg,
+//                               const PatchSubset* patches,
+//                               const MaterialSubset* matls,
+//                               DataWarehouse* old_dw,
+//                               DataWarehouse* new_dw);
+
 
 protected:
 
@@ -213,6 +220,7 @@ private:
   Arches(const Arches&);
 
   Arches& operator=(const Arches&);
+
 
   void paramInit(const ProcessorGroup*,
                  const PatchSubset* patches,

@@ -79,6 +79,7 @@
 #include <CCA/Components/Arches/SmagorinskyModel.h>
 #include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
 #include <CCA/Components/Arches/ChemMix/ChemHelper.h>
+//#include <CCA/Components/Arches/Operators/Operators.h>
 
 #include <CCA/Components/Arches/TurbulenceModelPlaceholder.h>
 
@@ -100,6 +101,8 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Parallel/Parallel.h>
+//#include <spatialops/structured/FVStaggeredFieldTypes.h>
+//#include <spatialops/structured/MemoryWindow.h>
 
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
@@ -956,6 +959,8 @@ Arches::scheduleInitialize(const LevelP& level,
  if( level->getIndex() != d_archesLevelIndex )
   return;
 
+  //sched_create_patch_operators( level, sched ); 
+
   const PatchSet* patches= level->eachPatch();
   const MaterialSet* matls = d_sharedState->allArchesMaterials();
 
@@ -1103,6 +1108,48 @@ Arches::scheduleInitialize(const LevelP& level,
 # endif // WASATCH_IN_ARCHES
 
 }
+
+//void 
+//Arches::sched_create_patch_operators( const LevelP& level, SchedulerP& sched ){ 
+//
+//  Task* tsk = scinew Task( "Arches::create_patch_operators", this, &Arches::create_patch_operators);
+//  
+//  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+//
+//}
+//
+//void 
+//Arches::create_patch_operators( const ProcessorGroup* pg,
+//                                const PatchSubset* patches,
+//                                const MaterialSubset* matls,
+//                                DataWarehouse* old_dw,
+//                                DataWarehouse* new_dw)
+//{
+//  for (int p = 0; p < patches->size(); p++) {
+//
+//    const Patch* patch = patches->get(p);
+//    Operators& opr = Operators::self(); 
+//
+//    IntVector low = patch->getExtraCellLowIndex(); 
+//    IntVector high = patch->getExtraCellHighIndex(); 
+//
+//    IntVector size = high - low; 
+//
+//    Vector Dx = patch->dCell(); 
+//    Vector L(size[0]*Dx.x(),size[1]*Dx.y(),size[2]*Dx.z());
+//
+//    Operators::PatchInfo pi;
+//
+//    int pid = patch->getID(); 
+//
+//    SpatialOps::structured::build_stencils( size[0], size[1], size[2],
+//                                               L[0],    L[1],    L[2],
+//                                             pi._sodb );
+//
+//    opr.patch_info_map.insert(std::make_pair(pid, pi)); 
+//
+//  }
+//}
 
 void
 Arches::restartInitialize()

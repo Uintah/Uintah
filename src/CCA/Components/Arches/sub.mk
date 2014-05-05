@@ -108,7 +108,7 @@ LIBS := $(LIBS) $(XML2_LIBRARY) $(F_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
         $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) \
         $(RADPROPS_LIBRARY) $(TABPROPS_LIBRARY) \
         $(BOOST_LIBRARY) $(Z_LIBRARY) \
-##				$(SPATIALOPS_LIBRARY)
+#				$(SPATIALOPS_LIBRARY)
 
 INCLUDES := $(INCLUDES) $(BOOST_INCLUDE) $(TABPROPS_INCLUDE) $(RADPROPS_INCLUDE)
 
@@ -123,7 +123,8 @@ SUBDIRS := $(SRCDIR)/ChemMix            \
            $(SRCDIR)/Radiation/fortran  \
            $(SRCDIR)/SourceTerms        \
            $(SRCDIR)/TransportEqns      \
-##					 $(SRCDIR)/Task 
+#					 $(SRCDIR)/Task               \
+#					 $(SRCDIR)/Operators
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 #### End handle subdirs
