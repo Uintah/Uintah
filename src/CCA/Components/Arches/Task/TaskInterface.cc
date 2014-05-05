@@ -6,6 +6,7 @@
 //#include <boost/foreach.hpp>
 
 using namespace Uintah; 
+namespace SS = SpatialOps::structured;
 
 TaskInterface::TaskInterface( std::string task_name, int matl_index ) : 
   _task_name(task_name),
@@ -449,6 +450,29 @@ void TaskInterface::schedule_task( const LevelP& level,
 
   sched->addTask( tsk, level->eachPatch(), matls );
 
+}
+
+//====================================================================================
+//
+//====================================================================================
+
+void TaskInterface::get_bc_logicals( const Uintah::Patch* const patch,
+                                     SS::IntVec& bcMinus,
+                                     SS::IntVec& bcPlus )
+{
+  for( int i=0; i<3; ++i ){
+    bcMinus[i] = 1;
+    bcPlus [i] = 1;
+  }
+  std::vector<Uintah::Patch::FaceType> faces;
+  patch->getNeighborFaces(faces);
+  for( std::vector<Uintah::Patch::FaceType>::const_iterator i=faces.begin(); i!=faces.end(); ++i ){
+    SCIRun::IntVector dir = patch->getFaceDirection(*i);
+    for( int j=0; j<3; ++j ){
+      if( dir[j] == -1 ) bcMinus[j]=0;
+      if( dir[j] ==  1 ) bcPlus [j]=0;
+    }
+  }
 }
 
 //====================================================================================

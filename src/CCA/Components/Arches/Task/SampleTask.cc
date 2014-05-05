@@ -1,5 +1,8 @@
 #include <CCA/Components/Arches/Task/SampleTask.h>
 
+#include <spatialops/Nebo.h>
+
+
 using namespace Uintah;
 
 SampleTask::SampleTask( std::string task_name, int matl_index ) : 
@@ -15,6 +18,7 @@ SampleTask::register_all_variables( std::vector<VariableInformation>& variable_r
 
   //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
   register_variable( "a_sample_variable", CC_DOUBLE, LOCAL_COMPUTES, 0, NEWDW,  variable_registry );
+  register_variable( "a_result_variable", CC_DOUBLE, LOCAL_COMPUTES, 0, NEWDW,  variable_registry );
   register_variable( "uVelocitySPBC",     FACEX,     REQUIRES,       1, LATEST, variable_registry );
   register_variable( "vVelocitySPBC",     FACEY,     REQUIRES,       2, LATEST, variable_registry );
 
@@ -24,13 +28,27 @@ SampleTask::register_all_variables( std::vector<VariableInformation>& variable_r
 void 
 SampleTask::eval( const Patch* patch, UintahVarMap& var_map, ConstUintahVarMap& const_var_map ){ 
 
-  CCVariable<double>*      temp = get_var<CCVariable<double> >("a_sample_variable", var_map);
-  constSFCXVariable<double>*  u = get_var<constSFCXVariable<double> >("uVelocitySPBC", const_var_map); 
-  constSFCYVariable<double>*  v = get_var<constSFCYVariable<double> >("vVelocitySPBC", const_var_map); 
+  using namespace SpatialOps;
+  using SpatialOps::operator *; //becuase MPM is opening up SCIRun namespace which is causing clashes -- may need to divorce Arhces completely from mpmarches. 
 
-  std::cout << (*u)[IntVector(1,1,1)] << std::endl;
-  std::cout << (*v)[IntVector(1,1,1)] << std::endl;
+  typedef SpatialOps::structured::SVolField   SVol;
+  typedef SpatialOps::structured::SSurfXField SurfX;
 
-  temp->initialize(3.0); 
+  //CCVariable<double>*      temp = get_uintah_grid_var<CCVariable<double> >("a_sample_variable", var_map);
+  //CCVariable<double>*     temp2 = get_uintah_grid_var<CCVariable<double> >("a_result_variable", var_map); 
+  //constSFCXVariable<double>*  u = get_uintah_grid_var<constSFCXVariable<double> >("uVelocitySPBC", const_var_map); 
+  constSFCYVariable<double>*  v = get_uintah_grid_var<constSFCYVariable<double> >("vVelocitySPBC", const_var_map); 
+  SVol* const so_field = get_sos_grid_var<SVol>("a_sample_variable", var_map, patch, 0 ); 
+  SVol* const re_field = get_sos_grid_var<SVol>("a_result_variable", var_map, patch, 0 ); 
+  SurfX* const u_1 = get_sos_grid_var<SurfX>("uVelocitySPBC", var_map, patch, 0 ); 
+
+ // temp->initialize(4.5); 
+ //
+  *so_field <<= 2.0;
+
+
+  *re_field <<= (*so_field)/(*so_field); 
+
+  *re_field <<= 2.0*(*so_field); 
 
 }

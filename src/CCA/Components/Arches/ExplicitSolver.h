@@ -79,7 +79,6 @@ class PartVel;
 class DQMOM;
 class EfficiencyCalculator; 
 class WallModelDriver; 
-class TaskInterface; 
 class ExplicitSolver: public NonlinearSolver {
 
 public:
@@ -364,8 +363,6 @@ private:
   SolverInterface* d_hypreSolver;             // infrastructure hypre solver
 
   EfficiencyCalculator* d_eff_calculator; 
-
-//  TaskInterface* _sample_task; 
 
   //Diagnostics
   bool d_printTotalKE; 
