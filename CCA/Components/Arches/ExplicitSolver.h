@@ -65,6 +65,7 @@ WARNING
 #include <CCA/Components/Arches/ExplicitTimeInt.h>
 
 namespace Uintah {
+//class TaskFactoryBase; 
 class PressureSolver;
 class MomentumSolver;
 class ScalarSolver;
@@ -362,6 +363,7 @@ private:
   SolverInterface* d_hypreSolver;             // infrastructure hypre solver
 
   EfficiencyCalculator* d_eff_calculator; 
+  //TaskFactoryBase* _test_factory; 
 
   //Diagnostics
   bool d_printTotalKE; 

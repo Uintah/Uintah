@@ -5,6 +5,7 @@
 
 namespace Uintah{ 
 
+  class Operators; 
   class SampleTask : public TaskInterface { 
 
 public: 
@@ -12,9 +13,18 @@ public:
     SampleTask( std::string task_name, int matl_index ); 
     ~SampleTask(); 
 
+    void problemSetup( ProblemSpecP& db ); 
+
     void register_all_variables( std::vector<VariableInformation>& variable_registry ); 
 
-    void eval( const Patch* patch, UintahVarMap& var_map, ConstUintahVarMap& const_var_map ); 
+    void register_initialize( std::vector<VariableInformation>& variable_registry );
+
+    void eval( const Patch* patch, UintahVarMap& var_map, 
+               ConstUintahVarMap& const_var_map, SpatialOps::OperatorDatabase& opr, 
+               const int time_substep ); 
+
+    void initialize( const Patch* patch, UintahVarMap& var_map, 
+                     ConstUintahVarMap& const_var_map, SpatialOps::OperatorDatabase& opr );
 
     //Build instructions for this (SampleTask) class. 
     class Builder : public TaskInterface::TaskBuilder { 
@@ -33,6 +43,10 @@ public:
       int _matl_index; 
 
     };
+
+private: 
+
+    double _value; 
   
   };
 }
