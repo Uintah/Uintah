@@ -2837,9 +2837,12 @@ if test "$with_mkl"; then
 
   if test "$with_mkl" = "yes"; then
     AC_MSG_ERROR(You must specify a directory with --with-mkl=DIR)
-  elif test "$with_mkl"; then
+  else
     _sci_lib="$with_mkl/lib"
     _sci_inc="$with_mkl/include"
+    if test ! -e "$with_mkl" -o ! -e "$_sci_lib" -o ! -e "$_sci_inc"; then
+       AC_MSG_ERROR(with_mkl (or lib/incldue) dir does not exist: $with_mkl)
+    fi
     
     # _sci_optional=specific TESTING FOR SPECIFIC NOT IMPLEMENTED!!!
     
@@ -2886,6 +2889,10 @@ if test "$with_mkl"; then
 
        ;;
   esac
+
+  if test "$HAVE_BLAS" != "yes"; then
+    AC_MSG_ERROR(Failed to link against MKL specified by --with_mkl.)
+  fi
 
   HAVE_LAPACK=$HAVE_BLAS
 
