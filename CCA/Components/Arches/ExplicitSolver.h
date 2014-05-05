@@ -65,7 +65,6 @@ WARNING
 #include <CCA/Components/Arches/ExplicitTimeInt.h>
 
 namespace Uintah {
-  using namespace SCIRun;
 class PressureSolver;
 class MomentumSolver;
 class ScalarSolver;

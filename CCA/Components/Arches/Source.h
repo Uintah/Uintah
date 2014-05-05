@@ -71,7 +71,6 @@ namespace Uintah {
   class ProcessorGroup;
 class PhysicalConstants;
 class BoundaryCondition;
-using namespace SCIRun;
 
 class Source {
 

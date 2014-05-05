@@ -41,7 +41,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
-  using namespace SCIRun;
+
 class PhysicalConstants {
 
 public:
@@ -54,10 +54,10 @@ public:
   void problemSetup(const ProblemSpecP& params);
 
   /** @brief return gravity vecotr **/ 
-  const Vector& getGravity(){ return d_gravity; }
+  const SCIRun::Vector& getGravity(){ return d_gravity; }
 
   /** @brief get reference point i,j,k **/ 
-  const IntVector& getRefPoint(){ return d_ref_point; }
+  const SCIRun::IntVector& getRefPoint(){ return d_ref_point; }
 
   /** @brief return only one component of the gravity vector **/ 
   double getGravity(int index){
@@ -84,8 +84,8 @@ private:
 
 private:
 
-  Vector d_gravity;
-  IntVector d_ref_point;
+  SCIRun::Vector d_gravity;
+  SCIRun::IntVector d_ref_point;
   double d_viscosity;
     
 }; // end class PhysicalConstants

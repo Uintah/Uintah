@@ -12,7 +12,6 @@
 
 namespace Uintah {
 
-using namespace SCIRun; 
 class ArchesLabel;   
 class ExplicitTimeInt {
     

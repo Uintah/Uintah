@@ -44,8 +44,6 @@ namespace Uintah {
   class ProcessorGroup;
   class PhysicalConstants;
 
-using namespace SCIRun;
-
 /**************************************
 
 CLASS
