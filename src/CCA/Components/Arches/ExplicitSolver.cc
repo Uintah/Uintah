@@ -38,6 +38,7 @@
 #include <CCA/Components/Arches/DQMOM.h>
 //#include <CCA/Components/Arches/Task/TaskInterface.h>
 //#include <CCA/Components/Arches/Task/SampleTask.h>
+//#include <CCA/Components/Arches/Task/TemplatedSampleTask.h>
 
 #include <CCA/Components/Arches/ExplicitSolver.h>
 #include <Core/Containers/StaticArray.h>
@@ -443,6 +444,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
 
 //    TaskInterface* sample_task = scinew SampleTask("test_task",0); 
+//    TaskInterface* templated_sample_task = scinew TemplatedSampleTask<CCVariable<double> >("template_task",0);
 //    sample_task->print_task_name(); 
 //    sample_task->schedule_task( level, sched, matls, curr_level ); 
 

@@ -45,8 +45,6 @@ class ArchesLabel;
 class CellInformation;
 // class StencilMatrix;
 
-using namespace SCIRun;
-
 /**************************************
 CLASS
    RadiationSolver
