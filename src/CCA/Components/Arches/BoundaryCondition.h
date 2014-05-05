@@ -78,7 +78,6 @@ none
 
 namespace Uintah {
 
-  using namespace SCIRun;
   class ArchesVariables;
   class ArchesConstVariables;
   class CellInformation;
