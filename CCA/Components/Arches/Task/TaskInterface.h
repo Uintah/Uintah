@@ -102,6 +102,7 @@ public:
                   std::vector<VariableInformation> variable_registry, 
                   int time_substep );
 
+    //Shamelessly stolen from Wasatch: 
     /**
      * \fn void get_bc_logicals( const Uintah::Patch* const, SpatialOps::structured::IntVec&, SpatialOps::structured::IntVec& );
      * \brief Given the patch, populate information about whether a physical
@@ -205,21 +206,116 @@ protected:
     template<class T, class M>
     T* get_uintah_grid_var(std::string name, M& var_map); 
 
-    template<class SOST, class M>
-    inline SOST* get_sos_grid_var(std::string name, M& var_map, 
-                                  const Patch* patch, const int nghost );
+    /** @brief Struct for template function specialization to return the SO field **/ 
+    template<class ST, class M>
+    struct SO{ 
+      ST* get_so_grid_var( std::string name, M& var_map, const Patch* patch, const int nGhost, TaskInterface& tsk ){
+        throw InvalidValue("Arches Task Error: (SPATIAL OPS) Cannot resolve grid variable "+name, __FILE__, __LINE__); 
+      };
+    };
+
     template<class M>
-    inline SpatialOps::structured::SVolField* get_sos_grid_var(std::string name, M& var_map, 
-                                  const Patch* patch, const int n_ghost );
+    struct SO<SpatialOps::structured::SVolField,M>{
+      SpatialOps::structured::SVolField* get_so_grid_var( std::string name, M& var_map, const Patch* patch, const int nGhost, TaskInterface& tsk ){
+        std::map<std::string, constVariableBase<GridVariableBase>* > test_const;
+        bool do_const = false; 
+        if (typeid(var_map) == typeid(test_const)){ 
+          do_const = true; 
+        }
+        if ( var_map.find(name) != var_map.end() ) {
+
+          if ( do_const ){ 
+            constCCVariable<double>* var = dynamic_cast<constCCVariable<double>* >(var_map.find(name)->second); 
+            return tsk.wrap_uintah_field_as_spatialops<SpatialOps::structured::SVolField>( var, patch, nGhost );
+          } else { 
+            CCVariable<double>* var = dynamic_cast<CCVariable<double>* >(var_map.find(name)->second); 
+            return tsk.wrap_uintah_field_as_spatialops<SpatialOps::structured::SVolField>( var, patch, nGhost );
+          }
+
+        }
+        throw InvalidValue("Arches Task Error: (SPATIAL OPS) Cannot resolve grid variable "+name, __FILE__, __LINE__); 
+      };
+    };
     template<class M>
-    inline SpatialOps::structured::SSurfXField* get_sos_grid_var(std::string name, M& var_map, 
-                                  const Patch* patch, const int n_ghost );
+    struct SO<SpatialOps::structured::SSurfXField,M>{
+      SpatialOps::structured::SSurfXField* get_so_grid_var( std::string name, M& var_map, const Patch* patch, const int nGhost, TaskInterface& tsk ){
+        std::map<std::string, constVariableBase<GridVariableBase>* > test_const;
+        bool do_const = false; 
+        if (typeid(var_map) == typeid(test_const)){ 
+          do_const = true; 
+        }
+        if ( var_map.find(name) != var_map.end() ) {
+
+          if ( do_const ){ 
+            constSFCXVariable<double>* var = dynamic_cast<constSFCXVariable<double>* >(var_map.find(name)->second); 
+            return tsk.wrap_uintah_field_as_spatialops<SpatialOps::structured::SSurfXField>( var, patch, nGhost );
+          } else { 
+            SFCXVariable<double>* var = dynamic_cast<SFCXVariable<double>* >(var_map.find(name)->second); 
+            return tsk.wrap_uintah_field_as_spatialops<SpatialOps::structured::SSurfXField>( var, patch, nGhost );
+          }
+
+        }
+
+        throw InvalidValue("Arches Task Error: (SPATIAL OPS) Cannot resolve grid variable "+name, __FILE__, __LINE__); 
+
+      }
+    };
     template<class M>
-    inline SpatialOps::structured::SSurfYField* get_sos_grid_var(std::string name, M& var_map, 
-                                  const Patch* patch, const int n_ghost );
+    struct SO<SpatialOps::structured::SSurfYField,M>{
+      SpatialOps::structured::SSurfYField* get_so_grid_var( std::string name, M& var_map, const Patch* patch, const int nGhost, TaskInterface& tsk ){
+        std::map<std::string, constVariableBase<GridVariableBase>* > test_const;
+        bool do_const = false; 
+        if (typeid(var_map) == typeid(test_const)){ 
+          do_const = true; 
+        }
+        if ( var_map.find(name) != var_map.end() ) {
+
+          if ( do_const ){ 
+            constSFCYVariable<double>* var = dynamic_cast<constSFCYVariable<double>* >(var_map.find(name)->second); 
+            return tsk.wrap_uintah_field_as_spatialops<SpatialOps::structured::SSurfYField>( var, patch, nGhost );
+          } else { 
+            SFCYVariable<double>* var = dynamic_cast<SFCYVariable<double>* >(var_map.find(name)->second); 
+            return tsk.wrap_uintah_field_as_spatialops<SpatialOps::structured::SSurfYField>( var, patch, nGhost );
+          }
+
+        }
+
+        throw InvalidValue("Arches Task Error: (SPATIAL OPS) Cannot resolve grid variable "+name, __FILE__, __LINE__); 
+
+      }
+    };
     template<class M>
-    inline SpatialOps::structured::SSurfZField* get_sos_grid_var(std::string name, M& var_map, 
-                                  const Patch* patch, const int n_ghost );
+    struct SO<SpatialOps::structured::SSurfZField,M>{
+      SpatialOps::structured::SSurfZField* get_so_grid_var( std::string name, M& var_map, const Patch* patch, const int nGhost, TaskInterface& tsk ){
+        std::map<std::string, constVariableBase<GridVariableBase>* > test_const;
+        bool do_const = false; 
+        if (typeid(var_map) == typeid(test_const)){ 
+          do_const = true; 
+        }
+        if ( var_map.find(name) != var_map.end() ) {
+
+          if ( do_const ){ 
+            constSFCZVariable<double>* var = dynamic_cast<constSFCZVariable<double>* >(var_map.find(name)->second); 
+            return tsk.wrap_uintah_field_as_spatialops<SpatialOps::structured::SSurfZField>( var, patch, nGhost );
+          } else { 
+            SFCZVariable<double>* var = dynamic_cast<SFCZVariable<double>* >(var_map.find(name)->second); 
+            return tsk.wrap_uintah_field_as_spatialops<SpatialOps::structured::SSurfZField>( var, patch, nGhost );
+          }
+
+        }
+
+        throw InvalidValue("Arches Task Error: (SPATIAL OPS) Cannot resolve grid variable "+name, __FILE__, __LINE__); 
+
+      }
+    };
+
+    template<class ST, class M>
+    ST* get_so_field(std::string name, M& var_map, const Patch* patch, const int nGhost, TaskInterface& tsk){ 
+      SO<ST,M> func; 
+      ST* field = func.get_so_grid_var(name, var_map, patch, nGhost, tsk); 
+      return field; 
+    };
+
 
     /** @brief Builder class containing instructions on how to build the task **/ 
     class TaskBuilder { 
@@ -263,70 +359,6 @@ private:
 
     throw InvalidValue("Arches Task Error: (UINTAH) Cannot resolve grid variable "+name, __FILE__, __LINE__); 
   
-  };
-
-  //SPATIAL OPS
-  template<class SOST, class M>
-  inline SOST* TaskInterface::get_sos_grid_var(std::string name, M& var_map, const Patch* patch, const int n_ghost ){
-
-    throw InvalidValue("Arches Task Error: (SPATIAL OPS) No known SpatialOps conversion for variable named: "+name, __FILE__, __LINE__); 
-
-  };
-
-  template<class M>
-  inline SpatialOps::structured::SVolField* TaskInterface::get_sos_grid_var(std::string name, M& var_map, const Patch* patch, const int n_ghost ){
-
-    if ( var_map.find(name) != var_map.end() ) {
-
-      CCVariable<double>* var = dynamic_cast<CCVariable<double>* >(var_map.find(name)->second); 
-      return wrap_uintah_field_as_spatialops<SpatialOps::structured::SVolField>( var, patch, n_ghost );
-
-    }
-
-    throw InvalidValue("Arches Task Error: (SPATIAL OPS) Cannot resolve grid variable "+name, __FILE__, __LINE__); 
-
-  };
-
-  template<class M>
-  inline SpatialOps::structured::SSurfXField* TaskInterface::get_sos_grid_var(std::string name, M& var_map, const Patch* patch, const int n_ghost ){
-
-    if ( var_map.find(name) != var_map.end() ) {
-
-      SFCXVariable<double>* var = dynamic_cast<SFCXVariable<double>* >(var_map.find(name)->second); 
-      return wrap_uintah_field_as_spatialops<SpatialOps::structured::SSurfXField>( var, patch, n_ghost );
-
-    }
-
-    throw InvalidValue("Arches Task Error: (SPATIAL OPS) Cannot resolve grid variable "+name, __FILE__, __LINE__); 
-
-  };
-
-  template<class M>
-  inline SpatialOps::structured::SSurfYField* TaskInterface::get_sos_grid_var(std::string name, M& var_map, const Patch* patch, const int n_ghost ){
-
-    if ( var_map.find(name) != var_map.end() ) {
-
-      SFCYVariable<double>* var = dynamic_cast<SFCYVariable<double>* >(var_map.find(name)->second); 
-      return wrap_uintah_field_as_spatialops<SpatialOps::structured::SSurfYField>( var, patch, n_ghost );
-
-    }
-
-    throw InvalidValue("Arches Task Error: (SPATIAL OPS) Cannot resolve grid variable "+name, __FILE__, __LINE__); 
-
-  };
-
-  template<class M>
-  inline SpatialOps::structured::SSurfZField* TaskInterface::get_sos_grid_var(std::string name, M& var_map, const Patch* patch, const int n_ghost ){
-
-    if ( var_map.find(name) != var_map.end() ) {
-
-      SFCZVariable<double>* var = dynamic_cast<SFCZVariable<double>* >(var_map.find(name)->second); 
-      return wrap_uintah_field_as_spatialops<SpatialOps::structured::SSurfZField>( var, patch, n_ghost );
-
-    }
-
-    throw InvalidValue("Arches Task Error: (SPATIAL OPS) Cannot resolve grid variable "+name, __FILE__, __LINE__); 
-
   };
 
 }
