@@ -4113,11 +4113,8 @@ if test "$with_boost"; then
       AC_MSG_ERROR( '$with_boost' directory does not exist. )
    elif test "$with_boost_library" -o "$with_boost_include" ; then
       AC_MSG_ERROR( You cannot use --with-boost and --with-boost-include/--with-boost-library. )
-   elif test "$with_boost" = "/usr"; then
+   elif test "$with_boost" != "/usr"; then
         # Check for header files
-        BOOST_INCLUDE_DIR=$with_boost/include/boost
-        BOOST_LIBRARY_DIR=$with_boost/lib
-   else
         BOOST_INCLUDE_DIR=$with_boost/include
         BOOST_LIBRARY_DIR=$with_boost/lib
    fi
@@ -4135,7 +4132,7 @@ if test "$with_boost_library" -o "$with_boost_include" ; then
    BOOST_LIBRARY_DIR=$with_boost_library
 fi
 
-if test "$BOOST_INCLUDE_DIR"; then
+if test "$with_boost" -o "$with_boost_library"; then
 
   _boost_incl="boost/signal.hpp boost/shared_ptr.hpp boost/bind.hpp boost/signal.hpp boost/ref.hpp boost/graph/adjacency_list.hpp boost/graph/graph_traits.hpp boost/graph/topological_sort.hpp boost/graph/graphviz.hpp boost/graph/breadth_first_search.hpp boost/graph/visitors.hpp boost/graph/transpose_graph.hpp boost/any.hpp boost/filesystem.hpp"
 
@@ -4162,9 +4159,22 @@ if test "$BOOST_INCLUDE_DIR"; then
         BOOST_LIB_DIR_FLAG="$LDRUN_PREFIX$BOOST_LIB_DIR -L$BOOST_LIB_DIR"
      fi
   fi
+
+
+  SCI_TRY_LINK( BOOST_FS_V3, check for boost filesystem v3 namespace...,$_boost_incl,$BOOST_INCLUDE_DIR,$_boost_libs,,
+                $BOOST_LIB_DIR_FLAG $BOOST_LIB_FLAG,
+                [  boost::system::error_code ec;
+                   boost::filesystem3::copy("abc","def", ec);  ],
+                optional)
+  if test "$HAVE_BOOST_FS_V3" = "yes"; then
+     DEF_BOOST_FILESYSTEM_NAMESPACE_V3="#define UINTAH_BOOST_FILESYSTEM_NAMESPACE_V3 1"
+  fi
+
+  sci_defs_files="$sci_defs_files include/sci_defs/boost_testdefs.h"
 fi
 AC_SUBST(HAVE_BOOST)
 AC_SUBST(DEF_BOOST)
+AC_SUBST(DEF_BOOST_FILESYSTEM_NAMESPACE_V3)
 AC_SUBST(INC_BOOST_H)
 AC_SUBST(BOOST_LIB_FLAG)
 AC_SUBST(BOOST_LIB_DIR_FLAG)
