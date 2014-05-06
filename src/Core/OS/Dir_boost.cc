@@ -30,6 +30,8 @@
 #include <Core/Exceptions/InternalError.h>
 //#include <Core/Util/FileUtils.h>
 
+#include <sci_defs/boost_defs.h>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 //#include <sys/syscall.h>
@@ -49,10 +51,10 @@
 
 #include <boost/filesystem/operations.hpp>
 
-#ifndef __bgq__
-  namespace bfs = boost::filesystem;
-#else
+#if defined( UINTAH_BOOST_FILESYSTEM_NAMESPACE_V3)
   namespace bfs = boost::filesystem3;
+#else
+  namespace bfs = boost::filesystem;
 #endif
 namespace bsys = boost::system;
 

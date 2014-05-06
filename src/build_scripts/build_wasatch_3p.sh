@@ -68,16 +68,21 @@ run()
 
 ############################################################################
 
-echo ""
-echo "------------------------------------------------------------------"
-echo "Building Wasatch Thirdparty Libraries..."
-echo ""
-echo "  Using Boost: Include: $BOOST_INCLUDE"
-echo "               Lib:     $BOOST_LIBRARY"
-echo ""
-echo "  Using Cmake: "`which cmake`
-echo ""
-echo "------------------------------------------------------------------"
+echo   ""
+echo   "------------------------------------------------------------------"
+echo   "Building Wasatch Thirdparty Libraries..."
+echo   ""
+if test -z "$BOOST_INCLUDE"; then
+  echo "  Using Boost: Built In"
+else
+  echo "  Using Boost: Include: $BOOST_INCLUDE"
+  echo "               Lib:     $BOOST_LIBRARY"
+  BOOST_FLAGS="-DBOOST_INCLUDEDIR=$BOOST_INCLUDE -DBOOST_LIBRARYDIR=$BOOST_LIBRARY"
+fi
+echo   ""
+echo   "  Using Cmake: "`which cmake`
+echo   ""
+echo   "------------------------------------------------------------------"
 ############################################################################
 # Go to build/install directory
 
@@ -115,8 +120,7 @@ run \
   $CUDA \
   -DENABLE_TESTS=OFF \
   -DENABLE_THREADS=OFF \
-  -DBOOST_INCLUDEDIR=$BOOST_INCLUDE \
-  -DBOOST_LIBRARYDIR=$BOOST_LIBRARY \
+  $BOOST_FLAGS \
   -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
   -DCMAKE_CXX_FLAGS="-fPIC" \
   .."
@@ -151,8 +155,7 @@ run                  \
   \
   -DSpatialOps_DIR=${SPATIAL_OPS_INSTALL_DIR}/share \
   \
-  -DBOOST_INCLUDEDIR=$BOOST_INCLUDE \
-  -DBOOST_LIBRARYDIR=$BOOST_LIBRARY \
+  $BOOST_FLAGS \
   \
   -DENABLE_UINTAH=ON \
   \
@@ -187,8 +190,7 @@ run \
   -DTabProps_UTILS=OFF \
   -DTabProps_ENABLE_TESTING=OFF \
   -DTabProps_ENABLE_IO=ON \
-  -DBOOST_INCLUDEDIR=$BOOST_INCLUDE \
-  -DBOOST_LIBRARYDIR=$BOOST_LIBRARY \
+  $BOOST_FLAGS \
   -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
   -DCMAKE_CXX_FLAGS=-fPIC \
   .."
@@ -218,8 +220,7 @@ run \
   $STATIC \
   -DRadProps_ENABLE_TESTING=OFF \
   -DRadProps_ENABLE_PREPROCESSOR=OFF \
-  -DBOOST_INCLUDEDIR=$BOOST_INCLUDE \
-  -DBOOST_LIBRARYDIR=$BOOST_LIBRARY \
+  $BOOST_FLAGS \
   -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
   -DCMAKE_CXX_FLAGS=-fPIC \
   -DTabProps_DIR=${BASE_BUILD_DIR}/Wasatch3P/install/TabProps/share \
