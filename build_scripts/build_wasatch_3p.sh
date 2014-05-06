@@ -151,6 +151,9 @@ run                  \
   \
   -DSpatialOps_DIR=${SPATIAL_OPS_INSTALL_DIR}/share \
   \
+  -DBOOST_INCLUDEDIR=$BOOST_INCLUDE \
+  -DBOOST_LIBRARYDIR=$BOOST_LIBRARY \
+  \
   -DENABLE_UINTAH=ON \
   \
   -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE}            \
