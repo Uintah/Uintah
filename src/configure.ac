@@ -4140,10 +4140,23 @@ if test "$with_boost" -o "$with_boost_library"; then
 
   _boost_libs="boost_thread boost_signals boost_serialization boost_system boost_program_options boost_filesystem"
 
-  SCI_TRY_LINK(BOOST,boost library and include headers,$_boost_incl,$BOOST_INCLUDE_DIR,$_boost_libs_mt,$BOOST_LIBRARY_DIR,,,optional)
+  SCI_TRY_LINK(BOOST,[boost library (mt version) and include headers],$_boost_incl,$BOOST_INCLUDE_DIR,$_boost_libs_mt,$BOOST_LIBRARY_DIR,,,optional)
+
+  if test "$HAVE_BOOST" = "yes" -a "$with_boost" != "/usr"; then
+    if test ! -e "$BOOST_LIBRARY_DIR"/libboost_thread-mt.so -a ! -e "$BOOST_LIBRARY_DIR"/libboost_thread-mt.a; then
+       AC_MSG_WARN( [Boost was found, but not in the right place... trying again.] )
+       HAVE_BOOST=no
+    fi
+  fi
 
   if test "$HAVE_BOOST" = "no"; then
      SCI_TRY_LINK(BOOST, boost library (non-mt) and include headers,$_boost_incl,$BOOST_INCLUDE_DIR,$_boost_libs,$BOOST_LIBRARY_DIR,,,optional)
+
+     if test "$HAVE_BOOST" = "yes" -a "$with_boost" != "/usr"; then
+        if test ! -e "$BOOST_LIBRARY_DIR"/libboost_thread.so -a ! -e "$BOOST_LIBRARY_DIR"/libboost_thread.a; then
+           AC_MSG_ERROR( Boost was found but not in the right place... )
+        fi
+     fi
   fi
 
   if test "$HAVE_BOOST" = "yes"; then
