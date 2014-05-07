@@ -4107,6 +4107,9 @@ BOOST_LIBRARY_DIR=
 
 if test "$with_boost"; then
 
+   # Remove the trailing / from with_boost (if any)
+   with_boost=${with_boost%/}
+
    if test "$with_boost" = "yes"; then
        AC_MSG_ERROR( --with-boost=DIR requires a DIRectory be provided. )
    elif test ! -d $with_boost; then
@@ -4490,7 +4493,7 @@ else
        test "$HAVE_SPATIALOPS" = "yes" &&
        test "$HAVE_EXPRLIB" = "yes"; then
       BUILD_WASATCH=yes
-      add_important_warning "All prereqs satisfied, turning on Wasatch component."
+      add_important_warning "All prereqs satisfied - turning on Wasatch component."
       AC_MSG_WARN(All prereqs satisfied, turning on Wasatch component.)
     fi
   fi

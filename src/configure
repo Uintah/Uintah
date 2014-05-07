@@ -12576,6 +12576,9 @@ fi
 
 for inc in $sci_thirdparty_include; do
 
+  # Remove any trailing / from inc.
+  inc=${inc%/}
+
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
      as_fn_error $? "Please do not specify /usr/include as the location for DL include files." "$LINENO" 5
@@ -15617,6 +15620,9 @@ fi
 
 for inc in $includes; do
 
+  # Remove any trailing / from inc.
+  inc=${inc%/}
+
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
      as_fn_error $? "Please do not specify /usr/include as the location for XML2 include files." "$LINENO" 5
@@ -16538,6 +16544,9 @@ fi
 
 for inc in $_sci_inc; do
 
+  # Remove any trailing / from inc.
+  inc=${inc%/}
+
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
      as_fn_error $? "Please do not specify /usr/include as the location for EXC include files." "$LINENO" 5
@@ -16980,6 +16989,9 @@ fi
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
 
 for inc in $_sci_inc; do
+
+  # Remove any trailing / from inc.
+  inc=${inc%/}
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
@@ -17499,6 +17511,9 @@ fi
 
 for inc in $_sci_inc; do
 
+  # Remove any trailing / from inc.
+  inc=${inc%/}
+
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
      as_fn_error $? "Please do not specify /usr/include as the location for Z include files." "$LINENO" 5
@@ -17974,6 +17989,9 @@ fi
 
 for inc in $_sci_inc; do
 
+  # Remove any trailing / from inc.
+  inc=${inc%/}
+
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
      as_fn_error $? "Please do not specify /usr/include as the location for JPEG include files." "$LINENO" 5
@@ -18433,6 +18451,9 @@ fi
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
 
 for inc in $_sci_inc; do
+
+  # Remove any trailing / from inc.
+  inc=${inc%/}
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
@@ -18944,6 +18965,9 @@ fi
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
 
 for inc in $_sci_inc; do
+
+  # Remove any trailing / from inc.
+  inc=${inc%/}
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
@@ -22683,6 +22707,9 @@ fi
 
 for inc in $_sci_inc; do
 
+  # Remove any trailing / from inc.
+  inc=${inc%/}
+
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
      as_fn_error $? "Please do not specify /usr/include as the location for F include files." "$LINENO" 5
@@ -23126,6 +23153,9 @@ fi
 
 for inc in $_sci_inc; do
 
+  # Remove any trailing / from inc.
+  inc=${inc%/}
+
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
      as_fn_error $? "Please do not specify /usr/include as the location for F include files." "$LINENO" 5
@@ -23568,6 +23598,9 @@ fi
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
 
 for inc in $_sci_inc; do
+
+  # Remove any trailing / from inc.
+  inc=${inc%/}
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
@@ -25709,6 +25742,9 @@ fi
 
 for inc in $_sci_inc; do
 
+  # Remove any trailing / from inc.
+  inc=${inc%/}
+
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
      as_fn_error $? "Please do not specify /usr/include as the location for BLAS include files." "$LINENO" 5
@@ -26215,6 +26251,9 @@ fi
 
 for inc in $_sci_inc; do
 
+  # Remove any trailing / from inc.
+  inc=${inc%/}
+
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
      as_fn_error $? "Please do not specify /usr/include as the location for BLAS include files." "$LINENO" 5
@@ -26718,6 +26757,9 @@ fi
 
 for inc in $_sci_inc; do
 
+  # Remove any trailing / from inc.
+  inc=${inc%/}
+
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
      as_fn_error $? "Please do not specify /usr/include as the location for BLAS include files." "$LINENO" 5
@@ -27207,6 +27249,9 @@ fi
 
 for inc in $altivec; do
 
+  # Remove any trailing / from inc.
+  inc=${inc%/}
+
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
      as_fn_error $? "Please do not specify /usr/include as the location for BLAS include files." "$LINENO" 5
@@ -27654,6 +27699,9 @@ fi
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
 
 for inc in $_sci_inc; do
+
+  # Remove any trailing / from inc.
+  inc=${inc%/}
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
@@ -28543,6 +28591,9 @@ fi
 
 for inc in $_sci_inc; do
 
+  # Remove any trailing / from inc.
+  inc=${inc%/}
+
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
      as_fn_error $? "Please do not specify /usr/include as the location for BLAS include files." "$LINENO" 5
@@ -28994,6 +29045,9 @@ fi
 
 for inc in $_sci_inc; do
 
+  # Remove any trailing / from inc.
+  inc=${inc%/}
+
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
      as_fn_error $? "Please do not specify /usr/include as the location for BLAS include files." "$LINENO" 5
@@ -29443,6 +29497,9 @@ fi
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
 
 for inc in $_sci_inc; do
+
+  # Remove any trailing / from inc.
+  inc=${inc%/}
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
@@ -33410,6 +33467,9 @@ fi
 
 for inc in $_sci_inc; do
 
+  # Remove any trailing / from inc.
+  inc=${inc%/}
+
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
      as_fn_error $? "Please do not specify /usr/include as the location for MPI include files." "$LINENO" 5
@@ -33889,6 +33949,9 @@ fi
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
 
 for inc in $_sci_inc; do
+
+  # Remove any trailing / from inc.
+  inc=${inc%/}
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
@@ -34539,6 +34602,9 @@ fi
 
 for inc in $_sci_inc; do
 
+  # Remove any trailing / from inc.
+  inc=${inc%/}
+
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
      as_fn_error $? "Please do not specify /usr/include as the location for PETSC include files." "$LINENO" 5
@@ -34994,6 +35060,9 @@ fi
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
 
 for inc in $_sci_inc; do
+
+  # Remove any trailing / from inc.
+  inc=${inc%/}
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
@@ -35677,6 +35746,9 @@ fi
 
 for inc in $_sci_inc; do
 
+  # Remove any trailing / from inc.
+  inc=${inc%/}
+
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
      as_fn_error $? "Please do not specify /usr/include as the location for PAPI include files." "$LINENO" 5
@@ -36211,6 +36283,9 @@ fi
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
 
 for inc in $_sci_inc; do
+
+  # Remove any trailing / from inc.
+  inc=${inc%/}
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
@@ -37237,6 +37312,9 @@ fi
 
 for inc in $_magma_inc $_cuda_inc; do
 
+  # Remove any trailing / from inc.
+  inc=${inc%/}
+
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
      as_fn_error $? "Please do not specify /usr/include as the location for MAGMA include files." "$LINENO" 5
@@ -37758,6 +37836,9 @@ fi
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
 
 for inc in $_sci_inc; do
+
+  # Remove any trailing / from inc.
+  inc=${inc%/}
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
@@ -38300,6 +38381,9 @@ fi
 
 for inc in $_sci_inc; do
 
+  # Remove any trailing / from inc.
+  inc=${inc%/}
+
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
      as_fn_error $? "Please do not specify /usr/include as the location for TEEM include files." "$LINENO" 5
@@ -38781,6 +38865,9 @@ fi
 
 for inc in $_sci_inc; do
 
+  # Remove any trailing / from inc.
+  inc=${inc%/}
+
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
      as_fn_error $? "Please do not specify /usr/include as the location for HDF5 include files." "$LINENO" 5
@@ -39181,6 +39268,9 @@ BOOST_LIBRARY_DIR=
 
 if test "$with_boost"; then
 
+   # Remove the trailing / from with_boost (if any)
+   with_boost=${with_boost%/}
+
    if test "$with_boost" = "yes"; then
        as_fn_error $? "--with-boost=DIR requires a DIRectory be provided. " "$LINENO" 5
    elif test ! -d $with_boost; then
@@ -39289,6 +39379,9 @@ fi
 # If $BOOST_INCLUDE_DIR (the -I paths) is blank, do nothing, else do the for statement.
 
 for inc in $BOOST_INCLUDE_DIR; do
+
+  # Remove any trailing / from inc.
+  inc=${inc%/}
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
@@ -39741,6 +39834,9 @@ fi
 # If $BOOST_INCLUDE_DIR (the -I paths) is blank, do nothing, else do the for statement.
 
 for inc in $BOOST_INCLUDE_DIR; do
+
+  # Remove any trailing / from inc.
+  inc=${inc%/}
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
@@ -40206,6 +40302,9 @@ fi
 # If $BOOST_INCLUDE_DIR (the -I paths) is blank, do nothing, else do the for statement.
 
 for inc in $BOOST_INCLUDE_DIR; do
+
+  # Remove any trailing / from inc.
+  inc=${inc%/}
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
@@ -40992,7 +41091,7 @@ $as_echo "$as_me: WARNING: $msg" >&2;}
        test "$HAVE_SPATIALOPS" = "yes" &&
        test "$HAVE_EXPRLIB" = "yes"; then
       BUILD_WASATCH=yes
-      add_important_warning "All prereqs satisfied, turning on Wasatch component."
+      add_important_warning "All prereqs satisfied - turning on Wasatch component."
       { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: All prereqs satisfied" >&5
 $as_echo "$as_me: WARNING: All prereqs satisfied" >&2;}
     fi
@@ -41120,6 +41219,9 @@ fi
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
 
 for inc in $_sci_inc; do
+
+  # Remove any trailing / from inc.
+  inc=${inc%/}
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
@@ -41564,6 +41666,9 @@ fi
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
 
 for inc in $_sci_inc; do
+
+  # Remove any trailing / from inc.
+  inc=${inc%/}
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
