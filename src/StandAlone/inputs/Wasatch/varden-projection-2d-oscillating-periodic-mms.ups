@@ -9,6 +9,7 @@
   <Wasatch>
     <TimeIntegrator> FE </TimeIntegrator>    
 
+		<VariableDensity model="CONSTANT" coefficient="0.1"/>
     <Density>
       <NameTag name="density" state="CARRY_FORWARD"/>
     </Density>
@@ -99,8 +100,10 @@
       </Viscosity>
       <ComputeMassResidual/>
       <Pressure>
-        <Use3DLaplacian>   false</Use3DLaplacian>
-
+        <ReferencePressure value="0.0">
+        	<ReferenceCell>[0,0,0]</ReferenceCell>
+        </ReferencePressure>
+        <Use3DLaplacian>   true</Use3DLaplacian>
         <Parameters>
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
