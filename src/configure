@@ -40578,7 +40578,6 @@ _sci_includes=''
      DEF_BOOST_FILESYSTEM_NAMESPACE_V3="#define UINTAH_BOOST_FILESYSTEM_NAMESPACE_V3 1"
   fi
 
-  sci_defs_files="$sci_defs_files include/sci_defs/boost_testdefs.h"
 fi
 
 
@@ -40592,6 +40591,8 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
+
+sci_defs_files="$sci_defs_files include/sci_defs/boost_testdefs.h"
 
 ##  --  search for Hash Map ------------------------
 
