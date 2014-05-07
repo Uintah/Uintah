@@ -4183,7 +4183,6 @@ if test "$with_boost" -o "$with_boost_library"; then
      DEF_BOOST_FILESYSTEM_NAMESPACE_V3="#define UINTAH_BOOST_FILESYSTEM_NAMESPACE_V3 1"
   fi
 
-  sci_defs_files="$sci_defs_files include/sci_defs/boost_testdefs.h"
 fi
 AC_SUBST(HAVE_BOOST)
 AC_SUBST(DEF_BOOST)
@@ -4192,6 +4191,8 @@ AC_SUBST(INC_BOOST_H)
 AC_SUBST(BOOST_LIB_FLAG)
 AC_SUBST(BOOST_LIB_DIR_FLAG)
 AC_LANG([C])
+
+sci_defs_files="$sci_defs_files include/sci_defs/boost_testdefs.h"
 
 ##  --  search for Hash Map ------------------------
 
