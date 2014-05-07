@@ -39216,7 +39216,7 @@ if test "$with_boost" -o "$with_boost_library"; then
 
 
 ##
-## SCI_TRY_LINK (BOOST):  boost library and include headers
+## SCI_TRY_LINK (BOOST):  boost library (mt version) and include headers
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -39248,7 +39248,7 @@ if test "$with_boost" -o "$with_boost_library"; then
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : BOOST
-## arg 2 : boost library and include headers
+## arg 2 : boost library (mt version) and include headers
 ## arg 3 : $_boost_incl
 ## arg 4 : $BOOST_INCLUDE_DIR
 ## arg 5 : $_boost_libs_mt
@@ -39268,12 +39268,12 @@ if test "$with_boost" -o "$with_boost_library"; then
 ##      HAVE_BOOST_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for boost library and include headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for boost library (mt version) and include headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for boost library and include headers (optional)" >&5
-$as_echo_n "checking for boost library and include headers (optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for boost library (mt version) and include headers (optional)" >&5
+$as_echo_n "checking for boost library (mt version) and include headers (optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -39283,7 +39283,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for boost library and include headers must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for boost library (mt version) and include headers must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $BOOST_INCLUDE_DIR (the -I paths) is blank, do nothing, else do the for statement.
@@ -39652,10 +39652,18 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (BOOST):  boost library and include headers
+## END of SCI_TRY_LINK (BOOST):  boost library (mt version) and include headers
 ##
 
 
+
+  if test "$HAVE_BOOST" = "yes" -a "$with_boost" != "/usr"; then
+    if test ! -e "$BOOST_LIBRARY_DIR"/libboost_thread-mt.so -a ! -e "$BOOST_LIBRARY_DIR"/libboost_thread-mt.a; then
+       { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Boost was found, but not in the right place... trying again. " >&5
+$as_echo "$as_me: WARNING: Boost was found, but not in the right place... trying again. " >&2;}
+       HAVE_BOOST=no
+    fi
+  fi
 
   if test "$HAVE_BOOST" = "no"; then
 
@@ -40100,6 +40108,12 @@ _sci_includes=''
 ##
 
 
+
+     if test "$HAVE_BOOST" = "yes" -a "$with_boost" != "/usr"; then
+        if test ! -e "$BOOST_LIBRARY_DIR"/libboost_thread.so -a ! -e "$BOOST_LIBRARY_DIR"/libboost_thread.a; then
+           as_fn_error $? "Boost was found but not in the right place... " "$LINENO" 5
+        fi
+     fi
   fi
 
   if test "$HAVE_BOOST" = "yes"; then
