@@ -340,11 +340,11 @@ Arches::problemSetup(const ProblemSpecP& params,
   const std::string xMomName = d_lab->d_uMomLabel->getName();
   const std::string yMomName = d_lab->d_vMomLabel->getName();
   const std::string zMomName = d_lab->d_wMomLabel->getName();
-  const Expr::Tag xMomTagN(xMomName,Expr::STATE_N);
+  const Expr::Tag xMomTagN(xMomName,Expr::STATE_DYNAMIC);
   initgh->exprFactory->register_expression( new XVolExprT::Builder(xMomTagN));
-  const Expr::Tag yMomTagN(yMomName,Expr::STATE_N);
+  const Expr::Tag yMomTagN(yMomName,Expr::STATE_DYNAMIC);
   initgh->exprFactory->register_expression( new YVolExprT::Builder(yMomTagN));
-  const Expr::Tag zMomTagN( zMomName, Expr::STATE_N);
+  const Expr::Tag zMomTagN( zMomName, Expr::STATE_DYNAMIC);
   initgh->exprFactory->register_expression( new ZVolExprT::Builder(zMomTagN));
 
   // construct the problemspec for the momentum equations. This includes the <MomentumEquations> block
@@ -475,6 +475,8 @@ Arches::problemSetup(const ProblemSpecP& params,
     Wasatch::TransportEquation* transEq = (*ia)->equation();
     if ( !(transEq->dir_name() == "") ) continue; // skip all momentum equations for the time being...
     std::string solnVarName = transEq->solution_variable_name();
+    if( !solngh->exprFactory->have_entry( Expr::Tag(solnVarName,Expr::STATE_DYNAMIC  ) ) )
+      solngh->exprFactory->register_expression( new SVolExprT::Builder(Expr::Tag(solnVarName,Expr::STATE_DYNAMIC)) );
     if( !solngh->exprFactory->have_entry( Expr::Tag(solnVarName,Expr::STATE_N  ) ) )
       solngh->exprFactory->register_expression( new SVolExprT::Builder(Expr::Tag(solnVarName,Expr::STATE_N)) );
     if( !solngh->exprFactory->have_entry( Expr::Tag(solnVarName,Expr::STATE_NP1  ) ) )
