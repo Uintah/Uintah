@@ -65,9 +65,13 @@ export REMOTEDIR_PARENT=`echo $string |cut -d\: -f2`
 export REMOTEDIR=$REMOTEDIR_PARENT/`basename $localDir`
 export PSCP_FILES=/tmp/pscp_files_`basename $localDir`_`whoami`
 
+#determing the remote parent group
+export GROUP=`ssh -x $LOGIN "cd $REMOTEDIR_PARENT && stat . --format %G"`
+
 echo "_____________________________________"
 echo "Inputs:"
 echo "	login:                 $LOGIN"
+echo "        remote group:          $GROUP"            # I have no idea why I have to indent this?
 echo "	# processors:          $nproc"
 echo "	transfer whole uda:    $transferWholeUda"
 echo "	localDir:              $localDir"
@@ -77,7 +81,7 @@ echo "	PSCP_FILES:            $PSCP_FILES"
 echo "	pscp2dir:              $pscp2dir"
 echo "_____________________________________"
 echo ""
-#------------------
+#______________________________________________________________________
 # Bulletproofing
 echo "Bullet proof tests:"
 
@@ -184,6 +188,8 @@ if test "$test" != "0"; then
 fi
 echo "yes."
 
+
+#__________________________________
 echo -n "  Testing: does passwordless access work... "
 test=`$SSH -x $LOGIN "echo 'password_access_works'"`
 if test "$test" != "password_access_works"; then
@@ -204,6 +210,7 @@ else
   HOSTNANE=`hostname`.`hostname -d`
 fi
 
+#__________________________________
 echo -n "  Testing: Do we know about the remote operating system?... "
 OS=`$SSH -x $LOGIN uname`
 
@@ -271,6 +278,8 @@ $FIND .             -maxdepth 1 -type d -exec basename {} \; | grep -v "t[0-9]\|
 $FIND ./t*          -maxdepth 0 -type d -exec basename {} \; | sort -r                    >>$PSCP_FILES
 $FIND ./checkpoints -maxdepth 1                                                           >>$PSCP_FILES
 
+sed -i /".\/checkpoints$"/d $PSCP_FILES
+
 if test "$transferWholeUda" == "n" -o "$transferWholeUda" == "N"; then
   echo "Now starting an editor:  Remove the files you don't want transferred"
 
@@ -286,13 +295,16 @@ $EDITOR $PSCP_FILES
 chmod ug+rw $PSCP_FILES
  
 echo
-echo -n "Starting at: "
-date
+echo -n "Starting at: " | tee -a $DATA_TRANSFER_RECORD
+date | tee -a $DATA_TRANSFER_RECORD
+echo | tee -a $DATA_TRANSFER_RECORD
+echo "Group permission on remote directory will be changed to $GROUP"
+
+/usr/bin/time -p $MAKE TAR=tar -f $pscp2dir/pscp2_driver_$OS -j $nproc | tee -a $DATA_TRANSFER_RECORD
+
+echo | tee -a $DATA_TRANSFER_RECORD
+echo -n "Ending at: " | tee -a $DATA_TRANSFER_RECORD
+date |tee -a $DATA_TRANSFER_RECORD
 echo
 
-/usr/bin/time -p $MAKE TAR=tar -f $pscp2dir/pscp2_driver_$OS -j $nproc
-
-echo
-echo -n "Ending at: "
-date
-echo
+scp $DATA_TRANSFER_RECORD $LOGIN\:$REMOTEDIR
