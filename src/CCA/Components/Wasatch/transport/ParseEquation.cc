@@ -193,9 +193,8 @@ namespace Wasatch{
       ss << iEq;
       std::string thisPhiName = basePhiName + ss.str();
       // set initial condition and register it
-      Expr::Tag icTag( thisPhiName, Expr::STATE_N );
-
-      Expr::Tag indepVarTag( "XSVOL", Expr::STATE_NONE );
+      const Expr::Tag icTag( thisPhiName, Expr::STATE_DYNAMIC );
+      const Expr::Tag indepVarTag( "XSVOL", Expr::STATE_NONE );
       typedef Expr::SinFunction<SVolField>::Builder Builder;
       icGraphHelper->exprFactory->register_expression( scinew Builder( icTag, indepVarTag, 1.0, 1, 0.0) );
 
@@ -779,7 +778,7 @@ namespace Wasatch{
       // make new Tag for solnVar by adding the appropriate suffix ( "_*" or nothing ). This
       // is because we need the ScalarRHS at time step n+1 for our pressure projection method
       Expr::Tag solnVarCorrectedTag;
-      if (suffix=="") solnVarCorrectedTag = Expr::Tag(solnVarTag.name(),        Expr::STATE_N   );
+      if (suffix=="") solnVarCorrectedTag = Expr::Tag(solnVarTag.name(),        Expr::STATE_DYNAMIC   );
       else            solnVarCorrectedTag = Expr::Tag(solnVarTag.name()+suffix, Expr::STATE_NONE);
 
       Expr::ExpressionBuilder* builder = NULL;

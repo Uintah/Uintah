@@ -69,7 +69,7 @@
     <!-- Set the initial condition expression for mixture fraction -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-			<NameTag name="f" state="STATE_N"/>      
+			<NameTag name="f" state="STATE_DYNAMIC"/>      
       <GeometryBased value="0.0">
       	<Intrusion value="1.0">
       		<geom_object>
@@ -91,19 +91,19 @@
     <!-- Set the initial condition expression for x-momentum -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="x-mom" state="STATE_N"/>
+       <NameTag name="x-mom" state="STATE_DYNAMIC"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="y-mom" state="STATE_N"/>
+       <NameTag name="y-mom" state="STATE_DYNAMIC"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="ZVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="z-mom" state="STATE_N"/>
+       <NameTag name="z-mom" state="STATE_DYNAMIC"/>
        <Constant>0.0</Constant>
     </BasicExpression>
                        
@@ -137,7 +137,7 @@
     </TransportEquation>
     <FieldClipping tasklist="advance_solution">
       <FieldExpression type="SVOL" min="0.0" max="1.0">
-        <NameTag name="f" state="STATE_N"/>        
+        <NameTag name="f" state="STATE_DYNAMIC"/>        
       </FieldExpression>                    
     </FieldClipping>
     

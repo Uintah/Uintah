@@ -31,91 +31,18 @@
 
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Task.h>
-
+#include <expression/Tag.h>
 #include <expression/ExprFwd.h>
 
 #include "GraphHelperTools.h"
 #include "PatchInfo.h"
 #include "FieldAdaptor.h"
 #include "FieldTypes.h"
-
-namespace Uintah{
-  class ProcessorGroup;
-  class DataWarehouse;
-  class VarLabel;
-}
+#include <CCA/Components/Wasatch/TimeIntegratorTools.h>
 
 namespace Wasatch{
 
-  /**
-   *  \ingroup WasatchCore
-   *  \enum  TimeIntegratorEnum
-   *  \author Tony Saad
-   *  \date   July 2013
-   *
-   *  \brief Enum that defines the currently supported time integrators in Wasatch.
-   */
-  enum TimeIntegratorEnum {
-    FE,      // Forward-Euler
-    RK2SSP,  // Runge-Kutta 2nd order strong stability preserving
-    RK3SSP   // Runge-Kutta 3rd order strong stability preserving
-  };
-
-  /**
-   *  \ingroup WasatchCore
-   *  \struct  TimeIntegrator
-   *  \author Tony Saad
-   *  \date   July 2013
-   *
-   *  \brief Defines coefficients for Runge-Kutta type integrators only two level
-   storage requirements (i.e. old, and new).
-   */
-  struct TimeIntegrator {
-    TimeIntegratorEnum timeIntEnum;
-    int nStages;
-    double alpha[3];
-    double beta[3];
-
-    TimeIntegrator(TimeIntegratorEnum theTimeIntEnum)
-    : timeIntEnum(theTimeIntEnum)    
-    {
-      initialize();
-    }
-
-    TimeIntegrator(const std::string& timeIntName)
-    : timeIntEnum( (timeIntName == "RK2SSP") ? RK2SSP : ( (timeIntName == "RK3SSP") ? RK3SSP : FE ) )
-    {
-      initialize();
-    }
-    
-    void initialize()
-    {
-      switch (timeIntEnum) {
-        default:
-        case FE:
-          nStages = 1;
-          alpha[0] = 1.0; beta[0]  = 1.0;
-          alpha[1] = 0.0; beta[1]  = 0.0;
-          alpha[2] = 0.0; beta[2]  = 0.0;
-          break;
-        case RK2SSP:
-          nStages = 2;
-          alpha[0] = 1.0; beta[0]  = 1.0;
-          alpha[1] = 0.5; beta[1]  = 0.5;
-          alpha[2] = 0.0; beta[2]  = 0.0;
-          break;
-        case RK3SSP:
-          nStages = 3;
-          alpha[0] = 1.0;     beta[0]  = 1.0;
-          alpha[1] = 0.75;    beta[1]  = 0.25;
-          alpha[2] = 1.0/3.0; beta[2]  = 2.0/3.0;
-          break;
-      }
-    }
-  };
-
   class TaskInterface;
-
   /**
    *  \ingroup WasatchCore
    *  \class  TimeStepper
@@ -142,12 +69,18 @@ namespace Wasatch{
     struct FieldInfo
     {
       std::string varname;
+      
+      Expr::Tag solnVarTag;
+      Expr::Tag rhsTag;
+      
       Uintah::VarLabel* varLabel;
       Uintah::VarLabel* rhsLabel;
       FieldInfo( const std::string& name,
+                Expr::Tag varTag,
+                Expr::Tag rhsVarTag,
                  Uintah::VarLabel* const vl,
                  Uintah::VarLabel* const rhsl )
-        : varname( name ), varLabel( vl ), rhsLabel( rhsl )
+        : varname( name ), solnVarTag(varTag), rhsTag(rhsVarTag), varLabel( vl ), rhsLabel( rhsl )
       {}
       bool operator==( const FieldInfo& fi ) const{ return varname.compare(fi.varname); }
       bool operator<( const FieldInfo& fi ) const{ return varname < fi.varname; }
@@ -175,6 +108,9 @@ namespace Wasatch{
 
     std::vector< Uintah::VarLabel* > createdVarLabels_;   ///< a list of all VarLabel objects created (so we can delete them later)
     std::list< TaskInterface* > taskInterfaceList_;    ///< all of the TaskInterface objects managed here
+
+    Expr::TagList solutionVarTagList_;
+    Expr::TagList rhsTagList_;
 
     /**
      *  \brief used internally to obtain the appropriate vector

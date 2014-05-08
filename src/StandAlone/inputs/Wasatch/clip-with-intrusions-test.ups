@@ -14,14 +14,14 @@
 
     <FieldClipping tasklist="advance_solution">
       <FieldExpression type="SVOL" min="0.1" max="0.9">
-        <NameTag name="phi-scalar" state="STATE_N"/>        
+        <NameTag name="phi-scalar" state="STATE_DYNAMIC"/>        
       </FieldExpression>                    
     </FieldClipping>
 
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi-scalar" state="STATE_N"/>
+      <NameTag name="phi-scalar" state="STATE_DYNAMIC"/>
       <Constant>0.1</Constant>
     </BasicExpression>
     
@@ -70,13 +70,13 @@
     <!-- Set the initial condition expression for x-momentum -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="x-mom" state="STATE_N"/>
+       <NameTag name="x-mom" state="STATE_DYNAMIC"/>
        <Constant>0.1</Constant>
     </BasicExpression>
 
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="y-mom" state="STATE_N"/>
+       <NameTag name="y-mom" state="STATE_DYNAMIC"/>
        <Constant>0.0</Constant>
     </BasicExpression>
                

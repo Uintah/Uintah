@@ -1395,7 +1395,7 @@ namespace Wasatch{
         double val = initialMoments[i];
         std::stringstream ss;
         ss << i;
-        Expr::Tag thisMomentTag("m_" + populationName + "_" + ss.str(), Expr::STATE_N);
+        Expr::Tag thisMomentTag("m_" + populationName + "_" + ss.str(), Expr::STATE_DYNAMIC);
         graphHelper->exprFactory->register_expression( scinew Builder( thisMomentTag, val ) );
       }
     }
