@@ -254,10 +254,10 @@ echo ""                                 >> $DATA_TRANSFER_RECORD
 # remove the remote directory
 if test "$rmDir" == "y" -o "$rmDir" == "Y"; then
   echo "Now removing $REMOTEDIR from $remote_machine if it exists..."
-  $SSH -x $LOGIN "/bin/rm -rf $REMOTEDIR; mkdir $REMOTEDIR"
+  $SSH -x $LOGIN "/bin/rm -rf $REMOTEDIR; mkdir $REMOTEDIR; chgrp $GROUP $REMOTEDIR"
 else
   echo $SSH -x $LOGIN \"mkdir -p $REMOTEDIR\"
-  $SSH -x $LOGIN "mkdir -p $REMOTEDIR"
+  $SSH -x $LOGIN "mkdir -p $REMOTEDIR; chgrp $GROUP $REMOTEDIR"
   scp $DATA_TRANSFER_RECORD $LOGIN\:$REMOTEDIR
 fi
 
