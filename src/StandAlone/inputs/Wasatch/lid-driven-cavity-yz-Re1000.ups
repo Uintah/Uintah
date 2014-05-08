@@ -137,9 +137,7 @@
 			<Face side="z+" type="Velocity">
 				<BCType var="Dirichlet" label="y-mom" value="1.0"/>
 				<BCType var="Dirichlet" label="v" value="1.0"/>
-				<BCType var="Dirichlet" label="z-mom" value="0.0"/>
-				<BCType var="Dirichlet" label="w" value="0.0"/>
-			</Face>
+				</Face>
 		</BoundaryConditions>
 		<Level>
 			<Box label="1">

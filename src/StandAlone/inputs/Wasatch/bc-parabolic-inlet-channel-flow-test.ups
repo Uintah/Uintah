@@ -121,8 +121,7 @@
       <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
       <Face side="x-" type="Velocity">
         <BCType label="x-mom" var="Dirichlet" value="parabolic-inlet"/>
-        <BCType label="y-mom" var="Dirichlet" value="0.0"/>
-      </Face>
+        </Face>
       <Face side="x+" type="Outflow"/>
       <Face side="y-" type="Wall"/>
       <Face side="y+" type="Wall"/>

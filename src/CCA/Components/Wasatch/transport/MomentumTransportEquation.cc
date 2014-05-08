@@ -950,6 +950,16 @@ namespace Wasatch{
 //            momBCSpec.varName = solution_variable_name();
 //            bcHelper.add_boundary_condition(bndName, momBCSpec);
 //          }
+          
+          // tsaad: If this VELOCITY boundary does NOT have this velocity AND this momentum specified
+          // then assume that they are zero and create boundary conditions for them accordingly
+          if( !myBndSpec.has_field(thisVelTag_.name()) && !myBndSpec.has_field(solnVarName_) ) {
+            BndCondSpec velBCSPec = {thisVelTag_.name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
+            bcHelper.add_boundary_condition(bndName, velBCSPec);
+            BndCondSpec momBCSPec = {solnVarName_, "none", 0.0, DIRICHLET, DOUBLE_TYPE};
+            bcHelper.add_boundary_condition(bndName, momBCSPec);
+          }
+
           if (isNormal) {
             BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(solnVarName_))).name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);

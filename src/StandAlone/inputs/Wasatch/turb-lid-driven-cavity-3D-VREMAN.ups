@@ -135,9 +135,7 @@
 				<BCType var="Dirichlet" label="z-mom" value="1.0"/>
 				<BCType var="Dirichlet" label="u" value="1.0"/>
 				<BCType var="Dirichlet" label="w" value="1.0"/>
-				<BCType var="Dirichlet" label="y-mom" value="0.0"/>
-				<BCType var="Dirichlet" label="v" value="0.0"/>
-			</Face>
+				</Face>
 			<Face side="z-" type="Wall"/>
 			<Face side="z+" type="Wall"/>
 		</BoundaryConditions>

@@ -117,8 +117,7 @@
 				<!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
 				<Face side="x-" type="Velocity">
 					<BCType var="Dirichlet" label="x-mom" value="1.0"/>        
-					<BCType var="Dirichlet" label="y-mom" value="0.0"/>
-				</Face>
+					</Face>
 			
 				<Face side="x+" type="Outflow"/>
 				<!-- SYMMETRY BOUNDARY CONDITION -->

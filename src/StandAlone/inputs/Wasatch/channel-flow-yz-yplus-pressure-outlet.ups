@@ -89,8 +89,7 @@
 				<!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
 				<Face side="y-" type="Velocity">
 					<BCType label="y-mom" var="Dirichlet" value="1.0"/>
-					<BCType label="z-mom" var="Dirichlet" value="0.0"/>
-				</Face>
+					</Face>
 				<Face side="y+" type="Outflow"/>
 				<Face side="z-" type="Wall"/>
 				<Face side="z+" type="Wall"/>

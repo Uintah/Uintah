@@ -270,9 +270,7 @@
 				</Face>
 				<Face side="y-" type="Velocity">
 					<BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
-					<BCType label="x-mom" var="Dirichlet" value="0.0"/>
 					<BCType label="y-mom" var="Dirichlet" value="1.0"/>
-					<BCType label="u" var="Dirichlet" value="0.0"/>
 					<BCType label="v" var="Dirichlet" value="1.0"/>
 				</Face>
 				<Face side="y+" type="Outflow">

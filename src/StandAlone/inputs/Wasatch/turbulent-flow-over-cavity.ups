@@ -217,8 +217,7 @@
       
       <Face rectangle="x-" lower="0 0 -1" upper="0 1 1" type="Velocity">
         <BCType var="Dirichlet" label="u" value="1.0"/>
-        <BCType var="Dirichlet" label="v" value="0.0"/>
-        <BCType var="Dirichlet" label="w" value="0.0"/>
+        <BCType var="Dirichlet" label="x-mom" value="1.0"/>        
         <BCType var="Dirichlet" label="f" value="10.0"/>
       </Face>
 
