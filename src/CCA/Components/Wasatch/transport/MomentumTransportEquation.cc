@@ -979,6 +979,15 @@ namespace Wasatch{
             // if the velocity specification is a constant - then use a simple constant value on the velocity estimates
             const Expr::Tag thisVelStarTag = TagNames::self().make_star(thisVelTag_);
             
+            // first check if the user specified velocity estimate conditions
+            if( myBndSpec.has_field(thisVelStarTag.name()) ){
+              std::ostringstream msg;
+              msg << "ERROR: You cannot specify velocity estimate boundary conditions at a Velocity boundary. Those are automatically inferred from the velocity specification. "
+              << "This error occured while trying to analyze boundary " << bndName
+              << std::endl;
+              throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+            }
+
             // check if this boundary has velocity specification on it. it better have!
             if (myBndSpec.has_field(thisVelTag_.name())) {
               // grab the bc specification of the velocity on this boundary. Note that here we

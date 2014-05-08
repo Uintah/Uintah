@@ -313,16 +313,16 @@ namespace Wasatch{
         // set bcs for solnVar_*
         const Expr::Tag solnVarStarTag = tagNames.make_star(this->solution_variable_name());
         
-        // check if this boundary has velocity specification on it. it better have!
+        // check if this boundary has the solution variable specification on it. it better have!
         if (myBndSpec.has_field(solution_variable_name())) {
-          // grab the bc specification of the velocity on this boundary. Note that here we
+          // grab the bc specification of the solution variable on this boundary. Note that here we
           // should guarantee that the spec is found!
           const BndCondSpec* phiBCSpec = myBndSpec.find(solution_variable_name());
           assert(phiBCSpec);
-          std::cout << "functor type " << solution_variable_name() << " = " << phiBCSpec->is_functor() << std::endl;
+
           if (!phiBCSpec->is_functor() ) {
             // if the boundary condition is not a functor (i.e. a constant value), then simply
-            // copy that value into a new BCSpec for the velocity estimate
+            // copy that value into a new BCSpec for the solution variable estimate (rhof*)
             BndCondSpec phiStarBCSpec = *phiBCSpec; // copy the spec from the velocity
             phiStarBCSpec.varName = solnVarStarTag.name(); // change the name to the starred velocity
             bcHelper.add_boundary_condition(bndName, phiStarBCSpec);
@@ -333,7 +333,7 @@ namespace Wasatch{
             // create and register the BCCopier
             typedef typename BCCopier<FieldT>::Builder Copier;
             advSlnFactory.register_expression(scinew Copier(solnVarStarBCTag,solution_variable_tag()));
-            // specify the bc on velstart using the bc copier functor
+            // specify the bc on rhof* using the bc copier functor
             BndCondSpec phiStarBCSpec = {solnVarStarTag.name(), solnVarStarBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
             // add it to the boundary conditions!
             bcHelper.add_boundary_condition(bndName, phiStarBCSpec);
