@@ -54,8 +54,9 @@ CUDA_ENABLED_SRCS =       \
      Strain               \
      ScalabilityTestSrc   \
      WeakConvectiveTerm   \
-     ExprAlgebra          \
-     VelEst
+     VelEst        \
+     ExprAlgebra   \
+     TimeAdvance
 
 ifeq ($(HAVE_CUDA),yes)
 
@@ -86,7 +87,7 @@ SRCS += \
         $(SRCDIR)/Coordinate.cc           \
         $(SRCDIR)/RadiationSource.cc      \
    $(SRCDIR)/CellType.cc      \
-   $(SRCDIR)/TabPropsHeatLossEvaluator.cc
+        $(SRCDIR)/TabPropsHeatLossEvaluator.cc
 
 #
 # Subdirectories to build...
@@ -166,6 +167,9 @@ ifeq ($(HAVE_CUDA),yes)
 	cp $< $@
 
   $(OBJTOP_ABS)/$(SRCDIR)/ExprAlgebra.cu : $(SRCTOP_ABS)/$(SRCDIR)/ExprAlgebra.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/TimeAdvance.cu : $(SRCTOP_ABS)/$(SRCDIR)/TimeAdvance.cc
 	cp $< $@
 
 endif

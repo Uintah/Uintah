@@ -48,13 +48,13 @@
     <!-- Set the initial condition expression for x-momentum -->
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="y-mom" state="STATE_N"/>
+       <NameTag name="y-mom" state="STATE_DYNAMIC"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="ZVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="z-mom" state="STATE_N"/>
+       <NameTag name="z-mom" state="STATE_DYNAMIC"/>
        <Constant>0.0</Constant>
     </BasicExpression>
                    

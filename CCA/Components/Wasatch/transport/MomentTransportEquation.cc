@@ -407,7 +407,7 @@ namespace Wasatch {
         const double momentOrder = (double) iEq;
         strMomID << momentOrder;
         const std::string phiName = "m_" + populationName_ + "_" + strMomID.str();
-        transportedMomentTags.push_back( Expr::Tag(phiName,Expr::STATE_N) );
+        transportedMomentTags.push_back( Expr::Tag(phiName,Expr::STATE_DYNAMIC) );
       }
       typedef typename QMOM<FieldT>::Builder QMOMExpr;
       Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
@@ -465,10 +465,8 @@ namespace Wasatch {
       factory.attach_modifier_expression( modifierTag, phiTag );
     }
     
-    
-    const Expr::Tag phiTag( this->solution_variable_name(), Expr::STATE_N );
-    if (factory.have_entry(phiTag))
-      bcHelper.apply_boundary_condition<FieldT>(this->solution_variable_tag(), taskCat);
+    if (factory.have_entry(solution_variable_tag()))
+      bcHelper.apply_boundary_condition<FieldT>(solution_variable_tag(), taskCat);
 
 
   }

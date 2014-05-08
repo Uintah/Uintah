@@ -323,7 +323,7 @@ build() const
  *  \class StepFunction
  *  \author Tony Saad
  *  \date July, 2012
- *  \brief Implements a StepFunction for initialization purposes among other things.
+ *  \brief Implements a Heaviside step function for initialization purposes among other things.
  */
 template< typename FieldT >
 class StepFunction : public Expr::Expression<FieldT>

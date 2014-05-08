@@ -31,9 +31,10 @@ namespace Wasatch{
   
   TagNames::TagNames() :
   
-  time    ( "time"    , Expr::STATE_NONE ),
-  dt      ( "dt"      , Expr::STATE_NONE ),
-  timestep ( "timestep", Expr::STATE_NONE ),
+  time          ( "time"    , Expr::STATE_NONE ),
+  dt            ( "dt"      , Expr::STATE_NONE ),
+  timestep      ( "timestep", Expr::STATE_NONE ),
+  rkstage       ( "rkstage" , Expr::STATE_NONE ),
   stableTimestep( "StableDT", Expr::STATE_NONE ),
   
   celltype("CellType", Expr::STATE_NONE),
@@ -57,8 +58,8 @@ namespace Wasatch{
   radiationsource    ( "RadiationSource"   , Expr::STATE_NONE ),
   radvolq            ( "radiationVolq"     , Expr::STATE_NONE ),
   radvrflux          ( "VRFlux"            , Expr::STATE_NONE ),
-  kineticEnergy      ( "KineticEnergy"     , Expr::STATE_NONE ),
-  totalKineticEnergy ( "TotalKineticEnergy", Expr::STATE_NONE ),
+  kineticEnergy      ("KineticEnergy",      Expr::STATE_NONE ),
+  totalKineticEnergy ("TotalKineticEnergy", Expr::STATE_NONE ),
   
   
   
@@ -113,7 +114,7 @@ namespace Wasatch{
   {
     return Expr::Tag(someTag.name() + star, newContext);
   }
-
+  
   template<>
   const Expr::Tag TagNames::make_double_star(Expr::Tag someTag,
                                              Expr::Context newContext) const

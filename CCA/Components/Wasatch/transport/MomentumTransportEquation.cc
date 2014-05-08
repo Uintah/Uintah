@@ -286,7 +286,7 @@ namespace Wasatch{
 
   Expr::Tag mom_tag( const std::string& momName )
   {
-    return Expr::Tag( momName, Expr::STATE_N );
+    return Expr::Tag( momName, Expr::STATE_DYNAMIC );
   }
 
   //==================================================================
@@ -1175,7 +1175,7 @@ namespace Wasatch{
   initial_condition( Expr::ExpressionFactory& icFactory )
   {
     // register an initial condition for da pressure
-    Expr::Tag ptag(pressure_tag().name(), Expr::STATE_N);    
+    Expr::Tag ptag(pressure_tag().name(), Expr::STATE_N);
     if( !icFactory.have_entry( ptag ) ) {
       icFactory.register_expression( new typename Expr::ConstantExpr<SVolField>::Builder(ptag, 0.0 ) );
     }
@@ -1207,7 +1207,6 @@ namespace Wasatch{
                                                                       true ) );
       icFactory.attach_modifier_expression( modifierTag, solution_variable_tag() );
     }
-
     return icFactory.get_id( solution_variable_tag() );
   }
 

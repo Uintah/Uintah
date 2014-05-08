@@ -24,7 +24,7 @@
 
     <PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="vel_magnitude" state="STATE_N"/>
+      <NameTag name="vel_magnitude" state="STATE_DYNAMIC"/>
       <VelocityMagnitude>
       <XVelocity>
         <NameTag name="u" state="STATE_NONE"/>
@@ -37,7 +37,7 @@
     
     <ForceOnGraph tasklist="initialization advance_solution">
       <NameTag name="vorticity_z" state="STATE_NONE"/>
-<!--       <NameTag name="vel_magnitude" state="STATE_N" /> -->
+<!--       <NameTag name="vel_magnitude" state="STATE_DYNAMIC" /> -->
     </ForceOnGraph>
 
     <Density>
@@ -78,20 +78,20 @@
     
     <BasicExpression type="SVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="pressure" state="STATE_N"/>
+       <NameTag name="pressure" state="STATE_DYNAMIC"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <!-- Set the initial condition expression for x-momentum -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="x-mom" state="STATE_N"/>
+       <NameTag name="x-mom" state="STATE_DYNAMIC"/>
        <Constant>0.1</Constant>
     </BasicExpression>
 
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="y-mom" state="STATE_N"/>
+       <NameTag name="y-mom" state="STATE_DYNAMIC"/>
        <Constant>0.0</Constant>
     </BasicExpression>
                

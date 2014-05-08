@@ -112,11 +112,11 @@ namespace Wasatch{
         msg << "ERROR: For solving the transport equations in weak form, the primitive variable will be the same as the solution variable. So, you don't need to specify it. Please remove the \"PrimitiveVariable\" block from the \"TransportEquation\" block in your input file." << endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-    }
+      }
     assert( primVarTag_ != Expr::Tag() );
 
     if( callSetup ) setup();
-  }
+    }
 
   //------------------------------------------------------------------
 
@@ -180,7 +180,7 @@ namespace Wasatch{
   ScalarTransportEquation<FieldT>::setup_convective_flux( FieldTagInfo& info )
   {
     Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
-    const Expr::Tag solnVarTag = solution_variable_tag();
+    const Expr::Tag solnVarTag( solnVarName_, Expr::STATE_DYNAMIC );
     for( Uintah::ProblemSpecP convFluxParams=params_->findBlock("ConvectiveFlux");
         convFluxParams != 0;
         convFluxParams=convFluxParams->findNextBlock("ConvectiveFlux") )
@@ -257,7 +257,7 @@ namespace Wasatch{
     const Category taskCat = INITIALIZATION;
    
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
-    const Expr::Tag phiTag( this->solution_variable_name(), Expr::STATE_N );
+    //const Expr::Tag phiTag( this->solution_variable_name(), Expr::STATE_N );
     
     // multiply the initial condition by the volume fraction for embedded geometries
     const EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
@@ -266,17 +266,17 @@ namespace Wasatch{
       //create modifier expression
       typedef ExprAlgebra<FieldT> ExprAlgbr;
       const Expr::TagList theTagList = tag_list( vNames.vol_frac_tag<SVolField>() );
-      Expr::Tag modifierTag = Expr::Tag( this->solution_variable_name() + "_init_cond_modifier", Expr::STATE_NONE);
+      const Expr::Tag modifierTag = Expr::Tag( this->solution_variable_name() + "_init_cond_modifier", Expr::STATE_NONE);
       factory.register_expression( new typename ExprAlgbr::Builder(modifierTag,
                                                                    theTagList,
                                                                    ExprAlgbr::PRODUCT,
                                                                    true) );
       
-      factory.attach_modifier_expression( modifierTag, phiTag );
+      factory.attach_modifier_expression( modifierTag, solution_variable_tag() );
     }
     
-    if( factory.have_entry(phiTag) ){
-      bcHelper.apply_boundary_condition<FieldT>( phiTag, taskCat );
+    if( factory.have_entry(solution_variable_tag()) ){
+      bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
     }
     
     if( !isConstDensity_ ){
@@ -389,7 +389,7 @@ namespace Wasatch{
   {            
     namespace SS = SpatialOps::structured;
     const Category taskCat = ADVANCE_SOLUTION;
-    bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
+    bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );    
     
     bcHelper.apply_boundary_condition<FieldT>( rhs_tag(), taskCat, true ); // apply the rhs bc directly inside the extra cell
   
@@ -418,7 +418,7 @@ namespace Wasatch{
                                                                              tag_list( primVarTag_, Expr::Tag(densityTag_.name(),Expr::STATE_NONE) ),
                                                                              ExprAlgbr::PRODUCT ) );
     }
-    return icFactory.get_id( Expr::Tag( this->solution_variable_name(), Expr::STATE_N ) );
+    return icFactory.get_id( solution_variable_tag() );
   }
 
   //------------------------------------------------------------------

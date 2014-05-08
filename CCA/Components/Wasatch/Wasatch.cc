@@ -62,6 +62,7 @@
 
 //-- Wasatch includes --//
 #include "Wasatch.h"
+#include <CCA/Components/Wasatch/TimeIntegratorTools.h>
 #include "WasatchMaterial.h"
 #include "FieldAdaptor.h"
 #include "TagNames.h"
@@ -777,7 +778,11 @@ namespace Wasatch{
 
     //_______________________________________
     // set the time
-    const Expr::TagList timeTags( tag_list( TagNames::self().time, TagNames::self().dt, TagNames::self().timestep  ) );
+    Expr::TagList timeTags;
+    timeTags.push_back( TagNames::self().time     );
+    timeTags.push_back( TagNames::self().dt     );
+    timeTags.push_back( TagNames::self().timestep );
+    timeTags.push_back( TagNames::self().rkstage  );
     exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
 
     //_____________________________________________
@@ -1090,13 +1095,15 @@ namespace Wasatch{
     // create an expression to set the current time as a field that
     // will be available to all expressions if needed.
     Expr::ExpressionID timeID;
-    if( rkStage==1 ){
-      const Expr::TagList timeTags( tag_list( TagNames::self().time, TagNames::self().dt, TagNames::self().timestep ) );
+    if( rkStage==1 && !exprFactory.have_entry(TagNames::self().time) ){
+      Expr::TagList timeTags;
+      timeTags.push_back( TagNames::self().time     );
+      timeTags.push_back( TagNames::self().dt     );
+      timeTags.push_back( TagNames::self().timestep );
+      timeTags.push_back( TagNames::self().rkstage  );
       timeID = exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
-    }
-    else{
-      const Expr::Tag timeTag = TagNames::self().time;
-      timeID = exprFactory.get_id(timeTag);
+    } else {
+      timeID = exprFactory.get_id(TagNames::self().time);
     }
 
     //___________________________________________
