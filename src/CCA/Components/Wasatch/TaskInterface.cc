@@ -392,7 +392,7 @@ namespace Wasatch{
 
         // this was needed for Warches. When adding a placeholder expression with STATE_N,
         // we must use the newdw in the initialization task graph.
-        if (tree.name() == "initialization" && fieldTag.context() == Expr::STATE_N) {
+        if (tree.name() == "initialization" && fieldTag.context() == Expr::STATE_DYNAMIC) {
           fieldInfo.useOldDataWarehouse = false;
         }
 
