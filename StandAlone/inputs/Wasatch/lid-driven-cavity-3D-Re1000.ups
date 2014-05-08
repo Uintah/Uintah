@@ -126,10 +126,8 @@
 			<Face side="y-" type="Wall"/>
 			<Face side="y+" type="Velocity">
 				<BCType var="Dirichlet" label="x-mom" value="1.0"/>
-				<BCType var="Dirichlet" label="y-mom" value="0.0"/>				
 				<BCType var="Dirichlet" label="z-mom" value="1.0"/>
 				<BCType var="Dirichlet" label="u" value="1.0"/>
-				<BCType var="Dirichlet" label="v" value="0.0"/>
 				<BCType var="Dirichlet" label="w" value="1.0"/>				
 			</Face>
 			<Face side="z-" type="Wall"/>        

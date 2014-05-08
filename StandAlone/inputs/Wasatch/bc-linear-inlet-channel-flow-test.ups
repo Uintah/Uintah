@@ -120,8 +120,7 @@
       <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
       <Face side="x-" type="Velocity">
         <BCType label="x-mom" var="Dirichlet" value="linear-inlet"/>
-        <BCType label="y-mom" var="Dirichlet" value="0.0"/>
-      </Face>
+        </Face>
       <Face side="x+">
         <BCType label="y-mom" var="Neumann" value="0.0"/>
         <BCType label="pressure" var="Dirichlet" value="0.0"/>

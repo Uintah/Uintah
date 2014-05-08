@@ -192,8 +192,7 @@
       <Face side="y-" type="Wall"/>
       <Face side="y+" type="Velocity">
         <BCType label="x-mom" var="Dirichlet" value="1"/>
-        <BCType label="y-mom" var="Dirichlet" value="0.0"/>
-      </Face>
+        </Face>
       </BoundaryConditions>
       <Level>
       <Box label="1">
