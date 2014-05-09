@@ -73,14 +73,10 @@ namespace Wasatch{
       Expr::Tag solnVarTag;
       Expr::Tag rhsTag;
       
-      Uintah::VarLabel* varLabel;
-      Uintah::VarLabel* rhsLabel;
       FieldInfo( const std::string& name,
                 Expr::Tag varTag,
-                Expr::Tag rhsVarTag,
-                 Uintah::VarLabel* const vl,
-                 Uintah::VarLabel* const rhsl )
-        : varname( name ), solnVarTag(varTag), rhsTag(rhsVarTag), varLabel( vl ), rhsLabel( rhsl )
+                Expr::Tag rhsVarTag )
+        : varname( name ), solnVarTag(varTag), rhsTag(rhsVarTag)
       {}
       bool operator==( const FieldInfo& fi ) const{ return varname.compare(fi.varname); }
       bool operator<( const FieldInfo& fi ) const{ return varname < fi.varname; }
@@ -106,11 +102,7 @@ namespace Wasatch{
     
     const TimeIntegrator timeInt_; ///< Multistage time integrator coefs
 
-    std::vector< Uintah::VarLabel* > createdVarLabels_;   ///< a list of all VarLabel objects created (so we can delete them later)
     std::list< TaskInterface* > taskInterfaceList_;    ///< all of the TaskInterface objects managed here
-
-    Expr::TagList solutionVarTagList_;
-    Expr::TagList rhsTagList_;
 
     /**
      *  \brief used internally to obtain the appropriate vector

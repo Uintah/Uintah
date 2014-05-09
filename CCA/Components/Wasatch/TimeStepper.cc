@@ -94,9 +94,6 @@ namespace Wasatch{
     for( std::list<TaskInterface*>::iterator i=taskInterfaceList_.begin(); i!=taskInterfaceList_.end(); ++i ){
       delete *i;
     }
-    for( std::vector<Uintah::VarLabel*>::iterator i=createdVarLabels_.begin(); i!=createdVarLabels_.end(); ++i ){
-      Uintah::VarLabel::destroy( *i );
-    }
   }
 
   //------------------------------------------------------------------
@@ -121,10 +118,10 @@ namespace Wasatch{
     // where they may be internal nodes in a graph and could thus turn into "temporary"
     // fields, leading to non-exposure to Uintah and bad things...
     std::set<std::string> persistentFields( ioFieldSet );
-    for( ScalarFields::const_iterator i=scalarFields_.begin(); i!=scalarFields_.end(); ++i )  persistentFields.insert( i->rhsLabel->getName() );
-    for(   XVolFields::const_iterator i=  xVolFields_.begin(); i!=  xVolFields_.end(); ++i )  persistentFields.insert( i->rhsLabel->getName() );
-    for(   YVolFields::const_iterator i=  yVolFields_.begin(); i!=  yVolFields_.end(); ++i )  persistentFields.insert( i->rhsLabel->getName() );
-    for(   ZVolFields::const_iterator i=  zVolFields_.begin(); i!=  zVolFields_.end(); ++i )  persistentFields.insert( i->rhsLabel->getName() );
+    for( ScalarFields::const_iterator i=scalarFields_.begin(); i!=scalarFields_.end(); ++i )  persistentFields.insert( i->rhsTag.name() );
+    for(   XVolFields::const_iterator i=  xVolFields_.begin(); i!=  xVolFields_.end(); ++i )  persistentFields.insert( i->rhsTag.name() );
+    for(   YVolFields::const_iterator i=  yVolFields_.begin(); i!=  yVolFields_.end(); ++i )  persistentFields.insert( i->rhsTag.name() );
+    for(   ZVolFields::const_iterator i=  zVolFields_.begin(); i!=  zVolFields_.end(); ++i )  persistentFields.insert( i->rhsTag.name() );
 
 
     //________________________________________________________
@@ -235,26 +232,19 @@ namespace Wasatch{
     const std::string rhsName = solnGraphHelper_->exprFactory->get_labels(rhsID)[0].name();
     const Uintah::TypeDescription* typeDesc = get_uintah_field_type_descriptor<FieldT>();
     const Uintah::IntVector ghostDesc       = get_uintah_ghost_descriptor<FieldT>();
-    Uintah::VarLabel* const solnVarLabel = Uintah::VarLabel::create( solnVarName, typeDesc, ghostDesc );
-    Uintah::VarLabel* const rhsVarLabel  = Uintah::VarLabel::create( rhsName,     typeDesc, ghostDesc );
 
     const Expr::Tag solnVarTag(solnVarName,Expr::STATE_NONE);
     const Expr::Tag rhsVarTag (rhsName,    Expr::STATE_NONE);
     
     std::set< FieldInfo<FieldT> >& fields = field_info_selctor<FieldT>();
-    fields.insert( FieldInfo<FieldT>( solnVarName, solnVarTag, rhsVarTag, solnVarLabel, rhsVarLabel ) );
-    createdVarLabels_.push_back( solnVarLabel );
-    createdVarLabels_.push_back( rhsVarLabel );
+    fields.insert( FieldInfo<FieldT>( solnVarName, solnVarTag, rhsVarTag ) );
 
     typedef Expr::PlaceHolder<FieldT>  FieldExpr;
     solnGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_N      )), true );
     solnGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1    )), true );
     solnGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_DYNAMIC)), true );
     
-    postProcGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1)), true );
-    
-    solutionVarTagList_.push_back( Expr::Tag(solnVarName,Expr::STATE_N   ) );
-    rhsTagList_        .push_back( Expr::Tag(rhsName,    Expr::STATE_NONE) );
+    postProcGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1)), true );    
   }
 
   //------------------------------------------------------------------

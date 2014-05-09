@@ -100,11 +100,11 @@ namespace Wasatch{
 
   //==================================================================
 
-  EqnTimestepAdaptorBase* parse_equation( Uintah::ProblemSpecP params,
-                                          TurbulenceParameters turbParams,
-                                          const Expr::Tag densityTag,
-                                          const bool isConstDensity,
-                                          GraphCategories& gc )
+  EqnTimestepAdaptorBase* parse_scalar_equation( Uintah::ProblemSpecP params,
+                                                 TurbulenceParameters turbParams,
+                                                 const Expr::Tag densityTag,
+                                                 const bool isConstDensity,
+                                                 GraphCategories& gc )
   {
     EqnTimestepAdaptorBase* adaptor = NULL;
     TransportEquation* transeqn = NULL;
