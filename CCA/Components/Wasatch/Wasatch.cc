@@ -757,9 +757,6 @@ namespace Wasatch{
     if( linSolver_ ) {
       linSolver_->scheduleInitialize( level, sched, 
                                       sharedState_->allMaterials() );
-
-      sched->overrideVariableBehavior("hypre_solver_label",false,false,
-                                      false,true,true);
     }
 #   endif
 

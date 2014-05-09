@@ -1196,8 +1196,6 @@ namespace Uintah {
                    sched->getLoadBalancer()->getPerProcessorPatchSet(level), 
                    matls);
 
-    sched->overrideVariableBehavior(hypre_solver_label->getName(),false,false,
-                                    false,true,true);
   }
 
   void HypreSolver2::allocateHypreMatrices(DataWarehouse* new_dw)

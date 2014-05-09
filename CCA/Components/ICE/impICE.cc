@@ -343,6 +343,9 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   if (d_solver->getName() == "hypre") {
     t->requires(Task::OldDW,hypre_solver_label);
     t->computes(hypre_solver_label);
+    
+    sched->overrideVariableBehavior(hypre_solver_label->getName(),false,false,
+                                    false,true,true);
   }
 #endif
 
@@ -969,8 +972,8 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   SoleVariable<hypre_solver_structP> hypre_solverP_;
   if (d_solver->getName() == "hypre") {
     if (ParentOldDW->exists(hypre_solver_label)) {
-      ParentOldDW->get(hypre_solverP_,hypre_solver_label);
-      subNewDW->put(hypre_solverP_, hypre_solver_label);
+      ParentOldDW->get(hypre_solverP_, hypre_solver_label);
+      subNewDW->put(   hypre_solverP_, hypre_solver_label);
     } 
   }
 #endif
@@ -1011,12 +1014,6 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
       d_subsched->initialize(3, 1);
       //__________________________________
       // schedule the tasks
-      
-#ifdef HAVE_HYPRE
-      d_subsched->overrideVariableBehavior(hypre_solver_label->getName(),false,
-                                           false,false,true,true);
-#endif
-
 
       scheduleSetupMatrix(    d_subsched, level,  patch_set,  one_matl, 
                               all_matls);

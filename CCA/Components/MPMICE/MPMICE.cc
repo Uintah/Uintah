@@ -439,9 +439,6 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
       const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
       const PatchSet* ice_patches = ice_level->eachPatch();
 
-      sched->overrideVariableBehavior("hypre_solver_label",false,
-                                      false,false,true,true);
-
       d_ice->scheduleSetupRHS(                sched, ice_patches, one_matl, 
                                                                   all_matls,
                                                                   false,
