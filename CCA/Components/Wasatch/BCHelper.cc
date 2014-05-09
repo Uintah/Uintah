@@ -477,18 +477,6 @@ namespace Wasatch {
   
   //------------------------------------------------------------------------------------------------
   
-  void BCHelper::add_auxiliary_boundary_condition( const std::string& srcVarName,
-                                                   const std::string& newVarName,
-                                                   const std::string& functorName,
-                                                   const BndCondTypeEnum newBCType )
-  {
-    namespace SS = SpatialOps::structured;
-    BndCondSpec newBCSpec = {newVarName, functorName, 0.0, newBCType, FUNCTOR_TYPE};
-    add_auxiliary_boundary_condition(srcVarName, newBCSpec);
-  }
-
-  //------------------------------------------------------------------------------------------------
-  
   void BCHelper::add_auxiliary_boundary_condition(const std::string& srcVarName,
                                                   BndCondSpec bcSpec)
   {
