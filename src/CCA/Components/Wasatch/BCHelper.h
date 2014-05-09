@@ -502,29 +502,7 @@ namespace Wasatch {
     void add_auxiliary_boundary_condition( const std::string& srcVarName,
                                           const std::string& newVarName,
                                           const double& newValue,
-                                          const BndCondTypeEnum newBCType );
-    /**
-     *  \brief Function that allows one to add an auxiliary boundary condition based on an existing
-     *  one. This situation typically arises when one needs to specify an auxiliary boundary condition
-     *  to complement one specified by the user. For example, at a moving wall, the user typically specifies
-     *  velocity but boundary conditions must be specified on the momentum RHS, among other things.
-     *
-     *  \param srcVarName A string designating the name of the variable on which one desires
-     *  to "template" the auxiliary boundary. By "template" we mean that the new boundary condition will
-     *  be set on the same boundary(ies), patches, etc...
-     *
-     *  \param newVarName An std::string designating the name of the auxiliary variable, i.e. the
-     *  variable for which we want to create a new boundary condition.
-     *
-     *  \param functorName The name of the functor that applies to the auxiliary boundary.
-     *
-     *  \param newBCType The type (DIRICHLET/NEUMANN) of the auxiliary bc.
-     */
-    void add_auxiliary_boundary_condition( const std::string& srcVarName,
-                                          const std::string& newVarName,
-                                          const std::string& functorName,
-                                          const BndCondTypeEnum newBCType );
-    
+                                          const BndCondTypeEnum newBCType );    
     /**
      *  \brief Adds a boundary condition on a specified boundary
      */
