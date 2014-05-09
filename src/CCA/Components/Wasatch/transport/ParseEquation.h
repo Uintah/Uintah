@@ -92,11 +92,11 @@ namespace Wasatch{
    *          plug this transport equation into a TimeStepper.
    */
   EqnTimestepAdaptorBase*
-  parse_equation( Uintah::ProblemSpecP params,
-                  TurbulenceParameters turbParams,
-                  const Expr::Tag densityTag,
-                  const bool isConstDensity,
-                  GraphCategories& gc );
+  parse_scalar_equation( Uintah::ProblemSpecP params,
+                          TurbulenceParameters turbParams,
+                          const Expr::Tag densityTag,
+                          const bool isConstDensity,
+                          GraphCategories& gc );
 
   /**
    *  \brief Build the momentum equation specified by "params"
