@@ -43,6 +43,7 @@
 #include <boost/random/uniform_real.hpp>
 #include <boost/random/variate_generator.hpp>
 #include <boost/math/special_functions/bessel.hpp>
+#include <boost/math/special_functions/next.hpp>
 
 #ifndef PI
 #define PI 3.1415926535897932384626433832795
@@ -238,6 +239,26 @@ bind_fields( const Expr::FieldManagerList& fml )
 }
 
 //--------------------------------------------------------------------
+// function that can be used to determine if a floating point x is between xMin and xMax
+// based on a specified ULP, i.e. how many floats are allowed in between x and xMin.
+template< typename T >
+bool in_range(const T& x, const T& xMin, const T& xMax, const int ULP)
+{
+  using namespace boost::math;
+  bool valid = false;
+  if ( fabs(float_distance(xMin,x)) < ULP ) {
+    valid = true;
+  } else if (fabs(float_distance(xMax,x)) < ULP ) {
+    valid = true;
+  } else if ( x >= xMin && x <= xMax ) {
+    valid = true;
+  } else {
+    valid = false;
+  }
+  return valid;
+}
+
+//--------------------------------------------------------------------
 
 template< typename FieldT >
 void
@@ -249,7 +270,7 @@ evaluate()
   FieldT& phi = this->value();
   phi <<= 0.0;
 
-  // gzFile utilities as they can handle both gzip and ascii files.
+  // use gzFile utilities as they can handle both gzip and ascii files.
   gzFile inputFile = gzopen( filename_.c_str(), "r" );
   
   if(inputFile == NULL) {
@@ -266,29 +287,32 @@ evaluate()
   const double zMin = field_min_interior(*z_);    
   typename FieldT::interior_iterator phiiter = phi.interior_begin();
 
+  const double dx = (*x_)(IntVec(1,0,0)) - (*x_)(IntVec(0,0,0));
+  const double dy = (*y_)(IntVec(0,1,0)) - (*y_)(IntVec(0,0,0));
+  const double dz = (*z_)(IntVec(0,0,1)) - (*z_)(IntVec(0,0,0));
   double x,y,z,val;
-
   // to take care of comparing doubles, use a tolerance value for min & max (see below)
-  const double eps = 2.0*std::numeric_limits<double>::epsilon();
-//  int size = 0;
+  const double epsx = dx/2.0;
+  const double epsy = dy/2.0;
+  const double epsz = dz/2.0;
   while ( !gzeof( inputFile ) ) { // check for end of file
     x   = Uintah::getDouble(inputFile);
     y   = Uintah::getDouble(inputFile);
     z   = Uintah::getDouble(inputFile);
-    val = Uintah::getDouble(inputFile);  
-    const bool containsValue = x >= (xMin - eps) && x <= (xMax + eps)
-                            && y >= (yMin - eps) && y <= (yMax + eps)
-                            && z >= (zMin - eps) && z <= (zMax + eps);
+    val = Uintah::getDouble(inputFile);
+
+    const bool containsValue =     x >= (xMin - epsx) && x <= (xMax + epsx)
+                                && y >= (yMin - epsy) && y <= (yMax + epsy)
+                                && z >= (zMin - epsz) && z <= (zMax + epsz);
+    
     if( containsValue && phiiter != phi.interior_end() ){
-      // this assumes that the list of data in the input file is ordered according to x, y, z locations...
+      // this assumes that the input file data is structured in the x, y, and z directions, respectively.
+      // Note also the assumption here that the memory layout of SpatialField iterators is also in x, y, and z
       *phiiter = val;
       ++phiiter;
-//      size++;
     }        
   }
-//  const int pid =  Uintah::Parallel::getMPIRank();
-//  std::cout << "Processor: " << pid << " collected total cells: "<< size << std::endl;
-  gzclose( inputFile );     
+  gzclose( inputFile );
 }
 
 //--------------------------------------------------------------------
