@@ -448,7 +448,7 @@ ZDragModel::computeModel( const ProcessorGroup* pc,
         } else {
           model[c] = weight[c]*(phi/t_p*(cartGas.z()-cartPart.z())+gravity.z())/(d_zvel_scaling_factor);
         }
-        gas_source[c] = -weight[c]*d_w_scaling_factor*rhop/6.0*pi*phi/t_p*(cartGas.z()-cartPart.z())*pow(length,3.0);
+        gas_source[c] = -weight[c]*d_w_scaling_factor*rhop*rho_factor/6.0*pi*phi/t_p*(cartGas.z()-cartPart.z())*pow(length,3.0);
 
         /*
         // Debugging

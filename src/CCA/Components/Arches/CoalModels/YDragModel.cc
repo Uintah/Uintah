@@ -449,7 +449,7 @@ YDragModel::computeModel( const ProcessorGroup* pc,
           model[c] = weight[c]*(phi/t_p*(cartGas.y()-cartPart.y())+gravity.y())/(d_yvel_scaling_factor);
         }
 
-        gas_source[c] = -weight[c]*d_w_scaling_factor*rhop/6.0*pi*phi/t_p*(cartGas.y()-cartPart.y())*pow(length,3.0);
+        gas_source[c] = -weight[c]*d_w_scaling_factor*rhop*rho_factor/6.0*pi*phi/t_p*(cartGas.y()-cartPart.y())*pow(length,3.0);
 
         /*
         // Debugging
