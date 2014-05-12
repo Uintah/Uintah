@@ -696,7 +696,6 @@ fi
 ##  --------------------------------------------------------------------
 
 IS_OSX="no"
-IS_WIN="no"
 IS_VC="no"
 IS_AIX="no"
 
@@ -722,14 +721,6 @@ case $host in
     NUM_CPUS=4
     IS_AIX="yes"
     ;;
-  *-mingw*)
-    NUM_CPUS=2
-    IS_WIN="yes"
-    ;;
-  *-pc*)
-    echo
-    AC_MSG_ERROR(Currently Windows only configures from mingw.  See install instructions)
-    ;;
   *)
     echo
     AC_MSG_WARN( !!!!!! This system is untested - You are on your own !!!!!!)
@@ -740,7 +731,6 @@ esac
 
 AC_SUBST(IS_OSX)
 AC_SUBST(DEF_OSX)
-AC_SUBST(IS_WIN)
 AC_SUBST(IS_AIX)
 
 sci_defs_files="$sci_defs_files include/sci_defs/osx_testdefs.h"
@@ -937,11 +927,7 @@ fi
 ##  DO NOT "hardcode" ANY libraries (i.e. no -l or -L or -I allowed).
 ##
 
-if test "$IS_WIN" = "yes"; then
-  TIME_IMPL=Time_win32.cc
-else
-  TIME_IMPL=Time_unix.cc
-fi
+TIME_IMPL=Time_unix.cc
 TEMPLATE_TAG=
 TEMPLATE_BOX="<>"
 case $host in
@@ -966,9 +952,6 @@ case $host in
         # later we will make .so's from them.
 	SO_OR_ARCHIVE_EXTENSION=a
 	;;
-     *-pc-mingw*)
-        SO_OR_ARCHIVE_EXTENSION=dll
-        ;;
      *)
 	SO_OR_ARCHIVE_EXTENSION=so 
         ;;
@@ -1100,12 +1083,6 @@ if test ! -e "`which $CC`"; then
 fi
 if test ! -e "`which $CXX`"; then
   SCI_MSG_ERROR(Could not find the specified C++ compiler (CC))
-fi
-
-if test "$IS_WIN" = "yes"; then
-  # don't require fortran on windows yet 
-  # (Uintah disables fortran compilation on windows for the moment...)
-  with_fortran="no"
 fi
 
 # enable/disable certain Uintah components
@@ -1353,11 +1330,6 @@ AC_SUBST(ZOLTAN_LIB_DIR_FLAG)
 
 sci_defs_files="$sci_defs_files include/sci_defs/uintah_testdefs.h"
 
-# This flag is for the windows compiler - so it can generate correct
-# SHARE flags.
-WIN_DLLFLAGS=""
-WIN_OTFFLAGS=""
-
 case $host in 
   *-dec*)
     ac_objext=o
@@ -1494,105 +1466,6 @@ case $host in
     esac
     ;;
 
-  *-pc-mingw*)
-    case $CXX in
-      *cl*)
-          ac_objext=obj
-          CXXFLAGS="-EHsc -GR"
-          
-          if test "$debug" = yes; then
-            #  no debug information for dynamic compilation yet - the threaded compilations will overwrite the db file
-            CFLAGS="-nologo -Od -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_DEPRECATE -Gm -Zi -MD -W1 -Wp64"
-            WIN_DLLFLAGS=' -DBUILD_$(subst /,_,$(patsubst %/,%,$(dir $@))) -Fo"$(dir $@)" -Fd"$(dir $@)vc70.pdb"'
-            WIN_OTFFLAGS=' -Fd"$(basename $@).pdb"'
-          else
-            CFLAGS="-nologo -O2 -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_DEPRECATE -O2 -MD -W1"
-            WIN_DLLFLAGS=' -DBUILD_$(subst /,_,$(patsubst %/,%,$(dir $@))) -Fo"$(dir $@)"'
-          fi
-          CXXFLAGS="$CXXFLAGS $CFLAGS"
-          WOFF=" -w0"
-          SOFLAGS="-link -dll"
-          NEED_SONAME=no
-          LDRUN_PREFIX="-LIBPATH:"
-          IS_VC="yes"
-          if !test -f "$PATH_TO_VC"/bin/cl.exe; then
-            PATH_TO_VC=""
-            echo "invalid PATH_TO_VC"
-          fi
-          if !test -f "$PATH_TO_PSDK"/Include/windows.h; then
-            PATH_TO_PSDK=""
-            echo "invalid PATH_TO_PSDK"
-          fi
-          if !test -f "$PATH_TO_MSYS_BIN"/make.exe; then
-            PATH_TO_MSYS_BIN=""
-            echo "invalid PATH_TO_MSYS_BIN"
-          fi
-          
-          if test -z "$PATH_TO_VC" -o -z "$PATH_TO_PSDK" -o -z "$PATH_TO_MSYS_BIN"; then
-            SCI_MSG_ERROR([One of more of the required VCDIRS variables are not set. Execute
-  export PATH_TO_VC=<path-to-vc>
-  export PATH_TO_PSDK=<path-to-PlatformSDK>
-  export PATH_TO_MSYS_BIN=<msys-bin-dir>
-    Use drive letter and forward slashes (/) instead of backslashes (\)
-    i.e., C:/msys/1.0/bin])
-          fi
-          AC_SUBST(PATH_TO_VC)
-          AC_SUBST(PATH_TO_PSDK)
-          AC_SUBST(PATH_TO_MSYS_BIN)
-          ;;
-      *g++*)
-          ac_objext=o
-          CFLAGS=" -Wall"
-          CXXFLAGS=" -Wall"
-          WIN_DLLFLAGS=' -DBUILD_$(subst /,_,$(patsubst %/,%,$(dir $@)))'
-          SCI_CHECK_VERSION($CC,--version,2.95.3,,
-            echo configure: error: wrong $CC version.; exit)
-          SCI_CHECK_VERSION($CXX,--version,2.95.3,,
-            echo configure: error: wrong $CXX version.; exit)
-          WOFF=" -w"
-          SOFLAGS="-shared ${SOFLAGS}"
-          NEED_SONAME=yes
-          ;;
-      esac
-    AC_PROG_CPP
-    AC_PROG_CXXCPP
-    AC_CHECK_PROG(AS,as,as)
-    AC_CHECK_PROG(LD,ld,ld)
-    CPPFLAGS="$CPPFLAGS $WOFF"
-    CFLAGS="$CFLAGS $extra_cflags"
-    CXXFLAGS="$CXXFLAGS $extra_cflags"
-
-    if test "$sci_required_fortran" = "yes"; then
-      SCI_CHECK_VERSION($F77,--version,0.5.25,,
-        echo configure: error: wrong $F77 version.; exit)
-      case $F77 in
-        *g77*)
-          # extra_fflags has array checking if in debug mode.
-          FFLAGS="$FFLAGS $extra_cflags $extra_fflags"
-
-          # put '_' at end and two '_'s if there is a '_' in name.
-          # This flag is used by the genfspec.pl script in Uintah (generated
-          # from fspec.pl.in).
-          FORTRAN_UNDERSCORE=linux
-          DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_LINUX"
-          ;;
-        *gfortran*)
-          FFLAGS="$FFLAGS -fbounds-check $extra_cflags"   
-          FORTRAN_UNDERSCORE=linux
-          DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_LINUX"
-          ;;        
-        *xlf*)
-          FFLAGS="$FFLAGS"   
-          FORTRAN_UNDERSCORE=linux
-          DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_LINUX"
-          ;;        
-        *)
-          FFLAGS="$FFLAGS $extra_cflags"
-          ;;
-      esac
-    fi
- 
-    ;;
   *)
     # linux
     ac_objext=o
@@ -1735,9 +1608,6 @@ sci_defs_files="$sci_defs_files include/sci_defs/bits_testdefs.h"
 
 ###
 
-AC_SUBST(WIN_DLLFLAGS)
-AC_SUBST(WIN_OTFFLAGS)
-
 rm -f configure-test.*
 rm -rf configure-test-dir
 mkdir configure-test-dir
@@ -1857,13 +1727,6 @@ if test $CC_DEPEND_MODE = unknown; then
   done
 fi
 
-if test $IS_WIN = "yes"; then
-  # for the moment, don't gen deps on win32
-  CC_DEPEND_MODE=normal
-  CC_DEPEND_REGEN=""
-  CC_DEPEND_EXT=""
-fi
-
 if test $CC_DEPEND_MODE = unknown; then
   AC_MSG_ERROR(Cannot determine dependency generation flag. You might have specified bad '--enable-optimize=' flags on your configure line)
 fi
@@ -1890,16 +1753,13 @@ AC_SUBST(F77_DEPEND_REGEN)
 AC_SUBST(F77_DEPEND_EXT)
 
 # Other programs
-if test "$IS_WIN" = "yes"; then
-  AC_CHECK_PROG(MAKE,make,make,NOT_FOUND,)
+AC_PATH_PROG(GMAKE,gmake,NOT_FOUND,,)
+if test "$GMAKE" = "NOT_FOUND"; then
+  AC_PATH_PROG(MAKE,make,NOT_FOUND,,)
 else
-  AC_PATH_PROG(GMAKE,gmake,NOT_FOUND,,)
-  if test "$GMAKE" = "NOT_FOUND"; then
-    AC_PATH_PROG(MAKE,make,NOT_FOUND,,)
-  else
-    MAKE=$GMAKE
-  fi
+  MAKE=$GMAKE
 fi
+
 if test "$MAKE" = "NOT_FOUND"; then
   SCI_MSG_ERROR(GNU make not found.)
 fi
@@ -1911,11 +1771,6 @@ SCI_CHECK_VERSION($MAKE,--version,3.78.1,,
   echo configure: error: wrong GNU make version.; exit)
 
 AC_PROG_AWK
-
-## ignore some software tests on windows (for now at least)
-if test "$IS_WIN" = "yes"; then
-  echo "skipping bison, lex, etags, perl tests"
-else
 
 AC_CHECK_PROG(ETAGS, etags, etags)
 
@@ -1929,8 +1784,6 @@ fi
 if test "$PERL" = "perl"; then
   PERL=`type perl | sed 's%^.* %%'`
 fi
-
-fi # end if IS_WIN = yes
 
 ##  Create the tools dir for later use.
 if test "$sci_required_tools" = "yes" ; then
@@ -2058,14 +1911,6 @@ MPI_EXTRA_LIB_FLAG="$MPI_EXTRA_LIB_FLAG $RT_LIB_FLAG"
 SOCKET_LIBRARY=""
 
 case $host in
-  *-pc-mingw*)
-    threads=win32
-    if test $IS_VC = "yes"; then
-      SOCKET_LIB_FLAG="ws2_32.lib"
-    else
-      SOCKET_LIB_FLAG="-lws2_32"
-    fi
-    ;;
   *)
     if test "$threads" = "unknown"; then
       threads=pthreads
@@ -2120,15 +1965,6 @@ case $threads in
       DEF_THREAD="#define SCI_NOTHREAD 1"
       AC_MSG_WARN(threads disabled - software may work incorrectly)
       ;;
-   win32)
-     # for time functions in windows
-     DEF_THREAD=
-     if test $IS_VC = "yes"; then
-       THREAD_LIB_FLAG=winmm.lib
-     else
-       THREAD_LIB_FLAG=-lwinmm
-     fi
-     ;;
    *)
       SCI_MSG_ERROR(unknown thread type for host $host: $threads. exiting.)
       ;;
@@ -2281,11 +2117,6 @@ else
       dlopen("bogus", 0);
     ],required)
     ;;
-  *-pc-mingw*)
-    echo "Using Windows dynamic loader"
-    DL_LIB_FLAG=""
-    DL_LIB_DIR_FLAG=""
-    ;;
   *)
     SCI_TRY_LINK(DL,dlopen in libdl,dlfcn.h,,dl,,,[
       dlopen("bogus", 0);
@@ -2322,14 +2153,10 @@ sci_defs_files="$sci_defs_files include/sci_defs/stat64_testdefs.h"
 SCI_TRY_LINK(STD_HDRS,standard headers,stdio.h stdlib.h stddef.h stdarg.h string.h limits.h errno.h fcntl.h float.h memory.h ctype.h signal.h locale.h assert.h sys/types.h sys/stat.h sys/timeb.h,,,,,,required)
 
 # don't test for malloc.h or values.h on darwin
-# don't test a bunch of then on win32
 case $host in
   *-darwin*)
     SCI_TRY_LINK(STD_HDRS, standard headers-2,unistd.h dirent.h sys/time.h sys/param.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h,,,,,,required)
     ;;
-  *-pc-mingw*)
-    ;;
-
   *)
     # default system headers that cannot be tested on all systems
     SCI_TRY_LINK(STD_HDRS,standard headers-2,unistd.h dirent.h sys/time.h sys/param.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h,,,,,,required)
@@ -2464,7 +2291,7 @@ fi
 
 AC_SUBST(SSTREAM_COMPAT)
 AC_LANG(C)
-##  --  search for SGI'S or Win32's traceback library  ------------------------------ 
+##  --  search for SGI'S traceback library  ------------------------------ 
 
 _sci_optional=optional
 if test "$with_exc"; then
@@ -2476,15 +2303,9 @@ else
   _sci_inc=
 fi
 
-if test "$IS_WIN" = "yes"; then
-  # it's 'imagehlp' but call it EXC anyway so we don't have to change
-  # other config parameters
-  SCI_TRY_LINK(EXC,WIN32 traceback library and headers,windows.h imagehlp.h,$_sci_inc,imagehlp psapi,$_sci_lib,,,required)
-else
-  SCI_TRY_LINK(EXC,traceback library and headers,libexc.h,$_sci_inc,exc,$_sci_lib,,,$_sci_optional)
-fi
+SCI_TRY_LINK(EXC,traceback library and headers,libexc.h,$_sci_inc,exc,$_sci_lib,,,$_sci_optional)
 
-if test "$HAVE_EXC" = "yes" -a "$IS_WIN" != "yes"; then
+if test "$HAVE_EXC" = "yes"; then
   DEF_EXC="#define HAVE_EXC 1"
 fi
 
@@ -3983,7 +3804,6 @@ elif test -e $sci_thirdparty_dir/bin/freetype-config; then
     _sci_lib="$sci_thirdparty_lib"
 else
     AC_MSG_RESULT(No 'freetype-config' file found in $freetype_bin.)
-    # try the 3P for windows
     _sci_lib="$sci_thirdparty_lib"
     _sci_inc="$sci_thirdparty_include"
     includes=""
@@ -4224,12 +4044,6 @@ if test "$DEF_HASHMAP" = "None"; then
   AC_TRY_COMPILE([#include <ext/hash_map>
                  std::hash_map<int, int> xx;], ,
 		 [DEF_HASHMAP=HAVE_EXT_HASHMAP])
-fi
-# win32 has hash_map in stdext namespace (7 deprecates it in std, 8 requires stdext)
-if test "$DEF_HASHMAP" = "None"; then
-  AC_TRY_COMPILE([#include <hash_map>
-                 stdext::hash_map<int, int> xx;], ,
-		 [DEF_HASHMAP=HAVE_STDEXT_HASHMAP])
 fi
 
 ############################################################
@@ -4631,11 +4445,6 @@ SCI_ARG_VAR(CXXFLAGS,C++ compiler flags)
 
 scirun_obj_dir=`pwd`;
 scirun_src_dir=`(cd ${srcdir};pwd)`
-
-if test "$IS_WIN" = "yes"; then
-  scirun_obj_dir=`echo "$scirun_obj_dir" | sed 's,/,,' | sed 's,/,:/,'`
-  scirun_src_dir=`echo "$scirun_src_dir" | sed 's,/,,' | sed 's,/,:/,'`
-fi
 
 AC_SUBST(scirun_obj_dir)
 AC_SUBST(scirun_src_dir)
