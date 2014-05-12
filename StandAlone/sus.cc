@@ -24,7 +24,7 @@
 
 
 /*
- *  sus.cc: Standalone Uintah Simulation - a bare-bones uintah simulation
+ *  sus.cc: Standalone Uintah Simulation - a bare-bones Uintah simulation
  *          for development
  *
  *  Written by:
@@ -90,11 +90,6 @@
 #endif
 #if 0
 #  include <fenv.h>
-#endif
-
-#ifdef _WIN32
-#  include <process.h>
-#  include <winsock2.h>
 #endif
 
 #include <iostream>
@@ -475,9 +470,7 @@ main( int argc, char *argv[], char *env[] )
   VTsetup();
   #endif
 
-#ifndef _WIN32
   char * start_addr = (char*)sbrk(0);
-#endif
 
 #if defined(__SGI__)
   Thread::disallow_sgi_OpenGL_page0_sillyness();

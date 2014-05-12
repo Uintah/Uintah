@@ -37,8 +37,6 @@
 #ifndef Core_Thread_AtomicCounter_h
 #define Core_Thread_AtomicCounter_h
 
-#include <Core/Thread/share.h>
-
 namespace SCIRun {
 
 struct AtomicCounter_private;
@@ -62,8 +60,9 @@ struct AtomicCounter_private;
  use of a statement like: x=x+2, which would NOT be thread safe.
 
 ****************************************/
-class SCISHARE AtomicCounter {
-public:
+class AtomicCounter {
+
+  public:
   //////////
   // Create an atomic counter with an unspecified initial value.
   // <tt>name</tt> should be a static string which describes the
@@ -92,7 +91,7 @@ public:
   // This does not return AtomicCounter& like a normal ++
   // operator would, because it would destroy atomicity
   long long operator++();
-    
+
   //////////
   //	Increment the counter and return the old value
   long long operator++(int);
@@ -102,7 +101,7 @@ public:
   // This does not return AtomicCounter& like a normal --
   // operator would, because it would destroy atomicity
   long long operator--();
-    
+
   //////////
   // Decrement the counter and return the old value
   long long operator--(int);
@@ -111,7 +110,7 @@ public:
   // Set the counter to a new value
   void set(long long);
 
-private:
+  private:
   const char* name_;
   AtomicCounter_private* priv_;
 
@@ -120,7 +119,9 @@ private:
   AtomicCounter(const AtomicCounter&);
   AtomicCounter& operator=(const AtomicCounter&);
 };
-} // End namespace SCIRun
+
+}
+  // End namespace SCIRun
 
 #endif
 

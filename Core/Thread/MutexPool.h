@@ -40,9 +40,8 @@
 #include <Core/Thread/AtomicCounter.h>
 #include <Core/Thread/Mutex.h>
 
-#include <Core/Thread/share.h>
-
 namespace SCIRun {
+
 /**************************************
  
 CLASS
@@ -57,52 +56,56 @@ DESCRIPTION
    However, this must be used very carefully, as it becomes easy to
    create a hold-and-wait condition.
 ****************************************/
-	class SCISHARE MutexPool {
-	public:
-	    //////////
-	    // Create the mutex pool with size mutex objects.
-	    MutexPool(const char* name, int size);
+class MutexPool {
 
-	    //////////
-	    // Destroy the mutex pool and all mutexes in it.
-	    ~MutexPool();
+  public:
+  //////////
+  // Create the mutex pool with size mutex objects.
+  MutexPool(const char* name, int size);
 
-	    //////////
-	    // return the next index in a round-robin fashion
-	    int nextIndex();
+  //////////
+  // Destroy the mutex pool and all mutexes in it.
+  ~MutexPool();
 
-	    //////////
-	    // return the idx'th mutex.
-	    Mutex* getMutex(int idx);
+  //////////
+  // return the next index in a round-robin fashion
+  int nextIndex();
 
-	    //////////
-	    // lock the idx'th mutex.
-	    void lockMutex(int idx);
+  //////////
+  // return the idx'th mutex.
+  Mutex* getMutex(int idx);
 
-	    //////////
-	    // unlock the idx'th mutex.
-	    void unlockMutex(int idx);
-	private:
-	    //////////
-	    // The next ID
-	    AtomicCounter nextID_;
+  //////////
+  // lock the idx'th mutex.
+  void lockMutex(int idx);
 
- 	    //////////
-	    // The number of Mutexes in the pool
-	    int size_;
+  //////////
+  // unlock the idx'th mutex.
+  void unlockMutex(int idx);
 
- 	    //////////
-	    // The array of Mutex objects.
-	    Mutex** pool_;
+  private:
+  //////////
+  // The next ID
+  AtomicCounter nextID_;
 
- 	    //////////
-	    // Private copy ctor to prevent accidental copying
-	    MutexPool(const MutexPool&);
- 	    //////////
-	    // Private assignment operator to prevent accidental assignment
-	    MutexPool& operator=(const MutexPool&);
-	};
-} // End namespace SCIRun
+  //////////
+  // The number of Mutexes in the pool
+  int size_;
+
+  //////////
+  // The array of Mutex objects.
+  Mutex** pool_;
+
+  //////////
+  // Private copy ctor to prevent accidental copying
+  MutexPool(const MutexPool&);
+  //////////
+  // Private assignment operator to prevent accidental assignment
+  MutexPool& operator=(const MutexPool&);
+};
+
+}
+  // End namespace SCIRun
 
 #endif
 
