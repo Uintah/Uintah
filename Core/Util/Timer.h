@@ -37,9 +37,7 @@
 #ifndef SCI_Containers_Timer_h
 #define SCI_Containers_Timer_h 1
 
-#include <Core/Util/share.h>
-
-class SCISHARE Timer {
+class Timer {
 public:
   enum timer_state_e {
     Stopped,
@@ -62,20 +60,20 @@ private:
 
 };
 
-class SCISHARE CPUTimer : public Timer {
+class CPUTimer : public Timer {
     virtual double get_time();
 public:
     virtual ~CPUTimer();
 };
 
-class SCISHARE WallClockTimer : public Timer {
+class WallClockTimer : public Timer {
     virtual double get_time();
 public:
     WallClockTimer();
     virtual ~WallClockTimer();
 };
 
-class SCISHARE TimeThrottle : public WallClockTimer {
+class TimeThrottle : public WallClockTimer {
 public:
     TimeThrottle();
     virtual ~TimeThrottle();

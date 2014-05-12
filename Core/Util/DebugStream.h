@@ -28,13 +28,13 @@
 // Department of Computer Science
 // University of Utah
 // Feb. 2000
-// DebugStream is an ostream that is useful for outputing debug messages.
+// DebugStream is an ostream that is useful for outputting debug messages.
 // When an instance is created, it is given a name.  An environment variable,
 // SCI_DEBUG, is inspected to see if a particular instance should be
 // active(identified by its name), and if so where to send the output.
 // The syntax for the environment variable is:
 // SCI_DEBUG = ([name]:[-|+|+FILENAME])(,[name]:[-|+|+FILENAME])*
-// The + or - specifies wheather the named object is on or off.  If a file is 
+// The + or - specifies whether the named object is on or off.  If a file is
 // specified it is opened in ios::out mode.  If no file is specified,
 // the stream is directed to cerr.  The : and , characters are
 // restricted to deliminators.
@@ -65,9 +65,6 @@
 #include <string>
 #include <iostream>
 
-
-#include <Core/Util/share.h>
-
 namespace SCIRun {
 
     class DebugStream;
@@ -92,7 +89,7 @@ namespace SCIRun {
     ///////////////////
     // class DebugStream
     // A general purpose debugging ostream.
-    class SCISHARE DebugStream: public std::ostream{
+    class DebugStream: public std::ostream{
     private:
       // identifies me uniquely
       std::string name;

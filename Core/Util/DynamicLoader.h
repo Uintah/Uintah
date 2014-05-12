@@ -40,11 +40,9 @@
 #include <string>
 #include <iostream>
 
-#include <Core/Util/share.h>
-
 namespace SCIRun {
 
-struct SCISHARE CompileInfo
+struct CompileInfo
 {
 public:
   typedef std::map<std::string, int> ci_map_type; //! unique keys.
@@ -93,7 +91,7 @@ typedef Handle<CompileInfo> CompileInfoHandle;
 //! A type that maker functions can create, and DynamicLoader can store.
 //! All algorithms that support the dynamic loading concept must 
 //! inherit from this.
-struct SCISHARE DynamicAlgoBase { 
+struct DynamicAlgoBase {
   int       ref_cnt;
   Mutex     lock;
 
@@ -105,7 +103,7 @@ struct SCISHARE DynamicAlgoBase {
 
 typedef LockingHandle<DynamicAlgoBase> DynamicAlgoHandle;
 
-class SCISHARE DynamicLoader
+class DynamicLoader
 {
 public:
   typedef DynamicAlgoBase* (*maker_fun)();
@@ -140,10 +138,10 @@ private:
   CrowdMonitor          map_crowd_;
   ConditionVariable     compilation_cond_;
   Mutex                 map_lock_;
-  static std::string	otf_dir();
+  static std::string	  otf_dir();
 
   //! static vars.
-  static DynamicLoader *scirun_loader_;
+  static DynamicLoader* scirun_loader_;
   static Mutex          scirun_loader_init_lock_;
   
 };

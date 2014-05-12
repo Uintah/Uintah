@@ -30,23 +30,17 @@
 
 // STL Includes
 #include   <Core/Util/Environment.h> // includes <string>
+
 #include   <iostream>
 #include   <map>
 #include   <cstring>
 #include   <cstdlib>
 #include   <cstdio>
+#include   <unistd.h>
+#include   <sys/param.h>
 
 #define SCI_OK_TO_INCLUDE_SCI_ENVIRONMENT_DEFS_H
 #include <sci_defs/environment_defs.h>
-
-#ifndef _WIN32
-#  include <unistd.h>
-#  include <sys/param.h>
-#else
-#  define MAXPATHLEN 256
-#  include <direct.h>
-#  include <windows.h>
-#endif
 
 using namespace SCIRun;
 using namespace std;

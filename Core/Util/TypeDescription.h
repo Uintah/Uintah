@@ -33,13 +33,11 @@
 #include <vector>
 #include <string>
 
-#include <Core/Util/share.h>
-
 namespace SCIRun {
 
 struct CompileInfo;
 
-class SCISHARE TypeDescription {
+class TypeDescription {
 public:
   enum category_e {
     DATA_E,
@@ -108,18 +106,18 @@ private:
 };
 
 
-SCISHARE const TypeDescription* get_type_description(double*);
-SCISHARE const TypeDescription* get_type_description(long*);
-SCISHARE const TypeDescription* get_type_description(float*);
-SCISHARE const TypeDescription* get_type_description(short*);
-SCISHARE const TypeDescription* get_type_description(unsigned short*); 
-SCISHARE const TypeDescription* get_type_description(int*);
-SCISHARE const TypeDescription* get_type_description(unsigned int*);
-SCISHARE const TypeDescription* get_type_description(char*);
-SCISHARE const TypeDescription* get_type_description(unsigned char*);
-SCISHARE const TypeDescription* get_type_description(bool*);
-SCISHARE const TypeDescription* get_type_description(std::string*);
-SCISHARE const TypeDescription* get_type_description(unsigned long*);
+const TypeDescription* get_type_description(double*);
+const TypeDescription* get_type_description(long*);
+const TypeDescription* get_type_description(float*);
+const TypeDescription* get_type_description(short*);
+const TypeDescription* get_type_description(unsigned short*);
+const TypeDescription* get_type_description(int*);
+const TypeDescription* get_type_description(unsigned int*);
+const TypeDescription* get_type_description(char*);
+const TypeDescription* get_type_description(unsigned char*);
+const TypeDescription* get_type_description(bool*);
+const TypeDescription* get_type_description(std::string*);
+const TypeDescription* get_type_description(unsigned long*);
 
 template <class T>
 const TypeDescription* get_type_description(std::vector<T>*)
