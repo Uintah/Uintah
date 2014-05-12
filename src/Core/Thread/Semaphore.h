@@ -37,8 +37,6 @@
 #ifndef Core_Thread_Semaphore_h
 #define Core_Thread_Semaphore_h
 
-#include <Core/Thread/share.h>
-
 namespace SCIRun {
 
 struct Semaphore_private;
@@ -60,8 +58,9 @@ struct Semaphore_private;
  thread calls the <i>up</i> method.
 
 ****************************************/
-class SCISHARE Semaphore {
-public:
+class Semaphore {
+
+  public:
   //////////
   // Create the semaphore, and setup the initial <i>count.name</i>
   // should be a static string which describes the primitive for
@@ -76,7 +75,7 @@ public:
   // Increment the semaphore count, unblocking up to <i>count</i>
   // threads that may be blocked in the <i>down</i> method.
   void up(int count=1);
-    
+
   //////////
   // Decrement the semaphore count by <i>count</i>.  If the
   // count is zero, this thread will be blocked until another
@@ -92,7 +91,7 @@ public:
   // return false. Otherwise, <i>tryDown</i> will return true.
   bool tryDown();
 
-private:
+  private:
   Semaphore_private* priv_;
   const char* name_;
 
@@ -100,6 +99,7 @@ private:
   Semaphore(const Semaphore&);
   Semaphore& operator=(const Semaphore&);
 };
+
 } // End namespace SCIRun
 
 #endif

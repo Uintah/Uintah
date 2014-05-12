@@ -39,23 +39,24 @@
 
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
-#include <Core/Thread/share.h>
 
 namespace SCIRun {
 
-class SCISHARE ThreadLock {
-public:
-  ThreadLock(const char *);
-  void          lock();
-  int           try_lock();
-  void          unlock();
-private:
-  Mutex         mutex_;
-  Thread *      owner_;
-  int           count_;
+class ThreadLock {
+
+  public:
+    ThreadLock(const char *);
+    void lock();
+    int try_lock();
+    void unlock();
+
+  private:
+    Mutex mutex_;
+    Thread * owner_;
+    int count_;
 };
 
-} // End namespace SCIRun
+}  // End namespace SCIRun
 
 
 #endif

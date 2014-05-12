@@ -42,7 +42,8 @@
 #include <Core/Thread/Parallel1.h>
 #include <Core/Thread/Parallel2.h>
 #include <Core/Thread/Parallel3.h>
-#include <Core/Thread/share.h>
+
+#define MAX_THREADS 64
 
 namespace SCIRun {
 
@@ -66,7 +67,7 @@ DESCRIPTION
    executed in another thread.
    
 ****************************************/
-  class SCISHARE Thread {
+  class Thread {
 #ifdef SCI_64BITS
     static const unsigned long DEFAULT_STACKSIZE  = 256 * 1024; // 128 KB
 #else
@@ -355,15 +356,6 @@ DESCRIPTION
     // Checks for the presence of an abortCleanupFunc_, and if so, calls it.
     void handleCleanup();
 
-#ifdef _WIN32
-    // in windows, we can't get around this with #define private public
-    //   since it knows which symbols at link-time are public and private.
-    friend class Runnable;	    
-    friend class ConditionVariable;
-    friend void Thread_run(Thread* t);
-    friend void Thread_shutdown(Thread* thread, bool actually_exit);
-    friend unsigned long run_threads(void* priv_v);
-#endif
     friend class AtomicCounter;  
     friend struct Thread_private;
 

@@ -37,8 +37,6 @@
 #ifndef Core_Thread_ParallelBase_h
 #define Core_Thread_ParallelBase_h
 
-#include <Core/Thread/share.h>
-
 namespace SCIRun {
 
 class Semaphore;
@@ -55,24 +53,27 @@ class Semaphore;
  by a user program.  See <b>Parallel</b> instead.
    
 ****************************************/
-class SCISHARE ParallelBase {
-public:
+class ParallelBase {
+
+  public:
   //////////
   // <i>The thread body</i>
   virtual void run(int proc)=0;
 
-protected:
+  protected:
   ParallelBase();
   virtual ~ParallelBase();
-  mutable Semaphore* wait_; // This may be modified by Thread::parallel
+  mutable Semaphore* wait_;// This may be modified by Thread::parallel
+
   friend class Thread;
 
-private:
+  private:
   // Cannot copy them
   ParallelBase(const ParallelBase&);
   ParallelBase& operator=(const ParallelBase&);
 };
-} // End namespace SCIRun
+}
+  // End namespace SCIRun
 
 #endif
 
