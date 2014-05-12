@@ -452,7 +452,7 @@ XDragModel::computeModel( const ProcessorGroup* pc,
           model[c]= weight[c]*(phi/t_p*(cartGas.x()-cartPart.x())+gravity.x())/d_xvel_scaling_factor;
         }
 
-        gas_source[c] = -weight[c]*d_w_scaling_factor*rhop/6.0*pi*phi/t_p*(cartGas.x()-cartPart.x())*pow(length,3.0);
+        gas_source[c] = -weight[c]*d_w_scaling_factor*rhop*rho_factor/6.0*pi*phi/t_p*(cartGas.x()-cartPart.x())*pow(length,3.0);
 
         /*
         // Debugging
