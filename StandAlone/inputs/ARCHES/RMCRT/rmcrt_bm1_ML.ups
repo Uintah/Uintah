@@ -192,6 +192,8 @@
   <CFD>
     <!-- ARCHES specification -->
     <ARCHES>
+    
+      <BoundaryConditions/>
 
       <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
