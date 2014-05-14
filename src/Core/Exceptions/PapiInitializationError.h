@@ -34,7 +34,7 @@
  */
 
 #ifndef Core_Exceptions_PapiInitializationError_h
-#define Core_Exceptions_PapiInitializationErrorn_h
+#define Core_Exceptions_PapiInitializationError_h
 
 #include <Core/Exceptions/Exception.h>
 #include <string>
