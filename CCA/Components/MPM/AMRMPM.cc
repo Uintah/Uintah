@@ -377,6 +377,7 @@ void AMRMPM::schedulePrintParticleCount(const LevelP& level,
   Task* t = scinew Task("AMRMPM::printParticleCount",
                   this, &AMRMPM::printParticleCount);
   t->requires(Task::NewDW, lb->partCountLabel);
+  t->setType(Task::OncePerProc);
   sched->addTask(t, sched->getLoadBalancer()->getPerProcessorPatchSet(level), d_sharedState->allMPMMaterials());
 }
 //______________________________________________________________________

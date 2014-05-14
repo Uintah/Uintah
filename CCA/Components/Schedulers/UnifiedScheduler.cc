@@ -364,7 +364,7 @@ void UnifiedScheduler::runTask(DetailedTask * task,
 void UnifiedScheduler::execute(int tgnum /*=0*/,
                                int iteration /*=0*/)
 {
-  if (Uintah::Parallel::usingMPI() && isCopyDataTimestep()) {
+  if (Uintah::Parallel::usingMPI() && d_sharedState->isCopyDataTimestep()) {
     MPIScheduler::execute(tgnum, iteration);
     return;
   }
@@ -467,6 +467,7 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   static int totaltasks;
 
   taskdbg << d_myworld->myrank() << " Switched to Task Phase " << currphase << " , total task  " << phaseTasks[currphase] << endl;
+  if (!d_isInitTimestep) {
   for (int i = 0; i < numThreads_; i++) {
     t_worker[i]->resetWaittime(Time::currentSeconds());  // reset wait time counter
     // sending signal to threads to wake them up
@@ -474,6 +475,7 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
     t_worker[i]->d_idle = false;
     t_worker[i]->d_runsignal.conditionSignal();
     t_worker[i]->d_runmutex.unlock();
+  }
   }
 
   // control loop for all tasks of task graph*/
@@ -486,12 +488,13 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   wait_till_all_done();
 
   // if any thread is busy, conditional wait here
+  if (!d_isInitTimestep) {
   d_nextmutex.lock();
   while (getAviableThreadNum() < numThreads_) {
     d_nextsignal.wait(d_nextmutex);
   }
   d_nextmutex.unlock();
-
+  }
 //  // debug
 //  if (me == 0) {
 //    cout << "AviableThreads : " << getAviableThreadNum() << ", task worked: " << numTasksDone << endl;
