@@ -622,15 +622,10 @@ class Vector : public Error {
     }
 
    /*------------- Printouts -------------*/
-#ifdef WIN32
-  friend std::ostream& operator << (std::ostream& os, const Vector& a);
-  friend std::istream& operator >> (std::istream& os, Vector& a);
-#else
   template<class T>
   friend std::ostream& operator << (std::ostream& os, const Vector<T>& a);
   template<class T>
   friend std::istream& operator >> (std::istream& os, Vector<T>& a);
-#endif
   
  private:
 
