@@ -31,22 +31,14 @@
 #include <iostream>
 #include <vector>
 #include <queue>
-
-#ifndef _WIN32
-#  include <unistd.h>
-#  include <sys/time.h>
-#endif
+#include <unistd.h>
+#include <sys/time.h>
 
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/ConditionVariable.h>
-
-#ifdef _WIN32
-#  include <windows.h>
-#  define usleep(x) Sleep(x/1000)
-#endif
 
 #define debug_main
 #define debug_main_thread

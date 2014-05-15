@@ -32,10 +32,6 @@
 #include <iomanip>
 #include <fstream>
 
-#ifdef _WIN32
-#define snprintf _snprintf
-#endif
-
 namespace Uintah {
   
   class EnsightOpts {
