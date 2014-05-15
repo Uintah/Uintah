@@ -274,16 +274,16 @@ void ClassicTableInterface::tableMatching(){
 //--------------------------------------------------------------------------- 
   void 
 ClassicTableInterface::sched_getState( const LevelP& level, 
-    SchedulerP& sched, 
-    const TimeIntegratorLabel* time_labels, 
-    const bool initialize_me,
-    const bool modify_ref_den )
+                                       SchedulerP& sched, 
+                                       const int time_substep,
+                                       const bool initialize_me,
+                                       const bool modify_ref_den )
 
 {
   string taskname = "ClassicTableInterface::getState"; 
   Ghost::GhostType  gn = Ghost::None;
 
-  Task* tsk = scinew Task(taskname, this, &ClassicTableInterface::getState, time_labels, initialize_me, modify_ref_den );
+  Task* tsk = scinew Task(taskname, this, &ClassicTableInterface::getState, time_substep, initialize_me, modify_ref_den );
 
   // independent variables :: these must have been computed previously 
   for ( MixingRxnModel::VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i ) {
@@ -331,9 +331,18 @@ ClassicTableInterface::sched_getState( const LevelP& level,
 
   // other variables 
   tsk->modifies( d_lab->d_densityCPLabel );  // lame .... fix me
-  if ( modify_ref_den ) {
-    tsk->computes(time_labels->ref_density); 
+
+  if ( modify_ref_den ){
+    if ( time_substep == 0 ){ 
+      tsk->computes( d_lab->d_denRefArrayLabel ); 
+    } 
+  } else { 
+    if ( time_substep == 0 ){ 
+      tsk->computes( d_lab->d_denRefArrayLabel ); 
+      tsk->requires( Task::OldDW, d_lab->d_denRefArrayLabel, Ghost::None, 0); 
+    } 
   }
+
   tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, gn, 0 ); 
   tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, gn, 0 ); 
 
@@ -355,7 +364,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     const MaterialSubset* matls, 
     DataWarehouse* old_dw, 
     DataWarehouse* new_dw, 
-    const TimeIntegratorLabel* time_labels, 
+    const int time_substep, 
     const bool initialize_me, 
     const bool modify_ref_den )
 {
@@ -754,12 +763,33 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     // reference density modification 
     if ( modify_ref_den ) {
 
+      //actually modify the reference density value: 
       DepVarMap::iterator i = depend_storage.find("density");
       std::vector<double> iv = _iv_transform->get_reference_iv(); 
       double den_ref = ND_interp->find_val( iv, i->second.index ); 
-      new_dw->put(sum_vartype(den_ref),time_labels->ref_density);
+      if ( time_substep == 0 ){ 
+        CCVariable<double> den_ref_array; 
+        new_dw->allocateAndPut(den_ref_array, d_lab->d_denRefArrayLabel, matlIndex, patch );
 
+        for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++ ){ 
+          IntVector c = *iter; 
+          den_ref_array[c] = den_ref;
+        }
+
+      }
+
+    } else { 
+
+      //just carry forward: 
+      if ( time_substep == 0 ){ 
+        CCVariable<double> den_ref_array; 
+        constCCVariable<double> old_den_ref_array; 
+        new_dw->allocateAndPut(den_ref_array, d_lab->d_denRefArrayLabel, matlIndex, patch );
+        old_dw->get(old_den_ref_array, d_lab->d_denRefArrayLabel, matlIndex, patch, Ghost::None, 0 ); 
+        den_ref_array.copyData( old_den_ref_array ); 
+      }
     }
+
   }
 }
 

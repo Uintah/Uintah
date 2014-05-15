@@ -1013,13 +1013,10 @@ Arches::scheduleInitialize(const LevelP& level,
   // Table Lookup
   bool initialize_it = true;
   bool modify_ref_den = true;
+  int time_substep = 0; //no meaning here, but is required to be zero for 
+                        //variables to be properly allocated. 
   d_props->doTableMatching();
-  d_props->sched_computeProps( level, sched, init_timelabel, initialize_it, modify_ref_den );
-
-  //compute the density reference array
-  d_props->sched_computeDenRefArray(sched, patches, matls,
-                                    true, 0);
-
+  d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, time_substep );
 
   //Setup BC areas
   d_boundaryCondition->sched_computeBCArea__NEW( sched, level, patches, matls );

@@ -458,7 +458,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     bool initialize_it  = false;
     bool modify_ref_den = false;
     if ( curr_level == 0 ) initialize_it = true;
-    d_props->sched_computeProps( level, sched, d_timeIntegratorLabels[curr_level], initialize_it, modify_ref_den );
+    d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, curr_level );
 
     d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls );
 
@@ -500,9 +500,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       sched_checkDensityLag(sched, patches, matls,
                             d_timeIntegratorLabels[curr_level],
                             false);
-//    d_timeIntegratorLabels[curr_level]->integrator_step_number = TimeIntegratorStepNumber::First;
-    d_props->sched_computeDenRefArray(sched, patches, matls,
-                                      false, curr_level);
 
     // linearizes and solves pressure eqn
     // first computes, hatted velocities and then computes
@@ -585,7 +582,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       //TABLE LOOKUP #2
       bool initialize_it  = false;
       bool modify_ref_den = false;
-      d_props->sched_computeProps( level, sched, d_timeIntegratorLabels[curr_level], initialize_it, modify_ref_den );
+      d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, curr_level );
 
       // Property models after table lookup
       for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
@@ -619,7 +616,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       //TABLE LOOKUP #3
       initialize_it  = false;
       modify_ref_den = false;
-      d_props->sched_computeProps( level, sched, d_timeIntegratorLabels[curr_level], initialize_it, modify_ref_den );
+      d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, curr_level );
     }
 
     if ((curr_level>0)&&(!((d_timeIntegratorType == "RK2")||(d_timeIntegratorType == "BEEmulation")))) {
