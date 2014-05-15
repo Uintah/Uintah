@@ -5584,18 +5584,24 @@
             <ICVars>
               <variable label="length" role="particle_length"/>
               <variable label="ux" role="particle_xvel"/>
+              <variable label="RCmass" role="raw_coal_mass" />
+              <variable label="Charmass" role="char_mass" />
             </ICVars>
           </model>
           <model label="ydragforce" type="YDrag">
             <ICVars>
               <variable label="length" role="particle_length"/>
               <variable label="uy" role="particle_yvel"/>
+              <variable label="RCmass" role="raw_coal_mass" />
+              <variable label="Charmass" role="char_mass" />
             </ICVars>
           </model>
           <model label="zdragforce" type="ZDrag">
             <ICVars>
               <variable label="length" role="particle_length"/>
               <variable label="uz" role="particle_zvel"/>
+              <variable label="RCmass" role="raw_coal_mass" />
+              <variable label="Charmass" role="char_mass" />
             </ICVars>
           </model>
           <model label="devol" type="YamamotoDevol">
