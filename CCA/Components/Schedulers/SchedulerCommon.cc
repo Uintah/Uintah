@@ -149,8 +149,7 @@ SchedulerCommon::checkMemoryUse( unsigned long & memuse,
   memuse = sizealloc - sizefree;
   highwater = highwater_mmap;
 
-#elif !defined(_WIN32)
-
+#else
   if ( ProcessInfo::IsSupported( ProcessInfo::MEM_SIZE ) ) {
     memuse = ProcessInfo::GetMemoryResident();
     // printf("1) memuse is %d\n", (int)memuse);
@@ -1402,7 +1401,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
   // set so the load balancer will make an adequate neighborhood, as the default
   // neighborhood isn't good enough for the copy data timestep
   d_sharedState->setCopyDataTimestep(true);  //-- do we still need this?  - BJW
-#if !defined( _WIN32 ) && !defined( DISABLE_SCI_MALLOC )
+#if !defined( DISABLE_SCI_MALLOC )
   const char* tag = AllocatorSetDefaultTag("DoDataCopy");
 #endif
   this->compile(); 
@@ -1419,7 +1418,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
   
   start = Time::currentSeconds();
   this->execute();
-#if !defined( _WIN32 ) && !defined( DISABLE_SCI_MALLOC )
+#if !defined( DISABLE_SCI_MALLOC )
   AllocatorSetDefaultTag(tag);
 #endif
 

@@ -52,10 +52,7 @@
 #include <set>
 #include <cstring>
 #include <sstream>
-
-#ifndef _WIN32
 #include <unistd.h>
-#endif
 
 using namespace Uintah;
 
@@ -72,7 +69,6 @@ extern SCIRun::Mutex       cerrLock;
 extern DebugStream mixedDebug;
 
 #define DAV_DEBUG 0
-
 
 TaskGraph::TaskGraph(SchedulerCommon* sc, const ProcessorGroup* pg, Scheduler::tgType type)
   : sc(sc), d_myworld(pg), type_(type), dts_(0), d_numtaskphases(0)

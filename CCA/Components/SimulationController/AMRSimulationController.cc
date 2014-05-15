@@ -252,7 +252,7 @@ AMRSimulationController::run()
        ostringstream fn;
        fn << "alloc." << setw(5) << setfill('0') << d_myworld->myrank() << ".out";
        string filename(fn.str());
-#if !defined( _WIN32 ) && !defined( DISABLE_SCI_MALLOC )
+#if !defined( DISABLE_SCI_MALLOC )
        DumpAllocator(DefaultAllocator(), filename.c_str());
 #endif
      }
