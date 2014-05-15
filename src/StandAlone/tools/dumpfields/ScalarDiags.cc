@@ -30,10 +30,6 @@
 #include <map>
 #include <list>
 
-#ifdef _WIN32
-#define snprintf _snprintf
-#endif
-
 using namespace std;
 
 namespace Uintah {
