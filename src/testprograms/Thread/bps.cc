@@ -29,16 +29,14 @@
 #include <Core/Thread/ThreadGroup.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Time.h>
+
 #include <iostream>
-using std::cerr;
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-
-#ifndef _WIN32
 #include <unistd.h>
-#endif
 
+using std::cerr;
 
 using namespace SCIRun;
 
