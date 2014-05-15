@@ -31,7 +31,7 @@
  *
  */
 
-#ifdef defined( __PGI )
+#if defined( __PGI )
    // pgCC version 7.1-2 does not define strtoll (in stdlib.h or
    // anywhere)... However, this seems to fake the compiler into
    // not complaining.
