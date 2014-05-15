@@ -3996,8 +3996,8 @@ if test "$with_boost" -o "$with_boost_library"; then
      fi
   fi
 
-
-  SCI_TRY_LINK( BOOST_FS_V3, check for boost filesystem v3 namespace...,$_boost_incl,$BOOST_INCLUDE_DIR,$_boost_libs,,
+  SCI_TRY_LINK( BOOST_FS_V3, check for boost filesystem v3 namespace...,
+                $_boost_incl,$BOOST_INCLUDE_DIR,,,
                 $BOOST_LIB_DIR_FLAG $BOOST_LIB_FLAG,
                 [  boost::system::error_code ec;
                    boost::filesystem3::copy("abc","def", ec);  ],

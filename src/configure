@@ -39021,7 +39021,6 @@ _sci_includes=''
   fi
 
 
-
 ##
 ## SCI_TRY_LINK (BOOST_FS_V3):  check for boost filesystem v3 namespace...
 ##
@@ -39058,7 +39057,7 @@ _sci_includes=''
 ## arg 2 : check for boost filesystem v3 namespace...
 ## arg 3 : $_boost_incl
 ## arg 4 : $BOOST_INCLUDE_DIR
-## arg 5 : $_boost_libs
+## arg 5 :
 ## arg 6 :
 ## arg 7 : $BOOST_LIB_DIR_FLAG $BOOST_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -39138,10 +39137,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "$_boost_libs"; then
+if test -n ""; then
 
    found_framework=no
-   for lib in $_boost_libs; do
+   for lib in ; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -39438,7 +39437,7 @@ if test "optional" = "specific"; then
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" $_boost_libs; do
+  for i in "" ; do
     if test -z "$i"; then
        continue
     fi
