@@ -302,13 +302,13 @@ namespace Wasatch {
                                        const Uintah::SolverParameters& sparams,
                                        Uintah::SolverInterface& solver )
   : ExpressionBuilder(results),
-  phirhst_( phiRHSTag ),
-  userefphi_ ( useRefPhi ),
-  refphivalue_ ( refPhiValue ),
-  refphilocation_ ( refPhiLocation ),
-  use3dlaplacian_( use3dlaplacian ),
-  sparams_( sparams ),
-  solver_( solver )
+    phirhst_( phiRHSTag ),
+    userefphi_ ( useRefPhi ),
+    refphivalue_ ( refPhiValue ),
+    refphilocation_ ( refPhiLocation ),
+    use3dlaplacian_( use3dlaplacian ),
+    sparams_( sparams ),
+    solver_( solver )
   {}
 
   //--------------------------------------------------------------------
@@ -317,10 +317,12 @@ namespace Wasatch {
   PoissonExpression::Builder::build() const
   {
     const Expr::TagList& phitags = get_tags();
-    //const Expr::Tag& phitag = get_computed_field_tag();
+
     return new PoissonExpression( phitags[0], phitags[1], phirhst_, userefphi_,
                         refphivalue_, refphilocation_, use3dlaplacian_,
                         sparams_, solver_ );
   }
+
   Expr::TagList PoissonExpression::poissonTagList = Expr::TagList();
+
 } // namespace Wasatch

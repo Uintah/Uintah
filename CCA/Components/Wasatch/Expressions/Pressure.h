@@ -109,7 +109,7 @@ class Pressure
   const YVolField* fy_;
   const ZVolField* fz_;
 
-  // build interpolant operators
+  // interpolant operators
   typedef OperatorTypeBuilder< Interpolant, XVolField, SpatialOps::structured::SSurfXField >::type  FxInterp;
   typedef OperatorTypeBuilder< Interpolant, YVolField, SpatialOps::structured::SSurfYField >::type  FyInterp;
   typedef OperatorTypeBuilder< Interpolant, ZVolField, SpatialOps::structured::SSurfZField >::type  FzInterp;
@@ -195,9 +195,9 @@ public:
    */  
   // NOTE: Maybe we should not expose this to the outside?
   void schedule_set_pressure_bcs( const Uintah::LevelP& level,
-                                      Uintah::SchedulerP sched,
-                                      const Uintah::MaterialSet* const materials,
-                                 const int RKStage );
+                                  Uintah::SchedulerP sched,
+                                  const Uintah::MaterialSet* const materials,
+                                  const int RKStage );
   
   /**
    *  \brief allows Wasatch::TaskInterface to reach in and provide
@@ -253,7 +253,7 @@ public:
                      const Uintah::PatchSubset* const patches,
                      const Uintah::MaterialSubset* const materials,
                      Uintah::DataWarehouse* const oldDW,
-                    Uintah::DataWarehouse* const newDW);
+                     Uintah::DataWarehouse* const newDW );
   
   //Uintah::CCVariable<Uintah::Stencil7> pressure_matrix(){ return matrix_ ;}
 
