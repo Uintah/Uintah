@@ -935,6 +935,7 @@ ac_subst_files=''
 ac_user_opts='
 enable_option_checking
 with_atlas
+with_math
 with_mkl
 with_essl
 with_acml
@@ -1669,6 +1670,9 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
 --with-atlas=DIR        Use the atlas (for lapack/blas) installation in DIR
+--with-math=FULL_PATH_INCLUDING_LIB
+                          Use specified math library (Defaults to built in
+                          -lm)
 --with-mkl=DIR          Use the mkl (for lapack/blas) installation in DIR
 --with-essl=DIR         Use the essl (for lapack/blas) installation in DIR
 --with-acml=DIR         Use the acml (for lapack/blas) installation in DIR
@@ -3121,6 +3125,22 @@ fi
   sci_arg_with_list="$sci_arg_with_list --with-atlas --without-atlas"
   if test -n "$atlas" -a ! -e "$atlas"; then
     as_fn_error $? "The file or directory parameter ($atlas) specified for --with-atlas does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  fi
+
+
+
+
+
+# Check whether --with-math was given.
+if test "${with_math+set}" = set; then :
+  withval=$with_math; with_math="$withval"
+else
+  with_math=""
+fi
+
+  sci_arg_with_list="$sci_arg_with_list --with-math --without-math"
+  if test -n "$math" -a ! -e "$math"; then
+    as_fn_error $? "The file or directory parameter ($math) specified for --with-math does not exist!  Please verify that the path and file are correct." "$LINENO" 5
   fi
 
 
@@ -8548,6 +8568,9 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for math library:" >&5
+$as_echo_n "checking for math library:... " >&6; }
+
 M_LIB_DIR=
 if test "$IS_VC" = "yes"; then
   M_LIB=""
@@ -8555,15 +8578,30 @@ else
   M_LIB=m
 fi
 
-if test "$IS_BGQ" = "yes"; then
-   # Fixme... this should be a configure flag... This is for LLNL's Vulcan
-   M_LIB_DIR=/opt/ibmcmp/xlmass/bg/7.3/bglib64
-   M_LIB=mass
+if test "$with_math"; then
+   if test ! -e "$with_math"; then
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: ERROR" >&5
+$as_echo "ERROR" >&6; }
+      as_fn_error $? "'$with_math' does not exist (--with-math)" "$LINENO" 5
+   fi
+   if test -d "$with_math"; then
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: ERROR" >&5
+$as_echo "ERROR" >&6; }
+      as_fn_error $? "--with-math takes a /PATH/LIB, not just the directory: '$with_math'" "$LINENO" 5
+   fi
+
+   M_LIB_DIR=`dirname $with_math`
+   # Remove the .a (or .so) and the lib...
+   M_LIB=`basename $with_math | rev | cut -f2- -d"." | rev | cut --complement -c1-3`
+
 fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $M_LIB" >&5
+$as_echo "$M_LIB" >&6; }
 
 
 ##
-## SCI_TRY_LINK (M):  math libraries and headers
+## SCI_TRY_LINK (M):  Verifying math library and header
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -8595,7 +8633,7 @@ fi
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : M
-## arg 2 : math libraries and headers
+## arg 2 : Verifying math library and header
 ## arg 3 : math.h
 ## arg 4 :
 ## arg 5 : $M_LIB
@@ -8615,12 +8653,12 @@ fi
 ##      HAVE_M_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for math libraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for Verifying math library and header.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for math libraries and headers (required)" >&5
-$as_echo_n "checking for math libraries and headers (required)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for Verifying math library and header (required)" >&5
+$as_echo_n "checking for Verifying math library and header (required)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -8630,7 +8668,7 @@ _sci_includes=
 
 if test "required" != "optional" -a "required" != "required" -a "required" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for math libraries and headers must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for Verifying math library and header must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -8963,7 +9001,7 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (M):  math libraries and headers
+## END of SCI_TRY_LINK (M):  Verifying math library and header
 ##
 
 

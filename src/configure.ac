@@ -229,6 +229,12 @@ SCI_ARG_WITH(atlas,
    sci_required_atlas=yes],
   [with_atlas=""])
   
+SCI_ARG_WITH(math,
+  AC_HELP_STRING(--with-math=FULL_PATH_INCLUDING_LIB,
+                 Use specified math library (Defaults to built in -lm)),
+  [with_math="$withval"],
+  [with_math=""])
+  
 SCI_ARG_WITH(mkl,
   AC_HELP_STRING(--with-mkl=DIR,
                  Use the mkl (for lapack/blas) installation in DIR),
@@ -1879,6 +1885,8 @@ sci_defs_files="$sci_defs_files include/sci_defs/config_testdefs.h"
 ##  --  search for the math library  -------------------------------------
 AC_LANG(C)
 
+AC_MSG_CHECKING(for math library:)
+
 M_LIB_DIR=
 if test "$IS_VC" = "yes"; then
   M_LIB=""
@@ -1886,13 +1894,25 @@ else
   M_LIB=m
 fi
 
-if test "$IS_BGQ" = "yes"; then
-   # Fixme... this should be a configure flag... This is for LLNL's Vulcan
-   M_LIB_DIR=/opt/ibmcmp/xlmass/bg/7.3/bglib64
-   M_LIB=mass
+if test "$with_math"; then
+   if test ! -e "$with_math"; then
+      AC_MSG_RESULT(ERROR)
+      AC_MSG_ERROR('$with_math' does not exist (--with-math))
+   fi
+   if test -d "$with_math"; then
+      AC_MSG_RESULT(ERROR)
+      AC_MSG_ERROR([--with-math takes a /PATH/LIB, not just the directory: '$with_math'])
+   fi
+
+   M_LIB_DIR=`dirname $with_math`
+   # Remove the .a (or .so) and the lib... 
+   M_LIB=`basename $with_math | rev | cut -f2- -d"." | rev | cut --complement -c1-3`
+
 fi
 
-SCI_TRY_LINK(M,math libraries and headers,math.h,,$M_LIB,$M_LIB_DIR,,[
+AC_MSG_RESULT($M_LIB)
+
+SCI_TRY_LINK(M,Verifying math library and header,math.h,,$M_LIB,$M_LIB_DIR,,[
   double d = fabs(69.05);
 ],required)
 
