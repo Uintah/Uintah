@@ -281,17 +281,17 @@ Pressure::setup_matrix(const SVolField* const volfrac)
 
   if ( doX_ || use3DLaplacian_ ) {
     const double dx2 = spacing[0]*spacing[0];
-    w = 1.0/dx2;
+    w  = 1.0/dx2;
     p -= 2.0/dx2;
   }
   if ( doY_ || use3DLaplacian_ ) {
     const double dy2 = spacing[1]*spacing[1];
-    s = 1.0/dy2;
+    s  = 1.0/dy2;
     p -= 2.0/dy2;
   }
   if ( doZ_ || use3DLaplacian_ ) {
     const double dz2 = spacing[2]*spacing[2];
-    b = 1.0/dz2;
+    b  = 1.0/dz2;
     p -= 2.0/dz2;
   }
 
@@ -378,7 +378,10 @@ Pressure::evaluate()
 
 //--------------------------------------------------------------------
 
-void Pressure::process_embedded_boundaries(const SVolField* const volfraction) {
+void Pressure::process_embedded_boundaries( const SVolField* const volfraction )
+{
+  using SpatialOps::structured::IntVec;
+
   // cell offset used to calculate local cell index with respect to patch.
   const int ng = get_n_ghost<SVolField>();
   const SCIRun::IntVector patchCellOffset = patch_->getExtraCellLowIndex(ng);
@@ -405,9 +408,9 @@ void Pressure::process_embedded_boundaries(const SVolField* const volfraction) {
       IntVector iCellOffset = iCell - patchCellOffset;
       
       // interior
-      const SpatialOps::structured::IntVec   intCellIJK( iCellOffset[0],
-                                                        iCellOffset[1],
-                                                        iCellOffset[2] );
+      const IntVec intCellIJK( iCellOffset[0],
+                               iCellOffset[1],
+                               iCellOffset[2] );
       
       const double volFrac = volfrac(intCellIJK);
       
@@ -420,67 +423,39 @@ void Pressure::process_embedded_boundaries(const SVolField* const volfraction) {
       }
       
       if (volFrac > 0.0) {
-        // east
-        const SpatialOps::structured::IntVec   eIJK( iCellOffset[0] + 1,
-                                                    iCellOffset[1],
-                                                    iCellOffset[2] );
-        
-        // north
-        const SpatialOps::structured::IntVec   nIJK( iCellOffset[0],
-                                                    iCellOffset[1] + 1,
-                                                    iCellOffset[2] );
-        
-        // top
-        const SpatialOps::structured::IntVec   tIJK( iCellOffset[0],
-                                                    iCellOffset[1],
-                                                    iCellOffset[2] + 1);
-        
-        // west
-        const SpatialOps::structured::IntVec   wIJK( iCellOffset[0] - 1,
-                                                    iCellOffset[1],
-                                                    iCellOffset[2] );
-        
-        // south
-        const SpatialOps::structured::IntVec   sIJK( iCellOffset[0],
-                                                    iCellOffset[1] - 1,
-                                                    iCellOffset[2] );
-        
-        // bottom
-        const SpatialOps::structured::IntVec   bIJK( iCellOffset[0],
-                                                    iCellOffset[1],
-                                                    iCellOffset[2] - 1);
 
-        //
-        double volFracEast  = volfrac(eIJK);
-        double volFracNorth = volfrac(nIJK);
-        double volFracTop   = volfrac(tIJK);
-        double volFracWest  = volfrac(wIJK);
-        double volFracSouth = volfrac(sIJK);
-        double volFracBot   = volfrac(bIJK);
+        const IntVec eIJK( iCellOffset[0] + 1, iCellOffset[1],     iCellOffset[2]     ); // east
+        const IntVec wIJK( iCellOffset[0] - 1, iCellOffset[1],     iCellOffset[2]     ); // west
+        const IntVec nIJK( iCellOffset[0],     iCellOffset[1] + 1, iCellOffset[2]     ); // north
+        const IntVec sIJK( iCellOffset[0],     iCellOffset[1] - 1, iCellOffset[2]     ); // south
+        const IntVec tIJK( iCellOffset[0],     iCellOffset[1],     iCellOffset[2] + 1 ); // top
+        const IntVec bIJK( iCellOffset[0],     iCellOffset[1],     iCellOffset[2] - 1 ); // bottom
+
+        const double volFracEast  = volfrac( eIJK );
+        const double volFracWest  = volfrac( wIJK );
+        const double volFracNorth = volfrac( nIJK );
+        const double volFracSouth = volfrac( sIJK );
+        const double volFracTop   = volfrac( tIJK );
+        const double volFracBot   = volfrac( bIJK );
 
         // neighbors are embedded boundaries
         if (doX_ && volFracEast < 1.0 ) {
           coefs.p -= 1.0/dx2;          
         }
-        
         if (doY_ && volFracNorth < 1.0 ) {
           coefs.p -= 1.0/dy2;
         }
-        
         if (doZ_ && volFracTop < 1.0 ) {
           coefs.p -= 1.0/dz2;
         }
-        
         if (doX_ && volFracWest < 1.0 ) {
           coefs.p -= 1.0/dx2;
           coefs.w  = 0.0;
         }
-        
         if (doY_ && volFracSouth < 1.0 ) {
           coefs.p -= 1.0/dy2;
           coefs.s = 0.0;
         }
-        
         if (doZ_ && volFracBot < 1.0 ) {
           coefs.p -= 1.0/dz2;
           coefs.b = 0.0;
