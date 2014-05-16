@@ -229,9 +229,6 @@ WARNING
     bool isCopyDataTimestep() {return d_sharedState->isCopyDataTimestep()||d_isInitTimestep;}
     void setInitTimestep(bool is_cdt) { d_isInitTimestep = is_cdt; }
 
-    typedef std::map<VarLabelMatl<Level>, Task*> ReductionTasksMap;
-    ReductionTasksMap reductionTasks;
-
   protected:
     void finalizeTimestep();
     

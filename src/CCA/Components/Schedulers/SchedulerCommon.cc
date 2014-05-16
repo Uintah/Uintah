@@ -756,7 +756,6 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
         graphs[graphs.size()-1]->addTask(newtask, 0, 0);
         VarLabelMatl<Level> key(dep->var, dw, dep->reductionLevel);
         numTasks_++;
-        reductionTasks[key]=newtask;
      }
   }
 }
@@ -811,7 +810,6 @@ SchedulerCommon::initialize(int numOldDW /* =1 */, int numNewDW /* =1 */)
   maxGhost=0;
   maxLevelOffset=0;
 
-  reductionTasks.clear();
   addTaskGraph(NormalTaskGraph);
 
 }
