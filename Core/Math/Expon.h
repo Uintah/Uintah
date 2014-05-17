@@ -103,7 +103,7 @@ namespace SCIRun {
     return sqrtf(d);
   }
 
-#if defined(linux)||defined(_WIN32)
+#if defined(linux)
   inline double Cbrt(double d)
   {
     return pow(d, 1./3.);

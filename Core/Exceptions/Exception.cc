@@ -37,23 +37,16 @@
 #include <Core/Exceptions/Exception.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/Assert.h>
+
 #include <cerrno>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
+#include <iomanip>
+#include <sstream>
 
-#ifndef _WIN32
-#  include <unistd.h>
-#else
-#  define strcasecmp stricmp
-#  include <io.h>
-#  include <process.h>
-#  include "StackWalker.h"
-#endif
-
-#include   <iostream>
-#include   <iomanip>
-#include   <sstream>
+#include <unistd.h>
 
 #ifdef HAVE_EXC
 #  include <libexc.h>
@@ -61,8 +54,6 @@
 #  include <execinfo.h>
 #  include <cxxabi.h>
 #  include <dlfcn.h>
-#elif defined(REDSTORM)
-#  include <execinfo.h>
 #endif
 
 #if defined(_AIX)
@@ -293,9 +284,6 @@ string getStackTrace(void* context /*=0*/)
     }
     free(names);
   }
-#elif defined(_WIN32)
-  StackWalker sw;
-  stacktrace << sw.GetCallstack(context);
 #endif
   return stacktrace.str();
 }
