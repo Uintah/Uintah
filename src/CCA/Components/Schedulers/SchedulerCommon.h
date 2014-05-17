@@ -222,9 +222,9 @@ WARNING
     
     const VarLabel * reloc_new_posLabel_;
     
-    int getMaxGhost() {return maxGhost;}
-    
-    int getMaxLevelOffset() {return maxLevelOffset;}
+    const std::map<int, int>& getMaxGhostCells() { return maxGhostCells; }
+
+    const std::map<int, int>& getMaxLevelOffsets() { return maxLevelOffsets; }
 
     bool isCopyDataTimestep() {return d_sharedState->isCopyDataTimestep()||d_isInitTimestep;}
     void setInitTimestep(bool is_cdt) { d_isInitTimestep = is_cdt; }
@@ -338,11 +338,15 @@ WARNING
     std::set<const VarLabel*, VarLabel::Compare> d_initRequiredVars;
     std::set<const VarLabel*, VarLabel::Compare> d_computedVars;
 
-    //max ghost cells of all tasks - will be used for loadbalancer to create neighborhood
-    int maxGhost;
-    
-    //max level offset of all tasks - will be used for loadbalancer to create neighborhood
-    int maxLevelOffset;
+    // max ghost cells of all tasks (per level) - will be used by loadbalancer to create neighborhood
+    // map levelIndex to maxGhostCells
+    //   this is effectively maximum horizontal range considered by the loadbalanceer for the neighborhood creation
+    std::map<int, int> maxGhostCells;
+
+    // max level offset of all tasks (per level) - will be used for loadbalancer to create neighborhood
+    // map levelIndex to maxLevelOffset
+    //   this is effectively maximum vertical range considered by the loadbalanceer for the neighborhood creation
+    std::map<int, int> maxLevelOffsets;
     
   };
 } // End namespace Uintah
