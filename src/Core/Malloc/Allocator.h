@@ -64,9 +64,7 @@
 #include "MallocTraceOn.h"
 
 #elif !defined( DISABLE_SCI_MALLOC )
-#  ifndef _WIN32
-#    include   <unistd.h>
-#  endif
+#  include   <unistd.h>
 
 //set these macros to be blank so everything will compile without MallocTrace
 #define MALLOC_TRACE_TAG_SCOPE(tag) ;
@@ -147,13 +145,9 @@ void DumpAllocator(Allocator*, const char* filename = "alloc.dump");
   
 } // End namespace SCIRun
 
-#  ifdef _WIN32
-#    define scinew new
-#  else
-     void* operator new(size_t, SCIRun::Allocator*, const char*, int);
-     void* operator new[](size_t, SCIRun::Allocator*, const char*, int);
-#    define scinew new(SCIRun::default_allocator, __FILE__, __LINE__)
-#  endif
+   void* operator new(size_t, SCIRun::Allocator*, const char*, int);
+   void* operator new[](size_t, SCIRun::Allocator*, const char*, int);
+#  define scinew new(SCIRun::default_allocator, __FILE__, __LINE__)
 
 #else  // MALLOC_TRACE
 

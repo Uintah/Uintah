@@ -44,16 +44,12 @@
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Containers/HashTable.h>
 
-#include   <string>
-#include   <vector>
-#include   <list>
+#include <string>
+#include <vector>
+#include <list>
 
 #include <fcntl.h>
-
-#ifndef _WIN32
-#  include <unistd.h>
-#endif
-
+#include <unistd.h>
 
 namespace Uintah {
 

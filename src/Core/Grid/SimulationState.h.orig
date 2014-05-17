@@ -38,8 +38,6 @@
 #include <vector>
 #include <iostream>
 
-#include <Core/Grid/uintahshare.h>
-
 #define OVERHEAD_WINDOW 40
 namespace Uintah {
 

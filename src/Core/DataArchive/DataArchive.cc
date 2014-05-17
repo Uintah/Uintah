@@ -46,13 +46,8 @@
 #include <fstream>
 #include <fcntl.h>
 
-#ifdef _WIN32
-#  include <io.h>
-#else
-#  include <sys/param.h>
-#  include <unistd.h>
-#endif
-
+#include <sys/param.h>
+#include <unistd.h>
 
 using namespace std;
 using namespace Uintah;
@@ -557,7 +552,7 @@ DataArchive::query( Variable& var, const std::string& name, int matlIndex,
   double tstart = Time::currentSeconds();
   string url;
 
-#if !defined( _WIN32 ) && !defined( DISABLE_SCI_MALLOC )
+#if !defined( DISABLE_SCI_MALLOC )
   const char* tag = AllocatorSetDefaultTag("QUERY");
 #endif
 
@@ -639,11 +634,7 @@ DataArchive::query( Variable& var, const std::string& name, int matlIndex,
     var.allocate(patch, varinfo.boundaryLayer);
   }
   
-#ifdef _WIN32
-  int fd = open(dataurl.c_str(), O_RDONLY|O_BINARY);
-#else
   int fd = open(dataurl.c_str(), O_RDONLY);
-#endif
   if(fd == -1) {
     cerr << "Error opening file: " << dataurl.c_str() << ", errno=" << errno << '\n';
     throw ErrnoException("DataArchive::query (open call)", errno, __FILE__, __LINE__);
@@ -666,7 +657,7 @@ DataArchive::query( Variable& var, const std::string& name, int matlIndex,
     throw ErrnoException("DataArchive::query (close call)", errno, __FILE__, __LINE__);
   }
 
-#if !defined( _WIN32 ) && !defined( DISABLE_SCI_MALLOC )
+#if !defined( DISABLE_SCI_MALLOC )
   AllocatorSetDefaultTag(tag);
 #endif
   dbg << "DataArchive::query() completed in "

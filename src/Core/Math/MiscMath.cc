@@ -61,10 +61,6 @@ double MakeReal(double value)
     fpclass_t c = fpclass(value);
     if (c == FP_PINF) is_inf = 1;
     if (c == FP_NINF) is_inf = -1;
-#elif defined(_WIN32)
-    int c = _fpclass(value);
-    if (c == _FPCLASS_PINF) is_inf = 1;
-    if (c == _FPCLASS_NINF) is_inf = -1;
 #else
 #  if defined( REDSTORM ) || defined( _AIX ) || defined( __PGI )
     is_inf  = isinf(value);

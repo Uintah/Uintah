@@ -224,7 +224,7 @@ Parallel::initializeManager(int& argc, char**& argv)
 #endif
 
      int status;
-#if !defined( _WIN32 ) && ( !defined( DISABLE_SCI_MALLOC ) || defined( SCI_MALLOC_TRACE ) )
+#if ( !defined( DISABLE_SCI_MALLOC ) || defined( SCI_MALLOC_TRACE ) )
      const char* oldtag = SCIRun::AllocatorSetDefaultTagMalloc("MPI initialization");
 #endif
 #ifdef __sgi
@@ -257,7 +257,7 @@ Parallel::initializeManager(int& argc, char**& argv)
 
      if((status=MPI_Comm_rank(worldComm, &worldRank)) != MPI_SUCCESS)
        MpiError(const_cast<char*>("MPI_Comm_rank"), status);
-#if !defined( _WIN32 ) && ( !defined( DISABLE_SCI_MALLOC ) || defined( SCI_MALLOC_TRACE ) )
+#if ( !defined( DISABLE_SCI_MALLOC ) || defined( SCI_MALLOC_TRACE ) )
      SCIRun::AllocatorSetDefaultTagMalloc(oldtag);
      SCIRun::AllocatorMallocStatsAppendNumber(worldRank);
 #endif

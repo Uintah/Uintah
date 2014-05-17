@@ -42,12 +42,8 @@
 #include <cstdio>
 #include <iostream>
 
-#ifndef _WIN32
-#  include <unistd.h>
-#  include <dirent.h>
-#else
-#  include <Core/Malloc/Allocator.h>
-#endif
+#include <unistd.h>
+#include <dirent.h>
 
 #include <boost/filesystem/operations.hpp>
 
