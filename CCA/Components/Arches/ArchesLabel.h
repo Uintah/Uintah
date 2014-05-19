@@ -295,6 +295,13 @@ namespace Uintah {
       typedef std::vector<int> MomentVector;
       typedef std::map<const MomentVector, const VarLabel* > MomentMap;
       MomentMap DQMOMMoments;
+      
+      //CQMOM Variables:
+      typedef std::map<int, const VarLabel* > WeightMap;
+      WeightMap CQMOMWeights;
+      
+      typedef std::map<int, const VarLabel* > AbscissaMap;
+      AbscissaMap CQMOMAbscissas;
 
       const VarLabel* d_areaFractionLabel; 
       const VarLabel* d_areaFractionFXLabel; 
