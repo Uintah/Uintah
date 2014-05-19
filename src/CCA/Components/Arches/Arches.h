@@ -115,6 +115,7 @@ namespace Uintah {
   class ExplicitTimeInt;
   class PartVel;
   class DQMOM;
+  class CQMOM;
 
 class Arches : public UintahParallelComponent, public SimulationInterface {
 
@@ -164,6 +165,8 @@ public:
   virtual void sched_weightedAbsInit( const LevelP& level,
                                 SchedulerP& );
   virtual void sched_scalarInit( const LevelP& level,
+                                 SchedulerP& sched );
+  virtual void sched_momentInit( const LevelP& level,
                                  SchedulerP& sched );
                                  
   //__________________________________
@@ -262,6 +265,12 @@ private:
                    const MaterialSubset*,
                    DataWarehouse* old_dw,
                    DataWarehouse* new_dw );
+  
+  void momentInit( const ProcessorGroup* ,
+                   const PatchSubset* patches,
+                   const MaterialSubset*,
+                   DataWarehouse* old_dw,
+                   DataWarehouse* new_dw );
 
 
 
@@ -281,6 +290,9 @@ private:
 
   /** @brief Registers all possible DQMOM equations by instantiating a builder in the factory */
   void registerDQMOMEqns(ProblemSpecP& db);
+  
+  /** @brief Registers all possible CQMOM equations by instantiating a builder in the factory */
+  void registerCQMOMEqns(ProblemSpecP& db);
 
   /** @brief Registers all possible Property Models by instantiating a builder in the factory */
   void registerPropertyModels( ProblemSpecP& db );
@@ -330,6 +342,10 @@ private:
   ExplicitTimeInt* d_timeIntegrator;
   PartVel* d_partVel;
   DQMOM* d_dqmomSolver;
+  
+  bool d_doCQMOM;
+  std::string d_which_cqmom;
+  CQMOM* d_cqmomSolver;
 
   bool d_doingRestart;
   bool d_newBC_on_Restart;

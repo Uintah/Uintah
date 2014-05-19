@@ -40,6 +40,7 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/BoundaryCond_new.cc          \
         $(SRCDIR)/CellInformation.cc           \
         $(SRCDIR)/CompDynamicProcedure.cc      \
+        $(SRCDIR)/CQMOM.cc                     \
         $(SRCDIR)/Discretization.cc            \
         $(SRCDIR)/DQMOM.cc                     \
         $(SRCDIR)/ExplicitSolver.cc            \

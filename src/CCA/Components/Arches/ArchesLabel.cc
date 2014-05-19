@@ -280,6 +280,17 @@ ArchesLabel::~ArchesLabel()
        iMoment != DQMOMMoments.end(); ++iMoment ) {
   VarLabel::destroy(iMoment->second); 
  }
+  
+  //get rid of cqmom var labels
+  for( ArchesLabel::WeightMap::iterator iW = CQMOMWeights.begin();
+      iW != CQMOMWeights.end(); ++iW ) {
+    VarLabel::destroy(iW->second);
+  }
+  
+  for( ArchesLabel::AbscissaMap::iterator iA = CQMOMAbscissas.begin();
+      iA != CQMOMAbscissas.end(); ++iA ) {
+    VarLabel::destroy(iA->second);
+  }
 
 #ifdef WASATCH_IN_ARCHES
   VarLabel::destroy(d_uVelRhoHatRHSPartLabel);

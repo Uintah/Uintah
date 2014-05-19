@@ -36,6 +36,9 @@
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
 #include <CCA/Components/Arches/DQMOM.h>
+#include <CCA/Components/Arches/CQMOM.h>
+#include <CCA/Components/Arches/TransportEqns/CQMOMEqn.h>
+#include <CCA/Components/Arches/TransportEqns/CQMOMEqnFactory.h>
 //#include <CCA/Components/Arches/Task/TaskInterface.h>
 //#include <CCA/Components/Arches/Task/SampleTask.h>
 //#include <CCA/Components/Arches/Task/TemplatedSampleTask.h>
@@ -320,6 +323,13 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     d_doDQMOM = true;
   else
     d_doDQMOM = false; // probably need to sync this better with the bool being set in Arches
+  
+  CQMOMEqnFactory& cqmomFactory = CQMOMEqnFactory::self();
+  if (cqmomFactory.get_number_moments() > 0)
+    d_doCQMOM = true;
+  else
+    d_doCQMOM = false;
+  
 
   EqnFactory& eqn_factory = EqnFactory::self();
   EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns();
@@ -405,6 +415,29 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         // schedule DQMOM moment calculation
         d_dqmomSolver->sched_calculateMoments( level, sched, curr_level );
       }
+    }
+    
+    if ( d_doCQMOM ) {
+      //basicalyl copying what DQMOM scheduler does
+      CQMOMEqnFactory::EqnMap& moment_eqns = cqmomFactory.retrieve_all_eqns();
+      //for source terms later      CoalModelFactory& modelFactory = CoalModelFactory::self();
+      //part vel needed?            d_partVel->schedComputePartVel( level, sched, curr_level );
+      
+      //Evaluate CQMOM equations
+      for ( CQMOMEqnFactory::EqnMap::iterator iEqn = moment_eqns.begin();
+           iEqn != moment_eqns.end(); iEqn++){
+        
+        CQMOMEqn* cqmom_eqn = dynamic_cast<CQMOMEqn*>(iEqn->second);
+        cqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );
+        
+        cqmom_eqn->sched_computeSources( level, sched, curr_level );
+      }
+      
+      //schedule model evaluation later
+      //modelFactory.sched_coalParticleCalculation( level, sched, curr_level );
+      
+      //schedule inversion for weights and abscissas
+      d_cqmomSolver->sched_solveCQMOMInversion( level, sched, curr_level );
     }
 
     // STAGE 0 

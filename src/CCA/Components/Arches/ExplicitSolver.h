@@ -77,6 +77,7 @@ class BoundaryCondition;
 class PhysicalConstants;
 class PartVel;
 class DQMOM;
+class CQMOM;
 class EfficiencyCalculator; 
 class WallModelDriver; 
 class ExplicitSolver: public NonlinearSolver {
@@ -301,6 +302,9 @@ private:
 
   void setDQMOMSolver( DQMOM* dqmomSolver ) {
     d_dqmomSolver = dqmomSolver; };
+  
+  void setCQMOMSolver( CQMOM* cqmomSolver ) {
+    d_cqmomSolver = cqmomSolver; };
 
   // const VarLabel*
   ArchesLabel* d_lab;
@@ -357,6 +361,10 @@ private:
   bool d_doDQMOM;
   PartVel* d_partVel;
   DQMOM* d_dqmomSolver;
+  
+  //CQMOM
+  bool d_doCQMOM;
+  CQMOM* d_cqmomSolver;
 
   // Pressure Eqn Solver
   PressureSolver* d_pressSolver;

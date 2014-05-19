@@ -48,6 +48,11 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/ScalarEqn.h>
+//NOTE: new includes for CQMOM
+#include <CCA/Components/Arches/CQMOM.h>
+#include <CCA/Components/Arches/TransportEqns/CQMOMEqnFactory.h>
+#include <CCA/Components/Arches/TransportEqns/CQMOMEqn.h>
+
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
 #include <CCA/Components/Arches/PropertyModels/ConstProperty.h>
@@ -212,6 +217,10 @@ Arches::Arches(const ProcessorGroup* myworld, const bool doAMR) :
   d_do_dummy_solve                 =  false; 
   d_doAMR                          = doAMR;
   d_useWasatchMomRHS               = false;
+  
+  CQMOMEqnFactory& cqmomfactory    = CQMOMEqnFactory::self();
+  cqmomfactory.set_number_moments(0);
+  d_doCQMOM                        = false;
 }
 
 // ****************************************************************************
@@ -242,6 +251,10 @@ Arches::~Arches()
   if (d_doDQMOM) {
     delete d_dqmomSolver;
     delete d_partVel;
+  }
+  
+  if (d_doCQMOM) {
+    delete d_cqmomSolver;
   }
   releasePort("solver");
 
@@ -860,6 +873,78 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   }
 
+  
+  // ----- CQMOM STUFF:
+
+  ProblemSpecP cqmom_db = db->findBlock("CQMOM");
+  if (cqmom_db) {
+    d_doCQMOM = true;
+    // require that we have weighted or unweighted explicitly specified as an attribute to CQMOM
+    cqmom_db->getAttribute( "type", d_which_cqmom );
+   
+    //register all equations.
+    Arches::registerCQMOMEqns(cqmom_db);
+    
+    //register all models/srcs
+//    CoalModelFactory& model_factory = CoalModelFactory::self();
+//    model_factory.problemSetup(cqmom_db);
+//    Arches::registerModels(cqmom_db);
+  
+    // initialze all CQMOM equations and call their respective problem setups.
+    CQMOMEqnFactory& eqn_factory = CQMOMEqnFactory::self();
+    const int numMoments = eqn_factory.get_number_moments();
+    proc0cout << "Feeding these " << numMoments << " eqns into CQMOM Eqn Factory" << endl;
+//    model_factory.setArchesLabel( d_lab );
+    
+    int M;
+    cqmom_db->get("NumberInternalCoordinates",M);
+    vector<int> temp_moment_index;
+    for ( ProblemSpecP db_moments = cqmom_db->findBlock("Moment");
+         db_moments != 0; db_moments = db_moments->findNextBlock("Moment") ) {
+      temp_moment_index.resize(0);
+      db_moments->get("m", temp_moment_index);
+      proc0cout << "Index " << temp_moment_index << " ";
+      int index_length = temp_moment_index.size();
+      if (index_length != M) {
+        std::cout << "Index for moment " << temp_moment_index << " does not have same number of indexes as internal coordinate #" << M << std::endl;
+      }
+      
+      std::string moment_name = "m_";
+      std::string mIndex;
+      std::stringstream out;
+      for (int i = 0; i<M ; i++) {
+        out << temp_moment_index[i];
+        mIndex = out.str();
+      }
+      moment_name += mIndex;
+      
+      EqnBase& a_moment = eqn_factory.retrieve_scalar_eqn( moment_name );
+      eqn_factory.set_moment_eqn( moment_name, &a_moment );
+      CQMOMEqn& moment = dynamic_cast<CQMOMEqn&>(a_moment);
+      moment.problemSetup( db_moments );
+    }
+    
+    // Now go through models and initialize all defined models and call
+    // their respective problemSetup
+//    ProblemSpecP models_db = cqmom_db->findBlock("Models");
+//    if (models_db) {
+//      for (ProblemSpecP m_db = models_db->findBlock("model"); m_db != 0; m_db = m_db->findNextBlock("model")){
+//        std::string model_name;
+//        m_db->getAttribute("label", model_name);
+//        for (int i = 0; i < nMoments; i++){
+//        }
+//      }
+//    }
+    
+    // set up the linear solver:
+    d_cqmomSolver = scinew CQMOM( d_lab, d_which_cqmom );
+    d_cqmomSolver->problemSetup( cqmom_db );
+    
+    //pass it to the explicit solver
+    d_nlSolver->setCQMOMSolver( d_cqmomSolver );
+  }
+
+  
   // register any other source terms:
   SourceTermFactory& src_factory = SourceTermFactory::self();
   src_factory.registerSources( d_lab, d_doDQMOM, d_which_dqmom );
@@ -892,6 +977,18 @@ Arches::problemSetup(const ProblemSpecP& params,
     }
   }
 
+  if(d_doCQMOM) //just copied from dqmom BC lock, this should work the same
+  {
+    // check to make sure that all cqmom equations have BCs set.
+    CQMOMEqnFactory& cqmom_factory = CQMOMEqnFactory::self();
+    CQMOMEqnFactory::EqnMap& cqmom_eqns = cqmom_factory.retrieve_all_eqns();
+    for (CQMOMEqnFactory::EqnMap::iterator ieqn=cqmom_eqns.begin(); ieqn != cqmom_eqns.end(); ieqn++){
+      EqnBase* eqn = ieqn->second;
+      eqn->set_intrusion( intrusion_ref );
+      eqn->set_intrusion_bool( using_new_intrusions );
+    }
+  }
+  
   // check to make sure that all the scalar variables have BCs set and set intrusions:
   for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++){
     EqnBase* eqn = ieqn->second;
@@ -1079,6 +1176,22 @@ Arches::scheduleInitialize(const LevelP& level,
   }
 
 
+  //----------------------
+  //CQMOM initialization
+  if(d_doCQMOM)
+  {
+    sched_momentInit( level, sched );
+    
+    // check to make sure that all cqmom equations have BCs set.
+    CQMOMEqnFactory& cqmom_factory = CQMOMEqnFactory::self();
+    CQMOMEqnFactory::EqnMap& cqmom_eqns = cqmom_factory.retrieve_all_eqns();
+    for (CQMOMEqnFactory::EqnMap::iterator ieqn=cqmom_eqns.begin(); ieqn != cqmom_eqns.end(); ieqn++){
+      EqnBase* eqn = ieqn->second;
+      eqn->sched_checkBCs( level, sched );
+    }
+  }
+  
+  
   // check to make sure that all the scalar variables have BCs set and set intrusions:
   EqnFactory& eqnFactory = EqnFactory::self();
   EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
@@ -2042,6 +2155,95 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
   }
   proc0cout << endl;
 }
+//___________________________________________________________________________
+//
+void
+Arches::sched_momentInit( const LevelP& level,
+                          SchedulerP& sched )
+{
+  Task* tsk = scinew Task( "Arches::momentInit",
+                          this, &Arches::momentInit);
+  
+  printSchedule(level,dbg,"Arches::momentInit");
+  
+  // CQMOM moment transport vars
+  CQMOMEqnFactory& cqmomFactory = CQMOMEqnFactory::self();
+  CQMOMEqnFactory::EqnMap& cqmom_eqns = cqmomFactory.retrieve_all_eqns();
+  for (CQMOMEqnFactory::EqnMap::iterator ieqn=cqmom_eqns.begin(); ieqn != cqmom_eqns.end(); ieqn++){
+    EqnBase* temp_eqn = ieqn->second;
+    CQMOMEqn* eqn = dynamic_cast<CQMOMEqn*>(temp_eqn);
+    
+    const VarLabel* tempVar = eqn->getTransportEqnLabel();
+    const VarLabel* oldtempVar = eqn->getoldTransportEqnLabel();
+    const VarLabel* tempSource = eqn->getSourceLabel();
+      
+    tsk->computes( tempVar );
+    tsk->computes( oldtempVar );
+    tsk->computes( tempSource );
+  }
+  
+  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None );
+  
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+}
+//______________________________________________________________________
+//
+void
+Arches::momentInit( const ProcessorGroup* ,
+                    const PatchSubset* patches,
+                    const MaterialSubset*,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw )
+{
+  
+  proc0cout << "Initializing all CQMOM moment equations..." << endl;
+  for (int p = 0; p < patches->size(); p++){
+    //assume only one material for now.
+    int archIndex = 0;
+    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    const Patch* patch=patches->get(p);
+    
+    constCCVariable<double> eps_v;
+    
+    new_dw->get( eps_v, d_lab->d_volFractionLabel, matlIndex, patch, Ghost::None, 0 );
+    
+    CQMOMEqnFactory& cqmomFactory = CQMOMEqnFactory::self();
+    CQMOMEqnFactory::EqnMap& cqmom_eqns = cqmomFactory.retrieve_all_eqns();
+    
+    // --- CQMOM EQNS
+    for (CQMOMEqnFactory::EqnMap::iterator ieqn=cqmom_eqns.begin();
+         ieqn != cqmom_eqns.end(); ieqn++){
+      
+      CQMOMEqn* eqn = dynamic_cast<CQMOMEqn*>(ieqn->second);
+      string eqn_name = ieqn->first;
+      
+      const VarLabel* sourceLabel  = eqn->getSourceLabel();
+      const VarLabel* phiLabel     = eqn->getTransportEqnLabel();
+      const VarLabel* oldPhiLabel  = eqn->getoldTransportEqnLabel();
+      
+      CCVariable<double> source;
+      CCVariable<double> phi;
+      CCVariable<double> oldPhi;
+      
+      new_dw->allocateAndPut( source,  sourceLabel,  matlIndex, patch );
+      new_dw->allocateAndPut( phi,     phiLabel,     matlIndex, patch );
+      new_dw->allocateAndPut( oldPhi,  oldPhiLabel,  matlIndex, patch );
+        
+      source.initialize(0.0);
+      phi.initialize(0.0);
+      oldPhi.initialize(0.0);
+      
+      // initialize phi
+      eqn->initializationFunction( patch, phi, eps_v );
+        
+      // do boundary conditions
+      eqn->computeBCs( patch, eqn_name, phi );
+      
+    }
+    proc0cout << endl;
+  }
+
+}
 
 // ****************************************************************************
 // Schedule Interpolate from SFCX, SFCY, SFCZ to CC
@@ -2556,6 +2758,65 @@ void Arches::registerDQMOMEqns(ProblemSpecP& db)
       d_lab->partVel.insert(make_pair(iqn, tempVarLabel));
 
     }
+  }
+}
+
+//---------------------------------------------------------------------------
+// Method: Register CQMOM Eqns
+//---------------------------------------------------------------------------
+void Arches::registerCQMOMEqns(ProblemSpecP& db)
+{
+  // Now do the same for CQMOM equations.
+  ProblemSpecP cqmom_db = db;
+  
+  // Get reference to the cqmom eqn factory
+  CQMOMEqnFactory& cqmom_eqnFactory = CQMOMEqnFactory::self();
+  
+  if (cqmom_db) {
+    
+    int nMoments = 0;
+    int M;
+    cqmom_db->require("NumberInternalCoordinates",M);
+    cqmom_db->get("NumberInternalCoordinates",M);
+    
+    proc0cout << "# IC = " << M << endl;
+    proc0cout << "******* CQMOM Equation Registration ********" << endl;
+    // Make the moment transport equations
+    vector<int> temp_moment_index;
+    for ( ProblemSpecP db_moments = cqmom_db->findBlock("Moment");
+         db_moments != 0; db_moments = db_moments->findNextBlock("Moment") ) {
+      temp_moment_index.resize(0);
+      db_moments->get("m", temp_moment_index);
+      
+      proc0cout << "creating a moment equation for: " << temp_moment_index << " as " ;
+      // put moment index into vector of moment indices:
+ //     momentIndexes.push_back(temp_moment_index);
+      
+      int index_length = temp_moment_index.size();
+      if (index_length != M) {
+        proc0cout << "\nIndex for moment " << temp_moment_index << " does not have same number of indexes as internal coordinate #" << M << endl;
+        throw InvalidValue("All specified moment must have same number of internal coordinates", __FILE__, __LINE__);
+      }
+      
+      //register eqns - this should make varLabel for each moment eqn
+      std::string moment_name = "m_";
+      std::string mIndex;
+      std::stringstream out;
+      for (int i = 0; i<M ; i++) {
+        out << temp_moment_index[i];
+        mIndex = out.str();
+      }
+      moment_name += mIndex;
+      proc0cout << moment_name << endl;
+      
+      CQMOMEqnBuilderBase* eqnBuilder = scinew CQMOMEqnBuilder( d_lab, d_timeIntegrator, moment_name );
+      cqmom_eqnFactory.register_scalar_eqn( moment_name, eqnBuilder );
+      nMoments++;
+    }
+    
+    cqmom_eqnFactory.set_number_moments( nMoments );
+    
+    //register internal coordinate names in a way to know which are velocities
   }
 }
 

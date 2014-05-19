@@ -1136,6 +1136,54 @@
 
       </DQMOM>
 
+      <!--CQMOM Block -->
+      <CQMOM                            spec="OPTIONAL NO_DATA"
+                                        attribute1="type REQUIRED STRING">
+        <Models                         spec="OPTIONAL NO_DATA">
+          <!-- insert future source terms/models here -->
+        </Models>
+        <NumberInternalCoordinates      spec="REQUIRED DOUBLE"/>
+        <QuadratureNodes                spec="REQUIRED MULTIPLE_INTEGERS"/> <!-- this is per direction -->
+        <HighestOrder                   spec="REQUIRED MULTIPLE_INTEGERS"/> <!-- this is per direction -->
+        <InternalCoordinate             spec="MULTIPLE NO_DATA">
+          <Name                         spec="REQUIRED STRING"/>
+        </InternalCoordinate> <!-- order these same as index moment order -->
+        
+        <!-- all moment eqns should keep these params the same-->
+        <doDiff                         spec="OPTIONAL BOOLEAN"/>
+        <doConv                         spec="OPTIONAL BOOLEAN"/>
+        <conv_scheme                    spec="OPTIONAL STRING 'upwind, roe_minmod, super_bee'"/>
+        <turbulentPrandtlNumber         spec="OPTIONAL DOUBLE" />
+        <molecular_diffusivity          spec="OPTIONAL DOUBLE 'positive'"/>
+        
+        <Moment                         spec="MULTIPLE NO_DATA">
+          <m                            spec="REQUIRED MULTIPLE_INTEGERS"/>
+          <initialization               spec="OPTIONAL NO_DATA"
+                                        attribute1="type REQUIRED STRING 'constant, step'">
+            <!-- constant value initialization -->
+            <constant                   spec="OPTIONAL DOUBLE"/>
+
+            <!-- step function initialization -->
+            <!-- Note: the only difference between 'step' and 'env_step' is the use of <step_value></step_value> or <env_step_value qn="" value=""/> -->
+            <step_direction             spec="OPTIONAL STRING 'x,y,z'"/> <!-- direction in which the step occurs -->
+            <step_value                 spec="OPTIONAL DOUBLE"/>         <!-- step from 0 to (value) -->
+            <step_start                 spec="OPTIONAL DOUBLE"/>         <!-- physical location (in specified direction) at which the step should begin -->
+            <step_end                   spec="OPTIONAL DOUBLE"/>         <!-- physical location (in specified direction) at which the step should end -->
+            <step_cellstart             spec="OPTIONAL DOUBLE"/>         <!-- cell location (in specified direction) at which the step should begin -->
+            <step_cellend               spec="OPTIONAL DOUBLE"/>         <!-- cell location (in specified direction) at which the step should end -->
+
+          </initialization>
+          
+          <scaling_const                spec="OPTIONAL DOUBLE"/>
+          <Clipping                     spec="OPTIONAL NO_DATA">
+            <low                        spec="OPTIONAL DOUBLE"/> <!-- Low clipping value for SCALED value of DQMOM internal coordinate -->
+            <high                       spec="OPTIONAL DOUBLE"/> <!-- High clipping value for SCALED value of DQMOM internal coordinate -->
+            <tol                        spec="OPTIONAL DOUBLE"/> <!-- Tolerance on the clipping (low+tol, high-tol) -->
+          </Clipping>
+        </Moment>
+        
+      </CQMOM>
+
       <!-- Use this block for wasatch-in-arches builds only to create placeholders for arbitrary variables -->
       <ExtraWarchesVariables            spec="OPTIONAL NO_DATA">
         <NameTag                        spec="MULTIPLE"/>
