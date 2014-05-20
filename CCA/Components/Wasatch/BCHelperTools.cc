@@ -469,7 +469,7 @@ namespace Wasatch {
   /**
    *  \ingroup WasatchCore
    *
-   *  \brief Key function to prcess boundary conditions for poisson equation.
+   *  \brief Key function to process boundary conditions for poisson equation.
    *
    */
   //****************************************************************************      
@@ -542,12 +542,12 @@ namespace Wasatch {
               bc_point_indices = bc_point_indices - patchCellOffset;
               
               const SS::IntVec   intCellIJK( bc_point_indices[0],
-                                            bc_point_indices[1],
-                                            bc_point_indices[2] );
+                                             bc_point_indices[1],
+                                             bc_point_indices[2] );
               const SS::IntVec ghostCellIJK( bc_point_indices[0]+bcPointGhostOffset[0],
-                                            bc_point_indices[1]+bcPointGhostOffset[1],
-                                            bc_point_indices[2]+bcPointGhostOffset[2] );
-              
+                                             bc_point_indices[1]+bcPointGhostOffset[1],
+                                             bc_point_indices[2]+bcPointGhostOffset[2] );
+
               const int iInterior = poissonField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
               const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);              
               poissonField[iGhost] = 2.0*bc_value - poissonField[iInterior];              
@@ -555,31 +555,31 @@ namespace Wasatch {
           } else if (bc_kind=="Neumann") {
             for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
               SCIRun::IntVector bc_point_indices(*bound_ptr);
-              
+
               bc_point_indices = bc_point_indices - patchCellOffset;
-              
+
               const SS::IntVec   intCellIJK( bc_point_indices[0],
-                                            bc_point_indices[1],
-                                            bc_point_indices[2] );
+                                             bc_point_indices[1],
+                                             bc_point_indices[2] );
               const SS::IntVec ghostCellIJK( bc_point_indices[0]+bcPointGhostOffset[0],
-                                            bc_point_indices[1]+bcPointGhostOffset[1],
-                                            bc_point_indices[2]+bcPointGhostOffset[2] );
-              
+                                             bc_point_indices[1]+bcPointGhostOffset[1],
+                                             bc_point_indices[2]+bcPointGhostOffset[2] );
+
               const int iInterior = poissonField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
               const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);              
               poissonField[iGhost] = spacing*bc_value + poissonField[iInterior];
             }
-            
+
           } else if (bc_kind=="OutletBC") {
             for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
               SCIRun::IntVector bc_point_indices(*bound_ptr);
-              
+
               bc_point_indices = bc_point_indices - patchCellOffset;
-              
+
               const SS::IntVec   intCellIJK( bc_point_indices[0],
-                                            bc_point_indices[1],
-                                            bc_point_indices[2] );
-              
+                                             bc_point_indices[1],
+                                             bc_point_indices[2] );
+
               const SS::IntVec extraCellIJK( bc_point_indices[0] + bcPointGhostOffset[0],
                                              bc_point_indices[1] + bcPointGhostOffset[1],
                                              bc_point_indices[2] + bcPointGhostOffset[2] );

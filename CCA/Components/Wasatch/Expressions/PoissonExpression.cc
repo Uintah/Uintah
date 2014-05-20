@@ -226,7 +226,7 @@ namespace Wasatch {
     }
 
     // When boundary conditions are present, modify the coefficient matrix coefficients at the boundary
-    if ( patch_->hasBoundaryFaces() )update_poisson_matrix((this->get_tags())[0], matrix_, patch_, materialID_);
+    if ( patch_->hasBoundaryFaces() ) update_poisson_matrix((this->get_tags())[0], matrix_, patch_, materialID_);
 
     // if the user specified a reference value, then modify the appropriate matrix coefficients
     if ( useRefPhi_ ) set_ref_poisson_coefs(matrix_, patch_, refPhiLocation_ );
