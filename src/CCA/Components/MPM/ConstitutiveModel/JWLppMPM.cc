@@ -472,7 +472,7 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
         
         pProgressF_new[idx] = pProgressF[idx];
         pProgressdelF_new[idx] = pProgressdelF[idx];
-        pLocalized_new[idx] = 1;
+        pLocalized_new[idx] = -999;
         continue;
       }
 
