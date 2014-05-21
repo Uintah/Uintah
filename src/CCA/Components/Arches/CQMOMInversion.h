@@ -31,14 +31,7 @@
 #include <math.h>
 #include <cstdlib>
 
-#include <sci_defs/uintah_defs.h>
-
-#if defined( FORTRAN_UNDERSCORE_END )
-   // This ## magic (apparently) concatenates the _ to the 'fun' varaible.
-#  define FIX_NAME(fun) fun ## _
-#else // NONE
-#  define FIX_NAME(fun) fun
-#endif
+#include <sci_defs/uintah_defs.h> // For FIX_NAME
 
 // declare lapack eigenvalue solver
 extern "C"{

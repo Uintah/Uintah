@@ -1799,7 +1799,7 @@ Arches::scalarInit( const ProcessorGroup* ,
                     DataWarehouse* new_dw )
 {
   coutLock.lock();
-  std::cout << "Initializing all scalar equations and sources..." << std::endl;
+  proc0cout << "Initializing all scalar equations and sources..." << std::endl;
   for (int p = 0; p < patches->size(); p++){
     //assume only one material for now
     int archIndex = 0;
@@ -1835,7 +1835,7 @@ Arches::scalarInit( const ProcessorGroup* ,
 
     }
   }
-  std::cout << std::endl;
+  //std::cout << std::endl;
   coutLock.unlock();
 }
 //___________________________________________________________________________
