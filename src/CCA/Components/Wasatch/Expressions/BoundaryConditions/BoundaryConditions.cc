@@ -41,8 +41,8 @@ evaluate()
   const double cg = this->cg_;
   
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+    std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
+    std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
     if(this->isStaggered_) {
       for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii){
         f(*ig) = bcValue_;
@@ -70,8 +70,8 @@ evaluate()
   
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
     double bcVal = 0.0;
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+    std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
+    std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
     if(this->isStaggered_) {
       for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
         bcVal  = a_ * (*x_)(*ii) + b_;
@@ -101,8 +101,8 @@ evaluate()
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
     double x = 0.0;
     double bcVal = 0.0;
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+    std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
+    std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
     if(this->isStaggered_) {
       for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
         x = (*x_)(*ii) - x0_;
@@ -133,8 +133,8 @@ evaluate()
   
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
     double bcVal = 0.0;
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+    std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
+    std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
     if(this->isStaggered_) {
       for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
         bcVal  = phic_ * std::pow( 1.0 - std::fabs( (*x_)(*ig) - x0_ ) / R_ , 1.0/n_ );
@@ -160,8 +160,8 @@ evaluate()
   using namespace SpatialOps;
   FieldT& f = this->value();
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+    std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
+    std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
     if (this->isStaggered_) {
       for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
         f(*ig) = (*src_)(*ig);
