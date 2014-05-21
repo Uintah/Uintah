@@ -163,7 +163,8 @@ namespace Uintah{
     bool d_addExtraSources; 
     double d_w_small;               ///< Value of "small" weights
     bool d_normalized;
-
+    bool d_usePartVel;             //determine whether to use particle velocities, or fluid velocities for convection
+    
   }; // class CQMOMEqn
 } // namespace Uintah
 

@@ -80,9 +80,13 @@ void CQMOM::problemSetup(const ProblemSpecP& params)
   for ( ProblemSpecP db_name = db->findBlock("InternalCoordinate");
        db_name != 0; db_name = db_name->findNextBlock("InternalCoordinate") ) {
     string coordName;
-    db_name->get("Name",coordName);
-    proc0cout << "Internal Coordinate Found: " << coordName << endl;
+    string varType;
+    db_name->getAttribute("name",coordName);
     coordinateNames.push_back(coordName);
+    db_name->getAttribute("type",varType);
+    varTypes.push_back(varType);
+    proc0cout << "Internal Coordinate Found: " << coordName << endl;
+    
   }
   
   proc0cout << "Internal Coordinates M: " << M << endl;
@@ -166,6 +170,16 @@ void CQMOM::problemSetup(const ProblemSpecP& params)
       proc0cout << "Creating var label for " << abscissa_name << endl;
       d_fieldLabels->CQMOMAbscissas[ii] = tempVarLabel;
       ii++;
+      
+      //keep track of any abscissa corresponding to velocities
+      if (varTypes[m] == "uVel") {
+        uVelAbscissas.push_back(abscissa_name);
+      } else if (varTypes[m] == "vVel") {
+        vVelAbscissas.push_back(abscissa_name);
+      } else if (varTypes[m] == "wVel") {
+        wVelAbscissas.push_back(abscissa_name);
+      }
+        
     }
   }
   

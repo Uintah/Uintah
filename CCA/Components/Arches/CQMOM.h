@@ -111,7 +111,12 @@ namespace Uintah {
 //                           DataWarehouse        * old_dw,
 //                           DataWarehouse        * new_dw );
     
+    //access the velocity abscissas
+    inline const std::vector<std::string> getuVelNames() {return uVelAbscissas; };
     
+    inline const std::vector<std::string> getvVelNames() {return vVelAbscissas; };
+    
+    inline const std::vector<std::string> getwVelNames() {return wVelAbscissas; };
 
 //____________________________
     
@@ -146,6 +151,11 @@ namespace Uintah {
     std::vector<std::string> weightNames;       //list of wieght names - to be used for dw->get
     std::vector<std::string> abscissaNames;     //list of absicassa names - to be used for dw->get
     
+    std::vector<std::string> varTypes;
+    
+    std::vector<std::string> uVelAbscissas; //store the velcoity abscissas in a way there are known which direction is which
+    std::vector<std::string> vVelAbscissas;
+    std::vector<std::string> wVelAbscissas;
 
     struct constCCVarWrapper {
       constCCVariable<double> data;
