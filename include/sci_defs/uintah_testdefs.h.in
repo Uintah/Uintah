@@ -1,3 +1,6 @@
+#ifndef UINTAH_DEFS_H
+#define UINTAH_DEFS_H
+
 /*
  * The MIT License
  *
@@ -22,9 +25,6 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_DEFS_H
-#define UINTAH_DEFS_H
-
 @DEF_ZOLTAN@
 
 @DEF_TABPROPS@
@@ -43,4 +43,13 @@
 
 @DEF_RAY_SCATTER@
 
+#if !defined( FIX_NAME )
+#  if defined( FORTRAN_UNDERSCORE_END )
+     // This ## magic (apparently) concatenates the _ to the 'fun' varaible.
+#    define FIX_NAME(fun) fun ## _
+#  else // NONE
+#    define FIX_NAME(fun) fun
+#  endif
 #endif
+
+#endif // UINTAH_DEFS_H

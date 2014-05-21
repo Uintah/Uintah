@@ -1,3 +1,6 @@
+#ifndef Uintah_Components_Arches_CQMOMInversion_h
+#define Uintah_Components_Arches_CQMOMInversion_h
+
 /*
  * The MIT License
  *
@@ -28,13 +31,20 @@
 #include <math.h>
 #include <cstdlib>
 
-#ifndef Uintah_Components_Arches_CQMOMInversion_h
-#define Uintah_Components_Arches_CQMOMInversion_h
+#include <sci_defs/uintah_defs.h>
+
+#if defined( FORTRAN_UNDERSCORE_END )
+   // This ## magic (apparently) concatenates the _ to the 'fun' varaible.
+#  define FIX_NAME(fun) fun ## _
+#else // NONE
+#  define FIX_NAME(fun) fun
+#endif
 
 // declare lapack eigenvalue solver
 extern "C"{
-  void dsyev_( char* jobz, char* uplo, int* n, double* a, int* lda,
-              double* w, double* work, int* lwork, int* info );
+# define DSYEV FIX_NAME(dsyev)
+  void DSYEV( char* jobz, char* uplo, int* n, double* a, int* lda,
+	      double* w, double* work, int* lwork, int* info );
 }
 
 //uncomment to debug matricies
@@ -205,13 +215,13 @@ void wheelerAlgorithm(const std::vector<double>& moments, std::vector<double>& w
   lwork = -1;
   char jobz='V';
   char matType = 'U';
-  dsyev_( &jobz, &matType, &nEnv, &z_[0], &lda, &eigenVal[0], &wkopt, &lwork, &info ); //with -1 this finds work size
+  DSYEV( &jobz, &matType, &nEnv, &z_[0], &lda, &eigenVal[0], &wkopt, &lwork, &info ); //with -1 this finds work size
   lwork = (int)wkopt;
   //  work_.resize(lwork);
   work = new double[lwork];
   // Solve eigenproblem. eigenvectors are stored in the z_ matrix, columnwise
   //  dsyev_( &jobz, &matType, &n, &z_[0], &lda, &eigenVal[0], &work_[0], &lwork, &info );
-  dsyev_( &jobz, &matType, &nEnv, &z_[0], &lda, &eigenVal[0], work, &lwork, &info );
+  DSYEV( &jobz, &matType, &nEnv, &z_[0], &lda, &eigenVal[0], work, &lwork, &info );
   bool status = ( info>0 || info<0 )? false : true;
   //NOTE: insert error based on status bool
   
