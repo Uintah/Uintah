@@ -73,6 +73,7 @@ CQMOMEqn::problemSetup(const ProblemSpecP& inputdb)
   ProblemSpecP cqmom_db = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("CQMOM");
   std::string which_cqmom;
   cqmom_db->getAttribute( "type", which_cqmom );
+  cqmom_db->getAttribute( "partvel", d_usePartVel );
   if ( which_cqmom == "normalized" )
     d_normalized= true;
   else
@@ -416,6 +417,9 @@ CQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int t
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
   
   //NOTE: loop over rquires for weights and abscissas needed for convection term if IC=u,v,w
+  if (d_usePartVel) {
+    //get a requires on all weights and abscissas
+  }
 }
 //---------------------------------------------------------------------------
 // Method: Actually build the transport equation.
@@ -492,11 +496,17 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     computeBCs( patch, d_eqnName, phi );
     
     //----CONVECTION
-    if (d_doConv){
+    if (d_doConv) {
 //      d_disc->computeConv( patch, Fconv, oldPhi, uVel, vVel, wVel, partVel, areaFraction, d_convScheme );
       //NOTE: use a base scalar transport for inital testing
       //rewrite the convection term later
-      d_disc->computeConv( patch, Fconv, oldPhi, uVel, vVel, wVel, den, areaFraction, d_convScheme );
+      if (d_usePartVel) {
+        //get weights and abscissas from dw
+        //call new convection term with these
+      } else {
+        d_disc->computeConv( patch, Fconv, oldPhi, uVel, vVel, wVel, den, areaFraction, d_convScheme );
+      }
+      
       // look for and add contribution from intrusions.
       if ( _using_new_intrusion ) {
         _intrusions->addScalarRHS( patch, Dx, d_eqnName, RHS );
