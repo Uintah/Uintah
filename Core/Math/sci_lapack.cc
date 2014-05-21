@@ -36,7 +36,7 @@
 #include <sci_defs/cuda_defs.h>
 #include <sci_defs/lapack_defs.h>
 #include <sci_defs/magma_defs.h>
-#include <sci_defs/uintah_defs.h> // For FORTRAN_UNDERSCORE_END
+#include <sci_defs/uintah_defs.h> // For FIX_NAME
 
 #include <Core/Math/sci_lapack.h>
 #include <Core/Util/Assert.h>
@@ -86,11 +86,11 @@ void sort_eigens(double *Er, double *Ei, int N, double **Evecs=0)
       temp = Ei[i]; Ei[i] = Ei[i+1]; Ei[i+1] = temp;
 
       if (Evecs) {
-	for (k=0; k<N; k++) {
-	  temp = Evecs[k][i];
-	  Evecs[k][i] = Evecs[k][i+1];
-	  Evecs[k][i+1] = temp;
-	}
+        for (k=0; k<N; k++) {
+          temp = Evecs[k][i];
+          Evecs[k][i] = Evecs[k][i+1];
+          Evecs[k][i+1] = temp;
+        }
       }
     }
 
@@ -98,12 +98,6 @@ void sort_eigens(double *Er, double *Ei, int N, double **Evecs=0)
 }
 
 #if defined(HAVE_LAPACK)
-
-#  if defined( FORTRAN_UNDERSCORE_END ) 
-#    define FIX_NAME(fun) fun ## _  // This ## magic (apparently) concatenates the _ to the 'fun' varaible.
-#  else
-#    define FIX_NAME(fun) fun
-#  endif
 
 #  define DGETRF FIX_NAME(dgetrf)
 #  define DGETRI FIX_NAME(dgetri)
@@ -113,13 +107,13 @@ void sort_eigens(double *Er, double *Ei, int N, double **Evecs=0)
 extern "C" {
   int DGETRF( int *m, int *n, double *a, int *lda, int *ipiv, int *info );
   int DGETRI( int *m, double *a, int *lda, int *ipiv, 
-	      double *work, int *lwork, int *info );
+              double *work, int *lwork, int *info );
   int DGESVD( char *jobu, char *jobvt, int *m, int *n, double *a, int *lda, 
-	      double *S, double *u, int *ldu, double *vt, int *ldvt, 
-	      double *work, int *lwork, int *info );
+              double *S, double *u, int *ldu, double *vt, int *ldvt, 
+              double *work, int *lwork, int *info );
   int DGEEV( char *jobvl, char *jobvr, int *n, double *a, int *lda,
-	     double *Er, double *Ei, double *vl, int *ldvl, double *vr, 
-	     int *ldvr, double *work, int *lwork, int *info );
+             double *Er, double *Ei, double *vl, int *ldvl, double *vr, 
+             int *ldvr, double *work, int *lwork, int *info );
 }
 
 bool
@@ -300,7 +294,7 @@ lapacksvd( double **A, int m, int n, double *S, double **U, double **VT )
   work = new double[lwork];
 
   DGESVD( &jobu, &jobvt, &m, &n, a, &lda, S, u,
-	  &ldu, vt, &ldvt, work, &lwork, &info );
+          &ldu, vt, &ldvt, work, &lwork, &info );
 
   ftoc(u, U, ldu, m);
   ftoc(vt, VT, ldvt, n);
@@ -324,7 +318,7 @@ void lapackeigen(double **H, int n, double *Er, double *Ei, double **Evecs)
   double *a, *vl=0, *vr=0, *work;
   
   jobvl = 'N'; /* V/N to calculate/not calculate the left eigenvectors
-		  of the matrix H.*/
+                  of the matrix H.*/
 
   if (Evecs) 
     jobvr = 'V'; // As above, but for the right eigenvectors.
@@ -333,7 +327,7 @@ void lapackeigen(double **H, int n, double *Er, double *Ei, double **Evecs)
 
   lda = n; // The leading dimension of the matrix a.
   a = ctof(H, n, lda); /* Convert the matrix H from double pointer
-				C form to single pointer Fortran form. */
+                                C form to single pointer Fortran form. */
 
   /* Whether we want them or not, we need to define the matrices
      for the eigenvectors, and give their leading dimensions.
@@ -370,7 +364,7 @@ void lapackeigen(double **H, int n, double *Er, double *Ei, double **Evecs)
 #else
 
   DGEEV( &jobvl, &jobvr, &n, a, &lda, Er, Ei, vl,
-	 &ldvl, vr, &ldvr, work, &lwork, &info );
+         &ldvl, vr, &ldvr, work, &lwork, &info );
 
 #endif
 
