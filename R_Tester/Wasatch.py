@@ -127,7 +127,7 @@ DEBUGTESTS = [
   ]
 
 NIGHTLYTESTS = [
-  ("scalar-transport-equation_perf",    scalarequationperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),
+#   ("scalar-transport-equation_perf",    scalarequationperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),
   ("turbulent-flow-over-cavity",                         "turbulent-flow-over-cavity.ups",    8,  "Linux",  ["abs_tolerance=1e-8","no_restart","no_memoryTest","no_dbg"]                                          ),
   ("coal-boiler-mini",                         "coal-boiler-mini.ups",    16,  "Linux",  ["exactComparison","no_restart","no_memoryTest"]                                          ),
   ("bc-linear-inlet-channel-flow-test",     "bc-linear-inlet-channel-flow-test.ups",             6,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
