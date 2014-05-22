@@ -362,7 +362,7 @@ int  set_inletVelocity_BC(const Patch* patch,
         // Assume that the TKE is evenly distrubuted between all three components of velocity
         // 1/2 * (sigma.x^2 + sigma.y^2 + sigma.z^2) = 3/2 * sigma^2
         
-        const double variance = 0.66666 * TKE;
+        const double variance = sqrt(0.66666 * TKE);
         
         //__________________________________
         // from the random number compute the new velocity knowing the mean velcity and variance
