@@ -552,8 +552,20 @@ TaskGraph::nullSort( vector<Task*>& tasks )
   // groups) run in different orders on different MPI processes.
   int n=0;
   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
+    // For all reduction tasks filtering out the one that is not in ReductionTasksMap 
+    if ((*iter)->getType() == Task::Reduction) { 
+      for (SchedulerCommon::ReductionTasksMap::iterator it = sc->reductionTasks.begin();
+          it!=sc->reductionTasks.end(); it++) {
+        if ( (*iter) == it->second) {
+          (*iter)->setSortedOrder(n++);
+          tasks.push_back( *iter );
+          break;
+        }
+      }
+    } else {
       (*iter)->setSortedOrder(n++);
       tasks.push_back( *iter );
+    }
   }
 }
 
