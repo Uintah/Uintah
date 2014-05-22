@@ -767,13 +767,22 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
 	 
         if (dep->matls != 0) {
           newtask->modifies(dep->var, dep->reductionLevel, dep->matls, Task::OutOfDomain);
+          for (int i=0; i<dep->matls->size(); i++) {
+            int maltIdx = dep->matls->get(i);
+            VarLabelMatl<Level> key(dep->var, maltIdx, dep->reductionLevel);
+            reductionTasks[key]=newtask;
+          }
         } else {
           for(int m=0;m<task->getMaterialSet()->size();m++) {
             newtask->modifies(dep->var, dep->reductionLevel, task->getMaterialSet()->getSubset(m), Task::OutOfDomain);
+            for (int i=0; i<task->getMaterialSet()->getSubset(m)->size(); i++) {
+              int maltIdx = task->getMaterialSet()->getSubset(m)->get(i);
+              VarLabelMatl<Level> key(dep->var, maltIdx, dep->reductionLevel);
+              reductionTasks[key]=newtask;
+            }
           }
         }
         graphs[graphs.size()-1]->addTask(newtask, 0, 0);
-        VarLabelMatl<Level> key(dep->var, dw, dep->reductionLevel);
         numTasks_++;
      }
   }
@@ -830,6 +839,7 @@ SchedulerCommon::initialize(int numOldDW /* =1 */, int numNewDW /* =1 */)
   maxGhostCells.clear();
   maxLevelOffsets.clear();
 
+  reductionTasks.clear();
   addTaskGraph(NormalTaskGraph);
 
 }

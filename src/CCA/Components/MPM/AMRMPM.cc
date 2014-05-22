@@ -362,7 +362,7 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
 
-  schedulePrintParticleCount(level, sched);
+  if (level->getIndex() == 0 ) schedulePrintParticleCount(level, sched); 
 
   // The task will have a reference to zeroth_matl
   if (zeroth_matl->removeReference())
