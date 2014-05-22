@@ -39,7 +39,7 @@
  are interpolation coefficients used to deduce the extra cell value that will reproduce the boundary condition 
  up to second order accuracy.
  *
- *  \tparam FieldT - the type of field for the expression on which this bc applies.
+ *  \tparam FieldT - The type of field for the expression on which this bc applies.
  */
 
 template< typename FieldT >

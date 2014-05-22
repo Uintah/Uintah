@@ -54,8 +54,8 @@ evaluate()
   FieldT& f = this->value();
   
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
-    std::vector<IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
-    std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+    std::vector<IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost ijk index
+    std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior ijk index
     const IntVec& offset = this->bndNormal_;
     const double sign = (offset[0] >=0 && offset[1] >= 0 && offset[2] >= 0) ? 1.0 : -1.0;
     
@@ -80,7 +80,7 @@ evaluate()
       }
       
       if (this->interiorEdgePoints_) {
-        std::vector<IntVec>::const_iterator ic = (this->interiorEdgePoints_)->begin(); // ii is the interior flat index
+        std::vector<IntVec>::const_iterator ic = (this->interiorEdgePoints_)->begin(); // ii is the interior ijk index
         for (; ic != (this->interiorEdgePoints_)->end(); ++ic) {
           const double ub  = (*u_)(*ic);            // boundary cell
           f(*ic) = -(1.0/ dt) * ub;
