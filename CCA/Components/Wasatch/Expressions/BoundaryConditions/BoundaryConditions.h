@@ -38,7 +38,7 @@
  *  conditions. Given a BCValue, we set the ghost value such that
  *  \f$ f[ghost] = \alpha f[interior] + \beta BCValue \f$
  *
- *  \tparam FieldT - the type of field for the RHS.
+ *  \tparam FieldT - The type of field for the expression on which this bc applies.
  */
 template< typename FieldT >
 class ConstantBC
@@ -55,10 +55,6 @@ public:
     /**
      * @param result Tag of the resulting expression.
      * @param bcValue   constant boundary condition value.
-     * @param cghost ghost coefficient. This is usually provided by an operator.
-     * @param flatGhostPoints  flat indices of the ghost points in which BC is being set.
-     * @param cinterior interior coefficient. This is usually provided by an operator.
-     * @param flatInteriorPoints  flat indices of the interior points that are used to set the ghost value.
      */
     Builder( const Expr::Tag& resultTag,
             const double bcValue ) :
@@ -87,7 +83,7 @@ private:
  *
  *  \brief Implements a linear profile at the boundary.
  *
- *  \tparam FieldT - the type of field for the RHS.
+ *  \tparam FieldT - The type of field for the expression on which this bc applies.
  */
 template< typename FieldT >
 class LinearBC
@@ -137,7 +133,7 @@ private:
  *
  *  \brief Implements a parabolic profile at the boundary.
  *
- *  \tparam FieldT - the type of field for the RHS.
+ *  \tparam FieldT - The type of field for the expression on which this bc applies.
  */
 template< typename FieldT >
 class ParabolicBC
@@ -190,7 +186,7 @@ private:
  *
  *  \brief Implements a powerlaw profile at the boundary.
  *
- *  \tparam FieldT - the type of field for the RHS.
+ *  \tparam FieldT - The type of field for the expression on which this bc applies.
  */
 template< typename FieldT >
 class PowerLawBC
@@ -243,7 +239,7 @@ private:
  *
  *  \brief Provides a mechanism to copy boundary values from one field to another.
  *
- *  \tparam FieldT - the type of field for the RHS.
+ *  \tparam FieldT - The type of field for the expression on which this bc applies.
  */
 template< typename FieldT >
 class BCCopier

@@ -428,10 +428,6 @@ namespace Wasatch {
     // bndNameBndSpecMap_ stores BndSpec information for each of the specified boundaries. This
     // map is indexed by the (unique) boundary name.
     BndMapT                    bndNameBndSpecMap_;
-
-    // appliedBCOnField is maps a field name and whether boundary conditions have been applied
-    // on it or not. This will be useful to avoid extra work done by the apply_boundary_condition
-    std::map< Category,std::vector<Expr::Tag> > appliedBCOnField_;
     
     template<typename FieldT>
     const std::vector<IntVecT>* get_extra_bnd_mask( const BndSpec& myBndSpec,
