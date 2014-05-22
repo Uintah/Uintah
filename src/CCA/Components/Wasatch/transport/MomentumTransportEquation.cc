@@ -880,15 +880,14 @@ namespace Wasatch{
         // check if this boundary applies a bc on the density
         if (myBndSpec.has_field(densityTag_.name())) {
           // create a bc copier for the density estimate
-          const Expr::Tag rhoStarBCTag( rhoStarTag.name() + "_init_" + bndName +"_bccopier", Expr::STATE_NONE);
+          const Expr::Tag rhoStarBCTag( rhoStarTag.name() + "_" + bndName +"_bccopier", Expr::STATE_NONE);
+          BndCondSpec rhoStarBCSpec = {rhoStarTag.name(), rhoStarBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
           if (!initFactory.have_entry(rhoStarBCTag)){
-            BndCondSpec rhoStarBCSpec = {rhoStarTag.name(), rhoStarBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
             const Expr::Tag rhoTag(densityTag_.name(), Expr::STATE_NONE);
             initFactory.register_expression ( new typename BCCopier<SVolField>::Builder(rhoStarBCTag, rhoTag) );
             bcHelper.add_boundary_condition(bndName, rhoStarBCSpec);
           }
           if (!advSlnFactory.have_entry(rhoStarBCTag)){
-            BndCondSpec rhoStarBCSpec = {rhoStarTag.name(), rhoStarBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
             const Expr::Tag rhoTag(densityTag_.name(), Expr::CARRY_FORWARD);
             advSlnFactory.register_expression ( new typename BCCopier<SVolField>::Builder(rhoStarBCTag, rhoTag) );
             bcHelper.add_boundary_condition(bndName, rhoStarBCSpec);
