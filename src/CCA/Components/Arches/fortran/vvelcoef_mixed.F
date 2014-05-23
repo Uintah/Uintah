@@ -58,6 +58,7 @@ c*********************************************************************
       double precision DWDYB, DWDYT
       double precision PT5, PT25, small
       double precision EPSN, EPSS, EPSE, EPSW, EPST, EPSB, EPSP
+      double precision GSIGN
 
 c*********************************************************************
 c     Start :
@@ -72,6 +73,7 @@ c*********************************************************************
       PT5 = 0.5D0
       PT25 = 0.25D0
       small = 1.0D-10
+      GSIGN = 1.0D0
 
       AREANS = dx*dz
       AREAEW = dy*dz
@@ -225,7 +227,8 @@ C-----------------------------------------------------------------------
      &                (VIST*DWDYT-VISB*DWDYB)/DZ +
      &                pt5*(DEN(I,J,K)+DEN(I,J-1,K))*
      $                (VV(I,J,K))/DELTAT
-     &              + (PT5*(DEN(I,J-1,K)+DEN(I,J,K))-
+     &              + (PT5*(DEN(I,J-1,K)+DEN(I,J,K))+
+     $              SIGN(GSIGN,GRAV)*  
      $              pt5*(DEN_REF(i,j,k)+DEN_REF(i,j-1,k)))*
      $              GRAV )*VOL*EPSP
 

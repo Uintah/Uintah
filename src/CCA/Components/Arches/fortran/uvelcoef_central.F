@@ -51,7 +51,7 @@ c*********************************************************************
       double precision DWDXB, DWDXT
       double precision PT5, PT25, small, tiny
       double precision EPSN, EPSS, EPSE, EPSW, EPST, EPSB
-      double precision EPSP
+      double precision EPSP, GSIGN
 
 c*********************************************************************
 c     Start :
@@ -67,6 +67,7 @@ c*********************************************************************
       PT25 = 0.25D0
       small = 1.0D-10
       tiny = 1.0D-20
+      GSIGN = 1.0D0
 
 c*********************************************************************
 c     Go thru all the cells
@@ -167,7 +168,8 @@ C-----------------------------------------------------------------------
      &               (VIST*DWDXT - VISB*DWDXB)/dz +
      &              PT5*(old_DEN(I,J,K) + old_DEN(I-1,J,K))*
      $              (old_UU(I,J,K))/DELTAT
-     &              + (PT5*(DEN(I,J,K)+DEN(I-1,J,K))-
+     &              + (PT5*(DEN(I,J,K)+DEN(I-1,J,K)) + 
+     $              SIGN(GSIGN,GRAV)*
      $              PT5*(den_ref(i,j,k)+den_ref(i-1,j,k)))*
      $              GRAV )*VOL*EPSP
 

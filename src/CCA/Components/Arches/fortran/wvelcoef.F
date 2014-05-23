@@ -58,7 +58,7 @@ c*********************************************************************
       double precision DWDZB, DWDZT
       double precision PT5, PT25, small 
       double precision EPSN, EPSS, EPSE, EPSW, EPST, EPSB
-      double precision EPSP
+      double precision EPSP, GSIGN
 
 c*********************************************************************
 c     Start :
@@ -73,6 +73,7 @@ c*********************************************************************
       PT5 = 0.5D0
       PT25 = 0.25D0
       small = 1.0D-10
+      GSIGN = 1.0D0
 
 c*********************************************************************
 c     Set all flags
@@ -283,7 +284,8 @@ C----------------------------------------------------------------------
      &              pt5*(DEN(I,J,K)+DEN(i,j,k-1))*
      $              (WW(I,J,K))/
      $              DELTAT 
-     &              + (PT5*(DEN(I,J,K-1)+DEN(I,J,K))-
+     &              + (PT5*(DEN(I,J,K-1)+DEN(I,J,K))+
+     $              SIGN(GSIGN,GRAV)*  
      $              pt5*(den_ref(i,j,k) + den_ref(i,j,k-1)))*
      $              GRAV
      $              )*VOL*EPSP
