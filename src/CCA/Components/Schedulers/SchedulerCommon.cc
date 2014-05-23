@@ -97,14 +97,17 @@ SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
   }
   
   // Default mapping...
-  dwmap[Task::OldDW]    =0;
-  dwmap[Task::NewDW]    =1;
-  d_isInitTimestep      = false;
+  dwmap[Task::OldDW] = 0;
+  dwmap[Task::NewDW] = 1;
+  d_isInitTimestep = false;
   m_locallyComputedPatchVarMap = scinew LocallyComputedPatchVarMap;
-  reloc_new_posLabel_   = 0;
+  reloc_new_posLabel_ = 0;
 
-  maxGhostCells.clear();
-  maxLevelOffsets.clear();
+  // TODO replace after DDT problem is debugged (APH - 05/22/14)
+  maxGhost = 0;
+  maxLevelOffset = 0;
+//  maxGhostCells.clear();
+//  maxLevelOffsets.clear();
 }
 //______________________________________________________________________
 //
@@ -677,31 +680,38 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
   graphs[graphs.size()-1]->addTask(task, patches, matls);
   numTasks_++;
 
+  // TODO replace after DDT problem is debugged (APH - 05/22/14)
+  if (task->maxGhostCells > maxGhost) {
+    maxGhost = task->maxGhostCells;
+  }
+  if (task->maxLevelOffset > maxLevelOffset){
+    maxLevelOffset = task->maxLevelOffset;
+  }
   // get the current level for the specified PatchSet to determine maxGhostCells and maxLevelOffset
   //   don't check these for output and restart tasks - patch and material sets are null then
-  if (patches && matls) {
-    int levelIndex = patches->getSubset(0)->get(0)->getLevel()->getIndex();
-
-    // initialize or update max ghost cells for the current level
-    std::map<int, int>::iterator mgc_iter;
-    mgc_iter = maxGhostCells.find(levelIndex);
-    if (mgc_iter == maxGhostCells.end()) {
-      maxGhostCells.insert(std::pair<int, int>(levelIndex, 0));
-    }
-    else if (task->maxGhostCells > mgc_iter->second) {
-      mgc_iter->second = task->maxGhostCells;
-    }
-
-    // initialize or update max level offset for the current level
-    std::map<int, int>::iterator mlo_iter;
-    mlo_iter = maxLevelOffsets.find(levelIndex);
-    if (mlo_iter == maxLevelOffsets.end()) {
-      maxLevelOffsets.insert(std::pair<int, int>(levelIndex, 0));
-    }
-    else if (task->maxLevelOffset > mlo_iter->second) {
-      mlo_iter->second = task->maxLevelOffset;
-    }
-  }
+//  if (patches && matls) {
+//    int levelIndex = patches->getSubset(0)->get(0)->getLevel()->getIndex();
+//
+//    // initialize or update max ghost cells for the current level
+//    std::map<int, int>::iterator mgc_iter;
+//    mgc_iter = maxGhostCells.find(levelIndex);
+//    if (mgc_iter == maxGhostCells.end()) {
+//      maxGhostCells.insert(std::pair<int, int>(levelIndex, 0));
+//    }
+//    else if (task->maxGhostCells > mgc_iter->second) {
+//      mgc_iter->second = task->maxGhostCells;
+//    }
+//
+//    // initialize or update max level offset for the current level
+//    std::map<int, int>::iterator mlo_iter;
+//    mlo_iter = maxLevelOffsets.find(levelIndex);
+//    if (mlo_iter == maxLevelOffsets.end()) {
+//      maxLevelOffsets.insert(std::pair<int, int>(levelIndex, 0));
+//    }
+//    else if (task->maxLevelOffset > mlo_iter->second) {
+//      mlo_iter->second = task->maxLevelOffset;
+//    }
+//  }
   
   // add to init-requires.  These are the vars which require from the OldDW that we'll
   // need for checkpointing, switching, and the like.
@@ -836,8 +846,11 @@ SchedulerCommon::initialize(int numOldDW /* =1 */, int numNewDW /* =1 */)
   d_computedVars.clear();
   numTasks_ = 0;
 
-  maxGhostCells.clear();
-  maxLevelOffsets.clear();
+  // TODO replace after DDT problem is debugged (APH - 05/22/14)
+  maxGhost = 0;
+  maxLevelOffset = 0;
+//  maxGhostCells.clear();
+//  maxLevelOffsets.clear();
 
   reductionTasks.clear();
   addTaskGraph(NormalTaskGraph);
