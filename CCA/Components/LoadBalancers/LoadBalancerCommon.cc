@@ -241,9 +241,12 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
   // TODO consider this old warning from Steve:
   //    WARNING - this should be determined from the taskgraph? - Steve
 
-  // get the max level offset and max ghost cells to consider for neighborhood creation
-  const std::map<int, int>& maxGhostCells = d_scheduler->getMaxGhostCells();
-  const std::map<int, int>& maxLevelOffsets = d_scheduler->getMaxLevelOffsets();
+  // TODO replace after DDT problem is debugged (APH - 05/22/14)
+  int maxGhost = d_scheduler->getMaxGhost();
+  int maxLevelOffset = d_scheduler->getMaxLevelOffset();
+//  // get the max level offset and max ghost cells to consider for neighborhood creation
+//  const std::map<int, int>& maxGhostCells = d_scheduler->getMaxGhostCells();
+//  const std::map<int, int>& maxLevelOffsets = d_scheduler->getMaxLevelOffsets();
 
   d_neighbors.clear();
   d_neighborProcessors.clear();
@@ -257,12 +260,12 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
   for(int l=0;l<grid->numLevels();l++){
     LevelP level = grid->getLevel(l);
 
-    // determine max ghost cells and max level offset for the current level
-    int maxGC = maxGhostCells.find(l)->second;
-    int maxOffset = maxLevelOffsets.find(l)->second;
+    // TODO replace after DDT problem is debugged (APH - 05/22/14)
+//    // determine max ghost cells and max level offset for the current level
+//    int maxGC = maxGhostCells.find(l)->second;
+//    int maxOffset = maxLevelOffsets.find(l)->second;
 
-    for(Level::const_patchIterator iter = level->patchesBegin();
-        iter != level->patchesEnd(); iter++){
+    for(Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
       const Patch* patch = *iter;
 
       // we need to check both where the patch is and where
@@ -280,7 +283,9 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
         // or otherwise it will conflict with the sorted order of the cached patches
         Patch::selectType neighbor;
 
-        IntVector ghost(maxGC,maxGC,maxGC);
+        // TODO replace after DDT problem is debugged (APH - 05/22/14)
+        IntVector ghost(maxGhost,maxGhost,maxGhost);
+//        IntVector ghost(maxGC,maxGC,maxGC);
 
         IntVector low(patch->getExtraLowIndex(Patch::CellBased, IntVector(0,0,0)));
         IntVector high(patch->getExtraHighIndex(Patch::CellBased, IntVector(0,0,0)));
@@ -318,14 +323,18 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
         // add amr stuff - so the patch will know about coarsening and refining
         if (l > 0 && (proc == me || (oldproc == me && !d_sharedState->isCopyDataTimestep()))) {
           LevelP coarseLevel = level;
-          IntVector ghost(maxGC, maxGC, maxGC);
-          for (int offset = 1; offset <= maxOffset && coarseLevel->hasCoarserLevel(); ++offset) {
+
+          // TODO replace after DDT problem is debugged (APH - 05/22/14)
+          IntVector ghost(maxGhost, maxGhost, maxGhost);
+          for (int offset = 1; offset <= maxLevelOffset && coarseLevel->hasCoarserLevel(); ++offset) {
+//          IntVector ghost(maxGC, maxGC, maxGC);
+//          for (int offset = 1; offset <= maxOffset && coarseLevel->hasCoarserLevel(); ++offset) {
             ghost = ghost * coarseLevel->getRefinementRatio();
             coarseLevel = coarseLevel->getCoarserLevel();
             Patch::selectType coarse;
 
             coarseLevel->selectPatches(level->mapCellToCoarser(low - ghost, offset),
-                    level->mapCellToCoarser(high + ghost, offset), coarse);
+                                       level->mapCellToCoarser(high + ghost, offset), coarse);
             for (int i = 0; i < coarse.size(); i++) //add owning processors
             {
               d_neighbors.insert(coarse[i]->getRealPatch());
@@ -339,7 +348,10 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
           }
         }
         if (l < grid->numLevels()-1 && (proc == me || (oldproc == me && !d_sharedState->isCopyDataTimestep()))) {
-          IntVector ghost(maxGC, maxGC, maxGC);
+
+          // TODO replace after DDT problem is debugged (APH - 05/22/14)
+          IntVector ghost(maxGhost, maxGhost, maxGhost);
+//          IntVector ghost(maxGC, maxGC, maxGC);
           const LevelP& fineLevel = level->getFinerLevel();
           Patch::selectType fine;
           fineLevel->selectPatches(level->mapCellToFiner(low-ghost), 
@@ -368,14 +380,15 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
         continue;
       }
 
-      int maxGC = maxGhostCells.find(l)->second;
-      IntVector ghost(maxGC, maxGC, maxGC);
+      // TODO replace after DDT problem is debugged (APH - 05/22/14)
+      IntVector ghost(maxGhost, maxGhost, maxGhost);
+//      int maxGC = maxGhostCells.find(l)->second;
+//      IntVector ghost(maxGC, maxGC, maxGC);
 
       LevelP oldLevel = oldGrid->getLevel(l);
       LevelP newLevel = grid->getLevel(l);
 
-      for(Level::const_patchIterator iter = oldLevel->patchesBegin();
-          iter != oldLevel->patchesEnd(); iter++){
+      for(Level::const_patchIterator iter = oldLevel->patchesBegin(); iter != oldLevel->patchesEnd(); iter++){
         const Patch* oldPatch = *iter;
 
         // we need to check both where the patch is and where
