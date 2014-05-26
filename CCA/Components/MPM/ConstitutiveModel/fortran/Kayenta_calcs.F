@@ -23,31 +23,30 @@ C IN THE SOFTWARE.
 C
 C 
 C 
-      SUBROUTINE KAYENTA_CHK ( UI, GC, DC)
-
+      SUBROUTINE KAYENTA_CHECK_PARAMS ( UI )
       CHARACTER*6 IAM
-      PARAMETER( IAM = 'KAYENTA_CHK' )
+      PARAMETER( IAM = 'KAYENTA_CHECK_PARAMS' )
 
       CALL LOGMES('This model is only available to licensees')
       CALL FATERR(IAM,'See Jim Guilkey for more information')
 
       END
 
-      SUBROUTINE KAYENTA_RXV(UI,GC,DC,
-     &  NX, NAMEA, KEYA, RINIT, RDIM, IADVCT, ITYPE)
+      SUBROUTINE KAYENTA_REQUEST_XTRA_VARS(UI,
+     &  NX, NAMEA, KEYA, XINIT, RDIM, IADVCT, ITYPE)
 
       CHARACTER*6 IAM
-      PARAMETER( IAM = 'KAYENTA_RXV' ) 
+      PARAMETER( IAM = 'KAYENTA_REQUEST_XTRA_VARS' ) 
       CALL LOGMES('This model is only available to licensees')
       CALL FATERR(IAM,'See Jim Guilkey for more information')
 
       END
 
-      SUBROUTINE KAYENTA_CALC( NBLK, NINSV, DT, UI, GC, DC,
-     $                                   SIGARG, D, SVARG, USM)
+      SUBROUTINE KAYENTA_UPDATE_STATE( NBLK, DT, UI,D,
+     $                                   SIGARG, SVARG, USM)
 
       CHARACTER*12 IAM
-      PARAMETER (IAM='KAYENTA_CALC')
+      PARAMETER (IAM='KAYENTA_UPDATE_STATE')
 
       CALL LOGMES('This model is only available to licensees')
       CALL FATERR(IAM,'See Jim Guilkey for more information')
