@@ -2820,18 +2820,4 @@ void Arches::registerCQMOMEqns(ProblemSpecP& db)
   }
 }
 
-//______________________________________________________________________
-// STUB FUNCTIONS
- void Arches::scheduleCoarsen(const Uintah::LevelP& /*coarseLevel*/,
-                          Uintah::SchedulerP& /*sched*/)
- {
-   // do nothing for now
- }
-
- void Arches::scheduleRefineInterface(const Uintah::LevelP& /*fineLevel*/,
-                                  Uintah::SchedulerP& /*scheduler*/,
-                                  bool, bool)
- {
-   // do nothing for now
- }
 //------------------------------------------------------------------
