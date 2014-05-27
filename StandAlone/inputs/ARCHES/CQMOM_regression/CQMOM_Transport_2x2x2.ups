@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <Uintah_specification>
   <Meta>
-    <title>CQMOM/Scalar Test 2x2x2</title>
+    <title>CQMOM Scalar Test 2x2x2</title>
   </Meta>
 
   <SimulationComponent type="arches"/>
 
   <Solver type="hypre"/>
   <Time>
-    <max_Timesteps> 10 </max_Timesteps>
+    <max_Timesteps> 5 </max_Timesteps>
     <maxTime>         1.0        </maxTime>
     <initTime>        0.0         </initTime>
     <delt_min>        0.001     </delt_min>
@@ -34,7 +34,7 @@
     <save label="m_100" />
     <save label="m_010" />
     <save label="m_001" />
-    <Save label="m_003" />
+    <save label="m_003" />
     <save label="m_030" />
     <save label="m_300" />
     
