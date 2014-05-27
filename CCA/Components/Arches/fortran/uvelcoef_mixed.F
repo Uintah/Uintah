@@ -58,7 +58,7 @@ c*********************************************************************
       double precision DWDXB, DWDXT
       double precision PT5, PT25, small 
       double precision EPSN, EPSS, EPSE, EPSW, EPST, EPSB
-      double precision EPSP, GSIGN
+      double precision EPSP
 
 c*********************************************************************
 c     Start :
@@ -73,7 +73,6 @@ c*********************************************************************
       PT5 = 0.5D0
       PT25 = 0.25D0
       small = 1.0D-10
-      GSIGN = 1.0D0
 
       Relimit_m1 = Relimit**(-1.0)
 
@@ -228,8 +227,7 @@ C-----------------------------------------------------------------------
      &              ( VIST*DWDXT - VISB*DWDXB)/dz +
      &              PT5*(DEN(I,J,K) + DEN(I-1,J,K))*
      $              (UU(I,J,K))/DELTAT
-     &              + (PT5*(DEN(I,J,K)+DEN(I-1,J,K))+
-     $              SIGN(GSIGN,GRAV)*  
+     &              + (PT5*(DEN(I,J,K)+DEN(I-1,J,K))-
      $              PT5*(den_ref(i,j,k)+den_ref(i-1,j,k)))*
      $              GRAV )*VOL*EPSP
 
