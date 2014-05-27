@@ -150,7 +150,7 @@ public:
                                              SchedulerP&);
   void 
   MPMArchesIntrusionSetupForResart( const LevelP& level, SchedulerP& sched, 
-      bool& recompile, bool doing_restart );
+                                    bool& recompile, bool doing_restart );
 
   virtual void scheduleTimeAdvance( const LevelP& level,
                                     SchedulerP&);
@@ -163,7 +163,8 @@ public:
   virtual void sched_weightInit( const LevelP& level,
                                 SchedulerP& );
   virtual void sched_weightedAbsInit( const LevelP& level,
-                                SchedulerP& );
+                                      SchedulerP& );
+                                      
   virtual void sched_scalarInit( const LevelP& level,
                                  SchedulerP& sched );
   virtual void sched_momentInit( const LevelP& level,
@@ -171,13 +172,19 @@ public:
                                  
   //__________________________________
   //  Multi-level/AMR 
-  virtual void scheduleCoarsen(const Uintah::LevelP& /*coarseLevel*/,
-                               Uintah::SchedulerP&   /*sched*/);
+  // stub functions.  Needed for multi-level RMCRT and
+  // if you want to change the coarse level patch configuration
+  virtual void scheduleCoarsen(const LevelP& ,
+                                SchedulerP& ){ /* do Nothing */};
 
-  virtual void scheduleRefineInterface(const Uintah::LevelP& /*fineLevel*/,
-                                       Uintah::SchedulerP& /*scheduler*/,
-                                       bool, bool);
+  virtual void scheduleRefineInterface(const LevelP&,
+                                       SchedulerP&,
+                                       bool, bool){ /* do Nothing */};
 
+  virtual void scheduleInitialErrorEstimate( const LevelP& , 
+                                             SchedulerP&  ){/* do Nothing */};
+  virtual void scheduleErrorEstimate( const LevelP& , 
+                                      SchedulerP&  ){/* do Nothing */};
 
   // for multimaterial
   void setMPMArchesLabel(const MPMArchesLabel* MAlb){
