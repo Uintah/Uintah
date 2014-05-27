@@ -32,7 +32,7 @@
        <save label = "p.x"/>
        <save label = "p.volume"/>
        <save label = "p.stress"/>
-       <!--<save label = "p.concentration"/>-->
+       <save label = "p.concentration"/>
        <save label = "g.concentration"/>
        <save label = "g.temperature"/>
        <save label = "g.mass"/>
@@ -47,7 +47,7 @@
 
 
     <PhysicalConstants>
-       <gravity>[1,0,0]</gravity>
+       <gravity>[0,0,0]</gravity>
     </PhysicalConstants>
 
     <MaterialProperties>
@@ -88,56 +88,38 @@
          <BCType id = "all" var = "Dirichlet" label = "Concentration">
                 <value> 300. </value>
          </BCType>
-         <BCType id = "all" var = "Dirichlet" label = "Velocity">
-                <value> [0.0, 0.0, 0.0] </value>
-         </BCType>
        </Face>
        <Face side = "x+">
          <BCType id = "all" var = "Dirichlet" label = "Concentration">
               <value> 1. </value>
-         </BCType>
-         <BCType id = "all" var = "Dirichlet" label = "Velocity">
-                <value> [0.0, 0.0, 0.0] </value>
          </BCType>
        </Face>
        <Face side = "y-">
          <BCType id = "all" var = "Neumann" label = "Concentration">
               <value> [0.0, 0.0, 0.0] </value>
          </BCType>
-         <BCType id = "all" var = "Dirichlet" label = "Velocity">
-                <value> [0.0, 0.0, 0.0] </value>
-         </BCType>
        </Face>
        <Face side = "y+">
          <BCType id = "all" var = "Neumann" label = "Concentration">
               <value> 0. </value>
-         </BCType>
-         <BCType id = "all" var = "Dirichlet" label = "Velocity">
-                <value> [0.0, 0.0, 0.0] </value>
          </BCType>
        </Face>
        <Face side = "z-">
        <BCType id = "all" var = "Neumann" label = "Concentration">
               <value> 0. </value>
          </BCType>
-         <BCType id = "all" var = "Dirichlet" label = "Velocity">
-                <value> [0.0, 0.0, 0.0] </value>
-         </BCType>
        </Face>
        <Face side = "z+">
          <BCType id = "all" var = "Neumann" label = "Concentration">
               <value> 0. </value>
-         </BCType>
-         <BCType id = "all" var = "Dirichlet" label = "Velocity">
-                <value> [0.0, 0.0, 0.0] </value>
          </BCType>
        </Face>
        </BoundaryConditions>       
        <Level>
            <Box label="1">
               <lower>[0,0,0]</lower>
-              <upper>[.008,.002,.002]</upper>
-               <resolution>[50,1,2]</resolution>
+              <upper>[.004,.002,.002]</upper>
+              <resolution>[10,1,2]</resolution>
               <patches>[1,1,1]</patches>
               <extraCells>[0,0,0]</extraCells>
            </Box>

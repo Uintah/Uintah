@@ -614,7 +614,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
       scheduleComputeNodalConcentrationFlux(         sched, patches, matls);
       scheduleSolveDiffusionEquations(           sched, patches, matls);
       scheduleIntegrateDiffusionRate(     sched, patches, matls);
-    }
+  }
   if(!flags->d_use_momentum_form){
     scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
     scheduleComputeStressTensor(            sched, patches, matls);

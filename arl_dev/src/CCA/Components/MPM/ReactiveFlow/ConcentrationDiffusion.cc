@@ -317,11 +317,10 @@ void ConcentrationDiffusion::computeInternalDiffusionRate(const ProcessorGroup*,
         for (int k = 0; k < d_flag->d_8or27; k++){
         	//cout << ni[k] << " gConc: " << gConcentration[ni[k]] << endl;
           for (int j = 0; j<3; j++) {
-        	potential = PotentialField::gaoPotential(gConcentration[ni[k]], satM, bolt,
-        										detF[ni[k]], omega, mStress[ni[k]], 0.0);
-            //pConcentrationGradient[idx][j] +=
-                  //gConcentration[ni[k]] * d_S[k][j] * oodx[j];
-        	pConcentrationGradient[idx][j] += potential * d_S[k][j] * oodx[j];
+        	//potential = PotentialField::gaoPotential(gConcentration[ni[k]], satM, bolt,
+        										//detF[ni[k]], omega, mStress[ni[k]], 0.0);
+            pConcentrationGradient[idx][j] += gConcentration[ni[k]] * d_S[k][j] * oodx[j];
+        	//pConcentrationGradient[idx][j] += potential * d_S[k][j] * oodx[j];
     
             if (cout_concentration.active()) {
               cout_concentration << "   node = " << ni[k]

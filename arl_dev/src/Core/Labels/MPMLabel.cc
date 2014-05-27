@@ -668,7 +668,7 @@ MPMLabel::MPMLabel()
   pConcentrationGradientLabel = VarLabel::create( "p.concentrationGradient",
   			ParticleVariable<Vector>::getTypeDescription() );
   pConcentrationLabel = VarLabel::create("p.concentration",
-		  	NCVariable<double>::getTypeDescription());
+		  	ParticleVariable<double>::getTypeDescription());
   pConcentrationLabel_preReloc = VarLabel::create( "p.concentration+",
     	    ParticleVariable<double>::getTypeDescription() );
   pConcentrationCurrentLabel = VarLabel::create( "p.concentrationCurrent",
