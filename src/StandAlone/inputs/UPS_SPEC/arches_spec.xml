@@ -534,7 +534,7 @@
         <MomentumSolver                 spec="REQUIRED NO_DATA" >
           <use_wasatch_momentum_rhs spec="OPTIONAL NO_DATA" />
           <filter_divergence_constraint spec="OPTIONAL BOOLEAN" />
-          <convection_scheme            spec="REQUIRED STRING 'central, upwind, wallupwind, old_central, old_upwind'" /> 
+          <convection_scheme            spec="REQUIRED STRING 'central, upwind, wall_upwind, old_central, old_upwind'" /> 
           <!-- wallupwind = upwinding on walls, central otherwise (cheap wall model)--> 
           <Re_limit                     spec="OPTIONAL DOUBLE 'positive'"/> <!-- for Upwind and Wallupwind: Upwind > this Re, Central < this Re --> 
           <src                          spec="MULTIPLE NO_DATA" 
