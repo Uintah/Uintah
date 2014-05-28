@@ -76,8 +76,8 @@ NIGHTLYTESTS = [
 #   ("coal_channel"                , "Coal/coal_channel.ups"                       , 1.1 , "Linux"  , ["exactComparison", "no_restart"])
 #   ("methane_RCCE"                , "methane_RCCE.ups"                            , 1.1 , "Linux"  , ["exactComparison"]) ,
    ("DOM16"                       , "DOM16.ups"                                    , 3   , "Linux"  , ["exactComparison", "no_restart"]),
-   ("CQMOM_scalar_transport"      , "CQMOM_regression/CQMOM_Transport.ups"         , 6   , "Linux"  , ["exactComparison", "no_restart"]),
-   ("CQMOM_scalar_transport2x2x2" , "CQMOM_regression/CQMOM_Transport_2x2x2.ups"   , 6   , "Linux"  , ["exactComparison", "no_restart"]),
+#   ("CQMOM_scalar_transport"      , "CQMOM_regression/CQMOM_Transport.ups"         , 6   , "Linux"  , ["exactComparison", "no_restart"]),
+#   ("CQMOM_scalar_transport2x2x2" , "CQMOM_regression/CQMOM_Transport_2x2x2.ups"   , 6   , "Linux"  , ["exactComparison", "no_restart"]),
 ]
 
 # Tests that are run during local regression testing
@@ -116,8 +116,8 @@ LOCALTESTS = [
 #   ("coal_channel"               , "Coal/coal_channel.ups"                       , 1.1 , "All"  , ["exactComparison", "no_restart"])
 #   ("methane_RCCE"               , "methane_RCCE.ups"                            , 1.1 , "All "  , ["exactComparison"]) ,
    ("DOM16"                       , "DOM16.ups"                                    , 3   , "All"  , ["exactComparison", "no_restart"]),
-   ("CQMOM_scalar_transport"      , "CQMOM_regression/CQMOM_Transport.ups"         , 6   , "All"  , ["exactComparison", "no_restart"]),
-   ("CQMOM_scalar_transport2x2x2" , "CQMOM_regression/CQMOM_Transport_2x2x2.ups"   , 6   , "All"  , ["exactComparison", "no_restart"]),
+#   ("CQMOM_scalar_transport"      , "CQMOM_regression/CQMOM_Transport.ups"         , 6   , "All"  , ["exactComparison", "no_restart"]),
+#   ("CQMOM_scalar_transport2x2x2" , "CQMOM_regression/CQMOM_Transport_2x2x2.ups"   , 6   , "All"  , ["exactComparison", "no_restart"]),
 ]
 
 NEWTESTS = [
