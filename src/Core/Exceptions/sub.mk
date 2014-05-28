@@ -22,35 +22,32 @@
 #  IN THE SOFTWARE.
 # 
 # 
-# 
-# 
-# 
 # Makefile fragment for this subdirectory 
-
+#
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR := Core/Exceptions
 
 SRCS   += \
-          $(SRCDIR)/ArrayIndexOutOfBounds.cc  \
-          $(SRCDIR)/AssertionFailed.cc        \
-          $(SRCDIR)/DimensionMismatch.cc      \
-          $(SRCDIR)/ErrnoException.cc         \
-          $(SRCDIR)/Exception.cc              \
-          $(SRCDIR)/FileNotFound.cc           \
-          $(SRCDIR)/InvalidState.cc           \
-          $(SRCDIR)/InternalError.cc          \
-          $(SRCDIR)/ConvergenceFailure.cc     \
-          $(SRCDIR)/InvalidCompressionMode.cc \
-          $(SRCDIR)/InvalidGrid.cc            \
-          $(SRCDIR)/InvalidValue.cc           \
-          $(SRCDIR)/ParameterNotFound.cc      \
-          $(SRCDIR)/ProblemSetupException.cc  \
-          $(SRCDIR)/TypeMismatchException.cc  \
-          $(SRCDIR)/UintahPetscError.cc       \
-          $(SRCDIR)/VariableNotFoundInGrid.cc \
-          $(SRCDIR)/PapiInitializationError.cc
+          $(SRCDIR)/ArrayIndexOutOfBounds.cc   \
+          $(SRCDIR)/AssertionFailed.cc         \
+          $(SRCDIR)/ConvergenceFailure.cc      \
+          $(SRCDIR)/DimensionMismatch.cc       \
+          $(SRCDIR)/ErrnoException.cc          \
+          $(SRCDIR)/Exception.cc               \
+          $(SRCDIR)/FileNotFound.cc            \
+          $(SRCDIR)/InternalError.cc           \
+          $(SRCDIR)/InvalidCompressionMode.cc  \
+          $(SRCDIR)/InvalidGrid.cc             \
+          $(SRCDIR)/InvalidState.cc            \
+          $(SRCDIR)/InvalidValue.cc            \
+          $(SRCDIR)/PapiInitializationError.cc \
+          $(SRCDIR)/ParameterNotFound.cc       \
+          $(SRCDIR)/ProblemSetupException.cc   \
+          $(SRCDIR)/TypeMismatchException.cc   \
+          $(SRCDIR)/UintahPetscError.cc        \
+          $(SRCDIR)/VariableNotFoundInGrid.cc  
 
 PSELIBS := 
 LIBS := $(TRACEBACK_LIB) $(DL_LIBRARY)

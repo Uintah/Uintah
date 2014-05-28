@@ -1,3 +1,6 @@
+#ifndef Core_Exceptions_ErrnoException_h
+#define Core_Exceptions_ErrnoException_h
+
 /*
  * The MIT License
  *
@@ -33,29 +36,31 @@
  *
  */
 
-#ifndef Core_Exceptions_ErrnoException_h
-#define Core_Exceptions_ErrnoException_h
-
 #include <Core/Exceptions/Exception.h>
+
 #include <string>
+
+#include <errno.h>
 
 namespace SCIRun {
 
 class ErrnoException : public Exception {
+
 public:
-  ErrnoException(const std::string&, int err, const char* file, int line);
-  ErrnoException(const ErrnoException&);
+  ErrnoException( const std::string & message, int errno_number, const char* file, int line );
+  ErrnoException( const ErrnoException & );
   virtual ~ErrnoException();
   virtual const char* message() const;
   virtual const char* type() const;
 	 
   int getErrno() const;
-protected:
-private:
-  std::string message_;
-  int errno_;
 
-  ErrnoException& operator=(const ErrnoException&);
+private:
+
+  std::string message_;
+  int         err_;
+
+  ErrnoException& operator=( const ErrnoException & );
 };
 
 } // End namespace SCIRun

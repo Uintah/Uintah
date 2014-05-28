@@ -92,46 +92,44 @@ namespace Uintah {
 
     int getSetupFrequency() const { return 1;}
         
-    virtual ~SolverParameters();
+    virtual ~SolverParameters() {}
+
   private:
-    bool   useStencil4;
-    bool   solveOnExtraCells;
-    double residualNormalizationFactor;
-    bool   restartableTimestep;
+    bool        useStencil4;
+    bool        solveOnExtraCells;
+    double      residualNormalizationFactor;
+    bool        restartableTimestep;
     std::string outputFileName;
   };
   
   class SolverInterface : public UintahParallelPort {
   public:
-    SolverInterface();
-    virtual ~SolverInterface();
+    SolverInterface() {}
+    virtual ~SolverInterface() {}
 
-    virtual SolverParameters* readParameters(ProblemSpecP& params,
-					     const std::string& name,
-                                             SimulationStateP& state) = 0;
+    virtual SolverParameters* readParameters(       ProblemSpecP     & params,
+					      const std::string      & name,
+                                                    SimulationStateP & state ) = 0;
 
-    virtual void scheduleInitialize(const LevelP& level,SchedulerP& sched,
-                                    const MaterialSet* matls);
+    virtual void scheduleInitialize( const LevelP      & level,
+                                           SchedulerP  & sched,
+                                     const MaterialSet * matls) = 0;
                             
-    virtual void scheduleSolve(const LevelP& level, SchedulerP& sched,
-                               const MaterialSet* matls,
-                               const VarLabel* A,    
-                               Task::WhichDW which_A_dw,  
-                               const VarLabel* x,
-                               bool modifies_x,
-                               const VarLabel* b,    
-                               Task::WhichDW which_b_dw,  
-                               const VarLabel* guess,
-                               Task::WhichDW guess_dw,
-                               const SolverParameters* params,
-                               bool modifies_hypre = false) = 0;
-#if 0
-    virtual void scheduleTransferData(const LevelP& level, SchedulerP& sched,
-                                      const MaterialSet* matls);
-#endif
+    virtual void scheduleSolve( const LevelP           & level,
+                                      SchedulerP       & sched,
+                                const MaterialSet      * matls,
+                                const VarLabel         * A,
+                                      Task::WhichDW      which_A_dw,
+                                const VarLabel         * x,
+                                      bool               modifies_x,
+                                const VarLabel         * b,
+                                      Task::WhichDW      which_b_dw,
+                                const VarLabel         * guess,
+                                      Task::WhichDW      which_guess_dw,
+                                const SolverParameters * params,
+                                      bool               modifies_hypre = false ) = 0;
 
-    virtual std::string getName()=0;
-
+    virtual std::string getName() = 0;
 
   private: 
     SolverInterface(const SolverInterface&);

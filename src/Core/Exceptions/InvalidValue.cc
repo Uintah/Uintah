@@ -22,13 +22,11 @@
  * IN THE SOFTWARE.
  */
 
-
 #include <Core/Exceptions/InvalidValue.h>
 #include <iostream>
 #include <sstream>
 
 using namespace Uintah;
-using std::cout;
 
 InvalidValue::InvalidValue(const std::string& msg, const char* file, int line)
   : d_msg(msg)

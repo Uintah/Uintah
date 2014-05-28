@@ -41,8 +41,8 @@
 #include <Core/Exceptions/Exception.h>
 #include <string>
 
-namespace SCIRun {
-  class InvalidState : public Exception {
+namespace Uintah {
+  class InvalidState : public SCIRun::Exception {
   public:
     InvalidState(const std::string&, const char* file, int line);
     InvalidState(const InvalidState&);
@@ -54,7 +54,7 @@ namespace SCIRun {
     std::string message_;
     InvalidState& operator=(const InvalidState&);
   };
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif
 

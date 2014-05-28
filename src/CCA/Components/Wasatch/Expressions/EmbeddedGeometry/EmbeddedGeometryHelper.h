@@ -79,7 +79,7 @@ namespace Wasatch{
       if (!doneSetup_) {
         std::ostringstream msg;
         msg << "ERROR: Trying to access embedded geometry information before it was parsed." << std::endl;
-        throw SCIRun::InvalidState( msg.str(), __FILE__, __LINE__ );
+        throw Uintah::InvalidState( msg.str(), __FILE__, __LINE__ );
       }
     }
 
