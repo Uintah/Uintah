@@ -23,6 +23,9 @@
  */
 
 
+/*
+These routines are not needed, can just delete this file... 
+
 #include <CCA/Ports/SolverInterface.h>
 
 using namespace Uintah;
@@ -54,3 +57,5 @@ SolverParameters::~SolverParameters()
   solveOnExtraCells           = true;
   residualNormalizationFactor = 1;
 }
+
+*/

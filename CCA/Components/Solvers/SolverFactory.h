@@ -68,11 +68,11 @@ namespace Uintah {
   class SolverFactory
     {
     public:
-      // this function has a switch for all known solvers
-    
-      static SolverInterface* create(ProblemSpecP& ps,
-                                     const ProcessorGroup* world,
-                                     std::string cmdline);
+
+      // This function contains switches for all known solvers.
+      static SolverInterface* create(       ProblemSpecP   & ps,
+                                      const ProcessorGroup * world,
+                                      const std::string    & cmdline = "" );
 
     };
 } // End namespace Uintah

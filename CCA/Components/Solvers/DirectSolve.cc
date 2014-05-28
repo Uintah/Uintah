@@ -259,36 +259,42 @@ private:
   const DirectSolveParams* params;
 };
 
-SolverParameters* DirectSolve::readParameters(ProblemSpecP& params, 
-                                              const string& varname,
-                                              SimulationStateP& state)
+SolverParameters *
+DirectSolve::readParameters(       ProblemSpecP     & params, 
+                             const string           & varname,
+                                   SimulationStateP & state )
 {
   DirectSolveParams* p = scinew DirectSolveParams();
   return p;
 }
 
 
-SolverParameters* DirectSolve::readParameters(ProblemSpecP& params, 
-                                              const string& varname)
+SolverParameters *
+DirectSolve::readParameters(       ProblemSpecP & params,
+                             const string       & varname )
 {
   DirectSolveParams* p = scinew DirectSolveParams();
   return p;
 }
 
-void DirectSolve::scheduleSolve(const LevelP& level, SchedulerP& sched,
-                                const MaterialSet* matls,
-                                const VarLabel* A,    
-                                Task::WhichDW which_A_dw,  
-                                const VarLabel* x,
-                                bool modifies_x,
-                                const VarLabel* b,    
-                                Task::WhichDW which_b_dw,  
-                                const VarLabel* guess,Task::WhichDW guess_dw,
-                                const SolverParameters* params,
-                                bool modifies_hypre)
+void
+DirectSolve::scheduleSolve( const LevelP           & level,
+                                  SchedulerP       & sched,
+                            const MaterialSet      * matls,
+                            const VarLabel         * A,    
+                                  Task::WhichDW      which_A_dw,  
+                            const VarLabel         * x,
+                                  bool               modifies_x,
+                            const VarLabel         * b,    
+                                  Task::WhichDW      which_b_dw,  
+                            const VarLabel         * guess,
+                                  Task::WhichDW      /* which_guess_dw */,
+                            const SolverParameters * params,
+                                  bool               /* modifies_hypre = false */ )
 {
-  if(level->numPatches() != 1)
+  if(level->numPatches() != 1) {
     throw InternalError("DirectSolve only works with 1 patch", __FILE__, __LINE__);
+  }
 
   Task* task;
   // The extra handle arg ensures that the stencil7 object will get freed
@@ -352,7 +358,8 @@ void DirectSolve::scheduleSolve(const LevelP& level, SchedulerP& sched,
   sched->addTask(task, level->eachPatch(), matls);
 }
 
-string DirectSolve::getName(){
+string
+DirectSolve::getName() {
   return "DirectSolve";
 }
 

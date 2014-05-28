@@ -42,6 +42,7 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/InvalidState.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -100,8 +101,15 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   int mpi_rank = Parallel::getMPIRank();
 
 #ifndef OLD_TABLE
+
   if (mpi_rank == 0) {
-    table_size = gzipInflate(tableFileName,uncomp_table_contents);
+    try {
+      table_size = gzipInflate( tableFileName, uncomp_table_contents );
+    }
+    catch( Exception & e ) {
+      throw InvalidState( string("Call to gzipInflate failed: ") + e.message(), __FILE__, __LINE__ );
+    }
+
     table_contents = (char*) uncomp_table_contents.c_str();
     proc0cout << tableFileName << " is " << table_size << " bytes" << endl;
   }

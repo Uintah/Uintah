@@ -37,11 +37,10 @@
 #include <iostream>
 #include <sstream>
 
-namespace SCIRun {
+using namespace Uintah;
 
-
-InvalidState::InvalidState(const std::string& message, const char* file, int line)
-    : message_(message)
+InvalidState::InvalidState( const std::string & message, const char * file, int line )
+    : message_( message )
 {
   std::ostringstream s;
   s << "An InvalidState exception was thrown.\n"
@@ -62,14 +61,16 @@ InvalidState::~InvalidState()
 {
 }
 
-const char* InvalidState::message() const
+const char *
+InvalidState::message() const
 {
     return message_.c_str();
 }
 
-const char* InvalidState::type() const
+const char *
+InvalidState::type() const
 {
-    return "InvalidState";
+    return "Uintah::Exceptions::InvalidState";
 }
 
-} // End namespace SCIRun
+
