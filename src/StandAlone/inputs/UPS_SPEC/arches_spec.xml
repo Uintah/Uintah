@@ -745,6 +745,7 @@
             <mixture_fraction_label     spec="REQUIRED STRING" need_applies_to="type dissipation_src"/>
             <gradmixfrac_label          spec="REQUIRED STRING" need_applies_to="type dissipation_src"/>
             <D                          spec="REQUIRED DOUBLE" need_applies_to="type dissipation_src"/>
+            <turb_visc_label            spec="REQUIRED STRING" need_applies_to="type dissipation_src"/>
 
             <!-- inject_type = constant : constant value in every cell that is contained within the geom object (use <constant> spec)--> 
             <!-- inject_type = fromfile : reads an input file and assigns value at each i,j,k matching the inputfile 
