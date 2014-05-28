@@ -357,11 +357,11 @@ if (strcmp(makePlot,"true"))
   FN = findall(h,'-property','FontName');
   set(FN,'FontName','Times');
   
-  FS = findall(h, '-property','FontSize');
-  set(FS,'FontSize',12);
+  %FS = findall(h, '-property','FontSize');
+  %set(FS,'FontSize',12);
   
   orient('portrait');
-  fname = sprintf( 'divQ.%s',dir);
+  fname = sprintf( 'divQ.%s.jpg',dir);
   saveas( h, fname, "jpg");
   pause;
 end
