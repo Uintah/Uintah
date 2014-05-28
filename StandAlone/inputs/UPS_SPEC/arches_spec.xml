@@ -738,14 +738,14 @@
             </injector_region>
             
             <!-- specs nneded for second moment of mixture fraction source-->
-            <density_label              spec="REQUIRED STRING" need_applies_to="type moment2_mixture_fraction_src"/>
+            <density_label              spec="REQUIRED STRING" need_applies_to="type moment2_mixture_fraction_src, dissipation_src"/>
             <scalar_dissipation_label   spec="REQUIRED STRING" need_applies_to="type moment2_mixture_fraction_src"/> 
             
             <!-- specs needed for the dissipation term for 2eqn scalr var model -->
-            <mixture_fraction_label     spec="REQUIRED STRING" need_applies_to="type dissipation_src"/>
-            <gradmixfrac_label          spec="REQUIRED STRING" need_applies_to="type dissipation_src"/>
-            <D                          spec="REQUIRED DOUBLE" need_applies_to="type dissipation_src"/>
-            <turb_visc_label            spec="REQUIRED STRING" need_applies_to="type dissipation_src"/>
+            <mixture_fraction_label     spec="REQUIRED STRING" need_applies_to="type dissipation_src"/> <!-- mixture fraction label -->
+            <gradmixfrac_label          spec="REQUIRED STRING" need_applies_to="type dissipation_src"/> <!-- label for the gradient of the mixture fraction -->
+            <D                          spec="REQUIRED DOUBLE" need_applies_to="type dissipation_src"/> <!-- Molecular diffusivity (?) -->
+            <turb_visc_label            spec="OPTIONAL STRING" need_applies_to="type dissipation_src"/> <!-- label for the turbulent viscosity. Default = turb_viscosity -->
 
             <!-- inject_type = constant : constant value in every cell that is contained within the geom object (use <constant> spec)--> 
             <!-- inject_type = fromfile : reads an input file and assigns value at each i,j,k matching the inputfile 
