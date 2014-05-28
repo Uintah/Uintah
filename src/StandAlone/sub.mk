@@ -113,10 +113,10 @@ ifeq ($(IS_STATIC_BUILD),yes)
     Core/Thread                         \
     Core/Persistent                     \
     Core/Geometry                       \
+    Core/IO                             \
     Core/Exceptions                     \
     Core/Containers                     \
     Core/Malloc                         \
-    Core/IO                             \
     Core/OS
 
 else
