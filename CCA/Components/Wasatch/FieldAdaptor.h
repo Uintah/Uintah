@@ -217,27 +217,6 @@ namespace Wasatch{
     return 0;
   };
 
-  /**
-   *  \ingroup WasatchFields
-   *  \brief Obtain the number of ghost cells in each direction for
-   *         the given SpatialOps field type as a template parameter.
-   *
-   *  \return the Uintah::IntVector describing the number of ghost
-   *          cells in each direction.
-   */
-  template<typename FieldT>
-  inline Uintah::IntVector get_uintah_ghost_descriptor()
-  {
-    int ng = 0; // for extra cells
-    return Uintah::IntVector(ng,ng,ng);
-  }
-
-  template<>
-  inline Uintah::IntVector get_uintah_ghost_descriptor<SpatialOps::structured::SingleValueField>()
-  {
-    return Uintah::IntVector(0,0,0);
-  }
-
   //====================================================================
 
   /**

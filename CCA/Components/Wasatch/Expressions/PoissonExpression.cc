@@ -78,13 +78,12 @@ namespace Wasatch {
     solver_( solver ),
 
     // note that this does not provide any ghost entries in the matrix...
-    matrixLabel_( Uintah::VarLabel::create( phit_.name() + "_matrix", Uintah::CCVariable<Uintah::Stencil4>::getTypeDescription() ) ),
-    phiLabel_( Uintah::VarLabel::create( phit_.name(),
-                                         Wasatch::get_uintah_field_type_descriptor<SVolField>(),
-                                         Wasatch::get_uintah_ghost_descriptor<SVolField>() ) ),
+    matrixLabel_( Uintah::VarLabel::create( phit_.name() + "_matrix",
+                                            Uintah::CCVariable<Uintah::Stencil4>::getTypeDescription() ) ),
+    phiLabel_   ( Uintah::VarLabel::create( phit_.name(),
+                                            Wasatch::get_uintah_field_type_descriptor<SVolField>() ) ),
     phirhsLabel_( Uintah::VarLabel::create( phirhslocalt_.name(),
-                                            Wasatch::get_uintah_field_type_descriptor<SVolField>(),
-                                            Wasatch::get_uintah_ghost_descriptor<SVolField>() ) )
+                                            Wasatch::get_uintah_field_type_descriptor<SVolField>() ) )
   {}
 
   //--------------------------------------------------------------------
