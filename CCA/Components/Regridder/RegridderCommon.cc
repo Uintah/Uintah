@@ -57,7 +57,9 @@ RegridderCommon::RegridderCommon(const ProcessorGroup* pg) : Regridder(), Uintah
   d_filterType = FILTER_BOX;
   d_lastRegridTimestep = 0;
   d_dilationTimestep = 3;
-  d_newGrid = true;
+  d_newGrid          = true;
+  d_regridOnce       = false;
+
   d_dilatedCellsStabilityLabel  = VarLabel::create("DilatedCellsStability",
                              CCVariable<int>::getTypeDescription());
 
@@ -393,6 +395,7 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   d_amrOverheadHigh   =.15;
 
   d_dynamicDilation=false;
+  regrid_spec->get("regrid_once",             d_regridOnce);
   regrid_spec->get("cell_stability_dilation", d_cellStabilityDilation);
   regrid_spec->get("cell_regrid_dilation",    d_cellRegridDilation);
   regrid_spec->get("cell_deletion_dilation",  d_cellDeletionDilation);
@@ -420,12 +423,6 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
 
 //_________________________________________________________________
 void RegridderCommon::problemSetup_BulletProofing(const int k){
-  
-  if(d_maxLevels < 2){
-    ostringstream msg;
-    msg << "\nProblem Setup: Regridder: <max_levels> must be > 1 to use a regridder with adaptive mesh refinement \n";
-    throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-  }
   
   if(k == 0){  
     for(int dir = 0; dir <3; dir++){

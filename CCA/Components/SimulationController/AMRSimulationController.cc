@@ -185,7 +185,7 @@ AMRSimulationController::run()
    bool   first = true;
    int    iterations = d_sharedState->getCurrentTopLevelTimeStep();
    double delt = 0;
-
+   
    double start;
   
    d_lb->resetCostForecaster();
@@ -216,10 +216,20 @@ AMRSimulationController::run()
      TAU_PROFILE_START(iteration_timer); 
 #endif
      
-     if (d_regridder && d_regridder->needsToReGrid(currentGrid) && (!first || (d_restarting))) {
+     //__________________________________
+     //    Regridding
+     if (d_regridder && d_regridder->needsToReGrid(currentGrid) && (!first || (!d_restarting))) {
        doRegridding(currentGrid, false);
      }
-    
+     
+     if( d_regridder && d_regridder->doRegridOnce() && d_regridder->isAdaptive() ){
+       proc0cout << "______________________________________________________________________\n";
+       proc0cout << " Regridding once.\n";
+       doRegridding(currentGrid, false);
+       d_regridder->setAdaptivity(false);
+       proc0cout << "______________________________________________________________________\n";
+     } 
+
      // Compute number of dataWarehouses - multiplies by the time refinement
      // ratio for each level you increase
      int totalFine=1;
