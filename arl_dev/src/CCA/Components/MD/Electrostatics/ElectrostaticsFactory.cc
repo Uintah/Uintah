@@ -25,6 +25,8 @@
 #include <CCA/Components/MD/Electrostatics/ElectrostaticsFactory.h>
 #include <CCA/Components/MD/Electrostatics/Electrostatics.h>
 #include <CCA/Components/MD/Electrostatics/DefinedElectrostaticsTypes.h>
+#include <CCA/Components/MD/CoordinateSystems/coordinateSystem.h>
+
 #include <CCA/Components/MD/MDSystem.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -40,7 +42,7 @@ using namespace Uintah;
 static DebugStream spme("SPME", false);
 
 Electrostatics* ElectrostaticsFactory::create(const ProblemSpecP& ps,
-                                              MDSystem* system)
+                                                    coordinateSystem* coords)
 {
   Electrostatics* electrostatics = 0;
   string type = "";
@@ -49,6 +51,9 @@ Electrostatics* ElectrostaticsFactory::create(const ProblemSpecP& ps,
   if (electrostatics_ps) {
     electrostatics_ps->getAttribute("type", type);
   }
+
+  // Find the resolution to determine the cutoff cell information
+  Vector resInverse = coords->getCellExtent().asVector() * coords->getInverseCell();
 
   // Default settings
   if (type == "") {
@@ -73,8 +78,8 @@ Electrostatics* ElectrostaticsFactory::create(const ProblemSpecP& ps,
     spme_ps->require("splineOrder",splineOrder);
     std::string polarizableEnabled;
     ProblemSpecP pol_ps = spme_ps->findBlock("polarizable");
-    double polTolerance;
-    int polMaxIterations;
+    double polTolerance = MDConstants::defaultPolarizationTolerance;
+    int polMaxIterations = 0;
     bool polarizable = false;
     if (pol_ps) {
       pol_ps->getAttribute("enabled",polarizableEnabled);
@@ -94,7 +99,20 @@ Electrostatics* ElectrostaticsFactory::create(const ProblemSpecP& ps,
       cutoffRadius = tempCutoff;
     }
 
-    electrostatics = scinew SPME(system, ewaldBeta, cutoffRadius, polarizable, polTolerance, kGrids, splineOrder, polMaxIterations);
+    Vector fractionalCutoffCells = Vector(cutoffRadius) * resInverse;
+    int electrostaticGhostCells = ceil(fractionalCutoffCells.x());
+    int yCells = ceil(fractionalCutoffCells.y());
+    int zCells = ceil(fractionalCutoffCells.z());
+    electrostaticGhostCells = max(electrostaticGhostCells,max(yCells, zCells));
+
+    electrostatics = scinew SPME(ewaldBeta,
+                                 cutoffRadius,
+                                 electrostaticGhostCells,
+                                 kGrids,
+                                 splineOrder,
+                                 polarizable,
+                                 polMaxIterations,
+                                 polTolerance);
 
   } else {
     throw ProblemSetupException("Unknown Electrostatics type", __FILE__, __LINE__);

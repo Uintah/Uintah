@@ -23,37 +23,31 @@
  * IN THE SOFTWARE.
  *
  * ----------------------------------------------------------
- * MDSubcomponentInterface.h
+ * coordinateSystemFactory.h
  *
- *  Created on: Apr 30, 2014
+ *  Created on: May 13, 2014
  *      Author: jbhooper
  */
 
-#ifndef MDSUBCOMPONENTINTERFACE_H_
-#define MDSUBCOMPONENTINTERFACE_H_
+#ifndef COORDINATESYSTEMFACTORY_H_
+#define COORDINATESYSTEMFACTORY_H_
+
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Grid.h>
+
+#include <Core/ProblemSpec/ProblemSpec.h>
+
+#include <CCA/Components/MD/CoordinateSystems/coordinateSystem.h>
 
 namespace Uintah {
-
-  // Define the common subcomponent interface that Uintah::MD will use to establish variable
-  //   dependencies with the core MD driver.
-
-  class MDSubcomponent {
+  class coordinateSystemFactory {
     public:
-      MDSubcomponent () { }
-      virtual ~MDSubcomponent() { }
-      virtual void registerRequiredParticleStates(std::vector<const VarLabel*>&,
-                                                  std::vector<const VarLabel*>&,
-                                                  MDLabel*) const = 0;
-      virtual void addInitializeRequirements(Task*, MDLabel*) const = 0;
-      virtual void addSetupRequirements(Task*, MDLabel*) const = 0;
-      virtual void addCalculateRequirements(Task*, MDLabel*) const = 0;
-      virtual void addFinalizeRequirements(Task*, MDLabel*) const = 0;
-      virtual void addInitializeComputes(Task*, MDLabel*) const = 0;
-      virtual void addSetupComputes(Task*, MDLabel*) const = 0;
-      virtual void addCalculateComputes(Task*, MDLabel*) const = 0;
-      virtual void addFinalizeComputes(Task*, MDLabel*) const = 0;
-    private:
+      static coordinateSystem* create(const ProblemSpecP&     spec,
+                                      const SimulationStateP& shared_state,
+                                      const GridP&            grid);
   };
 }
 
-#endif /* MDSUBCOMPONENTINTERFACE_H_ */
+
+
+#endif /* COORDINATESYSTEMFACTORY_H_ */

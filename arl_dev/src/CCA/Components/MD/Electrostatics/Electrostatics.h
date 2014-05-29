@@ -25,9 +25,12 @@
 #ifndef UINTAHMD_ELECTROSTATICS_H
 #define UINTAHMD_ELECTROSTATICS_H
 
-#include <CCA/Components/MD/MDSystem.h>
-#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Core/Grid/Variables/ComputeSet.h>
+
+#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
+
+#include <CCA/Components/MD/MDSystem.h>
+#include <CCA/Components/MD/CoordinateSystems/coordinateSystem.h>
 
 namespace Uintah {
 
@@ -69,43 +72,58 @@ namespace Uintah {
        * @param
        */
       virtual void initialize(const ProcessorGroup* pg,
-                              const PatchSubset* patches,
+                              const PatchSubset*    patches,
                               const MaterialSubset* materials,
-                              DataWarehouse* old_dw,
-                              DataWarehouse* new_dw) = 0;
+                              DataWarehouse*      /*old_dw*/,
+                              DataWarehouse*        new_dw,
+                              const SimulationStateP*     simState,
+                              MDSystem*             systemInfo,
+                              const MDLabel*        label,
+                              coordinateSystem*     coordinateSys) = 0;
 
       /**
        * @brief
        * @param
        */
-      virtual void setup(const ProcessorGroup* pg,
-                         const PatchSubset* patches,
-                         const MaterialSubset* materials,
-                         DataWarehouse* old_dw,
-                         DataWarehouse* new_dw) = 0;
+      virtual void setup(const ProcessorGroup*  pg,
+                         const PatchSubset*     patches,
+                         const MaterialSubset*  materials,
+                         DataWarehouse*         old_dw,
+                         DataWarehouse*         new_dw,
+                         const SimulationStateP*      simState,
+                         MDSystem*              systemInfo,
+                         const MDLabel*         label,
+                         coordinateSystem*      coordSys) = 0;
 
       /**
        * @brief
        * @param
        */
-      virtual void calculate(const ProcessorGroup* pg,
-                             const PatchSubset* patches,
-                             const MaterialSubset* materials,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw,
-                             SchedulerP& subscheduler,
-                             const LevelP& level,
-                             SimulationStateP& sharedState) = 0;
+      virtual void calculate(const ProcessorGroup*  pg,
+                             const PatchSubset*     patches,
+                             const MaterialSubset*  materials,
+                             DataWarehouse*         old_dw,
+                             DataWarehouse*         new_dw,
+                             const SimulationStateP*      simState,
+                             MDSystem*              systemInfo,
+                             const MDLabel*         label,
+                             coordinateSystem*      coordinateSys,
+                             SchedulerP&            subscheduler,
+                             const LevelP&          level) = 0;
 
       /**
        * @brief
        * @param
        */
-      virtual void finalize(const ProcessorGroup* pg,
-                            const PatchSubset* patches,
-                            const MaterialSubset* materials,
-                            DataWarehouse* old_dw,
-                            DataWarehouse* new_dw) = 0;
+      virtual void finalize(const ProcessorGroup*   pg,
+                            const PatchSubset*      patches,
+                            const MaterialSubset*   materials,
+                            DataWarehouse*          old_dw,
+                            DataWarehouse*          new_dw,
+                            const SimulationStateP*       simState,
+                            MDSystem*               systemInfo,
+                            const MDLabel*          label,
+                            coordinateSystem*       coordinateSys) = 0;
 
       /**
        * @brief
@@ -113,10 +131,7 @@ namespace Uintah {
        * @return
        */
       virtual ElectrostaticsType getType() const = 0;
-
-      virtual void registerRequiredParticleStates(std::vector<const VarLabel*>&,
-                                                  std::vector<const VarLabel*>&,
-                                                  MDLabel* ) const = 0;
+      virtual int requiredGhostCells() const = 0;
 
     private:
 

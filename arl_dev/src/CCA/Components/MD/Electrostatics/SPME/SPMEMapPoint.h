@@ -69,10 +69,10 @@ namespace Uintah {
        * @return
        */
       SPMEMapPoint(const particleIndex&,
-                                  const IntVector&,
-                                  const SimpleGrid<double>&,
-                                  const SimpleGrid<SCIRun::Vector>&,
-                                  const SimpleGrid<Matrix3>&);
+                   const IntVector&,
+                   const SimpleGrid<double>&,
+                   const SimpleGrid<SCIRun::Vector>&,
+                   const SimpleGrid<Matrix3>&);
 
       /**
        * @brief
@@ -132,12 +132,11 @@ namespace Uintah {
 
     private:
 
-      particleIndex d_particleID;
-      IntVector d_gridOffset;
-      SimpleGrid<double> d_chargeGrid;
-      SimpleGrid<SCIRun::Vector> d_forceGrid;
-      SimpleGrid<Matrix3> d_polarizableForceGrid;
-
+      particleIndex                 d_particleID;
+      IntVector                     d_gridOffset;
+      SimpleGrid<double>            d_chargeGrid;
+      SimpleGrid<SCIRun::Vector>    d_forceGrid;
+      SimpleGrid<Matrix3>           d_polarizableForceGrid;
   };
 
 }  // End namespace Uintah

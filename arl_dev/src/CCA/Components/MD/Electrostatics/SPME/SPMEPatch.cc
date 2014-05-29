@@ -26,7 +26,6 @@
 #include <Core/Geometry/IntVector.h>
 
 #include <iostream>
-#define IV_ZERO IntVector(0,0,0)
 
 using namespace Uintah;
 
@@ -65,9 +64,18 @@ SPMEPatch::SPMEPatch(IntVector extents,
       d_negGhostExtents(minusGhostExtents),
       d_patch(patch)
 {
-  d_Q_patchLocal        = scinew SimpleGrid<dblcomplex>(extents, offset, IV_ZERO, splineSupport);
-  d_stressPrefactor     = scinew SimpleGrid<Matrix3>(extents, offset, IV_ZERO, 0);
-  d_theta               = scinew SimpleGrid<double>(extents, offset, IV_ZERO, 0);
+  d_Q_patchLocal        = scinew SimpleGrid<dblcomplex>(extents,
+                                                        offset,
+                                                        MDConstants::IV_ZERO,
+                                                        splineSupport);
+  d_stressPrefactor     = scinew SimpleGrid<Matrix3>(extents,
+                                                     offset,
+                                                     MDConstants::IV_ZERO,
+                                                     0);
+  d_theta               = scinew SimpleGrid<double>(extents,
+                                                    offset,
+                                                    MDConstants::IV_ZERO,
+                                                    0);
 
   // Pre-allocate memory for charge maps.
   size_t numAtomTypes = system->getNumAtomTypes();

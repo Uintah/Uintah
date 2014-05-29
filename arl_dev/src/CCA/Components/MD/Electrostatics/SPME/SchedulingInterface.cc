@@ -1,0 +1,471 @@
+/*
+ *
+ * The MIT License
+ *
+ * Copyright (c) 1997-2014 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ *
+ * ----------------------------------------------------------
+ * SPME_Scheduling.cc
+ *
+ *  Created on: May 15, 2014
+ *      Author: jbhooper
+ */
+
+#include <Core/Grid/DbgOutput.h>
+#include <Core/Grid/Task.h>
+
+#include <CCA/Ports/Scheduler.h>
+
+#include <CCA/Components/MD/Electrostatics/SPME/SPME.h>
+
+
+using namespace Uintah;
+
+// Scheduling related helpers for the base SPME class
+void SPME::addInitializeRequirements(Task* task, MDLabel* d_label) const {
+  // This isn't really requires, it's simply being used to make sure we don't
+  // init before we've finished MD::Initialize.  Not sure that's necessary...
+
+  task->requires(Task::NewDW, d_label->global->pX, Ghost::None, 0);
+}
+
+void SPME::addInitializeComputes(Task* task, MDLabel* d_label) const {
+
+  // Probably should initialize rElectrostaticInverseEnergy and
+  // rElectrostaticInverseStress in setup or even in calculate since we'll be
+  // overwriting them every iteration for the polarizable loop
+
+  task->computes(d_label->electrostatic->sForwardTransformPlan);
+  task->computes(d_label->electrostatic->sBackwardTransformPlan);
+
+  task->computes(d_label->electrostatic->dElectrostaticDependency);
+
+}
+
+void SPME::addSetupRequirements(Task* task, MDLabel* d_label) const {
+
+  task->requires(Task::NewDW, 
+                   d_label->electrostatic->dElectrostaticDependency);
+}
+
+void SPME::addSetupComputes(Task* task, MDLabel* d_label) const {
+
+  if (f_polarizable) {
+    task->computes(d_label->electrostatic->pE_electroInverse);
+    task->computes(d_label->electrostatic->pE_electroReal);
+  }
+  task->computes(d_label->electrostatic->pF_electroInverse);
+  task->computes(d_label->electrostatic->pF_electroReal);
+
+  task->modifies(d_label->electrostatic->dElectrostaticDependency);
+}
+
+void SPME::addCalculateRequirements(Task* task, MDLabel* d_label) const {
+
+  task->requires(Task::NewDW, d_label->electrostatic->pE_electroInverse, 
+                   Ghost::None, 0);
+  task->requires(Task::NewDW, d_label->electrostatic->pE_electroReal, 
+                   Ghost::None, 0);
+  task->requires(Task::NewDW, 
+                   d_label->electrostatic->dElectrostaticDependency);
+}
+
+void SPME::addCalculateComputes(Task* task, MDLabel* d_label) const {
+
+  // These are the variables provided at the end of the entire SPME routine, 
+  // and have nothing to do with computes/requires from the subscheduler.
+  task->computes(d_label->electrostatic->rElectrostaticInverseEnergy);
+  task->computes(d_label->electrostatic->rElectrostaticRealEnergy);
+  task->computes(d_label->electrostatic->rElectrostaticInverseStress);
+  task->computes(d_label->electrostatic->rElectrostaticRealStress);
+
+  task->computes(d_label->electrostatic->pMu);
+
+  // We should probably actually concatenate the forces into a single 
+  // pF_electrostatic for gating to the integrator.
+  task->computes(d_label->electrostatic->pF_electroInverse_preReloc);
+  task->computes(d_label->electrostatic->pF_electroReal_preReloc);
+
+}
+
+void SPME::addFinalizeRequirements(Task* task, MDLabel* d_label) const {
+
+  task->requires(Task::NewDW, d_label->electrostatic->pF_electroInverse,
+                   Ghost::None, 0);
+  task->requires(Task::NewDW, d_label->electrostatic->pF_electroReal, 
+                   Ghost::None, 0);
+  task->requires(Task::NewDW, d_label->electrostatic->dSubschedulerDependency);
+
+}
+
+void SPME::addFinalizeComputes(Task* task, MDLabel* d_label) const {
+
+  task->computes(d_label->electrostatic->pF_electroInverse_preReloc);
+  task->computes(d_label->electrostatic->pF_electroReal_preReloc);
+
+}
+
+void SPME::registerRequiredParticleStates(LabelArray& particleState,
+                                          LabelArray& particleState_preReloc,
+                                          MDLabel* d_label) const {
+
+  // We absolutely need per-particle information to implement polarizable SPME
+  if (f_polarizable) {
+    particleState.push_back(d_label->electrostatic->pMu);
+    particleState_preReloc.push_back(d_label->electrostatic->pMu_preReloc);
+    
+    particleState.push_back(d_label->electrostatic->pE_electroReal);
+    particleState_preReloc.push_back(
+                          d_label->electrostatic->pE_electroReal_preReloc);
+    
+    particleState.push_back(d_label->electrostatic->pE_electroInverse);
+    particleState_preReloc.push_back(
+                          d_label->electrostatic->pE_electroInverse_preReloc);
+  }
+
+  // We -probably- don't need relocatable Force information, however it may be
+  // the easiest way to implement the required per-particle Force information.
+  particleState.push_back(d_label->electrostatic->pF_electroInverse);
+  particleState_preReloc.push_back(
+                        d_label->electrostatic->pF_electroInverse_preReloc);
+  particleState.push_back(d_label->electrostatic->pF_electroReal);
+  particleState_preReloc.push_back(
+                        d_label->electrostatic->pF_electroReal_preReloc);
+
+  // Note:  Per particle charges may be required in some FF implementations (i.e. ReaxFF), however we will let
+  //        the FF themselves register these variables if these are present and needed.
+
+}
+
+// Scheduling routines for the SPME subscheduler
+void SPME::scheduleUpdateFieldAndStress(const ProcessorGroup*   pg,
+                                        const PatchSet*         patches,
+                                        const MaterialSet*      materials,
+                                        DataWarehouse*          subOldDW,
+                                        DataWarehouse*          subNewDW,
+                                        const MDLabel*          label,
+                                        coordinateSystem*       coordSystem,
+                                        SchedulerP&             sched)
+{
+  printSchedule(patches, spme_cout, "SPME::scheduleUpdateFieldandStress");
+
+  Task* task = scinew Task("SPME::updateFieldAndStress",
+                           this,
+                           &SPME::dipoleUpdateFieldAndStress,
+                           label,
+                           coordSystem);
+
+  // Requires the dipoles from the last iteration
+  task->requires(Task::OldDW, label->electrostatic->pMu);
+  task->requires(Task::OldDW, label->electrostatic->pE_electroInverse_preReloc);
+
+  // Calculates the new inverse space field prediction and updates the inverse space stress tensor
+  task->computes(label->electrostatic->pE_electroInverse_preReloc);
+  task->modifies(label->electrostatic->rElectrostaticInverseStress);
+
+  sched->addTask(task, patches, materials);
+
+}
+
+void SPME::scheduleCalculateNewDipoles(const ProcessorGroup*    pg,
+                                       const PatchSet*          patches,
+                                       const MaterialSet*       materials,
+                                       DataWarehouse*           subOldDW,
+                                       DataWarehouse*           subNewDW,
+                                       const MDLabel*           label,
+                                       SchedulerP&              sched)
+{
+    printSchedule(patches, spme_cout, "SPME::scheduleCalculateNewDipoles");
+
+    Task* task = scinew Task("SPME::calculateNewDipoles",
+                             this,
+                             &SPME::calculateNewDipoles,
+                             label);
+
+    // Requires the updated field from both the realspace and reciprocal calculation
+    // Also may want the dipoles from the previous iteration
+    task->requires(Task::OldDW, label->electrostatic->pMu, Ghost::None, 0);
+    task->requires(Task::NewDW, label->electrostatic->pE_electroReal_preReloc, Ghost::None, 0);
+    task->requires(Task::NewDW, label->electrostatic->pE_electroInverse_preReloc, Ghost::None, 0);
+
+    // Overwrites each dipole array at iteration n with the full estimate of dipole array at iteration n+1
+    task->computes(label->electrostatic->pMu_preReloc);
+
+    sched->addTask(task, patches, materials);
+
+
+}
+
+void SPME::scheduleCalculateRealspace(const ProcessorGroup*     pg,
+                                      const PatchSet*           patches,
+                                      const MaterialSet*        materials,
+                                      DataWarehouse*            subOldDW,
+                                      DataWarehouse*            subNewDW,
+                                      const SimulationStateP*         sharedState,
+                                      const MDLabel*            label,
+                                      coordinateSystem*         coordSys,
+                                      SchedulerP&               sched)
+{
+    printSchedule(patches, spme_cout, "SPME::scheduleCalculateRealspace");
+
+    Task* task;
+    if (f_polarizable) {
+      task = scinew Task("SPME::calculateRealspaceDipole",
+                         this,
+                         &SPME::calculateRealspaceDipole,
+                         sharedState,
+                         label,
+                         coordSys);
+
+      // Also requires the last iteration's dipole guess, which does change
+      // for the polarizability iteration
+      task->requires(Task::NewDW, label->electrostatic->pMu,
+                     Ghost::AroundNodes, d_electrostaticGhostCells);
+
+      task->computes(label->electrostatic->pE_electroReal_preReloc);
+    }
+    else {
+      task = scinew Task("SPME::calculateRealspace",
+                         this,
+                         &SPME::calculateRealspace,
+                         sharedState,
+                         label,
+                         coordSys);
+    }
+    task->requires(Task::ParentOldDW, label->global->pX,
+                   Ghost::AroundNodes, d_electrostaticGhostCells);
+    task->requires(Task::ParentOldDW, label->global->pID,
+                   Ghost::AroundNodes, d_electrostaticGhostCells);
+
+    // Computes the realspace contribution to the electrostatic field, force, and stress tensor
+    task->computes(label->electrostatic->rElectrostaticRealEnergy);
+    task->computes(label->electrostatic->rElectrostaticRealStress);
+
+}
+
+void SPME::scheduleCalculatePretransform(const ProcessorGroup*  pg,
+                                         const PatchSet*        patches,
+                                         const MaterialSet*     materials,
+                                         DataWarehouse*         subOldDW,
+                                         DataWarehouse*         subNewDW,
+                                         const SimulationStateP*      simState,
+                                         const MDLabel*         label,
+                                         coordinateSystem*      coordSys,
+                                         SchedulerP&            sched)
+{
+  printSchedule(patches, spme_cout, "SPME::scheduleCalculatePreTransform");
+
+  Task* task = scinew Task("SPME::calculatePreTransform",
+                           this,
+                           &SPME::calculatePreTransform,
+                           simState,
+                           label,
+                           coordSys);
+
+//  int CUTOFF_RADIUS = d_system->getElectrostaticGhostCells();
+
+  // Setup requires the position and ID arrays from the parent process
+  task->requires(Task::ParentOldDW, label->global->pX, Ghost::AroundNodes, d_electrostaticGhostCells);
+  task->requires(Task::ParentOldDW, label->global->pID, Ghost::AroundNodes, d_electrostaticGhostCells);
+
+//  task->requires(Task::ParentNewDW, d_label->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
+//  task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
+//  task->requires(Task::OldDW, d_label->pParticleIDLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
+
+  // Computes (copies from parent to local) position and ID, sets dependency flag
+  task->computes(label->electrostatic->dSubschedulerDependency);
+  task->computes(label->global->pX);
+  task->computes(label->global->pID);
+
+  // May also want to initialize things like field, force, etc.. here since it's outside the polarization loop
+  // !FIXME
+
+  sched->addTask(task, patches, materials);
+}
+
+void SPME::scheduleReduceNodeLocalQ(const ProcessorGroup*   pg,
+                                    const PatchSet*         patches,
+                                    const MaterialSet*      materials,
+                                    DataWarehouse*          subOldDW,
+                                    DataWarehouse*          subNewDW,
+                                    const MDLabel*          label,
+                                    SchedulerP&             sched)
+{
+  printSchedule(patches, spme_cout, "SPME::scheduleReduceNodeLocalQ");
+
+  Task* task = scinew Task("SPME::reduceNodeLocalQ",
+                           this,
+                           &SPME::reduceNodeLocalQ);
+
+  // FIXME!  Is this redundant with the following "modifies"?
+  task->requires(Task::NewDW, label->electrostatic->dSubschedulerDependency, Ghost::None, 0);
+//  task->requires(Task::NewDW, d_label->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
+  task->modifies(label->electrostatic->dSubschedulerDependency);
+//  task->modifies(d_label->subSchedulerDependencyLabel);
+
+  sched->addTask(task, patches, materials);
+}
+
+void SPME::scheduleTransformRealToFourier(const ProcessorGroup* pg,
+                                          const PatchSet*       patches,
+                                          const MaterialSet*    materials,
+                                          DataWarehouse*        subOldDW,
+                                          DataWarehouse*        subNewDW,
+                                          const MDLabel*        label,
+                                          const LevelP&         level,
+                                          SchedulerP&           sched)
+{
+  printSchedule(patches, spme_cout, "SPME::scheduleTransformRealToFourier");
+
+  Task* task = scinew Task("SPME::transformRealToFourier", this, &SPME::transformRealToFourier);
+  task->setType(Task::OncePerProc);
+  task->usesMPI(true);
+
+  task->requires(Task::NewDW, label->electrostatic->dSubschedulerDependency, Ghost::None, 0);
+
+  task->modifies(label->electrostatic->dSubschedulerDependency);
+
+  LoadBalancer* loadBal = sched->getLoadBalancer();
+  const PatchSet* perproc_patches = loadBal->getPerProcessorPatchSet(level);
+
+  sched->addTask(task, perproc_patches, materials);
+}
+
+void SPME::scheduleCalculateInFourierSpace(const ProcessorGroup* pg,
+                                           const PatchSet* patches,
+                                           const MaterialSet* materials,
+                                           DataWarehouse* subOldDW,
+                                           DataWarehouse* subNewDW,
+                                           const MDLabel* label,
+                                           SchedulerP& sched)
+{
+  printSchedule(patches, spme_cout, "SPME::scheduleCalculateInFourierSpace");
+
+  Task* task = scinew Task("SPME::calculateInFourierSpace",
+                           this,
+                           &SPME::calculateInFourierSpace,
+                           label);
+
+  task->requires(Task::NewDW, label->electrostatic->dSubschedulerDependency, Ghost:: Ghost::None, 0);
+
+//  task->requires(Task::NewDW, d_label->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
+  task->modifies(label->electrostatic->dSubschedulerDependency);
+  task->computes(label->electrostatic->rElectrostaticInverseEnergy);
+  task->computes(label->electrostatic->rElectrostaticInverseStress);
+//  task->modifies(d_label->subSchedulerDependencyLabel);
+//  task->computes(d_label->electrostaticReciprocalEnergyLabel);
+//  task->computes(d_label->electrostaticReciprocalStressLabel);
+
+  sched->addTask(task, patches, materials);
+}
+
+void SPME::scheduleTransformFourierToReal(const ProcessorGroup* pg,
+                                          const PatchSet*       patches,
+                                          const MaterialSet*    materials,
+                                          DataWarehouse*        subOldDW,
+                                          DataWarehouse*        subNewDW,
+                                          const MDLabel*        label,
+                                          const LevelP&         level,
+                                          SchedulerP&           sched)
+{
+  printSchedule(patches, spme_cout, "SPME::scheduleTransformFourierToReal");
+
+  Task* task = scinew Task("SPME::transformFourierToReal", this, &SPME::transformFourierToReal);
+  task->setType(Task::OncePerProc);
+  task->usesMPI(true);
+
+  task->requires(Task::NewDW, label->electrostatic->dSubschedulerDependency, Ghost::None, 0);
+//  task->requires(Task::NewDW, d_label->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
+  task->modifies(label->electrostatic->dSubschedulerDependency);
+//  task->modifies(d_label->subSchedulerDependencyLabel);
+
+  LoadBalancer* loadBal = sched->getLoadBalancer();
+  const PatchSet* perproc_patches =  loadBal->getPerProcessorPatchSet(level);
+
+  sched->addTask(task, perproc_patches, materials);
+}
+
+void SPME::scheduleDistributeNodeLocalQ(const ProcessorGroup*   pg,
+                                        const PatchSet*         patches,
+                                        const MaterialSet*      materials,
+                                        DataWarehouse*          subOldDW,
+                                        DataWarehouse*          subNewDW,
+                                        const MDLabel*          label,
+                                        SchedulerP&             sched)
+{
+  printSchedule(patches, spme_cout, "SPME::scheduleDistributeNodeLocalQ");
+
+  Task* task = scinew Task("SPME::distributeNodeLocalQ-force", this, &SPME::distributeNodeLocalQ);
+
+  task->requires(Task::NewDW,
+                 label->electrostatic->dSubschedulerDependency,
+                 Ghost::None,
+                 0);
+
+  task->modifies(label->electrostatic->dSubschedulerDependency);
+  //  task->requires(Task::NewDW, d_label->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
+//  task->modifies(d_label->subSchedulerDependencyLabel);
+
+  sched->addTask(task, patches, materials);
+}
+
+void SPME::scheduleCalculatePostTransform(const ProcessorGroup* pg,
+                                          const PatchSet*       patches,
+                                          const MaterialSet*    materials,
+                                          DataWarehouse*        subOldDW,
+                                          DataWarehouse*        subNewDW,
+                                          const SimulationStateP*     simState,
+                                          const MDLabel*        label,
+                                          coordinateSystem*     coordSys,
+                                          SchedulerP&           sched) {
+// FIXME  Should probably have logic here
+  printSchedule(patches, spme_cout, "SPME::scheduleCalculatePostTransform");
+  //  Have done SPME and dipole convergence by this point.
+  Task* task;
+  if (f_polarizable) {
+    task = scinew Task("SPME::calculatePostTransformDipole",
+                       this,
+                       &SPME::calculatePostTransformDipole,
+                       simState,
+                       label,
+                       coordSys);
+    // This should require us to have copied over the dipoles to the parent
+    // DW, signifying we've converged
+    task->requires(Task::ParentNewDW, label->electrostatic->pMu);
+  }
+
+  else {
+    task = scinew Task("SPME::calculatePostTransform",
+                       this,
+                       &SPME::calculatePostTransform,
+                       simState,
+                       label,
+                       coordSys);
+  }
+
+  // Dependency flag is the only way to ensure the non-dipolar task
+  // has finished.
+  task->requires(Task::NewDW,
+                 label->electrostatic->dElectrostaticDependency);
+
+  task->computes(label->electrostatic->pF_electroInverse_preReloc);
+
+}

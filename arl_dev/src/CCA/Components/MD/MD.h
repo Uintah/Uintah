@@ -36,6 +36,7 @@
 #include <CCA/Components/MD/Electrostatics/Electrostatics.h>
 #include <CCA/Components/MD/Forcefields/Forcefield.h>
 #include <CCA/Components/MD/Integrators/Integrator.h>
+#include <CCA/Components/MD/CoordinateSystems/coordinateSystem.h>
 
 #include <vector>
 
@@ -254,22 +255,22 @@ namespace Uintah {
        * @param
        * @return
        */
-      void nonbondedInitialize(const ProcessorGroup* pg,
-                               const PatchSubset* patches,
-                               const MaterialSubset* matls,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw);
+      void nonbondedInitialize(const ProcessorGroup*    pg,
+                               const PatchSubset*       patches,
+                               const MaterialSubset*    matls,
+                               DataWarehouse*           oldDW,
+                               DataWarehouse*           newDW);
 
       /**
        * @brief
        * @param
        * @return
        */
-      void nonbondedSetup(const ProcessorGroup* pg,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw);
+      void nonbondedSetup(const ProcessorGroup*     pg,
+                          const PatchSubset*        patches,
+                          const MaterialSubset*     matls,
+                          DataWarehouse*            oldDW,
+                          DataWarehouse*            newDW);
 
       /**
        * @brief
@@ -277,67 +278,66 @@ namespace Uintah {
        * @return
        */
       void nonbondedCalculate(const ProcessorGroup* pg,
-                              const PatchSubset* perprocPatches,
+                              const PatchSubset*    patches,
                               const MaterialSubset* matls,
-                              DataWarehouse* parentOldDW,
-                              DataWarehouse* parentNewDW,
-                              const LevelP level);
+                              DataWarehouse*        oldDW,
+                              DataWarehouse*        newDW);
 
       /**
        * @brief
        * @param
        * @return
        */
-      void nonbondedFinalize(const ProcessorGroup* pg,
-                             const PatchSubset* patches,
-                             const MaterialSubset* matls,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw);
+      void nonbondedFinalize(const ProcessorGroup*  pg,
+                             const PatchSubset*     patches,
+                             const MaterialSubset*  matls,
+                             DataWarehouse*         oldDW,
+                             DataWarehouse*         newDW);
 
       /**
        * @brief
        * @param
        * @return
        */
-      void electrostaticsInitialize(const ProcessorGroup* pg,
-                                    const PatchSubset* patches,
-                                    const MaterialSubset* matls,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw);
+      void electrostaticsInitialize(const ProcessorGroup*   pg,
+                                    const PatchSubset*      patches,
+                                    const MaterialSubset*   matls,
+                                    DataWarehouse*          oldDW,
+                                    DataWarehouse*          newDW);
 
       /**
        * @brief
        * @param
        * @return
        */
-      void electrostaticsSetup(const ProcessorGroup* pg,
-                               const PatchSubset* patches,
-                               const MaterialSubset* matls,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw);
+      void electrostaticsSetup(const ProcessorGroup*    pg,
+                               const PatchSubset*       patches,
+                               const MaterialSubset*    matls,
+                               DataWarehouse*           oldDW,
+                               DataWarehouse*           newDW);
 
       /**
        * @brief
        * @param
        * @return
        */
-      void electrostaticsCalculate(const ProcessorGroup* pg,
-                                   const PatchSubset* perprocPatches,
-                                   const MaterialSubset* matls,
-                                   DataWarehouse* parentOldDW,
-                                   DataWarehouse* parentNewDW,
-                                   const LevelP level);
+      void electrostaticsCalculate(const ProcessorGroup*    pg,
+                                   const PatchSubset*       perprocPatches,
+                                   const MaterialSubset*    matls,
+                                   DataWarehouse*           parentOldDW,
+                                   DataWarehouse*           parentNewDW,
+                                   const LevelP             level);
 
       /**
        * @brief
        * @param
        * @return
        */
-      void electrostaticsFinalize(const ProcessorGroup* pg,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset* matls,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw);
+      void electrostaticsFinalize(const ProcessorGroup*     pg,
+                                  const PatchSubset*        patches,
+                                  const MaterialSubset*     matls,
+                                  DataWarehouse*            oldDW,
+                                  DataWarehouse*            newDW);
 
       /**
        * @brief
@@ -396,50 +396,34 @@ namespace Uintah {
                                const IntVector& h,
                                const IntVector& p) const
       {
-        return ((p.x() >= l.x() && p.x() < h.x()) && (p.y() >= l.y() && p.y() < h.y()) && (p.z() >= l.z() && p.z() < h.z()));
+        return ((p.x() >= l.x() && p.x() < h.x()) &&
+                (p.y() >= l.y() && p.y() < h.y()) &&
+                (p.z() >= l.z() && p.z() < h.z()));
       }
 
     private:
+// Member pointers inherited from Uintah
+      Output*           d_dataArchiver;     //!< Handle to the Uintah data archiver
+      MDLabel*          d_label;            //!< Variable labels for the per-particle Uintah MD variables
+      SimulationStateP  d_sharedState;      //!< Shared simulation state (global)
+      ProblemSpecP      d_problemSpec;      //!< Problem spec since we need to parse our coordinates, and it's either storing this pointer or the whole parsed coordinate set
+      ProblemSpecP      d_restartSpec;
 
-//      struct Atom {
-//          Atom(Point pnt,
-//               double charge) :
-//              coords(pnt), charge(charge)
-//          {
-//          }
-//          Point coords;
-//          double charge;
-//      };
+// Member pointers constructed specifically for this component
+      Electrostatics*   d_electrostatics;   //!< The simulation Electrostatics model instance
+      Nonbonded*        d_nonbonded;              //!< The simulation Nonbonded instance
+      Integrator*       d_integrator;       //!< MD style integrator object
 
-      // Member pointers inherited from Uintah
-
-      Output* d_dataArchiver;              //!< Handle to the Uintah data archiver
-      MDLabel* d_label;                       //!< Variable labels for the per-particle Uintah MD variables
-      SimulationStateP d_sharedState;      //!< Shared simulation state (global)
-      ProblemSpecP     d_problemSpec;      //!< Problem spec since we need to parse our coordinates, and it's either storing this pointer or the whole parsed coordinate set
-      ProblemSpecP     d_restartSpec;
-
-      // Member pointers constructed specifically for this component
-      Electrostatics*  d_electrostatics;   //!< The simulation Electrostatics model instance
-      Integrator*      d_integrator;       //!< MD style integrator object
-      Forcefield*      d_forcefield;       //!< Currently employed MD forcefield
-      MDSystem*        d_system;           //!< The global MD system
+      Forcefield*       d_forcefield;       //!< Currently employed MD forcefield
+      MDSystem*         d_system;           //!< The global MD system
+      coordinateSystem* d_coordinate;       //!< Interface to abstract coordinte system
 
 
       //  Does this need to exist here?  Can it be stuffed in the electrostatics object?
-      SchedulerP d_electrostaticSubscheduler;           //!< Subscheduler for SPME::calculate() convergence loop
-      bool d_recompileSubscheduler;        //!< Whether or not the subscheduler taskgraph needs recompilation
+      SchedulerP        d_electrostaticSubscheduler;    //!< Subscheduler for SPME::calculate() convergence loop
+      bool              d_recompileSubscheduler;        //!< Whether or not the subscheduler taskgraph needs recompilation
 
-//      //  The material list should exist in the forcefield held by the system...?
-//      SimpleMaterial* d_material;          //!< For now, this is a single material
-      //IntegratorType d_integrator;         //!< Timestep integrator
-      double delt;                         //!< Simulation delta T
-
-
-//      std::string d_coordinateFile;        //!< Name of file with coordinates and charges of all atoms
-//      std::vector<Atom> d_atomList;        //!< Individual atom neighbor list
-
-      Nonbonded* d_nonbonded;              //!< The simulation Nonbonded instance
+      double            delt;                         //!< Simulation delta T
 
       std::vector<const VarLabel*> d_particleState;            //!< Atom (particle) state prior to relocation
       std::vector<const VarLabel*> d_particleState_preReloc;   //!< For atom (particle) relocation

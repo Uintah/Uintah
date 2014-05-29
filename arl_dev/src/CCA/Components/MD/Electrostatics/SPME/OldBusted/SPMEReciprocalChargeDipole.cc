@@ -60,18 +60,20 @@
 
 #define IV_ZERO IntVector(0,0,0)
 
-using namespace Uintah;
+using namespace OldSPME;
 
 extern SCIRun::Mutex cerrLock;
 
-void SPME::dipoleGenerateChargeMap(const ProcessorGroup* pg,
-                             	const PatchSubset* patches,
-                             	const MaterialSubset* materials,
-                             	DataWarehouse* old_dw,
-                             	DataWarehouse* new_dw)
+void SPME::generateChargeMapDipole(const ProcessorGroup*    pg,
+                                   const PatchSubset*       patches,
+                                   const MaterialSubset*    materials,
+                                   DataWarehouse*           old_dw,
+                                   DataWarehouse*           new_dw,
+                                   coordinateSystem*        coordSys)
 {
 	size_t numPatches = patches->size();
 	size_t numMaterials = materials->size();
+	Uintah::Matrix3 inverseUnitCell = coordSys->getInverseCell();
 
 	// Step through all the patches on this thread
 	for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) {
@@ -104,7 +106,7 @@ void SPME::dipoleGenerateChargeMap(const ProcessorGroup* pg,
 				particleId ID = atomIDs[atomIndex];
 				Point position = atomPositions[atomIndex];
 
-				Vector atomGridCoordinates = position.asVector() * d_inverseUnitCell;
+				Vector atomGridCoordinates = position.asVector() * inverseUnitCell;
 				// ^^^ Note:  We may want to replace a matrix/vector multiplication with optimized orthorhombic multiplications
 
 				Vector kReal = d_kLimits.asVector();
@@ -155,7 +157,7 @@ void SPME::dipoleGenerateChargeMap(const ProcessorGroup* pg,
 				  }
 				}
 				//SPMEMapPoint holds ONLY the spline and related derivatives; charge and dipole values and derivatives
-				//  don't get baked in, so that we don't need to recalculate this quantities within the inner loop.
+				//  don't get baked in, so that we don't need to recalculate these quantities within the inner loop.
  			    SPMEMapPoint currentMapPoint(ID, atomGridOffset, chargeGrid, forceGrid, dipoleGrid);
 			    gridMap->push_back(currentMapPoint);
 			}
@@ -163,14 +165,17 @@ void SPME::dipoleGenerateChargeMap(const ProcessorGroup* pg,
 	}
 }
 
-void SPME::dipoleCalculatePreTransform(const ProcessorGroup* pg,
-		                            const PatchSubset* patches,
-		                            const MaterialSubset* materials,
-		                            DataWarehouse* old_dw,
-		                            DataWarehouse* new_dw)
+void SPME::calculatePreTransformDipole(const ProcessorGroup*    pg,
+                                       const PatchSubset*       patches,
+                                       const MaterialSubset*    materials,
+                                       DataWarehouse*           old_dw,
+                                       DataWarehouse*           new_dw,
+                                       coordinateSystem*        coordSys,
+                                       SimulationStateP&        simState)
 {
 	size_t numPatches   = patches->size();
 	size_t numAtomTypes = materials->size();
+	Uintah::Matrix3 inverseUnitCell = coordSys->getInverseCell();
 
 	for (size_t currPatch = 0; currPatch < numPatches; ++currPatch) {
 		const Patch* patch = patches->get(currPatch);
@@ -186,12 +191,12 @@ void SPME::dipoleCalculatePreTransform(const ProcessorGroup* pg,
 		for (size_t currAtomType = 0; currAtomType < numAtomTypes; ++currAtomType) {
 			int atomType = materials->get(currAtomType);
 			ParticleSubset* pset = old_dw->getParticleSubset(atomType, patch);
-			double atomCharge = d_system->getAtomicCharge(atomType);
+			double atomCharge = simState->getMDMaterial(atomType)->getCharge();
+//			double atomCharge = d_system->getAtomicCharge(atomType);
 			constParticleVariable<Vector> p_Dipole;
-			new_dw->get(p_Dipole, d_label->electrostatic->pMu, pset);
-//			new_dw->get(p_Dipole, d_label->pTotalDipoles, pset);
+			old_dw->get(p_Dipole, d_label->electrostatic->pMu, pset);
 			std::vector<SPMEMapPoint>* gridMap = currentSPMEPatch->getChargeMap(atomType);
-			SPME::dipoleMapChargeToGrid(currentSPMEPatch, gridMap, pset, atomCharge, p_Dipole);
+			SPME::dipoleMapChargeToGrid(currentSPMEPatch, gridMap, pset, atomCharge, p_Dipole, inverseUnitCell);
 		} // end Atom Type Loop
 	} // end Patch Loop
 
@@ -210,7 +215,8 @@ void SPME::dipoleMapChargeToGrid(SPMEPatch* spmePatch,
                                  const std::vector<SPMEMapPoint>* gridMap,
 		                         ParticleSubset* pset,
                                  double charge,
-		                         constParticleVariable<Vector>& p_Dipole) {
+		                         constParticleVariable<Vector>& p_Dipole,
+		                         Uintah::Matrix3 inverseUnitCell) {
 
   // grab local Q grid
   SimpleGrid<dblcomplex>* Q_patchLocal 	= spmePatch->getQ();
@@ -236,7 +242,7 @@ void SPME::dipoleMapChargeToGrid(SPMEPatch* spmePatch,
     int yExtent = supportExtent[1];
     int zExtent = supportExtent[2];
 
-    Vector d_dot_nabla = dipole * d_inverseUnitCell;
+    Vector d_dot_nabla = dipole * inverseUnitCell;
 
     for (int xmask = 0; xmask < xExtent; ++xmask) {
       int x_anchor = x_Base + xmask;
@@ -256,15 +262,15 @@ void SPME::dipoleUpdateFieldAndStress(const ProcessorGroup* pg,
                                       const PatchSubset* patches,
                                       const MaterialSubset* materials,
                                       DataWarehouse* old_dw,
-                                      DataWarehouse* new_dw) {
+                                      DataWarehouse* new_dw,
+                                      coordinateSystem* coordSys) {
 
   size_t numPatches = patches->size();
   size_t numAtomTypes = materials->size();
 
-
-  SCIRun::Vector delU0 = d_inverseUnitCell.getRow(0);
-  SCIRun::Vector delU1 = d_inverseUnitCell.getRow(1);
-  SCIRun::Vector delU2 = d_inverseUnitCell.getRow(2);
+  SCIRun::Vector delU0 = coordSys->getInverseCell().getRow(0);
+  SCIRun::Vector delU1 = coordSys->getInverseCell().getRow(1);
+  SCIRun::Vector delU2 = coordSys->getInverseCell().getRow(2);
 
   // Step through all the patches on this thread
   for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) {
@@ -291,7 +297,7 @@ void SPME::dipoleUpdateFieldAndStress(const ProcessorGroup* pg,
         int x_Base = Base[0];
         int y_Base = Base[1];
         int z_Base = Base[2];
-
+// XXX TODO FIXME FINISH LOGIC!!!
         int xExtent = supportExtent[0];
         int yExtent = supportExtent[1];
         int zExtent = supportExtent[2];

@@ -9,6 +9,7 @@
 #include <CCA/Components/MD/MDSystem.h>
 #include <CCA/Components/MD/Nonbonded/TwoBodyDeterministic.h>
 #include <CCA/Components/MD/Forcefields/TwoBodyForceField.h>
+#include <CCA/Components/MD/CoordinateSystems/coordinateSystem.h>
 
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/LevelP.h>
@@ -28,48 +29,102 @@ using namespace Uintah;
 
 const std::string TwoBodyDeterministic::nonbondedType = "TwoBodyDeterministic";
 
-TwoBodyDeterministic::TwoBodyDeterministic(MDSystem* _system,
-                                           MDLabel* _label,
-                                           double _nbRadius)
-                                          :d_System(_system),
-                                           d_Label(_label),
-                                           d_nonbondedRadius(_nbRadius) { }
+TwoBodyDeterministic::TwoBodyDeterministic(double _nbRadius,
+                                           int _nbGhost)
+                                          :d_nonbondedRadius(_nbRadius),
+                                           d_nonbondedGhostCells(_nbGhost) { }
 
-void TwoBodyDeterministic::initialize(const ProcessorGroup* pg,
-                                      const PatchSubset* patches,
-                                      const MaterialSubset* materials,
-                                      DataWarehouse* oldDW,
-                                      DataWarehouse* newDW) {
+void TwoBodyDeterministic::addInitializeRequirements(Task* task,
+                                                     MDLabel* label) const {
+
+}
+
+void TwoBodyDeterministic::addInitializeComputes(Task* task,
+                                                 MDLabel* label) const {
+  // None of this probably really needs to be here, except the dependency
+  task->computes(label->nonbonded->rNonbondedEnergy);
+  task->computes(label->nonbonded->rNonbondedStress);
+  task->computes(label->nonbonded->dNonbondedDependency);
+
+}
+
+void TwoBodyDeterministic::initialize(const ProcessorGroup*     pg,
+                                      const PatchSubset*        patches,
+                                      const MaterialSubset*     materials,
+                                      DataWarehouse*          /*oldDW*/,
+                                      DataWarehouse*            newDW,
+                                      SimulationStateP&         simState,
+                                      MDSystem*                 systemInfo,
+                                      const MDLabel*            label,
+                                      coordinateSystem*         coordSys) {
 
   // global sum reduction of nonbonded energy
-  newDW->put(sum_vartype(0.0), d_Label->nonbonded->rNonbondedEnergy);
-  newDW->put(matrix_sum(0.0), d_Label->nonbonded->rNonbondedStress);
+  newDW->put(sum_vartype(0.0), label->nonbonded->rNonbondedEnergy);
+  newDW->put(matrix_sum(0.0), label->nonbonded->rNonbondedStress);
 
   SoleVariable<double> dependency;
-  newDW->put(dependency, d_Label->nonbonded->dNonbondedDependency);
+  newDW->put(dependency, label->nonbonded->dNonbondedDependency);
 
 }
 
-void TwoBodyDeterministic::setup(const ProcessorGroup* pg,
-                                 const PatchSubset* patches,
-                                 const MaterialSubset* materials,
-                                 DataWarehouse* oldDW,
-                                 DataWarehouse* newDW) {
+void TwoBodyDeterministic::addSetupRequirements(Task* task,
+                                                MDLabel* label) const {
+
+  task->requires(Task::OldDW,
+                 label->nonbonded->dNonbondedDependency,
+                 Ghost::None, 0);
 
 }
 
-void TwoBodyDeterministic::calculate(const ProcessorGroup* pg,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset* materials,
-                                     DataWarehouse* oldDW,
-                                     DataWarehouse* newDW,
-                                     SchedulerP& subscheduler,
-                                     const LevelP& level) {
+void TwoBodyDeterministic::addSetupComputes(Task* task,
+                                            MDLabel* label) const {
+
+  task->computes(label->nonbonded->dNonbondedDependency);
+}
+
+void TwoBodyDeterministic::setup(const ProcessorGroup*  pg,
+                                 const PatchSubset*     patches,
+                                 const MaterialSubset*  materials,
+                                 DataWarehouse*         oldDW,
+                                 DataWarehouse*         newDW,
+                                 SimulationStateP&      simState,
+                                 MDSystem*              systemInfo,
+                                 const MDLabel*         label,
+                                 coordinateSystem*      coordSys) {
+
+}
+
+void TwoBodyDeterministic::addCalculateRequirements(Task* task,
+                                                    MDLabel* label) const {
+
+  task->requires(Task::OldDW, label->nonbonded->dNonbondedDependency);
+
+}
+
+void TwoBodyDeterministic::addCalculateComputes(Task* task,
+                                                MDLabel* label) const {
+  // Provides force, energy, and stress tensor
+
+  task->computes(label->nonbonded->pF_nonbonded_preReloc);
+  task->computes(label->nonbonded->rNonbondedEnergy);
+  task->computes(label->nonbonded->rNonbondedStress);
+
+}
+
+void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
+                                     const PatchSubset*     patches,
+                                     const MaterialSubset*  materials,
+                                     DataWarehouse*         oldDW,
+                                     DataWarehouse*         newDW,
+                                     SimulationStateP&      simState,
+                                     MDSystem*              systemInfo,
+                                     const MDLabel*         label,
+                                     coordinateSystem*      coordSys)
+{
 
   double cutoff2 = d_nonbondedRadius * d_nonbondedRadius;
-  SimulationStateP simState = d_System->getStatePointer();
-  TwoBodyForcefield* forcefield = dynamic_cast<TwoBodyForcefield*> (d_System->getForcefieldPointer());
-  size_t nbGhostCells = d_System->getNonbondedGhostCells();
+  TwoBodyForcefield* forcefield = dynamic_cast<TwoBodyForcefield*>
+                                       ( systemInfo->getForcefieldPointer() );
 
   // Initialize local accumulators
   double nbEnergy_patchLocal = 0;
@@ -79,50 +134,65 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup* pg,
 
   size_t numPatches = patches->size();
   size_t numMaterials = materials->size();
+  SCIRun::Vector atomOffsetVector(0.0);
 
-  for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) { // Loop over all patches
+  // Loop over all patches
+  for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) {
     const Patch* currPatch = patches->get(patchIndex);
-    for (size_t localMaterialIndex = 0; localMaterialIndex < numMaterials; ++localMaterialIndex) { // Internal patch material loop
-
+    // Internal patch material loop
+    for (size_t localMaterialIndex = 0;
+                localMaterialIndex < numMaterials;
+              ++localMaterialIndex)
+    {
       // Build particle set for on-patch atom/material set
-      int localMaterialID = materials->get(localMaterialIndex);
-      ParticleSubset* localAtoms = oldDW->getParticleSubset(localMaterialID, currPatch);
+      int               localMaterial = materials->get(localMaterialIndex);
+      ParticleSubset*   localAtoms    = oldDW->getParticleSubset(localMaterial,
+                                                                   currPatch);
       size_t localAtomCount = localAtoms->numParticles();
 
       // Get atom ID and positions
       constParticleVariable<long64> localParticleID;
-      oldDW->get(localParticleID, d_Label->global->pID, localAtoms);
-//      oldDW->get(localParticleID, d_Label->pParticleIDLabel, localAtoms);
-      constParticleVariable<Point> localPositions;
-      oldDW->get(localPositions, d_Label->global->pX, localAtoms);
-//      oldDW->get(localPositions, d_Label->pXLabel, localAtoms);
+      oldDW->get(localParticleID, label->global->pID, localAtoms);
+      constParticleVariable<Point> localX;
+      oldDW->get(localX, label->global->pX, localAtoms);
 
       // Get material map label for source atom type
-      std::string localMaterialLabel = simState->getMDMaterial(localMaterialID)->getMapLabel();
+      std::string localMaterialLabel =
+          simState->getMDMaterial(localMaterial)->getMapLabel();
 
       // Initialize force variable
       ParticleVariable<Vector> pForce;
-      newDW->allocateAndPut(pForce, d_Label->nonbonded->pF_nonbonded_preReloc, localAtoms);
-//      newDW->allocateAndPut(pForce, d_Label->pNonbondedForceLabel_preReloc, localAtoms);
-      for (size_t localAtomIndex = 0; localAtomIndex < localAtomCount; ++localAtomIndex) { // Initialize force array
+      newDW->allocateAndPut(pForce,
+                            label->nonbonded->pF_nonbonded_preReloc,
+                            localAtoms);
+      for (size_t localAtomIndex = 0;
+                  localAtomIndex < localAtomCount;
+                ++localAtomIndex) // Initialize force array
+      {
         pForce[localAtomIndex] = 0.0;
       }
 
-      for (size_t neighborMaterialIndex = 0; neighborMaterialIndex < numMaterials; ++neighborMaterialIndex) { // Internal + ghost patch material loop
-
+      for (size_t neighborMaterialIndex = 0;
+                  neighborMaterialIndex < numMaterials;
+                ++neighborMaterialIndex)
+      { // (Internal + ghost) patch material loop
         // Build particle set for on patch + nearby atoms
         int neighborMaterialID = materials->get(neighborMaterialIndex);
-        ParticleSubset* neighborAtoms = oldDW->getParticleSubset(neighborMaterialID, currPatch, Ghost::AroundNodes, nbGhostCells, d_Label->global->pX);
-//        ParticleSubset* neighborAtoms = oldDW->getParticleSubset(neighborMaterialID, currPatch, Ghost::AroundNodes, nbGhostCells, d_Label->pXLabel);
+        ParticleSubset* neighborAtoms =
+            oldDW->getParticleSubset(neighborMaterialID,
+                                     currPatch,
+                                     Ghost::AroundNodes,
+                                     d_nonbondedGhostCells,
+                                     label->global->pX);
+
         size_t neighborAtomCount = neighborAtoms->numParticles();
 
         // Get atom ID and positions
         constParticleVariable<long64> neighborParticleID;
-        oldDW->get(neighborParticleID, d_Label->global->pID, neighborAtoms);
-//        oldDW->get(neighborParticleID, d_Label->pParticleIDLabel, neighborAtoms);
-        constParticleVariable<Point> neighborPositions;
-        oldDW->get(neighborPositions, d_Label->global->pX, neighborAtoms);
-//        oldDW->get(neighborPositions, d_Label->pXLabel, neighborAtoms);
+        oldDW->get(neighborParticleID, label->global->pID, neighborAtoms);
+        constParticleVariable<Point> neighborX;
+        oldDW->get(neighborX, label->global->pX, neighborAtoms);
+//        oldDW->get(neighborX, d_Label->pXLabel, neighborAtoms);
 
         // Get material map label for source atom type
         std::string neighborMaterialLabel = simState->getMDMaterial(neighborMaterialID)->getMapLabel();
@@ -133,8 +203,11 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup* pg,
         for (size_t localAtomIndex = 0; localAtomIndex < localAtomCount; ++localAtomIndex) { // Loop over atoms in local patch
           for (size_t neighborAtomIndex = 0; neighborAtomIndex < neighborAtomCount; ++neighborAtomIndex) { // Loop over local plus nearby atoms
             if (localParticleID[localAtomIndex] != neighborParticleID[neighborAtomIndex]) { // Ensure we're not working with the same particle
-              SCIRun::Vector atomOffsetVector = neighborPositions[neighborAtomIndex] - localPositions[localAtomIndex];
-              // find minimum image of offset vector
+              coordSys->minimumImageDistance(neighborX[neighborAtomIndex],
+                                             localX[localAtomIndex],
+                                             atomOffsetVector);
+//              SCIRun::Vector atomOffsetVector = neighborPositions[neighborAtomIndex] - localPositions[localAtomIndex];
+              // find minimum image of offset vector FIXME
 
               if (atomOffsetVector.length2() <= cutoff2) { // Interaction is within range
                 SCIRun::Vector tempForce;
@@ -150,18 +223,29 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup* pg,
       }  // Loop over neighbor materials
     }  // Loop over local materials
   }  // Loop over patches
-  newDW->put(sum_vartype(0.5 * nbEnergy_patchLocal), d_Label->nonbonded->rNonbondedEnergy);
-  newDW->put(matrix_sum(0.5 * stressTensor_patchLocal), d_Label->nonbonded->rNonbondedStress);
-//  newDW->put(sum_vartype(0.5 * nbEnergy_patchLocal), d_Label->nonbondedEnergyLabel);
-//  newDW->put(matrix_sum(0.5 * stressTensor_patchLocal), d_Label->nonbondedStressLabel);
+  newDW->put(sum_vartype(0.5 * nbEnergy_patchLocal),
+             label->nonbonded->rNonbondedEnergy);
+  newDW->put(matrix_sum(0.5 * stressTensor_patchLocal),
+             label->nonbonded->rNonbondedStress);
 } // TwoBodyDeterministic::calculate
 
+void TwoBodyDeterministic::addFinalizeRequirements(Task* task, MDLabel* d_label) const {
+  // This space intentionally left blank
+}
 
-void TwoBodyDeterministic::finalize(const ProcessorGroup* pg,
-                                    const PatchSubset* patches,
-                                    const MaterialSubset* materials,
-                                    DataWarehouse* oldDW,
-                                    DataWarehouse* newDW) {
+void TwoBodyDeterministic::addFinalizeComputes(Task* task, MDLabel* d_label) const {
+  // What is the sound of one hand coding?
+}
+
+void TwoBodyDeterministic::finalize(const ProcessorGroup*   pg,
+                                    const PatchSubset*      patches,
+                                    const MaterialSubset*   materials,
+                                    DataWarehouse*          oldDW,
+                                    DataWarehouse*          newDW,
+                                    SimulationStateP&       simState,
+                                    MDSystem*               systemInfo,
+                                    const MDLabel*          label,
+                                    coordinateSystem*       coordSys) {
   // Nothing to put here now
 }
 

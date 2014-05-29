@@ -1,4 +1,5 @@
 /*
+ *
  * The MIT License
  *
  * Copyright (c) 1997-2014 The University of Utah
@@ -20,39 +21,47 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
+ *
+ * ----------------------------------------------------------
+ * SPME_Common.h
+ *
+ *  Created on: May 15, 2014
+ *      Author: jbhooper
  */
 
-#ifndef UINTAH_MD_ELECTROSTATICS_SPME_H
-#define UINTAH_MD_ELECTROSTATICS_SPME_H
-
-#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
-#include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/Variables/ParticleVariable.h>
-#include <Core/Thread/ConditionVariable.h>
-#include <Core/Util/DebugStream.h>
+#ifndef SPME_COMMON_H_
+#define SPME_COMMON_H_
 
 #include <vector>
 
-#include <sci_defs/fftw_defs.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+
+#include <Core/Thread/ConditionVariable.h>
+
+#include <Core/Util/DebugStream.h>
+
+#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 
 #include <CCA/Components/MD/SimpleGrid.h>
-#include <CCA/Components/MD/Electrostatics/Electrostatics.h>
-#include <CCA/Components/MD/Electrostatics/SPME/ShiftedCardinalBSpline.h>
-#include <CCA/Components/MD/Electrostatics/SPME/SPMEPatch.h>
+#include <CCA/Components/MD/MDSubcomponent.h>
+#include <CCA/Components/MD/MDSystem.h>
+#include <CCA/Components/MD/MDUtil.h>
 
+#include <CCA/Components/MD/CoordinateSystems/coordinateSystem.h>
+#include <CCA/Components/MD/Electrostatics/Electrostatics.h>
+#include <CCA/Components/MD/Electrostatics/SPME/SPMEPatch.h>
+#include <CCA/Components/MD/Electrostatics/SPME/ShiftedCardinalBSpline.h>
+
+#include <sci_defs/fftw_defs.h>
+
+//-------1_________2---------3_________4---------5________6---------7_________8
 
 namespace Uintah {
 
-  using namespace SCIRun;
-
   typedef std::complex<double> dblcomplex;
-  typedef int particleIndex;
-  typedef int particleId;
-
-  class MDSystem;
-  class SPMEMapPoint;
-  class ParticleSubset;
-  class MDLabel;
+  typedef std::vector<const VarLabel*> LabelArray;
+  typedef std::vector<SPMEMapPoint> spmeMapVector;
 
   static SCIRun::DebugStream spme_cout("SPMECout", false);
   static SCIRun::DebugStream spme_dbg("SPMEDBG", false);
@@ -67,379 +76,147 @@ namespace Uintah {
    *
    *  @param
    */
-  class SPME : public Electrostatics {
-
+  class SPME: public Electrostatics, public MDSubcomponent {
     public:
 
-      /**
-       * @brief
-       * @param
-       */
-      SPME();
+// Constructors and destructors
+   /*
+    * @brief
+    *
+    */
+      SPME(const double             ewaldBeta,
+           const double             cutoffRadius,
+           const int                ghostCells,
+           const SCIRun::IntVector  kLimits,
+           const int                splineOrder,
+           const bool               polarizable               = false,
+           const int                maxPolarizableIterations  = 0,
+           const double             polarizationTolerance     =
+                                    MDConstants::defaultPolarizationTolerance);
+     ~SPME();
 
-      /**
-       * @brief
-       * @param
-       * @param
-       * @param
-       * @param
-       */
-      SPME(MDSystem* system,
-           const double ewaldBeta,
-           const double cutoffRadius,
-           const bool polarizable,
-           const double polarizationTolerance,
-           const IntVector& kLimits,
-           const int splineOrder,
-           const int maxPolarizableIterations = 0);
+// Inherited from Electrostatics public interface
+     /*
+      * @brief Initializes the SPME object.  Initializes data which is expected
+      *        as input for the polarizable charge calculation loop.
+      */
+      virtual void initialize(const ProcessorGroup*     pg,
+                              const PatchSubset*        perProcPatches,
+                              const MaterialSubset*     materials,
+                              DataWarehouse*          /*old_dw*/,
+                              DataWarehouse*            new_dw,
+                              const SimulationStateP*   simState,
+                              MDSystem*                 systemInfo,
+                              const MDLabel*            label,
+                              coordinateSystem*         coordSystem);
 
-      /**
-       * @brief
-       * @param
-       */
-      ~SPME();
+     /*
+      * @brief Sets up the necessary internal quantities for each electrostatic
+      *        iteration. For NPT this includes the phase factors for the FFT.
+      */
+      virtual void setup     (const ProcessorGroup* pg,
+                              const PatchSubset*    patches,
+                              const MaterialSubset* materials,
+                              DataWarehouse*        old_dw,
+                              DataWarehouse*        new_dw,
+                              const SimulationStateP*     simState,
+                              MDSystem*             systemInfo,
+                              const MDLabel*        label,
+                              coordinateSystem*     coordSystem);
 
-      /**
-       * @brief
-       * @param
-       * @param
-       * @param
-       * @return
-       */
-      void initialize(const ProcessorGroup* pg,
-                      const PatchSubset* perProcPatches,
-                      const MaterialSubset* materials,
-                      DataWarehouse* /* old_dw */,
-                      DataWarehouse* new_dw);
+     /*
+      * @brief Performs the calculation of the entire charge loop.
+      */
+      virtual void calculate (const ProcessorGroup* pg,
+                              const PatchSubset*    patches,
+                              const MaterialSubset* materials,
+                              DataWarehouse*        old_dw,
+                              DataWarehouse*        new_dw,
+                              const SimulationStateP*     simState,
+                              MDSystem*             systemInfo,
+                              const MDLabel*        label,
+                              coordinateSystem*     coordinateSys,
+                              SchedulerP&           subscheduler,
+                              const LevelP&         level);
 
-      /**
-       * @brief
-       * @param None
-       * @return None
-       */
-      void setup(const ProcessorGroup* pg,
-                 const PatchSubset* patches,
-                 const MaterialSubset* materials,
-                 DataWarehouse* old_dw,
-                 DataWarehouse* new_dw);
+     /*
+      * @brief Performs clean up after simulation has been run
+      */
+      virtual void finalize  (const ProcessorGroup* pg,
+                              const PatchSubset*    patches,
+                              const MaterialSubset* materials,
+                              DataWarehouse*        old_dw,
+                              DataWarehouse*        new_dw,
+                              const SimulationStateP*     simState,
+                              MDSystem*             systemInfo,
+                              const MDLabel*        label,
+                              coordinateSystem*     coordinateSys);
 
-      /**
-       * @brief
-       * @param
-       * @return None
-       */
-      void calculate(const ProcessorGroup* pg,
-                     const PatchSubset* perProcPatches,
-                     const MaterialSubset* materials,
-                     DataWarehouse* old_dw,
-                     DataWarehouse* new_dw,
-                     SchedulerP& subscheduler,
-                     const LevelP& level,
-                     SimulationStateP& sharedState);
+//  Inherited from MDSubcomponent
+     /*
+      * @brief Registers the necessary per-particle variables for this
+      *        subcomponent which are to be tracked and updated as particles
+      *        transition across patch boundaries
+      */
+      virtual void registerRequiredParticleStates(
+                                         LabelArray& particleState,
+                                         LabelArray& particleState_preReloc,
+                                         MDLabel* labels) const;
 
-      /**
-       * @brief
-       * @param None
-       * @return None
-       */
-      void finalize(const ProcessorGroup* pg,
-                    const PatchSubset* patches,
-                    const MaterialSubset* materials,
-                    DataWarehouse* old_dw,
-                    DataWarehouse* new_dw);
+     /*
+      * @brief Registers the required and provided variable labels for the
+      *        Initialize method
+      */
+      virtual void addInitializeRequirements(   Task*  task,
+                                                MDLabel*  labels) const;
+      virtual void addInitializeComputes(       Task*  task,
+                                                MDLabel*  labels) const;
 
-      /**
-       * @brief
-       * @param None
-       * @return
-       */
+     /*
+      * @brief Registers the required and provided variable labels for the
+      *        Setup method
+      */
+      virtual void addSetupRequirements(        Task*  task,
+                                                MDLabel*  labels) const;
+      virtual void addSetupComputes(            Task*  task,
+                                                MDLabel*  labels) const;
+
+     /*
+      * @brief Registers the required and provided variable labels for the
+      *        Calculate method
+      */
+      virtual void addCalculateRequirements(    Task*  task,
+                                                MDLabel*  labels) const;
+      virtual void addCalculateComputes(        Task*  task,
+                                                MDLabel*  labels) const;
+
+     /*
+      * @brief Registers the required and provided variable labels for the
+      *        Finalize method
+      */
+      virtual void addFinalizeRequirements(     Task*  task,
+                                                MDLabel*  labels) const;
+      virtual void addFinalizeComputes(         Task*  task,
+                                                MDLabel*  labels) const;
+
+//  Local methods
+      inline double getRealspaceCutoff() {
+        return d_electrostaticRadius;
+      }
+
       inline ElectrostaticsType getType() const
       {
         return d_electrostaticMethod;
       }
 
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      inline void setMDLabel(MDLabel* lb)
-      {
-        d_label = lb;
+      inline int requiredGhostCells() const {
+        return d_electrostaticGhostCells;
       }
-
-      inline double getRealspaceCutoff() {
-        return d_electrostaticRadius;
-      }
-
-      virtual void registerRequiredParticleStates(std::vector<const VarLabel*>&,
-                                                  std::vector<const VarLabel*>&,
-                                                  MDLabel* ) const;
-
 
     private:
-
-      /*
-       * @brief
-       * @param
-       * @return
-       */
-      void calculateRealspace(const ProcessorGroup* pg,
-                              const PatchSubset* patches,
-                              const MaterialSubset* materials,
-                              DataWarehouse* old_dw,
-                              DataWarehouse* new_dw);
-      /*
-       * @brief
-       * @param
-       * @return
-       */
-      void scheduleCalculateRealspace(SchedulerP& sched,
-                                      const ProcessorGroup* pg,
-                                      const PatchSet* patches,
-                                      const MaterialSet* materials,
-                                      DataWarehouse* subOldDW,
-                                      DataWarehouse* subNewDW);
-      /*
-       * @brief
-       * @param
-       * @return
-       */
-      void scheduleCalculateNewDipoles(SchedulerP& sched,
-                                       const ProcessorGroup* pg,
-                                       const PatchSet* patches,
-                                       const MaterialSet* materials,
-                                       DataWarehouse* subOldDW,
-                                       DataWarehouse* subNewDW);
-      /*
-       * @brief
-       * @param
-       * @return
-       */
-      void scheduleUpdateFieldandStress(SchedulerP& sched,
-                                        const ProcessorGroup* pg,
-                                        const PatchSet* patches,
-                                        const MaterialSet* materials,
-                                        DataWarehouse* subOldDW,
-                                        DataWarehouse* subNewDW);
-      /*
-       * @brief
-       * @param
-       * @return
-       */
-      void scheduleCalculatePreTransform(SchedulerP& sched,
-                                         const ProcessorGroup* pg,
-                                         const PatchSet* patches,
-                                         const MaterialSet* materials,
-                                         DataWarehouse* subOldDW,
-                                         DataWarehouse* subNewDW);
-      /*
-       * @brief
-       * @param
-       * @return
-       */
-      void scheduleReduceNodeLocalQ(SchedulerP& sched,
-                                    const ProcessorGroup* pg,
-                                    const PatchSet* patches,
-                                    const MaterialSet* materials,
-                                    DataWarehouse* subOldDW,
-                                    DataWarehouse* subNewDW);
-      /*
-       * @brief
-       * @param
-       * @return
-       */
-      void scheduleDistributeNodeLocalQ(SchedulerP& sched,
-                                        const ProcessorGroup* pg,
-                                        const PatchSet* patches,
-                                        const MaterialSet* materials,
-                                        DataWarehouse* subOldDW,
-                                        DataWarehouse* subNewDW);
-      /*
-       * @brief
-       * @param
-       * @return
-       */
-      void scheduleCalculateInFourierSpace(SchedulerP& sched,
-                                           const ProcessorGroup* pg,
-                                           const PatchSet* patches,
-                                           const MaterialSet* materials,
-                                           DataWarehouse* subOldDW,
-                                           DataWarehouse* subNewDW);
-      /*
-       * @brief
-       * @param
-       * @return
-       */
-      void scheduleTransformFourierToReal(SchedulerP& sched,
-                                          const ProcessorGroup* pg,
-                                          const PatchSet* perProcPatches,
-                                          const MaterialSet* materials,
-                                          DataWarehouse* subOldDW,
-                                          DataWarehouse* subNewDW,
-                                          const LevelP& level);
-      /*
-       * @brief
-       * @param
-       * @return
-       */
-      void scheduleTransformRealToFourier(SchedulerP& sched,
-                                          const ProcessorGroup* pg,
-                                          const PatchSet* perProcPatches,
-                                          const MaterialSet* materials,
-                                          DataWarehouse* subOldDW,
-                                          DataWarehouse* subNewDW,
-                                          const LevelP& level);
-
-      /**
-       * @brief
-       * @param
-       * @param
-       * @return
-       */
-      void generateChargeMap(std::vector<SPMEMapPoint>* chargeMap,
-                             ParticleSubset* pset,
-                             constParticleVariable<Point>& particlePositions,
-                             constParticleVariable<long64>& particleIDs);
-
-      void dipoleGenerateChargeMap(const ProcessorGroup* pg,
-                                   const PatchSubset* patches,
-                                   const MaterialSubset* materials,
-                                   DataWarehouse* old_dw,
-                                   DataWarehouse* new_dw);
-
-      /**
-       * @brief Map points (charges) onto the underlying grid.
-       * @param
-       * @param
-       * @param
-       * @return
-       */
-      void mapChargeToGrid(SPMEPatch* spmePatch,
-                           const std::vector<SPMEMapPoint>* gridMap,
-                           ParticleSubset* pset,
-                           double charge);
-
-      void dipoleMapChargeToGrid(SPMEPatch* spmePatch,
-                                 const std::vector<SPMEMapPoint>* gridMap,
-                                 ParticleSubset* pset,
-                                 double charge,
-                                 constParticleVariable<Vector>& p_Dipole);
-
-      /**
-       * @brief Map forces from grid back to points.
-       * @param
-       * @return
-       */
-      void mapForceFromGrid(SPMEPatch* spmePatch,
-                            const std::vector<SPMEMapPoint>* gridMap,
-                            ParticleSubset* pset,
-                            double charge,
-                            ParticleVariable<Vector>& pforcenew);
-
-      void dipoleMapForceFromGrid(SPMEPatch* spmePatch,
-                                  const std::vector<SPMEMapPoint>* gridMap,
-                                  ParticleSubset* pset,
-                                  double charge,
-                                  ParticleVariable<Vector>& pforcenew,
-                                  ParticleVariable<Vector>& p_Dipole);
-
-      void calculatePreTransform(const ProcessorGroup* pg,
-                                 const PatchSubset* patches,
-                                 const MaterialSubset* materials,
-                                 DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw);
-
-      void dipoleCalculatePreTransform(const ProcessorGroup* pg,
-                                       const PatchSubset* patches,
-                                       const MaterialSubset* materials,
-                                       DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw);
-
-      void dipoleUpdateFieldAndStress(const ProcessorGroup* pg,
-                                      const PatchSubset* patches,
-                                      const MaterialSubset* materials,
-                                      DataWarehouse* old_dw,
-                                      DataWarehouse* new_dw);
-
-      void calculateNewDipoles(const ProcessorGroup* pg,
-                               const PatchSubset* patches,
-                               const MaterialSubset* materials,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw);
-
-      /**
-       * @brief
-       * @param
-       * @param
-       * @return
-       */
-      std::vector<double> calculateOrdinalSpline(const int orderMinusOne,
-                                            const int splineOrder);
-
-      /**
-       * @brief Generates the local portion of the B grid (see. Essmann et. al., J. Phys. Chem. 103, p 8577, 1995)
-       *          Equation 4.8
-       * @param
-       * @param Extents - The number of internal grid points on the current processor
-       * @param Offsets - The global mapping of the local (0,0,0) coordinate into the global grid index
-       *
-       * @return None
-       */
-      void calculateBGrid(SimpleGrid<double>& BGrid,
-                                        const IntVector& localExtents,
-                                        const IntVector& globalOffset) const;
-
-      /**
-       * @brief
-       * @param
-       * @param
-       * @param
-       * @param
-       * @return
-       */
-      void generateBVector(std::vector<dblcomplex>& bVector,
-                           const std::vector<double>& mFractional,
-                           const int initialIndex,
-                           const int localGridExtent) const;
-
-      /**
-       * @brief
-       * @param
-       * @param
-       * @param
-       * @param
-       * @return
-       */
-      void generateBVectorChunk(std::vector<dblcomplex>& bVector,
-                                const int m_initial,
-                                const int localGridExtent,
-                                const int K) const;
-
-      /**
-       * @brief Generates the local portion of the C grid (see. Essmann et. al., J. Phys. Chem. 103, p 8577, 1995)
-       *          Equation 3.9
-       * @param Extents - The number of internal grid points on the current processor
-       * @param Offsets - The global mapping of the local (0,0,0) coordinate into the global grid index
-       *
-       * @return None
-       */
-      void calculateCGrid(SimpleGrid<double>& CGrid,
-                          const IntVector& extents,
-                          const IntVector& offsets) const;
-
-      /**
-       * @brief
-       * @param stressPrefactor Pointer to the SimpleGrid of stress mat3
-       * @param extents - The number of internal grid points on the current processor
-       * @param offsets - The global mapping of the local (0,0,0) coordinate into the global grid index
-       *
-       * @return None.
-       */
-      void calculateStressPrefactor(SimpleGrid<Matrix3>* stressPrefactor,
-                                    const IntVector& extents,
-                                    const IntVector& offset);
-
+//---->>>> Subordinate functions for the primary interface
+      // Generate a vector of possible fractional frequencies up to
+      // the nyquist frequency, and negative frequencies thereafter
       /**
        * @brief Generates split grid vector.
        *        Generates the vector of points from 0..K/2 in the first half of the array, followed by -K/2..-1
@@ -448,184 +225,417 @@ namespace Uintah {
        * @param spline - CenteredCardinalBSpline that determines the number of wrapping points necessary
        * @return std::vector<double> of (0..[m=K/2],[K/2-K]..-1);
        */
-      inline void generateMPrimeVector(std::vector<double>& mPrime, unsigned int kMax) const
-      {
-        size_t halfMax = kMax / 2;
+      inline void generateMPrimeVector(std::vector<double>& mPrime,
+                                       int                  kMax) const {
+        int halfMax = kMax/2;
 
-        for (size_t idx = 0; idx <= halfMax; ++idx) {
-          mPrime[idx] = static_cast<double>(idx);
+        for (int Index = 0; Index < kMax; ++Index) {
+          mPrime[Index]     = static_cast<double> (Index);
         }
 
-        for (size_t Index = halfMax + 1; Index < kMax; ++Index) {
-          mPrime[Index] = static_cast<double>(static_cast<double>(Index) - static_cast<int>(kMax));
+        for (int Index = halfMax + 1; Index < kMax; ++Index) {
+          mPrime[Index]    -= static_cast<double> (kMax);
         }
+
       }
 
-      /**
-       * @brief Generates reduced Fourier grid vector. Generates the vector of values i/K_i for i = 0...K-1
-       * @param KMax - Maximum number of grid points for direction
-       * @param InterpolatingSpline - CenteredCardinalBSpline that determines the number of wrapping points necessary
-       * @return std::vector<double> of the reduced coordinates for the local grid along the input lattice direction
-       */
-      inline void generateMFractionalVector(std::vector<double>& mFractional,
-                                            size_t kMax) const
-      {
-        double kMaxInv = 1.0 / static_cast<double>(kMax);
-        for (size_t idx = 0; idx < kMax; ++idx) {
-          mFractional[idx] = static_cast<double>(idx) * kMaxInv;
-        }
-      }
+      void generateBVectorChunk(std::vector<dblcomplex>&    bVector,
+                                const int                   m_initial,
+                                const int                   localGridExtent,
+                                const int                   K) const;
 
+      void generateMPrimeChunk(std::vector<double>& mPrimeChunk,
+                               const int            m_initial,
+                               const int            localGridExtent,
+                               const int            K) const;
 
-      /**
-       * @brief Perform all Fourier space calculations.
-       * @param const ProcessorGroup* pg -- All processors processing SPME patches
-       * @param const PatchSubset* patches -- Patches to be processed by this thread
-       * @param const MaterialSubset* materials -- Material subset belonging to this patch
-       * @param DataWarehouse* old_dw -- Last time step's data warehouse
-       * @param DataWarehouse* new_dw -- This time step's data warehouse
-       * @return None
-       */
-      void calculateInFourierSpace(const ProcessorGroup* pg,
-                                   const PatchSubset* patches,
-                                   const MaterialSubset* materials,
-                                   DataWarehouse* old_dw,
-                                   DataWarehouse* new_dw);
+      void calculateBGrid(SimpleGrid<double>&   BGrid) const;
 
-      /**
-       * @brief Perform calculations proceeding the FFT transform from Fourier to real space.
-       * @param const ProcessorGroup* pg -- All processors processing SPME patches
-       * @param const PatchSubset* patches -- Patches to be processed by this thread
-       * @param const MaterialSubset* materials -- Material subset belonging to this patch
-       * @param DataWarehouse* old_dw -- Last time step's data warehouse
-       * @param DataWarehouse* new_dw -- This time step's data warehouse
-       * @return None
-       */
-      void calculatePostTransform(const ProcessorGroup* pg,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset* materials,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw);
-      /**
-       * @brief Perform necessary operation to transform Q grid to fourier space
-       * @param const ProcessorGroup* pg -- All processors processing SPME patches
-       * @param const PatchSubset* patches -- Patches to be processed by this thread
-       * @param const MaterialSubset* materials -- Material subset belonging to this patch
-       * @param DataWarehouse* old_dw -- Last time step's data warehouse
-       * @param DataWarehouse* new_dw -- This time step's data warehouse
-       * @return None
-       *
-       */
-      void transformRealToFourier(const ProcessorGroup* pg,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset* materials,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw);
-      /**
-       * @brief Perform necessary operation to transform Q grid to fourier space
-       * @param const ProcessorGroup* pg -- All processors processing SPME patches
-       * @param const PatchSubset* patches -- Patches to be processed by this thread
-       * @param const MaterialSubset* materials -- Material subset belonging to this patch
-       * @param DataWarehouse* old_dw -- Last time step's data warehouse
-       * @param DataWarehouse* new_dw -- This time step's data warehouse
-       * @return None
-       *
-       */
-      void transformFourierToReal(const ProcessorGroup*pg,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset* materials,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw);
+      void calculateCGrid(SimpleGrid<double>&   CGrid,
+                          coordinateSystem*     coordSys) const;
 
-      /**
-       * @brief Reduce node-local Q data for the global reduction and FFT
-       * @param None
-       * @return None
-       */
-      void reduceNodeLocalQ(const ProcessorGroup* pg,
-                            const PatchSubset* patches,
-                            const MaterialSubset* materials,
-                            DataWarehouse* old_dw,
-                            DataWarehouse* new_dw);
+      void calculateStressPrefactor(SimpleGrid<Matrix3>*    stressPrefactor,
+                                    coordinateSystem*       coordSys);
+
+//---->>>> Functions which serve as proxies to schedule the necessary
+//         calculations for the electrostatics subscheduler.
       /*
-       * @brief Copy internal only patch local Q data to the node-local Q copy for global reduction
-       * @param None
-       * @return None
+       * @brief Schedules the realspace portion of the calculation
        */
-      void copyToNodeLocalQ(const ProcessorGroup* pg,
-                            const PatchSubset* patches,
-                            const MaterialSubset* materials,
-                            DataWarehouse* old_dw,
-                            DataWarehouse* new_dw);
+       void scheduleCalculateRealspace(const ProcessorGroup*  pg,
+                                       const PatchSet*        patches,
+                                       const MaterialSet*     materials,
+                                       DataWarehouse*         subOldDW,
+                                       DataWarehouse*         subNewDW,
+                                       const SimulationStateP*      sharedState,
+                                       const MDLabel*         label,
+                                       coordinateSystem*      coordSys,
+                                       SchedulerP&            sched);
 
-      /**
-       * @brief redistribute node-local Q data (force)
-       * @param None
-       * @return None
-       */
-      void distributeNodeLocalQ(const ProcessorGroup* pg,
-                                const PatchSubset* patches,
-                                const MaterialSubset* materials,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw);
+       /*
+        * @brief    Places the calculation of the charge spreading into the
+        *           task graph
+        */
+       void scheduleCalculatePretransform(const ProcessorGroup* pg,
+                                          const PatchSet*       patches,
+                                          const MaterialSet*    materials,
+                                          DataWarehouse*        subOldDW,
+                                          DataWarehouse*        subNewDW,
+                                          const SimulationStateP*     simState,
+                                          const MDLabel*        label,
+                                          coordinateSystem*     coordSystem,
+                                          SchedulerP&           sched);
+       /*
+        * @brief    Places the reduction of nodewide fourier space data into
+        *           the task graph
+        */
+       void scheduleReduceNodeLocalQ(const ProcessorGroup*  pg,
+                                     const PatchSet*        patches,
+                                     const MaterialSet*     materials,
+                                     DataWarehouse*         subOldDW,
+                                     DataWarehouse*         subNewDW,
+                                     const MDLabel*         label,
+                                     SchedulerP&            sched);
 
-      /**
-       * @brief Checks for convergence of polarizability calculation
-       * @param None
-       * @return Bool - true if converged, false if not
-       */
-      bool checkConvergence() const;
+       /*
+        * @brief    Places the real->fourier transform into the task graph
+        */
+       void scheduleTransformRealToFourier(const ProcessorGroup*    pg,
+                                           const PatchSet*          patches,
+                                           const MaterialSet*       materials,
+                                           DataWarehouse*           subOldDW,
+                                           DataWarehouse*           subNewDW,
+                                           const MDLabel*           label,
+                                           const LevelP&            level,
+                                           SchedulerP&              sched);
 
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      inline bool getPolarizableCalculation() const
-      {
-        return d_polarizable;
-      }
+       /*
+        * @brief    Places the fourier space calculations into the task graph
+        */
+       void scheduleCalculateInFourierSpace(const ProcessorGroup*   pg,
+                                            const PatchSet*         patches,
+                                            const MaterialSet*      materials,
+                                            DataWarehouse*          subOldDW,
+                                            DataWarehouse*          subNewDW,
+                                            const MDLabel*          label,
+                                            SchedulerP&             sched);
 
-      // Values fixed on instantiation
-      ElectrostaticsType d_electrostaticMethod;         //!< Implementation type for long range electrostatics
-      MDSystem* d_system;                               //!< A handle to the MD simulation system object
-      MDLabel* d_label;                                    //!< A handle on the set of MD specific labels
-      double d_ewaldBeta;						                    //!< The Ewald calculation damping coefficient
-      double d_electrostaticRadius;                     //!< Radius for realspace electrostatic interactions
+       /*
+        * @brief    Places the fourier->real transform into the task graph
+        */
+       void scheduleTransformFourierToReal(const ProcessorGroup*    pg,
+                                           const PatchSet*          patches,
+                                           const MaterialSet*       materials,
+                                           DataWarehouse*           subOldDW,
+                                           DataWarehouse*           subNewDW,
+                                           const MDLabel*           label,
+                                           const LevelP&            level,
+                                           SchedulerP&              sched);
 
-      // Dipole related variables
-      bool d_polarizable;				                //!< Use polarizable Ewald formulation
-      double d_polarizationTolerance;                   //!< Tolerance threshold for polarizable system
-      static const double d_dipoleMixRatio;              //!< Amount of old dipole to mix into new dipole for convergence
+       /*
+        * @brief    Places the distribution of aggregate data to individual
+        *           nodes into the task graph
+        */
+       void scheduleDistributeNodeLocalQ(const ProcessorGroup*  pg,
+                                         const PatchSet*        patches,
+                                         const MaterialSet*     materials,
+                                         DataWarehouse*         subOldDW,
+                                         DataWarehouse*         subNewDW,
+                                         const MDLabel*         label,
+                                         SchedulerP&            sched);
 
-      IntVector d_kLimits;                              //!< Number of grid divisions in each direction
-      int d_maxPolarizableIterations;                   //!< Max number of polarization iterations to do
-      ShiftedCardinalBSpline d_interpolatingSpline;     //!< Spline object to hold info for spline calculation
-      SimpleGrid<dblcomplex>* d_Q_nodeLocal;            //!< The local version of the global Q grid
-      SimpleGrid<dblcomplex>* d_Q_nodeLocalScratch;     //!< Scratch version of the global Q grid - for Allreduce
+       /*
+        * @brief    Places the reduction of the electrostatic field and update
+        *           of stress tensor into the task graph (dipole only)
+        */
+       void scheduleUpdateFieldAndStress(const ProcessorGroup*  pg,
+                                         const PatchSet*        patches,
+                                         const MaterialSet*     materials,
+                                         DataWarehouse*         subOldDW,
+                                         DataWarehouse*         subNewDW,
+                                         const MDLabel*         label,
+                                         coordinateSystem*      coordSystem,
+                                         SchedulerP&            sched);
 
-      struct LocalFFTData {
-          fftw_complex* complexData;
-          ptrdiff_t numElements;
-          ptrdiff_t startAddress;
-      };
+       /*
+        * @brief    Place the calculation of new dipoles into the task graph
+        */
+       void scheduleCalculateNewDipoles(const ProcessorGroup*  pg,
+                                        const PatchSet*        patches,
+                                        const MaterialSet*     materials,
+                                        DataWarehouse*         subOldDW,
+                                        DataWarehouse*         subNewDW,
+                                        const MDLabel*         label,
+                                        SchedulerP&            sched);
 
-      fftw_plan d_forwardPlan;                          //!< Forward FFTW MPI plan
-      fftw_plan d_backwardPlan;                         //!< Reverse FFTW MPI plan
-      LocalFFTData d_localFFTData;                      //!< The local portion of the global 3D FFT data
+       void scheduleCalculatePostTransform(const ProcessorGroup*    pg,
+                                           const PatchSet*          patches,
+                                           const MaterialSet*       materials,
+                                           DataWarehouse*           subOldDW,
+                                           DataWarehouse*           subNewDW,
+                                           const SimulationStateP*        simState,
+                                           const MDLabel*           label,
+                                           coordinateSystem*        coordSystem,
+                                           SchedulerP&              sched);
 
-      // Variables we'll get from the MDSystem instance to make life easier
-      Matrix3 d_unitCell;           //!< Unit cell lattice parameters
-      Matrix3 d_inverseUnitCell;    //!< Inverse lattice parameters
-      double d_systemVolume;        //!< Volume of the unit cell
+// ---->>>> Actual calculation routines; non-framework logic resides in these
+       /*
+        * @brief Realspace portion of Ewald calculation for non-dipolar systems
+        */
+       void calculateRealspace(const ProcessorGroup*    pg,
+                               const PatchSubset*       patches,
+                               const MaterialSubset*    materials,
+                               DataWarehouse*           subOldDW,
+                               DataWarehouse*           subNewDW,
+                               const SimulationStateP*        sharedState,
+                               const MDLabel*           label,
+                               coordinateSystem*        coordSystem);
 
-      std::map<int, SPMEPatch*> d_spmePatchMap;  //!< These are the pieces of the K-space grid, map to Uintah patches
+       /*
+        * @brief    Realspace portion of Ewald calculation for induced dipolar
+        *           systems
+        */
+       void calculateRealspaceDipole(const ProcessorGroup*  pg,
+                                     const PatchSubset*     patches,
+                                     const MaterialSubset*  materials,
+                                     DataWarehouse*         subOldDW,
+                                     DataWarehouse*         subNewDW,
+                                     const SimulationStateP*      sharedState,
+                                     const MDLabel*         label,
+                                     coordinateSystem*      coordSystem);
 
-      Mutex d_Qlock;               //!< for local reductions on d_Q_nodeLocal (contention on overlapping ghost cells)
-      mutable CrowdMonitor d_spmeLock;
+       /*
+        * @brief    Generates the basic coefficients for mapping charge to the
+        *           fourier space grid
+        */
+       void generateChargeMap(const ProcessorGroup*  pg,
+                              const PatchSubset*     patches,
+                              const MaterialSubset*  materials,
+                              DataWarehouse*         subOldDW,
+                              DataWarehouse*         subNewDW,
+                              const MDLabel*         label,
+                              coordinateSystem*      coordSystem);
 
+       /*
+         * @brief    Generates the basic coefficients for mapping charge +
+         *           dipole contributions to the fourier space grid.
+         */
+        void generateChargeMapDipole(const ProcessorGroup*  pg,
+                                     const PatchSubset*     patches,
+                                     const MaterialSubset*  materials,
+                                     DataWarehouse*         old_dw,
+                                     DataWarehouse*         new_dw,
+                                     const MDLabel*         label,
+                                     coordinateSystem*      coordSystem);
+        /*
+         * @brief   Performs calculations necessary to fill the fourier charge
+         *          grid.
+         */
+       void calculatePreTransform(const ProcessorGroup*     pg,
+                                  const PatchSubset*        patches,
+                                  const MaterialSubset*     materials,
+                                  DataWarehouse*            oldDW,
+                                  DataWarehouse*            newDW,
+                                  const SimulationStateP*         simState,
+                                  const MDLabel*            label,
+                                  coordinateSystem*         coordSys);
+
+       /*
+        * @brief    Performs calculations necessary to fill the fourier charge
+        *           + dipole grid.
+        */
+       void calculatePreTransformDipole(const ProcessorGroup*   pg,
+                                        const PatchSubset*      patches,
+                                        const MaterialSubset*   materials,
+                                        DataWarehouse*          oldDW,
+                                        DataWarehouse*          newDW,
+                                        const SimulationStateP*       simState,
+                                        const MDLabel*          label,
+                                        coordinateSystem*       coordSys);
+
+       /*
+        * @brief    Maps the particle charge value onto the K-space grid
+        */
+       void mapChargeToGrid(SPMEPatch*              spmePatch,
+                            const spmeMapVector*    gridMap,
+                            ParticleSubset*         atomSet,
+                            double                  charge,
+                            coordinateSystem*       coordSys);
+
+       /*
+        * @brief    Maps the particle charge/dipole value onto the K-space grid
+        */
+       void mapChargeToGridDipole(SPMEPatch*                        spmePatch,
+                                  const spmeMapVector*              gridMap,
+                                  ParticleSubset*                   pset,
+                                  double                            charge,
+                                  constParticleVariable<Vector>&    p_Dipole,
+                                  coordinateSystem*                 coordSys);
+
+       void calculateInFourierSpace(const ProcessorGroup*   pg,
+                                    const PatchSubset*      patches,
+                                    const MaterialSubset*   materials,
+                                    DataWarehouse*          oldDW,
+                                    DataWarehouse*          newDW,
+                                    const MDLabel*          label);
+
+       /*
+        * @brief    Calculate the new predicted dipole from the total field
+        */
+       void calculateNewDipoles(const ProcessorGroup*   pg,
+                                const PatchSubset*      patches,
+                                const MaterialSubset*   materials,
+                                DataWarehouse*          oldDW,
+                                DataWarehouse*          newDW,
+                                const MDLabel*          label);
+
+       /*
+        * @brief    Determine the force of the charge-only system
+        */
+       void mapForceFromGrid(const SPMEPatch*           spmePatch,
+                             const spmeMapVector*       gridMap,
+                             ParticleSubset*            atomSet,
+                             const double               charge,
+                             ParticleVariable<Vector>&  pForceRecip,
+                             coordinateSystem*          coordSys);
+
+       /*
+        * @brief    Determine the force of the induced dipole system
+        */
+       void mapForceFromGridDipole(const SPMEPatch*                 spmePatch,
+                                   const spmeMapVector*             gridMap,
+                                   ParticleSubset*                  particles,
+                                   const double                     charge,
+                                   const ParticleVariable<Vector>&  pDipole,
+                                   ParticleVariable<Vector>&        pForceRecip,
+                                   coordinateSystem*                coordSystem);
+
+       /*
+        * @brief    Set up force calculations after real->fourier transform
+        */
+       void calculatePostTransformDipole(const ProcessorGroup*  pg,
+                                         const PatchSubset*     patches,
+                                         const MaterialSubset*  materials,
+                                         DataWarehouse*         oldDW,
+                                         DataWarehouse*         newDW,
+                                         const SimulationStateP*      simState,
+                                         const MDLabel*         label,
+                                         coordinateSystem*      coordSystem);
+
+       /*
+        * @brief    Calculate forces for the non-dipolar system
+        */
+       void calculatePostTransform(const ProcessorGroup*    pg,
+                                   const PatchSubset*       patches,
+                                   const MaterialSubset*    materials,
+                                   DataWarehouse*           oldDW,
+                                   DataWarehouse*           newDW,
+                                   const SimulationStateP*        simState,
+                                   const MDLabel*           label,
+                                   coordinateSystem*        coordSystem);
+
+       /*
+        * @brief    Calculates the updated field for the induced polarizable
+        *           system and also calculates the dipole correction to the
+        *           stress tensor.
+        */
+       void dipoleUpdateFieldAndStress(const ProcessorGroup*    pg,
+                                       const PatchSubset*       patches,
+                                       const MaterialSubset*    materials,
+                                       DataWarehouse*           oldDW,
+                                       DataWarehouse*           newDW,
+                                       const MDLabel*           label,
+                                       coordinateSystem*        coordSystem);
+
+       /*
+        * @brief    On-processor reduction of the local, per-thread instances
+        *           of the Q grid before the FFT is called.
+        */
+       void reduceNodeLocalQ(const ProcessorGroup*  pg,
+                             const PatchSubset*     patches,
+                             const MaterialSubset*  materials,
+                             DataWarehouse*         oldDW,
+                             DataWarehouse*         newDW);
+
+       /*
+        * @brief    Places the transformed Q data back into the local,
+        *           per-thread Q variable
+        */
+       void distributeNodeLocalQ(const ProcessorGroup*  pg,
+                                 const PatchSubset*     patches,
+                                 const MaterialSubset*  materials,
+                                 DataWarehouse*         oldDW,
+                                 DataWarehouse*         newDW);
+
+       void transformRealToFourier(const ProcessorGroup*    pg,
+                                   const PatchSubset*       patches,
+                                   const MaterialSubset*    materials,
+                                   DataWarehouse*           oldDW,
+                                   DataWarehouse*           newDW);
+
+       void transformFourierToReal(const ProcessorGroup*    pg,
+                                   const PatchSubset*       patches,
+                                   const MaterialSubset*    materials,
+                                   DataWarehouse*           oldDW,
+                                   DataWarehouse*           newDW);
+
+
+       bool checkConvergence() const;
+
+//  Data members
+   // Implementation type for electrostatic calculation
+       ElectrostaticsType           d_electrostaticMethod;
+
+  //--> Basic charge related variables
+   // B1: Ewald calculation damping coefficient
+   // B2: Cutoff radius for realspace portion of Ewald calculation
+   // B3: Number of ghost cells necessary for realspace portion of Ewald calc.
+   // B4: Number of fourier space grid divisions along each unit axis
+       double                       d_electrostaticRadius;      // B1
+       int                          d_electrostaticGhostCells;  // B2
+       SCIRun::IntVector            d_kLimits;                  // B3
+       double                       d_ewaldBeta;                // B4
+
+  //--> Dipole related variables
+   // D1) Whether or not calculation includes induced polarizability
+   // D2) Number of iterations to perform before giving up on convergence
+   // D3) Tolerance threshold for polarizability convergence
+   // D4)Amount of old dipole to mix with new in convergence loop
+       bool                         f_polarizable;              // D1
+       int                          d_maxPolarizableIterations; // D2
+       const double                 d_polarizationTolerance;    // D3
+       static const double          d_dipoleMixRatio;           // D4
+
+  //--> FFTW related variables and structures
+       struct LocalFFTData {
+         fftw_complex*    complexData;
+         ptrdiff_t        numElements;
+         ptrdiff_t        startAddress;
+       };
+   // F1) Forward FFTW MPI transformation plan:
+   // F2) Backward FFTW MPI transformation plan:
+   // F3) Local portion of the entire FFT data set:
+       fftw_plan                    d_forwardPlan;              // F1
+       fftw_plan                    d_backwardPlan;             // F2
+       LocalFFTData                 d_localFFTData;             // F3
+
+  //--> Processor local helper variables and objects necessary to perform SPME
+   // H1: Spline object used to spread the aggregate charges onto Fourier grid
+   // H2: Map which holds the pieces of the k-Space grid, indexed by the patch
+   //     to which they correspond
+   // H3: Data structure which holds the entire processor contribution to the
+   //     gridded charge
+   // H4: Data structure which acts as a scratch pad for calculations on the
+   //     local processor contribution to the gridded charge
+   // H5: Lock for threaded access to the local processor charge grids
+       ShiftedCardinalBSpline       d_interpolatingSpline;      // H1
+       std::map<int, SPMEPatch*>    d_spmePatchMap;             // H2
+       SimpleGrid<dblcomplex>*      d_Q_nodeLocal;              // H3
+       SimpleGrid<dblcomplex>*      d_Q_nodeLocalScratch;       // H4
+       Mutex                        d_Qlock;                    // H5
+
+       mutable CrowdMonitor         d_spmeLock;
   };
+}
 
-}  // End namespace Uintah
-
-#endif
+#endif /* SPME_COMMON_H_ */

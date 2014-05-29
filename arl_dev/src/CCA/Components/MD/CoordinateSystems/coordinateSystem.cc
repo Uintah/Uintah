@@ -1,4 +1,5 @@
 /*
+ *
  * The MIT License
  *
  * Copyright (c) 1997-2014 The University of Utah
@@ -20,43 +21,34 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
+ *
+ * ----------------------------------------------------------
+ * coordinateSystem.cc
+ *
+ *  Created on: May 12, 2014
+ *      Author: jbhooper
  */
 
-#ifndef UINTAH_MD_ELECTROSTATICSFACTORY_h
-#define UINTAH_MD_ELECTROSTATICSFACTORY_h
-
-#include <Core/ProblemSpec/ProblemSpecP.h>
-#include <CCA/Components/MD/Electrostatics/Electrostatics.h>
 #include <CCA/Components/MD/CoordinateSystems/coordinateSystem.h>
 
-namespace Uintah {
+using namespace Uintah;
 
-  class ProcessorGroup;
-  class MDSystem;
+const double coordinateSystem::PI_Over_2 = acos(-1.0);
 
-  /**
-   *  @class ElectrostaticsFactory
-   *  @ingroup MD
-   *  @author Alan Humphrey and Justin Hooper
-   *  @date   February, 2013
-   *
-   *  @brief
-   *
-   *  @param
-   */
-  class ElectrostaticsFactory {
+coordinateSystem::coordinateSystem(const SCIRun::IntVector& _extent,
+                                   const SCIRun::IntVector& _periodic)
+                                  :d_totalCellExtent(_extent),
+                                   d_periodic(_periodic) {
 
-    public:
+  f_periodicX = false;
+  f_periodicY = false;
+  f_periodicZ = false;
+  if (d_periodic[0] != 0) f_periodicX = true;
+  if (d_periodic[1] != 0) f_periodicY = true;
+  if (d_periodic[2] != 0) f_periodicZ = true;
 
-      /**
-       * @brief Simply create the appropriate Electrostatics object.
-       *         This method has a switch for all known Electrostatics types.
-       * @param ps The ProblemSpec handle with which to get electrostatics properties from the input file.
-       * @param system The MD system handle to pass off to the appropriate Electrostatics constructor.
-       */
-      static Electrostatics* create(const ProblemSpecP& ps,
-                                          coordinateSystem* coords);
-  };
-}  // End namespace Uintah
+  markCellChanged();
 
-#endif
+}
+
+

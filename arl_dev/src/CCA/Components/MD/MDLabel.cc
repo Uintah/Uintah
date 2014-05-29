@@ -82,10 +82,11 @@ nonbondedLabels::~nonbondedLabels() { // destroy variable labels used in nonbond
 
 electrostaticLabels::electrostaticLabels() { // create variable labels used in electrostatic calculation contexts
   // Reduction variables
-  rElectrostaticRealEnergy      = VarLabel::create("e_elec_real", sum_vartype::getTypeDescription());
-  rElectrostaticRealStress      = VarLabel::create("S_elec_real", matrix_sum::getTypeDescription());
-  rElectrostaticInverseEnergy   = VarLabel::create("e_elec_inv", sum_vartype::getTypeDescription());
-  rElectrostaticInverseStress   = VarLabel::create("S_elec_inv", matrix_sum::getTypeDescription());
+  rElectrostaticRealEnergy          = VarLabel::create("e_elec_real", sum_vartype::getTypeDescription());
+  rElectrostaticRealStress          = VarLabel::create("S_elec_real", matrix_sum::getTypeDescription());
+  rElectrostaticInverseEnergy       = VarLabel::create("e_elec_inv", sum_vartype::getTypeDescription());
+  rElectrostaticInverseStress       = VarLabel::create("S_elec_inv", matrix_sum::getTypeDescription());
+  rElectrostaticInverseStressDipole = VarLabel::create("S_elec_inv_dip", matrix_sum::getTypeDescription());
 
   // Sole variables for interfacing with FFTW
 #ifdef HAVE_FFTW
@@ -124,6 +125,7 @@ electrostaticLabels::~electrostaticLabels() { // destroy variable labels used in
   VarLabel::destroy(rElectrostaticRealStress);
   VarLabel::destroy(rElectrostaticInverseEnergy);
   VarLabel::destroy(rElectrostaticInverseStress);
+  VarLabel::destroy(rElectrostaticInverseStressDipole);
 
 #ifdef HAVE_FFTW
   VarLabel::destroy(sForwardTransformPlan);

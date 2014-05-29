@@ -27,16 +27,12 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR	:= CCA/Components/MD/Electrostatics/SPME
+SRCDIR	:= CCA/Components/MD/CoordinateSystems
 
-SRCS += $(SRCDIR)/SPMEMapPoint.cc				\
-        $(SRCDIR)/SPMEPatch.cc					\
-        $(SRCDIR)/DipoleRoutines.cc				\
-        $(SRCDIR)/BaseInterface.cc				\
-        $(SRCDIR)/ChargeRoutines.cc				\
-        $(SRCDIR)/SharedRoutines.cc				\
-        $(SRCDIR)/SchedulingInterface.cc		\
-        $(SRCDIR)/ShiftedCardinalBSpline.cc
+SRCS += $(SRCDIR)/coordinateSystem.cc			\
+        $(SRCDIR)/orthorhombicCoordinates.cc	\
+        $(SRCDIR)/genericCoordinates.cc			\
+		$(SRCDIR)/coordinateSystemFactory.cc
         
 PSELIBS :=
 

@@ -82,7 +82,9 @@ namespace Uintah {
      void set(int i, int j, double val);
 
     // sub-vector extraction
+    inline void getRow(int i, SCIRun::Vector&) const;
     inline SCIRun::Vector getRow(int i) const;
+    inline void getColumn(int i, SCIRun::Vector&) const;
     inline SCIRun::Vector getColumn(int i) const;
 
 
@@ -480,12 +482,28 @@ namespace Uintah {
       }
     }
 
+  inline void Matrix3::getRow(int i, SCIRun::Vector& _In) const {
+    _In[0]=mat3[i][0];
+    _In[1]=mat3[i][1];
+    _In[2]=mat3[i][2];
+  }
+
   inline SCIRun::Vector Matrix3::getRow(int i) const {
-    return (Vector(mat3[i][0],mat3[i][1],mat3[i][2]));
+    SCIRun::Vector temp;
+    getRow(i,temp);
+    return(temp);
+  }
+
+  inline void Matrix3::getColumn(int i, SCIRun::Vector& _In) const {
+    _In[0]=mat3[0][i];
+    _In[1]=mat3[1][i];
+    _In[2]=mat3[2][i];
   }
 
   inline SCIRun::Vector Matrix3::getColumn(int i) const {
-    return (Vector(mat3[0][i],mat3[1][i],mat3[2][i]));
+    SCIRun::Vector temp;
+    getColumn(i,temp);
+    return temp;
   }
 
 

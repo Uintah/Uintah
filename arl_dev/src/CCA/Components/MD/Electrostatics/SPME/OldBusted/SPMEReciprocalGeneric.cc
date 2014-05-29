@@ -59,7 +59,7 @@
 
 #define IV_ZERO IntVector(0,0,0)
 
-using namespace Uintah;
+using namespace OldSPME;
 
 extern SCIRun::Mutex coutLock;
 
@@ -468,7 +468,8 @@ void SPME::calculateCGrid(SimpleGrid<double>& CGrid,
 
 void SPME::calculateStressPrefactor(SimpleGrid<Matrix3>* stressPrefactor,
                                     const IntVector& extents,
-                                    const IntVector& offset)
+                                    const IntVector& offset,
+                                    const Uintah::Matrix3& inverseCell)
 {
   std::vector<double> mp1(d_kLimits.x());
   std::vector<double> mp2(d_kLimits.y());
@@ -495,7 +496,7 @@ void SPME::calculateStressPrefactor(SimpleGrid<Matrix3>* stressPrefactor,
       for (size_t kZ = 0; kZ < zExtents; ++kZ) {
         if (kX != 0 || kY != 0 || kZ != 0) {
           Vector m(mp1[kX + xOffset], mp2[kY + yOffset], mp3[kZ + zOffset]);
-          m = m * d_inverseUnitCell;
+          m = m * inverseCell;
           double M2 = m.length2();
           Matrix3 localStressContribution(-2.0 * (1.0 + PI2 * M2 * invBeta2) / M2);
 

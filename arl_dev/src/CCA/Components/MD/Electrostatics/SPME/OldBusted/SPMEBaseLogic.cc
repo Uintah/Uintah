@@ -66,7 +66,7 @@
 
 #define IV_ZERO IntVector(0,0,0)
 
-using namespace Uintah;
+using namespace OldSPME;
 
 // This file implements the core of the SPME implementation of the electrostatics factory
 //  Constructors, destructors, the four basic interface operation
