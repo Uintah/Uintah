@@ -108,11 +108,9 @@ Pressure::Pressure( const std::string& pressureName,
     // note that this does not provide any ghost entries in the matrix...
     matrixLabel_  ( Uintah::VarLabel::create( "pressure_matrix", Uintah::CCVariable<Uintah::Stencil4>::getTypeDescription() ) ),
     pressureLabel_( Uintah::VarLabel::create( pressureName,
-                                              Wasatch::get_uintah_field_type_descriptor<SVolField>(),
-                                              Wasatch::get_uintah_ghost_descriptor<SVolField>() ) ),
+                                              Wasatch::get_uintah_field_type_descriptor<SVolField>() ) ),
     prhsLabel_    ( Uintah::VarLabel::create( pressureRHSName,
-                                              Wasatch::get_uintah_field_type_descriptor<SVolField>(),
-                                              Wasatch::get_uintah_ghost_descriptor<SVolField>() ) )
+                                              Wasatch::get_uintah_field_type_descriptor<SVolField>() ) )
 {}
 
 //--------------------------------------------------------------------

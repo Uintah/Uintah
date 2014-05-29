@@ -64,13 +64,12 @@ namespace Wasatch {
     VarHelperBase( const Expr::Tag& var,
                    const bool retainName,
                    const Uintah::TypeDescription* typeDesc,
-                   const Uintah::IntVector ghostDesc,
                    Uintah::Ghost::GhostType ghostType)
     : name_( var ),
       oldName_( var.name() + ( (retainName) ? "" : "_old" ), Expr::STATE_NONE ),
       needsNewVarLabel_ ( Uintah::VarLabel::find( name_.name() ) == NULL ),
-      oldVarLabel_( Uintah::VarLabel::create( oldName_.name(), typeDesc, ghostDesc ) ),
-      varLabel_   ( needsNewVarLabel_ ? Uintah::VarLabel::create( name_.name(), typeDesc, ghostDesc ) : Uintah::VarLabel::find( name_.name() ) ),
+      oldVarLabel_( Uintah::VarLabel::create( oldName_.name(), typeDesc ) ),
+      varLabel_   ( needsNewVarLabel_ ? Uintah::VarLabel::create( name_.name(), typeDesc ) : Uintah::VarLabel::find( name_.name() ) ),
       ghostType_  ( ghostType )
     {}
 
@@ -106,7 +105,6 @@ namespace Wasatch {
     : VarHelperBase( var,
                      retainName,
                      get_uintah_field_type_descriptor<T>(),
-                     get_uintah_ghost_descriptor<T>(),
                      get_uintah_ghost_type<T>())
     {}
 

@@ -70,17 +70,13 @@ RadiationSource::RadiationSource( const std::string& radiationSourceName,
 
     // note that this does not provide any ghost entries in the matrix...
     temperatureLabel_( Uintah::VarLabel::create( temperatureTag_.name(),
-                                                 Wasatch::get_uintah_field_type_descriptor<SVolField>(),
-                                                 Wasatch::get_uintah_ghost_descriptor<SVolField>() ) ),
+                                                 Wasatch::get_uintah_field_type_descriptor<SVolField>() ) ),
     absorptionLabel_ ( Uintah::VarLabel::create( absorptionTag_.name(),
-                                                 Wasatch::get_uintah_field_type_descriptor<SVolField>(),
-                                                 Wasatch::get_uintah_ghost_descriptor<SVolField>() ) ),
+                                                 Wasatch::get_uintah_field_type_descriptor<SVolField>() ) ),
     celltypeLabel_   ( Uintah::VarLabel::create( celltypeTag_.name(),
-                                                 Wasatch::get_uintah_field_type_descriptor<int>(),
-                                                 Wasatch::get_uintah_ghost_descriptor<int>() ) ),
+                                                 Wasatch::get_uintah_field_type_descriptor<int>() ) ),
     divqLabel_       ( Uintah::VarLabel::create( radiationSourceName,
-                                                 Wasatch::get_uintah_field_type_descriptor<SVolField>(),
-                                                 Wasatch::get_uintah_ghost_descriptor<SVolField>() ) )
+                                                 Wasatch::get_uintah_field_type_descriptor<SVolField>() ) )
 {
   rmcrt_ = scinew Uintah::Ray();
   

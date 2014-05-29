@@ -231,7 +231,6 @@ namespace Wasatch{
   {
     const std::string rhsName = solnGraphHelper_->exprFactory->get_labels(rhsID)[0].name();
     const Uintah::TypeDescription* typeDesc = get_uintah_field_type_descriptor<FieldT>();
-    const Uintah::IntVector ghostDesc       = get_uintah_ghost_descriptor<FieldT>();
 
     const Expr::Tag solnVarTag(solnVarName,Expr::STATE_NONE);
     const Expr::Tag rhsVarTag (rhsName,    Expr::STATE_NONE);
