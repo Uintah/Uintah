@@ -108,7 +108,10 @@ JWLppMPM::JWLppMPM(ProblemSpecP& ps, MPMFlags* Mflag)
                                ParticleVariable<double>::getTypeDescription());
   pProgressdelFLabel_preReloc = VarLabel::create("p.progressdelF+",
                                ParticleVariable<double>::getTypeDescription());
-
+  pVelGradLabel               = VarLabel::create("p.velGrad",
+                               ParticleVariable<Matrix3>::getTypeDescription());
+  pVelGradLabel_preReloc      = VarLabel::create("p.velGrad+",
+                               ParticleVariable<Matrix3>::getTypeDescription());
   pLocalizedLabel             = VarLabel::create("p.localized",
                                ParticleVariable<int>::getTypeDescription());
   pLocalizedLabel_preReloc    = VarLabel::create("p.localized+",
@@ -158,6 +161,10 @@ JWLppMPM::JWLppMPM(const JWLppMPM* cm) : ConstitutiveModel(cm)
                                ParticleVariable<double>::getTypeDescription());
   pProgressdelFLabel_preReloc = VarLabel::create("p.progressdelF+",
                                ParticleVariable<double>::getTypeDescription());
+  pVelGradLabel               = VarLabel::create("p.velGrad",
+                               ParticleVariable<Matrix3>::getTypeDescription());
+  pVelGradLabel_preReloc      = VarLabel::create("p.velGrad+",
+                               ParticleVariable<Matrix3>::getTypeDescription());
   pLocalizedLabel             = VarLabel::create("p.localized",
                                ParticleVariable<int>::getTypeDescription());
   pLocalizedLabel_preReloc    = VarLabel::create("p.localized+",
@@ -170,6 +177,8 @@ JWLppMPM::~JWLppMPM()
   VarLabel::destroy(pProgressFLabel_preReloc);
   VarLabel::destroy(pProgressdelFLabel);
   VarLabel::destroy(pProgressdelFLabel_preReloc);
+  VarLabel::destroy(pVelGradLabel);
+  VarLabel::destroy(pVelGradLabel_preReloc);
   VarLabel::destroy(pLocalizedLabel);
   VarLabel::destroy(pLocalizedLabel_preReloc);
 }
@@ -225,18 +234,20 @@ void JWLppMPM::initializeCMData(const Patch* patch,
                                 DataWarehouse* new_dw)
 {
   // Initialize local variables
+  Matrix3 zero(0.0);
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
   ParticleVariable<int>     pLocalized;
   ParticleVariable<double>  pProgress, pProgressdelF;
-
-  new_dw->allocateAndPut(pProgress,    pProgressFLabel,   pset);
+  ParticleVariable<Matrix3> pVelGrad;
+  new_dw->allocateAndPut(pProgress,pProgressFLabel,pset);
   new_dw->allocateAndPut(pProgressdelF,pProgressdelFLabel,pset);
-  new_dw->allocateAndPut(pLocalized,    pLocalizedLabel,  pset);
-  
+  new_dw->allocateAndPut(pVelGrad, pVelGradLabel, pset);
+  new_dw->allocateAndPut(pLocalized, pLocalizedLabel, pset);
   ParticleSubset::iterator iter = pset->begin();
   for(; iter != pset->end(); iter++){
     pProgress[*iter]     = 0.0;
     pProgressdelF[*iter] = 0.0;
+    pVelGrad[*iter] = zero;
     pLocalized[*iter] = 0;
   }
 
@@ -293,7 +304,8 @@ void JWLppMPM::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(pProgressFLabel_preReloc);
   from.push_back(pProgressdelFLabel);
   to.push_back(pProgressdelFLabel_preReloc);
-  
+  from.push_back(pVelGradLabel);
+  to.push_back(pVelGradLabel_preReloc);
   from.push_back(pLocalizedLabel);
   to.push_back(pLocalizedLabel_preReloc);
 }
@@ -391,14 +403,13 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pstress_new,     lb->pStressLabel_preReloc,    pset);
     new_dw->allocateAndPut(pdTdt,           lb->pdTdtLabel_preReloc,      pset);
     new_dw->allocateAndPut(p_q,             lb->p_qLabel_preReloc,        pset);
-    
     new_dw->allocateAndPut(pProgressF_new,    pProgressFLabel_preReloc,   pset);
     new_dw->allocateAndPut(pProgressdelF_new, pProgressdelFLabel_preReloc,pset);
     new_dw->allocateAndPut(pLocalized_new,    pLocalizedLabel_preReloc,   pset);
-    
     new_dw->get(pvolume,          lb->pVolumeLabel_preReloc,              pset);
     new_dw->get(velGrad,          lb->pVelGradLabel_preReloc,             pset);
-    new_dw->get(pDefGrad_new,     lb->pDeformationMeasureLabel_preReloc,  pset);
+    new_dw->get(pDefGrad_new,
+                                  lb->pDeformationMeasureLabel_preReloc,  pset);
 
     // Compute deformation gradient and velocity gradient at each 
     // particle before pressure stabilization
@@ -562,7 +573,8 @@ void JWLppMPM::addComputesAndRequires(Task* task,
   task->computes(pProgressFLabel_preReloc,        matlset);
   task->requires(Task::OldDW, pProgressdelFLabel, matlset, Ghost::None);
   task->computes(pProgressdelFLabel_preReloc,     matlset);
-  task->requires(Task::OldDW, lb->pVelGradLabel,  matlset, Ghost::None);
+  task->requires(Task::OldDW, pVelGradLabel,      matlset, Ghost::None);
+  task->computes(pVelGradLabel_preReloc,          matlset);
   task->requires(Task::OldDW, pLocalizedLabel,    matlset, Ghost::None);
   task->computes(pLocalizedLabel_preReloc,        matlset);
 }
