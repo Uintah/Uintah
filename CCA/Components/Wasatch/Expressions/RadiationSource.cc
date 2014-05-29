@@ -69,82 +69,81 @@ RadiationSource::RadiationSource( const std::string& radiationSourceName,
     celltypeTag_( celltypeTag),
 
     // note that this does not provide any ghost entries in the matrix...
-    temperatureLabel_    ( Uintah::VarLabel::create( temperatureTag_.name(),
-                                               Wasatch::get_uintah_field_type_descriptor<SVolField>(),
-                                               Wasatch::get_uintah_ghost_descriptor<SVolField>() ) ),
-    absorptionLabel_   ( Uintah::VarLabel::create( absorptionTag_.name(),
-                                              Wasatch::get_uintah_field_type_descriptor<SVolField>(),
-                                              Wasatch::get_uintah_ghost_descriptor<SVolField>() ) ),
-    celltypeLabel_    ( Uintah::VarLabel::create( celltypeTag_.name(),
-                                              Wasatch::get_uintah_field_type_descriptor<int>(),
-                                              Wasatch::get_uintah_ghost_descriptor<int>() ) ),
-    divqLabel_    ( Uintah::VarLabel::create( radiationSourceName,
-                                               Wasatch::get_uintah_field_type_descriptor<SVolField>(),
-                                               Wasatch::get_uintah_ghost_descriptor<SVolField>() ) )
-  
+    temperatureLabel_( Uintah::VarLabel::create( temperatureTag_.name(),
+                                                 Wasatch::get_uintah_field_type_descriptor<SVolField>(),
+                                                 Wasatch::get_uintah_ghost_descriptor<SVolField>() ) ),
+    absorptionLabel_ ( Uintah::VarLabel::create( absorptionTag_.name(),
+                                                 Wasatch::get_uintah_field_type_descriptor<SVolField>(),
+                                                 Wasatch::get_uintah_ghost_descriptor<SVolField>() ) ),
+    celltypeLabel_   ( Uintah::VarLabel::create( celltypeTag_.name(),
+                                                 Wasatch::get_uintah_field_type_descriptor<int>(),
+                                                 Wasatch::get_uintah_ghost_descriptor<int>() ) ),
+    divqLabel_       ( Uintah::VarLabel::create( radiationSourceName,
+                                                 Wasatch::get_uintah_field_type_descriptor<SVolField>(),
+                                                 Wasatch::get_uintah_ghost_descriptor<SVolField>() ) )
 {
   rmcrt_ = scinew Uintah::Ray();
   
-  rmcrt_->registerVarLabels(0,
-                            absorptionLabel_,
-                            absorptionLabel_,
-                            temperatureLabel_,
-                            celltypeLabel_,
-                            divqLabel_);
+  rmcrt_->registerVarLabels( 0,
+                             absorptionLabel_,
+                             absorptionLabel_,
+                             temperatureLabel_,
+                             celltypeLabel_,
+                             divqLabel_ );
   
   rmcrt_->problemSetup(radiationSpec, radiationSpec, sharedState);
 }
 //--------------------------------------------------------------------
-  void
-  RadiationSource::schedule_setup_bndflux( const Uintah::LevelP& level,
-                                      Uintah::SchedulerP sched,
-                                      const Uintah::MaterialSet* const materials )
-  {
-    // hack in a task to apply boundary condition on the pressure after the pressure solve
-    Uintah::Task* task = scinew Uintah::Task("RadiationSource: setup bndflux", this,
-                                             &RadiationSource::setup_bndflux);
-    
-    task->computes(Uintah::VarLabel::find("boundFlux"));
-    sched->addTask(task, level->eachPatch(), materials);
-  }
+void
+RadiationSource::schedule_setup_bndflux( const Uintah::LevelP& level,
+                                         Uintah::SchedulerP sched,
+                                         const Uintah::MaterialSet* const materials )
+{
+  // hack in a task to apply boundary condition on the pressure after the pressure solve
+  Uintah::Task* task = scinew Uintah::Task( "RadiationSource: setup bndflux", this,
+                                            &RadiationSource::setup_bndflux );
 
-  void
-  RadiationSource::setup_bndflux ( const Uintah::ProcessorGroup* const pg,
-                      const Uintah::PatchSubset* const patches,
-                      const Uintah::MaterialSubset* const materials,
-                      Uintah::DataWarehouse* const oldDW,
-                      Uintah::DataWarehouse* const newDW )
-  {
-    for (int p=0; p < patches->size(); p++){
-      const Uintah::Patch* patch = patches->get(p);
-      Uintah::CCVariable<Uintah::Stencil7> boundFlux;
-      newDW->allocateAndPut( boundFlux,    Uintah::VarLabel::find("boundFlux"), 0, patch );
-      
-      for (Uintah::CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
-        Uintah::IntVector origin = *iter;
-        boundFlux[origin].initialize(0.0);
-      }
+  task->computes(Uintah::VarLabel::find("boundFlux"));
+  sched->addTask(task, level->eachPatch(), materials);
+}
 
+void
+RadiationSource::setup_bndflux ( const Uintah::ProcessorGroup* const pg,
+                                 const Uintah::PatchSubset* const patches,
+                                 const Uintah::MaterialSubset* const materials,
+                                 Uintah::DataWarehouse* const oldDW,
+                                 Uintah::DataWarehouse* const newDW )
+{
+  for (int p=0; p < patches->size(); p++){
+    const Uintah::Patch* patch = patches->get(p);
+    Uintah::CCVariable<Uintah::Stencil7> boundFlux;
+    newDW->allocateAndPut( boundFlux, Uintah::VarLabel::find("boundFlux"), 0, patch );
+
+    for (Uintah::CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+      Uintah::IntVector origin = *iter;
+      boundFlux[origin].initialize(0.0);
     }
+
   }
+}
 
 //--------------------------------------------------------------------
 
 RadiationSource::~RadiationSource()
 {
   Uintah::VarLabel::destroy( temperatureLabel_ );
-  Uintah::VarLabel::destroy( absorptionLabel_     );
-  Uintah::VarLabel::destroy( celltypeLabel_   );
-  Uintah::VarLabel::destroy( divqLabel_   );
+  Uintah::VarLabel::destroy( absorptionLabel_  );
+  Uintah::VarLabel::destroy( celltypeLabel_    );
+  Uintah::VarLabel::destroy( divqLabel_        );
 }
 
 //--------------------------------------------------------------------
 
 void
 RadiationSource::schedule_ray_tracing( const Uintah::LevelP& level,
-                           Uintah::SchedulerP sched,
-                           const Uintah::MaterialSet* const materials,
-                           const int RKStage )
+                                       Uintah::SchedulerP sched,
+                                       const Uintah::MaterialSet* const materials,
+                                       const int RKStage )
 {
   using namespace Uintah;
   
@@ -198,18 +197,18 @@ RadiationSource::schedule_ray_tracing( const Uintah::LevelP& level,
 
 void
 RadiationSource::declare_uintah_vars( Uintah::Task& task,
-                               const Uintah::PatchSubset* const patches,
-                               const Uintah::MaterialSubset* const materials,
-                               const int RKStage )
+                                      const Uintah::PatchSubset* const patches,
+                                      const Uintah::MaterialSubset* const materials,
+                                      const int RKStage )
 {}
 
 //--------------------------------------------------------------------
 
 void
 RadiationSource::bind_uintah_vars( Uintah::DataWarehouse* const dw,
-                           const Uintah::Patch* const patch,
-                           const int material,
-                           const int RKStage )
+                                   const Uintah::Patch* const patch,
+                                   const int material,
+                                   const int RKStage )
 {}
 
 //--------------------------------------------------------------------
@@ -251,18 +250,18 @@ RadiationSource::evaluate()
 
 //--------------------------------------------------------------------
 
-  RadiationSource::Builder::Builder( const Expr::TagList& results,
-                                    const Expr::Tag& temperatureTag,
-                                    const Expr::Tag& absorptionTag,
-                                    const Expr::Tag& celltypeTag,
-                                    Uintah::ProblemSpecP& radiationSpec,
-                                    Uintah::SimulationStateP& sharedState)
- : ExpressionBuilder  ( results        ),
-   temperatureTag_    ( temperatureTag ),
-   absorptionTag_     ( absorptionTag  ),
-   celltypeTag_       ( celltypeTag    ),
-   radiationSpec_     ( radiationSpec  ),
-   sharedState_       ( sharedState    )
+RadiationSource::Builder::Builder( const Expr::TagList& results,
+                                   const Expr::Tag& temperatureTag,
+                                   const Expr::Tag& absorptionTag,
+                                   const Expr::Tag& celltypeTag,
+                                   Uintah::ProblemSpecP& radiationSpec,
+                                   Uintah::SimulationStateP& sharedState )
+: ExpressionBuilder  ( results        ),
+  temperatureTag_    ( temperatureTag ),
+  absorptionTag_     ( absorptionTag  ),
+  celltypeTag_       ( celltypeTag    ),
+  radiationSpec_     ( radiationSpec  ),
+  sharedState_       ( sharedState    )
 {}
 
 //--------------------------------------------------------------------
