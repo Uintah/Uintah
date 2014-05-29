@@ -738,7 +738,7 @@
             </injector_region>
             
             <!-- specs nneded for second moment of mixture fraction source-->
-            <density_label              spec="REQUIRED STRING" need_applies_to="type moment2_mixture_fraction_src, dissipation_src"/>
+            <density_label              spec="OPTIONAL STRING" need_applies_to="type moment2_mixture_fraction_src, dissipation_src"/>
             <scalar_dissipation_label   spec="REQUIRED STRING" need_applies_to="type moment2_mixture_fraction_src"/> 
             
             <!-- specs needed for the dissipation term for 2eqn scalr var model -->
