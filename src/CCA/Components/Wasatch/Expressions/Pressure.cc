@@ -189,16 +189,18 @@ Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
     // check for transferfrom - transfer matrix from old to new DW
     if (RKStage==1 ) dw->put( matrix_, matrixLabel_, materialID_, patch );
     else             dw->getModifiable( matrix_, matrixLabel_, materialID_, patch );
-  } else {
+  }
+  else{
     dw->allocateAndPut( matrix_, matrixLabel_, materialID_, patch );
     
-    if (volfract_ != Expr::Tag()) {
+    if( volfract_ != Expr::Tag() ){
       typedef SelectUintahFieldType<SVolField>::const_type ConstUintahField;
       ConstUintahField svolFrac;
       const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<SVolField>();
       const int ng = get_n_ghost<SVolField>();
-      dw->           get( svolFrac,    Uintah::VarLabel::find(volfract_.name()),    material, patch, gt, ng );
-      volfrac = wrap_uintah_field_as_spatialops<SVolField>(svolFrac, patch);
+      dw->get( svolFrac, Uintah::VarLabel::find(volfract_.name()), material, patch, gt, ng );
+      const AllocInfo ainfo( dw, dw, material, patch, NULL );
+      volfrac = wrap_uintah_field_as_spatialops<SVolField>(svolFrac, ainfo);
     }
     setup_matrix(volfrac);
   }
@@ -489,9 +491,10 @@ Pressure::process_bcs ( const Uintah::ProcessorGroup* const pg,
     // loop over patches
     for( int ip=0; ip<patches->size(); ++ip ){
       const Uintah::Patch* const patch = patches->get(ip);
-      if ( patch->hasBoundaryFaces() && bcHelper_ ) {
+      if( patch->hasBoundaryFaces() && bcHelper_  ){
         newDW->get( pressureField_, pressureLabel_, material, patch, gt, ng);
-        SVolField* const pressure = wrap_uintah_field_as_spatialops<SVolField>(pressureField_,patch);
+        const AllocInfo ainfo( oldDW, newDW, im, patch, pg );
+        SVolField* const pressure = wrap_uintah_field_as_spatialops<SVolField>(pressureField_,ainfo);
         bcHelper_->apply_pressure_bc(*pressure,patch);
         delete pressure;
       }

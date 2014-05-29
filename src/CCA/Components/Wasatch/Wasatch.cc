@@ -925,7 +925,7 @@ namespace Wasatch{
       	task->computes( sharedState_->get_delt_label(),
                       level.get_rep() );
       //              materials_->getUnion() );
-      // jcs why can't we specify a metrial here?  It doesn't seem to be working if I do.
+      // jcs why can't we specify a material here?  It doesn't seem to be working if I do.
       
       const GraphHelper* slnGraphHelper = graphCategories_[ADVANCE_SOLUTION];
       const TagNames& tagNames = TagNames::self();

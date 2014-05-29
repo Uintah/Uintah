@@ -32,12 +32,15 @@
 
 #include <spatialops/SpatialOpsDefs.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
+#include <spatialops/particles/ParticleFieldTypes.h>
 
 
 using SpatialOps::structured::SVolField;   ///< the scalar volume field type
 using SpatialOps::structured::XVolField;   ///< the x-staggered volume field type
 using SpatialOps::structured::YVolField;   ///< the y-staggered volume field type
 using SpatialOps::structured::ZVolField;   ///< the z-staggered volume field type
+
+using SpatialOps::Particle::ParticleField; ///< lagrangian particles
 
 using SpatialOps::structured::FaceTypes;   ///< allows deducing face types from volume types
 
