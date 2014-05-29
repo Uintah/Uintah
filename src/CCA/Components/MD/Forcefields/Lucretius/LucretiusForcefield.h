@@ -13,6 +13,8 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <CCA/Components/MD/MDLabel.h>
+#include <CCA/Components/MD/MDUtil.h>
+
 
 #include <CCA/Components/MD/Forcefields/TwoBodyForceField.h>
 #include <CCA/Components/MD/Forcefields/forcefieldTypes.h>

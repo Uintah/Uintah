@@ -324,7 +324,6 @@ LucretiusForcefield::LucretiusForcefield(const ProblemSpecP& spec,
 //-> BEGIN PARSING FORCEFIELD
     std::string buffer;
     std::string error_msg;
-    SCIRun::IntVector IV_ZERO(0, 0, 0);
 
     // ---> Set necessary particle VarLabels for registration of a forcefield of this type
     // --->  Variables for current iteration data storage (time n)

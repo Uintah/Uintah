@@ -31,6 +31,7 @@
 #include <Core/Math/Matrix3.h>
 
 #include <CCA/Components/MD/MDSystem.h>
+#include <CCA/Components/MD/MDUtil.h>
 #include <CCA/Components/MD/SimpleGrid.h>
 #include <CCA/Components/MD/Electrostatics/SPME/SPMEMapPoint.h>
 
@@ -166,7 +167,7 @@ namespace Uintah {
        * @param
        * @return
        */
-      inline SimpleGrid<std::complex<double> >* getQ()
+      inline SimpleGrid<std::complex<double> >* getQ() const
       {
         return d_Q_patchLocal;
       }

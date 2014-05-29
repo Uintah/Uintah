@@ -9,6 +9,8 @@
 #define TWOBODYDETERMINISTIC_H_
 
 #include <CCA/Components/MD/MDLabel.h>
+#include <CCA/Components/MD/MDSubcomponent.h>
+
 #include <CCA/Components/MD/Nonbonded/Nonbonded.h>
 
 #include <Core/Grid/Variables/ComputeSet.h>
@@ -16,54 +18,85 @@
 
 namespace Uintah {
 
-  class TwoBodyDeterministic : public Nonbonded {
+  class TwoBodyDeterministic : public Nonbonded, public MDSubcomponent {
     public:
+
+// Constructors and destructors
      ~TwoBodyDeterministic() {}
-      TwoBodyDeterministic(MDSystem*, MDLabel*, double);
-      void initialize(const ProcessorGroup* pg,
-                      const PatchSubset* perProcPatches,
-                      const MaterialSubset* materials,
-                      DataWarehouse* old_dw,
-                      DataWarehouse* new_dw);
+      TwoBodyDeterministic(double, int);
 
-      void setup(const ProcessorGroup* pg,
-                 const PatchSubset* perProcPatches,
-                 const MaterialSubset* materials,
-                 DataWarehouse* old_dw,
-                 DataWarehouse* new_dw);
+// Inherited from nonbonded
+      void initialize(  const ProcessorGroup*       pg,
+                        const PatchSubset*          patches,
+                        const MaterialSubset*       materials,
+                        DataWarehouse*              oldDW,
+                        DataWarehouse*              newDW,
+                        SimulationStateP&           simState,
+                        MDSystem*                   systemInfo,
+                        const MDLabel*              label,
+                        coordinateSystem*           coordSys);
 
-      void calculate(const ProcessorGroup* pg,
-                     const PatchSubset* patches,
-                     const MaterialSubset* materials,
-                     DataWarehouse* old_dw,
-                     DataWarehouse* new_dw,
-                     SchedulerP& subscheduler,
-                     const LevelP& level);
+      void setup(       const ProcessorGroup*       pg,
+                        const PatchSubset*          patches,
+                        const MaterialSubset*       materials,
+                        DataWarehouse*              oldDW,
+                        DataWarehouse*              newDW,
+                        SimulationStateP&           simState,
+                        MDSystem*                   systemInfo,
+                        const MDLabel*              label,
+                        coordinateSystem*           coordSys);
+
+      void calculate(   const ProcessorGroup*       pg,
+                        const PatchSubset*          patches,
+                        const MaterialSubset*       materials,
+                        DataWarehouse*              oldDW,
+                        DataWarehouse*              newDW,
+                        SimulationStateP&           simState,
+                        MDSystem*                   systemInfo,
+                        const MDLabel*              label,
+                        coordinateSystem*           coordSys);
 
 
-      void finalize(const ProcessorGroup* pg,
-                    const PatchSubset* patches,
-                    const MaterialSubset* materials,
-                    DataWarehouse* old_dw,
-                    DataWarehouse* new_dw);
-
-      inline void setMDLabel(MDLabel* lb)
-      {
-        d_Label = lb;
-      }
+      void finalize(    const ProcessorGroup*       pg,
+                        const PatchSubset*          patches,
+                        const MaterialSubset*       materials,
+                        DataWarehouse*              oldDW,
+                        DataWarehouse*              newDW,
+                        SimulationStateP&           simState,
+                        MDSystem*                   systemInfo,
+                        const MDLabel*              label,
+                        coordinateSystem*           coordSys);
 
       inline std::string getNonbondedType() const {
         return nonbondedType;
       }
 
-      void registerRequiredParticleStates(std::vector<const VarLabel*>&,
-                                          std::vector<const VarLabel*>&,
-                                          MDLabel*) const;
+      inline int requiredGhostCells() const {
+        return d_nonbondedGhostCells;
+      }
+
+// Inherited from MDSubcomponent
+      virtual void registerRequiredParticleStates(std::vector<const VarLabel*>&,
+                                                  std::vector<const VarLabel*>&,
+                                                  MDLabel*) const;
+
+      virtual void addInitializeRequirements(Task*, MDLabel*) const;
+      virtual void addInitializeComputes(Task*, MDLabel*) const;
+
+      virtual void addSetupRequirements(Task*, MDLabel*) const;
+      virtual void addSetupComputes(Task*, MDLabel*) const;
+
+      virtual void addCalculateRequirements(Task*, MDLabel*) const;
+      virtual void addCalculateComputes(Task*, MDLabel*) const;
+
+      virtual void addFinalizeRequirements(Task*, MDLabel*) const;
+      virtual void addFinalizeComputes(Task*, MDLabel*) const;
+
+
     private:
       static const std::string nonbondedType;
-      MDSystem* d_System;
-      MDLabel* d_Label;
       const double d_nonbondedRadius;
+      const double d_nonbondedGhostCells;
 
   };
 }

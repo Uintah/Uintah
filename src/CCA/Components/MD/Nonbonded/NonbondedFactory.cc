@@ -39,6 +39,7 @@
 #include <Core/Util/DebugStream.h>
 
 #include <iostream>
+#include <algorithm>
 
 using namespace Uintah;
 
@@ -46,7 +47,7 @@ using namespace Uintah;
 static DebugStream nbFactory("nonbondedFactory", false);
 
 Nonbonded* NonbondedFactory::create(const ProblemSpecP& ps,
-                                           MDSystem* system,
+                                           coordinateSystem* coords,
                                            MDLabel* label,
                                            forcefieldInteractionClass ffType,
                                            interactionModel imType) {
@@ -54,13 +55,35 @@ Nonbonded* NonbondedFactory::create(const ProblemSpecP& ps,
   std::string type = "";
 
   double nonbondedCutoff;
-  ps->findBlock("MD")->findBlock("System")->require("cutoffRadius",nonbondedCutoff);
+  ps->findBlock("MD")->findBlock("System")->require("cutoffRadius",
+                                                    nonbondedCutoff);
+
+//  // Find the resolution to determine the cutoff cell information
+//  SCIRun::Vector realExtents= coords->getCellExtent().asVector();
+//  SCIRun::Vector resInverse;
+//  coords->toReduced(realExtents, resInverse);
+//  Vector resInverse = coords->getCellExtent().asVector() * coords->getInverseCell();
+//  Vector fractionalCutoffCells = Vector(nonbondedCutoff) * resInverse;
+
+  // Calculate the fractional number of cells necessary to accomodate the cutoff
+  // radius.
+  SCIRun::Vector resInverse;
+  coords->toReduced(nonbondedCutoff,resInverse);
+  SCIRun::Vector fractionalCutoffCells;
+  fractionalCutoffCells = coords->getCellExtent().asVector() * resInverse;
+
+
+  int xCells = ceil(fractionalCutoffCells.x());
+  int yCells = ceil(fractionalCutoffCells.y());
+  int zCells = ceil(fractionalCutoffCells.z());
+  int nonbondedGhostCells = std::max(xCells,std::max(yCells, zCells));
 
   switch (ffType) {
     case(TwoBody):
       switch(imType) {
         case(Deterministic):
-          nonbonded = scinew TwoBodyDeterministic(system, label, nonbondedCutoff);
+          nonbonded = scinew TwoBodyDeterministic(nonbondedCutoff,
+                                                  nonbondedGhostCells);
           break;
         default:
           throw ProblemSetupException("Only the two-body deterministic integrator is defined at this time.", __FILE__, __LINE__);

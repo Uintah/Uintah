@@ -32,6 +32,7 @@
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Containers/Array2.h>
+#include <Core/Exceptions/InternalError.h>
 #include <CCA/Components/MD/Forcefields/Forcefield.h>
 #include <CCA/Components/MD/Potentials/TwoBody/NonbondedTwoBodyPotential.h>
 #include <CCA/Components/MD/MDMaterial.h>
@@ -75,8 +76,7 @@ namespace Uintah {
        */
       MDSystem(const ProblemSpecP&,
                GridP&,
-               SimulationStateP&,
-               Forcefield*);
+               SimulationStateP&);
 
       /**
        * @brief
@@ -97,62 +97,62 @@ namespace Uintah {
        * @param None
        * @return
        */
-      inline bool isOrthorhombic() const { return d_orthorhombic; }
-
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      inline bool queryBoxChanged() const { return d_boxChanged; }
-
-      /*
-       * @brief
-       * @param
-       * @return
-       */
-      inline void clearBoxChanged() { d_boxChanged = false; }
-
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      inline void markBoxChanged() { d_boxChanged = true; }
-
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      inline Matrix3 getUnitCell() const { return d_unitCell; }
-
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      inline Matrix3 getInverseCell() const { return d_inverseCell; }
-
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      inline double getCellVolume() const { return d_cellVolume; }
-
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      inline IntVector getCellExtent() const { return d_totalCellExtent; }
-
-      /*
-       *
-       */
-      inline IntVector getPeriodic() const { return d_periodicVector; }
-
+//      inline bool isOrthorhombic() const { return d_orthorhombic; }
+//
+//      /**
+//       * @brief
+//       * @param
+//       * @return
+//       */
+//      inline bool queryBoxChanged() const { return d_cellChanged; }
+//
+//      /*
+//       * @brief
+//       * @param
+//       * @return
+//       */
+//      inline void clearBoxChanged() { d_cellChanged = false; }
+//
+//      /**
+//       * @brief
+//       * @param
+//       * @return
+//       */
+//      inline void markBoxChanged() { d_cellChanged = true; }
+//
+//      /**
+//       * @brief
+//       * @param
+//       * @return
+//       */
+//      inline Matrix3 getUnitCell() const { return d_unitCell; }
+//
+//      /**
+//       * @brief
+//       * @param
+//       * @return
+//       */
+//      inline Matrix3 getInverseCell() const { return d_inverseCell; }
+//
+//      /**
+//       * @brief
+//       * @param
+//       * @return
+//       */
+//      inline double getCellVolume() const { return d_cellVolume; }
+//
+//      /**
+//       * @brief
+//       * @param
+//       * @return
+//       */
+//      inline IntVector getCellExtent() const { return d_totalCellExtent; }
+//
+//      /*
+//       *
+//       */
+//      inline IntVector getPeriodic() const { return d_periodicVector; }
+//
       /**
        * @brief
        * @param
@@ -165,14 +165,14 @@ namespace Uintah {
        * @param
        * @return
        */
-      inline Vector getBox() const { return d_box; }
+//      inline Vector getBox() const { return d_box; }
 
       /*
        * @brief
        * @param
        * @return
        */
-      inline size_t getNumAtomTypes() const { return d_atomTypeList.size(); }
+      inline size_t getNumAtomTypes() const { return d_numAtomsOfType.size(); }
 
 //      /*
 //       * @brief
@@ -186,7 +186,7 @@ namespace Uintah {
        * @param
        * @return
        */
-      inline size_t getNumAtomsOfType(size_t TypeIndex) const { return d_atomTypeList[TypeIndex]; }
+      inline size_t getNumAtomsOfType(size_t TypeIndex) const { return d_numAtomsOfType[TypeIndex]; }
 
 //      /*
 //       * @brief
@@ -200,14 +200,14 @@ namespace Uintah {
        * @param
        * @return
        */
-      inline size_t getNonbondedGhostCells() const { return d_nonbondedGhostCells; }
+//      inline size_t getNonbondedGhostCells() const { return d_nonbondedGhostCells; }
 
       /*
        * @brief Return number of ghost cells required for electrostatic realspace calculation
        * @param None
        * @return size_t: Number of ghost cells required in all directions
        */
-      inline size_t getElectrostaticGhostCells() const { return d_electrostaticGhostCells; }
+//      inline size_t getElectrostaticGhostCells() const { return d_electrostaticGhostCells; }
 
       inline double getAtomicCharge(size_t MaterialIndex) const {
     	  return d_simState->getMDMaterial(MaterialIndex)->getCharge();
@@ -218,9 +218,9 @@ namespace Uintah {
       inline Forcefield* getForcefieldPointer() { return d_forcefield; };
 
       inline size_t registerAtomCount(const size_t count, const size_t matlIndex) {
-        size_t numMatls = d_atomTypeList.size();
+        size_t numMatls = d_numAtomsOfType.size();
         if (matlIndex < numMatls) {
-          d_atomTypeList[matlIndex] = count;
+          d_numAtomsOfType[matlIndex] = count;
           d_numAtoms += count;
         };
         return count;
@@ -230,45 +230,55 @@ namespace Uintah {
         return d_ensemble;
       }
 
+//      inline void attachForcefield(Forcefield* ff) {
+//        if (!d_forcefield) {
+//          d_forcefield = ff;
+//        }
+//        else
+//        {
+//          InternalError("Error:  Attempted to attach a forcefield to an already populated system", __FILE__, __LINE__);
+//        }
+//      }
+
     private:
 
       ensembleType d_ensemble;                // Variable holding the type of the simulation ensemble
+      unsigned long d_numAtoms;                //!< Total number of atoms in the simulation
+      std::vector<size_t> d_numAtomsOfType;     //!< List of total number of each atom type in the simulation
+      unsigned long d_numMolecules;
+      std::vector<size_t> d_numMoleculesOfType;
 
+      Vector d_pressure;                //!< Total MD System pressure
+      double d_temperature;             //!< Total MD system temperature
+
+//      bool d_orthorhombic;              //!< Whether or not the MD system is using orthorhombic coordinates
+
+      // Unit cell variables
+//      Matrix3 d_unitCell;               //!< MD system unit cell
+//      Matrix3 d_inverseCell;            //!< MD system inverse unit cell
+//      double  d_cellVolume;             //!< Cell volume; calculate internally, return at request for efficiency
+//      bool    d_cellChanged;            //!< Whether or not the system size has changed... create a new box
+
+//      IntVector d_totalCellExtent;      //!< Number of sub-cells in the global unit cell
+//      IntVector d_periodicVector;       //!< Grid's periodic vector
+
+      // Methods
+//      void calcCellVolume();
+      inline size_t max(int a, int b){ return (a > b ? a : b); }
+      inline double max(int a, int b, int c) { return (max(max(a,b),c)); }
+
+// Maybe these should be passed around seperately?
       Forcefield* d_forcefield;               //! Pointer to the established forcefield
       SimulationStateP d_simState;            //! Pointer to the simulation state (for material access)
 
-      unsigned int d_numAtoms;                //!< Total number of atoms in the simulation
-      std::vector<size_t> d_atomTypeList;     //!< List of total number of each atom type in the simulation
-
-//      unsigned int d_numMolecules;            //!< Total number of molecules in the simulation
-//      std::vector<size_t> d_moleculeTypeList; //!< List of total number of each molecule type in the simulation
-      
-      Vector d_pressure;                //!< Total MD system pressure
-      double d_temperature;             //!< Total MD system temperature
-      bool d_orthorhombic;              //!< Whether or not the MD system is using orthorhombic coordinates
-
-      // Unit cell variables
-      Matrix3 d_unitCell;               //!< MD system unit cell
-      Matrix3 d_inverseCell;            //!< MD system inverse unit cell
-      double  d_cellVolume;             //!< Cell volume; calculate internally, return at request for efficiency
-
       // Total cell variables
-      Vector d_box;                     //!< The MD system input box size
-      bool d_boxChanged;                //!< Whether or not the system size has changed... create a new box
 
-      IntVector d_totalCellExtent;      //!< Number of sub-cells in the global unit cell
-      size_t d_nonbondedGhostCells;     //!< Number of ghost cells for nonbonded realspace neighbor calculations
-      size_t d_electrostaticGhostCells; //!< Number of ghost cells for electrostatic realspace neighbor calculations
-      IntVector d_periodicVector;       //!< Grid's periodic vector
 
-      inline size_t max(int a, int b){ return (a > b ? a : b); }
-      inline double max(int a, int b, int c) { return (max(max(a,b),c)); }
 
       // disable copy and assignment
       MDSystem(const MDSystem& system);
       MDSystem& operator=(const MDSystem& system);
 
-      void calcCellVolume();
   };
 
 }  // End namespace Uintah
