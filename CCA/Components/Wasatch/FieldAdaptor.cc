@@ -155,6 +155,8 @@ namespace Wasatch{
   template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::ZSurfZField>(){ return Uintah::Ghost::AroundCells; }
 
   template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::SingleValueField>(){ return Uintah::Ghost::None; }
+
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::Particle::ParticleField>(){ return Uintah::Ghost::None; }
   //------------------------------------------------------------------
 
   // macro shortcuts for explicit template instantiation
@@ -169,11 +171,13 @@ namespace Wasatch{
   declare_method( FaceTypes<VOLT>::YFace );     \
   declare_method( FaceTypes<VOLT>::ZFace );
 
-  declare_method( SS::SingleValueField );
   declare_variants( SS::SVolField );
   declare_variants( SS::XVolField );
   declare_variants( SS::YVolField );
   declare_variants( SS::ZVolField );
+
+  declare_method( SS::SingleValueField                );
+  declare_method( SpatialOps::Particle::ParticleField );
 
   //------------------------------------------------------------------
 

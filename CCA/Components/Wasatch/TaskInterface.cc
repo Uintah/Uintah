@@ -560,7 +560,7 @@ namespace Wasatch{
                     << endl;
           if( dbg_tasks_on ) fml_->dump_fields(std::cout);
 
-          fml_->allocate_fields( Expr::AllocInfo( oldDW, newDW, material, patch, pg ) );
+          fml_->allocate_fields( AllocInfo( oldDW, newDW, material, patch, pg ) );
 
           if( hasPressureExpression_ ){
             Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( pressure_tag(), patchID, true ) );
