@@ -22,43 +22,40 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/Regridder/RegridderFactory.h>
-#include <CCA/Components/Regridder/HierarchicalRegridder.h>
-#include <CCA/Components/Regridder/BNRRegridder.h>
-#include <CCA/Components/Regridder/SingleLevelRegridder.h>
+#ifndef UINTAH_SINGLELEVELREGRIDDER_H
+#define UINTAH_SINGLELEVELREGRIDDER_H
+#include <CCA/Components/Regridder/RegridderCommon.h>
 #include <CCA/Components/Regridder/TiledRegridder.h>
-#include <Core/Parallel/ProcessorGroup.h>
 
-using namespace std;
-using namespace Uintah;
+#include <vector> 
 
-RegridderCommon* RegridderFactory::create(ProblemSpecP& ps, 
-                                          const ProcessorGroup* world)
-{
-  RegridderCommon* regrid = 0;
-  
-  ProblemSpecP amr = ps->findBlock("AMR");	
-  ProblemSpecP reg_ps = amr->findBlock("Regridder");
-  if (reg_ps) {
+namespace Uintah {
 
-    string regridder;
-    reg_ps->getAttribute( "type", regridder );
+/**************************************
 
-    if (world->myrank() == 0) {
-      cout << "Using Regridder " << regridder << endl;
-    }
-    if(regridder == "Hierarchical") {
-      regrid = scinew HierarchicalRegridder(world);
-    } else if(regridder == "BNR") {
-      regrid = scinew BNRRegridder(world);
-    } else if (regridder == "Tiled") {
-      regrid = scinew TiledRegridder(world);
-    } else if (regridder == "SingleLevel") {
-      regrid = scinew SingleLevelRegridder(world);
-    } else
-      regrid = 0;
-  }
+CLASS
+   SingleLevelRegridder
+   
+****************************************/
+  class SingleLevelRegridder : public TiledRegridder {
+  public:
+    SingleLevelRegridder(const ProcessorGroup* pg);
+    virtual ~SingleLevelRegridder();
+    
+    virtual Grid* regrid( Grid* oldGrid );
+		
+    virtual void problemSetup(const ProblemSpecP& params,
+			         const GridP& grid,
+			         const SimulationStateP& state);
 
-  return regrid;
+    std::vector<IntVector> getMinPatchSize() {return d_tileSize;}
 
-}
+  protected:
+    void problemSetup_BulletProofing(const int l);
+    int d_level_index;              // perform regrid on this level index
+
+  };
+
+} // End namespace Uintah
+
+#endif
