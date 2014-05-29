@@ -695,6 +695,7 @@
       <min_boundary_cells               spec="REQUIRED VECTOR" />
       
       <!--Generic Optional Regridder Options --> 
+      <regrid_once                     spec="OPTIONAL BOOLEAN" />
       <amr_overhead_high                spec="OPTIONAL DOUBLE '0,1'" />   
       <amr_overhead_low                 spec="OPTIONAL DOUBLE '0,1'" />   
       <cell_stability_dilation          spec="OPTIONAL VECTOR" />
@@ -708,6 +709,7 @@
       <min_patch_size                   spec="REQUIRED MULTIPLE_VECTORS" need_applies_to="type BNR Tiled"/>
 
       <!--       Optional Options-->
+      <coarse_level_patch_layout        spec="OPTIONAL VECTOR"       need_applies_to="type Tiled"/>
       <patch_split_tolerance            spec="OPTIONAL DOUBLE '0,1'" need_applies_to="type BNR" />
       <patch_combine_tolerance          spec="OPTIONAL DOUBLE '0,1'" need_applies_to="type BNR" />
       <patch_ratio_to_target            spec="OPTIONAL DOUBLE '0,1'" need_applies_to="type BNR" />
