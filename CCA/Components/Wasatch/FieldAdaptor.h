@@ -339,7 +339,7 @@ namespace Wasatch{
 
   template< > inline
   ParticleField*
-  wrap_uintah_field_as_spatialops<ParticleField,typename SelectUintahFieldType<ParticleField>::type>(
+  wrap_uintah_field_as_spatialops<ParticleField,SelectUintahFieldType<ParticleField>::type>(
       typename SelectUintahFieldType<ParticleField>::type& uintahVar,
       const AllocInfo& ainfo,
       const SpatialOps::MemoryType mtype,
@@ -348,14 +348,14 @@ namespace Wasatch{
   {
     namespace SS = SpatialOps::structured;
     typedef typename ParticleField::value_type ValT;
-    double* fieldValues = NULL;
+    ValT* fieldValues = NULL;
     if( mtype == SpatialOps::EXTERNAL_CUDA_GPU ){
 #     ifdef HAVE_CUDA
-      fieldValues = const_cast<double*>( uintahDeviceVar );
+      fieldValues = const_cast<ValT*>( uintahDeviceVar );
 #     endif
     }
     else{
-      fieldValues = const_cast<typename ParticleField::value_type*>( (double*)uintahVar.getBasePointer() );
+      fieldValues = const_cast<typename ParticleField::value_type*>( (ValT*)uintahVar.getBasePointer() );
     }
 
     const int npar = ainfo.oldDW->getParticleSubset( ainfo.materialIndex, ainfo.patch )->numParticles();
@@ -371,7 +371,7 @@ namespace Wasatch{
 
   template< > inline
   ParticleField*
-  wrap_uintah_field_as_spatialops<ParticleField,typename SelectUintahFieldType<ParticleField>::const_type>(
+  wrap_uintah_field_as_spatialops<ParticleField,SelectUintahFieldType<ParticleField>::const_type>(
       typename SelectUintahFieldType<ParticleField>::const_type& uintahVar,
       const AllocInfo& ainfo,
       const SpatialOps::MemoryType mtype,
