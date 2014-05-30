@@ -370,7 +370,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
   
   //start the 3D quadrature method
   vanderMom.resize(N_i[0]);
-  std::vector< std::vector< std::vector<double> > > Zeta (N_i[0], std::vector<std::vector<double> > (N_i[1], std::vector<double> (2*N_i[2]-1,0.0)) );
+  std::vector< std::vector< std::vector<double> > > Zeta (N_i[0], std::vector<std::vector<double> > (N_i[1], std::vector<double> (2*N_i[2],0.0)) );
   std::vector<double> tempStar (N_i[0],0.0);
 
   for (int k3 = 1; k3<2*N_i[2]; k3++) {
