@@ -94,6 +94,7 @@ namespace Wasatch{
    *  when obtaining scratch fields from patch information. When an actual field
    *  from Uintah is available, you should use wrap_uintah_field_as_spatialops
    */
+  template<typename FieldT>
   SpatialOps::structured::MemoryWindow
   get_memory_window_for_uintah_field( const Uintah::Patch* const patch );
 
