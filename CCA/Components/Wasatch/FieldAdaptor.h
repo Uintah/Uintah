@@ -372,7 +372,7 @@ namespace Wasatch{
   template< > inline
   ParticleField*
   wrap_uintah_field_as_spatialops<ParticleField,SelectUintahFieldType<ParticleField>::const_type>(
-      typename SelectUintahFieldType<ParticleField>::const_type& uintahVar,
+      SelectUintahFieldType<ParticleField>::const_type& uintahVar,
       const AllocInfo& ainfo,
       const SpatialOps::MemoryType mtype,
       const unsigned short int deviceIndex,
