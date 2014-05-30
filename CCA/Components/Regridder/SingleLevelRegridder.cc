@@ -24,8 +24,6 @@
 
 #include <CCA/Components/Regridder/SingleLevelRegridder.h>
 #include <CCA/Ports/LoadBalancer.h>
-#include <CCA/Ports/Scheduler.h>
-
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Grid.h>
@@ -49,8 +47,8 @@ SingleLevelRegridder::~SingleLevelRegridder()
 //______________________________________________________________________
 //
 void SingleLevelRegridder::problemSetup(const ProblemSpecP& params, 
-                                  const GridP& oldGrid,
-                                  const SimulationStateP& state)
+                                        const GridP& oldGrid,
+                                        const SimulationStateP& state)
 {
 
   RegridderCommon::problemSetup(params, oldGrid, state);
@@ -58,12 +56,6 @@ void SingleLevelRegridder::problemSetup(const ProblemSpecP& params,
   
   ProblemSpecP amr_spec = params->findBlock("AMR");
   ProblemSpecP regrid_spec = amr_spec->findBlock("Regridder");
-  
-  if (!regrid_spec) {
-    return; 
-  }
-  
-  cout << "*** SingleLevelRegridder::problemSetup " << endl;
   
   // compute number of cells and the patch size or tile size on all levels
   d_numCells.reserve( d_maxLevels );
@@ -83,25 +75,19 @@ void SingleLevelRegridder::problemSetup(const ProblemSpecP& params,
     d_tileSize[l] = high-low;
   }
   
-  // level to regrid
-  d_level_index = 0;
+  // find the level of interest.
+  d_level_index = 0;    // default
   regrid_spec->get("level", d_level_index);
   LevelP level = oldGrid->getLevel( d_level_index );
   
-  
-  // Let user change a level's patch layout
+  // Let user change the level of interest patch layout
   // This can be especially useful on restarts where
   // you need to increase the number of coarse level patches
   IntVector new_patch_layout(1,1,1);
-  regrid_spec->require("level_patch_layout", new_patch_layout);
+  regrid_spec->require("new_patch_layout", new_patch_layout);
   
   IntVector myPatchSize = d_numCells[d_level_index]/new_patch_layout;
   d_tileSize[d_level_index] = myPatchSize;
-  
-  cout << " ** ProblemSetup: " << endl;
-  for(int l=0; l<d_maxLevels; l++){
-    cout  << "  l : " << l <<" tileSize: " << d_tileSize[l] << endl;
-  }
   
   for (int k = 0; k < d_maxLevels; k++) {
     if (k < (d_maxLevels)) {
@@ -115,58 +101,53 @@ void SingleLevelRegridder::problemSetup(const ProblemSpecP& params,
 void SingleLevelRegridder::problemSetup_BulletProofing(const int L)
 {
   RegridderCommon::problemSetup_BulletProofing(L);
- 
 }
 
 //______________________________________________________________________
-//
+//  Reset the patch layout on the level of interest.  The other level's
+//  grid structures will remain constant
+// 
 Grid* SingleLevelRegridder::regrid(Grid* oldGrid)
 {
-
-  cout << "***Regrid " << endl;
   MALLOC_TRACE_TAG_SCOPE("SingleLevelRegridder::regrid");
 
   vector< vector<IntVector> > tiles(min(oldGrid->numLevels()+1,d_maxLevels));
 
-  //______________________________________________________________________
-  //  compute tiles 
-  //  Sometimes the user wants to change a Level's patch layout on a restart
+  //__________________________________
+  //  compute tiles or patches based on user input 
   int minLevel = 0;
 
   for(int l=d_maxLevels-1; l >= minLevel;l--) {
-  
-  cout << "   level: " << l << endl;
+
+    // Level of interest  
     if( l == d_level_index) {
 
       const LevelP level = oldGrid->getLevel(l);
       const PatchSubset *patchSS=lb_->getPerProcessorPatchSet(level)->getSubset(d_myworld->myrank());
       vector<IntVector> mytiles;
 
-      //for each patch I own
+      // For each patch I own
       for(int p=0; p<patchSS->size(); p++) {
 
         const Patch* patch=patchSS ->get(p);  
 
-        //compute patch extents        
-        cout << "  patch: " << *patch << " tileSize " << d_tileSize[l] << endl;
+        // Compute patch extents        
         IntVector patchLow  = patch->getCellLowIndex();
         IntVector patchHigh = patch->getCellHighIndex();
 
-        //compute tile indices
+        // Compute tile indices
         IntVector tileLow  = TiledRegridder::computeTileIndex( patchLow, d_tileSize[l] );
         IntVector tileHigh = TiledRegridder::computeTileIndex( patchHigh,d_tileSize[l] );
-        cout << "  tileLow: " << tileLow << " tileHigh " << tileHigh << endl;
 
-        // add tiles
         for (CellIterator ti(tileLow,tileHigh); !ti.done(); ti++){
           mytiles.push_back(*ti);
-        }  // tile loop
+        }
       }  // patch loop
 
-
       TiledRegridder::GatherTiles( mytiles,tiles[l] );
+      
     } else {
-  
+      // Other levels:
       // The level's patch layout does not change so just copy the patches -> tiles
       for (Level::const_patchIterator p = oldGrid->getLevel(l)->patchesBegin(); p != oldGrid->getLevel(l)->patchesEnd(); p++){
         IntVector me = TiledRegridder::computeTileIndex((*p)->getCellLowIndex(), d_tileSize[l]);
@@ -175,6 +156,7 @@ Grid* SingleLevelRegridder::regrid(Grid* oldGrid)
     }
   }
   
+  //__________________________________
   //  Create the new grid
   Grid *newGrid = TiledRegridder::CreateGrid(oldGrid,tiles);
 
@@ -183,7 +165,7 @@ Grid* SingleLevelRegridder::regrid(Grid* oldGrid)
     return oldGrid;
   }
 
-  //finalize the grid  
+  // Finalize the grid  
   IntVector periodic = oldGrid->getLevel(0)->getPeriodicBoundaries();
 
   for(int l=0;l<newGrid->numLevels();l++){
@@ -193,7 +175,7 @@ Grid* SingleLevelRegridder::regrid(Grid* oldGrid)
 
   TiledRegridder::OutputGridStats(newGrid);
 
-  //initialize the weights on new patches
+  // initialize the weights on new patches
   lb_->initializeWeights(oldGrid,newGrid);
 
 #if SCI_ASSERTION_LEVEL > 0
