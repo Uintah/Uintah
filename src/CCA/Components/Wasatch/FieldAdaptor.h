@@ -94,7 +94,6 @@ namespace Wasatch{
    *  when obtaining scratch fields from patch information. When an actual field
    *  from Uintah is available, you should use wrap_uintah_field_as_spatialops
    */
-  template< typename FieldT >
   SpatialOps::structured::MemoryWindow
   get_memory_window_for_uintah_field( const Uintah::Patch* const patch );
 
@@ -340,14 +339,14 @@ namespace Wasatch{
   template< > inline
   ParticleField*
   wrap_uintah_field_as_spatialops<ParticleField,SelectUintahFieldType<ParticleField>::type>(
-      typename SelectUintahFieldType<ParticleField>::type& uintahVar,
+      SelectUintahFieldType<ParticleField>::type& uintahVar,
       const AllocInfo& ainfo,
       const SpatialOps::MemoryType mtype,
       const unsigned short int deviceIndex,
       double* uintahDeviceVar )
   {
     namespace SS = SpatialOps::structured;
-    typedef typename ParticleField::value_type ValT;
+    typedef ParticleField::value_type ValT;
     ValT* fieldValues = NULL;
     if( mtype == SpatialOps::EXTERNAL_CUDA_GPU ){
 #     ifdef HAVE_CUDA
@@ -355,7 +354,7 @@ namespace Wasatch{
 #     endif
     }
     else{
-      fieldValues = const_cast<typename ParticleField::value_type*>( (ValT*)uintahVar.getBasePointer() );
+      fieldValues = const_cast<ParticleField::value_type*>( (ValT*)uintahVar.getBasePointer() );
     }
 
     const int npar = ainfo.oldDW->getParticleSubset( ainfo.materialIndex, ainfo.patch )->numParticles();
@@ -379,7 +378,7 @@ namespace Wasatch{
       double* uintahDeviceVar )
   {
     namespace SS = SpatialOps::structured;
-    typedef typename ParticleField::value_type ValT;
+    typedef ParticleField::value_type ValT;
     ValT* fieldValues = NULL;
     if( mtype == SpatialOps::EXTERNAL_CUDA_GPU ){
 #     ifdef HAVE_CUDA
