@@ -342,8 +342,6 @@ void ScalarEqn::cleanUp( const ProcessorGroup* pc,
 
     SourceTermBase& temp_src = factory.retrieve_source_term( iter->name ); 
   
-    temp_src.reinitializeLabel(); 
-
   }
 }
 //---------------------------------------------------------------------------

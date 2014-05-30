@@ -30,7 +30,6 @@ DORadiation::DORadiation( std::string src_name, ArchesLabel* labels, MPMArchesLa
   // now until the boundary condition reference can be stripped out of 
   // the radiation model. 
   
-  _label_sched_init = false; 
   const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
 
   _src_label = VarLabel::create( src_name, CC_double ); 
@@ -157,10 +156,7 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   _soot_label = VarLabel::find( _soot_label_name ); 
   _abskpLabel = VarLabel::find( _abskp_label_name ); 
   
-  if (timeSubStep == 0 && !_label_sched_init) {
-    // Every source term needs to set this flag after the varLabel is computed. 
-    // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
-    _label_sched_init = true;
+  if (timeSubStep == 0) { 
 
     tsk->computes(_src_label);
 

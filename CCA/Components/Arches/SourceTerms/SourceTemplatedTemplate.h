@@ -108,7 +108,6 @@ CLASSNAME<TEMP_PARAMS>::CLASSNAME( std::string src_name, SimulationStateP& share
                       vector<std::string> req_label_names ) 
 : SourceTermBase( src_name, shared_state, req_label_names )
 {
-  _label_sched_init = false; 
 
   _src_label = VarLabel::create( src_name, sT::getTypeDescription() ); 
 
@@ -175,10 +174,7 @@ void CLASSNAME<TEMP_PARAMS>::sched_computeSource( const LevelP& level, Scheduler
   std::string taskname = "CLASSNAME::eval";
   Task* tsk = scinew Task(taskname, this, &CLASSNAME::computeSource, timeSubStep);
 
-  if (timeSubStep == 0 && !_label_sched_init) {
-    // Every source term needs to set this flag after the varLabel is computed. 
-    // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
-    _label_sched_init = true;
+  if (timeSubStep == 0) {
 
     tsk->computes(_src_label);
 
