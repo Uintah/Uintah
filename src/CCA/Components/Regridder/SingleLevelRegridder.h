@@ -35,7 +35,13 @@ namespace Uintah {
 
 CLASS
    SingleLevelRegridder
-   
+  
+DESCRIPTION 
+    This regridder was designed to allow the user to alter a single level's
+    patch configuration.  This is useful when restarting a single level uda
+    and use more processors than the original patch configuration
+    would allow.
+     
 ****************************************/
   class SingleLevelRegridder : public TiledRegridder {
   public:
