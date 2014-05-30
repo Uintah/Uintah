@@ -15,7 +15,6 @@ ManifoldRxn::ManifoldRxn( std::string src_name, SimulationStateP& shared_state,
                             vector<std::string> req_label_names, std::string type ) 
 : SourceTermBase(src_name, shared_state, req_label_names, type)
 {
-  _label_sched_init = false; 
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() ); 
   _conv_label = VarLabel::create( src_name+"_conv", CCVariable<double>::getTypeDescription() );
   _diff_label = VarLabel::create( src_name+"_diff", CCVariable<double>::getTypeDescription() );

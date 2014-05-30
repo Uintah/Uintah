@@ -26,7 +26,6 @@ BowmanNOx::BowmanNOx( std::string src_name, ArchesLabel* field_labels,
 : SourceTermBase(src_name, field_labels->d_sharedState, req_label_names, type), _field_labels(field_labels)
 { 
 
-  _label_sched_init = false; 
 
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() ); 
 
@@ -83,11 +82,7 @@ BowmanNOx::sched_computeSource( const LevelP& level, SchedulerP& sched, int time
   nGhosts = 0;
 #endif
 
-  if (timeSubStep == 0 && !_label_sched_init) {
-    // Every source term needs to set this flag after the varLabel is computed. 
-    // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
-    _label_sched_init = true;
-
+  if (timeSubStep == 0) {
     tsk->computes(_src_label);
   } else {
 #ifdef WASATCH_IN_ARCHES
