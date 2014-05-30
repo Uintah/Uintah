@@ -105,12 +105,13 @@ namespace Wasatch{
 
   template< typename FieldT >
   SpatialOps::structured::MemoryWindow
-  get_memory_window_for_uintah_field( const Uintah::Patch* const patch )
+  get_memory_window_for_uintah_field( const AllocInfo& ainfo )
   {
     SS::IntVec bcMinus, bcPlus;
-    get_bc_logicals( patch, bcMinus, bcPlus );
+    get_bc_logicals( ainfo.patch, bcMinus, bcPlus );
 
-    const SCIRun::IntVector gs = patch->getCellHighIndex(0) - patch->getCellLowIndex(0);
+    const SCIRun::IntVector gs = ainfo.patch->getCellHighIndex(0)
+                               - ainfo.patch->getCellLowIndex(0);
 
     const int nGhost = get_n_ghost<FieldT>();
     const SS::IntVec glob( gs[0] + nGhost*2 + (bcPlus[0] ? FieldT::Location::BCExtra::X : 0),
@@ -125,10 +126,183 @@ namespace Wasatch{
 
   template<>
   SpatialOps::structured::MemoryWindow
-  get_memory_window_for_uintah_field<SS::SingleValueField>( const Uintah::Patch* const patch )
+  get_memory_window_for_uintah_field<SS::SingleValueField>( const AllocInfo& ainfo  )
   {
     const int nGhost = get_n_ghost<SS::SingleValueField>();
     return SS::MemoryWindow( SS::IntVec(1,1,1), SS::IntVec(0,0,0), SS::IntVec(nGhost,nGhost,nGhost) );
+  }
+
+  template<>
+  SpatialOps::structured::MemoryWindow
+  get_memory_window_for_uintah_field<ParticleField>( const AllocInfo& ainfo )
+  {
+    const int npar = ainfo.oldDW->getParticleSubset( ainfo.materialIndex, ainfo.patch )->numParticles();
+    const int nGhost = get_n_ghost<ParticleField>();
+    return SS::MemoryWindow( SS::IntVec(npar,1,1) );
+  }
+
+
+  //------------------------------------------------------------------
+
+  template< typename FieldT, typename UFT >
+  FieldT*
+  wrap_uintah_field_as_spatialops( UFT& uintahVar,
+                                   const AllocInfo& ainfo,
+                                   const SpatialOps::MemoryType mtype,
+                                   const unsigned short int deviceIndex,
+                                   double* uintahDeviceVar )
+  {
+    /*
+     * NOTE: before changing things here, look at the line:
+     *    Uintah::OnDemandDataWarehouse::d_combineMemory = false;
+     * in Wasatch.cc.  This is currently preventing Uintah from
+     * combining patch memory.
+     */
+    namespace SS = SpatialOps::structured;
+
+    using SCIRun::IntVector;
+
+    const SCIRun::IntVector lowIx       = uintahVar.getLowIndex();
+    const SCIRun::IntVector highIx      = uintahVar.getHighIndex();
+    const SCIRun::IntVector fieldSize   = uintahVar.getWindow()->getData()->size();
+    const SCIRun::IntVector fieldOffset = uintahVar.getWindow()->getOffset();
+    const SCIRun::IntVector fieldExtent = highIx - lowIx;
+
+    const SS::IntVec   size(   fieldSize[0],   fieldSize[1],   fieldSize[2] );
+    const SS::IntVec extent( fieldExtent[0], fieldExtent[1], fieldExtent[2] );
+    const SS::IntVec offset( lowIx[0]-fieldOffset[0],
+                             lowIx[1]-fieldOffset[1],
+                             lowIx[2]-fieldOffset[2] );
+
+    SS::IntVec bcMinus, bcPlus;
+    get_bc_logicals( ainfo.patch, bcMinus, bcPlus );
+
+    double* fieldValues_ = NULL;
+    if( mtype == SpatialOps::EXTERNAL_CUDA_GPU ){
+#     ifdef HAVE_CUDA
+      fieldValues_ = const_cast<double*>( uintahDeviceVar );
+#     endif
+    }
+    else{
+      fieldValues_ = const_cast<typename FieldT::value_type*>( uintahVar.getPointer() );
+    }
+
+    // jcs why aren't we using get_memory_window_for_uintah_field here???
+    return new FieldT( SS::MemoryWindow( size, offset, extent ),
+                       SS::BoundaryCellInfo::build<FieldT>(bcPlus),
+                       SS::GhostData( get_n_ghost<FieldT>() ),
+                       fieldValues_,
+                       SS::ExternalStorage,
+                       mtype,
+                       deviceIndex );
+  }
+
+
+  template< >
+  ParticleField*
+  wrap_uintah_field_as_spatialops<ParticleField,SelectUintahFieldType<ParticleField>::type>(
+      SelectUintahFieldType<ParticleField>::type& uintahVar,
+      const AllocInfo& ainfo,
+      const SpatialOps::MemoryType mtype,
+      const unsigned short int deviceIndex,
+      double* uintahDeviceVar )
+  {
+    namespace SS = SpatialOps::structured;
+    typedef ParticleField::value_type ValT;
+    ValT* fieldValues = NULL;
+    if( mtype == SpatialOps::EXTERNAL_CUDA_GPU ){
+#     ifdef HAVE_CUDA
+      fieldValues = const_cast<ValT*>( uintahDeviceVar );
+#     endif
+    }
+    else{
+      fieldValues = const_cast<ParticleField::value_type*>( (ValT*)uintahVar.getBasePointer() );
+    }
+
+    // jcs need to get GPU support ready...
+    return new ParticleField( get_memory_window_for_uintah_field<ParticleField>(ainfo),
+                              SS::BoundaryCellInfo::build<ParticleField>(),
+                              SS::GhostData( get_n_ghost<ParticleField>() ),
+                              fieldValues,
+                              SS::ExternalStorage,
+                              mtype,
+                              deviceIndex );
+  }
+
+  template< >
+  ParticleField*
+  wrap_uintah_field_as_spatialops<ParticleField,SelectUintahFieldType<ParticleField>::const_type>(
+      SelectUintahFieldType<ParticleField>::const_type& uintahVar,
+      const AllocInfo& ainfo,
+      const SpatialOps::MemoryType mtype,
+      const unsigned short int deviceIndex,
+      double* uintahDeviceVar )
+  {
+    namespace SS = SpatialOps::structured;
+    typedef ParticleField::value_type ValT;
+    ValT* fieldValues = NULL;
+    if( mtype == SpatialOps::EXTERNAL_CUDA_GPU ){
+#     ifdef HAVE_CUDA
+      fieldValues = const_cast<ValT*>( uintahDeviceVar );
+#     endif
+    }
+    else{
+      fieldValues = const_cast<ValT*>( (ValT*)uintahVar.getBaseRep().getBasePointer() );
+    }
+
+    // jcs need to get GPU support ready...
+    return new ParticleField( get_memory_window_for_uintah_field<ParticleField>(ainfo),
+                              SS::BoundaryCellInfo::build<ParticleField>(),
+                              SS::GhostData( get_n_ghost<ParticleField>() ),
+                              fieldValues,
+                              SS::ExternalStorage,
+                              mtype,
+                              deviceIndex );
+  }
+
+  //-----------------------------------------------------------------
+  // NOTE: this wraps a raw uintah field type, whereas the default
+  //       implementations work with an Expr::UintahFieldContainer
+  template<>
+  SpatialOps::structured::SingleValueField*
+  wrap_uintah_field_as_spatialops<SpatialOps::structured::SingleValueField,Uintah::PerPatch<double*> >(
+      Uintah::PerPatch<double*>& uintahVar,
+      const AllocInfo& ainfo,
+      const SpatialOps::MemoryType mtype,
+      const unsigned short int deviceIndex,
+      double* uintahDeviceVar )
+  {
+    namespace SS = SpatialOps::structured;
+    typedef SS::SingleValueField FieldT;
+    return new FieldT( get_memory_window_for_uintah_field<FieldT>(ainfo),
+                       SS::BoundaryCellInfo::build<FieldT>(false,false,false),    // bc doesn't matter for single value fields
+                       SS::GhostData( get_n_ghost<FieldT>() ),
+                       uintahVar.get(),
+                       SS::ExternalStorage,
+                       mtype,
+                       deviceIndex );
+  }
+
+  // NOTE: this wraps a raw uintah field type, whereas the default
+  //       implementations work with an Expr::UintahFieldContainer
+  template<>
+  inline SpatialOps::structured::SingleValueField*
+  wrap_uintah_field_as_spatialops<SpatialOps::structured::SingleValueField,Uintah::ReductionVariableBase>(
+      Uintah::ReductionVariableBase& uintahVar,
+      const AllocInfo& ainfo,
+      const SpatialOps::MemoryType mtype,
+      const unsigned short int deviceIndex,
+      double* uintahDeviceVar )
+  {
+    namespace SS = SpatialOps::structured;
+    typedef SS::SingleValueField FieldT;
+    return new FieldT( SS::MemoryWindow( SS::IntVec(1,1,1), SS::IntVec(0,0,0), SS::IntVec(1,1,1) ),
+                       SS::BoundaryCellInfo::build<FieldT>(false,false,false),    // bc doesn't matter for single value fields
+                       SS::GhostData( get_n_ghost<FieldT>() ),
+                       (double*)( uintahVar.getBasePointer() ),  // jcs this is a bit sketchy because of the type casting.  It will only work for reductions on doubles
+                       SS::ExternalStorage,
+                       mtype,
+                       deviceIndex );
   }
 
 
@@ -160,24 +334,58 @@ namespace Wasatch{
   //------------------------------------------------------------------
 
   // macro shortcuts for explicit template instantiation
-#define declare_method( FIELDT )                                              \
-  template SS::MemoryWindow                                                   \
-  get_memory_window_for_uintah_field<FIELDT>( const Uintah::Patch* const  );  \
-  template Uintah::Ghost::GhostType get_uintah_ghost_type<FIELDT>();
+#define declare_wrap( FIELDT )                                                                        \
+  template FIELDT* wrap_uintah_field_as_spatialops<FIELDT,SelectUintahFieldType<FIELDT>::type>(       \
+      SelectUintahFieldType<FIELDT>::type&,                                                           \
+      const AllocInfo&,                                                                               \
+      const SpatialOps::MemoryType,                                                                   \
+      const unsigned short int,double* );
+#define declare_const_wrap( FIELDT )                                                                  \
+  template FIELDT* wrap_uintah_field_as_spatialops<FIELDT,SelectUintahFieldType<FIELDT>::const_type>( \
+      SelectUintahFieldType<FIELDT>::const_type&,                                                     \
+      const AllocInfo&,                                                                               \
+      const SpatialOps::MemoryType,                                                                   \
+      const unsigned short int,double* );
+#define declare_methods( FIELDT )                                                                     \
+  template SS::MemoryWindow get_memory_window_for_uintah_field<FIELDT>( const AllocInfo& );           \
+  template Uintah::Ghost::GhostType get_uintah_ghost_type<FIELDT>();                                  \
 
 #define declare_variants( VOLT )                \
-  declare_method( VOLT );                       \
-  declare_method( FaceTypes<VOLT>::XFace );     \
-  declare_method( FaceTypes<VOLT>::YFace );     \
-  declare_method( FaceTypes<VOLT>::ZFace );
+  declare_methods   ( VOLT                   ); \
+  declare_methods   ( FaceTypes<VOLT>::XFace ); \
+  declare_methods   ( FaceTypes<VOLT>::YFace ); \
+  declare_methods   ( FaceTypes<VOLT>::ZFace ); \
+  declare_wrap      ( VOLT                   ); \
+  declare_wrap      ( FaceTypes<VOLT>::XFace ); \
+  declare_wrap      ( FaceTypes<VOLT>::YFace ); \
+  declare_wrap      ( FaceTypes<VOLT>::ZFace ); \
+  declare_const_wrap( VOLT                   ); \
+  declare_const_wrap( FaceTypes<VOLT>::XFace ); \
+  declare_const_wrap( FaceTypes<VOLT>::YFace ); \
+  declare_const_wrap( FaceTypes<VOLT>::ZFace );
 
   declare_variants( SS::SVolField );
   declare_variants( SS::XVolField );
   declare_variants( SS::YVolField );
   declare_variants( SS::ZVolField );
 
-  declare_method( SS::SingleValueField                );
-  declare_method( SpatialOps::Particle::ParticleField );
+  template SS::SingleValueField*
+  wrap_uintah_field_as_spatialops<SS::SingleValueField,Uintah::PerPatch<double*> >(
+      Uintah::PerPatch<double*>&,
+      const AllocInfo&,
+      const SpatialOps::MemoryType,
+      const unsigned short int,double* );
+  template SS::SingleValueField*
+  wrap_uintah_field_as_spatialops<SS::SingleValueField,Uintah::ReductionVariableBase>(
+      Uintah::ReductionVariableBase&,
+      const AllocInfo&,
+      const SpatialOps::MemoryType,
+      const unsigned short int,double* );
+  declare_methods( SS::SingleValueField );
+
+  declare_methods   ( ParticleField );
+  declare_wrap      ( ParticleField );
+  declare_const_wrap( ParticleField );
 
   //------------------------------------------------------------------
 
