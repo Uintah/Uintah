@@ -22,7 +22,7 @@ There are two ways to generating the comparisons with the CBC data.
 ---------------
 METHOD 1
 ---------------
-In general, you will only need to work with the function energy_spectrum_plot_all. All other Matlab scripts include helper functions that are used by energy_spectrum_plot_all. To use this energy_spectrum_plot_all, follow these steps:
+In general, you will only need to work with the function plot_energy_spectrum_all. All other Matlab scripts include helper functions that are used by plot_energy_spectrum_all. To use this plot_energy_spectrum_all, follow these steps:
 
 1. Run your turbulent flow simulation
 
@@ -32,8 +32,8 @@ In general, you will only need to work with the function energy_spectrum_plot_al
     uvel/vvel/wvel_basename_t0.28s/t0.66s.txt
     for example: vvel_32_wasatch_csmag_t0.28s.txt is the lineextract for the y-velocity field. here, the basename is 32_wasatch_csmag.
 
-4. Execute energy_spectrum_plot_all(output_filename,base_name, figure_title). 
-Here, the output_filename designates the pdf filename of the exported figure, base_name denotes the base_name in the lineextract output filename, and figure_title is a string that corresponds to the figure's title. For example, energy_spectrum_plot_all('ke_wasatch_wale_32','32_wasatch_wale','Wale model, C_w = 0.7') will look for lineextract files with names:
+4. Execute plot_energy_spectrum_all(output_filename,base_name, figure_title). 
+Here, the output_filename designates the pdf filename of the exported figure, base_name denotes the base_name in the lineextract output filename, and figure_title is a string that corresponds to the figure's title. For example, plot_energy_spectrum_all('ke_wasatch_wale_32','32_wasatch_wale','Wale model, C_w = 0.7') will look for lineextract files with names:
 uvel_32_wasatch_wale_t0.28s.txt
 vvel_32_wasatch_wale_t0.28s.txt
 wvel_32_wasatch_wale_t0.28s.txt
@@ -45,6 +45,6 @@ The output pdf figure will have the title ke_wasatch_wale_32.pdf and will have t
 ---------------
 METHOD 2
 ---------------
-Alternatively, if you want to execute the entire verification suite, simply execute the "run_verification_tests.sh" bash script. This script requires that you provide it with an absolute path to the sus directory. Example:
-./run_verification_tests.sh /scrach/aurora/tsaad/uintah/opt/StandAlone/ (don't forget the forward slash "/" at the end).
+Alternatively, if you want to execute the entire verification suite, simply execute the "run-verification-tests.sh" bash script. This script requires that you provide it with an absolute path to the sus directory. Example:
+./run-verification-tests.sh /scratch/local/aurora/tsaad/uintah/opt/StandAlone/ (don't forget the forward slash "/" at the end).
 Also, make sure that you add your Matlab executable to your path, otherwise, the matlab plots will NOT be generated.
