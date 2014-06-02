@@ -709,6 +709,7 @@
     <CR                               spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4 arena" />
     <T1_rate_dependence               spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4 arena" />
     <T2_rate_dependence               spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4 arena" />
+	<Initial_Disaggregation_Strain    spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4 arena" />
     <kinematic_hardening_constant     spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4 arena" />
     <fluid_B0                         spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4 arena" />
     <fluid_pressure_initial           spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4 arena" />
