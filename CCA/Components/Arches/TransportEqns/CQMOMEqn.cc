@@ -336,18 +336,18 @@ void CQMOMEqn::initializeVariables( const ProcessorGroup* pc,
 void
 CQMOMEqn::sched_computeSources( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  string taskname = "CQMOMEqn::computeSources";
-  Task* tsk = scinew Task(taskname, this, &CQMOMEqn::computeSources);
-  // This scheduler only calls other schedulers
- 
-  SourceTermFactory& factory = SourceTermFactory::self();
-  for (vector<std::string>::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
-    
-    SourceTermBase& temp_src = factory.retrieve_source_term( *iter );
-    
-    temp_src.sched_computeSource( level, sched, timeSubStep );
-    
-  }
+//  string taskname = "CQMOMEqn::computeSources";
+//  Task* tsk = scinew Task(taskname, this, &CQMOMEqn::computeSources);
+//  // This scheduler only calls other schedulers
+// 
+//  SourceTermFactory& factory = SourceTermFactory::self();
+//  for (vector<std::string>::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
+//    
+//    SourceTermBase& temp_src = factory.retrieve_source_term( *iter );
+//    
+//    temp_src.sched_computeSource( level, sched, timeSubStep );
+//    
+//  }
 }
 
 //---------------------------------------------------------------------------
