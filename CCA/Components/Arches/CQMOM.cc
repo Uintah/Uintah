@@ -318,9 +318,9 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
         vector<int> temp_index = momentIndexes[ii];
         
         if (M == 2) {
-          flatIndex = temp_index[0] + temp_index[1]*maxInd[1];
+          flatIndex = temp_index[0] + temp_index[1]*maxInd[0];
         } else if (M == 3) {
-          flatIndex = temp_index[0] + temp_index[1]*maxInd[1] + temp_index[2]*maxInd[2]*maxInd[2];
+          flatIndex = temp_index[0] + temp_index[1]*maxInd[0] + temp_index[2]*maxInd[0]*maxInd[1];
         }
         
         temp_moments[flatIndex] = temp_value;

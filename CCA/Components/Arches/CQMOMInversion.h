@@ -251,10 +251,6 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
   //For the time being this is only for M = 2 or 3
   //NOTE: to-do: expand to M = 4,5...N etc
   
-//  int maxInd = 5;
-//  maxInd++;
-//  int nMixedMoments = (maxInd)*(maxInd)*(maxInd);
-//  std::vector<double> moments ( nMixedMoments, 0.0 );
 
   int nTot = 1;  //this could probably be input
   for (int i=0; i<M; i++) {
@@ -285,7 +281,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
   
   for (int k = 1; k<2*N_i[1]; k++) {   //this loops each column vector of conditional moments
     for (int i=0; i<N_i[0]; i++) {
-      vanderMom[i] = moments[i+ k*maxInd[1] ];  //ith,kth moment, with j = 0
+      vanderMom[i] = moments[i+ k*maxInd[0] ];  //ith,kth moment, with j = 0
     }
     
 #ifdef cqmom_dbg
@@ -378,7 +374,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
       // solve V_1R_1 * zeta^(k1,k2) = m for zeta 1 to N1
       //populate the moment vector
       for (int i = 0; i<N_i[0]; i++) {
-        vanderMom[i] = moments[i + k2*maxInd[1] + k3*maxInd[2]*maxInd[2]];
+        vanderMom[i] = moments[i + k2*maxInd[0] + k3*maxInd[0]*maxInd[1]];
 #ifdef cqmom_dbg
         if ( k3 == 1 ) {
           cout << "RHS[" << i << "] = " << vanderMom[i] << endl;
