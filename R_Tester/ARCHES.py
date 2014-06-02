@@ -76,8 +76,9 @@ NIGHTLYTESTS = [
 #   ("coal_channel"                , "Coal/coal_channel.ups"                       , 1.1 , "Linux"  , ["exactComparison", "no_restart"])
 #   ("methane_RCCE"                , "methane_RCCE.ups"                            , 1.1 , "Linux"  , ["exactComparison"]) ,
    ("DOM16"                       , "DOM16.ups"                                    , 3   , "Linux"  , ["exactComparison", "no_restart"]),
-#   ("CQMOM_scalar_transport"      , "CQMOM_regression/CQMOM_Transport.ups"         , 6   , "Linux"  , ["exactComparison", "no_restart"]),
-#   ("CQMOM_scalar_transport2x2x2" , "CQMOM_regression/CQMOM_Transport_2x2x2.ups"   , 6   , "Linux"  , ["exactComparison", "no_restart"]),
+   ("CQMOM_1x1"                   , "CQMOM_regression/CQMOM_1x1.ups"               , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
+   ("CQMOM_scalar_transport"      , "CQMOM_regression/CQMOM_Transport.ups"         , 6   , "Linux"  , ["exactComparison", "no_restart"]),
+   ("CQMOM_scalar_transport2x2x2" , "CQMOM_regression/CQMOM_Transport_2x2x2.ups"   , 6   , "Linux"  , ["exactComparison", "no_restart"]),
 ]
 
 # Tests that are run during local regression testing
@@ -116,8 +117,9 @@ LOCALTESTS = [
 #   ("coal_channel"               , "Coal/coal_channel.ups"                       , 1.1 , "All"  , ["exactComparison", "no_restart"])
 #   ("methane_RCCE"               , "methane_RCCE.ups"                            , 1.1 , "All "  , ["exactComparison"]) ,
    ("DOM16"                       , "DOM16.ups"                                    , 3   , "All"  , ["exactComparison", "no_restart"]),
-#   ("CQMOM_scalar_transport"      , "CQMOM_regression/CQMOM_Transport.ups"         , 6   , "All"  , ["exactComparison", "no_restart"]),
-#   ("CQMOM_scalar_transport2x2x2" , "CQMOM_regression/CQMOM_Transport_2x2x2.ups"   , 6   , "All"  , ["exactComparison", "no_restart"]),
+   ("CQMOM_1x1"                   , "CQMOM_regression/CQMOM_1x1.ups"               , 1.1 , "All"  , ["exactComparison", "no_restart"]),
+   ("CQMOM_scalar_transport"      , "CQMOM_regression/CQMOM_Transport.ups"         , 6   , "All"  , ["exactComparison", "no_restart"]),
+   ("CQMOM_scalar_transport2x2x2" , "CQMOM_regression/CQMOM_Transport_2x2x2.ups"   , 6   , "All"  , ["exactComparison", "no_restart"]),
 ]
 
 NEWTESTS = [
@@ -155,10 +157,16 @@ RMCRTTESTS = [
   ("methane_rmcrt_const_props"   , "RMCRT/methane_rmcrt_const_props.ups"         , 4 ,   "ALL"  , ["exactComparison"])
 ]
 
+CQMOMTESTS = [
+  ("CQMOM_1x1"                   , "CQMOM_regression/CQMOM_1x1.ups"               , 1.1 , "All"  , ["exactComparison", "no_restart"]),
+  ("CQMOM_scalar_transport"      , "CQMOM_regression/CQMOM_Transport.ups"         , 6   , "All"  , ["exactComparison", "no_restart"]),
+  ("CQMOM_scalar_transport2x2x2" , "CQMOM_regression/CQMOM_Transport_2x2x2.ups"   , 6   , "All"  , ["exactComparison", "no_restart"]),
+]
+
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS RMCRTTESTS NEWTESTS SCALARTESTS DQMOMTESTS NIGHTLYTESTS
+#LIST: LOCALTESTS RMCRTTESTS NEWTESTS SCALARTESTS DQMOMTESTS NIGHTLYTESTS CQMOMTESTS
 #__________________________________
 
   
@@ -176,6 +184,8 @@ def getTestList(me) :
     TESTS = DQMOMTESTS
   elif me == "NIGHTLYTESTS":
     TESTS = NIGHTLYTESTS
+  elif me == "CQMOMTESTS":
+    TESTS = CQMOMTESTS
   else:
     print "\nERROR:ARCHES.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)
