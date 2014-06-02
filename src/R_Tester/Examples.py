@@ -37,6 +37,11 @@ NIGHTLYTESTS = [   ("poisson1",         "poisson1.ups",         1, "ALL"),
                    ("RMCRT_udaInit",    "RMCRT_udaInit.ups",    1, "ALL", ["exactComparison","no_restart"]),
                    ("RMCRT_1L_perf",    "RMCRT_1L_perf.ups",    1, "ALL", ["do_performance_test"]),
                    ("RMCRT_DO_perf",    "RMCRT_DO_perf.ups",    1, "ALL", ["do_performance_test"]),
+#
+# multi-threaded tests
+                   ("RMCRT_test_1L_thread", "RMCRT_test_1L.ups", 1.1, "ALL", ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),                   
+                   ("RMCRT_bm1_DO_thread",  "RMCRT_bm1_DO.ups",  1.1, "ALL", ["no_restart", "exactComparison", "sus_options=-nthreads 8"]),
+                   ("RMCRT_ML_thread",      "RMCRT_ML.ups",      1.1, "ALL", ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
                ]
 
 # Tests that are run during local regression testing
