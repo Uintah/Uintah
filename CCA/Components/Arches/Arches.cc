@@ -1681,8 +1681,12 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   printSchedule(level,dbg, "Arches::scheduleTimeAdvance");
 
   nofTimeSteps++ ;
-
-  if (d_doingRestart) {
+  
+  if( d_sharedState->isRegridTimestep() ){  // needed for single level regridding on restarts
+    d_doingRestart = true;                  // this task is called twice on a regrid.
+  }
+  
+  if (d_doingRestart  ) {
 
     const PatchSet* patches= level->eachPatch();
     const MaterialSet* matls = d_sharedState->allArchesMaterials();
@@ -1728,7 +1732,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   }
 
   if (d_doingRestart) {
-
     d_doingRestart = false;
     d_lab->recompile_taskgraph = true;
 
