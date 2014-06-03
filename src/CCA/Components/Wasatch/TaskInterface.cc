@@ -347,7 +347,7 @@ namespace Wasatch{
 
           dbg_fields << std::setw(10) << "(REQUIRES)"
                      << std::setw(20) << std::left << fieldInfo.varlabel->getName()
-                     << "OLD   "
+                     << " OLD   "
                      << std::left << std::setw(5) << fieldInfo.nghost
                      << *patches << endl;
         }
@@ -386,15 +386,17 @@ namespace Wasatch{
             (fieldInfo.varlabel->getName()=="time"     ||
              fieldInfo.varlabel->getName()=="dt"       ||
              fieldInfo.varlabel->getName()=="timestep" ||
-             fieldInfo.varlabel->getName()=="rkstage")     ){
+             fieldInfo.varlabel->getName()=="rkstage") ){
           fieldInfo.mode = Expr::REQUIRES;
         }
 
+#       ifdef WASATCH_IN_ARCHES
         // this was needed for Warches. When adding a placeholder expression with STATE_N,
         // we must use the newdw in the initialization task graph.
-        if (tree.name() == "initialization" && fieldTag.context() == Expr::STATE_DYNAMIC) {
+        if( tree.name() == "initialization" && fieldTag.context() == Expr::STATE_DYNAMIC ){
           fieldInfo.useOldDataWarehouse = false;
         }
+#       endif // WASATCH_IN_ARCHES
 
         const Uintah::Task::WhichDW dw = ( fieldInfo.useOldDataWarehouse ) ? Uintah::Task::OldDW : Uintah::Task::NewDW;
 
@@ -430,8 +432,8 @@ namespace Wasatch{
         } // switch
 
         dbg_fields << std::setw(20) << std::left << fieldInfo.varlabel->getName();
-        if( fieldInfo.useOldDataWarehouse ){ dbg_fields << "OLD   "; }
-        else{ dbg_fields << "NEW   "; }
+        if( fieldInfo.useOldDataWarehouse ){ dbg_fields << " OLD   "; }
+        else{ dbg_fields << " NEW   "; }
         dbg_fields << std::left << std::setw(5) << fieldInfo.nghost << *patches << endl;
 
       } // field loop
