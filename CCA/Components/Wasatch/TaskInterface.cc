@@ -570,51 +570,48 @@ namespace Wasatch{
           }
 
           Expr::Tag ptag;
-          for( Expr::TagList::iterator ptag=PoissonExpression::poissonTagList.begin();
-              ptag!=PoissonExpression::poissonTagList.end();
-              ++ptag ){
-            if (tree->computes_field( *ptag )) {
-              PoissonExpression& pexpr = dynamic_cast<PoissonExpression&>( factory.retrieve_expression( *ptag, patchID, true ) );
+          BOOST_FOREACH( const Expr::Tag& ptag, PoissonExpression::poissonTagList ){
+            if (tree->computes_field( ptag )) {
+              PoissonExpression& pexpr = dynamic_cast<PoissonExpression&>( factory.retrieve_expression( ptag, patchID, true ) );
               pexpr.set_patch(patches->get(ip));
               pexpr.set_RKStage(rkStage);
             }            
           }    
 
-            // Pass patch information to the coordinate expressions
-            typedef std::map<Expr::Tag, std::string> CoordMapT;
-            // OldVariable& oldVar = OldVariable::self();
-            BOOST_FOREACH( const CoordMapT::value_type& coordPair, CoordinateNames::coordinate_map() )
-            {
-              const Expr::Tag& coordTag = coordPair.first;
-              const std::string& coordFieldT = coordPair.second;
+          // Pass patch information to the coordinate expressions
+          typedef std::map<Expr::Tag, std::string> CoordMapT;
+          // OldVariable& oldVar = OldVariable::self();
+          BOOST_FOREACH( const CoordMapT::value_type& coordPair, CoordinateNames::coordinate_map() ){
+            const Expr::Tag& coordTag = coordPair.first;
+            const std::string& coordFieldT = coordPair.second;
 
-              if (!(tree->computes_field(coordTag))) continue;
+            if( ! tree->computes_field(coordTag) ) continue;
 
-              if( coordFieldT == "SVOL"){
-                Coordinates<SVolField>& coordExpr = dynamic_cast<Coordinates<SVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
-                coordExpr.set_patch(patches->get(ip));
-                // In case we want to copy coordinates instead of recomputing them, uncomment the following line
-  //              oldVar.add_variable<SVolField>( ADVANCE_SOLUTION, coordTag, true);
-              }
-              else if( coordFieldT == "XVOL" ){
-                Coordinates<XVolField>& coordExpr = dynamic_cast<Coordinates<XVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
-                coordExpr.set_patch(patches->get(ip));
-                // In case we want to copy coordinates instead of recomputing them, uncomment the following line
-  //              oldVar.add_variable<XVolField>( ADVANCE_SOLUTION, coordTag, true);
-              }
-              else if( coordFieldT == "YVOL" ){
-                Coordinates<YVolField>& coordExpr = dynamic_cast<Coordinates<YVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
-                coordExpr.set_patch(patches->get(ip));
-                // In case we want to copy coordinates instead of recomputing them, uncomment the following line
-  //              oldVar.add_variable<YVolField>( ADVANCE_SOLUTION, coordTag, true);
-              }
-              else if( coordFieldT == "ZVOL" ){
-                Coordinates<ZVolField>& coordExpr = dynamic_cast<Coordinates<ZVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
-                coordExpr.set_patch(patches->get(ip));
-                // In case we want to copy coordinates instead of recomputing them, uncomment the following line
-  //              oldVar.add_variable<ZVolField>( ADVANCE_SOLUTION, coordTag, true);
-              }
+            if( coordFieldT == "SVOL"){
+              Coordinates<SVolField>& coordExpr = dynamic_cast<Coordinates<SVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
+              coordExpr.set_patch(patches->get(ip));
+              // In case we want to copy coordinates instead of recomputing them, uncomment the following line
+              // oldVar.add_variable<SVolField>( ADVANCE_SOLUTION, coordTag, true);
             }
+            else if( coordFieldT == "XVOL" ){
+              Coordinates<XVolField>& coordExpr = dynamic_cast<Coordinates<XVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
+              coordExpr.set_patch(patches->get(ip));
+              // In case we want to copy coordinates instead of recomputing them, uncomment the following line
+              // oldVar.add_variable<XVolField>( ADVANCE_SOLUTION, coordTag, true);
+            }
+            else if( coordFieldT == "YVOL" ){
+              Coordinates<YVolField>& coordExpr = dynamic_cast<Coordinates<YVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
+              coordExpr.set_patch(patches->get(ip));
+              // In case we want to copy coordinates instead of recomputing them, uncomment the following line
+              // oldVar.add_variable<YVolField>( ADVANCE_SOLUTION, coordTag, true);
+            }
+            else if( coordFieldT == "ZVOL" ){
+              Coordinates<ZVolField>& coordExpr = dynamic_cast<Coordinates<ZVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
+              coordExpr.set_patch(patches->get(ip));
+              // In case we want to copy coordinates instead of recomputing them, uncomment the following line
+              // oldVar.add_variable<ZVolField>( ADVANCE_SOLUTION, coordTag, true);
+            }
+          }
 
           tree->bind_fields( *fml_ );
           tree->bind_operators( opdb );
