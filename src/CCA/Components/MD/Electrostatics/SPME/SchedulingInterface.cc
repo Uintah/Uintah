@@ -40,23 +40,35 @@
 using namespace Uintah;
 
 // Scheduling related helpers for the base SPME class
-void SPME::addInitializeRequirements(Task* task, MDLabel* d_label) const {
+void SPME::addInitializeRequirements(Task* task, MDLabel* label) const {
   // This isn't really requires, it's simply being used to make sure we don't
   // init before we've finished MD::Initialize.  Not sure that's necessary...
 
-  task->requires(Task::NewDW, d_label->global->pX, Ghost::None, 0);
+  task->requires(Task::NewDW, label->global->pX, Ghost::None, 0);
+
 }
 
-void SPME::addInitializeComputes(Task* task, MDLabel* d_label) const {
+void SPME::addInitializeComputes(Task* task, MDLabel* label) const {
 
   // Probably should initialize rElectrostaticInverseEnergy and
   // rElectrostaticInverseStress in setup or even in calculate since we'll be
   // overwriting them every iteration for the polarizable loop
 
-  task->computes(d_label->electrostatic->sForwardTransformPlan);
-  task->computes(d_label->electrostatic->sBackwardTransformPlan);
+  task->computes(label->electrostatic->sForwardTransformPlan);
+  task->computes(label->electrostatic->sBackwardTransformPlan);
 
-  task->computes(d_label->electrostatic->dElectrostaticDependency);
+
+  task->computes(label->electrostatic->rElectrostaticInverseEnergy);
+  task->computes(label->electrostatic->rElectrostaticRealEnergy);
+
+  task->computes(label->electrostatic->rElectrostaticInverseStress);
+  task->computes(label->electrostatic->rElectrostaticRealStress);
+
+  task->computes(label->electrostatic->dElectrostaticDependency);
+
+  if (f_polarizable) {
+    task->computes(label->electrostatic->rElectrostaticInverseStressDipole);
+  }
 
 }
 

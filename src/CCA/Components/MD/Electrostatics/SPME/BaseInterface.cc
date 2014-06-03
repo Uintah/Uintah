@@ -108,6 +108,26 @@ void SPME::initialize(  const ProcessorGroup*   pg,
                      	coordinateSystem*       coordSys) {
   // SPME::initialize is called from MD::initialize
 
+  // Initialization of reductions
+  newDW->put(sum_vartype(0.0),
+             label->electrostatic->rElectrostaticInverseEnergy);
+
+  newDW->put(sum_vartype(0.0),
+             label->electrostatic->rElectrostaticRealEnergy);
+
+  if (NPT == systemInfo->getEnsemble()) {
+    newDW->put(matrix_sum(0.0),
+               label->electrostatic->rElectrostaticInverseStress);
+    newDW->put(matrix_sum(0.0),
+               label->electrostatic->rElectrostaticRealStress);
+    if (f_polarizable) {
+      newDW->put(matrix_sum(0.0),
+                 label->electrostatic->rElectrostaticInverseStressDipole);
+    }
+
+  }
+
+
   /* Initialize the local version of the global Q and Q_scratch arrays
    *   Rather than forcing reductions on processor for each patch, we have a
    *   single per-processor pool, where we handle thread access manually with

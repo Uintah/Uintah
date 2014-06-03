@@ -33,7 +33,7 @@ const std::string LucretiusForcefield::d_forcefieldNameString = "Lucretius";
 
 NonbondedTwoBodyPotential* LucretiusForcefield::parseHomoatomicNonbonded(std::string& parseLine,
                                                                    	     const forcefieldType currentForcefieldType,
-                                                                   	     double currentMass) {
+                                                                   	     double& currentMass) {
 // First three characters form the label for this specific interaction type
   std::string nbLabel;
   nbLabel = parseLine.substr(0,3);  // First three characters form the specific interaction label
@@ -154,7 +154,6 @@ NonbondedTwoBodyPotential* LucretiusForcefield::parseHeteroatomicNonbonded(std::
   return potential;
 }
 
-
 void LucretiusForcefield::parseNonbondedPotentials(std::ifstream& fileHandle,
                                                    const std::string& filename,
                                                    std::string& buffer,
@@ -194,20 +193,23 @@ void LucretiusForcefield::parseNonbondedPotentials(std::ifstream& fileHandle,
       else { // Line starts with a space so represents a charge / polarization / comment
         std::vector<std::string> chargeLineTokens;
         Parse::tokenizeAtMost(buffer, chargeLineTokens, 2); // return 2 tokens and the rest of the line with leading spaces stripped
-        double charge = Parse::stringToInt(chargeLineTokens[0]);
-        double polarizability = Parse::stringToInt(chargeLineTokens[1]);
+        double charge = Parse::stringToDouble(chargeLineTokens[0]);
+        double polarizability = Parse::stringToDouble(chargeLineTokens[1]);
         std::string chargeLineComment = "";
         if (chargeLineTokens.size() == 3) {
           chargeLineComment = chargeLineTokens[2];
-       }
-       LucretiusMaterial* currentMaterial = scinew LucretiusMaterial(nonbondedHomoatomic,
-                                                                     currentMass,
-                                                                     charge,
-                                                                     polarizability,
-                                                                     currentChargeSubindex);
-       materialArray.push_back(currentMaterial);
+        }
+        LucretiusMaterial* currentMaterial = scinew LucretiusMaterial(nonbondedHomoatomic,
+                                                                      currentMass,
+                                                                      charge,
+                                                                      polarizability,
+                                                                      currentChargeSubindex);
+        materialArray.push_back(currentMaterial);
+        std::cerr << " Material registered: " << materialArray.size() <<  " " <<
+        materialArray[materialArray.size()-1]->getMaterialDescriptor() << " " <<
+        materialArray[materialArray.size()-1]->getMaterialLabel() << std::endl;
         ++currentChargeSubindex;
-//        sharedState->registerMDMaterial(currentMaterial);
+        sharedState->registerMDMaterial(currentMaterial);
         nonbondedTwoBodyKey potentialKey(nonbondedHomoatomic->getLabel(),nonbondedHomoatomic->getLabel());
         potentialMap.insert(twoBodyPotentialMapPair(potentialKey,nonbondedHomoatomic));
       }
