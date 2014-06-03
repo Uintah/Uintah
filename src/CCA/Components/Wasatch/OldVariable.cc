@@ -34,7 +34,6 @@
 #include <boost/foreach.hpp>
 
 //-- ExprLib includes --//
-#include <expression/PlaceHolderExpr.h>
 #include <expression/ExpressionFactory.h>
 
 //-- SpatialOps includes --//

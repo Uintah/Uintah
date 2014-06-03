@@ -77,7 +77,6 @@
 
 #ifdef WASATCH_IN_ARCHES
 #  include <expression/ExprLib.h>
-#  include <expression/PlaceHolderExpr.h>
 
 #  include <CCA/Components/Wasatch/Wasatch.h>
 #  include <CCA/Components/Wasatch/FieldTypes.h>

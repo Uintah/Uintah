@@ -26,7 +26,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <expression/PlaceHolderExpr.h>
 
 //-- Wasatch includes --//
 #include "EmbeddedGeometryHelper.h"
