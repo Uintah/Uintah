@@ -1128,8 +1128,6 @@ namespace Wasatch{
                                      BCHelper& bcHelper )
   {
     namespace SS = SpatialOps::structured;
-    Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
-   
     const Category taskCat = INITIALIZATION;
   
     // apply velocity boundary condition, if specified
