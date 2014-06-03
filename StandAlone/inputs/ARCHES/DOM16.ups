@@ -221,6 +221,9 @@
                 <pctype>jacobi</pctype>
                 <max_iter>1375</max_iter>
               </LinearSolver>
+                <property_calculator type="hottel_sarofim">
+                  <opl>3.0</opl>
+                </property_calculator>
             </DORadiationModel>
           </src>
         </Sources>
