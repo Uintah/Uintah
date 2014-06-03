@@ -28,27 +28,7 @@
          <NameTag name="YSVOL" state="STATE_NONE"/>
        </ParabolicFunction>
     </BCExpression>
-    
-<!-- 
-    <BCExpression type="SVOL">
-      <TaskList>initialization advance_solution</TaskList>
-      <NameTag name="linear-inlet" state="STATE_NONE" />
-      <LinearFunction slope="100" intercept="0.0">
-         <NameTag name="YSVOL" state="STATE_NONE" />
-       </LinearFunction>
-    </BCExpression>
- -->
-
-
-    <ForceOnGraph tasklist="initialization advance_solution">
-      <NameTag name="YSVOL" state="STATE_NONE"/>
-    </ForceOnGraph>
-<!-- 
-    <ForceOnGraph tasklist="advance_solution">
-      <NameTag name="YSVOL" state="STATE_NONE" />
-    </ForceOnGraph>
- -->
-
+ 
     <!-- Build a non-staggered scalar transport equation -->
     <TransportEquation equation="generic">
       <SolutionVariable>phi-dirichlet-dirichlet-a</SolutionVariable>
