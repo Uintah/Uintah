@@ -108,18 +108,15 @@
       </Viscosity>
       
       <Pressure>
-        <Use3DLaplacian>   false</Use3DLaplacian>
-
+        <Use3DLaplacian>false</Use3DLaplacian>
         <Parameters>
-
-            <!-- Hypre options -->
-            <solver>         cg      </solver>
-            <preconditioner> pfmg    </preconditioner>
-            <tolerance>      1e-12  </tolerance>
-            <maxiterations>  1000   </maxiterations>
-            <relax_type>     2       </relax_type>
-           </Parameters>
-
+          <!-- Hypre options -->
+          <solver>         cg      </solver>
+          <preconditioner> pfmg    </preconditioner>
+          <tolerance>      1e-12  </tolerance>
+          <maxiterations>  1000   </maxiterations>
+          <relax_type>     2       </relax_type>
+        </Parameters>
       </Pressure>
     </MomentumEquations>
 
@@ -161,21 +158,21 @@
       <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
 
       <Face side="z-">
-        <BCType label="pressure" var="Dirichlet" value="0.0"/>
-        <BCType label="z-mom" var="Neumann" value="0.0"/>
-        <BCType label="w" var="Neumann" value="0.0"/>
-        <BCType label="rhof" var="Neumann" value="0.0"/>
-        <BCType label="f" var="Neumann" value="0.0"/>
-        <BCType label="density" var="Neumann" value="0.0"/>
+        <BCType label="pressure"          var="Dirichlet" value="0.0"/>
+        <BCType label="z-mom"             var="Neumann"  value="0.0"/>
+        <BCType label="w"                 var="Neumann"   value="0.0"/>
+        <BCType label="rhof"              var="Neumann"   value="0.0"/>
+        <BCType label="f"                 var="Neumann"   value="0.0"/>
+        <BCType label="density"           var="Neumann"   value="0.0"/>
         <BCType label="z-mom_rhs_partial" var="Dirichlet" value="0.0"/>
       </Face>
       <Face side="z+">
-        <BCType label="pressure" var="Dirichlet" value="0.0"/>
-        <BCType label="z-mom" var="Neumann" value="0.0"/>
-        <BCType label="w" var="Neumann" value="0.0"/>
-        <BCType label="rhof" var="Neumann" value="0.0"/>
-        <BCType label="f" var="Neumann" value="0.0"/>
-        <BCType label="density" var="Neumann" value="0.0"/>
+        <BCType label="pressure"          var="Dirichlet" value="0.0"/>
+        <BCType label="z-mom"             var="Neumann"   value="0.0"/>
+        <BCType label="w"                 var="Neumann"   value="0.0"/>
+        <BCType label="rhof"              var="Neumann"   value="0.0"/>
+        <BCType label="f"                 var="Neumann"   value="0.0"/>
+        <BCType label="density"           var="Neumann"   value="0.0"/>
         <BCType label="z-mom_rhs_partial" var="Dirichlet" value="0.0"/>
       </Face>
       </BoundaryConditions>  
