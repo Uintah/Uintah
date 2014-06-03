@@ -67,7 +67,6 @@ void CQMOM::problemSetup(const ProblemSpecP& params)
     d_normalized = true;
   else
     d_normalized = false;
-  //NOTE: leave debugging with #ifdef to CQMOMinversion.h
   
   int index_length = 0;
   db->get("NumberInternalCoordinates",M);   //get number of coordiantes
@@ -93,7 +92,7 @@ void CQMOM::problemSetup(const ProblemSpecP& params)
   
   nNodes = 1;
   momentSize = 1;
-  for (int i = 0; i<N_i.size(); i++) {
+  for (unsigned int i = 0; i<N_i.size(); i++) {
     nNodes *= N_i[i];
     momentSize *= (maxInd[i]+1);
     maxInd[i]++; //increase maxindex by one to account for 0th index
