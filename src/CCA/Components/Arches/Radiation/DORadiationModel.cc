@@ -169,6 +169,9 @@ DORadiationModel::problemSetup( ProblemSpecP& params, bool stand_alone_src )
 
   fraction.resize(1,100);
   fraction.initialize(0.0);
+  fraction[1]=1.0;  // This a hack to fix DORad with the new property model interface - Derek 6-14
+
+
 
   fractiontwo.resize(1,100);
   fractiontwo.initialize(0.0);
