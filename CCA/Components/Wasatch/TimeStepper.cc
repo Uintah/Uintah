@@ -34,7 +34,6 @@
 
 //-- ExprLib includes --//
 #include <expression/ExpressionFactory.h>
-#include <expression/PlaceHolderExpr.h>
 
 //-- SpatialOps includes --//
 #include <spatialops/Nebo.h>

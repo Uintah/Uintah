@@ -2,7 +2,6 @@
 #define Reduction_Expr_h
 
 #include "ReductionBase.h"
-#include <expression/PlaceHolderExpr.h>
 
 /**
  *  \class Reduction
