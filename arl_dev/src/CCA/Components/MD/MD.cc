@@ -114,6 +114,27 @@ void MD::problemSetup(const ProblemSpecP& params,
 //  d_system->attachForcefield(d_forcefield);
 //  std::cerr << "Created system object" << std::endl;
 
+  // Parse the forcefield
+    // Material (atom) types should be registered on parsing the forcefield.
+    Forcefield* tempFF = ForcefieldFactory::create(params, shared_state);
+
+    switch(tempFF->getInteractionClass()) { // Set generic interface based on FF type
+      case(TwoBody):
+        d_forcefield=dynamic_cast<TwoBodyForcefield*> (tempFF);
+        break;
+      case(ThreeBody):
+      case(NBody):
+      default:
+        throw InternalError("MD:  Attempted to instantiate a forcefield type which is not yet implemented", __FILE__, __LINE__);
+    }
+
+    d_forcefield->registerProvidedParticleStates(d_particleState,
+                                                 d_particleState_preReloc,
+                                                 d_label);
+
+    std::cerr << "Forcefield created: "
+              << d_forcefield->getForcefieldDescriptor() << std::endl;
+
   // Instantiate the integrator
 //  Integrator* tempIntegrator = IntegratorFactory::create(XXX);
 //  switch(tempIntegrator->getInteractionModel()) { // Set generic interface based on integrator type
@@ -180,27 +201,6 @@ void MD::problemSetup(const ProblemSpecP& params,
    d_nonbondedInterface->registerRequiredParticleStates(d_particleState, d_particleState_preReloc, d_label);
    //d_integrator->registerRequiredParticleState(d_particleState, d_particleState_preReloc, d_label);
 
-   // Parse the forcefield
-     // Material (atom) types should be registered on parsing the forcefield.
-     Forcefield* tempFF = ForcefieldFactory::create(params, shared_state);
-
-     switch(tempFF->getInteractionClass()) { // Set generic interface based on FF type
-       case(TwoBody):
-         d_forcefield=dynamic_cast<TwoBodyForcefield*> (tempFF);
-         break;
-       case(ThreeBody):
-       case(NBody):
-       default:
-         throw InternalError("MD:  Attempted to instantiate a forcefield type which is not yet implemented", __FILE__, __LINE__);
-     }
-     d_forcefield->registerProvidedParticleStates(d_particleState,
-                                                  d_particleState_preReloc,
-                                                  d_label);
-
-     std::cerr << "Forcefield created: "
-               << d_forcefield->getForcefieldDescriptor() << std::endl;
-
-
 //  // register permanent particle state; for relocation, etc
   //registerPermanentParticleState();
 
@@ -253,14 +253,15 @@ void MD::scheduleInitialize(const LevelP& level,
   const PatchSet* perProcPatches = loadBal->getPerProcessorPatchSet(level);
 
   // FIXME -- Original, no longer correct?
-  //sched->addTask(task, level->eachPatch(), materials);
-  sched->addTask(task, perProcPatches, materials);
+  sched->addTask(task, level->eachPatch(), materials);
+  //sched->addTask(task, perProcPatches, materials);
 
   std::cerr << "MD::ScheduleInitialize -> Added MD::Initialize to task graph." << std::endl;
 
   // Nonbonded initialization - OncePerProc, during initial (0th) timestep.
   // The required pXlabel is available to this OncePerProc task in the new_dw from the computes above
   scheduleNonbondedInitialize(sched, perProcPatches, materials, level);
+//  scheduleNonbondedInitialize()
   std::cerr << "MD::ScheduleInitialize -> Called scheduleNonbondedInitialize." << std::endl;
 
   // Nonbonded initialization - OncePerProc, during initial (0th) timestep.
@@ -287,6 +288,10 @@ void MD::scheduleComputeStableTimestep(const LevelP& level,
     task->requires(Task::NewDW, d_label->nonbonded->rNonbondedStress);
     task->requires(Task::NewDW, d_label->electrostatic->rElectrostaticInverseStress);
     task->requires(Task::NewDW, d_label->electrostatic->rElectrostaticRealStress);
+    if ( d_electrostatics->isPolarizable() ) {
+      task->requires(Task::NewDW,
+                     d_label->electrostatic->rElectrostaticInverseStressDipole);
+    }
   }
 
   task->computes(d_sharedState->get_delt_label(), level.get_rep());
@@ -339,6 +344,7 @@ void MD::scheduleNonbondedInitialize(SchedulerP& sched,
                                      const MaterialSet* matls,
                                      const LevelP& level)
 {
+
   printSchedule(perProcPatches, md_cout, "MD::scheduleNonbondedInitialize");
 
   Task* task = scinew Task("MD::nonbondedInitialize", this, &MD::nonbondedInitialize);
@@ -347,7 +353,7 @@ void MD::scheduleNonbondedInitialize(SchedulerP& sched,
   task->requires(Task::NewDW, d_label->global->pX, Ghost::None, 0);
 //  task->requires(Task::NewDW, d_label->pXLabel, Ghost::None, 0);
 
-  MDSubcomponent* d_nonbondedInterface = dynamic_cast<MDSubcomponent*> (d_electrostatics);
+  MDSubcomponent* d_nonbondedInterface = dynamic_cast<MDSubcomponent*> (d_nonbonded);
 
   task->requires(Task::NewDW, d_label->global->pX, Ghost::None, 0);
   d_nonbondedInterface->addInitializeRequirements(task, d_label);
@@ -616,10 +622,10 @@ void MD::scheduleUpdatePosition(SchedulerP& sched,
   task->requires(Task::OldDW, d_label->global->pID, Ghost::None, 0);
 
   // d_forcefield->addUpdateRequires();
-  task->requires(Task::NewDW, d_label->nonbonded->pF_nonbonded_preReloc);
+  task->requires(Task::NewDW, d_label->nonbonded->pF_nonbonded_preReloc, Ghost::None, 0);
   // d_electrostatics->addUpdateRequires();
-  task->requires(Task::NewDW, d_label->electrostatic->pF_electroInverse_preReloc);
-  task->requires(Task::NewDW, d_label->electrostatic->pF_electroReal_preReloc);
+  task->requires(Task::NewDW, d_label->electrostatic->pF_electroInverse_preReloc, Ghost::None, 0);
+  task->requires(Task::NewDW, d_label->electrostatic->pF_electroReal_preReloc, Ghost::None, 0);
 
 //  task->requires(Task::OldDW, d_label->pXLabel, Ghost::None, 0);
 //  task->requires(Task::OldDW, d_label->pParticleIDLabel, Ghost::None, 0);
@@ -675,14 +681,14 @@ void MD::initialize(const ProcessorGroup* pg,
   // Input coordinates from problem spec
   atomMap* parsedCoordinates = atomFactory::create(d_problemSpec, d_sharedState);
   size_t numTypesParsed = parsedCoordinates->getNumberAtomTypes();
-  size_t numMaterialTypes = d_system->getNumAtomTypes();
+  size_t numMaterialTypes = d_sharedState->allMDMaterials()->size();
 
-  if (numTypesParsed != numMaterialTypes) {
-    std::stringstream errorOut;
-    errorOut << " ERROR:  Expected to find " << numMaterialTypes << " types of materials in the coordinate file." << std::endl;
-    errorOut << "     However, the coordinate file only parsed " << numTypesParsed << std::endl;
-    throw ProblemSetupException(errorOut.str(), __FILE__, __LINE__);
-  }
+//  if (numTypesParsed != numMaterialTypes) {
+//    std::stringstream errorOut;
+//    errorOut << " ERROR:  Expected to find " << numMaterialTypes << " types of materials in the coordinate file." << std::endl;
+//    errorOut << "     However, the coordinate file only parsed " << numTypesParsed << std::endl;
+//    throw ProblemSetupException(errorOut.str(), __FILE__, __LINE__);
+//  }
 
   for (size_t matlIndex = 0; matlIndex < numMaterialTypes; ++matlIndex) {
     std::string materialLabel = d_sharedState->getMDMaterial(matlIndex)->getMaterialLabel();
@@ -760,13 +766,13 @@ void MD::initialize(const ProcessorGroup* pg,
 //      new_dw->allocateAndPut(pF_eRecip, d_label->pElectrostaticsReciprocalForce, currPset);
 //      new_dw->allocateAndPut(pF_v, d_label->pValenceForceLabel, currPset);
     // --> Dipoles
-      ParticleVariable<Vector> pDipoles;
-      new_dw->allocateAndPut(pDipoles, d_label->electrostatic->pMu, currPset);
+//      ParticleVariable<Vector> pDipoles;
+//      new_dw->allocateAndPut(pDipoles, d_label->electrostatic->pMu, currPset);
 //      new_dw->allocateAndPut(pDipoles, d_label->pTotalDipoles, currPset);
     // --> Field subcomponents
-      ParticleVariable<Vector> pFieldReal, pFieldReciprocal;
-      new_dw->allocateAndPut(pFieldReal, d_label->electrostatic->pE_electroReal, currPset);
-      new_dw->allocateAndPut(pFieldReciprocal, d_label->electrostatic->pE_electroInverse, currPset);
+//      ParticleVariable<Vector> pFieldReal, pFieldReciprocal;
+//      new_dw->allocateAndPut(pFieldReal, d_label->electrostatic->pE_electroReal, currPset);
+//      new_dw->allocateAndPut(pFieldReciprocal, d_label->electrostatic->pE_electroInverse, currPset);
 //      new_dw->allocateAndPut(pFieldReal, d_label->pElectrostaticsRealField, currPset);
 //      new_dw->allocateAndPut(pFieldReciprocal, d_label->pElectrostaticsReciprocalField, currPset);
 
@@ -781,9 +787,9 @@ void MD::initialize(const ProcessorGroup* pg,
 //        pF_eReal[atomIndex]                 = VectorZero;
 //        pF_eRecip[atomIndex]                = VectorZero;
 //        pF_v[atomIndex]                     = VectorZero;
-        pDipoles[atomIndex]                 = VectorZero;
-        pFieldReal[atomIndex]               = VectorZero;
-        pFieldReciprocal[atomIndex]         = VectorZero;
+//        pDipoles[atomIndex]                 = VectorZero;
+//        pFieldReal[atomIndex]               = VectorZero;
+//        pFieldReciprocal[atomIndex]         = VectorZero;
 
         if (md_dbg.active()) { // Output for debug..
           cerrLock.lock();
@@ -905,13 +911,12 @@ void MD::computeStableTimestep(const ProcessorGroup* pg,
   sum_vartype vdwEnergy;
   sum_vartype spmeFourierEnergy;
   matrix_sum spmeFourierStress;
+  matrix_sum spmeRealStress;
+  matrix_sum spmeFourierStressDipole;
 
   new_dw->get(vdwEnergy, d_label->nonbonded->rNonbondedEnergy);
-//  new_dw->get(vdwEnergy, d_label->nonbondedEnergyLabel);
-  new_dw->get(spmeFourierEnergy, d_label->electrostatic->rElectrostaticInverseEnergy);
-  new_dw->get(spmeFourierStress, d_label->electrostatic->rElectrostaticInverseStress);
-//  new_dw->get(spmeFourierEnergy, d_label->electrostaticReciprocalEnergyLabel);
-//  new_dw->get(spmeFourierStress, d_label->electrostaticReciprocalStressLabel);
+  new_dw->get(spmeFourierEnergy,
+              d_label->electrostatic->rElectrostaticInverseEnergy);
 
   proc0cout << std::endl;
   proc0cout << "-----------------------------------------------------"           << std::endl;
@@ -919,8 +924,21 @@ void MD::computeStableTimestep(const ProcessorGroup* pg,
   proc0cout << "-----------------------------------------------------"           << std::endl;
   proc0cout << "Fourier Energy = " << std::setprecision(16) << spmeFourierEnergy << std::endl;
   proc0cout << "-----------------------------------------------------"           << std::endl;
-  proc0cout << "Fourier Stress = " << std::setprecision(16) << spmeFourierStress << std::endl;
-  proc0cout << "-----------------------------------------------------"           << std::endl;
+
+  if (NPT == d_system->getEnsemble()) {
+    new_dw->get(spmeFourierStress,
+                d_label->electrostatic->rElectrostaticInverseStress);
+    new_dw->get(spmeRealStress,
+                d_label->electrostatic->rElectrostaticRealStress);
+    proc0cout << "Fourier Stress = " << std::setprecision(16) << spmeFourierStress << std::endl;
+    proc0cout << "-----------------------------------------------------"           << std::endl;
+
+    if (d_electrostatics->isPolarizable()) {
+      new_dw->get(spmeFourierStressDipole,
+                  d_label->electrostatic->rElectrostaticInverseStressDipole);
+    }
+  }
+
   proc0cout << std::endl;
 
   new_dw->put(delt_vartype(1), d_sharedState->get_delt_label(), getLevel(patches));

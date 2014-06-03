@@ -64,7 +64,7 @@ namespace Uintah {
       // Private functions related to parsing of the input forcefield file
       NonbondedTwoBodyPotential* parseHomoatomicNonbonded(std::string&,
                                                           const forcefieldType,
-                                                          double);
+                                                          double&);
       NonbondedTwoBodyPotential* parseHeteroatomicNonbonded(std::string&,
                                                             const forcefieldType);
       void parseNonbondedPotentials(std::ifstream&,

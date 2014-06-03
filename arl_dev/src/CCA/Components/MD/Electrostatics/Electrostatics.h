@@ -132,6 +132,7 @@ namespace Uintah {
        */
       virtual ElectrostaticsType getType() const = 0;
       virtual int requiredGhostCells() const = 0;
+      virtual bool isPolarizable() const = 0;
 
     private:
 

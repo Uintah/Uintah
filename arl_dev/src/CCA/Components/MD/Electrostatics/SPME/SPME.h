@@ -213,6 +213,9 @@ namespace Uintah {
         return d_electrostaticGhostCells;
       }
 
+      inline bool isPolarizable() const {
+        return true;
+      }
     private:
 //---->>>> Subordinate functions for the primary interface
       // Generate a vector of possible fractional frequencies up to
