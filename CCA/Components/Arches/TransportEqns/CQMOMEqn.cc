@@ -409,11 +409,6 @@ CQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int t
 //    tsk->requires(Task::NewDW, d_sourceLabel, Ghost::None, 0);
   }
   
-  if ( timeSubStep == 0 ){
-    tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::AroundCells, 1);
-  } else {
-    tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::AroundCells, 1);
-  }
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
   
   //NOTE: loop over rquires for weights and abscissas needed for convection term if IC=u,v,w
@@ -456,8 +451,6 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     CCVariable<double> Fconv;
     CCVariable<double> RHS;
     
-    constCCVariable<double> den;
-    
     new_dw->get(oldPhi, d_oldtransportVarLabel, matlIndex, patch, gac, 2);
  //   if (new_dw->exists(d_sourceLabel, matlIndex, patch)) {
  //     new_dw->get(src, d_sourceLabel, matlIndex, patch, gn, 0); // only get new_dw value on rkstep > 0
@@ -486,25 +479,17 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     Fconv.initialize(0.0);
     Fdiff.initialize(0.0);
     
-    if ( _stage == 0 ){
-      new_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gac, 1);
-    } else {
-//      new_dw->get(den, VarLabel::find("density_old"), matlIndex, patch, gac, 1);
-      new_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gac, 1);
-    }
-    
     computeBCs( patch, d_eqnName, phi );
     
     //----CONVECTION
     if (d_doConv) {
-//      d_disc->computeConv( patch, Fconv, oldPhi, uVel, vVel, wVel, partVel, areaFraction, d_convScheme );
       //NOTE: use a base scalar transport for inital testing
       //rewrite the convection term later
       if (d_usePartVel) {
         //get weights and abscissas from dw
         //call new convection term with these
       } else {
-        d_disc->computeConv( patch, Fconv, oldPhi, uVel, vVel, wVel, den, areaFraction, d_convScheme );
+        d_disc->computeConv( patch, Fconv, oldPhi, uVel, vVel, wVel, areaFraction, d_convScheme );
       }
       
       // look for and add contribution from intrusions.
@@ -604,7 +589,6 @@ CQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     double factor = d_timeIntegrator->time_factor[timeSubStep];
     curr_ssp_time = curr_time + factor * dt;
     
- //   d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, new_den, old_den, timeSubStep, curr_ssp_time, clip.tol, clip.do_low, clip.low, clip.do_high, clip.high );
     d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time, clip.tol, clip.do_low, clip.low, clip.do_high, clip.high);
     
     //----BOUNDARY CONDITIONS
