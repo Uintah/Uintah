@@ -27,10 +27,6 @@
 
 //------------------------ CQMOMInversion.h -----------------------------------
 
-#include <vector>
-#include <math.h>
-#include <cstdlib>
-
 #include <sci_defs/uintah_defs.h> // For FIX_NAME
 
 // declare lapack eigenvalue solver
@@ -43,6 +39,7 @@ extern "C"{
 //uncomment to debug matricies
 //#define cqmom_dbg
 using namespace std;
+using namespace Uintah;
 //-------------------------------------------------------
 
 /**
@@ -109,8 +106,12 @@ void wheelerAlgorithm(const std::vector<double>& moments, std::vector<double>& w
   int nMom = moments.size();
   
   if (moments[0] < 0.0) {
-    cout << "Number density is negative " << endl;
-    //NOTE: Insert Uintah error exception here?
+    cout << "WARNING: Number density is negative setting nodes to 0" << endl;
+    for (int i = 0; i<nEnv; i++) {
+      w[i] = 0.0;
+      x[i] = 0.0;
+    }
+    return;
   }
   
   if (moments[0] == 0.0) {  //return only 0's if moment_0 = 0
@@ -160,14 +161,15 @@ void wheelerAlgorithm(const std::vector<double>& moments, std::vector<double>& w
   }
 #endif
   
-  //check realizable
+  //check the b vector for realizable space
   for ( int i = 0; i<nEnv; i++ ) {
     if (b[i] < 0) {
-      cout << "Moments are not realizable: ";
+      stringstream err_msg;
+      err_msg << "ERROR: Arches: CQMOMInversion: Negative b vector encountered. Moment set: " << endl;
       for (int i = 0; i<nMom; i++) {
-        cout << moments[i] << " ";
-        //NOTE: insert uintah error exception?
+        err_msg << "m[" << i << "]=" << moments[i] << endl;
       }
+      throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
       cout << endl;
     }
   }
@@ -216,7 +218,15 @@ void wheelerAlgorithm(const std::vector<double>& moments, std::vector<double>& w
   //  dsyev_( &jobz, &matType, &n, &z_[0], &lda, &eigenVal[0], &work_[0], &lwork, &info );
   DSYEV( &jobz, &matType, &nEnv, &z_[0], &lda, &eigenVal[0], work, &lwork, &info );
   bool status = ( info>0 || info<0 )? false : true;
-  //NOTE: insert error based on status bool
+  
+  if (!status) {
+    stringstream err_msg;
+    err_msg << "ERROR: Arches: CQMOMInversion: Solving Eigenvalue problem failed. Moment set: " << endl;
+    for (int i = 0; i<nMom; i++) {
+      err_msg << "m[" << i << "]=" << moments[i] << endl;
+    }
+    throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
+  }
   
   //_____________
   //Solve actual weights and absciasas
@@ -258,7 +268,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
   }
   
   std::vector<double> tempMom ( N_i[0]*2,0.0);
-  for (int i = 0; i<tempMom.size(); i++ ) {
+  for (unsigned int i = 0; i<tempMom.size(); i++ ) {
     tempMom[i] = moments[i];
   }
   std::vector<double> x1 ( N_i[0], 0.0 );
@@ -314,7 +324,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
   std::vector< std::vector<double> > w2 (N_i[0], std::vector<double> (N_i[1], 0.0) );
   tempMom.resize(2*N_i[1]);
   
-  int nOutAct;
+//  int nOutAct;
 //NOTE: make rMin/eAbs inputs when adaptive method is used
 //  double rMin = 1e-5;
 //  double eAbs = 1e-3;
