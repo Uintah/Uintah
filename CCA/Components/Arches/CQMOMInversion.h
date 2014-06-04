@@ -33,7 +33,7 @@
 extern "C"{
 # define DSYEV FIX_NAME(dsyev)
   void DSYEV( char* jobz, char* uplo, int* n, double* a, int* lda,
-	      double* w, double* work, int* lwork, int* info );
+              double* w, double* work, int* lwork, int* info );
 }
 
 //uncomment to debug matricies
