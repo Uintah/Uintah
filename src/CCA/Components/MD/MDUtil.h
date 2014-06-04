@@ -34,9 +34,16 @@
 
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
+
 #include <Core/Math/Matrix3.h>
 
+#include <Core/Grid/Variables/VarLabel.h>
+
+#include <vector>
+
 namespace Uintah {
+
+  typedef std::vector<const VarLabel*> LabelArray;
 
   class MDConstants {
     public:

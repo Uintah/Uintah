@@ -9,18 +9,23 @@
 #define LUCRETIUSFORCEFIELD_H_
 
 #include <Core/Grid/SimulationState.h>
+#include <Core/Grid/SimulationStateP.h>
+
+//#include <Core/Malloc/Allocator.h>
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <CCA/Components/MD/MDLabel.h>
+#include <CCA/Components/MD/MDMaterial.h>
 #include <CCA/Components/MD/MDUtil.h>
 
+#include <CCA/Components/MD/Potentials/TwoBody/NonbondedTwoBodyPotential.h>
 
 #include <CCA/Components/MD/Forcefields/TwoBodyForceField.h>
 #include <CCA/Components/MD/Forcefields/forcefieldTypes.h>
 #include <CCA/Components/MD/Forcefields/nonbondedPotentialMapKey.h>
 
-#include <CCA/Components/MD/Potentials/TwoBody/NonbondedTwoBodyPotential.h>
+#include <CCA/Components/MD/Forcefields/Lucretius/LucretiusForcefield.h>
 #include <CCA/Components/MD/Forcefields/Lucretius/nonbondedLucretius.h>
 #include <CCA/Components/MD/Forcefields/Lucretius/LucretiusMaterial.h>
 
@@ -56,9 +61,10 @@ namespace Uintah {
        return d_forcefieldNameString;
       }
 
-     virtual void registerProvidedParticleStates(std::vector<const VarLabel*>&,
-                                                   std::vector<const VarLabel*>&,
-                                                   MDLabel*) const;
+     virtual void registerAtomTypes(const LabelArray&   particleState,
+                                    const LabelArray&   particleState_preReloc,
+                                    const MDLabel*      label,
+                                    SimulationStateP&   simState) const;
 
     private:
       // Private functions related to parsing of the input forcefield file

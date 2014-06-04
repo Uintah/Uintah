@@ -97,15 +97,15 @@ SPME::~SPME() {
 }
 
 // Interface implementations
-void SPME::initialize(  const ProcessorGroup*   pg,
-                     	const PatchSubset*      patches,
-                     	const MaterialSubset*   materials,
-                     	DataWarehouse*        /*oldDW*/,
-                     	DataWarehouse*          newDW,
-                     	const SimulationStateP* simState,
-                     	MDSystem*               systemInfo,
-                     	const MDLabel*          label,
-                     	coordinateSystem*       coordSys) {
+void SPME::initialize(const ProcessorGroup*   pg,
+                      const PatchSubset*      patches,
+                      const MaterialSubset*   materials,
+                      DataWarehouse*        /*oldDW*/,
+                      DataWarehouse*          newDW,
+                      const SimulationStateP* simState,
+                      MDSystem*               systemInfo,
+                      const MDLabel*          label,
+                      coordinateSystem*       coordSys) {
   // SPME::initialize is called from MD::initialize
 
   // Initialization of reductions

@@ -5,19 +5,14 @@
  *      Author: jbhooper
  */
 
-#include <CCA/Components/MD/MDLabel.h>
-#include <CCA/Components/MD/MDMaterial.h>
+#include <CCA/Components/MD/Forcefields/Lucretius/LucretiusForcefield.h>
 
 #include <CCA/Components/MD/Forcefields/parseUtils.h>
-#include <CCA/Components/MD/Forcefields/Lucretius/LucretiusForcefield.h>
-//#include <CCA/Components/MD/Forcefields/Lucretius/LucretiusMaterial.h>
+
 #include <CCA/Components/MD/Forcefields/Lucretius/LucretiusParsing.h>
 
 #include <CCA/Components/MD/Potentials/TwoBody/TwoBodyPotentialFactory.h>
 
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/InvalidState.h>
 
@@ -30,6 +25,7 @@ using namespace Uintah;
  * ....................................................................................................................*
  */
 const std::string LucretiusForcefield::d_forcefieldNameString = "Lucretius";
+
 
 NonbondedTwoBodyPotential* LucretiusForcefield::parseHomoatomicNonbonded(std::string& parseLine,
                                                                    	     const forcefieldType currentForcefieldType,
@@ -209,7 +205,7 @@ void LucretiusForcefield::parseNonbondedPotentials(std::ifstream& fileHandle,
         materialArray[materialArray.size()-1]->getMaterialDescriptor() << " " <<
         materialArray[materialArray.size()-1]->getMaterialLabel() << std::endl;
         ++currentChargeSubindex;
-        sharedState->registerMDMaterial(currentMaterial);
+//        sharedState->registerMDMaterial(currentMaterial);
         nonbondedTwoBodyKey potentialKey(nonbondedHomoatomic->getLabel(),nonbondedHomoatomic->getLabel());
         potentialMap.insert(twoBodyPotentialMapPair(potentialKey,nonbondedHomoatomic));
       }
@@ -478,12 +474,20 @@ NonbondedTwoBodyPotential* LucretiusForcefield::getNonbondedPotential(const std:
   throw InvalidState(ErrorOut.str(), __FILE__, __LINE__);
 }
 
-void LucretiusForcefield::registerProvidedParticleStates(std::vector<const VarLabel*>& particleState,
-                                                           std::vector<const VarLabel*>& particleState_preReloc,
-                                                           MDLabel* label) const {
+void LucretiusForcefield::registerAtomTypes(
+    const LabelArray& required_particleStates,
+    const LabelArray& required_particleStates_preReloc,
+    const MDLabel* label,
+    SimulationStateP& simState) const {
 
-  particleState.push_back(label->nonbonded->pF_nonbonded);
-  particleState_preReloc.push_back(label->nonbonded->pF_nonbonded_preReloc);
+  size_t numberAtomTypes = materialArray.size();
+
+  for (size_t atomType = 0; atomType < numberAtomTypes; ++atomType) {
+    simState->registerMDMaterial(materialArray[atomType]);
+    simState->d_particleState.push_back(required_particleStates);
+    simState->d_particleState_preReloc.push_back(required_particleStates_preReloc);
+  }
+
 
 }
 

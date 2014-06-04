@@ -10,6 +10,7 @@
 
 #include <CCA/Components/MD/MDLabel.h>
 #include <CCA/Components/MD/MDSubcomponent.h>
+#include <CCA/Components/MD/MDUtil.h>
 
 #include <CCA/Components/MD/Nonbonded/Nonbonded.h>
 
@@ -76,8 +77,8 @@ namespace Uintah {
       }
 
 // Inherited from MDSubcomponent
-      virtual void registerRequiredParticleStates(std::vector<const VarLabel*>&,
-                                                  std::vector<const VarLabel*>&,
+      virtual void registerRequiredParticleStates(LabelArray&,
+                                                  LabelArray&,
                                                   MDLabel*) const;
 
       virtual void addInitializeRequirements(Task*, MDLabel*) const;

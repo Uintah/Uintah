@@ -92,10 +92,14 @@ void SPME::addSetupComputes(Task* task, MDLabel* d_label) const {
 
 void SPME::addCalculateRequirements(Task* task, MDLabel* d_label) const {
 
-  task->requires(Task::NewDW, d_label->electrostatic->pE_electroInverse, 
+  if (f_polarizable) {
+    // This is a requirement for the field calculation.  Not sure this is
+    // actually necessary.  FIXME  JBH
+    task->requires(Task::NewDW, d_label->electrostatic->pE_electroInverse,
                    Ghost::None, 0);
-  task->requires(Task::NewDW, d_label->electrostatic->pE_electroReal, 
+    task->requires(Task::NewDW, d_label->electrostatic->pE_electroReal,
                    Ghost::None, 0);
+  }
   task->requires(Task::NewDW, 
                    d_label->electrostatic->dElectrostaticDependency);
 }
@@ -109,8 +113,9 @@ void SPME::addCalculateComputes(Task* task, MDLabel* d_label) const {
   task->computes(d_label->electrostatic->rElectrostaticInverseStress);
   task->computes(d_label->electrostatic->rElectrostaticRealStress);
 
-  task->computes(d_label->electrostatic->pMu);
-
+  if (f_polarizable) {
+    task->computes(d_label->electrostatic->pMu);
+  }
   // We should probably actually concatenate the forces into a single 
   // pF_electrostatic for gating to the integrator.
   task->computes(d_label->electrostatic->pF_electroInverse_preReloc);
@@ -120,18 +125,18 @@ void SPME::addCalculateComputes(Task* task, MDLabel* d_label) const {
 
 void SPME::addFinalizeRequirements(Task* task, MDLabel* d_label) const {
 
-  task->requires(Task::NewDW, d_label->electrostatic->pF_electroInverse,
-                   Ghost::None, 0);
-  task->requires(Task::NewDW, d_label->electrostatic->pF_electroReal, 
-                   Ghost::None, 0);
-  task->requires(Task::NewDW, d_label->electrostatic->dSubschedulerDependency);
+//  task->requires(Task::NewDW, d_label->electrostatic->pF_electroInverse_preReloc,
+//                   Ghost::None, 0);
+//  task->requires(Task::NewDW, d_label->electrostatic->pF_electroReal_preReloc,
+//                   Ghost::None, 0);
+//  task->requires(Task::NewDW, d_label->electrostatic->dSubschedulerDependency);
 
 }
 
 void SPME::addFinalizeComputes(Task* task, MDLabel* d_label) const {
 
-  task->computes(d_label->electrostatic->pF_electroInverse_preReloc);
-  task->computes(d_label->electrostatic->pF_electroReal_preReloc);
+//  task->computes(d_label->electrostatic->pF_electroInverse_preReloc);
+//  task->computes(d_label->electrostatic->pF_electroReal_preReloc);
 
 }
 
