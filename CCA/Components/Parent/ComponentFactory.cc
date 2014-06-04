@@ -54,12 +54,12 @@
 #include <sci_defs/cuda_defs.h>
 
 #ifdef HAVE_CUDA
-#include <CCA/Components/Examples/UnifiedSchedulerTest.h>
-#include <CCA/Components/Examples/PoissonGPU1.h>
+#  include <CCA/Components/Examples/UnifiedSchedulerTest.h>
+#  include <CCA/Components/Examples/PoissonGPU1.h>
 #endif
 
 #ifndef NO_WASATCH
-#include <CCA/Components/Wasatch/Wasatch.h>
+#  include <CCA/Components/Wasatch/Wasatch.h>
 #endif
 
 #include <iosfwd>
