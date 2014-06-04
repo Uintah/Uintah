@@ -10,15 +10,13 @@
 
 
 #ifdef HAVE_PETSC
-
-#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR < 4))
-extern "C" {
-#include "petscksp.h"
-}
-#else
-#include "petscksp.h"
-#endif
-
+#  if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR < 4))
+     extern "C" {
+#      include <petscksp.h>
+     }
+#  else
+#    include <petscksp.h>
+#  endif
 #endif
 
 namespace Uintah { 
