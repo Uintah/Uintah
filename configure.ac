@@ -4202,7 +4202,7 @@ if test "$with_exprlib"; then
     # Check includes
     for file in ExprDeps.h ExprLib.h Context.h Expression.h ExpressionID.h FieldManagerList.h \
                 ExpressionBase.h ExpressionFactory.h ExpressionTree.h FieldDeps.h FieldManager.h FieldManagerBase.h \
-                Functions.h PlaceHolderExpr.h Tag.h TransportEquation.h uintah; do
+                Functions.h Tag.h TransportEquation.h uintah; do
       if test ! -e $with_exprlib/$SPOPS_INCLUDE_DIR/$file; then
         echo ""
         AC_MSG_ERROR( '$with_exprlib/$SPOPS_INCLUDE_DIR/$file' does not exist. )
