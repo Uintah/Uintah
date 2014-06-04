@@ -28,7 +28,7 @@
 #include <CCA/Components/Solvers/DirectSolve.h>
 
 #ifdef HAVE_HYPRE
-#include <CCA/Components/Solvers/HypreSolver.h>
+#  include <CCA/Components/Solvers/HypreSolver.h>
 #endif
 
 #include <CCA/Components/Solvers/AMR/AMRSolver.h>
@@ -39,9 +39,9 @@
 using namespace Uintah;
 using namespace std;
 
-SolverInterface* SolverFactory::create(ProblemSpecP& ps,
-                                       const ProcessorGroup* world,
-                                       string cmdline)
+SolverInterface* SolverFactory::create(       ProblemSpecP   & ps,
+                                        const ProcessorGroup * world,
+                                        const string         & cmdline )
 {
   string solver = "CGSolver";
 
@@ -68,8 +68,8 @@ SolverInterface* SolverFactory::create(ProblemSpecP& ps,
     solve = scinew HypreSolver2(world);
 #else
     ostringstream msg;
-    msg << "Hypre solver not available, hypre not configured\n";
-    throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+    msg << "Hypre solver not available, Hypre was not configured.\n";
+    throw ProblemSetupException( msg.str(), __FILE__, __LINE__ );
 #endif
   }
   else if (solver == "AMRSolver" || solver == "hypreamr") {
@@ -77,15 +77,15 @@ SolverInterface* SolverFactory::create(ProblemSpecP& ps,
     solve = scinew AMRSolver(world);
 #else
     ostringstream msg;
-    msg << "Hypre 1.9.0b solver not available, hypre not configured\n";
-    throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+    msg << "Hypre 1.9.0b solver not available, Hypre not configured.\n";
+    throw ProblemSetupException( msg.str(), __FILE__, __LINE__ );
 #endif
   }
   else {
     ostringstream msg;
     msg << "\nERROR: Unknown solver (" << solver
         << ") Valid Solvers: CGSolver, DirectSolver, HypreSolver, AMRSolver, hypreamr \n";
-    throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+    throw ProblemSetupException( msg.str(), __FILE__, __LINE__ );
   }
 
   return solve;

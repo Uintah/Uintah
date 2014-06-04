@@ -52,8 +52,6 @@
 #include <iostream>
 #include <string>
 
-#include <Core/Util/share.h>
-
 namespace SCIRun {
 
 /**************************************
@@ -68,11 +66,11 @@ DESCRIPTION
   
 ****************************************/
 
-class SCISHARE ProgressiveWarning {
+class ProgressiveWarning {
 
  public:
    //! Pass the message to output as a warning.  The multiplier is the amount to multiply the
-   //! next occurence by when we output the warning.  -1 will mean to only output once.
+   //! next occurrence by when we output the warning.  -1 will mean to only output once.
    //! Output to stream.  'Multiplier' should not be set to '1'... and will be updated to '2' if
    //! '1' is specified.
 

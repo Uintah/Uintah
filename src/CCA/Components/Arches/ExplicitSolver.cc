@@ -36,8 +36,13 @@
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
 #include <CCA/Components/Arches/DQMOM.h>
+#include <CCA/Components/Arches/CQMOM.h>
+#include <CCA/Components/Arches/TransportEqns/CQMOMEqn.h>
+#include <CCA/Components/Arches/TransportEqns/CQMOMEqnFactory.h>
 //#include <CCA/Components/Arches/Task/TaskInterface.h>
-//i#include <CCA/Components/Arches/Task/SampleTask.h>
+//#include <CCA/Components/Arches/Task/SampleTask.h>
+//#include <CCA/Components/Arches/Task/TemplatedSampleTask.h>
+//#include <CCA/Components/Arches/Task/SampleFactory.h>
 
 #include <CCA/Components/Arches/ExplicitSolver.h>
 #include <Core/Containers/StaticArray.h>
@@ -72,7 +77,6 @@
 
 #ifdef WASATCH_IN_ARCHES
 #  include <expression/ExprLib.h>
-#  include <expression/PlaceHolderExpr.h>
 
 #  include <CCA/Components/Wasatch/Wasatch.h>
 #  include <CCA/Components/Wasatch/FieldTypes.h>
@@ -133,6 +137,7 @@ ExplicitSolver::~ExplicitSolver()
   if ( d_wall_ht_models != 0 ){ 
     delete d_wall_ht_models; 
   }
+  //delete _test_factory; 
 }
 
 // ****************************************************************************
@@ -144,6 +149,10 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params, SimulationStateP & st
 
   ProblemSpecP db = params->findBlock("ExplicitSolver");
   ProblemSpecP db_parent = params; 
+
+  //_test_factory = scinew SampleFactory(); 
+  //_test_factory->register_all_tasks( db ); 
+  //_test_factory->build_all_tasks( db ); 
 
   if ( db->findBlock( "print_total_ke" ) ){ 
     d_printTotalKE = true; 
@@ -271,9 +280,6 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params, SimulationStateP & st
     proc0cout << "Notice: No efficiency calculators found." << endl;
   } 
 
-//  TaskInterface* _sample_task = scinew SampleTask("a_test_task", 0); 
-//  _sample_task->print_task_name(); 
-
 }
 
 void 
@@ -316,6 +322,13 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     d_doDQMOM = true;
   else
     d_doDQMOM = false; // probably need to sync this better with the bool being set in Arches
+  
+  CQMOMEqnFactory& cqmomFactory = CQMOMEqnFactory::self();
+  if (cqmomFactory.get_number_moments() > 0)
+    d_doCQMOM = true;
+  else
+    d_doCQMOM = false;
+  
 
   EqnFactory& eqn_factory = EqnFactory::self();
   EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns();
@@ -402,6 +415,29 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         d_dqmomSolver->sched_calculateMoments( level, sched, curr_level );
       }
     }
+    
+    if ( d_doCQMOM ) {
+      //basicalyl copying what DQMOM scheduler does
+      CQMOMEqnFactory::EqnMap& moment_eqns = cqmomFactory.retrieve_all_eqns();
+      //for source terms later      CoalModelFactory& modelFactory = CoalModelFactory::self();
+      //part vel needed?            d_partVel->schedComputePartVel( level, sched, curr_level );
+      
+      //Evaluate CQMOM equations
+      for ( CQMOMEqnFactory::EqnMap::iterator iEqn = moment_eqns.begin();
+           iEqn != moment_eqns.end(); iEqn++){
+        
+        CQMOMEqn* cqmom_eqn = dynamic_cast<CQMOMEqn*>(iEqn->second);
+        cqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );
+        
+        cqmom_eqn->sched_computeSources( level, sched, curr_level );
+      }
+      
+      //schedule model evaluation later
+      //modelFactory.sched_coalParticleCalculation( level, sched, curr_level );
+      
+      //schedule inversion for weights and abscissas
+      d_cqmomSolver->sched_solveCQMOMInversion( level, sched, curr_level );
+    }
 
     // STAGE 0 
 
@@ -444,16 +480,17 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     if ( hl_model != 0 )
       hl_model->sched_computeProp( level, sched, curr_level ); 
 
-//    std::cout << " The task = " << _sample_task << std::endl;
-//    TaskInterface* sample_task = scinew SampleTask("test_task",0); 
-//    sample_task->print_task_name(); 
-//    sample_task->schedule_task( level, sched, matls, curr_level ); 
+//    TaskInterface& tsk1 = _test_factory->retrieve_task("sample_task"); 
+//    tsk1.schedule_task( level, sched, matls, curr_level ); 
+
+//    TaskInterface& tsk2 = _test_factory->retrieve_task("templated_task"); 
+//    tsk2.schedule_task( level, sched, matls, curr_level ); 
 
     //1st TABLE LOOKUP
     bool initialize_it  = false;
     bool modify_ref_den = false;
     if ( curr_level == 0 ) initialize_it = true;
-    d_props->sched_computeProps( level, sched, d_timeIntegratorLabels[curr_level], initialize_it, modify_ref_den );
+    d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, curr_level );
 
     d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls );
 
@@ -495,9 +532,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       sched_checkDensityLag(sched, patches, matls,
                             d_timeIntegratorLabels[curr_level],
                             false);
-//    d_timeIntegratorLabels[curr_level]->integrator_step_number = TimeIntegratorStepNumber::First;
-    d_props->sched_computeDenRefArray(sched, patches, matls,
-                                      false, curr_level);
 
     // linearizes and solves pressure eqn
     // first computes, hatted velocities and then computes
@@ -580,7 +614,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       //TABLE LOOKUP #2
       bool initialize_it  = false;
       bool modify_ref_den = false;
-      d_props->sched_computeProps( level, sched, d_timeIntegratorLabels[curr_level], initialize_it, modify_ref_den );
+      d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, curr_level );
 
       // Property models after table lookup
       for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
@@ -614,7 +648,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       //TABLE LOOKUP #3
       initialize_it  = false;
       modify_ref_den = false;
-      d_props->sched_computeProps( level, sched, d_timeIntegratorLabels[curr_level], initialize_it, modify_ref_den );
+      d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, curr_level );
     }
 
     if ((curr_level>0)&&(!((d_timeIntegratorType == "RK2")||(d_timeIntegratorType == "BEEmulation")))) {

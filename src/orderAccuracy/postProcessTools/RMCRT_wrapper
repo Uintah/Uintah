@@ -56,10 +56,10 @@ paste $out_x $out_y $out_z > $out
 #  combine plots
 
 if ($plot == "true") then
-  mogrify -trim divQ.X
-#  mogrify -trim divQ.Y
-  mogrify -trim divQ.Z
-  montage -geometry 740x680 -tile 3x1 divQ.X divQ.Y divQ.Z divQ.all
+  mogrify -trim divQ.X.jpg
+  mogrify -trim divQ.Y.jpg
+  mogrify -trim divQ.Z.jpg
+  montage -geometry 740x680 -tile 3x1 divQ.X.jpg divQ.Y.jpg divQ.Z.jpg divQ.all.jpg
 endif
 
 exit

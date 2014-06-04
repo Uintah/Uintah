@@ -215,16 +215,20 @@ WARNING
     const std::set<std::string>& getNoScrubVars() { return noScrubVars_;}
     const std::set<std::string>& getCopyDataVars() { return copyDataVars_;}
     const std::set<std::string>& getNotCopyDataVars() { return notCopyDataVars_;}
-    virtual const std::set<std::string>& getNotCheckPointVars() const
-              { return notCheckpointVars_;}       
+    virtual const std::set<std::string>& getNotCheckPointVars() const { return notCheckpointVars_;}
 
     virtual bool useInternalDeps();
     
     const VarLabel * reloc_new_posLabel_;
-    
+
+    // TODO replace after DDT problem is debugged (APH - 05/22/14)
     int getMaxGhost() {return maxGhost;}
-    
     int getMaxLevelOffset() {return maxLevelOffset;}
+//    const std::map<int, int>& getMaxGhostCells() { return maxGhostCells; }
+//    const std::map<int, int>& getMaxLevelOffsets() { return maxLevelOffsets; }
+
+    bool isCopyDataTimestep() {return d_sharedState->isCopyDataTimestep()||d_isInitTimestep;}
+    void setInitTimestep(bool is_cdt) { d_isInitTimestep = is_cdt; }
 
     typedef std::map<VarLabelMatl<Level>, Task*> ReductionTasksMap;
     ReductionTasksMap reductionTasks;
@@ -241,6 +245,7 @@ WARNING
     enum { PRINT_BEFORE_COMM = 1, PRINT_BEFORE_EXEC = 2, PRINT_AFTER_EXEC = 4};
     void printTrackedVars(DetailedTask* dt, int when);
     
+    bool d_isInitTimestep;
    
     /**
     * output the task name and the level it's executing on.
@@ -337,11 +342,20 @@ WARNING
     std::set<const VarLabel*, VarLabel::Compare> d_initRequiredVars;
     std::set<const VarLabel*, VarLabel::Compare> d_computedVars;
 
+    // TODO replace after DDT problem is debugged (APH - 05/22/14)
     //max ghost cells of all tasks - will be used for loadbalancer to create neighborhood
     int maxGhost;
-    
     //max level offset of all tasks - will be used for loadbalancer to create neighborhood
     int maxLevelOffset;
+//    // max ghost cells of all tasks (per level) - will be used by loadbalancer to create neighborhood
+//    // map levelIndex to maxGhostCells
+//    //   this is effectively maximum horizontal range considered by the loadbalanceer for the neighborhood creation
+//    std::map<int, int> maxGhostCells;
+//
+//    // max level offset of all tasks (per level) - will be used for loadbalancer to create neighborhood
+//    // map levelIndex to maxLevelOffset
+//    //   this is effectively maximum vertical range considered by the loadbalanceer for the neighborhood creation
+//    std::map<int, int> maxLevelOffsets;
     
   };
 } // End namespace Uintah

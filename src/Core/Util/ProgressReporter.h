@@ -43,10 +43,9 @@
 #include <Core/Util/Timer.h>
 #include <Core/Thread/AtomicCounter.h>
 
-#include <Core/Util/share.h>
 namespace SCIRun {
 
-class SCISHARE ProgressReporter 
+class ProgressReporter
 {
 public:
   typedef enum {Starting, Compiling, CompilationDone, Done } ProgressState;

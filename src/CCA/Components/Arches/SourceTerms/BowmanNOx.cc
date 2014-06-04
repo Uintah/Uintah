@@ -26,7 +26,6 @@ BowmanNOx::BowmanNOx( std::string src_name, ArchesLabel* field_labels,
 : SourceTermBase(src_name, field_labels->d_sharedState, req_label_names, type), _field_labels(field_labels)
 { 
 
-  _label_sched_init = false; 
 
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() ); 
 
@@ -83,11 +82,7 @@ BowmanNOx::sched_computeSource( const LevelP& level, SchedulerP& sched, int time
   nGhosts = 0;
 #endif
 
-  if (timeSubStep == 0 && !_label_sched_init) {
-    // Every source term needs to set this flag after the varLabel is computed. 
-    // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
-    _label_sched_init = true;
-
+  if (timeSubStep == 0) {
     tsk->computes(_src_label);
   } else {
 #ifdef WASATCH_IN_ARCHES
@@ -182,12 +177,13 @@ BowmanNOx::computeSource( const ProcessorGroup* pc,
     using SpatialOps::operator *;
 
     // SVolField = CCVariable<double> with 1 ghost cell
-    SVolField* const rate_        = wrap_uintah_field_as_spatialops<SVolField>(rate,patch);
-    const SVolField* const N2_    = wrap_uintah_field_as_spatialops<SVolField>(N2,patch);
-    const SVolField* const O2_    = wrap_uintah_field_as_spatialops<SVolField>(O2,patch);
-    const SVolField* const rho_   = wrap_uintah_field_as_spatialops<SVolField>(rho,patch);
-    const SVolField* const T_     = wrap_uintah_field_as_spatialops<SVolField>(T,patch);
-    const SVolField* const vfrac_ = wrap_uintah_field_as_spatialops<SVolField>(vol_fraction,patch);
+    const Wasatch::AllocInfo ainfo( old_dw, new_dw, matlIndex, patch, pc );
+    SVolField* const rate_        = wrap_uintah_field_as_spatialops<SVolField>(rate,ainfo);
+    const SVolField* const N2_    = wrap_uintah_field_as_spatialops<SVolField>(N2,  ainfo);
+    const SVolField* const O2_    = wrap_uintah_field_as_spatialops<SVolField>(O2,  ainfo);
+    const SVolField* const rho_   = wrap_uintah_field_as_spatialops<SVolField>(rho, ainfo);
+    const SVolField* const T_     = wrap_uintah_field_as_spatialops<SVolField>(T,   ainfo);
+    const SVolField* const vfrac_ = wrap_uintah_field_as_spatialops<SVolField>(vol_fraction,ainfo);
     
     *rate_ <<= 30000.0 * _A / ( sqrt(*T_) ) * exp(-_E_R/ *T_) * (1.0e-3/_MW_N2 * *N2_ * *rho_) * sqrt(1.0e-3/_MW_O2 * *O2_ * *rho_);
     *rate_ <<= cond( *rate_ < 1.0e-16, 0.0)

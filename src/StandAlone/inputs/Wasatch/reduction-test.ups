@@ -104,19 +104,19 @@
     <!-- Set the initial condition expression for x-momentum -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="x-mom" state="STATE_N"/>
+       <NameTag name="x-mom" state="STATE_DYNAMIC"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="y-mom" state="STATE_N"/>
+       <NameTag name="y-mom" state="STATE_DYNAMIC"/>
        <Constant>0.0</Constant>
     </BasicExpression>
                    
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="viscosity" state="STATE_N"/>
+      <NameTag name="viscosity" state="STATE_NONE"/>
       <Constant>0.001</Constant>
     </BasicExpression>
     
@@ -192,8 +192,7 @@
       <Face side="y-" type="Wall"/>
       <Face side="y+" type="Velocity">
         <BCType label="x-mom" var="Dirichlet" value="1"/>
-        <BCType label="y-mom" var="Dirichlet" value="0.0"/>
-      </Face>
+        </Face>
       </BoundaryConditions>
       <Level>
       <Box label="1">

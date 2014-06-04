@@ -22,17 +22,14 @@
  * IN THE SOFTWARE.
  */
 
-#undef SCISHARE
 
-#ifdef _WIN32
-#ifdef BUILD_Core_Thread
-#define SCISHARE __declspec(dllexport)
-#else
-#define SCISHARE __declspec(dllimport)
-#endif
-#else
-#define SCISHARE
-#endif
+#include <StandAlone/tools/puda/puda.h>
 
-#define MAX_THREADS 64
+namespace Uintah {
+
+  class DataArchive;
+
+  void pressure( DataArchive * da, CommandLineFlags & clf );
+
+}
 

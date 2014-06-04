@@ -33,7 +33,7 @@ template< typename FieldT >
 class OpenBC
 : public BoundaryConditionBase<FieldT>
 {
-  OpenBC( const Expr::Tag& velTag ) : velTag_ (velTag)
+  OpenBC( const Expr::Tag& momTag ) : momTag_ (momTag)
   {
     this->set_gpu_runnable(false);
   }
@@ -42,13 +42,13 @@ public:
   {
   public:
     Builder( const Expr::Tag& resultTag,
-             const Expr::Tag& velTag )
+             const Expr::Tag& momTag )
     : ExpressionBuilder(resultTag),
-      velTag_ (velTag)
+      momTag_ (momTag)
     {}
-    Expr::ExpressionBase* build() const{ return new OpenBC(velTag_); }
+    Expr::ExpressionBase* build() const{ return new OpenBC(momTag_); }
   private:
-    const Expr::Tag velTag_;
+    const Expr::Tag momTag_;
   };
   
   ~OpenBC(){}
@@ -60,7 +60,7 @@ public:
 private:
   const FieldT* u_;
   const SpatialOps::structured::SingleValueField* dt_;
-  const Expr::Tag velTag_;
+  const Expr::Tag momTag_;
 };
 
 #endif // OpenBC_Expr_h

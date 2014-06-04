@@ -98,6 +98,13 @@ WARNING
 
     //! Asks if we are going to do regridding
     virtual bool isAdaptive() { return d_isAdaptive; }
+    
+    //! switch for setting adaptivity
+    virtual void setAdaptivity(const bool ans) { d_isAdaptive = ans;}
+    
+    //! Ask if regridding only once.
+    virtual bool doRegridOnce() { return d_regridOnce; }
+       
 
     //! Schedules task to initialize the error flags to 0
     virtual void scheduleInitializeErrorEstimate(const LevelP& level);
@@ -182,6 +189,7 @@ WARNING
     std::vector<int> d_numDeleted;
 
     bool d_newGrid;
+    bool d_regridOnce;
     int d_lastRegridTimestep;         //The last time the full regridder was called (grid may not change)
     int d_dilationTimestep;           //The last timestep that the dilation was changed
     int d_maxTimestepsBetweenRegrids;

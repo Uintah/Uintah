@@ -34,7 +34,11 @@
 #include <Core/Grid/Variables/CCVariable.h>    /* cell variable   */
 #include <Core/Grid/Variables/PerPatch.h>      /* single double per patch */
 #include <Core/Grid/Variables/ReductionVariable.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Disclosure/TypeDescription.h>
+
+#include <CCA/Ports/DataWarehouse.h>
+
 #include <sci_defs/uintah_defs.h>
 #include <sci_defs/cuda_defs.h>
 
@@ -52,7 +56,7 @@
  *  library.  There should be no reason to use it otherwise.
  */
 
-namespace Uintah{ class Patch; }
+namespace Uintah{ class Patch; class ProcessorGroup; }
 
 namespace Wasatch{
 
@@ -90,7 +94,7 @@ namespace Wasatch{
    *  when obtaining scratch fields from patch information. When an actual field
    *  from Uintah is available, you should use wrap_uintah_field_as_spatialops
    */
-  template< typename FieldT >
+  template<typename FieldT>
   SpatialOps::structured::MemoryWindow
   get_memory_window_for_uintah_field( const Uintah::Patch* const patch );
 
@@ -190,6 +194,12 @@ namespace Wasatch{
      typedef Uintah::constCCVariable<double>  const_type;
    };
 
+   // currently, particle fields are only supported for double, not int or Point types.
+   template<> struct SelectUintahFieldType<SpatialOps::Particle::ParticleField>{
+     typedef Uintah::     ParticleVariable<double>  type;
+     typedef Uintah::constParticleVariable<double>  const_type;
+   };
+
   /**
    *  \ingroup WasatchFields
    *  \brief Given the SpatialOps field type, this returns the
@@ -217,26 +227,9 @@ namespace Wasatch{
     return 0;
   };
 
-  /**
-   *  \ingroup WasatchFields
-   *  \brief Obtain the number of ghost cells in each direction for
-   *         the given SpatialOps field type as a template parameter.
-   *
-   *  \return the Uintah::IntVector describing the number of ghost
-   *          cells in each direction.
-   */
-  template<typename FieldT>
-  inline Uintah::IntVector get_uintah_ghost_descriptor()
-  {
-    int ng = 0; // for extra cells
-    return Uintah::IntVector(ng,ng,ng);
-  }
-
-  template<>
-  inline Uintah::IntVector get_uintah_ghost_descriptor<SpatialOps::structured::SingleValueField>()
-  {
-    return Uintah::IntVector(0,0,0);
-  }
+  template<> inline int get_n_ghost<SpatialOps::Particle::ParticleField>(){
+    return 0;
+  };
 
   //====================================================================
 
@@ -246,9 +239,34 @@ namespace Wasatch{
    *         determine the Uintah GhostType information.
    *
    *  \return The Uintah::Ghost::GhostType for this field type.
+   *
+   *  Note that this is specialized for each of the supported types of fields in Wasatch.
    */
   template<typename FieldT> Uintah::Ghost::GhostType get_uintah_ghost_type();
 
+
+  /**
+   *  This is used to pass required information through to the FieldManager::allocate_fields() method.
+   */
+  struct AllocInfo
+  {
+    Uintah::DataWarehouse* const oldDW;
+    Uintah::DataWarehouse* const newDW;
+    const int materialIndex;
+    const Uintah::Patch* const patch;
+    const Uintah::ProcessorGroup* const procgroup;
+    AllocInfo( Uintah::DataWarehouse* const olddw,
+               Uintah::DataWarehouse* const newdw,
+               const int mi,
+               const Uintah::Patch* p,
+               const Uintah::ProcessorGroup* const pg )
+    : oldDW( olddw ),
+      newDW( newdw ),
+      materialIndex( mi ),
+      patch( p ),
+      procgroup( pg )
+    {}
+  };
 
 
   /**
@@ -270,7 +288,7 @@ namespace Wasatch{
    */
   template< typename FieldT, typename UFT >
   inline FieldT* wrap_uintah_field_as_spatialops( UFT& uintahVar,
-                                                  const Uintah::Patch* const patch,
+                                                  const AllocInfo& ainfo,
                                                   const SpatialOps::MemoryType mtype=SpatialOps::LOCAL_RAM,
                                                   const unsigned short int deviceIndex=0,
                                                   double* uintahDeviceVar = NULL )
@@ -291,12 +309,12 @@ namespace Wasatch{
     const SCIRun::IntVector fieldOffset = uintahVar.getWindow()->getOffset();
     const SCIRun::IntVector fieldExtent = highIx - lowIx;
 
-    const SS::IntVec   size( fieldSize[0],   fieldSize[1],   fieldSize[2]   );
+    const SS::IntVec   size(   fieldSize[0],   fieldSize[1],   fieldSize[2] );
     const SS::IntVec extent( fieldExtent[0], fieldExtent[1], fieldExtent[2] );
     const SS::IntVec offset( lowIx[0]-fieldOffset[0], lowIx[1]-fieldOffset[1], lowIx[2]-fieldOffset[2] );
 
     SS::IntVec bcMinus, bcPlus;
-    get_bc_logicals( patch, bcMinus, bcPlus );
+    get_bc_logicals( ainfo.patch, bcMinus, bcPlus );
 
     double* fieldValues_ = NULL;
     if( mtype == SpatialOps::EXTERNAL_CUDA_GPU ){
@@ -317,13 +335,80 @@ namespace Wasatch{
                        deviceIndex );
   }
 
+  //-----------------------------------------------------------------
+
+  template< > inline
+  ParticleField*
+  wrap_uintah_field_as_spatialops<ParticleField,SelectUintahFieldType<ParticleField>::type>(
+      SelectUintahFieldType<ParticleField>::type& uintahVar,
+      const AllocInfo& ainfo,
+      const SpatialOps::MemoryType mtype,
+      const unsigned short int deviceIndex,
+      double* uintahDeviceVar )
+  {
+    namespace SS = SpatialOps::structured;
+    typedef ParticleField::value_type ValT;
+    ValT* fieldValues = NULL;
+    if( mtype == SpatialOps::EXTERNAL_CUDA_GPU ){
+#     ifdef HAVE_CUDA
+      fieldValues = const_cast<ValT*>( uintahDeviceVar );
+#     endif
+    }
+    else{
+      fieldValues = const_cast<ParticleField::value_type*>( (ValT*)uintahVar.getBasePointer() );
+    }
+
+    const int npar = ainfo.oldDW->getParticleSubset( ainfo.materialIndex, ainfo.patch )->numParticles();
+    // jcs need to get GPU support ready...
+    return new ParticleField( SS::MemoryWindow( SS::IntVec(npar,1,1) ),
+                              SS::BoundaryCellInfo::build<ParticleField>(),
+                              SS::GhostData( get_n_ghost<ParticleField>() ),
+                              fieldValues,
+                              SS::ExternalStorage,
+                              mtype,
+                              deviceIndex );
+  }
+
+  template< > inline
+  ParticleField*
+  wrap_uintah_field_as_spatialops<ParticleField,SelectUintahFieldType<ParticleField>::const_type>(
+      SelectUintahFieldType<ParticleField>::const_type& uintahVar,
+      const AllocInfo& ainfo,
+      const SpatialOps::MemoryType mtype,
+      const unsigned short int deviceIndex,
+      double* uintahDeviceVar )
+  {
+    namespace SS = SpatialOps::structured;
+    typedef ParticleField::value_type ValT;
+    ValT* fieldValues = NULL;
+    if( mtype == SpatialOps::EXTERNAL_CUDA_GPU ){
+#     ifdef HAVE_CUDA
+      fieldValues = const_cast<ValT*>( uintahDeviceVar );
+#     endif
+    }
+    else{
+      fieldValues = const_cast<ValT*>( (ValT*)uintahVar.getBaseRep().getBasePointer() );
+    }
+
+    const int npar = ainfo.oldDW->getParticleSubset( ainfo.materialIndex, ainfo.patch )->numParticles();
+    // jcs need to get GPU support ready...
+    return new ParticleField( SS::MemoryWindow( SS::IntVec(npar,1,1) ),
+                              SS::BoundaryCellInfo::build<ParticleField>(),
+                              SS::GhostData( get_n_ghost<ParticleField>() ),
+                              fieldValues,
+                              SS::ExternalStorage,
+                              mtype,
+                              deviceIndex );
+  }
+
+  //-----------------------------------------------------------------
   // NOTE: this wraps a raw uintah field type, whereas the default
   //       implementations work with an Expr::UintahFieldContainer
   template<>
   inline SpatialOps::structured::SingleValueField*
   wrap_uintah_field_as_spatialops<SpatialOps::structured::SingleValueField,Uintah::PerPatch<double*> >(
       Uintah::PerPatch<double*>& uintahVar,
-      const Uintah::Patch* const patch,
+      const AllocInfo& ainfo,
       const SpatialOps::MemoryType mtype,
       const unsigned short int deviceIndex,
       double* uintahDeviceVar )
@@ -345,7 +430,7 @@ namespace Wasatch{
   inline SpatialOps::structured::SingleValueField*
   wrap_uintah_field_as_spatialops<SpatialOps::structured::SingleValueField,Uintah::ReductionVariableBase>(
       Uintah::ReductionVariableBase& uintahVar,
-      const Uintah::Patch* const patch,
+      const AllocInfo& ainfo,
       const SpatialOps::MemoryType mtype,
       const unsigned short int deviceIndex,
       double* uintahDeviceVar )

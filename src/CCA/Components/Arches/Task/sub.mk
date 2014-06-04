@@ -4,4 +4,7 @@ SRCDIR   := CCA/Components/Arches/Task
 
 SRCS += \
         $(SRCDIR)/TaskInterface.cc \
-				$(SRCDIR)/SampleTask.cc 
+				$(SRCDIR)/TemplatedSampleTask.cc \
+				$(SRCDIR)/TaskFactoryBase.cc \
+				$(SRCDIR)/SampleTask.cc \
+				$(SRCDIR)/SampleFactory.cc

@@ -534,7 +534,7 @@
         <MomentumSolver                 spec="REQUIRED NO_DATA" >
           <use_wasatch_momentum_rhs spec="OPTIONAL NO_DATA" />
           <filter_divergence_constraint spec="OPTIONAL BOOLEAN" />
-          <convection_scheme            spec="REQUIRED STRING 'central, upwind, wallupwind, old_central, old_upwind'" /> 
+          <convection_scheme            spec="REQUIRED STRING 'central, upwind, wall_upwind, old_central, old_upwind'" /> 
           <!-- wallupwind = upwinding on walls, central otherwise (cheap wall model)--> 
           <Re_limit                     spec="OPTIONAL DOUBLE 'positive'"/> <!-- for Upwind and Wallupwind: Upwind > this Re, Central < this Re --> 
           <src                          spec="MULTIPLE NO_DATA" 
@@ -738,13 +738,14 @@
             </injector_region>
             
             <!-- specs nneded for second moment of mixture fraction source-->
-            <density_label              spec="REQUIRED STRING" need_applies_to="type moment2_mixture_fraction_src"/>
+            <density_label              spec="OPTIONAL STRING" need_applies_to="type moment2_mixture_fraction_src, dissipation_src"/>
             <scalar_dissipation_label   spec="REQUIRED STRING" need_applies_to="type moment2_mixture_fraction_src"/> 
             
             <!-- specs needed for the dissipation term for 2eqn scalr var model -->
-            <mixture_fraction_label     spec="REQUIRED STRING" need_applies_to="type dissipation_src"/>
-            <gradmixfrac_label          spec="REQUIRED STRING" need_applies_to="type dissipation_src"/>
-            <D                          spec="REQUIRED DOUBLE" need_applies_to="type dissipation_src"/>
+            <mixture_fraction_label     spec="REQUIRED STRING" need_applies_to="type dissipation_src"/> <!-- mixture fraction label -->
+            <gradmixfrac_label          spec="REQUIRED STRING" need_applies_to="type dissipation_src"/> <!-- label for the gradient of the mixture fraction -->
+            <D                          spec="REQUIRED DOUBLE" need_applies_to="type dissipation_src"/> <!-- Molecular diffusivity (?) -->
+            <turb_visc_label            spec="OPTIONAL STRING" need_applies_to="type dissipation_src"/> <!-- label for the turbulent viscosity. Default = turb_viscosity -->
 
             <!-- inject_type = constant : constant value in every cell that is contained within the geom object (use <constant> spec)--> 
             <!-- inject_type = fromfile : reads an input file and assigns value at each i,j,k matching the inputfile 
@@ -1135,6 +1136,56 @@
         </Moment>
 
       </DQMOM>
+
+      <!--CQMOM Block -->
+      <CQMOM                            spec="OPTIONAL NO_DATA"
+                                        attribute1="type REQUIRED STRING 'normalized, unweighted'"
+                                        attribute2="partvel REQUIRED BOOLEAN"> <!-- USE PARTICLE VELOCITY OR USE ST << 1-->
+        <Models                         spec="OPTIONAL NO_DATA">
+          <!-- insert future source terms/models here -->
+        </Models>
+        <NumberInternalCoordinates      spec="REQUIRED DOUBLE"/>
+        <QuadratureNodes                spec="REQUIRED MULTIPLE_INTEGERS"/> <!-- this is per direction -->
+        <HighestOrder                   spec="REQUIRED MULTIPLE_INTEGERS"/> <!-- this is per direction -->
+        <!-- order these same as index moment order -->
+        <InternalCoordinate             spec="MULTIPLE NO_DATA"
+                                        attribute1="name REQUIRED STRING"
+                                        attribute2="type REQUIRED STRING 'uVel, vVel, wVel, scalar'"/>
+        
+        <!-- all moment eqns should keep these params the same-->
+        <doDiff                         spec="OPTIONAL BOOLEAN"/>
+        <doConv                         spec="OPTIONAL BOOLEAN"/>
+        <conv_scheme                    spec="OPTIONAL STRING 'upwind, roe_minmod, super_bee'"/>
+        <turbulentPrandtlNumber         spec="OPTIONAL DOUBLE" />
+        <molecular_diffusivity          spec="OPTIONAL DOUBLE 'positive'"/>
+        
+        <Moment                         spec="MULTIPLE NO_DATA">
+          <m                            spec="REQUIRED MULTIPLE_INTEGERS"/>
+          <initialization               spec="OPTIONAL NO_DATA"
+                                        attribute1="type REQUIRED STRING 'constant, step'">
+            <!-- constant value initialization -->
+            <constant                   spec="OPTIONAL DOUBLE"/>
+
+            <!-- step function initialization -->
+            <!-- Note: the only difference between 'step' and 'env_step' is the use of <step_value></step_value> or <env_step_value qn="" value=""/> -->
+            <step_direction             spec="OPTIONAL STRING 'x,y,z'"/> <!-- direction in which the step occurs -->
+            <step_value                 spec="OPTIONAL DOUBLE"/>         <!-- step from 0 to (value) -->
+            <step_start                 spec="OPTIONAL DOUBLE"/>         <!-- physical location (in specified direction) at which the step should begin -->
+            <step_end                   spec="OPTIONAL DOUBLE"/>         <!-- physical location (in specified direction) at which the step should end -->
+            <step_cellstart             spec="OPTIONAL DOUBLE"/>         <!-- cell location (in specified direction) at which the step should begin -->
+            <step_cellend               spec="OPTIONAL DOUBLE"/>         <!-- cell location (in specified direction) at which the step should end -->
+
+          </initialization>
+          
+          <scaling_const                spec="OPTIONAL DOUBLE"/>
+          <Clipping                     spec="OPTIONAL NO_DATA">
+            <low                        spec="OPTIONAL DOUBLE"/> <!-- Low clipping value for SCALED value of DQMOM internal coordinate -->
+            <high                       spec="OPTIONAL DOUBLE"/> <!-- High clipping value for SCALED value of DQMOM internal coordinate -->
+            <tol                        spec="OPTIONAL DOUBLE"/> <!-- Tolerance on the clipping (low+tol, high-tol) -->
+          </Clipping>
+        </Moment>
+        
+      </CQMOM>
 
       <!-- Use this block for wasatch-in-arches builds only to create placeholders for arbitrary variables -->
       <ExtraWarchesVariables            spec="OPTIONAL NO_DATA">

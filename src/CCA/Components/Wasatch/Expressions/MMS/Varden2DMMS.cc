@@ -610,7 +610,8 @@ VarDenMMSOscillatingContinuitySrc( const Expr::Tag densTag,
                                    const Expr::Tag& xTag,
                                    const Expr::Tag& yTag,
                                    const Expr::Tag& tTag,
-                                   const Expr::Tag& timestepTag)
+                                   const Expr::Tag& timestepTag,
+                                   const Wasatch::VarDenParameters varDenParams )
 : Expr::Expression<FieldT>(),
   xVelStart_( velStarTags[0] ),
   yVelStart_( velStarTags[1] ),
@@ -630,7 +631,9 @@ VarDenMMSOscillatingContinuitySrc( const Expr::Tag densTag,
   xTag_( xTag ),
   yTag_( yTag ),
   tTag_( tTag ),
-  timestepTag_( timestepTag )
+  timestepTag_( timestepTag ),
+  a0_(varDenParams.alpha0),
+  model_(varDenParams.model)
 {
   this->set_gpu_runnable( true );
 }
@@ -741,10 +744,21 @@ evaluate()
 //                    ( 1.0/(*beta + 1.0)  );
   
 //  const double r = ( r1_/r0_ >= r0_/r1_ ? r0_/r1_ : r1_/r0_ );
-  *alpha <<= cond( *beta != *beta, 0.0 )
-                 ( exp(log(0.2)*(pow(*beta, 0.2))) ); // Increase the value of the exponent to get closer to a step function
+//  *alpha <<= cond( *beta != *beta, 0.0 )
+//                 ( exp(log(0.2)*(pow(*beta, 0.2))) ); // Increase the value of the exponent to get closer to a step function
   
-  *alpha <<= 0.1; // use this for the moment until we figure out the proper model for alpha
+//  *alpha <<= 0.1; // use this for the moment until we figure out the proper model for alpha
+  switch (model_) {
+    case Wasatch::VarDenParameters::CONSTANT:
+      *alpha <<= a0_;
+      break;
+    case Wasatch::VarDenParameters::IMPULSE:
+      *alpha <<= cond(*drhodtstar == 0.0, 1.0)(a0_);
+      break;
+    default:
+      *alpha <<= 0.1;
+      break;
+  }
   
   SpatFldPtr<TimeField> t = SpatialFieldStore::get<TimeField>( *t_ );
   *t <<= *t_ + *timestep_;
@@ -785,7 +799,8 @@ Builder( const Expr::Tag& result,
          const Expr::Tag& xTag,
          const Expr::Tag& yTag,
          const Expr::Tag& tTag,
-         const Expr::Tag& timestepTag )
+         const Expr::Tag& timestepTag,
+         const Wasatch::VarDenParameters varDenParams )
 : ExpressionBuilder(result),
   r0_( r0 ),
   r1_( r1 ),
@@ -800,7 +815,8 @@ Builder( const Expr::Tag& result,
   denst_     ( densTag      ),
   densStart_ ( densStarTag  ),
   dens2Start_( dens2StarTag ),
-  velStarTs_ ( velStarTags  )
+  velStarTs_ ( velStarTags  ),
+  varDenParams_(varDenParams)
 {}
 
 //--------------------------------------------------------------------
@@ -810,7 +826,7 @@ Expr::ExpressionBase*
 VarDenMMSOscillatingContinuitySrc<FieldT>::Builder::
 build() const
 {
-  return new VarDenMMSOscillatingContinuitySrc<FieldT>( denst_, densStart_, dens2Start_, velStarTs_, r0_, r1_, w_, k_, uf_, vf_, xTag_, yTag_, tTag_, timestepTag_ );
+  return new VarDenMMSOscillatingContinuitySrc<FieldT>( denst_, densStart_, dens2Start_, velStarTs_, r0_, r1_, w_, k_, uf_, vf_, xTag_, yTag_, tTag_, timestepTag_, varDenParams_ );
 }
 
 

@@ -30,11 +30,15 @@ namespace Wasatch{
 
   SetCurrentTime::SetCurrentTime()
     : Expr::Expression<SpatialOps::structured::SingleValueField>(),
-      rkStage_ ( 0   ),
+      rkStage_ ( 1   ),
       deltat_  ( 0.0 ),
       simTime_ ( 0.0 ),
       timeStep_( 0.0 )
-  {}
+  {
+    timeCor_[0] = 0.0; // for the first rk stage, the time is t0
+    timeCor_[1] = 1.0; // for the second rk stage, the time is t0 + dt
+    timeCor_[2] = 0.5; // for the third rk stage, the time is t0 + 0.5*dt
+  }
 
   //--------------------------------------------------------------------
 
@@ -52,14 +56,10 @@ namespace Wasatch{
 
     typedef std::vector<SpatialOps::structured::SingleValueField*> Vec;
     Vec& results = this->get_value_vec();
-    *results[0] <<= simTime_;
+    *results[0] <<= simTime_ + timeCor_[rkStage_ - 1]*deltat_;
     *results[1] <<= deltat_;
-    if( rkStage_ == 2 ) *results[0] <<= *results[0] + deltat_;
-    if( rkStage_ == 3 ) {
-      *results[0] <<= *results[0] + 0.5*deltat_;
-      *results[1] <<= 0.5*deltat_;
-    }
     *results[2] <<= timeStep_;
+    *results[3] <<= (double) rkStage_;
   }
 
   //--------------------------------------------------------------------

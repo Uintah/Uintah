@@ -244,7 +244,7 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
                           const bool print_all_info )
 
 { 
-  double start_time = Time::currentSeconds();
+  double start_time = SCIRun::Time::currentSeconds();
   gridSetup(pc, patch, plusX, plusY, plusZ);
   
   /*-----------------------------------------------------------
@@ -360,7 +360,7 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
   hypre_TFree(d_value);
 
   if ( print_all_info ) {
-    proc0cout << " Time in HYPRE Assemble: " << Time::currentSeconds()-start_time << " seconds\n";
+    proc0cout << " Time in HYPRE Assemble: " << SCIRun::Time::currentSeconds()-start_time << " seconds\n";
   } 
 }
 //______________________________________________________________________
@@ -412,7 +412,7 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
   skip = 1;
   HYPRE_StructSolver solver, precond;
 
-  double start_time = Time::currentSeconds();
+  double start_time = SCIRun::Time::currentSeconds();
 
   if (d_kspType == "1") {
     /*Solve the system using SMG*/
@@ -615,9 +615,9 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
   }
 
   if ( print_all_info ){ 
-    proc0cout << "    Direction: " << direcn << "     Sum(B) = " << sum_b << "      Init Norm: " << init_norm << "      Total Iter: " << num_iterations << "     Final Norm: " <<  final_res_norm << "     Total Time(sec): " << Time::currentSeconds()-start_time << endl;
+    proc0cout << "    Direction: " << direcn << "     Sum(B) = " << sum_b << "      Init Norm: " << init_norm << "      Total Iter: " << num_iterations << "     Final Norm: " <<  final_res_norm << "     Total Time(sec): " << SCIRun::Time::currentSeconds()-start_time << endl;
   } else { 
-    proc0cout << "    Direction: " << direcn << "     Total Iter: " << num_iterations << "     Final Norm: " <<  final_res_norm << "     Total Time(sec): " << Time::currentSeconds()-start_time << endl;
+    proc0cout << "    Direction: " << direcn << "     Total Iter: " << num_iterations << "     Final Norm: " <<  final_res_norm << "     Total Time(sec): " << SCIRun::Time::currentSeconds()-start_time << endl;
   } 
 
   if (final_res_norm < d_residual)

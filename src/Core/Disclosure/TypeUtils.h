@@ -27,11 +27,7 @@
 
 #include <sci_defs/compile_defs.h> // for STATIC_BUILD
 
-#ifndef _WIN32
-#  include <inttypes.h>
-#else
-#  include <Core/Util/Endian.h> // for long64 and the like
-#endif
+#include <inttypes.h>
 
 #include <cfloat>
 #include <complex>

@@ -37,8 +37,6 @@
 #ifndef Core_Thread_Time_h
 #define Core_Thread_Time_h
 
-#include <Core/Thread/share.h>
-
 namespace SCIRun {
 /**************************************
 
@@ -53,51 +51,54 @@ namespace SCIRun {
  high precision counters on the SGI, and standard unix system calls
  on other machines.
 
-****************************************/
-class SCISHARE Time {
-public:
+ ****************************************/
+class Time {
+
+  public:
   typedef unsigned long long SysClock;
-	    
+
   //////////
   // Return the current system time, in terms of clock ticks.
   // Time zero is at some arbitrary point in the past.
   static SysClock currentTicks();
-	    
+
   //////////
   // Return the current system time, in terms of seconds.
   // This is slower than currentTicks().  Time zero is at
   // some arbitrary point in the past.
   static double currentSeconds();
-	    
+
   //////////
   // Return the conversion from seconds to ticks.
   static double ticksPerSecond();
-	    
+
   //////////
   // Return the conversion from ticks to seconds.
   static double secondsPerTick();
-	    
+
   //////////
   // Wait until the specified time in clock ticks.
   static void waitUntil(SysClock ticks);
-	    
+
   //////////
   // Wait until the specified time in seconds.
   static void waitUntil(double seconds);
-	    
+
   //////////
   // Wait for the specified time in clock ticks
   static void waitFor(SysClock ticks);
-	    
+
   //////////
   // Wait for the specified time in seconds
   static void waitFor(double seconds);
 
-private:
+  private:
   Time();
   static void initialize();
 };
-} // End namespace SCIRun
+
+}
+  // End namespace SCIRun
 
 #endif
 

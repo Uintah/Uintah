@@ -175,7 +175,7 @@ namespace Uintah{
       int    d_orderOfInterpolation;        // Order of interpolation for interior fine patch
       
       MaterialSet* d_matlSet;
-      IntVector _halo;                      // number of cells surrounding a coarse patch on coarser levels
+      IntVector d_halo;                      // number of cells surrounding a coarse patch on coarser levels
       
       double d_sigma_over_pi;                // Stefan Boltzmann divided by pi (W* m-2* K-4)
       bool d_isSeedRandom;

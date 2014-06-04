@@ -99,14 +99,6 @@ public:
 
   void problemSetup(const ProblemSpecP& params);
 
-  ///////////////////////////////////////////////////////////////////////
-  // Schedule the computation of density reference array here
-
-  void sched_computeDenRefArray(SchedulerP&, 
-                                const PatchSet* patches,
-                                const MaterialSet* matls,
-                                bool initialize, int time_substep);
-
   void sched_averageRKProps(SchedulerP&, 
                             const PatchSet* patches,
                             const MaterialSet* matls,
@@ -166,9 +158,9 @@ public:
   //for the new table:
   void sched_computeProps( const LevelP&,
                            SchedulerP&,
-                           const TimeIntegratorLabel* timelabels,
                            const bool initialize, 
-                           const bool modify_ref_den ); 
+                           const bool modify_ref_den, 
+                           const int time_substep ); 
 
   void doTableMatching(); 
 
@@ -179,13 +171,6 @@ private:
 
   ///////////////////////////////////////////////////////////////////////
   // Carry out actual computation of density reference array
-
-  void computeDenRefArray(const ProcessorGroup*,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw,
-                          bool initialize, int time_substep);
 
   void averageRKProps(const ProcessorGroup*,
                       const PatchSubset* patches,

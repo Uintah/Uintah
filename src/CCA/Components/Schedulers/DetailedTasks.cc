@@ -50,7 +50,7 @@ using namespace std;
 // multiple threads at the same time)  From sus.cc:
 extern SCIRun::Mutex cerrLock;
 extern DebugStream mixedDebug;
-static DebugStream dbg("TaskGraph", false);
+static DebugStream dbg("DetailedTasks", false);
 static DebugStream scrubout("Scrubbing", false);
 static DebugStream messagedbg("MessageTags", false);
 static DebugStream internaldbg("InternalDeps", false);
@@ -170,6 +170,35 @@ void DetailedTasks::assignMessageTags(int me)
 void DetailedTasks::add(DetailedTask* task)
 {
   tasks_.push_back(task);
+}
+
+void DetailedTasks::makeDWKeyDatabase()
+{
+  for (int i = 0; i < (int)localtasks_.size(); i++) {
+    DetailedTask* task=localtasks_[i];
+    //for reduction task check modifies other task check computes
+    const Task::Dependency *comp=task->getTask()->isReductionTask()? task->getTask()->getModifies():task->getTask()->getComputes();
+    for(;comp != 0; comp = comp->next){
+      const MaterialSubset* matls= comp->matls?comp->matls:task->getMaterials(); 
+      for (int m=0; m< matls->size(); m++){
+        int matl=matls->get(m);
+        // if variables saved on levelDB
+        if (comp->var->typeDescription()->getType() == TypeDescription::ReductionVariable
+            ||comp->var->typeDescription()->getType() == TypeDescription::SoleVariable ){
+          levelKeyDB.insert(comp->var,matl, comp->reductionLevel);
+        // if variables saved on varDB
+        } else {
+          const PatchSubset* patches=comp->patches?comp->patches:task->getPatches();
+          for (int p=0; p< patches->size();p++) {
+            const Patch* patch=patches->get(p);
+            varKeyDB.insert(comp->var,matl, patch);
+          //  cout << "reserve "  << comp->var->getName() << " on Patch " << patch->getID() 
+            //        << ", Malt " <<  matl << endl;
+          }
+        }
+      } //end matls
+    }
+  }
 }
 
 void DetailedTasks::computeLocalTasks(int me)
@@ -300,6 +329,7 @@ void DetailedTasks::initializeScrubs(vector<OnDemandDataWarehouseP>& dws,
     if (dwmap[i] < 0)
       continue;
     OnDemandDataWarehouse* dw = dws[dwmap[i]].get_rep();
+//    if (dw != 0) dw->copyKeyDB(varKeyDB, levelKeyDB);
     if (dw != 0 && dw->getScrubMode() == DataWarehouse::ScrubComplete) {
       // only a OldDW or a CoarseOldDW will have scrubComplete 
       //   But we know a future taskgraph (in a w-cycle) will need the vars if there are fine dws 
@@ -775,6 +805,9 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
   if (req->var->typeDescription()->getType() == TypeDescription::SoleVariable) {
     return;
   }
+
+  //make keys for MPI messages
+  if (fromPatch) varKeyDB.insert(req->var,matl,fromPatch);
 
   //get dependancy batch
   DependencyBatch* batch = from->getComputes();

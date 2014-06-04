@@ -167,7 +167,7 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 void 
 TabPropsInterface::sched_getState( const LevelP& level, 
                                    SchedulerP& sched, 
-                                   const TimeIntegratorLabel* time_labels, 
+                                   const int time_substep, 
                                    const bool initialize_me,
                                    const bool modify_ref_den )
 
@@ -175,7 +175,7 @@ TabPropsInterface::sched_getState( const LevelP& level,
   string taskname = "TabPropsInterface::getState"; 
   Ghost::GhostType  gn = Ghost::None;
 
-  Task* tsk = scinew Task(taskname, this, &TabPropsInterface::getState, time_labels, initialize_me, modify_ref_den );
+  Task* tsk = scinew Task(taskname, this, &TabPropsInterface::getState, time_substep, initialize_me, modify_ref_den );
 
   // independent variables :: these must have been computed previously 
   for ( MixingRxnModel::VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i ) {
@@ -207,9 +207,18 @@ TabPropsInterface::sched_getState( const LevelP& level,
 
   // other variables 
   tsk->modifies( d_lab->d_densityCPLabel );  // lame .... fix me
-  if ( modify_ref_den )
-    tsk->computes(time_labels->ref_density); 
   tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, gn, 0 ); 
+
+  if ( modify_ref_den ){
+    if ( time_substep == 0 ){ 
+      tsk->computes( d_lab->d_denRefArrayLabel ); 
+    } 
+  } else { 
+    if ( time_substep == 0 ){ 
+      tsk->computes( d_lab->d_denRefArrayLabel ); 
+      tsk->requires( Task::OldDW, d_lab->d_denRefArrayLabel, Ghost::None, 0); 
+    } 
+  }
 
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
 }
@@ -223,7 +232,7 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
                              const MaterialSubset* matls, 
                              DataWarehouse* old_dw, 
                              DataWarehouse* new_dw, 
-                             const TimeIntegratorLabel* time_labels, 
+                             const int time_substep, 
                              const bool initialize_me, 
                              const bool modify_ref_den )
 {
@@ -434,15 +443,30 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
     // reference density modification 
     if ( modify_ref_den ) {
 
-      double den_ref = 0.0;
+      throw InvalidValue( "Error: Reference denisty not implement yet in TabProps. Code fix needed, yo.", __FILE__, __LINE__ ); 
 
-      if (patch->containsCell(d_ijk_den_ref)) {
+      //actually modify the reference density value: 
+      //double den_ref = get_reference_density(arches_density, cell_type);       
+      //if ( time_substep == 0 ){ 
+      //  CCVariable<double> den_ref_array; 
+      //  new_dw->allocateAndPut(den_ref_array, d_lab->d_denRefArrayLabel, matlIndex, patch );
 
-        den_ref = arches_density[d_ijk_den_ref];
-        cerr << "Modified reference density to: density_ref = " << den_ref << endl;
+      //  for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++ ){ 
+      //    den_ref_array[c] = den_ref;
+      //  }
 
+      //}
+
+    } else { 
+
+      //just carry forward: 
+      if ( time_substep == 0 ){ 
+        CCVariable<double> den_ref_array; 
+        constCCVariable<double> old_den_ref_array; 
+        new_dw->allocateAndPut(den_ref_array, d_lab->d_denRefArrayLabel, matlIndex, patch );
+        old_dw->get(old_den_ref_array, d_lab->d_denRefArrayLabel, matlIndex, patch, Ghost::None, 0 ); 
+        den_ref_array.copyData( old_den_ref_array ); 
       }
-      new_dw->put(sum_vartype(den_ref),time_labels->ref_density);
     }
   }
 }

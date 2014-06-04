@@ -42,13 +42,13 @@
     <!-- Set the initial condition expression for x-momentum -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="x-mom" state="STATE_N"/>
+       <NameTag name="x-mom" state="STATE_DYNAMIC"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="y-mom" state="STATE_N"/>
+       <NameTag name="y-mom" state="STATE_DYNAMIC"/>
        <Constant>0.0</Constant>
     </BasicExpression>
                
@@ -117,8 +117,7 @@
 				<!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
 				<Face side="x-" type="Velocity" name="Face_0">
 					<BCType label="x-mom" var="Dirichlet" value="1.0"/>
-					<BCType label="y-mom" var="Dirichlet" value="0.0"/>
-				</Face>
+					</Face>
 				<Face side="x+" type="Outflow" name="Face_1"/>
 				<Face side="y-" type="Wall" name="Face_2"/>
 				<Face side="y+" type="Wall" name="Face_3"/>

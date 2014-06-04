@@ -57,7 +57,7 @@ namespace Wasatch{
   {
     const TagNames& tagNames = TagNames::self();
     const Expr::Tag diffFluxTag( thisPhiName + tagNames.diffusiveflux + dir, Expr::STATE_NONE );
-    const Expr::Tag phiTag( thisPhiName, Expr::STATE_N );
+    const Expr::Tag phiTag( thisPhiName, Expr::STATE_DYNAMIC );
 
     Expr::ExpressionBuilder* builder = NULL;
     FieldSelector fs;
@@ -201,7 +201,7 @@ namespace Wasatch{
 
       std::string basePhiName;
       params_->get( "SolutionVariable", basePhiName );
-      const Expr::Tag basePhiTag ( basePhiName, Expr::STATE_N );
+      const Expr::Tag basePhiTag ( basePhiName, Expr::STATE_DYNAMIC );
 
       typedef typename ScalabilityTestSrc<FieldT>::Builder coupledSrcTerm;
       factory.register_expression( scinew coupledSrcTerm( srcTag, basePhiTag, nEqs) );
@@ -245,7 +245,7 @@ namespace Wasatch{
 
   template< typename FieldT >
   void ScalabilityTestTransportEquation<FieldT>::
-  setup_initial_boundary_conditions( const GraphHelper& graphHelper,
+  apply_initial_boundary_conditions( const GraphHelper& graphHelper,
                                     BCHelper& bcHelper )
   {}
   
@@ -253,7 +253,7 @@ namespace Wasatch{
   
   template< typename FieldT >
   void ScalabilityTestTransportEquation<FieldT>::
-  setup_boundary_conditions( const GraphHelper& graphHelper,
+  apply_boundary_conditions( const GraphHelper& graphHelper,
                              BCHelper& bcHelper )
   {}
 
@@ -264,7 +264,7 @@ namespace Wasatch{
   ScalabilityTestTransportEquation<FieldT>::
   initial_condition( Expr::ExpressionFactory& icFactory )
   {
-    return icFactory.get_id( Expr::Tag( this->solution_variable_name(), Expr::STATE_N ) );
+    return icFactory.get_id( solution_variable_tag() );
   }
 
   //------------------------------------------------------------------

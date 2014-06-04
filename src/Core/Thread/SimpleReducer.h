@@ -39,8 +39,6 @@
 
 #include <Core/Thread/Barrier.h>
 
-#include <Core/Thread/share.h>
-
 namespace SCIRun {
 
 /**************************************
@@ -58,60 +56,69 @@ DESCRIPTION
    thread, and these sums are added together.
    
 ****************************************/
-	class SCISHARE SimpleReducer : public Barrier {
-	public:
-	    //////////
-	    // Create a <b> SimpleReducer</i>.
-	    // At each operation, a barrier wait is performed, and the
-	    // operation will be performed to compute the global balue.
-	    // <i>name</i> should be a static string which describes
-	    // the primitive for debugging purposes.
-	    SimpleReducer(const char* name);
+class SimpleReducer : public Barrier {
 
-	    //////////
-	    // Destroy the SimpleReducer and free associated memory.
-	    virtual ~SimpleReducer();
+  public:
+    //////////
+    // Create a <b> SimpleReducer</i>.
+    // At each operation, a barrier wait is performed, and the
+    // operation will be performed to compute the global balue.
+    // <i>name</i> should be a static string which describes
+    // the primitive for debugging purposes.
+    SimpleReducer(const char* name);
 
-	    //////////
-	    // Performs a global sum over all of the threads.  As soon as each
-	    // thread has called sum with their local sum, each thread will
-	    // return the same global sum.
-	    double sum(int myrank, int numThreads, double mysum);
+    //////////
+    // Destroy the SimpleReducer and free associated memory.
+    virtual ~SimpleReducer();
 
-	    //////////
-	    // Performs a global max over all of the threads.  As soon as each
-	    // thread has called max with their local max, each thread will
-	    // return the same global max.
-	    double max(int myrank, int numThreads, double mymax);
+    //////////
+    // Performs a global sum over all of the threads.  As soon as each
+    // thread has called sum with their local sum, each thread will
+    // return the same global sum.
+    double sum(int myrank,
+               int numThreads,
+               double mysum);
 
-	    //////////
-	    // Performs a global min over all of the threads.  As soon as each
-	    // thread has called min with their local max, each thread will
-	    // return the same global max.
-	    double min(int myrank, int numThreads, double mymax);
+    //////////
+    // Performs a global max over all of the threads.  As soon as each
+    // thread has called max with their local max, each thread will
+    // return the same global max.
+    double max(int myrank,
+               int numThreads,
+               double mymax);
 
-	private:
-	    struct data {
-		double d_;
-	    };
-	    struct joinArray {
-		data d_;
-		// Assumes 128 bytes in a cache line...
-		char filler_[128-sizeof(data)];
-	    };
-	    struct pdata {
-		int buf_;
-		char filler_[128-sizeof(int)];	
-	    };
-	    joinArray* join_[2];
-	    pdata* p_;
-	    int array_size_;
-	    void collectiveResize(int proc, int numThreads);
+    //////////
+    // Performs a global min over all of the threads.  As soon as each
+    // thread has called min with their local max, each thread will
+    // return the same global max.
+    double min(int myrank,
+               int numThreads,
+               double mymax);
 
-	    // Cannot copy them
-	    SimpleReducer(const SimpleReducer&);
-	    SimpleReducer& operator=(const SimpleReducer&);
-	};
+  private:
+    struct data {
+        double d_;
+    };
+    struct joinArray {
+        data d_;
+        // Assumes 128 bytes in a cache line...
+        char filler_[128 - sizeof(data)];
+    };
+    struct pdata {
+        int buf_;
+        char filler_[128 - sizeof(int)];
+    };
+    joinArray* join_[2];
+    pdata* p_;
+    int array_size_;
+    void collectiveResize(int proc,
+                          int numThreads);
+
+    // Cannot copy them
+    SimpleReducer(const SimpleReducer&);
+    SimpleReducer& operator=(const SimpleReducer&);
+};
+
 } // End namespace SCIRun
 
 #endif

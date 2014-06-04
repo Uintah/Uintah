@@ -63,9 +63,7 @@
 #include <Core/Util/FileUtils.h>
 #include <Core/Util/DebugStream.h>
 #include <sys/stat.h>
-#ifndef _WIN32
 #include <dirent.h>
-#endif
 #include <iostream>
 #include <fstream>
 

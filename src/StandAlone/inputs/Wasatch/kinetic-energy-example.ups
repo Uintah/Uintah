@@ -5,7 +5,7 @@
   </Meta>
 
   <SimulationComponent type="wasatch"/>
-   <Solver type="hypre"/>
+   <Solver type="hypre" />
   <Wasatch>
 
     <Density>
@@ -15,7 +15,7 @@
     <!-- Set the initial condition expression for x-momentum -->
     <TaylorVortexMMS type="XVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="x-mom" state="STATE_N"/>
+      <NameTag name="x-mom" state="STATE_DYNAMIC" />
       <TGVel3D angle="1.570796326794897">
         <VelComponent>X</VelComponent>
         <XCoordinate> <NameTag name="XXVOL" state="STATE_NONE"/> </XCoordinate>
@@ -27,7 +27,7 @@
     <!-- Set the initial condition for y-momentum -->
     <TaylorVortexMMS type="YVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="y-mom" state="STATE_N"/>
+      <NameTag name="y-mom" state="STATE_DYNAMIC" />
       <TGVel3D angle="1.570796326794897">
         <VelComponent>Y</VelComponent>      
         <XCoordinate> <NameTag name="XYVOL" state="STATE_NONE"/> </XCoordinate>
@@ -39,7 +39,7 @@
     <!-- Set the initial condition for z-momentum -->
     <TaylorVortexMMS type="ZVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="z-mom" state="STATE_N"/>
+      <NameTag name="z-mom" state="STATE_DYNAMIC" />
       <TGVel3D angle="1.570796326794897">
         <VelComponent>Z</VelComponent>      
         <XCoordinate> <NameTag name="XZVOL" state="STATE_NONE"/> </XCoordinate>
@@ -50,7 +50,7 @@
                 
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_NONE"/>
+      <NameTag name="viscosity" state="STATE_NONE" />
       <Constant>0.001</Constant>
     </BasicExpression>
 
@@ -65,7 +65,7 @@
       <Z-Velocity>w</Z-Velocity>
       <Z-Momentum>z-mom</Z-Momentum>      
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE"/>
+        <NameTag name="viscosity" state="STATE_NONE" />
       </Viscosity>
       
       <Pressure>
@@ -104,7 +104,7 @@
     <filebase>kinetic-energy-example.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle="2" interval="0.001"/>
+    <checkpoint cycle = "2" interval = "0.001"/>
     <compression>gzip</compression>
     <save label="u"/>
     <save label="v"/>

@@ -115,6 +115,7 @@ namespace Uintah {
   class ExplicitTimeInt;
   class PartVel;
   class DQMOM;
+  class CQMOM;
 
 class Arches : public UintahParallelComponent, public SimulationInterface {
 
@@ -149,7 +150,7 @@ public:
                                              SchedulerP&);
   void 
   MPMArchesIntrusionSetupForResart( const LevelP& level, SchedulerP& sched, 
-      bool& recompile, bool doing_restart );
+                                    bool& recompile, bool doing_restart );
 
   virtual void scheduleTimeAdvance( const LevelP& level,
                                     SchedulerP&);
@@ -162,19 +163,28 @@ public:
   virtual void sched_weightInit( const LevelP& level,
                                 SchedulerP& );
   virtual void sched_weightedAbsInit( const LevelP& level,
-                                SchedulerP& );
+                                      SchedulerP& );
+                                      
   virtual void sched_scalarInit( const LevelP& level,
+                                 SchedulerP& sched );
+  virtual void sched_momentInit( const LevelP& level,
                                  SchedulerP& sched );
                                  
   //__________________________________
   //  Multi-level/AMR 
-  virtual void scheduleCoarsen(const Uintah::LevelP& /*coarseLevel*/,
-                               Uintah::SchedulerP&   /*sched*/);
+  // stub functions.  Needed for multi-level RMCRT and
+  // if you want to change the coarse level patch configuration
+  virtual void scheduleCoarsen(const LevelP& ,
+                                SchedulerP& ){ /* do Nothing */};
 
-  virtual void scheduleRefineInterface(const Uintah::LevelP& /*fineLevel*/,
-                                       Uintah::SchedulerP& /*scheduler*/,
-                                       bool, bool);
+  virtual void scheduleRefineInterface(const LevelP&,
+                                       SchedulerP&,
+                                       bool, bool){ /* do Nothing */};
 
+  virtual void scheduleInitialErrorEstimate( const LevelP& , 
+                                             SchedulerP&  ){/* do Nothing */};
+  virtual void scheduleErrorEstimate( const LevelP& , 
+                                      SchedulerP&  ){/* do Nothing */};
 
   // for multimaterial
   void setMPMArchesLabel(const MPMArchesLabel* MAlb){
@@ -203,6 +213,13 @@ public:
     d_with_mpmarches = true;
   };
 
+//  void sched_create_patch_operators( const LevelP& level, SchedulerP& sched ); 
+//  void create_patch_operators( const ProcessorGroup* pg,
+//                               const PatchSubset* patches,
+//                               const MaterialSubset* matls,
+//                               DataWarehouse* old_dw,
+//                               DataWarehouse* new_dw);
+
 
 protected:
 
@@ -213,6 +230,7 @@ private:
   Arches(const Arches&);
 
   Arches& operator=(const Arches&);
+
 
   void paramInit(const ProcessorGroup*,
                  const PatchSubset* patches,
@@ -254,6 +272,12 @@ private:
                    const MaterialSubset*,
                    DataWarehouse* old_dw,
                    DataWarehouse* new_dw );
+  
+  void momentInit( const ProcessorGroup* ,
+                   const PatchSubset* patches,
+                   const MaterialSubset*,
+                   DataWarehouse* old_dw,
+                   DataWarehouse* new_dw );
 
 
 
@@ -273,6 +297,9 @@ private:
 
   /** @brief Registers all possible DQMOM equations by instantiating a builder in the factory */
   void registerDQMOMEqns(ProblemSpecP& db);
+  
+  /** @brief Registers all possible CQMOM equations by instantiating a builder in the factory */
+  void registerCQMOMEqns(ProblemSpecP& db);
 
   /** @brief Registers all possible Property Models by instantiating a builder in the factory */
   void registerPropertyModels( ProblemSpecP& db );
@@ -322,6 +349,10 @@ private:
   ExplicitTimeInt* d_timeIntegrator;
   PartVel* d_partVel;
   DQMOM* d_dqmomSolver;
+  
+  bool d_doCQMOM;
+  std::string d_which_cqmom;
+  CQMOM* d_cqmomSolver;
 
   bool d_doingRestart;
   bool d_newBC_on_Restart;

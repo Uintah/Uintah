@@ -43,6 +43,7 @@
       hash_map(int &n) : boost::unordered_map<A,B,C>(n){}
    };
    template<typename A, typename B> class hash_multimap : public boost::unordered_multimap<A, B> {};
+   template<typename A, typename B> class hashmap : public boost::unordered_map<A, B> {};
 
 #elif defined(HAVE_STD_HASHMAP)
 
@@ -72,6 +73,7 @@
       hash_map(int &n) : std::unordered_map<A,B,C>(n){}
    };
    template<typename A, typename B> class hash_multimap : public std::unordered_multimap<A, B> {};
+   template<typename A, typename B> class hashmap : public std::unordered_map<A, B> {};
    using std::hash;
 
 #elif defined(HAVE_TR1_HASHMAP)
@@ -83,6 +85,7 @@
       hash_map(int &n) : std::tr1::unordered_map<A,B,C>(n){}
    };
    template<typename A, typename B> class hash_multimap : public std::tr1::unordered_multimap<A, B> {};
+   template<typename A, typename B> class hashmap : public std::tr1::unordered_map<A, B> {};
    using std::tr1::hash;
 
 #elif defined(HAVE_GNU_HASHMAP)
@@ -91,6 +94,7 @@
    using __gnu_cxx::hash_map;
    using __gnu_cxx::hash_multimap;
    using __gnu_cxx::hash;
+   template<typename A, typename B> class hashmap : public hash_map<A, B> {};
 
 #elif defined(HAVE_STDEXT_HASHMAP)
 
@@ -98,6 +102,7 @@
    using stdext::hash_map;
    using stdext::hash_multimap;
    using stdext::hash_compare; // MS VC 8
+   template<typename A, typename B> class hashmap : public hash_map<A, B> {};
 
 #else
 

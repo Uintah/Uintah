@@ -12,7 +12,7 @@
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
-n *
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -24,6 +24,9 @@ n *
 
 #include <Core/IO/UintahZlibUtil.h>
 
+#include <Core/Exceptions/ErrnoException.h>
+#include <Core/Exceptions/InvalidState.h>
+
 #include <cstdio>
 #include <fstream>
 #include <iostream>
@@ -33,6 +36,8 @@ n *
 namespace Uintah {
 
   using std::string;
+  using std::ifstream;
+  using std::stringstream;
 
 //
 // Reads a token out of a gzipped file... Tokens are separated by
@@ -76,7 +81,7 @@ getToken( gzFile & gzFp )
 
 static
 string
-getToken(std::stringstream& stream_file )
+getToken( stringstream & stream_file )
 {
   string token;
 
@@ -117,7 +122,7 @@ getString( gzFile & gzFp )
 }
 
 string
-getString(std::stringstream& stream_file )
+getString( stringstream & stream_file )
 {
   return getToken( stream_file );
 }
@@ -133,7 +138,7 @@ getDouble( gzFile & gzFp )
 
 
 double
-getDouble(std::stringstream& stream_file )
+getDouble( stringstream & stream_file )
 {
   double out;
   string result = getToken(stream_file );
@@ -151,7 +156,7 @@ getInt( gzFile & gzFp )
 }
 
 int
-getInt(std::stringstream& stream_file )
+getInt( stringstream & stream_file )
 {
   int out;
   string result = getToken( stream_file );
@@ -187,7 +192,7 @@ getLine( gzFile & gzFp )
 }
 
 string
-getLine(std::stringstream& stream_file )
+getLine( stringstream & stream_file )
 {
   string line;
 
@@ -216,18 +221,26 @@ getLine(std::stringstream& stream_file )
 }
 
 
-int gzipInflate(const std::string& filename, std::string& uncomp_table_contents)
+int
+gzipInflate( const string & filename,
+                   string & uncomp_table_contents )
 {
 
-  std::ifstream table_file(filename.c_str(), std::ios::binary);
-  std::stringstream table_buffer;
+  ifstream table_file( filename.c_str(), std::ios::binary );
+
+  if( !table_file.is_open() ) {
+    throw SCIRun::ErrnoException( "Failed to open file: " + filename, errno, __FILE__, __LINE__ );
+  }
+
+  stringstream table_buffer;
   table_buffer << table_file.rdbuf();
-  std::string compressedBytes = table_buffer.str();
+
+  string compressedBytes = table_buffer.str();
+
   table_file.close();
 
   if ( compressedBytes.size() == 0 ) {  
-    uncomp_table_contents = compressedBytes ;  
-    return 0 ;  
+    throw InvalidState( "File failed to inflate: " + filename, __FILE__, __LINE__ );
   }  
   
   uncomp_table_contents.clear() ;  
@@ -246,9 +259,8 @@ int gzipInflate(const std::string& filename, std::string& uncomp_table_contents)
   strm.zfree = Z_NULL;  
   bool done = false ;  
   
-  if (inflateInit2(&strm, (16+MAX_WBITS)) != Z_OK) {  
-    delete[] uncomp;  
-    return 0;  
+  if( inflateInit2(&strm, (16+MAX_WBITS)) != Z_OK) {
+    throw InvalidState( "inflateInit2 failed for file: " + filename, __FILE__, __LINE__ );
   }  
   
   while (!done) {  
@@ -273,9 +285,8 @@ int gzipInflate(const std::string& filename, std::string& uncomp_table_contents)
     }  
   }  
   
-  if (inflateEnd (&strm) != Z_OK) {  
-    delete [] uncomp;  
-    return 0;  
+  if (inflateEnd( &strm ) != Z_OK) {  
+    throw InvalidState( "inflateEnd failed for file: " + filename, __FILE__, __LINE__ );
   }  
   
   for ( size_t i=0; i<strm.total_out; ++i ) {  

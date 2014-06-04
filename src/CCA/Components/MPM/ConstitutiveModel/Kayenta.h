@@ -56,44 +56,39 @@ namespace Uintah {
       std::string WeibDist;   // String for Distribution
     };
     int d_NKMMPROP;
-    int d_NKMMGC;
-    int d_NKMMDC;
     int d_NINSV;
     static int const d_B0 = 0; // Initial intact elastic bulk modulus
     static int const d_G0 = 5; // Initial intact elastic shear modulus
     static int const d_TFAIL = 42; // tenth failure parameter
     static int const d_PEAKI1I = 52; // Peak I1 hydrostatic tension strength
-    static int const d_RHO0 = 89; //  initial density
-    static int const d_TMPR0 = 90; //  initial temperature
-    static int const d_SNDSP0 = 91; //  initial soundspeed
-    static int const d_CV = 92; //  specific heat
+    static int const d_R0 = 88; //  initial density
+    static int const d_T0 = 89; //  initial temperature
+    static int const d_CS = 90; //  initial soundspeed
+    static int const d_CV = 93; //  specific heat
     enum KAYENTA_UI {
       B0, B1, B2, B3, B4, G0, G1, G2, G3, G4, RJS, RKS, RKN, A1, A2, A3, A4, P0,
-      P1, P2, P3, CR, RK, RN, HC, CTPSF, CUTPS, CUTI1, T1, T2, T3, T4, T5, T6,
-      T7, J3TYPE, A2PF, A4PF, CRPF, RKPF, SUBX, DEJAVU, FAIL0, FAIL1, FAIL2,
-      FAIL3, FAIL4, FAIL5, FAIL6, FAIL7, FAIL8, FAIL9, PEAKI1I, STRENI, FSLOPEI,
-      PEAKI1F, STRENF, SOFTENING, FSLOPEF, FAILSTAT, IEOSID, EVLEOS, DILATLIM,
-      NU, YSLOPEI, YSLOPEF, SPALLI1, FREE08, FREE07, FREE06, FREE05, FREE04,
-      FREE03, FREE02, FREE01, CKN01, VMAX1, SPACE1, SHRSTIFF1, CKN02, VMAX2,
-      SPACE2, SHRSTIFF2, CKN03, VMAX3, SPACE3, SHRSTIFF3, TMPRXP, TMPRM0, RHO0,
-      TMPR0, SNDSP0, CV, GRPAR, EOS01, EOS02, EOS03, EOS04, EOS05, EOS06, EOS07,
-      EOS08, EOS09, EOS10, EOS11, EOS12, EOS13, NUM_KAYENTA_PROPS};
+      P1, P2, P3, CR, RK, RN, HC, CTPSF, CTPS, CTI1, T1, T2, T3, T4, T5, T6, T7,
+      J3TYPE, A2PF, A4PF, CRPF, RKPF, SUBX, DEJAVU, FAIL0, FAIL1, FAIL2, FAIL3,
+      FAIL4, FAIL5, FAIL6, FAIL7, FAIL8, FAIL9, PEAKI1I, STRENI, FSLOPEI,
+      PEAKI1F, STRENF, SOFTENING, FSLOPEF, FAILSTAT, EOSID, DILATLIM, NU,
+      YSLOPEI, YSLOPEF, SPALLI1, FREE08, FREE07, FREE06, FREE05, FREE04, FREE03,
+      FREE02, FREE01, CKN01, CKN02, CKN03, VMAX1, VMAX2, VMAX3, SPACE1, SPACE2,
+      SPACE3, SHRSTIFF1, SHRSTIFF2, SHRSTIFF3, TMPRXP, TM, R0, T0, CS, S1, SR,
+      CV, EOS01, EOS02, EOS03, EOS04, EOS05, EOS06, EOS07, EOS08, EOS09, EOS10,
+      EOS11, EOS12, EOS13, EOS14, EOS15, EOS16, SQA, DC01, DC02, DC03, DC04,
+      DC05, DC06, DC07, DC08, DC09, DC10, DC11, DC12, DC13, NUM_KAYENTA_PROPS
+    };
     enum KAYENTA_EX {
       KKAPPA, KINDEX, KEQDOT, KI1, KROOTJ2, KALXX, KALYY, KALZZ, KALXY, KALYZ,
       KALZX, KGFUN, KEQPS, KEQPV, KEL0, KHK, KEVOL, KBACKRN, KCRACK, KSHEAR,
       KYIELD, KLODE, KQSSIGXX, KQSSIGYY, KQSSIGZZ, KQSSIGXY, KQSSIGYZ, KQSSIGZX,
-      KDCSP, KKAPQ, KQSBSXX, KQSBSYY, KQSBSZZ, KQSBSXY, KQSBSYZ, KQSBSZX,
-      KTGROW, KCOHER, KKAYENTA_TEMPERATURE, KKAYENTA_MELT_TEMPERATURE,
-      KKAYENTA_SOUND_SPEED, KKAYENTA_DENSITY, KKAYENTA_ENERGY, KALPHAMG, KEOS1,
-      KEOS2, KEOS3, KEOS4, KRTJ2IN, KACCSTRAIN, KJNTOPN1, KJNTOPN2, KJNTOPN3,
-      KELNUM, NUM_KAYENTA_EX};
-    enum KAYENTA_DC { DC1, DC2, DC3, DC4, DC5, DC6, DC7, DC8,
-                      DC9, DC10, DC11, DC12, DC13, NUM_KAYENTA_DC };
-    enum KAYENTA_GC { NUM_KAYENTA_GC };
+      KDCSP, KQSEL, KQSBSXX, KQSBSYY, KQSBSZZ, KQSBSXY, KQSBSYZ, KQSBSZX,
+      KTGROW, KCOHER, KTMPR, KSNDSP, KRHO, KENRGY, KBMOD, KSMOD, KPEOS, KVOID,
+      KDPDR, KACCSTRAIN, KTGROWCTPS, KCOHERCTPS, KJNTOPN1, KJNTOPN2, KJNTOPN3,
+      KELNUM, NUM_KAYENTA_XV
+    };
     double UI[130];
-    double GC[20];
-    double DC[20];
-    double rinit[200];
+    double xinit[200];
     double d_hugeJ;
     // weibull parameter set
     WeibParameters wdist;

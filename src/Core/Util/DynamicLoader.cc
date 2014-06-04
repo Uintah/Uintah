@@ -42,37 +42,9 @@
 #include <sys/stat.h>
 #include <cerrno>
 #include <cstdio>
+#include <unistd.h>
 
 using namespace std;
-
-#ifdef _WIN32
-#include <windows.h>
-#ifdef _MSC_VER
-
-string vstext;
-void set_vc_dirs()
-{
-  string path_to_vc = PATH_TO_VC;
-  string path_to_psdk = PATH_TO_PSDK;
-  string path_to_make = PATH_TO_MSYS_BIN;
-
-  // path is path-to-vc/bin + path-to-vc/../Common7/IDE (for a dependent dll) + path_to_make
-  vstext = "@SET PATH=" + path_to_vc + "\\..\\Common7\\IDE;" + path_to_vc + "\\bin;" + path_to_make + ";%PATH%\n";
-
-  // include is path-to-vc/include and path-to-psdk/Include
-  vstext+= "@SET INCLUDE=" + path_to_vc + "\\include;" + path_to_psdk + "\\Include\n";
-
-  // lib (libpaths) is the same, with lib
-  vstext+= "@SET LIB=" + path_to_vc + "\\lib;" + path_to_psdk + "\\Lib";
-}
-
-#endif
-#undef SCISHARE
-#define SCISHARE __declspec(dllexport)
-#else
-#include <unistd.h>
-#define SCISHARE
-#endif
 
 namespace SCIRun {
 
@@ -83,8 +55,6 @@ namespace SCIRun {
   // in Persistent.cc.
   Mutex persistentTypeIDMutex("Persistent Type ID Table Lock");
   const string ext("dylib");
-#elif defined(_WIN32)
-  const string ext("dll");
 #else
   const string ext("so");
 #endif
@@ -92,65 +62,64 @@ namespace SCIRun {
   // Need these mutexes to be created here for use in another library
   // as they must "construct" _now_ because they are used before the
   // library that would normally construct them gets loaded...
-  SCISHARE Mutex colormapIEPluginMutex("ColorMap Import/Export Plugin Table Lock");
-  SCISHARE Mutex fieldIEPluginMutex("Field Import/Export Plugin Table Lock");
-  SCISHARE Mutex matrixIEPluginMutex("Matrix Import/Export Plugin Table Lock");
+  Mutex colormapIEPluginMutex("ColorMap Import/Export Plugin Table Lock");
+  Mutex fieldIEPluginMutex("Field Import/Export Plugin Table Lock");
+  Mutex matrixIEPluginMutex("Matrix Import/Export Plugin Table Lock");
 
 DynamicLoader *DynamicLoader::scirun_loader_ = 0;
 Mutex DynamicLoader::scirun_loader_init_lock_("SCIRun loader init lock");
 
 
-string
-remove_vowels(const string &s)
+string remove_vowels(const string &s)
 {
   // will never remove first character.
   vector<size_t> rm_list;
   size_t p = 0;
-  for(;;) {
+  for (;;) {
     p = s.find("a", p);
-    if (p  == string::npos)
+    if (p == string::npos) {
       break;
-    else {
+    } else {
       rm_list.push_back(p);
       ++p;
     }
   }
   p = 0;
-  for(;;) {
+  for (;;) {
     p = s.find("e", p);
-    if (p  == string::npos)
+    if (p == string::npos) {
       break;
-    else {
+    } else {
       rm_list.push_back(p);
       ++p;
     }
   }
   p = 0;
-  for(;;) {
+  for (;;) {
     p = s.find("i", p);
-    if (p  == string::npos)
+    if (p == string::npos) {
       break;
-    else {
+    } else {
       rm_list.push_back(p);
       ++p;
     }
   }
   p = 0;
-  for(;;) {
+  for (;;) {
     p = s.find("o", p);
-    if (p  == string::npos)
+    if (p == string::npos) {
       break;
-    else {
+    } else {
       rm_list.push_back(p);
       ++p;
     }
   }
   p = 0;
-  for(;;) {
+  for (;;) {
     p = s.find("u", p);
-    if (p  == string::npos)
+    if (p == string::npos) {
       break;
-    else {
+    } else {
       rm_list.push_back(p);
       ++p;
     }
@@ -361,15 +330,8 @@ CompileInfo::create_cc(ostream &fstr, bool empty) const
     fstr << "\n" << post_include_extra_ << "\n";
   }
 
-#ifdef _WIN32
   // Delcare the maker function
-  fstr << endl << "extern \"C\" {"  << endl
-       << "__declspec(dllexport)" << base_class_name_ << "* maker() {" << endl;
-#else
-  // Delcare the maker function
-  fstr << endl << "extern \"C\" {"  << endl
-       << base_class_name_ << "* maker() {" << endl;
-#endif
+  fstr << endl << "extern \"C\" {" << endl << base_class_name_ << "* maker() {" << endl;
 
   // If making an empty maker, return nothing instead of newing up the class.
   // Comments out the next line that news up the class.
@@ -633,99 +595,22 @@ DynamicLoader::compile_so(const CompileInfo &info, ProgressReporter *pr)
 #ifdef __sgi
   command += " 2>&1";
   pipe = popen(command.c_str(), "r");
-  if (pipe == NULL)
-  {
+  if (pipe == NULL) {
     pr->remark("DynamicLoader::compile_so() syscal error unable to make.");
     result = false;
   }
 #else
   command += " > " + info.filename_ + "log 2>&1";
-
-#ifdef _WIN32
-  // we need to create a separate process here, because TCL's interpreter is active.
-  // For some reason, calling make in 'system' will hang until the interpreter closes.
-  // the batch file is for convenience of not having to create files manually
-
-  STARTUPINFO si_;
-  PROCESS_INFORMATION pi_;
-
-  memset(&si_, 0, sizeof(si_));
-  memset(&pi_, 0, sizeof(pi_));
-
-  DWORD status = 1;
-
-  HANDLE logfile;
-  char logfilename[256];
-  char otfdir[256];
-  strcpy(otfdir, otf_dir().c_str());
-  // We need to make Windows create a command and read it since windows
-  // system can't handle a ';' to split commands
-  int loc = command.find(';');
-
-  // give it \ instead of / so windows can read it correctly
-  string command1 = command.substr(0, loc);
-  for (unsigned i = 0; i < command1.length(); i++)
-  {
-    if (command1[i] == '/')
-    {
-      command1[i] = '\\';
-    }
-  }
-  for (unsigned i = 0; i < strlen(otfdir); i++)
-  {
-    if (otfdir[i] == '/')
-    {
-      otfdir[i] = '\\';
-    }
-  }
-  string command2 = command.substr(loc+1, command.length());
-  // hardcoded...
-  string batch_filename = string(otfdir)+"\\" + info.filename_ + "bat";
-  FILE* batch = fopen(batch_filename.c_str(), "w");
-#ifdef _MSC_VER
-  fprintf(batch, "\n%s\n%s\n%s\n", vstext.c_str(), command1.c_str(), command2.c_str());
-#else
-  fprintf(batch, "\n%s\n%s\n", command1.c_str(), command2.c_str());
-#endif
-  fclose(batch);
-
-  si_.cb = sizeof(STARTUPINFO);
-
-  // the CREATE_NO_WINDOW is so the process will not run in the same shell.
-  // Otherwise it will get confused while trying to run in the same shell as the
-  // tcl interpreter.
-  bool retval =
-    CreateProcess(batch_filename.c_str(),0,0,0,0,CREATE_NO_WINDOW,0,0, &si_, &pi_);
-  if (!retval)
-  {
-    const char *soerr = SOError();
-    if (soerr)
-    {
-      cerr << soerr << "\n";
-    }
-  }
-  else
-  {
-    WaitForSingleObject(pi_.hProcess, INFINITE);
-    GetExitCodeProcess(pi_.hProcess, &status);
-    CloseHandle(pi_.hProcess);
-    CloseHandle(pi_.hThread);
-  }
-#else
   const int status = sci_system(command.c_str());
-#endif // def _WIN32
-  if(status != 0)
-  {
-    pr->remark("DynamicLoader::compile_so() syscal error " +
-               SCIRun::to_string(status) + ": command was '" + command + "'.");
+  if (status != 0) {
+    pr->remark("DynamicLoader::compile_so() syscal error " + SCIRun::to_string(status) + ": command was '" + command + "'.");
     result = false;
   }
   pipe = fopen(string(otf_dir() + "/" + info.filename_ + "log").c_str(), "r");
 #endif // __sgi
 
   char buffer[256];
-  while (pipe && fgets(buffer, 256, pipe) != NULL)
-  {
+  while (pipe && fgets(buffer, 256, pipe) != NULL) {
     pr->add_raw_message(buffer);
   }
 
@@ -735,10 +620,8 @@ DynamicLoader::compile_so(const CompileInfo &info, ProgressReporter *pr)
   if (pipe) { fclose(pipe); }
 #endif
 
-  if (result)
-  {
-    pr->add_raw_message("DynamicLoader - Successfully compiled " +
-                        info.filename_ + ext + "\n");
+  if (result) {
+    pr->add_raw_message("DynamicLoader - Successfully compiled " + info.filename_ + ext + "\n");
   }
   return result;
 }

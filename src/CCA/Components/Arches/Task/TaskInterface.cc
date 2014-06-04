@@ -1,4 +1,5 @@
 #include <CCA/Components/Arches/Task/TaskInterface.h>
+#include <CCA/Components/Arches/Operators/Operators.h>
 
 //Uintah Includes:  
 
@@ -6,6 +7,7 @@
 //#include <boost/foreach.hpp>
 
 using namespace Uintah; 
+namespace SS = SpatialOps::structured;
 
 TaskInterface::TaskInterface( std::string task_name, int matl_index ) : 
   _task_name(task_name),
@@ -15,6 +17,10 @@ TaskInterface::TaskInterface( std::string task_name, int matl_index ) :
 
 TaskInterface::~TaskInterface()
 { 
+  //destroy local labels
+  BOOST_FOREACH( const VarLabel* &ilab, _local_labels ){ 
+    VarLabel::destroy(ilab); 
+  }
 }
 
 //====================================================================================
@@ -51,6 +57,7 @@ TaskInterface::register_variable_work( std::string name,
   info.type   = type; 
   info.nGhost = nGhost; 
   info.dw_inquire = false; 
+  info.local = false; 
 
   switch (dw){
 
@@ -79,7 +86,7 @@ TaskInterface::register_variable_work( std::string name,
   //check for conflicts: 
   if ( (dep == COMPUTES && dw == OLDDW) ||
        (dep == LOCAL_COMPUTES && dw == OLDDW) ){ 
-    throw InvalidValue("Arches Task Error: Cannot COMPUTES a variable from OldDW for variable: "+name, __FILE__, __LINE__); 
+    throw InvalidValue("Arches Task Error: Cannot COMPUTE (COMPUTES) a variable from OldDW for variable: "+name, __FILE__, __LINE__); 
   }
 
   if ( (dep == MODIFIES && dw == OLDDW) || 
@@ -92,7 +99,7 @@ TaskInterface::register_variable_work( std::string name,
 
     if ( nGhost > 0 ){ 
 
-      std::cout << "Arches Task Warning: Variable COMPUTES found that is requesting ghosts for: "+name+" Nghosts set to zero!" << std::endl; 
+      std::cout << "Arches Task Warning: Variable COMPUTE (COMPUTES) found that is requesting ghosts for: "+name+" Nghosts set to zero!" << std::endl; 
       info.nGhost = 0;
     
     }
@@ -114,22 +121,40 @@ TaskInterface::register_variable_work( std::string name,
 
       if ( type == CC_INT ){
         info.label = VarLabel::create( name, CCVariable<int>::getTypeDescription() );
+        info.local = true; 
+        _local_labels.push_back(info.label); 
       } else if ( type == CC_DOUBLE ){ 
         info.label = VarLabel::create( name, CCVariable<double>::getTypeDescription() );
+        info.local = true; 
+        _local_labels.push_back(info.label); 
       } else if ( type == CC_VEC ){ 
         info.label = VarLabel::create( name, CCVariable<Vector>::getTypeDescription() );
+        info.local = true; 
+        _local_labels.push_back(info.label); 
       } else if ( type == FACEX ){ 
         info.label = VarLabel::create( name, SFCXVariable<double>::getTypeDescription() );
+        info.local = true; 
+        _local_labels.push_back(info.label); 
       } else if ( type == FACEY ){ 
         info.label = VarLabel::create( name, SFCYVariable<double>::getTypeDescription() );
+        info.local = true; 
+        _local_labels.push_back(info.label); 
       } else if ( type == FACEZ ){
         info.label = VarLabel::create( name, SFCZVariable<double>::getTypeDescription() );
+        info.local = true; 
+        _local_labels.push_back(info.label); 
       } else if ( type == SUM ){
         info.label = VarLabel::create( name, sum_vartype::getTypeDescription() );
+        info.local = true; 
+        _local_labels.push_back(info.label); 
       } else if ( type == MAX ){
         info.label = VarLabel::create( name, max_vartype::getTypeDescription() );
+        info.local = true; 
+        _local_labels.push_back(info.label); 
       } else if ( type == MIN ){
         info.label = VarLabel::create( name, min_vartype::getTypeDescription() );
+        info.local = true; 
+        _local_labels.push_back(info.label); 
       }
 
       //reasign because we resolve the labels later. 
@@ -191,7 +216,6 @@ TaskInterface::register_variable_work( std::string name,
     }  
   }
 
-
   //label will be matched later. 
   //info.label = NULL; 
 
@@ -211,7 +235,7 @@ TaskInterface::resolve_labels( std::vector<VariableInformation>& variable_regist
     ivar.label = VarLabel::find( ivar.name ); 
 
     if ( ivar.label == NULL ){ 
-      throw InvalidValue("Arches Task Error: Variable label not found: "+ivar.name, __FILE__, __LINE__); 
+      throw InvalidValue("Arches Task Error: Cannot resolve variable label for task execution: "+ivar.name, __FILE__, __LINE__); 
     }
   }
 
@@ -454,6 +478,74 @@ void TaskInterface::schedule_task( const LevelP& level,
 //====================================================================================
 //
 //====================================================================================
+void TaskInterface::schedule_init( const LevelP& level, 
+                                   SchedulerP& sched, 
+                                   const MaterialSet* matls ){ 
+
+  std::vector<VariableInformation> variable_registry; 
+
+  register_initialize( variable_registry ); 
+
+  resolve_labels( variable_registry ); 
+
+  Task* tsk = scinew Task( _task_name, this, &TaskInterface::do_init, variable_registry ); 
+
+  BOOST_FOREACH( VariableInformation &ivar, variable_registry ){ 
+
+    if ( ivar.dw == OLDDW ){ 
+      throw InvalidValue("Arches Task Error: Cannot use OLDDW for initialization task: "+_task_name, __FILE__, __LINE__); 
+    }
+
+    switch(ivar.depend){
+
+      case COMPUTES: 
+        tsk->computes( ivar.label ); 
+        break; 
+      case MODIFIES: 
+        tsk->modifies( ivar.label );
+        break; 
+      case REQUIRES: 
+        ivar.dw = NEWDW; 
+        ivar.uintah_task_dw = Task::NewDW; 
+        tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
+        break; 
+      default: 
+        throw InvalidValue("Arches Task Error: Cannot schedule task becuase of incomplete variable dependency: "+_task_name, __FILE__, __LINE__); 
+        break; 
+
+    }
+  }
+
+  sched->addTask( tsk, level->eachPatch(), matls );
+
+}
+
+//====================================================================================
+//
+//====================================================================================
+
+void TaskInterface::get_bc_logicals( const Uintah::Patch* const patch,
+                                     SS::IntVec& bcMinus,
+                                     SS::IntVec& bcPlus )
+{
+  for( int i=0; i<3; ++i ){
+    bcMinus[i] = 1;
+    bcPlus [i] = 1;
+  }
+  std::vector<Uintah::Patch::FaceType> faces;
+  patch->getNeighborFaces(faces);
+  for( std::vector<Uintah::Patch::FaceType>::const_iterator i=faces.begin(); i!=faces.end(); ++i ){
+    SCIRun::IntVector dir = patch->getFaceDirection(*i);
+    for( int j=0; j<3; ++j ){
+      if( dir[j] == -1 ) bcMinus[j]=0;
+      if( dir[j] ==  1 ) bcPlus [j]=0;
+    }
+  }
+}
+
+//====================================================================================
+//
+//====================================================================================
 void TaskInterface::schedule_task( const LevelP& level, 
                                    SchedulerP& sched, 
                                    const MaterialSet* matls,
@@ -521,9 +613,43 @@ void TaskInterface::do_task( const ProcessorGroup* pc,
 
     ConstUintahVarMap const_variable_map; 
 
+    //doing DW gets...
     resolve_fields( old_dw, new_dw, patch, variable_registry, variable_map, const_variable_map, time_substep ); 
 
-    eval( patch, variable_map, const_variable_map ); 
+    //get the operator DB for this patch
+    Operators& opr = Operators::self(); 
+    Operators::PatchInfoMap::iterator i_opr = opr.patch_info_map.find(patch->getID()); 
+
+    eval( patch, variable_map, const_variable_map, i_opr->second._sodb, time_substep ); 
+
+  }
+}
+
+void TaskInterface::do_init( const ProcessorGroup* pc, 
+                             const PatchSubset* patches, 
+                             const MaterialSubset* matls, 
+                             DataWarehouse* old_dw, 
+                             DataWarehouse* new_dw, 
+                             std::vector<VariableInformation> variable_registry ){
+
+  for (int p = 0; p < patches->size(); p++) {
+    
+    const Patch* patch = patches->get(p);
+
+    UintahVarMap variable_map; 
+
+    ConstUintahVarMap const_variable_map; 
+
+    int time_substep = 0;
+
+    //doing DW gets...
+    resolve_fields( old_dw, new_dw, patch, variable_registry, variable_map, const_variable_map, time_substep ); 
+
+    //get the operator DB for this patch
+    Operators& opr = Operators::self(); 
+    Operators::PatchInfoMap::iterator i_opr = opr.patch_info_map.find(patch->getID()); 
+
+    initialize( patch, variable_map, const_variable_map, i_opr->second._sodb ); 
 
   }
 }

@@ -71,16 +71,9 @@
 #include <cstring>
 
 #include <time.h>
-
-#ifdef _WIN32
-#  define MAXHOSTNAMELEN 256
-#  include <winsock2.h>
-#  include <process.h>
-#else
-#  include <sys/param.h>
-#  include <strings.h>
-#  include <unistd.h>
-#endif
+#include <sys/param.h>
+#include <strings.h>
+#include <unistd.h>
 
 //TODO - BJW - if multilevel reduction doesn't work, fix all
 //       getMaterialSet(0)
@@ -397,10 +390,8 @@ DataArchiver::initializeOutput(const ProblemSpecP& params)
      fprintf(tmpout, "\n");
      if(fflush(tmpout) != 0)
        throw ErrnoException("fflush", errno, __FILE__, __LINE__);
-#ifndef _WIN32
      if(fsync(fileno(tmpout)) != 0)
        throw ErrnoException("fsync", errno, __FILE__, __LINE__);
-#endif
      if(fclose(tmpout) != 0)
        throw ErrnoException("fclose", errno, __FILE__, __LINE__);
      MPI_Barrier(d_myworld->getComm());
@@ -438,7 +429,7 @@ DataArchiver::initializeOutput(const ProblemSpecP& params)
        if(fsync(fileno(tmpout)) != 0) {
          throw ErrnoException("fsync", errno, __FILE__, __LINE__);
        }
-#elif !defined(_WIN32) && !defined(__bgq__) // __bgq__ is defined on Blue Gene Q computers...
+#elif !defined(__bgq__) // __bgq__ is defined on Blue Gene Q computers...
        if(fdatasync(fileno(tmpout)) != 0) {
          throw ErrnoException("fdatasync", errno, __FILE__, __LINE__);
        }
@@ -1962,11 +1953,7 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
     ProblemSpecP doc; 
 
     // file-opening flags
-#ifdef _WIN32
-    int flags = O_WRONLY|O_CREAT|O_BINARY|O_TRUNC;
-#else
     int flags = O_WRONLY|O_CREAT|O_TRUNC;
-#endif
 
 #if 0
     // DON'T reload a timestep.xml - it will probably mean there was a timestep restart that had written data
@@ -2247,14 +2234,12 @@ DataArchiver::makeVersionedDir()
   int rc = LSTAT(d_filebase.c_str(), &sb);
   if ((rc != 0) && (errno == ENOENT))
     make_link = true;
-#ifndef _WIN32
   else if ((rc == 0) && (S_ISLNK(sb.st_mode))) {
     unlink(d_filebase.c_str());
     make_link = true;
   }
   if (make_link)
     symlink(dirName.c_str(), d_filebase.c_str());
-#endif
 
   cout << "DataArchiver created " << dirName << endl;
   d_dir = Dir(dirName);

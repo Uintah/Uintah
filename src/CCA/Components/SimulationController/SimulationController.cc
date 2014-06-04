@@ -48,10 +48,7 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/PapiInitializationError.h>
 
-#ifndef _WIN32
-#  include <sys/param.h>
-#endif
-
+#include <sys/param.h>
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -78,6 +75,7 @@ static DebugStream istats("IndividualComponentTimings",false);
 extern DebugStream amrout;
 
 namespace Uintah {
+
   struct double_int
   {
      double val;
@@ -628,9 +626,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     *mallocPerProcStream << "Timestep " << timestep << "   ";
     *mallocPerProcStream << "Size "     << ProcessInfo::GetMemoryUsed() << "   ";
     *mallocPerProcStream << "RSS "      << ProcessInfo::GetMemoryResident() << "   ";
-#ifndef _WIN32
     *mallocPerProcStream << "Sbrk "     << (char*)sbrk(0) - d_scheduler->getStartAddr() << "   ";
-#endif
 #ifndef DISABLE_SCI_MALLOC
     *mallocPerProcStream << "Sci_Malloc_Memuse "    << memuse << "   ";
     *mallocPerProcStream << "Sci_Malloc_Highwater " << highwater;
@@ -905,7 +901,6 @@ if(d_myworld->myrank() == 0){
     << " (timestep "  << timestep 
     << "), delT="     << delt
     << walltime;
-#ifndef _WIN32
   message << ", Mem Use (MB)= ";
   if (avg_memuse == max_memuse && avg_highwater == max_highwater) {
     message << toHumanUnits((unsigned long) avg_memuse);
@@ -924,7 +919,6 @@ if(d_myworld->myrank() == 0){
     message << " (max on rank:" << max_memuse_loc << ")";
   }
 
-#endif
   dbg << message.str() << "\n";
   dbg.flush();
   cout.flush();

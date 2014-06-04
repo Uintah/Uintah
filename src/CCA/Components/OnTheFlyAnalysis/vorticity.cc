@@ -35,9 +35,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>
 #include <sys/stat.h>
-#ifndef _WIN32
 #include <dirent.h>
-#endif
 #include <iostream>
 #include <fstream>
 #include <cstdio>

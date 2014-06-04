@@ -69,11 +69,6 @@ public:
   /** @brief Work to be performed after properties are setup */ 
   virtual void extraSetup(GridP& grid){ }
 
-  /** @brief reinitialize the flags that tells the scheduler if the varLabel needs a compute or a modifies. */
-  // Note I need two of these flags; 1 for scheduling and 1 for actual execution.
-  inline void reinitializeLabel(){ 
-    _label_sched_init  = false; }
-
   /** @brief Returns the source label **/ 
   inline const VarLabel* getSrcLabel(){
     return _src_label; }
@@ -119,7 +114,6 @@ protected:
   std::string _type;                                      ///< Source type (eg, constant, westbrook dryer, .... )
   bool _compute_me;                                       ///< To indicate if calculating this source is needed or has already been computed. 
   const VarLabel* _src_label;                             ///< Source varlabel
-  bool _label_sched_init;                                 ///< Boolean to clarify if a "computes" or "requires" is needed
   int _stage;                                             ///< At which stage should this be computed: 0) before table lookup 1) after table lookup 2) after RK ave
   SimulationStateP& _shared_state;                        ///< Local copy of sharedState
   std::vector<std::string> _required_labels;              ///< Vector of required labels

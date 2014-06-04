@@ -122,6 +122,7 @@ public:
   virtual void override(const SoleVariableBase&, const VarLabel*,
 			const Level* level = 0, int matlIndex = -1) = 0;
 
+  virtual void doReserve() = 0; 
 
   // Particle Variables
   // changed way PS's were stored from ghost info to low-high range.

@@ -46,7 +46,7 @@ namespace Wasatch{
   : params_             ( params ),
     gc_                 ( gc ),
     solnVarName_        ( solnVarName ),
-    solnVarTag_         ( solnVarName, Expr::STATE_N ),
+    solnVarTag_         ( solnVarName, Expr::STATE_DYNAMIC ),
     rhsTag_             ( solnVarName+"_rhs", Expr::STATE_NONE ),
     stagLoc_            ( stagLoc ),
     isConstDensity_     ( isConstDensity )

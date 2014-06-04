@@ -135,6 +135,7 @@ namespace Wasatch{
     };
     
     ~PoissonExpression();
+
     static Expr::TagList poissonTagList;
     
     /**
@@ -143,13 +144,13 @@ namespace Wasatch{
      *         linear solver.
      */
     void schedule_solver( const Uintah::LevelP& level,
-                         Uintah::SchedulerP sched,
-                         const Uintah::MaterialSet* const materials,
-                         const int RKStage, const bool isDoingInitialization );
+                          Uintah::SchedulerP sched,
+                          const Uintah::MaterialSet* const materials,
+                          const int RKStage, const bool isDoingInitialization );
     
     /**
      *  \brief Allows Wasatch::TaskInterface to reach in set the boundary conditions
-     on PoissonExpression at the appropriate time - namely after the linear solve. 
+     *  on PoissonExpression at the appropriate time - namely after the linear solve.
      */  
     // NOTE: Maybe we should not expose this to the outside?
     void schedule_set_poisson_bcs( const Uintah::LevelP& level,
@@ -163,22 +164,22 @@ namespace Wasatch{
      *         needs to.
      */
     void declare_uintah_vars( Uintah::Task& task,
-                             const Uintah::PatchSubset* const patches,
-                             const Uintah::MaterialSubset* const materials,
-                             const int RKStage );
+                              const Uintah::PatchSubset* const patches,
+                              const Uintah::MaterialSubset* const materials,
+                              const int RKStage );
     
     /**
      *  \brief Save pointer to the patch associated with this expression. This
-    *          is needed to set boundary conditions and extract other mesh info.
+     *         is needed to set boundary conditions and extract other mesh info.
      */    
     void set_patch( const Uintah::Patch* const patch ){ patch_ = const_cast<Uintah::Patch*> (patch); }
     
     /**
      *  \brief set the RKStage for the current PoissonExpression evaluation. We need this to
-     reduce the number of PoissonExpression-solve iterations in the 2nd and 3rd
-     stages of the RK3SSP integrator. Since these subsequent RK stages
-     use the guess PoissonExpression from the newDW, then we should NOT initialize
-     the PoissonExpression in the new DW to zero for those stages.
+     *  reduce the number of PoissonExpression-solve iterations in the 2nd and 3rd
+     *  stages of the RK3SSP integrator. Since these subsequent RK stages
+     *  use the guess PoissonExpression from the newDW, then we should NOT initialize
+     *  the PoissonExpression in the new DW to zero for those stages.
      */  
     void set_RKStage( const int RKStage ){ rkStage_ = RKStage; }
     
@@ -195,9 +196,9 @@ namespace Wasatch{
      *  through the advertise_dependents method.
      */
     void bind_uintah_vars( Uintah::DataWarehouse* const dw,
-                          const Uintah::Patch* const patch,
-                          const int material,
-                          const int RKStage );
+                           const Uintah::Patch* const patch,
+                           const int material,
+                           const int RKStage );
     /**
      * \brief Calculates PoissonExpression coefficient matrix.
      */
@@ -209,10 +210,10 @@ namespace Wasatch{
      *        We may need to split the PoissonExpression expression into a PoissonExpression_rhs and a PoissonExpression...
      */  
     void process_bcs ( const Uintah::ProcessorGroup* const pg,
-                      const Uintah::PatchSubset* const patches,
-                      const Uintah::MaterialSubset* const materials,
-                      Uintah::DataWarehouse* const oldDW,
-                      Uintah::DataWarehouse* const newDW);
+                       const Uintah::PatchSubset* const patches,
+                       const Uintah::MaterialSubset* const materials,
+                       Uintah::DataWarehouse* const oldDW,
+                       Uintah::DataWarehouse* const newDW);
     
     //Uintah::CCVariable<Uintah::Stencil7> PoissonExpression_matrix(){ return matrix_ ;}
     void advertise_dependents( Expr::ExprDeps& exprDeps );

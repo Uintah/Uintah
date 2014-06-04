@@ -69,6 +69,7 @@ SRCS +=                                              \
         $(SRCDIR)/TaskInterface.cc                   \
         $(SRCDIR)/BCHelper.cc                        \
         $(SRCDIR)/CoordinateHelper.cc                \
+        $(SRCDIR)/VardenParameters.cc                \
         $(SRCDIR)/Wasatch.cc
 
 PSELIBS :=                        \

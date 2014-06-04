@@ -457,9 +457,10 @@ void MinMax::computeMinMax(const ProcessorGroup* pg,
 
   double now = d_dataArchiver->getCurrentTime();
   if(now < d_startTime || now > d_stopTime){
+    new_dw->put(max_vartype(lastWriteTime), d_lb->lastCompTimeLabel);
     return;
   }
-  
+ 
   double nextWriteTime = lastWriteTime + 1.0/d_writeFreq;
   //__________________________________
   // compute min/max if it's time to write
@@ -574,10 +575,18 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
   int L_indx = level->getIndex();
   
   max_vartype writeTime;
-  old_dw->get( writeTime, d_lb->lastCompTimeLabel );
-  double lastWriteTime = writeTime;
+  double lastWriteTime = 0;
+  if( old_dw->exists( d_lb->lastCompTimeLabel ) ){
+    old_dw->get(writeTime, d_lb->lastCompTimeLabel);
+    lastWriteTime = writeTime;
+  }
 
   double now = d_dataArchiver->getCurrentTime();
+   if(now < d_startTime || now > d_stopTime){
+    new_dw->put(max_vartype(lastWriteTime), d_lb->lastCompTimeLabel);
+    return;
+  }
+
   double nextWriteTime = lastWriteTime + 1.0/d_writeFreq;
   
   for(int p=0;p<patches->size();p++){

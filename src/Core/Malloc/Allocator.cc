@@ -57,7 +57,7 @@ const int ALIGN=16;
 #  include <Core/Malloc/AllocPriv.h>
 #  include <Core/Malloc/AllocOS.h>
 
-#  if defined(__sun) || defined(_WIN32)
+#  if defined(__sun)
 #    include <cstring>
 #    define bcopy(src,dest,n) memcpy(dest,src,n)
 #  elif defined(__linux) || defined(__digital__) || defined(__sgi) || defined(_AIX) || defined(__APPLE__) || defined(__CYGWIN__)
@@ -66,11 +66,9 @@ const int ALIGN=16;
 #    error "Need bcopy idfdef for this architecture"
 #  endif
 
-#  ifndef _WIN32
-#    include <sys/param.h>
-//   irix64 KCC stuff
-#    include <strings.h>
-#  endif
+#  include <sys/param.h>
+// irix64 KCC stuff
+#  include <strings.h>
 #  include <cstdio>
 
 #  ifdef SCI_PTHREAD

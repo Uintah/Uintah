@@ -24,7 +24,7 @@
 
 
 /*
- *  sus.cc: Standalone Uintah Simulation - a bare-bones uintah simulation
+ *  sus.cc: Standalone Uintah Simulation - a bare-bones Uintah simulation
  *          for development
  *
  *  Written by:
@@ -50,7 +50,7 @@
 #include <CCA/Components/Solvers/DirectSolve.h>
 
 #ifdef HAVE_HYPRE
-#include <CCA/Components/Solvers/HypreSolver.h>
+#  include <CCA/Components/Solvers/HypreSolver.h>
 #endif
 
 #include <CCA/Components/ReduceUda/UdaReducer.h>
@@ -90,11 +90,6 @@
 #endif
 #if 0
 #  include <fenv.h>
-#endif
-
-#ifdef _WIN32
-#  include <process.h>
-#  include <winsock2.h>
 #endif
 
 #include <iostream>
@@ -274,24 +269,27 @@ main( int argc, char *argv[], char *env[] )
   /*
    * Default values
    */
-  bool   do_AMR=false;
-  bool   emit_graphs=false;
-  bool   restart=false;
-  bool   reduce_uda=false;
-  bool   do_svnDiff = false;
-  bool   do_svnStat = false;
-  int    restartTimestep = -1;
-  int    udaSuffix = -1;
+  bool   do_AMR              = false;
+  bool   emit_graphs         = false;
+  bool   restart             = false;
+  bool   reduce_uda          = false;
+  bool   do_svnDiff          = false;
+  bool   do_svnStat          = false;
+  int    restartTimestep     = -1;
+  int    udaSuffix           = -1;
   string udaDir; // for restart
-  bool   restartFromScratch = true;
+  bool   restartFromScratch  = true;
   bool   restartRemoveOldDir = false;
-  int    numThreads = 0;
+  int    numThreads          = 0;
   string filename;
-  string solver;
-  IntVector layout(1,1,1);
-  bool   validateUps = true, onlyValidateUps = false;
-  bool   track = false, track_or_die = false;
+  string solver              = ""; // Empty string defaults to CGSolver
+  bool   validateUps         = true,
+         onlyValidateUps     = false;
+  bool   track               = false,
+         track_or_die        = false;
     
+  IntVector layout(1,1,1);
+
   // Checks to see if user is running an MPI version of sus.
   Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
 
@@ -312,7 +310,7 @@ main( int argc, char *argv[], char *env[] )
   /*
     * Parse arguments
     */
-  for(int i=1;i<argc;i++){
+  for( int i = 1; i < argc; i++ ){
     string arg = argv[i];
     if( (arg == "-help") || (arg == "-h") ) {
       usage( "", "", argv[0]);
@@ -475,9 +473,7 @@ main( int argc, char *argv[], char *env[] )
   VTsetup();
   #endif
 
-#ifndef _WIN32
   char * start_addr = (char*)sbrk(0);
-#endif
 
 #if defined(__SGI__)
   Thread::disallow_sgi_OpenGL_page0_sillyness();
@@ -609,11 +605,9 @@ main( int argc, char *argv[], char *env[] )
 
     //__________________________________
     // Solver
-    SolverInterface* solve = 0;
-    solve = SolverFactory::create(ups, world, solver);
-    if(Uintah::Parallel::getMPIRank() == 0 && solve!=0) {
-      cout << "Implicit Solver: \t" << solve->getName() << endl;
-    }
+    SolverInterface * solve = SolverFactory::create( ups, world, solver );
+
+    proc0cout << "Implicit Solver: \t" << solve->getName() << "\n";
 
     MALLOC_TRACE_TAG("main():create components");
     //______________________________________________________________________

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 2012 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,14 +22,44 @@
  * IN THE SOFTWARE.
  */
 
-#undef SCISHARE
+#ifndef Wasatch_VarDenParameters_h
+#define Wasatch_VarDenParameters_h
 
-#ifdef _WIN32
-#ifdef BUILD_Core_Util
-#define SCISHARE __declspec(dllexport)
-#else
-#define SCISHARE __declspec(dllimport)
-#endif
-#else
-#define SCISHARE
-#endif
+#include <Core/ProblemSpec/ProblemSpec.h>
+
+namespace Wasatch{
+  
+  /**
+   *  \ingroup WasatchCore
+   *  \struct TurbulenceParameters
+   *  \author Tony Saad, Amir Biglari
+   *  \date   June, 2012
+   *
+   *  \brief Holds some key parameters for supported turbulence models.
+   */
+  struct VarDenParameters {
+    VarDenParameters();
+
+    /**
+     *  \ingroup WasatchCore
+     *  \enum TurbulenceModelsNames
+     *  \author Tony Saad, Amir Biglari
+     *  \date   June, 2012
+     *
+     *  \brief An enum listing the supported turbulence models.
+     */
+    enum VariableDensityModels {
+      CONSTANT,
+      IMPULSE
+    };
+
+    double alpha0;
+    VariableDensityModels model;
+  };
+  
+  void parse_varden_input( Uintah::ProblemSpecP varDenSpec,
+                               VarDenParameters& varDenParams );
+  
+}
+
+#endif // Wasatch_VarDenParameters_h

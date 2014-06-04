@@ -25,13 +25,11 @@
 
 #include <cstdlib>
 #include <cstdio>
-#ifndef _WIN32
 #include <strings.h>
-#endif
 #if defined(__sun)
 #include <cstring>
 #define bcopy(src,dest,n) memcpy(dest,src,n)
-#elif defined(__linux) || defined(__digital__) || defined __sgi || defined __APPLE__ || defined _WIN32
+#elif defined(__linux) || defined(__digital__) || defined __sgi || defined __APPLE__
 #include <cstring>
 #else
 #error "Need bcopy idfdef for this architecture"

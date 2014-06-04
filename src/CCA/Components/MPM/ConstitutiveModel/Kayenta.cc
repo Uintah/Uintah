@@ -55,34 +55,27 @@ made.
 #include <string>
 #include <cstring>
 ////////////////////////////////////////////////////////////////////////////////
-// The following functions are found in fortran/*.F
-//SUBROUTINE KAYENTA_CALC( NBLK, NINSV, DT, UI, GC, DC,
-//   $                                   SIGARG, D, SVARG, USM   )
 extern "C"{
 #if defined( FORTRAN_UNDERSCORE_END )
-#  define KAYENTA_CHK kayenta_chk_
-#  define KAYENTA_CALC kayenta_calc_
-#  define KAYENTA_RXV kayenta_rxv_
+#  define KAYENTA_CHECK_PARAMS kayenta_check_params_
+#  define KAYENTA_UPDATE_STATE kayenta_update_state_
+#  define KAYENTA_REQUEST_XTRA_VARS kayenta_request_xtra_vars_
 #elif defined( FORTRAN_UNDERSCORE_LINUX )
-#  define KAYENTA_CHK kayenta_chk_
-#  define KAYENTA_RXV kayenta_rxv_
-#  define KAYENTA_CALC kayenta_calc__
+#  define KAYENTA_CHECK_PARAMS kayenta_check_params_
+#  define KAYENTA_UPDATE_STATE kayenta_update_state_
+#  define KAYENTA_REQUEST_XTRA_VARS kayenta_request_xtra_vars_
 #else // NONE
-#  define KAYENTA_CHK kayenta_chk
-#  define KAYENTA_CALC kayenta_calc
-#  define KAYENTA_RXV kayenta_rxv
+#  define KAYENTA_CHECK_PARAMS kayenta_check_params
+#  define KAYENTA_UPDATE_STATE kayenta_update_state
+#  define KAYENTA_REQUEST_XTRA_VARS kayenta_request_xtra_vars
 #endif
-//#define KMM_ORTHOTROPIC
-//#undef KMM_ORTHOTROPIC
-//#define KMM_ANISOTROPIC
-//#undef KMM_ANISOTROPIC
-   void KAYENTA_CHK( double UI[], double GC[], double DC[] );
-   void KAYENTA_CALC(int &nblk, int &ninsv, double &dt,
-                     double UI[], double GC[], double DC[], double stress[],
-                     double D[], double svarg[], double &USM );
-   void KAYENTA_RXV( double UI[], double GC[], double DC[], int &nx,
-                     char namea[], char keya[], double rinit[], double rdim[],
-                     int iadvct[], int itype[] );
+  void KAYENTA_CHECK_PARAMS(double UI[]);
+  void KAYENTA_UPDATE_STATE(int &nblk, double &dt, double UI[],
+			    double D[], double stress[], double svarg[],
+			    double &USM);
+  void KAYENTA_REQUEST_XTRA_VARS(double UI[], int &nx,
+				 char namea[], char keya[], double xinit[],
+				 double rdim[], int iadvct[], int itype[]);
 }
 // End fortran functions.
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,20 +86,11 @@ Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
   // See Kayenta_pnt.Blk to see where these numbers come from
   // Total number of User Inputs
   d_NKMMPROP=NUM_KAYENTA_PROPS;
-  // Global Constants
-  d_NKMMGC=NUM_KAYENTA_GC;
-// Derived Constants
-  d_NKMMDC=NUM_KAYENTA_DC;
-  // Internal State Variables
-  // d_NINSV automatically read
-  // pre-initialize all of the user inputs to zero.
+
   for(int i = 0; i<d_NKMMPROP; i++){
      UI[i] = 0.;
-     GC[i] = 0.;
   }
-  for(int i = 0; i<d_NKMMDC; i++){
-     DC[i] = 0.;
-  }
+
   // Read model parameters from the input file
   getInputParameters(ps);
   // Check that model parameters are valid and allow model to change if needed
@@ -115,7 +99,7 @@ Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
   for(int i = 0; i<d_NKMMPROP; i++){
      proc0cout << "UI[" << i << "] = " << UI[i] << endl;
   }
-  KAYENTA_CHK(UI,GC,DC);
+  KAYENTA_CHECK_PARAMS(UI);
   //Now, print out the UI values after alteration by KAYENTA_CHK
   proc0cout << "Modified UI values" << endl;
   for(int i = 0; i<d_NKMMPROP; i++){
@@ -128,7 +112,7 @@ Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
   double rdim[700];
   int iadvct[100];
   int itype[100];
-  KAYENTA_RXV( UI, GC, DC, nx, namea, keya, rinit, rdim, iadvct, itype );
+  KAYENTA_REQUEST_XTRA_VARS(UI, nx, namea, keya, xinit, rdim, iadvct, itype);
   //Print out the Derived Constants
 //  proc0cout << "Derived Constants" << endl;
 //  for(int i = 0; i<d_NKMMDC; i++){
@@ -139,7 +123,7 @@ Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
   proc0cout << "Internal State Variables" << endl;
   proc0cout << "# ISVs = " << d_NINSV << endl;
 //  for(int i = 0;i<d_NINSV; i++){
-//    proc0cout << "ISV[" << i << "] = " << rinit[i] << endl;
+//    proc0cout << "ISV[" << i << "] = " << xinit[i] << endl;
 //  }
   initializeLocalMPMLabels();
 }
@@ -176,137 +160,138 @@ void Kayenta::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
     cm_ps = ps->appendChild("constitutive_model");
     cm_ps->setAttribute("type","kayenta");
   }
-  // Kayenta User Input Variables UI[FortranNumber-1]  // Description (units)
-  cm_ps->appendElement("B0", UI[0]); // Initial intact elastic bulk modulus
-  cm_ps->appendElement("B1", UI[1]); // Coef in bulk modulus hardening
-  cm_ps->appendElement("B2", UI[2]); // Coef in bulk modulus softening
-  cm_ps->appendElement("B3", UI[3]); // Coef in bulk modulus softening
-  cm_ps->appendElement("B4", UI[4]); // Power in bulk modulus softening
-  cm_ps->appendElement("G0", UI[5]); // Initial intact elastic shear modulus
-  cm_ps->appendElement("G1", UI[6]); // Coef in shear modulus hardening
-  cm_ps->appendElement("G2", UI[7]); // Coef in shear modulus hardening
-  cm_ps->appendElement("G3", UI[8]); // Coef in shear modulus softening
-  cm_ps->appendElement("G4", UI[9]); // Power in shear modulus softening
-  cm_ps->appendElement("RJS", UI[10]); // Isotropic joint spacing
-  cm_ps->appendElement("RKS", UI[11]); // Isotropic joint shear stiffness
-  cm_ps->appendElement("RKN", UI[12]); // Isotropic joint normal stiffness
-  cm_ps->appendElement("A1", UI[13]); // Shear failure parameter 1
-  cm_ps->appendElement("A2", UI[14]); // Shear failure parameter 2
-  cm_ps->appendElement("A3", UI[15]); // Shear failure parameter 3
-  cm_ps->appendElement("A4", UI[16]); // Shear failure parameter 4
-  cm_ps->appendElement("P0", UI[17]); // Init value of XL for pore collapse
-  cm_ps->appendElement("P1", UI[18]); // Pressure-volume parameter 1
-  cm_ps->appendElement("P2", UI[19]); // Pressure-volume parameter 2
-  cm_ps->appendElement("P3", UI[20]); // Compaction volume strain asymptote
-  cm_ps->appendElement("CR", UI[21]); // Shear failure Shape parameter
-  cm_ps->appendElement("RK", UI[22]); // TXE/TXC Strength ratio
-  cm_ps->appendElement("RN", UI[23]); // Initial shear yield offset
-  cm_ps->appendElement("HC", UI[24]); // Kinematic hardening parameter
-  cm_ps->appendElement("CTPSF", UI[25]); // Fracture cut-off of principal stress
-  cm_ps->appendElement("CUTPS", UI[26]); // Tension cut-off of principal stress
-  cm_ps->appendElement("CUTI1", UI[27]); // I1 cut-off
-  cm_ps->appendElement("T1", UI[28]); // Relaxation time constant 1
-  cm_ps->appendElement("T2", UI[29]); // Relaxation time constant 2
-  cm_ps->appendElement("T3", UI[30]); // Relaxation time constant 3
-  cm_ps->appendElement("T4", UI[31]); // Relaxation time constant 4
-  cm_ps->appendElement("T5", UI[32]); // Relaxation time constant 5
-  cm_ps->appendElement("T6", UI[33]); // Relaxation time constant 6
-  cm_ps->appendElement("T7", UI[34]); // Relaxation time constant 7
-  cm_ps->appendElement("J3TYPE", UI[35]); // Octahedral shape ID
-  cm_ps->appendElement("A2PF", UI[36]); // Potential function parameter 1
-  cm_ps->appendElement("A4PF", UI[37]); // Potential function parameter 2
-  cm_ps->appendElement("CRPF", UI[38]); // Potential function parameter 3
-  cm_ps->appendElement("RKPF", UI[39]); // Potential function parameter 4
-  cm_ps->appendElement("SUBX", UI[40]); // subcycle control parameter
-  cm_ps->appendElement("DEJAVU", UI[41]); //  1 if params have been checked or revised
-  cm_ps->appendElement("FAIL0", UI[42]); // tenth failure parameter
-  cm_ps->appendElement("FAIL1", UI[43]); // first failure parameter
-  cm_ps->appendElement("FAIL2", UI[44]); // second failure parameter
-  cm_ps->appendElement("FAIL3", UI[45]); // third failure parameter
-  cm_ps->appendElement("FAIL4", UI[46]); // fourth failure parameter
-  cm_ps->appendElement("FAIL5", UI[47]); // fifth failure parameter
-  cm_ps->appendElement("FAIL6", UI[48]); // sixth failure parameter
-  cm_ps->appendElement("FAIL7", UI[49]); // seventh failure parameter
-  cm_ps->appendElement("FAIL8", UI[50]); // eighth failure parameter
-  cm_ps->appendElement("FAIL9", UI[51]); // ninth failure parameter
-  cm_ps->appendElement("PEAKI1I", UI[52]); // Peak I1 hydrostatic tension strength
-  cm_ps->appendElement("STRENI", UI[53]); // Peak (high pressure) shear strength
-  cm_ps->appendElement("FSLOPEI", UI[54]); // Initial slope of limit surface at PEAKI1I
-  cm_ps->appendElement("PEAKI1F", UI[55]); // same as PEAKI1I, but for failed surface
-  cm_ps->appendElement("STRENF", UI[56]); // same as STRENI, but for failed surface
-  cm_ps->appendElement("SOFTENING", UI[57]); // failure handling option
-  cm_ps->appendElement("FSLOPEF", UI[58]); // same as FSLOPEI, but for failed surface
-  cm_ps->appendElement("FAILSTAT", UI[59]); // Failure statistics (if failstat > 0)
-  cm_ps->appendElement("IEOSID", UI[60]); // Equation of state ID
-  cm_ps->appendElement("EVLEOS", UI[61]); // Evaluate EOS and exit
-  cm_ps->appendElement("DILATLIM", UI[62]); // Limit on plastic dilatation
-  cm_ps->appendElement("NU", UI[63]); // Poissons ratio
-  cm_ps->appendElement("YSLOPEI", UI[64]); // beta testing parameter
-  cm_ps->appendElement("YSLOPEF", UI[65]); // beta testing parameter
-  cm_ps->appendElement("SPALLI1", UI[66]); // spall pressure
-  cm_ps->appendElement("FREE08", UI[67]); // unused
-  cm_ps->appendElement("FREE07", UI[68]); // unused
-  cm_ps->appendElement("FREE06", UI[69]); // unused
-  cm_ps->appendElement("FREE05", UI[70]); // unused
-  cm_ps->appendElement("FREE04", UI[71]); // unused
-  cm_ps->appendElement("FREE03", UI[72]); // unused
-  cm_ps->appendElement("FREE02", UI[73]); // unused
-  cm_ps->appendElement("FREE01", UI[74]); // unused
-  cm_ps->appendElement("CKN01", UI[75]); // Init jnt normal stiffness
-  cm_ps->appendElement("VMAX1", UI[76]); // Maximum joint closure
-  cm_ps->appendElement("SPACE1", UI[77]); // Spacing of joints in a set
-  cm_ps->appendElement("SHRSTIFF1", UI[78]); // Init joint shr stiffness
-  cm_ps->appendElement("CKN02", UI[79]); // Init jnt normal stiffness
-  cm_ps->appendElement("VMAX2", UI[80]); // Maximum joint closure
-  cm_ps->appendElement("SPACE2", UI[81]); // Spacing of joints in a set
-  cm_ps->appendElement("SHRSTIFF2", UI[82]); // Init jnt shr stiffness
-  cm_ps->appendElement("CKN03", UI[83]); // Init jnt normal stiffness
-  cm_ps->appendElement("VMAX3", UI[84]); // Maximum joint closure
-  cm_ps->appendElement("SPACE3", UI[85]); // Spacing of joints in a set
-  cm_ps->appendElement("SHRSTIFF3", UI[86]); // Init jnt shr stiffness
-  cm_ps->appendElement("TMPRXP", UI[87]); //  homologous temperature exponent
-  cm_ps->appendElement("TMPRM0", UI[88]); //  initial melt temperature
-  cm_ps->appendElement("RHO0", UI[89]); //  initial density
-  cm_ps->appendElement("TMPR0", UI[90]); //  initial temperature
-  cm_ps->appendElement("SNDSP0", UI[91]); //  initial soundspeed
-  cm_ps->appendElement("CV", UI[92]); //  specific heat
-  cm_ps->appendElement("GRPAR", UI[93]); //  Gruneisen parameter
-  cm_ps->appendElement("EOS01", UI[94]); //  linear us/up coefficient
-  cm_ps->appendElement("EOS02", UI[95]); //  shift in energy fit
-  cm_ps->appendElement("EOS03", UI[96]); //  initial porous density
-  cm_ps->appendElement("EOS04", UI[97]); //  crushup pressure
-  cm_ps->appendElement("EOS05", UI[98]); //  pressure at elastic limit
-  cm_ps->appendElement("EOS06", UI[99]); //  soundspeed of foam
-  cm_ps->appendElement("EOS07", UI[100]); //  subcycle factor
-  cm_ps->appendElement("EOS08", UI[101]); //  quadratic us/up coefficient
-  cm_ps->appendElement("EOS09", UI[102]); //  type indicator
-  cm_ps->appendElement("EOS10", UI[103]); // 
-  cm_ps->appendElement("EOS11", UI[104]); // 
-  cm_ps->appendElement("EOS12", UI[105]); // 
-  cm_ps->appendElement("EOS13", UI[106]); // 
-  //    ________________________________________________________________________
-  //    EOSMG Derived Constants
-  cm_ps->appendElement("DC1", DC[0]);
-  cm_ps->appendElement("DC2", DC[1]);
-  cm_ps->appendElement("DC3", DC[2]);
-  cm_ps->appendElement("DC4", DC[3]);
-  cm_ps->appendElement("DC5", DC[4]);
-  cm_ps->appendElement("DC6", DC[5]);
-  cm_ps->appendElement("DC7", DC[6]);
-  cm_ps->appendElement("DC8", DC[7]);
-  cm_ps->appendElement("DC9", DC[8]);
-  cm_ps->appendElement("DC10", DC[9]);
-  cm_ps->appendElement("DC11", DC[10]);
-  cm_ps->appendElement("DC12", DC[11]);
-  cm_ps->appendElement("DC13", DC[12]);
-  //    ________________________________________________________________________
-  //    Uintah Variability Variables
-  cm_ps->appendElement("peakI1IPerturb", wdist.Perturb);
-  cm_ps->appendElement("peakI1IMed", wdist.WeibMed);
-  cm_ps->appendElement("peakI1IMod", wdist.WeibMod);
-  cm_ps->appendElement("peakI1IRefVol", wdist.WeibRefVol);
-  cm_ps->appendElement("peakI1ISeed", wdist.WeibSeed);
-  cm_ps->appendElement("PEAKI1IDIST", wdist.WeibDist);
+  /* Kayenta User Input Variables UI[FortranNumber-1] */
+  cm_ps->appendElement("B0", UI[0]);
+  cm_ps->appendElement("B1", UI[1]);
+  cm_ps->appendElement("B2", UI[2]);
+  cm_ps->appendElement("B3", UI[3]);
+  cm_ps->appendElement("B4", UI[4]);
+  cm_ps->appendElement("G0", UI[5]);
+  cm_ps->appendElement("G1", UI[6]);
+  cm_ps->appendElement("G2", UI[7]);
+  cm_ps->appendElement("G3", UI[8]);
+  cm_ps->appendElement("G4", UI[9]);
+  cm_ps->appendElement("RJS", UI[10]);
+  cm_ps->appendElement("RKS", UI[11]);
+  cm_ps->appendElement("RKN", UI[12]);
+  cm_ps->appendElement("A1", UI[13]);
+  cm_ps->appendElement("A2", UI[14]);
+  cm_ps->appendElement("A3", UI[15]);
+  cm_ps->appendElement("A4", UI[16]);
+  cm_ps->appendElement("P0", UI[17]);
+  cm_ps->appendElement("P1", UI[18]);
+  cm_ps->appendElement("P2", UI[19]);
+  cm_ps->appendElement("P3", UI[20]);
+  cm_ps->appendElement("CR", UI[21]);
+  cm_ps->appendElement("RK", UI[22]);
+  cm_ps->appendElement("RN", UI[23]);
+  cm_ps->appendElement("HC", UI[24]);
+  cm_ps->appendElement("CTPSF", UI[25]);
+  cm_ps->appendElement("CTPS", UI[26]);
+  cm_ps->appendElement("CTI1", UI[27]);
+  cm_ps->appendElement("T1", UI[28]);
+  cm_ps->appendElement("T2", UI[29]);
+  cm_ps->appendElement("T3", UI[30]);
+  cm_ps->appendElement("T4", UI[31]);
+  cm_ps->appendElement("T5", UI[32]);
+  cm_ps->appendElement("T6", UI[33]);
+  cm_ps->appendElement("T7", UI[34]);
+  cm_ps->appendElement("J3TYPE", UI[35]);
+  cm_ps->appendElement("A2PF", UI[36]);
+  cm_ps->appendElement("A4PF", UI[37]);
+  cm_ps->appendElement("CRPF", UI[38]);
+  cm_ps->appendElement("RKPF", UI[39]);
+  cm_ps->appendElement("SUBX", UI[40]);
+  cm_ps->appendElement("DEJAVU", UI[41]);
+  cm_ps->appendElement("FAIL0", UI[42]);
+  cm_ps->appendElement("FAIL1", UI[43]);
+  cm_ps->appendElement("FAIL2", UI[44]);
+  cm_ps->appendElement("FAIL3", UI[45]);
+  cm_ps->appendElement("FAIL4", UI[46]);
+  cm_ps->appendElement("FAIL5", UI[47]);
+  cm_ps->appendElement("FAIL6", UI[48]);
+  cm_ps->appendElement("FAIL7", UI[49]);
+  cm_ps->appendElement("FAIL8", UI[50]);
+  cm_ps->appendElement("FAIL9", UI[51]);
+  cm_ps->appendElement("PEAKI1I", UI[52]);
+  cm_ps->appendElement("STRENI", UI[53]);
+  cm_ps->appendElement("FSLOPEI", UI[54]);
+  cm_ps->appendElement("PEAKI1F", UI[55]);
+  cm_ps->appendElement("STRENF", UI[56]);
+  cm_ps->appendElement("SOFTENING", UI[57]);
+  cm_ps->appendElement("FSLOPEF", UI[58]);
+  cm_ps->appendElement("FAILSTAT", UI[59]);
+  cm_ps->appendElement("EOSID", UI[60]);
+  cm_ps->appendElement("DILATLIM", UI[61]);
+  cm_ps->appendElement("NU", UI[62]);
+  cm_ps->appendElement("YSLOPEI", UI[63]);
+  cm_ps->appendElement("YSLOPEF", UI[64]);
+  cm_ps->appendElement("SPALLI1", UI[65]);
+  cm_ps->appendElement("FREE08", UI[66]);
+  cm_ps->appendElement("FREE07", UI[67]);
+  cm_ps->appendElement("FREE06", UI[68]);
+  cm_ps->appendElement("FREE05", UI[69]);
+  cm_ps->appendElement("FREE04", UI[70]);
+  cm_ps->appendElement("FREE03", UI[71]);
+  cm_ps->appendElement("FREE02", UI[72]);
+  cm_ps->appendElement("FREE01", UI[73]);
+  cm_ps->appendElement("CKN01", UI[74]);
+  cm_ps->appendElement("CKN02", UI[75]);
+  cm_ps->appendElement("CKN03", UI[76]);
+  cm_ps->appendElement("VMAX1", UI[77]);
+  cm_ps->appendElement("VMAX2", UI[78]);
+  cm_ps->appendElement("VMAX3", UI[79]);
+  cm_ps->appendElement("SPACE1", UI[80]);
+  cm_ps->appendElement("SPACE2", UI[81]);
+  cm_ps->appendElement("SPACE3", UI[82]);
+  cm_ps->appendElement("SHRSTIFF1", UI[83]);
+  cm_ps->appendElement("SHRSTIFF2", UI[84]);
+  cm_ps->appendElement("SHRSTIFF3", UI[85]);
+  cm_ps->appendElement("TMPRXP", UI[86]);
+  cm_ps->appendElement("TM", UI[87]);
+  cm_ps->appendElement("R0", UI[88]);
+  cm_ps->appendElement("T0", UI[89]);
+  cm_ps->appendElement("CS", UI[90]);
+  cm_ps->appendElement("S1", UI[91]);
+  cm_ps->appendElement("SR", UI[92]);
+  cm_ps->appendElement("CV", UI[93]);
+  cm_ps->appendElement("EOS01", UI[94]);
+  cm_ps->appendElement("EOS02", UI[95]);
+  cm_ps->appendElement("EOS03", UI[96]);
+  cm_ps->appendElement("EOS04", UI[97]);
+  cm_ps->appendElement("EOS05", UI[98]);
+  cm_ps->appendElement("EOS06", UI[99]);
+  cm_ps->appendElement("EOS07", UI[100]);
+  cm_ps->appendElement("EOS08", UI[101]);
+  cm_ps->appendElement("EOS09", UI[102]);
+  cm_ps->appendElement("EOS10", UI[103]);
+  cm_ps->appendElement("EOS11", UI[104]);
+  cm_ps->appendElement("EOS12", UI[105]);
+  cm_ps->appendElement("EOS13", UI[106]);
+  cm_ps->appendElement("EOS14", UI[107]);
+  cm_ps->appendElement("EOS15", UI[108]);
+  cm_ps->appendElement("EOS16", UI[109]);
+  cm_ps->appendElement("SQA", UI[110]);
+  cm_ps->appendElement("DC01", UI[111]);
+  cm_ps->appendElement("DC02", UI[112]);
+  cm_ps->appendElement("DC03", UI[113]);
+  cm_ps->appendElement("DC04", UI[114]);
+  cm_ps->appendElement("DC05", UI[115]);
+  cm_ps->appendElement("DC06", UI[116]);
+  cm_ps->appendElement("DC07", UI[117]);
+  cm_ps->appendElement("DC08", UI[118]);
+  cm_ps->appendElement("DC09", UI[119]);
+  cm_ps->appendElement("DC10", UI[120]);
+  cm_ps->appendElement("DC11", UI[121]);
+  cm_ps->appendElement("DC12", UI[122]);
+  cm_ps->appendElement("DC13", UI[123]);
+   /* Uintah Variability Variables */
+  cm_ps->appendElement("PeakI1IPerturb", wdist.Perturb);
+  cm_ps->appendElement("PeakI1IMed", wdist.WeibMed);
+  cm_ps->appendElement("PeakI1IMod", wdist.WeibMod);
+  cm_ps->appendElement("PeakI1IRefVol", wdist.WeibRefVol);
+  cm_ps->appendElement("PeakI1ISeed", wdist.WeibSeed);
+  cm_ps->appendElement("PeakI1IDist", wdist.WeibDist);
 }
 Kayenta* Kayenta::clone()
 {
@@ -326,7 +311,7 @@ void Kayenta::initializeCMData(const Patch* patch,
     new_dw->allocateAndPut(ISVs[i],ISVLabels[i], pset);
     ParticleSubset::iterator iter = pset->begin();
     for(;iter != pset->end(); iter++){
-      ISVs[i][*iter] = rinit[i];
+      ISVs[i][*iter] = xinit[i];
     }
   }
   ParticleVariable<int>     pLocalized;
@@ -421,9 +406,9 @@ void Kayenta::computeStableTimestep(const Patch* patch,
                       Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
                       Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
   }
-  UI[d_RHO0] = matl->getInitialDensity();      // RHO0
-  UI[d_TMPR0]=matl->getRoomTemperature();     // TMPR0
-  UI[d_SNDSP0]=bulk/matl->getInitialDensity(); // SNDSP0
+  UI[d_R0] = matl->getInitialDensity();      // RHO0
+  UI[d_T0]=matl->getRoomTemperature();     // TMPR0
+  UI[d_CS]=bulk/matl->getInitialDensity(); // SNDSP0
   UI[d_CV]=matl->getInitialCv();           // CV
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
@@ -574,10 +559,10 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
         // 'Hijack' PEAKI1I = UI[51] with perturbed value if desired
         // put real value of UI[51] in tmp var just in case
         UI[d_PEAKI1I] = peakI1IDist[idx];
-        KAYENTA_CALC(nblk, d_NINSV, dt, UI, GC, DC, sigarg, Darray, svarg, USM);
+        KAYENTA_UPDATE_STATE(nblk, dt, UI, Darray, sigarg, svarg, USM);
         UI[d_PEAKI1I]=tempVar;
       } else {
-        KAYENTA_CALC(nblk, d_NINSV, dt, UI, GC, DC, sigarg, Darray, svarg, USM);
+        KAYENTA_UPDATE_STATE(nblk, dt, UI, Darray, sigarg, svarg, USM);
       }
       // Put T1 back for now
       UI[d_TFAIL]=TFAIL_tmp;
@@ -751,128 +736,130 @@ double Kayenta::getCompressibility()
 void
 Kayenta::getInputParameters(ProblemSpecP& ps)
 {
-  ps->require("B0", UI[0]); 
-  ps->getWithDefault("B1", UI[1],0.0); 
-  ps->getWithDefault("B2", UI[2],0.0); 
-  ps->getWithDefault("B3", UI[3],0.0); 
-  ps->getWithDefault("B4", UI[4],0.0); 
-  ps->require("G0", UI[5]); 
-  ps->getWithDefault("G1", UI[6],0.0); 
-  ps->getWithDefault("G2", UI[7],0.0); 
-  ps->getWithDefault("G3", UI[8],0.0); 
-  ps->getWithDefault("G4", UI[9],0.0); 
-  ps->getWithDefault("RJS", UI[10],0.0); 
-  ps->getWithDefault("RKS", UI[11],0.0); 
-  ps->getWithDefault("RKN", UI[12],0.0); 
-  ps->getWithDefault("A1", UI[13],0.0); 
-  ps->getWithDefault("A2", UI[14],0.0); 
-  ps->getWithDefault("A3", UI[15],0.0); 
-  ps->getWithDefault("A4", UI[16],0.0); 
-  ps->getWithDefault("P0", UI[17],0.0); 
-  ps->getWithDefault("P1", UI[18],0.0); 
-  ps->getWithDefault("P2", UI[19],0.0); 
-  ps->getWithDefault("P3", UI[20],0.0); 
-  ps->getWithDefault("CR", UI[21],0.0); 
-  ps->getWithDefault("RK", UI[22],0.0); 
-  ps->getWithDefault("RN", UI[23],0.0); 
-  ps->getWithDefault("HC", UI[24],0.0); 
-  ps->getWithDefault("CTPSF", UI[25],0.0); 
-  ps->getWithDefault("CUTPS", UI[26],0.0); 
-  ps->getWithDefault("CUTI1", UI[27],0.0); 
-  ps->getWithDefault("T1", UI[28],0.0); 
-  ps->getWithDefault("T2", UI[29],0.0); 
-  ps->getWithDefault("T3", UI[30],0.0); 
-  ps->getWithDefault("T4", UI[31],0.0); 
-  ps->getWithDefault("T5", UI[32],0.0); 
-  ps->getWithDefault("T6", UI[33],0.0); 
-  ps->getWithDefault("T7", UI[34],0.0); 
-  ps->getWithDefault("J3TYPE", UI[35],0.0); 
-  ps->getWithDefault("A2PF", UI[36],0.0); 
-  ps->getWithDefault("A4PF", UI[37],0.0); 
-  ps->getWithDefault("CRPF", UI[38],0.0); 
-  ps->getWithDefault("RKPF", UI[39],0.0); 
-  ps->getWithDefault("SUBX", UI[40],0.0); 
-  ps->getWithDefault("DEJAVU", UI[41],0.0); 
-  ps->getWithDefault("FAIL0", UI[42],0.0); 
-  ps->getWithDefault("FAIL1", UI[43],0.0); 
-  ps->getWithDefault("FAIL2", UI[44],0.0); 
-  ps->getWithDefault("FAIL3", UI[45],0.0); 
-  ps->getWithDefault("FAIL4", UI[46],0.0); 
-  ps->getWithDefault("FAIL5", UI[47],0.0); 
-  ps->getWithDefault("FAIL6", UI[48],0.0); 
-  ps->getWithDefault("FAIL7", UI[49],0.0); 
-  ps->getWithDefault("FAIL8", UI[50],0.0); 
-  ps->getWithDefault("FAIL9", UI[51],0.0); 
-  ps->getWithDefault("PEAKI1I", UI[52],0.0); 
-  ps->getWithDefault("STRENI", UI[53],0.0); 
-  ps->getWithDefault("FSLOPEI", UI[54],0.0); 
-  ps->getWithDefault("PEAKI1F", UI[55],0.0); 
-  ps->getWithDefault("STRENF", UI[56],0.0); 
-  ps->getWithDefault("SOFTENING", UI[57],0.0); 
-  ps->getWithDefault("FSLOPEF", UI[58],0.0); 
-  ps->getWithDefault("FAILSTAT", UI[59],0.0); 
-  ps->getWithDefault("IEOSID", UI[60],0.0); 
-  ps->getWithDefault("EVLEOS", UI[61],0.0); 
-  ps->getWithDefault("DILATLIM", UI[62],0.0); 
-  ps->getWithDefault("NU", UI[63],0.0); 
-  ps->getWithDefault("YSLOPEI", UI[64],0.0); 
-  ps->getWithDefault("YSLOPEF", UI[65],0.0); 
-  ps->getWithDefault("SPALLI1", UI[66],0.0); 
-  ps->getWithDefault("FREE08", UI[67],0.0); 
-  ps->getWithDefault("FREE07", UI[68],0.0); 
-  ps->getWithDefault("FREE06", UI[69],0.0); 
-  ps->getWithDefault("FREE05", UI[70],0.0); 
-  ps->getWithDefault("FREE04", UI[71],0.0); 
-  ps->getWithDefault("FREE03", UI[72],0.0); 
-  ps->getWithDefault("FREE02", UI[73],0.0); 
-  ps->getWithDefault("FREE01", UI[74],0.0); 
-  ps->getWithDefault("CKN01", UI[75],0.0); 
-  ps->getWithDefault("VMAX1", UI[76],0.0); 
-  ps->getWithDefault("SPACE1", UI[77],0.0); 
-  ps->getWithDefault("SHRSTIFF1", UI[78],0.0); 
-  ps->getWithDefault("CKN02", UI[79],0.0); 
-  ps->getWithDefault("VMAX2", UI[80],0.0); 
-  ps->getWithDefault("SPACE2", UI[81],0.0); 
-  ps->getWithDefault("SHRSTIFF2", UI[82],0.0); 
-  ps->getWithDefault("CKN03", UI[83],0.0); 
-  ps->getWithDefault("VMAX3", UI[84],0.0); 
-  ps->getWithDefault("SPACE3", UI[85],0.0); 
-  ps->getWithDefault("SHRSTIFF3", UI[86],0.0); 
-  ps->getWithDefault("TMPRXP", UI[87],0.0); 
-  ps->getWithDefault("TMPRM0", UI[88],0.0); 
-  ps->getWithDefault("RHO0", UI[89],0.0); 
-  ps->getWithDefault("TMPR0", UI[90],0.0); 
-  ps->getWithDefault("SNDSP0", UI[91],0.0); 
-  ps->getWithDefault("CV", UI[92],0.0); 
-  ps->getWithDefault("GRPAR", UI[93],0.0); 
-  ps->getWithDefault("EOS01", UI[94],0.0); 
-  ps->getWithDefault("EOS02", UI[95],0.0); 
-  ps->getWithDefault("EOS03", UI[96],0.0); 
-  ps->getWithDefault("EOS04", UI[97],0.0); 
-  ps->getWithDefault("EOS05", UI[98],0.0); 
-  ps->getWithDefault("EOS06", UI[99],0.0); 
-  ps->getWithDefault("EOS07", UI[100],0.0); 
-  ps->getWithDefault("EOS08", UI[101],0.0); 
-  ps->getWithDefault("EOS09", UI[102],0.0); 
-  ps->getWithDefault("EOS10", UI[103],0.0); 
-  ps->getWithDefault("EOS11", UI[104],0.0); 
-  ps->getWithDefault("EOS12", UI[105],0.0); 
-  ps->getWithDefault("EOS13", UI[106],0.0); 
-  //    ________________________________________________________________________
-  //    EOSMG Derived Constants
-  ps->getWithDefault("DC1", DC[0],0.0);
-  ps->getWithDefault("DC2", DC[1],0.0);
-  ps->getWithDefault("DC3", DC[2],0.0);
-  ps->getWithDefault("DC4", DC[3],0.0);
-  ps->getWithDefault("DC5", DC[4],0.0);
-  ps->getWithDefault("DC6", DC[5],0.0);
-  ps->getWithDefault("DC7", DC[6],0.0);
-  ps->getWithDefault("DC8", DC[7],0.0);
-  ps->getWithDefault("DC9", DC[8],0.0);
-  ps->getWithDefault("DC10", DC[9],0.0);
-  ps->getWithDefault("DC11", DC[10],0.0);
-  ps->getWithDefault("DC12", DC[11],0.0);
-  ps->getWithDefault("DC13", DC[12],0.0);
+  ps->require("B0", UI[0]);
+  ps->getWithDefault("B1", UI[1],0.0);
+  ps->getWithDefault("B2", UI[2],0.0);
+  ps->getWithDefault("B3", UI[3],0.0);
+  ps->getWithDefault("B4", UI[4],0.0);
+  ps->require("G0", UI[5]);
+  ps->getWithDefault("G1", UI[6],0.0);
+  ps->getWithDefault("G2", UI[7],0.0);
+  ps->getWithDefault("G3", UI[8],0.0);
+  ps->getWithDefault("G4", UI[9],0.0);
+  ps->getWithDefault("RJS", UI[10],0.0);
+  ps->getWithDefault("RKS", UI[11],0.0);
+  ps->getWithDefault("RKN", UI[12],0.0);
+  ps->getWithDefault("A1", UI[13],0.0);
+  ps->getWithDefault("A2", UI[14],0.0);
+  ps->getWithDefault("A3", UI[15],0.0);
+  ps->getWithDefault("A4", UI[16],0.0);
+  ps->getWithDefault("P0", UI[17],0.0);
+  ps->getWithDefault("P1", UI[18],0.0);
+  ps->getWithDefault("P2", UI[19],0.0);
+  ps->getWithDefault("P3", UI[20],0.0);
+  ps->getWithDefault("CR", UI[21],0.0);
+  ps->getWithDefault("RK", UI[22],0.0);
+  ps->getWithDefault("RN", UI[23],0.0);
+  ps->getWithDefault("HC", UI[24],0.0);
+  ps->getWithDefault("CTPSF", UI[25],0.0);
+  ps->getWithDefault("CTPS", UI[26],0.0);
+  ps->getWithDefault("CTI1", UI[27],0.0);
+  ps->getWithDefault("T1", UI[28],0.0);
+  ps->getWithDefault("T2", UI[29],0.0);
+  ps->getWithDefault("T3", UI[30],0.0);
+  ps->getWithDefault("T4", UI[31],0.0);
+  ps->getWithDefault("T5", UI[32],0.0);
+  ps->getWithDefault("T6", UI[33],0.0);
+  ps->getWithDefault("T7", UI[34],0.0);
+  ps->getWithDefault("J3TYPE", UI[35],0.0);
+  ps->getWithDefault("A2PF", UI[36],0.0);
+  ps->getWithDefault("A4PF", UI[37],0.0);
+  ps->getWithDefault("CRPF", UI[38],0.0);
+  ps->getWithDefault("RKPF", UI[39],0.0);
+  ps->getWithDefault("SUBX", UI[40],0.0);
+  ps->getWithDefault("DEJAVU", UI[41],0.0);
+  ps->getWithDefault("FAIL0", UI[42],0.0);
+  ps->getWithDefault("FAIL1", UI[43],0.0);
+  ps->getWithDefault("FAIL2", UI[44],0.0);
+  ps->getWithDefault("FAIL3", UI[45],0.0);
+  ps->getWithDefault("FAIL4", UI[46],0.0);
+  ps->getWithDefault("FAIL5", UI[47],0.0);
+  ps->getWithDefault("FAIL6", UI[48],0.0);
+  ps->getWithDefault("FAIL7", UI[49],0.0);
+  ps->getWithDefault("FAIL8", UI[50],0.0);
+  ps->getWithDefault("FAIL9", UI[51],0.0);
+  ps->getWithDefault("PEAKI1I", UI[52],0.0);
+  ps->getWithDefault("STRENI", UI[53],0.0);
+  ps->getWithDefault("FSLOPEI", UI[54],0.0);
+  ps->getWithDefault("PEAKI1F", UI[55],0.0);
+  ps->getWithDefault("STRENF", UI[56],0.0);
+  ps->getWithDefault("SOFTENING", UI[57],0.0);
+  ps->getWithDefault("FSLOPEF", UI[58],0.0);
+  ps->getWithDefault("FAILSTAT", UI[59],0.0);
+  ps->getWithDefault("EOSID", UI[60],0.0);
+  ps->getWithDefault("DILATLIM", UI[61],0.0);
+  ps->getWithDefault("NU", UI[62],0.0);
+  ps->getWithDefault("YSLOPEI", UI[63],0.0);
+  ps->getWithDefault("YSLOPEF", UI[64],0.0);
+  ps->getWithDefault("SPALLI1", UI[65],0.0);
+  ps->getWithDefault("FREE08", UI[66],0.0);
+  ps->getWithDefault("FREE07", UI[67],0.0);
+  ps->getWithDefault("FREE06", UI[68],0.0);
+  ps->getWithDefault("FREE05", UI[69],0.0);
+  ps->getWithDefault("FREE04", UI[70],0.0);
+  ps->getWithDefault("FREE03", UI[71],0.0);
+  ps->getWithDefault("FREE02", UI[72],0.0);
+  ps->getWithDefault("FREE01", UI[73],0.0);
+  ps->getWithDefault("CKN01", UI[74],0.0);
+  ps->getWithDefault("CKN02", UI[75],0.0);
+  ps->getWithDefault("CKN03", UI[76],0.0);
+  ps->getWithDefault("VMAX1", UI[77],0.0);
+  ps->getWithDefault("VMAX2", UI[78],0.0);
+  ps->getWithDefault("VMAX3", UI[79],0.0);
+  ps->getWithDefault("SPACE1", UI[80],0.0);
+  ps->getWithDefault("SPACE2", UI[81],0.0);
+  ps->getWithDefault("SPACE3", UI[82],0.0);
+  ps->getWithDefault("SHRSTIFF1", UI[83],0.0);
+  ps->getWithDefault("SHRSTIFF2", UI[84],0.0);
+  ps->getWithDefault("SHRSTIFF3", UI[85],0.0);
+  ps->getWithDefault("TMPRXP", UI[86],0.0);
+  ps->getWithDefault("TM", UI[87],0.0);
+  ps->getWithDefault("R0", UI[88],0.0);
+  ps->getWithDefault("T0", UI[89],0.0);
+  ps->getWithDefault("CS", UI[90],0.0);
+  ps->getWithDefault("S1", UI[91],0.0);
+  ps->getWithDefault("SR", UI[92],0.0);
+  ps->getWithDefault("CV", UI[93],0.0);
+  ps->getWithDefault("EOS01", UI[94],0.0);
+  ps->getWithDefault("EOS02", UI[95],0.0);
+  ps->getWithDefault("EOS03", UI[96],0.0);
+  ps->getWithDefault("EOS04", UI[97],0.0);
+  ps->getWithDefault("EOS05", UI[98],0.0);
+  ps->getWithDefault("EOS06", UI[99],0.0);
+  ps->getWithDefault("EOS07", UI[100],0.0);
+  ps->getWithDefault("EOS08", UI[101],0.0);
+  ps->getWithDefault("EOS09", UI[102],0.0);
+  ps->getWithDefault("EOS10", UI[103],0.0);
+  ps->getWithDefault("EOS11", UI[104],0.0);
+  ps->getWithDefault("EOS12", UI[105],0.0);
+  ps->getWithDefault("EOS13", UI[106],0.0);
+  ps->getWithDefault("EOS14", UI[107],0.0);
+  ps->getWithDefault("EOS15", UI[108],0.0);
+  ps->getWithDefault("EOS16", UI[109],0.0);
+  ps->getWithDefault("SQA", UI[110],0.0);
+  ps->getWithDefault("DC01", UI[111],0.0);
+  ps->getWithDefault("DC02", UI[112],0.0);
+  ps->getWithDefault("DC03", UI[113],0.0);
+  ps->getWithDefault("DC04", UI[114],0.0);
+  ps->getWithDefault("DC05", UI[115],0.0);
+  ps->getWithDefault("DC06", UI[116],0.0);
+  ps->getWithDefault("DC07", UI[117],0.0);
+  ps->getWithDefault("DC08", UI[118],0.0);
+  ps->getWithDefault("DC09", UI[119],0.0);
+  ps->getWithDefault("DC10", UI[120],0.0);
+  ps->getWithDefault("DC11", UI[121],0.0);
+  ps->getWithDefault("DC12", UI[122],0.0);
+  ps->getWithDefault("DC13", UI[123],0.0);
   //    ________________________________________________________________________
   //    Uintah Variability Variables
   ps->get("PEAKI1IDIST",wdist.WeibDist);
@@ -899,11 +886,11 @@ Kayenta::initializeLocalMPMLabels()
   int nx;
   char namea[5000];
   char keya[5000];
-  double rinit[100];
+  double xinit[100];
   double rdim[700];
   int iadvct[100];
   int itype[100];
-  KAYENTA_RXV( UI, GC, DC, nx, namea, keya, rinit, rdim, iadvct, itype );
+  KAYENTA_REQUEST_XTRA_VARS( UI, nx, namea, keya, xinit, rdim, iadvct, itype );
   char *ISV[d_NINSV];
   ISV[0] = strtok(keya, "|"); // Splits | between words in string
   ISVNames.push_back(ISV[0]);

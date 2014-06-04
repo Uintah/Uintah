@@ -7,7 +7,7 @@
     -->
     <NameTag  spec="OPTIONAL NO_DATA"
               attribute1="name REQUIRED STRING"
-              attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD'" />
+              attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'" />
 
 		<!-- ================================================================================== -->            
 		<!-- Specification of the diffusive flux -->
@@ -670,68 +670,6 @@
       </GradPY>
 
     </TaylorVortexMMS>
-
-    <!-- ========================================= -->
-    <!-- Spec for Shunn's Varden 2D MMS types -->
-    
-    <ShunnVarden2DMMS      spec="MULTIPLE NO_DATA"
-      attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
-      children1="ONE_OF(CHILD VelocityX,VelocityY,MixtureFraction,DiffusiveConstant)" >
-      <TaskList           spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
-      <NameTag            spec="REQUIRED" />
-      
-      <!-- Shunn's Varden 2D MMS Velocity field function in x direction -->
-      <VelocityX          spec="OPTIONAL NO_DATA">
-
-        <Density          spec="REQUIRED NO_DATA">
-          <NameTag        spec="REQUIRED"/>
-        </Density>
-        <XCoordinate      spec="REQUIRED NO_DATA">
-          <NameTag        spec="REQUIRED"/>
-        </XCoordinate>
-        <YCoordinate      spec="REQUIRED NO_DATA">
-          <NameTag        spec="REQUIRED"/>
-        </YCoordinate>
-        
-      </VelocityX>
-      
-      <!-- Shunn's Varden 2D MMS Velocity field function in y direction -->
-      <VelocityY          spec="OPTIONAL NO_DATA">
-
-        <Density          spec="REQUIRED NO_DATA">
-          <NameTag        spec="REQUIRED"/>
-        </Density>
-        <XCoordinate      spec="REQUIRED NO_DATA">
-          <NameTag        spec="REQUIRED"/>
-        </XCoordinate>
-        <YCoordinate      spec="REQUIRED NO_DATA">
-          <NameTag        spec="REQUIRED"/>
-        </YCoordinate>
-      </VelocityY>
-            
-      <!-- Shunn's Varden 2D MMS mixture fraction field function  -->
-      <MixtureFraction          spec="OPTIONAL NO_DATA">
-        
-        <XCoordinate      spec="REQUIRED NO_DATA">
-          <NameTag        spec="REQUIRED"/>
-        </XCoordinate>
-        <YCoordinate      spec="REQUIRED NO_DATA">
-          <NameTag        spec="REQUIRED"/>
-        </YCoordinate>
-
-      </MixtureFraction>
-
-      <!-- Shunn's Varden 2D MMS mixture fraction field function  -->
-      <DiffusiveConstant          spec="OPTIONAL NO_DATA">
-        
-        <Density          spec="REQUIRED NO_DATA">
-          <NameTag        spec="REQUIRED"/>
-        </Density>
-        
-      </DiffusiveConstant>
-
-    </ShunnVarden2DMMS>
-    <!-- ========================================= -->
     
     <!-- =========================================================================== -->
     <!-- Spec for density in our equations (transport equation & momentum equation): -->
@@ -744,7 +682,14 @@
                 attribute1="value REQUIRED DOUBLE"
                 attribute2="name REQUIRED STRING" />          
       <NameTag  spec="OPTIONAL" />
-    </Density>    
+    </Density>   
+    
+    <!-- =========================================================================== -->
+    <!-- CAUTION! FOR DEVELOPER USE ONLY -->
+    <!-- =========================================================================== -->
+    <VariableDensity spec="OPTIONAL NO_DATA" 
+                     attribute1="model REQUIRED STRING 'CONSTANT, IMPULSE'"
+                     attribute2="coefficient REQUIRED DOUBLE"/>
     
     <!-- ============================ -->
     <!-- Spec for a TransportEquation -->

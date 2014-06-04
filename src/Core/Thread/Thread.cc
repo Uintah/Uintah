@@ -54,22 +54,8 @@
 
 #include <cstring>
 #include <sys/types.h>
-#ifdef _WIN32
-#include <windows.h>
-#include <winnt.h>
-#include <io.h>
-#include <process.h>
-#include <imagehlp.h>
-#include <psapi.h>
-#define SCI_OK_TO_INCLUDE_SCI_ENVIRONMENT_DEFS_H
-#include <sci_defs/environment_defs.h> // for SCIRUN_OBJDIR. can't use sci_getenv lest we create a circular dependency
-#undef SCI_OK_TO_INCLUDE_SCI_ENVIRONMENT_DEFS_H
-#define strcasecmp stricmp //native windows doesn't have strcasecmp
-#define SCISHARE __declspec(dllexport)
-#else
-#define SCISHARE
 #include <unistd.h>
-#endif
+
 #ifdef HAVE_EXC
 #include <libexc.h>
 #elif defined(__GNUC__) && defined(__linux)
@@ -82,7 +68,7 @@
 
 // provide "C" interface to exitAll
 extern "C" { 
-  void SCISHARE exit_all_threads(int rc) {
+  void exit_all_threads(int rc) {
     SCIRun::Thread::exitAll(rc);
   }
 }

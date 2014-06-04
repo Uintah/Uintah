@@ -372,7 +372,7 @@ const BCDataArray* Patch::getBCDataArray(Patch::FaceType face) const
                               __FILE__, __LINE__));
     }
   } else {
-    SCI_THROW(InternalError("d_arrayBCS has not been allocated",
+    SCI_THROW(InternalError("Error: d_arrayBCs not allocated. This means that no boundary conditions were found. If you are solving a periodic problem, please add a <periodic> tag to your input file to avoid this error. Otherwise, add a <BoundaryConditions> block.",
                             __FILE__, __LINE__));
   }
 

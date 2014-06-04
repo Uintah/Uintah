@@ -26,6 +26,7 @@
 #define UINTAH_HOMEBREW_DetailedTasks_H
 
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
+#include <CCA/Components/Schedulers/DWDatabase.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Patch.h>
@@ -42,6 +43,8 @@
 #include <set>
 
 #include <sci_defs/cuda_defs.h>
+
+#include "OnDemandDataWarehouse.h"
 
 namespace Uintah {
   using SCIRun::Min;
@@ -351,6 +354,11 @@ namespace Uintah {
     ~DetailedTasks();
 
     void add(DetailedTask* task);
+    void makeDWKeyDatabase();
+    void copyoutDWKeyDatabase(OnDemandDataWarehouseP dws) {
+      dws->copyKeyDB(varKeyDB, levelKeyDB);
+    }
+    
     int numTasks() const {
       return (int)tasks_.size();
     }
@@ -463,6 +471,8 @@ namespace Uintah {
     // store the first so we can share the scrubCountTable
     DetailedTasks* first;
     std::vector<DetailedTask*> tasks_;
+    KeyDatabase<Patch> varKeyDB;
+    KeyDatabase<Level> levelKeyDB;
 #if 0
     std::vector<DetailedReq*> initreqs_;
 #endif

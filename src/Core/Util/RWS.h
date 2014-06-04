@@ -27,16 +27,15 @@
 
 #include <Core/Util/notset.h>
 #include <string>
-#include <Core/Util/share.h>
 
 namespace SCIRun {
 
 //!remove leading and trailing white space from a char*
 // returns _NOTSET_ if the std::string is or becomes zero length
-SCISHARE char* removeLTWhiteSpace(char* string);
+char* removeLTWhiteSpace(char* string);
 
 //! std::string version.
-SCISHARE bool remove_lt_white_space(std::string &str);
+bool remove_lt_white_space(std::string &str);
 
 }
 

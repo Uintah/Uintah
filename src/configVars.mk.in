@@ -87,7 +87,6 @@ SUBDIRS += $(COMPONENT_DIRS)
 SUBDIRS += testprograms
 
 IS_OSX := @IS_OSX@
-IS_WIN := @IS_WIN@
 IS_AIX := @IS_AIX@
 IS_REDSTORM := no
 IS_BGQ := @IS_BGQ@
@@ -251,7 +250,7 @@ endif
 DL_LIBRARY := @DL_LIB_DIR_FLAG@ @DL_LIB_FLAG@
 Z_LIBRARY := @Z_LIB_DIR_FLAG@ @Z_LIB_FLAG@ 
 
-XML2_LIBRARY := @XML2_LIB_DIR_FLAG@ @XML2_LIB_FLAG@
+XML2_LIBRARY := $(Z_LIBRARY) @XML2_LIB_DIR_FLAG@ @XML2_LIB_FLAG@
 XML2_INCLUDE := @INC_XML2_H@
 
 HAVE_TIFF := @HAVE_TIFF@
@@ -303,19 +302,12 @@ CFLAGS          := @CFLAGS@ $(CFLAGS) @WOFF_STRING@
 CXXFLAGS        := @CXXFLAGS@ $(CXXFLAGS) @WOFF_STRING@
 NVCC_CFLAGS     := @NVCC_CFLAGS@
 NVCC_CXXFLAGS   := @NVCC_CXXFLAGS@
-ifeq ($(IS_WIN),yes)
-  SOFLAGS         := $(CFLAGS) @SOFLAGS@ -LIBPATH:$(LIBDIR)
-  LDFLAGS         := $(CXXFLAGS) @LDFLAGS@
-  NVCC_LDFLAGS    := $(NVCC_CXXFLAGS) @NVCC_LDFLAGS@
-  PROGRAM_LDFLAGS := -link -LIBPATH:$(LIBDIR)
-else
-  SOFLAGS         := $(CFLAGS) @SOFLAGS@ -L$(LIBDIR)
-  LDFLAGS         := $(CXXFLAGS) @LDFLAGS@ -L$(LIBDIR) $(ELECTRIC_FENCE)
-  NVCC_LDFLAGS    := $(NVCC_CXXFLAGS) @NVCC_LDFLAGS@
-endif
+SOFLAGS         := $(CFLAGS) @SOFLAGS@ -L$(LIBDIR)
+LDFLAGS         := $(CXXFLAGS) @LDFLAGS@ -L$(LIBDIR) $(ELECTRIC_FENCE)
+NVCC_LDFLAGS    := $(NVCC_CXXFLAGS) @NVCC_LDFLAGS@
 ASFLAGS         := @ASFLAGS@  $(ASFLAGS)
-F77		:= @F77@
-FFLAGS		:= @FFLAGS@ $(FFLAGS)
+F77             := @F77@
+FFLAGS          := @FFLAGS@ $(FFLAGS)
 
 # Fortran Library:
 F_LIBRARY	:= @F_LIB_DIR_FLAG@ @F_LIB_FLAG@ @RT_LIB_FLAG@
@@ -401,9 +393,9 @@ ifeq ($(CC_DEPEND_MODE),normal)
   else
     ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@echo "Compiling: $<"
-	@$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) @WIN_DLLFLAGS@ $(call repository,$@) -c $< -o $@
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
     else
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) @WIN_DLLFLAGS@ $(call repository,$@) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
     endif
   endif
 else
@@ -501,7 +493,7 @@ endif
 .cpp.$(OBJEXT): $<
 	-rm -f $@
 ifeq ($(CC_DEPEND_MODE),normal)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) @WIN_DLLFLAGS@ $(call repository,$@) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
 else
   ifeq ($(CC_DEPEND_MODE),modify)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && $(SED) -e 's,^$(notdir $@),$@,' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT).tmp && mv -f $(basename $@).$(CC_DEPEND_EXT).tmp $(basename $@).$(CC_DEPEND_EXT)
@@ -645,9 +637,9 @@ endif
 ifeq ($(CC_DEPEND_MODE),normal)
   ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@echo "Compiling: $<"
-	@$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) @WIN_DLLFLAGS@ -c $< -o $@
+	@$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
   else
-	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) @WIN_DLLFLAGS@ -c $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
   endif
 else
   ifeq ($(CC_DEPEND_MODE),modify)

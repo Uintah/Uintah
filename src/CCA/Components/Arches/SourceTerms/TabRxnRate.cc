@@ -14,7 +14,6 @@ TabRxnRate::TabRxnRate( std::string src_name, SimulationStateP& shared_state,
                             vector<std::string> req_label_names, std::string type ) 
 : SourceTermBase(src_name, shared_state, req_label_names, type)
 {
-  _label_sched_init = false; 
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() ); 
 }
 
@@ -45,10 +44,7 @@ TabRxnRate::sched_computeSource( const LevelP& level, SchedulerP& sched, int tim
   std::string taskname = "TabRxnRate::eval";
   Task* tsk = scinew Task(taskname, this, &TabRxnRate::computeSource, timeSubStep);
 
-  if (timeSubStep == 0 && !_label_sched_init) {
-    // Every source term needs to set this flag after the varLabel is computed. 
-    // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
-    _label_sched_init = true;
+  if (timeSubStep == 0) { 
 
     tsk->computes(_src_label);
   } else {

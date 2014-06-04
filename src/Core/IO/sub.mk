@@ -36,7 +36,7 @@ SRCS += \
 	$(SRCDIR)/UintahZlibUtil.cc \
 	$(SRCDIR)/UintahIFStreamUtil.cc
 
-PSELIBS :=
+PSELIBS := Core/Exceptions
 LIBS    := $(Z_LIBRARY) $(GPERFTOOLS_LIBRARY)
 
 # See commit message for while hacking in the MPI_LIBRARY is necessary.

@@ -377,6 +377,9 @@ fi
 ifelse([$4],[],,[
 for inc in $4; do
 
+  # Remove any trailing / from inc.
+  inc=${inc%/}
+
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
      AC_MSG_ERROR(Please do not specify /usr/include as the location for $1 include files.)
