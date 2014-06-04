@@ -34,7 +34,6 @@
 
 //-- ExprLib includes --//
 #include <expression/Expression.h>
-#include <expression/PlaceHolderExpr.h>
 #include <expression/ExpressionFactory.h>
 
 //-- Wasatch includes --//

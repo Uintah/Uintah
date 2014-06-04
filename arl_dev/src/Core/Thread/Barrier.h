@@ -37,8 +37,6 @@
 #ifndef Core_Thread_Barrier_h
 #define Core_Thread_Barrier_h
 
-#include <Core/Thread/share.h>
-
 namespace SCIRun {
 
 struct Barrier_private;
@@ -64,18 +62,19 @@ struct Barrier_private;
    
 ****************************************/
 
-class SCISHARE Barrier {
-public:
+class Barrier {
+
+  public:
   //////////
   // Create a barrier which will be used by a variable number
   // of threads.   <tt>name</tt> should be a static string
   // which describes the primitive for debugging purposes.
   Barrier(const char* name);
-    
+
   //////////
   // Destroy the barrier
   virtual ~Barrier();
-    
+
   //////////
   // This causes all of the threads to block at this method
   // until all numThreads threads have called the method.
@@ -83,8 +82,9 @@ public:
   // to return.
   void wait(int numThreads);
 
-protected:
-private:
+  protected:
+
+  private:
   Barrier_private* priv_;
   const char* name_;
 
@@ -92,7 +92,9 @@ private:
   Barrier(const Barrier&);
   Barrier& operator=(const Barrier&);
 };
-} // End namespace SCIRun
+
+}
+  // End namespace SCIRun
 
 #endif
 

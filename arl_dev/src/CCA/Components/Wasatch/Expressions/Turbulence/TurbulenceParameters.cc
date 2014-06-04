@@ -32,7 +32,7 @@ namespace Wasatch {
     turbSchmidt  = 1.0;
     turbPrandtl  = 0.7;
     eddyViscCoef = 0.1;
-    turbModelName = NOTURBULENCE;
+    turbModelName = TurbulenceParameters::NOTURBULENCE;
   };
 
   void parse_turbulence_input( Uintah::ProblemSpecP turbulenceInputParams,
@@ -45,19 +45,19 @@ namespace Wasatch {
     turbulenceInputParams->getAttribute("model",turbulenceModelName);
     
     if ( turbulenceModelName.compare("SMAGORINSKY") == 0   ) {
-      turbParams.turbModelName = SMAGORINSKY;
+      turbParams.turbModelName = TurbulenceParameters::SMAGORINSKY;
     } else if ( turbulenceModelName.compare("DYNAMIC") ==0 ) {    
-      turbParams.turbModelName = DYNAMIC;  
+      turbParams.turbModelName = TurbulenceParameters::DYNAMIC;
     } else if ( turbulenceModelName.compare("WALE")==0     ) {    
-      turbParams.turbModelName = WALE;
+      turbParams.turbModelName = TurbulenceParameters::WALE;
     } else if ( turbulenceModelName.compare("VREMAN") == 0 ) {
-      turbParams.turbModelName = VREMAN;
+      turbParams.turbModelName = TurbulenceParameters::VREMAN;
     } else {
-      turbParams.turbModelName = NOTURBULENCE;
+      turbParams.turbModelName = TurbulenceParameters::NOTURBULENCE;
     }
     
     // get the eddy viscosity constant
-    if ( turbParams.turbModelName != DYNAMIC )
+    if ( turbParams.turbModelName != TurbulenceParameters::DYNAMIC )
       turbulenceInputParams->get("EddyViscosityCoefficient",turbParams.eddyViscCoef);
 
     // get the turbulent Schmidt Number

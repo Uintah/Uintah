@@ -30,14 +30,9 @@
 #include <iosfwd>
 #include <sstream>
 #include <string>
-
-#ifndef _WIN32
-#include <unistd.h>
-#else
-typedef long ssize_t;
-#endif
-
 #include <cerrno>
+
+#include <unistd.h>
 
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InternalError.h>

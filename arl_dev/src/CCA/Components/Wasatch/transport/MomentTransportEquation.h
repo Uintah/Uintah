@@ -97,20 +97,20 @@ namespace Wasatch{
 
     ~MomentTransportEquation();
 
-    void verify_boundary_conditions(BCHelper& bcHelper,
+    void setup_boundary_conditions(BCHelper& bcHelper,
                                     GraphCategories& graphCat){}
     
     /**
      *  \brief apply the boundary conditions on the initial condition
      *         associated with this transport equation
      */
-    void setup_initial_boundary_conditions( const GraphHelper& graphHelper,
+    void apply_initial_boundary_conditions( const GraphHelper& graphHelper,
                                            BCHelper& bcHelper );
 
     /**
      *  \brief setup the boundary conditions associated with this transport equation
      */
-    void setup_boundary_conditions( const GraphHelper& graphHelper,
+    void apply_boundary_conditions( const GraphHelper& graphHelper,
                                    BCHelper& bcHelper );
     /**
      *  \brief setup the initial conditions for this transport equation.

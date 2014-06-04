@@ -98,10 +98,10 @@ namespace Uintah {
 
     /** @brief Returns a vector of the state space for a given set of independent parameters */
     virtual void sched_getState( const LevelP& level, 
-        SchedulerP& sched, 
-        const TimeIntegratorLabel* time_labels, 
-        const bool initialize,
-        const bool modify_ref_den ) = 0;
+                                 SchedulerP& sched, 
+                                 const int time_substep,
+                                 const bool initialize,
+                                 const bool modify_ref_den ) = 0;
 
     /** @brief Provides access for models, algorithms, etc. to add additional table lookup variables. */
     void addAdditionalDV( std::vector<std::string>& vars );

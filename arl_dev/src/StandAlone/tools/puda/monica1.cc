@@ -87,12 +87,12 @@ Uintah::monica1( DataArchive * da, CommandLineFlags & clf )
         for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
            IntVector c = *iter;  // get teh coordinates of the cell
 
-           if(press_CC[c] > pressure)
+           if(press_CC[c] > pressure){
               pressure = press_CC[c];
-
-           if(press_CC[c] > maxPressure)
+           }
+           if(press_CC[c] > maxPressure){
               maxPressure = press_CC[c];
-          
+           }
         } // for cells
       }  // for patches
    

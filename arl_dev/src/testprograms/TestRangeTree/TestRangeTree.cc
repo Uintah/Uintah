@@ -26,10 +26,8 @@
 #include <Core/Containers/RangeTree.h>
 #include "Point.h"
 #include <cstdlib>
-#ifndef _WIN32
 #include <unistd.h>
 #include <sys/time.h>
-#endif
 #include <cmath>
 #include <iostream>
 #include <cstring>

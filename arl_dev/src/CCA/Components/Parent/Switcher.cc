@@ -118,12 +118,11 @@ Switcher::Switcher( const ProcessorGroup* myworld,
     attachPort( "sim", sim );
 
     //__________________________________
-    // create solver  port and attach it to the switcher component
-    string  no_solver_specified("");
-    SolverInterface * solver = SolverFactory::create( subCompUps, myworld, no_solver_specified );
+    // Create solver port and attach it to the switcher component.
+    SolverInterface * solver = SolverFactory::create( subCompUps, myworld );
     
-    attachPort(   "sub_solver", solver);
-    comp->attachPort("solver", solver);
+    attachPort( "sub_solver", solver );
+    comp->attachPort( "solver", solver );
 
     //__________________________________
     // create switching criteria port and attach it switcher component

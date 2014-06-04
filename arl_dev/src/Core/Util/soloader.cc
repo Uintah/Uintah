@@ -39,10 +39,6 @@ void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
 {
   LIBRARY_HANDLE LibraryHandle = 0;
   
-#ifdef _WIN32
-  LibraryHandle = LoadLibrary(libname);
-  //#elif defined(__APPLE__)
-#else
   ASSERT(SCIRun::sci_getenv("SCIRUN_OBJDIR"));
   string name = string(SCIRun::sci_getenv("SCIRUN_OBJDIR")) + "/lib/" + 
     string(libname);
@@ -55,15 +51,12 @@ void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
   }
   //#else
   //LibraryHandle = dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
-#endif
   
   if (LibraryHandle == 0) {
     return 0;
   }
   
-#ifdef _WIN32
-  return (void*) GetProcAddress(LibraryHandle,symbolname);
-#elif defined __APPLE__
+#if defined __APPLE__
   //*** Workaround for a bug in 10.4's dyld library ***//
   // Add a leading underscore to the symbolname for call to mach lib functions
   // If you don't check against the underscored symbol name NSIsSymbolNameDefined
@@ -92,30 +85,24 @@ void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
 #endif
 }
 
-LIBRARY_HANDLE
-findLib(string lib)
+LIBRARY_HANDLE findLib(string lib)
 {
-  LIBRARY_HANDLE handle=0;
+  LIBRARY_HANDLE handle = 0;
   const char *env = SCIRun::sci_getenv("PACKAGE_LIB_PATH");
-  string tempPaths(env?env:"");
+  string tempPaths(env ? env : "");
   // try to find the library in the specified path
-  while (tempPaths!="") {
+  while (tempPaths != "") {
     string dir;
-#ifdef _WIN32
-    // make sure we don't throw away the drive letter
-    const unsigned int firstColon = tempPaths.find(':',2);
-#else
     const unsigned int firstColon = tempPaths.find(':');
-#endif
-    if(firstColon < tempPaths.size()) {
-      dir=tempPaths.substr(0,firstColon);
-      tempPaths=tempPaths.substr(firstColon+1);
+    if (firstColon < tempPaths.size()) {
+      dir = tempPaths.substr(0, firstColon);
+      tempPaths = tempPaths.substr(firstColon + 1);
     } else {
-      dir=tempPaths;
-      tempPaths="";
+      dir = tempPaths;
+      tempPaths = "";
     }
 
-    handle = GetLibraryHandle((dir+"/"+lib).c_str());
+    handle = GetLibraryHandle((dir + "/" + lib).c_str());
     if (handle)
       return handle;
   }
@@ -128,9 +115,7 @@ findLib(string lib)
 
 void* GetHandleSymbolAddress(LIBRARY_HANDLE handle, const char* symbolname)
 {
-#ifdef _WIN32
-  return (void*) GetProcAddress(handle,symbolname);
-#elif defined __APPLE__
+#if defined __APPLE__
   //*** Workaround for a bug in 10.4's dyld library ***//
   // Add a leading underscore to the symbolname for call to mach lib functions
   // If you don't check against the underscored symbol name NSIsSymbolNameDefined
@@ -161,22 +146,18 @@ void* GetHandleSymbolAddress(LIBRARY_HANDLE handle, const char* symbolname)
 
 LIBRARY_HANDLE GetLibraryHandle(const char* libname)
 {
-#ifdef _WIN32
-  return LoadLibrary(libname);
-  //#elif defined(__APPLE__)
-#else  
   string name;
-  if ( libname[0] == '/' )
+  if (libname[0] == '/')
     name = libname;
   else {
     ASSERT(SCIRun::sci_getenv("SCIRUN_OBJDIR"));
-    name = string(SCIRun::sci_getenv("SCIRUN_OBJDIR"))+"/lib/"+string(libname);
+    name = string(SCIRun::sci_getenv("SCIRUN_OBJDIR")) + "/lib/" + string(libname);
   }
 
   LIBRARY_HANDLE lh;
-  lh = dlopen(name.c_str(), RTLD_LAZY|RTLD_GLOBAL);
+  lh = dlopen(name.c_str(), RTLD_LAZY | RTLD_GLOBAL);
 
-  // commented out the following, as it breaks error reporing.  Don't try to 
+  // commented out the following, as it breaks error reporting.  Don't try to
   // load a second time without dlerror being called and reported.
 //   if( lh == 0 ) { 
 //     // dlopen of absolute path failed...  Perhaps they have a DYLD_LIBRARY_PATH var set...
@@ -186,29 +167,16 @@ LIBRARY_HANDLE GetLibraryHandle(const char* libname)
   return lh;
   //#else
   //return dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
-#endif
 }
 
 void CloseLibrary(LIBRARY_HANDLE LibraryHandle)
 {
-#ifdef _WIN32
-  FreeLibrary(LibraryHandle);
-#else
   dlclose(LibraryHandle);
-#endif
 }
 
 const char* SOError( )
 {
-#ifdef _WIN32
-  char* lpMsgBuf;
-  FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-    NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &lpMsgBuf, 0, NULL);
-
-  return lpMsgBuf;
-#else
   return dlerror();
-#endif
 }
 
 LIBRARY_HANDLE FindLibInPath(const std::string& lib, const std::string& path)

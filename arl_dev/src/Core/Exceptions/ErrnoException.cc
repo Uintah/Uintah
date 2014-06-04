@@ -35,6 +35,7 @@
  */
 
 #include <Core/Exceptions/ErrnoException.h>
+
 #include <sstream>
 #include <cstring>
 #include <iostream>
@@ -43,8 +44,8 @@ namespace SCIRun {
 
 using namespace std;
 
-ErrnoException::ErrnoException(const std::string& message, int err, const char* file, int line)
-   : errno_(err)
+ErrnoException::ErrnoException( const string & message, int err, const char* file, int line )
+   : err_(err)
 {
    ostringstream str;
    const char* s = strerror(err);
@@ -56,12 +57,12 @@ ErrnoException::ErrnoException(const std::string& message, int err, const char* 
    message_ = str.str();
 
 #ifdef EXCEPTIONS_CRASH
-   std::cout << message_ << "\n";
+   cout << message_ << "\n";
 #endif
 }
 
 ErrnoException::ErrnoException(const ErrnoException& copy)
-   : message_(copy.message_), errno_(copy.errno_)
+   : message_(copy.message_), err_(copy.err_)
 {
 }
 
@@ -81,7 +82,7 @@ const char* ErrnoException::type() const
 
 int ErrnoException::getErrno() const
 {
-   return errno_;
+   return err_;
 }
 
 } // End namespace SCIRun

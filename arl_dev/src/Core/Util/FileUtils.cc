@@ -24,23 +24,6 @@
 
 /* FileUtils.cc */
 
-#include <cerrno>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <time.h>
-
-#include <sys/stat.h>
-
-#ifndef _WIN32
-#  include <unistd.h>
-#  include <dirent.h>
-#else
-#  include <io.h>
-   typedef unsigned short mode_t;
-#  define MAXPATHLEN 256
-#endif
-
 #include <Core/OS/Dir.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/Environment.h>
@@ -50,6 +33,15 @@
 
 #include <iostream>
 #include <sstream>
+#include <cerrno>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <time.h>
+
+#include <sys/stat.h>
+#include <unistd.h>
+#include <dirent.h>
 
 using namespace std;
 
@@ -301,14 +293,11 @@ validDir( const string & dirname )
 bool
 isSymLink( const string & filename )
 {
-#ifndef _WIN32
   struct stat buf;
-  if( lstat(filename.c_str(), &buf) == 0 )
-  {
+  if (lstat(filename.c_str(), &buf) == 0) {
     mode_t &m = buf.st_mode;
-    return( m & S_ISLNK(m) );
+    return (m & S_ISLNK(m));
   }
-#endif
   return false;
 }
 
@@ -398,18 +387,16 @@ findFileInPath(const string &file, const string &path)
   string::size_type end = 0;
 
   while (beg < path.length()) {
-#ifdef _WIN32
-    end = path.find(":",beg+2);
-#else
-    end = path.find(":",beg);
-#endif
-    if (end == string::npos) end = path.size();
+    end = path.find(":", beg);
+    if (end == string::npos)
+      end = path.size();
 
-    string dir(path, beg, end-beg);
+    string dir(path, beg, end - beg);
     ASSERT(!dir.empty());
     // Append a slash if there isn't one
     if (validDir(dir)) {
-      if (dir[dir.length()-1] != '/') dir = dir + "/";
+      if (dir[dir.length() - 1] != '/')
+        dir = dir + "/";
       string filename = dir + file;
       if (validFile(filename)) {
         // see comments at function start
@@ -417,38 +404,29 @@ findFileInPath(const string &file, const string &path)
       }
     }
 
-    beg = end+1;
+    beg = end + 1;
   }
   return "";
 }
     
 string
-autocomplete(const string & instr) {
+autocomplete(const string & instr)
+{
   string str = instr;
   pair<string, string> dirfile = split_filename(str);
   string dir = dirfile.first;
   if (!validDir(dir)) {
-#ifdef _WIN32
-    // in windows c:/dir1/ will not be valid, but c:/dir1 will be.  Lose the end '/' and try again
-    if ((dir[dir.length()-1] == '/' || dir[dir.length()-1] == '\\') && dir.length() > 1) {
-      dir = dir.substr(0, dir.length()-1);
-      if (!validDir(dir)) 
-        return str;
-    }
-    else 
-#endif
-      return str;
+    return str;
   }
-  if (dirfile.first.empty() || dirfile.first[dirfile.first.length()-1] != '/') {
-    dirfile.first = dirfile.first+"/";
+  if (dirfile.first.empty() || dirfile.first[dirfile.first.length() - 1] != '/') {
+    dirfile.first = dirfile.first + "/";
   }
-  vector<string> files = 
-    GetFilenamesStartingWith(dir, dirfile.second);
-  
-    
+  vector<string> files = GetFilenamesStartingWith(dir, dirfile.second);
+
   if (files.empty()) {
     return str;
-  } if (files.size() == 3 && files[0] == "." && files[1] == "..") {
+  }
+  if (files.size() == 3 && files[0] == "." && files[1] == "..") {
     str = dirfile.first + files[2];
     if (validDir(str)) {
       str = str + "/";
@@ -463,8 +441,8 @@ autocomplete(const string & instr) {
     unsigned int j = j0;
     do {
       for (unsigned int i = 1; i < files.size(); ++i) {
-        if ((j == files[i].size()) || (files[i][j] != files[i-1][j])) {
-          str = str + files[i].substr(j0, j-j0);
+        if ((j == files[i].size()) || (files[i][j] != files[i - 1][j])) {
+          str = str + files[i].substr(j0, j - j0);
           return str;
         }
       }
@@ -503,18 +481,12 @@ canonicalize(const string & fname )
   
   filename = "";
   for (unsigned int i = 0; i < entries.size(); ++i) {
-#ifdef _WIN32
-    // don't put / in front of c:\ as it doesn't make sense
-    if (i == 0 && entries[i].size() > 1 && entries[i][1] == ':')
-      filename = entries[i];
-    else
-#endif
     filename = filename + "/" + entries[i];
   }
   if (filename == "" || validDir(filename)) {
-    filename = filename+"/";
+    filename = filename + "/";
   }
-  
+
   return filename;
 }
 
@@ -543,18 +515,10 @@ convertToUnixPath( string & unixPath )
 int
 copyFile( const string & src, const string & dest)
 {
-#ifdef _WIN32
-  string cpCmd = "copy /Y ";
-  convertToWindowsPath(src);
-  convertToWindowsPath(dest);
-#else
   string cpCmd = "cp -f ";
-#endif
-
   string cmd = cpCmd + src + " " + dest;
   int code = sci_system(cmd.c_str());
-  if (code)
-  {
+  if (code) {
     cerr << "Error executing: " << cmd << "\n";
   }
   return code;
@@ -563,18 +527,10 @@ copyFile( const string & src, const string & dest)
 int
 moveFile( const string & src, const string & dest )
 {
-#ifdef _WIN32
-  string mvCmd = "move /Y ";
-  convertToWindowsPath(src);
-  convertToWindowsPath(dest);
-#else
   string mvCmd = "mv -f ";
-#endif
-
   string cmd = mvCmd + src + " " + dest;
   int code = sci_system(cmd.c_str());
-  if (code)
-  {
+  if (code) {
     cerr << "Error executing: " << cmd << "\n";
   }
   return code;
@@ -583,17 +539,10 @@ moveFile( const string & src, const string & dest )
 int
 deleteFile( const string & filename )
 {
-#ifdef _WIN32
-  string rmCmd = "del /Y ";
-  convertToWindowsPath(filename);
-#else
   string rmCmd = "rm -f ";
-#endif
-
   string cmd = rmCmd + filename;
   int code = sci_system(cmd.c_str());
-  if (code)
-  {
+  if (code) {
     cerr << "Error executing: " << cmd << "\n";
   }
   return code;
@@ -602,18 +551,10 @@ deleteFile( const string & filename )
 int
 copyDir( const string & src, const string & dest )
 {
-#ifdef _WIN32
-  string cpCmd = "xcopy /Y ";
-  convertToWindowsPath(src);
-  convertToWindowsPath(dest);
-#else
   string cpCmd = "cp -fr ";
-#endif
-
   string cmd = cpCmd + src + " " + dest;
   int code = sci_system(cmd.c_str());
-  if (code)
-  {
+  if (code) {
     cerr << "Error executing: " << cmd << "\n";
   }
   return code;
@@ -621,17 +562,10 @@ copyDir( const string & src, const string & dest )
 
 int deleteDir(string filename)
 {
-#ifdef _WIN32
-  string rmCmd = "rmdir /Q ";
-  convertToWindowsPath(filename);
-#else
   string rmCmd = "rm -rf ";
-#endif
-
   string cmd = rmCmd + filename;
   int code = sci_system(cmd.c_str());
-  if (code)
-  {
+  if (code) {
     cerr << "Error executing: " << cmd << "\n";
   }
   return code;
@@ -660,86 +594,5 @@ changeExtension( const string & filename, const string &extension)
 }
 
 
-
-
 } // End namespace SCIRun
 
-
-#ifdef _WIN32
-#  include <cerrno>
-struct DIR
-{
-  long file_handle;
-  _finddata_t finddata;
-  _finddata_t nextfinddata;
-  bool done;
-  dirent return_on_read;
-};
-
-DIR *
-opendir(const char *name)
-{
-  // grab the first file in the directory by ending name with "/*"
-  DIR *dir = 0;
-  if (name != NULL) {
-    unsigned length = strlen(name);
-    if (length > 0) {
-      dir = new DIR;
-      dir->done = false;
-
-      // create the file search path with the wildcard
-      string search_path = name; 
-      if (name[length-1] == '/' || name[length-1] == '\\')
-        search_path += "*";
-      else
-        search_path += "/*";
-
-      if ((dir->file_handle = (long) _findfirst(search_path.c_str(), &dir->nextfinddata)) == -1) {
-        delete dir;
-        dir = 0;
-      }
-      return dir;
-    }
-  }
-  errno = EINVAL;
-  return 0;
-}
-
-int
-closedir(DIR *dir)
-{
-  int result = -1;
-  if (dir) {
-    result = _findclose(dir->file_handle);
-    delete dir;
-  }
-  if (result == -1) errno = EBADF;
-  return result;
-}
-
-dirent
-*readdir(DIR *dir)
-{
-  if (dir->done) 
-    return 0;
-  if (dir) {
-    dir->finddata = dir->nextfinddata;
-    if (_findnext(dir->file_handle, &dir->nextfinddata) == -1)
-      dir->done = true;
-    dir->return_on_read.d_name = dir->finddata.name;
-    return &dir->return_on_read;
-  }
-  else {
-    errno = EBADF;
-  }
-  return 0;
-}
-
-void
-rewinddir(DIR *dir)
-{
-  printf( "Warning: FileUtils.cc: rewinddir not implemented!\n" );
-}
-
-
-#endif

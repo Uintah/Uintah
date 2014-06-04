@@ -27,11 +27,7 @@
 #include <sstream>
 #include <cstdlib>
 #include <cstring>
-#ifndef _WIN32
 #include <unistd.h>
-#else
-#include <process.h>
-#endif
 #include <climits>
 
 using namespace std;

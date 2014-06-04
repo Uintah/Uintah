@@ -41,7 +41,7 @@
 #include <Core/Malloc/AllocPriv.h>
 #include <Core/Malloc/mem_init.h>
 
-#if defined(__sun) || defined(_WIN32)
+#if defined(__sun)
 #  include <cstring>
 #  define bzero(p,sz)  memset(p,0, sz);
 #elif defined(__linux) || defined(__sgi) || defined(__digital__) || defined(_AIX) || defined(__APPLE__) || defined(__CYGWIN__)
@@ -50,14 +50,10 @@
 #  error "Need bcopy define for this architecture"
 #endif
 
-#ifndef _WIN32
 // irix64 KCC stuff
-#  include <strings.h>
-#  ifdef __GNUG__
-#    define THROWCLAUSE throw()
-#  else
-#    define THROWCLAUSE
-#  endif
+#include <strings.h>
+#ifdef __GNUG__
+#  define THROWCLAUSE throw()
 #else
 #  define THROWCLAUSE
 #endif

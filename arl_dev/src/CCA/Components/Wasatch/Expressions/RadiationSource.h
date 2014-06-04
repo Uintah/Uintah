@@ -27,7 +27,6 @@
 
 //-- ExprLib Includes --//
 #include <expression/Expression.h>
-#include <expression/PlaceHolderExpr.h>
 
 //-- Wasatch Includes --//
 #include <CCA/Components/Wasatch/FieldTypes.h>

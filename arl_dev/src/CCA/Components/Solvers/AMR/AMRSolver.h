@@ -58,6 +58,7 @@ WARNING
 #include <Core/Parallel/UintahParallelComponent.h>
 
 namespace Uintah {
+
   class AMRSolver :
     public SolverInterface, public UintahParallelComponent { 
 
@@ -74,22 +75,30 @@ namespace Uintah {
     virtual SolverParameters* readParameters(ProblemSpecP& params,
                                              const std::string& name);
 
-    virtual void scheduleSolve(const LevelP& level, SchedulerP& sched,
-                               const MaterialSet* matls,
-                               const VarLabel* A,    
-                               Task::WhichDW which_A_dw,  
-                               const VarLabel* x,
-                               bool modifies_x,
-                               const VarLabel* b,    
-                               Task::WhichDW which_b_dw,  
-                               const VarLabel* guess,
-                               Task::WhichDW guess_dw,
-                               const SolverParameters* params,
-                               bool modifies_hypre = false);
+    virtual void scheduleSolve( const LevelP           & level,
+                                      SchedulerP       & sched,
+                                const MaterialSet      * matls,
+                                const VarLabel         * A,    
+                                      Task::WhichDW      which_A_dw,  
+                                const VarLabel         * x,
+                                      bool               modifies_x,
+                                const VarLabel         * b,    
+                                      Task::WhichDW      which_b_dw,  
+                                const VarLabel         * guess,
+                                      Task::WhichDW      which_guess_dw,
+                                const SolverParameters * params,
+                                      bool               modifies_hypre = false );
                                
     virtual std::string getName();
     
-    private:
+    // AMRSolver does not require initialization... but we need an empty
+   // routine to satisfy inheritance.
+    virtual void scheduleInitialize( const LevelP      & level,
+                                           SchedulerP  & sched,
+                                     const MaterialSet * matls ) {}
+
+  private:
+
   };
 }
 

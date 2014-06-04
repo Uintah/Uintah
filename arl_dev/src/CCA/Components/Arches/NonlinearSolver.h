@@ -128,6 +128,8 @@ public:
   virtual void setPartVel(PartVel* partVel) = 0; 
 
   virtual void setDQMOMSolver(DQMOM* dqmomSolver) = 0;
+  
+  virtual void setCQMOMSolver(CQMOM* cqmomSolver) = 0;
 
   virtual void setInitVelConditionInterface( const Patch          * patch, 
                                              SFCXVariable<double> & uvel, 

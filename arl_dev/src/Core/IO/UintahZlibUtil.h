@@ -46,11 +46,15 @@ namespace Uintah {
   // Returns a full line... If the line is a comment it is skipped and
   // the next line is returned.  If the line is empty, an empty string
   // is returned.
+  //
+  std::string getLine(            gzFile & gzFp );
+  std::string getLine( std::stringstream & file_stream );
 
-  std::string getLine(   gzFile & gzFp );
-  std::string getLine(std::stringstream &file_stream );
 
-  int gzipInflate(const std::string& filename,
-                  std::string& uncomp_table_contents);
+  // Returns the number of bytes in the uncopmressed data.  If an error
+  // occurs, then an exception is raised.
+  //
+  int gzipInflate( const std::string & filename,
+                         std::string & uncomp_table_contents );
 
 } // end namespace Uintah

@@ -31,9 +31,7 @@
  *
  */
 
-#ifdef _WIN32
-#  define strtoll _strtoi64
-#elif defined( __PGI )
+#if defined( __PGI )
    // pgCC version 7.1-2 does not define strtoll (in stdlib.h or
    // anywhere)... However, this seems to fake the compiler into
    // not complaining.

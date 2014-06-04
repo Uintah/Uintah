@@ -42,7 +42,6 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
   _bc(bc), 
   _my_world(my_world)
 {  
-  _label_sched_init = false; 
   
   const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
   _src_label      = VarLabel::create( src_name,  CC_double ); 
@@ -255,7 +254,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   bool modifies_divQ     = false;
   const bool includeExtraCells = false;  // domain for sigmaT4 computation
 
-  if (timeSubStep == 0 && !_label_sched_init) {
+  if (timeSubStep == 0) {
     modifies_divQ  = false;
   } else {
     modifies_divQ  = true;

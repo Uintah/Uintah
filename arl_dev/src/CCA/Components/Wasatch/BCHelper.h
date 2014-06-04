@@ -293,7 +293,7 @@ namespace Wasatch {
     std::vector<SpatialOps::structured::IntVec> extraBndCells;        // iterator for extra cells
     std::vector<SpatialOps::structured::IntVec> extraPlusBndCells;    // iterator for extra cells on plus faces (staggered fields)
     std::vector<SpatialOps::structured::IntVec> interiorBndCells;     // iterator for interior cells
-    std::vector<SpatialOps::structured::IntVec> interiorEdgeCells;    // iterator for interior cells
+    std::vector<SpatialOps::structured::IntVec> interiorEdgeCells;    // iterator for interior edge (domain edges) cells
     Uintah::Iterator extraBndCellsUintah;                             // We still need the Unitah iterator
   };
   
@@ -413,12 +413,11 @@ namespace Wasatch {
     typedef SpatialOps::structured::IntVec                IntVecT          ;  // SpatialOps IntVec
     typedef std::map <int, BoundaryIterators            > patchIDBndItrMapT;  // temporary typedef map that stores boundary iterators per patch id: Patch ID -> Bnd Iterators
     typedef std::map <std::string, patchIDBndItrMapT    > MaskMapT         ;  // boundary name -> (patch ID -> Boundary iterators )
-    typedef std::map <std::string, std::vector<IntVecT> > EdgeCellsMapT    ;  // for logical domain boundaries, 1 set of corner cells per boundary, regardless of patcIDs
     
     const Uintah::PatchSet*    const localPatches_;
     const Uintah::MaterialSet* const materials_   ;
     const PatchInfoMap&        patchInfoMap_      ;
-    const BCFunctorMap&        bcFunctorMap_      ;
+    BCFunctorMap&        bcFunctorMap_      ;
     GraphCategories&           grafCat_           ;
     
     // This map stores the iterators associated with each boundary condition name.
@@ -430,8 +429,6 @@ namespace Wasatch {
     // map is indexed by the (unique) boundary name.
     BndMapT                    bndNameBndSpecMap_;
     
-    EdgeCellsMapT            bndNameEdgeCellsMap_;
-
     template<typename FieldT>
     const std::vector<IntVecT>* get_extra_bnd_mask( const BndSpec& myBndSpec,
                                                     const int& patchID ) const;
@@ -474,7 +471,7 @@ namespace Wasatch {
              const Uintah::MaterialSet* const materials,
              const PatchInfoMap& patchInfoMap,
              GraphCategories& grafCat,
-             const BCFunctorMap& bcFunctorMap );
+             BCFunctorMap& bcFunctorMap );
         
     ~BCHelper();
     
@@ -498,29 +495,7 @@ namespace Wasatch {
     void add_auxiliary_boundary_condition( const std::string& srcVarName,
                                           const std::string& newVarName,
                                           const double& newValue,
-                                          const BndCondTypeEnum newBCType );
-    /**
-     *  \brief Function that allows one to add an auxiliary boundary condition based on an existing
-     *  one. This situation typically arises when one needs to specify an auxiliary boundary condition
-     *  to complement one specified by the user. For example, at a moving wall, the user typically specifies
-     *  velocity but boundary conditions must be specified on the momentum RHS, among other things.
-     *
-     *  \param srcVarName A string designating the name of the variable on which one desires
-     *  to "template" the auxiliary boundary. By "template" we mean that the new boundary condition will
-     *  be set on the same boundary(ies), patches, etc...
-     *
-     *  \param newVarName An std::string designating the name of the auxiliary variable, i.e. the
-     *  variable for which we want to create a new boundary condition.
-     *
-     *  \param functorName The name of the functor that applies to the auxiliary boundary.
-     *
-     *  \param newBCType The type (DIRICHLET/NEUMANN) of the auxiliary bc.
-     */
-    void add_auxiliary_boundary_condition( const std::string& srcVarName,
-                                          const std::string& newVarName,
-                                          const std::string& functorName,
-                                          const BndCondTypeEnum newBCType );
-    
+                                          const BndCondTypeEnum newBCType );    
     /**
      *  \brief Adds a boundary condition on a specified boundary
      */
@@ -602,7 +577,23 @@ namespace Wasatch {
      *  BCHelper
      */
     BndMapT& get_boundary_information();
+
+    /**
+     *  \brief Returns true of the BCHelper on this patch has any physical boundaries
+     */
+    bool has_boundaries();
     
+    /**
+     *  \brief Allows one to inject dummy dependencies to help with boundary condition expressions.
+     *  \param targetTag    The Expression tag on which we want to attach a new dependency
+     *  \param dependencies A TagList of new dependencies to attach to targetTag
+     *  \param taskCat      The task in which the dependencies are to be added
+     *
+     */
+    template<typename FieldT>
+    void create_dummy_dependency(const Expr::Tag& targetTag,
+                                 const Expr::TagList dependencies,
+                                 const Category taskCat);
     /**
      *  \brief Print boundary conditions summary.
      *

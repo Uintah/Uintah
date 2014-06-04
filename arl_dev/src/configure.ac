@@ -229,6 +229,12 @@ SCI_ARG_WITH(atlas,
    sci_required_atlas=yes],
   [with_atlas=""])
   
+SCI_ARG_WITH(math,
+  AC_HELP_STRING(--with-math=FULL_PATH_INCLUDING_LIB,
+                 Use specified math library (Defaults to built in -lm)),
+  [with_math="$withval"],
+  [with_math=""])
+  
 SCI_ARG_WITH(mkl,
   AC_HELP_STRING(--with-mkl=DIR,
                  Use the mkl (for lapack/blas) installation in DIR),
@@ -349,10 +355,24 @@ SCI_ARG_WITH(petsc,
   
 SCI_ARG_WITH(boost,
   AC_HELP_STRING(--with-boost=DIR,
-                 Use the Boost library in DIR),
+                 Use the Boost library in DIR/lib),
   [with_boost="$withval"
    sci_required_boost=yes],
   [with_boost=""])
+  
+SCI_ARG_WITH(boost_library,
+  AC_HELP_STRING(--with-boost-library=DIR,
+                 Use the Boost library in DIR),
+  [with_boost_library="$withval"
+   sci_required_boost=yes],
+  [with_boost_library=""])
+  
+SCI_ARG_WITH(boost_include,
+  AC_HELP_STRING(--with-boost-include=DIR,
+                 Use the Boost include files in DIR),
+  [with_boost_include="$withval"
+   sci_required_boost=yes],
+  [with_boost_include=""])
   
 SCI_ARG_WITH(spatialops,
   AC_HELP_STRING(--with-spatialops=DIR,
@@ -689,7 +709,6 @@ fi
 ##  --------------------------------------------------------------------
 
 IS_OSX="no"
-IS_WIN="no"
 IS_VC="no"
 IS_AIX="no"
 
@@ -710,13 +729,6 @@ case $host in
     NUM_CPUS=2
     IS_OSX="yes"
     DEF_OSX="#define IS_OSX 1"
-
-    # New Mac Clang comiler does not support the -faltivec flag...
-    altivec="-faltivec"
-    $CC --version | grep -q -i clang > /dev/null 2>&1
-    if test $? = 0; then
-      altivec="" 
-    fi
     # New Mac gcc47 compiler also does not support the -faltivec flag...
     $CC --version | grep -q -i gcc47 > /dev/null 2>&1
     if test $? = 0; then
@@ -726,14 +738,6 @@ case $host in
   *-aix*)
     NUM_CPUS=4
     IS_AIX="yes"
-    ;;
-  *-mingw*)
-    NUM_CPUS=2
-    IS_WIN="yes"
-    ;;
-  *-pc*)
-    echo
-    AC_MSG_ERROR(Currently Windows only configures from mingw.  See install instructions)
     ;;
   *)
     echo
@@ -745,7 +749,6 @@ esac
 
 AC_SUBST(IS_OSX)
 AC_SUBST(DEF_OSX)
-AC_SUBST(IS_WIN)
 AC_SUBST(IS_AIX)
 
 sci_defs_files="$sci_defs_files include/sci_defs/osx_testdefs.h"
@@ -945,15 +948,17 @@ fi
 ##  DO NOT "hardcode" ANY libraries (i.e. no -l or -L or -I allowed).
 ##
 
-if test "$IS_WIN" = "yes"; then
-  TIME_IMPL=Time_win32.cc
-else
-  TIME_IMPL=Time_unix.cc
-fi
+TIME_IMPL=Time_unix.cc
 TEMPLATE_TAG=
 TEMPLATE_BOX="<>"
 case $host in
      *-darwin*)
+        # New Mac Clang comiler does not support the -faltivec flag...
+        altivec="-faltivec"
+        $CC --version | grep -q -i clang > /dev/null 2>&1
+        if test $? = 0; then
+           altivec="" 
+        fi
 	SO_OR_ARCHIVE_EXTENSION=dylib
         if test "$enable_sci_malloc" = "yes"; then
            AC_MSG_ERROR(sci_malloc does not work under mac osx. Though you can try to use: --enable-sci-malloc=force)
@@ -968,9 +973,6 @@ case $host in
         # later we will make .so's from them.
 	SO_OR_ARCHIVE_EXTENSION=a
 	;;
-     *-pc-mingw*)
-        SO_OR_ARCHIVE_EXTENSION=dll
-        ;;
      *)
 	SO_OR_ARCHIVE_EXTENSION=so 
         ;;
@@ -1102,12 +1104,6 @@ if test ! -e "`which $CC`"; then
 fi
 if test ! -e "`which $CXX`"; then
   SCI_MSG_ERROR(Could not find the specified C++ compiler (CC))
-fi
-
-if test "$IS_WIN" = "yes"; then
-  # don't require fortran on windows yet 
-  # (Uintah disables fortran compilation on windows for the moment...)
-  with_fortran="no"
 fi
 
 # enable/disable certain Uintah components
@@ -1360,11 +1356,6 @@ AC_SUBST(ZOLTAN_LIB_DIR_FLAG)
 
 sci_defs_files="$sci_defs_files include/sci_defs/uintah_testdefs.h"
 
-# This flag is for the windows compiler - so it can generate correct
-# SHARE flags.
-WIN_DLLFLAGS=""
-WIN_OTFFLAGS=""
-
 case $host in 
   *-dec*)
     ac_objext=o
@@ -1501,105 +1492,6 @@ case $host in
     esac
     ;;
 
-  *-pc-mingw*)
-    case $CXX in
-      *cl*)
-          ac_objext=obj
-          CXXFLAGS="-EHsc -GR"
-          
-          if test "$debug" = yes; then
-            #  no debug information for dynamic compilation yet - the threaded compilations will overwrite the db file
-            CFLAGS="-nologo -Od -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_DEPRECATE -Gm -Zi -MD -W1 -Wp64"
-            WIN_DLLFLAGS=' -DBUILD_$(subst /,_,$(patsubst %/,%,$(dir $@))) -Fo"$(dir $@)" -Fd"$(dir $@)vc70.pdb"'
-            WIN_OTFFLAGS=' -Fd"$(basename $@).pdb"'
-          else
-            CFLAGS="-nologo -O2 -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_DEPRECATE -O2 -MD -W1"
-            WIN_DLLFLAGS=' -DBUILD_$(subst /,_,$(patsubst %/,%,$(dir $@))) -Fo"$(dir $@)"'
-          fi
-          CXXFLAGS="$CXXFLAGS $CFLAGS"
-          WOFF=" -w0"
-          SOFLAGS="-link -dll"
-          NEED_SONAME=no
-          LDRUN_PREFIX="-LIBPATH:"
-          IS_VC="yes"
-          if !test -f "$PATH_TO_VC"/bin/cl.exe; then
-            PATH_TO_VC=""
-            echo "invalid PATH_TO_VC"
-          fi
-          if !test -f "$PATH_TO_PSDK"/Include/windows.h; then
-            PATH_TO_PSDK=""
-            echo "invalid PATH_TO_PSDK"
-          fi
-          if !test -f "$PATH_TO_MSYS_BIN"/make.exe; then
-            PATH_TO_MSYS_BIN=""
-            echo "invalid PATH_TO_MSYS_BIN"
-          fi
-          
-          if test -z "$PATH_TO_VC" -o -z "$PATH_TO_PSDK" -o -z "$PATH_TO_MSYS_BIN"; then
-            SCI_MSG_ERROR([One of more of the required VCDIRS variables are not set. Execute
-  export PATH_TO_VC=<path-to-vc>
-  export PATH_TO_PSDK=<path-to-PlatformSDK>
-  export PATH_TO_MSYS_BIN=<msys-bin-dir>
-    Use drive letter and forward slashes (/) instead of backslashes (\)
-    i.e., C:/msys/1.0/bin])
-          fi
-          AC_SUBST(PATH_TO_VC)
-          AC_SUBST(PATH_TO_PSDK)
-          AC_SUBST(PATH_TO_MSYS_BIN)
-          ;;
-      *g++*)
-          ac_objext=o
-          CFLAGS=" -Wall"
-          CXXFLAGS=" -Wall"
-          WIN_DLLFLAGS=' -DBUILD_$(subst /,_,$(patsubst %/,%,$(dir $@)))'
-          SCI_CHECK_VERSION($CC,--version,2.95.3,,
-            echo configure: error: wrong $CC version.; exit)
-          SCI_CHECK_VERSION($CXX,--version,2.95.3,,
-            echo configure: error: wrong $CXX version.; exit)
-          WOFF=" -w"
-          SOFLAGS="-shared ${SOFLAGS}"
-          NEED_SONAME=yes
-          ;;
-      esac
-    AC_PROG_CPP
-    AC_PROG_CXXCPP
-    AC_CHECK_PROG(AS,as,as)
-    AC_CHECK_PROG(LD,ld,ld)
-    CPPFLAGS="$CPPFLAGS $WOFF"
-    CFLAGS="$CFLAGS $extra_cflags"
-    CXXFLAGS="$CXXFLAGS $extra_cflags"
-
-    if test "$sci_required_fortran" = "yes"; then
-      SCI_CHECK_VERSION($F77,--version,0.5.25,,
-        echo configure: error: wrong $F77 version.; exit)
-      case $F77 in
-        *g77*)
-          # extra_fflags has array checking if in debug mode.
-          FFLAGS="$FFLAGS $extra_cflags $extra_fflags"
-
-          # put '_' at end and two '_'s if there is a '_' in name.
-          # This flag is used by the genfspec.pl script in Uintah (generated
-          # from fspec.pl.in).
-          FORTRAN_UNDERSCORE=linux
-          DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_LINUX"
-          ;;
-        *gfortran*)
-          FFLAGS="$FFLAGS -fbounds-check $extra_cflags"   
-          FORTRAN_UNDERSCORE=linux
-          DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_LINUX"
-          ;;        
-        *xlf*)
-          FFLAGS="$FFLAGS"   
-          FORTRAN_UNDERSCORE=linux
-          DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_LINUX"
-          ;;        
-        *)
-          FFLAGS="$FFLAGS $extra_cflags"
-          ;;
-      esac
-    fi
- 
-    ;;
   *)
     # linux
     ac_objext=o
@@ -1742,9 +1634,6 @@ sci_defs_files="$sci_defs_files include/sci_defs/bits_testdefs.h"
 
 ###
 
-AC_SUBST(WIN_DLLFLAGS)
-AC_SUBST(WIN_OTFFLAGS)
-
 rm -f configure-test.*
 rm -rf configure-test-dir
 mkdir configure-test-dir
@@ -1864,13 +1753,6 @@ if test $CC_DEPEND_MODE = unknown; then
   done
 fi
 
-if test $IS_WIN = "yes"; then
-  # for the moment, don't gen deps on win32
-  CC_DEPEND_MODE=normal
-  CC_DEPEND_REGEN=""
-  CC_DEPEND_EXT=""
-fi
-
 if test $CC_DEPEND_MODE = unknown; then
   AC_MSG_ERROR(Cannot determine dependency generation flag. You might have specified bad '--enable-optimize=' flags on your configure line)
 fi
@@ -1897,16 +1779,13 @@ AC_SUBST(F77_DEPEND_REGEN)
 AC_SUBST(F77_DEPEND_EXT)
 
 # Other programs
-if test "$IS_WIN" = "yes"; then
-  AC_CHECK_PROG(MAKE,make,make,NOT_FOUND,)
+AC_PATH_PROG(GMAKE,gmake,NOT_FOUND,,)
+if test "$GMAKE" = "NOT_FOUND"; then
+  AC_PATH_PROG(MAKE,make,NOT_FOUND,,)
 else
-  AC_PATH_PROG(GMAKE,gmake,NOT_FOUND,,)
-  if test "$GMAKE" = "NOT_FOUND"; then
-    AC_PATH_PROG(MAKE,make,NOT_FOUND,,)
-  else
-    MAKE=$GMAKE
-  fi
+  MAKE=$GMAKE
 fi
+
 if test "$MAKE" = "NOT_FOUND"; then
   SCI_MSG_ERROR(GNU make not found.)
 fi
@@ -1918,11 +1797,6 @@ SCI_CHECK_VERSION($MAKE,--version,3.78.1,,
   echo configure: error: wrong GNU make version.; exit)
 
 AC_PROG_AWK
-
-## ignore some software tests on windows (for now at least)
-if test "$IS_WIN" = "yes"; then
-  echo "skipping bison, lex, etags, perl tests"
-else
 
 AC_CHECK_PROG(ETAGS, etags, etags)
 
@@ -1936,8 +1810,6 @@ fi
 if test "$PERL" = "perl"; then
   PERL=`type perl | sed 's%^.* %%'`
 fi
-
-fi # end if IS_WIN = yes
 
 ##  Create the tools dir for later use.
 if test "$sci_required_tools" = "yes" ; then
@@ -2033,6 +1905,8 @@ sci_defs_files="$sci_defs_files include/sci_defs/config_testdefs.h"
 ##  --  search for the math library  -------------------------------------
 AC_LANG(C)
 
+AC_MSG_CHECKING(for math library:)
+
 M_LIB_DIR=
 if test "$IS_VC" = "yes"; then
   M_LIB=""
@@ -2040,13 +1914,25 @@ else
   M_LIB=m
 fi
 
-if test "$IS_BGQ" = "yes"; then
-   # Fixme... this should be a configure flag... This is for LLNL's Vulcan
-   M_LIB_DIR=/opt/ibmcmp/xlmass/bg/7.3/bglib64
-   M_LIB=mass
+if test "$with_math"; then
+   if test ! -e "$with_math"; then
+      AC_MSG_RESULT(ERROR)
+      AC_MSG_ERROR('$with_math' does not exist (--with-math))
+   fi
+   if test -d "$with_math"; then
+      AC_MSG_RESULT(ERROR)
+      AC_MSG_ERROR([--with-math takes a /PATH/LIB, not just the directory: '$with_math'])
+   fi
+
+   M_LIB_DIR=`dirname $with_math`
+   # Remove the .a (or .so) and the lib... 
+   M_LIB=`basename $with_math | rev | cut -f2- -d"." | rev | cut --complement -c1-3`
+
 fi
 
-SCI_TRY_LINK(M,math libraries and headers,math.h,,$M_LIB,$M_LIB_DIR,,[
+AC_MSG_RESULT($M_LIB)
+
+SCI_TRY_LINK(M,Verifying math library and header,math.h,,$M_LIB,$M_LIB_DIR,,[
   double d = fabs(69.05);
 ],required)
 
@@ -2065,14 +1951,6 @@ MPI_EXTRA_LIB_FLAG="$MPI_EXTRA_LIB_FLAG $RT_LIB_FLAG"
 SOCKET_LIBRARY=""
 
 case $host in
-  *-pc-mingw*)
-    threads=win32
-    if test $IS_VC = "yes"; then
-      SOCKET_LIB_FLAG="ws2_32.lib"
-    else
-      SOCKET_LIB_FLAG="-lws2_32"
-    fi
-    ;;
   *)
     if test "$threads" = "unknown"; then
       threads=pthreads
@@ -2127,15 +2005,6 @@ case $threads in
       DEF_THREAD="#define SCI_NOTHREAD 1"
       AC_MSG_WARN(threads disabled - software may work incorrectly)
       ;;
-   win32)
-     # for time functions in windows
-     DEF_THREAD=
-     if test $IS_VC = "yes"; then
-       THREAD_LIB_FLAG=winmm.lib
-     else
-       THREAD_LIB_FLAG=-lwinmm
-     fi
-     ;;
    *)
       SCI_MSG_ERROR(unknown thread type for host $host: $threads. exiting.)
       ;;
@@ -2174,16 +2043,44 @@ if test "$ray_scatter" = "yes"; then
 fi
 AC_SUBST(DEF_RAY_SCATTER)
 
+##  --  Verify CMake -----------------------------
+
+if test "$with_visit" -o "$wasatch_3p" = "yes"; then
+   which cmake > /dev/null 2>&1
+   if test $? != 0; then
+      AC_MSG_ERROR( VisIt requires CMake. Please make sure 'cmake' is in your path!)
+   fi
+   CMAKE_LOCATION=`which cmake`
+
+   # Verify that cmake is new enough:
+   #
+   # Need this ugly hack to handle different types of version strings returned by cmake's different versions... sigh.
+   # The first 'sed' removes all alphabetical characters (leaves numbers, spaces, and periods).  The second 'sed'
+   # removes leading and trailing space.  The final 'sed' replaces (potential) spaces with a perions (.).
+   # Eg: The version string from cmake 2.4.8 is 'cmake version 2.4-patch 8'.
+   # Note: autoconf removes one set of [], thus the below sed commands have one extra set of [] around each portion.
+   CMAKE_VERSION_STRING=`cmake --version | sed 's/[[^0-9. ]]//g' | sed 's/^[[[:space:]]]*\(.*\)[[[:space:]]]*$/\1/' | sed 's/ /./g'`
+
+   CMAKE_VERSION_MAJOR=`echo "$CMAKE_VERSION_STRING" | awk -F. '{print $1}'`
+   CMAKE_VERSION_MINOR=`echo "$CMAKE_VERSION_STRING" | awk -F. '{print $2}'`
+   CMAKE_VERSION_PATCH=`echo "$CMAKE_VERSION_STRING" | awk -F. '{print $3}'`
+
+   if   test "$CMAKE_VERSION_MAJOR" -ge 3; then
+      AC_MSG_WARN(Have not tried using cmake v3.x... It might work...)
+   elif test "$CMAKE_VERSION_MAJOR" -lt 2; then
+      AC_MSG_ERROR(CMake must be version 2.8.7 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING.)
+   elif test "$CMAKE_VERSION_MINOR" -lt 8; then
+      AC_MSG_ERROR(CMake must be version 2.8.7 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING.)
+   elif test "$CMAKE_VERSION_PATCH" -lt 7; then
+      AC_MSG_ERROR(CMake must be version 2.8.7 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING.)
+   fi
+fi
+
 ##  --  With VisIt -----------------------------
 
 if test "$with_visit"; then
 
    AC_MSG_CHECKING(for VisIt)
-
-   which cmake > /dev/null 2>&1
-   if test $? != 0; then
-      AC_MSG_ERROR( VisIt requires CMake. Please make sure 'cmake' is in your path!)
-   fi
 
    if test "$with_visit" = "yes"; then 
       AC_MSG_ERROR( You must provide a DIRECTORY when using --with-visit=DIR. )
@@ -2198,28 +2095,6 @@ if test "$with_visit"; then
       	 AC_MSG_WARN(VisIt target directory has changed - removing old VisIt build directory...)
 	 rm -rf ./VisIt
       fi
-   fi
-
-   CMAKE_LOCATION=`which cmake`
-
-   # Verify that cmake is new enough:
-   #
-   # Need this ugly hack to handle different types of version strings returned by cmake's different versions... sigh.
-   # The first 'sed' removes all alphabetical characters (leaves numbers, spaces, and periods).  The second 'sed'
-   # removes leading and trailing space.  The final 'sed' replaces (potential) spaces with a perions (.).
-   # Eg: The version string from cmake 2.4.8 is 'cmake version 2.4-patch 8'.
-   # Note: autoconf removes one set of [], thus the below sed commands have one extra set of [] around each portion.
-   CMAKE_VERSION_STRING=`cmake --version | sed 's/[[^0-9. ]]//g' | sed 's/^[[[:space:]]]*\(.*\)[[[:space:]]]*$/\1/' | sed 's/ /./g'`
-
-   CMAKE_VERSION_MAJOR=`echo "$CMAKE_VERSION_STRING" | awk -F. '{print $1}'`
-   CMAKE_VERSION_MINOR=`echo "$CMAKE_VERSION_STRING" | awk -F. '{print $2}'`
-
-   if   test "$CMAKE_VERSION_MAJOR" -ge 3; then
-      AC_MSG_WARN(Have not tried using cmake v3.x... It might work...)
-   elif test "$CMAKE_VERSION_MAJOR" -lt 2; then
-      AC_MSG_ERROR(CMake must be version 2.8 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING.)
-   elif test "$CMAKE_VERSION_MINOR" -lt 8; then
-      AC_MSG_ERROR(CMake must be version 2.8 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING.)
    fi
 
    sci_defs_files="$sci_defs_files VisIt/udaReaderMTMD/avtudaReaderMTMDFileFormat.C"
@@ -2282,11 +2157,6 @@ else
       dlopen("bogus", 0);
     ],required)
     ;;
-  *-pc-mingw*)
-    echo "Using Windows dynamic loader"
-    DL_LIB_FLAG=""
-    DL_LIB_DIR_FLAG=""
-    ;;
   *)
     SCI_TRY_LINK(DL,dlopen in libdl,dlfcn.h,,dl,,,[
       dlopen("bogus", 0);
@@ -2323,14 +2193,10 @@ sci_defs_files="$sci_defs_files include/sci_defs/stat64_testdefs.h"
 SCI_TRY_LINK(STD_HDRS,standard headers,stdio.h stdlib.h stddef.h stdarg.h string.h limits.h errno.h fcntl.h float.h memory.h ctype.h signal.h locale.h assert.h sys/types.h sys/stat.h sys/timeb.h,,,,,,required)
 
 # don't test for malloc.h or values.h on darwin
-# don't test a bunch of then on win32
 case $host in
   *-darwin*)
     SCI_TRY_LINK(STD_HDRS, standard headers-2,unistd.h dirent.h sys/time.h sys/param.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h,,,,,,required)
     ;;
-  *-pc-mingw*)
-    ;;
-
   *)
     # default system headers that cannot be tested on all systems
     SCI_TRY_LINK(STD_HDRS,standard headers-2,unistd.h dirent.h sys/time.h sys/param.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h,,,,,,required)
@@ -2465,7 +2331,7 @@ fi
 
 AC_SUBST(SSTREAM_COMPAT)
 AC_LANG(C)
-##  --  search for SGI'S or Win32's traceback library  ------------------------------ 
+##  --  search for SGI'S traceback library  ------------------------------ 
 
 _sci_optional=optional
 if test "$with_exc"; then
@@ -2477,15 +2343,9 @@ else
   _sci_inc=
 fi
 
-if test "$IS_WIN" = "yes"; then
-  # it's 'imagehlp' but call it EXC anyway so we don't have to change
-  # other config parameters
-  SCI_TRY_LINK(EXC,WIN32 traceback library and headers,windows.h imagehlp.h,$_sci_inc,imagehlp psapi,$_sci_lib,,,required)
-else
-  SCI_TRY_LINK(EXC,traceback library and headers,libexc.h,$_sci_inc,exc,$_sci_lib,,,$_sci_optional)
-fi
+SCI_TRY_LINK(EXC,traceback library and headers,libexc.h,$_sci_inc,exc,$_sci_lib,,,$_sci_optional)
 
-if test "$HAVE_EXC" = "yes" -a "$IS_WIN" != "yes"; then
+if test "$HAVE_EXC" = "yes"; then
   DEF_EXC="#define HAVE_EXC 1"
 fi
 
@@ -2838,9 +2698,12 @@ if test "$with_mkl"; then
 
   if test "$with_mkl" = "yes"; then
     AC_MSG_ERROR(You must specify a directory with --with-mkl=DIR)
-  elif test "$with_mkl"; then
+  else
     _sci_lib="$with_mkl/lib"
     _sci_inc="$with_mkl/include"
+    if test ! -e "$with_mkl" -o ! -e "$_sci_lib" -o ! -e "$_sci_inc"; then
+       AC_MSG_ERROR(with_mkl (or lib/incldue) dir does not exist: $with_mkl)
+    fi
     
     # _sci_optional=specific TESTING FOR SPECIFIC NOT IMPLEMENTED!!!
     
@@ -2887,6 +2750,10 @@ if test "$with_mkl"; then
 
        ;;
   esac
+
+  if test "$HAVE_BLAS" != "yes"; then
+    AC_MSG_ERROR(Failed to link against MKL specified by --with_mkl.)
+  fi
 
   HAVE_LAPACK=$HAVE_BLAS
 
@@ -4024,7 +3891,6 @@ elif test -e $sci_thirdparty_dir/bin/freetype-config; then
     _sci_lib="$sci_thirdparty_lib"
 else
     AC_MSG_RESULT(No 'freetype-config' file found in $freetype_bin.)
-    # try the 3P for windows
     _sci_lib="$sci_thirdparty_lib"
     _sci_inc="$sci_thirdparty_include"
     includes=""
@@ -4142,33 +4008,65 @@ AC_LANG(C)
 
 ##  --  search for Boost ------------------------
 AC_LANG([C++])
+
+BOOST_INCLUDE_DIR=
+BOOST_LIBRARY_DIR=
+
 if test "$with_boost"; then
+
+   # Remove the trailing / from with_boost (if any)
+   with_boost=${with_boost%/}
+
    if test "$with_boost" = "yes"; then
        AC_MSG_ERROR( --with-boost=DIR requires a DIRectory be provided. )
    elif test ! -d $with_boost; then
-        echo ""
-        AC_MSG_ERROR( '$with_boost' directory does not exist. )
-   elif test "$with_boost" = "/usr"; then
+      AC_MSG_ERROR( '$with_boost' directory does not exist. )
+   elif test "$with_boost_library" -o "$with_boost_include" ; then
+      AC_MSG_ERROR( You cannot use --with-boost and --with-boost-include/--with-boost-library. )
+   elif test "$with_boost" != "/usr"; then
         # Check for header files
-        BOOST_INCLUDE_DIR=$with_boost/include/boost
-        BOOST_LIBRARY_DIR=$with_boost/lib
- 
-   else
         BOOST_INCLUDE_DIR=$with_boost/include
         BOOST_LIBRARY_DIR=$with_boost/lib
-   
    fi
-   
-    _boost_incl="boost/signal.hpp boost/shared_ptr.hpp boost/bind.hpp boost/signal.hpp boost/ref.hpp boost/graph/adjacency_list.hpp boost/graph/graph_traits.hpp boost/graph/topological_sort.hpp boost/graph/graphviz.hpp boost/graph/breadth_first_search.hpp boost/graph/visitors.hpp boost/graph/transpose_graph.hpp boost/any.hpp boost/filesystem.hpp"
+fi
 
-    _boost_libs_mt="boost_thread-mt boost_signals-mt boost_serialization-mt boost_system-mt boost_program_options-mt boost_filesystem-mt"
+if test "$with_boost_library" -o "$with_boost_include" ; then
+   if test ! "$with_boost_library" -o ! "$with_boost_include" ; then
+      AC_MSG_ERROR( You must specify both --with-boost-include and --with-boost-library. )
+   elif test ! -d $with_boost_include; then
+      AC_MSG_ERROR( Directory does not exist: '$with_boost_include' )
+   elif test ! -d $with_boost_library; then
+      AC_MSG_ERROR( Directory does not exist: '$with_boost_library' )
+   fi
+   BOOST_INCLUDE_DIR=$with_boost_include
+   BOOST_LIBRARY_DIR=$with_boost_library
+fi
 
-   _boost_libs="boost_thread boost_signals boost_serialization boost_system boost_program_options boost_filesystem"
-  
-  SCI_TRY_LINK(BOOST,boost library and include headers,$_boost_incl,$BOOST_INCLUDE_DIR,$_boost_libs_mt,$BOOST_LIBRARY_DIR,,,optional)
+if test "$with_boost" -o "$with_boost_library"; then
+
+  _boost_incl="boost/signal.hpp boost/shared_ptr.hpp boost/bind.hpp boost/signal.hpp boost/ref.hpp boost/graph/adjacency_list.hpp boost/graph/graph_traits.hpp boost/graph/topological_sort.hpp boost/graph/graphviz.hpp boost/graph/breadth_first_search.hpp boost/graph/visitors.hpp boost/graph/transpose_graph.hpp boost/any.hpp boost/filesystem.hpp"
+
+  _boost_libs_mt="boost_thread-mt boost_signals-mt boost_serialization-mt boost_system-mt boost_program_options-mt boost_filesystem-mt"
+
+  _boost_libs="boost_thread boost_signals boost_serialization boost_system boost_program_options boost_filesystem"
+
+  SCI_TRY_LINK(BOOST,[boost library (mt version) and include headers],$_boost_incl,$BOOST_INCLUDE_DIR,$_boost_libs_mt,$BOOST_LIBRARY_DIR,,,optional)
+
+  if test "$HAVE_BOOST" = "yes" -a "$with_boost" != "/usr"; then
+    if test ! -e "$BOOST_LIBRARY_DIR"/libboost_thread-mt.so -a ! -e "$BOOST_LIBRARY_DIR"/libboost_thread-mt.a; then
+       AC_MSG_WARN( [Boost was found, but not in the right place... trying again.] )
+       HAVE_BOOST=no
+    fi
+  fi
 
   if test "$HAVE_BOOST" = "no"; then
      SCI_TRY_LINK(BOOST, boost library (non-mt) and include headers,$_boost_incl,$BOOST_INCLUDE_DIR,$_boost_libs,$BOOST_LIBRARY_DIR,,,optional)
+
+     if test "$HAVE_BOOST" = "yes" -a "$with_boost" != "/usr"; then
+        if test ! -e "$BOOST_LIBRARY_DIR"/libboost_thread.so -a ! -e "$BOOST_LIBRARY_DIR"/libboost_thread.a; then
+           AC_MSG_ERROR( Boost was found but not in the right place... )
+        fi
+     fi
   fi
 
   if test "$HAVE_BOOST" = "yes"; then
@@ -4177,20 +4075,34 @@ if test "$with_boost"; then
      AC_MSG_ERROR( Did not find boost in: '$with_boost'. )
   fi
 
-  if test "$with_boost" != "/usr"; then
+  if test "$with_boost" -a "$with_boost" != "/usr"; then
      # If with_boost points to /usr, then we don't need to explicitly point to it...
      INC_BOOST_H="-I$with_boost/include"
      if test "$IS_STATIC_BUILD" != "yes"; then
         BOOST_LIB_DIR_FLAG="$LDRUN_PREFIX$BOOST_LIB_DIR -L$BOOST_LIB_DIR"
      fi
   fi
+
+  SCI_TRY_LINK( BOOST_FS_V3, check for boost filesystem v3 namespace...,
+                $_boost_incl,$BOOST_INCLUDE_DIR,,,
+                $BOOST_LIB_DIR_FLAG $BOOST_LIB_FLAG,
+                [  boost::system::error_code ec;
+                   boost::filesystem3::copy("abc","def", ec);  ],
+                optional)
+  if test "$HAVE_BOOST_FS_V3" = "yes"; then
+     DEF_BOOST_FILESYSTEM_NAMESPACE_V3="#define UINTAH_BOOST_FILESYSTEM_NAMESPACE_V3 1"
+  fi
+
 fi
 AC_SUBST(HAVE_BOOST)
 AC_SUBST(DEF_BOOST)
+AC_SUBST(DEF_BOOST_FILESYSTEM_NAMESPACE_V3)
 AC_SUBST(INC_BOOST_H)
 AC_SUBST(BOOST_LIB_FLAG)
 AC_SUBST(BOOST_LIB_DIR_FLAG)
 AC_LANG([C])
+
+sci_defs_files="$sci_defs_files include/sci_defs/boost_testdefs.h"
 
 ##  --  search for Hash Map ------------------------
 
@@ -4219,12 +4131,6 @@ if test "$DEF_HASHMAP" = "None"; then
   AC_TRY_COMPILE([#include <ext/hash_map>
                  std::hash_map<int, int> xx;], ,
 		 [DEF_HASHMAP=HAVE_EXT_HASHMAP])
-fi
-# win32 has hash_map in stdext namespace (7 deprecates it in std, 8 requires stdext)
-if test "$DEF_HASHMAP" = "None"; then
-  AC_TRY_COMPILE([#include <hash_map>
-                 stdext::hash_map<int, int> xx;], ,
-		 [DEF_HASHMAP=HAVE_STDEXT_HASHMAP])
 fi
 
 ############################################################
@@ -4284,7 +4190,7 @@ if test "$wasatch_3p" = "yes"; then
 
   mkdir -p Wasatch3P
 
-  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` "$with_boost" "$debug" "$IS_STATIC_BUILD" "$sci_required_cuda"
+  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` "$BOOST_LIBRARY_DIR" "$BOOST_INCLUDE_DIR" "$debug" "$IS_STATIC_BUILD" "$sci_required_cuda"
 
   if test $? != 0; then
      AC_MSG_ERROR( Failed to build Wasatch 3p libraries... )
@@ -4363,7 +4269,7 @@ if test "$with_exprlib"; then
     # Check includes
     for file in ExprDeps.h ExprLib.h Context.h Expression.h ExpressionID.h FieldManagerList.h \
                 ExpressionBase.h ExpressionFactory.h ExpressionTree.h FieldDeps.h FieldManager.h FieldManagerBase.h \
-                Functions.h PlaceHolderExpr.h Tag.h TransportEquation.h uintah; do
+                Functions.h Tag.h TransportEquation.h uintah; do
       if test ! -e $with_exprlib/$SPOPS_INCLUDE_DIR/$file; then
         echo ""
         AC_MSG_ERROR( '$with_exprlib/$SPOPS_INCLUDE_DIR/$file' does not exist. )
@@ -4488,7 +4394,7 @@ else
        test "$HAVE_SPATIALOPS" = "yes" &&
        test "$HAVE_EXPRLIB" = "yes"; then
       BUILD_WASATCH=yes
-      add_important_warning "All prereqs satisfied, turning on Wasatch component."
+      add_important_warning "All prereqs satisfied - turning on Wasatch component."
       AC_MSG_WARN(All prereqs satisfied, turning on Wasatch component.)
     fi
   fi
@@ -4626,11 +4532,6 @@ SCI_ARG_VAR(CXXFLAGS,C++ compiler flags)
 
 scirun_obj_dir=`pwd`;
 scirun_src_dir=`(cd ${srcdir};pwd)`
-
-if test "$IS_WIN" = "yes"; then
-  scirun_obj_dir=`echo "$scirun_obj_dir" | sed 's,/,,' | sed 's,/,:/,'`
-  scirun_src_dir=`echo "$scirun_src_dir" | sed 's,/,,' | sed 's,/,:/,'`
-fi
 
 AC_SUBST(scirun_obj_dir)
 AC_SUBST(scirun_src_dir)

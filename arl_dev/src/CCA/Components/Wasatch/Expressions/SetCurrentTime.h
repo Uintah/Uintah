@@ -42,7 +42,7 @@ class SetCurrentTime
 {
   int rkStage_;
   double deltat_, simTime_, timeStep_;
-
+  double timeCor_[3]; // time correction in rkstages
   SetCurrentTime();
 
 public:
@@ -61,9 +61,9 @@ public:
   void bind_fields( const Expr::FieldManagerList& fml ){}
   void evaluate();
   void set_integrator_stage( const int rkStage ){rkStage_ = rkStage;}
-  void set_deltat( const double deltat ) {deltat_ = deltat;}
+  void set_deltat( const double deltat ) { deltat_ = deltat; }
   void set_timestep( const int ts ){ timeStep_ = (double) ts; }
-  void set_time( const double t ){ simTime_ = t; }
+  void set_time  ( const double t ){ simTime_ = t; }
 };
 
 } // namespace Wasatch

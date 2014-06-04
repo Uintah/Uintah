@@ -37,8 +37,6 @@
 #ifndef Core_Thread_Runnable_h
 #define Core_Thread_Runnable_h
 
-#include <Core/Thread/share.h>
-
 namespace SCIRun {
 
   class Thread;
@@ -67,11 +65,13 @@ DESCRIPTION
    of this same thread.
    
 ****************************************/
-  class SCISHARE Runnable {
+class Runnable {
+
   protected:
+
     friend class Thread;
     Thread* my_thread_;
-    
+
     //////////
     // Create a new runnable, and initialize it's state.
     Runnable(bool delete_on_exit = true);
@@ -87,14 +87,17 @@ DESCRIPTION
     // is attached to a <b>Thread</b> object, and will be executed
     // in a new context.
     virtual void run()=0;
+
   private:
+
     bool delete_on_exit;
 
     // Cannot copy them
     Runnable(const Runnable&);
     Runnable& operator=(const Runnable&);
-  };
-} // End namespace SCIRun
+};
+}
+  // End namespace SCIRun
 
 #endif
 

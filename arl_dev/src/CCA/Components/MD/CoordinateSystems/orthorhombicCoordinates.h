@@ -119,7 +119,7 @@ namespace Uintah {
         double d_zeroTol = 1.0e-13;
         SCIRun::Vector angleDiff = _anglesIn*MDConstants::degToRad-SCIRun::Vector(MDConstants::PI_Over_2);
         if (abs(angleDiff[0]) > d_zeroTol || abs(angleDiff[1]) > d_zeroTol || abs(angleDiff[2]) > d_zeroTol) {
-          throw SCIRun::InvalidState("Error:  Attempt to update an orthorhombic coordinate system with cell angles not equal to 90 degrees",
+          throw InvalidState("Error:  Attempt to update an orthorhombic coordinate system with cell angles not equal to 90 degrees",
                                      __FILE__,
                                      __LINE__);
         }

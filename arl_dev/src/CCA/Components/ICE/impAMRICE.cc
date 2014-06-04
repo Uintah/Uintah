@@ -370,6 +370,7 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
 
   d_subsched->setParentDWs(ParentOldDW, ParentNewDW);
   d_subsched->advanceDataWarehouse(grid);
+  d_subsched->setInitTimestep(true);
   DataWarehouse* subOldDW = d_subsched->get_dw(2);
   DataWarehouse* subNewDW = d_subsched->get_dw(3);
 
@@ -412,6 +413,8 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   bool recursion = true;
   //bool firstIter = true;
   bool modifies_X = true;
+
+  d_subsched->setInitTimestep(false);
 
   while( counter < d_max_iter_implicit && max_RHS > d_outer_iter_tolerance) {
     if (counter == 0 && d_recompileSubsched) {

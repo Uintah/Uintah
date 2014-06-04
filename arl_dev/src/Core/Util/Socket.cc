@@ -35,17 +35,11 @@
 #include <cstring>
 #include <cerrno>
 #include <cstdio>
-
-#ifdef _WIN32
-#  define socklen_t int
-#  define close closesocket
-#else
-#  include <fcntl.h>
-#endif
+#include <fcntl.h>
 
 #if defined(__APPLE__)
 #  define SOCKET_NOSIGNAL SO_NOSIGPIPE
-#elif defined(_WIN32) || defined(__sgi) || defined(_AIX)
+#elif defined(__sgi) || defined(_AIX)
 #  define SOCKET_NOSIGNAL 0
 #else
 #  define SOCKET_NOSIGNAL MSG_NOSIGNAL
@@ -152,18 +146,11 @@ Socket::write(const std::string s) const
 bool 
 Socket::write(const void *buf, size_t bytes) const
 {
-#ifdef _WIN32
-  // windows wants a char buffer
-  const char* charbuf = (const char*) buf;
-  bytes *= (sizeof(void*)/sizeof(char*));
-  int sent = ::send(sock_, charbuf, bytes, SOCKET_NOSIGNAL);
-#else
   int sent = ::send(sock_, buf, bytes, SOCKET_NOSIGNAL);
-#endif
 
-  if (sent == -1) { 
+  if (sent == -1) {
     perror("ERROR in write(const void *buf, size_t bytes)");
-    return false; 
+    return false;
   }
   return true;
 }
@@ -244,30 +231,23 @@ Socket::connect(const std::string host, const int port)
 void 
 Socket::set_blocking(const bool b)
 {
-#ifndef _WIN32
   int opts;
   opts = fcntl(sock_, F_GETFL);
-  
-  if (opts < 0) { 
+
+  if (opts < 0) {
     perror("ERROR in set_non_blocking() get");
-    return; 
+    return;
   }
-  
-  if (! b) {
-    opts = ( opts | O_NONBLOCK );
+
+  if (!b) {
+    opts = (opts | O_NONBLOCK);
   } else {
-    opts = ( opts & ~O_NONBLOCK );
+    opts = (opts & ~O_NONBLOCK);
   }
-  
+
   if (fcntl(sock_, F_SETFL, opts) < 0) {
     perror("ERROR in set_non_blocking() set");
   }
-#else
-  unsigned long val = !b;
-  if (ioctlsocket(sock_, FIONBIO, &val) < 0) {
-    perror("ERROR in set_non_blocking() set");
-  }
-#endif
 }
 
 string

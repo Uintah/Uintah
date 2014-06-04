@@ -3,7 +3,7 @@
 #______________________________________________________________________
 # Parallel copy (cp)
 # This script copies an uda between file system in parallel.  It requires
-# that the user has interactive nodes or is using batch scheduling system.
+# that the user use interactive nodes or is using batch scheduling system.
 #______________________________________________________________________
 # unalias commands
 unalias -a rm
@@ -13,7 +13,7 @@ unalias -a cd
 # error checking
 if test "$#" -ne 6; then
   echo ""
-  echo "Usage: pcp <number of nodes> <method (rsync/tar)> <transfer entire uda (y/n) > < remove remote directory (y/n) > < local dir to be copied> <remote dir>"
+  echo "Usage: pcp <number of nodes> <method (cp/rsync/tar)> <transfer entire uda (y/n) > < remove remote directory (y/n) > < local dir to be copied> <remote dir>"
   echo ""
   exit 1
 fi
@@ -26,6 +26,7 @@ if test $? != 0 ; then
   echo ""
   exit 1  
 fi
+
 
 #__________________________________
 # local variables are all lowercase
@@ -186,6 +187,14 @@ if test $numNodes -gt $PBS_NUM_NODES; then
   exit 1 
 fi
 
+pbsdsh > /dev/null 2>&1
+if test $? != 0 ; then
+  echo ""
+  echo "Error:  Can't find the pbs command pbsdsh.  Please correct your path"
+  echo ""
+  exit 1
+fi
+
 let numProcs=$numNodes*$numPPM
 if test $numProcs -gt 50; then
   echo ""
@@ -240,6 +249,7 @@ cd $LOCALDIR
 
 FIND=find
 $FIND .             -maxdepth 1 -type f -exec basename {} \; | grep -v .transferred_files > $PCP_FILES
+$FIND .             -maxdepth 1 -type d -exec basename {} \; | grep -v "t[0-9]\|checkpoints\|.transferred_files" >> $PCP_FILES
 $FIND ./t*          -maxdepth 0 -type d -exec basename {} \; | sort -r                    >>$PCP_FILES
 $FIND ./checkpoints -maxdepth 1                                                           >>$PCP_FILES
 

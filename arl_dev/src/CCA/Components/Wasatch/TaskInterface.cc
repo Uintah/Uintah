@@ -347,7 +347,7 @@ namespace Wasatch{
 
           dbg_fields << std::setw(10) << "(REQUIRES)"
                      << std::setw(20) << std::left << fieldInfo.varlabel->getName()
-                     << "OLD   "
+                     << " OLD   "
                      << std::left << std::setw(5) << fieldInfo.nghost
                      << *patches << endl;
         }
@@ -366,11 +366,15 @@ namespace Wasatch{
         }
         else if( fieldTag.context() == Expr::STATE_N ){
           fieldInfo.mode = Expr::REQUIRES;
-          fieldInfo.useOldDataWarehouse = (rkStage < 2);
+          fieldInfo.useOldDataWarehouse = true;
         }
         else if( fieldTag.context() == Expr::STATE_NP1 ){
           fieldInfo.mode = Expr::REQUIRES;
           fieldInfo.useOldDataWarehouse = false;
+        }
+        else if( fieldTag.context() == Expr::STATE_DYNAMIC ){
+          fieldInfo.mode = Expr::REQUIRES;
+          fieldInfo.useOldDataWarehouse = (rkStage < 2);
         }
         else{
           fieldInfo.mode = Expr::REQUIRES;
@@ -379,17 +383,20 @@ namespace Wasatch{
         }
         if( tree.name()!="set_time" &&
             tree.name()!="initialization" &&
-            (fieldInfo.varlabel->getName()=="time" ||
-             fieldInfo.varlabel->getName()=="dt"   ||
-             fieldInfo.varlabel->getName()=="timestep")){
+            (fieldInfo.varlabel->getName()=="time"     ||
+             fieldInfo.varlabel->getName()=="dt"       ||
+             fieldInfo.varlabel->getName()=="timestep" ||
+             fieldInfo.varlabel->getName()=="rkstage") ){
           fieldInfo.mode = Expr::REQUIRES;
         }
 
+#       ifdef WASATCH_IN_ARCHES
         // this was needed for Warches. When adding a placeholder expression with STATE_N,
         // we must use the newdw in the initialization task graph.
-        if (tree.name() == "initialization" && fieldTag.context() == Expr::STATE_N) {
+        if( tree.name() == "initialization" && fieldTag.context() == Expr::STATE_DYNAMIC ){
           fieldInfo.useOldDataWarehouse = false;
         }
+#       endif // WASATCH_IN_ARCHES
 
         const Uintah::Task::WhichDW dw = ( fieldInfo.useOldDataWarehouse ) ? Uintah::Task::OldDW : Uintah::Task::NewDW;
 
@@ -425,8 +432,8 @@ namespace Wasatch{
         } // switch
 
         dbg_fields << std::setw(20) << std::left << fieldInfo.varlabel->getName();
-        if( fieldInfo.useOldDataWarehouse ){ dbg_fields << "OLD   "; }
-        else{ dbg_fields << "NEW   "; }
+        if( fieldInfo.useOldDataWarehouse ){ dbg_fields << " OLD   "; }
+        else{ dbg_fields << " NEW   "; }
         dbg_fields << std::left << std::setw(5) << fieldInfo.nghost << *patches << endl;
 
       } // field loop
@@ -478,10 +485,10 @@ namespace Wasatch{
     if( hasPressureExpression_ ){
       Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( pressure_tag(), patchID, true ) );
       pexpr.declare_uintah_vars( *task, pss, mss, rkStage );
-      pexpr.schedule_solver( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );      
+      pexpr.schedule_solver( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
       pexpr.schedule_set_pressure_bcs( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );            
     }
-    
+
     if (tree->computes_field(TagNames::self().radiationsource)) {
       RadiationSource& radExpr = dynamic_cast<RadiationSource&>( factory.retrieve_expression(TagNames::self().radiationsource,patchID,true) );
       radExpr.schedule_ray_tracing( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
@@ -528,102 +535,99 @@ namespace Wasatch{
     //
     if( event == Uintah::Task::CPU || event == Uintah::Task::GPU ){
       // preventing postGPU / preGPU callbacks to execute the tree again
-      for( int ip=0; ip<patches->size(); ++ip ){
+    for( int ip=0; ip<patches->size(); ++ip ){
 
-        const Uintah::Patch* const patch = patches->get(ip);
-        const int patchID = patch->getID();
-        PatchTreeTaskMap::iterator iptm = patchTreeMap_.find(patchID);
-        ASSERT( iptm != patchTreeMap_.end() );
-        const TreePtr tree = iptm->second.tree;
+      const Uintah::Patch* const patch = patches->get(ip);
+      const int patchID = patch->getID();
+      PatchTreeTaskMap::iterator iptm = patchTreeMap_.find(patchID);
+      ASSERT( iptm != patchTreeMap_.end() );
+      const TreePtr tree = iptm->second.tree;
 
   #     ifdef HAVE_CUDA
         // set the stream for the Tree and the underlying expressions in it
         if( event == Uintah::Task::GPU ) tree->set_cuda_stream( *(cudaStream_t*)stream );
   #     endif
 
-        Expr::ExpressionFactory& factory = tree->get_expression_factory();
-        const SpatialOps::OperatorDatabase& opdb = *iptm->second.operators;
+      Expr::ExpressionFactory& factory = tree->get_expression_factory();
+      const SpatialOps::OperatorDatabase& opdb = *iptm->second.operators;
 
-        for( int im=0; im<materials->size(); ++im ){
+      for( int im=0; im<materials->size(); ++im ){
 
-          const int material = materials->get(im);
-          try{
-            dbg_tasks << endl
-                      << "Wasatch: executing graph '" << taskName_
-                      << "' for patch " << patch->getID()
-                      << " and material " << material
-                      << endl;
-            if( dbg_tasks_on ) fml_->dump_fields(std::cout);
+        const int material = materials->get(im);
+        try{
+          dbg_tasks << endl
+                    << "Wasatch: executing graph '" << taskName_
+                    << "' for patch " << patch->getID()
+                    << " and material " << material
+                    << endl;
+          if( dbg_tasks_on ) fml_->dump_fields(std::cout);
 
-            fml_->allocate_fields( Expr::AllocInfo( oldDW, newDW, material, patch, pg ) );
+          fml_->allocate_fields( AllocInfo( oldDW, newDW, material, patch, pg ) );
 
-            if( hasPressureExpression_ ){
-              Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( pressure_tag(), patchID, true ) );
+          if( hasPressureExpression_ ){
+            Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( pressure_tag(), patchID, true ) );
+            pexpr.set_patch(patches->get(ip));
+            pexpr.set_RKStage(rkStage);
+            pexpr.bind_uintah_vars( newDW, patch, material, rkStage );
+          }
+
+          Expr::Tag ptag;
+          BOOST_FOREACH( const Expr::Tag& ptag, PoissonExpression::poissonTagList ){
+            if (tree->computes_field( ptag )) {
+              PoissonExpression& pexpr = dynamic_cast<PoissonExpression&>( factory.retrieve_expression( ptag, patchID, true ) );
               pexpr.set_patch(patches->get(ip));
               pexpr.set_RKStage(rkStage);
-              pexpr.bind_uintah_vars( newDW, patch, material, rkStage );
+            }            
+          }    
+
+          // Pass patch information to the coordinate expressions
+          typedef std::map<Expr::Tag, std::string> CoordMapT;
+          // OldVariable& oldVar = OldVariable::self();
+          BOOST_FOREACH( const CoordMapT::value_type& coordPair, CoordinateNames::coordinate_map() ){
+            const Expr::Tag& coordTag = coordPair.first;
+            const std::string& coordFieldT = coordPair.second;
+
+            if( ! tree->computes_field(coordTag) ) continue;
+
+            if( coordFieldT == "SVOL"){
+              Coordinates<SVolField>& coordExpr = dynamic_cast<Coordinates<SVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
+              coordExpr.set_patch(patches->get(ip));
+              // In case we want to copy coordinates instead of recomputing them, uncomment the following line
+              // oldVar.add_variable<SVolField>( ADVANCE_SOLUTION, coordTag, true);
             }
-
-            Expr::Tag ptag;
-            for( Expr::TagList::iterator ptag=PoissonExpression::poissonTagList.begin();
-                ptag!=PoissonExpression::poissonTagList.end();
-                ++ptag ){
-              if (tree->computes_field( *ptag )) {
-                PoissonExpression& pexpr = dynamic_cast<PoissonExpression&>( factory.retrieve_expression( *ptag, patchID, true ) );
-                pexpr.set_patch(patches->get(ip));
-                pexpr.set_RKStage(rkStage);
-              }
+            else if( coordFieldT == "XVOL" ){
+              Coordinates<XVolField>& coordExpr = dynamic_cast<Coordinates<XVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
+              coordExpr.set_patch(patches->get(ip));
+              // In case we want to copy coordinates instead of recomputing them, uncomment the following line
+              // oldVar.add_variable<XVolField>( ADVANCE_SOLUTION, coordTag, true);
             }
-
-            // Pass patch information to the coordinate expressions
-            typedef std::map<Expr::Tag, std::string> CoordMapT;
-            // OldVariable& oldVar = OldVariable::self();
-            BOOST_FOREACH( const CoordMapT::value_type& coordPair, CoordinateNames::coordinate_map() )
-            {
-              const Expr::Tag& coordTag = coordPair.first;
-              const std::string& coordFieldT = coordPair.second;
-
-              if( !(tree->computes_field(coordTag)) ) continue;
-
-              if( coordFieldT == "SVOL"){
-                Coordinates<SVolField>& coordExpr = dynamic_cast<Coordinates<SVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
-                coordExpr.set_patch(patches->get(ip));
-                // In case we want to copy coordinates instead of recomputing them, uncomment the following line
-  //              oldVar.add_variable<SVolField>( ADVANCE_SOLUTION, coordTag, true);
-              }
-              else if( coordFieldT == "XVOL" ){
-                Coordinates<XVolField>& coordExpr = dynamic_cast<Coordinates<XVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
-                coordExpr.set_patch(patches->get(ip));
-                // In case we want to copy coordinates instead of recomputing them, uncomment the following line
-  //              oldVar.add_variable<XVolField>( ADVANCE_SOLUTION, coordTag, true);
-              }
-              else if( coordFieldT == "YVOL" ){
-                Coordinates<YVolField>& coordExpr = dynamic_cast<Coordinates<YVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
-                coordExpr.set_patch(patches->get(ip));
-                // In case we want to copy coordinates instead of recomputing them, uncomment the following line
-  //              oldVar.add_variable<YVolField>( ADVANCE_SOLUTION, coordTag, true);
-              }
-              else if( coordFieldT == "ZVOL" ){
-                Coordinates<ZVolField>& coordExpr = dynamic_cast<Coordinates<ZVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
-                coordExpr.set_patch(patches->get(ip));
-                // In case we want to copy coordinates instead of recomputing them, uncomment the following line
-  //              oldVar.add_variable<ZVolField>( ADVANCE_SOLUTION, coordTag, true);
-              }
+            else if( coordFieldT == "YVOL" ){
+              Coordinates<YVolField>& coordExpr = dynamic_cast<Coordinates<YVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
+              coordExpr.set_patch(patches->get(ip));
+              // In case we want to copy coordinates instead of recomputing them, uncomment the following line
+              // oldVar.add_variable<YVolField>( ADVANCE_SOLUTION, coordTag, true);
             }
-
-            tree->bind_fields( *fml_ );
-            tree->bind_operators( opdb );
-            tree->execute_tree();
-
-            dbg_tasks << "Wasatch: done executing graph '" << taskName_ << "'" << endl;
-            fml_->deallocate_fields();
+            else if( coordFieldT == "ZVOL" ){
+              Coordinates<ZVolField>& coordExpr = dynamic_cast<Coordinates<ZVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
+              coordExpr.set_patch(patches->get(ip));
+              // In case we want to copy coordinates instead of recomputing them, uncomment the following line
+              // oldVar.add_variable<ZVolField>( ADVANCE_SOLUTION, coordTag, true);
+            }
           }
-          catch( std::exception& e ){
-            proc0cout << e.what() << endl;
-            throw std::runtime_error( "Error" );
-          }
+
+          tree->bind_fields( *fml_ );
+          tree->bind_operators( opdb );
+          tree->execute_tree();
+
+          dbg_tasks << "Wasatch: done executing graph '" << taskName_ << "'" << endl;
+          fml_->deallocate_fields();
+        }
+        catch( std::exception& e ){
+          proc0cout << e.what() << endl;
+          throw std::runtime_error( "Error" );
         }
       }
+    }
     } // event : GPU, CPU
   }
 
@@ -658,20 +662,20 @@ namespace Wasatch{
       // write out graph information.
       if( Uintah::Parallel::getMPIRank() == 0 && ip == 0 ){
         const bool writeTreeDetails = dbg_tasks_on;
-        if( treeList.size() > 1 ){
-          std::ostringstream fnam;
-          fnam << tree->name() << "_original.dot";
-          proc0cout << "writing pre-cleave tree to " << fnam.str() << endl;
-          std::ofstream fout( fnam.str().c_str() );
-          tree->write_tree(fout,false,writeTreeDetails);
+          if( treeList.size() > 1 ){
+            std::ostringstream fnam;
+            fnam << tree->name() << "_original.dot";
+            proc0cout << "writing pre-cleave tree to " << fnam.str() << endl;
+            std::ofstream fout( fnam.str().c_str() );
+            tree->write_tree(fout,false,writeTreeDetails);
+          }
+          BOOST_FOREACH( TreePtr tr, treeList ){
+            std::ostringstream fnam;
+            fnam << tr->name() << ".dot";
+            std::ofstream fout( fnam.str().c_str() );
+            tr->write_tree(fout,false,writeTreeDetails);
+          }
         }
-        BOOST_FOREACH( TreePtr tr, treeList ){
-          std::ostringstream fnam;
-          fnam << tr->name() << ".dot";
-          std::ofstream fout( fnam.str().c_str() );
-          tr->write_tree(fout,false,writeTreeDetails);
-        }
-      }
 
       // Transpose the storage so that we have a vector with each entry in the
       // vector containing the map of patch IDs to each tree

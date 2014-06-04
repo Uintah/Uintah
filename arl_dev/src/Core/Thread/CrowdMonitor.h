@@ -37,9 +37,8 @@
 #ifndef Core_Thread_CrowdMonitor_h
 #define Core_Thread_CrowdMonitor_h
 
-#include <Core/Thread/share.h>
-
 namespace SCIRun {
+
   struct CrowdMonitor_private;
 /**************************************
  
@@ -71,67 +70,70 @@ WARNING
    
 ****************************************/
 
-	class SCISHARE CrowdMonitor {
-	public:
-	    //////////
-	    // Create and initialize the CrowdMonitor. <i>name</i> should
-	    // be a static which describes the primitive for debugging
-	    // purposes.
-	    CrowdMonitor(const char* name);
-    
-	    //////////
-	    // Destroy the CrowdMonitor.
-	    ~CrowdMonitor();
-    
-	    //////////
-	    // Acquire the read-only lock associated with this
-	    // <b>CrowdMonitor</b>. Multiple threads may hold the
-	    // read-only lock simultaneously.
-	    void readLock();
-  
-      //////////
-	    // Try acquire the read-only lock associated with this
-	    // <b>CrowdMonitor</b>. Multiple threads may hold the
-	    // read-only lock simultaneously. Return true when success
-	    bool readTrylock();
-    
-	    //////////
-	    // Release the read-only lock obtained from <i>readLock</i>.
-	    // Undefined behavior may result when <i>readUnlock</i> is
-	    // called and a <i>readLock</i> is not held by the calling
-	    // Thread.
-	    void readUnlock();
-    
-	    //////////
-	    // Acquire the write lock associated with this
-	    // <b>CrowdMonitor</b>. Only one thread may hold the write
-	    // lock, and during the time that this lock is not held, no
-	    // threads may hold the read-only lock.
-	    void writeLock();
+class CrowdMonitor {
 
-	    //////////
-	    // Acquire the write lock associated with this
-	    // <b>CrowdMonitor</b>. Only one thread may hold the write
-	    // lock, and during the time that this lock is not held, no
-	    // threads may hold the read-only lock.Return true when success.
-	    bool writeTrylock();
+  public:
+  //////////
+  // Create and initialize the CrowdMonitor. <i>name</i> should
+  // be a static which describes the primitive for debugging
+  // purposes.
+  CrowdMonitor(const char* name);
 
-	    //////////
-	    // Release the write-only lock obtained from <i>writeLock</i>.
-	    // Undefined behavior may result when <i>writeUnlock</i> is
-	    // called and a <i>writeLock</i> is not held by the calling
-	    // Thread.
-	    void writeUnlock();
+  //////////
+  // Destroy the CrowdMonitor.
+  ~CrowdMonitor();
 
-	private:
-	    const char* name_;
-	    CrowdMonitor_private* priv_;
+  //////////
+  // Acquire the read-only lock associated with this
+  // <b>CrowdMonitor</b>. Multiple threads may hold the
+  // read-only lock simultaneously.
+  void readLock();
 
-	    // Cannot copy them
-	    CrowdMonitor(const CrowdMonitor&);
-	    CrowdMonitor& operator=(const CrowdMonitor&);
-	};
-} // End namespace SCIRun
+  //////////
+  // Try acquire the read-only lock associated with this
+  // <b>CrowdMonitor</b>. Multiple threads may hold the
+  // read-only lock simultaneously. Return true when success
+  bool readTrylock();
+
+  //////////
+  // Release the read-only lock obtained from <i>readLock</i>.
+  // Undefined behavior may result when <i>readUnlock</i> is
+  // called and a <i>readLock</i> is not held by the calling
+  // Thread.
+  void readUnlock();
+
+  //////////
+  // Acquire the write lock associated with this
+  // <b>CrowdMonitor</b>. Only one thread may hold the write
+  // lock, and during the time that this lock is not held, no
+  // threads may hold the read-only lock.
+  void writeLock();
+
+  //////////
+  // Acquire the write lock associated with this
+  // <b>CrowdMonitor</b>. Only one thread may hold the write
+  // lock, and during the time that this lock is not held, no
+  // threads may hold the read-only lock.Return true when success.
+  bool writeTrylock();
+
+  //////////
+  // Release the write-only lock obtained from <i>writeLock</i>.
+  // Undefined behavior may result when <i>writeUnlock</i> is
+  // called and a <i>writeLock</i> is not held by the calling
+  // Thread.
+  void writeUnlock();
+
+  private:
+  const char* name_;
+  CrowdMonitor_private* priv_;
+
+  // Cannot copy them
+  CrowdMonitor(const CrowdMonitor&);
+  CrowdMonitor& operator=(const CrowdMonitor&);
+};
+
+}
+  // End namespace SCIRun
 
 #endif
 

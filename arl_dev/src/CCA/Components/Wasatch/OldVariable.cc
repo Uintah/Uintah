@@ -34,7 +34,6 @@
 #include <boost/foreach.hpp>
 
 //-- ExprLib includes --//
-#include <expression/PlaceHolderExpr.h>
 #include <expression/ExpressionFactory.h>
 
 //-- SpatialOps includes --//
@@ -64,13 +63,12 @@ namespace Wasatch {
     VarHelperBase( const Expr::Tag& var,
                    const bool retainName,
                    const Uintah::TypeDescription* typeDesc,
-                   const Uintah::IntVector ghostDesc,
                    Uintah::Ghost::GhostType ghostType)
     : name_( var ),
       oldName_( var.name() + ( (retainName) ? "" : "_old" ), Expr::STATE_NONE ),
       needsNewVarLabel_ ( Uintah::VarLabel::find( name_.name() ) == NULL ),
-      oldVarLabel_( Uintah::VarLabel::create( oldName_.name(), typeDesc, ghostDesc ) ),
-      varLabel_   ( needsNewVarLabel_ ? Uintah::VarLabel::create( name_.name(), typeDesc, ghostDesc ) : Uintah::VarLabel::find( name_.name() ) ),
+      oldVarLabel_( Uintah::VarLabel::create( oldName_.name(), typeDesc ) ),
+      varLabel_   ( needsNewVarLabel_ ? Uintah::VarLabel::create( name_.name(), typeDesc ) : Uintah::VarLabel::find( name_.name() ) ),
       ghostType_  ( ghostType )
     {}
 
@@ -87,11 +85,7 @@ namespace Wasatch {
     Uintah::VarLabel* const  get_old_var_label() const{ return oldVarLabel_; }
     Uintah::Ghost::GhostType get_ghost_type() { return ghostType_; }
 
-    virtual void populate_old_variable( Uintah::DataWarehouse* const newdw,
-                                        Uintah::DataWarehouse* const olddw,
-                                        const Uintah::Patch* patch,
-                                        const int mat,
-                                        const int rkStage) = 0;
+    virtual void populate_old_variable( const AllocInfo& ainfo, const int rkStage ) = 0;
   };
 
   //==================================================================
@@ -106,17 +100,12 @@ namespace Wasatch {
     : VarHelperBase( var,
                      retainName,
                      get_uintah_field_type_descriptor<T>(),
-                     get_uintah_ghost_descriptor<T>(),
                      get_uintah_ghost_type<T>())
     {}
 
     ~VarHelper(){}
 
-    void populate_old_variable( Uintah::DataWarehouse* const newdw,
-                                Uintah::DataWarehouse* const olddw,
-                                const Uintah::Patch* patch,
-                                const int mat,
-                                const int rkStage)
+    void populate_old_variable( const AllocInfo& ainfo, const int rkStage )
     {
       typedef typename SelectUintahFieldType<T>::const_type ConstUintahField;
       typedef typename SelectUintahFieldType<T>::type       UintahField;
@@ -127,19 +116,20 @@ namespace Wasatch {
       UintahField oldVal; // we will save the current value into this one
       ConstUintahField val; // copy the value from this
       
-      if (rkStage == 1) newdw->allocateAndPut( oldVal, oldVarLabel_, mat, patch, gt, ng );
-      else              newdw->getModifiable ( oldVal, oldVarLabel_, mat, patch, gt, ng );
-      T* const fOldVal = wrap_uintah_field_as_spatialops<T>(oldVal,patch);
+      if (rkStage == 1) ainfo.newDW->allocateAndPut( oldVal, oldVarLabel_, ainfo.materialIndex, ainfo.patch, gt, ng );
+      else              ainfo.newDW->getModifiable ( oldVal, oldVarLabel_, ainfo.materialIndex, ainfo.patch, gt, ng );
+      T* const fOldVal = wrap_uintah_field_as_spatialops<T>(oldVal,ainfo);
       using SpatialOps::operator <<=;
       
-      Uintah::DataWarehouse* dw = (rkStage == 1) ? olddw : newdw;
+      Uintah::DataWarehouse* dw = (rkStage == 1) ? ainfo.oldDW : ainfo.newDW;
       
-      if (dw->exists(varLabel_,mat,patch)) {
-        dw->           get( val,    varLabel_,    mat, patch, gt, ng );
-        const T* const f = wrap_uintah_field_as_spatialops<T>(val,   patch);
+      if (dw->exists(varLabel_,ainfo.materialIndex,ainfo.patch)) {
+        dw->get( val, varLabel_, ainfo.materialIndex, ainfo.patch, gt, ng );
+        const T* const f = wrap_uintah_field_as_spatialops<T>(val,ainfo);
         (*fOldVal) <<= (*f);
         delete f;
-      } else  {
+      }
+      else  {
         (*fOldVal) <<= 0.0;
       }      
 
@@ -257,8 +247,9 @@ namespace Wasatch {
     for( int ip=0; ip<patches->size(); ++ip ){
       const Uintah::Patch* const patch = patches->get(ip);
       for( int im=0; im<materials->size(); ++im ){
+        const AllocInfo ainfo( oldDW, newDW, im, patch, pg );
         BOOST_FOREACH( VarHelperBase* vh, varHelpers_ ){
-          vh->populate_old_variable( newDW, oldDW, patch, im, rkStage );
+          vh->populate_old_variable( ainfo, rkStage );
         }
       }
     }
@@ -289,5 +280,7 @@ INSTANTIATE_VARIANTS( SVolField )
 INSTANTIATE_VARIANTS( XVolField )
 INSTANTIATE_VARIANTS( YVolField )
 INSTANTIATE_VARIANTS( ZVolField )
+
+//INSTANTIATE( ParticleField ) // jcs not ready for particle fields yet.
 //====================================================================
 

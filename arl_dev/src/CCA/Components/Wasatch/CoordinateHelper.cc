@@ -34,7 +34,6 @@
 #include <Core/Grid/SimpleMaterial.h>
 #include <Core/Grid/Task.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <expression/PlaceHolderExpr.h>
 
 //-- ExprLib includes --//
 #include <expression/ExpressionFactory.h>

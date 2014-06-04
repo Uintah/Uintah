@@ -13,11 +13,7 @@
       <Constant value="1" name="density" />
     </Density>
     
-    <BasicExpression type="SVOL">
-       <TaskList>initialization</TaskList>
-       <NameTag name="pressure" state="STATE_N" />
-       <Constant>0.0</Constant>
-    </BasicExpression>
+
 
 <!-- 
     <Turbulence>
@@ -29,7 +25,7 @@
     <!-- Set the initial condition for x-mom -->
     <BasicExpression type="XVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="x-mom" state="STATE_N" />
+      <NameTag name="x-mom" state="STATE_DYNAMIC" />
       <ReadFromFile>
         <FileName>inputs/Wasatch/TurbulenceVerification/cbc64_uvw_wasatch_u.gz</FileName>
       </ReadFromFile>
@@ -38,7 +34,7 @@
     <!-- Set the initial condition for y-mom -->
     <BasicExpression type="YVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="y-mom" state="STATE_N" />
+      <NameTag name="y-mom" state="STATE_DYNAMIC" />
       <ReadFromFile>
         <FileName>inputs/Wasatch/TurbulenceVerification/cbc64_uvw_wasatch_v.gz</FileName>
       </ReadFromFile>
@@ -47,7 +43,7 @@
     <!-- Set the initial condition for z-mom -->
     <BasicExpression type="ZVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="z-mom" state="STATE_N" />
+      <NameTag name="z-mom" state="STATE_DYNAMIC" />
       <ReadFromFile>
         <FileName>inputs/Wasatch/TurbulenceVerification/cbc64_uvw_wasatch_w.gz</FileName>
       </ReadFromFile>

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-  
+ 
 from sys import argv, exit
 from os import environ
 from helpers.runSusTests import runSusTests, inputs_root, generatingGoldStandards
@@ -31,7 +31,7 @@ liddrivencavity3DRe1000rk3_ups = modUPS( the_dir, \
 lid_driven_cavity_3D_Re1000_rk2_ups = modUPS( the_dir, \
                                        "lid-driven-cavity-3D-Re1000.ups", \
                                        ["<TimeIntegrator> RK2SSP </TimeIntegrator>", \
-                                       "<filebase>liddrivencavity3DRe1000rk3.uda</filebase>"])
+                                       "<filebase>liddrivencavity3DRe1000rk2.uda</filebase>"])
 
 rk2_verification_ode_ups = modUPS( the_dir, \
                                        "rk3-verification-ode.ups", \
@@ -122,11 +122,12 @@ decayIsotropicTurbulenceDSmag64_ups = modUPS( turbulenceDir, \
 #______________________________________________________________________
 
 DEBUGTESTS = [
-  ("turbulent-flow-over-cavity",                         "turbulent-flow-over-cavity.ups",    8,  "All",  ["abs_tolerance=1e-8","no_restart","no_memoryTest","no_dbg"] )
+    ("liddrivencavity3DRe1000rk3",   liddrivencavity3DRe1000rk3_ups,   8,  "All",  ["exactComparison","no_restart"] ),
+    ("lid-driven-cavity-3D-Re1000-rk2",   lid_driven_cavity_3D_Re1000_rk2_ups,   8,  "All",  ["exactComparison","no_restart"] )    
   ]
 
 NIGHTLYTESTS = [
-  ("scalar-transport-equation_perf",    scalarequationperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),
+#   ("scalar-transport-equation_perf",    scalarequationperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),
   ("turbulent-flow-over-cavity",                         "turbulent-flow-over-cavity.ups",    8,  "Linux",  ["abs_tolerance=1e-8","no_restart","no_memoryTest","no_dbg"]                                          ),
   ("coal-boiler-mini",                         "coal-boiler-mini.ups",    16,  "Linux",  ["exactComparison","no_restart","no_memoryTest"]                                          ),
   ("bc-linear-inlet-channel-flow-test",     "bc-linear-inlet-channel-flow-test.ups",             6,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),

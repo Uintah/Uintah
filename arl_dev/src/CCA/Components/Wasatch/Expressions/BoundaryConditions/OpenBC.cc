@@ -29,7 +29,7 @@ void
 OpenBC<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  exprDeps.requires_expression( velTag_ );
+  exprDeps.requires_expression( momTag_ );
   const Wasatch::TagNames& tagNames = Wasatch::TagNames::self();
   exprDeps.requires_expression( tagNames.dt );
 }
@@ -39,7 +39,7 @@ void
 OpenBC<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  u_ = &fml.template field_ref<FieldT>( velTag_ );
+  u_ = &fml.template field_ref<FieldT>( momTag_ );
   const Wasatch::TagNames& tagNames = Wasatch::TagNames::self();
   dt_ = &fml.template field_ref<SpatialOps::structured::SingleValueField>( tagNames.dt );
 }
@@ -54,8 +54,8 @@ evaluate()
   FieldT& f = this->value();
   
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
-    std::vector<IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
-    std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+    std::vector<IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost ijk index
+    std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior ijk index
     const IntVec& offset = this->bndNormal_;
     const double sign = (offset[0] >=0 && offset[1] >= 0 && offset[2] >= 0) ? 1.0 : -1.0;
     
@@ -80,7 +80,7 @@ evaluate()
       }
       
       if (this->interiorEdgePoints_) {
-        std::vector<IntVec>::const_iterator ic = (this->interiorEdgePoints_)->begin(); // ii is the interior flat index
+        std::vector<IntVec>::const_iterator ic = (this->interiorEdgePoints_)->begin(); // ii is the interior ijk index
         for (; ic != (this->interiorEdgePoints_)->end(); ++ic) {
           const double ub  = (*u_)(*ic);            // boundary cell
           f(*ic) = -(1.0/ dt) * ub;

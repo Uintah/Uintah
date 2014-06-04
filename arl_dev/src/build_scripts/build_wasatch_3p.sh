@@ -5,26 +5,28 @@
 # by the Wasatch component: SpatialOps, TabProps, ExprLib.
 #
 # $1 - location to build the 3P
-# $2 - boost location
-# $3 - whether Uintah is being built in debug mode or not...
-# $4 - whether Uintah is being built with static libraries or not ...
-# $5 - whether Uintah is being built with CUDA
+# $2 - boost library location
+# $3 - boost include location
+# $4 - whether Uintah is being built in debug mode or not...
+# $5 - whether Uintah is being built with static libraries or not ...
+# $6 - whether Uintah is being built with CUDA
 #
 
 BASE_BUILD_DIR=$1
-BOOST_DIR=$2
+BOOST_LIBRARY=$2
+BOOST_INCLUDE=$3
 
-if test $3 != "no"; then
+if test $4 != "no"; then
   DEBUG="-DCMAKE_BUILD_TYPE=Debug"
 fi
 
-if test $4 = "yes"; then
+if test $5 = "yes"; then
   STATIC="-DBoost_USE_STATIC_LIBS=ON"
 else
   STATIC=""
 fi
 
-if test "$5" = "yes"; then
+if test "$6" = "yes"; then
   CUDA="-DENABLE_CUDA=ON"
 else
   CUDA=""
@@ -66,15 +68,21 @@ run()
 
 ############################################################################
 
-echo ""
-echo "------------------------------------------------------------------"
-echo "Building Wasatch Thirdparty Libraries..."
-echo ""
-echo "  Using Boost: $BOOST_DIR"
-echo ""
-echo "  Using Cmake: "`which cmake`
-echo ""
-echo "------------------------------------------------------------------"
+echo   ""
+echo   "------------------------------------------------------------------"
+echo   "Building Wasatch Thirdparty Libraries..."
+echo   ""
+if test -z "$BOOST_INCLUDE"; then
+  echo "  Using Boost: Built In"
+else
+  echo "  Using Boost: Include: $BOOST_INCLUDE"
+  echo "               Lib:     $BOOST_LIBRARY"
+  BOOST_FLAGS="-DBOOST_INCLUDEDIR=$BOOST_INCLUDE -DBOOST_LIBRARYDIR=$BOOST_LIBRARY"
+fi
+echo   ""
+echo   "  Using Cmake: "`which cmake`
+echo   ""
+echo   "------------------------------------------------------------------"
 ############################################################################
 # Go to build/install directory
 
@@ -112,7 +120,7 @@ run \
   $CUDA \
   -DENABLE_TESTS=OFF \
   -DENABLE_THREADS=OFF \
-  -DBOOST_ROOT=$BOOST_DIR \
+  $BOOST_FLAGS \
   -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
   -DCMAKE_CXX_FLAGS="-fPIC" \
   .."
@@ -137,18 +145,22 @@ run "cd $BASE_BUILD_DIR/Wasatch3P/src/ExprLib/build"
 INSTALL_HERE=$BASE_BUILD_DIR/Wasatch3P/install/ExprLib
 SPATIAL_OPS_INSTALL_DIR=$BASE_BUILD_DIR/Wasatch3P/install/SpatialOps
 
-run \
-"cmake \
-  $DEBUG \
-  $STATIC \
+run                  \
+"cmake               \
+  $DEBUG             \
+  $STATIC            \
+  \
   -DENABLE_TESTS=OFF \
+  -DBUILD_GUI=OFF    \
   \
   -DSpatialOps_DIR=${SPATIAL_OPS_INSTALL_DIR}/share \
   \
+  $BOOST_FLAGS \
+  \
   -DENABLE_UINTAH=ON \
   \
-  -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
-  -DCMAKE_CXX_FLAGS="-fPIC" \
+  -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE}            \
+  -DCMAKE_CXX_FLAGS="-fPIC"                         \
   .."
 
 run "make -j4 install"
@@ -178,7 +190,7 @@ run \
   -DTabProps_UTILS=OFF \
   -DTabProps_ENABLE_TESTING=OFF \
   -DTabProps_ENABLE_IO=ON \
-  -DBOOST_ROOT=$BOOST_DIR \
+  $BOOST_FLAGS \
   -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
   -DCMAKE_CXX_FLAGS=-fPIC \
   .."
@@ -208,7 +220,7 @@ run \
   $STATIC \
   -DRadProps_ENABLE_TESTING=OFF \
   -DRadProps_ENABLE_PREPROCESSOR=OFF \
-  -DBOOST_ROOT=$BOOST_DIR \
+  $BOOST_FLAGS \
   -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
   -DCMAKE_CXX_FLAGS=-fPIC \
   -DTabProps_DIR=${BASE_BUILD_DIR}/Wasatch3P/install/TabProps/share \

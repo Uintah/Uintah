@@ -45,12 +45,12 @@ orthorhombicCoordinates::orthorhombicCoordinates(const SCIRun::IntVector& _exten
   if ( abs(_cell(0,1)) > d_zeroTol || abs(_cell(0,2)) > d_zeroTol ||
        abs(_cell(1,0)) > d_zeroTol || abs(_cell(1,2)) > d_zeroTol ||
        abs(_cell(2,0)) > d_zeroTol || abs(_cell(2,1)) > d_zeroTol  ) {
-    throw SCIRun::InvalidState("Error:  Attempt to instantiate an orthorhombic coordinate system with a non-orthorhombic unit cell",
+    throw InvalidState("Error:  Attempt to instantiate an orthorhombic coordinate system with a non-orthorhombic unit cell",
                                __FILE__,
                                __LINE__);
   }
   if (_cell(0,0) < d_zeroTol || _cell(1,1) < d_zeroTol || _cell(2,2) < d_zeroTol) {
-    throw SCIRun::InvalidState("Error:  Attempt to instantiate a coordinate system with a principle vector of length zero",
+    throw InvalidState("Error:  Attempt to instantiate a coordinate system with a principle vector of length zero",
                                __FILE__,
                                __LINE__);
   }
@@ -76,13 +76,13 @@ orthorhombicCoordinates::orthorhombicCoordinates(const SCIRun::IntVector& _exten
   double d_zeroTol = 1.0e-13;
   SCIRun::Vector angleDiff = _angles*MDConstants::degToRad-SCIRun::Vector(MDConstants::PI_Over_2);
   if (abs(angleDiff[0]) > d_zeroTol || abs(angleDiff[1]) > d_zeroTol || abs(angleDiff[2]) > d_zeroTol) {
-    throw SCIRun::InvalidState("Error:  Attempt to instantiate an orthorhombic coordinate system without all cell angles equal to 90 degrees",
+    throw InvalidState("Error:  Attempt to instantiate an orthorhombic coordinate system without all cell angles equal to 90 degrees",
                                __FILE__,
                                __LINE__);
   }
 
   if ((_lengths[0] < d_zeroTol) || (_lengths[1] < d_zeroTol) || (_lengths[2] < d_zeroTol)) {
-    throw SCIRun::InvalidState("Error:  Attempt to instantiate a coordinate system with a principle vector of length zero",
+    throw InvalidState("Error:  Attempt to instantiate a coordinate system with a principle vector of length zero",
                                __FILE__,
                                __LINE__);
   }
@@ -126,12 +126,12 @@ void orthorhombicCoordinates::updateUnitCell(const Uintah::Matrix3& In) {
   if ( abs(In(0,1)) > d_zeroTol || abs(In(0,2)) > d_zeroTol ||
        abs(In(1,0)) > d_zeroTol || abs(In(1,2)) > d_zeroTol ||
        abs(In(2,0)) > d_zeroTol || abs(In(2,1)) > d_zeroTol  ) {
-    throw SCIRun::InvalidState("Error:  Attempt to instantiate an orthorhombic coordinate system with a non-orthorhombic unit cell",
+    throw InvalidState("Error:  Attempt to instantiate an orthorhombic coordinate system with a non-orthorhombic unit cell",
                                __FILE__,
                                __LINE__);
   }
   if (In(0,0) < d_zeroTol || In(1,1) < d_zeroTol || In(2,2) < d_zeroTol) {
-    throw SCIRun::InvalidState("Error:  Attempt to instantiate a coordinate system with a principle vector of length zero",
+    throw InvalidState("Error:  Attempt to instantiate a coordinate system with a principle vector of length zero",
                                __FILE__,
                                __LINE__);
   }

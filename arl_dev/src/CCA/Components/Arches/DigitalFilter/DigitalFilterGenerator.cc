@@ -7,6 +7,8 @@
  *  mean velocities, integral length scales, Reynold's stresses
  *  refer to StandAlone/inputs/ARCHES/DigitalFilterInlet/ChannelInletGenerator.txt
  *  or User Guide for specific layout
+ *  A second turbulent inlet has also been implemented - a synthetic eddy method
+ *  This method generates a table faster, but shows slighlty less accuracy in co-flow jets
  */
 
 
@@ -51,6 +53,12 @@ double BSum ( int k, double n, int N ) {
   SumTerm = sqrt(SumTerm);
   double BK = bTilde(k, n)/SumTerm;
   return(BK);
+}
+
+double tentFunc( double &L, double &r) {
+
+  double f = sqrt(3.0/2.0/L) * (1.0 - abs(r/L) );
+  return(f);
 }
 
 /***********************************************************************
@@ -865,6 +873,15 @@ int main( int argc, const char* argv[] )
     exit(1);
   }
   
+  //choose type of inlet to use
+  bool SEM = false;
+  string methodType;
+  
+  methodType = getString(gzFp);
+  if (methodType == "SEM" || methodType == "sem") {
+    SEM = true;
+  }
+  
   //______________________
   //Create inlet to hold relevant data, makes other functions cleaner
   InletInfo newTurbInlet;
@@ -1406,6 +1423,8 @@ int main( int argc, const char* argv[] )
       }
     }
   }
+
+  
   
   //_____________________________________________________________
   //check if the velocity vector is at an angle from normal plane
@@ -1513,47 +1532,48 @@ int main( int argc, const char* argv[] )
                                                                                      ( filterSize[1], vector<double>
                                                                                       ( filterSize[2]) ) ) ) ) ;
   vector< vector<vector <int> > > variableFilterSize (jSize, vector<vector<int> > (kSize, vector<int> (3,0) ) );
-  
-  if ( !userL ) {    
-    for (int i = 0; i<filterSize[0]; i++) {
-      for (int j = 0; j<filterSize[1]; j++) {
-        for (int k = 0; k<filterSize[2]; k++) {
-          filterCoefficients[i][j][k] = BSum(i-N_a[0], n_a[0], N_a[0]) * BSum(j-N_a[1], n_a[1], N_a[1]) * BSum(k-N_a[2], n_a[2], N_a[2]); 
-        }
-      }
-    }
-  } else {
-    vector< vector<vector <double> > > variable_n_a (jSize, vector<vector<double> > (kSize, vector<double> (3,0) ) );
-    vector< vector<vector <int> > > variable_N_a (jSize, vector<vector<int> > (kSize, vector<int> (3,0) ) );
-        
-    //set up lengths of filter coefficients
-    for ( int j = 0; j<jSize; j++) {
-      for (int k = 0; k<kSize; k++ ) {
-        for (int i =0; i<3; i++) {
-          variable_n_a[j][k][i] = newTurbInlet.lengthScaleProfile[j][k][i]/Dx[i];
-          variable_N_a[j][k][i] = (int) ceil(variable_n_a[j][k][i] * AccuracyCoef);
-          variableFilterSize[j][k][i] = 2*variable_N_a[j][k][i] + 1;
-        }
-      }
-    }
- 
-    for (int j = 0; j<jSize; j++) {
-      for (int k = 0; k<kSize; k++) {
-        //calc filter coeff at each pt
-        for (int iprime = 0; iprime < variableFilterSize[j][k][0]; iprime++) {
-          for (int jprime = 0; jprime < variableFilterSize[j][k][1]; jprime++) {
-            for (int kprime = 0; kprime < variableFilterSize[j][k][2]; kprime++) {
-              variableFilterCoefficients[j][k][iprime][jprime][kprime] = BSum(iprime-variable_N_a[j][k][0], variable_n_a[j][k][0], variable_N_a[j][k][0]) *
-                                                                         BSum(jprime-variable_N_a[j][k][1], variable_n_a[j][k][1], variable_N_a[j][k][1]) *
-                                                                         BSum(kprime-variable_N_a[j][k][2], variable_n_a[j][k][2], variable_N_a[j][k][2]);
-            }
+  if (!SEM) {
+    if ( !userL ) {
+      for (int i = 0; i<filterSize[0]; i++) {
+        for (int j = 0; j<filterSize[1]; j++) {
+          for (int k = 0; k<filterSize[2]; k++) {
+            filterCoefficients[i][j][k] = BSum(i-N_a[0], n_a[0], N_a[0]) * BSum(j-N_a[1], n_a[1], N_a[1]) * BSum(k-N_a[2], n_a[2], N_a[2]);
           }
-        } //end iprime
+        }
       }
-      cout << "Filter Coefficient done for j = " << j << endl;
+    } else {
+      vector< vector<vector <double> > > variable_n_a (jSize, vector<vector<double> > (kSize, vector<double> (3,0) ) );
+      vector< vector<vector <int> > > variable_N_a (jSize, vector<vector<int> > (kSize, vector<int> (3,0) ) );
+        
+      //set up lengths of filter coefficients
+      for ( int j = 0; j<jSize; j++) {
+        for (int k = 0; k<kSize; k++ ) {
+          for (int i =0; i<3; i++) {
+            variable_n_a[j][k][i] = newTurbInlet.lengthScaleProfile[j][k][i]/Dx[i];
+            variable_N_a[j][k][i] = (int) ceil(variable_n_a[j][k][i] * AccuracyCoef);
+            variableFilterSize[j][k][i] = 2*variable_N_a[j][k][i] + 1;
+          }
+        }
+      }
+ 
+      for (int j = 0; j<jSize; j++) {
+        for (int k = 0; k<kSize; k++) {
+          //calc filter coeff at each pt
+          for (int iprime = 0; iprime < variableFilterSize[j][k][0]; iprime++) {
+            for (int jprime = 0; jprime < variableFilterSize[j][k][1]; jprime++) {
+              for (int kprime = 0; kprime < variableFilterSize[j][k][2]; kprime++) {
+                variableFilterCoefficients[j][k][iprime][jprime][kprime] = BSum(iprime-variable_N_a[j][k][0], variable_n_a[j][k][0], variable_N_a[j][k][0]) *
+                                                                           BSum(jprime-variable_N_a[j][k][1], variable_n_a[j][k][1], variable_N_a[j][k][1]) *
+                                                                           BSum(kprime-variable_N_a[j][k][2], variable_n_a[j][k][2], variable_N_a[j][k][2]);
+              }
+            }
+          } //end iprime
+        }
+        cout << "Filter Coefficient done for j = " << j << endl;
+      }
     }
   }
-   
+  
   double infinity = 1.0e10;
   if (userS) { //check that Aij matrix is not nan/inf
     for (int i = 0; i<6; i++) {
@@ -1586,127 +1606,279 @@ int main( int argc, const char* argv[] )
   double a11, a21, a22, a31, a32, a33;
   int sizeX, sizeY, sizeZ;
   
-  for (int t = 0; t<NT+1; t++) {
-    //each timestep
-    cout << "Writing TimeStep: " << t << endl;
-    for (std::vector<IntVector>::iterator it = ptList.begin() ; it != ptList.end() ; ++it) {
-      int j, k;
-      if (faceSide == "x-" || faceSide == "x+") {
-        j = it->y() - minCell[1] ;
-        k = it->z() - minCell[2];
-      } else if (faceSide == "y-" || faceSide == "y+") {
-        j = it->x() - minCell[0];
-        k = it->z() - minCell[2];
-      } else {
-        j = it->x() - minCell[0];
-        k = it->y() - minCell[1];
-      }
-      
-      uBaseX[j][k] = 0.0;
-      uBaseY[j][k] = 0.0;
-      uBaseZ[j][k] = 0.0;
+  double eventNum, sx, sy, sz, ep;
+  if ( faceSide == "x-" || faceSide == "x+") {
+    sx = NT * Dx[0];//  /L_a[0];
+    sy = M_y * Dx[1];// /L_a[1];
+    sz = M_z * Dx[2];// /L_a[2];
+  } else if ( faceSide == "y-" || faceSide == "y+") {
+    sx = M_x * Dx[0];
+    sy = NT * Dx[1];
+    sz = M_z * Dx[2];
+  } else { //z face
+    sx = M_x * Dx[0];
+    sy = M_y * Dx[1];
+    sz = NT * Dx[2];
+  }
+  
+  eventNum = ceil(sx*sy*sz/(L_a[0]*L_a[1]*L_a[2]) );
+  vector<double> epsilon (eventNum);
+  vector< Point > eventList;
+  if (SEM) {
+    Point eventPoint;
+    double randX, randY, randZ;
+    for (int i = 0; i<eventNum; i++) {
         
-      if ( !userL) {
-        sizeX = filterSize[0];
+      randX = ((double)rand()/RAND_MAX ); //3 rand # from 0 to 1
+      randY = ((double)rand()/RAND_MAX );
+      randZ = ((double)rand()/RAND_MAX );
+        
+      randX = randX * sx;
+      randY = randY * sy;
+      randZ = randZ * sz;
+        
+      eventPoint = Point( randX, randY, randZ);
+      eventList.push_back(eventPoint);
+
+      ep = ((double)rand()/RAND_MAX - 0.5);
+      if (ep > 0.0){
+        epsilon[i] = 1.0;
+      } else {
+        epsilon[i] = -1.0;
+      }
+    }
+    cout << "# eddy " << eventNum << endl;
+  }
+  
+  if (SEM) {
+    for (int t = 0; t<NT+1; t++) {
+      //each timestep
+      cout << "Writing TimeStep: " << t << endl;
+      for (std::vector<IntVector>::iterator it = ptList.begin() ; it != ptList.end() ; ++it) {
+        int j, k;
+        if (faceSide == "x-" || faceSide == "x+") {
+          j = it->y() - minCell[1] ;
+          k = it->z() - minCell[2];
+        } else if (faceSide == "y-" || faceSide == "y+") {
+          j = it->x() - minCell[0];
+          k = it->z() - minCell[2];
+        } else {
+          j = it->x() - minCell[0];
+          k = it->y() - minCell[1];
+        }
+        
+        uBaseX[j][k] = 0.0;
+        uBaseY[j][k] = 0.0;
+        uBaseZ[j][k] = 0.0;
+        
+        sizeX = filterSize[0]; //cout << "sx " << sizeX << endl;
         sizeY = filterSize[1];
         sizeZ = filterSize[2];
-      } else {
-        sizeX = variableFilterSize[j][k][0];
-        sizeY = variableFilterSize[j][k][1];
-        sizeZ = variableFilterSize[j][k][2];
-      }
         
-      for (int iprime = 0; iprime<sizeX; iprime++) {
-        for (int jprime = 0; jprime<sizeY; jprime++) {
-          for (int kprime = 0; kprime<sizeZ; kprime++) {
-
-            if (!userL) {
-              bijk = filterCoefficients[iprime][jprime][kprime];
-            } else {
-              bijk = variableFilterCoefficients[j][k][iprime][jprime][kprime];
-            }
-              
-            if (faceSide == "x-" || faceSide=="x+") {
-              uBaseX[j][k] += bijk * randomFieldx[iprime+t][j+jprime][k+kprime];
-              uBaseY[j][k] += bijk * randomFieldy[iprime+t][j+jprime][k+kprime];
-              uBaseZ[j][k] += bijk * randomFieldz[iprime+t][j+jprime][k+kprime];
-            } else if (faceSide=="y-" || faceSide=="y+") {
-              uBaseX[j][k] += bijk * randomFieldx[iprime+j][jprime+t][k+kprime];
-              uBaseY[j][k] += bijk * randomFieldy[iprime+j][jprime+t][k+kprime];
-              uBaseZ[j][k] += bijk * randomFieldz[iprime+j][jprime+t][k+kprime];
-            } else if (faceSide=="z-" || faceSide=="z+") {
-              uBaseX[j][k] += bijk * randomFieldx[iprime+j][k+jprime][kprime+t];
-              uBaseY[j][k] += bijk * randomFieldy[iprime+j][k+jprime][kprime+t];
-              uBaseZ[j][k] += bijk * randomFieldz[iprime+j][k+jprime][kprime+t];
-            }
-              
+        int N = 0; double allL = L_a[0]; //fix to x
+        int i = 0;
+        
+        for (std::vector<Point>::iterator iter=eventList.begin(); iter != eventList.end(); ++iter) {
+          double xDist = t*Dx[0] - iter->x();
+          double yDist = j*Dx[1] - iter->y();
+          double zDist = k*Dx[2] - iter->z();
+ 
+          if (abs(xDist) < allL && abs(yDist) < allL && abs(zDist) < allL) {
+            N++;
+            uBaseX[j][k] += epsilon[i] * tentFunc(allL,xDist) * tentFunc(allL,yDist) * tentFunc(allL,zDist);
+            uBaseY[j][k] += epsilon[i] * tentFunc(allL,xDist) * tentFunc(allL,yDist) * tentFunc(allL,zDist);
+            uBaseZ[j][k] += epsilon[i] * tentFunc(allL,xDist) * tentFunc(allL,yDist) * tentFunc(allL,zDist);
+            
           }
+          i++;
         }
-      } //end iprime
         
-      if (!userV) {
-        u = aveU[0];
-        v = aveU[1];
-        w = aveU[2];
-      } else {
-        u = newTurbInlet.velocityProfile[j][k][0];
-        v = newTurbInlet.velocityProfile[j][k][1];
-        w = newTurbInlet.velocityProfile[j][k][2];
-      }
-        
-      if (!userS) {
-        a11 = newTurbInlet.constStress[0];
-        a21 = newTurbInlet.constStress[1];
-        a22 = newTurbInlet.constStress[2];
-        a31 = newTurbInlet.constStress[3];
-        a32 = newTurbInlet.constStress[4];
-        a33 = newTurbInlet.constStress[5];
-      } else {
-        a11 = newTurbInlet.stressProfile[j][k][0];
-        a21 = newTurbInlet.stressProfile[j][k][1];
-        a22 = newTurbInlet.stressProfile[j][k][2];
-        a31 = newTurbInlet.stressProfile[j][k][3];
-        a32 = newTurbInlet.stressProfile[j][k][4];
-        a33 = newTurbInlet.stressProfile[j][k][5];
-      }
+        double coef = 1.10;
+        double VB= allL * allL * allL * 8.0;
 
-      if (!angleVelocity) {
-        uFluctX[t][j][k] = u + a11 * uBaseX[j][k];
-        uFluctY[t][j][k] = v + a21 * uBaseX[j][k] + a22*uBaseY[j][k];
-        uFluctZ[t][j][k] = w + a31 * uBaseX[j][k] + a32*uBaseY[j][k] + a33*uBaseZ[j][k];
-      } else {
-        double tempX, tempY, tempZ;
-        tempX = u + a11 * uBaseX[j][k];
-        tempY = v + a21 * uBaseX[j][k] + a22*uBaseY[j][k];
-        tempZ = w + a31 * uBaseX[j][k] + a32*uBaseY[j][k] + a33*uBaseZ[j][k];
-         
-        uFluctX[t][j][k] = rotationMatrix[0][0] * tempX + rotationMatrix[1][0]*tempY + rotationMatrix[2][0]*tempZ;
-        uFluctY[t][j][k] = rotationMatrix[0][1] * tempX + rotationMatrix[1][1]*tempY + rotationMatrix[2][1]*tempZ;
-        uFluctZ[t][j][k] = rotationMatrix[0][2] * tempX + rotationMatrix[1][2]*tempY + rotationMatrix[2][2]*tempZ;
-      }
+        uBaseX[j][k] = uBaseX[j][k]*sqrt(VB/(double)N)/coef;
+        uBaseY[j][k] = uBaseY[j][k]*sqrt(VB/(double)N)/coef;
+        uBaseZ[j][k] = uBaseZ[j][k]*sqrt(VB/(double)N)/coef;
         
-      //prevent negative flow on velocity normal to the inlet
-      if ( faceSide=="x-" && uFluctX[t][j][k] < 0.0) {
-        uFluctX[t][j][k] = 0.0;
-      } else if ( faceSide=="x+" && uFluctX[t][j][k] > 0.0 ) {
-        uFluctX[t][j][k] = 0.0;
-      } else if ( faceSide=="y-" && uFluctY[t][j][k] < 0.0 ) {
-        uFluctY[t][j][k] = 0.0;
-      } else if ( faceSide=="y+" && uFluctY[t][j][k] > 0.0 ) {
-        uFluctY[t][j][k] = 0.0;
-      } else if ( faceSide=="z-" && uFluctZ[t][j][k] < 0.0 ) {
-        uFluctZ[t][j][k] = 0.0;
-      } else if ( faceSide=="z+" && uFluctZ[t][j][k] > 0.0 ) {
-        uFluctZ[t][j][k] = 0.0; 
-      }
+
+        if (!userV) {
+          u = aveU[0];
+          v = aveU[1];
+          w = aveU[2];
+        } else {
+          u = newTurbInlet.velocityProfile[j][k][0];
+          v = newTurbInlet.velocityProfile[j][k][1];
+          w = newTurbInlet.velocityProfile[j][k][2];
+        }
         
+        if (!userS) {
+          a11 = newTurbInlet.constStress[0];
+          a21 = newTurbInlet.constStress[1];
+          a22 = newTurbInlet.constStress[2];
+          a31 = newTurbInlet.constStress[3];
+          a32 = newTurbInlet.constStress[4];
+          a33 = newTurbInlet.constStress[5];
+        } else {
+          a11 = newTurbInlet.stressProfile[j][k][0];
+          a21 = newTurbInlet.stressProfile[j][k][1];
+          a22 = newTurbInlet.stressProfile[j][k][2];
+          a31 = newTurbInlet.stressProfile[j][k][3];
+          a32 = newTurbInlet.stressProfile[j][k][4];
+          a33 = newTurbInlet.stressProfile[j][k][5];
+        }
+        
+        if (!angleVelocity) {
+          uFluctX[t][j][k] = u + a11 * uBaseX[j][k];
+          uFluctY[t][j][k] = v + a21 * uBaseX[j][k] + a22*uBaseY[j][k];
+          uFluctZ[t][j][k] = w + a31 * uBaseX[j][k] + a32*uBaseY[j][k] + a33*uBaseZ[j][k];
+        }
+        
+        //prevent negative flow on velocity normal to the inlet
+        if ( faceSide=="x-" && uFluctX[t][j][k] < 0.0) {
+          uFluctX[t][j][k] = 0.0;
+        } else if ( faceSide=="x+" && uFluctX[t][j][k] > 0.0 ) {
+          uFluctX[t][j][k] = 0.0;
+        } else if ( faceSide=="y-" && uFluctY[t][j][k] < 0.0 ) {
+          uFluctY[t][j][k] = 0.0;
+        } else if ( faceSide=="y+" && uFluctY[t][j][k] > 0.0 ) {
+          uFluctY[t][j][k] = 0.0;
+        } else if ( faceSide=="z-" && uFluctZ[t][j][k] < 0.0 ) {
+          uFluctZ[t][j][k] = 0.0;
+        } else if ( faceSide=="z+" && uFluctZ[t][j][k] > 0.0 ) {
+          uFluctZ[t][j][k] = 0.0;
+        }
+      }
     }
-  } //end t
+  }
+  
+  if(!SEM) {
+    for (int t = 0; t<NT+1; t++) {
+      //each timestep
+      cout << "Writing TimeStep: " << t << endl;
+      for (std::vector<IntVector>::iterator it = ptList.begin() ; it != ptList.end() ; ++it) {
+        int j, k;
+        if (faceSide == "x-" || faceSide == "x+") {
+          j = it->y() - minCell[1] ;
+          k = it->z() - minCell[2];
+        } else if (faceSide == "y-" || faceSide == "y+") {
+          j = it->x() - minCell[0];
+          k = it->z() - minCell[2];
+        } else {
+          j = it->x() - minCell[0];
+          k = it->y() - minCell[1];
+        }
+      
+        uBaseX[j][k] = 0.0;
+        uBaseY[j][k] = 0.0;
+        uBaseZ[j][k] = 0.0;
+        
+        if ( !userL) {
+          sizeX = filterSize[0];
+          sizeY = filterSize[1];
+          sizeZ = filterSize[2];
+        } else {
+          sizeX = variableFilterSize[j][k][0];
+          sizeY = variableFilterSize[j][k][1];
+          sizeZ = variableFilterSize[j][k][2];
+        }
+        
+        for (int iprime = 0; iprime<sizeX; iprime++) {
+          for (int jprime = 0; jprime<sizeY; jprime++) {
+            for (int kprime = 0; kprime<sizeZ; kprime++) {
+
+              if (!userL) {
+                bijk = filterCoefficients[iprime][jprime][kprime];
+              } else {
+                bijk = variableFilterCoefficients[j][k][iprime][jprime][kprime];
+              }
+              
+              if (faceSide == "x-" || faceSide=="x+") {
+                uBaseX[j][k] += bijk * randomFieldx[iprime+t][j+jprime][k+kprime];
+                uBaseY[j][k] += bijk * randomFieldy[iprime+t][j+jprime][k+kprime];
+                uBaseZ[j][k] += bijk * randomFieldz[iprime+t][j+jprime][k+kprime];
+              } else if (faceSide=="y-" || faceSide=="y+") {
+                uBaseX[j][k] += bijk * randomFieldx[iprime+j][jprime+t][k+kprime];
+                uBaseY[j][k] += bijk * randomFieldy[iprime+j][jprime+t][k+kprime];
+                uBaseZ[j][k] += bijk * randomFieldz[iprime+j][jprime+t][k+kprime];
+              } else if (faceSide=="z-" || faceSide=="z+") {
+                uBaseX[j][k] += bijk * randomFieldx[iprime+j][k+jprime][kprime+t];
+                uBaseY[j][k] += bijk * randomFieldy[iprime+j][k+jprime][kprime+t];
+                uBaseZ[j][k] += bijk * randomFieldz[iprime+j][k+jprime][kprime+t];
+              }
+              
+            }
+          }
+        } //end iprime
+        
+        if (!userV) {
+          u = aveU[0];
+          v = aveU[1];
+          w = aveU[2];
+        } else {
+          u = newTurbInlet.velocityProfile[j][k][0];
+          v = newTurbInlet.velocityProfile[j][k][1];
+          w = newTurbInlet.velocityProfile[j][k][2];
+        }
+        
+        if (!userS) {
+          a11 = newTurbInlet.constStress[0];
+          a21 = newTurbInlet.constStress[1];
+          a22 = newTurbInlet.constStress[2];
+          a31 = newTurbInlet.constStress[3];
+          a32 = newTurbInlet.constStress[4];
+          a33 = newTurbInlet.constStress[5];
+        } else {
+          a11 = newTurbInlet.stressProfile[j][k][0];
+          a21 = newTurbInlet.stressProfile[j][k][1];
+          a22 = newTurbInlet.stressProfile[j][k][2];
+          a31 = newTurbInlet.stressProfile[j][k][3];
+          a32 = newTurbInlet.stressProfile[j][k][4];
+          a33 = newTurbInlet.stressProfile[j][k][5];
+        }
+
+        if (!angleVelocity) {
+          uFluctX[t][j][k] = u + a11 * uBaseX[j][k];
+          uFluctY[t][j][k] = v + a21 * uBaseX[j][k] + a22*uBaseY[j][k];
+          uFluctZ[t][j][k] = w + a31 * uBaseX[j][k] + a32*uBaseY[j][k] + a33*uBaseZ[j][k];
+        } else {
+          double tempX, tempY, tempZ;
+          tempX = u + a11 * uBaseX[j][k];
+          tempY = v + a21 * uBaseX[j][k] + a22*uBaseY[j][k];
+          tempZ = w + a31 * uBaseX[j][k] + a32*uBaseY[j][k] + a33*uBaseZ[j][k];
+        
+          uFluctX[t][j][k] = rotationMatrix[0][0] * tempX + rotationMatrix[1][0]*tempY + rotationMatrix[2][0]*tempZ;
+          uFluctY[t][j][k] = rotationMatrix[0][1] * tempX + rotationMatrix[1][1]*tempY + rotationMatrix[2][1]*tempZ;
+          uFluctZ[t][j][k] = rotationMatrix[0][2] * tempX + rotationMatrix[1][2]*tempY + rotationMatrix[2][2]*tempZ;
+        }
+        
+        //prevent negative flow on velocity normal to the inlet
+        if ( faceSide=="x-" && uFluctX[t][j][k] < 0.0) {
+          uFluctX[t][j][k] = 0.0;
+        } else if ( faceSide=="x+" && uFluctX[t][j][k] > 0.0 ) {
+          uFluctX[t][j][k] = 0.0;
+        } else if ( faceSide=="y-" && uFluctY[t][j][k] < 0.0 ) {
+          uFluctY[t][j][k] = 0.0;
+        } else if ( faceSide=="y+" && uFluctY[t][j][k] > 0.0 ) {
+          uFluctY[t][j][k] = 0.0;
+        } else if ( faceSide=="z-" && uFluctZ[t][j][k] < 0.0 ) {
+          uFluctZ[t][j][k] = 0.0;
+        } else if ( faceSide=="z+" && uFluctZ[t][j][k] > 0.0 ) {
+          uFluctZ[t][j][k] = 0.0;
+        }
+        
+      }
+    } //end t
+  }
   
   //open file to write out
   ofstream myfile;
   myfile.open( outputfile.c_str(), ios::out );
   //Some indentifing header info
+  if (SEM) {
+    myfile << "#Method: SEM" << endl;
+  } else {
+    myfile << "#Method: DFG" << endl;
+  }
   myfile << "#Resolution: " << resolution[0] << " " << resolution[1] << " " << resolution[2] << endl;
   myfile << "#Velocity Prof: " << velocityType << endl;
   myfile << "#Stress Prof: " << stressType << endl;

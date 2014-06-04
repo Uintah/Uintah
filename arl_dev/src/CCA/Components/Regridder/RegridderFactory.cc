@@ -25,6 +25,7 @@
 #include <CCA/Components/Regridder/RegridderFactory.h>
 #include <CCA/Components/Regridder/HierarchicalRegridder.h>
 #include <CCA/Components/Regridder/BNRRegridder.h>
+#include <CCA/Components/Regridder/SingleLevelRegridder.h>
 #include <CCA/Components/Regridder/TiledRegridder.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
@@ -52,6 +53,8 @@ RegridderCommon* RegridderFactory::create(ProblemSpecP& ps,
       regrid = scinew BNRRegridder(world);
     } else if (regridder == "Tiled") {
       regrid = scinew TiledRegridder(world);
+    } else if (regridder == "SingleLevel") {
+      regrid = scinew SingleLevelRegridder(world);
     } else
       regrid = 0;
   }

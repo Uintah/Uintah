@@ -33,10 +33,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-
-#ifndef _WIN32
 #include <unistd.h>
-#endif
 
 using namespace std;
 using namespace SCIRun;

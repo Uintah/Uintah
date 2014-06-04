@@ -37,8 +37,6 @@
 #ifndef Core_Thread_Mutex_h
 #define Core_Thread_Mutex_h
 
-#include <Core/Thread/share.h>
-
 namespace SCIRun {
 
 struct Mutex_private;
@@ -58,8 +56,9 @@ struct Mutex_private;
  lock() in a nested call will result in an error or deadlock.
 
 ****************************************/
-class SCISHARE Mutex {
-public:
+class Mutex {
+
+  public:
   //////////
   // Create the mutex.  The mutex is allocated in the unlocked
   // state. <i>name</i> should be a static string which describes
@@ -85,8 +84,11 @@ public:
   // Release the Mutex, unblocking any other threads that are
   // blocked waiting for the Mutex.
   void unlock();
+
   friend class ConditionVariable;
-private:
+
+  private:
+
   Mutex_private* priv_;
   const char* name_;
 
@@ -95,7 +97,8 @@ private:
   Mutex& operator=(const Mutex&);
 };
 
-} // End namespace SCIRun
+}
+  // End namespace SCIRun
 
 #endif
 

@@ -46,9 +46,7 @@ namespace Wasatch{
    *
    *  NOTE: this expression BREAKS WITH CONVENTION!  Notably, it has
    *  uintah tenticles that reach into it, and mixes SpatialOps and
-   *  Uintah constructs.  This is because we don't (currently) have a
-   *  robust interface to deal with parallel linear solves through the
-   *  expression library, but Uintah has a reasonably robust interface.
+   *  Uintah constructs.
    *
    *  This expression does play well with expression graphs, however.
    *  There are only a few places where Uintah reaches in.

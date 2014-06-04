@@ -223,6 +223,7 @@ Arenisca::Arenisca(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->getWithDefault("gruneisen_parameter",d_cm.gruneisen_parameter, 0.1);
   ps->getWithDefault("T1_rate_dependence",d_cm.T1_rate_dependence, 0.0);
   ps->getWithDefault("T2_rate_dependence",d_cm.T2_rate_dependence, 0.0);
+  ps->getWithDefault("Initial_Disaggregation_Strain",d_cm.Initial_Disaggregation_Strain, -1);	//EG
   
   ps->get("PEAKI1IDIST",wdist.WeibDist);
   WeibullParser(wdist);
@@ -255,6 +256,7 @@ Arenisca::Arenisca(const Arenisca* cm)
   d_cm.CR = cm->d_cm.CR;  // not used
   d_cm.T1_rate_dependence = cm->d_cm.T1_rate_dependence;
   d_cm.T2_rate_dependence = cm->d_cm.T2_rate_dependence;
+  d_cm.Initial_Disaggregation_Strain = cm->d_cm.Initial_Disaggregation_Strain;	//EG
   d_cm.p0_crush_curve = cm->d_cm.p0_crush_curve;
   d_cm.p1_crush_curve = cm->d_cm.p1_crush_curve;
   d_cm.p3_crush_curve = cm->d_cm.p3_crush_curve;
@@ -289,7 +291,9 @@ Arenisca::~Arenisca()
   VarLabel::destroy(pepLabel_preReloc);
   VarLabel::destroy(pevpLabel);              //Plastic Volumetric Strain
   VarLabel::destroy(pevpLabel_preReloc);
-  VarLabel::destroy(peqpsLabel);              //Hamid:Equivalent plastic shear Strain
+  VarLabel::destroy(pevvLabel);              //EG: Disaggregation Volumetric Strain
+  VarLabel::destroy(pevvLabel_preReloc);
+  VarLabel::destroy(peqpsLabel);             //Hamid:Equivalent plastic shear Strain
   VarLabel::destroy(peqpsLabel_preReloc);
   VarLabel::destroy(peveLabel);              //Elastic Volumetric Strain
   VarLabel::destroy(peveLabel_preReloc);
@@ -327,6 +331,7 @@ void Arenisca::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("CR",d_cm.CR); //not used
   cm_ps->appendElement("T1_rate_dependence",d_cm.T1_rate_dependence);
   cm_ps->appendElement("T2_rate_dependence",d_cm.T2_rate_dependence);
+  cm_ps->appendElement("Initial_Disaggregation_Strain",d_cm.Initial_Disaggregation_Strain);	//EG
   cm_ps->appendElement("p0_crush_curve",d_cm.p0_crush_curve);
   cm_ps->appendElement("p1_crush_curve",d_cm.p1_crush_curve);
   cm_ps->appendElement("p3_crush_curve",d_cm.p3_crush_curve);
@@ -398,6 +403,7 @@ void Arenisca::initializeCMData(const Patch* patch,
                             pPorePressure,   // Plottable fluid pressure
                             peakI1IDist,     // Holder for particles PEAKI1 value
                             pevp,            // Plastic Volumetric Strain
+							pevv,			 // EG: Disaggregation Volumetric Strain
                             peqps,           // Hamid Equivalent Plastic Shear strain
                             peve,            // Elastic Volumetric Strain
                             pCapX,           // I1 of cap intercept
@@ -419,6 +425,7 @@ void Arenisca::initializeCMData(const Patch* patch,
   new_dw->allocateAndPut(peakI1IDist,     peakI1IDistLabel,     pset);
   new_dw->allocateAndPut(pep,             pepLabel,             pset);
   new_dw->allocateAndPut(pevp,            pevpLabel,            pset);
+  new_dw->allocateAndPut(pevv,            pevvLabel,            pset);	//EG
   new_dw->allocateAndPut(peqps,           peqpsLabel,           pset);
   new_dw->allocateAndPut(peve,            peveLabel,            pset);
   new_dw->allocateAndPut(pCapX,           pCapXLabel,           pset);
@@ -430,6 +437,16 @@ void Arenisca::initializeCMData(const Patch* patch,
   new_dw->allocateAndPut(pIotaQS,         pIotaQSLabel,         pset);
   new_dw->allocateAndPut(pStressQS,       pStressQSLabel,  pset);
   new_dw->allocateAndPut(pScratchMatrix,  pScratchMatrixLabel,  pset);
+  
+  //-----EG: Activating Disaggregation Algorithm
+  double pevv0 = 0.0;	
+  if (d_cm.Initial_Disaggregation_Strain != -1){
+	  pevv0 = d_cm.Initial_Disaggregation_Strain;
+	  if (pevv0 < 0){
+		  pevv0 = 0.0;
+	  }  
+  }
+  //-----EG
 
   for(ParticleSubset::iterator iter = pset->begin();
       iter != pset->end();iter++){
@@ -440,6 +457,7 @@ void Arenisca::initializeCMData(const Patch* patch,
     pPorePressure[*iter] = d_cm.fluid_pressure_initial;
     peakI1IDist[*iter] = d_cm.PEAKI1;
     pevp[*iter] = 0.0;
+	pevv[*iter] = pevv0;	//EG: Inintial Disaggregation Volumetric Strain
     peqps[*iter] = 0.0;
     peve[*iter] = 0.0;
     pCapX[*iter] = computeX(0.0);
@@ -664,6 +682,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                                    pPorePressure,
                                    pmass,           //used for stable timestep
                                    pevp,
+								   pevv,			//EG
                                    peqps,           //Hamid
                                    peve,
                                    pCapX, pCapXQS,
@@ -688,6 +707,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pPorePressure,   pPorePressureLabel,           pset); //initializeCMData()
     old_dw->get(pmass,           lb->pMassLabel,               pset);
     old_dw->get(pevp,            pevpLabel,                    pset); //initializeCMData()
+	old_dw->get(pevv,            pevvLabel,                    pset); //EG: initializeCMData()
     old_dw->get(peqps,           peqpsLabel,                   pset); //Hamid
     old_dw->get(peve,            peveLabel,                    pset); //initializeCMData()
     old_dw->get(pCapX,           pCapXLabel,                   pset); //initializeCMData()
@@ -733,6 +753,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                               pScratchDouble2_new,
                               pPorePressure_new,
                               pevp_new,
+							  pevv_new,		//EG
                               peqps_new,
                               peve_new,
                               pCapX_new, pCapXQS_new,
@@ -749,6 +770,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pScratchDouble2_new, pScratchDouble2Label_preReloc, pset);
     new_dw->allocateAndPut(pPorePressure_new,   pPorePressureLabel_preReloc,   pset);
     new_dw->allocateAndPut(pevp_new,            pevpLabel_preReloc,            pset);
+	new_dw->allocateAndPut(pevv_new,            pevvLabel_preReloc,            pset); //EG
     new_dw->allocateAndPut(peqps_new,           peqpsLabel_preReloc,           pset); //hamid
     new_dw->allocateAndPut(peve_new,            peveLabel_preReloc,            pset);
     new_dw->allocateAndPut(pCapX_new,           pCapXLabel_preReloc,           pset);
@@ -929,6 +951,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         // part of the plastic strain, volumetric part of the elastic strain, \kappa,
         // and the backstress. tentative assumption of elasticity
         pevp_new[idx]   = pevp[idx];
+		pevv_new[idx]   = pevv[idx];	  //EG
         peve_new[idx]   = peve[idx] + D.Trace()*delT;
         peqps_new[idx]  = peqps[idx]; //Hamid
         pCapX_new[idx]  = pCapX[idx];
@@ -940,6 +963,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 
         // allocate and assign step values
         double  evp_new_step    = pevp_new[idx],
+				evv_new_step    = pevv_new[idx],  //EG
                 eqps_new_step   = peqps_new[idx], //Hamid
                 eve_new_step    = peve_new[idx],
                 X_new_step      = pCapX_new[idx],
@@ -948,7 +972,126 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                 PEAKI1Dist      = peakI1IDist_new[idx]; //Weibull Distribution on PEAKI1
         Matrix3 ep_new_step     = pep_new[idx],
                 stress_new_step = pStress_new[idx];
+		
+		
+		//EG: ----------------------- Begining of the Disaggregation Algorithm -----------------------
+	
+		double ev_new_step = evp_new_step + evv_new_step + eve_new_step;	//Total Disaggregation volumetric strain	
+		double beta_void = 0.0;
+		
+		
+		//EG: Existing Disaggregation volumetric strain 
+		if (pevv[idx]>0 && d_cm.Initial_Disaggregation_Strain != -1) {
+			if (pevv[idx] + D.Trace()*delT > 0){
+				beta_void = 1.0;	
+			}else{
+				beta_void = -pevv[idx]/(D.Trace()*delT);
+			}
+			evv_new_step = pevv[idx] + beta_void*D.Trace()*delT;	
+			eve_new_step = peve[idx]+(1-beta_void)*D.Trace()*delT;	
+			
+			//if (pParticleID[idx]==55834574848 || pParticleID[idx]==55834640384){
+			//	cout<<" Existing void"<<endl;
+			//	cout<< "pID = "<<pParticleID[idx]<<" beta_void = "<<beta_void<<" evv_new_step = "<<evv_new_step<<" eve_new_step = "<<eve_new_step<< endl;
+			//	cout<<" trace(D)- before modification = "<<D.Trace()<<endl;
+			//}
+				
+			D = (1-beta_void)*D; 
+			trial_stress_step = trial_stress_step - beta_void*stress_diff_step; 
+			stress_new_step = trial_stress_step;
+			computeInvariants(trial_stress_step, S_trial_step, I1_trial_step, J2_trial_step);
+			f_trial_step[idx] = YieldFunction(I1_trial_step,
+											  J2_trial_step,
+											  pCapX[idx],
+											  pZeta[idx],
+											  threeKby2G,
+											  peakI1IDist[idx]);
+			
+			if (beta_void==1.0) {	
+				f_trial_step[idx]=-1;
+			}
+			
+			//if (pParticleID[idx]==55834574848 || pParticleID[idx]==55834640384){
+			//	cout<<" I1_trial_step = "<<I1_trial_step<<" J2_trial_step = "<<J2_trial_step<<" trace(D) = "<<D.Trace()<<endl;
+			//}
+		}
+			
+		//EG: Introducing Disaggregation volumetric strain
+		
+		//if (I1_trial_step > PEAKI1 || ev_new_step > pIota[idx]) {	//Emad:void insertion
+		//if ((I1_trial_step>0 && f_trial_step[idx]>0) || ev_new_step > pIota[idx]) {	//Emad:void insertion
+		//if ((I1_trial_step>0 && f_trial_step[idx]>0)||I1_trial_step > PEAKI1 || ev_new_step > pIota[idx]||pevv[idx]>0) {	//Emad:void insertion
+		//if ((I1_trial_step>0 && f_trial_step[idx])||pevv[idx]>0) {	//Emad:void insertion
+		//if (I1_trial_step>0 && f_trial_step[idx]>0 && D.Trace()>0&&pevv[idx]<=0) {	//Emad:void insertion
+		if (I1_trial_step>0 && f_trial_step[idx]>0 && D.Trace()>0 && d_cm.Initial_Disaggregation_Strain != -1) {
+			
 
+			//Iota_new_step = min(ev_new_step,pIota[idx]);
+			
+			stress_new_step = trial_stress_step;
+			double  I1_void = I1_trial_step,
+					J2_void = J2_trial_step,
+					n_void  = 0.0,
+					f_void = f_trial_step[idx];
+			Matrix3 S_void  = S_trial_step;
+			
+			//while (Abs(pow(2,n_void)*stress_diff_step.Norm()) > 1.0e-18 || f_void>=0){
+			while (Abs(pow(2,n_void)*stress_diff_step.Norm()) > 1.0e-20){
+				n_void--;
+				//EG: modifying the stress
+				stress_new_step = stress_new_step - Sign(f_void)*pow(2,n_void)*stress_diff_step;
+				// EG: Compute the invariants of modified stress
+				I1_void = stress_new_step.Trace();  
+				S_void  = stress_new_step - Identity*(one_third*I1_void);  
+				J2_void = 0.5*S_void.Contract(S_void);
+				//EG: Sign of the yeild surface after modification				
+				f_void = YieldFunction(I1_trial_step,
+									   J2_trial_step,
+									   pCapX[idx],
+									   pZeta[idx],
+									   threeKby2G,
+									   peakI1IDist[idx]);
+				
+				//cout<< "f_void = "<<f_void<<" ,I1 = "<<I1_void<<" ,J2 = "<<J2_void<<endl;
+				//cout<< "f_void = "<<f_void<<" ,n = "<<n_void<<endl;
+			}
+			
+			f_trial_step[idx]=-1; 
+			
+			//cout<< "n_void = "<<n_void<<" sig_22 = "<<stress_new_step(1,1) << endl;
+			//cout<< "n_void = "<<n_void<<endl;
+			
+			beta_void = 1-((stress_new_step-trial_stress_step + stress_diff_step).Norm())/stress_diff_step.Norm();
+			
+			evv_new_step = pevv[idx] + beta_void*D.Trace()*delT;	
+			eve_new_step = peve[idx]+(1-beta_void)*D.Trace()*delT;
+			
+			
+			//if (pParticleID[idx]==55834574848 || pParticleID[idx]==55834640384){
+			//	cout<<" New void"<<endl;
+			//	cout<< "pID = "<<pParticleID[idx]<<" beta_void = "<<beta_void<<" evv_new_step = "<<evv_new_step<<" eve_new_step = "<<eve_new_step<< endl;
+			//	cout<<" trace(D)- before modification = "<<D.Trace()<<endl;
+			//}
+			
+			D = (1-beta_void)*D; 
+			trial_stress_step = trial_stress_step - beta_void*stress_diff_step; 
+			stress_new_step = trial_stress_step; 
+			computeInvariants(trial_stress_step, S_trial_step, I1_trial_step, J2_trial_step);
+			f_trial_step[idx] = YieldFunction(I1_trial_step,
+											  J2_trial_step,
+											  pCapX[idx],
+											  pZeta[idx],
+											  threeKby2G,
+											  peakI1IDist[idx]);
+			
+			//if (pParticleID[idx]==55834574848 || pParticleID[idx]==55834640384){
+			//	cout<<" I1_trial_step = "<<I1_trial_step<<" J2_trial_step = "<<J2_trial_step<<" trace(D) = "<<D.Trace()<<endl;
+			//}
+			
+			
+		//EG: ----------------------- End of the Disaggregation Algorithm -----------------------
+			
+		}else{ //EG
 
         // MH: We now check if the entire step is elastic.  If it is, we update the
         //     new stress to be our trial stress and compute the new elastic strain.
@@ -1173,6 +1316,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
           //                     __FILE__, __LINE__);
           //}
         }
+		}	//EG
 
         //T2D: Move declarations to beginning and use compute invariants
         Matrix3 ep_inc = ep_new_step-pep_new[idx];
@@ -1181,6 +1325,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 	
         eqps_new_step    = sqrt(2*Dev_s.Contract(Dev_s));
         pevp_new[idx]    = evp_new_step;
+		pevv_new[idx]    = evv_new_step;	//EG
         peqps_new[idx]   = peqps_new[idx]+eqps_new_step; //Hamid
         peve_new[idx]    = eve_new_step;
         pCapX_new[idx]   = X_new_step;
@@ -2042,6 +2187,7 @@ void Arenisca::addParticleState(std::vector<const VarLabel*>& from,
   from.push_back(pPorePressureLabel);
   from.push_back(pepLabel);
   from.push_back(pevpLabel);
+  from.push_back(pevvLabel);	//EG
   from.push_back(peqpsLabel);//Hamid
   from.push_back(peveLabel);
   from.push_back(pCapXLabel);
@@ -2061,6 +2207,7 @@ void Arenisca::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(  pPorePressureLabel_preReloc);
   to.push_back(  pepLabel_preReloc);
   to.push_back(  pevpLabel_preReloc);
+  to.push_back(  pevvLabel_preReloc);	//Emad
   to.push_back(  peqpsLabel_preReloc);//Hamid
   to.push_back(  peveLabel_preReloc);
   to.push_back(  pCapXLabel_preReloc);
@@ -2093,6 +2240,7 @@ void Arenisca::addInitialComputesAndRequires(Task* task,
   task->computes(pPorePressureLabel,   matlset);
   task->computes(pepLabel,             matlset);
   task->computes(pevpLabel,            matlset);
+  task->computes(pevvLabel,            matlset);	//EG
   task->computes(peqpsLabel,           matlset);//Hamid
   task->computes(peveLabel,            matlset);
   task->computes(pCapXLabel,           matlset);
@@ -2123,6 +2271,7 @@ void Arenisca::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, pPorePressureLabel,   matlset, Ghost::None);
   task->requires(Task::OldDW, pepLabel,             matlset, Ghost::None);
   task->requires(Task::OldDW, pevpLabel,            matlset, Ghost::None);
+  task->requires(Task::OldDW, pevvLabel,            matlset, Ghost::None);	//EG
   task->requires(Task::OldDW, peqpsLabel,           matlset, Ghost::None);//Hamid
   task->requires(Task::OldDW, peveLabel,            matlset, Ghost::None);
   task->requires(Task::OldDW, pCapXLabel,           matlset, Ghost::None);
@@ -2143,6 +2292,7 @@ void Arenisca::addComputesAndRequires(Task* task,
   task->computes(pPorePressureLabel_preReloc,   matlset);
   task->computes(pepLabel_preReloc,             matlset);
   task->computes(pevpLabel_preReloc,            matlset);
+  task->computes(pevvLabel_preReloc,            matlset);	//EG
   task->computes(peqpsLabel_preReloc,           matlset);//Hamid
   task->computes(peveLabel_preReloc,            matlset);
   task->computes(pCapXLabel_preReloc,           matlset);
@@ -2258,6 +2408,11 @@ void Arenisca::initializeLocalMPMLabels()
   pevpLabel = VarLabel::create("p.evp",
     ParticleVariable<double>::getTypeDescription());
   pevpLabel_preReloc = VarLabel::create("p.evp+",
+    ParticleVariable<double>::getTypeDescription());
+  //EG: pevv
+  pevvLabel = VarLabel::create("p.evv",
+    ParticleVariable<double>::getTypeDescription());
+  pevvLabel_preReloc = VarLabel::create("p.evv+",
     ParticleVariable<double>::getTypeDescription());
   //peqps Hamid
   peqpsLabel = VarLabel::create("p.eqps",

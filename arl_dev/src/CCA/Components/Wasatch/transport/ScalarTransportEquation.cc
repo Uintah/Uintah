@@ -68,7 +68,7 @@ namespace Wasatch{
                                   get_staggered_location<FieldT>(),
                                   isConstDensity ),
       densityTag_( densityTag ),
-      enableTurbulence_( !params->findBlock("DisableTurbulenceModel") && (turbulenceParams.turbModelName != NOTURBULENCE) )
+      enableTurbulence_( !params->findBlock("DisableTurbulenceModel") && (turbulenceParams.turbModelName != TurbulenceParameters::NOTURBULENCE) )
   {
     //_____________
     // Turbulence
@@ -112,11 +112,11 @@ namespace Wasatch{
         msg << "ERROR: For solving the transport equations in weak form, the primitive variable will be the same as the solution variable. So, you don't need to specify it. Please remove the \"PrimitiveVariable\" block from the \"TransportEquation\" block in your input file." << endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-    }
+      }
     assert( primVarTag_ != Expr::Tag() );
 
     if( callSetup ) setup();
-  }
+    }
 
   //------------------------------------------------------------------
 
@@ -180,7 +180,7 @@ namespace Wasatch{
   ScalarTransportEquation<FieldT>::setup_convective_flux( FieldTagInfo& info )
   {
     Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
-    const Expr::Tag solnVarTag = solution_variable_tag();
+    const Expr::Tag solnVarTag( solnVarName_, Expr::STATE_DYNAMIC );
     for( Uintah::ProblemSpecP convFluxParams=params_->findBlock("ConvectiveFlux");
         convFluxParams != 0;
         convFluxParams=convFluxParams->findNextBlock("ConvectiveFlux") )
@@ -251,13 +251,13 @@ namespace Wasatch{
 
   template< typename FieldT >
   void ScalarTransportEquation<FieldT>::
-  setup_initial_boundary_conditions( const GraphHelper& graphHelper,
+  apply_initial_boundary_conditions( const GraphHelper& graphHelper,
                                      BCHelper& bcHelper )
   {
     const Category taskCat = INITIALIZATION;
    
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
-    const Expr::Tag phiTag( this->solution_variable_name(), Expr::STATE_N );
+    //const Expr::Tag phiTag( this->solution_variable_name(), Expr::STATE_N );
     
     // multiply the initial condition by the volume fraction for embedded geometries
     const EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
@@ -266,17 +266,17 @@ namespace Wasatch{
       //create modifier expression
       typedef ExprAlgebra<FieldT> ExprAlgbr;
       const Expr::TagList theTagList = tag_list( vNames.vol_frac_tag<SVolField>() );
-      Expr::Tag modifierTag = Expr::Tag( this->solution_variable_name() + "_init_cond_modifier", Expr::STATE_NONE);
+      const Expr::Tag modifierTag = Expr::Tag( this->solution_variable_name() + "_init_cond_modifier", Expr::STATE_NONE);
       factory.register_expression( new typename ExprAlgbr::Builder(modifierTag,
                                                                    theTagList,
                                                                    ExprAlgbr::PRODUCT,
                                                                    true) );
       
-      factory.attach_modifier_expression( modifierTag, phiTag );
+      factory.attach_modifier_expression( modifierTag, solution_variable_tag() );
     }
     
-    if( factory.have_entry(phiTag) ){
-      bcHelper.apply_boundary_condition<FieldT>( phiTag, taskCat );
+    if( factory.have_entry(solution_variable_tag()) ){
+      bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
     }
     
     if( !isConstDensity_ ){
@@ -287,19 +287,58 @@ namespace Wasatch{
   //------------------------------------------------------------------
   template< typename FieldT >
   void ScalarTransportEquation<FieldT>::
-  verify_boundary_conditions( BCHelper& bcHelper,
+  setup_boundary_conditions( BCHelper& bcHelper,
                              GraphCategories& graphCat )
   {
     Expr::ExpressionFactory& advSlnFactory = *(graphCat[ADVANCE_SOLUTION]->exprFactory);
-    
+
     const TagNames& tagNames = TagNames::self();
     const Expr::Tag rhsStarTag = tagNames.make_star_rhs( this->solution_variable_tag() );
+  
+    // add dummy functors on ALL patches
+    if (!isConstDensity_)
+    {
+      const Expr::Tag solnVarStarTag = tagNames.make_star(this->solution_variable_name());
+      bcHelper.create_dummy_dependency<FieldT>(solnVarStarTag, tag_list(solution_variable_tag()), ADVANCE_SOLUTION);
+    }
     
     // make logical decisions based on the specified boundary types
     BOOST_FOREACH( BndMapT::value_type& bndPair, bcHelper.get_boundary_information() )
     {
       const std::string& bndName = bndPair.first;
       BndSpec& myBndSpec = bndPair.second;
+                  
+      if (!isConstDensity_) {
+        // set bcs for solnVar_*
+        const Expr::Tag solnVarStarTag = tagNames.make_star(this->solution_variable_name());
+        
+        // check if this boundary has the solution variable specification on it. it better have!
+        if (myBndSpec.has_field(solution_variable_name())) {
+          // grab the bc specification of the solution variable on this boundary. Note that here we
+          // should guarantee that the spec is found!
+          const BndCondSpec* phiBCSpec = myBndSpec.find(solution_variable_name());
+          assert(phiBCSpec);
+
+          if (!phiBCSpec->is_functor() ) {
+            // if the boundary condition is not a functor (i.e. a constant value), then simply
+            // copy that value into a new BCSpec for the solution variable estimate (rhof*)
+            BndCondSpec phiStarBCSpec = *phiBCSpec; // copy the spec from the velocity
+            phiStarBCSpec.varName = solnVarStarTag.name(); // change the name to the starred velocity
+            bcHelper.add_boundary_condition(bndName, phiStarBCSpec);
+          } else {
+            // if it is a functor type, then create a BCCopier
+            // create tagname for the bc copier
+            const Expr::Tag solnVarStarBCTag( solnVarStarTag.name() + "_" + bndName + "_bccopier",Expr::STATE_NONE);
+            // create and register the BCCopier
+            typedef typename BCCopier<FieldT>::Builder Copier;
+            advSlnFactory.register_expression(scinew Copier(solnVarStarBCTag,solution_variable_tag()));
+            // specify the bc on rhof* using the bc copier functor
+            BndCondSpec phiStarBCSpec = {solnVarStarTag.name(), solnVarStarBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
+            // add it to the boundary conditions!
+            bcHelper.add_boundary_condition(bndName, phiStarBCSpec);
+          }
+        }
+      }
       
       switch (myBndSpec.type) {
         case WALL:
@@ -344,12 +383,12 @@ namespace Wasatch{
   
   template< typename FieldT >
   void ScalarTransportEquation<FieldT>::
-  setup_boundary_conditions( const GraphHelper& graphHelper,
+  apply_boundary_conditions( const GraphHelper& graphHelper,
                              BCHelper& bcHelper )
   {            
     namespace SS = SpatialOps::structured;
     const Category taskCat = ADVANCE_SOLUTION;
-    bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
+    bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );    
     
     bcHelper.apply_boundary_condition<FieldT>( rhs_tag(), taskCat, true ); // apply the rhs bc directly inside the extra cell
   
@@ -357,15 +396,7 @@ namespace Wasatch{
       // set bcs for solnVar_*
       const TagNames& tagNames = TagNames::self();
       const Expr::Tag solnVarStarTag = tagNames.make_star(this->solution_variable_name());
-      const Expr::Tag solnVarStarBCTag( solnVarStarTag.name()+"_bc",Expr::STATE_NONE);
-      Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
-      if( !factory.have_entry(solnVarStarBCTag) ){
-        factory.register_expression ( new typename BCCopier<SVolField>::Builder(solnVarStarBCTag, Expr::Tag( this->solution_variable_name(),Expr::STATE_N )) );
-      }
-      
-      bcHelper.add_auxiliary_boundary_condition( this->solution_variable_name(), solnVarStarTag.name(), solnVarStarBCTag.name(), Wasatch::DIRICHLET );
       bcHelper.apply_boundary_condition<FieldT>( solnVarStarTag, taskCat );
-
       bcHelper.apply_boundary_condition<FieldT>( Expr::Tag(rhs_tag().name() + tagNames.star, Expr::STATE_NONE), taskCat, true );
       bcHelper.apply_boundary_condition<FieldT>( primVarTag_, taskCat );
     }
@@ -386,7 +417,7 @@ namespace Wasatch{
                                                                              tag_list( primVarTag_, Expr::Tag(densityTag_.name(),Expr::STATE_NONE) ),
                                                                              ExprAlgbr::PRODUCT ) );
     }
-    return icFactory.get_id( Expr::Tag( this->solution_variable_name(), Expr::STATE_N ) );
+    return icFactory.get_id( solution_variable_tag() );
   }
 
   //------------------------------------------------------------------

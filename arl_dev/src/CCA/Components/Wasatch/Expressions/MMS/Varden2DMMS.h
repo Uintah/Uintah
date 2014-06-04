@@ -6,7 +6,7 @@
 
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVStaggeredOperatorTypes.h>
-
+#include <CCA/Components/Wasatch/VardenParameters.h>
 #include <limits>
 #include <iostream>
 #include <fstream>
@@ -356,7 +356,7 @@ private:
 
 /**
  *  \class VarDenMMSOscillatingContinuitySrc
- *  \author Amir Biglari
+ *  \author Tony Saad, Amir Biglari
  *  \date December, 2013
  *  \brief The source term for continuity equation in the 2D-MMS applied on pressure projection method.
  *         This is forced on the continuity equation by the manufactured solutions.
@@ -392,7 +392,8 @@ public:
              const Expr::Tag& xTag,
              const Expr::Tag& yTag,
              const Expr::Tag& tTag,
-             const Expr::Tag& timestepTag );
+             const Expr::Tag& timestepTag,
+             const Wasatch::VarDenParameters varDenParams);
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
@@ -400,6 +401,7 @@ public:
     const Expr::Tag xTag_, yTag_, tTag_, timestepTag_;
     const Expr::Tag denst_, densStart_, dens2Start_;
     const Expr::TagList velStarTs_;
+    const Wasatch::VarDenParameters varDenParams_;
   };
   
   void advertise_dependents( Expr::ExprDeps& exprDeps );
@@ -419,23 +421,26 @@ private:
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SVolField >::type GradZT;
   
   VarDenMMSOscillatingContinuitySrc( const Expr::Tag densTag,
-                             const Expr::Tag densStarTag,
-                             const Expr::Tag dens2StarTag,
-                             const Expr::TagList& velStarTags,
-                             const double r0,
-                             const double r1,
-                             const double w,
-                             const double k,
-                             const double uf,
-                             const double vf,
-                             const Expr::Tag& xTag,
-                             const Expr::Tag& yTag,
-                             const Expr::Tag& tTag,
-                             const Expr::Tag& timestepTag );
+                                     const Expr::Tag densStarTag,
+                                     const Expr::Tag dens2StarTag,
+                                     const Expr::TagList& velStarTags,
+                                     const double r0,
+                                     const double r1,
+                                     const double w,
+                                     const double k,
+                                     const double uf,
+                                     const double vf,
+                                     const Expr::Tag& xTag,
+                                     const Expr::Tag& yTag,
+                                     const Expr::Tag& tTag,
+                                     const Expr::Tag& timestepTag,
+                                     const Wasatch::VarDenParameters varDenParams );
   const Expr::Tag xVelStart_, yVelStart_, zVelStart_, denst_, densStart_, dens2Start_;
   const bool doX_, doY_, doZ_;
   const double r0_, r1_, w_, k_, uf_, vf_;
   const Expr::Tag xTag_, yTag_, tTag_, timestepTag_;
+  const double a0_;
+  const Wasatch::VarDenParameters::VariableDensityModels model_;
   const XVolField *uStar_;
   const YVolField *vStar_;
   const ZVolField *wStar_;

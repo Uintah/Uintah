@@ -62,6 +62,7 @@
 
 //-- Wasatch includes --//
 #include "Wasatch.h"
+#include <CCA/Components/Wasatch/TimeIntegratorTools.h>
 #include "WasatchMaterial.h"
 #include "FieldAdaptor.h"
 #include "TagNames.h"
@@ -464,31 +465,6 @@ namespace Wasatch{
       }
     }
     
-    // Here we add the functors name of the "*" stage variables BC to the functormap
-    if( wasatchSpec_->findBlock("MomentumEquations") &&
-        wasatchSpec_->findBlock("Density") &&
-        wasatchSpec_->findBlock("TransportEquation") )
-    {
-      for( Uintah::ProblemSpecP transEqnParams=wasatchSpec_->findBlock("TransportEquation");
-          transEqnParams != 0;
-          transEqnParams=transEqnParams->findNextBlock("TransportEquation") )
-      {
-        std::string solnVarName;
-        transEqnParams->get("SolutionVariable",solnVarName);
-        BCFunctorMap::mapped_type functorSet;
-        BCFunctorMap::key_type functorName = solnVarName+TagNames::self().star+"_bc";
-        BCFunctorMap::key_type phiName     = solnVarName+TagNames::self().star;
-        functorSet.insert(functorName);
-        bcFunctorMap_.insert( BCFunctorMap::value_type(phiName,functorSet) );
-      }
-
-      BCFunctorMap::mapped_type functorSet;
-      BCFunctorMap::key_type functorName = densityTag.name()+TagNames::self().star+"_bc";
-      BCFunctorMap::key_type phiName     = densityTag.name()+TagNames::self().star;
-      functorSet.insert(functorName);
-      bcFunctorMap_.insert( BCFunctorMap::value_type(phiName,functorSet) );
-    }
-
     // PARSE IO FIELDS
     Uintah::ProblemSpecP archiverParams = params->findBlock("DataArchiver");
     for( Uintah::ProblemSpecP saveLabelParams=archiverParams->findBlock("save");
@@ -545,7 +521,14 @@ namespace Wasatch{
     Uintah::ProblemSpecP turbulenceModelParams = wasatchSpec_->findBlock("Turbulence");
     TurbulenceParameters turbParams;
     parse_turbulence_input(turbulenceModelParams, turbParams);
-    
+
+    //
+    // get the variable density model params, if any, and parse them.
+    //
+    Uintah::ProblemSpecP varDenModelParams = wasatchSpec_->findBlock("VariableDensity");
+    VarDenParameters varDenParams;
+    parse_varden_input(varDenModelParams, varDenParams);
+
     //
     // Build transport equations.  This registers all expressions as
     // appropriate for solution of each transport equation.
@@ -555,7 +538,7 @@ namespace Wasatch{
     for( Uintah::ProblemSpecP transEqnParams=wasatchSpec_->findBlock("TransportEquation");
          transEqnParams != 0;
          transEqnParams=transEqnParams->findNextBlock("TransportEquation") ){
-      adaptors_.push_back( parse_equation( transEqnParams, turbParams, densityTag, isConstDensity, graphCategories_ ) );
+      adaptors_.push_back( parse_scalar_equation( transEqnParams, turbParams, densityTag, isConstDensity, graphCategories_ ) );
     }
 
     //
@@ -601,6 +584,7 @@ namespace Wasatch{
       try{
           const EquationAdaptors adaptors = parse_momentum_equations( momEqnParams,
                                                                       turbParams,
+                                                                      varDenParams,
                                                                       useAdaptiveDt,
                                                                       isConstDensity,
                                                                       densityTag,
@@ -773,9 +757,6 @@ namespace Wasatch{
     if( linSolver_ ) {
       linSolver_->scheduleInitialize( level, sched, 
                                       sharedState_->allMaterials() );
-
-      sched->overrideVariableBehavior("hypre_solver_label",false,false,
-                                      false,true,true);
     }
 #   endif
 
@@ -794,7 +775,11 @@ namespace Wasatch{
 
     //_______________________________________
     // set the time
-    const Expr::TagList timeTags( tag_list( TagNames::self().time, TagNames::self().dt, TagNames::self().timestep  ) );
+    Expr::TagList timeTags;
+    timeTags.push_back( TagNames::self().time     );
+    timeTags.push_back( TagNames::self().dt     );
+    timeTags.push_back( TagNames::self().timestep );
+    timeTags.push_back( TagNames::self().rkstage  );
     exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
 
     //_____________________________________________
@@ -813,9 +798,9 @@ namespace Wasatch{
         //______________________________________________________
         // set up initial boundary conditions on this transport equation
         try{
-          transEq->verify_boundary_conditions( *bcHelperMap_[level->getID()], graphCategories_);
+          transEq->setup_boundary_conditions( *bcHelperMap_[level->getID()], graphCategories_);
           proc0cout << "Setting Initial BCs for transport equation '" << eqnLabel << "'" << std::endl;
-          transEq->setup_initial_boundary_conditions( *icGraphHelper, *bcHelperMap_[level->getID()]);
+          transEq->apply_initial_boundary_conditions( *icGraphHelper, *bcHelperMap_[level->getID()]);
         }
         catch( std::runtime_error& e ){
           std::ostringstream msg;
@@ -940,7 +925,7 @@ namespace Wasatch{
       	task->computes( sharedState_->get_delt_label(),
                       level.get_rep() );
       //              materials_->getUnion() );
-      // jcs why can't we specify a metrial here?  It doesn't seem to be working if I do.
+      // jcs why can't we specify a material here?  It doesn't seem to be working if I do.
       
       const GraphHelper* slnGraphHelper = graphCategories_[ADVANCE_SOLUTION];
       const TagNames& tagNames = TagNames::self();
@@ -1010,9 +995,9 @@ namespace Wasatch{
         // set up boundary conditions on this transport equation
         try{
           // only verify boundary conditions on the first stage!
-          if( isRestarting_ && iStage < 2 ) transEq->verify_boundary_conditions(*bcHelperMap_[level->getID()], graphCategories_);
+          if( isRestarting_ && iStage < 2 ) transEq->setup_boundary_conditions(*bcHelperMap_[level->getID()], graphCategories_);
           proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
-          transEq->setup_boundary_conditions(*advSolGraphHelper, *bcHelperMap_[level->getID()]);
+          transEq->apply_boundary_conditions(*advSolGraphHelper, *bcHelperMap_[level->getID()]);
         }
         catch( std::runtime_error& e ){
           std::ostringstream msg;
@@ -1107,13 +1092,15 @@ namespace Wasatch{
     // create an expression to set the current time as a field that
     // will be available to all expressions if needed.
     Expr::ExpressionID timeID;
-    if( rkStage==1 ){
-      const Expr::TagList timeTags( tag_list( TagNames::self().time, TagNames::self().dt, TagNames::self().timestep ) );
+    if( rkStage==1 && !exprFactory.have_entry(TagNames::self().time) ){
+      Expr::TagList timeTags;
+      timeTags.push_back( TagNames::self().time     );
+      timeTags.push_back( TagNames::self().dt     );
+      timeTags.push_back( TagNames::self().timestep );
+      timeTags.push_back( TagNames::self().rkstage  );
       timeID = exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
-    }
-    else{
-      const Expr::Tag timeTag = TagNames::self().time;
-      timeID = exprFactory.get_id(timeTag);
+    } else {
+      timeID = exprFactory.get_id(TagNames::self().time);
     }
 
     //___________________________________________

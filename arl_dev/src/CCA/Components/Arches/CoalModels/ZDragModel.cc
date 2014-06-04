@@ -89,6 +89,8 @@ ZDragModel::problemSetup(const ProblemSpecP& params, int qn)
   if (params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties")) {
     ProblemSpecP db_coal = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties");
     db_coal->require("particle_density", rhop);
+    db_coal->require("initial_rawcoal_mass", rc_mass_init);
+    db_coal->require("initial_ash_mass", ash_mass_init);
   } else {
     throw InvalidValue("ERROR: ZDragmodel: problemSetup(): Missing <Coal_Properties> section in input file!",__FILE__,__LINE__);
   }
@@ -116,9 +118,13 @@ ZDragModel::problemSetup(const ProblemSpecP& params, int qn)
       LabelToRoleMap[temp_label_name] = role_name;
     } else if (role_name == "particle_zvel") {
       LabelToRoleMap[temp_label_name] = role_name;
+    } else if (role_name == "raw_coal_mass") {
+      LabelToRoleMap[temp_label_name] = role_name;
+    } else if (role_name == "char_mass") {
+      LabelToRoleMap[temp_label_name] = role_name;
     } else {
       std::string errmsg;
-      errmsg = "Invalid variable role for ZDrag model: must be \"particle_length\" or \"particle_zvel\", you specified \"" + role_name + "\".";
+      errmsg = "Invalid variable role for ZDrag model: must be \"particle_length\" or \"particle_zvel\" or \"raw_coal_mass\" or \"char_mass\", you specified \"" + role_name + "\".";
       throw InvalidValue(errmsg,__FILE__,__LINE__);
     }
 
@@ -254,14 +260,42 @@ ZDragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int time
           errmsg += "\" in EqnFactory or in DQMOMEqnFactory.";
           throw InvalidValue(errmsg,__FILE__,__LINE__);
         }
+      } else if ( iMap->second == "raw_coal_mass" ) {
+        if (dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
+          EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
+          DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
+          d_raw_coal_mass_label = current_eqn.getTransportEqnLabel();
+          d_rcmass_scaling_factor = current_eqn.getScalingConstant();
+          tsk->requires(Task::OldDW, d_raw_coal_mass_label, gn, 0);
+        } else {
+          std::string errmsg = "ARCHES: ZDragModel: Invalid variable given in <variable> tag for Drag model";
+          errmsg += "\nCould not find given raw coal mass variable \"";
+          errmsg += *iter;
+          errmsg += "\" in EqnFactory or in DQMOMEqnFactory.";
+          throw InvalidValue(errmsg,__FILE__,__LINE__);
+        }
+      } else if ( iMap->second == "char_mass" ) {
+        if (dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
+          EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
+          DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
+          d_char_mass_label = current_eqn.getTransportEqnLabel();
+          d_charmass_scaling_factor = current_eqn.getScalingConstant();
+          tsk->requires(Task::OldDW, d_char_mass_label, gn, 0);
+        } else {
+          std::string errmsg = "ARCHES: ZDragModel: Invalid variable given in <variable> tag for Drag model";
+          errmsg += "\nCould not find given raw coal mass variable \"";
+          errmsg += *iter;
+          errmsg += "\" in EqnFactory or in DQMOMEqnFactory.";
+          throw InvalidValue(errmsg,__FILE__,__LINE__);
+        }
       } else if ( iMap->second == "particle_zvel" ) {
         if (dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
           EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
           d_zvel_scaling_factor = current_eqn.getScalingConstant();
         } else {
-          std::string errmsg = "ARCHES: XDragModel: Invalid variable given in <variable> tag for Drag model";
-          errmsg += "\nCould not find given particle x-velocity variable \"";
+          std::string errmsg = "ARCHES: ZDragModel: Invalid variable given in <variable> tag for Drag model";
+          errmsg += "\nCould not find given particle Z-velocity variable \"";
           errmsg += *iter;
           errmsg += "\" in EqnFactory or in DQMOMEqnFactory.";
           throw InvalidValue(errmsg,__FILE__,__LINE__);
@@ -345,6 +379,12 @@ ZDragModel::computeModel( const ProcessorGroup* pc,
     constCCVariable<double> w_particle_length;
     old_dw->get( w_particle_length, d_particle_length_label, matlIndex, patch, gn, 0 );
 
+    constCCVariable<double> w_raw_coal_mass;
+    old_dw->get( w_raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
+
+    constCCVariable<double> w_char_mass;
+    old_dw->get( w_char_mass, d_char_mass_label, matlIndex, patch, gn, 0 );
+
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
 
@@ -358,6 +398,18 @@ ZDragModel::computeModel( const ProcessorGroup* pc,
           length = w_particle_length[c]*d_pl_scaling_factor;
         } else {
           length = w_particle_length[c]/weight[c]*d_pl_scaling_factor;
+        }
+        double rc_mass;
+        if(d_unweighted) {
+          rc_mass = w_raw_coal_mass[c]*d_rcmass_scaling_factor;
+        } else {
+          rc_mass = w_raw_coal_mass[c]/weight[c]*d_rcmass_scaling_factor;
+        }
+        double char_mass;
+        if(d_unweighted) {
+          char_mass = w_char_mass[c]*d_charmass_scaling_factor;
+        } else {
+          char_mass = w_char_mass[c]/weight[c]*d_charmass_scaling_factor;
         }
 
         Vector sphGas = Vector(0.,0.,0.);
@@ -381,15 +433,22 @@ ZDragModel::computeModel( const ProcessorGroup* pc,
           phi = 1. + .15*pow(Re, 0.687);
         }
 
-        double t_p = rhop/(18.0*kvisc)*pow(length,2.0);
+        double rho_factor = (char_mass+rc_mass+ash_mass_init[d_quadNode])/(rc_mass_init[d_quadNode]+ash_mass_init[d_quadNode]);
 
+        if(!(rho_factor>=0 && rho_factor<=1.0)){
+          if(!(rho_factor>=0 && rho_factor<=1.2))
+          //          cout <<"Z_rho_factor =" <<rho_factor <<", c"<<c<<" charmass="<<w_char_mass[c]<<" ,"<<char_mass<<" rcmass="<<w_raw_coal_mass[c]<<" ,"<<rc_mass<<" ,"<<rc_mass_init[d_quadNode]<<" weights="<<weight[c]<<", lenght="<<length<<endl;
+          rho_factor =1;
+        }
+
+        double t_p = rhop*rho_factor/(18.0*kvisc)*pow(length,2.0);
 
         if(d_unweighted){        
           model[c] = (phi/t_p*(cartGas.z()-cartPart.z())+gravity.z())/(d_zvel_scaling_factor);
         } else {
           model[c] = weight[c]*(phi/t_p*(cartGas.z()-cartPart.z())+gravity.z())/(d_zvel_scaling_factor);
         }
-        gas_source[c] = -weight[c]*d_w_scaling_factor*rhop/6.0*pi*phi/t_p*(cartGas.z()-cartPart.z())*pow(length,3.0);
+        gas_source[c] = -weight[c]*d_w_scaling_factor*rhop*rho_factor/6.0*pi*phi/t_p*(cartGas.z()-cartPart.z())*pow(length,3.0);
 
         /*
         // Debugging

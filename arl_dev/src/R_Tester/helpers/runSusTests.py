@@ -70,7 +70,10 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   
   dbg_opt         = argv[4]
   max_parallelism = float(argv[5])
-  svn_revision    = getoutput("svn info ../src |grep Revision")
+  
+  global svn_revision
+  svn_revision = getoutput("svn info ../src |grep Revision")
+  svn_revision = svn_revision.split(" ")[1]
   
   
                     # 1 for GPU RT machine (albion, aurora), 0 otherwise.
@@ -411,7 +414,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     if failcode == 0 and (user == "csafe-tester" or user == "root"):
       print "Updating the svn revision file %s" %svn_revision
       svn_file = "%s/%s/%s/svn_revision" % (gold_standard,ALGO,testname)
-      system( "echo 'This test last passed with %s'> %s" %(svn_revision, svn_file))  
+      system( "echo 'This test last passed with Revision: %s'> %s" %(svn_revision, svn_file))  
     #__________________________________
     # end of test loop
 
@@ -466,6 +469,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket):
   global startpath
   global helperspath
+  global svn_revision
   
   testname = nameoftest(test)
 
@@ -686,8 +690,8 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     if do_performance_test == 1:
       print "\tPerforming performance test on %s" % (date())
       
-      performance_RC = system("performance_check %s %s %s %s %s > performance_check.log.txt 2>&1" % 
-                             (testname, do_plots, ts_file, compare_root, helperspath))
+      performance_RC = system("performance_check %s %s %s %s %s %s %s > performance_check.log.txt 2>&1" % 
+                             (testname, do_plots, ts_file, compare_root, helperspath, "sus.log.txt", svn_revision))
       try:
         short_message_file = open("performance_shortmessage.txt", 'r+', 500)
         short_message = rstrip(short_message_file.readline(500))

@@ -28,12 +28,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <iostream>
-
-#ifndef _WIN32
-#  include <unistd.h>
-#else
-#  include <process.h>
-#endif
+#include <unistd.h>
 
 using namespace std;
 using namespace Uintah;

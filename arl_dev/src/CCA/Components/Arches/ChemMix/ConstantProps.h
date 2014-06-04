@@ -91,7 +91,7 @@ public:
       @param modify_ref_den     Tells the method to modify the reference density */
   void sched_getState( const LevelP& level, 
                        SchedulerP& sched, 
-                       const TimeIntegratorLabel* time_labels, 
+                       const int time_substep, 
                        const bool initialize,
                        const bool modify_ref_den ); 
 
@@ -103,7 +103,7 @@ public:
                  const MaterialSubset* matls, 
                  DataWarehouse* old_dw, 
                  DataWarehouse* new_dw, 
-                 const TimeIntegratorLabel* time_labels, 
+                 const int time_substep, 
                  const bool initialize, 
                  const bool modify_ref_den );
 

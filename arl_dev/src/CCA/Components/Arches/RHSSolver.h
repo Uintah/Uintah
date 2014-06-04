@@ -60,8 +60,6 @@ WARNING
 
 namespace Uintah {
 
-using namespace SCIRun;
-
 class RHSSolver{
 
 public:

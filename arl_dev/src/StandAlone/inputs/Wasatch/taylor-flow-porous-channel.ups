@@ -136,15 +136,11 @@
       <Face side="x-" type="Wall"/>
       <Face side="x+" type="Outflow"/>
       <Face side="y-" type="Velocity">
-        <BCType label="x-mom" var="Dirichlet" value="0.0"/>
         <BCType label="y-mom" var="Dirichlet" value="0.1"/>
-        <BCType label="u" var="Dirichlet" value="0.0"/>
         <BCType label="v" var="Dirichlet" value="0.1"/>
       </Face>
       <Face side="y+" type="Velocity">
-        <BCType label="x-mom" var="Dirichlet" value="0.0"/>
         <BCType label="y-mom" var="Dirichlet" value="-0.1"/>
-        <BCType label="u" var="Dirichlet" value="0.0"/>
         <BCType label="v" var="Dirichlet" value="-0.1"/>
       </Face>
       </BoundaryConditions>

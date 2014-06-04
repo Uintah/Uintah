@@ -40,8 +40,6 @@
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Mutex.h>
 
-#include <Core/Thread/share.h>
-
 struct timespec;
 
 namespace SCIRun {
@@ -71,56 +69,59 @@ struct CrowdMonitor_private;
    
 ****************************************/
 
-class SCISHARE ConditionVariable {
-public:
-  //////////
-  // Create a condition variable. <i>name</i> should be a static
-  // string which describes the primitive for debugging purposes.
-  ConditionVariable(const char* name);
-    
-  //////////
-  // Destroy the condition variable
-  ~ConditionVariable();
-    
-  //////////
-  // Wait for a condition.  This method atomically unlocks
-  // <b>mutex</b>, and blocks.  The <b>mutex</b> is typically
-  // used to guard access to the resource that the thread is
-  // waiting for.
-  void wait(Mutex& m);
+class ConditionVariable {
 
-  //////////
-  // Wait for a condition.  This method atomically unlocks
-  // <b>mutex</b>, and blocks.  The <b>mutex</b> is typically
-  // used to guard access to the resource that the thread is
-  // waiting for.  If the time abstime is reached before
-  // the ConditionVariable is signaled, this will return
-  // false.  Otherewise it will return true.
-  bool timedWait(Mutex& m, const struct ::timespec* abstime);
-    
-  //////////
-  // Signal a condition.  This will unblock one of the waiting
-  // threads. No guarantee is made as to which thread will be
-  // unblocked, but thread implementations typically give
-  // preference to the thread that has waited the longest.
-  void conditionSignal();
+  public:
+    //////////
+    // Create a condition variable. <i>name</i> should be a static
+    // string which describes the primitive for debugging purposes.
+    ConditionVariable(const char* name);
 
-  //////////
-  // Signal a condition.  This will unblock all of the waiting
-  // threads. Note that only the number of waiting threads will
-  // be unblocked. No guarantee is made that these are the same
-  // N threads that were blocked at the time of the broadcast.
-  void conditionBroadcast();
+    //////////
+    // Destroy the condition variable
+    ~ConditionVariable();
 
-private:
-  const char* name_;
-  ConditionVariable_private* priv_;
+    //////////
+    // Wait for a condition.  This method atomically unlocks
+    // <b>mutex</b>, and blocks.  The <b>mutex</b> is typically
+    // used to guard access to the resource that the thread is
+    // waiting for.
+    void wait(Mutex& m);
 
-  // Cannot copy them
-  ConditionVariable(const ConditionVariable&);
-  ConditionVariable& operator=(const ConditionVariable&);
+    //////////
+    // Wait for a condition.  This method atomically unlocks
+    // <b>mutex</b>, and blocks.  The <b>mutex</b> is typically
+    // used to guard access to the resource that the thread is
+    // waiting for.  If the time abstime is reached before
+    // the ConditionVariable is signaled, this will return
+    // false.  Otherewise it will return true.
+    bool timedWait(Mutex& m,
+                   const struct ::timespec* abstime);
+
+    //////////
+    // Signal a condition.  This will unblock one of the waiting
+    // threads. No guarantee is made as to which thread will be
+    // unblocked, but thread implementations typically give
+    // preference to the thread that has waited the longest.
+    void conditionSignal();
+
+    //////////
+    // Signal a condition.  This will unblock all of the waiting
+    // threads. Note that only the number of waiting threads will
+    // be unblocked. No guarantee is made that these are the same
+    // N threads that were blocked at the time of the broadcast.
+    void conditionBroadcast();
+
+  private:
+    const char* name_;
+    ConditionVariable_private* priv_;
+
+    // Cannot copy them
+    ConditionVariable(const ConditionVariable&);
+    ConditionVariable& operator=(const ConditionVariable&);
 };
-} // End namespace SCIRun
+
+}  // End namespace SCIRun
 
 #endif
 

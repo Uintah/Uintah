@@ -9,6 +9,7 @@
   <Wasatch>
     <TimeIntegrator> FE </TimeIntegrator>    
 
+		<VariableDensity model="CONSTANT" coefficient="0.1"/>
     <Density>
       <NameTag name="density" state="CARRY_FORWARD"/>
     </Density>
@@ -48,7 +49,7 @@
       <SolutionVariable>rhof</SolutionVariable>
       <PrimitiveVariable>f</PrimitiveVariable>
 
-      <DiffusiveFlux direction="X">
+      <DiffusiveFlux direction="XY">
         <DiffusionCoefficient>
           <NameTag name="diffcoef" state="STATE_NONE"/>
         </DiffusionCoefficient>
@@ -60,11 +61,14 @@
         </AdvectiveVelocity>
       </ConvectiveFlux>
       
-      <DiffusiveFlux direction="Y">
-        <DiffusionCoefficient>
-          <NameTag name="diffcoef" state="STATE_NONE"/>
-        </DiffusionCoefficient>
-      </DiffusiveFlux>
+      <ConvectiveFlux direction="Y" method="UPWIND">
+        <AdvectiveVelocity>
+            <NameTag name="v" state="STATE_NONE"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      
+    </TransportEquation>   
+
 
       <ConvectiveFlux direction="Y" method="UPWIND">
         <AdvectiveVelocity>
@@ -99,8 +103,10 @@
       </Viscosity>
       <ComputeMassResidual/>
       <Pressure>
-        <Use3DLaplacian>   false</Use3DLaplacian>
-
+        <ReferencePressure value="0.0">
+        	<ReferenceCell>[0,0,0]</ReferenceCell>
+        </ReferencePressure>
+        <Use3DLaplacian>   true</Use3DLaplacian>
         <Parameters>
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>

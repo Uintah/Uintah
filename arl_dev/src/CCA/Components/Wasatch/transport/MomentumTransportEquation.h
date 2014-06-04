@@ -32,6 +32,7 @@
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/BCHelperTools.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
+#include <CCA/Components/Wasatch/VardenParameters.h>
 #include <CCA/Components/Wasatch/transport/TransportEquation.h>
 
 //-- Uintah includes --//
@@ -90,25 +91,26 @@ namespace Wasatch{
                                GraphCategories& grafCat,
                                Uintah::ProblemSpecP params,
                                TurbulenceParameters turbulenceParams,
+                               VarDenParameters varDenParams,
                                Uintah::SolverInterface& linSolver,
                                Uintah::SimulationStateP sharedState );
 
     ~MomentumTransportEquation();
 
-    void verify_boundary_conditions(BCHelper& bcHelper,
+    void setup_boundary_conditions(BCHelper& bcHelper,
                                     GraphCategories& graphCat);
     
     /**
      *  \brief apply the boundary conditions on the initial condition
      *         associated with this transport equation
      */
-    void setup_initial_boundary_conditions( const GraphHelper& graphHelper,
+    void apply_initial_boundary_conditions( const GraphHelper& graphHelper,
                                            BCHelper& bcHelper );
 
     /**
      *  \brief setup the boundary conditions associated with this momentum equation
      */
-    void setup_boundary_conditions( const GraphHelper& graphHelper,
+    void apply_boundary_conditions( const GraphHelper& graphHelper,
                                    BCHelper& bcHelper );
     /**
      *  \brief setup the initial conditions for this momentum equation.

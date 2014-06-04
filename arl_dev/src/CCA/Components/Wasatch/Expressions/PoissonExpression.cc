@@ -78,13 +78,12 @@ namespace Wasatch {
     solver_( solver ),
 
     // note that this does not provide any ghost entries in the matrix...
-    matrixLabel_( Uintah::VarLabel::create( phit_.name() + "_matrix", Uintah::CCVariable<Uintah::Stencil4>::getTypeDescription() ) ),
-    phiLabel_( Uintah::VarLabel::create( phit_.name(),
-                                         Wasatch::get_uintah_field_type_descriptor<SVolField>(),
-                                         Wasatch::get_uintah_ghost_descriptor<SVolField>() ) ),
+    matrixLabel_( Uintah::VarLabel::create( phit_.name() + "_matrix",
+                                            Uintah::CCVariable<Uintah::Stencil4>::getTypeDescription() ) ),
+    phiLabel_   ( Uintah::VarLabel::create( phit_.name(),
+                                            Wasatch::get_uintah_field_type_descriptor<SVolField>() ) ),
     phirhsLabel_( Uintah::VarLabel::create( phirhslocalt_.name(),
-                                            Wasatch::get_uintah_field_type_descriptor<SVolField>(),
-                                            Wasatch::get_uintah_ghost_descriptor<SVolField>() ) )
+                                            Wasatch::get_uintah_field_type_descriptor<SVolField>() ) )
   {}
 
   //--------------------------------------------------------------------
@@ -104,8 +103,6 @@ namespace Wasatch {
                                       const Uintah::MaterialSet* const materials,
                                       const int RKStage, const bool isDoingInitialization )
   {
-    sched->overrideVariableBehavior("hypre_solver_label",false,false,
-                                    false,true,true);
     solver_.scheduleSolve( level, sched, materials, matrixLabel_, Uintah::Task::NewDW,
                            phiLabel_, true,
                            phirhsLabel_, Uintah::Task::NewDW,
@@ -228,7 +225,7 @@ namespace Wasatch {
     }
 
     // When boundary conditions are present, modify the coefficient matrix coefficients at the boundary
-    if ( patch_->hasBoundaryFaces() )update_poisson_matrix((this->get_tags())[0], matrix_, patch_, materialID_);
+    if ( patch_->hasBoundaryFaces() ) update_poisson_matrix((this->get_tags())[0], matrix_, patch_, materialID_);
 
     // if the user specified a reference value, then modify the appropriate matrix coefficients
     if ( useRefPhi_ ) set_ref_poisson_coefs(matrix_, patch_, refPhiLocation_ );
@@ -284,8 +281,9 @@ namespace Wasatch {
       for( int ip=0; ip<patches->size(); ++ip ){
         const Uintah::Patch* const patch = patches->get(ip);
         if ( patch->hasBoundaryFaces() ) {
+          const AllocInfo ainfo( oldDW, newDW, im, patch, pg );
           newDW->get( poissonField_, phiLabel_, material, patch, gt, ng);
-          SVolField* const phi = wrap_uintah_field_as_spatialops<SVolField>(poissonField_,patch);
+          SVolField* const phi = wrap_uintah_field_as_spatialops<SVolField>(poissonField_,ainfo);
           process_poisson_bcs(phit_, *phi, patch, material);
           delete phi;
         }
@@ -304,13 +302,13 @@ namespace Wasatch {
                                        const Uintah::SolverParameters& sparams,
                                        Uintah::SolverInterface& solver )
   : ExpressionBuilder(results),
-  phirhst_( phiRHSTag ),
-  userefphi_ ( useRefPhi ),
-  refphivalue_ ( refPhiValue ),
-  refphilocation_ ( refPhiLocation ),
-  use3dlaplacian_( use3dlaplacian ),
-  sparams_( sparams ),
-  solver_( solver )
+    phirhst_( phiRHSTag ),
+    userefphi_ ( useRefPhi ),
+    refphivalue_ ( refPhiValue ),
+    refphilocation_ ( refPhiLocation ),
+    use3dlaplacian_( use3dlaplacian ),
+    sparams_( sparams ),
+    solver_( solver )
   {}
 
   //--------------------------------------------------------------------
@@ -319,10 +317,12 @@ namespace Wasatch {
   PoissonExpression::Builder::build() const
   {
     const Expr::TagList& phitags = get_tags();
-    //const Expr::Tag& phitag = get_computed_field_tag();
+
     return new PoissonExpression( phitags[0], phitags[1], phirhst_, userefphi_,
                         refphivalue_, refphilocation_, use3dlaplacian_,
                         sparams_, solver_ );
   }
+
   Expr::TagList PoissonExpression::poissonTagList = Expr::TagList();
+
 } // namespace Wasatch
