@@ -98,7 +98,8 @@ namespace Uintah {
 
       //** WARNING: This needs to be duplicated in BoundaryCond_new.h for now until BoundaryCondition goes away **//
       //** WARNING!!! ** // 
-      enum BC_TYPE { VELOCITY_INLET, MASSFLOW_INLET, VELOCITY_FILE, MASSFLOW_FILE, STABL, PRESSURE, OUTLET, WALL, MMWALL, INTRUSION, SWIRL, TURBULENT_INLET }; 
+      enum BC_TYPE { VELOCITY_INLET, MASSFLOW_INLET, VELOCITY_FILE, MASSFLOW_FILE, STABL, PRESSURE, 
+        OUTLET, NEUTRAL_OUTLET, WALL, MMWALL, INTRUSION, SWIRL, TURBULENT_INLET }; 
       //** END WARNING!!! **//
       
       
@@ -708,6 +709,20 @@ namespace Uintah {
                           const bool mF1, const bool pF1, 
                           const bool mF2, const bool pF2 );
 
+      /** @brief A method for applying the outlet BC du/dn=0 on minus faces. **/
+      template <class velType, class oldVelType> void 
+      neutralOutleMinus( IntVector insideCellDir, 
+                         Iterator bound_ptr, 
+                         velType& vel, 
+                         oldVelType& old_vel );
+
+      /** @brief A method for applying the outlet BC du/dn=0 on plus faces. **/
+      template <class velType, class oldVelType> void 
+      neutralOutletPlus(  IntVector insideCellDir, 
+                          Iterator bound_ptr, 
+                          velType& vel, 
+                          oldVelType& old_vel );
+
       /** @brief Fix a stencil direction to a specified value **/ 
       void fix_stencil_value( CCVariable<Stencil7>& stencil,  
           DIRECTION dir, double value, IntVector c ){
@@ -1009,7 +1024,9 @@ BoundaryCondition::delPForOutletPressure__NEW( const Patch* patch,
   for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
         bc_iter != d_bc_information.end(); bc_iter++){
 
-    if ( bc_iter->second.type == OUTLET || bc_iter->second.type == PRESSURE ) { 
+    if ( bc_iter->second.type == OUTLET || 
+         bc_iter->second.type == PRESSURE ||
+         bc_iter->second.type == NEUTRAL_OUTLET ) { 
 
       for ( bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++ ){
 
@@ -1182,6 +1199,42 @@ BoundaryCondition::outletPressurePlus( IntVector insideCellDir,
     }
   }
 
+}
+template <class velType, class oldVelType> void 
+BoundaryCondition::neutralOutleMinus( IntVector insideCellDir, 
+                                      Iterator bound_ptr, 
+                                      velType& vel, 
+                                      oldVelType& old_vel )
+{
+
+  for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+    IntVector c = *bound_ptr; 
+    IntVector cp  = c - insideCellDir; 
+    IntVector cpp = cp - insideCellDir; 
+
+    vel[cp] = vel[cpp]; 
+    vel[c] = vel[cp]; 
+
+  }
+}
+template <class velType, class oldVelType> void 
+BoundaryCondition::neutralOutletPlus( IntVector insideCellDir, 
+                                      Iterator bound_ptr, 
+                                      velType& vel, 
+                                      oldVelType& old_vel )
+{
+
+  for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+    IntVector c = *bound_ptr; 
+    IntVector cp  = c - insideCellDir; 
+    IntVector cm  = c + insideCellDir; 
+
+    vel[c] = vel[cp]; 
+    vel[cm] = vel[c]; 
+    
+  }
 }
 
 } // End namespace Uintah
