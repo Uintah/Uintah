@@ -33,6 +33,7 @@
 #define UINTAH_MD_FORCEFIELD_H_
 
 #include <CCA/Components/MD/MDLabel.h>
+#include <CCA/Components/MD/MDUtil.h>
 
 #include <CCA/Components/MD/Potentials/NonbondedPotential.h>
 #include <CCA/Components/MD/Potentials/Valence/BondPotential.h>
@@ -55,9 +56,10 @@ namespace Uintah {
       virtual ~Forcefield () {}
       virtual forcefieldInteractionClass getInteractionClass() const = 0;
       virtual std::string getForcefieldDescriptor() const = 0;
-      virtual void registerProvidedParticleStates(std::vector<const VarLabel*>&,
-                                                    std::vector<const VarLabel*>&,
-                                                    MDLabel*) const = 0;
+      virtual void registerAtomTypes(const LabelArray&  particleState,
+                                     const LabelArray&  particleState_preReloc,
+                                     const MDLabel*     label,
+                                     SimulationStateP&  simState) const = 0;
 
     private:
 

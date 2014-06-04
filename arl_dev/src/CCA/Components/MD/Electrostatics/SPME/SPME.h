@@ -60,7 +60,6 @@
 namespace Uintah {
 
   typedef std::complex<double> dblcomplex;
-  typedef std::vector<const VarLabel*> LabelArray;
   typedef std::vector<SPMEMapPoint> spmeMapVector;
 
   static SCIRun::DebugStream spme_cout("SPMECout", false);

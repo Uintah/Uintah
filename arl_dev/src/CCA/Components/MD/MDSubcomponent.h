@@ -34,6 +34,7 @@
 
 #include <Core/Grid/Task.h>
 
+#include <CCA/Components/MD/MDUtil.h>
 #include <CCA/Components/MD/MDLabel.h>
 
 namespace Uintah {
@@ -45,8 +46,8 @@ namespace Uintah {
     public:
       MDSubcomponent () { }
       virtual ~MDSubcomponent() { }
-      virtual void registerRequiredParticleStates(std::vector<const VarLabel*>&,
-                                                  std::vector<const VarLabel*>&,
+      virtual void registerRequiredParticleStates(LabelArray&,
+                                                  LabelArray&,
                                                   MDLabel*) const = 0;
       virtual void addInitializeRequirements(Task*, MDLabel*) const = 0;
       virtual void addInitializeComputes(Task*, MDLabel*) const = 0;

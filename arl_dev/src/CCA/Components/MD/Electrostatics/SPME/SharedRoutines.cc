@@ -527,6 +527,8 @@ void SPME::calculateInFourierSpace(const ProcessorGroup*    pg,
     SPMEPatch*  currentSPMEPatch = d_spmePatchMap.find(patch->getID())->second;
     IntVector   localExtents     = currentSPMEPatch->getLocalExtents();
 
+    // We should probably remove this material loop; all materials are smeared
+    // together at this point as a total charge distribution! FIXME
     for (size_t typeIndex = 0; typeIndex < numAtomTypes; ++typeIndex) {
       int atomType = materials->get(typeIndex);
 

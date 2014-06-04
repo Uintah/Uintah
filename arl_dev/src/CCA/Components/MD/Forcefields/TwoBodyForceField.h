@@ -32,38 +32,38 @@
 #ifndef TWOBODYFORCEFIELD_H_
 #define TWOBODYFORCEFIELD_H_
 
+#include <CCA/Components/MD/MDUtil.h>
+
 #include <CCA/Components/MD/Forcefields/Forcefield.h>
 #include <CCA/Components/MD/Potentials/TwoBody/NonbondedTwoBodyPotential.h>
-#include <Core/Containers/Array2.h>
 
 #include <vector>
 
 namespace Uintah {
 
-   class TwoBodyForcefield : public Forcefield {
-//      class TwoBodyForcefield : public Forcefield {
 
-      public:
-        TwoBodyForcefield() {}
-        virtual ~TwoBodyForcefield() {}
+  class TwoBodyForcefield : public Forcefield {
+    public:
 
-        virtual std::string getForcefieldDescriptor() {
-          return "TwoBody";
-        }
-
-        // Inherited from parent class
-        inline forcefieldInteractionClass getInteractionClass() const {
-          return d_forcefieldClass;
-        }
-        virtual NonbondedTwoBodyPotential* getNonbondedPotential(const std::string&, const std::string&) const = 0;
-        virtual void registerProvidedParticleStates(std::vector<const VarLabel*>&,
-                                                      std::vector<const VarLabel*>&,
-                                                      MDLabel*) const = 0;
-
-      private:
-        static const forcefieldInteractionClass d_forcefieldClass;
+      TwoBodyForcefield() {}
+      virtual ~TwoBodyForcefield() {}
+      virtual std::string getForcefieldDescriptor() {
+        return "TwoBody";
+      }
 
 
+      // Inherited from parent class
+      inline forcefieldInteractionClass getInteractionClass() const {
+        return d_forcefieldClass;
+      }
+      virtual NonbondedTwoBodyPotential* getNonbondedPotential(const std::string&, const std::string&) const = 0;
+      virtual void registerAtomTypes(const LabelArray&    particleState,
+                                     const LabelArray&    particleState_preReloc,
+                                     const MDLabel*       label,
+                                     SimulationStateP&    simState) const = 0;
+
+    private:
+      static const forcefieldInteractionClass d_forcefieldClass;
   };
 
 }

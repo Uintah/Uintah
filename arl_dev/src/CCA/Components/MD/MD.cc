@@ -128,10 +128,6 @@ void MD::problemSetup(const ProblemSpecP& params,
         throw InternalError("MD:  Attempted to instantiate a forcefield type which is not yet implemented", __FILE__, __LINE__);
     }
 
-    d_forcefield->registerProvidedParticleStates(d_particleState,
-                                                 d_particleState_preReloc,
-                                                 d_label);
-
     std::cerr << "Forcefield created: "
               << d_forcefield->getForcefieldDescriptor() << std::endl;
 
@@ -190,8 +186,8 @@ void MD::problemSetup(const ProblemSpecP& params,
   // Add labels from our forcefield (nonbonded)
   MDSubcomponent* d_electrostaticInterface = dynamic_cast<MDSubcomponent*> (d_electrostatics);
   MDSubcomponent* d_nonbondedInterface     = dynamic_cast<MDSubcomponent*> (d_nonbonded);
-//  MDSubcomponent* d_integratorInterface = dynamic_cast<MDSubcomponent*> (d_integrator);
-//  MDSubcomponent* d_valelnceInterface = dynamic_cast<MDSubcomponent*> (d_valence);
+//  MDSubcomponent* d_integratorInterface    = dynamic_cast<MDSubcomponent*> (d_integrator);
+//  MDSubcomponent* d_valenceInterface       = dynamic_cast<MDSubcomponent*> (d_valence);
 
 
 // Register the general labels that all MD simulations will use
@@ -199,12 +195,15 @@ void MD::problemSetup(const ProblemSpecP& params,
    // And then add the labels that each created subcomponent will require
    d_electrostaticInterface->registerRequiredParticleStates(d_particleState, d_particleState_preReloc, d_label);
    d_nonbondedInterface->registerRequiredParticleStates(d_particleState, d_particleState_preReloc, d_label);
-   //d_integrator->registerRequiredParticleState(d_particleState, d_particleState_preReloc, d_label);
+   // NYI:  d_integrator->registerRequiredParticleState(d_particleState, d_particleState_preReloc, d_label);
 
-//  // register permanent particle state; for relocation, etc
-  //registerPermanentParticleState();
+   // We must wait to register our atom (material) types until the
+   // subcomponents have provided the per-particle labels
+   d_forcefield->registerAtomTypes(d_particleState,
+                                   d_particleState_preReloc,
+                                   d_label,
+                                   d_sharedState);
 
-  // do file I/O to get atom coordinates and simulation cell size
   std::cerr << "End of MD::Setup" << std::endl;
 }
 
@@ -583,8 +582,8 @@ void MD::scheduleElectrostaticsFinalize(SchedulerP& sched,
     Task* task = scinew Task("MD::electrostaticsFinalize", this, &MD::electrostaticsFinalize);
 
     MDSubcomponent* d_electroInterface = dynamic_cast<MDSubcomponent*> (d_electrostatics);
-    d_electroInterface->addCalculateRequirements(task, d_label);
-    d_electroInterface->addCalculateComputes(task, d_label);
+    d_electroInterface->addFinalizeRequirements(task, d_label);
+    d_electroInterface->addFinalizeComputes(task, d_label);
 
 
   // particle variables
@@ -914,6 +913,7 @@ void MD::computeStableTimestep(const ProcessorGroup* pg,
   matrix_sum spmeRealStress;
   matrix_sum spmeFourierStressDipole;
 
+  double energyTest = 0.1;
   new_dw->get(vdwEnergy, d_label->nonbonded->rNonbondedEnergy);
   new_dw->get(spmeFourierEnergy,
               d_label->electrostatic->rElectrostaticInverseEnergy);
@@ -925,9 +925,12 @@ void MD::computeStableTimestep(const ProcessorGroup* pg,
   proc0cout << "Fourier Energy = " << std::setprecision(16) << spmeFourierEnergy << std::endl;
   proc0cout << "-----------------------------------------------------"           << std::endl;
 
+
   if (NPT == d_system->getEnsemble()) {
     new_dw->get(spmeFourierStress,
                 d_label->electrostatic->rElectrostaticInverseStress);
+    Uintah::Matrix3 test(0.1);
+
     new_dw->get(spmeRealStress,
                 d_label->electrostatic->rElectrostaticRealStress);
     proc0cout << "Fourier Stress = " << std::setprecision(16) << spmeFourierStress << std::endl;
