@@ -50,6 +50,7 @@
 #include <CCA/Components/Wasatch/Expressions/PrimVar.h>
 #include <CCA/Components/Wasatch/Expressions/PressureSource.h>
 #include <CCA/Components/Wasatch/Expressions/VelEst.h>
+#include <CCA/Components/Wasatch/Expressions/DivmomStar.h>
 #include <CCA/Components/Wasatch/Expressions/WeakConvectiveTerm.h>
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/InterpolateExpression.h>
@@ -710,11 +711,12 @@ namespace Wasatch{
           psrcTagList.push_back(tagNames.drhodt     );
           psrcTagList.push_back(tagNames.vardenalpha);
           psrcTagList.push_back(tagNames.vardenbeta );
-          psrcTagList.push_back(tagNames.divmomstar );
+//          psrcTagList.push_back(tagNames.divmomstar );
           psrcTagList.push_back(tagNames.drhodtstar );
         }
       std::cout << "registering pressure source \n";
-        factory.register_expression( new typename PressureSource::Builder( psrcTagList, momTags_, velStarTags, isConstDensity, densTag, densStarTag, dens2StarTag, varDenParams) );
+      factory.register_expression( new typename DivmomStar::Builder( tagNames.divmomstar, velStarTags, densStarTag ) );
+      factory.register_expression( new typename PressureSource::Builder( psrcTagList, momTags_, velTags_, velStarTags, isConstDensity, densTag, densStarTag, dens2StarTag, varDenParams, tagNames.divmomstar ) );
     }
     
     //__________________
@@ -1025,18 +1027,6 @@ namespace Wasatch{
             BndCondSpec rhsPartBCSpec = {(rhs_part_tag(solution_variable_tag())).name(),outBCTag.name(), 0.0, DIRICHLET,FUNCTOR_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
             
-            // variable density:
-            // for variable density outflows, change the velocity estimate at the outflow boundary.
-            // instead of using an outflow boundary condition similar to that applied on momentum (see above)
-            // simply use the old velocity value at the outflow boundary, i.e. u*_at_outflow = un_at_outflow (old velocity)
-            if (!isConstDensity_) {
-              const Expr::Tag velStarTag = TagNames::self().make_star(thisVelTag_);
-              const Expr::Tag velStarBCTag( velStarTag.name() + bndName + "_outflow_bc",Expr::STATE_NONE);
-              advSlnFactory.register_expression ( new typename BCCopier<FieldT>::Builder(velStarBCTag, thisVelTag_) );
-              BndCondSpec velStarBCSpec = {velStarTag.name(), velStarBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
-              bcHelper.add_boundary_condition(bndName, velStarBCSpec);
-            }
-            
           } else {
             BndCondSpec rhsFullBCSpec = {rhs_name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
@@ -1050,6 +1040,17 @@ namespace Wasatch{
             }
           }
           
+          // variable density:
+          // for variable density outflows, force the value of divmomStar to zero in the interior cells of the outflow boundary
+          if (!isConstDensity_) {
+            const Expr::Tag divmomstarBCTag( TagNames::self().divmomstar.name() + "_" + bndName + "_outflow_bc",Expr::STATE_NONE);
+            if (!advSlnFactory.have_entry(divmomstarBCTag)) {
+              advSlnFactory.register_expression ( new typename OneSidedDirichletBC<SVolField>::Builder(divmomstarBCTag, 0.0) );
+              BndCondSpec divmomstarBCSpec = {TagNames::self().divmomstar.name(), divmomstarBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
+              bcHelper.add_boundary_condition(bndName, divmomstarBCSpec);
+            }
+          }
+
           // after the correction has been made, update the momentum and velocities in the extra cells using simple Neumann conditions
           BndCondSpec momBCSpec = {solnVarName_, "none", 0.0, NEUMANN, DOUBLE_TYPE};
           BndCondSpec velBCSpec = {thisVelTag_.name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
@@ -1179,6 +1180,9 @@ namespace Wasatch{
       // set bcs for density_*
       const Expr::Tag densStarTag = tagNames.make_star(densityTag_,Expr::CARRY_FORWARD);
       bcHelper.apply_boundary_condition<SVolField>(densStarTag, taskCat);
+
+      // set bcs for divmom*
+      bcHelper.apply_boundary_condition<SVolField>(TagNames::self().divmomstar, taskCat);
     }
   }
 

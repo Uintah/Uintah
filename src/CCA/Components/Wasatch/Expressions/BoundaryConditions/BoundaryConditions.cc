@@ -60,6 +60,30 @@ evaluate()
 
 template< typename FieldT >
 void
+OneSidedDirichletBC<FieldT>::
+evaluate()
+{
+  using namespace SpatialOps;
+  FieldT& f = this->value();
+  const double ci = this->ci_;
+  const double cg = this->cg_;
+  
+  if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
+    std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
+    std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
+    
+    for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
+      f(*ii) = bcValue_ ;
+      f(*ig) = bcValue_ ;
+    }
+    
+  }
+}
+
+// ###################################################################
+
+template< typename FieldT >
+void
 LinearBC<FieldT>::
 evaluate()
 {
@@ -183,6 +207,10 @@ template class ConstantBC<VOLT>;      \
 template class ConstantBC<SpatialOps::structured::FaceTypes<VOLT>::XFace>;      \
 template class ConstantBC<SpatialOps::structured::FaceTypes<VOLT>::YFace>;      \
 template class ConstantBC<SpatialOps::structured::FaceTypes<VOLT>::ZFace>;      \
+template class OneSidedDirichletBC<VOLT>;      \
+template class OneSidedDirichletBC<SpatialOps::structured::FaceTypes<VOLT>::XFace>;      \
+template class OneSidedDirichletBC<SpatialOps::structured::FaceTypes<VOLT>::YFace>;      \
+template class OneSidedDirichletBC<SpatialOps::structured::FaceTypes<VOLT>::ZFace>;      \
 template class LinearBC<VOLT>;        \
 template class LinearBC<SpatialOps::structured::FaceTypes<VOLT>::XFace>;        \
 template class LinearBC<SpatialOps::structured::FaceTypes<VOLT>::YFace>;        \

@@ -54,6 +54,7 @@ CUDA_ENABLED_SRCS =       \
      Strain               \
      ScalabilityTestSrc   \
      WeakConvectiveTerm   \
+     DivmomStar	          \
      VelEst        \
      ExprAlgebra   \
      TimeAdvance
@@ -161,6 +162,9 @@ ifeq ($(HAVE_CUDA),yes)
 	cp $< $@
 	
   $(OBJTOP_ABS)/$(SRCDIR)/WeakConvectiveTerm.cu : $(SRCTOP_ABS)/$(SRCDIR)/WeakConvectiveTerm.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/DivmomStar.cu : $(SRCTOP_ABS)/$(SRCDIR)/DivmomStar.cc
 	cp $< $@
 
   $(OBJTOP_ABS)/$(SRCDIR)/VelEst.cu : $(SRCTOP_ABS)/$(SRCDIR)/VelEst.cc

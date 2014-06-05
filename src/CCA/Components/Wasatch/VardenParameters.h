@@ -50,7 +50,8 @@ namespace Wasatch{
      */
     enum VariableDensityModels {
       CONSTANT,
-      IMPULSE
+      IMPULSE,
+      DYNAMIC
     };
 
     double alpha0;
