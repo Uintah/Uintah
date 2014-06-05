@@ -1,5 +1,5 @@
-#ifndef PressureSource_Expr_h
-#define PressureSource_Expr_h
+#ifndef DivmomStar_Expr_h
+#define DivmomStar_Expr_h
 
 #include <map>
 
@@ -12,7 +12,7 @@
 
 /**
  *  \ingroup WasatchExpressions
- *  \class  PressureSource
+ *  \class  DivmomStar
  *  \author Amir Biglari
  *  \date	July, 2011
  *
@@ -34,7 +34,7 @@
  *       equations.
  *
  */
-class PressureSource : public Expr::Expression<SVolField>
+class DivmomStar : public Expr::Expression<SVolField>
 {  
   
   typedef SpatialOps::structured::FaceTypes<SVolField> FaceTypes;
@@ -42,61 +42,32 @@ class PressureSource : public Expr::Expression<SVolField>
   typedef FaceTypes::YFace YFace; ///< The type of field for the y-face of SVolField.
   typedef FaceTypes::ZFace ZFace; ///< The type of field for the z-face of SVolField.
 
-  typedef SpatialOps::structured::SingleValueField TimeField;
-
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, XVolField >::type S2XInterpOpT;
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, YVolField >::type S2YInterpOpT;
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, ZVolField >::type S2ZInterpOpT;
   
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, SVolField >::type X2SInterpOpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, SVolField >::type Y2SInterpOpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, ZVolField, SVolField >::type Z2SInterpOpT;
-
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SVolField >::type GradXT;
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SVolField >::type GradYT;
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SVolField >::type GradZT;
   
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::GradientX, SVolField, SVolField >::type GradXST;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::GradientY, SVolField, SVolField >::type GradYST;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::GradientZ, SVolField, SVolField >::type GradZST;
-
-  const XVolField *xMom_, *uStar_, *xVel_;
-  const YVolField *yMom_, *vStar_, *yVel_;
-  const ZVolField *zMom_, *wStar_, *zVel_;
-  const SVolField *dens_, *densStar_, *dens2Star_, *divmomstar_;
-  const SVolField *dil_;
-  const TimeField* timestep_;
+  const XVolField *uStar_;
+  const YVolField *vStar_;
+  const ZVolField *wStar_;
+  const SVolField *densStar_;
   
-  const bool isConstDensity_, doX_, doY_, doZ_, is3d_;
+  const bool doX_, doY_, doZ_, is3d_;
   
-  const Expr::Tag xMomt_, yMomt_, zMomt_;
-  const Expr::Tag xVelt_, yVelt_, zVelt_, xVelStart_, yVelStart_, zVelStart_, denst_, densStart_, dens2Start_, dilt_, timestept_, divmomstart_;
-  
-  const double a0_;
-  const Wasatch::VarDenParameters::VariableDensityModels model_;
+  const Expr::Tag xVelStart_, yVelStart_, zVelStart_, densStart_;
   
   const GradXT* gradXOp_;
   const GradYT* gradYOp_;
   const GradZT* gradZOp_;
-  const GradXST* gradXSOp_;
-  const GradYST* gradYSOp_;
-  const GradZST* gradZSOp_;
   const S2XInterpOpT* s2XInterpOp_;
   const S2YInterpOpT* s2YInterpOp_;
   const S2ZInterpOpT* s2ZInterpOp_;  
-  const X2SInterpOpT* x2SInterpOp_;
-  const Y2SInterpOpT* y2SInterpOp_;
-  const Z2SInterpOpT* z2SInterpOp_;
   
-  PressureSource( const Expr::TagList& momTags,
-                  const Expr::TagList& velTags,
-                  const Expr::TagList& velStarTags,
-                  const bool isConstDensity,
-                  const Expr::Tag densTag,
-                  const Expr::Tag densStarTag,
-                  const Expr::Tag dens2StarTag,
-                  const Wasatch::VarDenParameters varDenParams,
-                  const Expr::Tag divmomstarTag);
+  DivmomStar( const Expr::TagList& velStarTags,
+              const Expr::Tag densStarTag );
 public:
   
   /**
@@ -113,11 +84,8 @@ public:
      *  \param the momTags a list tag which holds the tags for momentum in
      *         all directions
      *
-     *  \param the velTags a list tag which holds the tags for velocity at
-     *         the current time stage in all directions
-     *
-     *  \param the velStarTags a list tag which holds the tags for velocity at
-     *         the time stage "*" in all directions
+     *  \param the velStarTags a list tag which holds the tags for velocity at 
+     *         the time stage "*" in all directions     
      *
      *  \param densTag a tag to hold density in constant density cases, which is 
      *         needed to obtain drhodt 
@@ -126,37 +94,26 @@ public:
      *         which is needed to obtain momentum at that stage.
      *
      *  \param dens2StarTag a tag for estimation of density at the time stage "**"
-     *         which is needed to calculate drhodt
+     *         which is needed to calculate drhodt 
      *
-     *  \param divmomStarTag a tag for estimation of divmom at the time stage "*"
-    *
      *  \param dilTag a tag to hold dilatation term in constant density cases.
      *
      *  \param timestepTag a tag to hold the timestep value.
      */
-    Builder( const Expr::TagList& results,
-             const Expr::TagList& momTags,
-             const Expr::TagList& velTags,
+    Builder( const Expr::Tag& results,
              const Expr::TagList& velStarTags,
-             const bool isConstDensity,
-             const Expr::Tag densTag,
-             const Expr::Tag densStarTag,
-             const Expr::Tag dens2StarTag,
-             const Wasatch::VarDenParameters varDenParams,
-             const Expr::Tag divmomstarTag);
+             const Expr::Tag densStarTag );
     
     ~Builder(){}
     
     Expr::ExpressionBase* build() const;
     
   private:
-    const bool isConstDens_;
-    const Expr::TagList momTs_, velTs_, velStarTs_;
-    const Expr::Tag denst_, densStart_, dens2Start_, divmomstart_;
-    const Wasatch::VarDenParameters varDenParams_;
+    const Expr::TagList velStarTs_;
+    const Expr::Tag densStart_;
   };
   
-  ~PressureSource();
+  ~DivmomStar();
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
@@ -164,4 +121,4 @@ public:
   
 };
 
-#endif // PressureSource_Expr_h
+#endif // DivmomStar_Expr_h

@@ -76,6 +76,52 @@ private:
 };
 
 /**
+ *  \class 	OneSidedDirichletBC
+ *  \ingroup 	Expressions
+ *  \author 	Amir Biglari
+ *  \date    May, 2014
+ *
+ *  \brief Implements a dirichlet boundary condition but on the interior cell.
+ *
+ *  \tparam FieldT - The type of field for the expression on which this bc applies.
+ */
+
+template< typename FieldT >
+class OneSidedDirichletBC
+: public BoundaryConditionBase<FieldT>
+{
+public:
+  OneSidedDirichletBC( const double bcValue) :
+  bcValue_(bcValue)
+  {}
+  
+  class Builder : public Expr::ExpressionBuilder
+  {
+  public:
+    /**
+     * @param result Tag of the resulting expression.
+     * @param bcValue   constant boundary condition value.
+     */
+    Builder( const Expr::Tag& resultTag,
+            const double bcValue ) :
+    ExpressionBuilder(resultTag),
+    bcValue_(bcValue)
+    {}
+    Expr::ExpressionBase* build() const{ return new OneSidedDirichletBC(bcValue_); }
+  private:
+    const double bcValue_;
+  };
+  
+  ~OneSidedDirichletBC(){}
+  void advertise_dependents( Expr::ExprDeps& exprDeps ){}
+  void bind_fields( const Expr::FieldManagerList& fml ){}
+  void evaluate();
+  
+private:
+  const double bcValue_;
+};
+
+/**
  *  \class 	LinearBC
  *  \ingroup 	Expressions
  *  \author 	Tony Saad
