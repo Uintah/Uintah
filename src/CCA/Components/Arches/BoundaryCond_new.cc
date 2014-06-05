@@ -617,9 +617,9 @@ void BoundaryCondition_new::setAreaFraction( const Patch* patch,
     
     Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
     
-    for (CellIterator iter =  patch->getFaceIterator(face, PEC); !iter.done(); iter++) {
+    for (CellIterator citer =  patch->getFaceIterator(face, PEC); !citer.done(); citer++) {
 
-      IntVector c = *iter;
+      IntVector c = *citer;
 
       vector<int>::iterator wt_iter; 
 
