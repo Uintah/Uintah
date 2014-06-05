@@ -677,35 +677,11 @@ void RegridderCommon::scheduleDilation(const LevelP& level)
   dilate_stability_task->requires(Task::NewDW, refineFlagLabel, refineFlag_matls, Ghost::AroundCells, ngc_stability);
   dilate_regrid_task->requires(   Task::NewDW, refineFlagLabel, refineFlag_matls, Ghost::AroundCells, ngc_regrid);
 
-  // we need this task on the init task, but will get bad if you require from old on the init task :)
-#if 0
-  if (sched_->get_dw(0) != 0)
-    dilate_task->requires(Task::OldDW, d_dilatedCellsStabilityLabel, Ghost::None, 0);
-  dilate_task->computes(d_dilatedCellsStabilityOldLabel);
-#endif
-
   dilate_stability_task->computes(d_dilatedCellsStabilityLabel, refineFlag_matls);
   sched_->addTask(dilate_stability_task, level->eachPatch(), all_matls);
   
   dilate_regrid_task->computes(d_dilatedCellsRegridLabel, refineFlag_matls);
   sched_->addTask(dilate_regrid_task, level->eachPatch(), all_matls);
-
-#if 0
-  if (stability_depth != delete_depth) {
-    // dilate flagged cells (for deletion) on this level)
-    Task* dilate_delete_task = scinew Task("RegridderCommon::Dilate Deletion",
-                           dynamic_cast<RegridderCommon*>(this),
-                           &RegridderCommon::Dilate, d_dilatedCellsDeletionLabel, filters[delete_depth], delete_depth);
-    
-    ngc = Max(delete_depth.x(), delete_depth.y());
-    ngc = Max(ngc, delete_depth.z());
-   
-    dilate_delete_task->requires(Task::OldDW, refineFlagLabel, refineFlag_matls, Ghost::AroundCells, ngc);
-                       
-    dilate_delete_task->computes(d_dilatedCellsDeletionLabel);
-    tempsched->addTask(dilate_delete_task, oldGrid->getLevel(levelIndex)->eachPatch(), all_matls);
-  }
-#endif
 }
 
 //______________________________________________________________________
@@ -736,20 +712,6 @@ void RegridderCommon::Dilate(const ProcessorGroup*,
     constCCVariable<int> flaggedCells;
     CCVariable<int> dilatedFlaggedCells;
 
-#if 0    
-    CCVariable<int> dilatedFlaggedOldCells;
-
-    if (old_dw && old_dw->exists(d_dilatedCellsStabilityLabel, 0, patch)) {
-      constCCVariable<int> oldDilated;
-      old_dw->get(oldDilated, d_dilatedCellsStabilityLabel, 0, patch, Ghost::None, 0);
-      dilatedFlaggedOldCells.copyPointer(oldDilated.castOffConst());
-      new_dw->put(dilatedFlaggedOldCells, d_dilatedCellsStablityOldLabel, 0, patch);
-    }
-    else {
-      new_dw->allocateAndPut(dilatedFlaggedOldCells, d_dilatedCellsStablityOldLabel, 0, patch);
-      dilatedFlaggedOldCells.initialize(0);
-    }
-#endif
     new_dw->get(flaggedCells, to_get, 0, patch, Ghost::AroundCells, ngc);
     new_dw->allocateAndPut(dilatedFlaggedCells, to_put, 0, patch);
 
