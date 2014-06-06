@@ -208,6 +208,7 @@
                         <constant>0.0</constant>
                       </scalar>
                     </scalars>
+                    <constant_temperature T="600"/>
                   </intrusion>
                 </intrusions>
 

@@ -1204,6 +1204,8 @@ Arches::scheduleInitialize(const LevelP& level,
     }
   }
 
+  d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls );
+
 # ifdef WASATCH_IN_ARCHES
   // must set wasatch materials after problemsetup so that we can access
   // sharedState->allArchesMaterials(). This is dictated by Uintah.
