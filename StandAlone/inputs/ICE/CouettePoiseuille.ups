@@ -20,7 +20,9 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-9      </delt_init>
+       <max_delt_increase>  2           </max_delt_increase>
        <timestep_multiplier>1.0         </timestep_multiplier>
+       <max_Timesteps>      100           </max_Timesteps>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -28,12 +30,26 @@
     <!--____________________________________________________________________-->
     <Grid>
     <BoundaryConditions>
+    
+      <inletVelocity type="powerLawProfile">
+        <verticalDirection> 1           </verticalDirection>
+        <exponent>          0.21        </exponent>
+        <maxHeight>         0.05        </maxHeight>
+        <material>          atmosphere  </material>
+
+        <variance>
+          <C_mu>            0.0845      </C_mu>         
+          <frictionVel>     0.26        </frictionVel>  
+        </variance>
+
+      </inletVelocity>
+ <!--
       <Face side = "x-">
         <BCType id = "0"   label = "Pressure"     var = "Dirichlet"> 
                             <value> 101325. </value> 
         </BCType> 
-        <BCType id = "0"   label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
+        <BCType id = "0"   label = "Velocity"     var = "powerLawProfile" >
+                            <value> [4.32,0.0,0.0] </value>
         </BCType>
         <BCType id = "0" 
                            label = "Temperature"  var = "Dirichlet"> 
@@ -63,6 +79,7 @@
                               <value> 0.0 </value>
         </BCType>
       </Face>
+-->
       <Face side = "y-">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
@@ -84,12 +101,9 @@
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
         </BCType>
-        <!--__________________________________________________-->
-        <!-- The velocity the upper wall is defined here      -->
-        <!-- Pure Poiseuille flow velocity = 0, 0, 0          -->
-        <!--__________________________________________________-->
+
         <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
-                              <value> [1.25,0.,0.] </value>
+                              <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "0"   label = "Temperature"  var = "Neumann">
                               <value> 0.0 </value>
@@ -112,20 +126,23 @@
     </BoundaryConditions>
        <Level>
            <Box label="1">
-              <lower>        [0,-0.05,0]         </lower>
-              <upper>        [1, 0.05,0.01]     </upper>
-              <extraCells>   [1,1,1]             </extraCells>
+              <lower>        [0, 0.0,0]          </lower>
+              <upper>        [1, 0.5,0.005]     </upper>
+              <extraCells>   [0,1,1]             </extraCells>
               <patches>      [1,1,1]             </patches>
+              <resolution>   [127,64,1]           </resolution>
            </Box>
-           <spacing>         [0.01,0.005,0.01]  </spacing>
+
+           <periodic>        [1,0,0]             </periodic>
        </Level>
+       
     </Grid>    
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>Couette-Poiseuille.uda</filebase>
-      <outputInterval>1</outputInterval>
+      <outputTimestepInterval>1</outputTimestepInterval>
       <save label="vel_CC"/>
       <save label="press_CC"/>
       <save label="delP_Dilatate"/>
@@ -139,7 +156,7 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-       <cfl>0.4</cfl>
+       <cfl>0.2</cfl>
        <ICE>
         <advection type = "SecondOrder" />
         <TimeStepControl>
@@ -160,14 +177,31 @@
             <!-- Hypre options -->
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
-            <tolerance>      1.e-10  </tolerance>
+            <tolerance>      1.e-16  </tolerance>
             <maxiterations>  7500    </maxiterations>
             <npre>           1       </npre>
             <npost>          1       </npost>
-            <skip>           0       </skip>
+            <skip>           1       </skip>
             <jump>           0       </jump>
+            <relax_type>      2      </relax_type>
            </Parameters>
         </ImplicitSolver>
+        
+        <customInitialization>             
+          <powerLawProfile>
+            <verticalDirection> 1           </verticalDirection>
+            <exponent>          0.21        </exponent>
+            <maxHeight>         0.05         </maxHeight>
+            <material>          atmosphere  </material>
+            <U_infinity>        [4.32, 0, 0]</U_infinity>
+        
+            <variance>
+              <C_mu>              0.0845    </C_mu>
+              <frictionVel>       0.26      </frictionVel>  
+            </variance>
+
+          </powerLawProfile>
+        </customInitialization>
       </ICE>        
     </CFD>
 
