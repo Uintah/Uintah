@@ -61,14 +61,34 @@ namespace Uintah {
     ~counterflow() {};
   };
 
+  // powerlaw profile + variance
+  // u = U_infinity * pow( h/height )^n
+  struct powerLaw{         
+    Vector U_infinity;            // freestream velocity
+    double exponent;
+
+    int verticalDir;              // vertical direction
+    double maxHeight;             // max height of velocity profile before it's set to u_infinity
+    Point gridMin;
+    Point gridMax;
+    
+    // variance
+    bool addVariance;             // add variance to the inlet velocity profile
+    double C_mu;                  // constant
+    double u_star;                // roughnes
+    ~powerLaw() {};
+  };
+
   struct customInitialize_basket{
     vortices*     vortex_inputs;
     mms*          mms_inputs;
     gaussTemp*    gaussTemp_inputs;
     counterflow*  counterflow_inputs;
+    powerLaw*     powerLaw_inputs;
     bool          doesComputePressure;
     std::string   which;
   };
+  
   void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
                                         customInitialize_basket* cib,
                                         GridP& grid);
