@@ -775,6 +775,8 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
   int lbstate = initialTimestep ? LoadBalancer::init : LoadBalancer::regrid;
 
   if (currentGrid != oldGrid) {
+    d_sharedState->setRegridTimestep(true);
+     
     d_lb->possiblyDynamicallyReallocate(currentGrid, lbstate); 
     if(dbg_barrier.active()) {
       double start;
@@ -786,9 +788,11 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
     currentGrid->assignBCS(d_grid_ps,d_lb);
     currentGrid->performConsistencyCheck();
 
+    //__________________________________
+    //  output regridding stats
     if (d_myworld->myrank() == 0) {
       cout << "  REGRIDDING:";
-      d_sharedState->setRegridTimestep(true);
+     
       //amrout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
       for (int i = 0; i < currentGrid->numLevels(); i++) {
         cout << " Level " << i << " has " << currentGrid->getLevel(i)->numPatches() << " patches...";
@@ -818,6 +822,7 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
     }  // rank 0
 
     double scheduleTime = Time::currentSeconds();
+    
     if (!initialTimestep) {
       d_scheduler->scheduleAndDoDataCopy(currentGrid, d_sim);
     }
