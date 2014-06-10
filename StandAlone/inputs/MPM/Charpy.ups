@@ -172,7 +172,9 @@
              <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
            </Face>
            <Face side = "y+">
-             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+             <BCType id = "all" var = "Neumann" label = "Velocity">
+               <value>[0, 0, 0]</value>
+             </BCType>
            </Face>                           
            <Face side = "z-">
              <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
