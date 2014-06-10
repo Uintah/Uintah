@@ -221,19 +221,19 @@ namespace Wasatch{
   void apply_intrusion_boundary_conditions(BCHelper& bcHelper)
   {
     EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
-    BndCondSpec svolFracSpec = {vNames.vol_frac_tag<SVolField>().name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
+    BndCondSpec svolFracSpec = {vNames.vol_frac_tag<SVolField>().name(), "none", 0, NEUMANN, DOUBLE_TYPE};
     bcHelper.add_boundary_condition(svolFracSpec);
     bcHelper.apply_boundary_condition<SVolField>( vNames.vol_frac_tag<SVolField>(), INITIALIZATION );
     
-    BndCondSpec xvolFracSpec = {vNames.vol_frac_tag<XVolField>().name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
+    BndCondSpec xvolFracSpec = {vNames.vol_frac_tag<XVolField>().name(), "none", 0, NEUMANN, DOUBLE_TYPE};
     bcHelper.add_boundary_condition(xvolFracSpec);
     bcHelper.apply_boundary_condition<XVolField>( vNames.vol_frac_tag<XVolField>(), INITIALIZATION );
     
-    BndCondSpec yvolFracSpec = {vNames.vol_frac_tag<YVolField>().name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
+    BndCondSpec yvolFracSpec = {vNames.vol_frac_tag<YVolField>().name(), "none", 0, NEUMANN, DOUBLE_TYPE};
     bcHelper.add_boundary_condition(yvolFracSpec);
     bcHelper.apply_boundary_condition<YVolField>( vNames.vol_frac_tag<YVolField>(), INITIALIZATION );
     
-    BndCondSpec zvolFracSpec = {vNames.vol_frac_tag<ZVolField>().name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
+    BndCondSpec zvolFracSpec = {vNames.vol_frac_tag<ZVolField>().name(), "none", 0, NEUMANN, DOUBLE_TYPE};
     bcHelper.add_boundary_condition(zvolFracSpec);
     bcHelper.apply_boundary_condition<ZVolField>( vNames.vol_frac_tag<ZVolField>(), INITIALIZATION );
   }

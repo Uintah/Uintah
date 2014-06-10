@@ -26,6 +26,11 @@
 #define BoundaryConditionBase_Expr_h
 
 #include <expression/Expression.h>
+#include <CCA/Components/Wasatch/BCHelper.h>
+
+#include <CCA/Components/Wasatch/Operators/Operators.h>
+#include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
+
 /**
  *  \class 	BoundaryConditionBase
  *  \ingroup 	Expressions
@@ -48,6 +53,81 @@ class BoundaryConditionBase
 {
 public:
 
+  void bind_operators( const SpatialOps::OperatorDatabase& opdb )
+  {
+    switch (bcTypeEnum_) {
+      case Wasatch::DIRICHLET:
+      {
+        switch (faceTypeEnum_) {
+          case Uintah::Patch::xminus:
+          case Uintah::Patch::xplus:
+          {
+            diriXOp_ = opdb.retrieve_operator<DiriXOpT>();
+            break;
+          }
+          case Uintah::Patch::yminus:
+          case Uintah::Patch::yplus:
+          {
+            diriYOp_ = opdb.retrieve_operator<DiriYOpT>();
+            break;
+          }
+          case Uintah::Patch::zminus:
+          case Uintah::Patch::zplus:
+          {
+            diriZOp_ = opdb.retrieve_operator<DiriZOpT>();
+            break;
+          }
+          default:
+          {
+            std::ostringstream msg;
+            msg << "ERROR: An invalid uintah face has been specified when tyring to apply boundary conditions.";
+            break;
+          }
+        }
+        break; // DIRICHLET
+      }
+        
+      case Wasatch::NEUMANN:
+      {
+        switch (faceTypeEnum_) {
+          case Uintah::Patch::xminus:
+          case Uintah::Patch::xplus:
+          {
+            neumXOp_ = opdb.retrieve_operator<NeumXOpT>();
+            break;
+          }
+          case Uintah::Patch::yminus:
+          case Uintah::Patch::yplus:
+          {
+            neumYOp_ = opdb.retrieve_operator<NeumYOpT>();
+            break;
+          }
+          case Uintah::Patch::zminus:
+          case Uintah::Patch::zplus:
+          {
+            neumZOp_ = opdb.retrieve_operator<NeumZOpT>();
+            break;
+          }
+          default:
+          {
+            std::ostringstream msg;
+            msg << "ERROR: An invalid uintah face has been specified when tyring to apply boundary conditions.\n";
+            break;
+          }
+        }
+        break; // NEUMANN
+      }
+        
+      default:
+      {
+        std::ostringstream msg;
+        msg << "ERROR: It looks like you have specified an UNSUPPORTED boundary condition type!"
+        << "Basic boundary types can only be either DIRICHLET or NEUMANN. Please revise your input file." << std::endl;
+        break;
+      }
+    }
+  }
+  
   /**
    *  \brief Specify whether this boundary condition applies to a staggered field that is staggered in a
    direction normal to the boundary. For exampl, XVol and on x-boundaries, YVol on y-boundaries, and ZVol
@@ -106,6 +186,31 @@ public:
   }
 
   /**
+   *  \brief Set nebo-mask-friendly interior points. This is a vector of locally indexed ijk interior points. Interior
+   points correspond to the interior cells adjacent to a boundary. For staggered fields that are normal
+   to a boundary, the interior points correspond to the boundary faces instead of the cells.
+   *  \param vecInteriorPoints Pointer to a stl vector of ijk triplets of interior cells adjacent
+   to the boundary. These are indexed zero-based on the first interior cell of the patch.
+   *
+   */
+  void set_nebo_interior_points( const std::vector<SpatialOps::structured::IntVec>* vecInteriorPoints )
+  {
+    neboInteriorPts_  = vecInteriorPoints;
+  }
+  
+  /**
+   *  \brief Set nebo-mask-friendly extra cells. This is a vector of locally indexed ijk extra-cell points. Extra-cell
+   points correspond to the extra cells adjacent to a boundary (outside). For staggered fields that
+   are normal to a boundary, the extra points correspond to the outside faces instead of the cells.
+   *  \param vecGhostPoints Pointer to a stl vector of ijk triplets of extra cells adjacent
+   to the boundary. These are indexed zero-based on the first interior cell of the patch.
+   *
+   */
+  void set_nebo_ghost_points( const std::vector<SpatialOps::structured::IntVec>* vecGhostPoints ){
+    neboGhostPts_ = vecGhostPoints;
+  }
+
+  /**
    *  \brief Set interior edge cells. This is a vector of locally indexed ijk edge interior points.
    The edges correspond to the edges of the compuational domain.
    *  \param interiorEdgePoints Pointer to a stl vector of ijk triplets of interior edge cells.
@@ -119,8 +224,47 @@ public:
    *  \brief Set the patch cell offset. This is the global ijk of the lowest cell on this patch.
    *
    */
-  void set_patch_cell_offset( const SpatialOps::structured::IntVec& patchCellOffset ){
+  void set_patch_cell_offset( const SpatialOps::structured::IntVec& patchCellOffset )
+  {
     patchCellOffset_ = patchCellOffset;
+  }
+
+  /**
+   *  \brief Set the type of this bc: Dirichlet or Neumann.
+   *
+   */
+  void set_bc_type ( Wasatch::BndCondTypeEnum bcTypeEnum)
+  {
+    bcTypeEnum_ = bcTypeEnum;
+  }
+
+  /**
+   *  \brief Set the face type of this bc: xminus, xplus,...
+   *
+   */
+  void set_face_type ( Uintah::Patch::FaceType faceType)
+  {
+    faceTypeEnum_ = faceType;
+    switch (faceTypeEnum_) {
+      case Uintah::Patch::xminus:
+      case Uintah::Patch::yminus:
+      case Uintah::Patch::zminus:
+      {
+        isMinusFace_ = true;
+        break;
+      }
+      case Uintah::Patch::xplus:
+      case Uintah::Patch::yplus:
+      case Uintah::Patch::zplus:
+      {
+        isMinusFace_ = false;
+        break;
+      }
+      default:
+      {
+        break;
+      }
+    }
   }
 
   /**
@@ -132,13 +276,27 @@ public:
     bndNormal_ = bndNormal;
   }
 
+  /**
+   *  \brief Specify whether this boundary condition applies in extra cells directly or uses operator inversion.
+   *
+   */
+  void set_extra_only( const bool setExtraOnly )
+  {
+    setInExtraCellsOnly_ = setExtraOnly;
+  }
+
+
   BoundaryConditionBase()
   {
     isStaggered_ = false;
+    isMinusFace_ = false;
+    setInExtraCellsOnly_ = false;
     ci_ = 0.0;
     cg_ = 0.0;
     patchCellOffset_ = SpatialOps::structured::IntVec(0,0,0);
     bndNormal_       = SpatialOps::structured::IntVec(0,0,0);
+    bcTypeEnum_      = Wasatch::UNSUPPORTED;
+    faceTypeEnum_    = Uintah::Patch::xminus;
     vecInteriorPts_ = NULL;
     vecGhostPts_ = NULL;
     interiorEdgePoints_ = NULL;
@@ -146,13 +304,79 @@ public:
   virtual ~BoundaryConditionBase(){}
 
 protected:
-  bool isStaggered_;
+  bool isStaggered_, isMinusFace_, setInExtraCellsOnly_;
   double ci_, cg_;
+
   SpatialOps::structured::IntVec patchCellOffset_;
   SpatialOps::structured::IntVec bndNormal_;
+  
+  Wasatch::BndCondTypeEnum bcTypeEnum_; // DIRICHLET, NEUMANN, UNSUPPORTED
+  Uintah::Patch::FaceType faceTypeEnum_;    // xminus, xplus...
+  
+  
+  // operators
+  typedef Wasatch::BCOpTypeSelector<FieldT> OpT;
+  
+  typedef SpatialOps::NeboBoundaryConditionBuilder<typename OpT::DirichletX> DiriXOpT;
+  typedef SpatialOps::NeboBoundaryConditionBuilder<typename OpT::DirichletY> DiriYOpT;
+  typedef SpatialOps::NeboBoundaryConditionBuilder<typename OpT::DirichletZ> DiriZOpT;
+  
+  typedef SpatialOps::NeboBoundaryConditionBuilder<typename OpT::NeumannX> NeumXOpT;
+  typedef SpatialOps::NeboBoundaryConditionBuilder<typename OpT::NeumannY> NeumYOpT;
+  typedef SpatialOps::NeboBoundaryConditionBuilder<typename OpT::NeumannZ> NeumZOpT;
+  
+  const DiriXOpT* diriXOp_;
+  const DiriYOpT* diriYOp_;
+  const DiriZOpT* diriZOp_;
+
+  const NeumXOpT* neumXOp_;
+  const NeumYOpT* neumYOp_;
+  const NeumZOpT* neumZOp_;
+  
   const std::vector<SpatialOps::structured::IntVec>* vecInteriorPts_;
   const std::vector<SpatialOps::structured::IntVec>* vecGhostPts_;
+  
+  const std::vector<SpatialOps::structured::IntVec>* neboInteriorPts_;
+  const std::vector<SpatialOps::structured::IntVec>* neboGhostPts_;
+
   const std::vector<SpatialOps::structured::IntVec>* interiorEdgePoints_;
+  
+  void build_mask_points(std::vector<SpatialOps::structured::IntVec>& maskPoints)
+  {
+    if(isStaggered_ && bcTypeEnum_ != Wasatch::NEUMANN) {
+      maskPoints = *neboInteriorPts_;
+      maskPoints.insert(maskPoints.end(), neboGhostPts_->begin(), neboGhostPts_->end());
+    }
+    else if(isStaggered_ && bcTypeEnum_ == Wasatch::NEUMANN) {
+      maskPoints = isMinusFace_ ? *neboInteriorPts_ : *neboInteriorPts_;
+    }
+    else {
+      if (setInExtraCellsOnly_) {
+        maskPoints = *neboGhostPts_;
+      } else {
+        switch (this->faceTypeEnum_) {
+          case Uintah::Patch::xminus:
+          case Uintah::Patch::yminus:
+          case Uintah::Patch::zminus:
+          {
+            maskPoints = *neboInteriorPts_;
+            break;
+          }
+          case Uintah::Patch::xplus:
+          case Uintah::Patch::yplus:
+          case Uintah::Patch::zplus:
+          {
+            maskPoints = *neboGhostPts_;
+            break;
+          }
+          default:
+          {
+            break;
+          }
+        }
+      }
+    }
+  }
 };
 
 #endif // BoundaryConditionBase_Expr_h
