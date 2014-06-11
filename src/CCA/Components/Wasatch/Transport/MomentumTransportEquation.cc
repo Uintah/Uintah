@@ -21,7 +21,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-#include <CCA/Components/Wasatch/transport/MomentumTransportEquation.h>
+#include <CCA/Components/Wasatch/Transport/MomentumTransportEquation.h>
 
 // -- Uintah includes --//
 #include <CCA/Ports/SolverInterface.h>
