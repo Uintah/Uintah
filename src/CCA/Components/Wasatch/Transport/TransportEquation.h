@@ -62,21 +62,21 @@ namespace Wasatch{
     void setup();
 
     /**
-     * Setup the expression(s) to calculate the diffusive fluxes as applicable,
+     * \brief Setup the expression(s) to calculate the diffusive fluxes as applicable,
      * populating the FieldTagInfo object supplied with the appropriate
      * diffusive flux tag(s).
      */
     virtual void setup_diffusive_flux( FieldTagInfo& ) = 0;
 
     /**
-     * Setup the expression(s) to calculate the convective fluxes as applicable,
+     * \brief Setup the expression(s) to calculate the convective fluxes as applicable,
      * populating the FieldTagInfo object supplied with the appropriate
      * convective flux tag(s).
      */
     virtual void setup_convective_flux( FieldTagInfo& ) = 0;
 
     /**
-     * Setup the expression to calculate the source term as applicable,
+     * \brief Setup the expression to calculate the source term as applicable,
      * populating the FieldTagInfo object supplied with the appropriate source
      * term tag.
      *
@@ -85,7 +85,7 @@ namespace Wasatch{
     virtual void setup_source_terms( FieldTagInfo&, Expr::TagList& ) = 0;
 
     /**
-     * Setup the RHS expression for this transport equation, returning the
+     * \brief Setup the RHS expression for this transport equation, returning the
      * ExpressionID associated with it.
      *
      * @param info the FieldTagInfo describing terms that are active for the RHS
@@ -145,7 +145,7 @@ namespace Wasatch{
     std::string dir_name() const;
 
     /**
-     * @return the ExpressionID for the RHS expression associated with this TransportEquation
+     * \brief Returns the ExpressionID for the RHS expression associated with this TransportEquation
      */
     Expr::ExpressionID get_rhs_id() const;
 
@@ -161,7 +161,7 @@ namespace Wasatch{
                                              GraphCategories& graphCat)=0;
     
     /**
-     *  Set up the boundary condition on initial conditions evaluators for this
+     *  \brief Set up the boundary condition on initial conditions evaluators for this
      *  TransportEquation. Each derived class must implement this
      *  method.  Boundary conditions are imposed by adding additional
      *  tasks to modify values in an Expression after it is evaluated.
@@ -172,7 +172,7 @@ namespace Wasatch{
                                                    BCHelper& bcHelper ) = 0;
 
     /**
-     *  Set up the boundary condition evaluators for this
+     *  \brief Set up the boundary condition evaluators for this
      *  TransportEquation. Each derived class must implement this
      *  method.  Boundary conditions are imposed by adding additional
      *  tasks to modify values in an Expression after it is evaluated.
@@ -183,7 +183,7 @@ namespace Wasatch{
                                             BCHelper& bcHelper ) = 0;
 
     /**
-     *  Return the ExpressionID that identifies an expression that will
+     *  \brief Return the ExpressionID that identifies an expression that will
      *  set the initial condition for this transport equation.
      *
      *  NOTE: the ExpressionFactory object provided here is distinctly
