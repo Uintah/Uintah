@@ -23,7 +23,7 @@
  * IN THE SOFTWARE.
  *
  * ----------------------------------------------------------
- * coordinateSystemFactory.h
+ * CoordinateSystemFactory.h
  *
  *  Created on: May 13, 2014
  *      Author: jbhooper
@@ -37,12 +37,12 @@
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 
-#include <CCA/Components/MD/CoordinateSystems/coordinateSystem.h>
+#include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
 
 namespace Uintah {
-  class coordinateSystemFactory {
+  class CoordinateSystemFactory {
     public:
-      static coordinateSystem* create(const ProblemSpecP&     spec,
+      static CoordinateSystem* create(const ProblemSpecP&     spec,
                                       const SimulationStateP& shared_state,
                                       const GridP&            grid);
   };

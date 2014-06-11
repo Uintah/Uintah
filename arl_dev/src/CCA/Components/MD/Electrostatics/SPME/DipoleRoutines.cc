@@ -61,7 +61,7 @@
 
 
 #include <CCA/Components/MD/Electrostatics/SPME/SPME.h>
-#include <CCA/Components/MD/CoordinateSystems/coordinateSystem.h>
+#include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
 
 
 //#ifdef DEBUG
@@ -71,13 +71,14 @@
 //.......1.........2.........3.........4.........5.........6.........7.........8
 using namespace Uintah;
 
+// Called from SPME::calculate directly
 void SPME::generateChargeMapDipole(const ProcessorGroup*    pg,
                                    const PatchSubset*       patches,
                                    const MaterialSubset*    materials,
                                    DataWarehouse*           oldDW,
                                    DataWarehouse*           newDW,
                                    const MDLabel*           label,
-                                   coordinateSystem*        coordSys)
+                                   CoordinateSystem*        coordSys)
 {
     size_t          numPatches          =   patches->size();
     size_t          numMaterials        =   materials->size();
@@ -211,70 +212,13 @@ void SPME::generateChargeMapDipole(const ProcessorGroup*    pg,
     }
 }
 
-void SPME::calculatePreTransformDipole(const ProcessorGroup*    pg,
-                                       const PatchSubset*       patches,
-                                       const MaterialSubset*    materials,
-                                       DataWarehouse*           oldDW,
-                                       DataWarehouse*           newDW,
-                                       const SimulationStateP*        simState,
-                                       const MDLabel*           label,
-                                       coordinateSystem*        coordSys)
-{
-  size_t numPatches   = patches->size();
-  size_t numAtomTypes = materials->size();
-  Uintah::Matrix3 inverseUnitCell = coordSys->getInverseCell();
-
-
-  for (size_t currPatch = 0; currPatch < numPatches; ++currPatch) {
-    const Patch* patch = patches->get(currPatch);
-
-    // Extract current SPMEPatch
-    SPMEPatch* currentSPMEPatch = d_spmePatchMap.find(patch->getID())->second;
-
-    // SPMEPatches map to Patches 1:1; shouldn't need to lock for anything
-    // that's local to a patch
-    SimpleGrid<dblcomplex>* Q_threadLocal = currentSPMEPatch->getQ();
-
-    //Initialize once before mapping any type of atoms
-    Q_threadLocal->initialize(dblcomplex(0.0,0.0));
-    for (size_t currType = 0; currType < numAtomTypes; ++currType) {
-
-      int       atomType    = materials->get(currType);
-      double    atomCharge  = (*simState)->getMDMaterial(atomType)->getCharge();
-
-      ParticleSubset* atomSet = oldDW->getParticleSubset(atomType, patch);
-
-      constParticleVariable<Vector> p_Dipole;
-      oldDW->get(p_Dipole, label->electrostatic->pMu, atomSet);
-
-      std::vector<SPMEMapPoint>* gridMap;
-      gridMap = currentSPMEPatch->getChargeMap(atomType);
-
-      SPME::mapChargeToGridDipole(currentSPMEPatch,
-                                  gridMap,
-                                  atomSet,
-                                  atomCharge,
-                                  p_Dipole,
-                                  coordSys);
-        } // end Atom Type Loop
-    } // end Patch Loop
-
-    // TODO keep an eye on this to make sure it works like we think it should
-    if (Thread::self()->myid() == 0) {
-      d_Q_nodeLocal->initialize(dblcomplex(0.0, 0.0));
-    }
-
-    bool replace = true;
-    // FIXME ????
-    newDW->transferFrom(oldDW, label->global->pX, patches, materials, replace);
-}
-
+// Called from calculatePreTransformDipole
 void SPME::mapChargeToGridDipole(SPMEPatch*                     spmePatch,
                                  const spmeMapVector*           gridMap,
                                  ParticleSubset*                pset,
                                  double                         charge,
                                  constParticleVariable<Vector>& p_Dipole,
-                                 coordinateSystem*              coordSys) {
+                                 CoordinateSystem*              coordSys) {
 
   // grab local Q grid
   SimpleGrid<dblcomplex>*   Q_patchLocal    = spmePatch->getQ();
@@ -318,14 +262,216 @@ void SPME::mapChargeToGridDipole(SPMEPatch*                     spmePatch,
   }
 }
 
+// Called from the SPME::calculate subscheduler as part of the polarizable
+// iteration loop.
+void SPME::calculateRealspaceDipole(const ProcessorGroup*     pg,
+                                    const PatchSubset*        patches,
+                                    const MaterialSubset*     materials,
+                                    DataWarehouse*            old_dw,
+                                    DataWarehouse*            new_dw,
+                                    const SimulationStateP*         sharedState,
+                                    const MDLabel*            label,
+                                    CoordinateSystem*         coordinateSystem)
+{
+  size_t numPatches = patches->size();
+  size_t numMaterials = materials->size();
+
+  // Static constants we'll use but that are calculated once
+  double twobeta2 = 2.0 * d_ewaldBeta * d_ewaldBeta;
+  double Pi = acos(-1.0);
+  double rootPi = sqrt(Pi);
+  double one_over_betarootPi = 1.0/(d_ewaldBeta*rootPi);
+  SCIRun::Vector ZERO_VECTOR(0.0, 0.0, 0.0);
+
+  double cutoff2 = d_electrostaticRadius * d_electrostaticRadius;
+  double realElectrostaticEnergy = 0;
+  Matrix3 realElectrostaticStress = Matrix3(0.0,0.0,0.0,
+                                            0.0,0.0,0.0,
+                                            0.0,0.0,0.0);
+
+  // Method global vector to catch the distance offset and avoid lots of
+  // spurious temporary vector creations.
+  SCIRun::Vector offset;
+
+  // Step through all the patches on this thread
+  for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) {
+    const Patch* patch = patches->get(patchIndex);
+
+    // step through the materials for the reference sites
+    for (size_t localIndex = 0; localIndex < numMaterials; ++localIndex) {
+      int atomType = materials->get(localIndex);
+      double atomCharge = (*sharedState)->getMDMaterial(atomType)->getCharge();
+      ParticleSubset* atomSubset = old_dw->getParticleSubset(atomType, patch);
+
+      constParticleVariable<Point>  localX;
+      constParticleVariable<long64> localID;
+      constParticleVariable<Vector> localMu;
+      old_dw->get(localX, label->global->pX, atomSubset);
+      old_dw->get(localID, label->global->pID, atomSubset);
+      old_dw->get(localMu, label->electrostatic->pMu, atomSubset);
+
+      size_t numLocalAtoms = atomSubset->numParticles();
+
+      ParticleVariable<SCIRun::Vector> localForce, localField;
+
+      new_dw->allocateAndPut(localForce,
+                             label->electrostatic->pF_electroReal_preReloc,
+                             atomSubset);
+
+      new_dw->allocateAndPut(localField,
+                             label->electrostatic->pE_electroReal_preReloc,
+                             atomSubset);
+
+      for (size_t Index = 0; Index < numLocalAtoms; ++ Index) {
+        localForce[Index] = ZERO_VECTOR;
+        localField[Index] = ZERO_VECTOR;
+      }
+
+      for (size_t neighborIndex = 0; neighborIndex < numMaterials; ++neighborIndex) {
+        int neighborType = materials->get(neighborIndex);
+        double neighborCharge = (*sharedState)->getMDMaterial(neighborType)->getCharge();
+        ParticleSubset* neighborSubset = old_dw->getParticleSubset(neighborType, patch, Ghost::AroundNodes, d_electrostaticGhostCells, label->global->pX);
+
+        constParticleVariable<Point>  neighborX;
+        constParticleVariable<long64> neighborID;
+        constParticleVariable<Vector> neighborMu;
+        old_dw->get(neighborX, label->global->pX, neighborSubset);
+        old_dw->get(neighborID, label->global->pID, neighborSubset);
+        old_dw->get(neighborMu, label->electrostatic->pMu, neighborSubset);
+
+        size_t numNeighborAtoms = neighborSubset->numParticles();
+
+        // loop over the local atoms
+        for (size_t patchAtom=0; patchAtom < numLocalAtoms; ++patchAtom) {
+          SCIRun::Vector atomDipole = localMu[patchAtom];
+          localForce[patchAtom]=ZERO_VECTOR;
+          localField[patchAtom]=ZERO_VECTOR;
+          // loop over the neighbors
+          for (size_t neighborAtom=0; neighborAtom < numNeighborAtoms; ++neighborAtom) {
+            // Ensure i != j
+            if (localID[patchAtom] != neighborID[neighborAtom]) {
+              // d_offsetProxy contains the proper implementation for distance offsets based on
+              // orthorhombic nature of the cell and the current inverse cell
+              coordinateSystem->minimumImageDistance(neighborX[neighborAtom],localX[patchAtom],offset);
+//              SCIRun::Vector atomicDistanceVector = neighborX[neighborIdx]-localX[localIdx];
+              // Periodic boundary condition; should eventually check against actual BC of system
+//              atomicDistanceVector -= (atomicDistanceVector / box).vec_rint() * box; // For orthorhombic only
+              double radius2 = offset.length2();
+
+              // only calculate if neighbor within spherical cutoff around local atom
+              if (radius2 < cutoff2 ) {
+                SCIRun::Vector neighborDipole = neighborMu[neighborAtom];
+                double rad2inv = 1.0/radius2;
+                double radius = sqrt(radius2);
+                double radinv = 1.0/radius;
+                double betar = d_ewaldBeta*radius;
+                double expnegbeta2r2_over_betarootpi = exp(-(d_ewaldBeta*d_ewaldBeta)*radius2)*one_over_betarootPi;
+                double B0 = erfc(betar)*radinv;
+                double B1 = (B0 + twobeta2*expnegbeta2r2_over_betarootpi);
+                double B2 = (3*B1 + twobeta2*twobeta2*expnegbeta2r2_over_betarootpi)*rad2inv;
+                double B3 = (5*B2 + twobeta2*twobeta2*twobeta2*expnegbeta2r2_over_betarootpi)*rad2inv;
+                double G0 = atomCharge*neighborCharge;
+                double pa_dot_rna = Dot(atomDipole,offset);
+                double pn_dot_rna = Dot(neighborDipole,offset);
+                double G1 = pa_dot_rna*neighborCharge - pn_dot_rna*atomCharge + Dot(atomDipole,neighborDipole);
+                double G2 = -pa_dot_rna*pn_dot_rna;
+                double delG0 = 0.0;
+                SCIRun::Vector delG1 = atomCharge*neighborDipole - neighborCharge*atomDipole;
+                SCIRun::Vector delG2 = pn_dot_rna*atomDipole + pa_dot_rna*neighborDipole;
+
+                realElectrostaticEnergy += (B0*G0 + B1*G1 + B2*G2);
+                SCIRun::Vector localForceVector = offset*(G0*B1+G1*B2+G2*B3) + (B1*delG1 + B2*delG2);
+                localForce[patchAtom] += localForceVector;
+                localField[patchAtom] += (atomCharge*B1-pn_dot_rna*B2)*offset + B1*neighborDipole;
+                realElectrostaticStress += OuterProduct(offset, localForceVector);
+              } // Interaction within cutoff
+            } // If atoms are different
+          } // Loop over neighbors
+        } // Loop over local atoms
+      } // Loop over neighbor materials
+    } // Loop over local materials
+  } // Loop over patches
+  // put updated values for reduction variables into the DW
+  new_dw->put(sum_vartype(0.5 * realElectrostaticEnergy),
+              label->electrostatic->rElectrostaticRealEnergy);
+  new_dw->put(matrix_sum(0.5 * realElectrostaticStress),
+              label->electrostatic->rElectrostaticRealStress);
+  return;
+} // End method
+
+// --> Fourier dipole calculation components
+void SPME::calculatePreTransformDipole(const ProcessorGroup*    pg,
+                                       const PatchSubset*       patches,
+                                       const MaterialSubset*    materials,
+                                       DataWarehouse*           oldDW,
+                                       DataWarehouse*           newDW,
+                                       const SimulationStateP*  simState,
+                                       const MDLabel*           label,
+                                       CoordinateSystem*        coordSys)
+{
+  size_t numPatches   = patches->size();
+  size_t numAtomTypes = materials->size();
+  Uintah::Matrix3 inverseUnitCell = coordSys->getInverseCell();
+
+
+  for (size_t currPatch = 0; currPatch < numPatches; ++currPatch) {
+    const Patch* patch = patches->get(currPatch);
+
+    // Extract current SPMEPatch
+    SPMEPatch* currentSPMEPatch = d_spmePatchMap.find(patch->getID())->second;
+
+    // SPMEPatches map to Patches 1:1; shouldn't need to lock for anything
+    // that's local to a patch
+    SimpleGrid<dblcomplex>* Q_threadLocal = currentSPMEPatch->getQ();
+
+    //Initialize once before mapping any type of atoms
+    Q_threadLocal->initialize(dblcomplex(0.0,0.0));
+    for (size_t currType = 0; currType < numAtomTypes; ++currType) {
+
+      int       atomType    = materials->get(currType);
+      double    atomCharge  = (*simState)->getMDMaterial(atomType)->getCharge();
+
+      ParticleSubset* atomSet = oldDW->getParticleSubset(atomType, patch);
+
+      constParticleVariable<Vector> p_Dipole;
+      oldDW->get(p_Dipole, label->electrostatic->pMu, atomSet);
+
+      std::vector<SPMEMapPoint>* gridMap;
+      gridMap = currentSPMEPatch->getChargeMap(atomType);
+
+      SPME::mapChargeToGridDipole(currentSPMEPatch,
+                                  gridMap,
+                                  atomSet,
+                                  atomCharge,
+                                  p_Dipole,
+                                  coordSys);
+
+    } // end Atom Type Loop
+
+    // Dummy variable for maintaining graph layout.
+    PerPatch<int> preTransformDep;
+    newDW->put(preTransformDep,
+               label->SPME_dep->dPreTransform,
+               -1,
+               patch);
+
+
+    } // end Patch Loop
+
+    // TODO keep an eye on this to make sure it works like we think it should
+    if (Thread::self()->myid() == 0) {
+      d_Q_nodeLocal->initialize(dblcomplex(0.0, 0.0));
+    }
+}
+
 void SPME::calculatePostTransformDipole(const ProcessorGroup*   pg,
                                         const PatchSubset*      patches,
                                         const MaterialSubset*   materials,
                                         DataWarehouse*          oldDW,
                                         DataWarehouse*          newDW,
-                                        const SimulationStateP*       simState,
+                                        const SimulationStateP* simState,
                                         const MDLabel*          label,
-                                        coordinateSystem*       coordSystem) {
+                                        CoordinateSystem*       coordSystem) {
   size_t numPatches     = patches->size();
   size_t numAtomTypes   = materials->size();
   for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) {
@@ -366,7 +512,7 @@ void SPME::mapForceFromGridDipole(const SPMEPatch*                  spmePatch,
                                   double                            charge,
                                   const ParticleVariable<Vector>&   pDipole,
                                   ParticleVariable<Vector>&         pForceRecip,
-                                  coordinateSystem*                 coordSystem) {
+                                  CoordinateSystem*                 coordSystem) {
 
   SimpleGrid<dblcomplex>*   Q_patchLocal = spmePatch->getQ();
   IntVector                 patchOffset  = spmePatch->getGlobalOffset();
@@ -432,7 +578,7 @@ void SPME::dipoleUpdateFieldAndStress(const ProcessorGroup* pg,
                                       DataWarehouse*        oldDW,
                                       DataWarehouse*        newDW,
                                       const MDLabel*        label,
-                                      coordinateSystem*     coordSystem) {
+                                      CoordinateSystem*     coordSystem) {
 
   size_t numPatches = patches->size();
   size_t numAtomTypes = materials->size();
@@ -518,133 +664,6 @@ void SPME::dipoleUpdateFieldAndStress(const ProcessorGroup* pg,
   newDW->put(matrix_sum(0.5 * localStressAddendum),
              label->electrostatic->rElectrostaticInverseStressDipole);
 }
-
-void SPME::calculateRealspaceDipole(const ProcessorGroup*     pg,
-                                    const PatchSubset*        patches,
-                                    const MaterialSubset*     materials,
-                                    DataWarehouse*            old_dw,
-                                    DataWarehouse*            new_dw,
-                                    const SimulationStateP*         sharedState,
-                                    const MDLabel*            label,
-                                    coordinateSystem*         coordinateSystem)
-{
-  size_t numPatches = patches->size();
-  size_t numMaterials = materials->size();
-
-  // Static constants we'll use but that are calculated once
-  double twobeta2 = 2.0 * d_ewaldBeta * d_ewaldBeta;
-  double Pi = acos(-1.0);
-  double rootPi = sqrt(Pi);
-  double one_over_betarootPi = 1.0/(d_ewaldBeta*rootPi);
-  SCIRun::Vector ZERO_VECTOR(0.0, 0.0, 0.0);
-
-  double cutoff2 = d_electrostaticRadius * d_electrostaticRadius;
-  double realElectrostaticEnergy = 0;
-  Matrix3 realElectrostaticStress = Matrix3(0.0,0.0,0.0,
-                                            0.0,0.0,0.0,
-                                            0.0,0.0,0.0);
-
-  // Method global vector to catch the distance offset and avoid lots of
-  // spurious temporary vector creations.
-  SCIRun::Vector offset;
-
-  // Step through all the patches on this thread
-  for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) {
-    const Patch* patch = patches->get(patchIndex);
-
-    // step through the materials for the reference sites
-    for (size_t localIndex = 0; localIndex < numMaterials; ++localIndex) {
-      int atomType = materials->get(localIndex);
-      double atomCharge = (*sharedState)->getMDMaterial(atomType)->getCharge();
-      ParticleSubset* atomSubset = old_dw->getParticleSubset(atomType, patch);
-
-      constParticleVariable<Point>  localX;
-      constParticleVariable<long64> localID;
-      constParticleVariable<Vector> localMu;
-      old_dw->get(localX, label->global->pX, atomSubset);
-      old_dw->get(localID, label->global->pID, atomSubset);
-      old_dw->get(localMu, label->electrostatic->pMu, atomSubset);
-
-      size_t numLocalAtoms = atomSubset->numParticles();
-
-      ParticleVariable<SCIRun::Vector> localForce, localField;
-      new_dw->allocateAndPut(localForce, label->electrostatic->pF_electroReal_preReloc, atomSubset);
-      new_dw->allocateAndPut(localField, label->electrostatic->pE_electroReal_preReloc, atomSubset);
-
-      for (size_t Index = 0; Index < numLocalAtoms; ++ Index) {
-        localForce[Index] = ZERO_VECTOR;
-        localField[Index] = ZERO_VECTOR;
-      }
-
-      for (size_t neighborIndex = 0; neighborIndex < numMaterials; ++neighborIndex) {
-        int neighborType = materials->get(neighborIndex);
-        double neighborCharge = (*sharedState)->getMDMaterial(neighborType)->getCharge();
-        ParticleSubset* neighborSubset = old_dw->getParticleSubset(neighborType, patch, Ghost::AroundNodes, d_electrostaticGhostCells, label->global->pX);
-
-        constParticleVariable<Point>  neighborX;
-        constParticleVariable<long64> neighborID;
-        constParticleVariable<Vector> neighborMu;
-        old_dw->get(neighborX, label->global->pX, neighborSubset);
-        old_dw->get(neighborID, label->global->pID, neighborSubset);
-        old_dw->get(neighborMu, label->electrostatic->pMu, neighborSubset);
-
-        size_t numNeighborAtoms = neighborSubset->numParticles();
-
-        // loop over the local atoms
-        for (size_t patchAtom=0; patchAtom < numLocalAtoms; ++patchAtom) {
-          SCIRun::Vector atomDipole = localMu[patchAtom];
-          localForce[patchAtom]=ZERO_VECTOR;
-          localField[patchAtom]=ZERO_VECTOR;
-          // loop over the neighbors
-          for (size_t neighborAtom=0; neighborAtom < numNeighborAtoms; ++neighborAtom) {
-            // Ensure i != j
-            if (localID[patchAtom] != neighborID[neighborAtom]) {
-              // d_offsetProxy contains the proper implementation for distance offsets based on
-              // orthorhombic nature of the cell and the current inverse cell
-              coordinateSystem->minimumImageDistance(neighborX[neighborAtom],localX[patchAtom],offset);
-//              SCIRun::Vector atomicDistanceVector = neighborX[neighborIdx]-localX[localIdx];
-              // Periodic boundary condition; should eventually check against actual BC of system
-//              atomicDistanceVector -= (atomicDistanceVector / box).vec_rint() * box; // For orthorhombic only
-              double radius2 = offset.length2();
-
-              // only calculate if neighbor within spherical cutoff around local atom
-              if (radius2 < cutoff2 ) {
-                SCIRun::Vector neighborDipole = neighborMu[neighborAtom];
-                double rad2inv = 1.0/radius2;
-                double radius = sqrt(radius2);
-                double radinv = 1.0/radius;
-                double betar = d_ewaldBeta*radius;
-                double expnegbeta2r2_over_betarootpi = exp(-(d_ewaldBeta*d_ewaldBeta)*radius2)*one_over_betarootPi;
-                double B0 = erfc(betar)*radinv;
-                double B1 = (B0 + twobeta2*expnegbeta2r2_over_betarootpi);
-                double B2 = (3*B1 + twobeta2*twobeta2*expnegbeta2r2_over_betarootpi)*rad2inv;
-                double B3 = (5*B2 + twobeta2*twobeta2*twobeta2*expnegbeta2r2_over_betarootpi)*rad2inv;
-                double G0 = atomCharge*neighborCharge;
-                double pa_dot_rna = Dot(atomDipole,offset);
-                double pn_dot_rna = Dot(neighborDipole,offset);
-                double G1 = pa_dot_rna*neighborCharge - pn_dot_rna*atomCharge + Dot(atomDipole,neighborDipole);
-                double G2 = -pa_dot_rna*pn_dot_rna;
-                double delG0 = 0.0;
-                SCIRun::Vector delG1 = atomCharge*neighborDipole - neighborCharge*atomDipole;
-                SCIRun::Vector delG2 = pn_dot_rna*atomDipole + pa_dot_rna*neighborDipole;
-
-                realElectrostaticEnergy += (B0*G0 + B1*G1 + B2*G2);
-                SCIRun::Vector localForceVector = offset*(G0*B1+G1*B2+G2*B3) + (B1*delG1 + B2*delG2);
-                localForce[patchAtom] += localForceVector;
-                localField[patchAtom] += (atomCharge*B1-pn_dot_rna*B2)*offset + B1*neighborDipole;
-                realElectrostaticStress += OuterProduct(offset, localForceVector);
-              } // Interaction within cutoff
-            } // If atoms are different
-          } // Loop over neighbors
-        } // Loop over local atoms
-      } // Loop over neighbor materials
-    } // Loop over local materials
-  } // Loop over patches
-  // put updated values for reduction variables into the DW
-  new_dw->put(sum_vartype(0.5 * realElectrostaticEnergy), label->electrostatic->rElectrostaticRealEnergy);
-  new_dw->put(matrix_sum(0.5 * realElectrostaticStress), label->electrostatic->rElectrostaticRealStress);
-  return;
-} // End method
 
 void SPME::calculateNewDipoles(const ProcessorGroup*    pg,
                                const PatchSubset*       patches,

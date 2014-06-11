@@ -30,7 +30,7 @@
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 
 #include <CCA/Components/MD/MDSystem.h>
-#include <CCA/Components/MD/CoordinateSystems/coordinateSystem.h>
+#include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
 
 namespace Uintah {
 
@@ -79,7 +79,7 @@ namespace Uintah {
                               const SimulationStateP*     simState,
                               MDSystem*             systemInfo,
                               const MDLabel*        label,
-                              coordinateSystem*     coordinateSys) = 0;
+                              CoordinateSystem*     coordinateSys) = 0;
 
       /**
        * @brief
@@ -93,7 +93,7 @@ namespace Uintah {
                          const SimulationStateP*      simState,
                          MDSystem*              systemInfo,
                          const MDLabel*         label,
-                         coordinateSystem*      coordSys) = 0;
+                         CoordinateSystem*      coordSys) = 0;
 
       /**
        * @brief
@@ -107,7 +107,7 @@ namespace Uintah {
                              const SimulationStateP*      simState,
                              MDSystem*              systemInfo,
                              const MDLabel*         label,
-                             coordinateSystem*      coordinateSys,
+                             CoordinateSystem*      coordinateSys,
                              SchedulerP&            subscheduler,
                              const LevelP&          level) = 0;
 
@@ -123,7 +123,7 @@ namespace Uintah {
                             const SimulationStateP*       simState,
                             MDSystem*               systemInfo,
                             const MDLabel*          label,
-                            coordinateSystem*       coordinateSys) = 0;
+                            CoordinateSystem*       coordinateSys) = 0;
 
       /**
        * @brief

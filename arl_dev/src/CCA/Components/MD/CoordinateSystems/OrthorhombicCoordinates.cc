@@ -29,17 +29,17 @@
  *      Author: jbhooper
  */
 
-#include <CCA/Components/MD/CoordinateSystems/coordinateSystem.h>
-#include <CCA/Components/MD/CoordinateSystems/orthorhombicCoordinates.h>
+#include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
+#include <CCA/Components/MD/CoordinateSystems/OrthorhombicCoordinates.h>
 
 #include <Core/Exceptions/InvalidState.h>
 
 using namespace Uintah;
 
-orthorhombicCoordinates::orthorhombicCoordinates(const SCIRun::IntVector& _extent,
+OrthorhombicCoordinates::OrthorhombicCoordinates(const SCIRun::IntVector& _extent,
                                                  const SCIRun::IntVector& _periodic,
                                                  const Uintah::Matrix3& _cell)
-                                                :coordinateSystem(_extent, _periodic) {
+                                                :CoordinateSystem(_extent, _periodic) {
   double d_zeroTol = 1.0e-13;
 
   if ( abs(_cell(0,1)) > d_zeroTol || abs(_cell(0,2)) > d_zeroTol ||
@@ -67,11 +67,11 @@ orthorhombicCoordinates::orthorhombicCoordinates(const SCIRun::IntVector& _exten
 
 }
 
-orthorhombicCoordinates::orthorhombicCoordinates(const SCIRun::IntVector& _extent,
+OrthorhombicCoordinates::OrthorhombicCoordinates(const SCIRun::IntVector& _extent,
                                                  const SCIRun::IntVector& _periodic,
                                                  const SCIRun::Vector& _lengths,
                                                  const SCIRun::Vector& _angles)
-                                                :coordinateSystem(_extent, _periodic) {
+                                                :CoordinateSystem(_extent, _periodic) {
 
   double d_zeroTol = 1.0e-13;
   SCIRun::Vector angleDiff = _angles*MDConstants::degToRad-SCIRun::Vector(MDConstants::PI_Over_2);
@@ -97,12 +97,12 @@ orthorhombicCoordinates::orthorhombicCoordinates(const SCIRun::IntVector& _exten
 
 }
 
-orthorhombicCoordinates::~orthorhombicCoordinates()
+OrthorhombicCoordinates::~OrthorhombicCoordinates()
 {
 
 }
 
-void orthorhombicCoordinates::getInverseCell(Uintah::Matrix3& In) {
+void OrthorhombicCoordinates::getInverseCell(Uintah::Matrix3& In) {
 
   if (!isInverseCurrent) {
     calculateInverse();
@@ -120,7 +120,7 @@ void orthorhombicCoordinates::getInverseCell(Uintah::Matrix3& In) {
 
 }
 
-void orthorhombicCoordinates::updateUnitCell(const Uintah::Matrix3& In) {
+void OrthorhombicCoordinates::updateUnitCell(const Uintah::Matrix3& In) {
   double d_zeroTol = 1.0e-13;
 
   if ( abs(In(0,1)) > d_zeroTol || abs(In(0,2)) > d_zeroTol ||
@@ -147,7 +147,7 @@ void orthorhombicCoordinates::updateUnitCell(const Uintah::Matrix3& In) {
   markCellChanged();
 }
 
-void orthorhombicCoordinates::updateUnitCell(const SCIRun::Vector& inLengths,
+void OrthorhombicCoordinates::updateUnitCell(const SCIRun::Vector& inLengths,
                                              const SCIRun::Vector& inAngles) {
 
   // Update the angles first in case they're not valid so we don't screw the Lengths
@@ -156,7 +156,7 @@ void orthorhombicCoordinates::updateUnitCell(const SCIRun::Vector& inLengths,
 
 }
 
-void orthorhombicCoordinates::minimumImageDistance(const SCIRun::Point& P1,
+void OrthorhombicCoordinates::minimumImageDistance(const SCIRun::Point& P1,
                                                    const SCIRun::Point& P2,
                                                          SCIRun::Vector& offset) const {
 

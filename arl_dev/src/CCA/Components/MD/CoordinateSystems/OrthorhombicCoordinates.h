@@ -33,23 +33,23 @@
 #define ORTHORHOMBICCOORDINATES_H_
 
 #include <CCA/Components/MD/MDUtil.h>
-#include <CCA/Components/MD/CoordinateSystems/coordinateSystem.h>
+#include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
 
 #include <Core/Exceptions/InvalidState.h>
 
 namespace Uintah {
-  class orthorhombicCoordinates: public coordinateSystem {
+  class OrthorhombicCoordinates: public CoordinateSystem {
     public:
-       orthorhombicCoordinates(const SCIRun::IntVector&,
+       OrthorhombicCoordinates(const SCIRun::IntVector&,
                                const SCIRun::IntVector&,
                                const Uintah::Matrix3&);
 
-       orthorhombicCoordinates(const SCIRun::IntVector&,
+       OrthorhombicCoordinates(const SCIRun::IntVector&,
                                const SCIRun::IntVector&,
                                const SCIRun::Vector&,
                                const SCIRun::Vector&);
 
-      ~orthorhombicCoordinates();
+      ~OrthorhombicCoordinates();
 
       virtual inline void toReduced(const SCIRun::Vector& _In,
                                    SCIRun::Vector& _Out) const {

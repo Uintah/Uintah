@@ -41,16 +41,16 @@
 namespace Uintah {
 
 
-  class coordinateSystem {
+  class CoordinateSystem {
     public:
 
       enum principleDirection {X=1, Y=2, XY = 3, Z=4, XZ = 5, YZ = 6, XYZ = 7};
       static const double PI_Over_2;
 
-               coordinateSystem(const SCIRun::IntVector&,
+               CoordinateSystem(const SCIRun::IntVector&,
                                 const SCIRun::IntVector&);
 
-      virtual ~coordinateSystem() { };
+      virtual ~CoordinateSystem() { };
 
       inline bool queryCellChanged() const {
         return d_cellChanged;

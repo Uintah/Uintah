@@ -43,6 +43,19 @@ namespace Uintah {
   typedef std::complex<double> dblcomplex;
   typedef ReductionVariable<Matrix3, Reductions::Sum<Matrix3> > matrix_sum;
 
+  class SPME_dependencies {
+      // Labels for dependency management in the SPME subscheduler
+    public:
+      SPME_dependencies();
+     ~SPME_dependencies();
+     const VarLabel* dPreTransform;
+     const VarLabel* dReduceNodeLocalQ;
+     const VarLabel* dTransformRealToFourier;
+     const VarLabel* dCalculateInFourierSpace;
+     const VarLabel* dTransformFourierToReal;
+     const VarLabel* dDistributeNodeLocalQ;
+  };
+
   class globalLabels { // Labels which EVERY MD SIMULATION must have defined
     public:
       globalLabels();
@@ -145,6 +158,7 @@ namespace Uintah {
       nonbondedLabels*       nonbonded;
       electrostaticLabels*   electrostatic;
       valenceLabels*         valence;
+      SPME_dependencies*     SPME_dep;
   };
 
   /**

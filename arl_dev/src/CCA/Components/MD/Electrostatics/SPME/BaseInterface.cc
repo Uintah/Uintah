@@ -105,7 +105,7 @@ void SPME::initialize(const ProcessorGroup*   pg,
                       const SimulationStateP* simState,
                       MDSystem*               systemInfo,
                       const MDLabel*          label,
-                      coordinateSystem*       coordSys) {
+                      CoordinateSystem*       coordSys) {
   // SPME::initialize is called from MD::initialize
 
   // Initialization of reductions
@@ -246,7 +246,7 @@ void SPME::setup(       const ProcessorGroup*   pg,
                         const SimulationStateP*       /*simState*/,
                         MDSystem*               systemInfo,
                         const MDLabel*          label,
-                        coordinateSystem*       coordSys) {
+                        CoordinateSystem*       coordSys) {
 
   Uintah::Matrix3 inverseUnitCell = coordSys->getInverseCell();
 
@@ -322,13 +322,30 @@ void SPME::calculate(   const ProcessorGroup*   pg,
                         const MaterialSubset*   materials,
                         DataWarehouse*          parentOldDW,
                         DataWarehouse*          parentNewDW,
-                        const SimulationStateP*       simState,
+                        const SimulationStateP* simState,
                         MDSystem*               systemInfo,
                         const MDLabel*          label,
-                        coordinateSystem*       coordSys,
+                        CoordinateSystem*       coordSys,
                         SchedulerP&             subscheduler,
                         const LevelP&           level)
 {
+
+  // Generate the spline coefficients for the loop calculation.  If we
+  // incorporate the charge seperately we can reduce this step to only once
+  // regardless of whether or not we are calculating induced dipoles.
+  if (f_polarizable) {
+    generateChargeMapDipole(pg, perProcPatches, materials,
+                    parentOldDW, parentNewDW,
+                    label, coordSys);
+  }
+  else
+  {
+    generateChargeMap(pg, perProcPatches, materials,
+                      parentOldDW, parentNewDW,
+                      label, coordSys);
+  }
+
+  // Most of the calculate loop falls under the control of the subscheduler
   //  Temporarily turn off parentDW scrubbing
   DataWarehouse::ScrubMode parentOldDW_scrubmode =
                            parentOldDW->setScrubbing(DataWarehouse::ScrubNone);
@@ -412,10 +429,10 @@ void SPME::calculate(   const ProcessorGroup*   pg,
                                label,
                                subscheduler );
 
-  scheduleCalculatePostTransform(pg, individualPatches, allMaterials,
-                                 subOldDW, subNewDW,
-                                 simState, label, coordSys,
-                                 subscheduler);
+//  scheduleCalculatePostTransform(pg, individualPatches, allMaterials,
+//                                 subOldDW, subNewDW,
+//                                 simState, label, coordSys,
+//                                 subscheduler);
 
   if (f_polarizable) {
     scheduleUpdateFieldAndStress(pg, individualPatches, allMaterials,
@@ -471,6 +488,18 @@ void SPME::calculate(   const ProcessorGroup*   pg,
   parentNewDW->transferFrom(subNewDW, label->electrostatic->pMu_preReloc,
                             perProcPatches, allMaterialsUnion);
 
+  // Dipoles have converged, calculate forces
+  if (f_polarizable) {
+    calculatePostTransformDipole(pg, perProcPatches, materials,
+                                 parentOldDW, parentNewDW,
+                                 simState, label, coordSys);
+  }
+  else {
+    calculatePostTransform(pg, perProcPatches, materials,
+                           parentOldDW, parentNewDW,
+                           simState, label, coordSys);
+  }
+
 }
 
 void SPME::finalize(    const ProcessorGroup*   pg,
@@ -481,7 +510,7 @@ void SPME::finalize(    const ProcessorGroup*   pg,
                         const SimulationStateP*       simState,
                         MDSystem*               systemInfo,
                         const MDLabel*          label,
-                        coordinateSystem*       coordSys)
+                        CoordinateSystem*       coordSys)
 {
   // Do something here?
   /*

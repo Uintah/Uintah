@@ -27,7 +27,7 @@
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Components/MD/Electrostatics/Electrostatics.h>
-#include <CCA/Components/MD/CoordinateSystems/coordinateSystem.h>
+#include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
 
 namespace Uintah {
 
@@ -55,7 +55,7 @@ namespace Uintah {
        * @param system The MD system handle to pass off to the appropriate Electrostatics constructor.
        */
       static Electrostatics* create(const ProblemSpecP& ps,
-                                          coordinateSystem* coords);
+                                          CoordinateSystem* coords);
   };
 }  // End namespace Uintah
 
