@@ -29,6 +29,7 @@
 #include <iosfwd>
 
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <sci_defs/pidx_defs.h>
 
 namespace SCIRun {
   class IntVector;
@@ -39,6 +40,7 @@ namespace Uintah {
   class TypeDescription;
   class InputContext;
   class OutputContext;
+  class PIDXOutputContext;
   class Patch;
   class RefCounted;
   class VarLabel;
@@ -94,7 +96,10 @@ public:
 
   void emit(OutputContext&, const IntVector& l, const IntVector& h,
             const std::string& compressionModeHint);
-
+#if HAVE_PIDX
+  void emit(PIDXOutputContext&, const IntVector& l, const IntVector& h,
+            const std::string& compressionModeHint, double* buffer);
+#endif
   void read(InputContext&, long end, bool swapbytes, int nByteMode,
             const std::string& compressionMode);
 

@@ -46,6 +46,10 @@ ifeq ($(HAVE_TEEM),yes)
              $(SRCDIR)/radiusMaker 
 endif 
 
+#ifeq ($(HAVE_PIDX),yes)
+#  SUBDIRS += $(SRCDIR)/pidx
+#endif 
+
 # Build the uda2vis regardless as it does depend on VisIt
 # However VisIt depends on it.
 #ifeq ($(BUILD_VISIT),yes)
