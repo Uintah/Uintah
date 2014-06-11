@@ -36,6 +36,9 @@
 
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/SoleVariable.h>
+#include <Core/Grid/Variables/PerPatch.h>
 
 #include <Core/Thread/ConditionVariable.h>
 
@@ -47,8 +50,9 @@
 #include <CCA/Components/MD/MDSubcomponent.h>
 #include <CCA/Components/MD/MDSystem.h>
 #include <CCA/Components/MD/MDUtil.h>
+#include <CCA/Components/MD/MDLabel.h>
 
-#include <CCA/Components/MD/CoordinateSystems/coordinateSystem.h>
+#include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
 #include <CCA/Components/MD/Electrostatics/Electrostatics.h>
 #include <CCA/Components/MD/Electrostatics/SPME/SPMEPatch.h>
 #include <CCA/Components/MD/Electrostatics/SPME/ShiftedCardinalBSpline.h>
@@ -107,7 +111,7 @@ namespace Uintah {
                               const SimulationStateP*   simState,
                               MDSystem*                 systemInfo,
                               const MDLabel*            label,
-                              coordinateSystem*         coordSystem);
+                              CoordinateSystem*         coordSystem);
 
      /*
       * @brief Sets up the necessary internal quantities for each electrostatic
@@ -121,7 +125,7 @@ namespace Uintah {
                               const SimulationStateP*     simState,
                               MDSystem*             systemInfo,
                               const MDLabel*        label,
-                              coordinateSystem*     coordSystem);
+                              CoordinateSystem*     coordSystem);
 
      /*
       * @brief Performs the calculation of the entire charge loop.
@@ -134,7 +138,7 @@ namespace Uintah {
                               const SimulationStateP*     simState,
                               MDSystem*             systemInfo,
                               const MDLabel*        label,
-                              coordinateSystem*     coordinateSys,
+                              CoordinateSystem*     coordinateSys,
                               SchedulerP&           subscheduler,
                               const LevelP&         level);
 
@@ -149,7 +153,7 @@ namespace Uintah {
                               const SimulationStateP*     simState,
                               MDSystem*             systemInfo,
                               const MDLabel*        label,
-                              coordinateSystem*     coordinateSys);
+                              CoordinateSystem*     coordinateSys);
 
 //  Inherited from MDSubcomponent
      /*
@@ -254,10 +258,10 @@ namespace Uintah {
       void calculateBGrid(SimpleGrid<double>&   BGrid) const;
 
       void calculateCGrid(SimpleGrid<double>&   CGrid,
-                          coordinateSystem*     coordSys) const;
+                          CoordinateSystem*     coordSys) const;
 
       void calculateStressPrefactor(SimpleGrid<Matrix3>*    stressPrefactor,
-                                    coordinateSystem*       coordSys);
+                                    CoordinateSystem*       coordSys);
 
 //---->>>> Functions which serve as proxies to schedule the necessary
 //         calculations for the electrostatics subscheduler.
@@ -271,7 +275,7 @@ namespace Uintah {
                                        DataWarehouse*         subNewDW,
                                        const SimulationStateP*      sharedState,
                                        const MDLabel*         label,
-                                       coordinateSystem*      coordSys,
+                                       CoordinateSystem*      coordSys,
                                        SchedulerP&            sched);
 
        /*
@@ -285,7 +289,7 @@ namespace Uintah {
                                           DataWarehouse*        subNewDW,
                                           const SimulationStateP*     simState,
                                           const MDLabel*        label,
-                                          coordinateSystem*     coordSystem,
+                                          CoordinateSystem*     coordSystem,
                                           SchedulerP&           sched);
        /*
         * @brief    Places the reduction of nodewide fourier space data into
@@ -356,7 +360,7 @@ namespace Uintah {
                                          DataWarehouse*         subOldDW,
                                          DataWarehouse*         subNewDW,
                                          const MDLabel*         label,
-                                         coordinateSystem*      coordSystem,
+                                         CoordinateSystem*      coordSystem,
                                          SchedulerP&            sched);
 
        /*
@@ -377,7 +381,7 @@ namespace Uintah {
                                            DataWarehouse*           subNewDW,
                                            const SimulationStateP*        simState,
                                            const MDLabel*           label,
-                                           coordinateSystem*        coordSystem,
+                                           CoordinateSystem*        coordSystem,
                                            SchedulerP&              sched);
 
 // ---->>>> Actual calculation routines; non-framework logic resides in these
@@ -391,7 +395,7 @@ namespace Uintah {
                                DataWarehouse*           subNewDW,
                                const SimulationStateP*        sharedState,
                                const MDLabel*           label,
-                               coordinateSystem*        coordSystem);
+                               CoordinateSystem*        coordSystem);
 
        /*
         * @brief    Realspace portion of Ewald calculation for induced dipolar
@@ -404,7 +408,7 @@ namespace Uintah {
                                      DataWarehouse*         subNewDW,
                                      const SimulationStateP*      sharedState,
                                      const MDLabel*         label,
-                                     coordinateSystem*      coordSystem);
+                                     CoordinateSystem*      coordSystem);
 
        /*
         * @brief    Generates the basic coefficients for mapping charge to the
@@ -416,7 +420,7 @@ namespace Uintah {
                               DataWarehouse*         subOldDW,
                               DataWarehouse*         subNewDW,
                               const MDLabel*         label,
-                              coordinateSystem*      coordSystem);
+                              CoordinateSystem*      coordSystem);
 
        /*
          * @brief    Generates the basic coefficients for mapping charge +
@@ -428,7 +432,7 @@ namespace Uintah {
                                      DataWarehouse*         old_dw,
                                      DataWarehouse*         new_dw,
                                      const MDLabel*         label,
-                                     coordinateSystem*      coordSystem);
+                                     CoordinateSystem*      coordSystem);
         /*
          * @brief   Performs calculations necessary to fill the fourier charge
          *          grid.
@@ -440,7 +444,7 @@ namespace Uintah {
                                   DataWarehouse*            newDW,
                                   const SimulationStateP*         simState,
                                   const MDLabel*            label,
-                                  coordinateSystem*         coordSys);
+                                  CoordinateSystem*         coordSys);
 
        /*
         * @brief    Performs calculations necessary to fill the fourier charge
@@ -453,7 +457,7 @@ namespace Uintah {
                                         DataWarehouse*          newDW,
                                         const SimulationStateP*       simState,
                                         const MDLabel*          label,
-                                        coordinateSystem*       coordSys);
+                                        CoordinateSystem*       coordSys);
 
        /*
         * @brief    Maps the particle charge value onto the K-space grid
@@ -462,7 +466,7 @@ namespace Uintah {
                             const spmeMapVector*    gridMap,
                             ParticleSubset*         atomSet,
                             double                  charge,
-                            coordinateSystem*       coordSys);
+                            CoordinateSystem*       coordSys);
 
        /*
         * @brief    Maps the particle charge/dipole value onto the K-space grid
@@ -472,7 +476,7 @@ namespace Uintah {
                                   ParticleSubset*                   pset,
                                   double                            charge,
                                   constParticleVariable<Vector>&    p_Dipole,
-                                  coordinateSystem*                 coordSys);
+                                  CoordinateSystem*                 coordSys);
 
        void calculateInFourierSpace(const ProcessorGroup*   pg,
                                     const PatchSubset*      patches,
@@ -499,7 +503,7 @@ namespace Uintah {
                              ParticleSubset*            atomSet,
                              const double               charge,
                              ParticleVariable<Vector>&  pForceRecip,
-                             coordinateSystem*          coordSys);
+                             CoordinateSystem*          coordSys);
 
        /*
         * @brief    Determine the force of the induced dipole system
@@ -510,7 +514,7 @@ namespace Uintah {
                                    const double                     charge,
                                    const ParticleVariable<Vector>&  pDipole,
                                    ParticleVariable<Vector>&        pForceRecip,
-                                   coordinateSystem*                coordSystem);
+                                   CoordinateSystem*                coordSystem);
 
        /*
         * @brief    Set up force calculations after real->fourier transform
@@ -522,7 +526,7 @@ namespace Uintah {
                                          DataWarehouse*         newDW,
                                          const SimulationStateP*      simState,
                                          const MDLabel*         label,
-                                         coordinateSystem*      coordSystem);
+                                         CoordinateSystem*      coordSystem);
 
        /*
         * @brief    Calculate forces for the non-dipolar system
@@ -534,7 +538,7 @@ namespace Uintah {
                                    DataWarehouse*           newDW,
                                    const SimulationStateP*        simState,
                                    const MDLabel*           label,
-                                   coordinateSystem*        coordSystem);
+                                   CoordinateSystem*        coordSystem);
 
        /*
         * @brief    Calculates the updated field for the induced polarizable
@@ -547,7 +551,7 @@ namespace Uintah {
                                        DataWarehouse*           oldDW,
                                        DataWarehouse*           newDW,
                                        const MDLabel*           label,
-                                       coordinateSystem*        coordSystem);
+                                       CoordinateSystem*        coordSystem);
 
        /*
         * @brief    On-processor reduction of the local, per-thread instances
@@ -557,7 +561,8 @@ namespace Uintah {
                              const PatchSubset*     patches,
                              const MaterialSubset*  materials,
                              DataWarehouse*         oldDW,
-                             DataWarehouse*         newDW);
+                             DataWarehouse*         newDW,
+                             const MDLabel*         label);
 
        /*
         * @brief    Places the transformed Q data back into the local,
@@ -567,19 +572,22 @@ namespace Uintah {
                                  const PatchSubset*     patches,
                                  const MaterialSubset*  materials,
                                  DataWarehouse*         oldDW,
-                                 DataWarehouse*         newDW);
+                                 DataWarehouse*         newDW,
+                                 const MDLabel*         label);
 
        void transformRealToFourier(const ProcessorGroup*    pg,
                                    const PatchSubset*       patches,
                                    const MaterialSubset*    materials,
                                    DataWarehouse*           oldDW,
-                                   DataWarehouse*           newDW);
+                                   DataWarehouse*           newDW,
+                                   const MDLabel*           label);
 
        void transformFourierToReal(const ProcessorGroup*    pg,
                                    const PatchSubset*       patches,
                                    const MaterialSubset*    materials,
                                    DataWarehouse*           oldDW,
-                                   DataWarehouse*           newDW);
+                                   DataWarehouse*           newDW,
+                                   const MDLabel*           label);
 
 
        bool checkConvergence() const;

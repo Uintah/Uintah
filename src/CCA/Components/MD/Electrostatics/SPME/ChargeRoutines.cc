@@ -45,7 +45,7 @@ void SPME::calculateRealspace(const ProcessorGroup*     pg,
                               DataWarehouse*            subNewDW,
                               const SimulationStateP*   simState,
                               const MDLabel*            label,
-                              coordinateSystem*         coordSys)
+                              CoordinateSystem*         coordSys)
 {
   size_t numPatches = patches->size();
   size_t numMaterials = materials->size();
@@ -159,7 +159,7 @@ void SPME::generateChargeMap(const ProcessorGroup*    pg,
                              DataWarehouse*           oldDW,
                              DataWarehouse*           newDW,
                              const MDLabel*           label,
-                             coordinateSystem*        coordSys)
+                             CoordinateSystem*        coordSys)
 {
     size_t          numPatches          =   patches->size();
     size_t          numMaterials        =   materials->size();
@@ -289,7 +289,7 @@ void SPME::calculatePreTransform(const ProcessorGroup*  pg,
                                  DataWarehouse*         newDW,
                                  const SimulationStateP*      simState,
                                  const MDLabel*         label,
-                                 coordinateSystem*      coordSys)
+                                 CoordinateSystem*      coordSys)
 {
 
   size_t numPatches   = patches->size();
@@ -320,8 +320,15 @@ void SPME::calculatePreTransform(const ProcessorGroup*  pg,
                               atomSet,
                               atomCharge,
                               coordSys);
-
       } // end Atom Type Loop
+
+      // Dummy variable for maintaining graph layout.
+      PerPatch<int> preTransformDep;
+      newDW->put(preTransformDep,
+                 label->SPME_dep->dPreTransform,
+                 -1,
+                 patch);
+
   } // end Patch Loop
 
   // TODO keep an eye on this to make sure it works like we think it should
@@ -338,7 +345,7 @@ void SPME::mapChargeToGrid(SPMEPatch*           spmePatch,
                            const spmeMapVector* gridMap,
                            ParticleSubset*      atomSet,
                            double               charge,
-                           coordinateSystem*    coordSystem) {
+                           CoordinateSystem*    coordSystem) {
   // grab local Q grid
   SimpleGrid<dblcomplex>* Q_patchLocal = spmePatch->getQ();
   IntVector patchOffset = spmePatch->getGlobalOffset();
@@ -387,9 +394,9 @@ void SPME::calculatePostTransform(const ProcessorGroup*   pg,
                                         const MaterialSubset*   materials,
                                         DataWarehouse*          oldDW,
                                         DataWarehouse*          newDW,
-                                        const SimulationStateP*       simState,
+                                        const SimulationStateP* simState,
                                         const MDLabel*          label,
-                                        coordinateSystem*       coordSystem) {
+                                        CoordinateSystem*       coordSystem) {
   size_t numPatches     = patches->size();
   size_t numAtomTypes   = materials->size();
   for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) {
@@ -426,7 +433,7 @@ void SPME::mapForceFromGrid(const SPMEPatch*                  spmePatch,
                             ParticleSubset*                   particles,
                             double                            charge,
                             ParticleVariable<Vector>&         pForceRecip,
-                            coordinateSystem*                 coordSystem) {
+                            CoordinateSystem*                 coordSystem) {
 
   SimpleGrid<dblcomplex>*   Q_patchLocal = spmePatch->getQ();
   IntVector                 patchOffset  = spmePatch->getGlobalOffset();

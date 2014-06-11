@@ -47,7 +47,7 @@ using namespace Uintah;
 static DebugStream nbFactory("nonbondedFactory", false);
 
 Nonbonded* NonbondedFactory::create(const ProblemSpecP& ps,
-                                           coordinateSystem* coords,
+                                           CoordinateSystem* coords,
                                            MDLabel* label,
                                            forcefieldInteractionClass ffType,
                                            interactionModel imType) {

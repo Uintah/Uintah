@@ -53,7 +53,7 @@
 #include <CCA/Components/MD/Electrostatics/SPME/SPME_NewHeader.h>
 #include <CCA/Components/MD/Electrostatics/SPME/ShiftedCardinalBSpline.h>
 #include <CCA/Components/MD/Electrostatics/SPME/SPMEMapPoint.h>
-#include <CCA/Components/MD/CoordinateSystems/coordinateSystem.h>
+#include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
 
 
 #ifdef DEBUG

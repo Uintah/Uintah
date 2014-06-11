@@ -135,7 +135,7 @@ void SPME::calculateBGrid(SimpleGrid<double>&   BGrid) const
 }
 
 void SPME::calculateCGrid(SimpleGrid<double>& CGrid,
-                          coordinateSystem*   coordSys) const
+                          CoordinateSystem*   coordSys) const
 {
   IntVector gridExtent  = CGrid.getExtents();
   IntVector gridOffset  = CGrid.getOffset();
@@ -190,7 +190,7 @@ void SPME::calculateCGrid(SimpleGrid<double>& CGrid,
 }
 
 void SPME::calculateStressPrefactor(SimpleGrid<Matrix3>*    stressPrefactor,
-                                    coordinateSystem*       coordSys)
+                                    CoordinateSystem*       coordSys)
 {
   IntVector gridExtent    =   stressPrefactor->getExtents();
   IntVector gridOffset    =   stressPrefactor->getOffset();
@@ -276,8 +276,9 @@ void SPME::calculateStressPrefactor(SimpleGrid<Matrix3>*    stressPrefactor,
 void SPME::reduceNodeLocalQ(const ProcessorGroup*   pg,
                             const PatchSubset*      patches,
                             const MaterialSubset*   materials,
-                            DataWarehouse*          old_dw,
-                            DataWarehouse*          new_dw)
+                            DataWarehouse*          oldDW,
+                            DataWarehouse*          newDW,
+                            const MDLabel*          label)
 {
   size_t numPatches = patches->size();
 
@@ -285,7 +286,10 @@ void SPME::reduceNodeLocalQ(const ProcessorGroup*   pg,
 
     const Patch* patch = patches->get(p);
     // Extract current spmePatch
-    SPMEPatch* currentSPMEPatch = d_spmePatchMap.find(patch->getID())->second;
+
+    const int patchID = patch->getID();
+
+    SPMEPatch* currentSPMEPatch = d_spmePatchMap.find(patchID)->second;
 
     SimpleGrid<dblcomplex>* Q_patchLocal = currentSPMEPatch->getQ();
 
@@ -341,18 +345,27 @@ void SPME::reduceNodeLocalQ(const ProcessorGroup*   pg,
           (*d_Q_nodeLocal)(x_global,y_global,z_global)
                    += (*Q_patchLocal)(x_local,y_local,z_local);
 
-        }
-      }
-    }
+        } // xmask
+      } // ymask
+    } // zmask
     d_Qlock.unlock();
-  }
+    // Set dummy variables for taskgraph dependence
+    // FIXME:  This won't work, can't put a PerPatch variable
+    PerPatch<int> reduceQDummy;
+    newDW->put(reduceQDummy,
+               label->SPME_dep->dReduceNodeLocalQ,
+               -1,
+               patch);
+
+
+  } // Patch
 }
 
 //void SPME::copyToNodeLocalQ(const ProcessorGroup* pg,
 //                             const PatchSubset* patches,
 //                             const MaterialSubset* materials,
-//                             DataWarehouse* old_dw,
-//                             DataWarehouse* new_dw)
+//                             DataWarehouse* oldDW,
+//                             DataWarehouse* newDW)
 //{
 //  size_t numPatches = patches->size();
 //
@@ -397,11 +410,12 @@ void SPME::reduceNodeLocalQ(const ProcessorGroup*   pg,
 //  }
 //}
 
-void SPME::distributeNodeLocalQ(const ProcessorGroup* pg,
-                                const PatchSubset* patches,
-                                const MaterialSubset* materials,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw)
+void SPME::distributeNodeLocalQ(const ProcessorGroup*   pg,
+                                const PatchSubset*      patches,
+                                const MaterialSubset*   materials,
+                                DataWarehouse*          oldDW,
+                                DataWarehouse*          newDW,
+                                const MDLabel*          label)
 {
   size_t numPatches = patches->size();
 
@@ -456,18 +470,24 @@ void SPME::distributeNodeLocalQ(const ProcessorGroup* pg,
           // for reduction across MPI threads
           (*Q_patchLocal)(x_local,y_local,z_local) =
               (*d_Q_nodeLocal)(x_global,y_global,z_global);
-        }
-      }
-    }
-  }
+        } // zmask
+      } // ymask
+    } // xmask
+    PerPatch<int> distributeQDummy;
+    newDW->put(distributeQDummy,
+               label->SPME_dep->dDistributeNodeLocalQ,
+               -1,
+               patch);
+  } // patch loop
 }
 
 // Fourier transform related routines
 void SPME::transformRealToFourier(const ProcessorGroup* pg,
-                                  const PatchSubset* patches,
+                                  const PatchSubset*    patches,
                                   const MaterialSubset* materials,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw)
+                                  DataWarehouse*        oldDW,
+                                  DataWarehouse*        newDW,
+                                  const MDLabel*        label)
 {
   // Do the homebrew MPI_Allreduce on our local Q-grid before we do the
   // forward FFT
@@ -506,6 +526,9 @@ void SPME::transformRealToFourier(const ProcessorGroup* pg,
   std::memcpy(nodeLocalData,                        //Copy to here
               localChunk,                           //Copy from here
               chunkSize);                           //Copy this much
+
+  SoleVariable<int> xformRtoF;
+  newDW->put(xformRtoF, label->SPME_dep->dTransformRealToFourier);
 }
 
 void SPME::calculateInFourierSpace(const ProcessorGroup*    pg,
@@ -515,6 +538,11 @@ void SPME::calculateInFourierSpace(const ProcessorGroup*    pg,
                                    DataWarehouse*           newDW,
                                    const MDLabel*           label)
 {
+  // TODO:  Determine if we actually need to do this to satisfy the dependency
+  //        requirement.
+  SoleVariable<int> xformRtoF;
+  newDW->get(xformRtoF, label->SPME_dep->dTransformRealToFourier);
+
   Uintah::Matrix3   spmeFourierStress(0.0);
   double    spmeFourierEnergy = 0.0;
 
@@ -588,10 +616,10 @@ void SPME::calculateInFourierSpace(const ProcessorGroup*    pg,
             spmeFourierStress += std::abs(
                 (*d_Q_nodeLocalScratch)(x_global, y_global, z_global)
                 * conj(gridValue)) * (*stressPrefactor)(kX, kY, kZ);
-          }
-        }
-      }
-    }  // end AtomType loop
+          } // kZ
+        } // kY
+      } // kX
+    }  // end atomType loop
 
 //    if (spme_dbg.active()) {
 //      coutLock.lock();
@@ -603,6 +631,13 @@ void SPME::calculateInFourierSpace(const ProcessorGroup*    pg,
 //                << "Fourier-Energy: " << spmeFourierEnergy << std::endl;
 //      coutLock.unlock();
 //    }
+    // dummies for remainder of inner subloop
+    PerPatch<int> calcInFourier;
+    newDW->put(calcInFourier,
+               label->SPME_dep->dCalculateInFourierSpace,
+               -1,
+               patch);
+
   }  // end SPME Patch loop
 
   // put updated values for reduction variables into the DW
@@ -617,7 +652,8 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
                                   const PatchSubset*    patches,
                                   const MaterialSubset* materials,
                                   DataWarehouse*        oldDW,
-                                  DataWarehouse*        newDW)
+                                  DataWarehouse*        newDW,
+                                  const MDLabel*        label)
 {
   // Do the homebrew MPI_Allreduce on our local Q-scratch-grid before we do the
   // reverse FFT
@@ -643,6 +679,9 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
   std::memcpy(localChunk, nodeLocalData, numElements * sizeof(dblcomplex));
   fftw_execute(d_backwardPlan);
   std::memcpy(nodeLocalData, localChunk, numElements * sizeof(dblcomplex));
+
+  SoleVariable<int> xformFtoR;
+  newDW->put(xformFtoR, label->SPME_dep->dTransformFourierToReal);
 }
 
 

@@ -41,7 +41,7 @@
 #include <CCA/Components/MD/Electrostatics/Electrostatics.h>
 #include <CCA/Components/MD/Electrostatics/SPME/ShiftedCardinalBSpline.h>
 #include <CCA/Components/MD/Electrostatics/SPME/SPMEPatch.h>
-#include <CCA/Components/MD/CoordinateSystems/coordinateSystem.h>
+#include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
 
 
 namespace OldSPME {

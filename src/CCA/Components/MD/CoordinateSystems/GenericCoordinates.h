@@ -23,7 +23,7 @@
  * IN THE SOFTWARE.
  *
  * ----------------------------------------------------------
- * genericCoordinates.h
+ * GenericCoordinates.h
  *
  *  Created on: May 12, 2014
  *      Author: jbhooper
@@ -32,23 +32,23 @@
 #ifndef GENERICCOORDINATES_H_
 #define GENERICCOORDINATES_H_
 
-#include <CCA/Components/MD/CoordinateSystems/coordinateSystem.h>
+#include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
 
 #include <Core/Exceptions/InternalError.h>
 
 namespace Uintah {
-  class genericCoordinates: public coordinateSystem {
+  class GenericCoordinates: public CoordinateSystem {
     public:
-       genericCoordinates(const SCIRun::IntVector&,
+       GenericCoordinates(const SCIRun::IntVector&,
                           const SCIRun::IntVector&,
                           const Uintah::Matrix3&);
 
-       genericCoordinates(const SCIRun::IntVector&,
+       GenericCoordinates(const SCIRun::IntVector&,
                           const SCIRun::IntVector&,
                           const SCIRun::Vector&,
                           const SCIRun::Vector&);
 
-      ~genericCoordinates();
+      ~GenericCoordinates();
 
       virtual inline void toReduced(const SCIRun::Vector& _In,
                                           SCIRun::Vector& _Out) const {

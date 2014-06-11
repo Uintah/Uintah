@@ -29,14 +29,14 @@
  *      Author: jbhooper
  */
 
-#include <CCA/Components/MD/CoordinateSystems/genericCoordinates.h>
+#include <CCA/Components/MD/CoordinateSystems/GenericCoordinates.h>
 
 using namespace Uintah;
 
-genericCoordinates::genericCoordinates(const SCIRun::IntVector& _extent,
+GenericCoordinates::GenericCoordinates(const SCIRun::IntVector& _extent,
                                        const SCIRun::IntVector& _periodic,
                                        const Uintah::Matrix3& _cell)
-                                      :coordinateSystem(_extent,_periodic),
+                                      :CoordinateSystem(_extent,_periodic),
                                        d_unitCell(_cell) {
 
   isUnitCellCurrent = true;
@@ -48,11 +48,11 @@ genericCoordinates::genericCoordinates(const SCIRun::IntVector& _extent,
 
 }
 
-genericCoordinates::genericCoordinates(const SCIRun::IntVector& _extent,
+GenericCoordinates::GenericCoordinates(const SCIRun::IntVector& _extent,
                                        const SCIRun::IntVector& _periodic,
                                        const SCIRun::Vector& _lengths,
                                        const SCIRun::Vector& _angles)
-                                      :coordinateSystem(_extent, _periodic),
+                                      :CoordinateSystem(_extent, _periodic),
                                        d_basisLengths(_lengths),
                                        d_basisAngles(_angles) {
   areBasisLengthsCurrent = true;
@@ -64,12 +64,12 @@ genericCoordinates::genericCoordinates(const SCIRun::IntVector& _extent,
 
 }
 
-genericCoordinates::~genericCoordinates()
+GenericCoordinates::~GenericCoordinates()
 {
 
 }
 
-void genericCoordinates::updateUnitCell(const Uintah::Matrix3& cellIn) {
+void GenericCoordinates::updateUnitCell(const Uintah::Matrix3& cellIn) {
   d_unitCell = cellIn;
   isUnitCellCurrent = true;
   isInverseCurrent = false;
@@ -80,7 +80,7 @@ void genericCoordinates::updateUnitCell(const Uintah::Matrix3& cellIn) {
 
 }
 
-void genericCoordinates::updateUnitCell(const SCIRun::Vector& lengths,
+void GenericCoordinates::updateUnitCell(const SCIRun::Vector& lengths,
                                         const SCIRun::Vector& angles) {
   d_basisLengths = lengths;
   d_basisAngles = angles;
@@ -92,7 +92,7 @@ void genericCoordinates::updateUnitCell(const SCIRun::Vector& lengths,
   markCellChanged();
 }
 
-void genericCoordinates::minimumImageDistance(const SCIRun::Point& P1,
+void GenericCoordinates::minimumImageDistance(const SCIRun::Point& P1,
                                               const SCIRun::Point& P2,
                                                     SCIRun::Vector& Out) const {
   SCIRun::Vector offset = (P2 - P1), temp;

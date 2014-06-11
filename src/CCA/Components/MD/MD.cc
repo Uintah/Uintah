@@ -51,7 +51,7 @@
 #include <CCA/Components/MD/MD.h>
 #include <CCA/Components/MD/MDSystem.h>
 #include <CCA/Components/MD/Electrostatics/ElectrostaticsFactory.h>
-#include <CCA/Components/MD/CoordinateSystems/coordinateSystemFactory.h>
+#include <CCA/Components/MD/CoordinateSystems/CoordinateSystemFactory.h>
 #include <CCA/Components/MD/Electrostatics/SPME/SPME.h>
 #include <CCA/Components/MD/Forcefields/Forcefield.h>
 #include <CCA/Components/MD/Forcefields/ForcefieldFactory.h>
@@ -106,7 +106,7 @@ void MD::problemSetup(const ProblemSpecP& params,
   dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(d_label->global->pX);
 
   // create the coordinate system interface
-  d_coordinate = coordinateSystemFactory::create(params, shared_state, grid);
+  d_coordinate = CoordinateSystemFactory::create(params, shared_state, grid);
   d_coordinate->markCellChanged();
 
   // create and populate the MD System object
@@ -210,7 +210,7 @@ void MD::problemSetup(const ProblemSpecP& params,
 void MD::scheduleInitialize(const LevelP& level,
                             SchedulerP& sched)
 {
-  coordinateSystem* coordSys;
+  CoordinateSystem* coordSys;
   /*
    * Note there are multiple tasks scheduled here. All three need only ever happen once.
    *

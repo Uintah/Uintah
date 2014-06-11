@@ -57,7 +57,7 @@ namespace Uintah {
        * @param system The MD system handle to pass off to the appropriate Nonbonded constructor.
        */
       static Nonbonded* create(const ProblemSpecP&,
-                               coordinateSystem*,
+                               CoordinateSystem*,
                                MDLabel*,
                                forcefieldInteractionClass,
                                interactionModel);

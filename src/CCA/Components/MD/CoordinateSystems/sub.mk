@@ -29,10 +29,10 @@
 
 SRCDIR	:= CCA/Components/MD/CoordinateSystems
 
-SRCS += $(SRCDIR)/coordinateSystem.cc			\
-        $(SRCDIR)/orthorhombicCoordinates.cc	\
-        $(SRCDIR)/genericCoordinates.cc			\
-		$(SRCDIR)/coordinateSystemFactory.cc
+SRCS += $(SRCDIR)/CoordinateSystem.cc			\
+        $(SRCDIR)/OrthorhombicCoordinates.cc	\
+        $(SRCDIR)/GenericCoordinates.cc			\
+		$(SRCDIR)/CoordinateSystemFactory.cc
         
 PSELIBS :=
 

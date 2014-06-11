@@ -32,7 +32,7 @@
 
 #include <CCA/Components/MD/MDSystem.h>
 
-#include <CCA/Components/MD/CoordinateSystems/coordinateSystem.h>
+#include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
 
 namespace Uintah {
 
@@ -74,7 +74,7 @@ namespace Uintah {
                               SimulationStateP&     simState,
                               MDSystem*             systemInfo,
                               const MDLabel*        label,
-                              coordinateSystem*     coordSys) = 0;
+                              CoordinateSystem*     coordSys) = 0;
 
       /**
        * @brief
@@ -88,7 +88,7 @@ namespace Uintah {
                          SimulationStateP&          simState,
                          MDSystem*                  systemInfo,
                          const MDLabel*             label,
-                         coordinateSystem*          coordSys) = 0;
+                         CoordinateSystem*          coordSys) = 0;
 
       /**
        * @brief
@@ -102,7 +102,7 @@ namespace Uintah {
                              SimulationStateP&      simState,
                              MDSystem*              systemInfo,
                              const MDLabel*         label,
-                             coordinateSystem*      coordSys) = 0;
+                             CoordinateSystem*      coordSys) = 0;
 
       /**
        * @brief
@@ -116,7 +116,7 @@ namespace Uintah {
                             SimulationStateP&       simState,
                             MDSystem*               systemInfo,
                             const MDLabel*          label,
-                            coordinateSystem*       coordSys) = 0;
+                            CoordinateSystem*       coordSys) = 0;
 
       /**
        * @brief

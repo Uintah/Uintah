@@ -24,12 +24,14 @@
 
 #include <CCA/Components/MD/MDLabel.h>
 #include <CCA/Components/MD/SimpleGrid.h>
+
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/VarTypes.h>
+
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/SoleVariable.h>
-#include <Core/Grid/Variables/NCVariable.h>
-#include <Core/Grid/Variables/VarLabel.h>
-#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Grid/Variables/PerPatch.h>
 
 #include <sci_defs/fftw_defs.h>
 
@@ -181,12 +183,43 @@ valenceLabels::~valenceLabels() { // destroy variable labels used in valence cal
 
 }
 
+SPME_dependencies::SPME_dependencies() {
+  // Create the dependency labels for the SPME subscheduler
+  // Note variable types:
+
+  // We have material types here, but don't need them so this will slightly
+  // decrease memory access
+  dPreTransform             =   VarLabel::create("dep_SPME_preXForm", PerPatch<int>::getTypeDescription());
+
+  // These routines have no material, so must be a PerPatch variable
+  dReduceNodeLocalQ         =   VarLabel::create("dep_SPME_redQ", PerPatch<int>::getTypeDescription());
+  dCalculateInFourierSpace  =   VarLabel::create("dep_SPME_calcInv", PerPatch<int>::getTypeDescription());
+  dDistributeNodeLocalQ     =   VarLabel::create("dep_SPME_distQ", PerPatch<int>::getTypeDescription());
+
+  // Transforms do not even have a patch basis to bind to, and occur once per
+  // PROCESSOR, so use SoleVariables
+  dTransformRealToFourier   =   VarLabel::create("dep_SPME_XFormRtoF", SoleVariable<int>::getTypeDescription());
+  dTransformFourierToReal   =   VarLabel::create("dep_SPME_XFormFtoR", SoleVariable<int>::getTypeDescription());
+
+
+}
+
+SPME_dependencies::~SPME_dependencies() {
+    VarLabel::destroy(dPreTransform);
+    VarLabel::destroy(dReduceNodeLocalQ);
+    VarLabel::destroy(dTransformRealToFourier);
+    VarLabel::destroy(dCalculateInFourierSpace);
+    VarLabel::destroy(dTransformFourierToReal);
+    VarLabel::destroy(dDistributeNodeLocalQ);
+}
+
 MDLabel::MDLabel() {
 
   global        = scinew globalLabels();
   nonbonded     = scinew nonbondedLabels();
   electrostatic = scinew electrostaticLabels();
   valence       = scinew valenceLabels();
+  SPME_dep      = scinew SPME_dependencies();
 }
 
 MDLabel::~MDLabel() {

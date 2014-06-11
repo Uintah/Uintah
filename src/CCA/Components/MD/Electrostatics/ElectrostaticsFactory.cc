@@ -25,7 +25,7 @@
 #include <CCA/Components/MD/Electrostatics/ElectrostaticsFactory.h>
 #include <CCA/Components/MD/Electrostatics/Electrostatics.h>
 #include <CCA/Components/MD/Electrostatics/DefinedElectrostaticsTypes.h>
-#include <CCA/Components/MD/CoordinateSystems/coordinateSystem.h>
+#include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
 
 #include <CCA/Components/MD/MDSystem.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -42,7 +42,7 @@ using namespace Uintah;
 static DebugStream spme("SPME", false);
 
 Electrostatics* ElectrostaticsFactory::create(const ProblemSpecP& ps,
-                                                    coordinateSystem* coords)
+                                                    CoordinateSystem* coords)
 {
   Electrostatics* electrostatics = 0;
   string type = "";

@@ -36,7 +36,7 @@
 #include <CCA/Components/MD/Electrostatics/Electrostatics.h>
 #include <CCA/Components/MD/Forcefields/Forcefield.h>
 #include <CCA/Components/MD/Integrators/Integrator.h>
-#include <CCA/Components/MD/CoordinateSystems/coordinateSystem.h>
+#include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
 
 #include <vector>
 
@@ -416,7 +416,7 @@ namespace Uintah {
 
       Forcefield*       d_forcefield;       //!< Currently employed MD forcefield
       MDSystem*         d_system;           //!< The global MD system
-      coordinateSystem* d_coordinate;       //!< Interface to abstract coordinte system
+      CoordinateSystem* d_coordinate;       //!< Interface to abstract coordinte system
 
 
       //  Does this need to exist here?  Can it be stuffed in the electrostatics object?

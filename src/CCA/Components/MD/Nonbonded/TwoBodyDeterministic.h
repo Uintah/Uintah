@@ -35,7 +35,7 @@ namespace Uintah {
                         SimulationStateP&           simState,
                         MDSystem*                   systemInfo,
                         const MDLabel*              label,
-                        coordinateSystem*           coordSys);
+                        CoordinateSystem*           coordSys);
 
       void setup(       const ProcessorGroup*       pg,
                         const PatchSubset*          patches,
@@ -45,7 +45,7 @@ namespace Uintah {
                         SimulationStateP&           simState,
                         MDSystem*                   systemInfo,
                         const MDLabel*              label,
-                        coordinateSystem*           coordSys);
+                        CoordinateSystem*           coordSys);
 
       void calculate(   const ProcessorGroup*       pg,
                         const PatchSubset*          patches,
@@ -55,7 +55,7 @@ namespace Uintah {
                         SimulationStateP&           simState,
                         MDSystem*                   systemInfo,
                         const MDLabel*              label,
-                        coordinateSystem*           coordSys);
+                        CoordinateSystem*           coordSys);
 
 
       void finalize(    const ProcessorGroup*       pg,
@@ -66,7 +66,7 @@ namespace Uintah {
                         SimulationStateP&           simState,
                         MDSystem*                   systemInfo,
                         const MDLabel*              label,
-                        coordinateSystem*           coordSys);
+                        CoordinateSystem*           coordSys);
 
       inline std::string getNonbondedType() const {
         return nonbondedType;

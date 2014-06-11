@@ -29,13 +29,13 @@
  *      Author: jbhooper
  */
 
-#include <CCA/Components/MD/CoordinateSystems/coordinateSystem.h>
+#include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
 
 using namespace Uintah;
 
-const double coordinateSystem::PI_Over_2 = acos(-1.0);
+const double CoordinateSystem::PI_Over_2 = acos(-1.0);
 
-coordinateSystem::coordinateSystem(const SCIRun::IntVector& _extent,
+CoordinateSystem::CoordinateSystem(const SCIRun::IntVector& _extent,
                                    const SCIRun::IntVector& _periodic)
                                   :d_totalCellExtent(_extent),
                                    d_periodic(_periodic) {

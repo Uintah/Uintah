@@ -39,16 +39,16 @@
 
 #include <CCA/Components/MD/MDUtil.h>
 
-#include <CCA/Components/MD/CoordinateSystems/coordinateSystemFactory.h>
-#include <CCA/Components/MD/CoordinateSystems/orthorhombicCoordinates.h>
-#include <CCA/Components/MD/CoordinateSystems/genericCoordinates.h>
+#include <CCA/Components/MD/CoordinateSystems/CoordinateSystemFactory.h>
+#include <CCA/Components/MD/CoordinateSystems/OrthorhombicCoordinates.h>
+#include <CCA/Components/MD/CoordinateSystems/GenericCoordinates.h>
 
 using namespace Uintah;
 
-coordinateSystem* coordinateSystemFactory::create(const ProblemSpecP&     ps,
+CoordinateSystem* CoordinateSystemFactory::create(const ProblemSpecP&     ps,
                                                  const SimulationStateP& shared_state,
                                                  const GridP&            grid) {
-  coordinateSystem* coordinates = 0;
+  CoordinateSystem* coordinates = 0;
 
   ProblemSpecP unitcell_ps = ps->findBlock("MD")->findBlock("System")->findBlock("unitCell");
   if (!unitcell_ps) {
@@ -76,7 +76,7 @@ coordinateSystem* coordinateSystemFactory::create(const ProblemSpecP&     ps,
     SCIRun::Vector length(boxLength);
     SCIRun::Vector angles(MDConstants::orthogonalAngle);
     orthorhombic = true;
-    coordinates = scinew orthorhombicCoordinates(gridExtent, periodicVector, length, angles);
+    coordinates = scinew OrthorhombicCoordinates(gridExtent, periodicVector, length, angles);
   }
   else if ("Length-Angle" == unitCellType) {
     // Unit cell is entered as a vector of three basis vector lengths and a vector of three angles between basis vectors
@@ -86,10 +86,10 @@ coordinateSystem* coordinateSystemFactory::create(const ProblemSpecP&     ps,
     SCIRun::Vector angleOrthoDeviation = angles*MDConstants::degToRad - SCIRun::Vector(MDConstants::orthogonalAngle);
     if ( angleOrthoDeviation.maxComponent() < MDConstants::zeroTol) {
       orthorhombic = true;
-      coordinates = scinew orthorhombicCoordinates(gridExtent, periodicVector, lengths, angles);
+      coordinates = scinew OrthorhombicCoordinates(gridExtent, periodicVector, lengths, angles);
     }
     else { // Not orthorhombic
-      coordinates = scinew genericCoordinates(gridExtent, periodicVector, lengths, angles);
+      coordinates = scinew GenericCoordinates(gridExtent, periodicVector, lengths, angles);
     }
   }
   else if ("basisVectors" == unitCellType) { // Explicit vasis vectors

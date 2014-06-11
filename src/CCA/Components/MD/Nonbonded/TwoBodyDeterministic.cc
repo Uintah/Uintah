@@ -9,7 +9,7 @@
 #include <CCA/Components/MD/MDSystem.h>
 #include <CCA/Components/MD/Nonbonded/TwoBodyDeterministic.h>
 #include <CCA/Components/MD/Forcefields/TwoBodyForceField.h>
-#include <CCA/Components/MD/CoordinateSystems/coordinateSystem.h>
+#include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
 
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/LevelP.h>
@@ -56,7 +56,7 @@ void TwoBodyDeterministic::initialize(const ProcessorGroup*     pg,
                                       SimulationStateP&         simState,
                                       MDSystem*                 systemInfo,
                                       const MDLabel*            label,
-                                      coordinateSystem*         coordSys) {
+                                      CoordinateSystem*         coordSys) {
 
   // global sum reduction of nonbonded energy
   newDW->put(sum_vartype(0.0), label->nonbonded->rNonbondedEnergy);
@@ -90,7 +90,7 @@ void TwoBodyDeterministic::setup(const ProcessorGroup*  pg,
                                  SimulationStateP&      simState,
                                  MDSystem*              systemInfo,
                                  const MDLabel*         label,
-                                 coordinateSystem*      coordSys) {
+                                 CoordinateSystem*      coordSys) {
 
 }
 
@@ -119,7 +119,7 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
                                      SimulationStateP&      simState,
                                      MDSystem*              systemInfo,
                                      const MDLabel*         label,
-                                     coordinateSystem*      coordSys)
+                                     CoordinateSystem*      coordSys)
 {
 
   double cutoff2 = d_nonbondedRadius * d_nonbondedRadius;
@@ -245,7 +245,7 @@ void TwoBodyDeterministic::finalize(const ProcessorGroup*   pg,
                                     SimulationStateP&       simState,
                                     MDSystem*               systemInfo,
                                     const MDLabel*          label,
-                                    coordinateSystem*       coordSys) {
+                                    CoordinateSystem*       coordSys) {
   // Nothing to put here now
 }
 
