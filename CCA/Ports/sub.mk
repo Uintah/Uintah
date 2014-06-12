@@ -41,7 +41,11 @@ SRCS += $(SRCDIR)/SimulationInterface.cc \
 	$(SRCDIR)/Regridder.cc \
 	$(SRCDIR)/Scheduler.cc \
 	$(SRCDIR)/SwitchingCriteria.cc \
-	$(SRCDIR)/SFC.cc
+	$(SRCDIR)/SFC.cc 
+
+ifeq ($(HAVE_PIDX),yes)
+	SRCS += $(SRCDIR)/PIDXOutputContext.cc 
+endif
 
 PSELIBS := \
 	Core/Parallel    \
