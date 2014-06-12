@@ -37,7 +37,7 @@ SRCS += $(SRCDIR)/SimulationInterface.cc \
 	$(SRCDIR)/ModelInterface.cc \
 	$(SRCDIR)/ModelMaker.cc \
 	$(SRCDIR)/Output.cc \
-	$(SRCDIR)/PIDXOutputContext.cc \
+#	$(SRCDIR)/PIDXOutputContext.cc \
 	$(SRCDIR)/ProblemSpecInterface.cc \
 	$(SRCDIR)/Regridder.cc \
 	$(SRCDIR)/Scheduler.cc \
