@@ -180,7 +180,7 @@ evaluate()
   // a viscosity interpolant is needed. If problems arise due to this extrapolation,
   // you should consider performing an MPI communication on the turbulent viscosity
   // (i.e. cleave the turbulent viscosity from its parents). This can be done
-  // in Transport/MomentumTransportEquation.cc
+  // in transport/MomentumTransportEquation.cc
   // Based on data that I collected, an MPI communication costs about twice as
   // much as the extrapolation in terms of speedup.
   // You may also need to skip extrapolation at physical boundaries. This is the
