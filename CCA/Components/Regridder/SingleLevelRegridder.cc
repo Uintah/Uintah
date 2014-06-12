@@ -53,6 +53,23 @@ void SingleLevelRegridder::problemSetup(const ProblemSpecP& params,
 
   RegridderCommon::problemSetup(params, oldGrid, state);
   d_sharedState  = state;
+  d_maxLevels = oldGrid->numLevels();
+  
+  // Compute the refinement ratio (RR).  The regridder's
+  // definition of RR differs from the value set in Level.cc
+  // Note that Level::d_refinementRatio(0) == 1,1,1 is always the case
+  
+  d_cellRefinementRatio.resize(d_maxLevels);
+  d_cellRefinementRatio[0] = IntVector(1,1,1);  
+  
+  for(int l=0; l<d_maxLevels-1; l++){
+
+    Vector dx_cur_level   = oldGrid->getLevel(l)->dCell();
+    Vector dx_next_level  = oldGrid->getLevel(l+1)->dCell();
+    Vector r = (dx_cur_level / dx_next_level ) + Vector(1e-6, 1e-6, 1e-6);
+    d_cellRefinementRatio[l] = IntVector((int)r.x(), (int)r.y(), (int)r.z());
+  }
+  
   
   ProblemSpecP amr_spec = params->findBlock("AMR");
   ProblemSpecP regrid_spec = amr_spec->findBlock("Regridder");
