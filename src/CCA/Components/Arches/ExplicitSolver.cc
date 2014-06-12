@@ -80,8 +80,8 @@
 
 #  include <CCA/Components/Wasatch/Wasatch.h>
 #  include <CCA/Components/Wasatch/FieldTypes.h>
-#  include <CCA/Components/Wasatch/Transport/TransportEquation.h>
-#  include <CCA/Components/Wasatch/Transport/ParseEquation.h>
+#  include <CCA/Components/Wasatch/transport/TransportEquation.h>
+#  include <CCA/Components/Wasatch/transport/ParseEquation.h>
 #  include <CCA/Components/Wasatch/GraphHelperTools.h>
 #  include <CCA/Components/Wasatch/TaskInterface.h>
 #  include <CCA/Components/Wasatch/TagNames.h>
