@@ -26,7 +26,7 @@
 #define Wasatch_ScalarTransportEquation_h
 
 //-- ExprLib includes --//
-#include <CCA/Components/Wasatch/Transport/TransportEquation.h>
+#include <CCA/Components/Wasatch/transport/TransportEquation.h>
 
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/FieldTypes.h>

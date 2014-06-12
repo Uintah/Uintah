@@ -30,7 +30,7 @@
 
 
 
-#include <CCA/Components/Wasatch/Transport/TransportEquation.h>
+#include <CCA/Components/Wasatch/transport/TransportEquation.h>
 #include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h>
 
 namespace Wasatch{
