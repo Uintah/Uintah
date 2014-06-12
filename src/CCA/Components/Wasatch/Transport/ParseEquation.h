@@ -31,7 +31,7 @@
 
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/GraphHelperTools.h>
-#include <CCA/Components/Wasatch/Transport//TransportEquation.h>
+#include <CCA/Components/Wasatch/Transport/TransportEquation.h>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
 #include <CCA/Components/Wasatch/VardenParameters.h>
