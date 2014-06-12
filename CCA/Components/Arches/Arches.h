@@ -94,7 +94,7 @@ WARNING
 
 
 # ifdef WASATCH_IN_ARCHES
-  #include <CCA/Components/Wasatch/Transport/MomentumTransportEquation.h>
+  #include <CCA/Components/Wasatch/transport/MomentumTransportEquation.h>
   namespace Wasatch{
     class Wasatch;
   }
