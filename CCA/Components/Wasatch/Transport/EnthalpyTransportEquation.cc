@@ -27,7 +27,7 @@
  * IN THE SOFTWARE.
  *
  */
-#include <CCA/Components/Wasatch/Transport//EnthalpyTransportEquation.h>
+#include <CCA/Components/Wasatch/Transport/EnthalpyTransportEquation.h>
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/TagNames.h>
