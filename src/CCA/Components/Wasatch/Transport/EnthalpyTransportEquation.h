@@ -30,7 +30,7 @@
 #ifndef ENTHALPYTRANSPORTEQUATION_H_
 #define ENTHALPYTRANSPORTEQUATION_H_
 
-#include <CCA/Components/Wasatch/Transport/ScalarTransportEquation.h>
+#include <CCA/Components/Wasatch/transport/ScalarTransportEquation.h>
 
 namespace Wasatch {
 

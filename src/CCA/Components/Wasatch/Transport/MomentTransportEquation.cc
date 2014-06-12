@@ -23,7 +23,7 @@
  */
 
 //-- Wasatch includes --//
-#include <CCA/Components/Wasatch/Transport/MomentTransportEquation.h>
+#include <CCA/Components/Wasatch/transport/MomentTransportEquation.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/Expressions/DiffusiveVelocity.h>
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
@@ -44,8 +44,8 @@
 #include <CCA/Components/Wasatch/Expressions/PBE/QuadratureClosure.h>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 
-#include <CCA/Components/Wasatch/Transport/ScalarTransportEquation.h>
-#include <CCA/Components/Wasatch/Transport/ParseEquation.h>
+#include <CCA/Components/Wasatch/transport/ScalarTransportEquation.h>
+#include <CCA/Components/Wasatch/transport/ParseEquation.h>
 
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/BCHelper.h>
