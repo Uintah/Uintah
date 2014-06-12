@@ -688,14 +688,15 @@
 
     <Regridder                          spec="OPTIONAL NO_DATA"
                                            attribute1="type REQUIRED STRING 'BNR, Hierarchical, Tiled SingleLevel'" >
-      <adaptive                         spec="OPTIONAL BOOLEAN" /> <!-- FIXME: optional? does this only apply to one of the types of regridder? -->
+      <adaptive                         spec="OPTIONAL BOOLEAN" />
+      
       <!--Generic Required Regridder Options --> 
       <max_levels                       spec="REQUIRED INTEGER 'positive'" />
       
       
       
       <!--Generic Optional Regridder Options --> 
-      <regrid_once                     spec="OPTIONAL BOOLEAN" />
+      <regrid_once                      spec="OPTIONAL BOOLEAN" />
       <amr_overhead_high                spec="OPTIONAL DOUBLE '0,1'" />   
       <amr_overhead_low                 spec="OPTIONAL DOUBLE '0,1'" />   
       <cell_stability_dilation          spec="OPTIONAL VECTOR" />
@@ -706,12 +707,14 @@
       <min_timestep_interval            spec="OPTIONAL INTEGER" />   
       
       <!--Required SingleLevel Regridder -->
-      <new_patch_layout               spec="REQUIRED VECTOR"           need_applies_to="type SingleLevel"/>
+      <new_patch_layout                 spec="REQUIRED VECTOR"             need_applies_to="type SingleLevel"/>
+      <level                            spec="OPTIONAL INTEGER 'positive'" need_applies_to="type SingleLevel"/>     
 
       <!--Required BNR Regridder & Tiled Regridder Options-->
       <min_patch_size                   spec="REQUIRED MULTIPLE_VECTORS" need_applies_to="type BNR Tiled"/>
       <min_boundary_cells               spec="REQUIRED VECTOR"           need_applies_to="type BNR Hierarchical, Tiled"/>
-      <cell_refinement_ratio            spec="REQUIRED STRING"           need_applies_to="type BNR Hierarchical, Tiled"/>/>
+      <cell_refinement_ratio            spec="REQUIRED STRING"           need_applies_to="type BNR Hierarchical, Tiled"/>
+      
       <!--       Optional Options-->
       <patch_split_tolerance            spec="OPTIONAL DOUBLE '0,1'" need_applies_to="type BNR" />
       <patch_combine_tolerance          spec="OPTIONAL DOUBLE '0,1'" need_applies_to="type BNR" />

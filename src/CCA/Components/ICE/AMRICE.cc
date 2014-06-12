@@ -83,7 +83,7 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
     string regridder;
     reg_ps->getAttribute( "type", regridder );
 
-    if (regridder != "Tiled") {
+    if (regridder != "Tiled" && regridder != "SingleLevel" ) {
       ostringstream msg;
       msg << "\n    ERROR:AMRICE With the (" << regridder << ") regridder the refine() task will overwrite \n";
       msg << "    all data in any newly created patches on the fine level patches.  There could be valid data on these patches. \n" ;

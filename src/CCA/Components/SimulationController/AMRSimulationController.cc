@@ -218,17 +218,18 @@ AMRSimulationController::run()
      
      //__________________________________
      //    Regridding
-     if (d_regridder && d_regridder->needsToReGrid(currentGrid) && (!first || (!d_restarting))) {
-       doRegridding(currentGrid, false);
-     }
-     
      if( d_regridder && d_regridder->doRegridOnce() && d_regridder->isAdaptive() ){
        proc0cout << "______________________________________________________________________\n";
        proc0cout << " Regridding once.\n";
        doRegridding(currentGrid, false);
        d_regridder->setAdaptivity(false);
        proc0cout << "______________________________________________________________________\n";
-     } 
+     }
+     
+     if (d_regridder && d_regridder->needsToReGrid(currentGrid) && (!first || (!d_restarting))) {
+       doRegridding(currentGrid, false);
+     }
+     
 
      // Compute number of dataWarehouses - multiplies by the time refinement
      // ratio for each level you increase
@@ -757,7 +758,7 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::doRegridding()");
   TAU_PROFILE("AMRSimulationController::doRegridding()", " ", TAU_USER);
   double start = Time::currentSeconds();
-  
+
   GridP oldGrid = currentGrid;
   currentGrid = d_regridder->regrid(oldGrid.get_rep());
   
