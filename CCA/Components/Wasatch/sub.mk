@@ -99,7 +99,7 @@ INCLUDES := $(INCLUDES) $(SPATIALOPS_INCLUDE) $(EXPRLIB_INCLUDE)    \
 SUBDIRS :=                      \
         $(SRCDIR)/Operators     \
         $(SRCDIR)/Expressions   \
-        $(SRCDIR)/Transport
+        $(SRCDIR)/transport
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
