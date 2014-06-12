@@ -27,7 +27,7 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR   := CCA/Components/Wasatch/Transport
+SRCDIR   := CCA/Components/Wasatch/transport
 
 #
 # These are files that if CUDA is enabled (via configure), must be

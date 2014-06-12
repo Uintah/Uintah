@@ -33,7 +33,7 @@
 #include <CCA/Components/Wasatch/BCHelperTools.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
 #include <CCA/Components/Wasatch/VardenParameters.h>
-#include <CCA/Components/Wasatch/Transport/TransportEquation.h>
+#include <CCA/Components/Wasatch/transport/TransportEquation.h>
 
 //-- Uintah includes --//
 #include <Core/ProblemSpec/ProblemSpecP.h>
