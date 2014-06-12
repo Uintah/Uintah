@@ -192,20 +192,18 @@ apply_embedded_boundaries( const PhiVolT &src, PhiFaceT &dest ) const {
   // this is the destination field value - always on the boundary
   const MemoryWindow wd( wdest.glob_dim(), destBaseOffset, destExtent );
 
-  const MemoryType dMemType = dest.memory_device_type();  // destination memory type
-  const unsigned short int dDevIdx = dest.device_index(); // destination device index
-  typename PhiFaceT::value_type* destVals = const_cast<typename PhiFaceT::value_type*>( dest.field_values(dMemType, dDevIdx) );
+  const short int dDevIdx = dest.device_index(); // destination device index
+  typename PhiFaceT::value_type* destVals = const_cast<typename PhiFaceT::value_type*>( dest.field_values(dDevIdx) );
 
-  const MemoryType advelMemType = advectiveVelocity_->memory_device_type();  // advel memory type
-  const unsigned short int advelDevIdx = advectiveVelocity_->device_index(); // advel device index
-  typename PhiFaceT::value_type* velVals = const_cast<typename PhiFaceT::value_type*>( advectiveVelocity_->field_values(advelMemType,advelDevIdx) );
+  const short int advelDevIdx = advectiveVelocity_->device_index(); // advel device index
+  typename PhiFaceT::value_type* velVals = const_cast<typename PhiFaceT::value_type*>( advectiveVelocity_->field_values(advelDevIdx) );
 
   const BoundaryCellInfo& bcs = src.boundary_info();
   const GhostData& gdd = dest.get_ghost_data();
   assert( gdd == advectiveVelocity_->get_ghost_data() );
 
-  PhiVolT          d( wd, bcs, gdd, destVals, ExternalStorage,     dMemType,     dDevIdx );
-  const PhiVolT aVel( wd, bcs, gdd,  velVals, ExternalStorage, advelMemType, advelDevIdx );
+  PhiVolT          d( wd, bcs, gdd, destVals, ExternalStorage,     dDevIdx );
+  const PhiVolT aVel( wd, bcs, gdd,  velVals, ExternalStorage, advelDevIdx );
 
   std::vector<PhiVolT> srcFields;
   build_src_fields( src, srcFields );
@@ -268,13 +266,11 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest )
   const MemoryWindow& wsrc  = src.window_with_ghost();
   const MemoryWindow& wdest = dest.window_with_ghost(); // used for velocity & interpolated phi
   
-  const MemoryType dMemType = dest.memory_device_type();  // destination memory type
-  const unsigned short int dDevIdx = dest.device_index(); // destination device index
-  typename PhiFaceT::value_type* destVals = const_cast<typename PhiFaceT::value_type*>( dest.field_values(dMemType, dDevIdx) );
+  const short int dDevIdx = dest.device_index(); // destination device index
+  typename PhiFaceT::value_type* destVals = const_cast<typename PhiFaceT::value_type*>( dest.field_values(dDevIdx) );
 
-  const MemoryType advelMemType = advectiveVelocity_->memory_device_type();  // advel memory type
-  const unsigned short int advelDevIdx = advectiveVelocity_->device_index(); // advel device index
-  typename PhiFaceT::value_type* velVals = const_cast<typename PhiFaceT::value_type*>( advectiveVelocity_->field_values(advelMemType,advelDevIdx) );
+  const short int advelDevIdx = advectiveVelocity_->device_index(); // advel device index
+  typename PhiFaceT::value_type* velVals = const_cast<typename PhiFaceT::value_type*>( advectiveVelocity_->field_values(advelDevIdx) );
 
   int pm[2]={1,-1}; // plus or minus face
   int zo[2]={0,1};  // zero and one
@@ -303,8 +299,8 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest )
     // second interior cell: on a minus face, this is src-plus-plus. on a plus face, this is src-minus-minus
     const MemoryWindow ws3( wsrc.glob_dim(), baseOffset  + unitNormal_ * pm[direc] * 2, extent );
 
-    PhiVolT          d( wd, bcSrc, ghostDest, destVals, ExternalStorage, dMemType,     dDevIdx     );
-    const PhiVolT aVel( wd, bcSrc, ghostDest, velVals,  ExternalStorage, advelMemType, advelDevIdx );
+    PhiVolT          d( wd, bcSrc, ghostDest, destVals, ExternalStorage, dDevIdx     );
+    const PhiVolT aVel( wd, bcSrc, ghostDest, velVals,  ExternalStorage, advelDevIdx );
     const PhiVolT s1( ws1, src );
     const PhiVolT s2( ws2, src );
     const PhiVolT s3( ws3, src );
@@ -338,8 +334,8 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest )
   const IntVec destBaseOffset = wdest.offset() + unitNormal_*2;
   const MemoryWindow wd( wdest.glob_dim(), destBaseOffset, destExtent );
 
-  PhiVolT          d( wd, bcSrc, ghostDest, destVals, ExternalStorage, dMemType,     dDevIdx );
-  const PhiVolT aVel( wd, bcSrc, ghostDest, velVals,  ExternalStorage, advelMemType, advelDevIdx );
+  PhiVolT          d( wd, bcSrc, ghostDest, destVals, ExternalStorage,     dDevIdx );
+  const PhiVolT aVel( wd, bcSrc, ghostDest, velVals,  ExternalStorage, advelDevIdx );
   
   // build the source fields - these correspond to windows into minus-minus,
   // minus, plus, and plus-plus with respect to destination (face).

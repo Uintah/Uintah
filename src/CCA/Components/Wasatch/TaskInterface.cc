@@ -82,13 +82,13 @@ typedef std::map<int,TreePtr> TreeMap;
  To enable multiple debug flags, use a comma to separate them
   tcsh: setenv SCI_DEBUG WASATCH_TASKS:+, WASATCH_FIELDS:+
   bash: export SCI_DEBUG=WASATCH_TASKS:+, WASATCH_FIELDS:+
- 
+
  To enable one flag and disable another that was previously enabled, either
  define a new flag excluding the unwanted flag, or redefine SCI_DEBUG with a -
  after the unwanted flag
    tcsh: setenv SCI_DEBUG WASATCH_TASKS:-, WASATCH_FIELDS:+
    bash: export SCI_DEBUG=WASATCH_TASKS:-, WASATCH_FIELDS:+
- 
+
  */
 
 static SCIRun::DebugStream dbgt("WASATCH_TASKS", false);  // task diagnostics
@@ -190,28 +190,26 @@ namespace Wasatch{
     hasPressureExpression_ = false;
     hasBeenScheduled_ = false;
 
-#  ifdef HAVE_CUDA
-   const int patchID = treeMap.begin()->first;
-   TreePtr tree      = treeMap.begin()->second;
-   bool isGPUTask = tree->is_homogeneous_gpu( patchID );
-   // turn off GPU task for the "initialization" task graph
-   if( !( isGPUTask && Uintah::Parallel::usingDevice() ) || ( taskName == "initialization") ) {
-     tree->flip_gpu_runnable( patchID, false );
-     isGPUTask = false;
-   }
-#  endif
-
     Uintah::Task* tsk = scinew Uintah::Task( taskName, this, &TreeTaskExecute::execute, rkStage );
-
-#  ifdef HAVE_CUDA
-   if( isGPUTask && Uintah::Parallel::usingDevice() && taskName != "initialization" && state->getCurrentTopLevelTimeStep() != 0 )
-     tsk->usesDevice(true);
-#  endif
 
     BOOST_FOREACH( TreeMap::value_type& vt, treeMap ){
 
       const int patchID = vt.first;
       TreePtr tree = vt.second;
+
+#  ifdef HAVE_CUDA
+      bool isGPUTask = tree->is_homogeneous_gpu( patchID );
+
+      // turn off GPU task for the "initialization" task graph
+      if( !(isGPUTask && Uintah::Parallel::usingDevice()) || (taskName == "initialization") ) {
+        tree->flip_gpu_runnable(patchID, false);
+        isGPUTask = false;
+      }
+
+      if( isGPUTask && Uintah::Parallel::usingDevice() && taskName != "initialization" ){
+        tsk->usesDevice(true);
+      }
+#  endif
 
       if( !hasPressureExpression_ ){
         if( tree->computes_field( pressure_tag() ) )
@@ -249,6 +247,13 @@ namespace Wasatch{
       info.task = tsk;
       info.tree = tree;
       patchTreeMap_[patchID] = info;
+
+# ifdef HAVE_CUDA
+      if( taskName != "initialization" && !isGPUTask){
+        tree->reset_tree_expressions();
+        tree->register_fields( *fml_ );
+      }
+# endif
 
     } // loop over trees
 
@@ -486,7 +491,7 @@ namespace Wasatch{
       Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( pressure_tag(), patchID, true ) );
       pexpr.declare_uintah_vars( *task, pss, mss, rkStage );
       pexpr.schedule_solver( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
-      pexpr.schedule_set_pressure_bcs( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );            
+      pexpr.schedule_set_pressure_bcs( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
     }
 
     if (tree->computes_field(TagNames::self().radiationsource)) {
@@ -502,10 +507,10 @@ namespace Wasatch{
         PoissonExpression& pexpr = dynamic_cast<PoissonExpression&>( factory.retrieve_expression(*ptag,patchID,true) );
         pexpr.schedule_solver( Uintah::getLevelP(pss), scheduler_, materials_, rkStage, tree->name()=="initialization" );
         pexpr.declare_uintah_vars( *task, pss, mss, rkStage );
-        pexpr.schedule_set_poisson_bcs( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );                      
-      }      
+        pexpr.schedule_set_poisson_bcs( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
+      }
     }
-    
+
     // go through reduction variables that are computed in this Wasatch Task
     // and insert a Uintah task immediately after.
     ReductionHelper::self().schedule_tasks(Uintah::getLevelP(pss), scheduler_, materials_, tree, patchID, rkStage);
@@ -543,10 +548,18 @@ namespace Wasatch{
       ASSERT( iptm != patchTreeMap_.end() );
       const TreePtr tree = iptm->second.tree;
 
-  #     ifdef HAVE_CUDA
-        // set the stream for the Tree and the underlying expressions in it
-        if( event == Uintah::Task::GPU ) tree->set_cuda_stream( *(cudaStream_t*)stream );
-  #     endif
+      bool isGPUTask = false;
+  #   ifdef HAVE_CUDA
+      // set the stream for the Tree and the underlying expressions
+      if( event == Uintah::Task::GPU ) {
+        dbg_tasks << endl
+                  << "Executing -  Wasatch as Homogeneous GPU Task : " << taskName_
+                  << " for patch : " << patch->getID()
+                  << endl;
+        isGPUTask = true;
+        tree->set_cuda_stream( *(cudaStream_t*)stream );
+      }
+#     endif
 
       Expr::ExpressionFactory& factory = tree->get_expression_factory();
       const SpatialOps::OperatorDatabase& opdb = *iptm->second.operators;
@@ -562,7 +575,7 @@ namespace Wasatch{
                     << endl;
           if( dbg_tasks_on ) fml_->dump_fields(std::cout);
 
-          fml_->allocate_fields( AllocInfo( oldDW, newDW, material, patch, pg ) );
+          fml_->allocate_fields( AllocInfo( oldDW, newDW, material, patch, pg, isGPUTask ) );
 
           if( hasPressureExpression_ ){
             Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( pressure_tag(), patchID, true ) );
@@ -577,8 +590,8 @@ namespace Wasatch{
               PoissonExpression& pexpr = dynamic_cast<PoissonExpression&>( factory.retrieve_expression( ptag, patchID, true ) );
               pexpr.set_patch(patches->get(ip));
               pexpr.set_RKStage(rkStage);
-            }            
-          }    
+            }
+          }
 
           // Pass patch information to the coordinate expressions
           typedef std::map<Expr::Tag, std::string> CoordMapT;
