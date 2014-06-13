@@ -49,17 +49,21 @@
 #include <sstream>
 
 #include <CCA/Components/MD/MD.h>
-#include <CCA/Components/MD/MDSystem.h>
+
 #include <CCA/Components/MD/Electrostatics/ElectrostaticsFactory.h>
-#include <CCA/Components/MD/CoordinateSystems/CoordinateSystemFactory.h>
 #include <CCA/Components/MD/Electrostatics/SPME/SPME.h>
-#include <CCA/Components/MD/Forcefields/Forcefield.h>
+
+#include <CCA/Components/MD/CoordinateSystems/CoordinateSystemFactory.h>
+
 #include <CCA/Components/MD/Forcefields/ForcefieldFactory.h>
 #include <CCA/Components/MD/Forcefields/TwoBodyForceField.h>
+
+#include <CCA/Components/MD/Nonbonded/NonbondedFactory.h>
 #include <CCA/Components/MD/Nonbonded/TwoBodyDeterministic.h>
+
 #include <CCA/Components/MD/atomMap.h>
 #include <CCA/Components/MD/atomFactory.h>
-#include <CCA/Components/MD/Nonbonded/NonbondedFactory.h>
+
 
 
 using namespace Uintah;
@@ -77,10 +81,24 @@ MD::MD(const ProcessorGroup* myworld) :
 
 MD::~MD()
 {
-  delete d_label;
-  delete d_system;
-  delete d_nonbonded;
-  delete d_electrostatics;
+  if (d_label) {
+    delete d_label;
+  }
+  if (d_system) {
+    delete d_system;
+  }
+  if (d_forcefield) {
+    delete d_forcefield;
+  }
+  if (d_nonbonded) {
+    delete d_nonbonded;
+  }
+  if (d_electrostatics) {
+    delete d_electrostatics;
+  }
+  if (d_coordinate) {
+    delete d_coordinate;
+  }
 }
 
 void MD::problemSetup(const ProblemSpecP& params,
@@ -90,47 +108,48 @@ void MD::problemSetup(const ProblemSpecP& params,
 {
   printTask(md_cout, "MD::problemSetup");
 
-// Inherit shared state into the component
+//-----> Set up components inherited from Uintah
+  // Inherit shared state into the component
   d_sharedState = shared_state;
 
-// Store the problem spec
+  // Store the problem spec
   d_problemSpec = params;
   d_restartSpec = restart_prob_spec;
 
-// Initialize output stream
+  // Initialize output stream
   d_dataArchiver = dynamic_cast<Output*>(getPort("output"));
   if (!d_dataArchiver) {
     throw InternalError("MD: couldn't get output port", __FILE__, __LINE__);
   }
 
-// Initialize base scheduler and attach the position variable
+  // Initialize base scheduler and attach the position variable
   dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(d_label->global->pX);
 
+//------> Set up components inherent to MD
   // create the coordinate system interface
   d_coordinate = CoordinateSystemFactory::create(params, shared_state, grid);
   d_coordinate->markCellChanged();
 
   // create and populate the MD System object
   d_system = scinew MDSystem(params, grid, shared_state);
-//  d_system->attachForcefield(d_forcefield);
-//  std::cerr << "Created system object" << std::endl;
 
   // Parse the forcefield
-    // Material (atom) types should be registered on parsing the forcefield.
-    Forcefield* tempFF = ForcefieldFactory::create(params, shared_state);
+  Forcefield* tempFF = ForcefieldFactory::create(params, shared_state);
 
-    switch(tempFF->getInteractionClass()) { // Set generic interface based on FF type
-      case(TwoBody):
+
+  switch(tempFF->getInteractionClass()) { // Set generic interface based on FF type
+    case(TwoBody):
         d_forcefield=dynamic_cast<TwoBodyForcefield*> (tempFF);
         break;
-      case(ThreeBody):
-      case(NBody):
-      default:
+    case(ThreeBody):
+    case(NBody):
+    default:
         throw InternalError("MD:  Attempted to instantiate a forcefield type which is not yet implemented", __FILE__, __LINE__);
     }
 
-    std::cerr << "Forcefield created: "
-              << d_forcefield->getForcefieldDescriptor() << std::endl;
+
+  std::cerr << "Forcefield created: "
+            << d_forcefield->getForcefieldDescriptor() << std::endl;
 
   // Instantiate the integrator
 //  Integrator* tempIntegrator = IntegratorFactory::create(XXX);
@@ -169,11 +188,8 @@ void MD::problemSetup(const ProblemSpecP& params,
   //electrostaticsModel elecCapability = d_forcefield->getElectrostaticsCapability();
   d_electrostatics = ElectrostaticsFactory::create(params, d_coordinate);
   if (d_electrostatics->getType() == Electrostatics::SPME) {
-//    dynamic_cast<SPME*>(d_electrostatics)->setMDLabel(d_label);
-
     // create subscheduler for convergence loop in SPME::calculate
     Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
-
     d_electrostaticSubscheduler = sched->createSubScheduler();
     d_electrostaticSubscheduler->initialize(3,1);
     d_electrostaticSubscheduler->clearMappings();
@@ -189,7 +205,6 @@ void MD::problemSetup(const ProblemSpecP& params,
   MDSubcomponent* d_nonbondedInterface     = dynamic_cast<MDSubcomponent*> (d_nonbonded);
 //  MDSubcomponent* d_integratorInterface    = dynamic_cast<MDSubcomponent*> (d_integrator);
 //  MDSubcomponent* d_valenceInterface       = dynamic_cast<MDSubcomponent*> (d_valence);
-
 
 // Register the general labels that all MD simulations will use
    createBasePermanentParticleState();
@@ -213,7 +228,8 @@ void MD::problemSetup(const ProblemSpecP& params,
 void MD::scheduleInitialize(const LevelP& level,
                             SchedulerP& sched)
 {
-//  CoordinateSystem* coordSys;
+  printSchedule(level, md_cout, "MD::scheduleInitialize");
+
   /*
    * Note there are multiple tasks scheduled here. All three need only ever happen once.
    *
@@ -221,38 +237,26 @@ void MD::scheduleInitialize(const LevelP& level,
    * 2.) Nonbonded::initialize
    * 3.) SPME::initialize
    */
-  std::cerr << "Enter:  Scheduled Initialization" << std::endl;
 
-  // Get Forcefield related label pointers
-  printSchedule(level, md_cout, "MD::scheduleInitialize");
+  std::cerr << "Enter:  Scheduled Initialization" << std::endl;
 
   Task* task = scinew Task("MD::initialize", this, &MD::initialize);
   std::cerr << "MD::ScheduleInitialize -> Created new task." << std::endl;
 
   // Initialize will load position, velocity, and ID tags
-  task->computes(d_label->global->pX);
-  task->computes(d_label->global->pV);
-  task->computes(d_label->global->pID);
+  task->computes(d_label->global->pX_preReloc);
+  task->computes(d_label->global->pV_preReloc);
+  task->computes(d_label->global->pID_preReloc);
 
-  // Add computes from our forcefield (nonbonded) and
-//  task->computes(d_label->nonbonded->pF_nonbonded);
-//  task->computes(d_label->electrostatic->pF_electroInverse);
-//  task->computes(d_label->electrostatic->pF_electroReal);
-//  task->computes(d_label->electrostatic->pMu);
-//  task->computes(d_label->electrostatic->pE_electroInverse);
-//  task->computes(d_label->electrostatic->pE_electroReal);
-
-//  task->computes(d_label->pValenceForceLabel);
-
-//  std::cerr << "MD::Schedule computes particleID" << std::endl;
-
+  //FIXME:  Do we still need this here?
   task->computes(d_label->electrostatic->dSubschedulerDependency);
-//  task->computes(d_label->subSchedulerDependencyLabel);
   std::cerr << "MD::Schedule computes subschedulerDependency" << std::endl;
 
-  const MaterialSet* materials = d_sharedState->allMDMaterials();
-  LoadBalancer* loadBal = sched->getLoadBalancer();
-  const PatchSet* perProcPatches = loadBal->getPerProcessorPatchSet(level);
+  // Get list of MD materials for scheduling
+  const MaterialSet*    materials       =   d_sharedState->allMDMaterials();
+  LoadBalancer*         loadBal         =   sched->getLoadBalancer();
+  const PatchSet*       perProcPatches  =
+                            loadBal->getPerProcessorPatchSet(level);
 
   // FIXME -- Original, no longer correct?
   sched->addTask(task, level->eachPatch(), materials);
@@ -658,11 +662,11 @@ void MD::scheduleUpdatePosition(SchedulerP& sched,
   sched->addTask(task, patches, matls);
 }
 
-void MD::initialize(const ProcessorGroup* pg,
-                    const PatchSubset* perProcPatches,
-                    const MaterialSubset* matls,
-                    DataWarehouse* /* old_dw */,
-                    DataWarehouse* new_dw)
+void MD::initialize(const ProcessorGroup*   pg,
+                    const PatchSubset*      perProcPatches,
+                    const MaterialSubset*   matls,
+                    DataWarehouse*       /* oldDW */,
+                    DataWarehouse*          newDW)
 {
   printTask(perProcPatches, md_cout, "MD::initialize");
 
@@ -674,61 +678,79 @@ void MD::initialize(const ProcessorGroup* pg,
   inverseExtentVector[1]=1.0/static_cast<double> (totalSystemExtent[1]);
   inverseExtentVector[2]=1.0/static_cast<double> (totalSystemExtent[2]);
 
-  SCIRun::Vector cellDimensions = d_coordinate->getUnitCell()*inverseExtentVector;
+  SCIRun::Vector cellDimensions =
+                     d_coordinate->getUnitCell()*inverseExtentVector;
 
   // Loop through each patch
-  size_t numPatches = perProcPatches->size();
-  size_t numMaterials = matls->size();
+  size_t numPatches             =   perProcPatches->size();
+  size_t numAtomTypes           =   matls->size();
 
   // Input coordinates from problem spec
-  atomMap* parsedCoordinates = atomFactory::create(d_problemSpec, d_sharedState);
-  size_t numTypesParsed = parsedCoordinates->getNumberAtomTypes();
-  size_t numMaterialTypes = d_sharedState->getNumMDMatls();
+  atomMap* parsedCoordinates    =
+               atomFactory::create(d_problemSpec, d_sharedState);
+
+  size_t numTypesParsed         =   parsedCoordinates->getNumberAtomTypes();
+  size_t numMaterialTypes       =   d_sharedState->getNumMDMatls();
 
   if (numTypesParsed > numMaterialTypes) {
     std::stringstream errorOut;
-    errorOut << " ERROR:  Expected to find " << numMaterials << " types of materials in the coordinate file." << std::endl;
-    errorOut << "     However, the coordinate file parsed " << numTypesParsed << std::endl;
+    errorOut << " ERROR:  Expected to find " << numMaterialTypes
+             << " types of materials in the coordinate file."
+             << std::endl
+             << "\tHowever, the coordinate file parsed " << numTypesParsed
+             << std::endl;
     throw ProblemSetupException(errorOut.str(), __FILE__, __LINE__);
   }
 
-  for (size_t matlIndex = 0; matlIndex < numMaterialTypes; ++matlIndex) {
-    std::string materialLabel = d_sharedState->getMDMaterial(matlIndex)->getMaterialLabel();
+  for (size_t matlIndex = 0; matlIndex < numAtomTypes; ++matlIndex) {
+    std::string materialLabel   =
+                    d_sharedState->getMDMaterial(matlIndex)->getMaterialLabel();
 
-    std::vector<atomData*>* currAtomList = parsedCoordinates->getAtomList(materialLabel);
-    size_t numAtoms = currAtomList->size();
+    std::vector<atomData*>* currAtomList    =
+                                parsedCoordinates->getAtomList(materialLabel);
 
+    size_t numAtoms                         =   currAtomList->size();
     d_system->registerAtomCount(numAtoms,matlIndex);
-
   }
 
   std::cerr << "Constructed particle map in MD::initialize" << std::endl;
-  SCIRun::Vector VectorZero(0.0, 0.0, 0.0);
+  for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) {
+    // Loop over perProcPatches
+    const Patch*        currPatch           =   perProcPatches->get(patchIndex);
+    SCIRun::IntVector   lowCellBoundary     =   currPatch->getCellLowIndex();
+    SCIRun::IntVector   highCellBoundary    =   currPatch->getCellHighIndex();
 
-  for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) { // Loop over perProcPatches
-    const Patch* currPatch = perProcPatches->get(patchIndex);
-    SCIRun::IntVector lowCellBoundary = currPatch->getCellLowIndex();
-    SCIRun::IntVector highCellBoundary = currPatch->getCellHighIndex();
     (const_cast<Patch*> (currPatch))->getLevel(true)->setdCell(cellDimensions);
 
-    for (size_t materialIndex = 0; materialIndex < numMaterials; ++materialIndex) { // Loop over materials
-      size_t materialID = matls->get(materialIndex);
-      std::string materialLabel = d_sharedState->getMDMaterial(materialID)->getMaterialLabel();
+    for (size_t localType = 0; localType < numAtomTypes; ++localType) {
+      // Loop over materials
+      size_t        globalID    = matls->get(localType);
+      MDMaterial*   atomType    = d_sharedState->getMDMaterial(globalID);
+      std::string   typeLabel   = atomType->getMaterialLabel();
 
       // Match coordinates to material and extract coordinate list
-      std::vector<atomData*>* currAtomList = parsedCoordinates->getAtomList(materialLabel);
-      size_t numMaterialAtoms = parsedCoordinates->getAtomListSize(materialLabel);
-      std::vector<Point> localAtomCoordinates;
-      std::vector<size_t> localAtomID;
-      std::vector<SCIRun::Vector> localAtomVelocity;
+      std::vector<atomData*>* currAtomList =
+                                  parsedCoordinates->getAtomList(typeLabel);
 
-      for (size_t atomIndex = 0; atomIndex < numMaterialAtoms; ++atomIndex) {  // Loop over all atoms of material
-        atomData* currAtom = (*currAtomList)[atomIndex];
-        Point currPosition = currAtom->getPosition();
-        IntVector currCell = currPatch->getLevel()->getCellIndex(currPosition);
+      size_t numAtomsOfType     = parsedCoordinates->getAtomListSize(typeLabel);
+
+      std::vector<Point>            localAtomCoordinates;
+      std::vector<size_t>           localAtomID;
+      std::vector<SCIRun::Vector>   localAtomVelocity;
+
+      for (size_t atomIndex = 0; atomIndex < numAtomsOfType; ++atomIndex) {
+        // Loop over all atoms of material
+        atomData*   currAtom        = (*currAtomList)[atomIndex];
+        Point       currPosition    = currAtom->getPosition();
+        IntVector   currCell        =
+                        currPatch
+                        ->getLevel()
+                          ->getCellIndex(currPosition);
 
         // Build local atom list for atoms of material in current patch
-        bool atomInPatch = containsAtom(lowCellBoundary, highCellBoundary, currCell);
+        bool atomInPatch = containsAtom(lowCellBoundary,
+                                        highCellBoundary,
+                                        currCell);
         if (atomInPatch) { // Atom is on this patch
           size_t currID = currAtom->getID();
           SCIRun::Vector currVelocity = currAtom->getVelocity();
@@ -740,166 +762,57 @@ void MD::initialize(const ProcessorGroup* pg,
       }
 
       // Create this patch's particle set for atoms of current material
-      size_t numAtoms = localAtomCoordinates.size();
-      ParticleSubset* currPset = new_dw->createParticleSubset(numAtoms, materialID, currPatch);
+      size_t            numAtoms = localAtomCoordinates.size();
+      ParticleSubset*   currPset =
+                        newDW->createParticleSubset(numAtoms,
+                                                     globalID,
+                                                     currPatch);
 
     // ----> Variables from parsing the input coordinate file
     // --> Position
-      ParticleVariable<Point> pX;
-      new_dw->allocateAndPut(pX, d_label->global->pX, currPset);
-
+      ParticleVariable<Point>   pX;
+      newDW->allocateAndPut(    pX, d_label->global->pX_preReloc, currPset);
     // --> Velocity
-      ParticleVariable<Vector> pV;
-      new_dw->allocateAndPut(pV, d_label->global->pV, currPset);
-
+      ParticleVariable<Vector>  pV;
+      newDW->allocateAndPut(    pV, d_label->global->pV_preReloc, currPset);
     // --> Index
-      ParticleVariable<long64> pID;
-      new_dw->allocateAndPut(pID, d_label->global->pID, currPset);
+      ParticleVariable<long64>  pID;
+      newDW->allocateAndPut(    pID, d_label->global->pID_preReloc,currPset);
 
-//    // ----> Initialization variables
-//    // -->  Force subcomponents
-//      ParticleVariable<Vector> pF_nb, pF_eReal, pF_eRecip, pF_v;
-//      new_dw->allocateAndPut(pF_nb, d_label->nonbonded->pF_nonbonded, currPset);
-//      new_dw->allocateAndPut(pF_eReal, d_label->electrostatic->pF_electroReal, currPset);
-//      new_dw->allocateAndPut(pF_eRecip, d_label->electrostatic->pF_electroInverse, currPset);
-
-//      new_dw->allocateAndPut(pF_nb, d_label->pNonbondedForceLabel, currPset);
-//      new_dw->allocateAndPut(pF_eReal, d_label->pElectrostaticsRealForce, currPset);
-//      new_dw->allocateAndPut(pF_eRecip, d_label->pElectrostaticsReciprocalForce, currPset);
-//      new_dw->allocateAndPut(pF_v, d_label->pValenceForceLabel, currPset);
-    // --> Dipoles
-//      ParticleVariable<Vector> pDipoles;
-//      new_dw->allocateAndPut(pDipoles, d_label->electrostatic->pMu, currPset);
-//      new_dw->allocateAndPut(pDipoles, d_label->pTotalDipoles, currPset);
-    // --> Field subcomponents
-//      ParticleVariable<Vector> pFieldReal, pFieldReciprocal;
-//      new_dw->allocateAndPut(pFieldReal, d_label->electrostatic->pE_electroReal, currPset);
-//      new_dw->allocateAndPut(pFieldReciprocal, d_label->electrostatic->pE_electroInverse, currPset);
-//      new_dw->allocateAndPut(pFieldReal, d_label->pElectrostaticsRealField, currPset);
-//      new_dw->allocateAndPut(pFieldReciprocal, d_label->pElectrostaticsReciprocalField, currPset);
-
-      for (size_t atomIndex = 0; atomIndex < numAtoms; ++atomIndex) { // Loop over atoms in this matl in this patch
+      for (size_t atomIndex = 0; atomIndex < numAtoms; ++atomIndex) {
         // Transfer over currently defined atom data
         pX[atomIndex]    = localAtomCoordinates[atomIndex];
         pV[atomIndex]    = localAtomVelocity[atomIndex];
         pID[atomIndex]   = localAtomID[atomIndex];
-
-        // Initialize the rest
-//        pF_nb[atomIndex]                    = VectorZero;
-//        pF_eReal[atomIndex]                 = VectorZero;
-//        pF_eRecip[atomIndex]                = VectorZero;
-//        pF_v[atomIndex]                     = VectorZero;
-//        pDipoles[atomIndex]                 = VectorZero;
-//        pFieldReal[atomIndex]               = VectorZero;
-//        pFieldReciprocal[atomIndex]         = VectorZero;
-
-        if (md_dbg.active()) { // Output for debug..
-          cerrLock.lock();
-          std::cout.setf(std::ios_base::showpoint);  // print decimal and trailing zeros
-          std::cout.setf(std::ios_base::left);  // pad after the value
-          std::cout.setf(std::ios_base::uppercase);  // use upper-case scientific notation
-          std::cout << std::setw(10) << " Patch_ID: " << std::setw(4) << currPatch->getID();
-          std::cout << std::setw(14) << " Particle_ID: " << std::setw(4) << pID[atomIndex];
-          std::cout << std::setw(12) << " Position: " << pX[atomIndex];
-          std::cout << std::endl;
-          cerrLock.unlock();
-        }
-
-
+//
+//        if (md_dbg.active()) { // Output for debug..
+//          cerrLock.lock();
+//          std::cout.setf(std::ios_base::showpoint);  // print decimal and trailing zeros
+//          std::cout.setf(std::ios_base::left);  // pad after the value
+//          std::cout.setf(std::ios_base::uppercase);  // use upper-case scientific notation
+//          std::cout << std::setw(10) << " Patch_ID: " << std::setw(4) << currPatch->getID();
+//          std::cout << std::setw(14) << " Particle_ID: " << std::setw(4) << pID[atomIndex];
+//          std::cout << std::setw(12) << " Position: " << pX[atomIndex];
+//          std::cout << std::endl;
+//          cerrLock.unlock();
+//        }
+//
+//
       }
 
       CCVariable<int> subSchedulerDependency;
-      new_dw->allocateAndPut(subSchedulerDependency, d_label->electrostatic->dSubschedulerDependency, materialID, currPatch, Ghost::None, 0);
-//      new_dw->allocateAndPut(subSchedulerDependency, d_label->subSchedulerDependencyLabel, materialID, currPatch, Ghost::None, 0);
+      newDW->allocateAndPut(subSchedulerDependency,
+                            d_label->electrostatic->dSubschedulerDependency,
+                            globalID,
+                            currPatch,
+                            Ghost::None,
+                            0);
       subSchedulerDependency.initialize(0);
 
 
     } // Loop over materials
   } // Loop over patches
 
-//  // Parse the input coordinates
-// size_t atomMapEntries = parsedCoordinates->getNumberAtomTypes();
-//
-//  // Pull the newly registered materials into a material set
-//  const MaterialSet* allMaterials = d_sharedState->allMaterials();
-//
-//  size_t materialEntries = allMaterials->size();
-//  if (materialEntries != atomMapEntries) {
-//    std::stringstream errorOut;
-//    errorOut << "ERROR:  There are " << materialEntries << " atom types registered, but only " << atomMapEntries
-//             << " unique atom types were parsed from the coordinate file(s)." << std::endl;
-//    throw ProblemSetupException(errorOut.str(), __FILE__, __LINE__);
-//  }
-
-
-
-//
-//  // loop through all patches
-//  unsigned int numAtoms = d_system->getNumAtoms();
-//  unsigned int numPatches = patches->size();
-//  for (unsigned int p = 0; p < numPatches; ++p) {
-//    const Patch* patch = patches->get(p);
-//
-//    // get bounds of current patch to correctly initialize particles (atoms)
-//    IntVector low = patch->getCellLowIndex();
-//    IntVector high = patch->getCellHighIndex();
-//
-//    // do this for each material
-//    unsigned int numMatls = matls->size();
-//    for (unsigned int m = 0; m < numMatls; ++m) {
-//      int matl = matls->get(m);
-//
-//      ParticleVariable<Point> px;
-//      ParticleVariable<Vector> pforceNonbonded;
-//      ParticleVariable<Vector> pforceElectrostatics;
-//      ParticleVariable<Vector> paccel;
-//      ParticleVariable<Vector> pvelocity;
-//      ParticleVariable<double> penergy;
-//      ParticleVariable<double> pmass;
-//      ParticleVariable<double> pcharge;
-//      ParticleVariable<long64> pids;
-//      CCVariable<int> subSchedulerDependency;
-//
-//      // eventually we'll need to use PFS for this
-//      std::vector<Atom> localAtoms;
-//      for (unsigned int i = 0; i < numAtoms; ++i) {
-////        Vector reducedCoordinates = ((d_atomList[i].coords).asVector() * systemInverseCell);
-////        IntVector cellCoordinates((reducedCoordinates * totalSystemExtent.asVector()).asPoint());
-//        // TODO make sure this is correct before deleting the above lines
-//        IntVector ptIndex = patch->getLevel()->getCellIndex(d_atomList[i].coords);
-//        if (containsAtom(low, high, ptIndex)) {
-//          localAtoms.push_back(d_atomList[i]);
-//        }
-//      }
-//
-//      // insert particle type counting loop here
-//
-//      ParticleSubset* pset = new_dw->createParticleSubset(localAtoms.size(), matl, patch);
-//      new_dw->allocateAndPut(px, d_lb->pXLabel, pset);
-//      new_dw->allocateAndPut(pforceNonbonded, d_lb->pNonbondedForceLabel, pset);
-//      new_dw->allocateAndPut(pforceElectrostatics, d_lb->pElectrostaticsForceLabel, pset);
-//      new_dw->allocateAndPut(paccel, d_lb->pAccelLabel, pset);
-//      new_dw->allocateAndPut(pvelocity, d_lb->pVelocityLabel, pset);
-//      new_dw->allocateAndPut(penergy, d_lb->pEnergyLabel, pset);
-//      new_dw->allocateAndPut(pmass, d_lb->pMassLabel, pset);
-//      new_dw->allocateAndPut(pcharge, d_lb->pChargeLabel, pset);
-//      new_dw->allocateAndPut(pids, d_lb->pParticleIDLabel, pset);
-//      new_dw->allocateAndPut(subSchedulerDependency, d_lb->subSchedulerDependencyLabel, matl, patch, Ghost::None, 0);
-//      subSchedulerDependency.initialize(0);
-//
-//      int numParticles = pset->numParticles();
-//      for (int i = 0; i < numParticles; ++i) {
-//        Point pos = localAtoms[i].coords;
-//        px[i] = pos;
-//        pforceNonbonded[i] = Vector(0.0, 0.0, 0.0);
-//        pforceElectrostatics[i] = Vector(0.0, 0.0, 0.0);
-//        paccel[i] = Vector(0.0, 0.0, 0.0);
-//        pvelocity[i] = Vector(0.0, 0.0, 0.0);
-//        penergy[i] = 1.1;
-//        pmass[i] = 2.5;
-//        pcharge[i] = localAtoms[i].charge;
-//        pids[i] = patch->getID() * numAtoms + i;
-//
 }
 
 void MD::computeStableTimestep(const ProcessorGroup* pg,
