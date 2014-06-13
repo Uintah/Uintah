@@ -109,23 +109,23 @@ void SPME::initialize(const ProcessorGroup*   pg,
   // SPME::initialize is called from MD::initialize
 
   // Initialization of reductions
-  newDW->put(sum_vartype(0.0),
-             label->electrostatic->rElectrostaticInverseEnergy);
-
-  newDW->put(sum_vartype(0.0),
-             label->electrostatic->rElectrostaticRealEnergy);
-
-  if (NPT == systemInfo->getEnsemble()) {
-    newDW->put(matrix_sum(0.0),
-               label->electrostatic->rElectrostaticInverseStress);
-    newDW->put(matrix_sum(0.0),
-               label->electrostatic->rElectrostaticRealStress);
-    if (f_polarizable) {
-      newDW->put(matrix_sum(0.0),
-                 label->electrostatic->rElectrostaticInverseStressDipole);
-    }
-
-  }
+//  newDW->put(sum_vartype(0.0),
+//             label->electrostatic->rElectrostaticInverseEnergy);
+//
+//  newDW->put(sum_vartype(0.0),
+//             label->electrostatic->rElectrostaticRealEnergy);
+//
+//  if ( NPT == systemInfo->getEnsemble() ) {
+//    newDW->put(matrix_sum(0.0),
+//               label->electrostatic->rElectrostaticInverseStress);
+//    newDW->put(matrix_sum(0.0),
+//               label->electrostatic->rElectrostaticRealStress);
+//    if (f_polarizable) {
+//      newDW->put(matrix_sum(0.0),
+//                 label->electrostatic->rElectrostaticInverseStressDipole);
+//    }
+//
+//  }
 
 
   /* Initialize the local version of the global Q and Q_scratch arrays
@@ -312,7 +312,6 @@ void SPME::setup(       const ProcessorGroup*   pg,
   } // Update SPME phase factors
 
   SoleVariable<double> dependency;
-  oldDW->get(dependency, label->electrostatic->dElectrostaticDependency);
   newDW->put(dependency, label->electrostatic->dElectrostaticDependency);
 
 }
@@ -391,6 +390,12 @@ void SPME::calculate(   const ProcessorGroup*   pg,
   //         loop?  Could we compile once in initialize?
 
   subscheduler->initialize(3,1);
+
+  scheduleInitializeLocalStorage(pg, individualPatches, allMaterials,
+                                 subOldDW, subNewDW,
+                                 label,
+                                 level,
+                                 subscheduler);
 
   scheduleCalculateRealspace(pg, individualPatches, allMaterials,
                              subOldDW, subNewDW,

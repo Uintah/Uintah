@@ -273,6 +273,21 @@ void SPME::calculateStressPrefactor(SimpleGrid<Matrix3>*    stressPrefactor,
   }
 }
 
+void SPME::initializeLocalStorage(const ProcessorGroup* pg,
+                                  const PatchSubset*    patches,
+                                  const MaterialSubset* materials,
+                                  DataWarehouse*        oldDW,
+                                  DataWarehouse*        newDW,
+                                  const MDLabel*        label)
+{
+  // Runs once per patch to avoid race conditions
+  d_Q_nodeLocal->initialize(dblcomplex(0.0, 0.0));
+  d_Q_nodeLocalScratch->initialize(dblcomplex(0.0, 0.0));
+  SoleVariable<int> initializeQDummy;
+  newDW->put(initializeQDummy,
+             label->SPME_dep->dInitializeQ);
+}
+
 void SPME::reduceNodeLocalQ(const ProcessorGroup*   pg,
                             const PatchSubset*      patches,
                             const MaterialSubset*   materials,

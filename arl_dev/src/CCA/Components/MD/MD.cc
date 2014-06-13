@@ -61,6 +61,7 @@
 #include <CCA/Components/MD/atomFactory.h>
 #include <CCA/Components/MD/Nonbonded/NonbondedFactory.h>
 
+
 using namespace Uintah;
 
 extern SCIRun::Mutex cerrLock;
@@ -199,6 +200,8 @@ void MD::problemSetup(const ProblemSpecP& params,
 
    // We must wait to register our atom (material) types until the
    // subcomponents have provided the per-particle labels
+   //
+   // For now we're assuming all atom types have the same tracked states.
    d_forcefield->registerAtomTypes(d_particleState,
                                    d_particleState_preReloc,
                                    d_label,
@@ -210,7 +213,7 @@ void MD::problemSetup(const ProblemSpecP& params,
 void MD::scheduleInitialize(const LevelP& level,
                             SchedulerP& sched)
 {
-  CoordinateSystem* coordSys;
+//  CoordinateSystem* coordSys;
   /*
    * Note there are multiple tasks scheduled here. All three need only ever happen once.
    *
@@ -247,7 +250,7 @@ void MD::scheduleInitialize(const LevelP& level,
 //  task->computes(d_label->subSchedulerDependencyLabel);
   std::cerr << "MD::Schedule computes subschedulerDependency" << std::endl;
 
-  const MaterialSet* materials = d_sharedState->allMaterials();
+  const MaterialSet* materials = d_sharedState->allMDMaterials();
   LoadBalancer* loadBal = sched->getLoadBalancer();
   const PatchSet* perProcPatches = loadBal->getPerProcessorPatchSet(level);
 
@@ -680,14 +683,14 @@ void MD::initialize(const ProcessorGroup* pg,
   // Input coordinates from problem spec
   atomMap* parsedCoordinates = atomFactory::create(d_problemSpec, d_sharedState);
   size_t numTypesParsed = parsedCoordinates->getNumberAtomTypes();
-  size_t numMaterialTypes = d_sharedState->allMDMaterials()->size();
+  size_t numMaterialTypes = d_sharedState->getNumMDMatls();
 
-//  if (numTypesParsed != numMaterialTypes) {
-//    std::stringstream errorOut;
-//    errorOut << " ERROR:  Expected to find " << numMaterialTypes << " types of materials in the coordinate file." << std::endl;
-//    errorOut << "     However, the coordinate file only parsed " << numTypesParsed << std::endl;
-//    throw ProblemSetupException(errorOut.str(), __FILE__, __LINE__);
-//  }
+  if (numTypesParsed > numMaterialTypes) {
+    std::stringstream errorOut;
+    errorOut << " ERROR:  Expected to find " << numMaterials << " types of materials in the coordinate file." << std::endl;
+    errorOut << "     However, the coordinate file parsed " << numTypesParsed << std::endl;
+    throw ProblemSetupException(errorOut.str(), __FILE__, __LINE__);
+  }
 
   for (size_t matlIndex = 0; matlIndex < numMaterialTypes; ++matlIndex) {
     std::string materialLabel = d_sharedState->getMDMaterial(matlIndex)->getMaterialLabel();
