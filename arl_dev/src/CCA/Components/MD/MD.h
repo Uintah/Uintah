@@ -31,11 +31,16 @@
 #include <CCA/Ports/Output.h>
 
 #include <CCA/Components/MD/MDLabel.h>
+#include <CCA/Components/MD/MDSystem.h>
 
 #include <CCA/Components/MD/Nonbonded/Nonbonded.h>
+
 #include <CCA/Components/MD/Electrostatics/Electrostatics.h>
+
 #include <CCA/Components/MD/Forcefields/Forcefield.h>
+
 #include <CCA/Components/MD/Integrators/Integrator.h>
+
 #include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
 
 #include <vector>
