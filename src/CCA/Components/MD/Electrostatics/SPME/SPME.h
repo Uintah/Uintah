@@ -266,6 +266,18 @@ namespace Uintah {
 //---->>>> Functions which serve as proxies to schedule the necessary
 //         calculations for the electrostatics subscheduler.
       /*
+       * @brief Schedules local data initialization for the patch Q Grids
+       */
+      void scheduleInitializeLocalStorage(const ProcessorGroup* pg,
+                                          const PatchSet*       patches,
+                                          const MaterialSet*    materials,
+                                          DataWarehouse*        subOldDW,
+                                          DataWarehouse*        subNewDW,
+                                          const MDLabel*        label,
+                                          const LevelP&         level,
+                                          SchedulerP&           sched);
+
+      /*
        * @brief Schedules the realspace portion of the calculation
        */
        void scheduleCalculateRealspace(const ProcessorGroup*  pg,
@@ -385,6 +397,16 @@ namespace Uintah {
                                            SchedulerP&              sched);
 
 // ---->>>> Actual calculation routines; non-framework logic resides in these
+       /*
+        * @brief Initializes the local Q grid in a non-race condition fashion
+        */
+       void initializeLocalStorage(const ProcessorGroup*    pg,
+                                   const PatchSubset*       patches,
+                                   const MaterialSubset*    materials,
+                                   DataWarehouse*           subOldDW,
+                                   DataWarehouse*           subNewDW,
+                                   const MDLabel*           label);
+
        /*
         * @brief Realspace portion of Ewald calculation for non-dipolar systems
         */

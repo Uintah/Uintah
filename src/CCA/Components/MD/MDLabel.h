@@ -48,6 +48,7 @@ namespace Uintah {
     public:
       SPME_dependencies();
      ~SPME_dependencies();
+     const VarLabel* dInitializeQ;
      const VarLabel* dPreTransform;
      const VarLabel* dReduceNodeLocalQ;
      const VarLabel* dTransformRealToFourier;

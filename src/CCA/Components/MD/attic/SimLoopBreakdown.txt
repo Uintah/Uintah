@@ -11,3 +11,8 @@ doInitialTimestep()
 
 executeTimestep()
 -->execute() // Line 910
+
+// Other notes:
+
+Gate oncePerProc dependencies with a SoleVariable type
+Gate perPatch dependencies with a PerPatch variable type

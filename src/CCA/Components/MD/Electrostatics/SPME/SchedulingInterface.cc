@@ -56,52 +56,51 @@ void SPME::addInitializeComputes(Task* task, MDLabel* label) const {
 
   task->computes(label->electrostatic->sForwardTransformPlan);
   task->computes(label->electrostatic->sBackwardTransformPlan);
-
-
-  task->computes(label->electrostatic->rElectrostaticInverseEnergy);
-  task->computes(label->electrostatic->rElectrostaticRealEnergy);
-
-  task->computes(label->electrostatic->rElectrostaticInverseStress);
-  task->computes(label->electrostatic->rElectrostaticRealStress);
-
   task->computes(label->electrostatic->dElectrostaticDependency);
 
-  if (f_polarizable) {
-    task->computes(label->electrostatic->rElectrostaticInverseStressDipole);
-  }
+
+//  task->computes(label->electrostatic->rElectrostaticInverseEnergy);
+//  task->computes(label->electrostatic->rElectrostaticRealEnergy);
+//
+//  task->computes(label->electrostatic->rElectrostaticInverseStress);
+//  task->computes(label->electrostatic->rElectrostaticRealStress);
+//  if (f_polarizable) {
+//    task->computes(label->electrostatic->rElectrostaticInverseStressDipole);
+//  }
 
 }
 
 void SPME::addSetupRequirements(Task* task, MDLabel* d_label) const {
 
-  task->requires(Task::NewDW, 
-                   d_label->electrostatic->dElectrostaticDependency);
+  task->requires(Task::OldDW,
+                 d_label->electrostatic->dElectrostaticDependency);
 }
 
 void SPME::addSetupComputes(Task* task, MDLabel* d_label) const {
 
-  if (f_polarizable) {
-    task->computes(d_label->electrostatic->pE_electroInverse);
-    task->computes(d_label->electrostatic->pE_electroReal);
-  }
-  task->computes(d_label->electrostatic->pF_electroInverse);
-  task->computes(d_label->electrostatic->pF_electroReal);
+//  if (f_polarizable) {
+//    task->computes(d_label->electrostatic->pE_electroInverse_preReloc);
+//    task->computes(d_label->electrostatic->pE_electroReal_preReloc);
+//  }
+//  task->computes(d_label->electrostatic->pF_electroInverse_preReloc);
+//  task->computes(d_label->electrostatic->pF_electroReal_preReloc);
 
   task->modifies(d_label->electrostatic->dElectrostaticDependency);
 }
 
 void SPME::addCalculateRequirements(Task* task, MDLabel* d_label) const {
 
-  if (f_polarizable) {
-    // This is a requirement for the field calculation.  Not sure this is
-    // actually necessary.  FIXME  JBH
-    task->requires(Task::NewDW, d_label->electrostatic->pE_electroInverse,
-                   Ghost::None, 0);
-    task->requires(Task::NewDW, d_label->electrostatic->pE_electroReal,
-                   Ghost::None, 0);
-  }
-  task->requires(Task::NewDW, 
-                   d_label->electrostatic->dElectrostaticDependency);
+//  if (f_polarizable) {
+//    // This is a requirement for the field calculation.  Not sure this is
+//    // actually necessary.  FIXME  JBH
+//    task->requires(Task::NewDW, d_label->electrostatic->pE_electroInverse,
+//                   Ghost::None, 0);
+//    task->requires(Task::NewDW, d_label->electrostatic->pE_electroReal,
+//                   Ghost::None, 0);
+//  }
+//  task->requires(Task::NewDW,
+//                   d_label->electrostatic->dElectrostaticDependency);
+  task->modifies(d_label->electrostatic->dElectrostaticDependency);
 }
 
 void SPME::addCalculateComputes(Task* task, MDLabel* d_label) const {
@@ -173,6 +172,29 @@ void SPME::registerRequiredParticleStates(LabelArray& particleState,
 }
 
 // Scheduling routines for the SPME subscheduler
+void SPME::scheduleInitializeLocalStorage(const ProcessorGroup* pg,
+                                          const PatchSet*       patches,
+                                          const MaterialSet*    materials,
+                                          DataWarehouse*        subOldDW,
+                                          DataWarehouse*        subNewDW,
+                                          const MDLabel*        label,
+                                          const LevelP&         level,
+                                          SchedulerP&           sched)
+{
+  printSchedule(patches, spme_cout, "SPME::scheduleInitializeLocalStorage");
+
+  Task* task = scinew Task("SPME::initializeLocalStorage",
+                           this,
+                           &SPME::initializeLocalStorage,
+                           label);
+
+  task->setType(Task::OncePerProc);
+  LoadBalancer* loadBal = sched->getLoadBalancer();
+  const PatchSet* perproc_patches = loadBal->getPerProcessorPatchSet(level);
+
+  task->computes(label->SPME_dep->dInitializeQ);
+}
+
 void SPME::scheduleCalculateRealspace(const ProcessorGroup*     pg,
                                       const PatchSet*           patches,
                                       const MaterialSet*        materials,
@@ -256,6 +278,7 @@ void SPME::scheduleCalculatePretransform(const ProcessorGroup*      pg,
 
   }
 
+  task->requires(Task::NewDW, label->SPME_dep->dInitializeQ);
   // Dummy dependency necessary for non-dipole case
   task->computes(label->SPME_dep->dPreTransform);
 

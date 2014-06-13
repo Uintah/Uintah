@@ -198,6 +198,7 @@ SPME_dependencies::SPME_dependencies() {
 
   // Transforms do not even have a patch basis to bind to, and occur once per
   // PROCESSOR, so use SoleVariables
+  dInitializeQ              =   VarLabel::create("dep_SPME_initQ", SoleVariable<int>::getTypeDescription());
   dTransformRealToFourier   =   VarLabel::create("dep_SPME_XFormRtoF", SoleVariable<int>::getTypeDescription());
   dTransformFourierToReal   =   VarLabel::create("dep_SPME_XFormFtoR", SoleVariable<int>::getTypeDescription());
 

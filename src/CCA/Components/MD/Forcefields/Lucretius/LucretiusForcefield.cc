@@ -486,6 +486,9 @@ void LucretiusForcefield::registerAtomTypes(
     simState->registerMDMaterial(materialArray[atomType]);
     simState->d_particleState.push_back(required_particleStates);
     simState->d_particleState_preReloc.push_back(required_particleStates_preReloc);
+    std::cerr << "Registered material " << atomType << " -> \""
+              << materialArray[atomType]->getMaterialLabel() << "\""
+              << std::endl;
   }
 
 
