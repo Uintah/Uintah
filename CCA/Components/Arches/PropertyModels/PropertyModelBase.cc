@@ -29,9 +29,32 @@ PropertyModelBase::commonProblemSetup( const ProblemSpecP& inputdb )
   ProblemSpecP db_init = db->findBlock("initialization");
   db_init->getAttribute("type",type); 
 
+
+
   if ( type == "constant" ){ 
 
     db_init->require("constant",_const_init); 
+    _init_type = "constant"; 
+
+  } else if ( type == "gaussian" ){ 
+
+    db_init->require( "amplitude", _a_gauss ); 
+    db_init->require( "center", _b_gauss ); 
+    db_init->require( "std", _c_gauss ); 
+
+    std::string direction; 
+    db_init->require( "direction", direction ); 
+
+    if ( direction == "X" || direction == "x" ){ 
+      _dir_gauss = 0; 
+    } else if ( direction == "Y" || direction == "y" ){ 
+      _dir_gauss = 1; 
+    } else if ( direction == "Z" || direction == "z" ){
+      _dir_gauss = 2; 
+    } 
+    db_init->getWithDefault( "shift", _shift_gauss, 0.0 ); 
+
+    _init_type = "gaussian";
 
   } else { 
 
