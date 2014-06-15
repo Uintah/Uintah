@@ -35,9 +35,19 @@
                                                                           scalar_diss'">
 
           <initialization               spec="REQUIRED NO_DATA"
-                                        attribute1="type REQUIRED STRING 'constant'">
+                                        attribute1="type REQUIRED STRING 'constant, gaussian'">
 
+            <!-- Constant initialization -->
             <constant                   spec="REQUIRED DOUBLE" need_applies_to="type constant"/>
+
+            <!-- gaussian initialization --> 
+            <!-- computes: y = a*exp( -1 * (x-b)^2/(2c^2) ) + shift --> 
+            <!-- a = amplitude, b = center, c = std --> 
+            <direction                  spec="REQUIRED STRING 'x,y,z,X,Y,Z'" need_applies_to="type gaussian"/> <!-- direction of the gaussian --> 
+            <amplitude                  spec="REQUIRED DOUBLE" need_applies_to="type gaussian"/>               <!-- height of the gaussian --> 
+            <center                     spec="REQUIRED DOUBLE" need_applies_to="type gaussian"/>               <!-- center of the gaussian --> 
+            <std                        spec="REQUIRED DOUBLE" need_applies_to="type gaussian"/>               <!-- width of the gaussian --> 
+            <shift                      spec="OPTIONAL DOUBLE" need_applies_to="type gaussian"/>               <!-- shift the gaussian by a constant --> 
 
           </initialization>
 

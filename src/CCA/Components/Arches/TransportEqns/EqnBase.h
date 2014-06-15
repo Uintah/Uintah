@@ -283,7 +283,7 @@ protected:
   double d_b_gauss;                 ///< constant b, position of gaussian function 
   double d_c_gauss;                 ///< constant c, width of gaussian function 
   double d_shift_gauss;             ///< shifts the gaussian function up or down 
-  double d_dir_gauss;               ///< direction of the gaussian (0,1,2) == [x,y,z]
+  int d_dir_gauss;                  ///< direction of the gaussian (0,1,2) == [x,y,z]
 
   // Other:
   double d_turbPrNo;                ///< Turbulent Prandtl number (used for scalar diffusion)
