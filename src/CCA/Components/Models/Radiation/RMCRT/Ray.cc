@@ -521,12 +521,14 @@ Ray::sched_rayTrace( const LevelP& level,
   tsk->requires( sigma_dw ,    d_sigmaT4_label,  gac, SHRT_MAX);
   tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
   
-  // needed for carry Forward
-  tsk->requires( Task::OldDW, d_divQLabel,           d_gn, 0 );
-  tsk->requires( Task::OldDW, d_VRFluxLabel,         d_gn, 0 );
-  tsk->requires( Task::OldDW, d_boundFluxLabel,      d_gn, 0 );
-  tsk->requires( Task::OldDW, d_radiationVolqLabel,  d_gn, 0 );
-  
+  // TODO This is a temporary fix until we can generalize GPU/CPU carry forward functionality.
+  if (!(Uintah::Parallel::usingDevice())) {
+    // needed for carry Forward
+    tsk->requires(Task::OldDW, d_divQLabel, d_gn, 0);
+    tsk->requires(Task::OldDW, d_VRFluxLabel, d_gn, 0);
+    tsk->requires(Task::OldDW, d_boundFluxLabel, d_gn, 0);
+    tsk->requires(Task::OldDW, d_radiationVolqLabel, d_gn, 0);
+  }
     
   if( modifies_divQ ){
     tsk->modifies( d_divQLabel ); 
@@ -559,7 +561,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
                Task::WhichDW which_celltype_dw,
                const int radCalc_freq )
 { 
-
 
   const Level* level = getLevel(patches);
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();

@@ -57,9 +57,6 @@ ifeq ($(HAVE_CUDA),yes)
           $(SRCDIR)/PoissonGPU1Kernel.cu           \
           $(SRCDIR)/UnifiedSchedulerTest.cc        \
           $(SRCDIR)/UnifiedSchedulerTestKernel.cu
-#          $(SRCDIR)/GPUSchedulerTest.cc            \
-#          $(SRCDIR)/GPUSchedulerTestKernel.cu      \
-          
 endif
 
 PSELIBS := \
