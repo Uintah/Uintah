@@ -224,8 +224,9 @@
                 <solveBoundaryFlux> false       </solveBoundaryFlux>
                 <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
                 
-                <property_calculator type="burns_christon"/>   
-                
+                <property_calculator type="burns_christon">
+                <abskg label="abskg" />
+                </property_calculator>
                 <algorithm type='dataOnion'>
                   <halo>           [4,4,4]     </halo>
 

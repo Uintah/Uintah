@@ -1,5 +1,6 @@
 #include <CCA/Components/Arches/PropertyModels/ABSKP.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
+#include <iostream>
 
 using namespace Uintah; 
 
@@ -57,12 +58,13 @@ void ABSKP::sched_computeProp( const LevelP& level, SchedulerP& sched, int time_
 //Method: Actually Compute Property
 //---------------------------------------------------------------------------
 void ABSKP::computeProp(const ProcessorGroup* pc, 
-                                    const PatchSubset* patches, 
-                                    const MaterialSubset* matls, 
-                                    DataWarehouse* old_dw, 
-                                    DataWarehouse* new_dw, 
-                                    int time_substep )
+    const PatchSubset* patches, 
+    const MaterialSubset* matls, 
+    DataWarehouse* old_dw, 
+    DataWarehouse* new_dw, 
+    int time_substep )
 {
+
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
@@ -73,20 +75,18 @@ void ABSKP::computeProp(const ProcessorGroup* pc,
 
     CCVariable<double> prop; 
     new_dw->getModifiable( prop, _prop_label, matlIndex, patch ); 
-    if ( time_substep == 0 )
-      prop.initialize(0.0);
+    //   if ( time_substep == 0 ){ // Derek  ->  I think this was originally intended to speed up the code, by only computing kabsp for the pertinent timesteps
+    prop.initialize(0.0);
 
     CellIterator iter = patch->getCellIterator(); 
 
     for (iter.begin(); !iter.done(); iter++){
-
       for( HeatTransferModelMap::iterator iModel = heatmodels_.begin(); iModel != heatmodels_.end(); ++iModel ) {
         //int modelNode = iModel->second->getquadNode();
         const VarLabel* tempabskpLabel = iModel->second->getabskpLabel();
         constCCVariable<double> qn_abskp;
         old_dw->get( qn_abskp, tempabskpLabel, matlIndex, patch, gn, 0 );
         prop[*iter] += qn_abskp[*iter];
-        //cout << "ABSKP: qn " << modelNode << " value " << qn_abskp[*iter] << endl;
       }
 
     }

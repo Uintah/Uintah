@@ -64,7 +64,13 @@ namespace Uintah {
 
         return false; 
 
-      };
+      }
+      
+      bool extraProblemSetup( const ProblemSpecP& db ){
+        bool complete = false; 
+        complete = _calculator->extraProblemSetup( db ); 
+        return complete; 
+      }
 
       void compute( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg ){ 
 
@@ -91,15 +97,42 @@ namespace Uintah {
 
       } 
 
+      inline const VarLabel* get_abskg_label(){ 
+        return _calculator->get_abskg_label(); 
+      }
+
+      inline const VarLabel* get_abskp_label(){ 
+        return _calculator->get_abskp_label(); 
+      }
+
+      inline std::string get_abskg_name(){ 
+        return _calculator->get_abskg_name(); 
+      }
+
+      inline std::string get_abskp_name(){ 
+        return _calculator->get_abskp_name(); 
+      }
+
+      void sum_abs( CCVariable<double>& abskg, CCVariable<double>& abskp, const Patch* patch ){ 
+        _calculator->sum_abs( abskg, abskp, patch ); 
+      }
+
     private: 
 
       class PropertyCalculatorBase { 
 
         public: 
           PropertyCalculatorBase() {}; 
-          virtual ~PropertyCalculatorBase(){};
+          virtual ~PropertyCalculatorBase(){
+
+            VarLabel::destroy(_abskg_label); 
+            if ( _local_abskp )
+              VarLabel::destroy(_abskp_label); 
+          
+          };
 
           virtual bool problemSetup( const ProblemSpecP& db )=0; 
+          virtual bool extraProblemSetup( const ProblemSpecP& db )=0;
           virtual void computeProps( const Patch* patch, constCCVariable<double>& VolFractionBC, 
                                      RadCalcSpeciesList species, constCCVariable<double>& mixT,  
                                      CCVariable<double>& abskg )=0; 
@@ -117,6 +150,35 @@ namespace Uintah {
                                                   CCVariable<double>& abskp ) = 0;
           virtual std::vector<std::string> get_sp() = 0;
           virtual bool does_scattering() = 0;
+
+          inline const VarLabel* get_abskg_label(){return _abskg_label;}; 
+          inline const VarLabel* get_abskp_label(){return _abskp_label;}; 
+
+          std::string get_abskg_name(){ return _abskg_name;};
+          std::string get_abskp_name(){ return _abskp_name;};
+
+          void sum_abs( CCVariable<double>& abskg, CCVariable<double>& abskp, const Patch* patch ){ 
+            if ( _use_abskp ){
+              for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
+                abskg[*iter] += abskp[*iter];  
+                
+              }
+            }
+          }
+
+        protected: 
+
+          const VarLabel* _abskg_label; 
+          const VarLabel* _abskp_label; 
+
+          std::string _abskg_name; 
+          std::string _abskp_name; 
+
+          bool _local_abskp; 
+          bool _use_abskp; 
+
+
       };
       //______________________________________________________________________
       //
@@ -127,6 +189,7 @@ namespace Uintah {
           ~ConstantProperties();
           
           bool problemSetup( const ProblemSpecP& db ); 
+          bool extraProblemSetup( const ProblemSpecP& db); 
           void computeProps( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg );
           void computePropsWithParticles( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, 
                                           double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weight_scaling_constant, RadCalcSpeciesList weight, 
@@ -138,7 +201,10 @@ namespace Uintah {
           bool does_scattering(){ return false; }
 
         private: 
-          double _value; 
+          double _abskg_value; 
+          double _abskp_value; 
+
+
       }; 
       //______________________________________________________________________
       //
@@ -148,6 +214,7 @@ namespace Uintah {
           BurnsChriston();
           ~BurnsChriston();
           bool problemSetup( const ProblemSpecP& db ); 
+          bool extraProblemSetup( const ProblemSpecP& db); 
           void computeProps( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg );
           void computePropsWithParticles( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, 
                                           double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weight_scaling_constant, RadCalcSpeciesList weight, 
@@ -173,6 +240,7 @@ namespace Uintah {
           ~HottelSarofim();
           
           bool problemSetup( const ProblemSpecP& db ); 
+          bool extraProblemSetup( const ProblemSpecP& db); 
           void computeProps( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg );
           void computePropsWithParticles( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, 
                                           double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weight_scaling_constant, RadCalcSpeciesList weight, 
@@ -187,7 +255,6 @@ namespace Uintah {
           std::string _h2o_name;                     ///< table name 
           std::string _soot_name;                    ///< property name
           double d_opl;                              ///< optical length; 
- 
       }; 
 
 #ifdef HAVE_RADPROPS
@@ -199,6 +266,7 @@ namespace Uintah {
           RadPropsInterface();
           ~RadPropsInterface(); 
           bool problemSetup( const ProblemSpecP& db );
+          bool extraProblemSetup( const ProblemSpecP& db){}; 
           void computeProps( const Patch* patch, 
               constCCVariable<double>& VolFractionBC, 
               RadCalcSpeciesList species,  

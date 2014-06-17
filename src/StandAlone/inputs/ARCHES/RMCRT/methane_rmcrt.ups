@@ -396,7 +396,8 @@
                 <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
                 <solveBoundaryFlux>    true    </solveBoundaryFlux>
                 <nFluxRays>         2          </nFluxRays>
-                <property_calculator type="hottel_sarofim">
+                <property_calculator type="burns_christon">
+                  <abskg label="abskg" />
                   <opl>.1</opl>
                 </property_calculator>
             </RMCRT>

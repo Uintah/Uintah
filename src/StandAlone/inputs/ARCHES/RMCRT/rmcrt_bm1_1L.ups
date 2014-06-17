@@ -215,7 +215,7 @@
                 <solveBoundaryFlux> true       </solveBoundaryFlux>
                 <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
                 <property_calculator type="burns_christon">
-             
+                  <abskg label = "abskg" /> 
                 </property_calculator>
             </RMCRT>
           </src>
