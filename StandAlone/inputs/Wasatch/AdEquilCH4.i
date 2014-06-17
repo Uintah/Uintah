@@ -21,7 +21,12 @@
   <nfpts>100</nfpts>
 
   <SelectForOutput>
-    temperature density MolecularWeight enthalpy Viscosity Conductivity
+    temperature
+    density
+    MolecularWeight
+    Enthalpy
+    Viscosity
+    Conductivity 
   </SelectForOutput>
   
   <!-- pick some mole fractions required for obtaining radiative transport properties -->

@@ -13,7 +13,12 @@
   <order>1</order>
   <nfpts>100</nfpts>
   <SelectForOutput>
-    temperature density MolecularWeight enthalpy Viscosity Conductivity
+    temperature 
+    density 
+    MolecularWeight
+    enthalpy 
+    Viscosity 
+    Conductivity
   </SelectForOutput>
 </ReactionModel>
 
