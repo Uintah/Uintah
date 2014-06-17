@@ -41,7 +41,26 @@ RadPropertyCalculator::ConstantProperties::~ConstantProperties() {};
 bool RadPropertyCalculator::ConstantProperties::problemSetup( const ProblemSpecP& db ) {
         
   ProblemSpecP db_prop = db; 
-  db_prop->getWithDefault("abskg",_value,1.0); 
+  db_prop->getWithDefault("abskg_value",_abskg_value,0.0); 
+  db_prop->getWithDefault("abskp_value",_abskp_value,0.0); 
+
+  if ( db_prop->findBlock("abskg") ){ 
+    db_prop->findBlock("abskg")->getAttribute("label",_abskg_name); 
+  } else { 
+    _abskg_name = "abskg_constant"; 
+  }
+
+  _local_abskp = true; 
+  _use_abskp = false; 
+
+  if ( db_prop->findBlock("abskp") ){ 
+    db_prop->findBlock("abskp")->getAttribute("label",_abskp_name); 
+  } else { 
+    _abskp_name = "abskp_constant"; 
+  }
+
+  _abskg_label = VarLabel::create(_abskg_name, CCVariable<double>::getTypeDescription() ); 
+  _abskp_label = VarLabel::create(_abskp_name, CCVariable<double>::getTypeDescription() ); 
   
   bool property_on = true; 
 
@@ -49,7 +68,7 @@ bool RadPropertyCalculator::ConstantProperties::problemSetup( const ProblemSpecP
 }
     
 void RadPropertyCalculator::ConstantProperties::computeProps( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg ){ 
-  abskg.initialize(_value); 
+  abskg.initialize(_abskg_value); 
 }
 
 void RadPropertyCalculator::ConstantProperties::computePropsWithParticles( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, 
@@ -58,6 +77,11 @@ void RadPropertyCalculator::ConstantProperties::computePropsWithParticles( const
 
   throw InvalidValue( "Error: No particle properties implemented for constant radiation properties.",__FILE__,__LINE__);
 
+}
+bool RadPropertyCalculator::ConstantProperties::extraProblemSetup( const ProblemSpecP& db ) {
+  ProblemSpecP db_h = db;
+  bool property_on = false;
+  return property_on; 
 }
 
 //--------------------------------------------------
@@ -72,8 +96,8 @@ RadPropertyCalculator::BurnsChriston::~BurnsChriston() {}
 
 bool RadPropertyCalculator::BurnsChriston::problemSetup( const ProblemSpecP& db ) { 
 
+
   ProblemSpecP db_prop = db;
-  
   db_prop->getWithDefault("min", _min, _notSetMin);  // optional
   db_prop->getWithDefault("max", _max, _notSetMax);
   
@@ -85,8 +109,32 @@ bool RadPropertyCalculator::BurnsChriston::problemSetup( const ProblemSpecP& db 
          << "You must specify both a min: "<< _min << " & max point: "<< _max <<"."; 
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
+
+
+  
+  if ( db_prop->findBlock("abskg") ){ 
+    db_prop->findBlock("abskg")->getAttribute("label",_abskg_name); 
+  } else { 
+    _abskg_name = "abskg_BC"; 
+  }
+
+  _local_abskp = true; 
+  _use_abskp = false; 
+
+  //no abskp
+  _abskp_name = "abskp_BC"; 
+
+  _abskg_label = VarLabel::create(_abskg_name, CCVariable<double>::getTypeDescription() ); 
+  _abskp_label = VarLabel::create(_abskp_name, CCVariable<double>::getTypeDescription() ); 
   
   bool property_on = true; 
+  return property_on; 
+}
+
+ 
+bool RadPropertyCalculator::BurnsChriston::extraProblemSetup( const ProblemSpecP& db ) {
+  ProblemSpecP db_h = db;
+  bool property_on = false;
   return property_on; 
 }
     
@@ -134,12 +182,42 @@ RadPropertyCalculator::HottelSarofim::~HottelSarofim() {};
     
 bool 
 RadPropertyCalculator::HottelSarofim::problemSetup( const ProblemSpecP& db ) {
-
   ProblemSpecP db_h = db;
   db_h->require("opl",d_opl);
   db_h->getWithDefault("co2_name",_co2_name,"CO2");
   db_h->getWithDefault("h2o_name",_h2o_name,"H2O");
   db_h->getWithDefault("soot_name",_soot_name,"soot");
+  
+  if ( db_h->findBlock("abskg") ){ 
+    db_h->findBlock("abskg")->getAttribute("label",_abskg_name); 
+  } else { 
+    _abskg_name = "abskg_HS"; 
+  }
+
+
+  _abskg_label = VarLabel::create(_abskg_name, CCVariable<double>::getTypeDescription() ); 
+
+  bool property_on = true;
+  return property_on; 
+
+}
+
+bool 
+RadPropertyCalculator::HottelSarofim::extraProblemSetup( const ProblemSpecP& db ) {
+  ProblemSpecP db_h = db;
+  _local_abskp = false; 
+if( db_h->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src")->findBlock("DORadiationModel")->findBlock("property_calculator")->findBlock("abskp")){
+ db_h->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src")->findBlock("DORadiationModel")->findBlock("property_calculator")->findBlock("abskp")->getAttribute("label",_abskp_name);  // This long syntax is needed becuase the incorrect variable (db_h) is being passed to this function
+    _abskp_label = VarLabel::find(_abskp_name);  
+
+    _use_abskp = true; 
+    _local_abskp = false; 
+  } else { 
+    _local_abskp = true; 
+    _use_abskp = false; 
+    _abskp_name = "abskp_HS"; 
+    _abskp_label = VarLabel::create(_abskp_name, CCVariable<double>::getTypeDescription()); 
+  }
 
   bool property_on = true;
   return property_on; 
@@ -251,6 +329,26 @@ bool RadPropertyCalculator::RadPropsInterface::problemSetup( const ProblemSpecP&
 
   }
 
+  if ( db->findBlock("abskg") ){ 
+    db->findBlock("abskg")->getAttribute("label",_abskg_name); 
+  } else { 
+    _abskg_name = "abskg_RP"; 
+  }
+
+  _local_abskp = false; 
+
+  if ( db->findBlock("abskp") ){ 
+    db->findBlock("abskp")->getAttribute("label",_abskg_name); 
+    _use_abskp = true; 
+  } else { 
+    _abskg_name = "abskp_RP";
+    _local_abskp = true; 
+    _use_abskp = false; 
+    _abskp_label = VarLabel::create(_abskp_name, CCVariable<double>::getTypeDescription() ); 
+  }
+
+  _abskg_label = VarLabel::create(_abskg_name, CCVariable<double>::getTypeDescription() ); 
+
   // For particles: 
   _does_scattering = false; 
   if ( db->findBlock( "particles" ) ){ 
@@ -277,6 +375,8 @@ bool RadPropertyCalculator::RadPropsInterface::problemSetup( const ProblemSpecP&
       _part_radprops = scinew ParticleRadCoeffs( complex_ir ); 
 
       _does_scattering = true; 
+
+      _use_abskp = true; 
 
     }
   //need smarter return? 

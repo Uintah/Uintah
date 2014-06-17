@@ -16,7 +16,6 @@
     <timestep_multiplier>0.4</timestep_multiplier>
     <max_Timesteps>25</max_Timesteps>
   </Time>
-
   <DataArchiver>
     <filebase>coal_channel.uda</filebase>
     <outputInitTimestep/>
@@ -36,6 +35,7 @@
     <save label="coal_gas_mix_frac_Fconv"/>
     <save label = "radiationVolq"/>
     <save label = "abskg"/>
+    <save label = "Julien_abskp"/>
     <save label = "divQ"/>
     <save label = "enthalpy"/>
     <save label = "length_qn0_icv" />
@@ -858,17 +858,21 @@
         <Sources>
           <src label="divQ" type="do_radiation">
             <calc_frequency>5</calc_frequency>
-            <abskp_label>Julien_abskp</abskp_label>
             <soot_label>soot</soot_label>
             <DORadiationModel>
-              <opl>0.432</opl>
-              <LinearSolver type="hypre">
+                <LinearSolver type="hypre">
                 <res_tol>1.0e-10</res_tol>
                 <ksptype>gmres</ksptype>
                 <pctype>jacobi</pctype>
                 <max_iter>1500</max_iter>
               </LinearSolver>
               <ordinates>4</ordinates>
+
+              <property_calculator type="hottel_sarofim">
+              <opl>0.432</opl>
+              <abskg label = "abskg" /> 
+              <abskp label = "Julien_abskp" /> 
+              </property_calculator>
             </DORadiationModel>
           </src>
 
@@ -939,18 +943,24 @@
             <ICVars>
               <variable label="length" role="particle_length"/>
               <variable label="ux" role="particle_xvel"/>
+              <variable label="RCmass" role="raw_coal_mass"/>
+              <variable label="Charmass" role="char_mass"/>
             </ICVars>
           </model>
           <model label="ydragforce" type="YDrag">
             <ICVars>
               <variable label="length" role="particle_length"/>
               <variable label="uy" role="particle_yvel"/>
+              <variable label="RCmass" role="raw_coal_mass"/>
+              <variable label="Charmass" role="char_mass"/>
             </ICVars>
           </model>
           <model label="zdragforce" type="ZDrag">
             <ICVars>
               <variable label="length" role="particle_length"/>
               <variable label="uz" role="particle_zvel"/>
+              <variable label="RCmass" role="raw_coal_mass"/>
+              <variable label="Charmass" role="char_mass"/>
             </ICVars>
           </model>
           <model label="devol" type="YamamotoDevol">

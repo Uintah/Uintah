@@ -54,6 +54,7 @@ public:
   ~DORadiation();
 
   void problemSetup(const ProblemSpecP& db);
+  void extraSetup(GridP& grid, const ProblemSpecP& db);
   void sched_computeSource( const LevelP& level, SchedulerP& sched, 
                             int timeSubStep );
   void computeSource( const ProcessorGroup* pc, 
@@ -107,7 +108,6 @@ private:
   std::string _co2_label_name; 
   std::string _h2o_label_name; 
   std::string _T_label_name; 
-  std::string _abskp_label_name; 
   std::string _soot_label_name; 
   std::string _size_label_name; 
   std::string _pT_label_name; 
@@ -127,9 +127,6 @@ private:
   const VarLabel* _co2_label; 
   const VarLabel* _h2o_label; 
   const VarLabel* _T_label; 
-  const VarLabel* _abskgLabel;
-  const VarLabel* _abskpLocalLabel;
-  const VarLabel* _abskpLabel;
   const VarLabel* _soot_label; 
   const VarLabel* _radiationSRCLabel;
   const VarLabel* _radiationFluxELabel;

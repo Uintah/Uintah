@@ -328,14 +328,14 @@ EnthalpyShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched, int
 
     tsk->computes(d_modelLabel);
     tsk->computes(d_gasLabel); 
-    tsk->computes(d_abskpLabel);
+    tsk->computes(d_abskpLabel); 
     tsk->computes(d_qconvLabel);
     tsk->computes(d_qradLabel);
     tsk->computes(d_pTLabel);
   } else {
     tsk->modifies(d_modelLabel);
     tsk->modifies(d_gasLabel);  
-    tsk->modifies(d_abskpLabel);
+    tsk->modifies(d_abskpLabel); 
     tsk->modifies(d_qconvLabel);
     tsk->modifies(d_qradLabel);
     tsk->modifies(d_pTLabel);
@@ -748,7 +748,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
           double Eb = 4.0*sigma*pow(gas_temperature,4.0);
           FSum = radiationVolqIN[c];    
           Q_radiation = Apsc*(FSum - Eb);
-          abskp_ = pi/4.0*Qabs*unscaled_weight*pow(unscaled_length,2.0); 
+          abskp_ = pi/4.0*Qabs*unscaled_weight*pow(unscaled_length,2.0);  // Derek
         } else {
           abskp_ = 0.0;
         }
