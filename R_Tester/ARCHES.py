@@ -74,7 +74,7 @@ NIGHTLYTESTS = [
    ("coal_table_pipe"             , "coal_table_pipe.ups"                         , 1.1 , "Linux"  , ["exactComparison"]),
    ("scalar_var_1eqn"             , "scalar_variance_1eqn.ups"                    , 4   , "Linux"  , ["exactComparison", "no_restart"]),
    ("scalar_var_2eqn"             , "scalar_variance_2eqn.ups"                    , 4   , "Linux"  , ["exactComparison", "no_restart"]),
-   ("coal_channel"                , "Coal/coal_channel.ups"                       , 1.1 , "Linux"  , ["exactComparison", "no_restart"])
+   ("coal_channel"                , "Coal/coal_channel.ups"                       , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
 #   ("methane_RCCE"                , "methane_RCCE.ups"                            , 1.1 , "Linux"  , ["exactComparison"]) ,
    ("DOM16"                       , "DOM16.ups"                                    , 3   , "Linux"  , ["exactComparison", "no_restart"]),
    ("CQMOM_1x1"                   , "CQMOM_regression/CQMOM_1x1.ups"               , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
