@@ -215,7 +215,7 @@ if( db_h->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Trans
   } else { 
     _local_abskp = true; 
     _use_abskp = false; 
-    _abskp_name = "abskp_HS"; 
+    _abskp_name = "abskp";  //derek
     _abskp_label = VarLabel::create(_abskp_name, CCVariable<double>::getTypeDescription()); 
   }
 
