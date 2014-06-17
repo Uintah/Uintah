@@ -18,9 +18,9 @@
 
   <nfpts>150</nfpts>
 
-  <SelectForOutput>
-    density temperature MolecularWeight
-  </SelectForOutput>
+  <SelectForOutput>MolecularWeight</SelectForOutput>
+    <SelectForOutput>Temperature</SelectForOutput>
+  <SelectForOutput>density</SelectForOutput>
   
 </ReactionModel>
 
