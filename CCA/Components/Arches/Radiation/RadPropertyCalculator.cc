@@ -206,8 +206,9 @@ bool
 RadPropertyCalculator::HottelSarofim::extraProblemSetup( const ProblemSpecP& db ) {
   ProblemSpecP db_h = db;
   _local_abskp = false; 
-if( db_h->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src")->findBlock("DORadiationModel")->findBlock("property_calculator")->findBlock("abskp")){
- db_h->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src")->findBlock("DORadiationModel")->findBlock("property_calculator")->findBlock("abskp")->getAttribute("label",_abskp_name);  // This long syntax is needed becuase the incorrect variable (db_h) is being passed to this function
+if(db_h->findBlock("DORadiationModel") && db_h->findBlock("DORadiationModel")->findBlock("property_calculator")->findBlock("abskp")){
+//if(db_h->findBlock("RMCRT") && db_h->findBlock("RMCRT")->findBlock("property_calculator")->findBlock("abskp")) // needed in future for rmcrt
+    db_h->findBlock("DORadiationModel")->findBlock("property_calculator")->findBlock("abskp")->getAttribute("label",_abskp_name);
     _abskp_label = VarLabel::find(_abskp_name);  
 
     _use_abskp = true; 
@@ -221,7 +222,6 @@ if( db_h->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Trans
 
   bool property_on = true;
   return property_on; 
-
 }
     
 void 
