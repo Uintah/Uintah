@@ -957,7 +957,7 @@ Arches::problemSetup(const ProblemSpecP& params,
 //  }
 
   if (transportEqn_db) {
-    for (ProblemSpecP eqn_db = transportEqn_db->findBlock("Eqn"); eqn_db != 0; eqn_db = eqn_db->findNextBlock("Eqn")){
+  for (ProblemSpecP eqn_db = transportEqn_db->findBlock("Sources"); eqn_db != 0; eqn_db = eqn_db->findNextBlock("Sources")){
       for (ProblemSpecP src_db = eqn_db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){ 
 
         std::string srcname; 
