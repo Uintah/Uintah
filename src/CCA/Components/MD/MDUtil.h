@@ -67,6 +67,7 @@ namespace Uintah {
       static const SCIRun::Vector       V_Y;
       static const SCIRun::Vector       V_Z;
       static const Uintah::Matrix3      M3_I;
+      static const Uintah::Matrix3      M3_0;
   };
 
 

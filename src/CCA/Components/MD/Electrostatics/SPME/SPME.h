@@ -217,7 +217,7 @@ namespace Uintah {
       }
 
       inline bool isPolarizable() const {
-        return true;
+        return f_polarizable;
       }
     private:
 //---->>>> Subordinate functions for the primary interface

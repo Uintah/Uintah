@@ -57,26 +57,15 @@ namespace Uintah {
   class MDSystem {
 
     public:
-
-      /**
-       * @brief Default constructor
-       * @param
-       */
-      MDSystem();
-
-      /**
-       * @brief Default destructor
-       * @param
-       */
-      ~MDSystem();
+     ~MDSystem ();
 
       /**
        * @brief
        * @param
        */
       MDSystem(const ProblemSpecP&,
-               GridP&,
-               SimulationStateP&);
+                     GridP&,
+                     Forcefield*);
 
       /**
        * @brief
@@ -209,11 +198,11 @@ namespace Uintah {
        */
 //      inline size_t getElectrostaticGhostCells() const { return d_electrostaticGhostCells; }
 
-      inline double getAtomicCharge(size_t MaterialIndex) const {
-    	  return d_simState->getMDMaterial(MaterialIndex)->getCharge();
-      }
+//      inline double getAtomicCharge(size_t MaterialIndex) const {
+//    	  return d_simState->getMDMaterial(MaterialIndex)->getCharge();
+//      }
 
-      inline SimulationStateP getStatePointer() { return d_simState; };
+//      inline SimulationStateP getStatePointer() { return d_simState; };
 
       inline Forcefield* getForcefieldPointer() { return d_forcefield; };
 
@@ -242,25 +231,14 @@ namespace Uintah {
 
     private:
 
-      ensembleType d_ensemble;                // Variable holding the type of the simulation ensemble
-      unsigned long d_numAtoms;                //!< Total number of atoms in the simulation
-      std::vector<size_t> d_numAtomsOfType;     //!< List of total number of each atom type in the simulation
-      unsigned long d_numMolecules;
-      std::vector<size_t> d_numMoleculesOfType;
+      ensembleType          d_ensemble;             //!< Type of the simulation ensemble
+      unsigned long         d_numAtoms;             //!< Total number of atoms in the simulation
+      std::vector<size_t>   d_numAtomsOfType;       //!< List of total number of each atom type
+      unsigned long         d_numMolecules;         //!< Number of molecules in the simulation
+      std::vector<size_t>   d_numMoleculesOfType;   //!< List of number of each molecule type
 
-      Vector d_pressure;                //!< Total MD System pressure
-      double d_temperature;             //!< Total MD system temperature
-
-//      bool d_orthorhombic;              //!< Whether or not the MD system is using orthorhombic coordinates
-
-      // Unit cell variables
-//      Matrix3 d_unitCell;               //!< MD system unit cell
-//      Matrix3 d_inverseCell;            //!< MD system inverse unit cell
-//      double  d_cellVolume;             //!< Cell volume; calculate internally, return at request for efficiency
-//      bool    d_cellChanged;            //!< Whether or not the system size has changed... create a new box
-
-//      IntVector d_totalCellExtent;      //!< Number of sub-cells in the global unit cell
-//      IntVector d_periodicVector;       //!< Grid's periodic vector
+      Vector                d_pressure;             //!< Total MD System pressure
+      double                d_temperature;          //!< Total MD system temperature
 
       // Methods
 //      void calcCellVolume();
@@ -268,14 +246,15 @@ namespace Uintah {
       inline double max(int a, int b, int c) { return (max(max(a,b),c)); }
 
 // Maybe these should be passed around seperately?
-      Forcefield* d_forcefield;               //! Pointer to the established forcefield
-      SimulationStateP d_simState;            //! Pointer to the simulation state (for material access)
+      Forcefield*           d_forcefield;           //! Pointer to the established forcefield
+//      SimulationStateP  d_simState;            //! Pointer to the simulation state (for material access)
 
       // Total cell variables
 
 
 
-      // disable copy and assignment
+      // disable copy and assignment and default construction
+      MDSystem();
       MDSystem(const MDSystem& system);
       MDSystem& operator=(const MDSystem& system);
 

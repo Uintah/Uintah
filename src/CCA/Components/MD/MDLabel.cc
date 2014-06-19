@@ -39,15 +39,15 @@ using namespace Uintah;
 
 globalLabels::globalLabels() { // create variable labels used across all simulation aspects
   // Create for timestep n
-  pX            = VarLabel::create("p.X", ParticleVariable<Point>::getTypeDescription(),
+  pX            = VarLabel::create("p.x", ParticleVariable<Point>::getTypeDescription(),
                                    IntVector(0,0,0), VarLabel::PositionVariable);
-  pV            = VarLabel::create("p.V", ParticleVariable<SCIRun::Vector>::getTypeDescription());
+  pV            = VarLabel::create("p.v", ParticleVariable<SCIRun::Vector>::getTypeDescription());
   pID           = VarLabel::create("p.ID", ParticleVariable<long64>::getTypeDescription());
 
   // Create for timestep n+1
-  pX_preReloc   = VarLabel::create("p.X+", ParticleVariable<Point>::getTypeDescription(),
+  pX_preReloc   = VarLabel::create("p.x+", ParticleVariable<Point>::getTypeDescription(),
                                    IntVector(0,0,0), VarLabel::PositionVariable);
-  pV_preReloc   = VarLabel::create("p.V+", ParticleVariable<SCIRun::Vector>::getTypeDescription());
+  pV_preReloc   = VarLabel::create("p.v+", ParticleVariable<SCIRun::Vector>::getTypeDescription());
   pID_preReloc  = VarLabel::create("p.ID+", ParticleVariable<long64>::getTypeDescription());
 }
 

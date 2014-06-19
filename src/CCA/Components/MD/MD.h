@@ -349,54 +349,14 @@ namespace Uintah {
        * @param
        * @return
        */
-      void interpolateParticlesToGrid(const ProcessorGroup*,
-                                      const PatchSubset* patches,
-                                      const MaterialSubset* matls,
-                                      DataWarehouse* old_dw,
-                                      DataWarehouse* new_dw);
-
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      void interpolateToParticlesAndUpdate(const ProcessorGroup* pg,
-                                           const PatchSubset* patches,
-                                           const MaterialSubset* matls,
-                                           DataWarehouse* old_dw,
-                                           DataWarehouse* new_dw);
-      /**
-       * @brief
-       * @param
-       * @return
-       */
       void updatePosition(const ProcessorGroup* pg,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw);
 
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      void registerPermanentParticleState();
+       void createBasePermanentParticleState();
 
-      void createBasePermanentParticleState();
-
-//      /**
-//       * @brief
-//       * @param
-//       * @return
-//       */
-//      void extractCoordinates();
-
-      /**
-       * @brief
-       * @param
-       * @return
-       */
       inline bool containsAtom(const IntVector& l,
                                const IntVector& h,
                                const IntVector& p) const

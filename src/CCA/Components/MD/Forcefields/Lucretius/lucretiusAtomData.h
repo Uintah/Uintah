@@ -36,7 +36,7 @@ namespace Uintah {
       virtual SCIRun::Vector getVelocity() const {
         return d_Velocity;
       }
-      virtual size_t getID() const {
+      virtual long64 getID() const {
         return d_ParticleID;
       }
       virtual std::string getLabel() const {

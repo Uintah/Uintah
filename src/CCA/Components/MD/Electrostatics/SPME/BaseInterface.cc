@@ -33,6 +33,8 @@
 
 #include <Core/Grid/Variables/SoleVariable.h>
 
+#include <CCA/Components/MD/MDUtil.h>
+
 #include <CCA/Components/MD/Electrostatics/SPME/SPME.h>
 
 
@@ -108,26 +110,6 @@ void SPME::initialize(const ProcessorGroup*   pg,
                       CoordinateSystem*       coordSys) {
   // SPME::initialize is called from MD::initialize
 
-  // Initialization of reductions
-//  newDW->put(sum_vartype(0.0),
-//             label->electrostatic->rElectrostaticInverseEnergy);
-//
-//  newDW->put(sum_vartype(0.0),
-//             label->electrostatic->rElectrostaticRealEnergy);
-//
-//  if ( NPT == systemInfo->getEnsemble() ) {
-//    newDW->put(matrix_sum(0.0),
-//               label->electrostatic->rElectrostaticInverseStress);
-//    newDW->put(matrix_sum(0.0),
-//               label->electrostatic->rElectrostaticRealStress);
-//    if (f_polarizable) {
-//      newDW->put(matrix_sum(0.0),
-//                 label->electrostatic->rElectrostaticInverseStressDipole);
-//    }
-//
-//  }
-
-
   /* Initialize the local version of the global Q and Q_scratch arrays
    *   Rather than forcing reductions on processor for each patch, we have a
    *   single per-processor pool, where we handle thread access manually with
@@ -182,8 +164,8 @@ void SPME::initialize(const ProcessorGroup*   pg,
   d_backwardPlan    = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, complexData,
                                            complexData, SPMEComm,
                                            FFTW_BACKWARD, FFTW_MEASURE);
-  SoleVariable<double> dependency;
-  newDW->put(dependency, label->electrostatic->dElectrostaticDependency);
+//  SoleVariable<double> dependency;
+//  newDW->put(dependency, label->electrostatic->dElectrostaticDependency);
 
 //---->>>> Allocate and map the SPME patches
   SCIRun::Vector    kReal               = d_kLimits.asVector();
@@ -197,9 +179,71 @@ void SPME::initialize(const ProcessorGroup*   pg,
   SCIRun::IntVector minusGhostExtents(0, 0, 0);
 
   // Loop through the patches and set them up
-  size_t            numPatches = patches->size();
+  size_t            numPatches      =   patches->size();
+  size_t            numAtomTypes    =   materials->size();
+
   for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) {
     const Patch*    patch           = patches->get(patchIndex);
+
+    // Initialize reduction variables for this patch:
+    newDW->put(sum_vartype(0.0),
+               label->electrostatic->rElectrostaticInverseEnergy);
+    newDW->put(sum_vartype(0.0),
+               label->electrostatic->rElectrostaticRealEnergy);
+
+    // We calculate stress even if we don't need it later; in most simulations
+    // we'll want to track it and it's small additional expense to calculate.
+    // We can add in a flag to gate calculation later if we really care.
+    newDW->put(matrix_sum(MDConstants::M3_0),
+               label->electrostatic->rElectrostaticInverseStress);
+    newDW->put(matrix_sum(MDConstants::M3_0),
+               label->electrostatic->rElectrostaticRealStress);
+
+    if (f_polarizable) {
+      newDW->put(matrix_sum(MDConstants::M3_0),
+                 label->electrostatic->rElectrostaticInverseStressDipole);
+    }
+
+    // Quick material loop to initialize per-particle related variables
+    for (size_t typeIndex = 0; typeIndex < numPatches; ++typeIndex) {
+      int atomType = materials->get(typeIndex);
+      ParticleSubset* atomSubset = newDW->getParticleSubset(atomType, patch);
+
+      ParticleVariable<Vector> pF_real, pF_inverse;
+      newDW->allocateAndPut(pF_real,
+                            label->electrostatic->pF_electroReal,
+                            atomSubset);
+      newDW->allocateAndPut(pF_inverse,
+                            label->electrostatic->pF_electroInverse,
+                            atomSubset);
+
+      particleIndex numAtoms = atomSubset->numParticles();
+      for (particleIndex atom = 0; atom < numAtoms; ++atom)
+      {
+        pF_real[atom]       =   MDConstants::V_ZERO;
+        pF_inverse[atom]    =   MDConstants::V_ZERO;
+      }
+
+      if (f_polarizable) {
+        ParticleVariable<Vector>   pE_real, pE_inverse, pMu;
+        newDW->allocateAndPut(pE_real,
+                              label->electrostatic->pE_electroReal,
+                              atomSubset);
+        newDW->allocateAndPut(pE_inverse,
+                              label->electrostatic->pE_electroInverse,
+                              atomSubset);
+        newDW->allocateAndPut(pMu,
+                              label->electrostatic->pMu,
+                              atomSubset);
+        particleIndex numAtoms = atomSubset->numParticles();
+        for (particleIndex atom = 0; atom < numAtoms; ++atom)
+        {
+          pE_real[atom]     =   MDConstants::V_ZERO;
+          pE_inverse[atom]  =   MDConstants::V_ZERO;
+          pMu[atom]         =   MDConstants::V_ZERO;
+        }
+      }
+    }
 
     SCIRun::Vector  patchLowIndex   = (patch->getCellLowIndex()).asVector();
     SCIRun::Vector  patchHighIndex  = (patch->getCellHighIndex()).asVector();
@@ -368,17 +412,17 @@ void SPME::calculate(   const ProcessorGroup*   pg,
   subNewDW->transferFrom(parentOldDW, label->global->pID, perProcPatches,
                          allMaterialsUnion);
 
-  // Initialize new parent DW for reduction variables.
-  //   Note:  We should probably skip this and just initialize them with the
-  //          converged value after the polarization loop is done instead.
-  parentNewDW->put(sum_vartype(0.0),
-                   label->electrostatic->rElectrostaticInverseEnergy);
-  parentNewDW->put(matrix_sum(0.0),
-                   label->electrostatic->rElectrostaticInverseStress);
-  parentNewDW->put(sum_vartype(0.0),
-                   label->electrostatic->rElectrostaticRealEnergy);
-  parentNewDW->put(matrix_sum(0.0),
-                   label->electrostatic->rElectrostaticRealStress);
+//  // Initialize new parent DW for reduction variables.
+//  //   Note:  We should probably skip this and just initialize them with the
+//  //          converged value after the polarization loop is done instead.
+//  parentNewDW->put(sum_vartype(0.0),
+//                   label->electrostatic->rElectrostaticInverseEnergy);
+//  parentNewDW->put(matrix_sum(0.0),
+//                   label->electrostatic->rElectrostaticInverseStress);
+//  parentNewDW->put(sum_vartype(0.0),
+//                   label->electrostatic->rElectrostaticRealEnergy);
+//  parentNewDW->put(matrix_sum(0.0),
+//                   label->electrostatic->rElectrostaticRealStress);
 
   // Prime variables for the loop
   bool                  converged           =   false;
@@ -492,6 +536,14 @@ void SPME::calculate(   const ProcessorGroup*   pg,
   // FIXME!  Is this right?
   parentNewDW->transferFrom(subNewDW, label->electrostatic->pMu_preReloc,
                             perProcPatches, allMaterialsUnion);
+  parentNewDW->transferFrom(subNewDW,
+                            label->electrostatic->pE_electroInverse_preReloc,
+                            perProcPatches,
+                            allMaterialsUnion);
+  parentNewDW->transferFrom(subNewDW,
+                            label->electrostatic->pE_electroReal_preReloc,
+                            perProcPatches,
+                            allMaterialsUnion);
 
   // Dipoles have converged, calculate forces
   if (f_polarizable) {
@@ -512,7 +564,7 @@ void SPME::finalize(    const ProcessorGroup*   pg,
                         const MaterialSubset*   materials,
                         DataWarehouse*          oldDW,
                         DataWarehouse*          newDW,
-                        const SimulationStateP*       simState,
+                        const SimulationStateP* simState,
                         MDSystem*               systemInfo,
                         const MDLabel*          label,
                         CoordinateSystem*       coordSys)

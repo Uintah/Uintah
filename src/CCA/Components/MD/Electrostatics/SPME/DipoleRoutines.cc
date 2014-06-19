@@ -487,7 +487,9 @@ void SPME::calculatePostTransformDipole(const ProcessorGroup*   pg,
       constParticleVariable<Vector>     pDipole;
       ParticleVariable<Vector>          pForceRecip;
 
-      newDW->get(pDipole, label->electrostatic->pMu_preReloc, particles);
+      newDW->get(pDipole,
+                 label->electrostatic->pMu_preReloc,
+                 particles);
       newDW->allocateAndPut(pForceRecip,
                             label->electrostatic->pF_electroInverse_preReloc,
                             particles);
