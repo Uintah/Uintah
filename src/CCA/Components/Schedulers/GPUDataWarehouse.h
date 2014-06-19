@@ -41,15 +41,15 @@ class GPUDataWarehouse {
 
 public:
 
-  GPUDataWarehouse(){d_numItems=0; d_device_copy=NULL; d_device_id=0; d_debug=true; d_dirty=true;};
-  virtual ~GPUDataWarehouse() {};
+           GPUDataWarehouse() { d_numItems=0; d_device_copy=NULL; d_device_id=0; d_debug=true; d_dirty=true; }
+  virtual ~GPUDataWarehouse() {}
 
   //______________________________________________________________________
   // GPU GridVariable methods
-  HOST_DEVICE void get(const GPUGridVariableBase& var, char const* label, int patchID, int matlID);
-  HOST_DEVICE void getModifiable(GPUGridVariableBase& var, char const* label, int patchID, int matlID);
-  HOST_DEVICE void put(GPUGridVariableBase& var, char const* label, int patchID, int matlID, bool overWrite=false);
-  HOST_DEVICE void allocateAndPut(GPUGridVariableBase& var, char const* label, int patchID, int matlID, int3 low, int3 high);
+  HOST_DEVICE void get(            const GPUGridVariableBase & var, char const* label, int patchID, int matlID );
+  HOST_DEVICE void getModifiable(        GPUGridVariableBase & var, char const* label, int patchID, int matlID );
+  HOST_DEVICE void put(                  GPUGridVariableBase & var, char const* label, int patchID, int matlID, bool overWrite = false );
+  HOST_DEVICE void allocateAndPut(       GPUGridVariableBase & var, char const* label, int patchID, int matlID, int3 low, int3 high );
 
   //______________________________________________________________________
   // GPU Particle Variable methods

@@ -40,10 +40,11 @@
 #include <cstring>
 
 #include <sci_defs/cuda_defs.h>
+
 #ifdef HAVE_CUDA
-#include <CCA/Components/Schedulers/GPUDataWarehouse.h>
-#include <Core/Grid/Variables/GPUGridVariable.h>
-#include <Core/Grid/Variables/GPUStencil7.h>
+#  include <CCA/Components/Schedulers/GPUDataWarehouse.h>
+#  include <Core/Grid/Variables/GPUGridVariable.h>
+#  include <Core/Grid/Variables/GPUStencil7.h>
 #endif
 
 #define USE_PACKING
@@ -55,14 +56,16 @@ using namespace SCIRun;
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
 extern SCIRun::Mutex cerrLock;
+
 extern DebugStream taskdbg;
 extern DebugStream mpidbg;
-extern map<string, double> waittimes;
-extern map<string, double> exectimes;
 extern DebugStream waitout;
 extern DebugStream execout;
 extern DebugStream taskorder;
 extern DebugStream taskLevel_dbg;
+
+extern map<string, double> waittimes;
+extern map<string, double> exectimes;
 
 static double CurrentWaitTime = 0;
 
@@ -74,8 +77,8 @@ static DebugStream threaddbg("UnifiedThreadDBG", false);
 static DebugStream affinity("CPUAffinity", true);
 
 #ifdef HAVE_CUDA
-static DebugStream gpu_stats("GPUStats", false);
-DebugStream use_single_device("SingleDevice", false);
+  static DebugStream gpu_stats("GPUStats", false);
+         DebugStream use_single_device("SingleDevice", false);
 #endif
 
 UnifiedScheduler::UnifiedScheduler(const ProcessorGroup* myworld,

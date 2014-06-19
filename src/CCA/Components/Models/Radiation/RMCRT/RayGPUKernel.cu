@@ -25,8 +25,7 @@
 #include <CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh>
 #include <Core/Grid/Variables/GPUGridVariable.h>
 
-// linker support for device code not ready yet, need to include the whole source...
-#include <CCA/Components/Schedulers/GPUDataWarehouse.cu>
+#include <CCA/Components/Schedulers/GPUDataWarehouse.h>
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/GPUStencil7.h>
 #include <sci_defs/cuda_defs.h>

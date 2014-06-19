@@ -75,6 +75,8 @@ ifeq ($(IS_STATIC_BUILD),yes)
   # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
   #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
   PSELIBS := \
+    $(GPU_EXTRA_LINK)                   \
+                                        \
     CCA/Components/Parent               \
     CCA/Components/Solvers              \
     CCA/Components/DataArchiver         \

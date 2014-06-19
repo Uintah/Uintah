@@ -54,7 +54,14 @@ Makefile: ${SRCTOP}/Makefile.in ${OBJTOP}/config.status
 configVars.mk: ${SRCTOP}/configVars.mk.in ${OBJTOP}/config.status
 	@( Here="`pwd`" ; cd ${OBJTOP} ; Top="`pwd`" ; CONFIG_FILES=`echo $${Here} | sed -e "s%^"$${Top}"/%%" -e "s%^"$${Top}"%.%"`/configVars.mk CONFIG_HEADERS="" ./config.status )
 
-# Actually include the module makefile fragments
+ifeq ($(IS_STATIC_BUILD),yes)
+  ifeq ($(HAVE_CUDA),yes)
+    GPU_EXTRA_LINK := gpu_extra_link
+    ALLTARGETS := $(ALLTARGETS) lib/lib$(GPU_EXTRA_LINK).a
+  endif
+endif
+
+# Now begin including all of the makefile fragments (sub.mk's)
 ALLSUBDIRS := . 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
@@ -314,3 +321,23 @@ gold_standards :
 runLocalRT:
 	@cd $(OBJTOP_ABS)
 	@$(SRCTOP)/R_Tester/toplevel/startLocalTest $(OBJTOP_ABS) $(SRCTOP_ABS) $(IS_DEBUG) $(SCI_MALLOC_ON)
+
+
+###############################################################################################
+# Build the extra library file needed for static builds when using the NVCC compiler...
+
+ifeq ($(IS_STATIC_BUILD),yes)
+  ifeq ($(HAVE_CUDA),yes)
+
+lib/lib$(GPU_EXTRA_LINK).a : $(CLEANLIBS)
+    ifeq ($(SCI_MAKE_BE_QUIET),true)
+	@echo "Building libgpu_extra_link.a..."
+	@$(NVCC) $(NVCC_CXXFLAGS) -dlink lib/lib*.a -o lib/lib$(GPU_EXTRA_LINK).a
+    else
+	$(NVCC) $(NVCC_CXXFLAGS) -dlink lib/lib*.a -o lib/lib$(GPU_EXTRA_LINK).a
+    endif
+
+  endif
+endif
+
+###############################################################################################
