@@ -24,11 +24,16 @@
  
 #include <Core/Util/GPU.h>
  
-namespace uintah{
-//______________________________________________________________________
-//  returns true if threadID and blockID are 0
-//  Useful in conditional statements for limiting output
-__device__ bool isThread0_Blk0(){
+namespace Uintah {
+
+//
+//  Returns true if threadID and blockID are 0.
+//  Useful in conditional statements for limiting output.
+//
+
+__device__
+bool
+isThread0_Blk0(){
   int blockID  = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z; 
   int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
   
@@ -36,4 +41,4 @@ __device__ bool isThread0_Blk0(){
   return test;
 }
 
-}  // uintah
+}  // end namespace Uintah
