@@ -34,12 +34,12 @@ SUBDIRS := $(SRCDIR)/RMCRT
 
 ifneq ($(NO_FORTRAN),yes)
   SRCS += \
-       $(SRCDIR)/Models_CellInformation.cc \
+       $(SRCDIR)/Models_CellInformation.cc  \
        $(SRCDIR)/Models_DORadiationModel.cc \
+       $(SRCDIR)/Models_RadiationModel.cc   \
+       $(SRCDIR)/Models_RadiationSolver.cc  \
        $(SRCDIR)/RadiationConstVariables.cc \
-       $(SRCDIR)/RadiationDriver.cc \
-       $(SRCDIR)/Models_RadiationModel.cc \
-       $(SRCDIR)/Models_RadiationSolver.cc \
+       $(SRCDIR)/RadiationDriver.cc         \
        $(SRCDIR)/RadiationVariables.cc
 
 

@@ -22,9 +22,6 @@
 #  IN THE SOFTWARE.
 # 
 # 
-# 
-# 
-# 
 # Makefile fragment for this subdirectory 
 
 SRCDIR := testprograms
@@ -57,26 +54,30 @@ ifeq ($(IS_STATIC_BUILD),yes)
         testprograms/TestConsecutiveRangeSet \
         testprograms/TestRangeTree           \
         testprograms/TestBoxGrouper          \
-        $(CORE_STATIC_PSELIBS)
+        $(ALL_STATIC_PSE_LIBS)
 else # Non-static build
   PSELIBS := \
         testprograms/TestSuite               \
         testprograms/TestMatrix3             \
-        Core/Util                            \
-        Core/ProblemSpec		     \
         testprograms/TestConsecutiveRangeSet \
         testprograms/TestRangeTree           \
         testprograms/TestBoxGrouper \
 	\
-	Core/Math
+	$(ALL_PSE_LIBS)
 endif
 
+PSELIBS := $(GPU_EXTRA_LINK) $(PSELIBS)
+
 ifeq ($(IS_STATIC_BUILD),yes)
-  LIBS := $(CORE_STATIC_LIBS)
+  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
+          $(HDF5_LIBRARY) $(BOOST_LIBRARY)         \
+          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
+          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
+          $(PAPI_LIBRARY) $(M_LIBRARY)
 else
   LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(LAPACK_LIBRARY) $(BLAS_LIBRARY) \
 	  $(THREAD_LIBRARY) $(Z_LIBRARY) \
-          $(TEEM_LIBRARY) $(XML2_LIBRARY)
+          $(TEEM_LIBRARY) $(XML2_LIBRARY) $(CUDA_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk

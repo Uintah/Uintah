@@ -57,25 +57,25 @@ ifeq ($(BUILD_ARCHES),yes)
 endif
 
 SUBDIRS := \
-        $(SRCDIR)/DataArchiver \
-        $(SRCDIR)/Examples \
-        $(SRCDIR)/Models \
-        $(SRCDIR)/LoadBalancers \
-        $(SRCDIR)/Schedulers \
-        $(SRCDIR)/Regridder \
-        $(SRCDIR)/SimulationController \
-        $(MPM)            \
-        $(ICE)            \
-        $(MPMICE)         \
-        $(ARCHES)         \
-        $(MPMARCHES)      \
-        $(WASATCH)        \
+        $(MPM)                         \
+        $(ICE)                         \
+        $(MPMICE)                      \
+        $(ARCHES)                      \
+        $(MPMARCHES)                   \
+        $(WASATCH)                     \
+        $(SRCDIR)/DataArchiver         \
+        $(SRCDIR)/Examples             \
+        $(SRCDIR)/LoadBalancers        \
+        $(SRCDIR)/Models               \
+        $(SRCDIR)/OnTheFlyAnalysis     \
+        $(SRCDIR)/Parent               \
         $(SRCDIR)/ProblemSpecification \
-        $(SRCDIR)/ReduceUda \
-        $(SRCDIR)/Solvers \
-        $(SRCDIR)/SwitchingCriteria \
-        $(SRCDIR)/OnTheFlyAnalysis \
-        $(SRCDIR)/Parent
+        $(SRCDIR)/ReduceUda            \
+        $(SRCDIR)/Regridder            \
+        $(SRCDIR)/Schedulers           \
+        $(SRCDIR)/SimulationController \
+        $(SRCDIR)/Solvers              \
+        $(SRCDIR)/SwitchingCriteria    
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

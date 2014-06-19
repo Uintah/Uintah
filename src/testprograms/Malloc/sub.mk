@@ -22,15 +22,27 @@
 #  IN THE SOFTWARE.
 # 
 # 
-# 
-# 
-# 
 # Makefile fragment for this subdirectory 
 
 SRCDIR := testprograms/Malloc
 
-PSELIBS :=
-LIBS := $(XML_LIBRARY) 
+ifeq ($(IS_STATIC_BUILD),yes)
+  PSELIBS := $(ALL_STATIC_PSE_LIBS)
+else # Non-static build
+  PSELIBS := $(ALL_PSE_LIBS)
+endif
+
+PSELIBS := $(GPU_EXTRA_LINK) $(PSELIBS)
+
+ifeq ($(IS_STATIC_BUILD),yes)
+  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
+          $(HDF5_LIBRARY) $(BOOST_LIBRARY)         \
+          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
+          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
+          $(PAPI_LIBRARY) $(M_LIBRARY)
+else
+  LIBS := $(XML_LIBRARY) $(DL_LIBRARY) $(THREAD_LIBRARY) $(CUDA_LIBRARY)
+endif
 
 PROGRAM := $(SRCDIR)/test1
 SRCS := $(SRCDIR)/test1.cc
@@ -83,18 +95,6 @@ include $(SCIRUN_SCRIPTS)/program.mk
 PROGRAM := $(SRCDIR)/test14
 SRCS := $(SRCDIR)/test14.cc
 include $(SCIRUN_SCRIPTS)/program.mk
-
-ifeq ($(IS_STATIC_BUILD),yes)
-  PSELIBS := $(CORE_STATIC_PSELIBS)
-else # Non-static build
-  PSELIBS := Core/Util Core/Containers Core/Exceptions Core/Thread
-endif
-
-ifeq ($(IS_STATIC_BUILD),yes)
-  LIBS := $(CORE_STATIC_LIBS)
-else
-  LIBS := $(XML_LIBRARY) $(DL_LIBRARY) $(THREAD_LIBRARY) 
-endif
 
 PROGRAM := $(SRCDIR)/test15
 SRCS := $(SRCDIR)/test15.cc

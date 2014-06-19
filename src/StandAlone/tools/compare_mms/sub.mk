@@ -22,9 +22,6 @@
 #  IN THE SOFTWARE.
 # 
 # 
-# 
-# 
-# 
 # Makefile fragment for this subdirectory 
 
 SRCDIR := StandAlone/tools/compare_mms
@@ -32,7 +29,7 @@ SRCDIR := StandAlone/tools/compare_mms
 
 ifeq ($(IS_STATIC_BUILD),yes)
 
-  PSELIBS := $(CORE_STATIC_PSELIBS)
+  PSELIBS := $(ALL_STATIC_PSE_LIBS)
 
 else # Non-static build
 
@@ -40,29 +37,20 @@ else # Non-static build
     PSELIBS := Packages/Uintah
   else
 
-    PSELIBS := \
-        Core/Containers   \
-        Core/Exceptions   \
-        Core/Geometry     \
-        Core/Math         \
-        Core/Util         \
-        Core/DataArchive \
-        Core/Disclosure  \
-        Core/Exceptions  \
-        Core/Grid        \
-        Core/Labels      \
-        Core/ProblemSpec                    \
-        Core/Util                           \
-        CCA/Components/DataArchiver         \
-        CCA/Components/Schedulers           \
-        CCA/Components/ProblemSpecification
+    PSELIBS := $(ALL_PSE_LIBS)
   endif
 endif
 
+PSELIBS := $(GPU_EXTRA_LINK) $(PSELIBS)
+
 ifeq ($(IS_STATIC_BUILD),yes)
-  LIBS := $(CORE_STATIC_LIBS)
+  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
+          $(HDF5_LIBRARY) $(BOOST_LIBRARY)         \
+          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
+          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
+          $(PAPI_LIBRARY) $(M_LIBRARY)
 else
-  LIBS := $(BOOST_LIBRARY) $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY) $(MPI_LIBRARY) $(XML2_LIBRARY)
+  LIBS := $(BOOST_LIBRARY) $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY) $(MPI_LIBRARY) $(XML2_LIBRARY) $(CUDA_LIBRARY)
 endif
 
 
