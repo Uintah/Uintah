@@ -40,67 +40,55 @@
 using namespace Uintah;
 
 // Scheduling related helpers for the base SPME class
-void SPME::addInitializeRequirements(Task* task, MDLabel* label) const {
-  // This isn't really requires, it's simply being used to make sure we don't
-  // init before we've finished MD::Initialize.  Not sure that's necessary...
-
-  task->requires(Task::NewDW, label->global->pX, Ghost::None, 0);
-
+void SPME::addInitializeRequirements(Task* task, MDLabel* label) const
+{
+  // Empty
 }
 
-void SPME::addInitializeComputes(Task* task, MDLabel* label) const {
-
-  // Probably should initialize rElectrostaticInverseEnergy and
-  // rElectrostaticInverseStress in setup or even in calculate since we'll be
-  // overwriting them every iteration for the polarizable loop
+void SPME::addInitializeComputes(Task* task, MDLabel* label) const
+{
 
   task->computes(label->electrostatic->sForwardTransformPlan);
   task->computes(label->electrostatic->sBackwardTransformPlan);
-  task->computes(label->electrostatic->dElectrostaticDependency);
 
+  // The following may be required to be initialized to keep the DW
+  // from fouling itself.
 
-//  task->computes(label->electrostatic->rElectrostaticInverseEnergy);
-//  task->computes(label->electrostatic->rElectrostaticRealEnergy);
-//
-//  task->computes(label->electrostatic->rElectrostaticInverseStress);
-//  task->computes(label->electrostatic->rElectrostaticRealStress);
-//  if (f_polarizable) {
-//    task->computes(label->electrostatic->rElectrostaticInverseStressDipole);
-//  }
+  task->computes(label->electrostatic->pF_electroInverse);
+  task->computes(label->electrostatic->pF_electroReal);
 
+  if (f_polarizable) {
+    task->computes(label->electrostatic->pMu);
+    task->computes(label->electrostatic->pE_electroReal);
+    task->computes(label->electrostatic->pE_electroInverse);
+  }
+
+  task->computes(label->electrostatic->rElectrostaticInverseEnergy);
+  task->computes(label->electrostatic->rElectrostaticInverseStress);
+  task->computes(label->electrostatic->rElectrostaticRealEnergy);
+  task->computes(label->electrostatic->rElectrostaticRealStress);
+
+  if (f_polarizable) {
+    task->computes(label->electrostatic->rElectrostaticInverseStressDipole);
+  }
 }
 
-void SPME::addSetupRequirements(Task* task, MDLabel* d_label) const {
-
-  task->requires(Task::OldDW,
-                 d_label->electrostatic->dElectrostaticDependency);
+void SPME::addSetupRequirements(Task* task, MDLabel* d_label) const
+{
+  // Empty
 }
 
 void SPME::addSetupComputes(Task* task, MDLabel* d_label) const {
 
-//  if (f_polarizable) {
-//    task->computes(d_label->electrostatic->pE_electroInverse_preReloc);
-//    task->computes(d_label->electrostatic->pE_electroReal_preReloc);
-//  }
-//  task->computes(d_label->electrostatic->pF_electroInverse_preReloc);
-//  task->computes(d_label->electrostatic->pF_electroReal_preReloc);
-
-  task->modifies(d_label->electrostatic->dElectrostaticDependency);
+  task->computes(d_label->electrostatic->dElectrostaticDependency);
 }
 
 void SPME::addCalculateRequirements(Task* task, MDLabel* d_label) const {
 
-//  if (f_polarizable) {
-//    // This is a requirement for the field calculation.  Not sure this is
-//    // actually necessary.  FIXME  JBH
-//    task->requires(Task::NewDW, d_label->electrostatic->pE_electroInverse,
-//                   Ghost::None, 0);
-//    task->requires(Task::NewDW, d_label->electrostatic->pE_electroReal,
-//                   Ghost::None, 0);
-//  }
-//  task->requires(Task::NewDW,
-//                   d_label->electrostatic->dElectrostaticDependency);
-  task->modifies(d_label->electrostatic->dElectrostaticDependency);
+  task->requires(Task::OldDW, d_label->global->pX, Ghost::None, 0);
+  task->requires(Task::OldDW, d_label->global->pID, Ghost::None, 0);
+
+  task->requires(Task::NewDW, d_label->electrostatic->dElectrostaticDependency);
 }
 
 void SPME::addCalculateComputes(Task* task, MDLabel* d_label) const {
@@ -113,30 +101,25 @@ void SPME::addCalculateComputes(Task* task, MDLabel* d_label) const {
   task->computes(d_label->electrostatic->rElectrostaticRealStress);
 
   if (f_polarizable) {
-    task->computes(d_label->electrostatic->pMu);
+    task->computes(d_label->electrostatic->pMu_preReloc);
   }
   // We should probably actually concatenate the forces into a single 
   // pF_electrostatic for gating to the integrator.
   task->computes(d_label->electrostatic->pF_electroInverse_preReloc);
   task->computes(d_label->electrostatic->pF_electroReal_preReloc);
+  task->computes(d_label->electrostatic->pE_electroInverse_preReloc);
+  task->computes(d_label->electrostatic->pE_electroReal_preReloc);
 
 }
 
-void SPME::addFinalizeRequirements(Task* task, MDLabel* d_label) const {
-
-//  task->requires(Task::NewDW, d_label->electrostatic->pF_electroInverse_preReloc,
-//                   Ghost::None, 0);
-//  task->requires(Task::NewDW, d_label->electrostatic->pF_electroReal_preReloc,
-//                   Ghost::None, 0);
-//  task->requires(Task::NewDW, d_label->electrostatic->dSubschedulerDependency);
-
+void SPME::addFinalizeRequirements(Task* task, MDLabel* d_label) const
+{
+  // Empty
 }
 
-void SPME::addFinalizeComputes(Task* task, MDLabel* d_label) const {
-
-//  task->computes(d_label->electrostatic->pF_electroInverse_preReloc);
-//  task->computes(d_label->electrostatic->pF_electroReal_preReloc);
-
+void SPME::addFinalizeComputes(Task* task, MDLabel* d_label) const
+{
+  // Empty
 }
 
 void SPME::registerRequiredParticleStates(LabelArray& particleState,
@@ -166,8 +149,9 @@ void SPME::registerRequiredParticleStates(LabelArray& particleState,
   particleState_preReloc.push_back(
                         d_label->electrostatic->pF_electroReal_preReloc);
 
-  // Note:  Per particle charges may be required in some FF implementations (i.e. ReaxFF), however we will let
-  //        the FF themselves register these variables if these are present and needed.
+  // Note:  Per particle charges may be required in some FF implementations
+  //        (i.e. ReaxFF), however we will let the FF themselves register these
+  //        variables if these are present and needed.
 
 }
 
@@ -218,9 +202,10 @@ void SPME::scheduleCalculateRealspace(const ProcessorGroup*     pg,
 
       // Also requires the last iteration's dipole guess, which does change
       // for the polarizability iteration
-      task->requires(Task::NewDW, label->electrostatic->pMu,
-                     Ghost::AroundNodes, d_electrostaticGhostCells);    //Dipoles
+      task->requires(Task::OldDW, label->electrostatic->pMu,
+                     Ghost::AroundNodes, d_electrostaticGhostCells);
 
+      // And provides the field
       task->computes(label->electrostatic->pE_electroReal_preReloc);
     }
     else {

@@ -59,4 +59,8 @@ const Uintah::Matrix3   MDConstants::M3_I(1.0, 0.0, 0.0,
                                           0.0, 1.0, 0.0,
                                           0.0, 0.0, 1.0);
 
+const Uintah::Matrix3   MDConstants::M3_0(0.0, 0.0, 0.0,
+                                          0.0, 0.0, 0.0,
+                                          0.0, 0.0, 1.0);
+
 

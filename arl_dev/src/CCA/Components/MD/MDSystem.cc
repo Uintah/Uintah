@@ -52,14 +52,11 @@ namespace Uintah {
 
   }
 
-  MDSystem::MDSystem(const ProblemSpecP& ps,
-                     GridP& grid,
-                     SimulationStateP& _state)
-                    :d_simState(_state)
+  MDSystem::MDSystem(const ProblemSpecP&    ps,
+                           GridP&           grid,
+                           Forcefield*      _ff)
+                    :d_forcefield(_ff)
   {
-    // Forcefield must be attached externally
-    d_forcefield = 0;
-
     //std::vector<int> d_atomTypeList;
     ProblemSpecP mdsystem_ps = ps->findBlock("MD")->findBlock("System");
     std::string ensembleLabel;
@@ -194,8 +191,8 @@ namespace Uintah {
 //    std::cerr << "MDSystem::MDSystem --> Parsed cutoff neighbor cell information" << std::endl;
 
 
-    int numAtomTypes = d_simState->getNumMatls();
-    d_numAtomsOfType = std::vector<size_t> (numAtomTypes,0);
+//    int numAtomTypes = d_simState->getNumMatls();
+//    d_numAtomsOfType = std::vector<size_t> (numAtomTypes,0);
     d_numAtoms=0;
 
     std::cerr << "MDSystem::MDSystem --> Parsed atom type list information" << std::endl;

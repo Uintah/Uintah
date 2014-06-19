@@ -92,7 +92,7 @@ lucretiusAtomMap::lucretiusAtomMap(const ProblemSpecP& spec, const SimulationSta
         SCIRun::Vector currentV;
         std::string currentLabel;
         size_t currentChargeIndex;
-        size_t atomCount=0;
+        long64 atomCount=0;
 //        while (coordFile) { // Keep reading as long as we have data
           while (buffer[0] != '*') {  // Parse coordinates
             // First parse the positions and type label
@@ -122,7 +122,7 @@ lucretiusAtomMap::lucretiusAtomMap(const ProblemSpecP& spec, const SimulationSta
               double vZ = Parse::stringToDouble(parseTokens[2]);
               currentV = SCIRun::Vector(vX,vY,vZ);
               ++atomCount; // Have coordinates, velocity, and label, and ID# now.  Create atom data.
-               lucretiusAtomData* newAtom = new lucretiusAtomData(currentP, currentV, atomCount, currentLabel, currentChargeIndex, ffType);
+              lucretiusAtomData* newAtom = new lucretiusAtomData(currentP, currentV, atomCount, currentLabel, currentChargeIndex, ffType);
               currentLabel = newAtom->getLabel();
               this->addAtomToList(currentLabel,newAtom);
               coordinates=true;

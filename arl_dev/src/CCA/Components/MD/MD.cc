@@ -70,8 +70,8 @@ using namespace Uintah;
 
 extern SCIRun::Mutex cerrLock;
 
-static DebugStream md_dbg("MDDebug", false);
-static DebugStream md_cout("MDCout", false);
+static DebugStream md_dbg("MDDebug", true);
+static DebugStream md_cout("MDCout", true);
 
 MD::MD(const ProcessorGroup* myworld) :
     UintahParallelComponent(myworld)
@@ -101,10 +101,10 @@ MD::~MD()
   }
 }
 
-void MD::problemSetup(const ProblemSpecP& params,
-                      const ProblemSpecP& restart_prob_spec,
-                      GridP& grid,
-                      SimulationStateP& shared_state)
+void MD::problemSetup(const ProblemSpecP&   params,
+                      const ProblemSpecP&   restart_prob_spec,
+                      GridP&                grid,
+                      SimulationStateP&     shared_state)
 {
   printTask(md_cout, "MD::problemSetup");
 
@@ -123,15 +123,13 @@ void MD::problemSetup(const ProblemSpecP& params,
   }
 
   // Initialize base scheduler and attach the position variable
-  dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(d_label->global->pX);
+  dynamic_cast<Scheduler*> (getPort("scheduler"))
+                            ->setPositionVar(d_label->global->pX);
 
 //------> Set up components inherent to MD
   // create the coordinate system interface
   d_coordinate = CoordinateSystemFactory::create(params, shared_state, grid);
   d_coordinate->markCellChanged();
-
-  // create and populate the MD System object
-  d_system = scinew MDSystem(params, grid, shared_state);
 
   // Parse the forcefield
   Forcefield* tempFF = ForcefieldFactory::create(params, shared_state);
@@ -150,6 +148,11 @@ void MD::problemSetup(const ProblemSpecP& params,
 
   std::cerr << "Forcefield created: "
             << d_forcefield->getForcefieldDescriptor() << std::endl;
+
+
+
+  // create and populate the MD System object
+  d_system = scinew MDSystem(params, grid, tempFF);
 
   // Instantiate the integrator
 //  Integrator* tempIntegrator = IntegratorFactory::create(XXX);
@@ -217,6 +220,30 @@ void MD::problemSetup(const ProblemSpecP& params,
    // subcomponents have provided the per-particle labels
    //
    // For now we're assuming all atom types have the same tracked states.
+   std::cout << "MD::problemSetup Registered Particle Variables:" << std::endl;
+   size_t stateSize, preRelocSize;
+   stateSize = d_particleState.size();
+   preRelocSize = d_particleState_preReloc.size();
+   if (stateSize != preRelocSize)
+   {
+     std::cerr << "ERROR:  Mismatch in number of per particle variable labels." << std::endl;
+   }
+   std::cout << "Registering particle variables: " << std::endl;
+   if (d_electrostatics->isPolarizable())
+   {
+     std::cout << "Simulation IS polarizable" << std::endl;
+   }
+   else
+   {
+     std::cout << "Simulation IS NOT polarizable" << std::endl;
+   }
+   for (size_t index = 0; index < stateSize; ++index)
+   {
+     std::cout << d_particleState[index]->getName() << "/"
+               << d_particleState_preReloc[index]->getName()
+               << std::endl;
+   }
+   std::cout << std::endl;
    d_forcefield->registerAtomTypes(d_particleState,
                                    d_particleState_preReloc,
                                    d_label,
@@ -244,9 +271,9 @@ void MD::scheduleInitialize(const LevelP& level,
   std::cerr << "MD::ScheduleInitialize -> Created new task." << std::endl;
 
   // Initialize will load position, velocity, and ID tags
-  task->computes(d_label->global->pX_preReloc);
-  task->computes(d_label->global->pV_preReloc);
-  task->computes(d_label->global->pID_preReloc);
+  task->computes(d_label->global->pX);
+  task->computes(d_label->global->pV);
+  task->computes(d_label->global->pID);
 
   //FIXME:  Do we still need this here?
   task->computes(d_label->electrostatic->dSubschedulerDependency);
@@ -285,20 +312,20 @@ void MD::scheduleComputeStableTimestep(const LevelP& level,
 
   Task* task = scinew Task("MD::computeStableTimestep", this, &MD::computeStableTimestep);
 
-  task->requires(Task::NewDW, d_label->nonbonded->rNonbondedEnergy);
-  task->requires(Task::NewDW, d_label->electrostatic->rElectrostaticInverseEnergy);
-  task->requires(Task::NewDW, d_label->electrostatic->rElectrostaticRealEnergy);
+//  task->requires(Task::NewDW, d_label->nonbonded->rNonbondedEnergy);
+//  task->requires(Task::NewDW, d_label->electrostatic->rElectrostaticInverseEnergy);
+//  task->requires(Task::NewDW, d_label->electrostatic->rElectrostaticRealEnergy);
 
   // We only -need- stress tensors if we're doing NPT
-  if ( NPT == d_system->getEnsemble()) {
-    task->requires(Task::NewDW, d_label->nonbonded->rNonbondedStress);
-    task->requires(Task::NewDW, d_label->electrostatic->rElectrostaticInverseStress);
-    task->requires(Task::NewDW, d_label->electrostatic->rElectrostaticRealStress);
-    if ( d_electrostatics->isPolarizable() ) {
-      task->requires(Task::NewDW,
-                     d_label->electrostatic->rElectrostaticInverseStressDipole);
-    }
-  }
+//  if ( NPT == d_system->getEnsemble()) {
+//    task->requires(Task::NewDW, d_label->nonbonded->rNonbondedStress);
+//    task->requires(Task::NewDW, d_label->electrostatic->rElectrostaticInverseStress);
+//    task->requires(Task::NewDW, d_label->electrostatic->rElectrostaticRealStress);
+//    if ( d_electrostatics->isPolarizable() ) {
+//      task->requires(Task::NewDW,
+//                     d_label->electrostatic->rElectrostaticInverseStressDipole);
+//    }
+//  }
 
   task->computes(d_sharedState->get_delt_label(), level.get_rep());
   task->setType(Task::OncePerProc);
@@ -338,117 +365,91 @@ void MD::scheduleTimeAdvance(const LevelP& level,
                                            d_label->global->pX,
                                            d_sharedState->d_particleState,
                                            d_label->global->pID,
-                                           matls, 1);
+                                           matls);
 
 
 //  sched->scheduleParticleRelocation(level, d_label->pXLabel_preReloc, d_sharedState->d_particleState_preReloc, d_label->pXLabel,
 //                                    d_sharedState->d_particleState, d_label->pParticleIDLabel, matls, 1);
 }
 
-void MD::scheduleNonbondedInitialize(SchedulerP& sched,
-                                     const PatchSet* perProcPatches,
+// Schedule indirect calls to subcomponents
+// Note:    Taskgraph can't schedule direct object reference tasks, since
+//          we don't know the explicit form of the subcomponents at compile
+//          time.
+void MD::scheduleNonbondedInitialize(SchedulerP&        sched,
+                                     const PatchSet*    perProcPatches,
                                      const MaterialSet* matls,
-                                     const LevelP& level)
+                                     const LevelP&      level)
 {
 
   printSchedule(perProcPatches, md_cout, "MD::scheduleNonbondedInitialize");
 
   Task* task = scinew Task("MD::nonbondedInitialize", this, &MD::nonbondedInitialize);
 
-  // This is during the initial timestep... no OldDW exists
-  task->requires(Task::NewDW, d_label->global->pX, Ghost::None, 0);
-//  task->requires(Task::NewDW, d_label->pXLabel, Ghost::None, 0);
+  MDSubcomponent* d_nonbondedInterface =
+                      dynamic_cast<MDSubcomponent*> (d_nonbonded);
 
-  MDSubcomponent* d_nonbondedInterface = dynamic_cast<MDSubcomponent*> (d_nonbonded);
-
-  task->requires(Task::NewDW, d_label->global->pX, Ghost::None, 0);
   d_nonbondedInterface->addInitializeRequirements(task, d_label);
   d_nonbondedInterface->addInitializeComputes(task, d_label);
-
-   // initialize reduction variable; van der Waals energy
-//  task->computes(d_label->nonbonded->rNonbondedEnergy);
-//  task->computes(d_label->nonbonded->dNonbondedDependency);
-//  task->computes(d_label->nonbonded->rNonbondedStress);
-
-//  task->computes(d_label->nonbondedEnergyLabel);
-//  task->computes(d_label->nonbondedDependencyLabel);
 
   task->setType(Task::OncePerProc);
   sched->addTask(task, perProcPatches, matls);
 }
 
-void MD::scheduleNonbondedSetup(SchedulerP& sched,
-                                const PatchSet* patches,
-                                const MaterialSet* matls,
-                                const LevelP& level)
+void MD::scheduleNonbondedSetup(SchedulerP&         sched,
+                                const PatchSet*     patches,
+                                const MaterialSet*  matls,
+                                const LevelP&       level)
 {
   printSchedule(patches, md_cout, "MD::scheduleNonbondedSetup");
 
   Task* task = scinew Task("MD::nonbondedSetup", this, &MD::nonbondedSetup);
 
-  task->requires(Task::OldDW, d_label->nonbonded->dNonbondedDependency);
-  MDSubcomponent* d_nonbondedInterface = dynamic_cast<MDSubcomponent*> (d_nonbonded);
+  MDSubcomponent* d_nonbondedInterface =
+                      dynamic_cast<MDSubcomponent*> (d_nonbonded);
 
   d_nonbondedInterface->addSetupRequirements(task, d_label);
   d_nonbondedInterface->addSetupComputes(task, d_label);
 
-//  task->computes(d_label->nonbonded->dNonbondedDependency);
-
-//  task->requires(Task::OldDW, d_label->nonbondedDependencyLabel);
-//  task->computes(d_label->nonbondedDependencyLabel);
-
   sched->addTask(task, patches, matls);
 }
 
-void MD::scheduleNonbondedCalculate(SchedulerP& sched,
-                                    const PatchSet* patches,
-                                    const MaterialSet* matls,
-                                    const LevelP& level)
+void MD::scheduleNonbondedCalculate(SchedulerP&         sched,
+                                    const PatchSet*     patches,
+                                    const MaterialSet*  matls,
+                                    const LevelP&       level)
 {
   printSchedule(patches, md_cout, "MD::scheduleNonbondedCalculate");
 
-  Task* task = scinew Task("MD::nonbondedCalculate",this,&MD::nonbondedCalculate);
+  Task* task = scinew Task("MD::nonbondedCalculate",
+                           this,
+                           &MD::nonbondedCalculate);
 
-//  int CUTOFF_RADIUS = d_system->getNonbondedGhostCells();
-  int CUTOFF_CELLS = d_nonbonded->requiredGhostCells();
-  task->requires(Task::OldDW, d_label->global->pX, Ghost::AroundNodes, CUTOFF_CELLS);
-  task->requires(Task::OldDW, d_label->global->pID, Ghost::AroundNodes, CUTOFF_CELLS);
+  MDSubcomponent* d_nonbondedInterface =
+                      dynamic_cast<MDSubcomponent*> (d_nonbonded);
 
-  MDSubcomponent* d_nonbondedInterface = dynamic_cast<MDSubcomponent*> (d_nonbonded);
   d_nonbondedInterface->addCalculateRequirements(task,d_label);
   d_nonbondedInterface->addCalculateComputes(task,d_label);
 
-  // ??? FIXME
-  //  Turns out we don't even need the old forces!
-  //  ^^^Do we really need ghost nodes for the force if we're only calculating local forces on a patch?
-//  task->requires(Task::OldDW, d_label->nonbonded->pF_nonbonded, Ghost::AroundNodes, CUTOFF_RADIUS);
-//  task->requires(Task::OldDW, d_label->nonbonded->dNonbondedDependency, Ghost::None, 0);
-
-  //  task->requires(Task::OldDW, d_label->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
-//  task->requires(Task::OldDW, d_label->pNonbondedForceLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
-//  task->requires(Task::OldDW, d_lb->pEnergyLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
-//  task->requires(Task::OldDW, d_label->pParticleIDLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
-//  task->requires(Task::OldDW, d_label->nonbondedDependencyLabel, Ghost::None, 0);
-
-//  task->computes(d_label->nonbonded->pF_nonbonded_preReloc);
-//  task->computes(d_label->nonbonded->rNonbondedEnergy);
-//  task->computes(d_label->nonbonded->rNonbondedStress);
-
   sched->addTask(task, patches, matls);
-//  task->computes(d_label->pNonbondedForceLabel_preReloc);
-//  task->computes(d_lb->pEnergyLabel_preReloc);
-//  task->computes(d_label->nonbondedEnergyLabel);
-
 }
 
-void MD::scheduleNonbondedFinalize(SchedulerP& sched,
-                                   const PatchSet* patches,
-                                   const MaterialSet* matls,
-                                   const LevelP& level)
+void MD::scheduleNonbondedFinalize(SchedulerP&          sched,
+                                   const PatchSet*      patches,
+                                   const MaterialSet*   matls,
+                                   const LevelP&        level)
 {
   printSchedule(patches, md_cout, "MD::scheduleNonbondedFinalize");
 
-  Task* task = scinew Task("MD::nonbondedFinalize", this, &MD::nonbondedFinalize);
+  Task* task = scinew Task("MD::nonbondedFinalize",
+                           this,
+                           &MD::nonbondedFinalize);
+
+  MDSubcomponent* d_nonbondedInterface =
+                      dynamic_cast<MDSubcomponent*> (d_nonbonded);
+
+  d_nonbondedInterface->addFinalizeRequirements(task, d_label);
+  d_nonbondedInterface->addFinalizeComputes(task, d_label);
 
   sched->addTask(task, patches, matls);
 }
@@ -467,36 +468,16 @@ void MD::scheduleElectrostaticsInitialize(SchedulerP& sched,
                              this,
                              &MD::electrostaticsInitialize);
 
-    task->requires(Task::NewDW, d_label->global->pX, Ghost::None, 0);
-
     // cast electrostatics to a subcomponent interface
-    MDSubcomponent* d_electroInterface = dynamic_cast<MDSubcomponent*> (d_electrostatics);
+    MDSubcomponent* d_electroInterface =
+                        dynamic_cast<MDSubcomponent*> (d_electrostatics);
+
     d_electroInterface->addInitializeRequirements(task, d_label);
     d_electroInterface->addInitializeComputes(task, d_label);
 
     task->setType(Task::OncePerProc);
     sched->addTask(task, perProcPatches, matls);
   }
-
-//    if (d_electrostatics->getType() == Electrostatics::SPME) {
-//
-//      // FFTW related sole variables
-//      task->computes(d_label->electrostatic->sForwardTransformPlan);
-//      task->computes(d_label->electrostatic->sBackwardTransformPlan);
-//
-//      // dependency
-//      task->computes(d_label->electrostatic->dElectrostaticDependency);
-//
-////      task->computes(d_label->electrostaticReciprocalEnergyLabel);
-////      task->computes(d_label->electrostaticReciprocalStressLabel);
-//
-//      // sole variables
-////      task->computes(d_label->electrostaticsDependencyLabel);
-//      task->setType(Task::OncePerProc);
-//      sched->addTask(task, perProcPatches, matls);
-//    }
-//
-//  }
 }
 
 void MD::scheduleElectrostaticsSetup(SchedulerP& sched,
@@ -516,19 +497,7 @@ void MD::scheduleElectrostaticsSetup(SchedulerP& sched,
     d_electroInterface->addSetupComputes(task, d_label);
     sched->addTask(task, patches, matls);
 
-//    task->requires(Task::NewDW, d_label->electrostatic->dElectrostaticDependency);
-//
-//
-//    // particle variables
-//    task->computes(d_label->electrostatic->pE_electroInverse);
-//    task->computes(d_label->electrostatic->pE_electroReal);
-//    task->computes(d_label->electrostatic->pF_electroInverse);
-//    task->computes(d_label->electrostatic->pF_electroReal);
-//
-//    // dependency variable (really necessary at this point?)
-//    task->modifies(d_label->electrostatic->dElectrostaticDependency);
   }
-//  task->computes(d_label->electrostaticsDependencyLabel);
 
 }
 
@@ -545,27 +514,13 @@ void MD::scheduleElectrostaticsCalculate(SchedulerP& sched,
     task->requires(Task::OldDW, d_label->global->pX, Ghost::AroundNodes, d_electrostatics->requiredGhostCells());
     task->requires(Task::OldDW, d_label->global->pID, Ghost::AroundNodes, d_electrostatics->requiredGhostCells());
 
+    // Need delT for the subscheduler timestep
+    task->requires(Task::OldDW, d_sharedState->get_delt_label());
+
     MDSubcomponent* d_electroInterface = dynamic_cast<MDSubcomponent*> (d_electrostatics);
 
     d_electroInterface->addCalculateRequirements(task, d_label);
     d_electroInterface->addCalculateComputes(task, d_label);
-//    task->requires(Task::NewDW, d_label->electrostatic->pE_electroInverse, Ghost::None, 0);
-//    task->requires(Task::NewDW, d_label->electrostatic->pE_electroReal, Ghost::None, 0);
-//
-//    task->requires(Task::NewDW, d_label->electrostatic->dElectrostaticDependency);
-
-  //  task->requires(Task::OldDW, d_label->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
-  //  task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
-  //  task->requires(Task::OldDW, d_label->pParticleIDLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
-  //  task->requires(Task::OldDW, d_label->electrostaticsDependencyLabel);
-  //  task->requires(Task::OldDW, d_label->subSchedulerDependencyLabel, Ghost::None, 0);
-
-//    task->computes(d_label->electrostatic->rElectrostaticInverseEnergy);
-//    task->computes(d_label->electrostatic->rElectrostaticRealEnergy);
-//    task->computes(d_label->electrostatic->rElectrostaticInverseStress);
-//    task->computes(d_label->electrostatic->rElectrostaticRealStress);
-//
-//    task->computes(d_label->electrostatic->pMu);
 
     task->hasSubScheduler(true);
     task->setType(Task::OncePerProc);
@@ -592,22 +547,6 @@ void MD::scheduleElectrostaticsFinalize(SchedulerP& sched,
     d_electroInterface->addFinalizeRequirements(task, d_label);
     d_electroInterface->addFinalizeComputes(task, d_label);
 
-
-  // particle variables
-//  task->requires(Task::NewDW, d_label->electrostatic->pF_electroInverse, Ghost::None, 0);
-//  task->requires(Task::NewDW, d_label->electrostatic->pF_electroReal, Ghost::None, 0);
-//  task->requires(Task::NewDW, d_label->electrostatic->dSubschedulerDependency);
-
-//  task->requires(Task::NewDW, d_label->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
-
-//  task->computes(d_label->electrostatic->pF_electroInverse_preReloc);
-//  task->computes(d_label->electrostatic->pF_electroReal_preReloc);
-
-//  task->computes(d_label->pElectrostaticsReciprocalForce_preReloc);
-//  task->computes(d_label->pElectrostaticsRealForce_preReloc);
-//  task->computes(d_lb->pElectrostaticsForceLabel_preReloc);
-//  task->computes(d_lb->pChargeLabel_preReloc);
-
     sched->addTask(task, patches, matls);
   }
 }
@@ -621,7 +560,6 @@ void MD::scheduleUpdatePosition(SchedulerP& sched,
 
   // This should eventually schedule a call of the integrator.  Something like d_Integrator->advanceTimestep()
   Task* task = scinew Task("updatePosition", this, &MD::updatePosition);
-
 
   // Integration requires the position and particle ID from last time step
   task->requires(Task::OldDW, d_label->global->pX, Ghost::None, 0);
@@ -651,6 +589,8 @@ void MD::scheduleUpdatePosition(SchedulerP& sched,
   // From integration we get new positions and velocities
   task->computes(d_label->global->pX_preReloc);
   task->computes(d_label->global->pID_preReloc);
+  task->computes(d_label->global->pV_preReloc);
+
 //  task->computes(d_label->pXLabel_preReloc);
 //  task->computes(d_label->pVelocityLabel_preReloc);
 //  task->modifies(d_lb->pNonbondedForceLabel_preReloc);
@@ -738,6 +678,11 @@ void MD::initialize(const ProcessorGroup*   pg,
       std::vector<size_t>           localAtomID;
       std::vector<SCIRun::Vector>   localAtomVelocity;
 
+//      std::cout << "Checking for location of atoms from pool of "
+//                << numAtomsOfType << " atoms with the label "
+//                << typeLabel << " with material ID: "
+//                << globalID << std::endl;
+
       for (size_t atomIndex = 0; atomIndex < numAtomsOfType; ++atomIndex) {
         // Loop over all atoms of material
         atomData*   currAtom        = (*currAtomList)[atomIndex];
@@ -748,9 +693,17 @@ void MD::initialize(const ProcessorGroup*   pg,
                           ->getCellIndex(currPosition);
 
         // Build local atom list for atoms of material in current patch
-        bool atomInPatch = containsAtom(lowCellBoundary,
-                                        highCellBoundary,
-                                        currCell);
+//        bool atomInPatch = containsAtom(lowCellBoundary,
+//                                        highCellBoundary,
+//                                        currCell);
+        bool atomInPatch = currPatch->containsPoint(currPosition);
+
+//        if (!atomInPatch && globalID == 2)
+//                          std::cout << "Atom " << currAtom->getID()
+//                                    << " Type: " << typeLabel
+//                                    << " cell: " << currCell
+//                                    << " | Patch Boundaries: " << lowCellBoundary << highCellBoundary
+//                                    << std::endl;
         if (atomInPatch) { // Atom is on this patch
           size_t currID = currAtom->getID();
           SCIRun::Vector currVelocity = currAtom->getVelocity();
@@ -765,26 +718,33 @@ void MD::initialize(const ProcessorGroup*   pg,
       size_t            numAtoms = localAtomCoordinates.size();
       ParticleSubset*   currPset =
                         newDW->createParticleSubset(numAtoms,
-                                                     globalID,
-                                                     currPatch);
-
+                                                    globalID,
+                                                    currPatch,
+                                                    lowCellBoundary,
+                                                    highCellBoundary);
+//      std::cerr << " Created a subset of " << currPset->numParticles()
+//                << " particles on patch " << patchIndex << "/" << numPatches
+//                << " of type " << typeLabel << " with material type "
+//                << globalID << " with DW index of " << atomType->getDWIndex()
+//                << "." << "\t Patch Limits: " << lowCellBoundary
+//                << " - " << highCellBoundary << std::endl;
     // ----> Variables from parsing the input coordinate file
     // --> Position
       ParticleVariable<Point>   pX;
-      newDW->allocateAndPut(    pX, d_label->global->pX_preReloc, currPset);
+      newDW->allocateAndPut(    pX, d_label->global->pX, currPset);
     // --> Velocity
       ParticleVariable<Vector>  pV;
-      newDW->allocateAndPut(    pV, d_label->global->pV_preReloc, currPset);
+      newDW->allocateAndPut(    pV, d_label->global->pV, currPset);
     // --> Index
       ParticleVariable<long64>  pID;
-      newDW->allocateAndPut(    pID, d_label->global->pID_preReloc,currPset);
+      newDW->allocateAndPut(    pID, d_label->global->pID,currPset);
 
       for (size_t atomIndex = 0; atomIndex < numAtoms; ++atomIndex) {
         // Transfer over currently defined atom data
         pX[atomIndex]    = localAtomCoordinates[atomIndex];
         pV[atomIndex]    = localAtomVelocity[atomIndex];
         pID[atomIndex]   = localAtomID[atomIndex];
-//
+
 //        if (md_dbg.active()) { // Output for debug..
 //          cerrLock.lock();
 //          std::cout.setf(std::ios_base::showpoint);  // print decimal and trailing zeros
@@ -796,8 +756,8 @@ void MD::initialize(const ProcessorGroup*   pg,
 //          std::cout << std::endl;
 //          cerrLock.unlock();
 //        }
-//
-//
+
+
       }
 
       CCVariable<int> subSchedulerDependency;
@@ -812,7 +772,6 @@ void MD::initialize(const ProcessorGroup*   pg,
 
     } // Loop over materials
   } // Loop over patches
-
 }
 
 void MD::computeStableTimestep(const ProcessorGroup* pg,
@@ -829,36 +788,38 @@ void MD::computeStableTimestep(const ProcessorGroup* pg,
   matrix_sum spmeRealStress;
   matrix_sum spmeFourierStressDipole;
 
-  double energyTest = 0.1;
-  new_dw->get(vdwEnergy, d_label->nonbonded->rNonbondedEnergy);
-  new_dw->get(spmeFourierEnergy,
-              d_label->electrostatic->rElectrostaticInverseEnergy);
+  // This is where we would actually map the correct timestep/taskgraph for a multistep integrator
 
-  proc0cout << std::endl;
-  proc0cout << "-----------------------------------------------------"           << std::endl;
-  proc0cout << "Total Energy   = " << std::setprecision(16) << vdwEnergy         << std::endl;
-  proc0cout << "-----------------------------------------------------"           << std::endl;
-  proc0cout << "Fourier Energy = " << std::setprecision(16) << spmeFourierEnergy << std::endl;
-  proc0cout << "-----------------------------------------------------"           << std::endl;
+//  double energyTest = 0.1;
+//  new_dw->get(vdwEnergy, d_label->nonbonded->rNonbondedEnergy);
+//  new_dw->get(spmeFourierEnergy,
+//              d_label->electrostatic->rElectrostaticInverseEnergy);
+//
+//  proc0cout << std::endl;
+//  proc0cout << "-----------------------------------------------------"           << std::endl;
+//  proc0cout << "Total Energy   = " << std::setprecision(16) << vdwEnergy         << std::endl;
+//  proc0cout << "-----------------------------------------------------"           << std::endl;
+//  proc0cout << "Fourier Energy = " << std::setprecision(16) << spmeFourierEnergy << std::endl;
+//  proc0cout << "-----------------------------------------------------"           << std::endl;
 
 
-  if (NPT == d_system->getEnsemble()) {
-    new_dw->get(spmeFourierStress,
-                d_label->electrostatic->rElectrostaticInverseStress);
-    Uintah::Matrix3 test(0.1);
-
-    new_dw->get(spmeRealStress,
-                d_label->electrostatic->rElectrostaticRealStress);
-    proc0cout << "Fourier Stress = " << std::setprecision(16) << spmeFourierStress << std::endl;
-    proc0cout << "-----------------------------------------------------"           << std::endl;
-
-    if (d_electrostatics->isPolarizable()) {
-      new_dw->get(spmeFourierStressDipole,
-                  d_label->electrostatic->rElectrostaticInverseStressDipole);
-    }
-  }
-
-  proc0cout << std::endl;
+//  if (NPT == d_system->getEnsemble()) {
+//    new_dw->get(spmeFourierStress,
+//                d_label->electrostatic->rElectrostaticInverseStress);
+//    Uintah::Matrix3 test(0.1);
+//
+//    new_dw->get(spmeRealStress,
+//                d_label->electrostatic->rElectrostaticRealStress);
+//    proc0cout << "Fourier Stress = " << std::setprecision(16) << spmeFourierStress << std::endl;
+//    proc0cout << "-----------------------------------------------------"           << std::endl;
+//
+//    if (d_electrostatics->isPolarizable()) {
+//      new_dw->get(spmeFourierStressDipole,
+//                  d_label->electrostatic->rElectrostaticInverseStressDipole);
+//    }
+//  }
+//
+//  proc0cout << std::endl;
 
   new_dw->put(delt_vartype(1), d_sharedState->get_delt_label(), getLevel(patches));
 }
@@ -952,10 +913,11 @@ void MD::electrostaticsCalculate(const ProcessorGroup* pg,
 {
   printTask(perProcPatches, md_cout, "MD::electrostaticsCalculate");
 
-//  delt_vartype dt;
-//  DataWarehouse* subNewDW = subscheduler->get_dw(3);
-//  parentOldDW->get(dt, d_sharedState->get_delt_label(),level.get_rep());
-//  subNewDW->put(dt, d_sharedState->get_delt_label(),level.get_rep());
+  // Copy del_t to the subscheduler
+  delt_vartype dt;
+  DataWarehouse* subNewDW = d_electrostaticSubscheduler->get_dw(3);
+  parentOldDW->get(dt, d_sharedState->get_delt_label(),level.get_rep());
+  subNewDW->put(dt, d_sharedState->get_delt_label(),level.get_rep());
 
   d_electrostatics->calculate(pg,perProcPatches,matls,parentOldDW,parentNewDW,
                               &d_sharedState,
@@ -981,17 +943,17 @@ void MD::electrostaticsFinalize(const ProcessorGroup* pg,
                              d_coordinate);
 }
 
-void MD::updatePosition(const ProcessorGroup* pg,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* old_dw,
-                        DataWarehouse* new_dw)
+void MD::updatePosition(const ProcessorGroup*   pg,
+                        const PatchSubset*      patches,
+                        const MaterialSubset*   matls,
+                        DataWarehouse*          old_dw,
+                        DataWarehouse*          new_dw)
 {
   printTask(patches, md_cout, "MD::updatePosition");
 
   // loop through all patches
   unsigned int numPatches = patches->size();
-  SimulationStateP simState = d_system->getStatePointer();
+//  SimulationStateP simState = d_system->getStatePointer();
 
   for (unsigned int p = 0; p < numPatches; ++p) {
     const Patch* patch = patches->get(p);
@@ -999,7 +961,7 @@ void MD::updatePosition(const ProcessorGroup* pg,
     unsigned int numMatls = matls->size();
     for (unsigned int m = 0; m < numMatls; ++m) {
       int matl = matls->get(m);
-      double massInv = 1.0/(simState->getMDMaterial(matl)->getMass());
+      double massInv = 1.0/(d_sharedState->getMDMaterial(matl)->getMass());
 
       ParticleSubset* pset = old_dw->getParticleSubset(matl, patch);
       ParticleSubset* delset = scinew ParticleSubset(0, matl, patch);
@@ -1010,11 +972,15 @@ void MD::updatePosition(const ProcessorGroup* pg,
       old_dw->get(pX, d_label->global->pX, pset);
       // --> Velocity at last time step (velocity verlet algorithm)
       constParticleVariable<SCIRun::Vector> pV;
-      old_dw->get(pX, d_label->global->pV, pset);
+      old_dw->get(pV, d_label->global->pV, pset);
+      constParticleVariable<long64> pID;
+      old_dw->get(pID, d_label->global->pID, pset);
+
 //      // --> Acceleration at last time step (velocity verlet algorithm)
 //      constParticleVariable<SCIRun::Vector> pA;
 //      old_dw->get(pA, d_lb->pAccelLabel, pset);
       // --> Forces for this time step
+
       constParticleVariable<SCIRun::Vector> pForceElectroReal;
       constParticleVariable<SCIRun::Vector> pForceElectroRecip;
       constParticleVariable<SCIRun::Vector> pForceNonbonded;
@@ -1037,6 +1003,8 @@ void MD::updatePosition(const ProcessorGroup* pg,
 //      // --> New acceleration
 //      ParticleVariable<SCIRun::Vector> pANew;
 //      new_dw->allocateAndPut(pANew, d_lb->pAccelLabel_preReloc, pset);
+      ParticleVariable<long64> pIDNew;
+      new_dw->allocateAndPut(pIDNew, d_label->global->pID_preReloc, pset);
 
       // get delT
       delt_vartype delT;
@@ -1057,6 +1025,9 @@ void MD::updatePosition(const ProcessorGroup* pg,
         pVNew[atomIndex] = pVNew[atomIndex] + 0.5 * (A_n) * delT; // pVNew = V_n+1/2
         // pXNew = X_n+1
         pXNew[atomIndex] = pX[atomIndex] + pVNew[atomIndex] * delT;
+
+        // Simply copy over particle IDs; they never change
+        pIDNew[atomIndex]= pID[atomIndex];
 //        if (md_dbg.active()) {
 //          cerrLock.lock();
 //          std::cout << "PatchID: " << std::setw(4) << patch->getID() << std::setw(6);
@@ -1091,52 +1062,3 @@ void MD::createBasePermanentParticleState() {
   d_particleState_preReloc.push_back(d_label->global->pID_preReloc);
   d_particleState_preReloc.push_back(d_label->global->pV_preReloc);
 }
-
-void MD::registerPermanentParticleState()
-{
-  // register the particle states with the shared SimulationState for persistence across timesteps
-  d_sharedState->d_particleState_preReloc.push_back(d_particleState_preReloc);
-  d_sharedState->d_particleState.push_back(d_particleState);
-}
-
-//void MD::extractCoordinates()
-//{
-//  std::ifstream inputFile;
-//  inputFile.open(d_coordinateFile.c_str());
-//  if (!inputFile.is_open()) {
-//    std::string message = "\tCannot open input file: " + d_coordinateFile;
-//    throw ProblemSetupException(message, __FILE__, __LINE__);
-//  }
-//
-//  // do file IO to extract atom coordinates and charge
-//  std::string line;
-//  unsigned int numRead;
-//  unsigned int numAtoms = d_system->getNumAtoms();
-//  for (unsigned int i = 0; i < numAtoms; ++i) {
-//    // get the atom coordinates
-//    getline(inputFile, line);
-//    double x, y, z;
-//    double charge;
-//    numRead = sscanf(line.c_str(), "%lf %lf %lf %lf", &x, &y, &z, &charge);
-//    if (numRead != 4) {
-//      std::string message = "\tMalformed input file. Should have [x,y,z] coordinates and [charge] per line: ";
-//      throw ProblemSetupException(message, __FILE__, __LINE__);
-//    }
-//
-//    //FIXME This is hacky!! Fix for generic case of wrapping arbitrary coordinates into arbitrary unit cells using
-//    //  reduced coordinate transformation!  -- JBH 5/9/13
-//    Vector box = d_system->getBox();
-//    if (x < 0) { x += box.x(); }
-//    if (y < 0) { y += box.y(); }
-//    if (z < 0) { z += box.z(); }
-//
-//    if (x >= box.x()) { x -= box.x(); }
-//    if (y >= box.y()) { y -= box.y(); }
-//    if (z >= box.z()) { z -= box.z(); }
-//
-//    Atom atom(Point(x, y, z), charge);
-//
-//    d_atomList.push_back(atom);
-//  }
-//  inputFile.close();
-//}

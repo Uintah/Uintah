@@ -83,9 +83,11 @@ Electrostatics* ElectrostaticsFactory::create(const ProblemSpecP& ps,
     bool polarizable = false;
     if (pol_ps) {
       pol_ps->getAttribute("enabled",polarizableEnabled);
+      std::cerr << "Parsing polarizability enabled attribute: " << polarizableEnabled << std::endl;
       std::string polCheck;
-      std::transform(polarizableEnabled.begin(),polarizableEnabled.end(),polCheck.begin(),::toupper);
-      if ( "true" == polCheck) {
+      std::transform(polarizableEnabled.begin(),polarizableEnabled.end(),polarizableEnabled.begin(),::toupper);
+      std::cerr << "Parsing polarizability enabled check attribute: " << polarizableEnabled << std::endl;
+      if ( "TRUE" == polarizableEnabled) {
         polarizable = true;
         pol_ps->require("polarizationTolerance",polTolerance);
         pol_ps->require("maxIterations",polMaxIterations);
