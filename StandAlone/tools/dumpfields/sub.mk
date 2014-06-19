@@ -22,9 +22,6 @@
 #  IN THE SOFTWARE.
 # 
 # 
-# 
-# 
-# 
 # Makefile fragment for this subdirectory 
 
 SRCDIR  := StandAlone/tools/dumpfields
@@ -50,42 +47,30 @@ SRCS    := \
 
 ifeq ($(IS_STATIC_BUILD),yes)
 
-  PSELIBS := $(CORE_STATIC_PSELIBS)
+  PSELIBS := $(ALL_STATIC_PSE_LIBS)
 
 else # Non-static build
 
   ifeq ($(LARGESOS),yes)
-    PSELIBS := Packages/Uintah
+    PSELIBS := $(ALL_STATIC_PSE_LIBS)
   else
-    PSELIBS := \
-        Core/Exceptions    \
-        Core/Grid          \
-        Core/Util          \
-        Core/Math          \
-        Core/Parallel      \
-        Core/Disclosure    \
-        Core/ProblemSpec   \
-        Core/Disclosure    \
-        Core/DataArchive   \
-	CCA/Ports          \
-        CCA/Components/ProblemSpecification \
-        Core/Exceptions  \
-        Core/Persistent  \
-        Core/Geometry    \
-        Core/Thread      \
-        Core/Util        \
-        Core/OS          \
-        Core/Containers
+    PSELIBS := $(ALL_PSE_LIBS)
   endif
 endif
 
+PSELIBS := $(GPU_EXTRA_LINK) $(PSELIBS)
+
 ifeq ($(IS_STATIC_BUILD),yes)
-  LIBS := $(CORE_STATIC_LIBS) $(BOOST_LIBRARY)
+  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
+          $(HDF5_LIBRARY) $(BOOST_LIBRARY)         \
+          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
+          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
+          $(PAPI_LIBRARY) $(M_LIBRARY)
 else
   # (Note, THREAD_LIBRARY must come after BLAS_LIBRARY.)
   LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) $(F_LIBRARY) \
           $(TEEM_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) \
-	  $(BOOST_LIBRARY)
+	  $(BOOST_LIBRARY) $(CUDA_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk

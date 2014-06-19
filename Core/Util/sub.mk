@@ -51,6 +51,7 @@ SRCS += $(REFCOUNT_IMPL)
 
 ifeq ($(HAVE_CUDA),yes)
   SRCS += $(SRCDIR)/GPU.cu
+  DLINK_FILES += Core/Util/GPU.o
 endif
 
 PSELIBS := Core/Containers Core/Exceptions Core/Thread

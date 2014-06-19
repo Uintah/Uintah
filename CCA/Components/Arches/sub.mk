@@ -22,14 +22,11 @@
 #  IN THE SOFTWARE.
 # 
 # 
-# 
-# 
-# 
 # Makefile fragment for this subdirectory 
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := CCA/Components/Arches
+SRCDIR := CCA/Components/Arches
 
 SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/ArchesConstVariables.cc      \
@@ -62,7 +59,8 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         
 
 ifeq ($(HAVE_CUDA),yes)
-   SRCS += $(SRCDIR)/constructLinearSystemKernel.cu
+  SRCS += $(SRCDIR)/constructLinearSystemKernel.cu
+  DLINK_FILES := $(DLINK_FILES) $(SRCDIR)/constructLinearSystemKernel.o
 endif
 
 PSELIBS :=
@@ -83,8 +81,8 @@ PSELIBS := \
         Core/Exceptions                 \
         Core/Geometry                   \
         Core/GeometryPiece              \
-        Core/IO                         \
         Core/Grid                       \
+        Core/IO                         \
         Core/Math                       \
         Core/Parallel                   \
         Core/ProblemSpec                \

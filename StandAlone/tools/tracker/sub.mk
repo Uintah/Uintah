@@ -22,33 +22,33 @@
 #  IN THE SOFTWARE.
 # 
 # 
-# 
-# 
-# 
 # Makefile fragment for this subdirectory 
 
 SRCDIR  := StandAlone/tools/tracker
 PROGRAM := $(SRCDIR)/tracker
 
 ifeq ($(IS_STATIC_BUILD),yes)
-  PSELIBS := Core/Tracker $(CORE_STATIC_PSELIBS)
+  PSELIBS := $(ALL_STATIC_PSE_LIBS)
 else # Non-static build
   ifeq ($(LARGESOS),yes)
     PSELIBS := Datflow Packages/Uintah
   else
-    PSELIBS := \
-	  Core/Util                     \
-          Core/Tracker
+    PSELIBS := $(ALL_PSE_LIBS)
   endif
 endif
 
-SRCS := \
-	$(SRCDIR)/TrackerProgram.cc                  
+PSELIBS := $(GPU_EXTRA_LINK) $(PSELIBS)
+
+SRCS := $(SRCDIR)/TrackerProgram.cc                  
 
 ifeq ($(IS_STATIC_BUILD),yes)
-  LIBS := $(CORE_STATIC_LIBS)
+  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
+          $(HDF5_LIBRARY) $(BOOST_LIBRARY)         \
+          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
+          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
+          $(PAPI_LIBRARY) $(M_LIBRARY)
 else
-  LIBS := $(XML2_LIBRARY) $(TEEM_LIBRARY) $(Z_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY)
+  LIBS := $(XML2_LIBRARY) $(TEEM_LIBRARY) $(Z_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(CUDA_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk

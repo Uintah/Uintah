@@ -22,62 +22,56 @@
 #  IN THE SOFTWARE.
 # 
 # 
-# 
-# 
-# 
 # Makefile fragment for this subdirectory 
-
-
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := CCA/Components/Schedulers
+SRCDIR := CCA/Components/Schedulers
 
 SRCS += \
-	$(SRCDIR)/DetailedTasks.cc \
-	$(SRCDIR)/MemoryLog.cc \
-	$(SRCDIR)/CommRecMPI.cc \
-	$(SRCDIR)/MPIScheduler.cc \
-	$(SRCDIR)/DynamicMPIScheduler.cc \
-	$(SRCDIR)/MessageLog.cc \
-	$(SRCDIR)/MixedScheduler.cc \
-	$(SRCDIR)/OnDemandDataWarehouse.cc \
-	$(SRCDIR)/Relocate.cc \
-	$(SRCDIR)/SchedulerCommon.cc \
-	$(SRCDIR)/SchedulerFactory.cc \
-	$(SRCDIR)/SendState.cc \
-	$(SRCDIR)/SingleProcessorScheduler.cc \
-	$(SRCDIR)/TaskGraph.cc \
-	$(SRCDIR)/ThreadedMPIScheduler.cc \
-	$(SRCDIR)/ThreadedMPIScheduler2.cc \
-	$(SRCDIR)/UnifiedScheduler.cc \
-	$(SRCDIR)/ThreadPool.cc \
-	$(SRCDIR)/DependencyException.cc \
-	$(SRCDIR)/IncorrectAllocation.cc \
-	$(SRCDIR)/Util.cc \
-	$(SRCDIR)/templates.cc
-	
+        $(SRCDIR)/CommRecMPI.cc               \
+        $(SRCDIR)/DependencyException.cc      \
+        $(SRCDIR)/DetailedTasks.cc            \
+        $(SRCDIR)/DynamicMPIScheduler.cc      \
+        $(SRCDIR)/IncorrectAllocation.cc      \
+        $(SRCDIR)/MemoryLog.cc                \
+        $(SRCDIR)/MessageLog.cc               \
+        $(SRCDIR)/MixedScheduler.cc           \
+        $(SRCDIR)/MPIScheduler.cc             \
+        $(SRCDIR)/OnDemandDataWarehouse.cc    \
+        $(SRCDIR)/Relocate.cc                 \
+        $(SRCDIR)/SchedulerCommon.cc          \
+        $(SRCDIR)/SchedulerFactory.cc         \
+        $(SRCDIR)/SendState.cc                \
+        $(SRCDIR)/SingleProcessorScheduler.cc \
+        $(SRCDIR)/TaskGraph.cc                \
+        $(SRCDIR)/ThreadedMPIScheduler.cc     \
+        $(SRCDIR)/ThreadedMPIScheduler2.cc    \
+        $(SRCDIR)/ThreadPool.cc               \
+        $(SRCDIR)/UnifiedScheduler.cc         \
+        $(SRCDIR)/Util.cc                     \
+        \
+        $(SRCDIR)/templates.cc
+        
 ifeq ($(HAVE_CUDA),yes)
-	SRCS += $(SRCDIR)/GPUDataWarehouse.cu
+  SRCS += $(SRCDIR)/GPUDataWarehouse.cu
+  DLINK_FILES += CCA/Components/Schedulers/GPUDataWarehouse.o
 endif
 
 PSELIBS := \
-	CCA/Components/ProblemSpecification \
-	Core/Grid        \
-	Core/Util        \
-	Core/Disclosure  \
-	Core/ProblemSpec \
-	CCA/Ports        \
-	Core/Parallel    \
-	Core/Exceptions  \
-	Core/Containers                  \
-	Core/Exceptions                  \
-	Core/Geometry                    \
-	Core/OS                          \
-	Core/Thread                      \
-	Core/Util \
-	\
-	Core/Math
+        CCA/Components/ProblemSpecification \
+        CCA/Ports        \
+        Core/Containers  \
+        Core/Disclosure  \
+        Core/Exceptions  \
+        Core/Geometry    \
+        Core/Grid        \
+        Core/Math        \
+        Core/OS          \
+        Core/Parallel    \
+        Core/ProblemSpec \
+        Core/Thread      \
+        Core/Util        
 
 LIBS := $(XML2_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(VAMPIR_LIBRARY) $(CUDA_LIBRARY)
 

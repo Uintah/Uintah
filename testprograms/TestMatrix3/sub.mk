@@ -22,9 +22,6 @@
 #  IN THE SOFTWARE.
 # 
 # 
-# 
-# 
-# 
 # Makefile fragment for this subdirectory 
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
@@ -33,18 +30,29 @@ SRCDIR := testprograms/TestMatrix3
 
 SRCS := $(SRCDIR)/testmatrix3.cc
 
-PSELIBS := \
+ifeq ($(IS_STATIC_BUILD),yes)
+  PSELIBS := $(ALL_STATIC_PSE_LIBS)
+else
+  PSELIBS := \
+	testprograms/TestSuite \
 	CCA/Ports              \
+	Core/Exceptions        \
+	Core/Geometry          \
 	Core/Grid              \
 	Core/Parallel          \
-	Core/Exceptions        \
 	Core/Math              \
-	testprograms/TestSuite \
-	Core/Exceptions \
-	Core/Thread     \
-	Core/Geometry
+	Core/Thread            
+endif
 
-LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
+ifeq ($(IS_STATIC_BUILD),yes)
+  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
+          $(HDF5_LIBRARY) $(BOOST_LIBRARY)         \
+          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
+          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
+          $(PAPI_LIBRARY) $(M_LIBRARY)
+else
+  LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(CUDA_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

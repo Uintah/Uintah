@@ -48,6 +48,7 @@ ifeq ($(HAVE_CUDA),yes)
    # using the nvcc compiler.
 
    SRCS += $(foreach var,$(CUDA_ENABLED_SRCS),$(OBJTOP_ABS)/$(SRCDIR)/$(var).cu)
+   DLINK_FILES := $(DLINK_FILES) $(foreach var,$(CUDA_ENABLED_SRCS),$(SRCDIR)/$(var).o)
 
 else
 

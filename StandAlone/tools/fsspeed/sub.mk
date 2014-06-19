@@ -22,9 +22,6 @@
 #  IN THE SOFTWARE.
 # 
 # 
-# 
-# 
-# 
 # Makefile fragment for this subdirectory 
 
 SRCDIR := StandAlone/tools/fsspeed
@@ -34,9 +31,25 @@ SRCDIR := StandAlone/tools/fsspeed
 
 SRCS    := $(SRCDIR)/fsspeed.cc
 PROGRAM := $(SRCDIR)/fsspeed
-PSELIBS := Core/Parallel
 
-LIBS    := $(XML2_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY)
+ifeq ($(IS_STATIC_BUILD),yes)
+
+  PSELIBS := $(ALL_STATIC_PSE_LIBS)
+
+else # Non-static build
+
+  PSELIBS := $(ALL_PSE_LIBS)
+
+endif
+
+PSELIBS := $(GPU_EXTRA_LINK) $(PSELIBS)
+
+LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)      \
+          $(HDF5_LIBRARY) $(BOOST_LIBRARY)         \
+          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
+          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
+          $(PAPI_LIBRARY) $(M_LIBRARY)
+
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

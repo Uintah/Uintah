@@ -54,14 +54,128 @@ Makefile: ${SRCTOP}/Makefile.in ${OBJTOP}/config.status
 configVars.mk: ${SRCTOP}/configVars.mk.in ${OBJTOP}/config.status
 	@( Here="`pwd`" ; cd ${OBJTOP} ; Top="`pwd`" ; CONFIG_FILES=`echo $${Here} | sed -e "s%^"$${Top}"/%%" -e "s%^"$${Top}"%.%"`/configVars.mk CONFIG_HEADERS="" ./config.status )
 
-ifeq ($(IS_STATIC_BUILD),yes)
-  ifeq ($(HAVE_CUDA),yes)
-    GPU_EXTRA_LINK := gpu_extra_link
-    ALLTARGETS := $(ALLTARGETS) lib/lib$(GPU_EXTRA_LINK).a
+ifeq ($(HAVE_CUDA),yes)
+  GPU_EXTRA_LINK := gpu_extra_link
+  ALLTARGETS := $(ALLTARGETS) lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE)
+endif
+
+# The following variables are used by the Fake* scripts... please
+# do not modify...
+#
+COMPONENTS      = CCA/Components
+CA              = CCA/Components/Arches
+ifeq ($(BUILD_ARCHES),yes)
+  ARCHES_SUB_LIBS = $(CA)/fortran 
+  ifeq ($(BUILD_MPM),yes)
+    MPMARCHES_LIB    = $(COMPONENTS)/MPMArches
+  endif
+  ARCHES_LIBS        = $(COMPONENTS)/Arches
+endif
+
+ifeq ($(BUILD_MPM),yes)
+  MPM_LIB            = CCA/Components/MPM
+  ifeq ($(BUILD_ICE),yes)
+    MPMICE_LIB       = CCA/Components/MPMICE
   endif
 endif
 
+ifeq ($(BUILD_ICE),yes)
+  ICE_LIB            = CCA/Components/ICE
+endif
+
+ifeq ($(BUILD_WASATCH),yes)
+  WASATCH_LIB        = CCA/Components/Wasatch
+endif
+
+ALL_PSE_LIBS =             \
+        Core/Containers    \
+        Core/DataArchive   \
+        Core/Disclosure    \
+        Core/Exceptions    \
+        Core/Geometry      \
+        Core/GeometryPiece \
+        Core/Grid          \
+        Core/Labels        \
+        Core/Math          \
+        Core/OS            \
+        Core/Parallel      \
+        Core/Persistent    \
+        Core/ProblemSpec   \
+        Core/Thread        \
+        Core/Tracker       \
+        Core/Util          \
+        CCA/Ports          \
+        CCA/Components/DataArchiver         \
+        CCA/Components/Examples             \
+        CCA/Components/LoadBalancers        \
+        CCA/Components/Models               \
+        CCA/Components/Parent               \
+        CCA/Components/ProblemSpecification \
+        CCA/Components/Regridder            \
+        CCA/Components/SimulationController \
+        CCA/Components/Schedulers           \
+        CCA/Components/Solvers              \
+                                            \
+        $(ARCHES_LIBS)                      \
+        $(ARCHES_SUB_LIBS)                  \
+        $(MPMARCHES_LIB)                    \
+        $(MPM_LIB)                          \
+        $(ICE_LIB)                          \
+        $(MPMICE_LIB)                       \
+        $(WASATCH_LIB)                      
+
+  # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
+  #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
+ALL_STATIC_PSE_LIBS =                   \
+    CCA/Components/Parent               \
+    CCA/Components/Solvers              \
+    CCA/Components/DataArchiver         \
+    CCA/Components/SimulationController \
+    CCA/Components/Regridder            \
+    CCA/Components/LoadBalancers        \
+    CCA/Components/SwitchingCriteria    \
+    CCA/Components/Examples             \
+                                        \
+    $(ARCHES_LIBS)                      \
+    $(ARCHES_SUB_LIBS)                  \
+    $(MPMARCHES_LIB)                    \
+    $(MPM_LIB)                          \
+    $(ICE_LIB)                          \
+    $(MPMICE_LIB)                       \
+    $(WASATCH_LIB)                      \
+                                        \
+    CCA/Components/Schedulers           \
+    CCA/Components/OnTheFlyAnalysis     \
+    CCA/Components/Models               \
+    CCA/Components/ReduceUda            \
+                                        \
+    Core/Datatypes                      \
+    Core/DataArchive                    \
+    Core/Grid                           \
+    Core/ProblemSpec                    \
+    Core/GeometryPiece                  \
+    Core/Tracker                        \
+    CCA/Components/ProblemSpecification \
+    CCA/Ports                           \
+    Core/Parallel                       \
+    Core/Labels                         \
+    Core/Math                           \
+    Core/Disclosure                     \
+    Core/Util                           \
+    Core/Thread                         \
+    Core/Persistent                     \
+    Core/Geometry                       \
+    Core/IO                             \
+    Core/Exceptions                     \
+    Core/Containers                     \
+    Core/Malloc                         \
+    Core/OS
+
+###################################################################################
+#
 # Now begin including all of the makefile fragments (sub.mk's)
+#
+
 ALLSUBDIRS := . 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
@@ -326,18 +440,16 @@ runLocalRT:
 ###############################################################################################
 # Build the extra library file needed for static builds when using the NVCC compiler...
 
-ifeq ($(IS_STATIC_BUILD),yes)
-  ifeq ($(HAVE_CUDA),yes)
+ifeq ($(HAVE_CUDA),yes)
 
-lib/lib$(GPU_EXTRA_LINK).a : $(CLEANLIBS)
-    ifeq ($(SCI_MAKE_BE_QUIET),true)
-	@echo "Building libgpu_extra_link.a..."
-	@$(NVCC) $(NVCC_CXXFLAGS) -dlink lib/lib*.a -o lib/lib$(GPU_EXTRA_LINK).a
-    else
-	$(NVCC) $(NVCC_CXXFLAGS) -dlink lib/lib*.a -o lib/lib$(GPU_EXTRA_LINK).a
-    endif
-
+lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE) : $(CLEANLIBS)
+  ifeq ($(SCI_MAKE_BE_QUIET),true)
+	@echo "Building libgpu_extra_link.$(SO_OR_A_FILE)..."
+	@$(NVCC) $(NVCC_CXXFLAGS) -dlink $(DLINK_FILES) -o lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE)
+  else
+	$(NVCC) $(NVCC_CXXFLAGS) -dlink $(DLINK_FILES) -o lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE)
   endif
+
 endif
 
 ###############################################################################################

@@ -22,28 +22,62 @@
 #  IN THE SOFTWARE.
 # 
 # 
-# 
-# 
-# 
 # Makefile fragment for this subdirectory 
 
 SRCDIR := StandAlone/tools
+
+########################################################
+# compute_Lnorm_udas
+
+ifeq ($(IS_STATIC_BUILD),yes)
+
+  PSELIBS := $(ALL_STATIC_PSE_LIBS)
+
+else # Non-static build
+
+  ifeq ($(LARGESOS),yes)
+    PSELIBS := Packages/Uintah
+  else
+    PSELIBS := $(ALL_PSE_LIBS)
+  endif
+endif
+
+PSELIBS := $(GPU_EXTRA_LINK) $(PSELIBS)
+
+ifeq ($(IS_STATIC_BUILD),yes)
+  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
+          $(HDF5_LIBRARY) $(BOOST_LIBRARY)         \
+          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
+          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
+          $(PAPI_LIBRARY) $(M_LIBRARY)
+else
+  LIBS := $(MPI_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) $(XML2_LIBRARY) \
+	  $(Z_LIBRARY) $(CUDA_LIBRARY)
+endif
+
+SRCS := $(SRCDIR)/compute_Lnorm_udas.cc 
+PROGRAM := $(SRCDIR)/compute_Lnorm_udas
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+########################################################
+# Handle sub-directories...
 
 SUBDIRS := \
         $(SRCDIR)/compare_mms \
         $(SRCDIR)/dumpfields  \
         $(SRCDIR)/extractors  \
+        $(SRCDIR)/fsspeed     \
         $(SRCDIR)/graphview   \
         $(SRCDIR)/mpi_test    \
-        $(SRCDIR)/fsspeed     \
         $(SRCDIR)/pfs         \
         $(SRCDIR)/puda        \
         $(SRCDIR)/tracker     \
         $(SRCDIR)/uda2vis     
 
 ifeq ($(HAVE_TEEM),yes)
-  SUBDIRS += $(SRCDIR)/uda2nrrd \
-             $(SRCDIR)/radiusMaker 
+  SUBDIRS += $(SRCDIR)/radiusMaker \
+             $(SRCDIR)/uda2nrrd
 endif 
 
 #ifeq ($(HAVE_PIDX),yes)
@@ -55,46 +89,6 @@ endif
 #ifeq ($(BUILD_VISIT),yes)
 #  SUBDIRS += $(SRCDIR)/uda2vis
 #endif
-
-########################################################
-# compute_Lnorm_udas
-
-ifeq ($(IS_STATIC_BUILD),yes)
-
-  PSELIBS := $(CORE_STATIC_PSELIBS)
-
-else # Non-static build
-
-  ifeq ($(LARGESOS),yes)
-    PSELIBS := Packages/Uintah
-  else
-
-    PSELIBS := \
-        Core/Exceptions   \
-        Core/Containers   \
-        Core/DataArchive  \
-	Core/Grid         \
-	Core/Math         \
-	Core/Thread       \
-	Core/Util         \
-	Core/ProblemSpec         \
-	CCA/Components/ProblemSpecification        \
-        CCA/Components/DataArchiver         
-  endif
-endif
-
-ifeq ($(IS_STATIC_BUILD),yes)
-  LIBS := \
-	$(CORE_STATIC_LIBS) $(PIDX_LIBRARY)
-else
-  LIBS := $(MPI_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) $(XML2_LIBRARY) \
-	  $(Z_LIBRARY)
-endif
-
-SRCS := $(SRCDIR)/compute_Lnorm_udas.cc 
-PROGRAM := $(SRCDIR)/compute_Lnorm_udas
-
-include $(SCIRUN_SCRIPTS)/program.mk
 
 
 

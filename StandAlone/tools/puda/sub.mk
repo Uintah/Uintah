@@ -22,66 +22,52 @@
 #  IN THE SOFTWARE.
 # 
 # 
-# 
-# 
-# 
 # Makefile fragment for this subdirectory 
 
 SRCDIR  := StandAlone/tools/puda
 PROGRAM := StandAlone/tools/puda/puda
 
 SRCS := \
-	$(SRCDIR)/asci.cc        \
-	$(SRCDIR)/jacquie.cc     \
- 	$(SRCDIR)/pressure.cc     \
-       $(SRCDIR)/monica1.cc     \
-	$(SRCDIR)/monica2.cc     \
-	$(SRCDIR)/jim1.cc        \
-	$(SRCDIR)/jim2.cc        \
-	$(SRCDIR)/jim3.cc        \
-	$(SRCDIR)/PIC.cc         \
-	$(SRCDIR)/POL.cc         \
-	$(SRCDIR)/AA_MMS.cc      \
-	$(SRCDIR)/util.cc        \
-	$(SRCDIR)/varsummary.cc  \
-	$(SRCDIR)/puda.cc        \
-	$(SRCDIR)/GV_MMS.cc      \
-	$(SRCDIR)/ER_MMS.cc      \
-	$(SRCDIR)/todd1.cc       
-	
+        $(SRCDIR)/asci.cc        \
+        $(SRCDIR)/jacquie.cc     \
+        $(SRCDIR)/pressure.cc    \
+        $(SRCDIR)/monica1.cc     \
+        $(SRCDIR)/monica2.cc     \
+        $(SRCDIR)/jim1.cc        \
+        $(SRCDIR)/jim2.cc        \
+        $(SRCDIR)/jim3.cc        \
+        $(SRCDIR)/PIC.cc         \
+        $(SRCDIR)/POL.cc         \
+        $(SRCDIR)/AA_MMS.cc      \
+        $(SRCDIR)/util.cc        \
+        $(SRCDIR)/varsummary.cc  \
+        $(SRCDIR)/puda.cc        \
+        $(SRCDIR)/GV_MMS.cc      \
+        $(SRCDIR)/ER_MMS.cc      \
+        $(SRCDIR)/todd1.cc       
+        
 
 ifeq ($(IS_STATIC_BUILD),yes)
-  PSELIBS := Core/Datatypes $(CORE_STATIC_PSELIBS) 
+  PSELIBS := $(ALL_STATIC_PSE_LIBS)
 else # Non-static build
   ifeq ($(LARGESOS),yes)
     PSELIBS := Datflow Packages/Uintah
   else
-    PSELIBS := \
-        CCA/Components/ProblemSpecification \
-        CCA/Ports          \
-        Core/DataArchive   \
-        Core/Disclosure    \
-        Core/Exceptions    \
-        Core/Grid          \
-        Core/Math          \
-        Core/Parallel      \
-        Core/ProblemSpec   \
-        Core/Util          \
-        Core/Containers    \
-        Core/Exceptions    \
-        Core/Geometry      \
-        Core/OS            \
-        Core/Persistent    \
-        Core/Thread        \
-        Core/Util        
+    PSELIBS := $(ALL_PSE_LIBS)
   endif
 endif
 
+PSELIBS := $(GPU_EXTRA_LINK) $(PSELIBS)
+
 ifeq ($(IS_STATIC_BUILD),yes)
-  LIBS := $(CORE_STATIC_LIBS)
+  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
+          $(HDF5_LIBRARY) $(BOOST_LIBRARY)         \
+          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
+          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
+          $(PAPI_LIBRARY) $(M_LIBRARY)
 else
   LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY) \
-	  $(F_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY)
+          $(F_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) $(CUDA_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
