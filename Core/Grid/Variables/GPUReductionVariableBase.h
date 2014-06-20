@@ -22,10 +22,10 @@
  * IN THE SOFTWARE.
  */
 
-// GPU ReductionVariable base class: in host & device code (HOST_DEVICE = __host__ __device__)
+// GPU ReductionVariable base class: in host & device code (HOST_DEVICE == __host__ __device__)
 
-#ifndef UINTAH_GPUREDUCTIONVARIABLEBASE_H
-#define UINTAH_GPUREDUCTIONVARIABLEBASE_H
+#ifndef UINTAH_CORE_GRID_VARIABLES_GPUREDUCTIONVARIABLEBASE_H
+#define UINTAH_CORE_GRID_VARIABLES_GPUREDUCTIONVARIABLEBASE_H
 
 #include <Core/Grid/Variables/GPUVariable.h>
 #include <sci_defs/cuda_defs.h>
@@ -42,14 +42,14 @@ class GPUReductionVariableBase : public GPUVariable {
 
   protected:
     HOST_DEVICE GPUReductionVariableBase() {}
+    HOST_DEVICE GPUReductionVariableBase(const GPUReductionVariableBase&);
 
   private:
-    HOST_DEVICE virtual void setData(const size_t& numElems, void* &ptr) const = 0;
-    HOST_DEVICE virtual void getData(size_t& numElems, void* &ptr) const = 0;
+    HOST_DEVICE virtual void getData(void* &ptr) const = 0;
+    HOST_DEVICE virtual void setData(void* &ptr) const = 0;
     HOST_DEVICE GPUReductionVariableBase& operator=(const GPUReductionVariableBase&);
-    HOST_DEVICE GPUReductionVariableBase(const GPUReductionVariableBase&);
 };
 
 }  // end namespace Uintah
 
-#endif
+#endif // UINTAH_CORE_GRID_VARIABLES_GPUREDUCTIONVARIABLEBASE_H

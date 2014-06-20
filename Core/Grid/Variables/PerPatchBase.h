@@ -80,6 +80,7 @@ WARNING
 
       virtual size_t getDataSize() const = 0;
       virtual bool copyOut(void* dst) const = 0;
+      virtual void* getBasePointer() const = 0;
 
       // Only affects grid variables
       void offsetGrid(const SCIRun::IntVector& /*offset*/);

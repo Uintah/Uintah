@@ -22,34 +22,34 @@
  * IN THE SOFTWARE.
  */
 
-// GPU GridVariable base class: in host & device code (HOST_DEVICE == __host__ __device__)
+// GPU PerPatch base class: in host & device code (HOST_DEVICE == __host__ __device__)
 
-#ifndef UINTAH_CORE_GRID_VARIABLES_GPUGRIDVARIABLEBASE_H
-#define UINTAH_CORE_GRID_VARIABLES_GPUGRIDVARIABLEBASE_H
+#ifndef UINTAH_CORE_GRID_VARIABLES_GPUPERPATCHBASE_H
+#define UINTAH_CORE_GRID_VARIABLES_GPUPERPATCHBASE_H
 
 #include <Core/Grid/Variables/GPUVariable.h>
 #include <sci_defs/cuda_defs.h>
 
 namespace Uintah {
 
-class GPUGridVariableBase : public GPUVariable {
+class GPUPerPatchBase : public GPUVariable {
 
-  friend class GPUDataWarehouse; // allow DataWarehouse set/get data members
+  friend class GPUDataWarehouse;  // allow DataWarehouse set/get data members
 
   public:
-    HOST_DEVICE virtual ~GPUGridVariableBase() {}
+    HOST_DEVICE virtual ~GPUPerPatchBase() {}
     HOST_DEVICE virtual size_t getMemSize() = 0;
 
   protected:
-    HOST_DEVICE GPUGridVariableBase() {}
-    HOST_DEVICE GPUGridVariableBase(const GPUGridVariableBase&);
+    HOST_DEVICE GPUPerPatchBase() {}
+    HOST_DEVICE GPUPerPatchBase(const GPUPerPatchBase&);
 
   private:
-    HOST_DEVICE virtual void getArray3(int3& offset, int3& size, void* &ptr) const = 0;
-    HOST_DEVICE virtual void setArray3(const int3& offset, const int3& size, void* &ptr) const = 0;
-    HOST_DEVICE GPUGridVariableBase& operator=(const GPUGridVariableBase&);
+    HOST_DEVICE virtual void getData(void* &ptr) const = 0;
+    HOST_DEVICE virtual void setData(void* &ptr) const = 0;
+    HOST_DEVICE GPUPerPatchBase& operator=(const GPUPerPatchBase&);
 };
 
-} // end namespace Uintah
+}  // end namespace Uintah
 
-#endif // UINTAH_CORE_GRID_VARIABLES_GPUGRIDVARIABLEBASE_H
+#endif // UINTAH_CORE_GRID_VARIABLES_GPUPERPATCHBASE_H
