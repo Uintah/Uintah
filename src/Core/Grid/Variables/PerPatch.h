@@ -99,6 +99,10 @@ WARNING
         return sizeof(T);
       }
 
+      virtual void* getBasePointer() const {
+        return (void*)&value;
+      }
+
       virtual bool copyOut(void* dst) const {
         void* src = (void*)(&value);
         size_t numBytes = getDataSize();

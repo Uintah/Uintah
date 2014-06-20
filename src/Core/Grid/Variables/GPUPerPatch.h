@@ -22,12 +22,12 @@
  * IN THE SOFTWARE.
  */
 
-// GPU ReductionVariable: in host & device code (HOST_DEVICE == __host__ __device__)
+// GPU PerPatch base class: in host & device code (HOST_DEVICE == __host__ __device__)
 
-#ifndef UINTAH_CORE_GRID_VARIABLES_GPUREDUCTIONVARIABLE_H
-#define UINTAH_CORE_GRID_VARIABLES_GPUREDUCTIONVARIABLE_H
+#ifndef UINTAH_CORE_GRID_VARIABLES_GPUPERPATCH_H
+#define UINTAH_CORE_GRID_VARIABLES_GPUPERPATCH_H
 
-#include <Core/Grid/Variables/GPUReductionVariableBase.h>
+#include <Core/Grid/Variables/GPUPerPatchBase.h>
 #include <sci_defs/cuda_defs.h>
 
 #include <string>
@@ -35,18 +35,23 @@
 namespace Uintah {
 
 template<class T>
-class GPUReductionVariable : public GPUReductionVariableBase {
+class GPUPerPatch : public GPUPerPatchBase {
 
-  friend class UnifiedScheduler; // allow Scheduler access
+  friend class UnifiedScheduler; // allow UnifiedScheduler access
 
   public:
 
-    HOST_DEVICE GPUReductionVariable()
+    HOST_DEVICE GPUPerPatch()
     {
-      d_data = NULL;
+      d_value = 0;
     }
 
-    HOST_DEVICE virtual ~GPUReductionVariable() {}
+    HOST_DEVICE GPUPerPatch(T value)
+          : d_value(value)
+    {
+    }
+
+    HOST_DEVICE virtual ~GPUPerPatch() {};
 
     HOST_DEVICE virtual size_t getMemSize()
     {
@@ -55,34 +60,36 @@ class GPUReductionVariable : public GPUReductionVariableBase {
 
     HOST_DEVICE T* getPointer() const
     {
-      return d_data;
+      return d_value;
     }
 
     HOST_DEVICE void getSizeInfo(std::string& elems, unsigned long& totsize, void* &ptr) const
     {
       elems = "1";
       totsize = sizeof(T);
-      ptr = (void*)&d_data;
+      ptr = (void*)&d_value;
     }
+
 
   private:
 
-    mutable T* d_data;
+    mutable T* d_value;
 
     HOST_DEVICE virtual void getData(void* &ptr) const
     {
-        ptr = (void*)d_data;
+        ptr = (void*)d_value;
     }
 
     HOST_DEVICE virtual void setData(void* &ptr) const
     {
-      d_data = (T*)ptr;
+      d_value = (T*)ptr;
     }
 
-    HOST_DEVICE GPUReductionVariable& operator=(const GPUReductionVariable&);
-    HOST_DEVICE GPUReductionVariable(const GPUReductionVariable&);
+    HOST_DEVICE GPUPerPatch<T>& operator=(const GPUPerPatch<T>& copy);
+    HOST_DEVICE GPUPerPatch(const GPUPerPatch&);
 };
 
-}  // end namespace Uintah
 
-#endif // UINTAH_CORE_GRID_VARIABLES_GPUREDUCTIONVARIABLE_H
+}  // End namespace Uintah
+
+#endif // UINTAH_CORE_GRID_VARIABLES_GPUPERPATCH_H

@@ -21,19 +21,21 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-/* GPU DataWarehouse device&host access*/
+
+/* GPU DataWarehouse device & host access*/
 
 #ifndef GPU_DW_H
 #define GPU_DW_H
 
 #include <sci_defs/cuda_defs.h>
+#include <Core/Grid/Variables/GPUVariable.h>
 #include <Core/Grid/Variables/GPUGridVariable.h>
-#include <Core/Grid/Variables/GPUParticleVariable.h>
 #include <Core/Grid/Variables/GPUReductionVariable.h>
+#include <Core/Grid/Variables/GPUPerPatch.h>
 
-#define MAX_ITEM 100
+#define MAX_ITEM   100
 #define MAX_LVITEM 10
-#define MAX_NAME 20
+#define MAX_NAME   20
 
 namespace Uintah {
 
@@ -44,31 +46,26 @@ public:
            GPUDataWarehouse() { d_numItems=0; d_device_copy=NULL; d_device_id=0; d_debug=true; d_dirty=true; }
   virtual ~GPUDataWarehouse() {}
 
-  //______________________________________________________________________
-  // GPU GridVariable methods
-  HOST_DEVICE void get(            const GPUGridVariableBase & var, char const* label, int patchID, int matlID );
-  HOST_DEVICE void getModifiable(        GPUGridVariableBase & var, char const* label, int patchID, int matlID );
-  HOST_DEVICE void put(                  GPUGridVariableBase & var, char const* label, int patchID, int matlID, bool overWrite = false );
-  HOST_DEVICE void allocateAndPut(       GPUGridVariableBase & var, char const* label, int patchID, int matlID, int3 low, int3 high );
+  HOST_DEVICE void get(const GPUGridVariableBase& var, char const* label, int patchID, int matlIndex);
+  HOST_DEVICE void get(const GPUReductionVariableBase& var, char const* label, int patchID, int matlIndex);
+  HOST_DEVICE void get(const GPUPerPatchBase& var, char const* label, int patchID, int matlIndex);
 
-  //______________________________________________________________________
-  // GPU Particle Variable methods
-  HOST_DEVICE void get(const GPUParticleVariableBase& var, char const* label, int patchID, int matlID);
-  HOST_DEVICE void getModifiable(GPUParticleVariableBase& var, char const* label, int patchID, int matlID);
-  HOST_DEVICE void put(GPUParticleVariableBase& var, char const* label, int patchID, int matlID, bool overWrite=false);
-  HOST_DEVICE void allocateAndPut(GPUParticleVariableBase& var, char const* label, int patchID, int matlID, size_t numElems);
+  HOST_DEVICE void getModifiable(GPUGridVariableBase& var, char const* label, int patchID, int matlIndex);
+  HOST_DEVICE void getModifiable(GPUReductionVariableBase& var, char const* label, int patchID, int matlIndex);
+  HOST_DEVICE void getModifiable(GPUPerPatchBase& var, char const* label, int patchID, int matlIndex);
 
-  //______________________________________________________________________
-  // GPU Reduction Variable methods
-  HOST_DEVICE void get(const GPUReductionVariableBase& var, char const* label, int patchID, int matlID);
-  HOST_DEVICE void getModifiable(GPUReductionVariableBase& var, char const* label, int patchID, int matlID);
-  HOST_DEVICE void put(GPUReductionVariableBase& var, char const* label, int patchID, int matlID, bool overWrite=false);
-  HOST_DEVICE void allocateAndPut(GPUReductionVariableBase& var, char const* label, int patchID, int matlID, int numElems);
+  HOST_DEVICE void put(GPUGridVariableBase& var, char const* label, int patchID, int matlIndex, bool overWrite=false);
+  HOST_DEVICE void put(GPUReductionVariableBase& var, char const* label, int patchID, int matlIndex, bool overWrite=false);
+  HOST_DEVICE void put(GPUPerPatchBase& var, char const* label, int patchID, int matlIndex, bool overWrite=false);
+
+  HOST_DEVICE void allocateAndPut(GPUGridVariableBase& var, char const* label, int patchID, int matlIndex, int3 low, int3 high);
+  HOST_DEVICE void allocateAndPut(GPUReductionVariableBase& var, char const* label, int patchID, int matlIndex);
+  HOST_DEVICE void allocateAndPut(GPUPerPatchBase& var, char const* label, int patchID, int matlIndex);
 
   //______________________________________________________________________
   // GPU DataWarehouse support methods
-  HOST_DEVICE bool exist(char const* name, int patchID, int matlID);
-  HOST_DEVICE bool remove(char const* name, int patchID, int matlID);
+  HOST_DEVICE bool exist(char const* name, int patchID, int matlIndex);
+  HOST_DEVICE bool remove(char const* name, int patchID, int matlIndex);
   HOST_DEVICE void init_device(int id);
   HOST_DEVICE void syncto_device(); 
   HOST_DEVICE void clear();
@@ -76,6 +73,9 @@ public:
   HOST_DEVICE void setDebug(bool s){d_debug=s;}
   
 private:
+
+  HOST_DEVICE void printGetError(const char* msg, char const* label, int patchID, int matlIndex);
+
 
   int d_numItems;
 
@@ -85,7 +85,6 @@ private:
     int        matlIndex;
     int3       var_offset;  
     int3       var_size;
-    size_t     num_elems;
     void*      var_ptr;
   };
 
@@ -96,7 +95,7 @@ private:
   int d_device_id;
   bool d_debug;
 
-  HOST_DEVICE dataItem* getItem(char const* label, int patchID, int matlID);
+  HOST_DEVICE dataItem* getItem(char const* label, int patchID, int matlIndex);
 };
 
 

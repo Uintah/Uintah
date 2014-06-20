@@ -280,10 +280,8 @@ public:
 
    // PerPatch Variables
    virtual void get(PerPatchBase&, const VarLabel*, int matIndex, const Patch*);
-   virtual void put(PerPatchBase&, const VarLabel*,
-		    int matIndex, const Patch*, bool replace = false);
 
-
+   virtual void put(PerPatchBase&, const VarLabel*, int matIndex, const Patch*, bool replace = false);
 
    virtual ScrubMode setScrubbing(ScrubMode);
 

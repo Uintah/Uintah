@@ -22,10 +22,10 @@
  * IN THE SOFTWARE.
  */
 
-// GPU Variable base class: in host & device code (HOST_DEVICE = __host__ __device__)
+// GPU Variable base class: in host & device code (HOST_DEVICE == __host__ __device__)
 
-#ifndef UINTAH_GPUVARIABLE_H
-#define UINTAH_GPUVARIABLE_H
+#ifndef UINTAH_CORE_GRID_VARIABLES_GPUVARIABLE_H
+#define UINTAH_CORE_GRID_VARIABLES_GPUVARIABLE_H
 
 #include <sci_defs/cuda_defs.h>
 
@@ -47,4 +47,4 @@ class GPUVariable {
 
 } // end namespace Uintah
 
-#endif
+#endif // UINTAH_CORE_GRID_VARIABLES_GPUVARIABLE_H
