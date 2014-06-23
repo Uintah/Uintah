@@ -72,6 +72,10 @@ extern SCIRun::Mutex cerrLock;
 
 static DebugStream md_dbg("MDDebug", true);
 static DebugStream md_cout("MDCout", true);
+static DebugStream particleDebug("MDParticleVariableDebug", true);
+static DebugStream electrostaticDebug("MDElectrostaticDebug", true);
+static DebugStream mdFlowDebug("MDLogicFlowDebug", true);
+
 
 MD::MD(const ProcessorGroup* myworld) :
     UintahParallelComponent(myworld)
@@ -106,7 +110,8 @@ void MD::problemSetup(const ProblemSpecP&   params,
                       GridP&                grid,
                       SimulationStateP&     shared_state)
 {
-  printTask(md_cout, "MD::problemSetup");
+  const std::string flowLocation = "MD::problemSetup | ";
+  printTask(md_cout, flowLocation);
 
 //-----> Set up components inherited from Uintah
   // Inherit shared state into the component
@@ -134,7 +139,6 @@ void MD::problemSetup(const ProblemSpecP&   params,
   // Parse the forcefield
   Forcefield* tempFF = ForcefieldFactory::create(params, shared_state);
 
-
   switch(tempFF->getInteractionClass()) { // Set generic interface based on FF type
     case(TwoBody):
         d_forcefield=dynamic_cast<TwoBodyForcefield*> (tempFF);
@@ -145,11 +149,12 @@ void MD::problemSetup(const ProblemSpecP&   params,
         throw InternalError("MD:  Attempted to instantiate a forcefield type which is not yet implemented", __FILE__, __LINE__);
     }
 
-
-  std::cerr << "Forcefield created: "
-            << d_forcefield->getForcefieldDescriptor() << std::endl;
-
-
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "Created forcefield object: \""
+                << d_forcefield->getForcefieldDescriptor()
+                << "\"" << std::endl;
+  }
 
   // create and populate the MD System object
   d_system = scinew MDSystem(params, grid, tempFF);
@@ -185,12 +190,24 @@ void MD::problemSetup(const ProblemSpecP&   params,
   if (tempNB->getNonbondedType() == "TwoBodyDeterministic") {
     d_nonbonded = dynamic_cast<TwoBodyDeterministic*> (tempNB);
   }
-  std::cerr << "Created nonbonded object" << std::endl;
+
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "Created nonbonded object: \""
+                << d_nonbonded->getNonbondedType()
+                << "\""
+                << std::endl;
+  }
 
   // create the Electrostatics object via factory method
   //electrostaticsModel elecCapability = d_forcefield->getElectrostaticsCapability();
   d_electrostatics = ElectrostaticsFactory::create(params, d_coordinate);
   if (d_electrostatics->getType() == Electrostatics::SPME) {
+    if (mdFlowDebug.active()) {
+      mdFlowDebug << flowLocation
+                  << "Created electrostatics object: \"SPME\""
+                  << std::endl;
+    }
     // create subscheduler for convergence loop in SPME::calculate
     Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
     d_electrostaticSubscheduler = sched->createSubScheduler();
@@ -201,26 +218,45 @@ void MD::problemSetup(const ProblemSpecP&   params,
     d_electrostaticSubscheduler->mapDataWarehouse(Task::OldDW, 2);
     d_electrostaticSubscheduler->mapDataWarehouse(Task::NewDW, 3);
   }
-  std::cerr << "created electrostatic object" << std::endl;
+  if (electrostaticDebug.active()) {
+    electrostaticDebug << flowLocation;
+    if (d_electrostatics->isPolarizable()) {
+      electrostaticDebug << "Electrostatic model IS polarizable.";
+    }
+    else
+    {
+      electrostaticDebug << "Electrostatic model IS NOT polarizable.";
+    }
+    electrostaticDebug << std::endl;
+  }
 
   // Add labels from our forcefield (nonbonded)
-  MDSubcomponent* d_electrostaticInterface = dynamic_cast<MDSubcomponent*> (d_electrostatics);
-  MDSubcomponent* d_nonbondedInterface     = dynamic_cast<MDSubcomponent*> (d_nonbonded);
+  MDSubcomponent* d_electrostaticInterface;
+  d_electrostaticInterface  = dynamic_cast<MDSubcomponent*> (d_electrostatics);
+
+  MDSubcomponent* d_nonbondedInterface;
+  d_nonbondedInterface      = dynamic_cast<MDSubcomponent*> (d_nonbonded);
+
 //  MDSubcomponent* d_integratorInterface    = dynamic_cast<MDSubcomponent*> (d_integrator);
 //  MDSubcomponent* d_valenceInterface       = dynamic_cast<MDSubcomponent*> (d_valence);
 
 // Register the general labels that all MD simulations will use
    createBasePermanentParticleState();
    // And then add the labels that each created subcomponent will require
-   d_electrostaticInterface->registerRequiredParticleStates(d_particleState, d_particleState_preReloc, d_label);
-   d_nonbondedInterface->registerRequiredParticleStates(d_particleState, d_particleState_preReloc, d_label);
+   d_electrostaticInterface
+     ->registerRequiredParticleStates(d_particleState,
+                                      d_particleState_preReloc,
+                                      d_label);
+   d_nonbondedInterface
+     ->registerRequiredParticleStates(d_particleState,
+                                      d_particleState_preReloc,
+                                      d_label);
    // NYI:  d_integrator->registerRequiredParticleState(d_particleState, d_particleState_preReloc, d_label);
 
    // We must wait to register our atom (material) types until the
    // subcomponents have provided the per-particle labels
    //
    // For now we're assuming all atom types have the same tracked states.
-   std::cout << "MD::problemSetup Registered Particle Variables:" << std::endl;
    size_t stateSize, preRelocSize;
    stateSize = d_particleState.size();
    preRelocSize = d_particleState_preReloc.size();
@@ -228,28 +264,27 @@ void MD::problemSetup(const ProblemSpecP&   params,
    {
      std::cerr << "ERROR:  Mismatch in number of per particle variable labels." << std::endl;
    }
-   std::cout << "Registering particle variables: " << std::endl;
-   if (d_electrostatics->isPolarizable())
-   {
-     std::cout << "Simulation IS polarizable" << std::endl;
+
+   if (particleDebug.active()) {
+     particleDebug << "MD::problemSetup | Registered particle variables: "
+                   << std::endl;
+     for (size_t index = 0; index < stateSize; ++index)
+     {
+       particleDebug << "MD::problemSetup | "
+                     << d_particleState[index]->getName() << "/"
+                     << d_particleState_preReloc[index]->getName()
+                     << std::endl;
+     }
    }
-   else
-   {
-     std::cout << "Simulation IS NOT polarizable" << std::endl;
-   }
-   for (size_t index = 0; index < stateSize; ++index)
-   {
-     std::cout << d_particleState[index]->getName() << "/"
-               << d_particleState_preReloc[index]->getName()
-               << std::endl;
-   }
-   std::cout << std::endl;
    d_forcefield->registerAtomTypes(d_particleState,
                                    d_particleState_preReloc,
                                    d_label,
                                    d_sharedState);
 
-  std::cerr << "End of MD::Setup" << std::endl;
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "END" << std::endl;
+  }
 }
 
 void MD::scheduleInitialize(const LevelP& level,
@@ -267,6 +302,12 @@ void MD::scheduleInitialize(const LevelP& level,
 
   std::cerr << "Enter:  Scheduled Initialization" << std::endl;
 
+  // Get list of MD materials for scheduling
+  const MaterialSet*    materials       =   d_sharedState->allMDMaterials();
+  LoadBalancer*         loadBal         =   sched->getLoadBalancer();
+  const PatchSet*       perProcPatches  =
+                            loadBal->getPerProcessorPatchSet(level);
+
   Task* task = scinew Task("MD::initialize", this, &MD::initialize);
   std::cerr << "MD::ScheduleInitialize -> Created new task." << std::endl;
 
@@ -279,11 +320,6 @@ void MD::scheduleInitialize(const LevelP& level,
   task->computes(d_label->electrostatic->dSubschedulerDependency);
   std::cerr << "MD::Schedule computes subschedulerDependency" << std::endl;
 
-  // Get list of MD materials for scheduling
-  const MaterialSet*    materials       =   d_sharedState->allMDMaterials();
-  LoadBalancer*         loadBal         =   sched->getLoadBalancer();
-  const PatchSet*       perProcPatches  =
-                            loadBal->getPerProcessorPatchSet(level);
 
   // FIXME -- Original, no longer correct?
   sched->addTask(task, level->eachPatch(), materials);
@@ -312,20 +348,20 @@ void MD::scheduleComputeStableTimestep(const LevelP& level,
 
   Task* task = scinew Task("MD::computeStableTimestep", this, &MD::computeStableTimestep);
 
-//  task->requires(Task::NewDW, d_label->nonbonded->rNonbondedEnergy);
-//  task->requires(Task::NewDW, d_label->electrostatic->rElectrostaticInverseEnergy);
-//  task->requires(Task::NewDW, d_label->electrostatic->rElectrostaticRealEnergy);
+  task->requires(Task::NewDW, d_label->nonbonded->rNonbondedEnergy);
+  task->requires(Task::NewDW, d_label->electrostatic->rElectrostaticInverseEnergy);
+  task->requires(Task::NewDW, d_label->electrostatic->rElectrostaticRealEnergy);
 
   // We only -need- stress tensors if we're doing NPT
-//  if ( NPT == d_system->getEnsemble()) {
-//    task->requires(Task::NewDW, d_label->nonbonded->rNonbondedStress);
-//    task->requires(Task::NewDW, d_label->electrostatic->rElectrostaticInverseStress);
-//    task->requires(Task::NewDW, d_label->electrostatic->rElectrostaticRealStress);
-//    if ( d_electrostatics->isPolarizable() ) {
-//      task->requires(Task::NewDW,
-//                     d_label->electrostatic->rElectrostaticInverseStressDipole);
-//    }
-//  }
+  if ( NPT == d_system->getEnsemble()) {
+    task->requires(Task::NewDW, d_label->nonbonded->rNonbondedStress);
+    task->requires(Task::NewDW, d_label->electrostatic->rElectrostaticInverseStress);
+    task->requires(Task::NewDW, d_label->electrostatic->rElectrostaticRealStress);
+    if ( d_electrostatics->isPolarizable() ) {
+      task->requires(Task::NewDW,
+                     d_label->electrostatic->rElectrostaticInverseStressDipole);
+    }
+  }
 
   task->computes(d_sharedState->get_delt_label(), level.get_rep());
   task->setType(Task::OncePerProc);

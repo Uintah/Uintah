@@ -125,8 +125,6 @@ void SimulationState::registerMaterial(Material* matl)
      max_matl_index = matls.size();
    }
 
-   std::cout << "SimulationState:: Registered a material: " << matl->getDWIndex() << std::endl;
-
    if(matl->hasName()) {
      named_matls[matl->getName()] = matl;
    }
@@ -141,15 +139,12 @@ void SimulationState::registerMaterial(Material* matl,unsigned int index)
      matls.resize(index+1);
    matls[index]=matl;
 
-
    if ((int)matls.size() > max_matl_index) {
      max_matl_index = matls.size();
    }
 
    if(matl->hasName())
      named_matls[matl->getName()] = matl;
-
-
 }
 
 
