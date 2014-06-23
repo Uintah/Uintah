@@ -137,8 +137,7 @@ evaluate()
     
     if( this->isStaggered_ && this->bcTypeEnum_ != Wasatch::NEUMANN ){
       SS::SpatialMask<FieldT> mask(f, maskPoints);
-      f <<= cond( mask, bcValue_ )
-                ( f              );
+      masked_assign( mask, f, bcValue_ );
     }
     else{
       APPLY_BC(bcValue_);
