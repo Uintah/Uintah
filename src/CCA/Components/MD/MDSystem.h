@@ -72,147 +72,73 @@ namespace Uintah {
        * @param  None
        * @return
        */
-      inline Vector getPressure() const { return d_pressure; }
+      inline Vector getPressure() const {
+        return d_pressure;
+      }
 
       /**
        * @brief
        * @param
        * @return
        */
-      inline double getTemperature() const { return d_temperature; }
-
-      /**
-       * @brief
-       * @param None
-       * @return
-       */
-//      inline bool isOrthorhombic() const { return d_orthorhombic; }
-//
-//      /**
-//       * @brief
-//       * @param
-//       * @return
-//       */
-//      inline bool queryBoxChanged() const { return d_cellChanged; }
-//
-//      /*
-//       * @brief
-//       * @param
-//       * @return
-//       */
-//      inline void clearBoxChanged() { d_cellChanged = false; }
-//
-//      /**
-//       * @brief
-//       * @param
-//       * @return
-//       */
-//      inline void markBoxChanged() { d_cellChanged = true; }
-//
-//      /**
-//       * @brief
-//       * @param
-//       * @return
-//       */
-//      inline Matrix3 getUnitCell() const { return d_unitCell; }
-//
-//      /**
-//       * @brief
-//       * @param
-//       * @return
-//       */
-//      inline Matrix3 getInverseCell() const { return d_inverseCell; }
-//
-//      /**
-//       * @brief
-//       * @param
-//       * @return
-//       */
-//      inline double getCellVolume() const { return d_cellVolume; }
-//
-//      /**
-//       * @brief
-//       * @param
-//       * @return
-//       */
-//      inline IntVector getCellExtent() const { return d_totalCellExtent; }
-//
-//      /*
-//       *
-//       */
-//      inline IntVector getPeriodic() const { return d_periodicVector; }
-//
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      inline unsigned int getNumAtoms() const { return d_numAtoms; }
+      inline double getTemperature() const {
+        return d_temperature;
+      }
 
       /**
        * @brief
        * @param
        * @return
        */
-//      inline Vector getBox() const { return d_box; }
+      inline size_t getNumAtoms() const {
+        return d_numAtoms;
+      }
 
       /*
        * @brief
        * @param
        * @return
        */
-      inline size_t getNumAtomTypes() const { return d_numAtomsOfType.size(); }
-
-//      /*
-//       * @brief
-//       * @param
-//       * @return
-//       */
-//      inline size_t getNumMoleculeType() const { return d_moleculeTypeList.size(); }
+      inline size_t getNumAtomTypes() const {
+        return d_numAtomsOfType.size();
+      }
 
       /*
        * @brief
        * @param
        * @return
        */
-      inline size_t getNumAtomsOfType(size_t TypeIndex) const { return d_numAtomsOfType[TypeIndex]; }
+      inline size_t getNumAtomsOfType(size_t TypeIndex) const {
+        return d_numAtomsOfType[TypeIndex];
+      }
 
-//      /*
-//       * @brief
-//       * @param
-//       * @return
-//       */
-//      inline size_t getNumMoleculesOfType(size_t TypeIndex) const { return d_moleculeTypeList[TypeIndex]; }
+      inline size_t getNumMolecules() const {
+        return d_numMolecules;
+      }
 
-      /*
-       * @brief
-       * @param
-       * @return
-       */
-//      inline size_t getNonbondedGhostCells() const { return d_nonbondedGhostCells; }
+      inline size_t getNumMoleculeTypes() const {
+        return d_numMoleculesOfType.size();
+      }
 
-      /*
-       * @brief Return number of ghost cells required for electrostatic realspace calculation
-       * @param None
-       * @return size_t: Number of ghost cells required in all directions
-       */
-//      inline size_t getElectrostaticGhostCells() const { return d_electrostaticGhostCells; }
+      inline size_t getNumMoleculesOfType(size_t TypeIndex) const {
+        return d_numMoleculesOfType[TypeIndex];
+      }
 
-//      inline double getAtomicCharge(size_t MaterialIndex) const {
-//    	  return d_simState->getMDMaterial(MaterialIndex)->getCharge();
-//      }
+      inline Forcefield* getForcefieldPointer() const {
+        return d_forcefield;
+      };
 
-//      inline SimulationStateP getStatePointer() { return d_simState; };
+      inline size_t registerAtomCount(const size_t count,
+                                      const size_t matlIndex) {
 
-      inline Forcefield* getForcefieldPointer() { return d_forcefield; };
-
-      inline size_t registerAtomCount(const size_t count, const size_t matlIndex) {
         size_t numMatls = d_numAtomsOfType.size();
         if (matlIndex < numMatls) {
           d_numAtomsOfType[matlIndex] = count;
           d_numAtoms += count;
         };
         return count;
+        size_t numAtomTypes = getNumAtomTypes();
+
       }
 
       inline ensembleType getEnsemble() const {
