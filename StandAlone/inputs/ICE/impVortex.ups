@@ -124,6 +124,7 @@
       <save label="sp_vol_CC"/>
       <save label="delP_Dilatate"/>
       <save label="TotalMass"/>
+      <save label="vorticity"/>
       <checkpoint interval="0.1" cycle="2"/>
    </DataArchiver>
    
@@ -204,4 +205,12 @@
          </material>
       </ICE>       
     </MaterialProperties> 
+    
+    <!--____________________________________________________________________-->
+    <DataAnalysis>
+       <Module name="vorticity">
+        <material>atmosphere</material>
+      </Module>
+  </DataAnalysis>
+
 </Uintah_specification>
