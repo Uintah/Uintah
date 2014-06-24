@@ -1163,9 +1163,12 @@
         <Models                         spec="OPTIONAL NO_DATA">
           <!-- insert future source terms/models here -->
         </Models>
-        <NumberInternalCoordinates      spec="REQUIRED DOUBLE"/>
+        <NumberInternalCoordinates      spec="REQUIRED INTEGER"/>
         <QuadratureNodes                spec="REQUIRED MULTIPLE_INTEGERS"/> <!-- this is per direction -->
         <HighestOrder                   spec="REQUIRED MULTIPLE_INTEGERS"/> <!-- this is per direction -->
+        <CutOff                         spec="OPTIONAL DOUBLE"/>
+        <Adaptive                       spec="OPTIONAL BOOLEAN"/>
+        
         <!-- order these same as index moment order -->
         <InternalCoordinate             spec="MULTIPLE NO_DATA"
                                         attribute1="name REQUIRED STRING"
