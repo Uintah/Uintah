@@ -1202,6 +1202,8 @@ Arches::scheduleInitialize(const LevelP& level,
       EqnBase* eqn = ieqn->second;
       eqn->sched_checkBCs( level, sched );
     }
+    //call the cqmom inversion so weights and abscissas are calculated at the start
+    //d_cqmomSolver->sched_solveCQMOMInversion( level, sched, 0 );
   }
   
   

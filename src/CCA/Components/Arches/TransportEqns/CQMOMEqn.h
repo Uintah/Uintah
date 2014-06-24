@@ -10,6 +10,7 @@
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <CCA/Components/Arches/Directives.h>
+#include <CCA/Components/Arches/TransportEqns/Convection_CQMOM.h>
 
 //==========================================================================
 
@@ -148,22 +149,32 @@ namespace Uintah{
         return 0.0;
       }
     };
-
     
   private:
     
     const VarLabel* d_sourceLabel;       // create one summed source label and use in build
-    std::vector<int> momentIndex;        //moment index for this transport equation, needed for convective and soruce closure
+    const VarLabel* d_tempLabel;         // a temporary label of the moment
+    const VarLabel* d_FconvXLabel;       // var label for x-only convection
+    const VarLabel* d_FconvYLabel;       // var label for y-only convection
+    const VarLabel* d_FconvZLabel;       // var label for z-only convection
+    std::vector<int> momentIndex;        // moment index for this transport equation, needed for convective and source closure
+    std::vector<int> N_i;                // vector of number of quadrature nodes in each dimension
 
     const VarLabel* d_momentLabel;       //Label for the moment of this transport equation
     int M;                               //number of internal coordiantes
-        
+    int nNodes;                          //total number of quadrature nodes
+    int uVelIndex;                       //internal coordinate index for uvel
+    int vVelIndex;                       //internal coordinate index for vvel
+    int wVelIndex;                       //internal coordinate index for wvel
+    
     std::vector<std::string> d_models;   ///< This is the list of models for this internal coordinate
     std::vector<std::string> d_sources;
     bool d_addExtraSources; 
     double d_w_small;               ///< Value of "small" weights
     bool d_normalized;
     bool d_usePartVel;             //determine whether to use particle velocities, or fluid velocities for convection
+    
+    Convection_CQMOM * d_cqmomConv; //class for cqmom-specific convection
     
   }; // class CQMOMEqn
 } // namespace Uintah
