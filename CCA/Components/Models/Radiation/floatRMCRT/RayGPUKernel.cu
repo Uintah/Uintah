@@ -50,6 +50,7 @@
 namespace Uintah {
 
 using namespace SCIRun;
+#if 0
 
 //---------------------------------------------------------------------------
 // Kernel: The GPU ray tracer kernel
@@ -809,4 +810,5 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
     CUDA_RT_SAFE_CALL( cudaFree(randNumStates) );
 }
 
+#endif
 } //end namespace Uintah
