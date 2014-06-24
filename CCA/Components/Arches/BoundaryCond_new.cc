@@ -384,6 +384,13 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
             }
 
           }
+        } else if ( bc_kind == "Moment") { //Dirichlet specific to moment eqns
+          
+          //Here the extra cell should be set to the face value so that the cqmom inversion
+          //doesn't return junk, with upwinding of the abscissas this should return correct face value
+          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+            scalar[*bound_ptr] = bc_value;
+          }
         }
       }
     }

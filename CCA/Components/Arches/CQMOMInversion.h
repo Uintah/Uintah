@@ -267,6 +267,12 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
     nTot *= N_i[i];
   }
   
+#ifdef cqmom_dbg
+  for (unsigned int i = 0; i<moments.size(); i++) {
+    cout << "M[ " << i << "]= " << moments[i] << endl;
+  }
+#endif
+  
   std::vector<double> tempMom ( N_i[0]*2,0.0);
   for (unsigned int i = 0; i<tempMom.size(); i++ ) {
     tempMom[i] = moments[i];
