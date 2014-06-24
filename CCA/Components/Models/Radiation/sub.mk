@@ -30,7 +30,8 @@
 
 SRCDIR   := CCA/Components/Models/Radiation
 
-SUBDIRS := $(SRCDIR)/RMCRT
+SUBDIRS := $(SRCDIR)/RMCRT \
+           $(SRCDIR)/floatRMCRT
 
 ifneq ($(NO_FORTRAN),yes)
   SRCS += \
