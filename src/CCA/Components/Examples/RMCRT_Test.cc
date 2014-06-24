@@ -35,6 +35,7 @@
 #include <Core/GeometryPiece/GeometryObject.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimpleMaterial.h>
@@ -147,7 +148,14 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
   if (prob_spec->findBlock("RMCRT")){
     ProblemSpecP rmcrt_ps = prob_spec->findBlock("RMCRT"); 
     
-    d_RMCRT = scinew Ray();
+    
+    #ifdef USINGFLOATRMCRT
+      proc0cout << "__________________________________ USING FLOAT VERSION OF RMCRT" << endl;
+      d_RMCRT = scinew floatRay();
+    #else
+      proc0cout << "__________________________________ USING DOUBLE VERSION OF RMCRT" << endl;
+      d_RMCRT = scinew Ray();
+    #endif
 
     d_RMCRT->registerVarLabels(0,d_abskgLabel,
                                  d_absorpLabel,
