@@ -70,11 +70,11 @@ using namespace Uintah;
 
 extern SCIRun::Mutex cerrLock;
 
-static DebugStream md_dbg("MDDebug", true);
-static DebugStream md_cout("MDCout", true);
-static DebugStream particleDebug("MDParticleVariableDebug", true);
-static DebugStream electrostaticDebug("MDElectrostaticDebug", true);
-static DebugStream mdFlowDebug("MDLogicFlowDebug", true);
+static DebugStream md_dbg("MDDebug", false);
+static DebugStream md_cout("MDCout", false);
+static DebugStream particleDebug("MDParticleVariableDebug", false);
+static DebugStream electrostaticDebug("MDElectrostaticDebug", false);
+static DebugStream mdFlowDebug("MDLogicFlowDebug", false);
 
 
 MD::MD(const ProcessorGroup* myworld) :
@@ -111,6 +111,9 @@ void MD::problemSetup(const ProblemSpecP&   params,
                       SimulationStateP&     shared_state)
 {
   const std::string flowLocation = "MD::problemSetup | ";
+  const std::string particleLocation = "MD::problemSetup P ";
+  const std::string electrostaticLocation = "MD::problemSetup E ";
+
   printTask(md_cout, flowLocation);
 
 //-----> Set up components inherited from Uintah
@@ -219,7 +222,7 @@ void MD::problemSetup(const ProblemSpecP&   params,
     d_electrostaticSubscheduler->mapDataWarehouse(Task::NewDW, 3);
   }
   if (electrostaticDebug.active()) {
-    electrostaticDebug << flowLocation;
+    electrostaticDebug << electrostaticLocation;
     if (d_electrostatics->isPolarizable()) {
       electrostaticDebug << "Electrostatic model IS polarizable.";
     }
@@ -266,12 +269,13 @@ void MD::problemSetup(const ProblemSpecP&   params,
    }
 
    if (particleDebug.active()) {
-     particleDebug << "MD::problemSetup | Registered particle variables: "
+     particleDebug << particleLocation
+                   << "  Registered particle variables: "
                    << std::endl;
      for (size_t index = 0; index < stateSize; ++index)
      {
-       particleDebug << "MD::problemSetup | "
-                     << d_particleState[index]->getName() << "/"
+       particleDebug << particleLocation
+                     << "  " << d_particleState[index]->getName() << "/"
                      << d_particleState_preReloc[index]->getName()
                      << std::endl;
      }
@@ -290,7 +294,8 @@ void MD::problemSetup(const ProblemSpecP&   params,
 void MD::scheduleInitialize(const LevelP& level,
                             SchedulerP& sched)
 {
-  printSchedule(level, md_cout, "MD::scheduleInitialize");
+  const std::string flowLocation = "MD::scheduleInitialize | ";
+  printSchedule(level, md_cout, flowLocation);
 
   /*
    * Note there are multiple tasks scheduled here. All three need only ever happen once.
@@ -300,8 +305,6 @@ void MD::scheduleInitialize(const LevelP& level,
    * 3.) SPME::initialize
    */
 
-  std::cerr << "Enter:  Scheduled Initialization" << std::endl;
-
   // Get list of MD materials for scheduling
   const MaterialSet*    materials       =   d_sharedState->allMDMaterials();
   LoadBalancer*         loadBal         =   sched->getLoadBalancer();
@@ -309,7 +312,6 @@ void MD::scheduleInitialize(const LevelP& level,
                             loadBal->getPerProcessorPatchSet(level);
 
   Task* task = scinew Task("MD::initialize", this, &MD::initialize);
-  std::cerr << "MD::ScheduleInitialize -> Created new task." << std::endl;
 
   // Initialize will load position, velocity, and ID tags
   task->computes(d_label->global->pX);
@@ -318,64 +320,80 @@ void MD::scheduleInitialize(const LevelP& level,
 
   //FIXME:  Do we still need this here?
   task->computes(d_label->electrostatic->dSubschedulerDependency);
-  std::cerr << "MD::Schedule computes subschedulerDependency" << std::endl;
-
 
   // FIXME -- Original, no longer correct?
   sched->addTask(task, level->eachPatch(), materials);
   //sched->addTask(task, perProcPatches, materials);
 
-  std::cerr << "MD::ScheduleInitialize -> Added MD::Initialize to task graph." << std::endl;
-
   // Nonbonded initialization - OncePerProc, during initial (0th) timestep.
   // The required pXlabel is available to this OncePerProc task in the new_dw from the computes above
   scheduleNonbondedInitialize(sched, perProcPatches, materials, level);
 //  scheduleNonbondedInitialize()
-  std::cerr << "MD::ScheduleInitialize -> Called scheduleNonbondedInitialize." << std::endl;
 
   // Nonbonded initialization - OncePerProc, during initial (0th) timestep.
   //   This OncePerProc task requires nothing
   scheduleElectrostaticsInitialize(sched, perProcPatches, materials, level);
-  std::cerr << "MD::ScheduleInitialize -> Created scheduleElectrostaticsInitialize." << std::endl;
-
-  std::cerr << "Exit:  Scheduled Initialization" << std::endl;
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "END"
+                << std::endl;
+  }
 }
 
 void MD::scheduleComputeStableTimestep(const LevelP& level,
                                        SchedulerP& sched)
 {
-  printSchedule(level, md_cout, "MD::scheduleComputeStableTimestep");
+  const std::string flowLocation = "MD::scheduleComputeStableTimestep | ";
+  printSchedule(level, md_cout, flowLocation);
 
   Task* task = scinew Task("MD::computeStableTimestep", this, &MD::computeStableTimestep);
 
-  task->requires(Task::NewDW, d_label->nonbonded->rNonbondedEnergy);
-  task->requires(Task::NewDW, d_label->electrostatic->rElectrostaticInverseEnergy);
-  task->requires(Task::NewDW, d_label->electrostatic->rElectrostaticRealEnergy);
+  task->requires(Task::NewDW,
+                 d_label->nonbonded->rNonbondedEnergy);
+  task->requires(Task::NewDW,
+                 d_label->electrostatic->rElectrostaticInverseEnergy);
+  task->requires(Task::NewDW,
+                 d_label->electrostatic->rElectrostaticRealEnergy);
 
   // We only -need- stress tensors if we're doing NPT
   if ( NPT == d_system->getEnsemble()) {
-    task->requires(Task::NewDW, d_label->nonbonded->rNonbondedStress);
-    task->requires(Task::NewDW, d_label->electrostatic->rElectrostaticInverseStress);
-    task->requires(Task::NewDW, d_label->electrostatic->rElectrostaticRealStress);
+    task->requires(Task::NewDW,
+                   d_label->nonbonded->rNonbondedStress);
+    task->requires(Task::NewDW,
+                   d_label->electrostatic->rElectrostaticInverseStress);
+    task->requires(Task::NewDW,
+                   d_label->electrostatic->rElectrostaticRealStress);
     if ( d_electrostatics->isPolarizable() ) {
       task->requires(Task::NewDW,
                      d_label->electrostatic->rElectrostaticInverseStressDipole);
     }
   }
 
-  task->computes(d_sharedState->get_delt_label(), level.get_rep());
+  task->computes(d_sharedState->get_delt_label(),
+                 level.get_rep());
+
   task->setType(Task::OncePerProc);
 
   LoadBalancer* loadBal = sched->getLoadBalancer();
   const PatchSet* perProcPatches = loadBal->getPerProcessorPatchSet(level);
 
-  sched->addTask(task, perProcPatches, d_sharedState->allMaterials());
+  sched->addTask(task,
+                 perProcPatches,
+                 d_sharedState->allMaterials());
+
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "END"
+                << std::endl;
+  }
+
 }
 
 void MD::scheduleTimeAdvance(const LevelP& level,
                              SchedulerP& sched)
 {
-  printSchedule(level, md_cout, "MD::scheduleTimeAdvance");
+  const std::string flowLocation = "MD::scheduleTimeAdvance | ";
+  printSchedule(level, md_cout, flowLocation);
 
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_sharedState->allMaterials();
@@ -396,13 +414,19 @@ void MD::scheduleTimeAdvance(const LevelP& level,
 
   scheduleUpdatePosition(sched, patches, matls, level);
 
-  sched->scheduleParticleRelocation(level, d_label->global->pX_preReloc,
-                                           d_sharedState->d_particleState_preReloc,
-                                           d_label->global->pX,
-                                           d_sharedState->d_particleState,
-                                           d_label->global->pID,
-                                           matls);
+  sched->scheduleParticleRelocation(level,
+                                    d_label->global->pX_preReloc,
+                                    d_sharedState->d_particleState_preReloc,
+                                    d_label->global->pX,
+                                    d_sharedState->d_particleState,
+                                    d_label->global->pID,
+                                    matls);
 
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "END"
+                << std::endl;
+  }
 
 //  sched->scheduleParticleRelocation(level, d_label->pXLabel_preReloc, d_sharedState->d_particleState_preReloc, d_label->pXLabel,
 //                                    d_sharedState->d_particleState, d_label->pParticleIDLabel, matls, 1);
@@ -417,10 +441,12 @@ void MD::scheduleNonbondedInitialize(SchedulerP&        sched,
                                      const MaterialSet* matls,
                                      const LevelP&      level)
 {
+  const std::string flowLocation = "MD::scheduleNonbondedInitialize | ";
+  printSchedule(perProcPatches, md_cout, flowLocation);
 
-  printSchedule(perProcPatches, md_cout, "MD::scheduleNonbondedInitialize");
-
-  Task* task = scinew Task("MD::nonbondedInitialize", this, &MD::nonbondedInitialize);
+  Task* task = scinew Task("MD::nonbondedInitialize",
+                           this,
+                           &MD::nonbondedInitialize);
 
   MDSubcomponent* d_nonbondedInterface =
                       dynamic_cast<MDSubcomponent*> (d_nonbonded);
@@ -430,6 +456,13 @@ void MD::scheduleNonbondedInitialize(SchedulerP&        sched,
 
   task->setType(Task::OncePerProc);
   sched->addTask(task, perProcPatches, matls);
+
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "END"
+                << std::endl;
+  }
+
 }
 
 void MD::scheduleNonbondedSetup(SchedulerP&         sched,
@@ -437,7 +470,8 @@ void MD::scheduleNonbondedSetup(SchedulerP&         sched,
                                 const MaterialSet*  matls,
                                 const LevelP&       level)
 {
-  printSchedule(patches, md_cout, "MD::scheduleNonbondedSetup");
+  const std::string flowLocation = "MD::scheduleNonbondedSetup | ";
+  printSchedule(patches, md_cout, flowLocation);
 
   Task* task = scinew Task("MD::nonbondedSetup", this, &MD::nonbondedSetup);
 
@@ -447,7 +481,12 @@ void MD::scheduleNonbondedSetup(SchedulerP&         sched,
   d_nonbondedInterface->addSetupRequirements(task, d_label);
   d_nonbondedInterface->addSetupComputes(task, d_label);
 
-  sched->addTask(task, patches, matls);
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "END"
+                << std::endl;
+  }
+
 }
 
 void MD::scheduleNonbondedCalculate(SchedulerP&         sched,
@@ -455,7 +494,8 @@ void MD::scheduleNonbondedCalculate(SchedulerP&         sched,
                                     const MaterialSet*  matls,
                                     const LevelP&       level)
 {
-  printSchedule(patches, md_cout, "MD::scheduleNonbondedCalculate");
+  const std::string flowLocation = "MD::scheduleNonbondedCalculate | ";
+  printSchedule(patches, md_cout, flowLocation);
 
   Task* task = scinew Task("MD::nonbondedCalculate",
                            this,
@@ -468,6 +508,12 @@ void MD::scheduleNonbondedCalculate(SchedulerP&         sched,
   d_nonbondedInterface->addCalculateComputes(task,d_label);
 
   sched->addTask(task, patches, matls);
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "END"
+                << std::endl;
+  }
+
 }
 
 void MD::scheduleNonbondedFinalize(SchedulerP&          sched,
@@ -475,6 +521,7 @@ void MD::scheduleNonbondedFinalize(SchedulerP&          sched,
                                    const MaterialSet*   matls,
                                    const LevelP&        level)
 {
+  const std::string flowLocation = "MD::scheduleNonbondedFinalize | ";
   printSchedule(patches, md_cout, "MD::scheduleNonbondedFinalize");
 
   Task* task = scinew Task("MD::nonbondedFinalize",
@@ -488,6 +535,12 @@ void MD::scheduleNonbondedFinalize(SchedulerP&          sched,
   d_nonbondedInterface->addFinalizeComputes(task, d_label);
 
   sched->addTask(task, patches, matls);
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "END"
+                << std::endl;
+  }
+
 }
 
 void MD::scheduleElectrostaticsInitialize(SchedulerP& sched,
@@ -495,7 +548,8 @@ void MD::scheduleElectrostaticsInitialize(SchedulerP& sched,
                                           const MaterialSet* matls,
                                           const LevelP& level)
 {
-  printSchedule(perProcPatches, md_cout, "MD::scheduleElectrostaticsInitialize");
+  const std::string flowLocation = "MD::scheduleElectrostaticsInitialize | ";
+  printSchedule(perProcPatches, md_cout, flowLocation);
 
   // initialize electrostatics instance; if we're doing electrostatics
   if (d_electrostatics->getType() != Electrostatics::NONE) {
@@ -514,6 +568,12 @@ void MD::scheduleElectrostaticsInitialize(SchedulerP& sched,
     task->setType(Task::OncePerProc);
     sched->addTask(task, perProcPatches, matls);
   }
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "END"
+                << std::endl;
+  }
+
 }
 
 void MD::scheduleElectrostaticsSetup(SchedulerP& sched,
@@ -521,7 +581,8 @@ void MD::scheduleElectrostaticsSetup(SchedulerP& sched,
                                      const MaterialSet* matls,
                                      const LevelP& level)
 {
-  printSchedule(patches, md_cout, "MD::scheduleElectrostaticsSetup");
+  const std::string flowLocation = "MD::scheduleElectrostaticsSetup | ";
+  printSchedule(patches, md_cout, flowLocation);
 
   if (d_electrostatics->getType() != Electrostatics::NONE) {
     Task* task = scinew Task("MD::electrostaticsSetup", this, &MD::electrostaticsSetup);
@@ -534,6 +595,11 @@ void MD::scheduleElectrostaticsSetup(SchedulerP& sched,
     sched->addTask(task, patches, matls);
 
   }
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "END"
+                << std::endl;
+  }
 
 }
 
@@ -542,7 +608,8 @@ void MD::scheduleElectrostaticsCalculate(SchedulerP& sched,
                                          const MaterialSet* matls,
                                          const LevelP& level)
 {
-  printSchedule(patches, md_cout, "MD::scheduleElectrostaticsCalculate");
+  const std::string flowLocation = "MD::scheduleElectrostaticsCalculate | ";
+  printSchedule(patches, md_cout, flowLocation);
 
   if (d_electrostatics->getType() != Electrostatics::NONE) {
     Task* task = scinew Task("electrostaticsCalculate", this, &MD::electrostaticsCalculate, level);
@@ -566,6 +633,11 @@ void MD::scheduleElectrostaticsCalculate(SchedulerP& sched,
 
     sched->addTask(task, perProcPatches, matls);
   }
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "END"
+                << std::endl;
+  }
 
 }
 
@@ -574,7 +646,8 @@ void MD::scheduleElectrostaticsFinalize(SchedulerP& sched,
                                         const MaterialSet* matls,
                                         const LevelP& level)
 {
-  printSchedule(patches, md_cout, "MD::scheduleElectrostaticsFinalize");
+  const std::string flowLocation = "MD::scheduleElectrostaticsFinalize | ";
+  printSchedule(patches, md_cout, flowLocation);
 
   if (d_electrostatics->getType() != Electrostatics::NONE) {
     Task* task = scinew Task("MD::electrostaticsFinalize", this, &MD::electrostaticsFinalize);
@@ -585,6 +658,13 @@ void MD::scheduleElectrostaticsFinalize(SchedulerP& sched,
 
     sched->addTask(task, patches, matls);
   }
+
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "END"
+                << std::endl;
+  }
+
 }
 
 void MD::scheduleUpdatePosition(SchedulerP& sched,
@@ -592,7 +672,8 @@ void MD::scheduleUpdatePosition(SchedulerP& sched,
                                 const MaterialSet* matls,
                                 const LevelP& level)
 {
-  printSchedule(patches, md_cout, "MD::scheduleUpdatePosition");
+  const std::string flowLocation = "MD::scheduleUpdatePosition | ";
+  printSchedule(patches, md_cout, flowLocation);
 
   // This should eventually schedule a call of the integrator.  Something like d_Integrator->advanceTimestep()
   Task* task = scinew Task("updatePosition", this, &MD::updatePosition);
@@ -636,6 +717,12 @@ void MD::scheduleUpdatePosition(SchedulerP& sched,
 //  task->computes(d_lb->pParticleIDLabel_preReloc);
 
   sched->addTask(task, patches, matls);
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "END"
+                << std::endl;
+  }
+
 }
 
 void MD::initialize(const ProcessorGroup*   pg,
@@ -644,7 +731,10 @@ void MD::initialize(const ProcessorGroup*   pg,
                     DataWarehouse*       /* oldDW */,
                     DataWarehouse*          newDW)
 {
-  printTask(perProcPatches, md_cout, "MD::initialize");
+  const std::string location = "MD::initialize";
+  const std::string flowLocation = location + " | ";
+  const std::string particleLocation = location + " P ";
+  printTask(perProcPatches, md_cout, location);
 
   Matrix3   systemInverseCell = d_coordinate->getInverseCell();
   IntVector totalSystemExtent = d_coordinate->getCellExtent();
@@ -688,8 +778,12 @@ void MD::initialize(const ProcessorGroup*   pg,
     size_t numAtoms                         =   currAtomList->size();
     d_system->registerAtomCount(numAtoms,matlIndex);
   }
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "  Constructed atom map."
+                << std::endl;
+  }
 
-  std::cerr << "Constructed particle map in MD::initialize" << std::endl;
   for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) {
     // Loop over perProcPatches
     const Patch*        currPatch           =   perProcPatches->get(patchIndex);
@@ -723,23 +817,14 @@ void MD::initialize(const ProcessorGroup*   pg,
         // Loop over all atoms of material
         atomData*   currAtom        = (*currAtomList)[atomIndex];
         Point       currPosition    = currAtom->getPosition();
-        IntVector   currCell        =
-                        currPatch
-                        ->getLevel()
-                          ->getCellIndex(currPosition);
+//        IntVector   currCell        =
+//                        currPatch
+//                        ->getLevel()
+//                          ->getCellIndex(currPosition);
 
         // Build local atom list for atoms of material in current patch
-//        bool atomInPatch = containsAtom(lowCellBoundary,
-//                                        highCellBoundary,
-//                                        currCell);
         bool atomInPatch = currPatch->containsPoint(currPosition);
 
-//        if (!atomInPatch && globalID == 2)
-//                          std::cout << "Atom " << currAtom->getID()
-//                                    << " Type: " << typeLabel
-//                                    << " cell: " << currCell
-//                                    << " | Patch Boundaries: " << lowCellBoundary << highCellBoundary
-//                                    << std::endl;
         if (atomInPatch) { // Atom is on this patch
           size_t currID = currAtom->getID();
           SCIRun::Vector currVelocity = currAtom->getVelocity();
@@ -758,12 +843,19 @@ void MD::initialize(const ProcessorGroup*   pg,
                                                     currPatch,
                                                     lowCellBoundary,
                                                     highCellBoundary);
-//      std::cerr << " Created a subset of " << currPset->numParticles()
-//                << " particles on patch " << patchIndex << "/" << numPatches
-//                << " of type " << typeLabel << " with material type "
-//                << globalID << " with DW index of " << atomType->getDWIndex()
-//                << "." << "\t Patch Limits: " << lowCellBoundary
-//                << " - " << highCellBoundary << std::endl;
+      if (particleDebug.active()) {
+        particleDebug << particleLocation
+                      << "  Created a subset with "
+                      << numAtoms
+                      << " of type label "
+                      << "\""
+                      << d_sharedState
+                           ->getMDMaterial(globalID)
+                             ->getMaterialLabel()
+                      << "\""
+                      << std::endl;
+      }
+
     // ----> Variables from parsing the input coordinate file
     // --> Position
       ParticleVariable<Point>   pX;
@@ -805,17 +897,28 @@ void MD::initialize(const ProcessorGroup*   pg,
                             0);
       subSchedulerDependency.initialize(0);
 
-
     } // Loop over materials
   } // Loop over patches
+
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "END"
+                << std::endl;
+  }
+
 }
 
-void MD::computeStableTimestep(const ProcessorGroup* pg,
-                               const PatchSubset* patches,
-                               const MaterialSubset* matls,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw)
+void MD::computeStableTimestep(const ProcessorGroup*    pg,
+                               const PatchSubset*       patches,
+                               const MaterialSubset*    matls,
+                               DataWarehouse*           oldDW,
+                               DataWarehouse*           newDW)
 {
+  const std::string location = "MD::computeStableTimestep";
+  const std::string flowLocation = location + " | ";
+  const std::string particleLocation = location + " P ";
+  const std::string electrostaticLocation = location + " E ";
+
   printTask(patches, md_cout, "MD::computeStableTimestep");
 
   sum_vartype vdwEnergy;
@@ -824,66 +927,104 @@ void MD::computeStableTimestep(const ProcessorGroup* pg,
   matrix_sum spmeRealStress;
   matrix_sum spmeFourierStressDipole;
 
-  // This is where we would actually map the correct timestep/taskgraph for a multistep integrator
+  // This is where we would actually map the correct timestep/taskgraph
+  // for a multistep integrator
 
-//  double energyTest = 0.1;
-//  new_dw->get(vdwEnergy, d_label->nonbonded->rNonbondedEnergy);
-//  new_dw->get(spmeFourierEnergy,
-//              d_label->electrostatic->rElectrostaticInverseEnergy);
-//
-//  proc0cout << std::endl;
-//  proc0cout << "-----------------------------------------------------"           << std::endl;
-//  proc0cout << "Total Energy   = " << std::setprecision(16) << vdwEnergy         << std::endl;
-//  proc0cout << "-----------------------------------------------------"           << std::endl;
-//  proc0cout << "Fourier Energy = " << std::setprecision(16) << spmeFourierEnergy << std::endl;
-//  proc0cout << "-----------------------------------------------------"           << std::endl;
+  newDW->get(vdwEnergy, d_label->nonbonded->rNonbondedEnergy);
+  newDW->get(spmeFourierEnergy,
+              d_label->electrostatic->rElectrostaticInverseEnergy);
+
+  proc0cout << std::endl;
+  proc0cout << "-----------------------------------------------------"           << std::endl;
+  proc0cout << "Total Energy = "
+            << std::setprecision(16)
+            << vdwEnergy
+            << std::endl;
+  proc0cout << "-----------------------------------------------------"           << std::endl;
+  proc0cout << "Fourier Energy = "
+            << std::setprecision(16)
+            << spmeFourierEnergy
+            << std::endl;
+  proc0cout << "-----------------------------------------------------"           << std::endl;
 
 
-//  if (NPT == d_system->getEnsemble()) {
-//    new_dw->get(spmeFourierStress,
-//                d_label->electrostatic->rElectrostaticInverseStress);
-//    Uintah::Matrix3 test(0.1);
-//
-//    new_dw->get(spmeRealStress,
-//                d_label->electrostatic->rElectrostaticRealStress);
-//    proc0cout << "Fourier Stress = " << std::setprecision(16) << spmeFourierStress << std::endl;
-//    proc0cout << "-----------------------------------------------------"           << std::endl;
-//
-//    if (d_electrostatics->isPolarizable()) {
-//      new_dw->get(spmeFourierStressDipole,
-//                  d_label->electrostatic->rElectrostaticInverseStressDipole);
-//    }
-//  }
-//
-//  proc0cout << std::endl;
+  if (NPT == d_system->getEnsemble()) {
+    newDW->get(spmeFourierStress,
+                d_label->electrostatic->rElectrostaticInverseStress);
+    newDW->get(spmeRealStress,
+                d_label->electrostatic->rElectrostaticRealStress);
+    proc0cout << "Fourier Stress = "
+              << std::setprecision(16)
+              << spmeFourierStress
+              << std::endl;
+    proc0cout << "-----------------------------------------------------"           << std::endl;
 
-  new_dw->put(delt_vartype(1), d_sharedState->get_delt_label(), getLevel(patches));
+    if (d_electrostatics->isPolarizable()) {
+      newDW->get(spmeFourierStressDipole,
+                  d_label->electrostatic->rElectrostaticInverseStressDipole);
+    }
+  }
+
+  proc0cout << std::endl;
+
+  newDW->put(delt_vartype(1),
+              d_sharedState->get_delt_label(),
+              getLevel(patches));
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "END"
+                << std::endl;
+  }
+
 }
 
-void MD::nonbondedInitialize(const ProcessorGroup* pg,
-                             const PatchSubset* patches,
-                             const MaterialSubset* matls,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw)
+void MD::nonbondedInitialize(const ProcessorGroup*  pg,
+                             const PatchSubset*     patches,
+                             const MaterialSubset*  matls,
+                             DataWarehouse*         oldDW,
+                             DataWarehouse*         newDW)
 {
+  const std::string location = "MD::nonbondedInitialize";
+  const std::string flowLocation = location + " | ";
   printTask(patches, md_cout, "MD::nonbondedInitialize");
 
-  d_nonbonded->initialize(pg, patches, matls, old_dw, new_dw,
+  d_nonbonded->initialize(pg, patches, matls, oldDW, newDW,
                           d_sharedState, d_system, d_label, d_coordinate);
+
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "END"
+                << std::endl;
+  }
+
+
 }
 
-void MD::nonbondedSetup(const ProcessorGroup* pg,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* old_dw,
-                        DataWarehouse* new_dw)
+void MD::nonbondedSetup(const ProcessorGroup*   pg,
+                        const PatchSubset*      patches,
+                        const MaterialSubset*   matls,
+                        DataWarehouse*          oldDW,
+                        DataWarehouse*          newDW)
 {
-  printTask(patches, md_cout, "MD::nonbondedSetup");
+  const std::string location = "MD::nonbondedSetup";
+  const std::string flowLocation = location + " | ";
+  printTask(patches, md_cout, location);
 
-  if (d_coordinate->queryCellChanged()) {
-    d_nonbonded->setup(pg, patches, matls, old_dw, new_dw,
-                       d_sharedState, d_system, d_label, d_coordinate);
+  d_nonbonded->setup(pg, patches, matls, oldDW, newDW,
+                     d_sharedState, d_system, d_label, d_coordinate);
+
+//  if (d_coordinate->queryCellChanged()) {
+//    d_nonbonded->setup(pg, patches, matls, oldDW, newDW,
+//                       d_sharedState, d_system, d_label, d_coordinate);
+//  }
+
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "END"
+                << std::endl;
   }
+
+
 }
 
 void MD::nonbondedCalculate(const ProcessorGroup*   pg,
@@ -892,125 +1033,174 @@ void MD::nonbondedCalculate(const ProcessorGroup*   pg,
                             DataWarehouse*          oldDW,
                             DataWarehouse*          newDW)
 {
+  const std::string location = "MD::nonbondeCalculate";
+  const std::string flowLocation = location + " | ";
   printTask(patches, md_cout, "MD::nonbondedCalculate");
 
   d_nonbonded->calculate(pg, patches, matls, oldDW, newDW,
                          d_sharedState, d_system, d_label, d_coordinate);
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "END"
+                << std::endl;
+  }
 }
 
-void MD::nonbondedFinalize(const ProcessorGroup* pg,
-                           const PatchSubset* patches,
-                           const MaterialSubset* matls,
-                           DataWarehouse* old_dw,
-                           DataWarehouse* new_dw)
+void MD::nonbondedFinalize(const ProcessorGroup*    pg,
+                           const PatchSubset*       patches,
+                           const MaterialSubset*    matls,
+                           DataWarehouse*           oldDW,
+                           DataWarehouse*           newDW)
 {
-  printTask(patches, md_cout, "MD::nonbondedFinalize");
+  const std::string location = "MD::nonbondedFinalize";
+  const std::string flowLocation = location + " | ";
+  printTask(patches, md_cout, location);
 
-  d_nonbonded->finalize(pg, patches, matls, old_dw, new_dw,
+  d_nonbonded->finalize(pg, patches, matls, oldDW, newDW,
                         d_sharedState, d_system, d_label, d_coordinate);
+
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "END"
+                << std::endl;
+  }
 }
 
 void MD::electrostaticsInitialize(const ProcessorGroup* pg,
-                                  const PatchSubset* patches,
+                                  const PatchSubset*    patches,
                                   const MaterialSubset* matls,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw)
+                                  DataWarehouse*        oldDW,
+                                  DataWarehouse*        newDW)
 {
-  printTask(patches, md_cout, "MD::electrostaticsInitialize");
+  const std::string location = "MD::electrostaticsInitialize";
+  const std::string flowLocation = location + " | ";
+  printTask(patches, md_cout, location);
 
-  d_electrostatics->initialize(pg, patches, matls, old_dw, new_dw,
-                               &d_sharedState,
-                               d_system,
-                               d_label,
-                               d_coordinate);
+  d_electrostatics->initialize(pg, patches, matls, oldDW, newDW,
+                               &d_sharedState, d_system, d_label, d_coordinate);
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "END"
+                << std::endl;
+  }
 }
 
-void MD::electrostaticsSetup(const ProcessorGroup* pg,
-                             const PatchSubset* patches,
-                             const MaterialSubset* matls,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw)
+void MD::electrostaticsSetup(const ProcessorGroup*  pg,
+                             const PatchSubset*     patches,
+                             const MaterialSubset*  matls,
+                             DataWarehouse*         oldDW,
+                             DataWarehouse*         newDW)
 {
+  const std::string location = "MD::electrostaticsSetup";
+  const std::string flowLocation = location + " | ";
   printTask(patches, md_cout, "MD::electrostaticsSetup");
 
-  d_electrostatics->setup(pg, patches, matls, old_dw, new_dw,
-                          &d_sharedState,
-                          d_system,
-                          d_label,
-                          d_coordinate);
+  d_electrostatics->setup(pg, patches, matls, oldDW, newDW,
+                          &d_sharedState, d_system, d_label, d_coordinate);
+
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "END"
+                << std::endl;
+  }
 }
 
-void MD::electrostaticsCalculate(const ProcessorGroup* pg,
-                                 const PatchSubset* perProcPatches,
-                                 const MaterialSubset* matls,
-                                 DataWarehouse* parentOldDW,
-                                 DataWarehouse* parentNewDW,
-                                 const LevelP level)
+void MD::electrostaticsCalculate(const ProcessorGroup*  pg,
+                                 const PatchSubset*     perProcPatches,
+                                 const MaterialSubset*  matls,
+                                 DataWarehouse*         parentOldDW,
+                                 DataWarehouse*         parentNewDW,
+                                 const LevelP           level)
 {
-  printTask(perProcPatches, md_cout, "MD::electrostaticsCalculate");
+  const std::string location = "MD::electrostaticsCalculate";
+  const std::string flowLocation = location + " | ";
+  const std::string electrostaticLocation = location + " E ";
+  printTask(perProcPatches, md_cout, location);
 
   // Copy del_t to the subscheduler
   delt_vartype dt;
   DataWarehouse* subNewDW = d_electrostaticSubscheduler->get_dw(3);
-  parentOldDW->get(dt, d_sharedState->get_delt_label(),level.get_rep());
-  subNewDW->put(dt, d_sharedState->get_delt_label(),level.get_rep());
+  parentOldDW->get(dt,
+                   d_sharedState->get_delt_label(),
+                   level.get_rep());
+  subNewDW->put(dt,
+                d_sharedState->get_delt_label(),
+                level.get_rep());
+
+  if (electrostaticDebug.active()) {
+    electrostaticDebug << electrostaticLocation
+                       << "  Copied delT to the electrostatic subscheduler."
+                       << std::endl;
+  }
 
   d_electrostatics->calculate(pg,perProcPatches,matls,parentOldDW,parentNewDW,
-                              &d_sharedState,
-                              d_system,
-                              d_label,
-                              d_coordinate,
-                              d_electrostaticSubscheduler,
-                              level);
+                              &d_sharedState, d_system, d_label, d_coordinate,
+                              d_electrostaticSubscheduler, level);
+
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "END"
+                << std::endl;
+  }
 }
 
-void MD::electrostaticsFinalize(const ProcessorGroup* pg,
-                                const PatchSubset* patches,
-                                const MaterialSubset* matls,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw)
+void MD::electrostaticsFinalize(const ProcessorGroup*   pg,
+                                const PatchSubset*      patches,
+                                const MaterialSubset*   matls,
+                                DataWarehouse*          oldDW,
+                                DataWarehouse*          newDW)
 {
-  printTask(patches, md_cout, "MD::electrostaticsFinalize");
+  const std::string location = "MD::electrostaticsFinalize";
+  const std::string flowLocation = location + " | ";
+  printTask(patches, md_cout, location);
 
-  d_electrostatics->finalize(pg, patches, matls, old_dw, new_dw,
-                             &d_sharedState,
-                             d_system,
-                             d_label,
-                             d_coordinate);
+  d_electrostatics->finalize(pg, patches, matls, oldDW, newDW,
+                             &d_sharedState, d_system, d_label, d_coordinate);
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "END"
+                << std::endl;
+  }
 }
 
 void MD::updatePosition(const ProcessorGroup*   pg,
                         const PatchSubset*      patches,
                         const MaterialSubset*   matls,
-                        DataWarehouse*          old_dw,
-                        DataWarehouse*          new_dw)
+                        DataWarehouse*          oldDW,
+                        DataWarehouse*          newDW)
 {
-  printTask(patches, md_cout, "MD::updatePosition");
+  const std::string location = "MD::updatePosition";
+  const std::string flowLocation = location + " | ";
+  const std::string particleLocation = location + " P ";
+  printTask(patches, md_cout, location);
 
   // loop through all patches
   unsigned int numPatches = patches->size();
-//  SimulationStateP simState = d_system->getStatePointer();
 
   for (unsigned int p = 0; p < numPatches; ++p) {
     const Patch* patch = patches->get(p);
-    // do this for each material; for this example, there is only a single material, material "0"
     unsigned int numMatls = matls->size();
+
     for (unsigned int m = 0; m < numMatls; ++m) {
       int matl = matls->get(m);
       double massInv = 1.0/(d_sharedState->getMDMaterial(matl)->getMass());
 
-      ParticleSubset* pset = old_dw->getParticleSubset(matl, patch);
+      ParticleSubset* pset = oldDW->getParticleSubset(matl, patch);
       ParticleSubset* delset = scinew ParticleSubset(0, matl, patch);
 
       // Variables required in order to integrate
       // --> Position at last time step
       constParticleVariable<Point> pX;
-      old_dw->get(pX, d_label->global->pX, pset);
+      oldDW->get(pX,
+                  d_label->global->pX, pset);
+
       // --> Velocity at last time step (velocity verlet algorithm)
       constParticleVariable<SCIRun::Vector> pV;
-      old_dw->get(pV, d_label->global->pV, pset);
+      oldDW->get(pV,
+                  d_label->global->pV, pset);
       constParticleVariable<long64> pID;
-      old_dw->get(pID, d_label->global->pID, pset);
+      oldDW->get(pID,
+                  d_label->global->pID, pset);
 
 //      // --> Acceleration at last time step (velocity verlet algorithm)
 //      constParticleVariable<SCIRun::Vector> pA;
@@ -1020,45 +1210,66 @@ void MD::updatePosition(const ProcessorGroup*   pg,
       constParticleVariable<SCIRun::Vector> pForceElectroReal;
       constParticleVariable<SCIRun::Vector> pForceElectroRecip;
       constParticleVariable<SCIRun::Vector> pForceNonbonded;
-      new_dw->get(pForceElectroReal, d_label->electrostatic->pF_electroReal_preReloc, pset);
-      new_dw->get(pForceElectroRecip, d_label->electrostatic->pF_electroInverse_preReloc, pset);
-      new_dw->get(pForceNonbonded, d_label->nonbonded->pF_nonbonded_preReloc, pset);
-//      new_dw->get(pForceElectroReal,d_label->pElectrostaticsRealForce_preReloc, pset);
-//      new_dw->get(pForceElectroRecip, d_label->pElectrostaticsReciprocalForce_preReloc, pset);
-//      new_dw->get(pForceNonbonded, d_label->pNonbondedForceLabel_preReloc, pset);
+      newDW->get(pForceElectroReal,
+                  d_label->electrostatic->pF_electroReal_preReloc,
+                  pset);
+      newDW->get(pForceElectroRecip,
+                  d_label->electrostatic->pF_electroInverse_preReloc,
+                  pset);
+      newDW->get(pForceNonbonded,
+                  d_label->nonbonded->pF_nonbonded_preReloc,
+                  pset);
 
       // Variables which the integrator calculates
       // --> New position
       ParticleVariable<Point> pXNew;
-      new_dw->allocateAndPut(pXNew, d_label->global->pX_preReloc, pset);
-//      new_dw->allocateAndPut(pXNew, d_label->pXLabel_preReloc, pset);
+      newDW->allocateAndPut(pXNew,
+                             d_label->global->pX_preReloc,
+                             pset);
       // --> New velocity
       ParticleVariable<SCIRun::Vector> pVNew;
-      new_dw->allocateAndPut(pVNew, d_label->global->pV_preReloc, pset);
-//      new_dw->allocateAndPut(pVNew, d_label->pVelocityLabel_preReloc, pset);
-//      // --> New acceleration
-//      ParticleVariable<SCIRun::Vector> pANew;
-//      new_dw->allocateAndPut(pANew, d_lb->pAccelLabel_preReloc, pset);
+      newDW->allocateAndPut(pVNew,
+                             d_label->global->pV_preReloc,
+                             pset);
       ParticleVariable<long64> pIDNew;
-      new_dw->allocateAndPut(pIDNew, d_label->global->pID_preReloc, pset);
+      newDW->allocateAndPut(pIDNew,
+                             d_label->global->pID_preReloc,
+                             pset);
 
       // get delT
       delt_vartype delT;
-      old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches));
+      oldDW->get(delT,
+                  d_sharedState->get_delt_label(),
+                  getLevel(patches));
 
       size_t numAtoms = pset->numParticles();
+
       // Loop over the atom set
       for (size_t atomIndex = 0; atomIndex < numAtoms; ++atomIndex) {
-        SCIRun::Vector totalForce = pForceElectroReal[atomIndex] + pForceElectroRecip[atomIndex] + pForceNonbonded[atomIndex];
+        SCIRun::Vector totalForce;
+        totalForce = pForceElectroReal[atomIndex] +
+                     pForceElectroRecip[atomIndex] +
+                     pForceNonbonded[atomIndex];
         // pX = X_n; pV = V_n-1/2; we will now calculate A_n
         // --> Force is calculated for position X_n, therefore the acceleration is A_n
         SCIRun::Vector A_n = totalForce*massInv;
+
         // pV is velocity at time n - 1/2
-        pVNew[atomIndex] = pV[atomIndex] + 0.5 * (A_n) * delT; // pVNew is therefore actually V_n
-        // Calculate velocity related things here, based on pVNew;  N?T integration temperature determination goes here
-        // --> This may eventually be the end of this routine to allow for reduction to gather the total temperature for N?T and Isokinetic integrators
+        pVNew[atomIndex] = pV[atomIndex] + 0.5 * (A_n) * delT;
+        // pVNew is therefore actually V_n
+
+        // Calculate velocity related things here, based on pVNew;
+        // NPT integration temperature determination goes here
+
+        // --> This may eventually be the end of this routine to allow for
+        //     reduction to gather the total temperature for NPT and
+        //     Isokinetic integrators
+
+
         // -->  For now we simply integrate again to get to V_n+1/2
-        pVNew[atomIndex] = pVNew[atomIndex] + 0.5 * (A_n) * delT; // pVNew = V_n+1/2
+        pVNew[atomIndex] = pVNew[atomIndex] + 0.5 * (A_n) * delT;
+        // pVNew = V_n+1/2
+
         // pXNew = X_n+1
         pXNew[atomIndex] = pX[atomIndex] + pVNew[atomIndex] * delT;
 
@@ -1076,13 +1287,18 @@ void MD::updatePosition(const ProcessorGroup*   pg,
 //          cerrLock.unlock();
       } // end Atom Loop
 
-      new_dw->deleteParticles(delset);
+      newDW->deleteParticles(delset);
 
     }  // end materials loop
 
   }  // end patch loop
 
   //d_coordinate->clearCellChanged();
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "END"
+                << std::endl;
+  }
 }
 
 void MD::createBasePermanentParticleState() {
@@ -1092,9 +1308,18 @@ void MD::createBasePermanentParticleState() {
   //
   // Note that position is registered elsewhere since it is the position variable.
 
+  const std::string location = "MD::createBasePermanentParticleState";
+  const std::string flowLocation = location + " | ";
+
   d_particleState.push_back(d_label->global->pID);
   d_particleState.push_back(d_label->global->pV);
 
   d_particleState_preReloc.push_back(d_label->global->pID_preReloc);
   d_particleState_preReloc.push_back(d_label->global->pV_preReloc);
+
+  if (mdFlowDebug.active()) {
+    mdFlowDebug << flowLocation
+                << "END"
+                << std::endl;
+  }
 }
