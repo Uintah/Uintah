@@ -169,7 +169,7 @@ void fineToCoarseOperator(CCVariable<T>& q_CC,
     coarsenDriver_std(cl, ch, fl, fh, r_Ratio, inv_RR, coarseLevel,                
                       fine_q_CC, q_CC );
   }
-  cout_dbg.setActive(false);// turn off the switch for cout_dbg
+//  cout_dbg.setActive(false);// turn off the switch for cout_dbg  (turn off tsanitizer warnings)
 }
 
 
