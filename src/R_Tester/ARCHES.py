@@ -84,8 +84,8 @@ NIGHTLYTESTS = [
 
 #
 # multi-threaded NIGHTLY tests
-   ("rmcrt_bm1_1L_thread"         , "RMCRT/rmcrt_bm1_1L.ups"               , 1.1 , "Linux"  , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
-   ("rmcrt_bm1_DO_thread"         , "RMCRT/rmcrt_bm1_DO.ups"               , 1.1 , "Linux"  , ["no_restart", "exactComparison", "sus_options=-nthreads 8"]),
+   #("rmcrt_bm1_1L_thread"         , "RMCRT/rmcrt_bm1_1L.ups"               , 1.1 , "Linux"  , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
+   #("rmcrt_bm1_DO_thread"         , "RMCRT/rmcrt_bm1_DO.ups"               , 1.1 , "Linux"  , ["no_restart", "exactComparison", "sus_options=-nthreads 8"]),
 ]
 
 # Tests that are run during local regression testing
@@ -130,8 +130,8 @@ LOCALTESTS = [
    ("CQMOM_scalar_transport2x2x2" , "CQMOM_regression/CQMOM_Transport_2x2x2.ups"   , 6   , "All"  , ["exactComparison", "no_restart"]),
    
 # multi-threaded LOCAL tests
-   ("rmcrt_bm1_1L_thread"                , "RMCRT/rmcrt_bm1_1L.ups"               , 1.1 , "ALL"    , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
-   ("rmcrt_bm1_DO_thread"                , "RMCRT/rmcrt_bm1_DO.ups"               , 1.1 , "ALL"    , ["no_restart", "exactComparison", "sus_options=-nthreads 8"]),   
+   #("rmcrt_bm1_1L_thread"                , "RMCRT/rmcrt_bm1_1L.ups"               , 1.1 , "ALL"    , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
+   #("rmcrt_bm1_DO_thread"                , "RMCRT/rmcrt_bm1_DO.ups"               , 1.1 , "ALL"    , ["no_restart", "exactComparison", "sus_options=-nthreads 8"]),   
 ]
 
 NEWTESTS = [

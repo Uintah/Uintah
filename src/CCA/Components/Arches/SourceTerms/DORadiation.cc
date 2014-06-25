@@ -407,7 +407,6 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       new_dw->allocateAndPut( radiation_vars.src    , _radiationSRCLabel   , matlIndex , patch );
       new_dw->allocateAndPut( radiation_vars.ABSKG  , _prop_calculator->get_abskg_label(), matlIndex , patch );
       new_dw->allocateAndPut( radiation_vars.ABSKP  , _prop_calculator->get_abskp_label(), matlIndex , patch );
-      new_dw->allocateAndPut( radiation_vars.ABSKP  , _prop_calculator->get_abskp_label(), matlIndex , patch );
       new_dw->allocateAndPut( divQ, _src_label, matlIndex, patch ); 
       radiation_vars.ESRCG.allocate( patch->getExtraCellLowIndex(1), patch->getExtraCellHighIndex(1) );  
       divQ.initialize(0.0);
