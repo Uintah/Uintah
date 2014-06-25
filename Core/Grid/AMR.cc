@@ -429,8 +429,9 @@ Function~  compute_Mag_gradient--
 Purpose~   computes the magnitude of the gradient/divergence of q_CC.
            First order central difference.  Used in setting refinement flags
 ______________________________________________________________________*/
-void compute_Mag_gradient( constCCVariable<double>& q_CC,
-                           CCVariable<double>& mag_grad_q_CC,
+template <class T>
+void compute_Mag_gradient( constCCVariable<T>& q_CC,
+                           CCVariable<T>& mag_grad_q_CC,
                            const Patch* patch) 
 {                  
   Vector dx = patch->dCell(); 
@@ -441,7 +442,7 @@ void compute_Mag_gradient( constCCVariable<double>& q_CC,
     for(int dir = 0; dir <3; dir ++ ) { 
       IntVector r = c;
       IntVector l = c;
-      double inv_dx = 0.5 /dx[dir];
+      T inv_dx = (T) 0.5 /dx[dir];
       r[dir] += 1;
       l[dir] -= 1;
       grad_q_CC[dir] = (q_CC[r] - q_CC[l])*inv_dx;
@@ -449,6 +450,19 @@ void compute_Mag_gradient( constCCVariable<double>& q_CC,
     mag_grad_q_CC[c] = grad_q_CC.length();
   }
 }
+
+//__________________________________
+// Explicit template instantiations
+template
+void compute_Mag_gradient( constCCVariable<float>& q_CC,
+                           CCVariable<float>& mag_grad_q_CC,
+                           const Patch* patch);
+
+template
+void compute_Mag_gradient( constCCVariable<double>& q_CC,
+                           CCVariable<double>& mag_grad_q_CC,
+                           const Patch* patch);
+
 //______________________________________________________________________
 //          vector version
 void compute_Mag_Divergence( constCCVariable<Vector>& q_CC,
