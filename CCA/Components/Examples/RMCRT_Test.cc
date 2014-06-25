@@ -506,7 +506,7 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
       }
       
       
-#ifdef USINGFLOATRMCRT      
+#ifdef USINGFLOATRMCRT
       //__________________________________
       // HACK:
       //  Make a copy of the float data and place it
@@ -521,23 +521,22 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
         D_abskg[c] = (double) abskg[c];
         D_color[c] = (double) color[c];
       }
-#endif    
-      
-      
       // set boundary conditions 
       d_RMCRT->setBC<double>( D_color,  d_colorLabel->getName(), patch, matl );
       d_RMCRT->setBC<double>( D_abskg,  d_abskgLabel->getName(), patch, matl );
 
-#ifdef USINGFLOATRMCRT
-      //__________________________________
-      //   HACK
       for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;
         abskg[c] = (float) D_abskg[c];
         color[c]  = (float) D_color[c];
       }
+#else
+      d_RMCRT->setBC<double>( color,  d_colorLabel->getName(), patch, matl );
+      d_RMCRT->setBC<double>( abskg,  d_abskgLabel->getName(), patch, matl );
+
 #endif
 
+      //__________________________________
       // initialize cell type
       cellType.initialize(d_flow_cell);
 
