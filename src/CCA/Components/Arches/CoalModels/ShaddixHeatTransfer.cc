@@ -267,14 +267,14 @@ ShaddixHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched,
 
     tsk->computes(d_modelLabel);
     tsk->computes(d_gasLabel); 
-    tsk->computes(d_abskpLabel);
+    tsk->computes(d_abskpLabel); 
     tsk->computes(d_qconvLabel);
     tsk->computes(d_qradLabel);
     tsk->computes(d_pTLabel);
   } else {
     tsk->modifies(d_modelLabel);
     tsk->modifies(d_gasLabel);  
-    tsk->modifies(d_abskpLabel);
+    tsk->modifies(d_abskpLabel); 
     tsk->modifies(d_qconvLabel);
     tsk->modifies(d_qradLabel);
     tsk->modifies(d_pTLabel);

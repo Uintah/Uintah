@@ -47,12 +47,8 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
   _src_label      = VarLabel::create( src_name,  CC_double ); 
   _sigmaT4Label   = VarLabel::create("sigmaT4",  CC_double );
   _extra_local_labels.push_back(_sigmaT4Label); 
-  _abskgLabel     = VarLabel::create( "abskg",   CC_double );
-  _extra_local_labels.push_back(_abskgLabel); 
   _absorpLabel    = VarLabel::create( "absorp",  CC_double );
   _extra_local_labels.push_back(_absorpLabel); 
-  _abskpLabel     = VarLabel::create( "abskp",   CC_double ); 
-  _extra_local_labels.push_back(_abskpLabel); 
   _cellTypeLabel  = _labels->d_cellTypeLabel; 
   
   //Declare the source type: 
@@ -85,9 +81,7 @@ RMCRT_Radiation::~RMCRT_Radiation()
 {
   // source label is destroyed in the base class 
   VarLabel::destroy( _sigmaT4Label ); 
-  VarLabel::destroy( _abskgLabel );
   VarLabel::destroy( _absorpLabel );
-  VarLabel::destroy( _abskpLabel ); 
 
   delete _prop_calculator; 
   delete _RMCRT; 
@@ -145,7 +139,7 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
 
   //__________________________________
   //for particles: 
-  _ps->getWithDefault( "abskp_label",        _abskp_label_name, "abskp" ); 
+//  _ps->getWithDefault( "abskp_label",        _abskp_label_name, "abskp" ); 
   _ps->getWithDefault( "psize_label",        _size_label_name,  "length");
   _ps->getWithDefault( "ptemperature_label", _pT_label_name,    "temperature"); 
   
@@ -159,6 +153,11 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
   //  
   _prop_calculator = scinew RadPropertyCalculator();
   _using_prop_calculator = _prop_calculator->problemSetup( rmcrt_ps ); 
+
+  if ( !_using_prop_calculator ){ 
+    throw ProblemSetupException("Error: No valid property calculator found.",__FILE__, __LINE__);
+  }
+
 }
 
 //______________________________________________________________________
@@ -166,13 +165,13 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
 //  so the reaction models can create the  VarLabel
 //______________________________________________________________________
 void 
-RMCRT_Radiation::extraSetup( GridP& grid )
+RMCRT_Radiation::extraSetup( GridP& grid, const ProblemSpecP& db )
 { 
 
   // determing the temperature label
   _tempLabel = _labels->getVarlabelByRole(ArchesLabel::TEMPERATURE);
   proc0cout << "RMCRT: temperature label name: " << _tempLabel->getName()
-            << "   abskg label name:       " << _abskgLabel->getName() << endl;
+            << "   abskg label name:       " << _prop_calculator->get_abskg_name() << endl;
 
   if ( _tempLabel == 0 ){ 
     throw ProblemSetupException("Error: No temperature label found.",__FILE__,__LINE__); 
@@ -182,7 +181,7 @@ RMCRT_Radiation::extraSetup( GridP& grid )
   _RMCRT = scinew Ray();
 
   _RMCRT->registerVarLabels(_matl, 
-                            _abskgLabel,
+                            _prop_calculator->get_abskg_label(),
                             _absorpLabel,
                             _tempLabel,
                             _cellTypeLabel, 
@@ -309,7 +308,6 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
    
     // compute Radiative properties and sigmaT4 on the finest level
     sched_radProperties( fineLevel, sched, timeSubStep );
-    
     _RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, _radiation_calc_freq, includeExtraCells );
     
     for (int l = 0; l < maxLevels; l++) {
@@ -356,8 +354,8 @@ RMCRT_Radiation::sched_radProperties( const LevelP& level,
   std::vector<std::string> part_sp = _prop_calculator->get_participating_sp(); 
 
   if ( time_sub_step == 0 ) { 
-    tsk->computes( _abskgLabel );
-    tsk->computes( _abskpLabel ); 
+    tsk->computes( _prop_calculator->get_abskg_label());
+    tsk->computes( _prop_calculator->get_abskp_label()); 
     tsk->requires( Task::OldDW, _tempLabel, Ghost::None, 0 ); 
     //gas
     for ( std::vector<std::string>::iterator iter = part_sp.begin(); iter != part_sp.end(); iter++){
@@ -417,8 +415,8 @@ RMCRT_Radiation::sched_radProperties( const LevelP& level,
       }
     } 
   } else {  
-    tsk->modifies( _abskgLabel );
-    tsk->modifies( _abskpLabel ); 
+    tsk->modifies( _prop_calculator->get_abskg_label());
+    tsk->modifies( _prop_calculator->get_abskp_label() ); 
     tsk->requires( Task::NewDW, _tempLabel, Ghost::None, 0 ); 
     tsk->requires( Task::NewDW, _labels->d_volFractionLabel, Ghost::None, 0 ); 
 
@@ -459,19 +457,18 @@ RMCRT_Radiation::radProperties( const ProcessorGroup* ,
     constCCVariable<double> VolFractionBC; 
 
     const Patch* patch = patches->get(p);
-
     printTask(patches,patch,dbg,"Doing RMCRT_Radiation::radProperties");
 
     DataWarehouse* which_dw; 
     CCVariable<double> abskg; 
     CCVariable<double> abskp; 
     if ( time_sub_step == 0 ) { 
-      new_dw->allocateAndPut( abskg, _abskgLabel, _matl, patch ); 
-      new_dw->allocateAndPut( abskp, _abskpLabel, _matl, patch ); 
+      new_dw->allocateAndPut( abskg, _prop_calculator->get_abskg_label(), _matl, patch ); 
+      new_dw->allocateAndPut( abskp, _prop_calculator->get_abskp_label(), _matl, patch ); 
       which_dw = old_dw; 
     } else { 
-      new_dw->getModifiable( abskg,  _abskgLabel,  _matl, patch );
-      new_dw->getModifiable( abskp,  _abskpLabel,  _matl, patch );
+      new_dw->getModifiable( abskg,  _prop_calculator->get_abskg_label(),  _matl, patch );
+      new_dw->getModifiable( abskp,  _prop_calculator->get_abskp_label(),  _matl, patch );
       which_dw = new_dw; 
     }
 
@@ -530,7 +527,6 @@ RMCRT_Radiation::radProperties( const ProcessorGroup* ,
       which_dw->get( var, *iter, _matl, patch, Ghost::None, 0 ); 
       species.push_back( var ); 
     }
-
     // compute absorption (gas and particle) coefficient(s) via RadPropertyCalulator
     if ( _prop_calculator->does_scattering() ){
       _prop_calculator->compute( patch, VolFractionBC, species, size_scaling_constant, size, pT, 
@@ -538,7 +534,7 @@ RMCRT_Radiation::radProperties( const ProcessorGroup* ,
     } else { 
       _prop_calculator->compute( patch, VolFractionBC, species, gas_temperature, abskg );
     } 
-    
+    _prop_calculator->sum_abs( abskg, abskp, patch ); 
     // abskg boundary conditions are set in setBoundaryCondition()
   }
 }
@@ -578,9 +574,9 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
     //__________________________________
     //  all levels
     tsk->computes( _sigmaT4Label );
-    tsk->computes( _abskgLabel  );
+    tsk->computes( _prop_calculator->get_abskg_label() );
     tsk->computes( _absorpLabel );
-    tsk->computes( _abskpLabel  );
+    tsk->computes( _prop_calculator->get_abskp_label() );
     
     sched->addTask(tsk, level->eachPatch(), _matlSet);
   }
@@ -614,9 +610,9 @@ RMCRT_Radiation::initialize( const ProcessorGroup*,
     // all levels
     CCVariable<double> sigmaT4, abskg, absorp, abskp;
     new_dw->allocateAndPut(sigmaT4, _sigmaT4Label, _matl, patch );
-    new_dw->allocateAndPut(abskg,   _abskgLabel,   _matl, patch );
+    new_dw->allocateAndPut(abskg,   _prop_calculator->get_abskg_label(),   _matl, patch );
     new_dw->allocateAndPut(absorp,  _absorpLabel,  _matl, patch );
-    new_dw->allocateAndPut(abskp,   _abskpLabel,   _matl, patch );
+    new_dw->allocateAndPut(abskp,   _prop_calculator->get_abskp_label(),   _matl, patch );
     
     sigmaT4.initialize( 0.0 );
     abskg.initialize( 0.0 );

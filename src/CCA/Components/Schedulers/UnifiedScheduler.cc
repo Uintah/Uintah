@@ -41,10 +41,11 @@
 #include <cstring>
 
 #include <sci_defs/cuda_defs.h>
+
 #ifdef HAVE_CUDA
-#include <CCA/Components/Schedulers/GPUDataWarehouse.h>
-#include <Core/Grid/Variables/GPUGridVariable.h>
-#include <Core/Grid/Variables/GPUStencil7.h>
+#  include <CCA/Components/Schedulers/GPUDataWarehouse.h>
+#  include <Core/Grid/Variables/GPUGridVariable.h>
+#  include <Core/Grid/Variables/GPUStencil7.h>
 #endif
 
 #define USE_PACKING
@@ -56,14 +57,16 @@ using namespace SCIRun;
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
 extern SCIRun::Mutex cerrLock;
+
 extern DebugStream taskdbg;
 extern DebugStream mpidbg;
-extern map<string, double> waittimes;
-extern map<string, double> exectimes;
 extern DebugStream waitout;
 extern DebugStream execout;
 extern DebugStream taskorder;
 extern DebugStream taskLevel_dbg;
+
+extern map<string, double> waittimes;
+extern map<string, double> exectimes;
 
 static double CurrentWaitTime = 0;
 
@@ -75,8 +78,8 @@ static DebugStream threaddbg("UnifiedThreadDBG", false);
 static DebugStream affinity("CPUAffinity", false);
 
 #ifdef HAVE_CUDA
-static DebugStream gpu_stats("GPUStats", false);
-DebugStream use_single_device("SingleDevice", false);
+  static DebugStream gpu_stats("GPUStats", false);
+         DebugStream use_single_device("SingleDevice", false);
 #endif
 
 UnifiedScheduler::UnifiedScheduler(const ProcessorGroup* myworld,
@@ -1658,8 +1661,7 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
             // critical section - prepare and async copy the requires variable data to the device
             h2dRequiresLock_.writeLock();
             {
-              int numElems = 1; // baked in for now: simple reductions on single value
-              dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID, numElems);
+              dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID);
 
               // The following is only efficient for large single copies. With multiple smaller copies
               // the faster PCIe transfers never outweigh the CUDA API latencies. We can revive this idea
@@ -1691,6 +1693,57 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
             break;
 
           }  // end ReductionVariable switch case
+
+          case TypeDescription::PerPatch : {
+
+            PerPatchBase* perPatchVar = dynamic_cast<PerPatchBase*>(req->var->typeDescription()->createInstance());
+            host_ptr = perPatchVar->getBasePointer();
+            host_bytes = perPatchVar->getDataSize();
+            GPUPerPatch<void*> device_var;
+
+            // check if the variable already exists on the GPU
+            if (dw->getGPUDW()->exist(reqVarName.c_str(), patchID, matlID)) {
+              dw->getGPUDW()->get(device_var, reqVarName.c_str(), patchID, matlID);
+              device_ptr = device_var.getPointer();
+              device_bytes = device_var.getMemSize(); // TODO fix this
+              // if the size is the same, assume the variable already exists on the GPU... no H2D copy
+              if (host_bytes == device_bytes) {
+                // report the above fact
+                if (gpu_stats.active()) {
+                  cerrLock.lock();
+                  {
+                    gpu_stats << "PerPatch: \"" << reqVarName << "\" already exists, skipping H2D copy..." << std::endl;
+                  }
+                  cerrLock.unlock();
+                }
+                continue;
+              } else {
+                dw->getGPUDW()->remove(reqVarName.c_str(), patchID, matlID);
+              }
+            }
+
+            // critical section - prepare and async copy the requires variable data to the device
+            h2dRequiresLock_.writeLock();
+            {
+              dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID);
+
+              if (gpu_stats.active()) {
+                cerrLock.lock();
+                {
+                  gpu_stats << "Post H2D copy of \"" << reqVarName << "\", size = " << std::dec << host_bytes << " from "
+                            << std::hex << host_ptr << " to " << std::hex << device_var.getPointer() << ", using stream "
+                            << std::hex << dtask->getCUDAStream() << std::dec << std::endl;
+                }
+                cerrLock.unlock();
+              }
+              cudaStream_t stream = *(dtask->getCUDAStream());
+              CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(device_var.getPointer(), host_ptr, host_bytes, cudaMemcpyHostToDevice, stream));
+            }
+            h2dRequiresLock_.writeUnlock();
+            delete perPatchVar;
+            break;
+
+          }  // end PerPatch switch case
 
           case TypeDescription::ParticleVariable : {
             SCI_THROW(InternalError("Copying ParticleVariables to GPU not yet supported:" + reqVarName, __FILE__, __LINE__));
@@ -1816,8 +1869,7 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
             d2hComputesLock_.writeLock();
             {
               GPUReductionVariable<void*> device_var;
-              int numElems = 1; // baked in for now: simple reductions on single value
-              dw->getGPUDW()->allocateAndPut(device_var, compVarName.c_str(), patchID, matlID, numElems);
+              dw->getGPUDW()->allocateAndPut(device_var, compVarName.c_str(), patchID, matlID);
               device_ptr = device_var.getPointer();
               num_bytes = device_var.getMemSize();
               if (gpu_stats.active()) {
@@ -1834,6 +1886,29 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
             break;
 
           }  // end ReductionVariable switch case
+
+          case TypeDescription::PerPatch : {
+
+                      d2hComputesLock_.writeLock();
+                      {
+                        GPUPerPatch<void*> device_var;
+                        dw->getGPUDW()->allocateAndPut(device_var, compVarName.c_str(), patchID, matlID);
+                        device_ptr = device_var.getPointer();
+                        num_bytes = device_var.getMemSize();
+                        if (gpu_stats.active()) {
+                          cerrLock.lock();
+                          {
+                            gpu_stats << "Allocated device copy of \"" << compVarName << "\", size = " << std::dec << num_bytes
+                                      << " at " << std::hex << device_ptr << " on device " << std::dec << dtask->getDeviceNum()
+                                      << std::dec << std::endl;
+                          }
+                          cerrLock.unlock();
+                        }
+                      }
+                      d2hComputesLock_.writeUnlock();
+                      break;
+
+                    }  // end PerPatch switch case
 
           case TypeDescription::ParticleVariable : {
             SCI_THROW(
@@ -2037,6 +2112,46 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
             break;
 
           }  // end ReductionVariable switch case
+
+          case TypeDescription::PerPatch : {
+
+            PerPatchBase* perPatchVar = dynamic_cast<PerPatchBase*>(comp->var->typeDescription()->createInstance());
+            dw->put(*perPatchVar, comp->var, matlID, patches->get(i));
+
+            host_ptr = perPatchVar->getBasePointer();
+            host_bytes = perPatchVar->getDataSize();
+
+            d2hComputesLock_.writeLock();
+            {
+              GPUPerPatch<void*> device_var;
+              dw->getGPUDW()->get(device_var, compVarName.c_str(), patchID, matlID);
+              device_ptr = device_var.getPointer();
+              device_bytes = device_var.getMemSize();
+
+              // if size is equal to CPU DW, directly copy back to CPU var memory;
+              if (host_bytes == device_bytes) {
+                if (gpu_stats.active()) {
+                  cerrLock.lock();
+                  {
+                    gpu_stats << "Post D2H copy of \"" << compVarName << "\", size = " << std::dec << host_bytes << " to "
+                              << std::hex << host_ptr << " from " << std::hex << device_ptr << ", using stream "
+                              << std::hex << dtask->getCUDAStream() << std::dec << std::endl;
+                  }
+                  cerrLock.unlock();
+                }
+                CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(host_ptr, device_ptr, host_bytes, cudaMemcpyDeviceToHost, *dtask->getCUDAStream()));
+                if (retVal == cudaErrorLaunchFailure) {
+                  SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task: "+ dtask->getName(), __FILE__, __LINE__));
+                } else {
+                  CUDA_RT_SAFE_CALL(retVal);
+                }
+              }
+            }
+            d2hComputesLock_.writeUnlock();
+            delete perPatchVar;
+            break;
+
+          }  // end PerPatch switch case
 
           case TypeDescription::ParticleVariable : {
             SCI_THROW(

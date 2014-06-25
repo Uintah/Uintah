@@ -27,7 +27,7 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR   := CCA/Components/Wasatch/transport
+SRCDIR   := CCA/Components/Wasatch/Transport
 
 #
 # These are files that if CUDA is enabled (via configure), must be
@@ -48,6 +48,7 @@ ifeq ($(HAVE_CUDA),yes)
    # using the nvcc compiler.
 
    SRCS += $(foreach var,$(CUDA_ENABLED_SRCS),$(OBJTOP_ABS)/$(SRCDIR)/$(var).cu)
+   DLINK_FILES := $(DLINK_FILES) $(foreach var,$(CUDA_ENABLED_SRCS),$(SRCDIR)/$(var).o)
 
 else
 

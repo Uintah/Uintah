@@ -255,16 +255,20 @@ namespace Wasatch{
     const int materialIndex;
     const Uintah::Patch* const patch;
     const Uintah::ProcessorGroup* const procgroup;
+    const bool isGPUTask;
+
     AllocInfo( Uintah::DataWarehouse* const olddw,
                Uintah::DataWarehouse* const newdw,
                const int mi,
                const Uintah::Patch* p,
-               const Uintah::ProcessorGroup* const pg )
+               const Uintah::ProcessorGroup* const pg,
+               const bool isgpu=false )
     : oldDW( olddw ),
       newDW( newdw ),
       materialIndex( mi ),
       patch( p ),
-      procgroup( pg )
+      procgroup( pg ),
+      isGPUTask( isgpu )
     {}
   };
 
@@ -277,7 +281,6 @@ namespace Wasatch{
    *         freeing the memory.
    *  \param uintahVar the uintah variable to wrap
    *  \param patch the patch that the field is associated with.
-   *  \param mtype specifies the location for the field (GPU,CPU)
    *  \param deviceIndex in the case of a GPU field, this specifies which GPU it is on
    *  \param uintahDeviceVar for GPU fields, this is the pointer to the field on the device
    *
@@ -289,9 +292,9 @@ namespace Wasatch{
   template< typename FieldT, typename UFT >
   inline FieldT* wrap_uintah_field_as_spatialops( UFT& uintahVar,
                                                   const AllocInfo& ainfo,
-                                                  const SpatialOps::MemoryType mtype=SpatialOps::LOCAL_RAM,
-                                                  const unsigned short int deviceIndex=0,
-                                                  double* uintahDeviceVar = NULL )
+                                                  short int deviceIndex=CPU_INDEX,
+                                                  double* uintahDeviceVar = NULL,
+                                                  const bool isGPUTask = false )
   {
     /*
      * NOTE: before changing things here, look at the line:
@@ -317,22 +320,33 @@ namespace Wasatch{
     get_bc_logicals( ainfo.patch, bcMinus, bcPlus );
 
     double* fieldValues_ = NULL;
-    if( mtype == SpatialOps::EXTERNAL_CUDA_GPU ){
+    FieldT* field;
+    if( isGPUTask && IS_GPU_INDEX(deviceIndex) ){ // homogeneosu GPU task
 #     ifdef HAVE_CUDA
       fieldValues_ = const_cast<double*>( uintahDeviceVar );
 #     endif
+      field = new FieldT( SS::MemoryWindow( size, offset, extent ),
+                          SS::BoundaryCellInfo::build<FieldT>(bcPlus),
+                          SS::GhostData( get_n_ghost<FieldT>() ),
+                          fieldValues_,
+                          SS::ExternalStorage,
+                          deviceIndex );
     }
-    else{
+    else{ // heterogeneous task
       fieldValues_ = const_cast<typename FieldT::value_type*>( uintahVar.getPointer() );
+      field = new FieldT( SS::MemoryWindow( size, offset, extent ),
+                                SS::BoundaryCellInfo::build<FieldT>(bcPlus),
+                                SS::GhostData( get_n_ghost<FieldT>() ),
+                                fieldValues_,
+                                SS::ExternalStorage,
+                                CPU_INDEX );
+#     ifdef HAVE_CUDA
+      if(IS_GPU_INDEX(deviceIndex)) field->add_field_loc(GPU_INDEX);
+#     endif
     }
 
-    return new FieldT( SS::MemoryWindow( size, offset, extent ),
-                       SS::BoundaryCellInfo::build<FieldT>(bcPlus),
-                       SS::GhostData( get_n_ghost<FieldT>() ),
-                       fieldValues_,
-                       SS::ExternalStorage,
-                       mtype,
-                       deviceIndex );
+
+    return field;
   }
 
   //-----------------------------------------------------------------
@@ -342,14 +356,14 @@ namespace Wasatch{
   wrap_uintah_field_as_spatialops<ParticleField,SelectUintahFieldType<ParticleField>::type>(
       SelectUintahFieldType<ParticleField>::type& uintahVar,
       const AllocInfo& ainfo,
-      const SpatialOps::MemoryType mtype,
-      const unsigned short int deviceIndex,
-      double* uintahDeviceVar )
+      const short int deviceIndex,
+      double* uintahDeviceVar,
+      const bool isGPUTask ) // abhi : not being used yet)
   {
     namespace SS = SpatialOps::structured;
     typedef ParticleField::value_type ValT;
     ValT* fieldValues = NULL;
-    if( mtype == SpatialOps::EXTERNAL_CUDA_GPU ){
+    if( IS_GPU_INDEX(deviceIndex) ){
 #     ifdef HAVE_CUDA
       fieldValues = const_cast<ValT*>( uintahDeviceVar );
 #     endif
@@ -365,7 +379,6 @@ namespace Wasatch{
                               SS::GhostData( get_n_ghost<ParticleField>() ),
                               fieldValues,
                               SS::ExternalStorage,
-                              mtype,
                               deviceIndex );
   }
 
@@ -374,14 +387,14 @@ namespace Wasatch{
   wrap_uintah_field_as_spatialops<ParticleField,SelectUintahFieldType<ParticleField>::const_type>(
       SelectUintahFieldType<ParticleField>::const_type& uintahVar,
       const AllocInfo& ainfo,
-      const SpatialOps::MemoryType mtype,
-      const unsigned short int deviceIndex,
-      double* uintahDeviceVar )
+      const short int deviceIndex,
+      double* uintahDeviceVar,
+      const bool isGPUTask ) // abhi : not being used yet)
   {
     namespace SS = SpatialOps::structured;
     typedef ParticleField::value_type ValT;
     ValT* fieldValues = NULL;
-    if( mtype == SpatialOps::EXTERNAL_CUDA_GPU ){
+    if( IS_GPU_INDEX(deviceIndex) ){
 #     ifdef HAVE_CUDA
       fieldValues = const_cast<ValT*>( uintahDeviceVar );
 #     endif
@@ -397,21 +410,21 @@ namespace Wasatch{
                               SS::GhostData( get_n_ghost<ParticleField>() ),
                               fieldValues,
                               SS::ExternalStorage,
-                              mtype,
                               deviceIndex );
   }
 
   //-----------------------------------------------------------------
   // NOTE: this wraps a raw uintah field type, whereas the default
   //       implementations work with an Expr::UintahFieldContainer
+  // Default arguments cannot be passed to Explicit Template Specialization
   template<>
   inline SpatialOps::structured::SingleValueField*
   wrap_uintah_field_as_spatialops<SpatialOps::structured::SingleValueField,Uintah::PerPatch<double*> >(
       Uintah::PerPatch<double*>& uintahVar,
       const AllocInfo& ainfo,
-      const SpatialOps::MemoryType mtype,
-      const unsigned short int deviceIndex,
-      double* uintahDeviceVar )
+      const short int deviceIndex,
+      double* uintahDeviceVar,
+      const bool isGPUTask ) // abhi : not being used yet
   {
     namespace SS = SpatialOps::structured;
     typedef SS::SingleValueField FieldT;
@@ -420,7 +433,6 @@ namespace Wasatch{
                        SS::GhostData( get_n_ghost<FieldT>() ),
                        uintahVar.get(),
                        SS::ExternalStorage,
-                       mtype,
                        deviceIndex );
   }
 
@@ -431,9 +443,9 @@ namespace Wasatch{
   wrap_uintah_field_as_spatialops<SpatialOps::structured::SingleValueField,Uintah::ReductionVariableBase>(
       Uintah::ReductionVariableBase& uintahVar,
       const AllocInfo& ainfo,
-      const SpatialOps::MemoryType mtype,
-      const unsigned short int deviceIndex,
-      double* uintahDeviceVar )
+      const short int deviceIndex,
+      double* uintahDeviceVar,
+      const bool isGPUTask ) // abhi : not being used yet
   {
     namespace SS = SpatialOps::structured;
     typedef SS::SingleValueField FieldT;
@@ -442,7 +454,6 @@ namespace Wasatch{
                        SS::GhostData( get_n_ghost<FieldT>() ),
                        (double*)( uintahVar.getBasePointer() ),  // jcs this is a bit sketchy because of the type casting.  It will only work for reductions on doubles
                        SS::ExternalStorage,
-                       mtype,
                        deviceIndex );
   }
 

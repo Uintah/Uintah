@@ -108,6 +108,13 @@ protected:
   // Constant initialization
   double _const_init;                                 ///< Constant for intialization
 
+  // Gaussian initialization 
+  int _dir_gauss; 
+  double _a_gauss; 
+  double _b_gauss; 
+  double _c_gauss; 
+  double _shift_gauss; 
+
 }; // end PropertyModelBase
 
 template <class phiT > 
@@ -119,10 +126,39 @@ void PropertyModelBase::base_initialize( const Patch* patch, phiT& phi ){
   } else {
     proc0cout << msg << std::endl;
   }
-  
+
   if ( _init_type == "constant" ) {
 
     phi.initialize( _const_init ); 
+
+  } else if ( _init_type == "gaussian" ) { 
+
+    //======= Gaussian ========
+    for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
+
+      IntVector c = *iter; 
+      Point  P  = patch->getCellPosition(c);
+
+      double x=0.0,y=0.0,z=0.0; 
+
+      x = P.x(); 
+      y = P.y(); 
+      z = P.z(); 
+
+      if ( _dir_gauss == 0 ){ 
+
+        phi[c] = _a_gauss * exp( -1.0*std::pow(x-_b_gauss,2.0)/(2.0*std::pow(_c_gauss,2.0))) + _shift_gauss;
+
+      } else if ( _dir_gauss == 1 ){ 
+
+        phi[c] = _a_gauss * exp( -1.0*std::pow(y-_b_gauss,2.0)/(2.0*std::pow(_c_gauss,2.0))) + _shift_gauss;
+
+      } else { 
+
+        phi[c] = _a_gauss * exp( -1.0*std::pow(z-_b_gauss,2.0)/(2.0*std::pow(_c_gauss,2.0))) + _shift_gauss;
+
+      } 
+    }
 
   } else {
     proc0cout << " For property model: " << _prop_name << std::endl;

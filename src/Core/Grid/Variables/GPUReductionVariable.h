@@ -22,13 +22,15 @@
  * IN THE SOFTWARE.
  */
 
-// GPU ReductionVariable: in host & device code (HOST_DEVICE = __host__ __device__)
+// GPU ReductionVariable: in host & device code (HOST_DEVICE == __host__ __device__)
 
-#ifndef UINTAH_GPUREDUCTIONVARIABLE_H
-#define UINTAH_GPUREDUCTIONVARIABLE_H
+#ifndef UINTAH_CORE_GRID_VARIABLES_GPUREDUCTIONVARIABLE_H
+#define UINTAH_CORE_GRID_VARIABLES_GPUREDUCTIONVARIABLE_H
 
 #include <Core/Grid/Variables/GPUReductionVariableBase.h>
 #include <sci_defs/cuda_defs.h>
+
+#include <string>
 
 namespace Uintah {
 
@@ -39,30 +41,42 @@ class GPUReductionVariable : public GPUReductionVariableBase {
 
   public:
 
-    HOST_DEVICE GPUReductionVariable() {d_data = NULL; d_numElems = 0;}
+    HOST_DEVICE GPUReductionVariable()
+    {
+      d_data = NULL;
+    }
+
     HOST_DEVICE virtual ~GPUReductionVariable() {}
 
-    HOST_DEVICE virtual size_t getMemSize() {
+    HOST_DEVICE virtual size_t getMemSize()
+    {
       return sizeof(T);
     }
 
-    HOST_DEVICE T* getPointer() const {
+    HOST_DEVICE T* getPointer() const
+    {
       return d_data;
+    }
+
+    HOST_DEVICE void getSizeInfo(std::string& elems, unsigned long& totsize, void* &ptr) const
+    {
+      elems = "1";
+      totsize = sizeof(T);
+      ptr = (void*)&d_data;
     }
 
   private:
 
     mutable T* d_data;
-    mutable size_t d_numElems;
 
-    HOST_DEVICE virtual void setData(const size_t& numElems, void* &ptr) const {
-      d_data = (T*)ptr;
-      d_numElems = numElems;
+    HOST_DEVICE virtual void getData(void* &ptr) const
+    {
+        ptr = (void*)d_data;
     }
 
-    HOST_DEVICE virtual void getData(size_t& numElems, void* &ptr) const {
-      ptr = (void*)d_data;
-      numElems = d_numElems;
+    HOST_DEVICE virtual void setData(void* &ptr) const
+    {
+      d_data = (T*)ptr;
     }
 
     HOST_DEVICE GPUReductionVariable& operator=(const GPUReductionVariable&);
@@ -71,4 +85,4 @@ class GPUReductionVariable : public GPUReductionVariableBase {
 
 }  // end namespace Uintah
 
-#endif
+#endif // UINTAH_CORE_GRID_VARIABLES_GPUREDUCTIONVARIABLE_H

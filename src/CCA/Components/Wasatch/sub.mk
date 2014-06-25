@@ -49,6 +49,7 @@ ifeq ($(HAVE_CUDA),yes)
    # using the nvcc compiler.
 
    SRCS += $(foreach var,$(CUDA_ENABLED_SRCS),$(OBJTOP_ABS)/$(SRCDIR)/$(var).cu)
+   DLINK_FILES := $(DLINK_FILES) $(foreach var,$(CUDA_ENABLED_SRCS),$(SRCDIR)/$(var).o)
 
 else
 
@@ -99,7 +100,7 @@ INCLUDES := $(INCLUDES) $(SPATIALOPS_INCLUDE) $(EXPRLIB_INCLUDE)    \
 SUBDIRS :=                      \
         $(SRCDIR)/Operators     \
         $(SRCDIR)/Expressions   \
-        $(SRCDIR)/transport
+        $(SRCDIR)/Transport
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
@@ -116,5 +117,5 @@ ifeq ($(HAVE_CUDA),yes)
 
   $(OBJTOP_ABS)/$(SRCDIR)/TimeStepper.cu : $(SRCTOP_ABS)/$(SRCDIR)/TimeStepper.cc
 	cp $< $@
-	
+
 endif

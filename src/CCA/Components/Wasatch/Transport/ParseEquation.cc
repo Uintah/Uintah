@@ -341,15 +341,29 @@ namespace Wasatch{
    
 
     Uintah::ProblemSpecP densityParams  = wasatchParams->findBlock("Density");
+    Uintah::ProblemSpecP momEqnParams  = wasatchParams->findBlock("MomentumEquations");
     Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
     Expr::Tag dens2StarTag = tagNames.make_double_star(densityTag, Expr::CARRY_FORWARD);
-
+    
+    std::string xvelname, yvelname, zvelname;
+    Uintah::ProblemSpecP doxvel,doyvel, dozvel;
+    Expr::TagList velTags;
+    doxvel = momEqnParams->get( "X-Velocity", xvelname );
+    doyvel = momEqnParams->get( "Y-Velocity", yvelname );
+    dozvel = momEqnParams->get( "Z-Velocity", zvelname );
+    if( doxvel ) velTags.push_back(Expr::Tag(xvelname, Expr::STATE_NONE));
+    else         velTags.push_back( Expr::Tag() );
+    if( doyvel ) velTags.push_back(Expr::Tag(yvelname, Expr::STATE_NONE));
+    else         velTags.push_back( Expr::Tag() );
+    if( dozvel ) velTags.push_back(Expr::Tag(zvelname, Expr::STATE_NONE));
+    else         velTags.push_back( Expr::Tag() );
+    
     // get the variable density model information from the input file
     Uintah::ProblemSpecP varDenModelParams = wasatchParams->findBlock("VariableDensity");
     VarDenParameters varDenParams;
     parse_varden_input(varDenModelParams, varDenParams);
     
-    slngraphHelper->exprFactory->register_expression( new VarDen1DMMSContinuitySrc<SVolField>::Builder( tagNames.mms_continuitysrc, rho0, rho1, densityTag, dens2StarTag, tagNames.xsvolcoord, tagNames.time, tagNames.dt, varDenParams));
+    slngraphHelper->exprFactory->register_expression( new VarDen1DMMSContinuitySrc<SVolField>::Builder( tagNames.mms_continuitysrc, rho0, rho1, densityTag, dens2StarTag, velTags, tagNames.xsvolcoord, tagNames.time, tagNames.dt, varDenParams));
     slngraphHelper->exprFactory->register_expression( new VarDen1DMMSPressureContSrc<SVolField>::Builder( tagNames.mms_pressurecontsrc, tagNames.mms_continuitysrc, tagNames.dt));
     
     slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_pressurecontsrc, tagNames.pressuresrc);
@@ -400,16 +414,34 @@ namespace Wasatch{
     
     std::string xvelname, yvelname, zvelname;
     Uintah::ProblemSpecP doxvel,doyvel, dozvel;
-    Expr::TagList velStarTags;
+    Expr::TagList velTags, velStarTags;
     doxvel = momEqnParams->get( "X-Velocity", xvelname );
     doyvel = momEqnParams->get( "Y-Velocity", yvelname );
     dozvel = momEqnParams->get( "Z-Velocity", zvelname );
-    if( doxvel ) velStarTags.push_back( tagNames.make_star(xvelname) );
-    else         velStarTags.push_back( Expr::Tag() );
-    if( doyvel ) velStarTags.push_back( tagNames.make_star(yvelname) );
-    else         velStarTags.push_back( Expr::Tag() );
-    if( dozvel ) velStarTags.push_back( tagNames.make_star(zvelname) );
-    else         velStarTags.push_back( Expr::Tag() );
+    if( doxvel ) {
+      velTags.push_back(Expr::Tag(xvelname, Expr::STATE_NONE));
+      velStarTags.push_back( tagNames.make_star(xvelname) );
+    }
+    else {
+      velTags.push_back( Expr::Tag() );
+      velStarTags.push_back( Expr::Tag() );
+    }
+    if( doyvel ) {
+      velTags.push_back(Expr::Tag(yvelname, Expr::STATE_NONE));
+      velStarTags.push_back( tagNames.make_star(yvelname) );
+    }
+    else {
+      velTags.push_back( Expr::Tag() );
+      velStarTags.push_back( Expr::Tag() );
+    }
+    if( dozvel ) {
+      velTags.push_back(Expr::Tag(zvelname, Expr::STATE_NONE));
+      velStarTags.push_back( tagNames.make_star(zvelname) );
+    }
+    else {
+      velTags.push_back( Expr::Tag() );
+      velStarTags.push_back( Expr::Tag() );
+    }
     
     //    double a=1.0, b=1.0;
     //    if (wasatchParams->findBlock("AlphaStudyParams")) {
@@ -423,7 +455,7 @@ namespace Wasatch{
     VarDenParameters varDenParams;
     parse_varden_input(varDenModelParams, varDenParams);
 
-    slngraphHelper->exprFactory->register_expression( new VarDenMMSOscillatingContinuitySrc<SVolField>::Builder( tagNames.mms_continuitysrc, densityTag, densStarTag, dens2StarTag, velStarTags, rho0, rho1,w, k, uf, vf, tagNames.xsvolcoord, tagNames.ysvolcoord, tagNames.time, tagNames.dt, varDenParams));
+    slngraphHelper->exprFactory->register_expression( new VarDenMMSOscillatingContinuitySrc<SVolField>::Builder( tagNames.mms_continuitysrc, densityTag, densStarTag, dens2StarTag, velTags, velStarTags, rho0, rho1,w, k, uf, vf, tagNames.xsvolcoord, tagNames.ysvolcoord, tagNames.time, tagNames.dt, varDenParams));
     slngraphHelper->exprFactory->register_expression( new VarDen1DMMSPressureContSrc<SVolField>::Builder( tagNames.mms_pressurecontsrc, tagNames.mms_continuitysrc, tagNames.dt));
     
     std::cout << "attaching dependency to psrc \n";

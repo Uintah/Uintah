@@ -843,72 +843,72 @@ template<class T>
 // find the range of values to get from the finePatch that coincides with coarsePatch
 // (we need the finePatch, as the fine level might not entirely overlap the coarse)
 // also get the coarse range to iterate over
- void getFineLevelRange(const Patch* coarsePatch, const Patch* finePatch,
-                                    SCIRun::IntVector& cl, SCIRun::IntVector& ch,
-                                    SCIRun::IntVector& fl, SCIRun::IntVector& fh);
+ void getFineLevelRange( const Patch* coarsePatch, const Patch* finePatch,
+                         SCIRun::IntVector& cl, SCIRun::IntVector& ch,
+                         SCIRun::IntVector& fl, SCIRun::IntVector& fh);
 
 // As above, but do the same for nodes, and include fine patch padding cell requirements
- void getFineLevelRangeNodes(const Patch* coarsePatch,
-                                        const Patch* finePatch,
-                                        SCIRun::IntVector& cl, SCIRun::IntVector& ch,
-                                        SCIRun::IntVector& fl, SCIRun::IntVector& fh,
-                                        SCIRun::IntVector padding);
+ void getFineLevelRangeNodes( const Patch* coarsePatch,
+                              const Patch* finePatch,
+                              SCIRun::IntVector& cl, SCIRun::IntVector& ch,
+                              SCIRun::IntVector& fl, SCIRun::IntVector& fh,
+                              SCIRun::IntVector padding );
 
 // find the range of values to get from the coarseLevel that coincides with coarsePatch
 // ngc is the number of ghost cells to get at the fine level
- void getCoarseLevelRange(const Patch* finePatch, const Level* coarseLevel,
-                                     SCIRun::IntVector& cl, SCIRun::IntVector& ch,
-                                     SCIRun::IntVector& fl, SCIRun::IntVector& fh,
-                                     SCIRun::IntVector boundaryLayer,
-                                     int ngc,
-                                     const bool returnExclusiveRange);
-
+ void getCoarseLevelRange( const Patch* finePatch, const Level* coarseLevel,
+                           SCIRun::IntVector& cl, SCIRun::IntVector& ch,
+                           SCIRun::IntVector& fl, SCIRun::IntVector& fh,
+                           SCIRun::IntVector boundaryLayer,
+                           int ngc,
+                           const bool returnExclusiveRange);
+ 
 
 // find the range of a coarse-fine interface along a certain face
- void getCoarseFineFaceRange(const Patch* finePatch,
-                                        const Level* coarseLevel,
-                                        Patch::FaceType face,
-                                        Patch::FaceIteratorType domain,
-                                        const int nCells,
-                                        SCIRun::IntVector& cl,
-                                        SCIRun::IntVector& ch,
-                                        SCIRun::IntVector& fl,
-                                        SCIRun::IntVector& fh);
+ void getCoarseFineFaceRange( const Patch* finePatch,
+                              const Level* coarseLevel,
+                              Patch::FaceType face,
+                              Patch::FaceIteratorType domain,
+                              const int nCells,
+                              SCIRun::IntVector& cl,
+                              SCIRun::IntVector& ch,
+                              SCIRun::IntVector& fl,
+                              SCIRun::IntVector& fh );
 
- void coarseLevel_CFI_NodeIterator(Patch::FaceType patchFace,
-                                              const Patch* coarsePatch,
-                                              const Patch* finePatch,
-                                              const Level* fineLevel,
-                                              NodeIterator& iter,
-                                              bool& isRight_CP_FP_pair);
+ void coarseLevel_CFI_NodeIterator( Patch::FaceType patchFace,
+                                    const Patch* coarsePatch,
+                                    const Patch* finePatch,
+                                    const Level* fineLevel,
+                                    NodeIterator& iter,
+                                    bool& isRight_CP_FP_pair );
 
- void coarseLevel_CFI_Iterator(Patch::FaceType patchFace,
-                                          const Patch* coarsePatch,
-                                          const Patch* finePatch,
-                                          const Level* fineLevel,
-                                          CellIterator& iter,
-                                          bool& isRight_CP_FP_pair);
+ void coarseLevel_CFI_Iterator( Patch::FaceType patchFace,
+                                const Patch* coarsePatch,
+                                const Patch* finePatch,
+                                const Level* fineLevel,
+                                CellIterator& iter,
+                                bool& isRight_CP_FP_pair );
 
- void fineLevel_CFI_Iterator(Patch::FaceType patchFace,
-                                        const Patch* coarsePatch,
-                                        const Patch* finePatch,
-                                        CellIterator& iter,
-                                        bool& isRight_CP_FP_pair);
+ void fineLevel_CFI_Iterator( Patch::FaceType patchFace,
+                              const Patch* coarsePatch,
+                              const Patch* finePatch,
+                              CellIterator& iter,
+                              bool& isRight_CP_FP_pair );
 
- void fineLevel_CFI_NodeIterator(Patch::FaceType patchFace,
-                                            const Patch* coarsePatch,
-                                            const Patch* finePatch,
-                                            NodeIterator& iter,
-                                            bool& isRight_CP_FP_pair);
+ void fineLevel_CFI_NodeIterator( Patch::FaceType patchFace,
+                                  const Patch* coarsePatch,
+                                  const Patch* finePatch,
+                                  NodeIterator& iter, 
+                                  bool& isRight_CP_FP_pair );
 
-
- void compute_Mag_gradient( constCCVariable<double>& q_CC,
-                                       CCVariable<double>& mag_grad_q_CC,
-                                       const Patch* patch);
+ template<class T>
+ void compute_Mag_gradient( constCCVariable<T>& q_CC,
+                            CCVariable<T>& mag_grad_q_CC,
+                            const Patch* patch );
 
  void compute_Mag_Divergence( constCCVariable<Vector>& q_CC,
-                                         CCVariable<double>& mag_div_q_CC,
-                                         const Patch* patch);
+                              CCVariable<double>& mag_div_q_CC,
+                              const Patch* patch );
 
 } // end namespace Uintah
 #endif

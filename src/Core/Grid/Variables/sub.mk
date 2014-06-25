@@ -58,3 +58,9 @@ SRCS += \
         $(SRCDIR)/ugc_templates.cc              \
         $(SRCDIR)/VarLabel.cc                   \
         $(SRCDIR)/Variable.cc                   
+
+#HAVE_PIDX
+ifeq ($(HAVE_PIDX),yes)
+	INCLUDES += ${PIDX_INCLUDE}
+	LIBS += $(PIDX_LIBRARY)
+endif

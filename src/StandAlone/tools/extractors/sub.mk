@@ -30,44 +30,31 @@
 SRCDIR := StandAlone/tools/extractors
 
 ifeq ($(IS_STATIC_BUILD),yes)
-  PSELIBS := $(CORE_STATIC_PSELIBS)
+  PSELIBS := $(ALL_STATIC_PSE_LIBS)
 
 else # Non-static build
 
   ifeq ($(LARGESOS),yes)
     PSELIBS := Packages/Uintah
   else
-    PSELIBS := \
-        Core/Containers   \
-        Core/Exceptions   \
-        Core/Geometry     \
-        Core/Math         \
-	Core/Persistent   \
-        Core/Thread       \
-        Core/Util         \
-        Core/DataArchive \
-        Core/Grid        \
-        Core/Parallel    \
-        Core/Labels      \
-        Core/Util        \
-        Core/Math        \
-        Core/Disclosure  \
-        Core/Exceptions  \
-        Core/OS          \
-        CCA/Ports        \
-        Core/ProblemSpec             \
-        CCA/Components/ProblemSpecification
+    PSELIBS := $(ALL_PSE_LIBS)
   endif
 endif
 
+PSELIBS := $(GPU_EXTRA_LINK) $(PSELIBS)
+
 ifeq ($(IS_STATIC_BUILD),yes)
-  LIBS := $(CORE_STATIC_LIBS)
+  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
+          $(HDF5_LIBRARY) $(BOOST_LIBRARY)         \
+          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
+          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
+          $(PAPI_LIBRARY) $(M_LIBRARY)
 else
   LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
           $(CANTERA_LIBRARY) \
           $(PETSC_LIBRARY)  $(LAPACK_LIBRARY) $(BLAS_LIBRARY) \
           $(MPI_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) \
-          $(TEEM_LIBRARY)
+          $(TEEM_LIBRARY) $(CUDA_LIBRARY)
   ifeq ($(HAVE_TIFF),yes)
     LIBS := $(LIBS) $(TIFF_LIBRARY)
   endif

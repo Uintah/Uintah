@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-// GPU ReductionVariable: in host & device code (HOST_DEVICE = __host__ __device__)
+// GPU ReductionVariable: in host & device code (HOST_DEVICE == __host__ __device__)
 
 #ifndef UINTAH_GPUPARTICLEVARIABLE_H
 #define UINTAH_GPUPARTICLEVARIABLE_H

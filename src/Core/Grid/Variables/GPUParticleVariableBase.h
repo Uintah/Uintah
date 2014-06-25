@@ -42,12 +42,12 @@ class GPUParticleVariableBase : public GPUVariable {
 
   protected:
     HOST_DEVICE GPUParticleVariableBase() {}
+    HOST_DEVICE GPUParticleVariableBase(const GPUParticleVariableBase&);
 
   private:
     HOST_DEVICE virtual void setData(const size_t& size, void* &ptr) const = 0;
     HOST_DEVICE virtual void getData(size_t& size, void* &ptr) const = 0;
     HOST_DEVICE GPUParticleVariableBase& operator=(const GPUParticleVariableBase&);
-    HOST_DEVICE GPUParticleVariableBase(const GPUParticleVariableBase&);
 };
 
 }  // end namespace Uintah

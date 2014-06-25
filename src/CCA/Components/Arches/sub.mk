@@ -22,14 +22,11 @@
 #  IN THE SOFTWARE.
 # 
 # 
-# 
-# 
-# 
 # Makefile fragment for this subdirectory 
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := CCA/Components/Arches
+SRCDIR := CCA/Components/Arches
 
 SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/ArchesConstVariables.cc      \
@@ -61,20 +58,15 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/TurbulenceModelPlaceholder.cc
         
 
-ifeq ($(HAVE_PETSC),yes)
-  SRCS += $(SRCDIR)/PetscCommon.cc \
-          $(SRCDIR)/Filter.cc
-endif
-
 ifeq ($(HAVE_CUDA),yes)
   SRCS += $(SRCDIR)/constructLinearSystemKernel.cu
+  DLINK_FILES := $(DLINK_FILES) $(SRCDIR)/constructLinearSystemKernel.o
 endif
 
-
 PSELIBS :=
+
 ifeq ($(BUILD_WASATCH_IN_ARCHES),yes)
-PSELIBS := \
-        CCA/Components/Wasatch
+   PSELIBS := CCA/Components/Wasatch
 endif
 
 PSELIBS := \
@@ -89,8 +81,8 @@ PSELIBS := \
         Core/Exceptions                 \
         Core/Geometry                   \
         Core/GeometryPiece              \
-        Core/IO                         \
         Core/Grid                       \
+        Core/IO                         \
         Core/Math                       \
         Core/Parallel                   \
         Core/ProblemSpec                \
@@ -98,11 +90,15 @@ PSELIBS := \
         Core/Util
 
 ifeq ($(HAVE_PETSC),yes)
-  LIBS := $(LIBS) $(PETSC_LIBRARY) 
+   SRCS += $(SRCDIR)/PetscCommon.cc \
+           $(SRCDIR)/Filter.cc
+   LIBS := $(LIBS) $(PETSC_LIBRARY) 
+   INCLUDES += $(PETSC_INCLUDE)
 endif
 
 ifeq ($(HAVE_HYPRE),yes)
-  LIBS := $(LIBS) $(HYPRE_LIBRARY) 
+   LIBS := $(LIBS) $(HYPRE_LIBRARY) 
+   INCLUDES += $(HYPRE_INCLUDE)
 endif
 
 LIBS := $(LIBS) $(XML2_LIBRARY) $(F_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
@@ -136,7 +132,7 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 # I don't know of any reason that these are actually made into separate libraries...
 # perhaps just for historical reasons.  It would be just as easy to fold them into
 # libArches if there ever was a reason to...
-SUBDIRS := $(SRCDIR)/fortran           \
+SUBDIRS := $(SRCDIR)/fortran           
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 #### End handle subdirs

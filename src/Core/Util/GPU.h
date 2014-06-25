@@ -27,9 +27,9 @@
 
 #include <sci_defs/cuda_defs.h>
 
-namespace uintah{
+namespace Uintah {
 
-  __device__ bool isThread0_Blk0();
+  extern __device__ bool isThread0_Blk0();
 
 }
 

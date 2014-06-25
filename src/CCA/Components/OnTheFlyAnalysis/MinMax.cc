@@ -457,7 +457,6 @@ void MinMax::computeMinMax(const ProcessorGroup* pg,
 
   double now = d_dataArchiver->getCurrentTime();
   if(now < d_startTime || now > d_stopTime){
-    new_dw->put(max_vartype(lastWriteTime), d_lb->lastCompTimeLabel);
     return;
   }
  
@@ -628,16 +627,12 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
                           + labelName , __FILE__, __LINE__);
         }
         
-        
         // Are we on the right level for this variable?
         const int myLevel = d_analyzeVars[i].level;
         
         if ( !isRightLevel( myLevel, L_indx, levelP ) ){
-          cout << " DDD HERE " << labelName << " myLevel " << myLevel << " L_indx: " << L_indx << endl;
           continue;
         }
-        
-        
 
         //__________________________________
         // create the directory structure

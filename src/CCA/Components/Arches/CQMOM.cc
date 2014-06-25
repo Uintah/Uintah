@@ -300,9 +300,13 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
       cqmomAbscissas.push_back(tempCCVar);
     }
     
-    for ( CellIterator iter = patch->getCellIterator();
+    for ( CellIterator iter = patch->getExtraCellIterator();
          !iter.done(); ++iter) {
       IntVector c = *iter;
+#ifdef cqmom_dbg
+      cout << "Cell Location " << c << endl;
+      cout << "______________" << endl;
+#endif
       vector<double> temp_weights (nNodes, 0.0);
       vector<vector<double> > temp_abscissas (M, vector<double> (nNodes, 0.0));
       vector<double> temp_moments (momentSize, 0.0);

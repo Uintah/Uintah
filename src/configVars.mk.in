@@ -118,6 +118,16 @@ HAVE_TEEM    := @HAVE_TEEM@
 TEEM_LIBRARY := @TEEM_LIB_DIR_FLAG@ @TEEM_LIB_FLAG@
 TEEM_INCLUDE := @INC_TEEM_H@
 
+#ViSUS (nvisusio)
+HAVE_VISUS := @HAVE_VISUS@
+VISUS_LIBRARY := @VISUS_LIB_DIR_FLAG@ @VISUS_LIB_FLAG@
+VISUS_INCLUDE := @INC_VISUS_H@
+
+#ViSUS (Parallel IDX)
+HAVE_PIDX := @HAVE_PIDX@
+PIDX_LIBRARY := @PIDX_LIB_DIR_FLAG@ @PIDX_LIB_FLAG@
+PIDX_INCLUDE := @INC_PIDX_H@
+
 FREETYPE_LIBRARY := @FREETYPE_LIB_DIR_FLAG@ @FREETYPE_LIB_FLAG@
 FREETYPE_INCLUDE := @INC_FREETYPE_H@
 
@@ -481,11 +491,11 @@ endif
 #
 ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@echo "Compiling: $<"
-	@$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
+	@$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c -dc $< -o $@
 	@rm -f $(basename $@).$(CC_DEPEND_EXT)
 	@$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -M $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
 else
-	$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
+	$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c -dc $< -o $@
 	@rm -f $(basename $@).$(CC_DEPEND_EXT)
 	$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -M $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
 endif

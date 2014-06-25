@@ -22,9 +22,6 @@
 #  IN THE SOFTWARE.
 # 
 # 
-# 
-# 
-# 
 # Makefile fragment for this subdirectory 
 
 SRCDIR := StandAlone/tools/graphview
@@ -36,25 +33,22 @@ SRCS := $(SRCDIR)/graphview.cc    \
 	$(SRCDIR)/DaVinci.cc
 
 ifeq ($(IS_STATIC_BUILD),yes)
-  PSELIBS := $(CORE_STATIC_PSELIBS)
-
-else # Non-static build
-
-  PSELIBS := \
-	Core/DataArchive \
-	CCA/Components/ProblemSpecification \
-	Core/ProblemSpec \
-	Core/Exceptions \
-	Core/Util \
-	Core/Exceptions  \
-	Core/Util  
+  PSELIBS := $(ALL_STATIC_PSE_LIBS)
+else
+  PSELIBS := $(ALL_PSE_LIBS)
 endif
 
+PSELIBS := $(GPU_EXTRA_LINK) $(PSELIBS)
+
 ifeq ($(IS_STATIC_BUILD),yes)
-  LIBS := $(CORE_STATIC_LIBS)
+  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
+          $(HDF5_LIBRARY) $(BOOST_LIBRARY)         \
+          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
+          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
+          $(PAPI_LIBRARY) $(M_LIBRARY)
 else
   LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(TEEM_LIBRARY) \
-	  $(BLAS_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY)
+	  $(BLAS_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) $(CUDA_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk

@@ -45,21 +45,19 @@ SUBDIRS := $(SRCDIR)/FluidsBased \
            $(RADIATION)
 
 PSELIBS :=                 \
-        Core/Exceptions    \
-        Core/Geometry      \
-        Core/Thread        \
-        Core/Util          \
         CCA/Ports          \
         Core/Disclosure    \
         Core/Exceptions    \
+        Core/Geometry      \
+        Core/GeometryPiece \
         Core/Grid          \
         Core/IO            \
-        Core/Util          \
-        Core/GeometryPiece \
         Core/Labels        \
+        Core/Math          \
         Core/Parallel      \
         Core/ProblemSpec   \
-        Core/Math
+        Core/Thread        \
+        Core/Util          
 
 ifneq ($(BUILD_ICE),no)
   PSELIBS += CCA/Components/ICE

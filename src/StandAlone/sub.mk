@@ -38,119 +38,20 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 ##############################################
 # sus
 
-# The following variables are used by the Fake* scripts... please
-# do not modify...
-#
-COMPONENTS      = CCA/Components
-CA              = CCA/Components/Arches
-ifeq ($(BUILD_ARCHES),yes)
-  ARCHES_SUB_LIBS = $(CA)/fortran 
-  ifeq ($(BUILD_MPM),yes)
-    MPMARCHES_LIB    = $(COMPONENTS)/MPMArches
-  endif
-  ARCHES_LIBS        = $(COMPONENTS)/Arches
-endif
-
-ifeq ($(BUILD_MPM),yes)
-  MPM_LIB            = CCA/Components/MPM
-  ifeq ($(BUILD_ICE),yes)
-    MPMICE_LIB       = CCA/Components/MPMICE
-  endif
-endif
-
-ifeq ($(BUILD_ICE),yes)
-  ICE_LIB            = CCA/Components/ICE
-endif
-
-ifeq ($(BUILD_WASATCH),yes)
-  WASATCH_LIB        = CCA/Components/Wasatch
-endif
-
-
 SRCS := $(SRCDIR)/sus.cc
 
 PROGRAM := StandAlone/sus
 
 ifeq ($(IS_STATIC_BUILD),yes)
-  # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
-  #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
-  PSELIBS := \
-    CCA/Components/Parent               \
-    CCA/Components/Solvers              \
-    CCA/Components/DataArchiver         \
-    CCA/Components/SimulationController \
-    CCA/Components/Regridder            \
-    CCA/Components/LoadBalancers        \
-    CCA/Components/SwitchingCriteria    \
-    CCA/Components/Examples             \
-                                        \
-    $(ARCHES_LIBS)                      \
-    $(ARCHES_SUB_LIBS)                  \
-    $(MPMARCHES_LIB)                    \
-    $(MPM_LIB)                          \
-    $(ICE_LIB)                          \
-    $(MPMICE_LIB)                       \
-    $(WASATCH_LIB)                      \
-                                        \
-    CCA/Components/Schedulers           \
-    CCA/Components/OnTheFlyAnalysis     \
-    CCA/Components/Models               \
-    CCA/Components/ReduceUda            \
-                                        \
-    Core/Datatypes                      \
-    Core/DataArchive                    \
-    Core/Grid                           \
-    Core/ProblemSpec                    \
-    Core/GeometryPiece                  \
-    Core/Tracker                        \
-    CCA/Components/ProblemSpecification \
-    CCA/Ports                           \
-    Core/Parallel                       \
-    Core/Labels                         \
-    Core/Math                           \
-    Core/Disclosure                     \
-    Core/Util                           \
-    Core/Thread                         \
-    Core/Persistent                     \
-    Core/Geometry                       \
-    Core/IO                             \
-    Core/Exceptions                     \
-    Core/Containers                     \
-    Core/Malloc                         \
-    Core/OS
+
+  PSELIBS := $(ALL_STATIC_PSE_LIBS)
 
 else
 
   ifeq ($(LARGESOS),yes)
     PSELIBS := Packages/Uintah
   else
-    PSELIBS := \
-        Core/Containers    \
-        Core/DataArchive   \
-        Core/Disclosure    \
-        Core/Exceptions    \
-        Core/Geometry      \
-        Core/GeometryPiece \
-        Core/Grid          \
-        Core/Labels        \
-        Core/Math          \
-        Core/OS            \
-        Core/Parallel      \
-        Core/Persistent    \
-        Core/ProblemSpec   \
-        Core/Thread        \
-        Core/Tracker       \
-        Core/Util          \
-        CCA/Ports          \
-        CCA/Components/Parent               \
-        CCA/Components/Models               \
-        CCA/Components/DataArchiver         \
-        CCA/Components/LoadBalancers        \
-        CCA/Components/Regridder            \
-        CCA/Components/SimulationController \
-        CCA/Components/Schedulers           \
-        CCA/Components/ProblemSpecification \
-        CCA/Components/Solvers              
+    PSELIBS := $(ALL_PSE_LIBS)
   endif
 endif
 
@@ -172,8 +73,9 @@ else
           $(PAPI_LIBRARY) $(GPERFTOOLS_LIBRARY)
 endif
 
-include $(SCIRUN_SCRIPTS)/program.mk
+PSELIBS := $(GPU_EXTRA_LINK) $(PSELIBS)
 
+include $(SCIRUN_SCRIPTS)/program.mk
 
 ##############################################
 # DigitalFilterGenerator

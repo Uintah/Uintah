@@ -22,9 +22,6 @@
 #  IN THE SOFTWARE.
 # 
 # 
-# 
-# 
-# 
 # Makefile fragment for this subdirectory 
 
 SRCDIR := testprograms/Regridders
@@ -39,22 +36,22 @@ SRCS    := $(SRCDIR)/benchmark.cc       \
            $(SRCDIR)/GBRv2Regridder.cc 
 
 ifeq ($(IS_STATIC_BUILD),yes)
-  PSELIBS := CCA/Components/Regridder $(CORE_STATIC_PSELIBS)
+  PSELIBS := $(ALL_STATIC_PSE_LIBS)
 else # Non-static build
-  PSELIBS := \
-        Core/Exceptions          \
-        Core/Geometry            \
-        Core/Grid                \
-        Core/Math                \
-        Core/ProblemSpec	 \
-        Core/Util
+  PSELIBS := $(ALL_PSE_LIBS)
 endif
 
+PSELIBS := $(GPU_EXTRA_LINK) $(PSELIBS)
+
 ifeq ($(IS_STATIC_BUILD),yes)
-  LIBS := $(CORE_STATIC_LIBS)
+  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
+          $(HDF5_LIBRARY) $(BOOST_LIBRARY)         \
+          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
+          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
+          $(PAPI_LIBRARY) $(M_LIBRARY)
 else
   LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) \
-	  $(XML2_LIBRARY) $(Z_LIBRARY)
+	  $(XML2_LIBRARY) $(Z_LIBRARY) $(CUDA_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -64,18 +61,6 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/patchquality
 SRCS    := $(SRCDIR)/patchquality.cc
-
-ifeq ($(IS_STATIC_BUILD),yes)
-  PSELIBS := CCA/Components/Regridder $(CORE_STATIC_PSELIBS)
-else # Non-static build
-  PSELIBS := \
-        Core/Exceptions          \
-        Core/Geometry            \
-        Core/Grid                \
-        Core/Math                \
-        Core/Parallel            \
-        Core/Util
-endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -87,17 +72,6 @@ PROGRAM := $(SRCDIR)/outputpatches
 SRCS    := $(SRCDIR)/outputpatches.cc   \
            $(SRCDIR)/BNRTask.cc         \
            $(SRCDIR)/GBRv2Regridder.cc 
-
-ifeq ($(IS_STATIC_BUILD),yes)
-  PSELIBS := CCA/Components/Regridder $(CORE_STATIC_PSELIBS)
-else # Non-static build
-  PSELIBS := \
-        Core/Exceptions   \
-        Core/Geometry     \
-        Core/Grid         \
-        Core/Math         \
-        Core/Util
-endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

@@ -175,7 +175,7 @@ namespace Wasatch {
     std::string      functorName; // name of the functor applied as bc
     double           value;       // boundary value for this variable
     BndCondTypeEnum  bcType;      // bc type: DIRICHLET, NEUMANN
-    BCValueTypeEnum  bcValType;   // value type: DOUBLE, FUNCTOR
+    BCValueTypeEnum  bcValType;   // value type: DOUBLE, FUNCTOR    
     
     // compare based on ALL the members of this struct
     bool operator==(const BndCondSpec& l) const
@@ -290,9 +290,14 @@ namespace Wasatch {
   //****************************************************************************
   struct BoundaryIterators
   {
-    std::vector<SpatialOps::structured::IntVec> extraBndCells;        // iterator for extra cells
-    std::vector<SpatialOps::structured::IntVec> extraPlusBndCells;    // iterator for extra cells on plus faces (staggered fields)
-    std::vector<SpatialOps::structured::IntVec> interiorBndCells;     // iterator for interior cells
+    std::vector<SpatialOps::structured::IntVec> extraBndCells;        // iterator for extra cells. These are zero-based on the extra cell
+    std::vector<SpatialOps::structured::IntVec> extraPlusBndCells;    // iterator for extra cells on plus faces (staggered fields). These are zero-based on the extra cell.
+    std::vector<SpatialOps::structured::IntVec> interiorBndCells;     // iterator for interior cells. These are zero-based on the extra cell
+    
+    std::vector<SpatialOps::structured::IntVec> neboExtraBndCells;        // iterator for extra cells. These are zero-based on the first interior cell.
+    std::vector<SpatialOps::structured::IntVec> neboExtraPlusBndCells;    // iterator for extra cells on plus faces (staggered fields). These are zero-based on the first interior cell.
+    std::vector<SpatialOps::structured::IntVec> neboInteriorBndCells;     // iterator for interior cells. These are zero-based on the first interior cell.
+
     std::vector<SpatialOps::structured::IntVec> interiorEdgeCells;    // iterator for interior edge (domain edges) cells
     Uintah::Iterator extraBndCellsUintah;                             // We still need the Unitah iterator
   };
@@ -436,7 +441,21 @@ namespace Wasatch {
     template<typename FieldT>
     const std::vector<IntVecT>* get_interior_bnd_mask( const BndSpec& myBndSpec,
                                                       const int& patchID ) const;
-    
+
+    // returns the nebo-friendly extra cell iterator. These are zero-based on the first
+    // interior cell. If FieldT is staggered and normal to the boundary, this will
+    // return the extra faces (those outside the domain).
+    template<typename FieldT>
+    const std::vector<IntVecT>* get_nebo_extra_bnd_mask( const BndSpec& myBndSpec,
+                                                   const int& patchID ) const;
+
+    // returns the nebo-friendly interior cell iterator. These are zero-based on the first
+    // interior cell. If FieldT is staggered and normal to the boundary, this will return
+    // the boundary faces.
+    template<typename FieldT>
+    const std::vector<IntVecT>* get_nebo_interior_bnd_mask( const BndSpec& myBndSpec,
+                                                      const int& patchID ) const;
+
     Uintah::Iterator& get_uintah_extra_bnd_mask( const BndSpec& myBndSpec,
                                                  const int& patchID );
     

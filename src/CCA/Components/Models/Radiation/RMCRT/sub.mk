@@ -22,23 +22,20 @@
 #  IN THE SOFTWARE.
 # 
 # 
-# 
-# 
-# 
 # Makefile fragment for this subdirectory 
 
-
-SRCDIR   := CCA/Components/Models/Radiation/RMCRT
+SRCDIR := CCA/Components/Models/Radiation/RMCRT
 
 SRCS += $(SRCDIR)/Ray.cc \
-				$(SRCDIR)/RayGPU.cc
+        $(SRCDIR)/RayGPU.cc
 
 ifneq ($(HAVE_CUDA),)
   SRCS += $(SRCDIR)/RayGPUKernel.cu
+  DLINK_FILES += CCA/Components/Models/Radiation/RMCRT/RayGPUKernel.o
 endif
 
 LIBS :=
 
 ifneq ($(HAVE_CUDA),)
-  LIBS :=  $(LIBS) $(CUDA_LIBRARY)
+  LIBS := $(LIBS) $(CUDA_LIBRARY)
 endif

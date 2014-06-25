@@ -688,7 +688,7 @@
     <!-- CAUTION! FOR DEVELOPER USE ONLY -->
     <!-- =========================================================================== -->
     <VariableDensity spec="OPTIONAL NO_DATA" 
-                     attribute1="model REQUIRED STRING 'CONSTANT, IMPULSE'"
+                     attribute1="model REQUIRED STRING 'CONSTANT, IMPULSE, DYNAMIC'"
                      attribute2="coefficient REQUIRED DOUBLE"/>
     
     <!-- ============================ -->
