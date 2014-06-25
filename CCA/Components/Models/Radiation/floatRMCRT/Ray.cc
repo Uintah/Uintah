@@ -1605,10 +1605,11 @@ floatRay::setBoundaryConditions( const ProcessorGroup*,
 
           Patch::FaceIteratorType IFC = Patch::InteriorFaceCells;
 
+          float qtr = 1./4.;
           for(CellIterator iter=patch->getFaceIterator(face, IFC); !iter.done();iter++) {
             const IntVector& c = *iter;
             float T4 =  sigmaT4OverPi[c]/sigma_over_pi;
-            temp[c]   =  pow( T4, 1./4.);
+            temp[c]   =  pow( T4, qtr);
           }
         }
       } else {
