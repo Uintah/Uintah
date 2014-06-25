@@ -798,11 +798,7 @@ if test \( "$cuda_gencode" != "20" \) -a \( "$cuda_gencode" != "21" \) -a \( "$c
   AC_MSG_ERROR( [The specified value provided: "--enable-gencode=$cuda_gencode" is invalid, must be: 2.0, 2.1, 3.0, 3.5] )
 fi  
   
-if test "$cuda_gencode" != "20"; then
-  NVCC_CXXFLAGS="-gencode arch=compute_$cuda_gencode,code=sm_$cuda_gencode "
-else	
-	NVCC_CXXFLAGS="-gencode arch=compute_20,code=sm_20 "
-fi
+NVCC_CXXFLAGS="-arch=sm_$cuda_gencode "
 
 # set up the -Xcompiler flag so that NVCC can pass CXXFLAGS to host C++ comiler
 for i in $CXXFLAGS; do
@@ -810,7 +806,14 @@ for i in $CXXFLAGS; do
 done
 
 if test "$debug" != "no"; then
-  NVCC_CXXFLAGS="-g -G -O0 -lineinfo $NVCC_CXXFLAGS $_sci_includes"
+  #
+  # Note, the -O2 below really should be -O0, but at least in the nvcc
+  # (version 5.5.0) on aurora this causes debug builds not to be able
+  # to link (when using -dlink) as symbols go missing.  If and when
+  # this bug is fixed in the nvcc compiler/linker, the O2 should
+  # change back to O0.
+  #
+  NVCC_CXXFLAGS="-g -G -O2 -lineinfo $NVCC_CXXFLAGS $_sci_includes"
 else
   NVCC_CXXFLAGS="$NVCC_CXXFLAGS $_sci_includes"
 fi
@@ -1193,7 +1196,7 @@ AC_DEFUN(SCI_CHECK_OS_VERSION,
       _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[[0-9]]*[[a-z]]*\.%%'`
       _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[[0-9]]*[[a-z]]*%%g'`
       _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[[0-9]]*[[a-z]]*\.%%'`
-      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
+      if test "$_CUR_2_" $_SCI_COMP_ "$_CUR_1_"; then
         _SCI_BIGGER_=no
         break
       elif test $_CUR_1_ -gt $_CUR_2_; then

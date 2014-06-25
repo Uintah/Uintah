@@ -384,6 +384,13 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
             }
 
           }
+        } else if ( bc_kind == "Moment") { //Dirichlet specific to moment eqns
+          
+          //Here the extra cell should be set to the face value so that the cqmom inversion
+          //doesn't return junk, with upwinding of the abscissas this should return correct face value
+          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+            scalar[*bound_ptr] = bc_value;
+          }
         }
       }
     }
@@ -612,13 +619,14 @@ void BoundaryCondition_new::setAreaFraction( const Patch* patch,
   patch->getBoundaryFaces(bf);
   
   for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
+
     Patch::FaceType face = *iter;
     
     Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
     
-    for (CellIterator iter =  patch->getFaceIterator(face, PEC); !iter.done(); iter++) {
+    for (CellIterator citer =  patch->getFaceIterator(face, PEC); !citer.done(); citer++) {
 
-      IntVector c = *iter;
+      IntVector c = *citer;
 
       vector<int>::iterator wt_iter; 
 

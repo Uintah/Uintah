@@ -23,12 +23,15 @@
  */
 
 #include <sci_defs/cuda_defs.h>
+
 #include <Core/Grid/Variables/GPUGridVariable.h>
-#include <CCA/Components/Schedulers/GPUDataWarehouse.h>
-#include <CCA/Components/Schedulers/GPUDataWarehouse.cu>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Util/GPU.h>
+
+#include <CCA/Components/Schedulers/GPUDataWarehouse.h>
 
 namespace Uintah {
+
 //______________________________________________________________________
 //
 // @brief A GPU kernel for the Jacobi iterations in the Poisson 1-material solver
@@ -38,15 +41,18 @@ namespace Uintah {
 // @param domainHigh a three component vector that gives the highest corner of the work area as (x,y,z)
 // @param old_gpudw the old GPU DataWarehouse
 // @param new_gpudw the new GPU DataWarehouse
-__global__ void unifiedSchedulerTestKernel(int patchID,
-                                           uint3 patchNodeLowIndex,
-                                           uint3 patchNodeHighIndex,
-                                           uint3 domainLow,
-                                           uint3 domainHigh,
-                                           GPUDataWarehouse* old_gpudw,
-                                           GPUDataWarehouse* new_gpudw,
-                                           cudaStream_t* stream) {
 
+__global__
+void
+unifiedSchedulerTestKernel( int                patchID,
+                            uint3              patchNodeLowIndex,
+                            uint3              patchNodeHighIndex,
+                            uint3              domainLow,
+                            uint3              domainHigh,
+                            GPUDataWarehouse * old_gpudw,
+                            GPUDataWarehouse * new_gpudw,
+                            cudaStream_t     * stream)
+{
   const GPUGridVariable<double> phi;
   GPUGridVariable<double> newphi;
   old_gpudw->get(phi, "phi", patchID, 0);
@@ -56,17 +62,17 @@ __global__ void unifiedSchedulerTestKernel(int patchID,
   int i = blockDim.x * blockIdx.x + threadIdx.x;
   int j = blockDim.y * blockIdx.y + threadIdx.y;
 
-
   // If the threads are within the bounds of the patch
-  //  the algorithm is allowed to stream along the z direction
-  //  applying the stencil to a line of cells.  The z direction
-  //  is streamed because it allows access of x and y elements
-  //  that are close to one another which should allow coalesced
-  //  memory accesses.
+  // the algorithm is allowed to stream along the z direction
+  // applying the stencil to a line of cells.  The z direction
+  // is streamed because it allows access of x and y elements
+  // that are close to one another which should allow coalesced
+  // memory accesses.
 
   // We also need to copy the boundary cells on the z faces.
   // These outer cells don't get computed, just preserved across iterations
   // newphi(i,j,k) = phi(i,j,k)
+
   if ((domainLow.x - patchNodeLowIndex.x == 1 && i == patchNodeLowIndex.x) ||
       (domainLow.y - patchNodeLowIndex.y == 1 && j == patchNodeLowIndex.y) ||
       (patchNodeHighIndex.x - domainHigh.x == 1 && i == patchNodeHighIndex.x - 1) ||
@@ -101,25 +107,26 @@ __global__ void unifiedSchedulerTestKernel(int patchID,
   }
 }
 
-void launchUnifiedSchedulerTestKernel(dim3 dimGrid,
-                                      dim3 dimBlock,
-                                      cudaStream_t* stream,
-                                      int patchID,
-                                      uint3 patchNodeLowIndex,
-                                      uint3 patchNodeHighIndex,
-                                      uint3 domainLow,
-                                      uint3 domainHigh,
-                                      GPUDataWarehouse* old_gpudw,
-                                      GPUDataWarehouse* new_gpudw)
+void
+launchUnifiedSchedulerTestKernel( dim3               dimGrid,
+                                  dim3               dimBlock,
+                                  cudaStream_t     * stream,
+                                  int                patchID,
+                                  uint3              patchNodeLowIndex,
+                                  uint3              patchNodeHighIndex,
+                                  uint3              domainLow,
+                                  uint3              domainHigh,
+                                  GPUDataWarehouse * old_gpudw,
+                                  GPUDataWarehouse * new_gpudw)
 {
-  unifiedSchedulerTestKernel<<< dimGrid, dimBlock, 0, *stream>>>(patchID,
-                                                                 patchNodeLowIndex,
-                                                                 patchNodeHighIndex,
-                                                                 domainLow,
-                                                                 domainHigh,
-                                                                 old_gpudw,
-                                                                 new_gpudw,
-                                                                 stream);
+  unifiedSchedulerTestKernel<<< dimGrid, dimBlock, 0, *stream>>>( patchID,
+                                                                  patchNodeLowIndex,
+                                                                  patchNodeHighIndex,
+                                                                  domainLow,
+                                                                  domainHigh,
+                                                                  old_gpudw,
+                                                                  new_gpudw,
+                                                                  stream );
 }
 
 } //end namespace Uintah

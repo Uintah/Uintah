@@ -80,7 +80,7 @@ namespace Uintah {
       double gruneisen_parameter;
       double T1_rate_dependence;
       double T2_rate_dependence;
-	  double Initial_Disaggregation_Strain;
+//      double Initial_Disaggregation_Strain;
     };
     const VarLabel* pLocalizedLabel;
     const VarLabel* pLocalizedLabel_preReloc;
@@ -96,8 +96,10 @@ namespace Uintah {
     const VarLabel* pepLabel_preReloc;
     const VarLabel* pevpLabel;              //Plastic Volumetric Strain
     const VarLabel* pevpLabel_preReloc;
-	const VarLabel* pevvLabel;              //EG: Disaggregation Volumetric Strain
+    const VarLabel* pevvLabel;              //EG: Disaggregation Volumetric Strain
     const VarLabel* pevvLabel_preReloc;
+    const VarLabel* pev0Label;              //JG: Initial Disaggregation Volumetric Strain
+    const VarLabel* pev0Label_preReloc;
     const VarLabel* peqpsLabel;              //Plastic Volumetric Strain
     const VarLabel* peqpsLabel_preReloc;
     const VarLabel* peveLabel;              //Elastic Volumetric Strain

@@ -551,7 +551,7 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* finePatch,
     }
   }
 
-  cout_dbg.setActive(false);// turn off the switch for cout_dbg
+//  cout_dbg.setActive(false);// turn off the switch for cout_dbg (turn off for tsanitizer warnings)
 }
 
 /*_____________________________________________________________________

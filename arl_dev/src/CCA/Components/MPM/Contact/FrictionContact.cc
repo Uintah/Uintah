@@ -244,6 +244,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 
       new_dw->allocateAndPut(gnormtraction[m],lb->gNormTractionLabel,dwi,patch);
       new_dw->allocateAndPut(gstress[m],      lb->gStressLabel,      dwi,patch);
+      gnormtraction[m].initialize(0.0);
       gstress[m].initialize(Matrix3(0.0));
 
       // Next, interpolate the stress to the grid
@@ -345,8 +346,8 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
               double normalDeltaVel=Dot(deltaVelocity,normal);
               Vector Dv(0.,0.,0.);
               double Tn = gnormtraction[n][c];
-              if((Tn <  0.0) || 
-                 (compare(fabs(Tn),0.0) && normalDeltaVel> 0.0)){
+              if((Tn < -1.e-12) || 
+                 (normalDeltaVel> 0.0)){
 
                 // Simplify algorithm in case where approach velocity
                 // is in direction of surface normal (no slip).
@@ -535,8 +536,8 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
 
               Vector Dv(0.,0.,0.);
               double Tn = normtraction[n][c];
-              if((Tn < 0.0) || 
-                 (compare(fabs(Tn),0.0) && normalDeltaVel>0.0)){
+              if((Tn < -1.e-12) || 
+                 (normalDeltaVel>0.0)){
 
                 // Simplify algorithm in case where approach velocity
                 // is in direction of surface normal (no slip).

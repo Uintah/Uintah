@@ -29,24 +29,24 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := CCA/Components/Examples
+SRCDIR := CCA/Components/Examples
 
-SRCS     += \
+SRCS += \
         $(SRCDIR)/AMRWave.cc           \
-        $(SRCDIR)/Wave.cc              \
+        $(SRCDIR)/Benchmark.cc         \
+        $(SRCDIR)/Burger.cc            \
+        $(SRCDIR)/ExamplesLabel.cc     \
+        $(SRCDIR)/HeatEquation.cc      \
+        $(SRCDIR)/Interpolator.cc      \
+        $(SRCDIR)/ParticleTest1.cc     \
         $(SRCDIR)/Poisson1.cc          \
         $(SRCDIR)/Poisson2.cc          \
         $(SRCDIR)/Poisson3.cc          \
         $(SRCDIR)/Poisson4.cc          \
-        $(SRCDIR)/Burger.cc            \
-        $(SRCDIR)/HeatEquation.cc      \
-        $(SRCDIR)/ParticleTest1.cc     \
-        $(SRCDIR)/Interpolator.cc      \
-        $(SRCDIR)/ExamplesLabel.cc     \
+        $(SRCDIR)/RegionDB.cc          \
         $(SRCDIR)/RegridderTest.cc     \
         $(SRCDIR)/SolverTest1.cc       \
-        $(SRCDIR)/RegionDB.cc          \
-        $(SRCDIR)/Benchmark.cc         \
+        $(SRCDIR)/Wave.cc              
 
 ifeq ($(BUILD_MODELS_RADIATION),yes)
   SRCS += $(SRCDIR)/RMCRT_Test.cc       
@@ -57,26 +57,24 @@ ifeq ($(HAVE_CUDA),yes)
           $(SRCDIR)/PoissonGPU1Kernel.cu           \
           $(SRCDIR)/UnifiedSchedulerTest.cc        \
           $(SRCDIR)/UnifiedSchedulerTestKernel.cu
-#          $(SRCDIR)/GPUSchedulerTest.cc            \
-#          $(SRCDIR)/GPUSchedulerTestKernel.cu      \
-          
+  DLINK_FILES += \
+          CCA/Components/Examples/PoissonGPU1Kernel.o           \
+          CCA/Components/Examples/UnifiedSchedulerTestKernel.o 
 endif
 
 PSELIBS := \
         CCA/Components/Models \
         CCA/Ports             \
         Core/DataArchive      \
-        Core/Geometry         \
-        Core/Util             \
-        Core/Exceptions       \
-        Core/Grid             \
-        Core/Util             \
-        Core/ProblemSpec      \
-        Core/GeometryPiece    \
-        Core/Exceptions       \
         Core/Disclosure       \
+        Core/Exceptions       \
+        Core/Geometry         \
+        Core/GeometryPiece    \
+        Core/Grid             \
         Core/Math             \
-        Core/Parallel
+        Core/Parallel         \
+        Core/ProblemSpec      \
+        Core/Util             
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(CUDA_LIBRARY)
 

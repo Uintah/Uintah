@@ -222,10 +222,13 @@ C     Scattering capabilities implemented in RMCRT.  ILH
 c     Anisotropic scattering properties for the interior nodes
 c     (for spherical harmonics only)
 
+
 	        END IF
 220	      CONTINUE
 230	    CONTINUE
 240	  CONTINUE
+
+
 
       RETURN
       END

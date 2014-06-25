@@ -3,6 +3,9 @@
 
 #include <expression/Expression.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+
+#include <spatialops/structured/FVStaggeredFieldTypes.h>
+#include <spatialops/structured/FVStaggeredOperatorTypes.h>
 #include <CCA/Components/Wasatch/VardenParameters.h>
 #include <limits>
 #include <iostream>
@@ -102,44 +105,68 @@ public:
      * @param timestepTag Tag of time step.
      */
     Builder( const Expr::Tag& result,
-            const double rho0,
-            const double rho1,
-            const Expr::Tag densTag,
-            const Expr::Tag dens2StarTag,            
-            const Expr::Tag& xTag,
-            const Expr::Tag& tTag,
-            const Expr::Tag& timestepTag,
-            const Wasatch::VarDenParameters varDenParams );
+             const double rho0,
+             const double rho1,
+             const Expr::Tag densTag,
+             const Expr::Tag dens2StarTag,
+             const Expr::TagList& velTags,
+             const Expr::Tag& xTag,
+             const Expr::Tag& tTag,
+             const Expr::Tag& timestepTag,
+             const Wasatch::VarDenParameters varDenParams );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
     const double rho0_, rho1_;
+    const Expr::TagList velTs_;
     const Expr::Tag densTag_, dens2StarTag_, xTag_, tTag_, timestepTag_;
     const Wasatch::VarDenParameters varDenParams_;
   };
   
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
+  void bind_operators( const SpatialOps::OperatorDatabase& opDB);
   void evaluate();
   
 private:
   typedef typename SpatialOps::structured::SingleValueField TimeField;
   
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::GradientX, SVolField, SVolField >::type GradXT;
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::GradientY, SVolField, SVolField >::type GradYT;
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::GradientZ, SVolField, SVolField >::type GradZT;
+  
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, SVolField >::type X2SInterpOpT;
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, SVolField >::type Y2SInterpOpT;
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, ZVolField, SVolField >::type Z2SInterpOpT;
+  
   VarDen1DMMSContinuitySrc( const double rho0,
-                          const double rho1,
-                          const Expr::Tag densTag,
-                          const Expr::Tag dens2StarTag,
-                          const Expr::Tag& xTag,
-                          const Expr::Tag& tTag,
-                          const Expr::Tag& timestepTag,
-                          const Wasatch::VarDenParameters varDenParams);
+                            const double rho1,
+                            const Expr::Tag densTag,
+                            const Expr::Tag dens2StarTag,
+                            const Expr::TagList& velTags,
+                            const Expr::Tag& xTag,
+                            const Expr::Tag& tTag,
+                            const Expr::Tag& timestepTag,
+                            const Wasatch::VarDenParameters varDenParams);
   const double rho0_, rho1_;
   const Expr::Tag densTag_, dens2StarTag_, xTag_, tTag_, timestepTag_;
+  const Expr::Tag xVelt_, yVelt_, zVelt_;
+  const bool doX_, doY_, doZ_, is3d_;
   const double a0_;
   const Wasatch::VarDenParameters::VariableDensityModels model_;
   const FieldT* x_;
+  const XVolField *xVel_;
+  const YVolField *yVel_;
+  const ZVolField *zVel_;
   const SVolField *dens_, *dens2Star_;
   const TimeField *t_, *timestep_;
+  
+  const GradXT* gradXOp_;
+  const GradYT* gradYOp_;
+  const GradZT* gradZOp_;
+  const X2SInterpOpT* x2SInterpOp_;
+  const Y2SInterpOpT* y2SInterpOp_;
+  const Z2SInterpOpT* z2SInterpOp_;
 };
 
 

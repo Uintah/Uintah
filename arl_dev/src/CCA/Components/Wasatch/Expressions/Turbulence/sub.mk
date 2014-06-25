@@ -47,6 +47,7 @@ ifeq ($(HAVE_CUDA),yes)
    # using the nvcc compiler.
 
    SRCS += $(foreach var,$(CUDA_ENABLED_SRCS),$(OBJTOP_ABS)/$(SRCDIR)/$(var).cu)
+   DLINK_FILES := $(DLINK_FILES) $(foreach var,$(CUDA_ENABLED_SRCS),$(SRCDIR)/$(var).o)
 
 else
 
@@ -58,12 +59,12 @@ endif
 # Non-CUDA Dependent src files... can be specified the old fashioned
 # way:
 #
-SRCS     +=                                    \
-	$(SRCDIR)/TurbulentViscosity.cc		       \
-	$(SRCDIR)/TurbulentDiffusivity.cc	       \
-    $(SRCDIR)/StrainTensorBase.cc     	       \
-	$(SRCDIR)/DynamicSmagorinskyCoefficient.cc \
-	$(SRCDIR)/TurbulenceParameters.cc
+SRCS +=                                        \
+    $(SRCDIR)/DynamicSmagorinskyCoefficient.cc \
+    $(SRCDIR)/StrainTensorBase.cc              \
+    $(SRCDIR)/TurbulenceParameters.cc          \
+    $(SRCDIR)/TurbulentDiffusivity.cc          \
+    $(SRCDIR)/TurbulentViscosity.cc            
 
 ########################################################################
 #
@@ -76,7 +77,5 @@ ifeq ($(HAVE_CUDA),yes)
 
   $(OBJTOP_ABS)/$(SRCDIR)/StrainTensorMagnitude.cu : $(SRCTOP_ABS)/$(SRCDIR)/StrainTensorMagnitude.cc
 	cp $< $@
-	
+
 endif
-	
-	

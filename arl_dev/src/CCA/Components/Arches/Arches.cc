@@ -158,9 +158,9 @@
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
-#include <CCA/Components/Wasatch/transport/TransportEquation.h>
-#include <CCA/Components/Wasatch/transport/MomentumTransportEquation.h>
-#include <CCA/Components/Wasatch/transport/ParseEquation.h>
+#include <CCA/Components/Wasatch/Transport/TransportEquation.h>
+#include <CCA/Components/Wasatch/Transport/MomentumTransportEquation.h>
+#include <CCA/Components/Wasatch/Transport/ParseEquation.h>
 #include <CCA/Components/Wasatch/GraphHelperTools.h>
 #include <CCA/Components/Wasatch/TaskInterface.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
@@ -525,6 +525,7 @@ Arches::problemSetup(const ProblemSpecP& params,
       an_eqn.problemSetup( eqn_db );
 
     }
+
 
     // Now go through sources and initialize all defined sources and call
     // their respective problemSetup
@@ -947,13 +948,26 @@ Arches::problemSetup(const ProblemSpecP& params,
   // register any other source terms:
   SourceTermFactory& src_factory = SourceTermFactory::self();
   src_factory.registerSources( d_lab, d_doDQMOM, d_which_dqmom );
-  SourceTermFactory::SourceMap& sources = src_factory.retrieve_all_sources();
-  for (SourceTermFactory::SourceMap::iterator iter = sources.begin(); iter != sources.end(); iter++){
+//  SourceTermFactory::SourceMap& sources = src_factory.retrieve_all_sources();
+//  for (SourceTermFactory::SourceMap::iterator iter = sources.begin(); iter != sources.end(); iter++){
+//
+//    SourceTermBase* src = iter->second;
+//    src->extraSetup(grid);
+//
+//  }
 
-    SourceTermBase* src = iter->second;
-    src->extraSetup(grid);
+  if (transportEqn_db) {
+  for (ProblemSpecP eqn_db = transportEqn_db->findBlock("Eqn"); eqn_db != 0; eqn_db = eqn_db->findNextBlock("Eqn")){
+      for (ProblemSpecP src_db = eqn_db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){ 
 
-  }
+        std::string srcname; 
+        src_db->getAttribute("label", srcname);
+        SourceTermBase& src = src_factory.retrieve_source_term( srcname ); 
+        src.extraSetup(grid, src_db); 
+        
+      }
+    }
+  } 
 
 
   // Add extra species to table lookup as required by models
@@ -1188,6 +1202,8 @@ Arches::scheduleInitialize(const LevelP& level,
       EqnBase* eqn = ieqn->second;
       eqn->sched_checkBCs( level, sched );
     }
+    //call the cqmom inversion so weights and abscissas are calculated at the start
+    d_cqmomSolver->sched_solveCQMOMInversion( level, sched, 0 );
   }
   
   
@@ -1203,6 +1219,8 @@ Arches::scheduleInitialize(const LevelP& level,
       eqn->sched_tableInitialization( level, sched ); 
     }
   }
+
+  d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls );
 
 # ifdef WASATCH_IN_ARCHES
   // must set wasatch materials after problemsetup so that we can access

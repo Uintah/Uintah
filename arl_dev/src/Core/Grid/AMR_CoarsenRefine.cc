@@ -169,7 +169,7 @@ void fineToCoarseOperator(CCVariable<T>& q_CC,
     coarsenDriver_std(cl, ch, fl, fh, r_Ratio, inv_RR, coarseLevel,                
                       fine_q_CC, q_CC );
   }
-  cout_dbg.setActive(false);// turn off the switch for cout_dbg
+//  cout_dbg.setActive(false);// turn off the switch for cout_dbg  (turn off tsanitizer warnings)
 }
 
 
@@ -178,6 +178,11 @@ void fineToCoarseOperator(CCVariable<T>& q_CC,
 template void coarsenDriver_std<double>( const IntVector& cl, const IntVector& ch, const IntVector& fl, const IntVector& fh,
                                          const IntVector& refinementRatio, const double ratio,
                                          const Level* coarseLevel, constCCVariable<double >& fine_q_CC, CCVariable<double>& coarse_q_CC );
+                                         
+template void coarsenDriver_std<float>( const IntVector& cl, const IntVector& ch, const IntVector& fl, const IntVector& fh,
+                                         const IntVector& refinementRatio, const double ratio,
+                                         const Level* coarseLevel, constCCVariable<float >& fine_q_CC, CCVariable<float>& coarse_q_CC );
+
 template void coarsenDriver_std<Vector>( const IntVector& cl, const IntVector& ch, const IntVector& fl, const IntVector& fh,
                                          const IntVector& refinementRatio, const double ratio,
                                          const Level* coarseLevel, constCCVariable<Vector >& fine_q_CC, CCVariable<Vector>& coarse_q_CC );
@@ -185,11 +190,16 @@ template void coarsenDriver_std<Vector>( const IntVector& cl, const IntVector& c
 
 template void coarsenDriver_massWeighted<double>( const IntVector & cl, const IntVector & ch, const IntVector & fl, const IntVector & fh, const IntVector & refinementRatio,
                                                   const Level* coarseLevel, constCCVariable<double>& cMass, constCCVariable<double>& fine_q_CC, CCVariable<double>& coarse_q_CC );
+
 template void coarsenDriver_massWeighted<Vector>( const IntVector & cl, const IntVector & ch, const IntVector & fl, const IntVector & fh, const IntVector & refinementRatio,
                                                   const Level* coarseLevel, constCCVariable<double>& cMass, constCCVariable<Vector>& fine_q_CC, CCVariable<Vector>& coarse_q_CC );
                                                   
 template void fineToCoarseOperator<double>(CCVariable<double>& q_CC, const bool computesAve, const VarLabel* varLabel, const int indx, DataWarehouse* new_dw,
                                    const Patch* coarsePatch, const Level* coarseLevel, const Level* fineLevel);
+                                   
+template void fineToCoarseOperator<float>(CCVariable<float>& q_CC, const bool computesAve, const VarLabel* varLabel, const int indx, DataWarehouse* new_dw,
+                                   const Patch* coarsePatch, const Level* coarseLevel, const Level* fineLevel);
+                                   
 template void fineToCoarseOperator<Vector>(CCVariable<Vector>& q_CC, const bool computesAve, const VarLabel* varLabel, const int indx, DataWarehouse* new_dw,
                                    const Patch* coarsePatch, const Level* coarseLevel, const Level* fineLevel);
 

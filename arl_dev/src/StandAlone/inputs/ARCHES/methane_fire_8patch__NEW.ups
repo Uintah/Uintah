@@ -221,13 +221,16 @@
             <calc_on_all_RKsteps>false</calc_on_all_RKsteps>
             <soot_label>soot</soot_label>
             <DORadiationModel>
-              <opl>3.0</opl>
               <LinearSolver type="hypre">
                 <res_tol>1.0e-10</res_tol>
                 <ksptype>gmres</ksptype>
                 <pctype>jacobi</pctype>
                 <max_iter>275</max_iter>
               </LinearSolver>
+              <property_calculator type="hottel_sarofim">
+              <opl>3.0</opl>
+              <abskg label = "abskg" /> 
+              </property_calculator>
             </DORadiationModel>
           </src>
         </Sources>

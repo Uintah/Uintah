@@ -30,44 +30,39 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := CCA/Components/Solvers
+SRCDIR := CCA/Components/Solvers
 
-SRCS     += \
+SRCS += \
 	$(SRCDIR)/CGSolver.cc \
 	$(SRCDIR)/DirectSolve.cc \
 	$(SRCDIR)/SolverFactory.cc
 
+PSELIBS := \
+	CCA/Ports         \
+	Core/Containers   \
+	Core/Disclosure   \
+	Core/Exceptions   \
+	Core/Geometry     \
+	Core/Grid         \
+	Core/Math         \
+	Core/Parallel     \
+	Core/ProblemSpec  \
+	Core/Thread       \
+	Core/Util         
+
+LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY)  $(LAPACK_LIBRARY) $(BLAS_LIBRARY)
+
 ifeq ($(HAVE_HYPRE),yes)
+
+  INCLUDES += $(HYPRE_INCLUDE)
+  LIBS := $(LIBS) $(HYPRE_LIBRARY) 
+
   SRCS += $(SRCDIR)/HypreSolver.cc
   
   SUBDIRS := $(SRCDIR)/AMR
   
   include $(SCIRUN_SCRIPTS)/recurse.mk
 
-endif # if $(HAVE_HYPRE)
-
-PSELIBS := \
-	Core/Containers                  \
-	Core/Exceptions                  \
-	Core/Geometry                    \
-	Core/Thread                      \
-	Core/Util                        \
-	Core/Geometry                    \
-	CCA/Ports        \
-	Core/Exceptions  \
-	Core/Grid        \
-	Core/Util        \
-	Core/Disclosure  \
-	Core/Parallel    \
-	Core/ProblemSpec \
-	\
-	Core/Math
-
-LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY)  $(LAPACK_LIBRARY) $(BLAS_LIBRARY)
-
-ifeq ($(HAVE_HYPRE),yes)
-  LIBS := $(LIBS) $(HYPRE_LIBRARY) 
-endif
+endif # HAVE_HYPRE
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-

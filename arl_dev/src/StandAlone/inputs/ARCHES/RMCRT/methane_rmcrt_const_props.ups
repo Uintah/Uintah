@@ -267,7 +267,8 @@
                 <solveBoundaryFlux>    true    </solveBoundaryFlux>
                 <nFluxRays>         2          </nFluxRays>
                 <property_calculator type="constant">
-                  <abskg>.1</abskg>
+                  <abskg_value> 0.1</abskg_value>
+                  <abskg label = "abskg"/> 
                 </property_calculator>
                 <ignore_BC_bulletproofing>true</ignore_BC_bulletproofing>
             </RMCRT>

@@ -603,7 +603,7 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
           double Eb = 4*sigma*pow(unscaled_particle_temperature,4);
           FSum = radiationVolqIN[c];    
           Q_radiation = Apsc*(FSum - Eb);
-          abskp_ = pi/4*Qabs*unscaled_weight*pow(unscaled_length,2); 
+          abskp_ = pi/4*Qabs*unscaled_weight*pow(unscaled_length,2);
         } else {
           abskp_ = 0.0;
         }

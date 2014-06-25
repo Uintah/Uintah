@@ -41,7 +41,11 @@ SRCS += $(SRCDIR)/SimulationInterface.cc \
 	$(SRCDIR)/Regridder.cc \
 	$(SRCDIR)/Scheduler.cc \
 	$(SRCDIR)/SwitchingCriteria.cc \
-	$(SRCDIR)/SFC.cc
+	$(SRCDIR)/SFC.cc 
+
+ifeq ($(HAVE_PIDX),yes)
+	SRCS += $(SRCDIR)/PIDXOutputContext.cc 
+endif
 
 PSELIBS := \
 	Core/Parallel    \
@@ -57,6 +61,12 @@ PSELIBS := \
 	Core/Util
 
 LIBS := $(MPI_LIBRARY)
+
+#HAVE_PIDX
+ifeq ($(HAVE_PIDX),yes)
+	INCLUDES += ${PIDX_INCLUDE}
+	LIBS += $(PIDX_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

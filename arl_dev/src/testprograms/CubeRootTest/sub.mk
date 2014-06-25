@@ -22,9 +22,6 @@
 #  IN THE SOFTWARE.
 # 
 # 
-# 
-# 
-# 
 # Makefile fragment for this subdirectory 
 
 SRCDIR := testprograms/CubeRootTest
@@ -32,12 +29,24 @@ SRCDIR := testprograms/CubeRootTest
 PROGRAM := $(SRCDIR)/CubeRootTest
 SRCS    := $(SRCDIR)/CubeRootTest.cc
 
-PSELIBS := \
-        Core/Exceptions          \
-	Core/Math
+ifeq ($(IS_STATIC_BUILD),yes)
+  PSELIBS := $(ALL_STATIC_PSE_LIBS)
+else
+  PSELIBS := $(ALL_PSE_LIBS)
+endif
 
-LIBS := $(MPI_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY)
-        
+PSELIBS := $(GPU_EXTRA_LINK) $(PSELIBS)
+
+ifeq ($(IS_STATIC_BUILD),yes)
+  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
+          $(HDF5_LIBRARY) $(BOOST_LIBRARY)         \
+          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
+          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
+          $(PAPI_LIBRARY) $(M_LIBRARY)
+
+else
+  LIBS := $(MPI_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) $(CUDA_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

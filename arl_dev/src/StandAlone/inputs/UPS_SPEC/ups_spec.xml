@@ -496,7 +496,7 @@
         <BCType             spec="MULTIPLE NO_DATA"
                               attribute1="id        OPTIONAL STRING '0,1,2,3,4,5,6,all'"
                               attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip Custom, 
-                                                                     VelocityInlet, StABL, PressureBC, WallBC, OutletBC, VelocityFileInput, MassFlowInlet, Swirl, FromFile,
+                                                                     VelocityInlet, StABL, PressureBC, WallBC, OutletBC, NOutletBC, VelocityFileInput, MassFlowInlet, Swirl, FromFile, Moment,
                                                                      TurbulentInlet, Tabulated powerLawProfile logWindProfile'"
                               attribute3="label     REQUIRED STRING "
                               attribute4="type      OPTIONAL STRING 'int'" 
@@ -615,7 +615,7 @@
 
   <DataAnalysis                         spec="OPTIONAL NO_DATA" >
     <Module                             spec="MULTIPLE NO_DATA"
-                                          attribute1="name REQUIRED STRING 'lineExtract, planeExtract, containerExtract, particleExtract flatPlate_heatFlux firstLawThermo minMax'" >
+                                          attribute1="name REQUIRED STRING 'lineExtract, planeExtract, containerExtract, particleExtract flatPlate_heatFlux firstLawThermo minMax vorticity'" >
       <material                         spec="OPTIONAL STRING" />
       <materialIndex                    spec="OPTIONAL INTEGER" />
       <samplingFrequency                spec="REQUIRED DOUBLE"  need_applies_to="name lineExtract, planeExtract, containerExtract, particleExtract, firstLawThermo, minMax"/>
@@ -689,14 +689,15 @@
 
     <Regridder                          spec="OPTIONAL NO_DATA"
                                            attribute1="type REQUIRED STRING 'BNR, Hierarchical, Tiled SingleLevel'" >
-      <adaptive                         spec="OPTIONAL BOOLEAN" /> <!-- FIXME: optional? does this only apply to one of the types of regridder? -->
+      <adaptive                         spec="OPTIONAL BOOLEAN" />
+      
       <!--Generic Required Regridder Options --> 
       <max_levels                       spec="REQUIRED INTEGER 'positive'" />
       
       
       
       <!--Generic Optional Regridder Options --> 
-      <regrid_once                     spec="OPTIONAL BOOLEAN" />
+      <regrid_once                      spec="OPTIONAL BOOLEAN" />
       <amr_overhead_high                spec="OPTIONAL DOUBLE '0,1'" />   
       <amr_overhead_low                 spec="OPTIONAL DOUBLE '0,1'" />   
       <cell_stability_dilation          spec="OPTIONAL VECTOR" />
@@ -707,12 +708,14 @@
       <min_timestep_interval            spec="OPTIONAL INTEGER" />   
       
       <!--Required SingleLevel Regridder -->
-      <new_patch_layout               spec="REQUIRED VECTOR"           need_applies_to="type SingleLevel"/>
+      <new_patch_layout                 spec="REQUIRED VECTOR"             need_applies_to="type SingleLevel"/>
+      <level                            spec="OPTIONAL INTEGER 'positive'" need_applies_to="type SingleLevel"/>     
 
       <!--Required BNR Regridder & Tiled Regridder Options-->
       <min_patch_size                   spec="REQUIRED MULTIPLE_VECTORS" need_applies_to="type BNR Tiled"/>
       <min_boundary_cells               spec="REQUIRED VECTOR"           need_applies_to="type BNR Hierarchical, Tiled"/>
-      <cell_refinement_ratio            spec="REQUIRED STRING"           need_applies_to="type BNR Hierarchical, Tiled"/>/>
+      <cell_refinement_ratio            spec="REQUIRED STRING"           need_applies_to="type BNR Hierarchical, Tiled"/>
+      
       <!--       Optional Options-->
       <patch_split_tolerance            spec="OPTIONAL DOUBLE '0,1'" need_applies_to="type BNR" />
       <patch_combine_tolerance          spec="OPTIONAL DOUBLE '0,1'" need_applies_to="type BNR" />

@@ -218,17 +218,18 @@ AMRSimulationController::run()
      
      //__________________________________
      //    Regridding
-     if (d_regridder && d_regridder->needsToReGrid(currentGrid) && (!first || (!d_restarting))) {
-       doRegridding(currentGrid, false);
-     }
-     
      if( d_regridder && d_regridder->doRegridOnce() && d_regridder->isAdaptive() ){
        proc0cout << "______________________________________________________________________\n";
        proc0cout << " Regridding once.\n";
        doRegridding(currentGrid, false);
        d_regridder->setAdaptivity(false);
        proc0cout << "______________________________________________________________________\n";
-     } 
+     }
+     
+     if (d_regridder && d_regridder->needsToReGrid(currentGrid) && (!first || (!d_restarting))) {
+       doRegridding(currentGrid, false);
+     }
+     
 
      // Compute number of dataWarehouses - multiplies by the time refinement
      // ratio for each level you increase
@@ -757,7 +758,7 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::doRegridding()");
   TAU_PROFILE("AMRSimulationController::doRegridding()", " ", TAU_USER);
   double start = Time::currentSeconds();
-  
+
   GridP oldGrid = currentGrid;
   currentGrid = d_regridder->regrid(oldGrid.get_rep());
   
@@ -775,6 +776,8 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
   int lbstate = initialTimestep ? LoadBalancer::init : LoadBalancer::regrid;
 
   if (currentGrid != oldGrid) {
+    d_sharedState->setRegridTimestep(true);
+     
     d_lb->possiblyDynamicallyReallocate(currentGrid, lbstate); 
     if(dbg_barrier.active()) {
       double start;
@@ -786,9 +789,11 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
     currentGrid->assignBCS(d_grid_ps,d_lb);
     currentGrid->performConsistencyCheck();
 
+    //__________________________________
+    //  output regridding stats
     if (d_myworld->myrank() == 0) {
       cout << "  REGRIDDING:";
-      d_sharedState->setRegridTimestep(true);
+     
       //amrout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
       for (int i = 0; i < currentGrid->numLevels(); i++) {
         cout << " Level " << i << " has " << currentGrid->getLevel(i)->numPatches() << " patches...";
@@ -818,6 +823,7 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
     }  // rank 0
 
     double scheduleTime = Time::currentSeconds();
+    
     if (!initialTimestep) {
       d_scheduler->scheduleAndDoDataCopy(currentGrid, d_sim);
     }

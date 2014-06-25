@@ -316,6 +316,11 @@ namespace Wasatch {
     std::vector<SS::IntVec>& extraBndSOIter    = myBndIters.extraBndCells;
     std::vector<SS::IntVec>& intBndSOIter      = myBndIters.interiorBndCells;
     std::vector<SS::IntVec>& extraPlusBndCells = myBndIters.extraPlusBndCells;
+    
+    std::vector<SS::IntVec>& neboExtraBndSOIter    = myBndIters.neboExtraBndCells;
+    std::vector<SS::IntVec>& neboIntBndSOIter      = myBndIters.neboInteriorBndCells;
+    std::vector<SS::IntVec>& neboExtraPlusBndCells = myBndIters.neboExtraPlusBndCells;
+
     std::vector<SS::IntVec>& intEdgeSOIter     = myBndIters.interiorEdgeCells;
    
     bool plusEdge[3];
@@ -347,10 +352,13 @@ namespace Wasatch {
     // save pointer to the Uintah iterator. This will be needed for expression that require access to the
     // native uintah iterators, such as the pressure expression.
     myBndIters.extraBndCellsUintah = bndIter;
+
+    std::cout << "---------------------------------------------------\n";
+    std::cout << "Face = " << face << std::endl;
     
     // MAJOR WARNING HERE - WHEN WE MOVE TO RUNTIME GHOST CELLS, WE NEED TO USE THE APPROPRIATE PATCH OFFSET
     const Uintah::IntVector patchCellOffset = patch->getExtraCellLowIndex(1);
-    
+    const Uintah::IntVector interiorPatchCellOffset = patch->getCellLowIndex();
     Uintah::IntVector unitNormal = patch->faceDirection(face); // this is needed to construct interior cells
     Uintah::IntVector bcPointIJK;
     
@@ -373,6 +381,11 @@ namespace Wasatch {
       }
       bcPointIJK -= unitNormal;
       intBndSOIter.push_back(SS::IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
+
+      bcPointIJK = *bndIter - interiorPatchCellOffset;
+      neboExtraBndSOIter.push_back(SS::IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
+      bcPointIJK -= unitNormal;
+      neboIntBndSOIter.push_back(SS::IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
     }
     
     // if we are on a plus face, we will most likely need a plus-face iterator for staggered fields
@@ -380,6 +393,9 @@ namespace Wasatch {
       for( bndIter.reset(); !bndIter.done(); ++bndIter ){
         bcPointIJK = *bndIter - patchCellOffset + unitNormal;
         extraPlusBndCells.push_back(SS::IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
+        
+        bcPointIJK = *bndIter - interiorPatchCellOffset + unitNormal;
+        neboExtraPlusBndCells.push_back(SS::IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
       }
     }
   }
@@ -548,6 +564,31 @@ namespace Wasatch {
     }
     return NULL;
   }
+  
+  //------------------------------------------------------------------------------------------------
+  
+  template<typename FieldT>
+  const std::vector<SpatialOps::structured::IntVec>*
+  BCHelper::get_nebo_extra_bnd_mask( const BndSpec& myBndSpec,
+                               const int& patchID ) const
+  {
+    const std::string bndName = myBndSpec.name;
+    const bool isStagNorm = is_staggered_normal<FieldT>(myBndSpec.face);
+    const bool isPlusSide = is_plus_side<FieldT>(myBndSpec.face);
+    if ( bndNamePatchIDMaskMap_.find(bndName) != bndNamePatchIDMaskMap_.end() ) {
+      const patchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
+      if ( myMap.find(patchID) != myMap.end() ) {
+        const BoundaryIterators& myIters = (*myMap.find(patchID)).second;
+        if (isStagNorm && isPlusSide) {
+          return &(myIters.neboExtraPlusBndCells);
+        } else {
+          return &(myIters.neboExtraBndCells);
+        }
+      }
+    }
+    return NULL;
+  }
+
 
   //------------------------------------------------------------------------------------------------
   
@@ -573,6 +614,32 @@ namespace Wasatch {
     }
     return NULL;
   }
+  
+  //------------------------------------------------------------------------------------------------
+  
+  template<typename FieldT>
+  const std::vector<SpatialOps::structured::IntVec>*
+  BCHelper::get_nebo_interior_bnd_mask( const BndSpec& myBndSpec,
+                                  const int& patchID ) const
+  {
+    const std::string bndName = myBndSpec.name;
+    const bool isStagNorm = is_staggered_normal<FieldT>(myBndSpec.face);
+    const bool isPlusSide = is_plus_side<FieldT>(myBndSpec.face);
+    
+    if ( bndNamePatchIDMaskMap_.find(bndName) != bndNamePatchIDMaskMap_.end() ) {
+      const patchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
+      if ( myMap.find(patchID) != myMap.end() ) {
+        const BoundaryIterators& myIters = (*myMap.find(patchID)).second;
+        if (isStagNorm && isPlusSide) {
+          return &(myIters.neboExtraBndCells);
+        } else {
+          return &(myIters.neboInteriorBndCells);
+        }
+      }
+    }
+    return NULL;
+  }
+
   //------------------------------------------------------------------------------------------------
   
   Uintah::Iterator&
@@ -770,6 +837,7 @@ namespace Wasatch {
     const Expr::Tag dummyTag(phiName + "_dummy_dependency", Expr::STATE_NONE );
     const std::string functorName = dummyTag.name();
     
+    // if the dependency was already adde then return
     if (factory.have_entry(dummyTag)) {
       return;
     }
@@ -892,7 +960,7 @@ namespace Wasatch {
               
               // check if this is a staggered field on a face in the same staggered direction (XVolField on x- Face)
               // and whether this a Neumann bc or not.
-              const bool isStagNorm = is_staggered_normal<FieldT>(myBndSpec.face) && myBndCondSpec->bcType!=NEUMANN;
+              const bool isStagNorm = is_staggered_normal<FieldT>(myBndSpec.face);// && myBndCondSpec->bcType!=NEUMANN;
               modExpr.set_staggered(isStagNorm);
               
               // set the ghost and interior points as well as coefficients
@@ -903,11 +971,16 @@ namespace Wasatch {
               const Uintah::IntVector uNorm = patch->getFaceDirection(myBndSpec.face);
               const IntVecT unitNormal( uNorm.x(), uNorm.y(), uNorm.z() );
               modExpr.set_boundary_normal(unitNormal);
-              
+              modExpr.set_bc_type(myBndCondSpec->bcType);
+              modExpr.set_face_type(myBndSpec.face);
+              modExpr.set_extra_only(setOnExtraOnly);
               modExpr.set_ghost_coef( cg );
               modExpr.set_ghost_points( get_extra_bnd_mask<FieldT>(myBndSpec, patchID) );
+              modExpr.set_nebo_ghost_points( get_nebo_extra_bnd_mask<FieldT>(myBndSpec, patchID) );
+              
               modExpr.set_interior_coef( ci );
               modExpr.set_interior_points( get_interior_bnd_mask<FieldT>(myBndSpec,patchID) );
+              modExpr.set_nebo_interior_points( get_nebo_interior_bnd_mask<FieldT>(myBndSpec,patchID) );
               // do not delete this. this could be needed for some outflow/open boundary conditions
               //modExpr.set_interior_edge_points( get_edge_mask(myBndSpec,patchID) );
             }

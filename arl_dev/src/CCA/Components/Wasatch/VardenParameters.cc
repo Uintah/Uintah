@@ -46,6 +46,8 @@ namespace Wasatch {
       varDenInputParams.model = VarDenParameters::CONSTANT;
     } else if ( varDenModelName.compare("IMPULSE") == 0 ) {
       varDenInputParams.model = VarDenParameters::IMPULSE;
+    } else if ( varDenModelName.compare("DYNAMIC") == 0 ) {
+      varDenInputParams.model = VarDenParameters::DYNAMIC;
     }
     // get the turbulent Prandtl number
     varDenSpec->getAttribute("coefficient",varDenInputParams.alpha0 );

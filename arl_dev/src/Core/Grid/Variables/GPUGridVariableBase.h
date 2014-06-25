@@ -22,10 +22,10 @@
  * IN THE SOFTWARE.
  */
 
-// GPU GridVariable base class: in host & device code (HOST_DEVICE = __host__ __device__)
+// GPU GridVariable base class: in host & device code (HOST_DEVICE == __host__ __device__)
 
-#ifndef UINTAH_GPUGRIDVARIABLEBASE_H
-#define UINTAH_GPUGRIDVARIABLEBASE_H
+#ifndef UINTAH_CORE_GRID_VARIABLES_GPUGRIDVARIABLEBASE_H
+#define UINTAH_CORE_GRID_VARIABLES_GPUGRIDVARIABLEBASE_H
 
 #include <Core/Grid/Variables/GPUVariable.h>
 #include <sci_defs/cuda_defs.h>
@@ -42,14 +42,14 @@ class GPUGridVariableBase : public GPUVariable {
 
   protected:
     HOST_DEVICE GPUGridVariableBase() {}
+    HOST_DEVICE GPUGridVariableBase(const GPUGridVariableBase&);
 
   private:
-    HOST_DEVICE virtual void setArray3(const int3& offset, const int3& size, void* &ptr) const = 0;
     HOST_DEVICE virtual void getArray3(int3& offset, int3& size, void* &ptr) const = 0;
+    HOST_DEVICE virtual void setArray3(const int3& offset, const int3& size, void* &ptr) const = 0;
     HOST_DEVICE GPUGridVariableBase& operator=(const GPUGridVariableBase&);
-    HOST_DEVICE GPUGridVariableBase(const GPUGridVariableBase&);
 };
 
 } // end namespace Uintah
 
-#endif
+#endif // UINTAH_CORE_GRID_VARIABLES_GPUGRIDVARIABLEBASE_H

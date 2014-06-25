@@ -109,7 +109,6 @@ WARNING
 #ifdef HAVE_CUDA
 
     cudaStream_t* getCudaStream(int device);
-    cudaEvent_t* getCudaEvent(int device);
 
 #endif
 

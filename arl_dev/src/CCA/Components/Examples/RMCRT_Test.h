@@ -26,6 +26,7 @@
 #define Packages_Uintah_CCA_Components_Examples_RMCRT_Test_h
 
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
+#include <CCA/Components/Models/Radiation/floatRMCRT/Ray.h>
 #include <CCA/Ports/SimulationInterface.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Grid/Patch.h>
@@ -35,6 +36,8 @@
 
 using SCIRun::DebugStream;
 
+//#define USINGFLOATRMCRT
+
 namespace Uintah
 {
   class SimpleMaterial;
@@ -42,6 +45,7 @@ namespace Uintah
   class VarLabel;
   class GeometryObject;
   class Ray;
+  class floatRay;
 /**************************************
 
 CLASS
@@ -141,7 +145,12 @@ WARNING
    protected:
     const ProcessorGroup* d_myworld;
     
-    Ray* d_RMCRT;
+    #ifdef USINGFLOATRMCRT
+      floatRay* d_RMCRT;
+    #else
+      Ray* d_RMCRT;
+    #endif
+    
     SimulationStateP d_sharedState;
     SimpleMaterial*  d_material;
 

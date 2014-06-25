@@ -382,6 +382,7 @@ public:
              const Expr::Tag densTag,
              const Expr::Tag densStarTag,
              const Expr::Tag dens2StarTag,
+             const Expr::TagList& velTags,
              const Expr::TagList& velStarTags,
              const double r0,
              const double r1,
@@ -400,7 +401,7 @@ public:
     const double r0_, r1_, w_, k_, uf_, vf_;
     const Expr::Tag xTag_, yTag_, tTag_, timestepTag_;
     const Expr::Tag denst_, densStart_, dens2Start_;
-    const Expr::TagList velStarTs_;
+    const Expr::TagList velTs_,velStarTs_;
     const Wasatch::VarDenParameters varDenParams_;
   };
   
@@ -416,13 +417,22 @@ private:
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, YVolField >::type S2YInterpOpT;
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, ZVolField >::type S2ZInterpOpT;
   
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, SVolField >::type X2SInterpOpT;
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, SVolField >::type Y2SInterpOpT;
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, ZVolField, SVolField >::type Z2SInterpOpT;
+  
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SVolField >::type GradXT;
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SVolField >::type GradYT;
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SVolField >::type GradZT;
+
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::GradientX, SVolField, SVolField >::type GradXST;
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::GradientY, SVolField, SVolField >::type GradYST;
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::GradientZ, SVolField, SVolField >::type GradZST;
   
   VarDenMMSOscillatingContinuitySrc( const Expr::Tag densTag,
                                      const Expr::Tag densStarTag,
                                      const Expr::Tag dens2StarTag,
+                                     const Expr::TagList& velTags,
                                      const Expr::TagList& velStarTags,
                                      const double r0,
                                      const double r1,
@@ -435,24 +445,30 @@ private:
                                      const Expr::Tag& tTag,
                                      const Expr::Tag& timestepTag,
                                      const Wasatch::VarDenParameters varDenParams );
-  const Expr::Tag xVelStart_, yVelStart_, zVelStart_, denst_, densStart_, dens2Start_;
-  const bool doX_, doY_, doZ_;
+  const Expr::Tag xVelt_, yVelt_, zVelt_, xVelStart_, yVelStart_, zVelStart_, denst_, densStart_, dens2Start_;
+  const bool doX_, doY_, doZ_, is3d_;
   const double r0_, r1_, w_, k_, uf_, vf_;
   const Expr::Tag xTag_, yTag_, tTag_, timestepTag_;
   const double a0_;
   const Wasatch::VarDenParameters::VariableDensityModels model_;
-  const XVolField *uStar_;
-  const YVolField *vStar_;
-  const ZVolField *wStar_;
+  const XVolField *uStar_, *xVel_;
+  const YVolField *vStar_, *yVel_;
+  const ZVolField *wStar_, *zVel_;
   const SVolField *dens_, *densStar_, *dens2Star_;
   const FieldT *x_, *y_;
   const TimeField *t_, *timestep_;
   const GradXT* gradXOp_;
   const GradYT* gradYOp_;
   const GradZT* gradZOp_;
+  const GradXST* gradXSOp_;
+  const GradYST* gradYSOp_;
+  const GradZST* gradZSOp_;
   const S2XInterpOpT* s2XInterpOp_;
   const S2YInterpOpT* s2YInterpOp_;
   const S2ZInterpOpT* s2ZInterpOp_;
+  const X2SInterpOpT* x2SInterpOp_;
+  const Y2SInterpOpT* y2SInterpOp_;
+  const Z2SInterpOpT* z2SInterpOp_;
 };
 
 //**********************************************************************

@@ -77,9 +77,9 @@
 #include "Expressions/NullExpression.h"
 #include "Expressions/MMS/Functions.h"
 
-#include "transport/ParseEquation.h"
+#include <CCA/Components/Wasatch/Transport/ParseEquation.h>
+#include <CCA/Components/Wasatch/Transport/TransportEquation.h>
 
-#include "transport/TransportEquation.h"
 #include "BCHelperTools.h"
 #include "ParseTools.h"
 #include "FieldClippingTools.h"

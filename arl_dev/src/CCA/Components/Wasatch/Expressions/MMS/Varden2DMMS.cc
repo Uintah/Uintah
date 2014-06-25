@@ -600,6 +600,7 @@ VarDenMMSOscillatingContinuitySrc<FieldT>::
 VarDenMMSOscillatingContinuitySrc( const Expr::Tag densTag,
                                    const Expr::Tag densStarTag,
                                    const Expr::Tag dens2StarTag,
+                                   const Expr::TagList& velTags,
                                    const Expr::TagList& velStarTags,
                                    const double r0,
                                    const double r1,
@@ -622,12 +623,16 @@ VarDenMMSOscillatingContinuitySrc( const Expr::Tag densTag,
   doX_( velStarTags[0]!=Expr::Tag() ),
   doY_( velStarTags[1]!=Expr::Tag() ),
   doZ_( velStarTags[2]!=Expr::Tag() ),
+  is3d_     ( doX_ && doY_ && doZ_    ),
   r0_( r0 ),
   r1_( r1 ),
   w_ ( w ),
   k_ ( k ),
   uf_ ( uf ),
   vf_ ( vf ),
+  xVelt_  ( velTags[0] ),
+  yVelt_  ( velTags[1] ),
+  zVelt_  ( velTags[2] ),
   xTag_( xTag ),
   yTag_( yTag ),
   tTag_( tTag ),
@@ -645,9 +650,21 @@ void
 VarDenMMSOscillatingContinuitySrc<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  if( doX_ ) exprDeps.requires_expression( xVelStart_ );
-  if( doY_ ) exprDeps.requires_expression( yVelStart_ );
-  if( doZ_ ) exprDeps.requires_expression( zVelStart_ );
+  if( doX_ )
+  {
+    exprDeps.requires_expression( xVelt_ );
+    exprDeps.requires_expression( xVelStart_ );
+  }
+  if( doY_ )
+  {
+    exprDeps.requires_expression( yVelt_ );
+    exprDeps.requires_expression( yVelStart_ );
+  }
+  if( doZ_ )
+  {
+    exprDeps.requires_expression( zVelt_ );
+    exprDeps.requires_expression( zVelStart_ );
+  }
 
   exprDeps.requires_expression( denst_ );
   exprDeps.requires_expression( densStart_ );
@@ -666,9 +683,18 @@ void
 VarDenMMSOscillatingContinuitySrc<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  if( doX_ ) uStar_ = &fml.field_ref<XVolField>( xVelStart_ );
-  if( doY_ ) vStar_ = &fml.field_ref<YVolField>( yVelStart_ );
-  if( doZ_ ) wStar_ = &fml.field_ref<ZVolField>( zVelStart_ );
+  if( doX_ ){
+    xVel_  = &fml.field_ref<XVolField>( xVelt_ );
+    uStar_ = &fml.field_ref<XVolField>( xVelStart_ );
+  }
+  if( doY_ ){
+    yVel_  = &fml.field_ref<YVolField>( yVelt_ );
+    vStar_ = &fml.field_ref<YVolField>( yVelStart_ );
+  }
+  if( doZ_ ){
+    zVel_  = &fml.field_ref<ZVolField>( zVelt_ );
+    wStar_ = &fml.field_ref<ZVolField>( zVelStart_ );
+  }
 
   const typename Expr::FieldMgrSelector<SVolField>::type& scalarFM = fml.field_manager<SVolField>();
   dens_      = &scalarFM.field_ref( denst_ );
@@ -692,16 +718,22 @@ VarDenMMSOscillatingContinuitySrc<FieldT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
   if( doX_ ){
-    gradXOp_       = opDB.retrieve_operator<GradXT>();
+    gradXOp_     = opDB.retrieve_operator<GradXT>();
     s2XInterpOp_ = opDB.retrieve_operator<S2XInterpOpT>();
+    x2SInterpOp_ = opDB.retrieve_operator<X2SInterpOpT>();
+    gradXSOp_    = opDB.retrieve_operator<GradXST>();
   }
   if( doY_ ){
-    gradYOp_       = opDB.retrieve_operator<GradYT>();
+    gradYOp_     = opDB.retrieve_operator<GradYT>();
     s2YInterpOp_ = opDB.retrieve_operator<S2YInterpOpT>();
+    y2SInterpOp_ = opDB.retrieve_operator<Y2SInterpOpT>();
+    gradYSOp_    = opDB.retrieve_operator<GradYST>();
   }
   if( doZ_ ){
-    gradZOp_       = opDB.retrieve_operator<GradZT>();
+    gradZOp_     = opDB.retrieve_operator<GradZT>();
     s2ZInterpOp_ = opDB.retrieve_operator<S2ZInterpOpT>();
+    z2SInterpOp_ = opDB.retrieve_operator<Z2SInterpOpT>();
+    gradZSOp_    = opDB.retrieve_operator<GradZST>();
   }
 }
 
@@ -755,6 +787,30 @@ evaluate()
     case Wasatch::VarDenParameters::IMPULSE:
       *alpha <<= cond(*drhodtstar == 0.0, 1.0)(a0_);
       break;
+    case Wasatch::VarDenParameters::DYNAMIC:
+    {
+      SpatialOps::SpatFldPtr<SVolField> velDotDensGrad = SpatialOps::SpatialFieldStore::get<SVolField>( result );
+      if( is3d_ ){ // for 3D cases, inline the whole thing
+        *velDotDensGrad <<= (*x2SInterpOp_)(*xVel_) * (*gradXSOp_)(*dens_) + (*y2SInterpOp_)(*yVel_) * (*gradYSOp_)(*dens_) + (*z2SInterpOp_)(*zVel_) * (*gradZSOp_)(*dens_);
+      } else {
+        // for 1D and 2D cases, we are not as efficient - add terms as needed...
+        if( doX_ ) *velDotDensGrad <<= (*x2SInterpOp_)(*xVel_) * (*gradXSOp_)(*dens_);
+        else       *velDotDensGrad <<= 0.0;
+        if( doY_ ) *velDotDensGrad <<= *velDotDensGrad + (*y2SInterpOp_)(*yVel_) * (*gradYSOp_)(*dens_);
+        if( doZ_ ) *velDotDensGrad <<= *velDotDensGrad + (*z2SInterpOp_)(*zVel_) * (*gradZSOp_)(*dens_);
+      } // 1D, 2D cases
+      *velDotDensGrad <<= abs(*velDotDensGrad);
+      *alpha <<= cond(*drhodtstar == 0.0, 1.0)( (1.0 - a0_) * ((0.1 * *velDotDensGrad) / ( 0.1 * *velDotDensGrad + 1)) + a0_ );
+    }
+      //    case Wasatch::VarDenParameters::DYNAMIC:
+      //    {
+      //      SpatialOps::SpatFldPtr<SVolField> densGrad = SpatialOps::SpatialFieldStore::get<SVolField>( result );
+      //      *densGrad <<= sqrt( (*gradXSOp_)(*dens_) * (*gradXSOp_)(*dens_) + (*gradYSOp_)(*dens_) * (*gradYSOp_)(*dens_) + (*gradZSOp_)(*dens_) * (*gradZSOp_)(*dens_));
+      //
+      //      //      alpha <<= 1.0 / ( 1.0 + exp(10- *densGrad));
+      //      *alpha <<= 0.9*((0.1 * *densGrad) / ( 0.1 * *densGrad + 1))+0.1;
+      //    }
+      break;
     default:
       *alpha <<= 0.1;
       break;
@@ -789,6 +845,7 @@ Builder( const Expr::Tag& result,
          const Expr::Tag densTag,
          const Expr::Tag densStarTag,
          const Expr::Tag dens2StarTag,
+         const Expr::TagList& velTags,
          const Expr::TagList& velStarTags,
          const double r0,
          const double r1,
@@ -815,6 +872,7 @@ Builder( const Expr::Tag& result,
   denst_     ( densTag      ),
   densStart_ ( densStarTag  ),
   dens2Start_( dens2StarTag ),
+  velTs_     ( velTags ),
   velStarTs_ ( velStarTags  ),
   varDenParams_(varDenParams)
 {}
@@ -826,7 +884,7 @@ Expr::ExpressionBase*
 VarDenMMSOscillatingContinuitySrc<FieldT>::Builder::
 build() const
 {
-  return new VarDenMMSOscillatingContinuitySrc<FieldT>( denst_, densStart_, dens2Start_, velStarTs_, r0_, r1_, w_, k_, uf_, vf_, xTag_, yTag_, tTag_, timestepTag_, varDenParams_ );
+  return new VarDenMMSOscillatingContinuitySrc<FieldT>( denst_, densStart_, dens2Start_, velTs_, velStarTs_, r0_, r1_, w_, k_, uf_, vf_, xTag_, yTag_, tTag_, timestepTag_, varDenParams_ );
 }
 
 

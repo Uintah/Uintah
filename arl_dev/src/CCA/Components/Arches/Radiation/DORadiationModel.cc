@@ -85,7 +85,7 @@ DORadiationModel::DORadiationModel(const ArchesLabel* label,
   d_linearSolver = 0;
   d_radCalcFreq = 0; 
   d_perproc_patches = 0;
-  d_use_abskp = false;
+  d_use_abskp = true;
 }
 
 //****************************************************************************
@@ -120,7 +120,7 @@ DORadiationModel::problemSetup( ProblemSpecP& params, bool stand_alone_src )
   ProblemSpecP db = params->findBlock("DORadiationModel");
 
   //__________________________________
-  // article absorption coefficient 
+  // particle absorption coefficient 
   PropertyModelFactory& prop_factory = PropertyModelFactory::self();
   d_use_abskp = prop_factory.find_property_model( "abskp");
   
@@ -132,7 +132,8 @@ DORadiationModel::problemSetup( ProblemSpecP& params, bool stand_alone_src )
  
   if (db) {
     db->getWithDefault("ordinates",d_sn,2);
-    db->require("opl",d_opl);
+ //   db->getWithDefault("opl",d_opl,0.18); //needs to go into property calculator
+    d_opl = .18;
     db->getWithDefault("property_model",prop_model,"radcoef");
   }
   else {
@@ -587,6 +588,7 @@ DORadiationModel::intensitysolve_new(const ProcessorGroup* pg,
       an.initialize(0.0);
       at.initialize(0.0);
       bool plusX, plusY, plusZ;
+
       
       fort_rdomsolve(idxLo, idxHi, constvars->cellType, ffield, 
                      cellinfo->sew, cellinfo->sns, cellinfo->stb, 

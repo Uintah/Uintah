@@ -59,9 +59,10 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
-// Debug: Used to sync cerr so it is readable (when output by
-// multiple threads at the same time)  From sus.cc:
-extern SCIRun::Mutex       cerrLock;
+// Used to sync cout/cerr so it is readable when output by multiple threads
+extern SCIRun::Mutex coutLock;
+extern SCIRun::Mutex cerrLock;
+
 extern DebugStream mixedDebug;
 
 static DebugStream dbg("MPIScheduler",             false);
@@ -203,8 +204,11 @@ MPIScheduler::initiateReduction( DetailedTask          * task)
 {
   TAU_PROFILE("MPIScheduler::initiateReduction()", " ", TAU_USER); 
   {
-    if(reductionout.active() && d_myworld->myrank()==0)
+    if(reductionout.active() && d_myworld->myrank()==0) {
+      coutLock.lock();
       reductionout << "Running Reduction Task: " << task->getName() << endl;
+      coutLock.unlock();
+    }
 
     double reducestart = Time::currentSeconds();
     

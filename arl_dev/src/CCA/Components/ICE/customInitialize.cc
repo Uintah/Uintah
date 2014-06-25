@@ -27,6 +27,8 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Math/MersenneTwister.h>
 
 using namespace std;
 
@@ -51,7 +53,8 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
   cib->doesComputePressure = false;
   
   if(c_init_ps){
-    //__________________________________
+
+    //_______________________________________________
     // multiple vortices section
     ProblemSpecP vortices_ps= c_init_ps->findBlock("vortices");    
     if(vortices_ps) {
@@ -94,7 +97,7 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
       cib->gaussTemp_inputs->spread_y  = spread_y;
     }
     
-    //__________________________________
+    //_______________________________________________
     //  method of manufactured solutions
     ProblemSpecP mms_ps= c_init_ps->findBlock("manufacturedSolution");
     if(mms_ps) {
@@ -116,7 +119,7 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
       }
     } 
     
-    //__________________________________
+    //_______________________________________________
     //  2D counterflow in the x & y plane
     ProblemSpecP cf_ps= c_init_ps->findBlock("counterflow");
     if(cf_ps) {
@@ -128,6 +131,45 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
       
       grid->getLength(cib->counterflow_inputs->domainLength, "minusExtraCells");
     }
+
+    //_______________________________________________
+    //  Channel Flow initialized with powerlaw velocity profile
+    // and variance. the x & y plane
+    ProblemSpecP pl_ps= c_init_ps->findBlock("powerLawProfile");
+    if(pl_ps) {
+      cib->which = "powerLaw";
+      cib->doesComputePressure = true;
+
+      cib->powerLaw_inputs = scinew powerLaw();
+      powerLaw* inputs = cib->powerLaw_inputs;   // for code readability
+            
+      // geometry: computational domain
+      BBox b;
+      grid->getInteriorSpatialRange(b);
+      cib->powerLaw_inputs->gridMin = b.min();
+      cib->powerLaw_inputs->gridMax = b.max();
+      
+      pl_ps -> require( "U_infinity",        inputs->U_infinity   );    
+      pl_ps -> require( "exponent",          inputs->exponent    );     
+      pl_ps -> require( "verticalDirection", inputs->verticalDir );
+
+      Vector tmp = b.max() - b.min();
+      double maxHeight = tmp[ inputs->verticalDir ];   // default value
+
+      pl_ps -> get( "maxHeight",             maxHeight   );
+      Vector lo = b.min().asVector();
+      inputs->maxHeight = maxHeight - lo[ inputs->verticalDir ];
+
+      //__________________________________
+      //  Add variance to the velocity profile
+      inputs->addVariance = false;
+      ProblemSpecP var_ps = pl_ps->findBlock("variance");
+      if (var_ps) {
+        inputs->addVariance = true;
+        var_ps -> get( "C_mu",        inputs->C_mu );
+        var_ps -> get( "frictionVel", inputs->u_star );
+      }
+    }  // powerLaw inputs    
   }
 }
 /*_____________________________________________________________________ 
@@ -142,7 +184,7 @@ void customInitialization(const Patch* patch,
                           ICEMaterial* ice_matl,
                           const customInitialize_basket* cib)
 {
-  //__________________________________
+  //_______________________________________________
   //  multiple vortices
   //See "Boundary Conditions for Direct Simulations of Compressible Viscous
   //     Flows" by Poinsot & LeLe pg 121
@@ -177,7 +219,7 @@ void customInitialization(const Patch* patch,
       } 
     }  // loop
   } // vortices
-  //__________________________________
+  //_______________________________________________
   // gaussian Temperature
   if(cib->which == "gaussianTemp"){
   
@@ -203,7 +245,7 @@ void customInitialization(const Patch* patch,
     }
   } 
   
-   //__________________________________
+  //_______________________________________________
   // 2D counterflow flowfield
   // See:  "Characteristic Boundary conditions for direct simulations
   //        of turbulent counterflow flames" by Yoo, Wang Trouve and IM
@@ -240,7 +282,7 @@ void customInitialization(const Patch* patch,
   }
   
   
-  //__________________________________
+  //_______________________________________________
   // method of manufactured solution 1
   // See:  "A non-trival analytical solution to the 2d incompressible
   //        Navier-Stokes equations" by Randy McDermott
@@ -269,7 +311,7 @@ void customInitialization(const Patch* patch,
     }
   } // mms_1
   
-  //__________________________________
+  //_______________________________________________
   // method of manufactured solution 2
   // See:  "Code Verification by the MMS SAND2000-1444
   // This is a steady state solution
@@ -296,7 +338,7 @@ void customInitialization(const Patch* patch,
     }
   } // mms_2
   
-  //__________________________________
+  //_______________________________________________
   // method of manufactured solution 3
   // See:  "Small-scale structure of the Taylor-Green vortex", M. Brachet et al.
   //       J. Fluid Mech, vol. 130, pp. 411-452, 1983.
@@ -320,6 +362,98 @@ void customInitialization(const Patch* patch,
       vel_CC[c].z( A * sin(angle)     * cos(x) * cos(y) * sin(z));
     }
   } // mms_3
-  
+
+  //_______________________________________________
+  //  power law velocity profile + variance 
+  // u = U_infinity * pow( h/height )^n
+  if(cib->which == "powerLaw"){
+    int vDir          =  cib->powerLaw_inputs->verticalDir;
+    double d          =  cib->powerLaw_inputs->gridMin(vDir);
+    double gridHeight =  cib->powerLaw_inputs->gridMax(vDir);
+    double height     =  cib->powerLaw_inputs->maxHeight;
+    Vector U_infinity =  cib->powerLaw_inputs->U_infinity;
+    double n          =  cib->powerLaw_inputs->exponent;
+    const Level* level = patch->getLevel();
+    
+    //std::cout << "     height: " << height << " exponent: " << n << " U_infinity: " << U_infinity 
+    //     << " nDir: " << nDir << " vDir: " << vDir << endl;
+
+    
+    for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
+      IntVector c = *iter; 
+
+      Point here   = level->getCellPosition(c);
+      double h     = here.asVector()[vDir] ;
+
+      vel_CC[c]    = U_infinity;             // set the components that are not normal to the face           
+      double ratio = (h - d)/height;
+      ratio = SCIRun::Clamp(ratio,0.0,1.0);
+
+      if( h > d && h < height){
+        vel_CC[c] = U_infinity * pow(ratio, n);
+      }else{                                // if height < h < gridHeight
+        vel_CC[c] = U_infinity;
+      }
+
+      // Clamp edge/corner values 
+      if( h < d || h > gridHeight ){
+        vel_CC[c] = Vector(0,0,0);
+      }
+    } 
+
+    //__________________________________
+    //  Addition of a 'kick' or variance to the mean velocity profile
+    //  This matches the Turbulent Kinetic Energy profile of 1/sqrt(C_u) * u_star^2 ( 1- Z/height)^2
+    //   where:
+    //          C_mu:     empirical constant
+    //          u_star:  frictionVelocity
+    //          Z:       height above the ground
+    //          height:  Boundar layer height, assumed to be the domain height
+    //
+    //   TKE = 1/2 * (sigma.x^2 + sigma.y^2 + sigma.z^2)
+    //    where sigma.x^2 = (1/N-1) * sum( u_mean - u)^2
+    //
+    //%  Reference: Castro, I, Apsley, D. "Flow and dispersion over topography;
+    //             A comparison between numerical and Laboratory Data for 
+    //             two-dimensional flows", Atmospheric Environment Vol. 31, No. 6
+    //             pp 839-850, 1997.
+    
+    if (cib->powerLaw_inputs->addVariance ){ 
+      MTRand mTwister;
+
+      double gridHeight =  cib->powerLaw_inputs->gridMax(vDir); 
+      double d          =  cib->powerLaw_inputs->gridMin(vDir);
+      double inv_Cmu    = 1.0/cib->powerLaw_inputs->C_mu;
+      double u_star2    = cib->powerLaw_inputs->u_star * cib->powerLaw_inputs->u_star;
+      
+      for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
+        IntVector c = *iter;
+        
+        Point here = level->getCellPosition(c);
+        double z   = here.asVector()[vDir] ;
+        
+        double ratio = (z - d)/gridHeight;
+        
+        double TKE = inv_Cmu * u_star2 * pow( (1 - ratio),2 );
+        
+        // Assume that the TKE is evenly distrubuted between all three components of velocity
+        // 1/2 * (sigma.x^2 + sigma.y^2 + sigma.z^2) = 3/2 * sigma^2
+        
+        const double variance = sqrt(0.66666 * TKE);
+        
+        //__________________________________
+        // from the random number compute the new velocity knowing the mean velcity and variance
+        vel_CC[c].x( mTwister.randNorm( vel_CC[c].x(), variance ) );
+        vel_CC[c].y( mTwister.randNorm( vel_CC[c].y(), variance ) );
+        vel_CC[c].z( mTwister.randNorm( vel_CC[c].z(), variance ) );
+                
+        // Clamp edge/c orner values 
+        if(z < d || z > gridHeight ){
+          vel_CC[c] = Vector(0,0,0);
+        }
+      }
+    }  // add variance
+  }
+    
 }
 } // end uintah namespace

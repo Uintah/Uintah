@@ -37,7 +37,7 @@ SRCDIR   := CCA/Components/Wasatch/Operators
 # corresponding rule at the end of this file!
 #
 CUDA_ENABLED_SRCS =       \
-	FluxLimiterInterpolant
+        FluxLimiterInterpolant
      
 ifeq ($(HAVE_CUDA),yes)
 
@@ -47,6 +47,7 @@ ifeq ($(HAVE_CUDA),yes)
    # using the nvcc compiler.
 
    SRCS += $(foreach var,$(CUDA_ENABLED_SRCS),$(OBJTOP_ABS)/$(SRCDIR)/$(var).cu)
+   DLINK_FILES := $(DLINK_FILES) $(foreach var,$(CUDA_ENABLED_SRCS),$(SRCDIR)/$(var).o)
 
 else
 
@@ -54,11 +55,11 @@ else
 
 endif
 
-SRCS    +=				\
-	$(SRCDIR)/Operators.cc		\
-	$(SRCDIR)/UpwindInterpolant.cc \
-	$(SRCDIR)/Extrapolant.cc 
-	
+SRCS +=                                 \
+        $(SRCDIR)/Extrapolant.cc        \
+        $(SRCDIR)/Operators.cc          \
+        $(SRCDIR)/UpwindInterpolant.cc  
+        
 ########################################################################
 #
 # Rules to copy CUDA enabled source (.cc) files to the binary build tree
@@ -70,5 +71,5 @@ ifeq ($(HAVE_CUDA),yes)
 
   $(OBJTOP_ABS)/$(SRCDIR)/FluxLimiterInterpolant.cu : $(SRCTOP_ABS)/$(SRCDIR)/FluxLimiterInterpolant.cc
 	cp $< $@
-	
+        
 endif

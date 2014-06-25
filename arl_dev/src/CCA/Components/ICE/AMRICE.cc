@@ -83,7 +83,7 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
     string regridder;
     reg_ps->getAttribute( "type", regridder );
 
-    if (regridder != "Tiled") {
+    if (regridder != "Tiled" && regridder != "SingleLevel" ) {
       ostringstream msg;
       msg << "\n    ERROR:AMRICE With the (" << regridder << ") regridder the refine() task will overwrite \n";
       msg << "    all data in any newly created patches on the fine level patches.  There could be valid data on these patches. \n" ;
@@ -534,7 +534,7 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
                << fineLevel->getIndex() << " Patches: " << *patches <<endl;
                
     int  numICEMatls = d_sharedState->getNumICEMatls();
-    bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
+//    bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off (turn off for threaded scheduler)
       
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
@@ -662,7 +662,7 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
       delete_CustomBCs(d_BC_globalVars, notUsed);
                   
     }  // patches loop
-    cout_dbg.setActive(dbg_onOff);  // reset on/off switch for cout_dbg
+//  cout_dbg.setActive(dbg_onOff);  // reset on/off switch for cout_dbg, (turn off for tsanitizer warnings)
   }
 }
 
@@ -1015,7 +1015,7 @@ void AMRICE::coarsen(const ProcessorGroup*,
              << " Doing coarsen \t\t\t\t\t AMRICE L-" 
              <<fineLevel->getIndex()<< "->"<<coarseLevel->getIndex();
   
-  bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off  
+//  bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off  (turn off for threaded scheduler)
   
   for(int p=0;p<patches->size();p++){  
     const Patch* coarsePatch = patches->get(p);
@@ -1086,7 +1086,7 @@ void AMRICE::coarsen(const ProcessorGroup*,
       } 
     }
   }  // course patch loop 
-  cout_dbg.setActive(dbg_onOff);  // reset on/off switch for cout_dbg
+//  cout_dbg.setActive(dbg_onOff);  // reset on/off switch for cout_dbg (turn off for tsanitizer warnings)
 }
 /*___________________________________________________________________
  Function~  AMRICE::scheduleReflux_computeCorrectionFluxes--  
@@ -1193,7 +1193,7 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
              << " Doing reflux_computeCorrectionFluxes \t\t\t AMRICE L-"
              <<fineLevel->getIndex()<< "->"<< coarseLevel->getIndex();
   
-  bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off             
+//  bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off (turn off for threaded scheduler)     
   
   //__________________________________
   for(int c_p=0;c_p<coarsePatches->size();c_p++){  
@@ -1257,7 +1257,7 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
       }  // finePatch loop 
     }  // matl loop
   }  // coarse patch loop 
-  cout_dbg.setActive(dbg_onOff);  // reset on/off switch for cout_dbg
+//  cout_dbg.setActive(dbg_onOff);  // reset on/off switch for cout_dbg, (turn off for tsanitizer warnings)
 }
 
 /*___________________________________________________________________
@@ -1481,7 +1481,7 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
              << " Doing reflux_applyCorrectionFluxes \t\t\t AMRICE L-"
              <<fineLevel->getIndex()<< "->"<< coarseLevel->getIndex();
   
-  bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
+//  bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off (turn off for threaded scheduler)
   
   for(int c_p=0;c_p<coarsePatches->size();c_p++){  
     const Patch* coarsePatch = coarsePatches->get(c_p);
@@ -1549,7 +1549,7 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
     }  // matl loop
   }  // course patch loop
   
-  cout_dbg.setActive(dbg_onOff);  // reset on/off switch for cout_dbg
+//  cout_dbg.setActive(dbg_onOff);  // reset on/off switch for cout_dbg, (turn off for tsanitizer warnings)
 }
 
 /*_____________________________________________________________________

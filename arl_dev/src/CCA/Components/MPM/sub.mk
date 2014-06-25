@@ -46,6 +46,8 @@ SRCS += $(SRCDIR)/SerialMPM.cc    \
 
 ifeq ($(HAVE_PETSC),yes)
   SRCS += $(SRCDIR)/PetscSolver.cc 
+  LIBS := $(LIBS) $(PETSC_LIBRARY) 
+  INCLUDES += $(PETSC_INCLUDE)
 else
   SRCS += $(SRCDIR)/FakePetscSolver.cc
 endif

@@ -31,7 +31,7 @@
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/ScalabilityTestSrc.h>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
-#include <CCA/Components/Wasatch/transport/ParseEquation.h>
+#include <CCA/Components/Wasatch/Transport/ParseEquation.h>
 #include <CCA/Components/Wasatch/Expressions/MonolithicRHS.h>
 #include <CCA/Components/Wasatch/BCHelper.h>
 
