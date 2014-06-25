@@ -64,12 +64,26 @@ namespace Uintah
 //
 RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld ): UintahParallelComponent( myworld )
 {
-  d_colorLabel    = VarLabel::create( "color",    CCVariable<double>::getTypeDescription() );          
+//  d_colorLabel    = VarLabel::create( "color",    CCVariable<double>::getTypeDescription() );          
   d_divQLabel     = VarLabel::create( "divQ",     CCVariable<double>::getTypeDescription() );          
-  d_abskgLabel    = VarLabel::create( "abskg",    CCVariable<double>::getTypeDescription() );          
+//  d_abskgLabel    = VarLabel::create( "abskg",    CCVariable<double>::getTypeDescription() );          
   d_absorpLabel   = VarLabel::create( "absorp",   CCVariable<double>::getTypeDescription() );
-  d_sigmaT4Label  = VarLabel::create( "sigmaT4",  CCVariable<double>::getTypeDescription() );
+//  d_sigmaT4Label  = VarLabel::create( "sigmaT4",  CCVariable<double>::getTypeDescription() );
   d_cellTypeLabel = VarLabel::create( "cellType", CCVariable<int>::getTypeDescription() );
+   
+/*`==========TESTING==========*/
+    #ifdef USINGFLOATRMCRT
+      proc0cout << "__________________________________ USING FLOAT VERSION OF RMCRT" << endl;
+      d_colorLabel  = VarLabel::create( "color",    CCVariable<float>::getTypeDescription() );
+      d_sigmaT4Label  = VarLabel::create( "sigmaT4",  CCVariable<float>::getTypeDescription() );
+      d_abskgLabel    = VarLabel::create( "abskg",    CCVariable<float>::getTypeDescription() );
+    #else
+      proc0cout << "__________________________________ USING DOUBLE VERSION OF RMCRT" << endl;
+      d_colorLabel    = VarLabel::create( "color",    CCVariable<double>::getTypeDescription() );  
+      d_sigmaT4Label  = VarLabel::create( "sigmaT4",  CCVariable<double>::getTypeDescription() );  
+      d_abskgLabel    = VarLabel::create( "abskg",    CCVariable<double>::getTypeDescription() );  
+    #endif 
+/*===========TESTING==========`*/   
    
   d_gac = Ghost::AroundCells;
   d_gn  = Ghost::None;
@@ -148,14 +162,15 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
   if (prob_spec->findBlock("RMCRT")){
     ProblemSpecP rmcrt_ps = prob_spec->findBlock("RMCRT"); 
     
-    
+/*`==========TESTING==========*/
     #ifdef USINGFLOATRMCRT
       proc0cout << "__________________________________ USING FLOAT VERSION OF RMCRT" << endl;
       d_RMCRT = scinew floatRay();
     #else
       proc0cout << "__________________________________ USING DOUBLE VERSION OF RMCRT" << endl;
       d_RMCRT = scinew Ray();
-    #endif
+    #endif 
+/*===========TESTING==========`*/
 
     d_RMCRT->registerVarLabels(0,d_abskgLabel,
                                  d_absorpLabel,
@@ -467,8 +482,18 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
 
+/*`==========TESTING==========*/
+    #ifdef USINGFLOATRMCRT
+      CCVariable<float> color;
+      CCVariable<float> abskg;
+      bool isFloat = true;
+    #else
       CCVariable<double> color;
       CCVariable<double> abskg;
+      bool isFloat = false;
+    #endif 
+/*===========TESTING==========`*/
+
       CCVariable<int> cellType; 
       new_dw->allocateAndPut(color,    d_colorLabel,    matl, patch);
       new_dw->allocateAndPut(abskg,    d_abskgLabel,    matl, patch);
@@ -479,9 +504,39 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
          color[idx] = d_initColor;
          abskg[idx] = d_initAbskg;
       }
+      
+      
+#ifdef USINGFLOATRMCRT      
+      //__________________________________
+      // HACK:
+      //  Make a copy of the float data and place it
+      //  in a double array.  The BC infrastructure can't 
+      //  deal with floats 
+      CCVariable<double> D_abskg, D_color;
+      
+      new_dw->allocateTemporary(D_abskg, patch);
+      new_dw->allocateTemporary(D_color, patch);
+      for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
+        D_abskg[c] = (double) abskg[c];
+        D_color[c] = (double) color[c];
+      }
+#endif    
+      
+      
       // set boundary conditions 
-      d_RMCRT->setBC(color,  d_colorLabel->getName(), patch, matl);
-      d_RMCRT->setBC(abskg,  d_abskgLabel->getName(), patch, matl);
+      d_RMCRT->setBC<double>( D_color,  d_colorLabel->getName(), patch, matl );
+      d_RMCRT->setBC<double>( D_abskg,  d_abskgLabel->getName(), patch, matl );
+
+#ifdef USINGFLOATRMCRT
+      //__________________________________
+      //   HACK
+      for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
+        abskg[c] = (float) D_abskg[c];
+        color[c]  = (float) D_color[c];
+      }
+#endif
 
       // initialize cell type
       cellType.initialize(d_flow_cell);
@@ -589,8 +644,16 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,dbg,"Doing initializeWithUda");
     
-    CCVariable<double> color;
-    CCVariable<double> abskg;
+/*`==========TESTING==========*/
+    #ifdef USINGFLOATRMCRT
+      CCVariable<float> color;
+      CCVariable<float> abskg;
+    #else
+      CCVariable<double> color;
+      CCVariable<double> abskg;
+    #endif 
+/*===========TESTING==========`*/    
+    
     new_dw->allocateAndPut(color,    d_colorLabel,    d_matl, patch);
     new_dw->allocateAndPut(abskg,    d_abskgLabel,    d_matl, patch);
     
@@ -605,8 +668,11 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
       archive->queryRegion( uda_temp,  d_old_uda->temperatureName, uda_matl, uda_level, timeIndex, low, high);
       archive->queryRegion( uda_abskg, d_old_uda->abskgName,       uda_matl, uda_level, timeIndex, low, high);
       
-      color.copyData( uda_temp );
-      abskg.copyData( uda_abskg );
+      for ( CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {
+        IntVector c(*iter);                      
+        color[c] = uda_temp[c];            
+        abskg[c] = uda_abskg[c];
+      }
     //            F L O A T     
     }else if( subType->getType() == Uintah::TypeDescription::float_type ) {                                          
       CCVariable<float> uda_temp;
@@ -622,8 +688,8 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
       }                                                                                    
     }
     
-    d_RMCRT->setBC(color,  d_colorLabel->getName(), patch, d_matl);
-    d_RMCRT->setBC(abskg,  d_abskgLabel->getName(), patch, d_matl);
+    d_RMCRT->setBC( color,  d_colorLabel->getName(), patch, d_matl );
+    d_RMCRT->setBC( abskg,  d_abskgLabel->getName(), patch, d_matl );
   }
   delete archive;
 }
@@ -669,8 +735,15 @@ void RMCRT_Test::initProperties( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     printTask(patches,patch,dbg,"Doing RMCRT_test::InitProperties");
 
-    CCVariable<double> abskg; 
-    CCVariable<double> absorp;
+  /*`==========TESTING==========*/
+    #ifdef USINGFLOATRMCRT
+      CCVariable<float> color;
+      CCVariable<float> abskg;
+    #else
+      CCVariable<double> color;
+      CCVariable<double> abskg;
+    #endif 
+/*===========TESTING==========`*/
 
     new_dw->getModifiable( abskg,    d_abskgLabel,     d_matl, patch );  
     abskg.initialize  ( 0.0 ); 
