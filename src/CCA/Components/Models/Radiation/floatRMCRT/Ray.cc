@@ -106,9 +106,9 @@ static DebugStream dbg_BC("RAY_BC", false);
 //---------------------------------------------------------------------------
 floatRay::floatRay()
 {
-  d_sigmaT4_label        = VarLabel::create( "sigmaT4",          CCVariable<double>::getTypeDescription() );
+  d_sigmaT4_label        = VarLabel::create( "sigmaT4",          CCVariable<float>::getTypeDescription() );
   d_mag_grad_abskgLabel  = VarLabel::create( "mag_grad_abskg",   CCVariable<double>::getTypeDescription() );
-  d_mag_grad_sigmaT4Label= VarLabel::create( "mag_grad_sigmaT4", CCVariable<double>::getTypeDescription() );
+  d_mag_grad_sigmaT4Label= VarLabel::create( "mag_grad_sigmaT4", CCVariable<float>::getTypeDescription() );
   d_flaggedCellsLabel    = VarLabel::create( "flaggedCells",     CCVariable<int>::getTypeDescription() );
   d_ROI_LoCellLabel      = VarLabel::create( "ROI_loCell",       minvec_vartype::getTypeDescription() );
   d_ROI_HiCellLabel      = VarLabel::create( "ROI_hiCell",       maxvec_vartype::getTypeDescription() );
@@ -442,13 +442,13 @@ floatRay::sched_sigmaT4( const LevelP& level,
 //---------------------------------------------------------------------------
 void
 floatRay::sigmaT4( const ProcessorGroup*,
-              const PatchSubset* patches,           
-              const MaterialSubset* matls,                
-              DataWarehouse* old_dw, 
-              DataWarehouse* new_dw,
-              Task::WhichDW which_temp_dw,
-              const int radCalc_freq,
-              const bool includeEC )               
+                   const PatchSubset* patches,           
+                   const MaterialSubset* matls,                
+                   DataWarehouse* old_dw, 
+                   DataWarehouse* new_dw,
+                   Task::WhichDW which_temp_dw,
+                   const int radCalc_freq,
+                   const bool includeEC )               
 {
   //__________________________________
   //  Carry Forward
@@ -467,10 +467,10 @@ floatRay::sigmaT4( const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches,patch,dbg,"Doing floatRay::sigmaT4");
 
-    double sigma_over_pi = d_sigma/M_PI;
+    float sigma_over_pi = d_sigma/M_PI;
 
-    constCCVariable<double> temp;
-    CCVariable<double> sigmaT4;             // sigma T ^4/pi
+    constCCVariable<float> temp;
+    CCVariable<float> sigmaT4;             // sigma T ^4/pi
 
     DataWarehouse* temp_dw = new_dw->getOtherDataWarehouse(which_temp_dw);
     temp_dw->get(temp,              d_temperatureLabel,   d_matl, patch, Ghost::None, 0);
@@ -484,7 +484,7 @@ floatRay::sigmaT4( const ProcessorGroup*,
 
     for (;!iter.done();iter++){
       const IntVector& c = *iter;
-      double T_sqrd = temp[c] * temp[c];
+      float T_sqrd = (float) temp[c] * temp[c];
       sigmaT4[c] = sigma_over_pi * T_sqrd * T_sqrd;
     }
   }
@@ -590,8 +590,8 @@ floatRay::rayTrace( const ProcessorGroup* pc,
   DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(whichd_sigmaT4_dw);
   DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
 
-  constCCVariable<double> sigmaT4OverPi;
-  constCCVariable<double> abskg;
+  constCCVariable<float> sigmaT4OverPi;
+  constCCVariable<float> abskg;
   constCCVariable<int>    celltype;
 
   abskg_dw->getRegion(   abskg   ,       d_abskgLabel ,   d_matl , level, domainLo_EC, domainHi_EC);
@@ -1002,10 +1002,10 @@ floatRay::rayTrace_dataOnion( const ProcessorGroup* pc,
   //__________________________________
   // retrieve the coarse level data
   // compute the level dependent variables that are constant
-  StaticArray< constCCVariable<double> > abskg(maxLevels);
-  StaticArray< constCCVariable<double> >sigmaT4OverPi(maxLevels);
-  constCCVariable<double> abskg_fine;
-  constCCVariable<double> sigmaT4OverPi_fine;
+  StaticArray< constCCVariable<float> > abskg(maxLevels);
+  StaticArray< constCCVariable<float> >sigmaT4OverPi(maxLevels);
+  constCCVariable<float> abskg_fine;
+  constCCVariable<float> sigmaT4OverPi_fine;
     
   DataWarehouse* abskg_dw   = new_dw->getOtherDataWarehouse(which_abskg_dw);
   DataWarehouse* sigmaT4_dw = new_dw->getOtherDataWarehouse(whichd_sigmaT4_dw);
@@ -1113,7 +1113,7 @@ floatRay::rayTrace_dataOnion( const ProcessorGroup* pc,
       } 
 /*===========TESTING==========`*/
       
-      double sumI = 0;
+      float sumI = 0;
 
       //__________________________________
       //  ray loop
@@ -1255,7 +1255,7 @@ floatRay::computeExtents(LevelP level_0,
 void floatRay::reflect(double& fs,
                   IntVector& cur,
                   IntVector& prevCell,
-                  const double abskg,
+                  const float abskg,
                   bool& in_domain,
                   int& step,
                   bool& sign,
@@ -1586,9 +1586,9 @@ floatRay::setBoundaryConditions( const ProcessorGroup*,
 
       double sigma_over_pi = d_sigma/M_PI;
       
-      CCVariable<double> temp;
-      CCVariable<double> abskg;
-      CCVariable<double> sigmaT4OverPi;
+      CCVariable<float> temp;
+      CCVariable<float> abskg;
+      CCVariable<float> sigmaT4OverPi;
       CCVariable<int> cellType;
       
       new_dw->allocateTemporary(temp,  patch);
@@ -1607,7 +1607,7 @@ floatRay::setBoundaryConditions( const ProcessorGroup*,
 
           for(CellIterator iter=patch->getFaceIterator(face, IFC); !iter.done();iter++) {
             const IntVector& c = *iter;
-            double T4 =  sigmaT4OverPi[c]/sigma_over_pi;
+            float T4 =  sigmaT4OverPi[c]/sigma_over_pi;
             temp[c]   =  pow( T4, 1./4.);
           }
         }
@@ -1616,17 +1616,39 @@ floatRay::setBoundaryConditions( const ProcessorGroup*,
         // get a copy of the temperature and set the BC
         // on the copy and do not put it back in the DW.
         DataWarehouse* t_dw = new_dw->getOtherDataWarehouse( temp_dw );
-        constCCVariable<double> varTmp;
+        constCCVariable<float> varTmp;
         t_dw->get(varTmp, d_temperatureLabel,   d_matl, patch, Ghost::None, 0);
         temp.copyData(varTmp);
       }
       
+      //__________________________________
+      // HACK:
+      //  Make a copy of the float data and place it
+      //  in a double array.  The BC infrastructure can't 
+      //  deal with floats 
+      CCVariable<double> D_abskg, D_temp;
+      
+      new_dw->allocateTemporary(D_abskg, patch);
+      new_dw->allocateTemporary(D_temp, patch);
+      for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
+        D_abskg[c] = (double) abskg[c];
+        D_temp[c] = (double) temp[c];
+      }
       
       //__________________________________
       // set the boundary conditions
-      setBC(abskg,    d_abskgLabel->getName(),       patch, d_matl);
-      setBC(temp,     d_temperatureLabel->getName(), patch, d_matl);
-      setBC(cellType, d_cellTypeLabel->getName(),    patch, d_matl);
+      setBC(D_abskg,    d_abskgLabel->getName(),       patch, d_matl);
+      setBC(D_temp,     d_temperatureLabel->getName(), patch, d_matl);
+      setBC(cellType,   d_cellTypeLabel->getName(),    patch, d_matl);
+
+      //__________________________________
+      //   HACK
+      for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
+        abskg[c] = (float) D_abskg[c];
+        temp[c]  = (float) D_temp[c];
+      }
 
       //__________________________________
       // loop over boundary faces and compute sigma T^4
@@ -1637,7 +1659,7 @@ floatRay::setBoundaryConditions( const ProcessorGroup*,
 
         for(CellIterator iter=patch->getFaceIterator(face, PEC); !iter.done();iter++) {
           const IntVector& c = *iter;
-          double T_sqrd = temp[c] * temp[c];
+          float T_sqrd = temp[c] * temp[c];
           sigmaT4OverPi[c] = sigma_over_pi * T_sqrd * T_sqrd;
         }
       } 
@@ -1649,9 +1671,9 @@ floatRay::setBoundaryConditions( const ProcessorGroup*,
 //  Set Boundary conditions
 template<class T>
 void floatRay::setBC(CCVariable<T>& Q_CC,
-                const string& desc,
-                const Patch* patch,
-                const int mat_id)
+                     const string& desc,
+                     const Patch* patch,
+                     const int mat_id)
 {
   if(patch->hasBoundaryFaces() == false || d_onOff_SetBCs == false){
     return;
@@ -1679,7 +1701,7 @@ void floatRay::setBC(CCVariable<T>& Q_CC,
       Iterator bound_ptr;
 
       bool foundIterator = 
-        getIteratorBCValueBCKind( patch, face, child, desc, mat_id,
+        getIteratorBCValueBCKind<T>( patch, face, child, desc, mat_id,
                         bc_value, bound_ptr,bc_kind); 
 
       if(foundIterator) {
@@ -1866,11 +1888,11 @@ void floatRay::ROI_Extents ( const ProcessorGroup*,
     printTask(patches, patch,dbg,"Doing ROI_Extents");
 
     //__________________________________     
-    constCCVariable<double> abskg;
-    constCCVariable<double> sigmaT4;
+    constCCVariable<float> abskg;
+    constCCVariable<float> sigmaT4;
 
-    CCVariable<double> mag_grad_abskg;
-    CCVariable<double> mag_grad_sigmaT4;
+    CCVariable<float> mag_grad_abskg;
+    CCVariable<float> mag_grad_sigmaT4;
     CCVariable<int> flaggedCells;
 
     new_dw->get(abskg,    d_abskgLabel ,     d_matl , patch, d_gac,1);
@@ -1984,7 +2006,7 @@ void floatRay::coarsen_Q ( const ProcessorGroup*,
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
 
-      CCVariable<double> Q_coarse;
+      CCVariable<float> Q_coarse;
       if(modifies){
         new_dw->getModifiable(Q_coarse,  variable, matl, coarsePatch);
       }else{
@@ -2034,8 +2056,8 @@ void floatRay::updateSumI ( Vector& ray_direction,
                        Vector& ray_location,
                        const IntVector& origin,
                        const Vector& Dx,
-                       constCCVariable<double>& sigmaT4OverPi,
-                       constCCVariable<double>& abskg,
+                       constCCVariable<float>& sigmaT4OverPi,
+                       constCCVariable<float>& abskg,
                        constCCVariable<int>& celltype,
                        unsigned long int& nRaySteps,
                        double& sumI,
@@ -2097,8 +2119,8 @@ void floatRay::updateSumI ( Vector& ray_direction,
        prevCell = cur;
        double disMin = -9;          // Represents ray segment length.
        
-       double abskg_prev = abskg[prevCell];  // optimization
-       double sigmaT4OverPi_prev = sigmaT4OverPi[prevCell];
+       float abskg_prev = abskg[prevCell];  // optimization
+       float sigmaT4OverPi_prev = sigmaT4OverPi[prevCell];
        //__________________________________
        //  Determine which cell the ray will enter next
        if ( tMax[0] < tMax[1] ){        // X < Y
@@ -2249,10 +2271,10 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0 ){
                            const IntVector& fineLevel_ROI_Hi,
                            vector<IntVector>& regionLo,
                            vector<IntVector>& regionHi,
-                           StaticArray< constCCVariable<double> >& sigmaT4OverPi,
-                           StaticArray< constCCVariable<double> >& abskg,
+                           StaticArray< constCCVariable<float> >& sigmaT4OverPi,
+                           StaticArray< constCCVariable<float> >& abskg,
                            unsigned long int& nRaySteps,
-                           double& sumI,
+                           float& sumI,
                            MTRand& mTwister)
 {
   
@@ -2404,7 +2426,7 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0 ){
       optical_thickness += Dx[prevLev].x() * abskg[prevLev][prevCell]*disMin;
       nRaySteps++;
 
-      double expOpticalThick = exp(-optical_thickness);
+      float expOpticalThick = exp(-optical_thickness);
 
       sumI += sigmaT4OverPi[prevLev][prevCell] * ( expOpticalThick_prev - expOpticalThick ) * fs;
 
@@ -2417,7 +2439,7 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0 ){
 
     } //end domain while loop.  ++++++++++++++
 
-    double wallEmissivity = abskg[L][cur];
+    float wallEmissivity = abskg[L][cur];
 
     if (wallEmissivity > 1.0){       // Ensure wall emissivity doesn't exceed one. 
       wallEmissivity = 1.0;
@@ -2549,3 +2571,4 @@ floatRay::filter( const ProcessorGroup*,
 
 template void floatRay::setBC<int>(    CCVariable<int>&    Q_CC, const string& desc, const Patch* patch, const int mat_id);
 template void floatRay::setBC<double>( CCVariable<double>& Q_CC, const string& desc, const Patch* patch, const int mat_id); 
+template void floatRay::setBC<float>( CCVariable<float>&   Q_CC, const string& desc, const Patch* patch, const int mat_id);
