@@ -197,19 +197,21 @@ namespace Wasatch{
       const int patchID = vt.first;
       TreePtr tree = vt.second;
 
-#  ifdef HAVE_CUDA
+#     ifdef HAVE_CUDA
       bool isGPUTask = tree->is_homogeneous_gpu( patchID );
 
-      // turn off GPU task for the "initialization" task graph
+      // Force everything to CPU for initialization & also for heterogeneous Task graph
+      // For heterogeneous graphs, ExprLib will control GPU execution.
       if( !(isGPUTask && Uintah::Parallel::usingDevice()) || (taskName == "initialization") ) {
-        tree->flip_gpu_runnable(patchID, false);
+        tree->turn_off_gpu_runnable( patchID );
         isGPUTask = false;
       }
 
+      // Flag the task as Uintah GPU::Task, if it is homogeneous GPU graph
       if( isGPUTask && Uintah::Parallel::usingDevice() && taskName != "initialization" ){
-        tsk->usesDevice(true);
+        tsk->usesDevice( true );
       }
-#  endif
+#     endif
 
       if( !hasPressureExpression_ ){
         if( tree->computes_field( pressure_tag() ) )
@@ -238,6 +240,13 @@ namespace Wasatch{
       // uncomment the next line to force Uintah to manage all fields:
       if (lockAllFields) tree->lock_fields(*fml_);
 
+#     ifdef HAVE_CUDA
+      // For a heterogenous task, restore the GPU runnable property for the expressions.
+      if( taskName != "initialization" && !isGPUTask){
+        tree->restore_gpu_runnable();
+      }
+#     endif
+
       tree->register_fields( *fml_ );
 
       PatchInfoMap::const_iterator ipim = patchInfoMap.find(patchID);
@@ -247,13 +256,6 @@ namespace Wasatch{
       info.task = tsk;
       info.tree = tree;
       patchTreeMap_[patchID] = info;
-
-# ifdef HAVE_CUDA
-      if( taskName != "initialization" && !isGPUTask){
-        tree->reset_tree_expressions();
-        tree->register_fields( *fml_ );
-      }
-# endif
 
     } // loop over trees
 
