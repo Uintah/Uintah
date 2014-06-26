@@ -599,8 +599,8 @@ namespace Wasatch{
     
     //_____________
     // volume fractions for embedded boundaries Terms
-    const EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
-    thisVolFracTag_ = vNames.vol_frac_tag<FieldT>();
+    const EmbeddedGeometryHelper& embedGeom = EmbeddedGeometryHelper::self();
+    thisVolFracTag_ = embedGeom.vol_frac_tag<FieldT>();
     
     //__________________
     // convective fluxes
@@ -760,7 +760,7 @@ namespace Wasatch{
         
         // matrix update in hypre: If we have a moving geometry, then update every timestep.
         // Otherwise, no update is needed since the coefficient matrix is constant        
-        solverParams_->setSetupFrequency(vNames.has_moving_geometry() ? 1 : 0);
+        solverParams_->setSetupFrequency(embedGeom.has_moving_geometry() ? 1 : 0);
         
         // if pressure expression has not be registered, then register it
         Expr::Tag fxt, fyt, fzt;
@@ -772,8 +772,8 @@ namespace Wasatch{
         ptags.push_back( pressure_tag() );
         ptags.push_back( Expr::Tag( pressure_tag().name() + "_rhs", pressure_tag().context() ) );
         const Expr::ExpressionBuilder* const pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt,
-                                                                                        tagNames.pressuresrc, tagNames.dt, vNames.vol_frac_tag<SVolField>(),
-                                                                                        vNames.has_moving_geometry(), usePressureRefPoint, refPressureValue,
+                                                                                        tagNames.pressuresrc, tagNames.dt, embedGeom.vol_frac_tag<SVolField>(),
+                                                                                        embedGeom.has_moving_geometry(), usePressureRefPoint, refPressureValue,
                                                                                         refPressureLocation, use3DLaplacian,
                                                                                         *solverParams_, linSolver);
         pressureID_ = factory.register_expression( pbuilder );
