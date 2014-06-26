@@ -2,7 +2,7 @@
 <upsFile>RMCRT_test_1L.ups</upsFile>
 <gnuplot>
   <script>plotScript.gp</script>s
-  <title>CPU:RMCRT order-of-accuracy \\n 1 timestep (41^3)</title>
+  <title>Double:CPU:RMCRT Order-Of-Accuracy \\n Burns and Christon Benchmark \\n 1  41^3, Random Seed</title>
   <ylabel>Error</ylabel>
   <xlabel># of Rays</xlabel>
 </gnuplot>
@@ -78,11 +78,30 @@
 <Test>
     <Title>128</Title>
     <sus_cmd> sus </sus_cmd>
-    <postProcess_cmd>RMCRT_wrapper -bm 1 -L 0 -plot true</postProcess_cmd>
+    <postProcess_cmd>RMCRT_wrapper -bm 1 -L 0 </postProcess_cmd>
     <x>128</x>
     <replace_lines>
       <nDivQRays>          128        </nDivQRays>
     </replace_lines>
 </Test>
 
+<Test>
+    <Title>256</Title>
+    <sus_cmd> sus </sus_cmd>
+    <postProcess_cmd>RMCRT_wrapper -bm 1 -L 0 </postProcess_cmd>
+    <x>256</x>
+    <replace_lines>
+      <nDivQRays>          256        </nDivQRays>
+    </replace_lines>
+</Test>
+
+<Test>
+    <Title>512</Title>
+    <sus_cmd> sus </sus_cmd>
+    <postProcess_cmd>RMCRT_wrapper -bm 1 -L 0 </postProcess_cmd>
+    <x>512</x>
+    <replace_lines>
+      <nDivQRays>          512        </nDivQRays>
+    </replace_lines>
+</Test>
 </start>
