@@ -51,7 +51,7 @@ using namespace Uintah;
 
 static AtomicCounter ids("Patch ID counter",0);
 static Mutex ids_init("ID init");
-
+extern SCIRun::Mutex coutLock; // Used to sync (when output by multiple threads)
 
 Patch::Patch(const Level* level,
              const IntVector& lowIndex, const IntVector& highIndex,
@@ -253,12 +253,14 @@ namespace Uintah {
   ostream&
   operator<<(ostream& out, const Patch & r)
   {
+    coutLock.lock();  // needed to eliminate threadsanitizer warnings
     out.setf(ios::scientific,ios::floatfield);
     out.precision(4);
     out << "(Patch " << r.getID() 
         << ", lowIndex=" << r.getExtraCellLowIndex() << ", highIndex=" 
         << r.getExtraCellHighIndex() << ")";
     out.setf(ios::scientific ,ios::floatfield);
+    coutLock.unlock();
     return out;
   }
   
