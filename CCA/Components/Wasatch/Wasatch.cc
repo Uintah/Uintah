@@ -566,7 +566,7 @@ namespace Wasatch{
     // THIS MUST BE PARSED BEFORE THE MOMENTUM EQUATIONS
     //
     Uintah::ProblemSpecP VarDenCorrugatedMMSSpec = wasatchSpec_->findBlock("VarDenCorrugatedMMS");
-    if (VarDenCorrugatedMMSSpec) {
+    if( VarDenCorrugatedMMSSpec ){
       const bool computeContinuityResidual = wasatchSpec_->findBlock("MomentumEquations")->findBlock("ComputeMassResidual");
       parse_var_den_corrugated_mms(wasatchSpec_, VarDenCorrugatedMMSSpec, computeContinuityResidual, graphCategories_);
     }
@@ -578,19 +578,17 @@ namespace Wasatch{
     for( Uintah::ProblemSpecP momEqnParams=wasatchSpec_->findBlock("MomentumEquations");
         momEqnParams != 0;
         momEqnParams=momEqnParams->findNextBlock("MomentumEquations") ){
-      bool hasMovingBoundaries = false;
-      if (hasEmbeddedGeometry) hasMovingBoundaries = wasatchSpec_->findBlock("EmbeddedGeometry")->findBlock("MovingGeometry") ;
-      // note - parse_momentum_equations returns a vector of equation adaptors
       try{
-          const EquationAdaptors adaptors = parse_momentum_equations( momEqnParams,
-                                                                      turbParams,
-                                                                      varDenParams,
-                                                                      useAdaptiveDt,
-                                                                      isConstDensity,
-                                                                      densityTag,
-                                                                      graphCategories_,
-                                                                      *linSolver_,
-                                                                      sharedState );
+        // note - parse_momentum_equations returns a vector of equation adaptors
+        const EquationAdaptors adaptors = parse_momentum_equations( momEqnParams,
+                                                                    turbParams,
+                                                                    varDenParams,
+                                                                    useAdaptiveDt,
+                                                                    isConstDensity,
+                                                                    densityTag,
+                                                                    graphCategories_,
+                                                                    *linSolver_,
+                                                                    sharedState );
         adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
       }
       catch( std::runtime_error& err ){
@@ -606,7 +604,7 @@ namespace Wasatch{
     // get the 2D variable density, osicllating (and periodic) mms params, if any, and parse them.
     //
     Uintah::ProblemSpecP varDenOscillatingMMSParams = wasatchSpec_->findBlock("VarDenOscillatingMMS");
-    if (varDenOscillatingMMSParams) {
+    if( varDenOscillatingMMSParams ){
       const bool computeContinuityResidual = wasatchSpec_->findBlock("MomentumEquations")->findBlock("ComputeMassResidual");
       parse_var_den_oscillating_mms(wasatchSpec_, varDenOscillatingMMSParams, computeContinuityResidual, graphCategories_);
     }
