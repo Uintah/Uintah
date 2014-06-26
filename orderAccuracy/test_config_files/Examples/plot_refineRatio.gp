@@ -1,9 +1,6 @@
-set term png
-set output "RR_error.png"
-
 # uncomment below for post script output
-#set terminal postscript color solid "Times-Roman" 14
-#set output "RR_error.ps"
+set terminal postscript color solid "Times-Roman" 14
+set output "RR_error.ps"
  
 set autoscale
 set grid xtics ytics
@@ -21,3 +18,4 @@ plot 'L2norm.dat' using 1:2 t 'X Error' with points, \
      'L2norm.dat' using 1:3 t 'Y Error' with points, \
      'L2norm.dat' using 1:4 t 'Z Error' with points
 
+!ps2pdf RR_error.ps
