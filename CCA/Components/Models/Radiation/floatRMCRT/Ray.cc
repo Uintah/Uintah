@@ -697,78 +697,13 @@ floatRay::rayTrace( const ProcessorGroup* pc,
       for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         IntVector origin = *iter;
 
-        // quick flux debug test
-        //if(face==3 && j==Ny-1 && k==Nz/2)  // Burns flux locations
-        //if(face==5 && j==Nx/2 && k==Nx-1){  // benchmark4, benchmark5: Siegel top surface flux locations
-
         // A given flow cell may have 0,1,2,3,4,5, or 6 faces that are adjacent to a wall.
         // boundaryFaces is the vector that contains the list of which faces are adjacent to a wall
         vector<int> boundaryFaces;
         boundaryFaces.clear();
-        
-        
-  // if(_benchmark==4 || _benchmark==5){
-  //   boundaryFaces.push_back(5);
-  // }
 
         // determine if origin has one or more boundary faces, and if so, populate boundaryFaces vector
         boundFlux[origin].p = has_a_boundary(origin, celltype, boundaryFaces);
-
-
-//__________________________________
-//  
-/*  Benchmark4
-        // Loop over 40 kappa and sigma_s values
-
-        // open sigma_s
-      char inputFilename[] = "sigma_s.txt";
-      ifstream inFile;
-      inFile.open(inputFilename, ios::in);
-      if (!inFile) {
-        cerr << "Can't open input file " << inputFilename << endl;
-        exit(1);
-      }
-      double sigma_s[40];
-      double kappa[40];
-
-      // open kappa
-      char inputFilename2[] = "kappa.txt";
-      ifstream inFile2;
-      inFile2.open(inputFilename2, ios::in);
-      if (!inFile2) {
-        cerr << "Can't open input file 2" << inputFilename << endl;
-        exit(1);
-      }
-
-      //assign kappa and sigma_s and LOOP over 40 values
-      int i_s=0;
-      while (!inFile.eof()) {
-        inFile >> sigma_s[i_s];
-        i_s++;
-      }
-      i_s = 0;
-      while(!inFile2.eof()) {
-        inFile2 >> kappa[i_s];
-        i_s++;
-      }
-
-       i_s=0;
-       while(i_s<40) {
-
-        _abskgBench4 = kappa[i_s];
-        d_sigmaScat = sigma_s[i_s];
-        i_s++;
-
-
-        //cout << d_sigmaScat << endl;
-        //cout << _abskgBench4 << endl;
-
-        FILE * f = NULL;
-        if(_benchmark==5){
-          f=fopen("benchmark5.txt", "w");
-        }
-//__________________________________
-*/
         
         //__________________________________
         // Loop over boundary faces of the cell and compute incident radiative flux
@@ -812,27 +747,8 @@ floatRay::rayTrace( const ProcessorGroup* pc,
                     origin.x(), origin.y(), origin.z(), face, sumProjI, boundFlux[origin][ face ]);
 #endif
 /*===========TESTING==========`*/
-          
-          
-/*
-          if(_benchmark==5){
-            fprintf(f, "%lf \n",boundFlux[origin][ face ]);
-          }
-*/
         } // boundary faces loop
-
-/*
-        if(_benchmark==5){
-          fclose(f);
-        }
-*/ 
       }  // end cell iterator
-
-      // if(_applyFilter)
-      // Put a cell iterator here
-      // Implement fancy 2D filtering for boundFluxFilt here
-      // Will need a smart algorithm to determine in which plane to do the filtering
-
     }   // end if d_solveBoundaryFlux
         
          
