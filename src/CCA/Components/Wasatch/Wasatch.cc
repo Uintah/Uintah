@@ -79,6 +79,7 @@
 
 #include <CCA/Components/Wasatch/Transport/ParseEquation.h>
 #include <CCA/Components/Wasatch/Transport/TransportEquation.h>
+#include <CCA/Components/Wasatch/Transport/EquationBase.h>
 
 #include "BCHelperTools.h"
 #include "ParseTools.h"
@@ -779,7 +780,7 @@ namespace Wasatch{
     timeTags.push_back( TagNames::self().timestep );
     timeTags.push_back( TagNames::self().rkstage  );
     exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
-
+    
     //_____________________________________________
     // Build the initial condition expression graph
     if( !icGraphHelper->rootIDs.empty() ){
@@ -791,7 +792,7 @@ namespace Wasatch{
       
       for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
         EqnTimestepAdaptorBase* const adaptor = *ia;
-        TransportEquation* transEq = adaptor->equation();
+        EquationBase* transEq = adaptor->equation();
         std::string eqnLabel = transEq->solution_variable_name();
         //______________________________________________________
         // set up initial boundary conditions on this transport equation
@@ -844,7 +845,7 @@ namespace Wasatch{
   }
 
   //--------------------------------------------------------------------
-
+  
   void Wasatch::restartInitialize()
   {
     isRestarting_ = true;
@@ -987,7 +988,7 @@ namespace Wasatch{
       
       for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
         EqnTimestepAdaptorBase* const adaptor = *ia;
-        TransportEquation* transEq = adaptor->equation();
+        EquationBase* transEq = adaptor->equation();
         std::string eqnLabel = transEq->solution_variable_name();
         //______________________________________________________
         // set up boundary conditions on this transport equation
