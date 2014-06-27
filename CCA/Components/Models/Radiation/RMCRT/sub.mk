@@ -27,6 +27,7 @@
 SRCDIR := CCA/Components/Models/Radiation/RMCRT
 
 SRCS += $(SRCDIR)/Ray.cc \
+        $(SRCDIR)/Radiometer.cc \
         $(SRCDIR)/RayGPU.cc
 
 ifneq ($(HAVE_CUDA),)
