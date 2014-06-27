@@ -131,3 +131,14 @@ NullScheduler::scheduleParticleRelocation(const LevelP&,
 					  const MaterialSet*)
 {
 }
+
+//////////
+// Schedule particle relocation without the need to provide pre-relocation labels. Warning: This
+// is experimental and has not been fully tested yet. Use with caution (tsaad).
+void
+NullScheduler::scheduleParticleRelocation(const LevelP&,
+                                          const VarLabel*,
+                                          const vector<vector<const VarLabel*> >&,
+                                          const MaterialSet*)
+{
+}

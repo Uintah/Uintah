@@ -184,6 +184,15 @@ WARNING
 			   DataWarehouse* new_dw);
 
     //////////
+    // Schedule particle relocation without the need to supply pre_relocation variables. Use with
+    // caution until as this requires further testing (tsaad).
+    virtual void scheduleParticleRelocation(const LevelP& coarsestLevelwithParticles,
+                                            const VarLabel* posLabel,
+                                            const std::vector<std::vector<const VarLabel*> >& otherLabels,
+                                            const MaterialSet* matls);
+
+    
+    //////////
     // Insert Documentation Here:
     virtual void scheduleParticleRelocation(const LevelP& level,
 					    const VarLabel* old_posLabel,
