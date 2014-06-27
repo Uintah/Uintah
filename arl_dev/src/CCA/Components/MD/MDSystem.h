@@ -36,6 +36,7 @@
 #include <CCA/Components/MD/Forcefields/Forcefield.h>
 #include <CCA/Components/MD/Potentials/TwoBody/NonbondedTwoBodyPotential.h>
 #include <CCA/Components/MD/MDMaterial.h>
+#include <CCA/Components/MD/atomMap.h>
 
 namespace Uintah {
 
@@ -127,6 +128,21 @@ namespace Uintah {
       inline Forcefield* getForcefieldPointer() const {
         return d_forcefield;
       };
+
+      inline size_t registerAtomTypes(const atomMap*            incomingMap,
+                                      const SimulationStateP&   simState)
+      {
+        d_numAtoms = 0;
+        d_numAtomsOfType.clear();
+        size_t numTypes = incomingMap->getNumberAtomTypes();
+        for (size_t currType = 0; currType < numTypes; ++currType) {
+          std::string atomLabel;
+          atomLabel = simState->getMDMaterial(currType)->getMaterialLabel();
+          size_t numOfType = incomingMap->getAtomListSize(atomLabel);
+          d_numAtoms += numOfType;
+          d_numAtomsOfType.push_back(numOfType);
+        }
+      }
 
       inline size_t registerAtomCount(const size_t count,
                                       const size_t matlIndex) {

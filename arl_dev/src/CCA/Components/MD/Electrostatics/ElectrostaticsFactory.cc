@@ -33,6 +33,7 @@
 #include <Core/Util/DebugStream.h>
 
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <cstring>
 
@@ -47,11 +48,17 @@ Electrostatics* ElectrostaticsFactory::create(const ProblemSpecP& ps,
   Electrostatics* electrostatics = 0;
   string type = "";
 
-  ProblemSpecP electrostatics_ps = ps->findBlock("MD")->findBlock("Electrostatics");
+  ProblemSpecP electrostatics_ps;
+  electrostatics_ps = ps->findBlock("MD")->findBlock("Electrostatics");
   if (electrostatics_ps) {
     electrostatics_ps->getAttribute("type", type);
   }
-
+  else {
+    std::stringstream errorMsg;
+    errorMsg << "Error:  Could not find an Electrostatics sub-block in the "
+             << "MD input section." << std::endl;
+    throw ProblemSetupException(errorMsg.str(), __FILE__, __LINE__);
+  }
   // Find the resolution to determine the cutoff cell information
   Vector resInverse = coords->getCellExtent().asVector() * coords->getInverseCell();
 

@@ -291,8 +291,8 @@ void MD::problemSetup(const ProblemSpecP&   params,
   }
 }
 
-void MD::scheduleInitialize(const LevelP& level,
-                            SchedulerP& sched)
+void MD::scheduleInitialize(const LevelP&   level,
+                            SchedulerP&     sched)
 {
   const std::string flowLocation = "MD::scheduleInitialize | ";
   printSchedule(level, md_cout, flowLocation);
@@ -322,8 +322,8 @@ void MD::scheduleInitialize(const LevelP& level,
   task->computes(d_label->electrostatic->dSubschedulerDependency);
 
   // FIXME -- Original, no longer correct?
-  sched->addTask(task, level->eachPatch(), materials);
-  //sched->addTask(task, perProcPatches, materials);
+  //sched->addTask(task, level->eachPatch(), materials);
+  sched->addTask(task, perProcPatches, materials);
 
   // Nonbonded initialization - OncePerProc, during initial (0th) timestep.
   // The required pXlabel is available to this OncePerProc task in the new_dw from the computes above
@@ -614,13 +614,20 @@ void MD::scheduleElectrostaticsCalculate(SchedulerP& sched,
   if (d_electrostatics->getType() != Electrostatics::NONE) {
     Task* task = scinew Task("electrostaticsCalculate", this, &MD::electrostaticsCalculate, level);
 
-    task->requires(Task::OldDW, d_label->global->pX, Ghost::AroundNodes, d_electrostatics->requiredGhostCells());
-    task->requires(Task::OldDW, d_label->global->pID, Ghost::AroundNodes, d_electrostatics->requiredGhostCells());
+//    task->requires(Task::OldDW,
+//                   d_label->global->pX,
+//                   Ghost::AroundNodes,
+//                   d_electrostatics->requiredGhostCells());
+//    task->requires(Task::OldDW,
+//                   d_label->global->pID,
+//                   Ghost::AroundNodes,
+//                   d_electrostatics->requiredGhostCells());
 
     // Need delT for the subscheduler timestep
     task->requires(Task::OldDW, d_sharedState->get_delt_label());
 
-    MDSubcomponent* d_electroInterface = dynamic_cast<MDSubcomponent*> (d_electrostatics);
+    MDSubcomponent* d_electroInterface =
+                        dynamic_cast<MDSubcomponent*> (d_electrostatics);
 
     d_electroInterface->addCalculateRequirements(task, d_label);
     d_electroInterface->addCalculateComputes(task, d_label);
@@ -767,6 +774,7 @@ void MD::initialize(const ProcessorGroup*   pg,
              << std::endl;
     throw ProblemSetupException(errorOut.str(), __FILE__, __LINE__);
   }
+  d_system->registerAtomTypes(parsedCoordinates, d_sharedState);
 
   for (size_t matlIndex = 0; matlIndex < numAtomTypes; ++matlIndex) {
     std::string materialLabel   =
@@ -970,6 +978,7 @@ void MD::computeStableTimestep(const ProcessorGroup*    pg,
   newDW->put(delt_vartype(1),
               d_sharedState->get_delt_label(),
               getLevel(patches));
+
   if (mdFlowDebug.active()) {
     mdFlowDebug << flowLocation
                 << "END"
@@ -1118,14 +1127,14 @@ void MD::electrostaticsCalculate(const ProcessorGroup*  pg,
   printTask(perProcPatches, md_cout, location);
 
   // Copy del_t to the subscheduler
-  delt_vartype dt;
-  DataWarehouse* subNewDW = d_electrostaticSubscheduler->get_dw(3);
-  parentOldDW->get(dt,
-                   d_sharedState->get_delt_label(),
-                   level.get_rep());
-  subNewDW->put(dt,
-                d_sharedState->get_delt_label(),
-                level.get_rep());
+//  delt_vartype dt;
+//  DataWarehouse* subNewDW = d_electrostaticSubscheduler->get_dw(3);
+//  parentOldDW->get(dt,
+//                   d_sharedState->get_delt_label(),
+//                   level.get_rep());
+//  subNewDW->put(dt,
+//                d_sharedState->get_delt_label(),
+//                level.get_rep());
 
   if (electrostaticDebug.active()) {
     electrostaticDebug << electrostaticLocation
