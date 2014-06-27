@@ -292,7 +292,7 @@ void SPME::setup(       const ProcessorGroup*   pg,
                         const MDLabel*          label,
                         CoordinateSystem*       coordSys) {
 
-  Uintah::Matrix3 inverseUnitCell = coordSys->getInverseCell();
+  //Uintah::Matrix3 inverseUnitCell = coordSys->getInverseCell();
 
   if (coordSys->queryCellChanged()) { // Update SPME phase factors
     /*

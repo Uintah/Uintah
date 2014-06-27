@@ -25,6 +25,7 @@ namespace Uintah {
   typedef std::pair<std::string,std::vector<atomData*>*> lucretiusMapPair;
   typedef std::map<std::string,std::vector<atomData*>*> lucretiusMap;
   typedef lucretiusMap::iterator lucretiusMapIterator;
+  typedef lucretiusMap::const_iterator constLucretiusMapIterator;
 
   class lucretiusAtomMap : public atomMap {
     public:
@@ -41,7 +42,7 @@ namespace Uintah {
       }
 
       inline std::vector<atomData*>* getAtomList(const std::string& searchLabel) {
-        const lucretiusMapIterator labelLocation = findValidAtomList(searchLabel);
+        lucretiusMapIterator labelLocation = findValidAtomList(searchLabel);
         if (labelLocation != atomSet.end()) {
           return (labelLocation->second);
         }
@@ -50,8 +51,9 @@ namespace Uintah {
         }
       }
 
-      inline size_t getAtomListSize(const std::string& searchLabel) {
-        lucretiusMapIterator labelLocation = findValidAtomList(searchLabel);
+      inline size_t getAtomListSize(const std::string& searchLabel) const
+      {
+        constLucretiusMapIterator labelLocation = findValidAtomList(searchLabel);
         if (labelLocation != atomSet.end()) {
           return (labelLocation->second->size());
         }
@@ -67,7 +69,8 @@ namespace Uintah {
       void outputStatistics() const;
 
     private:
-      lucretiusMapIterator findValidAtomList(const std::string&);
+      constLucretiusMapIterator findValidAtomList(const std::string&) const;
+      lucretiusMapIterator      findValidAtomList(const std::string&);
       size_t addAtomToList(const std::string&, atomData*);
 
       lucretiusMap atomSet;

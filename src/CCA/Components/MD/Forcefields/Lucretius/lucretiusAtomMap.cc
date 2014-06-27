@@ -20,7 +20,24 @@
 
 using namespace Uintah;
 
-lucretiusMapIterator lucretiusAtomMap::findValidAtomList(const std::string& searchLabel) {
+constLucretiusMapIterator
+lucretiusAtomMap::findValidAtomList(const std::string& searchLabel) const
+{
+  constLucretiusMapIterator labelLocation = atomSet.find(searchLabel);
+
+  if (labelLocation == atomSet.end()) { // Error:  Label not found
+    std::stringstream errorOut;
+    errorOut << "ERROR:  Attempt to access an atom type that does not exist." << std::endl
+             << "  Forcefield Model --> Lucretius " << std::endl
+             << "     Missing Label ---> \"" << searchLabel << "\"" << std::endl;
+    throw InvalidValue(errorOut.str(), __FILE__, __LINE__);
+    return (atomSet.end());
+  }
+  else return (labelLocation);
+}
+lucretiusMapIterator
+lucretiusAtomMap::findValidAtomList(const std::string& searchLabel)
+{
   lucretiusMapIterator labelLocation = atomSet.find(searchLabel);
 
   if (labelLocation == atomSet.end()) { // Error:  Label not found
