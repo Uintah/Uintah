@@ -509,7 +509,11 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   }
 
   // control loop for all tasks of task graph*/
-//  runTasks(0);
+  // as execution is restricted to only one thread for the first timestep (r51836)
+  //   allow master thread to execute tasks during initTimestep.
+  if (d_isInitTimestep) {
+    runTasks(0);
+  }
 
   // end while( numTasksDone < ntasks )
   TAU_PROFILE_STOP(doittimer);
