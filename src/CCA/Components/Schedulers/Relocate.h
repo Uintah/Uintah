@@ -77,19 +77,39 @@ WARNING
     //////////
     // Insert Documentation Here:
     void scheduleParticleRelocation(Scheduler*,
-			const ProcessorGroup* pg,
-			LoadBalancer* lb,
-			const LevelP& level,
-			const VarLabel* old_posLabel,
-                        const std::vector<std::vector<const VarLabel*> >& old_labels,
-			const VarLabel* new_posLabel,
-			const std::vector<std::vector<const VarLabel*> >& new_labels,
-			const VarLabel* particleIDLabel,
-			const MaterialSet* matls);
+                                    const ProcessorGroup* pg,
+                                    LoadBalancer* lb,
+                                    const LevelP& level,
+                                    const VarLabel* old_posLabel,
+                                    const std::vector<std::vector<const VarLabel*> >& old_labels,
+                                    const VarLabel* new_posLabel,
+                                    const std::vector<std::vector<const VarLabel*> >& new_labels,
+                                    const VarLabel* particleIDLabel,
+                                    const MaterialSet* matls);
+    //////////
+    // Schedule particle relocation without the need to provide pre-relocation labels. Warning: This
+    // is experimental and has not been fully tested yet. Use with caution (tsaad).
+    void scheduleParticleRelocation(Scheduler*,
+                                    const ProcessorGroup* pg,
+                                    LoadBalancer* lb,
+                                    const LevelP& level,
+                                    const VarLabel* posLabel,
+                                    const std::vector<std::vector<const VarLabel*> >& otherLabels,
+                                    const MaterialSet* matls);
 
     const MaterialSet* getMaterialSet() const { return reloc_matls;}
 
   private:
+
+    //////////
+    // Callback function for particle relocation that doesn't use pre-Relocation variables.
+    void relocateParticlesModifies(const ProcessorGroup*,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw,
+                                   const Level* coarsestLevelwithParticles);
+
     void relocateParticles(const ProcessorGroup*,
                            const PatchSubset* patches,
                            const MaterialSubset* matls,

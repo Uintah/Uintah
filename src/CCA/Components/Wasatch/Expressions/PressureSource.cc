@@ -30,12 +30,12 @@ PressureSource::PressureSource( const Expr::TagList& momTags,
   xVelStart_  ( densStarTag==Expr::Tag() ? Expr::Tag() : velStarTags[0] ),
   yVelStart_  ( densStarTag==Expr::Tag() ? Expr::Tag() : velStarTags[1] ),
   zVelStart_  ( densStarTag==Expr::Tag() ? Expr::Tag() : velStarTags[2] ),
-  divmomstart_( divmomstarTag ),
   denst_      ( densTag  ),
   densStart_  ( densStarTag==Expr::Tag() ? Expr::Tag() : densStarTag    ),
   dens2Start_ ( densStarTag==Expr::Tag() ? Expr::Tag() : dens2StarTag   ),
   dilt_       ( Wasatch::TagNames::self().dilatation ),
   timestept_  ( Wasatch::TagNames::self().dt ),
+  divmomstart_( divmomstarTag ),
   a0_( varDenParams.alpha0),
   model_(varDenParams.model)
 {

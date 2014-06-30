@@ -109,7 +109,6 @@ namespace Wasatch{
                              const std::set<std::string>& ioFieldSet )
   {
     // for now we will assume that we are computing things on ALL materials
-    const Uintah::MaterialSubset* const mss = materials->getUnion();
     std::stringstream strRKStage;
     strRKStage << rkStage;
 
@@ -152,7 +151,6 @@ namespace Wasatch{
     //_________________________________________________________________
     // Schedule the task to compute the RHS for the transport equations
     //
-    bool rhsDeviceTask;
     try{
       // jcs for multistage integrators, we may need to keep the same
       //     field manager list for all of the stages?  Otherwise we
@@ -175,9 +173,6 @@ namespace Wasatch{
 
       taskInterfaceList_.push_back( rhsTask );
       rhsTask->schedule( rkStage ); // must be scheduled after coordHelper_
-#     ifdef HAVE_CUDA
-        //if( rhsTask->get_task_event() == Uintah::Task::GPU ) rhsDeviceTask = true;
-#     endif
     }
     catch( std::exception& e ){
       std::ostringstream msg;
@@ -229,7 +224,6 @@ namespace Wasatch{
                              const Expr::ExpressionID& rhsID )
   {
     const std::string rhsName = solnGraphHelper_->exprFactory->get_labels(rhsID)[0].name();
-    const Uintah::TypeDescription* typeDesc = get_uintah_field_type_descriptor<FieldT>();
 
     const Expr::Tag solnVarTag(solnVarName,Expr::STATE_NONE);
     const Expr::Tag rhsVarTag (rhsName,    Expr::STATE_NONE);
