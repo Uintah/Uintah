@@ -162,4 +162,5 @@ template class TimeAdvance< SpatialOps::structured::SVolField >;
 template class TimeAdvance< SpatialOps::structured::XVolField >;
 template class TimeAdvance< SpatialOps::structured::YVolField >;
 template class TimeAdvance< SpatialOps::structured::ZVolField >;
+template class TimeAdvance< SpatialOps::Particle::ParticleField >;
 //==========================================================================

@@ -70,7 +70,7 @@ namespace Wasatch{
     XVOL, XSURFX, XSURFY, XSURFZ,
     YVOL, YSURFX, YSURFY, YSURFZ,
     ZVOL, ZSURFX, ZSURFY, ZSURFZ,
-    PERPATCH
+    PERPATCH, PARTICLE
   };
 
   /**
@@ -372,7 +372,12 @@ namespace Wasatch{
       fieldValues = const_cast<ParticleField::value_type*>( (ValT*)uintahVar.getBasePointer() );
     }
 
-    const int npar = ainfo.oldDW->getParticleSubset( ainfo.materialIndex, ainfo.patch )->numParticles();
+    int npar=1;
+    if (ainfo.oldDW) {
+      npar = ainfo.oldDW->getParticleSubset( ainfo.materialIndex, ainfo.patch )->numParticles();
+    } else {
+      npar = ainfo.newDW->getParticleSubset( ainfo.materialIndex, ainfo.patch )->numParticles();
+    }
     // jcs need to get GPU support ready...
     return new ParticleField( SS::MemoryWindow( SS::IntVec(npar,1,1) ),
                               SS::BoundaryCellInfo::build<ParticleField>(),

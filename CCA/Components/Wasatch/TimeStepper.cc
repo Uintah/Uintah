@@ -120,7 +120,7 @@ namespace Wasatch{
     for(   XVolFields::const_iterator i=  xVolFields_.begin(); i!=  xVolFields_.end(); ++i )  persistentFields.insert( i->rhsTag.name() );
     for(   YVolFields::const_iterator i=  yVolFields_.begin(); i!=  yVolFields_.end(); ++i )  persistentFields.insert( i->rhsTag.name() );
     for(   ZVolFields::const_iterator i=  zVolFields_.begin(); i!=  zVolFields_.end(); ++i )  persistentFields.insert( i->rhsTag.name() );
-
+    for(   ParticleFields::const_iterator i=  particleFields_.begin(); i!=  particleFields_.end(); ++i )  persistentFields.insert( i->rhsTag.name() );
 
     //________________________________________________________
     // add a task to populate a "field" with the current time.
@@ -158,10 +158,11 @@ namespace Wasatch{
 
       // plug in time advance expression
       if (rkStage == 1) {
-        create_time_advance_expressions<SO::SVolField>(scalarFields_, solnGraphHelper_, timeInt_);
-        create_time_advance_expressions<SO::XVolField>(xVolFields_  , solnGraphHelper_, timeInt_);
-        create_time_advance_expressions<SO::YVolField>(yVolFields_  , solnGraphHelper_, timeInt_);
-        create_time_advance_expressions<SO::ZVolField>(zVolFields_  , solnGraphHelper_, timeInt_);
+        create_time_advance_expressions<SO::SVolField>(scalarFields_    , solnGraphHelper_, timeInt_);
+        create_time_advance_expressions<SO::XVolField>(xVolFields_      , solnGraphHelper_, timeInt_);
+        create_time_advance_expressions<SO::YVolField>(yVolFields_      , solnGraphHelper_, timeInt_);
+        create_time_advance_expressions<SO::ZVolField>(zVolFields_      , solnGraphHelper_, timeInt_);
+        create_time_advance_expressions<ParticleField>(particleFields_  , solnGraphHelper_, timeInt_);
       }
       
       TaskInterface* rhsTask = scinew TaskInterface( solnGraphHelper_->rootIDs,
@@ -265,6 +266,12 @@ namespace Wasatch{
   {
     return zVolFields_;
   }
+  template<>
+  inline std::set<TimeStepper::FieldInfo<SpatialOps::Particle::ParticleField> >&
+  TimeStepper::field_info_selctor<SpatialOps::Particle::ParticleField>()
+  {
+    return particleFields_;
+  }
 
   //------------------------------------------------------------------
 
@@ -272,5 +279,5 @@ namespace Wasatch{
   template void TimeStepper::add_equation<SpatialOps::structured::XVolField>( const std::string&, const Expr::ExpressionID& );
   template void TimeStepper::add_equation<SpatialOps::structured::YVolField>( const std::string&, const Expr::ExpressionID& );
   template void TimeStepper::add_equation<SpatialOps::structured::ZVolField>( const std::string&, const Expr::ExpressionID& );
-
+  template void TimeStepper::add_equation<SpatialOps::Particle::ParticleField>( const std::string&, const Expr::ExpressionID& );
 } // namespace Wasatch

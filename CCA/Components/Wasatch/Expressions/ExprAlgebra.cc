@@ -135,3 +135,4 @@ template class ExprAlgebra<SVolField>;
 template class ExprAlgebra<XVolField>;
 template class ExprAlgebra<YVolField>;
 template class ExprAlgebra<ZVolField>;
+template class ExprAlgebra<ParticleField>;

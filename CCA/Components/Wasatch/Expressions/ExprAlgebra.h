@@ -29,7 +29,6 @@
 #include <spatialops/structured/FVStaggeredOperatorTypes.h>
 #include <spatialops/OperatorDatabase.h>
 
-
 #include <stdexcept>
 
 /**

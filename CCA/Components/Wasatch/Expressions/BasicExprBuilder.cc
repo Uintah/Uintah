@@ -65,6 +65,9 @@
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/VelocityMagnitude.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/InterpolateExpression.h>
 
+#include <CCA/Components/Wasatch/Expressions/Particles/ParticleInitialization.h>
+
+
 // BC Expressions Includes
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/TurbulentInletBC.h>
@@ -84,6 +87,70 @@ using std::endl;
 
 namespace Wasatch{
   
+  //------------------------------------------------------------------
+  // Special parser for particle expressions
+  
+  template<typename FieldT>
+  Expr::ExpressionBuilder*
+  build_basic_particle_expr( Uintah::ProblemSpecP params )
+  {
+    const Expr::Tag tag = parse_nametag( params->findBlock("NameTag") );
+    
+    const TagNames& tagNames = TagNames::self();
+    
+    Expr::ExpressionBuilder* builder = NULL;
+
+    if( params->findBlock("Constant") ){
+      double val;  params->get("Constant",val);
+      typedef typename Expr::ConstantExpr<FieldT>::Builder Builder;
+      builder = scinew Builder( tag, val );
+    }  else if ( params->findBlock("RandomField") ) {
+      Uintah::ProblemSpecP valParams = params->findBlock("RandomField");
+      double low, high, seed;
+      valParams->getAttribute("low",low);
+      valParams->getAttribute("high",high);
+      valParams->getAttribute("seed",seed);
+      
+      Expr::Tag exprLoHiTag;
+      typedef typename RandomField<ParticleField>::Builder Builder;
+      if (valParams->findBlock("ExprLoHi"))
+      {
+        exprLoHiTag = parse_nametag(valParams->findBlock("ExprLoHi"));
+        std::string coordFieldType;
+        valParams->findBlock("ExprLoHi")->getAttribute("type",coordFieldType);
+        switch( get_field_type(coordFieldType) ){
+          case SVOL : {
+            builder = scinew ParticleRandomIC<SVolField>::Builder( tag, low, high, exprLoHiTag, seed );
+            break;
+          }
+          case XVOL : {
+            builder = scinew ParticleRandomIC<XVolField>::Builder( tag, low, high, exprLoHiTag, seed );
+            break;
+          }
+          case YVOL : {
+            builder = scinew ParticleRandomIC<YVolField>::Builder( tag, low, high, exprLoHiTag, seed );
+            break;
+          }
+          case ZVOL : {
+            builder = scinew ParticleRandomIC<ZVolField>::Builder( tag, low, high, exprLoHiTag, seed );
+            break;
+          }
+          default:
+            std::ostringstream msg;
+            msg << "ERROR: unsupported exprLoHi field type '" << coordFieldType << "'" << "while parsing an RandomField expression for particle initialization." << std::endl;
+            throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }
+      } else { // if NO exprHiLo was provided
+        builder = scinew ParticleRandomIC<SVolField>::Builder( tag, low, high, exprLoHiTag, seed );
+      }    
+    } else {
+      std::ostringstream msg;
+      msg << "ERROR: unsupported BasicExpression for Particles. Note that not all BasicExpressions are supported by particles. Please revise your input file." << std::endl;
+      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+    }
+    return builder;
+  }
+
   //------------------------------------------------------------------
   
   template<typename FieldT>
@@ -1102,6 +1169,7 @@ namespace Wasatch{
         case XVOL : builder = build_basic_expr< XVolField >( exprParams );  break;
         case YVOL : builder = build_basic_expr< YVolField >( exprParams );  break;
         case ZVOL : builder = build_basic_expr< ZVolField >( exprParams );  break;
+        case PARTICLE : builder = build_basic_particle_expr< ParticleField >( exprParams );  break;
         default:
           std::ostringstream msg;
           msg << "ERROR: unsupported field type '" << fieldType << "'" << std::endl;

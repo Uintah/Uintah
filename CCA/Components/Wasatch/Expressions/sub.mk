@@ -87,7 +87,7 @@ SRCS += \
         $(SRCDIR)/ReductionBase.cc        \
         $(SRCDIR)/Coordinate.cc           \
         $(SRCDIR)/RadiationSource.cc      \
-   $(SRCDIR)/CellType.cc      \
+        $(SRCDIR)/CellType.cc      \
         $(SRCDIR)/TabPropsHeatLossEvaluator.cc
 
 #
@@ -100,6 +100,7 @@ SUBDIRS := \
         $(SRCDIR)/PBE              \
         $(SRCDIR)/PostProcessing   \
         $(SRCDIR)/BoundaryConditions   \
+        $(SRCDIR)/Particles       \
         $(SRCDIR)/Turbulence
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

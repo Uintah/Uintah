@@ -55,6 +55,7 @@
 #include <CCA/Components/Wasatch/Expressions/RadiationSource.h>
 #include <CCA/Components/Wasatch/ReductionHelper.h>
 #include <CCA/Components/Wasatch/CoordinateHelper.h>
+#include <CCA/Components/Wasatch/ParticlesHelper.h>
 #include <CCA/Components/Wasatch/OldVariable.h>
 
 #include <stdexcept>
@@ -331,6 +332,17 @@ namespace Wasatch{
         Expr::UintahFieldAllocInfo& fieldInfo = *(ii->second);
         const Expr::Tag& fieldTag = ii->first;
 
+        // look for particle variables that are managed by uintah
+        if (tree.name()!="initialization") {
+          if (fieldInfo.varlabel->typeDescription()->getType() == Uintah::TypeDescription::ParticleVariable) {
+            if (tree.is_persistent(fieldTag)) {
+              // if a particle variable is managed by uintah, then pass it on to the particles helper
+              // for use in relocation
+              ParticlesHelper::self().add_particle_variable(fieldTag);
+            }
+          }
+        }
+        
         dbg_fields << "examining field: " << fieldTag << " for stage " << rkStage << std::endl;
 
         // see if this field is required by the given tree
@@ -412,10 +424,10 @@ namespace Wasatch{
         case Expr::COMPUTES:
           dbg_fields << std::setw(10) << "COMPUTES";
           ASSERT( dw == Uintah::Task::NewDW );
-          task.computesWithScratchGhost( fieldInfo.varlabel,
-                                         materials, Uintah::Task::NormalDomain,
-                                         fieldInfo.ghostType, fieldInfo.nghost );
-
+              task.computesWithScratchGhost( fieldInfo.varlabel,
+                                            materials, Uintah::Task::NormalDomain,
+                                            fieldInfo.ghostType, fieldInfo.nghost );
+              
           break;
 
         case Expr::REQUIRES:

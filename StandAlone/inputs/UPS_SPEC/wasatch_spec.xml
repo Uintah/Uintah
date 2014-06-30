@@ -58,13 +58,13 @@
 
     <!-- Spec for basic expression types -->
     <BasicExpression      spec="MULTIPLE NO_DATA"
-                            attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL'"
-                            children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,
-                                       SineFunction,GaussianFunction,DoubleTanhFunction,
-                                       StepFunction,SineTime,ExprAlgebra,
-                                       WallDistanceFunction,ReadFromFile,RandomField,
-                                       ExponentialVortex,LambsDipole,TimeDerivative,
-                                       RayleighTaylor, BurnsChristonAbskg, GeometryBased)" >
+                          attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL,PARTICLE'"
+													children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,
+																		 SineFunction,GaussianFunction,DoubleTanhFunction,
+																		 StepFunction,SineTime,ExprAlgebra,
+																		 WallDistanceFunction,ReadFromFile,RandomField,
+																		 ExponentialVortex,LambsDipole,TimeDerivative,
+																		 RayleighTaylor, BurnsChristonAbskg, GeometryBased)" >
                                        
       <TaskList           spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag            spec="REQUIRED" />
@@ -170,6 +170,11 @@
                        attribute1="low  REQUIRED DOUBLE"
                        attribute2="high REQUIRED DOUBLE"
                        attribute3="seed REQUIRED DOUBLE">
+        <!-- Often times, the low and hi need to be determined from another expression. To achieve this, use the xml spec below. -->                       
+      	<ExprLoHi spec="OPTIONAL NO_DATA"
+      	          attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL'"
+                  attribute2="name REQUIRED STRING"
+                  attribute3="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/> 
       </RandomField>
       
       <!-- Creates an exponential vortex for testing outflow boundary conditions!-->
@@ -809,6 +814,103 @@
       <Scalar           spec="REQUIRED STRING"/> <!-- input -->      
       <ConservedScalar  spec="REQUIRED STRING"/> <!-- The conserved scalar is created by the transport equation. just Specify the name here -->
     </VarDenOscillatingMMS>
+
+		<ParticleTransportEquations spec="OPTIONAL NO_DATA">
+
+			<NumberOfInitialParticles spec="OPTIONAL DOUBLE"/>
+
+			<ParticleDensity 	spec="OPTIONAL NO_DATA"
+												attribute1="name REQUIRED STRING"
+												attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
+
+			<ParticleSize spec="OPTIONAL NO_DATA"
+										attribute1="name REQUIRED STRING"
+										attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'">
+				<SourceTerm spec="OPTIONAL NO_DATA"
+							attribute1="name REQUIRED STRING"
+							attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>										
+			</ParticleSize>
+
+			<ParticleMass spec="OPTIONAL NO_DATA"
+										attribute1="name REQUIRED STRING"
+										attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'">
+				<SourceTerm spec="OPTIONAL NO_DATA"
+							attribute1="name REQUIRED STRING"
+							attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>										
+			</ParticleMass>										
+
+			<!-- this solves dx/dt = u -->			
+			<ParticlePosition spec="REQUIRED NO_DATA"
+												attribute1="x REQUIRED STRING"
+												attribute2="y REQUIRED STRING"
+												attribute3="z REQUIRED STRING">	
+				<Velocity	spec = "REQUIRED NO_DATA">
+						<XVel spec="OPTIONAL NO_DATA"
+                  attribute1="name REQUIRED STRING"
+                  attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
+						<YVel spec="OPTIONAL NO_DATA"
+                  attribute1="name REQUIRED STRING"
+                  attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
+						<ZVel spec="OPTIONAL NO_DATA"
+                  attribute1="name REQUIRED STRING"
+                  attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>                  
+				</Velocity>
+			</ParticlePosition>
+
+			<ParticleMomentum spec="REQUIRED NO_DATA"
+												attribute1="x REQUIRED STRING"
+												attribute2="y REQUIRED STRING"
+												attribute3="z REQUIRED STRING">
+				<DisableDragForce spec="OPTIONAL NO_DATA"/>
+				<!-- Specify a body force. This has units of m / s^2 and will be multiplied by the density -->
+				<Gravity              spec="MULTIPLE NO_DATA"
+															attribute1="direction REQUIRED STRING 'X,Y,Z'"/>																								      
+
+				<GasProperties spec="REQUIRED NO_DATA">
+					<GasDensity   spec="OPTIONAL NO_DATA"
+    										attribute1="name REQUIRED STRING"
+		    								attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>									
+					<GasViscosity spec="OPTIONAL NO_DATA"
+    										attribute1="name REQUIRED STRING"
+		    								attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
+					<GasVelocity	spec = "REQUIRED NO_DATA">
+							<XVel spec="OPTIONAL NO_DATA"
+										attribute1="name REQUIRED STRING"
+										attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
+							<YVel spec="OPTIONAL NO_DATA"
+										attribute1="name REQUIRED STRING"
+										attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
+							<ZVel spec="OPTIONAL NO_DATA"
+										attribute1="name REQUIRED STRING"
+										attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>                  
+					</GasVelocity>												
+				</GasProperties>				
+			</ParticleMomentum>
+
+<!-- 
+			<ParticleMomentum spec="REQUIRED NO_DATA"
+												attribute1="x REQUIRED STRING"
+												attribute2="y REQUIRED STRING"
+												attribute3="z REQUIRED STRING">
+				<DragModel	spec="REQUIRED NO_DATA"
+										attribute1="model REQUIRED STRING"/>
+			</ParticleMomentum>
+
+			<ParticleSize spec="REQUIRED NO_DATA">
+				<NameTag spec="REQUIRED"/>
+			</ParticleSize>
+			
+			<ParticleMass spce="REQUIRED NO_DATA">
+				<NameTag spec="REQUIRED"/>
+			</ParticleMass>
+			
+			<GasVelocity spec="REQUIRED NO_DATA"												
+												attribute1="x REQUIRED STRING"
+												attribute2="y REQUIRED STRING"
+												attribute3="z REQUIRED STRING"/>
+ -->
+												
+		</ParticleTransportEquations>
 
     <MomentumEquations        spec="OPTIONAL NO_DATA">
       <DisableTurbulenceModel spec="OPTIONAL NO_DATA" />    
