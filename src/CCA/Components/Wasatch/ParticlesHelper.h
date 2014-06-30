@@ -93,7 +93,7 @@ namespace Wasatch {
     const Uintah::VarLabel *pXLabel_,*pYLabel_,*pZLabel_;
     std::vector<const Uintah::VarLabel*> destroyMe_;
     
-    static std::vector<const Expr::Tag> otherParticleTags_;
+    static std::vector<Expr::Tag> otherParticleTags_;
     
     void initialize_particles(const Uintah::ProcessorGroup*,
                          const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,

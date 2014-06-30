@@ -51,7 +51,7 @@
 
 namespace SS = SpatialOps::structured;
 
-std::vector<const Expr::Tag> Wasatch::ParticlesHelper::otherParticleTags_;
+std::vector<Expr::Tag> Wasatch::ParticlesHelper::otherParticleTags_;
 
 namespace Wasatch {
   
@@ -175,7 +175,7 @@ namespace Wasatch {
     // first go through the list of particle expressions and check whether Uintah manages those
     // or note. We need this for particle relocation.
     vector<const VarLabel*> otherParticleVarLabels;
-    vector<const Expr::Tag>::iterator tagIter = otherParticleTags_.begin();
+    vector<Expr::Tag>::iterator tagIter = otherParticleTags_.begin();
     while (tagIter != otherParticleTags_.end())
     {
       if (VarLabel::find( (*tagIter).name() ) ) {
@@ -208,7 +208,7 @@ namespace Wasatch {
   //------------------------------------------------------------------
   
   void
-  ParticlesHelper::add_particle_variable( const Expr::Tag& varTag )
+  ParticlesHelper::add_particle_variable(const Expr::Tag& varTag )
   {
     otherParticleTags_.push_back(varTag);
   }
