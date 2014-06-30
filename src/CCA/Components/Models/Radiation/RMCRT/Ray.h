@@ -45,6 +45,7 @@
 #include <cmath>
 #include <string>
 #include <vector>
+#include <CCA/Components/Models/Radiation/RMCRT/RMCRTCommon.h>
 
 //==========================================================================
 
@@ -61,7 +62,7 @@ class MTRand; //forward declaration for use in updateSumI
 
 namespace Uintah{
 
-  class Ray  {
+  class Ray : public RMCRTCommon  {
 
     public: 
 
@@ -91,13 +92,6 @@ namespace Uintah{
                                      Task::WhichDW sigma_dw,
                                      bool modifies_divQ,
                                      const int radCalc_freq );
-
-      /** @brief Schedule compute of blackbody intensity */ 
-      void sched_sigmaT4( const LevelP& level, 
-                          SchedulerP& sched,
-                          Task::WhichDW temp_dw,
-                          const int radCalc_freq,
-                          const bool includeEC = true );
 
 
       /** @brief Schedule filtering of q and divQ */
@@ -130,40 +124,15 @@ namespace Uintah{
 
       void sched_ROI_Extents ( const LevelP& level, 
                                SchedulerP& scheduler );
- 
 
-      //__________________________________
-      //  Carry Forward tasks     
-      // transfer a variable from old_dw -> new_dw for convience */   
-      void sched_CarryForward_Var ( const LevelP& level,
-                                    SchedulerP& scheduler,
-                                    const VarLabel* variable );
-
-                               
-      //__________________________________
-      //  Helpers
-      /** @brief map the component VarLabels to RMCRT VarLabels */
-     void registerVarLabels(int   matl,
-                            const VarLabel*  abskg,
-                            const VarLabel* absorp,
-                            const VarLabel* temperature,
-                            const VarLabel* celltype, 
-                            const VarLabel* divQ);
-                            
-    template< class T >                        
+    template< class T > 
     void setBC(CCVariable<T>& Q_CC,
                const std::string& desc,
                const Patch* patch,          
                const int mat_id);
-
-    private: 
-      enum DIR {X=0, Y=1, Z=2, NONE=-9};
-      //           -x      +x       -y       +y     -z     +z
-      enum FACE {EAST=0, WEST=1, NORTH=2, SOUTH=3, TOP=4, BOT=5, nFACES=6};
-      
-      double d_threshold;
-      double d_sigma;
-      double d_sigmaScat;
+               
+    //______________________________________________________________________
+    private:       
       double d_sigmaT4_thld;                 // threshold values for determining the extents of ROI
       double d_abskg_thld;
       
@@ -171,19 +140,14 @@ namespace Uintah{
       int    d_nDivQRays;                    // number of rays per cell used to compute divQ
       int    d_nRadRays;                     // number of rays per radiometer used to compute radiative flux
       int    d_nFluxRays;                    // number of rays per cell used to compute radiative flux
-      int    d_matl;
       int    d_orderOfInterpolation;        // Order of interpolation for interior fine patch
       
-      MaterialSet* d_matlSet;
       IntVector d_halo;                      // number of cells surrounding a coarse patch on coarser levels
       
-      double d_sigma_over_pi;                // Stefan Boltzmann divided by pi (W* m-2* K-4)
-      bool d_isSeedRandom;
       bool d_solveBoundaryFlux;
       bool d_solveDivQ;          
-      bool d_allowReflect;                // specify as false when doing DOM comparisons
       bool d_CCRays;
-      bool d_onOff_SetBCs;                // switch for setting boundary conditions                    
+      bool d_onOff_SetBCs;                // switch for setting boundary conditions
       bool d_isDbgOn;
       bool d_applyFilter;                 // Allow for filtering of boundFlux and divQ results
       
@@ -214,16 +178,6 @@ namespace Uintah{
       std::map <int,IntVector> d_locationIndexOrder;
       std::map <int,IntVector> d_locationShift;
 
-      Ghost::GhostType d_gn;
-      Ghost::GhostType d_gac;
-
-      SimulationStateP d_sharedState;
-      const VarLabel* d_sigmaT4_label; 
-      const VarLabel* d_abskgLabel;
-      const VarLabel* d_absorpLabel;
-      const VarLabel* d_temperatureLabel;
-      const VarLabel* d_cellTypeLabel;
-      const VarLabel* d_divQLabel;
       const VarLabel* d_VRFluxLabel;
       const VarLabel* d_divQFiltLabel;
       const VarLabel* d_boundFluxLabel;
@@ -235,7 +189,7 @@ namespace Uintah{
       const VarLabel* d_ROI_LoCellLabel;
       const VarLabel* d_ROI_HiCellLabel;
 
-      //----------------------------------------
+      //__________________________________
       void rayTrace( const ProcessorGroup* pc, 
                      const PatchSubset* patches, 
                      const MaterialSubset* matls, 
@@ -247,7 +201,7 @@ namespace Uintah{
                      Task::WhichDW which_celltype_dw,
                      const int radCalc_freq );
 
-      //______________________________________________________________________
+      //__________________________________
       void rayTraceGPU( Task::CallBackEvent event,
                         const ProcessorGroup* pg,
                         const PatchSubset* patches,
@@ -271,22 +225,7 @@ namespace Uintah{
                                Task::WhichDW which_abskg_dw,
                                Task::WhichDW whichd_sigmaT4_dw,
                                const int radCalc_freq );
-                               
-                               
       //__________________________________
-      // @brief Update the running total of the incident intensity */
-      void  updateSumI ( Vector& ray_direction, // can change if scattering occurs
-                         Vector& ray_location,
-                         const IntVector& origin,
-                         const Vector& Dx,
-                         constCCVariable<double>& sigmaT4Pi,
-                         constCCVariable<double>& abskg,
-                         constCCVariable<int>& celltype,
-                         unsigned long int& size,
-                         double& sumI,
-                         MTRand& mTwister);
-                         
-      
       void  updateSumI_ML ( Vector& ray_direction, 
                             Vector& ray_location,
                             const IntVector& origin,
@@ -316,17 +255,7 @@ namespace Uintah{
                         std::vector<IntVector>& regionLo,
                         std::vector<IntVector>& regionHi);
 
-      //----------------------------------------
-      void sigmaT4( const ProcessorGroup* pc,
-                    const PatchSubset* patches,
-                    const MaterialSubset* matls,
-                    DataWarehouse* old_dw,
-                    DataWarehouse* new_dw,
-                    Task::WhichDW which_temp_dw,
-                    const int radCalc_freq,
-                    const bool includeEC );
-
-      //----------------------------------------
+      //__________________________________
       void filter( const ProcessorGroup* pc,
                     const PatchSubset* patches,
                     const MaterialSubset* matls,
@@ -341,37 +270,8 @@ namespace Uintah{
                                const IntVector &high, 
                                const IntVector &cell,
                                const int &dir);
-
-      
-
-      //__________________________________
-      //
-      void reflect(double& fs,
-                   IntVector& cur,
-                   IntVector& prevCell,
-                   const double abskg,
-                   bool& in_domain,
-                   int& step,
-                   bool& sign,
-                   double& ray_direction);
-
-      //__________________________________
-      //
-      void findStepSize(int step[],
-                        bool sign[],
-                        const Vector& inv_direction_vector);
-      
-      //__________________________________
-      //
-      void rayLocation( MTRand& mTwister,
-                       const IntVector origin,
-                       const double DyDx, 
-                       const double DzDx,
-                       const bool useCCRays,
-                       Vector& location);
-
-      
-                       
+   
+      //__________________________________               
       /** @brief Adjust the location of a ray origin depending on the cell face */
       void rayLocation_cellFace( MTRand& mTwister,
                                  const IntVector& origin,
@@ -380,12 +280,7 @@ namespace Uintah{
                                  const double &DyDx, 
                                  const double &DzDx,
                                  Vector& location );
-      //__________________________________
-      //
-      Vector findRayDirection( MTRand& mTwister,
-                               const bool isSeedRandom,
-                               const IntVector& = IntVector(-9,-9,-9),
-                               const int iRay = -9);
+
       //__________________________________
       //  
       void rayDirection_VR( MTRand& mTwister,
@@ -396,7 +291,7 @@ namespace Uintah{
                             const double DzDx,
                             Vector& directionVector,
                             double& cosVRTheta );
-
+      //__________________________________
       /** @brief Adjust the direction of a ray depending on the cell face */
       void rayDirection_cellFace( MTRand& mTwister,
                                   const IntVector& origin,
@@ -458,18 +353,7 @@ namespace Uintah{
                        const MaterialSubset* matls,
                        DataWarehouse*,
                        DataWarehouse* new_dw);
-    //______________________________________________________________________
-    //    Carry Foward tasks       
-    bool doCarryForward( const int timestep,
-                         const int radCalc_freq);
-                        
-    void carryForward_Var ( const ProcessorGroup*,
-                            const PatchSubset* ,
-                            const MaterialSubset*,
-                            DataWarehouse*,
-                            DataWarehouse*,
-                            const VarLabel* variable);
-                        
+
     //______________________________________________________________________
     //  Helpers
     bool less_Eq(    const IntVector& a, const IntVector& b ){
