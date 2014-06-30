@@ -151,10 +151,10 @@ namespace Uintah{
                             const VarLabel* divQ);
                             
     template< class T >                        
-    void setBC(CCVariable<T>& Q_CC,
-               const std::string& desc,
-               const Patch* patch,          
-               const int mat_id);
+    void setBC( CCVariable<T>& Q_CC,
+                const std::string& desc,
+                const Patch* patch,          
+                const int mat_id );
 
     private: 
       enum DIR {X=0, Y=1, Z=2, NONE=-9};
@@ -279,8 +279,8 @@ namespace Uintah{
                          Vector& ray_location,
                          const IntVector& origin,
                          const Vector& Dx,
-                         constCCVariable<double>& sigmaT4Pi,
-                         constCCVariable<double>& abskg,
+                         constCCVariable<float>& sigmaT4Pi,
+                         constCCVariable<float>& abskg,
                          constCCVariable<int>& celltype,
                          unsigned long int& size,
                          double& sumI,
@@ -300,10 +300,10 @@ namespace Uintah{
                             const IntVector& fineLevel_ROI_Hi,
                             std::vector<IntVector>& regionLo,
                             std::vector<IntVector>& regionHi,
-                            StaticArray< constCCVariable<double> >& sigmaT4Pi,
-                            StaticArray< constCCVariable<double> >& abskg,
+                            StaticArray< constCCVariable<float> >& sigmaT4Pi,
+                            StaticArray< constCCVariable<float> >& abskg,
                             unsigned long int& size,
-                            double& sumI,
+                            float& sumI,
                             MTRand& mTwister);
      //__________________________________ 
      void computeExtents(LevelP level_0,
@@ -349,7 +349,7 @@ namespace Uintah{
       void reflect(double& fs,
                    IntVector& cur,
                    IntVector& prevCell,
-                   const double abskg,
+                   const float abskg,
                    bool& in_domain,
                    int& step,
                    bool& sign,

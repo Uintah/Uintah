@@ -79,6 +79,7 @@
 
 #include <CCA/Components/Wasatch/Transport/ParseEquation.h>
 #include <CCA/Components/Wasatch/Transport/TransportEquation.h>
+#include <CCA/Components/Wasatch/Transport/EquationBase.h>
 
 #include "BCHelperTools.h"
 #include "ParseTools.h"
@@ -566,7 +567,7 @@ namespace Wasatch{
     // THIS MUST BE PARSED BEFORE THE MOMENTUM EQUATIONS
     //
     Uintah::ProblemSpecP VarDenCorrugatedMMSSpec = wasatchSpec_->findBlock("VarDenCorrugatedMMS");
-    if (VarDenCorrugatedMMSSpec) {
+    if( VarDenCorrugatedMMSSpec ){
       const bool computeContinuityResidual = wasatchSpec_->findBlock("MomentumEquations")->findBlock("ComputeMassResidual");
       parse_var_den_corrugated_mms(wasatchSpec_, VarDenCorrugatedMMSSpec, computeContinuityResidual, graphCategories_);
     }
@@ -578,19 +579,17 @@ namespace Wasatch{
     for( Uintah::ProblemSpecP momEqnParams=wasatchSpec_->findBlock("MomentumEquations");
         momEqnParams != 0;
         momEqnParams=momEqnParams->findNextBlock("MomentumEquations") ){
-      bool hasMovingBoundaries = false;
-      if (hasEmbeddedGeometry) hasMovingBoundaries = wasatchSpec_->findBlock("EmbeddedGeometry")->findBlock("MovingGeometry") ;
-      // note - parse_momentum_equations returns a vector of equation adaptors
       try{
-          const EquationAdaptors adaptors = parse_momentum_equations( momEqnParams,
-                                                                      turbParams,
-                                                                      varDenParams,
-                                                                      useAdaptiveDt,
-                                                                      isConstDensity,
-                                                                      densityTag,
-                                                                      graphCategories_,
-                                                                      *linSolver_,
-                                                                      sharedState );
+        // note - parse_momentum_equations returns a vector of equation adaptors
+        const EquationAdaptors adaptors = parse_momentum_equations( momEqnParams,
+                                                                    turbParams,
+                                                                    varDenParams,
+                                                                    useAdaptiveDt,
+                                                                    isConstDensity,
+                                                                    densityTag,
+                                                                    graphCategories_,
+                                                                    *linSolver_,
+                                                                    sharedState );
         adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
       }
       catch( std::runtime_error& err ){
@@ -606,7 +605,7 @@ namespace Wasatch{
     // get the 2D variable density, osicllating (and periodic) mms params, if any, and parse them.
     //
     Uintah::ProblemSpecP varDenOscillatingMMSParams = wasatchSpec_->findBlock("VarDenOscillatingMMS");
-    if (varDenOscillatingMMSParams) {
+    if( varDenOscillatingMMSParams ){
       const bool computeContinuityResidual = wasatchSpec_->findBlock("MomentumEquations")->findBlock("ComputeMassResidual");
       parse_var_den_oscillating_mms(wasatchSpec_, varDenOscillatingMMSParams, computeContinuityResidual, graphCategories_);
     }
@@ -781,7 +780,7 @@ namespace Wasatch{
     timeTags.push_back( TagNames::self().timestep );
     timeTags.push_back( TagNames::self().rkstage  );
     exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
-
+    
     //_____________________________________________
     // Build the initial condition expression graph
     if( !icGraphHelper->rootIDs.empty() ){
@@ -793,7 +792,7 @@ namespace Wasatch{
       
       for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
         EqnTimestepAdaptorBase* const adaptor = *ia;
-        TransportEquation* transEq = adaptor->equation();
+        EquationBase* transEq = adaptor->equation();
         std::string eqnLabel = transEq->solution_variable_name();
         //______________________________________________________
         // set up initial boundary conditions on this transport equation
@@ -846,7 +845,7 @@ namespace Wasatch{
   }
 
   //--------------------------------------------------------------------
-
+  
   void Wasatch::restartInitialize()
   {
     isRestarting_ = true;
@@ -989,7 +988,7 @@ namespace Wasatch{
       
       for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
         EqnTimestepAdaptorBase* const adaptor = *ia;
-        TransportEquation* transEq = adaptor->equation();
+        EquationBase* transEq = adaptor->equation();
         std::string eqnLabel = transEq->solution_variable_name();
         //______________________________________________________
         // set up boundary conditions on this transport equation

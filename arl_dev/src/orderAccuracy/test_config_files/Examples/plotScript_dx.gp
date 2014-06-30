@@ -1,12 +1,8 @@
-set term png
-set output "orderAccuracy.png"
-
-# uncomment below for post script output
-#set terminal postscript color solid "Times-Roman" 14
-#set output "orderAccuracy.ps"
-#set style line 1  lt 1 lw 0.6 lc 1
-#set style line 2  lt 1 lw 0.6 lc 3
-#set style line 3  lt 1 lw 0.6 lc 5
+set terminal postscript color solid "Times-Roman" 14
+set output "orderAccuracy.ps"
+set style line 1  lt 1 lw 0.6 lc 1
+set style line 2  lt 1 lw 0.6 lc 2
+set style line 3  lt 1 lw 0.6 lc 3
  
 set autoscale
 set logscale x
@@ -42,19 +38,19 @@ FIT_LIMIT=1e-6
 fit f4(x) 'L2norm.dat' using 1:4 via a4
 
 set label 'Ideal = a * (#Grid Cells)^-1' at screen 0.2,0.475
-set label 'a = %14.15g',a1      at screen 0.2,0.45
+set label 'a = %2.3g',a1      at screen 0.2,0.45
 
 set label 'x_Error = a * (#Grid Cells)^b' at screen 0.2,0.4
-set label 'a = %14.15g',a1      at screen 0.2,0.375
-set label 'b = %14.15g',b1      at screen 0.2,0.35
+set label 'a = %2.3g',a1      at screen 0.2,0.375
+set label 'b = %2.3g',b1      at screen 0.2,0.35
 
 set label 'y_Error = a * (#Grid Cells)^b' at screen 0.2,0.3
-set label 'a = %14.15g',a2      at screen 0.2,0.275
-set label 'b = %14.15g',b2      at screen 0.2,0.25
+set label 'a = %2.3g',a2      at screen 0.2,0.275
+set label 'b = %2.3g',b2      at screen 0.2,0.25
 
 set label 'z_Error = a * (#Grid Cells)^b' at screen 0.2,0.2
-set label 'a = %14.15g',a3      at screen 0.2,0.175
-set label 'b = %14.15g',b3      at screen 0.2,0.15
+set label 'a = %2.3g',a3      at screen 0.2,0.175
+set label 'b = %2.3g',b3      at screen 0.2,0.15
 
 
 plot 'L2norm.dat' using 1:2 t 'X Error' with points, \
@@ -65,3 +61,4 @@ plot 'L2norm.dat' using 1:2 t 'X Error' with points, \
      f3(x) t 'z-curve fit', \
      f4(x) t 'Ideal'
 
+!ps2pdf orderAccuracy.ps

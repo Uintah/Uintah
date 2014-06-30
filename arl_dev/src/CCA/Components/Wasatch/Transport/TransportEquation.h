@@ -42,6 +42,7 @@
 #include <CCA/Components/Wasatch/PatchInfo.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/Expressions/RHSTerms.h>
+#include <CCA/Components/Wasatch/Transport/EquationBase.h>
 
 namespace Wasatch{
 
@@ -55,7 +56,7 @@ namespace Wasatch{
    *  \date   April, 2011
    *  \brief  Base class for defining a transport equation.
    */
-  class TransportEquation{
+  class TransportEquation : public EquationBase {
 
   protected:
 
@@ -112,26 +113,8 @@ namespace Wasatch{
 
     virtual ~TransportEquation(){}
 
-    /**
-     *  \brief Obtain the name of the solution variable for this transport equation.
-     */
-    inline const std::string& solution_variable_name() const{ return solnVarName_; }
+    inline bool is_constant_density()   const { return isConstDensity_; }
 
-    /**
-     *  \brief Obtain the tag of the solution variable for this transport equation.
-     */
-    inline const Expr::Tag& solution_variable_tag() const{ return solnVarTag_; }
-
-    /**
-     *  \brief Obtain the rhs tag of the solution variable for this transport equation.
-     */
-    inline const Expr::Tag& rhs_tag() const { return rhsTag_; }
-
-    /**
-     *  \brief Obtain the rhs name of the solution variable for this transport equation.
-     */
-    inline std::string rhs_name() const{ return rhsTag_.name(); }
-    
     /**
      *  \brief Obtain the staggered location of the solution variable that is
      *  governed by this transport equation.
@@ -143,69 +126,10 @@ namespace Wasatch{
      *  variable that is governed by this transport equation.
      */
     std::string dir_name() const;
-
-    /**
-     * \brief Returns the ExpressionID for the RHS expression associated with this TransportEquation
-     */
-    Expr::ExpressionID get_rhs_id() const;
-
-    /**
-     *  \brief Used to check the validity of the boundary conditions specified
-     *   by the user at a given boundary and also to infer/add new BCs on the
-     *   type of boundary.  Example: at a stationary impermeable wall, we can
-     *   immediately infer zero-velocity boundary conditions and check whether
-     *   the user has specified any velocity BCs at that boundary. See examples
-     *   in the momentum transport equation.
-     */
-    virtual void setup_boundary_conditions( BCHelper& bcHelper,
-                                             GraphCategories& graphCat)=0;
-    
-    /**
-     *  \brief Set up the boundary condition on initial conditions evaluators for this
-     *  TransportEquation. Each derived class must implement this
-     *  method.  Boundary conditions are imposed by adding additional
-     *  tasks to modify values in an Expression after it is evaluated.
-     *  This is done by attaching a functor to the applicable expression
-     *  via the <code>Expression::process_after_evaluate</code> method.
-     */
-    virtual void apply_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                                   BCHelper& bcHelper ) = 0;
-
-    /**
-     *  \brief Set up the boundary condition evaluators for this
-     *  TransportEquation. Each derived class must implement this
-     *  method.  Boundary conditions are imposed by adding additional
-     *  tasks to modify values in an Expression after it is evaluated.
-     *  This is done by attaching a functor to the applicable expression
-     *  via the <code>Expression::process_after_evaluate</code> method.
-     */
-    virtual void apply_boundary_conditions( const GraphHelper& graphHelper,
-                                            BCHelper& bcHelper ) = 0;
-
-    /**
-     *  \brief Return the ExpressionID that identifies an expression that will
-     *  set the initial condition for this transport equation.
-     *
-     *  NOTE: the ExpressionFactory object provided here is distinctly
-     *  different than the one provided at construction of the
-     *  TransportEquation object.  Therefore, you should not assume that
-     *  any expressions registered at construction of this
-     *  TransportEquation are registered for purposes of calculating the
-     *  initial conditions.
-     */
-    virtual Expr::ExpressionID initial_condition( Expr::ExpressionFactory& exprFactory ) = 0;
-
-    inline bool is_constant_density()   const { return isConstDensity_; }
     
   protected:
-    Uintah::ProblemSpecP params_;
-    GraphCategories& gc_;
-    const std::string  solnVarName_;      ///< Name of the solution variable for this TransportEquation.
-    const Expr::Tag solnVarTag_;          ///< Tag for the solution variable (at STATE_N)
-    const Expr::Tag rhsTag_;              ///< Tag for the rhs
-    const Direction stagLoc_;             ///< staggered direction for this equation
+    const Direction stagLoc_;             ///< staggered direction for this equation    
     const bool isConstDensity_;
-    Expr::ExpressionID rhsExprID_;  ///< The label for the rhs expression for this TransportEquation.
   };
 
 } // namespace Wasatch

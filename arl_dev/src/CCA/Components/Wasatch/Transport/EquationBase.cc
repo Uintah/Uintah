@@ -1,5 +1,5 @@
 /**
- *  \file   TransportEquation.cc
+ *  \file   EquationBase.cc
  *  \date   Nov 13, 2013
  *  \author "James C. Sutherland"
  *
@@ -30,64 +30,31 @@
 
 
 
-#include <CCA/Components/Wasatch/Transport/TransportEquation.h>
+#include <CCA/Components/Wasatch/Transport/EquationBase.h>
 #include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h>
 
 namespace Wasatch{
 
   //---------------------------------------------------------------------------
 
-  TransportEquation::
-  TransportEquation( GraphCategories& gc,
+  EquationBase::
+  EquationBase( GraphCategories& gc,
                      const std::string solnVarName,
-                     Uintah::ProblemSpecP params,
-                     const Direction stagLoc,
-                     const bool isConstDensity )
-  : EquationBase::EquationBase(gc, solnVarName, params),
-    isConstDensity_ ( isConstDensity ),
-    stagLoc_        (stagLoc)
-  {
-//    setup();  // build all expressions required for this TransportEquation
-  }
+                     Uintah::ProblemSpecP params )
+  : params_             ( params ),
+    gc_                 ( gc ),
+    solnVarName_        ( solnVarName ),
+    solnVarTag_         ( solnVarName, Expr::STATE_DYNAMIC ),
+    rhsTag_             ( solnVarName+"_rhs", Expr::STATE_NONE )
+  {}
+
 
   //---------------------------------------------------------------------------
 
-  void TransportEquation::setup()
+  Expr::ExpressionID EquationBase::get_rhs_id() const
   {
-    FieldTagInfo tagInfo;
-    Expr::TagList sourceTags;
-
-    EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
-    if( vNames.has_embedded_geometry() ){
-      EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
-      tagInfo[VOLUME_FRAC] = vNames.vol_frac_tag<SVolField>();
-      tagInfo[AREA_FRAC_X] = vNames.vol_frac_tag<XVolField>();
-      tagInfo[AREA_FRAC_Y] = vNames.vol_frac_tag<YVolField>();
-      tagInfo[AREA_FRAC_Z] = vNames.vol_frac_tag<ZVolField>();
-    }
-
-    setup_diffusive_flux ( tagInfo );
-    setup_convective_flux( tagInfo );
-    setup_source_terms   ( tagInfo, sourceTags );
-
-    // now build the RHS given the tagInfo that has been populated
-    rhsExprID_ = setup_rhs( tagInfo, sourceTags );
     assert( rhsExprID_ != Expr::ExpressionID::null_id() );
-    gc_[ADVANCE_SOLUTION]->rootIDs.insert( rhsExprID_ );
-  }
-
-  //---------------------------------------------------------------------------
-  
-  std::string
-  TransportEquation::dir_name() const
-  {
-    switch (stagLoc_) {
-      case XDIR: return "x";
-      case YDIR: return "y";
-      case ZDIR: return "z";
-      case NODIR:
-      default: return "";
-    }
+    return rhsExprID_;
   }
 
   //---------------------------------------------------------------------------

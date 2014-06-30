@@ -169,6 +169,14 @@ WARNING
 					    const VarLabel* particleIDLabel,
 					    const MaterialSet* matls, int w) = 0;
 
+    //////////
+    // Schedule particle relocation without the need to provide pre-relocation labels. Warning: This
+    // is experimental and has not been fully tested yet. Use with caution (tsaad).
+    virtual void scheduleParticleRelocation(const LevelP& coarsestLevelwithParticles,
+                                            const VarLabel* posLabel,
+                                            const std::vector<std::vector<const VarLabel*> >& otherLabels,
+                                            const MaterialSet* matls) = 0;
+
     //! Schedule copying data to new grid after regridding
     virtual void scheduleAndDoDataCopy(const GridP& grid, 
                                        SimulationInterface* sim) = 0;
