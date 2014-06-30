@@ -158,6 +158,7 @@
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
+#include <CCA/Components/Wasatch/Transport/EquationBase.h>
 #include <CCA/Components/Wasatch/Transport/TransportEquation.h>
 #include <CCA/Components/Wasatch/Transport/MomentumTransportEquation.h>
 #include <CCA/Components/Wasatch/Transport/ParseEquation.h>
@@ -484,7 +485,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   // from the equation adaptors after parsing the Wasatch xml block.
   const Wasatch::Wasatch::EquationAdaptors& adaptors = d_wasatch->equation_adaptors();
   for( Wasatch::Wasatch::EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ) {
-    Wasatch::TransportEquation* transEq = (*ia)->equation();
+    Wasatch::EquationBase* transEq = (*ia)->equation();
     if ( !(transEq->dir_name() == "") ) continue; // skip all momentum equations for the time being...
     std::string solnVarName = transEq->solution_variable_name();
     if( !solngh->exprFactory->have_entry( Expr::Tag(solnVarName,Expr::STATE_DYNAMIC  ) ) )
