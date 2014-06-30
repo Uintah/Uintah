@@ -112,7 +112,6 @@ namespace Wasatch{
       valParams->getAttribute("seed",seed);
       
       Expr::Tag exprLoHiTag;
-      typedef typename RandomField<ParticleField>::Builder Builder;
       if (valParams->findBlock("ExprLoHi"))
       {
         exprLoHiTag = parse_nametag(valParams->findBlock("ExprLoHi"));
