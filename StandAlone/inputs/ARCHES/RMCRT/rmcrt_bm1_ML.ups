@@ -28,7 +28,7 @@
     <outputInitTimestep/>
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label="divQ"  levels="-1"/>
-    <save label="abskg" />
+    <save label="abskg_BC" />
     <save label="sigmaT4" />
     <save label="cellType" />
     
@@ -52,7 +52,7 @@
         <BCType id="all"  label = "temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"       var="Dirichlet">
+        <BCType id="all"  label = "abskg_BC"    var="Dirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -70,7 +70,7 @@
         <BCType id="all"  label = "temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"       var="Dirichlet">
+        <BCType id="all"  label = "abskg_BC"    var="Dirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -88,7 +88,7 @@
         <BCType id="all"  label = "temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"       var="Dirichlet">
+        <BCType id="all"  label = "abskg_BC"    var="Dirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -106,7 +106,7 @@
         <BCType id="all"  label = "temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"       var="Dirichlet">
+        <BCType id="all"  label = "abskg_BC"    var="Dirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -124,7 +124,7 @@
         <BCType id="all"  label = "temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"       var="Dirichlet">
+        <BCType id="all"  label = "abskg_BC"    var="Dirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -142,7 +142,7 @@
         <BCType id="all"  label = "temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"       var="Dirichlet">
+        <BCType id="all"  label = "abskg_BC"    var="Dirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
