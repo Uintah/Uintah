@@ -1650,7 +1650,6 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
             new_dw->put(*vars[v], reloc_new_labels[m][v]);
             delete vars[v];
           }
-          std::cout << "total_reloc: " << total_reloc[0] << ", " << total_reloc[1] << ", " << total_reloc[2] << "\n";
         }  // particles have moved 
         if(keep_pset->removeReference()){
           delete keep_pset;
