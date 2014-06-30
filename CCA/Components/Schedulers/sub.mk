@@ -36,7 +36,6 @@ SRCS += \
         $(SRCDIR)/IncorrectAllocation.cc      \
         $(SRCDIR)/MemoryLog.cc                \
         $(SRCDIR)/MessageLog.cc               \
-        $(SRCDIR)/MixedScheduler.cc           \
         $(SRCDIR)/MPIScheduler.cc             \
         $(SRCDIR)/OnDemandDataWarehouse.cc    \
         $(SRCDIR)/Relocate.cc                 \
@@ -45,9 +44,6 @@ SRCS += \
         $(SRCDIR)/SendState.cc                \
         $(SRCDIR)/SingleProcessorScheduler.cc \
         $(SRCDIR)/TaskGraph.cc                \
-        $(SRCDIR)/ThreadedMPIScheduler.cc     \
-        $(SRCDIR)/ThreadedMPIScheduler2.cc    \
-        $(SRCDIR)/ThreadPool.cc               \
         $(SRCDIR)/UnifiedScheduler.cc         \
         $(SRCDIR)/Util.cc                     \
         \
