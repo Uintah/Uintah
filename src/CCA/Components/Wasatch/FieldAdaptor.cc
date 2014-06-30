@@ -62,6 +62,8 @@ namespace Wasatch{
     validStrings["ZSURFZ"] = ZSURFZ;
     
     validStrings["PERPATCH"] = PERPATCH;
+    
+    validStrings["PARTICLE"] = PARTICLE;
   }
 
   //------------------------------------------------------------------

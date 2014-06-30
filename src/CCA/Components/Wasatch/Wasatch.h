@@ -117,11 +117,12 @@
 #include "FieldTypes.h"
 #include "BCHelper.h"
 
+//-- ExprLib Includes --//
 #include <expression/ExpressionFactory.h>
 
 namespace Expr{ class ExpressionID; }
 
-namespace Uintah{
+namespace Uintah {
   class Task;
   class Ray;
 }
@@ -139,6 +140,7 @@ namespace Wasatch{
   class EqnTimestepAdaptorBase;
   class TimeStepper;
   class TaskInterface;
+  class ParticlesHelper;
 
   /**
    *  \ingroup WasatchCore
@@ -261,7 +263,7 @@ namespace Wasatch{
     void set_wasatch_materials(const Uintah::MaterialSet* const materials) { materials_ = materials; }
     const Uintah::MaterialSet* const get_wasatch_materials() const{ return materials_; }
     const Uintah::ProblemSpecP get_wasatch_spec(){return wasatchSpec_;}
-
+    
   private:
     bool buildTimeIntegrator_;   ///< used for Wasatch-Arches coupling
     bool buildWasatchMaterial_;  ///< used for Wasatch-Arches coupling
@@ -269,11 +271,14 @@ namespace Wasatch{
     int nRKStages_;
     bool isPeriodic_;
     bool doRadiation_;
+    bool doParticles_;
     std::set<std::string> lockedFields_;   ///< prevent the ExpressionTree from reclaiming memory on these fields.
     Uintah::SimulationStateP sharedState_; ///< access to some common things like the current timestep.
     const Uintah::MaterialSet* materials_;
     Uintah::ProblemSpecP wasatchSpec_;
 
+    ParticlesHelper* particlesHelper_;
+    
     BCFunctorMap bcFunctorMap_;
     BCHelperMapT bcHelperMap_;
     
@@ -297,7 +302,7 @@ namespace Wasatch{
     std::list< const TaskInterface*  > taskInterfaceList_;
     std::map< int, const Uintah::PatchSet* > patchesForOperators_;
 
-    Wasatch( const Wasatch& ); // disallow copying
+    Wasatch( const Wasatch& );            // disallow copying
     Wasatch& operator=( const Wasatch& ); // disallow assignment
 
     /** \brief a convenience function */
@@ -327,7 +332,6 @@ namespace Wasatch{
     const Uintah::PatchSet* get_patchset( const PatchsetSelector,
                                           const Uintah::LevelP& level,
                                           Uintah::SchedulerP& sched );
-
   };
 
 } // namespace Wasatch

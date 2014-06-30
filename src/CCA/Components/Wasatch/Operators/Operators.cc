@@ -31,6 +31,7 @@
 #include <CCA/Components/Wasatch/Operators/Extrapolant.h>
 #include <CCA/Components/Wasatch/Operators/FluxLimiterInterpolant.h>
 #include <CCA/Components/Wasatch/BCHelper.h>
+#include <spatialops/particles/ParticleOperators.h>
 
 //-- Uintah includes --//
 #include <Core/Grid/Patch.h>
@@ -40,6 +41,12 @@ using namespace structured;
 
 namespace Wasatch{
   
+#define BUILD_CELL2PARTICLE( VOLT )                                            \
+{                                                                     \
+typedef SpatialOps::Particle::CellToParticle<VOLT> C2P;\
+opDB.register_new_operator<C2P>(scinew C2P(spacing[0],low.x(),spacing[1],low.y(),spacing[2],low.z()) );\
+}
+
 #define BUILD_UPWIND( VOLT )                                            \
 {                                                                     \
   typedef UpwindInterpolant<VOLT,FaceTypes<VOLT>::XFace> OpX;         \
@@ -105,6 +112,8 @@ namespace Wasatch{
                        SpatialOps::OperatorDatabase& opDB )
   {
     const SCIRun::IntVector udim = patch.getCellHighIndex() - patch.getCellLowIndex();
+    const SCIRun::Point low = patch.getCellPosition(patch.getCellLowIndex());
+
     std::vector<int> dim(3,1);
     for( size_t i=0; i<3; ++i ){ dim[i] = udim[i];}
     
@@ -158,6 +167,14 @@ namespace Wasatch{
     BUILD_EXTRAPOLANT( XVolField )
     BUILD_EXTRAPOLANT( YVolField )
     BUILD_EXTRAPOLANT( ZVolField )
+
+    //--------------------------------------------------------
+    // Particles
+    //--------------------------------------------------------
+    BUILD_CELL2PARTICLE( SVolField);
+    BUILD_CELL2PARTICLE( XVolField);
+    BUILD_CELL2PARTICLE( YVolField);
+    BUILD_CELL2PARTICLE( ZVolField);
   }
   
 } // namespace Wasatch

@@ -91,12 +91,14 @@ namespace Wasatch{
     typedef std::set< FieldInfo<SpatialOps::structured::XVolField> > XVolFields;
     typedef std::set< FieldInfo<SpatialOps::structured::YVolField> > YVolFields;
     typedef std::set< FieldInfo<SpatialOps::structured::ZVolField> > ZVolFields;
+    typedef std::set< FieldInfo<SpatialOps::Particle::ParticleField> > ParticleFields;
 
-    ScalarFields scalarFields_;  ///< A vector of the scalar fields being solved by this time integrator.
-    XVolFields   xVolFields_;    ///< A vector of the x-volume fields being solved by this time integrator.
-    YVolFields   yVolFields_;    ///< A vector of the y-volume fields being solved by this time integrator.
-    ZVolFields   zVolFields_;    ///< A vector of the z-volume fields being solved by this time integrator.
-
+    ScalarFields   scalarFields_;   ///< A vector of the scalar fields being solved by this time integrator.
+    XVolFields     xVolFields_;     ///< A vector of the x-volume fields being solved by this time integrator.
+    YVolFields     yVolFields_;     ///< A vector of the y-volume fields being solved by this time integrator.
+    ZVolFields     zVolFields_;     ///< A vector of the z-volume fields being solved by this time integrator.
+    ParticleFields particleFields_; ///< A vector of the particle fields being solved by this time integrator.
+    
     GraphHelper* const solnGraphHelper_;
     GraphHelper* const postProcGraphHelper_;      
     

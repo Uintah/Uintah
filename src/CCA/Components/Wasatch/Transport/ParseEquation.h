@@ -46,7 +46,7 @@
 namespace Wasatch{
 
   class TimeStepper;
-  class TransportEquation;
+  class EquationBase;
 
   /** \addtogroup WasatchParser
    *  @{
@@ -65,14 +65,14 @@ namespace Wasatch{
   class EqnTimestepAdaptorBase
   {
   protected:
-    EqnTimestepAdaptorBase( TransportEquation* eqn);
-    TransportEquation* const eqn_;
+    EqnTimestepAdaptorBase( EquationBase* eqn);
+    EquationBase* const eqn_;
 
   public:
     virtual ~EqnTimestepAdaptorBase();
     virtual void hook( TimeStepper& ts ) const = 0;
-    TransportEquation* equation(){ return eqn_; }
-    const TransportEquation* equation() const{ return eqn_; }
+    EquationBase* equation(){ return eqn_; }
+    const EquationBase* equation() const{ return eqn_; }
   };
 
 
@@ -208,6 +208,11 @@ namespace Wasatch{
                                                                          Uintah::ProblemSpecP wasatchParams,
                                                                          const bool isConstDensity,
                                                                          GraphCategories& gc);
+
+  std::vector<EqnTimestepAdaptorBase*>
+  parse_particle_transport_equations( Uintah::ProblemSpecP particleSpec,
+                                      Uintah::ProblemSpecP wasatchSpec,
+                                      GraphCategories& gc);
 
 
   /**
