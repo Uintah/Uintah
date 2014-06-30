@@ -60,10 +60,10 @@ namespace Wasatch{
 
   public:
 
-    enum ParticleDirection
-    {
-      XDIR, YDIR, ZDIR, NODIR
-    };
+//    enum ParticleDirection
+//    {
+//      XDIR, YDIR, ZDIR, NODIR
+//    };
 
     /**
      * @brief Construct a ParticleEquationBase
@@ -81,7 +81,7 @@ namespace Wasatch{
      * \param gc The GraphCategories object from Wasatch
      */
     ParticleEquationBase( const std::string& solnVarName,
-                         const ParticleDirection pdir,
+                         const Direction pdir,
                          const Expr::TagList& particlePositionTags,
                          const Expr::Tag& particleSizeTag,
                          Uintah::ProblemSpecP particleEqsSpec,
@@ -91,15 +91,13 @@ namespace Wasatch{
     
 
   protected:
-    const ParticleDirection pDir_;
-    const std::string pDirName_;
     const Expr::TagList pPosTags_;
     const Expr::Tag     pSizeTag_;
   };
   
-  // helper functions
-  ParticleEquationBase::ParticleDirection string_to_particle_direction(const std::string& dirname);
-  std::string particle_direction_to_string(const ParticleEquationBase::ParticleDirection dir);
+//  // helper functions
+//  ParticleEquationBase::ParticleDirection string_to_particle_direction(const std::string& dirname);
+//  std::string particle_direction_to_string(const ParticleEquationBase::ParticleDirection dir);
 } // namespace Wasatch
 
 #endif // Wasatch_ParticleEquationBase_h

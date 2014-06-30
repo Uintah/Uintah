@@ -40,7 +40,7 @@ namespace Wasatch{
 
   ParticlePositionEquation::
   ParticlePositionEquation( const std::string& solnVarName,
-                            const ParticleDirection pdir,
+                            const Direction pdir,
                             const Expr::TagList& particlePositionTags,
                            const Expr::Tag& particleSizeTag,
                            Uintah::ProblemSpecP particleEqsSpec,
@@ -70,7 +70,7 @@ namespace Wasatch{
     Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
     
     Expr::Tag pVelTag;
-    switch (pDir_) {
+    switch (direction_) {
       case XDIR:
         pVelTag = pUTag_;
         break;

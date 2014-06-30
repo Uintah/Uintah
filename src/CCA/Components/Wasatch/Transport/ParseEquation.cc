@@ -730,7 +730,7 @@ namespace Wasatch{
     
     proc0cout << "Setting up particle x-coordinate equation" << std::endl;
     EquationBase* pxeq = scinew ParticlePositionEquation( pxname,
-                                                          ParticleEquationBase::XDIR,
+                                                          XDIR,
                                                           pPosTags,
                                                          pSizeTag,
                                                           particleSpec,
@@ -739,7 +739,7 @@ namespace Wasatch{
     
     proc0cout << "Setting up particle y-coordinate equation" << std::endl;
     EquationBase* pyeq = scinew ParticlePositionEquation( pyname,
-                                                         ParticleEquationBase::YDIR,
+                                                         YDIR,
                                                          pPosTags,
                                                          pSizeTag,
                                                          particleSpec,
@@ -748,7 +748,7 @@ namespace Wasatch{
 
     proc0cout << "Setting up particle z-coordinate equation" << std::endl;
     EquationBase* pzeq = scinew ParticlePositionEquation( pzname,
-                                                         ParticleEquationBase::ZDIR,
+                                                         ZDIR,
                                                          pPosTags,
                                                          pSizeTag,
                                                          particleSpec,
@@ -769,7 +769,7 @@ namespace Wasatch{
     const std::string pMassName = pMassTag.name();
     proc0cout << "Setting up particle mass equation" << std::endl;
     EquationBase* pmeq = scinew ParticleMassEquation( pMassName,
-                                                     ParticleEquationBase::NODIR,
+                                                     NODIR,
                                                      pPosTags,
                                                      pSizeTag,
                                                      particleSpec,
@@ -781,7 +781,7 @@ namespace Wasatch{
     //
     proc0cout << "Setting up particle x-momentum equation" << std::endl;
     EquationBase* pueq = scinew ParticleMomentumEquation( puname,
-                                                         ParticleEquationBase::XDIR,
+                                                         XDIR,
                                                          pPosTags,
                                                          pSizeTag,
                                                          particleSpec,
@@ -790,7 +790,7 @@ namespace Wasatch{
     
     proc0cout << "Setting up particle y-momentum equation" << std::endl;
     EquationBase* pveq = scinew ParticleMomentumEquation( pvname,
-                                                         ParticleEquationBase::YDIR,
+                                                         YDIR,
                                                          pPosTags,
                                                          pSizeTag,
                                                          particleSpec,
@@ -799,7 +799,7 @@ namespace Wasatch{
     
     proc0cout << "Setting up particle z-momentum equation" << std::endl;
     EquationBase* pweq = scinew ParticleMomentumEquation( pwname,
-                                                         ParticleEquationBase::ZDIR,
+                                                         ZDIR,
                                                          pPosTags,
                                                          pSizeTag,
                                                          particleSpec,
@@ -811,7 +811,7 @@ namespace Wasatch{
     //
     proc0cout << "Setting up particle size equation" << std::endl;
     EquationBase* psizeeq = scinew ParticleSizeEquation( pSizeName,
-                                                         ParticleEquationBase::NODIR,
+                                                         NODIR,
                                                          pPosTags,
                                                          pSizeTag,
                                                          particleSpec,

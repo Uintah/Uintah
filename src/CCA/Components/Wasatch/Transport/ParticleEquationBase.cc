@@ -31,47 +31,14 @@ namespace Wasatch{
 
   ParticleEquationBase::
   ParticleEquationBase( const std::string& solnVarName,
-                       const ParticleDirection pDir,
+                       const Direction pDir,
                        const Expr::TagList& particlePositionTags,
                        const Expr::Tag& particleSizeTag,
                        Uintah::ProblemSpecP particleEqsSpec,
                        GraphCategories& gc )
-  : EquationBase::EquationBase(gc, solnVarName, particleEqsSpec),
-    pDir_(pDir),
-    pDirName_(particle_direction_to_string(pDir_)),
+  : EquationBase::EquationBase(gc, solnVarName, pDir, particleEqsSpec),
     pPosTags_(particlePositionTags),
     pSizeTag_(particleSizeTag)
   {}
-
-  //---------------------------------------------------------------------------
-
-  ParticleEquationBase::ParticleDirection string_to_particle_direction(const std::string& dirname)
-  {
-    if      (dirname=="X"  ) return ParticleEquationBase::XDIR;
-    else if (dirname == "Y") return ParticleEquationBase::YDIR;
-    else if (dirname == "Z") return ParticleEquationBase::ZDIR;
-    else                     return ParticleEquationBase::NODIR;
-  }
-
-  //---------------------------------------------------------------------------
-  
-  std::string particle_direction_to_string(const ParticleEquationBase::ParticleDirection dir)
-  {
-    std::string strDir ="";
-    switch (dir) {
-      case XDIR:
-        strDir = "X";
-        break;
-      case YDIR:
-        strDir = "Y";
-        break;
-      case ZDIR:
-        strDir = "Z";
-        break;
-      default:
-        break;
-    }
-    return strDir;
-  }
 
 } // namespace Wasatch

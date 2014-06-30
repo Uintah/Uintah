@@ -123,7 +123,7 @@ namespace Wasatch{
 
   ParticleMassEquation::
   ParticleMassEquation( const std::string& solnVarName,
-                            const ParticleDirection pdir,
+                            const Direction pdir,
                             const Expr::TagList& particlePositionTags,
                            const Expr::Tag& particleSizeTag,
                            Uintah::ProblemSpecP particleEqsSpec,

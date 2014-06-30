@@ -115,20 +115,7 @@ namespace Wasatch{
 
     inline bool is_constant_density()   const { return isConstDensity_; }
 
-    /**
-     *  \brief Obtain the staggered location of the solution variable that is
-     *  governed by this transport equation.
-     */
-    inline Direction staggered_location() const{ return stagLoc_; }
-
-    /**
-     *  \brief Obtain the name (i.e. string) staggered location of the solution
-     *  variable that is governed by this transport equation.
-     */
-    std::string dir_name() const;
-    
   protected:
-    const Direction stagLoc_;             ///< staggered direction for this equation    
     const bool isConstDensity_;
   };
 

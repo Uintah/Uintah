@@ -39,9 +39,11 @@ namespace Wasatch{
 
   EquationBase::
   EquationBase( GraphCategories& gc,
-                     const std::string solnVarName,
-                     Uintah::ProblemSpecP params )
-  : params_             ( params ),
+                const std::string solnVarName,
+                const Direction direction,
+                Uintah::ProblemSpecP params )
+  : direction_          ( direction ),
+    params_             ( params ),
     gc_                 ( gc ),
     solnVarName_        ( solnVarName ),
     solnVarTag_         ( solnVarName, Expr::STATE_DYNAMIC ),
@@ -55,6 +57,20 @@ namespace Wasatch{
   {
     assert( rhsExprID_ != Expr::ExpressionID::null_id() );
     return rhsExprID_;
+  }
+
+  //---------------------------------------------------------------------------
+  
+  std::string
+  EquationBase::dir_name() const
+  {
+    switch (direction_) {
+      case XDIR: return "x";
+      case YDIR: return "y";
+      case ZDIR: return "z";
+      case NODIR:
+      default: return "";
+    }
   }
 
   //---------------------------------------------------------------------------
