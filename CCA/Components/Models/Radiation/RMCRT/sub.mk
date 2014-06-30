@@ -26,7 +26,8 @@
 
 SRCDIR := CCA/Components/Models/Radiation/RMCRT
 
-SRCS += $(SRCDIR)/Ray.cc \
+SRCS += $(SRCDIR)/RMCRTCommon.cc \
+        $(SRCDIR)/Ray.cc \
         $(SRCDIR)/Radiometer.cc \
         $(SRCDIR)/RayGPU.cc
 
