@@ -48,7 +48,7 @@ namespace Wasatch{
 
   ParticleMomentumEquation::
   ParticleMomentumEquation( const std::string& solnVarName,
-                            const ParticleDirection pdir,
+                            const Direction pdir,
                             const Expr::TagList& particlePositionTags,
                             const Expr::Tag& particleSizeTag,
                             Uintah::ProblemSpecP particleEqsSpec,
@@ -83,9 +83,9 @@ namespace Wasatch{
     {
       std::string gDir;
       gravitySpec->getAttribute("direction",gDir);
-      if      (gDir == "X" && pDirName_ == "X") doGravity_ = true;
-      else if (gDir == "Y" && pDirName_ == "Y") doGravity_ = true;
-      else if (gDir == "Z" && pDirName_ == "Z") doGravity_ = true;
+      if      (gDir == "X" && dir_name() == "X") doGravity_ = true;
+      else if (gDir == "Y" && dir_name() == "Y") doGravity_ = true;
+      else if (gDir == "Z" && dir_name() == "Z") doGravity_ = true;
     }
     doDrag_ = true;
     doDrag_ = !(pMomSpec->findBlock("DisableDragForce"));
@@ -119,7 +119,7 @@ namespace Wasatch{
     Expr::Tag pBodyForceTag;
     if (doGravity_)
     {
-      pBodyForceTag = Expr::Tag("p.gravity_" + pDirName_, Expr::STATE_NONE);
+      pBodyForceTag = Expr::Tag("p.gravity_" + dir_name(), Expr::STATE_NONE);
       typedef ParticleBodyForce<SVolField>::Builder BodyForce;
       factory.register_expression( scinew BodyForce(pBodyForceTag, gRhoTag_, pRhoTag_, pSizeTag_, pPosTags_ ) );
     }
@@ -156,8 +156,8 @@ namespace Wasatch{
       
       //_____________________________
       // Drag Force
-      pDragForceTag =  Expr::Tag("p.drag_" + pDirName_, Expr::STATE_NONE);
-      switch (pDir_) {
+      pDragForceTag =  Expr::Tag("p.drag_" + dir_name(), Expr::STATE_NONE);
+      switch (direction_) {
         case XDIR:
         {
           typedef ParticleDragForce<XVolField>::Builder DragForce;

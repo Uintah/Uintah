@@ -68,6 +68,7 @@ namespace Wasatch{
      */
     EquationBase( GraphCategories& gc,
                   const std::string solnVarName,
+                  const Direction direction,
                   Uintah::ProblemSpecP params );
 
     virtual ~EquationBase(){}
@@ -142,8 +143,21 @@ namespace Wasatch{
      *  initial conditions.
      */
     virtual Expr::ExpressionID initial_condition( Expr::ExpressionFactory& exprFactory ) = 0;
+
+    /**
+     *  \brief Obtain the staggered location of the solution variable that is
+     *  governed by this transport equation.
+     */
+    inline Direction staggered_location() const{ return direction_; }
     
+    /**
+     *  \brief Obtain the name (i.e. string) staggered location of the solution
+     *  variable that is governed by this transport equation.
+     */
+    std::string dir_name() const;
+
   protected:
+    const Direction direction_;             ///< staggered direction for this equation
     Uintah::ProblemSpecP params_;
     GraphCategories& gc_;
     const std::string  solnVarName_;      ///< Name of the solution variable for this EquationBase.
