@@ -80,6 +80,7 @@
 
 #  include <CCA/Components/Wasatch/Wasatch.h>
 #  include <CCA/Components/Wasatch/FieldTypes.h>
+#include <CCA/Components/Wasatch/Transport/EquationBase.h>
 #  include <CCA/Components/Wasatch/Transport/TransportEquation.h>
 #  include <CCA/Components/Wasatch/Transport/ParseEquation.h>
 #  include <CCA/Components/Wasatch/GraphHelperTools.h>
@@ -721,7 +722,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       
       std::set< Expr::ExpressionID > scalRHSIDs;
       for( Wasatch::Wasatch::EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ) {
-        Wasatch::TransportEquation* transEq = (*ia)->equation();
+        Wasatch::EquationBase* transEq = (*ia)->equation();
         if ( !(transEq->dir_name() == "") ) continue; // skip momentum equations
         std::string solnVarName = transEq->solution_variable_name();
         phi.push_back(solnVarName);
