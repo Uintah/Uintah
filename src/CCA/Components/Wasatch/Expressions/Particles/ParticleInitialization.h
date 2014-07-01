@@ -163,6 +163,21 @@ ParticleRandomIC<GridCoordT>::Builder::build() const
 
 //--------------------------------------------------------------------
 
+template< typename GridCoordT >
+double
+get_field_dx(const GridCoordT& x, const std::string& coord)
+{
+  if (coord == "X") {
+    return (x(1,0,0) - x(0,0,0));
+  } else if (coord == "Y") {
+    return (x(0,1,0) - x(0,0,0));
+  } else {
+    return (x(0,0,1) - x(0,0,0));
+  }
+  return 0.0;
+}
+
+
 //==================================================================
 /**
  *  \class  ParticleUniformIC
@@ -183,7 +198,8 @@ public:
     Builder( const Expr::Tag& result,
             const Expr::Tag& exprLoHiTag,
             const int nParticles,
-            const bool transverse);
+            const bool transverse,
+            const std::string coord);
     
     ~Builder(){}
     Expr::ExpressionBase* build() const;
@@ -191,6 +207,7 @@ public:
     const Expr::Tag exprLoHiTag_;
     const int nParticles_;
     const bool transverse_;
+    const std::string coord_;
   };
   
   void advertise_dependents( Expr::ExprDeps& exprDeps );
@@ -201,11 +218,13 @@ private:
   const Expr::Tag exprLoHiTag_;
   const int nParticles_;
   const bool transverse_;
+  const std::string coord_;
   const GridCoordT *x_;
   
   ParticleUniformIC( const Expr::Tag& exprLoHiTag,
                      const int nParticles,
-                     const bool transverse);
+                     const bool transverse,
+                     const std::string coord);
   
 };
 
@@ -215,11 +234,13 @@ template<typename GridCoordT>
 ParticleUniformIC<GridCoordT>::
 ParticleUniformIC(const Expr::Tag& exprLoHiTag,
                   const int nParticles,
-                  const bool transverse)
+                  const bool transverse,
+                  const std::string coord)
 : Expr::Expression<ParticleField>(),
 exprLoHiTag_(exprLoHiTag),
 nParticles_(nParticles),
-transverse_(transverse)
+transverse_(transverse),
+coord_(coord)
 {}
 
 //--------------------------------------------------------------------
@@ -254,8 +275,8 @@ evaluate()
   ParticleField& phi = this->value();
   typename ParticleField::iterator phiIter = phi.begin();
   
-  const double low  = field_min_interior(*x_);
-  const double high = field_max_interior(*x_);
+  const double low  = field_min_interior(*x_) - get_field_dx(*x_, coord_)/4.0;
+  const double high = field_max_interior(*x_) + get_field_dx(*x_, coord_)/4.0;
   
   const int npart = (int) sqrt(nParticles_);
   const double dx = (high-low) / npart;
@@ -290,11 +311,13 @@ ParticleUniformIC<GridCoordT>::Builder::
 Builder( const Expr::Tag& result,
         const Expr::Tag& exprLoHiTag,
         const int nParticles,
-        const bool transverse)
+        const bool transverse,
+        const std::string coord)
 : ExpressionBuilder(result),
 exprLoHiTag_(exprLoHiTag),
 nParticles_(nParticles),
-transverse_(transverse)
+transverse_(transverse),
+coord_(coord)
 {}
 
 //--------------------------------------------------------------------
@@ -303,7 +326,7 @@ template< typename GridCoordT >
 Expr::ExpressionBase*
 ParticleUniformIC<GridCoordT>::Builder::build() const
 {
-  return new ParticleUniformIC<GridCoordT>(exprLoHiTag_, nParticles_, transverse_ );
+  return new ParticleUniformIC<GridCoordT>(exprLoHiTag_, nParticles_, transverse_, coord_ );
 }
 
 //--------------------------------------------------------------------

@@ -69,7 +69,7 @@
     </ForceOnGraph>
     
     <ParticleTransportEquations>
-      <NumberOfInitialParticles>2000</NumberOfInitialParticles>
+      <NumberOfInitialParticles>10000</NumberOfInitialParticles>
       <ParticleDensity name="p.rho" state="STATE_NONE"/>            
       <ParticleMass name="p.m" state="STATE_DYNAMIC">
       	<SourceTerm name="nothing" state="STATE_NONE"/>	
@@ -106,8 +106,8 @@
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
        <NameTag name="p.size" state="STATE_DYNAMIC"/>
-       <RandomField low="1e-5" high="5e-4" seed="0.333"/>       
-<!--        <Constant>0.0001</Constant> -->
+<!--        <RandomField low="1e-3" high="1e-1" seed="0.333"/>        -->
+       <Constant>0.001</Constant>
     </BasicExpression>
 
 <!-- 
@@ -141,6 +141,22 @@
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
        <NameTag name="p.xw" state="STATE_DYNAMIC"/>
+       <ParticleUniformIC nparticles="10000" coordinate="X">
+       </ParticleUniformIC>
+    </BasicExpression>
+
+    <BasicExpression type="PARTICLE">
+       <TaskList>initialization</TaskList>
+       <NameTag name="p.yw" state="STATE_DYNAMIC"/>
+       <ParticleUniformIC nparticles="10000" coordinate="Y" >
+         <TransverseDirection/>       
+       </ParticleUniformIC>
+    </BasicExpression>
+
+<!-- 
+    <BasicExpression type="PARTICLE">
+       <TaskList>initialization</TaskList>
+       <NameTag name="p.xw" state="STATE_DYNAMIC"/>
        <RandomField low="0.0" high="1.0" seed="0.1">
        <ExprLoHi type="SVOL" name="XSVOL" state="STATE_NONE"/>
        </RandomField>
@@ -153,6 +169,7 @@
        <ExprLoHi type="SVOL" name="YSVOL" state="STATE_NONE"/>       
        </RandomField>
     </BasicExpression>
+ -->
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
@@ -253,14 +270,14 @@
     <initTime>0.0</initTime>
     <delt_min>0.0001</delt_min>
     <delt_max>0.0001</delt_max>
-<!--     <max_Timesteps> 10</max_Timesteps> -->
+    <max_Timesteps> 10</max_Timesteps>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
 
   <DataArchiver>
     <filebase>particle-test-driven-cavity.uda</filebase>
-    <outputTimestepInterval>500</outputTimestepInterval>
+    <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle="2" interval="0.0001"/>
 <!--     <compression>gzip</compression> -->
@@ -273,6 +290,15 @@
     <save label="p.xw_rhs"/>    
     <save label="p.yw_rhs"/>    
     <save label="p.zw_rhs"/>            
+
+    <save label="p.u_rhs"/>    
+    <save label="p.v_rhs"/>    
+    <save label="p.w_rhs"/>            
+
+    <save label="p.drag_x"/>    
+    <save label="p.drag_y"/>    
+    <save label="p.drag_z"/>            
+    
     <save label="p.u"/>    
     <save label="p.v"/>        
     <save label="p.w"/>        

@@ -64,17 +64,14 @@
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
        <NameTag name="p.xw" state="STATE_DYNAMIC"/>
-       <ParticleUniformIC nparticles="484">
-				 <ExprLoHi type="SVOL" name="XSVOL" state="STATE_NONE"/>       
-       </ParticleUniformIC>
+       <ParticleUniformIC nparticles="484" coordinate="X"/>
     </BasicExpression>
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
        <NameTag name="p.yw" state="STATE_DYNAMIC"/>
-       <ParticleUniformIC nparticles="484">
+       <ParticleUniformIC nparticles="484" coordinate="X">
          <TransverseDirection/>       
-				 <ExprLoHi type="SVOL" name="YSVOL" state="STATE_NONE"/>
        </ParticleUniformIC>
     </BasicExpression>
 

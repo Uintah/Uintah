@@ -179,13 +179,10 @@
       </RandomField>
 
       <ParticleUniformIC spec="OPTIONAL NO_DATA"
-                         attribute1="nparticles  REQUIRED INTEGER">
+                         attribute1="nparticles  REQUIRED INTEGER"
+                         attribute2="coordinate REQUIRED STRING 'X,Y,Z'">
         <!-- Often times, the low and hi need to be determined from another expression. To achieve this, use the xml spec below. -->                       
         <TransverseDirection spec="OPTIONAL NO_DATA"/>
-      	<ExprLoHi spec="OPTIONAL NO_DATA"
-      	          attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL'"
-                  attribute2="name REQUIRED STRING"
-                  attribute3="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/> 
       </ParticleUniformIC>
       
       <!-- Creates an exponential vortex for testing outflow boundary conditions!-->
