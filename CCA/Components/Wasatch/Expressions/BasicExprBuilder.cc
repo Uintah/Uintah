@@ -141,7 +141,56 @@ namespace Wasatch{
         }
       } else { // if NO exprHiLo was provided
         builder = scinew ParticleRandomIC<SVolField>::Builder( tag, low, high, exprLoHiTag, seed );
-      }    
+      }
+    } else if ( params->findBlock("ParticleUniformIC") ) {
+      Uintah::ProblemSpecP valParams = params->findBlock("ParticleUniformIC");
+      const Expr::Tag exprLoHiTag = parse_nametag(valParams->findBlock("ExprLoHi"));
+      bool transverse = valParams->findBlock("TransverseDirection");
+      int nParticles;
+      valParams->getAttribute("nparticles",nParticles);
+      std::string coordFieldType;
+      valParams->findBlock("ExprLoHi")->getAttribute("type",coordFieldType);
+      switch( get_field_type(coordFieldType) ){
+        case SVOL : {
+          builder = scinew ParticleUniformIC<SVolField>::Builder( tag, exprLoHiTag, nParticles, transverse );
+          break;
+        }
+        case XVOL : {
+          builder = scinew ParticleUniformIC<XVolField>::Builder( tag, exprLoHiTag, nParticles, transverse );
+          break;
+        }
+        case YVOL : {
+          builder = scinew ParticleUniformIC<YVolField>::Builder( tag, exprLoHiTag, nParticles, transverse );
+          break;
+        }
+        case ZVOL : {
+          builder = scinew ParticleUniformIC<ZVolField>::Builder( tag, exprLoHiTag, nParticles, transverse );
+          break;
+        }
+        default:
+        {
+          std::ostringstream msg;
+          msg << "ERROR: unsupported exprLoHi field type '" << coordFieldType << "'" << "while parsing an RandomField expression for particle initialization." << std::endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }
+      }
+    } else if( params->findBlock("LinearFunction") ){
+      double slope, intercept;
+      Uintah::ProblemSpecP valParams = params->findBlock("LinearFunction");
+      valParams->getAttribute("slope",slope);
+      valParams->getAttribute("intercept",intercept);
+      const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
+      typedef typename Expr::LinearFunction<FieldT>::Builder Builder;
+      builder = scinew Builder( tag, indepVarTag, slope, intercept );
+    } else if ( params->findBlock("SineFunction") ) {
+      double amplitude, frequency, offset;
+      Uintah::ProblemSpecP valParams = params->findBlock("SineFunction");
+      valParams->getAttribute("amplitude",amplitude);
+      valParams->getAttribute("frequency",frequency);
+      valParams->getAttribute("offset",offset);
+      const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
+      typedef typename Expr::SinFunction<FieldT>::Builder Builder;
+      builder = scinew Builder( tag, indepVarTag, amplitude, frequency, offset);
     } else {
       std::ostringstream msg;
       msg << "ERROR: unsupported BasicExpression for Particles. Note that not all BasicExpressions are supported by particles. Please revise your input file." << std::endl;

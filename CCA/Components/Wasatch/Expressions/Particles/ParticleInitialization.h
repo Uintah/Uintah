@@ -181,16 +181,16 @@ public:
   struct Builder : public Expr::ExpressionBuilder
   {
     Builder( const Expr::Tag& result,
-            const double lo,
-            const double hi,
             const Expr::Tag& exprLoHiTag,
-            const double seed );
+            const int nParticles,
+            const bool transverse);
     
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
-    const double lo_, hi_, seed_;
     const Expr::Tag exprLoHiTag_;
+    const int nParticles_;
+    const bool transverse_;
   };
   
   void advertise_dependents( Expr::ExprDeps& exprDeps );
@@ -198,14 +198,14 @@ public:
   void evaluate();
   
 private:
-  const double lo_, hi_, seed_;
   const Expr::Tag exprLoHiTag_;
+  const int nParticles_;
+  const bool transverse_;
   const GridCoordT *x_;
   
-  ParticleUniformIC( const double lo,
-                   const double hi,
-                   const Expr::Tag& exprLoHiTag,
-                   const double seed );
+  ParticleUniformIC( const Expr::Tag& exprLoHiTag,
+                     const int nParticles,
+                     const bool transverse);
   
 };
 
@@ -213,15 +213,13 @@ private:
 
 template<typename GridCoordT>
 ParticleUniformIC<GridCoordT>::
-ParticleUniformIC(const double lo,
-                 const double hi,
-                 const Expr::Tag& exprLoHiTag,
-                 const double seed )
+ParticleUniformIC(const Expr::Tag& exprLoHiTag,
+                  const int nParticles,
+                  const bool transverse)
 : Expr::Expression<ParticleField>(),
-lo_(lo),
-hi_(hi),
 exprLoHiTag_(exprLoHiTag),
-seed_(seed)
+nParticles_(nParticles),
+transverse_(transverse)
 {}
 
 //--------------------------------------------------------------------
@@ -231,9 +229,7 @@ void
 ParticleUniformIC<GridCoordT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  if (exprLoHiTag_ != Expr::Tag()) {
-    exprDeps.requires_expression( exprLoHiTag_ );
-  }
+  exprDeps.requires_expression( exprLoHiTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -244,11 +240,7 @@ ParticleUniformIC<GridCoordT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
   const typename Expr::FieldMgrSelector<GridCoordT>::type& fm = fml.template field_manager<GridCoordT>();
-  if (exprLoHiTag_ != Expr::Tag()) {
-    x_ = &fm.field_ref( exprLoHiTag_ );
-  } else {
-    x_ = NULL;
-  }
+  x_ = &fm.field_ref( exprLoHiTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -262,33 +254,32 @@ evaluate()
   ParticleField& phi = this->value();
   typename ParticleField::iterator phiIter = phi.begin();
   
+  const double low  = field_min_interior(*x_);
+  const double high = field_max_interior(*x_);
   
-  //  typedef boost::mt19937                       GenT;    // Mersenne Twister
-  //  typedef boost::normal_distribution<double>   DistT;   // Normal Distribution
-  //  typedef boost::variate_generator<GenT,DistT> VarGenT;    // Variate generator
-  //
-  //  GenT     eng((unsigned) ( (pid+1) * seed_ * std::time(0) ));
-  //  DistT    dist(0,1);
-  //  VarGenT  gen(eng,dist);
-  
-  
-  // This is a typedef for a random number generator.
-  typedef boost::mt19937 base_generator_type; // mersenne twister
-  // Define a random number generator and initialize it with a seed.
-  // (The seed is unsigned, otherwise the wrong overload may be selected
-  // when using mt19937 as the base_generator_type.)
-  // seed the random number generator based on the MPI rank
-  const int pid =  Uintah::Parallel::getMPIRank();
-  base_generator_type generator((unsigned) ( (pid+1) * seed_ * std::time(0) ));
-  const double low  = x_ ? field_min(*x_) : lo_;
-  const double high = x_ ? field_max(*x_) : hi_;
-  
-  boost::uniform_real<> rand_dist(low,high);
-  boost::variate_generator<base_generator_type&, boost::uniform_real<> > boost_rand(generator, rand_dist);
-  
-  while ( phiIter != phi.end() ) {
-    *phiIter = boost_rand();
-    ++phiIter;
+  const int npart = (int) sqrt(nParticles_);
+  const double dx = (high-low) / npart;
+  int i = 0;
+  int j = 0;
+  if (transverse_) {
+    while ( phiIter != phi.end() ) {
+      const double x = low + j*dx;
+      if (x >= high) {
+        j = 0;
+        i++;
+      }
+      *phiIter = low + i*dx;
+      ++phiIter;
+      j++;
+    }
+  } else {
+    while ( phiIter != phi.end() ) {
+      const double x = low + i*dx;
+      if (x >= high) i = 0;
+      *phiIter = low + i*dx;
+      ++phiIter;
+      i++;
+    }
   }
 }
 
@@ -297,15 +288,13 @@ evaluate()
 template< typename GridCoordT >
 ParticleUniformIC<GridCoordT>::Builder::
 Builder( const Expr::Tag& result,
-        const double lo,
-        const double hi,
         const Expr::Tag& exprLoHiTag,
-        const double seed )
+        const int nParticles,
+        const bool transverse)
 : ExpressionBuilder(result),
-lo_(lo),
-hi_(hi),
 exprLoHiTag_(exprLoHiTag),
-seed_(seed)
+nParticles_(nParticles),
+transverse_(transverse)
 {}
 
 //--------------------------------------------------------------------
@@ -314,7 +303,7 @@ template< typename GridCoordT >
 Expr::ExpressionBase*
 ParticleUniformIC<GridCoordT>::Builder::build() const
 {
-  return new ParticleUniformIC<GridCoordT>(lo_, hi_, exprLoHiTag_, seed_ );
+  return new ParticleUniformIC<GridCoordT>(exprLoHiTag_, nParticles_, transverse_ );
 }
 
 //--------------------------------------------------------------------
