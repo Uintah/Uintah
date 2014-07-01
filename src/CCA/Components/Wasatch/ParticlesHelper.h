@@ -84,7 +84,10 @@ namespace Wasatch {
                                       Uintah::SchedulerP& sched );
     
     void sync_with_wasatch( Wasatch* const wasatch );
-    
+
+    void schedule_delete_outside_particles( const Uintah::LevelP& level,
+                                          Uintah::SchedulerP& sched );
+
     static void add_particle_variable(const Expr::Tag& varTag);
     
   private:
@@ -98,6 +101,10 @@ namespace Wasatch {
     void initialize_particles(const Uintah::ProcessorGroup*,
                          const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
                          Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
+
+    void delete_outside_particles(const Uintah::ProcessorGroup*,
+                              const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
+                              Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
 
     void sync_particle_position(const Uintah::ProcessorGroup*,
                         const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,

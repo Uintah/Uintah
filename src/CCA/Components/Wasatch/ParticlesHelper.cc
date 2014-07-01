@@ -161,6 +161,67 @@ namespace Wasatch {
       }
     }
   }
+  //--------------------------------------------------------------------
+  
+  void ParticlesHelper::schedule_delete_outside_particles(const Uintah::LevelP& level,
+                                                      Uintah::SchedulerP& sched)
+  {
+    using namespace Uintah;
+    Uintah::Task* task = scinew Uintah::Task("delete outside particles",
+                                             this, &ParticlesHelper::delete_outside_particles);
+    task->requires(Task::NewDW, pXLabel_, Uintah::Ghost::None, 0);
+    task->requires(Task::NewDW, pYLabel_, Uintah::Ghost::None, 0);
+    task->requires(Task::NewDW, pZLabel_, Uintah::Ghost::None, 0);
+    sched->addTask(task, level->eachPatch(), wasatch_->get_wasatch_materials());
+  }
+  
+  //--------------------------------------------------------------------
+  
+  // this will create the particle subset
+  void ParticlesHelper::delete_outside_particles(const Uintah::ProcessorGroup*,
+                                             const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
+                                             Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw)
+  {
+    using namespace Uintah;
+    for(int p=0;p<patches->size();p++){
+      const Patch* patch = patches->get(p);
+      for(int m = 0; m<matls->size(); m++){
+        const int matl = matls->get(m);
+        ParticleSubset* pset = new_dw->getParticleSubset(matl, patch);
+        
+        ParticleSubset* delset = scinew ParticleSubset(0,matl,patch);
+        Point low  = patch->getCellPosition(patch->getCellLowIndex());
+        Point high = patch->getCellPosition(patch->getCellLowIndex());
+        
+        // Wasatch particle positions
+        constParticleVariable<double> px;
+        constParticleVariable<double> py;
+        constParticleVariable<double> pz;
+        
+        new_dw->get(px,    pXLabel_,                  pset);
+        new_dw->get(py,    pYLabel_,                  pset);
+        new_dw->get(pz,    pZLabel_,                  pset);
+        
+        
+        for(ParticleSubset::iterator iter = pset->begin();
+            iter != pset->end(); iter++)
+        {
+          particleIndex idx = *iter;
+
+          
+          // Delete particles whose mass is too small (due to combustion),
+          // whose pLocalized flag has been set to -999 or who have a negative temperature
+          if (   px[idx] > high.x() || px[idx] < low.x()
+              || py[idx] > high.y() || py[idx] < low.y()
+              || pz[idx] > high.z() || pz[idx] < low.z()){
+            delset->addParticle(idx);
+          }
+          
+        } // particles
+        new_dw->deleteParticles(delset);
+      }
+    }
+  }
 
   //------------------------------------------------------------------
   
