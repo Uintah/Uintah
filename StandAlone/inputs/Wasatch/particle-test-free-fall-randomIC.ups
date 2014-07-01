@@ -220,11 +220,11 @@
     <save label="p.re"/>    
     <save label="p.cd"/>        
     <save label="p.tau"/>    
-    <save label="p.drag_X"/>    
-    <save label="p.drag_Y"/>    
-		<save label="p.drag_Z"/>    
+    <save label="p.drag_x"/>    
+    <save label="p.drag_y"/>    
+		<save label="p.drag_z"/>    
 
-		<save label="p.gravity_Z"/>        
+		<save label="p.gravity_z"/>        
     <save label="p.u_rhs"/>    
     <save label="p.v_rhs"/>    
     <save label="p.w_rhs"/>            
