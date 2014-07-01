@@ -303,10 +303,6 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
     for ( CellIterator iter = patch->getExtraCellIterator();
          !iter.done(); ++iter) {
       IntVector c = *iter;
-#ifdef cqmom_dbg
-      cout << "Cell Location " << c << endl;
-      cout << "______________" << endl;
-#endif
       vector<double> temp_weights (nNodes, 0.0);
       vector<vector<double> > temp_abscissas (M, vector<double> (nNodes, 0.0));
       vector<double> temp_moments (momentSize, 0.0);
@@ -333,7 +329,13 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
       //actually do the cqmom inversion step
       if (temp_moments[0] < d_small) {
         //if m0 is very small, leave all weights/absciassa equal to 0 (as intialized)
+        if (temp_moments[0] < 0.0 )
+          cout << "WARNING: Negative Moment in cell " << c << " settign all wegiths and abscissas to 0" << endl;
       } else {
+#ifdef cqmom_dbg
+        cout << "Cell Location " << c << endl;
+        cout << "______________" << endl;
+#endif
         //actually compute inversion
         CQMOMInversion( temp_moments, M, N_i, maxInd,
                         temp_weights, temp_abscissas, d_adaptive);

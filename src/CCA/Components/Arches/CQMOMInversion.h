@@ -91,7 +91,11 @@ void vandermondeSolve ( const std::vector<double> &x, std::vector<double> &w, co
         s += q[k-1] * b;
         t = xx *t+b;
       }
-      w[i] = s/t;
+      if ( t!= 0.0 ) {
+        w[i] = s/t;
+      } else {
+        w[i] = q[i];
+      }
     }
   }
 }
@@ -104,24 +108,12 @@ void wheelerAlgorithm(const std::vector<double>& moments, std::vector<double>& w
 {
   int nEnv = (int) moments.size()/2; //get # nodes
   int nMom = moments.size();
-  
-  if (moments[0] < 0.0) {
-    cout << "WARNING: Number density is negative setting nodes to 0" << endl;
-    for (int i = 0; i<nEnv; i++) {
-      w[i] = 0.0;
-      x[i] = 0.0;
-    }
-    return;
+#ifdef cqmom_dbg
+  cout << "Wheeler Start" << endl;
+  for (int i = 0; i < nMom; i++) {
+    cout << "m[" << i << "]=" << moments[i] << endl;
   }
-  
-  if (moments[0] == 0.0) {  //return only 0's if moment_0 = 0
-    for (int i = 0; i<nEnv; i++) {
-      w[i] = 0.0;
-      x[i] = 0.0;
-    }
-    return;
-  }
-  
+#endif
   if (nEnv == 1) {
     w[0] = moments[0];
     x[0] = moments[1]/moments[0];
@@ -229,7 +221,7 @@ void wheelerAlgorithm(const std::vector<double>& moments, std::vector<double>& w
   }
   
   //_____________
-  //Solve actual weights and absciasas
+  //Solve actual weights and abscissas
   for( int i = 0; i < nEnv; i++) {
     w[i] = moments[0] * z_[i*nEnv] * z_[i*nEnv];
     x[i] = eigenVal[i];
@@ -252,7 +244,7 @@ void adaptiveWheelerAlgorithm(const std::vector<double>& moments, std::vector<do
  CQMOMInversion Function
  ****************************/
 void CQMOMInversion( const std::vector<double>& moments, const int& M, const std::vector<int>& N_i, const std::vector<int>& maxInd,
-                     std::vector<double> & weights, std::vector<std::vector<double> >& absciasas, const bool& adapt )
+                     std::vector<double> & weights, std::vector<std::vector<double> >& abscissas, const bool& adapt )
 {
   //This is the actual cqmom inversion fucntion
   //moments should be a a flat array numerically ordered
@@ -289,6 +281,14 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
   }
 #endif
   
+  if (M == 1) {
+    for (int k1 = 0; k1 < N_i[0]; k1++) {
+      weights[k1] = x1[k1];
+      abscissas[0][k1] = x1[k1];
+    }
+    return;
+  }
+  
   std::vector<double> vanderMom (N_i[0], 0.0);    //moment matrix to solve conditionals
   std::vector<double> condMomStar(N_i[0], 0.0);   //temporary conditional moments
   std::vector< std::vector<double> > condMom (N_i[0], std::vector<double> (2*N_i[1], 1.0) ); //initialized to 1.0 to handle all 0th moments
@@ -308,11 +308,15 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
 #endif
     
     //vander solve (x,w,q) -> vandersolve sum x_i^k w_i = q_k
-    // q contians known moments, x_i contains absicsissas, w_i are conditional moments (unknown)
+    // q contians known moments, x_i contains abscissas, w_i are conditional moments (unknown)
     vandermondeSolve ( x1, condMomStar, vanderMom);
     
     for (int i = 0; i<N_i[0]; i++) {
-      condMom[i][k] = condMomStar[i]/w1[i];
+      if ( w1[i] > 0.0 ) {
+        condMom[i][k] = condMomStar[i]/w1[i];
+      } else {
+        condMom[i][k] = 0.0;
+      }
     }
 #ifdef cqmom_dbg
     for (int i = 0; i<N_i[0]; i++) {
@@ -372,8 +376,8 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
     for (int k1 = 0; k1 < N_i[0]; k1++) {
       for (int k2 = 0; k2 < N_i[1]; k2++) {
         weights[ii] = w1[k1]*w2[k1][k2];
-        absciasas[0][ii] = x1[k1];
-        absciasas[1][ii] = x2[k1][k2];
+        abscissas[0][ii] = x1[k1];
+        abscissas[1][ii] = x2[k1][k2];
         ii++;
       }
     }
@@ -411,7 +415,11 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
 #endif
       
       for (int i = 0; i<N_i[0]; i++) {
-        Zeta[i][k2][k3] = tempStar[i]/w1[i];
+        if ( w1[i] > 0.0 ) {
+          Zeta[i][k2][k3] = tempStar[i]/w1[i];
+        } else {
+          Zeta[i][k2][k3] = 0.0;
+        }
 #ifdef cqmom_dbg
         if ( k3 == 1 ) {
           cout << "Zeta[" << i << "] = " << Zeta[i][k2][k3] << endl;
@@ -451,7 +459,11 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
       }
       vandermondeSolve(xTemp, condMomStar, vanderMom );
       for (int j = 0; j<N_i[1]; j++) {
-        condMom3[j][k] = condMomStar[j]/wTemp[j]; //un-normalize the weights
+        if ( wTemp[j] > 0.0 ) {
+          condMom3[j][k] = condMomStar[j]/wTemp[j]; //un-normalize the weights
+        } else {
+          condMom3[j][k] = 0.0;
+        }
 #ifdef cqmom_dbg
         if ( k == 1 ) {
           cout << "cmom*[" << j << "] = " << condMomStar[j] << endl;
@@ -502,9 +514,9 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
     for (int k2 = 0; k2 < N_i[1]; k2++) {
       for (int k3 = 0; k3 < N_i[2]; k3++) {
         weights[ii] = w1[k1]*w2[k1][k2]*w3[k1][k2][k3];
-        absciasas[0][ii] = x1[k1];
-        absciasas[1][ii] = x2[k1][k2];
-        absciasas[2][ii] = x3[k1][k2][k3];
+        abscissas[0][ii] = x1[k1];
+        abscissas[1][ii] = x2[k1][k2];
+        abscissas[2][ii] = x3[k1][k2][k3];
         ii++;
       }
     }
