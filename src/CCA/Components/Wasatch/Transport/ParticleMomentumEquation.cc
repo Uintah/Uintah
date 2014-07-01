@@ -83,9 +83,9 @@ namespace Wasatch{
     {
       std::string gDir;
       gravitySpec->getAttribute("direction",gDir);
-      if      (gDir == "X" && dir_name() == "X") doGravity_ = true;
-      else if (gDir == "Y" && dir_name() == "Y") doGravity_ = true;
-      else if (gDir == "Z" && dir_name() == "Z") doGravity_ = true;
+      if      (gDir == "X" && dir_name() == "x") doGravity_ = true;
+      else if (gDir == "Y" && dir_name() == "y") doGravity_ = true;
+      else if (gDir == "Z" && dir_name() == "z") doGravity_ = true;
     }
     doDrag_ = true;
     doDrag_ = !(pMomSpec->findBlock("DisableDragForce"));
