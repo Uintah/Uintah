@@ -123,7 +123,6 @@ void SPME::generateChargeMapDipole(const ProcessorGroup*    pg,
                 particleId    ID        =   atomIDs[atomIndex];
                 Point         position  =   atomPositions[atomIndex];
 
-                std::cerr << " Test Position: " << position << std::endl;
                 Vector atomGridCoordinates;
                 coordSys->toReduced(position.asVector(),atomGridCoordinates);
 
@@ -270,7 +269,7 @@ void SPME::calculateRealspaceDipole(const ProcessorGroup*     pg,
                                     const MaterialSubset*     materials,
                                     DataWarehouse*            old_dw,
                                     DataWarehouse*            new_dw,
-                                    const SimulationStateP*         sharedState,
+                                    const SimulationStateP*   sharedState,
                                     const MDLabel*            label,
                                     CoordinateSystem*         coordinateSystem)
 {
