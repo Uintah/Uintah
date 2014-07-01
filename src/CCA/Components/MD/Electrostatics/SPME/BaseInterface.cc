@@ -182,6 +182,8 @@ void SPME::initialize(const ProcessorGroup*   pg,
   size_t            numPatches      =   patches->size();
   size_t            numAtomTypes    =   materials->size();
 
+
+
   for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) {
     const Patch*    patch           = patches->get(patchIndex);
 
@@ -205,7 +207,7 @@ void SPME::initialize(const ProcessorGroup*   pg,
     }
 
     // Quick material loop to initialize per-particle related variables
-    for (size_t typeIndex = 0; typeIndex < numPatches; ++typeIndex) {
+    for (size_t typeIndex = 0; typeIndex < numAtomTypes; ++typeIndex) {
       int atomType = materials->get(typeIndex);
       ParticleSubset* atomSubset = newDW->getParticleSubset(atomType, patch);
 
@@ -388,6 +390,11 @@ void SPME::calculate(   const ProcessorGroup*   pg,
                       label, coordSys);
   }
 
+
+  //  Get the full material set
+  const MaterialSet*    allMaterials        =   (*simState)->allMaterials();
+  const MaterialSubset* allMaterialsUnion   =   allMaterials->getUnion();
+
   // Most of the calculate loop falls under the control of the subscheduler
   //  Temporarily turn off parentDW scrubbing
   DataWarehouse::ScrubMode parentOldDW_scrubmode =
@@ -396,21 +403,28 @@ void SPME::calculate(   const ProcessorGroup*   pg,
   DataWarehouse::ScrubMode parentNewDW_scrubmode =
                            parentNewDW->setScrubbing(DataWarehouse::ScrubNone);
 
-  GridP                 grid                =   level->getGrid();
+  GridP grid    =   level->getGrid();
   subscheduler->setParentDWs(parentOldDW, parentNewDW);
   subscheduler->advanceDataWarehouse(grid);
-
-  //  Get the full material set
-  const MaterialSet*    allMaterials        =   (*simState)->allMaterials();
-  const MaterialSubset* allMaterialsUnion   =   allMaterials->getUnion();
+  subscheduler->setInitTimestep(true);
   DataWarehouse*        subOldDW            =   subscheduler->get_dw(2);
   DataWarehouse*        subNewDW            =   subscheduler->get_dw(3);
 
-  // transfer data from parentOldDW to subDW
-  subNewDW->transferFrom(parentOldDW, label->global->pX, perProcPatches,
+//  if (f_polarizable) {
+//    subNewDW->transferFrom(parentOldDW,
+//                           label->electrostatic->pMu,
+//                           perProcPatches,
+//                           allMaterialsUnion);
+//  }
+  subNewDW->transferFrom(parentOldDW,
+                         label->global->pX,
+                         perProcPatches,
                          allMaterialsUnion);
-  subNewDW->transferFrom(parentOldDW, label->global->pID, perProcPatches,
+  subNewDW->transferFrom(parentOldDW,
+                         label->global->pID,
+                         perProcPatches,
                          allMaterialsUnion);
+  subscheduler->setInitTimestep(false);
 
 //  // Initialize new parent DW for reduction variables.
 //  //   Note:  We should probably skip this and just initialize them with the
@@ -494,6 +508,15 @@ void SPME::calculate(   const ProcessorGroup*   pg,
                                 subscheduler);
   }
   subscheduler->compile();
+
+  // transfer data from parentOldDW to subDW
+//  subNewDW->transferFrom(parentOldDW, label->electrostatic->pMu, perProcPatches,
+//                         allMaterialsUnion);
+//  subNewDW->transferFrom(parentOldDW, label->global->pX, perProcPatches,
+//                         allMaterialsUnion);
+//  subNewDW->transferFrom(parentOldDW, label->global->pID, perProcPatches,
+//                         allMaterialsUnion);
+
 
   while (!converged && (numIterations < d_maxPolarizableIterations)) {
     // Map subNewDW

@@ -178,6 +178,9 @@ void SPME::scheduleInitializeLocalStorage(const ProcessorGroup* pg,
   const PatchSet* perproc_patches = loadBal->getPerProcessorPatchSet(level);
 
   task->computes(label->SPME_dep->dInitializeQ);
+
+  sched->addTask(task, perproc_patches, materials);
+
 }
 
 void SPME::scheduleCalculateRealspace(const ProcessorGroup*     pg,
@@ -227,6 +230,8 @@ void SPME::scheduleCalculateRealspace(const ProcessorGroup*     pg,
     task->computes(label->electrostatic->rElectrostaticRealEnergy); //Energy
     task->computes(label->electrostatic->rElectrostaticRealStress); //Stress
 
+    sched->addTask(task, patches, materials);
+
 }
 
 void SPME::scheduleCalculatePretransform(const ProcessorGroup*      pg,
@@ -251,7 +256,7 @@ void SPME::scheduleCalculatePretransform(const ProcessorGroup*      pg,
                        coordSys);
 
     // We need per particle dipoles to map the Charge grid
-    task->requires(Task::NewDW, label->electrostatic->pMu);
+    task->requires(Task::OldDW, label->electrostatic->pMu, Ghost::None, 0);
 
   }
   else {
@@ -307,7 +312,7 @@ void SPME::scheduleReduceNodeLocalQ(const ProcessorGroup*   pg,
 
   // As such, we need to place an artificial dependency chain to get the task
   // graph laid out correctly.
-  task->requires(Task::NewDW, label->SPME_dep->dPreTransform);
+  task->requires(Task::NewDW, label->SPME_dep->dPreTransform, Ghost::None, 0);
   task->computes(label->SPME_dep->dReduceNodeLocalQ);
 //  // FIXME!  Is this redundant with the following "modifies"?
 //  task->requires(Task::NewDW, label->electrostatic->dSubschedulerDependency, Ghost::None, 0);
@@ -347,7 +352,12 @@ void SPME::scheduleTransformRealToFourier(const ProcessorGroup* pg,
   LoadBalancer* loadBal = sched->getLoadBalancer();
   const PatchSet* perproc_patches = loadBal->getPerProcessorPatchSet(level);
 
-  task->requires(Task::NewDW, label->SPME_dep->dReduceNodeLocalQ);
+  // Ensure all nodes have populated their nodeLocalQ variable
+  task->requires(Task::NewDW,
+                 label->SPME_dep->dReduceNodeLocalQ,
+                 Ghost::AroundNodes,
+                 SHRT_MAX);
+
   task->computes(label->SPME_dep->dTransformRealToFourier);
 //  task->requires(Task::NewDW, label->electrostatic->dSubschedulerDependency, Ghost::None, 0);
 //
@@ -420,7 +430,10 @@ void SPME::scheduleTransformFourierToReal(const ProcessorGroup* pg,
   LoadBalancer* loadBal = sched->getLoadBalancer();
   const PatchSet* perproc_patches =  loadBal->getPerProcessorPatchSet(level);
 
-  task->requires(Task::NewDW, label->SPME_dep->dCalculateInFourierSpace);
+  task->requires(Task::NewDW,
+                 label->SPME_dep->dCalculateInFourierSpace,
+                 Ghost::None,
+                 0);
   task->computes(label->SPME_dep->dTransformFourierToReal);
 
 //  task->requires(Task::NewDW, label->electrostatic->dSubschedulerDependency, Ghost::None, 0);
@@ -480,8 +493,13 @@ void SPME::scheduleUpdateFieldAndStress(const ProcessorGroup*   pg,
                            coordSystem);
 
   // Requires the dipoles from the last iteration
-  task->requires(Task::OldDW, label->electrostatic->pMu);
-  task->requires(Task::NewDW, label->SPME_dep->dDistributeNodeLocalQ);
+  task->requires(Task::OldDW, label->electrostatic->pMu, Ghost::None, 0);
+  task->requires(Task::NewDW,
+                 label->SPME_dep->dDistributeNodeLocalQ,
+                 Ghost::None,
+                 0);
+//                 Ghost::AroundNodes,
+//                 SHRT_MAX);
 
   // Calculates the new inverse space field prediction and updates the inverse space stress tensor
   task->computes(label->electrostatic->pE_electroInverse_preReloc);
