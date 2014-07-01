@@ -87,8 +87,9 @@ void SPME::addCalculateRequirements(Task* task, MDLabel* d_label) const {
 
   task->requires(Task::OldDW, d_label->global->pX, Ghost::None, 0);
   task->requires(Task::OldDW, d_label->global->pID, Ghost::None, 0);
-  task->requires(Task::OldDW, d_label->electrostatic->pMu, Ghost::None, 0);
-
+  if (f_polarizable) {
+    task->requires(Task::OldDW, d_label->electrostatic->pMu, Ghost::None, 0);
+  }
   // Ensures that SPME::Setup runs first
   task->requires(Task::NewDW, d_label->electrostatic->dElectrostaticDependency);
 }
