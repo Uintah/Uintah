@@ -141,36 +141,13 @@ namespace Wasatch{
       }
     } else if ( params->findBlock("ParticleUniformIC") ) {
       Uintah::ProblemSpecP valParams = params->findBlock("ParticleUniformIC");
-      const Expr::Tag exprLoHiTag = parse_nametag(valParams->findBlock("ExprLoHi"));
       bool transverse = valParams->findBlock("TransverseDirection");
       int nParticles;
       valParams->getAttribute("nparticles",nParticles);
-      std::string coordFieldType;
-      valParams->findBlock("ExprLoHi")->getAttribute("type",coordFieldType);
-      switch( get_field_type(coordFieldType) ){
-        case SVOL : {
-          builder = scinew ParticleUniformIC<SVolField>::Builder( tag, exprLoHiTag, nParticles, transverse );
-          break;
-        }
-        case XVOL : {
-          builder = scinew ParticleUniformIC<XVolField>::Builder( tag, exprLoHiTag, nParticles, transverse );
-          break;
-        }
-        case YVOL : {
-          builder = scinew ParticleUniformIC<YVolField>::Builder( tag, exprLoHiTag, nParticles, transverse );
-          break;
-        }
-        case ZVOL : {
-          builder = scinew ParticleUniformIC<ZVolField>::Builder( tag, exprLoHiTag, nParticles, transverse );
-          break;
-        }
-        default:
-        {
-          std::ostringstream msg;
-          msg << "ERROR: unsupported exprLoHi field type '" << coordFieldType << "'" << "while parsing an RandomField expression for particle initialization." << std::endl;
-          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-        }
-      }
+      std::string coord;
+      valParams->getAttribute("coordinate",coord);
+      Expr::Tag coordTag(coord+"SVOL",Expr::STATE_NONE);
+      builder = scinew ParticleUniformIC<SVolField>::Builder( tag, coordTag, nParticles, transverse, coord );
     } else if( params->findBlock("LinearFunction") ){
       double slope, intercept;
       Uintah::ProblemSpecP valParams = params->findBlock("LinearFunction");
