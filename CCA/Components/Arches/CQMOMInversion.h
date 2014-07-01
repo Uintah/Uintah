@@ -283,7 +283,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
   
   if (M == 1) {
     for (int k1 = 0; k1 < N_i[0]; k1++) {
-      weights[k1] = x1[k1];
+      weights[k1] = w1[k1];
       abscissas[0][k1] = x1[k1];
     }
     return;
