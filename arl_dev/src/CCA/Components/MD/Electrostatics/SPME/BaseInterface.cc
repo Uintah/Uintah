@@ -410,12 +410,12 @@ void SPME::calculate(   const ProcessorGroup*   pg,
   DataWarehouse*        subOldDW            =   subscheduler->get_dw(2);
   DataWarehouse*        subNewDW            =   subscheduler->get_dw(3);
 
-//  if (f_polarizable) {
-//    subNewDW->transferFrom(parentOldDW,
-//                           label->electrostatic->pMu,
-//                           perProcPatches,
-//                           allMaterialsUnion);
-//  }
+  if (f_polarizable) {
+    subNewDW->transferFrom(parentOldDW,
+                           label->electrostatic->pMu,
+                           perProcPatches,
+                           allMaterialsUnion);
+  }
   subNewDW->transferFrom(parentOldDW,
                          label->global->pX,
                          perProcPatches,
