@@ -145,6 +145,7 @@ namespace Uintah {
     int d_timeSubStep;
     bool d_normalized;                          //boolean to normalize weights if needed later
     bool d_adaptive;                            //boolean to use adaptive number of nodes
+    bool d_useLapack;                           //boolean to use lapack or vandermonde solver
     std::string d_which_cqmom;
     
     std::vector<std::string> coordinateNames;   //list of internal coordiante names

@@ -74,6 +74,7 @@ void CQMOM::problemSetup(const ProblemSpecP& params)
   db->get("HighestOrder",maxInd);           //vector of maxium moment order NOTE: this could be made automatic from indexes later
   db->getWithDefault("Adaptive",d_adaptive,false); //use adaptive quadrature or not - NYI
   db->getWithDefault("CutOff",d_small,1.0e-10);    //value of moment 0 to fix weights and abscissas to 0
+  db->getWithDefault("UseLapack",d_useLapack,false); //pick which linear solve to use
   
   //NOTE: redo this to only have one xml tag here?
   for ( ProblemSpecP db_name = db->findBlock("InternalCoordinate");
@@ -338,7 +339,7 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
 #endif
         //actually compute inversion
         CQMOMInversion( temp_moments, M, N_i, maxInd,
-                        temp_weights, temp_abscissas, d_adaptive);
+                        temp_weights, temp_abscissas, d_adaptive, d_useLapack);
       }
       
       //Now actually assign the new weights and abscissas

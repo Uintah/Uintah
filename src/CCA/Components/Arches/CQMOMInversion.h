@@ -34,6 +34,10 @@ extern "C"{
 # define DSYEV FIX_NAME(dsyev)
   void DSYEV( char* jobz, char* uplo, int* n, double* a, int* lda,
               double* w, double* work, int* lwork, int* info );
+  
+# define DGESV FIX_NAME(dgesv)
+  void DGESV(int *n, int *nrhs, double *a, int *lda,
+             int *ipiv, double *b, int *ldb, int *info);
 }
 
 //uncomment to debug matricies
@@ -244,7 +248,7 @@ void adaptiveWheelerAlgorithm(const std::vector<double>& moments, std::vector<do
  CQMOMInversion Function
  ****************************/
 void CQMOMInversion( const std::vector<double>& moments, const int& M, const std::vector<int>& N_i, const std::vector<int>& maxInd,
-                     std::vector<double> & weights, std::vector<std::vector<double> >& abscissas, const bool& adapt )
+                     std::vector<double> & weights, std::vector<std::vector<double> >& abscissas, const bool& adapt, const bool& useLapack )
 {
   //This is the actual cqmom inversion fucntion
   //moments should be a a flat array numerically ordered
@@ -261,7 +265,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
   
 #ifdef cqmom_dbg
   for (unsigned int i = 0; i<moments.size(); i++) {
-    cout << "M[ " << i << "]= " << moments[i] << endl;
+    cout << "M[" << i << "]= " << moments[i] << endl;
   }
 #endif
   
@@ -307,9 +311,34 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
   }
 #endif
     
+    if ( !useLapack ) {
     //vander solve (x,w,q) -> vandersolve sum x_i^k w_i = q_k
     // q contians known moments, x_i contains abscissas, w_i are conditional moments (unknown)
-    vandermondeSolve ( x1, condMomStar, vanderMom);
+      vandermondeSolve ( x1, condMomStar, vanderMom);
+    } else {
+      int dim = N_i[0];
+      int nRHS = 1;
+      int info;
+      vector<int> ipiv(dim);
+      vector<double> b (dim);
+      vector<double> a (dim*dim);
+    
+      for (int i = 0; i<dim; i++) {
+        b[i] = vanderMom[i];
+      }
+    
+      for (int i = 0; i<dim; i++) {
+        for (int j = 0; j<dim; j++) {
+          a[j + dim*i] = pow(x1[i],j);
+        }
+      }
+    
+      DGESV(&dim, &nRHS, &*a.begin(), &dim, &*ipiv.begin(), &*b.begin(), &dim, &info);
+    
+      for (int i = 0; i<dim; i++) {
+        condMomStar[i] = b[i];
+      }
+    }
     
     for (int i = 0; i<N_i[0]; i++) {
       if ( w1[i] > 0.0 ) {
@@ -402,8 +431,33 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
 #endif
       }
       
+      if ( !useLapack ) {
       //feed into vandermonde
-      vandermondeSolve(x1, tempStar, vanderMom);
+        vandermondeSolve(x1, tempStar, vanderMom);
+      } else {
+        int dim = N_i[0];
+        int nRHS = 1;
+        int info;
+        vector<int> ipiv(dim);
+        vector<double> b (dim);
+        vector<double> a (dim*dim);
+      
+        for (int i = 0; i<dim; i++) {
+          b[i] = vanderMom[i];
+        }
+      
+        for (int i = 0; i<dim; i++) {
+          for (int j = 0; j<dim; j++) {
+            a[j + dim*i] = pow(x1[i],j);
+          }
+        }
+      
+        DGESV(&dim, &nRHS, &*a.begin(), &dim, &*ipiv.begin(), &*b.begin(), &dim, &info);
+      
+        for (int i = 0; i<dim; i++) {
+          tempStar[i] = b[i];
+        }
+      }
 #ifdef cqmom_dbg
       if (k3 == 1) {
         for (int i = 0; i<N_i[0]; i++) {
@@ -457,7 +511,34 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
         }
 #endif
       }
-      vandermondeSolve(xTemp, condMomStar, vanderMom );
+      
+      if ( !useLapack ) {
+        vandermondeSolve(xTemp, condMomStar, vanderMom );
+      } else {
+        int dim = N_i[0];
+        int nRHS = 1;
+        int info;
+        vector<int> ipiv(dim);
+        vector<double> b (dim);
+        vector<double> a (dim*dim);
+      
+        for (int i = 0; i<dim; i++) {
+          b[i] = vanderMom[i];
+        }
+      
+        for (int i = 0; i<dim; i++) {
+          for (int j = 0; j<dim; j++) {
+            a[j + dim*i] = pow(xTemp[i],j);
+          }
+        }
+      
+        DGESV(&dim, &nRHS, &*a.begin(), &dim, &*ipiv.begin(), &*b.begin(), &dim, &info);
+      
+        for (int i = 0; i<dim; i++) {
+          condMomStar[i] = b[i];
+        }
+      }
+      
       for (int j = 0; j<N_i[1]; j++) {
         if ( wTemp[j] > 0.0 ) {
           condMom3[j][k] = condMomStar[j]/wTemp[j]; //un-normalize the weights
