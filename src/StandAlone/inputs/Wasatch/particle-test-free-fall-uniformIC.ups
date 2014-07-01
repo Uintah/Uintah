@@ -170,7 +170,7 @@
     <filebase>particle-test-free-fall-uniformIC.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle="2" interval="0.1"/>
+    <checkpoint cycle="5" interval="0.1"/>
     
     <save label="p.x"/>
     

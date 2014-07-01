@@ -339,14 +339,18 @@ RADIATIONTESTS=[
   ("RMCRT-Burns-Christon", "RMCRT-Burns-Christon.ups",   8,  "All",   ["exactComparison","no_restart","no_memoryTest"] )
 ]
 
+PARTICLETESTS=[
+  ("particle-test-free-fall-uniformIC", "particle-test-free-fall-uniformIC.ups",   1,  "All",   ["exactComparison","no_restart","no_memoryTest"] )
+]
+
 #  ("radprops",                      "RadPropsInterface.ups",             2,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] )
 
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS GPUTESTS BCTESTS CONVECTIONTESTS DEBUGTESTS INTRUSIONTESTS MISCTESTS NIGHTLYTESTS PROJECTIONTESTS QMOMTESTS RADIATIONTESTS RKTESTS SCALARTRANSPORTTESTS TURBULENCETESTS VARDENTESTS
+#LIST: LOCALTESTS GPUTESTS BCTESTS CONVECTIONTESTS DEBUGTESTS INTRUSIONTESTS MISCTESTS NIGHTLYTESTS PARTICLETESTS PROJECTIONTESTS QMOMTESTS RADIATIONTESTS RKTESTS SCALARTRANSPORTTESTS TURBULENCETESTS VARDENTESTS
 #__________________________________
-ALLTESTS = RADIATIONTESTS + TURBULENCETESTS + INTRUSIONTESTS + PROJECTIONTESTS + RKTESTS + VARDENTESTS + MISCTESTS + CONVECTIONTESTS + BCTESTS + QMOMTESTS + SCALARTRANSPORTTESTS
+ALLTESTS = RADIATIONTESTS + TURBULENCETESTS + INTRUSIONTESTS + PROJECTIONTESTS + RKTESTS + VARDENTESTS + MISCTESTS + CONVECTIONTESTS + BCTESTS + QMOMTESTS + SCALARTRANSPORTTESTS + PARTICLETESTS
 
 
 # returns the list
@@ -381,6 +385,8 @@ def getTestList(me) :
     TESTS = INTRUSIONTESTS
   elif me == "RADIATIONTESTS":
     TESTS = RADIATIONTESTS
+  elif me == "PARTICLETESTS":
+    TESTS = PARTICLETESTS   
   else:
     print "\nERROR:Wasatch.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)
