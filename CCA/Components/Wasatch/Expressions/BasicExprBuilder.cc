@@ -94,10 +94,7 @@ namespace Wasatch{
   Expr::ExpressionBuilder*
   build_basic_particle_expr( Uintah::ProblemSpecP params )
   {
-    const Expr::Tag tag = parse_nametag( params->findBlock("NameTag") );
-    
-    const TagNames& tagNames = TagNames::self();
-    
+    const Expr::Tag tag = parse_nametag( params->findBlock("NameTag") );    
     Expr::ExpressionBuilder* builder = NULL;
 
     if( params->findBlock("Constant") ){

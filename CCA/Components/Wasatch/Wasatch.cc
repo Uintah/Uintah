@@ -878,7 +878,10 @@ namespace Wasatch{
     if (doRadiation_)
       cellType_->schedule_compute_celltype(allPatches,materials_,sched);
     //
-    if (doParticles_) particlesHelper_->schedule_sync_particle_position(level,sched,true);
+    if (doParticles_){
+      particlesHelper_->schedule_sync_particle_position(level,sched,true);
+    }
+    
     proc0cout << "Wasatch: done creating initialization task(s)" << std::endl;
   }
 
