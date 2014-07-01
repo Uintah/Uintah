@@ -190,7 +190,6 @@ WARNING
 
     bool d_newGrid;
     bool d_regridOnce;
-    bool d_regridCoarsestLevel;
     
     int d_lastRegridTimestep;         //The last time the full regridder was called (grid may not change)
     int d_dilationTimestep;           //The last timestep that the dilation was changed

@@ -343,7 +343,7 @@ void DDT1::problemSetup_BulletProofing(ProblemSpecP& ps)
       string regridder;
       reg_ps->getAttribute( "type", regridder );
 
-      if (regridder != "Tiled") {
+      if (regridder != "Tiled" && regridder != "SingleLevel") {
         ostringstream msg;
         msg << "\n ERROR:Model:DDT1: The (" << regridder << ") regridder will not work with this burn model. \n";
         msg << "The only regridder that works with this burn model is the \"Tiled\" regridder\n"; 

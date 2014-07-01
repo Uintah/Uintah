@@ -394,9 +394,7 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
 
   d_dynamicDilation=false;
   d_regridOnce = false;
-  d_regridCoarsestLevel = false;
   
-  regrid_spec->get("regrid_L0",               d_regridCoarsestLevel);  
   regrid_spec->get("regrid_once",             d_regridOnce);
   regrid_spec->get("cell_stability_dilation", d_cellStabilityDilation);
   regrid_spec->get("cell_regrid_dilation",    d_cellRegridDilation);
