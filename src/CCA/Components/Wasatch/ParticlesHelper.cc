@@ -241,8 +241,6 @@ namespace Wasatch {
     using namespace Uintah;
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
-      Point low = patch->cellPosition(patch->getCellLowIndex());
-      Point high = patch->cellPosition(patch->getCellHighIndex());
       for(int m = 0; m<matls->size(); m++){
         const int matl = matls->get(m);
         ParticleSubset* pset = initialization ? new_dw->getParticleSubset(matl, patch) : old_dw->getParticleSubset(matl, patch);

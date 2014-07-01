@@ -64,8 +64,8 @@ ParticleRandomIC(const double lo,
 : Expr::Expression<ParticleField>(),
 lo_(lo),
 hi_(hi),
-exprLoHiTag_(exprLoHiTag),
-seed_(seed)
+seed_(seed),
+exprLoHiTag_(exprLoHiTag)
 {}
 
 //--------------------------------------------------------------------
@@ -148,8 +148,8 @@ Builder( const Expr::Tag& result,
 : ExpressionBuilder(result),
 lo_(lo),
 hi_(hi),
-exprLoHiTag_(exprLoHiTag),
-seed_(seed)
+seed_(seed),
+exprLoHiTag_(exprLoHiTag)
 {}
 
 //--------------------------------------------------------------------
