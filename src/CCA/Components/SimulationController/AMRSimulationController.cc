@@ -220,19 +220,30 @@ AMRSimulationController::run()
 #endif
      
      if (d_regridder && d_regridder->needsToReGrid(currentGrid) && (!first || (!d_restarting))) {
-//       proc0cout << "** AMRSimulatiionController: checking if we need to regrid" << endl;
+       //cout << "** AMRSimulatiionController: checking if we need to regrid" << endl;
        doRegridding(currentGrid, false);
+       cout << " d_regridder->needsToReGrid(currentGrid): " << d_regridder->needsToReGrid(currentGrid) 
+             << " first " << first << " d_restarting: " << d_restarting << endl;
      }
     
 /*`==========TESTING==========*/
     // For Jacqueline:  Regrid on the 5th timestep if 
-    // regridOnce flag is set
-    counter ++;
-//cout<<" counter "<<counter<< " regrid once? "<<d_regridder->doRegridOnce()<<endl;
-    if(d_regridder && d_regridder->doRegridOnce() && counter == 5){
-      doRegridding(currentGrid, false);
-      d_regridder->setAdaptivity(false);
-    } 
+    // regridOnce flag is set  
+     //__________________________________
+     //    Regridding
+     if( d_regridder && d_regridder->doRegridOnce() && d_regridder->isAdaptive() ){
+       proc0cout << "______________________________________________________________________\n";
+       proc0cout << " Regridding once.\n";
+       doRegridding(currentGrid, false);
+       d_regridder->setAdaptivity(false);
+       proc0cout << "______________________________________________________________________\n";
+     }
+     
+     if (d_regridder && d_regridder->needsToReGrid(currentGrid) && (!first || (!d_restarting))) {
+       doRegridding(currentGrid, false);
+     }
+    
+    
 /*===========TESTING==========`*/
     
     
@@ -718,7 +729,6 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
       // No scrubbing for initial step
       d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
       d_scheduler->execute();
-cout<<"  here __ "<<endl;
       needNewLevel = d_regridder && d_regridder->isAdaptive() && grid->numLevels()<d_regridder->maxLevels() && doRegridding(grid, true);
     } while (needNewLevel);
 

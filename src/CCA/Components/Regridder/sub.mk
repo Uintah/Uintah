@@ -32,27 +32,28 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := CCA/Components/Regridder
 
 SRCS     += $(SRCDIR)/RegridderCommon.cc \
-	    $(SRCDIR)/RegridderFactory.cc \
-	    $(SRCDIR)/HierarchicalRegridder.cc \
-			$(SRCDIR)/BNRTask.cc \
-	    $(SRCDIR)/BNRRegridder.cc \
-	    $(SRCDIR)/PatchFixer.cc  \
-	    $(SRCDIR)/TiledRegridder.cc
+            $(SRCDIR)/RegridderFactory.cc \
+            $(SRCDIR)/HierarchicalRegridder.cc \
+            $(SRCDIR)/BNRTask.cc \
+            $(SRCDIR)/BNRRegridder.cc \
+            $(SRCDIR)/PatchFixer.cc  \
+            $(SRCDIR)/TiledRegridder.cc \
+            $(SRCDIR)/SingleLevelRegridder.cc
 
 PSELIBS := \
-	CCA/Ports        \
-	Core/Disclosure  \
-	Core/ProblemSpec \
-	Core/Parallel    \
-	Core/Grid        \
-	Core/Util        \
-	Core/Exceptions  \
-	Core/Geometry			 \
-	Core/Exceptions			 \
-	Core/Thread			 \
-	Core/Util \
-	\
-	Core/Math
+        CCA/Ports        \
+        Core/Disclosure  \
+        Core/ProblemSpec \
+        Core/Parallel    \
+        Core/Grid        \
+        Core/Util        \
+        Core/Exceptions  \
+        Core/Geometry    \
+        Core/Exceptions  \
+        Core/Thread      \
+        Core/Util \
+        \
+        Core/Math
 
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
