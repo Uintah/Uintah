@@ -73,7 +73,7 @@ class QMOM : public Expr::Expression<FieldT>
 
   QMOM( const Expr::TagList knownMomentsTagList, const bool realizable );
   
-  bool product_difference(const std::vector<typename FieldT::const_interior_iterator>& knownMomentsIterator);
+  bool product_difference(const std::vector<typename FieldT::const_iterator>& knownMomentsIterator);
 
 
 public:
@@ -184,18 +184,18 @@ evaluate()
   // loop over interior points in the patch. To do this, we grab a sample
   // iterator from any of the exisiting fields, for example, m0.
   const FieldT* sampleField = knownMoments_[0];
-  typename FieldT::const_interior_iterator sampleIterator = sampleField->interior_begin();
+  typename FieldT::const_iterator sampleIterator = sampleField->interior_begin();
 
   //
   // create a vector of iterators for the known moments and for the results
   //
-  std::vector<typename FieldT::const_interior_iterator> knownMomentsIterators;
-  std::vector<typename FieldT::interior_iterator> resultsIterators;
+  std::vector<typename FieldT::const_iterator> knownMomentsIterators;
+  std::vector<typename FieldT::iterator> resultsIterators;
   for (int i=0; i<nMoments_; ++i) {
-    typename FieldT::const_interior_iterator thisIterator = knownMoments_[i]->interior_begin();
+    typename FieldT::const_iterator thisIterator = knownMoments_[i]->interior_begin();
     knownMomentsIterators.push_back(thisIterator);
 
-    typename FieldT::interior_iterator thisResultsIterator = results[i]->interior_begin();
+    typename FieldT::iterator thisResultsIterator = results[i]->interior_begin();
     resultsIterators.push_back(thisResultsIterator);
   }
 
@@ -259,7 +259,7 @@ evaluate()
 template< typename FieldT >
 bool
 QMOM<FieldT>::
-product_difference(const std::vector<typename FieldT::const_interior_iterator>& knownMomentsIterator) {
+product_difference(const std::vector<typename FieldT::const_iterator>& knownMomentsIterator) {
   int nEnvironments = nMoments_/2;  
   // initialize the p matrix
   for (int i=0; i<nMoments_; ++i) {

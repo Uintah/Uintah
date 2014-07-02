@@ -228,9 +228,9 @@ evaluate()
                                                   pow(*rStar_ - stdDev_, momentOrder_ + 1)) / (momentOrder_ + 1);
           break;
         case NORMAL: {
-          typename FieldT::const_interior_iterator rStarIter = rStar_->interior_begin();
-          typename FieldT::const_interior_iterator birthCoefIter = birthCoef_->interior_begin();
-          typename FieldT::interior_iterator resultsIter = result.interior_begin();
+          typename FieldT::const_iterator rStarIter = rStar_->interior_begin();
+          typename FieldT::const_iterator birthCoefIter = birthCoef_->interior_begin();
+          typename FieldT::iterator resultsIter = result.interior_begin();
           while (rStarIter!=rStar_->interior_end() ) {
             const double intVal = integrate_birth_kernel(*rStarIter);
             *resultsIter = constCoef_ * *birthCoefIter * intVal;
@@ -277,8 +277,8 @@ evaluate()
                                      pow(*rStar_ - stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
           break;
         case NORMAL: {
-          typename FieldT::const_interior_iterator rStarIter = rStar_->interior_begin();
-          typename FieldT::interior_iterator resultsIter = result.interior_begin();
+          typename FieldT::const_iterator rStarIter = rStar_->interior_begin();
+          typename FieldT::iterator resultsIter = result.interior_begin();
           while (rStarIter!=rStar_->interior_end() ) {
             const double intVal = integrate_birth_kernel(*rStarIter);
             *resultsIter = constCoef_ * intVal;
