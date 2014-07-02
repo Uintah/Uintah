@@ -72,9 +72,11 @@ void CQMOM::problemSetup(const ProblemSpecP& params)
   db->get("NumberInternalCoordinates",M);   //get number of coordiantes
   db->get("QuadratureNodes",N_i);           //get vector of quad nodes per internal coordiante
   db->get("HighestOrder",maxInd);           //vector of maxium moment order NOTE: this could be made automatic from indexes later
-  db->getWithDefault("Adaptive",d_adaptive,false); //use adaptive quadrature or not - NYI
-  db->getWithDefault("CutOff",d_small,1.0e-10);    //value of moment 0 to fix weights and abscissas to 0
+  db->getWithDefault("Adaptive",d_adaptive,false);   //use adaptive quadrature or not - NYI
+  db->getWithDefault("CutOff",d_small,1.0e-10);      //value of moment 0 to fix weights and abscissas to 0
   db->getWithDefault("UseLapack",d_useLapack,false); //pick which linear solve to use
+  db->getWithDefault("WeightRatio",weightRatio,1.0e-5);     //maximum ratio for min to max weight
+  db->getWithDefault("AbscissaRatio",abscissaRatio,1.0e-5); //maximum ratio for min to max spacing of abscissas
   
   //NOTE: redo this to only have one xml tag here?
   for ( ProblemSpecP db_name = db->findBlock("InternalCoordinate");
@@ -331,7 +333,7 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
       if (temp_moments[0] < d_small) {
         //if m0 is very small, leave all weights/absciassa equal to 0 (as intialized)
         if (temp_moments[0] < 0.0 )
-          cout << "WARNING: Negative Moment in cell " << c << " settign all wegiths and abscissas to 0" << endl;
+          cout << "WARNING: Negative Moment " << temp_moments[0] <<  " in cell " << c << " settign all wegiths and abscissas to 0" << endl;
       } else {
 #ifdef cqmom_dbg
         cout << "Cell Location " << c << endl;
@@ -339,7 +341,7 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
 #endif
         //actually compute inversion
         CQMOMInversion( temp_moments, M, N_i, maxInd,
-                        temp_weights, temp_abscissas, d_adaptive, d_useLapack);
+                        temp_weights, temp_abscissas, d_adaptive, d_useLapack, weightRatio, abscissaRatio);
       }
       
       //Now actually assign the new weights and abscissas

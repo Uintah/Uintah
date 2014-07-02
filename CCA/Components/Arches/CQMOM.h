@@ -148,6 +148,9 @@ namespace Uintah {
     bool d_useLapack;                           //boolean to use lapack or vandermonde solver
     std::string d_which_cqmom;
     
+    double weightRatio;                         //adaptive double for minimum allowed weigth ratio
+    double abscissaRatio;                       //adaptive double for minimum allowed abscissa ratio
+    
     std::vector<std::string> coordinateNames;   //list of internal coordiante names
     std::vector<std::string> weightNames;       //list of wieght names - to be used for dw->get
     std::vector<std::string> abscissaNames;     //list of absicassa names - to be used for dw->get

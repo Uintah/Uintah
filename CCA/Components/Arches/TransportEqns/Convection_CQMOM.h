@@ -276,17 +276,17 @@ namespace Uintah{
     {
       cqFaceData1D gPhi;
       double hPlus = 0.0, hMinus = 0.0;
-      
+      double d_small = 1.0e-10;
       //plus cell face
       for (int i = 0; i < nNodes; i++) {
-        if (a[i + nNodes*velIndex].plus_left > 0.0) {
+        if (a[i + nNodes*velIndex].plus_left > 0.0 && w[i].plus_left > d_small) {
           double nodeVal = 1.0;
           for (int m = 0 ; m < M ; m++) {
             nodeVal *= pow( (a[i + nNodes*m].plus_left),momentIndex[m] );
           }
           hPlus += w[i].plus_left * a[i + nNodes*velIndex].plus_left * nodeVal; //add hplus
         }
-        if ( a[i + nNodes*velIndex].plus_right < 0.0) {
+        if ( a[i + nNodes*velIndex].plus_right < 0.0 && w[i].plus_right > d_small) {
           double nodeVal = 1.0;
           for (int m = 0 ; m < M ; m++) {
             nodeVal *= pow( (a[i + nNodes*m].plus_right),momentIndex[m] );
@@ -321,14 +321,14 @@ namespace Uintah{
       //minus cell face
       hPlus = 0.0; hMinus = 0.0;
       for (int i = 0; i < nNodes; i++) {
-        if (a[i + nNodes*velIndex].minus_left > 0.0) {
+        if (a[i + nNodes*velIndex].minus_left > 0.0 && w[i].minus_left > d_small) {
           double nodeVal = 1.0;
           for (int m = 0 ; m < M ; m++) {
             nodeVal *= pow( (a[i + nNodes*m].minus_left),momentIndex[m] );
           }
           hPlus += w[i].minus_left * a[i + nNodes*velIndex].minus_left * nodeVal; //add hplus
         }
-        if ( a[i + nNodes*velIndex].minus_right < 0.0) {
+        if ( a[i + nNodes*velIndex].minus_right < 0.0 && w[i].minus_right > d_small) {
           double nodeVal = 1.0;
           for (int m = 0 ; m < M ; m++) {
             nodeVal *= pow( (a[i + nNodes*m].minus_right),momentIndex[m] );
