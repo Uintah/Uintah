@@ -50,7 +50,7 @@ static DebugStream dbg("RAY", false);
 //
 Radiometer::Radiometer()
 {
-  d_VRFluxLabel = VarLabel::create( "VRFlux", CCVariable<double>::getTypeDescription() );                      
+  d_VRFluxLabel = VarLabel::create( "RadiometerFlux", CCVariable<double>::getTypeDescription() );                      
 }
 
 //______________________________________________________________________
@@ -84,7 +84,6 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
   rmcrt_ps->getWithDefault( "allowReflect"   ,  d_allowReflect,     true );             // Allow for ray reflections. Make false for DOM comparisons.  
   rmcrt_ps->get(            "VRLocationsMin" ,  d_VRLocationsMin );                     // minimum extent of the string or block of virtual radiometers in physical units
   rmcrt_ps->get(            "VRLocationsMax" ,  d_VRLocationsMax );                     // maximum extent
-
 
   //__________________________________
   //  Warnings and bulletproofing
@@ -130,8 +129,7 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
       orient[d] =1e-16;      // to avoid divide by 0.
     }
   }
-  
-  
+
   //__________________________________
   //  CONSTANT VR VARIABLES
   //  In spherical coordinates, the polar angle, theta_rot,
@@ -193,7 +191,7 @@ Radiometer::sched_radiometer( const LevelP& level,
   Task *tsk;
   tsk = scinew Task( taskname, this, &Radiometer::radiometer, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
 
-  printSchedule(level,dbg,taskname);
+  printSchedule( level,dbg,"Radiometer::sched_radiometer" );
 
   // require an infinite number of ghost cells so you can access the entire domain.
   Ghost::GhostType  gac  = Ghost::AroundCells;
@@ -226,11 +224,11 @@ Radiometer::radiometer( const ProcessorGroup* pc,
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
   
   if ( doCarryForward( timestep, radCalc_freq) ) {
-    printTask(patches,patches->get(0), dbg,"Doing Radiometer::rayTrace (carryForward)");
+    printTask(patches,patches->get(0), dbg,"Doing Radiometer::radiometer (carryForward)");
     bool replaceVar = true;
     new_dw->transferFrom( old_dw, d_VRFluxLabel, patches, matls, replaceVar );
     return;
-  }
+  }  
   
   //__________________________________
   //
@@ -260,7 +258,7 @@ Radiometer::radiometer( const ProcessorGroup* pc,
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
-    printTask(patches,patch,dbg,"Doing Radiometer::rayTrace");
+    printTask(patches,patch,dbg,"Doing Radiometer::radiometer");
 
     CCVariable<double> VRFlux;
     new_dw->allocateAndPut( VRFlux, d_VRFluxLabel, d_matl, patch );

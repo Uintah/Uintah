@@ -22,9 +22,10 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef Uintah_Component_Arches_Ray_h
-#define Uintah_Component_Arches_Ray_h
+#ifndef RAY_H
+#define RAY_H
 
+#include <CCA/Components/Models/Radiation/RMCRT/RMCRTCommon.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Containers/StaticArray.h>
 #include <Core/Grid/SimulationState.h>
@@ -45,7 +46,7 @@
 #include <cmath>
 #include <string>
 #include <vector>
-#include <CCA/Components/Models/Radiation/RMCRT/RMCRTCommon.h>
+
 
 //==========================================================================
 
