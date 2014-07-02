@@ -24,7 +24,10 @@
 
 #include <CCA/Components/OnTheFlyAnalysis/radiometer.h>
 #include <CCA/Ports/Scheduler.h>
+
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/DbgOutput.h>
+#include <Core/Grid/Material.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
@@ -37,23 +40,19 @@ using namespace Uintah;
 using namespace std;
 /*______________________________________________________________________
           TO DO
-    - Generalize how the varLabels are registered for each component
-
-    - Add bulletproofing in problem setup to catch if the user doesn't
-      save the fluxes.
-
-    - add radiometerFreq variable
+      - Clean up the hardwiring in the problem setup
 ______________________________________________________________________*/
-static DebugStream cout_doing("RADIOMETER_DOING_COUT", false);
+static DebugStream cout_doing("radiometer", false);
 
 OnTheFly_radiometer::OnTheFly_radiometer(ProblemSpecP& module_spec,
                                          SimulationStateP& sharedState,
                                          Output* dataArchiver)
   : AnalysisModule(module_spec, sharedState, dataArchiver)
 {
-
   d_sharedState = sharedState;
-  d_RMCRT  = scinew Radiometer();
+  d_RMCRT       = scinew Radiometer();
+  d_module_ps   = module_spec;
+  d_dataArchiver = dataArchiver;
 }
 
 //__________________________________
@@ -67,24 +66,26 @@ OnTheFly_radiometer::~OnTheFly_radiometer()
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
 //______________________________________________________________________
-void OnTheFly_radiometer::problemSetup(const ProblemSpecP& prob_spec,
+void OnTheFly_radiometer::problemSetup(const ProblemSpecP& ,
                                        const ProblemSpecP& ,
                                        GridP& grid,
                                        SimulationStateP& sharedState)
 {
   cout_doing << "Doing problemSetup \t\t\t\t OnTheFly_radiometer" << endl;
-#if 0
+
   //__________________________________
   // find the material .  Default is matl 0.
   // The user can use either
   //  <material>   atmosphere </material>
   //  <materialIndex> 1 </materialIndex>
-  const Material* matl;
-  if( prob_spec->findBlock("material") ){
-    matl = d_sharedState->parseAndLookupMaterial(d_prob_spec, "material");
-  } else if ( prob_spec->findBlock("materialIndex") ){
+ 
+  Material* matl;
+ 
+  if( d_module_ps->findBlock("material") ){
+    matl = d_sharedState->parseAndLookupMaterial( d_module_ps, "material" );
+  } else if ( d_module_ps->findBlock("materialIndex") ){
     int indx;
-    prob_spec->get("materialIndex", indx);
+    d_module_ps->get("materialIndex", indx);
     matl = d_sharedState->getMaterial(indx);
   } else {
     matl = d_sharedState->getMaterial(0);
@@ -92,17 +93,50 @@ void OnTheFly_radiometer::problemSetup(const ProblemSpecP& prob_spec,
 
   int matl_index = matl->getDWIndex();
 
+  //_____________________________________________________
+  //   H A R D W I R E   H A R D W I R E   H A R D W I R E
+  string temp     = "temperature";
+  string cellType = "cellType";
+  string abskg    = "abskg";
 
+  const VarLabel* tempLabel      = VarLabel::find( temp );
+  const VarLabel* cellTypeLabel  = VarLabel::find( cellType );
+  const VarLabel* abskgLabel     = VarLabel::find( abskg );
+  const VarLabel* notUsed = 0;
+  
+  if( tempLabel == NULL || cellTypeLabel == NULL || abskgLabel == NULL ){
+    ostringstream warn;
+    warn << "ERROR OnTheFly_radiometer One of the VarLabels need to do the analysis does not exist\n"
+         << "    temperature address: " << tempLabel << "\n"
+         << "    celltype:             " << cellTypeLabel << "\n"
+         << "    abskg:                " << abskgLabel << "\n";
+    throw InternalError(warn.str(), __FILE__, __LINE__);
+  }
+  //_____________________________________________________
 
-  d_RMCRT->registerVarLabels(_matl_index,
-                          _prop_calculator->get_abskg_label(),
-                          _absorpLabel,
-                          _tempLabel,
-                          _cellTypeLabel,
-                          _src_label);
-#endif
+  //__________________________________
+  // register the component VarLabels the RMCRT:Radiometer
+  d_RMCRT->registerVarLabels( matl_index,
+                              abskgLabel,
+                              notUsed,
+                              tempLabel,
+                              cellTypeLabel,
+                              notUsed);
 
-  d_RMCRT->problemSetup(prob_spec, prob_spec, sharedState);
+  d_module_ps->getWithDefault( "radiometerCalc_freq", d_radiometerCalc_freq, 1 );
+
+  
+  ProblemSpecP rad_ps = d_module_ps->findBlock("Radiometer");
+  if (!rad_ps){
+    throw ProblemSetupException("ERROR Radiometer: Couldn't find <Radiometer> xml node", __FILE__, __LINE__);    
+  }
+  
+  d_RMCRT->problemSetup(rad_ps, rad_ps, d_sharedState);
+  
+  if(!d_dataArchiver->isLabelSaved( "RadiometerFlux" ) ){
+    throw ProblemSetupException("ERROR:  You've activated the radiometer but your not saving the variable (RadiometerFlux)",__FILE__, __LINE__);
+  }
+  
 }
 
 //______________________________________________________________________
@@ -132,12 +166,15 @@ void OnTheFly_radiometer::restartInitialize()
 void OnTheFly_radiometer::scheduleDoAnalysis(SchedulerP& sched,
                                              const LevelP& level)
 {
-  d_radiometerCalc_freq =1;
+  printSchedule(level, cout_doing, "OnTheFly_radiometer::scheduleDoAnalysis");
 
   Task::WhichDW temp_dw     = Task::NewDW;
   Task::WhichDW abskg_dw    = Task::NewDW;
   Task::WhichDW sigmaT4_dw  = Task::NewDW;
   Task::WhichDW celltype_dw = Task::NewDW;
+  bool includeEC = true;
+  
+  d_RMCRT->sched_sigmaT4( level, sched, temp_dw, d_radiometerCalc_freq, includeEC );
 
   d_RMCRT->sched_radiometer( level, sched, abskg_dw, sigmaT4_dw, celltype_dw, d_radiometerCalc_freq );
 }
