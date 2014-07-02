@@ -28,14 +28,14 @@
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <CCA/Components/Models/Radiation/RMCRT/RMCRTCommon.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Radiometer.h>
-
+#include <CCA/Ports/Output.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/LevelP.h>
 
 namespace Uintah {
 /*______________________________________________________________________
 
-  Class:        On the Fly radiometer
+  Class:        On-the-Fly radiometer
 
   Author:       Todd Harman
 
@@ -94,16 +94,9 @@ _____________________________________________________________________*/
     Radiometer* d_RMCRT;
 
     int d_radiometerCalc_freq;
-
-#if 1
-    //__________________________________
-    // global constants
+    ProblemSpecP d_module_ps;
+    Output* d_dataArchiver;
     SimulationStateP d_sharedState;
-    ProblemSpecP d_prob_spec;
-    const Material* d_matl;
-    MaterialSet* d_matl_set;
-    const MaterialSubset* d_matl_sub;
-#endif
   };
 }
 
