@@ -138,6 +138,7 @@
        <Constant>0.0</Constant>
     </BasicExpression>
 
+<!-- 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
        <NameTag name="p.xw" state="STATE_DYNAMIC"/>
@@ -152,8 +153,8 @@
          <TransverseDirection/>       
        </ParticleUniformIC>
     </BasicExpression>
+ -->
 
-<!-- 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
        <NameTag name="p.xw" state="STATE_DYNAMIC"/>
@@ -169,7 +170,6 @@
        <ExprLoHi type="SVOL" name="YSVOL" state="STATE_NONE"/>       
        </RandomField>
     </BasicExpression>
- -->
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
@@ -312,7 +312,8 @@
     <save label="vorticity_z"/>    
     <save label="xvelcc"/>
     <save label="yvelcc"/>    
-    
+
+    <save label="p.particleID"/>        
     <save label="pressure"/>
     <save label="dilatation"/>
 <!-- 

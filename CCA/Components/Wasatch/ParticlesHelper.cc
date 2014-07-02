@@ -60,11 +60,16 @@ namespace Wasatch {
   ParticlesHelper::ParticlesHelper()
   {
     wasatchSync_ = false;
-    pPosLabel_ = Uintah::VarLabel::create("p.x",
-                                         Uintah::ParticleVariable<Uintah::Point>::getTypeDescription(),
+    using namespace Uintah;
+    pPosLabel_ = VarLabel::create("p.x",
+                                         ParticleVariable<Uintah::Point>::getTypeDescription(),
                                          SCIRun::IntVector(0,0,0),
-                                         Uintah::VarLabel::PositionVariable );
+                                         VarLabel::PositionVariable );
+    pIDLabel_ = Uintah::VarLabel::create("p.particleID",
+                                          ParticleVariable<long64>::getTypeDescription());
+    
     destroyMe_.push_back(pPosLabel_);
+    destroyMe_.push_back(pIDLabel_);
   }
 
   //------------------------------------------------------------------
@@ -137,6 +142,7 @@ namespace Wasatch {
     Uintah::Task* task = scinew Uintah::Task("initialize particles",
                                              this, &ParticlesHelper::initialize_particles);
     task->computes(pPosLabel_);
+    task->computes(pIDLabel_);
     sched->addTask(task, level->eachPatch(), wasatch_->get_wasatch_materials());
   }
   
@@ -155,9 +161,14 @@ namespace Wasatch {
       const Patch* patch = patches->get(p);
       for(int m = 0;m<matls->size();m++){
         int matl = matls->get(m);
-        ParticleVariable<Point> ppos;
         ParticleSubset* subset = new_dw->createParticleSubset(nParticles_,matl,patch);
+        ParticleVariable<Point>  ppos;
+        ParticleVariable<long64> pid;
         new_dw->allocateAndPut(ppos,    pPosLabel_,           subset);
+        new_dw->allocateAndPut(pid,    pIDLabel_,           subset);
+        for (int i=0; i < nParticles_; i++) {
+          pid[i] = i + patch->getID() * nParticles_;
+        }
       }
     }
   }
@@ -250,6 +261,8 @@ namespace Wasatch {
       ++tagIter;
     }
     
+    otherParticleVarLabels.push_back(pIDLabel_);
+    
     vector< vector<const VarLabel*> > otherParticleVars;
     for (int m = 0; m < materials->size(); m++) {
       otherParticleVars.push_back(otherParticleVarLabels);
@@ -276,6 +289,40 @@ namespace Wasatch {
 
   //--------------------------------------------------------------------
   // this task will sync particle position with wasatch computed values
+  void ParticlesHelper::schedule_transfer_particle_ids(const Uintah::LevelP& level,
+                                                        Uintah::SchedulerP& sched)
+  {
+    using namespace Uintah;
+    Uintah::Task* task = scinew Uintah::Task("transfer particles IDs",
+                                             this, &ParticlesHelper::transfer_particle_ids);
+    task->computes(pIDLabel_);
+    task->requires(Task::OldDW, pIDLabel_, Uintah::Ghost::None, 0);
+    sched->addTask(task, level->eachPatch(), wasatch_->get_wasatch_materials());
+  }
+  
+  //--------------------------------------------------------------------
+  
+  void ParticlesHelper::transfer_particle_ids(const Uintah::ProcessorGroup*,
+                                               const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
+                                               Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw )
+  {
+    using namespace Uintah;
+    for(int p=0;p<patches->size();p++){
+      const Patch* patch = patches->get(p);
+      for(int m = 0; m<matls->size(); m++){
+        const int matl = matls->get(m);
+        ParticleSubset* pset = old_dw->getParticleSubset(matl, patch);
+        ParticleVariable<long64> pid;
+        constParticleVariable<long64> pidOld;
+        new_dw->allocateAndPut(pid,    pIDLabel_,          pset);
+        old_dw->get(pidOld,pIDLabel_,pset);
+        pid.copyData(pidOld);
+      }
+    }
+  }
+
+  //--------------------------------------------------------------------
+  // this task will sync particle position with wasatch computed values
   void ParticlesHelper::schedule_sync_particle_position(const Uintah::LevelP& level,
                                         Uintah::SchedulerP& sched, const bool initialization)
   {
@@ -287,7 +334,6 @@ namespace Wasatch {
     } else {
       task->computes(pPosLabel_);
     }
-    
     task->requires(Task::NewDW, pXLabel_, Uintah::Ghost::None, 0);
     task->requires(Task::NewDW, pYLabel_, Uintah::Ghost::None, 0);
     task->requires(Task::NewDW, pZLabel_, Uintah::Ghost::None, 0);
@@ -311,7 +357,7 @@ namespace Wasatch {
         new_dw->deleteParticles(delset);
         
         ParticleVariable<Point> ppos; // Uintah particle position
-
+        
         // Wasatch particle positions
         constParticleVariable<double> px;
         constParticleVariable<double> py;
