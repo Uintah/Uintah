@@ -285,7 +285,7 @@ evaluate()
   const double yMin = field_min_interior(*y_);
   const double zMax = field_max_interior(*z_);
   const double zMin = field_min_interior(*z_);    
-  typename FieldT::interior_iterator phiiter = phi.interior_begin();
+  typename FieldT::iterator phiiter = phi.interior_begin();
 
   const double dx = (*x_)(IntVec(1,0,0)) - (*x_)(IntVec(0,0,0));
   const double dy = (*y_)(IntVec(0,1,0)) - (*y_)(IntVec(0,0,0));
