@@ -1123,6 +1123,7 @@ namespace Wasatch{
     if (doParticles_)
     {
       particlesHelper_->schedule_sync_particle_position(level,sched);
+      particlesHelper_->schedule_transfer_particle_ids(level,sched);
       particlesHelper_->schedule_relocate_particles(level,sched);
     }
   }

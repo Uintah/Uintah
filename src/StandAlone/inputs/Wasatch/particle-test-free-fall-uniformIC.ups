@@ -196,7 +196,7 @@
     <save label="p.w"/>        
 
     <save label="p.size"/>    
-    
+    <save label="p.particleID"/>    
     <save label="p.xw"/>        
     <save label="p.yw"/>
     <save label="p.zw"/>    

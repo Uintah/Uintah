@@ -79,7 +79,10 @@ namespace Wasatch {
     void schedule_sync_particle_position( const Uintah::LevelP& level,
                                   Uintah::SchedulerP& sched,
                                   const bool initialization=false );
-    
+
+    void schedule_transfer_particle_ids( const Uintah::LevelP& level,
+                                          Uintah::SchedulerP& sched);
+
     void schedule_relocate_particles( const Uintah::LevelP& level,
                                       Uintah::SchedulerP& sched );
     
@@ -92,7 +95,7 @@ namespace Wasatch {
     
   private:
 
-    const Uintah::VarLabel* pPosLabel_;
+    const Uintah::VarLabel *pPosLabel_, *pIDLabel_;
     const Uintah::VarLabel *pXLabel_,*pYLabel_,*pZLabel_;
     std::vector<const Uintah::VarLabel*> destroyMe_;
     
@@ -101,6 +104,10 @@ namespace Wasatch {
     void initialize_particles(const Uintah::ProcessorGroup*,
                          const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
                          Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
+
+    void transfer_particle_ids(const Uintah::ProcessorGroup*,
+                              const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
+                              Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
 
     void delete_outside_particles(const Uintah::ProcessorGroup*,
                               const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
