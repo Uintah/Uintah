@@ -262,10 +262,10 @@ PressureSource::Builder::Builder( const Expr::TagList& results,
   momTs_      ( densStarTag==Expr::Tag() ? Expr::TagList() : momTags     ),
   velTs_      ( densStarTag==Expr::Tag() ? Expr::TagList() : velTags     ),
   velStarTs_  ( densStarTag==Expr::Tag() ? Expr::TagList() : velStarTags ),
+  denst_      ( densTag       ),
+  densStart_  ( densStarTag   ),
+  dens2Start_ ( dens2StarTag  ),
   divmomstart_( divmomstarTag ),
-  denst_     ( densTag      ),
-  densStart_ ( densStarTag  ),
-  dens2Start_( dens2StarTag ),
   varDenParams_(varDenParams)
 {}
 

@@ -717,10 +717,7 @@ namespace Wasatch{
     
     const Expr::Tag pSizeTag = parse_nametag(particleSpec->findBlock("ParticleSize"));
     const std::string pSizeName=pSizeTag.name();
-    
-    GraphHelper* const solnGraphHelper = gc[ADVANCE_SOLUTION  ];
-    GraphHelper* const icGraphHelper   = gc[INITIALIZATION    ];
-    
+
     //___________________________________________________________________________
     // resolve the momentum equation to be solved and create the adaptor for it.
     //
@@ -732,27 +729,27 @@ namespace Wasatch{
     EquationBase* pxeq = scinew ParticlePositionEquation( pxname,
                                                           XDIR,
                                                           pPosTags,
-                                                         pSizeTag,
+                                                          pSizeTag,
                                                           particleSpec,
-                                                          gc);
+                                                          gc );
     adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pxeq) );
     
     proc0cout << "Setting up particle y-coordinate equation" << std::endl;
     EquationBase* pyeq = scinew ParticlePositionEquation( pyname,
-                                                         YDIR,
-                                                         pPosTags,
-                                                         pSizeTag,
-                                                         particleSpec,
-                                                         gc);
+                                                          YDIR,
+                                                          pPosTags,
+                                                          pSizeTag,
+                                                          particleSpec,
+                                                          gc );
     adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pyeq) );
 
     proc0cout << "Setting up particle z-coordinate equation" << std::endl;
     EquationBase* pzeq = scinew ParticlePositionEquation( pzname,
-                                                         ZDIR,
-                                                         pPosTags,
-                                                         pSizeTag,
-                                                         particleSpec,
-                                                         gc);
+                                                          ZDIR,
+                                                          pPosTags,
+                                                          pSizeTag,
+                                                          particleSpec,
+                                                          gc );
     adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pzeq) );
 
     
@@ -769,11 +766,11 @@ namespace Wasatch{
     const std::string pMassName = pMassTag.name();
     proc0cout << "Setting up particle mass equation" << std::endl;
     EquationBase* pmeq = scinew ParticleMassEquation( pMassName,
-                                                     NODIR,
-                                                     pPosTags,
-                                                     pSizeTag,
-                                                     particleSpec,
-                                                     gc );
+                                                      NODIR,
+                                                      pPosTags,
+                                                      pSizeTag,
+                                                      particleSpec,
+                                                      gc );
     adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pmeq) );
 
     //___________________________________________________________________________
@@ -781,29 +778,29 @@ namespace Wasatch{
     //
     proc0cout << "Setting up particle x-momentum equation" << std::endl;
     EquationBase* pueq = scinew ParticleMomentumEquation( puname,
-                                                         XDIR,
-                                                         pPosTags,
-                                                         pSizeTag,
-                                                         particleSpec,
-                                                         gc);
+                                                          XDIR,
+                                                          pPosTags,
+                                                          pSizeTag,
+                                                          particleSpec,
+                                                          gc );
     adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pueq) );
     
     proc0cout << "Setting up particle y-momentum equation" << std::endl;
     EquationBase* pveq = scinew ParticleMomentumEquation( pvname,
-                                                         YDIR,
-                                                         pPosTags,
-                                                         pSizeTag,
-                                                         particleSpec,
-                                                         gc);
+                                                          YDIR,
+                                                          pPosTags,
+                                                          pSizeTag,
+                                                          particleSpec,
+                                                          gc );
     adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pveq) );
     
     proc0cout << "Setting up particle z-momentum equation" << std::endl;
     EquationBase* pweq = scinew ParticleMomentumEquation( pwname,
-                                                         ZDIR,
-                                                         pPosTags,
-                                                         pSizeTag,
-                                                         particleSpec,
-                                                         gc);
+                                                          ZDIR,
+                                                          pPosTags,
+                                                          pSizeTag,
+                                                          particleSpec,
+                                                          gc );
     adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pweq) );
 
     //___________________________________________________________________________
@@ -815,7 +812,7 @@ namespace Wasatch{
                                                          pPosTags,
                                                          pSizeTag,
                                                          particleSpec,
-                                                         gc);
+                                                         gc );
     adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(psizeeq) );
 
     //
@@ -829,6 +826,7 @@ namespace Wasatch{
         proc0cout << "Setting initial conditions for particle equation: "
         << particleEq->solution_variable_name()
         << std::endl;
+        GraphHelper* const icGraphHelper = gc[INITIALIZATION];
         icGraphHelper->rootIDs.insert( particleEq->initial_condition( *icGraphHelper->exprFactory ) );
       }
       catch( std::runtime_error& e ){

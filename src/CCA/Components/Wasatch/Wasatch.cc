@@ -547,8 +547,6 @@ namespace Wasatch{
     // Build transport equations.  This registers all expressions as
     // appropriate for solution of each transport equation.
     //
-    const bool hasEmbeddedGeometry = wasatchSpec_->findBlock("EmbeddedGeometry");
-
     for( Uintah::ProblemSpecP transEqnParams=wasatchSpec_->findBlock("TransportEquation");
          transEqnParams != 0;
          transEqnParams=transEqnParams->findNextBlock("TransportEquation") ){
@@ -802,8 +800,7 @@ namespace Wasatch{
     bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     
     // handle intrusion boundaries
-    if ( wasatchSpec_->findBlock("EmbeddedGeometry") )
-    {
+    if( wasatchSpec_->findBlock("EmbeddedGeometry") ){
       apply_intrusion_boundary_conditions( *bcHelperMap_[level->getID()] );
     }
 
@@ -816,7 +813,7 @@ namespace Wasatch{
     timeTags.push_back( TagNames::self().rkstage  );
     exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
     //
-    if (doParticles_) particlesHelper_->schedule_initialize_particles(level,sched);
+    if( doParticles_ ) particlesHelper_->schedule_initialize_particles(level,sched);
     
     //_____________________________________________
     // Build the initial condition expression graph
