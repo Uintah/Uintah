@@ -77,11 +77,11 @@ RMCRTCommon::~RMCRTCommon()
 //
 void
 RMCRTCommon::registerVarLabels(int   matlIndex,
-                       const VarLabel* abskg,
-                       const VarLabel* absorp,
-                       const VarLabel* temperature,
-                       const VarLabel* celltype, 
-                       const VarLabel* divQ )
+                               const VarLabel* abskg,
+                               const VarLabel* absorp,
+                               const VarLabel* temperature,
+                               const VarLabel* celltype, 
+                               const VarLabel* divQ )
 {
   d_matl             = matlIndex;
   d_abskgLabel       = abskg;
