@@ -41,6 +41,7 @@ SRCS     += \
 	$(SRCDIR)/particleExtract.cc	\
 	$(SRCDIR)/containerExtract.cc	\
 	$(SRCDIR)/vorticity.cc             \
+	$(SRCDIR)/radiometer.cc            \
 	$(SRCDIR)/1stLawThermo.cc          \
 	$(SRCDIR)/MinMax.cc
 PSELIBS := \
