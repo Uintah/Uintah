@@ -1014,7 +1014,7 @@ void OnDemandDataWarehouse::insertPSetRecord(psetDBType &subsetDB,
     SCI_THROW(InternalError("tried to create a particle subset that already exists", __FILE__, __LINE__));
   }
 #endif
-  d_plock.writeLock();
+  d_plock.writeTrylock();
   psetDBType::key_type key(patch->getRealPatch(), matlIndex, getID());
   subsetDB.insert(pair<psetDBType::key_type,ParticleSubset*>(key,psubset));
   psubset->addReference();
@@ -2718,7 +2718,7 @@ OnDemandDataWarehouse::transferFrom( DataWarehouse* from,
             SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl, "in transferFrom", __FILE__, __LINE__) );
           }
 
-          d_plock.writeLock();
+          d_plock.writeTrylock();
           // or else the readLock in haveParticleSubset will hang
           ParticleSubset* subset;
           if( !haveParticleSubset( matl, copyPatch ) ) {
