@@ -406,25 +406,9 @@ void SPME::calculate(   const ProcessorGroup*   pg,
   GridP grid    =   level->getGrid();
   subscheduler->setParentDWs(parentOldDW, parentNewDW);
   subscheduler->advanceDataWarehouse(grid);
-  subscheduler->setInitTimestep(true);
   DataWarehouse*        subOldDW            =   subscheduler->get_dw(2);
   DataWarehouse*        subNewDW            =   subscheduler->get_dw(3);
 
-  if (f_polarizable) {
-    subNewDW->transferFrom(parentOldDW,
-                           label->electrostatic->pMu,
-                           perProcPatches,
-                           allMaterialsUnion);
-  }
-  subNewDW->transferFrom(parentOldDW,
-                         label->global->pX,
-                         perProcPatches,
-                         allMaterialsUnion);
-  subNewDW->transferFrom(parentOldDW,
-                         label->global->pID,
-                         perProcPatches,
-                         allMaterialsUnion);
-  subscheduler->setInitTimestep(false);
 
 //  // Initialize new parent DW for reduction variables.
 //  //   Note:  We should probably skip this and just initialize them with the
@@ -508,6 +492,68 @@ void SPME::calculate(   const ProcessorGroup*   pg,
                                 subscheduler);
   }
   subscheduler->compile();
+
+//  subscheduler->setInitTimestep(true);
+
+  size_t numPatches   = perProcPatches->size();
+  size_t numAtomTypes = materials->size();
+
+  for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) {
+    const Patch* currPatch = perProcPatches->get(patchIndex);
+
+    for (size_t typeIndex = 0; typeIndex < numAtomTypes; ++typeIndex) {
+      int atomType = materials->get(typeIndex);
+      ParticleSubset* atomSubset = parentOldDW->getParticleSubset(atomType,
+                                                                  currPatch);
+      ParticleVariable<Vector> pMu;
+      subNewDW->allocateAndPut(pMu,
+                               label->electrostatic->pMu_preReloc,
+                               atomSubset);
+//      ParticleVariable<Point> pX;
+//      subNewDW->allocateAndPut(pX,
+//                               label->global->pX_preReloc,
+//                               atomSubset);
+//      ParticleVariable<long64> pID;
+//      subNewDW->allocateAndPut(pID,
+//                               label->global->pID_preReloc,
+//                               atomSubset);
+      constParticleVariable<Vector> pMu_Old;
+      parentOldDW->get(pMu_Old,
+                       label->electrostatic->pMu,
+                       atomSubset);
+      constParticleVariable<Point> pX_Old;
+//      parentOldDW->get(pX_Old,
+//                       label->global->pX,
+//                       atomSubset);
+//      constParticleVariable<long64> pID_Old;
+//      parentOldDW->get(pID_Old,
+//                       label->global->pID,
+//                       atomSubset);
+      size_t numAtoms = atomSubset->numParticles();
+      for (size_t atom = 0; atom < numAtoms; ++atom) {
+        pMu[atom] = pMu_Old[atom];
+//        pX[atom] = pX_Old[atom];
+//        pID[atom] = pID_Old[atom];
+      }
+
+    } // atom Types
+  } // Patches
+
+//  if (f_polarizable) {
+//    subNewDW->transferFrom(parentOldDW,
+//                           label->electrostatic->pMu,
+//                           perProcPatches,
+//                           allMaterialsUnion);
+//  }
+//  subNewDW->transferFrom(parentOldDW,
+//                         label->global->pX,
+//                         perProcPatches,
+//                         allMaterialsUnion);
+//  subNewDW->transferFrom(parentOldDW,
+//                         label->global->pID,
+//                         perProcPatches,
+//                         allMaterialsUnion);
+//  subscheduler->setInitTimestep(false);
 
   // transfer data from parentOldDW to subDW
 //  subNewDW->transferFrom(parentOldDW, label->electrostatic->pMu, perProcPatches,
