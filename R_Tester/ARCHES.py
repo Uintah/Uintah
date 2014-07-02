@@ -81,6 +81,9 @@ NIGHTLYTESTS = [
    ("CQMOM_1x1"                   , "CQMOM_regression/CQMOM_1x1.ups"               , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
    ("CQMOM_scalar_transport"      , "CQMOM_regression/CQMOM_Transport.ups"         , 6   , "Linux"  , ["exactComparison", "no_restart"]),
    ("CQMOM_scalar_transport2x2x2" , "CQMOM_regression/CQMOM_Transport_2x2x2.ups"   , 6   , "Linux"  , ["exactComparison", "no_restart"]),
+   ("SimpleBoxPTC"                , "CQMOM_regression/SimpleBoxPTC.ups"            , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
+   ("PTC_2D"                      , "CQMOM_regression/PTC_2D.ups"                  , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
+   ("PTC_3D"                      , "CQMOM_regression/PTC_3D.ups"                  , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
    ("regridTestArches"            , "regridTestArches"                             , 8   , "Linux"  , ["startFromCheckpoint", "no_restart"]),
 
 #
@@ -130,6 +133,9 @@ LOCALTESTS = [
    ("CQMOM_1x1"                   , "CQMOM_regression/CQMOM_1x1.ups"               , 1.1 , "All"  , ["exactComparison", "no_restart"]),
    ("CQMOM_scalar_transport"      , "CQMOM_regression/CQMOM_Transport.ups"         , 6   , "All"  , ["exactComparison", "no_restart"]),
    ("CQMOM_scalar_transport2x2x2" , "CQMOM_regression/CQMOM_Transport_2x2x2.ups"   , 6   , "All"  , ["exactComparison", "no_restart"]),
+   ("SimpleBoxPTC"                , "CQMOM_regression/SimpleBoxPTC.ups"            , 1.1 , "All"  , ["exactComparison", "no_restart"]),
+   ("PTC_2D"                      , "CQMOM_regression/PTC_2D.ups"                  , 1.1 , "All"  , ["exactComparison", "no_restart"]),
+   ("PTC_3D"                      , "CQMOM_regression/PTC_3D.ups"                  , 1.1 , "All"  , ["exactComparison", "no_restart"]),
    
 # multi-threaded LOCAL tests
    ("rmcrt_bm1_1L_thread"                , "RMCRT/rmcrt_bm1_1L.ups"               , 1.1 , "ALL"    , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
@@ -181,6 +187,9 @@ CQMOMTESTS = [
   ("CQMOM_1x1"                   , "CQMOM_regression/CQMOM_1x1.ups"               , 1.1 , "All"  , ["exactComparison", "no_restart"]),
   ("CQMOM_scalar_transport"      , "CQMOM_regression/CQMOM_Transport.ups"         , 6   , "All"  , ["exactComparison", "no_restart"]),
   ("CQMOM_scalar_transport2x2x2" , "CQMOM_regression/CQMOM_Transport_2x2x2.ups"   , 6   , "All"  , ["exactComparison", "no_restart"]),
+  ("SimpleBoxPTC"                , "CQMOM_regression/SimpleBoxPTC.ups"            , 1.1 , "All"  , ["exactComparison", "no_restart"]),
+  ("PTC_2D"                      , "CQMOM_regression/PTC_2D.ups"                  , 1.1 , "All"  , ["exactComparison", "no_restart"]),
+  ("PTC_3D"                      , "CQMOM_regression/PTC_3D.ups"                  , 1.1 , "All"  , ["exactComparison", "no_restart"]),
 ]
 
 #__________________________________
