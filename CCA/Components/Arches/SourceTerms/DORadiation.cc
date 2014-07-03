@@ -35,9 +35,6 @@ DORadiation::DORadiation( std::string src_name, ArchesLabel* labels, MPMArchesLa
   _src_label = VarLabel::create( src_name, CC_double ); 
 
   // Add any other local variables here. 
-  _radiationSRCLabel = VarLabel::create("radiationSRC",  CC_double);
-  _extra_local_labels.push_back(_radiationSRCLabel);  
-
   _radiationFluxELabel = VarLabel::create("radiationFluxE",  CC_double);
   _extra_local_labels.push_back(_radiationFluxELabel); 
 
@@ -117,11 +114,12 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   proc0cout << " --- end DO Radiation Summary ------ " << endl;
 
   _DO_model = scinew DORadiationModel( _labels, _MAlab, _bc, _my_world ); 
-  _DO_model->problemSetup( db, true ); 
+  _DO_model->problemSetup( db ); 
 
   _prop_calculator = scinew RadPropertyCalculator(); 
   ProblemSpecP db_DORad = db->findBlock("DORadiationModel");
   _using_prop_calculator = _prop_calculator->problemSetup( db_DORad ); 
+
   if ( !_using_prop_calculator ){ 
     throw ProblemSetupException("Error: No valid property calculator found.",__FILE__, __LINE__);
   }
@@ -156,6 +154,8 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   _h2o_label = VarLabel::find( _h2o_label_name ); 
   _T_label   = VarLabel::find( _T_label_name ); 
   _soot_label = VarLabel::find( _soot_label_name ); 
+
+  tsk->requires( Task::OldDW, _src_label, gn, 0 );
   
   if (timeSubStep == 0) { 
 
@@ -173,7 +173,7 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
       _species_varlabels.push_back(label); 
 
       if ( label != 0 ){ 
-        tsk->requires( Task::OldDW, label, Ghost::None, 0 ); 
+        tsk->requires( Task::OldDW, label, gn, 0 ); 
       } else { 
         throw ProblemSetupException("Error: Could not match species with varlabel: "+*iter,__FILE__, __LINE__);
       }
@@ -191,7 +191,7 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
       _size_varlabels.push_back( sizelabel ); 
 
       if ( sizelabel != 0 ){ 
-        tsk->requires( Task::OldDW, sizelabel, Ghost::None, 0 ); 
+        tsk->requires( Task::OldDW, sizelabel, gn, 0 ); 
       } else { 
         throw ProblemSetupException("Error: Could not find particle size quadrature node: " + label_name, __FILE__, __LINE__);
       }
@@ -204,7 +204,7 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
       _T_varlabels.push_back( tlabel ); 
 
       if ( tlabel != 0 ){ 
-        tsk->requires( Task::OldDW, tlabel, Ghost::None, 0 ); 
+        tsk->requires( Task::OldDW, tlabel, gn, 0 ); 
       } else { 
         throw ProblemSetupException("Error: Could not find particle temperature quadrature node: " + label_name , __FILE__, __LINE__);
       }
@@ -215,7 +215,7 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
       _w_varlabels.push_back( wlabel ); 
 
       if ( wlabel != 0 ){ 
-        tsk->requires( Task::OldDW, wlabel, Ghost::None, 0 ); 
+        tsk->requires( Task::OldDW, wlabel, gn, 0 ); 
       } else { 
         throw ProblemSetupException("Error: Could not find particle weight quadrature node: w_qn"+out.str() , __FILE__, __LINE__);
       }
@@ -232,33 +232,34 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
     }
 
+    //properties: 
     tsk->computes( _prop_calculator->get_abskg_label() ); 
-   
-    if (_prop_calculator->get_abskp_name().compare("Julien_abskp")){  
-        tsk->computes( _prop_calculator->get_abskp_label() ); //derek
-        }
-
     tsk->requires( Task::OldDW, _prop_calculator->get_abskg_label(), gn, 0 ); 
-    tsk->requires( Task::OldDW, _prop_calculator->get_abskp_label(), gn, 0 ); 
+
+    if ( _prop_calculator->has_abskp_local() ){
+      tsk->computes( _prop_calculator->get_abskp_label() ); //derek
+    } else { 
+      tsk->requires( Task::OldDW, _prop_calculator->get_abskp_label(), gn, 0 ); 
+    }
 
   } else {
 
     tsk->modifies(_src_label); 
 
     for ( std::vector<const VarLabel*>::iterator iter = _species_varlabels.begin();  iter != _species_varlabels.end(); iter++ ){ 
-      tsk->requires( Task::NewDW, *iter, Ghost::None, 0 ); 
+      tsk->requires( Task::NewDW, *iter, gn, 0 ); 
     } 
 
     for ( std::vector<const VarLabel*>::iterator iter = _size_varlabels.begin(); iter != _size_varlabels.end(); iter++) { 
-      tsk->requires( Task::NewDW, *iter, Ghost::None, 0 ); 
+      tsk->requires( Task::NewDW, *iter, gn, 0 ); 
     } 
 
     for ( std::vector<const VarLabel*>::iterator iter = _w_varlabels.begin(); iter != _w_varlabels.end(); iter++) { 
-      tsk->requires( Task::NewDW, *iter, Ghost::None, 0 ); 
+      tsk->requires( Task::NewDW, *iter, gn, 0 ); 
     } 
 
     for ( std::vector<const VarLabel*>::iterator iter = _T_varlabels.begin(); iter != _T_varlabels.end(); iter++) { 
-      tsk->requires( Task::NewDW, *iter, Ghost::None, 0 ); 
+      tsk->requires( Task::NewDW, *iter, gn, 0 ); 
     } 
 
     tsk->requires( Task::NewDW, _T_label, gac, 1 ); 
@@ -267,13 +268,13 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
     for ( int i = 0; i < _nQn_part; i++ ){ 
 
       //--size--
-      tsk->requires( Task::NewDW, _size_varlabels[i], Ghost::None, 0 ); 
+      tsk->requires( Task::NewDW, _size_varlabels[i], gn, 0 ); 
 
       //--temperature--
-      tsk->requires( Task::NewDW, _T_varlabels[i], Ghost::None, 0 ); 
+      tsk->requires( Task::NewDW, _T_varlabels[i], gn, 0 ); 
 
       //--weight--
-      tsk->requires( Task::NewDW, _w_varlabels[i], Ghost::None, 0 ); 
+      tsk->requires( Task::NewDW, _w_varlabels[i], gn, 0 ); 
 
     } 
 
@@ -283,8 +284,14 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
       tsk->modifies( *iter ); 
 
     }
+
     tsk->modifies( _prop_calculator->get_abskg_label() ); 
-    tsk->modifies( _prop_calculator->get_abskp_label() ); 
+
+    if ( _prop_calculator->has_abskp_local() ){
+      tsk->modifies( _prop_calculator->get_abskp_label() ); //derek
+    } else { 
+      tsk->requires( Task::NewDW, _prop_calculator->get_abskp_label(), gn, 0 ); 
+    }
 
   }
 
@@ -313,7 +320,6 @@ DORadiation::computeSource( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
     int timestep = _labels->d_sharedState->getCurrentTopLevelTimeStep(); 
 
     PerPatch<CellInformationP> cellInfoP;
@@ -321,6 +327,8 @@ DORadiation::computeSource( const ProcessorGroup* pc,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     CCVariable<double> divQ; 
+    CCVariable<double> abskp_nonconst; 
+    constCCVariable<double> abskp_const; 
 
     bool do_radiation = false; 
     if ( timestep%_radiation_calc_freq == 0 ) { 
@@ -335,6 +343,7 @@ DORadiation::computeSource( const ProcessorGroup* pc,
     ArchesConstVariables const_radiation_vars;
   //  Ghost::GhostType  gn = Ghost::None; // Not needed - Derek?
     Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gn = Ghost::None; 
     constCCVariable<double> mixT;
     constCCVariable<double> VolFractionBC;
     typedef std::vector<constCCVariable<double> > CCCV; 
@@ -357,7 +366,7 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       for ( CCCVL::iterator iter = _species_varlabels.begin();  iter != _species_varlabels.end(); iter++ ){ 
         constCCVariable<double> var; 
         // std::cout<<"species_label="<<*iter<<", "; 
-        old_dw->get( var, *iter, matlIndex, patch, Ghost::None, 0 ); 
+        old_dw->get( var, *iter, matlIndex, patch, gn, 0 ); 
         species.push_back( var ); 
       }
       // std::cout<<"species.size="<<species.size()<<endl; 
@@ -365,7 +374,7 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       //--size--
       for ( CCCVL::iterator iter = _size_varlabels.begin(); iter != _size_varlabels.end(); iter++ ){ 
         constCCVariable<double> var; 
-        old_dw->get( var, *iter, matlIndex, patch, Ghost::None, 0 ); 
+        old_dw->get( var, *iter, matlIndex, patch, gn, 0 ); 
         size.push_back( var ); 
         //to get size scaling constant
         if(iter == _size_varlabels.begin()){
@@ -377,14 +386,14 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       //--temperature--
       for ( CCCVL::iterator iter = _T_varlabels.begin(); iter != _T_varlabels.end(); iter++ ){ 
         constCCVariable<double> var; 
-        old_dw->get( var, *iter, matlIndex, patch, Ghost::None, 0 ); 
+        old_dw->get( var, *iter, matlIndex, patch, gn, 0 ); 
         pT.push_back( var ); 
       } 
 
       //--weight--
       for ( CCCVL::iterator iter = _w_varlabels.begin(); iter != _w_varlabels.end(); iter++ ){ 
         constCCVariable<double> var; 
-        old_dw->get( var, *iter, matlIndex, patch, Ghost::None, 0 ); 
+        old_dw->get( var, *iter, matlIndex, patch, gn, 0 ); 
         weights.push_back( var ); 
         //to get weight scaling constant
         if(iter == _w_varlabels.begin()){
@@ -397,60 +406,64 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       old_dw->get( mixT, _T_label, matlIndex , patch , gac , 1 );
       old_dw->get( VolFractionBC, _labels->d_volFractionLabel , matlIndex , patch , gac , 1 );
 
-      new_dw->allocateAndPut( radiation_vars.qfluxe , _radiationFluxELabel , matlIndex , patch );
-      new_dw->allocateAndPut( radiation_vars.qfluxw , _radiationFluxWLabel , matlIndex , patch );
-      new_dw->allocateAndPut( radiation_vars.qfluxn , _radiationFluxNLabel , matlIndex , patch );
-      new_dw->allocateAndPut( radiation_vars.qfluxs , _radiationFluxSLabel , matlIndex , patch );
-      new_dw->allocateAndPut( radiation_vars.qfluxt , _radiationFluxTLabel , matlIndex , patch );
-      new_dw->allocateAndPut( radiation_vars.qfluxb , _radiationFluxBLabel , matlIndex , patch );
-      new_dw->allocateAndPut( radiation_vars.volq   , _radiationVolqLabel  , matlIndex , patch );
-      new_dw->allocateAndPut( radiation_vars.src    , _radiationSRCLabel   , matlIndex , patch );
-      new_dw->allocateAndPut( radiation_vars.ABSKG  , _prop_calculator->get_abskg_label(), matlIndex , patch );
-      new_dw->allocateAndPut( radiation_vars.ABSKP  , _prop_calculator->get_abskp_label(), matlIndex , patch );
+      new_dw->allocateAndPut( radiation_vars.qfluxe , _radiationFluxELabel                , matlIndex , patch );
+      new_dw->allocateAndPut( radiation_vars.qfluxw , _radiationFluxWLabel                , matlIndex , patch );
+      new_dw->allocateAndPut( radiation_vars.qfluxn , _radiationFluxNLabel                , matlIndex , patch );
+      new_dw->allocateAndPut( radiation_vars.qfluxs , _radiationFluxSLabel                , matlIndex , patch );
+      new_dw->allocateAndPut( radiation_vars.qfluxt , _radiationFluxTLabel                , matlIndex , patch );
+      new_dw->allocateAndPut( radiation_vars.qfluxb , _radiationFluxBLabel                , matlIndex , patch );
+      new_dw->allocateAndPut( radiation_vars.volq   , _radiationVolqLabel                 , matlIndex , patch );
+      new_dw->allocateAndPut( radiation_vars.ABSKG  , _prop_calculator->get_abskg_label() , matlIndex , patch );
+
+      if ( _prop_calculator->has_abskp_local() ){ 
+        new_dw->allocateAndPut( abskp_nonconst, _prop_calculator->get_abskp_label(), matlIndex, patch ); 
+      } else { 
+        old_dw->get( abskp_const, _prop_calculator->get_abskp_label(), matlIndex, patch, gn, 0 ); 
+      }
+
       new_dw->allocateAndPut( divQ, _src_label, matlIndex, patch ); 
+      old_dw->copyOut( divQ, _src_label, matlIndex, patch, gn, 0 ); 
+
       radiation_vars.ESRCG.allocate( patch->getExtraCellLowIndex(1), patch->getExtraCellHighIndex(1) );  
-      divQ.initialize(0.0);
       radiation_vars.ESRCG.initialize(0.0); 
 
       // copy old solution into newly allocated variable
-      old_dw->copyOut( radiation_vars.qfluxe, _radiationFluxELabel, matlIndex, patch, Ghost::None, 0 );  
-      old_dw->copyOut( radiation_vars.qfluxw, _radiationFluxWLabel, matlIndex, patch, Ghost::None, 0 );  
-      old_dw->copyOut( radiation_vars.qfluxn, _radiationFluxNLabel, matlIndex, patch, Ghost::None, 0 );  
-      old_dw->copyOut( radiation_vars.qfluxs, _radiationFluxSLabel, matlIndex, patch, Ghost::None, 0 );  
-      old_dw->copyOut( radiation_vars.qfluxt, _radiationFluxTLabel, matlIndex, patch, Ghost::None, 0 );  
-      old_dw->copyOut( radiation_vars.qfluxb, _radiationFluxBLabel, matlIndex, patch, Ghost::None, 0 );  
-      old_dw->copyOut( radiation_vars.ABSKG,  _prop_calculator->get_abskg_label(), matlIndex, patch, Ghost::None, 0 );  
-      old_dw->copyOut( radiation_vars.ABSKP,  _prop_calculator->get_abskp_label(), matlIndex, patch, Ghost::None, 0 );
-      old_dw->copyOut( radiation_vars.volq,   _radiationVolqLabel, matlIndex, patch, Ghost::None, 0 );  
-      old_dw->copyOut( radiation_vars.src,    _radiationSRCLabel, matlIndex, patch, Ghost::None, 0 );  
+      old_dw->copyOut( radiation_vars.qfluxe , _radiationFluxELabel                , matlIndex , patch , gn , 0 );
+      old_dw->copyOut( radiation_vars.qfluxw , _radiationFluxWLabel                , matlIndex , patch , gn , 0 );
+      old_dw->copyOut( radiation_vars.qfluxn , _radiationFluxNLabel                , matlIndex , patch , gn , 0 );
+      old_dw->copyOut( radiation_vars.qfluxs , _radiationFluxSLabel                , matlIndex , patch , gn , 0 );
+      old_dw->copyOut( radiation_vars.qfluxt , _radiationFluxTLabel                , matlIndex , patch , gn , 0 );
+      old_dw->copyOut( radiation_vars.qfluxb , _radiationFluxBLabel                , matlIndex , patch , gn , 0 );
+      old_dw->copyOut( radiation_vars.volq   , _radiationVolqLabel                 , matlIndex , patch , gn , 0 );
+      old_dw->copyOut( radiation_vars.ABSKG  , _prop_calculator->get_abskg_label() , matlIndex , patch , gn , 0 );
 
     } else { 
 
       //--species--
       for ( std::vector<const VarLabel*>::iterator iter = _species_varlabels.begin();  iter != _species_varlabels.end(); iter++ ){ 
         constCCVariable<double> var; 
-        new_dw->get( var, *iter, matlIndex, patch, Ghost::None, 0 ); 
+        new_dw->get( var, *iter, matlIndex, patch, gn, 0 ); 
         species.push_back( var ); 
       }
 
       //--size--
       for ( CCCVL::iterator iter = _size_varlabels.begin(); iter != _size_varlabels.end(); iter++ ){ 
         constCCVariable<double> var; 
-        new_dw->get( var, *iter, matlIndex, patch, Ghost::None, 0 ); 
+        new_dw->get( var, *iter, matlIndex, patch, gn, 0 ); 
         size.push_back( var ); 
       } 
 
       //--temperature--
       for ( CCCVL::iterator iter = _T_varlabels.begin(); iter != _T_varlabels.end(); iter++ ){ 
         constCCVariable<double> var; 
-        new_dw->get( var, *iter, matlIndex, patch, Ghost::None, 0 ); 
+        new_dw->get( var, *iter, matlIndex, patch, gn, 0 ); 
         pT.push_back( var ); 
       } 
 
       //--weight--
       for ( CCCVL::iterator iter = _w_varlabels.begin(); iter != _w_varlabels.end(); iter++ ){ 
         constCCVariable<double> var; 
-        new_dw->get( var, *iter, matlIndex, patch, Ghost::None, 0 ); 
+        new_dw->get( var, *iter, matlIndex, patch, gn, 0 ); 
         weights.push_back( var ); 
       } 
 
@@ -465,9 +478,13 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       new_dw->getModifiable( radiation_vars.qfluxt , _radiationFluxTLabel , matlIndex , patch );
       new_dw->getModifiable( radiation_vars.qfluxb , _radiationFluxBLabel , matlIndex , patch );
       new_dw->getModifiable( radiation_vars.volq   , _radiationVolqLabel  , matlIndex , patch );
-      new_dw->getModifiable( radiation_vars.src    , _radiationSRCLabel   , matlIndex , patch );
       new_dw->getModifiable( radiation_vars.ABSKG  , _prop_calculator->get_abskg_label(), matlIndex , patch );
-      new_dw->getModifiable( radiation_vars.ABSKP  , _prop_calculator->get_abskp_label(), matlIndex , patch );
+      if ( _prop_calculator->has_abskp_local() ){ 
+        new_dw->getModifiable( abskp_nonconst, _prop_calculator->get_abskp_label(), matlIndex, patch ); 
+      } else { 
+        old_dw->get( abskp_const, _prop_calculator->get_abskp_label(), matlIndex, patch, gn, 0 ); 
+      }
+
       new_dw->getModifiable( divQ, _src_label, matlIndex, patch ); 
 
       radiation_vars.ESRCG.allocate( patch->getExtraCellLowIndex(1), patch->getExtraCellHighIndex(1) );  
@@ -483,44 +500,37 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 
         if ( _prop_calculator->does_scattering() ){ 
 
+          //the property model is computing a abskp//
           _prop_calculator->compute( patch, VolFractionBC, species, size_scaling_constant, size, pT, 
-              weights_scaling_constant, weights, _nQn_part, mixT, radiation_vars.ABSKG, radiation_vars.ABSKP); 
-          _prop_calculator->sum_abs( radiation_vars.ABSKG, radiation_vars.ABSKP, patch ); 
-          //            to calculate blackbody emissive flux
-          for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){ 
+                                     weights_scaling_constant, weights, _nQn_part, mixT, 
+                                     radiation_vars.ABSKG, abskp_nonconst ); 
 
-            IntVector c = *iter;
-            radiation_vars.ESRCG[c] = 1.0*5.67e-8/M_PI*radiation_vars.ABSKG[c]*pow(mixT[c],4);
-          }
+          _prop_calculator->sum_abs( radiation_vars.ABSKG, abskp_nonconst, patch ); 
 
         } else { 
 
+          //abskp is computed elsewhere 
           _prop_calculator->compute( patch, VolFractionBC, species, mixT, radiation_vars.ABSKG);
-          _prop_calculator->sum_abs( radiation_vars.ABSKG, radiation_vars.ABSKP, patch ); 
 
-          //            to calculate blackbody emissive flux
-          for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){ 
+          _prop_calculator->sum_abs( radiation_vars.ABSKG, abskp_const, patch ); 
 
-            IntVector c = *iter;
-            radiation_vars.ESRCG[c] = 1.0*5.67e-8/M_PI*radiation_vars.ABSKG[c]*pow(mixT[c],4);
-          }
         }
-//        _prop_calculator->sum_abs( radiation_vars.ABSKG, radiation_vars.ABSKP, patch ); // derek
 
-        _DO_model->boundarycondition_new( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars ); 
+        //blackbody emissive flux
+        for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){ 
 
-        _DO_model->intensitysolve_new( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars, BoundaryCondition::WALL ); 
+          IntVector c = *iter;
+          radiation_vars.ESRCG[c] = 1.0*5.67e-8/M_PI*radiation_vars.ABSKG[c]*pow(mixT[c],4);
+
+        }
+
+        _DO_model->boundarycondition( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars ); 
+
+        //Note: The final divQ is initialized (to zero) and set after the solve in the intensity solve itself.
+        _DO_model->intensitysolve( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars, divQ, BoundaryCondition::WALL ); 
 
       }
     }
-
-    for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){ 
-
-      IntVector c = *iter;
-      divQ[c] = radiation_vars.src[c]; 
-
-    }
-
   } // end patch loop
 }
 
@@ -542,9 +552,10 @@ DORadiation::sched_initialize( const LevelP& level, SchedulerP& sched )
   }
 
   tsk->computes(_prop_calculator->get_abskg_label()); 
-    if (_prop_calculator->get_abskp_name().compare("Julien_abskp")){  
-        tsk->computes( _prop_calculator->get_abskp_label() ); //derek
-        }
+
+  if ( _prop_calculator->does_scattering()){ 
+    tsk->computes( _prop_calculator->get_abskp_label()); 
+  }
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
 
@@ -578,16 +589,16 @@ DORadiation::initialize( const ProcessorGroup* pc,
       
     }
 
-
     CCVariable<double> abskg; 
-    CCVariable<double> abskp; 
-//    const VarLabel* L =_prop_calculator->get_abskp_label(); // Not needed? - Derek
     new_dw->allocateAndPut( abskg, _prop_calculator->get_abskg_label(), matlIndex, patch ); 
-    new_dw->allocateAndPut( abskp, _prop_calculator->get_abskp_label(), matlIndex, patch ); 
+
+    if ( _prop_calculator->does_scattering()){ 
+      CCVariable<double> abskp; 
+      new_dw->allocateAndPut( abskp, _prop_calculator->get_abskp_label(), matlIndex, patch ); 
+      abskp.initialize(0.0); 
+    }
 
     abskg.initialize(0.0); 
-    abskp.initialize(0.0); 
-
 
   }
 }
