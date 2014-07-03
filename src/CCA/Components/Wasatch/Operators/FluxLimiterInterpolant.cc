@@ -29,7 +29,6 @@
 #include <cmath>
 
 #include "spatialops/SpatialOpsDefs.h"
-#include "spatialops/structured/FVTools.h"
 
 #define LIMITER_TO_MACRO(limiterType) \
 switch (limiterType) { \
