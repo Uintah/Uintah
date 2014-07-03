@@ -38,6 +38,8 @@
 
 using namespace Uintah;
 using namespace std;
+
+//#define USE_RADIOMETER
 /*______________________________________________________________________
           TO DO
       - Clean up the hardwiring in the problem setup
@@ -50,7 +52,10 @@ OnTheFly_radiometer::OnTheFly_radiometer(ProblemSpecP& module_spec,
   : AnalysisModule(module_spec, sharedState, dataArchiver)
 {
   d_sharedState = sharedState;
+
+#ifdef USE_RADIOMETER
   d_RMCRT       = scinew Radiometer();
+#endif
   d_module_ps   = module_spec;
   d_dataArchiver = dataArchiver;
 }
@@ -59,8 +64,9 @@ OnTheFly_radiometer::OnTheFly_radiometer(ProblemSpecP& module_spec,
 OnTheFly_radiometer::~OnTheFly_radiometer()
 {
   cout_doing << " Doing: destorying OntheFly_radiometer " << endl;
-
+#ifdef USE_RADIOMETER
   delete d_RMCRT;
+#endif
 }
 
 //______________________________________________________________________
@@ -113,7 +119,7 @@ void OnTheFly_radiometer::problemSetup(const ProblemSpecP& ,
     throw InternalError(warn.str(), __FILE__, __LINE__);
   }
   //_____________________________________________________
-
+#ifdef USE_RADIOMETER
   //__________________________________
   // register the component VarLabels the RMCRT:Radiometer
   d_RMCRT->registerVarLabels( matl_index,
@@ -124,7 +130,6 @@ void OnTheFly_radiometer::problemSetup(const ProblemSpecP& ,
                               notUsed);
 
   d_module_ps->getWithDefault( "radiometerCalc_freq", d_radiometerCalc_freq, 1 );
-
   
   ProblemSpecP rad_ps = d_module_ps->findBlock("Radiometer");
   if (!rad_ps){
@@ -136,7 +141,7 @@ void OnTheFly_radiometer::problemSetup(const ProblemSpecP& ,
   if(!d_dataArchiver->isLabelSaved( "RadiometerFlux" ) ){
     throw ProblemSetupException("ERROR:  You've activated the radiometer but your not saving the variable (RadiometerFlux)",__FILE__, __LINE__);
   }
-  
+#endif  
 }
 
 //______________________________________________________________________
@@ -173,8 +178,9 @@ void OnTheFly_radiometer::scheduleDoAnalysis(SchedulerP& sched,
   Task::WhichDW sigmaT4_dw  = Task::NewDW;
   Task::WhichDW celltype_dw = Task::NewDW;
   bool includeEC = true;
-  
+#ifdef USE_RADIOMETER  
   d_RMCRT->sched_sigmaT4( level, sched, temp_dw, d_radiometerCalc_freq, includeEC );
 
   d_RMCRT->sched_radiometer( level, sched, abskg_dw, sigmaT4_dw, celltype_dw, d_radiometerCalc_freq );
+#endif
 }
