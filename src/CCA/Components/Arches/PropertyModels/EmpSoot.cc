@@ -35,41 +35,7 @@ void EmpSoot::problemSetup( const ProblemSpecP& inputdb )
   
   db->require( "carbon_content_fuel", _carb_content_fuel );
   db->require( "carbon_content_ox",   _carb_content_ox );
-
-  if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources") ){ 
-
-    // Look for the opl specified in the radiation model: 
-    ProblemSpecP sources_db = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources");
-    for (ProblemSpecP src_db = sources_db->findBlock("src");
-        src_db !=0; src_db = src_db->findNextBlock("src")){
-
-      string type; 
-      src_db->getAttribute("type", type); 
-
-      if ( type == "do_radiation" ){ 
-        if(src_db->findBlock("DORadiationModel")->findBlock("property_calculator")->findBlock("opl")){
-          src_db->findBlock("DORadiationModel")->findBlock("property_calculator")->require("opl", _opl );
-        }
-        else {
-          // if no DORadiation model exists, then require user to specify the OPL
-          proc0cout << "\n\nERROR!!!   OPL MUST be set in the soot model if not specified in the radiation property_calculator" << endl;
-          db->require( "opl", _opl );   
-        }
-
-      } else if ( type == "rmcrt") { 
-
-        if(src_db->findBlock("RMCRT")->findBlock("property_calculator")->findBlock("opl")){
-          src_db->findBlock("RMCRT")->findBlock("property_calculator")->require( "opl", _opl ); 
-        }
-        else {
-          // if no RMCRT model exists, then require user to specify the OPL
-          proc0cout << "\n\nERROR!!!   OPL MUST be set in the soot model if not specified in the radiation property_calculator" << endl;
-          db->require( "opl", _opl );   
-        }
-      } 
-    }
-  }  
-
+  db->require( "opl", _opl );  
 
   db->getWithDefault( "density_label",          _den_label_name, "density"); 
   db->getWithDefault( "absorption_label",       _absorp_label_name, "absorpIN"); 

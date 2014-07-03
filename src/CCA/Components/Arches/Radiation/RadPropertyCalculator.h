@@ -24,105 +24,33 @@ namespace Uintah {
 
     public: 
 
-      RadPropertyCalculator();
+      RadPropertyCalculator( const int _matl_index );
 
       ~RadPropertyCalculator();
 
       typedef std::vector<constCCVariable<double> > RadCalcSpeciesList; 
 
-      bool problemSetup( const ProblemSpecP& db ){ 
-
-        if ( db->findBlock("property_calculator") ){ 
-
-          std::string calculator_type; 
-          ProblemSpecP db_pc = db->findBlock("property_calculator"); 
-
-          db_pc->getAttribute("type", calculator_type); 
-
-          if ( calculator_type == "constant" ){ 
-            _calculator = scinew ConstantProperties(); 
-          } else if ( calculator_type == "burns_christon" ){ 
-            _calculator = scinew BurnsChriston(); 
-          } else if ( calculator_type == "hottel_sarofim"){
-            _calculator = scinew HottelSarofim(); 
-          } else if ( calculator_type == "radprops" ){
-#ifdef HAVE_RADPROPS
-            _calculator = scinew RadPropsInterface(); 
-#else
-            throw InvalidValue("Error: You haven't configured with the RadProps library (try configuring with --enable-wasatch_3p and --with-boost=DIR.)",__FILE__,__LINE__);
-#endif
-          } else { 
-            throw InvalidValue("Error: Property calculator not recognized.",__FILE__, __LINE__); 
-          } 
-
-          bool complete; 
-          complete = _calculator->problemSetup( db_pc );
-
-          return complete; 
-
-        } 
-
-        return false; 
-
-      }
+      /** @brief Problem setup **/ 
+      void problemSetup( const ProblemSpecP& db ); 
       
-      bool extraProblemSetup( const ProblemSpecP& db ){
-        bool complete = false; 
-        complete = _calculator->extraProblemSetup( db ); 
-        return complete; 
-      }
-
-      void compute( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg ){ 
-
-      _calculator->computeProps( patch, VolFractionBC, species, mixT, abskg );
-
-      };
-
-      void compute( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, 
-                    double weights_scaling_constant, RadCalcSpeciesList weights, const int N, constCCVariable<double>& mixT, CCVariable<double>& abskg, CCVariable<double>& abskp ){
-
-      _calculator->computePropsWithParticles( patch, VolFractionBC, species, size_scaling_constant, size, pT, weights_scaling_constant, weights, N, mixT, abskg, abskp ); 
-
-      };
-
-      inline std::vector<std::string> get_participating_sp(){ 
-
-        return _calculator->get_sp(); 
-
-      }
-
-      bool does_scattering() { 
-
-        return _calculator->does_scattering(); 
-
-      } 
-
-      inline const VarLabel* get_abskg_label(){ 
-        return _calculator->get_abskg_label(); 
-      }
-
-      inline const VarLabel* get_abskp_label(){ 
-        return _calculator->get_abskp_label(); 
-      }
-
-      inline std::string get_abskg_name(){ 
-        return _calculator->get_abskg_name(); 
-      }
-
-      inline std::string get_abskp_name(){ 
-        return _calculator->get_abskp_name(); 
-      }
-
-      inline const bool has_abskp_local(){ 
-        return _calculator->has_abskp_local(); 
-      }
-
-      template <class T> 
-      void sum_abs( CCVariable<double>& abskg, T& abskp, const Patch* patch ){ 
-        _calculator->sum_abs( abskg, abskp, patch ); 
-      }
+      /** @brief Compute the properties/timestep **/ 
+      void sched_compute_radiation_properties( const LevelP& level, SchedulerP& sched, const MaterialSet* matls, 
+                                               const int time_substep, const bool doing_initialization ); 
 
     private: 
+
+      const int _matl_index; 
+      std::string _temperature_name; 
+      const VarLabel* _temperature_label; 
+
+      /** @brief see sched_compute_radiation_properties **/ 
+      void compute_radiation_properties( const ProcessorGroup* pc, 
+                                         const PatchSubset* patches, 
+                                         const MaterialSubset* matls, 
+                                         DataWarehouse* old_dw, 
+                                         DataWarehouse* new_dw, 
+                                         const int time_substep, 
+                                         const bool doing_initialization);
 
       class PropertyCalculatorBase { 
 
@@ -137,7 +65,6 @@ namespace Uintah {
           };
 
           virtual bool problemSetup( const ProblemSpecP& db )=0; 
-          virtual bool extraProblemSetup( const ProblemSpecP& db )=0;
           virtual void computeProps( const Patch* patch, constCCVariable<double>& VolFractionBC, 
                                      RadCalcSpeciesList species, constCCVariable<double>& mixT,  
                                      CCVariable<double>& abskg )=0; 
@@ -159,18 +86,17 @@ namespace Uintah {
           inline const VarLabel* get_abskg_label(){return _abskg_label;} 
           inline const VarLabel* get_abskp_label(){return _abskp_label;}
           inline const bool has_abskp_local(){ return _local_abskp; }
+          inline const bool use_abskp(){ return _use_abskp; }
 
           std::string get_abskg_name(){ return _abskg_name;}
           std::string get_abskp_name(){ return _abskp_name;}
 
           template <class T> 
           void sum_abs( CCVariable<double>& abskg, T& abskp, const Patch* patch ){ 
-            if ( _use_abskp ){
-              for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+            for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
-                abskg[*iter] += abskp[*iter];  
-                
-              }
+              abskg[*iter] += abskp[*iter];  
+              
             }
           }
 
@@ -187,6 +113,10 @@ namespace Uintah {
 
 
       };
+
+      typedef std::vector<PropertyCalculatorBase*> CalculatorVec;
+      CalculatorVec _all_calculators; 
+
       //______________________________________________________________________
       //
       class ConstantProperties : public PropertyCalculatorBase  { 
@@ -196,7 +126,6 @@ namespace Uintah {
           ~ConstantProperties();
           
           bool problemSetup( const ProblemSpecP& db ); 
-          bool extraProblemSetup( const ProblemSpecP& db); 
           void computeProps( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg );
           void computePropsWithParticles( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, 
                                           double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weight_scaling_constant, RadCalcSpeciesList weight, 
@@ -221,7 +150,6 @@ namespace Uintah {
           BurnsChriston();
           ~BurnsChriston();
           bool problemSetup( const ProblemSpecP& db ); 
-          bool extraProblemSetup( const ProblemSpecP& db); 
           void computeProps( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg );
           void computePropsWithParticles( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, 
                                           double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weight_scaling_constant, RadCalcSpeciesList weight, 
@@ -247,7 +175,6 @@ namespace Uintah {
           ~HottelSarofim();
           
           bool problemSetup( const ProblemSpecP& db ); 
-          bool extraProblemSetup( const ProblemSpecP& db); 
           void computeProps( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg );
           void computePropsWithParticles( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, 
                                           double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weight_scaling_constant, RadCalcSpeciesList weight, 
@@ -273,7 +200,6 @@ namespace Uintah {
           RadPropsInterface();
           ~RadPropsInterface(); 
           bool problemSetup( const ProblemSpecP& db );
-          bool extraProblemSetup( const ProblemSpecP& db){}; 
           void computeProps( const Patch* patch, 
               constCCVariable<double>& VolFractionBC, 
               RadCalcSpeciesList species,  
@@ -301,8 +227,6 @@ namespace Uintah {
 
       }; 
 #endif
-
-      RadPropertyCalculator::PropertyCalculatorBase* _calculator;
 
   }; 
 } 

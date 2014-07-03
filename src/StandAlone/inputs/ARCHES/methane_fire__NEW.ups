@@ -220,7 +220,6 @@
           <src label="divQ" type="do_radiation">
             <calc_frequency>5</calc_frequency>
             <calc_on_all_RKsteps>false</calc_on_all_RKsteps>
-            <soot_label>soot</soot_label>
             <DORadiationModel>
               <LinearSolver type="hypre">
                 <res_tol>1.0e-10</res_tol>
@@ -228,17 +227,17 @@
                 <pctype>jacobi</pctype>
                 <max_iter>275</max_iter>
               </LinearSolver>
-
-              <property_calculator type="hottel_sarofim">
-              <opl>3.0</opl>
-              <abskg label = "abskg" /> 
-              </property_calculator>
-
             </DORadiationModel>
           </src>
         </Sources>
 
       </TransportEqns>
+
+      <RadiationProperties>
+        <calculator type="hottel_sarofim">
+        <opl>3</opl>
+        </calculator>
+      </RadiationProperties>
 
       <PropertyModels>
         <model type="heat_loss" label="heat_loss">
@@ -252,6 +251,7 @@
           <initialization type="constant">
             <constant>0.0</constant>
           </initialization>
+          <opl>3</opl>
           <carbon_content_fuel>0.75</carbon_content_fuel>
           <carbon_content_ox>0.0</carbon_content_ox>
           <E_st>0.08</E_st>

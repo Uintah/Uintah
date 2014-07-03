@@ -23,6 +23,7 @@
  */
 
 //----- ExplicitSolver.cc ----------------------------------------------
+#include <CCA/Components/Arches/Radiation/RadPropertyCalculator.h>
 #include <CCA/Components/Arches/EfficiencyCalculator.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
@@ -107,6 +108,7 @@ ExplicitSolver(ArchesLabel* label,
                TurbulenceModel* turbModel,
                ScaleSimilarityModel* scaleSimilarityModel,
                PhysicalConstants* physConst,
+               RadPropertyCalculator* rad_properties, 
                const ProcessorGroup* myworld,
                SolverInterface* hypreSolver):
                NonlinearSolver(myworld),
@@ -114,7 +116,8 @@ ExplicitSolver(ArchesLabel* label,
                d_boundaryCondition(bc), d_turbModel(turbModel),
                d_scaleSimilarityModel(scaleSimilarityModel),
                d_physicalConsts(physConst),
-               d_hypreSolver(hypreSolver)
+               d_hypreSolver(hypreSolver), 
+               d_rad_prop_calc(rad_properties)
 {
   d_pressSolver = 0;
   d_momSolver = 0;
@@ -441,6 +444,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     }
 
     // STAGE 0 
+    d_rad_prop_calc->sched_compute_radiation_properties( level, sched, matls, curr_level, false ); 
 
     SourceTermFactory& src_factory = SourceTermFactory::self();
     src_factory.sched_computeSources( level, sched, curr_level, 0 ); 

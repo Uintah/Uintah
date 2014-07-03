@@ -9,23 +9,267 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <CCA/Ports/Scheduler.h>
 #ifdef HAVE_RADPROPS
 #  include <radprops/AbsCoeffGas.h>
 #  include <radprops/RadiativeSpecies.h>
 #  include <radprops/Particles.h>
 #endif
 
+#include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/Radiation/fortran/hottel_fort.h>
 
 using namespace std; 
 using namespace Uintah;
 
-RadPropertyCalculator::RadPropertyCalculator(){
-  _calculator = 0; 
-}
+RadPropertyCalculator::RadPropertyCalculator( const int matl_index ) :
+_matl_index( matl_index )
+{}
 
 RadPropertyCalculator::~RadPropertyCalculator(){
-  delete _calculator; 
+  for ( CalculatorVec::iterator i = _all_calculators.begin(); i != _all_calculators.end(); i++ ){ 
+    delete *i;
+  }
+}
+
+void
+RadPropertyCalculator::problemSetup( const ProblemSpecP& db ){ 
+
+  for ( ProblemSpecP db_pc = db->findBlock("calculator");
+        db_pc != 0; db_pc = db_pc->findNextBlock("calculator") ) {
+
+    RadPropertyCalculator::PropertyCalculatorBase* calculator;
+
+    std::string calculator_type; 
+    db_pc->getAttribute("type", calculator_type); 
+
+    if ( calculator_type == "constant" ){ 
+      calculator = scinew ConstantProperties(); 
+    } else if ( calculator_type == "burns_christon" ){ 
+      calculator = scinew BurnsChriston(); 
+    } else if ( calculator_type == "hottel_sarofim"){
+      calculator = scinew HottelSarofim(); 
+    } else if ( calculator_type == "radprops" ){
+#ifdef HAVE_RADPROPS
+      calculator = scinew RadPropsInterface(); 
+#else
+      throw InvalidValue("Error: You haven't configured with the RadProps library (try configuring with --enable-wasatch_3p and --with-boost=DIR.)",__FILE__,__LINE__);
+#endif
+     } else { 
+       throw InvalidValue("Error: Property calculator not recognized.",__FILE__, __LINE__); 
+     } 
+
+     if ( db_pc->findBlock("temperature")){ 
+       db_pc->findBlock("temperature")->getAttribute("label", _temperature_name); 
+     } else { 
+       _temperature_name = "temperature"; 
+     }
+
+     bool complete; 
+     complete = calculator->problemSetup( db_pc );
+
+     if ( complete )
+       _all_calculators.push_back(calculator); 
+     else 
+       throw InvalidValue("Error: Unable to setup radiation property calculator: "+calculator_type,__FILE__, __LINE__); 
+
+
+  } 
+}
+
+void 
+RadPropertyCalculator::sched_compute_radiation_properties( const LevelP& level, SchedulerP& sched, 
+                                                           const MaterialSet* matls, const int time_substep, 
+                                                           const bool doing_initialization )
+{
+
+  std::string taskname = "RadPropertyCalculator::compute_radiation_properties"; 
+  Task* tsk = scinew Task(taskname, this, &RadPropertyCalculator::compute_radiation_properties, 
+      time_substep, doing_initialization ); 
+
+  for ( CalculatorVec::iterator i = _all_calculators.begin(); i != _all_calculators.end(); i++ ){ 
+
+    const bool local_abskp = (*i)->has_abskp_local();  
+    const bool use_abskp   = (*i)->use_abskp(); 
+
+    if ( time_substep == 0 && !doing_initialization ){ 
+
+      tsk->computes( (*i)->get_abskg_label() );
+
+      if ( use_abskp && local_abskp ){ 
+        tsk->computes( (*i)->get_abskp_label() ); 
+      } else if ( use_abskp && !local_abskp ){ 
+        tsk->requires( Task::OldDW, (*i)->get_abskp_label(), Ghost::None, 0 );
+      }
+      //participating species from property calculator
+      std::vector<std::string> part_sp = (*i)->get_sp(); 
+
+      for ( std::vector<std::string>::iterator iter = part_sp.begin(); iter != part_sp.end(); iter++){
+        const VarLabel* label = VarLabel::find(*iter);
+        if ( label != 0 ){ 
+          tsk->requires( Task::OldDW, label, Ghost::None, 0 ); 
+        } else { 
+          throw ProblemSetupException("Error: Could not match species with varlabel: "+*iter,__FILE__, __LINE__);
+        }
+      }
+    } else if ( time_substep == 0 && doing_initialization ) {
+      tsk->computes( (*i)->get_abskg_label() );
+
+      if ( use_abskp && local_abskp ){ 
+        tsk->computes( (*i)->get_abskp_label() ); 
+      } else if ( use_abskp && !local_abskp ){ 
+        tsk->requires( Task::NewDW, (*i)->get_abskp_label(), Ghost::None, 0 );
+      }
+      //participating species from property calculator
+      std::vector<std::string> part_sp = (*i)->get_sp(); 
+
+      for ( std::vector<std::string>::iterator iter = part_sp.begin(); iter != part_sp.end(); iter++){
+        const VarLabel* label = VarLabel::find(*iter);
+        if ( label != 0 ){ 
+          tsk->requires( Task::NewDW, label, Ghost::None, 0 ); 
+        } else { 
+          throw ProblemSetupException("Error: Could not match species with varlabel: "+*iter,__FILE__, __LINE__);
+        }
+      }
+    } else { 
+
+      tsk->modifies( (*i)->get_abskg_label() );
+
+      if ( use_abskp && local_abskp ){ 
+        tsk->modifies( (*i)->get_abskp_label() ); 
+      } else if ( use_abskp && !local_abskp ){ 
+        tsk->requires( Task::NewDW, (*i)->get_abskp_label(), Ghost::None, 0 );
+      }
+      //participating species from property calculator
+      std::vector<std::string> part_sp = (*i)->get_sp(); 
+
+      for ( std::vector<std::string>::iterator iter = part_sp.begin(); iter != part_sp.end(); iter++){
+        const VarLabel* label = VarLabel::find(*iter);
+        if ( label != 0 ){ 
+          tsk->requires( Task::NewDW, label, Ghost::None, 0 ); 
+        } else { 
+          throw ProblemSetupException("Error: Could not match species with varlabel: "+*iter,__FILE__, __LINE__);
+        }
+      }
+
+    }
+  }
+
+  tsk->requires( Task::NewDW, VarLabel::find("volFraction"), Ghost::None, 0 ); 
+
+  _temperature_label = VarLabel::find(_temperature_name); 
+  if ( _temperature_label != 0 ){ 
+    if ( time_substep == 0 && !doing_initialization ){ 
+      tsk->requires( Task::OldDW, VarLabel::find(_temperature_name), Ghost::None, 0);
+    } else if ( time_substep == 0 && doing_initialization ){ 
+      tsk->requires( Task::NewDW, VarLabel::find(_temperature_name), Ghost::None, 0);
+    } else { 
+      tsk->requires( Task::NewDW, VarLabel::find(_temperature_name), Ghost::None, 0);
+    }
+  } else { 
+    throw ProblemSetupException("Error: Could not find the temperature label",__FILE__, __LINE__);
+  }
+
+  sched->addTask(tsk, level->eachPatch(), matls); 
+
+}
+
+
+void 
+RadPropertyCalculator::compute_radiation_properties( const ProcessorGroup* pc, 
+                                                     const PatchSubset* patches, 
+                                                     const MaterialSubset* matls, 
+                                                     DataWarehouse* old_dw, 
+                                                     DataWarehouse* new_dw, 
+                                                     const int time_substep, 
+                                                     const bool doing_initialization )
+{
+
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+    const Patch* patch = patches->get(p);
+    
+    //get other variables
+    constCCVariable<double> vol_fraction; 
+    constCCVariable<double> temperature; 
+
+    new_dw->get( vol_fraction, VarLabel::find("volFraction"), _matl_index, patch, Ghost::None, 0 ); 
+
+    for ( CalculatorVec::iterator i = _all_calculators.begin(); i != _all_calculators.end(); i++ ){ 
+     
+      DataWarehouse* which_dw; 
+    
+      const bool local_abskp = (*i)->has_abskp_local();  
+      const bool use_abskp   = (*i)->use_abskp(); 
+
+      CCVariable<double> abskg; 
+      CCVariable<double> abskp; 
+      constCCVariable<double> const_abskp; 
+
+      if ( time_substep == 0 && !doing_initialization ) { 
+        which_dw = old_dw; 
+        new_dw->allocateAndPut( abskg, (*i)->get_abskg_label(), _matl_index, patch );
+        if ( use_abskp && local_abskp ){ 
+          new_dw->allocateAndPut( abskp, (*i)->get_abskp_label(), _matl_index, patch );
+        } else if ( use_abskp && !local_abskp ){ 
+          old_dw->get( const_abskp, (*i)->get_abskp_label(), _matl_index, patch, Ghost::None, 0 ); 
+        }
+        old_dw->get( temperature, _temperature_label, _matl_index, patch, Ghost::None, 0 ); 
+      } else if ( time_substep == 0 && doing_initialization ){
+        which_dw = new_dw; 
+        new_dw->allocateAndPut( abskg, (*i)->get_abskg_label(), _matl_index, patch );
+        if ( use_abskp && local_abskp ){ 
+          new_dw->allocateAndPut( abskp, (*i)->get_abskp_label(), _matl_index, patch );
+        } else if ( use_abskp && !local_abskp ){ 
+          new_dw->get( const_abskp, (*i)->get_abskp_label(), _matl_index, patch, Ghost::None, 0 ); 
+        }
+        new_dw->get( temperature, _temperature_label, _matl_index, patch, Ghost::None, 0 ); 
+
+      } else { 
+        which_dw = new_dw; 
+        new_dw->getModifiable( abskg, (*i)->get_abskg_label(), _matl_index, patch );
+        if ( use_abskp && local_abskp ){ 
+          new_dw->getModifiable( abskp, (*i)->get_abskp_label(), _matl_index, patch );
+        } else if ( use_abskp && !local_abskp ){ 
+          new_dw->get( const_abskp, (*i)->get_abskp_label(), _matl_index, patch, Ghost::None, 0 ); 
+        }
+        new_dw->get( temperature, _temperature_label, _matl_index, patch, Ghost::None, 0 ); 
+      }
+
+      //participating species from property calculator
+      typedef std::vector<constCCVariable<double> > CCCV; 
+      CCCV species; 
+      std::vector<std::string> part_sp = (*i)->get_sp(); 
+
+      for ( std::vector<std::string>::iterator iter = part_sp.begin(); iter != part_sp.end(); iter++){
+        const VarLabel* label = VarLabel::find(*iter);
+        constCCVariable<double> spec; 
+        which_dw->get( spec, label, _matl_index, patch, Ghost::None, 0 ); 
+        species.push_back(spec); 
+      }
+
+      //initializing properties here.  This needs to be made consistent with BCs
+      abskg.initialize(1.0); //so that walls, bcs, etc, are fulling absorbing 
+      if ( use_abskp && local_abskp ){
+        abskp.initialize(0.0); 
+      }
+
+      //actually compute the properties
+      (*i)->computeProps( patch, vol_fraction, species, temperature, abskg ); 
+
+      //sum in the particle contribution if needed
+      if ( use_abskp ){ 
+
+        if ( local_abskp ){ 
+          (*i)->sum_abs( abskg, abskp, patch ); 
+        } else { 
+          (*i)->sum_abs( abskg, const_abskp, patch ); 
+        }
+
+      }
+
+    } //calculator loop
+  }   //patch loop
 }
 
 //--------------------------------------------------
@@ -42,33 +286,36 @@ bool RadPropertyCalculator::ConstantProperties::problemSetup( const ProblemSpecP
         
   ProblemSpecP db_prop = db; 
   db_prop->getWithDefault("abskg_value",_abskg_value,0.0); 
-  db_prop->getWithDefault("abskp_value",_abskp_value,0.0); 
 
   if ( db_prop->findBlock("abskg") ){ 
     db_prop->findBlock("abskg")->getAttribute("label",_abskg_name); 
   } else { 
-    _abskg_name = "abskg_constant"; 
+    _abskg_name = "abskg"; 
   }
 
-  _local_abskp = true; 
+  //Create the particle absorption coeff as a <PropertyModel>
+  _local_abskp = false; 
   _use_abskp = false; 
 
-  if ( db_prop->findBlock("abskp") ){ 
-    db_prop->findBlock("abskp")->getAttribute("label",_abskp_name); 
+  const VarLabel* test_label = VarLabel::find(_abskg_name); 
+  if ( test_label == 0 ){ 
+    _abskg_label = VarLabel::create(_abskg_name, CCVariable<double>::getTypeDescription() ); 
   } else { 
-    _abskp_name = "abskp_constant"; 
+    throw ProblemSetupException("Error: Abskg label already used for constant properties: "+_abskg_name,__FILE__, __LINE__);
   }
 
-  _abskg_label = VarLabel::create(_abskg_name, CCVariable<double>::getTypeDescription() ); 
-  _abskp_label = VarLabel::create(_abskp_name, CCVariable<double>::getTypeDescription() ); 
-  
   bool property_on = true; 
 
   return property_on; 
 }
+
+
     
-void RadPropertyCalculator::ConstantProperties::computeProps( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg ){ 
+void RadPropertyCalculator::ConstantProperties::computeProps( const Patch* patch, constCCVariable<double>& VolFractionBC, 
+                                                              RadCalcSpeciesList species, constCCVariable<double>& mixT, 
+                                                              CCVariable<double>& abskg ){ 
   abskg.initialize(_abskg_value); 
+
 }
 
 void RadPropertyCalculator::ConstantProperties::computePropsWithParticles( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, 
@@ -77,11 +324,6 @@ void RadPropertyCalculator::ConstantProperties::computePropsWithParticles( const
 
   throw InvalidValue( "Error: No particle properties implemented for constant radiation properties.",__FILE__,__LINE__);
 
-}
-bool RadPropertyCalculator::ConstantProperties::extraProblemSetup( const ProblemSpecP& db ) {
-  ProblemSpecP db_h = db;
-  bool property_on = false;
-  return property_on; 
 }
 
 //--------------------------------------------------
@@ -115,29 +357,26 @@ bool RadPropertyCalculator::BurnsChriston::problemSetup( const ProblemSpecP& db 
   if ( db_prop->findBlock("abskg") ){ 
     db_prop->findBlock("abskg")->getAttribute("label",_abskg_name); 
   } else { 
-    _abskg_name = "abskg_BC"; 
+    _abskg_name = "abskg"; 
   }
 
   _local_abskp = true; 
   _use_abskp = false; 
 
   //no abskp
-  _abskp_name = "abskp_BC"; 
+  _abskp_name = "NA"; 
 
-  _abskg_label = VarLabel::create(_abskg_name, CCVariable<double>::getTypeDescription() ); 
-  _abskp_label = VarLabel::create(_abskp_name, CCVariable<double>::getTypeDescription() ); 
-  
+  const VarLabel* test_label = VarLabel::find(_abskg_name); 
+  if ( test_label == 0 ){ 
+    _abskg_label = VarLabel::create(_abskg_name, CCVariable<double>::getTypeDescription() ); 
+  } else { 
+    throw ProblemSetupException("Error: Abskg label already used for constant properties: "+_abskg_name,__FILE__, __LINE__);
+  }
+
   bool property_on = true; 
   return property_on; 
 }
 
- 
-bool RadPropertyCalculator::BurnsChriston::extraProblemSetup( const ProblemSpecP& db ) {
-  ProblemSpecP db_h = db;
-  bool property_on = false;
-  return property_on; 
-}
-    
 void RadPropertyCalculator::BurnsChriston::computeProps( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg ){ 
   
   BBox domain(_min,_max);
@@ -191,39 +430,24 @@ RadPropertyCalculator::HottelSarofim::problemSetup( const ProblemSpecP& db ) {
   if ( db_h->findBlock("abskg") ){ 
     db_h->findBlock("abskg")->getAttribute("label",_abskg_name); 
   } else { 
-    _abskg_name = "abskg_HS"; 
+    _abskg_name = "abskg"; 
   }
-
 
   _abskg_label = VarLabel::create(_abskg_name, CCVariable<double>::getTypeDescription() ); 
 
-  bool property_on = true;
-  return property_on; 
-
-}
-
-bool 
-RadPropertyCalculator::HottelSarofim::extraProblemSetup( const ProblemSpecP& db ) {
-  ProblemSpecP db_h = db;
   _local_abskp = false; 
-  if( db_h->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src")->findBlock("DORadiationModel")->findBlock("property_calculator")->findBlock("abskp")){
-    //if(db_h->findBlock("RMCRT") && db_h->findBlock("RMCRT")->findBlock("property_calculator")->findBlock("abskp")) // needed in future for rmcrt
-    db_h->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src")->findBlock("DORadiationModel")->findBlock("property_calculator")->findBlock("abskp")->getAttribute("label",_abskp_name);  // This long syntax is needed becuase the incorrect variable (db_h) is being passed to this function
-    _abskp_label = VarLabel::find(_abskp_name);  
+  _use_abskp = false; 
 
+  if ( db_h->findBlock("abskp")){ 
+    db_h->findBlock("abskp")->getAttribute("label",_abskp_name); 
     _use_abskp = true; 
-    _local_abskp = false; 
-  } else { 
-    _local_abskp = true; 
-    _use_abskp = false; 
-    _abskp_name = "abskp_HS";  
-    _abskp_label = VarLabel::create(_abskp_name, CCVariable<double>::getTypeDescription()); 
   }
 
   bool property_on = true;
   return property_on; 
+
 }
-    
+
 void 
 RadPropertyCalculator::HottelSarofim::computeProps( const Patch* patch, 
     constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, 
@@ -250,6 +474,7 @@ RadPropertyCalculator::HottelSarofim::computePropsWithParticles( const Patch* pa
 vector<std::string> 
 RadPropertyCalculator::HottelSarofim::get_sp(){
 
+  _the_species.clear(); 
   _the_species.push_back(_co2_name);
   _the_species.push_back(_h2o_name);
   _the_species.push_back(_soot_name);
@@ -283,6 +508,9 @@ RadPropertyCalculator::RadPropsInterface::~RadPropsInterface() {
 }
     
 bool RadPropertyCalculator::RadPropsInterface::problemSetup( const ProblemSpecP& db ) {
+
+  _local_abskp = false; 
+  _use_abskp = false; 
 
   if ( db->findBlock( "grey_gas" ) ){
 
@@ -332,19 +560,12 @@ bool RadPropertyCalculator::RadPropsInterface::problemSetup( const ProblemSpecP&
   if ( db->findBlock("abskg") ){ 
     db->findBlock("abskg")->getAttribute("label",_abskg_name); 
   } else { 
-    _abskg_name = "abskg_RP"; 
+    _abskg_name = "abskg"; 
   }
-
-  _local_abskp = false; 
 
   if ( db->findBlock("abskp") ){ 
     db->findBlock("abskp")->getAttribute("label",_abskg_name); 
     _use_abskp = true; 
-  } else { 
-    _abskg_name = "abskp_RP";
-    _local_abskp = true; 
-    _use_abskp = false; 
-    _abskp_label = VarLabel::create(_abskp_name, CCVariable<double>::getTypeDescription() ); 
   }
 
   _abskg_label = VarLabel::create(_abskg_name, CCVariable<double>::getTypeDescription() ); 
@@ -353,34 +574,34 @@ bool RadPropertyCalculator::RadPropsInterface::problemSetup( const ProblemSpecP&
   _does_scattering = false; 
   if ( db->findBlock( "particles" ) ){ 
 
-      ProblemSpecP db_p = db->findBlock( "particles" ); 
+    ProblemSpecP db_p = db->findBlock( "particles" ); 
 
-      double real_part = 0; 
-      double imag_part = 0; 
-      db_p->require( "complex_ir_real", real_part ); 
-      db_p->require( "complex_ir_imag", imag_part ); 
+    double real_part = 0; 
+    double imag_part = 0; 
+    db_p->require( "complex_ir_real", real_part ); 
+    db_p->require( "complex_ir_imag", imag_part ); 
 
-      std::string which_model = "none"; 
-      db_p->require( "model_type", which_model );
-      if ( which_model == "planck" ){ 
-        _p_planck_abskp = true; 
-      } else if ( which_model == "rossland" ){ 
-        _p_ros_abskp = true; 
-      } else { 
-        throw InvalidValue( "Error: Particle model not recognized.",__FILE__,__LINE__);
-      }   
+    std::string which_model = "none"; 
+    db_p->require( "model_type", which_model );
+    if ( which_model == "planck" ){ 
+      _p_planck_abskp = true; 
+    } else if ( which_model == "rossland" ){ 
+      _p_ros_abskp = true; 
+    } else { 
+      throw InvalidValue( "Error: Particle model not recognized.",__FILE__,__LINE__);
+    }   
 
-      std::complex<double> complex_ir( real_part, imag_part ); 
+    std::complex<double> complex_ir( real_part, imag_part ); 
 
-      _part_radprops = scinew ParticleRadCoeffs( complex_ir ); 
+    _part_radprops = scinew ParticleRadCoeffs( complex_ir ); 
 
-      _does_scattering = true; 
+    _does_scattering = true; 
 
-      _use_abskp = true; 
+    _use_abskp = true; 
+    _local_abskp = true; 
+    _abskp_label = VarLabel::create(_abskp_name, CCVariable<double>::getTypeDescription() ); 
 
-    }
-  //need smarter return? 
-  //or no return at all? 
+  }
   return true; 
   
 }
