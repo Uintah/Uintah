@@ -1,5 +1,5 @@
 /**
- *  \file   MonolithicRHS.cpp
+ *  \file   MonolithicRHS.cc
  *
  *  \date   Apr 10, 2012
  *  \author James C. Sutherland

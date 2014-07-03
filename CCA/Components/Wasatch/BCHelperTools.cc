@@ -53,6 +53,10 @@
 #include "Expressions/BoundaryConditions/BoundaryConditions.h"
 #include "Expressions/BoundaryConditions/BoundaryConditionBase.h"
 
+/**
+ * \file BCHelperTools.cc
+ */
+
 //#define WASATCH_BC_DIAGNOSTICS
 
 namespace Wasatch {

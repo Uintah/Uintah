@@ -73,11 +73,9 @@ public:
     
     /**
      *  \brief Constructs a builder for the convective term of the weak momentum transport equation
-     *
-     *  \param the velTag a tag for the component of the velocity that we are advancing
-     *
-     *  \param the velTags a tag list holding velocity components
-     *
+     *  \param result the convective term
+     *  \param velTag a tag for the component of the velocity that we are advancing
+     *  \param velTags a tag list holding velocity components
      */
     Builder( const Expr::Tag& result,
              const Expr::Tag velTag,

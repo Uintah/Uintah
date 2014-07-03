@@ -81,11 +81,11 @@ namespace Wasatch{
    *
    *  \param params the tag from the input file specifying the
    *         transport equation.
-   *
+   *  \param turbParams
    *  \param densityTag a tag for the density to be passed to
    *         the scalar transport equations if it is needed.
-   *         othwise it will be an empty tag.
-   *
+   *         otherwise it will be an empty tag.
+   *  \param isConstDensity true if density is constant
    *  \param gc the GraphCategories.
    *
    *  \return an EqnTimestepAdaptorBase object that can be used to
@@ -115,10 +115,16 @@ namespace Wasatch{
   /**
    *  \brief Build the momentum equation specified by "params"
    *
-   *  \param params The XML block from the input file specifying the
+   *  \param momentumSpec The XML block from the input file specifying the
    *         momentum equation. This will be \verbatim <MomentumEquations>\endverbatim.
-   *
+   *  \param turbParams
+   *  \param varDenParams
+   *  \param useAdaptiveDt true for variable dt
+   *  \param isConstDensity true if density is constant
+   *  \param densityTag the tag for the mixture mass density
    *  \param gc The GraphCategories.
+   *  \param linSolver
+   *  \param sharedState
    *
    *  \return an EqnTimestepAdaptorBase object that can be used to
    *          plug this transport equation into a TimeStepper.
@@ -143,10 +149,13 @@ namespace Wasatch{
   /**
    *  \brief Build mms source terms and parse them properly to the RHS's
    *
-   *  \param varDensMMSParams The XML block from the input file specifying the
-   *         parameters of the MMS. This will be <VariableDensityMMS>.
+   *  \param wasatchParams The XML block from the input file specifying the
+   *         wasatch block.
    *
-   *  \param computeContinuityResidual a boolean showing wether the continuity
+   *  \param varDensMMSParams The XML block from the input file specifying the
+   *         parameters of the MMS. This will be \verbatim<VariableDensityMMS>\endverbatim.
+   *
+   *  \param computeContinuityResidual a boolean showing whether the continuity
    *         residual is being calculated or not
    *
    *  \param gc The GraphCategories.
@@ -160,32 +169,38 @@ namespace Wasatch{
   /**
    *  \brief Build 2D mms source terms and parse them properly to the RHS's
    *
-   *  \param varDensMMSParams The XML block from the input file specifying the
-   *         parameters of the MMS. This will be <VariableDensityMMS>.
+   *  \param wasatchParams The XML block from the input file specifying the
+   *         wasatch block.
    *
-   *  \param computeContinuityResidual a boolean showing wether the continuity
+   *  \param varDensMMSParams The XML block from the input file specifying the
+   *         parameters of the MMS. This will be \verbatim<VariableDensityMMS>\endverbatim.
+   *
+   *  \param computeContinuityResidual a boolean showing whether the continuity
    *         residual is being calculated or not
    *
    *  \param gc The GraphCategories.
    */
   void parse_var_den_oscillating_mms( Uintah::ProblemSpecP wasatchParams,
-                                      Uintah::ProblemSpecP varDens2DMMSParams,
+                                      Uintah::ProblemSpecP varDensMMSParams,
                                       const bool computeContinuityResidual,
                                       GraphCategories& gc);
 
   /**
    *  \brief Build 2D mms source terms and parse them properly to the RHS's
    *
-   *  \param varDensMMSParams The XML block from the input file specifying the
-   *         parameters of the MMS. This will be <VariableDensityMMS>.
+   *  \param wasatchParams The XML block from the input file specifying the
+   *         wasatch block.
    *
-   *  \param computeContinuityResidual a boolean showing wether the continuity
+   *  \param varDensMMSParams The XML block from the input file specifying the
+   *         parameters of the MMS. This will be \verbatim <VariableDensityMMS>\endverbatim.
+   *
+   *  \param computeContinuityResidual a boolean showing whether the continuity
    *         residual is being calculated or not
    *
    *  \param gc The GraphCategories.
    */
   void parse_var_den_corrugated_mms( Uintah::ProblemSpecP wasatchParams,
-                                     Uintah::ProblemSpecP varDens2DMMSParams,
+                                     Uintah::ProblemSpecP varDensMMSParams,
                                      const bool computeContinuityResidual,
                                      GraphCategories& gc);
 
@@ -193,11 +208,12 @@ namespace Wasatch{
    *  \brief Build moment transport equations specified by "params"
    *
    *  \param params The XML block from the input file specifying the
-   *         momentum equation. This will be <MomentumEquations>.
+   *         momentum equation. This will be \verbatim <MomentumEquations> \endverbatim.
    *
-   *  \param densityTag a tag for the density to be passed to
-   *         the momentum equations if it is needed. othwise
-   *         it will be an empty tag.
+   *  \param wasatchParams The XML block from the input file specifying the
+   *         wasatch block.
+   *
+   *  \param isConstDensity true for constant density problems
    *
    *  \param gc The GraphCategories.
    *
@@ -218,10 +234,11 @@ namespace Wasatch{
   /**
    * \brief Register diffusive flux calculation, \f$J_\phi = -\rho \Gamma_\phi \nabla \phi\f$,
    *        for the scalar quantity \f$ \phi \f$.
-   * \param convFluxParams Parser block "DiffusiveFlux"
-   * \param solnVarTag the solution variable to be advected (\f$ \phi \f$).
-   * \param volFracTag volume fraction tag - okay if empty for no volume fraction specification
-   * \param suffix a string containing the "_*" suffix or not, according to wether we 
+   * \param diffFluxParams Parser block "DiffusiveFlux"
+   * \param densityTag the mixture mass density
+   * \param primVarTag The primitive variable, \f$\phi\f$.
+   * \param turbDiffTag The scalar turbulent diffusivity
+   * \param suffix a string containing the "_*" suffix or not, according to whether we
    *        want to calculate the convection term at time step "n+1" or the current time step 
    * \param factory the factory to register the resulting expression on
    * \param info the FieldTagInfo object that will be populated with the appropriate convective flux entry.
@@ -249,7 +266,7 @@ namespace Wasatch{
    *        flux, populate it to use a flux expression that already exists.
    * \param convMethod the upwind method to use
    * \param advVelocityTag the advecting velocity, which lives at staggered cell centers
-   * \param suffix a string containing the "_*" suffix or not, according to wether we 
+   * \param suffix a string containing the "_*" suffix or not, according to whether we
    *        want to calculate the convection term at time step "n+1" or the current time step 
    * \param factory the factory to associate the convective flux expression with
    * \param info this will be populated for use in the ScalarRHS expression if needed.
@@ -268,7 +285,7 @@ namespace Wasatch{
    * \brief Register convective flux calculation for the given scalar quantity
    * \param convFluxParams Parser block "ConvectiveFlux"
    * \param solnVarTag the solution variable to be advected
-   * \param suffix a string containing the "_*" suffix or not, according to wether we 
+   * \param suffix a string containing the "_*" suffix or not, according to whether we
    *        want to calculate the convection term at time step "n+1" or the current time step 
    * \param factory the factory to register the resulting expression on
    * \param info the FieldTagInfo object that will be populated with the appropriate convective flux entry.

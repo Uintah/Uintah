@@ -78,9 +78,16 @@ namespace Wasatch{
      *  \brief Construct a MomentumTransportEquation
      *  \param velName the name of the velocity component solved by this MomentumTransportEquation
      *  \param momName the name of the momentum component solved by this MomentumTransportEquation
-     *  \param factory the Expr::ExpressionFactory that will hold expressions registered by this transport equation.
+     *  \param densTag the tag for the mixture mass density
+     *  \param isConstDensity
+     *  \param bodyForceTag tag for body force
+     *  \param srcTermTag tag for any source terms present
+     *  \param gc
      *  \param params Parser information for this momentum equation
+     *  \param turbulenceParams
+     *  \param varDenParams
      *  \param linSolver the linear solver object for the pressure solve
+     *  \param sharedState contains useful stuff like the value of timestep, etc.
      */
     MomentumTransportEquation( const std::string velName,
                                const std::string momName,
@@ -88,7 +95,7 @@ namespace Wasatch{
                                const bool isConstDensity,
                                const Expr::Tag bodyForceTag,                              
                                const Expr::Tag srcTermTag,
-                               GraphCategories& grafCat,
+                               GraphCategories& gc,
                                Uintah::ProblemSpecP params,
                                TurbulenceParameters turbulenceParams,
                                VarDenParameters varDenParams,

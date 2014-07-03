@@ -48,11 +48,10 @@ public:
     /**
      *  \brief Constructs a builder for the solution variable estimation
      *
-     *  \param the solnVarOldTag a tag for solution variable at the current RK stage
-     *
-     *  \param the solnVarRHSTag a tag for the right hand side of solution variable
+     *  \param result the tag for the solution variable estimate
+     *  \param solnVarOldTag a tag for solution variable at the current RK stage
+     *  \param solnVarRHSTag a tag for the right hand side of solution variable
      *         transport equation at the current RK stage
-     *
      *  \param timeStepTag a tag for the time step at the current RK stage
      *
      */

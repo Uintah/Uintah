@@ -280,9 +280,10 @@ namespace Wasatch{
    *         returning a new pointer.  The caller is responsible for
    *         freeing the memory.
    *  \param uintahVar the uintah variable to wrap
-   *  \param patch the patch that the field is associated with.
+   *  \param ainfo information required about the size of the field
    *  \param deviceIndex in the case of a GPU field, this specifies which GPU it is on
    *  \param uintahDeviceVar for GPU fields, this is the pointer to the field on the device
+   *  \param isGPUTask if true, then this will wrap fields on GPU rather than CPU.
    *
    *  \tparam FieldT the SpatialOps field type to produce
    *  \tparam UFT the Uintah field type that we began with

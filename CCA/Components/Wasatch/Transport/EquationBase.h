@@ -59,12 +59,12 @@ namespace Wasatch{
   public:
 
     /**
-     * @brief Construct a EquationBase
+     * @brief Construct an EquationBase
      * @param gc the GraphCategories object from Wasatch
      * @param solnVarName the name of the solution variable for this equation
+     * @param direction for staggered equations (e.g., momentum), this provides
+     *        the direction that the equation is staggered.
      * @param params the parser information for this EquationBase
-     * @param stagLoc the direction that this equation is staggered
-     * @param isConstDensity flag for constant density
      */
     EquationBase( GraphCategories& gc,
                   const std::string solnVarName,

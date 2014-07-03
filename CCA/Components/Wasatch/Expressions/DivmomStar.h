@@ -80,27 +80,13 @@ public:
     
     /**
      *  \brief Constructs a builder for source term of the pressure
-     *
-     *  \param the momTags a list tag which holds the tags for momentum in
-     *         all directions
-     *
-     *  \param the velStarTags a list tag which holds the tags for velocity at 
+     *  \param result the divergence of the momentum predictor
+     *  \param velStarTags a list tag which holds the tags for velocity at
      *         the time stage "*" in all directions     
-     *
-     *  \param densTag a tag to hold density in constant density cases, which is 
-     *         needed to obtain drhodt 
-     *
      *  \param densStarTag a tag for estimation of density at the time stage "*"
      *         which is needed to obtain momentum at that stage.
-     *
-     *  \param dens2StarTag a tag for estimation of density at the time stage "**"
-     *         which is needed to calculate drhodt 
-     *
-     *  \param dilTag a tag to hold dilatation term in constant density cases.
-     *
-     *  \param timestepTag a tag to hold the timestep value.
      */
-    Builder( const Expr::Tag& results,
+    Builder( const Expr::Tag& result,
              const Expr::TagList& velStarTags,
              const Expr::Tag densStarTag );
     

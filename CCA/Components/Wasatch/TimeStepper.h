@@ -142,12 +142,8 @@ namespace Wasatch{
      *  \brief Construct a TimeStepper object to advance equations forward in time
      *
      *  \param sharedState
-     *
-     *  \param factory - the ExpressionFactory that will be used to
-     *                   construct the trees for any transport
-     *                   equations added to this library.  The same
-     *                   factory should be used when constructing the
-     *                   expressions in each transport equation.
+     *  \param grafCat
+     *  \param timeInt the time integrator to use
      */
     TimeStepper( Uintah::SimulationStateP sharedState,
                  GraphCategories& grafCat,
@@ -177,7 +173,10 @@ namespace Wasatch{
      *  \param infoMap information about each patch including operators, etc.
      *  \param localPatches the patches that this task will be executed on
      *  \param materials the materials that this task will be executed on
+     *  \param level the level of interest
      *  \param sched the scheduler
+     *  \param rkStage the RK stage (1 for forward euler)
+     *  \param ioFieldSet the set of fields that should be locked to maintain persistence
      */
     void create_tasks( const Expr::ExpressionID timeID,
                        const PatchInfoMap& infoMap,

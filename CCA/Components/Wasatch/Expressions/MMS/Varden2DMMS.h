@@ -92,6 +92,14 @@ public:
      * @param D      a double containing the diffusivity constant.
      * @param r0   a double holding the density value at f=0.
      * @param r1   a double holding the density value at f=1.
+     * @param d
+     * @param w
+     * @param k
+     * @param a
+     * @param b
+     * @param uf
+     * @param vf
+     *
      */
     Builder( const Expr::Tag& result,
             const Expr::Tag& xTag,
@@ -157,6 +165,13 @@ public:
      * @param D      a double containing the diffusivity constant.
      * @param r0   a double holding the density value at f=0.
      * @param r1   a double holding the density value at f=1.
+     * @param d
+     * @param w
+     * @param k
+     * @param a
+     * @param b
+     * @param uf
+     * @param vf
      */
     Builder( const Expr::Tag& result,
             const Expr::Tag& xTag,
@@ -223,6 +238,13 @@ public:
      * @param D      a double containing the diffusivity constant.
      * @param r0   a double holding the density value at f=0.
      * @param r1   a double holding the density value at f=1.
+     * @param d
+     * @param w
+     * @param k
+     * @param a
+     * @param b
+     * @param uf
+     * @param vf
      */
     Builder( const Expr::Tag& result,
             const Expr::Tag& xTag,
@@ -305,9 +327,13 @@ public:
      * @param xTag   Tag of the first coordinate.
      * @param yTag   Tag of the second coordinate.
      * @param tTag   Tag of time.
-     * @param D      a double containing the diffusivity constant.
      * @param r0   a double holding the density value at f=0.
      * @param r1   a double holding the density value at f=1.
+     * @param d
+     * @param w
+     * @param k
+     * @param uf
+     * @param vf
      */
     Builder( const Expr::Tag& result,
              const Expr::Tag& xTag,
@@ -371,13 +397,6 @@ class VarDenMMSOscillatingContinuitySrc : public Expr::Expression<FieldT>
 public:
   struct Builder : public Expr::ExpressionBuilder
   {
-    /**
-     * @param result      Tag of the resulting expression.
-     * @param xTag        Tag of the first coordinate.
-     * @param yTag        Tag of the second coordinate.
-     * @param tTag        Tag of time.
-     * @param timestepTag Tag of time step.
-     */
     Builder( const Expr::Tag& result,
              const Expr::Tag densTag,
              const Expr::Tag densStarTag,
@@ -504,9 +523,9 @@ public:
   {
     Builder( const Expr::Tag& result,
              const Expr::Tag& rhoTag,
-             const Expr::Tag& xTag,  ///< x coordinate
-             const Expr::Tag& yTag,  ///< y coordinate
-             const Expr::Tag& tTag,  ///< time
+             const Expr::Tag& xTag,
+             const Expr::Tag& yTag,
+             const Expr::Tag& tTag,
              const double r0,
              const double r1,
              const double w,
@@ -578,9 +597,9 @@ public:
   {
     Builder( const Expr::Tag& result,
              const Expr::Tag& rhoTag,
-             const Expr::Tag& xTag,  ///< x-coordinate
-             const Expr::Tag& yTag,  ///< y-coordinate
-             const Expr::Tag& tTag,  ///< time
+             const Expr::Tag& xTag,
+             const Expr::Tag& yTag,
+             const Expr::Tag& tTag,
               const double r0,
               const double r1,
               const double w,
@@ -649,15 +668,15 @@ public:
   struct Builder : public Expr::ExpressionBuilder
   {
     Builder( const Expr::Tag& result,
-             const Expr::Tag& xTag,  ///< x-coordinate
-             const Expr::Tag& yTag,  ///< y-coordinate
-             const Expr::Tag& tTag,  ///< time
-            const double r0,
-            const double r1,
-            const double w,
-            const double k,
-            const double uf,
-            const double vf);
+             const Expr::Tag& xTag,
+             const Expr::Tag& yTag,
+             const Expr::Tag& tTag,
+             const double r0,
+             const double r1,
+             const double w,
+             const double k,
+             const double uf,
+             const double vf);
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
@@ -674,12 +693,12 @@ private:
   VarDenOscillatingMMSMixFrac( const Expr::Tag& xTag,
                    const Expr::Tag& yTag,
                    const Expr::Tag& tTag,
-                              const double r0,
-                              const double r1,
-                              const double w,
-                              const double k,
-                              const double uf,
-                              const double vf);
+                   const double r0,
+                   const double r1,
+                   const double w,
+                   const double k,
+                   const double uf,
+                   const double vf );
   const double r0_, r1_, w_, k_, uf_, vf_;
   const Expr::Tag xTag_, yTag_, tTag_;
   const FieldT* x_;

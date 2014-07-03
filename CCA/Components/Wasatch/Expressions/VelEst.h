@@ -86,18 +86,15 @@ public:
     
     /**
      *  \brief Constructs a builder for one of the velocity components estimation
-     *
-     *  \param the velTag a tag for the component of the velocity that we are advancing
-     *
-     *  \param the tauTags a tag list holding stress tensor components related to the 
+     *  \param result the tag for the velocity estimate
+     *  \param velTag a tag for the component of the velocity that we are advancing
+     *  \param convTermTag a tag for the convective term
+     *  \param tauTags a tag list holding stress tensor components related to the
      *         component of the velocity which exists in velTag.
-     *
-     *  \param the densityTag a tag for density at the current time step
-     *
-     *  \param the pressureTag a tag for pressure field at the previous time step.
-     *
+     *  \param densityTag a tag for density at the current time step
+     *  \param viscTag a tag for viscosity
+     *  \param pressureTag a tag for pressure field at the previous time step.
      *  \param timeStepTag a tag for the time step at the current RK stage
-     *
      */
     Builder( const Expr::Tag& result,
              const Expr::Tag velTag,

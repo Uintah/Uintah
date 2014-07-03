@@ -224,6 +224,8 @@ namespace Wasatch{
    *         instance of TabProps.
    *  \param doDenstPlus - the boolean showing whether we have a variable
    *         density case and we want to do pressure projection or not
+   *  \param [inout] lockedFields the set of fields that should be controlled by
+   *         Uintah and not allowed to be scratch/temporary fields.
    */
   void parse_tabprops( Uintah::ProblemSpecP& params,
                        GraphHelper& gh,

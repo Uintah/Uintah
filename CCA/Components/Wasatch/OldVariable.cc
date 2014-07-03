@@ -1,8 +1,5 @@
 /**
- *  \file   OldVariable.cc
- *  \date   Feb 7, 2013
- *  \author "James C. Sutherland"
- *
+ * \file OldVariable.cc
  *
  * The MIT License
  *

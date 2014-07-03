@@ -147,7 +147,10 @@ namespace Wasatch{
      *  \param materials - the list of materials that this task is to be associated with.
      *  \param info	- the PatchInfoMap object that holds patch-specific information (like operators).
      *  \param rkStage - the stage of the RK integrator that this is associated with
+     *  \param state
      *  \param ioFieldSet - the set of fields that are requested for IO.  This prevents these fields from being recycled internally.
+     *  \param lockAllFields if true, then all fields will be marked persistent.
+     *         Otherwise, memory will be reclaimed when possible.
      */
     TreeTaskExecute( TreeMap& treeMap,
                      const std::string taskName,
@@ -282,6 +285,7 @@ namespace Wasatch{
    *  \param patches - the patches to associate with this task
    *  \param materials - the materials to associate with this task
    *  \param newDWFields - any fields specified in this TagSet will be taken from the new DataWarehouse instead of the old DataWarehouse.
+   *  \param rkStage - the current Runge-Kutta stage
    *
    *  This function analyzes the ExpressionTree to identify what
    *  fields are required for this task, and then advertises them to

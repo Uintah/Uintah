@@ -64,6 +64,10 @@ static SCIRun::DebugStream dbgbc("WASATCH_BC", false);
 #define DBC_BC_ON  dbgbc.active()
 #define DBGBC  if( DBC_BC_ON  ) dbgbc
 
+/**
+ * \file BCHelper.h
+ */
+
 namespace Wasatch {
   
   // !!! ACHTUNG !!!
@@ -103,7 +107,7 @@ namespace Wasatch {
   };
   
   BndCondTypeEnum   select_bc_type_enum( const std::string& bcTypeStr );
-  const std::string bc_type_enum_to_string( const BndCondTypeEnum bcTypeEnum );
+  std::string bc_type_enum_to_string( const BndCondTypeEnum bcTypeEnum );
 
   template<typename OST>
   OST& operator<<( OST& os, const BndCondTypeEnum bcTypeEnum );
@@ -116,16 +120,16 @@ namespace Wasatch {
    *  @date   Sept 2013
    *
    *  @brief  Enum that specifies the types of boundaries supported in Wasatch.
-   Boundaries represent physical domain boundaries and can be of type Wall, Inlet, etc...
-   They can be thought of as physical, user-friendly boundaries types. These types, specified
-   in the input file, will be used to make logical decisions on the sanity of boundary conditions
-   specified by the user. They are also used to infer auxiliary boundary conditions.
-   
-   The boundary type is specified by the user through the input file, for example:
-   <Face side="x+" name="outlet" type="Outflow"/>
-   All types specified in the input file are Capitalized (first letter only).
-   If the user doesn't specify a type, then Wasatch will assume that the boundary type is USER, i.e.
-   the user specifies bcs on any quantity as long as Wasatch applies a bc on that quantity.
+   *  Boundaries represent physical domain boundaries and can be of type Wall, Inlet, etc...
+   *  They can be thought of as physical, user-friendly boundaries types. These types, specified
+   *  in the input file, will be used to make logical decisions on the sanity of boundary conditions
+   *  specified by the user. They are also used to infer auxiliary boundary conditions.
+   *
+   *  The boundary type is specified by the user through the input file, for example:
+   *  \verbatim<Face side="x+" name="outlet" type="Outflow"/>\verbatim
+   *  All types specified in the input file are Capitalized (first letter only).
+   *  If the user doesn't specify a type, then Wasatch will assume that the boundary type is USER, i.e.
+   *  the user specifies bcs on any quantity as long as Wasatch applies a bc on that quantity.
    */
   //****************************************************************************
   enum BndTypeEnum
@@ -385,8 +389,9 @@ namespace Wasatch {
    *  The BCHelper class provides a centralized approach to dealing with boundary
    *  conditions. The model adopted for our boundary condition implementation
    *  relies on the basic assumption that all boundary specification within a
-   *  <Face> specification in a ups input file belong to the same boundary.
-   *  This is the essential assumption on which this entire class is built.
+   *  \verbatim<Face>\endverbatim specification in a ups input file belong to
+   *  the same boundary. This is the essential assumption on which this entire
+   *  class is built.
    *
    *  The class operates in the following manner. After Uintah performs its
    *  input-file setup, it automatically constructs BC-related objects and
@@ -553,22 +558,11 @@ namespace Wasatch {
      *
      *  \brief Function that updates poisson rhs when boundaries are present.
      *
-     *  \param poissonTag The Expr::Tag of the poisson variable (e.g. pressure).
-     This Tag is needed to extract the boundary iterators from Uintah.
-     *
-     *  \param poissonMatrix A reference to the poisson coefficient matrix which
-     we intend to modify.
-     *
-     *  \param poissonField A reference to the poisson field. This contains the
-     values of the poisson variable, e.g. pressure.
-     *
-     *  \param poissonRHS A reference to the poisson RHS field. This should be
-     a MODIFIABLE field since it will be updated using bcs on the poisson field.
+     *  \param pressureRHS A reference to the poisson RHS field. This should be
+     *  a MODIFIABLE field since it will be updated using bcs on the poisson field.
      *
      *  \param patch A pointer to the current patch. If the patch does NOT contain
-     the reference cells, then nothing is set.
-     *
-     *  \param material The Uintah material ID (an integer).
+     *  the reference cells, then nothing is set.
      */
     void update_pressure_rhs( SVolField& pressureRHS,
                               const Uintah::Patch* patch );

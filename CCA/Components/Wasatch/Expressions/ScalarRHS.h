@@ -76,7 +76,7 @@
  *     + \frac{1}{\rho} s_\phi
  *    \right]
  *  \f]
- *  where $\f\vec{V}^d_\phi = \frac{\vec{J}_\phi}{\rho}\f$ is the diffusion velocity.
+ *  where \f$\vec{V}^d_\phi = \frac{\vec{J}_\phi}{\rho}\f$ is the diffusion velocity.
  *
  *  It also supports the weak form of the RHS:
  *  \f[
@@ -129,6 +129,7 @@ public:
 
     /**
      *  \brief Constructs a builder for a ScalarRHS object.
+     *  \param result the tag for the ScalarRHS
      *  \param fieldInfo the FieldTagInfo object that holds information for the
      *   various expressions that form the RHS.
      *  \param densityTag density tag for cases that we have constant density and a source term.

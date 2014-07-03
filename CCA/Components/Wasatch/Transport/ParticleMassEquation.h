@@ -72,12 +72,10 @@ namespace Wasatch{
 
   /**
    *  @class ParticleMassEquation
-      @author Tony Saad
-      @date: June 2014
+   *  @author Tony Saad
+   *  @date   June 2014
    *  @brief Solves for particle mass.
-   *
    */
- 
   class ParticleMassEquation
     : public ParticleEquationBase
   {
@@ -90,12 +88,13 @@ namespace Wasatch{
      *
      * \param pdir Specifies which position or momentum component this equation solves.
      *
-     * \param particlePositionTags A taglist containing the tags of x, y, and z particle coordiantes.
-        Those may be needed by some particle expressions that require particle operators
+     * \param particlePositionTags A taglist containing the tags of x, y, and z
+     *        particle coordiantes. Those may be needed by some particle
+     *        expressions that require particle operators
      *
      * \param particleSizeTag Particle size tag. May be needed by some expressions.
      *
-     * \param particleEquationSpec the Uintah parser information for this Particle equation
+     * \param particleEqsSpec the Uintah parser information for this Particle equation
      *
      * \param gc The GraphCategories object from Wasatch
      *

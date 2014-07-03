@@ -1,5 +1,5 @@
 /**
- *  \file   EnthalpyTransportEquation.cpp
+ *  \file   EnthalpyTransportEquation.cc
  *  \date   Nov 12, 2013
  *  \author "James C. Sutherland"
  *

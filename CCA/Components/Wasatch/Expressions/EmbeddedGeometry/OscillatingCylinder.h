@@ -28,7 +28,7 @@
 #include <expression/Expression.h>
 
 /**
- *  \class Oscillating Cylinder
+ *  \class OscillatingCylinder
  *  \author Tony Saad
  *  \date April, 2012
  *  \brief Implements an oscillating cylinder that can be used as volume
@@ -40,15 +40,15 @@ public:
   
   struct Builder : public Expr::ExpressionBuilder
   {
-    Builder(const Expr::Tag& result,
-            const std::string axis,
-            const std::vector<double>& origin,
-            const std::vector<double>& oscillatingdir,
-            const double insideValue = 1.0,
-            const double outsideValue = 0.0,
-            const double radius = 0.1,
-            const double frequency = 6.28318530717959,
-            const double amplitude = 0.0);
+    Builder( const Expr::Tag& result,
+             const std::string axis,
+             const std::vector<double>& origin,
+             const std::vector<double>& oscillatingdir,
+             const double insideValue = 1.0,
+             const double outsideValue = 0.0,
+             const double radius = 0.1,
+             const double frequency = 6.28318530717959,
+             const double amplitude = 0.0) ;
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
