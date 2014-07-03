@@ -80,6 +80,7 @@ class DQMOM;
 class CQMOM;
 class EfficiencyCalculator; 
 class WallModelDriver; 
+class RadPropertyCalculator; 
 class ExplicitSolver: public NonlinearSolver {
 
 public:
@@ -90,7 +91,8 @@ public:
                  BoundaryCondition* bc,
                  TurbulenceModel* turbModel,
                  ScaleSimilarityModel* scaleSimilarityModel,
-                 PhysicalConstants* physConst,
+                 PhysicalConstants* physConst, 
+                 RadPropertyCalculator* rad_properties, 
                  const ProcessorGroup* myworld,
                  SolverInterface* hypreSolver);
 
@@ -370,8 +372,12 @@ private:
   PressureSolver* d_pressSolver;
   SolverInterface* d_hypreSolver;             // infrastructure hypre solver
 
-  EfficiencyCalculator* d_eff_calculator; 
+  EfficiencyCalculator* d_eff_calculator;
+  RadPropertyCalculator* d_rad_prop_calc; 
+
   //TaskFactoryBase* _test_factory; 
+  
+
 
   //Diagnostics
   bool d_printTotalKE; 

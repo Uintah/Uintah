@@ -179,6 +179,18 @@ namespace Uintah{
       std::map <int,IntVector> d_locationIndexOrder;
       std::map <int,IntVector> d_locationShift;
 
+<<<<<<< HEAD
+=======
+      Ghost::GhostType d_gn;
+      Ghost::GhostType d_gac;
+
+      SimulationStateP d_sharedState;
+      const VarLabel* d_sigmaT4_label; 
+      const VarLabel* d_abskgLabel;
+      const VarLabel* d_temperatureLabel;
+      const VarLabel* d_cellTypeLabel;
+      const VarLabel* d_divQLabel;
+>>>>>>> Complete divorce of the radiation properties from the radiation models
       const VarLabel* d_VRFluxLabel;
       const VarLabel* d_divQFiltLabel;
       const VarLabel* d_boundFluxLabel;

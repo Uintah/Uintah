@@ -152,7 +152,6 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
   ffield = -1;
 
   //NOTE: Setting wall properties to 1.0 
-  d_wall_abskg      = 1.0; 
   d_intrusion_abskg = 1.0;
 
 
@@ -188,24 +187,26 @@ DORadiationModel::boundarycondition(const ProcessorGroup*,
                                     ArchesVariables* vars,
                                     ArchesConstVariables* constvars)
 {
-           
-  //__________________________________
-  // loop over computational domain faces
-  vector<Patch::FaceType> bf;
-  patch->getBoundaryFaces(bf);
-  
-  for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
-    Patch::FaceType face = *iter;
-    
-    Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
-    
-    for (CellIterator iter =  patch->getFaceIterator(face, PEC); !iter.done(); iter++) {
-      IntVector c = *iter;
-      if (constvars->cellType[c] != ffield ){
-        vars->ABSKG[c]       = d_wall_abskg;
-      }
-    }
-  }
+ 
+  //This should be done in the property calculator
+//  //__________________________________
+//  // loop over computational domain faces
+//  vector<Patch::FaceType> bf;
+//  patch->getBoundaryFaces(bf);
+//  
+//  for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
+//    Patch::FaceType face = *iter;
+//    
+//    Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
+//    
+//    for (CellIterator iter =  patch->getFaceIterator(face, PEC); !iter.done(); iter++) {
+//      IntVector c = *iter;
+//      if (constvars->cellType[c] != ffield ){
+//        vars->ABSKG[c]       = d_wall_abskg;
+//      }
+//    }
+//  }
+
 }
 
 //***************************************************************************
@@ -307,7 +308,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       fort_rdomsolve( idxLo, idxHi, constvars->cellType, ffield, 
                       cellinfo->sew, cellinfo->sns, cellinfo->stb, 
                       vars->ESRCG, direcn, oxi, omu,oeta, wt, 
-                      vars->temperature, vars->ABSKG,
+                      constvars->temperature, constvars->ABSKG,
                       su, aw, as, ab, ap, ae, an, at,
                       plusX, plusY, plusZ, fraction, bands, 
                       d_intrusion_abskg);
@@ -334,7 +335,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                      vars->qfluxt, vars->qfluxb);
     }  // ordinate loop
 
-    fort_rdomsrc( idxLo, idxHi, vars->ABSKG, vars->ESRCG,vars->volq, divQ );
+    fort_rdomsrc( idxLo, idxHi, constvars->ABSKG, vars->ESRCG,vars->volq, divQ );
 
   }  // bands loop
 

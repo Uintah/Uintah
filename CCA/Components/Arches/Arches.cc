@@ -23,6 +23,7 @@
  */
 
 //----- Arches.cc ----------------------------------------------
+#include <CCA/Components/Arches/Radiation/RadPropertyCalculator.h>
 #include <CCA/Components/Arches/DQMOM.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
@@ -498,7 +499,17 @@ Arches::problemSetup(const ProblemSpecP& params,
 
 # endif // WASATCH_IN_ARCHES
 //------------------------------------------------------------------------------
+//
 
+  //Radiation Properties: 
+  ProblemSpecP rad_properties_db = db->findBlock("RadiationProperties"); 
+  int matl_index = d_sharedState->getArchesMaterial(0)->getDWIndex();
+  d_rad_prop_calc = scinew RadPropertyCalculator(matl_index); 
+  if ( rad_properties_db ){
+    d_rad_prop_calc->problemSetup(rad_properties_db); 
+  }
+
+  //Transport Eqns: 
   ProblemSpecP transportEqn_db = db->findBlock("TransportEqns");
   if (transportEqn_db) {
 
@@ -723,7 +734,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_nlSolver = scinew ExplicitSolver(d_lab, d_MAlab, d_props,
                                        d_boundaryCondition,
                                        d_turbModel, d_scaleSimilarityModel,
-                                       d_physicalConsts,
+                                       d_physicalConsts, d_rad_prop_calc, 
                                        d_myworld,
                                        hypreSolver);
 
@@ -1222,6 +1233,8 @@ Arches::scheduleInitialize(const LevelP& level,
   }
 
   d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls );
+
+  d_rad_prop_calc->sched_compute_radiation_properties( level, sched, matls, 0, true ); 
 
 # ifdef WASATCH_IN_ARCHES
   // must set wasatch materials after problemsetup so that we can access

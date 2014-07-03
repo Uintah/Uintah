@@ -116,6 +116,7 @@ namespace Uintah {
   class PartVel;
   class DQMOM;
   class CQMOM;
+  class RadPropertyCalculator; 
 
 class Arches : public UintahParallelComponent, public SimulationInterface {
 
@@ -327,6 +328,9 @@ private:
   SimulationStateP d_sharedState;
   // Variable labels that are used by the simulation controller
   ArchesLabel* d_lab;
+
+  //Radiation properties
+  RadPropertyCalculator* d_rad_prop_calc;
 
   const MPMArchesLabel* d_MAlab;
 

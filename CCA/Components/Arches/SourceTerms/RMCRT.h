@@ -1,7 +1,6 @@
 #ifndef Uintah_Component_Arches_RMCRT_h
 #define Uintah_Component_Arches_RMCRT_h
 #include <CCA/Components/Arches/ArchesLabel.h>
-#include <CCA/Components/Arches/Radiation/RadPropertyCalculator.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/MPMArches/MPMArchesLabel.h>
@@ -152,23 +151,17 @@ private:
   ArchesLabel*    _labels; 
   MPMArchesLabel* _MAlab;
   BoundaryCondition* _bc; 
-  RadPropertyCalculator* _prop_calculator; 
   const ProcessorGroup* _my_world;
   SimulationStateP      _sharedState;
   ProblemSpecP          _ps;  // needed for extraSetup()
  
   const VarLabel* _tempLabel;
   const VarLabel* _sigmaT4Label;
-  const VarLabel* _absorpLabel;
   const VarLabel* _cellTypeLabel; 
+  const VarLabel* _abskg_label; 
 
   std::string _size_label_name; 
-  std::string _abskp_label_name; 
-  std::string _pT_label_name; 
-  std::vector<const VarLabel*> _size_varlabels; 
-  std::vector<const VarLabel*> _w_varlabels; 
-  std::vector<const VarLabel*> _T_varlabels; 
-  int _nQn_part; 
+  std::string _abskg_label_name; 
   
   Ghost::GhostType _gn;
   Ghost::GhostType _gac;
