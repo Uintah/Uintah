@@ -242,8 +242,9 @@ void adaptiveWheelerAlgorithm(const std::vector<double>& moments, std::vector<do
 {
   int nEnvMax = moments.size()/2;
   int nEnvOut = moments.size()/2;
-  int nMom = moments.size();
+  
 #ifdef cqmom_dbg
+  int nMom = moments.size();
   cout << "Wheeler Adaptive Start" << endl;
   for (int i = 0; i < nMom; i++) {
     cout << "m[" << i << "]=" << moments[i] << endl;
