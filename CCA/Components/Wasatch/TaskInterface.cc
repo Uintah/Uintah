@@ -199,12 +199,12 @@ namespace Wasatch{
       TreePtr tree = vt.second;
 
 #     ifdef HAVE_CUDA
-      bool isGPUTask = tree->is_homogeneous_gpu( patchID );
+      bool isGPUTask = tree->is_homogeneous_gpu();
 
       // Force everything to CPU for initialization & also for heterogeneous Task graph
       // For heterogeneous graphs, ExprLib will control GPU execution.
       if( !(isGPUTask && Uintah::Parallel::usingDevice()) || (taskName == "initialization") ) {
-        tree->turn_off_gpu_runnable( patchID );
+        tree->turn_off_gpu_runnable();
         isGPUTask = false;
       }
 
