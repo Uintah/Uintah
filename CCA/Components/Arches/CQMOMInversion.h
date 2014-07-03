@@ -371,6 +371,7 @@ void adaptiveWheelerAlgorithm(const std::vector<double>& moments, std::vector<do
     // Solve eigenproblem. eigenvectors are stored in the z_ matrix, columnwise
     DSYEV( &jobz, &matType, &nEnvOut, &z_[0], &lda, &eigenVal[0], work, &lwork, &info );
     bool status = ( info>0 || info<0 )? false : true;
+    delete work;
   
     if (!status) {
 #ifdef cqmom_dbg
@@ -385,7 +386,6 @@ void adaptiveWheelerAlgorithm(const std::vector<double>& moments, std::vector<do
       w[i] = moments[0] * z_[i*nEnvOut] * z_[i*nEnvOut];
       x[i] = eigenVal[i];
     }
-    delete work;
     
     //____________
     //Check that the minimum spacing and weight ratios are met
