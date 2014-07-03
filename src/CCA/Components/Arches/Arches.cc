@@ -66,6 +66,7 @@
 #include <CCA/Components/Arches/PropertyModels/ScalarVarianceScaleSim.h>
 #include <CCA/Components/Arches/PropertyModels/NormScalarVariance.h>
 #include <CCA/Components/Arches/PropertyModels/ScalarDissipation.h>
+#include <CCA/Components/Arches/PropertyModels/RadProperties.h>
 #include <Core/IO/UintahZlibUtil.h>
 
 #if HAVE_TABPROPS
@@ -501,14 +502,6 @@ Arches::problemSetup(const ProblemSpecP& params,
 //------------------------------------------------------------------------------
 //
 
-  //Radiation Properties: 
-  ProblemSpecP rad_properties_db = db->findBlock("RadiationProperties"); 
-  int matl_index = d_sharedState->getArchesMaterial(0)->getDWIndex();
-  d_rad_prop_calc = scinew RadPropertyCalculator(matl_index); 
-  if ( rad_properties_db ){
-    d_rad_prop_calc->problemSetup(rad_properties_db); 
-  }
-
   //Transport Eqns: 
   ProblemSpecP transportEqn_db = db->findBlock("TransportEqns");
   if (transportEqn_db) {
@@ -605,6 +598,14 @@ Arches::problemSetup(const ProblemSpecP& params,
       a_model.problemSetup( prop_db );
 
     }
+  }
+
+  //Radiation Properties: 
+  ProblemSpecP rad_properties_db = db->findBlock("RadiationProperties"); 
+  int matl_index = d_sharedState->getArchesMaterial(0)->getDWIndex();
+  d_rad_prop_calc = scinew RadPropertyCalculator(matl_index); 
+  if ( rad_properties_db ){
+    d_rad_prop_calc->problemSetup(rad_properties_db); 
   }
 
   // read properties
@@ -1234,7 +1235,7 @@ Arches::scheduleInitialize(const LevelP& level,
 
   d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls );
 
-  d_rad_prop_calc->sched_compute_radiation_properties( level, sched, matls, 0, true ); 
+  //d_rad_prop_calc->sched_compute_radiation_properties( level, sched, matls, 0, true ); 
 
 # ifdef WASATCH_IN_ARCHES
   // must set wasatch materials after problemsetup so that we can access
@@ -2703,6 +2704,12 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
 
         //Scalar dissipation based on the transported squared gradient of mixture fraction for 2-eqn scalar var model
         PropertyModelBase::Builder* the_builder = new ScalarDissipation::Builder( prop_name, d_sharedState );
+        prop_factory.register_property_model( prop_name, the_builder );
+
+      } else if ( prop_type == "radiation_properties" ){ 
+
+        //Radiation properties as computed through the RadPropertyCalculator
+        PropertyModelBase::Builder* the_builder = new RadProperties::Builder( prop_name, d_sharedState ); 
         prop_factory.register_property_model( prop_name, the_builder );
 
       } else {

@@ -94,7 +94,15 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
   _ps = inputdb; 
   _ps->getWithDefault( "calc_frequency",       _radiation_calc_freq, 3 ); 
   _ps->getWithDefault( "calc_on_all_RKsteps",  _all_rk,              false );  
-  _ps->getWithDefault( "abskg_label", _abskg_label_name, "abskg"); 
+  _T_label_name = "temperature"; 
+  if ( _ps->findBlock("temperature")){ 
+    _ps->findBlock("temperature")->getAttribute("label",_T_label_name); 
+  } 
+  if ( _ps->findBlock("abskg")){ 
+    _ps->findBlock("abskg")->getAttribute("label", _abskg_label_name); 
+  } else { 
+    throw ProblemSetupException("Error: RMCRT - The absorption coefficient is not defined.",__FILE__,__LINE__);
+  }
 
   //__________________________________
   //  Bulletproofing:
@@ -142,7 +150,8 @@ RMCRT_Radiation::extraSetup( GridP& grid, const ProblemSpecP& db )
 { 
 
   // determing the temperature label
-  _tempLabel = _labels->getVarlabelByRole(ArchesLabel::TEMPERATURE);
+  //_tempLabel = _labels->getVarlabelByRole(ArchesLabel::TEMPERATURE);
+  _tempLabel = VarLabel::find(_T_label_name); 
   proc0cout << "RMCRT: temperature label name: " << _tempLabel->getName() << endl;
 
   if ( _tempLabel == 0 ){ 
