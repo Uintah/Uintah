@@ -562,12 +562,16 @@ namespace Uintah{
     public:
       cqFaceData1D no_bc( const IntVector c, const IntVector coord, phiT& phi) {
         //placeholder
+        Convection_CQMOM::cqFaceData1D face_values;
+        return face_values;
       }
       
       cqFaceData1D inline with_bc( const IntVector c, const IntVector coord, phiT& phi,
                                    constCCVariable<Vector>& areaFraction, cqFaceBoundaryBool isBoundary)
       {
         //placeholder
+        Convection_CQMOM::cqFaceData1D face_values;
+        return face_values;
       }
     };
     
