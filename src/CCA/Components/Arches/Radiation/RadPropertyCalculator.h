@@ -113,7 +113,12 @@ namespace Uintah {
         return _calculator->get_abskp_name(); 
       }
 
-      void sum_abs( CCVariable<double>& abskg, CCVariable<double>& abskp, const Patch* patch ){ 
+      inline const bool has_abskp_local(){ 
+        return _calculator->has_abskp_local(); 
+      }
+
+      template <class T> 
+      void sum_abs( CCVariable<double>& abskg, T& abskp, const Patch* patch ){ 
         _calculator->sum_abs( abskg, abskp, patch ); 
       }
 
@@ -151,13 +156,15 @@ namespace Uintah {
           virtual std::vector<std::string> get_sp() = 0;
           virtual bool does_scattering() = 0;
 
-          inline const VarLabel* get_abskg_label(){return _abskg_label;}; 
-          inline const VarLabel* get_abskp_label(){return _abskp_label;}; 
+          inline const VarLabel* get_abskg_label(){return _abskg_label;} 
+          inline const VarLabel* get_abskp_label(){return _abskp_label;}
+          inline const bool has_abskp_local(){ return _local_abskp; }
 
-          std::string get_abskg_name(){ return _abskg_name;};
-          std::string get_abskp_name(){ return _abskp_name;};
+          std::string get_abskg_name(){ return _abskg_name;}
+          std::string get_abskp_name(){ return _abskp_name;}
 
-          void sum_abs( CCVariable<double>& abskg, CCVariable<double>& abskp, const Patch* patch ){ 
+          template <class T> 
+          void sum_abs( CCVariable<double>& abskg, T& abskp, const Patch* patch ){ 
             if ( _use_abskp ){
               for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 

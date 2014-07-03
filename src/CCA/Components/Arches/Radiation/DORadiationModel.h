@@ -44,7 +44,6 @@ GENERAL INFORMATION
     
     
 ***************************************************************************/
-//#include <CCA/Components/Arches/Radiation/RadiationModel.h>
 #include <CCA/Components/Arches/Radiation/RadiationSolver.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <CCA/Components/Arches/ArchesVariables.h>
@@ -57,6 +56,7 @@ GENERAL INFORMATION
 #include <Core/Grid/Variables/VarLabel.h>
 
 namespace Uintah {
+
   class ArchesLabel;
   class BoundaryCondition;
 
@@ -75,133 +75,24 @@ public:
       virtual ~DORadiationModel();
 
 
-      virtual void problemSetup(ProblemSpecP& params, bool stand_alone_src );
+      virtual void problemSetup(ProblemSpecP& params);
 
-      virtual void computeRadiationProps(const ProcessorGroup* pc,
-                                         const Patch* patch,
-                                         CellInformation* cellinfo,
-                                         ArchesVariables* vars,
-                                         ArchesConstVariables* constvars);
-      
       virtual void boundarycondition(const ProcessorGroup* pc,
                                      const Patch* patch,
                                      CellInformation* cellinfo, 
                                      ArchesVariables* vars,
                                      ArchesConstVariables* constvars);
 
-      virtual void boundarycondition_new(const ProcessorGroup* pc,
-                                         const Patch* patch,
-                                         CellInformation* cellinfo, 
-                                         ArchesVariables* vars,
-                                         ArchesConstVariables* constvars);
-
       virtual void intensitysolve(const ProcessorGroup* pc,
                                   const Patch* patch,
                                   CellInformation* cellinfo, 
                                   ArchesVariables* vars,
                                   ArchesConstVariables* constvars, 
+                                  CCVariable<double>& divQ,
                                   int wall_type);
-
-      virtual void intensitysolve_new(const ProcessorGroup* pc,
-                                  const Patch* patch,
-                                  CellInformation* cellinfo, 
-                                  ArchesVariables* vars,
-                                  ArchesConstVariables* constvars, 
-                                  int wall_type);
-
-//      //__________________________________
-//      //  This task is called by enthalpy solver
-//      //  and it computes div_q
-//      virtual void sched_computeSource( const LevelP& level, 
-//                                SchedulerP& sched, 
-//                                const MaterialSet* matls,
-//                                const TimeIntegratorLabel* timelabels,
-//                                const bool isFirstIntegrationStep );
-//                                       
-//      virtual void computeSource( const ProcessorGroup* pc, 
-//                          const PatchSubset* patches, 
-//                          const MaterialSubset* matls, 
-//                          DataWarehouse* old_dw, 
-//                          DataWarehouse* new_dw,
-//                          const TimeIntegratorLabel* timelabels,  
-//                          bool isFirstIntegrationStep );
-//
-protected: 
-
-      /// For other analytical properties.
-      class PropertyCalculatorBase { 
-
-        public: 
-          PropertyCalculatorBase(); 
-          virtual ~PropertyCalculatorBase(); 
-
-          virtual bool problemSetup( const ProblemSpecP& db )=0; 
-          virtual void computeProps( const Patch* patch, CCVariable<double>& abskg )=0;  // for now only assume abskg
-      };
-
-      //__________________________________
-      //
-      class ConstantProperties : public PropertyCalculatorBase  { 
-
-        public: 
-          ConstantProperties();
-          ~ConstantProperties();
-
-          bool problemSetup( const ProblemSpecP& db ) {
-              
-            ProblemSpecP db_prop = db; 
-            db_prop->getWithDefault("abskg",_value,1.0); 
-            
-            bool property_on = true; 
-
-            return property_on; 
-          };
-
-          void computeProps( const Patch* patch, CCVariable<double>& abskg ){ 
-            abskg.initialize(_value); 
-          }; 
-
-        private: 
-          double _value; 
-      }; 
-      //__________________________________
-      //
-      class  BurnsChriston : public PropertyCalculatorBase  { 
-
-        public: 
-          BurnsChriston();
-          ~BurnsChriston();
-
-          bool problemSetup( const ProblemSpecP& db ) { 
-            ProblemSpecP db_prop = db; 
-            db_prop->require("grid",grid);
-             
-            bool property_on = true; 
-            return property_on; 
-          };
-
-          void computeProps( const Patch* patch, CCVariable<double>& abskg ){ 
-
-            Vector Dx = patch->dCell(); 
-
-            for (CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter){ 
-              IntVector c = *iter; 
-              std::cout << abskg[c] << std::endl;
-              abskg[c] = 0.90 * ( 1.0 - 2.0 * fabs( ( c[0] - (grid.x() - 1.0) /2.0) * Dx[0]) )
-                              * ( 1.0 - 2.0 * fabs( ( c[1] - (grid.y() - 1.0) /2.0) * Dx[1]) )
-                              * ( 1.0 - 2.0 * fabs( ( c[2] - (grid.z() - 1.0) /2.0) * Dx[2]) ) 
-                              + 0.1;
-            } 
-          }; 
-
-        private: 
-          double _value; 
-          IntVector grid; 
-      }; 
 
 private:
 
-      void computeOpticalLength();
       double d_opl; // optical length
       const ArchesLabel*    d_lab;
       const MPMArchesLabel* d_MAlab;
@@ -209,28 +100,17 @@ private:
       const ProcessorGroup* d_myworld;
       const PatchSet* d_perproc_patches;
       
-      int  d_radCalcFreq;
-      bool d_radRKsteps;
-      bool d_radImpsteps;
-      
       int d_sn, d_totalOrds; // totalOrdinates = sn*(sn+2)
 
       void computeOrdinatesOPL();
       
       int d_lambda;
       int ffield;
-      bool lradcal, lwsgg, lplanckmean, lpatchmean;
-      //not clear if these work so forcing them to be switched off: 
-      bool lprobone, lprobtwo, lprobthree; 
 
       double d_wall_abskg; 
       double d_intrusion_abskg; 
 
-      bool d_do_const_wall_T;
-      double d_wall_temperature; 
-
       OffsetArray1<double> fraction;
-      OffsetArray1<double> fractiontwo;
 
       OffsetArray1<double> oxi;
       OffsetArray1<double> omu;
@@ -247,18 +127,10 @@ private:
       OffsetArray1<double> srcpone;
       OffsetArray1<double> qfluxbbm;
 
-      bool d_use_abskp;
-      const VarLabel* d_abskpLabel;
       bool d_print_all_info; 
-
 
 }; // end class RadiationModel
 
 } // end namespace Uintah
 
 #endif
-
-
-
-
-
