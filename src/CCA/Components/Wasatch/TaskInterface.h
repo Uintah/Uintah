@@ -96,14 +96,17 @@ namespace Wasatch{
      *  \param roots The root nodes of the tree to create
      *  \param taskName the name of this task
      *  \param factory the Expr::ExpressionFactory that will be used to build the tree.
+     *  \param level the level of the mesh that this applies to
      *  \param sched The Scheduler that this task will be loaded on.
      *  \param patches the patches to associate this task with.
      *  \param materials the MaterialSet for the materials associated with this task
      *  \param info The PatchInfoMap object.
-     *  \param RKStage the stage of the RK integrator (use 1 otherwise)
+     *  \param rkStage the stage of the RK integrator (use 1 otherwise)
      *  \param state information such as time step - required to determine if we are on the first timestep or not.
      *  \param ioFieldSet the fields that are required for output and should not
      *         be managed "externally" so that their memory is not reclaimed.
+     *  \param lockAllFields if true, then all fiels will be persistent.
+     *         Otherwise, fields will be reused when they are no longer needed.
      *
      *  This registers fields on the FieldManagerList (which is created if necessary).
      */
@@ -115,7 +118,7 @@ namespace Wasatch{
                    const Uintah::PatchSet      * const patches,
                    const Uintah::MaterialSet   * const materials,
                    const PatchInfoMap          & info,
-                   const int                     RKStage,
+                   const int                     rkStage,
                    Uintah::SimulationStateP      state,
                    const std::set<std::string> & ioFieldSet,
                    const bool                    lockAllFields = false );
@@ -132,10 +135,12 @@ namespace Wasatch{
      *         determine where the field will exist in Uintah's
      *         DataWarehouse
      *
+     *  \param rkStage the Runge-Kutta stage
+     *
      *  This sets all field requirements for the Uintah task and
      *  scheduled it for execution.
      */
-    void schedule( const Expr::TagSet& newDWFields, const int RKStage = 1 );
+    void schedule( const Expr::TagSet& newDWFields, const int rkStage = 1 );
 
 
     /**

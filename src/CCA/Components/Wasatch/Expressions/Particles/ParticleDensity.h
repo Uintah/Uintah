@@ -4,19 +4,13 @@
 #include <expression/Expression.h>
 #include <spatialops/particles/ParticleFieldTypes.h>
 
-//==================================================================
+
 /**
  *  \class  ParticleDensity
  *  \author Tony Saad, Naveen Punati
  *  \date   June, 2014
- *  \brief  Calculates the particle density \f$ \rho_\text{p} = \frac{m_\text{p}}{\mathcal{V}_\text{p}}
+ *  \brief  Calculates the particle density \f$ \rho_\text{p} = \frac{m_\text{p}}{\mathcal{V}_\text{p}}\f$
  */
-
-//###################################################################
-//
-//
-//####################################################################
-
 class ParticleDensity
 : public Expr::Expression<ParticleField>
 {

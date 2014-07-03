@@ -132,28 +132,29 @@ namespace Wasatch {
    *  \ingroup WasatchCore
    *
    *  \brief Function that updates pressure RHS when setting a
-             reference pressure. The reference pressure value defaults to 0.0 
-             for convenience.   
+   *         reference pressure. The reference pressure value defaults to 0.0
+   *         for convenience.
    *
-   *  \param pressureMatrix A reference to the pressure coefficient matrix which
-                            we intend to modify.
+   *  \param pressureRHS the pressure RHS.
    *
    *  \param patch A pointer to the current patch. If the patch does NOT contain
-                   the reference cells, then nothing is set.
+   *               the reference cells, then nothing is set.
    *
-   *  \param refCell A SCIRun::IntVector that designates the reference cell. 
-                     This defaults to [1,1,1].
+   *  \param referencePressureValue the value for the reference pressure.
+   *
+   *  \param refCell A SCIRun::IntVector that designates the reference cell to
+   *                 use to anchor the pressure.  This defaults to [1,1,1].
    */    
-  void set_ref_poisson_rhs  ( SVolField& pressureRHS,
-                               const Uintah::Patch* patch, 
-                               const double referencePressureValue,
-                               const SCIRun::IntVector refCell );
+  void set_ref_poisson_rhs( SVolField& pressureRHS,
+                            const Uintah::Patch* patch,
+                            const double referencePressureValue,
+                            const SCIRun::IntVector refCell );
   /**
    *  \ingroup WasatchCore
    *
    *  \brief Special function to handle pressure boundary conditions. This is
-      needed because process_after_evaluate() will NOT work on the newly solved
-      pressure.
+   *  needed because process_after_evaluate() will NOT work on the newly solved
+   *  pressure.
    *
    *  \param pressureTag Pressure tag.
    *
@@ -161,7 +162,7 @@ namespace Wasatch {
    *
    *  \param patch The patch on which we wish to apply the BCs.
    *
-   *  \param patch The material on which we wish to apply the BCs.   
+   *  \param material The material on which we wish to apply the BCs.
    */    
   void process_poisson_bcs( const Expr::Tag& pressureTag,
                             SVolField& pressureField,

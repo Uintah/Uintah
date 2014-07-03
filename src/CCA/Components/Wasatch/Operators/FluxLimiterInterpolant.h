@@ -109,6 +109,7 @@ public:
    *         in each direction.
    *  \param hasPlusFace: Determines if this patch has a physical
    *         boundary on its plus side.
+   *  \param hasMinusBoundary true if a physical boundary is present on the (-) side of the patch.
    */
   FluxLimiterInterpolant( const std::vector<int>& dim,
                           const std::vector<bool> hasPlusFace,

@@ -109,30 +109,24 @@ public:
     
     /**
      *  \brief Constructs a builder for source term of the pressure
-     *
-     *  \param the momTags a list tag which holds the tags for momentum in
+     *  \param results the tags for the result fields calculated by this expression.
+     *         See the documentation of the PressureSource class for more details.
+     *         Order is critically important.
+     *  \param momTags a list tag which holds the tags for momentum in
      *         all directions
-     *
-     *  \param the velTags a list tag which holds the tags for velocity at
+     *  \param velTags a list tag which holds the tags for velocity at
      *         the current time stage in all directions
-     *
-     *  \param the velStarTags a list tag which holds the tags for velocity at
+     *  \param velStarTags a list tag which holds the tags for velocity at
      *         the time stage "*" in all directions
-     *
+     *  \param isConstDensity
      *  \param densTag a tag to hold density in constant density cases, which is 
      *         needed to obtain drhodt 
-     *
      *  \param densStarTag a tag for estimation of density at the time stage "*"
      *         which is needed to obtain momentum at that stage.
-     *
      *  \param dens2StarTag a tag for estimation of density at the time stage "**"
      *         which is needed to calculate drhodt
-     *
-     *  \param divmomStarTag a tag for estimation of divmom at the time stage "*"
-    *
-     *  \param dilTag a tag to hold dilatation term in constant density cases.
-     *
-     *  \param timestepTag a tag to hold the timestep value.
+     *  \param varDenParams
+     *  \param divMomStarTag a tag for estimation of divmom at the time stage "*"
      */
     Builder( const Expr::TagList& results,
              const Expr::TagList& momTags,
@@ -143,7 +137,7 @@ public:
              const Expr::Tag densStarTag,
              const Expr::Tag dens2StarTag,
              const Wasatch::VarDenParameters varDenParams,
-             const Expr::Tag divmomstarTag);
+             const Expr::Tag divMomStarTag);
     
     ~Builder(){}
     

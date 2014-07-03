@@ -204,6 +204,8 @@ public:
      *  @param gammaTag the heat loss parameter (calculated here)
      *  @param rhofTag the density-weighted mixture fraction
      *  @param rhohTag the density-weighted enthalpy
+     *  @param densEvaluator The function to evaluate density from mixture fraction and heat loss
+     *  @param enthEvaluator The function to evaluate enthalpy from mixture fraction and heat loss
      */
     Builder( const Expr::Tag& rhoTag,
              const Expr::Tag& gammaTag,

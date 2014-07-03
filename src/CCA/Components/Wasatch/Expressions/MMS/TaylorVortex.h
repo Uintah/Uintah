@@ -54,7 +54,7 @@ public:
    */
   struct Builder : public Expr::ExpressionBuilder
   {
-    Builder( const Expr::Tag& result,
+    Builder( const Expr::Tag& result,///< x-velocity tag
              const Expr::Tag& xTag,  ///< x coordinate
              const Expr::Tag& yTag,  ///< y coordinate
              const Expr::Tag& tTag,  ///< time
@@ -114,7 +114,7 @@ public:
    */
   struct Builder : public Expr::ExpressionBuilder
   {
-    Builder( const Expr::Tag& result,
+    Builder( const Expr::Tag& result, ///< y-velocity tag
              const Expr::Tag& xTag,  ///< x-coordinate
              const Expr::Tag& yTag,  ///< y-coordinate
              const Expr::Tag& tTag,  ///< time
@@ -178,7 +178,7 @@ public:
    */
   struct Builder : public Expr::ExpressionBuilder
   {
-    Builder( const Expr::Tag& result,
+    Builder( const Expr::Tag& result,///< dp/dx tag
              const Expr::Tag& xTag,  ///< x-coordinate
              const Expr::Tag& yTag,  ///< y-coordinate
              const Expr::Tag& tTag,  ///< time
@@ -242,7 +242,7 @@ public:
    */
   struct Builder : public Expr::ExpressionBuilder
   {
-    Builder( const Expr::Tag& result,
+    Builder( const Expr::Tag& result,///< dp/dy tag
              const Expr::Tag& xTag,  ///< x-coordinate
              const Expr::Tag& yTag,  ///< y-coordinate
              const Expr::Tag& tTag,  ///< time
@@ -311,11 +311,11 @@ public:
    */
   struct Builder : public Expr::ExpressionBuilder
   {
-    Builder( const Expr::Tag& result,
-             const Expr::Tag& xTag,  ///< x coordinate
-             const Expr::Tag& yTag,  ///< y coordinate
-             const Expr::Tag& zTag,  ///< z
-             const double angle=0.1  ///< Kinematic viscosity of the fluid
+    Builder( const Expr::Tag& result,///< velocity tag
+             const Expr::Tag& xTag,  ///< coordinate 1
+             const Expr::Tag& yTag,  ///< coordinate 2
+             const Expr::Tag& zTag,  ///< coordinate 3
+             const double angle=0.1  ///< \f$\theta\f$
             );
     Expr::ExpressionBase* build() const;
   private:

@@ -90,6 +90,8 @@ public:
      *  \brief Construct a DiffusiveFlux::Builder object for
      *         registration with an Expr::ExpressionFactory.
      *
+     *  \param result the diffusive flux
+     *
      *  \param phiTag the Expr::Tag for the scalar field.
      *
      *  \param coefTag the Expr::Tag for the diffusion coefficient
@@ -115,6 +117,8 @@ public:
     /**
      *  \brief Construct a DiffusiveFlux::Builder object for
      *         registration with an Expr::ExpressionFactory.
+     *
+     *  \param result the diffusive flux
      *
      *  \param phiTag the Expr::Tag for the scalar field.
      *

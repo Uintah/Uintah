@@ -60,23 +60,19 @@ namespace Wasatch{
 
   public:
 
-//    enum ParticleDirection
-//    {
-//      XDIR, YDIR, ZDIR, NODIR
-//    };
-
     /**
      * @brief Construct a ParticleEquationBase
      * \param solnVarName The name of the solution variable for this equation
      *
      * \param pdir Specifies which position or momentum component this equation solves.
      *
-     * \param particlePositionTags A taglist containing the tags of x, y, and z particle coordiantes.
-     Those may be needed by some particle expressions that require particle operators
+     * \param particlePositionTags A taglist containing the tags of x, y, and z
+     *        particle coordinates. Those may be needed by some particle
+     *        expressions that require particle operators
      *
      * \param particleSizeTag Particle size tag. May be needed by some expressions.
      *
-     * \param particleEquationSpec the Uintah parser information for this Particle equation
+     * \param particleEqsSpec the Uintah parser information for this Particle equation
      *
      * \param gc The GraphCategories object from Wasatch
      */
@@ -89,7 +85,6 @@ namespace Wasatch{
 
     virtual ~ParticleEquationBase(){}
     
-
   protected:
     const Expr::TagList pPosTags_;
     const Expr::Tag     pSizeTag_;

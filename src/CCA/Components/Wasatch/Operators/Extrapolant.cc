@@ -33,10 +33,10 @@
 
 template< typename FieldT >
 Extrapolant<FieldT>::
-Extrapolant(const std::vector<bool>& bcMinus,
-            const std::vector<bool>& bcPlus) :
-bcMinus_ (bcMinus),
-bcPlus_  (bcPlus )
+Extrapolant( const std::vector<bool>& bcMinus,
+             const std::vector<bool>& bcPlus )
+: bcMinus_ (bcMinus),
+  bcPlus_  (bcPlus )
 {
   using namespace SpatialOps::structured;
   unitNormal_.push_back(IntVec(1,0,0));
@@ -57,9 +57,9 @@ template< typename FieldT >
 void
 Extrapolant<FieldT>::
 apply_to_field( FieldT& src,
-               const double min,
-               const double max,
-               const bool skipBCs )
+                const double min,
+                const double max,
+                const bool skipBCs )
 {
   // extrapolate from interior cells:
   using namespace SpatialOps;

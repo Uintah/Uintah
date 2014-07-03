@@ -41,14 +41,7 @@
  *         \frac{\partial \phi}{\partial x}\f$, where \f$\Gamma\f$ is
  *         located at the same location as \f$\phi\f$.
  *
- *  \tpar VelT the type for the diffusive velocity
- *  <ul>
- *  <li> \b GradT The type of operator used in forming
- *       \f$\frac{\partial \phi}{\partial x}\f$
- *  <li> \b InterpT The type of operator used in interpolating
- *       \f$\Gamma\f$ from the location of \f$\phi\f$ to the location
- *       of \f$\frac{\partial \phi}{\partial x}\f$
- *  </ul>
+ *  \tparam VelT the type for the diffusive velocity
  */
 template< typename VelT >
 class DiffusiveVelocity : public Expr::Expression<VelT>
@@ -86,12 +79,10 @@ public:
     /**
      *  \brief Construct a DiffusiveVelocity::Builder object for
      *         registration with an Expr::ExpressionFactory.
-     *
+     *  \param result the diffusive velocity tag
      *  \param phiTag the Expr::Tag for the scalar field.
-     *
      *  \param coefTag the Expr::Tag for the diffusion coefficient
      *         (located at same points as the scalar field).
-     *
      *  \param turbDiffTag the Expr::Tag for the turbulent diffusivity which will be interpolated to FluxT field.
      */
     Builder( const Expr::Tag& result,

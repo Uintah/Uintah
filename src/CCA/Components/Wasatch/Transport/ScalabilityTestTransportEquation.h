@@ -88,8 +88,9 @@ namespace Wasatch{
 
     /**
      *  \brief Construct a ScalabilityTestTransportEquation
+     *  \param gc
      *  \param thisPhiName The name of the solution variable for this ScalarTransportEquation
-     *  \param id The Expr::ExpressionID for the RHS expression for this ScalarTransportEquation
+     *  \param params the parser block for this equation
      *
      *  Note that the static member method get_rhs_expr_id can be useful to
      *  obtain the appropriate input arguments here.
@@ -100,24 +101,29 @@ namespace Wasatch{
 
     ~ScalabilityTestTransportEquation();
 
-    void setup_boundary_conditions(BCHelper& bcHelper,
-                                    GraphCategories& graphCat){}
+    void setup_boundary_conditions( BCHelper& bcHelper,
+                                    GraphCategories& graphCat ){}
     
     /**
      *  \brief apply the boundary conditions on the initial condition
      *         associated with this transport equation
+     *  \param graphHelper
+     *  \param bcHelper
      */
     void apply_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                           BCHelper& bcHelper );
+                                            BCHelper& bcHelper );
 
     /**
      *  \brief setup the boundary conditions associated with this transport equation
+     *  \param graphHelper
+     *  \param bcHelper
      */
     void apply_boundary_conditions( const GraphHelper& graphHelper,
-                                   BCHelper& bcHelper );
+                                    BCHelper& bcHelper );
 
     /**
      *  \brief setup the initial conditions for this transport equation.
+     *  \param icFactory
      */
     Expr::ExpressionID initial_condition( Expr::ExpressionFactory& icFactory );
 

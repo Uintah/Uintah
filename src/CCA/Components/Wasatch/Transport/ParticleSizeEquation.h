@@ -32,10 +32,9 @@ namespace Wasatch{
 
   /**
    *  @class ParticleSizeEquation
-      @author Tony Saad
-      @date: June 2014
+   *  @author Tony Saad
+   *  @date June 2014
    *  @brief Solves d pd / dt = src where pd is the particle size and src is a source term.
-   *
    */
  
   class ParticleSizeEquation
@@ -50,12 +49,13 @@ namespace Wasatch{
      *
      * \param pdir Specifies which position or momentum component this equation solves.
      *
-     * \param particlePositionTags A taglist containing the tags of x, y, and z particle coordiantes.
-     Those may be needed by some particle expressions that require particle operators
+     * \param particlePositionTags A taglist containing the tags of x, y, and z
+     *        particle coordiantes. Those may be needed by some particle
+     *        expressions that require particle operators
      *
      * \param particleSizeTag Particle size tag. May be needed by some expressions.
      *
-     * \param particleEquationSpec the Uintah parser information for this Particle equation
+     * \param particleEqsSpec the Uintah parser information for this Particle equation
      *
      * \param gc The GraphCategories object from Wasatch
      *
@@ -81,25 +81,32 @@ namespace Wasatch{
      *   immediately infer zero-velocity boundary conditions and check whether
      *   the user has specified any velocity BCs at that boundary. See examples
      *   in the momentum transport equation.
+     *
+     *  \param bcHelper
+     *  \param graphCat
      */
     void setup_boundary_conditions( BCHelper& bcHelper,
-                                   GraphCategories& graphCat)
+                                    GraphCategories& graphCat)
     {}
     
     /**
      *  \brief Set up the boundary condition on initial conditions evaluators for this
      *  Equation.
+     *  \param graphHelper
+     *  \param bcHelper
      */
     void apply_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                           BCHelper& bcHelper )
+                                            BCHelper& bcHelper )
     {}
     
     /**
      *  \brief Set up the boundary condition evaluators for this
      *  Equation.
+     *  \param graphHelper
+     *  \param bcHelper
      */
     void apply_boundary_conditions( const GraphHelper& graphHelper,
-                                   BCHelper& bcHelper )
+                                    BCHelper& bcHelper )
     {}
 
   private:

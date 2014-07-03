@@ -68,7 +68,7 @@ namespace Wasatch {
    * \param method the ConvInterpMethods enum value
    * \return the corresponding string name
    */
-  std::string get_conv_interp_method( const ConvInterpMethods );
+  std::string get_conv_interp_method( const ConvInterpMethods method );
 
 } // namespace Wasatch
 

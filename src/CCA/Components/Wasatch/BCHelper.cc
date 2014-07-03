@@ -49,6 +49,10 @@
 #include "Expressions/BoundaryConditions/BoundaryConditions.h"
 #include "Expressions/BoundaryConditions/BoundaryConditionBase.h"
 
+/**
+ * \file BCHelper.cc
+ */
+
 namespace Wasatch {
   
   BndCondTypeEnum select_bc_type_enum( const std::string& bcTypeStr )
@@ -69,7 +73,7 @@ namespace Wasatch {
     else                                  return INVALID;
   }
 
-  const std::string bc_type_enum_to_string( const BndCondTypeEnum bcTypeEnum )
+  std::string bc_type_enum_to_string( const BndCondTypeEnum bcTypeEnum )
   {
     switch (bcTypeEnum) {
       case DIRICHLET:
