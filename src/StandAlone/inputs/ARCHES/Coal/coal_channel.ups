@@ -890,12 +890,13 @@
       </TransportEqns>
 
       <PropertyModels>
-        <model type="radiation_properties" label="tot_abskg">
+        <model type="radiation_properties" label="abskg">
           <initialization type="constant">
             <constant>0.0</constant>
           </initialization>
           <calculator type="hottel_sarofim">
             <opl>.432</opl>
+            <abskg label="gas_abskg"/>
             <abskp label="Julien_abskp"/>
           </calculator>
         </model>
