@@ -34,6 +34,7 @@
     <save label="coal_gas_mix_frac_Fdiff"/>
     <save label="coal_gas_mix_frac_Fconv"/>
     <save label = "radiationVolq"/>
+    <save label = "tot_abskg"/>
     <save label = "abskg"/>
     <save label = "Julien_abskp"/>
     <save label = "divQ"/>
@@ -858,7 +859,7 @@
         <Sources>
           <src label="divQ" type="do_radiation">
             <calc_frequency>5</calc_frequency>
-            <soot_label>soot</soot_label>
+            <abskg label="abskg"/>
             <DORadiationModel>
                 <LinearSolver type="hypre">
                 <res_tol>1.0e-10</res_tol>
@@ -867,12 +868,6 @@
                 <max_iter>1500</max_iter>
               </LinearSolver>
               <ordinates>4</ordinates>
-
-              <property_calculator type="hottel_sarofim">
-              <opl>0.432</opl>
-              <abskg label = "abskg" /> 
-              <abskp label = "Julien_abskp" /> 
-              </property_calculator>
             </DORadiationModel>
           </src>
 
@@ -895,6 +890,15 @@
       </TransportEqns>
 
       <PropertyModels>
+        <model type="radiation_properties" label="tot_abskg">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <calculator type="hottel_sarofim">
+            <opl>.432</opl>
+            <abskp label="Julien_abskp"/>
+          </calculator>
+        </model>
         <model label="Julien_abskp" type="particle_absorption_coefficient">
           <initialization type="constant">
             <constant>0.0</constant>

@@ -162,6 +162,7 @@ private:
 
   std::string _size_label_name; 
   std::string _abskg_label_name; 
+  std::string _T_label_name; 
   
   Ghost::GhostType _gn;
   Ghost::GhostType _gac;

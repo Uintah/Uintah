@@ -14,6 +14,7 @@ SRCS += \
         $(SRCDIR)/HeatLoss.cc \
         $(SRCDIR)/ConstProperty.cc \
         $(SRCDIR)/NormScalarVariance.cc \
+				$(SRCDIR)/RadProperties.cc \
         $(SRCDIR)/ScalarDissipation.cc
 
 

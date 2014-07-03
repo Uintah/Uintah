@@ -37,12 +37,6 @@ namespace Uintah {
       void sched_compute_radiation_properties( const LevelP& level, SchedulerP& sched, const MaterialSet* matls, 
                                                const int time_substep, const bool doing_initialization ); 
 
-    private: 
-
-      const int _matl_index; 
-      std::string _temperature_name; 
-      const VarLabel* _temperature_label; 
-
       /** @brief see sched_compute_radiation_properties **/ 
       void compute_radiation_properties( const ProcessorGroup* pc, 
                                          const PatchSubset* patches, 
@@ -88,14 +82,29 @@ namespace Uintah {
           inline const bool has_abskp_local(){ return _local_abskp; }
           inline const bool use_abskp(){ return _use_abskp; }
 
+          /** @brief Matches label names to labels **/ 
+          inline void resolve_labels(){
+
+            if ( _use_abskp && !_local_abskp ){ 
+              const VarLabel* temp = VarLabel::find(_abskp_name); 
+              if ( temp == 0 ){ 
+                throw ProblemSetupException("Error: Could not find the abskp label.",__FILE__, __LINE__);
+              } else { 
+                _abskp_label = temp; 
+              }
+            }
+
+          } 
+
           std::string get_abskg_name(){ return _abskg_name;}
           std::string get_abskp_name(){ return _abskp_name;}
 
+          /** @brief This function sums in the particle contribution to the gas contribution **/ 
           template <class T> 
-          void sum_abs( CCVariable<double>& abskg, T& abskp, const Patch* patch ){ 
+          void sum_abs( CCVariable<double>& absk_tot, T& abskp, const Patch* patch ){ 
             for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
-              abskg[*iter] += abskp[*iter];  
+              absk_tot[*iter] += abskp[*iter];  
               
             }
           }
@@ -227,6 +236,13 @@ namespace Uintah {
 
       }; 
 #endif
+
+    private: 
+
+      const int _matl_index; 
+      std::string _temperature_name; 
+      const VarLabel* _temperature_label; 
+
 
   }; 
 } 

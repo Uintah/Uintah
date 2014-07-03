@@ -5501,10 +5501,8 @@
         <Sources>
           <src label="divQ" type="do_radiation">
             <calc_frequency>50</calc_frequency>
-            <abskp_label>Julien_abskp</abskp_label>
-            <soot_label>soot</soot_label>
+            <abskg label="abskg"/>
             <DORadiationModel>
-              <opl>0.432</opl>
               <LinearSolver type="hypre">
                 <res_tol>1.0e-10</res_tol>
                 <ksptype>gmres</ksptype>
@@ -5534,6 +5532,16 @@
       </TransportEqns>
 
       <PropertyModels>
+        <model type="radiation_properties" label="abskg">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <calculator type="hottel_sarofim">
+            <abskg label="gas_abskg"/>
+            <abskp label="Julien_abskp"/>
+            <opl>.432</opl>
+          </calculator>
+        </model>
         <model label="Julien_abskp" type="particle_absorption_coefficient">
           <initialization type="constant">
             <constant>0.0</constant>

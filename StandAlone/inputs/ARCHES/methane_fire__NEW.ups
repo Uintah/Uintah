@@ -35,7 +35,8 @@
     <save label="CO2" table_lookup="true"/>
     <save label="velocityDivergence"/>
     <save label="continuityResidual"/>
-    <save label="abskg"/>
+    <save label="abskg"/> 
+    <save label="gas_abskg"/>
     <save label="soot"/>
     <checkpoint cycle="2" interval="0.02"/>
     <compression>gzip</compression>
@@ -220,6 +221,7 @@
           <src label="divQ" type="do_radiation">
             <calc_frequency>5</calc_frequency>
             <calc_on_all_RKsteps>false</calc_on_all_RKsteps>
+            <abskg label="gas_abskg"/>
             <DORadiationModel>
               <LinearSolver type="hypre">
                 <res_tol>1.0e-10</res_tol>
@@ -233,13 +235,15 @@
 
       </TransportEqns>
 
-      <RadiationProperties>
-        <calculator type="hottel_sarofim">
-        <opl>3</opl>
-        </calculator>
-      </RadiationProperties>
-
       <PropertyModels>
+        <model type="radiation_properties" label="gas_abskg">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <calculator type="hottel_sarofim">
+            <opl>3.0</opl>
+          </calculator>
+        </model>
         <model type="heat_loss" label="heat_loss">
           <initialization type="constant">
             <constant>0.0</constant>

@@ -228,6 +228,7 @@
         <Sources>
           <src label="divQ" type="rmcrt_radiation">
             <calc_frequency>1</calc_frequency>
+            <abskg label="abskg"/>
             <RMCRT>
                 <randomSeed>        false     </randomSeed>
                 <nDivQRays>          5         </nDivQRays>
@@ -246,6 +247,17 @@
           </src>
        </Sources> 
       </TransportEqns>
+
+      <PropertyModels>
+        <model type="radiation_properties" label="abskg">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <calculator type="burns_christon">
+            <abskg label="gas_abskg"/>
+          </calculator>
+        </model>
+      </PropertyModels>
 
       <Properties>
         <ConstantProps>

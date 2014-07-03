@@ -89,12 +89,20 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
 
   db->getWithDefault( "calc_frequency",   _radiation_calc_freq, 3 ); 
   db->getWithDefault( "calc_on_all_RKsteps", _all_rk, false ); 
-  db->getWithDefault( "T_label", _T_label_name, "temperature"); 
-  db->getWithDefault( "abskg_label", _abskg_label_name, "abskg"); 
+  _T_label_name = "temperature"; 
+  if ( db->findBlock("temperature")){ 
+    db->findBlock("temperature")->getAttribute("label",_T_label_name); 
+  } 
+  if ( db->findBlock("abskg")){ 
+    db->findBlock("abskg")->getAttribute("label", _abskg_label_name); 
+  } else { 
+    throw ProblemSetupException("Error: DO Radiation - The absorption coefficient is not defined.",__FILE__,__LINE__);
+  }
   
   proc0cout << " --- DO Radiation Model Summary: --- " << endl;
   proc0cout << "   -> calculation frequency:     " << _radiation_calc_freq << endl;
   proc0cout << "   -> temperature label:         " << _T_label_name << endl;
+  proc0cout << "   -> abskg label:               " << _abskg_label_name << endl;
   proc0cout << " --- end DO Radiation Summary ------ " << endl;
 
   _DO_model = scinew DORadiationModel( _labels, _MAlab, _bc, _my_world ); 
@@ -104,7 +112,6 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
 void 
 DORadiation::extraSetup( GridP& grid, const ProblemSpecP& inputdb)
 {
-
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the source term 
@@ -260,14 +267,6 @@ DORadiation::computeSource( const ProcessorGroup* pc,
     if ( do_radiation ){ 
 
       if ( timeSubStep == 0 ) {
-
-//        //blackbody emissive flux
-//        for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){ 
-//
-//          IntVector c = *iter;
-//          radiation_vars.ESRCG[c] = 1.0*5.67e-8/M_PI*radiation_vars.ABSKG[c]*pow(radiation_vars.temperature[c],4);
-//
-//        }
 
         _DO_model->boundarycondition( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars ); 
 

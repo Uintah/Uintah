@@ -346,7 +346,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   // --------> START RK LOOP <---------
   for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
   {
-    // Clean up all property models
+    // Create this timestep labels for properties
     PropertyModelFactory& propFactory = PropertyModelFactory::self();
     PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models();
     for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
@@ -444,7 +444,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     }
 
     // STAGE 0 
-    d_rad_prop_calc->sched_compute_radiation_properties( level, sched, matls, curr_level, false ); 
+    //d_rad_prop_calc->sched_compute_radiation_properties( level, sched, matls, curr_level, false ); 
 
     SourceTermFactory& src_factory = SourceTermFactory::self();
     src_factory.sched_computeSources( level, sched, curr_level, 0 ); 
