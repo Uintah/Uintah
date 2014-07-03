@@ -63,7 +63,6 @@ namespace Uintah{
       /** @brief map the component VarLabels to RMCRT class VarLabels */
      void registerVarLabels(int   matl,
                             const VarLabel*  abskg,
-                            const VarLabel* absorp,
                             const VarLabel* temperature,
                             const VarLabel* celltype,
                             const VarLabel* divQ);
@@ -171,7 +170,6 @@ namespace Uintah{
       SimulationStateP d_sharedState;
       const VarLabel* d_sigmaT4_label;
       const VarLabel* d_abskgLabel;
-      const VarLabel* d_absorpLabel;
       const VarLabel* d_temperatureLabel;
       const VarLabel* d_cellTypeLabel;
       const VarLabel* d_divQLabel;

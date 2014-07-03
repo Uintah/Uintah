@@ -731,7 +731,6 @@ void RMCRT_Test::initProperties( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     printTask(patches,patch,dbg,"Doing RMCRT_test::InitProperties");
 
-<<<<<<< HEAD
   /*`==========TESTING==========*/
     #ifdef USINGFLOATRMCRT
       CCVariable<float> color;
@@ -741,9 +740,6 @@ void RMCRT_Test::initProperties( const ProcessorGroup* pc,
       CCVariable<double> abskg;
     #endif 
 /*===========TESTING==========`*/
-=======
-    CCVariable<double> abskg; 
->>>>>>> Complete divorce of the radiation properties from the radiation models
 
     new_dw->getModifiable( abskg,    d_abskgLabel,     d_matl, patch );  
     abskg.initialize  ( 0.0 ); 
