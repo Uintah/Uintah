@@ -7,6 +7,7 @@
 //==================================================================
 /**
  *  \class  ParticleDensity
+ *  \ingroup WasatchParticles
  *  \author Tony Saad, ODT
  *  \date   June, 2014
  *  \brief  Calculates the drag coefficient.
@@ -14,8 +15,6 @@
 class ParticleDragCoefficient
  : public Expr::Expression<ParticleField>
 {
-
-
   ParticleDragCoefficient( const Expr::Tag& pReTag );
 
   const Expr::Tag pReTag_;
@@ -25,6 +24,10 @@ public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
+    /**
+     * @param dragTag tag for the drag coefficient
+     * @param reTag tag for the particle reynolds number
+     */
     Builder( const Expr::Tag& dragTag,
              const Expr::Tag& reTag );
     ~Builder(){}
@@ -65,7 +68,7 @@ ParticleDragCoefficient::~ParticleDragCoefficient()
 void
 ParticleDragCoefficient::advertise_dependents( Expr::ExprDeps& exprDeps)
 {
-  exprDeps.requires_expression( pReTag_  );
+  exprDeps.requires_expression( pReTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -73,8 +76,7 @@ ParticleDragCoefficient::advertise_dependents( Expr::ExprDeps& exprDeps)
 void
 ParticleDragCoefficient::bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldMgrSelector<ParticleField>::type& fm = fml.field_manager<ParticleField>();
-  pRe_ = &fm.field_ref( pReTag_  );
+  pRe_ = &fml.field_ref<ParticleField>( pReTag_  );
 }
 
 //--------------------------------------------------------------------
@@ -99,7 +101,7 @@ ParticleDragCoefficient::evaluate()
 //--------------------------------------------------------------------
 
 ParticleDragCoefficient::Builder::Builder( const Expr::Tag& dragTag,
-                                   const Expr::Tag& pReTag )
+                                           const Expr::Tag& pReTag )
 : ExpressionBuilder(dragTag),
   pRet_(pReTag)
 {}

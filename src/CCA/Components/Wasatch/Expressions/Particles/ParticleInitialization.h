@@ -7,10 +7,17 @@
 #include <spatialops/particles/ParticleOperators.h>
 #include <spatialops/particles/ParticleFieldTypes.h>
 #include <CCA/Components/Wasatch/PatchInfo.h>
+
+// note that here we break with convention to allow uintah intrusion into an
+// expression.  This is because these initialization expressions are fairly
+// specific to Uintah/Wasatch.
 #include <Core/Grid/Box.h>
+
 //==================================================================
+
 /**
  *  \class  ParticleRandomIC
+ *  \ingroup WasatchParticles
  *  \author Tony Saad
  *  \date   June, 2014
  *  \brief  Generates a pseudo-random field to initialize particles.
@@ -21,15 +28,25 @@ public:
   
   /**
    *  \brief Builds a ParticleRandomIC expression.
+   *
    */
   struct Builder : public Expr::ExpressionBuilder
   {
+    /**
+     * @param result the value being set (e.g., particle position)
+     * @param coord  the cooordinate name (X,Y,Z)
+     * @param lo lower bound on the random value
+     * @param hi upper bound on the random value
+     * @param seed seed for random number generator
+     * @param usePatchBounds if true, use patch bounds rather than the
+     *        "lo" and "hi" arguments supplied above
+     */
     Builder( const Expr::Tag& result,
-            const std::string& coord,
-            const double lo,
-            const double hi,
-            const double seed,
-            const bool usePatchBounds);
+             const std::string& coord,
+             const double lo,
+             const double hi,
+             const double seed,
+             const bool usePatchBounds );
     
     ~Builder(){}
     Expr::ExpressionBase* build() const;
@@ -51,31 +68,31 @@ private:
   Wasatch::UintahPatchContainer* patchContainer_;
   
   ParticleRandomIC( const std::string& coord,
-                   const double lo,
-                   const double hi,
-                   const double seed,
-                   const bool usePatchBounds );
-  
+                    const double lo,
+                    const double hi,
+                    const double seed,
+                    const bool usePatchBounds );
 };
 
 //====================================================================
 
 ParticleRandomIC::
-ParticleRandomIC(const std::string& coord,
-                 const double lo,
-                 const double hi,
-                 const double seed,
-                 const bool usePatchBounds )
+ParticleRandomIC( const std::string& coord,
+                  const double lo,
+                  const double hi,
+                  const double seed,
+                  const bool usePatchBounds )
 : Expr::Expression<ParticleField>(),
-coord_(coord),
-lo_(lo),
-hi_(hi),
-seed_(seed),
-usePatchBounds_(usePatchBounds)
-{}
+  coord_(coord),
+  lo_(lo),
+  hi_(hi),
+  seed_(seed),
+  usePatchBounds_(usePatchBounds)
+{
+  this->set_gpu_runnable( false );  // definitely not GPU ready
+}
 
 //--------------------------------------------------------------------
-
 
 void
 ParticleRandomIC::
@@ -92,7 +109,6 @@ ParticleRandomIC::bind_operators( const SpatialOps::OperatorDatabase& opDB )
 
 //--------------------------------------------------------------------
 
-
 void
 ParticleRandomIC::
 bind_fields( const Expr::FieldManagerList& fml )
@@ -103,13 +119,10 @@ bind_fields( const Expr::FieldManagerList& fml )
 double
 get_patch_low(const Uintah::Patch* const patch, const std::string& coord)
 {
-  if (coord == "X") {
-    return patch->getBox().lower().x() + patch->dCell().x()/2.0;
-  } else if (coord == "Y") {
-    return patch->getBox().lower().y() + patch->dCell().y()/2.0;
-  } else {
-    return patch->getBox().lower().z() + patch->dCell().z()/2.0;
-  }
+  if     ( coord == "X" ) return patch->getBox().lower().x() + patch->dCell().x()/2.0;
+  else if( coord == "Y" ) return patch->getBox().lower().y() + patch->dCell().y()/2.0;
+  else if( coord == "Z" ) return patch->getBox().lower().z() + patch->dCell().z()/2.0;
+  assert( false ); // should never get here.
   return 0.0;
 }
 
@@ -118,13 +131,10 @@ get_patch_low(const Uintah::Patch* const patch, const std::string& coord)
 double
 get_patch_high(const Uintah::Patch* const patch, const std::string& coord)
 {
-  if (coord == "X") {
-    return patch->getBox().upper().x() - patch->dCell().x()/2.0;
-  } else if (coord == "Y") {
-    return patch->getBox().upper().y() - patch->dCell().y()/2.0;
-  } else {
-    return patch->getBox().upper().z() - patch->dCell().z()/2.0;
-  }
+  if     ( coord == "X" ) return patch->getBox().upper().x() - patch->dCell().x()/2.0;
+  else if( coord == "Y" ) return patch->getBox().upper().y() - patch->dCell().y()/2.0;
+  else if( coord == "Z" ) return patch->getBox().upper().z() - patch->dCell().z()/2.0;
+  assert( false ); // should never get here
   return 0.0;
 }
 
@@ -136,8 +146,6 @@ evaluate()
 {
   using namespace SpatialOps;
   ParticleField& phi = this->value();
-  ParticleField::iterator phiIter = phi.begin();
-  
   
 //  typedef boost::mt19937                       GenT;    // Mersenne Twister
 //  typedef boost::normal_distribution<double>   DistT;   // Normal Distribution
@@ -147,12 +155,11 @@ evaluate()
 //  DistT    dist(0,1);
 //  VarGenT  gen(eng,dist);
 
-
   double low = lo_, high = hi_;
-  if (usePatchBounds_) {
+  if( usePatchBounds_ ){
     const Uintah::Patch* const patch = patchContainer_->get_uintah_patch();
-    low  = get_patch_low(patch, coord_);
-    high = get_patch_high(patch, coord_);
+    low  = get_patch_low ( patch, coord_ );
+    high = get_patch_high( patch, coord_ );
   }
 
   // This is a typedef for a random number generator.
@@ -165,34 +172,33 @@ evaluate()
   base_generator_type generator((unsigned) ( (pid+1) * seed_ * std::time(0) ));
   
   boost::uniform_real<> rand_dist(low,high);
-  boost::variate_generator<base_generator_type&, boost::uniform_real<> > boost_rand(generator, rand_dist);
+  boost::variate_generator<base_generator_type&, boost::uniform_real<> > boost_rand( generator, rand_dist );
   
-  while ( phiIter != phi.end() ) {
+  ParticleField::iterator phiIter = phi.begin();
+  ParticleField::iterator phiIterEnd = phi.end();
+  for( ; phiIter != phiIterEnd; ++phiIter ){
     *phiIter = boost_rand();
-    ++phiIter;
   }
 }
 
 //--------------------------------------------------------------------
 
-
 ParticleRandomIC::Builder::
 Builder( const Expr::Tag& result,
-        const std::string& coord,
-        const double lo,
-        const double hi,
-        const double seed,
-        const bool usePatchBounds )
+         const std::string& coord,
+         const double lo,
+         const double hi,
+         const double seed,
+         const bool usePatchBounds )
 : ExpressionBuilder(result),
-coord_(coord),
-lo_(lo),
-hi_(hi),
-seed_(seed),
-usePatchBounds_(usePatchBounds)
+  coord_(coord),
+  lo_   (lo   ),
+  hi_   (hi   ),
+  seed_ (seed ),
+  usePatchBounds_(usePatchBounds)
 {}
 
 //--------------------------------------------------------------------
-
 
 Expr::ExpressionBase*
 ParticleRandomIC::Builder::build() const
@@ -200,16 +206,15 @@ ParticleRandomIC::Builder::build() const
   return new ParticleRandomIC(coord_,lo_, hi_, seed_,usePatchBounds_ );
 }
 
-//--------------------------------------------------------------------
-
 //==================================================================
+
 /**
  *  \class  ParticleUniformIC
+ *  \ingroup WasatchParticles
  *  \author Tony Saad
  *  \date   June, 2014
  *  \brief  Generates a pseudo-random field to initialize particles.
  */
-
 class ParticleUniformIC : public Expr::Expression<ParticleField>
 {
 public:
@@ -220,12 +225,12 @@ public:
   struct Builder : public Expr::ExpressionBuilder
   {
     Builder( const Expr::Tag& result,
-            const int nParticles,
-            const double lo,
-            const double hi,
-            const bool transverse,
-            const std::string coord,
-            const bool usePatchBounds);
+             const int nParticles,
+             const double lo,
+             const double hi,
+             const bool transverse,
+             const std::string coord,
+             const bool usePatchBounds );
     
     ~Builder(){}
     Expr::ExpressionBase* build() const;
@@ -255,30 +260,30 @@ private:
                      const double hi,
                      const bool transverse,
                      const std::string coord,
-                     const bool usePatchBounds);
-  
+                     const bool usePatchBounds );
 };
 
 //====================================================================
 
 ParticleUniformIC::
-ParticleUniformIC(const int nParticles,
-                  const double lo,
-                  const double hi,
-                  const bool transverse,
-                  const std::string coord,
-                  const bool usePatchBounds)
+ParticleUniformIC( const int nParticles,
+                   const double lo,
+                   const double hi,
+                   const bool transverse,
+                   const std::string coord,
+                   const bool usePatchBounds )
 : Expr::Expression<ParticleField>(),
-nParticles_(nParticles),
-lo_(lo),
-hi_(hi),
-transverse_(transverse),
-coord_(coord),
-usePatchBounds_(usePatchBounds)
-{}
+  nParticles_(nParticles),
+  lo_(lo),
+  hi_(hi),
+  transverse_(transverse),
+  coord_(coord),
+  usePatchBounds_(usePatchBounds)
+{
+  this->set_gpu_runnable( false );
+}
 
 //--------------------------------------------------------------------
-
 
 void
 ParticleUniformIC::
@@ -286,7 +291,6 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
 {}
 
 //--------------------------------------------------------------------
-
 
 void
 ParticleUniformIC::
@@ -309,64 +313,60 @@ evaluate()
 {
   using namespace SpatialOps;
   ParticleField& phi = this->value();
-  ParticleField::iterator phiIter = phi.begin();
   
   double low = lo_, high = hi_;
 
-  if (usePatchBounds_) {
+  if( usePatchBounds_ ){
     const Uintah::Patch* const patch = patchContainer_->get_uintah_patch();
-    low  = get_patch_low(patch, coord_);
-    high = get_patch_high(patch, coord_);
+    low  = get_patch_low ( patch, coord_ );
+    high = get_patch_high( patch, coord_ );
   }
   
   const int npart = (int) sqrt(nParticles_);
   const double dx = (high-low) / npart;
-  int i = 0;
-  int j = 0;
-  if (transverse_) {
-    while ( phiIter != phi.end() ) {
+  ParticleField::iterator phiIter = phi.begin();
+  const ParticleField::iterator phiIterEnd = phi.end();
+  if( transverse_ ){
+    int i = 0;
+    int j = 0;
+    for( ; phiIter != phiIterEnd; ++phiIter, ++j ){
       const double x = low + j*dx;
-      if (x >= high) {
+      if( x >= high ){
         j = 0;
-        i++;
+        ++i;
       }
       *phiIter = low + i*dx;
-      ++phiIter;
-      j++;
     }
-  } else {
-    while ( phiIter != phi.end() ) {
+  }
+  else{
+    for( int i=0; phiIter != phiIterEnd; ++phiIter, ++i ){
       const double x = low + i*dx;
-      if (x >= high) i = 0;
+      if( x >= high ) i = 0;
       *phiIter = low + i*dx;
-      ++phiIter;
-      i++;
     }
   }
 }
 
 //--------------------------------------------------------------------
 
-
 ParticleUniformIC::Builder::
 Builder( const Expr::Tag& result,
-        const int nParticles,
-        const double lo,
-        const double hi,
-        const bool transverse,
-        const std::string coord,
-        const bool usePatchBounds)
+         const int nParticles,
+         const double lo,
+         const double hi,
+         const bool transverse,
+         const std::string coord,
+         const bool usePatchBounds )
 : ExpressionBuilder(result),
-nParticles_(nParticles),
-lo_(lo),
-hi_(hi),
-transverse_(transverse),
-coord_(coord),
-usePatchBounds_(usePatchBounds)
+  nParticles_(nParticles),
+  lo_(lo),
+  hi_(hi),
+  transverse_(transverse),
+  coord_(coord),
+  usePatchBounds_(usePatchBounds)
 {}
 
 //--------------------------------------------------------------------
-
 
 Expr::ExpressionBase*
 ParticleUniformIC::Builder::build() const
@@ -375,6 +375,5 @@ ParticleUniformIC::Builder::build() const
 }
 
 //--------------------------------------------------------------------
-
 
 #endif // ParticlePositionEquation_h

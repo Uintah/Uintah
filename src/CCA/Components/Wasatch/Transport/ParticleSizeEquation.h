@@ -32,6 +32,7 @@ namespace Wasatch{
 
   /**
    *  @class ParticleSizeEquation
+   *  @ingroup WasatchParticles
    *  @author Tony Saad
    *  @date June 2014
    *  @brief Solves d pd / dt = src where pd is the particle size and src is a source term.

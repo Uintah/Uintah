@@ -32,6 +32,7 @@ namespace Wasatch{
 
   /**
    *  @class ParticlePositionEquation
+   *  @ingroup WasatchParticles
    *  @author Tony Saad
    *  @date June 2014
    *  @brief Solves dxp/dt = up where xp and up are the particle position and velocity, respectively.

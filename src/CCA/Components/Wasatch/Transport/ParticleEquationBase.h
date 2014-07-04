@@ -51,6 +51,7 @@ namespace Wasatch{
   class BCHelper;
   /**
    *  \ingroup WasatchCore
+   *  \ingroup WasatchParticles
    *  \class  ParticleEquationBase
    *  \author Tony Saad
    *  \date   June, 2014

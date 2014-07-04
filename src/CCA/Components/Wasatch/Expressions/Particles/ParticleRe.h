@@ -12,13 +12,17 @@
 //==================================================================
 /**
  *  \class ParticleRe
-    \author Tony Saad, ODT
-    \date June 2014
+ *  \ingroup WasatchParticles
+ *  \author Tony Saad, ODT
+ *  \date June 2014
  *  \brief Calculates the particle Reynolds number. 
-\f[ 
-  \text{Re}_\text{p} \equiv \frac{ \rho_\text{p} \left|\mathbf{u}_text{g} - \mathbf{u}_{p} \right| d_\text{p} }{\mu_\text{g}}
- \f]
- Based on the ODT ParticleRe class.
+ *  \f[
+ *    \text{Re}_\text{p} \equiv \frac{ \rho_\text{p} \left|\mathbf{u}_text{g} - \mathbf{u}_{p} \right| d_\text{p} }{\mu_\text{g}}
+ *   \f]
+ *   Based on the ODT ParticleRe class.
+ *  \tparam GVel1T type for the first  velocity component in the gas phase
+ *  \tparam GVel2T type for the second velocity component in the gas phase
+ *  \tparam GVel3T type for the third  velocity component in the gas phase
  */
 template< typename GVel1T, typename GVel2T, typename GVel3T, typename ScalarT >
 class ParticleRe
@@ -33,10 +37,10 @@ class ParticleRe
   const ScalarT *gVisc_, *gDensity_;
 
   typedef typename SpatialOps::Particle::CellToParticle<GVel1T> GVel1OpT;
-  GVel1OpT* gv1Op_;
   typedef typename SpatialOps::Particle::CellToParticle<GVel2T> GVel2OpT;
-  GVel2OpT* gv2Op_;
   typedef typename SpatialOps::Particle::CellToParticle<GVel3T> GVel3OpT;
+  GVel1OpT* gv1Op_;
+  GVel2OpT* gv2Op_;
   GVel3OpT* gv3Op_;
 
   typedef typename SpatialOps::Particle::CellToParticle<ScalarT> Scal2POpT;
@@ -55,7 +59,7 @@ public:
   public:
     /**
      *  \brief Create a ParticleRe::Builder
-     *  \param resultTag            The result tag of this expression
+     *  \param resultTag            The tag for the particle reynolds number
      *  \param particleSizeTag      The particle mass density
      *  \param gasDensityTag        The gas density
      *  \param gasViscosityTag      The gas viscosity
@@ -64,12 +68,12 @@ public:
      *  \param gasVelocityTags      The local gas velocities - u, v, and w, respectively
      */
     Builder( const Expr::Tag& resultTag,
-            const Expr::Tag& particleSizeTag,
-            const Expr::Tag& gasDensityTag,
-            const Expr::Tag& gasViscosityTag,
-            const Expr::TagList& particlePositionTags,
-            const Expr::TagList& particleVelocityTags,
-            const Expr::TagList& gasVelocityTags );
+             const Expr::Tag& particleSizeTag,
+             const Expr::Tag& gasDensityTag,
+             const Expr::Tag& gasViscosityTag,
+             const Expr::TagList& particlePositionTags,
+             const Expr::TagList& particleVelocityTags,
+             const Expr::TagList& gasVelocityTags );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
@@ -95,19 +99,21 @@ public:
 template< typename GVel1T, typename GVel2T, typename GVel3T, typename ScalarT >
 ParticleRe<GVel1T, GVel2T, GVel3T, ScalarT>::
 ParticleRe( const Expr::Tag& particleSizeTag,
-           const Expr::Tag& gasDensityTag,
-           const Expr::Tag& gasViscosityTag,
-           const Expr::TagList& particlePositionTags,
-           const Expr::TagList& particleVelocityTags,
-           const Expr::TagList& gasVelocityTags )
+            const Expr::Tag& gasDensityTag,
+            const Expr::Tag& gasViscosityTag,
+            const Expr::TagList& particlePositionTags,
+            const Expr::TagList& particleVelocityTags,
+            const Expr::TagList& gasVelocityTags )
   : Expr::Expression<ParticleField>(),
-    pSizeTag_   ( particleSizeTag ),
-    gDensityTag_( gasDensityTag ),
-    gViscTag_ ( gasViscosityTag ),
-    pPosTags_    ( particlePositionTags  ),
-    pVelTags_    ( particleVelocityTags  ),
-    gVelTags_  ( gasVelocityTags  )
-{}
+    pSizeTag_   ( particleSizeTag      ),
+    gDensityTag_( gasDensityTag        ),
+    gViscTag_   ( gasViscosityTag      ),
+    pPosTags_   ( particlePositionTags ),
+    pVelTags_   ( particleVelocityTags ),
+    gVelTags_   ( gasVelocityTags      )
+{
+  this->set_gpu_runnable( false );  // not until we get particle interpolants GPU ready
+}
 
 //--------------------------------------------------------------------
 
@@ -121,12 +127,12 @@ template< typename GVel1T, typename GVel2T, typename GVel3T, typename ScalarT >
 void
 ParticleRe<GVel1T, GVel2T, GVel3T, ScalarT>::advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  exprDeps.requires_expression( pSizeTag_ );
-  exprDeps.requires_expression( pPosTags_ );
-  exprDeps.requires_expression( pVelTags_  );
-  exprDeps.requires_expression( gDensityTag_  );
-  exprDeps.requires_expression( gViscTag_ );
-  exprDeps.requires_expression( gVelTags_ );
+  exprDeps.requires_expression( pSizeTag_    );
+  exprDeps.requires_expression( pPosTags_    );
+  exprDeps.requires_expression( pVelTags_    );
+  exprDeps.requires_expression( gDensityTag_ );
+  exprDeps.requires_expression( gViscTag_    );
+  exprDeps.requires_expression( gVelTags_    );
   
 }
 
@@ -135,24 +141,27 @@ template< typename GVel1T, typename GVel2T, typename GVel3T, typename ScalarT >
 void
 ParticleRe<GVel1T, GVel2T, GVel3T, ScalarT>::bind_fields( const Expr::FieldManagerList& fml )
 {
-  const typename Expr::FieldMgrSelector<GVel1T        >::type& v1fm = fml.field_manager<GVel1T       >();
-  const typename Expr::FieldMgrSelector<GVel2T        >::type& v2fm = fml.field_manager<GVel2T       >();
-  const typename Expr::FieldMgrSelector<GVel3T        >::type& v3fm = fml.field_manager<GVel3T       >();
-  const typename Expr::FieldMgrSelector<ScalarT       >::type& scalfm = fml.field_manager<ScalarT       >();
-  const typename Expr::FieldMgrSelector<ParticleField>::type& fm    = fml.field_manager<ParticleField>();
+  using namespace Expr;
 
+  // particle fields
+  const typename FieldMgrSelector<ParticleField>::type& fm = fml.field_manager<ParticleField>();
   psize_  = &fm.field_ref( pSizeTag_ );
   px_     = &fm.field_ref( pPosTags_[0]  );
   py_     = &fm.field_ref( pPosTags_[1]  );
   pz_     = &fm.field_ref( pPosTags_[2]  );
-  pu_   = &fm.field_ref( pVelTags_[0]  );
-  pv_   = &fm.field_ref( pVelTags_[1]  );
-  pw_   = &fm.field_ref( pVelTags_[2]  );
+  pu_     = &fm.field_ref( pVelTags_[0]  );
+  pv_     = &fm.field_ref( pVelTags_[1]  );
+  pw_     = &fm.field_ref( pVelTags_[2]  );
+
+  // gas fields
+  const typename FieldMgrSelector<ScalarT>::type& scalfm = fml.field_manager<ScalarT>();
   gDensity_ = &scalfm.field_ref( gDensityTag_ );
-  gVisc_  = &scalfm.field_ref( gViscTag_  );
-  gU_   = &v1fm.field_ref( gVelTags_[0]   );
-  gV_   = &v2fm.field_ref( gVelTags_[1]   );
-  gW_   = &v3fm.field_ref( gVelTags_[2]   );
+  gVisc_    = &scalfm.field_ref( gViscTag_    );
+
+  // gas fields for velocity components
+  gU_ = &fml.field_ref<GVel1T>( gVelTags_[0] );
+  gV_ = &fml.field_ref<GVel2T>( gVelTags_[1] );
+  gW_ = &fml.field_ref<GVel3T>( gVelTags_[2] );
 }
 
 //--------------------------------------------------------------------
@@ -161,10 +170,10 @@ template< typename GVel1T, typename GVel2T, typename GVel3T, typename ScalarT >
 void
 ParticleRe<GVel1T, GVel2T, GVel3T, ScalarT>::bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  gv1Op_ = opDB.retrieve_operator<GVel1OpT>();
-  gv2Op_ = opDB.retrieve_operator<GVel2OpT>();
-  gv3Op_ = opDB.retrieve_operator<GVel3OpT>();
-  sOp_ = opDB.retrieve_operator<Scal2POpT>();
+  gv1Op_ = opDB.retrieve_operator<GVel1OpT >();
+  gv2Op_ = opDB.retrieve_operator<GVel2OpT >();
+  gv3Op_ = opDB.retrieve_operator<GVel3OpT >();
+  sOp_   = opDB.retrieve_operator<Scal2POpT>();
 }
 
 //--------------------------------------------------------------------
@@ -177,32 +186,37 @@ ParticleRe<GVel1T, GVel2T, GVel3T, ScalarT>::evaluate()
   ParticleField& result = this->value();
   
   SpatFldPtr<ParticleField> relativeVelMag = SpatialFieldStore::get<ParticleField>( result );
+
+  //--------------------------------------------------------------
+  // interpolate gas velocity components to the particle locations
+  {
+    SpatFldPtr<ParticleField> tmpu = SpatialFieldStore::get<ParticleField>( result );
+    SpatFldPtr<ParticleField> tmpv = SpatialFieldStore::get<ParticleField>( result );
+    SpatFldPtr<ParticleField> tmpw = SpatialFieldStore::get<ParticleField>( result );
+    gv1Op_->set_coordinate_information(px_,py_,pz_,psize_);
+    gv1Op_->apply_to_field(*gU_, *tmpu);
+    *tmpu <<= *pu_ - *tmpu;
+
+    gv2Op_->set_coordinate_information(px_,py_,pz_,psize_);
+    gv2Op_->apply_to_field(*gV_, *tmpv);
+    *tmpv <<= *pv_ - *tmpv;
+
+    gv3Op_->set_coordinate_information(px_,py_,pz_,psize_);
+    gv3Op_->apply_to_field(*gW_, *tmpw);
+    *tmpw <<= *pw_ - *tmpw;
+
+    *relativeVelMag <<= sqrt(*tmpu * *tmpu + *tmpv * *tmpv + *tmpw * *tmpw);
+  }
+  //--------------------------------------------------------------
   
-  SpatFldPtr<ParticleField> tmpu = SpatialFieldStore::get<ParticleField>( result );
-  SpatFldPtr<ParticleField> tmpv = SpatialFieldStore::get<ParticleField>( result );
-  SpatFldPtr<ParticleField> tmpw = SpatialFieldStore::get<ParticleField>( result );
+  
   SpatFldPtr<ParticleField> tmpvisc = SpatialFieldStore::get<ParticleField>( result );
-  SpatFldPtr<ParticleField> tmpden = SpatialFieldStore::get<ParticleField>( result );
+  SpatFldPtr<ParticleField> tmpden  = SpatialFieldStore::get<ParticleField>( result );
+  sOp_->set_coordinate_information( px_, py_, pz_, psize_ );
+  sOp_->apply_to_field( *gVisc_,    *tmpvisc );
+  sOp_->apply_to_field( *gDensity_, *tmpden  );
 
-  gv1Op_->set_coordinate_information(px_,py_,pz_,psize_);
-  gv1Op_->apply_to_field(*gU_, *tmpu);
-  *tmpu <<= *pu_ - *tmpu;
-
-  gv2Op_->set_coordinate_information(px_,py_,pz_,psize_);
-  gv2Op_->apply_to_field(*gV_, *tmpv);
-  *tmpv <<= *pv_ - *tmpv;
-  
-  gv3Op_->set_coordinate_information(px_,py_,pz_,psize_);
-  gv3Op_->apply_to_field(*gW_, *tmpw);
-  *tmpw <<= *pw_ - *tmpw;
-  
-  *relativeVelMag <<= sqrt(*tmpu * *tmpu + *tmpv * *tmpv + *tmpw * *tmpw);
-  
-  sOp_->set_coordinate_information(px_,py_,pz_,psize_);
-  sOp_->apply_to_field(*gVisc_, *tmpvisc);
-  sOp_->apply_to_field(*gDensity_, *tmpden);
-
-  result <<= *tmpden * *psize_ * *relativeVelMag/ *tmpvisc;
+  result <<= *tmpden * *psize_ * *relativeVelMag / *tmpvisc;
 }
 
 //--------------------------------------------------------------------
@@ -210,19 +224,19 @@ ParticleRe<GVel1T, GVel2T, GVel3T, ScalarT>::evaluate()
 template< typename GVel1T, typename GVel2T, typename GVel3T, typename ScalarT >
 ParticleRe<GVel1T, GVel2T, GVel3T, ScalarT>::Builder::
 Builder( const Expr::Tag& resultTag,
-        const Expr::Tag& particleSizeTag,
-        const Expr::Tag& gasDensityTag,
-        const Expr::Tag& gasViscosityTag,
-        const Expr::TagList& particlePositionTags,
-        const Expr::TagList& particleVelocityTags,
-        const Expr::TagList& gasVelocityTags )
+         const Expr::Tag& particleSizeTag,
+         const Expr::Tag& gasDensityTag,
+         const Expr::Tag& gasViscosityTag,
+         const Expr::TagList& particlePositionTags,
+         const Expr::TagList& particleVelocityTags,
+         const Expr::TagList& gasVelocityTags )
   : ExpressionBuilder( resultTag ),
-pSizeTag_   ( particleSizeTag ),
-gDensityTag_( gasDensityTag ),
-gViscTag_ ( gasViscosityTag ),
-pPosTags_    ( particlePositionTags  ),
-pVelTags_    ( particleVelocityTags  ),
-gVelTags_  ( gasVelocityTags  )
+    pSizeTag_   ( particleSizeTag      ),
+    gDensityTag_( gasDensityTag        ),
+    gViscTag_   ( gasViscosityTag      ),
+    pPosTags_   ( particlePositionTags ),
+    pVelTags_   ( particleVelocityTags ),
+    gVelTags_   ( gasVelocityTags      )
 {}
 
 //--------------------------------------------------------------------

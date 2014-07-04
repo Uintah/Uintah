@@ -8,14 +8,10 @@
 
 /**
  *  \class ParticleMomentumRHS
+ *  \ingroup WasatchParticles
  *  \brief Evaluates the RHS of the particle momentum equations.
  *
  *  \author James C. Sutherland, Tony Saad
- *
- *  \par Template Parameters
- *  <ul>
- *   <li> \b FieldToParticleOp The operator that interpolates mesh variables to particle positions.
- *  </ul>
  *
  *  The particle momentum equation can be written as
  *   \f[
@@ -38,32 +34,23 @@
  *  which is the working equation.
  *
  */
-
-//###################################################################
-//
-//
-//####################################################################
-
-
 class ParticleMomentumRHS
 : public Expr::Expression<SpatialOps::Particle::ParticleField>
 {
   const Expr::Tag pBodyForceTag_, pDragTag_;
-  
   const bool doBodyForce_, doDragForce_;
-  
   const ParticleField *pg_, *pdrag_;
   
   ParticleMomentumRHS( const Expr::Tag& particleBodyForceTag,
-                        const Expr::Tag& ParticleDragForceTag );
+                       const Expr::Tag& ParticleDragForceTag );
   
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
     Builder( const Expr::Tag& resultTag,
-            const Expr::Tag& particleBodyForceTag,
-            const Expr::Tag& ParticleDragForceTag );
+             const Expr::Tag& particleBodyForceTag,
+             const Expr::Tag& ParticleDragForceTag );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
@@ -92,16 +79,17 @@ public:
 
 ParticleMomentumRHS::
 ParticleMomentumRHS( const Expr::Tag& particleBodyForceTag,
-                    const Expr::Tag& ParticleDragForceTag )
+                     const Expr::Tag& ParticleDragForceTag )
 : Expr::Expression<ParticleField>(),
-pBodyForceTag_( particleBodyForceTag ),
-pDragTag_       ( ParticleDragForceTag  ),
-doBodyForce_( pBodyForceTag_ != Expr::Tag() ),
-doDragForce_( pDragTag_ != Expr::Tag() )
-{}
+  pBodyForceTag_( particleBodyForceTag ),
+  pDragTag_     ( ParticleDragForceTag ),
+  doBodyForce_  ( pBodyForceTag_ != Expr::Tag() ),
+  doDragForce_  ( pDragTag_ != Expr::Tag() )
+{
+  this->set_gpu_runnable(true);
+}
 
 //------------------------------------------------------------------
-
 
 ParticleMomentumRHS::
 ~ParticleMomentumRHS()
@@ -114,17 +102,11 @@ void
 ParticleMomentumRHS::
 advertise_dependents( Expr::ExprDeps& exprDeps)
 {
-  if (doDragForce_) {
-    exprDeps.requires_expression( pDragTag_  );
-  }
-
-  if(doBodyForce_) {
-    exprDeps.requires_expression( pBodyForceTag_ );
-  }
+  if( doDragForce_ ) exprDeps.requires_expression( pDragTag_      );
+  if( doBodyForce_ ) exprDeps.requires_expression( pBodyForceTag_ );
 }
 
 //------------------------------------------------------------------
-
 
 void
 ParticleMomentumRHS::
@@ -132,16 +114,11 @@ bind_fields( const Expr::FieldManagerList& fml )
 {
   const Expr::FieldMgrSelector<ParticleField>::type& pfm = fml.field_manager<ParticleField>();
   
-  if(doBodyForce_){
-    pg_ = &pfm.field_ref( pBodyForceTag_ );
-  }
-  if (doDragForce_) {
-    pdrag_     = &pfm.field_ref( pDragTag_ );
-  }
+  if( doBodyForce_ ) pg_   = &pfm.field_ref( pBodyForceTag_ );
+  if( doDragForce_ ) pdrag_= &pfm.field_ref( pDragTag_      );
 }
 
 //------------------------------------------------------------------
-
 
 void
 ParticleMomentumRHS::
@@ -150,7 +127,6 @@ bind_operators( const SpatialOps::OperatorDatabase& opDB )
 
 //------------------------------------------------------------------
 
-
 void
 ParticleMomentumRHS::
 evaluate()
@@ -158,27 +134,29 @@ evaluate()
   using namespace SpatialOps;
   
   ParticleField& result = this->value();
-  if (doBodyForce_ && doDragForce_ ) {
+  if( doBodyForce_ && doDragForce_ ){
     result <<= *pdrag_ + *pg_;
-  } else if (doDragForce_) {
+  }
+  else if( doDragForce_ ){
     result <<= *pdrag_;
-  } else if (doBodyForce_) {
+  }
+  else if( doBodyForce_ ){
     result <<= *pg_;
-  } else {
+  }
+  else{
     result <<= 0.0;
   }
 }
 
 //------------------------------------------------------------------
 
-
 ParticleMomentumRHS::
 Builder::Builder( const Expr::Tag& resultTag,
-                 const Expr::Tag& particleBodyForceTag,
-                 const Expr::Tag& ParticleDragForceTag )
+                  const Expr::Tag& particleBodyForceTag,
+                  const Expr::Tag& ParticleDragForceTag )
 : ExpressionBuilder( resultTag ),
-pBodyForceTag_( particleBodyForceTag ),
-pDragTag_       ( ParticleDragForceTag  )
+  pBodyForceTag_( particleBodyForceTag ),
+  pDragTag_     ( ParticleDragForceTag )
 {}
 
 //------------------------------------------------------------------

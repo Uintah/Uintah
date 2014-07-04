@@ -6,6 +6,7 @@
 //==================================================================
 /**
  *  \class ParticlePositionRHS
+ *  \ingroup WasatchParticles
  *  \brief Calculates the change in particle position according to
  *         \f$\frac{d x}{d t}=u_p\f$, where \f$u_p\f$ is the
  *         particle velocity.
@@ -15,8 +16,6 @@
 class ParticlePositionRHS :
 public Expr::Expression<ParticleField>
 {
-  //typedef SpatialOps::Particle::ParticleField  ParticleField;
-  
   const Expr::Tag pvelTag_;
   const ParticleField* pvel_;
   
@@ -31,14 +30,14 @@ public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
-    /**
-     *  \param positionRHSTag the value that this expression evaluates
+    /** \brief Construct a ParticlePositionRHS::Builder
+     *  \param positionRHSTag the position RHS tag (value that this expression evaluates)
      *  \param particleVelocity the advecting velocity for the particle
      */
     Builder( const Expr::Tag& positionRHSTag,
-            const Expr::Tag& particleVelocity );
+             const Expr::Tag& particleVelocity );
     ~Builder(){}
-    Expr::ExpressionBase* build() const{return new ParticlePositionRHS( pvel_ );}
+    Expr::ExpressionBase* build() const{ return new ParticlePositionRHS( pvel_ ); }
     
   private:
     const Expr::Tag pvel_;
@@ -58,9 +57,9 @@ public:
 ParticlePositionRHS::
 ParticlePositionRHS( const Expr::Tag& particleVelocity )
 : Expr::Expression<ParticleField>(),
-pvelTag_( particleVelocity )
+  pvelTag_( particleVelocity )
 {
-  this->set_gpu_runnable(false);
+  this->set_gpu_runnable( true );
 }
 
 //------------------------------------------------------------------
@@ -104,9 +103,9 @@ ParticlePositionRHS::evaluate()
 
 ParticlePositionRHS::
 Builder::Builder( const Expr::Tag& positionRHSTag,
-                 const Expr::Tag& particleVelocity )
+                  const Expr::Tag& particleVelocity )
 : ExpressionBuilder( positionRHSTag ),
-pvel_( particleVelocity )
+  pvel_( particleVelocity )
 {}
 
 
