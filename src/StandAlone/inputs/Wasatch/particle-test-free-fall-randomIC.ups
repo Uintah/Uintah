@@ -100,10 +100,7 @@
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
        <NameTag name="p.xw" state="STATE_DYNAMIC"/>
-       <ParticlePositionIC coordinate="X">
-       		<Bounds>
-       			<UsePatchBounds/>
-       		</Bounds>
+       <ParticlePositionIC coordinate="X" bounds="PATCHBASED">
        		<Random seed="0.1"/>
        </ParticlePositionIC>
     </BasicExpression>
@@ -111,10 +108,7 @@
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
        <NameTag name="p.yw" state="STATE_DYNAMIC"/>
-       <ParticlePositionIC coordinate="Y">
-       		<Bounds>
-       			<UsePatchBounds/>
-       		</Bounds>
+       <ParticlePositionIC coordinate="Y" bounds="PATCHBASED">
        		<Random seed="0.23"/>
        </ParticlePositionIC>
     </BasicExpression>
