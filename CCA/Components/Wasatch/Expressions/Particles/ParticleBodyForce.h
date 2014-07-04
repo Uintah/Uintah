@@ -9,25 +9,28 @@
 //==================================================================
 /**
  *  \class  ParticleBodyForce
+ *  \ingroup WasatchParticles
  *  \author Tony Saad, ODT
  *  \date   June, 2014
- *  \brief  Calculates particle body force which includes weight and buyoancy forces. This is written
- as  
-  \f[ F = w_\text{p} - f_\text{b} \f]
- where \f$ F \f$ is the total body force experience by the particle, \f$ w_\text{p} \f$ is the particle
- weight, and \f$ f_\text{b} \f$ is the buyoancy force experience by the particle as exerted by the fluid.
- The particle weight is easily computed as
-  \f[ w_\text{p} = \rho_\text{p} \mathcal{V}_\text{p} \f]
- where \f$\mathcal{V}_\text{p}\f$ is the particle volume. The buyoancy force is equal to the weight
- of the fluid displaced by the particle. The volume of the fluid displaced by the particle is assumed
- to be \f$ \mathcal{V}_\text{p} \f$ and, if the fluid density is given by \f$ \rho_\text{f} \f$, then
- the buyoancy force is given by
-  \f[ f_\text{b} = \rho_\text{f} \mathcal{V}_\text{p} g \f].
- At the outset, the total body force is divided by the particle mass 
- \f$ m_\text{p} \equiv \rho_\text{p} \mathcal{V}_\text{p} \f$, then, upon substitution and simplification
-  \f[ \frac{F}{m_\text{p}} = g - \frac{\rho_\text{f}}{\rho_\text{p}} g \f].
+ *  \brief  Calculates particle body force which includes weight and buoyancy forces.
+ *
+ *  The buoyancy force can be written as
+ *  \f[ F = w_\text{p} - f_\text{b} \f]
+ *  where \f$ F \f$ is the total body force experience by the particle, \f$ w_\text{p} \f$ is the particle
+ *  weight, and \f$ f_\text{b} \f$ is the buoyancy force experience by the particle as exerted by the fluid.
+ *  The particle weight is easily computed as
+ *   \f[ w_\text{p} = \rho_\text{p} \mathcal{V}_\text{p} \f]
+ *  where \f$\mathcal{V}_\text{p}\f$ is the particle volume. The buoyancy force is equal to the weight
+ *  of the fluid displaced by the particle. The volume of the fluid displaced by the particle is assumed
+ *  to be \f$ \mathcal{V}_\text{p} \f$ and, if the fluid density is given by \f$ \rho_\text{f} \f$, then
+ *  the buoyancy force is given by
+ *   \f[ f_\text{b} = \rho_\text{f} \mathcal{V}_\text{p} g \f].
+ *  At the outset, the total body force is divided by the particle mass
+ *  \f$ m_\text{p} \equiv \rho_\text{p} \mathcal{V}_\text{p} \f$, then, upon substitution and simplification
+ *   \f[ \frac{F}{m_\text{p}} = g - \frac{\rho_\text{f}}{\rho_\text{p}} g \f].
+ *
+ *  \tparam ScalarT the field type for the gas phase density
  */
-
 template< typename ScalarT >
 class ParticleBodyForce
 : public Expr::Expression<ParticleField>
@@ -44,24 +47,24 @@ class ParticleBodyForce
   ParticleBodyForce( const Expr::Tag& gasDensityTag,
                      const Expr::Tag& particleDensityTag,
                      const Expr::Tag& particleSizeTag,
-                     const Expr::TagList& particlePositionTags);
+                     const Expr::TagList& particlePositionTags );
   
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
     /**
-     *  \param resultTag The result of this expression
+     *  \param resultTag The buoyancy force
      *  \param gasDensityTag The gas-phase velocity
      *  \param particleDensityTag The particle density Tag
      *  \param particleSizeTag The particle Size tag
      *  \param particlePositionTags the particle coordinates - x, y, and z, respectively
      */
     Builder( const Expr::Tag& resultTag,
-            const Expr::Tag& gasDensityTag,
-            const Expr::Tag& particleDensityTag,
-            const Expr::Tag& particleSizeTag,
-            const Expr::TagList& particlePositionTags);
+             const Expr::Tag& gasDensityTag,
+             const Expr::Tag& particleDensityTag,
+             const Expr::Tag& particleSizeTag,
+             const Expr::TagList& particlePositionTags );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
@@ -78,27 +81,23 @@ public:
   
 };
 
-
-
 // ###################################################################
 //
 //                          Implementation
 //
 // ###################################################################
 
-
-
 template<typename ScalarT>
 ParticleBodyForce<ScalarT>::
-ParticleBodyForce(const Expr::Tag& gasDensityTag,
-                  const Expr::Tag& particleDensityTag,
-                  const Expr::Tag& particleSizeTag,
-                  const Expr::TagList& particlePositionTags)
+ParticleBodyForce( const Expr::Tag& gasDensityTag,
+                   const Expr::Tag& particleDensityTag,
+                   const Expr::Tag& particleSizeTag,
+                   const Expr::TagList& particlePositionTags )
 : Expr::Expression<ParticleField>(),
-gDensityTag_ ( gasDensityTag        ),
-pDensityTag_ ( particleDensityTag   ),
-pSizeTag_    ( particleSizeTag      ),
-pPosTags_    ( particlePositionTags )
+  gDensityTag_ ( gasDensityTag        ),
+  pDensityTag_ ( particleDensityTag   ),
+  pSizeTag_    ( particleSizeTag      ),
+  pPosTags_    ( particlePositionTags )
 {
   this->set_gpu_runnable(false);  // need new particle operators...
 }
@@ -131,14 +130,13 @@ ParticleBodyForce<ScalarT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
   const typename Expr::FieldMgrSelector<ParticleField>::type& pfm = fml.template field_manager<ParticleField>();
-  const typename Expr::FieldMgrSelector<ScalarT>::type&  fm = fml.template field_manager<ScalarT>();
-
   px_    = &pfm.field_ref( pPosTags_[0] );
   py_    = &pfm.field_ref( pPosTags_[1] );
   pz_    = &pfm.field_ref( pPosTags_[2] );
   psize_ = &pfm.field_ref( pSizeTag_    );
-  grho_  = & fm.field_ref( gDensityTag_ );
-  prho_  = &pfm.field_ref(pDensityTag_  );
+  prho_  = &pfm.field_ref( pDensityTag_ );
+
+  grho_  = &fml.field_ref<ScalarT>( gDensityTag_ );
 }
 
 //------------------------------------------------------------------
@@ -158,14 +156,14 @@ void
 ParticleBodyForce<ScalarT>::
 evaluate()
 {
+  using namespace SpatialOps;
   ParticleField& result = this->value();
   
-  SpatialOps::SpatFldPtr<ParticleField> tmprho = SpatialOps::SpatialFieldStore::get<ParticleField>( result );
+  SpatFldPtr<ParticleField> tmprho = SpatialFieldStore::get<ParticleField>( result );
   
   sOp_->set_coordinate_information(px_,py_,pz_,psize_);
   sOp_->apply_to_field( *grho_, *tmprho );
   
-  using namespace SpatialOps;
   result <<= -9.81 * (*prho_ - *tmprho) / *prho_;
 }
 
@@ -174,15 +172,15 @@ evaluate()
 template<typename ScalarT>
 ParticleBodyForce<ScalarT>::
 Builder::Builder( const Expr::Tag& resultTag,
-                 const Expr::Tag& gasDensityTag,
-                 const Expr::Tag& particleDensityTag,
-                 const Expr::Tag& particleSizeTag,
-                 const Expr::TagList& particlePositionTags)
+                  const Expr::Tag& gasDensityTag,
+                  const Expr::Tag& particleDensityTag,
+                  const Expr::Tag& particleSizeTag,
+                  const Expr::TagList& particlePositionTags )
 : ExpressionBuilder(resultTag),
-gDensityTag_  ( gasDensityTag        ),
-pDensityTag_  ( particleDensityTag   ),
-pSizeTag_     ( particleSizeTag      ),
-pPosTags_     ( particlePositionTags )
+  gDensityTag_  ( gasDensityTag        ),
+  pDensityTag_  ( particleDensityTag   ),
+  pSizeTag_     ( particleSizeTag      ),
+  pPosTags_     ( particlePositionTags )
 {}
 
 //------------------------------------------------------------------

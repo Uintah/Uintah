@@ -32,6 +32,7 @@ namespace Wasatch{
 
   /**
    *  @class ParticleMomentumEquation
+   *  @ingroup WasatchParticles
    *  @author Tony Saad
    *  @date June 2014
    *  @brief Solves the particle momentum equation.

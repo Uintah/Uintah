@@ -29,6 +29,8 @@
 #include <expression/ExprLib.h>
 /**
  *  \class ParticleMassIC
+ *  \ingroup WasatchParticles
+ *  \brief Initial condition for particle mass
  */
 class ParticleMassIC
 : public Expr::Expression<ParticleField>
@@ -72,6 +74,7 @@ namespace Wasatch{
 
   /**
    *  @class ParticleMassEquation
+   *  @ingroup WasatchParticles
    *  @author Tony Saad
    *  @date   June 2014
    *  @brief Solves for particle mass.

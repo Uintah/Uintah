@@ -93,6 +93,7 @@
   \defgroup WasatchCore		Wasatch Core
   \defgroup WasatchGraph	Wasatch Graph
   \defgroup WasatchParser	Wasatch Parsers
+  \defgroup WasatchParticles    Particle Transport
 
 */
 
