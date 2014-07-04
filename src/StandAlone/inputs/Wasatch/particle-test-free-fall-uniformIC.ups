@@ -64,15 +64,26 @@
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
        <NameTag name="p.xw" state="STATE_DYNAMIC"/>
-       <ParticleUniformIC nparticles="484" coordinate="X"/>
+        <ParticlePositionIC coordinate="X">
+       		<Bounds>
+       			<UsePatchBounds/>
+       		</Bounds>
+       		<Uniform nparticles="484"/>
+       </ParticlePositionIC>
+
     </BasicExpression>
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
        <NameTag name="p.yw" state="STATE_DYNAMIC"/>
-       <ParticleUniformIC nparticles="484" coordinate="X">
-         <TransverseDirection/>       
-       </ParticleUniformIC>
+        <ParticlePositionIC coordinate="Y">
+       		<Bounds>
+       			<UsePatchBounds/>
+       		</Bounds>
+       		<Uniform nparticles="484">
+       			<TransverseDirection/>
+       		</Uniform>
+       </ParticlePositionIC>
     </BasicExpression>
 
     <BasicExpression type="PARTICLE">

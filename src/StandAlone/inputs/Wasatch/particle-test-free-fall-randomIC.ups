@@ -100,17 +100,23 @@
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
        <NameTag name="p.xw" state="STATE_DYNAMIC"/>
-       <RandomField low="0.1" high="0.9" seed="0.142">
-				 <ExprLoHi type="SVOL" name="XSVOL" state="STATE_NONE"/>       
-       </RandomField>
+       <ParticlePositionIC coordinate="X">
+       		<Bounds>
+       			<UsePatchBounds/>
+       		</Bounds>
+       		<Random seed="0.1"/>
+       </ParticlePositionIC>
     </BasicExpression>
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
        <NameTag name="p.yw" state="STATE_DYNAMIC"/>
-       <RandomField low="0.1" high="0.9" seed="0.3">
-				 <ExprLoHi type="SVOL" name="YSVOL" state="STATE_NONE"/>
-       </RandomField>
+       <ParticlePositionIC coordinate="Y">
+       		<Bounds>
+       			<UsePatchBounds/>
+       		</Bounds>
+       		<Random seed="0.23"/>
+       </ParticlePositionIC>
     </BasicExpression>
 
     <BasicExpression type="PARTICLE">
@@ -208,8 +214,8 @@
 
 
   <DataArchiver>
-    <filebase>particle-test.uda</filebase>
-    <outputTimestepInterval>2000</outputTimestepInterval>
+    <filebase>particle-test-free-fall-randomIC.uda</filebase>
+    <outputTimestepInterval>500</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle="2" interval="0.0001"/>
     <save label="p.x"/>

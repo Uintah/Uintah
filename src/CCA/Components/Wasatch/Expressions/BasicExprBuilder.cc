@@ -101,53 +101,40 @@ namespace Wasatch{
       double val;  params->get("Constant",val);
       typedef typename Expr::ConstantExpr<FieldT>::Builder Builder;
       builder = scinew Builder( tag, val );
-    }  else if ( params->findBlock("RandomField") ) {
-      Uintah::ProblemSpecP valParams = params->findBlock("RandomField");
-      double low, high, seed;
-      valParams->getAttribute("low",low);
-      valParams->getAttribute("high",high);
-      valParams->getAttribute("seed",seed);
-      
-      Expr::Tag exprLoHiTag;
-      if (valParams->findBlock("ExprLoHi"))
-      {
-        exprLoHiTag = parse_nametag(valParams->findBlock("ExprLoHi"));
-        std::string coordFieldType;
-        valParams->findBlock("ExprLoHi")->getAttribute("type",coordFieldType);
-        switch( get_field_type(coordFieldType) ){
-          case SVOL : {
-            builder = scinew ParticleRandomIC<SVolField>::Builder( tag, low, high, exprLoHiTag, seed );
-            break;
-          }
-          case XVOL : {
-            builder = scinew ParticleRandomIC<XVolField>::Builder( tag, low, high, exprLoHiTag, seed );
-            break;
-          }
-          case YVOL : {
-            builder = scinew ParticleRandomIC<YVolField>::Builder( tag, low, high, exprLoHiTag, seed );
-            break;
-          }
-          case ZVOL : {
-            builder = scinew ParticleRandomIC<ZVolField>::Builder( tag, low, high, exprLoHiTag, seed );
-            break;
-          }
-          default:
-            std::ostringstream msg;
-            msg << "ERROR: unsupported exprLoHi field type '" << coordFieldType << "'" << "while parsing an RandomField expression for particle initialization." << std::endl;
-            throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-        }
-      } else { // if NO exprHiLo was provided
-        builder = scinew ParticleRandomIC<SVolField>::Builder( tag, low, high, exprLoHiTag, seed );
-      }
-    } else if ( params->findBlock("ParticleUniformIC") ) {
-      Uintah::ProblemSpecP valParams = params->findBlock("ParticleUniformIC");
-      bool transverse = valParams->findBlock("TransverseDirection");
-      int nParticles;
-      valParams->getAttribute("nparticles",nParticles);
+    } else if (params->findBlock("ParticlePositionIC")) {
+      Uintah::ProblemSpecP valParams = params->findBlock("ParticlePositionIC");
+      // parse coordinate
       std::string coord;
       valParams->getAttribute("coordinate",coord);
-      Expr::Tag coordTag(coord+"SVOL",Expr::STATE_NONE);
-      builder = scinew ParticleUniformIC<SVolField>::Builder( tag, coordTag, nParticles, transverse, coord );
+            
+      double lo = 0.0, hi = 1.0;
+      Uintah::ProblemSpecP boundsSpec = valParams->findBlock("Bounds");
+      bool usePatchBounds = boundsSpec->findBlock("UsePatchBounds");
+      if (boundsSpec->findBlock("Fixed")) {
+        boundsSpec->findBlock("Fixed")->getAttribute("low", lo);
+        boundsSpec->findBlock("Fixed")->getAttribute("high", hi);
+      }
+      
+      if (valParams->findBlock("Uniform")) {
+        bool transverse = valParams->findBlock("Uniform")->findBlock("TransverseDirection");
+        int nParticles;
+        valParams->findBlock("Uniform")->getAttribute("nparticles",nParticles);
+        builder = scinew ParticleUniformIC::Builder( tag, nParticles, lo, hi, transverse, coord, usePatchBounds );
+      } else if (valParams->findBlock("Random")) {
+        double seed = 0.0;
+        valParams->findBlock("Random")->getAttribute("seed",seed);
+        builder = scinew ParticleRandomIC::Builder( tag, coord, lo, hi, seed, usePatchBounds );
+      }
+      
+    } else if ( params->findBlock("RandomField") ) {
+      Uintah::ProblemSpecP valParams = params->findBlock("RandomField");
+      double lo, hi, seed;
+      valParams->getAttribute("low",lo);
+      valParams->getAttribute("high",hi);
+      valParams->getAttribute("seed",seed);
+      const std::string coord="";
+      const bool usePatchBounds = false;
+      builder = scinew ParticleRandomIC::Builder( tag, coord, lo, hi, seed, usePatchBounds );
     } else if( params->findBlock("LinearFunction") ){
       double slope, intercept;
       Uintah::ProblemSpecP valParams = params->findBlock("LinearFunction");

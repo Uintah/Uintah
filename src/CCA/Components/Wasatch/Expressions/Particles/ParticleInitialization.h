@@ -6,7 +6,8 @@
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/particles/ParticleOperators.h>
 #include <spatialops/particles/ParticleFieldTypes.h>
-
+#include <CCA/Components/Wasatch/PatchInfo.h>
+#include <Core/Grid/Box.h>
 //==================================================================
 /**
  *  \class  ParticleRandomIC
@@ -14,7 +15,6 @@
  *  \date   June, 2014
  *  \brief  Generates a pseudo-random field to initialize particles.
  */
-template< typename GridCoordT >
 class ParticleRandomIC : public Expr::Expression<ParticleField>
 {
 public:
@@ -25,86 +25,118 @@ public:
   struct Builder : public Expr::ExpressionBuilder
   {
     Builder( const Expr::Tag& result,
+            const std::string& coord,
             const double lo,
             const double hi,
-            const Expr::Tag& exprLoHiTag,
-            const double seed );
+            const double seed,
+            const bool usePatchBounds);
     
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
+    const std::string coord_;
     const double lo_, hi_, seed_;
-    const Expr::Tag exprLoHiTag_;
+    const bool usePatchBounds_;
   };
   
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
+  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
   
 private:
+  const std::string coord_;
   const double lo_, hi_, seed_;
-  const Expr::Tag exprLoHiTag_;
-  const GridCoordT *x_;
+  const bool usePatchBounds_;
+  Wasatch::UintahPatchContainer* patchContainer_;
   
-  ParticleRandomIC( const double lo,
-              const double hi,
-              const Expr::Tag& exprLoHiTag,
-              const double seed );
+  ParticleRandomIC( const std::string& coord,
+                   const double lo,
+                   const double hi,
+                   const double seed,
+                   const bool usePatchBounds );
   
 };
 
 //====================================================================
 
-template<typename GridCoordT>
-ParticleRandomIC<GridCoordT>::
-ParticleRandomIC(const double lo,
-            const double hi,
-            const Expr::Tag& exprLoHiTag,
-            const double seed )
+ParticleRandomIC::
+ParticleRandomIC(const std::string& coord,
+                 const double lo,
+                 const double hi,
+                 const double seed,
+                 const bool usePatchBounds )
 : Expr::Expression<ParticleField>(),
+coord_(coord),
 lo_(lo),
 hi_(hi),
 seed_(seed),
-exprLoHiTag_(exprLoHiTag)
+usePatchBounds_(usePatchBounds)
 {}
 
 //--------------------------------------------------------------------
 
-template< typename GridCoordT >
+
 void
-ParticleRandomIC<GridCoordT>::
+ParticleRandomIC::
 advertise_dependents( Expr::ExprDeps& exprDeps )
+{}
+
+//--------------------------------------------------------------------
+
+void
+ParticleRandomIC::bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  if (exprLoHiTag_ != Expr::Tag()) {
-    exprDeps.requires_expression( exprLoHiTag_ );
-  }
+  patchContainer_ = opDB.retrieve_operator<Wasatch::UintahPatchContainer>();
 }
 
 //--------------------------------------------------------------------
 
-template< typename GridCoordT >
+
 void
-ParticleRandomIC<GridCoordT>::
+ParticleRandomIC::
 bind_fields( const Expr::FieldManagerList& fml )
+{}
+
+//--------------------------------------------------------------------
+
+double
+get_patch_low(const Uintah::Patch* const patch, const std::string& coord)
 {
-  const typename Expr::FieldMgrSelector<GridCoordT>::type& fm = fml.template field_manager<GridCoordT>();
-  if (exprLoHiTag_ != Expr::Tag()) {
-    x_ = &fm.field_ref( exprLoHiTag_ );
+  if (coord == "X") {
+    return patch->getBox().lower().x() + patch->dCell().x()/2.0;
+  } else if (coord == "Y") {
+    return patch->getBox().lower().y() + patch->dCell().y()/2.0;
   } else {
-    x_ = NULL;
+    return patch->getBox().lower().z() + patch->dCell().z()/2.0;
   }
+  return 0.0;
 }
 
 //--------------------------------------------------------------------
 
-template< typename GridCoordT >
+double
+get_patch_high(const Uintah::Patch* const patch, const std::string& coord)
+{
+  if (coord == "X") {
+    return patch->getBox().upper().x() - patch->dCell().x()/2.0;
+  } else if (coord == "Y") {
+    return patch->getBox().upper().y() - patch->dCell().y()/2.0;
+  } else {
+    return patch->getBox().upper().z() - patch->dCell().z()/2.0;
+  }
+  return 0.0;
+}
+
+//--------------------------------------------------------------------
+
 void
-ParticleRandomIC<GridCoordT>::
+ParticleRandomIC::
 evaluate()
 {
   using namespace SpatialOps;
   ParticleField& phi = this->value();
-  typename ParticleField::iterator phiIter = phi.begin();
+  ParticleField::iterator phiIter = phi.begin();
   
   
 //  typedef boost::mt19937                       GenT;    // Mersenne Twister
@@ -115,7 +147,14 @@ evaluate()
 //  DistT    dist(0,1);
 //  VarGenT  gen(eng,dist);
 
-  
+
+  double low = lo_, high = hi_;
+  if (usePatchBounds_) {
+    const Uintah::Patch* const patch = patchContainer_->get_uintah_patch();
+    low  = get_patch_low(patch, coord_);
+    high = get_patch_high(patch, coord_);
+  }
+
   // This is a typedef for a random number generator.
   typedef boost::mt19937 base_generator_type; // mersenne twister
   // Define a random number generator and initialize it with a seed.
@@ -124,8 +163,6 @@ evaluate()
   // seed the random number generator based on the MPI rank
   const int pid =  Uintah::Parallel::getMPIRank();
   base_generator_type generator((unsigned) ( (pid+1) * seed_ * std::time(0) ));
-  const double low  = x_ ? field_min(*x_) : lo_;
-  const double high = x_ ? field_max(*x_) : hi_;
   
   boost::uniform_real<> rand_dist(low,high);
   boost::variate_generator<base_generator_type&, boost::uniform_real<> > boost_rand(generator, rand_dist);
@@ -138,45 +175,32 @@ evaluate()
 
 //--------------------------------------------------------------------
 
-template< typename GridCoordT >
-ParticleRandomIC<GridCoordT>::Builder::
+
+ParticleRandomIC::Builder::
 Builder( const Expr::Tag& result,
+        const std::string& coord,
         const double lo,
         const double hi,
-        const Expr::Tag& exprLoHiTag,
-        const double seed )
+        const double seed,
+        const bool usePatchBounds )
 : ExpressionBuilder(result),
+coord_(coord),
 lo_(lo),
 hi_(hi),
 seed_(seed),
-exprLoHiTag_(exprLoHiTag)
+usePatchBounds_(usePatchBounds)
 {}
 
 //--------------------------------------------------------------------
 
-template< typename GridCoordT >
+
 Expr::ExpressionBase*
-ParticleRandomIC<GridCoordT>::Builder::build() const
+ParticleRandomIC::Builder::build() const
 {
-  return new ParticleRandomIC<GridCoordT>(lo_, hi_, exprLoHiTag_, seed_ );
+  return new ParticleRandomIC(coord_,lo_, hi_, seed_,usePatchBounds_ );
 }
 
 //--------------------------------------------------------------------
-
-template< typename GridCoordT >
-double
-get_field_dx(const GridCoordT& x, const std::string& coord)
-{
-  if (coord == "X") {
-    return (x(1,0,0) - x(0,0,0));
-  } else if (coord == "Y") {
-    return (x(0,1,0) - x(0,0,0));
-  } else {
-    return (x(0,0,1) - x(0,0,0));
-  }
-  return 0.0;
-}
-
 
 //==================================================================
 /**
@@ -185,7 +209,7 @@ get_field_dx(const GridCoordT& x, const std::string& coord)
  *  \date   June, 2014
  *  \brief  Generates a pseudo-random field to initialize particles.
  */
-template< typename GridCoordT >
+
 class ParticleUniformIC : public Expr::Expression<ParticleField>
 {
 public:
@@ -196,87 +220,104 @@ public:
   struct Builder : public Expr::ExpressionBuilder
   {
     Builder( const Expr::Tag& result,
-            const Expr::Tag& exprLoHiTag,
             const int nParticles,
+            const double lo,
+            const double hi,
             const bool transverse,
-            const std::string coord);
+            const std::string coord,
+            const bool usePatchBounds);
     
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
-    const Expr::Tag exprLoHiTag_;
     const int nParticles_;
+    const double lo_, hi_;
     const bool transverse_;
     const std::string coord_;
+    const bool usePatchBounds_;
   };
   
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
+  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
   
 private:
-  const Expr::Tag exprLoHiTag_;
   const int nParticles_;
+  const double lo_, hi_;
   const bool transverse_;
   const std::string coord_;
-  const GridCoordT *x_;
+  const bool usePatchBounds_;
+  Wasatch::UintahPatchContainer* patchContainer_;
   
-  ParticleUniformIC( const Expr::Tag& exprLoHiTag,
-                     const int nParticles,
+  ParticleUniformIC( const int nParticles,
+                     const double lo,
+                     const double hi,
                      const bool transverse,
-                     const std::string coord);
+                     const std::string coord,
+                     const bool usePatchBounds);
   
 };
 
 //====================================================================
 
-template<typename GridCoordT>
-ParticleUniformIC<GridCoordT>::
-ParticleUniformIC(const Expr::Tag& exprLoHiTag,
-                  const int nParticles,
+ParticleUniformIC::
+ParticleUniformIC(const int nParticles,
+                  const double lo,
+                  const double hi,
                   const bool transverse,
-                  const std::string coord)
+                  const std::string coord,
+                  const bool usePatchBounds)
 : Expr::Expression<ParticleField>(),
-exprLoHiTag_(exprLoHiTag),
 nParticles_(nParticles),
+lo_(lo),
+hi_(hi),
 transverse_(transverse),
-coord_(coord)
+coord_(coord),
+usePatchBounds_(usePatchBounds)
 {}
 
 //--------------------------------------------------------------------
 
-template< typename GridCoordT >
+
 void
-ParticleUniformIC<GridCoordT>::
+ParticleUniformIC::
 advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( exprLoHiTag_ );
-}
+{}
 
 //--------------------------------------------------------------------
 
-template< typename GridCoordT >
+
 void
-ParticleUniformIC<GridCoordT>::
+ParticleUniformIC::
 bind_fields( const Expr::FieldManagerList& fml )
+{}
+
+//--------------------------------------------------------------------
+
+void
+ParticleUniformIC::bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  const typename Expr::FieldMgrSelector<GridCoordT>::type& fm = fml.template field_manager<GridCoordT>();
-  x_ = &fm.field_ref( exprLoHiTag_ );
+  patchContainer_ = opDB.retrieve_operator<Wasatch::UintahPatchContainer>();
 }
 
 //--------------------------------------------------------------------
 
-template< typename GridCoordT >
 void
-ParticleUniformIC<GridCoordT>::
+ParticleUniformIC::
 evaluate()
 {
   using namespace SpatialOps;
   ParticleField& phi = this->value();
-  typename ParticleField::iterator phiIter = phi.begin();
+  ParticleField::iterator phiIter = phi.begin();
   
-  const double low  = field_min_interior(*x_) - get_field_dx(*x_, coord_)/4.0;
-  const double high = field_max_interior(*x_) + get_field_dx(*x_, coord_)/4.0;
+  double low = lo_, high = hi_;
+
+  if (usePatchBounds_) {
+    const Uintah::Patch* const patch = patchContainer_->get_uintah_patch();
+    low  = get_patch_low(patch, coord_);
+    high = get_patch_high(patch, coord_);
+  }
   
   const int npart = (int) sqrt(nParticles_);
   const double dx = (high-low) / npart;
@@ -306,27 +347,31 @@ evaluate()
 
 //--------------------------------------------------------------------
 
-template< typename GridCoordT >
-ParticleUniformIC<GridCoordT>::Builder::
+
+ParticleUniformIC::Builder::
 Builder( const Expr::Tag& result,
-        const Expr::Tag& exprLoHiTag,
         const int nParticles,
+        const double lo,
+        const double hi,
         const bool transverse,
-        const std::string coord)
+        const std::string coord,
+        const bool usePatchBounds)
 : ExpressionBuilder(result),
-exprLoHiTag_(exprLoHiTag),
 nParticles_(nParticles),
+lo_(lo),
+hi_(hi),
 transverse_(transverse),
-coord_(coord)
+coord_(coord),
+usePatchBounds_(usePatchBounds)
 {}
 
 //--------------------------------------------------------------------
 
-template< typename GridCoordT >
+
 Expr::ExpressionBase*
-ParticleUniformIC<GridCoordT>::Builder::build() const
+ParticleUniformIC::Builder::build() const
 {
-  return new ParticleUniformIC<GridCoordT>(exprLoHiTag_, nParticles_, transverse_, coord_ );
+  return new ParticleUniformIC( nParticles_, lo_, hi_, transverse_, coord_, usePatchBounds_ );
 }
 
 //--------------------------------------------------------------------

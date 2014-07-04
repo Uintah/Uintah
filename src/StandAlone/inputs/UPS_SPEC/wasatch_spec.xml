@@ -65,11 +65,30 @@
 																		 WallDistanceFunction,ReadFromFile,RandomField,
 																		 ExponentialVortex,LambsDipole,TimeDerivative,
 																		 RayleighTaylor, BurnsChristonAbskg, GeometryBased,
-																		 ParticleUniformIC)" >
+																		 ParticleUniformIC, ParticlePositionIC)" >
                                        
       <TaskList           spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag            spec="REQUIRED" />
       <Constant           spec="OPTIONAL DOUBLE" />
+
+
+			<ParticlePositionIC spec="OPTIONAL NO_DATA"
+													attribute1="coordinate REQUIRED STRING 'X,Y,Z'"
+													children1="ONE_OF(CHILD Uniform,Random)">
+				<Bounds spec="REQUIRED NO_DATA"
+								children1="ONE_OF(CHILD Fixed,UsePatchBounds)">
+					<Fixed spec="OPTIONAL NO_DATA"
+								 attribute1="low REQUIRED DOUBLE"
+								 attribute2="high REQUIRED DOUBLE"/>
+					<UsePatchBounds spec="OPTIONAL NO_DATA"/>				       
+				</Bounds>
+				<Uniform spec="OPTIONAL NO_DATA"
+													 attribute1="nparticles  REQUIRED INTEGER">        
+					<TransverseDirection spec="OPTIONAL NO_DATA"/>
+				</Uniform>
+				<Random spec="OPTIONAL NO_DATA"
+								attribute1="seed REQUIRED DOUBLE"/>
+			</ParticlePositionIC>
 
 			<!-- provides a way to initialize a field using geometry primitives -->
 			<GeometryBased      spec="OPTIONAL NO_DATA"
@@ -177,7 +196,6 @@
                   attribute2="name REQUIRED STRING"
                   attribute3="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/> 
       </RandomField>
-
       <ParticleUniformIC spec="OPTIONAL NO_DATA"
                          attribute1="nparticles  REQUIRED INTEGER"
                          attribute2="coordinate REQUIRED STRING 'X,Y,Z'">
