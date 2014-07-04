@@ -34,8 +34,8 @@
     <save label="coal_gas_mix_frac_Fdiff"/>
     <save label="coal_gas_mix_frac_Fconv"/>
     <save label = "radiationVolq"/>
-    <save label = "tot_abskg"/>
     <save label = "abskg"/>
+    <save label = "gas_abskg"/>
     <save label = "Julien_abskp"/>
     <save label = "divQ"/>
     <save label = "enthalpy"/>
