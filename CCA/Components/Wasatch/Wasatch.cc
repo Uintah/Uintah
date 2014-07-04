@@ -917,6 +917,11 @@ namespace Wasatch{
       for( int ip=0; ip<pss->size(); ++ip ){
         SpatialOps::OperatorDatabase* const opdb = scinew SpatialOps::OperatorDatabase();
         const Uintah::Patch* const patch = pss->get(ip);
+
+        //tsaad: register an patch container as an operator for easy access to the Uintah patch
+        // inside of an expression.
+        opdb->register_new_operator<UintahPatchContainer>(scinew UintahPatchContainer(patch) );
+        
         build_operators( *patch, *opdb );
         PatchInfo& pi = patchInfoMap_[patch->getID()];
         pi.operators = opdb;
