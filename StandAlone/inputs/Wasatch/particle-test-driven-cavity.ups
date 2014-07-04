@@ -69,7 +69,7 @@
     </ForceOnGraph>
     
     <ParticleTransportEquations>
-      <NumberOfInitialParticles>10000</NumberOfInitialParticles>
+      <NumberOfInitialParticles>1000</NumberOfInitialParticles>
       <ParticleDensity name="p.rho" state="STATE_NONE"/>            
       <ParticleMass name="p.m" state="STATE_DYNAMIC">
       	<SourceTerm name="nothing" state="STATE_NONE"/>	
@@ -106,8 +106,8 @@
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
        <NameTag name="p.size" state="STATE_DYNAMIC"/>
-<!--        <RandomField low="1e-3" high="1e-1" seed="0.333"/>        -->
-       <Constant>0.001</Constant>
+       <RandomField low="1e-3" high="1e-1" seed="0.333"/>       
+<!--        <Constant>0.001</Constant> -->
     </BasicExpression>
 
 <!-- 
@@ -158,17 +158,23 @@
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
        <NameTag name="p.xw" state="STATE_DYNAMIC"/>
-       <RandomField low="0.0" high="1.0" seed="0.1">
-       <ExprLoHi type="SVOL" name="XSVOL" state="STATE_NONE"/>
-       </RandomField>
+       <ParticlePositionIC coordinate="X">
+       		<Bounds>
+       			<UsePatchBounds/>
+       		</Bounds>
+       		<Random seed="0.1"/>
+       </ParticlePositionIC>
     </BasicExpression>
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
        <NameTag name="p.yw" state="STATE_DYNAMIC"/>
-       <RandomField low="0.0" high="1.0" seed="0.3">
-       <ExprLoHi type="SVOL" name="YSVOL" state="STATE_NONE"/>       
-       </RandomField>
+       <ParticlePositionIC coordinate="Y">
+       		<Bounds>
+       			<UsePatchBounds/>
+       		</Bounds>
+       		<Random seed="0.2"/>
+       </ParticlePositionIC>
     </BasicExpression>
 
     <BasicExpression type="PARTICLE">
@@ -340,7 +346,7 @@
 				<upper>[1,1,0.1]</upper>
 				<resolution>[32,32,4]</resolution>
 				<!--extraCells>[1,1,0]</extraCells-->
-				<patches>[2,2,1]</patches>
+				<patches>[1,1,1]</patches>
 			</Box>
 			<periodic>[0,0,1]</periodic>
 		</Level>
