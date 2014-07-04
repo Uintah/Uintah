@@ -250,6 +250,7 @@ Arches::~Arches()
   }
 
   delete d_timeIntegrator;
+  delete d_rad_prop_calc; 
   if (d_doDQMOM) {
     delete d_dqmomSolver;
     delete d_partVel;
