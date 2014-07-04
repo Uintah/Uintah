@@ -31,6 +31,7 @@ RadProperties::~RadProperties( )
   }
 
   delete _props; 
+  delete _calc; 
 }
 
 
