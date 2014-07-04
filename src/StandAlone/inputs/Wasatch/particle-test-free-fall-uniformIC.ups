@@ -65,7 +65,7 @@
        <TaskList>initialization</TaskList>
        <NameTag name="p.xw" state="STATE_DYNAMIC"/>
         <ParticlePositionIC coordinate="X" bounds="PATCHBASED">
-       		<Uniform nparticles="484"/>
+       		<Uniform/>
        </ParticlePositionIC>
 
     </BasicExpression>
@@ -74,7 +74,7 @@
        <TaskList>initialization</TaskList>
        <NameTag name="p.yw" state="STATE_DYNAMIC"/>
         <ParticlePositionIC coordinate="Y" bounds="PATCHBASED">
-       		<Uniform nparticles="484" transversedir="true"/>
+       		<Uniform transversedir="true"/>
        </ParticlePositionIC>
     </BasicExpression>
 

@@ -120,10 +120,7 @@ namespace Wasatch{
       if (valParams->findBlock("Uniform")) {
         bool transverse = false;
         valParams->findBlock("Uniform")->getAttribute("transversedir", transverse);
-        std::cout << "transverse dir = " << transverse << std::endl;
-        int nParticles;
-        valParams->findBlock("Uniform")->getAttribute("nparticles",nParticles);
-        builder = scinew ParticleUniformIC::Builder( tag, nParticles, lo, hi, transverse, coord, usePatchBounds );
+        builder = scinew ParticleUniformIC::Builder( tag, lo, hi, transverse, coord, usePatchBounds );
       } else if (valParams->findBlock("Random")) {
         double seed = 0.0;
         valParams->findBlock("Random")->getAttribute("seed",seed);
