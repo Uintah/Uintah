@@ -106,17 +106,21 @@ namespace Wasatch{
       // parse coordinate
       std::string coord;
       valParams->getAttribute("coordinate",coord);
-            
+      // check what type of bounds we are using: specified or patch based?
+      std::string boundsType;
+      valParams->getAttribute("bounds",boundsType);
+      const bool usePatchBounds = (boundsType == "PATCHBASED");
       double lo = 0.0, hi = 1.0;
-      Uintah::ProblemSpecP boundsSpec = valParams->findBlock("Bounds");
-      bool usePatchBounds = boundsSpec->findBlock("UsePatchBounds");
-      if (boundsSpec->findBlock("Fixed")) {
-        boundsSpec->findBlock("Fixed")->getAttribute("low", lo);
-        boundsSpec->findBlock("Fixed")->getAttribute("high", hi);
+
+      if (valParams->findBlock("Bounds")) {
+        valParams->findBlock("Bounds")->getAttribute("low", lo);
+        valParams->findBlock("Bounds")->getAttribute("high", hi);
       }
       
       if (valParams->findBlock("Uniform")) {
-        bool transverse = valParams->findBlock("Uniform")->findBlock("TransverseDirection");
+        bool transverse = false;
+        valParams->findBlock("Uniform")->getAttribute("transversedir", transverse);
+        std::cout << "transverse dir = " << transverse << std::endl;
         int nParticles;
         valParams->findBlock("Uniform")->getAttribute("nparticles",nParticles);
         builder = scinew ParticleUniformIC::Builder( tag, nParticles, lo, hi, transverse, coord, usePatchBounds );

@@ -74,17 +74,14 @@
 
 			<ParticlePositionIC spec="OPTIONAL NO_DATA"
 													attribute1="coordinate REQUIRED STRING 'X,Y,Z'"
+													attribute2="bounds REQUIRED STRING 'SPECIFIED, PATCHBASED'"
 													children1="ONE_OF(CHILD Uniform,Random)">
-				<Bounds spec="REQUIRED NO_DATA"
-								children1="ONE_OF(CHILD Fixed,UsePatchBounds)">
-					<Fixed spec="OPTIONAL NO_DATA"
-								 attribute1="low REQUIRED DOUBLE"
-								 attribute2="high REQUIRED DOUBLE"/>
-					<UsePatchBounds spec="OPTIONAL NO_DATA"/>				       
-				</Bounds>
+				<Bounds spec="OPTIONAL NO_DATA" need_applies_to="bounds SPECIFIED"
+							  attribute1="low REQUIRED DOUBLE"
+							  attribute2="high REQUIRED DOUBLE"/>													
 				<Uniform spec="OPTIONAL NO_DATA"
-													 attribute1="nparticles  REQUIRED INTEGER">        
-					<TransverseDirection spec="OPTIONAL NO_DATA"/>
+								 attribute1="nparticles  REQUIRED INTEGER"
+								 attribute2="transversedir OPTIONAL BOOLEAN">        
 				</Uniform>
 				<Random spec="OPTIONAL NO_DATA"
 								attribute1="seed REQUIRED DOUBLE"/>
