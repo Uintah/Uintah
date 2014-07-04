@@ -58,9 +58,9 @@
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[3,4,4]</upper>
-        <resolution>[15,25,25]</resolution>
+        <resolution>[16,25,25]</resolution>
         <extraCells>[1,1,1]</extraCells>
-        <patches>[1,1,1]</patches>
+        <patches>[2,2,2]</patches>
       </Box>
     </Level>
     <BoundaryConditions>
