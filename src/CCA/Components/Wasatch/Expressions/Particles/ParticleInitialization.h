@@ -177,7 +177,7 @@ evaluate()
   // (The seed is unsigned, otherwise the wrong overload may be selected
   // when using mt19937 as the base_generator_type.)
   // seed the random number generator based on the MPI rank
-  const int pid =  Uintah::Parallel::getMPIRank();
+  const int pid =  patchContainer_->get_uintah_patch()->getID();
   base_generator_type generator((unsigned) ( (pid+1) * seed_ * std::time(0) ));
   
   boost::uniform_real<> rand_dist(low,high);
