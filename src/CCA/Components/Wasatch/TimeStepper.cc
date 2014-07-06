@@ -49,9 +49,8 @@
 #include <Core/Grid/SimulationState.h>
 #include <sci_defs/cuda_defs.h>
 
-
 using std::endl;
-namespace SO=SpatialOps::structured;
+namespace so=SpatialOps;
 
 
 namespace Wasatch{
@@ -158,10 +157,10 @@ namespace Wasatch{
 
       // plug in time advance expression
       if (rkStage == 1) {
-        create_time_advance_expressions<SO::SVolField>(scalarFields_    , solnGraphHelper_, timeInt_);
-        create_time_advance_expressions<SO::XVolField>(xVolFields_      , solnGraphHelper_, timeInt_);
-        create_time_advance_expressions<SO::YVolField>(yVolFields_      , solnGraphHelper_, timeInt_);
-        create_time_advance_expressions<SO::ZVolField>(zVolFields_      , solnGraphHelper_, timeInt_);
+        create_time_advance_expressions<so::SVolField>(scalarFields_    , solnGraphHelper_, timeInt_);
+        create_time_advance_expressions<so::XVolField>(xVolFields_      , solnGraphHelper_, timeInt_);
+        create_time_advance_expressions<so::YVolField>(yVolFields_      , solnGraphHelper_, timeInt_);
+        create_time_advance_expressions<so::ZVolField>(zVolFields_      , solnGraphHelper_, timeInt_);
         create_time_advance_expressions<ParticleField>(particleFields_  , solnGraphHelper_, timeInt_);
       }
       
@@ -243,41 +242,41 @@ namespace Wasatch{
   //------------------------------------------------------------------
 
   template<>
-  inline std::set< TimeStepper::FieldInfo<SpatialOps::structured::SVolField> >&
-  TimeStepper::field_info_selctor<SpatialOps::structured::SVolField>()
+  inline std::set< TimeStepper::FieldInfo<so::SVolField> >&
+  TimeStepper::field_info_selctor<so::SVolField>()
   {
     return scalarFields_;
   }
   template<>
-  inline std::set<TimeStepper::FieldInfo<SpatialOps::structured::XVolField> >&
-  TimeStepper::field_info_selctor<SpatialOps::structured::XVolField>()
+  inline std::set<TimeStepper::FieldInfo<so::XVolField> >&
+  TimeStepper::field_info_selctor<so::XVolField>()
   {
     return xVolFields_;
   }
   template<>
-  inline std::set<TimeStepper::FieldInfo<SpatialOps::structured::YVolField> >&
-  TimeStepper::field_info_selctor<SpatialOps::structured::YVolField>()
+  inline std::set<TimeStepper::FieldInfo<so::YVolField> >&
+  TimeStepper::field_info_selctor<so::YVolField>()
   {
     return yVolFields_;
   }
   template<>
-  inline std::set<TimeStepper::FieldInfo<SpatialOps::structured::ZVolField> >&
-  TimeStepper::field_info_selctor<SpatialOps::structured::ZVolField>()
+  inline std::set<TimeStepper::FieldInfo<so::ZVolField> >&
+  TimeStepper::field_info_selctor<so::ZVolField>()
   {
     return zVolFields_;
   }
   template<>
-  inline std::set<TimeStepper::FieldInfo<SpatialOps::Particle::ParticleField> >&
-  TimeStepper::field_info_selctor<SpatialOps::Particle::ParticleField>()
+  inline std::set<TimeStepper::FieldInfo<so::Particle::ParticleField> >&
+  TimeStepper::field_info_selctor<so::Particle::ParticleField>()
   {
     return particleFields_;
   }
 
   //------------------------------------------------------------------
 
-  template void TimeStepper::add_equation<SpatialOps::structured::SVolField>( const std::string&, const Expr::ExpressionID& );
-  template void TimeStepper::add_equation<SpatialOps::structured::XVolField>( const std::string&, const Expr::ExpressionID& );
-  template void TimeStepper::add_equation<SpatialOps::structured::YVolField>( const std::string&, const Expr::ExpressionID& );
-  template void TimeStepper::add_equation<SpatialOps::structured::ZVolField>( const std::string&, const Expr::ExpressionID& );
-  template void TimeStepper::add_equation<SpatialOps::Particle::ParticleField>( const std::string&, const Expr::ExpressionID& );
+  template void TimeStepper::add_equation<so::SVolField              >( const std::string&, const Expr::ExpressionID& );
+  template void TimeStepper::add_equation<so::XVolField              >( const std::string&, const Expr::ExpressionID& );
+  template void TimeStepper::add_equation<so::YVolField              >( const std::string&, const Expr::ExpressionID& );
+  template void TimeStepper::add_equation<so::ZVolField              >( const std::string&, const Expr::ExpressionID& );
+  template void TimeStepper::add_equation<so::Particle::ParticleField>( const std::string&, const Expr::ExpressionID& );
 } // namespace Wasatch

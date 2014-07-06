@@ -123,7 +123,7 @@ evaluate()
   const FieldT& x = *(this->x_);
   const FieldT& y = *(this->y_);
   
-  typedef SpatialOps::structured::SingleValueField TimeField;
+  typedef SpatialOps::SingleValueField TimeField;
   const TimeField& t = *(this->t_);
   
   SpatFldPtr<FieldT> xh_ = SpatialFieldStore::get<FieldT>( result );
@@ -230,7 +230,7 @@ evaluate()
 
   const FieldT& x = *(this->x_);
   const FieldT& y = *(this->y_);
-  typedef SpatialOps::structured::SingleValueField TimeField;
+  typedef SpatialOps::SingleValueField TimeField;
   const TimeField& t = *(this->t_);
   
   SpatFldPtr<FieldT> s0_ = SpatialFieldStore::get<FieldT>( result );
@@ -349,7 +349,7 @@ evaluate()
   const FieldT& x = *(this->x_);
   const FieldT& y = *(this->y_);
   
-  typedef SpatialOps::structured::SingleValueField TimeField;
+  typedef SpatialOps::SingleValueField TimeField;
   const TimeField& t = *(this->t_);
   
   SpatFldPtr<FieldT> xh_ = SpatialFieldStore::get<FieldT>( result );

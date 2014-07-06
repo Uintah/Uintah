@@ -38,7 +38,7 @@ namespace Wasatch{
  *         time.  May be needed for time-varying BCs, etc.
  */
 class SetCurrentTime
- : public Expr::Expression<SpatialOps::structured::SingleValueField>
+ : public Expr::Expression<SpatialOps::SingleValueField>
 {
   int rkStage_;
   double deltat_, simTime_, timeStep_;

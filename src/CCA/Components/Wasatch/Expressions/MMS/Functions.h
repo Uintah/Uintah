@@ -82,7 +82,7 @@ public:
   void evaluate();
 
 private:
-  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  typedef typename SpatialOps::SingleValueField TimeField;
   SineTime( const Expr::Tag& tTag );
   const Expr::Tag tTag_;
   const TimeField* t_;
@@ -266,7 +266,6 @@ ReadFromFileExpression<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  using namespace SpatialOps::structured;
   FieldT& phi = this->value();
   phi <<= 0.0;
 

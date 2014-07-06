@@ -449,7 +449,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   const Expr::Tag timeStepTag( "timestep", Expr::STATE_NONE );
   if( !(solngh->exprFactory->have_entry( timeTag )) ) {
     // register placeholder expressions for time and timestep
-    typedef Expr::PlaceHolder<SpatialOps::structured::SingleValueField>  TimeT;
+    typedef Expr::PlaceHolder<SpatialOps::SingleValueField>  TimeT;
     solngh->exprFactory->register_expression( new TimeT::Builder(timeTag) );
     solngh->exprFactory->register_expression( new TimeT::Builder(timeStepTag) );    
   }
@@ -1287,9 +1287,9 @@ Arches::scheduleInitialize(const LevelP& level,
 //
 //    int pid = patch->getID(); 
 //
-//    SpatialOps::structured::build_stencils( size[0], size[1], size[2],
-//                                               L[0],    L[1],    L[2],
-//                                             pi._sodb );
+//    SpatialOps::build_stencils( size[0], size[1], size[2],
+//                                L[0],    L[1],    L[2],
+//                                pi._sodb );
 //
 //    opr.patch_info_map.insert(std::make_pair(pid, pi)); 
 //

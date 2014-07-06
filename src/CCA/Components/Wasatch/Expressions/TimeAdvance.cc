@@ -158,9 +158,9 @@ TimeAdvance<FieldT>::Builder::build() const
 //==========================================================================
 // Explicit template instantiation for supported versions of this expression
 #include <spatialops/structured/FVStaggered.h>
-template class TimeAdvance< SpatialOps::structured::SVolField >;
-template class TimeAdvance< SpatialOps::structured::XVolField >;
-template class TimeAdvance< SpatialOps::structured::YVolField >;
-template class TimeAdvance< SpatialOps::structured::ZVolField >;
+template class TimeAdvance< SpatialOps::SVolField >;
+template class TimeAdvance< SpatialOps::XVolField >;
+template class TimeAdvance< SpatialOps::YVolField >;
+template class TimeAdvance< SpatialOps::ZVolField >;
 template class TimeAdvance< SpatialOps::Particle::ParticleField >;
 //==========================================================================

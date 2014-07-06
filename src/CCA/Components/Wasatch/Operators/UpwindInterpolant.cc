@@ -75,7 +75,6 @@ UpwindInterpolant<SrcT,DestT>::
 apply_to_field( const SrcT& src, DestT& dest )
 {
   using namespace SpatialOps;
-  using namespace SpatialOps::structured;
 
   typedef typename OperatorTypeBuilder<Interpolant,SrcT,DestT>::type::PointCollectionType StencilPts;
   typedef typename StencilPts::Collection::Point LowStPt;
@@ -137,10 +136,8 @@ apply_to_field( const SrcT& src, DestT& dest )
 
 //==================================================================
 // Explicit template instantiation
-namespace SS = SpatialOps::structured;
-
-template class UpwindInterpolant< SS::SVolField, SS::SSurfXField >;
-template class UpwindInterpolant< SS::SVolField, SS::SSurfYField >;
-template class UpwindInterpolant< SS::SVolField, SS::SSurfZField >;
+template class UpwindInterpolant< SpatialOps::SVolField, SpatialOps::SSurfXField >;
+template class UpwindInterpolant< SpatialOps::SVolField, SpatialOps::SSurfYField >;
+template class UpwindInterpolant< SpatialOps::SVolField, SpatialOps::SSurfZField >;
 
 //==================================================================

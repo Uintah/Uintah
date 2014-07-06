@@ -3,14 +3,14 @@
 //-- Boost includes --//
 #include <boost/foreach.hpp>
 
-namespace SS = SpatialOps::structured;
+namespace so = SpatialOps;
 
 ReductionBase::
 ReductionBase( const Expr::Tag& resultTag,
                const Expr::Tag& srcTag,
                const ReductionEnum reductionName,
                const bool printVar )
-: Expr::Expression<SS::SingleValueField>(),
+: Expr::Expression<so::SingleValueField>(),
   srcTag_( srcTag ),
   reductionName_( reductionName ),
   printVar_(printVar)
@@ -75,7 +75,7 @@ schedule_set_reduction_vars( const Uintah::LevelP& level,
   Uintah::Task* reductionVarTask = scinew Uintah::Task( "set reduction variables", this, &ReductionBase::populate_reduction_variable, RKStage );
   // we require this perpatch variable
   reductionVarTask->requires( Uintah::Task::NewDW, thisVarLabel_,
-                              Wasatch::get_uintah_ghost_type<SS::SingleValueField>() );
+                              Wasatch::get_uintah_ghost_type<so::SingleValueField>() );
   // we compute the reduction on this per patch variable
   reductionVarTask->computes( rkRedVarLbls_[RKStage - 1] ); // RKStage starts at 1
   sched->addTask( reductionVarTask,

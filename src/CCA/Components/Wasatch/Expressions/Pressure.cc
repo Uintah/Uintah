@@ -327,7 +327,6 @@ void
 Pressure::evaluate()
 {
   using namespace SpatialOps;
-  namespace SS = SpatialOps::structured;
 
   typedef std::vector<SVolField*> SVolFieldVec;
   SVolFieldVec& results = this->get_value_vec();
@@ -380,7 +379,7 @@ Pressure::evaluate()
 
 void Pressure::process_embedded_boundaries( const SVolField* const volfraction )
 {
-  using SpatialOps::structured::IntVec;
+  using SpatialOps::IntVec;
 
   // cell offset used to calculate local cell index with respect to patch.
   const int ng = get_n_ghost<SVolField>();

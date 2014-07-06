@@ -41,7 +41,7 @@ bind_fields( const Expr::FieldManagerList& fml )
 {
   u_ = &fml.template field_ref<FieldT>( momTag_ );
   const Wasatch::TagNames& tagNames = Wasatch::TagNames::self();
-  dt_ = &fml.template field_ref<SpatialOps::structured::SingleValueField>( tagNames.dt );
+  dt_ = &fml.template field_ref<SpatialOps::SingleValueField>( tagNames.dt );
 }
 
 template<typename FieldT>
@@ -50,7 +50,6 @@ OutflowBC<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  using namespace SpatialOps::structured;
   FieldT& f = this->value();
   
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {

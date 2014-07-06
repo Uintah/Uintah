@@ -46,10 +46,10 @@
 template< typename VelT >
 class DiffusiveVelocity : public Expr::Expression<VelT>
 {
-  typedef typename SpatialOps::structured::VolType<VelT>::VolField ScalarT;
+  typedef typename SpatialOps::VolType<VelT>::VolField ScalarT;
 
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Gradient,   ScalarT,  VelT>::type  GradT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,ScalarT,  VelT>::type  InterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Gradient,   ScalarT,  VelT>::type  GradT;
+  typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,ScalarT,  VelT>::type  InterpT;
 
   const bool isTurbulent_, isConstCoef_;
   const Expr::Tag phiTag_, coefTag_, turbDiffTag_;

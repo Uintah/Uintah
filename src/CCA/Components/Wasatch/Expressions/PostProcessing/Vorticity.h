@@ -34,36 +34,36 @@
 template< typename Vel1T, typename Vel2T> struct VorticityFaceSelector;
 
 // for omega_x = dw/dy - dv/dz
-template<> struct VorticityFaceSelector<SpatialOps::structured::ZVolField, SpatialOps::structured::YVolField>
+template<> struct VorticityFaceSelector<SpatialOps::ZVolField, SpatialOps::YVolField>
 {
 private:
-  typedef SpatialOps::structured::ZVolField Vel1T;
-  typedef SpatialOps::structured::YVolField Vel2T;
+  typedef SpatialOps::ZVolField Vel1T;
+  typedef SpatialOps::YVolField Vel2T;
 public:
-  typedef SpatialOps::structured::FaceTypes<Vel1T>::YFace Vel1FaceT;
-  typedef SpatialOps::structured::FaceTypes<Vel2T>::ZFace Vel2FaceT;
+  typedef SpatialOps::FaceTypes<Vel1T>::YFace Vel1FaceT;
+  typedef SpatialOps::FaceTypes<Vel2T>::ZFace Vel2FaceT;
 };
 
 // for omega_y = du/dz - dw/dx
-template<> struct VorticityFaceSelector<SpatialOps::structured::XVolField, SpatialOps::structured::ZVolField>
+template<> struct VorticityFaceSelector<SpatialOps::XVolField, SpatialOps::ZVolField>
 {
 private:
-  typedef SpatialOps::structured::XVolField Vel1T;
-  typedef SpatialOps::structured::ZVolField Vel2T;
+  typedef SpatialOps::XVolField Vel1T;
+  typedef SpatialOps::ZVolField Vel2T;
 public:
-  typedef SpatialOps::structured::FaceTypes<Vel1T>::ZFace Vel1FaceT;
-  typedef SpatialOps::structured::FaceTypes<Vel2T>::XFace Vel2FaceT;
+  typedef SpatialOps::FaceTypes<Vel1T>::ZFace Vel1FaceT;
+  typedef SpatialOps::FaceTypes<Vel2T>::XFace Vel2FaceT;
 };
 
 // for omega_z = dv/dx - du/dy
-template<> struct VorticityFaceSelector<SpatialOps::structured::YVolField, SpatialOps::structured::XVolField>
+template<> struct VorticityFaceSelector<SpatialOps::YVolField, SpatialOps::XVolField>
 {
 private:
-  typedef SpatialOps::structured::YVolField Vel1T;
-  typedef SpatialOps::structured::XVolField Vel2T;
+  typedef SpatialOps::YVolField Vel1T;
+  typedef SpatialOps::XVolField Vel2T;
 public:
-  typedef SpatialOps::structured::FaceTypes<Vel1T>::XFace Vel1FaceT;
-  typedef SpatialOps::structured::FaceTypes<Vel2T>::YFace Vel2FaceT;
+  typedef SpatialOps::FaceTypes<Vel1T>::XFace Vel1FaceT;
+  typedef SpatialOps::FaceTypes<Vel2T>::YFace Vel2FaceT;
 };
 
 /**
@@ -87,11 +87,11 @@ class Vorticity
   typedef typename VorticityFaceSelector<Vel1T, Vel2T>::Vel1FaceT Vel1FaceT;
   typedef typename VorticityFaceSelector<Vel1T, Vel2T>::Vel2FaceT Vel2FaceT;
 
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, Vel1T, Vel1FaceT >::type Vel1GradT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, Vel2T, Vel2FaceT >::type Vel2GradT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, Vel1T, Vel1FaceT >::type Vel1GradT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, Vel2T, Vel2FaceT >::type Vel2GradT;
 
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, Vel1FaceT, FieldT >::type InterpVel1FaceT2FieldT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, Vel2FaceT, FieldT >::type InterpVel2FaceT2FieldT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, Vel1FaceT, FieldT >::type InterpVel1FaceT2FieldT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, Vel2FaceT, FieldT >::type InterpVel2FaceT2FieldT;
 
   const Vel1T* vel1_;
   const Vel2T* vel2_;

@@ -52,13 +52,13 @@ class WallDistance
   const SVolField* phi_;
    
   // gradient operators are only here to extract spacing information out of them
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, SVolField, XVolField >::type GradXT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, SVolField, YVolField >::type GradYT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, SVolField, ZVolField >::type GradZT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, SVolField, XVolField >::type GradXT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, SVolField, YVolField >::type GradYT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, SVolField, ZVolField >::type GradZT;
   
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, SVolField >::type XtoSInterpT;  
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, SVolField >::type YtoSInterpT;  
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, ZVolField, SVolField >::type ZtoSInterpT;  
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, SVolField >::type XtoSInterpT;  
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, SVolField >::type YtoSInterpT;  
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, ZVolField, SVolField >::type ZtoSInterpT;  
   
   const GradXT*  gradXOp_;            ///< x-component of the gradient operator
   const GradYT*  gradYOp_;            ///< y-component of the gradient operator  

@@ -148,10 +148,10 @@ DiffusiveVelocity<VelT>::Builder::build() const
 #include <spatialops/structured/FVStaggered.h>
 
 #define DECLARE_DIFF_VELOCITY( VOL )                                                            \
-  template class DiffusiveVelocity< SpatialOps::structured::FaceTypes<VOL>::XFace >;   \
-  template class DiffusiveVelocity< SpatialOps::structured::FaceTypes<VOL>::YFace >;   \
-  template class DiffusiveVelocity< SpatialOps::structured::FaceTypes<VOL>::ZFace >;
+  template class DiffusiveVelocity< SpatialOps::FaceTypes<VOL>::XFace >;   \
+  template class DiffusiveVelocity< SpatialOps::FaceTypes<VOL>::YFace >;   \
+  template class DiffusiveVelocity< SpatialOps::FaceTypes<VOL>::ZFace >;
 
-DECLARE_DIFF_VELOCITY( SpatialOps::structured::SVolField );
+DECLARE_DIFF_VELOCITY( SpatialOps::SVolField );
 //
 //==========================================================================

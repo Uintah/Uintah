@@ -63,7 +63,7 @@ template < typename FieldT >
 class Extrapolant {
   const std::vector<bool> bcMinus_;
   const std::vector<bool> bcPlus_;
-  std::vector<SpatialOps::structured::IntVec> unitNormal_;
+  std::vector<SpatialOps::IntVec> unitNormal_;
 
 public:
 

@@ -25,7 +25,7 @@ template< typename FieldT >
 class SolnVarEst 
   : public Expr::Expression<FieldT>
 {  
-  typedef SpatialOps::structured::SingleValueField TimeField;
+  typedef SpatialOps::SingleValueField TimeField;
 
   const FieldT *solnVarOld_, *solnVarRHS_;
 

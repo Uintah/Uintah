@@ -47,7 +47,7 @@ SampleTask::initialize( const Patch* patch, UintahVarMap& var_map,
   using namespace SpatialOps;
   using SpatialOps::operator *; 
 
-  typedef SpatialOps::structured::SVolField   SVol;
+  typedef SpatialOps::SVolField   SVol;
 
   SVol* const field = get_so_field<SVol>( "a_sample_variable", var_map, patch, 0, *this ); 
   SVol* const result = get_so_field<SVol>( "a_result_variable", var_map, patch, 0, *this ); 
@@ -86,12 +86,12 @@ SampleTask::eval( const Patch* patch, UintahVarMap& var_map,
   using namespace SpatialOps;
   using SpatialOps::operator *; 
 
-  typedef SpatialOps::structured::SVolField   SVol;
-  typedef SpatialOps::structured::SSurfXField SurfX;
-  typedef SpatialOps::structured::SSurfYField SurfY;
-  typedef SpatialOps::structured::SSurfZField SurfZ;
+  typedef SpatialOps::SVolField   SVol;
+  typedef SpatialOps::SSurfXField SurfX;
+  typedef SpatialOps::SSurfYField SurfY;
+  typedef SpatialOps::SSurfZField SurfZ;
 
-  typedef SpatialOps::structured::BasicOpTypes<SVol>::GradX GradX;
+  typedef SpatialOps::BasicOpTypes<SVol>::GradX GradX;
   const GradX* const gradx = opr.retrieve_operator<GradX>();
 
   //Get uintah fields for work: 

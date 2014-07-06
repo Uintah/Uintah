@@ -47,8 +47,8 @@ template< typename FieldT >
 class MomRHS
  : public Expr::Expression<FieldT>
 {
-  typedef SpatialOps::structured::SVolField PFieldT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, PFieldT, FieldT >::type Grad;
+  typedef SpatialOps::SVolField PFieldT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, PFieldT, FieldT >::type Grad;
 
   const Expr::Tag pressuret_, rhspartt_, volfract_, emptyTag_;
 

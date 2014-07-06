@@ -139,9 +139,9 @@ namespace Wasatch {
 //    if (patch->getBCType(Uintah::Patch::yplus)==Uintah::Patch::None) hasPlusFace[1]=true;
 //    if (patch->getBCType(Uintah::Patch::zplus)==Uintah::Patch::None) hasPlusFace[2]=true;
     // get the dimensions of this patch
-    namespace SS = SpatialOps::structured;
+    using SpatialOps::IntVec;
     const SCIRun::IntVector patchDim_ = patch->getCellHighIndex();
-    const SS::IntVec patchDim(patchDim_[0],patchDim_[1],patchDim_[2]);
+    const IntVec patchDim(patchDim_[0],patchDim_[1],patchDim_[2]);
     const Uintah::Vector spacing = patch->dCell();
     const double dx = spacing[0];
     const double dy = spacing[1];
@@ -175,7 +175,7 @@ namespace Wasatch {
         SCIRun::IntVector insideCellDir = patch->faceDirection(face);
         const bool hasExtraCells = ( patch->getExtraCells() != SCIRun::IntVector(0,0,0) );
         
-        SS::IntVec bcPointGhostOffset(0,0,0);
+        IntVec bcPointGhostOffset(0,0,0);
         double denom   = 1.0;
         double spacing = 1.0;
         
@@ -193,20 +193,20 @@ namespace Wasatch {
         const SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0);
 
 
-        if (foundIterator) {
+        if( foundIterator ){
 
-          if (bc_kind=="Dirichlet") {
+          if( bc_kind=="Dirichlet" ){
             for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
               SCIRun::IntVector bc_point_indices(*bound_ptr);
               
               bc_point_indices = bc_point_indices - patchCellOffset;
               
-              const SS::IntVec   intCellIJK( bc_point_indices[0],
-                                             bc_point_indices[1],
-                                             bc_point_indices[2] );
-              const SS::IntVec ghostCellIJK( bc_point_indices[0]+bcPointGhostOffset[0],
-                                             bc_point_indices[1]+bcPointGhostOffset[1],
-                                             bc_point_indices[2]+bcPointGhostOffset[2] );
+              const IntVec   intCellIJK( bc_point_indices[0],
+                                         bc_point_indices[1],
+                                         bc_point_indices[2] );
+              const IntVec ghostCellIJK( bc_point_indices[0]+bcPointGhostOffset[0],
+                                         bc_point_indices[1]+bcPointGhostOffset[1],
+                                         bc_point_indices[2]+bcPointGhostOffset[2] );
               
               const int iInterior = poissonField.window_without_ghost().flat_index( hasExtraCells ? ghostCellIJK : intCellIJK  );
 //            const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);
@@ -214,27 +214,29 @@ namespace Wasatch {
 //            poissonRHS[iInterior] += bc_value/denom;
               poissonRHS[iInterior] += 2.0*bc_value/denom;
             }
-          } else if (bc_kind=="Neumann") {
+          }
+          else if( bc_kind=="Neumann" ){
             for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
               SCIRun::IntVector bc_point_indices(*bound_ptr);
               
               bc_point_indices = bc_point_indices - patchCellOffset;
                             
-              const SS::IntVec   intCellIJK( bc_point_indices[0],
-                                             bc_point_indices[1],
-                                             bc_point_indices[2] );
-              
-              const SS::IntVec ghostCellIJK( bc_point_indices[0]+bcPointGhostOffset[0],
-                                             bc_point_indices[1]+bcPointGhostOffset[1],
-                                             bc_point_indices[2]+bcPointGhostOffset[2] );
-              
+              const IntVec   intCellIJK( bc_point_indices[0],
+                                         bc_point_indices[1],
+                                         bc_point_indices[2] );
+
+              const IntVec ghostCellIJK( bc_point_indices[0]+bcPointGhostOffset[0],
+                                         bc_point_indices[1]+bcPointGhostOffset[1],
+                                         bc_point_indices[2]+bcPointGhostOffset[2] );
+
               const int iInterior = poissonField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
 //            const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);
 //            const double ghostValue = spacing*bc_value + poissonField[iInterior];
 //            poissonRHS[iInterior] += ghostValue/denom;
               poissonRHS[iInterior] += spacing*bc_value/denom;
             }
-          } else {
+          }
+          else {
             return;
           }
         }
@@ -265,9 +267,9 @@ namespace Wasatch {
      boundary conditions
      */
     // get the dimensions of this patch
-    namespace SS = SpatialOps::structured;
+    using SpatialOps::IntVec;
     const SCIRun::IntVector patchDim_ = patch->getCellHighIndex();
-    const SS::IntVec patchDim(patchDim_[0],patchDim_[1],patchDim_[2]);
+    const IntVec patchDim(patchDim_[0],patchDim_[1],patchDim_[2]);
     const Uintah::Vector spacing = patch->dCell();
     const double dx = spacing[0];
     const double dy = spacing[1];
@@ -451,7 +453,7 @@ namespace Wasatch {
       }
       // remember, indexing is local for SpatialOps so we must offset by the patch's low index
       const SCIRun::IntVector refCellWithOffset = refCell - patch->getCellLowIndex(0);
-      const SpatialOps::structured::IntVec refCellIJK(refCellWithOffset.x(),refCellWithOffset.y(),refCellWithOffset.z());
+      const SpatialOps::IntVec refCellIJK(refCellWithOffset.x(),refCellWithOffset.y(),refCellWithOffset.z());
       const int irefCell = poissonRHS.window_without_ghost().flat_index(refCellIJK);
       poissonRHS[irefCell] = refpoissonValue;
 
@@ -460,12 +462,12 @@ namespace Wasatch {
       const double dx2 = spacing[0]*spacing[0];
       const double dy2 = spacing[1]*spacing[1];
       const double dz2 = spacing[2]*spacing[2];
-      poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(1,0,0) ) ] += refpoissonValue/dx2;
-      poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(0,1,0) ) ] += refpoissonValue/dy2;
-      poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(0,0,1) ) ] += refpoissonValue/dz2;
-      poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(-1,0,0) )] += refpoissonValue/dx2;
-      poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(0,-1,0) )] += refpoissonValue/dy2;
-      poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::structured::IntVec(0,0,-1) )] += refpoissonValue/dz2;
+      poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::IntVec(1,0,0) ) ] += refpoissonValue/dx2;
+      poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::IntVec(0,1,0) ) ] += refpoissonValue/dy2;
+      poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::IntVec(0,0,1) ) ] += refpoissonValue/dz2;
+      poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::IntVec(-1,0,0) )] += refpoissonValue/dx2;
+      poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::IntVec(0,-1,0) )] += refpoissonValue/dy2;
+      poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::IntVec(0,0,-1) )] += refpoissonValue/dz2;
     }
   }
 
@@ -488,9 +490,9 @@ namespace Wasatch {
 //    if (patch->getBCType(Uintah::Patch::yplus)==Uintah::Patch::None) hasPlusFace[1]=true;
 //    if (patch->getBCType(Uintah::Patch::zplus)==Uintah::Patch::None) hasPlusFace[2]=true;
     // get the dimensions of this patch
-    namespace SS = SpatialOps::structured;
+    using SpatialOps::IntVec;
     const SCIRun::IntVector patchDim_ = patch->getCellHighIndex();
-    const SS::IntVec patchDim(patchDim_[0],patchDim_[1],patchDim_[2]);
+    const IntVec patchDim(patchDim_[0],patchDim_[1],patchDim_[2]);
     const Uintah::Vector spacing = patch->dCell();
     const double dx = spacing[0];
     const double dy = spacing[1];
@@ -523,7 +525,7 @@ namespace Wasatch {
           SCIRun::IntVector insideCellDir = patch->faceDirection(face);
           const bool hasExtraCells = ( patch->getExtraCells() != SCIRun::IntVector(0,0,0) );
           
-          SS::IntVec bcPointGhostOffset(0,0,0);
+          IntVec bcPointGhostOffset(0,0,0);
           double spacing = 1.0;
           
           switch( face ){
@@ -545,10 +547,10 @@ namespace Wasatch {
 
               bc_point_indices = bc_point_indices - patchCellOffset;
               
-              const SS::IntVec   intCellIJK( bc_point_indices[0],
+              const IntVec   intCellIJK( bc_point_indices[0],
                                              bc_point_indices[1],
                                              bc_point_indices[2] );
-              const SS::IntVec ghostCellIJK( bc_point_indices[0]+bcPointGhostOffset[0],
+              const IntVec ghostCellIJK( bc_point_indices[0]+bcPointGhostOffset[0],
                                              bc_point_indices[1]+bcPointGhostOffset[1],
                                              bc_point_indices[2]+bcPointGhostOffset[2] );
 
@@ -562,10 +564,10 @@ namespace Wasatch {
 
               bc_point_indices = bc_point_indices - patchCellOffset;
 
-              const SS::IntVec   intCellIJK( bc_point_indices[0],
+              const IntVec   intCellIJK( bc_point_indices[0],
                                              bc_point_indices[1],
                                              bc_point_indices[2] );
-              const SS::IntVec ghostCellIJK( bc_point_indices[0]+bcPointGhostOffset[0],
+              const IntVec ghostCellIJK( bc_point_indices[0]+bcPointGhostOffset[0],
                                              bc_point_indices[1]+bcPointGhostOffset[1],
                                              bc_point_indices[2]+bcPointGhostOffset[2] );
 
@@ -580,11 +582,11 @@ namespace Wasatch {
 
               bc_point_indices = bc_point_indices - patchCellOffset;
 
-              const SS::IntVec   intCellIJK( bc_point_indices[0],
+              const IntVec   intCellIJK( bc_point_indices[0],
                                              bc_point_indices[1],
                                              bc_point_indices[2] );
 
-              const SS::IntVec extraCellIJK( bc_point_indices[0] + bcPointGhostOffset[0],
+              const IntVec extraCellIJK( bc_point_indices[0] + bcPointGhostOffset[0],
                                              bc_point_indices[1] + bcPointGhostOffset[1],
                                              bc_point_indices[2] + bcPointGhostOffset[2] );
               

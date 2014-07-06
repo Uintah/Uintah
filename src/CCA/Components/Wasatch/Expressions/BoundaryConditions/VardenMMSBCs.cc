@@ -44,8 +44,8 @@ VarDen1DMMSDensity<FieldT>::evaluate()
 
   const double bcValue = -1 / ( (5/(exp(1125/( t + 10)) * (2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp(1125 / (t + 10)) * (2 * t + 5)));
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+    std::vector<SpatialOps::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
+    std::vector<SpatialOps::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
     for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
       f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
     }
@@ -70,8 +70,8 @@ VarDen1DMMSMixtureFraction<FieldT>::evaluate()
   const double t = (*t_)[0];  // this breaks GPU.
   
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+    std::vector<SpatialOps::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
+    std::vector<SpatialOps::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
     const double bcValue = ( (5. / (2. * t +5.)) * exp(-1125 / (10. + t)) );
     for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
       f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
@@ -90,36 +90,38 @@ void
 VarDen1DMMSMomentum<FieldT>::evaluate()
 {
   using namespace SpatialOps;
-  namespace SS = SpatialOps::structured;
   FieldT& f = this->value();
   const double ci = this->ci_;
   const double cg = this->cg_;
   const double t = (*t_)[0];
   
-  if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
-    std::vector<SS::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
-    std::vector<SS::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
-    if (this->isStaggered_) {
-      if (side_==SS::PLUS_SIDE) {
+  if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
+    std::vector<IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
+    std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+    if( this->isStaggered_ ){
+      if( side_==PLUS_SIDE ){
         const double bcValue = (5 * t * sin((30 * M_PI )/(3 * t + 30)))/(( (t * t) + 1)*((5 / (exp(1125/(t + 10))*(2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp(1125/(t + 10))*(2 * t + 5))));
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
           f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
           f(*ii) = ( bcValue - ci*f(*ig) ) / cg;
         }
-      } else if (side_ == SS::MINUS_SIDE) {
+      }
+      else if( side_ == MINUS_SIDE ){
         const double bcValue = (5 * t * sin((-30 * M_PI )/(3 * t + 30)))/(( (t * t) + 1)*((5 / (exp(1125/(t + 10))*(2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp(1125/(t + 10))*(2 * t + 5))));
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
           f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
           f(*ii) = ( bcValue - ci*f(*ii) ) / cg;
         }
       }
-    } else {
-      if (side_==SS::PLUS_SIDE) {
+    }
+    else {
+      if( side_==PLUS_SIDE ){
         const double bcValue = (5 * t * sin((30 * M_PI )/(3 * t + 30)))/(( (t * t) + 1)*((5 / (exp(1125/(t + 10))*(2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp(1125/(t + 10))*(2 * t + 5))));
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
           f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
         }
-      } else if (side_ == SS::MINUS_SIDE) {
+      }
+      else if( side_ == MINUS_SIDE ){
         const double bcValue = (5 * t * sin((-30 * M_PI )/(3 * t + 30)))/(( (t * t) + 1)*((5 / (exp(1125/(t + 10))*(2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp(1125/(t + 10))*(2 * t + 5))));
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
           f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
@@ -146,8 +148,8 @@ VarDen1DMMSSolnVar<FieldT>::evaluate()
   const double t = (*t_)[0];  // this breaks GPU
   
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+    std::vector<SpatialOps::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
+    std::vector<SpatialOps::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
     const double bcValue = -5/(exp(1125/(t + 10))*(2 * t + 5) * ((5/(exp(1125/(t + 10))*(2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp(1125/(t + 10))*(2 * t + 5))));
     for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
       f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
@@ -166,7 +168,6 @@ void
 VarDen1DMMSVelocity<FieldT>::evaluate()
 {
   using namespace SpatialOps;
-  namespace SS = SpatialOps::structured;
   
   FieldT& f = this->value();
   const double ci = this->ci_;
@@ -174,16 +175,16 @@ VarDen1DMMSVelocity<FieldT>::evaluate()
   const double t = (*t_)[0];  // this breaks GPU
   
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
-    std::vector<SS::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
-    std::vector<SS::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+    std::vector<IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
+    std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
     if (this->isStaggered_) {
-      if (side_== SS::PLUS_SIDE) {
+      if (side_== PLUS_SIDE) {
         const double bcValue = ( ((-5 * t)/( t * t + 1)) * sin(10 * M_PI / (t + 10) ) );
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
           f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
           f(*ii) = ( bcValue - ci*f(*ig) ) / cg;
         }
-      } else if (side_ == SS::MINUS_SIDE) {
+      } else if (side_ == MINUS_SIDE) {
         const double bcValue = ( ((-5 * t)/( t * t + 1)) * sin(-10 * M_PI / (t + 10) ) );
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
           f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
@@ -191,12 +192,12 @@ VarDen1DMMSVelocity<FieldT>::evaluate()
         }
       }
     } else {
-      if (side_== SS::PLUS_SIDE) {
+      if (side_== PLUS_SIDE) {
         const double bcValue = ( ((-5 * t)/( t * t + 1)) * sin(10 * M_PI / (t + 10) ) );
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
           f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
         }
-      } else if (side_ == SS::MINUS_SIDE) {
+      } else if (side_ == MINUS_SIDE) {
         const double bcValue = ( ((-5 * t)/( t * t + 1)) * sin(-10 * M_PI / (t + 10) ) );
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
           f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
@@ -235,8 +236,8 @@ VarDenCorrugatedMMSMixFracBC<FieldT>::evaluate()
 
   
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+    std::vector<SpatialOps::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
+    std::vector<SpatialOps::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
     const double dn1 = 1 + r0/r1;
     const double dn2 = 1 - r0/r1;
     for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
@@ -276,8 +277,8 @@ VarDenCorrugatedMMSRhofBC<FieldT>::evaluate()
   
   
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+    std::vector<SpatialOps::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
+    std::vector<SpatialOps::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
 
     for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
       const double xh = uf * t - x(*ii) + a * cos(k * (vf * t - y(*ii)));
@@ -317,8 +318,8 @@ VarDenCorrugatedMMSVelocityBC<FieldT>::evaluate()
   const double r1 = this->r1_;
   
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+    std::vector<SpatialOps::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
+    std::vector<SpatialOps::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
     if (this->isStaggered_) {
       for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
         const double xh = uf * t - x(*ii) + a * cos(k * (vf * t - y(*ii)));
@@ -368,8 +369,8 @@ VarDenCorrugatedMMSMomBC<FieldT>::evaluate()
   const double r1 = this->r1_;
   
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+    std::vector<SpatialOps::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
+    std::vector<SpatialOps::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
     if (this->isStaggered_) {
       for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
         const double xh = uf * t - x(*ii) + a * cos(k * (vf * t - y(*ii)));
@@ -417,8 +418,8 @@ VarDenCorrugatedMMSyMomBC<FieldT>::evaluate()
   const double r1 = this->r1_;
   
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+    std::vector<SpatialOps::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
+    std::vector<SpatialOps::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
     if (this->isStaggered_) {
       for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
         const double xh = uf * t - x(*ii) + a * cos(k * (vf * t - y(*ii)));
@@ -466,8 +467,8 @@ VarDenCorrugatedMMSRho<FieldT>::evaluate()
   const double r1 = this->r1_;
   
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+    std::vector<SpatialOps::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
+    std::vector<SpatialOps::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
     if (this->isStaggered_) {
       for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
         const double xh = uf * t - x(*ii) + a * cos(k * (vf * t - y(*ii)));

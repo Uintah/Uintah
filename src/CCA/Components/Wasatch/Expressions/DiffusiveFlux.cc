@@ -152,10 +152,10 @@ DiffusiveFlux<FluxT>::Builder::build() const
 #include <spatialops/structured/FVStaggered.h>
 
 #define DECLARE_DIFF_FLUX( VOL )                                                 \
-  template class DiffusiveFlux< SpatialOps::structured::FaceTypes<VOL>::XFace >; \
-  template class DiffusiveFlux< SpatialOps::structured::FaceTypes<VOL>::YFace >; \
-  template class DiffusiveFlux< SpatialOps::structured::FaceTypes<VOL>::ZFace >;
+  template class DiffusiveFlux< SpatialOps::FaceTypes<VOL>::XFace >; \
+  template class DiffusiveFlux< SpatialOps::FaceTypes<VOL>::YFace >; \
+  template class DiffusiveFlux< SpatialOps::FaceTypes<VOL>::ZFace >;
 
-DECLARE_DIFF_FLUX( SpatialOps::structured::SVolField );
+DECLARE_DIFF_FLUX( SpatialOps::SVolField );
 //
 //==========================================================================

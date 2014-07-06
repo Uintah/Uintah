@@ -23,21 +23,21 @@ template< typename FieldT >
 class WeakConvectiveTerm
   : public Expr::Expression<FieldT>
 {  
-  typedef SpatialOps::structured::FaceTypes<FieldT> FaceTypes;
+  typedef SpatialOps::FaceTypes<FieldT> FaceTypes;
   typedef typename FaceTypes::XFace XFace; ///< The type of field for the x-face of FieldT.
   typedef typename FaceTypes::YFace YFace; ///< The type of field for the y-face of FieldT.
   typedef typename FaceTypes::ZFace ZFace; ///< The type of field for the z-face of FieldT.
   
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, FieldT >::type  XInterpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, FieldT >::type  YInterpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, ZVolField, FieldT >::type  ZInterpT;  
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, XFace, FieldT >::type  XFaceInterpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, YFace, FieldT >::type  YFaceInterpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, ZFace, FieldT >::type  ZFaceInterpT;  
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, FieldT >::type  XInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, FieldT >::type  YInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, ZVolField, FieldT >::type  ZInterpT;  
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, XFace, FieldT >::type  XFaceInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, YFace, FieldT >::type  YFaceInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, ZFace, FieldT >::type  ZFaceInterpT;  
   
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, FieldT, XFace >::type  GradXT; 
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, FieldT, YFace >::type  GradYT; 
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, FieldT, ZFace >::type  GradZT; 
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, FieldT, XFace >::type  GradXT; 
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, FieldT, YFace >::type  GradYT; 
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, FieldT, ZFace >::type  GradZT; 
     
   // interpolant operators
   const XInterpT* xInterpOp_;

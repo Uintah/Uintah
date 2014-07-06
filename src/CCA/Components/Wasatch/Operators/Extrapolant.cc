@@ -38,10 +38,9 @@ Extrapolant( const std::vector<bool>& bcMinus,
 : bcMinus_ (bcMinus),
   bcPlus_  (bcPlus )
 {
-  using namespace SpatialOps::structured;
-  unitNormal_.push_back(IntVec(1,0,0));
-  unitNormal_.push_back(IntVec(0,1,0));
-  unitNormal_.push_back(IntVec(0,0,1));
+  unitNormal_.push_back(SpatialOps::IntVec(1,0,0));
+  unitNormal_.push_back(SpatialOps::IntVec(0,1,0));
+  unitNormal_.push_back(SpatialOps::IntVec(0,0,1));
 }
 
 //--------------------------------------------------------------------
@@ -63,7 +62,6 @@ apply_to_field( FieldT& src,
 {
   // extrapolate from interior cells:
   using namespace SpatialOps;
-  using namespace SpatialOps::structured;
 
   bool doMinMaxCheck = (min > DBLMIN || max < DBLMAX);
   const MemoryWindow& ws = src.window_with_ghost();
@@ -109,9 +107,8 @@ apply_to_field( FieldT& src,
 
 //==================================================================
 // Explicit template instantiation
-namespace SS = SpatialOps::structured;
-template class Extrapolant<SS::SVolField>;
-template class Extrapolant<SS::XVolField>;
-template class Extrapolant<SS::YVolField>;
-template class Extrapolant<SS::ZVolField>;
+template class Extrapolant< SpatialOps::SVolField >;
+template class Extrapolant< SpatialOps::XVolField >;
+template class Extrapolant< SpatialOps::YVolField >;
+template class Extrapolant< SpatialOps::ZVolField >;
 //==================================================================

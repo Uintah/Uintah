@@ -64,7 +64,7 @@ public:
   void evaluate();
   
 private:
-  typedef SpatialOps::structured::SingleValueField TimeField;
+  typedef SpatialOps::SingleValueField TimeField;
   
   OscillatingCylinder( const std::string axis,
                        const std::vector<double>& origin,  // origin on the minus face perpendicular to axis
