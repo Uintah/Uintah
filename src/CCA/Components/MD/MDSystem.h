@@ -142,6 +142,7 @@ namespace Uintah {
           d_numAtoms += numOfType;
           d_numAtomsOfType.push_back(numOfType);
         }
+        return d_numAtoms;
       }
 
       inline size_t registerAtomCount(const size_t count,
@@ -153,7 +154,7 @@ namespace Uintah {
           d_numAtoms += count;
         };
         return count;
-        size_t numAtomTypes = getNumAtomTypes();
+//        size_t numAtomTypes = getNumAtomTypes();
 
       }
 

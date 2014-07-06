@@ -39,11 +39,16 @@
 
 #include <Core/Grid/Variables/VarLabel.h>
 
+#include <CCA/Components/MD/SimpleGrid.h>
+
 #include <vector>
 
 namespace Uintah {
 
-  typedef std::vector<const VarLabel*> LabelArray;
+  typedef std::vector<const VarLabel*>              LabelArray;
+  typedef SimpleGrid<double>                        doubleGrid;
+  typedef SimpleGrid<SCIRun::Vector>                vectorGrid;
+  typedef SimpleGrid<Uintah::Matrix3>               matrixGrid;
 
   class MDConstants {
     public:

@@ -70,10 +70,10 @@ namespace Uintah {
        * @param offset The offset for the first point in the patch in reference to the global grid.
        * @param numGhostCells The number of ghost cells this SimpleGrid has.
        */
-      SimpleGrid(const IntVector& extents,
-                 const IntVector& offset,
-                 const IntVector& origin,
-                 const int numGhostCells);
+      SimpleGrid(const IntVector&   extents,
+                 const IntVector&   offset,
+                 const IntVector&   origin,
+                 const int          numGhostCells);
 
       /**
        * @brief
@@ -110,9 +110,19 @@ namespace Uintah {
         return d_gridOffset;
       }
 
+      inline void setOffset(const SCIRun::IntVector& _IV_In) {
+        d_gridOffset = _IV_In;
+        return;
+      }
+
       inline IntVector getOrigin() const
       {
         return d_internalOrigin;
+      }
+
+      inline void setOrigin(const SCIRun::IntVector& _IV_In) {
+        d_internalOrigin = _IV_In;
+        return;
       }
 
       /**
@@ -415,10 +425,15 @@ namespace Uintah {
     private:
 
       LinearArray3<T> d_values;     //!< Grid cell values
-      IntVector d_internalExtents;  //!< Stores the number of total grid points in this grid
-      IntVector d_gridOffset;       //!< Stores the offset pointer for the first point in this grid in reference to the global grid
-      IntVector d_internalOrigin;           //!< IntVector which stores the x,y,z components of the first non-ghost point within the simple grid
-      int d_numGhostCells;         //!< The number of ghost cells for the patch the associated points are on
+      IntVector d_internalExtents;  //!< Stores the number of total grid points
+                                    //   in this grid
+      IntVector d_gridOffset;       //!< Stores the offset of the current grid
+                                    //   in relation to the global origin
+      IntVector d_internalOrigin;   //!< IntVector which stores the internal
+                                    //   x/y/z/ components of the first non-ghost
+                                    //   point within the simple grid
+      int d_numGhostCells;          //!< The total number of ghost cells in
+                                    //   each direction in the grid
 
   };
 

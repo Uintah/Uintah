@@ -188,12 +188,13 @@ void SPME::scheduleInitializeLocalStorage(const ProcessorGroup* pg,
 void SPME::scheduleCalculateRealspace(const ProcessorGroup*     pg,
                                       const PatchSet*           patches,
                                       const MaterialSet*        materials,
-                                      DataWarehouse*            subOldDW,
-                                      DataWarehouse*            subNewDW,
-                                      const SimulationStateP*         sharedState,
+                                            DataWarehouse*      subOldDW,
+                                            DataWarehouse*      subNewDW,
+                                      const SimulationStateP*   sharedState,
                                       const MDLabel*            label,
-                                      CoordinateSystem*         coordSys,
-                                      SchedulerP&               sched)
+                                            CoordinateSystem*   coordSys,
+                                            SchedulerP&         sched,
+                                            DataWarehouse*      parentOldDW)
 {
     printSchedule(patches, spme_cout, "SPME::scheduleCalculateRealspace");
 
@@ -204,12 +205,15 @@ void SPME::scheduleCalculateRealspace(const ProcessorGroup*     pg,
                          &SPME::calculateRealspaceDipole,
                          sharedState,
                          label,
-                         coordSys);
+                         coordSys,
+                         parentOldDW);
 
       // Also requires the last iteration's dipole guess, which does change
       // for the polarizability iteration
-      task->requires(Task::OldDW, label->electrostatic->pMu,
-                     Ghost::AroundNodes, d_electrostaticGhostCells);
+      task->requires(Task::OldDW,
+                     label->electrostatic->pMu,
+                     Ghost::AroundNodes,
+                     d_electrostaticGhostCells);
 
       // And provides the field
       task->computes(label->electrostatic->pE_electroReal_preReloc);
@@ -220,14 +224,21 @@ void SPME::scheduleCalculateRealspace(const ProcessorGroup*     pg,
                          &SPME::calculateRealspace,
                          sharedState,
                          label,
-                         coordSys);
+                         coordSys,
+                         parentOldDW);
     }
-    task->requires(Task::ParentOldDW, label->global->pX,
-                   Ghost::AroundNodes, d_electrostaticGhostCells);
-    task->requires(Task::ParentOldDW, label->global->pID,
-                   Ghost::AroundNodes, d_electrostaticGhostCells);
+    task->requires(Task::ParentOldDW,
+                   label->global->pX,
+                   Ghost::AroundNodes,
+                   d_electrostaticGhostCells);
 
-    // Computes the realspace contribution to the electrostatic field, force, and stress tensor
+    task->requires(Task::ParentOldDW,
+                   label->global->pID,
+                   Ghost::AroundNodes,
+                   d_electrostaticGhostCells);
+
+    // Computes the realspace contribution to the electrostatic field,
+    // force, and stress tensor.
     task->computes(label->electrostatic->pF_electroReal_preReloc);  //Force
     task->computes(label->electrostatic->rElectrostaticRealEnergy); //Energy
     task->computes(label->electrostatic->rElectrostaticRealStress); //Stress
@@ -239,12 +250,12 @@ void SPME::scheduleCalculateRealspace(const ProcessorGroup*     pg,
 void SPME::scheduleCalculatePretransform(const ProcessorGroup*      pg,
                                          const PatchSet*            patches,
                                          const MaterialSet*         materials,
-                                         DataWarehouse*             subOldDW,
-                                         DataWarehouse*             subNewDW,
+                                               DataWarehouse*       subOldDW,
+                                               DataWarehouse*       subNewDW,
                                          const SimulationStateP*    simState,
                                          const MDLabel*             label,
-                                         CoordinateSystem*          coordSys,
-                                         SchedulerP&                sched)
+                                               CoordinateSystem*    coordSys,
+                                               SchedulerP&          sched)
 {
   printSchedule(patches, spme_cout, "SPME::scheduleCalculatePreTransform");
 
@@ -288,8 +299,7 @@ void SPME::scheduleCalculatePretransform(const ProcessorGroup*      pg,
 //  task->computes(label->global->pX);
 //  task->computes(label->global->pID);
 
-  // May also want to initialize things like field, force, etc.. here since it's outside the polarization loop
-  // !FIXME
+
 
   sched->addTask(task, patches, materials);
 }

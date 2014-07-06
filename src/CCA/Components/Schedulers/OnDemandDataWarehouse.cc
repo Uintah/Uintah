@@ -2719,7 +2719,7 @@ OnDemandDataWarehouse::transferFrom( DataWarehouse* from,
           }
 
           d_plock.writeTrylock();
-          // or else the readLock in haveParticleSubset will hang
+          // or else the readLock in haveParticleSubset will hang -- FIXME, This comment should not be correct - JBH, 7/3/14
           ParticleSubset* subset;
           if( !haveParticleSubset( matl, copyPatch ) ) {
             ParticleSubset* oldsubset = fromDW->getParticleSubset( matl, patch );
