@@ -518,7 +518,7 @@ Builder::Builder( const Expr::Tag& resultTag,
 
 // explicit template instantiation
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-template class DensFromMixfrac       <SpatialOps::structured::SVolField>;
-template class DensHeatLossMixfrac   <SpatialOps::structured::SVolField>;
-template class TwoStreamDensFromMixfr<SpatialOps::structured::SVolField>;
-template class TwoStreamMixingDensity<SpatialOps::structured::SVolField>;
+template class DensFromMixfrac       <SpatialOps::SVolField>;
+template class DensHeatLossMixfrac   <SpatialOps::SVolField>;
+template class TwoStreamDensFromMixfr<SpatialOps::SVolField>;
+template class TwoStreamMixingDensity<SpatialOps::SVolField>;

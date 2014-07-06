@@ -26,20 +26,20 @@ template< typename FieldT >
 class VelEst
   : public Expr::Expression<FieldT>
 {  
-  typedef SpatialOps::structured::SingleValueField TimeField;
-  typedef SpatialOps::structured::FaceTypes<FieldT> FaceTypes;
+  typedef SpatialOps::SingleValueField TimeField;
+  typedef SpatialOps::FaceTypes<FieldT> FaceTypes;
   typedef typename FaceTypes::XFace XFace; ///< The type of field for the x-face of FieldT.
   typedef typename FaceTypes::YFace YFace; ///< The type of field for the y-face of FieldT.
   typedef typename FaceTypes::ZFace ZFace; ///< The type of field for the z-face of FieldT.
   
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, FieldT >::type ScalarInterpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, XFace >::type  S2XFInterpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, YFace >::type  S2YFInterpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, ZFace >::type  S2ZFInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, FieldT >::type ScalarInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, XFace >::type  S2XFInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, YFace >::type  S2YFInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, ZFace >::type  S2ZFInterpT;
 
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, SVolField, FieldT >::type  GradPT; 
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, SVolField, FieldT >::type  GradPT; 
   
-  typedef SpatialOps::structured::BasicOpTypes<FieldT> OpTypes;
+  typedef SpatialOps::BasicOpTypes<FieldT> OpTypes;
   typedef typename OpTypes::DivX DivXT; ///< Divergence operator (surface integral) in the x-direction
   typedef typename OpTypes::DivY DivYT; ///< Divergence operator (surface integral) in the y-direction
   typedef typename OpTypes::DivZ DivZT; ///< Divergence operator (surface integral) in the z-direction

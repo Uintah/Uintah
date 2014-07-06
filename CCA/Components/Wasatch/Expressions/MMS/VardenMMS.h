@@ -68,7 +68,7 @@ public:
   void evaluate();
   
 private:
-  typedef SpatialOps::structured::SingleValueField TimeField;
+  typedef SpatialOps::SingleValueField TimeField;
   
   VarDen1DMMSMixFracSrc( const Expr::Tag& xTag,
                        const Expr::Tag& tTag,
@@ -129,15 +129,15 @@ public:
   void evaluate();
   
 private:
-  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  typedef typename SpatialOps::SingleValueField TimeField;
   
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::GradientX, SVolField, SVolField >::type GradXT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::GradientY, SVolField, SVolField >::type GradYT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::GradientZ, SVolField, SVolField >::type GradZT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientX, SVolField, SVolField >::type GradXT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientY, SVolField, SVolField >::type GradYT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientZ, SVolField, SVolField >::type GradZT;
   
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, SVolField >::type X2SInterpOpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, SVolField >::type Y2SInterpOpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, ZVolField, SVolField >::type Z2SInterpOpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, SVolField >::type X2SInterpOpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, SVolField >::type Y2SInterpOpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, ZVolField, SVolField >::type Z2SInterpOpT;
   
   VarDen1DMMSContinuitySrc( const double rho0,
                             const double rho1,
@@ -210,7 +210,7 @@ private:
   
   VarDen1DMMSPressureContSrc( const Expr::Tag continutySrcTag,
                             const Expr::Tag& timestepTag);
-  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  typedef typename SpatialOps::SingleValueField TimeField;
   const Expr::Tag continutySrcTag_, timestepTag_;
   const FieldT* continutySrc_;
   const TimeField* timestep_;

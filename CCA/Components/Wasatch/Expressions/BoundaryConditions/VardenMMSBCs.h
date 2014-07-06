@@ -46,7 +46,7 @@
 template< typename FieldT >
 class VarDen1DMMSDensity : public BoundaryConditionBase<FieldT>
 {
-  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  typedef typename SpatialOps::SingleValueField TimeField;
   VarDen1DMMSDensity( const Expr::Tag& indepVarTag,
                      const double rho0,
                      const double rho1 )
@@ -111,7 +111,7 @@ template< typename FieldT >
 class VarDen1DMMSMixtureFraction
 : public BoundaryConditionBase<FieldT>
 {
-  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  typedef typename SpatialOps::SingleValueField TimeField;
   VarDen1DMMSMixtureFraction( const Expr::Tag& indepVarTag ) :
   indepVarTag_ (indepVarTag)
   {
@@ -164,7 +164,7 @@ template< typename FieldT >
 class VarDen1DMMSMomentum
 : public BoundaryConditionBase<FieldT>
 {
-  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  typedef typename SpatialOps::SingleValueField TimeField;
 public:
   class Builder : public Expr::ExpressionBuilder
   {
@@ -181,7 +181,7 @@ public:
             const Expr::Tag& indepVarTag,
             const double rho0,
             const double rho1,
-            const SpatialOps::structured::BCSide side )
+            const SpatialOps::BCSide side )
     : ExpressionBuilder(resultTag),
     indepVarTag_ (indepVarTag),
     rho0_( rho0 ),
@@ -192,7 +192,7 @@ public:
   private:
     const Expr::Tag indepVarTag_;
     const double rho0_, rho1_;
-    const SpatialOps::structured::BCSide side_;
+    const SpatialOps::BCSide side_;
   };
   
   ~VarDen1DMMSMomentum(){}
@@ -203,7 +203,7 @@ private:
   VarDen1DMMSMomentum( const Expr::Tag& indepVarTag,
                      const double rho0,
                      const double rho1,
-                     const SpatialOps::structured::BCSide side )
+                     const SpatialOps::BCSide side )
   : indepVarTag_( indepVarTag ),
   rho0_( rho0 ),
   rho1_( rho1 ),
@@ -214,7 +214,7 @@ private:
   const TimeField* t_;
   const Expr::Tag indepVarTag_;
   const double rho0_, rho1_;
-  const SpatialOps::structured::BCSide side_;
+  const SpatialOps::BCSide side_;
 };
 
 /***********************************************************************************************/
@@ -233,7 +233,7 @@ template< typename FieldT >
 class VarDen1DMMSSolnVar
 : public BoundaryConditionBase<FieldT>
 {
-  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  typedef typename SpatialOps::SingleValueField TimeField;
   VarDen1DMMSSolnVar( const Expr::Tag& indepVarTag,
                     const double rho0,
                     const double rho1  )
@@ -295,7 +295,7 @@ template< typename FieldT >
 class VarDen1DMMSVelocity
 : public BoundaryConditionBase<FieldT>
 {
-  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  typedef typename SpatialOps::SingleValueField TimeField;
 public:
   class Builder : public Expr::ExpressionBuilder
   {
@@ -310,7 +310,7 @@ public:
      */
     Builder( const Expr::Tag& resultTag,
             const Expr::Tag& indepVarTag,
-            const SpatialOps::structured::BCSide side ) :
+            const SpatialOps::BCSide side ) :
     ExpressionBuilder(resultTag),
     indepVarTag_ (indepVarTag),
     side_ (side)
@@ -318,7 +318,7 @@ public:
     Expr::ExpressionBase* build() const{ return new VarDen1DMMSVelocity(indepVarTag_, side_); }
   private:
     const Expr::Tag indepVarTag_;
-    const SpatialOps::structured::BCSide side_;
+    const SpatialOps::BCSide side_;
   };
   
   ~VarDen1DMMSVelocity(){}
@@ -327,7 +327,7 @@ public:
   void evaluate();
 private:
   VarDen1DMMSVelocity( const Expr::Tag& indepVarTag,
-                     const SpatialOps::structured::BCSide side )
+                     const SpatialOps::BCSide side )
   : indepVarTag_ (indepVarTag),
   side_ (side)
   {
@@ -335,7 +335,7 @@ private:
   }
   const TimeField* t_;
   const Expr::Tag indepVarTag_;
-  const SpatialOps::structured::BCSide side_;
+  const SpatialOps::BCSide side_;
 };
 
 /***********************************************************************************************/
@@ -370,7 +370,7 @@ public:
   void evaluate(){}
   
 protected:
-  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  typedef typename SpatialOps::SingleValueField TimeField;
   VarDenCorrugatedMMSBCBase( const Expr::Tag& xTag,
                             const Expr::Tag& yTag,
                             const Expr::Tag& tTag,
@@ -420,7 +420,7 @@ template< typename FieldT >
 class VarDenCorrugatedMMSMixFracBC
 : public VarDenCorrugatedMMSBCBase<FieldT>
 {
-  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  typedef typename SpatialOps::SingleValueField TimeField;
   VarDenCorrugatedMMSMixFracBC( const Expr::Tag& xTag,
                             const Expr::Tag& yTag,
                             const Expr::Tag& tTag,
@@ -502,7 +502,7 @@ template< typename FieldT >
 class VarDenCorrugatedMMSRhofBC
 : public VarDenCorrugatedMMSBCBase<FieldT>
 {
-  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  typedef typename SpatialOps::SingleValueField TimeField;
   VarDenCorrugatedMMSRhofBC( const Expr::Tag& xTag,
                                const Expr::Tag& yTag,
                                const Expr::Tag& tTag,
@@ -585,7 +585,7 @@ template< typename FieldT >
 class VarDenCorrugatedMMSVelocityBC
 : public VarDenCorrugatedMMSBCBase<FieldT>
 {
-  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  typedef typename SpatialOps::SingleValueField TimeField;
   VarDenCorrugatedMMSVelocityBC( const Expr::Tag& xTag,
                                const Expr::Tag& yTag,
                                const Expr::Tag& tTag,
@@ -666,7 +666,7 @@ template< typename FieldT >
 class VarDenCorrugatedMMSMomBC
 : public VarDenCorrugatedMMSBCBase<FieldT>
 {
-  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  typedef typename SpatialOps::SingleValueField TimeField;
   VarDenCorrugatedMMSMomBC( const Expr::Tag& xTag,
                                 const Expr::Tag& yTag,
                                 const Expr::Tag& tTag,
@@ -747,7 +747,7 @@ template< typename FieldT >
 class VarDenCorrugatedMMSyMomBC
 : public VarDenCorrugatedMMSBCBase<FieldT>
 {
-  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  typedef typename SpatialOps::SingleValueField TimeField;
   VarDenCorrugatedMMSyMomBC( const Expr::Tag& xTag,
                            const Expr::Tag& yTag,
                            const Expr::Tag& tTag,
@@ -828,7 +828,7 @@ template< typename FieldT >
 class VarDenCorrugatedMMSRho
 : public VarDenCorrugatedMMSBCBase<FieldT>
 {
-  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  typedef typename SpatialOps::SingleValueField TimeField;
   VarDenCorrugatedMMSRho( const Expr::Tag& xTag,
                             const Expr::Tag& yTag,
                             const Expr::Tag& tTag,

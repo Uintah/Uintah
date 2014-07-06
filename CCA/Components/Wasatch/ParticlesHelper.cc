@@ -49,8 +49,6 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Variables/VarTypes.h>
 
-namespace SS = SpatialOps::structured;
-
 std::vector<Expr::Tag> Wasatch::ParticlesHelper::otherParticleTags_;
 
 namespace Wasatch {

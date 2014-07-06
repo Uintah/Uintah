@@ -45,7 +45,7 @@ template< typename FieldT >
 class TimeAdvance
  : public Expr::Expression<FieldT>
 {
-  typedef typename SpatialOps::structured::SingleValueField SingleValue;
+  typedef typename SpatialOps::SingleValueField SingleValue;
   const Expr::Tag phioldt_, rhst_, dtt_, rkstaget_;
 
   const Wasatch::TimeIntegrator timeIntInfo_;

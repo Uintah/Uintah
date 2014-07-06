@@ -37,7 +37,6 @@
 #include <Core/Grid/Patch.h>
 
 using namespace SpatialOps;
-using namespace structured;
 
 namespace Wasatch{
   
@@ -147,7 +146,7 @@ namespace Wasatch{
 
 
   void build_operators( const Uintah::Patch& patch,
-                       SpatialOps::OperatorDatabase& opDB )
+                        SpatialOps::OperatorDatabase& opDB )
   {
     const SCIRun::IntVector udim = patch.getCellHighIndex() - patch.getCellLowIndex();
 
@@ -172,9 +171,9 @@ namespace Wasatch{
     bcMinus[2] = patch.getBCType(Uintah::Patch::zminus) != Uintah::Patch::Neighbor;
     
     // build all of the stencils defined in SpatialOps
-    SpatialOps::structured::build_stencils( udim[0], udim[1], udim[2],
-                                           udim[0]*spacing[0], udim[1]*spacing[1], udim[2]*spacing[2],
-                                           opDB );
+    SpatialOps::build_stencils( udim[0], udim[1], udim[2],
+                                udim[0]*spacing[0], udim[1]*spacing[1], udim[2]*spacing[2],
+                                opDB );
     
     //--------------------------------------------------------
     // UPWIND interpolants - phi volume to phi surface

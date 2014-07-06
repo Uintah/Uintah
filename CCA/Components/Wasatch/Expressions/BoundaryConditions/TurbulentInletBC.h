@@ -35,7 +35,7 @@ template< typename FieldT >
 class TurbulentInletBC
 : public BoundaryConditionBase<FieldT>
 {
-  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  typedef typename SpatialOps::SingleValueField TimeField;
   TurbulentInletBC( const std::string inputFileName,
                     const std::string velDir,
                     const int period,
@@ -212,7 +212,7 @@ evaluate()
 
   int tIndex = calculate_time_index();
 
-  typedef SpatialOps::structured::IntVec IntVecT;
+  typedef SpatialOps::IntVec IntVecT;
   IntVecT globalCellIJK;
 
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {

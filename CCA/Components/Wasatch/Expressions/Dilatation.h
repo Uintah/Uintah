@@ -50,9 +50,9 @@ class Dilatation
   const Expr::Tag vel1t_, vel2t_, vel3t_;
   const bool is3d_;
 
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, Vel1T, FieldT >::type Vel1GradT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, Vel2T, FieldT >::type Vel2GradT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, Vel3T, FieldT >::type Vel3GradT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, Vel1T, FieldT >::type Vel1GradT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, Vel2T, FieldT >::type Vel2GradT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, Vel3T, FieldT >::type Vel3GradT;
 
   const Vel1T* vel1_;
   const Vel2T* vel2_;

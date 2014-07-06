@@ -216,17 +216,17 @@ Strain<StrainT,VelT,VelT>::Builder::build() const
 // Explicit template instantiation
 #include <spatialops/structured/FVStaggered.h>
 #define DECLARE_Strain( VOL )	\
-  template class Strain< SpatialOps::structured::FaceTypes<VOL>::XFace,	\
+  template class Strain< SpatialOps::FaceTypes<VOL>::XFace,	\
                          VOL,						\
-                         SpatialOps::structured::XVolField >;           \
-  template class Strain< SpatialOps::structured::FaceTypes<VOL>::YFace,	\
+                         SpatialOps::XVolField >;           \
+  template class Strain< SpatialOps::FaceTypes<VOL>::YFace,	\
                          VOL,						\
-                         SpatialOps::structured::YVolField >;           \
-  template class Strain< SpatialOps::structured::FaceTypes<VOL>::ZFace,	\
+                         SpatialOps::YVolField >;           \
+  template class Strain< SpatialOps::FaceTypes<VOL>::ZFace,	\
                          VOL,						\
-                         SpatialOps::structured::ZVolField>;
+                         SpatialOps::ZVolField>;
 
-DECLARE_Strain( SpatialOps::structured::XVolField );
-DECLARE_Strain( SpatialOps::structured::YVolField );
-DECLARE_Strain( SpatialOps::structured::ZVolField );
+DECLARE_Strain( SpatialOps::XVolField );
+DECLARE_Strain( SpatialOps::YVolField );
+DECLARE_Strain( SpatialOps::ZVolField );
 //====================================================================

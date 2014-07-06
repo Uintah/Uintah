@@ -118,22 +118,22 @@ FluxLimiterInterpolant( const std::vector<int>& dim,
   
   switch (direction) {
     case SpatialOps::XDIR::value:
-      unitNormal_ = SpatialOps::structured::IntVec(1,0,0);
+      unitNormal_ = SpatialOps::IntVec(1,0,0);
       hasMinusBoundary_ = hasMinusBoundary[0];
       hasPlusBoundary_ = hasPlusFace[0];
       break;
     case SpatialOps::YDIR::value:
-      unitNormal_ = SpatialOps::structured::IntVec(0,1,0);
+      unitNormal_ = SpatialOps::IntVec(0,1,0);
       hasMinusBoundary_ = hasMinusBoundary[1];
       hasPlusBoundary_ = hasPlusFace[1];
       break;
     case SpatialOps::ZDIR::value:
-      unitNormal_ = SpatialOps::structured::IntVec(0,0,1);
+      unitNormal_ = SpatialOps::IntVec(0,0,1);
       hasMinusBoundary_ = hasMinusBoundary[2];
       hasPlusBoundary_ = hasPlusFace[2];
       break;
     default:
-      unitNormal_ = SpatialOps::structured::IntVec(0,0,0);
+      unitNormal_ = SpatialOps::IntVec(0,0,0);
       break;
   }
   
@@ -183,7 +183,6 @@ FluxLimiterInterpolant<PhiVolT,PhiFaceT>::
 apply_embedded_boundaries( const PhiVolT &src, PhiFaceT &dest ) const {
   
   using namespace SpatialOps;
-  using namespace SpatialOps::structured;
   
   const MemoryWindow& wdest = dest.window_with_ghost(); // used for velocity & interpolated phi
   IntVec destExtent = wdest.extent() - unitNormal_*3 - unitNormal_ * (hasPlusBoundary_ ? 1 : 0);
@@ -224,7 +223,6 @@ build_src_fields( const PhiVolT& src,
                   std::vector<PhiVolT>& srcFields ) const
 {
   using namespace SpatialOps;
-  using namespace SpatialOps::structured;
   
   srcFields.clear();
 
@@ -260,7 +258,6 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest )
    * Loop over faces
    */
   using namespace SpatialOps;
-  using namespace SpatialOps::structured;
 
   const MemoryWindow& wsrc  = src.window_with_ghost();
   const MemoryWindow& wdest = dest.window_with_ghost(); // used for velocity & interpolated phi
@@ -374,10 +371,8 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest )
 
 //==================================================================
 // Explicit template instantiation
-namespace SS = SpatialOps::structured;
-
-template class FluxLimiterInterpolant< SS::SVolField, SS::SSurfXField >;
-template class FluxLimiterInterpolant< SS::SVolField, SS::SSurfYField >;
-template class FluxLimiterInterpolant< SS::SVolField, SS::SSurfZField >;
+template class FluxLimiterInterpolant< SpatialOps::SVolField, SpatialOps::SSurfXField >;
+template class FluxLimiterInterpolant< SpatialOps::SVolField, SpatialOps::SSurfYField >;
+template class FluxLimiterInterpolant< SpatialOps::SVolField, SpatialOps::SSurfZField >;
 
 //==================================================================

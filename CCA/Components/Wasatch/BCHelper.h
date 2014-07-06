@@ -294,15 +294,15 @@ namespace Wasatch {
   //****************************************************************************
   struct BoundaryIterators
   {
-    std::vector<SpatialOps::structured::IntVec> extraBndCells;        // iterator for extra cells. These are zero-based on the extra cell
-    std::vector<SpatialOps::structured::IntVec> extraPlusBndCells;    // iterator for extra cells on plus faces (staggered fields). These are zero-based on the extra cell.
-    std::vector<SpatialOps::structured::IntVec> interiorBndCells;     // iterator for interior cells. These are zero-based on the extra cell
+    std::vector<SpatialOps::IntVec> extraBndCells;        // iterator for extra cells. These are zero-based on the extra cell
+    std::vector<SpatialOps::IntVec> extraPlusBndCells;    // iterator for extra cells on plus faces (staggered fields). These are zero-based on the extra cell.
+    std::vector<SpatialOps::IntVec> interiorBndCells;     // iterator for interior cells. These are zero-based on the extra cell
     
-    std::vector<SpatialOps::structured::IntVec> neboExtraBndCells;        // iterator for extra cells. These are zero-based on the first interior cell.
-    std::vector<SpatialOps::structured::IntVec> neboExtraPlusBndCells;    // iterator for extra cells on plus faces (staggered fields). These are zero-based on the first interior cell.
-    std::vector<SpatialOps::structured::IntVec> neboInteriorBndCells;     // iterator for interior cells. These are zero-based on the first interior cell.
+    std::vector<SpatialOps::IntVec> neboExtraBndCells;        // iterator for extra cells. These are zero-based on the first interior cell.
+    std::vector<SpatialOps::IntVec> neboExtraPlusBndCells;    // iterator for extra cells on plus faces (staggered fields). These are zero-based on the first interior cell.
+    std::vector<SpatialOps::IntVec> neboInteriorBndCells;     // iterator for interior cells. These are zero-based on the first interior cell.
 
-    std::vector<SpatialOps::structured::IntVec> interiorEdgeCells;    // iterator for interior edge (domain edges) cells
+    std::vector<SpatialOps::IntVec> interiorEdgeCells;    // iterator for interior edge (domain edges) cells
     Uintah::Iterator extraBndCellsUintah;                             // We still need the Unitah iterator
   };
   
@@ -340,21 +340,21 @@ namespace Wasatch {
   template<>
   struct BCOpTypeSelector<XVolField> : public BCOpTypeSelectorBase<XVolField>
   {
-    typedef SpatialOps::structured::OperatorTypeBuilder<SpatialOps::GradientX, XVolField, XVolField >::type NeumannX;
+    typedef SpatialOps::OperatorTypeBuilder<SpatialOps::GradientX, XVolField, XVolField >::type NeumannX;
   };
   
   // partial specialization with inheritance for YVolFields
   template<>
   struct BCOpTypeSelector<YVolField> : public BCOpTypeSelectorBase<YVolField>
   {
-    typedef SpatialOps::structured::OperatorTypeBuilder<SpatialOps::GradientY, YVolField, YVolField >::type NeumannY;
+    typedef SpatialOps::OperatorTypeBuilder<SpatialOps::GradientY, YVolField, YVolField >::type NeumannY;
   };
   
   // partial specialization with inheritance for ZVolFields
   template<>
   struct BCOpTypeSelector<ZVolField> : public BCOpTypeSelectorBase<ZVolField>
   {
-    typedef SpatialOps::structured::OperatorTypeBuilder<SpatialOps::GradientZ, ZVolField, ZVolField >::type NeumannZ;
+    typedef SpatialOps::OperatorTypeBuilder<SpatialOps::GradientZ, ZVolField, ZVolField >::type NeumannZ;
   };
   
   //
@@ -362,22 +362,22 @@ namespace Wasatch {
   struct BCOpTypeSelector<FaceTypes<XVolField>::XFace>
   {
   public:
-    typedef SpatialOps::structured::OperatorTypeBuilder<Interpolant, SpatialOps::structured::XSurfXField, SpatialOps::structured::XVolField >::type DirichletX;
-    typedef SpatialOps::structured::OperatorTypeBuilder<Divergence, SpatialOps::structured::XSurfXField, SpatialOps::structured::XVolField >::type NeumannX;
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::XSurfXField, SpatialOps::XVolField >::type DirichletX;
+    typedef SpatialOps::OperatorTypeBuilder<Divergence, SpatialOps::XSurfXField, SpatialOps::XVolField >::type NeumannX;
   };
   //
   template<>
   struct BCOpTypeSelector<FaceTypes<YVolField>::YFace>
   {
-    typedef SpatialOps::structured::OperatorTypeBuilder<Interpolant, SpatialOps::structured::YSurfYField, SpatialOps::structured::YVolField >::type DirichletY;
-    typedef SpatialOps::structured::OperatorTypeBuilder<Divergence, SpatialOps::structured::YSurfYField, SpatialOps::structured::YVolField >::type NeumannY;
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::YSurfYField, SpatialOps::YVolField >::type DirichletY;
+    typedef SpatialOps::OperatorTypeBuilder<Divergence, SpatialOps::YSurfYField, SpatialOps::YVolField >::type NeumannY;
   };
   //
   template<>
   struct BCOpTypeSelector<FaceTypes<ZVolField>::ZFace>
   {
-    typedef SpatialOps::structured::OperatorTypeBuilder<Interpolant, SpatialOps::structured::ZSurfZField, SpatialOps::structured::ZVolField >::type DirichletZ;
-    typedef SpatialOps::structured::OperatorTypeBuilder<Divergence, SpatialOps::structured::ZSurfZField, SpatialOps::structured::ZVolField >::type NeumannZ;
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::ZSurfZField, SpatialOps::ZVolField >::type DirichletZ;
+    typedef SpatialOps::OperatorTypeBuilder<Divergence, SpatialOps::ZSurfZField, SpatialOps::ZVolField >::type NeumannZ;
   };
 
   //****************************************************************************
@@ -420,7 +420,7 @@ namespace Wasatch {
   class BCHelper {
     
   private:
-    typedef SpatialOps::structured::IntVec                IntVecT          ;  // SpatialOps IntVec
+    typedef SpatialOps::IntVec                IntVecT          ;  // SpatialOps IntVec
     typedef std::map <int, BoundaryIterators            > patchIDBndItrMapT;  // temporary typedef map that stores boundary iterators per patch id: Patch ID -> Bnd Iterators
     typedef std::map <std::string, patchIDBndItrMapT    > MaskMapT         ;  // boundary name -> (patch ID -> Boundary iterators )
     

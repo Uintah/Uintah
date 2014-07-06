@@ -69,7 +69,7 @@ private:
   const SVolField* y_;
   const SVolField* z_;
   
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, FieldT >::type InpterpSrcT2DestT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, FieldT >::type InpterpSrcT2DestT;
   const InpterpSrcT2DestT* interpSrcT2DestTOp_;
 
   void compute_volume_fraction(SVolField& volFrac);
@@ -140,7 +140,7 @@ compute_volume_fraction(SVolField& volFrac)
   int ix,iy,iz;
   double x,y,z;
   bool isInside = false;
-  SpatialOps::structured::IntVec localCellIJK;
+  SpatialOps::IntVec localCellIJK;
   
   while ( resultIter != volFrac.end() ) {
     i = resultIter - volFrac.begin();

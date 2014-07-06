@@ -46,7 +46,7 @@
 template< typename ValT >
 class VelocityX : public Expr::Expression<ValT>
 {
-  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  typedef typename SpatialOps::SingleValueField TimeField;
 public:
 
   /**
@@ -106,7 +106,7 @@ private:
 template< typename ValT >
 class VelocityY : public Expr::Expression<ValT>
 {
-  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  typedef typename SpatialOps::SingleValueField TimeField;
 public:
 
   /**
@@ -170,7 +170,7 @@ private:
 template< typename ValT >
 class GradPX : public Expr::Expression<ValT>
 {
-  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  typedef typename SpatialOps::SingleValueField TimeField;
 public:
 
   /**
@@ -234,7 +234,7 @@ private:
 template< typename ValT >
 class GradPY : public Expr::Expression<ValT>
 {
-  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  typedef typename SpatialOps::SingleValueField TimeField;
 public:
 
   /**

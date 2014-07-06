@@ -37,28 +37,28 @@
 class PressureSource : public Expr::Expression<SVolField>
 {  
   
-  typedef SpatialOps::structured::FaceTypes<SVolField> FaceTypes;
+  typedef SpatialOps::FaceTypes<SVolField> FaceTypes;
   typedef FaceTypes::XFace XFace; ///< The type of field for the x-face of SVolField.
   typedef FaceTypes::YFace YFace; ///< The type of field for the y-face of SVolField.
   typedef FaceTypes::ZFace ZFace; ///< The type of field for the z-face of SVolField.
 
-  typedef SpatialOps::structured::SingleValueField TimeField;
+  typedef SpatialOps::SingleValueField TimeField;
 
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, XVolField >::type S2XInterpOpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, YVolField >::type S2YInterpOpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, ZVolField >::type S2ZInterpOpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, XVolField >::type S2XInterpOpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, YVolField >::type S2YInterpOpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, ZVolField >::type S2ZInterpOpT;
   
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, SVolField >::type X2SInterpOpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, SVolField >::type Y2SInterpOpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, ZVolField, SVolField >::type Z2SInterpOpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, SVolField >::type X2SInterpOpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, SVolField >::type Y2SInterpOpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, ZVolField, SVolField >::type Z2SInterpOpT;
 
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SVolField >::type GradXT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SVolField >::type GradYT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SVolField >::type GradZT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SVolField >::type GradXT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SVolField >::type GradYT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SVolField >::type GradZT;
   
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::GradientX, SVolField, SVolField >::type GradXST;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::GradientY, SVolField, SVolField >::type GradYST;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::GradientZ, SVolField, SVolField >::type GradZST;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientX, SVolField, SVolField >::type GradXST;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientY, SVolField, SVolField >::type GradYST;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientZ, SVolField, SVolField >::type GradZST;
 
   const XVolField *xMom_, *uStar_, *xVel_;
   const YVolField *yMom_, *vStar_, *yVel_;

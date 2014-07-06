@@ -7,7 +7,7 @@
 //#include <boost/foreach.hpp>
 
 using namespace Uintah; 
-namespace SS = SpatialOps::structured;
+namespace so = SpatialOps;
 
 TaskInterface::TaskInterface( std::string task_name, int matl_index ) : 
   _task_name(task_name),
@@ -33,9 +33,7 @@ TaskInterface::register_variable( std::string name,
                                   int nGhost, 
                                   WHICH_DW dw, 
                                   std::vector<VariableInformation>& variable_registry ){
-
   register_variable_work( name, type, dep, nGhost, dw, variable_registry );
-
 }
 
 //====================================================================================
@@ -525,8 +523,8 @@ void TaskInterface::schedule_init( const LevelP& level,
 //====================================================================================
 
 void TaskInterface::get_bc_logicals( const Uintah::Patch* const patch,
-                                     SS::IntVec& bcMinus,
-                                     SS::IntVec& bcPlus )
+                                     so::IntVec& bcMinus,
+                                     so::IntVec& bcPlus )
 {
   for( int i=0; i<3; ++i ){
     bcMinus[i] = 1;

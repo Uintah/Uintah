@@ -119,7 +119,7 @@ namespace Wasatch {
       const SCIRun::Point xyz( patch_->getCellPosition(iCell) );
       const IntVector localUintahIJK = iCell - patchCellOffset;
       // now go to local indexing
-      const SpatialOps::structured::IntVec localIJK(localUintahIJK[0], localUintahIJK[1], localUintahIJK[2]);
+      const SpatialOps::IntVec localIJK(localUintahIJK[0], localUintahIJK[1], localUintahIJK[2]);
       phi(localIJK) = xyz(idir_) + shift_[idir_];
     }
   }

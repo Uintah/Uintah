@@ -61,7 +61,7 @@ public:
   void evaluate();
   
 private:
-  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  typedef typename SpatialOps::SingleValueField TimeField;
   
   TimeDerivative( const Expr::Tag& newVarTag,
                  const Expr::Tag& oldVarTag,

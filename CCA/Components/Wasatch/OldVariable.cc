@@ -269,9 +269,9 @@ namespace Wasatch {
 
 #define INSTANTIATE_VARIANTS( VOL )                            \
   INSTANTIATE( VOL )                                           \
-  INSTANTIATE( SpatialOps::structured::FaceTypes<VOL>::XFace ) \
-  INSTANTIATE( SpatialOps::structured::FaceTypes<VOL>::YFace ) \
-  INSTANTIATE( SpatialOps::structured::FaceTypes<VOL>::ZFace )
+  INSTANTIATE( SpatialOps::FaceTypes<VOL>::XFace ) \
+  INSTANTIATE( SpatialOps::FaceTypes<VOL>::YFace ) \
+  INSTANTIATE( SpatialOps::FaceTypes<VOL>::ZFace )
 
 INSTANTIATE_VARIANTS( SVolField )
 INSTANTIATE_VARIANTS( XVolField )

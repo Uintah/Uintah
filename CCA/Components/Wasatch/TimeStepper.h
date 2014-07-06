@@ -87,10 +87,10 @@ namespace Wasatch{
 
     Uintah::SimulationStateP sharedState_;
 
-    typedef std::set< FieldInfo<SpatialOps::structured::SVolField> > ScalarFields;
-    typedef std::set< FieldInfo<SpatialOps::structured::XVolField> > XVolFields;
-    typedef std::set< FieldInfo<SpatialOps::structured::YVolField> > YVolFields;
-    typedef std::set< FieldInfo<SpatialOps::structured::ZVolField> > ZVolFields;
+    typedef std::set< FieldInfo<SpatialOps::SVolField> > ScalarFields;
+    typedef std::set< FieldInfo<SpatialOps::XVolField> > XVolFields;
+    typedef std::set< FieldInfo<SpatialOps::YVolField> > YVolFields;
+    typedef std::set< FieldInfo<SpatialOps::ZVolField> > ZVolFields;
     typedef std::set< FieldInfo<SpatialOps::Particle::ParticleField> > ParticleFields;
 
     ScalarFields   scalarFields_;   ///< A vector of the scalar fields being solved by this time integrator.

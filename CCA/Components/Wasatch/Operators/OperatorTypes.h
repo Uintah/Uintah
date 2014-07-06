@@ -41,7 +41,7 @@ using SpatialOps::Divergence;
 using SpatialOps::Gradient;
 using SpatialOps::Interpolant;
 
-using SpatialOps::structured::OperatorTypeBuilder;
+using SpatialOps::OperatorTypeBuilder;
 
 namespace Wasatch{
 
@@ -96,7 +96,7 @@ namespace Wasatch{
    *  these operator types, it may not be supported.
    */
   template< typename CellT > struct OpTypes
-    : public SpatialOps::structured::BasicOpTypes<CellT>
+    : public SpatialOps::BasicOpTypes<CellT>
   {
     typedef UpwindInterpolant< CellT, typename FaceTypes<CellT>::XFace >    InterpC2FXUpwind;
     typedef UpwindInterpolant< CellT, typename FaceTypes<CellT>::YFace >    InterpC2FYUpwind;

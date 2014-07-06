@@ -85,13 +85,13 @@ public:
         _mytype = FACEY; 
       } else if ( typeid(T) == typeid(SFCZVariable<double>)){ 
         _mytype = FACEZ; 
-      } else if ( typeid(T) == typeid(SpatialOps::structured::SVolField)){ 
+      } else if ( typeid(T) == typeid(SpatialOps::SVolField)){ 
         _mytype = CC_DOUBLE; 
-      } else if ( typeid(T) == typeid(SpatialOps::structured::SSurfXField)){ 
+      } else if ( typeid(T) == typeid(SpatialOps::SSurfXField)){ 
         _mytype = FACEX; 
-      } else if ( typeid(T) == typeid(SpatialOps::structured::SSurfYField)){ 
+      } else if ( typeid(T) == typeid(SpatialOps::SSurfYField)){ 
         _mytype = FACEY; 
-      } else if ( typeid(T) == typeid(SpatialOps::structured::SSurfZField)){ 
+      } else if ( typeid(T) == typeid(SpatialOps::SSurfZField)){ 
         _mytype = FACEZ; 
       }
 
@@ -152,7 +152,7 @@ public:
 
     //Shamelessly stolen from Wasatch: 
     /**
-     * \fn void get_bc_logicals( const Uintah::Patch* const, SpatialOps::structured::IntVec&, SpatialOps::structured::IntVec& );
+     * \fn void get_bc_logicals( const Uintah::Patch* const, SpatialOps::IntVec&, SpatialOps::IntVec& );
      * \brief Given the patch, populate information about whether a physical
      *        boundary exists on each side of the patch.
      * \param patch   - the patch of interest
@@ -160,8 +160,8 @@ public:
      * \param bcPlus  - assigned to 0 if no BC present on (+) faces, 1 if present
      */
     void get_bc_logicals( const Uintah::Patch* const patch,
-                          SpatialOps::structured::IntVec& bcMinus,
-                          SpatialOps::structured::IntVec& bcPlus );
+                          SpatialOps::IntVec& bcMinus,
+                          SpatialOps::IntVec& bcPlus );
 
     template< typename FieldT, typename UFT >
     inline FieldT* wrap_uintah_field_as_spatialops( UFT& uintahVar,
@@ -172,7 +172,7 @@ public:
                                                     double* uintahDeviceVar = NULL )
     {
 
-      namespace SS = SpatialOps::structured;
+      namespace SS = SpatialOps;
 
       using SCIRun::IntVector;
 
@@ -284,8 +284,8 @@ protected:
     };
 
     template<class M>
-    struct SO<SpatialOps::structured::SVolField,M>{
-      SpatialOps::structured::SVolField* get_so_grid_var( std::string name, M& var_map, const Patch* patch, const int nGhost, TaskInterface& tsk ){
+    struct SO<SpatialOps::SVolField,M>{
+      SpatialOps::SVolField* get_so_grid_var( std::string name, M& var_map, const Patch* patch, const int nGhost, TaskInterface& tsk ){
         std::map<std::string, constVariableBase<GridVariableBase>* > test_const;
         bool do_const = false; 
         if (typeid(var_map) == typeid(test_const)){ 
@@ -295,10 +295,10 @@ protected:
 
           if ( do_const ){ 
             constCCVariable<double>* var = dynamic_cast<constCCVariable<double>* >(var_map.find(name)->second); 
-            return tsk.wrap_uintah_field_as_spatialops<SpatialOps::structured::SVolField>( var, patch, nGhost );
+            return tsk.wrap_uintah_field_as_spatialops<SpatialOps::SVolField>( var, patch, nGhost );
           } else { 
             CCVariable<double>* var = dynamic_cast<CCVariable<double>* >(var_map.find(name)->second); 
-            return tsk.wrap_uintah_field_as_spatialops<SpatialOps::structured::SVolField>( var, patch, nGhost );
+            return tsk.wrap_uintah_field_as_spatialops<SpatialOps::SVolField>( var, patch, nGhost );
           }
 
         }
@@ -306,8 +306,8 @@ protected:
       };
     };
     template<class M>
-    struct SO<SpatialOps::structured::SSurfXField,M>{
-      SpatialOps::structured::SSurfXField* get_so_grid_var( std::string name, M& var_map, const Patch* patch, const int nGhost, TaskInterface& tsk ){
+    struct SO<SpatialOps::SSurfXField,M>{
+      SpatialOps::SSurfXField* get_so_grid_var( std::string name, M& var_map, const Patch* patch, const int nGhost, TaskInterface& tsk ){
         std::map<std::string, constVariableBase<GridVariableBase>* > test_const;
         bool do_const = false; 
         if (typeid(var_map) == typeid(test_const)){ 
@@ -317,10 +317,10 @@ protected:
 
           if ( do_const ){ 
             constSFCXVariable<double>* var = dynamic_cast<constSFCXVariable<double>* >(var_map.find(name)->second); 
-            return tsk.wrap_uintah_field_as_spatialops<SpatialOps::structured::SSurfXField>( var, patch, nGhost );
+            return tsk.wrap_uintah_field_as_spatialops<SpatialOps::SSurfXField>( var, patch, nGhost );
           } else { 
             SFCXVariable<double>* var = dynamic_cast<SFCXVariable<double>* >(var_map.find(name)->second); 
-            return tsk.wrap_uintah_field_as_spatialops<SpatialOps::structured::SSurfXField>( var, patch, nGhost );
+            return tsk.wrap_uintah_field_as_spatialops<SpatialOps::SSurfXField>( var, patch, nGhost );
           }
 
         }
@@ -330,8 +330,8 @@ protected:
       }
     };
     template<class M>
-    struct SO<SpatialOps::structured::SSurfYField,M>{
-      SpatialOps::structured::SSurfYField* get_so_grid_var( std::string name, M& var_map, const Patch* patch, const int nGhost, TaskInterface& tsk ){
+    struct SO<SpatialOps::SSurfYField,M>{
+      SpatialOps::SSurfYField* get_so_grid_var( std::string name, M& var_map, const Patch* patch, const int nGhost, TaskInterface& tsk ){
         std::map<std::string, constVariableBase<GridVariableBase>* > test_const;
         bool do_const = false; 
         if (typeid(var_map) == typeid(test_const)){ 
@@ -341,10 +341,10 @@ protected:
 
           if ( do_const ){ 
             constSFCYVariable<double>* var = dynamic_cast<constSFCYVariable<double>* >(var_map.find(name)->second); 
-            return tsk.wrap_uintah_field_as_spatialops<SpatialOps::structured::SSurfYField>( var, patch, nGhost );
+            return tsk.wrap_uintah_field_as_spatialops<SpatialOps::SSurfYField>( var, patch, nGhost );
           } else { 
             SFCYVariable<double>* var = dynamic_cast<SFCYVariable<double>* >(var_map.find(name)->second); 
-            return tsk.wrap_uintah_field_as_spatialops<SpatialOps::structured::SSurfYField>( var, patch, nGhost );
+            return tsk.wrap_uintah_field_as_spatialops<SpatialOps::SSurfYField>( var, patch, nGhost );
           }
 
         }
@@ -354,8 +354,8 @@ protected:
       }
     };
     template<class M>
-    struct SO<SpatialOps::structured::SSurfZField,M>{
-      SpatialOps::structured::SSurfZField* get_so_grid_var( std::string name, M& var_map, const Patch* patch, const int nGhost, TaskInterface& tsk ){
+    struct SO<SpatialOps::SSurfZField,M>{
+      SpatialOps::SSurfZField* get_so_grid_var( std::string name, M& var_map, const Patch* patch, const int nGhost, TaskInterface& tsk ){
         std::map<std::string, constVariableBase<GridVariableBase>* > test_const;
         bool do_const = false; 
         if (typeid(var_map) == typeid(test_const)){ 
@@ -365,10 +365,10 @@ protected:
 
           if ( do_const ){ 
             constSFCZVariable<double>* var = dynamic_cast<constSFCZVariable<double>* >(var_map.find(name)->second); 
-            return tsk.wrap_uintah_field_as_spatialops<SpatialOps::structured::SSurfZField>( var, patch, nGhost );
+            return tsk.wrap_uintah_field_as_spatialops<SpatialOps::SSurfZField>( var, patch, nGhost );
           } else { 
             SFCZVariable<double>* var = dynamic_cast<SFCZVariable<double>* >(var_map.find(name)->second); 
-            return tsk.wrap_uintah_field_as_spatialops<SpatialOps::structured::SSurfZField>( var, patch, nGhost );
+            return tsk.wrap_uintah_field_as_spatialops<SpatialOps::SSurfZField>( var, patch, nGhost );
           }
 
         }

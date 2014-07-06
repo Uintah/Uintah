@@ -131,16 +131,16 @@ Vorticity<FieldT,Vel1T,Vel2T>::Builder::build() const
 //==========================================================================
 // Explicit template instantiation for supported versions of this expression
 #include <spatialops/structured/FVStaggered.h>
-template class Vorticity< SpatialOps::structured::SVolField,
-                          SpatialOps::structured::YVolField,
-                          SpatialOps::structured::XVolField >;
+template class Vorticity< SpatialOps::SVolField,
+                          SpatialOps::YVolField,
+                          SpatialOps::XVolField >;
 
-template class Vorticity< SpatialOps::structured::SVolField,
-                          SpatialOps::structured::ZVolField,
-                          SpatialOps::structured::YVolField >;
+template class Vorticity< SpatialOps::SVolField,
+                          SpatialOps::ZVolField,
+                          SpatialOps::YVolField >;
 
-template class Vorticity< SpatialOps::structured::SVolField,
-                          SpatialOps::structured::XVolField,
-                          SpatialOps::structured::ZVolField >;
+template class Vorticity< SpatialOps::SVolField,
+                          SpatialOps::XVolField,
+                          SpatialOps::ZVolField >;
 
 //==========================================================================

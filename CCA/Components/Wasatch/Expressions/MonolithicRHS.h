@@ -35,7 +35,7 @@ class MonolithicRHS
   const YFaceT* convFluxY_;  ///< y-direction convective flux
   const ZFaceT* convFluxZ_;  ///< z-direction convective flux
 
-  typedef SpatialOps::structured::BasicOpTypes<FieldT>  OpTypes;
+  typedef SpatialOps::BasicOpTypes<FieldT>  OpTypes;
 
   typedef typename OpTypes::InterpC2FX InterpX;
   typedef typename OpTypes::InterpC2FY InterpY;

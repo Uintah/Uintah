@@ -237,7 +237,6 @@ namespace Wasatch {
   PoissonExpression::evaluate()
   {
     using namespace SpatialOps;
-    namespace SS = SpatialOps::structured;
 
     typedef std::vector<SVolField*> SVolFieldVec;
     SVolFieldVec& results = this->get_value_vec();

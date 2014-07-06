@@ -58,7 +58,7 @@ template<typename FieldT, typename ReductionOpT>
 struct populate_result{
   static inline void doit( const FieldT& src,
                            const ReductionEnum reduction,
-                           SpatialOps::structured::SingleValueField& result )
+                           SpatialOps::SingleValueField& result )
   {
     using namespace SpatialOps;
      switch( reduction ){
@@ -71,10 +71,10 @@ struct populate_result{
 };
 
 template<typename ReductionOpT>
-struct populate_result<SpatialOps::structured::SingleValueField,ReductionOpT>{
-  static inline void doit( const SpatialOps::structured::SingleValueField& src,
+struct populate_result<SpatialOps::SingleValueField,ReductionOpT>{
+  static inline void doit( const SpatialOps::SingleValueField& src,
                            const ReductionEnum reduction,
-                           SpatialOps::structured::SingleValueField& result )
+                           SpatialOps::SingleValueField& result )
   {
     using namespace SpatialOps;
     result <<= src;
@@ -121,7 +121,7 @@ Builder::build() const
   template class Reduction<T,ReductionMaxOpT>; \
   template class Reduction<T,ReductionSumOpT>;
 
-DECLARE( SpatialOps::structured::SingleValueField )
+DECLARE( SpatialOps::SingleValueField )
 DECLARE( SVolField                                )
 DECLARE( XVolField                                )
 DECLARE( YVolField                                )

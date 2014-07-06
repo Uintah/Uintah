@@ -314,18 +314,17 @@ namespace Wasatch {
                                            Uintah::Iterator& bndIter,
                                            BoundaryIterators& myBndIters )
   {
-    namespace SS = SpatialOps::structured;    
-    typedef SpatialOps::structured::IntVec IntVecT;
+    using SpatialOps::IntVec;
     
-    std::vector<SS::IntVec>& extraBndSOIter    = myBndIters.extraBndCells;
-    std::vector<SS::IntVec>& intBndSOIter      = myBndIters.interiorBndCells;
-    std::vector<SS::IntVec>& extraPlusBndCells = myBndIters.extraPlusBndCells;
+    std::vector<IntVec>& extraBndSOIter        = myBndIters.extraBndCells;
+    std::vector<IntVec>& intBndSOIter          = myBndIters.interiorBndCells;
+    std::vector<IntVec>& extraPlusBndCells     = myBndIters.extraPlusBndCells;
     
-    std::vector<SS::IntVec>& neboExtraBndSOIter    = myBndIters.neboExtraBndCells;
-    std::vector<SS::IntVec>& neboIntBndSOIter      = myBndIters.neboInteriorBndCells;
-    std::vector<SS::IntVec>& neboExtraPlusBndCells = myBndIters.neboExtraPlusBndCells;
+    std::vector<IntVec>& neboExtraBndSOIter    = myBndIters.neboExtraBndCells;
+    std::vector<IntVec>& neboIntBndSOIter      = myBndIters.neboInteriorBndCells;
+    std::vector<IntVec>& neboExtraPlusBndCells = myBndIters.neboExtraPlusBndCells;
 
-    std::vector<SS::IntVec>& intEdgeSOIter     = myBndIters.interiorEdgeCells;
+    std::vector<IntVec>& intEdgeSOIter         = myBndIters.interiorEdgeCells;
    
     bool plusEdge[3];
     bool minusEdge[3];
@@ -372,7 +371,7 @@ namespace Wasatch {
 
     for( bndIter.reset(); !bndIter.done(); ++bndIter ){
       bcPointIJK = *bndIter - patchCellOffset;
-      extraBndSOIter.push_back(SS::IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
+      extraBndSOIter.push_back(IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
       
       edgePoint = *bndIter - unitNormal;
       if( ((edgePoint[i] == idxHi[i]) && plusEdge[i]  ) ||
@@ -381,25 +380,25 @@ namespace Wasatch {
           ((edgePoint[j] == idxLo[j]) && minusEdge[j] ) )
       {
         edgePoint -= patchCellOffset;
-        intEdgeSOIter.push_back( IntVecT(bcPointIJK[0], bcPointIJK[1], bcPointIJK[2]) );
+        intEdgeSOIter.push_back( IntVec(bcPointIJK[0], bcPointIJK[1], bcPointIJK[2]) );
       }
       bcPointIJK -= unitNormal;
-      intBndSOIter.push_back(SS::IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
+      intBndSOIter.push_back(IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
 
       bcPointIJK = *bndIter - interiorPatchCellOffset;
-      neboExtraBndSOIter.push_back(SS::IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
+      neboExtraBndSOIter.push_back(IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
       bcPointIJK -= unitNormal;
-      neboIntBndSOIter.push_back(SS::IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
+      neboIntBndSOIter.push_back(IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
     }
     
     // if we are on a plus face, we will most likely need a plus-face iterator for staggered fields
     if (face == Uintah::Patch::xplus || face == Uintah::Patch::yplus || face == Uintah::Patch::zplus ){
       for( bndIter.reset(); !bndIter.done(); ++bndIter ){
         bcPointIJK = *bndIter - patchCellOffset + unitNormal;
-        extraPlusBndCells.push_back(SS::IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
+        extraPlusBndCells.push_back(IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
         
         bcPointIJK = *bndIter - interiorPatchCellOffset + unitNormal;
-        neboExtraPlusBndCells.push_back(SS::IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
+        neboExtraPlusBndCells.push_back(IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
       }
     }
   }
@@ -490,7 +489,6 @@ namespace Wasatch {
                                                    const double& newValue,
                                                    const BndCondTypeEnum newBCType )
   {
-    namespace SS = SpatialOps::structured;
     BndCondSpec newBCSpec = {newVarName, "none", newValue, newBCType, DOUBLE_TYPE};
     add_auxiliary_boundary_condition(srcVarName, newBCSpec);
   }
@@ -500,9 +498,7 @@ namespace Wasatch {
   void BCHelper::add_auxiliary_boundary_condition(const std::string& srcVarName,
                                                   BndCondSpec bcSpec)
   {
-    using namespace std;
-    BOOST_FOREACH( BndMapT::value_type bndSpecPair, bndNameBndSpecMap_ )
-    {
+    BOOST_FOREACH( BndMapT::value_type bndSpecPair, bndNameBndSpecMap_ ){
       BndSpec& myBndSpec = bndSpecPair.second;
       const BndCondSpec* myBndCondSpec = myBndSpec.find(srcVarName);
       if (myBndCondSpec) {
@@ -531,7 +527,7 @@ namespace Wasatch {
 
   //------------------------------------------------------------------------------------------------
 
-  const std::vector<SpatialOps::structured::IntVec>*
+  const std::vector<SpatialOps::IntVec>*
   BCHelper::get_edge_mask( const BndSpec& myBndSpec, const int& patchID ) const
   {
     const std::string bndName = myBndSpec.name;
@@ -548,7 +544,7 @@ namespace Wasatch {
   //------------------------------------------------------------------------------------------------
   
   template<typename FieldT>
-  const std::vector<SpatialOps::structured::IntVec>*
+  const std::vector<SpatialOps::IntVec>*
   BCHelper::get_extra_bnd_mask( const BndSpec& myBndSpec,
                                const int& patchID ) const
   {
@@ -572,7 +568,7 @@ namespace Wasatch {
   //------------------------------------------------------------------------------------------------
   
   template<typename FieldT>
-  const std::vector<SpatialOps::structured::IntVec>*
+  const std::vector<SpatialOps::IntVec>*
   BCHelper::get_nebo_extra_bnd_mask( const BndSpec& myBndSpec,
                                const int& patchID ) const
   {
@@ -597,7 +593,7 @@ namespace Wasatch {
   //------------------------------------------------------------------------------------------------
   
   template<typename FieldT>
-  const std::vector<SpatialOps::structured::IntVec>*
+  const std::vector<SpatialOps::IntVec>*
   BCHelper::get_interior_bnd_mask( const BndSpec& myBndSpec,
                                   const int& patchID ) const
   {
@@ -622,7 +618,7 @@ namespace Wasatch {
   //------------------------------------------------------------------------------------------------
   
   template<typename FieldT>
-  const std::vector<SpatialOps::structured::IntVec>*
+  const std::vector<SpatialOps::IntVec>*
   BCHelper::get_nebo_interior_bnd_mask( const BndSpec& myBndSpec,
                                   const int& patchID ) const
   {
@@ -680,7 +676,6 @@ namespace Wasatch {
 
   void BCHelper::parse_boundary_conditions()
   {
-    namespace SS = SpatialOps::structured;
     using namespace std;
     // loop over the material set
     BOOST_FOREACH( const Uintah::MaterialSubset* matSubSet, materials_->getVector() ) {
@@ -1056,7 +1051,7 @@ namespace Wasatch {
             // if we are inside a solid, then don't do anything because we already handle this in the pressure expression
             if (volFrac) {
               const Uintah::IntVector iCell = *bndMask - unitNormal - patch->getExtraCellLowIndex(1);
-              const SpatialOps::structured::IntVec iiCell(iCell.x(), iCell.y(), iCell.z() );
+              const SpatialOps::IntVec iiCell(iCell.x(), iCell.y(), iCell.z() );
               if ((*volFrac)(iiCell) < 1.0)
                 continue;
             }
@@ -1083,7 +1078,7 @@ namespace Wasatch {
   void BCHelper::apply_pressure_bc( SVolField& pressureField,
                                     const Uintah::Patch* patch )
   {
-    typedef std::vector<SpatialOps::structured::IntVec> MaskT;
+    typedef std::vector<SpatialOps::IntVec> MaskT;
     
     const int patchID = patch->getID();
 
@@ -1145,7 +1140,7 @@ namespace Wasatch {
   void BCHelper::update_pressure_rhs( SVolField& pressureRHS,
                                       const Uintah::Patch* patch )
   {
-    typedef std::vector<SpatialOps::structured::IntVec> MaskT;
+    typedef std::vector<SpatialOps::IntVec> MaskT;
     
     const int patchID = patch->getID();
     
@@ -1215,8 +1210,8 @@ namespace Wasatch {
   template void BCHelper::create_dummy_dependency< VOLT >( const Expr::Tag& attachDepToThisTag, \
                                                           const Expr::TagList dependencies,     \
                                                           const Category taskCat );             
-  INSTANTIATE_BC_TYPES(SpatialOps::structured::SVolField);
-  INSTANTIATE_BC_TYPES(SpatialOps::structured::XVolField);
-  INSTANTIATE_BC_TYPES(SpatialOps::structured::YVolField);
-  INSTANTIATE_BC_TYPES(SpatialOps::structured::ZVolField);
+  INSTANTIATE_BC_TYPES(SpatialOps::SVolField);
+  INSTANTIATE_BC_TYPES(SpatialOps::XVolField);
+  INSTANTIATE_BC_TYPES(SpatialOps::YVolField);
+  INSTANTIATE_BC_TYPES(SpatialOps::ZVolField);
 } // class BCHelper

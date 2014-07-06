@@ -50,7 +50,7 @@ class InterpolateExpression
 {
   const Expr::Tag srct_;
   
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SrcT, DestT >::type InterpSrcT2DestT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SrcT, DestT >::type InterpSrcT2DestT;
   
   const SrcT* src_;
   
