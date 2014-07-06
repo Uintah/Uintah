@@ -75,142 +75,165 @@ using namespace Uintah;
 void SPME::generateChargeMapDipole(const ProcessorGroup*    pg,
                                    const PatchSubset*       patches,
                                    const MaterialSubset*    materials,
-                                   DataWarehouse*           oldDW,
-                                   DataWarehouse*           newDW,
+                                         DataWarehouse*     oldDW,
+                                         DataWarehouse*     newDW,
                                    const MDLabel*           label,
-                                   CoordinateSystem*        coordSys)
+                                         CoordinateSystem*  coordSys)
 {
-    size_t          numPatches          =   patches->size();
-    size_t          numMaterials        =   materials->size();
-    Uintah::Matrix3 inverseUnitCell     =   coordSys->getInverseCell();
+  size_t numPatches     =   patches->size();
+  size_t numMaterials   =   materials->size();
 
-    // Step through all the patches on this thread
-    for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) {
-        const Patch* patch = patches->get(patchIndex);
+  Uintah::Matrix3 inverseUnitCell = coordSys->getInverseCell();
 
-        // Extract SPMEPatch which maps to our current patch
-        SPMEPatch* currentSPMEPatch =
-                        d_spmePatchMap.find(patch->getID())->second;
+  // Step through all the patches on this thread
+  for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) {
+    const Patch* patch = patches->get(patchIndex);
+    // Extract SPMEPatch which maps to our current patch
+    SPMEPatch* currentSPMEPatch = d_spmePatchMap.find(patch->getID())->second;
 
-        // Step through all the materials in this patch
-        for (size_t material = 0; material < numMaterials; ++material) {
-            ParticleSubset* atomSubset;
-            atomSubset = oldDW->getParticleSubset(material, patch);
+    // Step through all the materials in this patch
+    for (size_t material = 0; material < numMaterials; ++material) {
+      ParticleSubset* atomSubset;
+      atomSubset = oldDW->getParticleSubset(material, patch);
 
-            constParticleVariable<Point> atomPositions;
-            constParticleVariable<long64> atomIDs;
+      constParticleVariable<Point> atomPositions;
+      constParticleVariable<long64> atomIDs;
 
-            oldDW->get(atomPositions, label->global->pX, atomSubset);
-            oldDW->get(atomIDs, label->global->pID, atomSubset);
+      oldDW->get(atomPositions, label->global->pX, atomSubset);
+      oldDW->get(atomIDs, label->global->pID, atomSubset);
 
-            int numAtoms = atomSubset->numParticles();
-            // Verify we have enough memory to hold the charge map for the
-            // current atom type
-            currentSPMEPatch->verifyChargeMapAllocation(numAtoms,material);
+      int numAtoms = atomSubset->numParticles();
+      // Verify we have enough memory to hold the charge map for the
+      // current atom type
+      currentSPMEPatch->verifyChargeMapAllocation(numAtoms, material);
 
-            // Pull the location for the SPMEPatch's copy of the charge map
-            // for this material type
-            std::vector<SPMEMapPoint>* gridMap;
-            gridMap = currentSPMEPatch->getChargeMap(material);
+      // Pull the location for the SPMEPatch's copy of the charge map
+      // for this material type
+      std::vector<SPMEMapPoint>* gridMap;
+      gridMap = currentSPMEPatch->getChargeMap(material);
 
-            // begin loop to generate the charge map
-            ParticleSubset::iterator atom, setBegin, setEnd;
-            setBegin = atomSubset->begin();
-            setEnd   = atomSubset->end();
-            for (atom = setBegin; atom != setEnd; ++atom) {
+      // begin loop to generate the charge map
+      ParticleSubset::iterator atom;
+      for (atom = atomSubset->begin(); atom != atomSubset->end(); ++atom) {
+        particleIndex   atomIndex       =  *atom;
+        particleId      ID              =   atomIDs[atomIndex];
+        Point           position        =   atomPositions[atomIndex];
 
-                particleIndex atomIndex =  *atom;
-                particleId    ID        =   atomIDs[atomIndex];
-                Point         position  =   atomPositions[atomIndex];
+        SCIRun::Vector  kReal           =   d_kLimits.asVector();
 
-                Vector atomGridCoordinates;
-                coordSys->toReduced(position.asVector(),atomGridCoordinates);
+        SCIRun::Vector  atomGridCoordinates;
+        coordSys->toReduced(position.asVector(),atomGridCoordinates);
+        atomGridCoordinates *= kReal;
 
-                SCIRun::Vector kReal    =   d_kLimits.asVector();
-                atomGridCoordinates    *=   kReal;
+        SCIRun::IntVector atomGridOffset =
+                              IntVector(atomGridCoordinates.asPoint());
 
-                SCIRun::IntVector atomGridOffset;
-                atomGridOffset = IntVector(atomGridCoordinates.asPoint());
-                SCIRun::Vector splineValues;
-                splineValues = atomGridOffset.asVector() - atomGridCoordinates;
+        // Set map point to associate with the current particle
+        SPMEMapPoint*   currMapPoint    = &((*gridMap)[atomIndex]);
+        currMapPoint->setParticleID(ID);
+        currMapPoint->setGridOffset(atomGridOffset);
 
-                size_t support = d_interpolatingSpline.getSupport();
 
-                SCIRun::IntVector SupportVector(support, support, support);
-                std::vector<SCIRun::Vector> baseLevel(support);
-                std::vector<SCIRun::Vector> firstDerivative(support);
-                std::vector<SCIRun::Vector> secondDerivative(support);
+        SCIRun::Vector splineValues = atomGridOffset.asVector()
+                                        - atomGridCoordinates;
 
-                d_interpolatingSpline.evaluateThroughSecondDerivative
-                  (splineValues,baseLevel, firstDerivative, secondDerivative);
+        size_t support = d_interpolatingSpline.getSupport();
+//                SCIRun::IntVector SupportVector(support, support, support);
+        std::vector<SCIRun::Vector> baseLevel(support);
+        std::vector<SCIRun::Vector> firstDerivative(support);
+        std::vector<SCIRun::Vector> secondDerivative(support);
 
-                SimpleGrid<double>          chargeGrid(SupportVector,
-                                                       atomGridOffset,
-                                                       MDConstants::IV_ZERO,
-                                                       0);
-                SimpleGrid<SCIRun::Vector>  forceGrid(SupportVector,
-                                                      atomGridOffset,
-                                                      MDConstants::IV_ZERO,
-                                                      0);
-                SimpleGrid<Uintah::Matrix3> dipoleGrid(SupportVector,
-                                                       atomGridOffset,
-                                                       MDConstants::IV_ZERO,
-                                                       0);
+        // All simple grids are already created with:
+        //   extents = SupportVector
+        //   offset  = SciRun::IntVector (0,0,0)
+        //   We simply need to map our variables to the imported map
+        //   Point's grids and set their offset appropriately.
 
-                double kX = kReal.x();
-                double kY = kReal.y();
-                double kZ = kReal.z();
-                for (size_t xIndex = 0; xIndex < support; ++xIndex) {
-                  double   Sx = baseLevel[xIndex].x();
-                  double  dSx = firstDerivative[xIndex].x()*kX;
-                  double d2Sx = secondDerivative[xIndex].x()*kX*kX;
-                  for (size_t yIndex = 0; yIndex < support; ++yIndex) {
-                    double   Sy = baseLevel[yIndex].y();
-                    double  dSy = firstDerivative[yIndex].y()*kY;
-                    double d2Sy = secondDerivative[yIndex].y()*kY*kY;
-                    double   Sx_Sy =  Sx*Sy;
-                    double  dSx_Sy = dSx*Sy;
-                    double  Sx_dSy = Sx*dSy;
-                    double dSx_dSy = dSx*dSy;
-                    for (size_t zIndex = 0; zIndex < support; ++zIndex) {
-                      double   Sz = baseLevel[zIndex].z();
-                      double  dSz = firstDerivative[zIndex].z()*kZ;
-                      double d2Sz = secondDerivative[zIndex].z()*kZ*kZ;
-                      double   Sx_Sz =   Sx*Sz;
-                      double   Sy_Sz =   Sy*Sz;
-                      double dSx_dSy_Sz = dSx_dSy*Sz;
-                      double dSx_Sy_dSz = dSx_Sy*dSz;
-                      double Sx_dSy_dSz = Sx_dSy*dSz;
-                      // Pure spline multiplication for Q/Q interactions
-                      chargeGrid(xIndex,yIndex,zIndex) = Sx_Sy*Sz;
-                      // dPhi/du for reciprocal contribution to electric field
-                      // (also charge contribution to force)
-                      forceGrid(xIndex,yIndex,zIndex)  =
-                        Vector(dSx*Sy_Sz,dSy*Sx_Sz,dSz*Sx_Sy);
-                      // dE/du for reciprocal dipole contribution to the force
-                      dipoleGrid(xIndex,yIndex,zIndex) =
-                        Matrix3(d2Sx*Sy_Sz,dSx_dSy_Sz,dSx_Sy_dSz,
-                                dSx_dSy_Sz,d2Sy*Sx_Sz,Sx_dSy_dSz,
-                                dSx_Sy_dSz,Sx_dSy_dSz,d2Sz*Sx_Sy);
-                    }
-                  }
-                }
-                /*
-                 *SPMEMapPoint holds ONLY the spline and related derivatives;
-                 *charge and dipole values and derivatives
-                 *don't get baked in, so that we don't need to recalculate
-                 *these quantities within the inner loop.
-                 */
-                SPMEMapPoint currentMapPoint(ID,
-                                             atomGridOffset,
-                                             chargeGrid,
-                                             forceGrid,
-                                             dipoleGrid);
-                gridMap->push_back(currentMapPoint);
-            }
-        }
-    }
-}
+
+        doubleGrid* chargeGrid = currMapPoint->getChargeGridModifiable();
+        chargeGrid->setOffset(atomGridOffset);
+
+        vectorGrid* forceGrid = currMapPoint->getForceGridModifiable();
+        forceGrid->setOffset(atomGridOffset);
+
+        matrixGrid* dipoleGrid = currMapPoint->getDipoleGridModifiable();
+        dipoleGrid->setOffset(atomGridOffset);
+
+        d_interpolatingSpline.evaluateThroughSecondDerivative(splineValues,
+                                                              baseLevel,
+                                                              firstDerivative,
+                                                              secondDerivative);
+
+//                SimpleGrid<double>          chargeGrid(SupportVector,
+//                                                       atomGridOffset,
+//                                                       MDConstants::IV_ZERO,
+//                                                       0);
+//                SimpleGrid<SCIRun::Vector>  forceGrid(SupportVector,
+//                                                      atomGridOffset,
+//                                                      MDConstants::IV_ZERO,
+//                                                      0);
+//                SimpleGrid<Uintah::Matrix3> dipoleGrid(SupportVector,
+//                                                       atomGridOffset,
+//                                                       MDConstants::IV_ZERO,
+//                                                       0);
+
+
+        double kX = kReal.x();
+        double kY = kReal.y();
+        double kZ = kReal.z();
+        for (size_t xIndex = 0; xIndex < support; ++xIndex) {
+          double   Sx = baseLevel[xIndex].x();
+          double  dSx = firstDerivative[xIndex].x()*kX;
+          double d2Sx = secondDerivative[xIndex].x()*kX*kX;
+          for (size_t yIndex = 0; yIndex < support; ++yIndex) {
+            double   Sy = baseLevel[yIndex].y();
+            double  dSy = firstDerivative[yIndex].y()*kY;
+            double d2Sy = secondDerivative[yIndex].y()*kY*kY;
+            double   Sx_Sy =  Sx*Sy;
+            double  dSx_Sy = dSx*Sy;
+            double  Sx_dSy = Sx*dSy;
+            double dSx_dSy = dSx*dSy;
+            for (size_t zIndex = 0; zIndex < support; ++zIndex) {
+              double   Sz = baseLevel[zIndex].z();
+              double  dSz = firstDerivative[zIndex].z()*kZ;
+              double d2Sz = secondDerivative[zIndex].z()*kZ*kZ;
+              double   Sx_Sz =   Sx*Sz;
+              double   Sy_Sz =   Sy*Sz;
+              double dSx_dSy_Sz = dSx_dSy*Sz;
+              double dSx_Sy_dSz = dSx_Sy*dSz;
+              double Sx_dSy_dSz = Sx_dSy*dSz;
+              // Pure spline multiplication for Q/Q interactions
+              (*chargeGrid)(xIndex,yIndex,zIndex) = Sx_Sy*Sz;
+              // dPhi/du for reciprocal contribution to electric field
+              // (also charge contribution to force)
+              (*forceGrid)(xIndex,yIndex,zIndex)  =
+                  Vector(dSx*Sy_Sz,dSy*Sx_Sz,dSz*Sx_Sy);
+              // dE/du for reciprocal dipole contribution to the force
+              (*dipoleGrid)(xIndex,yIndex,zIndex) =
+                  Matrix3(d2Sx*Sy_Sz,dSx_dSy_Sz,dSx_Sy_dSz,
+                          dSx_dSy_Sz,d2Sy*Sx_Sz,Sx_dSy_dSz,
+                          dSx_Sy_dSz,Sx_dSy_dSz,d2Sz*Sx_Sy);
+            } // zIndex
+          } // yIndex
+        } // xIndex
+
+        /*
+         *SPMEMapPoint holds ONLY the spline and related derivatives;
+         *charge and dipole values and derivatives
+         *don't get baked in, so that we don't need to recalculate
+         *these quantities within the inner loop.
+         */
+//                SPMEMapPoint currentMapPoint(ID,
+//                                             atomGridOffset,
+//                                             chargeGrid,
+//                                             forceGrid,
+//                                             dipoleGrid);
+//                gridMap->push_back(currentMapPoint);
+
+      } // atom
+    } // material
+  } // patch
+} // method
 
 // Called from calculatePreTransformDipole
 void SPME::mapChargeToGridDipole(SPMEPatch*                     spmePatch,
@@ -227,15 +250,20 @@ void SPME::mapChargeToGridDipole(SPMEPatch*                     spmePatch,
 
   // Method global vector to avoid unnecessary temporary creation
   SCIRun::Vector            d_dot_nabla;
-  for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); ++iter) {
-    particleIndex atom = *iter;
+  ParticleSubset::iterator particleIt;
+  for (particleIt = pset->begin(); particleIt != pset->end(); ++particleIt) {
+    particleIndex atom = *particleIt;
 
-    const SimpleGrid<double> chargeMap = (*gridMap)[atom].getChargeGrid();
-    const SimpleGrid<Vector> gradMap   = (*gridMap)[atom].getGradientGrid();
-    const Vector             dipole    = p_Dipole[atom];
+    //SPMEMapPoint
+    const doubleGrid*       chargeMap = (*gridMap)[atom].getChargeGrid();
+    const vectorGrid*       gradMap   = (*gridMap)[atom].getGradientGrid();
+    const SCIRun::Vector    dipole    = p_Dipole[atom];
 
-    IntVector QAnchor = chargeMap.getOffset();
-    IntVector supportExtent = chargeMap.getExtents();
+    // Pull offset from the mapPoint, not each individual grid, since they
+    // should all be the same and should be equivalent to map's offset for
+    // the particle.
+    IntVector QAnchor = chargeMap->getOffset();
+    IntVector supportExtent = chargeMap->getExtents();
     IntVector Base = QAnchor - patchOffset;
 
     int x_Base = Base[0];
@@ -254,7 +282,8 @@ void SPME::mapChargeToGridDipole(SPMEPatch*                     spmePatch,
         int y_anchor = y_Base + ymask;
         for (int zmask = 0; zmask < zExtent; ++zmask) {
           int z_anchor = z_Base + zmask;
-          dblcomplex val = charge*chargeMap(xmask,ymask,zmask) + Dot(d_dot_nabla,gradMap(xmask,ymask,zmask));
+          dblcomplex val = charge*(*chargeMap)(xmask,ymask,zmask)
+                          + Dot(d_dot_nabla,(*gradMap)(xmask,ymask,zmask));
           (*Q_patchLocal)(x_anchor, y_anchor, z_anchor) += val;
         }
       }
@@ -264,14 +293,15 @@ void SPME::mapChargeToGridDipole(SPMEPatch*                     spmePatch,
 
 // Called from the SPME::calculate subscheduler as part of the polarizable
 // iteration loop.
-void SPME::calculateRealspaceDipole(const ProcessorGroup*     pg,
-                                    const PatchSubset*        patches,
-                                    const MaterialSubset*     materials,
-                                    DataWarehouse*            old_dw,
-                                    DataWarehouse*            new_dw,
-                                    const SimulationStateP*   sharedState,
-                                    const MDLabel*            label,
-                                    CoordinateSystem*         coordinateSystem)
+void SPME::calculateRealspaceDipole(const ProcessorGroup*       pg,
+                                    const PatchSubset*          patches,
+                                    const MaterialSubset*       materials,
+                                          DataWarehouse*        subOldDW,
+                                          DataWarehouse*        subNewDW,
+                                    const SimulationStateP*     sharedState,
+                                    const MDLabel*              label,
+                                          CoordinateSystem*     coordinateSystem,
+                                          DataWarehouse*        parentOldDW)
 {
   size_t numPatches = patches->size();
   size_t numMaterials = materials->size();
@@ -301,24 +331,24 @@ void SPME::calculateRealspaceDipole(const ProcessorGroup*     pg,
     for (size_t localIndex = 0; localIndex < numMaterials; ++localIndex) {
       int atomType = materials->get(localIndex);
       double atomCharge = (*sharedState)->getMDMaterial(atomType)->getCharge();
-      ParticleSubset* atomSubset = old_dw->getParticleSubset(atomType, patch);
-
+      ParticleSubset* atomSubset = parentOldDW->getParticleSubset(atomType,
+                                                                  patch);
       constParticleVariable<Point>  localX;
       constParticleVariable<long64> localID;
       constParticleVariable<Vector> localMu;
-      old_dw->get(localX, label->global->pX, atomSubset);
-      old_dw->get(localID, label->global->pID, atomSubset);
-      old_dw->get(localMu, label->electrostatic->pMu, atomSubset);
+      parentOldDW->get(localX, label->global->pX, atomSubset);
+      parentOldDW->get(localID, label->global->pID, atomSubset);
+      subOldDW->get(localMu, label->electrostatic->pMu, atomSubset);
 
       size_t numLocalAtoms = atomSubset->numParticles();
 
       ParticleVariable<SCIRun::Vector> localForce, localField;
 
-      new_dw->allocateAndPut(localForce,
+      subNewDW->allocateAndPut(localForce,
                              label->electrostatic->pF_electroReal_preReloc,
                              atomSubset);
 
-      new_dw->allocateAndPut(localField,
+      subNewDW->allocateAndPut(localField,
                              label->electrostatic->pE_electroReal_preReloc,
                              atomSubset);
 
@@ -330,14 +360,19 @@ void SPME::calculateRealspaceDipole(const ProcessorGroup*     pg,
       for (size_t neighborIndex = 0; neighborIndex < numMaterials; ++neighborIndex) {
         int neighborType = materials->get(neighborIndex);
         double neighborCharge = (*sharedState)->getMDMaterial(neighborType)->getCharge();
-        ParticleSubset* neighborSubset = old_dw->getParticleSubset(neighborType, patch, Ghost::AroundNodes, d_electrostaticGhostCells, label->global->pX);
+        ParticleSubset* neighborSubset;
+        neighborSubset =  parentOldDW->getParticleSubset(neighborType,
+                                                         patch,
+                                                         Ghost::AroundNodes,
+                                                         d_electrostaticGhostCells,
+                                                         label->global->pX);
 
         constParticleVariable<Point>  neighborX;
         constParticleVariable<long64> neighborID;
         constParticleVariable<Vector> neighborMu;
-        old_dw->get(neighborX, label->global->pX, neighborSubset);
-        old_dw->get(neighborID, label->global->pID, neighborSubset);
-        old_dw->get(neighborMu, label->electrostatic->pMu, neighborSubset);
+        parentOldDW->get(neighborX, label->global->pX, neighborSubset);
+        parentOldDW->get(neighborID, label->global->pID, neighborSubset);
+        subOldDW->get(neighborMu, label->electrostatic->pMu, neighborSubset);
 
         size_t numNeighborAtoms = neighborSubset->numParticles();
 
@@ -392,9 +427,9 @@ void SPME::calculateRealspaceDipole(const ProcessorGroup*     pg,
     } // Loop over local materials
   } // Loop over patches
   // put updated values for reduction variables into the DW
-  new_dw->put(sum_vartype(0.5 * realElectrostaticEnergy),
+  subNewDW->put(sum_vartype(0.5 * realElectrostaticEnergy),
               label->electrostatic->rElectrostaticRealEnergy);
-  new_dw->put(matrix_sum(0.5 * realElectrostaticStress),
+  subNewDW->put(matrix_sum(0.5 * realElectrostaticStress),
               label->electrostatic->rElectrostaticRealStress);
   return;
 } // End method
@@ -445,15 +480,15 @@ void SPME::calculatePreTransformDipole(const ProcessorGroup*    pg,
                                   atomCharge,
                                   p_Dipole,
                                   coordSys);
+      // Dummy variable for maintaining graph layout.
+      PerPatch<int> preTransformDep(1);
+      newDW->put(preTransformDep,
+                 label->SPME_dep->dPreTransform,
+                 atomType,
+                 patch);
 
     } // end Atom Type Loop
 
-    // Dummy variable for maintaining graph layout.
-    PerPatch<int> preTransformDep;
-    newDW->put(preTransformDep,
-               label->SPME_dep->dPreTransform,
-               -1,
-               patch);
 
 
     } // end Patch Loop
@@ -535,14 +570,14 @@ void SPME::mapForceFromGridDipole(const SPMEPatch*                  spmePatch,
   for (atomIter = atomBegin; atomIter != atomEnd; ++atomIter) {
     size_t atom = *atomIter;
 
-    SimpleGrid<SCIRun::Vector>  forceMap    = (*gridMap)[atom].getForceGrid();
-    SimpleGrid<Uintah::Matrix3> gradMap     = (*gridMap)[atom].getDipoleGrid();
+    const vectorGrid*   forceMap    = (*gridMap)[atom].getForceGrid();
+    const matrixGrid*   gradMap     = (*gridMap)[atom].getDipoleGrid();
 
     SCIRun::Vector          de_du(0.0);
     Mu  =   pDipole[atom];
 
-    IntVector   QAnchor         =   forceMap.getOffset();
-    IntVector   supportExtent   =   forceMap.getExtents();
+    IntVector   QAnchor         =   forceMap->getOffset();
+    IntVector   supportExtent   =   forceMap->getExtents();
     IntVector   Base            =   QAnchor - patchOffset;
 
     int         xBase           =   Base[0];
@@ -561,9 +596,9 @@ void SPME::mapForceFromGridDipole(const SPMEPatch*                  spmePatch,
         int yAnchor = yBase + ymask;
         for (int zmask = 0; zmask < zExtent; ++zmask) {
           int zAnchor = zBase + zmask;
-          Uintah::Matrix3 dipoleMap = gradMap(xmask, ymask, zmask);
+          Uintah::Matrix3 dipoleMap = (*gradMap)(xmask, ymask, zmask);
           double QReal = std::real((*Q_patchLocal)(xAnchor, yAnchor, zAnchor));
-          de_du += QReal*(charge*forceMap(xmask, ymask, zmask)
+          de_du += QReal*(charge*(*forceMap)(xmask, ymask, zmask)
                           + muDotU[0] * dipoleMap.getColumn(0)
                           + muDotU[1] * dipoleMap.getColumn(1)
                           + muDotU[2] * dipoleMap.getColumn(2) );
@@ -626,12 +661,12 @@ void SPME::dipoleUpdateFieldAndStress(const ProcessorGroup* pg,
         size_t  atom                = *pSetIter;
                 pRecipField[atom]  *= 0.0;
 
-        SimpleGrid<Vector> potentialDerivMap;
+        const vectorGrid* potentialDerivMap;
         potentialDerivMap = (*gridMap)[atom].getPotentialDerivativeGrid();
 
 
-        IntVector QAnchor           = potentialDerivMap.getOffset();
-        IntVector supportExtent     = potentialDerivMap.getExtents();
+        IntVector QAnchor           = potentialDerivMap->getOffset();
+        IntVector supportExtent     = potentialDerivMap->getExtents();
         IntVector Base              = QAnchor - patchOffset;
 
         int xBase = Base[0];
@@ -648,7 +683,7 @@ void SPME::dipoleUpdateFieldAndStress(const ProcessorGroup* pg,
             int yAnchor = yBase + ymask;
             for (int zmask = 0; zmask < zExtent; ++zmask) {
               int zAnchor = zBase + zmask;
-              potentialDeriv = potentialDerivMap(xmask, ymask, zmask);
+              potentialDeriv = (*potentialDerivMap)(xmask, ymask, zmask);
               double    Q = std::abs((*QConvoluted)(xAnchor, yAnchor, zAnchor));
               pRecipField[atom]    += Q * ( potentialDeriv[0] * delU[0] +
                                             potentialDeriv[1] * delU[1] +

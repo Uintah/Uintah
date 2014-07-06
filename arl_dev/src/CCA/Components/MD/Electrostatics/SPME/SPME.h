@@ -130,17 +130,17 @@ namespace Uintah {
      /*
       * @brief Performs the calculation of the entire charge loop.
       */
-      virtual void calculate (const ProcessorGroup* pg,
-                              const PatchSubset*    patches,
-                              const MaterialSubset* materials,
-                              DataWarehouse*        old_dw,
-                              DataWarehouse*        new_dw,
-                              const SimulationStateP*     simState,
-                              MDSystem*             systemInfo,
-                              const MDLabel*        label,
-                              CoordinateSystem*     coordinateSys,
-                              SchedulerP&           subscheduler,
-                              const LevelP&         level);
+      virtual void calculate (const ProcessorGroup*      pg,
+                              const PatchSubset*        patches,
+                              const MaterialSubset*     materials,
+                                    DataWarehouse*      old_dw,
+                                    DataWarehouse*      new_dw,
+                              const SimulationStateP*   simState,
+                                    MDSystem*           systemInfo,
+                              const MDLabel*            label,
+                                    CoordinateSystem*   coordinateSys,
+                                    SchedulerP&         subscheduler,
+                              const LevelP&             level);
 
      /*
       * @brief Performs clean up after simulation has been run
@@ -271,38 +271,39 @@ namespace Uintah {
       void scheduleInitializeLocalStorage(const ProcessorGroup* pg,
                                           const PatchSet*       patches,
                                           const MaterialSet*    materials,
-                                          DataWarehouse*        subOldDW,
-                                          DataWarehouse*        subNewDW,
+                                                DataWarehouse*  subOldDW,
+                                                DataWarehouse*  subNewDW,
                                           const MDLabel*        label,
                                           const LevelP&         level,
-                                          SchedulerP&           sched);
+                                                SchedulerP&     sched);
 
       /*
        * @brief Schedules the realspace portion of the calculation
        */
-       void scheduleCalculateRealspace(const ProcessorGroup*  pg,
-                                       const PatchSet*        patches,
-                                       const MaterialSet*     materials,
-                                       DataWarehouse*         subOldDW,
-                                       DataWarehouse*         subNewDW,
-                                       const SimulationStateP*      sharedState,
-                                       const MDLabel*         label,
-                                       CoordinateSystem*      coordSys,
-                                       SchedulerP&            sched);
+       void scheduleCalculateRealspace(const ProcessorGroup*    pg,
+                                       const PatchSet*          patches,
+                                       const MaterialSet*       materials,
+                                             DataWarehouse*     subOldDW,
+                                             DataWarehouse*     subNewDW,
+                                       const SimulationStateP*  sharedState,
+                                       const MDLabel*           label,
+                                             CoordinateSystem*  coordSys,
+                                             SchedulerP&        sched,
+                                             DataWarehouse*     parentOldDW);
 
        /*
         * @brief    Places the calculation of the charge spreading into the
         *           task graph
         */
-       void scheduleCalculatePretransform(const ProcessorGroup* pg,
-                                          const PatchSet*       patches,
-                                          const MaterialSet*    materials,
-                                          DataWarehouse*        subOldDW,
-                                          DataWarehouse*        subNewDW,
-                                          const SimulationStateP*     simState,
-                                          const MDLabel*        label,
-                                          CoordinateSystem*     coordSystem,
-                                          SchedulerP&           sched);
+       void scheduleCalculatePretransform(const ProcessorGroup*     pg,
+                                          const PatchSet*           patches,
+                                          const MaterialSet*        materials,
+                                                DataWarehouse*      subOldDW,
+                                                DataWarehouse*      subNewDW,
+                                          const SimulationStateP*   simState,
+                                          const MDLabel*            label,
+                                                CoordinateSystem*   coordSystem,
+                                                SchedulerP&         sched);
        /*
         * @brief    Places the reduction of nodewide fourier space data into
         *           the task graph
@@ -413,24 +414,26 @@ namespace Uintah {
        void calculateRealspace(const ProcessorGroup*    pg,
                                const PatchSubset*       patches,
                                const MaterialSubset*    materials,
-                               DataWarehouse*           subOldDW,
-                               DataWarehouse*           subNewDW,
-                               const SimulationStateP*        sharedState,
+                                     DataWarehouse*     subOldDW,
+                                     DataWarehouse*     subNewDW,
+                               const SimulationStateP*  sharedState,
                                const MDLabel*           label,
-                               CoordinateSystem*        coordSystem);
+                                     CoordinateSystem*  coordSystem,
+                                     DataWarehouse*     parentOldDW);
 
        /*
         * @brief    Realspace portion of Ewald calculation for induced dipolar
         *           systems
         */
-       void calculateRealspaceDipole(const ProcessorGroup*  pg,
-                                     const PatchSubset*     patches,
-                                     const MaterialSubset*  materials,
-                                     DataWarehouse*         subOldDW,
-                                     DataWarehouse*         subNewDW,
-                                     const SimulationStateP*      sharedState,
-                                     const MDLabel*         label,
-                                     CoordinateSystem*      coordSystem);
+       void calculateRealspaceDipole(const ProcessorGroup*      pg,
+                                     const PatchSubset*         patches,
+                                     const MaterialSubset*      materials,
+                                           DataWarehouse*       subOldDW,
+                                           DataWarehouse*       subNewDW,
+                                     const SimulationStateP*    sharedState,
+                                     const MDLabel*             label,
+                                           CoordinateSystem*    coordSystem,
+                                           DataWarehouse*       parentOldDW);
 
        /*
         * @brief    Generates the basic coefficients for mapping charge to the

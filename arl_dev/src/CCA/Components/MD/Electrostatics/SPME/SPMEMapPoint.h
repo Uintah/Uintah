@@ -99,37 +99,50 @@ namespace Uintah {
        * @param
        * @return
        */
-      inline const SimpleGrid<double>& getChargeGrid() const
-      {
-        return d_chargeGrid;
+      inline const SimpleGrid<double>* getChargeGrid() const {
+        return &d_chargeGrid;
       }
 
-      inline const SimpleGrid<Vector>& getGradientGrid() const
-		{
-    	  return d_forceGrid;
-		}
-
-      inline const SimpleGrid<Vector>& getPotentialDerivativeGrid() const
-		{
-    	  // d_forceGrid is the derivative of the potential at a point
-    	  return d_forceGrid;
-		}
-
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      inline const SimpleGrid<SCIRun::Vector>& getForceGrid() const
-      {
-        return d_forceGrid;
+      inline const SimpleGrid<SCIRun::Vector>* getGradientGrid() const {
+          return &d_forceGrid;
       }
 
-      inline const SimpleGrid<Matrix3>& getDipoleGrid() const
-	  {
-    	  return d_polarizableForceGrid;
-	  }
+      inline const SimpleGrid<SCIRun::Vector>* getPotentialDerivativeGrid() const {
+          // d_forceGrid is the derivative of the potential at a point
+          return &d_forceGrid;
+      }
 
+      inline const SimpleGrid<SCIRun::Vector>* getForceGrid() const {
+        return &d_forceGrid;
+      }
+
+      inline const SimpleGrid<Matrix3>* getDipoleGrid() const {
+          return &d_polarizableForceGrid;
+      }
+
+      inline SimpleGrid<double>* getChargeGridModifiable() {
+        return &d_chargeGrid;
+      }
+
+      inline SimpleGrid<SCIRun::Vector>* getForceGridModifiable() {
+        return &d_forceGrid;
+      }
+
+      inline SimpleGrid<SCIRun::Vector>* getGradientGridModifiable() {
+        return &d_forceGrid;
+      }
+
+      inline SimpleGrid<Matrix3>* getDipoleGridModifiable() {
+        return &d_polarizableForceGrid;
+      }
+
+      inline void setGridOffset(const IntVector& _IV_In) {
+        d_gridOffset = _IV_In;
+      }
+
+      inline void setParticleID(const particleIndex& _ID_In) {
+        d_particleID = _ID_In;
+      }
     private:
 
       particleIndex                 d_particleID;

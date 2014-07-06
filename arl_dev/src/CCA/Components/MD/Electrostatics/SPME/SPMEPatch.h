@@ -137,10 +137,10 @@ namespace Uintah {
        * @param
        * @return
        */
-      inline void setTheta(SimpleGrid<double>* theta)
-      {
-        d_theta = theta;
-      }
+//      inline void setTheta(SimpleGrid<double>* theta)
+//      {
+//        d_theta = theta;
+//      }
 
       /**
        * @brief
@@ -157,10 +157,10 @@ namespace Uintah {
        * @param
        * @return
        */
-      inline void setStressPrefactor(SimpleGrid<Matrix3>* stressPrefactor)
-      {
-        d_stressPrefactor = stressPrefactor;
-      }
+//      inline void setStressPrefactor(SimpleGrid<Matrix3>* stressPrefactor)
+//      {
+//        d_stressPrefactor = stressPrefactor;
+//      }
 
       /**
        * @brief
@@ -182,13 +182,13 @@ namespace Uintah {
         d_Q_patchLocal = q;
       }
 
-      inline ParticleVariable<Vector>* getDipoles() {
-    	return d_Dipoles_patchLocal;
-      }
+//      inline ParticleVariable<Vector>* getDipoles() {
+//    	return d_Dipoles_patchLocal;
+//      }
 
-      inline void setDipoles(ParticleVariable<Vector>* dipoleVector) {
-    	  d_Dipoles_patchLocal = dipoleVector;
-      }
+//      inline void setDipoles(ParticleVariable<Vector>* dipoleVector) {
+//    	  d_Dipoles_patchLocal = dipoleVector;
+//      }
 
       inline std::vector<SPMEMapPoint>* getChargeMap(const int AtomTypeIndex)
       {
@@ -214,7 +214,7 @@ namespace Uintah {
       SimpleGrid<double>* d_theta;             //!<
       SimpleGrid<Matrix3>* d_stressPrefactor;  //!<
       SimpleGrid<std::complex<double> >* d_Q_patchLocal;    //!<
-      ParticleVariable<Vector>* d_Dipoles_patchLocal;
+//      ParticleVariable<Vector>* d_Dipoles_patchLocal;
 
       const Patch* d_patch;                    //!<
 

@@ -365,13 +365,15 @@ void SPME::reduceNodeLocalQ(const ProcessorGroup*   pg,
     } // zmask
     d_Qlock.unlock();
     // Set dummy variables for taskgraph dependence
-    // FIXME:  This won't work, can't put a PerPatch variable
-    PerPatch<int> reduceQDummy;
-    newDW->put(reduceQDummy,
-               label->SPME_dep->dReduceNodeLocalQ,
-               -1,
-               patch);
-
+    size_t numAtomTypes = materials->size();
+    for (size_t dummyType = 0; dummyType < numAtomTypes; ++dummyType) {
+      int atomType = materials->get(dummyType);
+      PerPatch<int> reduceQDummy;
+      newDW->put(reduceQDummy,
+                 label->SPME_dep->dReduceNodeLocalQ,
+                 atomType,
+                 patch);
+    }
 
   } // Patch
 }

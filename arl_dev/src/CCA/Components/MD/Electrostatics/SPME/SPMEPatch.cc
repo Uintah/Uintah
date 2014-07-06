@@ -50,30 +50,30 @@ SPMEPatch::~SPMEPatch()
 //  }
 }
 
-SPMEPatch::SPMEPatch(IntVector extents,
-                     IntVector offset,
-                     IntVector plusGhostExtents,
-                     IntVector minusGhostExtents,
-                     const Patch* patch,
-                     double patchVolumeFraction,
-                     int splineSupport,
-                     MDSystem* system) :
-      d_localExtents(extents),
-      d_globalOffset(offset),
-      d_posGhostExtents(plusGhostExtents),
-      d_negGhostExtents(minusGhostExtents),
-      d_patch(patch)
+SPMEPatch::SPMEPatch(       IntVector   kGridExtents,
+                            IntVector   kGridOffset,
+                            IntVector   plusGhostExtents,
+                            IntVector   minusGhostExtents,
+                     const  Patch*      patch,
+                            double      patchVolumeFraction,
+                            int         splineSupport,
+                            MDSystem*   system)
+                    :d_localExtents(kGridExtents),
+                     d_globalOffset(kGridOffset),
+                     d_posGhostExtents(plusGhostExtents),
+                     d_negGhostExtents(minusGhostExtents),
+                     d_patch(patch)
 {
-  d_Q_patchLocal        = scinew SimpleGrid<dblcomplex>(extents,
-                                                        offset,
+  d_Q_patchLocal        = scinew SimpleGrid<dblcomplex>(kGridExtents,
+                                                        kGridOffset,
                                                         MDConstants::IV_ZERO,
                                                         splineSupport);
-  d_stressPrefactor     = scinew SimpleGrid<Matrix3>(extents,
-                                                     offset,
+  d_stressPrefactor     = scinew SimpleGrid<Matrix3>(kGridExtents,
+                                                     kGridOffset,
                                                      MDConstants::IV_ZERO,
                                                      0);
-  d_theta               = scinew SimpleGrid<double>(extents,
-                                                    offset,
+  d_theta               = scinew SimpleGrid<double>(kGridExtents,
+                                                    kGridOffset,
                                                     MDConstants::IV_ZERO,
                                                     0);
 
@@ -90,32 +90,32 @@ SPMEPatch::SPMEPatch(IntVector extents,
    sg_Matrix3Null.fill(Matrix3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
    SPMEMapPoint nullMap(-1, IV_FLAG, sg_doubleNull, sg_VectorNull, sg_Matrix3Null);
 
-   Uintah::Matrix3 m3ZERO = Uintah::Matrix3(0.0,0.0,0.0,  0.0,0.0,0.0,  0.0,0.0,0.0);
-   {
-   // Test 1
-//   SimpleGrid<double> doubleCopy(sg_doubleNull);
-//   // Test 2
-//   SimpleGrid<SCIRun::Vector> VectorCopy(sg_VectorNull);
-//   // Test 3
-//   SimpleGrid<Matrix3> Matrix3Copy(sg_Matrix3Null);
-//   // Test 4 for crashing of SimpleGrid vs. crashing of Matrix3
-//   std::vector<SimpleGrid<double> > vSGDouble(10,sg_doubleNull);
-//   // Test 5
-//   std::vector<SimpleGrid<SCIRun::Vector> > vSGVector(10,sg_VectorNull);
-     // Test 6.1
-     std::vector<Uintah::Matrix3> vMatrix3(10, m3ZERO );
-     // Test 6.2
-     LinearArray3<Uintah::Matrix3> laMatrix3(2,2,2, m3ZERO );
-   // Test 6
-//   std::vector<SimpleGrid<Uintah::Matrix3> > vSGMatrix(10,sg_Matrix3Null);
-   }
+//   Uintah::Matrix3 m3ZERO = Uintah::Matrix3(0.0,0.0,0.0,  0.0,0.0,0.0,  0.0,0.0,0.0);
+//   {
+//   // Test 1
+////   SimpleGrid<double> doubleCopy(sg_doubleNull);
+////   // Test 2
+////   SimpleGrid<SCIRun::Vector> VectorCopy(sg_VectorNull);
+////   // Test 3
+////   SimpleGrid<Matrix3> Matrix3Copy(sg_Matrix3Null);
+////   // Test 4 for crashing of SimpleGrid vs. crashing of Matrix3
+////   std::vector<SimpleGrid<double> > vSGDouble(10,sg_doubleNull);
+////   // Test 5
+////   std::vector<SimpleGrid<SCIRun::Vector> > vSGVector(10,sg_VectorNull);
+//     // Test 6.1
+//     std::vector<Uintah::Matrix3> vMatrix3(10, m3ZERO );
+//     // Test 6.2
+//     LinearArray3<Uintah::Matrix3> laMatrix3(2,2,2, m3ZERO );
+//   // Test 6
+////   std::vector<SimpleGrid<Uintah::Matrix3> > vSGMatrix(10,sg_Matrix3Null);
+//   }
 
 
   d_chargeMapVector = std::vector< std::vector<SPMEMapPoint> >(numAtomTypes);
   for (size_t AtomType = 0; AtomType < numAtomTypes; ++AtomType) {
     // Initial buffer is 2*relative fraction patch comprises of entire system*total number of atoms of type
     size_t totalNumberOfType = system->getNumAtomsOfType(AtomType);
-    size_t numberBuffered = totalNumberOfType * estimatedMaximumMultiplier * patchVolumeFraction;
+    size_t numberBuffered = ceil(totalNumberOfType * estimatedMaximumMultiplier * patchVolumeFraction);
     d_chargeMapVector[AtomType] = std::vector<SPMEMapPoint> (numberBuffered, nullMap);
   }
 
@@ -183,26 +183,47 @@ SPMEPatch::SPMEPatch(IntVector extents,
 //  }
 }
 
-void SPMEPatch::verifyChargeMapAllocation(const int dataSize, const int globalAtomTypeIndex) {
-  // Checks to see if we can accommodate dataSize items.  If so, we return.  If not, we reserve
-  //   twice as much memory, copy the old vector to the new one, and then return.
-  int currentVectorSize = static_cast<int> (d_chargeMapVector[globalAtomTypeIndex].capacity());
-  if (dataSize <= currentVectorSize) { return; }
+void SPMEPatch::verifyChargeMapAllocation(const int dataSize,
+                                          const int globalAtomTypeIndex) {
+  // Checks to see if we can accommodate dataSize items.  If so, we return.
+  // If not, we keep doubling memory until we have more than enough,
+  // copy the old vector to the new one, and then return.
+  int currentVectorSize =
+      static_cast<int> (d_chargeMapVector[globalAtomTypeIndex].capacity());
+  if (dataSize <= currentVectorSize) {
+    return;
+  }
   int newVectorSize = currentVectorSize * 2;
-  while (dataSize > newVectorSize) { newVectorSize *= 2; }
+  while (dataSize > newVectorSize) {
+    newVectorSize *= 2;
+  }
 
   // Pre-allocate memory for entire new vector
-  IntVector currentMapPointExtents = ((d_chargeMapVector[globalAtomTypeIndex][0]).getChargeGrid()).getExtents();
+  IntVector currentMapPointExtents;
+  // Get grid extents from a current grid
+  currentMapPointExtents =
+      ((d_chargeMapVector[globalAtomTypeIndex][0]).getChargeGrid())->getExtents();
+
+  // Set up a dummy grid point for building the new vector
   const IntVector IV_FLAG(-1,-1,-1);
   SimpleGrid<double> sg_doubleNull(currentMapPointExtents, IV_FLAG, IV_FLAG, 0);
   sg_doubleNull.fill(0.0);
+
   SimpleGrid<Vector> sg_VectorNull(currentMapPointExtents, IV_FLAG, IV_FLAG, 0);
   sg_VectorNull.fill(Vector(0.0, 0.0, 0.0));
+
   SimpleGrid<Matrix3> sg_Matrix3Null(currentMapPointExtents, IV_FLAG, IV_FLAG, 0);
   sg_Matrix3Null.fill(Matrix3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
-  SPMEMapPoint nullMap(-1, IV_FLAG, sg_doubleNull, sg_VectorNull, sg_Matrix3Null);
+  SPMEMapPoint nullMap(-1,
+                       IV_FLAG,
+                       sg_doubleNull,
+                       sg_VectorNull,
+                       sg_Matrix3Null);
 
+  // Resize the current vector with a copy of the nulled mapPoint;
+  // Since this happens as we're building a new set of mapPoints, and since
+  // there is no correspondence between the last set of mapPoints and the
+  // current, there is no need to copy old data.
   d_chargeMapVector[globalAtomTypeIndex].resize(newVectorSize,nullMap);
-
   return;
 }

@@ -405,9 +405,8 @@ void SPME::calculate(   const ProcessorGroup*   pg,
 
   GridP grid    =   level->getGrid();
   subscheduler->setParentDWs(parentOldDW, parentNewDW);
-  subscheduler->advanceDataWarehouse(grid);
-
-  subscheduler->setInitTimestep(true);
+  subscheduler->advanceDataWarehouse(grid); // Generates the first subNewDW
+  subscheduler->setInitTimestep(true);      // Necessary to populate the subNewDW
 
   DataWarehouse*        subOldDW            =   subscheduler->get_dw(2);
   DataWarehouse*        subNewDW            =   subscheduler->get_dw(3);
@@ -419,15 +418,15 @@ void SPME::calculate(   const ProcessorGroup*   pg,
                            allMaterialsUnion);
   }
 
-  subNewDW->transferFrom(parentOldDW,
-                         label->global->pX,
-                         perProcPatches,
-                         allMaterialsUnion);
-
-  subNewDW->transferFrom(parentOldDW,
-                         label->global->pID,
-                         perProcPatches,
-                         allMaterialsUnion);
+//  subNewDW->transferFrom(parentOldDW,
+//                         label->global->pX,
+//                         perProcPatches,
+//                         allMaterialsUnion);
+//
+//  subNewDW->transferFrom(parentOldDW,
+//                         label->global->pID,
+//                         perProcPatches,
+//                         allMaterialsUnion);
 
   subscheduler->setInitTimestep(false);
 
@@ -463,7 +462,8 @@ void SPME::calculate(   const ProcessorGroup*   pg,
   scheduleCalculateRealspace(pg, individualPatches, allMaterials,
                              subOldDW, subNewDW,
                              simState, label, coordSys,
-                             subscheduler);
+                             subscheduler,
+                             parentOldDW);
 
   scheduleCalculatePretransform(pg, individualPatches, allMaterials,
                                 subOldDW, subNewDW,

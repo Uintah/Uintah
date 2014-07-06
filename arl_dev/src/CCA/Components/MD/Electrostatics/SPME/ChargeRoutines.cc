@@ -41,11 +41,12 @@ using namespace Uintah;
 void SPME::calculateRealspace(const ProcessorGroup*     pg,
                               const PatchSubset*        patches,
                               const MaterialSubset*     materials,
-                              DataWarehouse*            subOldDW,
-                              DataWarehouse*            subNewDW,
+                                    DataWarehouse*      subOldDW,
+                                    DataWarehouse*      subNewDW,
                               const SimulationStateP*   simState,
                               const MDLabel*            label,
-                              CoordinateSystem*         coordSys)
+                                    CoordinateSystem*   coordSys,
+                                    DataWarehouse*      parentOldDW)
 {
   size_t numPatches = patches->size();
   size_t numMaterials = materials->size();
@@ -75,12 +76,13 @@ void SPME::calculateRealspace(const ProcessorGroup*     pg,
     for (size_t localIndex = 0; localIndex < numMaterials; ++localIndex) {
       int atomType = materials->get(localIndex);
       double atomCharge = (*simState)->getMDMaterial(atomType)->getCharge();
-      ParticleSubset* atomSubset = subOldDW->getParticleSubset(atomType, patch);
+      ParticleSubset* atomSubset = parentOldDW->getParticleSubset(atomType,
+                                                                  patch);
 
       constParticleVariable<Point>  localX;
       constParticleVariable<long64> localID;
-      subOldDW->get(localX, label->global->pX, atomSubset);
-      subOldDW->get(localID, label->global->pID, atomSubset);
+      parentOldDW->get(localX, label->global->pX, atomSubset);
+      parentOldDW->get(localID, label->global->pID, atomSubset);
 
       size_t numLocalAtoms = atomSubset->numParticles();
 
@@ -97,16 +99,16 @@ void SPME::calculateRealspace(const ProcessorGroup*     pg,
         int neighborType = materials->get(neighborIndex);
         double neighborCharge = (*simState)->getMDMaterial(neighborType)->getCharge();
         ParticleSubset* neighborSubset;
-        neighborSubset = subOldDW->getParticleSubset(neighborType,
-                                                     patch,
-                                                     Ghost::AroundNodes,
-                                                     d_electrostaticGhostCells,
-                                                     label->global->pX);
+        neighborSubset = parentOldDW->getParticleSubset(neighborType,
+                                                        patch,
+                                                        Ghost::AroundNodes,
+                                                        d_electrostaticGhostCells,
+                                                        label->global->pX);
 
         constParticleVariable<Point>  neighborX;
         constParticleVariable<long64> neighborID;
-        subOldDW->get(neighborX, label->global->pX, neighborSubset);
-        subOldDW->get(neighborID, label->global->pID, neighborSubset);
+        parentOldDW->get(neighborX, label->global->pX, neighborSubset);
+        parentOldDW->get(neighborID, label->global->pID, neighborSubset);
 
         size_t numNeighborAtoms = neighborSubset->numParticles();
 
@@ -331,14 +333,14 @@ void SPME::calculatePreTransform(const ProcessorGroup*  pg,
 
   } // end Patch Loop
 
-  // TODO keep an eye on this to make sure it works like we think it should
-  if (Thread::self()->myid() == 0) {
-    d_Q_nodeLocal->initialize(dblcomplex(0.0, 0.0));
-  }
+//  // TODO keep an eye on this to make sure it works like we think it should
+//  if (Thread::self()->myid() == 0) {
+//    d_Q_nodeLocal->initialize(dblcomplex(0.0, 0.0));
+//  }
 
-  bool replace = true;
-  // FIXME ????
-  newDW->transferFrom(oldDW, label->global->pX, patches, materials, replace);
+//  bool replace = true;
+//  // FIXME ????
+//  newDW->transferFrom(oldDW, label->global->pX, patches, materials, replace);
 }
 
 void SPME::mapChargeToGrid(SPMEPatch*           spmePatch,
@@ -357,12 +359,12 @@ void SPME::mapChargeToGrid(SPMEPatch*           spmePatch,
   for (current = setStart; current != setEnd; ++current) {
     particleIndex atom = *current;
 
-    const SimpleGrid<double> chargeMap = (*gridMap)[atom].getChargeGrid();
+    const doubleGrid* chargeMap = (*gridMap)[atom].getChargeGrid();
 
     // Location of the 0,0,0 origin for the charge map grid
-    IntVector QAnchor       = chargeMap.getOffset();
+    IntVector QAnchor       = chargeMap->getOffset();
     // Size of charge map grid
-    IntVector supportExtent = chargeMap.getExtents();
+    IntVector supportExtent = chargeMap->getExtents();
 
     IntVector Base          = QAnchor - patchOffset;
 
@@ -381,7 +383,7 @@ void SPME::mapChargeToGrid(SPMEPatch*           spmePatch,
         for (int zmask = 0; zmask < zExtent; ++zmask) {
           int z_anchor = z_Base + zmask;
           // Local patch has no wrapping, we have ghost cells to write into
-          dblcomplex val = charge * chargeMap(xmask, ymask, zmask);
+          dblcomplex val = charge * (*chargeMap)(xmask, ymask, zmask);
           (*Q_patchLocal)(x_anchor, y_anchor, z_anchor) += val;
         }
       }
@@ -453,13 +455,13 @@ void SPME::mapForceFromGrid(const SPMEPatch*                  spmePatch,
   for (atomIter = atomBegin; atomIter != atomEnd; ++atomIter) {
     size_t atom = *atomIter;
 
-    SimpleGrid<SCIRun::Vector>  forceMap    = (*gridMap)[atom].getForceGrid();
-    SimpleGrid<Uintah::Matrix3> gradMap     = (*gridMap)[atom].getDipoleGrid();
+    const vectorGrid*   forceMap    = (*gridMap)[atom].getForceGrid();
+//    const matrixGrid*   gradMap     = (*gridMap)[atom].getDipoleGrid();
 
     SCIRun::Vector          de_du(0.0);
 
-    IntVector   QAnchor         =   forceMap.getOffset();
-    IntVector   supportExtent   =   forceMap.getExtents();
+    IntVector   QAnchor         =   forceMap->getOffset();
+    IntVector   supportExtent   =   forceMap->getExtents();
     IntVector   Base            =   QAnchor - patchOffset;
 
     int         xBase           =   Base[0];
@@ -480,7 +482,7 @@ void SPME::mapForceFromGrid(const SPMEPatch*                  spmePatch,
           // Since charge is constant for any atom type, we can move it outside
           // the loop (see below).  We would need to fix this if we had
           // per-atom charges instead of per-type
-          de_du += QReal*forceMap(xmask, ymask, zmask);
+          de_du += QReal*(*forceMap)(xmask, ymask, zmask);
         } // Loop over Z
       } // Loop over Y
     } // Loop over X
