@@ -73,7 +73,6 @@ namespace Uintah{
 
     private: 
 
-      RadPropertyCalculator* _props; 
       RadPropertyCalculator::PropertyCalculatorBase* _calc; 
       const VarLabel* _temperature_label; 
       std::string _temperature_name;
