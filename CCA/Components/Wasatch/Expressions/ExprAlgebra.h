@@ -26,10 +26,7 @@
 #define ExprAlgebra_Expr_h
 
 #include <expression/Expression.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
-#include <spatialops/OperatorDatabase.h>
-
-#include <stdexcept>
+#include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 
 /**
  *  \class ExprAlgebra

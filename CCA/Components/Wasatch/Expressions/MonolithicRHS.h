@@ -3,8 +3,7 @@
 
 #include <expression/Expression.h>
 
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
-#include <spatialops/structured/FVStaggeredFieldTypes.h>
+#include <spatialops/structured/FVStaggered.h>
 
 /**
  *  \class MonolithicRHS

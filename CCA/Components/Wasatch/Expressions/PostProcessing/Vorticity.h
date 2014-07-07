@@ -26,9 +26,7 @@
 #define Vorticity_Expr_h
 
 #include <expression/Expression.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
-#include <spatialops/OperatorDatabase.h>
-#include <spatialops/structured/SpatialFieldStore.h>
+#include <spatialops/structured/FVStaggered.h>
 
 // helper struct to identify which faces or directions we take derivatives on
 template< typename Vel1T, typename Vel2T> struct VorticityFaceSelector;

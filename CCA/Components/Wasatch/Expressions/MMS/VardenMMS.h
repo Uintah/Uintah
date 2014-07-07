@@ -2,10 +2,10 @@
 #define VarDen_MMS_Expressions
 
 #include <expression/Expression.h>
-#include <Core/Exceptions/ProblemSetupException.h>
 
-#include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
+#include <spatialops/structured/FVStaggered.h>
+
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Components/Wasatch/VardenParameters.h>
 #include <limits>
 #include <iostream>

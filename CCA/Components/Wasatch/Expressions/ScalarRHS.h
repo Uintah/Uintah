@@ -31,8 +31,7 @@
 #include <expression/ExprLib.h>
 
 //-- SpatialOps Includes --//
-#include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
+#include <spatialops/structured/FVStaggered.h>
 
 #include "RHSTerms.h"
 

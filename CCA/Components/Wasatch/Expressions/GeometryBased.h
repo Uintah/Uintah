@@ -27,7 +27,11 @@
 
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
+
 #include <expression/Expression.h>
+
+#include <spatialops/OperatorDatabase.h>
+
 /**
  *  \class   GeometryBased
  *  \author  Tony Saad
@@ -80,13 +84,13 @@ private:
 template< typename FieldT >
 GeometryBased<FieldT>::
 GeometryBased( GeomValueMapT geomObjects,
-               const double outsideValue)
+               const double outsideValue )
 : Expr::Expression<FieldT>(),
-geomObjects_(geomObjects),
-outsideValue_(outsideValue),
-xTag_(Expr::Tag("XSVOL",Expr::STATE_NONE)),
-yTag_(Expr::Tag("YSVOL",Expr::STATE_NONE)),
-zTag_(Expr::Tag("ZSVOL",Expr::STATE_NONE))
+  geomObjects_(geomObjects),
+  outsideValue_(outsideValue),
+  xTag_(Expr::Tag("XSVOL",Expr::STATE_NONE)),
+  yTag_(Expr::Tag("YSVOL",Expr::STATE_NONE)),
+  zTag_(Expr::Tag("ZSVOL",Expr::STATE_NONE))
 {}
 
 //--------------------------------------------------------------------
@@ -203,11 +207,11 @@ evaluate()
 template< typename FieldT >
 GeometryBased<FieldT>::Builder::
 Builder( const Expr::Tag& result,
-        GeomValueMapT geomObjects,
-        const double outsideValue)
+         GeomValueMapT geomObjects,
+         const double outsideValue )
 : ExpressionBuilder(result),
-geomObjects_(geomObjects),
-outsideValue_(outsideValue)
+  geomObjects_(geomObjects),
+  outsideValue_(outsideValue)
 {}
 
 //--------------------------------------------------------------------
