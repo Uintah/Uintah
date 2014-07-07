@@ -26,9 +26,8 @@
 #define AreaFraction_Expr_h
 
 #include <expression/Expression.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
-#include <spatialops/OperatorDatabase.h>
-#include <spatialops/structured/SpatialFieldStore.h>
+
+#include <spatialops/structured/FVStaggered.h>
 
 /**
  *  \class   AreaFraction

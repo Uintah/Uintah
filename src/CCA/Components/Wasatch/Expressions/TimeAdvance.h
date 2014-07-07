@@ -27,7 +27,8 @@
 
 #include <expression/Expression.h>
 
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
+#include <spatialops/structured/FVStaggered.h>
+
 #include <CCA/Components/Wasatch/TimeIntegratorTools.h>
 
 /**

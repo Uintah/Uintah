@@ -9,8 +9,7 @@
 #include "VardenMMS.h"
 
 //-- SpatialOps Includes --//
-#include <spatialops/OperatorDatabase.h>
-#include <spatialops/structured/SpatialFieldStore.h>
+#include <spatialops/structured/FVStaggered.h>
 
 #ifndef PI
 #define PI 3.1415926535897932384626433832795

@@ -24,8 +24,7 @@
 
 #include "KineticEnergy.h"
 
-#include <spatialops/OperatorDatabase.h>
-#include <spatialops/structured/SpatialFieldStore.h>
+#include <spatialops/structured/FVStaggered.h>
 
 // ###################################################################
 //

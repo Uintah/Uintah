@@ -2,7 +2,7 @@
 #include <CCA/Components/Arches/Operators/Operators.h>
 
 #include <spatialops/Nebo.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
+#include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 
 
 using namespace Uintah;

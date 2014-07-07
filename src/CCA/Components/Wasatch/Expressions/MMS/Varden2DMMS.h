@@ -5,7 +5,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
+#include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 #include <CCA/Components/Wasatch/VardenParameters.h>
 #include <limits>
 #include <iostream>

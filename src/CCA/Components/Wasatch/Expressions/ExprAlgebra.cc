@@ -23,7 +23,7 @@
  */
 
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
-
+#include <spatialops/structured/FVStaggered.h>
 
 // ###################################################################
 //

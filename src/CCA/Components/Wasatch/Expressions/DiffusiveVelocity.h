@@ -28,7 +28,7 @@
 #include <expression/Expression.h>
 
 //-- SpatialOps includes --//
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
+#include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 
 
 /**

@@ -27,7 +27,7 @@
 
 #include <expression/Expression.h>
 
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
+#include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 
 /**
  *  \class Dilatation
