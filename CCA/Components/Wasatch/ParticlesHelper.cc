@@ -45,6 +45,7 @@
 #include <CCA/Components/Wasatch/ParseTools.h>
 
 //-- Uintah Includes --//
+#include <Core/Grid/Box.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -134,8 +135,6 @@ namespace Wasatch {
       destroyMe_.push_back(pZLabel_);
     }
 
-    //
-
     // this task will allocate a particle subset and create particle positions
     Uintah::Task* task = scinew Uintah::Task("initialize particles",
                                              this, &ParticlesHelper::initialize_particles);
@@ -155,11 +154,72 @@ namespace Wasatch {
     particleEqsSpec_ = wasatch_->get_wasatch_spec()->findBlock("ParticleTransportEquations");
     particleEqsSpec_->get("NumberOfInitialParticles",nParticles_);
     
+
+    //____________________________________________
+    /* In certain cases of particle initialization, a patch will NOT have any particles in it. For example,
+     given a domain where x[0, 1] with patch0 [0,0.5] and patch1[0.5,1], assume one wants to initialize
+     particles in the region x[0.55,1]. The process runnin patch will create the correct positions for these
+     particles (since they are bounded by that patch, however, the process running on patch0 will
+     create particles that are OUTSIDE its bounds. This is incorrect and usually leads to problems when
+     performing particle interpolation. There are three remedies to this:
+     (1) Relocate particles that are outside a given patch. This is NOT an option at the moment because
+     particle relocation doesn't work with the initialization task graph
+     (2) Delete the particles that are outside a given patch (on initialization only!)
+     (3) Check particle initialization spec and create a subset with 0 particles on patches that should
+     not have particles in them.
+     The code that follows does option (3).
+    */
+    double xmin=-DBL_MAX, xmax=DBL_MAX,
+           ymin=-DBL_MAX, ymax=DBL_MAX,
+           zmin=-DBL_MAX, zmax=DBL_MAX;
+
+    bool bounded=false;
+    for( Uintah::ProblemSpecP exprParams = wasatch_->get_wasatch_spec()->findBlock("BasicExpression");
+        exprParams != 0;
+        exprParams = exprParams->findNextBlock("BasicExpression") )
+    {
+      if (exprParams->findBlock("ParticlePositionIC")) {
+        Uintah::ProblemSpecP pICSpec = exprParams->findBlock("ParticlePositionIC");
+        // check what type of bounds we are using: specified or patch based?
+        std::string boundsType;
+        pICSpec->getAttribute("bounds",boundsType);
+        bounded = bounded || (boundsType == "SPECIFIED");
+        if (bounded) {
+          double lo = 0.0, hi = 1.0;
+          pICSpec->findBlock("Bounds")->getAttribute("low", lo);
+          pICSpec->findBlock("Bounds")->getAttribute("high", hi);
+          // parse coordinate
+          std::string coord;
+          pICSpec->getAttribute("coordinate",coord);
+          if (coord == "X") {xmin = lo; xmax = hi;}
+          if (coord == "Y") {ymin = lo; ymax = hi;}
+          if (coord == "Z") {zmin = lo; zmax = hi;}
+        }
+      }
+    }
+
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
       for(int m = 0;m<matls->size();m++){
         int matl = matls->get(m);
+        
+        // If the particle position initialization is bounded, make sure that the bounds are within
+        // this patch. If the bounds are NOT, then set the number of particles on this patch to 0.
+        if (bounded) {
+          Point low = patch->getBox().lower();
+          Point high = patch->getBox().upper();
+          if (   xmin >= high.x() || ymin >= high.y() || zmin >= high.z()
+              || xmax <= low.x()  || ymax <= low.y()  || zmax <= low.z()  ) {
+            // no particles will be created in this patch
+            nParticles_ = 0;
+          }
+        }
+        
+        // create a subset with the correct number of particles. This will serve as the initial memory
+        // block for particles
         ParticleSubset* subset = new_dw->createParticleSubset(nParticles_,matl,patch);
+        
+        // allocate memory for Uintah particle position and particle IDs
         ParticleVariable<Point>  ppos;
         ParticleVariable<long64> pid;
         new_dw->allocateAndPut(ppos,    pPosLabel_,           subset);
