@@ -183,6 +183,17 @@ public:
   Vector dCell() const {
     return d_dcell;
   }
+
+  /**
+   * Returns the cell volume dx*dy*dz. This will not work for stretched grids.
+   */
+  double cellVolume() const {
+    if (isStretched()) {
+      throw InternalError( "Cell Volume is not unique for stretched meshes, therefore, you cannot use Patch::cellVolume() or Level::cellVolume().", __FILE__, __LINE__);
+    }
+    return d_dcell.x()*d_dcell.y()*d_dcell.z();
+  }
+  
   Point getAnchor() const {
     return d_anchor;
   }
