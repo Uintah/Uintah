@@ -138,14 +138,17 @@ void BNRRegridder::computeHistogram(std::list<IntVector> &flags, const Region &b
 }
 Split BNRRegridder::findSplit(std::vector<std::vector<unsigned int> > &hist)
 {
-  int size[3]={hist[0].size(),hist[1].size(),hist[2].size()};
-  int dims[3]={0,1,2};
+  int size[3] = { static_cast<int>(hist[0].size()), static_cast<int>(hist[1].size()), static_cast<int>(hist[2].size()) };
+  int dims[3] = { 0, 1, 2 };
 #if 1
   //simple bubble sort on the length of the dimension
-  for(int i=0;i<3;i++)
-    for(int j=0;j<i;j++)
-      if(size[dims[i]]>size[dims[j]])
-        std::swap(dims[i],dims[j]);
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < i; j++) {
+      if (size[dims[i]] > size[dims[j]]) {
+        std::swap(dims[i], dims[j]);
+      }
+    }
+  }
 #endif
   
   //search for zero split in each dimension
@@ -153,15 +156,12 @@ Split BNRRegridder::findSplit(std::vector<std::vector<unsigned int> > &hist)
   //cout << "dimension order: " << dims[0] << " " << dims[1] << " " << dims[2] << endl;
 
   //search for a zero
-  for(size_t dim=0;dim<hist.size();dim++)
-  {
-    int d=dims[dim];
-    for(size_t i=0;i<hist[d].size();i++)
-    {
-      if(hist[d][i]==0)
-      {
+  for (size_t dim = 0; dim < hist.size(); dim++) {
+    int d = dims[dim];
+    for (size_t i = 0; i < hist[d].size(); i++) {
+      if (hist[d][i] == 0) {
         //cout << "Zero split found at: " << d << " : " << i << endl;
-        return Split(d,i);
+        return Split(d, i);
       }
     }
   }

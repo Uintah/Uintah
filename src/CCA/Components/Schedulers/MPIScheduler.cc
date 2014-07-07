@@ -561,15 +561,14 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_
       }
 
       OnDemandDataWarehouse* posDW;
-      const VarLabel* posLabel;
 
       // the load balancer is used to determine where data was in the old dw on the prev timestep
       // pass it in if the particle data is on the old dw
       LoadBalancer* lb = 0;
-      if(!reloc_new_posLabel_ && parentScheduler){
+      if (!reloc_new_posLabel_ && parentScheduler) {
         posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
-        posLabel = parentScheduler->reloc_new_posLabel_;
-      } else {
+      }
+      else {
         // on an output task (and only on one) we require particle variables from the NewDW
         if (req->toTasks.front()->getTask()->getType() == Task::Output)
           posDW = dws[req->req->task->mapDataWarehouse(Task::NewDW)].get_rep();
@@ -577,7 +576,6 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_
           posDW = dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
           lb = getLoadBalancer();
         }
-        posLabel = reloc_new_posLabel_;
       }
 
       MPIScheduler* top = this;
