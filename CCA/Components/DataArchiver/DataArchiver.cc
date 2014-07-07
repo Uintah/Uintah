@@ -102,6 +102,7 @@ DataArchiver::DataArchiver(const ProcessorGroup* myworld, int udaSuffix)
   d_isCheckpointTimestep  = false;
   d_saveParticleVariables = false;
   d_saveP_x               = false;
+  d_particlePositionName  = "p.x";
   d_usingReduceUda        = false;
   //d_currentTime=-1;
   //d_currentTimestep=-1;
@@ -130,6 +131,11 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
    
    d_sharedState = state;
    d_upsFile = params;
+  
+   if (params->findBlock("ParticlePosition")) {
+     params->findBlock("ParticlePosition")->getAttribute("label",d_particlePositionName);
+   }
+  
    ProblemSpecP p = params->findBlock("DataArchiver");
 
    d_outputDoubleAsFloat = p->findBlock("outputDoubleAsFloat") != 0;
@@ -937,6 +943,8 @@ DataArchiver::createIndexXML(Dir& dir)
 
    rootElem->appendElement("numberOfProcessors", d_myworld->size());
 
+   rootElem->appendElement("ParticlePosition", d_particlePositionName);
+ 
    ProblemSpecP metaElem = rootElem->appendChild("Meta");
 
    // Some systems dont supply a logname

@@ -328,6 +328,8 @@ using SCIRun::Mutex;
 
        //! Wheter or not p.x is saved 
        bool d_saveP_x;
+     
+       std::string d_particlePositionName;
 
        //double d_currentTime;
 
