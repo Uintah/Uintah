@@ -30,37 +30,34 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := CCA/Components/OnTheFlyAnalysis
+SRCDIR := CCA/Components/OnTheFlyAnalysis
 
-SRCS     += \
-	$(SRCDIR)/AnalysisModuleFactory.cc \
-	$(SRCDIR)/AnalysisModule.cc	       \
-	$(SRCDIR)/lineExtract.cc	       \
-	$(SRCDIR)/planeExtract.cc	       \
-	$(SRCDIR)/flatPlate_heatFlux.cc	\
-	$(SRCDIR)/particleExtract.cc	\
-	$(SRCDIR)/containerExtract.cc	\
-	$(SRCDIR)/vorticity.cc             \
-	$(SRCDIR)/radiometer.cc            \
-	$(SRCDIR)/1stLawThermo.cc          \
-	$(SRCDIR)/MinMax.cc
+SRCS += \
+        $(SRCDIR)/AnalysisModuleFactory.cc   \
+        $(SRCDIR)/AnalysisModule.cc          \
+        $(SRCDIR)/lineExtract.cc             \
+        $(SRCDIR)/planeExtract.cc            \
+        $(SRCDIR)/flatPlate_heatFlux.cc      \
+        $(SRCDIR)/particleExtract.cc         \
+        $(SRCDIR)/containerExtract.cc        \
+        $(SRCDIR)/vorticity.cc               \
+        $(SRCDIR)/radiometer.cc              \
+        $(SRCDIR)/1stLawThermo.cc            \
+        $(SRCDIR)/MinMax.cc
+
 PSELIBS := \
-	Core/Geometry                    \
-	Core/Exceptions                  \
-	Core/Util                        \
-	Core/OS                          \
-	CCA/Ports        \
-	Core/Disclosure  \
-	Core/Exceptions  \
-	Core/Grid        \
-	Core/Parallel    \
-	Core/Labels      \
-	Core/Parallel    \
-	Core/Util        \
-	Core/GeometryPiece \
-	Core/ProblemSpec   \
-	\
-	Core/Math
+        CCA/Ports                \
+        Core/Disclosure          \
+        Core/Exceptions          \
+        Core/Geometry            \
+        Core/GeometryPiece       \
+        Core/Grid                \
+        Core/Labels              \
+        Core/Math                \
+        Core/OS                  \
+        Core/Parallel            \
+        Core/ProblemSpec         \
+        Core/Util                
 
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY)
 
