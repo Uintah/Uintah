@@ -63,7 +63,8 @@ DataArchive::DataArchive(const std::string& filebase,
   d_filebase(filebase), 
   d_cell_scale( Vector(1.0,1.0,1.0) ),
   d_processor(processor),
-  d_numProcessors(numProcessors), d_lock("DataArchive lock")
+  d_numProcessors(numProcessors), d_lock("DataArchive lock"),
+  d_particlePositionName("p.x")
 {
   if( d_filebase == "" ) {
     throw InternalError("DataArchive::DataArchive 'filebase' cannot be empty (\"\").", __FILE__, __LINE__);
@@ -84,6 +85,11 @@ DataArchive::DataArchive(const std::string& filebase,
   d_globalEndianness = "";
   d_globalNumBits = -1;
   queryEndiannessAndBits(d_indexDoc, d_globalEndianness, d_globalNumBits);
+  
+  if (d_indexDoc->findBlock("ParticlePosition"))
+  {
+    d_indexDoc->get("ParticlePosition", d_particlePositionName);
+  }
 }
 
 
