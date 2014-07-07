@@ -50,7 +50,7 @@ static DebugStream dbg("RAY", false);
 //
 Radiometer::Radiometer()
 {
-  d_VRFluxLabel = VarLabel::create( "RadiometerFlux", CCVariable<double>::getTypeDescription() );                      
+  d_VRFluxLabel = VarLabel::create( "radiometerFlux", CCVariable<double>::getTypeDescription() );                      
 }
 
 //______________________________________________________________________

@@ -98,13 +98,31 @@ void OnTheFly_radiometer::problemSetup(const ProblemSpecP& ,
   }
 
   int matl_index = matl->getDWIndex();
-
-  //_____________________________________________________
-  //   H A R D W I R E   H A R D W I R E   H A R D W I R E
-  string temp     = "temperature";
-  string cellType = "cellType";
-  string abskg    = "abskg";
-
+  
+  ProblemSpecP rad_ps = d_module_ps->findBlock("Radiometer");
+  if (!rad_ps){
+    throw ProblemSetupException("ERROR Radiometer: Couldn't find <Radiometer> xml node", __FILE__, __LINE__);    
+  }
+  
+  //__________________________________
+  //  read in the VarLabel names
+  string temp     = "NULL";
+  string cellType = "NULL";
+  string abskg    = "NULL";
+  
+  if ( rad_ps->findBlock( "temperature" ) ){ 
+    rad_ps->findBlock( "temperature" )->getAttribute( "label",temp ); 
+  } 
+  if ( rad_ps->findBlock( "cellType" ) ){ 
+    rad_ps->findBlock( "cellType" )->getAttribute( "label",cellType ); 
+  }
+  if ( rad_ps->findBlock( "abskg" ) ){ 
+    rad_ps->findBlock( "abskg" )->getAttribute( "label",abskg ); 
+  }
+  
+  
+  //__________________________________
+  //  bulletproofing
   const VarLabel* tempLabel      = VarLabel::find( temp );
   const VarLabel* cellTypeLabel  = VarLabel::find( cellType );
   const VarLabel* abskgLabel     = VarLabel::find( abskg );
@@ -118,28 +136,22 @@ void OnTheFly_radiometer::problemSetup(const ProblemSpecP& ,
          << "    abskg:                " << abskgLabel << "\n";
     throw InternalError(warn.str(), __FILE__, __LINE__);
   }
-  //_____________________________________________________
+
 #ifdef USE_RADIOMETER
   //__________________________________
   // register the component VarLabels the RMCRT:Radiometer
   d_RMCRT->registerVarLabels( matl_index,
                               abskgLabel,
-                              notUsed,
                               tempLabel,
                               cellTypeLabel,
                               notUsed);
 
   d_module_ps->getWithDefault( "radiometerCalc_freq", d_radiometerCalc_freq, 1 );
   
-  ProblemSpecP rad_ps = d_module_ps->findBlock("Radiometer");
-  if (!rad_ps){
-    throw ProblemSetupException("ERROR Radiometer: Couldn't find <Radiometer> xml node", __FILE__, __LINE__);    
-  }
-  
   d_RMCRT->problemSetup(rad_ps, rad_ps, d_sharedState);
   
-  if(!d_dataArchiver->isLabelSaved( "RadiometerFlux" ) ){
-    throw ProblemSetupException("ERROR:  You've activated the radiometer but your not saving the variable (RadiometerFlux)",__FILE__, __LINE__);
+  if(!d_dataArchiver->isLabelSaved( "radiometerFlux" ) ){
+    throw ProblemSetupException("\nERROR:  You've activated the radiometer but your not saving the variable (radiometerFlux)\n",__FILE__, __LINE__);
   }
 #endif  
 }
