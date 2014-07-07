@@ -213,7 +213,7 @@
       </Face>
 
       <Face rectangle="x-" lower="0 .6 .6" upper="0 .8 .8">
-        <BCType id = "all" label = "inletx" var = "VelocityInlet">
+        <BCType id = "all" label = "inletx2" var = "VelocityInlet">
           <value> [0,0,0] </value>
         </BCType>
         <BCType id="all" label="mixture_fraction" var="Dirichlet">
