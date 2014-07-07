@@ -339,7 +339,7 @@ void RadPropertyCalculator::ConstantProperties::computePropsWithParticles( const
 RadPropertyCalculator::BurnsChriston::BurnsChriston() {
   _notSetMin = Point(SHRT_MAX, SHRT_MAX, SHRT_MAX);
   _notSetMax = Point(SHRT_MIN, SHRT_MIN, SHRT_MIN);
-  _local_abskp = true; 
+  _local_abskp = false; 
   _use_abskp = false; 
 }
 

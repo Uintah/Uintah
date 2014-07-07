@@ -14,7 +14,6 @@ RadProperties::RadProperties( std::string prop_name, SimulationStateP& shared_st
   _before_table_lookup = true; 
 
   int matlIndex = _shared_state->getArchesMaterial(0)->getDWIndex(); 
-  _props = scinew RadPropertyCalculator(matlIndex); 
 
 }
 
@@ -30,7 +29,6 @@ RadProperties::~RadProperties( )
 
   }
 
-  delete _props; 
   delete _calc; 
 }
 
@@ -109,8 +107,6 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
     throw ProblemSetupException("Error: Could not find the temperature label",__FILE__, __LINE__);
   }
   tsk->requires( Task::NewDW, VarLabel::find("volFraction"), Ghost::None, 0 ); 
-
-  std::cout << " abskg = " << _calc->get_abskg_name(); 
 
   if ( time_substep == 0 ){ 
 
