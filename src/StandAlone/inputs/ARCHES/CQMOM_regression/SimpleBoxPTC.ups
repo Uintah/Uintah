@@ -52,22 +52,22 @@
         <BCType id="all" label="mixture_fraction" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_00" var="Moment">
+        <BCType id="all" label="m_00" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_10" var="Moment">
+        <BCType id="all" label="m_10" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_20" var="Moment">
+        <BCType id="all" label="m_20" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_30" var="Moment">
+        <BCType id="all" label="m_30" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_01" var="Moment">
+        <BCType id="all" label="m_01" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_11" var="Moment">
+        <BCType id="all" label="m_11" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
       </Face>
@@ -79,22 +79,22 @@
         <BCType id="all" label="mixture_fraction" var="Dirichlet">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" label="m_00" var="Moment">
+        <BCType id="all" label="m_00" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" label="m_10" var="Moment">
+        <BCType id="all" label="m_10" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" label="m_20" var="Moment">
+        <BCType id="all" label="m_20" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" label="m_30" var="Moment">
+        <BCType id="all" label="m_30" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" label="m_01" var="Moment">
+        <BCType id="all" label="m_01" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_11" var="Moment">
+        <BCType id="all" label="m_11" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
       </Face>
@@ -107,22 +107,22 @@
           <value> 1.0 </value>
         </BCType>
         <!-- transported moments -->
-        <BCType id="all" label="m_00" var="Moment">
+        <BCType id="all" label="m_00" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" label="m_10" var="Moment">
+        <BCType id="all" label="m_10" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_20" var="Moment">
+        <BCType id="all" label="m_20" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_30" var="Moment">
+        <BCType id="all" label="m_30" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_01" var="Moment">
+        <BCType id="all" label="m_01" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" label="m_11" var="Moment">
+        <BCType id="all" label="m_11" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
       </Face>
@@ -162,22 +162,22 @@
         <BCType id="all" label="mixture_fraction" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_00" var="Moment">
+        <BCType id="all" label="m_00" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_10" var="Moment">
+        <BCType id="all" label="m_10" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_20" var="Moment">
+        <BCType id="all" label="m_20" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_30" var="Moment">
+        <BCType id="all" label="m_30" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_01" var="Moment">
+        <BCType id="all" label="m_01" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_11" var="Moment">
+        <BCType id="all" label="m_11" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
       </Face>
