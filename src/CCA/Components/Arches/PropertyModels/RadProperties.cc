@@ -1,6 +1,6 @@
 #include <CCA/Components/Arches/PropertyModels/RadProperties.h>
 #include <CCA/Components/Arches/Radiation/RadPropertyCalculator.h>
-
+#include <CCA/Components/Arches/BoundaryCond_new.h>
 using namespace Uintah; 
 
 //---------------------------------------------------------------------------
@@ -14,6 +14,7 @@ RadProperties::RadProperties( std::string prop_name, SimulationStateP& shared_st
   _before_table_lookup = true; 
 
   int matlIndex = _shared_state->getArchesMaterial(0)->getDWIndex(); 
+  _boundaryCond = scinew BoundaryCondition_new( matlIndex );
 
 }
 
@@ -29,6 +30,7 @@ RadProperties::~RadProperties( )
 
   }
 
+  delete _boundaryCond;
   delete _calc; 
 }
 
@@ -254,6 +256,8 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
       }
 
     }
+    // update absk_tot at the walls
+    _boundaryCond->setScalarValueBC( pc, patch, absk_tot,_prop_name );
   }
 }
 

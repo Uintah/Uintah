@@ -27,6 +27,7 @@
 
 namespace Uintah{ 
 
+  class BoundaryCondition_new;
   class RadPropertyCalculator; 
 
   class RadProperties : public PropertyModelBase {
@@ -76,6 +77,7 @@ namespace Uintah{
       RadPropertyCalculator::PropertyCalculatorBase* _calc; 
       const VarLabel* _temperature_label; 
       std::string _temperature_name;
+      BoundaryCondition_new* _boundaryCond;
 
   }; // class RadProperties
 }   // namespace Uintah
