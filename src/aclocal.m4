@@ -502,7 +502,7 @@ if test -n "$6"; then
          fi
       else
          echo
-         AC_MSG_WARN(The path given $the_path is not a valid directory... ignoring.)
+         AC_MSG_ERROR(The given path "$the_path" is not a valid directory...)
       fi
    done
 fi
