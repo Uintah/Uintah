@@ -92,6 +92,12 @@ namespace Wasatch {
                                           Uintah::SchedulerP& sched );
 
     static void add_particle_variable(const Expr::Tag& varTag);
+
+    /*
+     *  \brief Parse the particle spec and create the position varlabels. This is an essential step
+     that MUST be called during Wasatch::ProblemSetup
+     */
+    void problem_setup();
     
   private:
 
@@ -120,6 +126,7 @@ namespace Wasatch {
     void relocate_particles(const Uintah::ProcessorGroup*,
                         const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
                         Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
+
 
     Wasatch* wasatch_;
     bool wasatchSync_;
