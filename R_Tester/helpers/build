@@ -30,27 +30,13 @@ if [ "$OS" = "Linux" ]; then
   #  machine specific variables
   if [ "$MACHINE" == "rt" ]; then    
     COMMON="      --with-boost=/usr/  \\
+     --enable-all-components \\
      --enable-wasatch_3p \\
-     --enable-ray-scatter \\
-     USE_WASATCH=yes \\"
+     --enable-ray-scatter \\"
  
     ENV="     CC=gcc \\
      CXX=g++ \\
      F77=gfortran"
-  fi
-  
-  if [ "$MACHINE" == "blaze" ]; then  
-    export PETSC_ARCH=linux-gnu-amd64
-    COMMON="      --with-mpi=/usr/lib/openmpi \\
-       --with-petsc=/usr/ \\
-       --with-hypre=/usr/ \\
-       --with-boost=/usr/ \\
-       --enable-wasatch_3p \\
-       USE_WASATCH=yes \\"
-
-    ENV="      CC=gcc \\
-       CXX=g++ \\
-       F77=gfortran"
   fi
   
   if [ "$MACHINE" == "kaibab" ]; then
