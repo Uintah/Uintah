@@ -360,6 +360,9 @@ namespace Wasatch{
     // Check whether we are solving for particles
     //
     doParticles_ = wasatchSpec_->findBlock("ParticleTransportEquations");
+    if (doParticles_) {
+      particlesHelper_->problem_setup();
+    }
 
     // setup names for all the boundary condition faces that do NOT have a name or that have duplicate names
     if ( params->findBlock("Grid") ) {
@@ -1000,12 +1003,6 @@ namespace Wasatch{
       setup_patchinfo_map( level, sched );
       //bcHelper_ = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
       bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
-      
-      if ( doParticles_ )
-      {
-        particlesHelper_ = scinew ParticlesHelper();
-        particlesHelper_->sync_with_wasatch( this );
-      }
     }
     
     for( int iStage=1; iStage<=nRKStages_; iStage++ ){

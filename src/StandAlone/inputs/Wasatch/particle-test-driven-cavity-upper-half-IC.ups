@@ -63,7 +63,7 @@
     </ForceOnGraph>
     
     <ParticleTransportEquations>
-      <NumberOfInitialParticles>900</NumberOfInitialParticles>
+      <NumberOfInitialParticles>625</NumberOfInitialParticles>
       <ParticleDensity name="p.rho" state="STATE_NONE"/>            
       <ParticleMass name="p.m" state="STATE_DYNAMIC">
       	<SourceTerm name="nothing" state="STATE_NONE"/>	
@@ -80,7 +80,7 @@
 			</ParticlePosition>
 			<ParticleMomentum x="p.u" y="p.v" z="p.w">
 <!-- 				<DisableDragForce/> -->
-				<Gravity direction="Z"/>
+<!-- 				<Gravity direction="Z"/> -->
 				<GasProperties>
 					<GasViscosity name="viscosity" state="STATE_NONE"/>
 					<GasDensity name="density" state="STATE_NONE"/>					
@@ -100,7 +100,7 @@
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
        <NameTag name="p.size" state="STATE_DYNAMIC"/>
-       <Constant>0.001</Constant>
+       <Constant>0.0001</Constant>
     </BasicExpression>
 
     <BasicExpression type="PARTICLE">
@@ -229,8 +229,8 @@
   <Time>
     <maxTime>60</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>0.0001</delt_min>
-    <delt_max>0.0001</delt_max>
+    <delt_min>0.001</delt_min>
+    <delt_max>0.001</delt_max>
     <max_Timesteps> 10</max_Timesteps>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
@@ -240,7 +240,7 @@
     <filebase>particle-test-driven-cavity-upper-half-IC.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle="2" interval="0.0001"/>
+    <checkpoint cycle="2" interval="0.001"/>
 <!--     <compression>gzip</compression> -->
     <save label="x-mom"/>
     <save label="y-mom"/>

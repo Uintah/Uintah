@@ -91,11 +91,10 @@ namespace Wasatch {
       ++it;
     }
   }
+
+  //------------------------------------------------------------------
   
-  //--------------------------------------------------------------------
-  
-  void ParticlesHelper::schedule_initialize_particles(const Uintah::LevelP& level,
-                                                      Uintah::SchedulerP& sched)
+  void ParticlesHelper::problem_setup()
   {
     using namespace Uintah;
     if( !wasatchSync_ ){
@@ -103,22 +102,22 @@ namespace Wasatch {
       msg << "ParticlesHelper error: must call sync_with_wasatch() prior to initializing particles!" << std::endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
-
+    
     //
     // set the position varlabels
     particleEqsSpec_ = wasatch_->get_wasatch_spec()->findBlock("ParticleTransportEquations");
     particleEqsSpec_->get("NumberOfInitialParticles",nParticles_);
-
+    
     ProblemSpecP pPosSpec = particleEqsSpec_->findBlock("ParticlePosition");
     std::string px, py, pz;
     pPosSpec->getAttribute("x",px);
     pPosSpec->getAttribute("y",py);
     pPosSpec->getAttribute("z",pz);
-
+    
     pXLabel_ = VarLabel::find(px);
     pYLabel_ = VarLabel::find(py);
     pZLabel_ = VarLabel::find(pz);
-
+    
     if (!pXLabel_) {
       pXLabel_ = Uintah::VarLabel::create(px,
                                           Uintah::ParticleVariable<double>::getTypeDescription() );
@@ -134,7 +133,14 @@ namespace Wasatch {
                                           Uintah::ParticleVariable<double>::getTypeDescription() );
       destroyMe_.push_back(pZLabel_);
     }
-
+    
+  }
+  
+  //--------------------------------------------------------------------
+  
+  void ParticlesHelper::schedule_initialize_particles(const Uintah::LevelP& level,
+                                                      Uintah::SchedulerP& sched)
+  {
     // this task will allocate a particle subset and create particle positions
     Uintah::Task* task = scinew Uintah::Task("initialize particles",
                                              this, &ParticlesHelper::initialize_particles);
