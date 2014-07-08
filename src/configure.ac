@@ -640,14 +640,97 @@ SCI_ARG_ENABLE(throw-level,
   [enable_throw_level="$enableval"],
   [enable_throw_level=${enable_throw_level=0}])
 
-SCI_ARG_ENABLE(rath,
+SCI_ARG_ENABLE(rpath,
   AC_HELP_STRING(--enable-rpath,
-                 Use the default runtime library search path),
+                 Set a default runtime library search path),
   [enable_rpath="$enableval"],
   [enable_rpath=${enable_rpath='yes'}])
 
+#
+# ---- List of --enable statements for Uintah Components ---- 
+#
+#
+# Models Radiation does not have a configure switch, and thus we need to set
+# the defaults here...
+#
+DEF_MODELS_RADIATION="#define NO_MODELS_RADIATION"
+BUILD_MODELS_RADIATION=no
+
+SCI_ARG_ENABLE(arches,
+  AC_HELP_STRING(--enable-arches,
+                 Turn on the Arches component - and Radiation Model.),
+  [BUILD_ARCHES="yes"
+   BUILD_MODELS_RADIATION="yes"
+   DEF_MODELS_RADIATION="" ],
+  [BUILD_ARCHES="no"
+   DEF_ARCHES=["#define NO_ARCHES"]])
+
+SCI_ARG_ENABLE(ice,
+  AC_HELP_STRING(--enable-ice,
+                 Turn on the Ice component.),
+  [BUILD_ICE="yes"],
+  [BUILD_ICE="no"
+   DEF_ICE=["#define NO_ICE"]])
+
+SCI_ARG_ENABLE(mpm,
+  AC_HELP_STRING(--enable-mpm,
+                 Turn on the Mpm component.),
+  [BUILD_MPM="yes"],
+  [BUILD_MPM="no"
+   DEF_MPM=["#define NO_MPM"]])
+
+SCI_ARG_ENABLE(wasatch,
+  AC_HELP_STRING(--enable-wasatch,
+                 Turn on the Wasatch component.),
+  [BUILD_WASATCH="yes"
+   BUILD_MODELS_RADIATION="yes"
+   DEF_MODELS_RADIATION="" ],
+  [BUILD_WASATCH="no"
+   DEF_WASATCH=["#define NO_WASATCH"]])
+
+SCI_ARG_ENABLE(all_components,
+  AC_HELP_STRING(--enable-all-components,
+                 Turn on the all components.),
+  [use_all_components="yes"
+   BUILD_ARCHES="yes"
+   BUILD_ICE="yes"
+   BUILD_MODELS_RADIATION="yes"
+   BUILD_MPM="yes"
+   BUILD_WASATCH="yes"
+   DEF_ARCHES=
+   DEF_ICE=
+   DEF_MODELS_RADIATION=
+   DEF_MPM=
+   DEF_WASATCH=
+  ],
+  [use_all_components="no"])
+
+#
+# --- end list of -enable components ------
+#
+
+if test "$use_all_components" = "yes" -a         \
+        \( "$enable_arches" = "yes"          -o   \
+          "$enable_ice" = "yes"              -o   \
+          "$enable_models_radiation" = "yes" -o   \
+          "$enable_mpm" = "yes"              -o   \
+          "$enable_wasatch" = "yes" \); then
+   AC_MSG_ERROR( Please do not use both --enable-all-components and --enable-<specific-component> )
+fi
+if test "$BUILD_ARCHES" != "yes"           -a   \
+        "$BUILD_ICE" != "yes"              -a   \
+        "$BUILD_MODELS_RADIATION" != "yes" -a   \
+        "$BUILD_MPM" != "yes"              -a   \
+        "$BUILD_WASATCH" != "yes"; then
+  add_important_warning "-------------------------------------------------------------------------"
+  msg="!!! NO COMPONENTS WERE SPECIFIED! ONLY UTILITY PROGRAMS WILL BE BUILT !!!"
+  add_important_warning "$msg"
+  add_important_warning "-------------------------------------------------------------------------"
+fi
+
+
 if test "$enable_sci_malloc" = "yes" -a "$with_malloc_trace" ; then
-   AC_MSG_ERROR( "You cannot use both --with-MallocTrace and --enable-sci-malloc!" )
+   AC_MSG_ERROR( You cannot use both --with-MallocTrace and --enable-sci-malloc! )
 fi
 
 if test "$enable_memory_initialization" != "no"; then
@@ -659,7 +742,7 @@ if test "$enable_memory_initialization" != "no"; then
       if test $val -lt 128 -a $val -gt 0; then
          memory_init=$val
       else
-         AC_MSG_ERROR( "--enable-memory-initialization's value must be from 0 to 127." )
+         AC_MSG_ERROR( --enable-memory-initialization's value must be from 0 to 127. )
       fi
    fi
    DEF_MEMORY_INIT_NUMBER="#define MEMORY_INIT_NUMBER $memory_init"
@@ -1103,41 +1186,39 @@ if test ! -e "`which $CXX`"; then
   SCI_MSG_ERROR(Could not find the specified C++ compiler (CC))
 fi
 
-# enable/disable certain Uintah components
-BUILD_ARCHES=yes
-BUILD_ICE=yes
-BUILD_MPM=yes
-BUILD_MODELS_RADIATION=yes
-BUILD_WASATCH=no
-BUILD_WASATCH_IN_ARCHES=no
-
-if test "$USE_WASATCH" = ""; then 
-  USE_WASATCH=undefined
+if test "$USE_ARCHES" != ""; then
+   AC_MSG_ERROR( USE_ARCHES is deprecated.  Please use --enable-arches. )
+fi
+if test "$USE_ICE" != ""; then
+   AC_MSG_ERROR( USE_ICE is deprecated.  Please use --enable-ice. )
+fi
+if test "$USE_MODELS_RADIATION" != ""; then
+   AC_MSG_ERROR( USE_MODELS_RADIATION is deprecated.  Models/Radiation will be turned on automatically if Arches or Wasatch are enabled. )
+fi
+if test "$USE_MPM" != ""; then
+   AC_MSG_ERROR( USE_MPM is deprecated.  Please use --enable-mpm. )
+fi
+if test "$USE_WASATCH" != ""; then
+   AC_MSG_ERROR( USE_WASATCH is deprecated.  Please use --enable-wasatch. )
 fi
 
-DEF_ARCHES=""
-DEF_ICE=""
-DEF_MPM=""
-DEF_MODELS_RADIATION=""
-DEF_WASATCH=""
-
-if test "$USE_ARCHES" = no; then BUILD_ARCHES=no; DEF_ARCHES="#define NO_ARCHES"; fi
-if test "$USE_ICE" = no; then BUILD_ICE=no; DEF_ICE="#define NO_ICE"; fi
-if test "$USE_MPM" = no; then BUILD_MPM=no; DEF_MPM="#define NO_MPM"; fi
-if test "$USE_MODELS_RADIATION" = no; then BUILD_MODELS_RADIATION=no; DEF_MODELS_RADIATION="#define NO_MODELS_RADIATION"; fi
 if test "$with_fortran" = no; then 
-            BUILD_ARCHES=no;
-            DEF_ARCHES="#define NO_ARCHES";
-            DEF_NO_FORTRAN="#define NO_FORTRAN";
-            NO_FORTRAN="yes";
+
+   if test "$use_arches_component" = "yes"; then
+      AC_MSG_ERROR( You may not turn on Arches if you turn off Fortran. )
+   fi
+   DEF_NO_FORTRAN="#define NO_FORTRAN";
+   NO_FORTRAN="yes";
 fi
 
 # NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
 
 AC_SUBST(BUILD_ARCHES)
 AC_SUBST(BUILD_ICE)
-AC_SUBST(BUILD_MPM)
 AC_SUBST(BUILD_MODELS_RADIATION)
+AC_SUBST(BUILD_MPM)
+AC_SUBST(BUILD_WASATCH)
+
 AC_SUBST(DEF_ARCHES)
 AC_SUBST(DEF_ICE)
 AC_SUBST(DEF_MPM)
@@ -1146,7 +1227,7 @@ AC_SUBST(DEF_MODELS_RADIATION)
 AC_SUBST(DEF_WASATCH)
 AC_SUBST(NO_FORTRAN)
 
-if test \("$BUILD_ARCHES" = no -a "$BUILD_MODELS_RADIATION" = no\) -o \( "$with_fortran" = no \) ; then
+if test "$BUILD_ARCHES" = no -a "$with_fortran" = "no"; then
   sci_required_fortran=no
 else
   sci_required_fortran=yes
@@ -2040,7 +2121,7 @@ AC_SUBST(DEF_RAY_SCATTER)
 if test "$with_visit" -o "$wasatch_3p" = "yes"; then
    which cmake > /dev/null 2>&1
    if test $? != 0; then
-      AC_MSG_ERROR( VisIt requires CMake. Please make sure 'cmake' is in your path!)
+      AC_MSG_ERROR( VisIt and/or Wasatch 3P requires CMake. Please make sure 'cmake' is in your path!)
    fi
    CMAKE_LOCATION=`which cmake`
 
@@ -4373,54 +4454,41 @@ AC_SUBST(RADPROPS_LIB_DIR_FLAG)
 
 ##  --  Handle --enable-wasatch-in-arches --------------------------------
 
+BUILD_WASATCH_IN_ARCHES=no
+
 if test "$wasatch_in_arches" = "yes"; then
-   if test "$USE_WASATCH" = "no"; then
-      AC_MSG_ERROR( --enable-wasatch-in-arches specified, but USE_WASATCH was set to 'no'. )
+   if test "$BUILD_WASATCH" = "no"; then
+      AC_MSG_ERROR( [--enable-wasatch-in-arches specified, but Wasatch component not enabled.] )
    fi
-   if test "$USE_WASATCH" = "undefined"; then
-      msg="Turning on Wasatch for use in Arches."
-      add_important_warning "$msg"
-      AC_MSG_WARN($msg)
-      USE_WASATCH=yes
+   if test "$BUILD_ARCHES" = "no"; then
+      AC_MSG_ERROR( [--enable-wasatch-in-arches specified, but Arches component not enabled.] )
    fi
+
    DEF_WASATCH="#define WASATCH_IN_ARCHES 1";
    BUILD_WASATCH_IN_ARCHES=yes
 fi
 AC_SUBST(DEF_WASATCH_IN_ARCHES)
 AC_SUBST(BUILD_WASATCH_IN_ARCHES)
 
-##  --  Determine whether we can use WASATCH OR NOT ----------------------
+##  --  Make sure Wasatch 3P is found if WASATCH or ARCHES is requested -------
 
-if test "$USE_WASATCH" = "yes"; then
-   if test "$HAVE_BOOST" = "yes" &&
-     test "$HAVE_TABPROPS" = "yes" &&
-     test "$HAVE_SPATIALOPS" = "yes" &&
-     test "$HAVE_EXPRLIB" = "yes"; then
-    BUILD_WASATCH=yes
-  else
-    AC_MSG_ERROR(You specified the use of the Wasatch component but do not have all the of the prereqs: Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB).)
-  fi
-else
-  if test "$USE_WASATCH" = "no"; then
-      msg="Found Boost TabProps ExprLib etc but USE_WASATCH was set to 'no'.  Will not turn on Wasatch."
-      add_important_warning "$msg"
-      AC_MSG_WARN($msg)
-  else
-    if test "$HAVE_BOOST" = "yes" &&
-       test "$HAVE_TABPROPS" = "yes" &&
-       test "$HAVE_SPATIALOPS" = "yes" &&
-       test "$HAVE_EXPRLIB" = "yes"; then
-      BUILD_WASATCH=yes
-      add_important_warning "All prereqs satisfied - turning on Wasatch component."
-      AC_MSG_WARN(All prereqs satisfied, turning on Wasatch component.)
-    fi
+if test "$BUILD_WASATCH" = "yes"; then
+  if test "$HAVE_BOOST" != "yes" ||
+     test "$HAVE_TABPROPS" != "yes" ||
+     test "$HAVE_SPATIALOPS" != "yes" ||
+     test "$HAVE_EXPRLIB" != "yes"; then
+    AC_MSG_ERROR(You enabled the Wasatch component but do not have all the of the prereqs: Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB).)
   fi
 fi
 
-if test "$BUILD_WASATCH" = no; then 
-  DEF_WASATCH="#define NO_WASATCH";
+if test "$BUILD_ARCHES" = "yes"; then
+  if test "$HAVE_BOOST" != "yes" ||
+     test "$HAVE_TABPROPS" != "yes" ||
+     test "$HAVE_SPATIALOPS" != "yes" ||
+     test "$HAVE_EXPRLIB" != "yes"; then
+    AC_MSG_ERROR(You enabled the Arches component but do not have all the of the prereqs: Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB).)
+  fi
 fi
-AC_SUBST(BUILD_WASATCH)
 
 ##  --  search for hypre stuff  ------------------------------------------
 
