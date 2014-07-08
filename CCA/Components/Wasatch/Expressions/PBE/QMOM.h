@@ -30,15 +30,19 @@
 
 #include <Core/Util/DebugStream.h>
 
+#include <sci_defs/uintah_defs.h>
+
 //set up a debug stream for qmom without ifdef compiler commands
 static SCIRun::DebugStream dbgqmom("WASATCH_QMOM_DBG", false);  //qmom debugging
 #define dbg_qmom_on dbgqmom.active() && Uintah::Parallel::getMPIRank() == 0
 #define dbg_qmom  if( dbg_qmom_on ) dbgqmom
 
+#define DSYEV FIX_NAME(dsyev)
+
 // declare lapack eigenvalue solver
 extern "C"{
-  void dsyev_( char* jobz, char* uplo, int* n, double* a, int* lda,
-        double* w, double* work, int* lwork, int* info );
+  void DSYEV( char* jobz, char* uplo, int* n, double* a, int* lda,
+	      double* w, double* work, int* lwork, int* info );
 }
 
 
@@ -353,11 +357,11 @@ product_difference(const std::vector<typename FieldT::const_iterator>& knownMome
   lwork = -1;
   char jobz='V';
   char matType = 'U';
-  dsyev_( &jobz, &matType, &n, &jMatrix_[0], &lda, &eigenValues_[0], &wkopt, &lwork, &info );
+  DSYEV( &jobz, &matType, &n, &jMatrix_[0], &lda, &eigenValues_[0], &wkopt, &lwork, &info );
   lwork = (int)wkopt;
   work_.resize(lwork);
   // Solve eigenproblem. eigenvectors are stored in the jMatrix, columnwise
-  dsyev_( &jobz, &matType, &n, &jMatrix_[0], &lda, &eigenValues_[0], &work_[0], &lwork, &info );
+  DSYEV( &jobz, &matType, &n, &jMatrix_[0], &lda, &eigenValues_[0], &work_[0], &lwork, &info );
   
   bool status = ( info>0 || info<0 )? false : true;
 
