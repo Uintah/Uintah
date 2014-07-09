@@ -81,7 +81,7 @@ const TypeDescription* fun_getTypeDescription(dblcomplex*)
    static TypeDescription* td;
    if(!td){
       td = scinew TypeDescription(TypeDescription::C_double_complex_type,
-          "C double complex", true, MPI_DOUBLE_COMPLEX);
+          "C double complex", true, MPI_C_DOUBLE_COMPLEX);
    }
    return td;
 }
