@@ -703,15 +703,25 @@ class Task {
     // class Task
 
     enum WhichDW {
-      OldDW = 0, NewDW = 1, CoarseOldDW = 2, CoarseNewDW = 3, ParentOldDW = 4, ParentNewDW = 5, TotalDWs = 6
+      OldDW = 0,
+      NewDW = 1,
+      CoarseOldDW = 2,
+      CoarseNewDW = 3,
+      ParentOldDW = 4,
+      ParentNewDW = 5,
+      TotalDWs = 6
     };
 
     enum {
-      NoDW = -1, InvalidDW = -2
+      NoDW = -1,
+      InvalidDW = -2
     };
 
     enum TaskType {
-      Normal, Reduction, InitialSend, OncePerProc,  // make sure to pass a PerProcessorPatchSet to the addTask function
+      Normal,
+      Reduction,
+      InitialSend,
+      OncePerProc,  // make sure to pass a PerProcessorPatchSet to the addTask function
       Output
     };  
     

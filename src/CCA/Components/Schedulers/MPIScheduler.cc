@@ -501,8 +501,6 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_
     task->incrementExternalDepCount();
     //cout << d_myworld->myrank() << " Add dep count to task " << *task << " for ext: " << *batch->fromTask << ": " << task->getExternalDepCount() << endl;
     if( !batch->makeMPIRequest() ) {
-      //externalRecvs.push_back( batch ); // no longer necessary
-
       if( mixedDebug.active() ) {
         cerrLock.lock();mixedDebug << "Someone else already receiving it\n";
         cerrLock.unlock();

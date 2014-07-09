@@ -81,12 +81,12 @@ DetailedTasks::DetailedTasks(SchedulerCommon* sc,
       ,deviceReadyQueueLock_("DetailedTasks Device Ready Queue"),
       deviceCompletedQueueLock_("DetailedTasks Device Completed Queue")
 #endif
-//readyQueueSemaphore_("Number of Ready DetailedTasks", 0)
 {
   // Set up mappings for the initial send tasks
   int dwmap[Task::TotalDWs];
-  for (int i = 0; i < Task::TotalDWs; i++)
+  for (int i = 0; i < Task::TotalDWs; i++) {
     dwmap[i] = Task::InvalidDW;
+  }
   dwmap[Task::OldDW] = 0;
   dwmap[Task::NewDW] = Task::NoDW;
 
