@@ -404,14 +404,6 @@ namespace Wasatch{
           if( newDWFields.find( fieldTag ) != newDWFields.end() )
             fieldInfo.useOldDataWarehouse = false;
         }
-        if( tree.name()!="set_time" &&
-            tree.name()!="initialization" &&
-            (fieldInfo.varlabel->getName()=="time"     ||
-             fieldInfo.varlabel->getName()=="dt"       ||
-             fieldInfo.varlabel->getName()=="timestep" ||
-             fieldInfo.varlabel->getName()=="rkstage") ){
-          fieldInfo.mode = Expr::REQUIRES;
-        }
 
 #       ifdef WASATCH_IN_ARCHES
         // this was needed for Warches. When adding a placeholder expression with STATE_N,
