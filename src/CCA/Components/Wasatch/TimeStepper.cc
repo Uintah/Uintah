@@ -134,17 +134,6 @@ namespace Wasatch{
                                rkStage );
       updateCurrentTimeTask->requires( Uintah::Task::OldDW, sharedState_->get_delt_label() );
       sched->addTask( updateCurrentTimeTask, patches, materials );
-
-      IDSet ids; ids.insert(timeID);
-      TaskInterface* const timeTask =
-          scinew TaskInterface( ids,
-                                "set_time",
-                                *(solnGraphHelper_->exprFactory),
-                                level, sched, patches, materials,
-                                patchInfoMap,
-                                1, sharedState_, persistentFields );
-      taskInterfaceList_.push_back( timeTask );
-      timeTask->schedule( rkStage );
     }
 
     //_________________________________________________________________
