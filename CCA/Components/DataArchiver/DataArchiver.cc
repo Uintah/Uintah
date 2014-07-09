@@ -29,8 +29,6 @@
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/LoadBalancer.h>
-#include <CCA/Ports/ModelInterface.h>
-#include <CCA/Ports/ModelMaker.h>
 #include <CCA/Ports/OutputContext.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SimulationInterface.h>
