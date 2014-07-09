@@ -153,6 +153,9 @@ public:
 
     std::vector<int>  d_allIndepVarNo;
     std::vector<double> table_vals;
+    std::vector<double> table_vals2;
+    std::vector<double> table_vals3;
+    std::vector<double> dist_vals;
     std::vector<std::vector<double> >  table2;
     std::vector< std::vector <double> >  indep;
     std::vector< std::vector <double > >  ind_1;
@@ -361,8 +364,11 @@ public:
 			ind_1 = i1;
 			table2 = table;
 			table_vals = std::vector<double>(8);
-			lo_index = std::vector<int>(3);
-			hi_index = std::vector<int>(3);
+			table_vals2 = std::vector<double>(4);
+			table_vals3 = std::vector<double>(2);
+			dist_vals = std::vector<double>(4, 0.0); // make sure the default is zero
+			lo_index = std::vector<int>(4);
+			hi_index = std::vector<int>(4);
 		};
 
 		~Interp3() {};
@@ -374,7 +380,6 @@ public:
       int lo_ind;
       int hi_ind;
       double iv_val;
-      bool Ncheck = false;
 
       d_interpLock.lock();
       {
@@ -402,38 +407,28 @@ public:
             hi_ind = 1;
           } else {
             lo_ind = hi_ind-1;
-            if (i == 2) {
-              Ncheck = true;
-            }
-
           }
-          lo_index[i] = lo_ind;
-          hi_index[i] = hi_ind;
+          lo_index[i+1] = lo_ind;
+          hi_index[i+1] = hi_ind;
 
           if (iv_val < indep[i-1][0]) {
-            lo_index[i] = 0;
-            hi_index[i] = 0;
+            lo_index[i+1] = 0;
+            hi_index[i+1] = 0;
           }
         }
-        int i1dep_ind = 0;
-        // binary search for i1
-        if (Ncheck) {
-          i1dep_ind = hi_index[2];
-        } else {
-         i1dep_ind = lo_index[2];     // assume i1 is dep on last var
-        }
 
-
+        int i1dep_ind1 = 0;
+        // binary search for i1 low
+        i1dep_ind1 = lo_index[3];  
         lo_ind = 0;
         hi_ind = d_allIndepVarNo[0] - 1;
         iv_val = iv[0];
-
-        if (ind_1[i1dep_ind][lo_ind] != iv_val && ind_1[i1dep_ind][hi_ind] != iv_val) {
+        if (ind_1[i1dep_ind1][lo_ind] != iv_val && ind_1[i1dep_ind1][hi_ind] != iv_val) {
           while ((hi_ind-lo_ind) > 1) {
             mid = (lo_ind+hi_ind)/2;
-            if (ind_1[i1dep_ind][mid] > iv_val ) {
+            if (ind_1[i1dep_ind1][mid] > iv_val ) {
               hi_ind = mid;
-            } else if (ind_1[i1dep_ind][mid] < iv_val) {
+            } else if (ind_1[i1dep_ind1][mid] < iv_val) {
               lo_ind = mid;
             } else {
               // if (i1[i1dep_ind][mid] == iv[0])
@@ -441,38 +436,81 @@ public:
               hi_ind = mid;
             }
           }
-        } else if (ind_1[i1dep_ind][lo_ind] == iv_val) {
+        } else if (ind_1[i1dep_ind1][lo_ind] == iv_val) {
           hi_ind = 1;
         } else {
           lo_ind = hi_ind-1;
         }
-
         lo_index[0] = lo_ind;
         hi_index[0] = hi_ind;
-
-        if (iv_val < ind_1[i1dep_ind][0]) {
+        if (iv_val < ind_1[i1dep_ind1][0]) {
           hi_index[0] = 0;
           lo_index[0] = 0;
         }
 
-        table_vals[0] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * lo_index[1] + lo_index[0]];
-        table_vals[1] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * lo_index[1] + hi_index[0]];
-        table_vals[2] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * hi_index[1] + lo_index[0]];
-        table_vals[3] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * hi_index[1] + hi_index[0]];
-        table_vals[4] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * lo_index[1] + lo_index[0]];
-        table_vals[5] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * lo_index[1] + hi_index[0]];
-        table_vals[6] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * hi_index[1] + lo_index[0]];
-        table_vals[7] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * hi_index[1] + hi_index[0]];
+        // binary search for i1 high
+        int i1dep_ind2 = 0;
+        i1dep_ind2 = hi_index[3];
+        lo_ind = 0;
+        hi_ind = d_allIndepVarNo[0] - 1;
+        iv_val = iv[0];
+        if (ind_1[i1dep_ind2][lo_ind] != iv_val && ind_1[i1dep_ind2][hi_ind] != iv_val) {
+          while ((hi_ind-lo_ind) > 1) {
+            mid = (lo_ind+hi_ind)/2;
+            if (ind_1[i1dep_ind2][mid] > iv_val ) {
+              hi_ind = mid;
+            } else if (ind_1[i1dep_ind2][mid] < iv_val) {
+              lo_ind = mid;
+            } else {
+              // if (i1[i1dep_ind][mid] == iv[0])
+              lo_ind = mid;
+              hi_ind = mid;
+            }
+          }
+        } else if (ind_1[i1dep_ind2][lo_ind] == iv_val) {
+          hi_ind = 1;
+        } else {
+          lo_ind = hi_ind-1;
+        }
+        lo_index[1] = lo_ind;
+        hi_index[1] = hi_ind;
+        if (iv_val < ind_1[i1dep_ind2][0]) {
+          hi_index[1] = 0;
+          lo_index[1] = 0;
+        }
 
-        table_vals[0] = (table_vals[4] - table_vals[0])/(indep[1][lo_index[2]+1]-indep[1][lo_index[2]])*(iv[2]-indep[1][lo_index[2]]) + table_vals[0];
-        table_vals[1] = (table_vals[5] - table_vals[1])/(indep[1][lo_index[2]+1]-indep[1][lo_index[2]])*(iv[2]-indep[1][lo_index[2]]) + table_vals[1];
-        table_vals[2] = (table_vals[6] - table_vals[2])/(indep[1][lo_index[2]+1]-indep[1][lo_index[2]])*(iv[2]-indep[1][lo_index[2]]) + table_vals[2];
-        table_vals[3] = (table_vals[7] - table_vals[3])/(indep[1][lo_index[2]+1]-indep[1][lo_index[2]])*(iv[2]-indep[1][lo_index[2]]) + table_vals[3];
-
-        table_vals[0] = (table_vals[2]-table_vals[0])/(indep[0][lo_index[1]+1]-indep[0][lo_index[1]])*(iv[1]-indep[0][lo_index[1]]) + table_vals[0];
-        table_vals[1] = (table_vals[3]-table_vals[1])/(indep[0][lo_index[1]+1]-indep[0][lo_index[1]])*(iv[1]-indep[0][lo_index[1]]) + table_vals[1];
-
-        var_val = (table_vals[1]-table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+table_vals[0];
+        table_vals[0] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3] + d_allIndepVarNo[0] * lo_index[2] + lo_index[0]];
+        table_vals[1] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3] + d_allIndepVarNo[0] * lo_index[2] + hi_index[0]];
+        table_vals[2] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3] + d_allIndepVarNo[0] * hi_index[2] + lo_index[0]];
+        table_vals[3] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3] + d_allIndepVarNo[0] * hi_index[2] + hi_index[0]];
+        table_vals[4] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3] + d_allIndepVarNo[0] * lo_index[2] + lo_index[1]];
+        table_vals[5] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3] + d_allIndepVarNo[0] * lo_index[2] + hi_index[1]];
+        table_vals[6] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3] + d_allIndepVarNo[0] * hi_index[2] + lo_index[1]];
+        table_vals[7] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3] + d_allIndepVarNo[0] * hi_index[2] + hi_index[1]];
+        
+        if (ind_1[i1dep_ind1][hi_index[0]]!=ind_1[i1dep_ind1][lo_index[0]]){
+          dist_vals[0]=(iv[0]-ind_1[i1dep_ind1][lo_index[0]])/(ind_1[i1dep_ind1][hi_index[0]]-ind_1[i1dep_ind1][lo_index[0]]);
+        }
+        if (ind_1[i1dep_ind2][hi_index[1]]!=ind_1[i1dep_ind2][lo_index[1]]){
+          dist_vals[1]=(iv[0]-ind_1[i1dep_ind2][lo_index[1]])/(ind_1[i1dep_ind2][hi_index[1]]-ind_1[i1dep_ind2][lo_index[1]]);
+        }
+        if (indep[0][hi_index[2]]!=indep[0][lo_index[2]]){
+          dist_vals[2]=(iv[1]-indep[0][lo_index[2]])/(indep[0][hi_index[2]]-indep[0][lo_index[2]]);
+        }
+        if (indep[1][hi_index[3]]!=indep[1][lo_index[3]]){
+          dist_vals[3]=(iv[2]-indep[1][lo_index[3]])/(indep[1][hi_index[3]]-indep[1][lo_index[3]]);
+        }       
+ 
+        // First, we make the 2d plane in indep_1 space
+        table_vals2[0] = table_vals[0]*(1 - dist_vals[0]) + table_vals[1]*dist_vals[0];
+        table_vals2[1] = table_vals[4]*(1 - dist_vals[1]) + table_vals[5]*dist_vals[1];
+        table_vals2[2] = table_vals[2]*(1 - dist_vals[0]) + table_vals[3]*dist_vals[0];
+        table_vals2[3] = table_vals[6]*(1 - dist_vals[1]) + table_vals[7]*dist_vals[1];
+        // Next, a line in indep_2 space
+        table_vals3[0] = table_vals2[0]*(1 - dist_vals[2]) + table_vals2[2]*dist_vals[2];
+        table_vals3[1] = table_vals2[1]*(1 - dist_vals[2]) + table_vals2[3]*dist_vals[2];
+        // Finally, we interplate the new line in indep_3 space
+        var_val = table_vals3[0]*(1 - dist_vals[3]) + table_vals3[1]*dist_vals[3];
 
       }
       d_interpLock.unlock();
