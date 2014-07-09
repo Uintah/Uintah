@@ -22,15 +22,16 @@
  * IN THE SOFTWARE.
  */
 
+#include <CCA/Components/Wasatch/Transport/ParticleMomentumEquation.h>
+
 // Uintah Includes
 #include <Core/Exceptions/ProblemSetupException.h>
 
 // Wasatch Includes
-#include <CCA/Components/Wasatch/Transport/ParticleMomentumEquation.h>
-
+#include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/Expressions/Particles/ParticleRe.h>
-#include <CCA/Components/Wasatch/Expressions/Particles/ParticleDragForce.h>
 #include <CCA/Components/Wasatch/Expressions/Particles/ParticleDensity.h>
+#include <CCA/Components/Wasatch/Expressions/Particles/ParticleDragForce.h>
 #include <CCA/Components/Wasatch/Expressions/Particles/ParticleBodyForce.h>
 #include <CCA/Components/Wasatch/Expressions/Particles/ParticleMomentumRHS.h>
 #include <CCA/Components/Wasatch/Expressions/Particles/ParticleResponseTime.h>
@@ -87,7 +88,8 @@ namespace Wasatch{
       else if (gDir == "Y" && dir_name() == "y") doGravity_ = true;
       else if (gDir == "Z" && dir_name() == "z") doGravity_ = true;
     }
-    doDrag_ = true;
+    
+    // check if drag was disabled
     doDrag_ = !(pMomSpec->findBlock("DisableDragForce"));
     setup();
   }
@@ -119,7 +121,12 @@ namespace Wasatch{
     Expr::Tag pBodyForceTag;
     if (doGravity_)
     {
-      pBodyForceTag = Expr::Tag("p.gravity_" + dir_name(), Expr::STATE_NONE);
+      switch (direction_) {
+        case XDIR: pBodyForceTag = TagNames::self().pbodyx; break;
+        case YDIR: pBodyForceTag = TagNames::self().pbodyy; break;
+        case ZDIR: pBodyForceTag = TagNames::self().pbodyz; break;
+        default:                                            break;
+      }
       typedef ParticleBodyForce<SVolField>::Builder BodyForce;
       factory.register_expression( scinew BodyForce(pBodyForceTag, gRhoTag_, pRhoTag_, pSizeTag_, pPosTags_ ) );
     }
@@ -128,7 +135,7 @@ namespace Wasatch{
     if (doDrag_) {
       //_____________________________
       // build a particle relaxation time expression
-      const Expr::Tag pTauTag("p.tau",Expr::STATE_NONE);
+      const Expr::Tag pTauTag = TagNames::self().presponse;
       if( !factory.have_entry( pTauTag ) )
       {
         typedef ParticleResponseTime<SVolField>::Builder ParticleTau;
@@ -137,7 +144,7 @@ namespace Wasatch{
       
       //_____________________________
       // build a particle Re expression
-      const Expr::Tag pReTag("p.re",Expr::STATE_NONE);
+      const Expr::Tag pReTag = TagNames::self().preynolds;
       if (!factory.have_entry( pReTag) )
       {
         typedef ParticleRe<XVolField, YVolField, ZVolField, SVolField>::Builder ParticleReB;
@@ -148,7 +155,7 @@ namespace Wasatch{
       
       //_____________________________
       // build a drag coefficient expression
-      const Expr::Tag pDragCoefTag("p.cd", Expr::STATE_NONE);
+      const Expr::Tag pDragCoefTag = TagNames::self().pdragcoef;
       if (!factory.have_entry(pDragCoefTag)) {
         typedef  ParticleDragCoefficient::Builder DragCoef;
         factory.register_expression( scinew DragCoef(pDragCoefTag, pReTag ) );
@@ -156,22 +163,24 @@ namespace Wasatch{
       
       //_____________________________
       // Drag Force
-      pDragForceTag =  Expr::Tag("p.drag_" + dir_name(), Expr::STATE_NONE);
       switch (direction_) {
         case XDIR:
         {
+          pDragForceTag = TagNames::self().pdragx;
           typedef ParticleDragForce<XVolField>::Builder DragForce;
           factory.register_expression( scinew DragForce(pDragForceTag, gUTag_, pDragCoefTag, pTauTag, solution_variable_tag(), pSizeTag_, pPosTags_ ) );
         }
           break;
         case YDIR:
         {
+          pDragForceTag = TagNames::self().pdragy;
           typedef ParticleDragForce<YVolField>::Builder DragForce;
           factory.register_expression( scinew DragForce(pDragForceTag, gVTag_, pDragCoefTag, pTauTag, solution_variable_tag(), pSizeTag_, pPosTags_ ) );
         }
           break;
         case ZDIR:
         {
+          pDragForceTag = TagNames::self().pdragz;
           typedef ParticleDragForce<ZVolField>::Builder DragForce;
           factory.register_expression( scinew DragForce(pDragForceTag, gWTag_, pDragCoefTag, pTauTag, solution_variable_tag(), pSizeTag_, pPosTags_ ) );
         }

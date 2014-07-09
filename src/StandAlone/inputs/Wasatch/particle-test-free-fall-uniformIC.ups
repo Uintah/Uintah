@@ -185,7 +185,7 @@
     <save label="p.drag_y"/>    
 		<save label="p.drag_z"/>    
 
-		<save label="p.gravity_z"/>  
+		<save label="p.body_z"/>  
 		      
     <save label="p.u_rhs"/>    
     <save label="p.v_rhs"/>    
