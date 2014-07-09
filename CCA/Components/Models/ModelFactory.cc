@@ -49,7 +49,6 @@
 #  include <CCA/Components/Models/SolidReactionModel/SolidReactionModel.h>
 #endif
 
-#include <CCA/Components/Models/Radiation/RadiationDriver.h>
 #include <Core/Malloc/Allocator.h>
 #include <sci_defs/uintah_defs.h>
 
@@ -138,12 +137,6 @@ ModelFactory::makeModels( const ProblemSpecP& restart_prob_spec,
       d_models.push_back(scinew DDT1(d_myworld, model_ps, prob_spec));
     else if(type == "SolidReactionModel")
       d_models.push_back(scinew SolidReactionModel(d_myworld, model_ps, prob_spec));
-    else if(type == "Radiation")
-#  if !defined( NO_FORTRAN ) && !defined( NO_MODELS_RADIATION )
-      d_models.push_back(scinew RadiationDriver(d_myworld, model_ps));
-#  else
-      throw ProblemSetupException("Radiation not supported in this build", __FILE__, __LINE__);
-#  endif
     else
       throw ProblemSetupException( "Unknown model: " + type, __FILE__, __LINE__ );
 #else
