@@ -129,14 +129,20 @@
     <StefanBoltzmann>   5.67051e-8  </StefanBoltzmann>
     <solveBoundaryFlux> false       </solveBoundaryFlux>
     <CCRays>            false       </CCRays>
+
+    <Radiometer>
+      <VRViewAngle>       180         </VRViewAngle>
+      <VROrientation>     [-1,0,0]    </VROrientation>
+      <VRLocationsMin>    [0,0,0]     </VRLocationsMin>
+      <VRLocationsMax>    [1,1,1]     </VRLocationsMax>
+      <nRadRays>          10          </nRadRays>
+
+
+      <randomSeed>        false       </randomSeed>
+      <Threshold>         0.05        </Threshold>
+      <sigmaScat>         0           </sigmaScat>
+      <allowReflect>      true        </allowReflect>
+    </Radiometer>
     
-    <VirtRadiometer>    true        </VirtRadiometer>
-    <VRViewAngle>       180         </VRViewAngle>
-    <VROrientation>     [-1,0,0]    </VROrientation>
-    
-    <VRLocationsMin>    [0,0,0]     </VRLocationsMin>
-    <VRLocationsMax>    [1,1,1]     </VRLocationsMax>
-    
-    <nRadRays>          10          </nRadRays>
   </RMCRT>
 </Uintah_specification>
