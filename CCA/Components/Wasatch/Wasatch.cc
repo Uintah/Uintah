@@ -816,7 +816,7 @@ namespace Wasatch{
     timeTags.push_back( TagNames::self().rkstage  );
     exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
     //
-    if( doParticles_ ) particlesHelper_->schedule_initialize_particles(level,sched);
+    if( doParticles_ ) particlesHelper_->schedule_initialize(level,sched);
     
     //_____________________________________________
     // Build the initial condition expression graph
@@ -1088,8 +1088,6 @@ namespace Wasatch{
       // pass the bc Helper to pressure expressions on all patches
       bcHelperMap_[level->getID()]->synchronize_pressure_expression();
     }
-
-    if (isRestarting_) isRestarting_ = false;
     
     // ensure that any "CARRY_FORWARD" variable has an initialization provided for it.
     if( buildTimeIntegrator_ ) { // make sure that we have a timestepper created - this is needed for wasatch-in-arches
@@ -1124,10 +1122,15 @@ namespace Wasatch{
     // Uintah::Point whereas Wasatch uses x, y, and z variables, separately.
     if (doParticles_)
     {
+      if (isRestarting_) {
+        particlesHelper_->schedule_restart_initialize(level,sched);
+      }
       particlesHelper_->schedule_sync_particle_position(level,sched);
       particlesHelper_->schedule_transfer_particle_ids(level,sched);
       particlesHelper_->schedule_relocate_particles(level,sched);
     }
+    
+    if (isRestarting_) isRestarting_ = false;
   }
 
   //--------------------------------------------------------------------
