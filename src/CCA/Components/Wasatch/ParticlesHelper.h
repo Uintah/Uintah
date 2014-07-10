@@ -117,7 +117,7 @@ namespace Wasatch {
     void schedule_delete_outside_particles( const Uintah::LevelP& level,
                                           Uintah::SchedulerP& sched );
 
-    static void add_particle_variable(const Expr::Tag& varTag);
+    static void add_particle_variable(const std::string& varName);
 
     /*
      *  \brief Parse the particle spec and create the position varlabels. This is an essential step
@@ -131,7 +131,7 @@ namespace Wasatch {
     const Uintah::VarLabel *pXLabel_,*pYLabel_,*pZLabel_;
     std::vector<const Uintah::VarLabel*> destroyMe_;
     
-    static std::vector<Expr::Tag> otherParticleTags_;
+    static std::vector<std::string> otherParticleVarNames_;
     
     void initialize( const Uintah::ProcessorGroup*,
                                const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,

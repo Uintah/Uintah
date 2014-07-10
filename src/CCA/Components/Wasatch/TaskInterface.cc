@@ -342,7 +342,7 @@ namespace Wasatch{
             if (tree.is_persistent(fieldTag)) {
               // if a particle variable is managed by uintah, then pass it on to the particles helper
               // for use in relocation
-              ParticlesHelper::self().add_particle_variable(fieldTag);
+              ParticlesHelper::self().add_particle_variable(fieldTag.name());
             }
           }
         }

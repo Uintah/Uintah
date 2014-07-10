@@ -50,7 +50,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Variables/VarTypes.h>
 
-std::vector<Expr::Tag> Wasatch::ParticlesHelper::otherParticleTags_;
+std::vector<std::string> Wasatch::ParticlesHelper::otherParticleVarNames_;
 
 namespace Wasatch {
   
@@ -345,20 +345,19 @@ namespace Wasatch {
     // first go through the list of particle expressions and check whether Uintah manages those
     // or note. We need this for particle relocation.
     vector<const VarLabel*> otherParticleVarLabels;
-    vector<Expr::Tag>::iterator tagIter = otherParticleTags_.begin();
-    while (tagIter != otherParticleTags_.end())
-    {
-      if (VarLabel::find( (*tagIter).name() ) ) {
-        VarLabel* theVarLabel = VarLabel::find( (*tagIter).name() );
+    vector<string>::iterator varNameIter = otherParticleVarNames_.begin();
+    for (; varNameIter != otherParticleVarNames_.end(); ++varNameIter) {
+      if (VarLabel::find( *varNameIter ) ) {
+        VarLabel* theVarLabel = VarLabel::find( *varNameIter );
         
         if (std::find(otherParticleVarLabels.begin(), otherParticleVarLabels.end(),theVarLabel) == otherParticleVarLabels.end())
         {
-          otherParticleVarLabels.push_back(VarLabel::find( (*tagIter).name() ));
+          otherParticleVarLabels.push_back(VarLabel::find( *varNameIter ));
         }
       }
-      ++tagIter;
     }
-    
+
+    // add the particle ID label!
     otherParticleVarLabels.push_back(pIDLabel_);
     
     vector< vector<const VarLabel*> > otherParticleVars;
@@ -408,9 +407,9 @@ namespace Wasatch {
   //------------------------------------------------------------------
   
   void
-  ParticlesHelper::add_particle_variable(const Expr::Tag& varTag )
+  ParticlesHelper::add_particle_variable(const std::string& varName )
   {
-    otherParticleTags_.push_back(varTag);
+    otherParticleVarNames_.push_back(varName);
   }
   
   //--------------------------------------------------------------------
