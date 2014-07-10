@@ -363,18 +363,16 @@ public:
 			indep = indep_headers;
 			ind_1 = i1;
 			table2 = table;
-			table_vals = std::vector<double>(8);
-			table_vals2 = std::vector<double>(4);
-			table_vals3 = std::vector<double>(2);
-			dist_vals = std::vector<double>(4, 0.0); // make sure the default is zero
-			lo_index = std::vector<int>(4);
-			hi_index = std::vector<int>(4);
 		};
 
 		~Interp3() {};
 		
 		inline double find_val( std::vector<double> iv, int var_index) {
 
+			table_vals = std::vector<double>(8,0.0);
+			dist_vals = std::vector<double>(4,0.0); // make sure the default is zero
+			lo_index = std::vector<int>(4,0);
+			hi_index = std::vector<int>(4,0);
       int mid = 0;
       double var_val = 0.0;
       int lo_ind;
@@ -502,15 +500,15 @@ public:
         }       
  
         // First, we make the 2d plane in indep_1 space
-        table_vals2[0] = table_vals[0]*(1 - dist_vals[0]) + table_vals[1]*dist_vals[0];
-        table_vals2[1] = table_vals[4]*(1 - dist_vals[1]) + table_vals[5]*dist_vals[1];
-        table_vals2[2] = table_vals[2]*(1 - dist_vals[0]) + table_vals[3]*dist_vals[0];
-        table_vals2[3] = table_vals[6]*(1 - dist_vals[1]) + table_vals[7]*dist_vals[1];
+        table_vals[0] = table_vals[0]*(1 - dist_vals[0]) + table_vals[1]*dist_vals[0];
+        table_vals[1] = table_vals[4]*(1 - dist_vals[1]) + table_vals[5]*dist_vals[1];
+        table_vals[2] = table_vals[2]*(1 - dist_vals[0]) + table_vals[3]*dist_vals[0];
+        table_vals[3] = table_vals[6]*(1 - dist_vals[1]) + table_vals[7]*dist_vals[1];
         // Next, a line in indep_2 space
-        table_vals3[0] = table_vals2[0]*(1 - dist_vals[2]) + table_vals2[2]*dist_vals[2];
-        table_vals3[1] = table_vals2[1]*(1 - dist_vals[2]) + table_vals2[3]*dist_vals[2];
+        table_vals[0] = table_vals[0]*(1 - dist_vals[2]) + table_vals[2]*dist_vals[2];
+        table_vals[1] = table_vals[1]*(1 - dist_vals[2]) + table_vals[3]*dist_vals[2];
         // Finally, we interplate the new line in indep_3 space
-        var_val = table_vals3[0]*(1 - dist_vals[3]) + table_vals3[1]*dist_vals[3];
+        var_val = table_vals[0]*(1 - dist_vals[3]) + table_vals[1]*dist_vals[3];
 
       }
       d_interpLock.unlock();
