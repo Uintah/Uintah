@@ -69,8 +69,7 @@ void
 Radiometer::problemSetup( const ProblemSpecP& prob_spec,
                           const ProblemSpecP& rmcrtps,
                           SimulationStateP&   sharedState) 
-{
-
+{  
   d_sharedState = sharedState;
   ProblemSpecP rmcrt_ps = rmcrtps;
   Vector orient;
@@ -219,7 +218,6 @@ Radiometer::radiometer( const ProcessorGroup* pc,
                         Task::WhichDW which_celltype_dw,
                         const int radCalc_freq )
 { 
-
   const Level* level = getLevel(patches);
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
   
@@ -249,9 +247,9 @@ Radiometer::radiometer( const ProcessorGroup* pc,
   constCCVariable<double> abskg;
   constCCVariable<int>    celltype;
 
-  abskg_dw->getRegion(   abskg   ,       d_abskgLabel ,   d_matl , level, domainLo_EC, domainHi_EC);
-  sigmaT4_dw->getRegion( sigmaT4OverPi , d_sigmaT4_label, d_matl , level, domainLo_EC, domainHi_EC);
-  celltype_dw->getRegion( celltype ,     d_cellTypeLabel, d_matl , level, domainLo_EC, domainHi_EC);
+  abskg_dw->getRegion(   abskg   ,       d_abskgLabel ,   d_matl , level, domainLo_EC, domainHi_EC );
+  sigmaT4_dw->getRegion( sigmaT4OverPi , d_sigmaT4_label, d_matl , level, domainLo_EC, domainHi_EC );
+  celltype_dw->getRegion( celltype ,     d_cellTypeLabel, d_matl , level, domainLo_EC, domainHi_EC );
 
   //__________________________________
   // patch loop
@@ -259,69 +257,81 @@ Radiometer::radiometer( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     printTask(patches,patch,dbg,"Doing Radiometer::radiometer");
-
-    CCVariable<double> VRFlux;
-    new_dw->allocateAndPut( VRFlux, d_VRFluxLabel, d_matl, patch );
-    VRFlux.initialize( 0.0 );
-
-    unsigned long int size = 0;                   // current size of PathIndex
-    Vector Dx = patch->dCell();                   // cell spacing
-    double DyDx = Dx.y() / Dx.x();                //noncubic
-    double DzDx = Dx.z() / Dx.x();                //noncubic 
     
-    //______________________________________________________________________
-    //           R A D I O M E T E R 
-    //______________________________________________________________________
-    IntVector lo = patch->getCellLowIndex();
-    IntVector hi = patch->getCellHighIndex();
-    
-    IntVector VR_posLo  = level->getCellIndex( d_VRLocationsMin );
-    IntVector VR_posHi  = level->getCellIndex( d_VRLocationsMax );
-       
-    if ( doesIntersect( VR_posLo, VR_posHi, lo, hi ) ){
-    
-      lo = Max(lo, VR_posLo);  // form an iterator for this patch
-      hi = Min(hi, VR_posHi);  // this is an intersection     
-
-      for(CellIterator iter(lo,hi); !iter.done(); iter++){
-       
-        IntVector c = *iter; 
- 
-        double sumI      = 0;
-        double sumProjI  = 0;
-        double sumI_prev = 0;
-
-        //__________________________________
-        // ray loop
-        for (int iRay=0; iRay < d_nRadRays; iRay++){
-
-          Vector ray_location;
-          bool useCCRays = true;
-          rayLocation(mTwister, c, DyDx, DzDx, useCCRays, ray_location);
-
-
-          double cosVRTheta;
-          Vector direction_vector;
-          rayDirection_VR( mTwister, c, iRay, d_VR, DyDx, DzDx, direction_vector, cosVRTheta);
-
-          // get the intensity for this ray
-          updateSumI( direction_vector, ray_location, c, Dx, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
-
-          sumProjI += cosVRTheta * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
-                                                       // from all the rays up to that point
-          sumI_prev = sumI;
-
-        } // end VR ray loop
-
-        //__________________________________
-        //  Compute VRFlux
-        VRFlux[c] = sumProjI * d_VR.sldAngl/d_nRadRays;
-
-      }  // end VR cell iterator
-    }  // end on Patch 
-  }  //end patch loop
+    radiometerFlux( patch, level, new_dw, mTwister, sigmaT4OverPi, abskg, celltype );
+   
+  }  // end patch loop
 }  // end radiometer
 
+//______________________________________________________________________
+//    Compute the radiometer flux.
+//______________________________________________________________________
+void 
+Radiometer::radiometerFlux( const Patch* patch,
+                            const Level* level,
+                            DataWarehouse* new_dw,
+                            MTRand& mTwister,
+                            constCCVariable<double> sigmaT4OverPi,
+                            constCCVariable<double> abskg,
+                            constCCVariable<int> celltype )
+{
+  CCVariable<double> VRFlux;
+  new_dw->allocateAndPut( VRFlux, d_VRFluxLabel, d_matl, patch );
+  VRFlux.initialize( 0.0 );
+
+  unsigned long int size = 0;                   // current size of PathIndex
+  Vector Dx = patch->dCell();                   // cell spacing
+  double DyDx = Dx.y() / Dx.x();                //noncubic
+  double DzDx = Dx.z() / Dx.x();                //noncubic 
+
+  IntVector lo = patch->getCellLowIndex();
+  IntVector hi = patch->getCellHighIndex();
+
+  IntVector VR_posLo  = level->getCellIndex( d_VRLocationsMin );
+  IntVector VR_posHi  = level->getCellIndex( d_VRLocationsMax );
+
+  if ( doesIntersect( VR_posLo, VR_posHi, lo, hi ) ){
+
+    lo = Max(lo, VR_posLo);  // form an iterator for this patch
+    hi = Min(hi, VR_posHi);  // this is an intersection     
+
+    for(CellIterator iter(lo,hi); !iter.done(); iter++){
+
+      IntVector c = *iter; 
+
+      double sumI      = 0;
+      double sumProjI  = 0;
+      double sumI_prev = 0;
+
+      //__________________________________
+      // ray loop
+      for (int iRay=0; iRay < d_nRadRays; iRay++){
+
+        Vector ray_location;
+        bool useCCRays = true;
+        rayLocation(mTwister, c, DyDx, DzDx, useCCRays, ray_location);
+
+
+        double cosVRTheta;
+        Vector direction_vector;
+        rayDirection_VR( mTwister, c, iRay, d_VR, DyDx, DzDx, direction_vector, cosVRTheta);
+
+        // get the intensity for this ray
+        updateSumI( direction_vector, ray_location, c, Dx, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
+
+        sumProjI += cosVRTheta * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
+                                                     // from all the rays up to that point
+        sumI_prev = sumI;
+
+      } // end VR ray loop
+
+      //__________________________________
+      //  Compute VRFlux
+      VRFlux[c] = sumProjI * d_VR.sldAngl/d_nRadRays;
+
+    }  // end VR cell iterator
+  }  // is radiometer on this patch
+}
 
 //______________________________________________________________________
 //    Compute the Ray direction for Virtual Radiometer

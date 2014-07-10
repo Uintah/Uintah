@@ -57,11 +57,21 @@ namespace Uintah{
 
       /** @brief Algorithm for tracing rays from radiometer location*/ 
       void sched_radiometer( const LevelP& level, 
-                           SchedulerP& sched,
-                           Task::WhichDW abskg_dw,
-                           Task::WhichDW sigma_dw,
-                           Task::WhichDW celltype_dw,
-                           const int radCalc_freq );
+                             SchedulerP& sched,
+                             Task::WhichDW abskg_dw,
+                             Task::WhichDW sigma_dw,
+                             Task::WhichDW celltype_dw,
+                             const int radCalc_freq );
+      //__________________________________
+      //  FUNCTIONS
+      void radiometerFlux(  const Patch* patch,
+                            const Level* level,
+                            DataWarehouse* new_dw,
+                            MTRand& mTwister,
+                            constCCVariable<double> sigmaT4OverPi,
+                            constCCVariable<double> abskg,
+                            constCCVariable<int> celltype );
+                          
     private: 
 
       // Virtual Radiometer parameters
