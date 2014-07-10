@@ -580,7 +580,7 @@ bool RadPropertyCalculator::RadPropsInterface::problemSetup( const ProblemSpecP&
   }
 
   if ( db->findBlock("abskp") ){ 
-    db->findBlock("abskp")->getAttribute("label",_abskg_name); 
+    db->findBlock("abskp")->getAttribute("label",_abskp_name); 
     _use_abskp = true; 
   }
 
