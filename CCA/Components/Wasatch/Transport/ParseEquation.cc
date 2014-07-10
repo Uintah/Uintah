@@ -820,36 +820,39 @@ namespace Wasatch{
     //___________________________________________________________________________
     // Two way coupling between particles and the gas phase
     //
-    Uintah::ProblemSpecP momentumSpec  = wasatchSpec->findBlock("MomentumEquations");
-    if (momentumSpec) {
-      std::string xmomname, ymomname, zmomname;
-      const Uintah::ProblemSpecP doxmom = momentumSpec->get( "X-Momentum", xmomname );
-      const Uintah::ProblemSpecP doymom = momentumSpec->get( "Y-Momentum", ymomname );
-      const Uintah::ProblemSpecP dozmom = momentumSpec->get( "Z-Momentum", zmomname );
-      
-      const TagNames tNames = TagNames::self();
-      if (doxmom) {
-        typedef ParticleGasMomentumSrc<XVolField>::Builder XMomSrcT;
-        const Expr::Tag xMomRHSTag (xmomname + "_rhs", Expr::STATE_NONE);
-        const Expr::Tag pXMomRHSTag(puname + "_rhs", Expr::STATE_NONE);
-        factory.register_expression( scinew XMomSrcT( tNames.pmomsrcx, pXMomRHSTag, pMassTag, pSizeTag, pPosTags ));
-        factory.attach_dependency_to_expression(tNames.pmomsrcx, xMomRHSTag);
-      }
-      
-      if (doymom) {
-        typedef ParticleGasMomentumSrc<YVolField>::Builder YMomSrcT;
-        const Expr::Tag yMomRHSTag (ymomname + "_rhs", Expr::STATE_NONE);
-        const Expr::Tag pYMomRHSTag(pvname + "_rhs", Expr::STATE_NONE);
-        factory.register_expression( scinew YMomSrcT( tNames.pmomsrcy, pYMomRHSTag, pMassTag, pSizeTag, pPosTags ));
-        factory.attach_dependency_to_expression(tNames.pmomsrcy, yMomRHSTag);
-      }
-      
-      if (dozmom) {
-        typedef ParticleGasMomentumSrc<ZVolField>::Builder ZMomSrcT;
-        const Expr::Tag zMomRHSTag (zmomname + "_rhs", Expr::STATE_NONE);
-        const Expr::Tag pZMomRHSTag(pwname + "_rhs", Expr::STATE_NONE);
-        factory.register_expression( scinew ZMomSrcT( tNames.pmomsrcz, pZMomRHSTag, pMassTag, pSizeTag, pPosTags ));
-        factory.attach_dependency_to_expression(tNames.pmomsrcz, zMomRHSTag);
+    if (!particleSpec->findBlock("ParticleMomentum")->findBlock("DisableTwoWayCoupling"))
+    {
+      Uintah::ProblemSpecP momentumSpec  = wasatchSpec->findBlock("MomentumEquations");
+      if (momentumSpec) {
+        std::string xmomname, ymomname, zmomname;
+        const Uintah::ProblemSpecP doxmom = momentumSpec->get( "X-Momentum", xmomname );
+        const Uintah::ProblemSpecP doymom = momentumSpec->get( "Y-Momentum", ymomname );
+        const Uintah::ProblemSpecP dozmom = momentumSpec->get( "Z-Momentum", zmomname );
+        
+        const TagNames tNames = TagNames::self();
+        if (doxmom) {
+          typedef ParticleGasMomentumSrc<XVolField>::Builder XMomSrcT;
+          const Expr::Tag xMomRHSTag (xmomname + "_rhs", Expr::STATE_NONE);
+          const Expr::Tag pXMomRHSTag(puname + "_rhs", Expr::STATE_NONE);
+          factory.register_expression( scinew XMomSrcT( tNames.pmomsrcx, pXMomRHSTag, pMassTag, pSizeTag, pPosTags ));
+          factory.attach_dependency_to_expression(tNames.pmomsrcx, xMomRHSTag);
+        }
+        
+        if (doymom) {
+          typedef ParticleGasMomentumSrc<YVolField>::Builder YMomSrcT;
+          const Expr::Tag yMomRHSTag (ymomname + "_rhs", Expr::STATE_NONE);
+          const Expr::Tag pYMomRHSTag(pvname + "_rhs", Expr::STATE_NONE);
+          factory.register_expression( scinew YMomSrcT( tNames.pmomsrcy, pYMomRHSTag, pMassTag, pSizeTag, pPosTags ));
+          factory.attach_dependency_to_expression(tNames.pmomsrcy, yMomRHSTag);
+        }
+        
+        if (dozmom) {
+          typedef ParticleGasMomentumSrc<ZVolField>::Builder ZMomSrcT;
+          const Expr::Tag zMomRHSTag (zmomname + "_rhs", Expr::STATE_NONE);
+          const Expr::Tag pZMomRHSTag(pwname + "_rhs", Expr::STATE_NONE);
+          factory.register_expression( scinew ZMomSrcT( tNames.pmomsrcz, pZMomRHSTag, pMassTag, pSizeTag, pPosTags ));
+          factory.attach_dependency_to_expression(tNames.pmomsrcz, zMomRHSTag);
+        }
       }
     }
 

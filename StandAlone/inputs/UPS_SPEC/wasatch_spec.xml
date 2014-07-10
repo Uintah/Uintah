@@ -871,6 +871,7 @@
 												attribute1="x REQUIRED STRING"
 												attribute2="y REQUIRED STRING"
 												attribute3="z REQUIRED STRING">
+				<DisableTwoWayCoupling spec="OPTIONAL NO_DATA"/>
 				<DisableDragForce spec="OPTIONAL NO_DATA"/>
 				<!-- Specify a body force. This has units of m / s^2 and will be multiplied by the density -->
 				<Gravity              spec="MULTIPLE NO_DATA"
