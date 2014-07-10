@@ -42,14 +42,10 @@ namespace Wasatch{
   
   template<typename FieldT>
   const SCIRun::Point get_low_position(const Uintah::Patch& patch)
-  {}
-  
-  template<>
-  const SCIRun::Point get_low_position<SVolField>(const Uintah::Patch& patch)
   {
     return patch.getCellPosition(patch.getCellLowIndex());
   }
-  
+    
   template<>
   const SCIRun::Point get_low_position<XVolField>(const Uintah::Patch& patch)
   {
