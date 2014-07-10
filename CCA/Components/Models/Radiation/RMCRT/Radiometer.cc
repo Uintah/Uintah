@@ -36,7 +36,7 @@
 #include <fstream>
 
 #include <include/sci_defs/uintah_testdefs.h.in>
-   
+
 
 //______________________________________________________________________
 //
@@ -50,7 +50,7 @@ static DebugStream dbg("RAY", false);
 //
 Radiometer::Radiometer()
 {
-  d_VRFluxLabel = VarLabel::create( "radiometerFlux", CCVariable<double>::getTypeDescription() );                      
+  d_VRFluxLabel = VarLabel::create( "VRFlux", CCVariable<double>::getTypeDescription() );
 }
 
 //______________________________________________________________________
@@ -68,19 +68,19 @@ Radiometer::~Radiometer()
 void
 Radiometer::problemSetup( const ProblemSpecP& prob_spec,
                           const ProblemSpecP& rmcrtps,
-                          SimulationStateP&   sharedState) 
-{  
+                          SimulationStateP&   sharedState)
+{
   d_sharedState = sharedState;
   ProblemSpecP rmcrt_ps = rmcrtps;
   Vector orient;
   rmcrt_ps->getWithDefault( "Threshold" ,       d_threshold ,      0.01 );             // When to terminate a ray
-  rmcrt_ps->getWithDefault( "randomSeed",       d_isSeedRandom,    true );             // random or deterministic seed. 
+  rmcrt_ps->getWithDefault( "randomSeed",       d_isSeedRandom,    true );             // random or deterministic seed.
   rmcrt_ps->getWithDefault( "StefanBoltzmann",  d_sigma,           5.67051e-8);        // Units are W/(m^2-K)
   rmcrt_ps->getWithDefault( "VRViewAngle"    ,  d_viewAng,         180 );              // view angle of the radiometer in degrees
   rmcrt_ps->getWithDefault( "VROrientation"  ,  orient,          Vector(0,0,1) );       // Normal vector of the radiometer orientation (Cartesian)
   rmcrt_ps->getWithDefault( "nRadRays"  ,       d_nRadRays ,       1000 );
   rmcrt_ps->getWithDefault( "sigmaScat"  ,      d_sigmaScat  ,      0 );                // scattering coefficient
-  rmcrt_ps->getWithDefault( "allowReflect"   ,  d_allowReflect,     true );             // Allow for ray reflections. Make false for DOM comparisons.  
+  rmcrt_ps->getWithDefault( "allowReflect"   ,  d_allowReflect,     true );             // Allow for ray reflections. Make false for DOM comparisons.
   rmcrt_ps->get(            "VRLocationsMin" ,  d_VRLocationsMin );                     // minimum extent of the string or block of virtual radiometers in physical units
   rmcrt_ps->get(            "VRLocationsMax" ,  d_VRLocationsMax );                     // maximum extent
 
@@ -115,9 +115,9 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 
-  if (d_virtRad && d_nRadRays < int(15 + pow(5.4, d_viewAng/40) ) ){
+  if ( d_nRadRays < int(15 + pow(5.4, d_viewAng/40) ) ){
     proc0cout << "RMCRT: WARNING Number of radiometer rays:  ("<< d_nRadRays <<") is less than the recommended number of ("<< int(15 + pow(5.4, d_viewAng/40) ) <<"). Errors will exceed 1%. " << endl;
-  } 
+  }
 
   // orient[0,1,2] represent the user specified vector normal of the radiometer.
   // These will be converted to rotations about the x,y, and z axes, respectively.
@@ -148,7 +148,7 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
   if (orient[0] > 0 && orient[1] < 0){       // quadrant 4
     psiRot = (2*M_PI - psiRot);
   }
-  
+
   d_VR.psiRot = psiRot;
   //  phiRot is always  0. There will never be a need for a rotation about the x axis. All
   //  possible rotations can be accomplished using the other two.
@@ -156,15 +156,15 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
 
   double deltaTheta = d_viewAng/360*M_PI;       // divides view angle by two and converts to radians
   double range      = 1 - cos(deltaTheta);      // cos(0) to cos(deltaTheta) gives the range of possible vals
-  d_VR.sldAngl      = 2*M_PI*range;             // the solid angle that the radiometer can view  
+  d_VR.sldAngl      = 2*M_PI*range;             // the solid angle that the radiometer can view
   d_VR.deltaTheta = deltaTheta;
   d_VR.range      = range;
   d_sigma_over_pi = d_sigma/M_PI;
 
   //__________________________________
-  // bulletproofing  
+  // bulletproofing
   ProblemSpecP root_ps = rmcrt_ps->getRootNode();
-    
+
   Vector periodic;
   ProblemSpecP grid_ps  = root_ps->findBlock("Grid");
   ProblemSpecP level_ps = grid_ps->findBlock("Level");
@@ -179,7 +179,7 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
 // Method: Schedule the virtual radiometer
 //______________________________________________________________________
 void
-Radiometer::sched_radiometer( const LevelP& level, 
+Radiometer::sched_radiometer( const LevelP& level,
                               SchedulerP& sched,
                               Task::WhichDW abskg_dw,
                               Task::WhichDW sigma_dw,
@@ -197,11 +197,11 @@ Radiometer::sched_radiometer( const LevelP& level,
   tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
   tsk->requires( sigma_dw ,    d_sigmaT4_label,  gac, SHRT_MAX);
   tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
-  
+
   tsk->requires(Task::OldDW, d_VRFluxLabel, d_gn, 0);
   tsk->computes( d_VRFluxLabel );
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
-  
+
 }
 
 //---------------------------------------------------------------------------
@@ -217,28 +217,28 @@ Radiometer::radiometer( const ProcessorGroup* pc,
                         Task::WhichDW whichd_sigmaT4_dw,
                         Task::WhichDW which_celltype_dw,
                         const int radCalc_freq )
-{ 
+{
   const Level* level = getLevel(patches);
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  
+
   if ( doCarryForward( timestep, radCalc_freq) ) {
     printTask(patches,patches->get(0), dbg,"Doing Radiometer::radiometer (carryForward)");
     bool replaceVar = true;
     new_dw->transferFrom( old_dw, d_VRFluxLabel, patches, matls, replaceVar );
     return;
-  }  
-  
+  }
+
   //__________________________________
   //
   MTRand mTwister;
-  
+
   // Determine the size of the domain.
   IntVector domainLo, domainHi;
   IntVector domainLo_EC, domainHi_EC;
-  
+
   level->findInteriorCellIndexRange(domainLo, domainHi);     // excluding extraCells
   level->findCellIndexRange(domainLo_EC, domainHi_EC);       // including extraCells
-  
+
   DataWarehouse* abskg_dw    = new_dw->getOtherDataWarehouse(which_abskg_dw);
   DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(whichd_sigmaT4_dw);
   DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
@@ -257,32 +257,39 @@ Radiometer::radiometer( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     printTask(patches,patch,dbg,"Doing Radiometer::radiometer");
-    
-    radiometerFlux( patch, level, new_dw, mTwister, sigmaT4OverPi, abskg, celltype );
-   
+
+    bool modifiesFlux= false;
+    radiometerFlux( patch, level, new_dw, mTwister, sigmaT4OverPi, abskg, celltype, modifiesFlux );
+
   }  // end patch loop
 }  // end radiometer
 
 //______________________________________________________________________
 //    Compute the radiometer flux.
 //______________________________________________________________________
-void 
+void
 Radiometer::radiometerFlux( const Patch* patch,
                             const Level* level,
                             DataWarehouse* new_dw,
                             MTRand& mTwister,
                             constCCVariable<double> sigmaT4OverPi,
                             constCCVariable<double> abskg,
-                            constCCVariable<int> celltype )
+                            constCCVariable<int> celltype,
+                            const bool modifiesFlux )
 {
+  cout << " INSIDE: radiometerFlux " << endl;
   CCVariable<double> VRFlux;
-  new_dw->allocateAndPut( VRFlux, d_VRFluxLabel, d_matl, patch );
-  VRFlux.initialize( 0.0 );
+  if( modifiesFlux ){
+    new_dw->getModifiable( VRFlux,  d_VRFluxLabel,  d_matl, patch );
+  }else{
+    new_dw->allocateAndPut( VRFlux, d_VRFluxLabel, d_matl, patch );
+    VRFlux.initialize( 0.0 );
+  }
 
   unsigned long int size = 0;                   // current size of PathIndex
   Vector Dx = patch->dCell();                   // cell spacing
   double DyDx = Dx.y() / Dx.x();                //noncubic
-  double DzDx = Dx.z() / Dx.x();                //noncubic 
+  double DzDx = Dx.z() / Dx.x();                //noncubic
 
   IntVector lo = patch->getCellLowIndex();
   IntVector hi = patch->getCellHighIndex();
@@ -293,11 +300,11 @@ Radiometer::radiometerFlux( const Patch* patch,
   if ( doesIntersect( VR_posLo, VR_posHi, lo, hi ) ){
 
     lo = Max(lo, VR_posLo);  // form an iterator for this patch
-    hi = Min(hi, VR_posHi);  // this is an intersection     
+    hi = Min(hi, VR_posHi);  // this is an intersection
 
     for(CellIterator iter(lo,hi); !iter.done(); iter++){
 
-      IntVector c = *iter; 
+      IntVector c = *iter;
 
       double sumI      = 0;
       double sumProjI  = 0;
@@ -336,31 +343,31 @@ Radiometer::radiometerFlux( const Patch* patch,
 //______________________________________________________________________
 //    Compute the Ray direction for Virtual Radiometer
 //______________________________________________________________________
-void 
+void
 Radiometer::rayDirection_VR( MTRand& mTwister,
-                             const IntVector& origin,      
-                             const int iRay,               
-                             VR_variables& VR,             
-                             const double DyDx,            
-                             const double DzDx,            
-                             Vector& direction_vector,     
-                             double& cosVRTheta)           
+                             const IntVector& origin,
+                             const int iRay,
+                             VR_variables& VR,
+                             const double DyDx,
+                             const double DzDx,
+                             Vector& direction_vector,
+                             double& cosVRTheta)
 {
   if( d_isSeedRandom == false ){
     mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
   }
-  
+
   // to help code readability
   double thetaRot   = VR.thetaRot;
   double deltaTheta = VR.deltaTheta;
   double psiRot     = VR.psiRot;
   double phiRot     = VR.phiRot;
   double range      = VR.range;
-  
+
   // Generate two uniformly-distributed-over-the-solid-angle random numbers
   // Used in determining the ray direction
   double phi = 2 * M_PI * mTwister.randDblExc(); //azimuthal angle. Range of 0 to 2pi
-    
+
   // This guarantees that the polar angle of the ray is within the delta_theta
   double VRTheta = acos(cos(deltaTheta)+range*mTwister.randDblExc());
   cosVRTheta = cos(VRTheta);
@@ -376,12 +383,12 @@ Radiometer::rayDirection_VR( MTRand& mTwister,
     y*(-cos(phiRot)*sin(psiRot) + sin(phiRot)*sin(thetaRot)*cos(psiRot)) +
     z*( sin(phiRot)*sin(psiRot) + cos(phiRot)*sin(thetaRot)*cos(psiRot));
 
-  direction_vector[1] = 
+  direction_vector[1] =
     x*cos(thetaRot)*sin(psiRot) +
     y *( cos(phiRot)*cos(psiRot) + sin(phiRot)*sin(thetaRot)*sin(psiRot)) +
     z *(-sin(phiRot)*cos(psiRot) + cos(phiRot)*sin(thetaRot)*sin(psiRot));
 
-  direction_vector[2] = 
+  direction_vector[2] =
     x*(-sin(thetaRot)) +
     y*sin(phiRot)*cos(thetaRot) +
     z*cos(phiRot)*cos(thetaRot);

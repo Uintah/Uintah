@@ -43,20 +43,20 @@ namespace Uintah{
 
   class Radiometer : public RMCRTCommon {
 
-    public: 
+    public:
 
       Radiometer();
-      ~Radiometer(); 
+      ~Radiometer();
 
       //__________________________________
       //  TASKS
       /** @brief Interface to input file information */
       void  problemSetup( const ProblemSpecP& prob_spec,
                           const ProblemSpecP& rmcrt_ps,
-                          SimulationStateP& sharedState ); 
+                          SimulationStateP& sharedState );
 
-      /** @brief Algorithm for tracing rays from radiometer location*/ 
-      void sched_radiometer( const LevelP& level, 
+      /** @brief Algorithm for tracing rays from radiometer location*/
+      void sched_radiometer( const LevelP& level,
                              SchedulerP& sched,
                              Task::WhichDW abskg_dw,
                              Task::WhichDW sigma_dw,
@@ -70,20 +70,24 @@ namespace Uintah{
                             MTRand& mTwister,
                             constCCVariable<double> sigmaT4OverPi,
                             constCCVariable<double> abskg,
-                            constCCVariable<int> celltype );
-                          
-    private: 
+                            constCCVariable<int> celltype,
+                            const bool modifiesFlux );
+
+    const VarLabel* getRadiometerLabel() const {
+      return d_VRFluxLabel;
+    }
+
+    private:
 
       // Virtual Radiometer parameters
       int  d_nRadRays;                     // number of rays per radiometer used to compute radiative flux
-      bool d_virtRad;
       double d_viewAng;
       Point d_VRLocationsMin;
       Point d_VRLocationsMax;
-      
+
       struct VR_variables{
         double thetaRot;
-        double phiRot; 
+        double phiRot;
         double psiRot;
         double deltaTheta;
         double range;
@@ -94,10 +98,10 @@ namespace Uintah{
 
       //__________________________________
       //
-      void radiometer( const ProcessorGroup* pc, 
-                       const PatchSubset* patches, 
-                       const MaterialSubset* matls, 
-                       DataWarehouse* old_dw, 
+      void radiometer( const ProcessorGroup* pc,
+                       const PatchSubset* patches,
+                       const MaterialSubset* matls,
+                       DataWarehouse* old_dw,
                        DataWarehouse* new_dw,
                        Task::WhichDW which_abskg_dw,
                        Task::WhichDW whichd_sigmaT4_dw,
@@ -105,7 +109,7 @@ namespace Uintah{
                        const int radCalc_freq );
 
       //__________________________________
-      //  
+      //
       void rayDirection_VR( MTRand& mTwister,
                             const IntVector& origin,
                             const int iRay,
@@ -114,7 +118,7 @@ namespace Uintah{
                             const double DzDx,
                             Vector& directionVector,
                             double& cosVRTheta );
-                            
+
   }; // class Radiometer
 
 } // namespace Uintah
