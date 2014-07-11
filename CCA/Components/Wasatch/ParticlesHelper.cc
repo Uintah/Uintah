@@ -29,20 +29,8 @@
 
 #include "ParticlesHelper.h"
 
-//-- Boost includes --//
-#include <boost/foreach.hpp>
-
-//-- ExprLib includes --//
-#include <expression/Expression.h>
-#include <expression/ExpressionFactory.h>
-
 //-- Wasatch includes --//
-#include <CCA/Components/Wasatch/FieldAdaptor.h>
 #include <CCA/Components/Wasatch/Wasatch.h>
-#include <CCA/Components/Wasatch/FieldTypes.h>
-#include <CCA/Components/Wasatch/Expressions/ReductionBase.h>
-#include <CCA/Components/Wasatch/Expressions/Reduction.h>
-#include <CCA/Components/Wasatch/ParseTools.h>
 
 //-- Uintah Includes --//
 #include <Core/Grid/Box.h>

@@ -33,18 +33,11 @@
 //-- stl includes --//
 #include <string>
 
-//-- Wasatch includes --//
-#include "GraphHelperTools.h"
-
 //-- Uintah includes --//
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Material.h>
-
-//-- Expression includes --//
-#include <expression/ExprFwd.h>
-#include <expression/ExpressionTree.h>
 
 // forward declarations
 namespace Uintah{
