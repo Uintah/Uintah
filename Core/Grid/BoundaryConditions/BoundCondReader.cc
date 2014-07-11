@@ -710,7 +710,7 @@ void BoundCondReader::combineBCS()
             rearranged.addBCData(mat_id,(*vec_itr)->clone());
           }
 
-          delete union_bc;
+          //delete union_bc;
           delete union_bc_clone;
 
         }
