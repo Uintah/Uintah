@@ -522,10 +522,17 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
       _iv_transform->transform( iv, total_inert_f ); 
 
-      // retrieve all depenedent variables from table
+      //get all the needed varaible values from table with only one search
+      std::vector<int> indepVarIndexes;
+      std::vector<double> depVarValues;
       for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
-
-        double table_value = ND_interp->find_val( iv, i->second.index );
+        indepVarIndexes.push_back( i->second.index );
+      }
+      depVarValues = ND_interp->find_val(iv, indepVarIndexes );
+      
+      int depVarCount = 0;
+      //now deal with the mixing and density checks same as before
+      for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
         // for post look-up mixing
         for (StringToCCVar::iterator inert_iter = inert_mixture_fractions.begin(); 
@@ -534,33 +541,34 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
           double inert_f = inert_iter->second.var[c];
           doubleMap inert_species_map_list = d_inertMap.find( inert_iter->first )->second; 
 
-          double temp_table_value = table_value; 
+          double temp_table_value = depVarValues[depVarCount];
           if ( i->first == "density" ){ 
-            temp_table_value = 1.0/table_value; 
+            temp_table_value = 1.0/depVarValues[depVarCount];
           } 
 
           post_mixing( temp_table_value, inert_f, i->first, inert_species_map_list ); 
 
           if ( i->first == "density" ){ 
-            table_value = 1.0 / temp_table_value; 
+            depVarValues[depVarCount] = 1.0 / temp_table_value;
           } else { 
-            table_value = temp_table_value; 
+            depVarValues[depVarCount] = temp_table_value;
           } 
         }
 
-        table_value *= eps_vol[c]; 
-        (*i->second.var)[c] = table_value;
+        depVarValues[depVarCount] *= eps_vol[c];
+        (*i->second.var)[c] = depVarValues[depVarCount];
 
         if (i->first == "density") {
 
-          arches_density[c] = table_value; 
+          arches_density[c] = depVarValues[depVarCount];
 
           if (d_MAlab)
-            mpmarches_denmicro[c] = table_value; 
+            mpmarches_denmicro[c] = depVarValues[depVarCount];
 
         }
-
+        depVarCount++;
       }
+      
     }
 
     // set boundary property values: 
@@ -637,11 +645,18 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
           _iv_transform->transform( iv, total_inert_f ); 
 
+          //Get all the dependant variables with one look up
+          std::vector<int> indepVarIndexes;
+          std::vector<double> depVarValues;
+          for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
+            indepVarIndexes.push_back( i->second.index );
+          }
+          depVarValues = ND_interp->find_val(iv, indepVarIndexes );
+          
+          //take care of the mixing and density the same
+          int depVarCount = 0;
           // now get state for boundary cell: 
           for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
-
-            //  double table_value = tableLookUp( iv, i->second.index ); 
-						double table_value = ND_interp->find_val( iv, i->second.index );
 
             // for post look-up mixing
             for (StringToCCVar::iterator inert_iter = inert_mixture_fractions.begin(); 
@@ -650,22 +665,22 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
               double inert_f = inert_iter->second.var[c];
               doubleMap inert_species_map_list = d_inertMap.find( inert_iter->first )->second; 
 
-              double temp_table_value = table_value; 
+              double temp_table_value = depVarValues[depVarCount];
               if ( i->first == "density" ){ 
-                temp_table_value = 1.0/table_value; 
+                temp_table_value = 1.0/depVarValues[depVarCount];
               } 
 
               post_mixing( temp_table_value, inert_f, i->first, inert_species_map_list ); 
 
               if ( i->first == "density" ){ 
-                table_value = 1.0 / temp_table_value; 
+                depVarValues[depVarCount] = 1.0 / temp_table_value;
               } else { 
-                table_value = temp_table_value; 
+                depVarValues[depVarCount] = temp_table_value;
               } 
             } 
 
-            table_value *= eps_vol[c]; 
-            double ghost_value = 2.0*table_value - (*i->second.var)[cp1];
+            depVarValues[depVarCount] *= eps_vol[c];
+            double ghost_value = 2.0*depVarValues[depVarCount] - (*i->second.var)[cp1];
             (*i->second.var)[c] = ghost_value; 
             //(*i->second.var)[c] = table_value;
             
@@ -674,7 +689,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
             if (i->first == "density")
               arches_density[c] = ghost_value; 
-
+            depVarCount++;
           }
           iv.resize(0);
         }
@@ -774,8 +789,13 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
       //actually modify the reference density value: 
       DepVarMap::iterator i = depend_storage.find("density");
-      std::vector<double> iv = _iv_transform->get_reference_iv(); 
-      double den_ref = ND_interp->find_val( iv, i->second.index ); 
+      std::vector<double> iv = _iv_transform->get_reference_iv();
+      
+      std::vector<int> varIndex (1, i->second.index );
+      std::vector<double> denValue(1, 0.0);
+      denValue = ND_interp->find_val( iv, varIndex );
+      double den_ref = denValue[0];
+      
       if ( time_substep == 0 ){ 
         CCVariable<double> den_ref_array; 
         new_dw->allocateAndPut(den_ref_array, d_lab->d_denRefArrayLabel, matlIndex, patch );
@@ -1130,8 +1150,13 @@ double
 ClassicTableInterface::getTableValue( std::vector<double> iv, std::string variable )
 {
   int dep_index = findIndex( variable ); 
-  _iv_transform->transform( iv, 0.0 ); 
-  double value = ND_interp->find_val( iv, dep_index );
+  _iv_transform->transform( iv, 0.0 );
+  
+  std::vector<int> varIndex (1, dep_index );
+  std::vector<double> tabValue(1, 0.0);
+  tabValue = ND_interp->find_val( iv, varIndex );
+  double value = tabValue[0];
+  
   return value; 
 }
 
@@ -1156,7 +1181,10 @@ ClassicTableInterface::getTableValue( std::vector<double> iv, std::string depend
 
   _iv_transform->transform( iv, total_inert_f ); 
 
-	double table_value = ND_interp->find_val( iv, dep_index ); 
+  std::vector<int> varIndex (1, dep_index );
+  std::vector<double> tabValue(1, 0.0);
+  tabValue = ND_interp->find_val( iv, varIndex );
+  double table_value = tabValue[0];
 
   // for post look-up mixing
   for (StringToCCVar::iterator inert_iter = inert_mixture_fractions.begin(); 
@@ -1192,7 +1220,10 @@ ClassicTableInterface::getTableValue( std::vector<double> iv, std::string depend
 
   _iv_transform->transform( iv, total_inert_f ); 
 
-	double table_value = ND_interp->find_val( iv, dep_index ); 
+  std::vector<int> varIndex (1, dep_index );
+  std::vector<double> tabValue(1, 0.0);
+  tabValue = ND_interp->find_val( iv, varIndex );
+  double table_value = tabValue[0];
 
   // for post look-up mixing
   for (MixingRxnModel::doubleMap::iterator inert_iter = inert_mixture_fractions.begin(); 
