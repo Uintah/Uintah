@@ -585,7 +585,8 @@ namespace Wasatch{
                     << endl;
           if( dbg_tasks_on ) fml_->dump_fields(std::cout);
 
-          fml_->allocate_fields( AllocInfo( oldDW, newDW, material, patch, pg, isGPUTask ) );
+          AllocInfo ainfo( oldDW, newDW, material, patch, pg, isGPUTask )
+          fml_->allocate_fields( ainfo );
 
           if( hasPressureExpression_ ){
             Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( pressure_tag(), patchID, true ) );
