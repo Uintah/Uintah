@@ -147,7 +147,7 @@ public:
     Interp_class() : d_interpLock("ClassicTable Interp_class lock"){};
     virtual ~Interp_class() {};
 
-    virtual inline double find_val( std::vector<double> iv, int var_index) {return 0;};
+    virtual inline std::vector<double> find_val( std::vector<double> iv, std::vector<int> var_index) {return std::vector<double>(1,0.0);};
 
   protected:
 
@@ -176,20 +176,22 @@ public:
           d_allIndepVarNo = d_allIndepVarNum;
           ind_1 = i1;
           table2 = table;
-          table_vals = std::vector<double>(2);
-          lo_index = std::vector<int>(1);
-          hi_index = std::vector<int>(1);
-			};
+
+    };
 
 		~Interp1() {};
 		
-		inline double find_val( std::vector <double> iv, int var_index) {
+    inline std::vector<double> find_val( std::vector <double> iv, std::vector<int> var_index) {
 			
+      table_vals = std::vector<double>(2);
+      lo_index = std::vector<int>(1);
+      hi_index = std::vector<int>(1);
       int i1dep_ind = 0;
       int mid = 0;
       int lo_ind = 0;
       double iv_val = iv[0];
       double var_val = 0.0;
+      std::vector<double> var_values (var_index.size(), 0.0 );
 
 		  d_interpLock.lock();
 		  {
@@ -223,18 +225,22 @@ public:
           lo_index[0] = 0;
         }
 
-        table_vals[0] = table2[var_index][lo_index[0]];
-        table_vals[1] = table2[var_index][hi_index[0]];
+        for (unsigned int i = 0; i < var_index.size(); i++) {
 
-        var_val = (table_vals[1]-table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[0][lo_index[0]])*(iv[0]-ind_1[0][lo_index[0]])+ table_vals[0];
+          table_vals[0] = table2[var_index[i]][lo_index[0]];
+          table_vals[1] = table2[var_index[i]][hi_index[0]];
 
-		  }
+          var_val = (table_vals[1]-table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[0][lo_index[0]])*(iv[0]-ind_1[0][lo_index[0]])+ table_vals[0];
+          var_values[i] = var_val;
+        }
+        
+      }
 			d_interpLock.unlock();
 
-      return var_val;
+      return var_values;
 
-		};
-	};
+    };
+  };
 	
 	class Interp2 : public Interp_class {
 	
@@ -247,21 +253,22 @@ public:
 			indep = indep_headers;
 			ind_1 = i1;
 			table2 = table;
-			table_vals = std::vector<double>(4);
-			lo_index = std::vector<int>(2);
-			hi_index = std::vector<int>(2);
-		
+
 		};
 
 		~Interp2() {};
 		
-		inline double find_val( std::vector<double> iv, int var_index) {
+		inline std::vector<double> find_val( std::vector<double> iv, std::vector<int> var_index) {
 			
+      table_vals = std::vector<double>(4);
+      lo_index = std::vector<int>(2);
+      hi_index = std::vector<int>(2);
       int mid = 0;
       int lo_ind;
       int hi_ind;
       double iv_val;
       double var_val = 0.0;
+      std::vector<double> var_values (var_index.size(), 0.0 );
 
       d_interpLock.lock();
       {
@@ -334,23 +341,26 @@ public:
           lo_index[0] = 0;
         }
 
-        table_vals[0] = table2[var_index][d_allIndepVarNo[0] * lo_index[1] + lo_index[0]];
-        table_vals[1] = table2[var_index][d_allIndepVarNo[0] * lo_index[1] + hi_index[0]];
-        table_vals[2] = table2[var_index][d_allIndepVarNo[0] * hi_index[1] + lo_index[0]];
-        table_vals[3] = table2[var_index][d_allIndepVarNo[0] * hi_index[1] + hi_index[0]];
+        for (unsigned int i = 0; i < var_index.size(); i++) {
+          table_vals[0] = table2[var_index[i]][d_allIndepVarNo[0] * lo_index[1] + lo_index[0]];
+          table_vals[1] = table2[var_index[i]][d_allIndepVarNo[0] * lo_index[1] + hi_index[0]];
+          table_vals[2] = table2[var_index[i]][d_allIndepVarNo[0] * hi_index[1] + lo_index[0]];
+          table_vals[3] = table2[var_index[i]][d_allIndepVarNo[0] * hi_index[1] + hi_index[0]];
 
-        table_vals[0] = (table_vals[2] - table_vals[0])/(indep[0][lo_index[1]+1]-indep[0][lo_index[1]])*(iv[1]-indep[0][lo_index[1]]) + table_vals[0];
-        table_vals[1] = (table_vals[3] - table_vals[1])/(indep[0][lo_index[1]+1]-indep[0][lo_index[1]])*(iv[1]-indep[0][lo_index[1]]) + table_vals[1];
+          table_vals[0] = (table_vals[2] - table_vals[0])/(indep[0][lo_index[1]+1]-indep[0][lo_index[1]])*(iv[1]-indep[0][lo_index[1]]) + table_vals[0];
+          table_vals[1] = (table_vals[3] - table_vals[1])/(indep[0][lo_index[1]+1]-indep[0][lo_index[1]])*(iv[1]-indep[0][lo_index[1]]) + table_vals[1];
 
-        var_val = (table_vals[1]-table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+ table_vals[0];
-
+          var_val = (table_vals[1]-table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+ table_vals[0];
+          var_values[i] = var_val;
+        }
+        
       }
       d_interpLock.unlock();
 
-      return var_val;
+      return var_values;
 			
-		};
-	}; 
+    };
+  };
 	
 	class Interp3 : public Interp_class {
 		
@@ -367,7 +377,7 @@ public:
 
 		~Interp3() {};
 		
-		inline double find_val( std::vector<double> iv, int var_index) {
+    inline std::vector<double> find_val( std::vector<double> iv, std::vector<int> var_index) {
 
 			table_vals = std::vector<double>(8,0.0);
 			dist_vals = std::vector<double>(4,0.0); // make sure the default is zero
@@ -378,6 +388,7 @@ public:
       int lo_ind;
       int hi_ind;
       double iv_val;
+      std::vector<double> var_values (var_index.size(), 0.0 );
 
       d_interpLock.lock();
       {
@@ -477,46 +488,50 @@ public:
           lo_index[1] = 0;
         }
 
-        table_vals[0] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3] + d_allIndepVarNo[0] * lo_index[2] + lo_index[0]];
-        table_vals[1] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3] + d_allIndepVarNo[0] * lo_index[2] + hi_index[0]];
-        table_vals[2] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3] + d_allIndepVarNo[0] * hi_index[2] + lo_index[0]];
-        table_vals[3] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3] + d_allIndepVarNo[0] * hi_index[2] + hi_index[0]];
-        table_vals[4] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3] + d_allIndepVarNo[0] * lo_index[2] + lo_index[1]];
-        table_vals[5] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3] + d_allIndepVarNo[0] * lo_index[2] + hi_index[1]];
-        table_vals[6] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3] + d_allIndepVarNo[0] * hi_index[2] + lo_index[1]];
-        table_vals[7] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3] + d_allIndepVarNo[0] * hi_index[2] + hi_index[1]];
+        for ( unsigned int i = 0; i < var_index.size(); i++ ) {
         
-        if (ind_1[i1dep_ind1][hi_index[0]]!=ind_1[i1dep_ind1][lo_index[0]]){
-          dist_vals[0]=(iv[0]-ind_1[i1dep_ind1][lo_index[0]])/(ind_1[i1dep_ind1][hi_index[0]]-ind_1[i1dep_ind1][lo_index[0]]);
-        }
-        if (ind_1[i1dep_ind2][hi_index[1]]!=ind_1[i1dep_ind2][lo_index[1]]){
-          dist_vals[1]=(iv[0]-ind_1[i1dep_ind2][lo_index[1]])/(ind_1[i1dep_ind2][hi_index[1]]-ind_1[i1dep_ind2][lo_index[1]]);
-        }
-        if (indep[0][hi_index[2]]!=indep[0][lo_index[2]]){
-          dist_vals[2]=(iv[1]-indep[0][lo_index[2]])/(indep[0][hi_index[2]]-indep[0][lo_index[2]]);
-        }
-        if (indep[1][hi_index[3]]!=indep[1][lo_index[3]]){
-          dist_vals[3]=(iv[2]-indep[1][lo_index[3]])/(indep[1][hi_index[3]]-indep[1][lo_index[3]]);
-        }       
+          table_vals[0] = table2[var_index[i]][d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3] + d_allIndepVarNo[0] * lo_index[2] + lo_index[0]];
+          table_vals[1] = table2[var_index[i]][d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3] + d_allIndepVarNo[0] * lo_index[2] + hi_index[0]];
+          table_vals[2] = table2[var_index[i]][d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3] + d_allIndepVarNo[0] * hi_index[2] + lo_index[0]];
+          table_vals[3] = table2[var_index[i]][d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3] + d_allIndepVarNo[0] * hi_index[2] + hi_index[0]];
+          table_vals[4] = table2[var_index[i]][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3] + d_allIndepVarNo[0] * lo_index[2] + lo_index[1]];
+          table_vals[5] = table2[var_index[i]][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3] + d_allIndepVarNo[0] * lo_index[2] + hi_index[1]];
+          table_vals[6] = table2[var_index[i]][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3] + d_allIndepVarNo[0] * hi_index[2] + lo_index[1]];
+          table_vals[7] = table2[var_index[i]][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3] + d_allIndepVarNo[0] * hi_index[2] + hi_index[1]];
+        
+          if (ind_1[i1dep_ind1][hi_index[0]]!=ind_1[i1dep_ind1][lo_index[0]]){
+            dist_vals[0]=(iv[0]-ind_1[i1dep_ind1][lo_index[0]])/(ind_1[i1dep_ind1][hi_index[0]]-ind_1[i1dep_ind1][lo_index[0]]);
+          }
+          if (ind_1[i1dep_ind2][hi_index[1]]!=ind_1[i1dep_ind2][lo_index[1]]){
+            dist_vals[1]=(iv[0]-ind_1[i1dep_ind2][lo_index[1]])/(ind_1[i1dep_ind2][hi_index[1]]-ind_1[i1dep_ind2][lo_index[1]]);
+          }
+          if (indep[0][hi_index[2]]!=indep[0][lo_index[2]]){
+            dist_vals[2]=(iv[1]-indep[0][lo_index[2]])/(indep[0][hi_index[2]]-indep[0][lo_index[2]]);
+          }
+          if (indep[1][hi_index[3]]!=indep[1][lo_index[3]]){
+            dist_vals[3]=(iv[2]-indep[1][lo_index[3]])/(indep[1][hi_index[3]]-indep[1][lo_index[3]]);
+          }
  
-        // First, we make the 2d plane in indep_1 space
-        table_vals[0] = table_vals[0]*(1 - dist_vals[0]) + table_vals[1]*dist_vals[0];
-        table_vals[1] = table_vals[4]*(1 - dist_vals[1]) + table_vals[5]*dist_vals[1];
-        table_vals[2] = table_vals[2]*(1 - dist_vals[0]) + table_vals[3]*dist_vals[0];
-        table_vals[3] = table_vals[6]*(1 - dist_vals[1]) + table_vals[7]*dist_vals[1];
-        // Next, a line in indep_2 space
-        table_vals[0] = table_vals[0]*(1 - dist_vals[2]) + table_vals[2]*dist_vals[2];
-        table_vals[1] = table_vals[1]*(1 - dist_vals[2]) + table_vals[3]*dist_vals[2];
-        // Finally, we interplate the new line in indep_3 space
-        var_val = table_vals[0]*(1 - dist_vals[3]) + table_vals[1]*dist_vals[3];
+          // First, we make the 2d plane in indep_1 space
+          table_vals[0] = table_vals[0]*(1 - dist_vals[0]) + table_vals[1]*dist_vals[0];
+          table_vals[1] = table_vals[4]*(1 - dist_vals[1]) + table_vals[5]*dist_vals[1];
+          table_vals[2] = table_vals[2]*(1 - dist_vals[0]) + table_vals[3]*dist_vals[0];
+          table_vals[3] = table_vals[6]*(1 - dist_vals[1]) + table_vals[7]*dist_vals[1];
+          // Next, a line in indep_2 space
+          table_vals[0] = table_vals[0]*(1 - dist_vals[2]) + table_vals[2]*dist_vals[2];
+          table_vals[1] = table_vals[1]*(1 - dist_vals[2]) + table_vals[3]*dist_vals[2];
+          // Finally, we interplate the new line in indep_3 space
+          var_val = table_vals[0]*(1 - dist_vals[3]) + table_vals[1]*dist_vals[3];
+          var_values[i] = var_val;
 
+        }
+        
       }
       d_interpLock.unlock();
+      return var_values;
 
-      return var_val;
-
-		};
-	}; 
+    };
+  };
 	
 	class Interp4 : public Interp_class {
 
@@ -529,20 +544,23 @@ public:
 			indep = indep_headers;
 			ind_1 = i1;
 			table2 = table;
-			table_vals = std::vector<double>(16);
-			lo_index = std::vector<int>(4);
-			hi_index = std::vector<int>(4);
+
 		};
 
 		~Interp4(){};
 		
-		inline double find_val(std::vector<double> iv, int var_index) {
+    inline std::vector<double> find_val(std::vector<double> iv, std::vector<int> var_index) {
 
       int mid = 0;
       double var_value = 0.0;
       int lo_ind;
       int hi_ind;
       double iv_val;
+      table_vals = std::vector<double>(16);
+      lo_index = std::vector<int>(4);
+      hi_index = std::vector<int>(4);
+      std::vector<double> var_values (var_index.size(), 0.0 );
+      
 
       d_interpLock.lock();
       {
@@ -614,39 +632,42 @@ public:
           lo_index[0] = 0;
         }
 
+        for (unsigned int ii = 0; ii < var_index.size(); ii++) {
         // popvals
-        table_vals[0] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * lo_index[1] + lo_index[0]];
-        table_vals[1] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * lo_index[1] + hi_index[0]];
-        table_vals[2] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * hi_index[1] + lo_index[0]];
-        table_vals[3] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * hi_index[1] + hi_index[0]];
-        table_vals[4] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * lo_index[1] + lo_index[0]];
-        table_vals[5] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * lo_index[1] + hi_index[0]];
-        table_vals[6] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * hi_index[1] + lo_index[0]];
-        table_vals[7] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * hi_index[1] + hi_index[0]];
-        table_vals[8] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * lo_index[1] + lo_index[0]];
-        table_vals[9] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * lo_index[1] + hi_index[0]];
-        table_vals[10] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * hi_index[1] + lo_index[0]];
-        table_vals[11] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * hi_index[1] + hi_index[0]];
-        table_vals[12] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * lo_index[1] + lo_index[0]];
-        table_vals[13] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * lo_index[1] + hi_index[0]];
-        table_vals[14] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * hi_index[1] + lo_index[0]];
-        table_vals[15] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * hi_index[1] + hi_index[0]];
-
-        int npts =0;
-        for (int i = 3; i > 0; i--) {
-          npts = (int)pow(2.0,i);
-          for (int k=0; k < npts; k++) {
-            table_vals[k] = (table_vals[k+npts]-table_vals[k])/(indep[i-1][lo_index[i]+1]-indep[i-1][lo_index[i]])*(iv[i]-indep[i-1][lo_index[i]])+table_vals[k];
+          table_vals[0] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * lo_index[1] + lo_index[0]];
+          table_vals[1] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * lo_index[1] + hi_index[0]];
+          table_vals[2] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * hi_index[1] + lo_index[0]];
+          table_vals[3] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * hi_index[1] + hi_index[0]];
+          table_vals[4] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * lo_index[1] + lo_index[0]];
+          table_vals[5] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * lo_index[1] + hi_index[0]];
+          table_vals[6] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * hi_index[1] + lo_index[0]];
+          table_vals[7] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * hi_index[1] + hi_index[0]];
+          table_vals[8] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * lo_index[1] + lo_index[0]];
+          table_vals[9] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * lo_index[1] + hi_index[0]];
+          table_vals[10] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * hi_index[1] + lo_index[0]];
+          table_vals[11] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * hi_index[1] + hi_index[0]];
+          table_vals[12] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * lo_index[1] + lo_index[0]];
+          table_vals[13] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * lo_index[1] + hi_index[0]];
+          table_vals[14] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * hi_index[1] + lo_index[0]];
+          table_vals[15] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * hi_index[1] + hi_index[0]];
+          
+          int npts =0;
+          for (int i = 3; i > 0; i--) {
+            npts = (int)pow(2.0,i);
+            for (int k=0; k < npts; k++) {
+              table_vals[k] = (table_vals[k+npts]-table_vals[k])/(indep[i-1][lo_index[i]+1]-indep[i-1][lo_index[i]])*(iv[i]-indep[i-1][lo_index[i]])+table_vals[k];
+            }
           }
-        }
 
-        table_vals[0] = (table_vals[1]-table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+table_vals[0];
-        var_value = table_vals[0];
+          table_vals[0] = (table_vals[1]-table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+table_vals[0];
+          var_value = table_vals[0];
+          var_values[ii] = var_value;
+        }
 
       }
       d_interpLock.unlock();
 
-      return var_value;
+      return var_values;
 			
 		};
 	};
@@ -690,26 +711,27 @@ public:
 			  }
 		  }
 			
-			d_allIndepVarNo = d_allIndepVarNum;
-			indep = indep_headers;
-			ind_1 = i1;
-			table2 = table;
-			table_vals = std::vector<double>(npts);
-			lo_index = std::vector<int>(d_indepvarscount);
-			hi_index = std::vector<int>(d_indepvarscount);
-			ivcount = d_indepvarscount;
-      
-		};
+      d_allIndepVarNo = d_allIndepVarNum;
+      indep = indep_headers;
+      ind_1 = i1;
+      table2 = table;
+      ivcount = d_indepvarscount;
+      vals_size = npts;
+    };
 
 		~InterpN(){};
 		
-		inline double find_val(std::vector<double> iv, int var_index) {
+    inline std::vector<double> find_val(std::vector<double> iv, std::vector<int> var_index) {
 
       int mid = 0;
       double var_value = 0.0;
       int lo_ind;
       int hi_ind;
       double iv_val;
+      table_vals = std::vector<double>(vals_size);
+      lo_index = std::vector<int>(ivcount);
+      hi_index = std::vector<int>(ivcount);
+      std::vector<double> var_values (var_index.size(), 0.0 );
 
       d_interpLock.lock();
       {
@@ -786,42 +808,46 @@ public:
         npts = (int)pow(2.0,ivcount);
         int tab_index;
 
-        // interpolant loop - 2parts read-in & calc
-        for (int i=0; i < npts; i++) {
-          tab_index = 0;
-          for (int j = ivcount-1; j >= 0; j--) {
-            if (value_pop[i][j]) { //determines hi/lo on bool
-              tab_index = tab_index + multiples[j]*lo_index[j];
-            } else {
-              tab_index = tab_index + multiples[j]*hi_index[j];
+        for (unsigned int ii = 0; ii < var_index.size(); ii++) {
+          // interpolant loop - 2parts read-in & calc
+          for (int i=0; i < npts; i++) {
+            tab_index = 0;
+            for (int j = ivcount-1; j >= 0; j--) {
+              if (value_pop[i][j]) { //determines hi/lo on bool
+                tab_index = tab_index + multiples[j]*lo_index[j];
+              } else {
+                tab_index = tab_index + multiples[j]*hi_index[j];
+              }
+            }
+            table_vals[i] = table2[var_index[ii]][tab_index];
+          }
+
+          for (int i = ivcount-1; i > 0; i--) {
+            npts = (int)pow(2.0,i);
+            for (int k=0; k < npts; k++) {
+              table_vals[k] = (table_vals[k+npts]-table_vals[k])/(indep[i-1][lo_index[i]+1]-indep[i-1][lo_index[i]])*(iv[i]-indep[i-1][lo_index[i]])+table_vals[k];
             }
           }
-          table_vals[i] = table2[var_index][tab_index];
+
+          table_vals[0] = (table_vals[1]-table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+table_vals[0];
+          var_value = table_vals[0];
+          var_values[ii] = var_value;
+
         }
-
-        for (int i = ivcount-1; i > 0; i--) {
-          npts = (int)pow(2.0,i);
-          for (int k=0; k < npts; k++) {
-            table_vals[k] = (table_vals[k+npts]-table_vals[k])/(indep[i-1][lo_index[i]+1]-indep[i-1][lo_index[i]])*(iv[i]-indep[i-1][lo_index[i]])+table_vals[k];
-          }
-        }
-
-        table_vals[0] = (table_vals[1]-table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+table_vals[0];
-        var_value = table_vals[0];
-
       }
       d_interpLock.unlock();
 
-      return var_value;
+      return var_values;
 			
 		}
 		
 	  protected:
 
-		int ivcount;
-		std::vector<int> multiples;
-		std::vector <std::vector <bool> > value_pop;
-		int multtemp;
+    int ivcount;
+    std::vector<int> multiples;
+    std::vector <std::vector <bool> > value_pop;
+    int multtemp;
+    int vals_size;
 	};
 	
   //*******************************************end interp classes//
