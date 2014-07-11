@@ -39,15 +39,10 @@
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Material.h>
 
-// forward declarations
-namespace Uintah{
+namespace Uintah {
+
   class ProcessorGroup;
   class DataWarehouse;
-}
-
-namespace Wasatch {
-
-  class Wasatch;  // forward declaration
 
   /**
    *  \class  ParticlesHelper
@@ -64,22 +59,22 @@ namespace Wasatch {
      */
     static ParticlesHelper& self();
     ParticlesHelper();
-    ~ParticlesHelper();
+    virtual ~ParticlesHelper();
 
     /*
      *  \brief Initializes particle memory. This must be called at schedule initialize. DO NOT call
      it on restarts. Use schedule_restart_initialize instead
      */
-    void schedule_initialize ( const Uintah::LevelP& level,
-                               Uintah::SchedulerP& sched   );
+    virtual void schedule_initialize ( const Uintah::LevelP& level,
+                                       Uintah::SchedulerP& sched   );
 
     /*
      *  \brief Will reallocate some essential objects for the particles helper such as the delete sets.
      MUST be called at restarts. Since there is no way to schedule restart initialize, you should call this
      function somewhere in scheduleTimeAdvance. See the Wasatch example.
      */
-    void schedule_restart_initialize( const Uintah::LevelP& level,
-                                      Uintah::SchedulerP& sched   );
+    virtual void schedule_restart_initialize( const Uintah::LevelP& level,
+                                              Uintah::SchedulerP& sched   );
 
     /*
      *  \brief Task that synchronizes Wasatch-specific particle positions (x, y, w) that are store
@@ -88,37 +83,40 @@ namespace Wasatch {
      of type Point. You should call this at the end of the scheduleTimeAdvance, after all internal
      Wasatch tasks have completed.
      */
-    void schedule_sync_particle_position( const Uintah::LevelP& level,
-                                  Uintah::SchedulerP& sched,
-                                  const bool initialization=false );
+    virtual void schedule_sync_particle_position( const Uintah::LevelP& level,
+                                                  Uintah::SchedulerP& sched,
+                                                  const bool initialization=false );
 
     /*
      *  \brief Task that transfers particle IDs from the oldDW to the new DW.
      */
-    void schedule_transfer_particle_ids( const Uintah::LevelP& level,
-                                          Uintah::SchedulerP& sched);
+    virtual void schedule_transfer_particle_ids( const Uintah::LevelP& level,
+                                                 Uintah::SchedulerP& sched);
 
     /*
      *  \brief Task that schedules the relocation algorithm. Should be the last function called
      on particles in the scheduleTimeAdvance.
      */
-    void schedule_relocate_particles( const Uintah::LevelP& level,
-                                      Uintah::SchedulerP& sched );
+    virtual void schedule_relocate_particles( const Uintah::LevelP& level,
+                                              Uintah::SchedulerP& sched );
 
-    void sync_with_wasatch( Wasatch* const wasatch );
+    virtual void schedule_delete_outside_particles( const Uintah::LevelP& level,
+                                                    Uintah::SchedulerP& sched );
 
-    void schedule_delete_outside_particles( const Uintah::LevelP& level,
-                                          Uintah::SchedulerP& sched );
-
-    static void add_particle_variable(const std::string& varName);
+    static void add_particle_variable( const std::string& varName );
 
     /*
      *  \brief Parse the particle spec and create the position varlabels. This is an essential step
      that MUST be called during Wasatch::ProblemSetup
      */
-    void problem_setup();
+    void problem_setup(Uintah::ProblemSpecP particleEqsSpec);
+    void set_materials(const Uintah::MaterialSet* const materials)
+    {
+      isValidState_ = true;
+      materials_ = materials;
+    }
     
-  private:
+  protected:
 
     const Uintah::VarLabel *pPosLabel_, *pIDLabel_;
     const Uintah::VarLabel *pXLabel_,*pYLabel_,*pZLabel_;
@@ -126,37 +124,32 @@ namespace Wasatch {
     
     static std::vector<std::string> otherParticleVarNames_;
     
-    void initialize( const Uintah::ProcessorGroup*,
+    virtual void initialize( const Uintah::ProcessorGroup*,
                                const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
                                Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
 
-    void restart_initialize( const Uintah::ProcessorGroup*,
+    virtual void restart_initialize( const Uintah::ProcessorGroup*,
                              const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
                              Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
 
-    void transfer_particle_ids(const Uintah::ProcessorGroup*,
+    virtual void transfer_particle_ids(const Uintah::ProcessorGroup*,
                               const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
                               Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
 
-    void delete_outside_particles(const Uintah::ProcessorGroup*,
+    virtual void delete_outside_particles(const Uintah::ProcessorGroup*,
                               const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
                               Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
 
-    void clear_deleteset(const Uintah::ProcessorGroup*,
+    virtual void clear_deleteset(const Uintah::ProcessorGroup*,
                           const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
                           Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
 
-    void sync_particle_position(const Uintah::ProcessorGroup*,
+    virtual void sync_particle_position(const Uintah::ProcessorGroup*,
                         const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
                         Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw, const bool initialization);
 
-    void relocate_particles(const Uintah::ProcessorGroup*,
-                        const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
-                        Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
-
-
-    Wasatch* wasatch_;
-    bool wasatchSync_;
+    bool isValidState_;
+    const Uintah::MaterialSet* materials_;
     int nParticles_; // number of initial particles
     Uintah::ProblemSpecP particleEqsSpec_;
     std::map<int, Uintah::ParticleSubset*> deleteSet_;

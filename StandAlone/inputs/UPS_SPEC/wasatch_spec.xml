@@ -896,31 +896,7 @@
 										attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>                  
 					</GasVelocity>												
 				</GasProperties>				
-			</ParticleMomentum>
-
-<!-- 
-			<ParticleMomentum spec="REQUIRED NO_DATA"
-												attribute1="x REQUIRED STRING"
-												attribute2="y REQUIRED STRING"
-												attribute3="z REQUIRED STRING">
-				<DragModel	spec="REQUIRED NO_DATA"
-										attribute1="model REQUIRED STRING"/>
-			</ParticleMomentum>
-
-			<ParticleSize spec="REQUIRED NO_DATA">
-				<NameTag spec="REQUIRED"/>
-			</ParticleSize>
-			
-			<ParticleMass spce="REQUIRED NO_DATA">
-				<NameTag spec="REQUIRED"/>
-			</ParticleMass>
-			
-			<GasVelocity spec="REQUIRED NO_DATA"												
-												attribute1="x REQUIRED STRING"
-												attribute2="y REQUIRED STRING"
-												attribute3="z REQUIRED STRING"/>
- -->
-												
+			</ParticleMomentum>												
 		</ParticleTransportEquations>
 
     <MomentumEquations        spec="OPTIONAL NO_DATA">

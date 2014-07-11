@@ -87,6 +87,7 @@
 #include "OldVariable.h"
 #include "ReductionHelper.h"
 #include "ParticlesHelper.h"
+#include "WasatchParticlesHelper.h"
 #include "BCHelper.h"
 #include "Expressions/CellType.h"
 using std::endl;
@@ -137,8 +138,8 @@ namespace Wasatch{
 
     OldVariable::self().sync_with_wasatch( this );
     ReductionHelper::self().sync_with_wasatch( this );
-    particlesHelper_ = scinew ParticlesHelper();
-    particlesHelper_->sync_with_wasatch( this );
+    particlesHelper_ = scinew WasatchParticlesHelper();
+    particlesHelper_->sync_with_wasatch(this);
   }
 
   //--------------------------------------------------------------------
@@ -361,7 +362,7 @@ namespace Wasatch{
     //
     doParticles_ = wasatchSpec_->findBlock("ParticleTransportEquations");
     if (doParticles_) {
-      particlesHelper_->problem_setup();
+      particlesHelper_->problem_setup(wasatchSpec_->findBlock("ParticleTransportEquations"));
     }
 
     // setup names for all the boundary condition faces that do NOT have a name or that have duplicate names
@@ -779,8 +780,18 @@ namespace Wasatch{
     // problemSetup. The sharedstate class will create this material set
     // in postgridsetup, which is called after problemsetup. This is dictated
     // by Uintah.
-    if (buildWasatchMaterial_) {
+    if (buildWasatchMaterial_)
+    {
       set_wasatch_materials(sharedState_->allWasatchMaterials());
+      if (doParticles_)
+      {
+        particlesHelper_->set_materials(sharedState_->allWasatchMaterials());
+      }
+    } else {
+      if (doParticles_)
+      {
+        particlesHelper_->set_materials(sharedState_->allMaterials());
+      }
     }
 
     setup_patchinfo_map( level, sched );
@@ -897,7 +908,10 @@ namespace Wasatch{
     // by Uintah.
     if( buildWasatchMaterial_ ){
       set_wasatch_materials( sharedState_->allWasatchMaterials() );
-    }
+      if (doParticles_) {
+        particlesHelper_->set_materials(get_wasatch_materials());
+      }
+    } 
   }
 
   //--------------------------------------------------------------------

@@ -85,7 +85,7 @@
 				</Velocity>
 			</ParticlePosition>
 			<ParticleMomentum x="p.u" y="p.v" z="p.w">
-			<DisableTwoWayCoupling/>
+				<DisableTwoWayCoupling/>
 <!-- 				<DisableDragForce/> -->
 <!-- 				<Gravity direction="Z"/> -->
 				<GasProperties>

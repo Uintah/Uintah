@@ -126,6 +126,7 @@ namespace Expr{ class ExpressionID; }
 namespace Uintah {
   class Task;
   class Ray;
+  class ParticlesHelper;
 }
 
   class CellType;
@@ -141,7 +142,7 @@ namespace Wasatch{
   class EqnTimestepAdaptorBase;
   class TimeStepper;
   class TaskInterface;
-  class ParticlesHelper;
+  class WasatchParticlesHelper;
 
   /**
    *  \ingroup WasatchCore
@@ -278,7 +279,7 @@ namespace Wasatch{
     const Uintah::MaterialSet* materials_;
     Uintah::ProblemSpecP wasatchSpec_;
 
-    ParticlesHelper* particlesHelper_;
+    WasatchParticlesHelper* particlesHelper_;
     
     BCFunctorMap bcFunctorMap_;
     BCHelperMapT bcHelperMap_;
