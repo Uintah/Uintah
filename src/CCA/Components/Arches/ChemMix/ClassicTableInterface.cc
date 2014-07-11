@@ -74,6 +74,7 @@ ClassicTableInterface::ClassicTableInterface( ArchesLabel* labels, const MPMArch
 ClassicTableInterface::~ClassicTableInterface()
 {
   delete _boundary_condition; 
+  delete ND_interp; 
 }
 
 //--------------------------------------------------------------------------- 
@@ -1110,15 +1111,15 @@ ClassicTableInterface::loadMixingTable(stringstream& table_stream,
   
 
 	if (d_indepvarscount == 1) {
-		ND_interp = new Interp1(d_allIndepVarNum, table, i1);
+		ND_interp = scinew Interp1(d_allIndepVarNum, table, i1);
   }	else if (d_indepvarscount == 2) {
- 	  ND_interp = new Interp2(d_allIndepVarNum, table, indep_headers, i1);
+ 	  ND_interp = scinew Interp2(d_allIndepVarNum, table, indep_headers, i1);
   } else if (d_indepvarscount == 3) {
-	  ND_interp = new Interp3(d_allIndepVarNum, table, indep_headers, i1);
+	  ND_interp = scinew Interp3(d_allIndepVarNum, table, indep_headers, i1);
   } else if (d_indepvarscount == 4) {
-		ND_interp = new Interp4(d_allIndepVarNum, table, indep_headers, i1);
+		ND_interp = scinew Interp4(d_allIndepVarNum, table, indep_headers, i1);
 	} else {  //IV > 4
-		ND_interp = new InterpN(d_allIndepVarNum, table, indep_headers, i1, d_indepvarscount);
+		ND_interp = scinew InterpN(d_allIndepVarNum, table, indep_headers, i1, d_indepvarscount);
 	}
 	  
   proc0cout << "Table successfully loaded into memory!" << endl;

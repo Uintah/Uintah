@@ -53,7 +53,8 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
   _source_grid_type = CC_SRC; // or FX_SRC, or FY_SRC, or FZ_SRC, or CCVECTOR_SRC
 
   _archesLevelIndex      = -9;
-  _RMCRT                 = 0;
+  _RMCRT = scinew Ray();
+
   _sharedState           = labels->d_sharedState;
   
   _gac = Ghost::AroundCells;
@@ -164,8 +165,6 @@ RMCRT_Radiation::extraSetup( GridP& grid, const ProblemSpecP& db )
   }
   
   // create RMCRT and register the labels
-  _RMCRT = scinew Ray();
-
   _RMCRT->registerVarLabels(_matl, 
                             _abskg_label,
                             _tempLabel,
