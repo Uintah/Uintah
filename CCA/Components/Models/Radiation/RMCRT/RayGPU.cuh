@@ -61,7 +61,6 @@ struct patchParams{
 
 struct RMCRT_flags{
   bool modifies_divQ;
-  bool virtRad;
   bool solveDivQ;
   bool allowReflect;
   bool solveBoundaryFlux;
@@ -72,7 +71,6 @@ struct RMCRT_flags{
   double threshold;
   
   int   nDivQRays;            // number of rays per cell used to compute divQ
-  int   nRadRays;             // number of rays for virtual radiometer
   int   nFluxRays;            // number of boundary flux rays
   int   nRaySteps;            // number of ray steps taken
 };
