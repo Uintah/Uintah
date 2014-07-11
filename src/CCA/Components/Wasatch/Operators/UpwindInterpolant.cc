@@ -95,10 +95,12 @@ apply_to_field( const SrcT& src, DestT& dest )
                           ws.extent() + S2Extent::int_vec() );
 
   const MemoryWindow& wdest = dest.window_with_ghost();
-  const BoundaryCellInfo& bcd = dest.boundary_info();
+
   const MemoryWindow wd( wdest.glob_dim(),
                          wdest.offset() + DOffset::int_vec(),
                          wdest.extent() + S1Extent::int_vec()  );
+
+  const BoundaryCellInfo& bcs =  src.boundary_info();
 
 //# ifndef NDEBUG
 //  assert( ws1.extent() == ws2.extent() && ws1.extent() == wd.extent() );
@@ -111,13 +113,13 @@ apply_to_field( const SrcT& src, DestT& dest )
   // that is the "same size" as the source field to allow us to use a nebo assignment
   const short int dDevIdx = dest.device_index(); // destination device index
   typename DestT::value_type* destVals = dest.field_values(dDevIdx);
-  SrcT  d( wd,  bcd, dest.get_ghost_data(), destVals, ExternalStorage, dDevIdx );
+  SrcT  d( wd,  bcs, dest.get_ghost_data(), destVals, ExternalStorage, dDevIdx );
 
   // NOTE here how we are crating a SrcT field from a DesT one.
   //This is a trick because we know that the fields in this case are of the same size
   const short int advelDevIdx = advectiveVelocity_->device_index(); // destination device index
   typename DestT::value_type* velVals  = const_cast<typename DestT::value_type*>(advectiveVelocity_->field_values(advelDevIdx));
-  const SrcT  aVel( wd, bcd, advectiveVelocity_->get_ghost_data(), velVals, ExternalStorage, advelDevIdx );
+  const SrcT  aVel( wd, bcs, advectiveVelocity_->get_ghost_data(), velVals, ExternalStorage, advelDevIdx );
   const SrcT    s1( ws1, src );
   const SrcT    s2( ws2, src );
 
