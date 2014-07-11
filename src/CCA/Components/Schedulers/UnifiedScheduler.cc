@@ -468,7 +468,7 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   taskdbg << "Total task phases: " << numPhase << std::endl;
 
   // signal worker threads to begin executing tasks
-  if (!d_isInitTimestep) {
+  if (!d_isInitTimestep && !d_isRestartInitTimestep) {
     for (int i = 0; i < numThreads_; i++) {
       t_worker[i]->resetWaittime(Time::currentSeconds());  // reset wait time counter
       // sending signal to threads to wake them up
@@ -487,7 +487,7 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   wait_till_all_done();
 
   // if any thread is busy, conditional wait here
-  if (!d_isInitTimestep) {
+  if (!d_isInitTimestep && !d_isRestartInitTimestep) {
     d_nextmutex.lock();
     while (getAviableThreadNum() < numThreads_) {
       d_nextsignal.wait(d_nextmutex);

@@ -190,6 +190,12 @@ AMRSimulationController::run()
   
    d_lb->resetCostForecaster();
    d_scheduler->setInitTimestep(false);
+
+   // scheduler needs to know if it's doing the first timestep in a restart
+   if (d_restarting) {
+     d_scheduler->setRestartInitTimestep(first);
+   }
+
    while( ( time < d_timeinfo->maxTime ) &&
           ( iterations < d_timeinfo->maxTimestep ) && 
           ( d_timeinfo->max_wall_time == 0 || getWallTime() < d_timeinfo->max_wall_time )  ) {
@@ -385,10 +391,15 @@ AMRSimulationController::run()
      printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep()-1, delt, time );
      // Execute the current timestep, restarting if necessary
      d_sharedState->d_current_delt = delt;
+
      executeTimestep( time, delt, currentGrid, totalFine );
      
      // Print MPI statistics
      d_scheduler->printMPIStats();
+
+     if (!first) {
+       d_scheduler->setRestartInitTimestep(false);
+     }
 
      // Update the profiler weights
      d_lb->finalizeContributions(currentGrid);
