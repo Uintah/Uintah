@@ -62,6 +62,7 @@ namespace Uintah {
     };
 
     struct CMData {
+      bool Use_Disaggregation_Algorithm;
       double FSLOPE;
       double CR;
       double p0_crush_curve;
@@ -80,7 +81,6 @@ namespace Uintah {
       double gruneisen_parameter;
       double T1_rate_dependence;
       double T2_rate_dependence;
-//      double Initial_Disaggregation_Strain;
     };
     const VarLabel* pLocalizedLabel;
     const VarLabel* pLocalizedLabel_preReloc;

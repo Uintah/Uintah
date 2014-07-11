@@ -216,6 +216,7 @@ Arenisca::Arenisca(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->require("PEAKI1",d_cm.PEAKI1);
   ps->require("B0",d_cm.B0);
   ps->require("G0",d_cm.G0);
+  ps->getWithDefault("Use_Disaggregation_Algorithm",d_cm.Use_Disaggregation_Algorithm, false);
   ps->getWithDefault("FSLOPE_p",d_cm.FSLOPE_p, 0.0);  // not used
   ps->getWithDefault("hardening_modulus",d_cm.hardening_modulus, 0.0); //not used
   ps->getWithDefault("kinematic_hardening_constant",d_cm.kinematic_hardening_constant, 0.0); // not used
@@ -223,7 +224,6 @@ Arenisca::Arenisca(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->getWithDefault("gruneisen_parameter",d_cm.gruneisen_parameter, 0.1);
   ps->getWithDefault("T1_rate_dependence",d_cm.T1_rate_dependence, 0.0);
   ps->getWithDefault("T2_rate_dependence",d_cm.T2_rate_dependence, 0.0);
-//  ps->getWithDefault("Initial_Disaggregation_Strain",d_cm.Initial_Disaggregation_Strain, -1);  //EG
   
   ps->get("PEAKI1IDIST",wdist.WeibDist);
   WeibullParser(wdist);
@@ -250,13 +250,13 @@ Arenisca::Arenisca(const Arenisca* cm)
   
   WeibullParser(wdist);
    
+  d_cm.Use_Disaggregation_Algorithm = cm->d_cm.Use_Disaggregation_Algorithm;
   d_cm.FSLOPE = cm->d_cm.FSLOPE;
   d_cm.FSLOPE_p = cm->d_cm.FSLOPE_p; // not used
   d_cm.hardening_modulus = cm->d_cm.hardening_modulus;  // not used
   d_cm.CR = cm->d_cm.CR;  // not used
   d_cm.T1_rate_dependence = cm->d_cm.T1_rate_dependence;
   d_cm.T2_rate_dependence = cm->d_cm.T2_rate_dependence;
-//  d_cm.Initial_Disaggregation_Strain = cm->d_cm.Initial_Disaggregation_Strain;  //EG
   d_cm.p0_crush_curve = cm->d_cm.p0_crush_curve;
   d_cm.p1_crush_curve = cm->d_cm.p1_crush_curve;
   d_cm.p3_crush_curve = cm->d_cm.p3_crush_curve;
@@ -327,13 +327,13 @@ void Arenisca::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
     cm_ps = ps->appendChild("constitutive_model");
     cm_ps->setAttribute("type","Arenisca");
   }
+  cm_ps->appendElement("Use_Disaggregation_Algorithm",d_cm.Use_Disaggregation_Algorithm);
   cm_ps->appendElement("FSLOPE",d_cm.FSLOPE);
   cm_ps->appendElement("FSLOPE_p",d_cm.FSLOPE_p); //not used
   cm_ps->appendElement("hardening_modulus",d_cm.hardening_modulus); //not used
   cm_ps->appendElement("CR",d_cm.CR); //not used
   cm_ps->appendElement("T1_rate_dependence",d_cm.T1_rate_dependence);
   cm_ps->appendElement("T2_rate_dependence",d_cm.T2_rate_dependence);
-//  cm_ps->appendElement("Initial_Disaggregation_Strain",d_cm.Initial_Disaggregation_Strain);  //EG
   cm_ps->appendElement("p0_crush_curve",d_cm.p0_crush_curve);
   cm_ps->appendElement("p1_crush_curve",d_cm.p1_crush_curve);
   cm_ps->appendElement("p3_crush_curve",d_cm.p3_crush_curve);
@@ -474,8 +474,11 @@ void Arenisca::initializeCMData(const Patch* patch,
     // IDVS=0.  IDVS>0 might occur in a shaped charge jet which has already stretched out
     double IDVSEq0Mass=pVolume[*iter]*rho_orig;
 
-    // This formula is possibly incorrect? Please fix. -JG
-    pevv[*iter] = log(pMass[*iter]/IDVSEq0Mass);  //JG: Initial Disaggregation Volumetric Strain
+    pevv[*iter] = 0;
+    if (d_cm.Use_Disaggregation_Algorithm){
+      // This formula is possibly incorrect? Please fix. -JG
+      pevv[*iter] = log(pMass[*iter]/IDVSEq0Mass);  //JG: Initial Disaggregation Volumetric Strain
+    }
     pev0[*iter] = pevv[*iter];
 
     peqps[*iter] = 0.0;
@@ -991,8 +994,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 
 
         //EG: Existing Disaggregation volumetric strain 
-//        if (pevv[idx]>0 && d_cm.Initial_Disaggregation_Strain != -1) {
-        if (pevv[idx]>0 && pev0[idx]>0) {
+        if (pevv[idx]>0 && d_cm.Use_Disaggregation_Algorithm) {
             if (pevv[idx] + D.Trace()*delT > 0){
                 beta_void = 1.0;    
             }else{
@@ -1031,8 +1033,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         //if ((I1_trial_step>0 && f_trial_step[idx])||pevv[idx]>0) {    //Emad:void insertion
         //if (I1_trial_step>0 && f_trial_step[idx]>0 && D.Trace()>0&&pevv[idx]<=0) {    //Emad:void insertion
 
-//        if (I1_trial_step>0 && f_trial_step[idx]>0 && D.Trace()>0 && d_cm.Initial_Disaggregation_Strain != -1) {
-        if (I1_trial_step>0 && f_trial_step[idx]>0 && D.Trace()>0 && pev0[idx]>0 ) {
+        if (I1_trial_step>0 && f_trial_step[idx]>0 && D.Trace()>0 && d_cm.Use_Disaggregation_Algorithm) {
             //Iota_new_step = min(ev_new_step,pIota[idx]);
             stress_new_step = trial_stress_step;
             double  I1_void = I1_trial_step,
