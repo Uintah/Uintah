@@ -89,6 +89,7 @@ echo   "------------------------------------------------------------------"
 run "cd $BASE_BUILD_DIR/Wasatch3P"
 run "mkdir -p src"
 run "mkdir -p install"
+run "rm -rf install/*"
 
 ############################################################################
 # SpatialOps
