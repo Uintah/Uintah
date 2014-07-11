@@ -53,6 +53,8 @@ void Task::initialize()
   d_subpatchCapable = false;
   d_hasSubScheduler = false;
 
+  maxLevelOffset=0;
+
   for(int i=0;i<TotalDWs;i++) {
     dwmap[i]=Task::InvalidDW;
   }

@@ -695,7 +695,9 @@ void BoundCondReader::combineBCS()
                                cmp_type<SideBCData>());
 
           side_bc = dynamic_cast<SideBCData*>((*side_index)->clone());
-          diff_bc = scinew DifferenceBCData(side_bc,union_bc->clone());
+
+          UnionBCData* union_bc_clone = union_bc->clone(); 
+          diff_bc = scinew DifferenceBCData(side_bc,union_bc_clone);
 
           diff_bc->setBCName( side_bc->getBCName() ); //make sure the new piece has the right name
           diff_bc->setBndType( side_bc->getBndType() ); //make sure the new piece has the correct boundary type
@@ -708,7 +710,8 @@ void BoundCondReader::combineBCS()
             rearranged.addBCData(mat_id,(*vec_itr)->clone());
           }
 
-          //   delete union_bc;
+          delete union_bc;
+          delete union_bc_clone;
 
         }
 
