@@ -55,7 +55,7 @@
 #include <CCA/Components/Wasatch/Expressions/RadiationSource.h>
 #include <CCA/Components/Wasatch/ReductionHelper.h>
 #include <CCA/Components/Wasatch/CoordinateHelper.h>
-#include <CCA/Components/Wasatch/ParticlesHelper.h>
+#include <CCA/Components/Wasatch/WasatchParticlesHelper.h>
 #include <CCA/Components/Wasatch/OldVariable.h>
 
 #include <stdexcept>
@@ -342,7 +342,7 @@ namespace Wasatch{
             if (tree.is_persistent(fieldTag)) {
               // if a particle variable is managed by uintah, then pass it on to the particles helper
               // for use in relocation
-              ParticlesHelper::self().add_particle_variable(fieldTag.name());
+              WasatchParticlesHelper::self().add_particle_variable(fieldTag.name());
             }
           }
         }
