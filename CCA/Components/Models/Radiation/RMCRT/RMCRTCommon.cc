@@ -45,14 +45,27 @@ using namespace std;
 static DebugStream dbg("RAY", false);
 
 //______________________________________________________________________
+// Static variable declarations
+// This class is instantiated by ray() and radiometer().  
+// You only want 1 instance of each of these variables thus we use
+// static variables
+//______________________________________________________________________
+
+int RMCRTCommon::d_matl;      
+MaterialSet* RMCRTCommon::d_matlSet;
+const VarLabel* RMCRTCommon::d_sigmaT4_label;
+const VarLabel* RMCRTCommon::d_abskgLabel;
+const VarLabel* RMCRTCommon::d_temperatureLabel;
+const VarLabel* RMCRTCommon::d_cellTypeLabel;
+const VarLabel* RMCRTCommon::d_divQLabel;
+
+//______________________________________________________________________
 // Class: Constructor.
 //______________________________________________________________________
 //
 RMCRTCommon::RMCRTCommon()
 {
-  d_sigmaT4_label  = VarLabel::create( "sigmaT4",  CCVariable<double>::getTypeDescription() );                 
-   
-  d_matlSet = 0;       
+  d_sigmaT4_label  = VarLabel::create( "sigmaT4",  CCVariable<double>::getTypeDescription() );                        
   d_gac     = Ghost::AroundCells;      
   d_gn      = Ghost::None;             
 }
@@ -63,8 +76,7 @@ RMCRTCommon::RMCRTCommon()
 //
 RMCRTCommon::~RMCRTCommon()
 {
-  VarLabel::destroy( d_sigmaT4_label );
-
+  VarLabel::destroy( d_sigmaT4_label );  
   if(d_matlSet && d_matlSet->removeReference()) {
     delete d_matlSet;
   }
