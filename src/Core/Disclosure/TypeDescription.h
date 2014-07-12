@@ -78,7 +78,7 @@ public:
     ReductionVariable,
     SoleVariable,
     double_type,
-    C_double_complex_type,
+    double_complex_type,
     float_type,
     bool_type,
     int_type,
