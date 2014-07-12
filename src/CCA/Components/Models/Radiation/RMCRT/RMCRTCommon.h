@@ -44,7 +44,7 @@
  * @date June, 2014
  *
  * @brief Methods, functions and variables that are common to both the 
- *        radiometer and RMCRT  
+ *        radiometer() and RMCRT()  
  *
  */
 class MTRand;
@@ -157,9 +157,6 @@ namespace Uintah{
       double d_sigma;
       double d_sigmaScat;      
        
-      int    d_matl;      
-      MaterialSet* d_matlSet;
-      
       double d_sigma_over_pi;                // Stefan Boltzmann divided by pi (W* m-2* K-4)
       bool d_isSeedRandom;     
       bool d_allowReflect;                   // specify as false when doing DOM comparisons
@@ -168,11 +165,16 @@ namespace Uintah{
       Ghost::GhostType d_gac;
 
       SimulationStateP d_sharedState;
-      const VarLabel* d_sigmaT4_label;
-      const VarLabel* d_abskgLabel;
-      const VarLabel* d_temperatureLabel;
-      const VarLabel* d_cellTypeLabel;
-      const VarLabel* d_divQLabel;
+      
+      // These are initialized once in registerVarLabels().
+      // This will create only 1 instance for both Ray() and radiometer() classes to use
+      static int d_matl;      
+      static MaterialSet* d_matlSet;      
+      static const VarLabel* d_sigmaT4_label;
+      static const VarLabel* d_abskgLabel;
+      static const VarLabel* d_temperatureLabel;
+      static const VarLabel* d_cellTypeLabel;
+      static const VarLabel* d_divQLabel;
 
   }; // class RMCRTCommon
 
