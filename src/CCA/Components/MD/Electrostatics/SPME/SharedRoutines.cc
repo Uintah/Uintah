@@ -490,11 +490,17 @@ void SPME::distributeNodeLocalQ(const ProcessorGroup*   pg,
         } // zmask
       } // ymask
     } // xmask
-    PerPatch<int> distributeQDummy;
-    newDW->put(distributeQDummy,
-               label->SPME_dep->dDistributeNodeLocalQ,
-               -1,
-               patch);
+    // Dummy material loop for dummy dependency variable
+    size_t numAtomTypes = materials->size();
+    for (size_t currType = 0; currType < numAtomTypes; ++currType) {
+      int atomType = materials->get(currType);
+      PerPatch<int> distributeQDummy;
+      newDW->put(distributeQDummy,
+                 label->SPME_dep->dDistributeNodeLocalQ,
+                 atomType,
+                 patch);
+
+    }
   } // patch loop
 }
 
@@ -514,7 +520,7 @@ void SPME::transformRealToFourier(const ProcessorGroup* pg,
   MPI_Allreduce(sendbuf,
                 recvbuf,
                 totalElements,
-                MPI_DOUBLE_COMPLEX,
+                MPI_C_DOUBLE_COMPLEX,
                 MPI_SUM,
                 pg->getComm());
 
@@ -649,11 +655,16 @@ void SPME::calculateInFourierSpace(const ProcessorGroup*    pg,
 //      coutLock.unlock();
 //    }
     // dummies for remainder of inner subloop
-    PerPatch<int> calcInFourier;
-    newDW->put(calcInFourier,
-               label->SPME_dep->dCalculateInFourierSpace,
-               -1,
-               patch);
+    size_t numAtomTypes = materials->size();
+    for (size_t currType = 0; currType < numAtomTypes; ++currType) {
+      int atomType = materials->get(currType);
+      PerPatch<int> calcInFourier;
+      newDW->put(calcInFourier,
+                 label->SPME_dep->dCalculateInFourierSpace,
+                 atomType,
+                 patch);
+
+    }
 
   }  // end SPME Patch loop
 
@@ -680,7 +691,7 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
   MPI_Allreduce(sendbuf,
                 recvbuf,
                 totalElements,
-                MPI_DOUBLE_COMPLEX,
+                MPI_C_DOUBLE_COMPLEX,
                 MPI_SUM,  // If forces aren't coming out right, look here!  FIXME
                 pg->getComm());
 

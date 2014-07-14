@@ -377,6 +377,17 @@ namespace Uintah {
                                          SchedulerP&            sched);
 
        /*
+        * @brief    Check convergence of the iterated dipoles in polarizable systems
+        */
+       void scheduleCheckConvergence(const ProcessorGroup*  pg,
+                                     const PatchSet*        patches,
+                                     const MaterialSet*     materials,
+                                     DataWarehouse*         subOldDW,
+                                     DataWarehouse*         subNewDW,
+                                     const MDLabel*         label,
+                                     SchedulerP&            sched);
+
+       /*
         * @brief    Place the calculation of new dipoles into the task graph
         */
        void scheduleCalculateNewDipoles(const ProcessorGroup*  pg,
@@ -615,7 +626,12 @@ namespace Uintah {
                                    const MDLabel*           label);
 
 
-       bool checkConvergence() const;
+       void checkConvergence(const ProcessorGroup*      pg,
+                             const PatchSubset*         patches,
+                             const MaterialSubset*      materials,
+                             DataWarehouse*             oldDW,
+                             DataWarehouse*             newDW,
+                             const MDLabel*             label);
 
 //  Data members
    // Implementation type for electrostatic calculation
