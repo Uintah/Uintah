@@ -12,7 +12,7 @@
   	<TimeIntegrator> FE </TimeIntegrator>
   	
     <ParticleTransportEquations>
-      <NumberOfInitialParticles>484</NumberOfInitialParticles>
+      <ParticlesPerCell>50</ParticlesPerCell>
       <ParticleDensity name="p.rho" state="STATE_NONE"/>            
       <ParticleMass name="p.m" state="STATE_DYNAMIC">
       	<SourceTerm name="nothing" state="STATE_NONE"/>	

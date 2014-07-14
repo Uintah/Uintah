@@ -46,7 +46,7 @@ namespace Uintah {
   
   ParticlesHelper::ParticlesHelper() :
   isValidState_(false),
-  nParticles_(0)
+  pPerCell_(0.0)
   {
     pPosLabel_ = VarLabel::create("p.x",
                                   ParticleVariable<Uintah::Point>::getTypeDescription(),
@@ -89,7 +89,7 @@ namespace Uintah {
 
     //
     // set the position varlabels
-    particleEqsSpec_->get("NumberOfInitialParticles",nParticles_);
+    particleEqsSpec_->get("ParticlesPerCell",pPerCell_);
     
     ProblemSpecP pPosSpec = particleEqsSpec_->findBlock("ParticlePosition");
 
@@ -154,7 +154,7 @@ namespace Uintah {
                                    Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw)
   {
     using namespace Uintah;
-    particleEqsSpec_->get("NumberOfInitialParticles",nParticles_);
+    particleEqsSpec_->get("ParticlesPerCell",pPerCell_);
     
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
@@ -165,15 +165,16 @@ namespace Uintah {
         
         // create a subset with the correct number of particles. This will serve as the initial memory
         // block for particles
-        ParticleSubset* subset = new_dw->createParticleSubset(nParticles_,matl,patch);
+        int nParticles = pPerCell_ * patch->getNumCells();
+        ParticleSubset* subset = new_dw->createParticleSubset(nParticles,matl,patch);
         
         // allocate memory for Uintah particle position and particle IDs
         ParticleVariable<Point>  ppos;
         ParticleVariable<long64> pid;
         new_dw->allocateAndPut(ppos,    pPosLabel_,           subset);
         new_dw->allocateAndPut(pid,    pIDLabel_,           subset);
-        for (int i=0; i < nParticles_; i++) {
-          pid[i] = i + patch->getID() * nParticles_;
+        for (int i=0; i < nParticles; i++) {
+          pid[i] = i + patch->getID();
         }
       }
     }

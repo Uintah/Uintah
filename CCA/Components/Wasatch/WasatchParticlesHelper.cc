@@ -72,7 +72,7 @@ namespace Wasatch {
                                    Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw)
   {
     using namespace Uintah;
-    particleEqsSpec_->get("NumberOfInitialParticles",nParticles_);
+    particleEqsSpec_->get("NumberOfInitialParticles",pPerCell_);
     
     
     //____________________________________________
@@ -98,13 +98,17 @@ namespace Wasatch {
         exprParams != 0;
         exprParams = exprParams->findNextBlock("BasicExpression") )
     {
+      // look for ParticlePositionIC xml Blocks (initial condition). These specify the kind of
+      // initial condition that the user wants to apply on particles.
       if (exprParams->findBlock("ParticlePositionIC")) {
         Uintah::ProblemSpecP pICSpec = exprParams->findBlock("ParticlePositionIC");
         // check what type of bounds we are using: specified or patch based?
         std::string boundsType;
+        // Check the kinds of bounds that the user has specified (based on patch bounds or user specified)
         pICSpec->getAttribute("bounds",boundsType);
         bounded = bounded || (boundsType == "SPECIFIED");
         if (bounded) {
+          // if the user specified the bounds, then check those out and save them in xmin, xmax etc...
           double lo = 0.0, hi = 1.0;
           pICSpec->findBlock("Bounds")->getAttribute("low", lo);
           pICSpec->findBlock("Bounds")->getAttribute("high", hi);
@@ -127,27 +131,43 @@ namespace Wasatch {
         
         // If the particle position initialization is bounded, make sure that the bounds are within
         // this patch. If the bounds are NOT, then set the number of particles on this patch to 0.
+        // Also, since the user specifies the number of particles per cell, we need to count the number
+        // of cells that fall within the specified bounds of the initialization and multiply that
+        // by the number of particles per cell to get the total number of particles in this patch
+        int nCells = 0;
         if (bounded) {
           Point low = patch->getBox().lower();
           Point high = patch->getBox().upper();
           if (   xmin >= high.x() || ymin >= high.y() || zmin >= high.z()
               || xmax <= low.x()  || ymax <= low.y()  || zmax <= low.z()  ) {
             // no particles will be created in this patch
-            nParticles_ = 0;
+            nCells = 0;
+          } else {
+            // count the number of cells that we will initialize particles in
+            for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
+              IntVector iCell = *iter;
+              Point p = patch->getCellPosition(iCell);
+              if (p.x() <= xmax && p.x() >= xmin && p.y() <= ymax && p.y() >= ymin && p.z() <= zmax && p.z() >= zmin  ) {
+                nCells++;
+              }
+            }
           }
+        } else {
+          nCells = patch->getNumCells();
         }
         
+        int nParticles = pPerCell_ * nCells;
         // create a subset with the correct number of particles. This will serve as the initial memory
         // block for particles
-        ParticleSubset* subset = new_dw->createParticleSubset(nParticles_,matl,patch);
+        ParticleSubset* subset = new_dw->createParticleSubset(nParticles,matl,patch);
         
         // allocate memory for Uintah particle position and particle IDs
         ParticleVariable<Point>  ppos;
         ParticleVariable<long64> pid;
         new_dw->allocateAndPut(ppos,    pPosLabel_,           subset);
         new_dw->allocateAndPut(pid,    pIDLabel_,           subset);
-        for (int i=0; i < nParticles_; i++) {
-          pid[i] = i + patch->getID() * nParticles_;
+        for (int i=0; i < nParticles; i++) {
+          pid[i] = i + patch->getID() * nParticles;
         }
       }
     }

@@ -164,11 +164,14 @@ evaluate()
 //  DistT    dist(0,1);
 //  VarGenT  gen(eng,dist);
 
-  double low = lo_, high = hi_;
+  const Uintah::Patch* const patch = patchContainer_->get_uintah_patch();
+  const double patchLo  = get_patch_low(patch, coord_);
+  const double patchHi  = get_patch_high(patch, coord_);
+  double low  = std::max(lo_, patchLo); // disallow creating particles outside the bounds of this patch
+  double high = std::min(hi_, patchHi); // disallow creating particles outside the bounds of this patch
   if (usePatchBounds_) {
-    const Uintah::Patch* const patch = patchContainer_->get_uintah_patch();
-    low  = get_patch_low(patch, coord_);
-    high = get_patch_high(patch, coord_);
+    low  = patchLo;
+    high = patchHi;
   }
 
   // This is a typedef for a random number generator.
@@ -176,9 +179,9 @@ evaluate()
   // Define a random number generator and initialize it with a seed.
   // (The seed is unsigned, otherwise the wrong overload may be selected
   // when using mt19937 as the base_generator_type.)
-  // seed the random number generator based on the MPI rank
+  // seed the random number generator based on the patch id
   const int pid =  patchContainer_->get_uintah_patch()->getID();
-  base_generator_type generator((unsigned) ( (pid+1) * seed_ * std::time(0) ));
+  base_generator_type generator((unsigned) ( (pid + 1) * std::abs(1 + seed_)  )); // 1 + seed to offset a seed = 0
   
   boost::uniform_real<> rand_dist(low,high);
   boost::variate_generator<base_generator_type&, boost::uniform_real<> > boost_rand(generator, rand_dist);
