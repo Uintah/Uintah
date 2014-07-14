@@ -688,6 +688,7 @@ void MD::scheduleUpdatePosition(SchedulerP& sched,
   // Integration requires the position and particle ID from last time step
   task->requires(Task::OldDW, d_label->global->pX, Ghost::None, 0);
   task->requires(Task::OldDW, d_label->global->pID, Ghost::None, 0);
+  task->requires(Task::OldDW, d_label->global->pV, Ghost::None, 0);
 
   // d_forcefield->addUpdateRequires();
   task->requires(Task::NewDW, d_label->nonbonded->pF_nonbonded_preReloc, Ghost::None, 0);

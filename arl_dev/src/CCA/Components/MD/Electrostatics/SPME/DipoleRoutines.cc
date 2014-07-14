@@ -511,6 +511,16 @@ void SPME::calculatePostTransformDipole(const ProcessorGroup*   pg,
                                         CoordinateSystem*       coordSystem) {
   size_t numPatches     = patches->size();
   size_t numAtomTypes   = materials->size();
+
+  Uintah::Matrix3 inverseCell = coordSystem->getInverseCell();
+  std::vector<SCIRun::Vector> delU;
+
+  for (size_t principle = 0; principle < 3; ++principle) {
+    delU.push_back(inverseCell.getRow(principle)*d_kLimits(principle));
+  }
+
+  // Instantiate temporaries outside the inner loops
+  SCIRun::Vector    Mu, de_dU;
   for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) {
     const Patch* patch = patches->get(patchIndex);
     SPMEPatch* spmePatch = d_spmePatchMap.find(patch->getID())->second;
@@ -530,19 +540,69 @@ void SPME::calculatePostTransformDipole(const ProcessorGroup*   pg,
       newDW->allocateAndPut(pForceRecip,
                             label->electrostatic->pF_electroInverse_preReloc,
                             particles);
-      std::vector<SPMEMapPoint>* gridMap = spmePatch->getChargeMap(atomType);
+      std::vector<SPMEMapPoint>*    gridMap  = spmePatch->getChargeMap(atomType);
 
-      // Calculate electrostatic reciprocal contribution to F_ij(r)
-      SPME::mapForceFromGridDipole(spmePatch,
-                                   gridMap,
-                                   particles,
-                                   charge,
-                                   pDipole,
-                                   pForceRecip,
-                                   coordSystem);
+      SimpleGrid<dblcomplex>*   Q_patchLocal = spmePatch->getQ();
+      SCIRun::IntVector         patchOffset  = spmePatch->getGlobalOffset();
+      SCIRun::IntVector         patchExtent  = Q_patchLocal->getExtentWithGhost();
 
-    }
-  }
+      ParticleSubset::iterator atomIter, atomBegin, atomEnd;
+      atomBegin = particles->begin();
+      atomEnd   = particles->end();
+
+      for (atomIter = atomBegin; atomIter != atomEnd; ++atomIter) {
+        size_t atom = *atomIter;
+
+        const vectorGrid*   forceMap = (*gridMap)[atom].getForceGrid();
+        const matrixGrid*   gradMap  = (*gridMap)[atom].getDipoleGrid();
+
+        // Zero out de/dU
+        de_dU   = MDConstants::V_ZERO;
+        Mu      = pDipole[atom];
+
+        SCIRun::Vector muDivU(Dot(Mu,delU[0]),Dot(Mu,delU[1]),Dot(Mu,delU[2]));
+
+        SCIRun::IntVector   QAnchor         = forceMap->getOffset();
+        SCIRun::IntVector   supportExtent   = forceMap->getExtents();
+        SCIRun::IntVector   base            = QAnchor - patchOffset;
+
+        int xBase   =   base[0];
+        int yBase   =   base[1];
+        int zBase   =   base[2];
+
+        int xExtent =   supportExtent[0];
+        int yExtent =   supportExtent[1];
+        int zExtent =   supportExtent[2];
+
+        for (int xmask = 0; xmask < xExtent; ++xmask ) {
+          int xAnchor = xBase + xmask;
+          for (int ymask = 0; ymask < yExtent; ++ymask) {
+            int yAnchor = yBase + ymask;
+            for (int zmask = 0; zmask < zExtent; ++zmask) {
+              int zAnchor = zBase + zmask;
+              const Uintah::Matrix3& dipoleMap = (*gradMap)(xmask, ymask, zmask);
+              double QReal = std::real((*Q_patchLocal)(xAnchor, yAnchor, zAnchor));
+              de_dU += QReal*(charge*(*forceMap)(xmask, ymask, zmask)
+                              + muDivU[0] * dipoleMap.getColumn(0)
+                              + muDivU[1] * dipoleMap.getColumn(1)
+                              + muDivU[2] * dipoleMap.getColumn(2) );
+            } // Loop over Z
+          } // Loop over Y
+        } // Loop over X
+        pForceRecip[atom] = -de_dU[0]*delU[0] -de_dU[1]*delU[1] - de_dU[2]*delU[2];
+      } // Loop over Atoms
+
+//      // Calculate electrostatic reciprocal contribution to F_ij(r)
+//      SPME::mapForceFromGridDipole(spmePatch,
+//                                   gridMap,
+//                                   particles,
+//                                   charge,
+//                                   pDipole,
+//                                   pForceRecip,
+//                                   coordSystem);
+
+    } // Loop over atom types
+  } // Loop over patches
 }
 
 void SPME::mapForceFromGridDipole(const SPMEPatch*                  spmePatch,
