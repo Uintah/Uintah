@@ -101,6 +101,7 @@ namespace Uintah {
       const VarLabel* rElectrostaticInverseEnergy;
       const VarLabel* rElectrostaticInverseStress;
       const VarLabel* rElectrostaticInverseStressDipole;
+      const VarLabel* rPolarizationDeviation;
 
 #ifdef HAVE_FFTW
       // Sole variables for interfacing with FFTW

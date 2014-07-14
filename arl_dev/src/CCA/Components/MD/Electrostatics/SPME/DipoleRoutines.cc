@@ -81,7 +81,7 @@ void SPME::generateChargeMapDipole(const ProcessorGroup*    pg,
                                          CoordinateSystem*  coordSys)
 {
   size_t numPatches     =   patches->size();
-  size_t numMaterials   =   materials->size();
+  size_t numAtomTypes   =   materials->size();
 
   Uintah::Matrix3 inverseUnitCell = coordSys->getInverseCell();
 
@@ -92,9 +92,11 @@ void SPME::generateChargeMapDipole(const ProcessorGroup*    pg,
     SPMEPatch* currentSPMEPatch = d_spmePatchMap.find(patch->getID())->second;
 
     // Step through all the materials in this patch
-    for (size_t material = 0; material < numMaterials; ++material) {
+    for (size_t typeIndex = 0; typeIndex < numAtomTypes; ++typeIndex) {
+      int atomType = materials->get(typeIndex);
+
       ParticleSubset* atomSubset;
-      atomSubset = oldDW->getParticleSubset(material, patch);
+      atomSubset = oldDW->getParticleSubset(atomType, patch);
 
       constParticleVariable<Point> atomPositions;
       constParticleVariable<long64> atomIDs;
@@ -105,12 +107,12 @@ void SPME::generateChargeMapDipole(const ProcessorGroup*    pg,
       int numAtoms = atomSubset->numParticles();
       // Verify we have enough memory to hold the charge map for the
       // current atom type
-      currentSPMEPatch->verifyChargeMapAllocation(numAtoms, material);
+      currentSPMEPatch->verifyChargeMapAllocation(numAtoms, atomType);
 
       // Pull the location for the SPMEPatch's copy of the charge map
       // for this material type
       std::vector<SPMEMapPoint>* gridMap;
-      gridMap = currentSPMEPatch->getChargeMap(material);
+      gridMap = currentSPMEPatch->getChargeMap(atomType);
 
       // begin loop to generate the charge map
       ParticleSubset::iterator atom;
@@ -651,8 +653,8 @@ void SPME::dipoleUpdateFieldAndStress(const ProcessorGroup* pg,
       constParticleVariable<Vector> pDipole;
       ParticleVariable<Vector>      pRecipField;
       oldDW->get(pDipole, label->electrostatic->pMu, pset);
-      newDW->getModifiable(pRecipField,
-                           label->electrostatic->pE_electroInverse, pset);
+      newDW->allocateAndPut(pRecipField,
+                            label->electrostatic->pE_electroInverse_preReloc, pset);
 
       ParticleSubset::iterator pSetIter, pSetBegin, pSetEnd;
       pSetBegin = pset->begin();
@@ -727,8 +729,8 @@ void SPME::calculateNewDipoles(const ProcessorGroup*    pg,
 //      old_dw->get(oldDipoles, d_label->pTotalDipoles, localSet);
       // We need the field estimation from the current iteration
       constParticleVariable<SCIRun::Vector> reciprocalField, realField;
-      oldDW->get(reciprocalField, label->electrostatic->pE_electroInverse_preReloc, localSet);
-      oldDW->get(realField, label->electrostatic->pE_electroReal_preReloc, localSet);
+      newDW->get(reciprocalField, label->electrostatic->pE_electroInverse_preReloc, localSet);
+      newDW->get(realField, label->electrostatic->pE_electroReal_preReloc, localSet);
 //      old_dw->get(reciprocalField, d_label->pElectrostaticsReciprocalField, localSet);
 //      old_dw->get(realField, d_label->pElectrostaticsRealField, localSet);
       ParticleVariable<SCIRun::Vector> newDipoles;
@@ -740,7 +742,8 @@ void SPME::calculateNewDipoles(const ProcessorGroup*    pg,
         //FIXME JBH -->  Put proper terms in here to actually calculate the new dipole contribution
         // Thole damping from Lucretius_Serial.f lines 2192-2202, 2291,
         newDipoles[Index] = reciprocalField[Index]+realField[Index];
-        newDipoles[Index] += d_dipoleMixRatio * oldDipoles[Index];
+//        newDipoles[Index] += d_dipoleMixRatio * oldDipoles[Index];
+        newDipoles[Index] = oldDipoles[Index];
       }
     }
   }
@@ -748,20 +751,60 @@ void SPME::calculateNewDipoles(const ProcessorGroup*    pg,
   // TODO fixme [APH]
 }
 
-bool SPME::checkConvergence() const
-{
-  // Subroutine determines if polarizable component has converged
-  if (!f_polarizable) {
-    return true;
-  } else {
-    // throw an exception for now, but eventually will check convergence here.
-    throw InternalError("Error: Polarizable force field not yet implemented!", __FILE__, __LINE__);
-  }
+void SPME::checkConvergence(const ProcessorGroup*       pg,
+                            const PatchSubset*          patches,
+                            const MaterialSubset*       materials,
+                            DataWarehouse*              subOldDW,
+                            DataWarehouse*              subNewDW,
+                            const MDLabel*              label) {
 
-  // TODO keep an eye on this to make sure it works like we think it should
-  if (Thread::self()->myid() == 0) {
-    d_Q_nodeLocal->initialize(dblcomplex(0.0, 0.0));
-  }
+  // Subroutine determines if polarizable component has converged
+  double sumSquaredDeviation = 0.0;
+  size_t numPatches = patches->size();
+  size_t numAtomTypes = materials->size();
+  for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) {
+    const Patch* patch = patches->get(patchIndex);
+    for (size_t typeIndex = 0; typeIndex < numAtomTypes; ++typeIndex) {
+      int atomType = materials->get(typeIndex);
+      ParticleSubset* atomSubset;
+      atomSubset = subOldDW->getParticleSubset(atomType, patch);
+
+      // Particle subsets are constant, so can get the subset once and index into it
+      // for both old and new DW.
+      constParticleVariable<SCIRun::Vector> oldDipole;
+      constParticleVariable<SCIRun::Vector> newDipole;
+      subOldDW->get(oldDipole,
+                    label->electrostatic->pMu,
+                    atomSubset);
+      subNewDW->get(newDipole,
+                    label->electrostatic->pMu_preReloc,
+                    atomSubset);
+
+      size_t numAtoms = atomSubset->numParticles();
+      for (size_t atom = 0; atom < numAtoms; ++atom) {
+        SCIRun::Vector deviation = newDipole[atom] - oldDipole[atom];
+        sumSquaredDeviation += deviation.length2();
+      } // Loop over atoms
+    } // Loop over atom types
+  } // Loop over patches
+
+  subNewDW->put(sum_vartype(sumSquaredDeviation),
+                label->electrostatic->rPolarizationDeviation);
+//
+//
+//  if (!f_polarizable) {
+//    return true;
+//  } else {
+//    double sumSquaredDeviation = 0.0;
+//    size_t numPatches = patches->size();
+//    // throw an exception for now, but eventually will check convergence here.
+//    throw InternalError("Error: Polarizable force field not yet implemented!", __FILE__, __LINE__);
+//  }
+
+//  // TODO keep an eye on this to make sure it works like we think it should
+//  if (Thread::self()->myid() == 0) {
+//    d_Q_nodeLocal->initialize(dblcomplex(0.0, 0.0));
+//  }
 }
 
 

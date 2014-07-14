@@ -105,6 +105,7 @@ void SPME::addCalculateComputes(Task* task, MDLabel* d_label) const {
 
   if (f_polarizable) {
     task->computes(d_label->electrostatic->pMu_preReloc);
+    task->computes(d_label->electrostatic->rElectrostaticInverseStressDipole);
   }
   // We should probably actually concatenate the forces into a single 
   // pF_electrostatic for gating to the integrator.
@@ -519,6 +520,29 @@ void SPME::scheduleUpdateFieldAndStress(const ProcessorGroup*   pg,
 
   sched->addTask(task, patches, materials);
 
+}
+
+void SPME::scheduleCheckConvergence(const ProcessorGroup*       pg,
+                                    const PatchSet*             patches,
+                                    const MaterialSet*          materials,
+                                    DataWarehouse*              subOldDW,
+                                    DataWarehouse*              subNewDW,
+                                    const MDLabel*              label,
+                                    SchedulerP&                 sched)
+{
+  printSchedule(patches, spme_cout, "SPME::scheduleCheckConvergence");
+
+  Task* task = scinew Task("SPME::checkConvergence",
+                           this,
+                           &SPME::checkConvergence,
+                           label);
+
+  task->requires(Task::OldDW, label->electrostatic->pMu, Ghost::None, 0);
+  task->requires(Task::NewDW, label->electrostatic->pMu_preReloc, Ghost::None, 0);
+
+  task->computes(label->electrostatic->rPolarizationDeviation);
+
+  sched->addTask(task, patches, materials);
 }
 
 void SPME::scheduleCalculateNewDipoles(const ProcessorGroup*    pg,

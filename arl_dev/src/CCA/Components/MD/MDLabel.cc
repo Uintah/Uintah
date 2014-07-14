@@ -89,7 +89,7 @@ electrostaticLabels::electrostaticLabels() { // create variable labels used in e
   rElectrostaticInverseEnergy       = VarLabel::create("e_elec_inv", sum_vartype::getTypeDescription());
   rElectrostaticInverseStress       = VarLabel::create("S_elec_inv", matrix_sum::getTypeDescription());
   rElectrostaticInverseStressDipole = VarLabel::create("S_elec_inv_dip", matrix_sum::getTypeDescription());
-
+  rPolarizationDeviation            = VarLabel::create("pol_squaredVar", sum_vartype::getTypeDescription());
   // Sole variables for interfacing with FFTW
 #ifdef HAVE_FFTW
   sForwardTransformPlan         = VarLabel::create("fftw_plan_forward", SoleVariable<fftw_plan>::getTypeDescription());
@@ -128,6 +128,7 @@ electrostaticLabels::~electrostaticLabels() { // destroy variable labels used in
   VarLabel::destroy(rElectrostaticInverseEnergy);
   VarLabel::destroy(rElectrostaticInverseStress);
   VarLabel::destroy(rElectrostaticInverseStressDipole);
+  VarLabel::destroy(rPolarizationDeviation);
 
 #ifdef HAVE_FFTW
   VarLabel::destroy(sForwardTransformPlan);
