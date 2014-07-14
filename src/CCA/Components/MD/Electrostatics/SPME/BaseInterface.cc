@@ -604,33 +604,56 @@ void SPME::calculate(   const ProcessorGroup*   pg,
       int atomType = materials->get(typeIndex);
       ParticleSubset* atomSet = subscheduler->get_dw(2)->getParticleSubset(atomType, patch);
 
-      constParticleVariable<Vector> pMuPull, pERealPull, pEInversePull;
-      subNewDW->get(pMuPull,
-                    label->electrostatic->pMu_preReloc,
-                    atomSet);
-      subNewDW->get(pERealPull,
-                    label->electrostatic->pE_electroReal_preReloc,
-                    atomSet);
-      subNewDW->get(pEInversePull,
-                    label->electrostatic->pE_electroInverse_preReloc,
-                    atomSet);
 
-      ParticleVariable<Vector> pMuPush, pERealPush, pEInversePush;
-      parentNewDW->allocateAndPut(pMuPush,
-                                  label->electrostatic->pMu_preReloc,
+      constParticleVariable<Vector> pMuPull, pERealPull, pEInversePull;
+      ParticleVariable<Vector>      pMuPush, pERealPush, pEInversePush;
+      if (f_polarizable) { // Transfer dipole and field
+        subNewDW->get(pMuPull,
+                      label->electrostatic->pMu_preReloc,
+                      atomSet);
+        subNewDW->get(pERealPull,
+                      label->electrostatic->pE_electroReal_preReloc,
+                      atomSet);
+        subNewDW->get(pEInversePull,
+                      label->electrostatic->pE_electroInverse_preReloc,
+                      atomSet);
+
+        parentNewDW->allocateAndPut(pMuPush,
+                                    label->electrostatic->pMu_preReloc,
+                                    atomSet);
+        parentNewDW->allocateAndPut(pERealPush,
+                                    label->electrostatic->pE_electroReal_preReloc,
+                                    atomSet);
+        parentNewDW->allocateAndPut(pEInversePush,
+                                    label->electrostatic->pE_electroInverse_preReloc,
+                                    atomSet);
+
+      }
+
+      constParticleVariable<Vector> pFRealPull, pFInversePull;
+      ParticleVariable<Vector>      pFRealPush, pFInversePush;
+      subNewDW->get(pFRealPull,
+                    label->electrostatic->pF_electroReal_preReloc,
+                    atomSet);
+//      subNewDW->get(pFInversePull,
+//                    label->electrostatic->pF_electroInverse_preReloc,
+//                    atomSet);
+      parentNewDW->allocateAndPut(pFRealPush,
+                                  label->electrostatic->pF_electroReal_preReloc,
                                   atomSet);
-      parentNewDW->allocateAndPut(pERealPush,
-                                  label->electrostatic->pE_electroReal_preReloc,
-                                  atomSet);
-      parentNewDW->allocateAndPut(pEInversePush,
-                                  label->electrostatic->pE_electroInverse_preReloc,
-                                  atomSet);
+//      parentNewDW->allocateAndPut(pFInversePush,
+//                                  label->electrostatic->pF_electroInverse_preReloc,
+//                                  atomSet);
 
       size_t numAtoms = atomSet->numParticles();
       for (size_t atom = 0; atom < numAtoms; ++atom) {
-        pMuPush[atom] = pMuPull[atom];
-        pERealPush[atom] = pERealPull[atom];
-        pEInversePush[atom] = pEInversePull[atom];
+        if (f_polarizable) {
+          pMuPush[atom]         =   pMuPull[atom];
+          pERealPush[atom]      =   pERealPull[atom];
+          pEInversePush[atom]   =   pEInversePull[atom];
+        }
+        pFRealPush[atom]    =   pFRealPull[atom];
+//        pFInversePush[atom] =   pFInversePull[atom];
       } // Loop over atoms
     } // Loop over atom types
   } // Loop over patches
@@ -639,14 +662,26 @@ void SPME::calculate(   const ProcessorGroup*   pg,
   // 0 Caught exception: An UnknownVariable exception was thrown.
   // /home/jbhooper/arlDev/UintahARL/src/CCA/Components/Schedulers/OnDemandDataWarehouse.cc:1131
   // Unknown variable: ParticleSubset, (low: [int 0, 0, 0], high: [int 50, 50, 25] DWID 1) requested from DW 1, Level 0, patch 0([ [0.00, 0.00, 0.00] [135.18, 135.18, 67.59] ]), material index: 0 (Cannot find particle set on patch)
-//  parentNewDW->transferFrom(subscheduler->get_dw(3), label->electrostatic->pMu_preReloc,
-//                            perProcPatches, materials);
+//  if (f_polarizable) {
+//    parentNewDW->transferFrom(subNewDW,
+//                              label->electrostatic->pMu_preReloc,
+//                              perProcPatches,
+//                              allMaterialsUnion);
+//    parentNewDW->transferFrom(subNewDW,
+//                              label->electrostatic->pE_electroInverse_preReloc,
+//                              perProcPatches,
+//                              allMaterialsUnion);
+//    parentNewDW->transferFrom(subNewDW,
+//                              label->electrostatic->pE_electroReal_preReloc,
+//                              perProcPatches,
+//                              allMaterialsUnion);
+//  }
+////  parentNewDW->transferFrom(subNewDW,
+////                            label->electrostatic->pF_electroInverse_preReloc,
+////                            perProcPatches,
+////                            allMaterialsUnion);
 //  parentNewDW->transferFrom(subNewDW,
-//                            label->electrostatic->pE_electroInverse_preReloc,
-//                            perProcPatches,
-//                            allMaterialsUnion);
-//  parentNewDW->transferFrom(subNewDW,
-//                            label->electrostatic->pE_electroReal_preReloc,
+//                            label->electrostatic->pF_electroReal_preReloc,
 //                            perProcPatches,
 //                            allMaterialsUnion);
 
