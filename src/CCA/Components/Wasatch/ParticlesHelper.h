@@ -150,7 +150,7 @@ namespace Uintah {
 
     bool isValidState_;
     const Uintah::MaterialSet* materials_;
-    int nParticles_; // number of initial particles
+    double pPerCell_; // number of initial particles per cell
     Uintah::ProblemSpecP particleEqsSpec_;
     std::map<int, Uintah::ParticleSubset*> deleteSet_;
   };

@@ -82,7 +82,7 @@
 								 attribute1="transversedir OPTIONAL BOOLEAN">        
 				</Uniform>
 				<Random spec="OPTIONAL NO_DATA"
-								attribute1="seed REQUIRED DOUBLE"/>
+								attribute1="seed REQUIRED INTEGER"/>
 			</ParticlePositionIC>
 
 			<!-- provides a way to initialize a field using geometry primitives -->
@@ -827,7 +827,7 @@
 
 		<ParticleTransportEquations spec="OPTIONAL NO_DATA">
 
-			<NumberOfInitialParticles spec="OPTIONAL DOUBLE"/>
+			<ParticlesPerCell spec="OPTIONAL DOUBLE"/>
 
 			<ParticleDensity 	spec="OPTIONAL NO_DATA"
 												attribute1="name REQUIRED STRING"

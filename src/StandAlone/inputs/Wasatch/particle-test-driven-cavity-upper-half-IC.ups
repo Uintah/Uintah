@@ -63,7 +63,7 @@
     </ForceOnGraph>
     
     <ParticleTransportEquations>
-      <NumberOfInitialParticles>625</NumberOfInitialParticles>
+      <ParticlesPerCell>1</ParticlesPerCell>
       <ParticleDensity name="p.rho" state="STATE_NONE"/>            
       <ParticleMass name="p.m" state="STATE_DYNAMIC">
       	<SourceTerm name="nothing" state="STATE_NONE"/>	
@@ -119,7 +119,7 @@
        <TaskList>initialization</TaskList>
        <NameTag name="p.xw" state="STATE_DYNAMIC"/>
        <ParticlePositionIC coordinate="X" bounds="PATCHBASED">
-       		<Uniform/>
+       		<Random seed="1"/>
        </ParticlePositionIC>
     </BasicExpression>
 
@@ -128,7 +128,7 @@
        <NameTag name="p.yw" state="STATE_DYNAMIC"/>
        <ParticlePositionIC coordinate="Y" bounds="SPECIFIED">
        		<Bounds low="0.55" high="0.95"/>
-       		<Uniform transversedir="true"/>
+       		<Random seed="2"/>
        </ParticlePositionIC>
     </BasicExpression>
 
