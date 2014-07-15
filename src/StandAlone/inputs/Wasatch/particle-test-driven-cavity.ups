@@ -160,7 +160,7 @@
        <TaskList>initialization</TaskList>
        <NameTag name="p.xw" state="STATE_DYNAMIC"/>
        <ParticlePositionIC coordinate="X" bounds="PATCHBASED">
-       		<Random seed="0.1"/>
+       		<Random seed="1"/>
        </ParticlePositionIC>
     </BasicExpression>
 
@@ -168,7 +168,7 @@
        <TaskList>initialization</TaskList>
        <NameTag name="p.yw" state="STATE_DYNAMIC"/>
        <ParticlePositionIC coordinate="Y" bounds="PATCHBASED">
-       		<Random seed="0.2"/>
+       		<Random seed="2"/>
        </ParticlePositionIC>
     </BasicExpression>
 

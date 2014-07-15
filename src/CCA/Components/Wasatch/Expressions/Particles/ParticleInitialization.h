@@ -76,6 +76,7 @@ private:
   const double lo_, hi_;
   const int seed_;
   const bool usePatchBounds_;
+  const bool isCoordExpr_; // is this expression evaluating a coordinate or not? for non coordinates, we use the user provided lo and hi
   Wasatch::UintahPatchContainer* patchContainer_;
   
   ParticleRandomIC( const std::string& coord,
@@ -98,7 +99,8 @@ coord_(coord),
 lo_(lo),
 hi_(hi),
 seed_(seed),
-usePatchBounds_(usePatchBounds)
+usePatchBounds_(usePatchBounds),
+isCoordExpr_ ( coord_ != "" )
 {
   this->set_gpu_runnable( false );  // definitely not GPU ready
 }
@@ -133,7 +135,8 @@ get_patch_low(const Uintah::Patch* const patch, const std::string& coord)
   if     ( coord == "X" ) return patch->getBox().lower().x() + patch->dCell().x()/2.0;
   else if( coord == "Y" ) return patch->getBox().lower().y() + patch->dCell().y()/2.0;
   else if( coord == "Z" ) return patch->getBox().lower().z() + patch->dCell().z()/2.0;
-  assert( false ); // should never get here.
+  else if( coord == ""  ) return 0.0;
+  assert(false);
   return 0.0;
 }
 
@@ -145,7 +148,8 @@ get_patch_high(const Uintah::Patch* const patch, const std::string& coord)
   if     ( coord == "X" ) return patch->getBox().upper().x() - patch->dCell().x()/2.0;
   else if( coord == "Y" ) return patch->getBox().upper().y() - patch->dCell().y()/2.0;
   else if( coord == "Z" ) return patch->getBox().upper().z() - patch->dCell().z()/2.0;
-  assert( false ); // should never get here
+  else if( coord == ""  ) return 0.0;
+  assert(false);
   return 0.0;
 }
 
@@ -166,14 +170,14 @@ evaluate()
 //  DistT    dist(0,1);
 //  VarGenT  gen(eng,dist);
 
-  const Uintah::Patch* const patch = patchContainer_->get_uintah_patch();
-  const double patchLo  = get_patch_low(patch, coord_);
-  const double patchHi  = get_patch_high(patch, coord_);
-  double low  = std::max(lo_, patchLo); // disallow creating particles outside the bounds of this patch
-  double high = std::min(hi_, patchHi); // disallow creating particles outside the bounds of this patch
-  if (usePatchBounds_) {
-    low  = patchLo;
-    high = patchHi;
+  double low = lo_;
+  double high = hi_;
+  if (isCoordExpr_) {
+    const Uintah::Patch* const patch = patchContainer_->get_uintah_patch();
+    const double patchLo  = get_patch_low (patch, coord_);
+    const double patchHi  = get_patch_high(patch, coord_);
+    low  = usePatchBounds_ ? patchLo : std::max(lo_, patchLo); // disallow creating particles outside the bounds of this patch
+    high = usePatchBounds_ ? patchHi : std::min(hi_, patchHi); // disallow creating particles outside the bounds of this patch
   }
 
   // This is a typedef for a random number generator.
