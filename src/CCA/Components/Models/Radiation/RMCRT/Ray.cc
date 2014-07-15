@@ -220,7 +220,8 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   ProblemSpecP rad_ps = rmcrt_ps->findBlock("Radiometer");
   if( rad_ps ) {
     d_radiometer = scinew Radiometer();
-    d_radiometer->problemSetup( prob_spec, rad_ps, sharedState );
+    bool getExtraInputs = false;
+    d_radiometer->problemSetup( prob_spec, rad_ps, sharedState, getExtraInputs );
     d_VRFluxLabel = d_radiometer->getRadiometerLabel();
   }
 

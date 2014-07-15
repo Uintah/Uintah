@@ -6,14 +6,16 @@
       <cellType                  spec="OPTIONAL NO_DATA"     attribute1="label REQUIRED STRING"/>
       <abskg                     spec="OPTIONAL NO_DATA"     attribute1="label REQUIRED STRING"/>
       
-      <randomSeed                spec="REQUIRED BOOLEAN"/>
-      <sigmaScat                 spec="REQUIRED DOUBLE  'positive'"/>
       <Threshold                 spec="REQUIRED DOUBLE  'positive'"/> 
       <VRViewAngle               spec="REQUIRED DOUBLE 'positive'"/>
       <VROrientation             spec="REQUIRED VECTOR"/>
       <VRLocationsMin            spec="REQUIRED VECTOR 'positive'"/>
       <VRLocationsMax            spec="REQUIRED VECTOR 'positive'"/>
       <nRadRays                  spec="REQUIRED INTEGER 'positive'"/>
-      <allowReflect              spec="REQUIRED BOOLEAN"/>
+      
+      <!--  If using OnTheFly: Radiometer you also need these -->
+      <randomSeed                spec="OPTIONAL BOOLEAN"/>
+      <sigmaScat                 spec="OPTIONAL DOUBLE  'positive'"/>
+      <allowReflect              spec="OPTIONAL BOOLEAN"/>
     </Radiometer>
 </Uintah_Include>

@@ -67,23 +67,27 @@ Radiometer::~Radiometer()
 //______________________________________________________________________
 void
 Radiometer::problemSetup( const ProblemSpecP& prob_spec,
-                          const ProblemSpecP& rmcrtps,
-                          SimulationStateP&   sharedState)
+                          const ProblemSpecP& radps,
+                          SimulationStateP&   sharedState,
+                          const bool getExtraInputs)
 {
   d_sharedState = sharedState;
-  ProblemSpecP rmcrt_ps = rmcrtps;
+  ProblemSpecP rad_ps = radps;
   Vector orient;
-  rmcrt_ps->getWithDefault( "Threshold" ,       d_threshold ,      0.01 );             // When to terminate a ray
-  rmcrt_ps->getWithDefault( "randomSeed",       d_isSeedRandom,    true );             // random or deterministic seed.
-  rmcrt_ps->getWithDefault( "StefanBoltzmann",  d_sigma,           5.67051e-8);        // Units are W/(m^2-K)
-  rmcrt_ps->getWithDefault( "VRViewAngle"    ,  d_viewAng,         180 );              // view angle of the radiometer in degrees
-  rmcrt_ps->getWithDefault( "VROrientation"  ,  orient,          Vector(0,0,1) );       // Normal vector of the radiometer orientation (Cartesian)
-  rmcrt_ps->getWithDefault( "nRadRays"  ,       d_nRadRays ,       1000 );
-  rmcrt_ps->getWithDefault( "sigmaScat"  ,      d_sigmaScat  ,      0 );                // scattering coefficient
-  rmcrt_ps->getWithDefault( "allowReflect"   ,  d_allowReflect,     true );             // Allow for ray reflections. Make false for DOM comparisons.
-  rmcrt_ps->get(            "VRLocationsMin" ,  d_VRLocationsMin );                     // minimum extent of the string or block of virtual radiometers in physical units
-  rmcrt_ps->get(            "VRLocationsMax" ,  d_VRLocationsMax );                     // maximum extent
+  rad_ps->getWithDefault( "VRViewAngle"    ,    d_viewAng,         180 );              // view angle of the radiometer in degrees
+  rad_ps->getWithDefault( "VROrientation"  ,    orient,          Vector(0,0,1) );      // Normal vector of the radiometer orientation (Cartesian)
+  rad_ps->getWithDefault( "nRadRays"  ,         d_nRadRays ,       1000 );
+  rad_ps->get(            "VRLocationsMin" ,    d_VRLocationsMin );                    // minimum extent of the string or block of virtual radiometers in physical units
+  rad_ps->get(            "VRLocationsMax" ,    d_VRLocationsMax );                    // maximum extent
 
+  if(getExtraInputs){
+    rad_ps->getWithDefault( "sigmaScat"  ,      d_sigmaScat  ,      0 );                // scattering coefficient
+    rad_ps->getWithDefault( "Threshold" ,       d_threshold ,      0.01 );              // When to terminate a ray
+    rad_ps->getWithDefault( "randomSeed",       d_isSeedRandom,    true );              // random or deterministic seed.
+    rad_ps->getWithDefault( "StefanBoltzmann",  d_sigma,           5.67051e-8);         // Units are W/(m^2-K)
+    rad_ps->getWithDefault( "allowReflect"   ,  d_allowReflect,     true );             // Allow for ray reflections. Make false for DOM comparisons.
+  }
+  
   //__________________________________
   //  Warnings and bulletproofing
 #ifndef RAY_SCATTER
@@ -163,7 +167,7 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
 
   //__________________________________
   // bulletproofing
-  ProblemSpecP root_ps = rmcrt_ps->getRootNode();
+  ProblemSpecP root_ps = rad_ps->getRootNode();
 
   Vector periodic;
   ProblemSpecP grid_ps  = root_ps->findBlock("Grid");
@@ -277,7 +281,6 @@ Radiometer::radiometerFlux( const Patch* patch,
                             constCCVariable<int> celltype,
                             const bool modifiesFlux )
 {
-  cout << " INSIDE: radiometerFlux " << endl;
   CCVariable<double> VRFlux;
   if( modifiesFlux ){
     new_dw->getModifiable( VRFlux,  d_VRFluxLabel,  d_matl, patch );

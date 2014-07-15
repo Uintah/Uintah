@@ -53,7 +53,8 @@ namespace Uintah{
       /** @brief Interface to input file information */
       void  problemSetup( const ProblemSpecP& prob_spec,
                           const ProblemSpecP& rmcrt_ps,
-                          SimulationStateP& sharedState );
+                          SimulationStateP& sharedState,
+                          const bool getExtraInputs );
 
       /** @brief Algorithm for tracing rays from radiometer location*/
       void sched_radiometer( const LevelP& level,

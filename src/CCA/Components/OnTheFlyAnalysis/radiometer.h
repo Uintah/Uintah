@@ -91,7 +91,7 @@ _____________________________________________________________________*/
                     DataWarehouse*,
                     DataWarehouse* new_dw);
 
-    Radiometer* d_RMCRT;
+    Radiometer* d_radiometer;
 
     int d_radiometerCalc_freq;
     ProblemSpecP d_module_ps;
