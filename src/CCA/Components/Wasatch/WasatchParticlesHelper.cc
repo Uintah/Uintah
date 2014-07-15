@@ -37,6 +37,8 @@
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/GeometryPiece/GeometryPieceFactory.h>
 
 namespace Wasatch {
   
@@ -92,16 +94,20 @@ namespace Wasatch {
     double xmin=-DBL_MAX, xmax=DBL_MAX,
     ymin=-DBL_MAX, ymax=DBL_MAX,
     zmin=-DBL_MAX, zmax=DBL_MAX;
+
+
+    std::vector <GeometryPieceP > geomObjects;
     
+    bool hasGeom = false;
     bool bounded=false;
-    for( Uintah::ProblemSpecP exprParams = wasatch_->get_wasatch_spec()->findBlock("BasicExpression");
+    for( ProblemSpecP exprParams = wasatch_->get_wasatch_spec()->findBlock("BasicExpression");
         exprParams != 0;
         exprParams = exprParams->findNextBlock("BasicExpression") )
     {
       // look for ParticlePositionIC xml Blocks (initial condition). These specify the kind of
       // initial condition that the user wants to apply on particles.
       if (exprParams->findBlock("ParticlePositionIC")) {
-        Uintah::ProblemSpecP pICSpec = exprParams->findBlock("ParticlePositionIC");
+        ProblemSpecP pICSpec = exprParams->findBlock("ParticlePositionIC");
         // check what type of bounds we are using: specified or patch based?
         std::string boundsType;
         // Check the kinds of bounds that the user has specified (based on patch bounds or user specified)
@@ -119,8 +125,23 @@ namespace Wasatch {
           if (coord == "Y") {ymin = lo; ymax = hi;}
           if (coord == "Z") {zmin = lo; zmax = hi;}
         }
+        
+        if ( pICSpec->findBlock("Geometry") ) {
+          hasGeom = true;
+          ProblemSpecP geomBasedSpec = pICSpec->findBlock("Geometry");
+          double seed = 0.0;
+          geomBasedSpec->getAttribute("seed",seed);
+          // parse all intrusions
+          for( ProblemSpecP intrusionParams = geomBasedSpec->findBlock("geom_object");
+              intrusionParams != 0;
+              intrusionParams = intrusionParams->findNextBlock("geom_object") )
+          {
+            GeometryPieceFactory::create(intrusionParams, geomObjects);
+          }
+        }
       }
     }
+
     
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
@@ -149,14 +170,35 @@ namespace Wasatch {
               Point p = patch->getCellPosition(iCell);
               if (p.x() <= xmax && p.x() >= xmin && p.y() <= ymax && p.y() >= ymin && p.z() <= zmax && p.z() >= zmin  ) {
                 nCells++;
-              }
-            }
+          }
+        }
           }
         } else {
           nCells = patch->getNumCells();
         }
         
-        int nParticles = pPerCell_ * nCells;
+        if (hasGeom) {
+          std::vector<GeometryPieceP>::iterator geomIter;
+          // get the total cells inside the geometries
+          nCells = 0;
+          bool isInside;
+          for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
+            IntVector iCell = *iter;
+            // loop over all geometry objects
+            geomIter = geomObjects.begin();
+            Point p = patch->getCellPosition(iCell);
+            while (geomIter != geomObjects.end()) {
+              isInside = (*geomIter)->inside(p);
+              if (isInside)
+              {
+                nCells++;
+              }
+              ++geomIter;
+            }
+          }
+        }
+        
+        const int nParticles = pPerCell_ * nCells;
         // create a subset with the correct number of particles. This will serve as the initial memory
         // block for particles
         ParticleSubset* subset = new_dw->createParticleSubset(nParticles,matl,patch);

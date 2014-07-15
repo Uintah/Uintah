@@ -74,7 +74,7 @@
 			<ParticlePositionIC spec="OPTIONAL NO_DATA"
 													attribute1="coordinate REQUIRED STRING 'X,Y,Z'"
 													attribute2="bounds REQUIRED STRING 'SPECIFIED, PATCHBASED'"
-													children1="ONE_OF(CHILD Uniform,Random)">
+													children1="ONE_OF(CHILD Uniform,Random, Geometry)">
 				<Bounds spec="OPTIONAL NO_DATA" need_applies_to="bounds SPECIFIED"
 							  attribute1="low REQUIRED DOUBLE"
 							  attribute2="high REQUIRED DOUBLE"/>													
@@ -83,6 +83,12 @@
 				</Uniform>
 				<Random spec="OPTIONAL NO_DATA"
 								attribute1="seed REQUIRED INTEGER"/>
+				
+			<Geometry      spec="OPTIONAL NO_DATA"
+													attribute1="seed REQUIRED INTEGER"> <!-- this is the outside value -->
+					<geom_object  spec="MULTIPLE"/>
+			</Geometry>
+
 			</ParticlePositionIC>
 
 			<!-- provides a way to initialize a field using geometry primitives -->

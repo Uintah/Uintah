@@ -12,8 +12,269 @@
 // expression.  This is because these initialization expressions are fairly
 // specific to Uintah/Wasatch.
 #include <Core/Grid/Box.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Level.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/GeometryPiece/GeometryPieceFactory.h>
+//--------------------------------------------------------------------
+
+/**
+ *  \brief Returns the lowest coordinate of a patch.
+ *  
+ *  \param patch  A pointer to a Uintah::Patch.
+ *
+ *  \param coord  A string denoting which coordinate we want this function to return. Allowed
+ options are "X", "Y", and "Z".
+ */
+double
+get_patch_low(const Uintah::Patch* const patch, const std::string& coord)
+{
+  if     ( coord == "X" ) return patch->getBox().lower().x() + patch->dCell().x()/2.0;
+  else if( coord == "Y" ) return patch->getBox().lower().y() + patch->dCell().y()/2.0;
+  else if( coord == "Z" ) return patch->getBox().lower().z() + patch->dCell().z()/2.0;
+  assert( false ); // should never get here.
+  return 0.0;
+}
+
+//--------------------------------------------------------------------
+
+/**
+ *  \brief Returns the highest coordinate of a patch.
+ *
+ *  \param patch  A pointer to a Uintah::Patch.
+ *
+ *  \param coord  A string denoting which coordinate we want this function to return. Allowed
+ options are "X", "Y", and "Z".
+ */
+double
+get_patch_high(const Uintah::Patch* const patch, const std::string& coord)
+{
+  if     ( coord == "X" ) return patch->getBox().upper().x() - patch->dCell().x()/2.0;
+  else if( coord == "Y" ) return patch->getBox().upper().y() - patch->dCell().y()/2.0;
+  else if( coord == "Z" ) return patch->getBox().upper().z() - patch->dCell().z()/2.0;
+  assert( false ); // should never get here
+  return 0.0;
+}
+
+//--------------------------------------------------------------------
+
+/**
+ *  \brief Returns the cell size.
+ *
+ *  \param patch  A pointer to a Uintah::Patch.
+ *
+ *  \param coord  A string denoting which coordinate we want this function to return. Allowed
+ options are "X", "Y", and "Z".
+ */
+double
+get_cell_size(const Uintah::Patch* const patch, const std::string& coord)
+{
+  if     ( coord == "X" ) return patch->dCell().x();
+  else if( coord == "Y" ) return patch->dCell().y();
+  else if( coord == "Z" ) return patch->dCell().z();
+  assert( false ); // should never get here
+  return 0.0;
+}
+
+//--------------------------------------------------------------------
+
+/**
+ *  \brief Returns a cell's minus face position. This is cell position - cellsize/2.
+ *
+ *  \param patch  A pointer to a Uintah::Patch.
+ *
+ *  \param coord  A string denoting which coordinate we want this function to return. Allowed
+ options are "X", "Y", and "Z".
+ *
+ *  \param cellPosition  A Uintah::Point denoting the cell position (cell center).
+ */
+double
+get_cell_position_offset(const Uintah::Patch* const patch, const std::string& coord, const Uintah::Point& cellPosition)
+{
+  if     ( coord == "X" ) return cellPosition.x() - patch->dCell().x()/2.0;
+  else if( coord == "Y" ) return cellPosition.y() - patch->dCell().y()/2.0;
+  else if( coord == "Z" ) return cellPosition.z() - patch->dCell().z()/2.0;
+  assert( false ); // should never get here
+  return 0.0;
+}
 
 //==================================================================
+
+/**
+ *  \class   ParticleGeometryBased
+ *  \author  Tony Saad
+ *  \date    July, 2014
+ *  \ingroup Expressions
+ *
+ *  \brief The ParticleGeometryBased expression allows users to fill arbitrary geometry shapes
+ with particles.
+ */
+class ParticleGeometryBased : public Expr::Expression<ParticleField>
+{
+public:
+  
+  struct Builder : public Expr::ExpressionBuilder
+  {
+    /**
+     *  \brief Build a ParticleGeometryBased expression.
+     *
+     *  \param resultTag Expr::Tag of the resulting expression.
+     *
+     *  \param coord     String denoting the coordinate direction computed by this expression. 
+     Allowed options are "X", "Y", and "Z".Note that you cannot use this expression to initialize 
+     scalar particle properties.
+     *
+     *  \param seed      Integer to seed the random number generator.
+     *
+     *  \param gomeObjects A vector of GeometryPiece pointers that contains a list of all geometery objects
+     to be filled by this expression.
+     */
+    Builder(const Expr::Tag& resultTag,
+            const std::string& coord,
+            const int seed,
+            std::vector<Uintah::GeometryPieceP > geomObjects);
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
+  private:
+    const std::string coord_;
+    const int seed_;
+    std::vector <Uintah::GeometryPieceP > geomObjects_;
+  };
+  
+  void advertise_dependents( Expr::ExprDeps& exprDeps );
+  void bind_fields( const Expr::FieldManagerList& fml );
+  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
+  void evaluate();
+  
+private:
+  const std::string coord_;
+  const int seed_;
+  typedef std::vector <Uintah::GeometryPieceP > GeomValueMapT;  // temporary typedef map that stores boundary
+  ParticleGeometryBased(const std::string& coord, const int seed, GeomValueMapT geomObjects);
+
+  GeomValueMapT geomObjects_;
+  Wasatch::UintahPatchContainer* patchContainer_;
+
+};
+
+//--------------------------------------------------------------------
+
+ParticleGeometryBased::
+ParticleGeometryBased( const std::string& coord, const int seed, GeomValueMapT geomObjects)
+: Expr::Expression<ParticleField>(),
+coord_(coord),
+seed_(seed),
+geomObjects_(geomObjects)
+{}
+
+//--------------------------------------------------------------------
+
+
+void
+ParticleGeometryBased::
+advertise_dependents( Expr::ExprDeps& exprDeps )
+{}
+
+//--------------------------------------------------------------------
+
+
+void
+ParticleGeometryBased::
+bind_fields( const Expr::FieldManagerList& fml )
+{}
+
+//--------------------------------------------------------------------
+
+void
+ParticleGeometryBased::
+bind_operators( const SpatialOps::OperatorDatabase& opDB )
+{
+  patchContainer_ = opDB.retrieve_operator<Wasatch::UintahPatchContainer>();
+}
+
+//--------------------------------------------------------------------
+
+void
+ParticleGeometryBased::
+evaluate()
+{
+  using namespace SpatialOps;
+  using namespace Uintah;
+  ParticleField& result = this->value();
+
+  const Uintah::Patch* const patch = patchContainer_->get_uintah_patch();
+
+  GeomValueMapT::iterator geomIter;
+  const int nTotalParticles = result.window_with_ghost().local_npts();
+
+  // random number generator
+  typedef boost::mt19937 base_generator_type; // mersenne twister
+  // seed the random number generator based on the MPI rank
+  const int pid =  patchContainer_->get_uintah_patch()->getID();
+  base_generator_type generator((unsigned) ( (pid+1) * (1 + seed_) ));
+  const double dx =  get_cell_size(patch, coord_); // dx, dy, or dz
+  boost::uniform_real<> rand_dist(0,dx); // generate random numbers between 0 and dx. Then we offset those by the cell location
+  boost::variate_generator<base_generator_type&, boost::uniform_real<> > boost_rand(generator, rand_dist);
+  
+  // collect the grid points that live inside the geometry
+  std::vector<Uintah::Point> insidePoints;
+  for(Uintah::CellIterator iter(patch->getCellIterator()); !iter.done(); iter++)
+  {
+    IntVector iCell = *iter;
+    // loop over all geometry objects
+    geomIter = geomObjects_.begin();
+    Uintah::Point p = patch->getCellPosition(iCell);
+    while (geomIter != geomObjects_.end())
+    {
+      const bool isInside = (*geomIter)->inside(p);
+      if ( isInside )
+      {
+        insidePoints.push_back(p);
+      }
+      ++geomIter;
+    }
+  }
+
+  //now iterate over the inside points and fill in the particles
+  ParticleField::iterator phiIter = result.begin();
+  ParticleField::iterator phiIterEnd = result.end();
+  std::vector<Uintah::Point>::iterator it = insidePoints.begin();
+  std::vector<Uintah::Point>::iterator ite = insidePoints.end();
+  
+  while (phiIter < phiIterEnd) {
+    it = insidePoints.begin();
+    for (; it != ite && phiIter != phiIterEnd; ++it) {
+      const double offset = get_cell_position_offset(patch, coord_, *it);
+      *phiIter = boost_rand() + offset;
+      ++phiIter;
+    }
+  }
+}
+
+//--------------------------------------------------------------------
+
+
+ParticleGeometryBased::Builder::
+Builder( const Expr::Tag& result,
+        const std::string& coord,
+        const int seed,
+        GeomValueMapT geomObjects )
+: ExpressionBuilder(result),
+coord_(coord),
+seed_(seed),
+geomObjects_(geomObjects)
+{}
+
+//--------------------------------------------------------------------
+
+
+Expr::ExpressionBase*
+ParticleGeometryBased::Builder::
+build() const
+{
+  return new ParticleGeometryBased( coord_, seed_, geomObjects_ );
+}
+
 
 /**
  *  \class  ParticleRandomIC
@@ -126,32 +387,6 @@ void
 ParticleRandomIC::
 bind_fields( const Expr::FieldManagerList& fml )
 {}
-
-//--------------------------------------------------------------------
-
-double
-get_patch_low(const Uintah::Patch* const patch, const std::string& coord)
-{
-  if     ( coord == "X" ) return patch->getBox().lower().x() + patch->dCell().x()/2.0;
-  else if( coord == "Y" ) return patch->getBox().lower().y() + patch->dCell().y()/2.0;
-  else if( coord == "Z" ) return patch->getBox().lower().z() + patch->dCell().z()/2.0;
-  else if( coord == ""  ) return 0.0;
-  assert(false);
-  return 0.0;
-}
-
-//--------------------------------------------------------------------
-
-double
-get_patch_high(const Uintah::Patch* const patch, const std::string& coord)
-{
-  if     ( coord == "X" ) return patch->getBox().upper().x() - patch->dCell().x()/2.0;
-  else if( coord == "Y" ) return patch->getBox().upper().y() - patch->dCell().y()/2.0;
-  else if( coord == "Z" ) return patch->getBox().upper().z() - patch->dCell().z()/2.0;
-  else if( coord == ""  ) return 0.0;
-  assert(false);
-  return 0.0;
-}
 
 //--------------------------------------------------------------------
 
