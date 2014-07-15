@@ -581,6 +581,24 @@
          the Arches time integration scheme !-->
     <TimeIntegrator     spec="OPTIONAL STRING 'RK3SSP, RK2SSP, FE'" />
 
+		<!-- The CommonGeometry block allows one to define geometries that can be reused in
+					other parts of the input file and the code. For example, when initializing
+					particle position so that particles fill a certain shape, we need three basic
+					expressions for the particle positions as well as a specification of the geometry
+					that these basic expressions use. To accomplish this nicely, one can define the
+					geometry in this CommonGeometry block and simply reference it in the particle
+					position initialization expressions. The common geometry block can also be referenced
+					in the <EmbeddedGeometry> spec. Information defined in the CommonGeometry block
+					does NOT propagate into scalar and momentum transport.  -->
+    <CommonGeometry  spec="OPTIONAL NO_DATA">
+    	<geom_object  spec="MULTIPLE"/>
+    </CommonGeometry>
+
+		<!-- The EmbeddedGeometry block specifies the physical geometry (or solids) that will
+					be embedded inside the domain. When the EmbeddedGeometry block is specified, 
+					information about this geometry is propagated throughout all transport equations.
+					The EmbeddedGeometry block can reference geometry defined in the CommonGeometry
+					block. -->
     <EmbeddedGeometry  spec="OPTIONAL NO_DATA"
                        children1="ONE_OF(CHILD Intrusion, GeometryExpression, External)" >
        <Inverted       spec="OPTIONAL NO_DATA"/>

@@ -526,11 +526,16 @@ namespace Wasatch{
     nRKStages_ = timeInt.nStages;
 
     //
+    //  Parse geometry pieces. NOTE: This must take place before create_expressions_from_input
+    //  because some input expressions will use the intrusion geometries (e.g. particle initialization)
+    //
+    parse_embedded_geometry(wasatchSpec_,graphCategories_);
+    
+    //
     // create expressions explicitly defined in the input file.  These
     // are typically associated with, e.g. initial conditions.
     //
     create_expressions_from_input( wasatchSpec_, graphCategories_ );
-    parse_embedded_geometry(wasatchSpec_,graphCategories_);
     setup_property_evaluation( wasatchSpec_, graphCategories_, lockedFields_ );
 
     //
