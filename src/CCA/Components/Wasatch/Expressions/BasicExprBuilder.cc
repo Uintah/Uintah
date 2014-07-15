@@ -122,7 +122,7 @@ namespace Wasatch{
         valParams->findBlock("Uniform")->getAttribute("transversedir", transverse);
         builder = scinew ParticleUniformIC::Builder( tag, lo, hi, transverse, coord, usePatchBounds );
       } else if (valParams->findBlock("Random")) {
-        double seed = 0.0;
+        int seed = 0;
         valParams->findBlock("Random")->getAttribute("seed",seed);
         builder = scinew ParticleRandomIC::Builder( tag, coord, lo, hi, seed, usePatchBounds );
       }
