@@ -51,7 +51,13 @@ static DebugStream dbg("RAY", false);
 // static variables
 //______________________________________________________________________
 
-int RMCRTCommon::d_matl;      
+double RMCRTCommon::d_threshold;            
+double RMCRTCommon::d_sigma;                
+double RMCRTCommon::d_sigmaScat;            
+bool   RMCRTCommon::d_isSeedRandom;           
+bool   RMCRTCommon::d_allowReflect;           
+int    RMCRTCommon::RMCRTCommon::d_matl;    
+  
 MaterialSet* RMCRTCommon::d_matlSet;
 const VarLabel* RMCRTCommon::d_sigmaT4_label;
 const VarLabel* RMCRTCommon::d_abskgLabel;
