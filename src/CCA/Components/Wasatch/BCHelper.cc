@@ -356,8 +356,8 @@ namespace Wasatch {
     // native uintah iterators, such as the pressure expression.
     myBndIters.extraBndCellsUintah = bndIter;
 
-    std::cout << "---------------------------------------------------\n";
-    std::cout << "Face = " << face << std::endl;
+    DBGBC << "---------------------------------------------------\n";
+    DBGBC << "Face = " << face << std::endl;
     
     // MAJOR WARNING HERE - WHEN WE MOVE TO RUNTIME GHOST CELLS, WE NEED TO USE THE APPROPRIATE PATCH OFFSET
     const Uintah::IntVector patchCellOffset = patch->getExtraCellLowIndex(1);
