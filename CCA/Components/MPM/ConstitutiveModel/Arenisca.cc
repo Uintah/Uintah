@@ -473,11 +473,11 @@ void Arenisca::initializeCMData(const Patch* patch,
     // As an illustration, a cup full of sand, subject to gravity, has porosity, but
     // IDVS=0.  IDVS>0 might occur in a shaped charge jet which has already stretched out
     double IDVSEq0Mass=pVolume[*iter]*rho_orig;
-
+    
     pevv[*iter] = 0;
     if (d_cm.Use_Disaggregation_Algorithm){
       // This formula is possibly incorrect? Please fix. -JG
-      pevv[*iter] = log(pMass[*iter]/IDVSEq0Mass);  //JG: Initial Disaggregation Volumetric Strain
+      pevv[*iter] = log(IDVSEq0Mass/pMass[*iter]);  //JG: Initial Disaggregation Volumetric Strain
     }
     pev0[*iter] = pevv[*iter];
 
@@ -989,9 +989,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 
        //EG: ---- Begining of the Disaggregation Algorithm -------
 
-       double ev_new_step = evp_new_step + evv_new_step + eve_new_step; //Total Disaggregation volumetric strain
        double beta_void = 0.0;
-
 
         //EG: Existing Disaggregation volumetric strain 
         if (pevv[idx]>0 && d_cm.Use_Disaggregation_Algorithm) {
@@ -1037,7 +1035,6 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
             //Iota_new_step = min(ev_new_step,pIota[idx]);
             stress_new_step = trial_stress_step;
             double  I1_void = I1_trial_step,
-                    J2_void = J2_trial_step,
                     n_void  = 0.0,
                     f_void = f_trial_step[idx];
             Matrix3 S_void  = S_trial_step;
@@ -1049,7 +1046,6 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                 // EG: Compute the invariants of modified stress
                 I1_void = stress_new_step.Trace();  
                 S_void  = stress_new_step - Identity*(one_third*I1_void);  
-                J2_void = 0.5*S_void.Contract(S_void);
                 //EG: Sign of the yeild surface after modification                
                 f_void = YieldFunction(I1_trial_step,
                                        J2_trial_step,
@@ -1366,8 +1362,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                  tau = 0,
                  RAT = 0,
                  pRH = 0,
-                 prh = 0,
-                 trace = 0;
+                 prh = 0;
           
           // Calculating Material Characteristic, for T2=0
           if (d_cm.T2_rate_dependence == 0 && d_cm.T1_rate_dependence != 0){
@@ -1407,12 +1402,11 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
           pIota_new[idx] = pIotaQS_new[idx] + pRH* pIota[idx] - pRH*pIotaQS_new[idx];
         } 
         else {
-          double tau1 = 0,
-                 tau = 0,
+          double tau = 0,
                  RAT = 0,
                  pRH = 0,
-                 prh = 0,
-                 trace = 0;
+                 prh = 0;
+          
           pCapXQS_new[idx]   = pCapX_new[idx];
           pZetaQS_new[idx]   = pZeta_new[idx];
           pIotaQS_new[idx]   = pIota_new[idx];
@@ -1663,7 +1657,7 @@ int Arenisca::computeStressTensorStep(const Matrix3& sigma_trial, // trial stres
     // ........................................................................
 
     // Initialize variables needed for plastic solution
-    double  gfcn,          // value of the flow function
+    double  //gfcn,          // value of the flow function
             r_new0 = r_trial,        // transformed r for non-hardening return
             z_new0 = z_trial,        // transformed, shifted z for non hardening return
             r_new = r_trial,         // transformed r for hardening return
@@ -1692,7 +1686,8 @@ int Arenisca::computeStressTensorStep(const Matrix3& sigma_trial, // trial stres
     */
 
     // Compute non-hardening return, (overwriting r_new0, and z_new0)
-    gfcn = ComputeNonHardeningReturn(r_trial, z_trial, X_old, Beta, r_new0, z_new0);
+    //gfcn = ComputeNonHardeningReturn(r_trial, z_trial, X_old, Beta, r_new0, z_new0);
+    ComputeNonHardeningReturn(r_trial, z_trial, X_old, Beta, r_new0, z_new0);
 
     // Update unshifted untransformed stress
     sigma_new0 = one_third*(sqrt_three*z_new0+Zeta_old)*Identity;
@@ -1750,7 +1745,8 @@ int Arenisca::computeStressTensorStep(const Matrix3& sigma_trial, // trial stres
       // strain was too large, so we scale back the multiplier eta.
 
       // Compute non-hardening return, (overwriting r_new, and z_new)
-      gfcn = ComputeNonHardeningReturn(r_trial, z_trial, X_new, Beta, r_new, z_new);
+      //gfcn = ComputeNonHardeningReturn(r_trial, z_trial, X_new, Beta, r_new, z_new);
+      ComputeNonHardeningReturn(r_trial, z_trial, X_new, Beta, r_new, z_new);
 
       if( TransformedYieldFunction( r_trial,z_trial,X_new,Beta,PEAKI1) <= 0.0 ||
           //Sign(dgdz(r_trial,z_trial,X_old,Beta)) != Sign(dgdz(r_trial,z_trial,X_new,Beta))
@@ -2629,7 +2625,6 @@ double Arenisca::computeX(double evp)
          p1  = d_cm.p1_crush_curve,
          p3  = d_cm.p3_crush_curve, // max vol. plastic strain
          B0  = d_cm.B0,             // low pressure bulk modulus
-         B1  = d_cm.p4_fluid_effect,             // additional high pressure bulk modulus
          Kf  = d_cm.fluid_B0,       // fluid bulk modulus
          //Pf0 = d_cm.fluid_pressure_initial,            // initial pore pressure
          ev0,                       // strain at zero pore pressure
