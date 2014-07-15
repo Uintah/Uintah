@@ -594,6 +594,10 @@ void SPME::calculate(   const ProcessorGroup*   pg,
                      label->electrostatic->rElectrostaticInverseStressDipole);
   }
 
+  parentOldDW->setScrubbing(parentOldDW_scrubmode);
+  parentNewDW->setScrubbing(parentNewDW_scrubmode);
+
+
   // FIXME APH  Work around for below error (patch/material loop)
   size_t numPatches = perProcPatches->size();
   size_t numAtomTypes = materials->size();

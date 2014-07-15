@@ -164,38 +164,42 @@ void
 OnDemandDataWarehouse::clear()
 {
   d_plock.writeLock();
-  for( psetDBType::const_iterator iter = d_psetDB.begin(); iter != d_psetDB.end(); iter++ ) {
-    if( iter->second->removeReference() ) {
+  {
+    for (psetDBType::const_iterator iter = d_psetDB.begin(); iter != d_psetDB.end(); iter++) {
+      if (iter->second->removeReference()) {
+        delete iter->second;
+      }
+    }
+
+    for (psetDBType::const_iterator iter = d_delsetDB.begin(); iter != d_delsetDB.end(); iter++) {
+      if (iter->second->removeReference()) {
+        delete iter->second;
+      }
+    }
+
+    for (psetAddDBType::const_iterator iter = d_addsetDB.begin(); iter != d_addsetDB.end(); iter++) {
+      map<const VarLabel*, ParticleVariableBase*>::const_iterator pvar_itr;
+      for (pvar_itr = iter->second->begin(); pvar_itr != iter->second->end(); pvar_itr++) {
+        delete pvar_itr->second;
+      }
       delete iter->second;
     }
-  }
-
-  for( psetDBType::const_iterator iter = d_delsetDB.begin(); iter != d_delsetDB.end(); iter++ ) {
-    if( iter->second->removeReference() ) {
-      delete iter->second;
-    }
-  }
-
-  for( psetAddDBType::const_iterator iter = d_addsetDB.begin(); iter != d_addsetDB.end(); iter++ ) {
-    map<const VarLabel*, ParticleVariableBase*>::const_iterator pvar_itr;
-    for( pvar_itr = iter->second->begin(); pvar_itr != iter->second->end(); pvar_itr++ ) {
-      delete pvar_itr->second;
-    }
-    delete iter->second;
   }
   d_plock.writeUnlock();
+
   d_lock.writeLock();
-  for( dataLocationDBtype::const_iterator iter = d_dataLocation.begin();
-      iter != d_dataLocation.end(); iter++ ) {
-    for( size_t i = 0; i < iter->second->size(); i++ ) {
-      delete &(iter->second[i]);
+  {
+    for (dataLocationDBtype::const_iterator iter = d_dataLocation.begin(); iter != d_dataLocation.end(); iter++) {
+      for (size_t i = 0; i < iter->second->size(); i++) {
+        delete &(iter->second[i]);
+      }
+      delete iter->second;
     }
-    delete iter->second;
   }
   d_lock.writeUnlock();
+
   d_varDB.clear();
   d_levelDB.clear();
-  d_lvlock.writeUnlock();
 
 #ifdef HAVE_CUDA
   if (Uintah::Parallel::usingDevice()) {
@@ -1014,7 +1018,7 @@ void OnDemandDataWarehouse::insertPSetRecord(psetDBType &subsetDB,
     SCI_THROW(InternalError("tried to create a particle subset that already exists", __FILE__, __LINE__));
   }
 #endif
-  d_plock.writeTrylock();
+  d_plock.writeLock();
   psetDBType::key_type key(patch->getRealPatch(), matlIndex, getID());
   subsetDB.insert(pair<psetDBType::key_type,ParticleSubset*>(key,psubset));
   psubset->addReference();
@@ -1296,11 +1300,14 @@ OnDemandDataWarehouse::getNewParticleState( int matlIndex, const Patch* patch )
   const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
   psetAddDBType::key_type key( matlIndex, realPatch );
   psetAddDBType::iterator iter = d_addsetDB.find( key );
+
   if( iter == d_addsetDB.end() ) {
     d_pslock.readUnlock();
     return 0;
   }
+
   d_pslock.readUnlock();
+
   return iter->second;
 }
 
@@ -2718,17 +2725,15 @@ OnDemandDataWarehouse::transferFrom( DataWarehouse* from,
             SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl, "in transferFrom", __FILE__, __LINE__) );
           }
 
-          d_plock.writeTrylock();
-          // or else the readLock in haveParticleSubset will hang -- FIXME, This comment should not be correct - JBH, 7/3/14
           ParticleSubset* subset;
-          if( !haveParticleSubset( matl, copyPatch ) ) {
-            ParticleSubset* oldsubset = fromDW->getParticleSubset( matl, patch );
-            subset = createParticleSubset( oldsubset->numParticles(), matl, copyPatch );
+          if (!haveParticleSubset(matl, copyPatch)) {
+            ParticleSubset* oldsubset = fromDW->getParticleSubset(matl, patch);
+            subset = createParticleSubset(oldsubset->numParticles(), matl, copyPatch);
           }
           else {
-            subset = getParticleSubset( matl, copyPatch );
+            subset = getParticleSubset(matl, copyPatch);
           }
-          d_plock.writeUnlock();
+
           ParticleVariableBase* v = dynamic_cast<ParticleVariableBase*>( fromDW->d_varDB.get(
               var, matl, patch ) );
           if( patch == copyPatch ) {
