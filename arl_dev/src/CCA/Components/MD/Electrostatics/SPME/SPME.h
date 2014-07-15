@@ -642,10 +642,11 @@ namespace Uintah {
    // B2: Cutoff radius for realspace portion of Ewald calculation
    // B3: Number of ghost cells necessary for realspace portion of Ewald calc.
    // B4: Number of fourier space grid divisions along each unit axis
-       double                       d_electrostaticRadius;      // B1
-       int                          d_electrostaticGhostCells;  // B2
-       SCIRun::IntVector            d_kLimits;                  // B3
-       double                       d_ewaldBeta;                // B4
+       double                       d_ewaldBeta;                // B1
+       double                       d_electrostaticRadius;      // B2
+       int                          d_electrostaticGhostCells;  // B3
+       SCIRun::IntVector            d_kLimits;                  // B4
+
 
   //--> Dipole related variables
    // D1) Whether or not calculation includes induced polarizability
