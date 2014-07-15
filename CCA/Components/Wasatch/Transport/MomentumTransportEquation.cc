@@ -714,7 +714,6 @@ namespace Wasatch{
 //          psrcTagList.push_back(tagNames.divmomstar );
           psrcTagList.push_back(tagNames.drhodtstar );
         }
-      std::cout << "registering pressure source \n";
       factory.register_expression( new typename DivmomStar::Builder( tagNames.divmomstar, velStarTags, densStarTag ) );
       factory.register_expression( new typename PressureSource::Builder( psrcTagList, momTags_, velTags_, velStarTags, isConstDensity, densTag, densStarTag, dens2StarTag, varDenParams, tagNames.divmomstar ) );
     }
