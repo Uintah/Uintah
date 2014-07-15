@@ -36,142 +36,87 @@
     </Density>
     
 
-    <EmbeddedGeometry>
-          <!-- I -->
-          <Intrusion>
+    <CommonGeometry>
             <geom_object>
+            <union label="ICSE">
+            	<!-- I -->
               <box>
                 <min>[0.8,2,0]</min>
                 <max>[1.4,2.2,1.0]</max>
               </box>
-            </geom_object>
-          </Intrusion>
-          <Intrusion>
-            <geom_object>
               <box>
                 <min>[1,1,0]</min>
                 <max>[1.2,2,1]</max>
               </box>
-            </geom_object>
-          </Intrusion>
-          <Intrusion>
-            <geom_object>
               <box>
                 <min>[0.8,0.8,0]</min>
                 <max>[1.4,1.0,1.0]</max>
               </box>
-            </geom_object>
-          </Intrusion>
-          
-          <!-- C -->
-          <Intrusion>
-            <geom_object>
+              <!-- C -->
               <box>
                 <min>[1.8,2,0]</min>
                 <max>[2.4,2.2,1]</max>
               </box>
-            </geom_object>
-          </Intrusion>
-          <Intrusion>
-            <geom_object>
               <box>
                 <min>[1.8,1,0]</min>
                 <max>[2,2,1]</max>
               </box>
-            </geom_object>
-          </Intrusion>
-          <Intrusion>
-            <geom_object>
               <box>
                 <min>[1.8,0.8,0]</min>
                 <max>[2.4,1,1]</max>
               </box>
-            </geom_object>
-          </Intrusion>
-
-          <!-- S -->
-          <Intrusion>
-            <geom_object>
+              <!-- S -->              
               <box>
                 <min>[2.8,2,0]</min>
                 <max>[3.4,2.2,1]</max>
               </box>
-            </geom_object>
-          </Intrusion>
-          <Intrusion>
-            <geom_object>
               <box>
                 <min>[2.8,1.6,0]</min>
                 <max>[3,2,1]</max>
               </box>
-            </geom_object>
-          </Intrusion>
-          <Intrusion>
-            <geom_object>
               <box>
                 <min>[2.8,1.4,0]</min>
                 <max>[3.4,1.6,1]</max>
               </box>
-            </geom_object>
-          </Intrusion>                    
-          <Intrusion>
-            <geom_object>
               <box>
                 <min>[3.2,1,0]</min>
                 <max>[3.4,1.4,1]</max>
               </box>
-            </geom_object>
-          </Intrusion>          
-          <Intrusion>
-            <geom_object>
+              <!-- E -->
               <box>
                 <min>[2.8,0.8,0]</min>
                 <max>[3.4,1,1]</max>
               </box>
-            </geom_object>
-          </Intrusion>
-
-          <!-- E -->
-          <Intrusion>
-            <geom_object>
               <box>
                 <min>[3.8,2,0]</min>
                 <max>[4.4,2.2,1]</max>
               </box>
-            </geom_object>
-          </Intrusion>
-          <Intrusion>
-            <geom_object>
               <box>
                 <min>[3.8,1.6,0]</min>
                 <max>[4,2,1]</max>
               </box>
-            </geom_object>
-          </Intrusion>
-          <Intrusion>
-            <geom_object>
               <box>
                 <min>[3.8,1.4,0]</min>
                 <max>[4.4,1.6,1]</max>
               </box>
-            </geom_object>
-          </Intrusion>                    
-          <Intrusion>
-            <geom_object>
               <box>
                 <min>[3.8,1,0]</min>
                 <max>[4,1.4,1]</max>
               </box>
-            </geom_object>
-          </Intrusion>          
-          <Intrusion>
-            <geom_object>
               <box>
                 <min>[3.8,0.8,0]</min>
                 <max>[4.4,1,1]</max>
-              </box>
+              </box>                            
+             </union>
             </geom_object>
-          </Intrusion>    
+    </CommonGeometry>
+
+    <EmbeddedGeometry>
+    	<Intrusion>
+    		<geom_object>
+    			<union label="ICSE"/>
+    		</geom_object>
+    	</Intrusion>
     </EmbeddedGeometry>
 
     <BasicExpression type="SVOL">

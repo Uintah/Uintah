@@ -111,6 +111,19 @@ namespace Wasatch{
     EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
     vNames.set_state(true);    
     vNames.set_vol_frac_names("","","","");
+
+    // first parse any common geometry. This MUST COME FIRST BEFORE parsing the embedded geometry
+    if (parser->findBlock("CommonGeometry")) {
+      // parse all intrusions
+      Uintah::ProblemSpecP geomParams = parser->findBlock("CommonGeometry");
+      std::vector<Uintah::GeometryPieceP> geomObjects;
+      for( Uintah::ProblemSpecP intrusionParams = geomParams->findBlock("geom_object");
+          intrusionParams != 0;
+          intrusionParams = intrusionParams->findNextBlock("geom_object") )
+      {
+        Uintah::GeometryPieceFactory::create(intrusionParams,geomObjects);
+      }
+    }
     
     if( parser->findBlock("EmbeddedGeometry") ){
       vNames.set_has_embedded_geometry(true);
