@@ -6771,7 +6771,7 @@ fi
 
 if test "$with_fortran" = no; then
 
-   if test "$use_arches_component" = "yes"; then
+   if test "$BUILD_ARCHES" = "yes"; then
       as_fn_error $? "You may not turn on Arches if you turn off Fortran. " "$LINENO" 5
    fi
    DEF_NO_FORTRAN="#define NO_FORTRAN";
@@ -8925,8 +8925,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of M check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -9337,8 +9336,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of RT check (dis
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -9789,8 +9787,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of PTHREAD check
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -10302,8 +10299,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of GCCSYNC check
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -10840,8 +10836,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of OFED check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -11295,8 +11290,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of MX check (dis
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -11706,8 +11700,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of DL check (dis
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -12159,8 +12152,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of DL check (dis
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -12567,8 +12559,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of DL check (dis
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -12987,8 +12978,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of STAT64 check 
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -13405,8 +13395,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of STD_HDRS chec
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -13813,8 +13802,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of STD_HDRS chec
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -14220,8 +14208,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of STD_HDRS chec
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -14640,8 +14627,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of STL_HEADERS c
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -15194,8 +15180,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of XML2 check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -15643,8 +15628,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of SSTREAM check
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -16115,8 +16099,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of EXC check (di
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -16635,8 +16618,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of Z check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -17113,8 +17095,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of JPEG check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -17576,8 +17557,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of TIFF check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -18090,8 +18070,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of UNP check (di
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -18527,8 +18506,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of F check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -18943,8 +18921,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of F check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -19349,8 +19326,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of F check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -19756,8 +19732,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of F check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -20162,8 +20137,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of F check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -20568,8 +20542,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of F check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -20974,8 +20947,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of F check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -21382,8 +21354,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of F check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -21831,8 +21802,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of F check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -22277,8 +22247,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of F check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -22723,8 +22692,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of F check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -23132,8 +23100,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of F check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -23538,8 +23505,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of F check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -23977,8 +23943,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of ELECTRIC_FENC
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -24382,8 +24347,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of ELECTRIC_FENC
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -24866,8 +24830,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BLAS check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -25375,8 +25338,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BLAS check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -25881,8 +25843,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BLAS check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -26373,8 +26334,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BLAS check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -26824,8 +26784,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BLAS check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -27266,8 +27225,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BLAS check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -27715,8 +27673,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BLAS check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -28169,8 +28126,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BLAS check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -28622,8 +28578,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BLAS check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -29035,8 +28990,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BLAS check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -29440,8 +29394,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BLAS check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -29847,8 +29800,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BLAS check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -30299,8 +30251,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of LAPACK check 
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -30708,8 +30659,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of LAPACK check 
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -31116,8 +31066,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of LAPACK check 
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -31532,8 +31481,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of LAPACK check 
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -31939,8 +31887,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of LAPACKMP chec
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -32591,8 +32538,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of MPI check (di
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -33074,8 +33020,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of MPI check (di
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -33726,8 +33671,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of PETSC check (
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -34185,8 +34129,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of PETSC check (
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -34870,8 +34813,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of PAPI check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -35408,8 +35350,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of GPERFTOOLS ch
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -36439,8 +36380,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of MAGMA check (
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -36963,8 +36903,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of FREETYPE chec
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -37507,8 +37446,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of TEEM check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -38034,8 +37972,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of VISUS check (
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -38559,8 +38496,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of PIDX check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -39045,8 +38981,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of HDF5 check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -39560,8 +39495,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BOOST check (
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -40015,8 +39949,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BOOST check (
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -40482,8 +40415,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BOOST_FS_V3 c
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -41364,8 +41296,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of HYPRE check (
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -41811,8 +41742,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of HYPRE check (
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi

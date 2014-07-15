@@ -41,11 +41,15 @@ using namespace std;
 
 ParticleSubset::~ParticleSubset()
 {
-  for(int i=0;i<(int)neighbor_subsets.size();i++)
-    if(neighbor_subsets[i]->removeReference())
+  for( unsigned int i = 0; i < neighbor_subsets.size(); i++ ) {
+    if( neighbor_subsets[i]->removeReference() ) {
       delete neighbor_subsets[i];
-  if(d_particles)
-    delete[] d_particles;
+    }
+  }
+
+  if( d_particles ) {
+    delete [] d_particles;
+  }
 }
 
 ParticleSubset::ParticleSubset() : d_numParticles(0)
@@ -53,7 +57,9 @@ ParticleSubset::ParticleSubset() : d_numParticles(0)
   init();
 }
 
-ParticleSubset::ParticleSubset(int num_particles, int matlIndex, const Patch* patch)
+ParticleSubset::ParticleSubset( const unsigned int   num_particles,
+                                const int            matlIndex, 
+                                const Patch        * patch)
     : d_numParticles(num_particles), d_matlIndex(matlIndex), d_patch(patch)
 {
   init();
@@ -70,10 +76,13 @@ ParticleSubset::ParticleSubset(int num_particles, int matlIndex, const Patch* pa
   fillset();
 }
 
-ParticleSubset::ParticleSubset(int num_particles, int matlIndex, const Patch* patch,
-                               IntVector low, IntVector high,
-                               const vector<const Patch*>& neighbors,
-                               const vector<ParticleSubset*>& neighbor_subsets)
+ParticleSubset::ParticleSubset( const unsigned int              num_particles,
+                                const int                       matlIndex,
+                                const Patch                   * patch,
+                                const IntVector               & low,
+                                const IntVector               & high,
+                                const vector<const Patch*>    & neighbors,
+                                const vector<ParticleSubset*> & neighbor_subsets )
   : d_numParticles(num_particles), d_matlIndex(matlIndex), d_patch(patch),
     d_low(low), d_high(high),
     neighbors(neighbors), neighbor_subsets(neighbor_subsets)
@@ -86,8 +95,11 @@ ParticleSubset::ParticleSubset(int num_particles, int matlIndex, const Patch* pa
   fillset();
 }
 
-ParticleSubset::ParticleSubset(int num_particles, int matlIndex, const Patch* patch,
-                               IntVector low, IntVector high)
+ParticleSubset::ParticleSubset(       unsigned int   num_particles,
+                                      int            matlIndex, 
+                                const Patch        * patch,
+                                const IntVector    & low,
+                                const IntVector    & high )
   : d_numParticles(num_particles), d_matlIndex(matlIndex), d_patch(patch),
     d_low(low), d_high(high)
 {
@@ -102,8 +114,9 @@ ParticleSubset::fillset()
 {
   if (d_numParticles > 0) {
     d_particles = scinew particleIndex[d_numParticles];
-    for(int i=0;i<d_numParticles;i++)
-      d_particles[i]=i;
+    for( unsigned int i = 0; i < d_numParticles; i++ ) {
+      d_particles[i] = i;
+    }
     d_allocatedSize = d_numParticles;
   }
 }
@@ -147,21 +160,27 @@ void
 ParticleSubset::resize(particleIndex newSize)
 {
   // Check for spurious resizes
-  if(d_particles)
+  if(d_particles) {
     SCI_THROW(InternalError("ParticleSubsets should not be resized after creation", __FILE__, __LINE__));
-  d_allocatedSize = d_numParticles = newSize;
-  d_particles = scinew particleIndex[newSize];
+  }
+
+  d_allocatedSize = newSize;
+  d_numParticles  = newSize;
+
+  d_particles = scinew particleIndex[ newSize ];
 }
 
 void
-ParticleSubset::expand(particleIndex amount)
+ParticleSubset::expand( unsigned int minSizeIncrement )
 {
-  particleIndex minAmount = d_numParticles>>2;
-  if(minAmount < 10)
+  unsigned int minAmount = d_numParticles >> 2;
+  if( minAmount < 10 ) {
     minAmount = 10;
-  if(amount < minAmount)
-    amount = minAmount;
-  d_allocatedSize += amount;
+  }
+  if( minSizeIncrement < minAmount ) {
+    minSizeIncrement = minAmount;
+  }
+  d_allocatedSize += minSizeIncrement;
 #if 0
   if(d_numExpansions++ > 18){
     static ProgressiveWarning warn("Performance warning in ParticleSubset",10);
@@ -171,36 +190,42 @@ ParticleSubset::expand(particleIndex amount)
 #endif
   particleIndex* newparticles = scinew particleIndex[d_allocatedSize];
   if(d_particles){
-    for(particleIndex i = 0; i < d_numParticles; i++)
+    for(unsigned int i = 0; i < d_numParticles; i++ ) {
       newparticles[i] = d_particles[i];
-    delete[] d_particles;
+    }
+    delete [] d_particles;
   }
   d_particles = newparticles;
 }
 
-particleIndex ParticleSubset::addParticles(particleIndex count)
+particleIndex
+ParticleSubset::addParticles( unsigned int count )
 {
-  if(d_numParticles + count > d_allocatedSize)
-    expand(count);
+  if( d_numParticles + count > d_allocatedSize ) {
+    expand( count );
+  }
 
-
-  particleIndex oldsize = d_numParticles;
+  unsigned int oldsize = d_numParticles;
   d_numParticles += count;
 
-  for(particleIndex idx = oldsize; idx < d_numParticles; idx++)
+  for( unsigned int idx = oldsize; idx < d_numParticles; idx++) {
     d_particles[idx] = idx;
+  }
   return oldsize;  // The beginning of the new index range
 }
 
 namespace Uintah {
-ostream& operator<<(ostream& out, ParticleSubset& pset)
+
+ostream &
+operator<<(ostream& out, ParticleSubset& pset)
 {
-    out << "pset (patch: " << *(pset.getPatch()) << " (" << (pset.getPatch()?pset.getPatch()->getID():0)
-        << "), matl "
-        << pset.getMatlIndex() << " range [" << pset.getLow() 
-        << ", " << pset.getHigh() << "]   " 
-        << pset.numParticles() << " particles, " 
-        << pset.getNeighbors().size() << " neighboring patches)" ;
-    return out;
+  out << "pset (patch: " << *(pset.getPatch()) << " (" << (pset.getPatch()?pset.getPatch()->getID():0)
+      << "), matl "
+      << pset.getMatlIndex() << " range [" << pset.getLow() 
+      << ", " << pset.getHigh() << "]   " 
+      << pset.numParticles() << " particles, " 
+      << pset.getNeighbors().size() << " neighboring patches)" ;
+  return out;
 }
+
 } // end namespace Uintah

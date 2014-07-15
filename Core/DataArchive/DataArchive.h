@@ -413,9 +413,13 @@ namespace Uintah {
     
       std::string d_particlePositionName;
 
-      void findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
-          long64 particleID, int matIndex, int levelIndex,
-          int index);
+      void findPatchAndIndex( const GridP            grid,
+                                    Patch         *& patch,
+                                    particleIndex  & idx,
+                              const long64           particleID,
+                              const int              matIndex,
+                              const int              levelIndex,
+                              const int              index );
 
       static DebugStream dbg;
   };

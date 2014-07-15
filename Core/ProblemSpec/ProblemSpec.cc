@@ -1125,6 +1125,14 @@ ProblemSpec::appendElement(const char* name, int value)
   return appendElement(name, val.str());
 }
 
+ProblemSpecP
+ProblemSpec::appendElement( const char * name, unsigned int value )
+{
+  ostringstream val;
+  val << value;
+  return appendElement( name, val.str() );
+}
+
 //______________________________________________________________________
 //
 ProblemSpecP
