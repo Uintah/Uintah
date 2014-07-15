@@ -1204,7 +1204,7 @@ fi
 
 if test "$with_fortran" = no; then 
 
-   if test "$use_arches_component" = "yes"; then
+   if test "$BUILD_ARCHES" = "yes"; then
       AC_MSG_ERROR( You may not turn on Arches if you turn off Fortran. )
    fi
    DEF_NO_FORTRAN="#define NO_FORTRAN";
