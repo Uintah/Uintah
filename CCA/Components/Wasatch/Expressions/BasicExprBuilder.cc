@@ -125,7 +125,22 @@ namespace Wasatch{
         int seed = 0;
         valParams->findBlock("Random")->getAttribute("seed",seed);
         builder = scinew ParticleRandomIC::Builder( tag, coord, lo, hi, seed, usePatchBounds );
+      } else if ( valParams->findBlock("Geometry") ) {
+        std::vector <Uintah::GeometryPieceP > geomObjects;
+        Uintah::ProblemSpecP geomBasedSpec = valParams->findBlock("Geometry");
+        int seed = 1;
+        geomBasedSpec->getAttribute("seed",seed);
+        // parse all intrusions
+  
+        for( Uintah::ProblemSpecP intrusionParams = geomBasedSpec->findBlock("geom_object");
+            intrusionParams != 0;
+            intrusionParams = intrusionParams->findNextBlock("geom_object") )
+        {
+          Uintah::GeometryPieceFactory::create(intrusionParams,geomObjects);
+        }
+        builder = scinew typename ParticleGeometryBased::Builder(tag, coord, seed, geomObjects);
       }
+
       
     } else if ( params->findBlock("RandomField") ) {
       Uintah::ProblemSpecP valParams = params->findBlock("RandomField");
