@@ -54,14 +54,15 @@ public:
             const std::string& coord,
             const double lo,
             const double hi,
-            const double seed,
+            const int seed,
             const bool usePatchBounds);
     
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
     const std::string coord_;
-    const double lo_, hi_, seed_;
+    const double lo_, hi_;
+    const int seed_;
     const bool usePatchBounds_;
   };
   
@@ -72,14 +73,15 @@ public:
   
 private:
   const std::string coord_;
-  const double lo_, hi_, seed_;
+  const double lo_, hi_;
+  const int seed_;
   const bool usePatchBounds_;
   Wasatch::UintahPatchContainer* patchContainer_;
   
   ParticleRandomIC( const std::string& coord,
                    const double lo,
                    const double hi,
-                   const double seed,
+                   const int seed,
                    const bool usePatchBounds );
 };
 
@@ -89,7 +91,7 @@ ParticleRandomIC::
 ParticleRandomIC(const std::string& coord,
                  const double lo,
                  const double hi,
-                 const double seed,
+                 const int seed,
                  const bool usePatchBounds )
 : Expr::Expression<ParticleField>(),
 coord_(coord),
@@ -187,7 +189,7 @@ evaluate()
   boost::variate_generator<base_generator_type&, boost::uniform_real<> > boost_rand(generator, rand_dist);
   
   ParticleField::iterator phiIter = phi.begin();
-  ParticleField::iterator phiIterEnd = phi.end();
+  const ParticleField::iterator phiIterEnd = phi.end();
   for( ; phiIter != phiIterEnd; ++phiIter ){
     *phiIter = boost_rand();
   }
@@ -200,7 +202,7 @@ Builder( const Expr::Tag& resultTag,
         const std::string& coord,
         const double lo,
         const double hi,
-        const double seed,
+        const int seed,
         const bool usePatchBounds )
 : ExpressionBuilder(resultTag),
 coord_(coord),
