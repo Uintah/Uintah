@@ -3452,7 +3452,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
         double J   =pFNew[idx].Determinant();
         double JOld=pFOld[idx].Determinant();
-        pvolume[idx]=pVolumeOld[idx]*(J/JOld);
+        pvolume[idx]=pVolumeOld[idx]*(J/JOld)*(pmassNew[idx]/pmass[idx]);
         partvoldef += pvolume[idx];
       }
 
