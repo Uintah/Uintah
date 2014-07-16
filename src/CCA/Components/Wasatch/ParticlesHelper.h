@@ -100,6 +100,13 @@ namespace Uintah {
     virtual void schedule_relocate_particles( const Uintah::LevelP& level,
                                               Uintah::SchedulerP& sched );
 
+    /*
+     *  \brief Task that deletes particles outside the bounds of a patch. This is usually taken care
+     of by the relocation alogrithm which moves these particles to neighboring patches. However, since
+     the relocation algorithm does not work at initialization, this task can be used instead. Sometimes
+     when creating particles in a patch, some particles are created outside the patch bounds. This causes
+     problems with particle operators. Use this task to cleanup those outside particles.
+     */
     virtual void schedule_delete_outside_particles( const Uintah::LevelP& level,
                                                     Uintah::SchedulerP& sched );
 
@@ -151,6 +158,7 @@ namespace Uintah {
     bool isValidState_;
     const Uintah::MaterialSet* materials_;
     double pPerCell_; // number of initial particles per cell
+    unsigned int maxParticles_;
     Uintah::ProblemSpecP particleEqsSpec_;
     std::map<int, Uintah::ParticleSubset*> deleteSet_;
   };

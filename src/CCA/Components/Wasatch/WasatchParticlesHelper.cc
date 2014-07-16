@@ -74,9 +74,7 @@ namespace Wasatch {
                                    Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw)
   {
     using namespace Uintah;
-    particleEqsSpec_->get("NumberOfInitialParticles",pPerCell_);
-    
-    
+
     //____________________________________________
     /* In certain cases of particle initialization, a patch will NOT have any particles in it. For example,
      given a domain where x[0, 1] with patch0 [0,0.5] and patch1[0.5,1], assume one wants to initialize
@@ -148,6 +146,7 @@ namespace Wasatch {
       for(int m = 0;m<matls->size();m++){
         int matl = matls->get(m);
         
+        // create an empty delete set
         deleteSet_.insert( std::pair<int, ParticleSubset*>(patch->getID(), scinew ParticleSubset(0,matl,patch)));
         
         // If the particle position initialization is bounded, make sure that the bounds are within
@@ -155,7 +154,7 @@ namespace Wasatch {
         // Also, since the user specifies the number of particles per cell, we need to count the number
         // of cells that fall within the specified bounds of the initialization and multiply that
         // by the number of particles per cell to get the total number of particles in this patch
-        int nCells = 0;
+        unsigned int nCells = 0;
         if (bounded) {
           Point low = patch->getBox().lower();
           Point high = patch->getBox().upper();
@@ -197,6 +196,8 @@ namespace Wasatch {
             }
           }
         }
+        
+        nCells = std::min(maxParticles_, nCells);
         
         const int nParticles = pPerCell_ * nCells;
         // create a subset with the correct number of particles. This will serve as the initial memory
