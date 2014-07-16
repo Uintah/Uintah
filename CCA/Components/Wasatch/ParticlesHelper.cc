@@ -46,7 +46,8 @@ namespace Uintah {
   
   ParticlesHelper::ParticlesHelper() :
   isValidState_(false),
-  pPerCell_(0.0)
+  pPerCell_(0.0),
+  maxParticles_(0x10000u) // 2^32 maximum particles per patch
   {
     pPosLabel_ = VarLabel::create("p.x",
                                   ParticleVariable<Uintah::Point>::getTypeDescription(),
@@ -90,6 +91,7 @@ namespace Uintah {
     //
     // set the position varlabels
     particleEqsSpec_->get("ParticlesPerCell",pPerCell_);
+    particleEqsSpec_->get("MaximumParticles",maxParticles_);
     
     ProblemSpecP pPosSpec = particleEqsSpec_->findBlock("ParticlePosition");
 

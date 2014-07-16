@@ -30,7 +30,8 @@
     </ForceOnGraph>
 
     <ParticleTransportEquations>
-      <NumberOfInitialParticles>1</NumberOfInitialParticles>
+      <ParticlesPerCell>1</ParticlesPerCell>
+      <MaximumParticles>1</MaximumParticles>
       <ParticleDensity name="p.rho" state="STATE_NONE"/>            
       <ParticleMass name="p.m" state="STATE_DYNAMIC">
       	<SourceTerm name="nothing" state="STATE_NONE"/>	
@@ -111,34 +112,18 @@
        <TaskList>initialization</TaskList>
        <NameTag name="p.xw" state="STATE_DYNAMIC"/>
        <Constant>0.5</Constant>
-       
-<!-- 
-       <ParticlePositionIC coordinate="X" bounds="PATCHBASED">
-       		<Random seed="0.1"/>
-       </ParticlePositionIC>
- -->
     </BasicExpression>
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
        <NameTag name="p.yw" state="STATE_DYNAMIC"/>
        <Constant>0.5</Constant>
-      <!-- 
-       <ParticlePositionIC coordinate="Y" bounds="PATCHBASED">
-       		<Random seed="0.23"/>
-       </ParticlePositionIC>
- -->
     </BasicExpression>
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
        <NameTag name="p.zw" state="STATE_DYNAMIC"/>
        <Constant>0.9</Constant>
-<!-- 
-       <RandomField low="0.1" high="0.9" seed="0.03">
-				 <ExprLoHi type="ZVOL" name="ZZVOL" state="STATE_NONE"/>       
-       </RandomField>
- -->
     </BasicExpression>
 
 

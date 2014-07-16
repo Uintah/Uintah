@@ -852,7 +852,7 @@
 		<ParticleTransportEquations spec="OPTIONAL NO_DATA">
 
 			<ParticlesPerCell spec="OPTIONAL DOUBLE"/>
-
+			<MaximumParticles spec="OPTIONAL INTEGER"/>
 			<ParticleDensity 	spec="OPTIONAL NO_DATA"
 												attribute1="name REQUIRED STRING"
 												attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
