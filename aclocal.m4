@@ -81,31 +81,36 @@ AC_DEFUN([BASE_LIB_PATH], [
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a 
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$2/lib
+  if test "$2" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$2/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$2/lib
+    _new_lib_path=$2/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$2/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$2/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$2/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$2/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$2/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$2/lib
-    fi
+    eval $1='"$_new_lib_path"'
   fi
-  eval $1='"$_new_lib_path"'
 ])
 
 
