@@ -4,27 +4,18 @@
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/Directives.h>
-#include <CCA/Components/Arches/LU.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqn.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/FileNotFound.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/MatrixOperations.h>
-#include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Grid/Variables/SFCXVariable.h>
-#include <Core/Grid/Variables/SFCYVariable.h>
-#include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/Parallel.h>
@@ -185,15 +176,6 @@ void CQMOM::problemSetup(const ProblemSpecP& params)
       proc0cout << "Creating var label for " << abscissa_name << endl;
       d_fieldLabels->CQMOMAbscissas[ii] = tempVarLabel;
       ii++;
-      
-      //keep track of any abscissa corresponding to velocities
-      if (varTypes[m] == "uVel") {
-        uVelAbscissas.push_back(abscissa_name);
-      } else if (varTypes[m] == "vVel") {
-        vVelAbscissas.push_back(abscissa_name);
-      } else if (varTypes[m] == "wVel") {
-        wVelAbscissas.push_back(abscissa_name);
-      }
         
     }
   }

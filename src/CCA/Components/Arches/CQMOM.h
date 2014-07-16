@@ -32,8 +32,6 @@
 //NOTE: I just listed all includes that DQMOM uses for now. As this is finalized some can likely be removed.
 #include <CCA/Components/Arches/Directives.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -154,13 +152,6 @@ namespace Uintah {
 //                           DataWarehouse        * old_dw,
 //                           DataWarehouse        * new_dw );
     
-    //access the velocity abscissas
-    inline const std::vector<std::string> getuVelNames() {return uVelAbscissas; };
-    
-    inline const std::vector<std::string> getvVelNames() {return vVelAbscissas; };
-    
-    inline const std::vector<std::string> getwVelNames() {return wVelAbscissas; };
-    
     inline bool getOperatorSplitting() {return d_doOperatorSplitting; };
     
     inline int getUVelIndex() {return uVelIndex; };
@@ -178,8 +169,6 @@ namespace Uintah {
     // ie void vandermonde(), void wheeler(), void inversion()
     
     std::vector<MomentVector> momentIndexes;     ///< Vector containing all moment indices
-    std::vector<MomentVector> weightIndexes;     //<Vector containing indexs for each quadrature node weight
-    std::vector<MomentVector> abscissasIndexes;  //vector containing index for each quad node location
     
     std::vector<CQMOMEqn* > momentEqns;          ///< moment equation labels, (same order as input?)
 
@@ -208,10 +197,6 @@ namespace Uintah {
     std::vector<std::string> abscissaNames;     //list of absicassa names - to be used for dw->get
     
     std::vector<std::string> varTypes;
-    
-    std::vector<std::string> uVelAbscissas; //store the velcoity abscissas in a way there are known which direction is which
-    std::vector<std::string> vVelAbscissas;
-    std::vector<std::string> wVelAbscissas;
 
     struct constCCVarWrapper {
       constCCVariable<double> data;
