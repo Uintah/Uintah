@@ -421,26 +421,79 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     }
     
     if ( d_doCQMOM ) {
-      //basicalyl copying what DQMOM scheduler does
+      bool doOperatorSplit;
+      doOperatorSplit = d_cqmomSolver->getOperatorSplitting();
       CQMOMEqnFactory::EqnMap& moment_eqns = cqmomFactory.retrieve_all_eqns();
       //for source terms later      CoalModelFactory& modelFactory = CoalModelFactory::self();
-      //part vel needed?            d_partVel->schedComputePartVel( level, sched, curr_level );
       
+      if (!doOperatorSplit) {
       //Evaluate CQMOM equations
-      for ( CQMOMEqnFactory::EqnMap::iterator iEqn = moment_eqns.begin();
-           iEqn != moment_eqns.end(); iEqn++){
+        for ( CQMOMEqnFactory::EqnMap::iterator iEqn = moment_eqns.begin();
+             iEqn != moment_eqns.end(); iEqn++){
+         
+          CQMOMEqn* cqmom_eqn = dynamic_cast<CQMOMEqn*>(iEqn->second);
+          cqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );
         
-        CQMOMEqn* cqmom_eqn = dynamic_cast<CQMOMEqn*>(iEqn->second);
-        cqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );
+          cqmom_eqn->sched_computeSources( level, sched, curr_level );
+        }
+        //get new weights and absicissa
+        d_cqmomSolver->sched_solveCQMOMInversion( level, sched, curr_level );
+      } else {
+        //if operator splitting is turned on use a different CQMOM permutation for each convection direction
+        int uVelIndex = d_cqmomSolver->getUVelIndex();
+        int vVelIndex = d_cqmomSolver->getVVelIndex();
+        int wVelIndex = d_cqmomSolver->getWVelIndex();
         
-        cqmom_eqn->sched_computeSources( level, sched, curr_level );
+        for ( CQMOMEqnFactory::EqnMap::iterator iEqn = moment_eqns.begin();
+             iEqn != moment_eqns.end(); iEqn++){
+          CQMOMEqn* cqmom_eqn = dynamic_cast<CQMOMEqn*>(iEqn->second);
+          if (curr_level == 0)
+            cqmom_eqn->sched_initializeVariables( level, sched );
+        }
+        //x-direction - do the CQMOM inversion of this permutation, then do the convection
+        if ( uVelIndex > -1 ) {
+          d_cqmomSolver->sched_solveCQMOMInversion321( level, sched, curr_level );
+          for ( CQMOMEqnFactory::EqnMap::iterator iEqn = moment_eqns.begin();
+               iEqn != moment_eqns.end(); iEqn++){
+          
+            CQMOMEqn* cqmom_eqn = dynamic_cast<CQMOMEqn*>(iEqn->second);
+            cqmom_eqn->sched_buildXConvection( level, sched, curr_level );
+          }
+        }
+        //y-direction
+        if ( vVelIndex > -1 ) {
+          d_cqmomSolver->sched_solveCQMOMInversion312( level, sched, curr_level );
+          for ( CQMOMEqnFactory::EqnMap::iterator iEqn = moment_eqns.begin();
+               iEqn != moment_eqns.end(); iEqn++){
+          
+            CQMOMEqn* cqmom_eqn = dynamic_cast<CQMOMEqn*>(iEqn->second);
+            cqmom_eqn->sched_buildYConvection( level, sched, curr_level );
+          }
+        }
+        //z-direction
+        if ( wVelIndex > -1 ) {
+          d_cqmomSolver->sched_solveCQMOMInversion213( level, sched, curr_level );
+          for ( CQMOMEqnFactory::EqnMap::iterator iEqn = moment_eqns.begin();
+               iEqn != moment_eqns.end(); iEqn++){
+          
+            CQMOMEqn* cqmom_eqn = dynamic_cast<CQMOMEqn*>(iEqn->second);
+            cqmom_eqn->sched_buildZConvection( level, sched, curr_level );
+          }
+        }
+
+        //combine all 3 fluxes and actually solve eqn with other sources
+        for ( CQMOMEqnFactory::EqnMap::iterator iEqn = moment_eqns.begin();
+             iEqn != moment_eqns.end(); iEqn++){
+          
+          CQMOMEqn* cqmom_eqn = dynamic_cast<CQMOMEqn*>(iEqn->second);
+          cqmom_eqn->sched_buildSplitRHS( level, sched, curr_level );
+          cqmom_eqn->sched_solveTransportEqn( level, sched, curr_level );
+        }
       }
       
       //schedule model evaluation later
       //modelFactory.sched_coalParticleCalculation( level, sched, curr_level );
       
-      //schedule inversion for weights and abscissas
-      d_cqmomSolver->sched_solveCQMOMInversion( level, sched, curr_level );
     }
 
     // STAGE 0 

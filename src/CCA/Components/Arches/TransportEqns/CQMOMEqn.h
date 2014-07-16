@@ -76,6 +76,46 @@ namespace Uintah{
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw);
     
+    /** @brief Schedule the convection for x direction */
+    void sched_buildXConvection( const LevelP& level,
+                                 SchedulerP& sched, int timeSubStep );
+    /** @brief Actually build x direction convection */
+    void buildXConvection(const ProcessorGroup*,
+                           const PatchSubset* patches,
+                           const MaterialSubset*,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw);
+    
+    /** @brief Schedule the convection for y direction */
+    void sched_buildYConvection( const LevelP& level,
+                                SchedulerP& sched, int timeSubStep );
+    /** @brief Actually build y direction convection */
+    void buildYConvection(const ProcessorGroup*,
+                          const PatchSubset* patches,
+                          const MaterialSubset*,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw);
+    
+    /** @brief Schedule the convection for z direction */
+    void sched_buildZConvection( const LevelP& level,
+                                SchedulerP& sched, int timeSubStep );
+    /** @brief Actually build z direction convection */
+    void buildZConvection(const ProcessorGroup*,
+                          const PatchSubset* patches,
+                          const MaterialSubset*,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw);
+    
+    /** @brief Schedule the build for combining fluxes and sources */
+    void sched_buildSplitRHS( const LevelP& level,
+                                SchedulerP& sched, int timeSubStep );
+    /** @brief Actually build the RHS from fluxes and sources */
+    void buildSplitRHS(const ProcessorGroup*,
+                          const PatchSubset* patches,
+                          const MaterialSubset*,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw);
+    
     /** @brief Schedule the solution the transport equation */
     void sched_solveTransportEqn(const LevelP& level,
                                  SchedulerP& sched, int timeSubStep );

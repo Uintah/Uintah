@@ -98,6 +98,49 @@ namespace Uintah {
                               DataWarehouse        * old_dw,
                               DataWarehouse        * new_dw);
     
+    //Other permutations of the problem, possibly find a way to condense all of these
+    /** @brief  Schedule the CQMOM inversion problem with conditioning 3|2|1
+     */
+    void sched_solveCQMOMInversion321( const LevelP & level,
+                                       SchedulerP   & sched,
+                                       int          timesubstep);
+    
+    /** @brief actually solve the inversion and put weights and abscissas in datawarehouse
+     */
+    void solveCQMOMInversion321( const ProcessorGroup *,
+                                 const PatchSubset    * patches,
+                                 const MaterialSubset *,
+                                 DataWarehouse        * old_dw,
+                                 DataWarehouse        * new_dw);
+    
+    /** @brief  Schedule the CQMOM inversion problem with conditioning 3|1|2
+     */
+    void sched_solveCQMOMInversion312( const LevelP & level,
+                                       SchedulerP   & sched,
+                                       int          timesubstep);
+    
+    /** @brief actually solve the inversion and put weights and abscissas in datawarehouse
+     */
+    void solveCQMOMInversion312( const ProcessorGroup *,
+                                 const PatchSubset    * patches,
+                                 const MaterialSubset *,
+                                 DataWarehouse        * old_dw,
+                                 DataWarehouse        * new_dw);
+    
+    /** @brief  Schedule the CQMOM inversion problem with conditioning 2|1|3
+     */
+    void sched_solveCQMOMInversion213( const LevelP & level,
+                                       SchedulerP   & sched,
+                                       int          timesubstep);
+    
+    /** @brief actually solve the inversion and put weights and abscissas in datawarehouse
+     */
+    void solveCQMOMInversion213( const ProcessorGroup *,
+                                 const PatchSubset    * patches,
+                                 const MaterialSubset *,
+                                 DataWarehouse        * old_dw,
+                                 DataWarehouse        * new_dw);
+    
     
     /** @brief Schedule re-calculation of moments */
 //    void sched_momentCorrection( const LevelP & level,
@@ -117,6 +160,14 @@ namespace Uintah {
     inline const std::vector<std::string> getvVelNames() {return vVelAbscissas; };
     
     inline const std::vector<std::string> getwVelNames() {return wVelAbscissas; };
+    
+    inline bool getOperatorSplitting() {return d_doOperatorSplitting; };
+    
+    inline int getUVelIndex() {return uVelIndex; };
+    
+    inline int getVVelIndex() {return vVelIndex; };
+    
+    inline int getWVelIndex() {return wVelIndex; };
 
 //____________________________
     
@@ -146,6 +197,7 @@ namespace Uintah {
     bool d_normalized;                          //boolean to normalize weights if needed later
     bool d_adaptive;                            //boolean to use adaptive number of nodes
     bool d_useLapack;                           //boolean to use lapack or vandermonde solver
+    bool d_doOperatorSplitting;                 //use operator splitting to calculate nodes for multiple permutations
     std::string d_which_cqmom;
     
     double weightRatio;                         //adaptive double for minimum allowed weigth ratio
@@ -172,6 +224,9 @@ namespace Uintah {
       std::vector<constCCVarWrapperTypeDef> models;
     };
 
+    int uVelIndex;
+    int vVelIndex;
+    int wVelIndex;
     
   }; // end class CQMOM
   
