@@ -1164,6 +1164,7 @@
         <UseLapack                      spec="OPTIONAL BOOLEAN"/>
         <WeightRatio                    spec="OPTIONAL DOUBLE"/>
         <AbscissaRatio                  spec="OPTIONAL DOUBLE"/>
+        <OperatorSplitting              spec="OPTIONAL BOOLEAN"/> <!-- turn on operator splitting for convective fluxes -->
         
         <!-- order these same as index moment order -->
         <InternalCoordinate             spec="MULTIPLE NO_DATA"
