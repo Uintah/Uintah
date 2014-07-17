@@ -83,7 +83,7 @@ RMCRTCommon::RMCRTCommon()
 RMCRTCommon::~RMCRTCommon()
 {
   VarLabel::destroy( d_sigmaT4_label );  
-  if(d_matlSet && d_matlSet->removeReference()) {
+  if( d_matlSet ) {
     delete d_matlSet;
   }
 }

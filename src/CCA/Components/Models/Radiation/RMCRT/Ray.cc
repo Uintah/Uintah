@@ -179,10 +179,6 @@ Ray::~Ray()
   VarLabel::destroy( d_cellTypeLabel );
   VarLabel::destroy( d_radiationVolqLabel );
 
-  if(d_matlSet && d_matlSet->removeReference()) {
-    delete d_matlSet;
-  }
-
   if( d_radiometer) {
     delete d_radiometer;
   }
