@@ -9,6 +9,38 @@
   <Wasatch>
       <TimeIntegrator> FE </TimeIntegrator>            
 
+
+<PostProcessingExpression type="SVOL">
+		<TaskList>advance_solution</TaskList>
+		<NameTag name="xvelcc" state="STATE_NONE" />
+		<InterpolateExpression type="XVOL">
+				<NameTag name="u" state="STATE_NONE"/>
+		</InterpolateExpression>
+</PostProcessingExpression>
+
+<PostProcessingExpression type="SVOL">
+		<TaskList>advance_solution</TaskList>
+		<NameTag name="yvelcc" state="STATE_NONE" />
+		<InterpolateExpression type="YVOL">
+				<NameTag name="v" state="STATE_NONE"/>
+		</InterpolateExpression>
+</PostProcessingExpression>
+
+<PostProcessingExpression type="SVOL">
+		<TaskList>advance_solution</TaskList>
+		<NameTag name="zvelcc" state="STATE_NONE" />
+		<InterpolateExpression type="ZVOL">
+				<NameTag name="w" state="STATE_NONE"/>
+		</InterpolateExpression>
+</PostProcessingExpression>
+
+<ForceOnGraph tasklist="advance_solution">
+	<NameTag name="xvelcc" state="STATE_NONE" />
+	<NameTag name="yvelcc" state="STATE_NONE" />
+	<NameTag name="zvelcc" state="STATE_NONE" />	
+</ForceOnGraph>
+
+
     <PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
       <NameTag name="vel_magnitude" state="STATE_NONE"/>
@@ -75,11 +107,6 @@
       </Viscosity>
       
       <Pressure>
-       <ReferencePressure value="0.0">
-              <ReferenceCell>[0,0,0]</ReferenceCell>
-        </ReferencePressure>
-        <Use3DLaplacian>    true</Use3DLaplacian>
-
         <Parameters>
  	 	 	 	 	 	 <skip>1</skip>
             <solver>         cg      </solver>
@@ -92,38 +119,49 @@
       </Pressure>
     </MomentumEquations>    
     <Density>
-      <Constant value="1.0" name="density"/>
+      <Constant value="1.225" name="density"/>
     </Density>
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
        <NameTag name="p.size" state="STATE_DYNAMIC"/>
-       <Constant>0.125</Constant>
-<!--        <RandomField low="0.01" high="0.02" seed="11.342"/> -->
+<!--        <Constant>0.01</Constant> -->
+       <Constant>0.067</Constant>
+<!--        <RandomField low="0.01" high="0.02" seed="11"/> -->
     </BasicExpression>
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
        <NameTag name="p.rho" state="STATE_NONE"/>
-       <Constant>1</Constant>
+       <Constant>369</Constant>
     </BasicExpression>
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
        <NameTag name="p.xw" state="STATE_DYNAMIC"/>
-       <Constant>0.5</Constant>
+       <Constant>0.25</Constant>
+<!-- 
+      <ParticlePositionIC coordinate="X" bounds="PATCHBASED">
+        <Random seed="1"/>
+      </ParticlePositionIC>
+ -->
     </BasicExpression>
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
        <NameTag name="p.yw" state="STATE_DYNAMIC"/>
-       <Constant>0.5</Constant>
+       <Constant>0.1</Constant>
+<!-- 
+      <ParticlePositionIC coordinate="Y" bounds="PATCHBASED">
+        <Random seed="2"/>
+      </ParticlePositionIC>
+ -->
     </BasicExpression>
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
        <NameTag name="p.zw" state="STATE_DYNAMIC"/>
-       <Constant>0.9</Constant>
+       <Constant>0.95</Constant>
     </BasicExpression>
 
 
@@ -136,7 +174,7 @@
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
        <NameTag name="p.v" state="STATE_DYNAMIC"/>
-       <Constant>0.0</Constant>
+       <Constant>0.3</Constant>
     </BasicExpression>
     
     <BasicExpression type="PARTICLE">
@@ -169,31 +207,31 @@
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="viscosity" state="STATE_N"/>
-      <Constant>0.01</Constant>
+      <Constant>1e-3</Constant>
     </BasicExpression>
     
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
       <NameTag name="viscosity" state="STATE_NONE"/>
-      <Constant>0.01</Constant>
+      <Constant>1e-3</Constant>
     </BasicExpression>
 
   </Wasatch>
 
 
   <Time>
-    <maxTime>1</maxTime>
+    <maxTime>10</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>0.00001</delt_min>
-    <delt_max>0.00001</delt_max>
-    <max_Timesteps> 10</max_Timesteps>
-    <timestep_multiplier>1.0</timestep_multiplier>
+    <delt_min>1e-4</delt_min>
+    <delt_max>1e-4</delt_max>
+<!--     <max_Timesteps> 10</max_Timesteps> -->
+    <timestep_multiplier>0.1</timestep_multiplier>
   </Time>
 
 
   <DataArchiver>
     <filebase>particle-test-free-fall-momsrc.uda</filebase>
-    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputTimestepInterval>100</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle="2" interval="0.0001"/>
     <save label="p.x"/>
@@ -201,6 +239,10 @@
     <save label="vel_magnitude"/>        
     <save label="y-mom"/>        
     <save label="z-mom"/>        
+    
+        <save label="xvelcc"/>        
+    <save label="yvelcc"/>        
+    <save label="zvelcc"/>        
     <save label="p.xw_rhs"/>    
     <save label="p.yw_rhs"/>    
     <save label="p.zw_rhs"/>            
@@ -239,15 +281,15 @@
 			<Face side="x+" type="Wall"/>
 			<Face side="y-" type="Wall"/>
 			<Face side="y+" type="Wall"/>
-			<Face side="z-" type="Open"/>			
-			<Face side="z+" type="Open"/>			
+			<Face side="z-" type="Wall"/>			
+			<Face side="z+" type="Wall"/>			
 		</BoundaryConditions>
 
 		<Level>
 			<Box label="1">
-				<lower>[0,0,-2]</lower>
-				<upper>[1,1,1]</upper>
-				<resolution>[8,8,24]</resolution>
+				<lower>[0,0,0]</lower>
+				<upper>[0.5,1,1]</upper>
+				<resolution>[16,32,32]</resolution>
 				<patches>[1,1,1]</patches>
 			</Box>
 			<periodic>[0,0,0]</periodic>
