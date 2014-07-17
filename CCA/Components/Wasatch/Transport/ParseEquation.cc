@@ -824,6 +824,17 @@ namespace Wasatch{
     {
       Uintah::ProblemSpecP momentumSpec  = wasatchSpec->findBlock("MomentumEquations");
       if (momentumSpec) {
+        
+        Uintah::ProblemSpecP gravitySpec = particleSpec->findBlock("ParticleMomentum")->findBlock("Gravity");
+        bool hasGX=false, hasGY=false, hasGZ=false;
+        if (gravitySpec) {
+          std::string gravDir;
+          gravitySpec->getAttribute("direction", gravDir);
+          hasGX = (gravDir == "X") ? true : false;
+          hasGY = (gravDir == "Y") ? true : false;
+          hasGZ = (gravDir == "Z") ? true : false;
+        }
+        
         std::string xmomname, ymomname, zmomname;
         const Uintah::ProblemSpecP doxmom = momentumSpec->get( "X-Momentum", xmomname );
         const Uintah::ProblemSpecP doymom = momentumSpec->get( "Y-Momentum", ymomname );
@@ -834,7 +845,7 @@ namespace Wasatch{
           typedef ParticleGasMomentumSrc<XVolField>::Builder XMomSrcT;
           const Expr::Tag xMomRHSTag (xmomname + "_rhs", Expr::STATE_NONE);
           const Expr::Tag pXMomRHSTag(puname + "_rhs", Expr::STATE_NONE);
-          factory.register_expression( scinew XMomSrcT( tNames.pmomsrcx, pXMomRHSTag, pMassTag, pSizeTag, pPosTags ));
+          factory.register_expression( scinew XMomSrcT( tNames.pmomsrcx, pXMomRHSTag, pMassTag, pSizeTag, pPosTags, hasGX ));
           factory.attach_dependency_to_expression(tNames.pmomsrcx, xMomRHSTag);
         }
         
@@ -842,7 +853,7 @@ namespace Wasatch{
           typedef ParticleGasMomentumSrc<YVolField>::Builder YMomSrcT;
           const Expr::Tag yMomRHSTag (ymomname + "_rhs", Expr::STATE_NONE);
           const Expr::Tag pYMomRHSTag(pvname + "_rhs", Expr::STATE_NONE);
-          factory.register_expression( scinew YMomSrcT( tNames.pmomsrcy, pYMomRHSTag, pMassTag, pSizeTag, pPosTags ));
+          factory.register_expression( scinew YMomSrcT( tNames.pmomsrcy, pYMomRHSTag, pMassTag, pSizeTag, pPosTags, hasGY ));
           factory.attach_dependency_to_expression(tNames.pmomsrcy, yMomRHSTag);
         }
         
@@ -850,7 +861,7 @@ namespace Wasatch{
           typedef ParticleGasMomentumSrc<ZVolField>::Builder ZMomSrcT;
           const Expr::Tag zMomRHSTag (zmomname + "_rhs", Expr::STATE_NONE);
           const Expr::Tag pZMomRHSTag(pwname + "_rhs", Expr::STATE_NONE);
-          factory.register_expression( scinew ZMomSrcT( tNames.pmomsrcz, pZMomRHSTag, pMassTag, pSizeTag, pPosTags ));
+          factory.register_expression( scinew ZMomSrcT( tNames.pmomsrcz, pZMomRHSTag, pMassTag, pSizeTag, pPosTags, hasGZ ));
           factory.attach_dependency_to_expression(tNames.pmomsrcz, zMomRHSTag);
         }
       }
