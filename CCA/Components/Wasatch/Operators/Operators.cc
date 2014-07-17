@@ -76,7 +76,7 @@ namespace Wasatch{
     return low;
   }
   
-#define BUILD_CELL2PARTICLE( VOLT )                                                                     \
+#define BUILD_PARTICLE_OPS( VOLT )                                                                     \
 {                                                                                                       \
   typedef SpatialOps::Particle::CellToParticle<VOLT> C2P;                                               \
   typedef SpatialOps::Particle::ParticleToCell<VOLT> P2C;                                               \
@@ -180,22 +180,22 @@ namespace Wasatch{
     // UPWIND interpolants - phi volume to phi surface
     //--------------------------------------------------------
     BUILD_UPWIND( SVolField )
-//    BUILD_UPWIND( XVolField )
-//    BUILD_UPWIND( YVolField )
-//    BUILD_UPWIND( ZVolField )
+//  BUILD_UPWIND( XVolField )
+//  BUILD_UPWIND( YVolField )
+//  BUILD_UPWIND( ZVolField )
     
     //--------------------------------------------------------
     // FLUX LIMITER interpolants - phi volume to phi surface
     //--------------------------------------------------------
     BUILD_UPWIND_LIMITER( SVolField )
-//    BUILD_UPWIND_LIMITER( XVolField )
-//    BUILD_UPWIND_LIMITER( YVolField )
-//    BUILD_UPWIND_LIMITER( ZVolField )
+//  BUILD_UPWIND_LIMITER( XVolField )
+//  BUILD_UPWIND_LIMITER( YVolField )
+//  BUILD_UPWIND_LIMITER( ZVolField )
     
-    BUILD_NEBO_BC_OPERATORS(SVolField)
-    BUILD_NEBO_BC_OPERATORS(XVolField)
-    BUILD_NEBO_BC_OPERATORS(YVolField)
-    BUILD_NEBO_BC_OPERATORS(ZVolField)
+    BUILD_NEBO_BC_OPERATORS( SVolField )
+    BUILD_NEBO_BC_OPERATORS( XVolField )
+    BUILD_NEBO_BC_OPERATORS( YVolField )
+    BUILD_NEBO_BC_OPERATORS( ZVolField )
     
     //--------------------------------------------------------
     // Extrapolants
@@ -208,10 +208,10 @@ namespace Wasatch{
     //--------------------------------------------------------
     // Particles
     //--------------------------------------------------------
-    BUILD_CELL2PARTICLE( SVolField);
-    BUILD_CELL2PARTICLE( XVolField);
-    BUILD_CELL2PARTICLE( YVolField);
-    BUILD_CELL2PARTICLE( ZVolField);
+    BUILD_PARTICLE_OPS( SVolField );
+    BUILD_PARTICLE_OPS( XVolField );
+    BUILD_PARTICLE_OPS( YVolField );
+    BUILD_PARTICLE_OPS( ZVolField );
   }
   
 } // namespace Wasatch
