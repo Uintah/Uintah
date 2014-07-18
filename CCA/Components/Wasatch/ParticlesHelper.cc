@@ -38,9 +38,34 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Variables/VarTypes.h>
 
-std::vector<std::string> Uintah::ParticlesHelper::otherParticleVarNames_;
+//std::vector<std::string> Uintah::ParticleVarManager::otherParticleVarNames_;
 
 namespace Uintah {
+  
+  //==================================================================
+  
+  ParticleVarManager&
+  ParticleVarManager::self()
+  {
+    static ParticleVarManager particleVars;
+    return particleVars;
+  }
+
+  //------------------------------------------------------------------
+  
+  const std::vector<std::string>&
+  ParticleVarManager::get_relocatable_particle_varnames()
+  {
+    return otherParticleVarNames_;
+  }
+
+  //------------------------------------------------------------------
+  
+  void
+  ParticleVarManager::add_particle_variable(const std::string& varName )
+  {
+    otherParticleVarNames_.push_back(varName);
+  }
   
   //==================================================================
   
@@ -58,15 +83,6 @@ namespace Uintah {
     
     destroyMe_.push_back(pPosLabel_);
     destroyMe_.push_back(pIDLabel_);
-  }
-  
-  //------------------------------------------------------------------
-  
-  ParticlesHelper&
-  ParticlesHelper::self()
-  {
-    static ParticlesHelper partHelp;
-    return partHelp;
   }
   
   //------------------------------------------------------------------
@@ -288,8 +304,10 @@ namespace Uintah {
     // first go through the list of particle expressions and check whether Uintah manages those
     // or note. We need this for particle relocation.
     vector<const VarLabel*> otherParticleVarLabels;
-    vector<string>::iterator varNameIter = otherParticleVarNames_.begin();
-    for (; varNameIter != otherParticleVarNames_.end(); ++varNameIter) {
+    const vector<string>& otherParticleVarNames = ParticleVarManager::self().get_relocatable_particle_varnames();
+    vector<string>::const_iterator varNameIter = otherParticleVarNames.begin();
+//    vector<string>::iterator varNameIter = otherParticleVarNames_.begin();
+    for (; varNameIter != otherParticleVarNames.end(); ++varNameIter) {
       if (VarLabel::find( *varNameIter ) ) {
         VarLabel* theVarLabel = VarLabel::find( *varNameIter );
         
@@ -338,13 +356,6 @@ namespace Uintah {
     }
   }
   
-  //------------------------------------------------------------------
-  
-  void
-  ParticlesHelper::add_particle_variable(const std::string& varName )
-  {
-    otherParticleVarNames_.push_back(varName);
-  }
   
   //--------------------------------------------------------------------
   // this task will sync particle position with wasatch computed values

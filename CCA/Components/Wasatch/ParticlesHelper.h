@@ -44,6 +44,23 @@ namespace Uintah {
   class ProcessorGroup;
   class DataWarehouse;
 
+  class ParticleVarManager
+  {
+  public:
+    /**
+     * @return the singleton instance of ParticlesHelper
+     */
+    static ParticleVarManager& self();
+
+    void add_particle_variable(const std::string& varName);
+
+    const std::vector<std::string>& get_relocatable_particle_varnames();
+
+  private:
+    ParticleVarManager(){}
+    std::vector<std::string> otherParticleVarNames_;
+  };
+  
   /**
    *  \class  ParticlesHelper
    *  \author Tony Saad
@@ -54,10 +71,6 @@ namespace Uintah {
   {
   public:
     
-    /**
-     * @return the singleton instance of ParticlesHelper
-     */
-    static ParticlesHelper& self();
     ParticlesHelper();
     virtual ~ParticlesHelper();
 
@@ -110,8 +123,6 @@ namespace Uintah {
     virtual void schedule_delete_outside_particles( const Uintah::LevelP& level,
                                                     Uintah::SchedulerP& sched );
 
-    static void add_particle_variable( const std::string& varName );
-
     /*
      *  \brief Parse the particle spec and create the position varlabels. This is an essential step
      that MUST be called during Wasatch::ProblemSetup
@@ -128,8 +139,6 @@ namespace Uintah {
     const Uintah::VarLabel *pPosLabel_, *pIDLabel_;
     const Uintah::VarLabel *pXLabel_,*pYLabel_,*pZLabel_;
     std::vector<const Uintah::VarLabel*> destroyMe_;
-    
-    static std::vector<std::string> otherParticleVarNames_;
     
     virtual void initialize( const Uintah::ProcessorGroup*,
                                const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
