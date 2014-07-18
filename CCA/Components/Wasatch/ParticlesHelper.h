@@ -27,6 +27,17 @@
  * IN THE SOFTWARE.
  */
 
+/**************************************************************************************
+ /       \  /      \ /       \ /        |/      \ /      |/  |      /        | /      \
+ $$$$$$$  |/$$$$$$  |$$$$$$$  |$$$$$$$$//$$$$$$  |$$$$$$/ $$ |      $$$$$$$$/ /$$$$$$  |
+ $$ |__$$ |$$ |__$$ |$$ |__$$ |   $$ |  $$ |  $$/   $$ |  $$ |      $$ |__    $$ \__$$/
+ $$    $$/ $$    $$ |$$    $$<    $$ |  $$ |        $$ |  $$ |      $$    |   $$      \
+ $$$$$$$/  $$$$$$$$ |$$$$$$$  |   $$ |  $$ |   __   $$ |  $$ |      $$$$$/     $$$$$$  |
+ $$ |      $$ |  $$ |$$ |  $$ |   $$ |  $$ \__/  | _$$ |_ $$ |_____ $$ |_____ /  \__$$ |
+ $$ |      $$ |  $$ |$$ |  $$ |   $$ |  $$    $$/ / $$   |$$       |$$       |$$    $$/
+ $$/       $$/   $$/ $$/   $$/    $$/    $$$$$$/  $$$$$$/ $$$$$$$$/ $$$$$$$$/  $$$$$$/
+**************************************************************************************/
+
 #ifndef Particles_Helper_h
 #define Particles_Helper_h
 
@@ -44,6 +55,13 @@ namespace Uintah {
   class ProcessorGroup;
   class DataWarehouse;
 
+  //==================================================================
+  /**
+   *  \class  ParticleVarManager
+   *  \author Tony Saad
+   *  \date   July, 2014
+   *  \brief  Helper class to manage particle variables marked for relocation.
+   */
   class ParticleVarManager
   {
   public:
@@ -52,15 +70,23 @@ namespace Uintah {
      */
     static ParticleVarManager& self();
 
+    /**
+     * \brief Use to add particle variable names marked for relocation. Note, do NOT add particle
+     position to this list.
+     */
     void add_particle_variable(const std::string& varName);
 
+    /**
+     * \brief Return a reference to the list of particle variables marked for relocation.
+     */
     const std::vector<std::string>& get_relocatable_particle_varnames();
 
   private:
     ParticleVarManager(){}
     std::vector<std::string> otherParticleVarNames_;
-  };
+  }; // Class ParticlesHelper
   
+  //==================================================================
   /**
    *  \class  ParticlesHelper
    *  \author Tony Saad
@@ -170,7 +196,8 @@ namespace Uintah {
     unsigned int maxParticles_;
     Uintah::ProblemSpecP particleEqsSpec_;
     std::map<int, Uintah::ParticleSubset*> deleteSet_;
-  };
+  }; // Class ParticlesHelper
 
-} /* namespace Wasatch */
-#endif /* Reduction_Helper_h */
+} /* namespace Uintah */
+
+#endif /* Particles_Helper_h */
