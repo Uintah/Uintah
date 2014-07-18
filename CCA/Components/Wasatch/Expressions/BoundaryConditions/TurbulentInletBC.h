@@ -46,17 +46,17 @@ public:
   {
   public:
     Builder( const Expr::Tag& resultTag,
-            const std::string inputFileName,
-            const std::string velDir,
-            const int period,
-            const double timePeriod) :
-    ExpressionBuilder(resultTag),
-    inputFileName_(inputFileName),
-    velDir_(velDir),
-    period_(period),
-    timePeriod_(timePeriod)
+             const std::string inputFileName,
+             const std::string velDir,
+             const int period,
+             const double timePeriod )
+    : ExpressionBuilder(resultTag),
+      inputFileName_(inputFileName),
+      velDir_(velDir),
+      period_(period),
+      timePeriod_(timePeriod)
     {}
-    
+
     Expr::ExpressionBase* build() const{
       return new TurbulentInletBC(inputFileName_, velDir_, period_, timePeriod_);
     }
@@ -81,7 +81,7 @@ private:
   const int period_;
   const double timePeriod_;
   std::vector< std::vector< std::vector<double> > > fluct_; // velocity fluctuations
-  std::vector<int> minC_; //store indicies of lowest corner value of bounding box aroudn inlet
+  SpatialOps::IntVec minC_; //store indicies of lowest corner value of bounding box aroudn inlet
   int NT_, jSize_, kSize_, iComponent_, jComponent_;
 
   double coord_;
@@ -132,7 +132,6 @@ TurbulentInletBC( const std::string inputFileName,
   Uintah::getValue(ifs, NT_);
   Uintah::getValue(ifs, jSize_);
   Uintah::getValue(ifs, kSize_);
-  minC_.resize(3);
   Uintah::getValue(ifs,minC_[0]);
   Uintah::getValue(ifs,minC_[1]);
   Uintah::getValue(ifs,minC_[2]);
@@ -210,19 +209,18 @@ evaluate()
   const double ci = this->ci_;
   const double cg = this->cg_;  
 
-  int tIndex = calculate_time_index();
+  const int tIndex = calculate_time_index();
 
-  typedef SpatialOps::IntVec IntVecT;
-  IntVecT globalCellIJK;
+  IntVec globalCellIJK;
 
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
-    std::vector<IntVecT>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
-    std::vector<IntVecT>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+    std::vector<IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
+    std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
     for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
       globalCellIJK = *ig - minC_ + this->patchCellOffset_;
       // linear interpolation between the turbulent-data points
-      const double y0 = fluct_[tIndex][globalCellIJK[iComponent_]][globalCellIJK[jComponent_]];
-      const double y1 = fluct_[tIndex + 1][globalCellIJK[iComponent_]][globalCellIJK[jComponent_]];
+      const double y0 = fluct_[tIndex    ][ globalCellIJK[iComponent_] ][ globalCellIJK[jComponent_] ];
+      const double y1 = fluct_[tIndex + 1][ globalCellIJK[iComponent_] ][ globalCellIJK[jComponent_] ];
       const double a = (y1-y0)/dx_;
       const double bcValue = a*coord_ + y0;
       //double bcValue_ = fluct_[tIndex][globalCellIJK[iComponent_]][globalCellIJK[jComponent_]];
