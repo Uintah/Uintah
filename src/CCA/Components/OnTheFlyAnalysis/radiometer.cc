@@ -77,6 +77,8 @@ void OnTheFly_radiometer::problemSetup(const ProblemSpecP& ,
                                        GridP& grid,
                                        SimulationStateP& sharedState)
 {
+
+#ifdef USE_RADIOMETER
   cout_doing << "Doing problemSetup \t\t\t\t OnTheFly_radiometer" << endl;
 
   //__________________________________
@@ -137,7 +139,7 @@ void OnTheFly_radiometer::problemSetup(const ProblemSpecP& ,
     throw InternalError(warn.str(), __FILE__, __LINE__);
   }
 
-#ifdef USE_RADIOMETER
+
   //__________________________________
   // register the component VarLabels the RMCRT:Radiometer
   d_radiometer->registerVarLabels( matl_index,
@@ -183,6 +185,7 @@ void OnTheFly_radiometer::restartInitialize()
 void OnTheFly_radiometer::scheduleDoAnalysis(SchedulerP& sched,
                                              const LevelP& level)
 {
+#ifdef USE_RADIOMETER 
   printSchedule(level, cout_doing, "OnTheFly_radiometer::scheduleDoAnalysis");
 
   Task::WhichDW temp_dw     = Task::NewDW;
@@ -190,7 +193,7 @@ void OnTheFly_radiometer::scheduleDoAnalysis(SchedulerP& sched,
   Task::WhichDW sigmaT4_dw  = Task::NewDW;
   Task::WhichDW celltype_dw = Task::NewDW;
   bool includeEC = true;
-#ifdef USE_RADIOMETER  
+ 
   d_radiometer->sched_sigmaT4( level, sched, temp_dw, d_radiometerCalc_freq, includeEC );
 
   d_radiometer->sched_radiometer( level, sched, abskg_dw, sigmaT4_dw, celltype_dw, d_radiometerCalc_freq );
