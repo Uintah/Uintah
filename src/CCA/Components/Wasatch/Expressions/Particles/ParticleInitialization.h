@@ -405,6 +405,9 @@ evaluate()
 //  DistT    dist(0,1);
 //  VarGenT  gen(eng,dist);
 
+  // if this patch has zero memory associated with its particles then just return.
+  if (phi.window_with_ghost().local_npts() == 0) return;
+  
   double low = lo_;
   double high = hi_;
   if (isCoordExpr_) {

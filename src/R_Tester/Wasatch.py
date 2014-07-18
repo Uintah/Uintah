@@ -128,6 +128,9 @@ DEBUGTESTS = [
 NIGHTLYTESTS = [
 #   ("scalar-transport-equation_perf",    scalarequationperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),
 #	("particle-test-driven-cavity-upper-half-IC", "particle-test-driven-cavity-upper-half-IC.ups",   4,  "Linux",   ["exactComparison","no_memoryTest"] ),
+	("particle-test-free-fall-two-way-coupling-xdir", "particle-test-free-fall-two-way-coupling-xdir.ups",  8,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
+	("particle-test-free-fall-two-way-coupling-ydir", "particle-test-free-fall-two-way-coupling-ydir.ups",  8,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),	
+	("particle-test-free-fall-two-way-coupling-zdir", "particle-test-free-fall-two-way-coupling-zdir.ups",  8,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
 	("particle-test-geom-shape-icse", "particle-test-geom-shape-icse.ups",  1,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
 	("particle-test-geom-shape-flow-mickey-mouse", "particle-test-geom-shape-flow-mickey-mouse.ups",   1.1,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
 	("particle-test-free-fall-xdir", "particle-test-free-fall-xdir.ups",   1,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
@@ -346,6 +349,9 @@ RADIATIONTESTS=[
 ]
 
 PARTICLETESTS=[
+	("particle-test-free-fall-two-way-coupling-xdir", "particle-test-free-fall-two-way-coupling-xdir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
+	("particle-test-free-fall-two-way-coupling-ydir", "particle-test-free-fall-two-way-coupling-ydir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),	
+	("particle-test-free-fall-two-way-coupling-zdir", "particle-test-free-fall-two-way-coupling-zdir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
 	("particle-test-geom-shape-icse", "particle-test-geom-shape-icse.ups",  1,  "All",   ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
 	("particle-test-geom-shape-flow-mickey-mouse", "particle-test-geom-shape-flow-mickey-mouse.ups",   1.1,  "All",   ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
 	("particle-test-free-fall-xdir", "particle-test-free-fall-xdir.ups",   1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
