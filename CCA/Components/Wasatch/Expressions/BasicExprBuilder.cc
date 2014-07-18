@@ -110,7 +110,7 @@ namespace Wasatch{
       std::string boundsType;
       valParams->getAttribute("bounds",boundsType);
       const bool usePatchBounds = (boundsType == "PATCHBASED");
-      double lo = 0.0, hi = 1.0;
+      double lo = -99999.0, hi = 99999.0;
 
       if (valParams->findBlock("Bounds")) {
         valParams->findBlock("Bounds")->getAttribute("low", lo);
