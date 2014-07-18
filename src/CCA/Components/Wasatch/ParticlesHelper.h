@@ -54,37 +54,6 @@ namespace Uintah {
 
   class ProcessorGroup;
   class DataWarehouse;
-
-  //==================================================================
-  /**
-   *  \class  ParticleVarManager
-   *  \author Tony Saad
-   *  \date   July, 2014
-   *  \brief  Helper class to manage particle variables marked for relocation.
-   */
-  class ParticleVarManager
-  {
-  public:
-    /**
-     * @return the singleton instance of ParticlesHelper
-     */
-    static ParticleVarManager& self();
-
-    /**
-     * \brief Use to add particle variable names marked for relocation. Note, do NOT add particle
-     position to this list.
-     */
-    void add_particle_variable(const std::string& varName);
-
-    /**
-     * \brief Return a reference to the list of particle variables marked for relocation.
-     */
-    const std::vector<std::string>& get_relocatable_particle_varnames();
-
-  private:
-    ParticleVarManager(){}
-    std::vector<std::string> otherParticleVarNames_;
-  }; // Class ParticlesHelper
   
   //==================================================================
   /**
@@ -160,8 +129,21 @@ namespace Uintah {
       materials_ = materials;
     }
     
+    /**
+     * \brief Use to add particle variable names marked for relocation. Note, do NOT add particle
+     position to this list.
+     */
+    static void add_particle_variable(const std::string& varName);
+    
+    /**
+     * \brief Return a reference to the list of particle variables marked for relocation.
+     */
+    static const std::vector<std::string>& get_relocatable_particle_varnames();
+
   protected:
 
+    static std::vector<std::string> otherParticleVarNames_;
+    
     const Uintah::VarLabel *pPosLabel_, *pIDLabel_;
     const Uintah::VarLabel *pXLabel_,*pYLabel_,*pZLabel_;
     std::vector<const Uintah::VarLabel*> destroyMe_;

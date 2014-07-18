@@ -49,36 +49,27 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Variables/VarTypes.h>
 
-//std::vector<std::string> Uintah::ParticleVarManager::otherParticleVarNames_;
+std::vector<std::string> Uintah::ParticlesHelper::otherParticleVarNames_;
 
 namespace Uintah {
   
   //==================================================================
-  
-  ParticleVarManager&
-  ParticleVarManager::self()
-  {
-    static ParticleVarManager particleVars;
-    return particleVars;
-  }
 
-  //------------------------------------------------------------------
-  
   const std::vector<std::string>&
-  ParticleVarManager::get_relocatable_particle_varnames()
+  ParticlesHelper::get_relocatable_particle_varnames()
   {
     return otherParticleVarNames_;
   }
-
+  
   //------------------------------------------------------------------
   
   void
-  ParticleVarManager::add_particle_variable(const std::string& varName )
+  ParticlesHelper::add_particle_variable(const std::string& varName )
   {
     otherParticleVarNames_.push_back(varName);
   }
-  
-  //==================================================================
+
+  //------------------------------------------------------------------
   
   ParticlesHelper::ParticlesHelper() :
   isValidState_(false),
@@ -315,7 +306,7 @@ namespace Uintah {
     // first go through the list of particle expressions and check whether Uintah manages those
     // or note. We need this for particle relocation.
     vector<const VarLabel*> otherParticleVarLabels;
-    const vector<string>& otherParticleVarNames = ParticleVarManager::self().get_relocatable_particle_varnames();
+    const vector<string>& otherParticleVarNames = ParticlesHelper::get_relocatable_particle_varnames();
     vector<string>::const_iterator varNameIter = otherParticleVarNames.begin();
 //    vector<string>::iterator varNameIter = otherParticleVarNames_.begin();
     for (; varNameIter != otherParticleVarNames.end(); ++varNameIter) {
