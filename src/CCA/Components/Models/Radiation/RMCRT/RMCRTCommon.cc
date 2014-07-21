@@ -84,12 +84,14 @@ RMCRTCommon::~RMCRTCommon()
 {
   VarLabel::destroy( d_sigmaT4_label );
   
-  d_matlSet->removeReference();
+  // when the radiometer class is invoked d_matlSet it deleted twice.  This prevents that.
   if( d_matlSet ) {
-    delete d_matlSet;
+    if ( d_matlSet->getReferenceCount() > 0 ){
+      d_matlSet->removeReference();
+      delete d_matlSet;
+    }
   }
 }
-
 
 //______________________________________________________________________
 // Register the material index and label names
