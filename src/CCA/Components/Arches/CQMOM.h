@@ -141,16 +141,16 @@ namespace Uintah {
     
     
     /** @brief Schedule re-calculation of moments */
-//    void sched_momentCorrection( const LevelP & level,
-//                                 SchedulerP   & sched,
-//                                 int          timeSubStep );
-//    
-//    /** @brief re-calculate moments as needed, if unrealizable abscissas occur */
-//    void momentCorrection( const ProcessorGroup *,
-//                           const PatchSubset    * patches,
-//                           const MaterialSubset *,
-//                           DataWarehouse        * old_dw,
-//                           DataWarehouse        * new_dw );
+    void sched_momentCorrection( const LevelP & level,
+                                 SchedulerP   & sched,
+                                 int          timeSubStep );
+    
+    /** @brief re-calculate moments as needed, if unrealizable abscissas occur */
+    void momentCorrection( const ProcessorGroup *,
+                           const PatchSubset    * patches,
+                           const MaterialSubset *,
+                           DataWarehouse        * old_dw,
+                           DataWarehouse        * new_dw );
     
     inline bool getOperatorSplitting() {return d_doOperatorSplitting; };
     
@@ -212,6 +212,20 @@ namespace Uintah {
     int uVelIndex;
     int vVelIndex;
     int wVelIndex;
+    
+    // Clipping:
+    struct ClipInfo{
+
+      bool activated;                 ///< Clipping on/off for this internal coordinate
+      bool do_low;                    ///< Do clipping on a min
+      bool do_high;                   ///< Do clipping on a max
+      double low;                     ///< Low clipping value
+      double high;                    ///< High clipping value
+      double tol;                     ///< Tolerance value for the min and max
+      
+    };
+    
+    std::vector<ClipInfo> clipNodes;
     
   }; // end class CQMOM
   

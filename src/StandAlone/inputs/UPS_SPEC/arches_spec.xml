@@ -1169,7 +1169,13 @@
         <!-- order these same as index moment order -->
         <InternalCoordinate             spec="MULTIPLE NO_DATA"
                                         attribute1="name REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'uVel, vVel, wVel, scalar'"/>
+                                        attribute2="type REQUIRED STRING 'uVel, vVel, wVel, scalar'">
+          <Clipping                     spec="OPTIONAL NO_DATA"> <!-- This clipping applys to the abscissa for this internal coordinate -->
+            <low                        spec="OPTIONAL DOUBLE"/>
+            <high                       spec="OPTIONAL DOUBLE"/>
+            <tol                        spec="OPTIONAL DOUBLE"/>
+          </Clipping>
+        </InternalCoordinate>
         
         <!-- all moment eqns should keep these params the same-->
         <doDiff                         spec="OPTIONAL BOOLEAN"/>

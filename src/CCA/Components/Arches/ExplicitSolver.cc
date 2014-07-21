@@ -438,6 +438,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         }
         //get new weights and absicissa
         d_cqmomSolver->sched_solveCQMOMInversion( level, sched, curr_level );
+        d_cqmomSolver->sched_momentCorrection( level, sched, curr_level );
       } else {
         //if operator splitting is turned on use a different CQMOM permutation for each convection direction
         int uVelIndex = d_cqmomSolver->getUVelIndex();
@@ -453,6 +454,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         //x-direction - do the CQMOM inversion of this permutation, then do the convection
         if ( uVelIndex > -1 ) {
           d_cqmomSolver->sched_solveCQMOMInversion321( level, sched, curr_level );
+          d_cqmomSolver->sched_momentCorrection( level, sched, curr_level );
           for ( CQMOMEqnFactory::EqnMap::iterator iEqn = moment_eqns.begin();
                iEqn != moment_eqns.end(); iEqn++){
           
@@ -463,6 +465,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         //y-direction
         if ( vVelIndex > -1 ) {
           d_cqmomSolver->sched_solveCQMOMInversion312( level, sched, curr_level );
+          d_cqmomSolver->sched_momentCorrection( level, sched, curr_level );
           for ( CQMOMEqnFactory::EqnMap::iterator iEqn = moment_eqns.begin();
                iEqn != moment_eqns.end(); iEqn++){
           
@@ -473,6 +476,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         //z-direction
         if ( wVelIndex > -1 ) {
           d_cqmomSolver->sched_solveCQMOMInversion213( level, sched, curr_level );
+          d_cqmomSolver->sched_momentCorrection( level, sched, curr_level );
           for ( CQMOMEqnFactory::EqnMap::iterator iEqn = moment_eqns.begin();
                iEqn != moment_eqns.end(); iEqn++){
           

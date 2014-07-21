@@ -92,6 +92,27 @@ void CQMOM::problemSetup(const ProblemSpecP& params)
       wVelIndex = m;
     }
     m++;
+    
+    ClipInfo clip;
+    clip.activated = false;
+    ProblemSpecP db_clipping = db_name->findBlock("Clipping");
+    if (db_clipping) {
+      clip.activated = true;
+      
+      if ( db_clipping->findBlock("low") )
+        clip.do_low = true;
+      
+      if ( db_clipping->findBlock("high") )
+        clip.do_high = true;
+      
+      db_clipping->getWithDefault("low", clip.low,  -1.e16);
+      db_clipping->getWithDefault("high",clip.high, 1.e16);
+      db_clipping->getWithDefault("tol", clip.tol, 1e-10);
+      
+      if ( !clip.do_low && !clip.do_high )
+        throw InvalidValue("Error: A low or high clipping must be specified if the <Clipping> section is activated.", __FILE__, __LINE__);
+    }
+    clipNodes.push_back(clip);
   }
   
   proc0cout << "Internal Coordinates M: " << M << endl;
@@ -367,32 +388,148 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
 }
 
 
+ /**********************************************
+ schedule the re-calculation of moments
+ **********************************************/
+void
+CQMOM::sched_momentCorrection( const LevelP& level, SchedulerP& sched, int timeSubStep )
+{
+  string taskname = "CQMOM::momentCorrection";
+  Task* tsk = scinew Task(taskname, this, &CQMOM::momentCorrection);
+
+  //tsk modifies on moment eqns
+  for (vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn) {
+    const VarLabel* tempLabel;
+    tempLabel = (*iEqn)->getTransportEqnLabel();
+    tsk->modifies(tempLabel);
+  }
+  
+  //tsk requires on weights
+  for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
+    const VarLabel* tempLabel = iW->second;
+    tsk->modifies(tempLabel);
+  }
+  
+  //tsk modifies on abscissas
+  for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
+    const VarLabel* tempLabel = iA->second;
+    tsk->modifies(tempLabel);
+  }
+  
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+}
+
+
 // **********************************************
-// schedule the re-calculation of moments
+// actualyl do the re-calculation of moments
 // **********************************************
-//void
-//CQMOM::sched_momentCorrection( const LevelP& level, SchedulerP& sched, int timeSubStep )
-//{
-//  //placeholder for now
-//  string taskname = "CQMOM::momentCorrection";
-//  Task* tsk = scinew Task(taskname, this, &CQMOM::momentCorrection);
-//
-//}
-//
-//
-//// **********************************************
-//// actualyl do the re-calculation of moments
-//// **********************************************
-//void
-//CQMOM::momentCorrection( const ProcessorGroup* pc,
-//                        const PatchSubset* patches,
-//                        const MaterialSubset* matls,
-//                        DataWarehouse* old_dw,
-//                        DataWarehouse* new_dw )
-//{
-//
-//  //place holder for now
-//}
+void
+CQMOM::momentCorrection( const ProcessorGroup* pc,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw )
+{
+  /*this will loop over all absciassa of the system and determine if any unphysical abscissa
+   (as determined by the user though the inputfile) were calculated from the CQMOM inversion,
+   if these are found, the abscissa are first clipped then the moments of that cell are all recalculated
+   with the new clipped value of the abscissa */
+  for (int p = 0; p< patches->size(); ++p) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    
+    // get moments from data warehouse and put into CCVariable
+    vector<CCVariable<double>* > ccMoments;
+    for( vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn ) {
+      const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
+      CCVariable<double>* tempCCVar = scinew CCVariable<double>;
+      new_dw->getModifiable( *tempCCVar, equation_label, matlIndex, patch );
+      ccMoments.push_back(tempCCVar);
+    }
+    
+    //get/allocate the weights
+    vector<CCVariable<double>* > cqmomWeights;
+    for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
+      const VarLabel* weight_label = iW->second;
+      CCVariable<double>* tempCCVar = scinew CCVariable<double>;
+      new_dw->getModifiable(*tempCCVar, weight_label, matlIndex, patch);
+      cqmomWeights.push_back(tempCCVar);
+    }
+    
+    //get/allocate the abscissas
+    vector<CCVariable<double>* > cqmomAbscissas;
+    for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
+      const VarLabel* abscissa_label = iA->second;
+      CCVariable<double>* tempCCVar = scinew CCVariable<double>;
+      new_dw->getModifiable(*tempCCVar, abscissa_label, matlIndex, patch);
+      cqmomAbscissas.push_back(tempCCVar);
+    }
+    
+    for ( CellIterator iter = patch->getExtraCellIterator();
+         !iter.done(); ++iter) {
+      IntVector c = *iter;
+      
+      bool correctMoments = false;
+      //check all abscissa
+      for ( int m = 0; m < M; m++ ) {
+        if (clipNodes[m].activated ) { //don't check values if clipping is off
+          for (int z = 0 ; z < nNodes; z++) {
+            if (clipNodes[m].do_high ) {
+              if ( (*cqmomAbscissas[z + m*nNodes])[c] > clipNodes[m].high - clipNodes[m].tol ) {
+                cout << "fix cell " << c << (*cqmomAbscissas[z + m*nNodes])[c] << " to " << clipNodes[m].high << endl;
+                (*cqmomAbscissas[z + m*nNodes])[c] = clipNodes[m].high;
+                correctMoments = true;
+              }
+            }
+            
+            if (clipNodes[m].do_low ) {
+              if ( (*cqmomAbscissas[z + m*nNodes])[c] < clipNodes[m].low + clipNodes[m].tol ) {
+                cout << "fix cell " << c << (*cqmomAbscissas[z + m*nNodes])[c] << " to " << clipNodes[m].low  << endl;
+                (*cqmomAbscissas[z + m*nNodes])[c] = clipNodes[m].low;
+                correctMoments = true;
+              }
+            }
+          }
+        }
+      }
+      
+      //fix moments in this cell if needed
+      if ( correctMoments ) {
+        int i = 0;
+        for( vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn ) {
+          vector<int> tempIndex = momentIndexes[i];
+          
+          double summation = 0.0;
+          for ( int z = 0; z < nNodes; z++ ) {
+            double product = 1.0;
+            for (int m = 0; m < M; m++) {
+              
+              product *= pow( (*cqmomAbscissas[z + m*nNodes])[c] , tempIndex[m] );
+            }
+            summation += product * (*cqmomWeights[z])[c];
+          }
+          (*ccMoments[i])[c] = summation;
+          i++;
+        }
+      }
+      
+    } //cell loop
+    
+    //delete pointers
+    for(unsigned int i=0; i<cqmomAbscissas.size(); ++i ){
+      delete cqmomAbscissas[i];
+    }
+    
+    for(unsigned int i=0; i<cqmomWeights.size(); ++i ){
+      delete cqmomWeights[i];
+    }
+    
+    for(unsigned int i=0; i<ccMoments.size(); ++i ){
+      delete ccMoments[i];
+    }
+  } //patch loop
+}
 
 // **********************************************
 // sched_solveCQMOMInversion 3|2|1
