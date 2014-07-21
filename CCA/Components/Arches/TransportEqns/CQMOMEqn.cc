@@ -751,8 +751,8 @@ CQMOMEqn::sched_advClipping( const LevelP& level, SchedulerP& sched, int timeSub
 void
 CQMOMEqn::sched_buildXConvection( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  string taskname = "CQMOMEqn::BuildXConvection";
-  Task* tsk = scinew Task(taskname, this, &CQMOMEqn::buildTransportEqn);
+  string taskname = "CQMOMEqn::buildXConvection";
+  Task* tsk = scinew Task(taskname, this, &CQMOMEqn::buildXConvection);
   
   //----NEW----
   tsk->modifies(d_transportVarLabel);
@@ -858,8 +858,8 @@ CQMOMEqn::buildXConvection( const ProcessorGroup* pc,
 void
 CQMOMEqn::sched_buildYConvection( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  string taskname = "CQMOMEqn::BuildYConvection";
-  Task* tsk = scinew Task(taskname, this, &CQMOMEqn::buildTransportEqn);
+  string taskname = "CQMOMEqn::buildYConvection";
+  Task* tsk = scinew Task(taskname, this, &CQMOMEqn::buildYConvection);
   
   //----NEW----
   tsk->modifies(d_transportVarLabel);
@@ -958,8 +958,8 @@ CQMOMEqn::buildYConvection( const ProcessorGroup* pc,
 void
 CQMOMEqn::sched_buildZConvection( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  string taskname = "CQMOMEqn::BuildZConvection";
-  Task* tsk = scinew Task(taskname, this, &CQMOMEqn::buildTransportEqn);
+  string taskname = "CQMOMEqn::buildZConvection";
+  Task* tsk = scinew Task(taskname, this, &CQMOMEqn::buildZConvection);
   
   //----NEW----
   tsk->modifies(d_transportVarLabel);
@@ -1059,7 +1059,7 @@ void
 CQMOMEqn::sched_buildSplitRHS( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   string taskname = "CQMOMEqn::buildSplitRHS";
-  Task* tsk = scinew Task(taskname, this, &CQMOMEqn::buildTransportEqn);
+  Task* tsk = scinew Task(taskname, this, &CQMOMEqn::buildSplitRHS);
   
   //----NEW----
   tsk->modifies(d_transportVarLabel);
