@@ -342,7 +342,7 @@ namespace Wasatch{
                                 so::ExternalStorage,
                                 CPU_INDEX );
 #     ifdef HAVE_CUDA
-      if(IS_GPU_INDEX(deviceIndex)) field->add_device_sync(GPU_INDEX);
+      if(IS_GPU_INDEX(deviceIndex)) field->add_device(GPU_INDEX);
 #     endif
     }
 
