@@ -129,10 +129,10 @@ public:
      *  \param gomeObjects A vector of GeometryPiece pointers that contains a list of all geometery objects
      to be filled by this expression.
      */
-    Builder(const Expr::Tag& resultTag,
-            const std::string& coord,
-            const int seed,
-            std::vector<Uintah::GeometryPieceP > geomObjects);
+    Builder( const Expr::Tag& resultTag,
+             const std::string& coord,
+             const int seed,
+             std::vector<Uintah::GeometryPieceP> geomObjects );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
@@ -150,7 +150,7 @@ private:
   const std::string coord_;
   const int seed_;
   typedef std::vector <Uintah::GeometryPieceP > GeomValueMapT;  // temporary typedef map that stores boundary
-  ParticleGeometryBased(const std::string& coord, const int seed, GeomValueMapT geomObjects);
+  ParticleGeometryBased( const std::string& coord, const int seed, GeomValueMapT geomObjects );
 
   GeomValueMapT geomObjects_;
   Wasatch::UintahPatchContainer* patchContainer_;
@@ -160,11 +160,11 @@ private:
 //--------------------------------------------------------------------
 
 ParticleGeometryBased::
-ParticleGeometryBased( const std::string& coord, const int seed, GeomValueMapT geomObjects)
+ParticleGeometryBased( const std::string& coord, const int seed, GeomValueMapT geomObjects )
 : Expr::Expression<ParticleField>(),
-coord_(coord),
-seed_(seed),
-geomObjects_(geomObjects)
+  coord_(coord),
+  seed_(seed),
+  geomObjects_(geomObjects)
 {}
 
 //--------------------------------------------------------------------
@@ -204,9 +204,6 @@ evaluate()
 
   const Uintah::Patch* const patch = patchContainer_->get_uintah_patch();
 
-  GeomValueMapT::iterator geomIter;
-  const int nTotalParticles = result.window_with_ghost().local_npts();
-
   // random number generator
   typedef boost::mt19937 base_generator_type; // mersenne twister
   // seed the random number generator based on the MPI rank
@@ -222,7 +219,7 @@ evaluate()
   {
     IntVector iCell = *iter;
     // loop over all geometry objects
-    geomIter = geomObjects_.begin();
+    GeomValueMapT::iterator geomIter = geomObjects_.begin();
     Uintah::Point p = patch->getCellPosition(iCell);
     while (geomIter != geomObjects_.end())
     {
@@ -235,7 +232,7 @@ evaluate()
     }
   }
 
-  //now iterate over the inside points and fill in the particles
+  // now iterate over the inside points and fill in the particles
   ParticleField::iterator phiIter = result.begin();
   ParticleField::iterator phiIterEnd = result.end();
   std::vector<Uintah::Point>::iterator it = insidePoints.begin();
@@ -256,13 +253,13 @@ evaluate()
 
 ParticleGeometryBased::Builder::
 Builder( const Expr::Tag& result,
-        const std::string& coord,
-        const int seed,
-        GeomValueMapT geomObjects )
+         const std::string& coord,
+         const int seed,
+         GeomValueMapT geomObjects )
 : ExpressionBuilder(result),
-coord_(coord),
-seed_(seed),
-geomObjects_(geomObjects)
+  coord_(coord),
+  seed_(seed),
+  geomObjects_(geomObjects)
 {}
 
 //--------------------------------------------------------------------
@@ -298,26 +295,25 @@ public:
      *  \brief            Build a ParticleRandomIC expression
      *  \param resultTag  The Tag for the resulting expression that his class computes.
      *  \param coord      A string designating which particle coordinate this expression computes.
-     These can only be X, Y, or Z.
-     *
+     *                    These can only be X, Y, or Z.
      *  \param lo         The lower bound used in the random number generator. This value is
-     superseeded by the lower patch boundaries if usePatchBounds is set to true.
+     *                    superseded by the lower patch boundaries if usePatchBounds is set to true.
      *
      *  \param hi         The upper bound used in the random number generator. This value is
-     superseeded by the upper patch boundary if the usePatchBounds is set to true.
+     *                    superseded by the upper patch boundary if the usePatchBounds is set to true.
      *
      *  \param seed       The seed for the random number generator. This is a required quantity.
      *
      *  \param usePatchBounds If true, then use the boundaries of the uintah patch on which this
-     expression is executing.
+     *                    expression is executing.
      */
     Builder( const Expr::Tag& resultTag,
-            const std::string& coord,
-            const double lo,
-            const double hi,
-            const int seed,
-            const bool usePatchBounds);
-    
+             const std::string& coord,
+             const double lo,
+             const double hi,
+             const int seed,
+             const bool usePatchBounds );
+
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
@@ -350,18 +346,18 @@ private:
 //====================================================================
 
 ParticleRandomIC::
-ParticleRandomIC(const std::string& coord,
-                 const double lo,
-                 const double hi,
-                 const int seed,
-                 const bool usePatchBounds )
+ParticleRandomIC( const std::string& coord,
+                  const double lo,
+                  const double hi,
+                  const int seed,
+                  const bool usePatchBounds )
 : Expr::Expression<ParticleField>(),
-coord_(coord),
-lo_(lo),
-hi_(hi),
-seed_(seed),
-usePatchBounds_(usePatchBounds),
-isCoordExpr_ ( coord_ != "" )
+  coord_(coord),
+  lo_(lo),
+  hi_(hi),
+  seed_(seed),
+  usePatchBounds_(usePatchBounds),
+  isCoordExpr_ ( coord_ != "" )
 {
   this->set_gpu_runnable( false );  // definitely not GPU ready
 }
@@ -441,17 +437,17 @@ evaluate()
 
 ParticleRandomIC::Builder::
 Builder( const Expr::Tag& resultTag,
-        const std::string& coord,
-        const double lo,
-        const double hi,
-        const int seed,
-        const bool usePatchBounds )
+         const std::string& coord,
+         const double lo,
+         const double hi,
+         const int seed,
+         const bool usePatchBounds )
 : ExpressionBuilder(resultTag),
-coord_(coord),
-lo_(lo),
-hi_(hi),
-seed_(seed),
-usePatchBounds_(usePatchBounds)
+  coord_(coord),
+  lo_(lo),
+  hi_(hi),
+  seed_(seed),
+  usePatchBounds_(usePatchBounds)
 {}
 
 //--------------------------------------------------------------------
@@ -482,26 +478,26 @@ public:
   struct Builder : public Expr::ExpressionBuilder
   {
     /**
-     *  \brief            Build a ParticleUniformIC expression
+     *  \brief Build a ParticleUniformIC expression
      *  \param resultTag  The Tag for the resulting expression that his class computes.
-     *  \param lo         The lower bound used in the random number generator. This value is
-     superseeded by the lower patch boundaries if usePatchBounds is set to true.
-     *  \param hi         The upper bound used in the random number generator. This value is
-     superseeded by the upper patch boundary if the usePatchBounds is set to true.
+     *  \param lo The lower bound used in the random number generator. This value is
+     *  superseded by the lower patch boundaries if usePatchBounds is set to true.
+     *  \param hi The upper bound used in the random number generator. This value is
+     *  superseded by the upper patch boundary if the usePatchBounds is set to true.
      *  \param transverse A boolean designating whether this coordinate is in the transverse direction.
-     Given the way particles are laid out in memory, two of the particle coordinates must be
-     set in the transverse direction so as not to place all the particles on one line. Simply set
-     this to false on one of the coordinates and true on the other two.
-     *  \param seed       The seed for the random number generator. This is a required quantity.
+     *  Given the way particles are laid out in memory, two of the particle coordinates must be
+     *  set in the transverse direction so as not to place all the particles on one line. Simply set
+     *  this to false on one of the coordinates and true on the other two.
+     *  \param seed The seed for the random number generator. This is a required quantity.
      *  \param usePatchBounds If true, then use the boundaries of the uintah patch on which this
-     expression is executing.
+     *  expression is executing.
      */
     Builder( const Expr::Tag& resultTag,
-            const double lo,
-            const double hi,
-            const bool transverse,
-            const std::string coord,
-            const bool usePatchBounds);
+             const double lo,
+             const double hi,
+             const bool transverse,
+             const std::string coord,
+             const bool usePatchBounds);
     
     ~Builder(){}
     Expr::ExpressionBase* build() const;
@@ -528,23 +524,23 @@ private:
                      const double hi,
                      const bool transverse,
                      const std::string coord,
-                     const bool usePatchBounds);
+                     const bool usePatchBounds );
 };
 
 //====================================================================
 
 ParticleUniformIC::
-ParticleUniformIC(const double lo,
-                  const double hi,
-                  const bool transverse,
-                  const std::string coord,
-                  const bool usePatchBounds)
+ParticleUniformIC( const double lo,
+                   const double hi,
+                   const bool transverse,
+                   const std::string coord,
+                   const bool usePatchBounds )
 : Expr::Expression<ParticleField>(),
-lo_(lo),
-hi_(hi),
-transverse_(transverse),
-coord_(coord),
-usePatchBounds_(usePatchBounds)
+  lo_(lo),
+  hi_(hi),
+  transverse_(transverse),
+  coord_(coord),
+  usePatchBounds_(usePatchBounds)
 {
   this->set_gpu_runnable( false );
 }
@@ -582,7 +578,7 @@ evaluate()
   
   double low = lo_, high = hi_;
 
-  if (usePatchBounds_) {
+  if( usePatchBounds_ ){
     const Uintah::Patch* const patch = patchContainer_->get_uintah_patch();
     low  = get_patch_low(patch, coord_);
     high = get_patch_high(patch, coord_);
@@ -618,17 +614,17 @@ evaluate()
 
 ParticleUniformIC::Builder::
 Builder( const Expr::Tag& resultTag,
-        const double lo,
-        const double hi,
-        const bool transverse,
-        const std::string coord,
-        const bool usePatchBounds)
+         const double lo,
+         const double hi,
+         const bool transverse,
+         const std::string coord,
+         const bool usePatchBounds )
 : ExpressionBuilder(resultTag),
-lo_(lo),
-hi_(hi),
-transverse_(transverse),
-coord_(coord),
-usePatchBounds_(usePatchBounds)
+  lo_(lo),
+  hi_(hi),
+  transverse_(transverse),
+  coord_(coord),
+  usePatchBounds_(usePatchBounds)
 {}
 
 //--------------------------------------------------------------------
