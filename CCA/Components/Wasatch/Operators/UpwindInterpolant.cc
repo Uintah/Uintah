@@ -118,13 +118,13 @@ apply_to_field( const SrcT& src, DestT& dest )
   // to work ONLY with SVol as source and X,Y,ZVol for destination fields.
   // Although the destination field is of a "different" type, we create a window
   // that is the "same size" as the source field to allow us to use a nebo assignment
-  const short int dDevIdx = dest.device_index(); // destination device index
+  const short int dDevIdx = dest.active_device_index(); // destination device index
   typename DestT::value_type* destVals = dest.field_values(dDevIdx);
   SrcT d( wd, bcs, dest.get_ghost_data(), destVals, ExternalStorage, dDevIdx );
 
   // NOTE here how we are crating a SrcT field from a DesT one.
   //This is a trick because we know that the fields in this case are of the same size
-  const short int advelDevIdx = advectiveVelocity_->device_index(); // destination device index
+  const short int advelDevIdx = advectiveVelocity_->active_device_index(); // destination device index
   typename DestT::value_type* velVals = const_cast<typename DestT::value_type*>(advectiveVelocity_->field_values(advelDevIdx));
   const SrcT  aVel( wd, bcs, advectiveVelocity_->get_ghost_data(), velVals, ExternalStorage, advelDevIdx );
   const SrcT    s1( ws1, src );

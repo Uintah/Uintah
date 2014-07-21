@@ -190,10 +190,10 @@ apply_embedded_boundaries( const PhiVolT &src, PhiFaceT &dest ) const {
   // this is the destination field value - always on the boundary
   const MemoryWindow wd( wdest.glob_dim(), destBaseOffset, destExtent );
 
-  const short int dDevIdx = dest.device_index(); // destination device index
+  const short int dDevIdx = dest.active_device_index(); // destination device index
   typename PhiFaceT::value_type* destVals = const_cast<typename PhiFaceT::value_type*>( dest.field_values(dDevIdx) );
 
-  const short int advelDevIdx = advectiveVelocity_->device_index(); // advel device index
+  const short int advelDevIdx = advectiveVelocity_->active_device_index(); // advel device index
   typename PhiFaceT::value_type* velVals = const_cast<typename PhiFaceT::value_type*>( advectiveVelocity_->field_values(advelDevIdx) );
 
   const BoundaryCellInfo& bcs = src.boundary_info();
@@ -262,10 +262,10 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest )
   const MemoryWindow& wsrc  = src.window_with_ghost();
   const MemoryWindow& wdest = dest.window_with_ghost(); // used for velocity & interpolated phi
   
-  const short int dDevIdx = dest.device_index(); // destination device index
+  const short int dDevIdx = dest.active_device_index(); // destination device index
   typename PhiFaceT::value_type* destVals = const_cast<typename PhiFaceT::value_type*>( dest.field_values(dDevIdx) );
 
-  const short int advelDevIdx = advectiveVelocity_->device_index(); // advel device index
+  const short int advelDevIdx = advectiveVelocity_->active_device_index(); // advel device index
   typename PhiFaceT::value_type* velVals = const_cast<typename PhiFaceT::value_type*>( advectiveVelocity_->field_values(advelDevIdx) );
 
   int pm[2]={1,-1}; // plus or minus face
