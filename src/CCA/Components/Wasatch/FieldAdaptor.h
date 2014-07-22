@@ -26,7 +26,7 @@
 #define Wasatch_FieldAdaptor_h
 
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/MemoryWindow.h>
+#include <spatialops/structured/SpatialFieldStore.h>
 
 #include <Core/Grid/Variables/SFCXVariable.h>  /* x-face variable */
 #include <Core/Grid/Variables/SFCYVariable.h>  /* y-face variable */
@@ -291,11 +291,13 @@ namespace Wasatch{
    *  \todo use type inference to go between FieldT and UFT.  Note that this is tied into ExprLib.
    */
   template< typename FieldT, typename UFT >
-  inline FieldT* wrap_uintah_field_as_spatialops( UFT& uintahVar,
-                                                  const AllocInfo& ainfo,
-                                                  short int deviceIndex=CPU_INDEX,
-                                                  double* uintahDeviceVar = NULL,
-                                                  const bool isGPUTask = false )
+  inline
+  SpatialOps::SpatFldPtr<FieldT>
+  wrap_uintah_field_as_spatialops( UFT& uintahVar,
+                                   const AllocInfo& ainfo,
+                                   short int deviceIndex=CPU_INDEX,
+                                   double* uintahDeviceVar = NULL,
+                                   const bool isGPUTask = false )
   {
     /*
      * NOTE: before changing things here, look at the line:
@@ -336,24 +338,23 @@ namespace Wasatch{
     else{ // heterogeneous task
       fieldValues_ = const_cast<typename FieldT::value_type*>( uintahVar.getPointer() );
       field = new FieldT( so::MemoryWindow( size, offset, extent ),
-                                so::BoundaryCellInfo::build<FieldT>(bcPlus),
-                                so::GhostData( get_n_ghost<FieldT>() ),
-                                fieldValues_,
-                                so::ExternalStorage,
-                                CPU_INDEX );
+                          so::BoundaryCellInfo::build<FieldT>(bcPlus),
+                          so::GhostData( get_n_ghost<FieldT>() ),
+                          fieldValues_,
+                          so::ExternalStorage,
+                          CPU_INDEX );
 #     ifdef HAVE_CUDA
       if(IS_GPU_INDEX(deviceIndex)) field->add_device(GPU_INDEX);
 #     endif
     }
 
-
-    return field;
+    return so::SpatFldPtr<FieldT>(field);
   }
 
   //-----------------------------------------------------------------
 
   template< > inline
-  ParticleField*
+  SpatialOps::SpatFldPtr<ParticleField>
   wrap_uintah_field_as_spatialops<ParticleField,SelectUintahFieldType<ParticleField>::type>(
       SelectUintahFieldType<ParticleField>::type& uintahVar,
       const AllocInfo& ainfo,
@@ -379,17 +380,18 @@ namespace Wasatch{
     } else {
       npar = ainfo.newDW->getParticleSubset( ainfo.materialIndex, ainfo.patch )->numParticles();
     }
-    // jcs need to get GPU support ready...
-    return new ParticleField( so::MemoryWindow( so::IntVec(npar,1,1) ),
-                              so::BoundaryCellInfo::build<ParticleField>(),
-                              so::GhostData( get_n_ghost<ParticleField>() ),
-                              fieldValues,
-                              so::ExternalStorage,
-                              deviceIndex );
+
+    return so::SpatFldPtr<ParticleField>(
+        new ParticleField( so::MemoryWindow( so::IntVec(npar,1,1) ),
+                           so::BoundaryCellInfo::build<ParticleField>(),
+                           so::GhostData( get_n_ghost<ParticleField>() ),
+                           fieldValues,
+                           so::ExternalStorage,
+                           deviceIndex ) );
   }
 
   template< > inline
-  ParticleField*
+  SpatialOps::SpatFldPtr<ParticleField>
   wrap_uintah_field_as_spatialops<ParticleField,SelectUintahFieldType<ParticleField>::const_type>(
       SelectUintahFieldType<ParticleField>::const_type& uintahVar,
       const AllocInfo& ainfo,
@@ -410,13 +412,14 @@ namespace Wasatch{
     }
 
     const int npar = ainfo.oldDW->getParticleSubset( ainfo.materialIndex, ainfo.patch )->numParticles();
-    // jcs need to get GPU support ready...
-    return new ParticleField( so::MemoryWindow( so::IntVec(npar,1,1) ),
-                              so::BoundaryCellInfo::build<ParticleField>(),
-                              so::GhostData( get_n_ghost<ParticleField>() ),
-                              fieldValues,
-                              so::ExternalStorage,
-                              deviceIndex );
+
+    return so::SpatFldPtr<ParticleField>(
+        new ParticleField( so::MemoryWindow( so::IntVec(npar,1,1) ),
+                           so::BoundaryCellInfo::build<ParticleField>(),
+                           so::GhostData( get_n_ghost<ParticleField>() ),
+                           fieldValues,
+                           so::ExternalStorage,
+                           deviceIndex ) );
   }
 
   //-----------------------------------------------------------------
@@ -424,7 +427,8 @@ namespace Wasatch{
   //       implementations work with an Expr::UintahFieldContainer
   // Default arguments cannot be passed to Explicit Template Specialization
   template<>
-  inline SpatialOps::SingleValueField*
+  inline
+  SpatialOps::SpatFldPtr<SpatialOps::SingleValueField>
   wrap_uintah_field_as_spatialops<SpatialOps::SingleValueField,Uintah::PerPatch<double*> >(
       Uintah::PerPatch<double*>& uintahVar,
       const AllocInfo& ainfo,
@@ -434,18 +438,20 @@ namespace Wasatch{
   {
     namespace so = SpatialOps;
     typedef so::SingleValueField FieldT;
-    return new FieldT( so::MemoryWindow( so::IntVec(1,1,1), so::IntVec(0,0,0), so::IntVec(1,1,1) ),
-                       so::BoundaryCellInfo::build<FieldT>(false,false,false),    // bc doesn't matter for single value fields
-                       so::GhostData( get_n_ghost<FieldT>() ),
-                       uintahVar.get(),
-                       so::ExternalStorage,
-                       deviceIndex );
+    return so::SpatFldPtr<FieldT>(
+        new FieldT( so::MemoryWindow( so::IntVec(1,1,1), so::IntVec(0,0,0), so::IntVec(1,1,1) ),
+                    so::BoundaryCellInfo::build<FieldT>(false,false,false),    // bc doesn't matter for single value fields
+                    so::GhostData( get_n_ghost<FieldT>() ),
+                    uintahVar.get(),
+                    so::ExternalStorage,
+                    deviceIndex ) );
   }
 
   // NOTE: this wraps a raw uintah field type, whereas the default
   //       implementations work with an Expr::UintahFieldContainer
   template<>
-  inline SpatialOps::SingleValueField*
+  inline
+  SpatialOps::SpatFldPtr<SpatialOps::SingleValueField>
   wrap_uintah_field_as_spatialops<SpatialOps::SingleValueField,Uintah::ReductionVariableBase>(
       Uintah::ReductionVariableBase& uintahVar,
       const AllocInfo& ainfo,
@@ -455,12 +461,13 @@ namespace Wasatch{
   {
     namespace so = SpatialOps;
     typedef so::SingleValueField FieldT;
-    return new FieldT( so::MemoryWindow( so::IntVec(1,1,1), so::IntVec(0,0,0), so::IntVec(1,1,1) ),
-                       so::BoundaryCellInfo::build<FieldT>(false,false,false),    // bc doesn't matter for single value fields
-                       so::GhostData( get_n_ghost<FieldT>() ),
-                       (double*)( uintahVar.getBasePointer() ),  // jcs this is a bit sketchy because of the type casting.  It will only work for reductions on doubles
-                       so::ExternalStorage,
-                       deviceIndex );
+    return so::SpatFldPtr<FieldT>(
+        new FieldT( so::MemoryWindow( so::IntVec(1,1,1), so::IntVec(0,0,0), so::IntVec(1,1,1) ),
+                    so::BoundaryCellInfo::build<FieldT>(false,false,false),    // bc doesn't matter for single value fields
+                    so::GhostData( get_n_ghost<FieldT>() ),
+                    (double*)( uintahVar.getBasePointer() ),  // jcs this is a bit sketchy because of the type casting.  It will only work for reductions on doubles
+                    so::ExternalStorage,
+                    deviceIndex ) );
   }
 
 }
