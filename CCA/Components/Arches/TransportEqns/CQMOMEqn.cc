@@ -792,12 +792,10 @@ CQMOMEqn::buildXConvection( const ProcessorGroup* pc,
   for (int p=0; p < patches->size(); p++) {
     
     Ghost::GhostType  gac = Ghost::AroundCells;
-    Ghost::GhostType  gn  = Ghost::None;
     
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    Vector Dx = patch->dCell();
     
     constCCVariable<double> oldPhi;
     constCCVariable<Vector> areaFraction;
@@ -898,12 +896,10 @@ CQMOMEqn::buildYConvection( const ProcessorGroup* pc,
   for (int p=0; p < patches->size(); p++) {
     
     Ghost::GhostType  gac = Ghost::AroundCells;
-    Ghost::GhostType  gn  = Ghost::None;
     
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    Vector Dx = patch->dCell();
     
     constCCVariable<double> oldPhi;
     constCCVariable<Vector> areaFraction;
@@ -998,12 +994,10 @@ CQMOMEqn::buildZConvection( const ProcessorGroup* pc,
   for (int p=0; p < patches->size(); p++) {
     
     Ghost::GhostType  gac = Ghost::AroundCells;
-    Ghost::GhostType  gn  = Ghost::None;
     
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    Vector Dx = patch->dCell();
     
     constCCVariable<double> oldPhi;
     constCCVariable<Vector> areaFraction;
