@@ -171,25 +171,25 @@ BowmanNOx::computeSource( const ProcessorGroup* pc,
     old_dw->get( vol_fraction, _field_labels->d_volFractionLabel, matlIndex, patch, gType, nGhosts );
 
 
-#ifdef WASATCH_IN_ARCHES
+#   ifdef WASATCH_IN_ARCHES
     using namespace Wasatch;
     using namespace SpatialOps;
     using SpatialOps::operator *;
+    typedef SpatFldPtr<SVolField> SVolPtr;
 
     // SVolField = CCVariable<double> with 1 ghost cell
     const Wasatch::AllocInfo ainfo( old_dw, new_dw, matlIndex, patch, pc );
-    SVolField* const rate_        = wrap_uintah_field_as_spatialops<SVolField>(rate,ainfo);
-    const SVolField* const N2_    = wrap_uintah_field_as_spatialops<SVolField>(N2,  ainfo);
-    const SVolField* const O2_    = wrap_uintah_field_as_spatialops<SVolField>(O2,  ainfo);
-    const SVolField* const rho_   = wrap_uintah_field_as_spatialops<SVolField>(rho, ainfo);
-    const SVolField* const T_     = wrap_uintah_field_as_spatialops<SVolField>(T,   ainfo);
-    const SVolField* const vfrac_ = wrap_uintah_field_as_spatialops<SVolField>(vol_fraction,ainfo);
+    SVolPtr rate_        = wrap_uintah_field_as_spatialops<SVolField>(rate,ainfo);
+    const SVolPtr N2_    = wrap_uintah_field_as_spatialops<SVolField>(N2,  ainfo);
+    const SVolPtr O2_    = wrap_uintah_field_as_spatialops<SVolField>(O2,  ainfo);
+    const SVolPtr rho_   = wrap_uintah_field_as_spatialops<SVolField>(rho, ainfo);
+    const SVolPtr T_     = wrap_uintah_field_as_spatialops<SVolField>(T,   ainfo);
+    const SVolPtr vfrac_ = wrap_uintah_field_as_spatialops<SVolField>(vol_fraction,ainfo);
     
     *rate_ <<= 30000.0 * _A / ( sqrt(*T_) ) * exp(-_E_R/ *T_) * (1.0e-3/_MW_N2 * *N2_ * *rho_) * sqrt(1.0e-3/_MW_O2 * *O2_ * *rho_);
     *rate_ <<= cond( *rate_ < 1.0e-16, 0.0)
                    ( *rate_ );
-    delete rate_; delete N2_; delete O2_; delete rho_; delete T_; delete vfrac_;
-#else
+#   else
 //    delt_vartype DT;
 //    old_dw->get(DT, _field_labels->d_sharedState->get_delt_label()); 
 //    double dt = DT;
@@ -216,7 +216,7 @@ BowmanNOx::computeSource( const ProcessorGroup* pc,
         rate[c] = 0.0;
       } 
     }
-#endif
+#   endif
   }
 }
 //---------------------------------------------------------------------------
