@@ -331,7 +331,7 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
       int ii = 0;
       for (vector<constCCVarWrapper>::iterator iter = momentCCVars.begin(); iter!= momentCCVars.end(); ++iter) {
         double temp_value = (iter->data)[c];
-        int flatIndex;
+        int flatIndex = 0;
         
         vector<int> temp_index = momentIndexes[ii];
         
@@ -640,7 +640,7 @@ void CQMOM::solveCQMOMInversion321( const ProcessorGroup* pc,
       int ii = 0;
       for (vector<constCCVarWrapper>::iterator iter = momentCCVars.begin(); iter!= momentCCVars.end(); ++iter) {
         double temp_value = (iter->data)[c];
-        int flatIndex;
+        int flatIndex = 0;
         
         vector<int> temp_index = momentIndexes[ii];
         
@@ -795,7 +795,7 @@ void CQMOM::solveCQMOMInversion312( const ProcessorGroup* pc,
       int ii = 0;
       for (vector<constCCVarWrapper>::iterator iter = momentCCVars.begin(); iter!= momentCCVars.end(); ++iter) {
         double temp_value = (iter->data)[c];
-        int flatIndex;
+        int flatIndex = 0;
         
         vector<int> temp_index = momentIndexes[ii];
         
@@ -960,7 +960,7 @@ void CQMOM::solveCQMOMInversion213( const ProcessorGroup* pc,
       int ii = 0;
       for (vector<constCCVarWrapper>::iterator iter = momentCCVars.begin(); iter!= momentCCVars.end(); ++iter) {
         double temp_value = (iter->data)[c];
-        int flatIndex;
+        int flatIndex = 0;
         
         vector<int> temp_index = momentIndexes[ii];
         
