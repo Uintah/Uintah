@@ -265,6 +265,7 @@ namespace Wasatch {
   {
     using namespace SpatialOps;
     typedef SelectUintahFieldType<SVolField>::const_type UintahField;
+    typedef SpatFldPtr<SVolField>  SVolFieldPtr;
     UintahField poissonField_;
 
     const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<SVolField>();
@@ -282,9 +283,8 @@ namespace Wasatch {
         if ( patch->hasBoundaryFaces() ) {
           const AllocInfo ainfo( oldDW, newDW, im, patch, pg );
           newDW->get( poissonField_, phiLabel_, material, patch, gt, ng);
-          SVolField* const phi = wrap_uintah_field_as_spatialops<SVolField>(poissonField_,ainfo);
-          process_poisson_bcs(phit_, *phi, patch, material);
-          delete phi;
+          SVolFieldPtr phi = wrap_uintah_field_as_spatialops<SVolField>(poissonField_,ainfo);
+          process_poisson_bcs( phit_, *phi, patch, material );
         }
       }
     }

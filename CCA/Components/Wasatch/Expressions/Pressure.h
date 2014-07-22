@@ -211,7 +211,7 @@ public:
 
   void set_patch( const Uintah::Patch* const patch ){ patch_ = const_cast<Uintah::Patch*> (patch); }
   
-  void set_bchelper(BCHelper* bcHelper) { bcHelper_ = bcHelper;}
+  void set_bchelper( BCHelper* bcHelper ) { bcHelper_ = bcHelper;}
   /**
    *  \brief set the RKStage for the current pressure evaluation. We need this to
              reduce the number of pressure-solve iterations in the 2nd and 3rd
@@ -240,9 +240,9 @@ public:
   /**
    * \brief Calculates pressure coefficient matrix.
    */
-  void setup_matrix(const SVolField* const volfrac);
+  void setup_matrix( const SVolField* const volfrac );
   
-  void process_embedded_boundaries(const SVolField* const volfrac);
+  void process_embedded_boundaries( const SVolField& volfrac );
 
   /**
    * \brief Special function to apply pressure boundary conditions after the pressure solve.

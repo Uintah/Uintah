@@ -1008,8 +1008,8 @@ namespace Wasatch {
   //------------------------------------------------------------------------------------------------
   
   void BCHelper::update_pressure_matrix( Uintah::CCVariable<Uintah::Stencil4>& pMatrix,
-                                        const SVolField* const volFrac,
-                                        const Uintah::Patch* patch )
+                                         const SVolField* const volFrac,
+                                         const Uintah::Patch* patch )
   {
     const int patchID = patch->getID();
     const Uintah::Vector spacing = patch->dCell();
@@ -1034,8 +1034,7 @@ namespace Wasatch {
        2. OUTFLOW/OPEN: p_outside = - p_inside -> we augment the coefficient for p_0
        3. Intrusion: do NOT modify the coefficient matrix since it will be modified inside the pressure expression when modifying the matrix for intrusions
        */
-        if (myBndSpec.has_patch(patchID))
-        {
+        if( myBndSpec.has_patch(patchID) ){
           Uintah::Iterator& bndMask = get_uintah_extra_bnd_mask(myBndSpec,patchID);
           
           double sign = (myBndSpec.type == OUTFLOW || myBndSpec.type == OPEN) ? 1.0 : -1.0; // For OUTFLOW/OPEN boundaries, augment the P0
@@ -1045,11 +1044,11 @@ namespace Wasatch {
             }
           }
           
-          for( bndMask.reset(); !bndMask.done(); ++bndMask ) {
+          for( bndMask.reset(); !bndMask.done(); ++bndMask ){
             Uintah::Stencil4& coefs = pMatrix[*bndMask - unitNormal];
             
             // if we are inside a solid, then don't do anything because we already handle this in the pressure expression
-            if (volFrac) {
+            if( volFrac ){
               const Uintah::IntVector iCell = *bndMask - unitNormal - patch->getExtraCellLowIndex(1);
               const SpatialOps::IntVec iiCell(iCell.x(), iCell.y(), iCell.z() );
               if ((*volFrac)(iiCell) < 1.0)
