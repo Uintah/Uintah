@@ -213,6 +213,7 @@ namespace Uintah{
     double d_w_small;               ///< Value of "small" weights
     bool d_normalized;
     bool d_usePartVel;             //determine whether to use particle velocities, or fluid velocities for convection
+    double epW;                    //particle-wall restituion coefficient
     
     Convection_CQMOM * d_cqmomConv; //class for cqmom-specific convection
     

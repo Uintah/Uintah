@@ -108,6 +108,8 @@ void CQMOM::problemSetup(const ProblemSpecP& params)
       db_clipping->getWithDefault("low", clip.low,  -1.e16);
       db_clipping->getWithDefault("high",clip.high, 1.e16);
       db_clipping->getWithDefault("tol", clip.tol, 1e-10);
+      db_clipping->getWithDefault("clip_zero",clip.clip_to_zero,false);
+      db_clipping->getWithDefault("min_weight",clip.weight_clip,1.0e-5);
       
       if ( !clip.do_low && !clip.do_high )
         throw InvalidValue("Error: A low or high clipping must be specified if the <Clipping> section is activated.", __FILE__, __LINE__);
@@ -477,16 +479,32 @@ CQMOM::momentCorrection( const ProcessorGroup* pc,
           for (int z = 0 ; z < nNodes; z++) {
             if (clipNodes[m].do_high ) {
               if ( (*cqmomAbscissas[z + m*nNodes])[c] > clipNodes[m].high - clipNodes[m].tol ) {
-                cout << "fix cell " << c << (*cqmomAbscissas[z + m*nNodes])[c] << " to " << clipNodes[m].high << endl;
-                (*cqmomAbscissas[z + m*nNodes])[c] = clipNodes[m].high;
+                if ( !clipNodes[m].clip_to_zero ) {
+                  cout << "fix cell " << c << " a= " << (*cqmomAbscissas[z + m*nNodes])[c] << " to " << clipNodes[m].high << " w= " << (*cqmomWeights[z])[c] << endl;
+                  (*cqmomAbscissas[z + m*nNodes])[c] = clipNodes[m].high;
+                } else  {
+                  cout << "fix cell " << c << " a= " << (*cqmomAbscissas[z + m*nNodes])[c] << " to " << 0.0 << " w= " << (*cqmomWeights[z])[c] << endl;
+                  (*cqmomAbscissas[z + m*nNodes])[c] = 0.0;
+                  if ((*cqmomWeights[z])[c] < clipNodes[m].weight_clip) {
+                    (*cqmomWeights[z])[c] = 0.0;
+                  }
+                }
                 correctMoments = true;
               }
             }
             
             if (clipNodes[m].do_low ) {
               if ( (*cqmomAbscissas[z + m*nNodes])[c] < clipNodes[m].low + clipNodes[m].tol ) {
-                cout << "fix cell " << c << (*cqmomAbscissas[z + m*nNodes])[c] << " to " << clipNodes[m].low  << endl;
-                (*cqmomAbscissas[z + m*nNodes])[c] = clipNodes[m].low;
+                if (!clipNodes[m].clip_to_zero ) {
+                  cout << "fix cell " << c << " a= " << (*cqmomAbscissas[z + m*nNodes])[c] << " to " << clipNodes[m].low  << " w= " << (*cqmomWeights[z])[c] << endl;
+                  (*cqmomAbscissas[z + m*nNodes])[c] = clipNodes[m].low;
+                } else {
+                  cout << "fix cell " << c << " a= " << (*cqmomAbscissas[z + m*nNodes])[c] << " to " << 0.0 << " w= " << (*cqmomWeights[z])[c] << endl;
+                  (*cqmomAbscissas[z + m*nNodes])[c] = 0.0;
+                  if ((*cqmomWeights[z])[c] < clipNodes[m].weight_clip) {
+                    (*cqmomWeights[z])[c] = 0.0;
+                  }
+                }
                 correctMoments = true;
               }
             }
