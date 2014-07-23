@@ -282,8 +282,9 @@ namespace Wasatch {
         const Uintah::Patch* const patch = patches->get(ip);
         if ( patch->hasBoundaryFaces() ) {
           const AllocInfo ainfo( oldDW, newDW, im, patch, pg );
+          const SpatialOps::GhostData gd( get_n_ghost<SVolField>() );
           newDW->get( poissonField_, phiLabel_, material, patch, gt, ng);
-          SVolFieldPtr phi = wrap_uintah_field_as_spatialops<SVolField>(poissonField_,ainfo);
+          SVolFieldPtr phi = wrap_uintah_field_as_spatialops<SVolField>(poissonField_,ainfo,gd);
           process_poisson_bcs( phit_, *phi, patch, material );
         }
       }

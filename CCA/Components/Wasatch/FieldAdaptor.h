@@ -259,13 +259,13 @@ namespace Wasatch{
 
     AllocInfo( Uintah::DataWarehouse* const olddw,
                Uintah::DataWarehouse* const newdw,
-               const int mi,
+               const int matlIndex,
                const Uintah::Patch* p,
                const Uintah::ProcessorGroup* const pg,
                const bool isgpu=false )
     : oldDW( olddw ),
       newDW( newdw ),
-      materialIndex( mi ),
+      materialIndex( matlIndex ),
       patch( p ),
       procgroup( pg ),
       isGPUTask( isgpu )
@@ -281,6 +281,7 @@ namespace Wasatch{
    *         freeing the memory.
    *  \param uintahVar the uintah variable to wrap
    *  \param ainfo information required about the size of the field
+   *  \param ghostData information about the number of ghosts required for this field
    *  \param deviceIndex in the case of a GPU field, this specifies which GPU it is on
    *  \param uintahDeviceVar for GPU fields, this is the pointer to the field on the device
    *  \param isGPUTask if true, then this will wrap fields on GPU rather than CPU.
@@ -295,6 +296,7 @@ namespace Wasatch{
   SpatialOps::SpatFldPtr<FieldT>
   wrap_uintah_field_as_spatialops( UFT& uintahVar,
                                    const AllocInfo& ainfo,
+                                   const SpatialOps::GhostData ghostData,
                                    short int deviceIndex=CPU_INDEX,
                                    double* uintahDeviceVar = NULL,
                                    const bool isGPUTask = false )
@@ -330,7 +332,7 @@ namespace Wasatch{
 #     endif
       field = new FieldT( so::MemoryWindow( size, offset, extent ),
                           so::BoundaryCellInfo::build<FieldT>(bcPlus),
-                          so::GhostData( get_n_ghost<FieldT>() ),
+                          ghostData,
                           fieldValues_,
                           so::ExternalStorage,
                           deviceIndex );
@@ -358,6 +360,7 @@ namespace Wasatch{
   wrap_uintah_field_as_spatialops<ParticleField,SelectUintahFieldType<ParticleField>::type>(
       SelectUintahFieldType<ParticleField>::type& uintahVar,
       const AllocInfo& ainfo,
+      const SpatialOps::GhostData ghostData,
       const short int deviceIndex,
       double* uintahDeviceVar,
       const bool isGPUTask ) // abhi : not being used yet)
@@ -384,7 +387,7 @@ namespace Wasatch{
     return so::SpatFldPtr<ParticleField>(
         new ParticleField( so::MemoryWindow( so::IntVec(npar,1,1) ),
                            so::BoundaryCellInfo::build<ParticleField>(),
-                           so::GhostData( get_n_ghost<ParticleField>() ),
+                           ghostData,
                            fieldValues,
                            so::ExternalStorage,
                            deviceIndex ) );
@@ -395,6 +398,7 @@ namespace Wasatch{
   wrap_uintah_field_as_spatialops<ParticleField,SelectUintahFieldType<ParticleField>::const_type>(
       SelectUintahFieldType<ParticleField>::const_type& uintahVar,
       const AllocInfo& ainfo,
+      const SpatialOps::GhostData ghostData,
       const short int deviceIndex,
       double* uintahDeviceVar,
       const bool isGPUTask ) // abhi : not being used yet)
@@ -416,7 +420,7 @@ namespace Wasatch{
     return so::SpatFldPtr<ParticleField>(
         new ParticleField( so::MemoryWindow( so::IntVec(npar,1,1) ),
                            so::BoundaryCellInfo::build<ParticleField>(),
-                           so::GhostData( get_n_ghost<ParticleField>() ),
+                           ghostData,
                            fieldValues,
                            so::ExternalStorage,
                            deviceIndex ) );
@@ -432,6 +436,7 @@ namespace Wasatch{
   wrap_uintah_field_as_spatialops<SpatialOps::SingleValueField,Uintah::PerPatch<double*> >(
       Uintah::PerPatch<double*>& uintahVar,
       const AllocInfo& ainfo,
+      const SpatialOps::GhostData ghostData,
       const short int deviceIndex,
       double* uintahDeviceVar,
       const bool isGPUTask ) // abhi : not being used yet
@@ -441,7 +446,7 @@ namespace Wasatch{
     return so::SpatFldPtr<FieldT>(
         new FieldT( so::MemoryWindow( so::IntVec(1,1,1), so::IntVec(0,0,0), so::IntVec(1,1,1) ),
                     so::BoundaryCellInfo::build<FieldT>(false,false,false),    // bc doesn't matter for single value fields
-                    so::GhostData( get_n_ghost<FieldT>() ),
+                    ghostData,
                     uintahVar.get(),
                     so::ExternalStorage,
                     deviceIndex ) );
@@ -455,6 +460,7 @@ namespace Wasatch{
   wrap_uintah_field_as_spatialops<SpatialOps::SingleValueField,Uintah::ReductionVariableBase>(
       Uintah::ReductionVariableBase& uintahVar,
       const AllocInfo& ainfo,
+      const SpatialOps::GhostData ghostData,
       const short int deviceIndex,
       double* uintahDeviceVar,
       const bool isGPUTask ) // abhi : not being used yet
@@ -464,7 +470,7 @@ namespace Wasatch{
     return so::SpatFldPtr<FieldT>(
         new FieldT( so::MemoryWindow( so::IntVec(1,1,1), so::IntVec(0,0,0), so::IntVec(1,1,1) ),
                     so::BoundaryCellInfo::build<FieldT>(false,false,false),    // bc doesn't matter for single value fields
-                    so::GhostData( get_n_ghost<FieldT>() ),
+                    ghostData,
                     (double*)( uintahVar.getBasePointer() ),  // jcs this is a bit sketchy because of the type casting.  It will only work for reductions on doubles
                     so::ExternalStorage,
                     deviceIndex ) );
