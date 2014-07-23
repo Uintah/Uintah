@@ -192,10 +192,10 @@ Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
   else{
     dw->allocateAndPut( matrix_, matrixLabel_, materialID_, patch );
     
+    typedef SelectUintahFieldType<SVolField>::const_type ConstUintahField;
+    ConstUintahField svolFrac;
     SpatialOps::SpatFldPtr<SVolField> volfrac;
     if( volfract_ != Expr::Tag() ){
-      typedef SelectUintahFieldType<SVolField>::const_type ConstUintahField;
-      ConstUintahField svolFrac;
       const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<SVolField>();
       const int ng = get_n_ghost<SVolField>();
       dw->get( svolFrac, Uintah::VarLabel::find(volfract_.name()), material, patch, gt, ng );
