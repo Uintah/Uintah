@@ -177,14 +177,15 @@ BowmanNOx::computeSource( const ProcessorGroup* pc,
     using SpatialOps::operator *;
     typedef SpatFldPtr<SVolField> SVolPtr;
 
-    // SVolField = CCVariable<double> with 1 ghost cell
+    // SVolField = CCVariable<double>
     const Wasatch::AllocInfo ainfo( old_dw, new_dw, matlIndex, patch, pc );
-    SVolPtr rate_        = wrap_uintah_field_as_spatialops<SVolField>(rate,ainfo);
-    const SVolPtr N2_    = wrap_uintah_field_as_spatialops<SVolField>(N2,  ainfo);
-    const SVolPtr O2_    = wrap_uintah_field_as_spatialops<SVolField>(O2,  ainfo);
-    const SVolPtr rho_   = wrap_uintah_field_as_spatialops<SVolField>(rho, ainfo);
-    const SVolPtr T_     = wrap_uintah_field_as_spatialops<SVolField>(T,   ainfo);
-    const SVolPtr vfrac_ = wrap_uintah_field_as_spatialops<SVolField>(vol_fraction,ainfo);
+    const SpatialOps::GhostData gd( nGhosts );
+    SVolPtr rate_        = wrap_uintah_field_as_spatialops<SVolField>(rate,ainfo, gd );
+    const SVolPtr N2_    = wrap_uintah_field_as_spatialops<SVolField>(N2,  ainfo, gd );
+    const SVolPtr O2_    = wrap_uintah_field_as_spatialops<SVolField>(O2,  ainfo, gd );
+    const SVolPtr rho_   = wrap_uintah_field_as_spatialops<SVolField>(rho, ainfo, gd );
+    const SVolPtr T_     = wrap_uintah_field_as_spatialops<SVolField>(T,   ainfo, gd );
+    const SVolPtr vfrac_ = wrap_uintah_field_as_spatialops<SVolField>(vol_fraction,ainfo,gd);
     
     *rate_ <<= 30000.0 * _A / ( sqrt(*T_) ) * exp(-_E_R/ *T_) * (1.0e-3/_MW_N2 * *N2_ * *rho_) * sqrt(1.0e-3/_MW_O2 * *O2_ * *rho_);
     *rate_ <<= cond( *rate_ < 1.0e-16, 0.0)
