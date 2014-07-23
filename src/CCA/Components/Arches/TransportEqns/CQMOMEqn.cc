@@ -114,6 +114,11 @@ CQMOMEqn::problemSetup(const ProblemSpecP& inputdb)
   CQMOMEqnFactory& cqmomFactory = CQMOMEqnFactory::self();
   cqmom_db->get("NumberInternalCoordinates",M);
   cqmom_db->get("QuadratureNodes",N_i);           //get vector of quad nodes per internal coordiante
+  cqmom_db->getWithDefault("RestitutionCoefficient",epW,1.0);
+  if (epW > 1.0 )
+    epW = 1.0;
+  if (epW < 0.0 )
+    epW = 0.0;
   
   nNodes = 1;
   for (unsigned int i = 0; i<N_i.size(); i++) {

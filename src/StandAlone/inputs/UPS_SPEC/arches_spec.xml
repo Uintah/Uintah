@@ -1165,6 +1165,7 @@
         <WeightRatio                    spec="OPTIONAL DOUBLE"/>
         <AbscissaRatio                  spec="OPTIONAL DOUBLE"/>
         <OperatorSplitting              spec="OPTIONAL BOOLEAN"/> <!-- turn on operator splitting for convective fluxes -->
+        <RestitutionCoefficient         spec="OPTIONAL DOUBLE"/>
         
         <!-- order these same as index moment order -->
         <InternalCoordinate             spec="MULTIPLE NO_DATA"
@@ -1174,6 +1175,8 @@
             <low                        spec="OPTIONAL DOUBLE"/>
             <high                       spec="OPTIONAL DOUBLE"/>
             <tol                        spec="OPTIONAL DOUBLE"/>
+            <clip_zero                  spec="OPTIONAL BOOLEAN"/> <!-- clip an out of bounds abscissa to 0 instead of the limit -->
+            <min_weight                 spec="OPTIONAL DOUBLE"/>  <!-- minimum weight with zero clip on to also clip weight to 0-->
           </Clipping>
         </InternalCoordinate>
         

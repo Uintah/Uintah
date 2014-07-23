@@ -219,6 +219,8 @@ namespace Uintah {
       bool activated;                 ///< Clipping on/off for this internal coordinate
       bool do_low;                    ///< Do clipping on a min
       bool do_high;                   ///< Do clipping on a max
+      bool clip_to_zero;              //clip to 0 instead of teh actual high/low
+      double weight_clip;             //limit on the weight to apply zero-clipping
       double low;                     ///< Low clipping value
       double high;                    ///< High clipping value
       double tol;                     ///< Tolerance value for the min and max
