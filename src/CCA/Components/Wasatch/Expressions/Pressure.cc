@@ -200,7 +200,8 @@ Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
       const int ng = get_n_ghost<SVolField>();
       dw->get( svolFrac, Uintah::VarLabel::find(volfract_.name()), material, patch, gt, ng );
       const AllocInfo ainfo( dw, dw, material, patch, NULL );
-      volfrac = wrap_uintah_field_as_spatialops<SVolField>(svolFrac, ainfo);
+      const SpatialOps::GhostData gd( get_n_ghost<SVolField>() );
+      volfrac = wrap_uintah_field_as_spatialops<SVolField>( svolFrac, ainfo, gd );
     }
     setup_matrix( &*volfrac );
   }
@@ -492,7 +493,8 @@ Pressure::process_bcs ( const Uintah::ProcessorGroup* const pg,
       if( patch->hasBoundaryFaces() && bcHelper_  ){
         newDW->get( pressureField_, pressureLabel_, material, patch, gt, ng);
         const AllocInfo ainfo( oldDW, newDW, im, patch, pg );
-        SVolFieldPtr pressure = wrap_uintah_field_as_spatialops<SVolField>(pressureField_,ainfo);
+        const SpatialOps::GhostData gd( get_n_ghost<SVolField>() );
+        SVolFieldPtr pressure = wrap_uintah_field_as_spatialops<SVolField>( pressureField_, ainfo, gd );
         bcHelper_->apply_pressure_bc(*pressure,patch);
       }
     }

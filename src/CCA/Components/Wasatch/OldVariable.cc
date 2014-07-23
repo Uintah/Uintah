@@ -117,13 +117,15 @@ namespace Wasatch {
       
       if (rkStage == 1) ainfo.newDW->allocateAndPut( oldVal, oldVarLabel_, ainfo.materialIndex, ainfo.patch, gt, ng );
       else              ainfo.newDW->getModifiable ( oldVal, oldVarLabel_, ainfo.materialIndex, ainfo.patch, gt, ng );
-      TPtr fOldVal = wrap_uintah_field_as_spatialops<T>(oldVal,ainfo);
+
+      const SpatialOps::GhostData gd( get_n_ghost<T>() );
+      TPtr fOldVal = wrap_uintah_field_as_spatialops<T>(oldVal,ainfo,gd);
       
       Uintah::DataWarehouse* dw = (rkStage == 1) ? ainfo.oldDW : ainfo.newDW;
       
       if (dw->exists(varLabel_,ainfo.materialIndex,ainfo.patch)) {
         dw->get( val, varLabel_, ainfo.materialIndex, ainfo.patch, gt, ng );
-        const TPtr f = wrap_uintah_field_as_spatialops<T>(val,ainfo);
+        const TPtr f = wrap_uintah_field_as_spatialops<T>(val,ainfo,gd);
         (*fOldVal) <<= (*f);
       }
       else  {
