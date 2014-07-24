@@ -893,7 +893,6 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
     
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
-      const Level* level = patch->getLevel();
       
       // AMR
       const Level* curLevel = patch->getLevel();
@@ -910,7 +909,7 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
       }
       
       Patch::selectType neighborPatches;
-      findNeighboringPatches(patch, level, findFiner, findCoarser, neighborPatches);
+      findNeighboringPatches(patch, curLevel, findFiner, findCoarser, neighborPatches);
       
       // Find all of the neighborPatches, and add them to a set
       for(int i=0; i<neighborPatches.size(); i++){
@@ -924,7 +923,7 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
         int numParticles     = pset->numParticles();
         
         constParticleVariable<Point> px;
-        new_dw->get(px, reloc_old_posLabel, pset);
+        old_dw->get(px, reloc_old_posLabel, pset);
         
         ParticleSubset* keep_pset    = scinew ParticleSubset(0, -1, 0);
         ParticleSubset* delete_pset  = new_dw->getDeleteSubset(matl, patch);
@@ -988,7 +987,7 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
               //__________________________________
               //  Search for the new patch that the particle belongs to on this level.
               bool includeExtraCells = false;
-              toPatch = level->getPatchFromPoint(px[idx], includeExtraCells);
+              toPatch = curLevel->getPatchFromPoint(px[idx], includeExtraCells);
               PP_ToPatch = toPatch;
               
               //__________________________________
@@ -999,7 +998,7 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
                 
                 PP_ToPatch_CL = toPatch;
 #if SCI_ASSERTION_LEVEL >= 1
-                if(!toPatch && level->containsPoint(px[idx])){
+                if(!toPatch && curLevel->containsPoint(px[idx])){
                   // Make sure that the particle really left the world
                   static ProgressiveWarning warn("A particle just travelled from one patch to another non-adjacent patch.  It has been deleted and we're moving on.",10);
                   warn.invoke();
@@ -1042,7 +1041,6 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
     // Now go through each of our patches, and do the merge.  Also handle the local case
     for(int p=0;p<patches->size();p++){
       const Patch* toPatch = patches->get(p);
-      const Level* level   = toPatch->getLevel();
       
       // AMR related
       const Level* curLevel = toPatch->getLevel();
@@ -1051,7 +1049,7 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
       bool findCoarser = curLevel->hasCoarserLevel() && curLevel->getIndex() > coarsestLevelwithParticles->getIndex();
       
       Patch::selectType neighborPatches;
-      findNeighboringPatches(toPatch, level, findFiner, findCoarser, neighborPatches);
+      findNeighboringPatches(toPatch, curLevel, findFiner, findCoarser, neighborPatches);
       
       for(int m = 0; m < matls->size(); m++){
         int matl = matls->get(m);
@@ -1140,7 +1138,7 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
           // Merge local portion
           vector<ParticleVariableBase*> invars(subsets.size());
           for(int i=0;i<(int)numOldVariables;i++){
-            invars[i]=new_dw->getParticleVariable(reloc_old_posLabel, matl, fromPatches[i]);
+            invars[i]=old_dw->getParticleVariable(reloc_old_posLabel, matl, fromPatches[i]);
           }
           
           if(newParticles_map){
@@ -1159,7 +1157,7 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
           }
           
           // particle position
-          ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, orig_pset);
+          ParticleVariableBase* posvar = old_dw->getParticleVariable(reloc_old_posLabel, orig_pset);
           ParticleVariableBase* newpos = posvar->clone();
           newpos->gather(newsubset, subsets, invars, fromPatches, numRemote);
           
@@ -1169,10 +1167,10 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
           
           for(int v=0;v<numVars;v++){
             const VarLabel* label = reloc_old_labels[m][v];
-            ParticleVariableBase* var = new_dw->getParticleVariable(label, orig_pset);
+            ParticleVariableBase* var = old_dw->getParticleVariable(label, orig_pset);
             
             for(int i=0;i<numOldVariables;i++){
-              invars[i]=new_dw->getParticleVariable(label, matl, fromPatches[i]);
+              invars[i]=old_dw->getParticleVariable(label, matl, fromPatches[i]);
             }
             
             if(newParticles_map){
@@ -1225,7 +1223,6 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
             new_dw->put(*vars[v], reloc_new_labels[m][v], true);
             delete vars[v];
           }
-          std::cout << "total_reloc: " << total_reloc[0] << ", " << total_reloc[1] << ", " << total_reloc[2] << "\n";
         }  // particles have moved
         if(keep_pset->removeReference()){
           delete keep_pset;
