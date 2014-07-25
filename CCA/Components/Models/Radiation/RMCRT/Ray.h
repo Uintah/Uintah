@@ -195,6 +195,7 @@ namespace Uintah{
                         DataWarehouse* old_dw,
                         DataWarehouse* new_dw,
                         void* stream,
+                        int deviceID,
                         bool modifies_divQ,
                         Task::WhichDW which_abskg_dw,
                         Task::WhichDW whichd_sigmaT4_dw,

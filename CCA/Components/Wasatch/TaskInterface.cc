@@ -137,6 +137,7 @@ namespace Wasatch{
                   Uintah::DataWarehouse* const,
                   Uintah::DataWarehouse* const,
                   void* stream,  // for GPU tasks, this is the associated stream
+                  int deviceID,
                   const int rkStage );
 
 # ifdef HAVE_CUDA
@@ -606,6 +607,7 @@ namespace Wasatch{
                             Uintah::DataWarehouse* const oldDW,
                             Uintah::DataWarehouse* const newDW,
                             void* stream,
+                            int deviceID,
                             const int rkStage )
   {
     //
@@ -642,7 +644,7 @@ namespace Wasatch{
 
           // set the device index passed from Uintah to the Expression tree
           // Currently it is not yet fixed as the callback is not providing deviceID
-          // tree->set_device_index( deviceID, fml_);
+          tree->set_device_index( deviceID, *fml_);
         }
 #       endif
 

@@ -173,7 +173,8 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
                                               const MaterialSubset* matls,
                                               DataWarehouse* old_dw,
                                               DataWarehouse* new_dw,
-                                              void* stream)
+                                              void* stream,
+                                              int deviceID)
 {
   // When Task is scheduled to CPU
   if (event == Task::CPU) {
