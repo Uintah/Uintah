@@ -862,15 +862,16 @@ getOtherLevelPatchSubset(Task::PatchDomainSpec dom, int level_offset,
 void
 Task::doit(CallBackEvent event,
            const ProcessorGroup* pg,
-	         const PatchSubset* patches,
-	         const MaterialSubset* matls,
-	         vector<DataWarehouseP>& dws,
-           void *stream)
+           const PatchSubset* patches,
+           const MaterialSubset* matls,
+           vector<DataWarehouseP>& dws,
+           void* stream,
+           int deviceID)
 {
   DataWarehouse* fromDW = mapDataWarehouse(Task::OldDW, dws);
   DataWarehouse* toDW = mapDataWarehouse(Task::NewDW, dws);
-  if(d_action) {
-    d_action->doit(event, pg, patches, matls, fromDW, toDW, stream);
+  if (d_action) {
+    d_action->doit(event, pg, patches, matls, fromDW, toDW, stream, deviceID);
   }
 }
 

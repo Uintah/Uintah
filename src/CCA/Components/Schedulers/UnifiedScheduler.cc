@@ -850,7 +850,7 @@ void UnifiedScheduler::runTasks(int t_id)
        */
       else if (dts->numInitiallyReadyDeviceTasks() > 0) {
         readyTask = dts->peekNextInitiallyReadyDeviceTask();
-        if (readyTask->checkCUDAStreamDone()) {
+        if (readyTask->queryCUDAStreamCompletion()) {
           // All of this task's h2d copies is complete, so add it to the completion
           // pending GPU task queue and prepare to run.
           readyTask = dts->getNextInitiallyReadyDeviceTask();
@@ -871,7 +871,7 @@ void UnifiedScheduler::runTasks(int t_id)
        */
       else if (dts->numCompletionPendingDeviceTasks() > 0) {
         readyTask = dts->peekNextCompletionPendingDeviceTask();
-        if (readyTask->checkCUDAStreamDone()) {
+        if (readyTask->queryCUDAStreamCompletion()) {
           readyTask = dts->getNextCompletionPendingDeviceTask();
           havework = true;
           gpuPending = true;

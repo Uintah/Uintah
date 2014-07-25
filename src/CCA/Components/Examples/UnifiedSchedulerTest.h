@@ -106,12 +106,13 @@ namespace Uintah {
                                  DataWarehouse* new_dw);
 
       void timeAdvanceUnified(Task::CallBackEvent event,
-                          const ProcessorGroup* pg,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw,
-                          void* stream);
+                              const ProcessorGroup* pg,
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw,
+                              void* stream,
+                              int deviceID);
 
       void timeAdvance1DP(const ProcessorGroup*,
                           const PatchSubset* patches,
