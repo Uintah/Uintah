@@ -663,9 +663,9 @@ void RadPropertyCalculator::RadPropsInterface::computeProps( const Patch* patch,
 
     if ( VolFraction > 1.e-16 ){
 
-      _gg_radprops->mixture_coeffs( plankCff, rossCff, effCff, mol_frac, T );
+      _gg_radprops->mixture_coeffs(plankCff, rossCff, effCff, mol_frac, T);
 
-      abskg[c] = effCff; //need to generalize this to the other coefficients
+      abskg[c] = effCff*100; // from cm^-1 to m^-1 //need to generalize this to the other coefficients
 
     } else { 
 
@@ -712,7 +712,7 @@ void RadPropertyCalculator::RadPropsInterface::computePropsWithParticles( const 
 
       _gg_radprops->mixture_coeffs( plankCff, rossCff, effCff, mol_frac, T );
 
-      abskg[c] = effCff; //need to generalize this to the other coefficients
+      abskg[c] = effCff*100; // from cm^-1 to m^-1 //need to generalize this to the other coefficients
     
       //now compute the particle values: 
       abskp[c] = 0.0; 

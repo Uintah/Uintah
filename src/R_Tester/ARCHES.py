@@ -78,6 +78,7 @@ NIGHTLYTESTS = [
    ("coal_channel"                , "Coal/coal_channel.ups"                       , 1.1 , "Linux"   , ["exactComparison", "no_restart"]),
 #   ("methane_RCCE"                , "methane_RCCE.ups"                            , 1.1 , "Linux"  , ["exactComparison"]) ,
    ("DOM16"                       , "DOM16.ups"                                    , 3   , "Linux"  , ["exactComparison", "no_restart"]),
+   ("DO_RadProps"                 , "DO_RadProps.ups"                              , 1.1 , "Linux"  , ["exactComparison"]) ,
    ("CQMOM_1x1"                   , "CQMOM_regression/CQMOM_1x1.ups"               , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
    ("CQMOM_scalar_transport"      , "CQMOM_regression/CQMOM_Transport.ups"         , 6   , "Linux"  , ["exactComparison", "no_restart"]),
    ("CQMOM_scalar_transport2x2x2" , "CQMOM_regression/CQMOM_Transport_2x2x2.ups"   , 6   , "Linux"  , ["exactComparison", "no_restart"]),
@@ -86,7 +87,7 @@ NIGHTLYTESTS = [
    ("PTC_3D"                      , "CQMOM_regression/PTC_3D.ups"                  , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
    ("regridTestArches"            , "regridTestArches"                             , 8   , "Linux"  , ["startFromCheckpoint", "no_restart"]),
 
-#
+
 # multi-threaded NIGHTLY tests
    ("rmcrt_bm1_1L_thread"         , "RMCRT/rmcrt_bm1_1L.ups"               , 1.1 , "Linux"  , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
    ("rmcrt_bm1_DO_thread"         , "RMCRT/rmcrt_bm1_DO.ups"               , 1.1 , "Linux"  , ["no_restart", "exactComparison", "sus_options=-nthreads 8"]),
@@ -130,6 +131,7 @@ LOCALTESTS = [
    ("coal_channel"               , "Coal/coal_channel.ups"                       , 1.1 , "All"    , ["exactComparison", "no_restart"]),
 #   ("methane_RCCE"               , "methane_RCCE.ups"                            , 1.1 , "All "  , ["exactComparison"]) ,
    ("DOM16"                       , "DOM16.ups"                                    , 3   , "All"  , ["exactComparison", "no_restart"]),
+   ("DO_RadProps"                 , "DO_RadProps.ups"                              , 1.1 , "All"  , ["exactComparison"]) ,
    ("CQMOM_1x1"                   , "CQMOM_regression/CQMOM_1x1.ups"               , 1.1 , "All"  , ["exactComparison", "no_restart"]),
    ("CQMOM_scalar_transport"      , "CQMOM_regression/CQMOM_Transport.ups"         , 6   , "All"  , ["exactComparison", "no_restart"]),
    ("CQMOM_scalar_transport2x2x2" , "CQMOM_regression/CQMOM_Transport_2x2x2.ups"   , 6   , "All"  , ["exactComparison", "no_restart"]),
