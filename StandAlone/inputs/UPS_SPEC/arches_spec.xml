@@ -691,7 +691,7 @@
           <initialization               spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'constant, step, geometry_fill, 
                                                                           sine-x, sine-y, sine-z, gaussian, 
-                                                                          tabulated'">
+                                                                          tabulated, linear-x'">
             <!-- constant value initialization -->
             <constant                   spec="OPTIONAL DOUBLE"/>
             <!-- constant within a geometry piece (geometry_fill) -->
