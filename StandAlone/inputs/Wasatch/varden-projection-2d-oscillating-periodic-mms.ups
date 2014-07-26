@@ -68,15 +68,6 @@
       </ConvectiveFlux>
       
     </TransportEquation>   
-
-
-      <ConvectiveFlux direction="Y" method="UPWIND">
-        <AdvectiveVelocity>
-            <NameTag name="v" state="STATE_NONE"/>
-        </AdvectiveVelocity>
-      </ConvectiveFlux>
-      
-    </TransportEquation>   
     
     <FieldClipping tasklist="advance_solution">
       <FieldExpression type="SVOL" min="0.0" max="1.0">
