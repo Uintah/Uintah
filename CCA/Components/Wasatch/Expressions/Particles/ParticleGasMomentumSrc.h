@@ -23,18 +23,16 @@ public:
 
   class Builder : public Expr::ExpressionBuilder
   {
-    const Expr::Tag     pMomRHSTag_, pMassTag_, pSizeTag_;
+    const Expr::Tag     pDragTag_, pMassTag_, pSizeTag_;
     const Expr::TagList pPosTags_;
-    const bool hasGravity_;
 
   public:
 
     Builder( const Expr::Tag& resultTag,
-             const Expr::Tag& particleMomentumRHSTag,
+             const Expr::Tag& particleDragTag,
              const Expr::Tag& particleMassTag,
              const Expr::Tag& particleSizeTag,
-             const Expr::TagList& particlePositionTags,
-             const bool hasGravity );
+             const Expr::TagList& particlePositionTags );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   };
@@ -48,15 +46,13 @@ public:
 
 private:
 
-  ParticleGasMomentumSrc( const Expr::Tag& particleMomentumRHSTag,
+  ParticleGasMomentumSrc( const Expr::Tag& particleDragTag,
                         const Expr::Tag& particleMassTag,
                         const Expr::Tag& particleSizeTag,
-                        const Expr::TagList& particlePositionTags,
-                         const bool hasGravity);
+                        const Expr::TagList& particlePositionTags);
 
-  const Expr::Tag     pMomRHSTag_, pMassTag_, pSizeTag_;
+  const Expr::Tag     pDragTag_, pMassTag_, pSizeTag_;
   const Expr::TagList pPosTags_;
-  const bool hasGravity_;
   double vol_; // cell volume
   
   typedef typename SpatialOps::Particle::ParticleToCell<GasVelT> P2GVelT;
@@ -64,7 +60,7 @@ private:
 
   Wasatch::UintahPatchContainer* patchContainer_;
   
-  const ParticleField *px_, *py_, *pz_, *pMomRHS_, *pSize_, *pMass_;
+  const ParticleField *px_, *py_, *pz_, *pDrag_, *pSize_, *pMass_;
 
 };
 
@@ -79,17 +75,15 @@ private:
 
 template< typename GasVelT >
 ParticleGasMomentumSrc<GasVelT>::
-ParticleGasMomentumSrc( const Expr::Tag& particleMomentumRHSTag,
+ParticleGasMomentumSrc( const Expr::Tag& particleDragTag,
                       const Expr::Tag& particleMassTag,
                       const Expr::Tag& particleSizeTag,
-                      const Expr::TagList& particlePositionTags,
-                       const bool hasGravity)
+                      const Expr::TagList& particlePositionTags)
   : Expr::Expression<GasVelT>(),
-    pMomRHSTag_( particleMomentumRHSTag ),
+    pDragTag_( particleDragTag ),
     pMassTag_  ( particleMassTag        ),
     pSizeTag_  ( particleSizeTag        ),
-    pPosTags_  ( particlePositionTags   ),
-    hasGravity_( hasGravity             )
+    pPosTags_  ( particlePositionTags   )
 {}
 
  //------------------------------------------------------------------
@@ -105,7 +99,7 @@ void
 ParticleGasMomentumSrc<GasVelT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  exprDeps.requires_expression( pMomRHSTag_     );
+  exprDeps.requires_expression( pDragTag_     );
   exprDeps.requires_expression( pMassTag_     );
   exprDeps.requires_expression( pSizeTag_     );
   exprDeps.requires_expression( pPosTags_     );
@@ -120,7 +114,7 @@ bind_fields( const Expr::FieldManagerList& fml )
 {
   const typename Expr::FieldMgrSelector<ParticleField>::type& pfm = fml.template field_manager<ParticleField>();
 
-  pMomRHS_ = &pfm.field_ref( pMomRHSTag_ );
+  pDrag_ = &pfm.field_ref( pDragTag_ );
   pMass_ =  &pfm.field_ref( pMassTag_ );
   pSize_  = &pfm.field_ref( pSizeTag_  );
   px_  = &pfm.field_ref( pPosTags_[0]  );
@@ -154,7 +148,7 @@ evaluate()
   SpatFldPtr<GasVelT     >  gasmomsrc = SpatialFieldStore::get<GasVelT     >( result );
   SpatFldPtr<ParticleField> pforcetmp    = SpatialFieldStore::get<ParticleField>( *px_ );
 
-  *pforcetmp <<= (*pMomRHS_ + (hasGravity_ ? 9.81 : 0) ) * *pMass_; // multiply by mass
+  *pforcetmp <<= *pDrag_ * *pMass_; // multiply by mass
 
   p2gvOp_->set_coordinate_information( px_,py_,pz_, pSize_ );
   p2gvOp_->apply_to_field( *pforcetmp, *gasmomsrc );
@@ -167,17 +161,15 @@ evaluate()
 template< typename GasVelT >
 ParticleGasMomentumSrc<GasVelT>::Builder::
 Builder( const Expr::Tag& resultTag,
-        const Expr::Tag& particleMomentumRHSTag,
+        const Expr::Tag& particleDragTag,
         const Expr::Tag& particleMassTag,
         const Expr::Tag& particleSizeTag,
-        const Expr::TagList& particlePositionTags,
-        const bool hasGravity)
+        const Expr::TagList& particlePositionTags)
   : ExpressionBuilder(resultTag),
-    pMomRHSTag_( particleMomentumRHSTag ),
+    pDragTag_( particleDragTag ),
     pMassTag_(particleMassTag),
     pSizeTag_(particleSizeTag),
-    pPosTags_(particlePositionTags),
-    hasGravity_(hasGravity)
+    pPosTags_(particlePositionTags)
 {}
 
 //--------------------------------------------------------------------
@@ -186,7 +178,7 @@ template< typename GasVelT >
 Expr::ExpressionBase*
 ParticleGasMomentumSrc<GasVelT>::Builder::build() const
 {
-  return new ParticleGasMomentumSrc<GasVelT> (pMomRHSTag_, pMassTag_, pSizeTag_, pPosTags_, hasGravity_ );
+  return new ParticleGasMomentumSrc<GasVelT> (pDragTag_, pMassTag_, pSizeTag_, pPosTags_ );
 }
 
 
