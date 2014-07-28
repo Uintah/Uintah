@@ -583,16 +583,6 @@ namespace Wasatch{
     }
 
     //
-    // get the 2D variable density, corrugated mms params, if any, and parse them.
-    // THIS MUST BE PARSED BEFORE THE MOMENTUM EQUATIONS
-    //
-    Uintah::ProblemSpecP VarDenCorrugatedMMSSpec = wasatchSpec_->findBlock("VarDenCorrugatedMMS");
-    if (VarDenCorrugatedMMSSpec) {
-      const bool computeContinuityResidual = wasatchSpec_->findBlock("MomentumEquations")->findBlock("ComputeMassResidual");
-      parse_var_den_corrugated_mms(wasatchSpec_, VarDenCorrugatedMMSSpec, computeContinuityResidual, graphCategories_);
-    }
-
-    //
     // Build momentum transport equations.  This registers all expressions
     // required for solution of each momentum equation.
     //

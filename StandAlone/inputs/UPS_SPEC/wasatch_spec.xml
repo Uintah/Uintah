@@ -813,25 +813,6 @@
       <scalar  spec="REQUIRED STRING"/>
     </VariableDensityMMS>
 
-    <VarDenCorrugatedMMS  spec="OPTIONAL NO_DATA"
-                          attribute1="rho0 REQUIRED DOUBLE"
-                          attribute2="rho1 REQUIRED DOUBLE"
-                          attribute3="w    REQUIRED DOUBLE"
-                          attribute4="k    REQUIRED DOUBLE"
-													attribute5="uf   REQUIRED DOUBLE"
-													attribute6="vf   REQUIRED DOUBLE"
-													attribute7="d    REQUIRED DOUBLE"
-													attribute8="a    REQUIRED DOUBLE"
-													attribute9="b    REQUIRED DOUBLE"                           
-													attribute10="x1  OPTIONAL STRING 'X, Y, Z'"
-													attribute11="x2  OPTIONAL STRING 'X, Y, Z'">
-      <DiffusionCoefficient spec="REQUIRED NO_DATA"> <!-- This creates an expression for the diffusion coefficient -->
-        <NameTag            spec="REQUIRED" />
-      </DiffusionCoefficient>
-      <Scalar           spec="REQUIRED STRING"/> <!-- The expression for the primitve scalar (e.g. f) is created by the transport equation. just specify the string name here -->      
-      <ConservedScalar  spec="REQUIRED STRING"/> <!-- The conserved scalar is created by the transport equation. just Specify the name here -->
-    </VarDenCorrugatedMMS>
-
     <VarDenOscillatingMMS  spec="OPTIONAL NO_DATA"
                            attribute1="rho0 REQUIRED DOUBLE"
                            attribute2="rho1 REQUIRED DOUBLE"
