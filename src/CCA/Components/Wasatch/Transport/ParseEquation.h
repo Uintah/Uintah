@@ -186,25 +186,6 @@ namespace Wasatch{
                                       GraphCategories& gc);
 
   /**
-   *  \brief Build 2D mms source terms and parse them properly to the RHS's
-   *
-   *  \param wasatchParams The XML block from the input file specifying the
-   *         wasatch block.
-   *
-   *  \param varDensMMSParams The XML block from the input file specifying the
-   *         parameters of the MMS. This will be \verbatim <VariableDensityMMS>\endverbatim.
-   *
-   *  \param computeContinuityResidual a boolean showing whether the continuity
-   *         residual is being calculated or not
-   *
-   *  \param gc The GraphCategories.
-   */
-  void parse_var_den_corrugated_mms( Uintah::ProblemSpecP wasatchParams,
-                                     Uintah::ProblemSpecP varDensMMSParams,
-                                     const bool computeContinuityResidual,
-                                     GraphCategories& gc);
-
-  /**
    *  \brief Build moment transport equations specified by "params"
    *
    *  \param params The XML block from the input file specifying the
