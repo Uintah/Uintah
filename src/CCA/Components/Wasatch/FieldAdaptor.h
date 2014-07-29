@@ -326,7 +326,7 @@ namespace Wasatch{
 
     double* fieldValues_ = NULL;
     FieldT* field;
-    if( isGPUTask && IS_GPU_INDEX(deviceIndex) ){ // homogeneosu GPU task
+    if( isGPUTask && IS_GPU_INDEX(deviceIndex) ){ // homogeneous GPU task
 #     ifdef HAVE_CUDA
       fieldValues_ = const_cast<double*>( uintahDeviceVar );
 #     endif
@@ -341,7 +341,7 @@ namespace Wasatch{
       fieldValues_ = const_cast<typename FieldT::value_type*>( uintahVar.getPointer() );
       field = new FieldT( so::MemoryWindow( size, offset, extent ),
                           so::BoundaryCellInfo::build<FieldT>(bcPlus),
-                          so::GhostData( get_n_ghost<FieldT>() ),
+                          ghostData,
                           fieldValues_,
                           so::ExternalStorage,
                           CPU_INDEX );
