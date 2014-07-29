@@ -58,7 +58,7 @@ bool   RMCRTCommon::d_isSeedRandom;
 bool   RMCRTCommon::d_allowReflect;           
 int    RMCRTCommon::RMCRTCommon::d_matl;    
   
-MaterialSet* RMCRTCommon::d_matlSet;
+MaterialSet* RMCRTCommon::d_matlSet = 0;
 const VarLabel* RMCRTCommon::d_sigmaT4_label;
 const VarLabel* RMCRTCommon::d_abskgLabel;
 const VarLabel* RMCRTCommon::d_temperatureLabel;
@@ -112,11 +112,15 @@ RMCRTCommon::registerVarLabels(int   matlIndex,
 
   //__________________________________
   //  define the materialSet
-  d_matlSet = scinew MaterialSet();
-  vector<int> m;
-  m.push_back(matlIndex);
-  d_matlSet->addAll(m);
-  d_matlSet->addReference();
+  if (d_matlSet == 0) {
+    d_matlSet = scinew MaterialSet();
+    vector<int> m;
+    m.push_back(matlIndex);
+    d_matlSet->addAll(m);
+    d_matlSet->addReference();
+  } else {
+    d_matlSet->addReference();
+  }
 }
 
 //______________________________________________________________________
