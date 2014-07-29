@@ -454,6 +454,7 @@ CQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int t
   tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 2);
   tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
   tsk->requires(Task::OldDW, d_fieldLabels->d_viscosityCTSLabel, Ghost::AroundCells, 1);
+  tsk->requires(Task::OldDW, d_fieldLabels->d_cellTypeLabel, Ghost::AroundCells, 1);
   
   if (timeSubStep == 0) {
 //    tsk->requires(Task::OldDW, d_sourceLabel, Ghost::None, 0);
@@ -506,6 +507,7 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     
     constCCVariable<double> oldPhi;
     constCCVariable<double> mu_t;
+    constCCVariable<int> cellType;
     constSFCXVariable<double> uVel;
     constSFCYVariable<double> vVel;
     constSFCZVariable<double> wVel;
@@ -531,6 +533,7 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     
     old_dw->get(mu_t, d_fieldLabels->d_viscosityCTSLabel, matlIndex, patch, gac, 1);
     old_dw->get(areaFraction, d_fieldLabels->d_areaFractionLabel, matlIndex, patch, gac, 2);
+    old_dw->get(cellType, d_fieldLabels->d_cellTypeLabel, matlIndex, patch, gac, 1);
     
     new_dw->getModifiable(phi, d_transportVarLabel, matlIndex, patch);
     new_dw->getModifiable(Fdiff, d_FdiffLabel, matlIndex, patch);
@@ -628,7 +631,7 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
         //splitting procedure will require putting each convective flux calculation to its own scheduler task
         if (uVelIndex > -1) {
           d_cqmomConv->doConvX( patch, FconvX, areaFraction, d_convScheme, cqmomWeights,
-                               cqmomAbscissas, M, nNodes, uVelIndex, momentIndex );
+                               cqmomAbscissas, M, nNodes, uVelIndex, momentIndex, cellType, epW );
           for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
             IntVector c = *iter;
             phiTemp[c] += -FconvX[c];
@@ -637,7 +640,7 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
 #ifdef YDIM
         if (vVelIndex > -1) {
           d_cqmomConv->doConvY( patch, FconvY, areaFraction, d_convScheme, cqmomWeights,
-                               cqmomAbscissas, M, nNodes, vVelIndex, momentIndex );
+                               cqmomAbscissas, M, nNodes, vVelIndex, momentIndex, cellType, epW );
           for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
             IntVector c = *iter;
             phiTemp[c] += -FconvY[c];
@@ -647,7 +650,7 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
 #ifdef ZDIM
         if (wVelIndex > -1) {
           d_cqmomConv->doConvZ( patch, FconvZ, areaFraction, d_convScheme, cqmomWeights,
-                               cqmomAbscissas, M, nNodes, wVelIndex, momentIndex );
+                               cqmomAbscissas, M, nNodes, wVelIndex, momentIndex, cellType, epW );
           for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
             IntVector c = *iter;
             phiTemp[c] += -FconvZ[c];
@@ -769,6 +772,7 @@ CQMOMEqn::sched_buildXConvection( const LevelP& level, SchedulerP& sched, int ti
   tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 2);
   tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
   tsk->requires(Task::OldDW, d_fieldLabels->d_viscosityCTSLabel, Ghost::AroundCells, 1);
+  tsk->requires(Task::OldDW, d_fieldLabels->d_cellTypeLabel, Ghost::AroundCells, 1);
   
   //loop over requires for weights and abscissas needed for convection term if IC=u,v,w
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
@@ -804,6 +808,7 @@ CQMOMEqn::buildXConvection( const ProcessorGroup* pc,
     
     constCCVariable<double> oldPhi;
     constCCVariable<Vector> areaFraction;
+    constCCVariable<int> cellType;
     
     CCVariable<double> phi;
     CCVariable<double> phiTemp;
@@ -811,6 +816,7 @@ CQMOMEqn::buildXConvection( const ProcessorGroup* pc,
 
     new_dw->get(oldPhi, d_oldtransportVarLabel, matlIndex, patch, gac, 2);
     old_dw->get(areaFraction, d_fieldLabels->d_areaFractionLabel, matlIndex, patch, gac, 2);
+    old_dw->get(cellType, d_fieldLabels->d_cellTypeLabel, matlIndex, patch, gac, 1);
     
     new_dw->getModifiable(phi, d_transportVarLabel, matlIndex, patch);
     new_dw->getModifiable(phiTemp, d_tempLabel, matlIndex, patch);
@@ -845,7 +851,7 @@ CQMOMEqn::buildXConvection( const ProcessorGroup* pc,
 #endif
 
     d_cqmomConv->doConvX( patch, FconvX, areaFraction, d_convScheme, cqmomWeights,
-                          cqmomAbscissas, M, nNodes, uVelIndex, momentIndex );
+                          cqmomAbscissas, M, nNodes, uVelIndex, momentIndex, cellType, epW );
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
       phi[c] += -FconvX[c]; //changing the actual phi value here
@@ -873,6 +879,7 @@ CQMOMEqn::sched_buildYConvection( const LevelP& level, SchedulerP& sched, int ti
   //-----OLD-----
   tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 2);
   tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
+  tsk->requires(Task::OldDW, d_fieldLabels->d_cellTypeLabel, Ghost::AroundCells, 1);
   
   //loop over requires for weights and abscissas needed for convection term if IC=u,v,w
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
@@ -908,6 +915,7 @@ CQMOMEqn::buildYConvection( const ProcessorGroup* pc,
     
     constCCVariable<double> oldPhi;
     constCCVariable<Vector> areaFraction;
+    constCCVariable<int> cellType;
     
     CCVariable<double> phi;
     CCVariable<double> phiTemp;
@@ -915,6 +923,7 @@ CQMOMEqn::buildYConvection( const ProcessorGroup* pc,
     
     new_dw->get(oldPhi, d_oldtransportVarLabel, matlIndex, patch, gac, 2);
     old_dw->get(areaFraction, d_fieldLabels->d_areaFractionLabel, matlIndex, patch, gac, 2);
+    old_dw->get(cellType, d_fieldLabels->d_cellTypeLabel, matlIndex, patch, gac, 1);
     
     new_dw->getModifiable(phi, d_transportVarLabel, matlIndex, patch);
     new_dw->getModifiable(phiTemp, d_tempLabel, matlIndex, patch);
@@ -944,7 +953,7 @@ CQMOMEqn::buildYConvection( const ProcessorGroup* pc,
 #endif
     
     d_cqmomConv->doConvY( patch, FconvY, areaFraction, d_convScheme, cqmomWeights,
-                           cqmomAbscissas, M, nNodes, vVelIndex, momentIndex );
+                           cqmomAbscissas, M, nNodes, vVelIndex, momentIndex, cellType, epW );
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
       phi[c] += -FconvY[c];
@@ -954,7 +963,7 @@ CQMOMEqn::buildYConvection( const ProcessorGroup* pc,
 }
 
 //---------------------------------------------------------------------------
-// Method: Schedule builindg the y-direction convection
+// Method: Schedule building the z-direction convection
 //---------------------------------------------------------------------------
 void
 CQMOMEqn::sched_buildZConvection( const LevelP& level, SchedulerP& sched, int timeSubStep )
@@ -971,6 +980,7 @@ CQMOMEqn::sched_buildZConvection( const LevelP& level, SchedulerP& sched, int ti
   //-----OLD-----
   tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 2);
   tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
+  tsk->requires(Task::OldDW, d_fieldLabels->d_cellTypeLabel, Ghost::AroundCells, 1);
   
   //loop over requires for weights and abscissas needed for convection term if IC=u,v,w
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
@@ -1006,6 +1016,7 @@ CQMOMEqn::buildZConvection( const ProcessorGroup* pc,
     
     constCCVariable<double> oldPhi;
     constCCVariable<Vector> areaFraction;
+    constCCVariable<int> cellType;
     
     CCVariable<double> phi;
     CCVariable<double> phiTemp;
@@ -1013,6 +1024,7 @@ CQMOMEqn::buildZConvection( const ProcessorGroup* pc,
     
     new_dw->get(oldPhi, d_oldtransportVarLabel, matlIndex, patch, gac, 2);
     old_dw->get(areaFraction, d_fieldLabels->d_areaFractionLabel, matlIndex, patch, gac, 2);
+    old_dw->get(cellType, d_fieldLabels->d_cellTypeLabel, matlIndex, patch, gac, 1);
     
     new_dw->getModifiable(phi, d_transportVarLabel, matlIndex, patch);
     new_dw->getModifiable(phiTemp, d_tempLabel, matlIndex, patch);
@@ -1042,7 +1054,7 @@ CQMOMEqn::buildZConvection( const ProcessorGroup* pc,
 #endif
     
     d_cqmomConv->doConvZ( patch, FconvZ, areaFraction, d_convScheme, cqmomWeights,
-                           cqmomAbscissas, M, nNodes, wVelIndex, momentIndex );
+                           cqmomAbscissas, M, nNodes, wVelIndex, momentIndex, cellType, epW );
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
       phi[c] += -FconvZ[c];
