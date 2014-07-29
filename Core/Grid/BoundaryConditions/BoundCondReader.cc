@@ -525,7 +525,7 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
       delete bc_geom_itr->second;
     }
 
-    BCR_dbg << "Printing out bcDataArray . . " << endl;
+    BCR_dbg << "Printing out bcDataArray . . " << "for face_side = " << face_side << endl;
     d_BCReaderData[face_side].print();
 
     delete bcGeom;
@@ -656,6 +656,7 @@ void BoundCondReader::combineBCS()
       SideBCData* side_bc = NULL;
       DifferenceBCData* diff_bc = NULL;
       BCGeomBase* other_bc = NULL;
+      UnionBCData* union_bc = NULL;
 
       if (bcgeom_vec.size() > 1) {
 
@@ -687,9 +688,17 @@ void BoundCondReader::combineBCS()
 
         } else {
 
-          UnionBCData* union_bc = scinew UnionBCData();
-          remove_copy_if(bcgeom_vec.begin(),bcgeom_vec.end(),
-                         back_inserter(union_bc->child),cmp_type<SideBCData>());
+          union_bc = scinew UnionBCData();
+          // Need to clone the RectangleBC that are being inserted 
+          // into the UnionBC 
+          // remove_copy_if(bcgeom_vec.begin(),bcgeom_vec.end(),
+          //            back_inserter(union_bc->child),cmp_type<SideBCData>());
+
+          for (BCGeomBaseVec::iterator itr = bcgeom_vec.begin(); 
+               itr != bcgeom_vec.end(); ++itr) {
+            if (!cmp_type<SideBCData>()(*itr))
+              union_bc->child.push_back((*itr)->clone());
+          }
           
           side_index = find_if(bcgeom_vec.begin(),bcgeom_vec.end(),
                                cmp_type<SideBCData>());
@@ -697,6 +706,7 @@ void BoundCondReader::combineBCS()
           side_bc = dynamic_cast<SideBCData*>((*side_index)->clone());
 
           UnionBCData* union_bc_clone = union_bc->clone(); 
+
           diff_bc = scinew DifferenceBCData(side_bc,union_bc_clone);
 
           diff_bc->setBCName( side_bc->getBCName() ); //make sure the new piece has the right name
@@ -705,17 +715,18 @@ void BoundCondReader::combineBCS()
           rearranged.addBCData(mat_id,diff_bc->clone());
           delete side_bc;
           delete diff_bc;
-          for (vec_itr=union_bc->child.begin();vec_itr!=union_bc->child.end();
+          for (vec_itr=union_bc_clone->child.begin();vec_itr!=union_bc_clone->child.end();
                ++vec_itr){
             rearranged.addBCData(mat_id,(*vec_itr)->clone());
           }
 
-          //delete union_bc;
+          
+          delete union_bc;
           delete union_bc_clone;
-
         }
 
       }
+
       for_each(bcgeom_vec.begin(),bcgeom_vec.end(),delete_object<BCGeomBase>());
       bcgeom_vec.clear();
     }
