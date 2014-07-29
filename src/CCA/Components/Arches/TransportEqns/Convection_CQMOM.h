@@ -36,6 +36,10 @@
  *        H^+ = \sum_i w_i max(u_i,0) u_i^k with k = moment order (expanded for multivariate)
  *        H^- = \sum_i w_i min(u_i,0) u_i^k \f$
  *
+ *        The wall boundary conditions - used when cellType = Intrusion or WallBC are given by setting the nodes on the
+ *        face fo the wall as (in x-dir) \f$ [w_\alpha U_\alpha V_\alpha W_\alpha]_{wall} = 
+ *        [w_\alpha/\epsilon_w -\epsilon_w * U_\alpha V_\alpha W_\alpha]_{interior} \f$ where \f$ \epsilon_w \f$ is the
+ *        particle-wall restituion coefficient, with default value set to 1 as an elastic wall collision
  */
 
 //NOTE: placing this here lets both cqmomeqn & this functino use it, possibly move it later?
@@ -63,19 +67,22 @@ namespace Uintah{
     template<class fT > void
     doConvX( const Patch* p, fT& Fconv, constCCVariable<Vector>& areaFraction, const std::string d_convScheme,
              std::vector<constCCVarWrapper> weights, std::vector<constCCVarWrapper> abscissas,
-             const int M, const int nNodes, const int uVelIndex, const std::vector<int> momentIndex );
+             const int M, const int nNodes, const int uVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
+             const double epW);
     
     /** @brief Computes the y-convection term. */
     template<class fT > void
     doConvY( const Patch* p, fT& Fconv, constCCVariable<Vector>& areaFraction, const std::string d_convScheme,
              std::vector<constCCVarWrapper> weights, std::vector<constCCVarWrapper> abscissas,
-             const int M, const int nNodes, const int yVelIndex, const std::vector<int> momentIndex );
+             const int M, const int nNodes, const int yVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
+             const double epW);
     
     /** @brief Computes the z-convection term. */
     template<class fT > void
     doConvZ( const Patch* p, fT& Fconv, constCCVariable<Vector>& areaFraction, const std::string d_convScheme,
              std::vector<constCCVarWrapper> weights, std::vector<constCCVarWrapper> abscissas,
-             const int M, const int nNodes, const int wVelIndex, const std::vector<int> momentIndex );
+             const int M, const int nNodes, const int wVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
+             const double epW);
     
     
     //---------------------------------------------------------------------------
@@ -249,7 +256,7 @@ namespace Uintah{
     //shouln't need flux versino with densoty for particle transport
     /** @brief Computes the flux term, \f$ int_A div{u \phi} \cdot dA \f$, where u is the velocity
      *          in the normal (coord) direction.  Note version does not have density. */
-    inline double getFlux( const double area, cqFaceData1D GPhi, constCCVariable<Vector>& areaFraction, IntVector coord, IntVector c )
+    inline double getFlux( const double area, cqFaceData1D GPhi, constCCVariable<Vector>& areaFraction, IntVector coord, IntVector c, constCCVariable<int>& cellType )
     {
       double F;
       cqFaceData1D areaFrac;
@@ -267,8 +274,13 @@ namespace Uintah{
       areaFrac.plus  = plus_areaFrac[dim];
       areaFrac.minus = curr_areaFrac[dim];
       
-      return F = area * (  areaFrac.plus * GPhi.plus
-                         - areaFrac.minus * GPhi.minus );
+      //Not using the areafraction here allows for flux to coem from an intrusion cell into the domain as
+      //the particles bounce, but requires checking celltype to prevent flux into intrusion cells
+      if ( cellType[c] == -1 ) {
+        return F = area * ( GPhi.plus - GPhi.minus );
+      } else {
+        return F = 0.0;
+      }
     }
     
     inline cqFaceData1D sumNodes( std::vector<cqFaceData1D>& w, std::vector<cqFaceData1D>& a, const int& nNodes, const int& M,
@@ -383,7 +395,7 @@ namespace Uintah{
       template<class fT>
       void do_convection( const Patch* p, fT& Fconv, std::vector<constCCVarWrapper> weights, std::vector<constCCVarWrapper> abscissas,
                          const int& M, const int& nNodes, const int& velIndex, const std::vector<int>& momentIndex, const int& dim,
-                         constCCVariable<Vector>& area_fraction, Convection_CQMOM* D)
+                         constCCVariable<Vector>& area_fraction, constCCVariable<int>& cellType, const double epW, Convection_CQMOM* D)
       {
         //set conv direction
         IntVector coord = IntVector(0,0,0);
@@ -415,16 +427,24 @@ namespace Uintah{
           double aSize = M*nNodes;
           std::vector<Convection_CQMOM::cqFaceData1D> faceAbscissas (aSize);
           std::vector<Convection_CQMOM::cqFaceData1D> faceWeights (nNodes);
+          bool isWeight = true; //bool to determine treatment of a weight near a wall
+          bool currVel = false;
           
           int ii = 0;
           for (std::vector<constCCVarWrapper>::iterator iter = weights.begin(); iter != weights.end(); ++iter) {
-            faceWeights[ii] = _opr->no_bc( c, coord, (iter->data) );
+            faceWeights[ii] = _opr->no_bc( c, coord, (iter->data), isWeight, currVel, cellType, epW );
             ii++;
           }
           
+          isWeight = false;
           ii = 0;
           for (std::vector<constCCVarWrapper>::iterator iter = abscissas.begin(); iter != abscissas.end(); ++iter) {
-            faceAbscissas[ii] = _opr->no_bc( c, coord, (iter->data) );
+            if ( ii >= (velIndex*nNodes) && ii < (velIndex+1)*nNodes ) { //check if wall is in this direction of velocity convection
+              currVel = true;
+            } else {
+              currVel = false;
+            }
+            faceAbscissas[ii] = _opr->no_bc( c, coord, (iter->data), isWeight, currVel, cellType, epW );
             ii++;
           }
 #ifdef cqmom_transport_dbg
@@ -432,7 +452,7 @@ namespace Uintah{
           std::cout << "____________________________" << std::endl;
 #endif
           gPhi     = D->sumNodes( faceWeights, faceAbscissas, nNodes, M, velIndex, momentIndex );
-          Fconv[c] = D->getFlux( area, gPhi, area_fraction, coord, c );
+          Fconv[c] = D->getFlux( area, gPhi, area_fraction, coord, c, cellType );
         }
  
 #ifdef cqmom_transport_dbg
@@ -462,15 +482,26 @@ namespace Uintah{
             std::vector<Convection_CQMOM::cqFaceData1D> faceAbscissas (aSize);
             std::vector<Convection_CQMOM::cqFaceData1D> faceWeights (nNodes);
             
+            bool isWeight = true; //bool to determien treatment at walls
+            bool currVel = false;
+            
+            //swapped boundary cells to use same code as interior cells
+            //keeping the iterators separate in case this behavoir needs to change later
             int ii = 0;
             for (std::vector<constCCVarWrapper>::iterator iter = weights.begin(); iter != weights.end(); ++iter) {
-              faceWeights[ii] = _opr->with_bc( c, coord, (iter->data), area_fraction, faceIsBoundary );
+              faceWeights[ii] = _opr->no_bc( c, coord, (iter->data), isWeight, currVel, cellType, epW );
               ii++;
             }
             
+            isWeight = false;
             ii = 0;
             for (std::vector<constCCVarWrapper>::iterator iter = abscissas.begin(); iter != abscissas.end(); ++iter) {
-              faceAbscissas[ii] = _opr->with_bc( c, coord, (iter->data), area_fraction, faceIsBoundary );
+              if ( ii >= (velIndex*nNodes) && ii < (velIndex+1)*nNodes ) { //check if wall is in this direction of velocity convection
+                currVel = true;
+              } else {
+                currVel = false;
+              }
+              faceAbscissas[ii] = _opr->no_bc( c, coord, (iter->data), isWeight, currVel, cellType, epW );
               ii++;
             }
 #ifdef cqmom_transport_dbg
@@ -478,7 +509,7 @@ namespace Uintah{
             std::cout << "____________________________" << std::endl;
 #endif
             gPhi     = D->sumNodes( faceWeights, faceAbscissas, nNodes, M, velIndex, momentIndex );
-            Fconv[c] = D->getFlux( area,  gPhi, area_fraction, coord, c );
+            Fconv[c] = D->getFlux( area,  gPhi, area_fraction, coord, c, cellType );
           }
         }
       }
@@ -501,7 +532,8 @@ namespace Uintah{
       FirstOrderInterpolation(){};
       ~FirstOrderInterpolation(){};
       
-      cqFaceData1D no_bc( const IntVector c, const IntVector coord, constCCVariable<double>& phi)
+      cqFaceData1D no_bc( const IntVector c, const IntVector coord, constCCVariable<double>& phi, const bool isWeight,
+                          const bool currVel, constCCVariable<int>& cellType, const double epW)
       {
         Convection_CQMOM::cqFaceData1D face_values;
         IntVector cxp = c + coord;
@@ -510,8 +542,33 @@ namespace Uintah{
         face_values.minus_right =  phi[c];
         face_values.plus_left  =  phi[c];
         
-        face_values.minus_left = phi[cxm];
-        face_values.plus_right = phi[cxp];
+        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] !=-1 ) { //check if this is a flow cell has a wall touching it
+          face_values.minus_left = phi[cxm];
+        } else {
+          if (isWeight) {
+            face_values.minus_left = phi[c]/epW;
+          } else {
+            if ( currVel ) {
+              face_values.minus_left = -epW*phi[c];
+            } else {
+              face_values.minus_left = phi[c];
+            }
+          }
+        }
+        
+        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] !=-1  ) {
+          face_values.plus_right = phi[cxp];
+        } else {
+          if (isWeight) {
+            face_values.plus_right = phi[c]/epW;
+          } else {
+            if (currVel ) {
+              face_values.plus_right = -epW*phi[c];
+            } else {
+              face_values.plus_right = phi[c];
+            }
+          }
+        }
         
         return face_values;
       };
@@ -601,7 +658,8 @@ namespace Uintah{
   template<class fT > void
   Convection_CQMOM::doConvX( const Patch* p, fT& Fconv, constCCVariable<Vector>& areaFraction, const std::string d_convScheme,
                              std::vector<constCCVarWrapper> weights, std::vector<constCCVarWrapper> abscissas,
-                             const int M, const int nNodes, const int uVelIndex, const std::vector<int> momentIndex )
+                             const int M, const int nNodes, const int uVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
+                             const double epW)
   {
     int dim = 0;
     
@@ -612,7 +670,7 @@ namespace Uintah{
       ConvHelper1<FirstOrderInterpolation<fT>, fT>* convection_helper =
       scinew ConvHelper1<FirstOrderInterpolation<fT>, fT>(the_interpolant, Fconv);
       
-      convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, uVelIndex, momentIndex, dim, areaFraction, this );
+      convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, uVelIndex, momentIndex, dim, areaFraction, cellType, epW, this );
       
       delete convection_helper;
       delete the_interpolant;
@@ -632,7 +690,8 @@ namespace Uintah{
   template<class fT> void
   Convection_CQMOM::doConvY( const Patch* p, fT& Fconv, constCCVariable<Vector>& areaFraction, const std::string d_convScheme,
                             std::vector<constCCVarWrapper> weights, std::vector<constCCVarWrapper> abscissas,
-                            const int M, const int nNodes, const int vVelIndex, const std::vector<int> momentIndex )
+                            const int M, const int nNodes, const int vVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
+                            const double epW)
   {
     int dim = 1;
     
@@ -641,7 +700,7 @@ namespace Uintah{
       ConvHelper1<FirstOrderInterpolation<fT>, fT>* convection_helper =
       scinew ConvHelper1<FirstOrderInterpolation<fT>, fT>(the_interpolant, Fconv);
       
-      convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, vVelIndex, momentIndex, dim, areaFraction, this );
+      convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, vVelIndex, momentIndex, dim, areaFraction, cellType, epW, this );
       
       delete convection_helper;
       delete the_interpolant;
@@ -660,7 +719,8 @@ namespace Uintah{
   template<class fT> void
   Convection_CQMOM::doConvZ( const Patch* p, fT& Fconv, constCCVariable<Vector>& areaFraction, const std::string d_convScheme,
                             std::vector<constCCVarWrapper> weights, std::vector<constCCVarWrapper> abscissas,
-                            const int M, const int nNodes, const int wVelIndex, const std::vector<int> momentIndex )
+                            const int M, const int nNodes, const int wVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
+                            const double epW)
   {
     int dim = 2;
     
@@ -669,7 +729,7 @@ namespace Uintah{
       ConvHelper1<FirstOrderInterpolation<fT>, fT>* convection_helper =
       scinew ConvHelper1<FirstOrderInterpolation<fT>, fT>(the_interpolant, Fconv);
       
-      convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, wVelIndex, momentIndex, dim, areaFraction, this );
+      convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, wVelIndex, momentIndex, dim, areaFraction, cellType, epW, this );
       
       delete convection_helper;
       delete the_interpolant;
