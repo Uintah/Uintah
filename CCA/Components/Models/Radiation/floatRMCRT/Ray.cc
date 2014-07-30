@@ -2326,6 +2326,7 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0 ){
 
       if( jumpFinetoCoarserLevel ){
         cur   = level->mapCellToCoarser(cur); 
+        prevCell   = level->mapCellToCoarser(prevCell); 
         level = level->getCoarserLevel().get_rep();      // move to a coarser level
         L     = level->getIndex();
         onFineLevel = false;
@@ -2334,8 +2335,9 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0 ){
         //dbg2 << " ** Jumping off fine patch switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << endl;
       } else if ( jumpCoarsetoCoarserLevel ){
 
-        IntVector c_old = cur;
+        //IntVector c_old = cur;
         cur   = level->mapCellToCoarser(cur); 
+        prevCell   = level->mapCellToCoarser(prevCell); 
         level = level->getCoarserLevel().get_rep();
         L     = level->getIndex();
 
