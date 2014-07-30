@@ -85,6 +85,7 @@ NIGHTLYTESTS = [
    ("SimpleBoxPTC"                , "CQMOM_regression/SimpleBoxPTC.ups"            , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
    ("PTC_2D"                      , "CQMOM_regression/PTC_2D.ups"                  , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
    ("PTC_3D"                      , "CQMOM_regression/PTC_3D.ups"                  , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
+   ("CQMOM_4D"                    , "CQMOM_regression/CQMOM_4D.ups"                , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
    ("regridTestArches"            , "regridTestArches"                             , 8   , "Linux"  , ["startFromCheckpoint", "no_restart"]),
 
 
@@ -138,6 +139,7 @@ LOCALTESTS = [
    ("SimpleBoxPTC"                , "CQMOM_regression/SimpleBoxPTC.ups"            , 1.1 , "All"  , ["exactComparison", "no_restart"]),
    ("PTC_2D"                      , "CQMOM_regression/PTC_2D.ups"                  , 1.1 , "All"  , ["exactComparison", "no_restart"]),
    ("PTC_3D"                      , "CQMOM_regression/PTC_3D.ups"                  , 1.1 , "All"  , ["exactComparison", "no_restart"]),
+   ("CQMOM_4D"                    , "CQMOM_regression/CQMOM_4D.ups"                , 1.1 , "All"  , ["exactComparison", "no_restart"]),
    
 # multi-threaded LOCAL tests
    ("rmcrt_bm1_1L_thread"                , "RMCRT/rmcrt_bm1_1L.ups"               , 1.1 , "ALL"    , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
@@ -192,6 +194,7 @@ CQMOMTESTS = [
   ("SimpleBoxPTC"                , "CQMOM_regression/SimpleBoxPTC.ups"            , 1.1 , "All"  , ["exactComparison", "no_restart"]),
   ("PTC_2D"                      , "CQMOM_regression/PTC_2D.ups"                  , 1.1 , "All"  , ["exactComparison", "no_restart"]),
   ("PTC_3D"                      , "CQMOM_regression/PTC_3D.ups"                  , 1.1 , "All"  , ["exactComparison", "no_restart"]),
+  ("CQMOM_4D"                    , "CQMOM_regression/CQMOM_4D.ups"                , 1.1 , "All"  , ["exactComparison", "no_restart"]),
 ]
 
 #__________________________________
