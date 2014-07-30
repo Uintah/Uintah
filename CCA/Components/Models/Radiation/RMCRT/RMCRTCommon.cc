@@ -86,7 +86,7 @@ RMCRTCommon::~RMCRTCommon()
   
   // when the radiometer class is invoked d_matlSet it deleted twice.  This prevents that.
   if( d_matlSet ) {
-    if ( d_matlSet->getReferenceCount() > 0 ){
+    if ( d_matlSet->getReferenceCount() == 1 ){
       d_matlSet->removeReference();
       delete d_matlSet;
     }
@@ -112,13 +112,12 @@ RMCRTCommon::registerVarLabels(int   matlIndex,
 
   //__________________________________
   //  define the materialSet
+  // The constructor can be called twice, so only create matlSet once.
   if (d_matlSet == 0) {
     d_matlSet = scinew MaterialSet();
     vector<int> m;
     m.push_back(matlIndex);
     d_matlSet->addAll(m);
-    d_matlSet->addReference();
-  } else {
     d_matlSet->addReference();
   }
 }
