@@ -791,7 +791,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
   }
   
 #ifdef cqmom_dbg
-  cout << "Final Quad Nodes" << endl;
+  cout << "3D Quad Nodes" << endl;
   cout << "________________" << endl;
   for (int i = 0 ; i<N_i[0]; i++) {
     cout << "x1[" << i << "] = " << x1[i] << " ";
@@ -809,17 +809,315 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
 #endif
   
   //now populate the weights and abscissas vectors
-  ii = 0;
+  if ( M == 3 ) {
+    ii = 0;
+    for (int k1 = 0; k1 < N_i[0]; k1++) {
+      for (int k2 = 0; k2 < N_i[1]; k2++) {
+        for (int k3 = 0; k3 < N_i[2]; k3++) {
+          weights[ii] = w1[k1]*w2[k1][k2]*w3[k1][k2][k3];
+          abscissas[0][ii] = x1[k1];
+          abscissas[1][ii] = x2[k1][k2];
+          abscissas[2][ii] = x3[k1][k2][k3];
+          ii++;
+        }
+      }
+    }
+    return;
+  }
+  
+  
+  //start the 4D quadrature
+  vanderMom.resize(N_i[0]);
+  tempStar.resize(N_i[0]);
+  std::vector< std::vector< std::vector< std::vector<double> > > > x4 (N_i[0], std::vector< std::vector< std::vector<double> > > (N_i[1], std::vector<std::vector<double> > (N_i[2], std::vector<double>( N_i[3], 0.0) ) ) );
+  std::vector< std::vector< std::vector< std::vector<double> > > > w4 (N_i[0], std::vector< std::vector< std::vector<double> > > (N_i[1], std::vector<std::vector<double> > (N_i[2], std::vector<double>( N_i[3], 0.0) ) ) );
+  std::vector< std::vector< std::vector< std::vector<double> > > > Zeta2 (N_i[0], std::vector< std::vector< std::vector<double> > > (N_i[1], std::vector<std::vector<double> > (N_i[2], std::vector<double>( 2*N_i[3], 0.0) ) ) );
+  
+  //first solve for all the zeta values using raw moments
+  // V1 R1 [zeta] = [moments]
+  for (int k2 = 0; k2 < N_i[1]; k2++ ) {
+    for (int k3 = 0; k3 < N_i[2]; k3++ ) {
+      for (int k4 = 1; k4 < 2*N_i[3]; k4++ ) {
+        //solve each vandermonde matrix of zeta
+        //fill in RHS of moments
+        for (int k1 = 0; k1<N_i[0]; k1++) {
+          vanderMom[k1] = moments[k1 + k2*maxInd[0] + k3*maxInd[0]*maxInd[1] + k4*maxInd[0]*maxInd[1]*maxInd[2]];
+#ifdef cqmom_dbg
+          cout << "m_" << k1 << k2 << k3 << k4 << "=" << vanderMom[k1] << endl;
+#endif
+        }
+        
+        if (!useLapack) {
+          vandermondeSolve(x1, tempStar, vanderMom);
+        } else {
+          int dim = N_i[0];
+          int nRHS = 1;
+          int info;
+          vector<int> ipiv(dim);
+          vector<double> b (dim);
+          vector<double> a (dim*dim);
+          
+          for (int i = 0; i<dim; i++) {
+            b[i] = vanderMom[i];
+          }
+          
+          for (int i = 0; i<dim; i++) {
+            for (int j = 0; j<dim; j++) {
+              a[j + dim*i] = pow(xTemp[i],j);
+            }
+          }
+          
+          DGESV(&dim, &nRHS, &*a.begin(), &dim, &*ipiv.begin(), &*b.begin(), &dim, &info);
+          
+          for (int i = 0; i<dim; i++) {
+            tempStar[i] = b[i];
+          }
+        }
+        
+#ifdef cqmom_dbg
+        if (k3 == 1) {
+          for (int k1 = 0; k1<N_i[0]; k1++) {
+            cout << "x[" << k1 << "] = " << x1[k1] << endl;
+            cout << "temp[" << k1 << "] = " << tempStar[k1] << endl;
+            cout << "vmom[" << k1 << "] = " << vanderMom[k1] << endl;
+          }
+        }
+#endif
+        
+        for (int k1 = 0; k1<N_i[0]; k1++) {
+          if ( w1[k1] > 0.0 ) {
+            Zeta2[k1][k2][k3][k4] = tempStar[k1]/w1[k1];
+          } else {
+            Zeta2[k1][k2][k3][k4] = 0.0;
+          }
+#ifdef cqmom_dbg
+          if ( k3 == 1 ) {
+            cout << "Zeta[" << k1 << "] = " << Zeta2[k1][k2][k3][k4] << endl;
+          }
+#endif
+        }
+        
+      }
+    }
+  }
+  
+  //next use these zeta values to solve for the new temporary variable omega
+  //V2 R2 [omega] = [zeta] for each node of M=1
+  std::vector< std::vector< std::vector< std::vector<double> > > > Omega (N_i[0], std::vector< std::vector< std::vector<double> > > (N_i[1], std::vector<std::vector<double> > (N_i[2], std::vector<double>( 2*N_i[3]-1, 0.0) ) ) );
+  xTemp.resize(N_i[1]);
+  wTemp.resize(N_i[1]);
+  vanderMom.resize(N_i[1]);
+  tempStar.resize(N_i[1]);
+  for (int k1 = 0; k1 < N_i[0]; k1++) { //loop over each node in x1
+    //fill in V2 R2 for this x1 node
+    for (int k2 = 0; k2<N_i[1]; k2++) {
+      xTemp[k2] = x2[k1][k2];
+      wTemp[k2] = w2[k1][k2];
+    }
+    
+    //populate "moments" vector in vandermonde with Zetas
+    for (int k4 = 1; k4<2*N_i[3]; k4++) {
+      for (int k3 = 0; k3 < N_i[2]; k3++) {
+        for (int k2 = 0; k2 < N_i[1]; k2++) {
+          vanderMom[k2] = Zeta2[k1][k2][k3][k4];
+#ifdef cqmom_dbg
+          if ( k4 == 1 ) {
+            cout << "rhs[" << k2 << "] = " << Zeta2[k1][k2][k3][k4] << endl;
+            cout << "rhs[" << k2 << "] = " << vanderMom[k2]<< endl;
+            cout << "x[" << k2 << "] = " << xTemp[k2]<< endl;
+          }
+#endif
+        }
+        
+        //now solve the vandermonde matrix for some Omega values
+        if (!useLapack) {
+          vandermondeSolve(xTemp, tempStar, vanderMom);
+        } else {
+          int dim = N_i[1];
+          int nRHS = 1;
+          int info;
+          vector<int> ipiv(dim);
+          vector<double> b (dim);
+          vector<double> a (dim*dim);
+          
+          for (int i = 0; i<dim; i++) {
+            b[i] = vanderMom[i];
+          }
+          
+          for (int i = 0; i<dim; i++) {
+            for (int j = 0; j<dim; j++) {
+              a[j + dim*i] = pow(xTemp[i],j);
+            }
+          }
+          
+          DGESV(&dim, &nRHS, &*a.begin(), &dim, &*ipiv.begin(), &*b.begin(), &dim, &info);
+          
+          for (int i = 0; i<dim; i++) {
+            tempStar[i] = b[i];
+          }
+        }
+        
+        //fill in this omega value
+        for (int k2 = 0; k2<N_i[1]; k2++) {
+          if ( wTemp[k2] > 0.0 ) {
+            Omega[k1][k2][k3][k4] = tempStar[k2]/wTemp[k2]; //un-normalize the weights
+          } else {
+            Omega[k1][k2][k3][k4] = 0.0;
+          }
+#ifdef cqmom_dbg
+          if ( k2 == 1 ) {
+            cout << "omega*[" << k2 << "] = " << tempStar[k2] << endl;
+            cout << "omega[" << k2 << "] = " << Omega[k1][k2][k3][k4] << endl;
+          }
+#endif
+        }
+        
+      }//k3
+    }//k4
+    //each Omega for this x1 is then done
+  }
+  
+  xTemp.resize(N_i[2]);
+  wTemp.resize(N_i[2]);
+  vanderMom.resize(N_i[2]);
+  tempStar.resize(N_i[2]);
+  condMomStar.resize(N_i[2]);
+  //now use omega values to solve for the actual conditional moment values
+  // V3 R3 *[cond mom] = [omega] for each M=2 node
+  std::vector< std::vector< std::vector< std::vector<double> > > > condMom4 (N_i[0], std::vector< std::vector< std::vector<double> > > (N_i[1], std::vector<std::vector<double> > (N_i[2], std::vector<double>( 2*N_i[3]-1, 1.0) ) ) );
+  for (int k1 = 0; k1< N_i[0]; k1++) {
+    for (int k2 = 0; k2 < N_i[1]; k2++) { //loop over every x2 node
+      //fill in V3 R3 for this x2 node
+      for (int k3 = 0; k3<N_i[2]; k3++) {
+        xTemp[k3] = x3[k1][k2][k3];
+        wTemp[k3] = w3[k1][k2][k3];
+      }
+      
+      //populate "moments" vector in vandermonde with Omegas
+      for (int k4 = 1; k4<2*N_i[3]; k4++) {
+        for (int k3 = 0; k3 < N_i[2]; k3++) {
+          vanderMom[k3] = Omega[k1][k2][k3][k4];
+        }
+        
+        if ( !useLapack ) {
+          vandermondeSolve(xTemp, condMomStar, vanderMom );
+        } else {
+          int dim = N_i[2];
+          int nRHS = 1;
+          int info;
+          vector<int> ipiv(dim);
+          vector<double> b (dim);
+          vector<double> a (dim*dim);
+          
+          for (int i = 0; i<dim; i++) {
+            b[i] = vanderMom[i];
+          }
+          
+          for (int i = 0; i<dim; i++) {
+            for (int j = 0; j<dim; j++) {
+              a[j + dim*i] = pow(xTemp[i],j);
+            }
+          }
+          
+          DGESV(&dim, &nRHS, &*a.begin(), &dim, &*ipiv.begin(), &*b.begin(), &dim, &info);
+          
+          for (int i = 0; i<dim; i++) {
+            condMomStar[i] = b[i];
+          }
+        }
+
+        //put the temporary values for conditional moments into the actual vector
+        for (int k3 = 0; k3<N_i[2]; k3++) {
+          if ( wTemp[k3] > 0.0 ) {
+            condMom4[k1][k2][k3][k4] = condMomStar[k3]/wTemp[k3]; //un-normalize the weights
+          } else {
+            condMom4[k1][k2][k3][k4] = 0.0;
+          }
+#ifdef cqmom_dbg
+          if ( k3 == 1 ) {
+            cout << "cmom*[" << k4 << "] = " << condMomStar[k3] << endl;
+            cout << "cmom[" << k4 << "] = " << condMom4[k1][k2][k3][k4] << endl;
+          }
+#endif
+        }
+        
+      } //k4
+    }
+    //conditional moments filled for this x2 node
+  }
+  
+  //Now that the conditional moments for x4 are known loop through and do the wheeler algorithm
+  tempMom.resize(N_i[3]*2); tempW.resize(N_i[3]); tempX.resize(N_i[3]);
   for (int k1 = 0; k1 < N_i[0]; k1++) {
     for (int k2 = 0; k2 < N_i[1]; k2++) {
       for (int k3 = 0; k3 < N_i[2]; k3++) {
-        weights[ii] = w1[k1]*w2[k1][k2]*w3[k1][k2][k3];
-        abscissas[0][ii] = x1[k1];
-        abscissas[1][ii] = x2[k1][k2];
-        abscissas[2][ii] = x3[k1][k2][k3];
-        ii++;
+        //fill in temp moment vector from conditionals
+        for (int k4 = 0; k4 < 2*N_i[3]; k4++) {
+          tempMom[k4] = condMom4[k1][k2][k3][k4];
+        }
+        
+        if (!adapt) {
+          wheelerAlgorithm( tempMom, tempW, tempX );
+        } else {
+          adaptiveWheelerAlgorithm( tempMom, tempW, tempX, rMin, eAbs );
+        }
+        
+        //fill in node values
+        for (int k4 = 0; k4 < N_i[3]; k4++) {
+          x4[k1][k2][k3][k4] = tempX[k4];
+          w4[k1][k2][k3][k4] = tempW[k4];
+        }
+        
       }
     }
+  }
+  
+#ifdef cqmom_dbg
+  cout << "4D Quad Nodes" << endl;
+  cout << "________________" << endl;
+  for (int i = 0 ; i<N_i[0]; i++) {
+    cout << "x1[" << i << "] = " << x1[i] << " ";
+    cout << "w1[" << i << "] = " << w1[i] << endl;
+    for (int j = 0; j<N_i[1]; j++ ) {
+      cout << "x2[" << i << "][" << j << "] = " << x2[i][j] << " ";
+      cout << "w2[" << i << "][" << j << "] = " << w2[i][j] << endl;
+      for (int k = 0; k<N_i[2]; k++) {
+        cout << "x3[" << i << "][" << j << "][" << k << "] = " << x3[i][j][k] << " ";
+        cout << "w3[" << i << "][" << j << "][" << k << "] = " << w3[i][j][k] << " " << "w_n = " << w1[i]*w2[i][j]*w3[i][j][k] << endl;
+        for ( int l = 0; l<N_i[3]; l++ ) {
+          cout << "x4[" << i << "][" << j << "][" << k << "][" << l << "] = " << x4[i][j][k][l] << " ";
+          cout << "w4[" << i << "][" << j << "][" << k << "][" << l << "] = " << w4[i][j][k][l] << " " << "w_n = " << w1[i]*w2[i][j]*w3[i][j][k]*w4[i][j][k][l] << endl;
+        }
+      }
+    }
+  }
+#endif
+  
+  //now populate the weights and abscissas vectors
+  if ( M == 4 ) {
+    ii = 0;
+    for (int k1 = 0; k1 < N_i[0]; k1++) {
+      for (int k2 = 0; k2 < N_i[1]; k2++) {
+        for (int k3 = 0; k3 < N_i[2]; k3++) {
+          for (int k4 = 0; k4 < N_i[3]; k4++ ) {
+            weights[ii] = w1[k1]*w2[k1][k2]*w3[k1][k2][k3]*w4[k1][k2][k3][k4];
+            abscissas[0][ii] = x1[k1];
+            abscissas[1][ii] = x2[k1][k2];
+            abscissas[2][ii] = x3[k1][k2][k3];
+            abscissas[3][ii] = x4[k1][k2][k3][k4];
+            ii++;
+          }
+        }
+      }
+    }
+    return;
+  }
+  
+  /*after M = 4, limit internal coordinates to 1 per direction, otherwise the number of scalar transport eqns
+   starts to become prohibitively large, along with the number of matricies to solve */
+  
+  for (int m = 5; m < M; m++) {
+    
   }
   
 } //end CQMOMInversion

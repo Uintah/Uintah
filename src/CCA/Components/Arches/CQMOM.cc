@@ -341,6 +341,8 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
           flatIndex = temp_index[0] + temp_index[1]*maxInd[0];
         } else if (M == 3) {
           flatIndex = temp_index[0] + temp_index[1]*maxInd[0] + temp_index[2]*maxInd[0]*maxInd[1];
+        } else if (M == 4) {
+          flatIndex = temp_index[0] + temp_index[1]*maxInd[0] + temp_index[2]*maxInd[0]*maxInd[1] + temp_index[3]*maxInd[0]*maxInd[1]*maxInd[2];
         }
         
         temp_moments[flatIndex] = temp_value;
@@ -666,6 +668,8 @@ void CQMOM::solveCQMOMInversion321( const ProcessorGroup* pc,
           flatIndex = temp_index[0] + temp_index[1]*maxInd[0];
         } else if (M == 3) {
           flatIndex = temp_index[0] + temp_index[1]*maxInd[0] + temp_index[2]*maxInd[0]*maxInd[1];
+        } else if ( M == 4 ) {
+          flatIndex = temp_index[0] + temp_index[1]*maxInd[0] + temp_index[2]*maxInd[0]*maxInd[1] + temp_index[3]*maxInd[0]*maxInd[1]*maxInd[2];
         }
         
         temp_moments[flatIndex] = temp_value;
@@ -822,6 +826,8 @@ void CQMOM::solveCQMOMInversion312( const ProcessorGroup* pc,
           flatIndex = temp_index[1] + temp_index[0]*maxInd[1];
         } else if (M == 3) {
           flatIndex = temp_index[1] + temp_index[0] * maxInd[1] + temp_index[2]*maxInd[1]*maxInd[0];
+        } else if ( M == 4 ) {
+          flatIndex = temp_index[1] + temp_index[0]*maxInd[1] + temp_index[2]*maxInd[1]*maxInd[0] + temp_index[3]*maxInd[0]*maxInd[1]*maxInd[2];
         }
         
         temp_moments[flatIndex] = temp_value;
@@ -987,6 +993,8 @@ void CQMOM::solveCQMOMInversion213( const ProcessorGroup* pc,
           flatIndex = temp_index[2] + temp_index[0]*maxInd[2];
         } else if (M == 3) {
           flatIndex = temp_index[2] + temp_index[0] * maxInd[2] + temp_index[1]*maxInd[2]*maxInd[0];
+        } else if ( M == 4 ) {
+          flatIndex = temp_index[2] + temp_index[0]*maxInd[2] + temp_index[1]*maxInd[2]*maxInd[0] + temp_index[3]*maxInd[0]*maxInd[1]*maxInd[2];
         }
         
         temp_moments[flatIndex] = temp_value;
