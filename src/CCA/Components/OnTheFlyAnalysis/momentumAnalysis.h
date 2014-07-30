@@ -119,17 +119,17 @@ WARNING
 
     // VarLabels
     class MA_Labels {
-    public:
-      VarLabel* lastCompTime;
-      VarLabel* fileVarsStruct;
-      VarLabel* totalCVMomentum;
-      VarLabel* CS_fluxes;
-      VarLabel* vel_CC;
-      VarLabel* rho_CC;
-      VarLabel* uvel_FC;
-      VarLabel* vvel_FC;
-      VarLabel* wvel_FC;
-      const VarLabel* delT;
+      public:
+        VarLabel* lastCompTime;
+        VarLabel* fileVarsStruct;
+        VarLabel* totalCVMomentum;
+        VarLabel* CS_fluxes;
+        VarLabel* vel_CC;
+        VarLabel* rho_CC;
+        VarLabel* uvel_FC;
+        VarLabel* vvel_FC;
+        VarLabel* wvel_FC;
+        const VarLabel* delT;
     };
 
     MA_Labels* labels;

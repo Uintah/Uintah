@@ -58,6 +58,8 @@ using namespace std;
 //  The face centered velocities are used to compute the fluxes through
 //  the control surface.
 //  Need to add viscous and pressure forces on the faces
+//  This assumes that the variables all come from the new_dw
+//  This assumes the entire computational domain is being used as the control volume!!!         <<<<<<<<<<<<,
 
 
 
@@ -78,6 +80,7 @@ momentumAnalysis::momentumAnalysis(ProblemSpecP& module_spec,
   d_zeroMatl     = 0;
   d_zeroMatlSet  = 0;
   d_zeroPatch    = 0;
+  d_matlIndx     = -9;
 
   labels = scinew MA_Labels();
 
@@ -156,19 +159,15 @@ void momentumAnalysis::problemSetup(const ProblemSpecP&,
   Material* matl;
   if( d_prob_spec->findBlock("material") ){
     matl = d_sharedState->parseAndLookupMaterial( d_prob_spec, "material" );
-    cout << " AAA " << matl <<  endl;
   } else if ( d_prob_spec->findBlock("materialIndex") ){
     int indx;
     d_prob_spec->get("materialIndex", indx);
     matl = d_sharedState->getMaterial(indx);
-    cout << " BBB " << matl <<  endl;
   } else {
     matl = d_sharedState->getMaterial(0);
-    cout << " CCC " << matl <<  endl;
   }
 
-  int d_matlIndx = matl->getDWIndex();
-  cout << " d_matlIndx : " << d_matlIndx << endl;
+  d_matlIndx = matl->getDWIndex();
 
   vector<int> m;
   m.push_back(0);            // matl index for FileInfo label
@@ -176,8 +175,6 @@ void momentumAnalysis::problemSetup(const ProblemSpecP&,
   d_matl_set = scinew MaterialSet();
   d_matl_set->addAll(m);
   d_matl_set->addReference();
-  
-  cout << " d_matlIndx : " << d_matlIndx << endl;
 
   //__________________________________
   //  read in the VarLabel names
@@ -347,10 +344,8 @@ void momentumAnalysis::scheduleDoAnalysis(SchedulerP& sched,
   Task* t0 = scinew Task( "momentumAnalysis::integrateMomentumField",
                      this,&momentumAnalysis::integrateMomentumField );
 
-  Ghost::GhostType  gn  = Ghost::None;
-  
-  cout << "momentumAnalysis::scheduleDoAnalysis: d_matlIndx: " << d_matlIndx << endl; 
-  
+  Ghost::GhostType  gn  = Ghost::None; 
+
   MaterialSubset* matl_SS = scinew MaterialSubset();
   matl_SS->add( d_matlIndx );
   matl_SS->addReference();
@@ -367,12 +362,10 @@ void momentumAnalysis::scheduleDoAnalysis(SchedulerP& sched,
   t0->computes( labels->totalCVMomentum );
   t0->computes( labels->CS_fluxes );
 
-cout << " T0 " << *t0 << " d_matl_set " << *d_matl_set <<  " mattl_SS " << *matl_SS << " d_matlIndex " << d_matlIndx << endl;
-
   sched->addTask( t0, level->eachPatch(), d_matl_set );
 
   //__________________________________
-  //  Task output the contributions
+  //  Task that outputs the contributions
   Task* t1 = scinew Task("momentumAnalysis::doAnalysis",
                     this,&momentumAnalysis::doAnalysis );
 
@@ -385,12 +378,10 @@ cout << " T0 " << *t0 << " d_matl_set " << *d_matl_set <<  " mattl_SS " << *matl
   t1->computes( labels->lastCompTime );
   t1->computes( labels->fileVarsStruct, d_zeroMatl );
   sched->addTask( t1, d_zeroPatch, d_zeroMatlSet);        // you only need to schedule this  patch 0 since all you're doing is writing out data
-
-  delete matl_SS;
 }
 
 //______________________________________________________________________
-//  Compute the total momentum of the CV and the fluxes passing
+//  Compute the total momentum of the control volume and the fluxes passing
 //  through the control surfaces.
 //______________________________________________________________________
 //
@@ -440,7 +431,7 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup* pg,
 
     //__________________________________
     //  Sum the total momentum over the patch
-    // This assumes the entire computational domain is being used!!!         <<<<<<<<<<<<,
+    // This assumes the entire computational domain is being used as the control volume!!!         <<<<<<<<<<<<,
     for (CellIterator iter=patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
       totalCVMomentum = rho_CC[c] * vol * vel_CC[c];
@@ -617,7 +608,7 @@ void momentumAnalysis::doAnalysis(const ProcessorGroup* pg,
       }
 
       string udaDir = d_dataArchiver->getOutputLocation();
-      string filename = udaDir + "/" + "momentumAnalysis6.dat";
+      string filename = udaDir + "/" + "momentumAnalysis.dat";
       FILE *fp=NULL;
 
 
@@ -682,7 +673,7 @@ void momentumAnalysis::createFile(string& filename,  FILE*& fp)
   fprintf( fp,"# Definitions:\n");
   fprintf( fp,"#    totalCVMomentum:  the total momentum in the control volume at that instant in time\n" );
   fprintf( fp,"#    netFlux:          the net flux of momentum through the control surfaces\n" );
-  fprintf( fp,"#Time                      totalCVMomentum.x()                  totalCVMomentum.x()                 totalCVMomentum.x()         netFlux.x()                  netFlux.y()           netFlux.z()\n");
+  fprintf( fp,"#Time                      totalCVMomentum.x()         totalCVMomentum.y()         totalCVMomentum.z()         netFlux.x()                  netFlux.y()                  netFlux.z()\n");
   cout << Parallel::getMPIRank() << " momentumAnalysis:Created file " << filename << endl;
 }
 
