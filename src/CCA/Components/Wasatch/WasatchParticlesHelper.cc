@@ -63,7 +63,8 @@ namespace Wasatch {
                                              this, &WasatchParticlesHelper::initialize);
     task->computes(pPosLabel_);
     task->computes(pIDLabel_);
-    sched->addTask(task, level->eachPatch(), materials_);
+    sched->addTask(task, level->eachPatch(), materials_);    
+    parse_boundary_conditions(level, sched);
   }
 
   //--------------------------------------------------------------------
@@ -144,7 +145,7 @@ namespace Wasatch {
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
       for(int m = 0;m<matls->size();m++){
-        int matl = matls->get(m);
+        const int matl = matls->get(m);
         
         // create an empty delete set
         deleteSet_.insert( std::pair<int, ParticleSubset*>(patch->getID(), scinew ParticleSubset(0,matl,patch)));

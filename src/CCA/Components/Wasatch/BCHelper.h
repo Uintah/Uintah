@@ -290,20 +290,25 @@ namespace Wasatch {
    *  @date   Sept 2013
    *
    *  @brief  Stores the domain boundary iterators necessary for setting boundary conditions.
+   *  For particles, we store a pointer to a list of particles near a given boundary. That list
+   is updated by the ParticlesHelper object. This external list stores the particle index that is
+   near the boundary, NOT the particle ID.
    */
   //****************************************************************************
   struct BoundaryIterators
   {
-    std::vector<SpatialOps::IntVec> extraBndCells;        // iterator for extra cells. These are zero-based on the extra cell
-    std::vector<SpatialOps::IntVec> extraPlusBndCells;    // iterator for extra cells on plus faces (staggered fields). These are zero-based on the extra cell.
-    std::vector<SpatialOps::IntVec> interiorBndCells;     // iterator for interior cells. These are zero-based on the extra cell
+    std::vector<SpatialOps::IntVec> extraBndCells;          // iterator for extra cells. These are zero-based on the extra cell
+    std::vector<SpatialOps::IntVec> extraPlusBndCells;      // iterator for extra cells on plus faces (staggered fields). These are zero-based on the extra cell.
+    std::vector<SpatialOps::IntVec> interiorBndCells;       // iterator for interior cells. These are zero-based on the extra cell
     
-    std::vector<SpatialOps::IntVec> neboExtraBndCells;        // iterator for extra cells. These are zero-based on the first interior cell.
-    std::vector<SpatialOps::IntVec> neboExtraPlusBndCells;    // iterator for extra cells on plus faces (staggered fields). These are zero-based on the first interior cell.
-    std::vector<SpatialOps::IntVec> neboInteriorBndCells;     // iterator for interior cells. These are zero-based on the first interior cell.
+    std::vector<SpatialOps::IntVec> neboExtraBndCells;      // iterator for extra cells. These are zero-based on the first interior cell.
+    std::vector<SpatialOps::IntVec> neboExtraPlusBndCells;  // iterator for extra cells on plus faces (staggered fields). These are zero-based on the first interior cell.
+    std::vector<SpatialOps::IntVec> neboInteriorBndCells;   // iterator for interior cells. These are zero-based on the first interior cell.
 
-    std::vector<SpatialOps::IntVec> interiorEdgeCells;    // iterator for interior edge (domain edges) cells
-    Uintah::Iterator extraBndCellsUintah;                             // We still need the Unitah iterator
+    std::vector<SpatialOps::IntVec> interiorEdgeCells;      // iterator for interior edge (domain edges) cells
+    Uintah::Iterator extraBndCellsUintah;                   // We still need the Unitah iterator
+    const std::vector<int>* particleIdx;                    // list of particle indices near a given boundary. Given the memory of ALL particles on a given patch, this vector stores
+                                                            // the indices of those particles that are near a boundary.
   };
   
   //****************************************************************************
@@ -335,7 +340,12 @@ namespace Wasatch {
   template< typename FieldT>
   struct BCOpTypeSelector : public BCOpTypeSelectorBase<FieldT>
   { };
-  
+
+  // partial specialization for particles. Use SVolField to get this to compile. Classic Boundary operators are meaningless for particles.
+  template<>
+  struct BCOpTypeSelector<ParticleField> : public BCOpTypeSelectorBase<SVolField>
+  { };
+
   // partial specialization with inheritance for XVolFields
   template<>
   struct BCOpTypeSelector<XVolField> : public BCOpTypeSelectorBase<XVolField>
@@ -438,6 +448,13 @@ namespace Wasatch {
     // bndNameBndSpecMap_ stores BndSpec information for each of the specified boundaries. This
     // map is indexed by the (unique) boundary name.
     BndMapT                    bndNameBndSpecMap_;
+    
+    /**
+     \brief Returns a pointer to the list of particles that are near a given boundary on a given patch ID.
+     This pointer is set externally through the ParticlesHelper class.
+     */
+    const std::vector<int>* get_particles_bnd_mask( const BndSpec& myBndSpec,
+                                                    const int& patchID ) const;
     
     template<typename FieldT>
     const std::vector<IntVecT>* get_extra_bnd_mask( const BndSpec& myBndSpec,

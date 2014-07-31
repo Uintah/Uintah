@@ -211,6 +211,19 @@ public:
   }
 
   /**
+   *  \brief Set nebo-mask-friendly interior points. This is a vector of locally indexed ijk interior points. Interior
+   points correspond to the interior cells adjacent to a boundary. For staggered fields that are normal
+   to a boundary, the interior points correspond to the boundary faces instead of the cells.
+   *  \param vecInteriorPoints Pointer to a stl vector of ijk triplets of interior cells adjacent
+   to the boundary. These are indexed zero-based on the first interior cell of the patch.
+   *
+   */
+  void set_boundary_particles( const std::vector<int>* boundaryParticles )
+  {
+    boundaryParticles_ = boundaryParticles;
+  }
+
+  /**
    *  \brief Set interior edge cells. This is a vector of locally indexed ijk edge interior points.
    The edges correspond to the edges of the compuational domain.
    *  \param interiorEdgePoints Pointer to a stl vector of ijk triplets of interior edge cells.
@@ -300,6 +313,7 @@ public:
     vecInteriorPts_ = NULL;
     vecGhostPts_ = NULL;
     interiorEdgePoints_ = NULL;
+    boundaryParticles_ = NULL;
   }
   virtual ~BoundaryConditionBase(){}
 
@@ -340,6 +354,8 @@ protected:
   const std::vector<SpatialOps::IntVec>* neboGhostPts_;
 
   const std::vector<SpatialOps::IntVec>* interiorEdgePoints_;
+  
+  const std::vector<int>* boundaryParticles_; // vector of indices of particles on this boundary
   
   void build_mask_points(std::vector<SpatialOps::IntVec>& maskPoints)
   {

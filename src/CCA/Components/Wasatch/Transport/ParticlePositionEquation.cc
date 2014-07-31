@@ -84,33 +84,7 @@ namespace Wasatch{
     }
 
     typedef ParticlePositionRHS::Builder RHSBuilder;
-    return factory.register_expression( scinew RHSBuilder(rhsTag_, pVelTag ) );
-    
-//    //
-//    // register velocity expression now for testing
-//    //
-//    Expr::Tag pvelTag;
-//    Expr::Tag pxTag("p.xw",Expr::STATE_DYNAMIC);
-//    Expr::Tag pyTag("p.yw",Expr::STATE_DYNAMIC);
-//    Expr::Tag pzTag("p.zw",Expr::STATE_DYNAMIC);
-//    
-//    if (solution_variable_name()=="p.xw") {
-//      pvelTag = Expr::Tag("p.u",Expr::STATE_NONE);
-//      Expr::Tag gasVelTag("u",Expr::STATE_NONE);
-//      factory.register_expression( scinew ParticleVelocity<XVolField>::Builder(pvelTag, gasVelTag, pxTag, pyTag, pzTag) );
-//    } else if (solution_variable_name()=="p.yw") {
-//      pvelTag = Expr::Tag("p.v",Expr::STATE_NONE);
-//      Expr::Tag gasVelTag("v",Expr::STATE_NONE);
-//      factory.register_expression( scinew ParticleVelocity<YVolField>::Builder(pvelTag, gasVelTag,pxTag,pyTag,pzTag) );
-//    } else {
-//      pvelTag = Expr::Tag("p.w",Expr::STATE_NONE);
-//      Expr::Tag gasVelTag("w",Expr::STATE_NONE);
-////      factory.register_expression( scinew ParticleVelocity<ZVolField>::Builder(pvelTag,gasVelTag,pxTag,pyTag,pzTag) );
-//      factory.register_expression( scinew Expr::ConstantExpr<ParticleField>::Builder(pvelTag,0.0) );
-//    }
-//    
-//    //
-//    return factory.register_expression( scinew RHSBuilder(rhsTag_, pvelTag ) );
+    return factory.register_expression( scinew RHSBuilder(rhsTag_, pVelTag ) );    
   }
   
   //------------------------------------------------------------------

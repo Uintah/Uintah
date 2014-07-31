@@ -47,7 +47,7 @@ namespace Wasatch{
     gc_                 ( gc ),
     solnVarName_        ( solnVarName ),
     solnVarTag_         ( solnVarName, Expr::STATE_DYNAMIC ),
-    rhsTag_             ( solnVarName+"_rhs", Expr::STATE_NONE )
+    rhsTag_             ( solnVarName + "_rhs", Expr::STATE_NONE )
   {}
 
 

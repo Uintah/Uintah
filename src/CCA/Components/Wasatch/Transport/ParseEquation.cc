@@ -227,8 +227,9 @@ namespace Wasatch{
                 << std::endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-      proc0cout << "------------------------------------------------" << std::endl;
     }
+
+    proc0cout << "------------------------------------------------" << std::endl;
     return adaptors;
   }
 
@@ -628,9 +629,8 @@ namespace Wasatch{
         << std::endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-      proc0cout << "------------------------------------------------" << std::endl;
     }
-
+    
     //_____________________________________________________
     // set up initial conditions on the pressure
     try{
@@ -648,6 +648,7 @@ namespace Wasatch{
       << std::endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
+    
     proc0cout << "------------------------------------------------" << std::endl;
     //
     return adaptors;
@@ -679,7 +680,7 @@ namespace Wasatch{
     const std::string pSizeName=pSizeTag.name();
 
     //___________________________________________________________________________
-    // resolve the momentum equation to be solved and create the adaptor for it.
+    // resolve the particle equations
     //
     proc0cout << "------------------------------------------------" << std::endl
     << "Creating particle equations..." << std::endl;
@@ -838,7 +839,6 @@ namespace Wasatch{
         << std::endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-      proc0cout << "------------------------------------------------" << std::endl;
     }
     
     proc0cout << "------------------------------------------------" << std::endl;
@@ -934,9 +934,9 @@ namespace Wasatch{
         << std::endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-      proc0cout << "------------------------------------------------" << std::endl;
     }
 
+    proc0cout << "------------------------------------------------" << std::endl;
     return adaptors;
   }
 

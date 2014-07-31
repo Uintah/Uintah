@@ -1,7 +1,7 @@
 <Uintah_specification>
 
   <Meta>
-    <title>Lid Driven Cavity Problem</title>
+    <title>Particles in a driven cavity</title>
   </Meta>
 
   <SimulationComponent type="wasatch"/>
@@ -28,6 +28,8 @@
     <ForceOnGraph tasklist="advance_solution">
       <NameTag name="xvelcc" state="STATE_NONE"/>
       <NameTag name="yvelcc" state="STATE_NONE"/>
+      <NameTag name="vel_magnitude" state="STATE_NONE"/>
+      <NameTag name="vorticity_z" state="STATE_NONE"/>                            
     </ForceOnGraph>
 
     <PostProcessingExpression type="SVOL">
@@ -57,19 +59,8 @@
       </VelocityMagnitude>
     </PostProcessingExpression>
 
-<!-- 
-    <ForceOnGraph tasklist="initialization">
-      <NameTag name="p.rho" state="STATE_NONE"/>                
-    </ForceOnGraph>
- -->
-    
-    <ForceOnGraph tasklist="advance_solution">
-      <NameTag name="vel_magnitude" state="STATE_NONE"/>
-      <NameTag name="vorticity_z" state="STATE_NONE"/>                      
-    </ForceOnGraph>
-    
     <ParticleTransportEquations>
-      <NumberOfInitialParticles>1000</NumberOfInitialParticles>
+      <ParticlesPerCell>1</ParticlesPerCell>
       <ParticleDensity name="p.rho" state="STATE_NONE"/>            
       <ParticleMass name="p.m" state="STATE_DYNAMIC">
       	<SourceTerm name="nothing" state="STATE_NONE"/>	
@@ -85,7 +76,7 @@
 				</Velocity>
 			</ParticlePosition>
 			<ParticleMomentum x="p.u" y="p.v" z="p.w">
-				<DisableTwoWayCoupling/>
+			<DisableTwoWayCoupling/>
 <!-- 				<DisableDragForce/> -->
 <!-- 				<Gravity direction="Z"/> -->
 				<GasProperties>
@@ -101,23 +92,15 @@
     </ParticleTransportEquations>
     
     <Density>
-      <Constant value="1.0" name="density"/>
+      <Constant value="1.225" name="density"/>
     </Density>
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
        <NameTag name="p.size" state="STATE_DYNAMIC"/>
-       <RandomField low="1e-5" high="1e-3" seed="0.333"/>       
-<!--        <Constant>0.001</Constant> -->
+       <Constant>1e-4</Constant>
+<!--        <RandomField low="1e-5" high="1e-3" seed="10"/> -->
     </BasicExpression>
-
-<!-- 
-    <BasicExpression type="PARTICLE">
-       <TaskList>advance_solution</TaskList>
-       <NameTag name="p.size" state="STATE_NONE"/>
-       <Constant>0.0001</Constant>
-    </BasicExpression>
- -->
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
@@ -125,36 +108,12 @@
        <Constant>1000</Constant>
     </BasicExpression>
 
-<!-- 
-    <BasicExpression type="PARTICLE">
-       <TaskList>advance_solution</TaskList>
-       <NameTag name="p.m" state="STATE_NONE"/>
-       <Constant>0.00001</Constant>
-    </BasicExpression>
- -->
-
+		<!-- need to set particle z velocity to zero during the time advance -->
     <BasicExpression type="PARTICLE">
        <TaskList>advance_solution</TaskList>
        <NameTag name="p.w" state="STATE_DYNAMIC"/>
        <Constant>0.0</Constant>
     </BasicExpression>
-
-<!-- 
-    <BasicExpression type="PARTICLE">
-       <TaskList>initialization</TaskList>
-       <NameTag name="p.xw" state="STATE_DYNAMIC"/>
-       <ParticleUniformIC nparticles="10000" coordinate="X">
-       </ParticleUniformIC>
-    </BasicExpression>
-
-    <BasicExpression type="PARTICLE">
-       <TaskList>initialization</TaskList>
-       <NameTag name="p.yw" state="STATE_DYNAMIC"/>
-       <ParticleUniformIC nparticles="10000" coordinate="Y" >
-         <TransverseDirection/>       
-       </ParticleUniformIC>
-    </BasicExpression>
- -->
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
@@ -197,7 +156,7 @@
     </BasicExpression>
 
 
-    <!-- Set the initial condition expression for x-momentum -->
+    <!-- Set the initial condition expression for momentum -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
        <NameTag name="x-mom" state="STATE_DYNAMIC"/>
@@ -225,8 +184,8 @@
                    
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="viscosity" state="STATE_N"/>
-      <Constant>0.001</Constant>
+      <NameTag name="viscosity" state="STATE_NONE"/>
+      <Constant>1e-5</Constant>
     </BasicExpression>
     
     <BasicExpression type="SVOL">
@@ -269,46 +228,28 @@
   <Time>
     <maxTime>60</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>0.0001</delt_min>
-    <delt_max>0.0001</delt_max>
-<!--     <max_Timesteps> 10</max_Timesteps> -->
+    <delt_min>0.001</delt_min>
+    <delt_max>0.001</delt_max>
+    <max_Timesteps> 10</max_Timesteps>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
 
   <DataArchiver>
     <filebase>particle-test-driven-cavity.uda</filebase>
-    <outputTimestepInterval>1000</outputTimestepInterval>
+    <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle="2" interval="0.0001"/>
+    <checkpoint cycle="2" interval="0.001"/>
 <!--     <compression>gzip</compression> -->
     <save label="x-mom"/>
     <save label="y-mom"/>
     <save label="u"/>
     <save label="v"/>
-    <save label="p.x"/>
-    <save label="p.m"/>    
-    <save label="p.xw_rhs"/>    
-    <save label="p.yw_rhs"/>    
-    <save label="p.zw_rhs"/>            
-
-    <save label="p.u_rhs"/>    
-    <save label="p.v_rhs"/>    
-    <save label="p.w_rhs"/>            
-
-    <save label="p.drag_x"/>    
-    <save label="p.drag_y"/>    
-    <save label="p.drag_z"/>            
-    
+    <save label="p.x"/>    
     <save label="p.u"/>    
     <save label="p.v"/>        
     <save label="p.w"/>        
-    <save label="p.zw_rhs"/>        
-    <save label="p.w_rhs"/>        
     <save label="p.size"/>    
-    <save label="p.xw"/>        
-    <save label="p.yw"/>
-    <save label="p.zw"/>    
     <save label="vel_magnitude"/>
     <save label="vorticity_z"/>    
     <save label="xvelcc"/>
@@ -317,10 +258,6 @@
     <save label="p.particleID"/>        
     <save label="pressure"/>
     <save label="dilatation"/>
-<!-- 
-    <save label="vorticity_z"/>
-    <save label="vel_magnitude"/>        
- -->
   </DataArchiver> 
 
 	<Grid>
@@ -337,10 +274,9 @@
 		</BoundaryConditions>
 		<Level>
 			<Box label="1">
-				<lower>[0,0,-0.1]</lower>
-				<upper>[1,1,0.1]</upper>
-				<resolution>[32,32,4]</resolution>
-				<!--extraCells>[1,1,0]</extraCells-->
+				<lower>[0,0,-1]</lower>
+				<upper>[1,1,1]</upper>
+				<resolution>[64,64,2]</resolution>
 				<patches>[2,2,1]</patches>
 			</Box>
 			<periodic>[0,0,1]</periodic>
