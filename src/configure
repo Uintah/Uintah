@@ -4190,12 +4190,12 @@ fi
 # --- end list of -enable components ------
 #
 
-if test "$use_all_components" = "yes" -a         \
-        \( "$enable_arches" = "yes"          -o   \
-          "$enable_ice" = "yes"              -o   \
-          "$enable_models_radiation" = "yes" -o   \
-          "$enable_mpm" = "yes"              -o   \
-          "$enable_wasatch" = "yes" \); then
+if test "$use_all_components" = "yes" -a          \
+        \( "$enable_arches" = "yes"           -o  \
+           "$enable_ice" = "yes"              -o  \
+           "$enable_models_radiation" = "yes" -o  \
+           "$enable_mpm" = "yes"              -o  \
+           "$enable_wasatch" = "yes" \); then
    as_fn_error $? "Please do not use both --enable-all-components and --enable-<specific-component> " "$LINENO" 5
 fi
 if test "$BUILD_ARCHES" != "yes"           -a   \
@@ -4209,6 +4209,11 @@ if test "$BUILD_ARCHES" != "yes"           -a   \
   add_important_warning "-------------------------------------------------------------------------"
 fi
 
+if test "$BUILD_ARCHES" = "yes" -a "$BUILD_WASATCH" != "yes"; then
+  BUILD_WASATCH=yes
+  msg="Arches requires Wasatch to be built... Turning on Wasatch!!!"
+  add_important_warning "$msg"
+fi
 
 if test "$enable_sci_malloc" = "yes" -a "$with_malloc_trace" ; then
    as_fn_error $? "You cannot use both --with-MallocTrace and --enable-sci-malloc! " "$LINENO" 5
@@ -10647,31 +10652,36 @@ if test "$with_ofed"; then
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$dir/lib
+  if test "$dir" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$dir/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$dir/lib
+    _new_lib_path=$dir/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$dir/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$dir/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$dir/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$dir/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$dir/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$dir/lib
-    fi
+    eval dir='"$_new_lib_path"'
   fi
-  eval dir='"$_new_lib_path"'
 
 
 
@@ -11101,31 +11111,36 @@ if test "$with_mx"; then
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$dir/lib
+  if test "$dir" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$dir/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$dir/lib
+    _new_lib_path=$dir/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$dir/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$dir/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$dir/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$dir/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$dir/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$dir/lib
-    fi
+    eval dir='"$_new_lib_path"'
   fi
-  eval dir='"$_new_lib_path"'
 
 
 
@@ -14891,31 +14906,36 @@ if test "$with_libxml2"; then
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$_sci_lib/lib
+  if test "$_sci_lib" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$_sci_lib/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
+    _new_lib_path=$_sci_lib/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$_sci_lib/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$_sci_lib/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$_sci_lib/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$_sci_lib/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$_sci_lib/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
-    fi
+    eval _sci_lib='"$_new_lib_path"'
   fi
-  eval _sci_lib='"$_new_lib_path"'
 
    _sci_optional=specific
 fi
@@ -16388,31 +16408,36 @@ fi
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$with_zlib/lib
+  if test "$with_zlib" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$with_zlib/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$with_zlib/lib
+    _new_lib_path=$with_zlib/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$with_zlib/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$with_zlib/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$with_zlib/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$with_zlib/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$with_zlib/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$with_zlib/lib
-    fi
+    eval _sci_lib='"$_new_lib_path"'
   fi
-  eval _sci_lib='"$_new_lib_path"'
 
 
 
@@ -32261,31 +32286,36 @@ $as_echo "$as_me: checking for required MPI components......" >&6;}
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$with_mpi/lib
+  if test "$with_mpi" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$with_mpi/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$with_mpi/lib
+    _new_lib_path=$with_mpi/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$with_mpi/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$with_mpi/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$with_mpi/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$with_mpi/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$with_mpi/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$with_mpi/lib
-    fi
+    eval _sci_lib='"$_new_lib_path"'
   fi
-  eval _sci_lib='"$_new_lib_path"'
 
            fi
         else
@@ -33404,31 +33434,36 @@ else
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$lib_dir/lib
+  if test "$lib_dir" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$lib_dir/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$lib_dir/lib
+    _new_lib_path=$lib_dir/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$lib_dir/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$lib_dir/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$lib_dir/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$lib_dir/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$lib_dir/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$lib_dir/lib
-    fi
+    eval _sci_lib_dir='"$_new_lib_path"'
   fi
-  eval _sci_lib_dir='"$_new_lib_path"'
 
       fi
 
@@ -34575,31 +34610,36 @@ if test "$sci_required_papi" = "yes"; then
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$_sci_lib/lib
+  if test "$_sci_lib" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$_sci_lib/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
+    _new_lib_path=$_sci_lib/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$_sci_lib/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$_sci_lib/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$_sci_lib/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$_sci_lib/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$_sci_lib/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
-    fi
+    eval _sci_lib='"$_new_lib_path"'
   fi
-  eval _sci_lib='"$_new_lib_path"'
 
     _sci_inc="$with_papi/include"
   fi
@@ -35103,31 +35143,36 @@ if test "$sci_required_gperftools" = "yes"; then
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$_sci_lib/lib
+  if test "$_sci_lib" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$_sci_lib/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
+    _new_lib_path=$_sci_lib/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$_sci_lib/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$_sci_lib/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$_sci_lib/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$_sci_lib/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$_sci_lib/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
-    fi
+    eval _sci_lib='"$_new_lib_path"'
   fi
-  eval _sci_lib='"$_new_lib_path"'
 
     _sci_inc="$with_gperftools/include"
   fi
@@ -35655,31 +35700,36 @@ $as_echo "$as_me: checking for required CUDA components......" >&6;}
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$with_cuda/lib
+  if test "$with_cuda" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$with_cuda/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$with_cuda/lib
+    _new_lib_path=$with_cuda/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$with_cuda/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$with_cuda/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$with_cuda/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$with_cuda/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$with_cuda/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$with_cuda/lib
-    fi
+    eval _cuda_lib='"$_new_lib_path"'
   fi
-  eval _cuda_lib='"$_new_lib_path"'
 
 
 # code to compile and test various system GPU/CUDA properties
@@ -36105,31 +36155,36 @@ if test "$sci_required_magma" = "yes"; then
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$with_magma/lib
+  if test "$with_magma" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$with_magma/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$with_magma/lib
+    _new_lib_path=$with_magma/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$with_magma/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$with_magma/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$with_magma/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$with_magma/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$with_magma/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$with_magma/lib
-    fi
+    eval _magma_lib='"$_new_lib_path"'
   fi
-  eval _magma_lib='"$_new_lib_path"'
 
 
 ##
@@ -36142,31 +36197,36 @@ if test "$sci_required_magma" = "yes"; then
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$with_cuda/lib
+  if test "$with_cuda" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$with_cuda/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$with_cuda/lib
+    _new_lib_path=$with_cuda/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$with_cuda/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$with_cuda/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$with_cuda/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$with_cuda/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$with_cuda/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$with_cuda/lib
-    fi
+    eval _cuda_lib='"$_new_lib_path"'
   fi
-  eval _cuda_lib='"$_new_lib_path"'
 
   _magma_inc="$with_magma/include"
   _cuda_inc="$with_cuda/include"
@@ -37197,31 +37257,36 @@ $as_echo "$as_me: WARNING: Teem is already required - you do not need to specify
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$_sci_lib/lib
+  if test "$_sci_lib" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$_sci_lib/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
+    _new_lib_path=$_sci_lib/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$_sci_lib/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$_sci_lib/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$_sci_lib/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$_sci_lib/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$_sci_lib/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
-    fi
+    eval _sci_lib='"$_new_lib_path"'
   fi
-  eval _sci_lib='"$_new_lib_path"'
 
     _sci_optional=required
   fi
@@ -37736,31 +37801,36 @@ $as_echo "$as_me: WARNING: ViSUS is already required - you do not need to specif
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$_sci_lib/lib
+  if test "$_sci_lib" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$_sci_lib/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
+    _new_lib_path=$_sci_lib/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$_sci_lib/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$_sci_lib/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$_sci_lib/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$_sci_lib/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$_sci_lib/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
-    fi
+    eval _sci_lib='"$_new_lib_path"'
   fi
-  eval _sci_lib='"$_new_lib_path"'
 
     _sci_optional=required
   fi
@@ -38264,31 +38334,36 @@ $as_echo "$as_me: WARNING: PIDX is already required - you do not need to specify
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$_sci_lib/lib
+  if test "$_sci_lib" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$_sci_lib/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
+    _new_lib_path=$_sci_lib/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$_sci_lib/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$_sci_lib/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$_sci_lib/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$_sci_lib/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$_sci_lib/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
-    fi
+    eval _sci_lib='"$_new_lib_path"'
   fi
-  eval _sci_lib='"$_new_lib_path"'
 
     _sci_optional=required
   fi
