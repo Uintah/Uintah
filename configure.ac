@@ -709,12 +709,12 @@ SCI_ARG_ENABLE(all_components,
 # --- end list of -enable components ------
 #
 
-if test "$use_all_components" = "yes" -a         \
-        \( "$enable_arches" = "yes"          -o   \
-          "$enable_ice" = "yes"              -o   \
-          "$enable_models_radiation" = "yes" -o   \
-          "$enable_mpm" = "yes"              -o   \
-          "$enable_wasatch" = "yes" \); then
+if test "$use_all_components" = "yes" -a          \
+        \( "$enable_arches" = "yes"           -o  \
+           "$enable_ice" = "yes"              -o  \
+           "$enable_models_radiation" = "yes" -o  \
+           "$enable_mpm" = "yes"              -o  \
+           "$enable_wasatch" = "yes" \); then
    AC_MSG_ERROR( Please do not use both --enable-all-components and --enable-<specific-component> )
 fi
 if test "$BUILD_ARCHES" != "yes"           -a   \
@@ -728,6 +728,11 @@ if test "$BUILD_ARCHES" != "yes"           -a   \
   add_important_warning "-------------------------------------------------------------------------"
 fi
 
+if test "$BUILD_ARCHES" = "yes" -a "$BUILD_WASATCH" != "yes"; then
+  BUILD_WASATCH=yes
+  msg="Arches requires Wasatch to be built... Turning on Wasatch!!!"
+  add_important_warning "$msg"
+fi
 
 if test "$enable_sci_malloc" = "yes" -a "$with_malloc_trace" ; then
    AC_MSG_ERROR( You cannot use both --with-MallocTrace and --enable-sci-malloc! )
