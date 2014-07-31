@@ -649,19 +649,11 @@ SCI_ARG_ENABLE(rpath,
 #
 # ---- List of --enable statements for Uintah Components ---- 
 #
-#
-# Models Radiation does not have a configure switch, and thus we need to set
-# the defaults here...
-#
-DEF_MODELS_RADIATION="#define NO_MODELS_RADIATION"
-BUILD_MODELS_RADIATION=no
 
 SCI_ARG_ENABLE(arches,
   AC_HELP_STRING(--enable-arches,
                  Turn on the Arches component - and Radiation Model.),
-  [BUILD_ARCHES="yes"
-   BUILD_MODELS_RADIATION="yes"
-   DEF_MODELS_RADIATION="" ],
+  [BUILD_ARCHES="yes"],
   [BUILD_ARCHES="no"
    DEF_ARCHES=["#define NO_ARCHES"]])
 
@@ -682,9 +674,7 @@ SCI_ARG_ENABLE(mpm,
 SCI_ARG_ENABLE(wasatch,
   AC_HELP_STRING(--enable-wasatch,
                  Turn on the Wasatch component.),
-  [BUILD_WASATCH="yes"
-   BUILD_MODELS_RADIATION="yes"
-   DEF_MODELS_RADIATION="" ],
+  [BUILD_WASATCH="yes"],
   [BUILD_WASATCH="no"
    DEF_WASATCH=["#define NO_WASATCH"]])
 
@@ -694,12 +684,10 @@ SCI_ARG_ENABLE(all_components,
   [use_all_components="yes"
    BUILD_ARCHES="yes"
    BUILD_ICE="yes"
-   BUILD_MODELS_RADIATION="yes"
    BUILD_MPM="yes"
    BUILD_WASATCH="yes"
    DEF_ARCHES=
    DEF_ICE=
-   DEF_MODELS_RADIATION=
    DEF_MPM=
    DEF_WASATCH=
   ],
@@ -709,18 +697,20 @@ SCI_ARG_ENABLE(all_components,
 # --- end list of -enable components ------
 #
 
+BUILD_MODELS_RADIATION=yes
+DEF_MODELS_RADIATION=
+
 if test "$use_all_components" = "yes" -a          \
-        \( "$enable_arches" = "yes"           -o  \
-           "$enable_ice" = "yes"              -o  \
+        \( "$enable_arches"           = "yes" -o  \
+           "$enable_ice"              = "yes" -o  \
            "$enable_models_radiation" = "yes" -o  \
-           "$enable_mpm" = "yes"              -o  \
-           "$enable_wasatch" = "yes" \); then
+           "$enable_mpm"              = "yes" -o  \
+           "$enable_wasatch"          = "yes" \); then
    AC_MSG_ERROR( Please do not use both --enable-all-components and --enable-<specific-component> )
 fi
-if test "$BUILD_ARCHES" != "yes"           -a   \
-        "$BUILD_ICE" != "yes"              -a   \
-        "$BUILD_MODELS_RADIATION" != "yes" -a   \
-        "$BUILD_MPM" != "yes"              -a   \
+if test "$BUILD_ARCHES"  != "yes"              -a   \
+        "$BUILD_ICE"     != "yes"              -a   \
+        "$BUILD_MPM"     != "yes"              -a   \
         "$BUILD_WASATCH" != "yes"; then
   add_important_warning "-------------------------------------------------------------------------"
   msg="!!! NO COMPONENTS WERE SPECIFIED! ONLY UTILITY PROGRAMS WILL BE BUILT !!!"
