@@ -559,7 +559,7 @@ namespace Uintah {
         
         // loop over the physical boundaries of this patch. These are the LOGICAL boundaries
         // and do NOT include intrusions
-        for (int f=0; f < bndFaces.size(); f++) {
+        for (size_t f=0; f < bndFaces.size(); f++) {
           Patch::FaceType face = bndFaces[f];
           // for a full boundary face, get the list of particles that are near that boundary
           IntVector low, high;
