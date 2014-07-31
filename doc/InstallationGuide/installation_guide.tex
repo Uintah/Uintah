@@ -437,7 +437,7 @@ mkdir dbg opt
 Go to the \TT{dbg} directory and enter the following:
 
 \begin{verbatim}
-../src/configure --enable-debug        
+../src/configure --enable-debug --enable-all-components
 \end{verbatim}
 
 
@@ -458,7 +458,7 @@ Once a debug build has finished, change to the \TT{opt} directory and
 enter the following configure line:
 
 \begin{verbatim}
-../src/configure '--enable-optimize=-O3 -mfpmath=sse' 
+../src/configure '--enable-optimize=-O3 -mfpmath=sse' --enable-all-components 
 \end{verbatim}
 
 The debug/optimize flags do the following:  --enable-debug adds ``-g''
@@ -472,24 +472,33 @@ Other useful configure options are seen below.  Note, depending on
 where libraries are installed on your system, you may or may not need
 to specify some (or all) of these options:
 
+By default, Uintah does not build any simulation components (such as
+ICE, Arches, Wasatch, or MPM) - though Example components are built.
+To turn on components, use the following configure flags:
+
+\begin{verbatim}
+--enable-all-components       <= Turns on all simulation components
+--enable-arches               <= Turns on Arches
+--enable-ice                  <= Turns on ICE
+--enable-mpm                  <= Turns on MPM
+--enable-wasatch              <= Turns on Wasatch
+\end{verbatim}
+
 \begin{verbatim}
 --with-mpi=/usr/lib64/openmpi <= Specifies location of MPI
 --enable-64bit                <= Specifies a 32 or 64bit build
 --enable-32bit
---with-petsc=/path/petsc-2.3.3-p13 <= Specifies location of PETSc
+--with-petsc=/path/petsc-2.3.3-p13            <= Specifies location of PETSc
 --with-hypre=/path/hypre-2.0.0/hypre_install  <= Specifies location of Hypre
 
-F77=gfortran-4.3               <= Specifies compilers (Fortran, C, C++).
+F77=gfortran-4.3              <= Specifies compilers (Fortran, C, C++).
 CC=/usr/bin/gcc-4.3
 CXX=/usr/bin/g++-4.3
 PETSC_ARCH=linux-gnu-c-real-opt <= Specifies PETSc architecture
 
-        --without-fortran     <= Turns off the use of Fortran (and the Arches/Radiation component.)
-
-        USE_ARCHES=no         <= Turn off the building of specific Uintah components.
-        USE_ICE=no               (Note, turning off Arches also turns off SpatialOps.)
-        USE_MPM=no
-        USE_RADIATION=no
+        --without-fortran     <= Turns off the use of Fortran. (Only
+useful if you are not building Arches and you do not have a working
+Fortran compiler on your computer. 
 
 \end{verbatim}
 To compile the Wasatch component add:
