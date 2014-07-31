@@ -83,8 +83,7 @@ namespace Wasatch{
      *   in the momentum transport equation.
      */
     void setup_boundary_conditions( BCHelper& bcHelper,
-                                           GraphCategories& graphCat)
-    {}
+                                   GraphCategories& graphCat);
     
     /**
      *  \brief Set up the boundary condition on initial conditions evaluators for this
@@ -99,8 +98,7 @@ namespace Wasatch{
      *  Equation. 
      */
     void apply_boundary_conditions( const GraphHelper& graphHelper,
-                                           BCHelper& bcHelper )
-    {}
+                                    BCHelper& bcHelper );
 
   private:
     Expr::Tag pUTag_, pVTag_, pWTag_, pMassTag_, pRhoTag_;

@@ -36,11 +36,11 @@
 #include <CCA/Components/Wasatch/Expressions/Particles/ParticleMomentumRHS.h>
 #include <CCA/Components/Wasatch/Expressions/Particles/ParticleResponseTime.h>
 #include <CCA/Components/Wasatch/Expressions/Particles/ParticleDragCoefficient.h>
-
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/ParticleWallBC.h>
 
 namespace Wasatch{
-
-
+  extern bool is_normal_to_boundary(const Direction stagLoc,
+                                    const Uintah::Patch::FaceType face);
   // #################################################################
   //
   //                          Implementation
@@ -209,6 +209,60 @@ namespace Wasatch{
     return exprFactory.get_id( solution_variable_tag() );
   }
 
+  //------------------------------------------------------------------
+  
+  void
+  ParticleMomentumEquation::setup_boundary_conditions(BCHelper& bcHelper,
+                                                      GraphCategories& graphCat)
+  {
+    Expr::ExpressionFactory& advSlnFactory = *(graphCat[ADVANCE_SOLUTION]->exprFactory);
+    
+    const TagNames& tagNames = TagNames::self();
+    
+    // make logical decisions based on the specified boundary types
+    BOOST_FOREACH( BndMapT::value_type& bndPair, bcHelper.get_boundary_information() )
+    {
+      const std::string& bndName = bndPair.first;
+      BndSpec& myBndSpec = bndPair.second;
+      
+      const bool isNormal = is_normal_to_boundary(direction_, myBndSpec.face);
+      
+      switch (myBndSpec.type) {
+        case WALL: {
+          if (isNormal) {
+            // create a bc copier for the density estimate
+            const Expr::Tag pVelBCTag( solution_variable_name() + "_" + bndName +"_wallbc", Expr::STATE_NONE);
+            BndCondSpec particleWallBCSpec = {solution_variable_name(), pVelBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
+            advSlnFactory.register_expression ( new ParticleWallBC::Builder(pVelBCTag) );
+            bcHelper.add_boundary_condition(bndName, particleWallBCSpec);
+          }
+        }
+          break;
+        case VELOCITY:
+        case OPEN:
+        case OUTFLOW:
+        case USER:
+        {
+          // parse through the list of user specified BCs that are relevant to this transport equation
+          break;
+        }
+          
+        default:
+          break;
+      }
+    }
+  }
+  
+  //==================================================================
+  
+  void ParticleMomentumEquation::
+  apply_boundary_conditions( const GraphHelper& graphHelper,
+                            BCHelper& bcHelper )
+  {
+    const Category taskCat = ADVANCE_SOLUTION;
+    // set bcs for particle momentum
+    bcHelper.apply_boundary_condition<ParticleField>( Expr::Tag(solution_variable_name(), Expr::STATE_NONE), taskCat );
+  }
   //==================================================================
 
 } // namespace Particle

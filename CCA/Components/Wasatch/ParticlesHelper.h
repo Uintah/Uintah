@@ -140,21 +140,65 @@ namespace Uintah {
      */
     static const std::vector<std::string>& get_relocatable_particle_varnames();
 
+    /**
+     * \brief Return a reference to the list of particle variables marked for relocation.
+     */
+    static const std::vector<int>* get_boundary_particles(const std::string& bndName,
+                                                          const int patchID);
+    /**
+     * \brief Schedule this task whenever you want to update the list of particles that are near boundaries.
+     */
+    virtual void schedule_find_boundary_particles(const Uintah::LevelP& level,
+                                                  Uintah::SchedulerP& sched);
   protected:
-
-    static std::vector<std::string> otherParticleVarNames_;
     
-    const Uintah::VarLabel *pPosLabel_, *pIDLabel_;
+    
+    //****************************************************************************
+    /**
+     *  @struct ParticleBoundarySpec
+     *  @author Tony Saad
+     *  @date   July 2014
+     *  @brief  Stores boundary information in a convenient way.
+     */
+    //****************************************************************************
+    struct ParticleBoundarySpec
+    {
+      std::string              name;      // name of the boundary
+      Uintah::Patch::FaceType  face;      // x-minus, x-plus, y-minus, y-plus, z-minus, z-plus
+      std::vector<int>         patchIDs;  // List of patch IDs that this boundary lives on.
+      // returns true if this Boundary has parts of it on patchID
+      bool has_patch(const int& patchID) const
+      {
+        return std::find(patchIDs.begin(), patchIDs.end(), patchID) != patchIDs.end();
+      };
+      
+    };
+    
+    // This vector stores a list of all particle variables (except position). These variables require relocation.
+    static std::vector<std::string> otherParticleVarNames_;
+
+    typedef std::vector<int> BndParticlesVector;
+    typedef std::map <int, BndParticlesVector            > patchIDBndParticlesMapT;  // temporary typedef map that stores boundary particles per patch id: Patch ID -> Bnd particles
+    typedef std::map <std::string, patchIDBndParticlesMapT    > MaskMapT         ;  // boundary name -> (patch ID -> boundary particles )
+    static MaskMapT bndParticlesMap_;
+
+    // particle position label of type Uintah::Point
+    const Uintah::VarLabel *pPosLabel_;
+    // particle ID label, of type long64
+    const Uintah::VarLabel *pIDLabel_;
+    // particle x, y, and z position (of type double)
     const Uintah::VarLabel *pXLabel_,*pYLabel_,*pZLabel_;
+    
+    // list of varlabels to be destroyed
     std::vector<const Uintah::VarLabel*> destroyMe_;
     
     virtual void initialize( const Uintah::ProcessorGroup*,
-                               const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
-                               Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
+                             const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
+                             Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw );
 
     virtual void restart_initialize( const Uintah::ProcessorGroup*,
-                             const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
-                             Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
+                                     const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
+                                     Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw );
 
     virtual void transfer_particle_ids(const Uintah::ProcessorGroup*,
                               const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
@@ -171,6 +215,30 @@ namespace Uintah {
     virtual void sync_particle_position(const Uintah::ProcessorGroup*,
                         const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
                         Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw, const bool initialization);
+
+    void allocate_boundary_particles_vector( const std::string& bndName,
+                                      const int& patchID );
+
+    void update_boundary_particles_vector( const std::vector<int>& myIters,
+                                            const std::string& bndName,
+                                            const int& patchID );
+    
+    void find_boundary_particles( const Uintah::ProcessorGroup*,
+                                  const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
+                                 Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw );
+
+    /**
+     * \brief Use this to parse boundary conditions specified in the input file and allocate appropriate
+     memory for the boundary particles.
+     */
+    virtual void parse_boundary_conditions(const Uintah::PatchSet* const patches);
+    
+    /**
+     * \brief Use this to parse boundary conditions specified in the input file and allocate appropriate
+     memory for the boundary particles.
+     */
+    virtual void parse_boundary_conditions(const Uintah::LevelP& level,
+                                           Uintah::SchedulerP& sched);
 
     bool isValidState_;
     const Uintah::MaterialSet* materials_;

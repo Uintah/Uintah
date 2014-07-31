@@ -39,18 +39,21 @@
 #include <Core/Grid/BoundaryConditions/BoundCondBase.h>
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
 #include <CCA/Components/Wasatch/Expressions/NullExpression.h>
+
 //-- ExprLib Includes --//
 #include <expression/ExprLib.h>
 #include <expression/ExpressionFactory.h>
 
 //-- Wasatch Includes --//
-#include "FieldTypes.h"
-#include "ParseTools.h"
-#include "Expressions/BoundaryConditions/BoundaryConditions.h"
-#include "Expressions/BoundaryConditions/BoundaryConditionBase.h"
+#include <CCA/Components/Wasatch/FieldTypes.h>
+#include <CCA/Components/Wasatch/ParseTools.h>
+#include <CCA/Components/Wasatch/ParticlesHelper.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
 
 /**
- * \file BCHelper.cc
+ * \file    BCHelper.cc
+ * \author  Tony Saad
  */
 
 namespace Wasatch {
@@ -543,6 +546,23 @@ namespace Wasatch {
 
   //------------------------------------------------------------------------------------------------
   
+  const std::vector<int>*
+  BCHelper::get_particles_bnd_mask( const BndSpec& myBndSpec,
+                                    const int& patchID ) const
+  {
+    const std::string bndName = myBndSpec.name;
+    if ( bndNamePatchIDMaskMap_.find(bndName) != bndNamePatchIDMaskMap_.end() ) {
+      const patchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
+      if ( myMap.find(patchID) != myMap.end() ) {
+        const BoundaryIterators& myIters = (*myMap.find(patchID)).second;
+        return myIters.particleIdx;
+      }
+    }
+    return NULL;
+  }
+
+  //------------------------------------------------------------------------------------------------
+  
   template<typename FieldT>
   const std::vector<SpatialOps::IntVec>*
   BCHelper::get_extra_bnd_mask( const BndSpec& myBndSpec,
@@ -714,7 +734,7 @@ namespace Wasatch {
               DBGBC << "Face = " << face << std::endl;
               //bcDataArray->print();
               
-              // now go over every boundary or child specified on this boundary face
+              // now go over every child-boundary (sub-boundary) specified on this domain boundary face
               for( int chid = 0; chid<numChildren; ++chid ) {
                 DBGBC << " child ID = " << chid << std::endl;
 
@@ -733,8 +753,7 @@ namespace Wasatch {
                 DBGBC << " geom bndtype  = " << thisGeom->getBndType() << std::endl;
                 BndTypeEnum bndType = select_bnd_type_enum(thisGeom->getBndType());
                 add_boundary( bndName, face, bndType, patchID );
-                DBGBC << " bc name = " << bndName << std::endl
-                      << " boundary type = " << bndType << std::endl;
+                DBGBC << " boundary type = " << bndType << std::endl;
                 
                 //__________________________________________________________________________________
                 Uintah::Iterator bndIter; // allocate iterator
@@ -744,6 +763,9 @@ namespace Wasatch {
                 BoundaryIterators myIters;
                 DBGBC << " Size of uintah iterator for boundary: " << bndName << " = " << bndIter.size() << std::endl;
                 pack_uintah_iterator_as_spatialops(face, patch, bndIter, myIters); // convert the Uintah iterator to a SpatialOps-friendly mask
+                // store a pointer to the list of particle index that are near this boundary.
+                myIters.particleIdx = Uintah::ParticlesHelper::get_boundary_particles(bndName,patchID);
+                
                 add_boundary_mask( myIters, bndName, patchID );
                 
                 //__________________________________________________________________________________
@@ -980,6 +1002,8 @@ namespace Wasatch {
               modExpr.set_interior_coef( ci );
               modExpr.set_interior_points( get_interior_bnd_mask<FieldT>(myBndSpec,patchID) );
               modExpr.set_nebo_interior_points( get_nebo_interior_bnd_mask<FieldT>(myBndSpec,patchID) );
+              
+              modExpr.set_boundary_particles(get_particles_bnd_mask(myBndSpec,patchID));
               // do not delete this. this could be needed for some outflow/open boundary conditions
               //modExpr.set_interior_edge_points( get_edge_mask(myBndSpec,patchID) );
             }
@@ -1209,6 +1233,7 @@ namespace Wasatch {
   template void BCHelper::create_dummy_dependency< VOLT >( const Expr::Tag& attachDepToThisTag, \
                                                           const Expr::TagList dependencies,     \
                                                           const Category taskCat );             
+  INSTANTIATE_BC_TYPES(ParticleField);
   INSTANTIATE_BC_TYPES(SpatialOps::SVolField);
   INSTANTIATE_BC_TYPES(SpatialOps::XVolField);
   INSTANTIATE_BC_TYPES(SpatialOps::YVolField);

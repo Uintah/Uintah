@@ -778,13 +778,11 @@ namespace Wasatch{
     if (buildWasatchMaterial_)
     {
       set_wasatch_materials(sharedState_->allWasatchMaterials());
-      if (doParticles_)
-      {
-        particlesHelper_->set_materials(sharedState_->allWasatchMaterials());
+      if (doParticles_) {
+        particlesHelper_->set_materials(get_wasatch_materials());
       }
     } else {
-      if (doParticles_)
-      {
+      if (doParticles_) {
         particlesHelper_->set_materials(sharedState_->allMaterials());
       }
     }
@@ -805,6 +803,10 @@ namespace Wasatch{
 
     Expr::ExpressionFactory& exprFactory = *icGraphHelper->exprFactory;
 
+    if( doParticles_ ) {
+      particlesHelper_->schedule_initialize(level,sched);
+    }
+    
     //bcHelper_ = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     
@@ -821,8 +823,6 @@ namespace Wasatch{
     timeTags.push_back( TagNames::self().timestep );
     timeTags.push_back( TagNames::self().rkstage  );
     exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
-    //
-    if( doParticles_ ) particlesHelper_->schedule_initialize(level,sched);
     
     //_____________________________________________
     // Build the initial condition expression graph
@@ -833,6 +833,10 @@ namespace Wasatch{
       // -----------------------------------------------------------------------
       typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
       
+      proc0cout << "------------------------------------------------" << std::endl
+      << "SETTING INITIAL BOUNDARY CONDITIONS:" << std::endl;
+      proc0cout << "------------------------------------------------" << std::endl;
+
       for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
         EqnTimestepAdaptorBase* const adaptor = *ia;
         EquationBase* transEq = adaptor->equation();
@@ -853,7 +857,9 @@ namespace Wasatch{
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
       }
-      // -----------------------------------------------------------------------          
+      proc0cout << "------------------------------------------------" << std::endl;
+
+      // -----------------------------------------------------------------------
       try{
         TaskInterface* const task = scinew TaskInterface( icGraphHelper->rootIDs,
                                                           "initialization",
@@ -1014,6 +1020,10 @@ namespace Wasatch{
       bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     }
     
+    if (doParticles_) {
+      particlesHelper_->schedule_find_boundary_particles(level,sched);
+    }
+    
     for( int iStage=1; iStage<=nRKStages_; iStage++ ){
       // jcs why do we need this instead of getting the level?
       // jcs notes:
@@ -1039,6 +1049,10 @@ namespace Wasatch{
       // -----------------------------------------------------------------------
       // BOUNDARY CONDITIONS TREATMENT
       // -----------------------------------------------------------------------
+      proc0cout << "------------------------------------------------" << std::endl
+      << "SETTING BOUNDARY CONDITIONS:" << std::endl;
+      proc0cout << "------------------------------------------------" << std::endl;
+
       typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
       
       for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
@@ -1062,6 +1076,7 @@ namespace Wasatch{
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
       }
+      proc0cout << "------------------------------------------------" << std::endl;
       
       //
       // process clipping on fields - must be done AFTER all bcs are applied
@@ -1134,6 +1149,7 @@ namespace Wasatch{
       if (isRestarting_) {
         particlesHelper_->schedule_restart_initialize(level,sched);
       }
+
       particlesHelper_->schedule_sync_particle_position(level,sched);
       particlesHelper_->schedule_transfer_particle_ids(level,sched);
       particlesHelper_->schedule_relocate_particles(level,sched);

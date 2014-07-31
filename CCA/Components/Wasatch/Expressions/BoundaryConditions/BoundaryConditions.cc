@@ -145,6 +145,15 @@ evaluate()
 }
 
 // ###################################################################
+// a necessary specialization for particle fields because the BCHelper automatically creates
+// ConstantBC for Dirichlet boundary conditions specified in the input file.
+template<>
+void
+ConstantBC<ParticleField>::
+evaluate()
+{}
+
+// ###################################################################
 
 template< typename FieldT >
 void
