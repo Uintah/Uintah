@@ -745,9 +745,9 @@
   <!--__________________________________-->
   
   <Scheduler              spec="OPTIONAL NO_DATA"
-                               attribute1="type OPTIONAL STRING 'MPI DynamicMPI ThreadedMPI ThreadedMPI2 Unified'">
+                            attribute1="type OPTIONAL STRING 'MPI DynamicMPI Unified'">
     <small_messages       spec="OPTIONAL BOOLEAN" />
-    <taskReadyQueueAlg     spec="OPTIONAL STRING 'MostChildren LeastChildren MostAllChildren LeastAllChildren MostL2Children LeastL2Children PatchOrder PatchOrderRandom MostMessages LeastMessages Random FCFS Stack'" />
+    <taskReadyQueueAlg    spec="OPTIONAL STRING 'MostChildren LeastChildren MostAllChildren LeastAllChildren MostL2Children LeastL2Children PatchOrder PatchOrderRandom MostMessages LeastMessages Random FCFS Stack'" />
     <VarTracker           spec="OPTIONAL NO_DATA">
       <start_time         spec="REQUIRED DOUBLE" />
       <end_time           spec="REQUIRED DOUBLE" />
