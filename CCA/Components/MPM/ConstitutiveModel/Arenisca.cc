@@ -557,11 +557,6 @@ void Arenisca::computeStableTimestep(const Patch* patch,
           shear= d_cm.G0;                        // shear modulus
   Vector  dx = patch->dCell(),
           WaveSpeed(1.e-12,1.e-12,1.e-12);       // what is this doing?
-#ifdef JC_DEBUG_SMALL_TIMESTEP
-  Vector  idvel(1,1,1),
-          vbulk(1,1,1),
-          vshear(1,1,1);
-#endif
   // Get the particles in the current patch
   ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
 
@@ -576,32 +571,15 @@ void Arenisca::computeStableTimestep(const Patch* patch,
   new_dw->get(pParticleID, lb->pParticleIDLabel, pset);
   new_dw->get(pvelocity,   lb->pVelocityLabel,   pset);
 
-  // Allocate temporary particle variables
-  ParticleVariable<double> rho_cur;
-  new_dw->allocateTemporary(rho_cur,      pset);
-
   // loop over the particles in the patch
   for(ParticleSubset::iterator iter = pset->begin();
       iter != pset->end(); iter++){
     particleIndex idx = *iter;
 
-    rho_cur[idx] = pmass[idx]/pvolume[idx];
-
     // Compute wave speed + particle velocity at each particle,
     // store the maximum
-    c_dil = sqrt((bulk+4.0*shear/3.0)/rho_cur[idx]);
+    c_dil = sqrt((bulk+4.0*shear/3.0)*(pvolume[idx]/pmass[idx]));
 
-#ifdef JC_DEBUG_SMALL_TIMESTEP
-     if(c_dil+fabs(pvelocity[idx].x()) > WaveSpeed.x()){
-       idvel.x(idx); vbulk.x(bulk); vshear.x(shear);
-     }
-     if(c_dil+fabs(pvelocity[idx].y()) > WaveSpeed.y()){
-       idvel.y(idx); vbulk.y(bulk); vshear.y(shear);
-     }
-     if(c_dil+fabs(pvelocity[idx].z()) > WaveSpeed.z()){
-       idvel.z(idx); vbulk.z(bulk); vshear.z(shear);
-     }
-#endif
     WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
                      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
                      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
@@ -610,31 +588,6 @@ void Arenisca::computeStableTimestep(const Patch* patch,
   // Compute the stable timestep based on maximum value of
   // "wave speed + particle velocity"
   WaveSpeed = dx/WaveSpeed;
-
-#ifdef JC_DEBUG_SMALL_TIMESTEP
-  //cout <<"delT_new="<<delT_new;
-  //cout <<"dx="<<dx<<endl;
-  if(delT_new==WaveSpeed.x()){
-    cout << "pvel.x=" << pvelocity[idvel.x()].x()
-         << ",wavespeed.x=" << WaveSpeed.x()
-         << ",bulk=" << vbulk.x()
-         << ",rho=" << rho_cur[idvel.x()]  << endl;
-  }
-  else if(delT_new==WaveSpeed.y()){
-    cout << "pvel.y: " << pvelocity[idvel.y()].y()
-         << ",wavespeed.y=" << WaveSpeed.y()
-         << ",bulk=" << vbulk.y()
-         << ",rho=" << rho_cur[idvel.y()] << endl;
-  }
-  else if(delT_new==WaveSpeed.z()){
-    cout << "pvel.z: " << pvelocity[idvel.z()].z()
-         << ",wavespeed.z=" << WaveSpeed.z()
-         << ",bulk=" << vbulk.z()
-         << ",rho=" << rho_cur[idvel.z()]  << endl;
-  }
-  else
-    cout << "ERROR in JC_DEBUG_SMALL_TIMESTEP" <<endl;
-#endif
 
   double delT_new = WaveSpeed.minComponent();
   new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
@@ -654,9 +607,6 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 {
   // Define some constants
   Matrix3 Identity; Identity.Identity();
-
-  // Get the initial density
-  double rho_orig = matl->getInitialDensity();
 
   // Get the Arenisca model parameters
   const double FSLOPE = d_cm.FSLOPE,        //yield function
@@ -683,8 +633,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
     const Patch* patch = patches->get(p);
     Matrix3 D;
 
-    double J,
-           c_dil=0.0,
+    double c_dil=0.0,
            se=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12); //used to calc. stable timestep
     Vector dx = patch->dCell(); //used to calc. artificial viscosity and timestep
@@ -811,23 +760,11 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pStressQS_new,       pStressQSLabel_preReloc,       pset);
 
     // Allocate temporary particle variables
-    ParticleVariable<double>       f_trial_step,
-                                   rho_cur; //used for calc. of stable timestep
+    ParticleVariable<double>       f_trial_step;
     ParticleVariable<Matrix3>      rotation;
 
     new_dw->allocateTemporary(f_trial_step, pset);
-    new_dw->allocateTemporary(rho_cur,      pset);
     new_dw->allocateTemporary(rotation,     pset);
-
-    // Loop over the particles of the current patch to compute particle density
-    //T2D: remove once stable timestep is made into a modular function
-    for(ParticleSubset::iterator iter=pset->begin();iter!=pset->end();iter++){
-      particleIndex idx = *iter;
-
-      // Update particle density
-      J = pDefGrad_new[idx].Determinant();
-      rho_cur[idx] = rho_orig/J;
-    }
 
     // Loop over the particles of the current patch to update particle
     // stress at the end of the current timestep along with all other
@@ -1441,7 +1378,8 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 
         // Compute wave speed + particle velocity at each particle,
         // store the maximum
-        c_dil = sqrt((bulk+four_third*shear)/(rho_cur[idx]));
+        double rho_cur = pmass[idx]/pvolume[idx];
+        c_dil = sqrt((bulk+four_third*shear)/rho_cur);
 #ifdef JC_DEBUG_SMALL_TIMESTEP
         if(c_dil+fabs(pvelocity[idx].x()) > WaveSpeed.x())
           {
@@ -1469,8 +1407,8 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         // Compute artificial viscosity term
         if (flag->d_artificial_viscosity) {
           double dx_ave = (dx.x() + dx.y() + dx.z())*one_third;
-          double c_bulk = sqrt(bulk/rho_cur[idx]);
-          p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur[idx], dx_ave);
+          double c_bulk = sqrt(bulk/rho_cur);
+          p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
         } else {
           p_q[idx] = 0.;
         }
