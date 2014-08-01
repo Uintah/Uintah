@@ -96,7 +96,7 @@ private:
     using namespace SpatialOps;
     using SpatialOps::operator *; 
 
-    T* const field = field_collector->get_so_field<T>( "templated_variable" ); 
+    T* const field = field_collector->get_so_field<T>( "templated_variable", NEWDW ); 
     *field <<= 3.2;
 
   }
@@ -118,7 +118,7 @@ private:
     using namespace SpatialOps;
     using SpatialOps::operator *; 
 
-    T* const field = field_collector->get_so_field<T>( "templated_variable" ); 
+    T* const field = field_collector->get_so_field<T>( "templated_variable", NEWDW ); 
 
     *field <<= 24.0;
   
