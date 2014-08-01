@@ -198,7 +198,7 @@ private:
 
       case SINECOS:
 
-        *dep_field <<= _A*sin(_two_pi * _f1 * (*interp)(*ind_field)) + _B*cos(_two_pi * _f2 * (*interp)(*ind_field_2)); 
+        *dep_field <<= _A*sin(_two_pi * _f1 * (*interp)(*ind_field)) + _B*cos(_two_pi * _f2 * (*interp)(*ind_field)); 
 
         break;
 
