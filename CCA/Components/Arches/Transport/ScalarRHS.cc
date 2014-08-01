@@ -185,13 +185,13 @@ ScalarRHS::eval( const Patch* patch, FieldCollector* field_collector,
   //process has already required the variables 
   //For now, we will be computing convection the old fashioned way until SpatialOps gets
   //flux limiters. 
-  CCVariable<double>* ui_fconv        = field_collector->get_uintah_field<CCVariable<double> >(_Fconv_name            );
-  constCCVariable<double>* ui_rho     = field_collector->get_uintah_field<constCCVariable<double> >("density"         );
-  constCCVariable<double>* ui_old_phi = field_collector->get_uintah_field<constCCVariable<double> >(_task_name        );
-  constCCVariable<Vector>* ui_eps     = field_collector->get_uintah_field<constCCVariable<Vector> >("areaFraction"    );
-  constSFCXVariable<double>* ui_u     = field_collector->get_uintah_field<constSFCXVariable<double> >("uVelocitySPBC" );
-  constSFCYVariable<double>* ui_v     = field_collector->get_uintah_field<constSFCYVariable<double> >("vVelocitySPBC" );
-  constSFCZVariable<double>* ui_w     = field_collector->get_uintah_field<constSFCZVariable<double> >("wVelocitySPBC" );
+  CCVariable<double>* ui_fconv        = field_collector->get_uintah_field<CCVariable<double> >        ( _Fconv_name     , NEWDW  );
+  constCCVariable<double>* ui_rho     = field_collector->get_uintah_field<constCCVariable<double> >   ( "density"       , LATEST );
+  constCCVariable<double>* ui_old_phi = field_collector->get_uintah_field<constCCVariable<double> >   ( _task_name      , LATEST );
+  constCCVariable<Vector>* ui_eps     = field_collector->get_uintah_field<constCCVariable<Vector> >   ( "areaFraction"  , LATEST );
+  constSFCXVariable<double>* ui_u     = field_collector->get_uintah_field<constSFCXVariable<double> > ( "uVelocitySPBC" , LATEST );
+  constSFCYVariable<double>* ui_v     = field_collector->get_uintah_field<constSFCYVariable<double> > ( "vVelocitySPBC" , LATEST );
+  constSFCZVariable<double>* ui_w     = field_collector->get_uintah_field<constSFCZVariable<double> > ( "wVelocitySPBC" , LATEST );
 
   const GradX* const gradx = opr.retrieve_operator<GradX>();
   const GradY* const grady = opr.retrieve_operator<GradY>();

@@ -199,6 +199,14 @@ protected:
                                  std::vector<VariableInformation>& var_reg, 
                                  const int time_substep );
 
+    /** @brief A container to hold a small amount of other information to 
+     *         pass into the task exe. **/ 
+    struct SchedToTaskInfo{ 
+      int time_substep; 
+      double dt; 
+    };
+   
+
     /** @brief Task grid variable storage **/ 
     template <typename T>
     struct VarContainer{ 
@@ -208,8 +216,6 @@ protected:
 
     typedef std::map<std::string, GridVariableBase* > UintahVarMap; 
     typedef std::map<std::string, constVariableBase<GridVariableBase>* > ConstUintahVarMap; 
-//    typedef std::map<std::string, VarContainer<T> > NUintahVarMap;
-//    typedef std::map<std::string, VarContainer<constVariableBase<GridVariableBase*> > > CNUintahVarMap;
 
     /** @brief A class for managing the retrieval of uintah/so fields during task exe **/ 
     class FieldCollector{
@@ -218,8 +224,8 @@ protected:
 
         enum MAPCHECK {CHECK_FIELD,CONST_FIELD,NONCONST_FIELD};
 
-        FieldCollector(std::vector<VariableInformation>& var_reg, const Patch* patch):
-          _var_reg(var_reg), _patch(patch){
+        FieldCollector( std::vector<VariableInformation>& var_reg, const Patch* patch, SchedToTaskInfo& info):
+                        _var_reg(var_reg), _patch(patch), _tsk_info(info){
 
           _variable_map.clear();
           _const_variable_map.clear(); 
@@ -250,6 +256,12 @@ protected:
           }
 
         }; 
+
+        /** @brief return the time substep **/ 
+        int get_time_substep(){ return _tsk_info.time_substep; }; 
+
+        /** @brief return the variable registry **/ 
+        std::vector<VariableInformation>& get_variable_reg(){ return _var_reg; }
 
         /** @brief Set the references to the variable maps in the Field Collector for easier 
          * management of the fields when trying to retrieve from the DW **/ 
@@ -509,7 +521,7 @@ protected:
               if ( ivar.name == name ){ 
 
                 //check dw before moving on
-                if ( ivar.dw == which_dw ){ 
+                if ( ivar.dw == which_dw_copy ){ 
                   var_info = &ivar;
                   break; 
                 }
@@ -558,11 +570,7 @@ protected:
         //UINTAH
         /** @brief The interface to the actual task for retrieving variables for uintah types **/ 
         template<class ST>
-        ST* get_uintah_field( const std::string name, 
-                              const bool check_dw=false,  
-                              const WHICH_DW which_dw=NEWDW, 
-                              const int time_substep=0 ){ 
-
+        ST* get_uintah_field( const std::string name, const WHICH_DW which_dw ){
 
           //search through the registry for the variable: 
           //Note: In its most basic operation, this assumes that the variable 
@@ -570,34 +578,21 @@ protected:
           //One can use the which_dw to force a matching if the variable 
           //is being requested from two different DW's
           VariableInformation* var_info=0; 
-          if ( !check_dw ){ 
-            BOOST_FOREACH( VariableInformation &ivar, _var_reg ){ 
-              if ( ivar.name == name ){ 
+          BOOST_FOREACH( VariableInformation &ivar, _var_reg ){ 
+            if ( ivar.name == name && ivar.dw == which_dw ){ 
 
-                var_info = &ivar; 
-                break; 
+              var_info = &ivar; 
 
+              if ( var_info->dw == LATEST ){ 
+                if ( _tsk_info.time_substep == 0 ){ 
+                  var_info->dw = OLDDW; 
+                } else { 
+                  var_info->dw = NEWDW; 
+                } 
               }
-            }
-          } else { 
-            WHICH_DW which_dw_copy = which_dw; 
-            if ( which_dw_copy == LATEST ){ 
-              if ( time_substep == 0 ){ 
-                which_dw_copy = OLDDW;
-              } else { 
-                which_dw_copy = NEWDW; 
-              }
-            }
-            BOOST_FOREACH( VariableInformation &ivar, _var_reg ){ 
-              if ( ivar.name == name ){ 
 
-                //check dw before moving on
-                if ( ivar.dw == which_dw ){ 
-                  var_info = &ivar;
-                  break; 
-                }
+              break; 
 
-              }
             }
           }
 
@@ -631,9 +626,7 @@ protected:
 
         UintahVarMap _variable_map;
         ConstUintahVarMap _const_variable_map; 
-
-//       NUintahVarMap _new_var_map; 
-//        CNUintahVarMap _new_const_var_map;
+        SchedToTaskInfo& _tsk_info; 
 
         std::vector<VariableInformation> _var_reg; 
         const Patch* _patch; 
@@ -652,19 +645,10 @@ protected:
     void resolve_fields( DataWarehouse* old_dw, 
                          DataWarehouse* new_dw, 
                          const Patch* patch, 
-                         std::vector<VariableInformation>& variable_registry, 
                          UintahVarMap& var_map, 
                          ConstUintahVarMap& const_var_map, 
-                         FieldCollector* f_collector,
-                         const int time_substep );
+                         FieldCollector* f_collector );
 
-    /** @brief A container to hold a small amount of other information to 
-     *         pass into the task exe. **/ 
-    struct SchedToTaskInfo{ 
-      int time_substep; 
-      double dt; 
-    };
-   
     /** @brief The actual work done within the derived class **/ 
     virtual void eval( const Patch* patch, FieldCollector* field_collector, 
                        SpatialOps::OperatorDatabase& opr, 
@@ -684,7 +668,8 @@ private:
     /** @brief Performs all DW get*,allocateAndPut, etc.. for all variables for this 
      *         task. **/
     template<class T>
-    void resolve_field_modifycompute( DataWarehouse* old_dw, DataWarehouse* new_dw, T* field, VariableInformation& info, const Patch* patch, const int time_substep );
+    void resolve_field_modifycompute( DataWarehouse* old_dw, DataWarehouse* new_dw, T* field, 
+                                      VariableInformation& info, const Patch* patch, const int time_substep );
 
     /** @brief Performs all DW get*,allocateAndPut, etc.. for all variables for this 
      *         task. **/
