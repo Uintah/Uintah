@@ -349,11 +349,11 @@ private:
 
   // Notice: the filter width is hard coded in the contructor (until we allow for variable filter widths)
   // delta = 3. 
-  int _filter_width;                          ///< Filter width
 
   double _filter_array[3][3][3];              ///< Filter weights for a width of 3*dx
 
   bool _use_old_filter;                       ///< Adjusts the filter at boundaries when this variable is true 
+  int _filter_width;                          ///< Filter width
 
 
   FILTER_TYPE _filter_type; 

@@ -652,7 +652,7 @@
       </ExplicitSolver>
 
       <TimeIntegrator                   spec="REQUIRED NO_DATA" 
-                                        attribute1="order REQUIRED INTEGER '1,3'">
+                                        attribute1="order OPTIONAL INTEGER '1,3'"> <!-- this optional order spec isnt used yet -->
         <ExplicitIntegrator             spec="REQUIRED NO_DATA"
                                         attribute1="order REQUIRED STRING 'first, second, third'"/>
       </TimeIntegrator>  

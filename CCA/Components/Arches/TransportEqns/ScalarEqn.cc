@@ -336,13 +336,6 @@ void ScalarEqn::cleanUp( const ProcessorGroup* pc,
                          DataWarehouse* new_dw )
 {
   printTask(patches,dbg,"ScalarEqn::cleanUp");
-  //Set the initialization flag for the source label to false.
-  SourceTermFactory& factory = SourceTermFactory::self(); 
-  for (vector<SourceContainer>::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
-
-    SourceTermBase& temp_src = factory.retrieve_source_term( iter->name ); 
-  
-  }
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the evaluation of the transport equation. 
