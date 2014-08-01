@@ -288,11 +288,11 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params, SimulationStateP & st
 
 void 
 ExplicitSolver::checkMomBCs( SchedulerP& sched,
-                             const PatchSet* patches,
+                             const LevelP& level, 
                              const MaterialSet* matls)
 {
 
-  d_boundaryCondition->sched_checkMomBCs( sched, patches, matls ); 
+  d_boundaryCondition->sched_checkMomBCs( sched, level, matls ); 
 
 }
 
@@ -318,7 +318,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
   sched_setInitialGuess(sched, patches, matls);
 
-  d_boundaryCondition->sched_setAreaFraction(sched, patches, matls, 0, false );
+  d_boundaryCondition->sched_setAreaFraction(sched, level, matls, 0, false );
   d_turbModel->sched_carryForwardFilterVol(sched, patches, matls); 
 
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
@@ -599,7 +599,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     if ( curr_level == 0 ) initialize_it = true;
     d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, curr_level );
 
-    d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls );
+    d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
 
     //NEW STUFF: -------------
     //this is updating the scalar with the latest density from the table lookup
@@ -780,9 +780,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     }
 
-    d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls );
+    d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
 
-    d_boundaryCondition->sched_setIntrusionDensity( sched, patches, matls ); 
+    d_boundaryCondition->sched_setIntrusionDensity( sched, level, matls ); 
 
     if ( d_wall_ht_models != 0 ){ 
       d_wall_ht_models->sched_doWallHT( level, sched, curr_level ); 
@@ -812,8 +812,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                                                         d_timeIntegratorLabels[curr_level]);
 //#endif // WASATCH_IN_ARCHES
     if (d_mixedModel) {
-      d_scaleSimilarityModel->sched_reComputeTurbSubmodel(sched, patches, matls,
-                                            d_timeIntegratorLabels[curr_level]);
+      d_scaleSimilarityModel->sched_reComputeTurbSubmodel( sched, level, matls,
+                                                           d_timeIntegratorLabels[curr_level]);
     }
 
 #   ifdef WASATCH_IN_ARCHES
@@ -880,7 +880,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     d_turbCounter = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
     if ((d_turbCounter%d_turbModelCalcFreq == 0)&&
         ((curr_level==0)||((!(curr_level==0))&&d_turbModelRKsteps)))
-      d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
+      d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls,
                                                d_timeIntegratorLabels[curr_level]);
 
 

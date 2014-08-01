@@ -1119,28 +1119,27 @@ Arches::scheduleInitialize(const LevelP& level,
 
   sched_create_patch_operators( level, sched ); 
 
-  const PatchSet* patches= level->eachPatch();
   const MaterialSet* matls = d_sharedState->allArchesMaterials();
 
   //Initialize several parameters
   sched_paramInit(level, sched);
 
   //Check for hand-off momentum BCs and perform mapping
-  d_nlSolver->checkMomBCs( sched, patches, matls ); 
+  d_nlSolver->checkMomBCs( sched, level, matls ); 
 
   //initialize cell type
-  d_boundaryCondition->sched_cellTypeInit__NEW( sched, level, patches, matls );
+  d_boundaryCondition->sched_cellTypeInit__NEW( sched, level, matls );
 
   // compute the cell area fraction
-  d_boundaryCondition->sched_setAreaFraction( sched, patches, matls, 0, true );
+  d_boundaryCondition->sched_setAreaFraction( sched, level, matls, 0, true );
 
   // setup intrusion cell type 
-  d_boundaryCondition->sched_setupNewIntrusionCellType( sched, patches, matls, false );
+  d_boundaryCondition->sched_setupNewIntrusionCellType( sched, level, matls, false );
 
   //AF must be called again to account for intrusions (can this be the ONLY call?) 
-  d_boundaryCondition->sched_setAreaFraction( sched, patches, matls, 1, true ); 
+  d_boundaryCondition->sched_setAreaFraction( sched, level, matls, 1, true ); 
 
-  d_turbModel->sched_computeFilterVol( sched, patches, matls ); 
+  d_turbModel->sched_computeFilterVol( sched, level, matls ); 
 
   typedef std::map<std::string, TaskFactoryBase*> FACMAP; 
   //utility factory
@@ -1204,19 +1203,19 @@ Arches::scheduleInitialize(const LevelP& level,
   d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, time_substep );
 
   //Setup BC areas
-  d_boundaryCondition->sched_computeBCArea__NEW( sched, level, patches, matls );
+  d_boundaryCondition->sched_computeBCArea__NEW( sched, level, matls );
 
   //For debugging
   //d_boundaryCondition->printBCInfo();
   
   //Setup initial inlet velocities 
-  d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls, d_doingRestart );
+  d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, level, matls, d_doingRestart );
 
   //Set the initial profiles
-  d_boundaryCondition->sched_setInitProfile__NEW( sched, patches, matls );
+  d_boundaryCondition->sched_setInitProfile__NEW( sched, level, matls );
 
   //Setup the intrusions. 
-  d_boundaryCondition->sched_setupNewIntrusions( sched, patches, matls );
+  d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
 
   sched_getCCVelocities(level, sched);
 
@@ -1225,11 +1224,11 @@ Arches::scheduleInitialize(const LevelP& level,
     if (!d_MAlab) {
       
       if (d_mixedModel) {
-        d_scaleSimilarityModel->sched_reComputeTurbSubmodel(sched, patches, matls,
+        d_scaleSimilarityModel->sched_reComputeTurbSubmodel(sched, level, matls,
                                                             init_timelabel);
       }
       
-      d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls, init_timelabel);
+      d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls, init_timelabel);
       
     }
   }
@@ -1295,7 +1294,7 @@ Arches::scheduleInitialize(const LevelP& level,
     }
   }
 
-  d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls );
+  d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
 
   //d_rad_prop_calc->sched_compute_radiation_properties( level, sched, matls, 0, true ); 
 
@@ -1794,8 +1793,8 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     const PatchSet* patches= level->eachPatch();
     const MaterialSet* matls = d_sharedState->allArchesMaterials();
 
-    d_boundaryCondition->sched_computeBCArea__NEW( sched, level, patches, matls );
-    d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls, d_doingRestart );
+    d_boundaryCondition->sched_computeBCArea__NEW( sched, level, matls );
+    d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, level, matls, d_doingRestart );
 
     EqnFactory& eqnFactory = EqnFactory::self();
     EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
@@ -1804,10 +1803,10 @@ Arches::scheduleTimeAdvance( const LevelP& level,
       eqn->sched_checkBCs( level, sched );
     }
 
-    d_nlSolver->checkMomBCs( sched, patches, matls ); 
+    d_nlSolver->checkMomBCs( sched, level, matls ); 
 
-    d_boundaryCondition->sched_setupNewIntrusionCellType( sched, patches, matls, d_doingRestart );
-    d_boundaryCondition->sched_setupNewIntrusions( sched, patches, matls );
+    d_boundaryCondition->sched_setupNewIntrusionCellType( sched, level, matls, d_doingRestart );
+    d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
 
   }
   

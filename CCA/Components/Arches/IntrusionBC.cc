@@ -306,7 +306,7 @@ IntrusionBC::problemSetup( const ProblemSpecP& params )
 //_________________________________________
 void 
 IntrusionBC::sched_computeBCArea( SchedulerP& sched, 
-                                  const PatchSet* patches, 
+                                  const LevelP& level, 
                                   const MaterialSet* matls )
 {
 
@@ -318,7 +318,7 @@ IntrusionBC::sched_computeBCArea( SchedulerP& sched,
 
   } 
 
-  sched->addTask(tsk, patches, matls); 
+  sched->addTask(tsk, level->eachPatch(), matls); 
 
 }
 void 
@@ -394,12 +394,12 @@ IntrusionBC::computeBCArea( const ProcessorGroup*,
 //_________________________________________
 void 
 IntrusionBC::sched_computeProperties( SchedulerP& sched, 
-                                      const PatchSet* patches, 
+                                      const LevelP& level, 
                                       const MaterialSet* matls )
 {
   Task* tsk = scinew Task("IntrusionBC::computeProperties", this, &IntrusionBC::computeProperties); 
 
-  sched->addTask(tsk, patches, matls); 
+  sched->addTask(tsk, level->eachPatch(), matls); 
 }
 void 
 IntrusionBC::computeProperties( const ProcessorGroup*, 
@@ -674,8 +674,8 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 //_________________________________________
 void 
 IntrusionBC::sched_setIntrusionVelocities( SchedulerP& sched, 
-                                  const PatchSet* patches, 
-                                  const MaterialSet* matls )
+                                           const LevelP& level, 
+                                           const MaterialSet* matls )
 {
   Task* tsk = scinew Task("IntrusionBC::setIntrusionVelocities", this, &IntrusionBC::setIntrusionVelocities); 
 
@@ -685,7 +685,7 @@ IntrusionBC::sched_setIntrusionVelocities( SchedulerP& sched,
 
   } 
 
-  sched->addTask(tsk, patches, matls); 
+  sched->addTask(tsk, level->eachPatch(), matls); 
 }
 
 void 
@@ -734,7 +734,7 @@ IntrusionBC::setIntrusionVelocities( const ProcessorGroup*,
 //_________________________________________
 void 
 IntrusionBC::sched_setCellType( SchedulerP& sched, 
-                                const PatchSet* patches, 
+                                const LevelP& level, 
                                 const MaterialSet* matls, 
                                 const bool doing_restart )
 {
@@ -745,7 +745,7 @@ IntrusionBC::sched_setCellType( SchedulerP& sched,
     tsk->modifies( _lab->d_areaFractionLabel ); 
     tsk->modifies( _lab->d_volFractionLabel ); 
   }
-  sched->addTask(tsk, patches, matls); 
+  sched->addTask(tsk, level->eachPatch(), matls); 
 }
 
 void 
@@ -939,7 +939,7 @@ IntrusionBC::setCellType( const ProcessorGroup*,
 //_________________________________________
 void 
 IntrusionBC::sched_gatherReductionInformation( SchedulerP& sched, 
-                                               const PatchSet* patches, 
+                                               const LevelP& level, 
                                                const MaterialSet* matls )
 {
   Task* tsk = scinew Task("IntrusionBC::gatherReductionInformation", this, &IntrusionBC::gatherReductionInformation); 
@@ -953,7 +953,7 @@ IntrusionBC::sched_gatherReductionInformation( SchedulerP& sched,
 
   } 
 
-  sched->addTask(tsk, patches, matls); 
+  sched->addTask(tsk, level->eachPatch(), matls); 
 }
 
 void 
@@ -1026,7 +1026,7 @@ IntrusionBC::gatherReductionInformation( const ProcessorGroup*,
 //_________________________________________
 void 
 IntrusionBC::sched_printIntrusionInformation( SchedulerP& sched, 
-                                              const PatchSet* patches, 
+                                              const LevelP& level, 
                                               const MaterialSet* matls )
 {
 
@@ -1041,7 +1041,7 @@ IntrusionBC::sched_printIntrusionInformation( SchedulerP& sched,
 
   } 
 
-  sched->addTask(tsk, patches, matls); 
+  sched->addTask(tsk, level->eachPatch(), matls); 
 
 }
 void 
@@ -1362,7 +1362,7 @@ IntrusionBC::setDensity( const Patch* patch,
 
 void 
 IntrusionBC::sched_setIntrusionT( SchedulerP& sched, 
-                                  const PatchSet* patches, 
+                                  const LevelP& level, 
                                   const MaterialSet* matls )
 { 
   if ( _do_energy_exchange ){ 
@@ -1377,7 +1377,7 @@ IntrusionBC::sched_setIntrusionT( SchedulerP& sched,
       tsk->requires( Task::NewDW, _mpmlab->integTemp_CCLabel, Ghost::None, 0 );  
     } 
 
-    sched->addTask( tsk, patches, matls );
+    sched->addTask( tsk, level->eachPatch(), matls );
   }
 } 
 

@@ -83,7 +83,7 @@ namespace Uintah{
 
       /** @brief Computes the boundary area for the non-wall portion */
       void sched_computeBCArea( SchedulerP& sched, 
-                                const PatchSet* patches, 
+                                const LevelP& level, 
                                 const MaterialSet* matls ); 
 
       void computeBCArea( const ProcessorGroup*, 
@@ -94,40 +94,40 @@ namespace Uintah{
 
       /** @brief Computes the velocity if a mass flow rate is specified */
       void sched_setIntrusionVelocities( SchedulerP& sched, 
-                                const PatchSet* patches, 
-                                const MaterialSet* matls ); 
+                                         const LevelP& level, 
+                                         const MaterialSet* matls ); 
 
       void setIntrusionVelocities( const ProcessorGroup*, 
-                          const PatchSubset* patches, 
-                          const MaterialSubset* matls, 
-                          DataWarehouse* old_dw, 
-                          DataWarehouse* new_dw ); 
+                                   const PatchSubset* patches, 
+                                   const MaterialSubset* matls, 
+                                   DataWarehouse* old_dw, 
+                                   DataWarehouse* new_dw ); 
 
       /** @brief Computes the properties at the boundary */
       void sched_computeProperties( SchedulerP& sched, 
-                                const PatchSet* patches, 
-                                const MaterialSet* matls ); 
+                                    const LevelP& level, 
+                                    const MaterialSet* matls ); 
 
       void computeProperties( const ProcessorGroup*, 
-                          const PatchSubset* patches, 
-                          const MaterialSubset* matls, 
-                          DataWarehouse* old_dw, 
-                          DataWarehouse* new_dw ); 
+                              const PatchSubset* patches, 
+                              const MaterialSubset* matls, 
+                              DataWarehouse* old_dw, 
+                              DataWarehouse* new_dw ); 
 
       /** @brief Print a summary of the intrusion information **/ 
       void sched_printIntrusionInformation( SchedulerP& sched, 
-                                            const PatchSet* patches, 
+                                            const LevelP& level, 
                                             const MaterialSet* matls );
 
       void printIntrusionInformation( const ProcessorGroup*, 
-                                        const PatchSubset* patches, 
-                                        const MaterialSubset* matls, 
-                                        DataWarehouse* old_dw, 
-                                        DataWarehouse* new_dw );
+                                      const PatchSubset* patches, 
+                                      const MaterialSubset* matls, 
+                                      DataWarehouse* old_dw, 
+                                      DataWarehouse* new_dw );
 
       /** @brief Gather (compute) reduction intrusion information **/ 
       void sched_gatherReductionInformation( SchedulerP& sched, 
-                                             const PatchSet* patches, 
+                                             const LevelP& level, 
                                              const MaterialSet* matls );
 
       void gatherReductionInformation( const ProcessorGroup*, 
@@ -138,16 +138,16 @@ namespace Uintah{
 
       /** @brief Sets the cell type, volume and area fractions @ boundaries */
       void sched_setCellType( SchedulerP& sched, 
-                                const PatchSet* patches, 
-                                const MaterialSet* matls, 
-                                const bool doing_restart); 
+                              const LevelP& level, 
+                              const MaterialSet* matls, 
+                              const bool doing_restart); 
 
       void setCellType( const ProcessorGroup*, 
-                          const PatchSubset* patches, 
-                          const MaterialSubset* matls, 
-                          DataWarehouse* old_dw, 
-                          DataWarehouse* new_dw, 
-                          const bool doing_restart); 
+                        const PatchSubset* patches, 
+                        const MaterialSubset* matls, 
+                        DataWarehouse* old_dw, 
+                        DataWarehouse* new_dw, 
+                        const bool doing_restart); 
 
 
       /** @brief Sets the hatted velocity boundary conditions */ 
@@ -181,7 +181,7 @@ namespace Uintah{
 
       /** @brief Sets the temperature field to that of the intrusion temperature */ 
       void sched_setIntrusionT( SchedulerP& sched, 
-                                const PatchSet* patches, 
+                                const LevelP& level, 
                                 const MaterialSet* matls );
 
       void setIntrusionT( const ProcessorGroup*, 

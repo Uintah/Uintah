@@ -99,10 +99,10 @@ public:
   // Schedule the recomputation of Turbulence Model data
   //    [in] 
   //        data User data needed for solve 
-  virtual void sched_reComputeTurbSubmodel(SchedulerP&,
-                                           const PatchSet* patches,
-                                           const MaterialSet* matls,
-                                         const TimeIntegratorLabel* timelabels);
+  virtual void sched_reComputeTurbSubmodel( SchedulerP&,
+                                            const LevelP& level,
+                                            const MaterialSet* matls,
+                                            const TimeIntegratorLabel* timelabels);
 
 
   double getMolecularViscosity() const; 

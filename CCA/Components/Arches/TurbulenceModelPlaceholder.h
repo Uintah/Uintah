@@ -67,21 +67,21 @@ namespace Uintah {
     void problemSetup(const ProblemSpecP& db);
     
     void sched_reComputeTurbSubmodel(SchedulerP&,
-                                             const PatchSet* patches,
-                                             const MaterialSet* matls,
-                                             const TimeIntegratorLabel* timelabels);
+                                     const LevelP& level,
+                                     const MaterialSet* matls,
+                                     const TimeIntegratorLabel* timelabels);
     
         
     void sched_computeScalarVariance(SchedulerP&,
-                                             const PatchSet* patches,
-                                             const MaterialSet* matls,
-                                             const TimeIntegratorLabel* timelabels)
+                                     const PatchSet* patches,
+                                     const MaterialSet* matls,
+                                     const TimeIntegratorLabel* timelabels)
     {;}
     
     void sched_computeScalarDissipation(SchedulerP&,
-                                                const PatchSet* patches,
-                                                const MaterialSet* matls,
-                                                const TimeIntegratorLabel* timelabels)
+                                        const PatchSet* patches,
+                                        const MaterialSet* matls,
+                                        const TimeIntegratorLabel* timelabels)
     {;}
     
     double getMolecularViscosity() const;

@@ -106,7 +106,7 @@ SmagorinskyModel::problemSetup(const ProblemSpecP& params)
 //****************************************************************************
 void 
 SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched, 
-                                              const PatchSet* patches,
+                                              const LevelP& level,
                                               const MaterialSet* matls,
                                               const TimeIntegratorLabel* timelabels)
 {
@@ -136,7 +136,7 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
   tsk->modifies(d_lab->d_viscosityCTSLabel);
   tsk->modifies(d_lab->d_turbViscosLabel);
 
-  sched->addTask(tsk, patches, matls);
+  sched->addTask(tsk, level->eachPatch(), matls);
 }
 
 
