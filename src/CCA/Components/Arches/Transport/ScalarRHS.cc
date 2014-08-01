@@ -124,6 +124,36 @@ ScalarRHS::initialize( const Patch* patch, FieldCollector* field_collector,
   *Fconv <<= 0.0; 
 
 }
+//
+//------------------------------------------------
+//------------- TIMESTEP INIT --------------------
+//------------------------------------------------
+//
+void 
+ScalarRHS::register_timestep_init( std::vector<VariableInformation>& variable_registry ){ 
+  register_variable( _D_name          , CC_DOUBLE , COMPUTES , 0 , NEWDW, variable_registry  );
+  register_variable( _D_name          , CC_DOUBLE , REQUIRES, 0 , OLDDW, variable_registry );
+  register_variable( _task_name       , CC_DOUBLE , COMPUTES , 0 , NEWDW, variable_registry  );
+  register_variable( _task_name       , CC_DOUBLE , COMPUTES , 0 , OLDDW, variable_registry  );
+}
+
+void 
+ScalarRHS::timestep_init( const Patch* patch, FieldCollector* field_collector, 
+                          SpatialOps::OperatorDatabase& opr ){ 
+
+  using namespace SpatialOps;
+  using SpatialOps::operator *; 
+
+  SVolF* const gamma       = field_collector->get_so_field<SVolF>( _D_name, NEWDW );
+  SVolF* const old_gamma    = field_collector->get_so_field<SVolF>( _D_name, OLDDW );
+  SVolF* const phi       = field_collector->get_so_field<SVolF>( _task_name, NEWDW );
+  SVolF* const old_phi       = field_collector->get_so_field<SVolF>( _task_name, OLDDW );
+
+  *gamma <<= *old_gamma;
+  *phi <<= *old_phi;
+
+}
+
 
 //
 //------------------------------------------------
@@ -132,14 +162,12 @@ ScalarRHS::initialize( const Patch* patch, FieldCollector* field_collector,
 //
 
 void 
-ScalarRHS::register_all_variables( std::vector<VariableInformation>& variable_registry, const int time_substep ){ 
+ScalarRHS::register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ){ 
 
   //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
   register_variable( _rhs_name        , CC_DOUBLE , COMPUTES , 0 , NEWDW  , variable_registry , time_substep );
-  register_variable( _D_name          , CC_DOUBLE , COMPUTES , 0 , NEWDW  , variable_registry , time_substep );
-  register_variable( _task_name       , CC_DOUBLE , COMPUTES , 0 , NEWDW  , variable_registry , time_substep );
+  register_variable( _D_name          , CC_DOUBLE , REQUIRES,  1 , NEWDW  , variable_registry , time_substep );
   register_variable( _task_name       , CC_DOUBLE , REQUIRES , 2 , LATEST , variable_registry , time_substep );
-  register_variable( _D_name          , CC_DOUBLE , REQUIRES , 1 , LATEST , variable_registry , time_substep );
   register_variable( _Fconv_name      , CC_DOUBLE , COMPUTES , 0 , NEWDW  , variable_registry , time_substep );
   register_variable( _Fdiff_name      , CC_DOUBLE , COMPUTES , 0 , NEWDW  , variable_registry , time_substep );
   register_variable( "uVelocitySPBC"  , FACEX     , REQUIRES , 1 , LATEST , variable_registry , time_substep );
@@ -149,7 +177,7 @@ ScalarRHS::register_all_variables( std::vector<VariableInformation>& variable_re
   register_variable( "areaFractionFY" , FACEY     , REQUIRES , 1 , OLDDW  , variable_registry , time_substep );
   register_variable( "areaFractionFZ" , FACEZ     , REQUIRES , 1 , OLDDW  , variable_registry , time_substep );
   register_variable( "density"        , CC_DOUBLE , REQUIRES , 1 , LATEST , variable_registry , time_substep );
-  register_variable( "areaFraction"        , CC_VEC , REQUIRES , 2 , LATEST , variable_registry , time_substep );
+  register_variable( "areaFraction"   , CC_VEC    , REQUIRES , 2 , LATEST , variable_registry , time_substep );
 
   typedef std::vector<SourceInfo> VS; 
   for (VS::iterator i = _source_info.begin(); i != _source_info.end(); i++){ 
@@ -160,38 +188,24 @@ ScalarRHS::register_all_variables( std::vector<VariableInformation>& variable_re
 
 void 
 ScalarRHS::eval( const Patch* patch, FieldCollector* field_collector, 
-                 SpatialOps::OperatorDatabase& opr, 
-                 SchedToTaskInfo& info ){ 
+                 SpatialOps::OperatorDatabase& opr ){ 
 
 
   using namespace SpatialOps;
   using SpatialOps::operator *; 
   SVolF* const rhs       = field_collector->get_so_field<SVolF>( _rhs_name        , NEWDW  );
-  SVolF* const old_phi   = field_collector->get_so_field<SVolF>( _task_name       , LATEST );
   SVolF* const phi       = field_collector->get_so_field<SVolF>( _task_name       , NEWDW  );
   SVolF* const rho       = field_collector->get_so_field<SVolF>( "density"        , LATEST );
   SVolF* const gamma     = field_collector->get_so_field<SVolF>( _D_name          , NEWDW  );
-  SVolF* const old_gamma = field_collector->get_so_field<SVolF>( _D_name          , LATEST );
   SVolF* const Fdiff     = field_collector->get_so_field<SVolF>( _Fdiff_name      , NEWDW  );
   SVolF* const Fconv     = field_collector->get_so_field<SVolF>( _Fconv_name      , NEWDW  );
   SurfX* const epsX      = field_collector->get_so_field<SurfX>( "areaFractionFX" , OLDDW  );
   SurfY* const epsY      = field_collector->get_so_field<SurfY>( "areaFractionFY" , OLDDW  );
   SurfZ* const epsZ      = field_collector->get_so_field<SurfZ>( "areaFractionFZ" , OLDDW  );
-  SurfX* const u         = field_collector->get_so_field<SurfX>( "uVelocitySPBC"  , LATEST );
-  SurfY* const v         = field_collector->get_so_field<SurfY>( "vVelocitySPBC"  , LATEST );
-  SurfZ* const w         = field_collector->get_so_field<SurfZ>( "wVelocitySPBC"  , LATEST );
-
-  //Note: we can just grab references to the Uintah grid types here because the registration 
-  //process has already required the variables 
-  //For now, we will be computing convection the old fashioned way until SpatialOps gets
-  //flux limiters. 
-  CCVariable<double>* ui_fconv        = field_collector->get_uintah_field<CCVariable<double> >        ( _Fconv_name     , NEWDW  );
-  constCCVariable<double>* ui_rho     = field_collector->get_uintah_field<constCCVariable<double> >   ( "density"       , LATEST );
-  constCCVariable<double>* ui_old_phi = field_collector->get_uintah_field<constCCVariable<double> >   ( _task_name      , LATEST );
-  constCCVariable<Vector>* ui_eps     = field_collector->get_uintah_field<constCCVariable<Vector> >   ( "areaFraction"  , LATEST );
-  constSFCXVariable<double>* ui_u     = field_collector->get_uintah_field<constSFCXVariable<double> > ( "uVelocitySPBC" , LATEST );
-  constSFCYVariable<double>* ui_v     = field_collector->get_uintah_field<constSFCYVariable<double> > ( "vVelocitySPBC" , LATEST );
-  constSFCZVariable<double>* ui_w     = field_collector->get_uintah_field<constSFCZVariable<double> > ( "wVelocitySPBC" , LATEST );
+  //not being used yet: 
+  //SurfX* const u         = field_collector->get_so_field<SurfX>( "uVelocitySPBC"  , LATEST );
+  //SurfY* const v         = field_collector->get_so_field<SurfY>( "vVelocitySPBC"  , LATEST );
+  //SurfZ* const w         = field_collector->get_so_field<SurfZ>( "wVelocitySPBC"  , LATEST );
 
   const GradX* const gradx = opr.retrieve_operator<GradX>();
   const GradY* const grady = opr.retrieve_operator<GradY>();
@@ -205,12 +219,9 @@ ScalarRHS::eval( const Patch* patch, FieldCollector* field_collector,
   const DivY* const dy = opr.retrieve_operator<DivY>();
   const DivZ* const dz = opr.retrieve_operator<DivZ>();
 
-  //-->carry forward gamma and phi:
-  *gamma <<= *old_gamma;
-  *phi <<= *old_phi; 
-
   Vector DX = patch->dCell(); 
   double vol = DX.x()*DX.y()*DX.z(); 
+  const double dt = field_collector->get_dt(); 
 
   //
   //--------------- actual work below this line ---------------------
@@ -218,23 +229,24 @@ ScalarRHS::eval( const Patch* patch, FieldCollector* field_collector,
   
   //-->diffusion: 
   if ( _do_diff ){ 
-    *Fdiff <<= (*dx)( (*ix)( *old_gamma * *rho ) * (*gradx)(*old_phi) * *epsX )
-             + (*dy)( (*iy)( *old_gamma * *rho ) * (*grady)(*old_phi) * *epsY )
-             + (*dz)( (*iz)( *old_gamma * *rho ) * (*gradz)(*old_phi) * *epsZ );
+    *Fdiff <<= (*dx)( (*ix)( *gamma * *rho ) * (*gradx)(*phi) * *epsX )
+             + (*dy)( (*iy)( *gamma * *rho ) * (*grady)(*phi) * *epsY )
+             + (*dz)( (*iz)( *gamma * *rho ) * (*gradz)(*phi) * *epsZ );
   } else { 
     *Fdiff <<= 0.0; 
   }
 
   //-->convection: 
   if ( _do_conv ){ 
-    _disc->computeConv( patch, *ui_fconv, *ui_old_phi, *ui_u, *ui_v, *ui_w, *ui_rho, *ui_eps, _conv_scheme );
+    //not working yet:
+    //_disc->computeConv( patch, *ui_fconv, *ui_old_phi, *ui_u, *ui_v, *ui_w, *ui_rho, *ui_eps, _conv_scheme );
   } else { 
     *Fconv <<= 0.0; 
   }
 
   //Divide by volume because Nebo is using a differential form
   //and the computeConv function is finite volume.
-  *rhs <<= *rho * *old_phi + info.dt * ( *Fdiff - *Fconv/vol );
+  *rhs <<= *rho * *phi + dt * ( *Fdiff - *Fconv/vol );
 
   //-->add sources
   typedef std::vector<SourceInfo> VS; 
@@ -242,8 +254,7 @@ ScalarRHS::eval( const Patch* patch, FieldCollector* field_collector,
 
     SVolF* const src = field_collector->get_so_field<SVolF>( i->name, LATEST );
 
-    *rhs <<= *rhs + info.dt * i->weight * *src;
+    *rhs <<= *rhs + dt * i->weight * *src;
 
   }
-
 }

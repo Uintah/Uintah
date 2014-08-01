@@ -24,6 +24,22 @@ SampleTask::problemSetup( ProblemSpecP& db ){
 
 //
 //------------------------------------------------
+//------------- TIMESTEP INIT --------------------
+//------------------------------------------------
+//
+void 
+SampleTask::register_timestep_init( std::vector<VariableInformation>& variable_registry ){ 
+}
+
+void 
+SampleTask::timestep_init( const Patch* patch, FieldCollector* field_collector, 
+                          SpatialOps::OperatorDatabase& opr ){ 
+
+}
+
+
+//
+//------------------------------------------------
 //-------------- INITIALIZATION ------------------
 //------------------------------------------------
 //
@@ -63,7 +79,7 @@ SampleTask::initialize( const Patch* patch, FieldCollector* field_collector,
 
 //Register all variables both local and those needed from elsewhere that are required for this task. 
 void 
-SampleTask::register_all_variables( std::vector<VariableInformation>& variable_registry, const int time_substep ){ 
+SampleTask::register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ){ 
 
   //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
   register_variable( "a_sample_variable", CC_DOUBLE, COMPUTES,       0, NEWDW,  variable_registry, time_substep );
@@ -78,8 +94,7 @@ SampleTask::register_all_variables( std::vector<VariableInformation>& variable_r
 //This is the work for the task.  First, get the variables. Second, do the work! 
 void 
 SampleTask::eval( const Patch* patch, FieldCollector* field_collector, 
-                  SpatialOps::OperatorDatabase& opr, 
-                  SchedToTaskInfo& info ){ 
+                  SpatialOps::OperatorDatabase& opr ){
 
   using namespace SpatialOps;
   using SpatialOps::operator *; 
