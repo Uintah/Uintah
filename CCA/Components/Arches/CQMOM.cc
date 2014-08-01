@@ -333,16 +333,15 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
       int ii = 0;
       for (vector<constCCVarWrapper>::iterator iter = momentCCVars.begin(); iter!= momentCCVars.end(); ++iter) {
         double temp_value = (iter->data)[c];
-        int flatIndex = 0;
-        
         vector<int> temp_index = momentIndexes[ii];
         
-        if (M == 2) {
-          flatIndex = temp_index[0] + temp_index[1]*maxInd[0];
-        } else if (M == 3) {
-          flatIndex = temp_index[0] + temp_index[1]*maxInd[0] + temp_index[2]*maxInd[0]*maxInd[1];
-        } else if (M == 4) {
-          flatIndex = temp_index[0] + temp_index[1]*maxInd[0] + temp_index[2]*maxInd[0]*maxInd[1] + temp_index[3]*maxInd[0]*maxInd[1]*maxInd[2];
+        int flatIndex = temp_index[0];
+        for (int i = 1; i < M; i++ ) {
+          int product = temp_index[i];
+          for (int j = 0; j<i; j++) {
+            product *= maxInd[j];
+          }
+          flatIndex += product;
         }
         
         temp_moments[flatIndex] = temp_value;
