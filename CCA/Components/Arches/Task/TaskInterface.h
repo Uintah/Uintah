@@ -604,8 +604,8 @@ protected:
         UintahVarMap _variable_map;
         ConstUintahVarMap _const_variable_map; 
 
-        const Patch* _patch; 
         std::vector<VariableInformation> _var_reg; 
+        const Patch* _patch; 
         SchedToTaskInfo& _tsk_info; 
 
         std::vector<void *> _all_so_fields; 

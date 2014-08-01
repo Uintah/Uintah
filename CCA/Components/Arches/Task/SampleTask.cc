@@ -105,7 +105,7 @@ SampleTask::eval( const Patch* patch, FieldCollector* field_collector,
   typedef SpatialOps::SSurfZField SurfZ;
 
   typedef SpatialOps::BasicOpTypes<SVol>::GradX GradX;
-  const GradX* const gradx = opr.retrieve_operator<GradX>();
+  //const GradX* const gradx = opr.retrieve_operator<GradX>();
 
   //Get uintah fields for work: 
   //CCVariable<double>*      field  = get_uintah_grid_var<CCVariable<double> >("a_sample_variable", var_map);

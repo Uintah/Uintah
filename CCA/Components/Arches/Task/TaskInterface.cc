@@ -597,8 +597,6 @@ void TaskInterface::schedule_timestep_init( const LevelP& level,
 
   Task* tsk = scinew Task( _task_name+"_timestep_initialize", this, &TaskInterface::do_timestep_init, variable_registry ); 
 
-  const int time_substep = 0; 
-
   BOOST_FOREACH( VariableInformation &ivar, variable_registry ){ 
 
     switch(ivar.depend){
