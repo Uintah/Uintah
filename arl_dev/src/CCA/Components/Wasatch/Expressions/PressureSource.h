@@ -6,8 +6,7 @@
 //-- ExprLib Includes --//
 #include <expression/Expression.h>
 
-#include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
+#include <spatialops/structured/FVStaggered.h>
 #include <CCA/Components/Wasatch/VardenParameters.h>
 
 /**
@@ -37,28 +36,28 @@
 class PressureSource : public Expr::Expression<SVolField>
 {  
   
-  typedef SpatialOps::structured::FaceTypes<SVolField> FaceTypes;
+  typedef SpatialOps::FaceTypes<SVolField> FaceTypes;
   typedef FaceTypes::XFace XFace; ///< The type of field for the x-face of SVolField.
   typedef FaceTypes::YFace YFace; ///< The type of field for the y-face of SVolField.
   typedef FaceTypes::ZFace ZFace; ///< The type of field for the z-face of SVolField.
 
-  typedef SpatialOps::structured::SingleValueField TimeField;
+  typedef SpatialOps::SingleValueField TimeField;
 
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, XVolField >::type S2XInterpOpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, YVolField >::type S2YInterpOpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, ZVolField >::type S2ZInterpOpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, XVolField >::type S2XInterpOpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, YVolField >::type S2YInterpOpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, ZVolField >::type S2ZInterpOpT;
   
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, SVolField >::type X2SInterpOpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, SVolField >::type Y2SInterpOpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, ZVolField, SVolField >::type Z2SInterpOpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, SVolField >::type X2SInterpOpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, SVolField >::type Y2SInterpOpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, ZVolField, SVolField >::type Z2SInterpOpT;
 
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SVolField >::type GradXT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SVolField >::type GradYT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SVolField >::type GradZT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SVolField >::type GradXT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SVolField >::type GradYT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SVolField >::type GradZT;
   
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::GradientX, SVolField, SVolField >::type GradXST;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::GradientY, SVolField, SVolField >::type GradYST;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::GradientZ, SVolField, SVolField >::type GradZST;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientX, SVolField, SVolField >::type GradXST;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientY, SVolField, SVolField >::type GradYST;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientZ, SVolField, SVolField >::type GradZST;
 
   const XVolField *xMom_, *uStar_, *xVel_;
   const YVolField *yMom_, *vStar_, *yVel_;
@@ -109,30 +108,24 @@ public:
     
     /**
      *  \brief Constructs a builder for source term of the pressure
-     *
-     *  \param the momTags a list tag which holds the tags for momentum in
+     *  \param results the tags for the result fields calculated by this expression.
+     *         See the documentation of the PressureSource class for more details.
+     *         Order is critically important.
+     *  \param momTags a list tag which holds the tags for momentum in
      *         all directions
-     *
-     *  \param the velTags a list tag which holds the tags for velocity at
+     *  \param velTags a list tag which holds the tags for velocity at
      *         the current time stage in all directions
-     *
-     *  \param the velStarTags a list tag which holds the tags for velocity at
+     *  \param velStarTags a list tag which holds the tags for velocity at
      *         the time stage "*" in all directions
-     *
+     *  \param isConstDensity
      *  \param densTag a tag to hold density in constant density cases, which is 
      *         needed to obtain drhodt 
-     *
      *  \param densStarTag a tag for estimation of density at the time stage "*"
      *         which is needed to obtain momentum at that stage.
-     *
      *  \param dens2StarTag a tag for estimation of density at the time stage "**"
      *         which is needed to calculate drhodt
-     *
-     *  \param divmomStarTag a tag for estimation of divmom at the time stage "*"
-    *
-     *  \param dilTag a tag to hold dilatation term in constant density cases.
-     *
-     *  \param timestepTag a tag to hold the timestep value.
+     *  \param varDenParams
+     *  \param divMomStarTag a tag for estimation of divmom at the time stage "*"
      */
     Builder( const Expr::TagList& results,
              const Expr::TagList& momTags,
@@ -143,7 +136,7 @@ public:
              const Expr::Tag densStarTag,
              const Expr::Tag dens2StarTag,
              const Wasatch::VarDenParameters varDenParams,
-             const Expr::Tag divmomstarTag);
+             const Expr::Tag divMomStarTag);
     
     ~Builder(){}
     

@@ -28,7 +28,7 @@
     <outputInitTimestep/>
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label="divQ"  levels="-1"/>
-    <save label="abskg" />
+    <!--<save label="abskg" />-->
     <save label="sigmaT4" />
     <save label="cellType" />
     
@@ -52,7 +52,7 @@
         <BCType id="all"  label = "temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"       var="Dirichlet">
+        <BCType id="all"  label = "abskg"    var="Dirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -70,7 +70,7 @@
         <BCType id="all"  label = "temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"       var="Dirichlet">
+        <BCType id="all"  label = "abskg"    var="Dirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -88,7 +88,7 @@
         <BCType id="all"  label = "temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"       var="Dirichlet">
+        <BCType id="all"  label = "abskg"    var="Dirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -106,7 +106,7 @@
         <BCType id="all"  label = "temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"       var="Dirichlet">
+        <BCType id="all"  label = "abskg"    var="Dirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -124,7 +124,7 @@
         <BCType id="all"  label = "temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"       var="Dirichlet">
+        <BCType id="all"  label = "abskg"    var="Dirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -142,7 +142,7 @@
         <BCType id="all"  label = "temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"       var="Dirichlet">
+        <BCType id="all"  label = "abskg"    var="Dirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -228,14 +228,13 @@
         <Sources>
           <src label="divQ" type="rmcrt_radiation">
             <calc_frequency>1</calc_frequency>
+            <abskg label="abskg"/>
             <RMCRT>
                 <randomSeed>        false     </randomSeed>
                 <nDivQRays>          5         </nDivQRays>
                 <Threshold>         0.05       </Threshold>
                 <solveBoundaryFlux> false       </solveBoundaryFlux>
                 <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
-                
-                <property_calculator type="burns_christon"/>   
                 
                 <!-- compute rmcrt on coarse level -->
                 <algorithm type='RMCRT_coarseLevel'>
@@ -246,6 +245,17 @@
           </src>
        </Sources> 
       </TransportEqns>
+
+      <PropertyModels>
+        <model type="radiation_properties" label="abskg">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <calculator type="burns_christon">
+            <abskg label="gas_abskg"/>
+          </calculator>
+        </model>
+      </PropertyModels>
 
       <Properties>
         <ConstantProps>

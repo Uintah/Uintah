@@ -30,7 +30,7 @@
 #include <string>
 #include <algorithm>
 
-namespace SS = SpatialOps::structured;
+namespace so = SpatialOps;
 
 namespace Wasatch{
 
@@ -62,6 +62,8 @@ namespace Wasatch{
     validStrings["ZSURFZ"] = ZSURFZ;
     
     validStrings["PERPATCH"] = PERPATCH;
+    
+    validStrings["PARTICLE"] = PARTICLE;
   }
 
   //------------------------------------------------------------------
@@ -83,8 +85,8 @@ namespace Wasatch{
   //------------------------------------------------------------------
 
   void get_bc_logicals( const Uintah::Patch* const patch,
-                        SS::IntVec& bcMinus,
-                        SS::IntVec& bcPlus )
+                        so::IntVec& bcMinus,
+                        so::IntVec& bcPlus )
   {
     for( int i=0; i<3; ++i ){
       bcMinus[i] = 1;
@@ -104,64 +106,64 @@ namespace Wasatch{
   //------------------------------------------------------------------
 
   template< typename FieldT >
-  SpatialOps::structured::MemoryWindow
+  SpatialOps::MemoryWindow
   get_memory_window_for_uintah_field( const Uintah::Patch* const patch )
   {
-    SS::IntVec bcMinus, bcPlus;
+    so::IntVec bcMinus, bcPlus;
     get_bc_logicals( patch, bcMinus, bcPlus );
 
     const SCIRun::IntVector gs = patch->getCellHighIndex(0) - patch->getCellLowIndex(0);
 
     const int nGhost = get_n_ghost<FieldT>();
-    const SS::IntVec glob( gs[0] + nGhost*2 + (bcPlus[0] ? FieldT::Location::BCExtra::X : 0),
+    const so::IntVec glob( gs[0] + nGhost*2 + (bcPlus[0] ? FieldT::Location::BCExtra::X : 0),
                            gs[1] + nGhost*2 + (bcPlus[1] ? FieldT::Location::BCExtra::Y : 0),
                            gs[2] + nGhost*2 + (bcPlus[2] ? FieldT::Location::BCExtra::Z : 0) );
     
-    const SS::IntVec extent = glob;
-    const SS::IntVec offset(nGhost,nGhost,nGhost);
+    const so::IntVec extent = glob;
+    const so::IntVec offset(nGhost,nGhost,nGhost);
 
-    return SS::MemoryWindow( glob, offset, extent );
+    return so::MemoryWindow( glob, offset, extent );
   }
 
   template<>
-  SpatialOps::structured::MemoryWindow
-  get_memory_window_for_uintah_field<SS::SingleValueField>( const Uintah::Patch* const patch )
+  SpatialOps::MemoryWindow
+  get_memory_window_for_uintah_field<so::SingleValueField>( const Uintah::Patch* const patch )
   {
-    const int nGhost = get_n_ghost<SS::SingleValueField>();
-    return SS::MemoryWindow( SS::IntVec(1,1,1), SS::IntVec(0,0,0), SS::IntVec(nGhost,nGhost,nGhost) );
+    const int nGhost = get_n_ghost<so::SingleValueField>();
+    return so::MemoryWindow( so::IntVec(1,1,1), so::IntVec(0,0,0), so::IntVec(nGhost,nGhost,nGhost) );
   }
 
 
   //------------------------------------------------------------------
   template<> Uintah::Ghost::GhostType get_uintah_ghost_type<int            >(){ return Uintah::Ghost::AroundCells; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::SVolField  >(){ return Uintah::Ghost::AroundCells; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::SSurfXField>(){ return Uintah::Ghost::AroundFaces; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::SSurfYField>(){ return Uintah::Ghost::AroundFaces; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::SSurfZField>(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<so::SVolField  >(){ return Uintah::Ghost::AroundCells; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<so::SSurfXField>(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<so::SSurfYField>(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<so::SSurfZField>(){ return Uintah::Ghost::AroundFaces; }
 
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::XVolField  >(){ return Uintah::Ghost::AroundFaces; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::XSurfXField>(){ return Uintah::Ghost::AroundCells; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::XSurfYField>(){ return Uintah::Ghost::AroundFaces; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::XSurfZField>(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<so::XVolField  >(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<so::XSurfXField>(){ return Uintah::Ghost::AroundCells; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<so::XSurfYField>(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<so::XSurfZField>(){ return Uintah::Ghost::AroundFaces; }
 
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::YVolField  >(){ return Uintah::Ghost::AroundFaces; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::YSurfXField>(){ return Uintah::Ghost::AroundFaces; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::YSurfYField>(){ return Uintah::Ghost::AroundCells; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::YSurfZField>(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<so::YVolField  >(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<so::YSurfXField>(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<so::YSurfYField>(){ return Uintah::Ghost::AroundCells; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<so::YSurfZField>(){ return Uintah::Ghost::AroundFaces; }
 
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::ZVolField  >(){ return Uintah::Ghost::AroundFaces; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::ZSurfXField>(){ return Uintah::Ghost::AroundFaces; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::ZSurfYField>(){ return Uintah::Ghost::AroundFaces; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::ZSurfZField>(){ return Uintah::Ghost::AroundCells; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<so::ZVolField  >(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<so::ZSurfXField>(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<so::ZSurfYField>(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<so::ZSurfZField>(){ return Uintah::Ghost::AroundCells; }
 
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::SingleValueField>(){ return Uintah::Ghost::None; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<so::SingleValueField>(){ return Uintah::Ghost::None; }
 
   template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::Particle::ParticleField>(){ return Uintah::Ghost::None; }
   //------------------------------------------------------------------
 
   // macro shortcuts for explicit template instantiation
 #define declare_method( FIELDT )                                              \
-  template SS::MemoryWindow                                                   \
+  template so::MemoryWindow                                                   \
   get_memory_window_for_uintah_field<FIELDT>( const Uintah::Patch* const  );  \
   template Uintah::Ghost::GhostType get_uintah_ghost_type<FIELDT>();
 
@@ -171,12 +173,12 @@ namespace Wasatch{
   declare_method( FaceTypes<VOLT>::YFace );     \
   declare_method( FaceTypes<VOLT>::ZFace );
 
-  declare_variants( SS::SVolField );
-  declare_variants( SS::XVolField );
-  declare_variants( SS::YVolField );
-  declare_variants( SS::ZVolField );
+  declare_variants( so::SVolField );
+  declare_variants( so::XVolField );
+  declare_variants( so::YVolField );
+  declare_variants( so::ZVolField );
 
-  declare_method( SS::SingleValueField                );
+  declare_method( so::SingleValueField                );
   declare_method( SpatialOps::Particle::ParticleField );
 
   //------------------------------------------------------------------

@@ -83,5 +83,5 @@ SolnVarEst<FieldT>::Builder::build() const
 //==========================================================================
 // Explicit template instantiation for supported versions of this expression
 #include <spatialops/structured/FVStaggered.h>
-template class SolnVarEst< SpatialOps::structured::SVolField >;
+template class SolnVarEst< SpatialOps::SVolField >;
 //==========================================================================

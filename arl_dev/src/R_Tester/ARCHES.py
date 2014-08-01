@@ -51,7 +51,8 @@ NIGHTLYTESTS = [
    ("methane_fire_8patch_petscrad__NEW" , "methane_fire_8patch_petscrad__NEW.ups" , 8   , "All"     , ["exactComparison"]) ,
    ("rmcrt_bm1_1L"                , "RMCRT/rmcrt_bm1_1L.ups"                      , 1.1 , "Linux"   , ["exactComparison"]) ,
    ("rmcrt_bm1_DO"                , "RMCRT/rmcrt_bm1_DO.ups"                      , 8 ,   "Linux"   , ["exactComparison"]) ,
-   ("methane_rmcrt_const_props"   , "RMCRT/methane_rmcrt_const_props.ups"         , 8 ,   "Linux"   , ["exactComparison", "no_restart"]) ,
+   ("rmcrt_bm1_ML"                , "RMCRT/rmcrt_bm1_ML.ups"                      , 1.1 , "Linux"   , ["exactComparison"]) ,
+   ("methane_rmcrt"               , "RMCRT/methane_rmcrt.ups"         , 8 ,   "Linux"   , ["exactComparison", "no_restart"]) ,
    ("dqmom_test_1"                , "DQMOM_regression/dqmom_test_1.ups"           , 1.1 , "Linux"   , ["exactComparison"]) , 
    ("dqmom_test_2"                , "DQMOM_regression/dqmom_test_2.ups"           , 1.1 , "Linux"   , ["exactComparison"]) , 
    ("dqmom_test_3"                , "DQMOM_regression/dqmom_test_3.ups"           , 1.1 , "Linux"   , ["exactComparison"]) , 
@@ -77,12 +78,17 @@ NIGHTLYTESTS = [
    ("coal_channel"                , "Coal/coal_channel.ups"                       , 1.1 , "Linux"   , ["exactComparison", "no_restart"]),
 #   ("methane_RCCE"                , "methane_RCCE.ups"                            , 1.1 , "Linux"  , ["exactComparison"]) ,
    ("DOM16"                       , "DOM16.ups"                                    , 3   , "Linux"  , ["exactComparison", "no_restart"]),
+   ("DO_RadProps"                 , "DO_RadProps.ups"                              , 1.1 , "Linux"  , ["exactComparison"]) ,
    ("CQMOM_1x1"                   , "CQMOM_regression/CQMOM_1x1.ups"               , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
    ("CQMOM_scalar_transport"      , "CQMOM_regression/CQMOM_Transport.ups"         , 6   , "Linux"  , ["exactComparison", "no_restart"]),
    ("CQMOM_scalar_transport2x2x2" , "CQMOM_regression/CQMOM_Transport_2x2x2.ups"   , 6   , "Linux"  , ["exactComparison", "no_restart"]),
+   ("SimpleBoxPTC"                , "CQMOM_regression/SimpleBoxPTC.ups"            , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
+   ("PTC_2D"                      , "CQMOM_regression/PTC_2D.ups"                  , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
+   ("PTC_3D"                      , "CQMOM_regression/PTC_3D.ups"                  , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
+   ("CQMOM_4D"                    , "CQMOM_regression/CQMOM_4D.ups"                , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
    ("regridTestArches"            , "regridTestArches"                             , 8   , "Linux"  , ["startFromCheckpoint", "no_restart"]),
 
-#
+
 # multi-threaded NIGHTLY tests
    ("rmcrt_bm1_1L_thread"         , "RMCRT/rmcrt_bm1_1L.ups"               , 1.1 , "Linux"  , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
    ("rmcrt_bm1_DO_thread"         , "RMCRT/rmcrt_bm1_DO.ups"               , 1.1 , "Linux"  , ["no_restart", "exactComparison", "sus_options=-nthreads 8"]),
@@ -99,7 +105,8 @@ LOCALTESTS = [
    ("methane_fire_8patch_petscrad__NEW" , "methane_fire_8patch_petscrad__NEW.ups" , 8   , "All"   , ["exactComparison"]) ,
    ("rmcrt_bm1_1L"               , "RMCRT/rmcrt_bm1_1L.ups"                      , 1.1 , "All"    , ["exactComparison"]) ,
    ("rmcrt_bm1_DO"               , "RMCRT/rmcrt_bm1_DO.ups"                      , 8 ,   "ALL"    , ["exactComparison"]) ,
-   ("methane_rmcrt_const_props"  , "RMCRT/methane_rmcrt_const_props.ups"         , 8 ,   "All"    , ["exactComparison", "no_restart"]) ,
+   ("rmcrt_bm1_ML"               , "RMCRT/rmcrt_bm1_ML.ups"                      , 1.1 , "ALL"    , ["exactComparison"]) ,
+   ("methane_rmcrt"              , "RMCRT/methane_rmcrt.ups"                     , 8 ,   "All"    , ["exactComparison", "no_restart"]) ,
    ("dqmom_test_1"               , "DQMOM_regression/dqmom_test_1.ups"           , 1.1 , "All"    , ["exactComparison"]) , 
    ("dqmom_test_2"               , "DQMOM_regression/dqmom_test_2.ups"           , 1.1 , "All"    , ["exactComparison"]) , 
    ("dqmom_test_3"               , "DQMOM_regression/dqmom_test_3.ups"           , 1.1 , "All"    , ["exactComparison"]) , 
@@ -125,9 +132,14 @@ LOCALTESTS = [
    ("coal_channel"               , "Coal/coal_channel.ups"                       , 1.1 , "All"    , ["exactComparison", "no_restart"]),
 #   ("methane_RCCE"               , "methane_RCCE.ups"                            , 1.1 , "All "  , ["exactComparison"]) ,
    ("DOM16"                       , "DOM16.ups"                                    , 3   , "All"  , ["exactComparison", "no_restart"]),
+   ("DO_RadProps"                 , "DO_RadProps.ups"                              , 1.1 , "All"  , ["exactComparison"]) ,
    ("CQMOM_1x1"                   , "CQMOM_regression/CQMOM_1x1.ups"               , 1.1 , "All"  , ["exactComparison", "no_restart"]),
    ("CQMOM_scalar_transport"      , "CQMOM_regression/CQMOM_Transport.ups"         , 6   , "All"  , ["exactComparison", "no_restart"]),
    ("CQMOM_scalar_transport2x2x2" , "CQMOM_regression/CQMOM_Transport_2x2x2.ups"   , 6   , "All"  , ["exactComparison", "no_restart"]),
+   ("SimpleBoxPTC"                , "CQMOM_regression/SimpleBoxPTC.ups"            , 1.1 , "All"  , ["exactComparison", "no_restart"]),
+   ("PTC_2D"                      , "CQMOM_regression/PTC_2D.ups"                  , 1.1 , "All"  , ["exactComparison", "no_restart"]),
+   ("PTC_3D"                      , "CQMOM_regression/PTC_3D.ups"                  , 1.1 , "All"  , ["exactComparison", "no_restart"]),
+   ("CQMOM_4D"                    , "CQMOM_regression/CQMOM_4D.ups"                , 1.1 , "All"  , ["exactComparison", "no_restart"]),
    
 # multi-threaded LOCAL tests
    ("rmcrt_bm1_1L_thread"                , "RMCRT/rmcrt_bm1_1L.ups"               , 1.1 , "ALL"    , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
@@ -179,6 +191,10 @@ CQMOMTESTS = [
   ("CQMOM_1x1"                   , "CQMOM_regression/CQMOM_1x1.ups"               , 1.1 , "All"  , ["exactComparison", "no_restart"]),
   ("CQMOM_scalar_transport"      , "CQMOM_regression/CQMOM_Transport.ups"         , 6   , "All"  , ["exactComparison", "no_restart"]),
   ("CQMOM_scalar_transport2x2x2" , "CQMOM_regression/CQMOM_Transport_2x2x2.ups"   , 6   , "All"  , ["exactComparison", "no_restart"]),
+  ("SimpleBoxPTC"                , "CQMOM_regression/SimpleBoxPTC.ups"            , 1.1 , "All"  , ["exactComparison", "no_restart"]),
+  ("PTC_2D"                      , "CQMOM_regression/PTC_2D.ups"                  , 1.1 , "All"  , ["exactComparison", "no_restart"]),
+  ("PTC_3D"                      , "CQMOM_regression/PTC_3D.ups"                  , 1.1 , "All"  , ["exactComparison", "no_restart"]),
+  ("CQMOM_4D"                    , "CQMOM_regression/CQMOM_4D.ups"                , 1.1 , "All"  , ["exactComparison", "no_restart"]),
 ]
 
 #__________________________________

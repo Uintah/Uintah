@@ -4,9 +4,7 @@
 //-- ExprLib Includes --//
 #include <expression/Expression.h>
 
-#include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
-
+#include <spatialops/structured/FVStaggered.h>
 
 /**
  *  \ingroup WasatchExpressions
@@ -26,20 +24,20 @@ template< typename FieldT >
 class VelEst
   : public Expr::Expression<FieldT>
 {  
-  typedef SpatialOps::structured::SingleValueField TimeField;
-  typedef SpatialOps::structured::FaceTypes<FieldT> FaceTypes;
+  typedef SpatialOps::SingleValueField TimeField;
+  typedef SpatialOps::FaceTypes<FieldT> FaceTypes;
   typedef typename FaceTypes::XFace XFace; ///< The type of field for the x-face of FieldT.
   typedef typename FaceTypes::YFace YFace; ///< The type of field for the y-face of FieldT.
   typedef typename FaceTypes::ZFace ZFace; ///< The type of field for the z-face of FieldT.
   
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, FieldT >::type ScalarInterpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, XFace >::type  S2XFInterpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, YFace >::type  S2YFInterpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, ZFace >::type  S2ZFInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, FieldT >::type ScalarInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, XFace >::type  S2XFInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, YFace >::type  S2YFInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, ZFace >::type  S2ZFInterpT;
 
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, SVolField, FieldT >::type  GradPT; 
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, SVolField, FieldT >::type  GradPT; 
   
-  typedef SpatialOps::structured::BasicOpTypes<FieldT> OpTypes;
+  typedef SpatialOps::BasicOpTypes<FieldT> OpTypes;
   typedef typename OpTypes::DivX DivXT; ///< Divergence operator (surface integral) in the x-direction
   typedef typename OpTypes::DivY DivYT; ///< Divergence operator (surface integral) in the y-direction
   typedef typename OpTypes::DivZ DivZT; ///< Divergence operator (surface integral) in the z-direction
@@ -86,18 +84,15 @@ public:
     
     /**
      *  \brief Constructs a builder for one of the velocity components estimation
-     *
-     *  \param the velTag a tag for the component of the velocity that we are advancing
-     *
-     *  \param the tauTags a tag list holding stress tensor components related to the 
+     *  \param result the tag for the velocity estimate
+     *  \param velTag a tag for the component of the velocity that we are advancing
+     *  \param convTermTag a tag for the convective term
+     *  \param tauTags a tag list holding stress tensor components related to the
      *         component of the velocity which exists in velTag.
-     *
-     *  \param the densityTag a tag for density at the current time step
-     *
-     *  \param the pressureTag a tag for pressure field at the previous time step.
-     *
+     *  \param densityTag a tag for density at the current time step
+     *  \param viscTag a tag for viscosity
+     *  \param pressureTag a tag for pressure field at the previous time step.
      *  \param timeStepTag a tag for the time step at the current RK stage
-     *
      */
     Builder( const Expr::Tag& result,
              const Expr::Tag velTag,

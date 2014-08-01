@@ -394,14 +394,12 @@ floatRay::problemSetup( const ProblemSpecP& prob_spec,
 void
 floatRay::registerVarLabels(int   matlIndex,
                        const VarLabel* abskg,
-                       const VarLabel* absorp,
                        const VarLabel* temperature,
                        const VarLabel* celltype, 
                        const VarLabel* divQ )
 {
   d_matl             = matlIndex;
   d_abskgLabel       = abskg;
-  d_absorpLabel      = absorp;
   d_temperatureLabel = temperature;
   d_cellTypeLabel    = celltype; 
   d_divQLabel        = divQ;
@@ -1358,12 +1356,12 @@ void floatRay::rayLocation_cellFace( MTRand& mTwister,
   Vector tmp;
   tmp[0] =  mTwister.rand() ;
   tmp[1] =  0;
-  tmp[2] =  mTwister.rand() * DzDx ;
+  tmp[2] =  mTwister.rand()  ;
   
   // Put point on correct face
   location[0] = tmp[indexOrder[0]] + shift[0];
-  location[1] = tmp[indexOrder[1]] + shift[1] * DyDx;
-  location[2] = tmp[indexOrder[2]] + shift[2] * DzDx;
+  location[1] = (tmp[indexOrder[1]] + shift[1]) * DyDx;
+  location[2] = (tmp[indexOrder[2]] + shift[2]) * DzDx;
 
   location[0] += origin.x();
   location[1] += origin.y();
@@ -2279,29 +2277,6 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0 ){
       // currently you can only move from fine to coarse level
 
       //bool jumpFinetoCoarserLevel   = ( onFineLevel && finePatch->containsCell(cur) == false );
-      bool jumpFinetoCoarserLevel   = ( onFineLevel && containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) == false );
-      bool jumpCoarsetoCoarserLevel = ( onFineLevel == false && containsCell(regionLo[L], regionHi[L], cur, dir) == false && L > 0 );
-
-      //dbg2 << cur << " **jumpFinetoCoarserLevel " << jumpFinetoCoarserLevel << " jumpCoarsetoCoarserLevel " << jumpCoarsetoCoarserLevel
-      //    << " containsCell: " << containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) << endl; 
-
-      if( jumpFinetoCoarserLevel ){
-        cur   = level->mapCellToCoarser(cur); 
-        level = level->getCoarserLevel().get_rep();      // move to a coarser level
-        L     = level->getIndex();
-        onFineLevel = false;
-
-        // NEVER UNCOMMENT EXCEPT FOR DEBUGGING, it is EXTREMELY SLOW
-        //dbg2 << " ** Jumping off fine patch switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << endl;
-      } else if ( jumpCoarsetoCoarserLevel ){
-
-        IntVector c_old = cur;
-        cur   = level->mapCellToCoarser(cur); 
-        level = level->getCoarserLevel().get_rep();
-        L     = level->getIndex();
-
-        //dbg2 << " ** Switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << " c_old " << c_old << endl;
-      }
 
       //__________________________________
       //  update marching variables
@@ -2318,17 +2293,6 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0 ){
       coarsenRatio[1] = dx[1]/dx_prev[1];
       coarsenRatio[2] = dx[2]/dx_prev[2];
 
-      Vector lineup;
-      for (int ii=0; ii<3; ii++){
-        if (sign[ii]) {
-          lineup[ii] = -(cur[ii] % coarsenRatio[ii] - (coarsenRatio[ii] - 1 ));
-        }
-        else {
-          lineup[ii] = cur[ii] % coarsenRatio[ii];
-        }
-      }
-
-      tMax += lineup * tDelta[prevLev];
 
       in_domain = domain_BB.inside(pos);
 
@@ -2353,7 +2317,44 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0 ){
       //dbg2 << "    origin " << origin << "dir " << dir << " cur " << cur <<" prevCell " << prevCell << " sumI " << sumI << " in_domain " << in_domain << endl;
       //dbg2 << "    tmaxX " << tMax.x() << " tmaxY " << tMax.y() << " tmaxZ " << tMax.z() << endl;
       //dbg2 << "    direction " << ray_direction << endl;
+      //
+      bool jumpFinetoCoarserLevel   = ( onFineLevel && containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) == false );
+      bool jumpCoarsetoCoarserLevel = ( onFineLevel == false && containsCell(regionLo[L], regionHi[L], cur, dir) == false && L > 0 );
 
+      //dbg2 << cur << " **jumpFinetoCoarserLevel " << jumpFinetoCoarserLevel << " jumpCoarsetoCoarserLevel " << jumpCoarsetoCoarserLevel
+      //    << " containsCell: " << containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) << endl; 
+
+      if( jumpFinetoCoarserLevel ){
+        cur   = level->mapCellToCoarser(cur); 
+        prevCell   = level->mapCellToCoarser(prevCell); 
+        level = level->getCoarserLevel().get_rep();      // move to a coarser level
+        L     = level->getIndex();
+        onFineLevel = false;
+
+        // NEVER UNCOMMENT EXCEPT FOR DEBUGGING, it is EXTREMELY SLOW
+        //dbg2 << " ** Jumping off fine patch switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << endl;
+      } else if ( jumpCoarsetoCoarserLevel ){
+
+        //IntVector c_old = cur;
+        cur   = level->mapCellToCoarser(cur); 
+        prevCell   = level->mapCellToCoarser(prevCell); 
+        level = level->getCoarserLevel().get_rep();
+        L     = level->getIndex();
+
+        //dbg2 << " ** Switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << " c_old " << c_old << endl;
+      }
+
+      Vector lineup;
+      for (int ii=0; ii<3; ii++){
+        if (sign[ii]) {
+          lineup[ii] = -(cur[ii] % coarsenRatio[ii] - (coarsenRatio[ii] - 1 ));
+        }
+        else {
+          lineup[ii] = cur[ii] % coarsenRatio[ii];
+        }
+      }
+
+      tMax += lineup * tDelta[prevLev];
     } //end domain while loop.  ++++++++++++++
 
     float wallEmissivity = abskg[L][cur];

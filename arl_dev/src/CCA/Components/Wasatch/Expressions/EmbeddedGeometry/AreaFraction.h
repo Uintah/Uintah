@@ -26,9 +26,8 @@
 #define AreaFraction_Expr_h
 
 #include <expression/Expression.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
-#include <spatialops/OperatorDatabase.h>
-#include <spatialops/structured/SpatialFieldStore.h>
+
+#include <spatialops/structured/FVStaggered.h>
 
 /**
  *  \class   AreaFraction
@@ -57,7 +56,7 @@ class AreaFraction
 {
   const Expr::Tag srct_;
   
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, DestT >::type InpterpSrcT2DestT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, DestT >::type InpterpSrcT2DestT;
   
   const SVolField* src_;
   

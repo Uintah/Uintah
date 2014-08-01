@@ -23,6 +23,7 @@
  */
 
 //----- Arches.cc ----------------------------------------------
+#include <CCA/Components/Arches/Radiation/RadPropertyCalculator.h>
 #include <CCA/Components/Arches/DQMOM.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
@@ -65,11 +66,24 @@
 #include <CCA/Components/Arches/PropertyModels/ScalarVarianceScaleSim.h>
 #include <CCA/Components/Arches/PropertyModels/NormScalarVariance.h>
 #include <CCA/Components/Arches/PropertyModels/ScalarDissipation.h>
+#include <CCA/Components/Arches/PropertyModels/RadProperties.h>
 #include <Core/IO/UintahZlibUtil.h>
 
 #if HAVE_TABPROPS
 #  include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
 #endif
+
+//NEW TASK INTERFACE STUFF
+//factories
+#include <CCA/Components/Arches/Utility/UtilityFactory.h>
+#include <CCA/Components/Arches/Utility/InitializeFactory.h>
+#include <CCA/Components/Arches/Transport/TransportFactory.h>
+//#include <CCA/Components/Arches/Task/SampleFactory.h>
+#include <CCA/Components/Arches/Task/TaskFactoryBase.h>
+
+
+//END NEW TASK INTERFACE STUFF
+
 
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
@@ -84,7 +98,7 @@
 #include <CCA/Components/Arches/SmagorinskyModel.h>
 #include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
 #include <CCA/Components/Arches/ChemMix/ChemHelper.h>
-//#include <CCA/Components/Arches/Operators/Operators.h>
+#include <CCA/Components/Arches/Operators/Operators.h>
 
 #include <CCA/Components/Arches/TurbulenceModelPlaceholder.h>
 
@@ -106,8 +120,8 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Parallel/Parallel.h>
-//#include <spatialops/structured/FVStaggeredFieldTypes.h>
-//#include <spatialops/structured/MemoryWindow.h>
+#include <spatialops/structured/FVStaggeredFieldTypes.h>
+#include <spatialops/structured/MemoryWindow.h>
 
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
@@ -158,6 +172,7 @@
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
+#include <CCA/Components/Wasatch/Transport/EquationBase.h>
 #include <CCA/Components/Wasatch/Transport/TransportEquation.h>
 #include <CCA/Components/Wasatch/Transport/MomentumTransportEquation.h>
 #include <CCA/Components/Wasatch/Transport/ParseEquation.h>
@@ -247,6 +262,7 @@ Arches::~Arches()
   }
 
   delete d_timeIntegrator;
+  delete d_rad_prop_calc; 
   if (d_doDQMOM) {
     delete d_dqmomSolver;
     delete d_partVel;
@@ -261,6 +277,12 @@ Arches::~Arches()
   d_wasatch->releasePort("solver");
   delete d_wasatch;
 #endif // WASATCH_IN_ARCHES
+
+  typedef std::map<std::string, TaskFactoryBase*> FM;  
+  for (FM::iterator i = _factory_map.begin(); i != _factory_map.end(); i++){ 
+    delete i->second; 
+  }
+
 }
 
 // ****************************************************************************
@@ -277,6 +299,34 @@ Arches::problemSetup(const ProblemSpecP& params,
   sharedState->registerArchesMaterial(mat);
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
   d_lab->problemSetup( db );
+
+
+  //NEW TASK STUFF
+  //build the factories
+  UtilityFactory* utility_factory = scinew UtilityFactory(); 
+  //SampleFactory* sample_factory = scinew SampleFactory(); 
+  TransportFactory* transport_factory = scinew TransportFactory(); 
+  InitializeFactory* init_factory = scinew InitializeFactory(); 
+
+  //insert the factories into a map
+  _factory_map.clear(); 
+  _factory_map.insert(std::make_pair("utility_factory",utility_factory));
+  //_factory_map.insert(std::make_pair("sample_factory",sample_factory)); 
+  _factory_map.insert(std::make_pair("transport_factory",transport_factory)); 
+  _factory_map.insert(std::make_pair("init_factory",init_factory)); 
+
+  typedef std::map<std::string, TaskFactoryBase*>::iterator iFACMAP; 
+  //registering tasks: 
+  for ( iFACMAP i = _factory_map.begin(); i != _factory_map.end(); i++ ){ 
+    i->second->register_all_tasks( db ); 
+  }
+    
+  //building tasks (includes calling problemSetup): 
+  for ( iFACMAP i = _factory_map.begin(); i != _factory_map.end(); i++ ){ 
+    i->second->build_all_tasks( db ); 
+  }
+  //END NEW TASK STUFF
+
 
   //__________________________________
   //  Multi-level related
@@ -445,7 +495,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   const Expr::Tag timeStepTag( "timestep", Expr::STATE_NONE );
   if( !(solngh->exprFactory->have_entry( timeTag )) ) {
     // register placeholder expressions for time and timestep
-    typedef Expr::PlaceHolder<SpatialOps::structured::SingleValueField>  TimeT;
+    typedef Expr::PlaceHolder<SpatialOps::SingleValueField>  TimeT;
     solngh->exprFactory->register_expression( new TimeT::Builder(timeTag) );
     solngh->exprFactory->register_expression( new TimeT::Builder(timeStepTag) );    
   }
@@ -484,7 +534,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   // from the equation adaptors after parsing the Wasatch xml block.
   const Wasatch::Wasatch::EquationAdaptors& adaptors = d_wasatch->equation_adaptors();
   for( Wasatch::Wasatch::EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ) {
-    Wasatch::TransportEquation* transEq = (*ia)->equation();
+    Wasatch::EquationBase* transEq = (*ia)->equation();
     if ( !(transEq->dir_name() == "") ) continue; // skip all momentum equations for the time being...
     std::string solnVarName = transEq->solution_variable_name();
     if( !solngh->exprFactory->have_entry( Expr::Tag(solnVarName,Expr::STATE_DYNAMIC  ) ) )
@@ -497,7 +547,9 @@ Arches::problemSetup(const ProblemSpecP& params,
 
 # endif // WASATCH_IN_ARCHES
 //------------------------------------------------------------------------------
+//
 
+  //Transport Eqns: 
   ProblemSpecP transportEqn_db = db->findBlock("TransportEqns");
   if (transportEqn_db) {
 
@@ -593,6 +645,14 @@ Arches::problemSetup(const ProblemSpecP& params,
       a_model.problemSetup( prop_db );
 
     }
+  }
+
+  //Radiation Properties: 
+  ProblemSpecP rad_properties_db = db->findBlock("RadiationProperties"); 
+  int matl_index = d_sharedState->getArchesMaterial(0)->getDWIndex();
+  d_rad_prop_calc = scinew RadPropertyCalculator(matl_index); 
+  if ( rad_properties_db ){
+    d_rad_prop_calc->problemSetup(rad_properties_db); 
   }
 
   // read properties
@@ -722,7 +782,9 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_nlSolver = scinew ExplicitSolver(d_lab, d_MAlab, d_props,
                                        d_boundaryCondition,
                                        d_turbModel, d_scaleSimilarityModel,
-                                       d_physicalConsts,
+                                       d_physicalConsts, 
+                                       d_rad_prop_calc, 
+                                       &_factory_map, 
                                        d_myworld,
                                        hypreSolver);
 
@@ -948,26 +1010,10 @@ Arches::problemSetup(const ProblemSpecP& params,
   // register any other source terms:
   SourceTermFactory& src_factory = SourceTermFactory::self();
   src_factory.registerSources( d_lab, d_doDQMOM, d_which_dqmom );
-//  SourceTermFactory::SourceMap& sources = src_factory.retrieve_all_sources();
-//  for (SourceTermFactory::SourceMap::iterator iter = sources.begin(); iter != sources.end(); iter++){
-//
-//    SourceTermBase* src = iter->second;
-//    src->extraSetup(grid);
-//
-//  }
 
-  if (transportEqn_db) {
-  for (ProblemSpecP eqn_db = transportEqn_db->findBlock("Eqn"); eqn_db != 0; eqn_db = eqn_db->findNextBlock("Eqn")){
-      for (ProblemSpecP src_db = eqn_db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){ 
 
-        std::string srcname; 
-        src_db->getAttribute("label", srcname);
-        SourceTermBase& src = src_factory.retrieve_source_term( srcname ); 
-        src.extraSetup(grid, src_db); 
-        
-      }
-    }
-  } 
+  // do any last setup operations on the active source terms: 
+  src_factory.extraSetup( grid ); 
 
 
   // Add extra species to table lookup as required by models
@@ -1071,30 +1117,58 @@ Arches::scheduleInitialize(const LevelP& level,
  if( level->getIndex() != d_archesLevelIndex )
   return;
 
-  //sched_create_patch_operators( level, sched ); 
+  sched_create_patch_operators( level, sched ); 
 
-  const PatchSet* patches= level->eachPatch();
   const MaterialSet* matls = d_sharedState->allArchesMaterials();
 
   //Initialize several parameters
   sched_paramInit(level, sched);
 
   //Check for hand-off momentum BCs and perform mapping
-  d_nlSolver->checkMomBCs( sched, patches, matls ); 
+  d_nlSolver->checkMomBCs( sched, level, matls ); 
 
   //initialize cell type
-  d_boundaryCondition->sched_cellTypeInit__NEW( sched, level, patches, matls );
+  d_boundaryCondition->sched_cellTypeInit__NEW( sched, level, matls );
 
   // compute the cell area fraction
-  d_boundaryCondition->sched_setAreaFraction( sched, patches, matls, 0, true );
+  d_boundaryCondition->sched_setAreaFraction( sched, level, matls, 0, true );
 
   // setup intrusion cell type 
-  d_boundaryCondition->sched_setupNewIntrusionCellType( sched, patches, matls, false );
+  d_boundaryCondition->sched_setupNewIntrusionCellType( sched, level, matls, false );
 
   //AF must be called again to account for intrusions (can this be the ONLY call?) 
-  d_boundaryCondition->sched_setAreaFraction( sched, patches, matls, 1, true ); 
+  d_boundaryCondition->sched_setAreaFraction( sched, level, matls, 1, true ); 
 
-  d_turbModel->sched_computeFilterVol( sched, patches, matls ); 
+  d_turbModel->sched_computeFilterVol( sched, level, matls ); 
+
+  typedef std::map<std::string, TaskFactoryBase*> FACMAP; 
+  //utility factory
+  FACMAP::iterator ifac = _factory_map.find("utility_factory"); 
+  TaskFactoryBase::TaskMap all_tasks = ifac->second->retrieve_all_tasks(); 
+  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+    i->second->schedule_init(level, sched, matls); 
+  }
+
+  //sample factory
+  //ifac = _factory_map.find("sample_factory"); 
+  //all_tasks = ifac->second->retrieve_all_tasks(); 
+  //for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+  //  i->second->schedule_init(level, sched, matls); 
+  //}
+
+  //transport factory
+  ifac = _factory_map.find("transport_factory"); 
+  all_tasks = ifac->second->retrieve_all_tasks(); 
+  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+    i->second->schedule_init(level, sched, matls ); 
+  }
+
+  //initialize 
+  ifac = _factory_map.find("init_factory"); 
+  all_tasks = ifac->second->retrieve_all_tasks(); 
+  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+    i->second->schedule_init(level, sched, matls ); 
+  }
 
   // base initialization of all scalars
   sched_scalarInit(level, sched);
@@ -1129,19 +1203,19 @@ Arches::scheduleInitialize(const LevelP& level,
   d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, time_substep );
 
   //Setup BC areas
-  d_boundaryCondition->sched_computeBCArea__NEW( sched, level, patches, matls );
+  d_boundaryCondition->sched_computeBCArea__NEW( sched, level, matls );
 
   //For debugging
   //d_boundaryCondition->printBCInfo();
   
   //Setup initial inlet velocities 
-  d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls, d_doingRestart );
+  d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, level, matls, d_doingRestart );
 
   //Set the initial profiles
-  d_boundaryCondition->sched_setInitProfile__NEW( sched, patches, matls );
+  d_boundaryCondition->sched_setInitProfile__NEW( sched, level, matls );
 
   //Setup the intrusions. 
-  d_boundaryCondition->sched_setupNewIntrusions( sched, patches, matls );
+  d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
 
   sched_getCCVelocities(level, sched);
 
@@ -1150,11 +1224,11 @@ Arches::scheduleInitialize(const LevelP& level,
     if (!d_MAlab) {
       
       if (d_mixedModel) {
-        d_scaleSimilarityModel->sched_reComputeTurbSubmodel(sched, patches, matls,
+        d_scaleSimilarityModel->sched_reComputeTurbSubmodel(sched, level, matls,
                                                             init_timelabel);
       }
       
-      d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls, init_timelabel);
+      d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls, init_timelabel);
       
     }
   }
@@ -1220,7 +1294,9 @@ Arches::scheduleInitialize(const LevelP& level,
     }
   }
 
-  d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls );
+  d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
+
+  //d_rad_prop_calc->sched_compute_radiation_properties( level, sched, matls, 0, true ); 
 
 # ifdef WASATCH_IN_ARCHES
   // must set wasatch materials after problemsetup so that we can access
@@ -1238,47 +1314,47 @@ Arches::scheduleInitialize(const LevelP& level,
 
 }
 
-//void 
-//Arches::sched_create_patch_operators( const LevelP& level, SchedulerP& sched ){ 
-//
-//  Task* tsk = scinew Task( "Arches::create_patch_operators", this, &Arches::create_patch_operators);
-//  
-//  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
-//
-//}
-//
-//void 
-//Arches::create_patch_operators( const ProcessorGroup* pg,
-//                                const PatchSubset* patches,
-//                                const MaterialSubset* matls,
-//                                DataWarehouse* old_dw,
-//                                DataWarehouse* new_dw)
-//{
-//  for (int p = 0; p < patches->size(); p++) {
-//
-//    const Patch* patch = patches->get(p);
-//    Operators& opr = Operators::self(); 
-//
-//    IntVector low = patch->getExtraCellLowIndex(); 
-//    IntVector high = patch->getExtraCellHighIndex(); 
-//
-//    IntVector size = high - low; 
-//
-//    Vector Dx = patch->dCell(); 
-//    Vector L(size[0]*Dx.x(),size[1]*Dx.y(),size[2]*Dx.z());
-//
-//    Operators::PatchInfo pi;
-//
-//    int pid = patch->getID(); 
-//
-//    SpatialOps::structured::build_stencils( size[0], size[1], size[2],
-//                                               L[0],    L[1],    L[2],
-//                                             pi._sodb );
-//
-//    opr.patch_info_map.insert(std::make_pair(pid, pi)); 
-//
-//  }
-//}
+void 
+Arches::sched_create_patch_operators( const LevelP& level, SchedulerP& sched ){ 
+
+  Task* tsk = scinew Task( "Arches::create_patch_operators", this, &Arches::create_patch_operators);
+  
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+
+}
+
+void 
+Arches::create_patch_operators( const ProcessorGroup* pg,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    Operators& opr = Operators::self(); 
+
+    IntVector low = patch->getExtraCellLowIndex(); 
+    IntVector high = patch->getExtraCellHighIndex(); 
+
+    IntVector size = high - low; 
+
+    Vector Dx = patch->dCell(); 
+    Vector L(size[0]*Dx.x(),size[1]*Dx.y(),size[2]*Dx.z());
+
+    Operators::PatchInfo pi;
+
+    int pid = patch->getID(); 
+
+    SpatialOps::build_stencils( size[0], size[1], size[2],
+                                L[0],    L[1],    L[2],
+                                pi._sodb );
+
+    opr.patch_info_map.insert(std::make_pair(pid, pi)); 
+
+  }
+}
 
 void
 Arches::restartInitialize()
@@ -1702,14 +1778,23 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   if( d_sharedState->isRegridTimestep() ){  // needed for single level regridding on restarts
     d_doingRestart = true;                  // this task is called twice on a regrid.
   }
+
+//  const MaterialSet* matls2 = d_sharedState->allArchesMaterials();
+//  typedef std::map<std::string, TaskFactoryBase*> FM;  
+//  for ( FM::iterator ifac = _factory_map.begin(); ifac != _factory_map.end(); ifac++){ 
+//    TaskFactoryBase::TaskMap all_tasks = ifac->second->retrieve_all_tasks(); 
+//    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+//      i->second->schedule_task(level, sched, matls2, 0); 
+//    }
+//  }
   
   if (d_doingRestart  ) {
 
     const PatchSet* patches= level->eachPatch();
     const MaterialSet* matls = d_sharedState->allArchesMaterials();
 
-    d_boundaryCondition->sched_computeBCArea__NEW( sched, level, patches, matls );
-    d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls, d_doingRestart );
+    d_boundaryCondition->sched_computeBCArea__NEW( sched, level, matls );
+    d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, level, matls, d_doingRestart );
 
     EqnFactory& eqnFactory = EqnFactory::self();
     EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
@@ -1718,10 +1803,10 @@ Arches::scheduleTimeAdvance( const LevelP& level,
       eqn->sched_checkBCs( level, sched );
     }
 
-    d_nlSolver->checkMomBCs( sched, patches, matls ); 
+    d_nlSolver->checkMomBCs( sched, level, matls ); 
 
-    d_boundaryCondition->sched_setupNewIntrusionCellType( sched, patches, matls, d_doingRestart );
-    d_boundaryCondition->sched_setupNewIntrusions( sched, patches, matls );
+    d_boundaryCondition->sched_setupNewIntrusionCellType( sched, level, matls, d_doingRestart );
+    d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
 
   }
   
@@ -2689,6 +2774,12 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
 
         //Scalar dissipation based on the transported squared gradient of mixture fraction for 2-eqn scalar var model
         PropertyModelBase::Builder* the_builder = new ScalarDissipation::Builder( prop_name, d_sharedState );
+        prop_factory.register_property_model( prop_name, the_builder );
+
+      } else if ( prop_type == "radiation_properties" ){ 
+
+        //Radiation properties as computed through the RadPropertyCalculator
+        PropertyModelBase::Builder* the_builder = new RadProperties::Builder( prop_name, d_sharedState ); 
         prop_factory.register_property_model( prop_name, the_builder );
 
       } else {

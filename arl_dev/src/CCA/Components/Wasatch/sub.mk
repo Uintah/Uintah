@@ -66,6 +66,8 @@ SRCS +=                                              \
         $(SRCDIR)/ParseTools.cc                      \
         $(SRCDIR)/Properties.cc                      \
         $(SRCDIR)/ReductionHelper.cc                 \
+        $(SRCDIR)/ParticlesHelper.cc                 \
+        $(SRCDIR)/WasatchParticlesHelper.cc          \
         $(SRCDIR)/TagNames.cc                        \
         $(SRCDIR)/TaskInterface.cc                   \
         $(SRCDIR)/BCHelper.cc                        \

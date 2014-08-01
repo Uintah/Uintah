@@ -35,14 +35,14 @@
 #include <spatialops/particles/ParticleFieldTypes.h>
 
 
-using SpatialOps::structured::SVolField;   ///< the scalar volume field type
-using SpatialOps::structured::XVolField;   ///< the x-staggered volume field type
-using SpatialOps::structured::YVolField;   ///< the y-staggered volume field type
-using SpatialOps::structured::ZVolField;   ///< the z-staggered volume field type
+using SpatialOps::SVolField;   ///< the scalar volume field type
+using SpatialOps::XVolField;   ///< the x-staggered volume field type
+using SpatialOps::YVolField;   ///< the y-staggered volume field type
+using SpatialOps::ZVolField;   ///< the z-staggered volume field type
 
 using SpatialOps::Particle::ParticleField; ///< lagrangian particles
 
-using SpatialOps::structured::FaceTypes;   ///< allows deducing face types from volume types
+using SpatialOps::FaceTypes;   ///< allows deducing face types from volume types
 
 namespace Wasatch{
 
@@ -68,7 +68,7 @@ namespace Wasatch{
   template< typename FieldT >
   Direction get_staggered_location()
   {
-    typedef typename SpatialOps::structured::GetNonzeroDir<typename FieldT::Location::Offset>::DirT  DirT;
+    typedef typename SpatialOps::GetNonzeroDir<typename FieldT::Location::Offset>::DirT  DirT;
     if     ( SpatialOps::IsSameType<DirT,SpatialOps::XDIR>::result ) return XDIR;
     else if( SpatialOps::IsSameType<DirT,SpatialOps::YDIR>::result ) return YDIR;
     else if( SpatialOps::IsSameType<DirT,SpatialOps::ZDIR>::result ) return ZDIR;

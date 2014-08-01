@@ -63,7 +63,8 @@ DataArchive::DataArchive(const std::string& filebase,
   d_filebase(filebase), 
   d_cell_scale( Vector(1.0,1.0,1.0) ),
   d_processor(processor),
-  d_numProcessors(numProcessors), d_lock("DataArchive lock")
+  d_numProcessors(numProcessors), d_lock("DataArchive lock"),
+  d_particlePositionName("p.x")
 {
   if( d_filebase == "" ) {
     throw InternalError("DataArchive::DataArchive 'filebase' cannot be empty (\"\").", __FILE__, __LINE__);
@@ -84,6 +85,11 @@ DataArchive::DataArchive(const std::string& filebase,
   d_globalEndianness = "";
   d_globalNumBits = -1;
   queryEndiannessAndBits(d_indexDoc, d_globalEndianness, d_globalNumBits);
+  
+  if (d_indexDoc->findBlock("ParticlePosition"))
+  {
+    d_indexDoc->get("ParticlePosition", d_particlePositionName);
+  }
 }
 
 
@@ -618,7 +624,7 @@ DataArchive::query( Variable& var, const std::string& name, int matlIndex,
     if(psetIter != d_psetDB.end()) {
       psubset = (*psetIter).second.get_rep();
     }
-    if (psubset == 0 || psubset->numParticles() != dfi->numParticles)
+    if (psubset == 0 || (int)psubset->numParticles() != dfi->numParticles)
     {
       psubset = scinew ParticleSubset(dfi->numParticles, matlIndex, patch);
       //      cout << "numParticles: " << dfi->numParticles << "\n";
@@ -746,17 +752,22 @@ void DataArchive::queryRegion(Variable& var, const string& name, int matlIndex,
 
 
 void 
-DataArchive::findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
-                               long64 particleID, int matlIndex, int levelIndex,
-                               int index)
+DataArchive::findPatchAndIndex( const GridP            grid,
+                                      Patch         *& patch,
+                                      particleIndex  & idx,
+                                const long64           particleID,
+                                const int              matlIndex,
+                                const int              levelIndex,
+                                const int              index)
 {
   Patch *local = patch;
   if( patch != NULL ){
     ParticleVariable<long64> var;
     query(var, "p.particleID", matlIndex, patch, index);
     //  cerr<<"var["<<idx<<"] = "<<var[idx]<<endl;
-    if( idx < var.getParticleSubset()->numParticles() && var[idx] == particleID )
+    if( idx < (int)var.getParticleSubset()->numParticles() && var[idx] == particleID ) {
       return;
+    }
     else {
       ParticleSubset* subset = var.getParticleSubset();
       for(ParticleSubset::iterator p_iter = subset->begin();

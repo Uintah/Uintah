@@ -32,8 +32,6 @@
 //NOTE: I just listed all includes that DQMOM uses for now. As this is finalized some can likely be removed.
 #include <CCA/Components/Arches/Directives.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -98,25 +96,69 @@ namespace Uintah {
                               DataWarehouse        * old_dw,
                               DataWarehouse        * new_dw);
     
+    //Other permutations of the problem, possibly find a way to condense all of these
+    /** @brief  Schedule the CQMOM inversion problem with conditioning 3|2|1
+     */
+    void sched_solveCQMOMInversion321( const LevelP & level,
+                                       SchedulerP   & sched,
+                                       int          timesubstep);
+    
+    /** @brief actually solve the inversion and put weights and abscissas in datawarehouse
+     */
+    void solveCQMOMInversion321( const ProcessorGroup *,
+                                 const PatchSubset    * patches,
+                                 const MaterialSubset *,
+                                 DataWarehouse        * old_dw,
+                                 DataWarehouse        * new_dw);
+    
+    /** @brief  Schedule the CQMOM inversion problem with conditioning 3|1|2
+     */
+    void sched_solveCQMOMInversion312( const LevelP & level,
+                                       SchedulerP   & sched,
+                                       int          timesubstep);
+    
+    /** @brief actually solve the inversion and put weights and abscissas in datawarehouse
+     */
+    void solveCQMOMInversion312( const ProcessorGroup *,
+                                 const PatchSubset    * patches,
+                                 const MaterialSubset *,
+                                 DataWarehouse        * old_dw,
+                                 DataWarehouse        * new_dw);
+    
+    /** @brief  Schedule the CQMOM inversion problem with conditioning 2|1|3
+     */
+    void sched_solveCQMOMInversion213( const LevelP & level,
+                                       SchedulerP   & sched,
+                                       int          timesubstep);
+    
+    /** @brief actually solve the inversion and put weights and abscissas in datawarehouse
+     */
+    void solveCQMOMInversion213( const ProcessorGroup *,
+                                 const PatchSubset    * patches,
+                                 const MaterialSubset *,
+                                 DataWarehouse        * old_dw,
+                                 DataWarehouse        * new_dw);
+    
     
     /** @brief Schedule re-calculation of moments */
-//    void sched_momentCorrection( const LevelP & level,
-//                                 SchedulerP   & sched,
-//                                 int          timeSubStep );
-//    
-//    /** @brief re-calculate moments as needed, if unrealizable abscissas occur */
-//    void momentCorrection( const ProcessorGroup *,
-//                           const PatchSubset    * patches,
-//                           const MaterialSubset *,
-//                           DataWarehouse        * old_dw,
-//                           DataWarehouse        * new_dw );
+    void sched_momentCorrection( const LevelP & level,
+                                 SchedulerP   & sched,
+                                 int          timeSubStep );
     
-    //access the velocity abscissas
-    inline const std::vector<std::string> getuVelNames() {return uVelAbscissas; };
+    /** @brief re-calculate moments as needed, if unrealizable abscissas occur */
+    void momentCorrection( const ProcessorGroup *,
+                           const PatchSubset    * patches,
+                           const MaterialSubset *,
+                           DataWarehouse        * old_dw,
+                           DataWarehouse        * new_dw );
     
-    inline const std::vector<std::string> getvVelNames() {return vVelAbscissas; };
+    inline bool getOperatorSplitting() {return d_doOperatorSplitting; };
     
-    inline const std::vector<std::string> getwVelNames() {return wVelAbscissas; };
+    inline int getUVelIndex() {return uVelIndex; };
+    
+    inline int getVVelIndex() {return vVelIndex; };
+    
+    inline int getWVelIndex() {return wVelIndex; };
 
 //____________________________
     
@@ -127,8 +169,6 @@ namespace Uintah {
     // ie void vandermonde(), void wheeler(), void inversion()
     
     std::vector<MomentVector> momentIndexes;     ///< Vector containing all moment indices
-    std::vector<MomentVector> weightIndexes;     //<Vector containing indexs for each quadrature node weight
-    std::vector<MomentVector> abscissasIndexes;  //vector containing index for each quad node location
     
     std::vector<CQMOMEqn* > momentEqns;          ///< moment equation labels, (same order as input?)
 
@@ -145,17 +185,18 @@ namespace Uintah {
     int d_timeSubStep;
     bool d_normalized;                          //boolean to normalize weights if needed later
     bool d_adaptive;                            //boolean to use adaptive number of nodes
+    bool d_useLapack;                           //boolean to use lapack or vandermonde solver
+    bool d_doOperatorSplitting;                 //use operator splitting to calculate nodes for multiple permutations
     std::string d_which_cqmom;
+    
+    double weightRatio;                         //adaptive double for minimum allowed weigth ratio
+    double abscissaRatio;                       //adaptive double for minimum allowed abscissa ratio
     
     std::vector<std::string> coordinateNames;   //list of internal coordiante names
     std::vector<std::string> weightNames;       //list of wieght names - to be used for dw->get
     std::vector<std::string> abscissaNames;     //list of absicassa names - to be used for dw->get
     
     std::vector<std::string> varTypes;
-    
-    std::vector<std::string> uVelAbscissas; //store the velcoity abscissas in a way there are known which direction is which
-    std::vector<std::string> vVelAbscissas;
-    std::vector<std::string> wVelAbscissas;
 
     struct constCCVarWrapper {
       constCCVariable<double> data;
@@ -168,6 +209,25 @@ namespace Uintah {
       std::vector<constCCVarWrapperTypeDef> models;
     };
 
+    int uVelIndex;
+    int vVelIndex;
+    int wVelIndex;
+    
+    // Clipping:
+    struct ClipInfo{
+
+      bool activated;                 ///< Clipping on/off for this internal coordinate
+      bool do_low;                    ///< Do clipping on a min
+      bool do_high;                   ///< Do clipping on a max
+      bool clip_to_zero;              //clip to 0 instead of teh actual high/low
+      double weight_clip;             //limit on the weight to apply zero-clipping
+      double low;                     ///< Low clipping value
+      double high;                    ///< High clipping value
+      double tol;                     ///< Tolerance value for the min and max
+      
+    };
+    
+    std::vector<ClipInfo> clipNodes;
     
   }; // end class CQMOM
   

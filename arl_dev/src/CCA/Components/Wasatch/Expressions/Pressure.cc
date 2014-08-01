@@ -182,9 +182,8 @@ Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
                            const int RKStage )
 {
   materialID_ = material;
-  SVolField* volfrac = NULL;
   
-  if (didAllocateMatrix_) {
+  if( didAllocateMatrix_ ){
     // Todd: instead of checking for allocation - check for new timestep or some other ingenious solution
     // check for transferfrom - transfer matrix from old to new DW
     if (RKStage==1 ) dw->put( matrix_, matrixLabel_, materialID_, patch );
@@ -193,16 +192,18 @@ Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
   else{
     dw->allocateAndPut( matrix_, matrixLabel_, materialID_, patch );
     
+    typedef SelectUintahFieldType<SVolField>::const_type ConstUintahField;
+    ConstUintahField svolFrac;
+    SpatialOps::SpatFldPtr<SVolField> volfrac;
     if( volfract_ != Expr::Tag() ){
-      typedef SelectUintahFieldType<SVolField>::const_type ConstUintahField;
-      ConstUintahField svolFrac;
       const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<SVolField>();
       const int ng = get_n_ghost<SVolField>();
       dw->get( svolFrac, Uintah::VarLabel::find(volfract_.name()), material, patch, gt, ng );
       const AllocInfo ainfo( dw, dw, material, patch, NULL );
-      volfrac = wrap_uintah_field_as_spatialops<SVolField>(svolFrac, ainfo);
+      const SpatialOps::GhostData gd( get_n_ghost<SVolField>() );
+      volfrac = wrap_uintah_field_as_spatialops<SVolField>( svolFrac, ainfo, gd );
     }
-    setup_matrix(volfrac);
+    setup_matrix( &*volfrac );
   }
   
   didAllocateMatrix_=true;
@@ -213,11 +214,11 @@ Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
 void
 Pressure::advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  if( doX_    )  exprDeps.requires_expression( fxt_ );
-  if( doY_    )  exprDeps.requires_expression( fyt_ );
-  if( doZ_    )  exprDeps.requires_expression( fzt_ );
+  if( doX_ )  exprDeps.requires_expression( fxt_ );
+  if( doY_ )  exprDeps.requires_expression( fyt_ );
+  if( doZ_ )  exprDeps.requires_expression( fzt_ );
 
-  if(volfract_ != Expr::Tag() ) exprDeps.requires_expression( volfract_ );
+  if( volfract_ != Expr::Tag() ) exprDeps.requires_expression( volfract_ );
   
   exprDeps.requires_expression( pSourcet_ );
   exprDeps.requires_expression( dtt_ );
@@ -265,7 +266,7 @@ Pressure::bind_operators( const SpatialOps::OperatorDatabase& opDB )
 //--------------------------------------------------------------------
 
 void
-Pressure::setup_matrix(const SVolField* const volfrac)
+Pressure::setup_matrix( const SVolField* const volfrac )
 {
   // construct the coefficient matrix: \nabla^2
   // We should probably move the matrix construction to the evaluate() method.
@@ -295,7 +296,7 @@ Pressure::setup_matrix(const SVolField* const volfrac)
     p -= 2.0/dz2;
   }
 
-  for(Uintah::CellIterator iter(patch_->getCellIterator()); !iter.done(); iter++){
+  for( Uintah::CellIterator iter(patch_->getCellIterator()); !iter.done(); iter++ ){
     // NOTE: for the conjugate gradient solver in Hypre, we must pass a positive
     // definite matrix. For the Laplacian on a structured grid, the matrix A corresponding
     // to the Laplacian operator is not positive definite - but "- A" is. Hence,
@@ -309,16 +310,16 @@ Pressure::setup_matrix(const SVolField* const volfrac)
   }
 
   // update the coefficient matrix with intrusion information
-  if ( volfract_ != Expr::Tag() && volfrac )
-    process_embedded_boundaries(volfrac);
+  if( volfract_ != Expr::Tag() && volfrac )
+    process_embedded_boundaries( *volfrac );
 
   // When boundary conditions are present, modify the pressure matrix coefficients at the boundary
-  if (patch_->hasBoundaryFaces() && bcHelper_)
-    bcHelper_->update_pressure_matrix(matrix_, volfrac, patch_);
+  if( patch_->hasBoundaryFaces() && bcHelper_ )
+    bcHelper_->update_pressure_matrix( matrix_, volfrac, patch_ );
 
   // if the user specified a reference pressure, then modify the appropriate matrix coefficients
-  if ( useRefPressure_ )
-    set_ref_poisson_coefs(matrix_, patch_, refPressureLocation_);
+  if( useRefPressure_ )
+    set_ref_poisson_coefs( matrix_, patch_, refPressureLocation_ );
 }
 
 //--------------------------------------------------------------------
@@ -327,7 +328,6 @@ void
 Pressure::evaluate()
 {
   using namespace SpatialOps;
-  namespace SS = SpatialOps::structured;
 
   typedef std::vector<SVolField*> SVolFieldVec;
   SVolFieldVec& results = this->get_value_vec();
@@ -338,7 +338,7 @@ Pressure::evaluate()
   // when we are at the 2nd or 3rd RK stages, do NOT initialize the pressure
   // in the new DW to zero because we're using that as our initial guess.
   // This will reduce the pressure solve iteration count.
-  if (rkStage_ == 1) pressure <<= 0.0;
+  if( rkStage_ == 1 ) pressure <<= 0.0;
 
   SVolField& rhs = *results[1];
 
@@ -361,26 +361,26 @@ Pressure::evaluate()
   if( doX_ ) rhs <<= rhs - (*divXOp_)((*interpX_)(*fx_));
   if( doY_ ) rhs <<= rhs - (*divYOp_)((*interpY_)(*fy_));
   if( doZ_ ) rhs <<= rhs - (*divZOp_)((*interpZ_)(*fz_));
-  if (volfract_ != Expr::Tag() ) rhs <<= rhs* *volfrac_;
+  if( volfract_ != Expr::Tag() ) rhs <<= rhs* *volfrac_;
 
   // update pressure rhs for reference pressure
-  if (useRefPressure_)
+  if( useRefPressure_ )
     set_ref_poisson_rhs( rhs, patch_, refPressureValue_, refPressureLocation_ );
 
   // update pressure rhs for any BCs
-  if(patch_->hasBoundaryFaces())
+  if( patch_->hasBoundaryFaces() )
     bcHelper_->update_pressure_rhs(rhs, patch_); // this will update the rhs with relevant boundary conditions.
 
   // if we have moving geometry, then we need to update the coefficient matrix
-  if ( hasMovingGeometry_ && volfract_ != Expr::Tag() )
-    setup_matrix(volfrac_);
+  if( hasMovingGeometry_ && volfract_ != Expr::Tag() )
+    setup_matrix( volfrac_ );
 }
 
 //--------------------------------------------------------------------
 
-void Pressure::process_embedded_boundaries( const SVolField* const volfraction )
+void Pressure::process_embedded_boundaries( const SVolField& volfrac )
 {
-  using SpatialOps::structured::IntVec;
+  using SpatialOps::IntVec;
 
   // cell offset used to calculate local cell index with respect to patch.
   const int ng = get_n_ghost<SVolField>();
@@ -393,9 +393,7 @@ void Pressure::process_embedded_boundaries( const SVolField* const volfraction )
   const double dy2 = dy*dy;
   const double dz2 = dz*dz;
 
-  const SVolField& volfrac = *volfraction;
-  
-  if (!didMatrixUpdate_ || hasMovingGeometry_) {
+  if( !didMatrixUpdate_ || hasMovingGeometry_ ){
     
     // didMatrixUpdate_: boolean that tracks whether we have updated the
     // pressure coef matrix or not when embedded geometries are present
@@ -415,14 +413,14 @@ void Pressure::process_embedded_boundaries( const SVolField* const volfraction )
       const double volFrac = volfrac(intCellIJK);
       
       // we are inside an embedded geometry, set pressure to zero.
-      if ( volFrac < 1.0 ) {
+      if( volFrac < 1.0 ){
         coefs.w = 0.0;
         coefs.s = 0.0;
         coefs.b = 0.0;
         coefs.p = 1.0;
       }
       
-      if (volFrac > 0.0) {
+      if( volFrac > 0.0 ){
 
         const IntVec eIJK( iCellOffset[0] + 1, iCellOffset[1],     iCellOffset[2]     ); // east
         const IntVec wIJK( iCellOffset[0] - 1, iCellOffset[1],     iCellOffset[2]     ); // west
@@ -439,24 +437,24 @@ void Pressure::process_embedded_boundaries( const SVolField* const volfraction )
         const double volFracBot   = volfrac( bIJK );
 
         // neighbors are embedded boundaries
-        if (doX_ && volFracEast < 1.0 ) {
+        if( doX_ && volFracEast < 1.0 ){
           coefs.p -= 1.0/dx2;          
         }
-        if (doY_ && volFracNorth < 1.0 ) {
+        if( doY_ && volFracNorth < 1.0 ){
           coefs.p -= 1.0/dy2;
         }
-        if (doZ_ && volFracTop < 1.0 ) {
+        if( doZ_ && volFracTop < 1.0 ){
           coefs.p -= 1.0/dz2;
         }
-        if (doX_ && volFracWest < 1.0 ) {
+        if( doX_ && volFracWest < 1.0 ){
           coefs.p -= 1.0/dx2;
           coefs.w  = 0.0;
         }
-        if (doY_ && volFracSouth < 1.0 ) {
+        if( doY_ && volFracSouth < 1.0 ){
           coefs.p -= 1.0/dy2;
           coefs.s = 0.0;
         }
-        if (doZ_ && volFracBot < 1.0 ) {
+        if( doZ_ && volFracBot < 1.0 ){
           coefs.p -= 1.0/dz2;
           coefs.b = 0.0;
         }
@@ -476,6 +474,7 @@ Pressure::process_bcs ( const Uintah::ProcessorGroup* const pg,
 {
   using namespace SpatialOps;
   typedef SelectUintahFieldType<SVolField>::const_type UintahField;
+  typedef SpatFldPtr<SVolField> SVolFieldPtr;
   UintahField pressureField_;
 
   const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<SVolField>();
@@ -494,9 +493,9 @@ Pressure::process_bcs ( const Uintah::ProcessorGroup* const pg,
       if( patch->hasBoundaryFaces() && bcHelper_  ){
         newDW->get( pressureField_, pressureLabel_, material, patch, gt, ng);
         const AllocInfo ainfo( oldDW, newDW, im, patch, pg );
-        SVolField* const pressure = wrap_uintah_field_as_spatialops<SVolField>(pressureField_,ainfo);
+        const SpatialOps::GhostData gd( get_n_ghost<SVolField>() );
+        SVolFieldPtr pressure = wrap_uintah_field_as_spatialops<SVolField>( pressureField_, ainfo, gd );
         bcHelper_->apply_pressure_bc(*pressure,patch);
-        delete pressure;
       }
     }
   }

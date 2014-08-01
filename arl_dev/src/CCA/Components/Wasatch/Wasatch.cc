@@ -86,6 +86,8 @@
 #include "FieldClippingTools.h"
 #include "OldVariable.h"
 #include "ReductionHelper.h"
+#include "ParticlesHelper.h"
+#include "WasatchParticlesHelper.h"
 #include "BCHelper.h"
 #include "Expressions/CellType.h"
 using std::endl;
@@ -100,7 +102,8 @@ namespace Wasatch{
       buildWasatchMaterial_( true ),
       nRKStages_(1),
       isPeriodic_( true ),
-      doRadiation_(false)
+      doRadiation_(false),
+      doParticles_(false)
   {
     proc0cout << std::endl
               << "-------------------------------------------------------------" << std::endl
@@ -135,6 +138,8 @@ namespace Wasatch{
 
     OldVariable::self().sync_with_wasatch( this );
     ReductionHelper::self().sync_with_wasatch( this );
+    particlesHelper_ = scinew WasatchParticlesHelper();
+    particlesHelper_->sync_with_wasatch(this);
   }
 
   //--------------------------------------------------------------------
@@ -168,6 +173,7 @@ namespace Wasatch{
       delete it->second;
     }
     delete cellType_;
+    delete particlesHelper_;
   }
 
   //--------------------------------------------------------------------
@@ -351,6 +357,14 @@ namespace Wasatch{
     wasatchSpec_ = params->findBlock("Wasatch");
     if (!wasatchSpec_) return;
 
+    //
+    // Check whether we are solving for particles
+    //
+    doParticles_ = wasatchSpec_->findBlock("ParticleTransportEquations");
+    if (doParticles_) {
+      particlesHelper_->problem_setup(wasatchSpec_->findBlock("ParticleTransportEquations"));
+    }
+
     // setup names for all the boundary condition faces that do NOT have a name or that have duplicate names
     if ( params->findBlock("Grid") ) {
       Uintah::ProblemSpecP bcProbSpec = params->findBlock("Grid")->findBlock("BoundaryConditions");
@@ -358,7 +372,9 @@ namespace Wasatch{
     }
     
     sharedState_ = sharedState;
-    
+    // TSAAD: keep the line of code below for future use. at this time, there is no apparent use for
+    // it. it doesn't do anything.
+    //    dynamic_cast<Uintah::Scheduler*>(getPort("scheduler"))->setPositionVar(pPosLabel);
     double deltMin, deltMax;
     params->findBlock("Time")->require("delt_min", deltMin);
     params->findBlock("Time")->require("delt_max", deltMax);
@@ -403,9 +419,10 @@ namespace Wasatch{
     bool isConstDensity = true;
     {
       Uintah::ProblemSpecP momEqnParams   = wasatchSpec_->findBlock("MomentumEquations");
+      Uintah::ProblemSpecP particleEqnParams   = wasatchSpec_->findBlock("ParticleTransportEquations");
       Uintah::ProblemSpecP densityParams  = wasatchSpec_->findBlock("Density");
       Uintah::ProblemSpecP transEqnParams = wasatchSpec_->findBlock("TransportEquation");
-      if( transEqnParams || momEqnParams ){
+      if( transEqnParams || momEqnParams || particleEqnParams ){
         if( !densityParams ) {
           std::ostringstream msg;
           msg << "ERROR: You must include a 'Density' block in your input file when solving transport equations" << endl;
@@ -509,11 +526,16 @@ namespace Wasatch{
     nRKStages_ = timeInt.nStages;
 
     //
+    //  Parse geometry pieces. NOTE: This must take place before create_expressions_from_input
+    //  because some input expressions will use the intrusion geometries (e.g. particle initialization)
+    //
+    parse_embedded_geometry(wasatchSpec_,graphCategories_);
+    
+    //
     // create expressions explicitly defined in the input file.  These
     // are typically associated with, e.g. initial conditions.
     //
     create_expressions_from_input( wasatchSpec_, graphCategories_ );
-    parse_embedded_geometry(wasatchSpec_,graphCategories_);
     setup_property_evaluation( wasatchSpec_, graphCategories_, lockedFields_ );
 
     //
@@ -534,8 +556,6 @@ namespace Wasatch{
     // Build transport equations.  This registers all expressions as
     // appropriate for solution of each transport equation.
     //
-    const bool hasEmbeddedGeometry = wasatchSpec_->findBlock("EmbeddedGeometry");
-
     for( Uintah::ProblemSpecP transEqnParams=wasatchSpec_->findBlock("TransportEquation");
          transEqnParams != 0;
          transEqnParams=transEqnParams->findNextBlock("TransportEquation") ){
@@ -563,16 +583,6 @@ namespace Wasatch{
     }
 
     //
-    // get the 2D variable density, corrugated mms params, if any, and parse them.
-    // THIS MUST BE PARSED BEFORE THE MOMENTUM EQUATIONS
-    //
-    Uintah::ProblemSpecP VarDenCorrugatedMMSSpec = wasatchSpec_->findBlock("VarDenCorrugatedMMS");
-    if( VarDenCorrugatedMMSSpec ){
-      const bool computeContinuityResidual = wasatchSpec_->findBlock("MomentumEquations")->findBlock("ComputeMassResidual");
-      parse_var_den_corrugated_mms(wasatchSpec_, VarDenCorrugatedMMSSpec, computeContinuityResidual, graphCategories_);
-    }
-
-    //
     // Build momentum transport equations.  This registers all expressions
     // required for solution of each momentum equation.
     //
@@ -580,16 +590,16 @@ namespace Wasatch{
         momEqnParams != 0;
         momEqnParams=momEqnParams->findNextBlock("MomentumEquations") ){
       try{
-        // note - parse_momentum_equations returns a vector of equation adaptors
-        const EquationAdaptors adaptors = parse_momentum_equations( momEqnParams,
-                                                                    turbParams,
-                                                                    varDenParams,
-                                                                    useAdaptiveDt,
-                                                                    isConstDensity,
-                                                                    densityTag,
-                                                                    graphCategories_,
-                                                                    *linSolver_,
-                                                                    sharedState );
+          // note - parse_momentum_equations returns a vector of equation adaptors
+          const EquationAdaptors adaptors = parse_momentum_equations( momEqnParams,
+                                                                      turbParams,
+                                                                      varDenParams,
+                                                                      useAdaptiveDt,
+                                                                      isConstDensity,
+                                                                      densityTag,
+                                                                      graphCategories_,
+                                                                      *linSolver_,
+                                                                      sharedState );
         adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
       }
       catch( std::runtime_error& err ){
@@ -605,7 +615,7 @@ namespace Wasatch{
     // get the 2D variable density, osicllating (and periodic) mms params, if any, and parse them.
     //
     Uintah::ProblemSpecP varDenOscillatingMMSParams = wasatchSpec_->findBlock("VarDenOscillatingMMS");
-    if( varDenOscillatingMMSParams ){
+    if (varDenOscillatingMMSParams) {
       const bool computeContinuityResidual = wasatchSpec_->findBlock("MomentumEquations")->findBlock("ComputeMassResidual");
       parse_var_den_oscillating_mms(wasatchSpec_, varDenOscillatingMMSParams, computeContinuityResidual, graphCategories_);
     }
@@ -729,6 +739,28 @@ namespace Wasatch{
       graphCategories_[ADVANCE_SOLUTION]->rootIDs.insert( exprID );
     }
     //
+    //
+    // Build particle transport equations.  This registers all expressions
+    // required for solution of each particle equation.
+    //
+    Uintah::ProblemSpecP particleEqnSpec = wasatchSpec_->findBlock("ParticleTransportEquations");
+    // note - parse_particle_transport_equations returns a vector of equation adaptors
+    if (particleEqnSpec) {
+      try{
+        const EquationAdaptors adaptors = parse_particle_transport_equations( particleEqnSpec,
+                                                                             wasatchSpec_,
+                                                                             graphCategories_);
+        adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
+      }
+      catch( std::runtime_error& err ){
+        std::ostringstream msg;
+        msg << endl
+        << "Problems setting up particle transport equations.  Details follow:" << endl
+        << err.what() << endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+    }
+    //
     // process any reduction variables specified through the input file
     //
     ReductionHelper::self().parse_reduction_spec(wasatchSpec_);
@@ -743,8 +775,16 @@ namespace Wasatch{
     // problemSetup. The sharedstate class will create this material set
     // in postgridsetup, which is called after problemsetup. This is dictated
     // by Uintah.
-    if (buildWasatchMaterial_) {
+    if (buildWasatchMaterial_)
+    {
       set_wasatch_materials(sharedState_->allWasatchMaterials());
+      if (doParticles_) {
+        particlesHelper_->set_materials(get_wasatch_materials());
+      }
+    } else {
+      if (doParticles_) {
+        particlesHelper_->set_materials(sharedState_->allMaterials());
+      }
     }
 
     setup_patchinfo_map( level, sched );
@@ -763,12 +803,15 @@ namespace Wasatch{
 
     Expr::ExpressionFactory& exprFactory = *icGraphHelper->exprFactory;
 
+    if( doParticles_ ) {
+      particlesHelper_->schedule_initialize(level,sched);
+    }
+    
     //bcHelper_ = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     
     // handle intrusion boundaries
-    if ( wasatchSpec_->findBlock("EmbeddedGeometry") )
-    {
+    if( wasatchSpec_->findBlock("EmbeddedGeometry") ){
       apply_intrusion_boundary_conditions( *bcHelperMap_[level->getID()] );
     }
 
@@ -790,6 +833,10 @@ namespace Wasatch{
       // -----------------------------------------------------------------------
       typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
       
+      proc0cout << "------------------------------------------------" << std::endl
+      << "SETTING INITIAL BOUNDARY CONDITIONS:" << std::endl;
+      proc0cout << "------------------------------------------------" << std::endl;
+
       for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
         EqnTimestepAdaptorBase* const adaptor = *ia;
         EquationBase* transEq = adaptor->equation();
@@ -810,7 +857,9 @@ namespace Wasatch{
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
       }
-      // -----------------------------------------------------------------------          
+      proc0cout << "------------------------------------------------" << std::endl;
+
+      // -----------------------------------------------------------------------
       try{
         TaskInterface* const task = scinew TaskInterface( icGraphHelper->rootIDs,
                                                           "initialization",
@@ -840,6 +889,10 @@ namespace Wasatch{
     // Compute the cell type only when radiation is present. This may change in the future.
     if (doRadiation_)
       cellType_->schedule_compute_celltype(allPatches,materials_,sched);
+    //
+    if (doParticles_){
+      particlesHelper_->schedule_sync_particle_position(level,sched,true);
+    }
     
     proc0cout << "Wasatch: done creating initialization task(s)" << std::endl;
   }
@@ -856,7 +909,10 @@ namespace Wasatch{
     // by Uintah.
     if( buildWasatchMaterial_ ){
       set_wasatch_materials( sharedState_->allWasatchMaterials() );
-    }
+      if (doParticles_) {
+        particlesHelper_->set_materials(get_wasatch_materials());
+      }
+    } 
   }
 
   //--------------------------------------------------------------------
@@ -879,6 +935,11 @@ namespace Wasatch{
       for( int ip=0; ip<pss->size(); ++ip ){
         SpatialOps::OperatorDatabase* const opdb = scinew SpatialOps::OperatorDatabase();
         const Uintah::Patch* const patch = pss->get(ip);
+
+        //tsaad: register an patch container as an operator for easy access to the Uintah patch
+        // inside of an expression.
+        opdb->register_new_operator<UintahPatchContainer>(scinew UintahPatchContainer(patch) );
+        
         build_operators( *patch, *opdb );
         PatchInfo& pi = patchInfoMap_[patch->getID()];
         pi.operators = opdb;
@@ -959,6 +1020,10 @@ namespace Wasatch{
       bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     }
     
+    if (doParticles_) {
+      particlesHelper_->schedule_find_boundary_particles(level,sched);
+    }
+    
     for( int iStage=1; iStage<=nRKStages_; iStage++ ){
       // jcs why do we need this instead of getting the level?
       // jcs notes:
@@ -984,6 +1049,10 @@ namespace Wasatch{
       // -----------------------------------------------------------------------
       // BOUNDARY CONDITIONS TREATMENT
       // -----------------------------------------------------------------------
+      proc0cout << "------------------------------------------------" << std::endl
+      << "SETTING BOUNDARY CONDITIONS:" << std::endl;
+      proc0cout << "------------------------------------------------" << std::endl;
+
       typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
       
       for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
@@ -1007,6 +1076,7 @@ namespace Wasatch{
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
       }
+      proc0cout << "------------------------------------------------" << std::endl;
       
       //
       // process clipping on fields - must be done AFTER all bcs are applied
@@ -1042,8 +1112,6 @@ namespace Wasatch{
       // pass the bc Helper to pressure expressions on all patches
       bcHelperMap_[level->getID()]->synchronize_pressure_expression();
     }
-
-    if (isRestarting_) isRestarting_ = false;
     
     // ensure that any "CARRY_FORWARD" variable has an initialization provided for it.
     if( buildTimeIntegrator_ ) { // make sure that we have a timestepper created - this is needed for wasatch-in-arches
@@ -1070,7 +1138,24 @@ namespace Wasatch{
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
     }
+    
+    //_________________________
+    // After the time advance graphs have all finished executing, it is time
+    // to synchronize the Wasatch particle position varibles with Uintah's.
+    // Recall that Uintah requires that particle position be specified as a
+    // Uintah::Point whereas Wasatch uses x, y, and z variables, separately.
+    if (doParticles_)
+    {
+      if (isRestarting_) {
+        particlesHelper_->schedule_restart_initialize(level,sched);
+      }
 
+      particlesHelper_->schedule_sync_particle_position(level,sched);
+      particlesHelper_->schedule_transfer_particle_ids(level,sched);
+      particlesHelper_->schedule_relocate_particles(level,sched);
+    }
+    
+    if (isRestarting_) isRestarting_ = false;
   }
 
   //--------------------------------------------------------------------

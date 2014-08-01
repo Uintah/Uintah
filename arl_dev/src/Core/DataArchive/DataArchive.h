@@ -196,7 +196,11 @@ namespace Uintah {
 
       std::string name(){ return d_filebase;}
 
-      //! Set up data arachive for restarting a Uintah simulation   
+      // return the name of the particle position variable if specified by the user. if not,
+      // this will return p.x
+     std::string getParticlePositionName() const { return d_particlePositionName; }
+
+      //! Set up data arachive for restarting a Uintah simulation
       void restartInitialize(       int             timestep,
                               const GridP         & grid,
                                     DataWarehouse * dw,
@@ -406,10 +410,16 @@ namespace Uintah {
       int d_numProcessors;
 
       Mutex d_lock;
+    
+      std::string d_particlePositionName;
 
-      void findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
-          long64 particleID, int matIndex, int levelIndex,
-          int index);
+      void findPatchAndIndex( const GridP            grid,
+                                    Patch         *& patch,
+                                    particleIndex  & idx,
+                              const long64           particleID,
+                              const int              matIndex,
+                              const int              levelIndex,
+                              const int              index );
 
       static DebugStream dbg;
   };

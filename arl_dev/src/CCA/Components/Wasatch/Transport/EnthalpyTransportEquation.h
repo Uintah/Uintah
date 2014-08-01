@@ -79,19 +79,15 @@ namespace Wasatch {
   {
   public:
     /**
-     *  \brief Construct a ScalarTransportEquation
+     *  \brief Construct an EnthalpyTransportEquation
      *  \param enthalpyName the name for enthalpy
-     *
      *  \param params the tag from the input file specifying the transport equation.
-     *
+     *  \param gc
      *  \param densityTag a tag containing density for necessary cases. it will be empty where
      *         it is not needed.
-     *
      *  \param isConstDensity true for constant density
-     *
-     *  \param id the Expr::ExpressionID for the RHS expression for this ScalarTransportEquation
+     *  \param turbulenceParams
      */
-
     EnthalpyTransportEquation( const std::string enthalpyName,
                                Uintah::ProblemSpecP params,
                                GraphCategories& gc,

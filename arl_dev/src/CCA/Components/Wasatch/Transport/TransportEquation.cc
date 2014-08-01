@@ -43,9 +43,8 @@ namespace Wasatch{
                      Uintah::ProblemSpecP params,
                      const Direction stagLoc,
                      const bool isConstDensity )
-  : EquationBase::EquationBase(gc, solnVarName, params),
-    isConstDensity_ ( isConstDensity ),
-    stagLoc_        (stagLoc)
+  : EquationBase::EquationBase(gc, solnVarName, stagLoc, params),
+    isConstDensity_ ( isConstDensity )
   {
 //    setup();  // build all expressions required for this TransportEquation
   }
@@ -74,20 +73,6 @@ namespace Wasatch{
     rhsExprID_ = setup_rhs( tagInfo, sourceTags );
     assert( rhsExprID_ != Expr::ExpressionID::null_id() );
     gc_[ADVANCE_SOLUTION]->rootIDs.insert( rhsExprID_ );
-  }
-
-  //---------------------------------------------------------------------------
-  
-  std::string
-  TransportEquation::dir_name() const
-  {
-    switch (stagLoc_) {
-      case XDIR: return "x";
-      case YDIR: return "y";
-      case ZDIR: return "z";
-      case NODIR:
-      default: return "";
-    }
   }
 
   //---------------------------------------------------------------------------

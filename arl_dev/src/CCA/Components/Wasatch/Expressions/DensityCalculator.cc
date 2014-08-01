@@ -1,17 +1,20 @@
-#include "DensityCalculator.h"
+#include <CCA/Components/Wasatch/Expressions/DensityCalculator.h>
+
+#include <sci_defs/uintah_defs.h>
 
 #include <boost/foreach.hpp>
 
+#define DGESV FIX_NAME(dgesv)
 
 extern "C"{
-  void dgesv_( const int* n,    // # of equations
-               const int* nrhs, // # of rhs to solve
-               double A[],      // lhs matrix
-               const int* lda,  // leading dim of A (#eqn for us)
-               int* ipiv,       // integer work array
-               double rhs[],    // rhs array
-               const int* ldb,  // dimension of rhs (#eqn for us)
-               int* info );
+  void DGESV( const int    * n,    // # of equations
+              const int    * nrhs, // # of rhs to solve
+                    double   A[],  // lhs matrix
+              const int    * lda,  // leading dim of A (#eqn for us)
+                    int    * ipiv, // integer work array
+                    double   rhs[],// rhs array
+              const int    * ldb,  // dimension of rhs (#eqn for us)
+                    int    * info );
 }
 
 //-------------------------------------------------------------------
@@ -47,7 +50,7 @@ bool DensityCalculatorBase::solve( const DoubleVec& passThrough,
         // Solving J * delta = rhs  (note the missing minus sign, which is handled in the update below)
         // note that on entry, res_ is the rhs and on exit, it is the solution (delta).
         const int one=1; int info;
-        dgesv_( &neq_, &one, &jac_[0], &neq_, &ipiv_[0], &res_[0], &neq_, &info );
+        DGESV( &neq_, &one, &jac_[0], &neq_, &ipiv_[0], &res_[0], &neq_, &info );
         if( info != 0 ){
           std::cout << "\nSOLVER FAILED: "<< info << "  " << soln[0] << ", " << soln[1] << std::endl;
         }
@@ -518,7 +521,7 @@ Builder::Builder( const Expr::Tag& resultTag,
 
 // explicit template instantiation
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-template class DensFromMixfrac       <SpatialOps::structured::SVolField>;
-template class DensHeatLossMixfrac   <SpatialOps::structured::SVolField>;
-template class TwoStreamDensFromMixfr<SpatialOps::structured::SVolField>;
-template class TwoStreamMixingDensity<SpatialOps::structured::SVolField>;
+template class DensFromMixfrac       <SpatialOps::SVolField>;
+template class DensHeatLossMixfrac   <SpatialOps::SVolField>;
+template class TwoStreamDensFromMixfr<SpatialOps::SVolField>;
+template class TwoStreamMixingDensity<SpatialOps::SVolField>;

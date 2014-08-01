@@ -24,7 +24,6 @@ class TiledRegridder
 void TiledRegridder::regrid(const std::vector<Region> &cp, const std::vector<CCVariable<int>*> &flags, std::vector<Region> &patches)
 {
   patches.resize(0);
-  Vector factor=rr.asVector()/mps.asVector(); 
   Vector inv_factor=mps.asVector()/rr.asVector();
   for(unsigned int patch=0;patch<cp.size();patch++)
   {

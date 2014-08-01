@@ -168,7 +168,7 @@ public:
    to the boundary.
    *
    */
-  void set_interior_points( const std::vector<SpatialOps::structured::IntVec>* vecInteriorPoints )
+  void set_interior_points( const std::vector<SpatialOps::IntVec>* vecInteriorPoints )
   {
     vecInteriorPts_  = vecInteriorPoints;
   }
@@ -181,7 +181,7 @@ public:
    to the boundary.
    *
    */
-  void set_ghost_points( const std::vector<SpatialOps::structured::IntVec>* vecGhostPoints ){
+  void set_ghost_points( const std::vector<SpatialOps::IntVec>* vecGhostPoints ){
     vecGhostPts_ = vecGhostPoints;
   }
 
@@ -193,7 +193,7 @@ public:
    to the boundary. These are indexed zero-based on the first interior cell of the patch.
    *
    */
-  void set_nebo_interior_points( const std::vector<SpatialOps::structured::IntVec>* vecInteriorPoints )
+  void set_nebo_interior_points( const std::vector<SpatialOps::IntVec>* vecInteriorPoints )
   {
     neboInteriorPts_  = vecInteriorPoints;
   }
@@ -206,8 +206,21 @@ public:
    to the boundary. These are indexed zero-based on the first interior cell of the patch.
    *
    */
-  void set_nebo_ghost_points( const std::vector<SpatialOps::structured::IntVec>* vecGhostPoints ){
+  void set_nebo_ghost_points( const std::vector<SpatialOps::IntVec>* vecGhostPoints ){
     neboGhostPts_ = vecGhostPoints;
+  }
+
+  /**
+   *  \brief Set nebo-mask-friendly interior points. This is a vector of locally indexed ijk interior points. Interior
+   points correspond to the interior cells adjacent to a boundary. For staggered fields that are normal
+   to a boundary, the interior points correspond to the boundary faces instead of the cells.
+   *  \param vecInteriorPoints Pointer to a stl vector of ijk triplets of interior cells adjacent
+   to the boundary. These are indexed zero-based on the first interior cell of the patch.
+   *
+   */
+  void set_boundary_particles( const std::vector<int>* boundaryParticles )
+  {
+    boundaryParticles_ = boundaryParticles;
   }
 
   /**
@@ -216,7 +229,7 @@ public:
    *  \param interiorEdgePoints Pointer to a stl vector of ijk triplets of interior edge cells.
    *
    */
-  void set_interior_edge_points( const std::vector<SpatialOps::structured::IntVec>* interiorEdgePoints ) {
+  void set_interior_edge_points( const std::vector<SpatialOps::IntVec>* interiorEdgePoints ) {
     interiorEdgePoints_  = interiorEdgePoints;
   }
 
@@ -224,7 +237,7 @@ public:
    *  \brief Set the patch cell offset. This is the global ijk of the lowest cell on this patch.
    *
    */
-  void set_patch_cell_offset( const SpatialOps::structured::IntVec& patchCellOffset )
+  void set_patch_cell_offset( const SpatialOps::IntVec& patchCellOffset )
   {
     patchCellOffset_ = patchCellOffset;
   }
@@ -271,7 +284,7 @@ public:
    *  \brief Set the boundary unit normal. This is (1,0,0) fro x+, (-1,0,0) for x-, etc...
    *
    */
-  void set_boundary_normal( const SpatialOps::structured::IntVec& bndNormal )
+  void set_boundary_normal( const SpatialOps::IntVec& bndNormal )
   {
     bndNormal_ = bndNormal;
   }
@@ -293,13 +306,14 @@ public:
     setInExtraCellsOnly_ = false;
     ci_ = 0.0;
     cg_ = 0.0;
-    patchCellOffset_ = SpatialOps::structured::IntVec(0,0,0);
-    bndNormal_       = SpatialOps::structured::IntVec(0,0,0);
+    patchCellOffset_ = SpatialOps::IntVec(0,0,0);
+    bndNormal_       = SpatialOps::IntVec(0,0,0);
     bcTypeEnum_      = Wasatch::UNSUPPORTED;
     faceTypeEnum_    = Uintah::Patch::xminus;
     vecInteriorPts_ = NULL;
     vecGhostPts_ = NULL;
     interiorEdgePoints_ = NULL;
+    boundaryParticles_ = NULL;
   }
   virtual ~BoundaryConditionBase(){}
 
@@ -307,8 +321,8 @@ protected:
   bool isStaggered_, isMinusFace_, setInExtraCellsOnly_;
   double ci_, cg_;
 
-  SpatialOps::structured::IntVec patchCellOffset_;
-  SpatialOps::structured::IntVec bndNormal_;
+  SpatialOps::IntVec patchCellOffset_;
+  SpatialOps::IntVec bndNormal_;
   
   Wasatch::BndCondTypeEnum bcTypeEnum_; // DIRICHLET, NEUMANN, UNSUPPORTED
   Uintah::Patch::FaceType faceTypeEnum_;    // xminus, xplus...
@@ -333,15 +347,17 @@ protected:
   const NeumYOpT* neumYOp_;
   const NeumZOpT* neumZOp_;
   
-  const std::vector<SpatialOps::structured::IntVec>* vecInteriorPts_;
-  const std::vector<SpatialOps::structured::IntVec>* vecGhostPts_;
+  const std::vector<SpatialOps::IntVec>* vecInteriorPts_;
+  const std::vector<SpatialOps::IntVec>* vecGhostPts_;
   
-  const std::vector<SpatialOps::structured::IntVec>* neboInteriorPts_;
-  const std::vector<SpatialOps::structured::IntVec>* neboGhostPts_;
+  const std::vector<SpatialOps::IntVec>* neboInteriorPts_;
+  const std::vector<SpatialOps::IntVec>* neboGhostPts_;
 
-  const std::vector<SpatialOps::structured::IntVec>* interiorEdgePoints_;
+  const std::vector<SpatialOps::IntVec>* interiorEdgePoints_;
   
-  void build_mask_points(std::vector<SpatialOps::structured::IntVec>& maskPoints)
+  const std::vector<int>* boundaryParticles_; // vector of indices of particles on this boundary
+  
+  void build_mask_points(std::vector<SpatialOps::IntVec>& maskPoints)
   {
     if(isStaggered_ && bcTypeEnum_ != Wasatch::NEUMANN) {
       maskPoints = *neboInteriorPts_;

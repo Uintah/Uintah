@@ -26,7 +26,7 @@
 #define Velocity_Magnitude_Expr_h
 
 #include <expression/Expression.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
+#include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 
 /**
  *  \class 	VelocityMagnitude
@@ -56,9 +56,9 @@ protected:
   const Expr::Tag vel1t_, vel2t_, vel3t_;
   const bool is3d_;
 
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, Vel1T, FieldT >::type InterpVel1T2FieldT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, Vel2T, FieldT >::type InterpVel2T2FieldT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, Vel3T, FieldT >::type InterpVel3T2FieldT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, Vel1T, FieldT >::type InterpVel1T2FieldT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, Vel2T, FieldT >::type InterpVel2T2FieldT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, Vel3T, FieldT >::type InterpVel3T2FieldT;
     
   const Vel1T* vel1_;
   const Vel2T* vel2_;

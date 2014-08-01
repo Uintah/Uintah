@@ -1,5 +1,5 @@
 /**
- *  \file   EnthalpyTransportEquation.cpp
+ *  \file   EnthalpyTransportEquation.cc
  *  \date   Nov 12, 2013
  *  \author "James C. Sutherland"
  *
@@ -146,9 +146,9 @@ namespace Wasatch {
   EnthalpyTransportEquation::
   setup_diffusive_flux( FieldTagInfo& info )
   {
-    typedef DiffusiveVelocity< SpatialOps::structured::SSurfXField >::Builder XFlux;
-    typedef DiffusiveVelocity< SpatialOps::structured::SSurfYField >::Builder YFlux;
-    typedef DiffusiveVelocity< SpatialOps::structured::SSurfZField >::Builder ZFlux;
+    typedef DiffusiveVelocity< SpatialOps::SSurfXField >::Builder XFlux;
+    typedef DiffusiveVelocity< SpatialOps::SSurfYField >::Builder YFlux;
+    typedef DiffusiveVelocity< SpatialOps::SSurfZField >::Builder ZFlux;
 
     // jcs how will we determine if we have each direction on???
     const bool doX=true, doY=true, doZ=true;

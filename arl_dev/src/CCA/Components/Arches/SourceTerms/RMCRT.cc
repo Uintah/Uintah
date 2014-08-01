@@ -47,17 +47,14 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
   _src_label      = VarLabel::create( src_name,  CC_double ); 
   _sigmaT4Label   = VarLabel::create("sigmaT4",  CC_double );
   _extra_local_labels.push_back(_sigmaT4Label); 
-  _absorpLabel    = VarLabel::create( "absorp",  CC_double );
-  _extra_local_labels.push_back(_absorpLabel); 
   _cellTypeLabel  = _labels->d_cellTypeLabel; 
   
   //Declare the source type: 
   _source_grid_type = CC_SRC; // or FX_SRC, or FY_SRC, or FZ_SRC, or CCVECTOR_SRC
 
   _archesLevelIndex      = -9;
-  _prop_calculator       = 0;
-  _using_prop_calculator = 0; 
-  _RMCRT                 = 0;
+  _RMCRT = scinew Ray();
+
   _sharedState           = labels->d_sharedState;
   
   _gac = Ghost::AroundCells;
@@ -81,9 +78,7 @@ RMCRT_Radiation::~RMCRT_Radiation()
 {
   // source label is destroyed in the base class 
   VarLabel::destroy( _sigmaT4Label ); 
-  VarLabel::destroy( _absorpLabel );
 
-  delete _prop_calculator; 
   delete _RMCRT; 
 
   if( _matlSet && _matlSet->removeReference()) {
@@ -100,6 +95,15 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
   _ps = inputdb; 
   _ps->getWithDefault( "calc_frequency",       _radiation_calc_freq, 3 ); 
   _ps->getWithDefault( "calc_on_all_RKsteps",  _all_rk,              false );  
+  _T_label_name = "temperature"; 
+  if ( _ps->findBlock("temperature")){ 
+    _ps->findBlock("temperature")->getAttribute("label",_T_label_name); 
+  } 
+  if ( _ps->findBlock("abskg")){ 
+    _ps->findBlock("abskg")->getAttribute("label", _abskg_label_name); 
+  } else { 
+    throw ProblemSetupException("Error: RMCRT - The absorption coefficient is not defined.",__FILE__,__LINE__);
+  }
 
   //__________________________________
   //  Bulletproofing:
@@ -136,28 +140,6 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
       _whichAlgo = coarseLevel;
     }
   }
-
-  //__________________________________
-  //for particles: 
-//  _ps->getWithDefault( "abskp_label",        _abskp_label_name, "abskp" ); 
-  _ps->getWithDefault( "psize_label",        _size_label_name,  "length");
-  _ps->getWithDefault( "ptemperature_label", _pT_label_name,    "temperature"); 
-  
-  //get the number of quadrature nodes and store it locally 
-  _nQn_part = 0;
-  if ( _ps->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM") ){
-    _ps->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->require( "number_quad_nodes", _nQn_part ); 
-  }
-
-  //__________________________________
-  //  
-  _prop_calculator = scinew RadPropertyCalculator();
-  _using_prop_calculator = _prop_calculator->problemSetup( rmcrt_ps ); 
-
-  if ( !_using_prop_calculator ){ 
-    throw ProblemSetupException("Error: No valid property calculator found.",__FILE__, __LINE__);
-  }
-
 }
 
 //______________________________________________________________________
@@ -165,24 +147,26 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
 //  so the reaction models can create the  VarLabel
 //______________________________________________________________________
 void 
-RMCRT_Radiation::extraSetup( GridP& grid, const ProblemSpecP& db )
+RMCRT_Radiation::extraSetup( GridP& grid )
 { 
 
   // determing the temperature label
-  _tempLabel = _labels->getVarlabelByRole(ArchesLabel::TEMPERATURE);
-  proc0cout << "RMCRT: temperature label name: " << _tempLabel->getName()
-            << "   abskg label name:       " << _prop_calculator->get_abskg_name() << endl;
+  //_tempLabel = _labels->getVarlabelByRole(ArchesLabel::TEMPERATURE);
+  _tempLabel = VarLabel::find(_T_label_name); 
+  proc0cout << "RMCRT: temperature label name: " << _tempLabel->getName() << endl;
 
   if ( _tempLabel == 0 ){ 
     throw ProblemSetupException("Error: No temperature label found.",__FILE__,__LINE__); 
   } 
+
+  _abskg_label = VarLabel::find(_abskg_label_name); 
+  if ( _abskg_label == 0){
+    throw InvalidValue("Error: For RMCRT Radiation source term -- Could not find the abskg label.", __FILE__, __LINE__);
+  }
   
   // create RMCRT and register the labels
-  _RMCRT = scinew Ray();
-
   _RMCRT->registerVarLabels(_matl, 
-                            _prop_calculator->get_abskg_label(),
-                            _absorpLabel,
+                            _abskg_label,
                             _tempLabel,
                             _cellTypeLabel, 
                             _src_label);
@@ -266,9 +250,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     Task::WhichDW temp_dw = Task::OldDW;
     
     // modify Radiative properties on the finest level
-    // compute Radiative properties and sigmaT4 on the finest level
-    sched_radProperties( fineLevel, sched, timeSubStep );
-    
+    // compute sigmaT4 on the finest level
     _RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, _radiation_calc_freq, includeExtraCells );
  
     _RMCRT->sched_setBoundaryConditions( fineLevel, sched, temp_dw, _radiation_calc_freq );
@@ -306,8 +288,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     const LevelP& fineLevel = grid->getLevel(_archesLevelIndex);
     Task::WhichDW temp_dw = Task::OldDW;
    
-    // compute Radiative properties and sigmaT4 on the finest level
-    sched_radProperties( fineLevel, sched, timeSubStep );
+    // compute sigmaT4 on the finest level
     _RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, _radiation_calc_freq, includeExtraCells );
     
     for (int l = 0; l < maxLevels; l++) {
@@ -335,207 +316,6 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
       const PatchSet* patches = level->eachPatch();
       _RMCRT->sched_Refine_Q (sched,  patches, _matlSet, _radiation_calc_freq);
     }
-  }
-}
-
-
-//---------------------------------------------------------------------------
-// Method: Wrapper to RadPropertyCalculator 
-//---------------------------------------------------------------------------
-void
-RMCRT_Radiation::sched_radProperties( const LevelP& level, 
-                                      SchedulerP& sched, 
-                                      const int time_sub_step )
-{
-  Task* tsk = scinew Task( "RMCRT_Radiation::radProperties", this, 
-                           &RMCRT_Radiation::radProperties, time_sub_step ); 
-                           
-  printSchedule(level,dbg, "RMCRT_Radiation::sched_radProperties");
-  std::vector<std::string> part_sp = _prop_calculator->get_participating_sp(); 
-
-  if ( time_sub_step == 0 ) { 
-    tsk->computes( _prop_calculator->get_abskg_label());
-    tsk->computes( _prop_calculator->get_abskp_label()); 
-    tsk->requires( Task::OldDW, _tempLabel, Ghost::None, 0 ); 
-    //gas
-    for ( std::vector<std::string>::iterator iter = part_sp.begin(); iter != part_sp.end(); iter++){
-
-      const VarLabel* label = VarLabel::find(*iter);
-      _species_varlabels.push_back(label); 
-
-      if ( label != 0 ){ 
-        tsk->requires( Task::OldDW, label, Ghost::None, 0 ); 
-      } else { 
-        throw ProblemSetupException("Error: Could not match species with varlabel: "+*iter,__FILE__, __LINE__);
-      }
-    }
-      
-    tsk->requires( Task::OldDW, _labels->d_volFractionLabel, Ghost::None, 0 ); 
-
-    //particles
-    for ( int i = 0; i < _nQn_part; i++ ){ 
-
-      //--size--
-      std::string label_name = _size_label_name + "_qn"; 
-      std::stringstream out; 
-      out << i; 
-      label_name += out.str(); 
-
-      const VarLabel* sizelabel = VarLabel::find( label_name ); 
-      _size_varlabels.push_back( sizelabel ); 
-
-      if ( sizelabel != 0 ){ 
-        tsk->requires( Task::OldDW, sizelabel, Ghost::None, 0 ); 
-      } else { 
-        throw ProblemSetupException("Error: Could not find particle size quadrature node: " + label_name, __FILE__, __LINE__);
-      }
-
-      //--temperature--
-      label_name = _pT_label_name + "_qn"; 
-      label_name += out.str(); 
-
-      const VarLabel* tlabel = VarLabel::find( label_name ); 
-      _T_varlabels.push_back( tlabel ); 
-
-      if ( tlabel != 0 ){ 
-        tsk->requires( Task::OldDW, tlabel, Ghost::None, 0 ); 
-      } else { 
-        throw ProblemSetupException("Error: Could not find particle temperature quadrature node: " + label_name , __FILE__, __LINE__);
-      }
-
-      //--weight--
-      label_name = "w_qn"+out.str(); 
-      const VarLabel* wlabel = VarLabel::find( label_name ); 
-      _w_varlabels.push_back( wlabel ); 
-
-      if ( wlabel != 0 ){ 
-        tsk->requires( Task::OldDW, wlabel, Ghost::None, 0 ); 
-      } else { 
-        throw ProblemSetupException("Error: Could not find particle weight quadrature node: w_qn"+out.str() , __FILE__, __LINE__);
-      }
-    } 
-  } else {  
-    tsk->modifies( _prop_calculator->get_abskg_label());
-    tsk->modifies( _prop_calculator->get_abskp_label() ); 
-    tsk->requires( Task::NewDW, _tempLabel, Ghost::None, 0 ); 
-    tsk->requires( Task::NewDW, _labels->d_volFractionLabel, Ghost::None, 0 ); 
-
-    for ( std::vector<const VarLabel*>::iterator iter = _species_varlabels.begin();  iter != _species_varlabels.end(); iter++ ){ 
-      tsk->requires( Task::NewDW, *iter, Ghost::None, 0 ); 
-    } 
-    for ( int i = 0; i < _nQn_part; i++ ){ 
-
-      //--size--
-      tsk->requires( Task::NewDW, _size_varlabels[i], Ghost::None, 0 ); 
-
-      //--temperature--
-      tsk->requires( Task::NewDW, _T_varlabels[i], Ghost::None, 0 ); 
-
-      //--weight--
-      tsk->requires( Task::NewDW, _w_varlabels[i], Ghost::None, 0 ); 
-
-    } 
-  }
-  
-  sched->addTask( tsk, level->eachPatch(), _matlSet ); 
-}
-
-//______________________________________________________________________
-//
-void
-RMCRT_Radiation::radProperties( const ProcessorGroup* ,
-                                const PatchSubset* patches,
-                                const MaterialSubset* matls,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw, 
-                                const int time_sub_step )
-{
-  for (int p=0; p < patches->size(); p++){
-
-    std::vector<constCCVariable<double> > species; 
-    constCCVariable<double> gas_temperature; 
-    constCCVariable<double> VolFractionBC; 
-
-    const Patch* patch = patches->get(p);
-    printTask(patches,patch,dbg,"Doing RMCRT_Radiation::radProperties");
-
-    DataWarehouse* which_dw; 
-    CCVariable<double> abskg; 
-    CCVariable<double> abskp; 
-    if ( time_sub_step == 0 ) { 
-      new_dw->allocateAndPut( abskg, _prop_calculator->get_abskg_label(), _matl, patch ); 
-      new_dw->allocateAndPut( abskp, _prop_calculator->get_abskp_label(), _matl, patch ); 
-      which_dw = old_dw; 
-    } else { 
-      new_dw->getModifiable( abskg,  _prop_calculator->get_abskg_label(),  _matl, patch );
-      new_dw->getModifiable( abskp,  _prop_calculator->get_abskp_label(),  _matl, patch );
-      which_dw = new_dw; 
-    }
-
-    which_dw->get( gas_temperature, _tempLabel, _matl, patch, Ghost::None, 0 ); 
-    which_dw->get( VolFractionBC, _labels->d_volFractionLabel, _matl, patch, Ghost::None, 0 ); 
-
-    typedef std::vector<constCCVariable<double> > CCCV; 
-    typedef std::vector<const VarLabel*> CCCVL; 
-
-    CCCV weights; 
-    CCCV size;
-    CCCV pT; 
-
-    double weights_scaling_constant=1.0;
-    double size_scaling_constant=1.0;
-
-    DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
-    string tlabelname;
-
-    //--size--
-    for ( CCCVL::iterator iter = _size_varlabels.begin(); iter != _size_varlabels.end(); iter++ ){ 
-      constCCVariable<double> var; 
-      which_dw->get( var, *iter, _matl, patch, Ghost::None, 0 ); 
-      size.push_back( var ); 
-      //to get size scaling constant
-      if(iter == _size_varlabels.begin()){
-        tlabelname = (*iter)->getName();
-        size_scaling_constant = dqmom_eqn_factory.retrieve_scalar_eqn(tlabelname).getScalingConstant();
-      } 
-
-    } 
-
-    //--temperature--
-    for ( CCCVL::iterator iter = _T_varlabels.begin(); iter != _T_varlabels.end(); iter++ ){ 
-      constCCVariable<double> var; 
-      which_dw->get( var, *iter, _matl, patch, Ghost::None, 0 ); 
-      pT.push_back( var ); 
-    } 
-
-    //--weight--
-    for ( CCCVL::iterator iter = _w_varlabels.begin(); iter != _w_varlabels.end(); iter++ ){ 
-      constCCVariable<double> var; 
-      which_dw->get( var, *iter, _matl, patch, Ghost::None, 0 ); 
-      weights.push_back( var ); 
-      //to get weight scaling constant
-      if(iter == _w_varlabels.begin()){
-        tlabelname = (*iter)->getName();
-        weights_scaling_constant = dqmom_eqn_factory.retrieve_scalar_eqn(tlabelname).getScalingConstant();
-      } 
-
-    } 
-
-    //--participating species--
-    for ( std::vector<const VarLabel*>::iterator iter = _species_varlabels.begin();  iter != _species_varlabels.end(); iter++ ){ 
-      constCCVariable<double> var; 
-      which_dw->get( var, *iter, _matl, patch, Ghost::None, 0 ); 
-      species.push_back( var ); 
-    }
-    // compute absorption (gas and particle) coefficient(s) via RadPropertyCalulator
-    if ( _prop_calculator->does_scattering() ){
-      _prop_calculator->compute( patch, VolFractionBC, species, size_scaling_constant, size, pT, 
-          weights_scaling_constant, weights, _nQn_part, gas_temperature, abskg, abskp ); 
-    } else { 
-      _prop_calculator->compute( patch, VolFractionBC, species, gas_temperature, abskg );
-    } 
-    _prop_calculator->sum_abs( abskg, abskp, patch ); 
-    // abskg boundary conditions are set in setBoundaryCondition()
   }
 }
 
@@ -574,9 +354,6 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
     //__________________________________
     //  all levels
     tsk->computes( _sigmaT4Label );
-    tsk->computes( _prop_calculator->get_abskg_label() );
-    tsk->computes( _absorpLabel );
-    tsk->computes( _prop_calculator->get_abskp_label() );
     
     sched->addTask(tsk, level->eachPatch(), _matlSet);
   }
@@ -608,16 +385,10 @@ RMCRT_Radiation::initialize( const ProcessorGroup*,
     
     //__________________________________
     // all levels
-    CCVariable<double> sigmaT4, abskg, absorp, abskp;
+    CCVariable<double> sigmaT4;
     new_dw->allocateAndPut(sigmaT4, _sigmaT4Label, _matl, patch );
-    new_dw->allocateAndPut(abskg,   _prop_calculator->get_abskg_label(),   _matl, patch );
-    new_dw->allocateAndPut(absorp,  _absorpLabel,  _matl, patch );
-    new_dw->allocateAndPut(abskp,   _prop_calculator->get_abskp_label(),   _matl, patch );
     
     sigmaT4.initialize( 0.0 );
-    abskg.initialize( 0.0 );
-    absorp.initialize( 0.0 );
-    abskp.initialize( 0.0 );
     
   }
 }

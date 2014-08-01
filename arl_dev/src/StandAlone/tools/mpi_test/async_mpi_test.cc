@@ -61,7 +61,6 @@ main(int argc, char** argv)
   char *recv_buf2;
   int myid = 99;
   int dest = 0;
-  int src = 0;
   int numprocs = 99;
   int tag = 1;
   
@@ -78,11 +77,9 @@ main(int argc, char** argv)
 
   if (myid == 0){
     dest = 1;
-    src = 0;
   }
   else {
     dest = 0;
-    src = 1;
   }
 
   send_buf = new char[message_size];

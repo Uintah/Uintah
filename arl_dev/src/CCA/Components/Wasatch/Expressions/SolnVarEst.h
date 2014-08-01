@@ -4,8 +4,7 @@
 //-- ExprLib Includes --//
 #include <expression/Expression.h>
 
-#include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
+#include <spatialops/structured/FVStaggered.h>
 
 
 /**
@@ -25,7 +24,7 @@ template< typename FieldT >
 class SolnVarEst 
   : public Expr::Expression<FieldT>
 {  
-  typedef SpatialOps::structured::SingleValueField TimeField;
+  typedef SpatialOps::SingleValueField TimeField;
 
   const FieldT *solnVarOld_, *solnVarRHS_;
 
@@ -48,11 +47,10 @@ public:
     /**
      *  \brief Constructs a builder for the solution variable estimation
      *
-     *  \param the solnVarOldTag a tag for solution variable at the current RK stage
-     *
-     *  \param the solnVarRHSTag a tag for the right hand side of solution variable
+     *  \param result the tag for the solution variable estimate
+     *  \param solnVarOldTag a tag for solution variable at the current RK stage
+     *  \param solnVarRHSTag a tag for the right hand side of solution variable
      *         transport equation at the current RK stage
-     *
      *  \param timeStepTag a tag for the time step at the current RK stage
      *
      */

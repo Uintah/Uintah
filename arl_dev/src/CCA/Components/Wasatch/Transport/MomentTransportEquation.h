@@ -80,13 +80,15 @@ namespace Wasatch{
   public:
     /**
      *  \brief Construct a MomentTransportEquation
-     *  \param basePhiName This equation will be created n-times where n is a user
+     *  \param thisPhiName This equation will be created n-times where n is a user
      *         specified number in the input file. The basePhiName refers to the
      *         base name of the solution variable. The n-equations that are created
      *         will correspond to basePhiName0, basePhiName1, etc...
-     *  \param thisPhiName The name of the solution variable for this ScalarTransportEquation
-     *  \param id The Expr::ExpressionID for the RHS expression for this ScalarTransportEquation
-     *
+     *  \param gc
+     *  \param momentOrder
+     *  \param isConstDensity
+     *  \param params
+     *  \param initialMoment
      */
     MomentTransportEquation( const std::string thisPhiName,
                              GraphCategories& gc,

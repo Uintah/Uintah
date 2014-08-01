@@ -89,6 +89,7 @@ echo   "------------------------------------------------------------------"
 run "cd $BASE_BUILD_DIR/Wasatch3P"
 run "mkdir -p src"
 run "mkdir -p install"
+run "rm -rf install/*"
 
 ############################################################################
 # SpatialOps
@@ -120,6 +121,7 @@ run \
   $CUDA \
   -DENABLE_TESTS=OFF \
   -DENABLE_THREADS=OFF \
+  -DENABLE_EXAMPLES=OFF \
   $BOOST_FLAGS \
   -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
   -DCMAKE_CXX_FLAGS="-fPIC" \

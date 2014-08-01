@@ -99,7 +99,10 @@ SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
   // Default mapping...
   dwmap[Task::OldDW] = 0;
   dwmap[Task::NewDW] = 1;
+
   d_isInitTimestep = false;
+  d_isRestartInitTimestep = false;
+
   m_locallyComputedPatchVarMap = scinew LocallyComputedPatchVarMap;
   reloc_new_posLabel_ = 0;
 

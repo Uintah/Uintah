@@ -58,17 +58,38 @@
 
     <!-- Spec for basic expression types -->
     <BasicExpression      spec="MULTIPLE NO_DATA"
-                            attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL'"
-                            children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,
-                                       SineFunction,GaussianFunction,DoubleTanhFunction,
-                                       StepFunction,SineTime,ExprAlgebra,
-                                       WallDistanceFunction,ReadFromFile,RandomField,
-                                       ExponentialVortex,LambsDipole,TimeDerivative,
-                                       RayleighTaylor, BurnsChristonAbskg, GeometryBased)" >
+                          attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL,PARTICLE'"
+													children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,
+																		 SineFunction,GaussianFunction,DoubleTanhFunction,
+																		 StepFunction,SineTime,ExprAlgebra,
+																		 WallDistanceFunction,ReadFromFile,RandomField,
+																		 ExponentialVortex,LambsDipole,TimeDerivative,
+																		 RayleighTaylor, BurnsChristonAbskg, GeometryBased, ParticlePositionIC)" >
                                        
       <TaskList           spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag            spec="REQUIRED" />
       <Constant           spec="OPTIONAL DOUBLE" />
+
+
+			<ParticlePositionIC spec="OPTIONAL NO_DATA"
+													attribute1="coordinate REQUIRED STRING 'X,Y,Z'"
+													attribute2="bounds REQUIRED STRING 'SPECIFIED, PATCHBASED'"
+													children1="ONE_OF(CHILD Uniform,Random, Geometry)">
+				<Bounds spec="OPTIONAL NO_DATA" need_applies_to="bounds SPECIFIED"
+							  attribute1="low REQUIRED DOUBLE"
+							  attribute2="high REQUIRED DOUBLE"/>													
+				<Uniform spec="OPTIONAL NO_DATA"
+								 attribute1="transversedir OPTIONAL BOOLEAN">        
+				</Uniform>
+				<Random spec="OPTIONAL NO_DATA"
+								attribute1="seed REQUIRED INTEGER"/>
+				
+			<Geometry      spec="OPTIONAL NO_DATA"
+													attribute1="seed REQUIRED INTEGER"> <!-- this is the outside value -->
+					<geom_object  spec="MULTIPLE"/>
+			</Geometry>
+
+			</ParticlePositionIC>
 
 			<!-- provides a way to initialize a field using geometry primitives -->
 			<GeometryBased      spec="OPTIONAL NO_DATA"
@@ -171,7 +192,7 @@
                        attribute2="high REQUIRED DOUBLE"
                        attribute3="seed REQUIRED DOUBLE">
       </RandomField>
-      
+            
       <!-- Creates an exponential vortex for testing outflow boundary conditions!-->
       <ExponentialVortex  spec="OPTIONAL NO_DATA"
                           attribute1="x0 REQUIRED DOUBLE"
@@ -566,6 +587,24 @@
          the Arches time integration scheme !-->
     <TimeIntegrator     spec="OPTIONAL STRING 'RK3SSP, RK2SSP, FE'" />
 
+		<!-- The CommonGeometry block allows one to define geometries that can be reused in
+					other parts of the input file and the code. For example, when initializing
+					particle position so that particles fill a certain shape, we need three basic
+					expressions for the particle positions as well as a specification of the geometry
+					that these basic expressions use. To accomplish this nicely, one can define the
+					geometry in this CommonGeometry block and simply reference it in the particle
+					position initialization expressions. The common geometry block can also be referenced
+					in the <EmbeddedGeometry> spec. Information defined in the CommonGeometry block
+					does NOT propagate into scalar and momentum transport.  -->
+    <CommonGeometry  spec="OPTIONAL NO_DATA">
+    	<geom_object  spec="MULTIPLE"/>
+    </CommonGeometry>
+
+		<!-- The EmbeddedGeometry block specifies the physical geometry (or solids) that will
+					be embedded inside the domain. When the EmbeddedGeometry block is specified, 
+					information about this geometry is propagated throughout all transport equations.
+					The EmbeddedGeometry block can reference geometry defined in the CommonGeometry
+					block. -->
     <EmbeddedGeometry  spec="OPTIONAL NO_DATA"
                        children1="ONE_OF(CHILD Intrusion, GeometryExpression, External)" >
        <Inverted       spec="OPTIONAL NO_DATA"/>
@@ -774,25 +813,6 @@
       <scalar  spec="REQUIRED STRING"/>
     </VariableDensityMMS>
 
-    <VarDenCorrugatedMMS  spec="OPTIONAL NO_DATA"
-                          attribute1="rho0 REQUIRED DOUBLE"
-                          attribute2="rho1 REQUIRED DOUBLE"
-                          attribute3="w    REQUIRED DOUBLE"
-                          attribute4="k    REQUIRED DOUBLE"
-													attribute5="uf   REQUIRED DOUBLE"
-													attribute6="vf   REQUIRED DOUBLE"
-													attribute7="d    REQUIRED DOUBLE"
-													attribute8="a    REQUIRED DOUBLE"
-													attribute9="b    REQUIRED DOUBLE"                           
-													attribute10="x1  OPTIONAL STRING 'X, Y, Z'"
-													attribute11="x2  OPTIONAL STRING 'X, Y, Z'">
-      <DiffusionCoefficient spec="REQUIRED NO_DATA"> <!-- This creates an expression for the diffusion coefficient -->
-        <NameTag            spec="REQUIRED" />
-      </DiffusionCoefficient>
-      <Scalar           spec="REQUIRED STRING"/> <!-- The expression for the primitve scalar (e.g. f) is created by the transport equation. just specify the string name here -->      
-      <ConservedScalar  spec="REQUIRED STRING"/> <!-- The conserved scalar is created by the transport equation. just Specify the name here -->
-    </VarDenCorrugatedMMS>
-
     <VarDenOscillatingMMS  spec="OPTIONAL NO_DATA"
                            attribute1="rho0 REQUIRED DOUBLE"
                            attribute2="rho1 REQUIRED DOUBLE"
@@ -809,6 +829,80 @@
       <Scalar           spec="REQUIRED STRING"/> <!-- input -->      
       <ConservedScalar  spec="REQUIRED STRING"/> <!-- The conserved scalar is created by the transport equation. just Specify the name here -->
     </VarDenOscillatingMMS>
+
+		<ParticleTransportEquations spec="OPTIONAL NO_DATA">
+
+			<ParticlesPerCell spec="OPTIONAL DOUBLE"/>
+			<MaximumParticles spec="OPTIONAL INTEGER"/>
+			<ParticleDensity 	spec="OPTIONAL NO_DATA"
+												attribute1="name REQUIRED STRING"
+												attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
+
+			<ParticleSize spec="OPTIONAL NO_DATA"
+										attribute1="name REQUIRED STRING"
+										attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'">
+				<SourceTerm spec="OPTIONAL NO_DATA"
+							attribute1="name REQUIRED STRING"
+							attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>										
+			</ParticleSize>
+
+			<ParticleMass spec="OPTIONAL NO_DATA"
+										attribute1="name REQUIRED STRING"
+										attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'">
+				<SourceTerm spec="OPTIONAL NO_DATA"
+							attribute1="name REQUIRED STRING"
+							attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>										
+			</ParticleMass>										
+
+			<!-- this solves dx/dt = u -->			
+			<ParticlePosition spec="REQUIRED NO_DATA"
+												attribute1="x REQUIRED STRING"
+												attribute2="y REQUIRED STRING"
+												attribute3="z REQUIRED STRING">	
+				<Velocity	spec = "REQUIRED NO_DATA">
+						<XVel spec="OPTIONAL NO_DATA"
+                  attribute1="name REQUIRED STRING"
+                  attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
+						<YVel spec="OPTIONAL NO_DATA"
+                  attribute1="name REQUIRED STRING"
+                  attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
+						<ZVel spec="OPTIONAL NO_DATA"
+                  attribute1="name REQUIRED STRING"
+                  attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>                  
+				</Velocity>
+			</ParticlePosition>
+
+			<ParticleMomentum spec="REQUIRED NO_DATA"
+												attribute1="x REQUIRED STRING"
+												attribute2="y REQUIRED STRING"
+												attribute3="z REQUIRED STRING">
+				<DisableTwoWayCoupling spec="OPTIONAL NO_DATA"/>
+				<DisableDragForce spec="OPTIONAL NO_DATA"/>
+				<!-- Specify a body force. This has units of m / s^2 and will be multiplied by the density -->
+				<Gravity              spec="MULTIPLE NO_DATA"
+															attribute1="direction REQUIRED STRING 'X,Y,Z'"/>																								      
+
+				<GasProperties spec="REQUIRED NO_DATA">
+					<GasDensity   spec="OPTIONAL NO_DATA"
+    										attribute1="name REQUIRED STRING"
+		    								attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>									
+					<GasViscosity spec="OPTIONAL NO_DATA"
+    										attribute1="name REQUIRED STRING"
+		    								attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
+					<GasVelocity	spec = "REQUIRED NO_DATA">
+							<XVel spec="OPTIONAL NO_DATA"
+										attribute1="name REQUIRED STRING"
+										attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
+							<YVel spec="OPTIONAL NO_DATA"
+										attribute1="name REQUIRED STRING"
+										attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
+							<ZVel spec="OPTIONAL NO_DATA"
+										attribute1="name REQUIRED STRING"
+										attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>                  
+					</GasVelocity>												
+				</GasProperties>				
+			</ParticleMomentum>												
+		</ParticleTransportEquations>
 
     <MomentumEquations        spec="OPTIONAL NO_DATA">
       <DisableTurbulenceModel spec="OPTIONAL NO_DATA" />    

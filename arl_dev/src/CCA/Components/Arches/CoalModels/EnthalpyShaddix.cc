@@ -673,7 +673,8 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
         // Convection part: -----------------------
 
         // Reynolds number
-        Re = std::abs(gas_velocity.length() - particle_velocity.length())*unscaled_length*density/visc;
+        double delta_V =sqrt(pow(gas_velocity.x() - particle_velocity.x(),2.0) + pow(gas_velocity.y() - particle_velocity.y(),2.0)+pow(gas_velocity.z() - particle_velocity.z(),2.0));
+        Re = delta_V*unscaled_length*density/visc;
 
         // Nusselt number
         Nu = 2.0 + 0.65*pow(Re,0.50)*pow(Pr,(1.0/3.0)); 

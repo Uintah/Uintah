@@ -23,6 +23,8 @@
  */
 
 #include <boost/foreach.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/interprocess/sync/scoped_lock.hpp>
 
 //-- SpatialOps library includes --//
 #include <spatialops/OperatorDatabase.h>
@@ -55,6 +57,8 @@
 #include <CCA/Components/Wasatch/Expressions/RadiationSource.h>
 #include <CCA/Components/Wasatch/ReductionHelper.h>
 #include <CCA/Components/Wasatch/CoordinateHelper.h>
+#include <CCA/Components/Wasatch/ParticlesHelper.h>
+#include <CCA/Components/Wasatch/WasatchParticlesHelper.h>
 #include <CCA/Components/Wasatch/OldVariable.h>
 
 #include <stdexcept>
@@ -133,7 +137,72 @@ namespace Wasatch{
                   Uintah::DataWarehouse* const,
                   Uintah::DataWarehouse* const,
                   void* stream,  // for GPU tasks, this is the associated stream
+                  int deviceID,
                   const int rkStage );
+
+# ifdef HAVE_CUDA
+
+    /**
+     *  \class GPULoadBalancer
+     *  \ingroup WasatchGraph
+     *  \brief Handles the selection and assignment of GPU device index for a given task.
+     *
+     *     - Supports selection and assignment of device for on-node multi-GPU system
+     *     - Used for assigning device indices for heterogeneous CPU-GPU tasks.
+     *     - Works with an assumption that all the GPUs have the same computational resources.
+     */
+
+    class GPULoadBalancer
+    {
+      int gpuDeviceID_;    ///< current asssigned GPU
+      int gpuDeviceCount_; ///< total available GPUs
+
+      GPULoadBalancer() :
+        gpuDeviceID_(0),
+        gpuDeviceCount_(0)
+      {
+        ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+        gpuDeviceCount_ = CDI.get_device_count();
+      }
+
+      ~GPULoadBalancer(){}
+
+      inline static GPULoadBalancer& self()
+      {
+        static GPULoadBalancer gpulb;
+        return gpulb;
+      }
+
+    public:
+
+      /** \brief returns the device Index */
+      inline static int get_device_index(){
+        GPULoadBalancer& gpulb = GPULoadBalancer::self();
+        gpulb.gpuDeviceID_ = (++gpulb.gpuDeviceID_) % gpulb.gpuDeviceCount_;
+        return gpulb.gpuDeviceID_;
+      }
+    };
+
+# endif
+
+    /**
+     *  \class ExecMutex
+     *  \brief Scoped lock.
+     */
+    class ExecMutex
+    {
+#   ifdef ENABLE_THREADS
+      const boost::mutex::scoped_lock lock;
+      inline boost::mutex& get_mutex() const{ static boost::mutex m; return m; }
+    public:
+      ExecMutex() : lock( get_mutex() ) {}
+      ~ExecMutex() {}
+#   else
+    public:
+      ExecMutex(){}
+      ~ExecMutex(){}
+#   endif
+    };
 
   public:
 
@@ -146,7 +215,10 @@ namespace Wasatch{
      *  \param materials - the list of materials that this task is to be associated with.
      *  \param info	- the PatchInfoMap object that holds patch-specific information (like operators).
      *  \param rkStage - the stage of the RK integrator that this is associated with
+     *  \param state
      *  \param ioFieldSet - the set of fields that are requested for IO.  This prevents these fields from being recycled internally.
+     *  \param lockAllFields if true, then all fields will be marked persistent.
+     *         Otherwise, memory will be reclaimed when possible.
      */
     TreeTaskExecute( TreeMap& treeMap,
                      const std::string taskName,
@@ -186,25 +258,26 @@ namespace Wasatch{
       fml_( scinew Expr::FieldManagerList(taskName) )
   {
     assert( treeMap.size() > 0 );
-
     hasPressureExpression_ = false;
     hasBeenScheduled_ = false;
 
     Uintah::Task* tsk = scinew Uintah::Task( taskName, this, &TreeTaskExecute::execute, rkStage );
-
     BOOST_FOREACH( TreeMap::value_type& vt, treeMap ){
 
       const int patchID = vt.first;
       TreePtr tree = vt.second;
 
 #     ifdef HAVE_CUDA
-      bool isGPUTask = tree->is_homogeneous_gpu( patchID );
+      bool isGPUTask = tree->is_homogeneous_gpu();
 
-      // Force everything to CPU for initialization & also for heterogeneous Task graph
-      // For heterogeneous graphs, ExprLib will control GPU execution.
       if( !(isGPUTask && Uintah::Parallel::usingDevice()) || (taskName == "initialization") ) {
-        tree->turn_off_gpu_runnable( patchID );
+        // Force everything to CPU for initialization & also for heterogeneous tasks.
+        // For heterogeneous graphs, ExprLib will control GPU execution.
+        tree->turn_off_gpu_runnable();
         isGPUTask = false;
+
+        // Get the best device available
+        tree->set_device_index( GPULoadBalancer::get_device_index(), *fml_ );
       }
 
       // Flag the task as Uintah GPU::Task, if it is homogeneous GPU graph
@@ -217,7 +290,6 @@ namespace Wasatch{
         if( tree->computes_field( pressure_tag() ) )
           hasPressureExpression_ = true;
       }
-
       tree->register_fields( *fml_ );
 
       BOOST_FOREACH( const std::string& iof, ioFieldSet ){
@@ -241,8 +313,9 @@ namespace Wasatch{
       if (lockAllFields) tree->lock_fields(*fml_);
 
 #     ifdef HAVE_CUDA
-      // For a heterogenous task, restore the GPU runnable property for the expressions.
-      if( taskName != "initialization" && !isGPUTask){
+      // For Heterogeneous case only
+      if( taskName != "initialization" && !isGPUTask ){
+        // For a heterogenous task, restore the GPU runnable property for the expressions.
         tree->restore_gpu_runnable();
       }
 #     endif
@@ -281,6 +354,7 @@ namespace Wasatch{
    *  \param patches - the patches to associate with this task
    *  \param materials - the materials to associate with this task
    *  \param newDWFields - any fields specified in this TagSet will be taken from the new DataWarehouse instead of the old DataWarehouse.
+   *  \param rkStage - the current Runge-Kutta stage
    *
    *  This function analyzes the ExpressionTree to identify what
    *  fields are required for this task, and then advertises them to
@@ -330,6 +404,17 @@ namespace Wasatch{
 
         Expr::UintahFieldAllocInfo& fieldInfo = *(ii->second);
         const Expr::Tag& fieldTag = ii->first;
+
+        // look for particle variables that are managed by uintah
+        if (tree.name()!="initialization") {
+          if (fieldInfo.varlabel->typeDescription()->getType() == Uintah::TypeDescription::ParticleVariable) {
+            if (tree.is_persistent(fieldTag)) {
+              // if a particle variable is managed by uintah, then pass it on to the particles helper
+              // for use in relocation
+              Uintah::ParticlesHelper::add_particle_variable(fieldTag.name());
+            }
+          }
+        }
 
         dbg_fields << "examining field: " << fieldTag << " for stage " << rkStage << std::endl;
 
@@ -388,14 +473,6 @@ namespace Wasatch{
           if( newDWFields.find( fieldTag ) != newDWFields.end() )
             fieldInfo.useOldDataWarehouse = false;
         }
-        if( tree.name()!="set_time" &&
-            tree.name()!="initialization" &&
-            (fieldInfo.varlabel->getName()=="time"     ||
-             fieldInfo.varlabel->getName()=="dt"       ||
-             fieldInfo.varlabel->getName()=="timestep" ||
-             fieldInfo.varlabel->getName()=="rkstage") ){
-          fieldInfo.mode = Expr::REQUIRES;
-        }
 
 #       ifdef WASATCH_IN_ARCHES
         // this was needed for Warches. When adding a placeholder expression with STATE_N,
@@ -412,9 +489,9 @@ namespace Wasatch{
         case Expr::COMPUTES:
           dbg_fields << std::setw(10) << "COMPUTES";
           ASSERT( dw == Uintah::Task::NewDW );
-          task.computesWithScratchGhost( fieldInfo.varlabel,
-                                         materials, Uintah::Task::NormalDomain,
-                                         fieldInfo.ghostType, fieldInfo.nghost );
+              task.computesWithScratchGhost( fieldInfo.varlabel,
+                                            materials, Uintah::Task::NormalDomain,
+                                            fieldInfo.ghostType, fieldInfo.nghost );
 
           break;
 
@@ -530,6 +607,7 @@ namespace Wasatch{
                             Uintah::DataWarehouse* const oldDW,
                             Uintah::DataWarehouse* const newDW,
                             void* stream,
+                            int deviceID,
                             const int rkStage )
   {
     //
@@ -540,109 +618,117 @@ namespace Wasatch{
     //       Otherwise we would have binding clashes between different
     //       threads.
     //
-    if( event == Uintah::Task::CPU || event == Uintah::Task::GPU ){
-      // preventing postGPU / preGPU callbacks to execute the tree again
-    for( int ip=0; ip<patches->size(); ++ip ){
 
-      const Uintah::Patch* const patch = patches->get(ip);
-      const int patchID = patch->getID();
-      PatchTreeTaskMap::iterator iptm = patchTreeMap_.find(patchID);
-      ASSERT( iptm != patchTreeMap_.end() );
-      const TreePtr tree = iptm->second.tree;
+    ExecMutex lock; // thread-safe
+
+    if( event == Uintah::Task::CPU || event == Uintah::Task::GPU ){
 
       bool isGPUTask = false;
-  #   ifdef HAVE_CUDA
-      // set the stream for the Tree and the underlying expressions
-      if( event == Uintah::Task::GPU ) {
-        dbg_tasks << endl
-                  << "Executing -  Wasatch as Homogeneous GPU Task : " << taskName_
-                  << " for patch : " << patch->getID()
-                  << endl;
-        isGPUTask = true;
-        tree->set_cuda_stream( *(cudaStream_t*)stream );
-      }
-#     endif
 
-      Expr::ExpressionFactory& factory = tree->get_expression_factory();
-      const SpatialOps::OperatorDatabase& opdb = *iptm->second.operators;
+      // preventing postGPU / preGPU callbacks to execute the tree again
+      for( int ip=0; ip<patches->size(); ++ip ){
 
-      for( int im=0; im<materials->size(); ++im ){
+        const Uintah::Patch* const patch = patches->get(ip);
+        const int patchID = patch->getID();
+        PatchTreeTaskMap::iterator iptm = patchTreeMap_.find(patchID);
+        ASSERT( iptm != patchTreeMap_.end() );
+        const TreePtr tree = iptm->second.tree;
 
-        const int material = materials->get(im);
-        try{
+#       ifdef HAVE_CUDA
+        if( event == Uintah::Task::GPU ){ // homogeneous GPU task
+          isGPUTask = true;
           dbg_tasks << endl
-                    << "Wasatch: executing graph '" << taskName_
-                    << "' for patch " << patch->getID()
-                    << " and material " << material
-                    << endl;
-          if( dbg_tasks_on ) fml_->dump_fields(std::cout);
+              << "Executing -  Wasatch as Homogeneous GPU Task : " << taskName_
+              << " for patch : " << patch->getID()
+              << endl;
 
-          fml_->allocate_fields( AllocInfo( oldDW, newDW, material, patch, pg, isGPUTask ) );
+          // set the device index passed from Uintah to the Expression tree
+          // Currently it is not yet fixed as the callback is not providing deviceID
+          tree->set_device_index( deviceID, *fml_);
+        }
+#       endif
 
-          if( hasPressureExpression_ ){
-            Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( pressure_tag(), patchID, true ) );
-            pexpr.set_patch(patches->get(ip));
-            pexpr.set_RKStage(rkStage);
-            pexpr.bind_uintah_vars( newDW, patch, material, rkStage );
-          }
+        Expr::ExpressionFactory& factory = tree->get_expression_factory();
+        const SpatialOps::OperatorDatabase& opdb = *iptm->second.operators;
 
-          Expr::Tag ptag;
-          BOOST_FOREACH( const Expr::Tag& ptag, PoissonExpression::poissonTagList ){
-            if (tree->computes_field( ptag )) {
-              PoissonExpression& pexpr = dynamic_cast<PoissonExpression&>( factory.retrieve_expression( ptag, patchID, true ) );
+        for( int im=0; im<materials->size(); ++im ){
+
+          const int material = materials->get(im);
+          try{
+            dbg_tasks << endl
+                << "Wasatch: executing graph '" << taskName_
+                << "' for patch " << patch->getID()
+                << " and material " << material
+                << endl;
+            if( dbg_tasks_on ) fml_->dump_fields(std::cout);
+
+            AllocInfo ainfo( oldDW, newDW, material, patch, pg, isGPUTask );
+            fml_->allocate_fields( ainfo );
+
+            if( hasPressureExpression_ ){
+              Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( pressure_tag(), patchID, true ) );
               pexpr.set_patch(patches->get(ip));
               pexpr.set_RKStage(rkStage);
+              pexpr.bind_uintah_vars( newDW, patch, material, rkStage );
             }
+
+            Expr::Tag ptag;
+            BOOST_FOREACH( const Expr::Tag& ptag, PoissonExpression::poissonTagList ){
+              if (tree->computes_field( ptag )) {
+                PoissonExpression& pexpr = dynamic_cast<PoissonExpression&>( factory.retrieve_expression( ptag, patchID, true ) );
+                pexpr.set_patch(patches->get(ip));
+                pexpr.set_RKStage(rkStage);
+              }
+            }
+
+            // Pass patch information to the coordinate expressions
+            typedef std::map<Expr::Tag, std::string> CoordMapT;
+            // OldVariable& oldVar = OldVariable::self();
+            BOOST_FOREACH( const CoordMapT::value_type& coordPair, CoordinateNames::coordinate_map() ){
+              const Expr::Tag& coordTag = coordPair.first;
+              const std::string& coordFieldT = coordPair.second;
+
+              if( ! tree->computes_field(coordTag) ) continue;
+
+              if( coordFieldT == "SVOL"){
+                Coordinates<SVolField>& coordExpr = dynamic_cast<Coordinates<SVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
+                coordExpr.set_patch(patches->get(ip));
+                // In case we want to copy coordinates instead of recomputing them, uncomment the following line
+                // oldVar.add_variable<SVolField>( ADVANCE_SOLUTION, coordTag, true);
+              }
+              else if( coordFieldT == "XVOL" ){
+                Coordinates<XVolField>& coordExpr = dynamic_cast<Coordinates<XVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
+                coordExpr.set_patch(patches->get(ip));
+                // In case we want to copy coordinates instead of recomputing them, uncomment the following line
+                // oldVar.add_variable<XVolField>( ADVANCE_SOLUTION, coordTag, true);
+              }
+              else if( coordFieldT == "YVOL" ){
+                Coordinates<YVolField>& coordExpr = dynamic_cast<Coordinates<YVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
+                coordExpr.set_patch(patches->get(ip));
+                // In case we want to copy coordinates instead of recomputing them, uncomment the following line
+                // oldVar.add_variable<YVolField>( ADVANCE_SOLUTION, coordTag, true);
+              }
+              else if( coordFieldT == "ZVOL" ){
+                Coordinates<ZVolField>& coordExpr = dynamic_cast<Coordinates<ZVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
+                coordExpr.set_patch(patches->get(ip));
+                // In case we want to copy coordinates instead of recomputing them, uncomment the following line
+                // oldVar.add_variable<ZVolField>( ADVANCE_SOLUTION, coordTag, true);
+              }
+            }
+
+            tree->bind_fields( *fml_ );
+            tree->bind_operators( opdb );
+            tree->execute_tree();
+
+            dbg_tasks << "Wasatch: done executing graph '" << taskName_ << "'" << endl;
+            fml_->deallocate_fields();
           }
-
-          // Pass patch information to the coordinate expressions
-          typedef std::map<Expr::Tag, std::string> CoordMapT;
-          // OldVariable& oldVar = OldVariable::self();
-          BOOST_FOREACH( const CoordMapT::value_type& coordPair, CoordinateNames::coordinate_map() ){
-            const Expr::Tag& coordTag = coordPair.first;
-            const std::string& coordFieldT = coordPair.second;
-
-            if( ! tree->computes_field(coordTag) ) continue;
-
-            if( coordFieldT == "SVOL"){
-              Coordinates<SVolField>& coordExpr = dynamic_cast<Coordinates<SVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
-              coordExpr.set_patch(patches->get(ip));
-              // In case we want to copy coordinates instead of recomputing them, uncomment the following line
-              // oldVar.add_variable<SVolField>( ADVANCE_SOLUTION, coordTag, true);
-            }
-            else if( coordFieldT == "XVOL" ){
-              Coordinates<XVolField>& coordExpr = dynamic_cast<Coordinates<XVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
-              coordExpr.set_patch(patches->get(ip));
-              // In case we want to copy coordinates instead of recomputing them, uncomment the following line
-              // oldVar.add_variable<XVolField>( ADVANCE_SOLUTION, coordTag, true);
-            }
-            else if( coordFieldT == "YVOL" ){
-              Coordinates<YVolField>& coordExpr = dynamic_cast<Coordinates<YVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
-              coordExpr.set_patch(patches->get(ip));
-              // In case we want to copy coordinates instead of recomputing them, uncomment the following line
-              // oldVar.add_variable<YVolField>( ADVANCE_SOLUTION, coordTag, true);
-            }
-            else if( coordFieldT == "ZVOL" ){
-              Coordinates<ZVolField>& coordExpr = dynamic_cast<Coordinates<ZVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
-              coordExpr.set_patch(patches->get(ip));
-              // In case we want to copy coordinates instead of recomputing them, uncomment the following line
-              // oldVar.add_variable<ZVolField>( ADVANCE_SOLUTION, coordTag, true);
-            }
+          catch( std::exception& e ){
+            proc0cout << e.what() << endl;
+            throw std::runtime_error( "Error" );
           }
-
-          tree->bind_fields( *fml_ );
-          tree->bind_operators( opdb );
-          tree->execute_tree();
-
-          dbg_tasks << "Wasatch: done executing graph '" << taskName_ << "'" << endl;
-          fml_->deallocate_fields();
-        }
-        catch( std::exception& e ){
-          proc0cout << e.what() << endl;
-          throw std::runtime_error( "Error" );
         }
       }
-    }
     } // event : GPU, CPU
   }
 

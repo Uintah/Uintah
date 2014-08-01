@@ -34,9 +34,9 @@ class TurbulentViscosity
   const Expr::Tag strTsrSqTag_, waleTsrMagTag_, vremanTsrMagTag_, dynCoefTag_, rhoTag_;
 
   // gradient operators are only here to extract spacing information out of them
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SVolField >::type GradXT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SVolField >::type GradYT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SVolField >::type GradZT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SVolField >::type GradXT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SVolField >::type GradYT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SVolField >::type GradZT;
   
   typedef Wasatch::OpTypes<SVolField>::BoundaryExtrapolant ExOpT;
   

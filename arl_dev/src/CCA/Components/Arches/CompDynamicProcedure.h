@@ -81,7 +81,7 @@ public:
   virtual void problemSetup(const ProblemSpecP& db);
 
   virtual void sched_reComputeTurbSubmodel(SchedulerP&, 
-                                           const PatchSet* patches,
+                                           const LevelP& level,
                                            const MaterialSet* matls,
                                            const TimeIntegratorLabel* timelabels);
 

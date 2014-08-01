@@ -24,8 +24,6 @@
 
 #ifndef MultiEnvMixingModel_Expr_h
 #define MultiEnvMixingModel_Expr_h
-#include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
 
 #include <expression/Expression.h>
 

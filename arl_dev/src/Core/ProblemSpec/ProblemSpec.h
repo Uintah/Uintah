@@ -286,20 +286,20 @@ WARNING
       ProblemSpecP getRootNode();
 
       //////////
-      // append a node with given value (of varied types) to this node
-      ProblemSpecP appendElement(const char* name, const std::string& val);
-      ProblemSpecP appendElement(const char* name, const char* value);
-      ProblemSpecP appendElement(const char* name, int value);
-      ProblemSpecP appendElement(const char* name, long value);
-      ProblemSpecP appendElement(const char* name, const IntVector& value);
-      ProblemSpecP appendElement(const char* name, const Point& value);
-      ProblemSpecP appendElement(const char* name, const Vector& value);
-      ProblemSpecP appendElement(const char* name, double value);
-      ProblemSpecP appendElement(const char* name, const std::vector<double>& va);
-      ProblemSpecP appendElement(const char* name, const std::vector<int>& val);
-      ProblemSpecP appendElement(const char* name, 
-                                 const std::vector<std::string>& val);
-      ProblemSpecP appendElement(const char* name, bool value);
+      // Append a node with given value (of varied types) to this node.
+      ProblemSpecP appendElement( const char* name, bool                             value);
+      ProblemSpecP appendElement( const char* name, const char *                     value );
+      ProblemSpecP appendElement( const char* name, const IntVector &                value );
+      ProblemSpecP appendElement( const char* name, const Point &                    value );
+      ProblemSpecP appendElement( const char* name, const std::string &              value );
+      ProblemSpecP appendElement( const char* name, const std::vector<double> &      value );
+      ProblemSpecP appendElement( const char* name, const std::vector<int> &         value );
+      ProblemSpecP appendElement( const char* name, const std::vector<std::string> & value );
+      ProblemSpecP appendElement( const char* name, const Vector &                   value );
+      ProblemSpecP appendElement( const char* name, double                           value );
+      ProblemSpecP appendElement( const char* name, int                              value );
+      ProblemSpecP appendElement( const char* name, long                             value );
+      ProblemSpecP appendElement( const char* name, unsigned int                     value );
 
       //////////
       // Finds child node with name 'name' and passes its value back into

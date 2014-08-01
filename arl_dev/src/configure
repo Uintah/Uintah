@@ -657,7 +657,6 @@ HYPRE_LIB_FLAG
 INC_HYPRE_H
 DEF_HYPRE
 HAVE_HYPRE
-BUILD_WASATCH
 BUILD_WASATCH_IN_ARCHES
 DEF_WASATCH_IN_ARCHES
 RADPROPS_LIB_DIR_FLAG
@@ -859,9 +858,10 @@ DEF_MD
 DEF_MPM
 DEF_ICE
 DEF_ARCHES
-BUILD_MODELS_RADIATION
+BUILD_WASATCH
 BUILD_MD
 BUILD_MPM
+BUILD_MODELS_RADIATION
 BUILD_ICE
 BUILD_ARCHES
 OGL_ERR_MACRO
@@ -1015,7 +1015,13 @@ with_MallocTrace
 enable_assertion_level
 enable_scinew_line_numbers
 enable_throw_level
-enable_rath
+enable_rpath
+enable_arches
+enable_ice
+enable_mpm
+enable_md
+enable_wasatch
+enable_all_components
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1684,7 +1690,13 @@ Optional Features:
                           Have SCI malloc store the file and line that calls
                           'scinew'
 --enable-throw-level=N  Use throw level N (0-3)
---enable-rpath          Use the default runtime library search path
+--enable-rpath          Set a default runtime library search path
+--enable-arches         Turn on the Arches component - and Radiation Model.
+--enable-ice            Turn on the Ice component.
+--enable-mpm            Turn on the Mpm component.
+--enable-md             Turn on the MD component.
+--enable-wasatch        Turn on the Wasatch component.
+--enable-all-components Turn on the all components.
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -4108,18 +4120,137 @@ fi
 
 
 
-  # Check whether --enable-rath was given.
-if test "${enable_rath+set}" = set; then :
-  enableval=$enable_rath; enable_rpath="$enableval"
+  # Check whether --enable-rpath was given.
+if test "${enable_rpath+set}" = set; then :
+  enableval=$enable_rpath; enable_rpath="$enableval"
 else
   enable_rpath=${enable_rpath='yes'}
 fi
 
-  sci_arg_enable_list="$sci_arg_enable_list --enable-rath --disable-rath"
+  sci_arg_enable_list="$sci_arg_enable_list --enable-rpath --disable-rpath"
 
+
+#
+# ---- List of --enable statements for Uintah Components ----
+#
+
+
+  # Check whether --enable-arches was given.
+if test "${enable_arches+set}" = set; then :
+  enableval=$enable_arches; BUILD_ARCHES="yes"
+else
+  BUILD_ARCHES="no"
+   DEF_ARCHES="#define NO_ARCHES"
+fi
+
+  sci_arg_enable_list="$sci_arg_enable_list --enable-arches --disable-arches"
+
+
+
+  # Check whether --enable-ice was given.
+if test "${enable_ice+set}" = set; then :
+  enableval=$enable_ice; BUILD_ICE="yes"
+else
+  BUILD_ICE="no"
+   DEF_ICE="#define NO_ICE"
+fi
+
+  sci_arg_enable_list="$sci_arg_enable_list --enable-ice --disable-ice"
+
+
+
+  # Check whether --enable-mpm was given.
+if test "${enable_mpm+set}" = set; then :
+  enableval=$enable_mpm; BUILD_MPM="yes"
+else
+  BUILD_MPM="no"
+   DEF_MPM="#define NO_MPM"
+fi
+
+  sci_arg_enable_list="$sci_arg_enable_list --enable-mpm --disable-mpm"
+
+
+
+  # Check whether --enable-md was given.
+if test "${enable_md+set}" = set; then :
+  enableval=$enable_md; BUILD_MD="yes"
+else
+  BUILD_MD="no"
+   DEF_MD="#define NO_MD"
+fi
+
+  sci_arg_enable_list="$sci_arg_enable_list --enable-md --disable-md"
+
+
+
+  # Check whether --enable-wasatch was given.
+if test "${enable_wasatch+set}" = set; then :
+  enableval=$enable_wasatch; BUILD_WASATCH="yes"
+else
+  BUILD_WASATCH="no"
+   DEF_WASATCH="#define NO_WASATCH"
+fi
+
+  sci_arg_enable_list="$sci_arg_enable_list --enable-wasatch --disable-wasatch"
+
+
+
+  # Check whether --enable-all_components was given.
+if test "${enable_all_components+set}" = set; then :
+  enableval=$enable_all_components; use_all_components="yes"
+   BUILD_ARCHES="yes"
+   BUILD_ICE="yes"
+   BUILD_MPM="yes"
+   BUILD_MD="yes"
+   BUILD_WASATCH="yes"
+   DEF_ARCHES=
+   DEF_ICE=
+   DEF_MPM=
+   DEF_MD=
+   DEF_WASATCH=
+
+else
+  use_all_components="no"
+fi
+
+  sci_arg_enable_list="$sci_arg_enable_list --enable-all_components --disable-all_components"
+
+
+#
+# --- end list of -enable components ------
+#
+
+BUILD_MODELS_RADIATION=yes
+DEF_MODELS_RADIATION=
+
+if test "$use_all_components" = "yes" -a          \
+        \( "$enable_arches"           = "yes" -o  \
+           "$enable_ice"              = "yes" -o  \
+           "$enable_models_radiation" = "yes" -o  \
+           "$enable_mpm"              = "yes" -o  \
+           "$enable_md"               = "yes" -o  \
+           "$enable_wasatch"          = "yes" \); then
+   as_fn_error $? "Please do not use both --enable-all-components and --enable-<specific-component> " "$LINENO" 5
+fi
+if test "$BUILD_ARCHES"  != "yes"              -a   \
+        "$BUILD_ICE"     != "yes"              -a   \
+        "$BUILD_MPM"     != "yes"              -a   \
+        "$BUILD_MD"      != "yes"              -a   \
+        "$BUILD_WASATCH" != "yes"; then
+  add_important_warning "-------------------------------------------------------------------------"
+  msg="!!! NO COMPONENTS WERE SPECIFIED! ONLY UTILITY PROGRAMS WILL BE BUILT !!!"
+  add_important_warning "$msg"
+  add_important_warning "-------------------------------------------------------------------------"
+fi
+
+if test "$BUILD_ARCHES" = "yes" -a "$BUILD_WASATCH" != "yes"; then
+  BUILD_WASATCH=yes
+  msg="Arches requires Wasatch to be built... Turning on Wasatch!!!"
+  add_important_warning "$msg"
+fi
 
 if test "$enable_sci_malloc" = "yes" -a "$with_malloc_trace" ; then
-   as_fn_error $? "\"You cannot use both --with-MallocTrace and --enable-sci-malloc!\" " "$LINENO" 5
+   as_fn_error $? "You cannot use both --with-MallocTrace and --enable-sci-malloc! " "$LINENO" 5
 fi
 
 if test "$enable_memory_initialization" != "no"; then
@@ -4131,7 +4262,7 @@ if test "$enable_memory_initialization" != "no"; then
       if test $val -lt 128 -a $val -gt 0; then
          memory_init=$val
       else
-         as_fn_error $? "\"--enable-memory-initialization's value must be from 0 to 127.\" " "$LINENO" 5
+         as_fn_error $? "--enable-memory-initialization's value must be from 0 to 127. " "$LINENO" 5
       fi
    fi
    DEF_MEMORY_INIT_NUMBER="#define MEMORY_INIT_NUMBER $memory_init"
@@ -6669,36 +6800,33 @@ as_fn_error $? "Could not find the specified C++ compiler (CC)" "$LINENO" 5
 
 fi
 
-# enable/disable certain Uintah components
-BUILD_ARCHES=yes
-BUILD_ICE=yes
-BUILD_MPM=yes
-BUILD_MD=yes
-BUILD_MODELS_RADIATION=yes
-BUILD_WASATCH=no
-BUILD_WASATCH_IN_ARCHES=no
 
-if test "$USE_WASATCH" = ""; then
-  USE_WASATCH=undefined
+if test "$USE_ARCHES" != ""; then
+   as_fn_error $? "USE_ARCHES is deprecated.  Please use --enable-arches. " "$LINENO" 5
+fi
+if test "$USE_ICE" != ""; then
+   as_fn_error $? "USE_ICE is deprecated.  Please use --enable-ice. " "$LINENO" 5
+fi
+if test "$USE_MODELS_RADIATION" != ""; then
+   as_fn_error $? "USE_MODELS_RADIATION is deprecated.  Models/Radiation will be turned on automatically if Arches or Wasatch are enabled. " "$LINENO" 5
+fi
+if test "$USE_MPM" != ""; then
+   as_fn_error $? "USE_MPM is deprecated.  Please use --enable-mpm. " "$LINENO" 5
+fi
+if test "$USE_MD" != ""; then
+   as_fn_error $? "USE_MD is deprecated.  Please use --enable-md. " "$LINENO" 5
+fi
+if test "$USE_WASATCH" != ""; then
+   as_fn_error $? "USE_WASATCH is deprecated.  Please use --enable-wasatch. " "$LINENO" 5
 fi
 
-DEF_ARCHES=""
-DEF_ICE=""
-DEF_MPM=""
-DEF_MD=""
-DEF_MODELS_RADIATION=""
-DEF_WASATCH=""
-
-if test "$USE_ARCHES" = no; then BUILD_ARCHES=no; DEF_ARCHES="#define NO_ARCHES"; fi
-if test "$USE_ICE" = no; then BUILD_ICE=no; DEF_ICE="#define NO_ICE"; fi
-if test "$USE_MPM" = no; then BUILD_MPM=no; DEF_MPM="#define NO_MPM"; fi
-if test "$USE_MD"  = no; then BUILD_MD=no; DEF_MD="#define NO_MD"; fi
-if test "$USE_MODELS_RADIATION" = no; then BUILD_MODELS_RADIATION=no; DEF_MODELS_RADIATION="#define NO_MODELS_RADIATION"; fi
 if test "$with_fortran" = no; then
-            BUILD_ARCHES=no;
-            DEF_ARCHES="#define NO_ARCHES";
-            DEF_NO_FORTRAN="#define NO_FORTRAN";
-            NO_FORTRAN="yes";
+
+   if test "$BUILD_ARCHES" = "yes"; then
+      as_fn_error $? "You may not turn on Arches if you turn off Fortran. " "$LINENO" 5
+   fi
+   DEF_NO_FORTRAN="#define NO_FORTRAN";
+   NO_FORTRAN="yes";
 fi
 
 # NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
@@ -6717,7 +6845,9 @@ fi
 
 
 
-if test \("$BUILD_ARCHES" = no -a "$BUILD_MODELS_RADIATION" = no\) -o \( "$with_fortran" = no \) ; then
+
+
+if test "$BUILD_ARCHES" = no -a "$with_fortran" = "no"; then
   sci_required_fortran=no
 else
   sci_required_fortran=yes
@@ -8848,8 +8978,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of M check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -9260,8 +9389,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of RT check (dis
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -9712,8 +9840,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of PTHREAD check
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -10225,8 +10352,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of GCCSYNC check
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -10490,7 +10616,7 @@ fi
 if test "$with_visit" -o "$wasatch_3p" = "yes"; then
    which cmake > /dev/null 2>&1
    if test $? != 0; then
-      as_fn_error $? "VisIt requires CMake. Please make sure 'cmake' is in your path!" "$LINENO" 5
+      as_fn_error $? "VisIt and/or Wasatch 3P requires CMake. Please make sure 'cmake' is in your path!" "$LINENO" 5
    fi
    CMAKE_LOCATION=`which cmake`
 
@@ -10574,31 +10700,36 @@ if test "$with_ofed"; then
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$dir/lib
+  if test "$dir" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$dir/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$dir/lib
+    _new_lib_path=$dir/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$dir/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$dir/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$dir/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$dir/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$dir/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$dir/lib
-    fi
+    eval dir='"$_new_lib_path"'
   fi
-  eval dir='"$_new_lib_path"'
 
 
 
@@ -10763,8 +10894,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of OFED check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -11029,31 +11159,36 @@ if test "$with_mx"; then
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$dir/lib
+  if test "$dir" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$dir/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$dir/lib
+    _new_lib_path=$dir/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$dir/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$dir/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$dir/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$dir/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$dir/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$dir/lib
-    fi
+    eval dir='"$_new_lib_path"'
   fi
-  eval dir='"$_new_lib_path"'
 
 
 
@@ -11218,8 +11353,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of MX check (dis
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -11629,8 +11763,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of DL check (dis
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -12082,8 +12215,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of DL check (dis
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -12490,8 +12622,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of DL check (dis
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -12910,8 +13041,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of STAT64 check 
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -13328,8 +13458,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of STD_HDRS chec
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -13736,8 +13865,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of STD_HDRS chec
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -14143,8 +14271,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of STD_HDRS chec
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -14563,8 +14690,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of STL_HEADERS c
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -14828,31 +14954,36 @@ if test "$with_libxml2"; then
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$_sci_lib/lib
+  if test "$_sci_lib" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$_sci_lib/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
+    _new_lib_path=$_sci_lib/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$_sci_lib/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$_sci_lib/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$_sci_lib/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$_sci_lib/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$_sci_lib/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
-    fi
+    eval _sci_lib='"$_new_lib_path"'
   fi
-  eval _sci_lib='"$_new_lib_path"'
 
    _sci_optional=specific
 fi
@@ -15117,8 +15248,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of XML2 check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -15566,8 +15696,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of SSTREAM check
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -16038,8 +16167,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of EXC check (di
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -16328,31 +16456,36 @@ fi
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$with_zlib/lib
+  if test "$with_zlib" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$with_zlib/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$with_zlib/lib
+    _new_lib_path=$with_zlib/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$with_zlib/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$with_zlib/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$with_zlib/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$with_zlib/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$with_zlib/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$with_zlib/lib
-    fi
+    eval _sci_lib='"$_new_lib_path"'
   fi
-  eval _sci_lib='"$_new_lib_path"'
 
 
 
@@ -16558,8 +16691,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of Z check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -17036,8 +17168,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of JPEG check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -17499,8 +17630,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of TIFF check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -18013,8 +18143,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of UNP check (di
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -18450,8 +18579,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of F check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -18866,8 +18994,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of F check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -19272,8 +19399,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of F check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -19679,8 +19805,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of F check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -20085,8 +20210,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of F check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -20491,8 +20615,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of F check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -20897,8 +21020,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of F check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -21305,8 +21427,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of F check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -21754,8 +21875,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of F check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -22200,8 +22320,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of F check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -22646,8 +22765,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of F check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -23055,8 +23173,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of F check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -23461,8 +23578,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of F check (disr
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -23900,8 +24016,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of ELECTRIC_FENC
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -24305,8 +24420,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of ELECTRIC_FENC
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -24789,8 +24903,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BLAS check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -25298,8 +25411,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BLAS check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -25804,8 +25916,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BLAS check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -26296,8 +26407,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BLAS check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -26747,8 +26857,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BLAS check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -27189,8 +27298,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BLAS check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -27638,8 +27746,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BLAS check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -28092,8 +28199,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BLAS check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -28545,8 +28651,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BLAS check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -28958,8 +29063,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BLAS check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -29363,8 +29467,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BLAS check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -29770,8 +29873,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BLAS check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -30222,8 +30324,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of LAPACK check 
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -30631,8 +30732,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of LAPACK check 
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -31039,8 +31139,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of LAPACK check 
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -31455,8 +31554,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of LAPACK check 
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -31862,8 +31960,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of LAPACKMP chec
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -32237,31 +32334,36 @@ $as_echo "$as_me: checking for required MPI components......" >&6;}
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$with_mpi/lib
+  if test "$with_mpi" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$with_mpi/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$with_mpi/lib
+    _new_lib_path=$with_mpi/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$with_mpi/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$with_mpi/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$with_mpi/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$with_mpi/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$with_mpi/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$with_mpi/lib
-    fi
+    eval _sci_lib='"$_new_lib_path"'
   fi
-  eval _sci_lib='"$_new_lib_path"'
 
            fi
         else
@@ -32514,8 +32616,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of MPI check (di
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -32997,8 +33098,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of MPI check (di
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -33382,31 +33482,36 @@ else
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$lib_dir/lib
+  if test "$lib_dir" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$lib_dir/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$lib_dir/lib
+    _new_lib_path=$lib_dir/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$lib_dir/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$lib_dir/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$lib_dir/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$lib_dir/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$lib_dir/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$lib_dir/lib
-    fi
+    eval _sci_lib_dir='"$_new_lib_path"'
   fi
-  eval _sci_lib_dir='"$_new_lib_path"'
 
       fi
 
@@ -33649,8 +33754,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of PETSC check (
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -34108,8 +34212,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of PETSC check (
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -34555,31 +34658,36 @@ if test "$sci_required_papi" = "yes"; then
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$_sci_lib/lib
+  if test "$_sci_lib" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$_sci_lib/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
+    _new_lib_path=$_sci_lib/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$_sci_lib/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$_sci_lib/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$_sci_lib/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$_sci_lib/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$_sci_lib/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
-    fi
+    eval _sci_lib='"$_new_lib_path"'
   fi
-  eval _sci_lib='"$_new_lib_path"'
 
     _sci_inc="$with_papi/include"
   fi
@@ -34793,8 +34901,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of PAPI check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -35083,31 +35190,36 @@ if test "$sci_required_fftw" = "yes"; then
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$_sci_lib/lib
+  if test "$_sci_lib" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$_sci_lib/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
+    _new_lib_path=$_sci_lib/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$_sci_lib/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$_sci_lib/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$_sci_lib/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$_sci_lib/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$_sci_lib/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
-    fi
+    eval _sci_lib='"$_new_lib_path"'
   fi
-  eval _sci_lib='"$_new_lib_path"'
 
     _sci_inc="$with_fftw/include"
   fi
@@ -35321,8 +35433,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of FFTW check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -35614,31 +35725,36 @@ if test "$sci_required_gperftools" = "yes"; then
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$_sci_lib/lib
+  if test "$_sci_lib" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$_sci_lib/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
+    _new_lib_path=$_sci_lib/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$_sci_lib/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$_sci_lib/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$_sci_lib/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$_sci_lib/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$_sci_lib/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
-    fi
+    eval _sci_lib='"$_new_lib_path"'
   fi
-  eval _sci_lib='"$_new_lib_path"'
 
     _sci_inc="$with_gperftools/include"
   fi
@@ -35861,8 +35977,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of GPERFTOOLS ch
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -36167,31 +36282,36 @@ $as_echo "$as_me: checking for required CUDA components......" >&6;}
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$with_cuda/lib
+  if test "$with_cuda" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$with_cuda/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$with_cuda/lib
+    _new_lib_path=$with_cuda/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$with_cuda/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$with_cuda/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$with_cuda/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$with_cuda/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$with_cuda/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$with_cuda/lib
-    fi
+    eval _cuda_lib='"$_new_lib_path"'
   fi
-  eval _cuda_lib='"$_new_lib_path"'
 
 
 # code to compile and test various system GPU/CUDA properties
@@ -36617,31 +36737,36 @@ if test "$sci_required_magma" = "yes"; then
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$with_magma/lib
+  if test "$with_magma" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$with_magma/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$with_magma/lib
+    _new_lib_path=$with_magma/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$with_magma/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$with_magma/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$with_magma/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$with_magma/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$with_magma/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$with_magma/lib
-    fi
+    eval _magma_lib='"$_new_lib_path"'
   fi
-  eval _magma_lib='"$_new_lib_path"'
 
 
 ##
@@ -36654,31 +36779,36 @@ if test "$sci_required_magma" = "yes"; then
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$with_cuda/lib
+  if test "$with_cuda" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$with_cuda/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$with_cuda/lib
+    _new_lib_path=$with_cuda/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$with_cuda/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$with_cuda/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$with_cuda/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$with_cuda/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$with_cuda/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$with_cuda/lib
-    fi
+    eval _cuda_lib='"$_new_lib_path"'
   fi
-  eval _cuda_lib='"$_new_lib_path"'
 
   _magma_inc="$with_magma/include"
   _cuda_inc="$with_cuda/include"
@@ -36892,8 +37022,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of MAGMA check (
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -37416,8 +37545,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of FREETYPE chec
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -37711,31 +37839,36 @@ $as_echo "$as_me: WARNING: Teem is already required - you do not need to specify
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$_sci_lib/lib
+  if test "$_sci_lib" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$_sci_lib/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
+    _new_lib_path=$_sci_lib/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$_sci_lib/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$_sci_lib/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$_sci_lib/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$_sci_lib/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$_sci_lib/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
-    fi
+    eval _sci_lib='"$_new_lib_path"'
   fi
-  eval _sci_lib='"$_new_lib_path"'
 
     _sci_optional=required
   fi
@@ -37960,8 +38093,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of TEEM check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -38251,31 +38383,36 @@ $as_echo "$as_me: WARNING: ViSUS is already required - you do not need to specif
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$_sci_lib/lib
+  if test "$_sci_lib" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$_sci_lib/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
+    _new_lib_path=$_sci_lib/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$_sci_lib/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$_sci_lib/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$_sci_lib/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$_sci_lib/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$_sci_lib/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
-    fi
+    eval _sci_lib='"$_new_lib_path"'
   fi
-  eval _sci_lib='"$_new_lib_path"'
 
     _sci_optional=required
   fi
@@ -38487,8 +38624,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of VISUS check (
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -38780,31 +38916,36 @@ $as_echo "$as_me: WARNING: PIDX is already required - you do not need to specify
 ##
 ## eg:  if arg 2 is /usr/sci/local, and the machine has a
 ## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
+## /usr/sci/local/lib64 is set as the value of arg 1.
 ##
-## arguments mean:
+## Arguments mean:
+##
 ## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+## arg 2 : Library base.  I.e. /usr, /usr/local, /usr/X11R6
+##           If arg 2 is blank, this function does nothing.
 ##
-## This function assums the enable_64bit variable is in scope
+## This function assumes the enable_64bit variable is in scope.
 ##
 
-  _new_lib_path=$_sci_lib/lib
+  if test "$_sci_lib" != ""; then
 
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$_sci_lib/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
+    _new_lib_path=$_sci_lib/lib
+
+    ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+    if test "$enable_64bit" = "yes"; then
+      _new_lib_path=$_sci_lib/lib64
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$_sci_lib/lib
+      fi
+    else
+    ## We should look for lib32 (IRIX), then default to lib
+      _new_lib_path=$_sci_lib/lib32
+      if test ! -e $_new_lib_path; then
+        _new_lib_path=$_sci_lib/lib
+      fi
     fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$_sci_lib/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
-    fi
+    eval _sci_lib='"$_new_lib_path"'
   fi
-  eval _sci_lib='"$_new_lib_path"'
 
     _sci_optional=required
   fi
@@ -39012,8 +39153,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of PIDX check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -39498,8 +39638,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of HDF5 check (d
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -40013,8 +40152,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BOOST check (
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -40468,8 +40606,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BOOST check (
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -40935,8 +41072,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BOOST_FS_V3 c
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -41537,57 +41673,41 @@ fi
 
 ##  --  Handle --enable-wasatch-in-arches --------------------------------
 
+BUILD_WASATCH_IN_ARCHES=no
+
 if test "$wasatch_in_arches" = "yes"; then
-   if test "$USE_WASATCH" = "no"; then
-      as_fn_error but USE_WASATCH was set to 'no'.  "--enable-wasatch-in-arches specified" "$LINENO" 5
+   if test "$BUILD_WASATCH" = "no"; then
+      as_fn_error $? "--enable-wasatch-in-arches specified, but Wasatch component not enabled. " "$LINENO" 5
    fi
-   if test "$USE_WASATCH" = "undefined"; then
-      msg="Turning on Wasatch for use in Arches."
-      add_important_warning "$msg"
-      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $msg" >&5
-$as_echo "$as_me: WARNING: $msg" >&2;}
-      USE_WASATCH=yes
+   if test "$BUILD_ARCHES" = "no"; then
+      as_fn_error $? "--enable-wasatch-in-arches specified, but Arches component not enabled. " "$LINENO" 5
    fi
+
    DEF_WASATCH="#define WASATCH_IN_ARCHES 1";
    BUILD_WASATCH_IN_ARCHES=yes
 fi
 
 
 
-##  --  Determine whether we can use WASATCH OR NOT ----------------------
+##  --  Make sure Wasatch 3P is found if WASATCH or ARCHES is requested -------
 
-if test "$USE_WASATCH" = "yes"; then
-   if test "$HAVE_BOOST" = "yes" &&
-     test "$HAVE_TABPROPS" = "yes" &&
-     test "$HAVE_SPATIALOPS" = "yes" &&
-     test "$HAVE_EXPRLIB" = "yes"; then
-    BUILD_WASATCH=yes
-  else
-    as_fn_error $? "You specified the use of the Wasatch component but do not have all the of the prereqs: Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB)." "$LINENO" 5
-  fi
-else
-  if test "$USE_WASATCH" = "no"; then
-      msg="Found Boost TabProps ExprLib etc but USE_WASATCH was set to 'no'.  Will not turn on Wasatch."
-      add_important_warning "$msg"
-      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $msg" >&5
-$as_echo "$as_me: WARNING: $msg" >&2;}
-  else
-    if test "$HAVE_BOOST" = "yes" &&
-       test "$HAVE_TABPROPS" = "yes" &&
-       test "$HAVE_SPATIALOPS" = "yes" &&
-       test "$HAVE_EXPRLIB" = "yes"; then
-      BUILD_WASATCH=yes
-      add_important_warning "All prereqs satisfied - turning on Wasatch component."
-      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: All prereqs satisfied" >&5
-$as_echo "$as_me: WARNING: All prereqs satisfied" >&2;}
-    fi
+if test "$BUILD_WASATCH" = "yes"; then
+  if test "$HAVE_BOOST" != "yes" ||
+     test "$HAVE_TABPROPS" != "yes" ||
+     test "$HAVE_SPATIALOPS" != "yes" ||
+     test "$HAVE_EXPRLIB" != "yes"; then
+    as_fn_error $? "You enabled the Wasatch component but do not have all the of the prereqs: Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB)." "$LINENO" 5
   fi
 fi
 
-if test "$BUILD_WASATCH" = no; then
-  DEF_WASATCH="#define NO_WASATCH";
+if test "$BUILD_ARCHES" = "yes"; then
+  if test "$HAVE_BOOST" != "yes" ||
+     test "$HAVE_TABPROPS" != "yes" ||
+     test "$HAVE_SPATIALOPS" != "yes" ||
+     test "$HAVE_EXPRLIB" != "yes"; then
+    as_fn_error $? "You enabled the Arches component but do not have all the of the prereqs: Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB)." "$LINENO" 5
+  fi
 fi
-
 
 ##  --  search for hypre stuff  ------------------------------------------
 
@@ -41833,8 +41953,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of HYPRE check (
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi
@@ -42280,8 +42399,7 @@ $as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of HYPRE check (
          fi
       else
          echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+         as_fn_error $? "The given path \"$the_path\" is not a valid directory..." "$LINENO" 5
       fi
    done
 fi

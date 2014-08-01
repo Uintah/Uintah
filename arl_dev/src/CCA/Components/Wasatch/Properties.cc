@@ -93,7 +93,7 @@ namespace Wasatch{
 
       proc0cout << "Particle properties using refractive index: " << refIx << std::endl;
 
-      typedef ParticleRadProps<SpatialOps::structured::SVolField>::Builder ParticleProps;
+      typedef ParticleRadProps<SpatialOps::SVolField>::Builder ParticleProps;
       gh.exprFactory->register_expression(
           scinew ParticleProps( propSelection,
                                 parse_nametag( pParams->findBlock("NameTag") ),
@@ -128,7 +128,7 @@ namespace Wasatch{
       std::string spnam;   spParams->getAttribute("name",spnam);
       spMap[ species_enum( spnam ) ] = parse_nametag( spParams->findBlock("NameTag") );
     }
-    typedef RadPropsEvaluator<SpatialOps::structured::SVolField>::Builder RadPropsExpr;
+    typedef RadPropsEvaluator<SpatialOps::SVolField>::Builder RadPropsExpr;
     gh.exprFactory->register_expression( scinew RadPropsExpr( parse_nametag(ggParams->findBlock("NameTag")),
                                                               parse_nametag(ggParams->findBlock("Temperature")->findBlock("NameTag")),
                                                               spMap,fileName) );
@@ -224,6 +224,8 @@ namespace Wasatch{
    *         instance of TabProps.
    *  \param doDenstPlus - the boolean showing whether we have a variable
    *         density case and we want to do pressure projection or not
+   *  \param [inout] lockedFields the set of fields that should be controlled by
+   *         Uintah and not allowed to be scratch/temporary fields.
    */
   void parse_tabprops( Uintah::ProblemSpecP& params,
                        GraphHelper& gh,
@@ -312,7 +314,7 @@ namespace Wasatch{
 
       switch( get_field_type(fieldType) ){
       case SVOL: {
-        typedef TabPropsEvaluator<SpatialOps::structured::SVolField>::Builder PropEvaluator;
+        typedef TabPropsEvaluator<SpatialOps::SVolField>::Builder PropEvaluator;
         gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, *interp, ivarNames ) );
         if( dvarTableName=="Density" ){
           const Expr::Tag densStarTag ( dvarTag.name()+TagNames::self().star,       dvarTag.context() );
@@ -323,17 +325,17 @@ namespace Wasatch{
         break;
       }
       case XVOL: {
-        typedef TabPropsEvaluator<SpatialOps::structured::SSurfXField>::Builder PropEvaluator;
+        typedef TabPropsEvaluator<SpatialOps::SSurfXField>::Builder PropEvaluator;
         gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, *interp, ivarNames ) );
         break;
       }
       case YVOL: {
-        typedef TabPropsEvaluator<SpatialOps::structured::SSurfYField>::Builder PropEvaluator;
+        typedef TabPropsEvaluator<SpatialOps::SSurfYField>::Builder PropEvaluator;
         gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, *interp, ivarNames ) );
         break;
       }
       case ZVOL: {
-        typedef TabPropsEvaluator<SpatialOps::structured::SSurfZField>::Builder PropEvaluator;
+        typedef TabPropsEvaluator<SpatialOps::SSurfZField>::Builder PropEvaluator;
         gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, *interp, ivarNames ) );
         break;
       }
@@ -367,7 +369,7 @@ namespace Wasatch{
       const InterpT* const adEnthInterp   = table.find_entry( "AdiabaticEnthalpy" );
       const InterpT* const sensEnthInterp = table.find_entry( "SensibleEnthalpy"  );
       const InterpT* const enthInterp     = table.find_entry( "Enthalpy"          );
-      typedef TabPropsHeatLossEvaluator<SpatialOps::structured::SVolField>::Builder HLEval;
+      typedef TabPropsHeatLossEvaluator<SpatialOps::SVolField>::Builder HLEval;
       gh.exprFactory->register_expression( scinew HLEval( parse_nametag( hlParams->findBlock("NameTag") ),
                                                           *adEnthInterp  ,
                                                           *sensEnthInterp,

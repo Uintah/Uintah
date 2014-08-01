@@ -53,6 +53,38 @@ namespace Wasatch{
 
   /**
    *  \ingroup WasatchCore
+   *  \struct UintahPatchContainer
+   *  \author Tony Saad
+   *  \date   July, 2014
+   *
+   *  \brief Holds a pointer to a Uintah::Patch. The intention of this structure is to allow expressions
+   to access Uintah patches internally through the bind_operators callback. This structure is
+   to be registered in an operators database using:
+   (given a: const Uintah::Patch* const patch)
+   register_new_operator<UintahPatchContainer>( scinew UintahPatchContainer(patch) )
+   Then, for expressions that require access to a patch, declare a private member
+   UintahPatchContainer* patchContainer_
+   and then in bind_operators use:
+   patchContainer_ = opdb.retrive_operator<UintahPatchContainer>()
+   Finally, patch access is performed via:
+   const Uintah::Patch* const patch_ = patchContainer_->get_uintah_patch();
+   */
+  struct UintahPatchContainer
+  {
+    public:
+      UintahPatchContainer(const Uintah::Patch* const patch) :
+      patch_(patch)
+      {}
+    const Uintah::Patch* const get_uintah_patch()
+    {
+      return patch_;
+    }
+    private:
+      const Uintah::Patch* const patch_;
+  };
+
+  /**
+   *  \ingroup WasatchCore
    *
    *  Defines a map between the patch index (Uintah assigns this) and
    *  the PatchInfo object associated with the patch.  This is

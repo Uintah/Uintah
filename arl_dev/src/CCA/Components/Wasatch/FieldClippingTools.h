@@ -26,7 +26,6 @@
 #define FieldClippingTools_h
 
 #include <spatialops/SpatialOpsConfigure.h>
-#include <spatialops/structured/FVTools.h>
 #include <expression/Expression.h>
 #include "ParseTools.h"
 

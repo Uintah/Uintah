@@ -1,8 +1,5 @@
 /**
- *  \file   OldVariable.cc
- *  \date   Feb 7, 2013
- *  \author "James C. Sutherland"
- *
+ * \file OldVariable.cc
  *
  * The MIT License
  *
@@ -107,8 +104,10 @@ namespace Wasatch {
 
     void populate_old_variable( const AllocInfo& ainfo, const int rkStage )
     {
+      using SpatialOps::operator <<=;
       typedef typename SelectUintahFieldType<T>::const_type ConstUintahField;
       typedef typename SelectUintahFieldType<T>::type       UintahField;
+      typedef typename SpatialOps::SpatFldPtr<T>            TPtr;
 
       const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<T>();
       const int ng = 0;  // no ghost cells
@@ -118,22 +117,20 @@ namespace Wasatch {
       
       if (rkStage == 1) ainfo.newDW->allocateAndPut( oldVal, oldVarLabel_, ainfo.materialIndex, ainfo.patch, gt, ng );
       else              ainfo.newDW->getModifiable ( oldVal, oldVarLabel_, ainfo.materialIndex, ainfo.patch, gt, ng );
-      T* const fOldVal = wrap_uintah_field_as_spatialops<T>(oldVal,ainfo);
-      using SpatialOps::operator <<=;
+
+      const SpatialOps::GhostData gd( get_n_ghost<T>() );
+      TPtr fOldVal = wrap_uintah_field_as_spatialops<T>(oldVal,ainfo,gd);
       
       Uintah::DataWarehouse* dw = (rkStage == 1) ? ainfo.oldDW : ainfo.newDW;
       
       if (dw->exists(varLabel_,ainfo.materialIndex,ainfo.patch)) {
         dw->get( val, varLabel_, ainfo.materialIndex, ainfo.patch, gt, ng );
-        const T* const f = wrap_uintah_field_as_spatialops<T>(val,ainfo);
+        const TPtr f = wrap_uintah_field_as_spatialops<T>(val,ainfo,gd);
         (*fOldVal) <<= (*f);
-        delete f;
       }
       else  {
         (*fOldVal) <<= 0.0;
       }      
-
-      delete fOldVal;
     }
   };
 
@@ -272,9 +269,9 @@ namespace Wasatch {
 
 #define INSTANTIATE_VARIANTS( VOL )                            \
   INSTANTIATE( VOL )                                           \
-  INSTANTIATE( SpatialOps::structured::FaceTypes<VOL>::XFace ) \
-  INSTANTIATE( SpatialOps::structured::FaceTypes<VOL>::YFace ) \
-  INSTANTIATE( SpatialOps::structured::FaceTypes<VOL>::ZFace )
+  INSTANTIATE( SpatialOps::FaceTypes<VOL>::XFace ) \
+  INSTANTIATE( SpatialOps::FaceTypes<VOL>::YFace ) \
+  INSTANTIATE( SpatialOps::FaceTypes<VOL>::ZFace )
 
 INSTANTIATE_VARIANTS( SVolField )
 INSTANTIATE_VARIANTS( XVolField )

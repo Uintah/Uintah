@@ -121,7 +121,7 @@ evaluate()
   int ix,iy,iz;
   double x,y,z;
   bool isInside = false;
-  SpatialOps::structured::IntVec localCellIJK;
+  SpatialOps::IntVec localCellIJK;
   
   while ( resultIter != result.end() ) {
     i = resultIter - result.begin();

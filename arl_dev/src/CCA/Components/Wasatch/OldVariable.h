@@ -98,6 +98,7 @@ namespace Wasatch {
      * @param patches
      * @param materials
      * @param sched
+     * @param rkStage the Runge-Kutta stage
      */
     void setup_tasks( const Uintah::PatchSet* const patches,
                       const Uintah::MaterialSet* const materials,

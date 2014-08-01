@@ -105,10 +105,10 @@ CompDynamicProcedure::problemSetup(const ProblemSpecP& params)
 // Schedule recomputation of the turbulence sub model 
 //****************************************************************************
   void 
-CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched, 
-    const PatchSet* patches,
-    const MaterialSet* matls,
-    const TimeIntegratorLabel* timelabels)
+CompDynamicProcedure::sched_reComputeTurbSubmodel( SchedulerP& sched, 
+                                                   const LevelP& level,
+                                                   const MaterialSet* matls,
+                                                   const TimeIntegratorLabel* timelabels)
 {
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
@@ -147,7 +147,7 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
       tsk->modifies(d_lab->d_filterRhoLabel);
     }  
 
-    sched->addTask(tsk, patches, matls);
+    sched->addTask(tsk, level->eachPatch(), matls);
   }
 
   //__________________________________
@@ -183,7 +183,7 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
       tsk->modifies(d_lab->d_filterStrainTensorCompLabel,
           d_lab->d_symTensorMatl, oams);
     }  
-    sched->addTask(tsk, patches, matls);
+    sched->addTask(tsk, level->eachPatch(), matls);
   }
 
   //__________________________________
@@ -224,7 +224,7 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
       tsk->modifies(d_lab->d_strainMagnitudeMMLabel);
     }
 
-    sched->addTask(tsk, patches, matls);
+    sched->addTask(tsk, level->eachPatch(), matls);
   }
 
   //__________________________________
@@ -260,7 +260,7 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
       tsk->modifies(d_lab->d_CsLabel);
     }
 
-    sched->addTask(tsk, patches, matls);
+    sched->addTask(tsk, level->eachPatch(), matls);
   }
 }
 

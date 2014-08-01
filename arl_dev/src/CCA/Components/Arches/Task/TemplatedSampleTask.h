@@ -4,7 +4,7 @@
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <spatialops/Nebo.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
+#include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 
 namespace Uintah{ 
 
@@ -38,16 +38,20 @@ public:
 
 protected: 
 
-    void register_all_variables( std::vector<VariableInformation>& variable_registry ); 
-
     void register_initialize( std::vector<VariableInformation>& variable_registry );
-  
 
-    void eval( const Patch* patch, UintahVarMap& var_map, 
-               ConstUintahVarMap& const_var_map, SpatialOps::OperatorDatabase& opr, const int time_substep ); 
+    void register_timestep_init( std::vector<VariableInformation>& variable_registry ){} 
 
-    void initialize( const Patch* patch, UintahVarMap& var_map, 
-                     ConstUintahVarMap& const_var_map, SpatialOps::OperatorDatabase& opr );
+    void register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ); 
+
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
+                     SpatialOps::OperatorDatabase& opr );
+    
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
+                        SpatialOps::OperatorDatabase& opr ){}
+
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
+               SpatialOps::OperatorDatabase& opr ); 
 
 private:
 
@@ -62,7 +66,7 @@ private:
 
     // This needs to be done to set the variable type 
     // for this function. All templated tasks should do this. 
-    set_type<T>(); 
+    set_task_type<T>(); 
   
   }
 
@@ -81,36 +85,47 @@ private:
 
   template <typename T>
   void TemplatedSampleTask<T>::register_initialize( std::vector<VariableInformation>& variable_registry ){ 
+
+    //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
+    register_variable( "templated_variable", _mytype, LOCAL_COMPUTES, 0, NEWDW, variable_registry ); 
   
   }
   
   //This is the work for the task.  First, get the variables. Second, do the work! 
   template <typename T> 
-  void TemplatedSampleTask<T>::initialize( const Patch* patch, UintahVarMap& var_map, 
-                          ConstUintahVarMap& const_var_map, SpatialOps::OperatorDatabase& opr ){ 
+  void TemplatedSampleTask<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
+                                           SpatialOps::OperatorDatabase& opr ){ 
+
+    using namespace SpatialOps;
+    using SpatialOps::operator *; 
+    typedef SpatialOps::SpatFldPtr<T> SVolFP;
+
+    SVolFP field = tsk_info->get_so_field<T>( "templated_variable" ); 
+    *field <<= 3.2;
+
   }
 
 
   template <typename T> 
-  void TemplatedSampleTask<T>::register_all_variables( std::vector<VariableInformation>& variable_registry ){
+  void TemplatedSampleTask<T>::register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ){
    
     //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
-    register_variable( "templated_variable", _mytype, LOCAL_COMPUTES, 0, NEWDW, variable_registry ); 
+    register_variable( "templated_variable", _mytype, COMPUTES, 0, NEWDW, variable_registry, time_substep ); 
   
   }
 
   template <typename T>
-  void TemplatedSampleTask<T>::eval(const Patch* patch, UintahVarMap& var_map, 
-                                    ConstUintahVarMap& const_var_map, SpatialOps::OperatorDatabase& opr, const int time_substep ){
+  void TemplatedSampleTask<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
+                                     SpatialOps::OperatorDatabase& opr ){ 
 
     using namespace SpatialOps;
     using SpatialOps::operator *; 
+    typedef SpatialOps::SpatFldPtr<T> SVolFP;
 
-    T* const field = get_so_field<T>( "templated_variable", var_map, patch, 0, *this ); 
+    SVolFP field = tsk_info->get_so_field<T>( "templated_variable" ); 
 
     *field <<= 24.0;
   
   }
-
 }
 #endif 

@@ -51,7 +51,7 @@
  *  \date      January 2011
  *  \ingroup   WasatchOperators
  *
- *  \todo Consider basing this on the SpatialOps::structured::Stencil2 stuff.
+ *  \todo Consider basing this on the SpatialOps::Stencil2 stuff.
  *  \todo Parallelize apply_to_field() method
  *
  *  \brief     Calculates convective flux using a flux limiter.
@@ -85,7 +85,7 @@ private:
   // holds the limiter type to be used, i.e. SUPERBEE, VANLEER, etc...
   Wasatch::ConvInterpMethods limiterType_;
   
-  SpatialOps::structured::IntVec unitNormal_;
+  SpatialOps::IntVec unitNormal_;
 
   // boundary information
   bool hasPlusBoundary_, hasMinusBoundary_;
@@ -109,6 +109,7 @@ public:
    *         in each direction.
    *  \param hasPlusFace: Determines if this patch has a physical
    *         boundary on its plus side.
+   *  \param hasMinusBoundary true if a physical boundary is present on the (-) side of the patch.
    */
   FluxLimiterInterpolant( const std::vector<int>& dim,
                           const std::vector<bool> hasPlusFace,

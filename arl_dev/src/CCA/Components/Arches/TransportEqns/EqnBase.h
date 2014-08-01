@@ -402,6 +402,9 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhi
 
       phi[c] = sin( 2.0 * pi * z ); 
 
+    } else if ( d_initFunction == "linear-x" ) {  // linear mixture fraction in x (with 0 for intercept and 1 m^-1 slope)
+      phi[c] =   x ; 
+
     // ======= add other initialization functions below here ======
     } else {
 
@@ -513,6 +516,9 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constCCV
       //======= sin function in z ======
 
       phi[c] = sin( 2.0 * pi * z ); 
+
+    } else if ( d_initFunction == "linear-x" ) {  // linear mixture fraction in x (with 0 for intercept and 1 m^-1 slope)
+      phi[c] =   x ; 
 
     } else if ( d_initFunction == "gaussian" ) { 
 

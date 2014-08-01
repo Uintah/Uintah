@@ -26,7 +26,7 @@
 #define Interpolate_Expr_h
 
 #include <expression/Expression.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
+#include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 
@@ -50,7 +50,7 @@ class InterpolateExpression
 {
   const Expr::Tag srct_;
   
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SrcT, DestT >::type InterpSrcT2DestT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SrcT, DestT >::type InterpSrcT2DestT;
   
   const SrcT* src_;
   

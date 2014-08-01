@@ -77,7 +77,7 @@ Expr::Tag pressure_tag();
 class Pressure
  : public Expr::Expression<SVolField>
 {
-  typedef SpatialOps::structured::SingleValueField TimeField;
+  typedef SpatialOps::SingleValueField TimeField;
 
   const Expr::Tag fxt_, fyt_, fzt_, pSourcet_, dtt_, currenttimet_, timestept_, volfract_;
 
@@ -110,17 +110,17 @@ class Pressure
   const ZVolField* fz_;
 
   // interpolant operators
-  typedef OperatorTypeBuilder< Interpolant, XVolField, SpatialOps::structured::SSurfXField >::type  FxInterp;
-  typedef OperatorTypeBuilder< Interpolant, YVolField, SpatialOps::structured::SSurfYField >::type  FyInterp;
-  typedef OperatorTypeBuilder< Interpolant, ZVolField, SpatialOps::structured::SSurfZField >::type  FzInterp;
+  typedef OperatorTypeBuilder< Interpolant, XVolField, SpatialOps::SSurfXField >::type  FxInterp;
+  typedef OperatorTypeBuilder< Interpolant, YVolField, SpatialOps::SSurfYField >::type  FyInterp;
+  typedef OperatorTypeBuilder< Interpolant, ZVolField, SpatialOps::SSurfZField >::type  FzInterp;
   const FxInterp* interpX_;
   const FyInterp* interpY_;
   const FzInterp* interpZ_;
 
   // divergence operators
-  typedef SpatialOps::structured::BasicOpTypes<SVolField>::DivX  DivX;
-  typedef SpatialOps::structured::BasicOpTypes<SVolField>::DivY  DivY;
-  typedef SpatialOps::structured::BasicOpTypes<SVolField>::DivZ  DivZ;
+  typedef SpatialOps::BasicOpTypes<SVolField>::DivX  DivX;
+  typedef SpatialOps::BasicOpTypes<SVolField>::DivY  DivY;
+  typedef SpatialOps::BasicOpTypes<SVolField>::DivZ  DivZ;
   const DivX* divXOp_;
   const DivY* divYOp_;
   const DivZ* divZOp_;
@@ -211,7 +211,7 @@ public:
 
   void set_patch( const Uintah::Patch* const patch ){ patch_ = const_cast<Uintah::Patch*> (patch); }
   
-  void set_bchelper(BCHelper* bcHelper) { bcHelper_ = bcHelper;}
+  void set_bchelper( BCHelper* bcHelper ) { bcHelper_ = bcHelper;}
   /**
    *  \brief set the RKStage for the current pressure evaluation. We need this to
              reduce the number of pressure-solve iterations in the 2nd and 3rd
@@ -240,9 +240,9 @@ public:
   /**
    * \brief Calculates pressure coefficient matrix.
    */
-  void setup_matrix(const SVolField* const volfrac);
+  void setup_matrix( const SVolField* const volfrac );
   
-  void process_embedded_boundaries(const SVolField* const volfrac);
+  void process_embedded_boundaries( const SVolField& volfrac );
 
   /**
    * \brief Special function to apply pressure boundary conditions after the pressure solve.

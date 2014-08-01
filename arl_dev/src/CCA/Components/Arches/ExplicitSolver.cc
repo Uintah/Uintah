@@ -23,6 +23,7 @@
  */
 
 //----- ExplicitSolver.cc ----------------------------------------------
+#include <CCA/Components/Arches/Radiation/RadPropertyCalculator.h>
 #include <CCA/Components/Arches/EfficiencyCalculator.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
@@ -39,10 +40,13 @@
 #include <CCA/Components/Arches/CQMOM.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqnFactory.h>
-//#include <CCA/Components/Arches/Task/TaskInterface.h>
-//#include <CCA/Components/Arches/Task/SampleTask.h>
-//#include <CCA/Components/Arches/Task/TemplatedSampleTask.h>
-//#include <CCA/Components/Arches/Task/SampleFactory.h>
+
+//NEW TASK STUFF
+#include <CCA/Components/Arches/Task/TaskInterface.h>
+#include <CCA/Components/Arches/Task/SampleTask.h>
+#include <CCA/Components/Arches/Task/TemplatedSampleTask.h>
+#include <CCA/Components/Arches/Task/TaskFactoryBase.h>
+//END NEW TASK STUFF
 
 #include <CCA/Components/Arches/ExplicitSolver.h>
 #include <Core/Containers/StaticArray.h>
@@ -80,6 +84,7 @@
 
 #  include <CCA/Components/Wasatch/Wasatch.h>
 #  include <CCA/Components/Wasatch/FieldTypes.h>
+#include <CCA/Components/Wasatch/Transport/EquationBase.h>
 #  include <CCA/Components/Wasatch/Transport/TransportEquation.h>
 #  include <CCA/Components/Wasatch/Transport/ParseEquation.h>
 #  include <CCA/Components/Wasatch/GraphHelperTools.h>
@@ -106,6 +111,8 @@ ExplicitSolver(ArchesLabel* label,
                TurbulenceModel* turbModel,
                ScaleSimilarityModel* scaleSimilarityModel,
                PhysicalConstants* physConst,
+               RadPropertyCalculator* rad_properties, 
+               std::map<std::string, TaskFactoryBase*>* factory_map, 
                const ProcessorGroup* myworld,
                SolverInterface* hypreSolver):
                NonlinearSolver(myworld),
@@ -113,8 +120,10 @@ ExplicitSolver(ArchesLabel* label,
                d_boundaryCondition(bc), d_turbModel(turbModel),
                d_scaleSimilarityModel(scaleSimilarityModel),
                d_physicalConsts(physConst),
-               d_hypreSolver(hypreSolver)
+               d_hypreSolver(hypreSolver), 
+               d_rad_prop_calc(rad_properties)
 {
+  _factory_map = factory_map; 
   d_pressSolver = 0;
   d_momSolver = 0;
   nosolve_timelabels_allocated = false;
@@ -137,7 +146,6 @@ ExplicitSolver::~ExplicitSolver()
   if ( d_wall_ht_models != 0 ){ 
     delete d_wall_ht_models; 
   }
-  //delete _test_factory; 
 }
 
 // ****************************************************************************
@@ -149,10 +157,6 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params, SimulationStateP & st
 
   ProblemSpecP db = params->findBlock("ExplicitSolver");
   ProblemSpecP db_parent = params; 
-
-  //_test_factory = scinew SampleFactory(); 
-  //_test_factory->register_all_tasks( db ); 
-  //_test_factory->build_all_tasks( db ); 
 
   if ( db->findBlock( "print_total_ke" ) ){ 
     d_printTotalKE = true; 
@@ -284,11 +288,11 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params, SimulationStateP & st
 
 void 
 ExplicitSolver::checkMomBCs( SchedulerP& sched,
-                             const PatchSet* patches,
+                             const LevelP& level, 
                              const MaterialSet* matls)
 {
 
-  d_boundaryCondition->sched_checkMomBCs( sched, patches, matls ); 
+  d_boundaryCondition->sched_checkMomBCs( sched, level, matls ); 
 
 }
 
@@ -314,7 +318,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
   sched_setInitialGuess(sched, patches, matls);
 
-  d_boundaryCondition->sched_setAreaFraction(sched, patches, matls, 0, false );
+  d_boundaryCondition->sched_setAreaFraction(sched, level, matls, 0, false );
   d_turbModel->sched_carryForwardFilterVol(sched, patches, matls); 
 
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
@@ -339,10 +343,53 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
   }
 
+  //========NEW STUFF =================================
+  //TIMESTEP INIT: 
+//  typedef std::map<std::string, TaskFactoryBase*> FACMAP; 
+//  ////utility factory
+//  FACMAP::iterator ifac = _factory_map->find("utility_factory"); 
+//  TaskFactoryBase::TaskMap init_all_tasks = ifac->second->retrieve_all_tasks(); 
+//  for ( TaskFactoryBase::TaskMap::iterator i = init_all_tasks.begin(); i != init_all_tasks.end(); i++){ 
+//    i->second->schedule_timestep_init(level, sched, matls ); 
+//  }
+//
+//  ////transport factory
+//  ifac = _factory_map->find("transport_factory"); 
+//  init_all_tasks = ifac->second->retrieve_all_tasks(); 
+//  for ( TaskFactoryBase::TaskMap::iterator i = init_all_tasks.begin(); i != init_all_tasks.end(); i++){ 
+//    if ( i->first != "scalar_fe_update" && i->first != "scalar_ssp_update") {
+//      i->second->schedule_timestep_init(level, sched, matls ); 
+//    }
+//  }
+  //===================END NEW STUFF=======================
+
   // --------> START RK LOOP <---------
   for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
   {
-    // Clean up all property models
+
+    //------------------------  NEW TASK STUFF: 
+    //utility factory
+//    FACMAP::iterator ifac = _factory_map->find("utility_factory"); 
+//    TaskFactoryBase::TaskMap all_tasks = ifac->second->retrieve_all_tasks(); 
+//    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+//      i->second->schedule_task(level, sched, matls, curr_level); 
+//    }
+//
+//    //transport factory
+//    ifac = _factory_map->find("transport_factory"); 
+//    all_tasks = ifac->second->retrieve_all_tasks(); 
+//    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+//      if ( i->first != "scalar_fe_update" && i->first != "scalar_ssp_update") {
+//        i->second->schedule_task(level, sched, matls, curr_level); 
+//      }
+//    }
+
+    //uncoment to get this to work
+    //TaskFactoryBase::TaskMap::iterator i_fe_update = all_tasks.find("scalar_fe_update");  
+    //i_fe_update->second->schedule_task( level, sched, matls, curr_level ); 
+    //------------------------  END NEW TASK STUFF: 
+
+    // Create this timestep labels for properties
     PropertyModelFactory& propFactory = PropertyModelFactory::self();
     PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models();
     for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
@@ -417,29 +464,87 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     }
     
     if ( d_doCQMOM ) {
-      //basicalyl copying what DQMOM scheduler does
+      bool doOperatorSplit;
+      doOperatorSplit = d_cqmomSolver->getOperatorSplitting();
       CQMOMEqnFactory::EqnMap& moment_eqns = cqmomFactory.retrieve_all_eqns();
       //for source terms later      CoalModelFactory& modelFactory = CoalModelFactory::self();
-      //part vel needed?            d_partVel->schedComputePartVel( level, sched, curr_level );
       
+      if (!doOperatorSplit) {
       //Evaluate CQMOM equations
-      for ( CQMOMEqnFactory::EqnMap::iterator iEqn = moment_eqns.begin();
-           iEqn != moment_eqns.end(); iEqn++){
+        for ( CQMOMEqnFactory::EqnMap::iterator iEqn = moment_eqns.begin();
+             iEqn != moment_eqns.end(); iEqn++){
+         
+          CQMOMEqn* cqmom_eqn = dynamic_cast<CQMOMEqn*>(iEqn->second);
+          cqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );
         
-        CQMOMEqn* cqmom_eqn = dynamic_cast<CQMOMEqn*>(iEqn->second);
-        cqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );
+          cqmom_eqn->sched_computeSources( level, sched, curr_level );
+        }
+        //get new weights and absicissa
+        d_cqmomSolver->sched_solveCQMOMInversion( level, sched, curr_level );
+        d_cqmomSolver->sched_momentCorrection( level, sched, curr_level );
+      } else {
+        //if operator splitting is turned on use a different CQMOM permutation for each convection direction
+        int uVelIndex = d_cqmomSolver->getUVelIndex();
+        int vVelIndex = d_cqmomSolver->getVVelIndex();
+        int wVelIndex = d_cqmomSolver->getWVelIndex();
         
-        cqmom_eqn->sched_computeSources( level, sched, curr_level );
+        for ( CQMOMEqnFactory::EqnMap::iterator iEqn = moment_eqns.begin();
+             iEqn != moment_eqns.end(); iEqn++){
+          CQMOMEqn* cqmom_eqn = dynamic_cast<CQMOMEqn*>(iEqn->second);
+          if (curr_level == 0)
+            cqmom_eqn->sched_initializeVariables( level, sched );
+        }
+        //x-direction - do the CQMOM inversion of this permutation, then do the convection
+        if ( uVelIndex > -1 ) {
+          d_cqmomSolver->sched_solveCQMOMInversion321( level, sched, curr_level );
+          d_cqmomSolver->sched_momentCorrection( level, sched, curr_level );
+          for ( CQMOMEqnFactory::EqnMap::iterator iEqn = moment_eqns.begin();
+               iEqn != moment_eqns.end(); iEqn++){
+          
+            CQMOMEqn* cqmom_eqn = dynamic_cast<CQMOMEqn*>(iEqn->second);
+            cqmom_eqn->sched_buildXConvection( level, sched, curr_level );
+          }
+        }
+        //y-direction
+        if ( vVelIndex > -1 ) {
+          d_cqmomSolver->sched_solveCQMOMInversion312( level, sched, curr_level );
+          d_cqmomSolver->sched_momentCorrection( level, sched, curr_level );
+          for ( CQMOMEqnFactory::EqnMap::iterator iEqn = moment_eqns.begin();
+               iEqn != moment_eqns.end(); iEqn++){
+          
+            CQMOMEqn* cqmom_eqn = dynamic_cast<CQMOMEqn*>(iEqn->second);
+            cqmom_eqn->sched_buildYConvection( level, sched, curr_level );
+          }
+        }
+        //z-direction
+        if ( wVelIndex > -1 ) {
+          d_cqmomSolver->sched_solveCQMOMInversion213( level, sched, curr_level );
+          d_cqmomSolver->sched_momentCorrection( level, sched, curr_level );
+          for ( CQMOMEqnFactory::EqnMap::iterator iEqn = moment_eqns.begin();
+               iEqn != moment_eqns.end(); iEqn++){
+          
+            CQMOMEqn* cqmom_eqn = dynamic_cast<CQMOMEqn*>(iEqn->second);
+            cqmom_eqn->sched_buildZConvection( level, sched, curr_level );
+          }
+        }
+
+        //combine all 3 fluxes and actually solve eqn with other sources
+        for ( CQMOMEqnFactory::EqnMap::iterator iEqn = moment_eqns.begin();
+             iEqn != moment_eqns.end(); iEqn++){
+          
+          CQMOMEqn* cqmom_eqn = dynamic_cast<CQMOMEqn*>(iEqn->second);
+          cqmom_eqn->sched_buildSplitRHS( level, sched, curr_level );
+          cqmom_eqn->sched_solveTransportEqn( level, sched, curr_level );
+        }
       }
       
       //schedule model evaluation later
       //modelFactory.sched_coalParticleCalculation( level, sched, curr_level );
       
-      //schedule inversion for weights and abscissas
-      d_cqmomSolver->sched_solveCQMOMInversion( level, sched, curr_level );
     }
 
     // STAGE 0 
+    //d_rad_prop_calc->sched_compute_radiation_properties( level, sched, matls, curr_level, false ); 
 
     SourceTermFactory& src_factory = SourceTermFactory::self();
     src_factory.sched_computeSources( level, sched, curr_level, 0 ); 
@@ -480,19 +585,21 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     if ( hl_model != 0 )
       hl_model->sched_computeProp( level, sched, curr_level ); 
 
-//    TaskInterface& tsk1 = _test_factory->retrieve_task("sample_task"); 
-//    tsk1.schedule_task( level, sched, matls, curr_level ); 
-
-//    TaskInterface& tsk2 = _test_factory->retrieve_task("templated_task"); 
-//    tsk2.schedule_task( level, sched, matls, curr_level ); 
-
     //1st TABLE LOOKUP
     bool initialize_it  = false;
     bool modify_ref_den = false;
     if ( curr_level == 0 ) initialize_it = true;
     d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, curr_level );
 
-    d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls );
+    d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
+
+    //NEW TASK STUFF: -------------
+    //uncomment to get this to work
+    //this is updating the scalar with the latest density from the table lookup
+    //TaskFactoryBase::TaskMap::iterator i_ssp_update = all_tasks.find("scalar_ssp_update"); 
+    //i_ssp_update->second->schedule_task( level, sched, matls, curr_level ); 
+    //END NEW TASK STUFF
+
 
     // STAGE 1
 
@@ -666,9 +773,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     }
 
-    d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls );
+    d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
 
-    d_boundaryCondition->sched_setIntrusionDensity( sched, patches, matls ); 
+    d_boundaryCondition->sched_setIntrusionDensity( sched, level, matls ); 
 
     if ( d_wall_ht_models != 0 ){ 
       d_wall_ht_models->sched_doWallHT( level, sched, curr_level ); 
@@ -698,8 +805,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                                                         d_timeIntegratorLabels[curr_level]);
 //#endif // WASATCH_IN_ARCHES
     if (d_mixedModel) {
-      d_scaleSimilarityModel->sched_reComputeTurbSubmodel(sched, patches, matls,
-                                            d_timeIntegratorLabels[curr_level]);
+      d_scaleSimilarityModel->sched_reComputeTurbSubmodel( sched, level, matls,
+                                                           d_timeIntegratorLabels[curr_level]);
     }
 
 #   ifdef WASATCH_IN_ARCHES
@@ -721,7 +828,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       
       std::set< Expr::ExpressionID > scalRHSIDs;
       for( Wasatch::Wasatch::EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ) {
-        Wasatch::TransportEquation* transEq = (*ia)->equation();
+        Wasatch::EquationBase* transEq = (*ia)->equation();
         if ( !(transEq->dir_name() == "") ) continue; // skip momentum equations
         std::string solnVarName = transEq->solution_variable_name();
         phi.push_back(solnVarName);
@@ -766,7 +873,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     d_turbCounter = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
     if ((d_turbCounter%d_turbModelCalcFreq == 0)&&
         ((curr_level==0)||((!(curr_level==0))&&d_turbModelRKsteps)))
-      d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
+      d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls,
                                                d_timeIntegratorLabels[curr_level]);
 
 

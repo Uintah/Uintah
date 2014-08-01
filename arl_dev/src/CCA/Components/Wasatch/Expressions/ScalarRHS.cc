@@ -376,5 +376,5 @@ ScalarRHS<FieldT>::Builder::build() const
 //==========================================================================
 // Explicit template instantiation for supported versions of this expression
 #include <spatialops/structured/FVStaggered.h>
-template class ScalarRHS< SpatialOps::structured::SVolField >;
+template class ScalarRHS< SpatialOps::SVolField >;
 //==========================================================================

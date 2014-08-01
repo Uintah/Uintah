@@ -24,8 +24,6 @@
 
 #ifndef Growth_Expr_h
 #define Growth_Expr_h
-#include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
 
 #include <expression/Expression.h>
 

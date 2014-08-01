@@ -63,7 +63,7 @@ template < typename FieldT >
 class Extrapolant {
   const std::vector<bool> bcMinus_;
   const std::vector<bool> bcPlus_;
-  std::vector<SpatialOps::structured::IntVec> unitNormal_;
+  std::vector<SpatialOps::IntVec> unitNormal_;
 
 public:
 
@@ -82,10 +82,12 @@ public:
    *  \brief Applies extrapolation to a field.
    *
    *  \param src: A reference to the field on which extrapolation is needed.
-   Extrapolated data is stored back in the field itself - no need for source
-   and destination fields.
+   *         Extrapolated data is stored back in the field itself - no need for
+   *         source and destination fields.
+   *  \param min the minimum allowed value for the exatrapolated field
+   *  \param max the maximum allowed value for the exatrapolated field
    *  \param skipBCs: A boolean flag that allows one to skip extrapolation at 
-   physical boundaries.
+   *         physical boundaries.
    *
    */
   void apply_to_field( FieldT& src,

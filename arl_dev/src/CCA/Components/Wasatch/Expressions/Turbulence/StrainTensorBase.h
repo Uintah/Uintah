@@ -56,27 +56,27 @@ protected:
   typedef std::vector< SVolPtr  > SVolVecT;
   typedef std::vector< SVolVecT > SVolTensorT;
   
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SpatialOps::structured::XSurfYField >::type dudyT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SpatialOps::structured::YSurfXField >::type dvdxT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SpatialOps::XSurfYField >::type dudyT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SpatialOps::YSurfXField >::type dvdxT;
   
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SpatialOps::structured::XSurfZField >::type dudzT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SpatialOps::structured::ZSurfXField >::type dwdxT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SpatialOps::XSurfZField >::type dudzT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SpatialOps::ZSurfXField >::type dwdxT;
   
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SpatialOps::structured::YSurfZField >::type dvdzT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SpatialOps::structured::ZSurfYField >::type dwdyT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SpatialOps::YSurfZField >::type dvdzT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SpatialOps::ZSurfYField >::type dwdyT;
   
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SVolField >::type dudxT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SVolField >::type dvdyT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SVolField >::type dwdzT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SVolField >::type dudxT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SVolField >::type dvdyT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SVolField >::type dwdzT;
   
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::structured::XSurfYField, SVolField >::type XYInterpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::structured::YSurfXField, SVolField >::type YXInterpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::XSurfYField, SVolField >::type XYInterpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::YSurfXField, SVolField >::type YXInterpT;
   
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::structured::XSurfZField, SVolField >::type XZInterpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::structured::ZSurfXField, SVolField >::type ZXInterpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::XSurfZField, SVolField >::type XZInterpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::ZSurfXField, SVolField >::type ZXInterpT;
   
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::structured::YSurfZField, SVolField >::type YZInterpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::structured::ZSurfYField, SVolField >::type ZYInterpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::YSurfZField, SVolField >::type YZInterpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::ZSurfYField, SVolField >::type ZYInterpT;
   
   const XVolField* vel1_;
   const YVolField* vel2_;

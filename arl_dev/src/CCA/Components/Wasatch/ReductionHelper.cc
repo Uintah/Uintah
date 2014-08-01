@@ -50,7 +50,7 @@
 #include <Core/Grid/Variables/Reductions.h>
 #include <Core/Grid/Variables/VarTypes.h>
 
-namespace SS = SpatialOps::structured;
+namespace so = SpatialOps;
 
 namespace Wasatch {
 
@@ -117,11 +117,11 @@ namespace Wasatch {
 
     // don't allow the ExpressionTree to reclaim memory for this field since
     // it will need to be seen by the task that copies it to the "old" value.
-    if ( wasatch_->locked_fields().find( srcTag.name() ) == wasatch_->locked_fields().end() )  {
+    if( wasatch_->locked_fields().find( srcTag.name() ) == wasatch_->locked_fields().end() ){
       wasatch_->locked_fields().insert( srcTag.name() );
     }
 
-    if ( wasatch_->locked_fields().find( resultTag.name() ) == wasatch_->locked_fields().end() )  {
+    if( wasatch_->locked_fields().find( resultTag.name() ) == wasatch_->locked_fields().end() ){
       wasatch_->locked_fields().insert( resultTag.name() );
     }
   }
@@ -253,9 +253,9 @@ namespace Wasatch {
         case PERPATCH :
         {
           switch (redEnum) {
-            case ReduceMin: self().add_variable<SS::SingleValueField, ReductionMinOpT>(cat, resultTag, srcTag, printVar, perStage); break;
-            case ReduceMax: self().add_variable<SS::SingleValueField, ReductionMaxOpT>(cat, resultTag, srcTag, printVar, perStage); break;
-            case ReduceSum: self().add_variable<SS::SingleValueField, ReductionSumOpT>(cat, resultTag, srcTag, printVar, perStage); break;
+            case ReduceMin: self().add_variable<so::SingleValueField, ReductionMinOpT>(cat, resultTag, srcTag, printVar, perStage); break;
+            case ReduceMax: self().add_variable<so::SingleValueField, ReductionMaxOpT>(cat, resultTag, srcTag, printVar, perStage); break;
+            case ReduceSum: self().add_variable<so::SingleValueField, ReductionSumOpT>(cat, resultTag, srcTag, printVar, perStage); break;
             default:
             {
               std::ostringstream msg;
@@ -310,7 +310,7 @@ template void Wasatch::ReductionHelper::add_variable<T,ReductionMinOpT>( const C
 template void Wasatch::ReductionHelper::add_variable<T,ReductionMaxOpT>( const Category, const Expr::Tag&, const Expr::Tag&, const bool, const bool ); \
 template void Wasatch::ReductionHelper::add_variable<T,ReductionSumOpT>( const Category, const Expr::Tag&, const Expr::Tag&, const bool, const bool );
 
-DECLARE_REDUCTION_VARIANTS(SS::SingleValueField)
+DECLARE_REDUCTION_VARIANTS(so::SingleValueField)
 DECLARE_REDUCTION_VARIANTS(SVolField)
 DECLARE_REDUCTION_VARIANTS(XVolField)
 DECLARE_REDUCTION_VARIANTS(YVolField)

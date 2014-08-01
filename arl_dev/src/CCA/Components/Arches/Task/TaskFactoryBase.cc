@@ -35,7 +35,7 @@ TaskFactoryBase::register_task(std::string task_name,
   }
 }
 
-TaskInterface& 
+TaskInterface* 
 TaskFactoryBase::retrieve_task( const std::string task_name ){ 
 
   BuildMap::iterator i = _builders.find(task_name); 
@@ -47,7 +47,7 @@ TaskFactoryBase::retrieve_task( const std::string task_name ){
 
     _tasks.insert(std::make_pair(task_name,t)); 
 
-    return *t; 
+    return t; 
   
   } else { 
 

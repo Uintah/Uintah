@@ -44,7 +44,7 @@ typedef Uintah::Reductions::Sum<double> ReductionSumOpT;
  is used.
  */
 class ReductionBase
- : public Expr::Expression<SpatialOps::structured::SingleValueField>
+ : public Expr::Expression<SpatialOps::SingleValueField>
 {
   typedef Uintah::ReductionVariable<double, ReductionMinOpT > UintahReduceMin;
   typedef Uintah::ReductionVariable<double, ReductionMaxOpT > UintahReduceMax;

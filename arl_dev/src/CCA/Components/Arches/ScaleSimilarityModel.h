@@ -91,7 +91,7 @@ public:
    //    [in] 
    //        data User data needed for solve 
    virtual void sched_reComputeTurbSubmodel(SchedulerP&,
-                                            const PatchSet* patches,
+                                            const LevelP& level,
                                             const MaterialSet* matls,
                                             const TimeIntegratorLabel* timelabels);
 

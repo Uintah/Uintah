@@ -5,7 +5,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
+#include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 #include <CCA/Components/Wasatch/VardenParameters.h>
 #include <limits>
 #include <iostream>
@@ -13,255 +13,6 @@
 #include <algorithm>
 
 #include <ctime>
-
-//**********************************************************************
-// CORRUGATED MMS: BASE CLASS
-//**********************************************************************
-
-/**
- *  \class  VarDenCorrugatedMMSBase
- *  \author Tony Saad
- *  \date   January, 2014
- *  \brief  A convenient base class for easy implementation of the 2D Corrugated MMS found in 
- 
- Shunn, L., Ham, F., & Moin, P. (2012). Verification of variable-density flow solvers using
- manufactured solutions. Journal of Computational Physics, 231(9), 3801–3827. 
- doi:10.1016/j.jcp.2012.01.027
- 
- *
- */
-template< typename FieldT >
-class VarDenCorrugatedMMSBase : public Expr::Expression<FieldT>
-{
-  
-public:
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
-  void evaluate();
-  
-protected:
-  typedef SpatialOps::structured::SingleValueField TimeField;
-  
-  VarDenCorrugatedMMSBase( const Expr::Tag& xTag,
-                             const Expr::Tag& yTag,
-                             const Expr::Tag& tTag,
-                             const double r0,
-                             const double r1,
-                             const double d,
-                             const double w,
-                             const double k,
-                             const double a,
-                             const double b,
-                             const double uf,
-                             const double vf);
-  const double r0_, r1_, d_, w_, k_, a_, b_, uf_, vf_;
-  const Expr::Tag xTag_, yTag_, tTag_;
-  const FieldT *x_, *y_;
-  const TimeField* t_;
-};
-
-//**********************************************************************
-// CORRUGATED MMS: MIXTURE FRACTION (initialization, etc...)
-//**********************************************************************
-
-/**
- *  \class  VarDenCorrugatedMMSMixFrac
- *  \author Tony Saad
- *  \date   January, 2014
- *  \brief  Implements the mixture fraction ansatz for the corrugated MMS. This is used for initializing
- the mixture fraction. it can also be used for verification. See eqs 23 in:
- 
- Shunn, L., Ham, F., & Moin, P. (2012). Verification of variable-density flow solvers using
- manufactured solutions. Journal of Computational Physics, 231(9), 3801–3827.
- doi:10.1016/j.jcp.2012.01.027
-
- *
- */
-template< typename FieldT >
-class VarDenCorrugatedMMSMixFrac : public VarDenCorrugatedMMSBase<FieldT>
-{
-  
-public:
-  struct Builder : public Expr::ExpressionBuilder
-  {
-    /**
-     * @param result Tag of the resulting expression.
-     * @param xTag   Tag of the first coordinate.
-     * @param yTag   Tag of the second coordinate.
-     * @param tTag   Tag of time.
-     * @param D      a double containing the diffusivity constant.
-     * @param r0   a double holding the density value at f=0.
-     * @param r1   a double holding the density value at f=1.
-     */
-    Builder( const Expr::Tag& result,
-            const Expr::Tag& xTag,
-            const Expr::Tag& yTag,
-            const Expr::Tag& tTag,
-            const double r0,
-            const double r1,
-            const double d,
-            const double w,
-            const double k,
-            const double a,
-            const double b,
-            const double uf,
-            const double vf);
-    ~Builder(){}
-    Expr::ExpressionBase* build() const;
-  private:
-    const double r0_, r1_, d_, w_, k_, a_, b_, uf_, vf_;
-    const Expr::Tag xTag_, yTag_, tTag_;
-  };
-  
-  void evaluate();
-  
-private:
-  VarDenCorrugatedMMSMixFrac( const Expr::Tag& xTag,
-                                const Expr::Tag& yTag,
-                                const Expr::Tag& tTag,
-                                const double r0,
-                                const double r1,
-                                const double d,
-                                const double w,
-                                const double k,
-                                const double a,
-                                const double b,
-                                const double uf,
-                                const double vf);
-};
-
-//**********************************************************************
-// CORRUGATED MMS: MIXTURE FRACTION SOURCE TERM
-//**********************************************************************
-
-/**
- *  \class  VarDenCorrugatedMMSMixFracSrc
- *  \author Tony Saad
- *  \date   January, 2014
- *  \brief  Implements the mixture fraction source term that results from using the corrugated ansatz/MMS 
- for the mixture fraction.
- *
- */
-template< typename FieldT >
-class VarDenCorrugatedMMSMixFracSrc : public VarDenCorrugatedMMSBase<FieldT>
-{
-  
-public:
-  struct Builder : public Expr::ExpressionBuilder
-  {
-    /**
-     * @param result Tag of the resulting expression.
-     * @param xTag   Tag of the first coordinate.
-     * @param yTag   Tag of the second coordinate.
-     * @param tTag   Tag of time.
-     * @param D      a double containing the diffusivity constant.
-     * @param r0   a double holding the density value at f=0.
-     * @param r1   a double holding the density value at f=1.
-     */
-    Builder( const Expr::Tag& result,
-            const Expr::Tag& xTag,
-            const Expr::Tag& yTag,
-            const Expr::Tag& tTag,
-            const double r0,
-            const double r1,
-            const double d,
-            const double w,
-            const double k,
-            const double a,
-            const double b,
-            const double uf,
-            const double vf);
-    ~Builder(){}
-    Expr::ExpressionBase* build() const;
-  private:
-  const double r0_, r1_, d_, w_, k_, a_, b_, uf_, vf_;
-    const Expr::Tag xTag_, yTag_, tTag_;
-  };
-
-  void evaluate();
-  
-private:
-  typedef SpatialOps::structured::SingleValueField TimeField;
-  
-  VarDenCorrugatedMMSMixFracSrc( const Expr::Tag& xTag,
-                                 const Expr::Tag& yTag,
-                                 const Expr::Tag& tTag,
-                                 const double r0,
-                                 const double r1,
-                                 const double d,
-                                 const double w,
-                                 const double k,                                
-                                 const double a,
-                                 const double b,
-                                 const double uf,
-                                 const double vf);
-};
-
-//**********************************************************************
-// CORRUGATED MMS: VELOCITY
-//**********************************************************************
-
-/**
- *  \class  VarDenCorrugatedMMSVelocity
- *  \author Tony Saad
- *  \date   January, 2014
- *  \brief  Implements the corrugated ansatz/MMS for the axial velocity
- *
- */
-template< typename FieldT >
-class VarDenCorrugatedMMSVelocity : public VarDenCorrugatedMMSBase<FieldT>
-{
-  
-public:
-  struct Builder : public Expr::ExpressionBuilder
-  {
-    /**
-     * @param result Tag of the resulting expression.
-     * @param xTag   Tag of the first coordinate.
-     * @param yTag   Tag of the second coordinate.
-     * @param tTag   Tag of time.
-     * @param D      a double containing the diffusivity constant.
-     * @param r0   a double holding the density value at f=0.
-     * @param r1   a double holding the density value at f=1.
-     */
-    Builder( const Expr::Tag& result,
-            const Expr::Tag& xTag,
-            const Expr::Tag& yTag,
-            const Expr::Tag& tTag,
-            const double r0,
-            const double r1,
-            const double d,
-            const double w,
-            const double k,
-            const double a,
-            const double b,
-            const double uf,
-            const double vf);
-    ~Builder(){}
-    Expr::ExpressionBase* build() const;
-  private:
-    const double r0_, r1_, d_, w_, k_, a_, b_, uf_, vf_;
-    const Expr::Tag xTag_, yTag_, tTag_;
-  };
-  
-  void evaluate();
-  
-private:
-  typedef SpatialOps::structured::SingleValueField TimeField;
-  
-  VarDenCorrugatedMMSVelocity( const Expr::Tag& xTag,
-                             const Expr::Tag& yTag,
-                             const Expr::Tag& tTag,
-                             const double r0,
-                             const double r1,
-                             const double d,
-                             const double w,
-                             const double k,
-                             const double a,
-                             const double b,
-                             const double uf,
-                             const double vf);
-};
 
 //**********************************************************************
 // OSCILLATING MMS: MIXTURE FRACTION SOURCE TERM
@@ -305,9 +56,13 @@ public:
      * @param xTag   Tag of the first coordinate.
      * @param yTag   Tag of the second coordinate.
      * @param tTag   Tag of time.
-     * @param D      a double containing the diffusivity constant.
      * @param r0   a double holding the density value at f=0.
      * @param r1   a double holding the density value at f=1.
+     * @param d
+     * @param w
+     * @param k
+     * @param uf
+     * @param vf
      */
     Builder( const Expr::Tag& result,
              const Expr::Tag& xTag,
@@ -332,7 +87,7 @@ public:
   void evaluate();
   
 private:
-  typedef SpatialOps::structured::SingleValueField TimeField;
+  typedef SpatialOps::SingleValueField TimeField;
   
   VarDenMMSOscillatingMixFracSrc( const Expr::Tag& xTag,
                                   const Expr::Tag& yTag,
@@ -371,13 +126,6 @@ class VarDenMMSOscillatingContinuitySrc : public Expr::Expression<FieldT>
 public:
   struct Builder : public Expr::ExpressionBuilder
   {
-    /**
-     * @param result      Tag of the resulting expression.
-     * @param xTag        Tag of the first coordinate.
-     * @param yTag        Tag of the second coordinate.
-     * @param tTag        Tag of time.
-     * @param timestepTag Tag of time step.
-     */
     Builder( const Expr::Tag& result,
              const Expr::Tag densTag,
              const Expr::Tag densStarTag,
@@ -411,23 +159,23 @@ public:
   void evaluate();
   
 private:
-  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  typedef typename SpatialOps::SingleValueField TimeField;
   
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, XVolField >::type S2XInterpOpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, YVolField >::type S2YInterpOpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, ZVolField >::type S2ZInterpOpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, XVolField >::type S2XInterpOpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, YVolField >::type S2YInterpOpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, ZVolField >::type S2ZInterpOpT;
   
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, SVolField >::type X2SInterpOpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, SVolField >::type Y2SInterpOpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, ZVolField, SVolField >::type Z2SInterpOpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, SVolField >::type X2SInterpOpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, SVolField >::type Y2SInterpOpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, ZVolField, SVolField >::type Z2SInterpOpT;
   
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SVolField >::type GradXT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SVolField >::type GradYT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SVolField >::type GradZT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SVolField >::type GradXT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SVolField >::type GradYT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SVolField >::type GradZT;
 
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::GradientX, SVolField, SVolField >::type GradXST;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::GradientY, SVolField, SVolField >::type GradYST;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::GradientZ, SVolField, SVolField >::type GradZST;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientX, SVolField, SVolField >::type GradXST;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientY, SVolField, SVolField >::type GradYST;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientZ, SVolField, SVolField >::type GradZST;
   
   VarDenMMSOscillatingContinuitySrc( const Expr::Tag densTag,
                                      const Expr::Tag densStarTag,
@@ -491,9 +239,9 @@ private:
 template< typename FieldT >
 class VarDenOscillatingMMSxVel : public Expr::Expression<FieldT>
 {
-  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  typedef typename SpatialOps::SingleValueField TimeField;
 
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, FieldT >::type S2FInterpOpT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, FieldT >::type S2FInterpOpT;
   const S2FInterpOpT* s2FInterpOp_;
 public:
   
@@ -504,9 +252,9 @@ public:
   {
     Builder( const Expr::Tag& result,
              const Expr::Tag& rhoTag,
-             const Expr::Tag& xTag,  ///< x coordinate
-             const Expr::Tag& yTag,  ///< y coordinate
-             const Expr::Tag& tTag,  ///< time
+             const Expr::Tag& xTag,
+             const Expr::Tag& yTag,
+             const Expr::Tag& tTag,
              const double r0,
              const double r1,
              const double w,
@@ -565,9 +313,9 @@ private:
 template< typename FieldT >
 class VarDenOscillatingMMSyVel : public Expr::Expression<FieldT>
 {
-  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  typedef typename SpatialOps::SingleValueField TimeField;
 
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, FieldT >::type S2FInterpOpT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, FieldT >::type S2FInterpOpT;
   const S2FInterpOpT* s2FInterpOp_;
 public:
   
@@ -578,9 +326,9 @@ public:
   {
     Builder( const Expr::Tag& result,
              const Expr::Tag& rhoTag,
-             const Expr::Tag& xTag,  ///< x-coordinate
-             const Expr::Tag& yTag,  ///< y-coordinate
-             const Expr::Tag& tTag,  ///< time
+             const Expr::Tag& xTag,
+             const Expr::Tag& yTag,
+             const Expr::Tag& tTag,
               const double r0,
               const double r1,
               const double w,
@@ -640,7 +388,7 @@ private:
 template< typename FieldT >
 class VarDenOscillatingMMSMixFrac : public Expr::Expression<FieldT>
 {
-  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  typedef typename SpatialOps::SingleValueField TimeField;
 public:
   
   /**
@@ -649,15 +397,15 @@ public:
   struct Builder : public Expr::ExpressionBuilder
   {
     Builder( const Expr::Tag& result,
-             const Expr::Tag& xTag,  ///< x-coordinate
-             const Expr::Tag& yTag,  ///< y-coordinate
-             const Expr::Tag& tTag,  ///< time
-            const double r0,
-            const double r1,
-            const double w,
-            const double k,
-            const double uf,
-            const double vf);
+             const Expr::Tag& xTag,
+             const Expr::Tag& yTag,
+             const Expr::Tag& tTag,
+             const double r0,
+             const double r1,
+             const double w,
+             const double k,
+             const double uf,
+             const double vf);
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
@@ -674,12 +422,12 @@ private:
   VarDenOscillatingMMSMixFrac( const Expr::Tag& xTag,
                    const Expr::Tag& yTag,
                    const Expr::Tag& tTag,
-                              const double r0,
-                              const double r1,
-                              const double w,
-                              const double k,
-                              const double uf,
-                              const double vf);
+                   const double r0,
+                   const double r1,
+                   const double w,
+                   const double k,
+                   const double uf,
+                   const double vf );
   const double r0_, r1_, w_, k_, uf_, vf_;
   const Expr::Tag xTag_, yTag_, tTag_;
   const FieldT* x_;

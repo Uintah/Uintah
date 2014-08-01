@@ -53,6 +53,7 @@ namespace Uintah {
       using_Sine_BCs    = false;
       using_inletVel_BCs= false;
       applyHydrostaticPress = true;
+      d_gravity         = Vector(0,0,0);
 
     };
     

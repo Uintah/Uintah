@@ -237,7 +237,6 @@ namespace Wasatch {
   PoissonExpression::evaluate()
   {
     using namespace SpatialOps;
-    namespace SS = SpatialOps::structured;
 
     typedef std::vector<SVolField*> SVolFieldVec;
     SVolFieldVec& results = this->get_value_vec();
@@ -266,6 +265,7 @@ namespace Wasatch {
   {
     using namespace SpatialOps;
     typedef SelectUintahFieldType<SVolField>::const_type UintahField;
+    typedef SpatFldPtr<SVolField>  SVolFieldPtr;
     UintahField poissonField_;
 
     const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<SVolField>();
@@ -282,10 +282,10 @@ namespace Wasatch {
         const Uintah::Patch* const patch = patches->get(ip);
         if ( patch->hasBoundaryFaces() ) {
           const AllocInfo ainfo( oldDW, newDW, im, patch, pg );
+          const SpatialOps::GhostData gd( get_n_ghost<SVolField>() );
           newDW->get( poissonField_, phiLabel_, material, patch, gt, ng);
-          SVolField* const phi = wrap_uintah_field_as_spatialops<SVolField>(poissonField_,ainfo);
-          process_poisson_bcs(phit_, *phi, patch, material);
-          delete phi;
+          SVolFieldPtr phi = wrap_uintah_field_as_spatialops<SVolField>(poissonField_,ainfo,gd);
+          process_poisson_bcs( phit_, *phi, patch, material );
         }
       }
     }

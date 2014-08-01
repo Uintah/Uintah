@@ -81,12 +81,12 @@ DetailedTasks::DetailedTasks(SchedulerCommon* sc,
       ,deviceReadyQueueLock_("DetailedTasks Device Ready Queue"),
       deviceCompletedQueueLock_("DetailedTasks Device Completed Queue")
 #endif
-//readyQueueSemaphore_("Number of Ready DetailedTasks", 0)
 {
   // Set up mappings for the initial send tasks
   int dwmap[Task::TotalDWs];
-  for (int i = 0; i < Task::TotalDWs; i++)
+  for (int i = 0; i < Task::TotalDWs; i++) {
     dwmap[i] = Task::InvalidDW;
+  }
   dwmap[Task::OldDW] = 0;
   dwmap[Task::NewDW] = Task::NoDW;
 
@@ -275,7 +275,7 @@ DetailedTask::~DetailedTask()
 void DetailedTask::doit(const ProcessorGroup* pg,
                         vector<OnDemandDataWarehouseP>& oddws,
                         vector<DataWarehouseP>& dws,
-                        Task::CallBackEvent event/*=Task::CPU*/)
+                        Task::CallBackEvent event /*=Task::CPU*/)
 {
   TAU_PROFILE("DetailedTask::doit", " ", TAU_USER);
   if (mixedDebug.active()) {
@@ -303,12 +303,12 @@ void DetailedTask::doit(const ProcessorGroup* pg,
   if (task->usesDevice()) {
     cudaError_t retVal;
     CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(deviceNum_));
-    task->doit(event, pg, patches, matls, dws, d_cudaStream);
+    task->doit(event, pg, patches, matls, dws, d_cudaStream, deviceNum_);
   } else {
-    task->doit(event, pg, patches, matls, dws, NULL);
+    task->doit(event, pg, patches, matls, dws, NULL, -1);
   }
 #else
-  task->doit(event, pg, patches, matls, dws, NULL);
+  task->doit(event, pg, patches, matls, dws, NULL, -1);
 #endif
 
   for (int i = 0; i < (int)dws.size(); i++) {
@@ -323,11 +323,13 @@ void DetailedTasks::initializeScrubs(vector<OnDemandDataWarehouseP>& dws,
                                      int dwmap[])
 {
   vector<bool> initialized(dws.size(), false);
-  if (scrubout.active())
+  if (scrubout.active()) {
     scrubout << Parallel::getMPIRank() << " Begin initialize scrubs\n";
+  }
   for (int i = 0; i < (int)Task::TotalDWs; i++) {
-    if (dwmap[i] < 0)
+    if (dwmap[i] < 0) {
       continue;
+    }
     OnDemandDataWarehouse* dw = dws[dwmap[i]].get_rep();
 //    if (dw != 0) dw->copyKeyDB(varKeyDB, levelKeyDB);
     if (dw != 0 && dw->getScrubMode() == DataWarehouse::ScrubComplete) {
@@ -352,8 +354,9 @@ void DetailedTasks::initializeScrubs(vector<OnDemandDataWarehouseP>& dws,
       initialized[dwmap[i]] = true;
     }
   }
-  if (scrubout.active())
+  if (scrubout.active()) {
     scrubout << Parallel::getMPIRank() << " End initialize scrubs\n";
+  }
 }
 
 void DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
@@ -767,7 +770,10 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
                                              const IntVector& high,
                                              DetailedDep::CommCondition cond)
 {
-  TAU_PROFILE("DetailedTasks::possiblyCreateDependency", " ", TAU_USER); ASSERTRANGE(from->getAssignedResourceIndex(), 0, d_myworld->size()); ASSERTRANGE(to->getAssignedResourceIndex(), 0, d_myworld->size());
+  TAU_PROFILE("DetailedTasks::possiblyCreateDependency", " ", TAU_USER);
+
+  ASSERTRANGE(from->getAssignedResourceIndex(), 0, d_myworld->size());
+  ASSERTRANGE(to->getAssignedResourceIndex(), 0, d_myworld->size());
 
   if (dbg.active()) {
     dbg << d_myworld->myrank() << "          " << *to << " depends on " << *from << "\n";
@@ -830,8 +836,9 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     to->addRequires(batch);
 #endif
     ASSERTL2(newRequireBatch);
-    if (dbg.active())
+    if (dbg.active()) {
       dbg << d_myworld->myrank() << "          NEW BATCH!\n";
+    }
   } else if (mustConsiderInternalDependencies_) {  // i.e. threaded mode
     if (to->addRequires(batch)) {
       // this is a new requires batch for this task, so add
@@ -1072,7 +1079,28 @@ void DetailedTask::addInternalDependency(DetailedTask* prerequisiteTask,
 }
 
 #ifdef HAVE_CUDA
-bool DetailedTask::checkCUDAStreamDone()
+
+void DetailedTask::assignDevice(int device)
+{
+  deviceNum_= device;
+}
+
+int DetailedTask::getDeviceNum() const
+{
+  return deviceNum_;
+}
+
+cudaStream_t* DetailedTask::getCUDAStream() const
+{
+  return d_cudaStream;
+}
+
+void DetailedTask::setCUDAStream(cudaStream_t* s)
+{
+  d_cudaStream = s;
+}
+
+bool DetailedTask::queryCUDAStreamCompletion()
 {
   // sets the CUDA context, for the call to cudaEventQuery()
   cudaError_t retVal;
@@ -1094,7 +1122,7 @@ bool DetailedTask::checkCUDAStreamDone()
   }
 }
 
-#endif
+#endif // HAVE_CUDA
 
 void DetailedTask::done(vector<OnDemandDataWarehouseP>& dws)
 {

@@ -86,7 +86,7 @@ TurbulenceModel::problemSetupCommon( const ProblemSpecP& params )
 
 }
 void TurbulenceModel::sched_computeFilterVol( SchedulerP& sched, 
-                                              const PatchSet* patches, 
+                                              const LevelP& level, 
                                               const MaterialSet* matls )
 {
 
@@ -94,7 +94,7 @@ void TurbulenceModel::sched_computeFilterVol( SchedulerP& sched,
   tsk->computes( d_lab->d_filterVolumeLabel ); 
   tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells, 1 ); 
  
-  sched->addTask(tsk, patches, matls);
+  sched->addTask(tsk, level->eachPatch(), matls);
 
 }
 

@@ -101,6 +101,9 @@ WARNING
 
   private:
 
+    // varlabels created for the modifies version of relocation
+    std::vector<const Uintah::VarLabel*> destroyMe_;
+    
     //////////
     // Callback function for particle relocation that doesn't use pre-Relocation variables.
     void relocateParticlesModifies(const ProcessorGroup*,

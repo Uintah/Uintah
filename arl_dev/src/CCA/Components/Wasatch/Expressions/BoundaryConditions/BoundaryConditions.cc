@@ -29,7 +29,7 @@
 {                                                                                           \
 if (this->setInExtraCellsOnly_)                                                             \
 {                                                                                           \
-  SS::SpatialMask<FieldT> mask(f, maskPoints);                                              \
+  SpatialMask<FieldT> mask(f, maskPoints);                                              \
   f <<= cond( mask, bcValue_ )                                                              \
             ( f              );                                                             \
 } else {                                                                                    \
@@ -42,7 +42,7 @@ if (this->setInExtraCellsOnly_)                                                 
         case Uintah::Patch::xplus:                                                          \
         {                                                                                   \
           typedef typename OpT::DirichletX::DestFieldType DesT;                             \
-          SS::SpatialMask<DesT> mask = SS::SpatialMask<DesT>::build(f, maskPoints);         \
+          SpatialMask<DesT> mask = SpatialMask<DesT>::build(f, maskPoints);         \
           (*this->diriXOp_)(mask, f, BCVALUE, this->isMinusFace_);                          \
           break;                                                                            \
         }                                                                                   \
@@ -50,7 +50,7 @@ if (this->setInExtraCellsOnly_)                                                 
         case Uintah::Patch::yplus:                                                          \
         {                                                                                   \
           typedef typename OpT::DirichletY::DestFieldType DesT;                             \
-          SS::SpatialMask<DesT> mask = SS::SpatialMask<DesT>::build(f, maskPoints);         \
+          SpatialMask<DesT> mask = SpatialMask<DesT>::build(f, maskPoints);         \
           (*this->diriYOp_)(mask, f, BCVALUE, this->isMinusFace_);                          \
           break;                                                                            \
         }                                                                                   \
@@ -58,7 +58,7 @@ if (this->setInExtraCellsOnly_)                                                 
         case Uintah::Patch::zplus:                                                          \
         {                                                                                   \
           typedef typename OpT::DirichletZ::DestFieldType DesT;                             \
-          SS::SpatialMask<DesT> mask = SS::SpatialMask<DesT>::build(f, maskPoints);         \
+          SpatialMask<DesT> mask = SpatialMask<DesT>::build(f, maskPoints);         \
           (*this->diriZOp_)(mask, f, BCVALUE, this->isMinusFace_);                          \
           break;                                                                            \
         }                                                                                   \
@@ -76,7 +76,7 @@ if (this->setInExtraCellsOnly_)                                                 
         case Uintah::Patch::xplus:                                                          \
         {                                                                                   \
           typedef typename OpT::NeumannX::DestFieldType DesT;                               \
-          SS::SpatialMask<DesT> mask = SS::SpatialMask<DesT>::build(f, maskPoints);         \
+          SpatialMask<DesT> mask = SpatialMask<DesT>::build(f, maskPoints);         \
           (*this->neumXOp_)(mask, f, BCVALUE, this->isMinusFace_);                          \
           break;                                                                            \
         }                                                                                   \
@@ -84,7 +84,7 @@ if (this->setInExtraCellsOnly_)                                                 
         case Uintah::Patch::yplus:                                                          \
         {                                                                                   \
           typedef typename OpT::NeumannY::DestFieldType DesT;                               \
-          SS::SpatialMask<DesT> mask = SS::SpatialMask<DesT>::build(f, maskPoints);         \
+          SpatialMask<DesT> mask = SpatialMask<DesT>::build(f, maskPoints);         \
           (*this->neumYOp_)(mask, f, BCVALUE, this->isMinusFace_);                          \
           break;                                                                            \
         }                                                                                   \
@@ -92,7 +92,7 @@ if (this->setInExtraCellsOnly_)                                                 
         case Uintah::Patch::zplus:                                                          \
         {                                                                                   \
           typedef typename OpT::NeumannZ::DestFieldType DesT;                               \
-          SS::SpatialMask<DesT> mask = SS::SpatialMask<DesT>::build(f, maskPoints);         \
+          SpatialMask<DesT> mask = SpatialMask<DesT>::build(f, maskPoints);         \
           (*this->neumZOp_)(mask, f, BCVALUE, this->isMinusFace_);                          \
           break;                                                                            \
         }                                                                                   \
@@ -125,18 +125,17 @@ ConstantBC<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  namespace SS = SpatialOps::structured;
   FieldT& f = this->value();
   
   if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
-    std::vector<SS::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
-    std::vector<SS::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
+    std::vector<IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
+    std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
     
-    std::vector<SS::IntVec> maskPoints;
+    std::vector<IntVec> maskPoints;
     this->build_mask_points(maskPoints);
     
     if( this->isStaggered_ && this->bcTypeEnum_ != Wasatch::NEUMANN ){
-      SS::SpatialMask<FieldT> mask(f, maskPoints);
+      SpatialMask<FieldT> mask(f, maskPoints);
       masked_assign( mask, f, bcValue_ );
     }
     else{
@@ -146,6 +145,15 @@ evaluate()
 }
 
 // ###################################################################
+// a necessary specialization for particle fields because the BCHelper automatically creates
+// ConstantBC for Dirichlet boundary conditions specified in the input file.
+template<>
+void
+ConstantBC<ParticleField>::
+evaluate()
+{}
+
+// ###################################################################
 
 template< typename FieldT >
 void
@@ -153,12 +161,11 @@ OneSidedDirichletBC<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  namespace SS = SpatialOps::structured;
   FieldT& f = this->value();
   
   if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
+    std::vector<SpatialOps::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
+    std::vector<SpatialOps::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
     for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
       f(*ii) = bcValue_ ;
       f(*ig) = bcValue_ ;
@@ -174,19 +181,18 @@ LinearBC<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  namespace SS = SpatialOps::structured;
   
   FieldT& f = this->value();
   const double ci = this->ci_;
   const double cg = this->cg_;
   
   if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
-    std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
-    std::vector<SS::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
-    std::vector<SS::IntVec> maskPoints;
+    std::vector<SpatialOps::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
+    std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
+    std::vector<IntVec> maskPoints;
     this->build_mask_points(maskPoints);
     if( this->isStaggered_ ){
-      SS::SpatialMask<FieldT> mask(f, maskPoints);
+      SpatialMask<FieldT> mask(f, maskPoints);
       f <<= cond( mask, a_ * *x_ + b_ )
                 ( f                   );
     }
@@ -206,18 +212,17 @@ ParabolicBC<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  namespace SS = SpatialOps::structured;
   FieldT& f = this->value();
   const double ci = this->ci_;
   const double cg = this->cg_;
   
   if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
-    std::vector<SS::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
-    std::vector<SS::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
-    std::vector<SS::IntVec> maskPoints;
+    std::vector<IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
+    std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
+    std::vector<IntVec> maskPoints;
     this->build_mask_points(maskPoints);
     if( this->isStaggered_ ){
-      SS::SpatialMask<FieldT> mask(f, maskPoints);
+      SpatialMask<FieldT> mask(f, maskPoints);
       f <<= cond( mask, a_ * (*x_ - x0_)*(*x_ - x0_) + b_ * (*x_ - x0_) + c_ )
                 (f );
     }
@@ -238,18 +243,17 @@ PowerLawBC<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  namespace SS = SpatialOps::structured;
   FieldT& f = this->value();
   const double ci = this->ci_;
   const double cg = this->cg_;
   
   if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
-    std::vector<SS::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
-    std::vector<SS::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
-    std::vector<SS::IntVec> maskPoints;
+    std::vector<IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
+    std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
+    std::vector<IntVec> maskPoints;
     this->build_mask_points(maskPoints);
     if(this->isStaggered_) {
-      SS::SpatialMask<FieldT> mask(f, maskPoints);
+      SpatialMask<FieldT> mask(f, maskPoints);
       f <<= cond( mask, phic_ * pow( 1.0 - abs(*x_ - x0_) / R_ , 1.0/n_ ) )
                 (f                   );
     }
@@ -270,20 +274,19 @@ BCCopier<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  namespace SS = SpatialOps::structured;
   FieldT& f = this->value();
   if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
-    std::vector<SS::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
-    std::vector<SS::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
-    std::vector<SS::IntVec> maskPoints;
+    std::vector<IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
+    std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
+    std::vector<IntVec> maskPoints;
     this->build_mask_points(maskPoints);
     if( this->isStaggered_ ){
-      SS::SpatialMask<FieldT> mask(f, maskPoints);
+      SpatialMask<FieldT> mask(f, maskPoints);
       f <<= cond( mask, *src_)
                 (f           );
     }
     else{
-      SS::SpatialMask<FieldT> mask(f, * this->neboGhostPts_);
+      SpatialMask<FieldT> mask(f, * this->neboGhostPts_);
       f <<= cond( mask, *src_)
                 (f           );
     }
@@ -293,13 +296,13 @@ evaluate()
 // ###################################################################
 // EXPLICIT INSTANTIATION
 #include <CCA/Components/Wasatch/FieldTypes.h>
-#define INSTANTIATE_BC_PROFILES(VOLT) \
-template class ConstantBC<VOLT>;      \
-template class OneSidedDirichletBC<VOLT>;      \
-template class LinearBC<VOLT>;        \
-template class ParabolicBC<VOLT>;     \
-template class PowerLawBC<VOLT>;     \
-template class BCCopier<VOLT>;
+#define INSTANTIATE_BC_PROFILES(VOLT)       \
+template class ConstantBC         <VOLT>;   \
+template class OneSidedDirichletBC<VOLT>;   \
+template class LinearBC           <VOLT>;   \
+template class ParabolicBC        <VOLT>;   \
+template class PowerLawBC         <VOLT>;   \
+template class BCCopier           <VOLT>;
 
 INSTANTIATE_BC_PROFILES(SVolField)
 INSTANTIATE_BC_PROFILES(XVolField)

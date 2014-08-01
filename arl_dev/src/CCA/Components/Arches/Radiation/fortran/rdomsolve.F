@@ -41,6 +41,9 @@ C
       do 20 j=idxlo(2),idxhi(2)
       do 10 i=idxlo(1),idxhi(1)
 
+c     blackbody emmissive flux
+      esrcg(i,j,k) = SIG/pi*abskg(i,j,k)*tg(i,j,k)**4
+
       if (omu(l).gt.0) then
          
          ii = i

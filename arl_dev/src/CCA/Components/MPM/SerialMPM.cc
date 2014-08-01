@@ -1414,6 +1414,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP& sched,
   t->requires(Task::NewDW, lb->frictionalWorkLabel,             gac,NGN);
   t->requires(Task::OldDW, lb->pXLabel,                         gnone);
   t->requires(Task::OldDW, lb->pMassLabel,                      gnone);
+  t->requires(Task::OldDW, lb->pVolumeLabel,                    gnone);
   t->requires(Task::OldDW, lb->pParticleIDLabel,                gnone);
   t->requires(Task::OldDW, lb->pTemperatureLabel,               gnone);
   t->requires(Task::OldDW, lb->pSizeLabel,                      gnone);
@@ -3438,15 +3439,13 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
-//    bool combustion_problem=false;
 
+#if 0
     Material* reactant;
-//    int RMI = -99;
     reactant = d_sharedState->getMaterialByName("reactant");
     if(reactant != 0){
-//      RMI = reactant->getDWIndex();
-      //combustion_problem=true;
     }
+#endif
     double move_particles=1.;
     if(!flags->d_doGridReset){
       move_particles=0.;
@@ -3462,7 +3461,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constParticleVariable<Matrix3> psize;
       ParticleVariable<Vector> pvelocitynew;
       ParticleVariable<Matrix3> psizeNew;
-      constParticleVariable<double> pmass, pTemperature;
+      constParticleVariable<double> pmass,pVolumeOld, pTemperature;
       constParticleVariable<double> pConcentration;
       ParticleVariable<double> pmassNew,pvolume,pTempNew;
       ParticleVariable<double> pConcentrationNew;
@@ -3495,6 +3494,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pTemperature, lb->pTemperatureLabel,               pset);
       old_dw->get(pConcentration, lb->pConcentrationLabel,           pset);
       old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
+      old_dw->get(pVolumeOld,   lb->pVolumeLabel,                    pset);
       old_dw->get(pLocalized,   lb->pLocalizedMPMLabel,              pset);
 
       new_dw->allocateAndPut(pvelocitynew,lb->pVelocityLabel_preReloc,    pset);
@@ -3562,11 +3562,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       }
 
       double Cp=mpm_matl->getSpecificHeat();
-      double rho_init=mpm_matl->getInitialDensity();
-//      double rho_frac_min = 0.;
-//      if(m == RMI){
-//        rho_frac_min = .1;
-//      }
 
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();
@@ -3680,8 +3675,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           pFNew[idx] = Finc*pFOld[idx];
         }
 
-        double J=pFNew[idx].Determinant();
-        pvolume[idx]=(pmassNew[idx]/rho_init)*J;
+        double J   =pFNew[idx].Determinant();
+        double JOld=pFOld[idx].Determinant();
+        pvolume[idx]=pVolumeOld[idx]*(J/JOld)*(pmassNew[idx]/pmass[idx]);
         partvoldef += pvolume[idx];
       }
 
@@ -3759,9 +3755,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           patch->findCell(px[idx],cell_index);
 
           vol_CC[cell_index]  +=pvolume[idx];
-//  either of the following is correct
           vol_0_CC[cell_index]+=pvolume[idx]/J;
-//          vol_0_CC[cell_index]+=pmassNew[idx]/rho_init;
         }
 
         for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++){
@@ -3784,6 +3778,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           pFNew[idx]*=cbrt(J_CC[cell_index]/J);
           // Change L such that it is consistent with the F          
           pVelGrad[idx]+= Identity*((log(J_CC[cell_index]/J))/ThreedelT);
+
+          double JOld=pFOld[idx].Determinant();
+          pvolume[idx]=pVolumeOld[idx]*(J/JOld);
         }
       } //end of pressureStabilization loop  at the patch level
 

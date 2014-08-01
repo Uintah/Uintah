@@ -168,7 +168,7 @@ VelEst<FieldT>::Builder::build() const
 //==========================================================================
 // Explicit template instantiation for supported versions of this expression
 #include <spatialops/structured/FVStaggered.h>
-template class VelEst< SpatialOps::structured::XVolField >;
-template class VelEst< SpatialOps::structured::YVolField >;
-template class VelEst< SpatialOps::structured::ZVolField >;
+template class VelEst< SpatialOps::XVolField >;
+template class VelEst< SpatialOps::YVolField >;
+template class VelEst< SpatialOps::ZVolField >;
 //==========================================================================

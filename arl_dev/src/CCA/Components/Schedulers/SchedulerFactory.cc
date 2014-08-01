@@ -27,8 +27,6 @@
 #include <CCA/Components/Schedulers/SingleProcessorScheduler.h>
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Components/Schedulers/DynamicMPIScheduler.h>
-#include <CCA/Components/Schedulers/ThreadedMPIScheduler.h>
-#include <CCA/Components/Schedulers/ThreadedMPIScheduler2.h>
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 
 #include <Core/Parallel/ProcessorGroup.h>
@@ -47,9 +45,6 @@ using namespace Uintah;
 static DebugStream SingleProcessor("SingleProcessor", false);
 static DebugStream MPI("MPI", false);
 static DebugStream DynamicMPI("DynamicMPI", false);
-static DebugStream Threaded("Threaded", false);
-static DebugStream Threaded2("Threaded2", false);
-static DebugStream GPU("GPU", false);
 
 SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
                                           const ProcessorGroup* world,
@@ -69,34 +64,28 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
       if (!(Uintah::Parallel::getNumThreads() > 0)) {
         if (SingleProcessor.active()) {
           throw ProblemSetupException("Cannot use Single Processor Scheduler with MPI.", __FILE__, __LINE__);
-        } else if (Threaded.active() || Threaded2.active() || GPU.active()) {
-          throw ProblemSetupException("Cannot run Threaded Schedulers without -nthreads <num>.", __FILE__, __LINE__);
-        } else if (GPU.active() && !(Uintah::Parallel::usingDevice())) {
-          throw ProblemSetupException("Cannot use GPU Scheduler without configuring with --enable-cuda.", __FILE__, __LINE__);
-        } else if (DynamicMPI.active()) {
+        }
+        else if (DynamicMPI.active()) {
           scheduler = "DynamicMPIScheduler";
-        } else {
+        }
+        else {
           scheduler = "MPIScheduler";
         }
-      } else if (Threaded.active()) {
-        scheduler = "ThreadedMPIScheduler";
-      } else if (Threaded2.active()) {
-        scheduler = "ThreadedMPI2Scheduler";
       }
       else {
         scheduler = "UnifiedScheduler";
       }
-    } else {
+    }
+    else {
       if (SingleProcessor.active()) {
         scheduler = "SingleProcessorScheduler";
-      } else {
+      }
+      else {
         scheduler = "UnifiedScheduler";
       }
     }
-    if ((Uintah::Parallel::getNumThreads() > 0) && (scheduler != "ThreadedMPIScheduler")
-                                                && (scheduler != "ThreadedMPI2Scheduler")
-                                                && (scheduler != "UnifiedScheduler")) {
-      throw ProblemSetupException("Threaded or Unified Scheduler needed for -nthreads", __FILE__, __LINE__);
+    if ((Uintah::Parallel::getNumThreads() > 0) && (scheduler != "UnifiedScheduler")) {
+      throw ProblemSetupException("Unified Scheduler needed for -nthreads", __FILE__, __LINE__);
     }
   }
 
@@ -108,15 +97,14 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
   // Check for specific scheduler request
   if (scheduler == "SingleProcessorScheduler" || scheduler == "SingleProcessor") {
     sch = scinew SingleProcessorScheduler(world, output, NULL);
-  } else if (scheduler == "MPIScheduler" || scheduler == "MPI") {
+  }
+  else if (scheduler == "MPIScheduler" || scheduler == "MPI") {
     sch = scinew MPIScheduler(world, output, NULL);
-  } else if (scheduler == "DynamicMPIScheduler" || scheduler == "DynamicMPI") {
+  }
+  else if (scheduler == "DynamicMPIScheduler" || scheduler == "DynamicMPI") {
     sch = scinew DynamicMPIScheduler(world, output, NULL);
-  } else if (scheduler == "ThreadedMPIScheduler" || scheduler == "ThreadedMPI") {
-    sch = scinew ThreadedMPIScheduler(world, output, NULL);
-  } else if (scheduler == "ThreadedMPI2Scheduler" || scheduler == "ThreadedMPI2") {
-    sch = scinew ThreadedMPIScheduler2(world, output);
-  } else if (scheduler == "UnifiedScheduler" || scheduler == "Unified") {
+  }
+  else if (scheduler == "UnifiedScheduler" || scheduler == "Unified") {
     sch = scinew UnifiedScheduler(world, output, NULL);
   }
   else {

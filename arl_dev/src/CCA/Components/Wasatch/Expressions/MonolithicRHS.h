@@ -3,8 +3,7 @@
 
 #include <expression/Expression.h>
 
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
-#include <spatialops/structured/FVStaggeredFieldTypes.h>
+#include <spatialops/structured/FVStaggered.h>
 
 /**
  *  \class MonolithicRHS
@@ -35,7 +34,7 @@ class MonolithicRHS
   const YFaceT* convFluxY_;  ///< y-direction convective flux
   const ZFaceT* convFluxZ_;  ///< z-direction convective flux
 
-  typedef SpatialOps::structured::BasicOpTypes<FieldT>  OpTypes;
+  typedef SpatialOps::BasicOpTypes<FieldT>  OpTypes;
 
   typedef typename OpTypes::InterpC2FX InterpX;
   typedef typename OpTypes::InterpC2FY InterpY;

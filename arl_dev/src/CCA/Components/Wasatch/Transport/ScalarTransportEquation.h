@@ -110,13 +110,11 @@ namespace Wasatch{
     /**
      *  \brief Construct a ScalarTransportEquation
      *  \param solnVarName the name of the solution variable for this ScalarTransportEquation
-     *
      *  \param params the tag from the input file specifying the
      *         transport equation.
-     *
+     *  \param gc
      *  \param densityTag a tag containing density for necessary cases. it will be empty where
      *         it is not needed.
-     *
      *  \param isConstDensity true for constant density
      *  \param turbulenceParams information on turbulence models
      *  \param callSetup for objects that derive from ScalarTransportEquation,

@@ -67,6 +67,9 @@
         <BCType id="0" var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
+        <BCType id="0" var="Neumann" label="nox"> 
+          <value>0.0</value>
+        </BCType>
       </Face>
       <Face circle="x-" origin="0 1.5 1.5" radius="0.5" name="main inlet">
         <BCType id="0" var="MassFlowInlet"  label="mass flow inlet">
@@ -84,6 +87,9 @@
         <BCType id="0" var="Tabulated" label="enthalpy"> 
           <value>adiabaticenthalpy</value>
         </BCType>
+        <BCType id="0" var="Dirichlet" label="nox"> 
+          <value>0.0</value>
+        </BCType>
       </Face> 
       <Face side="x+">
         <BCType id="0" var="OutletBC"  label="the outlet">
@@ -99,6 +105,9 @@
           <value>0.0</value>
         </BCType>
         <BCType id="0" var="Neumann" label="enthalpy"> 
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" var="Neumann" label="nox"> 
           <value>0.0</value>
         </BCType>
       </Face>
@@ -118,6 +127,9 @@
         <BCType id="0" var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
+        <BCType id="0" var="Neumann" label="nox"> 
+          <value>0.0</value>
+        </BCType>
       </Face>
       <Face side="y+">
         <BCType id="0" var="PressureBC"  label="y+pressure">
@@ -133,6 +145,9 @@
           <value>0.0</value>
         </BCType>
         <BCType id="0" var="Neumann" label="enthalpy"> 
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" var="Neumann" label="nox"> 
           <value>0.0</value>
         </BCType>
       </Face>
@@ -152,6 +167,9 @@
         <BCType id="0" var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
+        <BCType id="0" var="Neumann" label="nox"> 
+          <value>0.0</value>
+        </BCType>
       </Face>
       <Face side="z+">
         <BCType id="0" var="PressureBC"  label="z+pressure">
@@ -169,6 +187,9 @@
         <BCType id="0" var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
+        <BCType id="0" var="Neumann" label="nox"> 
+          <value>0.0</value>
+        </BCType>
       </Face>
     </BoundaryConditions>
   </Grid>
@@ -182,6 +203,8 @@
   <CFD>
 <!-- ARCHES specification -->
     <ARCHES>
+
+      <BoundaryConditions/>
 
       <TimeIntegrator>
         <ExplicitIntegrator order="second"/>
@@ -233,8 +256,8 @@
           <src label="divQ" type="do_radiation">
             <calc_frequency>5</calc_frequency>
             <calc_on_all_RKsteps>false</calc_on_all_RKsteps>
+            <abskg label="abskg"/>
             <DORadiationModel>
-              <opl>3.0</opl>
               <LinearSolver type="hypre">
                 <res_tol>1.0e-10</res_tol>
                 <ksptype>gmres</ksptype>
@@ -252,6 +275,15 @@
       </TransportEqns>
 
       <PropertyModels>
+        <model type="radiation_properties" label="abskg">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <calculator type="hottel_sarofim">
+            <abskg label="gas_abskg"/>
+            <opl>3.0</opl>
+          </calculator>
+        </model>
         <model type="heat_loss" label="heat_loss">
           <initialization type="constant">
             <constant>0.0</constant>
@@ -266,6 +298,17 @@
           <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
           <density_label>density</density_label>
           <variance_coefficient>0.14</variance_coefficient>
+        </model>
+        <model type="empirical_soot" label="soot">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <carbon_content_fuel>0.75</carbon_content_fuel>
+          <carbon_content_ox>0.0</carbon_content_ox>
+          <E_st>0.08</E_st>
+          <opl>3.0</opl>
+          <temperature_label>temperature</temperature_label>
+          <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
         </model>
       </PropertyModels>
 

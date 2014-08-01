@@ -188,32 +188,31 @@ namespace Uintah {
 
      void sched_cellTypeInit__NEW(SchedulerP& sched,
                                   const LevelP& level, 
-                                  const PatchSet* patches,
                                   const MaterialSet* matls);
 
-     void cellTypeInit__NEW(const ProcessorGroup*,
-                            const PatchSubset* patches,
-                            const MaterialSubset*,
-                            DataWarehouse*,
-                            DataWarehouse* new_dw, 
-                            IntVector lo, IntVector hi);
+     void cellTypeInit__NEW( const ProcessorGroup*,
+                             const PatchSubset* patches,
+                             const MaterialSubset*,
+                             DataWarehouse*,
+                             DataWarehouse* new_dw, 
+                             IntVector lo, IntVector hi);
 
-     void sched_computeBCArea__NEW(SchedulerP& sched,
-                                      const LevelP& level, 
-                                      const PatchSet* patches,
-                                      const MaterialSet* matls);
-     void computeBCArea__NEW(const ProcessorGroup*,
-                                const PatchSubset* patches,
-                                const MaterialSubset*,
-                                DataWarehouse*,
-                                DataWarehouse* new_dw, 
-                                const IntVector lo, 
-                                const IntVector hi);
+     void sched_computeBCArea__NEW( SchedulerP& sched,
+                                    const LevelP& level, 
+                                    const MaterialSet* matls);
 
-     void sched_setupBCInletVelocities__NEW(SchedulerP& sched,
-                                      const PatchSet* patches,
-                                      const MaterialSet* matls, 
-                                      bool doing_restart );
+     void computeBCArea__NEW( const ProcessorGroup*,
+                              const PatchSubset* patches,
+                              const MaterialSubset*,
+                              DataWarehouse*,
+                              DataWarehouse* new_dw, 
+                              const IntVector lo, 
+                              const IntVector hi);
+
+     void sched_setupBCInletVelocities__NEW( SchedulerP& sched,
+                                             const LevelP& level,
+                                             const MaterialSet* matls, 
+                                             bool doing_restart );
 
      void setupBCInletVelocities__NEW(const ProcessorGroup*,
                                 const PatchSubset* patches,
@@ -223,8 +222,8 @@ namespace Uintah {
                                 bool doing_restart );
 
      void sched_setInitProfile__NEW(SchedulerP& sched,
-                                      const PatchSet* patches,
-                                      const MaterialSet* matls);
+                                    const LevelP& level,
+                                    const MaterialSet* matls);
 
      void setInitProfile__NEW(const ProcessorGroup*,
                               const PatchSubset* patches,
@@ -232,7 +231,9 @@ namespace Uintah {
                               DataWarehouse*,
                               DataWarehouse* new_dw);
 
-     void sched_checkMomBCs( SchedulerP& sched, const PatchSet* patches, const MaterialSet* matls ); 
+     void sched_checkMomBCs( SchedulerP& sched, 
+                             const LevelP& level, 
+                             const MaterialSet* matls ); 
 
      void checkMomBCs( const ProcessorGroup* pc, 
                        const PatchSubset* patches, 
@@ -299,12 +300,14 @@ namespace Uintah {
                         varType& phi, 
                         std::vector<BC_TYPE>& types );
 
-      void sched_setupNewIntrusions(SchedulerP&, 
-          const PatchSet* patches,
-          const MaterialSet* matls); 
+      void sched_setupNewIntrusions( SchedulerP&, 
+                                     const LevelP& level,
+                                     const MaterialSet* matls ); 
 
       void sched_setupNewIntrusionCellType( SchedulerP& sched, 
-        const PatchSet* patches, const MaterialSet* matls, const bool doing_restart );
+                                            const LevelP& level, 
+                                            const MaterialSet* matls, 
+                                            const bool doing_restart );
 
       void setHattedIntrusionVelocity( const Patch* p,
                                        SFCXVariable<double>& u, 
@@ -312,7 +315,9 @@ namespace Uintah {
                                        SFCZVariable<double>& w, 
                                        constCCVariable<double>& density );
 
-      void sched_setIntrusionDensity( SchedulerP& sched, const PatchSet* patches, const MaterialSet* matls );
+      void sched_setIntrusionDensity( SchedulerP& sched, 
+                                      const LevelP& level, 
+                                      const MaterialSet* matls );
 
       void setIntrusionDensity( const ProcessorGroup*,
                                 const PatchSubset* patches,
@@ -533,7 +538,7 @@ namespace Uintah {
 
 
       void sched_setAreaFraction(SchedulerP& sched, 
-          const PatchSet* patches, 
+          const LevelP& level, 
           const MaterialSet* matls, 
           const int timesubstep,
           const bool reinitialize );
@@ -604,7 +609,7 @@ namespace Uintah {
 
       /** @brief Interface to the intrusion temperature method */ 
       void sched_setIntrusionTemperature( SchedulerP& sched, 
-                                          const PatchSet* patches,
+                                          const LevelP& level,
                                           const MaterialSet* matls );
 
       BCInfoMap d_bc_information;                           ///< Contains information about each boundary condition spec. (from UPS)

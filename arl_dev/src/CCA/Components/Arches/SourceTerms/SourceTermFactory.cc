@@ -133,6 +133,16 @@ void SourceTermFactory::commonSrcProblemSetup( const ProblemSpecP& db )
   }
 }
 
+void SourceTermFactory::extraSetup( GridP& grid )
+{ 
+  for ( std::vector<SourceContainer>::iterator iter = _active_sources.begin();iter != _active_sources.end(); iter++ ){ 
+
+    SourceTermBase& src  = this->retrieve_source_term( iter->name ); 
+    src.extraSetup( grid ); 
+
+  }
+}
+
 //---------------------------------------------------------------------------
 // Method: Find if a property model is included in the map. 
 //---------------------------------------------------------------------------

@@ -133,7 +133,7 @@ MomRHS<FieldT>::Builder::build() const
 
 //==================================================================
 // Explicit template instantiation
-template class MomRHS< SpatialOps::structured::XVolField >;
-template class MomRHS< SpatialOps::structured::YVolField >;
-template class MomRHS< SpatialOps::structured::ZVolField >;
+template class MomRHS< SpatialOps::XVolField >;
+template class MomRHS< SpatialOps::YVolField >;
+template class MomRHS< SpatialOps::ZVolField >;
 //==================================================================

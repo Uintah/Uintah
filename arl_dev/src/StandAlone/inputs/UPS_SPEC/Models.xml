@@ -29,6 +29,8 @@
       <applyFilter            spec="OPTIONAL BOOLEAN"/>
       <ignore_BC_bulletproofing spec="OPTIONAL BOOLEAN"/>
            
+      <include href="RMCRT_radiometer.xml" section="Radiometer" />     
+           
       <algorithm                spec="OPTIONAL NO_DATA" 
                                     attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel'">
                                     

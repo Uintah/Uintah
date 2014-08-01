@@ -62,14 +62,14 @@ void
 StrainTensorSquare::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  exprDeps.requires_expression( S11Tag_   );
-  exprDeps.requires_expression( S21Tag_   );
-  exprDeps.requires_expression( S31Tag_   );
+  exprDeps.requires_expression( S11Tag_ );
+  exprDeps.requires_expression( S21Tag_ );
+  exprDeps.requires_expression( S31Tag_ );
 
-  exprDeps.requires_expression( S22Tag_   );
-  exprDeps.requires_expression( S32Tag_   );
+  exprDeps.requires_expression( S22Tag_ );
+  exprDeps.requires_expression( S32Tag_ );
 
-  exprDeps.requires_expression( S33Tag_   );
+  exprDeps.requires_expression( S33Tag_ );
 }
 
 //--------------------------------------------------------------------
@@ -78,16 +78,16 @@ void
 StrainTensorSquare::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  namespace SS = SpatialOps::structured;
+  namespace so = SpatialOps;
   
-  S11_ = &fml.field_ref<SS::XSurfXField>(S11Tag_);
-  S21_ = &fml.field_ref<SS::XSurfYField>(S21Tag_);
-  S31_ = &fml.field_ref<SS::XSurfZField>(S31Tag_);
+  S11_ = &fml.field_ref<so::XSurfXField>(S11Tag_);
+  S21_ = &fml.field_ref<so::XSurfYField>(S21Tag_);
+  S31_ = &fml.field_ref<so::XSurfZField>(S31Tag_);
 
-  S22_ = &fml.field_ref<SS::YSurfYField>(S22Tag_);
-  S32_ = &fml.field_ref<SS::YSurfZField>(S32Tag_);
+  S22_ = &fml.field_ref<so::YSurfYField>(S22Tag_);
+  S32_ = &fml.field_ref<so::YSurfZField>(S32Tag_);
 
-  S33_ = &fml.field_ref<SS::ZSurfZField>(S33Tag_);
+  S33_ = &fml.field_ref<so::ZSurfZField>(S33Tag_);
 }
 
 //--------------------------------------------------------------------

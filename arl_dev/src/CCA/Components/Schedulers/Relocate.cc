@@ -58,6 +58,9 @@ Relocate::~Relocate()
 {
   if(reloc_matls && reloc_matls->removeReference())
     delete reloc_matls;
+  for (int p=0; p < destroyMe_.size(); p++) {
+    VarLabel::destroy(destroyMe_[p]);
+  }
 }
 
 namespace Uintah {
@@ -178,13 +181,42 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
                                      const vector<vector<const VarLabel*> >& otherLabels,
                                      const MaterialSet* matls)
 {
+  //In this version of the relocation algorithm, the user provides a list of varlabels that require
+  // relocation. Uintah will create a mirror list of temporary, post-reloc variables. Uintah will
+  // then fill those post-reloc variables with relocated variables. After all communication and
+  // relocation is completed, Uintah will then copy the relocated variables back into the original
+  // variables that the user has provided
+  
+  // create the post relocation position variables
+  VarLabel* posPostRelocLabel = VarLabel::create(posLabel->getName() + "+", posLabel->typeDescription());
+  destroyMe_.push_back(posPostRelocLabel);
+  
+  // create a vector of post relocation variables
+  vector<vector<const VarLabel*> > postRelocOtherLabels;
+  // fill the list of post relocation variables
+  for (int m =0; m<otherLabels.size(); m++) {
+    vector<const VarLabel*> tmp;
+    postRelocOtherLabels.push_back(tmp);
+    for (int p=0; p<otherLabels[m].size(); p++) {
+      const VarLabel* pVarLabel = otherLabels[m][p];
+      const std::string pPostRelocVarName = pVarLabel->getName() + "+";
+      const VarLabel* pPostRelocVarLabel;
+      if (VarLabel::find(pPostRelocVarName)) {
+        pPostRelocVarLabel = VarLabel::find(pPostRelocVarName);
+      } else {
+        pPostRelocVarLabel = VarLabel::create(pPostRelocVarName, pVarLabel->typeDescription());
+        destroyMe_.push_back(pPostRelocVarLabel);
+      }
+      postRelocOtherLabels[m].push_back(pPostRelocVarLabel);
+    }
+  }
   // Only allow particles at the finest level for now
   //  if(level->getIndex() != level->getGrid()->numLevels()-1)
   //    return;
   reloc_old_posLabel = posLabel;
   reloc_old_labels   = otherLabels;
-  reloc_new_posLabel = posLabel;
-  reloc_new_labels   = otherLabels;
+  reloc_new_posLabel = posPostRelocLabel;
+  reloc_new_labels   = postRelocOtherLabels;
   
   if(reloc_matls && reloc_matls->removeReference()){
     delete reloc_matls;
@@ -192,7 +224,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   
   reloc_matls = matls;
   reloc_matls->addReference();
-//  ASSERTEQ(reloc_old_labels.size(), reloc_new_labels.size());
+  ASSERTEQ(reloc_old_labels.size(), reloc_new_labels.size());
   int numMatls = (int)reloc_old_labels.size();
   ASSERTEQ(matls->size(), 1);
   
@@ -200,30 +232,31 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   // they may not be in consecutive order - so get the matl from the matl
   // subset whenever you schedule a task or use the dw.
   const MaterialSubset* matlsub = matls->getSubset(0);
-//  ASSERTEQ(numMatls, matlsub->size());
+  ASSERTEQ(numMatls, matlsub->size());
   
-//  for (int m = 0; m< numMatls; m++){
-//    ASSERTEQ(reloc_old_labels[m].size(), reloc_new_labels[m].size());
-//  }
-
+  for (int m = 0; m< numMatls; m++){
+    ASSERTEQ(reloc_old_labels[m].size(), reloc_new_labels[m].size());
+  }
   Task* t = scinew Task("Relocate::relocateParticles",
                         this, &Relocate::relocateParticlesModifies, coarsestLevelwithParticles.get_rep());
   if(lb){
     t->usesMPI(true);
   }
-  t->requires( Task::OldDW, posLabel, Ghost::None);
+  t->requires( Task::NewDW, reloc_old_posLabel, Ghost::None);
+  //t->modifies( reloc_old_posLabel );
   
   for(int m=0;m < numMatls;m++){
     MaterialSubset* thismatl = scinew MaterialSubset();
     thismatl->add(matlsub->get(m));
     
-    for(int i=0;i<(int)otherLabels[m].size();i++){
-      t->requires( Task::OldDW, otherLabels[m][i], thismatl, Ghost::None);
+    for(int i=0;i<(int)reloc_old_labels[m].size();i++){
+      t->requires( Task::NewDW, reloc_old_labels[m][i], Ghost::None);
+//      t->modifies( reloc_old_labels[m][i] );
     }
     
-    t->modifies( posLabel, thismatl);
-    for(int i=0;i<(int)otherLabels[m].size();i++){
-      t->modifies(otherLabels[m][i], thismatl);
+    t->computes( reloc_new_posLabel, thismatl);
+    for(int i=0;i<(int)reloc_new_labels[m].size();i++){
+      t->computes(reloc_new_labels[m][i], thismatl);
     }
   }
   
@@ -1101,7 +1134,16 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
         if(recvs == 0 && subsets.size() == 1 && keep_pset == orig_pset && !adding_new_particles){
           // carry forward old data
           new_dw->saveParticleSubset(orig_pset, matl, toPatch);
-
+          
+          // particle position
+          ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, orig_pset);
+          new_dw->put(*posvar, reloc_new_posLabel);
+          
+          // all other variables
+          for(int v=0;v<numVars;v++){
+            ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[m][v], orig_pset);
+            new_dw->put(*var, reloc_new_labels[m][v]);
+          }
         } else {
           
           //__________________________________
@@ -1216,16 +1258,27 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
           
           ASSERTEQ(idx, totalParticles);
           
+#if 0
+          for(int v=0;v<numVars;v++){
+            const VarLabel* label = reloc_new_labels[m][v];
+            if (label == particleIDLabel_)
+              break;
+          }
+          
+          // must have a p.particleID variable in reloc labels
+          ASSERT(v < numVars);
+          newsubset->sort(vars[v] /* particleID variable */);
+#endif
+          
           // Put the data back in the data warehouse
-          new_dw->put(*newpos, reloc_new_posLabel, true);
+          new_dw->put(*newpos, reloc_new_posLabel);
           
           delete newpos;
           
-          for(int v=0;v<numVars;v++) {
-            new_dw->put(*vars[v], reloc_new_labels[m][v], true);
+          for(int v=0;v<numVars;v++){
+            new_dw->put(*vars[v], reloc_new_labels[m][v]);
             delete vars[v];
           }
-          std::cout << "total_reloc: " << total_reloc[0] << ", " << total_reloc[1] << ", " << total_reloc[2] << "\n";
         }  // particles have moved
         if(keep_pset->removeReference()){
           delete keep_pset;
@@ -1268,6 +1321,24 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
   
   if (pg->size() > 1){
     finalizeCommunication();
+  }
+  
+  // Finally, copy the relocated variables back into the original variables :)
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    for(int m = 0; m<matls->size(); m++){
+      const int matl = matls->get(m);
+      ParticleVariableBase* pPos = new_dw->getParticleVariable(reloc_new_posLabel, matl, patch);
+      new_dw->put(*pPos, reloc_old_posLabel, true);
+
+      // go over the list of particle variables
+      for (int i=0; i< reloc_new_labels[m].size(); i++) {
+        const VarLabel* pVarLabel = reloc_old_labels[m][i];
+        const VarLabel* relocVarLabel = reloc_new_labels[m][i];
+        ParticleVariableBase* pvar = new_dw->getParticleVariable(relocVarLabel,matl, patch);
+        new_dw->put(*pvar, pVarLabel,true);
+      }
+    }
   }
   
 }
