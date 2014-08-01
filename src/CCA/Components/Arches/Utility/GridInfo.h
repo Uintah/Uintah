@@ -1,17 +1,17 @@
-#ifndef Uintah_Component_Arches_SampleTask_h
-#define Uintah_Component_Arches_SampleTask_h
+#ifndef Uintah_Component_Arches_GridInfo_h
+#define Uintah_Component_Arches_GridInfo_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 
 namespace Uintah{ 
 
   class Operators; 
-  class SampleTask : public TaskInterface { 
+  class GridInfo : public TaskInterface { 
 
 public: 
 
-    SampleTask( std::string task_name, int matl_index ); 
-    ~SampleTask(); 
+    GridInfo( std::string task_name, int matl_index ); 
+    ~GridInfo(); 
 
     void problemSetup( ProblemSpecP& db ); 
 
@@ -26,7 +26,7 @@ public:
     void initialize( const Patch* patch, FieldCollector* field_collector, 
                      SpatialOps::OperatorDatabase& opr );
 
-    //Build instructions for this (SampleTask) class. 
+    //Build instructions for this (GridInfo) class. 
     class Builder : public TaskInterface::TaskBuilder { 
 
       public: 
@@ -34,8 +34,8 @@ public:
       Builder( std::string task_name, int matl_index ) : _task_name(task_name), _matl_index(matl_index){}
       ~Builder(){}
 
-      SampleTask* build()
-      { return scinew SampleTask( _task_name, _matl_index ); }
+      GridInfo* build()
+      { return scinew GridInfo( _task_name, _matl_index ); }
 
       private: 
 

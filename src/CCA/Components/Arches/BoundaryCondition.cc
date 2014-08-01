@@ -1763,22 +1763,18 @@ void BoundaryCondition::sched_setAreaFraction( SchedulerP& sched,
 
     tsk->computes( d_lab->d_areaFractionLabel );
     tsk->computes( d_lab->d_volFractionLabel );
-#ifdef WASATCH_IN_ARCHES
     tsk->computes(d_lab->d_areaFractionFXLabel); 
     tsk->computes(d_lab->d_areaFractionFYLabel); 
     tsk->computes(d_lab->d_areaFractionFZLabel); 
-#endif
 
   } else {
 
     //only in cases where geometry moves. 
     tsk->modifies( d_lab->d_areaFractionLabel );
     tsk->modifies( d_lab->d_volFractionLabel); 
-#ifdef WASATCH_IN_ARCHES
     tsk->modifies(d_lab->d_areaFractionFXLabel); 
     tsk->modifies(d_lab->d_areaFractionFYLabel); 
     tsk->modifies(d_lab->d_areaFractionFZLabel); 
-#endif
 
   }
 
@@ -1786,12 +1782,9 @@ void BoundaryCondition::sched_setAreaFraction( SchedulerP& sched,
 
     tsk->requires( Task::OldDW, d_lab->d_areaFractionLabel, Ghost::None, 0 );
     tsk->requires( Task::OldDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
-
-#ifdef WASATCH_IN_ARCHES
     tsk->requires( Task::OldDW, d_lab->d_areaFractionFXLabel, Ghost::None, 0 );
     tsk->requires( Task::OldDW, d_lab->d_areaFractionFYLabel, Ghost::None, 0 );
     tsk->requires( Task::OldDW, d_lab->d_areaFractionFZLabel, Ghost::None, 0 );
-#endif
 
   }
 
@@ -1817,11 +1810,9 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<Vector>   areaFraction; 
-#ifdef WASATCH_IN_ARCHES
     SFCXVariable<double> areaFractionFX; 
     SFCYVariable<double> areaFractionFY; 
     SFCZVariable<double> areaFractionFZ; 
-#endif
     CCVariable<double>   volFraction; 
     constCCVariable<int> cellType; 
 
@@ -1837,25 +1828,21 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
         areaFraction[*iter] = Vector(1.0,1.0,1.0);
       }
 
-#ifdef WASATCH_IN_ARCHES
       new_dw->allocateAndPut( areaFractionFX, d_lab->d_areaFractionFXLabel, indx, patch );  
       new_dw->allocateAndPut( areaFractionFY, d_lab->d_areaFractionFYLabel, indx, patch );  
       new_dw->allocateAndPut( areaFractionFZ, d_lab->d_areaFractionFZLabel, indx, patch );  
       areaFractionFX.initialize(1.0);
       areaFractionFY.initialize(1.0);
       areaFractionFZ.initialize(1.0);
-#endif 
 
     } else { 
 
       new_dw->getModifiable( areaFraction, d_lab->d_areaFractionLabel, indx, patch );  
       new_dw->getModifiable( volFraction, d_lab->d_volFractionLabel, indx, patch );  
 
-#ifdef WASATCH_IN_ARCHES
       new_dw->getModifiable( areaFractionFX, d_lab->d_areaFractionFXLabel, indx, patch );  
       new_dw->getModifiable( areaFractionFY, d_lab->d_areaFractionFYLabel, indx, patch );  
       new_dw->getModifiable( areaFractionFZ, d_lab->d_areaFractionFZLabel, indx, patch );  
-#endif 
 
     }
 
@@ -1870,7 +1857,6 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
       areaFraction.copyData( old_area_frac );
       volFraction.copyData( old_vol_frac );
 
-#ifdef WASATCH_IN_ARCHES
       constSFCXVariable<double> old_Fx;
       constSFCYVariable<double> old_Fy; 
       constSFCZVariable<double> old_Fz;
@@ -1880,7 +1866,6 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
       areaFractionFX.copyData( old_Fx );
       areaFractionFY.copyData( old_Fy );
       areaFractionFZ.copyData( old_Fz );
-#endif 
     
     } else { 
 
@@ -1897,15 +1882,12 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
 
       d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, wall_type, flowType ); 
 
-#ifdef WASATCH_IN_ARCHES
-      //copy for wasatch-arches: 
       for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
         IntVector c = *iter; 
         areaFractionFX[c] = areaFraction[c].x(); 
         areaFractionFY[c] = areaFraction[c].y(); 
         areaFractionFZ[c] = areaFraction[c].z(); 
       }
-#endif 
     }
   }
 }

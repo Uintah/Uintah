@@ -73,6 +73,18 @@
 #  include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
 #endif
 
+//NEW TASK INTERFACE STUFF
+//factories
+#include <CCA/Components/Arches/Utility/UtilityFactory.h>
+#include <CCA/Components/Arches/Utility/InitializeFactory.h>
+#include <CCA/Components/Arches/Transport/TransportFactory.h>
+//#include <CCA/Components/Arches/Task/SampleFactory.h>
+#include <CCA/Components/Arches/Task/TaskFactoryBase.h>
+
+
+//END NEW TASK INTERFACE STUFF
+
+
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
@@ -86,7 +98,7 @@
 #include <CCA/Components/Arches/SmagorinskyModel.h>
 #include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
 #include <CCA/Components/Arches/ChemMix/ChemHelper.h>
-//#include <CCA/Components/Arches/Operators/Operators.h>
+#include <CCA/Components/Arches/Operators/Operators.h>
 
 #include <CCA/Components/Arches/TurbulenceModelPlaceholder.h>
 
@@ -108,8 +120,8 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Parallel/Parallel.h>
-//#include <spatialops/structured/FVStaggeredFieldTypes.h>
-//#include <spatialops/structured/MemoryWindow.h>
+#include <spatialops/structured/FVStaggeredFieldTypes.h>
+#include <spatialops/structured/MemoryWindow.h>
 
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
@@ -265,6 +277,12 @@ Arches::~Arches()
   d_wasatch->releasePort("solver");
   delete d_wasatch;
 #endif // WASATCH_IN_ARCHES
+
+  typedef std::map<std::string, TaskFactoryBase*> FM;  
+  for (FM::iterator i = _factory_map.begin(); i != _factory_map.end(); i++){ 
+    delete i->second; 
+  }
+
 }
 
 // ****************************************************************************
@@ -281,6 +299,34 @@ Arches::problemSetup(const ProblemSpecP& params,
   sharedState->registerArchesMaterial(mat);
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
   d_lab->problemSetup( db );
+
+
+  //NEW TASK STUFF
+  //build the factories
+  UtilityFactory* utility_factory = scinew UtilityFactory(); 
+  //SampleFactory* sample_factory = scinew SampleFactory(); 
+  TransportFactory* transport_factory = scinew TransportFactory(); 
+  InitializeFactory* init_factory = scinew InitializeFactory(); 
+
+  //insert the factories into a map
+  _factory_map.clear(); 
+  _factory_map.insert(std::make_pair("utility_factory",utility_factory));
+  //_factory_map.insert(std::make_pair("sample_factory",sample_factory)); 
+  _factory_map.insert(std::make_pair("transport_factory",transport_factory)); 
+  _factory_map.insert(std::make_pair("init_factory",init_factory)); 
+
+  typedef std::map<std::string, TaskFactoryBase*>::iterator iFACMAP; 
+  //registering tasks: 
+  for ( iFACMAP i = _factory_map.begin(); i != _factory_map.end(); i++ ){ 
+    i->second->register_all_tasks( db ); 
+  }
+    
+  //building tasks (includes calling problemSetup): 
+  for ( iFACMAP i = _factory_map.begin(); i != _factory_map.end(); i++ ){ 
+    i->second->build_all_tasks( db ); 
+  }
+  //END NEW TASK STUFF
+
 
   //__________________________________
   //  Multi-level related
@@ -736,7 +782,9 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_nlSolver = scinew ExplicitSolver(d_lab, d_MAlab, d_props,
                                        d_boundaryCondition,
                                        d_turbModel, d_scaleSimilarityModel,
-                                       d_physicalConsts, d_rad_prop_calc, 
+                                       d_physicalConsts, 
+                                       d_rad_prop_calc, 
+                                       &_factory_map, 
                                        d_myworld,
                                        hypreSolver);
 
@@ -1085,7 +1133,7 @@ Arches::scheduleInitialize(const LevelP& level,
  if( level->getIndex() != d_archesLevelIndex )
   return;
 
-  //sched_create_patch_operators( level, sched ); 
+  sched_create_patch_operators( level, sched ); 
 
   const PatchSet* patches= level->eachPatch();
   const MaterialSet* matls = d_sharedState->allArchesMaterials();
@@ -1109,6 +1157,35 @@ Arches::scheduleInitialize(const LevelP& level,
   d_boundaryCondition->sched_setAreaFraction( sched, patches, matls, 1, true ); 
 
   d_turbModel->sched_computeFilterVol( sched, patches, matls ); 
+
+  typedef std::map<std::string, TaskFactoryBase*> FACMAP; 
+  //utility factory
+  FACMAP::iterator ifac = _factory_map.find("utility_factory"); 
+  TaskFactoryBase::TaskMap all_tasks = ifac->second->retrieve_all_tasks(); 
+  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+    i->second->schedule_init(level, sched, matls); 
+  }
+
+  //sample factory
+  //ifac = _factory_map.find("sample_factory"); 
+  //all_tasks = ifac->second->retrieve_all_tasks(); 
+  //for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+  //  i->second->schedule_init(level, sched, matls); 
+  //}
+
+  //transport factory
+  ifac = _factory_map.find("transport_factory"); 
+  all_tasks = ifac->second->retrieve_all_tasks(); 
+  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+    i->second->schedule_init(level, sched, matls ); 
+  }
+
+  //initialize 
+  ifac = _factory_map.find("init_factory"); 
+  all_tasks = ifac->second->retrieve_all_tasks(); 
+  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+    i->second->schedule_init(level, sched, matls ); 
+  }
 
   // base initialization of all scalars
   sched_scalarInit(level, sched);
@@ -1254,47 +1331,47 @@ Arches::scheduleInitialize(const LevelP& level,
 
 }
 
-//void 
-//Arches::sched_create_patch_operators( const LevelP& level, SchedulerP& sched ){ 
-//
-//  Task* tsk = scinew Task( "Arches::create_patch_operators", this, &Arches::create_patch_operators);
-//  
-//  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
-//
-//}
-//
-//void 
-//Arches::create_patch_operators( const ProcessorGroup* pg,
-//                                const PatchSubset* patches,
-//                                const MaterialSubset* matls,
-//                                DataWarehouse* old_dw,
-//                                DataWarehouse* new_dw)
-//{
-//  for (int p = 0; p < patches->size(); p++) {
-//
-//    const Patch* patch = patches->get(p);
-//    Operators& opr = Operators::self(); 
-//
-//    IntVector low = patch->getExtraCellLowIndex(); 
-//    IntVector high = patch->getExtraCellHighIndex(); 
-//
-//    IntVector size = high - low; 
-//
-//    Vector Dx = patch->dCell(); 
-//    Vector L(size[0]*Dx.x(),size[1]*Dx.y(),size[2]*Dx.z());
-//
-//    Operators::PatchInfo pi;
-//
-//    int pid = patch->getID(); 
-//
-//    SpatialOps::build_stencils( size[0], size[1], size[2],
-//                                L[0],    L[1],    L[2],
-//                                pi._sodb );
-//
-//    opr.patch_info_map.insert(std::make_pair(pid, pi)); 
-//
-//  }
-//}
+void 
+Arches::sched_create_patch_operators( const LevelP& level, SchedulerP& sched ){ 
+
+  Task* tsk = scinew Task( "Arches::create_patch_operators", this, &Arches::create_patch_operators);
+  
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+
+}
+
+void 
+Arches::create_patch_operators( const ProcessorGroup* pg,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    Operators& opr = Operators::self(); 
+
+    IntVector low = patch->getExtraCellLowIndex(); 
+    IntVector high = patch->getExtraCellHighIndex(); 
+
+    IntVector size = high - low; 
+
+    Vector Dx = patch->dCell(); 
+    Vector L(size[0]*Dx.x(),size[1]*Dx.y(),size[2]*Dx.z());
+
+    Operators::PatchInfo pi;
+
+    int pid = patch->getID(); 
+
+    SpatialOps::build_stencils( size[0], size[1], size[2],
+                                L[0],    L[1],    L[2],
+                                pi._sodb );
+
+    opr.patch_info_map.insert(std::make_pair(pid, pi)); 
+
+  }
+}
 
 void
 Arches::restartInitialize()
@@ -1718,6 +1795,15 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   if( d_sharedState->isRegridTimestep() ){  // needed for single level regridding on restarts
     d_doingRestart = true;                  // this task is called twice on a regrid.
   }
+
+//  const MaterialSet* matls2 = d_sharedState->allArchesMaterials();
+//  typedef std::map<std::string, TaskFactoryBase*> FM;  
+//  for ( FM::iterator ifac = _factory_map.begin(); ifac != _factory_map.end(); ifac++){ 
+//    TaskFactoryBase::TaskMap all_tasks = ifac->second->retrieve_all_tasks(); 
+//    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+//      i->second->schedule_task(level, sched, matls2, 0); 
+//    }
+//  }
   
   if (d_doingRestart  ) {
 

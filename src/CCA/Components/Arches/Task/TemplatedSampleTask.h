@@ -38,16 +38,17 @@ public:
 
 protected: 
 
-    void register_all_variables( std::vector<VariableInformation>& variable_registry ); 
+    void register_all_variables( std::vector<VariableInformation>& variable_registry, const int time_substep ); 
 
     void register_initialize( std::vector<VariableInformation>& variable_registry );
   
 
-    void eval( const Patch* patch, UintahVarMap& var_map, 
-               ConstUintahVarMap& const_var_map, SpatialOps::OperatorDatabase& opr, const int time_substep ); 
+    void eval( const Patch* patch, FieldCollector* field_collector,
+               SpatialOps::OperatorDatabase& opr, 
+               SchedToTaskInfo& info ); 
 
-    void initialize( const Patch* patch, UintahVarMap& var_map, 
-                     ConstUintahVarMap& const_var_map, SpatialOps::OperatorDatabase& opr );
+    void initialize( const Patch* patch, FieldCollector* field_collector, 
+                     SpatialOps::OperatorDatabase& opr );
 
 private:
 
@@ -81,32 +82,43 @@ private:
 
   template <typename T>
   void TemplatedSampleTask<T>::register_initialize( std::vector<VariableInformation>& variable_registry ){ 
+
+    //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
+    register_variable( "templated_variable", _mytype, LOCAL_COMPUTES, 0, NEWDW, variable_registry ); 
   
   }
   
   //This is the work for the task.  First, get the variables. Second, do the work! 
   template <typename T> 
-  void TemplatedSampleTask<T>::initialize( const Patch* patch, UintahVarMap& var_map, 
-                          ConstUintahVarMap& const_var_map, SpatialOps::OperatorDatabase& opr ){ 
-  }
-
-
-  template <typename T> 
-  void TemplatedSampleTask<T>::register_all_variables( std::vector<VariableInformation>& variable_registry ){
-   
-    //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
-    register_variable( "templated_variable", _mytype, LOCAL_COMPUTES, 0, NEWDW, variable_registry ); 
-  
-  }
-
-  template <typename T>
-  void TemplatedSampleTask<T>::eval(const Patch* patch, UintahVarMap& var_map, 
-                                    ConstUintahVarMap& const_var_map, SpatialOps::OperatorDatabase& opr, const int time_substep ){
+  void TemplatedSampleTask<T>::initialize( const Patch* patch, FieldCollector* field_collector,
+                                           SpatialOps::OperatorDatabase& opr ){ 
 
     using namespace SpatialOps;
     using SpatialOps::operator *; 
 
-    T* const field = get_so_field<T>( "templated_variable", var_map, patch, 0, *this ); 
+    T* const field = field_collector->get_so_field<T>( "templated_variable" ); 
+    *field <<= 3.2;
+
+  }
+
+
+  template <typename T> 
+  void TemplatedSampleTask<T>::register_all_variables( std::vector<VariableInformation>& variable_registry, const int time_substep ){
+   
+    //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
+    register_variable( "templated_variable", _mytype, COMPUTES, 0, NEWDW, variable_registry, time_substep ); 
+  
+  }
+
+  template <typename T>
+  void TemplatedSampleTask<T>::eval( const Patch* patch, FieldCollector* field_collector,
+                                     SpatialOps::OperatorDatabase& opr, 
+                                     SchedToTaskInfo& info ){
+
+    using namespace SpatialOps;
+    using SpatialOps::operator *; 
+
+    T* const field = field_collector->get_so_field<T>( "templated_variable" ); 
 
     *field <<= 24.0;
   

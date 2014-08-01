@@ -32,8 +32,23 @@ TaskInterface::register_variable( std::string name,
                                   VAR_DEPEND dep, 
                                   int nGhost, 
                                   WHICH_DW dw, 
+                                  std::vector<VariableInformation>& variable_registry, 
+                                  const int time_substep ){
+
+  register_variable_work( name, type, dep, nGhost, dw, variable_registry, time_substep );
+
+}
+
+void 
+TaskInterface::register_variable( std::string name, 
+                                  VAR_TYPE type, 
+                                  VAR_DEPEND dep, 
+                                  int nGhost, 
+                                  WHICH_DW dw, 
                                   std::vector<VariableInformation>& variable_registry ){
-  register_variable_work( name, type, dep, nGhost, dw, variable_registry );
+
+  register_variable_work( name, type, dep, nGhost, dw, variable_registry, 0 );
+
 }
 
 //====================================================================================
@@ -45,7 +60,8 @@ TaskInterface::register_variable_work( std::string name,
                                        VAR_DEPEND dep, 
                                        int nGhost, 
                                        WHICH_DW dw, 
-                                       std::vector<VariableInformation>& variable_registry ){
+                                       std::vector<VariableInformation>& variable_registry, 
+                                       const int time_substep ){
   
   VariableInformation info; 
 
@@ -87,8 +103,7 @@ TaskInterface::register_variable_work( std::string name,
     throw InvalidValue("Arches Task Error: Cannot COMPUTE (COMPUTES) a variable from OldDW for variable: "+name, __FILE__, __LINE__); 
   }
 
-  if ( (dep == MODIFIES && dw == OLDDW) || 
-       (dep == LOCAL_MODIFIES && dw == OLDDW) ){ 
+  if ( (dep == MODIFIES && dw == OLDDW) ){ 
     throw InvalidValue("Arches Task Error: Cannot MODIFY a variable from OldDW for variable: "+name, __FILE__, __LINE__); 
   }
 
@@ -108,14 +123,13 @@ TaskInterface::register_variable_work( std::string name,
   //to make sure that other variables are
   //created somewhere else.  That check 
   //will be done later. 
-  if ( dep == LOCAL_MODIFIES || 
-       dep == LOCAL_COMPUTES  || 
-       dep == LOCAL_REQUIRES ){
+  if ( dep == LOCAL_COMPUTES ) {  
+       
 
     const VarLabel* test = NULL; 
     test = VarLabel::find( name );
 
-    if ( test == NULL ){ 
+    if ( test == NULL && time_substep == 0 ){ 
 
       if ( type == CC_INT ){
         info.label = VarLabel::create( name, CCVariable<int>::getTypeDescription() );
@@ -155,20 +169,20 @@ TaskInterface::register_variable_work( std::string name,
         _local_labels.push_back(info.label); 
       }
 
-      //reasign because we resolve the labels later. 
-      if ( dep == LOCAL_REQUIRES ){ 
-        info.depend = REQUIRES; 
-        dep = REQUIRES; 
-      } else if ( dep == LOCAL_COMPUTES ){ 
-        info.depend = COMPUTES; 
-        dep = COMPUTES; 
-      } else if ( dep == LOCAL_MODIFIES ){ 
-        info.depend = MODIFIES; 
-        dep = MODIFIES; 
-      }
+      info.depend = COMPUTES; 
+      dep = COMPUTES; 
+
+    } else if ( test != NULL && time_substep > 0 ){ 
+
+      //because computing happens on time_substep = 0 
+      //checking for duplicate labels occurred upstream
+      info.depend = MODIFIES; 
+      dep = MODIFIES; 
     
     } else { 
-      throw InvalidValue("Arches Task Error: Trying to create a local variable that already exists for Arches Task: "+_task_name, __FILE__, __LINE__); 
+
+      throw InvalidValue("Arches Task Error: Trying to create a local variable, "+name+", that already exists for Arches Task: "+_task_name, __FILE__, __LINE__); 
+
     }
     
   }
@@ -245,7 +259,7 @@ TaskInterface::resolve_labels( std::vector<VariableInformation>& variable_regist
 template <class T>
 void TaskInterface::resolve_field_requires( DataWarehouse* old_dw, 
                                             DataWarehouse* new_dw, 
-                                            T& field, 
+                                            T* field, 
                                             VariableInformation& info, 
                                             const Patch* patch, 
                                             const int time_substep ){ 
@@ -299,7 +313,8 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
                                     const Patch* patch, 
                                     std::vector<VariableInformation>& variable_registry, 
                                     UintahVarMap& var_map, 
-                                    ConstUintahVarMap& const_var_map,
+                                    ConstUintahVarMap& const_var_map, 
+                                    FieldCollector* f_collector, 
                                     const int time_substep ){ 
 
 
@@ -316,9 +331,15 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
           resolve_field_requires( old_dw, new_dw, var, ivar, patch, time_substep ); 
           const_var_map.insert(std::make_pair(ivar.name, var)); 
 
+        } else if ( ivar.depend == MODIFIES ){ 
+
+          CCVariable<int>* var = scinew CCVariable<int>;
+          new_dw->getModifiable( *var, ivar.label, _matl_index, patch );
+          var_map.insert(std::make_pair(ivar.name, var)); 
+
         } else { 
 
-          CCVariable<int>* var = scinew CCVariable<int>; 
+          CCVariable<int>* var = scinew CCVariable<int>;
           new_dw->allocateAndPut( *var, ivar.label, _matl_index, patch );
           var_map.insert(std::make_pair(ivar.name, var)); 
           
@@ -333,9 +354,15 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
           resolve_field_requires( old_dw, new_dw, var, ivar, patch, time_substep ); 
           const_var_map.insert(std::make_pair(ivar.name, var)); 
 
+        } else if ( ivar.depend == MODIFIES ){ 
+
+          CCVariable<double>* var = scinew CCVariable<double>;
+          new_dw->getModifiable( *var, ivar.label, _matl_index, patch );
+          var_map.insert(std::make_pair(ivar.name, var)); 
+            
         } else { 
 
-          CCVariable<double>* var = scinew CCVariable<double>; 
+          CCVariable<double>* var = scinew CCVariable<double>;
           new_dw->allocateAndPut( *var, ivar.label, _matl_index, patch );
           var_map.insert(std::make_pair(ivar.name, var)); 
           
@@ -350,9 +377,15 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
           resolve_field_requires( old_dw, new_dw, var, ivar, patch, time_substep ); 
           const_var_map.insert(std::make_pair(ivar.name, var)); 
 
+        } else if ( ivar.depend == MODIFIES ){ 
+
+          CCVariable<Vector>* var = scinew CCVariable<Vector>;
+          new_dw->getModifiable( *var, ivar.label, _matl_index, patch );
+          var_map.insert(std::make_pair(ivar.name, var)); 
+
         } else { 
 
-          CCVariable<Vector>* var = scinew CCVariable<Vector>; 
+          CCVariable<Vector>* var = scinew CCVariable<Vector>;
           new_dw->allocateAndPut( *var, ivar.label, _matl_index, patch );
           var_map.insert(std::make_pair(ivar.name, var)); 
           
@@ -366,6 +399,12 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
           constSFCXVariable<double>* var = scinew constSFCXVariable<double>; 
           resolve_field_requires( old_dw, new_dw, var, ivar, patch, time_substep ); 
           const_var_map.insert(std::make_pair(ivar.name, var)); 
+
+        } else if ( ivar.depend == MODIFIES ){ 
+
+          SFCXVariable<double>* var = scinew SFCXVariable<double>; 
+          new_dw->getModifiable( *var, ivar.label, _matl_index, patch );
+          var_map.insert(std::make_pair(ivar.name, var)); 
 
         } else { 
 
@@ -384,6 +423,12 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
           resolve_field_requires( old_dw, new_dw, var, ivar, patch, time_substep ); 
           const_var_map.insert(std::make_pair(ivar.name, var)); 
 
+        } else if ( ivar.depend == MODIFIES ){ 
+
+          SFCYVariable<double>* var = scinew SFCYVariable<double>; 
+          new_dw->getModifiable( *var, ivar.label, _matl_index, patch );
+          var_map.insert(std::make_pair(ivar.name, var)); 
+
         } else { 
 
           SFCYVariable<double>* var = scinew SFCYVariable<double>; 
@@ -400,6 +445,12 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
           constSFCZVariable<double>* var = scinew constSFCZVariable<double>; 
           resolve_field_requires( old_dw, new_dw, var, ivar, patch, time_substep ); 
           const_var_map.insert(std::make_pair(ivar.name, var)); 
+
+        } else if ( ivar.depend == MODIFIES ){ 
+
+          SFCZVariable<double>* var = scinew SFCZVariable<double>; 
+          new_dw->getModifiable( *var, ivar.label, _matl_index, patch );
+          var_map.insert(std::make_pair(ivar.name, var)); 
 
         } else { 
 
@@ -428,7 +479,7 @@ void TaskInterface::schedule_task( const LevelP& level,
 
   std::vector<VariableInformation> variable_registry; 
 
-  register_all_variables( variable_registry ); 
+  register_all_variables( variable_registry, time_substep ); 
 
   resolve_labels( variable_registry ); 
 
@@ -439,7 +490,14 @@ void TaskInterface::schedule_task( const LevelP& level,
     switch(ivar.depend){
 
       case COMPUTES: 
-        tsk->computes( ivar.label ); 
+        if ( time_substep == 0 ){ 
+          tsk->computes( ivar.label ); //only compute on the zero time substep
+        } else { 
+          tsk->modifies( ivar.label );
+          ivar.dw = NEWDW; 
+          ivar.uintah_task_dw = Task::NewDW; 
+          ivar.depend = MODIFIES; 
+        }
         break; 
       case MODIFIES: 
         tsk->modifies( ivar.label );
@@ -469,6 +527,9 @@ void TaskInterface::schedule_task( const LevelP& level,
     }
   }
 
+  //other variables: 
+  tsk->requires(Task::OldDW, VarLabel::find("delT")); 
+
   sched->addTask( tsk, level->eachPatch(), matls );
 
 }
@@ -486,7 +547,7 @@ void TaskInterface::schedule_init( const LevelP& level,
 
   resolve_labels( variable_registry ); 
 
-  Task* tsk = scinew Task( _task_name, this, &TaskInterface::do_init, variable_registry ); 
+  Task* tsk = scinew Task( _task_name+"_initialize", this, &TaskInterface::do_init, variable_registry ); 
 
   BOOST_FOREACH( VariableInformation &ivar, variable_registry ){ 
 
@@ -518,50 +579,31 @@ void TaskInterface::schedule_init( const LevelP& level,
 
 }
 
-//====================================================================================
-//
-//====================================================================================
-
-void TaskInterface::get_bc_logicals( const Uintah::Patch* const patch,
-                                     so::IntVec& bcMinus,
-                                     so::IntVec& bcPlus )
-{
-  for( int i=0; i<3; ++i ){
-    bcMinus[i] = 1;
-    bcPlus [i] = 1;
-  }
-  std::vector<Uintah::Patch::FaceType> faces;
-  patch->getNeighborFaces(faces);
-  for( std::vector<Uintah::Patch::FaceType>::const_iterator i=faces.begin(); i!=faces.end(); ++i ){
-    SCIRun::IntVector dir = patch->getFaceDirection(*i);
-    for( int j=0; j<3; ++j ){
-      if( dir[j] == -1 ) bcMinus[j]=0;
-      if( dir[j] ==  1 ) bcPlus [j]=0;
-    }
-  }
-}
-
-//====================================================================================
-//
-//====================================================================================
 void TaskInterface::schedule_task( const LevelP& level, 
                                    SchedulerP& sched, 
                                    const MaterialSet* matls,
                                    std::vector<VariableInformation>& variable_registry, 
                                    int time_substep ){ 
 
-  register_all_variables( variable_registry ); 
+  register_all_variables( variable_registry, time_substep ); 
 
   resolve_labels( variable_registry ); 
 
-  Task* tsk = scinew Task( _task_name, this, &TaskInterface::do_task, variable_registry, time_substep ); 
+  Task* tsk = scinew Task( _task_name+"_eval", this, &TaskInterface::do_task, variable_registry, time_substep ); 
 
   BOOST_FOREACH( VariableInformation &ivar, variable_registry ){ 
 
     switch(ivar.depend){
 
       case COMPUTES: 
-        tsk->computes( ivar.label ); 
+        if ( time_substep == 0 ){ 
+          tsk->computes( ivar.label ); //only compute on the zero time substep
+        } else { 
+          tsk->modifies( ivar.label );
+          ivar.dw = NEWDW; 
+          ivar.uintah_task_dw = Task::NewDW; 
+          ivar.depend= MODIFIES; 
+        }
         break; 
       case MODIFIES: 
         tsk->modifies( ivar.label );
@@ -591,6 +633,9 @@ void TaskInterface::schedule_task( const LevelP& level,
     }
   }
 
+  //other variables: 
+  tsk->requires(Task::OldDW, VarLabel::find("delT")); 
+
   sched->addTask( tsk, level->eachPatch(), matls );
 
 }
@@ -606,20 +651,75 @@ void TaskInterface::do_task( const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     
     const Patch* patch = patches->get(p);
-
-    UintahVarMap variable_map; 
-
+  
+    UintahVarMap variable_map;
     ConstUintahVarMap const_variable_map; 
 
+    FieldCollector* field_collector = scinew FieldCollector(variable_registry, patch); 
+
     //doing DW gets...
-    resolve_fields( old_dw, new_dw, patch, variable_registry, variable_map, const_variable_map, time_substep ); 
+    resolve_fields( old_dw, new_dw, patch, variable_registry, variable_map, const_variable_map, field_collector, time_substep ); 
+
+    //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
+    field_collector->set_var_maps(variable_map, const_variable_map); 
 
     //get the operator DB for this patch
     Operators& opr = Operators::self(); 
     Operators::PatchInfoMap::iterator i_opr = opr.patch_info_map.find(patch->getID()); 
 
-    eval( patch, variable_map, const_variable_map, i_opr->second._sodb, time_substep ); 
+    SchedToTaskInfo info; 
 
+    //get the current dt
+    delt_vartype DT;
+    old_dw->get(DT, VarLabel::find("delT")); 
+    info.dt = DT; 
+    info.time_substep = time_substep; 
+
+    eval( patch, field_collector, i_opr->second._sodb, info ); 
+
+    //clean up 
+    delete field_collector; 
+    
+    for ( UintahVarMap::iterator i = variable_map.begin(); i != variable_map.end(); i++ ){
+      delete i->second; 
+    }
+    for ( ConstUintahVarMap::iterator i = const_variable_map.begin(); i != const_variable_map.end(); i++ ){
+      delete i->second; 
+    }
+//    //ugly...need to rethink how we are storing out Uintah variables
+//    for ( UintahVarMap::iterator i = variable_map.begin(); i != variable_map.end(); i++ ){
+//      const TypeDescription* type = i->second->virtualGetTypeDescription(); 
+//      if ( type == CCVariable<double>::getTypeDescription() ){ 
+//        delete dynamic_cast<CCVariable<double>* >(i->second); 
+//      } else if ( type == CCVariable<int>::getTypeDescription() ){ 
+//        delete dynamic_cast<CCVariable<int>* >(i->second); 
+//      } else if ( type == CCVariable<Vector>::getTypeDescription() ){ 
+//        delete dynamic_cast<CCVariable<Vector>* >(i->second); 
+//      } else if ( type == SFCXVariable<double>::getTypeDescription() ){ 
+//        delete dynamic_cast<SFCXVariable<double>* >(i->second); 
+//      } else if ( type == SFCYVariable<double>::getTypeDescription() ){ 
+//        delete dynamic_cast<SFCYVariable<double>* >(i->second); 
+//      } else if ( type == SFCZVariable<double>::getTypeDescription() ){ 
+//        delete dynamic_cast<SFCZVariable<double>* >(i->second); 
+//      }
+//    }
+//
+//    for ( ConstUintahVarMap::iterator i = const_variable_map.begin(); i != const_variable_map.end(); i++ ){
+//      const TypeDescription* type = i->second->virtualGetTypeDescription(); 
+//      if ( type == CCVariable<double>::getTypeDescription() ){ 
+//        delete dynamic_cast<constCCVariable<double>* >(i->second); 
+//      } else if ( type == CCVariable<int>::getTypeDescription() ){ 
+//        delete dynamic_cast<constCCVariable<int>* >(i->second); 
+//      } else if ( type == CCVariable<Vector>::getTypeDescription() ){ 
+//        delete dynamic_cast<constCCVariable<Vector>* >(i->second); 
+//      } else if ( type == SFCXVariable<double>::getTypeDescription() ){ 
+//        delete dynamic_cast<constSFCXVariable<double>* >(i->second); 
+//      } else if ( type == SFCYVariable<double>::getTypeDescription() ){ 
+//        delete dynamic_cast<constSFCYVariable<double>* >(i->second); 
+//      } else if ( type == SFCZVariable<double>::getTypeDescription() ){ 
+//        delete dynamic_cast<constSFCZVariable<double>* >(i->second); 
+//      }
+//    }
   }
 }
 
@@ -634,20 +734,66 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
     
     const Patch* patch = patches->get(p);
 
-    UintahVarMap variable_map; 
-
+    UintahVarMap variable_map;
     ConstUintahVarMap const_variable_map; 
+
+    FieldCollector* field_collector = scinew FieldCollector(variable_registry, patch); 
 
     int time_substep = 0;
 
     //doing DW gets...
-    resolve_fields( old_dw, new_dw, patch, variable_registry, variable_map, const_variable_map, time_substep ); 
+    resolve_fields( old_dw, new_dw, patch, variable_registry, variable_map, const_variable_map, field_collector, time_substep ); 
+
+    //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
+    field_collector->set_var_maps(variable_map, const_variable_map); 
 
     //get the operator DB for this patch
     Operators& opr = Operators::self(); 
     Operators::PatchInfoMap::iterator i_opr = opr.patch_info_map.find(patch->getID()); 
 
-    initialize( patch, variable_map, const_variable_map, i_opr->second._sodb ); 
+    initialize( patch, field_collector, i_opr->second._sodb ); 
 
+    //clean up 
+    delete field_collector; 
+
+    for ( UintahVarMap::iterator i = variable_map.begin(); i != variable_map.end(); i++ ){
+      delete i->second; 
+    }
+    for ( ConstUintahVarMap::iterator i = const_variable_map.begin(); i != const_variable_map.end(); i++ ){
+      delete i->second; 
+    }
+//    //ugly...need to rethink how we are storing out Uintah variables
+//    for ( UintahVarMap::iterator i = variable_map.begin(); i != variable_map.end(); i++ ){
+//      const TypeDescription* type = i->second->virtualGetTypeDescription(); 
+//      if ( type == CCVariable<double>::getTypeDescription() ){ 
+//        delete dynamic_cast<CCVariable<double>* >(i->second); 
+//      } else if ( type == CCVariable<int>::getTypeDescription() ){ 
+//        delete dynamic_cast<CCVariable<int>* >(i->second); 
+//      } else if ( type == CCVariable<Vector>::getTypeDescription() ){ 
+//        delete dynamic_cast<CCVariable<Vector>* >(i->second); 
+//      } else if ( type == SFCXVariable<double>::getTypeDescription() ){ 
+//        delete dynamic_cast<SFCXVariable<double>* >(i->second); 
+//      } else if ( type == SFCYVariable<double>::getTypeDescription() ){ 
+//        delete dynamic_cast<SFCYVariable<double>* >(i->second); 
+//      } else if ( type == SFCZVariable<double>::getTypeDescription() ){ 
+//        delete dynamic_cast<SFCZVariable<double>* >(i->second); 
+//      }
+//    }
+//    for ( ConstUintahVarMap::iterator i = const_variable_map.begin(); i != const_variable_map.end(); i++ ){
+//      const TypeDescription* type = i->second->virtualGetTypeDescription(); 
+//      if ( type == CCVariable<double>::getTypeDescription() ){ 
+//        delete dynamic_cast<CCVariable<double>* >(i->second); 
+//      } else if ( type == CCVariable<int>::getTypeDescription() ){ 
+//        delete dynamic_cast<CCVariable<int>* >(i->second); 
+//      } else if ( type == CCVariable<Vector>::getTypeDescription() ){ 
+//        delete dynamic_cast<CCVariable<Vector>* >(i->second); 
+//      } else if ( type == SFCXVariable<double>::getTypeDescription() ){ 
+//        delete dynamic_cast<SFCXVariable<double>* >(i->second); 
+//      } else if ( type == SFCYVariable<double>::getTypeDescription() ){ 
+//        delete dynamic_cast<SFCYVariable<double>* >(i->second); 
+//      } else if ( type == SFCZVariable<double>::getTypeDescription() ){ 
+//        delete dynamic_cast<SFCZVariable<double>* >(i->second); 
+//      }
+//    }
   }
 }

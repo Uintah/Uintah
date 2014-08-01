@@ -1,17 +1,18 @@
-#ifndef Uintah_Component_Arches_SampleTask_h
-#define Uintah_Component_Arches_SampleTask_h
+#ifndef Uintah_Component_Arches_ScalarRHS_h
+#define Uintah_Component_Arches_ScalarRHS_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 
 namespace Uintah{ 
 
   class Operators; 
-  class SampleTask : public TaskInterface { 
+  class Discretization_new; 
+  class ScalarRHS : public TaskInterface { 
 
 public: 
 
-    SampleTask( std::string task_name, int matl_index ); 
-    ~SampleTask(); 
+    ScalarRHS( std::string task_name, int matl_index ); 
+    ~ScalarRHS(); 
 
     void problemSetup( ProblemSpecP& db ); 
 
@@ -26,7 +27,7 @@ public:
     void initialize( const Patch* patch, FieldCollector* field_collector, 
                      SpatialOps::OperatorDatabase& opr );
 
-    //Build instructions for this (SampleTask) class. 
+    //Build instructions for this (ScalarRHS) class. 
     class Builder : public TaskInterface::TaskBuilder { 
 
       public: 
@@ -34,8 +35,8 @@ public:
       Builder( std::string task_name, int matl_index ) : _task_name(task_name), _matl_index(matl_index){}
       ~Builder(){}
 
-      SampleTask* build()
-      { return scinew SampleTask( _task_name, _matl_index ); }
+      ScalarRHS* build()
+      { return scinew ScalarRHS( _task_name, _matl_index ); }
 
       private: 
 
@@ -46,7 +47,26 @@ public:
 
 private: 
 
-    double _value; 
+    std::string _rhs_name; 
+    std::string _D_name; 
+    std::string _Fconv_name; 
+    std::string _Fdiff_name; 
+    Discretization_new* _disc; 
+    std::string _conv_scheme; 
+
+    bool _do_conv; 
+    bool _do_diff; 
+    bool _do_clip; 
+
+    double _low_clip; 
+    double _high_clip; 
+
+
+    struct SourceInfo{ 
+      std::string name; 
+      double weight; 
+    };
+    std::vector<SourceInfo> _source_info; 
   
   };
 }

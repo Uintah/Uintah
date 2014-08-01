@@ -65,7 +65,7 @@ WARNING
 #include <CCA/Components/Arches/ExplicitTimeInt.h>
 
 namespace Uintah {
-//class TaskFactoryBase; 
+class TaskFactoryBase; 
 class PressureSolver;
 class MomentumSolver;
 class ScalarSolver;
@@ -93,6 +93,7 @@ public:
                  ScaleSimilarityModel* scaleSimilarityModel,
                  PhysicalConstants* physConst, 
                  RadPropertyCalculator* rad_properties, 
+                 std::map<std::string, TaskFactoryBase*>* factory_map,
                  const ProcessorGroup* myworld,
                  SolverInterface* hypreSolver);
 
@@ -375,13 +376,12 @@ private:
   EfficiencyCalculator* d_eff_calculator;
   RadPropertyCalculator* d_rad_prop_calc; 
 
-  //TaskFactoryBase* _test_factory; 
-  
-
-
   //Diagnostics
   bool d_printTotalKE; 
   double d_ke_limit; 
+
+  //NEW TASK INTERFACE STUFF: 
+  std::map<std::string, TaskFactoryBase*>* _factory_map; 
 
 }; // End class ExplicitSolver
 } // End namespace Uintah

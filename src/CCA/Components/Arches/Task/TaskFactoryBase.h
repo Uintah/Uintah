@@ -24,12 +24,14 @@ namespace Uintah{
     void register_task(std::string task_name, 
                        TaskInterface::TaskBuilder* builder );
 
-    TaskInterface& retrieve_task( const std::string task_name );
+    TaskInterface* retrieve_task( const std::string task_name );
+
+    TaskMap   _tasks;             ///< Task map
+    TaskMap& retrieve_all_tasks(){ return _tasks; }; 
 
   protected: 
 
     BuildMap  _builders;          ///< Builder map
-    TaskMap   _tasks;             ///< Task map
 
     std::vector<std::string> _active_tasks;       ///< Task which are active 
 
