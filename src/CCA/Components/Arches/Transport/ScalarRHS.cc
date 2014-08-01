@@ -131,10 +131,10 @@ ScalarRHS::initialize( const Patch* patch, FieldCollector* field_collector,
 //
 void 
 ScalarRHS::register_timestep_init( std::vector<VariableInformation>& variable_registry ){ 
-  register_variable( _D_name          , CC_DOUBLE , COMPUTES , 0 , NEWDW, variable_registry  );
-  register_variable( _D_name          , CC_DOUBLE , REQUIRES, 0 , OLDDW, variable_registry );
-  register_variable( _task_name       , CC_DOUBLE , COMPUTES , 0 , NEWDW, variable_registry  );
-  register_variable( _task_name       , CC_DOUBLE , COMPUTES , 0 , OLDDW, variable_registry  );
+  register_variable( _D_name    , CC_DOUBLE , COMPUTES , 0 , NEWDW , variable_registry  );
+  register_variable( _D_name    , CC_DOUBLE , REQUIRES , 0 , OLDDW , variable_registry );
+  register_variable( _task_name , CC_DOUBLE , COMPUTES , 0 , NEWDW , variable_registry  );
+  register_variable( _task_name , CC_DOUBLE , REQUIRES , 0 , OLDDW , variable_registry  );
 }
 
 void 
@@ -170,14 +170,14 @@ ScalarRHS::register_timestep_eval( std::vector<VariableInformation>& variable_re
   register_variable( _task_name       , CC_DOUBLE , REQUIRES , 2 , LATEST , variable_registry , time_substep );
   register_variable( _Fconv_name      , CC_DOUBLE , COMPUTES , 0 , NEWDW  , variable_registry , time_substep );
   register_variable( _Fdiff_name      , CC_DOUBLE , COMPUTES , 0 , NEWDW  , variable_registry , time_substep );
-  register_variable( "uVelocitySPBC"  , FACEX     , REQUIRES , 1 , LATEST , variable_registry , time_substep );
-  register_variable( "vVelocitySPBC"  , FACEY     , REQUIRES , 1 , LATEST , variable_registry , time_substep );
-  register_variable( "wVelocitySPBC"  , FACEZ     , REQUIRES , 1 , LATEST , variable_registry , time_substep );
+  //register_variable( "uVelocitySPBC"  , FACEX     , REQUIRES , 1 , LATEST , variable_registry , time_substep );
+  //register_variable( "vVelocitySPBC"  , FACEY     , REQUIRES , 1 , LATEST , variable_registry , time_substep );
+  //register_variable( "wVelocitySPBC"  , FACEZ     , REQUIRES , 1 , LATEST , variable_registry , time_substep );
   register_variable( "areaFractionFX" , FACEX     , REQUIRES , 1 , OLDDW  , variable_registry , time_substep );
   register_variable( "areaFractionFY" , FACEY     , REQUIRES , 1 , OLDDW  , variable_registry , time_substep );
   register_variable( "areaFractionFZ" , FACEZ     , REQUIRES , 1 , OLDDW  , variable_registry , time_substep );
   register_variable( "density"        , CC_DOUBLE , REQUIRES , 1 , LATEST , variable_registry , time_substep );
-  register_variable( "areaFraction"   , CC_VEC    , REQUIRES , 2 , LATEST , variable_registry , time_substep );
+  //register_variable( "areaFraction"   , CC_VEC    , REQUIRES , 2 , LATEST , variable_registry , time_substep );
 
   typedef std::vector<SourceInfo> VS; 
   for (VS::iterator i = _source_info.begin(); i != _source_info.end(); i++){ 
@@ -194,7 +194,7 @@ ScalarRHS::eval( const Patch* patch, FieldCollector* field_collector,
   using namespace SpatialOps;
   using SpatialOps::operator *; 
   SVolF* const rhs       = field_collector->get_so_field<SVolF>( _rhs_name        , NEWDW  );
-  SVolF* const phi       = field_collector->get_so_field<SVolF>( _task_name       , NEWDW  );
+  SVolF* const phi       = field_collector->get_so_field<SVolF>( _task_name       , LATEST );
   SVolF* const rho       = field_collector->get_so_field<SVolF>( "density"        , LATEST );
   SVolF* const gamma     = field_collector->get_so_field<SVolF>( _D_name          , NEWDW  );
   SVolF* const Fdiff     = field_collector->get_so_field<SVolF>( _Fdiff_name      , NEWDW  );
