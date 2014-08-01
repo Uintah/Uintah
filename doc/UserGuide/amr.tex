@@ -15,12 +15,10 @@ In general, the AMR input looks like:
         <min_grid_level>-1</min_grid_level>
         <max_grid_level>-1</max_grid_level>
       </MPM>
-      <useLockStep>true</useLockStep>    
+      <useLockStep>true</useLockStep>
       <Regridder type="Tiled">
 \end{Verbatim}
-      %<!--to use hierarchical regridder set the type to "Hierarchical",
-       %to use the tiled regridder set the type to "Tiled" -->
-       %<type> BNR </type>
+
 \begin{Verbatim}[fontsize=\footnotesize]
         <!--General Regridder Settings-->
         <max_levels>2</max_levels>
@@ -28,17 +26,12 @@ In general, the AMR input looks like:
         <cell_stability_dilation>   [2,2,1]   </cell_stability_dilation>
         <cell_regrid_dilation>   [1,1,0]   </cell_regrid_dilation>
         <min_boundary_cells>       [1,1,0]   </min_boundary_cells>
-\end{Verbatim}     
-        %<!--Hierarchical Specific Settings-->
-        %<lattice_refinement_ratio> [[4,4,1],[2,2,1]]  </lattice_refinement_ratio>
-        
-        %<!--Berger Rigoutsos Specific Settings-->
-        %<min_patch_size>  [[8,8,1]] </min_patch_size>
-        %<patch_ratio_to_target>.2</patch_ratio_to_target>
+\end{Verbatim}
+
 \begin{Verbatim}[fontsize=\footnotesize]
         <!--Tiled Specific Settings-->
         <min_patch_size>  [[8,8,1]] </min_patch_size>
-        <patches_per_level_per_proc>8</patches_per_level_per_proc>         
+        <patches_per_level_per_proc>8</patches_per_level_per_proc>
       </Regridder>
     </AMR>
 
@@ -81,15 +74,14 @@ The presence of the Regridder section specifies you want to run an
 adaptive problem.
 \begin{itemize}
   \item type (optional) - sets the Regridder type. The options are
-   ``Tiled'' (default), ``BNR'' (Berger-Rigoutsos), ``Hierarchical''.
-  \red{Only the ``Tiled'' regridder can be used with ICE, AMRICE, MPMAMRICE problems.}
- \item max\_levels - maximum number of levels to create in the grid. 
+   ``Tiled'' (default), ``SingleLevel''.
+ \item max\_levels - maximum number of levels to create in the grid.
  \item cell\_refinement\_ratio - How much to refine a cell in each
    dimension. This can be specified in a comma-separated list, with the dimensions in the default order [[x,y,z]].
     \item cell\_stability\_dilation - How much to pad the refinement flags
-   in each dimension for stability reasons.  Reset on every timestep. 
+   in each dimension for stability reasons.  Reset on every timestep.
  \item cell\_regrid\_dilation - How much to pad the refinement flags in
-   each dimension in order to reduce regridding frequency. If the refinement flags are still in the finest level due to large enough padding then regridding will not occur. Reset only when regridding occurs.  
+   each dimension in order to reduce regridding frequency. If the refinement flags are still in the finest level due to large enough padding then regridding will not occur. Reset only when regridding occurs.
  \item min\_boundary\_cells - The minimum number of cells that needs to
    exist between one level's coarser level and its finer level (i.e.,
    between level 0 and 2).
@@ -97,33 +89,12 @@ adaptive problem.
 
 When running a non adaptive problem. Adaptive regridding can be turned off by commenting out the regridding section.
 \begin{itemize}
-  \item min\_timestep\_interval - The minumum number of timesteps between each regrid. This will not force a regrid but after the set number of timesteps a regrid will be considered. Only used when adaptive regridding is turned off. min\_timestep\_interval $\leq$ cell\_stability\_dilation + 1 
+  \item min\_timestep\_interval - The minimum number of timesteps between each regrid. This will not force a regrid but after the set number of timesteps a regrid will be considered. Only used when adaptive regridding is turned off. min\_timestep\_interval $\leq$ cell\_stability\_dilation + 1
   \item max\_timestep\_interval - The maximum number of timesteps between each regrid.  This will not force a regrid.
- It tells the code it has been a set number of timesteps since the last regrid and it should look at if a regrid is needed. Used primarely when adaptive regridding is turned off.
+ It tells the code it has been a set number of timesteps since the last regrid and it should look at if a regrid is needed. Used primarily when adaptive regridding is turned off.
 \end{itemize}
 
-%Hierarchical Specific Settings
-
-%\begin{itemize}
-%\item lattice\_refinement\_ratio - Specific to Hierarchical
-%  Regridder. Determines how many patches to potentially divide a
- % coarser patch into on the finer level. See Regridding section below.
-%\end{itemize}
-
-%Berger-Rigoutsos Specific Settings 
-
-%\begin{itemize}
-%\item min\_patch\_size - sets the minimum patch size created by the
-%  regridder per level. This size must divide evenly into the
-%  resolution and must be divisible by the cell refinement ratio.
-%\item patch\_ratio\_to\_target - sets the maximum patch size to the
-%  average work load per processor times this value. Theoretical load
-%  imbalance should be close to one half of this value. Setting this
-%  value too small will create an excess number of patches and cause
-%  excessive overhead. .2 seems to be a reasonable value.
-%\end{itemize}
-
-Tiled Specific Settings 
+Tiled Specific Settings
 \begin{itemize}
 \item min\_patch\_size - sets the minimum patch size created by the
   regridder per level. This size must divide evenly into the
@@ -136,7 +107,7 @@ Tiled Specific Settings
 \end{itemize}
 
 An example of a simple, 2-dimensional, tiled AMR problem can be found at \tt StandAlone/
-inputs/MPMICE/advect\_2L\_MI.ups. \normalfont When the AMR input for this simulation matches the input at the beginning of this section (\ref{Sec:AMR}), we see the following: 
+inputs/MPMICE/advect\_2L\_MI.ups. \normalfont When the AMR input for this simulation matches the input at the beginning of this section (\ref{Sec:AMR}), we see the following:
 
 \begin{figure}[H]
   \centering
@@ -154,7 +125,7 @@ Here the black lines represent cells and the red lines represent patches with th
   \label{}
 \end{figure}
 
-Note that now there are only 2 patches covering our finest level compared to the 6 patches covering our finest levels in figure \ref{fig:881}. This is because there is enough ``padding'' in between our refinement flags and differing levels to avoid setting up whole new patches at the most refined level. This option can be adjusted to increase or decrease the overall amount of regridding necessary with the cell\_regrid\_dilation flag. 
+Note that now there are only 2 patches covering our finest level compared to the 6 patches covering our finest levels in figure \ref{fig:881}. This is because there is enough ``padding'' in between our refinement flags and differing levels to avoid setting up whole new patches at the most refined level. This option can be adjusted to increase or decrease the overall amount of regridding necessary with the cell\_regrid\_dilation flag.
 
 When we decrease our minimum patch size to [4,4,1] we see:
 \begin{figure}[H]
@@ -174,8 +145,6 @@ The best way to increase the ``padding'' of your simulation and therefore decrea
 \end{figure}
 
 There is a balance between cell stability dilation and computational time. If your domain is set up like figure \ref{fig:10101}, less computational time will be wasted regridding. However, it could be more economical to utilize some coarser levels in the areas that see little or no particles.
-%If you are using the Berger-Rigoutsos regridder you should also
-%include a  LoadBalancer, see~\ref{loadbalancer}.
 
 
 \subsection{AMR Grids}
@@ -193,34 +162,6 @@ level. See more on Regridding below.
 
 For an adaptive problem, specify the Regridder section in the input
 file. The Tiled regridder works as follows:
- 
-%The Hierarchical regridder works as follows: 
-
-%Divide each patch into subpatches according to the
-%lattice\_refinement\_ratio. E.g., with a ratio of [2,2,2], it will
-%create 8 subpatches. Then, if there are refinement flags within the
-%region of that subpatch, then a patch (with resolution increased by
-%the cell\_refinement\_ratio) will be added with the subpatch's range on
-%the next finer level. This regridder is inefficient and has been
-%superseded by the Tiled regridder.
-
-%The Berger-Rigoutsos regridder works as follows: 
-
-%Tiles of the size of the minimum patch size are laid across the next
-%finer level. The refinement flags are then used to give each of these
-%tiles a single flag indicting if a flag exists within them. The
-%Berger-Rigoutsos algorithm is then used to create an initial patch
-%set. Next a post processing phase splits patches in order to meet
-%alignment constraints. Finally another post process phase splits the
-%largest patches further depending on the patch\_ratio\_to\_target input
-%file specification. The Berger-Rigoutsos regridder should produce
-%patch sets with a much smaller number of patches than the Hierarchical
-%Regridder causing less overhead allowing decreasing AMR
-%overhead. Unfortunately the cost of the running the BNR algorithm can
-%be substantial at large numbers of processors and the patch sets
-%produced by this regridder are difficult to load balance. Because of
-%this the Tiled regridder should be used.
-
 
 Tiles sized according to the minimum patch size are laid across domain. Refinement flags are then used to determine which of
 those tiles are in the patch set. If the number of tiles is more than
@@ -258,7 +199,7 @@ other levels. However there are some patch boundaries that span more
 than one level. So in (F) we must expand out the middle level to
 compensate.
 
-Note that if you you define multiple levels in the input file, all but
+Note that if you define multiple levels in the input file, all but
 the coarsest level will be recycled, and levels will be added where
 the Regridder wants to put them.
 
@@ -270,12 +211,12 @@ Grid~\ref{Sec:Grid}.
 
 \subsubsection{Ideal Patch Configuration for Good Scaling}
 The patch configuration on multiple levels has been shown to greatly
-effect the scalability and mean time per time step. 
+effect the scalability and mean time per time step.
 Here are some guidelines to follow when trying to get good scaling with multilevel AMR.
 This example is for a 3 Level simulation.
 \begin{itemize}
 \item On Level 0 and 1 $\frac{\# cells}{patch} = 8$ \\	
-	i.e. min\_patch\_size [8,8,8] 
+	i.e. min\_patch\_size [8,8,8]
 \item On finer levels (level 2)
 \begin{itemize}
 	\item min\_patch\_size MUST be greater than or equal to 8,8,8!! This is very important!
@@ -287,9 +228,9 @@ This example is for a 3 Level simulation.
 \subsection{AMR Cycle}
 
 Whether working with an adaptive or a static grid, AMR problems follow
-the same cycle. 
+the same cycle.
 
-In short, there are 3 main AMR operations 
+In short, there are 3 main AMR operations
 \begin{itemize}
 
 \item Coarsen - This occurs after each execution of a finer level, if
@@ -306,14 +247,14 @@ In short, there are 3 main AMR operations
   finer level stays in sync with the coarser levels).
 \item Refine - This occurs for new patches created by the regrid
   operation. Variables that are necessary will be created on those
-  patches by interpolation from the coarser level. 
+  patches by interpolation from the coarser level.
 \end{itemize}
 
-After an entire cycle, then we check to see if we need to regrid. If the flags haven't changed such that patches would form, the grid will remain the same. 
+After an entire cycle, then we check to see if we need to regrid. If the flags haven't changed such that patches would form, the grid will remain the same.
 
-In short, these diagrams may be useful: 
+In short, these diagrams may be useful:
 
-``W-cycle'' (time refinement ratio of 2) 
+``W-cycle'' (time refinement ratio of 2)
 
 \begin{figure}[h]
   \centering
