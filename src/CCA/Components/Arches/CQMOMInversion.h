@@ -903,7 +903,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
   
   //next use these zeta values to solve for the new temporary variable omega
   //V2 R2 [omega] = [zeta] for each node of M=1
-  std::vector< std::vector< std::vector< std::vector<double> > > > Omega (N_i[0], std::vector< std::vector< std::vector<double> > > (N_i[1], std::vector<std::vector<double> > (N_i[2], std::vector<double>( 2*N_i[3]-1, 0.0) ) ) );
+  std::vector< std::vector< std::vector< std::vector<double> > > > Omega (N_i[0], std::vector< std::vector< std::vector<double> > > (N_i[1], std::vector<std::vector<double> > (N_i[2], std::vector<double>( 2*N_i[3], 0.0) ) ) );
   xTemp.resize(N_i[1]);
   wTemp.resize(N_i[1]);
   vanderMom.resize(N_i[1]);
@@ -984,7 +984,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
   condMomStar.resize(N_i[2]);
   //now use omega values to solve for the actual conditional moment values
   // V3 R3 *[cond mom] = [omega] for each M=2 node
-  std::vector< std::vector< std::vector< std::vector<double> > > > condMom4 (N_i[0], std::vector< std::vector< std::vector<double> > > (N_i[1], std::vector<std::vector<double> > (N_i[2], std::vector<double>( 2*N_i[3]-1, 1.0) ) ) );
+  std::vector< std::vector< std::vector< std::vector<double> > > > condMom4 (N_i[0], std::vector< std::vector< std::vector<double> > > (N_i[1], std::vector<std::vector<double> > (N_i[2], std::vector<double>( 2*N_i[3], 1.0) ) ) );
   for (int k1 = 0; k1< N_i[0]; k1++) {
     for (int k2 = 0; k2 < N_i[1]; k2++) { //loop over every x2 node
       //fill in V3 R3 for this x2 node
