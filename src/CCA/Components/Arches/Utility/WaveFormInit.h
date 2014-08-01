@@ -154,11 +154,11 @@ private:
 
     const InterpT* const interp = opr.retrieve_operator<InterpT>();
 
-    T* const field = field_collector->get_so_field<T>( _var_name ); 
+    T* const field = field_collector->get_so_field<T>( _var_name, NEWDW ); 
 
-    const SVolF* const x = field_collector->get_so_field<SVolF>( "gridX" ); 
-    const SVolF* const y = field_collector->get_so_field<SVolF>( "gridY" ); 
-    const SVolF* const z = field_collector->get_so_field<SVolF>( "gridZ" ); 
+    const SVolF* const x = field_collector->get_so_field<SVolF>( "gridX", NEWDW ); 
+    const SVolF* const y = field_collector->get_so_field<SVolF>( "gridY", NEWDW ); 
+    const SVolF* const z = field_collector->get_so_field<SVolF>( "gridZ", NEWDW ); 
     IntVector c = IntVector(1,1,1); 
 
     switch (_wtype){ 

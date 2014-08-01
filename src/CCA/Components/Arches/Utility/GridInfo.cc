@@ -85,13 +85,13 @@ GridInfo::eval( const Patch* patch, FieldCollector* field_collector,
   using SpatialOps::operator *; 
   typedef SpatialOps::SVolField   SVol;
 
-  SVol* const gridX = field_collector->get_so_field<SVol>( "gridX" ); 
-  SVol* const gridY = field_collector->get_so_field<SVol>( "gridY" ); 
-  SVol* const gridZ = field_collector->get_so_field<SVol>( "gridZ" ); 
+  SVol* const gridX = field_collector->get_so_field<SVol>( "gridX", NEWDW ); 
+  SVol* const gridY = field_collector->get_so_field<SVol>( "gridY", NEWDW ); 
+  SVol* const gridZ = field_collector->get_so_field<SVol>( "gridZ", NEWDW ); 
 
-  SVol* const old_gridX = field_collector->get_so_field<SVol>( "gridX" ); 
-  SVol* const old_gridY = field_collector->get_so_field<SVol>( "gridY" ); 
-  SVol* const old_gridZ = field_collector->get_so_field<SVol>( "gridZ" ); 
+  SVol* const old_gridX = field_collector->get_so_field<SVol>( "gridX", OLDDW ); 
+  SVol* const old_gridY = field_collector->get_so_field<SVol>( "gridY", OLDDW ); 
+  SVol* const old_gridZ = field_collector->get_so_field<SVol>( "gridZ", OLDDW ); 
 
   //carry forward  the grid information.                   
   *gridX <<= *old_gridX;                   

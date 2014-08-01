@@ -173,18 +173,17 @@ private:
     using SpatialOps::operator *; 
     typedef SpatialOps::SVolField   SVolF;
 
-    const SVolF* const rho = field_collector->get_so_field<SVolF>( "density" ); 
     typedef std::vector<std::string> SV;
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){ 
 
-      T* const phi     = field_collector->get_so_field<T>( *i        );
-      T* const rho     = field_collector->get_so_field<T>( "density" );
+      T* const phi     = field_collector->get_so_field<T>( *i, NEWDW        );
+      T* const rho     = field_collector->get_so_field<T>( "density", NEWDW );
 
       //because of the ambiguity with the variables having the same name, we use the 
       //enums from the field collector to be specific about which variables we need. otherwise
       //we could/would end up with the wrong phi and density 
-      T* const old_phi = field_collector->get_so_field<T>( *i, true, OLDDW, info.time_substep );
-      T* const old_rho = field_collector->get_so_field<T>( "density", true, OLDDW, info.time_substep );
+      T* const old_phi = field_collector->get_so_field<T>( *i, OLDDW );
+      T* const old_rho = field_collector->get_so_field<T>( "density", OLDDW );
 
       double alpha = _ssp_alpha[info.time_substep]; 
       double beta  = _ssp_beta[info.time_substep];

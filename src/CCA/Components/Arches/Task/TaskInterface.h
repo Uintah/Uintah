@@ -489,9 +489,7 @@ protected:
         /** @brief The interface to the actual task for retrieving variables for spatialops types.**/
         template<class ST>
         ST* get_so_field( const std::string name, 
-                          const bool check_dw=false,  
-                          const WHICH_DW which_dw=NEWDW, 
-                          const int time_substep=0 ){ 
+                          const WHICH_DW which_dw ){ 
 
           //search through the registry for the variable: 
           //Note: In its most basic operation, this assumes that the variable 
@@ -499,34 +497,12 @@ protected:
           //One can use the which_dw to force a matching if the variable 
           //is being requested from two different DW's
           VariableInformation* var_info=0; 
-          if ( !check_dw ){ 
-            BOOST_FOREACH( VariableInformation &ivar, _var_reg ){ 
-              if ( ivar.name == name ){ 
+          BOOST_FOREACH( VariableInformation &ivar, _var_reg ){ 
+            if ( ivar.name == name && ivar.dw == which_dw ){ 
 
-                var_info = &ivar; 
-                break; 
+              var_info = &ivar; 
+              break; 
 
-              }
-            }
-          } else { 
-            WHICH_DW which_dw_copy = which_dw; 
-            if ( which_dw_copy == LATEST ){ 
-              if ( time_substep == 0 ){ 
-                which_dw_copy = OLDDW;
-              } else { 
-                which_dw_copy = NEWDW; 
-              }
-            }
-            BOOST_FOREACH( VariableInformation &ivar, _var_reg ){ 
-              if ( ivar.name == name ){ 
-
-                //check dw before moving on
-                if ( ivar.dw == which_dw_copy ){ 
-                  var_info = &ivar;
-                  break; 
-                }
-
-              }
             }
           }
 
@@ -582,15 +558,6 @@ protected:
             if ( ivar.name == name && ivar.dw == which_dw ){ 
 
               var_info = &ivar; 
-
-              if ( var_info->dw == LATEST ){ 
-                if ( _tsk_info.time_substep == 0 ){ 
-                  var_info->dw = OLDDW; 
-                } else { 
-                  var_info->dw = NEWDW; 
-                } 
-              }
-
               break; 
 
             }

@@ -111,11 +111,11 @@ ScalarRHS::initialize( const Patch* patch, FieldCollector* field_collector,
   using SpatialOps::operator *; 
   typedef SpatialOps::SVolField   SVolF;
 
-  SVolF* const rhs   = field_collector->get_so_field<SVolF>( _rhs_name   );
-  SVolF* const phi   = field_collector->get_so_field<SVolF>( _task_name  );
-  SVolF* const gamma = field_collector->get_so_field<SVolF>( _D_name     );
-  SVolF* const Fdiff = field_collector->get_so_field<SVolF>( _Fdiff_name );
-  SVolF* const Fconv = field_collector->get_so_field<SVolF>( _Fconv_name );
+  SVolF* const rhs   = field_collector->get_so_field<SVolF>( _rhs_name  , NEWDW );
+  SVolF* const phi   = field_collector->get_so_field<SVolF>( _task_name , NEWDW );
+  SVolF* const gamma = field_collector->get_so_field<SVolF>( _D_name    , NEWDW );
+  SVolF* const Fdiff = field_collector->get_so_field<SVolF>( _Fdiff_name, NEWDW );
+  SVolF* const Fconv = field_collector->get_so_field<SVolF>( _Fconv_name, NEWDW );
 
   *rhs <<= 0.0;
   *phi <<= 0.0;
@@ -166,20 +166,20 @@ ScalarRHS::eval( const Patch* patch, FieldCollector* field_collector,
 
   using namespace SpatialOps;
   using SpatialOps::operator *; 
-  SVolF* const rhs       = field_collector->get_so_field<SVolF>( _rhs_name         );
-  SVolF* const old_phi   = field_collector->get_so_field<SVolF>( _task_name        );
-  SVolF* const phi       = field_collector->get_so_field<SVolF>( _task_name        );
-  SVolF* const rho       = field_collector->get_so_field<SVolF>( "density"         );
-  SVolF* const gamma     = field_collector->get_so_field<SVolF>( _D_name           );
-  SVolF* const old_gamma = field_collector->get_so_field<SVolF>( _D_name           );
-  SVolF* const Fdiff     = field_collector->get_so_field<SVolF>( _Fdiff_name       );
-  SVolF* const Fconv     = field_collector->get_so_field<SVolF>( _Fconv_name       );
-  SurfX* const epsX      = field_collector->get_so_field<SurfX>( "areaFractionFX" );
-  SurfY* const epsY      = field_collector->get_so_field<SurfY>( "areaFractionFY" );
-  SurfZ* const epsZ      = field_collector->get_so_field<SurfZ>( "areaFractionFZ" );
-  SurfX* const u         = field_collector->get_so_field<SurfX>( "uVelocitySPBC"  );
-  SurfY* const v         = field_collector->get_so_field<SurfY>( "vVelocitySPBC"  );
-  SurfZ* const w         = field_collector->get_so_field<SurfZ>( "wVelocitySPBC"  );
+  SVolF* const rhs       = field_collector->get_so_field<SVolF>( _rhs_name        , NEWDW  );
+  SVolF* const old_phi   = field_collector->get_so_field<SVolF>( _task_name       , LATEST );
+  SVolF* const phi       = field_collector->get_so_field<SVolF>( _task_name       , NEWDW  );
+  SVolF* const rho       = field_collector->get_so_field<SVolF>( "density"        , LATEST );
+  SVolF* const gamma     = field_collector->get_so_field<SVolF>( _D_name          , NEWDW  );
+  SVolF* const old_gamma = field_collector->get_so_field<SVolF>( _D_name          , LATEST );
+  SVolF* const Fdiff     = field_collector->get_so_field<SVolF>( _Fdiff_name      , NEWDW  );
+  SVolF* const Fconv     = field_collector->get_so_field<SVolF>( _Fconv_name      , NEWDW  );
+  SurfX* const epsX      = field_collector->get_so_field<SurfX>( "areaFractionFX" , OLDDW  );
+  SurfY* const epsY      = field_collector->get_so_field<SurfY>( "areaFractionFY" , OLDDW  );
+  SurfZ* const epsZ      = field_collector->get_so_field<SurfZ>( "areaFractionFZ" , OLDDW  );
+  SurfX* const u         = field_collector->get_so_field<SurfX>( "uVelocitySPBC"  , LATEST );
+  SurfY* const v         = field_collector->get_so_field<SurfY>( "vVelocitySPBC"  , LATEST );
+  SurfZ* const w         = field_collector->get_so_field<SurfZ>( "wVelocitySPBC"  , LATEST );
 
   //Note: we can just grab references to the Uintah grid types here because the registration 
   //process has already required the variables 
@@ -240,7 +240,7 @@ ScalarRHS::eval( const Patch* patch, FieldCollector* field_collector,
   typedef std::vector<SourceInfo> VS; 
   for (VS::iterator i = _source_info.begin(); i != _source_info.end(); i++){ 
 
-    SVolF* const src = field_collector->get_so_field<SVolF>( i->name );
+    SVolF* const src = field_collector->get_so_field<SVolF>( i->name, LATEST );
 
     *rhs <<= *rhs + info.dt * i->weight * *src;
 

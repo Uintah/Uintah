@@ -47,8 +47,8 @@ SampleTask::initialize( const Patch* patch, FieldCollector* field_collector,
 
   typedef SpatialOps::SVolField   SVol;
 
-  SVol* const field = field_collector->get_so_field<SVol>( "a_sample_variable" ); 
-  SVol* const result = field_collector->get_so_field<SVol>( "a_result_variable" ); 
+  SVol* const field = field_collector->get_so_field<SVol>( "a_sample_variable", NEWDW ); 
+  SVol* const result = field_collector->get_so_field<SVol>( "a_result_variable", NEWDW ); 
 
   *field  <<= 1.1; 
   *result <<= 2.1; 
@@ -99,12 +99,12 @@ SampleTask::eval( const Patch* patch, FieldCollector* field_collector,
   //constSFCYVariable<double>*    v = get_uintah_grid_var<constSFCYVariable<double> >("vVelocitySPBC", const_var_map); 
 
   //Get spatialops variables for work: 
-  SVol* const field = field_collector->get_so_field<SVol>( "a_sample_variable" ); 
-  SVol* const result = field_collector->get_so_field<SVol>( "a_result_variable" ); 
-  SVol* const density = field_collector->get_so_field<SVol>( "density" ); 
-  SurfX* const u = field_collector->get_so_field<SurfX>("uVelocitySPBC" ); 
-  SurfY* const v = field_collector->get_so_field<SurfY>("vVelocitySPBC" ); 
-  SurfZ* const w = field_collector->get_so_field<SurfZ>("wVelocitySPBC" ); 
+  SVol* const field = field_collector->get_so_field<SVol>( "a_sample_variable", NEWDW ); 
+  SVol* const result = field_collector->get_so_field<SVol>( "a_result_variable", NEWDW ); 
+  SVol* const density = field_collector->get_so_field<SVol>( "density", LATEST ); 
+  SurfX* const u = field_collector->get_so_field<SurfX>("uVelocitySPBC", LATEST ); 
+  SurfY* const v = field_collector->get_so_field<SurfY>("vVelocitySPBC", LATEST ); 
+  SurfZ* const w = field_collector->get_so_field<SurfZ>("wVelocitySPBC", LATEST ); 
 
   *field <<= _value*(*density);
 

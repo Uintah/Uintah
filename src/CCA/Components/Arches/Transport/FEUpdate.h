@@ -118,12 +118,12 @@ private:
     using SpatialOps::operator *; 
     typedef SpatialOps::SVolField   SVol;
 
-    const SVol* const rho = field_collector->get_so_field<SVol>( "density" ); 
+    const SVol* const rho = field_collector->get_so_field<SVol>( "density", LATEST ); 
     typedef std::vector<std::string> SV;
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){ 
 
-      T* const phi = field_collector->get_so_field<T>( *i );
-      T* const rhs = field_collector->get_so_field<T>( *i+"_RHS" ); 
+      T* const phi = field_collector->get_so_field<T>( *i, NEWDW );
+      T* const rhs = field_collector->get_so_field<T>( *i+"_RHS", NEWDW ); 
 
       //update: 
       *phi <<= *rhs / *rho; 
