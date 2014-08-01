@@ -57,7 +57,7 @@ public:
 
   void problemSetup(const ProblemSpecP& db );
   
-  void extraSetup( GridP& grid, const ProblemSpecP& db );
+  void extraSetup( GridP& grid );
   
   void sched_computeSource( const LevelP& level, 
                             SchedulerP& sched, 

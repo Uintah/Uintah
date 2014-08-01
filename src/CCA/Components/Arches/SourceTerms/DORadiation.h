@@ -54,7 +54,6 @@ public:
   ~DORadiation();
 
   void problemSetup(const ProblemSpecP& db);
-  void extraSetup(GridP& grid, const ProblemSpecP& db);
   void sched_computeSource( const LevelP& level, SchedulerP& sched, 
                             int timeSubStep );
   void computeSource( const ProcessorGroup* pc, 

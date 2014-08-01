@@ -109,10 +109,6 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   _DO_model->problemSetup( db ); 
 
 }
-void 
-DORadiation::extraSetup( GridP& grid, const ProblemSpecP& inputdb)
-{
-}
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the source term 
 //---------------------------------------------------------------------------
