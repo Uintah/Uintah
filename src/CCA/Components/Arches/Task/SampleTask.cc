@@ -42,7 +42,7 @@ SampleTask::register_timestep_init( std::vector<VariableInformation>& variable_r
 }
 
 void 
-SampleTask::timestep_init( const Patch* patch, FieldCollector* field_collector, 
+SampleTask::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                           SpatialOps::OperatorDatabase& opr ){ 
 
 }
@@ -64,15 +64,15 @@ SampleTask::register_initialize( std::vector<VariableInformation>& variable_regi
 }
 
 void 
-SampleTask::initialize( const Patch* patch, FieldCollector* field_collector, 
+SampleTask::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                         SpatialOps::OperatorDatabase& opr ){ 
 
 
   using namespace SpatialOps;
   using SpatialOps::operator *; 
 
-  SVolFP field  = field_collector->get_so_field<SVolF>( "a_sample_variable" );
-  SVolFP result = field_collector->get_so_field<SVolF>( "a_result_variable" );
+  SVolFP field  = tsk_info->get_so_field<SVolF>( "a_sample_variable" );
+  SVolFP result = tsk_info->get_so_field<SVolF>( "a_result_variable" );
 
   *field  <<= 1.1; 
   *result <<= 2.1; 
@@ -101,7 +101,7 @@ SampleTask::register_timestep_eval( std::vector<VariableInformation>& variable_r
 
 //This is the work for the task.  First, get the variables. Second, do the work! 
 void 
-SampleTask::eval( const Patch* patch, FieldCollector* field_collector, 
+SampleTask::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                   SpatialOps::OperatorDatabase& opr ){
 
   using namespace SpatialOps;
@@ -117,12 +117,12 @@ SampleTask::eval( const Patch* patch, FieldCollector* field_collector,
   //constSFCYVariable<double>*    v = get_uintah_grid_var<constSFCYVariable<double> >("vVelocitySPBC", const_var_map); 
 
   //Get spatialops variables for work: 
-  SVolFP field   = field_collector->get_so_field<SVolF>( "a_sample_variable" );
-  SVolFP result  = field_collector->get_so_field<SVolF>( "a_result_variable" );
-  SVolFP const density = field_collector->get_so_field<SVolF>( "density" );
-  SurfXP const u      = field_collector->get_so_field<SurfX>("uVelocitySPBC" );
-  SurfYP const v      = field_collector->get_so_field<SurfY>("vVelocitySPBC" );
-  SurfZP const w      = field_collector->get_so_field<SurfZ>("wVelocitySPBC" );
+  SVolFP field   = tsk_info->get_so_field<SVolF>( "a_sample_variable" );
+  SVolFP result  = tsk_info->get_so_field<SVolF>( "a_result_variable" );
+  SVolFP const density = tsk_info->get_so_field<SVolF>( "density" );
+  SurfXP const u      = tsk_info->get_so_field<SurfX>("uVelocitySPBC" );
+  SurfYP const v      = tsk_info->get_so_field<SurfY>("vVelocitySPBC" );
+  SurfZP const w      = tsk_info->get_so_field<SurfZ>("wVelocitySPBC" );
 
   *field <<= _value*(*density);
 

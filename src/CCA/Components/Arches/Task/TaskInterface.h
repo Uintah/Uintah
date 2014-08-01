@@ -238,42 +238,29 @@ protected:
     typedef std::map<std::string, constVariableBase<GridVariableBase>* > ConstUintahVarMap; 
 
     /** @brief A class for managing the retrieval of uintah/so fields during task exe **/ 
-    class FieldCollector{
+    class ArchesTaskInfoManager{
 
       public: 
 
         enum MAPCHECK {CHECK_FIELD,CONST_FIELD,NONCONST_FIELD};
 
-        FieldCollector( std::vector<VariableInformation>& var_reg, const Patch* patch, SchedToTaskInfo& info ):
+        ArchesTaskInfoManager( std::vector<VariableInformation>& var_reg, const Patch* patch, SchedToTaskInfo& info ):
                         _var_reg(var_reg), _patch(patch), _tsk_info(info){
 
         }; 
 
-        ~FieldCollector(){
-        
-//          for ( std::vector<SpatialOps::SVolField*>::iterator i = _cc_fields.begin(); i != _cc_fields.end(); i++){ 
-//            delete *i; 
-//          }
-//          for ( std::vector<SpatialOps::SSurfXField*>::iterator i = _fx_fields.begin(); i != _fx_fields.end(); i++){ 
-//            delete *i; 
-//          }
-//          for ( std::vector<SpatialOps::SSurfYField*>::iterator i = _fy_fields.begin(); i != _fy_fields.end(); i++){ 
-//            delete *i; 
-//          }
-//          for ( std::vector<SpatialOps::SSurfZField*>::iterator i = _fz_fields.begin(); i != _fz_fields.end(); i++){ 
-//            delete *i; 
-//          }
+        ~ArchesTaskInfoManager(){
 
         }; 
 
         /** @brief return the time substep **/ 
-        int get_time_substep(){ return _tsk_info.time_substep; }; 
+        inline int get_time_substep(){ return _tsk_info.time_substep; }; 
 
         /** @brief return the dt **/ 
-        double get_dt(){ return _tsk_info.dt; }; 
+        inline double get_dt(){ return _tsk_info.dt; }; 
 
         /** @brief return the variable registry **/ 
-        std::vector<VariableInformation>& get_variable_reg(){ return _var_reg; }
+        inline std::vector<VariableInformation>& get_variable_reg(){ return _var_reg; }
 
         /** @brief Set the references to the variable maps in the Field Collector for easier 
          * management of the fields when trying to retrieve from the DW **/ 
@@ -283,283 +270,9 @@ protected:
           
         }
 
-//        //Shamelessly stolen from Wasatch: 
-//        /**
-//         * \fn void get_bc_logicals( const Uintah::Patch* const, SpatialOps::IntVec&, SpatialOps::IntVec& );
-//         * \brief Given the patch, populate information about whether a physical
-//         *        boundary exists on each side of the patch.
-//         * \param patch   - the patch of interest
-//         * \param bcMinus - assigned to 0 if no BC present on (-) faces, 1 if present
-//         * \param bcPlus  - assigned to 0 if no BC present on (+) faces, 1 if present
-//         */
-//        static void get_bc_logicals( const Uintah::Patch* const patch,
-//                              SpatialOps::IntVec& bcMinus,
-//                              SpatialOps::IntVec& bcPlus )
-//        {
-//          for( int i=0; i<3; ++i ){
-//            bcMinus[i] = 1;
-//            bcPlus [i] = 1;
-//          }
-//          std::vector<Uintah::Patch::FaceType> faces;
-//          patch->getNeighborFaces(faces);
-//          for( std::vector<Uintah::Patch::FaceType>::const_iterator i=faces.begin(); i!=faces.end(); ++i ){
-//            SCIRun::IntVector dir = patch->getFaceDirection(*i);
-//            for( int j=0; j<3; ++j ){
-//              if( dir[j] == -1 ) bcMinus[j]=0;
-//              if( dir[j] ==  1 ) bcPlus [j]=0;
-//            }
-//          }
-//        }
-//
-//        /** @brief wrap a uintah field as a spatialops field. **/ 
-//        template< typename FieldT, typename UFT >
-//        static inline FieldT* wrap_uintah_field_as_spatialops( UFT& uintahVar,
-//                                                        const Uintah::Patch* const patch,
-//                                                        const int nGhost )
-//    //                                                    const SpatialOps::MemoryType mtype=SpatialOps::LOCAL_RAM,
-//    //                                                    const unsigned short int deviceIndex=0,
-//    //                                                    double* uintahDeviceVar = NULL )
-//        {
-//    
-//          namespace SS = SpatialOps;
-//    
-//          using SCIRun::IntVector;
-//    
-//          const SCIRun::IntVector lowIx       = uintahVar->getLowIndex();
-//          const SCIRun::IntVector highIx      = uintahVar->getHighIndex();
-//          const SCIRun::IntVector fieldSize   = uintahVar->getWindow()->getData()->size();
-//          const SCIRun::IntVector fieldOffset = uintahVar->getWindow()->getOffset();
-//          const SCIRun::IntVector fieldExtent = highIx - lowIx;
-//    
-//          const SS::IntVec   size( fieldSize[0],   fieldSize[1],   fieldSize[2]   );
-//          const SS::IntVec extent( fieldExtent[0], fieldExtent[1], fieldExtent[2] );
-//          const SS::IntVec offset( lowIx[0]-fieldOffset[0], lowIx[1]-fieldOffset[1], lowIx[2]-fieldOffset[2] );
-//    
-//          SS::IntVec bcMinus, bcPlus;
-//          get_bc_logicals( patch, bcMinus, bcPlus );
-//    
-//          const unsigned short int deviceIndex = CPU_INDEX; 
-//    
-//          double* fieldValues_ = NULL;
-//    //      if( mtype == SpatialOps::EXTERNAL_CUDA_GPU ){
-//    //#       ifdef HAVE_CUDA
-//    //        fieldValues_ = const_cast<double*>( uintahDeviceVar );
-//    //#       endif
-//    //      }
-//    //      else{
-//            fieldValues_ = const_cast<typename FieldT::value_type*>( uintahVar->getPointer() );
-//    //      }
-//    
-//          return new FieldT( SS::MemoryWindow( size, offset, extent ),
-//                             SS::BoundaryCellInfo::build<FieldT>(bcPlus),
-//                             nGhost,
-//                             fieldValues_,
-//                             SS::ExternalStorage,
-//                             deviceIndex );
-//        }
-//
-//        /** @brief Add a (non-const) variable to the list **/ 
-//        void add_variable(std::string name, GridVariableBase* var){
-//
-//          //_variable_map.insert(std::make_pair(name, var)); 
-//        
-//        }
-//
-//        /** @brief Add a constant variable to the list **/ 
-//        void add_constant_variable(std::string name, constVariableBase<GridVariableBase>* var){
-//
-//          //_const_variable_map.insert(std::make_pair(name, var)); 
-//        
-//        }
-//
-//        /** @brief Struct for template function specialization to return the SO field **/ 
-//        template<class ST, class M>
-//        struct SO{ 
-//          ST* get_so_grid_var( std::string name, M& var_map, const Patch* patch, const int nGhost ){
-//            throw InvalidValue("Arches Task Error: (SPATIAL OPS) Cannot resolve grid variable "+name, __FILE__, __LINE__); 
-//          };
-//        };
-//
-//        template<class M>
-//        struct SO<SpatialOps::SVolField,M>{
-//          SpatialOps::SVolField* get_so_grid_var( std::string name, M& var_map, const Patch* patch, const int nGhost ){
-//            std::map<std::string, constVariableBase<GridVariableBase>* > test_const;
-//            bool do_const = false; 
-//            if (typeid(var_map) == typeid(test_const)){ 
-//              do_const = true; 
-//            }
-//            if ( var_map.find(name) != var_map.end() ) {
-//
-//              if ( do_const ){ 
-//                constCCVariable<double>* var = dynamic_cast<constCCVariable<double>* >(var_map.find(name)->second); 
-//                return wrap_uintah_field_as_spatialops<SpatialOps::SVolField>( var, patch, nGhost );
-//              } else { 
-//                CCVariable<double>* var = dynamic_cast<CCVariable<double>* >(var_map.find(name)->second); 
-//                return wrap_uintah_field_as_spatialops<SpatialOps::SVolField>( var, patch, nGhost );
-//              }
-//
-//            }
-//            std::ostringstream msg; 
-//            msg << " Arches Task Error: Cannot resolve grid variable: "<< name << "\n" << "(try checking var_map)" << std::endl;
-//            throw InvalidValue(msg.str(), __FILE__, __LINE__); 
-//          };
-//        };
-//        template<class M>
-//        struct SO<SpatialOps::SSurfXField,M>{
-//          SpatialOps::SSurfXField* get_so_grid_var( std::string name, M& var_map, const Patch* patch, const int nGhost ){
-//            std::map<std::string, constVariableBase<GridVariableBase>* > test_const;
-//            bool do_const = false; 
-//            if (typeid(var_map) == typeid(test_const)){ 
-//              do_const = true; 
-//            }
-//            if ( var_map.find(name) != var_map.end() ) {
-//
-//              if ( do_const ){ 
-//                constSFCXVariable<double>* var = dynamic_cast<constSFCXVariable<double>* >(var_map.find(name)->second); 
-//                return wrap_uintah_field_as_spatialops<SpatialOps::SSurfXField>( var, patch, nGhost );
-//              } else { 
-//                SFCXVariable<double>* var = dynamic_cast<SFCXVariable<double>* >(var_map.find(name)->second); 
-//                return wrap_uintah_field_as_spatialops<SpatialOps::SSurfXField>( var, patch, nGhost );
-//              }
-//
-//            }
-//
-//            throw InvalidValue("Arches Task Error: (SPATIAL OPS) Cannot resolve grid variable "+name, __FILE__, __LINE__); 
-//
-//          }
-//        };
-//        template<class M>
-//        struct SO<SpatialOps::SSurfYField,M>{
-//          SpatialOps::SSurfYField* get_so_grid_var( std::string name, M& var_map, const Patch* patch, const int nGhost ){
-//            std::map<std::string, constVariableBase<GridVariableBase>* > test_const;
-//            bool do_const = false; 
-//            if (typeid(var_map) == typeid(test_const)){ 
-//              do_const = true; 
-//            }
-//            if ( var_map.find(name) != var_map.end() ) {
-//
-//              if ( do_const ){ 
-//                constSFCYVariable<double>* var = dynamic_cast<constSFCYVariable<double>* >(var_map.find(name)->second); 
-//                return wrap_uintah_field_as_spatialops<SpatialOps::SSurfYField>( var, patch, nGhost );
-//              } else { 
-//                SFCYVariable<double>* var = dynamic_cast<SFCYVariable<double>* >(var_map.find(name)->second); 
-//                return wrap_uintah_field_as_spatialops<SpatialOps::SSurfYField>( var, patch, nGhost );
-//              }
-//
-//            }
-//
-//            throw InvalidValue("Arches Task Error: (SPATIAL OPS) Cannot resolve grid variable "+name, __FILE__, __LINE__); 
-//
-//          }
-//        };
-//        template<class M>
-//        struct SO<SpatialOps::SSurfZField,M>{
-//          SpatialOps::SSurfZField* get_so_grid_var( std::string name, M& var_map, const Patch* patch, const int nGhost ){
-//            std::map<std::string, constVariableBase<GridVariableBase>* > test_const;
-//            bool do_const = false; 
-//            if (typeid(var_map) == typeid(test_const)){ 
-//              do_const = true; 
-//            }
-//            if ( var_map.find(name) != var_map.end() ) {
-//
-//              if ( do_const ){ 
-//                constSFCZVariable<double>* var = dynamic_cast<constSFCZVariable<double>* >(var_map.find(name)->second); 
-//                return wrap_uintah_field_as_spatialops<SpatialOps::SSurfZField>( var, patch, nGhost );
-//              } else { 
-//                SFCZVariable<double>* var = dynamic_cast<SFCZVariable<double>* >(var_map.find(name)->second); 
-//                return wrap_uintah_field_as_spatialops<SpatialOps::SSurfZField>( var, patch, nGhost );
-//              }
-//
-//            }
-//
-//            throw InvalidValue("Arches Task Error: (SPATIAL OPS) Cannot resolve grid variable "+name, __FILE__, __LINE__); 
-//
-//          }
-//        };
-//
-//
-//        /** @brief Get an SpatialOps field to work with **/ 
-//        template<class ST, class M>
-//        ST* retrieve_so_field(const std::string name, M& var_map, const Patch* patch, const int nGhost ){ 
-//          SO<ST,M> func; 
-//          ST* field = func.get_so_grid_var(name, var_map, patch, nGhost ); 
-//          return field; 
-//        }
-//
-//        /** @brief Get a Uintah field to work with **/ 
-//        template<class T, class M>
-//        inline T* get_uintah_grid_var(const std::string name, M& var_map ){
-//
-//          if ( var_map.find(name) != var_map.end() ) return dynamic_cast<T* >(var_map.find(name)->second); 
-//
-//          throw InvalidValue("Arches Task Error: (UINTAH) Cannot resolve grid variable "+name, __FILE__, __LINE__); 
-//        }
-//
-//        //====================================================================================
-//        // GRID VARIABLE ACCESS
-//        //====================================================================================
-//        //SO FIELD
-//        /** @brief The interface to the actual task for retrieving variables for spatialops types.**/
-//        template<class ST>
-//        ST* get_so_field( const std::string name, 
-//                          const WHICH_DW which_dw ){ 
-//
-//          //search through the registry for the variable: 
-//          //Note: In its most basic operation, this assumes that the variable 
-//          //name will be present ONLY ONCE in the variable registry. 
-//          //One can use the which_dw to force a matching if the variable 
-//          //is being requested from two different DW's
-//          VariableInformation* var_info=0; 
-//          BOOST_FOREACH( VariableInformation &ivar, _var_reg ){ 
-//            if ( ivar.name == name && ivar.dw == which_dw ){ 
-//
-//              var_info = &ivar; 
-//              break; 
-//
-//            }
-//          }
-//
-//          if (var_info == 0){ 
-//            throw InvalidValue("Arches Task Error: (UINTAH) Cannot find information on variable: "+name, __FILE__, __LINE__); 
-//          }
-//
-//          //utilize the appropriate map: 
-//          //Note we passing the patch here because we might want to 
-//          //interface directly with the Wasatch wrap function later. 
-//          int nGhost = var_info->nGhost; 
-//          ST* field; 
-//
-//          if ( var_info->depend == REQUIRES ){ 
-//            //const map (requires)
-//            //field = retrieve_so_field<ST>(name, _const_variable_map, _patch, nGhost ); 
-//          } else { 
-//            //non-const map (computes, modifies)
-//            //field = retrieve_so_field<ST>(name, _variable_map, _patch, nGhost ); 
-//          }
-//
-//          //clunky: but we need to track the variables to destroy them later --
-//          //how bad is the dynamic casting?
-//          if ( var_info->type == CC_DOUBLE ){ 
-////            _cc_fields.push_back(dynamic_cast<SpatialOps::SVolField*>(field)); 
-//          } else if ( var_info->type == FACEX ){ 
-////            _fx_fields.push_back(dynamic_cast<SpatialOps::SSurfXField*>(field)); 
-//          } else if ( var_info->type == FACEY ){ 
-////            _fy_fields.push_back(dynamic_cast<SpatialOps::SSurfYField*>(field)); 
-//          } else if ( var_info->type == FACEZ ){ 
-////            _fz_fields.push_back(dynamic_cast<SpatialOps::SSurfZField*>(field)); 
-//          }
-//
-//          return field; 
-//
-//        }
-
-
         //====================================================================================
         // GRID VARIABLE ACCESS
         //====================================================================================
-        //UINTAH
-        /** @brief The interface to the actual task for retrieving variables for uintah types **/ 
-
         template <typename T>
         T* get_uintah_const_field( const std::string name ){ 
           return _field_container->get_const_field<T>(name); 
@@ -588,33 +301,25 @@ protected:
         const Patch* _patch; 
         SchedToTaskInfo& _tsk_info; 
 
-//        std::vector<void *> _all_so_fields; 
-      
-        //lists of spatialops variables to be destroyed: 
-//        std::vector<SpatialOps::SVolField*> _cc_fields;
-//        std::vector<SpatialOps::SSurfXField*> _fx_fields;
-//        std::vector<SpatialOps::SSurfYField*> _fy_fields;
-//        std::vector<SpatialOps::SSurfZField*> _fz_fields;
-
-    }; //End FieldCollector
+    }; //End ArchesTaskInfoManager
 
     /** @brief Resolves the DW fields with the dependency **/ 
     void resolve_fields( DataWarehouse* old_dw, 
                          DataWarehouse* new_dw, 
                          const Patch* patch, 
                          ArchesFieldContainer* field_container, 
-                         FieldCollector* f_collector );
+                         ArchesTaskInfoManager* f_collector );
 
     /** @brief The actual work done within the derived class **/ 
-    virtual void initialize( const Patch* patch, FieldCollector* field_collector, 
+    virtual void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, 
                              SpatialOps::OperatorDatabase& opr ) = 0; 
 
     /** @brief Work done at the top of a timestep **/ 
-    virtual void timestep_init( const Patch* patch, FieldCollector* field_collector, 
+    virtual void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, 
                                 SpatialOps::OperatorDatabase& opr ) = 0; 
 
     /** @brief The actual work done within the derived class **/ 
-    virtual void eval( const Patch* patch, FieldCollector* field_collector, 
+    virtual void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, 
                        SpatialOps::OperatorDatabase& opr ) = 0; 
 
     std::string _task_name; 

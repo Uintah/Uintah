@@ -33,12 +33,12 @@ GridInfo::register_initialize( std::vector<VariableInformation>& variable_regist
 }
 
 void 
-GridInfo::initialize( const Patch* patch, FieldCollector* field_collector, 
+GridInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                       SpatialOps::OperatorDatabase& opr ){ 
 
-  CCVariable<double>* gridX = field_collector->get_uintah_field<CCVariable<double> >( "gridX" ); 
-  CCVariable<double>* gridY = field_collector->get_uintah_field<CCVariable<double> >( "gridY" ); 
-  CCVariable<double>* gridZ = field_collector->get_uintah_field<CCVariable<double> >( "gridZ" ); 
+  CCVariable<double>* gridX = tsk_info->get_uintah_field<CCVariable<double> >( "gridX" ); 
+  CCVariable<double>* gridY = tsk_info->get_uintah_field<CCVariable<double> >( "gridY" ); 
+  CCVariable<double>* gridZ = tsk_info->get_uintah_field<CCVariable<double> >( "gridZ" ); 
 
   for ( CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++ ){ 
 
@@ -74,7 +74,7 @@ GridInfo::register_timestep_init( std::vector<VariableInformation>& variable_reg
 }
 
 void 
-GridInfo::timestep_init( const Patch* patch, FieldCollector* field_collector, 
+GridInfo::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                           SpatialOps::OperatorDatabase& opr ){ 
 
   using namespace SpatialOps;
@@ -82,13 +82,13 @@ GridInfo::timestep_init( const Patch* patch, FieldCollector* field_collector,
   typedef SpatialOps::SVolField   SVolF;
   typedef SpatialOps::SpatFldPtr<SVolF> SVolFP; 
 
-  SVolFP gridX = field_collector->get_so_field<SVolF>( "gridX" ); 
-  SVolFP gridY = field_collector->get_so_field<SVolF>( "gridY" ); 
-  SVolFP gridZ = field_collector->get_so_field<SVolF>( "gridZ" ); 
+  SVolFP gridX = tsk_info->get_so_field<SVolF>( "gridX" ); 
+  SVolFP gridY = tsk_info->get_so_field<SVolF>( "gridY" ); 
+  SVolFP gridZ = tsk_info->get_so_field<SVolF>( "gridZ" ); 
 
-  SVolFP const old_gridX = field_collector->get_const_so_field<SVolF>( "gridX" ); 
-  SVolFP const old_gridY = field_collector->get_const_so_field<SVolF>( "gridY" ); 
-  SVolFP const old_gridZ = field_collector->get_const_so_field<SVolF>( "gridZ" ); 
+  SVolFP const old_gridX = tsk_info->get_const_so_field<SVolF>( "gridX" ); 
+  SVolFP const old_gridY = tsk_info->get_const_so_field<SVolF>( "gridY" ); 
+  SVolFP const old_gridZ = tsk_info->get_const_so_field<SVolF>( "gridZ" ); 
 
   //carry forward  the grid information.                   
   *gridX <<= *old_gridX;                   
@@ -108,6 +108,6 @@ GridInfo::register_timestep_eval( std::vector<VariableInformation>& variable_reg
 }
 
 void 
-GridInfo::eval( const Patch* patch, FieldCollector* field_collector, 
+GridInfo::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                 SpatialOps::OperatorDatabase& opr ){ 
 }

@@ -44,13 +44,13 @@ protected:
 
     void register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ); 
 
-    void initialize( const Patch* patch, FieldCollector* field_collector, 
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                      SpatialOps::OperatorDatabase& opr );
     
-    void timestep_init( const Patch* patch, FieldCollector* field_collector, 
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                         SpatialOps::OperatorDatabase& opr ){}
 
-    void eval( const Patch* patch, FieldCollector* field_collector, 
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                SpatialOps::OperatorDatabase& opr ); 
 
 private:
@@ -93,14 +93,14 @@ private:
   
   //This is the work for the task.  First, get the variables. Second, do the work! 
   template <typename T> 
-  void TemplatedSampleTask<T>::initialize( const Patch* patch, FieldCollector* field_collector,
+  void TemplatedSampleTask<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                                            SpatialOps::OperatorDatabase& opr ){ 
 
     using namespace SpatialOps;
     using SpatialOps::operator *; 
     typedef SpatialOps::SpatFldPtr<T> SVolFP;
 
-    SVolFP field = field_collector->get_so_field<T>( "templated_variable" ); 
+    SVolFP field = tsk_info->get_so_field<T>( "templated_variable" ); 
     *field <<= 3.2;
 
   }
@@ -115,14 +115,14 @@ private:
   }
 
   template <typename T>
-  void TemplatedSampleTask<T>::eval( const Patch* patch, FieldCollector* field_collector,
+  void TemplatedSampleTask<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                                      SpatialOps::OperatorDatabase& opr ){ 
 
     using namespace SpatialOps;
     using SpatialOps::operator *; 
     typedef SpatialOps::SpatFldPtr<T> SVolFP;
 
-    SVolFP field = field_collector->get_so_field<T>( "templated_variable" ); 
+    SVolFP field = tsk_info->get_so_field<T>( "templated_variable" ); 
 
     *field <<= 24.0;
   

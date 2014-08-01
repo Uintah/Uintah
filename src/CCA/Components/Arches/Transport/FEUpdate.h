@@ -46,13 +46,13 @@ protected:
 
     void register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ); 
 
-    void initialize( const Patch* patch, FieldCollector* field_collector, 
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                      SpatialOps::OperatorDatabase& opr );
     
-    void timestep_init( const Patch* patch, FieldCollector* field_collector, 
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                         SpatialOps::OperatorDatabase& opr ){}
 
-    void eval( const Patch* patch, FieldCollector* field_collector, 
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                SpatialOps::OperatorDatabase& opr ); 
 
 private:
@@ -92,7 +92,7 @@ private:
   
   //This is the work for the task.  First, get the variables. Second, do the work! 
   template <typename T> 
-  void FEUpdate<T>::initialize( const Patch* patch, FieldCollector* field_collector, 
+  void FEUpdate<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                                 SpatialOps::OperatorDatabase& opr ){ 
   }
 
@@ -113,7 +113,7 @@ private:
   }
 
   template <typename T>
-  void FEUpdate<T>::eval( const Patch* patch, FieldCollector* field_collector, 
+  void FEUpdate<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                           SpatialOps::OperatorDatabase& opr ){ 
 
     using namespace SpatialOps;
@@ -122,13 +122,13 @@ private:
     typedef SpatialOps::SpatFldPtr<SVolF> SVolFP; 
     typedef SpatialOps::SpatFldPtr<T> STFP; 
 
-    SVolFP const rho = field_collector->get_const_so_field<SVolF>( "density" ); 
+    SVolFP const rho = tsk_info->get_const_so_field<SVolF>( "density" ); 
     typedef std::vector<std::string> SV;
 
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){ 
 
-      STFP phi = field_collector->get_so_field<T>( *i );
-      STFP rhs = field_collector->get_const_so_field<T>( *i+"_RHS" ); 
+      STFP phi = tsk_info->get_so_field<T>( *i );
+      STFP rhs = tsk_info->get_const_so_field<T>( *i+"_RHS" ); 
 
       //update: 
       *phi <<= *rhs / *rho; 

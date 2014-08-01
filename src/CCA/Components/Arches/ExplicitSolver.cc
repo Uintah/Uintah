@@ -355,7 +355,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   ////transport factory
   ifac = _factory_map->find("transport_factory"); 
   init_all_tasks = ifac->second->retrieve_all_tasks(); 
-  //TaskFactoryBase::TaskMap::iterator i_ssp_update; 
   for ( TaskFactoryBase::TaskMap::iterator i = init_all_tasks.begin(); i != init_all_tasks.end(); i++){ 
     if ( i->first != "scalar_fe_update" && i->first != "scalar_ssp_update") {
       i->second->schedule_timestep_init(level, sched, matls ); 
@@ -377,7 +376,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     //transport factory
     ifac = _factory_map->find("transport_factory"); 
     all_tasks = ifac->second->retrieve_all_tasks(); 
-    //TaskFactoryBase::TaskMap::iterator i_ssp_update; 
     for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
       if ( i->first != "scalar_fe_update" && i->first != "scalar_ssp_update") {
         i->second->schedule_task(level, sched, matls, curr_level); 
@@ -386,15 +384,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     TaskFactoryBase::TaskMap::iterator i_fe_update = all_tasks.find("scalar_fe_update");  
     i_fe_update->second->schedule_task( level, sched, matls, curr_level ); 
-
-    //BELOW HERE DOESN'T WORK???
-    //TaskInterface* sample = ifac->second->retrieve_task("sample_task"); 
-    //sample->schedule_task( level, sched, matls, curr_level ); 
-
-    //TaskInterface* templated_sample = ifac->second->retrieve_task("templated_task"); 
-    //templated_sample->schedule_task( level, sched, matls, curr_level ); 
-    //END DOESNT WORK
-    //
     //------------------------  END NEW TASK STUFF: 
 
     // Create this timestep labels for properties
@@ -601,11 +590,11 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
 
-    //NEW STUFF: -------------
+    //NEW TASK STUFF: -------------
     //this is updating the scalar with the latest density from the table lookup
     TaskFactoryBase::TaskMap::iterator i_ssp_update = all_tasks.find("scalar_ssp_update"); 
     i_ssp_update->second->schedule_task( level, sched, matls, curr_level ); 
-    //END NEW STUFF
+    //END NEW TASK STUFF
 
 
     // STAGE 1

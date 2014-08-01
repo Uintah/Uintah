@@ -46,13 +46,13 @@ protected:
 
     void register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ); 
 
-    void initialize( const Patch* patch, FieldCollector* field_collector, 
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                      SpatialOps::OperatorDatabase& opr );
     
-    void timestep_init( const Patch* patch, FieldCollector* field_collector, 
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                         SpatialOps::OperatorDatabase& opr ){}
 
-    void eval( const Patch* patch, FieldCollector* field_collector, 
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                SpatialOps::OperatorDatabase& opr );
 
 
@@ -147,7 +147,7 @@ private:
   
   //This is the work for the task.  First, get the variables. Second, do the work! 
   template <typename T> 
-  void SSPInt<T>::initialize( const Patch* patch, FieldCollector* field_collector, 
+  void SSPInt<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                               SpatialOps::OperatorDatabase& opr ){ 
   }
 
@@ -169,7 +169,7 @@ private:
   }
 
   template <typename T>
-  void SSPInt<T>::eval( const Patch* patch, FieldCollector* field_collector, 
+  void SSPInt<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                         SpatialOps::OperatorDatabase& opr ){
 
     using namespace SpatialOps;
@@ -180,18 +180,20 @@ private:
 
     typedef std::vector<std::string> SV;
 
-    const int time_substep = field_collector->get_time_substep();
+    const int time_substep = tsk_info->get_time_substep();
 
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){ 
 
       //we don't actually modify density here, but need to trick the system 
       //for now because density is appearing twice in the const fields and 
       //we only allow it to appear once. 
-      SFTP phi         = field_collector->get_so_field<T>( *i );
-      SVolFP rho = field_collector->get_so_field<T>( "density" );
+      //Perhaps the better thing to do is to create a new variable called 
+      //old_density so that we can get it as const
+      SFTP phi   = tsk_info->get_so_field<T>( *i );
+      SVolFP rho = tsk_info->get_so_field<T>( "density" );
 
-      SFTP   const old_phi = field_collector->get_const_so_field<T>( *i );
-      SVolFP const old_rho = field_collector->get_const_so_field<T>( "density" );
+      SFTP   const old_phi = tsk_info->get_const_so_field<T>( *i );
+      SVolFP const old_rho = tsk_info->get_const_so_field<T>( "density" );
 
       double alpha = _ssp_alpha[time_substep]; 
       double beta  = _ssp_beta[time_substep];
