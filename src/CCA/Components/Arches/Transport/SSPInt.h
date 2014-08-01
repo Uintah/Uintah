@@ -163,7 +163,7 @@ private:
       register_variable( *i, _mytype, REQUIRES, 0, OLDDW, variable_registry, time_substep ); 
     }
 
-    register_variable( "density", CC_DOUBLE, REQUIRES, 0, NEWDW, variable_registry, time_substep ); 
+    register_variable( "density", CC_DOUBLE, MODIFIES, 0, NEWDW,  variable_registry, time_substep ); 
     register_variable( "density", CC_DOUBLE, REQUIRES, 0, OLDDW,  variable_registry, time_substep ); 
   
   }
@@ -174,6 +174,9 @@ private:
 
     using namespace SpatialOps;
     using SpatialOps::operator *; 
+    typedef SVolField   SVolF;
+    typedef SpatialOps::SpatFldPtr<SVolF> SVolFP; 
+    typedef SpatialOps::SpatFldPtr<T> SFTP; 
 
     typedef std::vector<std::string> SV;
 
@@ -181,14 +184,14 @@ private:
 
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){ 
 
-      T* const phi     = field_collector->get_so_field<T>( *i, NEWDW        );
-      T* const rho     = field_collector->get_so_field<T>( "density", NEWDW );
+      //we don't actually modify density here, but need to trick the system 
+      //for now because density is appearing twice in the const fields and 
+      //we only allow it to appear once. 
+      SFTP phi         = field_collector->get_so_field<T>( *i );
+      SVolFP rho = field_collector->get_so_field<T>( "density" );
 
-      //because of the ambiguity with the variables having the same name, we use the 
-      //enums from the field collector to be specific about which variables we need. otherwise
-      //we could/would end up with the wrong phi and density 
-      T* const old_phi = field_collector->get_so_field<T>( *i, OLDDW );
-      T* const old_rho = field_collector->get_so_field<T>( "density", OLDDW );
+      SFTP   const old_phi = field_collector->get_const_so_field<T>( *i );
+      SVolFP const old_rho = field_collector->get_const_so_field<T>( "density" );
 
       double alpha = _ssp_alpha[time_substep]; 
       double beta  = _ssp_beta[time_substep];

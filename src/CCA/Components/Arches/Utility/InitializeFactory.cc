@@ -44,34 +44,34 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
 
       if ( type == "wave" ){ 
 
-        std::string gtype; 
-        db_task->findBlock("grid")->getAttribute("type",gtype);
+        std::string dependent_type; 
+        std::string independent_type; 
 
-        if ( gtype == "svol"){ 
-          typedef SpatialOps::SVolField SVol;
-          TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<SVol>::Builder(task_name, 0, eqn_name );
-          register_task(task_name, tsk);
+        db_task->findBlock("wave")->findBlock("grid")->getAttribute("dependent_type",dependent_type);
+        db_task->findBlock("wave")->findBlock("grid")->getAttribute("independent_type", independent_type); 
 
-          _active_tasks.push_back(task_name); 
+        typedef SpatialOps::SVolField SVol;
+        typedef SpatialOps::XVolField XVol; 
+        typedef SpatialOps::YVolField YVol; 
+        typedef SpatialOps::ZVolField ZVol; 
 
-// Need to make operators to interpolate the grid positions to faces 
-// in order for this to work. 
-        } else if ( gtype == "xvol"){ 
-          typedef SpatialOps::SSurfXField XVol;
-          TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<XVol>::Builder(task_name, 0, eqn_name );
-          register_task(task_name, tsk);
+        if ( dependent_type == "svol"){ 
 
-          _active_tasks.push_back(task_name); 
-        } else if ( gtype == "yvol"){ 
-          typedef SpatialOps::SSurfYField YVol;
-          TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<YVol>::Builder(task_name, 0, eqn_name );
-          register_task(task_name, tsk);
-
-          _active_tasks.push_back(task_name); 
-        } else if ( gtype == "zvol"){ 
-          typedef SpatialOps::SSurfZField ZVol;
-          TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<ZVol>::Builder(task_name, 0, eqn_name );
-          register_task(task_name, tsk);
+          if ( independent_type == "svol"){ 
+            TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<SVol, SVol>::Builder(task_name, 0, eqn_name); 
+            register_task( task_name, tsk ); 
+          } else if ( independent_type == "xvol"){ 
+            TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<XVol, SVol>::Builder(task_name, 0, eqn_name); 
+            register_task( task_name, tsk ); 
+          } else if ( independent_type == "yvol"){ 
+            TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<YVol, SVol>::Builder(task_name, 0, eqn_name); 
+            register_task( task_name, tsk ); 
+          } else if ( independent_type == "zvol"){ 
+            TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<ZVol, SVol>::Builder(task_name, 0, eqn_name); 
+            register_task( task_name, tsk ); 
+          } else { 
+            throw InvalidValue("Error: SpatalOps grid variable type not recognized for waveform.",__FILE__,__LINE__);
+          }
 
           _active_tasks.push_back(task_name); 
 

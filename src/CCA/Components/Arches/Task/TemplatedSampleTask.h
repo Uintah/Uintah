@@ -98,8 +98,9 @@ private:
 
     using namespace SpatialOps;
     using SpatialOps::operator *; 
+    typedef SpatialOps::SpatFldPtr<T> SVolFP;
 
-    T* const field = field_collector->get_so_field<T>( "templated_variable", NEWDW ); 
+    SVolFP field = field_collector->get_so_field<T>( "templated_variable" ); 
     *field <<= 3.2;
 
   }
@@ -119,12 +120,12 @@ private:
 
     using namespace SpatialOps;
     using SpatialOps::operator *; 
+    typedef SpatialOps::SpatFldPtr<T> SVolFP;
 
-    T* const field = field_collector->get_so_field<T>( "templated_variable", NEWDW ); 
+    SVolFP field = field_collector->get_so_field<T>( "templated_variable" ); 
 
     *field <<= 24.0;
   
   }
-
 }
 #endif 

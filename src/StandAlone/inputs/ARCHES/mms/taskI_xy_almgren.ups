@@ -71,16 +71,15 @@
       </ScalarTransport>
 
       <Initialization>
-        <task label="my_init" eqn="task_i_scalar" type="wave">
-          <grid type="svol"/>
+        <task label="my_great_initializer" eqn="task_i_scalar" type="wave">
           <wave type="sine">
+            <grid dependent_type="svol" independent_type="xvol"/>
+            <!--<independent_variable label="gridX"/>-->
+            <independent_variable label="uVelocitySPBC"/>
             <sine A="1.0" f=".5" offset="0"/>
-            <direction value="x"/>
           </wave>
         </task>
       </Initialization>
-
-
 
 <!-- END NEW STUFF -->
 
