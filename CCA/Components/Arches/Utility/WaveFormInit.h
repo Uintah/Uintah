@@ -62,6 +62,7 @@ private:
 
     const std::string _var_name; 
     std::string _ind_var_name;
+    std::string _ind_var_name_2;
     WAVE_TYPE _wtype; 
     VAR_TYPE _D_type; 
     VAR_TYPE _I_type; 
@@ -125,6 +126,7 @@ private:
     } else if ( wave_type == "sinecos"){ 
     
       ProblemSpecP db_sinecos= db->findBlock("wave")->findBlock("sinecos"); 
+      db->findBlock("wave")->findBlock("independent_variable_2")->getAttribute("label",_ind_var_name_2); 
 
       _wtype = SINECOS; 
       db_sinecos->getAttribute("A",_A); 
@@ -152,16 +154,15 @@ private:
   template <typename IT, typename DT>
   void WaveFormInit<IT, DT>::register_initialize( std::vector<VariableInformation>& variable_registry ){ 
 
-    using namespace SpatialOps;
-    using SpatialOps::operator *; 
-
     //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
     register_variable( _ind_var_name,       _I_type,   REQUIRES,       0, NEWDW,  variable_registry ); 
+    if ( _wtype == SINECOS ){ 
+      register_variable( _ind_var_name_2,       _I_type,   REQUIRES,       0, NEWDW,  variable_registry ); 
+    }
     register_variable( _var_name,           _D_type,   MODIFIES,       0, NEWDW,  variable_registry );
   
   }
   
-  //This is the work for the task.  First, get the variables. Second, do the work! 
   template <typename IT, typename DT> 
   void WaveFormInit<IT,DT>::initialize( const Patch* patch, FieldCollector* field_collector, 
                                         SpatialOps::OperatorDatabase& opr ){ 
@@ -197,7 +198,7 @@ private:
 
       case SINECOS:
 
-        *dep_field <<= _A*sin(_two_pi * _f1 * (*interp)(*ind_field)) + _B*cos(_two_pi * _f2 * (*interp)(*ind_field)); 
+        *dep_field <<= _A*sin(_two_pi * _f1 * (*interp)(*ind_field)) + _B*cos(_two_pi * _f2 * (*interp)(*ind_field_2)); 
 
         break;
 
