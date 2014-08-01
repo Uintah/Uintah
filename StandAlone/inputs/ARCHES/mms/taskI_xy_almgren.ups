@@ -15,7 +15,7 @@
     <delt_min>0.00001</delt_min>
     <delt_max>5</delt_max>
     <timestep_multiplier>0.5</timestep_multiplier>
-    <max_Timesteps>100</max_Timesteps>
+    <max_Timesteps>1</max_Timesteps>
   </Time>
 
   <DataArchiver>
@@ -32,6 +32,9 @@
     <save label="continuityResidual"/>
     <save label="velocityDivergence"/>
     <save label="arches_task_scalar"/>
+    <save label="arches_task_scalar_RHS"/>
+    <save label="arches_task_scalar_Fdiff"/>
+    <save label="arches_task_scalar_D"/>
     <checkpoint cycle="2" interval="0.05"/>
     <compression>gzip</compression>
   </DataArchiver>
@@ -41,7 +44,7 @@
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[1.0,1.0,1.0]</upper>
-        <resolution>[50,50,2]</resolution>
+        <resolution>[10,10,2]</resolution>
         <extraCells>[0,0,0]</extraCells>
         <patches>[1,1,1]</patches>
       </Box>
@@ -75,28 +78,18 @@
 
       <Initialization>
         <task label="my_great_initializer" eqn="arches_task_scalar" type="wave">
-          <!--<wave type="sine">-->
-            <!--<grid dependent_type="svol" independent_type="svol"/>-->
-            <!--<independent_variable label="gridX"/>-->
-            <!--[><independent_variable label="uVelocitySPBC"/><]-->
-            <!--[><independent_variable label="vVelocitySPBC"/><]-->
-            <!--<sine A="1.0" f=".5" offset="0"/>-->
-          <!--</wave>-->
-          <wave type="sinecos">
+          <wave type="sine">
             <grid dependent_type="svol" independent_type="svol"/>
             <independent_variable label="gridX"/>
-            <independent_variable_2 label="gridY"/>
-            <!--<independent_variable label="uVelocitySPBC"/>-->
-            <!--<independent_variable label="vVelocitySPBC"/>-->
-            <sinecos A="1.0" B="1.0" f1="6.0" f2="6.0" offset="0"/>
+            <sine A="1.0" f=".5" offset="0"/>
           </wave>
         </task>
       </Initialization>
 
 <!-- END NEW STUFF -->
 
-      <TimeIntegrator order="2">
-        <ExplicitIntegrator order="second"/>
+      <TimeIntegrator order="1">
+        <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
 
       <Properties>

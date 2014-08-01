@@ -49,13 +49,13 @@ protected:
 
     void register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ){} 
 
-    void initialize( const Patch* patch, FieldCollector* field_collector, 
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                      SpatialOps::OperatorDatabase& opr );
     
-    void timestep_init( const Patch* patch, FieldCollector* field_collector, 
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                         SpatialOps::OperatorDatabase& opr ){}
 
-    void eval( const Patch* patch, FieldCollector* field_collector, 
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                SpatialOps::OperatorDatabase& opr ){}
 
 private:
@@ -164,7 +164,7 @@ private:
   }
   
   template <typename IT, typename DT> 
-  void WaveFormInit<IT,DT>::initialize( const Patch* patch, FieldCollector* field_collector, 
+  void WaveFormInit<IT,DT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                                         SpatialOps::OperatorDatabase& opr ){ 
 
     using namespace SpatialOps;
@@ -177,8 +177,8 @@ private:
     typedef typename OperatorTypeBuilder< SpatialOps::Interpolant, IT, DT >::type InterpT;
     const InterpT* const interp = opr.retrieve_operator<InterpT>();
 
-    DTptr dep_field = field_collector->get_so_field<DT>( _var_name ); 
-    ITptr ind_field = field_collector->get_const_so_field<IT>( _ind_var_name ); 
+    DTptr dep_field = tsk_info->get_so_field<DT>( _var_name ); 
+    ITptr ind_field = tsk_info->get_const_so_field<IT>( _ind_var_name ); 
 
     switch (_wtype){ 
       case SINE:
@@ -206,8 +206,6 @@ private:
         break;
 
     } 
-
   }
-
 }
 #endif 

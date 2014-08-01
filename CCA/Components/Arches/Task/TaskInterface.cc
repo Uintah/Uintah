@@ -313,7 +313,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
                                     DataWarehouse* new_dw, 
                                     const Patch* patch, 
                                     ArchesFieldContainer* field_container, 
-                                    FieldCollector* f_collector ){ 
+                                    ArchesTaskInfoManager* f_collector ){ 
 
 
   std::vector<VariableInformation>& variable_registry = f_collector->get_variable_reg(); 
@@ -718,22 +718,22 @@ void TaskInterface::do_task( const ProcessorGroup* pc,
     info.dt = DT; 
     info.time_substep = time_substep; 
 
-    FieldCollector* field_collector = scinew FieldCollector(variable_registry, patch, info); 
+    ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info); 
 
     //doing DW gets...
-    resolve_fields( old_dw, new_dw, patch, field_container, field_collector ); 
+    resolve_fields( old_dw, new_dw, patch, field_container, tsk_info_mngr ); 
 
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
-    field_collector->set_field_container( field_container ); 
+    tsk_info_mngr->set_field_container( field_container ); 
 
     //get the operator DB for this patch
     Operators& opr = Operators::self(); 
     Operators::PatchInfoMap::iterator i_opr = opr.patch_info_map.find(patch->getID()); 
 
-    eval( patch, field_collector, i_opr->second._sodb ); 
+    eval( patch, tsk_info_mngr, i_opr->second._sodb ); 
 
     //clean up 
-    delete field_collector; 
+    delete tsk_info_mngr; 
     delete field_container; 
     
     for ( UintahVarMap::iterator i = variable_map.begin(); i != variable_map.end(); i++ ){
@@ -769,22 +769,22 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
     info.dt = 0; 
     info.time_substep = 0; 
 
-    FieldCollector* field_collector = scinew FieldCollector(variable_registry, patch, info); 
+    ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info); 
 
     //doing DW gets...
-    resolve_fields( old_dw, new_dw, patch, field_container, field_collector ); 
+    resolve_fields( old_dw, new_dw, patch, field_container, tsk_info_mngr ); 
 
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
-    field_collector->set_field_container( field_container ); 
+    tsk_info_mngr->set_field_container( field_container ); 
 
     //get the operator DB for this patch
     Operators& opr = Operators::self(); 
     Operators::PatchInfoMap::iterator i_opr = opr.patch_info_map.find(patch->getID()); 
 
-    initialize( patch, field_collector, i_opr->second._sodb ); 
+    initialize( patch, tsk_info_mngr, i_opr->second._sodb ); 
 
     //clean up 
-    delete field_collector; 
+    delete tsk_info_mngr; 
     delete field_container; 
 
     for ( UintahVarMap::iterator i = variable_map.begin(); i != variable_map.end(); i++ ){
@@ -820,22 +820,22 @@ void TaskInterface::do_timestep_init( const ProcessorGroup* pc,
     info.dt = 0; 
     info.time_substep = 0; 
 
-    FieldCollector* field_collector = scinew FieldCollector(variable_registry, patch, info); 
+    ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info); 
 
     //doing DW gets...
-    resolve_fields( old_dw, new_dw, patch, field_container, field_collector ); 
+    resolve_fields( old_dw, new_dw, patch, field_container, tsk_info_mngr ); 
 
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
-    field_collector->set_field_container( field_container ); 
+    tsk_info_mngr->set_field_container( field_container ); 
 
     //get the operator DB for this patch
     Operators& opr = Operators::self(); 
     Operators::PatchInfoMap::iterator i_opr = opr.patch_info_map.find(patch->getID()); 
 
-    timestep_init( patch, field_collector, i_opr->second._sodb ); 
+    timestep_init( patch, tsk_info_mngr, i_opr->second._sodb ); 
 
     //clean up 
-    delete field_collector; 
+    delete tsk_info_mngr; 
     delete field_container; 
 
     for ( UintahVarMap::iterator i = variable_map.begin(); i != variable_map.end(); i++ ){

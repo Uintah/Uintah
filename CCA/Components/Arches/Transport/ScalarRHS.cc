@@ -12,9 +12,9 @@ typedef SSurfYField SurfY;
 typedef SSurfZField SurfZ;
 typedef SVolField   SVolF;
 typedef SpatialOps::SpatFldPtr<SVolF> SVolFP; 
-typedef SpatialOps::SpatFldPtr<XVol> XVolPtr; 
-typedef SpatialOps::SpatFldPtr<YVol> YVolPtr; 
-typedef SpatialOps::SpatFldPtr<ZVol> ZVolPtr; 
+typedef SpatialOps::SpatFldPtr<SpatialOps::XVolField> XVolPtr; 
+typedef SpatialOps::SpatFldPtr<SpatialOps::YVolField> YVolPtr; 
+typedef SpatialOps::SpatFldPtr<SpatialOps::ZVolField> ZVolPtr; 
 //gradient
 typedef BasicOpTypes<SVolF>::GradX GradX;
 typedef BasicOpTypes<SVolF>::GradY GradY;
@@ -108,21 +108,21 @@ ScalarRHS::register_initialize( std::vector<VariableInformation>& variable_regis
 }
 
 void 
-ScalarRHS::initialize( const Patch* patch, FieldCollector* field_collector, 
+ScalarRHS::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                        SpatialOps::OperatorDatabase& opr ){ 
 
   using namespace SpatialOps;
   using SpatialOps::operator *; 
 
-  SVolFP rhs   = field_collector->get_so_field<SVolF>(_rhs_name);
-  SVolFP phi   = field_collector->get_so_field<SVolF>(_task_name);
-  SVolFP gamma = field_collector->get_so_field<SVolF>(_D_name);
-  SVolFP Fdiff = field_collector->get_so_field<SVolF>(_Fdiff_name);
-  SVolFP Fconv = field_collector->get_so_field<SVolF>(_Fconv_name);
+  SVolFP rhs   = tsk_info->get_so_field<SVolF>(_rhs_name);
+  SVolFP phi   = tsk_info->get_so_field<SVolF>(_task_name);
+  SVolFP gamma = tsk_info->get_so_field<SVolF>(_D_name);
+  SVolFP Fdiff = tsk_info->get_so_field<SVolF>(_Fdiff_name);
+  SVolFP Fconv = tsk_info->get_so_field<SVolF>(_Fconv_name);
 
   *rhs <<= 0.0;
   *phi <<= 0.0;
-  *gamma <<= 0.0; 
+  *gamma <<= 0.1; 
   *Fdiff <<= 0.0;
   *Fconv <<= 0.0; 
 
@@ -141,16 +141,16 @@ ScalarRHS::register_timestep_init( std::vector<VariableInformation>& variable_re
 }
 
 void 
-ScalarRHS::timestep_init( const Patch* patch, FieldCollector* field_collector, 
+ScalarRHS::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                           SpatialOps::OperatorDatabase& opr ){ 
 
   using namespace SpatialOps;
   using SpatialOps::operator *; 
 
-  SVolFP gamma     = field_collector->get_so_field<SVolF>( _D_name );
-  SVolFP old_gamma = field_collector->get_const_so_field<SVolF>( _D_name );
-  SVolFP phi       = field_collector->get_so_field<SVolF>( _task_name );
-  SVolFP old_phi   = field_collector->get_const_so_field<SVolF>( _task_name );
+  SVolFP gamma     = tsk_info->get_so_field<SVolF>( _D_name );
+  SVolFP old_gamma = tsk_info->get_const_so_field<SVolF>( _D_name );
+  SVolFP phi       = tsk_info->get_so_field<SVolF>( _task_name );
+  SVolFP old_phi   = tsk_info->get_const_so_field<SVolF>( _task_name );
 
   *gamma <<= *old_gamma;
   *phi <<= *old_phi;
@@ -169,17 +169,17 @@ ScalarRHS::register_timestep_eval( std::vector<VariableInformation>& variable_re
 
 //  //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
   register_variable( _rhs_name        , CC_DOUBLE , COMPUTES , 0 , NEWDW  , variable_registry , time_substep );
-//  register_variable( _D_name          , CC_DOUBLE , REQUIRES,  1 , NEWDW  , variable_registry , time_substep );
-//  register_variable( _task_name       , CC_DOUBLE , REQUIRES , 2 , LATEST , variable_registry , time_substep );
+  register_variable( _D_name          , CC_DOUBLE , REQUIRES,  1 , NEWDW  , variable_registry , time_substep );
+  register_variable( _task_name       , CC_DOUBLE , REQUIRES , 1 , LATEST , variable_registry , time_substep );
 //  register_variable( _Fconv_name      , CC_DOUBLE , COMPUTES , 0 , NEWDW  , variable_registry , time_substep );
-//  register_variable( _Fdiff_name      , CC_DOUBLE , COMPUTES , 0 , NEWDW  , variable_registry , time_substep );
+  register_variable( _Fdiff_name      , CC_DOUBLE , COMPUTES , 0 , NEWDW  , variable_registry , time_substep );
 //  //register_variable( "uVelocitySPBC"  , FACEX     , REQUIRES , 1 , LATEST , variable_registry , time_substep );
 //  //register_variable( "vVelocitySPBC"  , FACEY     , REQUIRES , 1 , LATEST , variable_registry , time_substep );
 //  //register_variable( "wVelocitySPBC"  , FACEZ     , REQUIRES , 1 , LATEST , variable_registry , time_substep );
-//  register_variable( "areaFractionFX" , FACEX     , REQUIRES , 1 , OLDDW  , variable_registry , time_substep );
-//  register_variable( "areaFractionFY" , FACEY     , REQUIRES , 1 , OLDDW  , variable_registry , time_substep );
-//  register_variable( "areaFractionFZ" , FACEZ     , REQUIRES , 1 , OLDDW  , variable_registry , time_substep );
-//  register_variable( "density"        , CC_DOUBLE , REQUIRES , 1 , LATEST , variable_registry , time_substep );
+  register_variable( "areaFractionFX" , FACEX     , REQUIRES , 1 , OLDDW  , variable_registry , time_substep );
+  register_variable( "areaFractionFY" , FACEY     , REQUIRES , 1 , OLDDW  , variable_registry , time_substep );
+  register_variable( "areaFractionFZ" , FACEZ     , REQUIRES , 1 , OLDDW  , variable_registry , time_substep );
+  register_variable( "density"        , CC_DOUBLE , REQUIRES , 1 , LATEST , variable_registry , time_substep );
 //  //register_variable( "areaFraction"   , CC_VEC    , REQUIRES , 2 , LATEST , variable_registry , time_substep );
 //
 //  typedef std::vector<SourceInfo> VS; 
@@ -190,59 +190,81 @@ ScalarRHS::register_timestep_eval( std::vector<VariableInformation>& variable_re
 }
 
 void 
-ScalarRHS::eval( const Patch* patch, FieldCollector* field_collector, 
+ScalarRHS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                  SpatialOps::OperatorDatabase& opr ){ 
 
 
   using namespace SpatialOps;
   using SpatialOps::operator *; 
-  SVolFP rhs       = field_collector->get_so_field<SVolF>( _rhs_name        );
+  SVolFP rhs       = tsk_info->get_so_field<SVolF>( _rhs_name        );
 
-  *rhs <<= 0.0; 
+  SVolFP Fdiff     = tsk_info->get_so_field<SVolF>( _Fdiff_name      );
+//  SVolFP Fconv     = tsk_info->get_so_field<SVolF>( _Fconv_name      );
+  SVolFP phi   = tsk_info->get_const_so_field<SVolF>( _task_name       );
+  XVolPtr epsX = tsk_info->get_const_so_field<SpatialOps::XVolField>( "areaFractionFX" );
+  YVolPtr epsY = tsk_info->get_const_so_field<SpatialOps::YVolField>( "areaFractionFY" );
+  ZVolPtr epsZ = tsk_info->get_const_so_field<SpatialOps::ZVolField>( "areaFractionFZ" );
+  SVolFP rho   = tsk_info->get_const_so_field<SVolF>( "density"        );
+  SVolFP gamma = tsk_info->get_const_so_field<SVolF>( _D_name          );
 
-
-//  SVolFP Fdiff     = field_collector->get_so_field<SVolF>( _Fdiff_name      );
-//  SVolFP Fconv     = field_collector->get_so_field<SVolF>( _Fconv_name      );
-//  SVolFP phi       = field_collector->get_const_so_field<SVolF>( _task_name       );
-//  XVolPtr epsX      = field_collector->get_const_so_field<XVol>( "areaFractionFX" );
-//  YVolPtr epsY      = field_collector->get_const_so_field<YVol>( "areaFractionFY" );
-//  ZVolPtr epsZ      = field_collector->get_const_so_field<ZVol>( "areaFractionFZ" );
-//  SVolFP rho       = field_collector->get_const_so_field<SVolF>( "density"        );
-//  SVolFP gamma     = field_collector->get_const_so_field<SVolF>( _D_name          );
+  CCVariable<double>* u_rhs = tsk_info->get_uintah_field<CCVariable<double> >( _rhs_name ); 
 //
 //  //not being used yet: 
-//  //SurfX* const u         = field_collector->get_so_field<SurfX>( "uVelocitySPBC"  , LATEST );
-//  //SurfY* const v         = field_collector->get_so_field<SurfY>( "vVelocitySPBC"  , LATEST );
-//  //SurfZ* const w         = field_collector->get_so_field<SurfZ>( "wVelocitySPBC"  , LATEST );
+//  //SurfX* const u         = tsk_info->get_so_field<SurfX>( "uVelocitySPBC"  , LATEST );
+//  //SurfY* const v         = tsk_info->get_so_field<SurfY>( "vVelocitySPBC"  , LATEST );
+//  //SurfZ* const w         = tsk_info->get_so_field<SurfZ>( "wVelocitySPBC"  , LATEST );
 //
-//  const GradX* const gradx = opr.retrieve_operator<GradX>();
-//  const GradY* const grady = opr.retrieve_operator<GradY>();
-//  const GradZ* const gradz = opr.retrieve_operator<GradZ>();
-//
-//  const InterpX* const ix = opr.retrieve_operator<InterpX>();
-//  const InterpY* const iy = opr.retrieve_operator<InterpY>();
-//  const InterpZ* const iz = opr.retrieve_operator<InterpZ>();
-//
-//  const DivX* const dx = opr.retrieve_operator<DivX>();
-//  const DivY* const dy = opr.retrieve_operator<DivY>();
-//  const DivZ* const dz = opr.retrieve_operator<DivZ>();
-//
-//  Vector DX = patch->dCell(); 
-//  double vol = DX.x()*DX.y()*DX.z(); 
-//  const double dt = field_collector->get_dt(); 
+
+  //operators: 
+  const GradX* const gradx = opr.retrieve_operator<GradX>();
+  const GradY* const grady = opr.retrieve_operator<GradY>();
+  const GradZ* const gradz = opr.retrieve_operator<GradZ>();
+
+  const InterpX* const ix = opr.retrieve_operator<InterpX>();
+  const InterpY* const iy = opr.retrieve_operator<InterpY>();
+  const InterpZ* const iz = opr.retrieve_operator<InterpZ>();
+
+  const DivX* const dx = opr.retrieve_operator<DivX>();
+  const DivY* const dy = opr.retrieve_operator<DivY>();
+  const DivZ* const dz = opr.retrieve_operator<DivZ>();
+
+  Vector DX = patch->dCell(); 
+  double vol = DX.x()*DX.y()*DX.z(); 
+  const double dt = tsk_info->get_dt(); 
+
+  typedef OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::XVolField, SpatialOps::SSurfXField >::type InterpTX;
+  typedef OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::YVolField, SpatialOps::SSurfYField >::type InterpTY;
+  typedef OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::ZVolField, SpatialOps::SSurfZField >::type InterpTZ;
+
+  const InterpTX* const interpx = opr.retrieve_operator<InterpTX>();
+  const InterpTY* const interpy = opr.retrieve_operator<InterpTY>();
+  const InterpTZ* const interpz = opr.retrieve_operator<InterpTZ>();
 
   //
   //--------------- actual work below this line ---------------------
   //
   
-//  //-->diffusion: 
+  //-->diffusion: 
 //  if ( _do_diff ){ 
-//    *Fdiff <<= (*dx)( (*ix)( *gamma * *rho ) * (*gradx)(*phi) * *epsX )
-//             + (*dy)( (*iy)( *gamma * *rho ) * (*grady)(*phi) * *epsY )
-//             + (*dz)( (*iz)( *gamma * *rho ) * (*gradz)(*phi) * *epsZ );
+//    *Fdiff <<= (*dx)( (*ix)( *gamma * *rho ) * (*gradx)(*phi)* (*interpx)(*epsX) )
+//             + (*dy)( (*iy)( *gamma * *rho ) * (*grady)(*phi)* (*interpy)(*epsY) )
+//             + (*dz)( (*iz)( *gamma * *rho ) * (*gradz)(*phi)* (*interpz)(*epsZ) );
 //  } else { 
 //    *Fdiff <<= 0.0; 
 //  }
+
+  if ( _do_diff ){ 
+
+    *Fdiff <<= (*dx)( (*ix)( *gamma * *rho ) * (*gradx)(*phi) )
+             + (*dy)( (*iy)( *gamma * *rho ) * (*grady)(*phi) )
+             + (*dz)( (*iz)( *gamma * *rho ) * (*gradz)(*phi) );
+
+  } else { 
+
+    *Fdiff <<= 0.0; 
+
+  }
+
 //
 //  //-->convection: 
 //  if ( _do_conv ){ 
@@ -254,13 +276,19 @@ ScalarRHS::eval( const Patch* patch, FieldCollector* field_collector,
 //
 //  //Divide by volume because Nebo is using a differential form
 //  //and the computeConv function is finite volume.
-//  *rhs <<= *rho * *phi + dt * ( *Fdiff - *Fconv/vol );
+//  *rhs <<= *rho * *phi + dt/vol * ( *Fdiff - *Fconv ) ;
+  *rhs <<= *rho * *phi + dt/vol * ( *Fdiff );
+
+  for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){ 
+    std::cout << " URHS = " << *iter << " " << (*u_rhs)[*iter] << std::endl;
+  }
+
 
 //  //-->add sources
 //  typedef std::vector<SourceInfo> VS; 
 //  for (VS::iterator i = _source_info.begin(); i != _source_info.end(); i++){ 
 //
-//    SVolFP const src = field_collector->get_const_so_field<SVolF>( i->name );
+//    SVolFP const src = tsk_info->get_const_so_field<SVolF>( i->name );
 //
 //    *rhs <<= *rhs + dt * i->weight * *src;
 //

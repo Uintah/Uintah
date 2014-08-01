@@ -21,13 +21,13 @@ public:
 
     void register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ); 
 
-    void initialize( const Patch* patch, FieldCollector* field_collector, 
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                      SpatialOps::OperatorDatabase& opr );
     
-    void timestep_init( const Patch* patch, FieldCollector* field_collector, 
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                         SpatialOps::OperatorDatabase& opr );
 
-    void eval( const Patch* patch, FieldCollector* field_collector, 
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                SpatialOps::OperatorDatabase& opr ); 
 
     //Build instructions for this (SampleTask) class. 
