@@ -203,23 +203,23 @@ void CQMOM::problemSetup(const ProblemSpecP& params)
     }
   }
   
-  
   // Check to make sure number of total moments specified in input file is correct
-  int reqMoments;
-  if (M == 2) {
-    reqMoments = 2*N_i[1]*N_i[0] + N_i[0];
-  } else {
-    //NOTE: fix this for other #'s later
-    reqMoments = nMoments;
+  if (!d_doOperatorSplitting) {
+    int reqMoments;
+    reqMoments = 2*N_i[0];
+    for ( int i = 1; i < M; i++ ) {
+      int product = N_i[0];
+      for ( int j = 1; j < i; j ++) {
+        product *= N_i[j];
+      }
+      product*= (2*N_i[i]-1);
+      reqMoments += product;
+    }
+    if ( nMoments != reqMoments ) {
+      proc0cout << "ERROR:CQMOM:ProblemSetup: You specified " << nMoments << " moments, but you need " << reqMoments << " moments." << endl;
+      throw InvalidValue( "ERROR:CQMOM:ProblemSetup: The number of moments specified was incorrect!",__FILE__,__LINE__);
+    }
   }
-//Comment this out for now as number of required moments change based on splitting
-//  if ( nMoments != reqMoments ) {
-//    proc0cout << "ERROR:CQMOM:ProblemSetup: You specified " << nMoments << " moments, but you need " << reqMoments << " moments." << endl;
-//    throw InvalidValue( "ERROR:CQMOM:ProblemSetup: The number of moments specified was incorrect!",__FILE__,__LINE__);
-//  }
-
-//set up more than one linear solver type in future?
-//  ProblemSpecP db_linear_solver = db->findBlock("LinearSolver");
   
 }
 
