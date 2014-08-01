@@ -56,9 +56,8 @@ public:
 
   enum FILTER_TYPE { BOX, MOIN98 };
 
-  Filter( bool use_old_filter, std::string filter_type, int filter_width ){
-    _use_old_filter = use_old_filter;
-    _filter_width  = filter_width;
+  Filter( bool use_old_filter, std::string filter_type, int filter_width ): 
+  _use_old_filter(use_old_filter), _filter_width(filter_width){
 
     if ( filter_type == "moin98" ){ 
       _filter_type = MOIN98; 
