@@ -22,43 +22,43 @@
  * IN THE SOFTWARE.
  */
 
+//-- Uintah component includes --//
 #include <CCA/Components/Regridder/RegridderFactory.h>
-#include <CCA/Components/Regridder/HierarchicalRegridder.h>
-#include <CCA/Components/Regridder/BNRRegridder.h>
 #include <CCA/Components/Regridder/SingleLevelRegridder.h>
 #include <CCA/Components/Regridder/TiledRegridder.h>
+
+//-- Uintah framework includes --//
 #include <Core/Parallel/ProcessorGroup.h>
 
-using namespace std;
 using namespace Uintah;
 
-RegridderCommon* RegridderFactory::create(ProblemSpecP& ps, 
-                                          const ProcessorGroup* world)
+RegridderCommon* RegridderFactory::create(ProblemSpecP& ps, const ProcessorGroup* world)
 {
-  RegridderCommon* regrid = 0;
-  
-  ProblemSpecP amr = ps->findBlock("AMR");	
-  ProblemSpecP reg_ps = amr->findBlock("Regridder");
-  if (reg_ps) {
+  RegridderCommon* regridder = 0;
 
-    string regridder;
-    reg_ps->getAttribute( "type", regridder );
+  // Parse the AMR/Regridder portion of the input file
+  ProblemSpecP amrPS = ps->findBlock("AMR");
+  ProblemSpecP regridderPS = amrPS->findBlock("Regridder");
+
+  if (regridderPS) {
+
+    std::string regridderName;
+    regridderPS->getAttribute("type", regridderName);
 
     if (world->myrank() == 0) {
-      cout << "Using Regridder " << regridder << endl;
+      std::cout << "Using Regridder " << regridderName << std::endl;
     }
-    if(regridder == "Hierarchical") {
-      regrid = scinew HierarchicalRegridder(world);
-    } else if(regridder == "BNR") {
-      regrid = scinew BNRRegridder(world);
-    } else if (regridder == "Tiled") {
-      regrid = scinew TiledRegridder(world);
-    } else if (regridder == "SingleLevel") {
-      regrid = scinew SingleLevelRegridder(world);
-    } else
-      regrid = 0;
+    if (regridderName == "Tiled") {
+      regridder = scinew TiledRegridder(world);
+    }
+    else if (regridderName == "SingleLevel") {
+      regridder = scinew SingleLevelRegridder(world);
+    }
+    else {
+      regridder = 0;
+    }
   }
 
-  return regrid;
+  return regridder;
 
 }

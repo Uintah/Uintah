@@ -1982,7 +1982,6 @@ OnDemandDataWarehouse::put( PerPatchBase& var,
 {
   MALLOC_TRACE_TAG_SCOPE( "OnDemandDataWarehouse::put(Per Patch Variable):" + label->getName() );
   ASSERT( !d_finalized );
-  //checkPutAccess(label, replace);
   checkPutAccess( label, matlIndex, patch, replace );
 
   // Put it in the database
@@ -2078,7 +2077,7 @@ OnDemandDataWarehouse::getRegion( constGridVariableBase& constVar,
     tmpVar->copyPointer( *v );
 
     if( patch->isVirtual() ) {
-      // if patch is virtual, it is probable a boundary layer/extra cell that has been requested (from AMR)
+      // if patch is virtual, it is probably a boundary layer/extra cell that has been requested (from AMR)
       // let Bryan know if this doesn't work.  We need to adjust the source but not the dest by the virtual offset
       tmpVar->offset( patch->getVirtualOffset() );
     }

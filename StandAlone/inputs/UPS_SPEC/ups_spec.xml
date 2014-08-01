@@ -692,25 +692,26 @@
       <rho_CC                           spec="OPTIONAL NO_DATA"     need_applies_to="name momentumAnalysis" attribute1="label REQUIRED STRING"/>
     </Module>
   </DataAnalysis>
+  
   <!--__________________________________-->
   
   <AMR                                  spec="OPTIONAL NO_DATA" >
     <doMultiTaskgraphing                spec="OPTIONAL BOOLEAN" />
     <useLockStep                        spec="OPTIONAL BOOLEAN" /> <!-- defaults to FALSE.  FIXME: correct?  Is it optional? -->
 
-    <include href="ice_spec.xml"         section="AMR/ICE" />
-    <include href="mpm_spec.xml"         section="AMR/MPM" />
+    <include href="ice_spec.xml"        section="AMR/ICE" />
+    <include href="mpm_spec.xml"        section="AMR/MPM" />
 
     <Regridder                          spec="OPTIONAL NO_DATA"
-                                           attribute1="type REQUIRED STRING 'BNR, Hierarchical, Tiled SingleLevel'" >
+                                          attribute1="type REQUIRED STRING 'Tiled, SingleLevel'" >
       <adaptive                         spec="OPTIONAL BOOLEAN" />
       
-      <!--Generic Required Regridder Options --> 
+      <!-- Generic Required Regridder Options --> 
       <max_levels                       spec="REQUIRED INTEGER 'positive'" />
       
       
       
-      <!--Generic Optional Regridder Options --> 
+      <!-- Generic Optional Regridder Options --> 
       <regrid_once                      spec="OPTIONAL BOOLEAN" />
       <amr_overhead_high                spec="OPTIONAL DOUBLE '0,1'" />   
       <amr_overhead_low                 spec="OPTIONAL DOUBLE '0,1'" />   
@@ -721,28 +722,23 @@
       <max_timestep_interval            spec="OPTIONAL INTEGER" />   
       <min_timestep_interval            spec="OPTIONAL INTEGER" />   
       
-      <!--Required SingleLevel Regridder -->
+      <!-- Required SingleLevel Regridder -->
       <new_patch_layout                 spec="REQUIRED VECTOR"             need_applies_to="type SingleLevel"/>
-      <level                            spec="OPTIONAL INTEGER 'positive'" need_applies_to="type SingleLevel"/>     
-
-      <!--Required BNR Regridder & Tiled Regridder Options-->
-      <min_patch_size                   spec="REQUIRED MULTIPLE_VECTORS" need_applies_to="type BNR Tiled"/>
-      <min_boundary_cells               spec="REQUIRED VECTOR"           need_applies_to="type BNR Hierarchical, Tiled"/>
-      <cell_refinement_ratio            spec="REQUIRED STRING"           need_applies_to="type BNR Hierarchical, Tiled"/>
+      <level                            spec="OPTIONAL INTEGER 'positive'" need_applies_to="type SingleLevel"/>
       
-      <!--       Optional Options-->
-      <patch_split_tolerance            spec="OPTIONAL DOUBLE '0,1'" need_applies_to="type BNR" />
-      <patch_combine_tolerance          spec="OPTIONAL DOUBLE '0,1'" need_applies_to="type BNR" />
-      <patch_ratio_to_target            spec="OPTIONAL DOUBLE '0,1'" need_applies_to="type BNR" />
-      <patches_per_level_per_proc       spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type BNR Tiled" />
+      <!--Required BNR Regridder & Tiled Regridder Options-->
+      <min_patch_size                   spec="REQUIRED MULTIPLE_VECTORS" need_applies_to="type Tiled"/>
+      <min_boundary_cells               spec="REQUIRED VECTOR"           need_applies_to="type Tiled"/>
+      <cell_refinement_ratio            spec="REQUIRED STRING"           need_applies_to="type Tiled"/>
+      
 
-      <!--Hierarchical Regridder-->
-      <!--       Required Options-->
-      <lattice_refinement_ratio         spec="REQUIRED STRING" need_applies_to="type Hierarchical" />
+      <!-- Optional Options-->
+      <patches_per_level_per_proc       spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type Tiled" />
 
     </Regridder>
   </AMR>
-  <!--__________________________________-->
+  
+  <!-- Scheduler Options -->
   
   <Scheduler              spec="OPTIONAL NO_DATA"
                             attribute1="type OPTIONAL STRING 'MPI DynamicMPI Unified'">

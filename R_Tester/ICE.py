@@ -26,7 +26,6 @@ riemann_AMR_3L_ups = modUPS( the_dir,                       \
 hotBlob_AMR_3L_ups = modUPS( the_dir,                       \
                              "hotBlob_AMR.ups",             \
                              ["<max_levels>3</max_levels>", \
-                              "<lattice_refinement_ratio> [[5,5,1],[2,2,1]]  </lattice_refinement_ratio>", \
                               "<filebase>AMR_HotBlob_3L.uda</filebase>"])
 
 #______________________________________________________________________

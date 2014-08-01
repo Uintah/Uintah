@@ -31,9 +31,7 @@ SRCDIR := testprograms/Regridders
 
 PROGRAM := $(SRCDIR)/benchmark
 
-SRCS    := $(SRCDIR)/benchmark.cc       \
-           $(SRCDIR)/BNRTask.cc         \
-           $(SRCDIR)/GBRv2Regridder.cc 
+SRCS    := $(SRCDIR)/benchmark.cc
 
 ifeq ($(IS_STATIC_BUILD),yes)
   PSELIBS := $(ALL_STATIC_PSE_LIBS)
@@ -51,7 +49,7 @@ ifeq ($(IS_STATIC_BUILD),yes)
           $(PAPI_LIBRARY) $(M_LIBRARY)
 else
   LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) \
-	  $(XML2_LIBRARY) $(Z_LIBRARY) $(CUDA_LIBRARY)
+	      $(XML2_LIBRARY) $(Z_LIBRARY) $(CUDA_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -68,10 +66,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 # Output Patches
 
 PROGRAM := $(SRCDIR)/outputpatches
-
-SRCS    := $(SRCDIR)/outputpatches.cc   \
-           $(SRCDIR)/BNRTask.cc         \
-           $(SRCDIR)/GBRv2Regridder.cc 
+SRCS    := $(SRCDIR)/outputpatches.cc
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
