@@ -343,23 +343,25 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
   }
 
+  //========NEW STUFF =================================
   //TIMESTEP INIT: 
-  typedef std::map<std::string, TaskFactoryBase*> FACMAP; 
-  ////utility factory
-  FACMAP::iterator ifac = _factory_map->find("utility_factory"); 
-  TaskFactoryBase::TaskMap init_all_tasks = ifac->second->retrieve_all_tasks(); 
-  for ( TaskFactoryBase::TaskMap::iterator i = init_all_tasks.begin(); i != init_all_tasks.end(); i++){ 
-    i->second->schedule_timestep_init(level, sched, matls ); 
-  }
-
-  ////transport factory
-  ifac = _factory_map->find("transport_factory"); 
-  init_all_tasks = ifac->second->retrieve_all_tasks(); 
-  for ( TaskFactoryBase::TaskMap::iterator i = init_all_tasks.begin(); i != init_all_tasks.end(); i++){ 
-    if ( i->first != "scalar_fe_update" && i->first != "scalar_ssp_update") {
-      i->second->schedule_timestep_init(level, sched, matls ); 
-    }
-  }
+//  typedef std::map<std::string, TaskFactoryBase*> FACMAP; 
+//  ////utility factory
+//  FACMAP::iterator ifac = _factory_map->find("utility_factory"); 
+//  TaskFactoryBase::TaskMap init_all_tasks = ifac->second->retrieve_all_tasks(); 
+//  for ( TaskFactoryBase::TaskMap::iterator i = init_all_tasks.begin(); i != init_all_tasks.end(); i++){ 
+//    i->second->schedule_timestep_init(level, sched, matls ); 
+//  }
+//
+//  ////transport factory
+//  ifac = _factory_map->find("transport_factory"); 
+//  init_all_tasks = ifac->second->retrieve_all_tasks(); 
+//  for ( TaskFactoryBase::TaskMap::iterator i = init_all_tasks.begin(); i != init_all_tasks.end(); i++){ 
+//    if ( i->first != "scalar_fe_update" && i->first != "scalar_ssp_update") {
+//      i->second->schedule_timestep_init(level, sched, matls ); 
+//    }
+//  }
+  //===================END NEW STUFF=======================
 
   // --------> START RK LOOP <---------
   for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
@@ -367,20 +369,20 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     //------------------------  NEW TASK STUFF: 
     //utility factory
-    FACMAP::iterator ifac = _factory_map->find("utility_factory"); 
-    TaskFactoryBase::TaskMap all_tasks = ifac->second->retrieve_all_tasks(); 
-    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
-      i->second->schedule_task(level, sched, matls, curr_level); 
-    }
-
-    //transport factory
-    ifac = _factory_map->find("transport_factory"); 
-    all_tasks = ifac->second->retrieve_all_tasks(); 
-    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
-      if ( i->first != "scalar_fe_update" && i->first != "scalar_ssp_update") {
-        i->second->schedule_task(level, sched, matls, curr_level); 
-      }
-    }
+//    FACMAP::iterator ifac = _factory_map->find("utility_factory"); 
+//    TaskFactoryBase::TaskMap all_tasks = ifac->second->retrieve_all_tasks(); 
+//    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+//      i->second->schedule_task(level, sched, matls, curr_level); 
+//    }
+//
+//    //transport factory
+//    ifac = _factory_map->find("transport_factory"); 
+//    all_tasks = ifac->second->retrieve_all_tasks(); 
+//    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+//      if ( i->first != "scalar_fe_update" && i->first != "scalar_ssp_update") {
+//        i->second->schedule_task(level, sched, matls, curr_level); 
+//      }
+//    }
 
     //uncoment to get this to work
     //TaskFactoryBase::TaskMap::iterator i_fe_update = all_tasks.find("scalar_fe_update");  
