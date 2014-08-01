@@ -6,6 +6,16 @@
 
 
 using namespace Uintah;
+using namespace SpatialOps;
+using SpatialOps::operator *; 
+typedef SVolField   SVolF;
+typedef SSurfXField SurfX;
+typedef SSurfYField SurfY;
+typedef SSurfZField SurfZ;
+typedef SpatialOps::SpatFldPtr<SVolF> SVolFP; 
+typedef SpatialOps::SpatFldPtr<SurfX> SurfXP; 
+typedef SpatialOps::SpatFldPtr<SurfY> SurfYP; 
+typedef SpatialOps::SpatFldPtr<SurfZ> SurfZP; 
 
 SampleTask::SampleTask( std::string task_name, int matl_index ) : 
 TaskInterface( task_name, matl_index ) { 
@@ -61,10 +71,8 @@ SampleTask::initialize( const Patch* patch, FieldCollector* field_collector,
   using namespace SpatialOps;
   using SpatialOps::operator *; 
 
-  typedef SpatialOps::SVolField   SVol;
-
-  SVol* const field = field_collector->get_so_field<SVol>( "a_sample_variable", NEWDW ); 
-  SVol* const result = field_collector->get_so_field<SVol>( "a_result_variable", NEWDW ); 
+  SVolFP field  = field_collector->get_so_field<SVolF>( "a_sample_variable" );
+  SVolFP result = field_collector->get_so_field<SVolF>( "a_result_variable" );
 
   *field  <<= 1.1; 
   *result <<= 2.1; 
@@ -99,12 +107,7 @@ SampleTask::eval( const Patch* patch, FieldCollector* field_collector,
   using namespace SpatialOps;
   using SpatialOps::operator *; 
 
-  typedef SpatialOps::SVolField   SVol;
-  typedef SpatialOps::SSurfXField SurfX;
-  typedef SpatialOps::SSurfYField SurfY;
-  typedef SpatialOps::SSurfZField SurfZ;
-
-  typedef SpatialOps::BasicOpTypes<SVol>::GradX GradX;
+  typedef SpatialOps::BasicOpTypes<SVolF>::GradX GradX;
   //const GradX* const gradx = opr.retrieve_operator<GradX>();
 
   //Get uintah fields for work: 
@@ -114,12 +117,12 @@ SampleTask::eval( const Patch* patch, FieldCollector* field_collector,
   //constSFCYVariable<double>*    v = get_uintah_grid_var<constSFCYVariable<double> >("vVelocitySPBC", const_var_map); 
 
   //Get spatialops variables for work: 
-  SVol* const field = field_collector->get_so_field<SVol>( "a_sample_variable", NEWDW ); 
-  SVol* const result = field_collector->get_so_field<SVol>( "a_result_variable", NEWDW ); 
-  SVol* const density = field_collector->get_so_field<SVol>( "density", LATEST ); 
-  SurfX* const u = field_collector->get_so_field<SurfX>("uVelocitySPBC", LATEST ); 
-  SurfY* const v = field_collector->get_so_field<SurfY>("vVelocitySPBC", LATEST ); 
-  SurfZ* const w = field_collector->get_so_field<SurfZ>("wVelocitySPBC", LATEST ); 
+  SVolFP field   = field_collector->get_so_field<SVolF>( "a_sample_variable" );
+  SVolFP result  = field_collector->get_so_field<SVolF>( "a_result_variable" );
+  SVolFP const density = field_collector->get_so_field<SVolF>( "density" );
+  SurfXP const u      = field_collector->get_so_field<SurfX>("uVelocitySPBC" );
+  SurfYP const v      = field_collector->get_so_field<SurfY>("vVelocitySPBC" );
+  SurfZP const w      = field_collector->get_so_field<SurfZ>("wVelocitySPBC" );
 
   *field <<= _value*(*density);
 

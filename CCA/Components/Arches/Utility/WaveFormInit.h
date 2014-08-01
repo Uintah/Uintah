@@ -7,15 +7,17 @@
 
 namespace Uintah{ 
 
-  template <typename T>
+  //IT is the independent variable type
+  //DT is the dependent variable type
+  template <typename IT, typename DT>
   class WaveFormInit : public TaskInterface { 
 
 public: 
 
     enum WAVE_TYPE { SINE, SQUARE, SINECOS };
 
-    WaveFormInit<T>( std::string task_name, int matl_index, const std::string var_name ); 
-    ~WaveFormInit<T>(); 
+    WaveFormInit<IT, DT>( std::string task_name, int matl_index, const std::string var_name ); 
+    ~WaveFormInit<IT, DT>(); 
 
     void problemSetup( ProblemSpecP& db ); 
 
@@ -29,14 +31,13 @@ public:
       ~Builder(){}
 
       WaveFormInit* build()
-      { return scinew WaveFormInit<T>( _task_name, _matl_index, _var_name ); }
+      { return scinew WaveFormInit<IT, DT>( _task_name, _matl_index, _var_name ); }
 
       private: 
 
       std::string _task_name; 
       std::string _var_name; 
       int _matl_index; 
-
 
     };
 
@@ -60,8 +61,10 @@ protected:
 private:
 
     const std::string _var_name; 
-    std::string _dir; 
+    std::string _ind_var_name;
     WAVE_TYPE _wtype; 
+    VAR_TYPE _D_type; 
+    VAR_TYPE _I_type; 
     double _amp; 
     double _two_pi; 
     double _f1, _f2; 
@@ -74,28 +77,32 @@ private:
 
   //Function definitions: 
 
-  template <typename T>
-  WaveFormInit<T>::WaveFormInit( std::string task_name, int matl_index, const std::string var_name ) : 
+  template <typename IT, typename DT>
+  WaveFormInit<IT, DT>::WaveFormInit( std::string task_name, int matl_index, const std::string var_name ) : 
   _var_name(var_name), TaskInterface( task_name, matl_index ){
 
     // This needs to be done to set the variable type 
-    // for this function. All templated tasks should do this. 
-    set_task_type<T>(); 
+    // for this function. This comes in handy often for templated tasks. 
+    // In this specific function, we don't use it but rather look at the 
+    // dependent and indepenent variables and set separate types for them for 
+    // use in the variable registration. 
+    set_task_type<DT>(); 
 
     _two_pi = 2.0*acos(-1.0);
   
   }
 
-  template <typename T>
-  WaveFormInit<T>::~WaveFormInit()
+  template <typename IT, typename DT>
+  WaveFormInit<IT, DT>::~WaveFormInit()
   {}
 
-  template <typename T>
-  void WaveFormInit<T>::problemSetup( ProblemSpecP& db ){ 
+  template <typename IT, typename DT>
+  void WaveFormInit<IT, DT>::problemSetup( ProblemSpecP& db ){ 
 
     std::string wave_type; 
     db->findBlock("wave")->getAttribute("type",wave_type); 
-    db->findBlock("wave")->findBlock("direction")->getAttribute("value",_dir); 
+    db->findBlock("wave")->findBlock("independent_variable")->getAttribute("label",_ind_var_name); 
+
     if ( wave_type == "sine"){ 
 
       ProblemSpecP db_sine = db->findBlock("wave")->findBlock("sine"); 
@@ -132,75 +139,65 @@ private:
 
     }
 
+    //This sets the type of the independent and dependent variable types as needed by the variable 
+    //registration step. 
+    DT* d_test; 
+    IT* i_test; 
+
+    set_type(d_test, _D_type); 
+    set_type(i_test, _I_type); 
+
   }
 
-  template <typename T>
-  void WaveFormInit<T>::register_initialize( std::vector<VariableInformation>& variable_registry ){ 
+  template <typename IT, typename DT>
+  void WaveFormInit<IT, DT>::register_initialize( std::vector<VariableInformation>& variable_registry ){ 
+
+    using namespace SpatialOps;
+    using SpatialOps::operator *; 
 
     //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
-    register_variable( "gridX",             CC_DOUBLE, REQUIRES,       0, NEWDW,  variable_registry ); 
-    register_variable( "gridY",             CC_DOUBLE, REQUIRES,       0, NEWDW,  variable_registry ); 
-    register_variable( "gridZ",             CC_DOUBLE, REQUIRES,       0, NEWDW,  variable_registry ); 
-    register_variable( _var_name,           _mytype,   MODIFIES,       0, NEWDW,  variable_registry );
+    register_variable( _ind_var_name,       _I_type,   REQUIRES,       0, NEWDW,  variable_registry ); 
+    register_variable( _var_name,           _D_type,   MODIFIES,       0, NEWDW,  variable_registry );
   
   }
   
   //This is the work for the task.  First, get the variables. Second, do the work! 
-  template <typename T> 
-  void WaveFormInit<T>::initialize( const Patch* patch, FieldCollector* field_collector, 
-                                    SpatialOps::OperatorDatabase& opr ){ 
+  template <typename IT, typename DT> 
+  void WaveFormInit<IT,DT>::initialize( const Patch* patch, FieldCollector* field_collector, 
+                                        SpatialOps::OperatorDatabase& opr ){ 
 
     using namespace SpatialOps;
     using SpatialOps::operator *; 
-    typedef SpatialOps::SVolField   SVolF;
-    typedef typename OperatorTypeBuilder< SpatialOps::Interpolant, SVolF, T >::type InterpT;
+    typedef SpatialOps::SpatFldPtr<IT> ITptr; 
+    typedef SpatialOps::SpatFldPtr<DT> DTptr; 
 
+    //build an operator to interpolate the independent variable to the grid 
+    //location of the dependent variable
+    typedef typename OperatorTypeBuilder< SpatialOps::Interpolant, IT, DT >::type InterpT;
     const InterpT* const interp = opr.retrieve_operator<InterpT>();
 
-    T* const field = field_collector->get_so_field<T>( _var_name, NEWDW ); 
-
-    const SVolF* const x = field_collector->get_so_field<SVolF>( "gridX", NEWDW ); 
-    const SVolF* const y = field_collector->get_so_field<SVolF>( "gridY", NEWDW ); 
-    const SVolF* const z = field_collector->get_so_field<SVolF>( "gridZ", NEWDW ); 
-    IntVector c = IntVector(1,1,1); 
+    DTptr dep_field = field_collector->get_so_field<DT>( _var_name ); 
+    ITptr ind_field = field_collector->get_const_so_field<IT>( _ind_var_name ); 
 
     switch (_wtype){ 
       case SINE:
-        
-        if ( _dir == "x"){
-          *field <<= _A*sin( _two_pi * _f1 * (*interp)( *x )) + _offset; 
-        } else if ( _dir == "y" ){ 
-          *field <<= _A*sin( _two_pi * _f1 * (*interp)( *y )) + _offset; 
-        } else { 
-          *field <<= _A*sin( _two_pi * _f1 * (*interp)( *z )) + _offset; 
-        }
+
+        *dep_field <<= _A*sin( _two_pi * _f1 * (*interp)( *ind_field ) ) + _offset; 
 
         break; 
       case SQUARE: 
 
-        if ( _dir == "x"){
-          *field <<= sin( _two_pi * _f1 * (*interp)( *x )) + _offset; 
-        } else if ( _dir == "y" ){ 
-          *field <<= sin( _two_pi * _f1 * (*interp)( *y )) + _offset; 
-        } else { 
-          *field <<= sin( _two_pi * _f1 * (*interp)( *z )) + _offset; 
-        }
+        *dep_field <<= sin( _two_pi * _f1 * (*interp)( *ind_field )) + _offset; 
 
-        *field <<= cond( *field < 0.0, _min_sq )
-                       ( *field > 0.0, _max_sq )
-                       ( 0.0 ); 
+        *dep_field <<= cond( *dep_field < 0.0, _min_sq )
+                           ( *dep_field > 0.0, _max_sq )
+                           ( 0.0 ); 
 
         break; 
 
       case SINECOS:
 
-        if ( _dir == "x"){ 
-          *field <<= _A*sin(_two_pi * _f1 * (*interp)(*x)) + _B*cos(_two_pi * _f2 * (*interp)(*x)); 
-        } else if ( _dir == "y" ){
-          *field <<= _A*sin(_two_pi * _f1 * (*interp)(*y)) + _B*cos(_two_pi * _f2 * (*interp)(*y)); 
-        } else {
-          *field <<= _A*sin(_two_pi * _f1 * (*interp)(*z)) + _B*cos(_two_pi * _f2 * (*interp)(*z)); 
-        }
+        *dep_field <<= _A*sin(_two_pi * _f1 * (*interp)(*ind_field)) + _B*cos(_two_pi * _f2 * (*interp)(*ind_field)); 
 
         break;
 

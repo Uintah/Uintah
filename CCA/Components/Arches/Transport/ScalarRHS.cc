@@ -11,6 +11,10 @@ typedef SSurfXField SurfX;
 typedef SSurfYField SurfY;
 typedef SSurfZField SurfZ;
 typedef SVolField   SVolF;
+typedef SpatialOps::SpatFldPtr<SVolF> SVolFP; 
+typedef SpatialOps::SpatFldPtr<XVol> XVolPtr; 
+typedef SpatialOps::SpatFldPtr<YVol> YVolPtr; 
+typedef SpatialOps::SpatFldPtr<ZVol> ZVolPtr; 
 //gradient
 typedef BasicOpTypes<SVolF>::GradX GradX;
 typedef BasicOpTypes<SVolF>::GradY GradY;
@@ -109,17 +113,12 @@ ScalarRHS::initialize( const Patch* patch, FieldCollector* field_collector,
 
   using namespace SpatialOps;
   using SpatialOps::operator *; 
-  typedef SpatialOps::SVolField   SVolF;
 
- // typedef SpatialOps::SpatFldPtr<SpatialOps::SVolField> SVolF; 
-
-  //SVolF* const rhs   = field_collector->get_so_field<SVolF>( _rhs_name  , NEWDW );
-  //SVolF* const rhs = field_collector->get_so_field<SVolF>(_rhs_name); 
-  SVolF* const rhs = field_collector->get_so_field<SVolF>(_rhs_name); 
-  SVolF* const phi   = field_collector->get_so_field<SVolF>( _task_name , NEWDW );
-  SVolF* const gamma = field_collector->get_so_field<SVolF>( _D_name    , NEWDW );
-  SVolF* const Fdiff = field_collector->get_so_field<SVolF>( _Fdiff_name, NEWDW );
-  SVolF* const Fconv = field_collector->get_so_field<SVolF>( _Fconv_name, NEWDW );
+  SVolFP rhs   = field_collector->get_so_field<SVolF>(_rhs_name);
+  SVolFP phi   = field_collector->get_so_field<SVolF>(_task_name);
+  SVolFP gamma = field_collector->get_so_field<SVolF>(_D_name);
+  SVolFP Fdiff = field_collector->get_so_field<SVolF>(_Fdiff_name);
+  SVolFP Fconv = field_collector->get_so_field<SVolF>(_Fconv_name);
 
   *rhs <<= 0.0;
   *phi <<= 0.0;
@@ -148,10 +147,10 @@ ScalarRHS::timestep_init( const Patch* patch, FieldCollector* field_collector,
   using namespace SpatialOps;
   using SpatialOps::operator *; 
 
-  SVolF* const gamma       = field_collector->get_so_field<SVolF>( _D_name, NEWDW );
-  SVolF* const old_gamma    = field_collector->get_so_field<SVolF>( _D_name, OLDDW );
-  SVolF* const phi       = field_collector->get_so_field<SVolF>( _task_name, NEWDW );
-  SVolF* const old_phi       = field_collector->get_so_field<SVolF>( _task_name, OLDDW );
+  SVolFP gamma     = field_collector->get_so_field<SVolF>( _D_name );
+  SVolFP old_gamma = field_collector->get_const_so_field<SVolF>( _D_name );
+  SVolFP phi       = field_collector->get_so_field<SVolF>( _task_name );
+  SVolFP old_phi   = field_collector->get_const_so_field<SVolF>( _task_name );
 
   *gamma <<= *old_gamma;
   *phi <<= *old_phi;
@@ -168,25 +167,25 @@ ScalarRHS::timestep_init( const Patch* patch, FieldCollector* field_collector,
 void 
 ScalarRHS::register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ){ 
 
-  //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
+//  //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
   register_variable( _rhs_name        , CC_DOUBLE , COMPUTES , 0 , NEWDW  , variable_registry , time_substep );
-  register_variable( _D_name          , CC_DOUBLE , REQUIRES,  1 , NEWDW  , variable_registry , time_substep );
-  register_variable( _task_name       , CC_DOUBLE , REQUIRES , 2 , LATEST , variable_registry , time_substep );
-  register_variable( _Fconv_name      , CC_DOUBLE , COMPUTES , 0 , NEWDW  , variable_registry , time_substep );
-  register_variable( _Fdiff_name      , CC_DOUBLE , COMPUTES , 0 , NEWDW  , variable_registry , time_substep );
-  //register_variable( "uVelocitySPBC"  , FACEX     , REQUIRES , 1 , LATEST , variable_registry , time_substep );
-  //register_variable( "vVelocitySPBC"  , FACEY     , REQUIRES , 1 , LATEST , variable_registry , time_substep );
-  //register_variable( "wVelocitySPBC"  , FACEZ     , REQUIRES , 1 , LATEST , variable_registry , time_substep );
-  register_variable( "areaFractionFX" , FACEX     , REQUIRES , 1 , OLDDW  , variable_registry , time_substep );
-  register_variable( "areaFractionFY" , FACEY     , REQUIRES , 1 , OLDDW  , variable_registry , time_substep );
-  register_variable( "areaFractionFZ" , FACEZ     , REQUIRES , 1 , OLDDW  , variable_registry , time_substep );
-  register_variable( "density"        , CC_DOUBLE , REQUIRES , 1 , LATEST , variable_registry , time_substep );
-  //register_variable( "areaFraction"   , CC_VEC    , REQUIRES , 2 , LATEST , variable_registry , time_substep );
-
-  typedef std::vector<SourceInfo> VS; 
-  for (VS::iterator i = _source_info.begin(); i != _source_info.end(); i++){ 
-    register_variable( i->name, CC_DOUBLE, REQUIRES, 0, LATEST, variable_registry, time_substep ); 
-  }
+//  register_variable( _D_name          , CC_DOUBLE , REQUIRES,  1 , NEWDW  , variable_registry , time_substep );
+//  register_variable( _task_name       , CC_DOUBLE , REQUIRES , 2 , LATEST , variable_registry , time_substep );
+//  register_variable( _Fconv_name      , CC_DOUBLE , COMPUTES , 0 , NEWDW  , variable_registry , time_substep );
+//  register_variable( _Fdiff_name      , CC_DOUBLE , COMPUTES , 0 , NEWDW  , variable_registry , time_substep );
+//  //register_variable( "uVelocitySPBC"  , FACEX     , REQUIRES , 1 , LATEST , variable_registry , time_substep );
+//  //register_variable( "vVelocitySPBC"  , FACEY     , REQUIRES , 1 , LATEST , variable_registry , time_substep );
+//  //register_variable( "wVelocitySPBC"  , FACEZ     , REQUIRES , 1 , LATEST , variable_registry , time_substep );
+//  register_variable( "areaFractionFX" , FACEX     , REQUIRES , 1 , OLDDW  , variable_registry , time_substep );
+//  register_variable( "areaFractionFY" , FACEY     , REQUIRES , 1 , OLDDW  , variable_registry , time_substep );
+//  register_variable( "areaFractionFZ" , FACEZ     , REQUIRES , 1 , OLDDW  , variable_registry , time_substep );
+//  register_variable( "density"        , CC_DOUBLE , REQUIRES , 1 , LATEST , variable_registry , time_substep );
+//  //register_variable( "areaFraction"   , CC_VEC    , REQUIRES , 2 , LATEST , variable_registry , time_substep );
+//
+//  typedef std::vector<SourceInfo> VS; 
+//  for (VS::iterator i = _source_info.begin(); i != _source_info.end(); i++){ 
+//    register_variable( i->name, CC_DOUBLE, REQUIRES, 0, LATEST, variable_registry, time_substep ); 
+//  }
 
 }
 
@@ -197,68 +196,73 @@ ScalarRHS::eval( const Patch* patch, FieldCollector* field_collector,
 
   using namespace SpatialOps;
   using SpatialOps::operator *; 
-  SVolF* const rhs       = field_collector->get_so_field<SVolF>( _rhs_name        , NEWDW  );
-  SVolF* const phi       = field_collector->get_so_field<SVolF>( _task_name       , LATEST );
-  SVolF* const rho       = field_collector->get_so_field<SVolF>( "density"        , LATEST );
-  SVolF* const gamma     = field_collector->get_so_field<SVolF>( _D_name          , NEWDW  );
-  SVolF* const Fdiff     = field_collector->get_so_field<SVolF>( _Fdiff_name      , NEWDW  );
-  SVolF* const Fconv     = field_collector->get_so_field<SVolF>( _Fconv_name      , NEWDW  );
-  SurfX* const epsX      = field_collector->get_so_field<SurfX>( "areaFractionFX" , OLDDW  );
-  SurfY* const epsY      = field_collector->get_so_field<SurfY>( "areaFractionFY" , OLDDW  );
-  SurfZ* const epsZ      = field_collector->get_so_field<SurfZ>( "areaFractionFZ" , OLDDW  );
-  //not being used yet: 
-  //SurfX* const u         = field_collector->get_so_field<SurfX>( "uVelocitySPBC"  , LATEST );
-  //SurfY* const v         = field_collector->get_so_field<SurfY>( "vVelocitySPBC"  , LATEST );
-  //SurfZ* const w         = field_collector->get_so_field<SurfZ>( "wVelocitySPBC"  , LATEST );
+  SVolFP rhs       = field_collector->get_so_field<SVolF>( _rhs_name        );
 
-  const GradX* const gradx = opr.retrieve_operator<GradX>();
-  const GradY* const grady = opr.retrieve_operator<GradY>();
-  const GradZ* const gradz = opr.retrieve_operator<GradZ>();
+  *rhs <<= 0.0; 
 
-  const InterpX* const ix = opr.retrieve_operator<InterpX>();
-  const InterpY* const iy = opr.retrieve_operator<InterpY>();
-  const InterpZ* const iz = opr.retrieve_operator<InterpZ>();
 
-  const DivX* const dx = opr.retrieve_operator<DivX>();
-  const DivY* const dy = opr.retrieve_operator<DivY>();
-  const DivZ* const dz = opr.retrieve_operator<DivZ>();
-
-  Vector DX = patch->dCell(); 
-  double vol = DX.x()*DX.y()*DX.z(); 
-  const double dt = field_collector->get_dt(); 
+//  SVolFP Fdiff     = field_collector->get_so_field<SVolF>( _Fdiff_name      );
+//  SVolFP Fconv     = field_collector->get_so_field<SVolF>( _Fconv_name      );
+//  SVolFP phi       = field_collector->get_const_so_field<SVolF>( _task_name       );
+//  XVolPtr epsX      = field_collector->get_const_so_field<XVol>( "areaFractionFX" );
+//  YVolPtr epsY      = field_collector->get_const_so_field<YVol>( "areaFractionFY" );
+//  ZVolPtr epsZ      = field_collector->get_const_so_field<ZVol>( "areaFractionFZ" );
+//  SVolFP rho       = field_collector->get_const_so_field<SVolF>( "density"        );
+//  SVolFP gamma     = field_collector->get_const_so_field<SVolF>( _D_name          );
+//
+//  //not being used yet: 
+//  //SurfX* const u         = field_collector->get_so_field<SurfX>( "uVelocitySPBC"  , LATEST );
+//  //SurfY* const v         = field_collector->get_so_field<SurfY>( "vVelocitySPBC"  , LATEST );
+//  //SurfZ* const w         = field_collector->get_so_field<SurfZ>( "wVelocitySPBC"  , LATEST );
+//
+//  const GradX* const gradx = opr.retrieve_operator<GradX>();
+//  const GradY* const grady = opr.retrieve_operator<GradY>();
+//  const GradZ* const gradz = opr.retrieve_operator<GradZ>();
+//
+//  const InterpX* const ix = opr.retrieve_operator<InterpX>();
+//  const InterpY* const iy = opr.retrieve_operator<InterpY>();
+//  const InterpZ* const iz = opr.retrieve_operator<InterpZ>();
+//
+//  const DivX* const dx = opr.retrieve_operator<DivX>();
+//  const DivY* const dy = opr.retrieve_operator<DivY>();
+//  const DivZ* const dz = opr.retrieve_operator<DivZ>();
+//
+//  Vector DX = patch->dCell(); 
+//  double vol = DX.x()*DX.y()*DX.z(); 
+//  const double dt = field_collector->get_dt(); 
 
   //
   //--------------- actual work below this line ---------------------
   //
   
-  //-->diffusion: 
-  if ( _do_diff ){ 
-    *Fdiff <<= (*dx)( (*ix)( *gamma * *rho ) * (*gradx)(*phi) * *epsX )
-             + (*dy)( (*iy)( *gamma * *rho ) * (*grady)(*phi) * *epsY )
-             + (*dz)( (*iz)( *gamma * *rho ) * (*gradz)(*phi) * *epsZ );
-  } else { 
-    *Fdiff <<= 0.0; 
-  }
+//  //-->diffusion: 
+//  if ( _do_diff ){ 
+//    *Fdiff <<= (*dx)( (*ix)( *gamma * *rho ) * (*gradx)(*phi) * *epsX )
+//             + (*dy)( (*iy)( *gamma * *rho ) * (*grady)(*phi) * *epsY )
+//             + (*dz)( (*iz)( *gamma * *rho ) * (*gradz)(*phi) * *epsZ );
+//  } else { 
+//    *Fdiff <<= 0.0; 
+//  }
+//
+//  //-->convection: 
+//  if ( _do_conv ){ 
+//    //not working yet:
+//    //_disc->computeConv( patch, *ui_fconv, *ui_old_phi, *ui_u, *ui_v, *ui_w, *ui_rho, *ui_eps, _conv_scheme );
+//  } else { 
+//    *Fconv <<= 0.0; 
+//  }
+//
+//  //Divide by volume because Nebo is using a differential form
+//  //and the computeConv function is finite volume.
+//  *rhs <<= *rho * *phi + dt * ( *Fdiff - *Fconv/vol );
 
-  //-->convection: 
-  if ( _do_conv ){ 
-    //not working yet:
-    //_disc->computeConv( patch, *ui_fconv, *ui_old_phi, *ui_u, *ui_v, *ui_w, *ui_rho, *ui_eps, _conv_scheme );
-  } else { 
-    *Fconv <<= 0.0; 
-  }
-
-  //Divide by volume because Nebo is using a differential form
-  //and the computeConv function is finite volume.
-  *rhs <<= *rho * *phi + dt * ( *Fdiff - *Fconv/vol );
-
-  //-->add sources
-  typedef std::vector<SourceInfo> VS; 
-  for (VS::iterator i = _source_info.begin(); i != _source_info.end(); i++){ 
-
-    SVolF* const src = field_collector->get_so_field<SVolF>( i->name, LATEST );
-
-    *rhs <<= *rhs + dt * i->weight * *src;
-
-  }
+//  //-->add sources
+//  typedef std::vector<SourceInfo> VS; 
+//  for (VS::iterator i = _source_info.begin(); i != _source_info.end(); i++){ 
+//
+//    SVolFP const src = field_collector->get_const_so_field<SVolF>( i->name );
+//
+//    *rhs <<= *rhs + dt * i->weight * *src;
+//
+//  }
 }

@@ -65,9 +65,11 @@ endif
 
 PSELIBS :=
 
-ifeq ($(BUILD_WASATCH_IN_ARCHES),yes)
-   PSELIBS := CCA/Components/Wasatch
-endif
+#ifeq ($(BUILD_WASATCH_IN_ARCHES),yes)
+#   PSELIBS := CCA/Components/Wasatch
+#endif
+
+PSELIBS := CCA/Components/Wasatch
 
 PSELIBS := \
         $(PSELIBS)                      \

@@ -696,12 +696,17 @@
                                         attribute1="label REQUIRED STRING" 
                                         attribute2="eqn   REQUIRED STRING"
                                         attribute3="type  REQUIRED STRING 'wave'">
-          <grid                         spec="REQUIRED NO_DATA"
-                                        attribute1="type REQUIRED STRING 'svol, xvol, yvol, zvol'"/>
-
           <!-- WAVE FORM -->
           <wave                         spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'sine,square,sinecos'">
+
+            <grid                       spec="REQUIRED NO_DATA"
+                                        attribute1="dependent_type REQUIRED STRING 'svol, xvol, yvol, zvol'"
+                                        attribute2="independent_type REQUIRED STRING 'svol, xvol, yvol, zvol'"/>
+
+
+            <independent_variable       spec="REQUIRED NO_DATA"
+                                        attribute1="label REQUIRED STRING"/>
 
             <sine                       spec="REQUIRED NO_DATA"
                                         attribute1="A REQUIRED DOUBLE"
@@ -722,8 +727,6 @@
                                         attribute4="f2 REQUIRED DOUBLE"
                                         attribute5="offset REQUIRED DOUBLE"
                                         need_applies_to="type sinecos"/>
-            <direction                  spec="REQUIRED NO_DATA"
-                                        attribute1="value REQUIRED STRING"/>
 
           </wave>
                                     
