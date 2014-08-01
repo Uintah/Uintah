@@ -67,7 +67,7 @@ public:
   virtual void sched_initialize( const LevelP& level, SchedulerP& sched ) = 0;
 
   /** @brief Work to be performed after properties are setup */ 
-  virtual void extraSetup(GridP& grid, const ProblemSpecP& db){ }
+  virtual void extraSetup( GridP& grid ){ }
 
   /** @brief Returns the source label **/ 
   inline const VarLabel* getSrcLabel(){

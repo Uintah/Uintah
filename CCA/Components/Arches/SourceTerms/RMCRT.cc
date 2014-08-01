@@ -147,7 +147,7 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
 //  so the reaction models can create the  VarLabel
 //______________________________________________________________________
 void 
-RMCRT_Radiation::extraSetup( GridP& grid, const ProblemSpecP& db )
+RMCRT_Radiation::extraSetup( GridP& grid )
 { 
 
   // determing the temperature label
