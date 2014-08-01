@@ -565,8 +565,8 @@ WallModelDriver::RegionHT::computeHT( const Patch* patch, const HTVariables& var
               TW0 = vars.T_old[c];
               net_q = rad_q - _sigma_constant * pow( TW0 , 4 );
               net_q = net_q > 0 ? net_q : 0;
-	      net_q *= pow(total_flux_ind,0.5)/total_flux_ind;
-	      net_q *= wi.emissivity;   
+	            net_q *= pow(total_flux_ind,0.5)/total_flux_ind;
+	            net_q *= wi.emissivity;   
               TW1 = wi.T_inner + net_q * wi.dy / wi.k;
               
               if( TW1 < TW0 ){
@@ -590,8 +590,8 @@ WallModelDriver::RegionHT::computeHT( const Patch* patch, const HTVariables& var
                 TW0 = ( Tmax + Tmin ) / 2.0; 
                 net_q = rad_q - _sigma_constant * pow( TW0, 4 );
                 net_q = net_q>0 ? net_q : 0;
-		net_q *= wi.emissivity;
-		net_q *= pow(total_flux_ind,0.5)/total_flux_ind;
+            		net_q *= wi.emissivity;
+	            	net_q *= pow(total_flux_ind,0.5)/total_flux_ind;
 
                 TW1 = wi.T_inner + net_q * wi.dy / wi.k;
                 
@@ -611,22 +611,16 @@ WallModelDriver::RegionHT::computeHT( const Patch* patch, const HTVariables& var
                 
               }
 
-	      TW0 = pow((rad_q-net_q) / _sigma_constant, 1/4.0);
+      	      TW0 = pow((rad_q-net_q) / _sigma_constant, 1/4.0);
               T[c] = (1-wi.relax)*vars.T_old[c]+wi.relax*TW0;
 
-	      Uintah::Point position = patch->getCellPosition(c);  //get cell position                           
-                                                                                                                       
-	      Vector dx = patch->dCell();  //get cell size                                                       
-                                                                                                                       
-	      double cell_x=position.x()-dx.x()/2.;                                                              
-
-	      double cell_y=position.y();                                                                        
-
-	      double cell_z=position.z();                                                                        
-
-	      if((fabs(cell_x-6.35)<=dx.x()/2. || fabs(cell_x-9.66)<=dx.x()/2.) && fabs(cell_y-1.441)<=dx.y()/2.)
-
-		cout<<"TW="<<TW0 <<","<<T[c]<<", "<<T[c+_d[i]]<<", net_q="<<net_q<<","<<q[c+_d[i]] <<", k="<<wi.k<<"\tc:"<<c<<"\t position: "<<cell_x<<", "<<cell_y<<", "<<cell_z<<endl;             
+            	//      Uintah::Point position = patch->getCellPosition(c);  //get cell position                           
+            	//      Vector dx = patch->dCell();  //get cell size                                                       
+	            //    double cell_x=position.x()-dx.x()/2.;                                                              
+	            //  double cell_y=position.y();                                                                        
+              //	      double cell_z=position.z();                                                                        
+              //	      if((fabs(cell_x-6.35)<=dx.x()/2. || fabs(cell_x-9.66)<=dx.x()/2.) && fabs(cell_y-1.441)<=dx.y()/2.)
+            	//	cout<<"TW="<<TW0 <<","<<T[c]<<", "<<T[c+_d[i]]<<", net_q="<<net_q<<","<<q[c+_d[i]] <<", k="<<wi.k<<"\tc:"<<c<<"\t position: "<<cell_x<<", "<<cell_y<<", "<<cell_z<<endl;             
 
             }
           } 
