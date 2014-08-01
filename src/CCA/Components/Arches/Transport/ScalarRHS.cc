@@ -111,7 +111,11 @@ ScalarRHS::initialize( const Patch* patch, FieldCollector* field_collector,
   using SpatialOps::operator *; 
   typedef SpatialOps::SVolField   SVolF;
 
-  SVolF* const rhs   = field_collector->get_so_field<SVolF>( _rhs_name  , NEWDW );
+ // typedef SpatialOps::SpatFldPtr<SpatialOps::SVolField> SVolF; 
+
+  //SVolF* const rhs   = field_collector->get_so_field<SVolF>( _rhs_name  , NEWDW );
+  //SVolF* const rhs = field_collector->get_so_field<SVolF>(_rhs_name); 
+  SVolF* const rhs = field_collector->get_so_field<SVolF>(_rhs_name); 
   SVolF* const phi   = field_collector->get_so_field<SVolF>( _task_name , NEWDW );
   SVolF* const gamma = field_collector->get_so_field<SVolF>( _D_name    , NEWDW );
   SVolF* const Fdiff = field_collector->get_so_field<SVolF>( _Fdiff_name, NEWDW );

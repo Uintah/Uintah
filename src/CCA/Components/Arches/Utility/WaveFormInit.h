@@ -80,7 +80,7 @@ private:
 
     // This needs to be done to set the variable type 
     // for this function. All templated tasks should do this. 
-    set_type<T>(); 
+    set_task_type<T>(); 
 
     _two_pi = 2.0*acos(-1.0);
   

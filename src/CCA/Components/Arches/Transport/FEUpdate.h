@@ -70,7 +70,7 @@ private:
 
     // This needs to be done to set the variable type 
     // for this function. All templated tasks should do this. 
-    set_type<T>(); 
+    set_task_type<T>(); 
 
     _eqn_names = eqn_names; 
   
