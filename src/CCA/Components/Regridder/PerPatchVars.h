@@ -22,24 +22,10 @@
  * IN THE SOFTWARE.
  */
 
+#ifndef UINTAH_CCA_COMPONENTS_REGRIDDERS_PERPATCHVARS_H
+#define UINTAH_CCA_COMPONENTS_REGRIDDERS_PERPATCHVARS_H
 
-#ifndef Uintah_Component_Regridder_PerPatchVars_h
-#define Uintah_Component_Regridder_PerPatchVars_h
-
-/**************************************
-
-   Bryan Worthen
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-   University of Utah
-  
-   
-DESCRIPTION
-   Some structs to help the regridder on a per-patch basis
-  
-WARNING
-  
-****************************************/
-
+//-- Uintah framework includes --//
 #include <Core/Util/RefCounted.h>
 #include <Core/Util/Handle.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -48,66 +34,43 @@ WARNING
 
 namespace Uintah {
 
-struct PatchFlag : public RefCounted {
-  inline PatchFlag() { flag = false; }
-  inline void set() { flag = true; }
-  bool flag;
-};
+  /**
+   *  @ingroup Regridders
+   *  @struct  PatchFlag
+   *  @author  Bryan Worthen
+   *           Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+   *           University of Utah
+   *  @date    CSAFE days - circa 08/04 (updated 08/14)
+   *  @brief   A reference counted struct to help the regridder on a per-patch basis
+   *           when doing AMR.
+   */
+  struct PatchFlag : public RefCounted {
 
-// used to indicate which sub patches within a patch will be used to create the next level
-struct SubPatchFlag : public RefCounted {
-  inline SubPatchFlag(const IntVector& low, const IntVector& high) { 
-    initialize(low, high);
-  }
-  inline SubPatchFlag() {subpatches_ = 0; delSubpatches_ = false;}
-  SubPatchFlag( const SubPatchFlag& ) { throw InternalError( "SubPatchFlag( const SubPatchFlag& ) not implemented!", __FILE__, __LINE__ ); }
-  SubPatchFlag& operator=( const SubPatchFlag& ) { throw InternalError( "SubPatchFlag& operator=( const SubPatchFlag& ) not implemented!", __FILE__, __LINE__ );}
-  inline ~SubPatchFlag() { if (delSubpatches_) delete subpatches_; }
-  
-  // initialize with our own memory
-  inline void initialize(const IntVector& low, const IntVector& high) {     
-    low_ = low; 
-    high_ = high;
-    range_ = high - low; 
-    size_ = range_.x() * range_.y() * range_.z();
-    subpatches_ = scinew int[size_];
-    delSubpatches_ = true;
-    for (int i = 0; i < size_; i++)
-      subpatches_[i] = 0;
-  }
+    /**
+     * @brief PatchFlag constructor. By default, flag is set to false.
+     * @param None
+     */
+    inline PatchFlag()
+    {
+      flag = false;
+    }
 
-  // use external memory
-  inline void initialize(const IntVector& low, const IntVector& high, int* data) {
-    if (delSubpatches_)
-      throw InternalError("Memory already allocated for this subpatch flag", __FILE__, __LINE__);
-    low_ = low; 
-    high_ = high;
-    range_ = high - low; 
-    size_ = range_.x() * range_.y() * range_.z();
-    subpatches_ = data;
+    /**
+     * @brief Sets this PatchFlag to true.
+     * @param None
+     */
+    inline void set()
+    {
+      flag = true;
+    }
 
-  }
-  inline int getIndex(const IntVector& index) const { 
-    IntVector tmp(index-low_);
-    return tmp.x() * range_.y() * range_.z() + tmp.y() * range_.z() + tmp.z(); 
-  }
-  inline void set(IntVector& index) { subpatches_[getIndex(index)] = 1; }
-  inline void clear(IntVector& index) { subpatches_[getIndex(index)] = 0;}
-  inline int operator[](const IntVector& idx) const {
-    int x = subpatches_[getIndex(idx)];
-    return x;
-  }
-  // array
-  int *subpatches_;
-  IntVector low_, high_, range_;
-  int size_;
+    bool flag; ///< The AMR refinement flag. Used on a PerPatch basis.
 
-  // whether we allocated the memory ourselves or not.
-  bool delSubpatches_;
-};
+  };
+  // End PatchFlag
 
-typedef Handle<PatchFlag> PatchFlagP;
-typedef Handle<SubPatchFlag> SubPatchFlagP;
+  typedef Handle<PatchFlag> PatchFlagP;
+
 }
 
-#endif
+#endif // End UINTAH_CCA_COMPONENTS_REGRIDDERS_PERPATCHVARS_H

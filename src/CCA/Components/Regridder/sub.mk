@@ -33,10 +33,6 @@ SRCDIR   := CCA/Components/Regridder
 
 SRCS     += $(SRCDIR)/RegridderCommon.cc \
             $(SRCDIR)/RegridderFactory.cc \
-            $(SRCDIR)/HierarchicalRegridder.cc \
-            $(SRCDIR)/BNRTask.cc \
-            $(SRCDIR)/BNRRegridder.cc \
-            $(SRCDIR)/PatchFixer.cc  \
             $(SRCDIR)/TiledRegridder.cc\
             $(SRCDIR)/SingleLevelRegridder.cc
 
