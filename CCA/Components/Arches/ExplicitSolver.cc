@@ -40,10 +40,13 @@
 #include <CCA/Components/Arches/CQMOM.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqnFactory.h>
-//#include <CCA/Components/Arches/Task/TaskInterface.h>
-//#include <CCA/Components/Arches/Task/SampleTask.h>
-//#include <CCA/Components/Arches/Task/TemplatedSampleTask.h>
-//#include <CCA/Components/Arches/Task/SampleFactory.h>
+
+//NEW TASK STUFF
+#include <CCA/Components/Arches/Task/TaskInterface.h>
+#include <CCA/Components/Arches/Task/SampleTask.h>
+#include <CCA/Components/Arches/Task/TemplatedSampleTask.h>
+#include <CCA/Components/Arches/Task/TaskFactoryBase.h>
+//END NEW TASK STUFF
 
 #include <CCA/Components/Arches/ExplicitSolver.h>
 #include <Core/Containers/StaticArray.h>
@@ -109,6 +112,7 @@ ExplicitSolver(ArchesLabel* label,
                ScaleSimilarityModel* scaleSimilarityModel,
                PhysicalConstants* physConst,
                RadPropertyCalculator* rad_properties, 
+               std::map<std::string, TaskFactoryBase*>* factory_map, 
                const ProcessorGroup* myworld,
                SolverInterface* hypreSolver):
                NonlinearSolver(myworld),
@@ -119,6 +123,7 @@ ExplicitSolver(ArchesLabel* label,
                d_hypreSolver(hypreSolver), 
                d_rad_prop_calc(rad_properties)
 {
+  _factory_map = factory_map; 
   d_pressSolver = 0;
   d_momSolver = 0;
   nosolve_timelabels_allocated = false;
@@ -141,7 +146,6 @@ ExplicitSolver::~ExplicitSolver()
   if ( d_wall_ht_models != 0 ){ 
     delete d_wall_ht_models; 
   }
-  //delete _test_factory; 
 }
 
 // ****************************************************************************
@@ -153,10 +157,6 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params, SimulationStateP & st
 
   ProblemSpecP db = params->findBlock("ExplicitSolver");
   ProblemSpecP db_parent = params; 
-
-  //_test_factory = scinew SampleFactory(); 
-  //_test_factory->register_all_tasks( db ); 
-  //_test_factory->build_all_tasks( db ); 
 
   if ( db->findBlock( "print_total_ke" ) ){ 
     d_printTotalKE = true; 
@@ -346,6 +346,46 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   // --------> START RK LOOP <---------
   for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
   {
+
+    //------------------------  NEW TASK STUFF: 
+    typedef std::map<std::string, TaskFactoryBase*> FACMAP; 
+
+    //utility factory
+    FACMAP::iterator ifac = _factory_map->find("utility_factory"); 
+    TaskFactoryBase::TaskMap all_tasks = ifac->second->retrieve_all_tasks(); 
+    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+      i->second->schedule_task(level, sched, matls, curr_level); 
+    }
+
+    //transport factory
+    ifac = _factory_map->find("transport_factory"); 
+    all_tasks = ifac->second->retrieve_all_tasks(); 
+    //TaskFactoryBase::TaskMap::iterator i_ssp_update; 
+    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+      if ( i->first != "scalar_fe_update" && i->first != "scalar_ssp_update") {
+        i->second->schedule_task(level, sched, matls, curr_level); 
+//      } else { 
+//        if ( i->first != "scalar_ssp_update"){ 
+//          i_fe_update = i; 
+//     //   } else { 
+     //     i_ssp_update = i; 
+       // }
+      }
+    }
+
+    TaskFactoryBase::TaskMap::iterator i_fe_update = all_tasks.find("scalar_fe_update");  
+    i_fe_update->second->schedule_task( level, sched, matls, curr_level ); 
+
+    //BELOW HERE DOESN'T WORK???
+    //TaskInterface* sample = ifac->second->retrieve_task("sample_task"); 
+    //sample->schedule_task( level, sched, matls, curr_level ); 
+
+    //TaskInterface* templated_sample = ifac->second->retrieve_task("templated_task"); 
+    //templated_sample->schedule_task( level, sched, matls, curr_level ); 
+    //END DOESNT WORK
+    //
+    //------------------------  END NEW TASK STUFF: 
+
     // Create this timestep labels for properties
     PropertyModelFactory& propFactory = PropertyModelFactory::self();
     PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models();
@@ -542,12 +582,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     if ( hl_model != 0 )
       hl_model->sched_computeProp( level, sched, curr_level ); 
 
-//    TaskInterface& tsk1 = _test_factory->retrieve_task("sample_task"); 
-//    tsk1.schedule_task( level, sched, matls, curr_level ); 
-
-//    TaskInterface& tsk2 = _test_factory->retrieve_task("templated_task"); 
-//    tsk2.schedule_task( level, sched, matls, curr_level ); 
-
     //1st TABLE LOOKUP
     bool initialize_it  = false;
     bool modify_ref_den = false;
@@ -555,6 +589,13 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, curr_level );
 
     d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls );
+
+    //NEW STUFF: -------------
+    //this is updating the scalar with the latest density from the table lookup
+    TaskFactoryBase::TaskMap::iterator i_ssp_update = all_tasks.find("scalar_ssp_update"); 
+    i_ssp_update->second->schedule_task( level, sched, matls, curr_level ); 
+    //END NEW STUFF
+
 
     // STAGE 1
 

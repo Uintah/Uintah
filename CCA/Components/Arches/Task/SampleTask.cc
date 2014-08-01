@@ -18,9 +18,7 @@ void
 SampleTask::problemSetup( ProblemSpecP& db ){ 
 
   _value = 1.0;
-  db->findBlock("sample_task")->getAttribute("value",_value); 
-
-  std::cout << " FOUND A VALUE = " << _value << std::endl; 
+  //db->findBlock("sample_task")->getAttribute("value",_value); 
 
 }
 
@@ -40,8 +38,8 @@ SampleTask::register_initialize( std::vector<VariableInformation>& variable_regi
 }
 
 void 
-SampleTask::initialize( const Patch* patch, UintahVarMap& var_map, 
-                        ConstUintahVarMap& const_var_map, SpatialOps::OperatorDatabase& opr ){ 
+SampleTask::initialize( const Patch* patch, FieldCollector* field_collector, 
+                        SpatialOps::OperatorDatabase& opr ){ 
 
 
   using namespace SpatialOps;
@@ -49,8 +47,8 @@ SampleTask::initialize( const Patch* patch, UintahVarMap& var_map,
 
   typedef SpatialOps::SVolField   SVol;
 
-  SVol* const field = get_so_field<SVol>( "a_sample_variable", var_map, patch, 0, *this ); 
-  SVol* const result = get_so_field<SVol>( "a_result_variable", var_map, patch, 0, *this ); 
+  SVol* const field = field_collector->get_so_field<SVol>( "a_sample_variable" ); 
+  SVol* const result = field_collector->get_so_field<SVol>( "a_result_variable" ); 
 
   *field  <<= 1.1; 
   *result <<= 2.1; 
@@ -65,23 +63,23 @@ SampleTask::initialize( const Patch* patch, UintahVarMap& var_map,
 
 //Register all variables both local and those needed from elsewhere that are required for this task. 
 void 
-SampleTask::register_all_variables( std::vector<VariableInformation>& variable_registry ){ 
+SampleTask::register_all_variables( std::vector<VariableInformation>& variable_registry, const int time_substep ){ 
 
   //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
-  register_variable( "old_sample_v",      CC_DOUBLE, REQUIRES,       0, OLDDW,  variable_registry ); 
-  register_variable( "a_sample_variable", CC_DOUBLE, LOCAL_COMPUTES, 0, NEWDW,  variable_registry );
-  register_variable( "a_result_variable", CC_DOUBLE, LOCAL_COMPUTES, 0, NEWDW,  variable_registry );
-  register_variable( "density",           CC_DOUBLE, REQUIRES,       1, LATEST, variable_registry );
-  register_variable( "uVelocitySPBC",     FACEX,     REQUIRES,       1, LATEST, variable_registry );
-  register_variable( "vVelocitySPBC",     FACEY,     REQUIRES,       2, LATEST, variable_registry );
-  register_variable( "wVelocitySPBC",     FACEZ,     REQUIRES,       2, LATEST, variable_registry );
+  register_variable( "a_sample_variable", CC_DOUBLE, COMPUTES,       0, NEWDW,  variable_registry, time_substep );
+  register_variable( "a_result_variable", CC_DOUBLE, COMPUTES,       0, NEWDW,  variable_registry, time_substep );
+  register_variable( "density",           CC_DOUBLE, REQUIRES,       1, LATEST, variable_registry, time_substep );
+  register_variable( "uVelocitySPBC",     FACEX,     REQUIRES,       1, LATEST, variable_registry, time_substep );
+  register_variable( "vVelocitySPBC",     FACEY,     REQUIRES,       2, LATEST, variable_registry, time_substep );
+  register_variable( "wVelocitySPBC",     FACEZ,     REQUIRES,       2, LATEST, variable_registry, time_substep );
 
 }
 
 //This is the work for the task.  First, get the variables. Second, do the work! 
 void 
-SampleTask::eval( const Patch* patch, UintahVarMap& var_map, 
-                  ConstUintahVarMap& const_var_map, SpatialOps::OperatorDatabase& opr, const int time_substep ){ 
+SampleTask::eval( const Patch* patch, FieldCollector* field_collector, 
+                  SpatialOps::OperatorDatabase& opr, 
+                  SchedToTaskInfo& info ){ 
 
   using namespace SpatialOps;
   using SpatialOps::operator *; 
@@ -101,12 +99,12 @@ SampleTask::eval( const Patch* patch, UintahVarMap& var_map,
   //constSFCYVariable<double>*    v = get_uintah_grid_var<constSFCYVariable<double> >("vVelocitySPBC", const_var_map); 
 
   //Get spatialops variables for work: 
-  SVol* const field = get_so_field<SVol>( "a_sample_variable", var_map, patch, 0, *this ); 
-  SVol* const result = get_so_field<SVol>( "a_result_variable", var_map, patch, 0, *this ); 
-  SVol* const density = get_so_field<SVol>( "density", const_var_map, patch,  1, *this ); 
-  SurfX* const u = get_so_field<SurfX>("uVelocitySPBC", const_var_map, patch, 1, *this ); 
-  SurfY* const v = get_so_field<SurfY>("vVelocitySPBC", const_var_map, patch, 2, *this ); 
-  SurfZ* const w = get_so_field<SurfZ>("wVelocitySPBC", const_var_map, patch, 2, *this ); 
+  SVol* const field = field_collector->get_so_field<SVol>( "a_sample_variable" ); 
+  SVol* const result = field_collector->get_so_field<SVol>( "a_result_variable" ); 
+  SVol* const density = field_collector->get_so_field<SVol>( "density" ); 
+  SurfX* const u = field_collector->get_so_field<SurfX>("uVelocitySPBC" ); 
+  SurfY* const v = field_collector->get_so_field<SurfY>("vVelocitySPBC" ); 
+  SurfZ* const w = field_collector->get_so_field<SurfZ>("wVelocitySPBC" ); 
 
   *field <<= _value*(*density);
 

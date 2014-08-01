@@ -46,27 +46,6 @@
  *
  * @details
  * This class provides and interface to classic Arches formatted tables.  
- 
-This code checks for the following tags/attributes in the input file:
-The UPS interface is: 
-
-\code
-<ClassicTable                   spec="OPTIONAL NO_DATA">
-  <inputfile                    spec="REQUIRED STRING" /> <!-- table to be opened --> 
-  <cold_flow                    spec="OPTIONAL BOOLEAN"/> <!-- use for simple two stream mixing --> 
-  <noisy_hl_warning             spec="OPTIONAL NO_DATA"/> <!-- warn when heat loss is clipped to bounds --> 
-  <hl_scalar_init               spec="OPTIONAL DOUBLE" /> <!-- initial heat loss value in the domain --> 
-  <coal                         spec="OPTIONAL NO_DATA" 
-                                attribute1="fp_label REQUIRED STRING"     
-                                attribute2="eta_label REQUIRED STRING"/> 
-                                <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
-</ClassicTable>
-
-<DataArchiver>
-    <save name=STRING table_lookup="true"> <!-- note that STRING must match the name in the table -->
-</DataArchiver>
-\endcode
-
  * Any variable that is saved to the UDA in the dataarchiver block is automatically given a VarLabel.  
  *
  * If you have trouble reading your table, you can "setenv SCI_DEBUG TABLE_DEBUG:+" to get a 
@@ -901,7 +880,6 @@ private:
 	
   bool d_table_isloaded;    ///< Boolean: has the table been loaded?
 
-  double d_hl_scalar_init;  ///< Heat loss value for non-adiabatic conditions
   // Specifically for the classic table: 
   double d_f_stoich;        ///< Stoichiometric mixture fraction 
   double d_H_fuel;          ///< Fuel Enthalpy

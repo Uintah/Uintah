@@ -333,7 +333,6 @@
           <ignore_iv_density_check      spec="OPTIONAL NO_DATA"/>  <!-- don't force an algorithmic change on the transported iv's to use density guess --> 
           <inputfile                    spec="REQUIRED STRING" /> <!-- table to be opened --> 
           <cold_flow                    spec="OPTIONAL BOOLEAN"/> <!-- used for simple stream mixing (no rxn) --> 
-          <hl_scalar_init               spec="OPTIONAL DOUBLE" /> <!-- initial heat loss value in the domain --> 
           <noisy_hl_warning             spec="OPTIONAL NO_DATA"/> <!-- warn when heat loss is clipped to bounds --> 
           <lower_hl_bound               spec="OPTIONAL DOUBLE"/> <!-- In the property table, the lower bound for heat loss.  default = -1 --> 
           <upper_hl_bound               spec="OPTIONAL DOUBLE"/> <!-- In the property table, the upper bound for heat loss.  default = +1 --> 
@@ -347,7 +346,6 @@
           <inputfile                    spec="REQUIRED STRING" />  <!-- table to be opened --> 
           <cold_flow                    spec="OPTIONAL BOOLEAN"/>  <!-- force adiabatic condition --> 
           <noisy_hl_warning             spec="OPTIONAL NO_DATA"/>  <!-- warn when heat loss is clipped to bounds --> 
-          <hl_scalar_init               spec="OPTIONAL DOUBLE" />  <!-- initial heat loss value in the domain --> 
           <mf_for_hl                    spec="OPTIONAL NO_DATA"/>  <!-- DEVELOPER SWITCH --> 
           <enthalpy_label               spec="OPTIONAL STRING" />  <!-- Pointer to the enthalpy equation.  default = enthalpySP -->
           <temperature_label_name       spec="OPTIONAL STRING"/>   <!-- The string label identifier from the table for temperature --> 
@@ -653,10 +651,100 @@
         <turbModelCalcFreq              spec="OPTIONAL INTEGER" />
       </ExplicitSolver>
 
-      <TimeIntegrator                   spec="REQUIRED NO_DATA" >
+      <TimeIntegrator                   spec="REQUIRED NO_DATA" 
+                                        attribute1="order REQUIRED INTEGER '1,3'">
         <ExplicitIntegrator             spec="REQUIRED NO_DATA"
                                         attribute1="order REQUIRED STRING 'first, second, third'"/>
       </TimeIntegrator>  
+
+
+<!-- 
+
+   ╔╗╔┌─┐┬ ┬  ╔═╗┌┬┐┬ ┬┌─┐┌─┐  
+   ║║║├┤ │││  ╚═╗ │ │ │├┤ ├┤   
+   ╝╚╝└─┘└┴┘  ╚═╝ ┴ └─┘└  └  
+
+-->
+
+      <!-- New Task interface transport for CC-scalars -->
+      <ScalarTransport                  spec="OPTIONAL NO_DATA">
+        <!-- Multiple cell-centered scalars can be added to the simulation -->
+        <eqn                            spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING">
+          <!--If this tag is present, diffusion is computed.--> 
+          <diffusion                    spec="OPTIONAL NO_DATA"/>            
+          <!-- If this tag is present, convection is computed. 
+           The type refers to the scheme: upwind, central, superbee, roe_minmod.-->
+          <convection                   spec="OPTIONAL NO_DATA"
+                                        attribute1="scheme REQUIRED STRING"/> 
+          <!-- Clip the scalar to maintain specified low and high bounds -->                               
+          <clip                         spec="OPTIONAL NO_DATA"
+                                        attribute1="low  REQUIRED DOUBLE"
+                                        attribute2="high REQUIRED DOUBLE"/>
+          <!-- reference a source (defined in the <Sources> block) to add it to the RHS -->
+          <src                          spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"/>
+        </eqn>
+      </ScalarTransport>
+
+      <!-- Initialization tasks -->
+      <Initialization                   spec="OPTIONAL NO_DATA"> 
+        <!-- label = unique label for this task 
+             eqn   = pointer to the scalartransport or momentumtransport eqn name 
+             type  = type of initialization -->
+        <task                           spec="MULTIPLE NO_DATA" 
+                                        attribute1="label REQUIRED STRING" 
+                                        attribute2="eqn   REQUIRED STRING"
+                                        attribute3="type  REQUIRED STRING 'wave'">
+          <grid                         spec="REQUIRED NO_DATA"
+                                        attribute1="type REQUIRED STRING 'svol, xvol, yvol, zvol'"/>
+
+          <!-- WAVE FORM -->
+          <wave                         spec="OPTIONAL NO_DATA"
+                                        attribute1="type REQUIRED STRING 'sine,square,sinecos'">
+
+            <sine                       spec="REQUIRED NO_DATA"
+                                        attribute1="A REQUIRED DOUBLE"
+                                        attribute2="f REQUIRED DOUBLE"
+                                        attribute3="offset REQUIRED DOUBLE"
+                                        need_applies_to="type sine"/>
+            <square                     spec="REQUIRED NO_DATA"
+                                        attribute1="min REQUIRED DOUBLE"
+                                        attribute2="max REQUIRED DOUBLE"
+                                        attribute3="f REQUIRED DOUBLE"
+                                        attribute4="offset REQUIRED DOUBLE"
+                                        need_applies_to="type square"/>
+            <!-- f(x) = A*sin(f1*2*pi*x) + B*cos(f2*2*pi*x)+offset -->                             
+            <sinecos                    spec="REQUIRED NO_DATA"
+                                        attribute1="A REQUIRED DOUBLE"
+                                        attribute2="B REQUIRED DOUBLE"
+                                        attribute3="f1 REQUIRED DOUBLE"
+                                        attribute4="f2 REQUIRED DOUBLE"
+                                        attribute5="offset REQUIRED DOUBLE"
+                                        need_applies_to="type sinecos"/>
+            <direction                  spec="REQUIRED NO_DATA"
+                                        attribute1="value REQUIRED STRING"/>
+
+          </wave>
+                                    
+
+
+
+
+
+
+
+        </task>
+      </Initialization>
+
+<!-- 
+
+   ╔═╗┌┐┌┌┬┐  ╔╗╔┌─┐┬ ┬  ╔═╗┌┬┐┬ ┬┌─┐┌─┐  
+   ║╣ │││ ││  ║║║├┤ │││  ╚═╗ │ │ │├┤ ├┤   
+   ╚═╝┘└┘─┴┘  ╝╚╝└─┘└┴┘  ╚═╝ ┴ └─┘└  └  
+
+-->
+
 
       <TransportEqns                    spec="OPTIONAL NO_DATA" >
 

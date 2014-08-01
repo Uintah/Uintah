@@ -43,8 +43,8 @@ SampleFactory::build_all_tasks( ProblemSpecP& db )
 
   for ( SV::iterator i = _active_tasks.begin(); i != _active_tasks.end(); i++){ 
 
-    TaskInterface& tsk = retrieve_task(*i); 
-    tsk.problemSetup( db ); 
+    TaskInterface* tsk = retrieve_task(*i); 
+    tsk->problemSetup( db ); 
 
   }
 

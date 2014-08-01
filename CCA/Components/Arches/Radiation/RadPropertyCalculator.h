@@ -79,8 +79,8 @@ namespace Uintah {
 
           inline const VarLabel* get_abskg_label(){return _abskg_label;} 
           inline const VarLabel* get_abskp_label(){return _abskp_label;}
-          inline const bool has_abskp_local(){ return _local_abskp; }
-          inline const bool use_abskp(){ return _use_abskp; }
+          inline bool has_abskp_local(){ return _local_abskp; }
+          inline bool use_abskp(){ return _use_abskp; }
 
           /** @brief Matches label names to labels **/ 
           inline void resolve_labels(){
