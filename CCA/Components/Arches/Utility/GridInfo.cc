@@ -36,10 +36,9 @@ void
 GridInfo::initialize( const Patch* patch, FieldCollector* field_collector, 
                       SpatialOps::OperatorDatabase& opr ){ 
 
-
-  CCVariable<double>* gridX  = field_collector->get_uintah_field<CCVariable<double> >("gridX", NEWDW );
-  CCVariable<double>* gridY  = field_collector->get_uintah_field<CCVariable<double> >("gridY", NEWDW );
-  CCVariable<double>* gridZ  = field_collector->get_uintah_field<CCVariable<double> >("gridZ", NEWDW );
+  CCVariable<double>* gridX = field_collector->get_uintah_field<CCVariable<double> >( "gridX" ); 
+  CCVariable<double>* gridY = field_collector->get_uintah_field<CCVariable<double> >( "gridY" ); 
+  CCVariable<double>* gridZ = field_collector->get_uintah_field<CCVariable<double> >( "gridZ" ); 
 
   for ( CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++ ){ 
 

@@ -4,14 +4,10 @@
 #include <spatialops/structured/FVStaggered.h>
 #include <spatialops/structured/MemoryWindow.h>
 
+#include <CCA/Components/Arches/Task/FieldContainer.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/SFCXVariable.h>
-#include <Core/Grid/Variables/SFCYVariable.h>
-#include <Core/Grid/Variables/SFCZVariable.h>
-#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <CCA/Ports/Scheduler.h>
@@ -76,7 +72,7 @@ public:
 
     /** @brief Get the type for templated tasks **/ 
     template <class T> 
-    void set_type(){
+    void set_task_type(){
 
       if ( typeid(T) == typeid(CCVariable<double>) ){
         _mytype = CC_DOUBLE; 
@@ -232,24 +228,13 @@ protected:
 
         enum MAPCHECK {CHECK_FIELD,CONST_FIELD,NONCONST_FIELD};
 
-        FieldCollector( std::vector<VariableInformation>& var_reg, const Patch* patch, SchedToTaskInfo& info):
+        FieldCollector( std::vector<VariableInformation>& var_reg, const Patch* patch, SchedToTaskInfo& info ):
                         _var_reg(var_reg), _patch(patch), _tsk_info(info){
 
-          _variable_map.clear();
-          _const_variable_map.clear(); 
-        
         }; 
 
         ~FieldCollector(){
         
-          //clean up 
-          //for ( UintahVarMap::iterator i = _variable_map.begin(); i != _variable_map.end(); i++ ){
-          //  delete i->second; 
-          //}
-          //for ( ConstUintahVarMap::iterator i = _const_variable_map.begin(); i != _const_variable_map.end(); i++ ){
-          //  delete i->second; 
-          //}
-
           for ( std::vector<SpatialOps::SVolField*>::iterator i = _cc_fields.begin(); i != _cc_fields.end(); i++){ 
             delete *i; 
           }
@@ -276,9 +261,10 @@ protected:
 
         /** @brief Set the references to the variable maps in the Field Collector for easier 
          * management of the fields when trying to retrieve from the DW **/ 
-        void set_var_maps(UintahVarMap& var_map, ConstUintahVarMap const_var_map){
-          _variable_map = var_map; 
-          _const_variable_map = const_var_map;
+        void set_field_container(ArchesFieldContainer* field_container){
+
+          _field_container = field_container; 
+          
         }
 
         //Shamelessly stolen from Wasatch: 
@@ -359,14 +345,14 @@ protected:
         /** @brief Add a (non-const) variable to the list **/ 
         void add_variable(std::string name, GridVariableBase* var){
 
-          _variable_map.insert(std::make_pair(name, var)); 
+          //_variable_map.insert(std::make_pair(name, var)); 
         
         }
 
         /** @brief Add a constant variable to the list **/ 
         void add_constant_variable(std::string name, constVariableBase<GridVariableBase>* var){
 
-          _const_variable_map.insert(std::make_pair(name, var)); 
+          //_const_variable_map.insert(std::make_pair(name, var)); 
         
         }
 
@@ -529,80 +515,58 @@ protected:
 
           if ( var_info->depend == REQUIRES ){ 
             //const map (requires)
-            field = retrieve_so_field<ST>(name, _const_variable_map, _patch, nGhost ); 
+            //field = retrieve_so_field<ST>(name, _const_variable_map, _patch, nGhost ); 
           } else { 
             //non-const map (computes, modifies)
-            field = retrieve_so_field<ST>(name, _variable_map, _patch, nGhost ); 
+            //field = retrieve_so_field<ST>(name, _variable_map, _patch, nGhost ); 
           }
 
           //clunky: but we need to track the variables to destroy them later --
           //how bad is the dynamic casting?
           if ( var_info->type == CC_DOUBLE ){ 
-            _cc_fields.push_back(dynamic_cast<SpatialOps::SVolField*>(field)); 
+//            _cc_fields.push_back(dynamic_cast<SpatialOps::SVolField*>(field)); 
           } else if ( var_info->type == FACEX ){ 
-            _fx_fields.push_back(dynamic_cast<SpatialOps::SSurfXField*>(field)); 
+//            _fx_fields.push_back(dynamic_cast<SpatialOps::SSurfXField*>(field)); 
           } else if ( var_info->type == FACEY ){ 
-            _fy_fields.push_back(dynamic_cast<SpatialOps::SSurfYField*>(field)); 
+//            _fy_fields.push_back(dynamic_cast<SpatialOps::SSurfYField*>(field)); 
           } else if ( var_info->type == FACEZ ){ 
-            _fz_fields.push_back(dynamic_cast<SpatialOps::SSurfZField*>(field)); 
+//            _fz_fields.push_back(dynamic_cast<SpatialOps::SSurfZField*>(field)); 
           }
 
           return field; 
 
         }
+
 
         //====================================================================================
         // GRID VARIABLE ACCESS
         //====================================================================================
         //UINTAH
         /** @brief The interface to the actual task for retrieving variables for uintah types **/ 
-        template<class ST>
-        ST* get_uintah_field( const std::string name, const WHICH_DW which_dw ){
 
-          //search through the registry for the variable: 
-          //Note: In its most basic operation, this assumes that the variable 
-          //name will be present ONLY ONCE in the variable registry. 
-          //One can use the which_dw to force a matching if the variable 
-          //is being requested from two different DW's
-          VariableInformation* var_info=0; 
-          BOOST_FOREACH( VariableInformation &ivar, _var_reg ){ 
-            if ( ivar.name == name && ivar.dw == which_dw ){ 
+        template <typename T>
+        T* get_uintah_const_field( const std::string name ){ 
+          return _field_container->get_const_field<T>(name); 
+        } 
 
-              var_info = &ivar; 
-              break; 
-
-            }
-          }
-
-          if (var_info == 0){ 
-            throw InvalidValue("Arches Task Error: (UINTAH) Cannot find information on variable: "+name, __FILE__, __LINE__); 
-          }
-
-          //utilize the appropriate map: 
-          ST* field; 
-          if ( var_info->depend == REQUIRES ){ 
-            //const map (requires)
-            field = get_uintah_grid_var<ST>(name, _const_variable_map );
-            //field = new_get_uintah_grid_var<ST>(name, CONST_FIELD ); 
-          } else { 
-            //non-const map (computes, modifies)
-            field = get_uintah_grid_var<ST>(name, _variable_map );
-            //field = new_get_uintah_grid_var<ST>(name, NONCONST_FIELD ); 
-          }
-
-          //uintah fields are automagically stored in the variable_maps.
-          //they get destroyed later when FieldCollector gets destroyed so 
-          //no need to do any more tracking. 
-
-          return field; 
-
+        template <typename T>
+        T* get_uintah_field( const std::string name ){ 
+          return _field_container->get_field<T>(name); 
         }
 
+        template <typename T>
+        T* get_so_field( const std::string name ){ 
+          return _field_container->get_so_field<T>(name); 
+        }
+
+        template <typename T>
+        T* get_const_so_field( const std::string name ){ 
+          return _field_container->get_const_so_field<T>(name); 
+        }
 
       private: 
 
-        UintahVarMap _variable_map;
-        ConstUintahVarMap _const_variable_map; 
+        ArchesFieldContainer* _field_container; 
 
         std::vector<VariableInformation> _var_reg; 
         const Patch* _patch; 
@@ -622,8 +586,7 @@ protected:
     void resolve_fields( DataWarehouse* old_dw, 
                          DataWarehouse* new_dw, 
                          const Patch* patch, 
-                         UintahVarMap& var_map, 
-                         ConstUintahVarMap& const_var_map, 
+                         ArchesFieldContainer* field_container, 
                          FieldCollector* f_collector );
 
     /** @brief The actual work done within the derived class **/ 

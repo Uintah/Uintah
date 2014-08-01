@@ -312,8 +312,7 @@ void TaskInterface::resolve_field_modifycompute( DataWarehouse* old_dw, DataWare
 void TaskInterface::resolve_fields( DataWarehouse* old_dw, 
                                     DataWarehouse* new_dw, 
                                     const Patch* patch, 
-                                    UintahVarMap& var_map, 
-                                    ConstUintahVarMap& const_var_map, 
+                                    ArchesFieldContainer* field_container, 
                                     FieldCollector* f_collector ){ 
 
 
@@ -332,19 +331,30 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
 
           constCCVariable<int>* var = scinew constCCVariable<int>; 
           resolve_field_requires( old_dw, new_dw, var, ivar, patch, time_substep ); 
-          const_var_map.insert(std::make_pair(ivar.name, var)); 
+          ArchesFieldContainer::ConstFieldContainer icontain; 
+          icontain.set_field(var);
+          icontain.set_field_type(ArchesFieldContainer::CC_INT); 
+          icontain.set_ghosts(ivar.nGhost);
+          field_container->add_const_variable(ivar.name, icontain); 
+
 
         } else if ( ivar.depend == MODIFIES ){ 
 
           CCVariable<int>* var = scinew CCVariable<int>;
           new_dw->getModifiable( *var, ivar.label, _matl_index, patch );
-          var_map.insert(std::make_pair(ivar.name, var)); 
+          ArchesFieldContainer::FieldContainer icontain; 
+          icontain.set_field(var);
+          icontain.set_field_type(ArchesFieldContainer::CC_INT); 
+          field_container->add_variable(ivar.name, icontain); 
 
         } else { 
 
           CCVariable<int>* var = scinew CCVariable<int>;
           new_dw->allocateAndPut( *var, ivar.label, _matl_index, patch );
-          var_map.insert(std::make_pair(ivar.name, var)); 
+          ArchesFieldContainer::FieldContainer icontain; 
+          icontain.set_field(var);
+          icontain.set_field_type(ArchesFieldContainer::CC_INT); 
+          field_container->add_variable(ivar.name, icontain); 
           
         }
         break; 
@@ -355,19 +365,29 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
 
           constCCVariable<double>* var = scinew constCCVariable<double>; 
           resolve_field_requires( old_dw, new_dw, var, ivar, patch, time_substep ); 
-          const_var_map.insert(std::make_pair(ivar.name, var)); 
+          ArchesFieldContainer::ConstFieldContainer icontain; 
+          icontain.set_field(var);
+          icontain.set_field_type(ArchesFieldContainer::CC_DOUBLE); 
+          icontain.set_ghosts(ivar.nGhost);
+          field_container->add_const_variable(ivar.name, icontain); 
 
         } else if ( ivar.depend == MODIFIES ){ 
 
           CCVariable<double>* var = scinew CCVariable<double>;
           new_dw->getModifiable( *var, ivar.label, _matl_index, patch );
-          var_map.insert(std::make_pair(ivar.name, var)); 
+          ArchesFieldContainer::FieldContainer icontain; 
+          icontain.set_field(var);
+          icontain.set_field_type(ArchesFieldContainer::CC_DOUBLE); 
+          field_container->add_variable(ivar.name, icontain); 
             
         } else { 
 
           CCVariable<double>* var = scinew CCVariable<double>;
           new_dw->allocateAndPut( *var, ivar.label, _matl_index, patch );
-          var_map.insert(std::make_pair(ivar.name, var)); 
+          ArchesFieldContainer::FieldContainer icontain; 
+          icontain.set_field(var);
+          icontain.set_field_type(ArchesFieldContainer::CC_DOUBLE); 
+          field_container->add_variable(ivar.name, icontain); 
           
         }
         break; 
@@ -378,19 +398,29 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
 
           constCCVariable<Vector>* var = scinew constCCVariable<Vector>; 
           resolve_field_requires( old_dw, new_dw, var, ivar, patch, time_substep ); 
-          const_var_map.insert(std::make_pair(ivar.name, var)); 
+          ArchesFieldContainer::ConstFieldContainer icontain; 
+          icontain.set_field(var);
+          icontain.set_field_type(ArchesFieldContainer::CC_VEC); 
+          icontain.set_ghosts(ivar.nGhost);
+          field_container->add_const_variable(ivar.name, icontain); 
 
         } else if ( ivar.depend == MODIFIES ){ 
 
           CCVariable<Vector>* var = scinew CCVariable<Vector>;
           new_dw->getModifiable( *var, ivar.label, _matl_index, patch );
-          var_map.insert(std::make_pair(ivar.name, var)); 
+          ArchesFieldContainer::FieldContainer icontain; 
+          icontain.set_field(var);
+          icontain.set_field_type(ArchesFieldContainer::CC_VEC); 
+          field_container->add_variable(ivar.name, icontain); 
 
         } else { 
 
           CCVariable<Vector>* var = scinew CCVariable<Vector>;
           new_dw->allocateAndPut( *var, ivar.label, _matl_index, patch );
-          var_map.insert(std::make_pair(ivar.name, var)); 
+          ArchesFieldContainer::FieldContainer icontain; 
+          icontain.set_field(var);
+          icontain.set_field_type(ArchesFieldContainer::CC_VEC); 
+          field_container->add_variable(ivar.name, icontain); 
           
         }
         break; 
@@ -401,19 +431,29 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
 
           constSFCXVariable<double>* var = scinew constSFCXVariable<double>; 
           resolve_field_requires( old_dw, new_dw, var, ivar, patch, time_substep ); 
-          const_var_map.insert(std::make_pair(ivar.name, var)); 
+          ArchesFieldContainer::ConstFieldContainer icontain; 
+          icontain.set_field(var);
+          icontain.set_field_type(ArchesFieldContainer::FACEX); 
+          icontain.set_ghosts(ivar.nGhost);
+          field_container->add_const_variable(ivar.name, icontain); 
 
         } else if ( ivar.depend == MODIFIES ){ 
 
           SFCXVariable<double>* var = scinew SFCXVariable<double>; 
           new_dw->getModifiable( *var, ivar.label, _matl_index, patch );
-          var_map.insert(std::make_pair(ivar.name, var)); 
+          ArchesFieldContainer::FieldContainer icontain; 
+          icontain.set_field(var);
+          icontain.set_field_type(ArchesFieldContainer::FACEX); 
+          field_container->add_variable(ivar.name, icontain); 
 
         } else { 
 
           SFCXVariable<double>* var = scinew SFCXVariable<double>; 
           new_dw->allocateAndPut( *var, ivar.label, _matl_index, patch );
-          var_map.insert(std::make_pair(ivar.name, var)); 
+          ArchesFieldContainer::FieldContainer icontain; 
+          icontain.set_field(var);
+          icontain.set_field_type(ArchesFieldContainer::FACEX); 
+          field_container->add_variable(ivar.name, icontain); 
           
         }
         break; 
@@ -424,19 +464,29 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
 
           constSFCYVariable<double>* var = scinew constSFCYVariable<double>; 
           resolve_field_requires( old_dw, new_dw, var, ivar, patch, time_substep ); 
-          const_var_map.insert(std::make_pair(ivar.name, var)); 
+          ArchesFieldContainer::ConstFieldContainer icontain; 
+          icontain.set_field(var);
+          icontain.set_field_type(ArchesFieldContainer::FACEY); 
+          icontain.set_ghosts(ivar.nGhost);
+          field_container->add_const_variable(ivar.name, icontain); 
 
         } else if ( ivar.depend == MODIFIES ){ 
 
           SFCYVariable<double>* var = scinew SFCYVariable<double>; 
           new_dw->getModifiable( *var, ivar.label, _matl_index, patch );
-          var_map.insert(std::make_pair(ivar.name, var)); 
+          ArchesFieldContainer::FieldContainer icontain; 
+          icontain.set_field(var);
+          icontain.set_field_type(ArchesFieldContainer::FACEY); 
+          field_container->add_variable(ivar.name, icontain); 
 
         } else { 
 
           SFCYVariable<double>* var = scinew SFCYVariable<double>; 
           new_dw->allocateAndPut( *var, ivar.label, _matl_index, patch );
-          var_map.insert(std::make_pair(ivar.name, var)); 
+          ArchesFieldContainer::FieldContainer icontain; 
+          icontain.set_field(var);
+          icontain.set_field_type(ArchesFieldContainer::FACEY); 
+          field_container->add_variable(ivar.name, icontain); 
           
         }
         break; 
@@ -447,19 +497,29 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
 
           constSFCZVariable<double>* var = scinew constSFCZVariable<double>; 
           resolve_field_requires( old_dw, new_dw, var, ivar, patch, time_substep ); 
-          const_var_map.insert(std::make_pair(ivar.name, var)); 
+          ArchesFieldContainer::ConstFieldContainer icontain; 
+          icontain.set_field(var);
+          icontain.set_field_type(ArchesFieldContainer::FACEZ); 
+          icontain.set_ghosts(ivar.nGhost);
+          field_container->add_const_variable(ivar.name, icontain); 
 
         } else if ( ivar.depend == MODIFIES ){ 
 
           SFCZVariable<double>* var = scinew SFCZVariable<double>; 
           new_dw->getModifiable( *var, ivar.label, _matl_index, patch );
-          var_map.insert(std::make_pair(ivar.name, var)); 
+          ArchesFieldContainer::FieldContainer icontain; 
+          icontain.set_field(var);
+          icontain.set_field_type(ArchesFieldContainer::FACEZ); 
+          field_container->add_variable(ivar.name, icontain); 
 
         } else { 
 
           SFCZVariable<double>* var = scinew SFCZVariable<double>; 
           new_dw->allocateAndPut( *var, ivar.label, _matl_index, patch );
-          var_map.insert(std::make_pair(ivar.name, var)); 
+          ArchesFieldContainer::FieldContainer icontain; 
+          icontain.set_field(var);
+          icontain.set_field_type(ArchesFieldContainer::FACEZ); 
+          field_container->add_variable(ivar.name, icontain); 
           
         }
         break; 
@@ -642,10 +702,14 @@ void TaskInterface::do_task( const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     
     const Patch* patch = patches->get(p);
-  
+
     UintahVarMap variable_map;
     ConstUintahVarMap const_variable_map; 
 
+    const Wasatch::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
+
+    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch); 
+  
     SchedToTaskInfo info; 
 
     //get the current dt
@@ -657,10 +721,10 @@ void TaskInterface::do_task( const ProcessorGroup* pc,
     FieldCollector* field_collector = scinew FieldCollector(variable_registry, patch, info); 
 
     //doing DW gets...
-    resolve_fields( old_dw, new_dw, patch, variable_map, const_variable_map, field_collector ); 
+    resolve_fields( old_dw, new_dw, patch, field_container, field_collector ); 
 
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
-    field_collector->set_var_maps(variable_map, const_variable_map); 
+    field_collector->set_field_container( field_container ); 
 
     //get the operator DB for this patch
     Operators& opr = Operators::self(); 
@@ -694,6 +758,10 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
     UintahVarMap variable_map;
     ConstUintahVarMap const_variable_map; 
 
+    const Wasatch::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
+
+    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch); 
+
     SchedToTaskInfo info; 
 
     //get the current dt
@@ -703,10 +771,10 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
     FieldCollector* field_collector = scinew FieldCollector(variable_registry, patch, info); 
 
     //doing DW gets...
-    resolve_fields( old_dw, new_dw, patch, variable_map, const_variable_map, field_collector ); 
+    resolve_fields( old_dw, new_dw, patch, field_container, field_collector ); 
 
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
-    field_collector->set_var_maps(variable_map, const_variable_map); 
+    field_collector->set_field_container( field_container ); 
 
     //get the operator DB for this patch
     Operators& opr = Operators::self(); 
@@ -737,8 +805,12 @@ void TaskInterface::do_timestep_init( const ProcessorGroup* pc,
     
     const Patch* patch = patches->get(p);
 
+    const Wasatch::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
+
     UintahVarMap variable_map;
     ConstUintahVarMap const_variable_map; 
+
+    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch); 
 
     SchedToTaskInfo info; 
 
@@ -749,10 +821,10 @@ void TaskInterface::do_timestep_init( const ProcessorGroup* pc,
     FieldCollector* field_collector = scinew FieldCollector(variable_registry, patch, info); 
 
     //doing DW gets...
-    resolve_fields( old_dw, new_dw, patch, variable_map, const_variable_map, field_collector ); 
+    resolve_fields( old_dw, new_dw, patch, field_container, field_collector ); 
 
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
-    field_collector->set_var_maps(variable_map, const_variable_map); 
+    field_collector->set_field_container( field_container ); 
 
     //get the operator DB for this patch
     Operators& opr = Operators::self(); 
@@ -762,6 +834,7 @@ void TaskInterface::do_timestep_init( const ProcessorGroup* pc,
 
     //clean up 
     delete field_collector; 
+    delete field_container; 
 
     for ( UintahVarMap::iterator i = variable_map.begin(); i != variable_map.end(); i++ ){
       delete i->second; 
@@ -769,5 +842,6 @@ void TaskInterface::do_timestep_init( const ProcessorGroup* pc,
     for ( ConstUintahVarMap::iterator i = const_variable_map.begin(); i != const_variable_map.end(); i++ ){
       delete i->second; 
     }
+
   }
 }
