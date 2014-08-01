@@ -98,7 +98,7 @@ ScaleSimilarityModel::problemSetup(const ProblemSpecP& params)
 //****************************************************************************
 void 
 ScaleSimilarityModel::sched_reComputeTurbSubmodel(SchedulerP& sched, 
-                                                  const PatchSet* patches,
+                                                  const LevelP& level,
                                                   const MaterialSet* matls,
                                                   const TimeIntegratorLabel* timelabels)
 {
@@ -138,7 +138,7 @@ ScaleSimilarityModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
     tsk->modifies(d_lab->d_stressTensorCompLabel, d_lab->d_tensorMatl, oams);
   }
 
-  sched->addTask(tsk, patches, matls);
+  sched->addTask(tsk, level->eachPatch(), matls);
 }
 
 //****************************************************************************

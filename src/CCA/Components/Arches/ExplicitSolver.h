@@ -123,7 +123,7 @@ public:
 
   /** @brief Check the momentum boundary conditions for errors (and do some other stuff too)**/ 
   void checkMomBCs( SchedulerP&,
-                    const PatchSet* patches,
+                    const LevelP& level, 
                     const MaterialSet* matls);
 
   /** @brief Interpolates face centered vars to cell centered **/ 

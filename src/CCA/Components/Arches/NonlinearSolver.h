@@ -137,7 +137,7 @@ public:
                                              SFCZVariable<double> & wvel ) = 0;
   
   virtual void checkMomBCs( SchedulerP& sched,
-                            const PatchSet* patches,
+                            const LevelP& level,
                             const MaterialSet* matls) = 0;
   
   inline void set_use_wasatch_mom_rhs(const bool useWasatchMomRHS) { d_useWasatchMomRHS = useWasatchMomRHS; }

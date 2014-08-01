@@ -113,10 +113,10 @@ IncDynamicProcedure::problemSetup(const ProblemSpecP& params)
 // Schedule recomputation of the turbulence sub model 
 //****************************************************************************
 void 
-IncDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched, 
-                                              const PatchSet* patches,
-                                              const MaterialSet* matls,
-                                              const TimeIntegratorLabel* timelabels)
+IncDynamicProcedure::sched_reComputeTurbSubmodel( SchedulerP& sched, 
+                                                  const LevelP& level,
+                                                  const MaterialSet* matls,
+                                                  const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "IncDynamicProcedure::reComputeTurbSubmodel" +
                      timelabels->integrator_step_name;
@@ -148,7 +148,7 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
                   oams);
   }
     
-  sched->addTask(tsk, patches, matls);
+  sched->addTask(tsk, level->eachPatch(), matls);
 
   //__________________________________
   taskname =  "IncDynamicProcedure::reComputeFilterValues" +
@@ -183,7 +183,7 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     tsk->modifies(d_lab->d_strainMagnitudeMMLabel);
   }
     
-  sched->addTask(tsk, patches, matls);
+  sched->addTask(tsk, level->eachPatch(), matls);
   //__________________________________
   taskname =  "IncDynamicProcedure::reComputeSmagCoeff" +
                timelabels->integrator_step_name;
@@ -218,7 +218,7 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
   }else{ 
     tsk->modifies(d_lab->d_CsLabel);
   }  
-  sched->addTask(tsk, patches, matls);
+  sched->addTask(tsk, level->eachPatch(), matls);
 }
 
 

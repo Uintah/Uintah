@@ -117,12 +117,12 @@ public:
       //    [in] 
       //        data User data needed for solve 
       virtual void sched_reComputeTurbSubmodel(SchedulerP&,
-                                               const PatchSet* patches,
+                                               const LevelP& level,
                                                const MaterialSet* matls,
                                                const TimeIntegratorLabel* timelabels) = 0;
 
       void sched_computeFilterVol( SchedulerP& sched, 
-                                   const PatchSet* patches, 
+                                   const LevelP& level, 
                                    const MaterialSet* matls );
 
       void sched_carryForwardFilterVol( SchedulerP& sched, 

@@ -94,10 +94,10 @@ TurbulenceModelPlaceholder::problemSetup(const ProblemSpecP& params)
 // Schedule recomputation of the turbulence sub model
 //****************************************************************************
 void
-TurbulenceModelPlaceholder::sched_reComputeTurbSubmodel(SchedulerP& sched,
-                                              const PatchSet* patches,
-                                              const MaterialSet* matls,
-                                              const TimeIntegratorLabel* timelabels)
+TurbulenceModelPlaceholder::sched_reComputeTurbSubmodel( SchedulerP& sched,
+                                                         const LevelP& level,
+                                                         const MaterialSet* matls,
+                                                         const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "TurbulenceModelPlaceholder::ReTurbSubmodel" +
   timelabels->integrator_step_name;
@@ -121,7 +121,7 @@ TurbulenceModelPlaceholder::sched_reComputeTurbSubmodel(SchedulerP& sched,
   tsk->modifies(d_lab->d_viscosityCTSLabel);
   tsk->modifies(d_lab->d_turbViscosLabel);
   
-  sched->addTask(tsk, patches, matls);
+  sched->addTask(tsk, level->eachPatch(), matls);
 }
 
 
