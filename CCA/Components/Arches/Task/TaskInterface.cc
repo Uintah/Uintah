@@ -734,6 +734,7 @@ void TaskInterface::do_task( const ProcessorGroup* pc,
 
     //clean up 
     delete field_collector; 
+    delete field_container; 
     
     for ( UintahVarMap::iterator i = variable_map.begin(); i != variable_map.end(); i++ ){
       delete i->second; 
@@ -784,6 +785,7 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
 
     //clean up 
     delete field_collector; 
+    delete field_container; 
 
     for ( UintahVarMap::iterator i = variable_map.begin(); i != variable_map.end(); i++ ){
       delete i->second; 

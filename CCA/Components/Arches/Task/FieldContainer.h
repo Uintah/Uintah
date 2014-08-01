@@ -45,7 +45,7 @@ namespace Uintah{
 
           FC_VAR_TYPE get_type(){ return _my_type; }
 
-          const int get_n_ghost(){ return 0; } //Not allowing for ghosts currently on modifiable fields
+          int get_n_ghost(){ return 0; } //Not allowing for ghosts currently on modifiable fields
 
         private: 
           GridVariableBase* _field; 
@@ -289,7 +289,7 @@ namespace Uintah{
           if ( iter != var_map.end() ) {
 
             constCCVariable<double>* var = iter->second.template get_field<constCCVariable<double> >();
-            int nGhost = iter->second.template get_n_ghost(); 
+            int nGhost = iter->second.get_n_ghost(); 
             return Wasatch::wrap_uintah_field_as_spatialops<SpatialOps::SVolField>( *var, ainfo, nGhost ); 
 
           }
