@@ -68,7 +68,7 @@ namespace Uintah{
 
           FC_VAR_TYPE get_type(){ return _my_type; }
 
-          const int get_n_ghost(){ return _n_ghosts; } //Not allowing for ghosts currently on modifiable fields
+          int get_n_ghost(){ return _n_ghosts; } //Not allowing for ghosts currently on modifiable fields
 
         private: 
           constVariableBase<GridVariableBase>* _field; 
