@@ -144,8 +144,7 @@ namespace Uintah{
       //  Helpers
       /** @brief map the component VarLabels to RMCRT VarLabels */
      void registerVarLabels(int   matl,
-                            const VarLabel*  abskg,
-                            const VarLabel* absorp,
+                            const VarLabel* abskg,
                             const VarLabel* temperature,
                             const VarLabel* celltype, 
                             const VarLabel* divQ);
@@ -220,7 +219,6 @@ namespace Uintah{
       SimulationStateP d_sharedState;
       const VarLabel* d_sigmaT4_label; 
       const VarLabel* d_abskgLabel;
-      const VarLabel* d_absorpLabel;
       const VarLabel* d_temperatureLabel;
       const VarLabel* d_cellTypeLabel;
       const VarLabel* d_divQLabel;
@@ -255,6 +253,7 @@ namespace Uintah{
                         DataWarehouse* old_dw,
                         DataWarehouse* new_dw,
                         void* stream,
+                        int deviceID,
                         bool modifies_divQ,
                         Task::WhichDW which_abskg_dw,
                         Task::WhichDW whichd_sigmaT4_dw,

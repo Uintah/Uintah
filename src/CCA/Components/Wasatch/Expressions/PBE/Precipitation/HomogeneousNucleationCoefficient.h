@@ -24,8 +24,6 @@
 
 #ifndef HomogeneousNucleationCoefficient_Expr_h
 #define HomogeneousNucleationCoefficient_Expr_h
-#include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
 
 #include <expression/Expression.h>
 

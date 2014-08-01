@@ -26,9 +26,6 @@
 #define Kinetic_Energy_Expr_h
 
 #include <expression/Expression.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
-#include <spatialops/OperatorDatabase.h>
-#include <spatialops/structured/SpatialFieldStore.h>
 
 #include "VelocityMagnitude.h"
 #include <CCA/Components/Wasatch/Expressions/ReductionBase.h>
@@ -36,9 +33,9 @@
 //----------------------------------------------------------------------------//
 
 /**
- *  \class 	 KineticEnergy
- *  \author  Tony Saad
- *  \date 	 June, 2013
+ *  \class  KineticEnergy
+ *  \author Tony Saad
+ *  \date   June, 2013
  *  \ingroup Expressions
  *
  *  \brief Calculates the cell centered, pointwise, kinetic energy.
@@ -113,7 +110,7 @@ public:
  */
 template< typename Vel1T, typename Vel2T, typename Vel3T >
 class TotalKineticEnergy
-: public Expr::Expression<SpatialOps::structured::SingleValueField>
+: public Expr::Expression<SpatialOps::SingleValueField>
 {
   
 private:

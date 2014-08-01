@@ -28,7 +28,7 @@ SampleFactory::register_all_tasks( ProblemSpecP& db )
   //The templated task: 
   tname = "templated_task";
   TaskInterface::TaskBuilder* templated_sample_builder = 
-    scinew TemplatedSampleTask<SpatialOps::structured::SVolField>::Builder(tname,0); 
+    scinew TemplatedSampleTask<SpatialOps::SVolField>::Builder(tname,0); 
   register_task(tname, templated_sample_builder); 
 
   _active_tasks.push_back(tname); 
@@ -43,8 +43,8 @@ SampleFactory::build_all_tasks( ProblemSpecP& db )
 
   for ( SV::iterator i = _active_tasks.begin(); i != _active_tasks.end(); i++){ 
 
-    TaskInterface& tsk = retrieve_task(*i); 
-    tsk.problemSetup( db ); 
+    TaskInterface* tsk = retrieve_task(*i); 
+    tsk->problemSetup( db ); 
 
   }
 

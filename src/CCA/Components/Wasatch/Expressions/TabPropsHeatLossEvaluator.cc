@@ -161,4 +161,4 @@ Builder::build() const
 //====================================================================
 // Explicit template instantiation
 #include <spatialops/structured/FVStaggered.h>
-template class TabPropsHeatLossEvaluator<SpatialOps::structured::SVolField>;
+template class TabPropsHeatLossEvaluator<SpatialOps::SVolField>;

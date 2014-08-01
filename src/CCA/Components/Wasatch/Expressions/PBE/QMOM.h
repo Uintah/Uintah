@@ -24,23 +24,25 @@
 
 #ifndef QMOM_Expr_h
 #define QMOM_Expr_h
-#include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
 
 #include <expression/Expression.h>
 #include <cmath>
 
 #include <Core/Util/DebugStream.h>
 
+#include <sci_defs/uintah_defs.h>
+
 //set up a debug stream for qmom without ifdef compiler commands
 static SCIRun::DebugStream dbgqmom("WASATCH_QMOM_DBG", false);  //qmom debugging
 #define dbg_qmom_on dbgqmom.active() && Uintah::Parallel::getMPIRank() == 0
 #define dbg_qmom  if( dbg_qmom_on ) dbgqmom
 
+#define DSYEV FIX_NAME(dsyev)
+
 // declare lapack eigenvalue solver
 extern "C"{
-  void dsyev_( char* jobz, char* uplo, int* n, double* a, int* lda,
-        double* w, double* work, int* lwork, int* info );
+  void DSYEV( char* jobz, char* uplo, int* n, double* a, int* lda,
+	      double* w, double* work, int* lwork, int* info );
 }
 
 
@@ -73,7 +75,7 @@ class QMOM : public Expr::Expression<FieldT>
 
   QMOM( const Expr::TagList knownMomentsTagList, const bool realizable );
   
-  bool product_difference(const std::vector<typename FieldT::const_interior_iterator>& knownMomentsIterator);
+  bool product_difference(const std::vector<typename FieldT::const_iterator>& knownMomentsIterator);
 
 
 public:
@@ -184,18 +186,18 @@ evaluate()
   // loop over interior points in the patch. To do this, we grab a sample
   // iterator from any of the exisiting fields, for example, m0.
   const FieldT* sampleField = knownMoments_[0];
-  typename FieldT::const_interior_iterator sampleIterator = sampleField->interior_begin();
+  typename FieldT::const_iterator sampleIterator = sampleField->interior_begin();
 
   //
   // create a vector of iterators for the known moments and for the results
   //
-  std::vector<typename FieldT::const_interior_iterator> knownMomentsIterators;
-  std::vector<typename FieldT::interior_iterator> resultsIterators;
+  std::vector<typename FieldT::const_iterator> knownMomentsIterators;
+  std::vector<typename FieldT::iterator> resultsIterators;
   for (int i=0; i<nMoments_; ++i) {
-    typename FieldT::const_interior_iterator thisIterator = knownMoments_[i]->interior_begin();
+    typename FieldT::const_iterator thisIterator = knownMoments_[i]->interior_begin();
     knownMomentsIterators.push_back(thisIterator);
 
-    typename FieldT::interior_iterator thisResultsIterator = results[i]->interior_begin();
+    typename FieldT::iterator thisResultsIterator = results[i]->interior_begin();
     resultsIterators.push_back(thisResultsIterator);
   }
 
@@ -259,7 +261,7 @@ evaluate()
 template< typename FieldT >
 bool
 QMOM<FieldT>::
-product_difference(const std::vector<typename FieldT::const_interior_iterator>& knownMomentsIterator) {
+product_difference(const std::vector<typename FieldT::const_iterator>& knownMomentsIterator) {
   int nEnvironments = nMoments_/2;  
   // initialize the p matrix
   for (int i=0; i<nMoments_; ++i) {
@@ -355,11 +357,11 @@ product_difference(const std::vector<typename FieldT::const_interior_iterator>& 
   lwork = -1;
   char jobz='V';
   char matType = 'U';
-  dsyev_( &jobz, &matType, &n, &jMatrix_[0], &lda, &eigenValues_[0], &wkopt, &lwork, &info );
+  DSYEV( &jobz, &matType, &n, &jMatrix_[0], &lda, &eigenValues_[0], &wkopt, &lwork, &info );
   lwork = (int)wkopt;
   work_.resize(lwork);
   // Solve eigenproblem. eigenvectors are stored in the jMatrix, columnwise
-  dsyev_( &jobz, &matType, &n, &jMatrix_[0], &lda, &eigenValues_[0], &work_[0], &lwork, &info );
+  DSYEV( &jobz, &matType, &n, &jMatrix_[0], &lda, &eigenValues_[0], &work_[0], &lwork, &info );
   
   bool status = ( info>0 || info<0 )? false : true;
 

@@ -83,7 +83,8 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 #
 ######################################################
 
-LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY)
+LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) \
+        $(LAPACK_LIBRARY)
 
 ifneq ($(HAVE_CUDA),)
   LIBS :=  $(LIBS) $(CUDA_LIBRARY)

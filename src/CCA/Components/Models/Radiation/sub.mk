@@ -33,49 +33,4 @@ SRCDIR   := CCA/Components/Models/Radiation
 SUBDIRS := $(SRCDIR)/RMCRT \
            $(SRCDIR)/floatRMCRT
 
-ifneq ($(NO_FORTRAN),yes)
-  SRCS += \
-       $(SRCDIR)/Models_CellInformation.cc  \
-       $(SRCDIR)/Models_DORadiationModel.cc \
-       $(SRCDIR)/Models_RadiationModel.cc   \
-       $(SRCDIR)/Models_RadiationSolver.cc  \
-       $(SRCDIR)/RadiationConstVariables.cc \
-       $(SRCDIR)/RadiationDriver.cc         \
-       $(SRCDIR)/RadiationVariables.cc
-
-
-  ifeq ($(HAVE_PETSC),yes)
-    SRCS += $(SRCDIR)/Models_PetscSolver.cc
-    INCLUDES += $(PETSC_INCLUDE)
-  else
-    SRCS += $(SRCDIR)/Models_FakePetscSolver.cc
-  endif
-
-  ifeq ($(HAVE_HYPRE),yes)
-    SRCS += $(SRCDIR)/Models_HypreSolver.cc
-    INCLUDES += $(HYPRE_INCLUDE)
-  endif
-
-  SUBDIRS += $(SRCDIR)/fortran
-
-  $(SRCDIR)/Models_CellInformation.$(OBJEXT): $(SRCDIR)/fortran/m_cellg_fort.h
-
-  $(SRCDIR)/Models_DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/m_rordr_fort.h
-  $(SRCDIR)/Models_DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/m_rordrtn_fort.h
-  $(SRCDIR)/Models_DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/m_radarray_fort.h
-  $(SRCDIR)/Models_DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/m_radcal_fort.h
-  $(SRCDIR)/Models_DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/m_radcoef_fort.h
-  $(SRCDIR)/Models_DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/m_radwsgg_fort.h
-  $(SRCDIR)/Models_DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/m_rdombc_fort.h
-  $(SRCDIR)/Models_DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/m_rdomsolve_fort.h
-  $(SRCDIR)/Models_DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/m_rdomsrc_fort.h
-  $(SRCDIR)/Models_DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/m_rdomflux_fort.h
-  $(SRCDIR)/Models_DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/m_rdombmcalc_fort.h
-  $(SRCDIR)/Models_DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/m_rdomvolq_fort.h
-  $(SRCDIR)/Models_DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/m_rshsolve_fort.h
-  $(SRCDIR)/Models_DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/m_rshresults_fort.h
-
-endif
-
 include $(SCIRUN_SCRIPTS)/recurse.mk
-

@@ -1,5 +1,5 @@
 /**
- *  \file   MonolithicRHS.cpp
+ *  \file   MonolithicRHS.cc
  *
  *  \date   Apr 10, 2012
  *  \author James C. Sutherland
@@ -113,7 +113,7 @@ bind_operators( const SpatialOps::OperatorDatabase& opDB )
 //--------------------------------------------------------------------
 
 #define build_field(f, theoffset)                                                       \
-    (FieldT(structured::MemoryWindow(f.window_without_ghost().glob_dim(),               \
+    (FieldT(MemoryWindow(f.window_without_ghost().glob_dim(),               \
                                      f.window_without_ghost().offset() + theoffset,     \
                                      f.window_without_ghost().extent(),                 \
                                      f.window_without_ghost().has_bc(0),                \
@@ -188,7 +188,7 @@ Builder::build() const
 
 
 //--- Explicit template instantiations ---
-template class MonolithicRHS<SpatialOps::structured::SVolField>;
-template class MonolithicRHS<SpatialOps::structured::XVolField>;
-template class MonolithicRHS<SpatialOps::structured::YVolField>;
-template class MonolithicRHS<SpatialOps::structured::ZVolField>;
+template class MonolithicRHS<SpatialOps::SVolField>;
+template class MonolithicRHS<SpatialOps::XVolField>;
+template class MonolithicRHS<SpatialOps::YVolField>;
+template class MonolithicRHS<SpatialOps::ZVolField>;

@@ -33,4 +33,5 @@ SRCS	+=                             \
 	$(SRCDIR)/BoundaryConditions.cc \
 	$(SRCDIR)/OpenBC.cc   \
 	$(SRCDIR)/OutflowBC.cc  \
+  $(SRCDIR)/ParticleWallBC.cc  \
 	$(SRCDIR)/VardenMMSBCs.cc  

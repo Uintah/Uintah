@@ -49,6 +49,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw,
                       void* stream,
+                      int deviceID,
                       bool modifies_divQ,
                       Task::WhichDW which_abskg_dw,
                       Task::WhichDW which_sigmaT4_dw,
@@ -108,7 +109,6 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   RMCRT_flags RT_flags;
   RT_flags.modifies_divQ = modifies_divQ;
   
-  RT_flags.virtRad            = d_virtRad;
   RT_flags.solveDivQ          = d_solveDivQ;
   RT_flags.allowReflect       = d_allowReflect;
   RT_flags.solveBoundaryFlux  = d_solveBoundaryFlux;
@@ -118,8 +118,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   RT_flags.sigmaScat  = d_sigmaScat; 
   RT_flags.threshold  = d_threshold;
   
-  RT_flags.nDivQRays = d_nDivQRays;   
-  RT_flags.nRadRays  = d_nRadRays;    
+  RT_flags.nDivQRays = d_nDivQRays;
   RT_flags.nFluxRays = d_nFluxRays;
   
   double start=clock();  

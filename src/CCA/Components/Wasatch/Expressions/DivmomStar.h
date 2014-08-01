@@ -6,8 +6,7 @@
 //-- ExprLib Includes --//
 #include <expression/Expression.h>
 
-#include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
+#include <spatialops/structured/FVStaggered.h>
 #include <CCA/Components/Wasatch/VardenParameters.h>
 
 /**
@@ -37,18 +36,18 @@
 class DivmomStar : public Expr::Expression<SVolField>
 {  
   
-  typedef SpatialOps::structured::FaceTypes<SVolField> FaceTypes;
+  typedef SpatialOps::FaceTypes<SVolField> FaceTypes;
   typedef FaceTypes::XFace XFace; ///< The type of field for the x-face of SVolField.
   typedef FaceTypes::YFace YFace; ///< The type of field for the y-face of SVolField.
   typedef FaceTypes::ZFace ZFace; ///< The type of field for the z-face of SVolField.
 
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, XVolField >::type S2XInterpOpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, YVolField >::type S2YInterpOpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, ZVolField >::type S2ZInterpOpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, XVolField >::type S2XInterpOpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, YVolField >::type S2YInterpOpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, ZVolField >::type S2ZInterpOpT;
   
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SVolField >::type GradXT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SVolField >::type GradYT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SVolField >::type GradZT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SVolField >::type GradXT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SVolField >::type GradYT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SVolField >::type GradZT;
   
   const XVolField *uStar_;
   const YVolField *vStar_;
@@ -80,27 +79,13 @@ public:
     
     /**
      *  \brief Constructs a builder for source term of the pressure
-     *
-     *  \param the momTags a list tag which holds the tags for momentum in
-     *         all directions
-     *
-     *  \param the velStarTags a list tag which holds the tags for velocity at 
+     *  \param result the divergence of the momentum predictor
+     *  \param velStarTags a list tag which holds the tags for velocity at
      *         the time stage "*" in all directions     
-     *
-     *  \param densTag a tag to hold density in constant density cases, which is 
-     *         needed to obtain drhodt 
-     *
      *  \param densStarTag a tag for estimation of density at the time stage "*"
      *         which is needed to obtain momentum at that stage.
-     *
-     *  \param dens2StarTag a tag for estimation of density at the time stage "**"
-     *         which is needed to calculate drhodt 
-     *
-     *  \param dilTag a tag to hold dilatation term in constant density cases.
-     *
-     *  \param timestepTag a tag to hold the timestep value.
      */
-    Builder( const Expr::Tag& results,
+    Builder( const Expr::Tag& result,
              const Expr::TagList& velStarTags,
              const Expr::Tag densStarTag );
     

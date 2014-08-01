@@ -1268,6 +1268,15 @@ WARNING
       }
 
       /**
+       * Returns the cell volume dx*dy*dz. This will not work for stretched grids.
+       * Note: This function will throw an exception if the grid is stretched.
+       */
+      inline double cellVolume() const
+      {
+        return getLevel()->cellVolume();
+      }
+    
+      /**
        * Returns the level that the patch lives on
        */
       inline const Level* getLevel() const 

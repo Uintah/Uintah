@@ -65,7 +65,7 @@ WARNING
 #include <CCA/Components/Arches/ExplicitTimeInt.h>
 
 namespace Uintah {
-//class TaskFactoryBase; 
+class TaskFactoryBase; 
 class PressureSolver;
 class MomentumSolver;
 class ScalarSolver;
@@ -80,6 +80,7 @@ class DQMOM;
 class CQMOM;
 class EfficiencyCalculator; 
 class WallModelDriver; 
+class RadPropertyCalculator; 
 class ExplicitSolver: public NonlinearSolver {
 
 public:
@@ -90,7 +91,9 @@ public:
                  BoundaryCondition* bc,
                  TurbulenceModel* turbModel,
                  ScaleSimilarityModel* scaleSimilarityModel,
-                 PhysicalConstants* physConst,
+                 PhysicalConstants* physConst, 
+                 RadPropertyCalculator* rad_properties, 
+                 std::map<std::string, TaskFactoryBase*>* factory_map,
                  const ProcessorGroup* myworld,
                  SolverInterface* hypreSolver);
 
@@ -120,7 +123,7 @@ public:
 
   /** @brief Check the momentum boundary conditions for errors (and do some other stuff too)**/ 
   void checkMomBCs( SchedulerP&,
-                    const PatchSet* patches,
+                    const LevelP& level, 
                     const MaterialSet* matls);
 
   /** @brief Interpolates face centered vars to cell centered **/ 
@@ -370,12 +373,15 @@ private:
   PressureSolver* d_pressSolver;
   SolverInterface* d_hypreSolver;             // infrastructure hypre solver
 
-  EfficiencyCalculator* d_eff_calculator; 
-  //TaskFactoryBase* _test_factory; 
+  EfficiencyCalculator* d_eff_calculator;
+  RadPropertyCalculator* d_rad_prop_calc; 
 
   //Diagnostics
   bool d_printTotalKE; 
   double d_ke_limit; 
+
+  //NEW TASK INTERFACE STUFF: 
+  std::map<std::string, TaskFactoryBase*>* _factory_map; 
 
 }; // End class ExplicitSolver
 } // End namespace Uintah

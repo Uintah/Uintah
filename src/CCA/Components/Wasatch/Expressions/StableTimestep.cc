@@ -29,7 +29,7 @@ StableTimestep( const Expr::Tag& rhoTag,
             const Expr::Tag& uTag,
             const Expr::Tag& vTag,
             const Expr::Tag& wTag )
-: Expr::Expression<SpatialOps::structured::SingleValueField>(),
+: Expr::Expression<SpatialOps::SingleValueField>(),
   rhoTag_( rhoTag ),
   viscTag_( viscTag ),
   uTag_( uTag ),
@@ -109,7 +109,7 @@ StableTimestep::
 evaluate()
 {
   using namespace SpatialOps;
-  SpatialOps::structured::SingleValueField& result = this->value();
+  SpatialOps::SingleValueField& result = this->value();
   
   // jcs we need to switch to this once we have field_min_interior fixed.  This expression would then be ready for gpu.
 //  if( is3dconvdiff_ ){

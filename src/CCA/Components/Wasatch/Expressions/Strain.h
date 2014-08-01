@@ -26,7 +26,7 @@
 #define Strain_Expr_h
 
 #include <expression/Expression.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
+#include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 
 /**
  *  \class 	Strain
@@ -52,9 +52,9 @@ class Strain
 {
   const Expr::Tag vel1t_, vel2t_, dilt_;
   
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, StrainT >::type  SVol2StrainInterpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient,    Vel1T, StrainT >::type  Vel1GradT;  // jcs this will likely be insufficient
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient,    Vel2T, StrainT >::type  Vel2GradT;  // jcs this will likely be insufficient
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, StrainT >::type  SVol2StrainInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient,    Vel1T, StrainT >::type  Vel1GradT;  // jcs this will likely be insufficient
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient,    Vel2T, StrainT >::type  Vel2GradT;  // jcs this will likely be insufficient
   
   const SVol2StrainInterpT* svolInterpOp_; ///< Interpolate viscosity to the face where we are building the Strain
   const Vel1GradT*   vel1GradOp_;   ///< Calculate the velocity gradient dui/dxj at the Strain face
@@ -112,8 +112,8 @@ class Strain< StrainT, VelT, VelT >
 {
   const Expr::Tag velt_, dilt_;
   
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, StrainT >::type  SVol2StrainInterpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient,    VelT,  StrainT >::type  VelGradT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, StrainT >::type  SVol2StrainInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient,    VelT,  StrainT >::type  VelGradT;
   
   const SVol2StrainInterpT* svolInterpOp_; ///< Interpolate viscosity to the face where we are building the Strain
   const VelGradT*    velGradOp_;    ///< Calculate the velocity gradient dui/dxj at the Strain face

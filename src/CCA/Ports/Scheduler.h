@@ -212,6 +212,7 @@ WARNING
 
     virtual bool isCopyDataTimestep() = 0;
     virtual void setInitTimestep(bool) = 0;
+    virtual void setRestartInitTimestep(bool) = 0;
 
   private:
     Scheduler(const Scheduler&);

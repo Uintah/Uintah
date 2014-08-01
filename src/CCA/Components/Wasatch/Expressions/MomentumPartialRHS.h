@@ -65,22 +65,22 @@ template< typename FieldT >
 class MomRHSPart
  : public Expr::Expression<FieldT>
 {
-  typedef typename SpatialOps::structured::FaceTypes<FieldT>::XFace  XFluxT;
-  typedef typename SpatialOps::structured::FaceTypes<FieldT>::YFace  YFluxT;
-  typedef typename SpatialOps::structured::FaceTypes<FieldT>::ZFace  ZFluxT;
+  typedef typename SpatialOps::FaceTypes<FieldT>::XFace  XFluxT;
+  typedef typename SpatialOps::FaceTypes<FieldT>::YFace  YFluxT;
+  typedef typename SpatialOps::FaceTypes<FieldT>::ZFace  ZFluxT;
 
-  typedef typename SpatialOps::structured::BasicOpTypes<FieldT>  OpTypes;
+  typedef typename SpatialOps::BasicOpTypes<FieldT>  OpTypes;
 
   typedef typename OpTypes::DivX  DivX;
   typedef typename OpTypes::DivY  DivY;
   typedef typename OpTypes::DivZ  DivZ;
   
   // interpolant for density: svol to fieldT
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,FieldT>::type  DensityInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,FieldT>::type  DensityInterpT;
 
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,XFluxT>::type  SVol2XFluxInterpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,YFluxT>::type  SVol2YFluxInterpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,ZFluxT>::type  SVol2ZFluxInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,XFluxT>::type  SVol2XFluxInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,YFluxT>::type  SVol2YFluxInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,ZFluxT>::type  SVol2ZFluxInterpT;
 
   const Expr::Tag cfluxXt_, cfluxYt_, cfluxZt_, viscTag_, tauXt_, tauYt_, tauZt_, densityt_, bodyForcet_, srcTermt_, emptyTag_;
   const Expr::Tag volfract_;

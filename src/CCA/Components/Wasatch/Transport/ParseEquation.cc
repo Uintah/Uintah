@@ -35,7 +35,13 @@
 #include "ScalarTransportEquation.h"
 #include "ScalabilityTestTransportEquation.h"
 #include "MomentumTransportEquation.h"
+#include "EquationBase.h"
+
 #include "MomentTransportEquation.h"
+#include "ParticlePositionEquation.h"
+#include "ParticleMomentumEquation.h"
+#include "ParticleSizeEquation.h"
+#include "ParticleMassEquation.h"
 #include "EnthalpyTransportEquation.h"
 
 //-- includes for the expressions built here --//
@@ -50,6 +56,7 @@
 #include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/VardenMMS.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/Varden2DMMS.h>
+#include <CCA/Components/Wasatch/Expressions/Particles/ParticleGasMomentumSrc.h>
 //-- Uintah includes --//
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -77,7 +84,7 @@ namespace Wasatch{
   class EqnTimestepAdaptor : public EqnTimestepAdaptorBase
   {
   public:
-    EqnTimestepAdaptor( TransportEquation* eqn ) : EqnTimestepAdaptorBase(eqn) {}
+    EqnTimestepAdaptor( EquationBase* eqn ) : EqnTimestepAdaptorBase(eqn) {}
     void hook( TimeStepper& ts ) const
     {
       ts.add_equation<FieldT>( eqn_->solution_variable_name(),
@@ -87,7 +94,7 @@ namespace Wasatch{
 
   //==================================================================
 
-  EqnTimestepAdaptorBase::EqnTimestepAdaptorBase( TransportEquation* eqn )
+  EqnTimestepAdaptorBase::EqnTimestepAdaptorBase( EquationBase* eqn )
     : eqn_(eqn)
   {}
 
@@ -107,7 +114,7 @@ namespace Wasatch{
                                                  GraphCategories& gc )
   {
     EqnTimestepAdaptorBase* adaptor = NULL;
-    TransportEquation* transeqn = NULL;
+    EquationBase* transeqn = NULL;
 
     std::string eqnLabel, solnVariable;
 
@@ -200,7 +207,7 @@ namespace Wasatch{
 
       // create the transport equation with all-to-all source term
       typedef ScalabilityTestTransportEquation< SVolField > ScalTestEqn;
-      TransportEquation* scaltesteqn = scinew ScalTestEqn( gc, thisPhiName, params );
+      EquationBase* scaltesteqn = scinew ScalTestEqn( gc, thisPhiName, params );
       adaptors.push_back( scinew EqnTimestepAdaptor< SVolField >( scaltesteqn ) );
 
       //_____________________________________________________
@@ -220,8 +227,9 @@ namespace Wasatch{
                 << std::endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-      proc0cout << "------------------------------------------------" << std::endl;
     }
+
+    proc0cout << "------------------------------------------------" << std::endl;
     return adaptors;
   }
 
@@ -458,7 +466,6 @@ namespace Wasatch{
     slngraphHelper->exprFactory->register_expression( new VarDenMMSOscillatingContinuitySrc<SVolField>::Builder( tagNames.mms_continuitysrc, densityTag, densStarTag, dens2StarTag, velTags, velStarTags, rho0, rho1,w, k, uf, vf, tagNames.xsvolcoord, tagNames.ysvolcoord, tagNames.time, tagNames.dt, varDenParams));
     slngraphHelper->exprFactory->register_expression( new VarDen1DMMSPressureContSrc<SVolField>::Builder( tagNames.mms_pressurecontsrc, tagNames.mms_continuitysrc, tagNames.dt));
     
-    std::cout << "attaching dependency to psrc \n";
     slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_pressurecontsrc, tagNames.pressuresrc);
     
     if (computeContinuityResidual)
@@ -468,46 +475,6 @@ namespace Wasatch{
     }
   }
   
-  //==================================================================
-  
-  void parse_var_den_corrugated_mms( Uintah::ProblemSpecP wasatchParams,
-                                     Uintah::ProblemSpecP varDen2DMMSParams,
-                                     const bool computeContinuityResidual,
-                                     GraphCategories& gc)
-  {
-    std::string solnVarName;
-    double rho0, rho1, d, w, a, b, k, uf, vf;
-    const Expr::Tag diffTag = parse_nametag( varDen2DMMSParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
-    varDen2DMMSParams->get("ConservedScalar",solnVarName);
-    varDen2DMMSParams->getAttribute("rho0",rho0);
-    varDen2DMMSParams->getAttribute("rho1",rho1);
-    varDen2DMMSParams->getAttribute("uf",uf);
-    varDen2DMMSParams->getAttribute("vf",vf);
-    varDen2DMMSParams->getAttribute("k",k);
-    varDen2DMMSParams->getAttribute("w",w);
-    varDen2DMMSParams->getAttribute("d",d);
-    varDen2DMMSParams->getAttribute("a",a);
-    varDen2DMMSParams->getAttribute("b",b);
-    
-    GraphHelper* const slngraphHelper = gc[ADVANCE_SOLUTION];
-    GraphHelper* const icgraphHelper = gc[INITIALIZATION];
-
-    const TagNames& tagNames = TagNames::self();    
-    const Expr::Tag solnVarRHSTag     = Expr::Tag(solnVarName + "_rhs",Expr::STATE_NONE);
-    const Expr::Tag solnVarRHSStarTag = tagNames.make_star_rhs(solnVarName);
-    
-
-    slngraphHelper->exprFactory->register_expression( new VarDenCorrugatedMMSMixFracSrc<SVolField>::Builder(tagNames.mms_mixfracsrc, tagNames.xsvolcoord, tagNames.ysvolcoord, tagNames.time, rho0, rho1, d, w, k, a, b, uf, vf));
-    
-    slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_mixfracsrc, solnVarRHSTag);
-    slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_mixfracsrc, solnVarRHSStarTag);
-    
-    // register the initial condition for velocities
-    icgraphHelper->exprFactory->register_expression( new VarDenCorrugatedMMSVelocity<XVolField>::Builder(Expr::Tag("u",Expr::STATE_NONE), tagNames.xxvolcoord, tagNames.yxvolcoord, tagNames.time, rho0, rho1, d, w, k, a, b, uf, vf));
-    icgraphHelper->exprFactory->register_expression( new Expr::ConstantExpr<YVolField>::Builder(Expr::Tag("v",Expr::STATE_NONE), vf ));
-
-  }
-
   //==================================================================
   
   std::vector<EqnTimestepAdaptorBase*>
@@ -577,7 +544,7 @@ namespace Wasatch{
     if( doxvel && doxmom ){
       proc0cout << "Setting up X momentum transport equation" << std::endl;
       typedef MomentumTransportEquation< XVolField > MomTransEq;
-      TransportEquation* momtranseq = scinew MomTransEq( xvelname,
+      EquationBase* momtranseq = scinew MomTransEq( xvelname,
                                                          xmomname,
                                                          densityTag,
                                                          isConstDensity,
@@ -594,7 +561,7 @@ namespace Wasatch{
     if( doyvel && doymom ){
       proc0cout << "Setting up Y momentum transport equation" << std::endl;
       typedef MomentumTransportEquation< YVolField > MomTransEq;
-      TransportEquation* momtranseq = scinew MomTransEq( yvelname,
+      EquationBase* momtranseq = scinew MomTransEq( yvelname,
                                                          ymomname,
                                                          densityTag,
                                                          isConstDensity,
@@ -611,7 +578,7 @@ namespace Wasatch{
     if( dozvel && dozmom ){
       proc0cout << "Setting up Z momentum transport equation" << std::endl;
       typedef MomentumTransportEquation< ZVolField > MomTransEq;
-      TransportEquation* momtranseq = scinew MomTransEq( zvelname,
+      EquationBase* momtranseq = scinew MomTransEq( zvelname,
                                                          zmomname,
                                                          densityTag,
                                                          isConstDensity,
@@ -644,7 +611,7 @@ namespace Wasatch{
     // loop over the local adaptors and set the initial and boundary conditions on each equation attached to that adaptor
     for( EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ){
       EqnTimestepAdaptorBase* const adaptor = *ia;
-      TransportEquation* momtranseq = adaptor->equation();
+      EquationBase* momtranseq = adaptor->equation();
       //_____________________________________________________
       // set up initial conditions on this momentum equation
       try{
@@ -662,9 +629,8 @@ namespace Wasatch{
         << std::endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-      proc0cout << "------------------------------------------------" << std::endl;
     }
-
+    
     //_____________________________________________________
     // set up initial conditions on the pressure
     try{
@@ -682,6 +648,199 @@ namespace Wasatch{
       << std::endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
+    
+    proc0cout << "------------------------------------------------" << std::endl;
+    //
+    return adaptors;
+  }
+
+  
+  //==================================================================
+  
+  std::vector<EqnTimestepAdaptorBase*>
+  parse_particle_transport_equations( Uintah::ProblemSpecP particleSpec,
+                                      Uintah::ProblemSpecP wasatchSpec,
+                                      GraphCategories& gc)
+  {
+    typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
+    EquationAdaptors adaptors;
+    
+    std::string pxname,pyname,pzname;
+    Uintah::ProblemSpecP posSpec = particleSpec->findBlock("ParticlePosition");
+    posSpec->getAttribute( "x", pxname );
+    posSpec->getAttribute( "y", pyname );
+    posSpec->getAttribute( "z", pzname );
+    
+    const Expr::Tag pXTag(pxname,Expr::STATE_DYNAMIC);
+    const Expr::Tag pYTag(pyname,Expr::STATE_DYNAMIC);
+    const Expr::Tag pZTag(pzname,Expr::STATE_DYNAMIC);
+    const Expr::TagList pPosTags( tag_list(pXTag,pYTag,pZTag) );
+    
+    const Expr::Tag pSizeTag = parse_nametag(particleSpec->findBlock("ParticleSize"));
+    const std::string pSizeName=pSizeTag.name();
+
+    //___________________________________________________________________________
+    // resolve the particle equations
+    //
+    proc0cout << "------------------------------------------------" << std::endl
+    << "Creating particle equations..." << std::endl;
+    proc0cout << "------------------------------------------------" << std::endl;
+    
+    proc0cout << "Setting up particle x-coordinate equation" << std::endl;
+    EquationBase* pxeq = scinew ParticlePositionEquation( pxname,
+                                                          XDIR,
+                                                          pPosTags,
+                                                          pSizeTag,
+                                                          particleSpec,
+                                                          gc );
+    adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pxeq) );
+    
+    proc0cout << "Setting up particle y-coordinate equation" << std::endl;
+    EquationBase* pyeq = scinew ParticlePositionEquation( pyname,
+                                                          YDIR,
+                                                          pPosTags,
+                                                          pSizeTag,
+                                                          particleSpec,
+                                                          gc );
+    adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pyeq) );
+
+    proc0cout << "Setting up particle z-coordinate equation" << std::endl;
+    EquationBase* pzeq = scinew ParticlePositionEquation( pzname,
+                                                          ZDIR,
+                                                          pPosTags,
+                                                          pSizeTag,
+                                                          particleSpec,
+                                                          gc );
+    adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pzeq) );
+
+    
+    std::string puname,pvname,pwname;
+    Uintah::ProblemSpecP pMomSpec = particleSpec->findBlock("ParticleMomentum");
+    pMomSpec->getAttribute( "x", puname );
+    pMomSpec->getAttribute( "y", pvname );
+    pMomSpec->getAttribute( "z", pwname );
+
+    //___________________________________________________________________________
+    // resolve the particle mass equation to be solved and create the adaptor for it.
+    //
+    const Expr::Tag pMassTag    = parse_nametag(particleSpec->findBlock("ParticleMass"));
+    const std::string pMassName = pMassTag.name();
+    proc0cout << "Setting up particle mass equation" << std::endl;
+    EquationBase* pmeq = scinew ParticleMassEquation( pMassName,
+                                                      NODIR,
+                                                      pPosTags,
+                                                      pSizeTag,
+                                                      particleSpec,
+                                                      gc );
+    adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pmeq) );
+
+    //___________________________________________________________________________
+    // resolve the momentum equation to be solved and create the adaptor for it.
+    //
+    Expr::ExpressionFactory& factory = *(gc[ADVANCE_SOLUTION]->exprFactory);
+    proc0cout << "Setting up particle x-momentum equation" << std::endl;
+    EquationBase* pueq = scinew ParticleMomentumEquation( puname,
+                                                          XDIR,
+                                                          pPosTags,
+                                                          pSizeTag,
+                                                          particleSpec,
+                                                          gc );
+    adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pueq) );
+    
+    proc0cout << "Setting up particle y-momentum equation" << std::endl;
+    EquationBase* pveq = scinew ParticleMomentumEquation( pvname,
+                                                          YDIR,
+                                                          pPosTags,
+                                                          pSizeTag,
+                                                          particleSpec,
+                                                          gc );
+    adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pveq) );
+    
+    proc0cout << "Setting up particle z-momentum equation" << std::endl;
+    EquationBase* pweq = scinew ParticleMomentumEquation( pwname,
+                                                          ZDIR,
+                                                          pPosTags,
+                                                          pSizeTag,
+                                                          particleSpec,
+                                                          gc );
+    adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pweq) );
+
+    //___________________________________________________________________________
+    // resolve the particle size equation to be solved and create the adaptor for it.
+    //
+    proc0cout << "Setting up particle size equation" << std::endl;
+    EquationBase* psizeeq = scinew ParticleSizeEquation( pSizeName,
+                                                         NODIR,
+                                                         pPosTags,
+                                                         pSizeTag,
+                                                         particleSpec,
+                                                         gc );
+    adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(psizeeq) );
+
+    //___________________________________________________________________________
+    // Two way coupling between particles and the gas phase
+    //
+    if (!particleSpec->findBlock("ParticleMomentum")->findBlock("DisableTwoWayCoupling"))
+    {
+      Uintah::ProblemSpecP momentumSpec  = wasatchSpec->findBlock("MomentumEquations");
+      if (momentumSpec) {
+                
+        std::string xmomname, ymomname, zmomname;
+        const Uintah::ProblemSpecP doxmom = momentumSpec->get( "X-Momentum", xmomname );
+        const Uintah::ProblemSpecP doymom = momentumSpec->get( "Y-Momentum", ymomname );
+        const Uintah::ProblemSpecP dozmom = momentumSpec->get( "Z-Momentum", zmomname );
+        
+        const TagNames tNames = TagNames::self();
+        if (doxmom) {
+          typedef ParticleGasMomentumSrc<XVolField>::Builder XMomSrcT;
+          const Expr::Tag xMomRHSTag (xmomname + "_rhs", Expr::STATE_NONE);
+          factory.register_expression( scinew XMomSrcT( tNames.pmomsrcx, tNames.pdragx, pMassTag, pSizeTag, pPosTags ));
+          factory.attach_dependency_to_expression(tNames.pmomsrcx, xMomRHSTag);
+        }
+        
+        if (doymom) {
+          typedef ParticleGasMomentumSrc<YVolField>::Builder YMomSrcT;
+          const Expr::Tag yMomRHSTag (ymomname + "_rhs", Expr::STATE_NONE);
+          const Expr::Tag pYMomRHSTag(pvname + "_rhs", Expr::STATE_NONE);
+          factory.register_expression( scinew YMomSrcT( tNames.pmomsrcy, tNames.pdragy, pMassTag, pSizeTag, pPosTags ));
+          factory.attach_dependency_to_expression(tNames.pmomsrcy, yMomRHSTag);
+        }
+        
+        if (dozmom) {
+          typedef ParticleGasMomentumSrc<ZVolField>::Builder ZMomSrcT;
+          const Expr::Tag zMomRHSTag (zmomname + "_rhs", Expr::STATE_NONE);
+          const Expr::Tag pZMomRHSTag(pwname + "_rhs", Expr::STATE_NONE);
+          factory.register_expression( scinew ZMomSrcT( tNames.pmomsrcz, tNames.pdragz, pMassTag, pSizeTag, pPosTags ));
+          factory.attach_dependency_to_expression(tNames.pmomsrcz, zMomRHSTag);
+        }
+      }
+    }
+
+    //
+    // loop over the local adaptors and set the initial and boundary conditions on each equation attached to that adaptor
+    for( EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ){
+      EqnTimestepAdaptorBase* const adaptor = *ia;
+      EquationBase* particleEq = adaptor->equation();
+      //_____________________________________________________
+      // set up initial conditions on this momentum equation
+      try{
+        proc0cout << "Setting initial conditions for particle equation: "
+        << particleEq->solution_variable_name()
+        << std::endl;
+        GraphHelper* const icGraphHelper = gc[INITIALIZATION];
+        icGraphHelper->rootIDs.insert( particleEq->initial_condition( *icGraphHelper->exprFactory ) );
+      }
+      catch( std::runtime_error& e ){
+        std::ostringstream msg;
+        msg << e.what()
+        << std::endl
+        << "ERORR while setting initial conditions on particle equation "
+        << particleEq->solution_variable_name()
+        << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+    }
+    
     proc0cout << "------------------------------------------------" << std::endl;
     //
     return adaptors;
@@ -737,7 +896,7 @@ namespace Wasatch{
 
       // create moment transport equation
       typedef MomentTransportEquation< SVolField > MomTransEq;
-      TransportEquation* momtranseq = scinew MomTransEq( thisPhiName,
+      EquationBase* momtranseq = scinew MomTransEq( thisPhiName,
                                                          gc,
                                                          momentID,
                                                          isConstDensity,
@@ -756,7 +915,7 @@ namespace Wasatch{
     // loop over the local adaptors and set the initial and boundary conditions on each equation attached to that adaptor
     for( EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ){
       EqnTimestepAdaptorBase* const adaptor = *ia;
-      TransportEquation* momtranseq = adaptor->equation();
+      EquationBase* momtranseq = adaptor->equation();
 
       //_____________________________________________________
       // set up initial conditions on this moment equation
@@ -775,9 +934,9 @@ namespace Wasatch{
         << std::endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-      proc0cout << "------------------------------------------------" << std::endl;
     }
 
+    proc0cout << "------------------------------------------------" << std::endl;
     return adaptors;
   }
 

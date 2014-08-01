@@ -33,7 +33,7 @@ namespace Uintah {
 
 CLASS
    EquationOfState
-   
+
    Short description...
 
 GENERAL INFORMATION
@@ -44,15 +44,18 @@ GENERAL INFORMATION
    Schlumberger Technology Corporation
    Perforating Research
 
-   
+
 KEYWORDS
    Equation_of_State
 
 DESCRIPTION
    Long description...
-  
-WARNING
-  
+
+REFERENCE
+
+"Introduction to Physical Oceanograph, Second Edition," John A. Knauss, Princeton Hall
+1997, pp 24-26.
+
 ****************************************/
 
   class KnaussSeaWater : public EquationOfState {
@@ -73,16 +76,16 @@ WARNING
 
     virtual void computeTempCC(const Patch* patch,
                                const std::string& comp_domain,
-                               const CCVariable<double>& press, 
+                               const CCVariable<double>& press,
                                const CCVariable<double>& gamma,
                                const CCVariable<double>& cv,
-                               const CCVariable<double>& rho_micro, 
+                               const CCVariable<double>& rho_micro,
                                CCVariable<double>& Temp,
                                Patch::FaceType face);
 
     virtual double getAlpha(double Temp,double sp_vol,double P, double cv);
 
-    virtual void hydrostaticTempAdjustment(Patch::FaceType face, 
+    virtual void hydrostaticTempAdjustment(Patch::FaceType face,
                                      const Patch* patch,
                                      Iterator &bound_ptr,
                                      Vector& gravity,
@@ -91,18 +94,18 @@ WARNING
                                      const Vector& dx,
                                      CCVariable<double>& Temp_CC);
      private:
-                      // Typical values
-       double   d_a;  // -0.15 kg/(m^3 C)
-       double   d_b;  //  0.78 kg/(m^3 PSU) PSU = Practical Salinity Unit
-       double   d_k;  //  4.5e-7 kg/(m^3 Pa)
-       double   d_T0; //  10 C = 283.15 K
-       double   d_P0; //  101325 Pa
-       double   d_S;  //  For 3% KCl, take d_S = 30
-       double   d_S0; // 35 PSU
+                        // Typical values, see reference for details
+       double   d_a;    // -0.15 kg/(m^3 C)
+       double   d_b;    //  0.78 kg/(m^3 PSU) PSU = Practical Salinity Unit
+       double   d_k;    //  4.5e-7 kg/(m^3 Pa)
+       double   d_T0;   //  10 C = 283.15 K
+       double   d_P0;   //  101325 Pa
+       double   d_S;    //  For 3% KCl, take d_S = 30
+       double   d_S0;   //  35 PSU
        double   d_rho0; // 1027 kg/m^3
   };
 } // End namespace Uintah
-      
+
 #endif  // __KNAUSS_SEA_WATER_H__
 
 

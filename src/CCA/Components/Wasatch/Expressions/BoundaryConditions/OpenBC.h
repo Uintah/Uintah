@@ -59,7 +59,7 @@ public:
   
 private:
   const FieldT* u_;
-  const SpatialOps::structured::SingleValueField* dt_;
+  const SpatialOps::SingleValueField* dt_;
   const Expr::Tag momTag_;
 };
 

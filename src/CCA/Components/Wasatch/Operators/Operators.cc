@@ -31,15 +31,60 @@
 #include <CCA/Components/Wasatch/Operators/Extrapolant.h>
 #include <CCA/Components/Wasatch/Operators/FluxLimiterInterpolant.h>
 #include <CCA/Components/Wasatch/BCHelper.h>
+#include <spatialops/particles/ParticleOperators.h>
 
 //-- Uintah includes --//
 #include <Core/Grid/Patch.h>
 
 using namespace SpatialOps;
-using namespace structured;
 
 namespace Wasatch{
   
+  template<typename FieldT>
+  const SCIRun::Point get_low_position(const Uintah::Patch& patch);
+  
+  template<>
+  const SCIRun::Point get_low_position<SVolField>(const Uintah::Patch& patch)
+  {
+    return patch.getCellPosition(patch.getCellLowIndex());
+  }
+    
+  template<>
+  const SCIRun::Point get_low_position<XVolField>(const Uintah::Patch& patch)
+  {
+    const Uintah::Vector spacing = patch.dCell();
+    SCIRun::Point low = patch.getCellPosition(patch.getCellLowIndex());
+    low.x( low.x() - spacing[0]/2.0 );
+    return low;
+  }
+  
+  template<>
+  const SCIRun::Point get_low_position<YVolField>(const Uintah::Patch& patch)
+  {
+    const Uintah::Vector spacing = patch.dCell();
+    SCIRun::Point low = patch.getCellPosition(patch.getCellLowIndex());
+    low.y( low.y() - spacing[1]/2.0 );
+    return low;
+  }
+  
+  template<>
+  const SCIRun::Point get_low_position<ZVolField>(const Uintah::Patch& patch)
+  {
+    const Uintah::Vector spacing = patch.dCell();
+    SCIRun::Point low = patch.getCellPosition(patch.getCellLowIndex());
+    low.z( low.z() - spacing[2]/2.0 );
+    return low;
+  }
+  
+#define BUILD_PARTICLE_OPS( VOLT )                                                                     \
+{                                                                                                       \
+  typedef SpatialOps::Particle::CellToParticle<VOLT> C2P;                                               \
+  typedef SpatialOps::Particle::ParticleToCell<VOLT> P2C;                                               \
+  const SCIRun::Point low = get_low_position<VOLT>(patch);                                               \
+  opDB.register_new_operator<C2P>(scinew C2P(spacing[0], low.x(), spacing[1], low.y(), spacing[2], low.z()) );\
+  opDB.register_new_operator<P2C>(scinew P2C(spacing[0], low.x(), spacing[1], low.y(), spacing[2], low.z()) );\
+}
+
 #define BUILD_UPWIND( VOLT )                                            \
 {                                                                     \
   typedef UpwindInterpolant<VOLT,FaceTypes<VOLT>::XFace> OpX;         \
@@ -102,9 +147,10 @@ namespace Wasatch{
 
 
   void build_operators( const Uintah::Patch& patch,
-                       SpatialOps::OperatorDatabase& opDB )
+                        SpatialOps::OperatorDatabase& opDB )
   {
     const SCIRun::IntVector udim = patch.getCellHighIndex() - patch.getCellLowIndex();
+
     std::vector<int> dim(3,1);
     for( size_t i=0; i<3; ++i ){ dim[i] = udim[i];}
     
@@ -126,30 +172,30 @@ namespace Wasatch{
     bcMinus[2] = patch.getBCType(Uintah::Patch::zminus) != Uintah::Patch::Neighbor;
     
     // build all of the stencils defined in SpatialOps
-    SpatialOps::structured::build_stencils( udim[0], udim[1], udim[2],
-                                           udim[0]*spacing[0], udim[1]*spacing[1], udim[2]*spacing[2],
-                                           opDB );
+    SpatialOps::build_stencils( udim[0], udim[1], udim[2],
+                                udim[0]*spacing[0], udim[1]*spacing[1], udim[2]*spacing[2],
+                                opDB );
     
     //--------------------------------------------------------
     // UPWIND interpolants - phi volume to phi surface
     //--------------------------------------------------------
     BUILD_UPWIND( SVolField )
-//    BUILD_UPWIND( XVolField )
-//    BUILD_UPWIND( YVolField )
-//    BUILD_UPWIND( ZVolField )
+//  BUILD_UPWIND( XVolField )
+//  BUILD_UPWIND( YVolField )
+//  BUILD_UPWIND( ZVolField )
     
     //--------------------------------------------------------
     // FLUX LIMITER interpolants - phi volume to phi surface
     //--------------------------------------------------------
     BUILD_UPWIND_LIMITER( SVolField )
-//    BUILD_UPWIND_LIMITER( XVolField )
-//    BUILD_UPWIND_LIMITER( YVolField )
-//    BUILD_UPWIND_LIMITER( ZVolField )
+//  BUILD_UPWIND_LIMITER( XVolField )
+//  BUILD_UPWIND_LIMITER( YVolField )
+//  BUILD_UPWIND_LIMITER( ZVolField )
     
-    BUILD_NEBO_BC_OPERATORS(SVolField)
-    BUILD_NEBO_BC_OPERATORS(XVolField)
-    BUILD_NEBO_BC_OPERATORS(YVolField)
-    BUILD_NEBO_BC_OPERATORS(ZVolField)
+    BUILD_NEBO_BC_OPERATORS( SVolField )
+    BUILD_NEBO_BC_OPERATORS( XVolField )
+    BUILD_NEBO_BC_OPERATORS( YVolField )
+    BUILD_NEBO_BC_OPERATORS( ZVolField )
     
     //--------------------------------------------------------
     // Extrapolants
@@ -158,6 +204,14 @@ namespace Wasatch{
     BUILD_EXTRAPOLANT( XVolField )
     BUILD_EXTRAPOLANT( YVolField )
     BUILD_EXTRAPOLANT( ZVolField )
+
+    //--------------------------------------------------------
+    // Particles
+    //--------------------------------------------------------
+    BUILD_PARTICLE_OPS( SVolField );
+    BUILD_PARTICLE_OPS( XVolField );
+    BUILD_PARTICLE_OPS( YVolField );
+    BUILD_PARTICLE_OPS( ZVolField );
   }
   
 } // namespace Wasatch

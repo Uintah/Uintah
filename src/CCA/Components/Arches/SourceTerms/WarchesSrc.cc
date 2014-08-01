@@ -119,17 +119,6 @@ WarchesSrc::computeSource( const ProcessorGroup* pc,
     int archIndex = 0;
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    Ghost::GhostType  gType;
-    int nGhosts;
-
-#ifdef WASATCH_IN_ARCHES
-    gType = Ghost::AroundCells;
-    nGhosts = Wasatch::get_n_ghost<SVolField>();
-#else
-    gType = Ghost::None;
-    nGhosts = 0;
-#endif
-
     CCVariable<double> constSrc; 
     constCCVariable<double> density; 
     if ( new_dw->exists(_src_label, matlIndex, patch ) ){
@@ -139,18 +128,6 @@ WarchesSrc::computeSource( const ProcessorGroup* pc,
       new_dw->allocateAndPut( constSrc, _src_label, matlIndex, patch );
       constSrc.initialize(0.0);
     } 
-
-#ifdef WASATCH_IN_ARCHES
-    using namespace Wasatch;
-    using namespace SpatialOps;
-    using SpatialOps::operator *;
-
-    // SVolField = CCVariable<double> with 1 ghost cell
-    SVolField* const constant    = wrap_uintah_field_as_spatialops<SVolField>(constSrc,patch);
-    delete constant; 
-#else
-#endif
-
   }
 }
 

@@ -143,8 +143,8 @@ Builder( const Expr::Tag& result,
 //==========================================================================
 // Explicit template instantiation for supported versions of this expression
 #include <spatialops/structured/FVStaggered.h>
-template class ScalabilityTestSrc< SpatialOps::structured::SVolField >;
-template class ScalabilityTestSrc< SpatialOps::structured::XVolField >;
-template class ScalabilityTestSrc< SpatialOps::structured::YVolField >;
-template class ScalabilityTestSrc< SpatialOps::structured::ZVolField >;
+template class ScalabilityTestSrc< SpatialOps::SVolField >;
+template class ScalabilityTestSrc< SpatialOps::XVolField >;
+template class ScalabilityTestSrc< SpatialOps::YVolField >;
+template class ScalabilityTestSrc< SpatialOps::ZVolField >;
 //==========================================================================

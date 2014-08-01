@@ -31,8 +31,7 @@
 #include <expression/ExprLib.h>
 
 //-- SpatialOps Includes --//
-#include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
+#include <spatialops/structured/FVStaggered.h>
 
 #include "RHSTerms.h"
 
@@ -76,7 +75,7 @@
  *     + \frac{1}{\rho} s_\phi
  *    \right]
  *  \f]
- *  where $\f\vec{V}^d_\phi = \frac{\vec{J}_\phi}{\rho}\f$ is the diffusion velocity.
+ *  where \f$\vec{V}^d_\phi = \frac{\vec{J}_\phi}{\rho}\f$ is the diffusion velocity.
  *
  *  It also supports the weak form of the RHS:
  *  \f[
@@ -95,22 +94,22 @@ class ScalarRHS : public Expr::Expression<FieldT>
 {
 protected:
 
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,FieldT>::type  DensityInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,FieldT>::type  DensityInterpT;
 
-  typedef typename SpatialOps::structured::FaceTypes<FieldT> FaceTypes;
+  typedef typename SpatialOps::FaceTypes<FieldT> FaceTypes;
   typedef typename FaceTypes::XFace XFluxT; ///< The type of field for the x-face variables.
   typedef typename FaceTypes::YFace YFluxT; ///< The type of field for the y-face variables.
   typedef typename FaceTypes::ZFace ZFluxT; ///< The type of field for the z-face variables.
 
-  typedef typename SpatialOps::structured::BasicOpTypes<FieldT> OpTypes;
+  typedef typename SpatialOps::BasicOpTypes<FieldT> OpTypes;
   typedef typename OpTypes::DivX   DivX; ///< Divergence operator (surface integral) in the x-direction
   typedef typename OpTypes::DivY   DivY; ///< Divergence operator (surface integral) in the y-direction
   typedef typename OpTypes::DivZ   DivZ; ///< Divergence operator (surface integral) in the z-direction
 
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,FieldT>::type  SVolToFieldTInterpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,XVolField,XFluxT>::type  XVolToXFluxInterpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,YVolField,YFluxT>::type  YVolToYFluxInterpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,ZVolField,ZFluxT>::type  ZVolToZFluxInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,FieldT>::type  SVolToFieldTInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,XVolField,XFluxT>::type  XVolToXFluxInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,YVolField,YFluxT>::type  YVolToYFluxInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,ZVolField,ZFluxT>::type  ZVolToZFluxInterpT;
 
 public:
 
@@ -129,6 +128,7 @@ public:
 
     /**
      *  \brief Constructs a builder for a ScalarRHS object.
+     *  \param result the tag for the ScalarRHS
      *  \param fieldInfo the FieldTagInfo object that holds information for the
      *   various expressions that form the RHS.
      *  \param densityTag density tag for cases that we have constant density and a source term.

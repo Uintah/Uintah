@@ -216,6 +216,7 @@ Arenisca::Arenisca(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->require("PEAKI1",d_cm.PEAKI1);
   ps->require("B0",d_cm.B0);
   ps->require("G0",d_cm.G0);
+  ps->getWithDefault("Use_Disaggregation_Algorithm",d_cm.Use_Disaggregation_Algorithm, false);
   ps->getWithDefault("FSLOPE_p",d_cm.FSLOPE_p, 0.0);  // not used
   ps->getWithDefault("hardening_modulus",d_cm.hardening_modulus, 0.0); //not used
   ps->getWithDefault("kinematic_hardening_constant",d_cm.kinematic_hardening_constant, 0.0); // not used
@@ -223,7 +224,6 @@ Arenisca::Arenisca(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->getWithDefault("gruneisen_parameter",d_cm.gruneisen_parameter, 0.1);
   ps->getWithDefault("T1_rate_dependence",d_cm.T1_rate_dependence, 0.0);
   ps->getWithDefault("T2_rate_dependence",d_cm.T2_rate_dependence, 0.0);
-//  ps->getWithDefault("Initial_Disaggregation_Strain",d_cm.Initial_Disaggregation_Strain, -1);  //EG
   
   ps->get("PEAKI1IDIST",wdist.WeibDist);
   WeibullParser(wdist);
@@ -250,13 +250,13 @@ Arenisca::Arenisca(const Arenisca* cm)
   
   WeibullParser(wdist);
    
+  d_cm.Use_Disaggregation_Algorithm = cm->d_cm.Use_Disaggregation_Algorithm;
   d_cm.FSLOPE = cm->d_cm.FSLOPE;
   d_cm.FSLOPE_p = cm->d_cm.FSLOPE_p; // not used
   d_cm.hardening_modulus = cm->d_cm.hardening_modulus;  // not used
   d_cm.CR = cm->d_cm.CR;  // not used
   d_cm.T1_rate_dependence = cm->d_cm.T1_rate_dependence;
   d_cm.T2_rate_dependence = cm->d_cm.T2_rate_dependence;
-//  d_cm.Initial_Disaggregation_Strain = cm->d_cm.Initial_Disaggregation_Strain;  //EG
   d_cm.p0_crush_curve = cm->d_cm.p0_crush_curve;
   d_cm.p1_crush_curve = cm->d_cm.p1_crush_curve;
   d_cm.p3_crush_curve = cm->d_cm.p3_crush_curve;
@@ -327,13 +327,13 @@ void Arenisca::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
     cm_ps = ps->appendChild("constitutive_model");
     cm_ps->setAttribute("type","Arenisca");
   }
+  cm_ps->appendElement("Use_Disaggregation_Algorithm",d_cm.Use_Disaggregation_Algorithm);
   cm_ps->appendElement("FSLOPE",d_cm.FSLOPE);
   cm_ps->appendElement("FSLOPE_p",d_cm.FSLOPE_p); //not used
   cm_ps->appendElement("hardening_modulus",d_cm.hardening_modulus); //not used
   cm_ps->appendElement("CR",d_cm.CR); //not used
   cm_ps->appendElement("T1_rate_dependence",d_cm.T1_rate_dependence);
   cm_ps->appendElement("T2_rate_dependence",d_cm.T2_rate_dependence);
-//  cm_ps->appendElement("Initial_Disaggregation_Strain",d_cm.Initial_Disaggregation_Strain);  //EG
   cm_ps->appendElement("p0_crush_curve",d_cm.p0_crush_curve);
   cm_ps->appendElement("p1_crush_curve",d_cm.p1_crush_curve);
   cm_ps->appendElement("p3_crush_curve",d_cm.p3_crush_curve);
@@ -473,9 +473,12 @@ void Arenisca::initializeCMData(const Patch* patch,
     // As an illustration, a cup full of sand, subject to gravity, has porosity, but
     // IDVS=0.  IDVS>0 might occur in a shaped charge jet which has already stretched out
     double IDVSEq0Mass=pVolume[*iter]*rho_orig;
-
-    // This formula is possibly incorrect? Please fix. -JG
-    pevv[*iter] = log(pMass[*iter]/IDVSEq0Mass);  //JG: Initial Disaggregation Volumetric Strain
+    
+    pevv[*iter] = 0;
+    if (d_cm.Use_Disaggregation_Algorithm){
+      // This formula is possibly incorrect? Please fix. -JG
+      pevv[*iter] = log(IDVSEq0Mass/pMass[*iter]);  //JG: Initial Disaggregation Volumetric Strain
+    }
     pev0[*iter] = pevv[*iter];
 
     peqps[*iter] = 0.0;
@@ -554,11 +557,6 @@ void Arenisca::computeStableTimestep(const Patch* patch,
           shear= d_cm.G0;                        // shear modulus
   Vector  dx = patch->dCell(),
           WaveSpeed(1.e-12,1.e-12,1.e-12);       // what is this doing?
-#ifdef JC_DEBUG_SMALL_TIMESTEP
-  Vector  idvel(1,1,1),
-          vbulk(1,1,1),
-          vshear(1,1,1);
-#endif
   // Get the particles in the current patch
   ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
 
@@ -573,32 +571,15 @@ void Arenisca::computeStableTimestep(const Patch* patch,
   new_dw->get(pParticleID, lb->pParticleIDLabel, pset);
   new_dw->get(pvelocity,   lb->pVelocityLabel,   pset);
 
-  // Allocate temporary particle variables
-  ParticleVariable<double> rho_cur;
-  new_dw->allocateTemporary(rho_cur,      pset);
-
   // loop over the particles in the patch
   for(ParticleSubset::iterator iter = pset->begin();
       iter != pset->end(); iter++){
     particleIndex idx = *iter;
 
-    rho_cur[idx] = pmass[idx]/pvolume[idx];
-
     // Compute wave speed + particle velocity at each particle,
     // store the maximum
-    c_dil = sqrt((bulk+4.0*shear/3.0)/rho_cur[idx]);
+    c_dil = sqrt((bulk+4.0*shear/3.0)*(pvolume[idx]/pmass[idx]));
 
-#ifdef JC_DEBUG_SMALL_TIMESTEP
-     if(c_dil+fabs(pvelocity[idx].x()) > WaveSpeed.x()){
-       idvel.x(idx); vbulk.x(bulk); vshear.x(shear);
-     }
-     if(c_dil+fabs(pvelocity[idx].y()) > WaveSpeed.y()){
-       idvel.y(idx); vbulk.y(bulk); vshear.y(shear);
-     }
-     if(c_dil+fabs(pvelocity[idx].z()) > WaveSpeed.z()){
-       idvel.z(idx); vbulk.z(bulk); vshear.z(shear);
-     }
-#endif
     WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
                      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
                      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
@@ -607,31 +588,6 @@ void Arenisca::computeStableTimestep(const Patch* patch,
   // Compute the stable timestep based on maximum value of
   // "wave speed + particle velocity"
   WaveSpeed = dx/WaveSpeed;
-
-#ifdef JC_DEBUG_SMALL_TIMESTEP
-  //cout <<"delT_new="<<delT_new;
-  //cout <<"dx="<<dx<<endl;
-  if(delT_new==WaveSpeed.x()){
-    cout << "pvel.x=" << pvelocity[idvel.x()].x()
-         << ",wavespeed.x=" << WaveSpeed.x()
-         << ",bulk=" << vbulk.x()
-         << ",rho=" << rho_cur[idvel.x()]  << endl;
-  }
-  else if(delT_new==WaveSpeed.y()){
-    cout << "pvel.y: " << pvelocity[idvel.y()].y()
-         << ",wavespeed.y=" << WaveSpeed.y()
-         << ",bulk=" << vbulk.y()
-         << ",rho=" << rho_cur[idvel.y()] << endl;
-  }
-  else if(delT_new==WaveSpeed.z()){
-    cout << "pvel.z: " << pvelocity[idvel.z()].z()
-         << ",wavespeed.z=" << WaveSpeed.z()
-         << ",bulk=" << vbulk.z()
-         << ",rho=" << rho_cur[idvel.z()]  << endl;
-  }
-  else
-    cout << "ERROR in JC_DEBUG_SMALL_TIMESTEP" <<endl;
-#endif
 
   double delT_new = WaveSpeed.minComponent();
   new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
@@ -651,9 +607,6 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 {
   // Define some constants
   Matrix3 Identity; Identity.Identity();
-
-  // Get the initial density
-  double rho_orig = matl->getInitialDensity();
 
   // Get the Arenisca model parameters
   const double FSLOPE = d_cm.FSLOPE,        //yield function
@@ -680,8 +633,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
     const Patch* patch = patches->get(p);
     Matrix3 D;
 
-    double J,
-           c_dil=0.0,
+    double c_dil=0.0,
            se=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12); //used to calc. stable timestep
     Vector dx = patch->dCell(); //used to calc. artificial viscosity and timestep
@@ -808,23 +760,11 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pStressQS_new,       pStressQSLabel_preReloc,       pset);
 
     // Allocate temporary particle variables
-    ParticleVariable<double>       f_trial_step,
-                                   rho_cur; //used for calc. of stable timestep
+    ParticleVariable<double>       f_trial_step;
     ParticleVariable<Matrix3>      rotation;
 
     new_dw->allocateTemporary(f_trial_step, pset);
-    new_dw->allocateTemporary(rho_cur,      pset);
     new_dw->allocateTemporary(rotation,     pset);
-
-    // Loop over the particles of the current patch to compute particle density
-    //T2D: remove once stable timestep is made into a modular function
-    for(ParticleSubset::iterator iter=pset->begin();iter!=pset->end();iter++){
-      particleIndex idx = *iter;
-
-      // Update particle density
-      J = pDefGrad_new[idx].Determinant();
-      rho_cur[idx] = rho_orig/J;
-    }
 
     // Loop over the particles of the current patch to update particle
     // stress at the end of the current timestep along with all other
@@ -986,13 +926,10 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 
        //EG: ---- Begining of the Disaggregation Algorithm -------
 
-       double ev_new_step = evp_new_step + evv_new_step + eve_new_step; //Total Disaggregation volumetric strain
        double beta_void = 0.0;
 
-
         //EG: Existing Disaggregation volumetric strain 
-//        if (pevv[idx]>0 && d_cm.Initial_Disaggregation_Strain != -1) {
-        if (pevv[idx]>0 && pev0[idx]>0) {
+        if (pevv[idx]>0 && d_cm.Use_Disaggregation_Algorithm) {
             if (pevv[idx] + D.Trace()*delT > 0){
                 beta_void = 1.0;    
             }else{
@@ -1031,12 +968,10 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         //if ((I1_trial_step>0 && f_trial_step[idx])||pevv[idx]>0) {    //Emad:void insertion
         //if (I1_trial_step>0 && f_trial_step[idx]>0 && D.Trace()>0&&pevv[idx]<=0) {    //Emad:void insertion
 
-//        if (I1_trial_step>0 && f_trial_step[idx]>0 && D.Trace()>0 && d_cm.Initial_Disaggregation_Strain != -1) {
-        if (I1_trial_step>0 && f_trial_step[idx]>0 && D.Trace()>0 && pev0[idx]>0 ) {
+        if (I1_trial_step>0 && f_trial_step[idx]>0 && D.Trace()>0 && d_cm.Use_Disaggregation_Algorithm) {
             //Iota_new_step = min(ev_new_step,pIota[idx]);
             stress_new_step = trial_stress_step;
             double  I1_void = I1_trial_step,
-                    J2_void = J2_trial_step,
                     n_void  = 0.0,
                     f_void = f_trial_step[idx];
             Matrix3 S_void  = S_trial_step;
@@ -1048,7 +983,6 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                 // EG: Compute the invariants of modified stress
                 I1_void = stress_new_step.Trace();  
                 S_void  = stress_new_step - Identity*(one_third*I1_void);  
-                J2_void = 0.5*S_void.Contract(S_void);
                 //EG: Sign of the yeild surface after modification                
                 f_void = YieldFunction(I1_trial_step,
                                        J2_trial_step,
@@ -1365,8 +1299,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                  tau = 0,
                  RAT = 0,
                  pRH = 0,
-                 prh = 0,
-                 trace = 0;
+                 prh = 0;
           
           // Calculating Material Characteristic, for T2=0
           if (d_cm.T2_rate_dependence == 0 && d_cm.T1_rate_dependence != 0){
@@ -1406,12 +1339,11 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
           pIota_new[idx] = pIotaQS_new[idx] + pRH* pIota[idx] - pRH*pIotaQS_new[idx];
         } 
         else {
-          double tau1 = 0,
-                 tau = 0,
+          double tau = 0,
                  RAT = 0,
                  pRH = 0,
-                 prh = 0,
-                 trace = 0;
+                 prh = 0;
+          
           pCapXQS_new[idx]   = pCapX_new[idx];
           pZetaQS_new[idx]   = pZeta_new[idx];
           pIotaQS_new[idx]   = pIota_new[idx];
@@ -1446,7 +1378,8 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 
         // Compute wave speed + particle velocity at each particle,
         // store the maximum
-        c_dil = sqrt((bulk+four_third*shear)/(rho_cur[idx]));
+        double rho_cur = pmass[idx]/pvolume[idx];
+        c_dil = sqrt((bulk+four_third*shear)/rho_cur);
 #ifdef JC_DEBUG_SMALL_TIMESTEP
         if(c_dil+fabs(pvelocity[idx].x()) > WaveSpeed.x())
           {
@@ -1474,8 +1407,8 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         // Compute artificial viscosity term
         if (flag->d_artificial_viscosity) {
           double dx_ave = (dx.x() + dx.y() + dx.z())*one_third;
-          double c_bulk = sqrt(bulk/rho_cur[idx]);
-          p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur[idx], dx_ave);
+          double c_bulk = sqrt(bulk/rho_cur);
+          p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
         } else {
           p_q[idx] = 0.;
         }
@@ -1662,7 +1595,7 @@ int Arenisca::computeStressTensorStep(const Matrix3& sigma_trial, // trial stres
     // ........................................................................
 
     // Initialize variables needed for plastic solution
-    double  gfcn,          // value of the flow function
+    double  //gfcn,          // value of the flow function
             r_new0 = r_trial,        // transformed r for non-hardening return
             z_new0 = z_trial,        // transformed, shifted z for non hardening return
             r_new = r_trial,         // transformed r for hardening return
@@ -1691,7 +1624,8 @@ int Arenisca::computeStressTensorStep(const Matrix3& sigma_trial, // trial stres
     */
 
     // Compute non-hardening return, (overwriting r_new0, and z_new0)
-    gfcn = ComputeNonHardeningReturn(r_trial, z_trial, X_old, Beta, r_new0, z_new0);
+    //gfcn = ComputeNonHardeningReturn(r_trial, z_trial, X_old, Beta, r_new0, z_new0);
+    ComputeNonHardeningReturn(r_trial, z_trial, X_old, Beta, r_new0, z_new0);
 
     // Update unshifted untransformed stress
     sigma_new0 = one_third*(sqrt_three*z_new0+Zeta_old)*Identity;
@@ -1749,7 +1683,8 @@ int Arenisca::computeStressTensorStep(const Matrix3& sigma_trial, // trial stres
       // strain was too large, so we scale back the multiplier eta.
 
       // Compute non-hardening return, (overwriting r_new, and z_new)
-      gfcn = ComputeNonHardeningReturn(r_trial, z_trial, X_new, Beta, r_new, z_new);
+      //gfcn = ComputeNonHardeningReturn(r_trial, z_trial, X_new, Beta, r_new, z_new);
+      ComputeNonHardeningReturn(r_trial, z_trial, X_new, Beta, r_new, z_new);
 
       if( TransformedYieldFunction( r_trial,z_trial,X_new,Beta,PEAKI1) <= 0.0 ||
           //Sign(dgdz(r_trial,z_trial,X_old,Beta)) != Sign(dgdz(r_trial,z_trial,X_new,Beta))
@@ -2628,7 +2563,6 @@ double Arenisca::computeX(double evp)
          p1  = d_cm.p1_crush_curve,
          p3  = d_cm.p3_crush_curve, // max vol. plastic strain
          B0  = d_cm.B0,             // low pressure bulk modulus
-         B1  = d_cm.p4_fluid_effect,             // additional high pressure bulk modulus
          Kf  = d_cm.fluid_B0,       // fluid bulk modulus
          //Pf0 = d_cm.fluid_pressure_initial,            // initial pore pressure
          ev0,                       // strain at zero pore pressure

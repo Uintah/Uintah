@@ -237,7 +237,8 @@ WARNING
 //    const std::map<int, int>& getMaxLevelOffsets() { return maxLevelOffsets; }
 
     bool isCopyDataTimestep() {return d_sharedState->isCopyDataTimestep()||d_isInitTimestep;}
-    void setInitTimestep(bool is_cdt) { d_isInitTimestep = is_cdt; }
+    void setInitTimestep(bool isInitTimestep) { d_isInitTimestep = isInitTimestep; }
+    void setRestartInitTimestep(bool isRestartInitTimestep) { d_isRestartInitTimestep = isRestartInitTimestep; }
 
     typedef std::map<VarLabelMatl<Level>, Task*> ReductionTasksMap;
     ReductionTasksMap reductionTasks;
@@ -255,6 +256,7 @@ WARNING
     void printTrackedVars(DetailedTask* dt, int when);
     
     bool d_isInitTimestep;
+    bool d_isRestartInitTimestep;
    
     /**
     * output the task name and the level it's executing on.

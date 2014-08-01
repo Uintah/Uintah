@@ -121,7 +121,7 @@ WeakConvectiveTerm<FieldT>::Builder::build() const
 //==========================================================================
 // Explicit template instantiation for supported versions of this expression
 #include <spatialops/structured/FVStaggered.h>
-template class WeakConvectiveTerm< SpatialOps::structured::XVolField >;
-template class WeakConvectiveTerm< SpatialOps::structured::YVolField >;
-template class WeakConvectiveTerm< SpatialOps::structured::ZVolField >;
+template class WeakConvectiveTerm< SpatialOps::XVolField >;
+template class WeakConvectiveTerm< SpatialOps::YVolField >;
+template class WeakConvectiveTerm< SpatialOps::ZVolField >;
 //==========================================================================

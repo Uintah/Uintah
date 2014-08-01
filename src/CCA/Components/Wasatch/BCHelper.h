@@ -64,6 +64,10 @@ static SCIRun::DebugStream dbgbc("WASATCH_BC", false);
 #define DBC_BC_ON  dbgbc.active()
 #define DBGBC  if( DBC_BC_ON  ) dbgbc
 
+/**
+ * \file BCHelper.h
+ */
+
 namespace Wasatch {
   
   // !!! ACHTUNG !!!
@@ -103,7 +107,7 @@ namespace Wasatch {
   };
   
   BndCondTypeEnum   select_bc_type_enum( const std::string& bcTypeStr );
-  const std::string bc_type_enum_to_string( const BndCondTypeEnum bcTypeEnum );
+  std::string bc_type_enum_to_string( const BndCondTypeEnum bcTypeEnum );
 
   template<typename OST>
   OST& operator<<( OST& os, const BndCondTypeEnum bcTypeEnum );
@@ -116,16 +120,16 @@ namespace Wasatch {
    *  @date   Sept 2013
    *
    *  @brief  Enum that specifies the types of boundaries supported in Wasatch.
-   Boundaries represent physical domain boundaries and can be of type Wall, Inlet, etc...
-   They can be thought of as physical, user-friendly boundaries types. These types, specified
-   in the input file, will be used to make logical decisions on the sanity of boundary conditions
-   specified by the user. They are also used to infer auxiliary boundary conditions.
-   
-   The boundary type is specified by the user through the input file, for example:
-   <Face side="x+" name="outlet" type="Outflow"/>
-   All types specified in the input file are Capitalized (first letter only).
-   If the user doesn't specify a type, then Wasatch will assume that the boundary type is USER, i.e.
-   the user specifies bcs on any quantity as long as Wasatch applies a bc on that quantity.
+   *  Boundaries represent physical domain boundaries and can be of type Wall, Inlet, etc...
+   *  They can be thought of as physical, user-friendly boundaries types. These types, specified
+   *  in the input file, will be used to make logical decisions on the sanity of boundary conditions
+   *  specified by the user. They are also used to infer auxiliary boundary conditions.
+   *
+   *  The boundary type is specified by the user through the input file, for example:
+   *  \verbatim<Face side="x+" name="outlet" type="Outflow"/>\verbatim
+   *  All types specified in the input file are Capitalized (first letter only).
+   *  If the user doesn't specify a type, then Wasatch will assume that the boundary type is USER, i.e.
+   *  the user specifies bcs on any quantity as long as Wasatch applies a bc on that quantity.
    */
   //****************************************************************************
   enum BndTypeEnum
@@ -286,20 +290,25 @@ namespace Wasatch {
    *  @date   Sept 2013
    *
    *  @brief  Stores the domain boundary iterators necessary for setting boundary conditions.
+   *  For particles, we store a pointer to a list of particles near a given boundary. That list
+   is updated by the ParticlesHelper object. This external list stores the particle index that is
+   near the boundary, NOT the particle ID.
    */
   //****************************************************************************
   struct BoundaryIterators
   {
-    std::vector<SpatialOps::structured::IntVec> extraBndCells;        // iterator for extra cells. These are zero-based on the extra cell
-    std::vector<SpatialOps::structured::IntVec> extraPlusBndCells;    // iterator for extra cells on plus faces (staggered fields). These are zero-based on the extra cell.
-    std::vector<SpatialOps::structured::IntVec> interiorBndCells;     // iterator for interior cells. These are zero-based on the extra cell
+    std::vector<SpatialOps::IntVec> extraBndCells;          // iterator for extra cells. These are zero-based on the extra cell
+    std::vector<SpatialOps::IntVec> extraPlusBndCells;      // iterator for extra cells on plus faces (staggered fields). These are zero-based on the extra cell.
+    std::vector<SpatialOps::IntVec> interiorBndCells;       // iterator for interior cells. These are zero-based on the extra cell
     
-    std::vector<SpatialOps::structured::IntVec> neboExtraBndCells;        // iterator for extra cells. These are zero-based on the first interior cell.
-    std::vector<SpatialOps::structured::IntVec> neboExtraPlusBndCells;    // iterator for extra cells on plus faces (staggered fields). These are zero-based on the first interior cell.
-    std::vector<SpatialOps::structured::IntVec> neboInteriorBndCells;     // iterator for interior cells. These are zero-based on the first interior cell.
+    std::vector<SpatialOps::IntVec> neboExtraBndCells;      // iterator for extra cells. These are zero-based on the first interior cell.
+    std::vector<SpatialOps::IntVec> neboExtraPlusBndCells;  // iterator for extra cells on plus faces (staggered fields). These are zero-based on the first interior cell.
+    std::vector<SpatialOps::IntVec> neboInteriorBndCells;   // iterator for interior cells. These are zero-based on the first interior cell.
 
-    std::vector<SpatialOps::structured::IntVec> interiorEdgeCells;    // iterator for interior edge (domain edges) cells
-    Uintah::Iterator extraBndCellsUintah;                             // We still need the Unitah iterator
+    std::vector<SpatialOps::IntVec> interiorEdgeCells;      // iterator for interior edge (domain edges) cells
+    Uintah::Iterator extraBndCellsUintah;                   // We still need the Unitah iterator
+    const std::vector<int>* particleIdx;                    // list of particle indices near a given boundary. Given the memory of ALL particles on a given patch, this vector stores
+                                                            // the indices of those particles that are near a boundary.
   };
   
   //****************************************************************************
@@ -331,26 +340,31 @@ namespace Wasatch {
   template< typename FieldT>
   struct BCOpTypeSelector : public BCOpTypeSelectorBase<FieldT>
   { };
-  
+
+  // partial specialization for particles. Use SVolField to get this to compile. Classic Boundary operators are meaningless for particles.
+  template<>
+  struct BCOpTypeSelector<ParticleField> : public BCOpTypeSelectorBase<SVolField>
+  { };
+
   // partial specialization with inheritance for XVolFields
   template<>
   struct BCOpTypeSelector<XVolField> : public BCOpTypeSelectorBase<XVolField>
   {
-    typedef SpatialOps::structured::OperatorTypeBuilder<SpatialOps::GradientX, XVolField, XVolField >::type NeumannX;
+    typedef SpatialOps::OperatorTypeBuilder<SpatialOps::GradientX, XVolField, XVolField >::type NeumannX;
   };
   
   // partial specialization with inheritance for YVolFields
   template<>
   struct BCOpTypeSelector<YVolField> : public BCOpTypeSelectorBase<YVolField>
   {
-    typedef SpatialOps::structured::OperatorTypeBuilder<SpatialOps::GradientY, YVolField, YVolField >::type NeumannY;
+    typedef SpatialOps::OperatorTypeBuilder<SpatialOps::GradientY, YVolField, YVolField >::type NeumannY;
   };
   
   // partial specialization with inheritance for ZVolFields
   template<>
   struct BCOpTypeSelector<ZVolField> : public BCOpTypeSelectorBase<ZVolField>
   {
-    typedef SpatialOps::structured::OperatorTypeBuilder<SpatialOps::GradientZ, ZVolField, ZVolField >::type NeumannZ;
+    typedef SpatialOps::OperatorTypeBuilder<SpatialOps::GradientZ, ZVolField, ZVolField >::type NeumannZ;
   };
   
   //
@@ -358,22 +372,22 @@ namespace Wasatch {
   struct BCOpTypeSelector<FaceTypes<XVolField>::XFace>
   {
   public:
-    typedef SpatialOps::structured::OperatorTypeBuilder<Interpolant, SpatialOps::structured::XSurfXField, SpatialOps::structured::XVolField >::type DirichletX;
-    typedef SpatialOps::structured::OperatorTypeBuilder<Divergence, SpatialOps::structured::XSurfXField, SpatialOps::structured::XVolField >::type NeumannX;
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::XSurfXField, SpatialOps::XVolField >::type DirichletX;
+    typedef SpatialOps::OperatorTypeBuilder<Divergence, SpatialOps::XSurfXField, SpatialOps::XVolField >::type NeumannX;
   };
   //
   template<>
   struct BCOpTypeSelector<FaceTypes<YVolField>::YFace>
   {
-    typedef SpatialOps::structured::OperatorTypeBuilder<Interpolant, SpatialOps::structured::YSurfYField, SpatialOps::structured::YVolField >::type DirichletY;
-    typedef SpatialOps::structured::OperatorTypeBuilder<Divergence, SpatialOps::structured::YSurfYField, SpatialOps::structured::YVolField >::type NeumannY;
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::YSurfYField, SpatialOps::YVolField >::type DirichletY;
+    typedef SpatialOps::OperatorTypeBuilder<Divergence, SpatialOps::YSurfYField, SpatialOps::YVolField >::type NeumannY;
   };
   //
   template<>
   struct BCOpTypeSelector<FaceTypes<ZVolField>::ZFace>
   {
-    typedef SpatialOps::structured::OperatorTypeBuilder<Interpolant, SpatialOps::structured::ZSurfZField, SpatialOps::structured::ZVolField >::type DirichletZ;
-    typedef SpatialOps::structured::OperatorTypeBuilder<Divergence, SpatialOps::structured::ZSurfZField, SpatialOps::structured::ZVolField >::type NeumannZ;
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::ZSurfZField, SpatialOps::ZVolField >::type DirichletZ;
+    typedef SpatialOps::OperatorTypeBuilder<Divergence, SpatialOps::ZSurfZField, SpatialOps::ZVolField >::type NeumannZ;
   };
 
   //****************************************************************************
@@ -385,8 +399,9 @@ namespace Wasatch {
    *  The BCHelper class provides a centralized approach to dealing with boundary
    *  conditions. The model adopted for our boundary condition implementation
    *  relies on the basic assumption that all boundary specification within a
-   *  <Face> specification in a ups input file belong to the same boundary.
-   *  This is the essential assumption on which this entire class is built.
+   *  \verbatim<Face>\endverbatim specification in a ups input file belong to
+   *  the same boundary. This is the essential assumption on which this entire
+   *  class is built.
    *
    *  The class operates in the following manner. After Uintah performs its
    *  input-file setup, it automatically constructs BC-related objects and
@@ -415,7 +430,7 @@ namespace Wasatch {
   class BCHelper {
     
   private:
-    typedef SpatialOps::structured::IntVec                IntVecT          ;  // SpatialOps IntVec
+    typedef SpatialOps::IntVec                IntVecT          ;  // SpatialOps IntVec
     typedef std::map <int, BoundaryIterators            > patchIDBndItrMapT;  // temporary typedef map that stores boundary iterators per patch id: Patch ID -> Bnd Iterators
     typedef std::map <std::string, patchIDBndItrMapT    > MaskMapT         ;  // boundary name -> (patch ID -> Boundary iterators )
     
@@ -433,6 +448,13 @@ namespace Wasatch {
     // bndNameBndSpecMap_ stores BndSpec information for each of the specified boundaries. This
     // map is indexed by the (unique) boundary name.
     BndMapT                    bndNameBndSpecMap_;
+    
+    /**
+     \brief Returns a pointer to the list of particles that are near a given boundary on a given patch ID.
+     This pointer is set externally through the ParticlesHelper class.
+     */
+    const std::vector<int>* get_particles_bnd_mask( const BndSpec& myBndSpec,
+                                                    const int& patchID ) const;
     
     template<typename FieldT>
     const std::vector<IntVecT>* get_extra_bnd_mask( const BndSpec& myBndSpec,
@@ -553,22 +575,11 @@ namespace Wasatch {
      *
      *  \brief Function that updates poisson rhs when boundaries are present.
      *
-     *  \param poissonTag The Expr::Tag of the poisson variable (e.g. pressure).
-     This Tag is needed to extract the boundary iterators from Uintah.
-     *
-     *  \param poissonMatrix A reference to the poisson coefficient matrix which
-     we intend to modify.
-     *
-     *  \param poissonField A reference to the poisson field. This contains the
-     values of the poisson variable, e.g. pressure.
-     *
-     *  \param poissonRHS A reference to the poisson RHS field. This should be
-     a MODIFIABLE field since it will be updated using bcs on the poisson field.
+     *  \param pressureRHS A reference to the poisson RHS field. This should be
+     *  a MODIFIABLE field since it will be updated using bcs on the poisson field.
      *
      *  \param patch A pointer to the current patch. If the patch does NOT contain
-     the reference cells, then nothing is set.
-     *
-     *  \param material The Uintah material ID (an integer).
+     *  the reference cells, then nothing is set.
      */
     void update_pressure_rhs( SVolField& pressureRHS,
                               const Uintah::Patch* patch );

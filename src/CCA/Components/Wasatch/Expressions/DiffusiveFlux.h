@@ -29,7 +29,7 @@
 #include <expression/Expression.h>
 
 //-- SpatialOps includes --//
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
+#include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 
 
 /**
@@ -52,10 +52,10 @@ template< typename FluxT >
 class DiffusiveFlux
   : public Expr::Expression< FluxT >
 {
-  typedef typename SpatialOps::structured::VolType<FluxT>::VolField ScalarT;
+  typedef typename SpatialOps::VolType<FluxT>::VolField ScalarT;
 
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Gradient,   ScalarT,  FluxT>::type  GradT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,ScalarT,  FluxT>::type  InterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Gradient,   ScalarT,  FluxT>::type  GradT;
+  typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,ScalarT,  FluxT>::type  InterpT;
 
   const bool isTurbulent_, isConstCoef_;
 
@@ -90,6 +90,8 @@ public:
      *  \brief Construct a DiffusiveFlux::Builder object for
      *         registration with an Expr::ExpressionFactory.
      *
+     *  \param result the diffusive flux
+     *
      *  \param phiTag the Expr::Tag for the scalar field.
      *
      *  \param coefTag the Expr::Tag for the diffusion coefficient
@@ -115,6 +117,8 @@ public:
     /**
      *  \brief Construct a DiffusiveFlux::Builder object for
      *         registration with an Expr::ExpressionFactory.
+     *
+     *  \param result the diffusive flux
      *
      *  \param phiTag the Expr::Tag for the scalar field.
      *

@@ -24,8 +24,6 @@
 
 #ifndef PrecipitationSource_Expr_h
 #define PrecipitationSource_Expr_h
-#include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
 
 #include <expression/Expression.h>
 #ifndef PI

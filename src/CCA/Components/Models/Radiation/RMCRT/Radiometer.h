@@ -25,17 +25,7 @@
 #ifndef RADIOMETER_H
 #define RADIOMETER_H
 
-#include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/Variables/CCVariable.h>
-
-#include <sci_defs/uintah_defs.h>
-
-#include <iostream>
-#include <cmath>
-#include <string>
-#include <vector>
+#include <CCA/Components/Models/Radiation/RMCRT/RMCRTCommon.h>
 
 //==========================================================================
 /**
@@ -51,166 +41,76 @@ class MTRand;
 
 namespace Uintah{
 
-  class Radiometer  {
+  class Radiometer : public RMCRTCommon {
 
-    public: 
+    public:
 
       Radiometer();
-      ~Radiometer(); 
+      ~Radiometer();
 
       //__________________________________
       //  TASKS
       /** @brief Interface to input file information */
       void  problemSetup( const ProblemSpecP& prob_spec,
                           const ProblemSpecP& rmcrt_ps,
-                          SimulationStateP& sharedState ); 
+                          SimulationStateP& sharedState,
+                          const bool getExtraInputs );
 
-      /** @brief Algorithm for tracing rays from radiometer location*/ 
-      void sched_radiometer( const LevelP& level, 
-                           SchedulerP& sched,
-                           Task::WhichDW abskg_dw,
-                           Task::WhichDW sigma_dw,
-                           Task::WhichDW celltype_dw,
-                           const int radCalc_freq );
-
- 
-      /** @brief Schedule compute of blackbody intensity */ 
-      void sched_sigmaT4( const LevelP& level, 
-                          SchedulerP& sched,
-                          Task::WhichDW temp_dw,
-                          const int radCalc_freq,
-                          const bool includeEC = true );
-
+      /** @brief Algorithm for tracing rays from radiometer location*/
+      void sched_radiometer( const LevelP& level,
+                             SchedulerP& sched,
+                             Task::WhichDW abskg_dw,
+                             Task::WhichDW sigma_dw,
+                             Task::WhichDW celltype_dw,
+                             const int radCalc_freq );
       //__________________________________
-      //  Carry Forward tasks     
-      // transfer a variable from old_dw -> new_dw for convience */   
-      void sched_CarryForward_Var ( const LevelP& level,
-                                    SchedulerP& scheduler,
-                                    const VarLabel* variable );
+      //  FUNCTIONS
+      void radiometerFlux(  const Patch* patch,
+                            const Level* level,
+                            DataWarehouse* new_dw,
+                            MTRand& mTwister,
+                            constCCVariable<double> sigmaT4OverPi,
+                            constCCVariable<double> abskg,
+                            constCCVariable<int> celltype,
+                            const bool modifiesFlux );
 
-                               
-      //__________________________________
-      //  Helpers
-      /** @brief map the component VarLabels to radiometer VarLabels */
-     void registerVarLabels(int   matl,
-                            const VarLabel*  abskg,
-                            const VarLabel* absorp,
-                            const VarLabel* temperature,
-                            const VarLabel* celltype);
+    const VarLabel* getRadiometerLabel() const {
+      return d_VRFluxLabel;
+    }
 
-    private: 
-      enum DIR {X=0, Y=1, Z=2, NONE=-9};      
-      double d_threshold;
-      double d_sigma;
-      double d_sigmaScat;      
-       
-      int    d_nRadRays;                     // number of rays per radiometer used to compute radiative flux
-      int    d_matl;      
-      MaterialSet* d_matlSet;
-      
-      double d_sigma_over_pi;                // Stefan Boltzmann divided by pi (W* m-2* K-4)
-      bool d_isSeedRandom;     
-      bool d_allowReflect;                   // specify as false when doing DOM comparisons
+    private:
 
       // Virtual Radiometer parameters
-      bool d_virtRad;
+      int  d_nRadRays;                     // number of rays per radiometer used to compute radiative flux
       double d_viewAng;
       Point d_VRLocationsMin;
       Point d_VRLocationsMax;
-      
+
       struct VR_variables{
         double thetaRot;
-        double phiRot; 
+        double phiRot;
         double psiRot;
         double deltaTheta;
         double range;
         double sldAngl;
       };
       VR_variables d_VR;
-      
-      Ghost::GhostType d_gn;
-      Ghost::GhostType d_gac;
-
-      SimulationStateP d_sharedState;
-      const VarLabel* d_sigmaT4_label;
-      const VarLabel* d_abskgLabel;
-      const VarLabel* d_absorpLabel;
-      const VarLabel* d_temperatureLabel;
-      const VarLabel* d_cellTypeLabel;
       const VarLabel* d_VRFluxLabel;
 
-      //----------------------------------------
-      void radiometer( const ProcessorGroup* pc, 
-                       const PatchSubset* patches, 
-                       const MaterialSubset* matls, 
-                       DataWarehouse* old_dw, 
+      //__________________________________
+      //
+      void radiometer( const ProcessorGroup* pc,
+                       const PatchSubset* patches,
+                       const MaterialSubset* matls,
+                       DataWarehouse* old_dw,
                        DataWarehouse* new_dw,
                        Task::WhichDW which_abskg_dw,
                        Task::WhichDW whichd_sigmaT4_dw,
                        Task::WhichDW which_celltype_dw,
                        const int radCalc_freq );
 
-
-      //__________________________________
-      // @brief Update the running total of the incident intensity */
-      void  updateSumI ( Vector& ray_direction, // can change if scattering occurs
-                         Vector& ray_location,
-                         const IntVector& origin,
-                         const Vector& Dx,
-                         constCCVariable<double>& sigmaT4Pi,
-                         constCCVariable<double>& abskg,
-                         constCCVariable<int>& celltype,
-                         unsigned long int& size,
-                         double& sumI,
-                         MTRand& mTwister);
-
       //__________________________________
       //
-      void sigmaT4( const ProcessorGroup* pc,
-                    const PatchSubset* patches,
-                    const MaterialSubset* matls,
-                    DataWarehouse* old_dw,
-                    DataWarehouse* new_dw,
-                    Task::WhichDW which_temp_dw,
-                    const int radCalc_freq,
-                    const bool includeEC );
-      
-
-      //__________________________________
-      //
-      void reflect(double& fs,
-                   IntVector& cur,
-                   IntVector& prevCell,
-                   const double abskg,
-                   bool& in_domain,
-                   int& step,
-                   bool& sign,
-                   double& ray_direction);
-
-      //__________________________________
-      //
-      void findStepSize(int step[],
-                        bool sign[],
-                        const Vector& inv_direction_vector);
-      
-      //__________________________________
-      //
-      void rayLocation( MTRand& mTwister,
-                       const IntVector origin,
-                       const double DyDx, 
-                       const double DzDx,
-                       const bool useCCRays,
-                       Vector& location);
-
-      
-      //__________________________________
-      //
-      Vector findRayDirection( MTRand& mTwister,
-                               const bool isSeedRandom,
-                               const IntVector& = IntVector(-9,-9,-9),
-                               const int iRay = -9);
-      //__________________________________
-      //  
       void rayDirection_VR( MTRand& mTwister,
                             const IntVector& origin,
                             const int iRay,
@@ -219,18 +119,6 @@ namespace Uintah{
                             const double DzDx,
                             Vector& directionVector,
                             double& cosVRTheta );
-
-     //______________________________________________________________________
-    //    Carry Foward tasks       
-    bool doCarryForward( const int timestep,
-                         const int radCalc_freq);
-                        
-    void carryForward_Var ( const ProcessorGroup*,
-                            const PatchSubset* ,
-                            const MaterialSubset*,
-                            DataWarehouse*,
-                            DataWarehouse*,
-                            const VarLabel* variable);       
 
   }; // class Radiometer
 

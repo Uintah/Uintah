@@ -24,8 +24,7 @@
 
 #include "KineticEnergy.h"
 
-#include <spatialops/OperatorDatabase.h>
-#include <spatialops/structured/SpatialFieldStore.h>
+#include <spatialops/structured/FVStaggered.h>
 
 // ###################################################################
 //
@@ -116,7 +115,7 @@ TotalKineticEnergy( const Expr::Tag& resultTag,
                     const Expr::Tag& vel1tag,
                     const Expr::Tag& vel2tag,
                     const Expr::Tag& vel3tag )
-: Expr::Expression<SpatialOps::structured::SingleValueField>(),
+: Expr::Expression<SpatialOps::SingleValueField>(),
   vel1t_( vel1tag ),
   vel2t_( vel2tag ),
   vel3t_( vel3tag ),
@@ -168,7 +167,7 @@ TotalKineticEnergy<Vel1T,Vel2T,Vel3T>::
 evaluate()
 {
   using namespace SpatialOps;
-  SpatialOps::structured::SingleValueField& tKE = this->value();
+  SpatialOps::SingleValueField& tKE = this->value();
   
   if (is3d_) {
     tKE <<= 0.5 * ( field_sum_interior(*vel1_ * *vel1_)
@@ -213,12 +212,12 @@ TotalKineticEnergy<Vel1T,Vel2T,Vel3T>::Builder::build() const
 // Explicit template instantiation for supported versions of this expression
 #include <spatialops/structured/FVStaggered.h>
 
-template class KineticEnergy< SpatialOps::structured::SVolField,
-                              SpatialOps::structured::XVolField,
-                              SpatialOps::structured::YVolField,
-                              SpatialOps::structured::ZVolField >;
+template class KineticEnergy< SpatialOps::SVolField,
+                              SpatialOps::XVolField,
+                              SpatialOps::YVolField,
+                              SpatialOps::ZVolField >;
 
-template class TotalKineticEnergy< SpatialOps::structured::XVolField,
-                                   SpatialOps::structured::YVolField,
-                                   SpatialOps::structured::ZVolField >;
+template class TotalKineticEnergy< SpatialOps::XVolField,
+                                   SpatialOps::YVolField,
+                                   SpatialOps::ZVolField >;
 //==========================================================================

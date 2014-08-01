@@ -15,16 +15,20 @@ public:
 
     void problemSetup( ProblemSpecP& db ); 
 
-    void register_all_variables( std::vector<VariableInformation>& variable_registry ); 
-
     void register_initialize( std::vector<VariableInformation>& variable_registry );
 
-    void eval( const Patch* patch, UintahVarMap& var_map, 
-               ConstUintahVarMap& const_var_map, SpatialOps::OperatorDatabase& opr, 
-               const int time_substep ); 
+    void register_timestep_init( std::vector<VariableInformation>& variable_registry ); 
 
-    void initialize( const Patch* patch, UintahVarMap& var_map, 
-                     ConstUintahVarMap& const_var_map, SpatialOps::OperatorDatabase& opr );
+    void register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ); 
+
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
+                     SpatialOps::OperatorDatabase& opr );
+    
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
+                        SpatialOps::OperatorDatabase& opr );
+
+    void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
+               SpatialOps::OperatorDatabase& opr ); 
 
     //Build instructions for this (SampleTask) class. 
     class Builder : public TaskInterface::TaskBuilder { 

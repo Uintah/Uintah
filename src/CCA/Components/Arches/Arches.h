@@ -102,6 +102,7 @@ WARNING
 
 namespace Uintah {
 
+  class TaskFactoryBase; 
   class VarLabel;
   class PhysicalConstants;
   class NonlinearSolver;
@@ -116,6 +117,7 @@ namespace Uintah {
   class PartVel;
   class DQMOM;
   class CQMOM;
+  class RadPropertyCalculator; 
 
 class Arches : public UintahParallelComponent, public SimulationInterface {
 
@@ -213,12 +215,12 @@ public:
     d_with_mpmarches = true;
   };
 
-//  void sched_create_patch_operators( const LevelP& level, SchedulerP& sched ); 
-//  void create_patch_operators( const ProcessorGroup* pg,
-//                               const PatchSubset* patches,
-//                               const MaterialSubset* matls,
-//                               DataWarehouse* old_dw,
-//                               DataWarehouse* new_dw);
+  void sched_create_patch_operators( const LevelP& level, SchedulerP& sched ); 
+  void create_patch_operators( const ProcessorGroup* pg,
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw);
 
 
 protected:
@@ -328,6 +330,9 @@ private:
   // Variable labels that are used by the simulation controller
   ArchesLabel* d_lab;
 
+  //Radiation properties
+  RadPropertyCalculator* d_rad_prop_calc;
+
   const MPMArchesLabel* d_MAlab;
 
   std::string d_timeIntegratorType;
@@ -362,6 +367,9 @@ private:
   //  Multi-level related
   int d_archesLevelIndex;
   bool d_doAMR;
+
+  //NEW TASK INTERFACE STUFF: 
+  std::map<std::string, TaskFactoryBase*> _factory_map; 
 
 
 }; // end class Arches

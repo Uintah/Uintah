@@ -61,9 +61,30 @@ namespace Uintah {
   class SchedulerCommon;
 
   typedef std::map<int, std::set<PSPatchMatlGhostRange> > ParticleExchangeVar;
-  enum ProfileType {Normal,Fine};
-  enum QueueAlg {FCFS, Stack, Random, MostChildren, LeastChildren, MostAllChildren, LeastAllChildren, MostMessages, LeastMessages, MostL2Children, LeastL2Children, CritialPath, PatchOrder, PatchOrderRandom};
   
+  enum ProfileType {
+    Normal,
+    Fine
+  };
+
+
+  enum QueueAlg {
+    FCFS,
+    Stack,
+    Random,
+    MostChildren,
+    LeastChildren,
+    MostAllChildren,
+    LeastAllChildren,
+    MostMessages,
+    LeastMessages,
+    MostL2Children,
+    LeastL2Children,
+    CritialPath,
+    PatchOrder,
+    PatchOrderRandom
+  };
+
   class DetailedDep {
   public:
     enum CommCondition { Always, FirstIteration, SubsequentIterations };
@@ -265,16 +286,13 @@ namespace Uintah {
     { return (numPendingInternalDependencies == 0); }
 
 #ifdef HAVE_CUDA
-    void assignDevice (int device) {
-      deviceNum_ = device;
-    }
-    int getDeviceNum () {
-      return deviceNum_;
-    }
-    cudaStream_t*   getCUDAStream() {return d_cudaStream;};
-    void setCUDAStream(cudaStream_t* s) { d_cudaStream = s;};
 
-    bool checkCUDAStreamDone();
+    void assignDevice(int device);
+    int getDeviceNum() const;
+    cudaStream_t* getCUDAStream() const;
+    void setCUDAStream(cudaStream_t* s);
+    bool queryCUDAStreamCompletion();
+
 #endif
 
   protected:
@@ -330,8 +348,7 @@ namespace Uintah {
     bool deviceExternallyReady_;
     bool completed_;
     int  deviceNum_;
-
-    cudaStream_t*   d_cudaStream;
+    cudaStream_t* d_cudaStream;
 #endif
 
   }; // end class DetailedTask

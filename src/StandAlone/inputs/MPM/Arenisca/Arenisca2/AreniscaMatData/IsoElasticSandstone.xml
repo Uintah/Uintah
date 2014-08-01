@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Sandstone -->
+<Uintah_Include>
+  <B0> 15.7e9 </B0>
+  <G0> 15.e9  </G0>
+</Uintah_Include>

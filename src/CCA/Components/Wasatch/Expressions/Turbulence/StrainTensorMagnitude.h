@@ -56,13 +56,13 @@ class StrainTensorSquare : Expr::Expression<SVolField> {
 
   const Expr::Tag S11Tag_, S21Tag_, S31Tag_, S22Tag_, S32Tag_, S33Tag_;
 
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::structured::XSurfXField, SVolField >::type XXInterpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::structured::YSurfYField, SVolField >::type YYInterpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::structured::ZSurfZField, SVolField >::type ZZInterpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::XSurfXField, SVolField >::type XXInterpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::YSurfYField, SVolField >::type YYInterpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::ZSurfZField, SVolField >::type ZZInterpT;
     
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::structured::XSurfYField, SVolField >::type XYInterpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::structured::XSurfZField, SVolField >::type XZInterpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::structured::YSurfZField, SVolField >::type YZInterpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::XSurfYField, SVolField >::type XYInterpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::XSurfZField, SVolField >::type XZInterpT;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::YSurfZField, SVolField >::type YZInterpT;
 
   // NOTATION: We follow the classical continuum mechanics notation for tensors:
   // S_ij is the strain rate on the i-th face in the j-th direction.
@@ -70,19 +70,19 @@ class StrainTensorSquare : Expr::Expression<SVolField> {
   // this distinction is important when dealing with staggered grids where S_ij cannot really be compared to S_ji
   // because these quantities live on different grid locations.
   // XVOL related strain rates
-  const SpatialOps::structured::XSurfXField* S11_; // strain on x face in x direction
-  const SpatialOps::structured::XSurfYField* S21_; // strain on y face in x direction
-  const SpatialOps::structured::XSurfZField* S31_; // strain on z face in x direction
+  const SpatialOps::XSurfXField* S11_; // strain on x face in x direction
+  const SpatialOps::XSurfYField* S21_; // strain on y face in x direction
+  const SpatialOps::XSurfZField* S31_; // strain on z face in x direction
 
   // YVOL related strain rates
-//  const SpatialOps::structured::YSurfXField* S12_; // strain on x face in y direction
-  const SpatialOps::structured::YSurfYField* S22_; // strain on y face in y direction
-  const SpatialOps::structured::YSurfZField* S32_; // strain on z face in y direction
+//  const SpatialOps::YSurfXField* S12_; // strain on x face in y direction
+  const SpatialOps::YSurfYField* S22_; // strain on y face in y direction
+  const SpatialOps::YSurfZField* S32_; // strain on z face in y direction
   
   // ZVOL related strain rates
-//  const SpatialOps::structured::ZSurfXField* S13_; // strain on x face in z direction
-//  const SpatialOps::structured::ZSurfYField* S23_; // strain on y face in z direction
-  const SpatialOps::structured::ZSurfZField* S33_; // strain on z face in z direction
+//  const SpatialOps::ZSurfXField* S13_; // strain on x face in z direction
+//  const SpatialOps::ZSurfYField* S23_; // strain on y face in z direction
+  const SpatialOps::ZSurfZField* S33_; // strain on z face in z direction
 //  const SVolField* dil_;
   const XXInterpT* xxInterpOp_;
   const YYInterpT* yyInterpOp_;

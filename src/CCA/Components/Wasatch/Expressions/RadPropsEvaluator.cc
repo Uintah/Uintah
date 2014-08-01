@@ -258,6 +258,6 @@ Builder::build() const
 //==========================================================================
 // Explicit template instantiation for supported versions of this expression
 #include <spatialops/structured/FVStaggered.h>
-template class RadPropsEvaluator<SpatialOps::structured::SVolField>;
-template class ParticleRadProps <SpatialOps::structured::SVolField>;
+template class RadPropsEvaluator<SpatialOps::SVolField>;
+template class ParticleRadProps <SpatialOps::SVolField>;
 //==========================================================================

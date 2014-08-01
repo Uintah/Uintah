@@ -75,16 +75,20 @@ UpwindInterpolant<SrcT,DestT>::
 apply_to_field( const SrcT& src, DestT& dest )
 {
   using namespace SpatialOps;
-  using namespace SpatialOps::structured;
 
   typedef typename OperatorTypeBuilder<Interpolant,SrcT,DestT>::type::PointCollectionType StencilPts;
   typedef typename StencilPts::Collection::Point LowStPt;
+  typedef typename StencilPts::Collection::Last  HiStPt;  // assumes a 2-point stencil
 
-  typedef IndexTriplet<0,0,0>           S1Offset;
-  typedef LowStPt                       S1Extent;
-  typedef typename LowStPt::Negate      S2Offset;
-  typedef S1Extent                      S2Extent;
-  typedef typename S1Extent::Negate     DOffset;
+  typedef LowStPt  S1Shift;  // relative to dest
+  typedef HiStPt   S2Shift;  // relative to dest
+
+  typedef IndexTriplet<0,0,0>                         S1Offset;
+  typedef typename Add     <S1Offset,S1Shift>::result S1Extent;
+  typedef typename Subtract<S1Offset,S1Shift>::result DOffset ;
+  typedef typename Add     <S1Offset,S1Shift>::result DExtent ;
+  typedef typename Subtract<S1Offset,S2Shift>::result S2Offset;
+  typedef S1Extent                                    S2Extent;
 
   const MemoryWindow& ws = src.window_with_ghost();
   const MemoryWindow ws1( ws.glob_dim(),
@@ -96,29 +100,33 @@ apply_to_field( const SrcT& src, DestT& dest )
                           ws.extent() + S2Extent::int_vec() );
 
   const MemoryWindow& wdest = dest.window_with_ghost();
-  const BoundaryCellInfo& bcd = dest.boundary_info();
+
   const MemoryWindow wd( wdest.glob_dim(),
                          wdest.offset() + DOffset::int_vec(),
-                         wdest.extent() + S1Extent::int_vec()  );
+                         ws.extent() + DExtent::int_vec() );  // yes, ws.
 
-//# ifndef NDEBUG
-//  assert( ws1.extent() == ws2.extent() && ws1.extent() == wd.extent() );
-//# endif
+  const BoundaryCellInfo& bcs =  src.boundary_info();
+
+# ifndef NDEBUG
+  assert( ws1.extent() == ws2.extent() );
+  assert( ws1.extent() ==  wd.extent() );
+  assert( ws2.extent() ==  wd.extent() );
+# endif
 
   // build fields using these newly created windows to do the stencil operation.
   // PAY ATTENTION to how we windowed on the destination field. This is likely
   // to work ONLY with SVol as source and X,Y,ZVol for destination fields.
   // Although the destination field is of a "different" type, we create a window
   // that is the "same size" as the source field to allow us to use a nebo assignment
-  const short int dDevIdx = dest.device_index(); // destination device index
+  const short int dDevIdx = dest.active_device_index(); // destination device index
   typename DestT::value_type* destVals = dest.field_values(dDevIdx);
-  SrcT  d( wd,  bcd, dest.get_ghost_data(), destVals, ExternalStorage, dDevIdx );
+  SrcT d( wd, bcs, dest.get_ghost_data(), destVals, ExternalStorage, dDevIdx );
 
   // NOTE here how we are crating a SrcT field from a DesT one.
   //This is a trick because we know that the fields in this case are of the same size
-  const short int advelDevIdx = advectiveVelocity_->device_index(); // destination device index
-  typename DestT::value_type* velVals  = const_cast<typename DestT::value_type*>(advectiveVelocity_->field_values(advelDevIdx));
-  const SrcT  aVel( wd, bcd, advectiveVelocity_->get_ghost_data(), velVals, ExternalStorage, advelDevIdx );
+  const short int advelDevIdx = advectiveVelocity_->active_device_index(); // destination device index
+  typename DestT::value_type* velVals = const_cast<typename DestT::value_type*>(advectiveVelocity_->field_values(advelDevIdx));
+  const SrcT  aVel( wd, bcs, advectiveVelocity_->get_ghost_data(), velVals, ExternalStorage, advelDevIdx );
   const SrcT    s1( ws1, src );
   const SrcT    s2( ws2, src );
 
@@ -137,10 +145,8 @@ apply_to_field( const SrcT& src, DestT& dest )
 
 //==================================================================
 // Explicit template instantiation
-namespace SS = SpatialOps::structured;
-
-template class UpwindInterpolant< SS::SVolField, SS::SSurfXField >;
-template class UpwindInterpolant< SS::SVolField, SS::SSurfYField >;
-template class UpwindInterpolant< SS::SVolField, SS::SSurfZField >;
+template class UpwindInterpolant< SpatialOps::SVolField, SpatialOps::SSurfXField >;
+template class UpwindInterpolant< SpatialOps::SVolField, SpatialOps::SSurfYField >;
+template class UpwindInterpolant< SpatialOps::SVolField, SpatialOps::SSurfZField >;
 
 //==================================================================

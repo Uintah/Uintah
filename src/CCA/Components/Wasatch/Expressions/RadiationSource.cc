@@ -82,7 +82,6 @@ RadiationSource::RadiationSource( const std::string& radiationSourceName,
   
   rmcrt_->registerVarLabels( 0,
                              absorptionLabel_,
-                             absorptionLabel_,
                              temperatureLabel_,
                              celltypeLabel_,
                              divqLabel_ );
@@ -234,7 +233,6 @@ void
 RadiationSource::evaluate()
 {
   using namespace SpatialOps;
-  namespace SS = SpatialOps::structured;
   
   typedef std::vector<SVolField*> SVolFieldVec;
   SVolFieldVec& results = this->get_value_vec();

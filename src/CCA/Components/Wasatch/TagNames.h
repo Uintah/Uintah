@@ -99,7 +99,14 @@ namespace Wasatch{
     turbulentviscosity,
     straintensormag, vremantensormag,
     waletensormag, dynamicsmagcoef;
-    
+
+    // particle related
+    const Expr::Tag
+    pdragx, pdragy, pdragz,
+    pbodyx, pbodyy, pbodyz,
+    pmomsrcx, pmomsrcy, pmomsrcz,
+    presponse, preynolds, pdragcoef;
+
     // varden
     const std::string
     star, doubleStar, rhs;

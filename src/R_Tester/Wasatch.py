@@ -127,6 +127,19 @@ DEBUGTESTS = [
 
 NIGHTLYTESTS = [
 #   ("scalar-transport-equation_perf",    scalarequationperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),
+#	("particle-test-driven-cavity-upper-half-IC", "particle-test-driven-cavity-upper-half-IC.ups",   4,  "Linux",   ["exactComparison","no_memoryTest"] ),
+	("particle-test-wall-bc-all-dir", "particle-test-wall-bc-all-dir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
+	("particle-test-wall-bc-xdir", "particle-test-wall-bc-xdir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
+	("particle-test-wall-bc-ydir", "particle-test-wall-bc-ydir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
+	("particle-test-wall-bc-zdir", "particle-test-wall-bc-zdir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),	
+	("particle-test-free-fall-two-way-coupling-xdir", "particle-test-free-fall-two-way-coupling-xdir.ups",  8,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
+	("particle-test-free-fall-two-way-coupling-ydir", "particle-test-free-fall-two-way-coupling-ydir.ups",  8,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),	
+	("particle-test-free-fall-two-way-coupling-zdir", "particle-test-free-fall-two-way-coupling-zdir.ups",  8,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
+	("particle-test-geom-shape-icse", "particle-test-geom-shape-icse.ups",  1,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
+	("particle-test-geom-shape-flow-mickey-mouse", "particle-test-geom-shape-flow-mickey-mouse.ups",   1.1,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
+	("particle-test-free-fall-xdir", "particle-test-free-fall-xdir.ups",   1,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
+	("particle-test-free-fall-ydir", "particle-test-free-fall-ydir.ups",   1,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
+	("particle-test-free-fall-zdir", "particle-test-free-fall-zdir.ups",   1,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),		
   ("turbulent-flow-over-cavity",                         "turbulent-flow-over-cavity.ups",    8,  "Linux",  ["abs_tolerance=1e-8","no_restart","no_memoryTest","no_dbg"]                                          ),
   ("coal-boiler-mini",                         "coal-boiler-mini.ups",    16,  "Linux",  ["exactComparison","no_restart","no_memoryTest"]                                          ),
   ("bc-linear-inlet-channel-flow-test",     "bc-linear-inlet-channel-flow-test.ups",             6,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
@@ -339,14 +352,29 @@ RADIATIONTESTS=[
   ("RMCRT-Burns-Christon", "RMCRT-Burns-Christon.ups",   8,  "All",   ["exactComparison","no_restart","no_memoryTest"] )
 ]
 
+PARTICLETESTS=[
+	("particle-test-wall-bc-all-dir", "particle-test-wall-bc-all-dir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
+	("particle-test-wall-bc-xdir", "particle-test-wall-bc-xdir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
+	("particle-test-wall-bc-ydir", "particle-test-wall-bc-ydir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
+	("particle-test-wall-bc-zdir", "particle-test-wall-bc-zdir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),	
+	("particle-test-free-fall-two-way-coupling-xdir", "particle-test-free-fall-two-way-coupling-xdir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
+	("particle-test-free-fall-two-way-coupling-ydir", "particle-test-free-fall-two-way-coupling-ydir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),	
+	("particle-test-free-fall-two-way-coupling-zdir", "particle-test-free-fall-two-way-coupling-zdir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
+	("particle-test-geom-shape-icse", "particle-test-geom-shape-icse.ups",  1,  "All",   ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+	("particle-test-geom-shape-flow-mickey-mouse", "particle-test-geom-shape-flow-mickey-mouse.ups",   1.1,  "All",   ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+	("particle-test-free-fall-xdir", "particle-test-free-fall-xdir.ups",   1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
+	("particle-test-free-fall-ydir", "particle-test-free-fall-ydir.ups",   1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
+	("particle-test-free-fall-zdir", "particle-test-free-fall-zdir.ups",   1,  "All",   ["exactComparison","no_restart","no_memoryTest"] )
+]
+
 #  ("radprops",                      "RadPropsInterface.ups",             2,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] )
 
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS GPUTESTS BCTESTS CONVECTIONTESTS DEBUGTESTS INTRUSIONTESTS MISCTESTS NIGHTLYTESTS PROJECTIONTESTS QMOMTESTS RADIATIONTESTS RKTESTS SCALARTRANSPORTTESTS TURBULENCETESTS VARDENTESTS
+#LIST: LOCALTESTS GPUTESTS BCTESTS CONVECTIONTESTS DEBUGTESTS INTRUSIONTESTS MISCTESTS NIGHTLYTESTS PARTICLETESTS PROJECTIONTESTS QMOMTESTS RADIATIONTESTS RKTESTS SCALARTRANSPORTTESTS TURBULENCETESTS VARDENTESTS
 #__________________________________
-ALLTESTS = RADIATIONTESTS + TURBULENCETESTS + INTRUSIONTESTS + PROJECTIONTESTS + RKTESTS + VARDENTESTS + MISCTESTS + CONVECTIONTESTS + BCTESTS + QMOMTESTS + SCALARTRANSPORTTESTS
+ALLTESTS = RADIATIONTESTS + TURBULENCETESTS + INTRUSIONTESTS + PROJECTIONTESTS + RKTESTS + VARDENTESTS + MISCTESTS + CONVECTIONTESTS + BCTESTS + QMOMTESTS + SCALARTRANSPORTTESTS + PARTICLETESTS
 
 
 # returns the list
@@ -381,6 +409,8 @@ def getTestList(me) :
     TESTS = INTRUSIONTESTS
   elif me == "RADIATIONTESTS":
     TESTS = RADIATIONTESTS
+  elif me == "PARTICLETESTS":
+    TESTS = PARTICLETESTS   
   else:
     print "\nERROR:Wasatch.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)

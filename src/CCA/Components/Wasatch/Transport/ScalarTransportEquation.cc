@@ -344,8 +344,7 @@ namespace Wasatch{
         case WALL:
         case VELOCITY:
         case OUTFLOW:
-        case OPEN:
-        {
+        case OPEN:{
           // first check if the user specified boundary conditions at the wall
           if( myBndSpec.has_field(rhs_name()) || myBndSpec.has_field(rhsStarTag.name()) ){
             std::ostringstream msg;
@@ -366,9 +365,8 @@ namespace Wasatch{
           
           break;
         }
-        case USER:
-        {
-          // prase through the list of user specified BCs that are relevant to this transport equation
+        case USER:{
+          // parse through the list of user specified BCs that are relevant to this transport equation
           break;
         }
           
@@ -386,7 +384,6 @@ namespace Wasatch{
   apply_boundary_conditions( const GraphHelper& graphHelper,
                              BCHelper& bcHelper )
   {            
-    namespace SS = SpatialOps::structured;
     const Category taskCat = ADVANCE_SOLUTION;
     bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );    
     

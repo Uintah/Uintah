@@ -150,8 +150,8 @@ VelocityMagnitude<FieldT,Vel1T,Vel2T,Vel3T>::Builder::build() const
 //==========================================================================
 // Explicit template instantiation for supported versions of this expression
 #include <spatialops/structured/FVStaggered.h>
-template class VelocityMagnitude< SpatialOps::structured::SVolField,
-                                  SpatialOps::structured::XVolField,
-                                  SpatialOps::structured::YVolField,
-                                  SpatialOps::structured::ZVolField >;
+template class VelocityMagnitude< SpatialOps::SVolField,
+                                  SpatialOps::XVolField,
+                                  SpatialOps::YVolField,
+                                  SpatialOps::ZVolField >;
 //==========================================================================

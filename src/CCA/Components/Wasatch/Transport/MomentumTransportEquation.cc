@@ -194,21 +194,21 @@ namespace Wasatch{
   template< typename FaceT > struct StrainHelper;
   // nomenclature: XSurfXField - first letter is volume type: S, X, Y, Z
   // then it is followed by the field type
-  template<> struct StrainHelper<SpatialOps::structured::XSurfXField>
+  template<> struct StrainHelper<SpatialOps::XSurfXField>
   {
     // XSurfXField - XVol-XSurf
     // tau_xx
     typedef XVolField Vel1T;
     typedef XVolField Vel2T;
   };
-  template<> struct StrainHelper<SpatialOps::structured::XSurfYField>
+  template<> struct StrainHelper<SpatialOps::XSurfYField>
   {
     // XSurfYField - XVol-YSurf
     // tau_yx (tau on a y face in the x direction)
     typedef XVolField Vel1T;
     typedef YVolField Vel2T;
   };
-  template<> struct StrainHelper<SpatialOps::structured::XSurfZField>
+  template<> struct StrainHelper<SpatialOps::XSurfZField>
   {
     // XSurfZField - XVol-ZSurf
     // tau_zx (tau on a z face in the x direction)
@@ -216,38 +216,38 @@ namespace Wasatch{
     typedef ZVolField Vel2T;
   };
 
-  template<> struct StrainHelper<SpatialOps::structured::YSurfXField>
+  template<> struct StrainHelper<SpatialOps::YSurfXField>
   {
     // tau_xy
     typedef YVolField Vel1T;
     typedef XVolField Vel2T;
   };
-  template<> struct StrainHelper<SpatialOps::structured::YSurfYField>
+  template<> struct StrainHelper<SpatialOps::YSurfYField>
   {
     // tau_yy
     typedef YVolField Vel1T;
     typedef YVolField Vel2T;
   };
-  template<> struct StrainHelper<SpatialOps::structured::YSurfZField>
+  template<> struct StrainHelper<SpatialOps::YSurfZField>
   {
     // tau_zy
     typedef YVolField Vel1T;
     typedef ZVolField Vel2T;
   };
 
-  template<> struct StrainHelper<SpatialOps::structured::ZSurfXField>
+  template<> struct StrainHelper<SpatialOps::ZSurfXField>
   {
     // tau_xz
     typedef ZVolField Vel1T;
     typedef XVolField Vel2T;
   };
-  template<> struct StrainHelper<SpatialOps::structured::ZSurfYField>
+  template<> struct StrainHelper<SpatialOps::ZSurfYField>
   {
     // tau_yz
     typedef ZVolField Vel1T;
     typedef YVolField Vel2T;
   };
-  template<> struct StrainHelper<SpatialOps::structured::ZSurfZField>
+  template<> struct StrainHelper<SpatialOps::ZSurfZField>
   {
     // tau_zz
     typedef ZVolField Vel1T;
@@ -258,28 +258,28 @@ namespace Wasatch{
 
   template< typename FieldT> struct NormalFaceSelector;
 
-  template<> struct NormalFaceSelector<SpatialOps::structured::XVolField>
+  template<> struct NormalFaceSelector<SpatialOps::XVolField>
   {
   private:
-    typedef SpatialOps::structured::XVolField FieldT;
+    typedef SpatialOps::XVolField FieldT;
   public:
-    typedef SpatialOps::structured::FaceTypes<FieldT>::XFace NormalFace;
+    typedef SpatialOps::FaceTypes<FieldT>::XFace NormalFace;
   };
 
-  template<> struct NormalFaceSelector<SpatialOps::structured::YVolField>
+  template<> struct NormalFaceSelector<SpatialOps::YVolField>
   {
   private:
-    typedef SpatialOps::structured::YVolField FieldT;
+    typedef SpatialOps::YVolField FieldT;
   public:
-    typedef SpatialOps::structured::FaceTypes<FieldT>::YFace NormalFace;
+    typedef SpatialOps::FaceTypes<FieldT>::YFace NormalFace;
   };
 
-  template<> struct NormalFaceSelector<SpatialOps::structured::ZVolField>
+  template<> struct NormalFaceSelector<SpatialOps::ZVolField>
   {
   private:
-    typedef SpatialOps::structured::ZVolField FieldT;
+    typedef SpatialOps::ZVolField FieldT;
   public:
-    typedef SpatialOps::structured::FaceTypes<FieldT>::ZFace NormalFace;
+    typedef SpatialOps::FaceTypes<FieldT>::ZFace NormalFace;
   };
 
   //==================================================================
@@ -432,9 +432,9 @@ namespace Wasatch{
   {
     const Direction stagLoc = get_staggered_location<FieldT>();
 
-    typedef typename SpatialOps::structured::FaceTypes<FieldT>::XFace XFace;
-    typedef typename SpatialOps::structured::FaceTypes<FieldT>::YFace YFace;
-    typedef typename SpatialOps::structured::FaceTypes<FieldT>::ZFace ZFace;
+    typedef typename SpatialOps::FaceTypes<FieldT>::XFace XFace;
+    typedef typename SpatialOps::FaceTypes<FieldT>::YFace YFace;
+    typedef typename SpatialOps::FaceTypes<FieldT>::ZFace ZFace;
 
     set_tau_tags<FieldT>( doMom, isViscous, tauTags );
     const Expr::Tag& tauxt = tauTags[0];
@@ -474,9 +474,9 @@ namespace Wasatch{
                          const Expr::Tag& momTag,
                          const Expr::Tag& advelTag, Expr::ExpressionFactory& factory )
   {
-    typedef typename SpatialOps::structured::VolType<FluxT>::VolField  MomT;
-    typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, MomT,   FluxT >::type  MomInterpOp;
-    typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, AdvelT, FluxT >::type  AdvelInterpOp;
+    typedef typename SpatialOps::VolType<FluxT>::VolField  MomT;
+    typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, MomT,   FluxT >::type  MomInterpOp;
+    typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, AdvelT, FluxT >::type  AdvelInterpOp;
     typedef typename ConvectiveFlux<MomInterpOp, AdvelInterpOp >::Builder ConvFlux;
     return factory.register_expression( scinew ConvFlux( fluxTag, momTag, advelTag ) );
   }
@@ -496,9 +496,9 @@ namespace Wasatch{
     const Expr::Tag cfyt = cfTags[1];
     const Expr::Tag cfzt = cfTags[2];
 
-    typedef typename SpatialOps::structured::FaceTypes<FieldT>::XFace XFace;
-    typedef typename SpatialOps::structured::FaceTypes<FieldT>::YFace YFace;
-    typedef typename SpatialOps::structured::FaceTypes<FieldT>::ZFace ZFace;
+    typedef typename SpatialOps::FaceTypes<FieldT>::XFace XFace;
+    typedef typename SpatialOps::FaceTypes<FieldT>::YFace YFace;
+    typedef typename SpatialOps::FaceTypes<FieldT>::ZFace ZFace;
 
     Expr::ExpressionID normalConvFluxID;
     Direction stagLoc = get_staggered_location<FieldT>();
@@ -714,7 +714,6 @@ namespace Wasatch{
 //          psrcTagList.push_back(tagNames.divmomstar );
           psrcTagList.push_back(tagNames.drhodtstar );
         }
-      std::cout << "registering pressure source \n";
       factory.register_expression( new typename DivmomStar::Builder( tagNames.divmomstar, velStarTags, densStarTag ) );
       factory.register_expression( new typename PressureSource::Builder( psrcTagList, momTags_, velTags_, velStarTags, isConstDensity, densTag, densStarTag, dens2StarTag, varDenParams, tagNames.divmomstar ) );
     }
@@ -800,7 +799,7 @@ namespace Wasatch{
           factory.register_expression(scinew typename TotalKineticEnergy<XVolField,YVolField,ZVolField>::Builder( tkeTempTag,
                                                                                                                  velTags_[0],velTags_[1],velTags_[2] ),true);
           
-          ReductionHelper::self().add_variable<SpatialOps::structured::SingleValueField, ReductionSumOpT>(ADVANCE_SOLUTION, TagNames::self().totalKineticEnergy, tkeTempTag, outputKE, false);
+          ReductionHelper::self().add_variable<SpatialOps::SingleValueField, ReductionSumOpT>(ADVANCE_SOLUTION, TagNames::self().totalKineticEnergy, tkeTempTag, outputKE, false);
         }
       } else if (!factory.have_entry( TagNames::self().kineticEnergy )) { // calculate local, pointwise kinetic energy
         const Expr::ExpressionID keID = factory.register_expression(
@@ -1127,7 +1126,6 @@ namespace Wasatch{
   apply_initial_boundary_conditions( const GraphHelper& graphHelper,
                                      BCHelper& bcHelper )
   {
-    namespace SS = SpatialOps::structured;
     const Category taskCat = INITIALIZATION;
   
     // apply velocity boundary condition, if specified
@@ -1155,7 +1153,6 @@ namespace Wasatch{
   apply_boundary_conditions( const GraphHelper& graphHelper,
                              BCHelper& bcHelper )
   {
-    namespace SS = SpatialOps::structured;
     const Category taskCat = ADVANCE_SOLUTION;
       
     // set bcs for momentum
@@ -1238,17 +1235,17 @@ namespace Wasatch{
   template class MomentumTransportEquation< ZVolField >;
   
 #define INSTANTIATE_SETUP_STRAIN(VOLT) \
-  template Expr::ExpressionID setup_strain< SpatialOps::structured::FaceTypes<VOLT>::XFace > ( const Expr::Tag& strainTag, \
+  template Expr::ExpressionID setup_strain< SpatialOps::FaceTypes<VOLT>::XFace > ( const Expr::Tag& strainTag, \
                                                                                                 const Expr::Tag& vel1Tag,\
                                                                                                 const Expr::Tag& vel2Tag,\
                                                                                                 const Expr::Tag& dilTag,\
                                                                                                 Expr::ExpressionFactory& factory ); \
-  template Expr::ExpressionID setup_strain< SpatialOps::structured::FaceTypes<VOLT>::YFace > ( const Expr::Tag& strainTag, \
+  template Expr::ExpressionID setup_strain< SpatialOps::FaceTypes<VOLT>::YFace > ( const Expr::Tag& strainTag, \
                                                                                                 const Expr::Tag& vel1Tag,\
                                                                                                 const Expr::Tag& vel2Tag,\
                                                                                                 const Expr::Tag& dilTag,\
                                                                                                 Expr::ExpressionFactory& factory ); \
-  template Expr::ExpressionID setup_strain< SpatialOps::structured::FaceTypes<VOLT>::ZFace > ( const Expr::Tag& strainTag, \
+  template Expr::ExpressionID setup_strain< SpatialOps::FaceTypes<VOLT>::ZFace > ( const Expr::Tag& strainTag, \
                                                                                                 const Expr::Tag& vel1Tag,\
                                                                                                 const Expr::Tag& vel2Tag,\
                                                                                                 const Expr::Tag& dilTag,\

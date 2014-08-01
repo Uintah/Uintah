@@ -31,22 +31,19 @@ namespace Wasatch{
   
   /**
    *  \ingroup WasatchCore
-   *  \struct TurbulenceParameters
+   *  \struct VarDenParameters
    *  \author Tony Saad, Amir Biglari
    *  \date   June, 2012
    *
-   *  \brief Holds some key parameters for supported turbulence models.
+   *  \brief Holds some key parameters for supported variable density models.
    */
   struct VarDenParameters {
     VarDenParameters();
 
     /**
      *  \ingroup WasatchCore
-     *  \enum TurbulenceModelsNames
-     *  \author Tony Saad, Amir Biglari
-     *  \date   June, 2012
-     *
-     *  \brief An enum listing the supported turbulence models.
+     *  \enum VariableDensityModels
+     *  \brief An enum listing the supported variable density models.
      */
     enum VariableDensityModels {
       CONSTANT,

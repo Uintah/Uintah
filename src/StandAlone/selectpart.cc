@@ -89,7 +89,6 @@ int main(int argc, char** argv)
   int mat = -1;
   unsigned long time_step_lower = 0;
   unsigned long time_step_upper = 1;
-  unsigned long time_step_inc = 1;
   bool tslow_set = false;
   bool tsup_set = false;;
 
@@ -123,7 +122,6 @@ int main(int argc, char** argv)
     } else if (s == "-timestepinc" ||
                s == "-timestepInc" ||
                s == "-timestep_inc") {
-      time_step_inc = strtoul(argv[++i],(char**)NULL,10);
     } 
   }
 

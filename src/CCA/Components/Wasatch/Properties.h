@@ -41,9 +41,11 @@ namespace Wasatch{
   /**
    *  \ingroup WasatchParser
    *  \brief handles parsing for the property evaluators.
-   *  \param params The parser block.  This block will be searched for
+   *  \param [in] params The parser block.  This block will be searched for
    *         one containing the \verbatim <PropertyEvaluator> \endverbatim tag.
-   *  \param gh The GraphHelper object to be used when setting properties.
+   *  \param [in] gc
+   *  \param [inout] lockedFields the fields that should be persistent (not
+   *         scratch/temporary).  These will be managed by Uintah.
    */
   void setup_property_evaluation( Uintah::ProblemSpecP& params,
                                   GraphCategories& gc,

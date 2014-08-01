@@ -401,12 +401,12 @@ BoundaryCondition::mmWallTemperatureBC(const Patch* patch,
 
 void 
 BoundaryCondition::sched_setIntrusionTemperature( SchedulerP& sched, 
-                                                  const PatchSet* patches,
+                                                  const LevelP& level,
                                                   const MaterialSet* matls) 
 { 
   if ( _using_new_intrusion ){ 
     // Interface to new intrusions
-    _intrusionBC->sched_setIntrusionT( sched, patches, matls ); 
+    _intrusionBC->sched_setIntrusionT( sched, level, matls ); 
   }
 } 
 
@@ -1751,7 +1751,7 @@ BoundaryCondition::addPresGradVelocityOutletPressureBC(const Patch* patch,
 }
 
 void BoundaryCondition::sched_setAreaFraction( SchedulerP& sched, 
-                                               const PatchSet* patches, 
+                                               const LevelP& level, 
                                                const MaterialSet* matls,
                                                const int timesubstep, 
                                                const bool reinitialize )
@@ -1763,22 +1763,18 @@ void BoundaryCondition::sched_setAreaFraction( SchedulerP& sched,
 
     tsk->computes( d_lab->d_areaFractionLabel );
     tsk->computes( d_lab->d_volFractionLabel );
-#ifdef WASATCH_IN_ARCHES
     tsk->computes(d_lab->d_areaFractionFXLabel); 
     tsk->computes(d_lab->d_areaFractionFYLabel); 
     tsk->computes(d_lab->d_areaFractionFZLabel); 
-#endif
 
   } else {
 
     //only in cases where geometry moves. 
     tsk->modifies( d_lab->d_areaFractionLabel );
     tsk->modifies( d_lab->d_volFractionLabel); 
-#ifdef WASATCH_IN_ARCHES
     tsk->modifies(d_lab->d_areaFractionFXLabel); 
     tsk->modifies(d_lab->d_areaFractionFYLabel); 
     tsk->modifies(d_lab->d_areaFractionFZLabel); 
-#endif
 
   }
 
@@ -1786,18 +1782,15 @@ void BoundaryCondition::sched_setAreaFraction( SchedulerP& sched,
 
     tsk->requires( Task::OldDW, d_lab->d_areaFractionLabel, Ghost::None, 0 );
     tsk->requires( Task::OldDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
-
-#ifdef WASATCH_IN_ARCHES
     tsk->requires( Task::OldDW, d_lab->d_areaFractionFXLabel, Ghost::None, 0 );
     tsk->requires( Task::OldDW, d_lab->d_areaFractionFYLabel, Ghost::None, 0 );
     tsk->requires( Task::OldDW, d_lab->d_areaFractionFZLabel, Ghost::None, 0 );
-#endif
 
   }
 
   tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells, 1 ); 
  
-  sched->addTask(tsk, patches, matls);
+  sched->addTask(tsk, level->eachPatch(), matls);
 
 }
 void 
@@ -1817,11 +1810,9 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<Vector>   areaFraction; 
-#ifdef WASATCH_IN_ARCHES
     SFCXVariable<double> areaFractionFX; 
     SFCYVariable<double> areaFractionFY; 
     SFCZVariable<double> areaFractionFZ; 
-#endif
     CCVariable<double>   volFraction; 
     constCCVariable<int> cellType; 
 
@@ -1837,25 +1828,21 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
         areaFraction[*iter] = Vector(1.0,1.0,1.0);
       }
 
-#ifdef WASATCH_IN_ARCHES
       new_dw->allocateAndPut( areaFractionFX, d_lab->d_areaFractionFXLabel, indx, patch );  
       new_dw->allocateAndPut( areaFractionFY, d_lab->d_areaFractionFYLabel, indx, patch );  
       new_dw->allocateAndPut( areaFractionFZ, d_lab->d_areaFractionFZLabel, indx, patch );  
       areaFractionFX.initialize(1.0);
       areaFractionFY.initialize(1.0);
       areaFractionFZ.initialize(1.0);
-#endif 
 
     } else { 
 
       new_dw->getModifiable( areaFraction, d_lab->d_areaFractionLabel, indx, patch );  
       new_dw->getModifiable( volFraction, d_lab->d_volFractionLabel, indx, patch );  
 
-#ifdef WASATCH_IN_ARCHES
       new_dw->getModifiable( areaFractionFX, d_lab->d_areaFractionFXLabel, indx, patch );  
       new_dw->getModifiable( areaFractionFY, d_lab->d_areaFractionFYLabel, indx, patch );  
       new_dw->getModifiable( areaFractionFZ, d_lab->d_areaFractionFZLabel, indx, patch );  
-#endif 
 
     }
 
@@ -1870,7 +1857,6 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
       areaFraction.copyData( old_area_frac );
       volFraction.copyData( old_vol_frac );
 
-#ifdef WASATCH_IN_ARCHES
       constSFCXVariable<double> old_Fx;
       constSFCYVariable<double> old_Fy; 
       constSFCZVariable<double> old_Fz;
@@ -1880,7 +1866,6 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
       areaFractionFX.copyData( old_Fx );
       areaFractionFY.copyData( old_Fy );
       areaFractionFZ.copyData( old_Fz );
-#endif 
     
     } else { 
 
@@ -1897,15 +1882,12 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
 
       d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, wall_type, flowType ); 
 
-#ifdef WASATCH_IN_ARCHES
-      //copy for wasatch-arches: 
       for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
         IntVector c = *iter; 
         areaFractionFX[c] = areaFraction[c].x(); 
         areaFractionFY[c] = areaFraction[c].y(); 
         areaFractionFZ[c] = areaFraction[c].z(); 
       }
-#endif 
     }
   }
 }
@@ -2141,7 +2123,6 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
 void 
 BoundaryCondition::sched_cellTypeInit__NEW(SchedulerP& sched,
                                            const LevelP& level, 
-                                           const PatchSet* patches,
                                            const MaterialSet* matls)
 {
   IntVector lo, hi;
@@ -2153,7 +2134,7 @@ BoundaryCondition::sched_cellTypeInit__NEW(SchedulerP& sched,
 
   tsk->computes(d_lab->d_cellTypeLabel);
 
-  sched->addTask(tsk, patches, matls);
+  sched->addTask(tsk, level->eachPatch(), matls);
 }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void 
@@ -2289,10 +2270,9 @@ BoundaryCondition::cellTypeInit__NEW(const ProcessorGroup*,
 // Compute BC Areas
 //
 void 
-BoundaryCondition::sched_computeBCArea__NEW(SchedulerP& sched,
-                                      const LevelP& level, 
-                                      const PatchSet* patches,
-                                      const MaterialSet* matls)
+BoundaryCondition::sched_computeBCArea__NEW( SchedulerP& sched,
+                                             const LevelP& level, 
+                                             const MaterialSet* matls)
 {
   IntVector lo, hi;
   level->findInteriorCellIndexRange(lo,hi);
@@ -2309,17 +2289,17 @@ BoundaryCondition::sched_computeBCArea__NEW(SchedulerP& sched,
 
   }
 
-  sched->addTask(tsk, patches, matls);
+  sched->addTask(tsk, level->eachPatch(), matls);
 }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void 
-BoundaryCondition::computeBCArea__NEW(const ProcessorGroup*,
-                                const PatchSubset* patches,
-                                const MaterialSubset*,
-                                DataWarehouse*,
-                                DataWarehouse* new_dw, 
-                                const IntVector lo, 
-                                const IntVector hi )
+BoundaryCondition::computeBCArea__NEW( const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset*,
+                                       DataWarehouse*,
+                                       DataWarehouse* new_dw, 
+                                       const IntVector lo, 
+                                       const IntVector hi )
 {
 
   for (int p = 0; p < patches->size(); p++) {
@@ -2438,8 +2418,9 @@ BoundaryCondition::computeBCArea__NEW(const ProcessorGroup*,
 //
 void 
 BoundaryCondition::sched_setupBCInletVelocities__NEW(SchedulerP& sched,
-                                                     const PatchSet* patches,
-                                                     const MaterialSet* matls, bool doing_restart )
+                                                     const LevelP& level,
+                                                     const MaterialSet* matls, 
+                                                     bool doing_restart )
 {
   // cell type initialization
   Task* tsk = scinew Task("BoundaryCondition::setupBCInletVelocities__NEW",
@@ -2459,7 +2440,7 @@ BoundaryCondition::sched_setupBCInletVelocities__NEW(SchedulerP& sched,
     tsk->requires( Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0 ); 
   }
 
-  sched->addTask(tsk, patches, matls);
+  sched->addTask(tsk, level->eachPatch(), matls);
 }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void 
@@ -2582,8 +2563,8 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
 //
 void 
 BoundaryCondition::sched_setInitProfile__NEW(SchedulerP& sched,
-                                       const PatchSet* patches,
-                                       const MaterialSet* matls)
+                                             const LevelP& level,
+                                             const MaterialSet* matls)
 {
   // cell type initialization
   Task* tsk = scinew Task("BoundaryCondition::setInitProfile__NEW",
@@ -2610,7 +2591,7 @@ BoundaryCondition::sched_setInitProfile__NEW(SchedulerP& sched,
 
   }
 
-  sched->addTask(tsk, patches, matls);
+  sched->addTask(tsk, level->eachPatch(), matls);
 }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void 
@@ -3659,35 +3640,42 @@ BoundaryCondition::setHattedIntrusionVelocity( const Patch* p,
   } 
 } 
 void
-BoundaryCondition::sched_setupNewIntrusionCellType( SchedulerP& sched, const PatchSet* patches, const MaterialSet* matls, const bool doing_restart )
+BoundaryCondition::sched_setupNewIntrusionCellType( SchedulerP& sched, 
+                                                    const LevelP& level, 
+                                                    const MaterialSet* matls, 
+                                                    const bool doing_restart )
 {
   if ( _using_new_intrusion ) { 
-    _intrusionBC->sched_setCellType( sched, patches, matls, doing_restart ); 
+    _intrusionBC->sched_setCellType( sched, level, matls, doing_restart ); 
   }
 }
 
 
 void
-BoundaryCondition::sched_setupNewIntrusions( SchedulerP& sched, const PatchSet* patches, const MaterialSet* matls )
+BoundaryCondition::sched_setupNewIntrusions( SchedulerP& sched, 
+                                             const LevelP& level, 
+                                             const MaterialSet* matls )
 {
 
   if ( _using_new_intrusion ) { 
-    _intrusionBC->sched_computeBCArea( sched, patches, matls ); 
-    _intrusionBC->sched_computeProperties( sched, patches, matls ); 
-    _intrusionBC->sched_setIntrusionVelocities( sched, patches, matls );  
-    _intrusionBC->sched_gatherReductionInformation( sched, patches, matls ); 
-    _intrusionBC->sched_printIntrusionInformation( sched, patches, matls ); 
+    _intrusionBC->sched_computeBCArea( sched, level, matls ); 
+    _intrusionBC->sched_computeProperties( sched, level, matls ); 
+    _intrusionBC->sched_setIntrusionVelocities( sched, level, matls );  
+    _intrusionBC->sched_gatherReductionInformation( sched, level, matls ); 
+    _intrusionBC->sched_printIntrusionInformation( sched, level, matls ); 
   }
 
 }
 
 void 
-BoundaryCondition::sched_setIntrusionDensity( SchedulerP& sched, const PatchSet* patches, const MaterialSet* matls )
+BoundaryCondition::sched_setIntrusionDensity( SchedulerP& sched, 
+                                              const LevelP& level, 
+                                              const MaterialSet* matls )
 { 
   Task* tsk = scinew Task( "BoundaryCondition::setIntrusionDensity", 
                            this, &BoundaryCondition::setIntrusionDensity); 
   tsk->modifies( d_lab->d_densityCPLabel ); 
-  sched->addTask( tsk, patches, matls ); 
+  sched->addTask( tsk, level->eachPatch(), matls ); 
 
 } 
 
@@ -3871,12 +3859,12 @@ BoundaryCondition::wallStress( const Patch* p,
   }
 } 
 void 
-BoundaryCondition::sched_checkMomBCs( SchedulerP& sched, const PatchSet* patches, const MaterialSet* matls )
+BoundaryCondition::sched_checkMomBCs( SchedulerP& sched, const LevelP& level, const MaterialSet* matls )
 {
   string taskname = "BoundaryCondition::checkMomBCs"; 
   Task* tsk = scinew Task(taskname, this, &BoundaryCondition::checkMomBCs ); 
 
-  sched->addTask( tsk, patches, matls ); 
+  sched->addTask( tsk, level->eachPatch(), matls ); 
 }
 
 void 

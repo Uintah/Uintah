@@ -63,6 +63,11 @@ endif
 SRCS +=                                                \
         $(SRCDIR)/ParseEquation.cc                     \
         $(SRCDIR)/EquationBase.cc                      \
+        $(SRCDIR)/ParticleEquationBase.cc            \
+        $(SRCDIR)/ParticlePositionEquation.cc         \
+        $(SRCDIR)/ParticleMomentumEquation.cc         \
+        $(SRCDIR)/ParticleMassEquation.cc         \
+        $(SRCDIR)/ParticleSizeEquation.cc         \
         $(SRCDIR)/EnthalpyTransportEquation.cc         \
         $(SRCDIR)/ScalabilityTestTransportEquation.cc  \
         $(SRCDIR)/ScalarTransportEquation.cc           \

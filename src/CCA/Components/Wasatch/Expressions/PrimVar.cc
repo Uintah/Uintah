@@ -195,10 +195,10 @@ PrimVar<FieldT,FieldT>::Builder::build() const
 //====================================================================
 //  Explicit template instantiation
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-template class PrimVar< SpatialOps::structured::SVolField, SpatialOps::structured::SVolField >;
-template class PrimVar< SpatialOps::structured::XVolField, SpatialOps::structured::SVolField >;
-template class PrimVar< SpatialOps::structured::YVolField, SpatialOps::structured::SVolField >;
-template class PrimVar< SpatialOps::structured::ZVolField, SpatialOps::structured::SVolField >;
+template class PrimVar< SpatialOps::SVolField, SpatialOps::SVolField >;
+template class PrimVar< SpatialOps::XVolField, SpatialOps::SVolField >;
+template class PrimVar< SpatialOps::YVolField, SpatialOps::SVolField >;
+template class PrimVar< SpatialOps::ZVolField, SpatialOps::SVolField >;
 //====================================================================
 
 

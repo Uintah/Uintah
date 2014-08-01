@@ -384,7 +384,10 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
             }
 
           }
-        } else if ( bc_kind == "Moment") { //Dirichlet specific to moment eqns
+        } else if ( bc_kind == "ForcedDirichlet") {
+          /* A Dirichlet condition to fix the cell value rather than use interpolate
+          This is required to use for cqmom with velocities as internal coordiantes,
+          and may help with some radiation physics */
           
           //Here the extra cell should be set to the face value so that the cqmom inversion
           //doesn't return junk, with upwinding of the abscissas this should return correct face value
