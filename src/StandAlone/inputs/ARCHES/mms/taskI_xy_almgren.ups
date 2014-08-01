@@ -20,15 +20,18 @@
 
   <DataArchiver>
     <filebase>xy_almgren.uda</filebase>
+    <outputInitTimestep/>
     <outputInterval>0.01</outputInterval>
     <save label="totalKineticEnergy"/>
     <save label="pressurePS"/>
+    <save label="gridX"/>
+    <save label="gridY"/>
     <save label="CCVelocity"/>
     <save label="uVelocitySPBC"/>
     <save label="vVelocitySPBC"/>
     <save label="continuityResidual"/>
     <save label="velocityDivergence"/>
-    <save label="task_i_scalar"/>
+    <save label="arches_task_scalar"/>
     <checkpoint cycle="2" interval="0.05"/>
     <compression>gzip</compression>
   </DataArchiver>
@@ -64,19 +67,28 @@
 
       <!-- transported scalar -->
       <ScalarTransport>
-        <eqn label="task_i_scalar">
+        <eqn label="arches_task_scalar">
           <diffusion/>
           <convection scheme="upwind"/>
         </eqn>
       </ScalarTransport>
 
       <Initialization>
-        <task label="my_great_initializer" eqn="task_i_scalar" type="wave">
-          <wave type="sine">
-            <grid dependent_type="svol" independent_type="xvol"/>
+        <task label="my_great_initializer" eqn="arches_task_scalar" type="wave">
+          <!--<wave type="sine">-->
+            <!--<grid dependent_type="svol" independent_type="svol"/>-->
             <!--<independent_variable label="gridX"/>-->
-            <independent_variable label="uVelocitySPBC"/>
-            <sine A="1.0" f=".5" offset="0"/>
+            <!--[><independent_variable label="uVelocitySPBC"/><]-->
+            <!--[><independent_variable label="vVelocitySPBC"/><]-->
+            <!--<sine A="1.0" f=".5" offset="0"/>-->
+          <!--</wave>-->
+          <wave type="sinecos">
+            <grid dependent_type="svol" independent_type="svol"/>
+            <independent_variable label="gridX"/>
+            <independent_variable_2 label="gridY"/>
+            <!--<independent_variable label="uVelocitySPBC"/>-->
+            <!--<independent_variable label="vVelocitySPBC"/>-->
+            <sinecos A="1.0" B="1.0" f1="6.0" f2="6.0" offset="0"/>
           </wave>
         </task>
       </Initialization>
