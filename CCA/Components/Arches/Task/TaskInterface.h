@@ -99,16 +99,19 @@ public:
     }
 
 
-    /** @brief Registers all variables with pertinent information for the 
-     *         uintah dw interface **/ 
-    virtual void register_all_variables( std::vector<VariableInformation>& variable_registry, 
-                                         const int time_substep ) = 0; 
-
     /** @brief Input file interface **/ 
     virtual void problemSetup( ProblemSpecP& db ) = 0; 
 
     /** @brief Initialization method **/ 
     virtual void register_initialize( std::vector<VariableInformation>& variable_registry ) = 0; 
+
+    /** @brief Schedules work done at the top of a timestep (which might be nothing) **/ 
+    virtual void register_timestep_init( std::vector<VariableInformation>& ) = 0; 
+
+    /** @brief Registers all variables with pertinent information for the 
+     *         uintah dw interface **/ 
+    virtual void register_timestep_eval( std::vector<VariableInformation>& variable_registry, 
+                                         const int time_substep ) = 0; 
 
     /** @brief Matches labels to variables in the registry **/ 
     void resolve_labels( std::vector<VariableInformation>& variable_registry ); 
@@ -259,6 +262,9 @@ protected:
 
         /** @brief return the time substep **/ 
         int get_time_substep(){ return _tsk_info.time_substep; }; 
+
+        /** @brief return the dt **/ 
+        double get_dt(){ return _tsk_info.dt; }; 
 
         /** @brief return the variable registry **/ 
         std::vector<VariableInformation>& get_variable_reg(){ return _var_reg; }
@@ -568,7 +574,6 @@ protected:
           }
 
           //utilize the appropriate map: 
-          int nGhost = var_info->nGhost; 
           ST* field; 
           if ( var_info->depend == REQUIRES ){ 
             //const map (requires)
@@ -593,10 +598,10 @@ protected:
 
         UintahVarMap _variable_map;
         ConstUintahVarMap _const_variable_map; 
-        SchedToTaskInfo& _tsk_info; 
 
-        std::vector<VariableInformation> _var_reg; 
         const Patch* _patch; 
+        std::vector<VariableInformation> _var_reg; 
+        SchedToTaskInfo& _tsk_info; 
 
         std::vector<void *> _all_so_fields; 
       
@@ -617,13 +622,16 @@ protected:
                          FieldCollector* f_collector );
 
     /** @brief The actual work done within the derived class **/ 
-    virtual void eval( const Patch* patch, FieldCollector* field_collector, 
-                       SpatialOps::OperatorDatabase& opr, 
-                       SchedToTaskInfo& info ) = 0; 
-
-    /** @brief The actual work done within the derived class **/ 
     virtual void initialize( const Patch* patch, FieldCollector* field_collector, 
                              SpatialOps::OperatorDatabase& opr ) = 0; 
+
+    /** @brief Work done at the top of a timestep **/ 
+    virtual void timestep_init( const Patch* patch, FieldCollector* field_collector, 
+                                SpatialOps::OperatorDatabase& opr ) = 0; 
+
+    /** @brief The actual work done within the derived class **/ 
+    virtual void eval( const Patch* patch, FieldCollector* field_collector, 
+                       SpatialOps::OperatorDatabase& opr ) = 0; 
 
     std::string _task_name; 
     const int _matl_index; 

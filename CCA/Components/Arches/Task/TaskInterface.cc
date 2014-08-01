@@ -482,7 +482,7 @@ void TaskInterface::schedule_task( const LevelP& level,
 
   std::vector<VariableInformation> variable_registry; 
 
-  register_all_variables( variable_registry, time_substep ); 
+  register_timestep_eval( variable_registry, time_substep ); 
 
   resolve_labels( variable_registry ); 
 
@@ -678,7 +678,7 @@ void TaskInterface::do_task( const ProcessorGroup* pc,
     Operators& opr = Operators::self(); 
     Operators::PatchInfoMap::iterator i_opr = opr.patch_info_map.find(patch->getID()); 
 
-    eval( patch, field_collector, i_opr->second._sodb, info ); 
+    eval( patch, field_collector, i_opr->second._sodb ); 
 
     //clean up 
     delete field_collector; 
@@ -713,8 +713,6 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
     info.time_substep = 0; 
 
     FieldCollector* field_collector = scinew FieldCollector(variable_registry, patch, info); 
-
-    int time_substep = 0;
 
     //doing DW gets...
     resolve_fields( old_dw, new_dw, patch, variable_map, const_variable_map, field_collector ); 

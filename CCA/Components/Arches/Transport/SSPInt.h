@@ -40,17 +40,21 @@ public:
 
 protected: 
 
-    void register_all_variables( std::vector<VariableInformation>& variable_registry, const int time_substep ); 
-
     void register_initialize( std::vector<VariableInformation>& variable_registry );
-  
 
-    void eval( const Patch* patch, FieldCollector* field_collector, 
-               SpatialOps::OperatorDatabase& opr, 
-               SchedToTaskInfo& info ); 
+    void register_timestep_init( std::vector<VariableInformation>& variable_registry ){}
+
+    void register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ); 
 
     void initialize( const Patch* patch, FieldCollector* field_collector, 
                      SpatialOps::OperatorDatabase& opr );
+    
+    void timestep_init( const Patch* patch, FieldCollector* field_collector, 
+                        SpatialOps::OperatorDatabase& opr ){}
+
+    void eval( const Patch* patch, FieldCollector* field_collector, 
+               SpatialOps::OperatorDatabase& opr );
+
 
 private:
 
@@ -149,7 +153,7 @@ private:
 
 
   template <typename T> 
-  void SSPInt<T>::register_all_variables( std::vector<VariableInformation>& variable_registry, const int time_substep ){
+  void SSPInt<T>::register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ){
    
     //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
     //register_variable( "templated_variable", _mytype, COMPUTES, 0, NEWDW, variable_registry, time_substep ); 
@@ -166,14 +170,15 @@ private:
 
   template <typename T>
   void SSPInt<T>::eval( const Patch* patch, FieldCollector* field_collector, 
-                        SpatialOps::OperatorDatabase& opr, 
-                        SchedToTaskInfo& info ){
+                        SpatialOps::OperatorDatabase& opr ){
 
     using namespace SpatialOps;
     using SpatialOps::operator *; 
-    typedef SpatialOps::SVolField   SVolF;
 
     typedef std::vector<std::string> SV;
+
+    const int time_substep = field_collector->get_time_substep();
+
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){ 
 
       T* const phi     = field_collector->get_so_field<T>( *i, NEWDW        );
@@ -185,8 +190,8 @@ private:
       T* const old_phi = field_collector->get_so_field<T>( *i, OLDDW );
       T* const old_rho = field_collector->get_so_field<T>( "density", OLDDW );
 
-      double alpha = _ssp_alpha[info.time_substep]; 
-      double beta  = _ssp_beta[info.time_substep];
+      double alpha = _ssp_alpha[time_substep]; 
+      double beta  = _ssp_beta[time_substep];
 
       //Weighting: 
       *phi <<= ( alpha * ( *old_rho * *old_phi) + beta * ( *rho * *phi) ) / ( alpha * *old_rho + beta * *rho ); 
