@@ -117,14 +117,6 @@ public:
     void resolve_labels( std::vector<VariableInformation>& variable_registry ); 
 
 
-    /** @brief Add this task to the Uintah task scheduler. (Overloaded)
-     * Start with a predefined variable registry **/ 
-    void schedule_task( const LevelP& level, 
-                        SchedulerP& sched, 
-                        const MaterialSet* matls,
-                        std::vector<VariableInformation>& variable_registry,
-                        int time_substep );
-
     /** @brief Add this task to the Uintah task scheduler **/ 
     void schedule_task( const LevelP& level, 
                         SchedulerP& sched, 
@@ -155,6 +147,19 @@ public:
                   DataWarehouse* new_dw, 
                   std::vector<VariableInformation> variable_registry );
 
+    /** @brief Add this task to the Uintah task scheduler **/ 
+    void schedule_timestep_init( const LevelP& level, 
+                                 SchedulerP& sched, 
+                                 const MaterialSet* matls );
+
+    /** @brief The actual task interface function that references the 
+     *         derived class implementation **/ 
+    void do_timestep_init( const ProcessorGroup* pc, 
+                           const PatchSubset* patches, 
+                           const MaterialSubset* matls, 
+                           DataWarehouse* old_dw, 
+                           DataWarehouse* new_dw, 
+                           std::vector<VariableInformation> variable_registry );
 
     /** @brief Builder class containing instructions on how to build the task **/ 
     class TaskBuilder { 

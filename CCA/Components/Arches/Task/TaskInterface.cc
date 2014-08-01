@@ -582,66 +582,56 @@ void TaskInterface::schedule_init( const LevelP& level,
 
 }
 
-//void TaskInterface::schedule_task( const LevelP& level, 
-//                                   SchedulerP& sched, 
-//                                   const MaterialSet* matls,
-//                                   std::vector<VariableInformation>& variable_registry, 
-//                                   int time_substep ){ 
+//====================================================================================
 //
-//  register_all_variables( variable_registry, time_substep ); 
-//
-//  resolve_labels( variable_registry ); 
-//
-//  Task* tsk = scinew Task( _task_name+"_eval", this, &TaskInterface::do_task, variable_registry, time_substep ); 
-//
-//  BOOST_FOREACH( VariableInformation &ivar, variable_registry ){ 
-//
-//    switch(ivar.depend){
-//
-//      case COMPUTES: 
-//        if ( time_substep == 0 ){ 
-//          tsk->computes( ivar.label ); //only compute on the zero time substep
-//        } else { 
-//          tsk->modifies( ivar.label );
-//          ivar.dw = NEWDW; 
-//          ivar.uintah_task_dw = Task::NewDW; 
-//          ivar.depend= MODIFIES; 
-//        }
-//        break; 
-//      case MODIFIES: 
-//        tsk->modifies( ivar.label );
-//        break; 
-//      case REQUIRES: 
-//        if ( ivar.dw_inquire ){
-//          if ( time_substep > 0 ){ 
-//            ivar.dw = NEWDW;
-//            ivar.uintah_task_dw = Task::NewDW; 
-//          } else { 
-//            ivar.dw = OLDDW; 
-//            ivar.uintah_task_dw = Task::OldDW; 
-//          }
-//        } else { 
-//          if ( ivar.dw == OLDDW ){
-//            ivar.uintah_task_dw = Task::OldDW; 
-//          } else { 
-//            ivar.uintah_task_dw = Task::NewDW; 
-//          }
-//        }
-//        tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
-//        break; 
-//      default: 
-//        throw InvalidValue("Arches Task Error: Cannot schedule task becuase of incomplete variable dependency: "+_task_name, __FILE__, __LINE__); 
-//        break; 
-//
-//    }
-//  }
-//
-//  //other variables: 
-//  tsk->requires(Task::OldDW, VarLabel::find("delT")); 
-//
-//  sched->addTask( tsk, level->eachPatch(), matls );
-//
-//}
+//====================================================================================
+void TaskInterface::schedule_timestep_init( const LevelP& level, 
+                                            SchedulerP& sched, 
+                                            const MaterialSet* matls ){ 
+
+  std::vector<VariableInformation> variable_registry; 
+
+  register_timestep_init( variable_registry ); 
+
+  resolve_labels( variable_registry ); 
+
+  Task* tsk = scinew Task( _task_name+"_timestep_initialize", this, &TaskInterface::do_timestep_init, variable_registry ); 
+
+  const int time_substep = 0; 
+
+  BOOST_FOREACH( VariableInformation &ivar, variable_registry ){ 
+
+    switch(ivar.depend){
+
+      case COMPUTES: 
+        tsk->computes( ivar.label ); //only compute on the zero time substep
+        break; 
+      case MODIFIES: 
+        tsk->modifies( ivar.label );
+        break; 
+      case REQUIRES: 
+        if ( ivar.dw_inquire ){
+          ivar.dw = OLDDW; 
+          ivar.uintah_task_dw = Task::OldDW; 
+        } else { 
+          if ( ivar.dw == OLDDW ){
+            ivar.uintah_task_dw = Task::OldDW; 
+          } else { 
+            ivar.uintah_task_dw = Task::NewDW; 
+          }
+        }
+        tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
+        break; 
+      default: 
+        throw InvalidValue("Arches Task Error: Cannot schedule task becuase of incomplete variable dependency: "+_task_name, __FILE__, __LINE__); 
+        break; 
+
+    }
+  }
+
+  sched->addTask( tsk, level->eachPatch(), matls );
+
+}
 
 void TaskInterface::do_task( const ProcessorGroup* pc, 
                              const PatchSubset* patches, 
@@ -725,6 +715,52 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
     Operators::PatchInfoMap::iterator i_opr = opr.patch_info_map.find(patch->getID()); 
 
     initialize( patch, field_collector, i_opr->second._sodb ); 
+
+    //clean up 
+    delete field_collector; 
+
+    for ( UintahVarMap::iterator i = variable_map.begin(); i != variable_map.end(); i++ ){
+      delete i->second; 
+    }
+    for ( ConstUintahVarMap::iterator i = const_variable_map.begin(); i != const_variable_map.end(); i++ ){
+      delete i->second; 
+    }
+  }
+}
+
+void TaskInterface::do_timestep_init( const ProcessorGroup* pc, 
+                                      const PatchSubset* patches, 
+                                      const MaterialSubset* matls, 
+                                      DataWarehouse* old_dw, 
+                                      DataWarehouse* new_dw, 
+                                      std::vector<VariableInformation> variable_registry ){
+
+  for (int p = 0; p < patches->size(); p++) {
+    
+    const Patch* patch = patches->get(p);
+
+    UintahVarMap variable_map;
+    ConstUintahVarMap const_variable_map; 
+
+    SchedToTaskInfo info; 
+
+    //get the current dt
+    info.dt = 0; 
+    info.time_substep = 0; 
+
+    FieldCollector* field_collector = scinew FieldCollector(variable_registry, patch, info); 
+
+    //doing DW gets...
+    resolve_fields( old_dw, new_dw, patch, variable_map, const_variable_map, field_collector ); 
+
+    //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
+    field_collector->set_var_maps(variable_map, const_variable_map); 
+
+    //get the operator DB for this patch
+    Operators& opr = Operators::self(); 
+    Operators::PatchInfoMap::iterator i_opr = opr.patch_info_map.find(patch->getID()); 
+
+    timestep_init( patch, field_collector, i_opr->second._sodb ); 
 
     //clean up 
     delete field_collector; 
