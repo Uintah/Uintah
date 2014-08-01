@@ -200,7 +200,7 @@ namespace Uintah{
           if ( iter != var_map.end() ) {
 
             CCVariable<double>* var = iter->second.template get_field<CCVariable<double> >();
-            int nGhost = iter->second.template get_n_ghost(); 
+            int nGhost = iter->second.get_n_ghost(); 
             return Wasatch::wrap_uintah_field_as_spatialops<SpatialOps::SVolField>( *var, ainfo, nGhost ); 
 
           }
@@ -222,7 +222,7 @@ namespace Uintah{
           if ( iter != var_map.end() ) {
 
             SFCXVariable<double>* var = iter->second.template get_field<SFCXVariable<double> >();
-            int nGhost = iter->second.template get_n_ghost(); 
+            int nGhost = iter->second.get_n_ghost(); 
             return Wasatch::wrap_uintah_field_as_spatialops<SpatialOps::XVolField>( *var, ainfo, nGhost ); 
 
           }
@@ -244,7 +244,7 @@ namespace Uintah{
           if ( iter != var_map.end() ) {
 
             SFCYVariable<double>* var = iter->second.template get_field<SFCYVariable<double> >();
-            int nGhost = iter->second.template get_n_ghost(); 
+            int nGhost = iter->second.get_n_ghost(); 
             return Wasatch::wrap_uintah_field_as_spatialops<SpatialOps::YVolField>( *var, ainfo, nGhost ); 
 
           }
@@ -266,7 +266,7 @@ namespace Uintah{
           if ( iter != var_map.end() ) {
 
             SFCZVariable<double>* var = iter->second.template get_field<SFCZVariable<double> >();
-            int nGhost = iter->second.template get_n_ghost(); 
+            int nGhost = iter->second.get_n_ghost(); 
             return Wasatch::wrap_uintah_field_as_spatialops<SpatialOps::ZVolField>( *var, ainfo, nGhost ); 
 
           }
@@ -311,7 +311,7 @@ namespace Uintah{
           if ( iter != var_map.end() ) {
 
             constSFCXVariable<double>* var = iter->second.template get_field<constSFCXVariable<double> >();
-            int nGhost = iter->second.template get_n_ghost(); 
+            int nGhost = iter->second.get_n_ghost(); 
             return Wasatch::wrap_uintah_field_as_spatialops<SpatialOps::XVolField>( *var, ainfo, nGhost ); 
 
           }
@@ -333,7 +333,7 @@ namespace Uintah{
           if ( iter != var_map.end() ) {
 
             constSFCYVariable<double>* var = iter->second.template get_field<constSFCYVariable<double> >();
-            int nGhost = iter->second.template get_n_ghost(); 
+            int nGhost = iter->second.get_n_ghost(); 
             return Wasatch::wrap_uintah_field_as_spatialops<SpatialOps::YVolField>( *var, ainfo, nGhost ); 
 
           }
@@ -355,7 +355,7 @@ namespace Uintah{
           if ( iter != var_map.end() ) {
 
             constSFCZVariable<double>* var = iter->second.template get_field<constSFCZVariable<double> >();
-            int nGhost = iter->second.template get_n_ghost(); 
+            int nGhost = iter->second.get_n_ghost(); 
             return Wasatch::wrap_uintah_field_as_spatialops<SpatialOps::ZVolField>( *var, ainfo, nGhost ); 
 
           }
