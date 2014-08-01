@@ -564,6 +564,8 @@ WallModelDriver::RegionHT::computeHT( const Patch* patch, const HTVariables& var
               TW0 = vars.T_old[c];
               net_q = rad_q - _sigma_constant * pow( TW0 , 4 );
               net_q = net_q > 0 ? net_q : 0;
+	      net_q *= pow(total_flux_ind,0.5)/total_flux_ind;
+
               TW1 = wi.T_inner + net_q * wi.dy / wi.k;
               
               if( TW1 < TW0 ){
@@ -587,6 +589,8 @@ WallModelDriver::RegionHT::computeHT( const Patch* patch, const HTVariables& var
                 TW0 = ( Tmax + Tmin ) / 2.0; 
                 net_q = rad_q - _sigma_constant * pow( TW0, 4 );
                 net_q = net_q>0 ? net_q : 0;
+		net_q *= pow(total_flux_ind,0.5)/total_flux_ind;
+
                 TW1 = wi.T_inner + net_q * wi.dy / wi.k;
                 
                 if( TW1 < TW0 ) {
@@ -604,7 +608,8 @@ WallModelDriver::RegionHT::computeHT( const Patch* patch, const HTVariables& var
                 num++;
                 
               }
-              
+
+	      TW0 = pow((q[c+_d[i]]-net_q) / _sigma_constant, 1/4.0);
               T[c] = (1-wi.relax)*vars.T_old[c]+wi.relax*TW0;
             }
             
