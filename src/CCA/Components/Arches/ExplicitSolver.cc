@@ -345,7 +345,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
   //TIMESTEP INIT: 
   typedef std::map<std::string, TaskFactoryBase*> FACMAP; 
-  //utility factory
+  ////utility factory
   FACMAP::iterator ifac = _factory_map->find("utility_factory"); 
   TaskFactoryBase::TaskMap init_all_tasks = ifac->second->retrieve_all_tasks(); 
   for ( TaskFactoryBase::TaskMap::iterator i = init_all_tasks.begin(); i != init_all_tasks.end(); i++){ 
@@ -382,8 +382,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       }
     }
 
-    TaskFactoryBase::TaskMap::iterator i_fe_update = all_tasks.find("scalar_fe_update");  
-    i_fe_update->second->schedule_task( level, sched, matls, curr_level ); 
+    //uncoment to get this to work
+    //TaskFactoryBase::TaskMap::iterator i_fe_update = all_tasks.find("scalar_fe_update");  
+    //i_fe_update->second->schedule_task( level, sched, matls, curr_level ); 
     //------------------------  END NEW TASK STUFF: 
 
     // Create this timestep labels for properties
@@ -591,9 +592,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
 
     //NEW TASK STUFF: -------------
+    //uncomment to get this to work
     //this is updating the scalar with the latest density from the table lookup
-    TaskFactoryBase::TaskMap::iterator i_ssp_update = all_tasks.find("scalar_ssp_update"); 
-    i_ssp_update->second->schedule_task( level, sched, matls, curr_level ); 
+    //TaskFactoryBase::TaskMap::iterator i_ssp_update = all_tasks.find("scalar_ssp_update"); 
+    //i_ssp_update->second->schedule_task( level, sched, matls, curr_level ); 
     //END NEW TASK STUFF
 
 

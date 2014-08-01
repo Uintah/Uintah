@@ -107,7 +107,7 @@ SampleTask::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   using namespace SpatialOps;
   using SpatialOps::operator *; 
 
-  typedef SpatialOps::BasicOpTypes<SVolF>::GradX GradX;
+  //typedef SpatialOps::BasicOpTypes<SVolF>::GradX GradX;
   //const GradX* const gradx = opr.retrieve_operator<GradX>();
 
   //Get uintah fields for work: 

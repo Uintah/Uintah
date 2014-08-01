@@ -36,8 +36,8 @@ public:
       private: 
 
       std::string _task_name; 
-      std::string _var_name; 
       int _matl_index; 
+      std::string _var_name; 
 
     };
 

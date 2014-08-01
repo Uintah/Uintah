@@ -122,7 +122,7 @@ ScalarRHS::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
   *rhs <<= 0.0;
   *phi <<= 0.0;
-  *gamma <<= 0.1; 
+  *gamma <<= 0.0001; 
   *Fdiff <<= 0.0;
   *Fconv <<= 0.0; 
 
@@ -207,7 +207,6 @@ ScalarRHS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   SVolFP rho   = tsk_info->get_const_so_field<SVolF>( "density"        );
   SVolFP gamma = tsk_info->get_const_so_field<SVolF>( _D_name          );
 
-  CCVariable<double>* u_rhs = tsk_info->get_uintah_field<CCVariable<double> >( _rhs_name ); 
 //
 //  //not being used yet: 
 //  //SurfX* const u         = tsk_info->get_so_field<SurfX>( "uVelocitySPBC"  , LATEST );
@@ -243,21 +242,12 @@ ScalarRHS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   //
   //--------------- actual work below this line ---------------------
   //
-  
-  //-->diffusion: 
-//  if ( _do_diff ){ 
-//    *Fdiff <<= (*dx)( (*ix)( *gamma * *rho ) * (*gradx)(*phi)* (*interpx)(*epsX) )
-//             + (*dy)( (*iy)( *gamma * *rho ) * (*grady)(*phi)* (*interpy)(*epsY) )
-//             + (*dz)( (*iz)( *gamma * *rho ) * (*gradz)(*phi)* (*interpz)(*epsZ) );
-//  } else { 
-//    *Fdiff <<= 0.0; 
-//  }
 
   if ( _do_diff ){ 
 
-    *Fdiff <<= (*dx)( (*ix)( *gamma * *rho ) * (*gradx)(*phi) )
-             + (*dy)( (*iy)( *gamma * *rho ) * (*grady)(*phi) )
-             + (*dz)( (*iz)( *gamma * *rho ) * (*gradz)(*phi) );
+    *Fdiff <<= (*dx)( (*ix)( *gamma * *rho ) * (*gradx)(*phi)* (*interpx)(*epsX) )
+             + (*dy)( (*iy)( *gamma * *rho ) * (*grady)(*phi)* (*interpy)(*epsY) )
+             + (*dz)( (*iz)( *gamma * *rho ) * (*gradz)(*phi)* (*interpz)(*epsZ) );
 
   } else { 
 
@@ -276,21 +266,29 @@ ScalarRHS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 //
 //  //Divide by volume because Nebo is using a differential form
 //  //and the computeConv function is finite volume.
-//  *rhs <<= *rho * *phi + dt/vol * ( *Fdiff - *Fconv ) ;
-  *rhs <<= *rho * *phi + dt/vol * ( *Fdiff );
+//  *rhs <<= *rho * *phi + dt * ( *Fdiff - *Fconv/vol ) ;
+  *rhs <<= *rho * *phi + dt * ( *Fdiff );
 
-  for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){ 
-    std::cout << " URHS = " << *iter << " " << (*u_rhs)[*iter] << std::endl;
+  //-->add sources
+  typedef std::vector<SourceInfo> VS; 
+  for (VS::iterator i = _source_info.begin(); i != _source_info.end(); i++){ 
+
+    SVolFP const src = tsk_info->get_const_so_field<SVolF>( i->name );
+
+    *rhs <<= *rhs + dt * i->weight * *src;
+
   }
-
-
-//  //-->add sources
-//  typedef std::vector<SourceInfo> VS; 
-//  for (VS::iterator i = _source_info.begin(); i != _source_info.end(); i++){ 
-//
-//    SVolFP const src = tsk_info->get_const_so_field<SVolF>( i->name );
-//
-//    *rhs <<= *rhs + dt * i->weight * *src;
-//
-//  }
 }
+
+  //mask example
+  //std::vector<SpatialOps::IntVec> maskset;  
+
+  //for (int i = 0; i < 11; i++){ 
+    //maskset.push_back(SpatialOps::IntVec(4,i,1)); 
+  //}
+
+  //SpatialOps::SpatialMask<SpatialOps::SVolField> mask(*phi,maskset); 
+
+  //*Fdiff <<= cond( mask, 3.0 )
+                 //( *Fdiff ); 
+
