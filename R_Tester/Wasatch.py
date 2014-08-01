@@ -128,6 +128,9 @@ DEBUGTESTS = [
 NIGHTLYTESTS = [
 #   ("scalar-transport-equation_perf",    scalarequationperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),
 #	("particle-test-driven-cavity-upper-half-IC", "particle-test-driven-cavity-upper-half-IC.ups",   4,  "Linux",   ["exactComparison","no_memoryTest"] ),
+	("particle-test-wall-bc-xdir", "particle-test-wall-bc-xdir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
+	("particle-test-wall-bc-ydir", "particle-test-wall-bc-ydir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
+	("particle-test-wall-bc-zdir", "particle-test-wall-bc-zdir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),	
 	("particle-test-free-fall-two-way-coupling-xdir", "particle-test-free-fall-two-way-coupling-xdir.ups",  8,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
 	("particle-test-free-fall-two-way-coupling-ydir", "particle-test-free-fall-two-way-coupling-ydir.ups",  8,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),	
 	("particle-test-free-fall-two-way-coupling-zdir", "particle-test-free-fall-two-way-coupling-zdir.ups",  8,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
@@ -349,6 +352,9 @@ RADIATIONTESTS=[
 ]
 
 PARTICLETESTS=[
+	("particle-test-wall-bc-xdir", "particle-test-wall-bc-xdir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
+	("particle-test-wall-bc-ydir", "particle-test-wall-bc-ydir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
+	("particle-test-wall-bc-zdir", "particle-test-wall-bc-zdir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),	
 	("particle-test-free-fall-two-way-coupling-xdir", "particle-test-free-fall-two-way-coupling-xdir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
 	("particle-test-free-fall-two-way-coupling-ydir", "particle-test-free-fall-two-way-coupling-ydir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),	
 	("particle-test-free-fall-two-way-coupling-zdir", "particle-test-free-fall-two-way-coupling-zdir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
