@@ -523,15 +523,6 @@ void Arenisca::initializeCMData(const Patch* patch,
   computeStableTimestep(patch, matl, new_dw);
 }
 
-//May be used in the future
-void Arenisca::allocateCMDataAdd(DataWarehouse* new_dw,
-                                 ParticleSubset* addset,
-            map<const VarLabel*, ParticleVariableBase*>* newState,
-                                 ParticleSubset* delset,
-                                 DataWarehouse* old_dw)
-{
-}
-
 // Compute stable timestep based on both the particle velocities
 // and wave speed
 void Arenisca::computeStableTimestep(const Patch* patch,
