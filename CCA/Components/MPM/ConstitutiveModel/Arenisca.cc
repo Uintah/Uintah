@@ -821,7 +821,6 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         double lame       = bulk - two_third*shear,
                threeKby2G = (3.0 * bulk) / (2.0 * shear);
 
- //cout << "++++++++++++++++++++++++++++++++++++++++++++" << endl;
         //--------------------------------------------------------------------//
         //-------------Rate Dependence / Duvaut Lions-------------------------//
         Matrix3 unrotated_stress;
@@ -830,32 +829,12 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         if (d_cm.T1_rate_dependence != 0 || d_cm.T2_rate_dependence != 0){
           unrotated_stressQS = (tensorR.Transpose())*(pStressQS_old[idx]*tensorR);
           unrotated_stress = (tensorR.Transpose())*(pStress_old[idx]*tensorR);
-          //cout << "unrotated_stress =  " << unrotated_stress << endl;
-          //cout << "pStressQS_old[idx] " << pStressQS_old[idx] << endl;
-          //cout << "pStress_old[idx] =  " << pStress_old[idx] << endl;
-          //cout << "T1 or T2 is not equal to zero PART 1" << endl;
-          //cout << "PART 1 pStress_new[idx] = " << pStress_new[idx] << endl;
-          //cout << "PART 1 pStressQS_new[idx] = " << pStressQS_new[idx] << endl;
-          //cout << "PART 1 pStress_old[idx] = " << pStress_old[idx] << endl;
-          
-          //cout << "PART 1 pStressQS_old[idx] = " << pStressQS_old[idx] << endl;
         }
         else{
-        // Without Rate Dependene when T1 and T2 are equal to zero
-
-        // Compute the unrotated stress at the first of the current timestep
-        //Matrix3 
-        unrotated_stressQS = (tensorR.Transpose())*(pStressQS_old[idx]*tensorR);
-        unrotated_stress = (tensorR.Transpose())*(pStress_old[idx]*tensorR);
-
- //cout << "unrotated_stress =  " << unrotated_stress << endl;
-           //cout << "pStress_old[idx] =  " << pStress_old[idx] << endl;
-           //cout << "T1 and T2 is equal to zero PART 1" << endl;
-           //cout << "PART 1 pStress_new[idx] = " << pStress_new[idx] << endl;
-           //cout << "PART 1 pStressQS_new[idx] = " << pStressQS_new[idx] << endl;
-           //cout << "PART 1 pStress_old[idx] = " << pStress_old[idx] << endl;
-           
-           //cout << "PART 1 pStressQS_old[idx] = " << pStressQS_old[idx] << endl;
+          // Without Rate Dependene when T1 and T2 are equal to zero
+          // Compute the unrotated stress at the first of the current timestep
+          unrotated_stressQS = (tensorR.Transpose())*(pStressQS_old[idx]*tensorR);
+          unrotated_stress = (tensorR.Transpose())*(pStress_old[idx]*tensorR);
         }
         //----------End Initial Part of Rate Dependence ---------------------//
 
