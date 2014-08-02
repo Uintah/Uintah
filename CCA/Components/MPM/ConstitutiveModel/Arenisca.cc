@@ -476,8 +476,8 @@ void Arenisca::initializeCMData(const Patch* patch,
     
     pevv[*iter] = 0;
     if (d_cm.Use_Disaggregation_Algorithm){
-      // This formula is possibly incorrect? Please fix. -JG
-      pevv[*iter] = log(IDVSEq0Mass/pMass[*iter]);  //JG: Initial Disaggregation Volumetric Strain
+      //JG: Initial Disaggregation Volumetric Strain
+      pevv[*iter] = log(IDVSEq0Mass/pMass[*iter]);
     }
     pev0[*iter] = pevv[*iter];
 
