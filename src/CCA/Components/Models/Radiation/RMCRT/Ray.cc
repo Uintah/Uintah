@@ -1686,13 +1686,6 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
 
       //__________________________________
       // Account for uniqueness of first step after reaching a new level
-      Vector dx = level->dCell();
-      IntVector coarsenRatio = IntVector(1,1,1);
-
-      coarsenRatio[0] = dx[0]/dx_prev[0];
-      coarsenRatio[1] = dx[1]/dx_prev[1];
-      coarsenRatio[2] = dx[2]/dx_prev[2];
-
 
       //__________________________________
       //  Update the ray location
@@ -1711,17 +1704,6 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
 
       expOpticalThick_prev = expOpticalThick;
 
-      // NEVER UNCOMMENT EXCEPT FOR DEBUGGING IT IS EXTREMELY SLOW
-      //dbg2 << "    origin " << origin << "dir " << dir << " cur " << cur <<" prevCell " << prevCell << " sumI " << sumI << " in_domain " << in_domain << endl;
-      //dbg2 << "    tmaxX " << tMax.x() << " tmaxY " << tMax.y() << " tmaxZ " << tMax.z() << endl;
-      //dbg2 << "    direction " << ray_direction << endl;
-      
-
-      //__________________________________
-      // Logic for moving between levels
-      // currently you can only move from fine to coarse level
-
-      //bool jumpFinetoCoarserLevel   = ( onFineLevel && finePatch->containsCell(cur) == false );
       bool jumpFinetoCoarserLevel   = ( onFineLevel && containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) == false );
       bool jumpCoarsetoCoarserLevel = ( onFineLevel == false && containsCell(regionLo[L], regionHi[L], cur, dir) == false && L > 0 );
 
@@ -1729,8 +1711,8 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
       //    << " containsCell: " << containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) << endl;
 
       if( jumpFinetoCoarserLevel ){
-        prevCell=level->mapCellToCoarser(cur);
         cur   = level->mapCellToCoarser(cur);
+        prevCell   = level->mapCellToCoarser(prevCell);
         level = level->getCoarserLevel().get_rep();      // move to a coarser level
         L     = level->getIndex();
         onFineLevel = false;
@@ -1739,14 +1721,25 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
         //dbg2 << " ** Jumping off fine patch switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << endl;
       } else if ( jumpCoarsetoCoarserLevel ){
 
-//        IntVector c_old = cur;
-        prevCell=level->mapCellToCoarser(cur);
+        IntVector c_old = cur;
         cur   = level->mapCellToCoarser(cur);
+        prevCell   = level->mapCellToCoarser(prevCell);
         level = level->getCoarserLevel().get_rep();
         L     = level->getIndex();
 
         //dbg2 << " ** Switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << " c_old " << c_old << endl;
       }
+
+      Vector dx = level->dCell();
+      IntVector coarsenRatio = IntVector(1,1,1);
+
+      coarsenRatio[0] = dx[0]/dx_prev[0];
+      coarsenRatio[1] = dx[1]/dx_prev[1];
+      coarsenRatio[2] = dx[2]/dx_prev[2];
+
+
+      in_domain = domain_BB.inside(pos);
+
       Vector lineup;
       for (int ii=0; ii<3; ii++){
         if (sign[ii]) {
@@ -1759,7 +1752,10 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
 
       tMax += lineup * tDelta[prevLev];
 
-      in_domain = domain_BB.inside(pos);
+      // NEVER UNCOMMENT EXCEPT FOR DEBUGGING IT IS EXTREMELY SLOW
+      //dbg2 << "    origin " << origin << "dir " << dir << " cur " << cur <<" prevCell " << prevCell << " sumI " << sumI << " in_domain " << in_domain << endl;
+      //dbg2 << "    tmaxX " << tMax.x() << " tmaxY " << tMax.y() << " tmaxZ " << tMax.z() << endl;
+      //dbg2 << "    direction " << ray_direction << endl;
 
     } //end domain while loop.  ++++++++++++++
 
