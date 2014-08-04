@@ -74,9 +74,9 @@
 	    <STREN>0.0</STREN>
 	    <YSLOPE>0.0</YSLOPE>
 	    <BETA_nonassociativity>1.0</BETA_nonassociativity>
-	    <B0>8000</B0>
-	    <B1>0.0</B1>
-	    <B2>0.0</B2>
+	    <B0>6000</B0>
+	    <B1>20000</B1>
+	    <B2>1500</B2>
 	    <B3>0.0</B3>
 	    <B4>0.0</B4>
 	    <G0>3750</G0>
@@ -89,10 +89,8 @@
 	    <p2_crush_curve>0.0</p2_crush_curve>
 	    <p3_crush_curve>0.5</p3_crush_curve>
 	    <CR>0.5</CR>
-            <!-- For fluid, use: 2200 -->
-	    <fluid_B0>2.2e9</fluid_B0>
-            <!-- For fluid, use: 500 -->
-	    <fluid_pressure_initial>0.0</fluid_pressure_initial>
+	    <fluid_B0>0</fluid_B0>
+	    <fluid_pressure_initial>0</fluid_pressure_initial>
 	    <T1_rate_dependence> 0.0 </T1_rate_dependence>
 	    <T2_rate_dependence> 0.0 </T2_rate_dependence> 
 	    <gruneisen_parameter> 0.0</gruneisen_parameter>

@@ -73,7 +73,7 @@
 	    <FSLOPE>0.235702260395516</FSLOPE>
 	    <STREN>0.0</STREN>
 	    <YSLOPE>0.0</YSLOPE>
-	    <BETA_nonassociativity>0.353553</BETA_nonassociativity>
+	    <BETA_nonassociativity>0.707107</BETA_nonassociativity>
 	    <B0>10000</B0>
 	    <B1>0.0</B1>
 	    <B2>0.0</B2>
