@@ -286,7 +286,7 @@ ScalarRHS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     upz->set_advective_velocity( *wfz ); 
     upz->apply_to_field(*phi, *phiLowZ);
 
-    *Fconv <<= (*dx)(*phiLowX) + (*dy)(*phiLowY) + (*dz)(*phiLowZ); 
+    *Fconv <<= (*dx)(*ufx * *phiLowX) + (*dy)(*vfy * *phiLowY) + (*dz)(*wfz * *phiLowZ); 
 
   } else { 
 
