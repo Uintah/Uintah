@@ -143,9 +143,15 @@ namespace Uintah {
            one_sixth,
            one_ninth,
            pi,
+           pi_fourth,
            pi_half,
            small_number,
-           big_number;
+           big_number,
+           Kf,
+           Km,
+           phi_i,
+           ev0,
+           C1;
 
     CMData d_cm;
 
@@ -240,7 +246,6 @@ namespace Uintah {
 
     double computedZetadevp(double Zeta,
                             double evp);
-    double computeev0();
 
     double computePorePressure(const double ev);
 
