@@ -14,7 +14,7 @@ namespace Uintah{
 
 public: 
 
-    enum WAVE_TYPE { SINE, SQUARE, SINECOS };
+    enum WAVE_TYPE { SINE, SQUARE };
 
     WaveFormInit<IT, DT>( std::string task_name, int matl_index, const std::string var_name ); 
     ~WaveFormInit<IT, DT>(); 
@@ -68,8 +68,8 @@ private:
     VAR_TYPE _I_type; 
     double _amp; 
     double _two_pi; 
-    double _f1, _f2; 
-    double _A, _B; 
+    double _f1; 
+    double _A; 
     double _offset; 
     double _min_sq; 
     double _max_sq; 
@@ -123,18 +123,6 @@ private:
       db_square->getAttribute("max",_max_sq ); 
       db_square->getAttribute("offset",_offset); 
 
-    } else if ( wave_type == "sinecos"){ 
-    
-      ProblemSpecP db_sinecos= db->findBlock("wave")->findBlock("sinecos"); 
-      db->findBlock("wave")->findBlock("independent_variable_2")->getAttribute("label",_ind_var_name_2); 
-
-      _wtype = SINECOS; 
-      db_sinecos->getAttribute("A",_A); 
-      db_sinecos->getAttribute("B",_B); 
-      db_sinecos->getAttribute("f1",_f1 ); 
-      db_sinecos->getAttribute("f2",_f2 ); 
-      db_sinecos->getAttribute("offset",_offset); 
-
     } else { 
 
       throw InvalidValue("Error: Wave type not recognized.",__FILE__,__LINE__);
@@ -156,9 +144,6 @@ private:
 
     //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
     register_variable( _ind_var_name,       _I_type,   REQUIRES,       0, NEWDW,  variable_registry ); 
-    if ( _wtype == SINECOS ){ 
-      register_variable( _ind_var_name_2,       _I_type,   REQUIRES,       0, NEWDW,  variable_registry ); 
-    }
     register_variable( _var_name,           _D_type,   MODIFIES,       0, NEWDW,  variable_registry );
   
   }
@@ -195,13 +180,6 @@ private:
                            ( 0.0 ); 
 
         break; 
-
-      case SINECOS:
-
-        *dep_field <<= _A*sin(_two_pi * _f1 * (*interp)(*ind_field)) + _B*cos(_two_pi * _f2 * (*interp)(*ind_field)); 
-
-        break;
-
       default:
         break;
 
