@@ -59,6 +59,7 @@ porosity).
 //----------------suggested max line width (72char)-------------------->
 
 //----------JC DEFINE SECTION----------
+//#define JC_3KBY3G_NOFIX
 #define JC_ZETA_HARDENING
 #define JC_KAPPA_HARDENING
 //#define JC_ARENISCA_VERSION 0.1  //120826.1339
@@ -160,7 +161,9 @@ Arenisca::Arenisca(ProblemSpecP& ps, MPMFlags* Mflag)
   //     << "                        :Lk5v.         ;ZB@B@BU,      Z@r     :Ov      .@B.     " << endl
   //     << endl
   //     << "    University of Utah, Mechanical Engineering, Computational Solid Mechanics   " << endl << endl;
-
+#ifdef JC_3KBY3G_NOFIX
+  proc0cout << ",JC_3KBY3G_NOFIX";
+#endif
 #ifdef JC_ZETA_HARDENING
   proc0cout << ",JC_ZETA_HARDENING";
 #endif
@@ -819,7 +822,11 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 */
         // Compute the lame constant using the bulk and shear moduli
         double lame       = bulk - two_third*shear,
+  #ifdef JC_3KBY3G_NOFIX
                threeKby2G = (3.0 * bulk) / (2.0 * shear);
+  #else
+               rootthreeKby2G = sqrt((3.0 * bulk) / (2.0 * shear));
+  #endif
 
         //--------------------------------------------------------------------//
         //-------------Rate Dependence / Duvaut Lions-------------------------//
@@ -861,7 +868,11 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                                           J2_trial_step,
                                           pCapX[idx],
                                           pZeta[idx],
+  #ifdef JC_3KBY3G_NOFIX
                                           threeKby2G,
+  #else
+                                          rootthreeKby2G,
+  #endif
                                           peakI1IDist[idx]);
 
         // initial assignment for the updated values of plastic strains, volumetric
@@ -922,7 +933,11 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                                               J2_trial_step,
                                               pCapX[idx],
                                               pZeta[idx],
+  #ifdef JC_3KBY3G_NOFIX
                                               threeKby2G,
+  #else
+                                              rootthreeKby2G,
+  #endif
                                               peakI1IDist[idx]);
             
             if (beta_void==1.0) {    
@@ -958,7 +973,11 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                                        J2_trial_step,
                                        pCapX[idx],
                                        pZeta[idx],
+      #ifdef JC_3KBY3G_NOFIX
                                        threeKby2G,
+      #else
+                                       rootthreeKby2G,
+      #endif
                                        peakI1IDist[idx]);
                 
                 //cout<< "f_void = "<<f_void<<" ,I1 = "<<I1_void<<" ,J2 = "<<J2_void<<endl;
@@ -990,7 +1009,11 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                                               J2_trial_step,
                                               pCapX[idx],
                                               pZeta[idx],
+    #ifdef JC_3KBY3G_NOFIX
                                               threeKby2G,
+    #else
+                                              rootthreeKby2G,
+    #endif
                                               peakI1IDist[idx]);
             
             //if (pParticleID[idx]==55834574848 || pParticleID[idx]==55834640384){
@@ -1503,8 +1526,12 @@ int Arenisca::computeStressTensorStep(const Matrix3& sigma_trial, // trial stres
   Identity.Identity(); // initialize identity tensor
 
   // Frequently used constants from elastic properties
-  double  //XXtwoGby3K      = (2.0*shear) / (3.0*bulk),               // scale deviator from closest point space
+  double  //XXtwoGby3K      = (2.0*shear) / (3.0*bulk),           // scale deviator from closest point space
+  #ifdef JC_3KBY3G_NOFIX
           threeKby2G    = (3.0*bulk)  / (2.0*shear),              // scale deviator to closest point space
+  #else
+          rootthreeKby2G    = sqrt((3.0*bulk)  / (2.0*shear)),    // scale deviator to closest point space
+  #endif
           oneby9k_1by6G = (1.0/(9.0*bulk)-1.0/(6.0*shear)),       // used to compute strain from stress
           oneby2G       = 1.0/(2.0*shear);                        // used to compute strain from stress
 
@@ -1519,9 +1546,15 @@ int Arenisca::computeStressTensorStep(const Matrix3& sigma_trial, // trial stres
   // Shifted and transformed coordinates for closest-point space.
   // Note, the shifted value for z_trial will change as the backstress
   // is changed in the iterative solution
+  #ifdef JC_3KBY3G_NOFIX
   double  Beta = FSLOPE*threeKby2G*sqrt(6.0),  //slope of r vs z in transformed space
           z_trial = (I1_trial - Zeta_old)*one_sqrt_three,
           r_trial = threeKby2G * sqrt(2.0*J2_trial);
+  #else
+  double  Beta = FSLOPE*rootthreeKby2G*sqrt(6.0),  //slope of r vs z in transformed space
+          z_trial = (I1_trial - Zeta_old)*one_sqrt_three,
+          r_trial = rootthreeKby2G * sqrt(2.0*J2_trial);
+  #endif
 
   // Checking for elastic or plastic step:
   if( TransformedYieldFunction(r_trial,z_trial,X_old,Beta,PEAKI1) <= 0 )
@@ -1814,7 +1847,11 @@ double Arenisca::YieldFunction(const double& I1,   // Unshifted
                                const double& J2,   // Untransformed
                                const double& X,    // Shifted
                                const double& Zeta, // Trace of backstres
+#ifdef JC_3KBY3G_NOFIX
                                const double& threeKby2G, // (3*K)/(2*G)
+#else
+                               const double& rootthreeKby2G, // (3*K)/(2*G)
+#endif                               
                                const double& PEAKI1)
 
 {
@@ -1832,9 +1869,15 @@ double Arenisca::YieldFunction(const double& I1,   // Unshifted
          Beta,
          f;
 
+#ifdef JC_3KBY3G_NOFIX
   R = sqrt(2*J2)*threeKby2G;
   Z = one_sqrt_three*(I1 - Zeta);
   Beta = FSLOPE*threeKby2G*sqrt(6.0);
+#else
+  R = sqrt(2*J2)*rootthreeKby2G;
+  Z = one_sqrt_three*(I1 - Zeta);
+  Beta = FSLOPE*rootthreeKby2G*sqrt(6.0);
+#endif
   f = TransformedYieldFunction(R,Z,X,Beta,PEAKI1);
 
   //cout << " YieldFxn:I1="<<I1<<", J2="<<J2<<", X="<<X
