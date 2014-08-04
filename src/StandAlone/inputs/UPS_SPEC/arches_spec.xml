@@ -696,9 +696,10 @@
                                         attribute1="label REQUIRED STRING" 
                                         attribute2="eqn   REQUIRED STRING"
                                         attribute3="type  REQUIRED STRING 'wave'">
-          <!-- WAVE FORM -->
+
+          <!-- 1D WAVE FORM -->
           <wave                         spec="OPTIONAL NO_DATA"
-                                        attribute1="type REQUIRED STRING 'sine,square,sinecos'">
+                                        attribute1="type REQUIRED STRING 'sine,square'">
 
             <grid                       spec="REQUIRED NO_DATA"
                                         attribute1="dependent_type REQUIRED STRING 'svol, xvol, yvol, zvol'"
@@ -722,14 +723,6 @@
                                         attribute3="f REQUIRED DOUBLE"
                                         attribute4="offset REQUIRED DOUBLE"
                                         need_applies_to="type square"/>
-            <!-- f(x) = A*sin(f1*2*pi*x) + B*cos(f2*2*pi*x)+offset -->                             
-            <sinecos                    spec="REQUIRED NO_DATA"
-                                        attribute1="A REQUIRED DOUBLE"
-                                        attribute2="B REQUIRED DOUBLE"
-                                        attribute3="f1 REQUIRED DOUBLE"
-                                        attribute4="f2 REQUIRED DOUBLE"
-                                        attribute5="offset REQUIRED DOUBLE"
-                                        need_applies_to="type sinecos"/>
 
           </wave>
                                     
