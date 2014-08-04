@@ -1314,14 +1314,14 @@ Arches::scheduleInitialize(const LevelP& level,
 
 }
 
-#define BUILD_UPWIND( VOLT )                                            \
+#define BUILD_UPWIND( VOLT )                                          \
 {                                                                     \
   typedef UpwindInterpolant<VOLT,FaceTypes<VOLT>::XFace> OpX;         \
   typedef UpwindInterpolant<VOLT,FaceTypes<VOLT>::YFace> OpY;         \
   typedef UpwindInterpolant<VOLT,FaceTypes<VOLT>::ZFace> OpZ;         \
-  pi._sodb.register_new_operator<OpX>( scinew OpX() );                    \
-  pi._sodb.register_new_operator<OpY>( scinew OpY() );                    \
-  pi._sodb.register_new_operator<OpZ>( scinew OpZ() );                    \
+  pi._sodb.register_new_operator<OpX>( scinew OpX() );                \
+  pi._sodb.register_new_operator<OpY>( scinew OpY() );                \
+  pi._sodb.register_new_operator<OpZ>( scinew OpZ() );                \
 }
 
 void 
