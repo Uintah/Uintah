@@ -708,9 +708,6 @@
 
             <independent_variable       spec="REQUIRED NO_DATA"
                                         attribute1="label REQUIRED STRING"/>
-            <independent_variable_2     spec="REQUIRED NO_DATA"
-                                        attribute1="label REQUIRED STRING"
-                                        need_applies_to="type sinecos"/>
 
             <sine                       spec="REQUIRED NO_DATA"
                                         attribute1="A REQUIRED DOUBLE"
