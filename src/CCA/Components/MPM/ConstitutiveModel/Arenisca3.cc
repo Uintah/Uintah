@@ -678,13 +678,6 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pStress_new,         lb->pStressLabel_preReloc,     pset);
     new_dw->allocateAndPut(pStressQS_new,       pStressQSLabel_preReloc,       pset);
 
-    // Allocate temporary particle variables
-    ParticleVariable<double>       f_trial_step;
-    ParticleVariable<Matrix3>      rotation;
-
-    new_dw->allocateTemporary(f_trial_step, pset);
-    new_dw->allocateTemporary(rotation,     pset);
-
     // Loop over the particles of the current patch to update particle
     // stress at the end of the current timestep along with all other
     // required data such plastic strain, elastic strain, cap position, etc.
@@ -712,7 +705,6 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
       // Use poYieldFxn:I1=-35.3311, J2=7516lar decomposition to compute the rotation and stretch tensors
       Matrix3 tensorR, tensorU;
       pDefGrad[idx].polarDecompositionRMB(tensorU, tensorR);
-      rotation[idx]=tensorR;
 
       // Compute the unrotated symmetric part of the velocity gradient
       D = (tensorR.Transpose())*(D*tensorR);
@@ -788,10 +780,9 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
 
       // Use polar decomposition to compute the rotation and stretch tensors
       pDefGrad_new[idx].polarDecompositionRMB(tensorU, tensorR);
-      rotation[idx]=tensorR;
 
       // Compute the rotated stress at the end of the current timestep
-      pStress_new[idx] = (rotation[idx]*pStress_new[idx])*(rotation[idx].Transpose());
+      pStress_new[idx] = (tensorR*pStress_new[idx])*(tensorR.Transpose());
 
       // Compute wave speed + particle velocity at each particle, store the maximum
       // Conservative elastic properties used to compute number of time steps:
@@ -980,7 +971,6 @@ failedStep:
 
 } //===================================================================
 
-
 // [shear,bulk] = computeElasticProperties()
 void Arenisca3::computeElasticProperties(double & bulk,
     double & shear)
@@ -1048,7 +1038,6 @@ void Arenisca3::computeElasticProperties(const Matrix3 stress,
     double Km = b0 + b1;
 
     // initial porosity, inferred from the p3 parameter in the crush curve
-
     double phi_i = 1.0 - exp(-d_cm.p3_crush_curve);
 
     // Current unloaded porosity (phi):
@@ -1396,7 +1385,7 @@ double Arenisca3::computeX(double evp)
     // MH!: This shouldn't be reached, but may allow for relaxed convergence
     // requirements (if this is reached it will be within an iteration on cap
     // position, and shouldn't end up as the final solution).
-    X = 1.0e6*p0;
+    X = 1.0e12*p0;
   }
   else
   { // --------------------Plastic strain is within allowable domain------------------------
@@ -1423,11 +1412,8 @@ double Arenisca3::computeX(double evp)
              b4 = d_cm.B4;
 
       // Kfit is the drained bulk modulus evaluated at evp, and for I1 = Xdry/2.
-      double Kdry = b0;
-      if (evp<=0.0){ // Pore Collapse
-        Kdry = Kdry + b1*exp(2.0*b2/X);
-        if (evp<0.0){Kdry = Kdry - b3*exp(b4/evp);}
-      }
+      double Kdry = b0 + b1*exp(2.0*b2/X);
+      if (evp<0.0){Kdry = Kdry - b3*exp(b4/evp);}
 
       // Now we use our engineering model for the bulk modulus of the
       // saturated material (Keng) to compute the stress at our elastic strain to yield.
