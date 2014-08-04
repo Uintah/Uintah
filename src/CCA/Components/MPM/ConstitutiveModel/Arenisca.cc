@@ -625,7 +625,6 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 
     // Declare and initial value assignment for some variables
     const Patch* patch = patches->get(p);
-    Matrix3 D;
 
     double c_dil=0.0,
            se=0.0;
@@ -753,13 +752,6 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pStress_new,         lb->pStressLabel_preReloc,     pset);
     new_dw->allocateAndPut(pStressQS_new,       pStressQSLabel_preReloc,       pset);
 
-    // Allocate temporary particle variables
-    ParticleVariable<double>       f_trial_step;
-    ParticleVariable<Matrix3>      rotation;
-
-    new_dw->allocateTemporary(f_trial_step, pset);
-    new_dw->allocateTemporary(rotation,     pset);
-
     // Loop over the particles of the current patch to update particle
     // stress at the end of the current timestep along with all other
     // required data such plastic strain, elastic strain, cap position, etc.
@@ -791,7 +783,6 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         // Use poYieldFxn:I1=-35.3311, J2=7516lar decomposition to compute the rotation and stretch tensors
         Matrix3 tensorR, tensorU;
         pDefGrad[idx].polarDecompositionRMB(tensorU, tensorR);
-        rotation[idx]=tensorR;
 
         // Compute the unrotated symmetric part of the velocity gradient
         D = (tensorR.Transpose())*(D*tensorR);
@@ -864,16 +855,16 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         // Compute the value of the test yield function at the trial stress.  This will
         // return +/- 1 for plastic and elastic states, respectively, or 0 if the state
         // is on the yield surface.
-        f_trial_step[idx] = YieldFunction(I1_trial_step,
-                                          J2_trial_step,
-                                          pCapX[idx],
-                                          pZeta[idx],
+        double f_trial_step = YieldFunction(I1_trial_step,
+                                            J2_trial_step,
+                                            pCapX[idx],
+                                            pZeta[idx],
   #ifdef JC_3KBY3G_NOFIX
-                                          threeKby2G,
+                                            threeKby2G,
   #else
-                                          rootthreeKby2G,
+                                            rootthreeKby2G,
   #endif
-                                          peakI1IDist[idx]);
+                                            peakI1IDist[idx]);
 
         // initial assignment for the updated values of plastic strains, volumetric
         // part of the plastic strain, volumetric part of the elastic strain, \kappa,
@@ -929,7 +920,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
             trial_stress_step = trial_stress_step - beta_void*stress_diff_step; 
             stress_new_step = trial_stress_step;
             computeInvariants(trial_stress_step, S_trial_step, I1_trial_step, J2_trial_step);
-            f_trial_step[idx] = YieldFunction(I1_trial_step,
+            f_trial_step = YieldFunction(I1_trial_step,
                                               J2_trial_step,
                                               pCapX[idx],
                                               pZeta[idx],
@@ -941,24 +932,24 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                                               peakI1IDist[idx]);
             
             if (beta_void==1.0) {    
-                f_trial_step[idx]=-1;
+                f_trial_step=-1;
             }
         }
             
         //EG: Introducing Disaggregation volumetric strain
         
         //if (I1_trial_step > PEAKI1 || ev_new_step > pIota[idx]) {    //Emad:void insertion
-        //if ((I1_trial_step>0 && f_trial_step[idx]>0) || ev_new_step > pIota[idx]) {    //Emad:void insertion
-        //if ((I1_trial_step>0 && f_trial_step[idx]>0)||I1_trial_step > PEAKI1 || ev_new_step > pIota[idx]||pevv[idx]>0) {    //Emad:void insertion
-        //if ((I1_trial_step>0 && f_trial_step[idx])||pevv[idx]>0) {    //Emad:void insertion
-        //if (I1_trial_step>0 && f_trial_step[idx]>0 && D.Trace()>0&&pevv[idx]<=0) {    //Emad:void insertion
+        //if ((I1_trial_step>0 && f_trial_step>0) || ev_new_step > pIota[idx]) {    //Emad:void insertion
+        //if ((I1_trial_step>0 && f_trial_step>0)||I1_trial_step > PEAKI1 || ev_new_step > pIota[idx]||pevv[idx]>0) {    //Emad:void insertion
+        //if ((I1_trial_step>0 && f_trial_step)||pevv[idx]>0) {    //Emad:void insertion
+        //if (I1_trial_step>0 && f_trial_step>0 && D.Trace()>0&&pevv[idx]<=0) {    //Emad:void insertion
 
-        if (I1_trial_step>0 && f_trial_step[idx]>0 && D.Trace()>0 && d_cm.Use_Disaggregation_Algorithm) {
+        if (I1_trial_step>0 && f_trial_step>0 && D.Trace()>0 && d_cm.Use_Disaggregation_Algorithm) {
             //Iota_new_step = min(ev_new_step,pIota[idx]);
             stress_new_step = trial_stress_step;
             double  I1_void = I1_trial_step,
                     n_void  = 0.0,
-                    f_void = f_trial_step[idx];
+                    f_void = f_trial_step;
             Matrix3 S_void  = S_trial_step;
             
             while (Abs(pow(2,n_void)*stress_diff_step.Norm()) > 1.0e-20){
@@ -984,7 +975,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                 //cout<< "f_void = "<<f_void<<" ,n = "<<n_void<<endl;
             }
             
-            f_trial_step[idx]=-1; 
+            f_trial_step=-1; 
             
             //cout<< "n_void = "<<n_void<<" sig_22 = "<<stress_new_step(1,1) << endl;
             //cout<< "n_void = "<<n_void<<endl;
@@ -1005,7 +996,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
             trial_stress_step = trial_stress_step - beta_void*stress_diff_step; 
             stress_new_step = trial_stress_step; 
             computeInvariants(trial_stress_step, S_trial_step, I1_trial_step, J2_trial_step);
-            f_trial_step[idx] = YieldFunction(I1_trial_step,
+            f_trial_step = YieldFunction(I1_trial_step,
                                               J2_trial_step,
                                               pCapX[idx],
                                               pZeta[idx],
@@ -1028,7 +1019,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         // MH: We now check if the entire step is elastic.  If it is, we update the
         //     new stress to be our trial stress and compute the new elastic strain.
         //     The plastic strain and internal state variables are unchanged.
-        if (f_trial_step[idx]<=0){  // elastic
+        if (f_trial_step<=0){  // elastic
 
           // An elastic step: the updated stres at the end of the current time step
           // is equal to the trial stress. otherwise, the plasticity return algrithm would be used.
@@ -1363,11 +1354,10 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 
         // Use polar decomposition to compute the rotation and stretch tensors
         pDefGrad_new[idx].polarDecompositionRMB(tensorU, tensorR);
-        rotation[idx]=tensorR;
 
         // Compute the rotated stress at the end of the current timestep
-        pStress_new[idx] = (rotation[idx]*pStress_new[idx])*(rotation[idx].Transpose());
-        pStressQS_new[idx] = (rotation[idx]*pStressQS_new[idx])*(rotation[idx].Transpose());
+        pStress_new[idx] = (tensorR*pStress_new[idx])*(tensorR.Transpose());
+        pStressQS_new[idx] = (tensorR*pStressQS_new[idx])*(tensorR.Transpose());
 
         // Compute wave speed + particle velocity at each particle,
         // store the maximum
