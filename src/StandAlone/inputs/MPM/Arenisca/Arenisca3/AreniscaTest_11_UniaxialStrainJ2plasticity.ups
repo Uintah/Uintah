@@ -55,8 +55,8 @@
 	     <specific_heat>134.0e-8</specific_heat>
 
               <constitutive_model type="Arenisca3">
-		<PEAKI1>165.0</PEAKI1>
-		<FSLOPE>0.0</FSLOPE>
+		<PEAKI1>165.0e16</PEAKI1>
+		<FSLOPE>1.0e-10</FSLOPE>
 		<STREN>0.0</STREN>
 		<YSLOPE>0.0</YSLOPE>
 		<BETA_nonassociativity>1.0</BETA_nonassociativity>
@@ -70,10 +70,10 @@
 		<G2>0.0</G2>
 		<G3>0.0</G3>
 		<G4>0.0</G4>
-		<p0_crush_curve>-1e99</p0_crush_curve>
-		<p1_crush_curve>-1e99</p1_crush_curve>
+		<p0_crush_curve>-30e16</p0_crush_curve>
+		<p1_crush_curve>5.4e-11</p1_crush_curve>
 		<p2_crush_curve>0.0</p2_crush_curve>
-		<p3_crush_curve>0.5</p3_crush_curve>
+		<p3_crush_curve>0.189</p3_crush_curve>
 		<CR>0.5</CR>
 		<fluid_B0>0.0</fluid_B0>
 		<fluid_pressure_initial>0.0</fluid_pressure_initial>
