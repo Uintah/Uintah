@@ -52,7 +52,7 @@ Software is furnished to do so, subject to the following conditions:
 
 //----------DEFINE SECTION----------
 //#define MH_VARIABILITY             // MH! Broken, not sure why since it works in Arenisca 2
-#define MHdebug                      // Prints errors messages when particles are deleted or subcycling fails
+//#define MHdebug                    // Prints errors messages when particles are deleted or subcycling fails
 
 // INCLUDE SECTION: tells the preprocessor to include the necessary files
 #include <CCA/Components/MPM/ConstitutiveModel/Arenisca3.h>
@@ -92,56 +92,9 @@ using namespace std;
 Arenisca3::Arenisca3(ProblemSpecP& ps, MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)
 {
-  proc0cout << "In Arenisca ver 3.0"<< endl;
-  proc0cout << endl
-            << "                                        ;1BB@B@B@@@B@8u:                        " << endl
-            << "                                   .Y@@@B@B@BB8GZMB@B@B@B@Mr                    " << endl
-            << "                                 Y@B@BB7.              :S@@B@Bi                 " << endl
-            << "                       BB.     EB@BG.                      rB@B@L               " << endl
-            << "                    iBOF@    5@B@L                            NB@Bi             " << endl
-            << "                     OB G  :B@Bv                                O@BM            " << endl
-            << "                   .@B@B@B@B@B  ;irr77777r77vL, .Yv77777777r7rr  :@B@           " << endl
-            << "                    B@BZS@@@2  :BBMMMMMMMMMMM@i ,@BMOMOMMMMMM@B    @@@          " << endl
-            << "                   L@B  i@@L   ,@E0q0PNPqPNPGB: .BGP0PNP0P0P08O     @B@         " << endl
-            << "                 uB5B. ,B@X    :B8qqXXSXSXkPNB: .@EqkXkXXPkPqO8      @@@        " << endl
-            << "                     @Z BZ  B@B     i@M8PqkPkXkqPOBr :BMNPkXkPkPPGB@      v@Bi       " << endl
-            << "              ;@r BN  7@B:        r8XXSPSPXZ5     :8PXkPkXkZU         B@B       " << endl
-            << "             2@  u@   @B@         iONkPkPkqG1     .M0kPSPkqGu         XB@       " << endl
-            << "            F@  :@    B@P         rMPXkXkXXOS     .BqqkXkXXO1         :@@i      " << endl
-            << "           Y@   @v    @@L         7MNSXkPXNGX     ,M0kPkXSN8F         .B@7      " << endl
-            << "          :@    B: v  B@7         rMPPSXkXPOk     ,BqXkPSPPO5         .@@7      " << endl
-            << "          @r   @@  B. @BX         7ONkXSXXq8k     ,M0kXkXXNGS         rB@.      " << endl
-            << "         @B  .BG   @. B@B         7MqPkPkXXOF     .BqPkXSPPO1         O@B       " << endl
-            << "        :B   B@       uB@.        7MNkPSPkqG5     .O0kXkXSN8F         @BN       " << endl
-            << "        BL   LB   E:   @@@        rMqPkXkPkG2     ,OPPSPkXPO5        MB@        " << endl
-            << "       r@     @  u@Z   :@BY       7M0XPSPSXXZOBBBMONqSPSPk0ME       7B@v        " << endl
-            << "       @v    .   @B     B@B7      v@ENXPSPkqX00Z0EPPSXkPXEO@i      i@@Z         " << endl
-            << "      :B     GM  OM    B@0@Bu      J@80XPkPkPXqXPkqkqkqXZMZ       vB@8          " << endl
-            << "      BM     B@  :B    .B i@BB      .OM800N0qEq0q0q0qE0OBY       MB@1           " << endl
-            << "      @.     B    @,    Gq .@B@v      Y@@BBMBMBBBMBMBB@M,      L@@@:            " << endl
-            << "     .B     .@    P@    F@i  UB@B2      .. ............      jB@BS              " << endl
-            << "     2@  B.  P@    :    @B1    1@B@Br                     r@@B@F                " << endl
-            << "     @u  @:   B@      B@Br       rB@B@Bqi.           ,78B@B@B7                  " << endl
-            << "     @:  Gr    B2 ,8uB@B@           i0@B@B@B@B@B@B@@@@@@@Gr                     " << endl
-            << "     @   7Y    XBUP@B@@@                .ru8B@B@B@MZjr.                         " << endl
-            << "     B         B@B@B@B.                                                         " << endl
-            << "     @02    ..BM U@@@@      :LLrjM           ,.           r8,       N@.         " << endl
-            << "     B@@,r@ @@@   .B@     GB@B@B@BE      F@B@B@@@@7      :@B@      2@B@         " << endl
-            << "     uB@B@B@B@.         Y@B@i   B@k    qB@8:   .ru.      @B@B;     @B@B         " << endl
-            << "      U@@B@B@.         M@@7      .    NB@                B@@@O    :B@@@r        " << endl
-            << "       2B@B@:         B@B             M@@7              7@BEB@    B@E0BO        " << endl
-            << "        :B7          k@B               1@@@B@B@BF       @BE @B:  :@B .@B        " << endl
-            << "                     @B7                  .:iLZ@B@X    :@@, B@B  @@O  B@.       " << endl
-            << "                    :@@                         iB@;   B@@  r@@ :B@   @BG       " << endl
-            << "                     @Bi        ur               @BJ  .@@U   @BO@@2   Y@B       " << endl
-            << "                     P@BY    ;@B@B  iB@i       :@B@   8B@    u@B@B     B@5      " << endl
-            << "                      7@@@B@B@B@:    BB@@@MOB@B@B5    B@@     B@B7     @B@      " << endl
-            << "                        :Lk5v.         ;ZB@B@BU,      Z@r     :Ov      .@B.     " << endl
-            << endl
-            << "    University of Utah, Mechanical Engineering, Computational Solid Mechanics   " << endl << endl;
+  proc0cout << "Arenisca ver 3.0"<< endl;
+  proc0cout << "University of Utah, Mechanical Engineering, Computational Solid Mechanics" << endl;
 
-  cout << endl;
-// ps->getWithDefault("STREN",d_cm.STREN,0.0);    // Shear Limit Surface Parameter
   one_third      = 1.0/3.0;
   two_third      = 2.0/3.0;
   four_third     = 4.0/3.0;
@@ -152,28 +105,29 @@ Arenisca3::Arenisca3(ProblemSpecP& ps, MPMFlags* Mflag)
   one_ninth      = 1.0/9.0;
   one_sixth      = 1.0/6.0;
   pi  = 3.141592653589793238462;
+  pi_fourth = 0.25*pi;
   pi_half = 0.5*pi;
 
-  ps->require("PEAKI1",d_cm.PEAKI1);             // Shear Limit Surface Parameter
-  ps->require("FSLOPE",d_cm.FSLOPE);             // Shear Limit Surface Parameter
+  ps->require("PEAKI1",d_cm.PEAKI1);  // Shear Limit Surface Parameter
+  ps->require("FSLOPE",d_cm.FSLOPE);  // Shear Limit Surface Parameter
   ps->require("STREN",d_cm.STREN);    // Shear Limit Surface Parameter
   ps->require("YSLOPE",d_cm.YSLOPE);  // Shear Limit Surface Parameter
   ps->require("BETA_nonassociativity",d_cm.BETA_nonassociativity);   // Nonassociativity Parameter
-  ps->require("B0",d_cm.B0);                     // Tangent Elastic Bulk Modulus Parameter
+  ps->require("B0",d_cm.B0);          // Tangent Elastic Bulk Modulus Parameter
   ps->require("B1",d_cm.B1);          // Tangent Elastic Bulk Modulus Parameter
   ps->require("B2",d_cm.B2);          // Tangent Elastic Bulk Modulus Parameter
   ps->require("B3",d_cm.B3);          // Tangent Elastic Bulk Modulus Parameter
   ps->require("B4",d_cm.B4);          // Tangent Elastic Bulk Modulus Parameter
-  ps->require("G0",d_cm.G0);                     // Tangent Elastic Shear Modulus Parameter
+  ps->require("G0",d_cm.G0);          // Tangent Elastic Shear Modulus Parameter
   ps->require("G1",d_cm.G1);          // Tangent Elastic Shear Modulus Parameter
   ps->require("G2",d_cm.G2);          // Tangent Elastic Shear Modulus Parameter
   ps->require("G3",d_cm.G3);          // Tangent Elastic Shear Modulus Parameter
   ps->require("G4",d_cm.G4);          // Tangent Elastic Shear Modulus Parameter
-  ps->require("p0_crush_curve",d_cm.p0_crush_curve);             // Crush Curve Parameter
-  ps->require("p1_crush_curve",d_cm.p1_crush_curve);             // Crush Curve Parameter
+  ps->require("p0_crush_curve",d_cm.p0_crush_curve);  // Crush Curve Parameter
+  ps->require("p1_crush_curve",d_cm.p1_crush_curve);  // Crush Curve Parameter
   ps->require("p2_crush_curve",d_cm.p2_crush_curve);  // Crush Curve Parameter (not used)
-  ps->require("p3_crush_curve",d_cm.p3_crush_curve);             // Crush Curve Parameter
-  ps->require("CR",d_cm.CR);                                     // Cap Shape Parameter CR = (peakI1-kappa)/(peakI1-X)
+  ps->require("p3_crush_curve",d_cm.p3_crush_curve);  // Crush Curve Parameter
+  ps->require("CR",d_cm.CR);                          // Cap Shape Parameter CR = (peakI1-kappa)/(peakI1-X)
   ps->require("fluid_B0",d_cm.fluid_B0);                                // Fluid bulk modulus (K_f)
   ps->require("fluid_pressure_initial",d_cm.fluid_pressure_initial);    // Zero strain Fluid Pressure (Pf0)
   ps->require("T1_rate_dependence",d_cm.T1_rate_dependence);    // Rate dependence parameter
@@ -186,6 +140,14 @@ Arenisca3::Arenisca3(ProblemSpecP& ps, MPMFlags* Mflag)
   WeibullParser(wdist);
   proc0cout <<"WeibMed="<<wdist.WeibMed<<endl;
 #endif
+
+  // These class variables are computed from input parameters and are used throughout the code
+  // The are evaluates here to avoid repeated computation, or to simplify expressions.
+  phi_i = 1.0 - exp(-d_cm.p3_crush_curve);      // initial porosity (inferred from crush curve
+  Km = d_cm.B0 + d_cm.B1;                       // Matrix bulk modulus
+  Kf = d_cm.fluid_B0;                           // Fluid bulk modulus
+  C1 = Kf*(1.0 - phi_i) + Km*(phi_i);           // Term to simplify the fluid model expressions
+  ev0 = C1*d_cm.fluid_pressure_initial/(Kf*Km); // Zero fluid pressure vol. strain.  (will equal zero if pfi=0)
 
   initializeLocalMPMLabels();
 }
@@ -202,6 +164,7 @@ Arenisca3::Arenisca3(const Arenisca3* cm)
   one_ninth      = 1.0/9.0;
   one_sixth      = 1.0/6.0;
   pi  = 3.141592653589793238462;
+  pi_fourth = 0.25*pi;
   pi_half = 0.5*pi;
 
 #ifdef MH_VARIABILITY
@@ -238,7 +201,7 @@ Arenisca3::Arenisca3(const Arenisca3* cm)
   d_cm.p1_crush_curve = cm->d_cm.p1_crush_curve;
   d_cm.p2_crush_curve = cm->d_cm.p2_crush_curve; // not used
   d_cm.p3_crush_curve = cm->d_cm.p3_crush_curve;
-  d_cm.CR = cm->d_cm.CR;  // not used
+  d_cm.CR = cm->d_cm.CR; // not used
   // Fluid Effects
   d_cm.fluid_B0 = cm->d_cm.fluid_B0;
   d_cm.fluid_pressure_initial = cm->d_cm.fluid_pressure_initial; // pfi
@@ -250,6 +213,7 @@ Arenisca3::Arenisca3(const Arenisca3* cm)
   // Subcycling
   d_cm.subcycling_characteristic_number = cm->d_cm.subcycling_characteristic_number; // not used
   initializeLocalMPMLabels();
+
 }
 // DESTRUCTOR
 Arenisca3::~Arenisca3()
@@ -1000,7 +964,6 @@ void Arenisca3::computeElasticProperties(const Matrix3 stress,
           b3 = d_cm.B3,
           b4 = d_cm.B4,
           g0 = d_cm.G0,
-          Kf  = d_cm.fluid_B0,
           I1 = stress.Trace(),
           evp = ep.Trace();
 
@@ -1017,9 +980,6 @@ void Arenisca3::computeElasticProperties(const Matrix3 stress,
     // Elastic-plastic coupling
     if (evp < 0.0){bulk = bulk - b3*exp(b4/evp);}
   }
-// In compression the low pressure modulus is modified by pressure,
-// plastic-strain, and fluid effects:
-  double ev0 = computeev0();
 
 // In  compression, or with fluid effects if the strain is more compressive
 // than the zero fluid pressure volumetric strain:
@@ -1032,16 +992,7 @@ void Arenisca3::computeElasticProperties(const Matrix3 stress,
     // formulation:
     double Kd = b0;
     if (evp < 0.0){Kd = b0 - b3*exp(b4/evp);}
-
-    // The grain bulk modulus, interpreted as the high pressure limit of the
-    // nonlinear elastic fit to the drained material.
-    double Km = b0 + b1;
-
-    // initial porosity, inferred from the p3 parameter in the crush curve
-    double phi_i = 1.0 - exp(-d_cm.p3_crush_curve);
-
     // Current unloaded porosity (phi):
-    double C1 = Kf*(1.0 - phi_i) + Km*(phi_i);  // term to simplify the expression below
     double phi = exp(evp*Km/C1)*phi_i/(-exp(evp*Kf/C1)*(phi_i-1.0) + exp(evp*Km/C1)*phi_i);
 
     // Biot-Gassmann formula for the saturated bulk modulus, evaluated at the
@@ -1398,8 +1349,6 @@ double Arenisca3::computeX(double evp)
       X = p0*Pow(1.0 + evp, 1.0/(p0*p1*p3));
     }
 
-    double Kf  = d_cm.fluid_B0,       // fluid bulk modulus
-           ev0 = computeev0();        // strain at zero pore pressure
     if(Kf!=0.0 && evp<=ev0)
     { // --------------------------------------------------------------------- Fluid Effects
       // First we evaluate the elastic volumetric strain to yield from the
@@ -1435,42 +1384,19 @@ double Arenisca3::computeX(double evp)
 } //===================================================================
 
 // Compute the strain at zero pore pressure from initial pore pressure (Pf0)
-double Arenisca3::computeev0()
-{
-  // The user-supplied initial pore pressure (Pf0) is the pore pressure at zero
-  // volumetric strain.  An estimate of the strain (ev0) at which the fluid pressure
-  // is zero is derived from M. Homel's engineering model of matrix compressibility:
-
-  //define and initialize some variables
-  double Kf  = d_cm.fluid_B0,               // fluid bulk modulus
-         pfi = d_cm.fluid_pressure_initial, // initial pore pressure
-         ev0 = 0.0;                         // strain at zero pore pressure
-
-  if(pfi!=0 && Kf!=0){ // Nonzero initial pore pressure
-    double phi_i = 1.0 - exp(-d_cm.p3_crush_curve), // Initial porosity (inferred from crush curve)
-           Km = d_cm.B0 + d_cm.B1;                  // Matrix bulk modulus (inferred from high pressure limit of drained bulk modulus)
-
-    ev0 = (Kf*(1.0 - phi_i) + Km*phi_i)*pfi/(Kf*Km);
-  }
-  return ev0;
-} //===================================================================
-
-// Compute the strain at zero pore pressure from initial pore pressure (Pf0)
 double Arenisca3::computePorePressure(const double ev)
 {
   // This compute the plotting variable pore pressure, which is defined from
   // input paramters and the current total volumetric strain (ev).
-  double Kf  = d_cm.fluid_B0,               // fluid bulk modulus
-         ev0 = computeev0(),                // strain at zero pore pressure
-         pf = 0.0;                          // pore fluid pressure
+  double pf = 0.0;                          // pore fluid pressure
 
   if(ev<=ev0 && Kf!=0){ // ....................fluid effects are active
-    double Km = d_cm.B0 + d_cm.B1,                   // Matrix bulk modulus (inferred from high pressure limit of drained bulk modulus)
-           phi_i = 1.0 - exp(-d_cm.p3_crush_curve),  // Initial porosity (inferred from crush curve)
-           pfi = d_cm.fluid_pressure_initial;        // initial pore pressure
-
-    double C1 = Kf*(1.0 - phi_i) + Km*(phi_i);       // Term to simplify the expression below
-    pf = pfi + Kf*log(exp(ev*(-1.0 - Km/C1))*(-exp((ev*Kf)/C1)*(phi_i-1.0) + exp((ev*Km)/C1)*phi_i));
+    //double Km = d_cm.B0 + d_cm.B1;                   // Matrix bulk modulus (inferred from high pressure limit of drained bulk modulus)
+    //double pfi = d_cm.fluid_pressure_initial;        // initial pore pressure
+    //double phi_i = 1.0 - exp(-d_cm.p3_crush_curve);  // Initial porosity (inferred from crush curve)
+    //double C1 = Kf*(1.0 - phi_i) + Km*(phi_i);       // Term to simplify the expression below
+    pf = d_cm.fluid_pressure_initial +
+         Kf*log(exp(ev*(-1.0 - Km/C1))*(-exp((ev*Kf)/C1)*(phi_i-1.0) + exp((ev*Km)/C1)*phi_i));
   }
   return pf;
 } //===================================================================
@@ -1537,7 +1463,8 @@ int Arenisca3::nonHardeningReturn(const double & I1_trial,    // Trial Stress
     // (5) Test for convergence:
     while ( (interior==0)&&(abs(theta)>TOL) ){
       //changed this to prevent the possibility of symmetric bouncing about a symmetric feature
-      theta = (pi/2.0)*Pow(-1.0,n+2.0)*Pow(0.5,(n+2.0)/2.0);
+      //theta = (pi/2.0)*Pow(-1.0,n+2.0)*Pow(0.5,(n+2.0)/2.0);
+      theta = pi_fourth*Pow(-two_third,n);
       z_test = z_trial + cos(theta)*(z_0-z_trial) - sin(theta)*(r_0-r_trial);
       r_test = r_trial + sin(theta)*(z_0-z_trial) + cos(theta)*(r_0-r_trial);
 
@@ -1750,17 +1677,10 @@ double Arenisca3::computedZetadevp(double Zeta, double evp)
   // Computes the partial derivative of the trace of the
   // isotropic backstress (Zeta) with respect to volumetric
   // plastic strain (evp).
-  //
-  // From M. Homel's engineering model for matrix compressibility:
-  double Kf  = d_cm.fluid_B0,       // fluid bulk modulus
-         ev0  = computeev0(),       // volumetric strain at zero pore pressure
-         dZetadevp = 0.0;           // Evolution rate of isotorpic backstress
+  double dZetadevp = 0.0;           // Evolution rate of isotorpic backstress
 
   if (evp <= ev0 && Kf != 0.0) { // ............................................ Fluid effects are active
-    double pfi = d_cm.fluid_pressure_initial,      // initial fluid pressure
-           phi_i = 1.0 - exp(-1.0*d_cm.p3_crush_curve), // Initial porosity (inferred from crush curve
-           Km = d_cm.B0 + d_cm.B1;                 // Matrix bulk modulus (inferred from high pressure elastic modulus)
-
+    double pfi = d_cm.fluid_pressure_initial;      // initial fluid pressure
     dZetadevp = (3.0*exp(evp)*Kf*Km)/(exp(evp)*(Kf + Km) + exp(Zeta/(3.0*Km))*Km*(-1.0 + phi_i) - exp((3.0*pfi + Zeta)/(3.0*Kf))*Kf*phi_i);
   }
   return dZetadevp;
