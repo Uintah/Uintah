@@ -793,7 +793,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
       // pressure bulk modulus in tension, and to use some mid range value between low
       // and high in compression.
 
-      double bulk = B0,
+      double bulk  = B0,
              shear = G0;
 /*
       if (d_cm.fluid_B0 != 0.)
@@ -810,22 +810,14 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
              rootthreeKby2G = sqrt((3.0 * bulk) / (2.0 * shear));
 #endif
 
-      //--------------------------------------------------------------------//
       //-------------Rate Dependence / Duvaut Lions-------------------------//
-      Matrix3 unrotated_stress;
-      Matrix3 unrotated_stressQS;
-      // With Rate Dependence if T1 or T2 is not equal to zero
-      if (d_cm.T1_rate_dependence != 0 || d_cm.T2_rate_dependence != 0){
-        unrotated_stressQS = (tensorR.Transpose())*(pStressQS_old[idx]*tensorR);
-        unrotated_stress = (tensorR.Transpose())*(pStress_old[idx]*tensorR);
-      }
-      else{
-        // Without Rate Dependene when T1 and T2 are equal to zero
-        // Compute the unrotated stress at the first of the current timestep
-        unrotated_stressQS = (tensorR.Transpose())*(pStressQS_old[idx]*tensorR);
-        unrotated_stress = (tensorR.Transpose())*(pStress_old[idx]*tensorR);
-      }
-      //----------End Initial Part of Rate Dependence ---------------------//
+      Matrix3 unrotated_stress,
+              unrotated_stressQS;
+
+      // Compute the unrotated stress at the first of the current timestep
+      unrotated_stressQS = (tensorR.Transpose())*(pStressQS_old[idx]*tensorR);
+      unrotated_stress = (tensorR.Transpose())*(pStress_old[idx]*tensorR);
+      //-------------End Initial Part of Rate Dependence
 
 
       // Compute the unrotated trial stress for the full timestep
@@ -860,20 +852,20 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
       // initial assignment for the updated values of plastic strains, volumetric
       // part of the plastic strain, volumetric part of the elastic strain, \kappa,
       // and the backstress. tentative assumption of elasticity
-      pevp_new[idx]   = pevp[idx];
-      pevv_new[idx]   = pevv[idx];  //EG
+      pevp_new[idx]        = pevp[idx];
+      pevv_new[idx]        = pevv[idx];  //EG
 
       // Carry forward initial disaggregation strain
-      pev0_new[idx]=pev0[idx];
+      pev0_new[idx]        = pev0[idx];
 
-      peve_new[idx]   = peve[idx] + D.Trace()*delT;
-      peqps_new[idx]  = peqps[idx]; //Hamid
-      pCapX_new[idx]  = pCapX[idx];
-      pKappa_new[idx] = pKappa[idx];
-      pZeta_new[idx]  = pZeta[idx];
-      pep_new[idx]    = pep[idx];
+      peve_new[idx]        = peve[idx] + D.Trace()*delT;
+      peqps_new[idx]       = peqps[idx]; //Hamid
+      pCapX_new[idx]       = pCapX[idx];
+      pKappa_new[idx]      = pKappa[idx];
+      pZeta_new[idx]       = pZeta[idx];
+      pep_new[idx]         = pep[idx];
       //Weibull Distribution on PEAKI1
-      peakI1IDist_new[idx]=peakI1IDist[idx];
+      peakI1IDist_new[idx] = peakI1IDist[idx];
 
       // allocate and assign step values
       double  evp_new_step    = pevp_new[idx],
@@ -885,13 +877,13 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
               Zeta_new_step   = pZeta_new[idx],
               PEAKI1Dist      = peakI1IDist_new[idx]; //Weibull Distribution on PEAKI1
       Matrix3 ep_new_step     = pep_new[idx],
-              stress_new_step = pStress_new[idx];
+              stress_new_step;
 
       //EG: ---- Begining of the Disaggregation Algorithm -------
 
       double beta_void = 0.0;
 
-        //EG: Existing Disaggregation volumetric strain 
+      //EG: Existing Disaggregation volumetric strain 
       if (pevv[idx]>0 && d_cm.Use_Disaggregation_Algorithm) {
         if (pevv[idx] + D.Trace()*delT > 0){
           beta_void = 1.0;    
@@ -940,7 +932,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         stress_new_step = trial_stress_step;
         double  I1_void = I1_trial_step,
                 n_void  = 0.0,
-                f_void = f_trial_step;
+                f_void  = f_trial_step;
         Matrix3 S_void  = S_trial_step;
         
         while (Abs(pow(2,n_void)*stress_diff_step.Norm()) > 1.0e-20){
@@ -1246,34 +1238,25 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
       pIota_new[idx]   = 0.0; //T2D: Emad
       pep_new[idx]     = ep_new_step;
       pStress_new[idx] = stress_new_step;
-
-      //Rate dependence
+    
+      // --------------Rate Dependence Code Last Portion-----------------------//
+      // Determination if Rate Dependence / Duvaut-Lions will be used
+      // d.cm.T1_rate_dependence and d.cm.T2_rate_dependence are defined by the user input
+      // tau is the material characteristic response time to deformation  
+      double tau1 = 0,
+             tau = 0,
+             RAT = 0,
+             pRH = 0,
+             prh = 0;
+      
       pCapXQS_new[idx]   = pCapX_new[idx];
       pZetaQS_new[idx]   = pZeta_new[idx];
       pIotaQS_new[idx]   = pIota_new[idx];
       pStressQS_new[idx] = pStress_new[idx];
-    
-      //--------------------------------------------------------------------//
-      // --------------Rate Dependence Code Continued-----------------------//
-      // Determination if Rate Dependence / Duvaut-Lions will be used
-      // d.cm.T1_rate_dependence and d.cm.T2_rate_dependence are defined by the user input
-      // tau is the material characteristic response time to deformation  
-
+      
       if (d_cm.T1_rate_dependence != 0 || d_cm.T2_rate_dependence != 0){
         //cout << "Rate Dependence Part 2" << endl;
-        pCapXQS_new[idx]   = pCapX_new[idx];
-        pZetaQS_new[idx]   = pZeta_new[idx];
-        pIotaQS_new[idx]   = pIota_new[idx];
-        pStressQS_new[idx] = pStress_new[idx];
-        
-        // Initializing tau, RAT, pRH, prh for Duvaut Lions Rate Dependence
-
-        double tau1 = 0,
-               tau = 0,
-               RAT = 0,
-               pRH = 0,
-               prh = 0;
-        
+                
         // Calculating Material Characteristic, for T2=0
         if (d_cm.T2_rate_dependence == 0 && d_cm.T1_rate_dependence != 0){
           tau1 = d_cm.T1_rate_dependence;
@@ -1288,7 +1271,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                            D(0,2)*D(0,2) +
                            D(1,2)*D(1,2));
 
-          double Dnorm1 = Pow(Dnormsq,0.5);
+          double Dnorm1 = Sqrt(Dnormsq);
           double Dnorm = max(Dnorm1 , 1e-15); // print result to observe the range
 
           double inv_eqstrain = 1.0/Dnorm;
@@ -1311,32 +1294,20 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         pZeta_new[idx] = pZetaQS_new[idx] + pRH* pZeta[idx] - pRH*pZetaQS_new[idx];
         pIota_new[idx] = pIotaQS_new[idx] + pRH* pIota[idx] - pRH*pIotaQS_new[idx];
       } 
-      else {
-        double tau = 0,
-               RAT = 0,
-               pRH = 0,
-               prh = 0;
-        
-        pCapXQS_new[idx]   = pCapX_new[idx];
-        pZetaQS_new[idx]   = pZeta_new[idx];
-        pIotaQS_new[idx]   = pIota_new[idx];
-        pStressQS_new[idx] = pStress_new[idx];
-        
-        tau = 1e-15;  //T2D: generally small value
-        RAT = delT/tau;                    
-        pRH = (1.0-exp(-RAT))/RAT;
-        prh = exp(-RAT) -pRH;
-          
-        pCapX_new[idx] = pCapXQS_new[idx] + pRH* pCapX[idx] - pRH*pCapXQS_new[idx];
-        pZeta_new[idx] = pZetaQS_new[idx] + pRH* pZeta[idx] - pRH*pZetaQS_new[idx];
-        pIota_new[idx] = pIotaQS_new[idx] + pRH* pIota[idx] - pRH*pIotaQS_new[idx];
+      //else {
+      //  tau = 1e-15;  //T2D: generally small value
+      //  RAT = delT/tau;                    
+      //  pRH = (1.0-exp(-RAT))/RAT;
+      //  prh = exp(-RAT) -pRH;
+      //    
+      //  pCapX_new[idx] = pCapXQS_new[idx] + pRH* pCapX[idx] - pRH*pCapXQS_new[idx];
+      //  pZeta_new[idx] = pZetaQS_new[idx] + pRH* pZeta[idx] - pRH*pZetaQS_new[idx];
+      //  pIota_new[idx] = pIotaQS_new[idx] + pRH* pIota[idx] - pRH*pIotaQS_new[idx];
 
-        pStress_new[idx] = pStressQS_new[idx] + pRH*(stress_diff_step + unrotated_stress) 
-                     - pRH*pStressQS_new[idx] + prh*unrotated_stress - prh*unrotated_stressQS;
-
-      }
-        
-      //----------End Rate Dependence ----------------------------//
+      //  pStress_new[idx] = pStressQS_new[idx] + pRH*(stress_diff_step + unrotated_stress) 
+      //               - pRH*pStressQS_new[idx] + prh*unrotated_stress - prh*unrotated_stressQS;
+      //}
+      //----------End of final portion for rate dependence
 
       // Compute the total strain energy and the stable timestep based on both
       // the particle velocities and wave speed.
@@ -1495,7 +1466,7 @@ int Arenisca::computeStressTensorStep(const Matrix3& sigma_trial, // trial stres
 #ifdef JC_3KBY3G_NOFIX
   double  threeKby2G    = (3.0*bulk)  / (2.0*shear),              // scale deviator to closest point space
 #else
-  double  rootthreeKby2G    = sqrt((3.0*bulk)  / (2.0*shear)),    // scale deviator to closest point space
+  double  rootthreeKby2G    = sqrt((3.0*bulk) / (2.0*shear)),    // scale deviator to closest point space
 #endif
           oneby9k_1by6G = (1.0/(9.0*bulk)-1.0/(6.0*shear)),       // used to compute strain from stress
           oneby2G       = 1.0/(2.0*shear);                        // used to compute strain from stress
@@ -1784,7 +1755,7 @@ void Arenisca::computeInvariants(const Matrix3& stress, Matrix3& S,  double& I1,
   // Compute the first invariants
   J2 = 0.5*S.Contract(S);  //Pa^2
 
-  if(sqrt(J2) < 1e-8*sqrt(Pow(I1,2)+J2))
+  if(J2 < 1e-16*(I1*I1+J2))
     J2=0;
 }
 
@@ -1862,8 +1833,8 @@ double Arenisca::ComputeNonHardeningReturn(const double& R,   // Transformed Tri
   //define and initialize some varialbes
   double Beta2   = Beta*Beta,
          CapR    =  d_cm.CR,
-         ZVertex = d_cm.PEAKI1/sqrt(3),
-         ZCapX   = CapX/sqrt(3),
+         ZVertex = d_cm.PEAKI1*one_sqrt_three,
+         ZCapX   = CapX*one_sqrt_three,
          ZKappa,
          RKappa,
          ZApex,
@@ -1872,20 +1843,22 @@ double Arenisca::ComputeNonHardeningReturn(const double& R,   // Transformed Tri
          g;
 
   double CapR2 = CapR*CapR,
-         R2 = R*R;
+         R2 = R*R,
+         Zdiff2=(Z - ZVertex)*(Z - ZVertex),
+         one_sqrt_sum1=1.0/Sqrt(Beta2 + CapR2);
 
   // Shifted Z component of the branch point:
-  ZKappa = ZCapX - (Beta*ZCapX)/Sqrt(Beta2 + CapR2) + (Beta*ZVertex) / Sqrt(Beta2 + CapR2);
+  ZKappa = ZCapX - (Beta*ZCapX)*one_sqrt_sum1 + (Beta*ZVertex)*one_sqrt_sum1;
     // Transformed R Component of the branch point
-  RKappa = (Beta*(-Beta + Sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex)) / Sqrt(Beta2 + CapR2);
+  RKappa = (Beta*(-Beta + Sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex))*one_sqrt_sum1;
     // Shifted Z component of the apex:
   ZApex = (CapR2*ZCapX + Beta*(-Beta + Sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex)) / CapR2;
 
   // Region I - closest point return to vertex
   if(R <= (Z - ZVertex)/Beta){
-    g = Sqrt(R2 + Pow(Z - ZVertex,2));
-    dgdr = R/Sqrt(R2 + Pow(Z - ZVertex,2));
-    dgdz = (Z - ZVertex)/Sqrt(R2 + Pow(Z - ZVertex,2));
+    g = Sqrt(R2 + Zdiff2);
+    dgdr = R/g;
+    dgdz = (Z - ZVertex)/g;
 
     r_new = R - g*dgdr;
     z_new = Z - g*dgdz;
@@ -1913,18 +1886,16 @@ double Arenisca::ComputeNonHardeningReturn(const double& R,   // Transformed Tri
           Theta_out = 1.570796326794897,
           TOL = 1.0e-6;
 
-   //while (Abs( Sqrt( Pow(X-a*cos(Theta_out),2) + Pow(Y-b*sin(Theta_out),2) ) -
-   //            Sqrt( Pow(X-a*cos(Theta_in),2) + Pow(Y-b*sin(Theta_in),2) ) ) > TOL)
    while(Abs(Theta_out-Theta_in)>TOL){
      Theta = (Theta_out+Theta_in)/2;
-     if ((2*a*(X-a*cos(Theta))*sin(Theta)-2*b*cos(Theta)*(Y-b*sin(Theta)))
-                          /(2*Sqrt(Pow(X-a*cos(Theta),2)+Pow(Y-b*sin(Theta),2))) > 0)
+     g=Sqrt((X-a*cos(Theta))*(X-a*cos(Theta))+(Y-b*sin(Theta))*(Y-b*sin(Theta)));
+     if ((2*a*(X-a*cos(Theta))*sin(Theta)
+          -2*b*cos(Theta)*(Y-b*sin(Theta)))/(2*g) > 0)
        Theta_out = Theta;
      else
        Theta_in = Theta;
    }
 
-   g = Sqrt( Pow(X-a*cos(Theta),2) + Pow(Y-b*sin(Theta),2) );
    r_new = b*sin(Theta);
    z_new = Sign(Z-ZApex)*a*cos(Theta) + ZApex;
   }
@@ -1959,18 +1930,19 @@ double Arenisca::TransformedYieldFunction(const double& R,   // Transformed Tria
 
   double Beta2   = Beta*Beta,
          CapR    = d_cm.CR,
-         ZVertex = PEAKI1/sqrt(3),
-         ZCapX   = CapX/sqrt(3),
+         ZVertex = PEAKI1*one_sqrt_three,
+         ZCapX   = CapX*one_sqrt_three,
          ZKappa,
          RKappa,
          ZApex,
          f       = 0.0, // sign of the yield function
-         CapR2   = CapR*CapR;
+         CapR2   = CapR*CapR,
+         one_sqrt_sum1=1.0/Sqrt(Beta2 + CapR2);
 
   // Shifted Z component of the branch point:
-  ZKappa = ZCapX - (Beta*ZCapX)/Sqrt(Beta2 + CapR2) + (Beta*ZVertex) / Sqrt(Beta2 + CapR2);
+  ZKappa = ZCapX - (Beta*ZCapX)*one_sqrt_sum1 + (Beta*ZVertex)*one_sqrt_sum1;
   // Transformed R Component of the branch point
-  RKappa = (Beta*(-Beta + Sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex)) / Sqrt(Beta2 + CapR2);
+  RKappa = (Beta*(-Beta + Sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex))*one_sqrt_sum1;
   // Shifted Z component of the apex:
   ZApex = (CapR2*ZCapX + Beta*(-Beta + Sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex)) / CapR2;
 
@@ -2415,8 +2387,8 @@ double Arenisca::computedfdKappa(double I1,
 
   // Cap Region (I1-Zeta) < Kappa
   else
-    dfdKappa = ( 2*Pow(FSLOPE,2)*(I1 - X)*(I1 - Kappa - Zeta)*Pow( -I1+PEAKI1+Zeta , 2 ) )
-               /Pow( -Kappa+X-Zeta , 3 );
+    dfdKappa = (2*FSLOPE*FSLOPE*(I1 - X)*(I1 - Kappa - Zeta)*(-I1+PEAKI1+Zeta)
+                *(-I1+PEAKI1+Zeta) )/((-Kappa+X-Zeta)*(-Kappa+X-Zeta)*(-Kappa+X-Zeta));
 
   return dfdKappa;
 }
@@ -2446,14 +2418,14 @@ double Arenisca::computedfdZeta(double I1,
 
   // Linear Drucker-Prager Region (I1-Zeta) >= Kappa
     if(I1-Zeta >= Kappa)
-      dfdZeta = -2*Pow(FSLOPE,2)*(-I1 + PEAKI1 + Zeta);
+      dfdZeta = -2*FSLOPE*FSLOPE*(-I1 + PEAKI1 + Zeta);
 
   // Cap Region (I1-Zeta) < Kappa
     else
-      dfdZeta = (2*Pow(FSLOPE,2)*(I1 - X)*(I1 - PEAKI1 - Zeta)*
-                ( Pow(I1,2) - Pow(X,2) + 3*X*(Kappa+Zeta) +
+      dfdZeta = (2*FSLOPE*FSLOPE*(I1 - X)*(I1 - PEAKI1 - Zeta)*
+                ( I1*I1 - X*X + 3*X*(Kappa+Zeta) +
                 (-2*Kappa+PEAKI1-Zeta)*(Kappa+Zeta) - I1*(PEAKI1+X+Zeta) ) )
-                / Pow(-Kappa+X-Zeta , 3);
+                /((-Kappa+X-Zeta)*(-Kappa+X-Zeta)*(-Kappa+X-Zeta));
 
   } //end fluid effects
 
