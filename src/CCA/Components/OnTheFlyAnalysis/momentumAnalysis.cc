@@ -434,7 +434,7 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup* pg,
     // This assumes the entire computational domain is being used as the control volume!!!         <<<<<<<<<<<<,
     for (CellIterator iter=patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
-      totalCVMomentum = rho_CC[c] * vol * vel_CC[c];
+      totalCVMomentum += rho_CC[c] * vol * vel_CC[c];
     }
 
     cout_dbg.precision(15);
@@ -498,7 +498,7 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup* pg,
           //cout << "face: " << faceName << " c: " << c << " offset: " << offset << " vel = " << vel << " mdot = " << mdot << endl;
         }
         total_flux += sumMom;
-        cout_dbg << "    face: " << faceName << " mdot = " << sumMom << endl;
+        cout_dbg << "    face: " << faceName << " sumMom = " << sumMom << endl;
       }
 
       //__________________________________
@@ -525,7 +525,7 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup* pg,
           //cout << "face: " << faceName << " c: " << c << " offset: " << offset << " vel = " << vel << " mdot = " << mdot << endl;
         }
         total_flux += sumMom;
-        cout_dbg << "    face: " << faceName << " mdot = "<< sumMom << endl;;
+        cout_dbg << "    face: " << faceName << " sumMom = "<< sumMom << endl;;
       }
 
       //__________________________________
@@ -552,11 +552,11 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup* pg,
           sumMom += mdot * vel_CC[uw];
         }
         total_flux += sumMom;
-        cout_dbg << "    face: " << faceName << " mdot = "<< sumMom << endl;;
+        cout_dbg << "    face: " << faceName << " sumMom = "<< sumMom << endl;;
       }
     }  // boundary faces
 
-    cout_dbg << "Patch: " << patch->getID() << " totalFlux: " << total_flux <<endl;
+    cout_dbg << "Patch: " << patch->getID() << " totalFlux: " << total_flux <<  " total CV: " << totalCVMomentum << endl;
 
     new_dw->put( sumvec_vartype(totalCVMomentum), labels->totalCVMomentum );
     new_dw->put( sumvec_vartype(total_flux),      labels->CS_fluxes );
@@ -632,7 +632,7 @@ void momentumAnalysis::doAnalysis(const ProcessorGroup* pg,
       Vector momentum = totalCVMomentum;
       Vector flux = total_flux;
 
-      fprintf(fp, "%16.15E      %16.15E       %16.15E       %16.15E      %16.15E       %16.15E       %16.15E\n", now,
+      fprintf(fp, "%16.15E,      %16.15E,       %16.15E,       %16.15E,      %16.15E,       %16.15E,       %16.15E\n", now,
                   (double)momentum.x(),
                   (double)momentum.y(),
                   (double)momentum.z(),
