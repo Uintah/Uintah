@@ -1356,12 +1356,12 @@ void floatRay::rayLocation_cellFace( MTRand& mTwister,
   Vector tmp;
   tmp[0] =  mTwister.rand() ;
   tmp[1] =  0;
-  tmp[2] =  mTwister.rand() * DzDx ;
+  tmp[2] =  mTwister.rand() ;
   
   // Put point on correct face
   location[0] = tmp[indexOrder[0]] + shift[0];
-  location[1] = tmp[indexOrder[1]] + shift[1] * DyDx;
-  location[2] = tmp[indexOrder[2]] + shift[2] * DzDx;
+  location[1] = (tmp[indexOrder[1]] + shift[1]) * DyDx;
+  location[2] = (tmp[indexOrder[2]] + shift[2]) * DzDx;
 
   location[0] += origin.x();
   location[1] += origin.y();
