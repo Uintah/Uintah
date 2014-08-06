@@ -36,7 +36,7 @@
  | $$$$$$$ | $$$$$$$$| $$$$$$$\  | $$     | $$  | $$   __ | $$      | $$$$$    _\$$$$$$\
  | $$      | $$  | $$| $$  | $$  | $$    _| $$_ | $$__/  \| $$_____ | $$_____ |  \__| $$
  | $$      | $$  | $$| $$  | $$  | $$   |   $$ \ \$$    $$| $$     \| $$     \ \$$    $$
- \$$       \$$   \$$ \$$   \$$   \$$    \$$$$$$  \$$$$$$  \$$$$$$$$ \$$$$$$$$  \$$$$$$
+ \ $$      \ $$  \ $$ \$$   \$$   \$$    \$$$$$$  \$$$$$$  \$$$$$$$$ \$$$$$$$$  \$$$$$$
  **************************************************************************************/
 
 #include "ParticlesHelper.h"
@@ -570,16 +570,27 @@ namespace Uintah {
           constParticleVariable<Point> pos;
           old_dw->get(pos,pPosLabel_,bndParticleSubset);
           
-          std::vector<int> bndParticlesIndices;
-          std::vector<Uintah::IntVector> bndCellIndices;
+          // map that holds particle indices per boundary cell: boundary cell index -> (vector of particles in that cell)
+          std::map<Uintah::IntVector, std::vector<int> > bndCIdxPIdx;
+          
+          // loop over all particles in this patch
           for (ParticleSubset::iterator it = bndParticleSubset->begin(); it!=bndParticleSubset->end();++it)
           {
+            // get particle index
             particleIndex idx = *it;
+            // get the cell index in which this particle lives
             const Uintah::IntVector cellIdx = patch->getCellIndex(pos[idx]);
+            // if this cell is part of the boundary face, then add it to the list of boundary cells and particles
             if(Patch::containsIndex(low,high,cellIdx) )
             {
-              bndParticlesIndices.push_back(idx);
-              bndCellIndices.push_back(cellIdx);
+              map<IntVector, vector<int> >::iterator it = bndCIdxPIdx.find(cellIdx);
+              map<IntVector, vector<int> >::iterator iend = bndCIdxPIdx.end();
+              if ( it == iend ) {
+                bndCIdxPIdx.insert(pair<IntVector, vector<int> >(cellIdx, vector<int>(1,idx)));
+              } else {
+                it->second.push_back(idx);
+              }
+              
             }
           }
           
@@ -620,13 +631,11 @@ namespace Uintah {
             // for every boundary point on this child, see which particles belong
             for( bndIter.reset(); !bndIter.done(); ++bndIter ) {
               const Uintah::IntVector bcPointIJK = *bndIter - unitNormal;
-              vector<Uintah::IntVector>::iterator cit = bndCellIndices.begin();
-              vector<int>::iterator pit = bndParticlesIndices.begin();
-              for (; cit != bndCellIndices.end() && pit != bndParticlesIndices.end(); ++cit, ++pit)
-              {
-                if (*cit == bcPointIJK) {
-                  childBndParticles.push_back(*pit);
-                }
+              // find this boundary cell in the bndCIdxPIdx
+              map<IntVector, vector<int> >::iterator it = bndCIdxPIdx.find(bcPointIJK);
+              map<IntVector, vector<int> >::iterator iend = bndCIdxPIdx.end();
+              if ( it != iend ) {
+                childBndParticles.insert(childBndParticles.end(),it->second.begin(), it->second.end());
               }
             }
             update_boundary_particles_vector( childBndParticles, bndName, patchID );
@@ -654,20 +663,21 @@ namespace Uintah {
     using namespace std;
     using namespace SCIRun;
     using namespace Uintah;
+
     // loop over the material set
-    BOOST_FOREACH( const Uintah::MaterialSubset* matSubSet, materials_->getVector() ) {
-      
+    for (int ms = 0; ms < materials_->size(); ms++) {
+      const Uintah::MaterialSubset* matSubSet = materials_->getSubset(ms);
       // loop over materials
-      for( int im=0; im<matSubSet->size(); ++im ) {
+      for( int im=0; im < matSubSet->size(); ++im ) {
         
         const int materialID = matSubSet->get(im);
         
         // loop over local patches
-        BOOST_FOREACH( const Uintah::PatchSubset* const patches, localPatches->getVector() ) {
-          
+        for (int ps = 0; ps < localPatches->size(); ps++) {
+          const Uintah::PatchSubset* const patches = localPatches->getSubset(ps);
           // loop over every patch in the patch subset
-          BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() ) {
-            
+          for (int p=0; p<patches->size(); p++) {
+            const Uintah::Patch* const patch = patches->get(p);
             const int patchID = patch->getID();
             
             std::vector<Uintah::Patch::FaceType> bndFaces;
@@ -675,8 +685,8 @@ namespace Uintah {
             
             // loop over the physical boundaries of this patch. These are the LOGICAL boundaries
             // and do NOT include intrusions
-            BOOST_FOREACH(const Uintah::Patch::FaceType face, bndFaces) {
-              
+            for (size_t f=0; f<bndFaces.size(); f++) {
+              const Patch::FaceType face = bndFaces[f];
               // for a full boundary face, get the list of particles that are near that boundary
               IntVector low, high;
               patch->getFaceCells(face,-1,low,high);
@@ -703,10 +713,9 @@ namespace Uintah {
                   msg << "ERROR: It looks like you have not set a name for one of your boundary conditions! "
                   << "You MUST specify a name for your <Face> spec boundary condition. Please revise your input file." << std::endl;
                   throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-                }
-                
+                }                
                 // for every child, allocate a new vector for boundary particles. this vector will
-                // be referenced by the boundary condition expressions.
+                // be referenced by the boundary condition expressions/tasks.
                 allocate_boundary_particles_vector(bndName, patchID );
               } // boundary child loop (note, a boundary child is what Wasatch thinks of as a boundary condition
             } // boundary faces loop
