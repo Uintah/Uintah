@@ -114,8 +114,13 @@
 
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
-          <initialization type="almgren">
-            <plane>x-y</plane>
+          <!--<initialization type="almgren">-->
+            <!--<plane>x-y</plane>-->
+          <!--</initialization>-->
+          <initialization type="constant">
+            <const_u>1.0</const_u>
+            <const_v>0.0</const_v>
+            <const_w>0.0</const_w>
           </initialization>
         </MomentumSolver>
 

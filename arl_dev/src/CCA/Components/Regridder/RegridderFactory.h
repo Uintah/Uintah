@@ -22,27 +22,43 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef Packages_Uintah_CCA_Components_Regridders_RegridderFactory_h
-#define Packages_Uintah_CCA_Components_Regridders_RegridderFactory_h
+#ifndef UINTAH_CCA_COMPONENTS_REGRIDDERS_REGRIDDERFACTORY_H
+#define UINTAH_CCA_COMPONENTS_REGRIDDERS_REGRIDDERFACTORY_H
 
-#include <Core/ProblemSpec/ProblemSpecP.h>
+//-- Uintah component includes --//
 #include <CCA/Components/Regridder/RegridderCommon.h>
+
+//-- Uintah framework includes --//
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 
   class ProcessorGroup;
 
-  class RegridderFactory
-  {
-  public:
-    // this function has a switch for all known regridders
-    
-    static RegridderCommon* create(ProblemSpecP& ps,
-                                   const ProcessorGroup* world);
+  /**
+   *  @ingroup Regridders
+   *  @class   RegridderFactory
+   *  @author  Steve Parker
+   *           Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+   *           University of Utah
+   *  @date    Long ago - CSAFE early days
+   *  @brief   Class to create one of all known regridders via factory method
+   */
+  class RegridderFactory {
 
+  public:
+
+    static RegridderCommon* ///< Pointer to the single simulation Regridder instance
+
+    /**
+     * @brief Create a simulation Regridder . Type is based on what the ProblemSpec is provided from the input file.
+     * @param ps Uintah::ProblemSpec used to parse the XML Uintah problem specification input file.
+     * @param world the MPI communicator used. To date this is normally MPI_COMM_WORLD.
+     */
+    create(ProblemSpecP& ps, const ProcessorGroup* world);
 
   };
-} // End namespace Uintah
 
+}  // End namespace Uintah
 
-#endif
+#endif // END UINTAH_CCA_COMPONENTS_REGRIDDERS_REGRIDDERFACTORY_H

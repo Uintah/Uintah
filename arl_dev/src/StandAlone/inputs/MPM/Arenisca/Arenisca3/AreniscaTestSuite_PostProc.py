@@ -1028,25 +1028,27 @@ def test08_postProc(uda_path,save_path,**kwargs):
   savePNG(save_path+'/Test08_verificationPlot_b','1280x960')
 
   ##Plot c
-  I1lims = (-7000,0)  
+  I1lims = (-10000,0)  
   plt.figure(3)
   plt.clf()
   ax3 = plt.subplot(111)
   plt.subplots_adjust(right=0.75,left=0.15) 
   param_text = material_dict['material string']
   plt.figtext(0.77,0.70,param_text,ha='left',va='top',size='x-small')  
-  eqShear_vs_meanStress(I1s,porosity,I1lims,(0,1.6))
+  eqShear_vs_meanStress(I1s,porosity,I1lims,(0,1.25))
   plt.title('AreniscaTest 08:\nLoading/Unloading (plot c)')
   plt.ylabel(str_to_mathbf('Porosity'))
   plt.xlabel(str_to_mathbf('I_{1}:first invariant of stress tensor (Pa)'))
   plot_crush_curve(uda_path,I1lims)
   #ax1.set_xticks([-9000,-7000,-5000,-3000,-1000,0])
-  ax3.set_xticks([-7000,-5000,-3000,-1000,1000])
+  ax3.set_xticks([-10000,-7500,-5000,-2500,0,1000])
+  ax3.set_yticks([0,0.2,0.4,0.6,0.8,1.0])
   ax3.xaxis.set_major_formatter(exp_formatter)
   ax3.yaxis.set_major_formatter(int_formatter)
   ax3.tick_params(axis='both',labelsize='small')
   plt.legend()
   savePNG(save_path+'/Test08_verificationPlot_c','1280x960')
+
   if SHOW_ON_MAKE:
     plt.show()   
   
@@ -1055,34 +1057,75 @@ def test09_postProc(uda_path,save_path,**kwargs):
   print "Post Processing Test: 09 - Fluid Filled Pore Space"
   times,sigmas = get_pStress(uda_path)
   I1s = []
+  ps = []
   for sigma in sigmas:
     I1s.append(sigma_I1(sigma))
+    ps.append(sigma_I1(sigma)/3.0)
   times,plasticStrainVol = get_pPlasticStrainVol(uda_path)
+  times,elasticStrainVol = get_pElasticStrainVol(uda_path)
+  totalStrainVol = np.array(elasticStrainVol)+np.array(plasticStrainVol)
   material_dict = get_yield_surface(uda_path)
   P3 = material_dict['P3']
   porosity = 1-np.exp(-(P3+np.array(plasticStrainVol)))
   
   
-  ###PLOTTING
-  formatter = ticker.FormatStrFormatter('$\mathbf{%g}$')
+   ###PLOTTING
+  int_formatter = ticker.FormatStrFormatter('$\mathbf{%g}$')
+  exp_formatter = ticker.FuncFormatter(exp_fmt)
   ##Plot a
-  I1lims = (-8000,0)  
   plt.figure(1)
   plt.clf()
   ax1 = plt.subplot(111)
-  plt.subplots_adjust(right=0.75) 
+  plt.subplots_adjust(right=0.75,left=0.15)  
   param_text = material_dict['material string']
-  plt.figtext(0.77,0.70,param_text,ha='left',va='top',size='x-small')   
-  ax1=eqShear_vs_meanStress(I1s,porosity)#,I1lims,(0,0.6))
-  plt.title('AreniscaTest 09:\nFluid Filled Pore Space')
+  plt.figtext(0.77,0.70,param_text,ha='left',va='top',size='x-small')  
+  ax1=eqShear_vs_meanStress(times,-np.array(ps),(0,3.5),(-500,2000))
+  plt.title('AreniscaTest 09:\nFluid EFfects (plot a)')  
+  plt.ylabel(str_to_mathbf('Pressure (Pa)'))
+  plt.xlabel(str_to_mathbf('Time (s)'))
+  ax1.xaxis.set_major_formatter(int_formatter)
+  ax1.yaxis.set_major_formatter(exp_formatter)
+  ax1.tick_params(axis='both',labelsize='small')
+  savePNG(save_path+'/Test09_verificationPlot_a','1280x960')  
+  
+  ##Plot b
+  plt.figure(2)
+  plt.clf()
+  ax2 = plt.subplot(111)
+  plt.subplots_adjust(right=0.75,left=0.15)  
+  param_text = material_dict['material string']
+  plt.figtext(0.77,0.70,param_text,ha='left',va='top',size='x-small')  
+  ax1=eqShear_vs_meanStress(times,totalStrainVol,(0,3.5),(-0.8,0.8))
+  plt.title('AreniscaTest 09:\nFluid EFfects (plot b)')  
+  plt.ylabel(str_to_mathbf('Total Volumetric Strain, \epsilon_{v}'))
+  plt.xlabel(str_to_mathbf('Time (s)'))
+  ax2.xaxis.set_major_formatter(int_formatter)
+  ax2.yaxis.set_major_formatter(int_formatter)  
+  ax2.tick_params(axis='both',labelsize='small')
+  savePNG(save_path+'/Test09_verificationPlot_b','1280x960')
+
+  ##Plot c
+  I1lims = (-10000,0)  
+  plt.figure(3)
+  plt.clf()
+  ax3 = plt.subplot(111)
+  plt.subplots_adjust(right=0.75,left=0.15) 
+  param_text = material_dict['material string']
+  plt.figtext(0.77,0.70,param_text,ha='left',va='top',size='x-small')  
+  eqShear_vs_meanStress(I1s,porosity,I1lims,(0,1.25))
+  plt.title('AreniscaTest 09:\nFluid EFfects (plot c)')
   plt.ylabel(str_to_mathbf('Porosity'))
   plt.xlabel(str_to_mathbf('I_{1}:first invariant of stress tensor (Pa)'))
   plot_crush_curve(uda_path,I1lims)
-  #ax1.set_xticks([-8000,-6000,-4000,-2000,0]) 
-  ax1.xaxis.set_major_formatter(formatter)
-  ax1.yaxis.set_major_formatter(formatter) 
+  #ax1.set_xticks([-9000,-7000,-5000,-3000,-1000,0])
+  ax3.set_xticks([-10000,-7500,-5000,-2500,0,1000])
+  ax3.set_yticks([0,0.2,0.4,0.6,0.8,1.0])
+  ax3.xaxis.set_major_formatter(exp_formatter)
+  ax3.yaxis.set_major_formatter(int_formatter)
+  ax3.tick_params(axis='both',labelsize='small')
   plt.legend()
-  savePNG(save_path+'/Test09_verificationPlot','1280x960')
+  savePNG(save_path+'/Test09_verificationPlot_c','1280x960')
+
   if SHOW_ON_MAKE:
     plt.show()  
   
@@ -1211,7 +1254,7 @@ def test11_postProc(uda_path,save_path,**kwargs):
     plt.figtext(0.77,0.70,param_text,ha='left',va='top',size='x-small')    
     plt.title('AreniscaTest 11:\nUniaxial Strain J2 Plasticity (plot a)')
     plt.plot(np.array(analytical_e11),np.array(analytical_Sxx)/1e6,'--g',linewidth=lineWidth+1,label=str_to_mathbf('Analytical'))    
-    plt.plot(np.array(exx)/1e-7,np.array(Sxx)/1e6,'-r',label=str_to_mathbf('Uintah'))
+    plt.plot(np.array(exx),np.array(Sxx)/1e6,'-r',label=str_to_mathbf('Uintah'))
     plt.xlabel(str_to_mathbf('\epsilon_{A}'))
     plt.ylabel(str_to_mathbf('\sigma_{A} (Mpa)'))     
     plt.legend()    
@@ -1227,7 +1270,7 @@ def test11_postProc(uda_path,save_path,**kwargs):
     plt.figtext(0.77,0.70,param_text,ha='left',va='top',size='x-small')     
     plt.title('AreniscaTest 11:\nUniaxial Strain J2 Plasticity (plot b)')    
     plt.plot(np.array(analytical_e11),np.array(analytical_Syy)/1e6,'--g',linewidth=lineWidth+1,label=str_to_mathbf('Analytical'))
-    plt.plot(np.array(exx)/1e-7,np.array(Syy)/1e6,'-r',label=str_to_mathbf('Uintah'))
+    plt.plot(np.array(exx),np.array(Syy)/1e6,'-r',label=str_to_mathbf('Uintah'))
     plt.xlabel(str_to_mathbf('\epsilon_{A}'))
     plt.ylabel(str_to_mathbf('\sigma_{L} (Mpa)')) 
     plt.legend()

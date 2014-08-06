@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_PERPATCH_H
-#define UINTAH_HOMEBREW_PERPATCH_H
+#ifndef UINTAH_CORE_GRID_VARIABLES_PERPATCH_H
+#define UINTAH_CORE_GRID_VARIABLES_PERPATCH_H
 
 #include <Core/Grid/Variables/PerPatchBase.h>
 #include <Core/Exceptions/TypeMismatchException.h>
@@ -34,6 +34,7 @@
 #include <cstring>
 
 namespace Uintah {
+
 /**************************************
 
 CLASS
@@ -53,7 +54,7 @@ GENERAL INFORMATION
   
 
 KEYWORDS
-   Sole_Variable
+   PerPatch Variable
 
 DESCRIPTION
    Long description...
@@ -62,37 +63,42 @@ WARNING
   
 ****************************************/
 
-   class Variable;
-
    // 'T' should be a Handle to be something that's RefCounted.
    // Otherwise, do your own memory management...
    template<class T> class PerPatch : public PerPatchBase {
    public:
       inline PerPatch() {}
       inline PerPatch(T value) : value(value) {}
+
       virtual void copyPointer(Variable&);
+
       inline PerPatch(const PerPatch<T>& copy) : value(copy.value) {}
+
       virtual ~PerPatch();
-      
+
       static const TypeDescription* getTypeDescription();
-      
+
       inline operator T () const {
          return value;
       }
+
       inline T& get() {
          return value;
       }
+
       inline const T& get() const {
          return value;
       }
+
       void setData(const T&);
       virtual PerPatchBase* clone() const;
       PerPatch<T>& operator=(const PerPatch<T>& copy);
-      virtual void getSizeInfo(std::string& elems, unsigned long& totsize,
-                               void*& ptr) const {
-        elems="1";
-        totsize=sizeof(T);
-        ptr=(void*)&value;
+
+      virtual void getSizeInfo(std::string& elems, unsigned long& totsize, void*& ptr) const
+      {
+        elems = "1";
+        totsize = sizeof(T);
+        ptr = (void*)&value;
       }
 
       virtual size_t getDataSize() const {
@@ -111,11 +117,13 @@ WARNING
       }
 
    private:
+
       static TypeDescription* td;
       T value;
-      // this function only exists to satisfy the TypeDescription, it will return null.
       static Variable* maker();
-   };
+
+   }; // end class PerPatch
+
 
    template<class T>
    TypeDescription* PerPatch<T>::td = 0;
@@ -124,7 +132,7 @@ WARNING
      Variable*
      PerPatch<T>::maker()
      {
-       return NULL;
+       return scinew PerPatch<T>();
      }
 
    template<class T>
@@ -134,7 +142,7 @@ WARNING
         if(!td){
           // this is a hack to get a non-null perpatch
           // var for some functions the perpatches are used in (i.e., task->computes).
-          // Since they're not fully-qualified variables, maker 
+          // Since they're not fully-qualified variables, maker
           // would fail anyway.  And since most instances use Handle, it would be difficult.
           td = scinew TypeDescription(TypeDescription::PerPatch,
                                       "PerPatch", &maker,
@@ -182,4 +190,4 @@ WARNING
       }
 } // End namespace Uintah
 
-#endif
+#endif // UINTAH_CORE_GRID_VARIABLES_PERPATCH_H

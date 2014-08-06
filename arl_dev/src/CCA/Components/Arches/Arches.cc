@@ -78,8 +78,8 @@
 #include <CCA/Components/Arches/Utility/UtilityFactory.h>
 #include <CCA/Components/Arches/Utility/InitializeFactory.h>
 #include <CCA/Components/Arches/Transport/TransportFactory.h>
-//#include <CCA/Components/Arches/Task/SampleFactory.h>
 #include <CCA/Components/Arches/Task/TaskFactoryBase.h>
+//#include <CCA/Components/Arches/Task/SampleFactory.h>
 
 
 //END NEW TASK INTERFACE STUFF
@@ -1314,6 +1314,16 @@ Arches::scheduleInitialize(const LevelP& level,
 
 }
 
+#define BUILD_UPWIND( VOLT )                                          \
+{                                                                     \
+  typedef UpwindInterpolant<VOLT,FaceTypes<VOLT>::XFace> OpX;         \
+  typedef UpwindInterpolant<VOLT,FaceTypes<VOLT>::YFace> OpY;         \
+  typedef UpwindInterpolant<VOLT,FaceTypes<VOLT>::ZFace> OpZ;         \
+  pi._sodb.register_new_operator<OpX>( scinew OpX() );                \
+  pi._sodb.register_new_operator<OpY>( scinew OpY() );                \
+  pi._sodb.register_new_operator<OpZ>( scinew OpZ() );                \
+}
+
 void 
 Arches::sched_create_patch_operators( const LevelP& level, SchedulerP& sched ){ 
 
@@ -1332,6 +1342,8 @@ Arches::create_patch_operators( const ProcessorGroup* pg,
 {
   for (int p = 0; p < patches->size(); p++) {
 
+    using namespace SpatialOps; 
+
     const Patch* patch = patches->get(p);
     Operators& opr = Operators::self(); 
 
@@ -1346,6 +1358,8 @@ Arches::create_patch_operators( const ProcessorGroup* pg,
     Operators::PatchInfo pi;
 
     int pid = patch->getID(); 
+
+    BUILD_UPWIND(SpatialOps::SVolField); 
 
     SpatialOps::build_stencils( size[0], size[1], size[2],
                                 L[0],    L[1],    L[2],

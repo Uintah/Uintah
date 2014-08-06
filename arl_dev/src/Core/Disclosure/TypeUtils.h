@@ -41,12 +41,11 @@ namespace Uintah {
 using SCIRun::Point;
 using SCIRun::Vector;
 
-class Matrix3;
+class  Matrix3;
+class  Short27;
+class  TypeDescription;
 struct Stencil7;
 struct Stencil4;
-class ConnectionList;
-class Short27;
-class TypeDescription;
 
 typedef int64_t long64;
 typedef std::complex<double> dblcomplex;
@@ -79,11 +78,6 @@ typedef std::complex<double> dblcomplex;
  
  const TypeDescription* fun_getTypeDescription(FILE**);
 
-// Added by Oren for implicit ICE AMR pressure solver type that
-// appears in ICELabel.cc.
- const TypeDescription* fun_getTypeDescription(ConnectionList*);
-
-
 
 
 // these functions are for getting safe values of types
@@ -111,7 +105,7 @@ typedef std::complex<double> dblcomplex;
 } // End namespace Uintah
    
 #include <Core/Datatypes/TypeName.h>
-#include   <string>
+#include <string>
 
 #if !defined( STATIC_BUILD )
 
