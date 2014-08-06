@@ -22,89 +22,80 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_REGRIDDERCOMMON_H
-#define UINTAH_HOMEBREW_REGRIDDERCOMMON_H
+#ifndef UINTAH_CCA_COMPONENTS_REGRIDDERS_REGRIDDERCOMMON_H
+#define UINTAH_CCA_COMPONENTS_REGRIDDERS_REGRIDDERCOMMON_H
 
+//-- Uintah component includes --//
 #include <CCA/Ports/Regridder.h>
 #include <CCA/Ports/DataWarehouseP.h>
+
+//-- Uintah framework includes --//
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Geometry/IntVector.h>
+
+//-- system includes --//
 #include <vector>
 
 namespace Uintah {
 
-class DataWarehouse;
-class Patch;
-class VarLabel;
-
-typedef std::vector<SCIRun::IntVector> SizeList;
-
-/**************************************
-
-CLASS
-   RegridderCommon
-   
-   Short description...
-
-GENERAL INFORMATION
-
-   RegridderCommon.h
-
-   Bryan Worthen
-   Department of Computer Science
-   University of Utah
-
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
-   
-KEYWORDS
-   RegridderCommon
-
-DESCRIPTION
-   Long description...
-  
-WARNING
-
-****************************************/
-
+  class DataWarehouse;
+  class Patch;
+  class VarLabel;
   class ProcessorGroup;
   class LoadBalancer;
   class Scheduler;
 
-  //! Takes care of AMR Regridding.  Parent class which takes care
-  //! of common regridding functionality.
+  typedef std::vector<SCIRun::IntVector> SizeList;
+
+  /**
+   *  @ingroup Regridders
+   *  @class   RegridderCommon
+   *  @author  Bryan Worthen
+   *           Department of Computer Science
+   *           University of Utah
+   *  @date    CSAFE days - circa 06/04 (updated 08/14)
+   *  @brief   Parent class which takes care of common regridding functionality.
+   */
   class RegridderCommon : public Regridder, public UintahParallelComponent {
+
   public:
+
     RegridderCommon(const ProcessorGroup* pg);
     virtual ~RegridderCommon();
 
     //! Initialize with regridding parameters from ups file
-    virtual void problemSetup(const ProblemSpecP& params,
-			      const GridP& grid,
-			      const SimulationStateP& state);
+    virtual void problemSetup(const ProblemSpecP& params, const GridP& grid, const SimulationStateP& state);
 
     //! On a Switch, basically asks whether to turn off/on the Regridding
     virtual void switchInitialize(const ProblemSpecP& params);
 
     //! Asks if we need to recompile the task graph.
     //! Will return true if we did a regrid
-    virtual bool needRecompile(double time, double delt,
-			       const GridP& grid);
+    virtual bool needRecompile(double time, double delt, const GridP& grid);
 
     //! Do we need to regrid this timestep?
     virtual bool needsToReGrid(const GridP& grid);
 
     //! Asks if we are going to do regridding
-    virtual bool isAdaptive() { return d_isAdaptive; }
-    
+    virtual bool isAdaptive()
+    {
+      return d_isAdaptive;
+    }
+
     //! switch for setting adaptivity
-    virtual void setAdaptivity(const bool ans) { d_isAdaptive = ans;}
-    
+    virtual void setAdaptivity(const bool ans)
+    {
+      d_isAdaptive = ans;
+    }
+
     //! Ask if regridding only once.
-    virtual bool doRegridOnce() { return d_regridOnce; }
-       
+    virtual bool
+    doRegridOnce()
+    {
+      return d_regridOnce;
+    }
 
     //! Schedules task to initialize the error flags to 0
     virtual void scheduleInitializeErrorEstimate(const LevelP& level);
@@ -116,9 +107,15 @@ WARNING
     virtual bool flaggedCellsOnFinestLevel(const GridP& grid);
 
     //! Returns the max number of levels this regridder will store
-    virtual int maxLevels() { return d_maxLevels; }
+    virtual int maxLevels()
+    {
+      return d_maxLevels;
+    }
 
-    virtual bool useDynamicDilation() { return d_dynamicDilation; }
+    virtual bool useDynamicDilation()
+    {
+      return d_dynamicDilation;
+    }
 
     enum FilterType {
       FILTER_STAR,
@@ -131,23 +128,22 @@ WARNING
       DILATE_DELETION,
       DILATE_PATCH
     };
-  
+
     //! initialize the refineFlag variable for this domain (a task callback)
     void initializeErrorEstimate(const ProcessorGroup*,
                                  const PatchSubset* patches,
                                  const MaterialSubset* matls,
-                                 DataWarehouse*, DataWarehouse* new_dw);
+                                 DataWarehouse*,
+                                 DataWarehouse* new_dw);
 
     void Dilate(const ProcessorGroup*,
                 const PatchSubset* patches,
-                const MaterialSubset* ,
+                const MaterialSubset*,
                 DataWarehouse* old_dw,
                 DataWarehouse* new_dw,
                 const VarLabel* to_put,
                 CCVariable<int>* filter,
                 IntVector depth);
-
-
 
   protected:
 
@@ -155,26 +151,26 @@ WARNING
     LoadBalancer *lb_;
     Scheduler *sched_;
 
-    SimulationStateP d_sharedState; ///< to keep track of timesteps
-    bool d_isAdaptive; //!< if false, do not regrid (stick with what you got)
+    SimulationStateP d_sharedState;  ///< Shared global space, to keep track of timesteps
+    bool d_isAdaptive;               ///< If false, do not regrid (stick with what you have)
 
     // input parameters from ups file
-    bool  d_dynamicDilation;
+    bool d_dynamicDilation;
     IntVector d_maxDilation;
-    SizeList  d_cellNum; 
-    SizeList  d_cellRefinementRatio;
+    SizeList d_cellNum;
+    SizeList d_cellRefinementRatio;
     IntVector d_cellStabilityDilation;
     IntVector d_cellRegridDilation;
     IntVector d_cellDeletionDilation;
-    IntVector d_minBoundaryCells; //! min # of cells to be between levels' boundaries
+    IntVector d_minBoundaryCells;     ///< min # of cells to be between levels' boundaries
     FilterType d_filterType;
 
-    std::vector< CCVariable<int>* > d_flaggedCells;
-    std::vector< CCVariable<int>* > d_dilatedCellsStability;
-    std::vector< CCVariable<int>* > d_dilatedCellsRegrid;
-    std::vector< CCVariable<int>* > d_dilatedCellsDeleted;
+    std::vector<CCVariable<int>*> d_flaggedCells;
+    std::vector<CCVariable<int>*> d_dilatedCellsStability;
+    std::vector<CCVariable<int>*> d_dilatedCellsRegrid;
+    std::vector<CCVariable<int>*> d_dilatedCellsDeleted;
 
-    std::map<IntVector,CCVariable<int>* > filters;
+    std::map<IntVector, CCVariable<int>*> filters;
     CCVariable<int> d_patchFilter;
 
     int d_maxLevels;
@@ -190,26 +186,26 @@ WARNING
 
     bool d_newGrid;
     bool d_regridOnce;
-    int d_lastRegridTimestep;         //The last time the full regridder was called (grid may not change)
-    int d_dilationTimestep;           //The last timestep that the dilation was changed
+    int d_lastRegridTimestep;         ///<The last time the full regridder was called (grid may not change)
+    int d_dilationTimestep;           ///<The last timestep that the dilation was changed
     int d_maxTimestepsBetweenRegrids;
     int d_minTimestepsBetweenRegrids;
-    double d_amrOverheadLow;          //Percentage low target for AMR overhead
-    double d_amrOverheadHigh;         //Percentage high target for AMR overhead
+    double d_amrOverheadLow;          ///<Percentage low target for AMR overhead
+    double d_amrOverheadHigh;         ///<Percentage high target for AMR overhead
 
     bool flaggedCellsExist(constCCVariable<int>& flaggedCells, IntVector low, IntVector high);
 
-    IntVector Less(    const IntVector& a, const IntVector& b );
-    IntVector Greater( const IntVector& a, const IntVector& b );
-    IntVector And(     const IntVector& a, const IntVector& b );
-    IntVector Mod(     const IntVector& a, const IntVector& b );
-    IntVector Ceil(    const Vector& a );
+    IntVector Less(const IntVector& a, const IntVector& b);
+    IntVector Greater(const IntVector& a, const IntVector& b);
+    IntVector And(const IntVector& a, const IntVector& b);
+    IntVector Mod(const IntVector& a, const IntVector& b);
+    IntVector Ceil(const Vector& a);
 
     void problemSetup_BulletProofing(const int k);
-    void GetFlaggedCells ( const GridP& origGrid, int levelIdx, DataWarehouse* dw );
+    void GetFlaggedCells(const GridP& origGrid, int levelIdx, DataWarehouse* dw);
     void initFilter(CCVariable<int>& filter, FilterType ft, IntVector& depth);
   };
 
-} // End namespace Uintah
+}  // End namespace Uintah
 
-#endif
+#endif // End UINTAH_CCA_COMPONENTS_REGRIDDERS_REGRIDDERCOMMON_H

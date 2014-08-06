@@ -1742,10 +1742,6 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
         else {
           vector<string>::const_iterator iter = find( tag->needAppliesTo_.validValues_.begin(), tag->needAppliesTo_.validValues_.end(),
                                                       attribute->currentValue_ );
-
-          // template tag is 'lattice_refinement_ratio'.  it is required for Hierarchical (regridder)
-          // we are working on a currentValue_ of "BNR".  which is not found.
-
           if( iter == tag->needAppliesTo_.validValues_.end() ) {
             continue;  // Tag is required, but not for this 'version' of the parent tag, so we just skip it.
           }

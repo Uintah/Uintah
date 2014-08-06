@@ -35,7 +35,6 @@ SUBDIRS := \
         $(SRCDIR)/TestConsecutiveRangeSet \
         $(SRCDIR)/TestRangeTree           \
         $(SRCDIR)/TestBoxGrouper          \
-        $(SRCDIR)/BNRRegridder            \
         $(SRCDIR)/Regridders              \
         $(SRCDIR)/IteratorTest            \
         $(SRCDIR)/RegionTest              \
@@ -76,7 +75,7 @@ ifeq ($(IS_STATIC_BUILD),yes)
           $(PAPI_LIBRARY) $(M_LIBRARY)
 else
   LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(LAPACK_LIBRARY) $(BLAS_LIBRARY) \
-	  $(THREAD_LIBRARY) $(Z_LIBRARY) \
+	      $(THREAD_LIBRARY) $(Z_LIBRARY) \
           $(TEEM_LIBRARY) $(XML2_LIBRARY) $(CUDA_LIBRARY)
 endif
 

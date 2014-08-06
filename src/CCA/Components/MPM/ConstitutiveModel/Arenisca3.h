@@ -50,6 +50,18 @@ namespace Uintah {
   class Arenisca3 : public ConstitutiveModel {
     // Create datatype for storing model parameters
   public:
+#ifdef MH_VARIABILITY
+    // For usage instructions, see the 'WeibullParser' function
+    // header in Kayenta.cc
+    struct WeibParameters {
+      bool Perturb;           // 'True' for perturbed parameter
+      double WeibMed;         // Medain distrib. value OR const value depending on bool Perturb
+      int    WeibSeed;        // seed for random number generator
+      double WeibMod;         // Weibull modulus
+      double WeibRefVol;      // Reference Volume
+      std::string WeibDist;   // String for Distribution
+    };
+#endif
     struct CMData {
       double PEAKI1;
       double FSLOPE;
@@ -113,14 +125,34 @@ namespace Uintah {
     const VarLabel* pScratchMatrixLabel;
     const VarLabel* pScratchMatrixLabel_preReloc;
 
+#ifdef MH_VARIABILITY
+    // weibull parameter set
+    WeibParameters wdist;
+
+    const VarLabel* peakI1IDistLabel;
+    const VarLabel* peakI1IDistLabel_preReloc;
+#endif
   private:
     double one_third,
            two_third,
            four_third,
+           sqrt_two,
+           one_sqrt_two,
            sqrt_three,
            one_sqrt_three,
+           one_sixth,
+           one_ninth,
+           pi,
+           pi_fourth,
+           pi_half,
            small_number,
-           big_number;
+           big_number,
+           Kf,
+           Km,
+           phi_i,
+           ev0,
+           C1;
+
     CMData d_cm;
 
     // Prevent copying of this class
@@ -161,10 +193,12 @@ namespace Uintah {
                     const Matrix3& sigma_n,
                     const double & X_n,
                     const double & Zeta_n,
+                    const double & damage_n, // XXX
                     const Matrix3& ep_n,
                     Matrix3& sigma_p,
                     double & X_p,
                     double & Zeta_p,
+                    double & damage_p, // XXX
                     Matrix3& ep_p,
                     long64 ParticleID);
 
@@ -200,17 +234,20 @@ namespace Uintah {
                        const Matrix3& ep_old,    // plastic strain at start of substep
                        const double & X_old,     // hydrostatic comrpessive strength at start of substep
                        const double & Zeta_old,  // trace of isotropic backstress at start of substep
+                       const double & damage_old, // XXX
                        Matrix3& sigma_new, // stress at end of substep
                        Matrix3& ep_new,    // plastic strain at end of substep
                        double & X_new,     // hydrostatic comrpessive strength at end of substep
-                       double & Zeta_new   // trace of isotropic backstress at end of substep
+                       double & Zeta_new,   // trace of isotropic backstress at end of substep
+                       double & damage_new // XXX
                       );
 
     double computeX(double evp);
 
     double computedZetadevp(double Zeta,
                             double evp);
-    double computeev0();
+
+    double computePorePressure(const double ev);
 
     int nonHardeningReturn(const double & I1_trial,
                            const double & rJ2_trial,
@@ -221,6 +258,7 @@ namespace Uintah {
                            const Matrix3& d_e,
                            const double & X,
                            const double & Zeta,
+                           const double & damage, // XXX
                            const double & bulk,
                            const double & shear,
                                  double & I1_new,
@@ -234,6 +272,7 @@ namespace Uintah {
                               const double& r_trial,
                               const double& X,
                               const double& Zeta,
+                              const double& damage, // XXX
                               const double& bulk,
                               const double& shear
                              );
@@ -242,13 +281,15 @@ namespace Uintah {
                                  const double& r,
                                  const double& X,
                                  const double& Zeta,
+                                 const double& damage, // XXX
                                  const double& bulk,
                                  const double& shear
                                 );
     int computeYieldFunction(const double& I1,
                              const double& rJ2,
                              const double& X,
-                             const double& Zeta
+                             const double& Zeta,
+                             const double& damage // XXX
                             );
 
   public: //Uintah MPM constitutive model specific functions
@@ -286,13 +327,6 @@ namespace Uintah {
                                                const MPMMaterial* matl,
                                                const PatchSet* patches) const;
 
-    virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-                                   ParticleSubset* addset,
-                                   std::map<const VarLabel*, ParticleVariableBase*>* newState,
-                                   ParticleSubset* delset,
-                                   DataWarehouse* old_dw);
-
-
     virtual void addComputesAndRequires(Task* task,
                                         const MPMMaterial* matl,
                                         const PatchSet* patches) const;
@@ -318,6 +352,19 @@ namespace Uintah {
                                    double temperature);
 
     virtual double getCompressibility();
+
+#ifdef MH_VARIABILITY
+    // Weibull input parser that accepts a structure of input
+    // parameters defined as:
+    //
+    // bool Perturb        'True' for perturbed parameter
+    // double WeibMed       Medain distrib. value OR const value
+    //                         depending on bool Perturb
+    // double WeibMod       Weibull modulus
+    // double WeibScale     Scale parameter
+    // std::string WeibDist  String for Distribution
+    virtual void WeibullParser(WeibParameters &iP);
+#endif
 
   };
 } // End namespace Uintah
