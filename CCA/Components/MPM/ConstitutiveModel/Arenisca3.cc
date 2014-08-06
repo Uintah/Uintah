@@ -14,6 +14,7 @@ the rights to use, copy, modify, merge, publish, distribute, sublicense,
 and/or sell copies of the Software, and to permit persons to whom the
 Software is furnished to do so, subject to the following conditions:
 
+
   The above copyright notice and this permission notice shall be included
   in all copies or substantial portions of the Software.
 
@@ -52,7 +53,7 @@ Software is furnished to do so, subject to the following conditions:
 
 //----------DEFINE SECTION----------
 //#define MH_VARIABILITY             // MH! Broken, not sure why since it works in Arenisca 2
-//#define MHdebug                    // Prints errors messages when particles are deleted or subcycling fails
+#define MHdebug                    // Prints errors messages when particles are deleted or subcycling fails
 
 // INCLUDE SECTION: tells the preprocessor to include the necessary files
 #include <CCA/Components/MPM/ConstitutiveModel/Arenisca3.h>
@@ -341,7 +342,6 @@ void Arenisca3::initializeCMData(const Patch* patch,
   // Allocate particle variables
   ParticleVariable<int> pLocalized,
                         pAreniscaFlag;
-
 #ifdef MH_VARIABILITY
   ParticleVariable<double>  peakI1IDist;     // Holder for particles PEAKI1 value
 #endif
@@ -822,7 +822,7 @@ int Arenisca3::computeStep(const Matrix3& D,       // strain "rate"
                            long64 ParticleID)// ParticleID for debug purposes
 {
   int n,
-      chimax = 16,                                  // max allowed subcycle multiplier
+      chimax = 1,                                  // max allowed subcycle multiplier
       // MH!: make this an input parameter for subcycle control
       chi = 1,                                      // subcycle multiplier
       stepFlag,                                     // 0/1 good/bad step
@@ -1131,7 +1131,7 @@ int Arenisca3::computeSubstep(const Matrix3& D,         // Strain "rate"
 //     [sigma_0,d_e_p,0] = (nonhardeningReturn(sigma_trial,sigma_old,X_old,Zeta_old,K,G)
     double  I1_0,       // I1 at stress update for non-hardening return
             rJ2_0,      // rJ2 at stress update for non-hardening return
-            TOL = 1e-5; // bisection convergence tolerance on eta
+            TOL = 1e-4; // bisection convergence tolerance on eta
     Matrix3 S_0,        // S (deviator) at stress update for non-hardening return
             d_ep_0;     // increment in plastic strain for non-hardening return
 
@@ -1158,7 +1158,7 @@ int Arenisca3::computeSubstep(const Matrix3& D,         // Strain "rate"
            eta_mid,
            d_evp;
     int i = 0,
-        imax=100;
+        imax=ceil(-10.0*log(TOL));
     double dZetadevp = computedZetadevp(Zeta_old,evp_old);
 
 // (7) Update Internal State Variables based on Last Non-Hardening Return:
@@ -1168,16 +1168,16 @@ updateISV:
     eta_mid   = 0.5*(eta_out+eta_in);
     d_evp     = eta_mid*d_evp_0;
 
-    if(evp_old + d_evp <= -p3 ){
-      eta_out = eta_mid;
-      if( i >= imax ){ // solution failed to converge
-#ifdef MHdebug
-        cout << "1296: i>=imax, failed substep (evp_old + d_evp <= -p3) "<< endl;
-#endif
-        goto failedSubstep;
-      }
-      goto updateISV;
-    }
+//    if(evp_old + d_evp <= -p3 ){
+//      eta_out = eta_mid;
+//      if( i >= imax ){ // solution failed to converge
+//#ifdef MHdebug
+//        cout << "1175: i>=imax, failed substep (evp_old + d_evp <= -p3) "<< endl;
+//#endif
+//        goto failedSubstep;
+//      }
+//      goto updateISV;
+//    }
 
     // Update X exactly
     X_new     = computeX(evp_old + d_evp);
@@ -1190,10 +1190,11 @@ updateISV:
     if( computeYieldFunction(I1_trial,rJ2_trial,X_new,Zeta_new,damage_old)!=1 ){
       eta_out = eta_mid;
       if( i >= imax ){                                        // solution failed to converge
-#ifdef MHdebug
-        cout << "1310: i>=imax, (yield surface encloses trial stress) failed substep "<< endl;
-#endif
-        goto failedSubstep;
+        eta_out=eta_in;
+//#ifdef MHdebug
+//        cout << "1194: i>=imax, (yield surface encloses trial stress) failed substep "<< endl;
+//#endif
+//        goto failedSubstep;
       }
       goto updateISV;
     }
@@ -1223,22 +1224,45 @@ updateISV:
     if(Sign(I1_trial - I1_new)!=Sign(I1_trial - I1_0)){
       eta_out = eta_mid;
       if( i >= imax ){                                        // solution failed to converge
-#ifdef MHdebug
-        cout << "1346: i>=imax, (isotropic return changed sign) failed substep "<< endl;
-#endif
-        goto failedSubstep;
+//#ifdef MHdebug
+//        cout << "1227: i>=imax, (isotropic return changed sign) failed substep "<< endl;
+//#endif
+        //goto failedSubstep;
+        eta_out = eta_in;
       }
       goto updateISV;
     }
-    // Good update, compare magnitude of plastic strain with prior update
+
+//    if(ep_new.Trace()<=-p3){
+//      eta_out = eta_mid;
+//      if( i >= imax ){                                        // solution failed to converge
+//#ifdef MHdebug
+//        cout << "1242: i>=imax (evp_new<=-p3), failed substep "<< endl;
+//#endif
+//        //goto failedSubstep;
+//        eta_out = eta_in;
+//      }
+//      goto updateISV;
+//    }
+
+    // Compare magnitude of plastic strain with prior update
     d_evp_new = d_ep_new.Trace();   // Increment in vol. plastic strain for return to new surface
+    ep_new = ep_old + d_ep_new;
 
     // Check for convergence
     if( abs(eta_out-eta_in) < TOL ){           // Solution is converged
       Matrix3 Identity;
       Identity.Identity();
       sigma_new = one_third*I1_new*Identity + S_new;
-      ep_new = ep_old + d_ep_new;
+
+    // If out of range, scale back isotropic plastic strain.
+      if(ep_new.Trace()<-p3){
+        d_evp_new = -p3-ep_old.Trace();
+        Matrix3 d_ep_new_iso = one_third*d_ep_new.Trace()*Identity,
+                d_ep_new_dev = d_ep_new - d_ep_new_iso;
+        ep_new = ep_old + d_ep_new_dev + one_third*d_evp_new*Identity;
+      }
+
       // Update X exactly
       X_new = computeX(ep_new.Trace());
       // Update zeta. min() eliminates tensile fluid pressure from explicit integration error
@@ -1742,7 +1766,7 @@ void Arenisca3::carryForward(const PatchSubset* patches,
 
     if (flag->d_reductionVars->accStrainEnergy ||
         flag->d_reductionVars->strainEnergy) {
-      new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
+      new_dw->put(sum_vartype(0.0),     lb->StrainEnergyLabel);
     }
   }
 }
@@ -1900,7 +1924,7 @@ double Arenisca3::computeRhoMicroCM(double pressure,
   double rho_cur;
   double bulk = d_cm.B0;
 
-  rho_cur = rho_orig/(1-p_gauge/bulk);
+  rho_cur = rho_orig/(1.0-p_gauge/bulk);
 
   cout << "NO VERSION OF computeRhoMicroCM EXISTS YET FOR Arenisca3"<<endl;
   return rho_cur;
@@ -1917,10 +1941,10 @@ void Arenisca3::computePressEOSCM(double rho_cur,double& pressure,
   double shear = d_cm.G0;
   double rho_orig = matl->getInitialDensity();
 
-  double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
+  double p_g = 0.5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
   pressure = p_ref + p_g;
-  dp_drho  = .5*bulk*(rho_orig/(rho_cur*rho_cur) + 1./rho_orig);
-  tmp = (bulk + 4.*shear/3.)/rho_cur;  // speed of sound squared
+  dp_drho  = 0.5*bulk*(rho_orig/(rho_cur*rho_cur) + 1./rho_orig);
+  tmp = (bulk + 4.0*shear/3.0)/rho_cur;  // speed of sound squared
 
   cout << "NO VERSION OF computePressEOSCM EXISTS YET FOR Arenisca3" << endl;
 }
