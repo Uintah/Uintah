@@ -7,6 +7,8 @@
 #include <CCA/Components/Arches/Task/FieldContainer.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
+#include <CCA/Components/Wasatch/Operators/FluxLimiterInterpolant.h>
+#include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
