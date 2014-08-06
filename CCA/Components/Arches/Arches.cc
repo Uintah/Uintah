@@ -1324,6 +1324,16 @@ Arches::scheduleInitialize(const LevelP& level,
   pi._sodb.register_new_operator<OpZ>( scinew OpZ() );                \
 }
 
+#define BUILD_UPWIND_LIMITER( VOLT )                                      \
+{                                                                         \
+  typedef FluxLimiterInterpolant<VOLT,FaceTypes<VOLT>::XFace> OpX;        \
+  typedef FluxLimiterInterpolant<VOLT,FaceTypes<VOLT>::YFace> OpY;        \
+  typedef FluxLimiterInterpolant<VOLT,FaceTypes<VOLT>::ZFace> OpZ;        \
+  pi._sodb.register_new_operator<OpX>( scinew OpX(dim,bcPlus,bcMinus) );  \
+  pi._sodb.register_new_operator<OpY>( scinew OpY(dim,bcPlus,bcMinus) );  \
+  pi._sodb.register_new_operator<OpZ>( scinew OpZ(dim,bcPlus,bcMinus) );  \
+}
+
 void 
 Arches::sched_create_patch_operators( const LevelP& level, SchedulerP& sched ){ 
 
@@ -1350,6 +1360,22 @@ Arches::create_patch_operators( const ProcessorGroup* pg,
     IntVector low = patch->getExtraCellLowIndex(); 
     IntVector high = patch->getExtraCellHighIndex(); 
 
+    const SCIRun::IntVector udim = patch->getCellHighIndex() - patch->getCellLowIndex();
+
+    std::vector<int> dim(3,1);
+    for( size_t i=0; i<3; ++i ){ dim[i] = udim[i];}
+
+    std::vector<bool> bcPlus(3,false);
+    bcPlus[0] = patch->getBCType(Uintah::Patch::xplus) != Uintah::Patch::Neighbor;
+    bcPlus[1] = patch->getBCType(Uintah::Patch::yplus) != Uintah::Patch::Neighbor;
+    bcPlus[2] = patch->getBCType(Uintah::Patch::zplus) != Uintah::Patch::Neighbor;
+    
+    // check if there are any physical boundaries present on the minus side of the patch
+    std::vector<bool> bcMinus(3,false);
+    bcMinus[0] = patch->getBCType(Uintah::Patch::xminus) != Uintah::Patch::Neighbor;
+    bcMinus[1] = patch->getBCType(Uintah::Patch::yminus) != Uintah::Patch::Neighbor;
+    bcMinus[2] = patch->getBCType(Uintah::Patch::zminus) != Uintah::Patch::Neighbor;
+
     IntVector size = high - low; 
 
     Vector Dx = patch->dCell(); 
@@ -1360,6 +1386,7 @@ Arches::create_patch_operators( const ProcessorGroup* pg,
     int pid = patch->getID(); 
 
     BUILD_UPWIND(SpatialOps::SVolField); 
+    BUILD_UPWIND_LIMITER(SpatialOps::SVolField);
 
     SpatialOps::build_stencils( size[0], size[1], size[2],
                                 L[0],    L[1],    L[2],
