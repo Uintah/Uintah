@@ -171,10 +171,9 @@ namespace Uintah {
       {
         return std::find(patchIDs.begin(), patchIDs.end(), patchID) != patchIDs.end();
       };
-      
     };
     
-    // This vector stores a list of all particle variables (except position). These variables require relocation.
+    // This vector stores a list of all particle variables that require relocation(except position).
     static std::vector<std::string> otherParticleVarNames_;
 
     typedef std::vector<int> BndParticlesVector;
@@ -197,31 +196,31 @@ namespace Uintah {
                              Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw );
 
     virtual void restart_initialize( const Uintah::ProcessorGroup*,
-                                     const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
-                                     Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw );
+                                    const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
+                                    Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw );
 
     virtual void transfer_particle_ids(const Uintah::ProcessorGroup*,
                               const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
                               Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
 
     virtual void delete_outside_particles(const Uintah::ProcessorGroup*,
-                              const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
-                              Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
+                                          const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
+                                          Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
 
     virtual void clear_deleteset(const Uintah::ProcessorGroup*,
-                          const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
-                          Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
+                                 const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
+                                 Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
 
     virtual void sync_particle_position(const Uintah::ProcessorGroup*,
-                        const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
-                        Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw, const bool initialization);
+                                        const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
+                                        Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw, const bool initialization);
 
     void allocate_boundary_particles_vector( const std::string& bndName,
-                                      const int& patchID );
+                                             const int& patchID );
 
     void update_boundary_particles_vector( const std::vector<int>& myIters,
-                                            const std::string& bndName,
-                                            const int& patchID );
+                                           const std::string& bndName,
+                                           const int& patchID );
     
     void find_boundary_particles( const Uintah::ProcessorGroup*,
                                   const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
@@ -235,7 +234,7 @@ namespace Uintah {
     
     /**
      * \brief Use this to parse boundary conditions specified in the input file and allocate appropriate
-     memory for the boundary particles.
+     memory for the boundary particles. This function will call parse_boundary_conditions(const Uintah::PatchSet* const patches)
      */
     virtual void parse_boundary_conditions(const Uintah::LevelP& level,
                                            Uintah::SchedulerP& sched);
