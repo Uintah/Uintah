@@ -124,6 +124,7 @@ SUBDIRS := $(SRCDIR)/ChemMix            \
            $(SRCDIR)/TransportEqns      \
 					 $(SRCDIR)/Task               \
 					 $(SRCDIR)/Utility 						\
+					 $(SRCDIR)/ParticleModels     \
 					 $(SRCDIR)/Transport 					\
 					 $(SRCDIR)/Operators
 

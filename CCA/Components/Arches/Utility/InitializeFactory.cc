@@ -82,13 +82,8 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
       } else { 
         throw InvalidValue("Error: Initialization function not recognized.",__FILE__,__LINE__);
       }
-
-
     }
-
-
   }
-
 }
 
 void 

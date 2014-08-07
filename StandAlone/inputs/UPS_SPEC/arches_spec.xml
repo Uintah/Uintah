@@ -733,6 +733,36 @@
         </task>
       </Initialization>
 
+      <ParticleModels                 spec="OPTIONAL NO_DATA">
+
+        <model                        spec="MULTIPLE NO_DATA"
+                                      attribute1="label REQUIRED STRING"
+                                      attribute2="type REQUIRED STRING 'simple_rate'">
+
+
+          <!-- Simple rate expression -->
+            <grid                       spec="REQUIRED NO_DATA"
+                                        attribute1="dependent_type REQUIRED STRING 'svol'"
+                                        attribute2="independent_type REQUIRED STRING 'svol'"/>
+            <A                          spec="REQUIRED DOUBLE 'positive'"
+                                        need_applies_to="type simple_rate"/>       <!-- Pre-exponential factor -->
+            <ER                         spec="REQUIRED DOUBLE 'positive'"
+                                        need_applies_to="type simple_rate"/>       <!-- E/R -->
+            <m                          spec="REQUIRED DOUBLE"
+                                        need_applies_to="type simple_rate"/>       <!-- Concentration raised to the m power -->
+            <temperature                spec="REQUIRED NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        need_applies_to="type simple_rate"/>       <!-- label for the "temperature" -->
+            <concentration              spec="REQUIRED NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        need_applies_to="type simple_rate"/>       <!-- label for the "concentration" -->
+            <N                          spec="REQUIRED INTEGER"
+                                        need_applies_to="type simple_rate"/>       <!-- hack for now to deal with multiple environments -->
+
+        </model>
+
+      </ParticleModels>
+
 <!-- 
 
    ╔═╗┌┐┌┌┬┐  ╔╗╔┌─┐┬ ┬  ╔═╗┌┬┐┬ ┬┌─┐┌─┐  
