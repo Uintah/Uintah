@@ -87,6 +87,8 @@ RadiationSource::RadiationSource( const std::string& radiationSourceName,
                              divqLabel_ );
   
   rmcrt_->problemSetup(radiationSpec, radiationSpec, sharedState);
+  
+  rmcrt_->BC_bulletproofing( radiationSpec );
 }
 //--------------------------------------------------------------------
 void

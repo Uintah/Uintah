@@ -59,7 +59,7 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
   
   _gac = Ghost::AroundCells;
   _gn  = Ghost::None; 
-  _whichAlgo = coarseLevel;
+  _whichAlgo = singleLevel;
   
   //__________________________________
   //  define the materialSet
@@ -96,6 +96,7 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
   _ps->getWithDefault( "calc_frequency",       _radiation_calc_freq, 3 ); 
   _ps->getWithDefault( "calc_on_all_RKsteps",  _all_rk,              false );  
   _T_label_name = "temperature"; 
+  
   if ( _ps->findBlock("temperature")){ 
     _ps->findBlock("temperature")->getAttribute("label",_T_label_name); 
   } 
@@ -117,15 +118,17 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
   }  
 
   //__________________________________
-  //  Read in the algorithm
+  //  Read in the RMCRT algorithm that will be used
   ProblemSpecP alg_ps = rmcrt_ps->findBlock("algorithm");
   if (alg_ps){
 
     string type="NULL";
     alg_ps->getAttribute("type", type);
 
-    if (type == "dataOnion" ) {
+    if (type == "dataOnion" ) {                   // DATA ONION
+    
       _whichAlgo = dataOnion;
+      _RMCRT->setBC_onOff( true );
 
       //__________________________________
       //  bulletproofing
@@ -136,8 +139,16 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
             << " inside of the <AMR> section. \n"; 
         throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
       }
-    } else if ( type == "RMCRT_coarseLevel" ) {
+    } else if ( type == "RMCRT_coarseLevel" ) {   // 2 LEVEL
+      
       _whichAlgo = coarseLevel;
+      _RMCRT->setBC_onOff( true );
+      
+    } else if ( type == "singleLevel" ) {         // 1 LEVEL
+      
+      _whichAlgo = singleLevel;
+      _RMCRT->setBC_onOff( true );                // SET THIS TO FALSE ONCE ARCHES CAN SET HANDLE BCS
+      
     }
   }
 }
@@ -171,8 +182,12 @@ RMCRT_Radiation::extraSetup( GridP& grid )
                             _cellTypeLabel, 
                             _src_label);
 
+  // read in RMCRT problem spec
   ProblemSpecP rmcrt_ps = _ps->findBlock("RMCRT");
+  
   _RMCRT->problemSetup( _ps, rmcrt_ps, _sharedState);
+  
+  _RMCRT->BC_bulletproofing( rmcrt_ps );
   
   //__________________________________
   //  Bulletproofing: 
@@ -316,6 +331,28 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
       const PatchSet* patches = level->eachPatch();
       _RMCRT->sched_Refine_Q (sched,  patches, _matlSet, _radiation_calc_freq);
     }
+  }
+  
+  //______________________________________________________________________
+  //   1 - L E V E L   A P P R O A C H
+  //  RMCRT is performed on the same level as CFD
+  if( _whichAlgo == singleLevel ){
+    const LevelP& level = grid->getLevel(_archesLevelIndex);
+    Task::WhichDW temp_dw = Task::OldDW;
+    
+    // compute sigmaT4 on the CFD level
+    _RMCRT->sched_sigmaT4( level,  sched, temp_dw, _radiation_calc_freq, includeExtraCells );
+    
+    Task::WhichDW abskg_dw    = Task::NewDW;                                                                       
+    Task::WhichDW sigmaT4_dw  = Task::NewDW;                                                                       
+    Task::WhichDW celltype_dw = Task::NewDW;                                                                       
+
+// REMOVE ONCE ARCHES CAN SET BCS ON 1 LEVEL
+    const bool backoutTemp    = true;
+    _RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, _radiation_calc_freq, backoutTemp);
+    
+    
+    _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, _radiation_calc_freq ); 
   }
 }
 

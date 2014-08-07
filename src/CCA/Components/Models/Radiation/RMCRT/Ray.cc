@@ -205,7 +205,6 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   rmcrt_ps->getWithDefault( "CCRays"    ,       d_CCRays,          false );            // if true, forces rays to always have CC origins
   rmcrt_ps->getWithDefault( "nFluxRays" ,       d_nFluxRays,       1 );                 // number of rays per cell for computation of boundary fluxes
   rmcrt_ps->getWithDefault( "sigmaScat"  ,      d_sigmaScat  ,      0 );                // scattering coefficient
-  rmcrt_ps->get(             "shouldSetBCs" ,   d_onOff_SetBCs );                       // ignore applying boundary conditions
   rmcrt_ps->getWithDefault( "allowReflect"   ,  d_allowReflect,     true );             // Allow for ray reflections. Make false for DOM comparisons.
   rmcrt_ps->getWithDefault( "solveDivQ"      ,  d_solveDivQ,        true );             // Allow for solving of divQ for flow cells.
   rmcrt_ps->getWithDefault( "applyFilter"    ,  d_applyFilter,      false );            // Allow filtering of boundFlux and divQ.
@@ -303,6 +302,22 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 
   d_sigma_over_pi = d_sigma/M_PI;
 
+}
+
+//______________________________________________________________________
+//  Method:  Check that the boundary conditions have been set for temperature
+//           and abskg
+//______________________________________________________________________
+//
+void
+Ray::BC_bulletproofing( const ProblemSpecP& rmcrtps )
+{
+  if(d_onOff_SetBCs == false ) {
+   return;
+  }
+  
+  ProblemSpecP rmcrt_ps = rmcrtps;
+  
   //__________________________________
   // BC bulletproofing
   bool ignore_BC_bulletproofing  = false;
@@ -311,7 +326,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   ProblemSpecP root_ps = rmcrt_ps->getRootNode();
   const MaterialSubset* mss = d_matlSet->getUnion();
 
-  if( ignore_BC_bulletproofing == true || d_onOff_SetBCs == false) {
+  if( ignore_BC_bulletproofing == true ) {
     proc0cout << "\n\n______________________________________________________________________" << endl;
     proc0cout << "  WARNING: bulletproofing of the boundary conditions specs is off!";
     proc0cout << "   You're free to set any BC you'd like " << endl;
@@ -329,7 +344,6 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     if (periodic.length() != 0 ){
       throw ProblemSetupException("\nERROR RMCRT:\nPeriodic boundary conditions are not allowed with Reverse Monte-Carlo Ray Tracing.", __FILE__, __LINE__);
     }
-
   }
 }
 

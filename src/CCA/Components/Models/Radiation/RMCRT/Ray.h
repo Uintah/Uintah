@@ -103,12 +103,28 @@ namespace Uintah{
                           const bool includeEC = true,
                           bool modifies_divQFilt = false);
 
-      /** @brief Set boundary conditions and compute sigmaT4 */
+      //__________________________________
+      //  Boundary condition related
+      /** @brief Set boundary conditions */
+      
+      void setBC_onOff( const bool onOff){
+        d_onOff_SetBCs = onOff;
+      }
+      
       void  sched_setBoundaryConditions( const LevelP& level,
                                          SchedulerP& sched,
                                          Task::WhichDW temp_dw,
                                          const int radCalc_freq,
                                          const bool backoutTemp = false);
+
+      void BC_bulletproofing( const ProblemSpecP& rmcrtps );
+                               
+
+      template< class T >
+      void setBC(CCVariable<T>& Q_CC,
+                 const std::string& desc,
+                 const Patch* patch,
+                 const int mat_id);
 
       //__________________________________
       //  Multilevel tasks
@@ -126,12 +142,8 @@ namespace Uintah{
 
       void sched_ROI_Extents ( const LevelP& level,
                                SchedulerP& scheduler );
+                               
 
-    template< class T >
-    void setBC(CCVariable<T>& Q_CC,
-               const std::string& desc,
-               const Patch* patch,
-               const int mat_id);
 
     //______________________________________________________________________
     private:
@@ -282,9 +294,8 @@ namespace Uintah{
       bool has_a_boundary(const IntVector &c,
                           constCCVariable<int> &celltype,
                           std::vector<int> &boundaryFaces);
-    //______________________________________________________________________
-    //   Boundary Conditions
-
+      //______________________________________________________________________
+      //   Boundary Conditions
       void setBoundaryConditions( const ProcessorGroup*,
                                   const PatchSubset* patches,
                                   const MaterialSubset*,
