@@ -40,6 +40,8 @@
  *        face fo the wall as (in x-dir) \f$ [w_\alpha U_\alpha V_\alpha W_\alpha]_{wall} = 
  *        [w_\alpha/\epsilon_w -\epsilon_w * U_\alpha V_\alpha W_\alpha]_{interior} \f$ where \f$ \epsilon_w \f$ is the
  *        particle-wall restituion coefficient, with default value set to 1 as an elastic wall collision
+ *
+ *        The first and second order convection schemes can be found in Vikas et. al. 2011
  */
 
 //NOTE: placing this here lets both cqmomeqn & this functino use it, possibly move it later?
@@ -489,7 +491,7 @@ namespace Uintah{
             //keeping the iterators separate in case this behavoir needs to change later
             int ii = 0;
             for (std::vector<constCCVarWrapper>::iterator iter = weights.begin(); iter != weights.end(); ++iter) {
-              faceWeights[ii] = _opr->no_bc( c, coord, (iter->data), isWeight, currVel, cellType, epW );
+              faceWeights[ii] = _opr->with_bc( c, coord, (iter->data), isWeight, currVel, cellType, epW, faceIsBoundary );
               ii++;
             }
             
@@ -501,7 +503,7 @@ namespace Uintah{
               } else {
                 currVel = false;
               }
-              faceAbscissas[ii] = _opr->no_bc( c, coord, (iter->data), isWeight, currVel, cellType, epW );
+              faceAbscissas[ii] = _opr->with_bc( c, coord, (iter->data), isWeight, currVel, cellType, epW, faceIsBoundary );
               ii++;
             }
 #ifdef cqmom_transport_dbg
@@ -573,36 +575,43 @@ namespace Uintah{
         return face_values;
       };
       
-      cqFaceData1D inline with_bc ( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                  constCCVariable<Vector>& areaFraction, cqFaceBoundaryBool isBoundary)
+      cqFaceData1D inline with_bc ( const IntVector c, const IntVector coord, constCCVariable<double>& phi, const bool isWeight,
+                                   const bool currVel, constCCVariable<int>& cellType, const double epW, cqFaceBoundaryBool isBoundary)
       {
+        //For first order treat boundary cells exactly how interior cells are treated
         Convection_CQMOM::cqFaceData1D face_values;
         IntVector cxp = c + coord;
         IntVector cxm = c - coord;
-        /*NOTE: since the inlet boundary condition is equal to the face, don't find the average
-        here as the regular scalars do when theres a dirichlet(or any) condition. Leaving the if statement and the
-         average as placeholder in case the boundary condtions are handled differently later it will be easy to switch*/
         
-        // - face
-        if (isBoundary.minus) {
-  //        face_values.minus_right = 0.5*(phi[c] + phi[cxm]);
-  //        face_values.minus_left = 0.5*(phi[c] + phi[cxm]);
-          face_values.minus_right =  phi[c];
+        face_values.minus_right =  phi[c];
+        face_values.plus_left  =  phi[c];
+        
+        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] !=-1 ) { //check if this is a flow cell has a wall touching it
           face_values.minus_left = phi[cxm];
         } else {
-          face_values.minus_right =  phi[c];
-          face_values.minus_left = phi[cxm];
+          if (isWeight) {
+            face_values.minus_left = phi[c]/epW;
+          } else {
+            if ( currVel ) {
+              face_values.minus_left = -epW*phi[c];
+            } else {
+              face_values.minus_left = phi[c];
+            }
+          }
         }
         
-        // + face
-        if (isBoundary.plus) {
-//          face_values.plus_left = 0.5*(phi[c] + phi[cxp]);
-//          face_values.plus_right = 0.5*(phi[c] + phi[cxp]);
-          face_values.plus_right =  phi[cxp];
-          face_values.plus_left = phi[c];
+        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] !=-1  ) {
+          face_values.plus_right = phi[cxp];
         } else {
-          face_values.plus_right  =  phi[cxp];
-          face_values.plus_left = phi[c];
+          if (isWeight) {
+            face_values.plus_right = phi[c]/epW;
+          } else {
+            if (currVel ) {
+              face_values.plus_right = -epW*phi[c];
+            } else {
+              face_values.plus_right = phi[c];
+            }
+          }
         }
         
         return face_values;
@@ -613,21 +622,179 @@ namespace Uintah{
     // ---------------------------------------------------------------------------
     // Second Order CQMOM Interpolation
     //
-    /** @brief second order interolation with the pseudo secodn order scheme */
+    /** @brief second order interolation with the pseudo second order scheme, which uses a min mod limiter
+        forcing the use of the min mod instead fo true secodn order to keep moments realizable */
     template <typename phiT>
     class SecondOrderInterpolation {
     public:
-      cqFaceData1D no_bc( const IntVector c, const IntVector coord, phiT& phi) {
-        //placeholder
+      double minMod ( double& x, double& y) {
+        double sgn;
+        if ( x < 0.0 )
+          sgn = -1.0;
+        if ( x > 0.0 )
+          sgn = 1.0;
+        if (x == 0.0 )
+          sgn = 0.0;
+        
+        double sgn2;
+        if ( x*y < 0.0 )
+          sgn2 = -1.0;
+        if ( x*y > 0.0 )
+          sgn2 = 1.0;
+        if (x*y == 0.0 )
+          sgn2 = 0.0;
+        
+        double delN;
+        if ( fabs(x) < fabs(y) ) {
+          delN = sgn * ( 1.0 + sgn2 )/2.0 * fabs(x);
+        } else {
+          delN = sgn * ( 1.0 + sgn2 )/2.0 * fabs(y);
+        }
+        return delN;
+      }
+      
+      cqFaceData1D no_bc( const IntVector c, const IntVector coord, constCCVariable<double>& phi, const bool isWeight,
+                          const bool currVel, constCCVariable<int>& cellType, const double epW) {
         Convection_CQMOM::cqFaceData1D face_values;
+        
+        IntVector cxpp = c + coord + coord;
+        IntVector cxp = c + coord;
+        IntVector cxm = c - coord;
+        IntVector cxmm = c - coord - coord;
+        
+        //calculate the inside faces
+        double delN;
+        double nxm = (phi[c] - phi[cxm]);
+        double nxp = (phi[cxp] - phi[c]);
+        //minmod on these n vals
+        delN = minMod(nxm, nxp);
+
+        face_values.minus_right = phi[c] - 1.0/2.0 * delN;
+        face_values.plus_left = phi[c] + 1.0/2.0 * delN;
+        
+        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] !=-1 ) { //check if wall is present
+          //no wall handle minus face normally
+          nxm = (phi[cxm] - phi[cxmm]);
+          nxp = (phi[c] - phi[cxm]);
+          delN = minMod(nxm, nxp);
+          face_values.minus_left = phi[cxm] + 1.0/2.0 * delN;
+        } else {
+          if (isWeight) {
+            face_values.minus_left = face_values.minus_right/epW;
+          } else {
+            if (currVel) {
+              face_values.minus_left = -epW*face_values.minus_right;
+            } else {
+              face_values.minus_left = face_values.minus_right;
+            }
+          }
+        }
+
+        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] !=-1 ) { //check if wall is present
+          //no wall handle plus face normally
+          nxm = (phi[cxp] - phi[c]);
+          nxp = (phi[cxpp] - phi[cxp]);
+          delN = minMod(nxm, nxp);
+          face_values.plus_right = phi[cxp] - 1.0/2.0 * delN;
+        } else {
+          if (isWeight) {
+            face_values.plus_right = face_values.plus_left/epW;
+          } else {
+            if (currVel) {
+              face_values.plus_right = -epW*face_values.plus_left;
+            } else {
+              face_values.plus_right = face_values.plus_left;
+            }
+          }
+        }
+        
+#ifdef cqmom_transport_dbg
+        if (phi[c] > 0.0) {
+          std::cout << "Cell c " << c << std::endl;
+          std::cout << "inside -r: " << face_values.minus_right << std::endl;
+          std::cout << "inside +l: " << face_values.plus_left << std::endl;
+          std::cout << "plus +r: " << face_values.plus_right << std::endl;
+          std::cout << "minus -l: " << face_values.minus_left << std::endl;
+        }
+#endif
+        
         return face_values;
       }
       
-      cqFaceData1D inline with_bc( const IntVector c, const IntVector coord, phiT& phi,
-                                   constCCVariable<Vector>& areaFraction, cqFaceBoundaryBool isBoundary)
+      cqFaceData1D inline with_bc( const IntVector c, const IntVector coord, constCCVariable<double>& phi, const bool isWeight,
+                                   const bool currVel, constCCVariable<int>& cellType, const double epW, cqFaceBoundaryBool isBoundary)
       {
-        //placeholder
         Convection_CQMOM::cqFaceData1D face_values;
+        
+        IntVector cxpp = c + coord + coord;
+        IntVector cxp = c + coord;
+        IntVector cxm = c - coord;
+        IntVector cxmm = c - coord - coord;
+        
+        //calculate the inside faces
+        double delN;
+        double nxm = (phi[c] - phi[cxm]);
+        double nxp = (phi[cxp] - phi[c]);
+        //minmod on these n vals
+        delN = minMod(nxm, nxp);
+
+        face_values.minus_right = phi[c] - 1.0/2.0 * delN;
+        face_values.plus_left = phi[c] + 1.0/2.0 * delN;
+
+        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] !=-1 ) { //check if wall is present
+          if (isBoundary.minus ) {
+            face_values.minus_left = phi[cxm];
+          } else {
+            //no wall handle minus face normally
+            nxm = (phi[cxm] - phi[cxmm]);
+            nxp = (phi[c] - phi[cxm]);
+            delN = minMod(nxm, nxp);
+            face_values.minus_left = phi[cxm] + 1.0/2.0 * delN;
+          }
+        } else {
+          if (isWeight) {
+            face_values.minus_left = face_values.minus_right/epW;
+          } else {
+            if (currVel) {
+              face_values.minus_left = -epW*face_values.minus_right;
+            } else {
+              face_values.minus_left = face_values.minus_right;
+            }
+          }
+        }
+
+        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] !=-1 ) { //check if wall is present
+          if (isBoundary.plus ) {
+            face_values.plus_right = phi[cxp];
+          } else {
+            //no wall handle plus face normally
+            nxm = (phi[cxp] - phi[c]);
+            nxp = (phi[cxpp] - phi[cxp]);
+            delN = minMod(nxm, nxp);
+            face_values.plus_right = phi[cxp] - 1.0/2.0 * delN;
+          }
+        } else {
+          if (isWeight) {
+            face_values.plus_right = face_values.plus_left/epW;
+          } else {
+            if (currVel) {
+              face_values.plus_right = -epW*face_values.plus_left;
+            } else {
+              face_values.plus_right = face_values.plus_left;
+            }
+          }
+        }
+        
+#ifdef cqmom_transport_dbg
+        if (phi[c] > 0.0) {
+          std::cout << "Cell c " << c << std::endl;
+          std::cout << "inside -r: " << face_values.minus_right << std::endl;
+          std::cout << "inside +l: " << face_values.plus_left << std::endl;
+          std::cout << "plus +r: " << face_values.plus_right << std::endl;
+          std::cout << "minus -l: " << face_values.minus_left << std::endl;
+        }
+#endif
+        
         return face_values;
       }
     };
@@ -676,8 +843,15 @@ namespace Uintah{
       delete the_interpolant;
       
     } else if (d_convScheme == "second") {
-      //insert second order later
-      throw InvalidValue("Error: Second order scheme not yet implemented", __FILE__, __LINE__);
+      
+      SecondOrderInterpolation<fT>* the_interpolant = scinew SecondOrderInterpolation<fT>();
+      ConvHelper1<SecondOrderInterpolation<fT>, fT>* convection_helper =
+      scinew ConvHelper1<SecondOrderInterpolation<fT>, fT>(the_interpolant, Fconv);
+      
+      convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, uVelIndex, momentIndex, dim, areaFraction, cellType, epW, this );
+      
+      delete convection_helper;
+      delete the_interpolant;
       
     } else {
       
@@ -706,7 +880,15 @@ namespace Uintah{
       delete the_interpolant;
       
     } else if (d_convScheme == "second") {
-      throw InvalidValue("Error: Second order scheme not yet implemented", __FILE__, __LINE__);
+      
+      SecondOrderInterpolation<fT>* the_interpolant = scinew SecondOrderInterpolation<fT>();
+      ConvHelper1<SecondOrderInterpolation<fT>, fT>* convection_helper =
+      scinew ConvHelper1<SecondOrderInterpolation<fT>, fT>(the_interpolant, Fconv);
+      
+      convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, vVelIndex, momentIndex, dim, areaFraction, cellType, epW, this );
+      
+      delete convection_helper;
+      delete the_interpolant;
       
     } else {
       
@@ -735,7 +917,15 @@ namespace Uintah{
       delete the_interpolant;
       
     } else if (d_convScheme == "second") {
-      throw InvalidValue("Error: Second order scheme not yet implemented", __FILE__, __LINE__);
+      
+      SecondOrderInterpolation<fT>* the_interpolant = scinew SecondOrderInterpolation<fT>();
+      ConvHelper1<SecondOrderInterpolation<fT>, fT>* convection_helper =
+      scinew ConvHelper1<SecondOrderInterpolation<fT>, fT>(the_interpolant, Fconv);
+      
+      convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, wVelIndex, momentIndex, dim, areaFraction, cellType, epW, this );
+      
+      delete convection_helper;
+      delete the_interpolant;
       
     } else {
       

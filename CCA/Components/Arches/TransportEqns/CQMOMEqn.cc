@@ -466,11 +466,11 @@ CQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int t
   if (d_usePartVel) {
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
       const VarLabel* tempLabel = iW->second;
-      tsk->requires( Task::OldDW, tempLabel, Ghost::AroundCells, 1 );
+      tsk->requires( Task::OldDW, tempLabel, Ghost::AroundCells, 2 );
     }
     for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
       const VarLabel* tempLabel = iA->second;
-      tsk->requires( Task::OldDW, tempLabel, Ghost::AroundCells, 1 );
+      tsk->requires( Task::OldDW, tempLabel, Ghost::AroundCells, 2 );
     }
   } else {
     tsk->requires(Task::OldDW, d_fieldLabels->d_uVelocitySPBCLabel, Ghost::AroundCells, 1);
@@ -577,14 +577,14 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
         for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
           const VarLabel* tempLabel = iW->second;
           constCCVarWrapper tempWrapper;
-          old_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 1 );
+          old_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
           cqmomWeights.push_back(tempWrapper);
         }
         
         for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
           const VarLabel* tempLabel = iA->second;
           constCCVarWrapper tempWrapper;
-          old_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 1 );
+          old_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
           cqmomAbscissas.push_back(tempWrapper);
         }
       } else if (!d_usePartVel) {
@@ -777,11 +777,11 @@ CQMOMEqn::sched_buildXConvection( const LevelP& level, SchedulerP& sched, int ti
   //loop over requires for weights and abscissas needed for convection term if IC=u,v,w
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
     const VarLabel* tempLabel = iW->second;
-    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 1 );
+    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
   }
   for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
     const VarLabel* tempLabel = iA->second;
-    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 1 );
+    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
   }
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -834,14 +834,14 @@ CQMOMEqn::buildXConvection( const ProcessorGroup* pc,
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
       const VarLabel* tempLabel = iW->second;
       constCCVarWrapper tempWrapper;
-      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 1 );
+      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
       cqmomWeights.push_back(tempWrapper);
     }
         
     for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
       const VarLabel* tempLabel = iA->second;
       constCCVarWrapper tempWrapper;
-      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 1 );
+      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
       cqmomAbscissas.push_back(tempWrapper);
      }
     
@@ -884,11 +884,11 @@ CQMOMEqn::sched_buildYConvection( const LevelP& level, SchedulerP& sched, int ti
   //loop over requires for weights and abscissas needed for convection term if IC=u,v,w
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
     const VarLabel* tempLabel = iW->second;
-    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 1 );
+    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
   }
   for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
     const VarLabel* tempLabel = iA->second;
-    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 1 );
+    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
   }
   
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -936,14 +936,14 @@ CQMOMEqn::buildYConvection( const ProcessorGroup* pc,
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
       const VarLabel* tempLabel = iW->second;
       constCCVarWrapper tempWrapper;
-      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 1 );
+      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
       cqmomWeights.push_back(tempWrapper);
     }
     
     for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
       const VarLabel* tempLabel = iA->second;
       constCCVarWrapper tempWrapper;
-      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 1 );
+      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
       cqmomAbscissas.push_back(tempWrapper);
     }
     
@@ -985,11 +985,11 @@ CQMOMEqn::sched_buildZConvection( const LevelP& level, SchedulerP& sched, int ti
   //loop over requires for weights and abscissas needed for convection term if IC=u,v,w
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
     const VarLabel* tempLabel = iW->second;
-    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 1 );
+    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
   }
   for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
     const VarLabel* tempLabel = iA->second;
-    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 1 );
+    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
   }
   
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -1037,14 +1037,14 @@ CQMOMEqn::buildZConvection( const ProcessorGroup* pc,
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
       const VarLabel* tempLabel = iW->second;
       constCCVarWrapper tempWrapper;
-      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 1 );
+      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
       cqmomWeights.push_back(tempWrapper);
     }
     
     for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
       const VarLabel* tempLabel = iA->second;
       constCCVarWrapper tempWrapper;
-      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 1 );
+      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
       cqmomAbscissas.push_back(tempWrapper);
     }
     
