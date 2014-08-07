@@ -360,7 +360,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     //if ( i->first != "scalar_fe_update" && i->first != "scalar_ssp_update") {
       //i->second->schedule_timestep_init(level, sched, matls ); 
     //}
-  }
+  //}
   //===================END NEW STUFF=======================
 
   // --------> START RK LOOP <---------
