@@ -894,12 +894,12 @@
             <calc_on_all_RKsteps        spec="OPTIONAL BOOLEAN" need_applies_to="type do_radiation rmcrt_radiation" /> <!-- calculate radiation every RK step, default = false --> 
             <temperature                spec="OPTIONAL NO_DATA"  
                                         attribute1="label REQUIRED STRING"
-                                        need_applies_to="type do_radiation rmcrt_radiation" /> <!-- string label of temperature, default = temperature -->
+                                        need_applies_to="type do_radiation rmcrt_radiation" />                         <!-- string label of temperature, default = temperature -->
             <abskg                      spec="OPTIONAL NO_DATA"  
                                         attribute1="label REQUIRED STRING"
-                                        need_applies_to="type do_radiation rmcrt_radiation" /> <!-- string label of abskg, default = abskg. NOTE: This is referenced to the 
-                                                                                                    total absorption coeffient. When using particles, the abskg label defined there
-                                                                                                    includes the effect of the abskp. abskg = abskg(gas only) + abskp -->
+                                        need_applies_to="type do_radiation rmcrt_radiation" />                         <!-- string label of abskg, default = abskg. NOTE: This is referenced to the 
+                                                                                                                            total absorption coeffient. When using particles, the abskg label defined there
+                                                                                                                            includes the effect of the abskp. abskg = abskg(gas only) + abskp -->
             <DORadiationModel           spec="OPTIONAL NO_DATA" need_applies_to="type do_radiation" >
               <ordinates                  spec="OPTIONAL INTEGER" />                                   <!-- number of ordinants, default = 2 --> 
               <LinearSolver               spec="OPTIONAL NO_DATA"                                      
@@ -928,12 +928,10 @@
             
             <!-- RMCRT -->
             <RMCRT                       spec="OPTIONAL NO_DATA" need_applies_to="type rmcrt_radiation" >
-              <!-- <include href="Models.xml" section="Models/RMCRT" />          Dav -->
               <randomSeed                spec="OPTIONAL BOOLEAN"/>
               <Temperature               spec="OPTIONAL DOUBLE  'positive'"/>      <!-- needed by RMCRT_test -->
               <abskg                     spec="OPTIONAL DOUBLE  'positive'"/>                   
               <sigmaScat                 spec="OPTIONAL DOUBLE  'positive'"/>
-              <abskgBench4               spec="OPTIONAL DOUBLE  'positive'"/>
               <nDivQRays                 spec="OPTIONAL INTEGER 'positive'"/>        
               <Threshold                 spec="OPTIONAL DOUBLE  'positive'"/>        
               <Slice                     spec="OPTIONAL DOUBLE"/>                    
@@ -954,7 +952,7 @@
               <applyFilter               spec="OPTIONAL BOOLEAN"/>
               <ignore_BC_bulletproofing  spec="OPTIONAL BOOLEAN"/>
  
-              <algorithm                spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel'">
+              <algorithm                spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel singleLevel'">
                                     
                 <orderOfInterpolation   spec="REQUIRED INTEGER 'positive'" need_applies_to="type RMCRT_coarseLevel" />
                 <halo                   spec="REQUIRED VECTOR  'positive'" need_applies_to="type dataOnion" />

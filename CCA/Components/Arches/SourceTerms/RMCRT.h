@@ -143,7 +143,7 @@ private:
   bool _using_prop_calculator;
   
   int  _whichAlgo;
-  enum Algorithm{ dataOnion, coarseLevel};
+  enum Algorithm{ dataOnion, coarseLevel, singleLevel};
   
   double _initAbskg; 
 

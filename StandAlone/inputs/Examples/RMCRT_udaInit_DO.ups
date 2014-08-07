@@ -154,9 +154,6 @@
     <nDivQRays>          5         </nDivQRays>
     <Threshold>         0.05       </Threshold>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
-    <shouldSetBCs>      true       </shouldSetBCs>
-    
-    
     <algorithm type='dataOnion'>
       <halo>           [4,4,4]     </halo>
            
