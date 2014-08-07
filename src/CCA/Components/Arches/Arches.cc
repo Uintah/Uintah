@@ -79,6 +79,7 @@
 #include <CCA/Components/Arches/Utility/InitializeFactory.h>
 #include <CCA/Components/Arches/Transport/TransportFactory.h>
 #include <CCA/Components/Arches/Task/TaskFactoryBase.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleModelFactory.h>
 //#include <CCA/Components/Arches/Task/SampleFactory.h>
 
 
@@ -301,19 +302,21 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_lab->problemSetup( db );
 
 
-  //NEW TASK STUFF
+  //==============NEW TASK STUFF
   //build the factories
   UtilityFactory* utility_factory = scinew UtilityFactory(); 
-  //SampleFactory* sample_factory = scinew SampleFactory(); 
   TransportFactory* transport_factory = scinew TransportFactory(); 
   InitializeFactory* init_factory = scinew InitializeFactory(); 
+  ParticleModelFactory* particle_model_factory = scinew ParticleModelFactory(); 
+  //SampleFactory* sample_factory = scinew SampleFactory(); 
 
   //insert the factories into a map
   _factory_map.clear(); 
   _factory_map.insert(std::make_pair("utility_factory",utility_factory));
-  //_factory_map.insert(std::make_pair("sample_factory",sample_factory)); 
   _factory_map.insert(std::make_pair("transport_factory",transport_factory)); 
   _factory_map.insert(std::make_pair("init_factory",init_factory)); 
+  _factory_map.insert(std::make_pair("particle_model_factory",particle_model_factory));
+  //_factory_map.insert(std::make_pair("sample_factory",sample_factory)); 
 
   typedef std::map<std::string, TaskFactoryBase*>::iterator iFACMAP; 
   //registering tasks: 
@@ -325,7 +328,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   for ( iFACMAP i = _factory_map.begin(); i != _factory_map.end(); i++ ){ 
     i->second->build_all_tasks( db ); 
   }
-  //END NEW TASK STUFF
+  //===================END NEW TASK STUFF
 
 
   //__________________________________
@@ -1141,6 +1144,8 @@ Arches::scheduleInitialize(const LevelP& level,
 
   d_turbModel->sched_computeFilterVol( sched, level, matls ); 
 
+  //=========== NEW TASK INTERFACE ==============================
+  // why not put this in a loop? 
   typedef std::map<std::string, TaskFactoryBase*> FACMAP; 
   //utility factory
   FACMAP::iterator ifac = _factory_map.find("utility_factory"); 
@@ -1148,13 +1153,6 @@ Arches::scheduleInitialize(const LevelP& level,
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
     i->second->schedule_init(level, sched, matls); 
   }
-
-  //sample factory
-  //ifac = _factory_map.find("sample_factory"); 
-  //all_tasks = ifac->second->retrieve_all_tasks(); 
-  //for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
-  //  i->second->schedule_init(level, sched, matls); 
-  //}
 
   //transport factory
   ifac = _factory_map.find("transport_factory"); 
@@ -1169,6 +1167,22 @@ Arches::scheduleInitialize(const LevelP& level,
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
     i->second->schedule_init(level, sched, matls ); 
   }
+
+  //particle models
+  ifac = _factory_map.find("particle_model_factory"); 
+  all_tasks = ifac->second->retrieve_all_tasks(); 
+  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+    i->second->schedule_init(level, sched, matls ); 
+  }
+
+  //sample factory
+  //ifac = _factory_map.find("sample_factory"); 
+  //all_tasks = ifac->second->retrieve_all_tasks(); 
+  //for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+  //  i->second->schedule_init(level, sched, matls); 
+  //}
+
+  //===============================================================
 
   // base initialization of all scalars
   sched_scalarInit(level, sched);
@@ -1820,15 +1834,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     d_doingRestart = true;                  // this task is called twice on a regrid.
   }
 
-//  const MaterialSet* matls2 = d_sharedState->allArchesMaterials();
-//  typedef std::map<std::string, TaskFactoryBase*> FM;  
-//  for ( FM::iterator ifac = _factory_map.begin(); ifac != _factory_map.end(); ifac++){ 
-//    TaskFactoryBase::TaskMap all_tasks = ifac->second->retrieve_all_tasks(); 
-//    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
-//      i->second->schedule_task(level, sched, matls2, 0); 
-//    }
-//  }
-  
   if (d_doingRestart  ) {
 
     const PatchSet* patches= level->eachPatch();
