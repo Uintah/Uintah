@@ -52,13 +52,13 @@ namespace Wasatch{
 /**
  *  \class 	  RadiationSource
  *  \ingroup 	Expressions
- *  \ingroup	 WasatchCore
- *  \authors 	James C. Sutherland, Tony Saad, Amir Biglari
- *  \date 	   January, 2011
+ *  \ingroup	WasatchCore
+ *  \authors  Tony Saad, James C. Sutherland
+ *  \date 	  January, 2014
  *
  *  \brief Expression to form and solve the poisson system for RadiationSource.
  *
- *  NOTE: this expression BREAKS WITH CONVENTION!  Notably, it has
+ *  \note: this expression BREAKS WITH CONVENTION!  Notably, it has
  *  uintah tenticles that reach into it, and mixes SpatialOps and
  *  Uintah constructs.  This is because we don't (currently) have a
  *  robust interface to deal with parallel linear solves through the
