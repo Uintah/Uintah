@@ -57,10 +57,41 @@ namespace Uintah {
   
   //==================================================================
   /**
-   *  \class  ParticlesHelper
-   *  \author Tony Saad
-   *  \date   June, 2014
-   *  \brief  This class provides support for creating particles.
+   *  \class    ParticlesHelper
+   
+   *  \author   Tony Saad
+   
+   *  \date     June, 2014
+   
+   *  \brief    This class provides support for creating and managing particles in Uintah.
+
+   *  \details  Uintah provides support for tracking particles using a ParticleSubset and a ParticleVariable.
+   A ParticleSubset represents the memory size of the particle field (e.g. number of particles on a
+   given patch and material). A ParticleVariable, as the name designates, represents a unique variable
+   associated with a particle. The size of a ParticleVariable is based on the ParticleSubset. As a 
+   rule of thumb, one will usually have one ParticleSubset per patch, per material, and an arbitrary
+   number of ParticleVariable vars per ParticleSubset.
+
+   A Uintah ParticleVariable can be templated on a variety of types (e.g. int, double, Point)
+   and is typically an array whose values are associated with different particles. An essential
+   variable that is intimately built into the Uintah particle support framework is the particle
+   position vector. This is a ParticleVariable templated on Uintah::Point, in other words, it is
+   an array of triplets. The particle position is required for load balancing, particle relocation
+   across patches, and visualization. From here on, ParticleVariable<Point> is referred to as the
+   particle position vector.
+   
+   Unfortunately, there are several reasons that require one to track particle position as three
+   separate particle variables instead of using a particle position vector. These include design
+   and personal preferences, and most importantly, the use of the Nebo EDSL. The Nebo EDSL was designed
+   (and for good reasons) to deal with vectors of doubles. It cannot handle vectors of triplets.
+   That being said, the ParticlesHelper is designed with Nebo in mind and will therefore require
+   that you create three particle variables of type double for the three particle positions.   
+   
+   *
+   *  \Note: Visit currently makes the assumption that the particle position vector be named "p.x".
+   This will change in the next Uintah release.
+   *  \Note: Particle variable names typically start with "p." - a Uintah assumption made to simplify
+   some runtime decisions.
    */
   class ParticlesHelper
   {
@@ -70,26 +101,34 @@ namespace Uintah {
     virtual ~ParticlesHelper();
 
     /*
-     *  \brief Initializes particle memory. This must be called at schedule initialize. DO NOT call
-     it on restarts. Use schedule_restart_initialize instead
+     *  \brief Creates particle memory (ParticleSubset) which can be used to allocated particle variables. 
+     Also, this function will allocate memory for pPosLabel_ and pIDLabel_ without initializing them
+     given the assumptions made for this class. The component is supposed to track particle position
+     for x, y, and z seperately and then synchronize with the particle position vector required by 
+     Uintah. Finally, this function must be called in a component's schedule_initialize.
+     *
+     *  \note: This function will NOT allocate memory for pXLabel_, pYLabel_, and PZLabel_. You are 
+     responsible for allocating and initializing those.
+     *
+     *  \warning DO NOT call this function on restarts. Use schedule_restart_initialize instead for restarts.
      */
     virtual void schedule_initialize ( const Uintah::LevelP& level,
                                        Uintah::SchedulerP& sched   );
 
     /*
      *  \brief Will reallocate some essential objects for the particles helper such as the delete sets.
-     MUST be called at restarts. Since there is no way to schedule restart initialize, you should call this
-     function somewhere in scheduleTimeAdvance. See the Wasatch example.
+     *
+     *  \warning MUST be called at restarts. Since there is no way to schedule restart initialize, 
+     you should call this function somewhere in scheduleTimeAdvance. See how Wasatch handles this.
      */
     virtual void schedule_restart_initialize( const Uintah::LevelP& level,
                                               Uintah::SchedulerP& sched   );
 
     /*
-     *  \brief Task that synchronizes Wasatch-specific particle positions (x, y, w) that are store
-     as sepearte fields with the Uintah::Point position field. The Uintah::Point position field 
-     is essential for the relocation algorithm to Work. Wasatch does not support particle fields
-     of type Point. You should call this at the end of the scheduleTimeAdvance, after all internal
-     Wasatch tasks have completed.
+     *  \brief Task that synchronizes particle positions (x, y, w) that are stored
+     as sepearte fields with the Uintah::Point particle position vector. The Uintah::Point particle
+     position vector is essential for the relocation algorithm to Work. You should call this at the end of the
+     scheduleTimeAdvance, after all your particle transport has completed.
      */
     virtual void schedule_sync_particle_position( const Uintah::LevelP& level,
                                                   Uintah::SchedulerP& sched,
