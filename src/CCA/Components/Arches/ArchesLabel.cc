@@ -132,6 +132,9 @@ ArchesLabel::ArchesLabel()
 
   // Cell Centered data after interpolation (for use in visualization and turbulence models)
   d_CCVelocityLabel   =  VarLabel::create("CCVelocity",      CC_Vector);
+  d_CCUVelocityLabel  =  VarLabel::create("CCUVelocity",     CC_double);
+  d_CCVVelocityLabel  =  VarLabel::create("CCVVelocity",     CC_double);
+  d_CCWVelocityLabel  =  VarLabel::create("CCWVelocity",     CC_double);
 
   // multimaterial wall/intrusion cells
   d_mmcellTypeLabel = VarLabel::create("mmcellType",
@@ -329,6 +332,10 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_refPressurePred_label);
   VarLabel::destroy(d_refPressure_label);
   VarLabel::destroy(d_CCVelocityLabel);
+  VarLabel::destroy(d_CCUVelocityLabel);
+  VarLabel::destroy(d_CCVVelocityLabel);
+  VarLabel::destroy(d_CCWVelocityLabel);
+  
   VarLabel::destroy(d_mmcellTypeLabel);
   VarLabel::destroy(d_mmgasVolFracLabel);
 

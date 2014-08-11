@@ -1444,6 +1444,9 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_vVelRhoHatLabel);
     tsk->computes(d_lab->d_wVelRhoHatLabel);
     tsk->computes(d_lab->d_CCVelocityLabel);
+    tsk->computes(d_lab->d_CCUVelocityLabel);
+    tsk->computes(d_lab->d_CCVVelocityLabel);
+    tsk->computes(d_lab->d_CCWVelocityLabel);
     tsk->computes(d_lab->d_pressurePSLabel);
     tsk->computes(d_lab->d_densityGuessLabel);
     tsk->computes(d_lab->d_totalKineticEnergyLabel); 
@@ -1518,6 +1521,9 @@ Arches::paramInit(const ProcessorGroup* pg,
     CCVariable<double> turb_viscosity; 
     CCVariable<double> pPlusHydro;
     CCVariable<double> mmgasVolFrac;
+    CCVariable<double> ccUVelocity;
+    CCVariable<double> ccVVelocity;
+    CCVariable<double> ccWVelocity;
 
     CCVariable<double> ke; 
     new_dw->allocateAndPut( ke, d_lab->d_kineticEnergyLabel, indx, patch ); 
@@ -1526,6 +1532,13 @@ Arches::paramInit(const ProcessorGroup* pg,
 
     new_dw->allocateAndPut(ccVelocity, d_lab->d_CCVelocityLabel, indx, patch);
     ccVelocity.initialize(Vector(0.,0.,0.));
+    
+    new_dw->allocateAndPut( ccUVelocity, d_lab->d_CCUVelocityLabel , indx, patch );
+    new_dw->allocateAndPut( ccVVelocity, d_lab->d_CCVVelocityLabel , indx, patch );
+    new_dw->allocateAndPut( ccWVelocity, d_lab->d_CCWVelocityLabel , indx, patch );
+    ccUVelocity.initialize(0.0);
+    ccVVelocity.initialize(0.0);
+    ccWVelocity.initialize(0.0);
 
     new_dw->allocateAndPut(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
     new_dw->allocateAndPut(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch);
@@ -2414,6 +2427,9 @@ Arches::sched_getCCVelocities(const LevelP& level, SchedulerP& sched)
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
 
   tsk->modifies(d_lab->d_CCVelocityLabel);
+  tsk->modifies(d_lab->d_CCUVelocityLabel);
+  tsk->modifies(d_lab->d_CCVVelocityLabel);
+  tsk->modifies(d_lab->d_CCWVelocityLabel);
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 }
@@ -2437,6 +2453,9 @@ Arches::getCCVelocities(const ProcessorGroup* ,
     constSFCYVariable<double> vvel_FC;
     constSFCZVariable<double> wvel_FC;
     CCVariable<Vector> vel_CC;
+    CCVariable<double> uVel_CC;
+    CCVariable<double> vVel_CC;
+    CCVariable<double> wVel_CC;
 
     IntVector idxLo = patch->getFortranCellLowIndex();
     IntVector idxHi = patch->getFortranCellHighIndex();
@@ -2454,7 +2473,14 @@ Arches::getCCVelocities(const ProcessorGroup* ,
 
     new_dw->getModifiable(vel_CC,  d_lab->d_CCVelocityLabel, indx, patch);
     vel_CC.initialize(Vector(0.0,0.0,0.0));
-
+    
+    new_dw->getModifiable(uVel_CC,  d_lab->d_CCUVelocityLabel, indx, patch);
+    new_dw->getModifiable(vVel_CC,  d_lab->d_CCVVelocityLabel, indx, patch);
+    new_dw->getModifiable(wVel_CC,  d_lab->d_CCWVelocityLabel, indx, patch);
+    uVel_CC.initialize( 0.0 );
+    vVel_CC.initialize( 0.0 );
+    wVel_CC.initialize( 0.0 );
+    
     //__________________________________
     //
     for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
@@ -2479,6 +2505,10 @@ Arches::getCCVelocities(const ProcessorGroup* ,
           cellinfo->tfac[k] * wvel_FC[idxW];
 
       vel_CC[c] = Vector(u, v, w);
+      //NOTE: this function could probably be nebo-ized with interp later
+      uVel_CC[c] = u;
+      vVel_CC[c] = v;
+      wVel_CC[c] = w;
     }
     //__________________________________
     // Apply boundary conditions
@@ -2530,6 +2560,9 @@ Arches::getCCVelocities(const ProcessorGroup* ,
             (1.0 - one_or_zero.z()) * wvel_FC[idxW];
 
         vel_CC[c] = Vector( u, v, w );
+        uVel_CC[c] = u;
+        vVel_CC[c] = v;
+        wVel_CC[c] = w;
       }
     }
   }
