@@ -377,12 +377,9 @@ namespace Wasatch{
       fieldValues = const_cast<ParticleField::value_type*>( (ValT*)uintahVar.getBasePointer() );
     }
 
-    int npar=1;
-    if (ainfo.oldDW) {
-      npar = ainfo.oldDW->getParticleSubset( ainfo.materialIndex, ainfo.patch )->numParticles();
-    } else {
-      npar = ainfo.newDW->getParticleSubset( ainfo.materialIndex, ainfo.patch )->numParticles();
-    }
+    const int npar = ainfo.oldDW
+        ? ainfo.oldDW->getParticleSubset( ainfo.materialIndex, ainfo.patch )->numParticles()
+        : ainfo.newDW->getParticleSubset( ainfo.materialIndex, ainfo.patch )->numParticles();
 
     return so::SpatFldPtr<ParticleField>(
         new ParticleField( so::MemoryWindow( so::IntVec(npar,1,1) ),
@@ -415,13 +412,10 @@ namespace Wasatch{
       fieldValues = const_cast<ValT*>( (ValT*)uintahVar.getBaseRep().getBasePointer() );
     }
 
-    int npar=1;
-    if (ainfo.oldDW) {
-      npar = ainfo.oldDW->getParticleSubset( ainfo.materialIndex, ainfo.patch )->numParticles();
-    } else {
-      npar = ainfo.newDW->getParticleSubset( ainfo.materialIndex, ainfo.patch )->numParticles();
-    }
-    
+    const int npar = ainfo.oldDW
+        ? ainfo.oldDW->getParticleSubset( ainfo.materialIndex, ainfo.patch )->numParticles()
+        : ainfo.newDW->getParticleSubset( ainfo.materialIndex, ainfo.patch )->numParticles();
+
     return so::SpatFldPtr<ParticleField>(
         new ParticleField( so::MemoryWindow( so::IntVec(npar,1,1) ),
                            so::BoundaryCellInfo::build<ParticleField>(),
