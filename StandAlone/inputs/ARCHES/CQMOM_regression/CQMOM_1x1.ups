@@ -34,9 +34,9 @@
     <save label="m_10" />
     <save label="m_01" />
     
-    <save label="w_1" />
-    <save label="a_r1_1" /> 
-    <save label="a_r2_1" />
+    <save label="w_0" />
+    <save label="r1_0" />
+    <save label="r2_0" />
 
  <!--save label="mixture_fraction"/-->    
     <checkpoint cycle="2" interval="0.001"/>
