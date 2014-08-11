@@ -1005,11 +1005,17 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
       tsk->computes(d_lab->d_CCVelocityLabel);
       tsk->computes(d_lab->d_velocityDivergenceLabel);
       tsk->computes(d_lab->d_continuityResidualLabel);
+      tsk->computes(d_lab->d_CCUVelocityLabel);
+      tsk->computes(d_lab->d_CCVVelocityLabel);
+      tsk->computes(d_lab->d_CCWVelocityLabel);
     }
     else {
       tsk->modifies(d_lab->d_CCVelocityLabel);
       tsk->modifies(d_lab->d_velocityDivergenceLabel);
       tsk->modifies(d_lab->d_continuityResidualLabel);
+      tsk->modifies(d_lab->d_CCUVelocityLabel);
+      tsk->modifies(d_lab->d_CCVVelocityLabel);
+      tsk->modifies(d_lab->d_CCWVelocityLabel);
     }
 
     sched->addTask(tsk, patches, matls);
@@ -1069,6 +1075,9 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     constSFCYVariable<double> newVVel;
     constSFCZVariable<double> newWVel;
     CCVariable<Vector> CCVel;
+    CCVariable<double> ccUVel;
+    CCVariable<double> ccVVel;
+    CCVariable<double> ccWVel;
 
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -1099,15 +1108,24 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
       new_dw->allocateAndPut(newCCVel,      d_lab->d_CCVelocityLabel,     indx, patch);
       new_dw->allocateAndPut(divergence,    d_lab->d_velocityDivergenceLabel,indx, patch);
       new_dw->allocateAndPut(residual,      d_lab->d_continuityResidualLabel,indx, patch);
+      new_dw->allocateAndPut(ccUVel,        d_lab->d_CCUVelocityLabel,     indx, patch);
+      new_dw->allocateAndPut(ccVVel,        d_lab->d_CCVVelocityLabel,     indx, patch);
+      new_dw->allocateAndPut(ccWVel,        d_lab->d_CCWVelocityLabel,     indx, patch);
     }
     else {
       new_dw->getModifiable(newCCVel,       d_lab->d_CCVelocityLabel,      indx, patch);
       new_dw->getModifiable(divergence,     d_lab->d_velocityDivergenceLabel, indx, patch);
       new_dw->getModifiable(residual,       d_lab->d_continuityResidualLabel, indx, patch);
+      new_dw->getModifiable(ccUVel,         d_lab->d_CCUVelocityLabel,     indx, patch);
+      new_dw->getModifiable(ccVVel,         d_lab->d_CCVVelocityLabel,     indx, patch);
+      new_dw->getModifiable(ccWVel,         d_lab->d_CCWVelocityLabel,     indx, patch);
     }
     newCCVel.initialize(Vector(0.0,0.0,0.0));
     divergence.initialize(0.0);
     residual.initialize(0.0);
+    ccUVel.initialize(0.0);
+    ccVVel.initialize(0.0);
+    ccWVel.initialize(0.0);
 
     for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
       for (int jj = idxLo.y(); jj <= idxHi.y(); ++jj) {
@@ -1126,6 +1144,9 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                          cellinfo->tfac[kk] * newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
+          ccUVel[idx] = new_u;
+          ccVVel[idx] = new_v;
+          ccWVel[idx] = new_w;
 
         }
       }
@@ -1147,6 +1168,9 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                          cellinfo->tfac[kk] * newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
+          ccUVel[idx] = new_u;
+          ccVVel[idx] = new_v;
+          ccWVel[idx] = new_w;
         }
       }
     }
@@ -1166,6 +1190,9 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                          cellinfo->tfac[kk] * newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
+          ccUVel[idx] = new_u;
+          ccVVel[idx] = new_v;
+          ccWVel[idx] = new_w;
         }
       }
     }
@@ -1185,6 +1212,9 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                          cellinfo->tfac[kk] * newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
+          ccUVel[idx] = new_u;
+          ccVVel[idx] = new_v;
+          ccWVel[idx] = new_w;
         }
       }
     }
@@ -1204,6 +1234,9 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                          cellinfo->tfac[kk] * newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
+          ccUVel[idx] = new_u;
+          ccVVel[idx] = new_v;
+          ccWVel[idx] = new_w;
         }
       }
     }
@@ -1223,6 +1256,9 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           double new_w = newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
+          ccUVel[idx] = new_u;
+          ccVVel[idx] = new_v;
+          ccWVel[idx] = new_w;
         }
       }
     }
@@ -1242,6 +1278,9 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           double new_w = newWVel[idx];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
+          ccUVel[idx] = new_u;
+          ccVVel[idx] = new_v;
+          ccWVel[idx] = new_w;
         }
       }
     }

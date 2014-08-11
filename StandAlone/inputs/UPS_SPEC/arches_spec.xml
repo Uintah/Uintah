@@ -737,8 +737,7 @@
 
         <model                        spec="MULTIPLE NO_DATA"
                                       attribute1="label REQUIRED STRING"
-                                      attribute2="type REQUIRED STRING 'simple_rate'">
-
+                                      attribute2="type REQUIRED STRING 'simple_rate, drag'">
 
           <!-- Simple rate expression -->
             <grid                       spec="REQUIRED NO_DATA"
@@ -757,7 +756,34 @@
                                         attribute1="label REQUIRED STRING"
                                         need_applies_to="type simple_rate"/>       <!-- label for the "concentration" -->
             <N                          spec="REQUIRED INTEGER"
-                                        need_applies_to="type simple_rate"/>       <!-- hack for now to deal with multiple environments -->
+                                        need_applies_to="type simple_rate, drag"/>       <!-- hack for now to deal with multiple environments -->
+          <!-- drag model -->
+            <particle_density           spec="REQUIRED NO_DATA"
+                                        attribute1="type REQUIRED STRING 'constant, node_specific'"> <!-- use a constant density for all particles, or use a model for each-->
+              <constant                 spec="REQUIRED DOUBLE"
+                                        need_applies_to="type constant"/>
+              <density_label            spec="REQUIRED STRING"
+                                        need_applies_to="type node_specific"/> <!-- base density label -->
+            </particle_density>
+            
+            <radius                     spec="REQUIRED NO_DATA"
+                                        attribute1="type REQUIRED STRING 'constant, node_specific"> <!-- use a constant radius for all particles, or use a model for each-->
+              <constant                 spec="REQUIRED DOUBLE"
+                                        need_applies_to="type constant"/>
+              <radius_label             spec="REQUIRED STRING"
+                                        need_applies_to="type node_specific"/> <!-- base radius label -->
+            </radius>
+            
+            <kinematic_viscosity        spec="REQUIRED DOUBLE"
+                                        need_applies_to="type drag"/>         <!-- kinematic viscosity of fluid -->
+            <direction                  spec="REQUIRED STRING 'x,y,z'"
+                                        need_applies_to="type drag"/>         <!-- apply this source to which velocity -->
+            <u_velocity_label           spec="REQUIRED STRING"
+                                        need_applies_to="type drag"/>         <!-- base u velocity label for IC -->
+            <v_velocity_label           spec="OPTIONAL STRING"
+                                        need_applies_to="type drag"/>         <!-- base v velocity label for IC -->
+            <w_velocity_label           spec="OPTIONAL STRING"
+                                        need_applies_to="type drag"/>         <!-- base w velocity label for IC -->
 
         </model>
 
