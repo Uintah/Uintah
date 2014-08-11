@@ -36,18 +36,18 @@
     <save label="m_03" />
     <save label="m_30" />
     
+    <save label="w_0" />
     <save label="w_1" />
     <save label="w_2" />
     <save label="w_3" />
-    <save label="w_4" />
-    <save label="a_r1_1" /> 
-    <save label="a_r1_2" />
-    <save label="a_r1_3" />
-    <save label="a_r1_4" />
-    <save label="a_r2_1" />
-    <save label="a_r2_2" />
-    <save label="a_r2_3" />
-    <save label="a_r2_4" />
+    <save label="r1_0" />
+    <save label="r1_1" />
+    <save label="r1_2" />
+    <save label="r1_3" />
+    <save label="r2_0" />
+    <save label="r2_1" />
+    <save label="r2_2" />
+    <save label="r2_3" />
  <!--save label="mixture_fraction"/-->    
     <checkpoint cycle="2" interval="0.001"/>
   </DataArchiver>

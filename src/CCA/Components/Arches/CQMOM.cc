@@ -164,9 +164,8 @@ void CQMOM::problemSetup(const ProblemSpecP& params)
     ++nMoments; // keep track of total number of moments
   }
   
-  //populate names for weights with just numberign them 1,2,3...
-  //NOTE: should weights be numbered 1,2,3,4... or 11,12,21,22...
-  for (int i = 1; i <= nNodes; i++) {
+  //populate names for weights with just numberign them 0,1,2,3...
+  for (int i = 0; i < nNodes; i++) {
     string weight_name = "w_";
     string node;
     stringstream out;
@@ -178,15 +177,15 @@ void CQMOM::problemSetup(const ProblemSpecP& params)
     //make varLabel
     const VarLabel* tempVarLabel = VarLabel::create(weight_name, CCVariable<double>::getTypeDescription());
     proc0cout << "Creating var label for " << weight_name << endl;
-    d_fieldLabels->CQMOMWeights[i-1] = tempVarLabel;
+    d_fieldLabels->CQMOMWeights[i] = tempVarLabel;
   }
   
   //repeat for the abscissas, but include coordinate names
   int ii = 0;
   for (int m = 0; m < M; m++) {
     string coordName = coordinateNames[m];
-    for (int i = 1; i <= nNodes; i++) {
-      string abscissa_name = "a_" + coordName + "_";
+    for (int i = 0; i < nNodes; i++) {
+      string abscissa_name = coordName + "_";
       string node;
       stringstream out;
       out << i;
