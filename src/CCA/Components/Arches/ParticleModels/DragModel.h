@@ -167,9 +167,8 @@ namespace Uintah{
   //======INITIALIZATION:
   template <typename IT, typename DT>
   void DragModel<IT, DT>::register_initialize( std::vector<VariableInformation>& variable_registry ){
-  //change this back later after dqmom and cqmom naming convention is equal
-//    for ( int i = 0; i < _N; i++ ){
-    for ( int i = 1; i <= _N; i++ ) {
+
+    for ( int i = 0; i < _N; i++ ){
       const std::string name = get_name(i, _base_var_name);
       std::cout << "Source label " << name << std::endl;
       register_variable( name, _D_type, LOCAL_COMPUTES, 0, NEWDW, variable_registry );
@@ -185,8 +184,7 @@ namespace Uintah{
     using SpatialOps::operator *;
     typedef SpatialOps::SpatFldPtr<DT> DTptr;
 
-//    for ( int i = 0; i < _N; i++ ){
-    for (int i = 1; i <= _N; i++ ) {
+    for ( int i = 0; i < _N; i++ ){
       const std::string name = get_name(i, _base_var_name);
       DTptr model_value = tsk_info->get_so_field<DT>(name);
       
@@ -208,8 +206,7 @@ namespace Uintah{
   template <typename IT, typename DT>
   void DragModel<IT, DT>::register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ){
     
-//    for ( int i = 0; i < _N; i++ ){
-    for ( int i = 1; i <= _N; i++ ) {
+    for ( int i = 0; i < _N; i++ ){
       //dependent variables(s) or model values
       const std::string name = get_name(i, _base_var_name);
       register_variable( name, _D_type, COMPUTES, 0, NEWDW, variable_registry, time_substep );
@@ -266,8 +263,7 @@ namespace Uintah{
     *gasVelMag <<= *gasVelMag + (*interp)(*velW) * (*interp)(*velW);
     *gasVelMag <<= sqrt( *gasVelMag );
     
-//    for ( int i = 0; i < _N; i++ ){
-    for (int i = 1; i <= _N; i++ ) {
+    for ( int i = 0; i < _N; i++ ){
       
       const std::string name = get_name(i, _base_var_name);
       DTptr model_value = tsk_info->get_so_field<DT>(name);
