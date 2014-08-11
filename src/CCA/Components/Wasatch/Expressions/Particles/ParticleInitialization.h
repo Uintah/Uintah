@@ -16,6 +16,7 @@
 #include <Core/Grid/Level.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
+#include <boost/random/uniform_int.hpp>
 //--------------------------------------------------------------------
 
 /**
@@ -89,7 +90,7 @@ get_cell_size(const Uintah::Patch* const patch, const std::string& coord)
  *  \param cellPosition  A Uintah::Point denoting the cell position (cell center).
  */
 double
-get_cell_position_offset(const Uintah::Patch* const patch, const std::string& coord, const Uintah::Point& cellPosition)
+get_cell_position_offset(const Uintah::Patch* const patch, const std::string& coord, const SCIRun::Point& cellPosition)
 {
   if     ( coord == "X" ) return cellPosition.x() - patch->dCell().x()/2.0;
   else if( coord == "Y" ) return cellPosition.y() - patch->dCell().y()/2.0;
@@ -213,14 +214,17 @@ evaluate()
   boost::uniform_real<> rand_dist(0,dx); // generate random numbers between 0 and dx. Then we offset those by the cell location
   boost::variate_generator<base_generator_type&, boost::uniform_real<> > boost_rand(generator, rand_dist);
   
+  //________________________________________________
   // collect the grid points that live inside the geometry
-  std::vector<Uintah::Point> insidePoints;
+  std::vector<SCIRun::Point> insidePoints;
+  int nPatchCells=0;
   for(Uintah::CellIterator iter(patch->getCellIterator()); !iter.done(); iter++)
   {
+    nPatchCells++;
     IntVector iCell = *iter;
     // loop over all geometry objects
     GeomValueMapT::iterator geomIter = geomObjects_.begin();
-    Uintah::Point p = patch->getCellPosition(iCell);
+    SCIRun::Point p = patch->getCellPosition(iCell);
     while (geomIter != geomObjects_.end())
     {
       const bool isInside = (*geomIter)->inside(p);
@@ -231,7 +235,13 @@ evaluate()
       ++geomIter;
     }
   }
+  // random distribution to pick random points within the geometry shape
+  base_generator_type generator2((unsigned) ( (pid+1) ));
+  boost::uniform_int<> rand_dist_int(0, insidePoints.size() - 1);
+  boost::variate_generator<base_generator_type&, boost::uniform_int<> > boost_rand_int(generator2, rand_dist_int);
 
+
+  //________________________________________________
   // now iterate over the inside points and fill in the particles
   ParticleField::iterator phiIter = result.begin();
   ParticleField::iterator phiIterEnd = result.end();
@@ -239,12 +249,11 @@ evaluate()
   std::vector<Uintah::Point>::iterator ite = insidePoints.end();
   
   while (phiIter < phiIterEnd) {
-    it = insidePoints.begin();
-    for (; it != ite && phiIter != phiIterEnd; ++it) {
-      const double offset = get_cell_position_offset(patch, coord_, *it);
-      *phiIter = boost_rand() + offset;
-      ++phiIter;
-    }
+    const int idx = boost_rand_int();
+    SCIRun::Point insidePoint = insidePoints[idx];
+    const double offset = get_cell_position_offset(patch, coord_, insidePoint);
+    *phiIter = boost_rand() + offset;
+    ++phiIter;
   }
 }
 

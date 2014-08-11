@@ -125,7 +125,7 @@ namespace Wasatch {
           if (coord == "Z") {zmin = lo; zmax = hi;}
         }
         
-        if ( pICSpec->findBlock("Geometry") ) {
+        if ( pICSpec->findBlock("Geometry") && geomObjects.size() == 0 ) { // only allow one vector of geom objects to be created. this is because all particle initialization with geometry shapes must have the same geometry
           hasGeom = true;
           ProblemSpecP geomBasedSpec = pICSpec->findBlock("Geometry");
           double seed = 0.0;
@@ -177,16 +177,18 @@ namespace Wasatch {
           nCells = patch->getNumCells();
         }
         
+        int nPatchCells = 0;
         if (hasGeom) {
           std::vector<GeometryPieceP>::iterator geomIter;
           // get the total cells inside the geometries
           nCells = 0;
           bool isInside;
           for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
+            nPatchCells++;
             IntVector iCell = *iter;
             // loop over all geometry objects
             geomIter = geomObjects.begin();
-            Point p = patch->getCellPosition(iCell);
+            SCIRun::Point p = patch->getCellPosition(iCell);
             while (geomIter != geomObjects.end()) {
               isInside = (*geomIter)->inside(p);
               if (isInside)
