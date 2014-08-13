@@ -666,19 +666,30 @@
 
       <LagrangianParticles              spec="OPTIONAL NO_DATA">
       
-			  <ParticlesPerCell spec="OPTIONAL DOUBLE"/>
-			  <MaximumParticles spec="OPTIONAL INTEGER"/>
-			  <ParticlePosition spec="REQUIRED NO_DATA"
-			  									attribute1="x REQUIRED STRING"
-			  									attribute2="y REQUIRED STRING"
-			  									attribute3="z REQUIRED STRING"/>	
+			  <ParticlesPerCell               spec="OPTIONAL DOUBLE"/>
+			  <MaximumParticles               spec="OPTIONAL INTEGER"/>
+			  <ParticlePosition               spec="REQUIRED NO_DATA"
+			  									              attribute1="x REQUIRED STRING"
+			  									              attribute2="y REQUIRED STRING"
+			  									              attribute3="z REQUIRED STRING"/>	
 
+        <ParticleVelocity               spec="REQUIRED NO_DATA"
+                                        attribute1="u REQUIRED STRING"
+                                        attribute2="v REQUIRED STRING"
+                                        attribute3="w REQUIRED STRING"/>
+
+        <!-- these are additional particle variable (besides position and velocity that
+            are loaded onto the particles -->
         <ParticleVariables spec="OPTIONAL NO_DATA">
 
           <variable       spec="MULTIPLE NO_DATA"
                           attribute1="label REQUIRED STRING"/>
 
         </ParticleVariables> 
+
+
+
+
       
       </LagrangianParticles>
 
@@ -748,14 +759,6 @@
           <velocity_init              spec="REQUIRED NO_DATA"
                                       attribute1="type REQUIRED STRING 'as_gas_velocity'"
                                       need_applies_to="type lagrangian_particle_velocity"/>
-          <velocity_label             spec="REQUIRED NO_DATA"
-                                      attribute1="u REQUIRED STRING"
-                                      attribute2="v REQUIRED STRING"
-                                      attribute3="w REQUIRED STRING"
-                                      need_applies_to="type lagrangian_particle_velocity"/>
-
-
-
                                     
 
 
@@ -793,7 +796,8 @@
                                         need_applies_to="type simple_rate, drag"/>       <!-- hack for now to deal with multiple environments -->
           <!-- drag model -->
             <particle_density           spec="REQUIRED NO_DATA"
-                                        attribute1="type REQUIRED STRING 'constant, node_specific'"> <!-- use a constant density for all particles, or use a model for each-->
+                                        attribute1="type REQUIRED STRING 'constant, node_specific'"
+                                        need_applies_to="type drag"> <!-- use a constant density for all particles, or use a model for each-->
               <constant                 spec="REQUIRED DOUBLE"
                                         need_applies_to="type constant"/>
               <density_label            spec="REQUIRED STRING"
@@ -801,7 +805,8 @@
             </particle_density>
             
             <radius                     spec="REQUIRED NO_DATA"
-                                        attribute1="type REQUIRED STRING 'constant, node_specific"> <!-- use a constant radius for all particles, or use a model for each-->
+                                        attribute1="type REQUIRED STRING 'constant, node_specific"
+                                        need_applies_to="type drag"> <!-- use a constant radius for all particles, or use a model for each-->
               <constant                 spec="REQUIRED DOUBLE"
                                         need_applies_to="type constant"/>
               <radius_label             spec="REQUIRED STRING"
