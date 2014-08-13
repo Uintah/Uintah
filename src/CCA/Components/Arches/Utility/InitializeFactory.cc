@@ -1,6 +1,8 @@
 #include <CCA/Components/Arches/Utility/InitializeFactory.h>
 #include <CCA/Components/Arches/Utility/GridInfo.h>
 #include <CCA/Components/Arches/Utility/WaveFormInit.h>
+#include <CCA/Components/Arches/Utility/RandParticleLoc.h>
+#include <CCA/Components/Arches/Utility/InitLagrangianParticleVelocity.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 
 using namespace Uintah; 
@@ -79,8 +81,20 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
           throw InvalidValue("Error: Grid type not recognized (must be a SO field).",__FILE__,__LINE__);
         }
 
+      } else if ( type == "random_lagrangian_particles"){ 
+
+        TaskInterface::TaskBuilder* tsk = scinew RandParticleLoc::Builder( task_name, 0 ); 
+        register_task( task_name, tsk ); 
+        _active_tasks.push_back(task_name); 
+
+      } else if ( type == "lagrangian_particle_velocity"){ 
+
+        TaskInterface::TaskBuilder* tsk = scinew InitLagrangianParticleVelocity::Builder( task_name, 0 ); 
+        register_task( task_name, tsk ); 
+        _active_tasks.push_back(task_name); 
+
       } else { 
-        throw InvalidValue("Error: Initialization function not recognized.",__FILE__,__LINE__);
+        throw InvalidValue("Error: Initialization function not recognized: "+type,__FILE__,__LINE__);
       }
     }
   }
@@ -104,14 +118,26 @@ InitializeFactory::build_all_tasks( ProblemSpecP& db )
       db_task->getAttribute("eqn", eqn_name );
       db_task->getAttribute("type", type ); 
 
-      if ( type == "wave" ){ 
+      TaskInterface* tsk = retrieve_task(task_name); 
+      tsk->problemSetup( db_task ); 
 
-        TaskInterface* tsk = retrieve_task(task_name); 
-        tsk->problemSetup( db_task ); 
-
-      } else { 
-        throw InvalidValue("Error: Initialization function not recognized.",__FILE__,__LINE__);
-      }
+//      if ( type == "wave" ){ 
+//
+//        TaskInterface* tsk = retrieve_task(task_name); 
+//        tsk->problemSetup( db_task ); 
+//
+//      } else if ( type == "random_lagrangian_particles"){ 
+//
+//        TaskInterface* tsk = retrieve_task(task_name); 
+//        tsk->problemSetup( db_task ); 
+//
+//      } else if ( type == "lagrangian_particle_velocity"){ 
+//
+//        TaskInterface* tsk = retrieve_task()
+//
+//      } else { 
+//        throw InvalidValue("Error: Initialization function not recognized: "+type,__FILE__,__LINE__);
+//      }
 
 
     }

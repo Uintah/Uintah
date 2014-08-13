@@ -49,6 +49,7 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/ScalarEqn.h>
+#include <CCA/Components/Arches/ArchesParticlesHelper.h>
 //NOTE: new includes for CQMOM
 #include <CCA/Components/Arches/CQMOM.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqnFactory.h>
@@ -80,6 +81,7 @@
 #include <CCA/Components/Arches/Transport/TransportFactory.h>
 #include <CCA/Components/Arches/Task/TaskFactoryBase.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleModelFactory.h>
+#include <CCA/Components/Arches/LagrangianParticles/LagrangianParticleFactory.h>
 //#include <CCA/Components/Arches/Task/SampleFactory.h>
 
 
@@ -236,6 +238,11 @@ Arches::Arches(const ProcessorGroup* myworld, const bool doAMR) :
   CQMOMEqnFactory& cqmomfactory    = CQMOMEqnFactory::self();
   cqmomfactory.set_number_moments(0);
   d_doCQMOM                        = false;
+
+  //lagrangian particles: 
+  _particlesHelper = scinew ArchesParticlesHelper(); 
+  _particlesHelper->sync_with_arches(this); 
+
 }
 
 // ****************************************************************************
@@ -284,6 +291,8 @@ Arches::~Arches()
     delete i->second; 
   }
 
+  delete _particlesHelper; 
+
 }
 
 // ****************************************************************************
@@ -299,8 +308,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   ArchesMaterial* mat= scinew ArchesMaterial();
   sharedState->registerArchesMaterial(mat);
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
+  _arches_spec = db; 
   d_lab->problemSetup( db );
-
 
   //==============NEW TASK STUFF
   //build the factories
@@ -308,6 +317,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   TransportFactory* transport_factory = scinew TransportFactory(); 
   InitializeFactory* init_factory = scinew InitializeFactory(); 
   ParticleModelFactory* particle_model_factory = scinew ParticleModelFactory(); 
+  LagrangianParticleFactory* lagrangian_particle_factory = scinew LagrangianParticleFactory(); 
+  lagrangian_particle_factory->set_particle_helper(_particlesHelper); 
   //SampleFactory* sample_factory = scinew SampleFactory(); 
 
   //insert the factories into a map
@@ -316,6 +327,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   _factory_map.insert(std::make_pair("transport_factory",transport_factory)); 
   _factory_map.insert(std::make_pair("init_factory",init_factory)); 
   _factory_map.insert(std::make_pair("particle_model_factory",particle_model_factory));
+  _factory_map.insert(std::make_pair("lagrangian_particle_factory",lagrangian_particle_factory));
   //_factory_map.insert(std::make_pair("sample_factory",sample_factory)); 
 
   typedef std::map<std::string, TaskFactoryBase*>::iterator iFACMAP; 
@@ -330,6 +342,11 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
   //===================END NEW TASK STUFF
 
+  //Checking for lagrangian particles: 
+  _doLagrangianParticles = _arches_spec->findBlock("LagrangianParticles"); 
+  if ( _doLagrangianParticles ){ 
+    _particlesHelper->problem_setup(_arches_spec->findBlock("LagrangianParticles")); 
+  }
 
   //__________________________________
   //  Multi-level related
@@ -1124,6 +1141,11 @@ Arches::scheduleInitialize(const LevelP& level,
 
   const MaterialSet* matls = d_sharedState->allArchesMaterials();
 
+  if ( _doLagrangianParticles ){ 
+    _particlesHelper->set_materials(d_sharedState->allArchesMaterials()); 
+    _particlesHelper->schedule_initialize(level, sched);
+  }
+
   //Initialize several parameters
   sched_paramInit(level, sched);
 
@@ -1170,6 +1192,13 @@ Arches::scheduleInitialize(const LevelP& level,
 
   //particle models
   ifac = _factory_map.find("particle_model_factory"); 
+  all_tasks = ifac->second->retrieve_all_tasks(); 
+  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+    i->second->schedule_init(level, sched, matls ); 
+  }
+
+  //lagrangian particles
+  ifac = _factory_map.find("lagrangian_particle_factory"); 
   all_tasks = ifac->second->retrieve_all_tasks(); 
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
     i->second->schedule_init(level, sched, matls ); 
@@ -1309,6 +1338,10 @@ Arches::scheduleInitialize(const LevelP& level,
   }
 
   d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
+
+  if ( _doLagrangianParticles ){ 
+    _particlesHelper->schedule_sync_particle_position(level,sched,true);
+  }
 
   //d_rad_prop_calc->sched_compute_radiation_properties( level, sched, matls, 0, true ); 
 
@@ -1876,6 +1909,13 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   d_nlSolver->nonlinearSolve(level, sched, *d_wasatch, d_timeIntegrator, d_sharedState );
 
 #else 
+
+  if ( _doLagrangianParticles ){ 
+    _particlesHelper->schedule_initialize(level, sched);
+    //_particlesHelper->schedule_sync_particle_position(level,sched);
+    //_particlesHelper->schedule_transfer_particle_ids(level,sched);
+    //_particlesHelper->schedule_relocate_particles(level,sched);
+  }
 
   d_nlSolver->nonlinearSolve(level, sched);
 

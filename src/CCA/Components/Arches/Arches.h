@@ -118,6 +118,7 @@ namespace Uintah {
   class DQMOM;
   class CQMOM;
   class RadPropertyCalculator; 
+  class ArchesParticlesHelper; 
 
 class Arches : public UintahParallelComponent, public SimulationInterface {
 
@@ -282,8 +283,7 @@ private:
                    DataWarehouse* new_dw );
 
 
-
-private:
+  const Uintah::ProblemSpecP get_arches_spec(){ return _arches_spec; }
 
   /** @brief Registers all possible user defined source terms by instantiating a builder in the factory */
   void registerUDSources(ProblemSpecP& db);
@@ -370,6 +370,11 @@ private:
 
   //NEW TASK INTERFACE STUFF: 
   std::map<std::string, TaskFactoryBase*> _factory_map; 
+
+  Uintah::ProblemSpecP _arches_spec; 
+
+  ArchesParticlesHelper* _particlesHelper; 
+  bool _doLagrangianParticles; 
 
 
 }; // end class Arches
