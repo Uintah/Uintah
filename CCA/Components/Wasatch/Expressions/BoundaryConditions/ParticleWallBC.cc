@@ -32,15 +32,23 @@ evaluate()
   using namespace std;
   ParticleField& f = this->value();
   if ((this->boundaryParticles_)->size() > 0) {
-    const IntVec& normal = this->bndNormal_;
-    const double sign = (normal[0] >=0 && normal[1] >= 0 && normal[2] >= 0) ? 1.0 : -1.0;
+    const IntVec& unitNormal = this->bndNormal_;
+    const double sign = (unitNormal[0] >=0 && unitNormal[1] >= 0 && unitNormal[2] >= 0) ? 1.0 : -1.0;
     vector<int>::const_iterator pIt = (this->boundaryParticles_)->begin();
     vector<int>::const_iterator pItEnd = (this->boundaryParticles_)->end();
-    for (; pIt != pItEnd; ++pIt) {
-      double& vel = f(*pIt, 0, 0);
-      if ( sign*vel > 0.0 ) { // if the particle is attempting to leave this boundary, then reflect it :)
-        vel *= -1.0;
+    
+    if (transverseVelocity_) {
+      for (; pIt != pItEnd; ++pIt) {
+        double& vel = f(*pIt, 0, 0);
+        vel *= restCoef_;
+      }
+    } else {
+      for (; pIt != pItEnd; ++pIt) {
+        double& vel = f(*pIt, 0, 0);
+        if ( sign*vel > 0.0 ) { // if the particle is attempting to leave this boundary, then reflect it :)
+          vel *= -restCoef_;
+        }
       }
     }
-  }  
+  }
 }
