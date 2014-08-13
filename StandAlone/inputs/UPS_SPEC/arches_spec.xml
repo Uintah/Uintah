@@ -668,6 +668,8 @@
       
 			  <ParticlesPerCell               spec="OPTIONAL DOUBLE"/>
 			  <MaximumParticles               spec="OPTIONAL INTEGER"/>
+
+        <!-- Position, Velocity, and Size are the min. spec -->
 			  <ParticlePosition               spec="REQUIRED NO_DATA"
 			  									              attribute1="x REQUIRED STRING"
 			  									              attribute2="y REQUIRED STRING"
@@ -678,6 +680,9 @@
                                         attribute2="v REQUIRED STRING"
                                         attribute3="w REQUIRED STRING"/>
 
+        <ParticleSize                   spec="REQUIRED NO_DATA"
+                                        attribute1="label REQUIRED STRING"/>
+
         <!-- these are additional particle variable (besides position and velocity that
             are loaded onto the particles -->
         <ParticleVariables spec="OPTIONAL NO_DATA">
@@ -686,10 +691,6 @@
                           attribute1="label REQUIRED STRING"/>
 
         </ParticleVariables> 
-
-
-
-
       
       </LagrangianParticles>
 
@@ -724,7 +725,7 @@
                                         attribute1="label REQUIRED STRING" 
                                         attribute2="eqn   OPTIONAL STRING"
                                         attribute3="type  REQUIRED STRING 'wave, random_lagrangian_particles, 
-                                                                           lagrangian_particle_velocity'">
+                                                                           lagrangian_particle_velocity, lagrangian_particle_size'">
 
           <!-- 1D WAVE FORM -->
           <wave                         spec="OPTIONAL NO_DATA"
@@ -759,11 +760,16 @@
           <velocity_init              spec="REQUIRED NO_DATA"
                                       attribute1="type REQUIRED STRING 'as_gas_velocity'"
                                       need_applies_to="type lagrangian_particle_velocity"/>
+
+          <!-- LAGRANGIAN PARTICLE SIZE -->
+          <size_init                  spec="REQUIRED NO_DATA"
+                                      attribute1="type REQUIRED STRING 'fixed, random'"
+                                      need_applies_to="type lagrangian_particle_size"/>
+          <fixed_diameter             spec="OPTIONAL DOUBLE 'positive'"
+                                      need_applies_to="type lagrangian_particle_size"/>
+          <max_diameter               spec="OPTIONAL DOUBLE 'positive'"
+                                      need_applies_to="type lagrangian_particle_size"/>
                                     
-
-
-
-
 
 
 

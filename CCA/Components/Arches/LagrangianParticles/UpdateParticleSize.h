@@ -1,17 +1,17 @@
-#ifndef Uintah_Component_Arches_InitLagrangianParticleVelocity_h
-#define Uintah_Component_Arches_InitLagrangianParticleVelocity_h
+#ifndef Uintah_Component_Arches_UpdateParticleSize_h
+#define Uintah_Component_Arches_UpdateParticleSize_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 
 namespace Uintah{ 
 
   class Operators; 
-  class InitLagrangianParticleVelocity : public TaskInterface { 
+  class UpdateParticleSize : public TaskInterface { 
 
 public: 
 
-    InitLagrangianParticleVelocity( std::string task_name, int matl_index ); 
-    ~InitLagrangianParticleVelocity(); 
+    UpdateParticleSize( std::string task_name, int matl_index ); 
+    ~UpdateParticleSize(); 
 
     void problemSetup( ProblemSpecP& db ); 
 
@@ -30,7 +30,7 @@ public:
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                SpatialOps::OperatorDatabase& opr ); 
 
-    //Build instructions for this (InitLagrangianParticleVelocity) class. 
+    //Build instructions for this (UpdateParticleSize) class. 
     class Builder : public TaskInterface::TaskBuilder { 
 
       public: 
@@ -38,8 +38,8 @@ public:
       Builder( std::string task_name, int matl_index ) : _task_name(task_name), _matl_index(matl_index){}
       ~Builder(){}
 
-      InitLagrangianParticleVelocity* build()
-      { return scinew InitLagrangianParticleVelocity( _task_name, _matl_index ); }
+      UpdateParticleSize* build()
+      { return scinew UpdateParticleSize( _task_name, _matl_index ); }
 
       private: 
 
@@ -50,16 +50,15 @@ public:
 
 private: 
 
-    std::string _pu_label; 
-    std::string _pv_label; 
-    std::string _pw_label; 
+    std::string _px_name; 
+    std::string _py_name; 
+    std::string _pz_name; 
 
-    std::string _px_label; 
-    std::string _py_label; 
-    std::string _pz_label; 
+    std::string _u_name; 
+    std::string _v_name; 
+    std::string _w_name; 
 
-    std::string _init_type; 
-    std::string _size_label; 
+    std::string _size_name; 
   
   };
 }

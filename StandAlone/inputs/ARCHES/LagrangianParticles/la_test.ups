@@ -8,14 +8,18 @@
 
   <SimulationComponent type="arches"/>
 
+  <Scheduler type="DynamicMPI">
+    <small_messages>true</small_messages>
+  </Scheduler>
+
   <Solver type="hypre"/>
   <Time>
     <maxTime>10.0</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>0.00001</delt_min>
-    <delt_max>5</delt_max>
+    <delt_min>0.005</delt_min>
+    <delt_max>0.005</delt_max>
     <timestep_multiplier>0.5</timestep_multiplier>
-    <max_Timesteps>20</max_Timesteps>
+    <max_Timesteps>200</max_Timesteps>
   </Time>
 
   <DataArchiver>
@@ -32,13 +36,15 @@
     <save label="velocityDivergence"/>
     <save label="p.x"/>
 
-    <save label="pu"/>
-    <save label="pv"/>
-    <save label="pw"/>
+    <save label="p.u"/>
+    <save label="p.v"/>
+    <save label="p.w"/>
 
-    <save label="px"/>
-    <save label="py"/>
-    <save label="pz"/>
+    <save label="p.px"/>
+    <save label="p.py"/>
+    <save label="p.pz"/>
+
+    <save label="p.d"/>
 
     <save label="p.particleID"/>
 
@@ -85,14 +91,12 @@
       </ScalarTransport>
 
       <LagrangianParticles>
-        <ParticlesPerCell>1</ParticlesPerCell>
-        <ParticlePosition x="px" y="py" z="pz"/>
-        <ParticleVelocity u="pu" v="pv" w="pw"/>
+        <ParticlesPerCell>100</ParticlesPerCell>
+        <ParticlePosition x="p.px" y="p.py" z="p.pz"/>
+        <ParticleVelocity u="p.u" v="p.v" w="p.w"/>
+        <ParticleSize     label="p.d"/>
 
         <ParticleVariables>
-          <variable label="pu"/>
-          <variable label="pv"/>
-          <variable label="pw"/>
         </ParticleVariables>
 
       </LagrangianParticles>
@@ -111,10 +115,15 @@
           </wave>
         </task>
 
-        <task label="La" type="random_lagrangian_particles"/>
+        <task label="Lx" type="random_lagrangian_particles"/>
 
-        <task label="Lb" type="lagrangian_particle_velocity">
+        <task label="Lvel" type="lagrangian_particle_velocity">
           <velocity_init type="as_gas_velocity"/>
+        </task>
+
+        <task label="Ld" type="lagrangian_particle_size">
+          <size_init type="random"/>
+          <max_diameter>1e-4</max_diameter>
         </task>
 
       </Initialization>
