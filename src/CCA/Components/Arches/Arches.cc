@@ -1187,9 +1187,24 @@ Arches::scheduleInitialize(const LevelP& level,
   //initialize 
   ifac = _factory_map.find("init_factory"); 
   all_tasks = ifac->second->retrieve_all_tasks(); 
+
+  //this is a hack to get the particle stuff going in the correct order.  Not sure why the 
+  //framework isn't ordering these tasks based on the dependencies.: 
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
-    i->second->schedule_init(level, sched, matls ); 
+
+    if ( i->first == "Lx" || i->first == "Lvel" || i->first == "Ld"){ 
+      std::cout << " Delaying.." << std::endl;
+    } else { 
+      i->second->schedule_init(level, sched, matls ); 
+    }
+
   }
+  TaskFactoryBase::TaskMap::iterator iLX = all_tasks.find("Lx");
+  iLX->second->schedule_init(level, sched, matls); 
+  TaskFactoryBase::TaskMap::iterator iLD = all_tasks.find("Ld"); 
+  iLD->second->schedule_init(level, sched, matls); 
+  TaskFactoryBase::TaskMap::iterator iLV = all_tasks.find("Lvel");
+  iLV->second->schedule_init(level, sched, matls); 
 
   //particle models
   ifac = _factory_map.find("particle_model_factory"); 
@@ -1837,10 +1852,15 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     FACMAP::iterator ifac = _factory_map.find("lagrangian_particle_factory"); 
     TaskFactoryBase::TaskMap all_tasks = ifac->second->retrieve_all_tasks(); 
 
+    TaskFactoryBase::TaskMap::iterator i_part_size_update = all_tasks.find("update_particle_size");  
     TaskFactoryBase::TaskMap::iterator i_part_pos_update = all_tasks.find("update_particle_position");  
     TaskFactoryBase::TaskMap::iterator i_part_vel_update = all_tasks.find("update_particle_velocity");  
 
+    //UPDATE SIZE
+    i_part_size_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), 0); 
+    //UPDATE POSITION 
     i_part_pos_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), 0); 
+    //UPDATE VELOCITY
     i_part_vel_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), 0); 
 
     _particlesHelper->schedule_sync_particle_position(level,sched);

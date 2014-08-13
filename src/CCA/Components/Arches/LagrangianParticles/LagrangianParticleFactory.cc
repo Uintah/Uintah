@@ -1,6 +1,7 @@
 #include <CCA/Components/Arches/LagrangianParticles/LagrangianParticleFactory.h>
 #include <CCA/Components/Arches/LagrangianParticles/UpdateParticlePosition.h>
 #include <CCA/Components/Arches/LagrangianParticles/UpdateParticleVelocity.h>
+#include <CCA/Components/Arches/LagrangianParticles/UpdateParticleSize.h>
 #include <CCA/Components/Arches/ArchesParticlesHelper.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 
@@ -45,6 +46,7 @@ LagrangianParticleFactory::register_all_tasks( ProblemSpecP& db )
   */
 
   if ( db->findBlock("LagrangianParticles")){ 
+
     ProblemSpecP db_lp = db->findBlock("LagrangianParticles"); 
 
     for ( ProblemSpecP db_pv = db_lp->findBlock("ParticleVariables")->findBlock("variable"); 
@@ -57,33 +59,28 @@ LagrangianParticleFactory::register_all_tasks( ProblemSpecP& db )
 
     }
 
-    if (!db->findBlock("ParticleVelocity")){ 
-      
-      ProblemSpecP db_vel = db->findBlock("ParticleVelocity");
+    //UPDATE PARTICLE POSITION
+    std::string task_name = "update_particle_position"; 
+    TaskInterface::TaskBuilder* tsk = scinew UpdateParticlePosition::Builder(task_name, 0); 
+    register_task( task_name, tsk ); 
 
-      //UPDATE PARTICLE POSITION
-      std::string task_name = "update_particle_position"; 
-      TaskInterface::TaskBuilder* tsk = scinew UpdateParticlePosition::Builder(task_name, 0); 
-      register_task( task_name, tsk ); 
+    _active_tasks.push_back(task_name);
 
-      _active_tasks.push_back(task_name);
+    //UPDATE PARTICLE VELOCITY
+    task_name = "update_particle_velocity"; 
+    tsk = scinew UpdateParticleVelocity::Builder(task_name, 0); 
+    register_task( task_name, tsk ); 
+    
+    _active_tasks.push_back(task_name); 
 
-      //UPDATE PARTICLE VELOCITY
-      task_name = "update_particle_velocity"; 
-      tsk = scinew UpdateParticleVelocity::Builder(task_name, 0); 
-      register_task( task_name, tsk ); 
-      
-      _active_tasks.push_back(task_name); 
-
-
-    } else { 
-      throw InvalidValue("Error: Currently one needs to specify the ParticleVelocity names.",__FILE__,__LINE__);
-    }
-
+    //UPDATE PARTICLE SIZE 
+    task_name = "update_particle_size"; 
+    tsk = scinew UpdateParticleSize::Builder(task_name, 0); 
+    register_task( task_name, tsk ); 
+    
+    _active_tasks.push_back(task_name); 
 
   }
-
-
 }
 
 void 
@@ -100,6 +97,8 @@ LagrangianParticleFactory::build_all_tasks( ProblemSpecP& db )
     tsk = retrieve_task( "update_particle_position"); 
     tsk->problemSetup( db_lp ); 
 
-  }
+    tsk = retrieve_task( "update_particle_size"); 
+    tsk->problemSetup( db_lp ); 
 
+  }
 }

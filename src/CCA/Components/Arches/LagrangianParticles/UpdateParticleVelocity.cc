@@ -1,5 +1,6 @@
 #include <CCA/Components/Arches/LagrangianParticles/UpdateParticleVelocity.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
+#include <CCA/Components/Arches/ArchesParticlesHelper.h>
 
 #include <spatialops/Nebo.h>
 #include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
@@ -28,8 +29,10 @@ UpdateParticleVelocity::problemSetup( ProblemSpecP& db ){
   db_vel->getAttribute("u",_u_name);
   db_vel->getAttribute("v",_v_name);
   db_vel->getAttribute("w",_w_name);
-  
 
+  Uintah::ArchesParticlesHelper::add_particle_variable(_u_name); 
+  Uintah::ArchesParticlesHelper::add_particle_variable(_v_name); 
+  Uintah::ArchesParticlesHelper::add_particle_variable(_w_name); 
 
 }
 

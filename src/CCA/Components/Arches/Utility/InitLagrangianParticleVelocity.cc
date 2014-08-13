@@ -40,6 +40,8 @@ InitLagrangianParticleVelocity::problemSetup( ProblemSpecP& db ){
   db_lp->findBlock("ParticleVelocity")->getAttribute("v", _pv_label ); 
   db_lp->findBlock("ParticleVelocity")->getAttribute("w", _pw_label ); 
 
+  ProblemSpecP db_size = db_lp->findBlock("ParticleSize"); 
+  db_size->getAttribute("label",_size_label); 
 
 }
 
@@ -60,6 +62,8 @@ InitLagrangianParticleVelocity::register_initialize( std::vector<VariableInforma
   register_variable( _px_label , PARTICLE , REQUIRES, 0 , NEWDW , variable_registry );
   register_variable( _py_label , PARTICLE , REQUIRES, 0 , NEWDW , variable_registry );
   register_variable( _pz_label , PARTICLE , REQUIRES, 0 , NEWDW , variable_registry );
+
+  register_variable( _size_label , PARTICLE , REQUIRES, 0 , NEWDW , variable_registry );
 
   //gas velocity
   register_variable( "uVelocitySPBC", FACEX, REQUIRES, 1, NEWDW, variable_registry ); 
@@ -89,13 +93,11 @@ InitLagrangianParticleVelocity::initialize( const Patch* patch, ArchesTaskInfoMa
   const Pptr py = tsk_info->get_const_particle_field(_py_label); 
   const Pptr pz = tsk_info->get_const_particle_field(_pz_label); 
 
+  const Pptr psize = tsk_info->get_const_particle_field(_size_label); 
+
   XVolPtr ug = tsk_info->get_const_so_field<SpatialOps::XVolField>("uVelocitySPBC"); 
   YVolPtr vg = tsk_info->get_const_so_field<SpatialOps::YVolField>("vVelocitySPBC"); 
   ZVolPtr wg = tsk_info->get_const_so_field<SpatialOps::ZVolField>("wVelocitySPBC"); 
-
-  //create a temporary uniform size variable for now: 
-  SpatialOps::SpatFldPtr<Particle::ParticleField> size = SpatialFieldStore::get<Particle::ParticleField>( *px ); 
-  *size <<= 1e-5;
 
   typedef SpatialOps::Particle::CellToParticle<SpatialOps::XVolField> GXtoPT;
   typedef SpatialOps::Particle::CellToParticle<SpatialOps::YVolField> GYtoPT;
@@ -106,13 +108,13 @@ InitLagrangianParticleVelocity::initialize( const Patch* patch, ArchesTaskInfoMa
   GZtoPT* gz_to_pt = opr.retrieve_operator<GZtoPT>(); 
 
   //gx_to_pt->set_coordinate_information( &*px, &*py, &*pz, &*size ); 
-  gx_to_pt->set_coordinate_information( px.operator->(), py.operator->(), pz.operator->(), size.operator->() ); 
+  gx_to_pt->set_coordinate_information( px.operator->(), py.operator->(), pz.operator->(), psize.operator->() ); 
   gx_to_pt->apply_to_field(*ug, *up); 
 
-  gy_to_pt->set_coordinate_information( px.operator->(), py.operator->(), pz.operator->(), size.operator->() ); 
+  gy_to_pt->set_coordinate_information( px.operator->(), py.operator->(), pz.operator->(), psize.operator->() ); 
   gy_to_pt->apply_to_field(*vg, *vp); 
 
-  gz_to_pt->set_coordinate_information( px.operator->(), py.operator->(), pz.operator->(), size.operator->() ); 
+  gz_to_pt->set_coordinate_information( px.operator->(), py.operator->(), pz.operator->(), psize.operator->() ); 
   gz_to_pt->apply_to_field(*wg, *wp); 
 
 }

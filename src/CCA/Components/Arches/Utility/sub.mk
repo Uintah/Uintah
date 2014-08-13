@@ -8,4 +8,5 @@ SRCS += \
 				$(SRCDIR)/WaveFormInit.cc \
 				$(SRCDIR)/RandParticleLoc.cc \
 				$(SRCDIR)/InitLagrangianParticleVelocity.cc \
+				$(SRCDIR)/InitLagrangianParticleSize.cc \
 				$(SRCDIR)/UtilityFactory.cc 
