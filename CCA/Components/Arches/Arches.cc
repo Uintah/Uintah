@@ -1199,12 +1199,12 @@ Arches::scheduleInitialize(const LevelP& level,
     }
 
   }
-  TaskFactoryBase::TaskMap::iterator iLX = all_tasks.find("Lx");
-  iLX->second->schedule_init(level, sched, matls); 
-  TaskFactoryBase::TaskMap::iterator iLD = all_tasks.find("Ld"); 
-  iLD->second->schedule_init(level, sched, matls); 
-  TaskFactoryBase::TaskMap::iterator iLV = all_tasks.find("Lvel");
-  iLV->second->schedule_init(level, sched, matls); 
+  //TaskFactoryBase::TaskMap::iterator iLX = all_tasks.find("Lx");
+  //iLX->second->schedule_init(level, sched, matls); 
+  //TaskFactoryBase::TaskMap::iterator iLD = all_tasks.find("Ld"); 
+  //iLD->second->schedule_init(level, sched, matls); 
+  //TaskFactoryBase::TaskMap::iterator iLV = all_tasks.find("Lvel");
+  //iLV->second->schedule_init(level, sched, matls); 
 
   //particle models
   ifac = _factory_map.find("particle_model_factory"); 
