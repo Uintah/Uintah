@@ -555,6 +555,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
           ArchesFieldContainer::ConstParticleFieldContainer icontain; 
           icontain.set_field(var); 
           icontain.set_field_type(ArchesFieldContainer::PARTICLE); 
+          icontain.set_ghosts(ivar.nGhost);
           field_container->add_const_particle_variable(ivar.name, icontain); 
 
         } else if ( ivar.depend == MODIFIES ){ 
@@ -567,6 +568,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
           ArchesFieldContainer::ParticleFieldContainer icontain; 
           icontain.set_field(var); 
           icontain.set_field_type(ArchesFieldContainer::PARTICLE); 
+          icontain.set_ghosts(0);
           field_container->add_particle_variable(ivar.name, icontain); 
 
         } else { 
@@ -584,6 +586,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
           ArchesFieldContainer::ParticleFieldContainer icontain; 
           icontain.set_field(var); 
           icontain.set_field_type(ArchesFieldContainer::PARTICLE); 
+          icontain.set_ghosts(0);
           field_container->add_particle_variable(ivar.name, icontain); 
 
         }

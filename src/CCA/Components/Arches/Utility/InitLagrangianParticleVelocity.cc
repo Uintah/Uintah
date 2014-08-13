@@ -19,10 +19,6 @@ InitLagrangianParticleVelocity::~InitLagrangianParticleVelocity(){
 void 
 InitLagrangianParticleVelocity::problemSetup( ProblemSpecP& db ){ 
 
-  db->findBlock("velocity_label")->getAttribute("u", _pu_label ); 
-  db->findBlock("velocity_label")->getAttribute("v", _pv_label ); 
-  db->findBlock("velocity_label")->getAttribute("w", _pw_label ); 
-
   _init_type = "NA"; 
   db->findBlock("velocity_init")->getAttribute("type", _init_type ); 
 
@@ -32,11 +28,18 @@ InitLagrangianParticleVelocity::problemSetup( ProblemSpecP& db ){
     throw InvalidValue("Error: Unrecognized lagrangian particle velocity initializiation.",__FILE__,__LINE__); 
   }
 
+  ProblemSpecP db_lp = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("LagrangianParticles");
+
   //also need coordinate information for interpolation
-  ProblemSpecP db_ppos = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("LagrangianParticles")->findBlock("ParticlePosition");
+  ProblemSpecP db_ppos = db_lp->findBlock("ParticlePosition");
   db_ppos->getAttribute("x",_px_label);
   db_ppos->getAttribute("y",_py_label);
   db_ppos->getAttribute("z",_pz_label);
+
+  db_lp->findBlock("ParticleVelocity")->getAttribute("u", _pu_label ); 
+  db_lp->findBlock("ParticleVelocity")->getAttribute("v", _pv_label ); 
+  db_lp->findBlock("ParticleVelocity")->getAttribute("w", _pw_label ); 
+
 
 }
 
@@ -59,10 +62,9 @@ InitLagrangianParticleVelocity::register_initialize( std::vector<VariableInforma
   register_variable( _pz_label , PARTICLE , REQUIRES, 0 , NEWDW , variable_registry );
 
   //gas velocity
-  register_variable( "uVelocitySPBC", FACEX, REQUIRES, 0, NEWDW, variable_registry ); 
-  register_variable( "vVelocitySPBC", FACEY, REQUIRES, 0, NEWDW, variable_registry ); 
-  register_variable( "wVelocitySPBC", FACEZ, REQUIRES, 0, NEWDW, variable_registry ); 
-  
+  register_variable( "uVelocitySPBC", FACEX, REQUIRES, 1, NEWDW, variable_registry ); 
+  register_variable( "vVelocitySPBC", FACEY, REQUIRES, 1, NEWDW, variable_registry ); 
+  register_variable( "wVelocitySPBC", FACEZ, REQUIRES, 1, NEWDW, variable_registry ); 
 
 }
 
@@ -74,7 +76,7 @@ InitLagrangianParticleVelocity::initialize( const Patch* patch, ArchesTaskInfoMa
   using namespace SpatialOps;
   using SpatialOps::operator *; 
 
-  typedef SpatialOps::SpatFldPtr<ParticleField> Pptr; 
+  typedef SpatialOps::SpatFldPtr<Particle::ParticleField> Pptr; 
   typedef SpatialOps::SpatFldPtr<SpatialOps::XVolField> XVolPtr; 
   typedef SpatialOps::SpatFldPtr<SpatialOps::YVolField> YVolPtr; 
   typedef SpatialOps::SpatFldPtr<SpatialOps::ZVolField> ZVolPtr; 
@@ -86,18 +88,14 @@ InitLagrangianParticleVelocity::initialize( const Patch* patch, ArchesTaskInfoMa
   const Pptr px = tsk_info->get_const_particle_field(_px_label); 
   const Pptr py = tsk_info->get_const_particle_field(_py_label); 
   const Pptr pz = tsk_info->get_const_particle_field(_pz_label); 
-  const ParticleField& px_ = *px; 
-  const ParticleField& py_ = *py; 
-  const ParticleField& pz_ = *pz; 
 
   XVolPtr ug = tsk_info->get_const_so_field<SpatialOps::XVolField>("uVelocitySPBC"); 
   YVolPtr vg = tsk_info->get_const_so_field<SpatialOps::YVolField>("vVelocitySPBC"); 
   ZVolPtr wg = tsk_info->get_const_so_field<SpatialOps::ZVolField>("wVelocitySPBC"); 
 
   //create a temporary uniform size variable for now: 
-  SpatialOps::SpatFldPtr<ParticleField> size = SpatialFieldStore::get<ParticleField>( *px ); 
-  const ParticleField& size_ = *size; 
-  *size <<= 1.0;
+  SpatialOps::SpatFldPtr<Particle::ParticleField> size = SpatialFieldStore::get<Particle::ParticleField>( *px ); 
+  *size <<= 1e-5;
 
   typedef SpatialOps::Particle::CellToParticle<SpatialOps::XVolField> GXtoPT;
   typedef SpatialOps::Particle::CellToParticle<SpatialOps::YVolField> GYtoPT;
@@ -107,11 +105,15 @@ InitLagrangianParticleVelocity::initialize( const Patch* patch, ArchesTaskInfoMa
   GYtoPT* gy_to_pt = opr.retrieve_operator<GYtoPT>(); 
   GZtoPT* gz_to_pt = opr.retrieve_operator<GZtoPT>(); 
 
-  *up <<= 1.0;
-
-  //gx_to_pt->set_coordinate_information( &px_, &py_, &pz_, &size_ ); 
+  //gx_to_pt->set_coordinate_information( &*px, &*py, &*pz, &*size ); 
   gx_to_pt->set_coordinate_information( px.operator->(), py.operator->(), pz.operator->(), size.operator->() ); 
   gx_to_pt->apply_to_field(*ug, *up); 
+
+  gy_to_pt->set_coordinate_information( px.operator->(), py.operator->(), pz.operator->(), size.operator->() ); 
+  gy_to_pt->apply_to_field(*vg, *vp); 
+
+  gz_to_pt->set_coordinate_information( px.operator->(), py.operator->(), pz.operator->(), size.operator->() ); 
+  gz_to_pt->apply_to_field(*wg, *wp); 
 
 }
 

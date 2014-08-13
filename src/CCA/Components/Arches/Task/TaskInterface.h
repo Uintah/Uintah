@@ -1,17 +1,16 @@
 #ifndef Uintah_Component_Arches_TaskInterface_h
 #define Uintah_Component_Arches_TaskInterface_h
 
+#include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
+#include <CCA/Components/Wasatch/Operators/FluxLimiterInterpolant.h>
+#include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
+
 #include <spatialops/structured/FVStaggered.h>
 #include <spatialops/structured/MemoryWindow.h>
 #include <spatialops/particles/ParticleFieldTypes.h>
 #include <spatialops/particles/ParticleOperators.h>
-
-
 #include <CCA/Components/Arches/Task/FieldContainer.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
-#include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
-#include <CCA/Components/Wasatch/Operators/FluxLimiterInterpolant.h>
-#include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
