@@ -129,12 +129,12 @@ Arenisca3::Arenisca3(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->require("p2_crush_curve",d_cm.p2_crush_curve);  // Crush Curve Parameter (not used)
   ps->require("p3_crush_curve",d_cm.p3_crush_curve);  // Crush Curve Parameter
   ps->require("CR",d_cm.CR);                          // Cap Shape Parameter CR = (peakI1-kappa)/(peakI1-X)
-  ps->require("fluid_B0",d_cm.fluid_B0);                                // Fluid bulk modulus (K_f)
-  ps->require("fluid_pressure_initial",d_cm.fluid_pressure_initial);    // Zero strain Fluid Pressure (Pf0)
+  ps->require("fluid_B0",d_cm.fluid_B0);              // Fluid bulk modulus (K_f)
+  ps->require("fluid_pressure_initial",d_cm.fluid_pressure_initial);  // Zero strain Fluid Pressure (Pf0)
   ps->require("T1_rate_dependence",d_cm.T1_rate_dependence);    // Rate dependence parameter
   ps->require("T2_rate_dependence",d_cm.T2_rate_dependence);    // Rate dependence parameter
   ps->require("gruneisen_parameter",d_cm.gruneisen_parameter);  // Mie Gruneisen e.o.s. parameter
-  ps->require("subcycling_characteristic_number",d_cm.subcycling_characteristic_number);  // Force subcycling for value > 1
+  ps->getWithDefault("subcycling_characteristic_number",d_cm.subcycling_characteristic_number, 256);    // allowable subcycles
 
 #ifdef MH_VARIABILITY
   ps->get("PEAKI1IDIST",wdist.WeibDist);
@@ -149,6 +149,9 @@ Arenisca3::Arenisca3(ProblemSpecP& ps, MPMFlags* Mflag)
   Kf = d_cm.fluid_B0;                           // Fluid bulk modulus
   C1 = Kf*(1.0 - phi_i) + Km*(phi_i);           // Term to simplify the fluid model expressions
   ev0 = C1*d_cm.fluid_pressure_initial/(Kf*Km); // Zero fluid pressure vol. strain.  (will equal zero if pfi=0)
+
+  // Compute the a1,a2,a3,a4 parameters from FSLOPE,YSLOPE,STREN and PEAKI1
+  computeLimitParameters(a1,a2,a3,a4);
 
   initializeLocalMPMLabels();
 }
@@ -460,7 +463,6 @@ void Arenisca3::computeStableTimestep(const Patch* patch,
   // value of the time step, ensuring stability.
   int     dwi = matl->getDWIndex();
 
-  //MH! change this to call the computeElasticProperties co
   double  c_dil = 0.0;
   double  bulk,shear;                   // High pressure limit elastic properties
   computeElasticProperties(bulk,shear);
@@ -863,7 +865,10 @@ computeInvariants(sigma_trial,S_trial,I1_trial,J2_trial,rJ2_trial);
 // elastic properties as sigma_old and sigma_trial and adjust nsub if
 // there is a large change to ensure an accurate solution for nonlinear
 // elasticity even with fully elastic loading.
-int nsub = computeStepDivisions(X_old,Zeta_old,ep_old,sigma_old,sigma_trial);
+  int nsub = computeStepDivisions(X_old,Zeta_old,ep_old,sigma_old,sigma_trial);
+  if (nsub < 0) { // nsub > d_cm.subcycling_characteristic_number. Delete particle
+    goto failedStep;
+  }
 
 // (3) Compute a subdivided time step:
 //
@@ -1031,6 +1036,7 @@ int Arenisca3::computeStepDivisions(const double& X,
 // as change in elastic properties between sigma_n and sigma_trial.
   double PEAKI1 = d_cm.PEAKI1,
          FSLOPE = d_cm.FSLOPE;
+  int nmax = ceil(d_cm.subcycling_characteristic_number);
 
   Matrix3 d_sigma = sigma_trial - sigma_n;
 
@@ -1043,10 +1049,16 @@ int Arenisca3::computeStepDivisions(const double& X,
       n_dev = ceil(.0625*d_sigma.Norm()/(FSLOPE*(PEAKI1-X)));
 
   int nsub = max(max(n_bulk,n_iso),n_dev);
+
+  if (nsub>d_cm.subcycling_characteristic_number){
 #ifdef MHdebug
-  if (nsub>256){    cout<<"stepDivide out of range. nsub = "<<nsub<<endl;}
+    cout<<"stepDivide out of range. nsub = "<<nsub<<" < "<< d_cm.subcycling_characteristic_number<<endl;
 #endif
-  nsub = min(max(nsub,1),256);
+    nsub = -1;
+  }
+  else {
+    nsub = min(max(nsub,1),nmax);
+  }
   return nsub;
 } //===================================================================
 
@@ -1158,7 +1170,8 @@ int Arenisca3::computeSubstep(const Matrix3& D,         // Strain "rate"
            eta_mid,
            d_evp;
     int i = 0,
-        imax=ceil(-10.0*log(TOL));
+        imax = 93;  // imax = ceil(-10.0*log(TOL)); // Update this if TOL changes
+
     double dZetadevp = computedZetadevp(Zeta_old,evp_old);
 
 // (7) Update Internal State Variables based on Last Non-Hardening Return:
@@ -1189,12 +1202,16 @@ updateISV:
 //     the state variable update.
     if( computeYieldFunction(I1_trial,rJ2_trial,X_new,Zeta_new,damage_old)!=1 ){
       eta_out = eta_mid;
-      if( i >= imax ){                                        // solution failed to converge
+      if( i >= imax ){
+        // solution failed to converge within the allowable iterations, which means
+        // the solution requires a plastic strain that is less than TOL*d_evp_0
+        // In this case we are near the zero porosity limit, so the response should
+        // be that of no porosity. By setting eta_out=eta_in, the next step will
+        // converge with the cap position of the previous iteration.  In this case,
+        // we set evp=-p3 (which corresponds to X=1e12*p0) so subsequent compressive
+        // loading will respond as though there is no porosity.  If there is dilatation
+        // in subsequent loading, the porosity will be recovered.
         eta_out=eta_in;
-//#ifdef MHdebug
-//        cout << "1194: i>=imax, (yield surface encloses trial stress) failed substep "<< endl;
-//#endif
-//        goto failedSubstep;
       }
       goto updateISV;
     }
@@ -1223,34 +1240,26 @@ updateISV:
     //if(abs(I1_trial - I1_new)>(d_cm.B0*TOL) && Sign(I1_trial - I1_new)!=Sign(I1_trial - I1_0)){
     if(Sign(I1_trial - I1_new)!=Sign(I1_trial - I1_0)){
       eta_out = eta_mid;
-      if( i >= imax ){                                        // solution failed to converge
-//#ifdef MHdebug
-//        cout << "1227: i>=imax, (isotropic return changed sign) failed substep "<< endl;
-//#endif
-        //goto failedSubstep;
+      if( i >= imax ){
+        // solution failed to converge within the allowable iterations, which means
+        // the solution requires a plastic strain that is less than TOL*d_evp_0
+        // In this case we are near the zero porosity limit, so the response should
+        // be that of no porosity. By setting eta_out=eta_in, the next step will
+        // converge with the cap position of the previous iteration.  In this case,
+        // we set evp=-p3 (which corresponds to X=1e12*p0) so subsequent compressive
+        // loading will respond as though there is no porosity.  If there is dilatation
+        // in subsequent loading, the porosity will be recovered.
         eta_out = eta_in;
       }
       goto updateISV;
     }
-
-//    if(ep_new.Trace()<=-p3){
-//      eta_out = eta_mid;
-//      if( i >= imax ){                                        // solution failed to converge
-//#ifdef MHdebug
-//        cout << "1242: i>=imax (evp_new<=-p3), failed substep "<< endl;
-//#endif
-//        //goto failedSubstep;
-//        eta_out = eta_in;
-//      }
-//      goto updateISV;
-//    }
 
     // Compare magnitude of plastic strain with prior update
     d_evp_new = d_ep_new.Trace();   // Increment in vol. plastic strain for return to new surface
     ep_new = ep_old + d_ep_new;
 
     // Check for convergence
-    if( abs(eta_out-eta_in) < TOL ){           // Solution is converged
+    if( abs(eta_out-eta_in) < TOL ){ // Solution is converged
       Matrix3 Identity;
       Identity.Identity();
       sigma_new = one_third*I1_new*Identity + S_new;
@@ -1305,7 +1314,14 @@ updateISV:
 
       goto successfulSubstep;
     }
-    if( i >= imax ){                                        // solution failed to converge
+    if( i >= imax ){
+      // Solution failed to converge but not because of too much plastic strain
+      // (which would have been caught by the checks above).  In this case we
+      // go to the failed substep return, which will trigger subcycling and
+      // particle deletion (if subcycling doesn't work).
+      //
+      // This code was never reached in testing, but is here to catch
+      // unforseen errors.
 #ifdef MHdebug
       cout << "1306: i>=imax, failed substep "<< endl;
 #endif
@@ -1354,12 +1370,11 @@ double Arenisca3::computeX(double evp)
   { // --------------------Plastic strain exceeds allowable limit--------------------------
     // The plastic strain for this iteration has exceed the allowable
     // value.  X is not defined in this region, so we set it to a large
-    // negative number.  This will cause the plastic strain to be reduced
-    // in subsequent iterations.
+    // negative number.
     //
-    // MH!: This shouldn't be reached, but may allow for relaxed convergence
-    // requirements (if this is reached it will be within an iteration on cap
-    // position, and shouldn't end up as the final solution).
+    // The code should never have evp<-p3, but will have evp=-p3 if the
+    // porosity approaches zero (within the specified tolerance).  By setting
+    // X=1e12*p0, the material will respond as though there is no porosity.
     X = 1.0e12*p0;
   }
   else
@@ -1603,7 +1618,7 @@ int Arenisca3::computeYieldFunction(const double& I1,
 {
   // Evaluate the yield criteria and return:
   //  -1: elastic
-  //   0: on yield surface within tolerance
+  //   0: on yield surface within tolerance (not used)
   //   1: plastic
   int YIELD = -1;
   double I1mZ = I1 - Zeta;    // Shifted stress to evalue yield criteria
@@ -1612,84 +1627,48 @@ int Arenisca3::computeYieldFunction(const double& I1,
 // *** SHEAR LIMIT FUNCTION ***
 // --------------------------------------------------------------------
   // Read input parameters to specify strength model
-  double  FSLOPE = d_cm.FSLOPE,
-          //STREN = d_cm.STREN,    //MH! add this user input
-          YSLOPE = d_cm.YSLOPE,  //MH! add this user input
-          PEAKI1 = d_cm.PEAKI1,
-          Ff;
-
-  // Damage
-  FSLOPE = (1.0-damage)*d_cm.FSLOPE + damage*d_cm.YSLOPE;
-  PEAKI1 = (1.0-damage)*d_cm.PEAKI1;
-
-  //if (FSLOPE == 0.0) {// VON MISES-------------------------------------
-  //  // If the user has specified an input set with FSLOPE = 0, this indicates
-  //  // a von Mises plasticity model should be used.  In this case, the yield
-  //  // stress is the input value for PEAKI1.
-  //  // Need to modify the compute substepdivisions as well for the von mises case
-  //  if( abs(rJ2) > PEAKI1 ) {YIELD=1;}
-  //  return YIELD;
-  //}
-  if (YSLOPE == FSLOPE){// LINEAR DRUCKER-PRAGER SURFACE----------
-    // If the user has specified an input set with FLSOPE=YSLOPE!=0, this
-    // indicates a linear Drucker-Prager shear strength model.
-    Ff = FSLOPE*(PEAKI1 - I1mZ);
-  }
-  else { //MH! hack until nonlinear is written in:
-    Ff = FSLOPE*(PEAKI1 - I1mZ);
-  }
-  //else{// NONLINEAR DRUCKER PRAGER-------------------------------------
-  //  // The general case for a non-linear Drucker-Prager surface.  We will
-  //  // compute the a_i parameters from the user inputs and the evaluate the
-  //  // non lniear shear limit function.
-  //
-  //  //MH! fix these...
-  //  double a1 = STREN + 2*I1*YSLOPE,
-  //         a2 = ProductLog(a2*Pow(E,a2*PEAKI1)*PEAKI1)/PEAKI1,
-  //         a3 = (FSLOPE - YSLOPE)/(a2*Pow(E,a2*PEAKI1)),
-  //         a4 = YSLOPE;
-  //
-  //  double  Ff = a1 - a3*Pow(E,a2*I1mZ) - a4*I1mZ;
-  //}
+  double  Ff;
+  // The a1,a2,a3,a4 parameters were previously computed from the input
+  // parameters in the computeLimitParameters() function.  This avoids
+  // having to recompute them every step.
+  Ff = a1 - a3*exp(a2*I1mZ) - a4*I1mZ;
 
 // --------------------------------------------------------------------
-// *** CAP FUNCTION ***
+// *** Branch Point ***
 // --------------------------------------------------------------------
-  double  p3  = d_cm.p3_crush_curve,
-          CR  = d_cm.CR;
-  double  Kappa  = PEAKI1-CR*(PEAKI1-X),
-          fc = 1.0;
-
-  if (p3 == 0.0){// No Cap---------------------------------------------
-    // p3 is the maximum achievable volumetric plastic strain in compresson
-    // so if a value of 0 has been specified this indicates the user
-    // wishes to run without porosity, and no cap function is used.
-    fc = 1.0;
-  }
-  else if( ( I1mZ < Kappa )&&( I1mZ >= X ) ){// Elliptical Cap Function
-    fc = sqrt(1.0-Pow((Kappa-I1mZ)/(Kappa-X),2.0));
-  }
+  double  CR  = d_cm.CR,
+          PEAKI1 = d_cm.PEAKI1;
+  double  Kappa  = PEAKI1-CR*(PEAKI1-X);
 
 // --------------------------------------------------------------------
 // *** COMPOSITE YIELD FUNCTION ***
 // --------------------------------------------------------------------
-  // Evaluate Composite Yield Function F(I1) = Ff(I1)*fc(I1) in each region
+  // Evaluate Composite Yield Function F(I1) = Ff(I1)*fc(I1) in each region.
+  // The elseif statements have nested if statements, which is not equivalent
+  // to them having a single elseif(A&&B&&C)
   if( I1mZ<X ){//---------------------------------------------------(I1<X)
-    YIELD=1;
+    YIELD = 1;
   }
+  else if(( I1mZ < Kappa )&&( I1mZ >= X )) {// ---------------(X<I1<kappa)
+    double  p3  = d_cm.p3_crush_curve,
+            fc2 = 1.0; // fc^2;
 
-  else if( ( I1mZ < Kappa )&&( I1mZ >= X ) ){// -------------(X<I1< kappa)
-    if( abs(rJ2) > Ff*fc ) {YIELD=1;}
-    //else if(abs(rJ2)==Ff*fc){YIELD=0;}
+    // p3 is the maximum achievable volumetric plastic strain in compresson
+    // so if a value of 0 has been specified this indicates the user
+    // wishes to run without porosity, and no cap function is used, i.e. fc=1
+    if(p3!=0.0){
+    // **Elliptical Cap Function:**
+    // fc = sqrt(1.0 - Pow((Kappa-I1mZ)/(Kappa-X)),2.0);
+    // faster version: fc2 = fc^2
+      fc2 = 1.0 - ((Kappa-I1mZ)/(Kappa-X))*((Kappa-I1mZ)/(Kappa-X));
+    }
+    if(rJ2*rJ2 > Ff*Ff*fc2 ) YIELD = 1;
   }
-
-  else if( ( I1mZ <= PEAKI1 )&&( I1mZ >= Kappa ) ){// ---(kappa<I1<PEAKI1)
-    if( abs(rJ2) > Ff ) {YIELD=1;}
-    //else if(abs(rJ2)==Ff){YIELD=0;}
+  else if(( I1mZ <= PEAKI1 )&&( I1mZ >= Kappa )){// -----(kappa<I1<PEAKI1)
+    if(rJ2 > Ff) YIELD = 1;
   }
-
-  else if( I1mZ > PEAKI1 ) {// -------------------------------(peakI1<I1)
-    YIELD=1;
+  else if( I1mZ > PEAKI1 ) {// --------------------------------(peakI1<I1)
+    YIELD = 1;
   };
 
   return YIELD;
@@ -1710,6 +1689,53 @@ double Arenisca3::computedZetadevp(double Zeta, double evp)
   return dZetadevp;
   //
 } //===================================================================
+
+
+// Compute (dZeta/devp) Zeta and vol. plastic strain
+void Arenisca3::computeLimitParameters(double& a1,double& a2,double& a3,double& a4)
+{ // The shear limit surface is defined in terms of the a1,a2,a3,a4 parameters, but
+  // the user inputs are the more intuitive set of FSLOPE. YSLOPE, STREN, and PEAKI1.
+
+  // This routine computes the a_i parameters from the user inputs.  The code was
+  // originally written by R.M. Brannon, with modifications by M.S. Swan.
+  double  FSLOPE = d_cm.FSLOPE,  // Slope at I1=PEAKI1
+          STREN  = d_cm.STREN,   // Value of rootJ2 at I1=0
+          YSLOPE = d_cm.YSLOPE,  // High pressure slope
+          PEAKI1 = d_cm.PEAKI1;  // Value of I1 at strength=0
+  int     flag = 0;              // Error flag = 1 if inputs are bad.
+
+  if (FSLOPE > 0.0 && PEAKI1 >= 0.0 && STREN == 0.0 && YSLOPE == 0.0)
+  {// ----------------------------------------------Linear Drucker Prager
+    a1 = PEAKI1*FSLOPE;
+    a2 = 0.0;
+    a3 = 0.0;
+    a4 = FSLOPE;
+  }
+  else if (FSLOPE == 0.0 && PEAKI1 == 0.0 && STREN > 0.0 && YSLOPE == 0.0)
+  { // ------------------------------------------------------- Von Mises
+    a1 = STREN;
+    a2 = 0.0;
+    a3 = 0.0;
+    a4 = 0.0;
+  }
+  else if (FSLOPE > YSLOPE && YSLOPE > 0.0 && STREN > YSLOPE*PEAKI1 && PEAKI1 >= 0.0)
+  { // ------------------------------------------------------- Nonlinear Drucker-Prager
+  a1 = STREN;
+  a2 = (FSLOPE-YSLOPE)/(STREN-YSLOPE*PEAKI1);
+  a3 = (STREN-YSLOPE*PEAKI1)*exp(-a2*PEAKI1);
+  a4 = YSLOPE;
+  }
+  else
+  {
+  a1 = 0.0;
+  a2 = 0.0;
+  a3 = 0.0;
+  a4 = 0.0;
+  flag = 1;
+  cout << "Bad input parameters for shear limit surface!" << endl;
+  }
+} //===================================================================
+
 
 
 // ****************************************************************************************************
