@@ -151,7 +151,11 @@ namespace Uintah {
            Km,
            phi_i,
            ev0,
-           C1;
+           C1,
+           a1,
+           a2,
+           a3,
+           a4;
 
     CMData d_cm;
 
@@ -291,6 +295,13 @@ namespace Uintah {
                              const double& Zeta,
                              const double& damage // XXX
                             );
+
+    void computeLimitParameters(double& a1,
+                                double& a2,
+                                double& a3,
+                                double& a4
+                               );
+
 
   public: //Uintah MPM constitutive model specific functions
     ////////////////////////////////////////////////////////////////////////
