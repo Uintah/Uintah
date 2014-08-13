@@ -56,6 +56,64 @@ namespace Uintah {
   class BCGeomBase {
   public:
 
+    /*  \struct ParticleBoundarySpec
+     *  \author Tony Saad
+     *  \date   August 2014
+     *  \brief  Struct that holds information about particle boundary conditions
+     */
+    struct ParticleBndSpec {
+
+      /*
+       *  \brief Particle boundary type wall or inlet
+       */
+      enum  ParticleBndTypeEnum {
+        WALL, INLET, NOTSET
+      };
+
+      /*
+       *  \brief Wall boundary type: Elastic, Inelastic, etc...
+       */
+      enum  ParticleWallTypeEnum {
+        ELASTIC, INELASTIC, PARTIALLYELASTIC
+      };
+      
+      // constructor
+      ParticleBndSpec()
+      {
+        ParticleBndSpec(ParticleBndSpec::NOTSET, ParticleBndSpec::ELASTIC, 0.0, 0.0);
+      }
+
+      // constructor
+      ParticleBndSpec(ParticleBndTypeEnum bndTypet, ParticleWallTypeEnum wallTypet, const double restitution, const double pPerSec)
+      {
+        bndType = bndTypet;
+        wallType = wallTypet;
+        restitutionCoef = restitution;
+        particlesPerSec = pPerSec;
+      }
+      
+      // constructor
+      ParticleBndSpec(const ParticleBndSpec& rhs)
+      {
+        bndType = rhs.bndType;
+        wallType = rhs.wallType;
+        restitutionCoef = rhs.restitutionCoef;
+        particlesPerSec = rhs.particlesPerSec;
+      }
+      
+      /*
+       *  \brief Checks whether a particle boundary condition has been specified on this BCGeometry
+       */
+      const bool hasParticlesBoundary() const
+      {
+        return (bndType != ParticleBndSpec::NOTSET);
+      }
+      
+      ParticleBndTypeEnum bndType;
+      ParticleWallTypeEnum wallType;
+      double restitutionCoef;
+      double particlesPerSec;
+    };
     /// Constructor
     BCGeomBase();
 
@@ -108,15 +166,21 @@ namespace Uintah {
     std::string getBCName(){ return d_bcname; };
     void setBCName( std::string bcname ){ d_bcname = bcname; }; 
 
-    /// Get the name for this boundary specification
+    /// Get the type for this boundary specification (type is usually associated with a user-friendly
+    /// boundary type such as Wall, Inlet, Outflow...
     std::string getBndType(){ return d_bndtype; };
     void setBndType( std::string bndType ){ d_bndtype = bndType; };
+    
+    ParticleBndSpec getParticleBndSpec(){return d_particleBndSpec;}
+    void setParticleBndSpec(const ParticleBndSpec pBndSpec){ d_particleBndSpec = pBndSpec; }
+    const bool hasParticlesBoundary(){return d_particleBndSpec.hasParticlesBoundary();}
 
   protected:
-    Iterator d_cells;
-    Iterator d_nodes;
-    std::string   d_bcname;
-    std::string   d_bndtype;
+    Iterator          d_cells;
+    Iterator          d_nodes;
+    std::string       d_bcname;
+    std::string       d_bndtype;
+    ParticleBndSpec   d_particleBndSpec;
   };
 
   template<class T> class cmp_type {

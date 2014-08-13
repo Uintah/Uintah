@@ -42,7 +42,10 @@ class ParticleWallBC
 : public BoundaryConditionBase<ParticleField>
 {
 public:
-  ParticleWallBC()
+  ParticleWallBC(const double restCoef,
+                const bool transverseVelocity):
+  restCoef_(restCoef),
+  transverseVelocity_(transverseVelocity)
   {}
   
   class Builder : public Expr::ExpressionBuilder
@@ -52,16 +55,26 @@ public:
      * @param result Tag of the resulting expression.
      * @param bcValue   constant boundary condition value.
      */
-    Builder( const Expr::Tag& resultTag) :
-    ExpressionBuilder(resultTag)
+    Builder( const Expr::Tag& resultTag,
+             const double restCoef,
+             const bool transverseVelocity) :
+    ExpressionBuilder(resultTag),
+    restCoef_(restCoef),
+    transverseVelocity_(transverseVelocity)
     {}
-    Expr::ExpressionBase* build() const{ return new ParticleWallBC(); }
+    Expr::ExpressionBase* build() const{ return new ParticleWallBC(restCoef_, transverseVelocity_); }
+  private:
+    const double restCoef_;
+    const bool transverseVelocity_;
   };
   
   ~ParticleWallBC(){}
   void advertise_dependents( Expr::ExprDeps& exprDeps ){}
   void bind_fields( const Expr::FieldManagerList& fml ){}
   void evaluate();
+private:
+  const double restCoef_;
+  const bool transverseVelocity_;
 };
 
 #endif // ParticleWallBC_Expr_h

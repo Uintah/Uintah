@@ -224,31 +224,37 @@ namespace Wasatch{
     {
       const std::string& bndName = bndPair.first;
       BndSpec& myBndSpec = bndPair.second;
-      
       const bool isNormal = is_normal_to_boundary(direction_, myBndSpec.face);
       
-      switch (myBndSpec.type) {
-        case WALL: {
-          if (isNormal) {
-            // create a bc copier for the density estimate
-            const Expr::Tag pVelBCTag( solution_variable_name() + "_" + bndName +"_wallbc", Expr::STATE_NONE);
-            BndCondSpec particleWallBCSpec = {solution_variable_name(), pVelBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
-            advSlnFactory.register_expression ( new ParticleWallBC::Builder(pVelBCTag) );
-            bcHelper.add_boundary_condition(bndName, particleWallBCSpec);
+      const Uintah::BCGeomBase::ParticleBndSpec pBndSpec = myBndSpec.particleBndSpec;
+      if (pBndSpec.hasParticlesBoundary()) {
+
+        switch (pBndSpec.bndType) {
+          case Uintah::BCGeomBase::ParticleBndSpec::WALL:
+          {
+            const double restCoef = pBndSpec.restitutionCoef;
+            if (isNormal) {
+              // create particle wall bcs
+              const Expr::Tag pVelBCTag( solution_variable_name() + "_" + bndName +"_wallbc", Expr::STATE_NONE);
+              BndCondSpec particleWallBCSpec = {solution_variable_name(), pVelBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
+              advSlnFactory.register_expression ( new ParticleWallBC::Builder(pVelBCTag, restCoef, false) );
+              bcHelper.add_boundary_condition(bndName, particleWallBCSpec);
+            } else {
+              if (pBndSpec.wallType != Uintah::BCGeomBase::ParticleBndSpec::ELASTIC) {
+                // create particle wall bcs
+                const Expr::Tag pVelBCTag( solution_variable_name() + "_" + bndName +"_wallbc", Expr::STATE_NONE);
+                std::cout << "creating particle wall bc = " << pVelBCTag << std::endl;
+                BndCondSpec particleWallBCSpec = {solution_variable_name(), pVelBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
+                advSlnFactory.register_expression ( new ParticleWallBC::Builder(pVelBCTag, restCoef, true) );
+                bcHelper.add_boundary_condition(bndName, particleWallBCSpec);
+              }
+            }
           }
+            break;
+            
+          default:
+            break;
         }
-          break;
-        case VELOCITY:
-        case OPEN:
-        case OUTFLOW:
-        case USER:
-        {
-          // parse through the list of user specified BCs that are relevant to this transport equation
-          break;
-        }
-          
-        default:
-          break;
       }
     }
   }

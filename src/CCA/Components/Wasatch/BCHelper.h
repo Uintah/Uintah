@@ -51,7 +51,7 @@
 
 //-- Uintah Includes --//
 #include <Core/Grid/Variables/ComputeSet.h> // used for Uintah::PatchSet
-
+#include <Core/Grid/BoundaryConditions/BCGeomBase.h>
 //-- Wasatch Includes --//
 #include "PatchInfo.h"
 #include "GraphHelperTools.h"
@@ -229,6 +229,7 @@ namespace Wasatch {
     BndTypeEnum              type;      // Wall, inlet, etc...
     std::vector<int>         patchIDs;  // List of patch IDs that this boundary lives on.
                                         //Note that a boundary is typically split between several patches.
+    Uintah::BCGeomBase::ParticleBndSpec particleBndSpec;    
     std::vector<BndCondSpec> bcSpecVec; // List of ALL the BCs applied at this boundary
 
     // returns true if this Boundary has parts of it on patchID
@@ -495,7 +496,8 @@ namespace Wasatch {
     void add_boundary( const std::string&      bndName,
                        Uintah::Patch::FaceType face,
                        const BndTypeEnum& bndType,
-                       const int               patchID );
+                       const int               patchID,
+                       const Uintah::BCGeomBase::ParticleBndSpec);
     
     // Parse boundary conditions specified through the input file. This function does NOT need
     // an input file since Uintah already parsed and processed most of this information.
