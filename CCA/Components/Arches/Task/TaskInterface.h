@@ -3,6 +3,9 @@
 
 #include <spatialops/structured/FVStaggered.h>
 #include <spatialops/structured/MemoryWindow.h>
+#include <spatialops/particles/ParticleFieldTypes.h>
+#include <spatialops/particles/ParticleOperators.h>
+
 
 #include <CCA/Components/Arches/Task/FieldContainer.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
@@ -44,7 +47,7 @@ public:
 
     enum VAR_DEPEND { COMPUTES, MODIFIES, REQUIRES, LOCAL_COMPUTES };
     enum WHICH_DW { OLDDW, NEWDW, LATEST };
-    enum VAR_TYPE { CC_INT, CC_DOUBLE, CC_VEC, FACEX, FACEY, FACEZ, SUM, MAX, MIN };
+    enum VAR_TYPE { CC_INT, CC_DOUBLE, CC_VEC, FACEX, FACEY, FACEZ, SUM, MAX, MIN, PARTICLE };
 
     /** @brief The variable registry information **/ 
     struct VariableInformation { 
@@ -97,6 +100,7 @@ public:
 
     }
 
+    /** @brief Sets the enum for a particular variable type **/ 
     template <class T> 
     void set_type(T var, VAR_TYPE& type){
       if ( typeid(var) == typeid(SpatialOps::SVolField*)){
@@ -107,6 +111,8 @@ public:
         type = FACEY; 
       } else if ( typeid(var) == typeid(SpatialOps::ZVolField*)){
         type = FACEZ; 
+      } else if ( typeid(var) == typeid(ParticleField)){ 
+        type = PARTICLE; 
       } else { 
         throw InvalidValue("Arches Task Error: Not able to deduce a type.", __FILE__, __LINE__); 
       }
@@ -276,24 +282,39 @@ protected:
         //====================================================================================
         // GRID VARIABLE ACCESS
         //====================================================================================
+
+        /** @brief Return a CONST UINTAH field **/ 
         template <typename T>
         T* get_uintah_const_field( const std::string name ){ 
           return _field_container->get_const_field<T>(name); 
         } 
 
+        /** @brief Return a UINTAH field **/ 
         template <typename T>
         T* get_uintah_field( const std::string name ){ 
           return _field_container->get_field<T>(name); 
         }
 
+        /** @brief Return a SPATIAL field **/ 
         template <typename T>
         SpatialOps::SpatFldPtr<T> get_so_field( const std::string name ){ 
           return _field_container->get_so_field<T>(name); 
         }
 
+        /** @brief Return a CONST SPATIAL field **/ 
         template <typename T>
         SpatialOps::SpatFldPtr<T> get_const_so_field( const std::string name ){ 
           return _field_container->get_const_so_field<T>(name); 
+        }
+
+        /** @brief Return a SPATIAL OPS PARTICLE FIELD **/ 
+        SpatialOps::SpatFldPtr<ParticleField> get_particle_field( const std::string name ){ 
+          return _field_container->get_so_particle_field(name); 
+        }
+
+        /** @brief Return a CONST SPATIAL OPS PARTICLE FIELD **/ 
+        SpatialOps::SpatFldPtr<ParticleField> get_const_particle_field( const std::string name ){ 
+          return _field_container->get_const_so_particle_field(name); 
         }
 
       private: 
@@ -311,7 +332,8 @@ protected:
                          DataWarehouse* new_dw, 
                          const Patch* patch, 
                          ArchesFieldContainer* field_container, 
-                         ArchesTaskInfoManager* f_collector );
+                         ArchesTaskInfoManager* f_collector, 
+                         const bool doing_initialization );
 
     /** @brief The actual work done within the derived class **/ 
     virtual void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, 

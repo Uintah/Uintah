@@ -172,7 +172,6 @@ private:
       //const std::string conc_name = get_name( i, _conc_var_name ); 
       //register_variable( conc_name, _I_type, REQUIRES, 0, LATEST, variable_registry, time_substep ); 
 
-
     }
 
     //temp: remove this after testing: 

@@ -660,11 +660,28 @@
 
 <!-- 
 
-   ╔╗╔┌─┐┬ ┬  ╔═╗┌┬┐┬ ┬┌─┐┌─┐  
-   ║║║├┤ │││  ╚═╗ │ │ │├┤ ├┤   
-   ╝╚╝└─┘└┴┘  ╚═╝ ┴ └─┘└  └  
+         NEW STUFF
 
 -->
+
+      <LagrangianParticles              spec="OPTIONAL NO_DATA">
+      
+			  <ParticlesPerCell spec="OPTIONAL DOUBLE"/>
+			  <MaximumParticles spec="OPTIONAL INTEGER"/>
+			  <ParticlePosition spec="REQUIRED NO_DATA"
+			  									attribute1="x REQUIRED STRING"
+			  									attribute2="y REQUIRED STRING"
+			  									attribute3="z REQUIRED STRING"/>	
+
+        <ParticleVariables spec="OPTIONAL NO_DATA">
+
+          <variable       spec="MULTIPLE NO_DATA"
+                          attribute1="label REQUIRED STRING"/>
+
+        </ParticleVariables> 
+      
+      </LagrangianParticles>
+
 
       <!-- New Task interface transport for CC-scalars -->
       <ScalarTransport                  spec="OPTIONAL NO_DATA">
@@ -694,8 +711,9 @@
              type  = type of initialization -->
         <task                           spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING" 
-                                        attribute2="eqn   REQUIRED STRING"
-                                        attribute3="type  REQUIRED STRING 'wave'">
+                                        attribute2="eqn   OPTIONAL STRING"
+                                        attribute3="type  REQUIRED STRING 'wave, random_lagrangian_particles, 
+                                                                           lagrangian_particle_velocity'">
 
           <!-- 1D WAVE FORM -->
           <wave                         spec="OPTIONAL NO_DATA"
@@ -722,6 +740,22 @@
                                         need_applies_to="type square"/>
 
           </wave>
+
+          <!-- LAGRANGIAN PARTICLE POSITION -->
+          <!-- nothing here yet -->
+
+          <!-- LAGRANGIAN PARTICLE VELOCITY -->
+          <velocity_init              spec="REQUIRED NO_DATA"
+                                      attribute1="type REQUIRED STRING 'as_gas_velocity'"
+                                      need_applies_to="type lagrangian_particle_velocity"/>
+          <velocity_label             spec="REQUIRED NO_DATA"
+                                      attribute1="u REQUIRED STRING"
+                                      attribute2="v REQUIRED STRING"
+                                      attribute3="w REQUIRED STRING"
+                                      need_applies_to="type lagrangian_particle_velocity"/>
+
+
+
                                     
 
 
@@ -791,9 +825,7 @@
 
 <!-- 
 
-   ╔═╗┌┐┌┌┬┐  ╔╗╔┌─┐┬ ┬  ╔═╗┌┬┐┬ ┬┌─┐┌─┐  
-   ║╣ │││ ││  ║║║├┤ │││  ╚═╗ │ │ │├┤ ├┤   
-   ╚═╝┘└┘─┴┘  ╝╚╝└─┘└┴┘  ╚═╝ ┴ └─┘└  └  
+    END NEW STUFF
 
 -->
 
