@@ -235,25 +235,25 @@ evaluate()
       ++geomIter;
     }
   }
-  // random distribution to pick random points within the geometry shape
-  base_generator_type generator2((unsigned) ( (pid+1) ));
-  boost::uniform_int<> rand_dist_int(0, insidePoints.size() - 1);
-  boost::variate_generator<base_generator_type&, boost::uniform_int<> > boost_rand_int(generator2, rand_dist_int);
 
-
-  //________________________________________________
-  // now iterate over the inside points and fill in the particles
   ParticleField::iterator phiIter = result.begin();
   ParticleField::iterator phiIterEnd = result.end();
-  std::vector<Uintah::Point>::iterator it = insidePoints.begin();
-  std::vector<Uintah::Point>::iterator ite = insidePoints.end();
   
-  while (phiIter < phiIterEnd) {
-    const int idx = boost_rand_int();
-    SCIRun::Point insidePoint = insidePoints[idx];
-    const double offset = get_cell_position_offset(patch, coord_, insidePoint);
-    *phiIter = boost_rand() + offset;
-    ++phiIter;
+  if (insidePoints.size() > 0 && phiIter < phiIterEnd) {
+    // random distribution to pick random points within the geometry shape
+    base_generator_type generator2((unsigned) ( (pid+1) ));
+    boost::uniform_int<> rand_dist_int(0, insidePoints.size() - 1);
+    boost::variate_generator<base_generator_type&, boost::uniform_int<> > boost_rand_int(generator2, rand_dist_int);
+    
+    //________________________________________________
+    // now iterate over the inside points and fill in the particles
+    while (phiIter < phiIterEnd) {
+      const int idx = boost_rand_int();
+      SCIRun::Point insidePoint = insidePoints[idx];
+      const double offset = get_cell_position_offset(patch, coord_, insidePoint);
+      *phiIter = boost_rand() + offset;
+      ++phiIter;
+    }
   }
 }
 
