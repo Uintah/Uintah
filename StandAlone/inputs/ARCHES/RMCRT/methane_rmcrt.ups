@@ -88,11 +88,11 @@
         <BCType id="0" label="enthalpy_do"             var="Tabulated">
                             <value>adiabaticenthalpy</value> <!-- Pure oxidizer enthalpy --> 
         </BCType>
-        <!-- for RMCRT-->
-        <BCType id="0"  label= "temperature"        var="Neumann">
+                        <!-- for RMCRT-->
+        <BCType id="0"  label= "SolidWallTemperature" var="Neumann">
                             <value> 0. </value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="Dirichlet">
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1. </value>
         </BCType>
       </Face>
@@ -120,11 +120,11 @@
         <BCType id="0" label="enthalpy_do"             var="Neumann">
                             <value>0.0</value> <!-- Pure oxidizer enthalpy --> 
         </BCType>
-        <!-- for RMCRT-->
-        <BCType id="0"  label= "temperature"        var="Neumann">
+                        <!-- for RMCRT-->
+        <BCType id="0"  label= "SolidWallTemperature"  var="Neumann">
                             <value> 0. </value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="Dirichlet">
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1. </value>
         </BCType>
       </Face>
@@ -149,14 +149,14 @@
         <BCType id="0" label="enthalpy"             var="Tabulated">
                             <value>adiabaticenthalpy</value> <!-- Pure fuel enthalpy --> 
         </BCType>
-        <BCType id="0" label="enthalpy_do"             var="Tabulated">
+        <BCType id="0" label="enthalpy_do"          var="Tabulated">
                             <value>adiabaticenthalpy</value> <!-- Pure oxidizer enthalpy --> 
         </BCType>
-        <!-- for RMCRT-->
-        <BCType id="0"  label= "temperature"        var="Neumann">
+                        <!-- for RMCRT-->
+        <BCType id="0"  label= "SolidWallTemperature" var="Neumann">
                             <value> 0. </value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="Dirichlet">
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1. </value>
         </BCType>
       </Face>
@@ -182,14 +182,14 @@
         <BCType id="0" label="enthalpy"             var="Neumann">
                             <value>0.0</value> 
         </BCType>
-        <BCType id="0" label="enthalpy_do"             var="Neumann">
+        <BCType id="0" label="enthalpy_do"          var="Neumann">
                             <value>0.0</value> 
         </BCType>
-        <!-- for RMCRT-->
-        <BCType id="0"  label= "temperature"        var="Neumann">
+                        <!-- for RMCRT-->
+        <BCType id="0"  label= "SolidWallTemperature" var="Neumann">
                             <value> 0. </value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="Dirichlet">
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1. </value>
         </BCType>
       </Face>
@@ -213,14 +213,14 @@
         <BCType id="0" label="enthalpy"             var="Neumann">
                             <value>0.0</value> 
         </BCType>
-        <BCType id="0" label="enthalpy_do"             var="Neumann">
+        <BCType id="0" label="enthalpy_do"          var="Neumann">
                             <value>0.0</value> 
         </BCType>
-        <!-- for RMCRT-->
-        <BCType id="0"  label= "temperature"        var="Neumann">
+                        <!-- for RMCRT-->
+        <BCType id="0"  label= "SolidWallTemperature"  var="Neumann">
                             <value> 0. </value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="Dirichlet">
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1. </value>
         </BCType>
       </Face>
@@ -244,14 +244,14 @@
         <BCType id="0" label="enthalpy"             var="Neumann">
                             <value>0.0</value> 
         </BCType>
-        <BCType id="0" label="enthalpy_do"             var="Neumann">
+        <BCType id="0" label="enthalpy_do"          var="Neumann">
                             <value>0.0</value> 
         </BCType>
-        <!-- for RMCRT-->
-        <BCType id="0"  label= "temperature"        var="Neumann">
+                        <!-- for RMCRT-->
+        <BCType id="0"  label= "SolidWallTemperature" var="Neumann">
                             <value> 0. </value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="Dirichlet">
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1. </value>
         </BCType>
       </Face>
@@ -275,14 +275,14 @@
         <BCType id="0" label="enthalpy"             var="Neumann">
                             <value>0.0</value> 
         </BCType>
-        <BCType id="0" label="enthalpy_do"             var="Neumann">
+        <BCType id="0" label="enthalpy_do"          var="Neumann">
                             <value>0.0</value> 
         </BCType>
-        <!-- for RMCRT-->
-        <BCType id="0"  label= "temperature"        var="Neumann">
+                        <!-- for RMCRT-->
+        <BCType id="0"  label= "SolidWallTemperature" var="Neumann">
                             <value> 0. </value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="Dirichlet">
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1. </value>
         </BCType>
       </Face>
@@ -307,14 +307,14 @@
         <BCType id="0" label="enthalpy"             var="Neumann">
                             <value>0.0</value>
         </BCType>
-        <BCType id="0" label="enthalpy_do"             var="Neumann">
+        <BCType id="0" label="enthalpy_do"          var="Neumann">
                             <value>0.0</value>
         </BCType>
-        <!-- for RMCRT-->
-        <BCType id="0"  label= "temperature"        var="Neumann">
+                        <!-- for RMCRT-->
+        <BCType id="0"  label= "SolidWallTemperature"  var="Neumann">
                             <value> 0. </value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="Dirichlet">
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1. </value>
         </BCType>
         
