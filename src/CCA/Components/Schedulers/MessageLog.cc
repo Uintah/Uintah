@@ -42,8 +42,8 @@ using namespace std;
 // multiple threads at the same time)  From sus.cc:
 extern SCIRun::Mutex       cerrLock;
 
-MessageLog::MessageLog(const ProcessorGroup* myworld, Output* oport)
-   : d_enabled(false), d_myworld(myworld), d_oport(oport)
+MessageLog::MessageLog( const ProcessorGroup * myworld, const Output * oport ) :
+  d_enabled(false), d_myworld(myworld), d_oport(oport)
 {
 }
 

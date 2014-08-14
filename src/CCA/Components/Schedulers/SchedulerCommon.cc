@@ -80,12 +80,12 @@ static DebugStream dbg("SchedulerCommon", false);
 char * SchedulerCommon::start_addr = NULL;
 
 
-SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
-  : UintahParallelComponent(myworld), m_outPort(oport),
-    trackingVarsPrintLocation_(0), d_maxMemUse(0), m_graphDoc(NULL), m_nodes(NULL)
+SchedulerCommon::SchedulerCommon( const ProcessorGroup * myworld, const Output * oport ) :
+  UintahParallelComponent(myworld), m_outPort(oport),
+  trackingVarsPrintLocation_(0), d_maxMemUse(0), m_graphDoc(NULL), m_nodes(NULL)
 {
   d_generation = 0;
-  numOldDWs = 0;
+  numOldDWs    = 0;
 
   emit_taskgraph      = false;
   d_useSmallMessages  = true;

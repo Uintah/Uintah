@@ -45,10 +45,10 @@
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
-#include   <sstream>
-#include   <iomanip>
-#include   <map>
-#include   <cstring>
+#include <sstream>
+#include <iomanip>
+#include <map>
+#include <cstring>
 
 // Pack data into a buffer before sending -- testing to see if this
 // works better and avoids certain problems possible when you allow
@@ -83,12 +83,13 @@ map<string,double> waittimes;
 map<string,double> exectimes;
 
  
-
 MPIScheduler::MPIScheduler( const ProcessorGroup * myworld,
-			          Output         * oport,
-			          MPIScheduler   * parentScheduler) :
+                            const Output         * oport,
+                                  MPIScheduler   * parentScheduler) :
   SchedulerCommon( myworld, oport ),
-  parentScheduler( parentScheduler ), log( myworld, oport ), oport_(oport)
+  parentScheduler( parentScheduler ),
+  log( myworld, oport ),
+  oport_( oport )
 {
   d_lasttime=Time::currentSeconds();
   reloc_new_posLabel_=0;
@@ -158,12 +159,12 @@ MPIScheduler::verifyChecksum()
   mpidbg << d_myworld->myrank() << " (Allreduce) Checking checksum of " << checksum << '\n';
   int result_checksum;
   MPI_Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN,
-		d_myworld->getComm());
+                d_myworld->getComm());
   if(checksum != result_checksum){
     cerr << "Failed task checksum comparison!\n";
     cerr << "Processor: " << d_myworld->myrank() << " of "
-	 << d_myworld->size() - 1 << ": has sum " << checksum
-	 << " and global is " << result_checksum << '\n';
+         << d_myworld->size() - 1 << ": has sum " << checksum
+         << " and global is " << result_checksum << '\n';
     MPI_Abort(d_myworld->getComm(), 1);
   }
   mpidbg << d_myworld->myrank() << " (Allreduce) Check succeeded\n";
@@ -172,7 +173,7 @@ MPIScheduler::verifyChecksum()
 
 #ifdef USE_TAU_PROFILING
 extern int create_tau_mapping( const string & taskname,
-			       const PatchSubset * patches );  // ThreadPool.cc
+                               const PatchSubset * patches );  // ThreadPool.cc
 #endif
 
 void
@@ -188,7 +189,7 @@ MPIScheduler::wait_till_all_done()
 
 void
 MPIScheduler::initiateTask( DetailedTask          * task,
-			    bool only_old_recvs, int abort_point, int iteration )
+                            bool only_old_recvs, int abort_point, int iteration )
 {
   MALLOC_TRACE_TAG_SCOPE("MPIScheduler::initiateTask");
   TAU_PROFILE("MPIScheduler::initiateTask()", " ", TAU_USER); 
@@ -381,8 +382,8 @@ MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
       LoadBalancer* lb = 0;
 
       if(!reloc_new_posLabel_ && parentScheduler){
-	posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
-	posLabel = parentScheduler->reloc_new_posLabel_;
+        posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
+        posLabel = parentScheduler->reloc_new_posLabel_;
       } else {
         // on an output task (and only on one) we require particle variables from the NewDW
         if (req->toTasks.front()->getTask()->getType() == Task::Output)
@@ -391,7 +392,7 @@ MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
           posDW = dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
           lb = getLoadBalancer();
         }
-	posLabel = reloc_new_posLabel_;
+        posLabel = reloc_new_posLabel_;
       }
       MPIScheduler* top = this;
       while(top->parentScheduler) top = top->parentScheduler;
@@ -642,7 +643,7 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_
       // the data.
       delete p_mpibuff;
       delete pBatchRecvHandler;
-#endif	        
+#endif          
     }
   } // end for
 
@@ -766,7 +767,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   if( dbg.active()) {
     cerrLock.lock();
     dbg << me << " Executing " << dts->numTasks() << " tasks (" 
-	       << ntasks << " local)\n";
+               << ntasks << " local)\n";
     cerrLock.unlock();
   }
 
@@ -779,7 +780,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     dws[dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), reloc_new_posLabel_, iteration);
 
   TAU_PROFILE_TIMER(doittimer, "Task execution", 
-		    "[MPIScheduler::execute() loop] ", TAU_USER); 
+                    "[MPIScheduler::execute() loop] ", TAU_USER); 
   TAU_PROFILE_START(doittimer);
 
   while( numTasksDone < ntasks) {
@@ -839,7 +840,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
         phase_id = (*iter).second;
       } else {
         TAU_MAPPING_CREATE( phase_name, "",
-			    (TauGroup_t) unique_id, "TAU_USER", 0 );
+                            (TauGroup_t) unique_id, "TAU_USER", 0 );
         phase_map[ phase_name ] = unique_id;
         phase_id = unique_id++;
       }

@@ -328,13 +328,14 @@ main( int argc, char *argv[], char *env[] )
         usage("You must provide a number of threads for -nthreads", arg, argv[0]);
       }
       numThreads = atoi(argv[i]);
-      if (numThreads < 1) {
+      if( numThreads < 1 ) {
         usage("Number of threads is too small", arg, argv[0]);
       }
-      else if (numThreads > MAX_THREADS) {
-        usage("Number of threads is out of range. Try to increase MAX_THREADS and recompile", arg, argv[0]);
+      else if( numThreads > MAX_THREADS ) {
+        usage( "Number of threads is out of range. Specify fewer threads, "
+               "or increase MAX_THREADS (.../src/Core/Thread/Threads.h) and recompile.", arg, argv[0] );
       }
-      Uintah::Parallel::setNumThreads(numThreads);
+      Uintah::Parallel::setNumThreads( numThreads );
     }
     else if (arg == "-threadmpi") {
       //used threaded mpi (this option is handled in MPI_Communicator.cc  MPI_Init_thread

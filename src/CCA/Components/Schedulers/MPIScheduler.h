@@ -87,15 +87,15 @@ WARNING
 
   class MPIScheduler : public SchedulerCommon {
   public:
-    MPIScheduler(const ProcessorGroup* myworld, Output* oport, MPIScheduler* parentScheduler = 0);
+    MPIScheduler( const ProcessorGroup * myworld, const Output * oport, MPIScheduler * parentScheduler = 0 );
     virtual ~MPIScheduler();
       
-    virtual void problemSetup(const ProblemSpecP& prob_spec,
-                              SimulationStateP& state);
-      
+    virtual void problemSetup( const ProblemSpecP     & prob_spec,
+                                     SimulationStateP & state );
+
     //////////
     // Insert Documentation Here:
-    virtual void execute(int tgnum = 0, int iteration = 0);
+    virtual void execute( int tgnum = 0, int iteration = 0 );
 
     virtual SchedulerP createSubScheduler();
     
@@ -162,24 +162,24 @@ WARNING
     virtual void wait_till_all_done();
     
     virtual void verifyChecksum();
-    MessageLog log;
 
+    void emitTime( const char* label );
+    void emitTime( const char* label, double time );
 
-    Output*       oport_;
+    MessageLog                  log;
 
-    CommRecMPI            sends_;
-    CommRecMPI            recvs_;
+    const Output              * oport_;
+
+    CommRecMPI                  sends_;
+    CommRecMPI                  recvs_;
 
     double                      d_lasttime;
     std::vector<const char*>    d_labels;
     std::vector<double>         d_times;
     std::ofstream               timingStats, avgStats, maxStats;
 
-    void emitTime(const char* label);
-    void emitTime(const char* label, double time);
-
-    unsigned int numMessages_;
-    double messageVolume_;
+    unsigned int                numMessages_;
+    double                      messageVolume_;
 
   private:
     MPIScheduler(const MPIScheduler&);
