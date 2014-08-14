@@ -77,16 +77,18 @@ WARNING
 
   class SchedulerCommon : public Scheduler, public UintahParallelComponent {
   public:
-    SchedulerCommon(const ProcessorGroup* myworld, Output* oport);
+    SchedulerCommon( const ProcessorGroup * myworld, const Output * oport );
     virtual ~SchedulerCommon();
 
-    virtual void problemSetup(const ProblemSpecP& prob_spec,
-                              SimulationStateP& state);
+    virtual void problemSetup( const ProblemSpecP     & prob_spec,
+                                     SimulationStateP & state );
 
     virtual void doEmitTaskGraphDocs();
 
-    virtual void checkMemoryUse( unsigned long & memuse, unsigned long & highwater,
+    virtual void checkMemoryUse( unsigned long & memuse,
+                                 unsigned long & highwater,
                                  unsigned long & maxMemUse );
+
     // sbrk memory start location (for memory tracking)
     virtual void   setStartAddr( char * start ) { start_addr = start; }
     virtual char * getStartAddr() { return start_addr; }
@@ -276,35 +278,35 @@ WARNING
     virtual void verifyChecksum() = 0;
 
     std::vector<TaskGraph*> graphs;
-    int currentTG_;
-    int numTasks_;
-    int d_generation;
+    int                     currentTG_;
+    int                     numTasks_;
+    int                     d_generation;
 
 
-    SimulationStateP d_sharedState;
+    SimulationStateP                    d_sharedState;
 
     std::vector<OnDemandDataWarehouseP> dws;
-    int numOldDWs;
+    int                                 numOldDWs;
 
-    int dwmap[Task::TotalDWs];
+    int                                 dwmap[Task::TotalDWs];
 
-    Output* m_outPort;
-    bool restartable;
+    const Output                      * m_outPort;
+    bool                                restartable;
 
     //! These are so we can track certain variables over the taskgraph's
     //! execution.
-    std::vector<std::string> trackingVars_;
-    std::vector<std::string> trackingTasks_;
+    std::vector<std::string>   trackingVars_;
+    std::vector<std::string>   trackingTasks_;
     std::vector<Task::WhichDW> trackingDWs_;
-    int trackingVarsPrintLocation_;
-    int trackingPatchID_;
-    double trackingStartTime_;
-    double trackingEndTime_;
-    int trackingLevel_;
-    IntVector trackingStartIndex_;
-    IntVector trackingEndIndex_;
+    int                        trackingVarsPrintLocation_;
+    int                        trackingPatchID_;
+    double                     trackingStartTime_;
+    double                     trackingEndTime_;
+    int                        trackingLevel_;
+    IntVector                  trackingStartIndex_;
+    IntVector                  trackingEndIndex_;
 
-    int numParticleGhostCells_;
+    int              numParticleGhostCells_;
     Ghost::GhostType particleGhostType_;
 
     // so we can manually copy vars between AMR levels
@@ -325,7 +327,7 @@ WARNING
     
   private:
 
-    SchedulerCommon(const SchedulerCommon&);
+    SchedulerCommon( const SchedulerCommon & );
     SchedulerCommon& operator=(const SchedulerCommon&);
 
     // Maximum memory use as sampled across a given timestep.

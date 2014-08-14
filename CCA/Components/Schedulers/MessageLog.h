@@ -65,22 +65,25 @@ namespace Uintah {
     
    class MessageLog {
    public:
-      MessageLog(const ProcessorGroup* myworld, Output* oport);
-      void problemSetup(const ProblemSpecP& prob_spec);
+      MessageLog( const ProcessorGroup * myworld, const Output * oport );
       ~MessageLog();
+
+      void problemSetup( const ProblemSpecP & prob_spec );
 #if 0
       void logSend(const DetailedReq* dep, int bytes,
-		   const char* msg = 0);
+                   const char* msg = 0);
       void logRecv(const DetailedReq* dep, int bytes,
-		   const char* msg = 0);
+                   const char* msg = 0);
 #endif
-
       void finishTimestep();
+
    private:
-      bool d_enabled;
-      const ProcessorGroup* d_myworld;
-      Output* d_oport;
-      std::ofstream out;
+
+      bool                   d_enabled;
+      const ProcessorGroup * d_myworld;
+      const Output         * d_oport;
+
+      std::ofstream          out;
       
       MessageLog(const MessageLog&);
       MessageLog& operator=(const MessageLog&);

@@ -126,53 +126,52 @@ class SimulationState;
 
     //////////
     // Get the current time step
-    virtual int getCurrentTimestep() = 0;
+    virtual int getCurrentTimestep() const = 0;
 
     //////////
     // Get the current time step
-    virtual double getCurrentTime() = 0;
+    virtual double getCurrentTime() const = 0;
 
     // Get the time the next output will occur
-    virtual double getNextOutputTime() = 0;
+    virtual double getNextOutputTime() const = 0;
 
     // Get the timestep the next output will occur
-    virtual int getNextOutputTimestep() = 0;
+    virtual int getNextOutputTimestep() const = 0;
 
     // Get the time the next checkpoint will occur
-    virtual double getNextCheckpointTime() = 0;
+    virtual double getNextCheckpointTime() const = 0;
 
     // Get the timestep the next checkpoint will occur
-    virtual int getNextCheckpointTimestep() = 0;
+    virtual int getNextCheckpointTimestep() const = 0;
       
     // Returns true if data will be output this timestep
-    virtual bool isOutputTimestep() = 0;
+    virtual bool isOutputTimestep() const = 0;
 
     // Returns true if data will be checkpointed this timestep
-    virtual bool isCheckpointTimestep() = 0;
+    virtual bool isCheckpointTimestep() const = 0;
 
     // Returns true if the label is being saved
-    virtual bool isLabelSaved(std::string label) = 0;
+    virtual bool isLabelSaved( const std::string & label ) const = 0;
 
     // update output interval
-    virtual void updateOutputInterval(double inv) = 0;
+    virtual void updateOutputInterval( double inv ) = 0;
 
     //get output interval
-    virtual double getOutputInterval()=0;
+    virtual double getOutputInterval() const = 0;
     
     // update checkpoint interval
-    virtual void updateCheckpointInterval(double inv) = 0;
+    virtual void updateCheckpointInterval( double inv ) = 0;
 
     //get checkpoint interval
-    virtual double getCheckpointInterval()=0;
+    virtual double getCheckpointInterval() const = 0;
     //////////
     // Get the directory of the current time step for outputting info.
-    virtual const std::string& getLastTimestepOutputLocation() const = 0;  
+    virtual const std::string& getLastTimestepOutputLocation() const = 0;
     
   private:
     
-  
-    Output(const Output&);
-    Output& operator=(const Output&);
+    Output( const Output& );
+    Output& operator=( const Output& );
   };
 
 } // End namespace Uintah

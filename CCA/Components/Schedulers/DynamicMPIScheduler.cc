@@ -32,7 +32,7 @@
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Mutex.h>
 
-#include   <cstring>
+#include <cstring>
 
 using namespace std;
 using namespace Uintah;
@@ -40,15 +40,15 @@ using namespace SCIRun;
 
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
-extern SCIRun::Mutex       cerrLock;
-extern DebugStream mixedDebug;
-extern DebugStream taskdbg;
-extern DebugStream mpidbg;
+extern SCIRun::Mutex      cerrLock;
+extern DebugStream        mixedDebug;
+extern DebugStream        taskdbg;
+extern DebugStream        mpidbg;
 extern map<string,double> waittimes;
 extern map<string,double> exectimes;
-extern DebugStream waitout;
-extern DebugStream execout;
-extern DebugStream taskorder;
+extern DebugStream        waitout;
+extern DebugStream        execout;
+extern DebugStream        taskorder;
 
 static DebugStream dbg("DynamicMPIScheduler", false);
 static DebugStream timeout("DynamicMPIScheduler.timings", false);
@@ -56,22 +56,21 @@ static DebugStream queuelength("QueueLength",false);
 
 #ifdef USE_TAU_PROFILING
 extern int create_tau_mapping( const string & taskname,
-			       const PatchSubset * patches );  // ThreadPool.cc
+                               const PatchSubset * patches );  // ThreadPool.cc
 #endif
 
 ofstream wout;
 
-DynamicMPIScheduler::DynamicMPIScheduler(const ProcessorGroup* myworld,
-                                         Output* oport,
-                                         DynamicMPIScheduler* parentScheduler)
-	: MPIScheduler( myworld, oport, parentScheduler)
+DynamicMPIScheduler::DynamicMPIScheduler( const ProcessorGroup      * myworld,
+                                          const Output              * oport,
+                                                DynamicMPIScheduler * parentScheduler ) :
+  MPIScheduler( myworld, oport, parentScheduler )
 {
-
 }
 
 void
-DynamicMPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
-                           SimulationStateP& state)
+DynamicMPIScheduler::problemSetup( const ProblemSpecP     & prob_spec,
+                                         SimulationStateP & state )
 {
   string taskQueueAlg = "";
 
@@ -252,9 +251,10 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     
     cerrLock.lock();
     dbg << me << " Executing " << dts->numTasks() << " tasks (" 
-	       << ntasks << " local)";
-    map<int,int>::iterator it;
-    for ( it=phaseTasks.begin() ; it != phaseTasks.end(); it++ ) {
+        << ntasks << " local)";
+
+    
+    for( map<int,int>::iterator it = phaseTasks.begin(); it != phaseTasks.end(); it++ ) {
       dbg << ", phase["<< (*it).first << "] = " << (*it).second;
     }
     dbg << endl;
@@ -265,7 +265,7 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   static int totaltasks;
   set<DetailedTask*> pending_tasks;
 
-  while( numTasksDone < ntasks) {
+  while( numTasksDone < ntasks ) {
     i++;
 
     // 

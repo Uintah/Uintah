@@ -71,31 +71,31 @@ WARNING
 
   class UdaReducer : public SimulationInterface, public UintahParallelComponent {
   public:
-    UdaReducer(const ProcessorGroup* myworld, 
-               std::string d_udaDir);
+    UdaReducer( const ProcessorGroup * myworld, 
+                const std::string    & d_udaDir );
 
     virtual ~UdaReducer();
 
-    virtual void problemSetup(const ProblemSpecP& params, 
-                              const ProblemSpecP& restart_prob_spec, 
-                              GridP& grid, 
-                              SimulationStateP& state);
+    virtual void problemSetup( const ProblemSpecP     & params, 
+                               const ProblemSpecP     & restart_prob_spec, 
+                                     GridP            & grid, 
+                                     SimulationStateP & state );
 
-    virtual void scheduleInitialize(const LevelP& level,
-                                    SchedulerP&);
+    virtual void scheduleInitialize( const LevelP     & level,
+                                           SchedulerP & );
 
     virtual void restartInitialize() {}
 
-    virtual void scheduleComputeStableTimestep(const LevelP&,
-                                               SchedulerP&);
+    virtual void scheduleComputeStableTimestep( const LevelP &,
+                                                      SchedulerP & );
 
-    virtual void scheduleTimeAdvance( const LevelP& level, 
-                                      SchedulerP&);
+    virtual void scheduleTimeAdvance( const LevelP     & level,
+                                            SchedulerP & );
 
 
-    virtual bool needRecompile(double time, 
-                               double dt,
-                               const GridP& grid);
+    virtual bool needRecompile( const double   time,
+                                const double   dt,
+                                const GridP  & grid );
                                
     virtual void scheduleFinalizeTimestep(const LevelP& level, 
                                           SchedulerP&){};
@@ -145,23 +145,24 @@ WARNING
                           DataWarehouse*,
                           DataWarehouse* );
 
-    std::string d_udaDir;
-    int d_timeIndex;
-    bool d_gridChanged;     
+    std::string            d_udaDir;
+    bool                   d_gridChanged;     
 
-    std::vector<int> d_timesteps;
-    std::vector<int> d_numMatls;
-    std::vector<double> d_times;
+    std::vector<int>       d_timesteps;
+    std::vector<int>       d_numMatls;
+    std::vector<double>    d_times;
     std::vector<VarLabel*> d_savedLabels;
 
-    GridP d_oldGrid;
-    DataArchive* d_dataArchive;
-    Output* d_dataArchiver;
+    GridP                  d_oldGrid;
+    DataArchive          * d_dataArchive;
+    Output               * d_dataArchiver;
     
-    LoadBalancer* d_lb;
-    const VarLabel* delt_label;
-    SimulationStateP d_sharedState;
-    SimpleMaterial*  d_oneMatl;
+    int                    d_timeIndex;
+
+    LoadBalancer         * d_lb;
+    const VarLabel       * delt_label;
+    SimulationStateP       d_sharedState;
+    SimpleMaterial       * d_oneMatl;
   };
 } // End namespace Uintah
    

@@ -70,7 +70,7 @@ WARNING
 
   public:
 
-    UnifiedScheduler(const ProcessorGroup* myworld, Output* oport, UnifiedScheduler* parentScheduler = 0);
+    UnifiedScheduler( const ProcessorGroup * myworld, const Output * oport, UnifiedScheduler * parentScheduler = 0 );
 
     ~UnifiedScheduler();
     
@@ -135,12 +135,12 @@ WARNING
     int getAviableThreadNum();
 
     UnifiedScheduler(const UnifiedScheduler&);
-
     UnifiedScheduler& operator=(const UnifiedScheduler&);
-    Output*       oport_t;
-    CommRecMPI    sends_[MAX_THREADS];
-    QueueAlg      taskQueueAlg_;
-    int           numThreads_;
+
+    const Output * oport_t;
+    CommRecMPI     sends_[MAX_THREADS];
+    QueueAlg       taskQueueAlg_;
+    int            numThreads_;
 
 #ifdef HAVE_CUDA
 

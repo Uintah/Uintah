@@ -46,9 +46,10 @@ static DebugStream SingleProcessor("SingleProcessor", false);
 static DebugStream MPI("MPI", false);
 static DebugStream DynamicMPI("DynamicMPI", false);
 
-SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
-                                          const ProcessorGroup* world,
-                                          Output* output)
+SchedulerCommon*
+SchedulerFactory::create( const ProblemSpecP   & ps,
+                          const ProcessorGroup * world,
+                          const Output         * output )
 {
   SchedulerCommon* sch = 0;
   string scheduler = "";
@@ -109,6 +110,7 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
   }
   else {
     sch = 0;
+    string error = "Unknown scheduler: '" + scheduler + "'";
     throw ProblemSetupException("Unknown scheduler", __FILE__, __LINE__);
   }
 
