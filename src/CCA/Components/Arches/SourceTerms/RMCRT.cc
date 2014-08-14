@@ -117,6 +117,9 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
     throw ProblemSetupException("ERROR:  RMCRT_radiation, the xml tag <RMCRT> was not found", __FILE__, __LINE__);
   }  
 
+
+  _RMCRT->setBC_onOff( false );
+
   //__________________________________
   //  Read in the RMCRT algorithm that will be used
   ProblemSpecP alg_ps = rmcrt_ps->findBlock("algorithm");
@@ -145,10 +148,8 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
       _RMCRT->setBC_onOff( true );
       
     } else if ( type == "singleLevel" ) {         // 1 LEVEL
-      
       _whichAlgo = singleLevel;
-      _RMCRT->setBC_onOff( true );                // SET THIS TO FALSE ONCE ARCHES CAN SET HANDLE BCS
-      
+
     }
   }
 }
@@ -250,7 +251,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
 
   // common flags
   bool modifies_divQ     = false;
-  const bool includeExtraCells = false;  // domain for sigmaT4 computation
+  bool includeExtraCells = false;  // domain for sigmaT4 computation
 
   if (timeSubStep == 0) {
     modifies_divQ  = false;
@@ -339,7 +340,8 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   if( _whichAlgo == singleLevel ){
     const LevelP& level = grid->getLevel(_archesLevelIndex);
     Task::WhichDW temp_dw = Task::OldDW;
-    
+    includeExtraCells = true;
+      
     // compute sigmaT4 on the CFD level
     _RMCRT->sched_sigmaT4( level,  sched, temp_dw, _radiation_calc_freq, includeExtraCells );
     
@@ -347,11 +349,6 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     Task::WhichDW sigmaT4_dw  = Task::NewDW;                                                                       
     Task::WhichDW celltype_dw = Task::NewDW;                                                                       
 
-// REMOVE ONCE ARCHES CAN SET BCS ON 1 LEVEL
-    const bool backoutTemp    = true;
-    _RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, _radiation_calc_freq, backoutTemp);
-    
-    
     _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, _radiation_calc_freq ); 
   }
 }
