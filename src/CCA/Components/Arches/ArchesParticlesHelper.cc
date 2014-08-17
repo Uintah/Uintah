@@ -89,6 +89,7 @@ namespace Uintah{
      (3) Check particle initialization spec and create a subset with 0 particles on patches that should
      not have particles in them.
      The code that follows does option (3).
+     ~Tony S. 
      */
     double xmin=-DBL_MAX, xmax=DBL_MAX,
     ymin=-DBL_MAX, ymax=DBL_MAX,
