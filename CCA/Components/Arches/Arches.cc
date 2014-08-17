@@ -1188,24 +1188,34 @@ Arches::scheduleInitialize(const LevelP& level,
   ifac = _factory_map.find("init_factory"); 
   all_tasks = ifac->second->retrieve_all_tasks(); 
 
+  bool break_it = false; 
+
   //this is a hack to get the particle stuff going in the correct order.  Not sure why the 
   //framework isn't ordering these tasks based on the dependencies.: 
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
 
-    if ( i->first == "Lx" || i->first == "Lvel" || i->first == "Ld"){ 
-      std::cout << " Delaying.." << std::endl;
-    } else { 
+    if ( break_it ){ 
       i->second->schedule_init(level, sched, matls ); 
+    } else { 
+      if ( i->first == "Lx" || i->first == "Lvel" || i->first == "Ld"){ 
+        std::cout << " Delaying task schedule.." << std::endl;
+      } else { 
+        i->second->schedule_init(level, sched, matls ); 
+      }
     }
 
   }
+
+  if ( !break_it ){ 
  
-  TaskFactoryBase::TaskMap::iterator iLX = all_tasks.find("Lx");
-  if ( iLX != all_tasks.end() ) iLX->second->schedule_init(level, sched, matls); 
-  TaskFactoryBase::TaskMap::iterator iLD = all_tasks.find("Ld"); 
-  if ( iLD != all_tasks.end() ) iLD->second->schedule_init(level, sched, matls); 
-  TaskFactoryBase::TaskMap::iterator iLV = all_tasks.find("Lvel");
-  if ( iLV != all_tasks.end() ) iLV->second->schedule_init(level, sched, matls); 
+    TaskFactoryBase::TaskMap::iterator iLX = all_tasks.find("Lx");
+    if ( iLX != all_tasks.end() ) iLX->second->schedule_init(level, sched, matls); 
+    TaskFactoryBase::TaskMap::iterator iLD = all_tasks.find("Ld"); 
+    if ( iLD != all_tasks.end() ) iLD->second->schedule_init(level, sched, matls); 
+    TaskFactoryBase::TaskMap::iterator iLV = all_tasks.find("Lvel");
+    if ( iLV != all_tasks.end() ) iLV->second->schedule_init(level, sched, matls); 
+
+  }
 
   //particle models
   ifac = _factory_map.find("particle_model_factory"); 
@@ -1239,8 +1249,7 @@ Arches::scheduleInitialize(const LevelP& level,
   d_turbModel->set3dPeriodic(d_3d_periodic);
   d_props->set3dPeriodic(d_3d_periodic);
 
-  init_timelabel = scinew TimeIntegratorLabel(d_lab,
-                                                TimeIntegratorStepType::FE);
+  init_timelabel = scinew TimeIntegratorLabel(d_lab, TimeIntegratorStepType::FE);
   init_timelabel_allocated = true;
 
   // Property model initialization
