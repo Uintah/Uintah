@@ -83,4 +83,5 @@ namespace Wasatch {
   };
 
 } /* namespace Wasatch */
-#endif /* Reduction_Helper_h */
+
+#endif /* wasatchparticles_helper_h */

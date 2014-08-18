@@ -50,6 +50,10 @@
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Material.h>
 
+#ifndef PIDOFFSET
+#define PIDOFFSET 1000000000000ul
+#endif
+
 namespace Uintah {
 
   class ProcessorGroup;
@@ -92,6 +96,13 @@ namespace Uintah {
    This will change in the next Uintah release.
    *  \Note: Particle variable names typically start with "p." - a Uintah assumption made to simplify
    some runtime decisions.
+   *  \Note: You will need to provide a basic xml support for particles:
+   <ParticlesPerCell spec="OPTIONAL DOUBLE"/>
+   <MaximumParticles spec="OPTIONAL INTEGER"/>
+   <ParticlePosition spec="REQUIRED NO_DATA"
+                     attribute1="x REQUIRED STRING"
+                     attribute2="y REQUIRED STRING"
+                     attribute3="z REQUIRED STRING"/>
    */
   class ParticlesHelper
   {
@@ -161,7 +172,9 @@ namespace Uintah {
      *  \brief Parse the particle spec and create the position varlabels. This is an essential step
      that MUST be called during Wasatch::ProblemSetup
      */
-    void problem_setup(Uintah::ProblemSpecP particleEqsSpec);
+    void problem_setup(Uintah::ProblemSpecP particleEqsSpec,
+                       Uintah::SimulationStateP sharedState);
+    
     void set_materials(const Uintah::MaterialSet* const materials)
     {
       isValidState_ = true;
@@ -169,10 +182,16 @@ namespace Uintah {
     }
     
     /**
-     * \brief Use to add particle variable names marked for relocation. Note, do NOT add particle
-     position to this list.
+     * \brief Use to mark a particle variable for relocation. Please do NOT add the Uintah particle
+     position vector ("p.x") to this list.
      */
-    static void add_particle_variable(const std::string& varName);
+    static void mark_for_relocation(const std::string& varName);
+
+    /**
+     * \brief Use to mark which particle variables require a boundary condition. Usually, these
+     are the transported particle variables. This is needed by the particle addition algorithm
+     */
+    static void needs_boundary_condition(const std::string& varName);
     
     /**
      * \brief Return a reference to the list of particle variables marked for relocation.
@@ -180,7 +199,16 @@ namespace Uintah {
     static const std::vector<std::string>& get_relocatable_particle_varnames();
 
     /**
-     * \brief Return a reference to the list of particle variables marked for relocation.
+     * \brief Task that adds particles through boundaries. This task will parse the ups input file and
+     add particles through the boundaries as specified.
+     * \Caution  Use AFTER schedule_particle_relocation.
+     */
+    virtual void schedule_add_particles( const Uintah::LevelP& level,
+                                         Uintah::SchedulerP& sched );
+    
+    /**
+     * \brief Return a reference to the list of particle near the boundary specified by bndName and on patch ID 
+     specified via patchID.
      */
     static const std::vector<int>* get_boundary_particles(const std::string& bndName,
                                                           const int patchID);
@@ -190,7 +218,6 @@ namespace Uintah {
     virtual void schedule_find_boundary_particles(const Uintah::LevelP& level,
                                                   Uintah::SchedulerP& sched);
   protected:
-    
     
     //****************************************************************************
     /**
@@ -213,12 +240,14 @@ namespace Uintah {
     };
     
     // This vector stores a list of all particle variables that require relocation(except position).
-    static std::vector<std::string> otherParticleVarNames_;
+    static std::vector<std::string> needsRelocation_;
+    static std::vector<std::string> needsBC_;
 
     typedef std::vector<int> BndParticlesVector;
     typedef std::map <int, BndParticlesVector            > patchIDBndParticlesMapT;  // temporary typedef map that stores boundary particles per patch id: Patch ID -> Bnd particles
     typedef std::map <std::string, patchIDBndParticlesMapT    > MaskMapT         ;  // boundary name -> (patch ID -> boundary particles )
     static MaskMapT bndParticlesMap_;
+    static MaskMapT inletBndParticlesMap_;
 
     // particle position label of type Uintah::Point
     const Uintah::VarLabel *pPosLabel_;
@@ -254,6 +283,10 @@ namespace Uintah {
                                         const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
                                         Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw, const bool initialization);
 
+    virtual void add_particles( const Uintah::ProcessorGroup*,
+                                const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
+                                Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw );
+
     void allocate_boundary_particles_vector( const std::string& bndName,
                                              const int& patchID );
 
@@ -281,9 +314,11 @@ namespace Uintah {
     bool isValidState_;
     const Uintah::MaterialSet* materials_;
     double pPerCell_; // number of initial particles per cell
-    unsigned int maxParticles_;
+    unsigned int maxParticles_; //number of maximum initial particles
+    Uintah::SimulationStateP sharedState_;
     Uintah::ProblemSpecP particleEqsSpec_;
     std::map<int, Uintah::ParticleSubset*> deleteSet_;
+    std::map<int, long64> lastPIDPerPatch_; // patchID -> last particle ID
   }; // Class ParticlesHelper
 
 } /* namespace Uintah */

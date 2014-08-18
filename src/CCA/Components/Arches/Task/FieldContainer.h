@@ -204,7 +204,7 @@ namespace Uintah{
         }
       }
 
-      void add_particle_variable( std::string name, ParticleFieldContainer container ){ 
+      void mark_for_relocation( std::string name, ParticleFieldContainer container ){ 
         UintahParticleMap::iterator iter = _particle_map.find(name); 
 
         if ( iter == _particle_map.end() ){ 

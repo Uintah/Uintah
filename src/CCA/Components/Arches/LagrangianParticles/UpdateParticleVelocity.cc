@@ -30,9 +30,9 @@ UpdateParticleVelocity::problemSetup( ProblemSpecP& db ){
   db_vel->getAttribute("v",_v_name);
   db_vel->getAttribute("w",_w_name);
 
-  Uintah::ArchesParticlesHelper::add_particle_variable(_u_name); 
-  Uintah::ArchesParticlesHelper::add_particle_variable(_v_name); 
-  Uintah::ArchesParticlesHelper::add_particle_variable(_w_name); 
+  Uintah::ArchesParticlesHelper::mark_for_relocation(_u_name); 
+  Uintah::ArchesParticlesHelper::mark_for_relocation(_v_name); 
+  Uintah::ArchesParticlesHelper::mark_for_relocation(_w_name); 
 
 }
 

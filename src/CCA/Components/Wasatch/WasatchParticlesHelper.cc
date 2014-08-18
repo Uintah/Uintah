@@ -144,9 +144,13 @@ namespace Wasatch {
     
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
+      const int patchID = patch->getID();
+      
       for(int m = 0;m<matls->size();m++){
         const int matl = matls->get(m);
-        
+
+        // create lastPIDPerPatch_ map
+        lastPIDPerPatch_.insert( std::pair<int, long64>(patchID, 0 ) );
         // create an empty delete set
         deleteSet_.insert( std::pair<int, ParticleSubset*>(patch->getID(), scinew ParticleSubset(0,matl,patch)));
         
@@ -215,6 +219,7 @@ namespace Wasatch {
         for (int i=0; i < nParticles; i++) {
           pid[i] = i + patch->getID() * nParticles;
         }
+        lastPIDPerPatch_[patchID] = nParticles > 0 ? pid[nParticles-1] : 0;
       }
     }
   }
@@ -227,35 +232,6 @@ namespace Wasatch {
     wasatch_ = wasatch;
     wasatchSync_ = true;
   }
-    
-  //  //--------------------------------------------------------------------
-  //
-  //  void WasatchParticlesHelper::schedule_add_particles( const Uintah::LevelP& level,
-  //                                                Uintah::SchedulerP& sched )
-  //  {
-  //    // this task will allocate a particle subset and create particle positions
-  //    Uintah::Task* task = scinew Uintah::Task( "add particles",
-  //                                              this, &WasatchParticlesHelper::add_particles );
-  //    sched->addTask(task, level->eachPatch(), wasatch_->get_wasatch_materials());
-  //  }
-  //
-  //  //--------------------------------------------------------------------
-  //  void WasatchParticlesHelper::add_particles( const Uintah::ProcessorGroup*,
-  //                                       const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
-  //                                       Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw )
-  //  {
-  //    using namespace Uintah;
-  //    for(int p=0; p<patches->size(); p++)
-  //    {
-  //      const Patch* patch = patches->get(p);
-  //      for(int m = 0;m<matls->size();m++)
-  //      {
-  //        int matl = matls->get(m);
-  //        ParticleSubset* pset = new_dw->haveParticleSubset(matl,patch) ? new_dw->getParticleSubset(matl, patch) : old_dw->getParticleSubset(matl, patch);
-  //        pset->addParticles(20);
-  //      }
-  //    }
-  //  }
   
   //--------------------------------------------------------------------
   

@@ -33,7 +33,7 @@ UpdateParticleSize::problemSetup( ProblemSpecP& db ){
   //parse and add the size variable here
   ProblemSpecP db_size = db->findBlock("ParticleSize"); 
   db_size->getAttribute("label",_size_name); 
-  Uintah::ArchesParticlesHelper::add_particle_variable(_size_name); 
+  Uintah::ArchesParticlesHelper::mark_for_relocation(_size_name); 
 
 }
 

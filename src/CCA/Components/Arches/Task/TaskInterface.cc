@@ -569,7 +569,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
           icontain.set_field(var); 
           icontain.set_field_type(ArchesFieldContainer::PARTICLE); 
           icontain.set_ghosts(0);
-          field_container->add_particle_variable(ivar.name, icontain); 
+          field_container->mark_for_relocation(ivar.name, icontain); 
 
         } else { 
 
@@ -587,7 +587,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
           icontain.set_field(var); 
           icontain.set_field_type(ArchesFieldContainer::PARTICLE); 
           icontain.set_ghosts(0);
-          field_container->add_particle_variable(ivar.name, icontain); 
+          field_container->mark_for_relocation(ivar.name, icontain); 
 
         }
         break;

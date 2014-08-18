@@ -21,7 +21,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-
+#include <CCA/Components/Wasatch/ParticlesHelper.h>
 #include <CCA/Components/Wasatch/Transport/ParticleEquationBase.h>
 #include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h>
 
@@ -39,6 +39,8 @@ namespace Wasatch{
   : EquationBase::EquationBase(gc, solnVarName, pDir, particleEqsSpec),
     pPosTags_(particlePositionTags),
     pSizeTag_(particleSizeTag)
-  {}
+  {
+    Uintah::ParticlesHelper::needs_boundary_condition(solnVarName);
+  }
 
 } // namespace Wasatch
