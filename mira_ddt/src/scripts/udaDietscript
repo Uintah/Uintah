@@ -1,0 +1,222 @@
+#!/bin/csh -f
+
+#______________________________________________________________________
+#   03/2014
+#   This script loops through a series of udas and executes
+#         sus -reduce_uda  <uda>
+#   on them.  It modifies the input.xml file and copies the On-The-Fly directories and output files to
+#   the diet.uda.
+#
+#    For the usage type
+# 
+#    udaDietscript -h
+#    
+#    Example:
+#       src/scripts/udaDietscript --np 32 --uda 'uda.000 uda.001 uda.002' --other 'dir1 dir2'
+#
+#     The file "NewDataArchive" must exist and contain the following
+#     data archiver sections:
+#
+#
+#                     <filebase> dietName.uda </filebase>"
+#                     <save label="press_CC"/>"
+#                     <save label="vol_frac_CC"/>
+#                             .
+#                             .
+#                             .
+#______________________________________________________________________
+getopt -Q -q --long np,uda,other -- $argv:q >& /dev/null
+
+set udas   = ""
+set other = ""
+@ nProcs = -1
+
+if( $#argv == 0 ) then
+  set argv = "-h"
+endif
+
+
+while ($#argv)
+   #echo $1 $2
+   
+   switch ($1:q)
+   
+     case --np:
+        @ nProcs = $2
+        shift; shift;
+        breaksw
+     case --uda:
+        set udas = ($2)
+        shift; shift
+        breaksw
+     case --other:
+        set other = ($2)
+        shift; shift
+        breaksw
+     case " ":
+        shift
+        break
+     default:
+        echo ""
+        echo "Usage: $0 "
+        echo ""
+        echo "   --np           <number of processors>"
+        echo "   --uda          <'list of udas'> "
+        echo "   --other        <other files and directories to be copied to new uda>"
+        echo ""
+        echo "  You MUST use single quotes '' around the lists."
+        echo "  The file NewDataArchive must exist and contain the following"
+        echo "  dataArchive section"
+        echo "                     <filebase> VIV_3D_new.uda </filebase>"
+        echo "                     <save label="press_CC"/>"
+        echo "                             ."
+        echo "                             ."
+        echo "                             ."
+        echo "   If you use this script please send feedback (good or bad) to Todd."
+        exit (1)
+  endsw 
+end
+
+#______________________________________________________________________
+# bulletproofing
+
+if ( $nProcs < 1 ) then
+  echo "__________________________________"
+  echo "ERROR: udaDiet"
+  echo " The number of processors (--np X) has not been defined or is negative $nProcs"
+  echo " Now exiting ...... "
+  exit (1)
+endif
+
+if( ! -e sus ) then
+  echo "__________________________________"
+  echo "ERROR: udaDiet: The executable sus cannot be found"
+  echo "       Now exiting......"
+  echo ""
+  exit (1)                     
+endif
+
+if( ! -e NewDataArchive ) then
+  echo "__________________________________"
+  echo "ERROR: udaDiet: The file 'NewDataArchive' doesn't not exist"
+  echo "                This file must consist of "
+  echo "                     <filebase> VIV_3D_new.uda </filebase>"
+  echo '                     <save label="press_CC"/>'
+  echo "                             ."
+  echo "                             ."
+  echo "                             ."
+  echo " "
+  exit (1)                    
+endif
+
+foreach X ($udas[*])
+  echo "Passing $X through the bulletproofing section"
+  
+  # does each uda exist
+  if (! -e $X ) then
+    echo "ERROR: udaDiet: can't find the uda $X"
+    exit (1)
+  endif
+  
+  # does each input.xml exist
+  if (! -e $X/input.xml ) then 
+    echo "______________________________________________________________"
+    echo "ERROR: udaDietScript: can't find the file $X/input.xml"
+    echo "       now exiting.............."
+    echo "______________________________________________________________"
+    exit (1)
+  endif
+  
+  foreach Y ( $other[*]:q )
+    if (! -e "$X/$Y" ) then 
+      echo "______________________________________________________________"
+      echo "ERROR: udaDietScript: can't find the file or directory $X/$Y"
+      echo "        That will be copied"
+      echo "       now exiting.............."
+      echo "______________________________________________________________"
+      exit (1)
+    endif
+  end
+end
+
+#______________________________________________________________________
+# Main loop over all udas
+
+foreach X ( $udas[*]:q )
+  cd $X
+  cp input.xml input.xml.original
+  
+  echo "__________________________________"
+  echo "  Working on Uda: $X "
+  echo  ""
+  
+  # change to component to reduce_uda
+  sed -i s/"<SimulationComponent.*"/"<SimulationComponent type='"reduce_uda"'\/> "/g input.xml
+  
+  grep Simulation input.xml
+  
+  #__________________________________
+  # modify the save labels section of the input.xml file
+  /bin/rm -rf tmp >& /dev/null
+  
+  # delete all of the save label lines and filebase
+  sed '/save/d;/filebase/d' input.xml > tmp
+ 
+  # delete any <DataArchive lines in NewDataArchive file
+  sed -i '/DataArchiv/d' ../NewDataArchive
+  
+  #__________________________________
+  # copy the contents of NewDataArchieve 
+  sed  -i -e "/<DataArchiver/ r ../NewDataArchive" tmp
+  
+  # show the new section
+  echo ""
+  echo "  New DataArchiver section"
+  echo "  ------------------------"
+  sed -n /DataArchiver/,/DataArchiver/p tmp
+  mv tmp input.xml
+  cd ..
+    
+  #__________________________________
+  # Now reduce the uda  
+  echo ""
+  echo "  running reduce uda"
+  mpirun -np $nProcs ./sus -mpi -reduce_uda $X |tee -a reduce_uda.out
+  
+  set rc = $status
+  
+  #__________________________________
+  # copy the original input.xml file back in case the command crashed
+  cp  $X/input.xml.orig $X/input.xml
+  
+  # bulletproofing
+  if ( $rc != "0" ) then
+    echo "______________________________________________________________"
+    echo "ERROR: udaDietScript: There was a problem running the command"
+    echo "        mpirun -np $nProcs ./sus -mpi -reduce_uda $X "
+    echo "       Look at the error message above."
+    echo "       Now exiting.............."
+    echo "______________________________________________________________"
+    exit (1)
+  endif
+  
+  #__________________________________
+  # copy other files and directories to the new uda
+  set newUda = `grep "DataArchiver created" reduce_uda.out | awk '{print $3}'`
+  mv reduce_uda.out $newUda
+
+  #copy output file to new uda
+  set out = `find $X/ -maxdepth 1 -type f -exec grep --files-with-match -i taskgraph {} \;`
+  cp $out $newUda
+
+  echo "out: $out newUda: $newUda"
+
+  foreach Y ( $other[*]:q )
+    echo "  Now moving files/directories to $Y to $newUda"
+    cp -r $X/$Y $newUda
+  end
+end
+
+exit
+
+

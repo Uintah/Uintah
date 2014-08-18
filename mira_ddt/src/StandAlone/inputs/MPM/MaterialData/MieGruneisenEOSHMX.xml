@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- HMX -->
+<!-- At density: 1.9 g/cm^3 -->
+<!-- From: Benson, D.J. and Conley, P. Eulerian finite-element simulations
+           of experimentally acquired HMX microstructures. Modelling Simul.
+           Mater. Sci. Eng. 7 (1999), pp 333-354.
+-->
+<Uintah_Include>
+  <equation_of_state type="mie_gruneisen">
+    <C_0>    2901.0   </C_0>
+    <Gamma_0>   1.1   </Gamma_0>
+    <S_alpha>   2.058 </S_alpha>
+    <S_2>       0.0   </S_2>
+    <S_3>       0.0   </S_3>
+  </equation_of_state>
+</Uintah_Include>
+

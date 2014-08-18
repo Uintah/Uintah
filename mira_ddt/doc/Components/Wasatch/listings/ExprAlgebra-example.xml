@@ -1,0 +1,10 @@
+<BasicExpression type="SVOL">        
+  <TaskList>initialization</TaskList>        
+  <NameTag name="phi" state="STATE_N" />        
+  <ExprAlgebra algebraicOperation="SUM"> 	
+      <!-- specify the list of tags of the source expressions -->	  
+      <NameTag name="XSVOL" state="STATE_NONE"/> 
+      <NameTag name="YSVOL" state="STATE_NONE"/> 
+      <NameTag name="ZSVOL" state="STATE_NONE"/> 
+  </ExprAlgebra>     
+</BasicExpression>
