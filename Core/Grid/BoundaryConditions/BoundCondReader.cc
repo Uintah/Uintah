@@ -403,8 +403,8 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
         pWallBC->get("Restitution", pBndSpec.restitutionCoef);
       }
     } else if (pInletBC) {
-      pBndSpec.bndType = BCGeomBase::ParticleBndSpec::WALL;
-      pWallBC->get("ParticlesPerSecond", pBndSpec.particlesPerSec);
+      pBndSpec.bndType = BCGeomBase::ParticleBndSpec::INLET;
+      pInletBC->get("ParticlesPerSecond", pBndSpec.particlesPerSec);
     }
     bcGeom->setParticleBndSpec(pBndSpec);
   }

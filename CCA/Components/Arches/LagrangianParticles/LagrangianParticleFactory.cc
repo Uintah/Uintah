@@ -55,7 +55,7 @@ LagrangianParticleFactory::register_all_tasks( ProblemSpecP& db )
       std::string label; 
       db_pv->getAttribute("label", label); 
 
-      Uintah::ArchesParticlesHelper::add_particle_variable(label); 
+      Uintah::ArchesParticlesHelper::mark_for_relocation(label); 
 
     }
 

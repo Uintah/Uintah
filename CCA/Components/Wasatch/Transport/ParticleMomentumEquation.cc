@@ -243,7 +243,6 @@ namespace Wasatch{
               if (pBndSpec.wallType != Uintah::BCGeomBase::ParticleBndSpec::ELASTIC) {
                 // create particle wall bcs
                 const Expr::Tag pVelBCTag( solution_variable_name() + "_" + bndName +"_wallbc", Expr::STATE_NONE);
-                std::cout << "creating particle wall bc = " << pVelBCTag << std::endl;
                 BndCondSpec particleWallBCSpec = {solution_variable_name(), pVelBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
                 advSlnFactory.register_expression ( new ParticleWallBC::Builder(pVelBCTag, restCoef, true) );
                 bcHelper.add_boundary_condition(bndName, particleWallBCSpec);
