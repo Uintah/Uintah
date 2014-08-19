@@ -1275,7 +1275,33 @@ WARNING
       {
         return getLevel()->cellVolume();
       }
-    
+
+      /**
+       * Returns the cell area dx*dy. This will not work for stretched grids.
+       * Note: This function will throw an exception if the grid is stretched.
+       */
+      inline double cellArea(const Uintah::Patch::FaceType face) const
+      {
+        Vector unitNormal(0,0,0);
+        switch (face) {
+          case xminus:
+          case xplus:
+            unitNormal = Vector(1,0,0);
+            break;
+          case yminus:
+          case yplus:
+            unitNormal = Vector(0,1,0);
+            break;
+          case zminus:
+          case zplus:
+            unitNormal = Vector(0,0,1);
+            break;
+          default:
+            break;
+        }
+        return getLevel()->cellArea(unitNormal);
+      }
+
       /**
        * Returns the level that the patch lives on
        */

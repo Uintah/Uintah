@@ -175,12 +175,15 @@ namespace Uintah {
     void setParticleBndSpec(const ParticleBndSpec pBndSpec){ d_particleBndSpec = pBndSpec; }
     const bool hasParticlesBoundary(){return d_particleBndSpec.hasParticlesBoundary();}
 
+    const double surfaceArea(){return d_surfaceArea;}
+    
   protected:
     Iterator          d_cells;
     Iterator          d_nodes;
     std::string       d_bcname;
     std::string       d_bndtype;
     ParticleBndSpec   d_particleBndSpec;
+    double            d_surfaceArea;
   };
 
   template<class T> class cmp_type {

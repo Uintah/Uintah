@@ -899,7 +899,7 @@ namespace Uintah {
                 for (int j=0; j<newNParticles; j++, i++) {
                   
                   // pick a random cell on this boundary
-                  const unsigned int r1 = ((float) rand()/RAND_MAX) * nCells;
+                  const unsigned int r1 = rand() % nCells;//((float) rand()/RAND_MAX) * nCells;
                   bndIter.reset();
                   for (int t = 0; t < r1; t++) bndIter++;
                   
@@ -913,8 +913,8 @@ namespace Uintah {
                   
                   // generate a random point inside this cell
                   Point pos( (((float) rand()) / RAND_MAX * ( high.x() - low.x()) + low.x()),
-                            (((float) rand()) / RAND_MAX * ( high.y() - low.y()) + low.y()),
-                            (((float) rand()) / RAND_MAX * ( high.z() - low.z()) + low.z()));
+                             (((float) rand()) / RAND_MAX * ( high.y() - low.y()) + low.y()),
+                             (((float) rand()) / RAND_MAX * ( high.z() - low.z()) + low.z()) );
                   
                   
                   // set the particle ID

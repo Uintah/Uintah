@@ -46,6 +46,7 @@ BCGeomBase::BCGeomBase()
   d_bcname = "NotSet";
   d_bndtype = "None";
   d_particleBndSpec = ParticleBndSpec(ParticleBndSpec::NOTSET, ParticleBndSpec::ELASTIC, 0.0, 0.0);
+  d_surfaceArea = 0.0;
 }
 
 
@@ -56,6 +57,7 @@ BCGeomBase::BCGeomBase(const BCGeomBase& rhs)
   d_bcname = rhs.d_bcname;
   d_bndtype = rhs.d_bndtype;
   d_particleBndSpec = rhs.d_particleBndSpec;
+  d_surfaceArea = rhs.d_surfaceArea;
 }
 
 
@@ -69,7 +71,8 @@ BCGeomBase& BCGeomBase::operator=(const BCGeomBase& rhs)
   d_bcname = rhs.d_bcname;
   d_bndtype = rhs.d_bndtype;
   d_particleBndSpec = rhs.d_particleBndSpec;
-
+  d_surfaceArea = rhs.d_surfaceArea;
+  
   return *this;
 }
 
@@ -152,6 +155,8 @@ void BCGeomBase::determineIteratorLimits(Patch::FaceType face,
     }
     d_nodes = list_nodes;
   }
+
+  d_surfaceArea = d_cells.size() * patch->cellArea(face);
 }
 
 
