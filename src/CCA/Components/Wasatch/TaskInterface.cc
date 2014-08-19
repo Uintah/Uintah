@@ -412,6 +412,7 @@ namespace Wasatch{
               // if a particle variable is managed by uintah, then pass it on to the particles helper
               // for use in relocation
               Uintah::ParticlesHelper::mark_for_relocation(fieldTag.name());
+              Uintah::ParticlesHelper::needs_boundary_condition(fieldTag.name());
             }
           }
         }

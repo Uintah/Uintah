@@ -69,7 +69,11 @@ namespace Uintah {
   void
   ParticlesHelper::mark_for_relocation(const std::string& varName )
   {
-    needsRelocation_.push_back(varName);
+    using namespace std;
+    vector<string>::iterator it = find(needsRelocation_.begin(), needsRelocation_.end(), varName);
+    if (it == needsRelocation_.end()) {
+      needsRelocation_.push_back(varName);
+    }
   }
 
   //------------------------------------------------------------------
@@ -77,7 +81,12 @@ namespace Uintah {
   void
   ParticlesHelper::needs_boundary_condition(const std::string& varName )
   {
-    needsBC_.push_back(varName);
+    using namespace std;
+    vector<string>::iterator it = find(needsBC_.begin(), needsBC_.end(), varName);
+    if (it == needsBC_.end()) {
+      needsBC_.push_back(varName);
+    }
+
   }
 
   //------------------------------------------------------------------
@@ -934,26 +943,28 @@ namespace Uintah {
                 // through the input file!
                 Uintah::BCData bcData;
                 thisGeom->getBCData(bcData);
-                const std::vector<BoundCondBase*>& bcDataVector = bcData.getBCData();
-                for (int i=0; i < bcDataVector.size(); ++i) {
-                  Uintah::BoundCondBase* bndCondBase = bcDataVector[i];
-                  const std::string varName = bndCondBase->getBCVariable();
-                  if (std::find(needsBC_.begin(), needsBC_.end(), varName) != needsBC_.end()) {
+                
+                // loop over needs bc data
+                for (int ivar=0; ivar < needsBC_.size(); ++ivar) {
+                  const std::string varName = needsBC_[ivar];
+                  const Uintah::BoundCondBase* bndCondBase = bcData.getBCValues(varName);
+                  int p = oldNParticles;
+                  ParticleVariable<double>& pvar = tmpVars[ivar];
+                  if (bndCondBase) {
                     const Uintah::BoundCond<double>* const new_bc = dynamic_cast<const Uintah::BoundCond<double>*>(bndCondBase);
                     const double doubleVal = new_bc->getValue();
-                    
-                    // if we found this variable in the list of variables that need bcs then proceed
-                    std::vector<std::string>::iterator itvar = std::find(needsBC_.begin(), needsBC_.end(), varName);
-                    const int varPos = std::distance(needsBC_.begin(), itvar);
-                    ParticleVariable<double>& pvar = tmpVars[varPos];
-                    int p = oldNParticles;
                     // right now, we only support constant boundary conditions
                     for (int j=0; j<newNParticles; j++, p++) {
-//                      pvar[p] = ((double) rand()/RAND_MAX)*(doubleVal*1.2 - doubleVal*0.8) + doubleVal*0.8;
+                      //                      pvar[p] = ((double) rand()/RAND_MAX)*(doubleVal*1.2 - doubleVal*0.8) + doubleVal*0.8;
                       pvar[p] = doubleVal;
                     }
-                    new_dw->put(pvar,needsBCLabels[varPos],true);
+                  } else {
+                    // for all particle variables that do not have bcs specified in the input file, initialize them to zero
+                    for (int j=0; j<newNParticles; j++, p++) {
+                      pvar[p] = 0.0;
+                    }
                   }
+                  new_dw->put(pvar,needsBCLabels[ivar],true);
                 }
               }
             }
