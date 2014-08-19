@@ -104,11 +104,11 @@ class Regridder;
 
       void scheduleComputeStableTimestep(const GridP& grid,
                                          SchedulerP&);
-      void reduceSysVar(const ProcessorGroup*,
-                       const PatchSubset* patches,
-                       const MaterialSubset* /*matls*/,
-                       DataWarehouse* /*old_dw*/,
-                       DataWarehouse* new_dw);
+      void reduceSysVar( const ProcessorGroup *,
+                         const PatchSubset    * patches,
+                         const MaterialSubset * /*matls*/,
+                               DataWarehouse  * /*old_dw*/,
+                               DataWarehouse  * new_dw );
 
    };
 

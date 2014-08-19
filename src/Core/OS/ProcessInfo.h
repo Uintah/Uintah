@@ -37,6 +37,8 @@
 #ifndef Core_OS_ProcessInfo_h
 #define Core_OS_ProcessInfo_h 1
 
+#include <string>
+
 namespace SCIRun {
 
 
@@ -49,11 +51,15 @@ namespace SCIRun {
       MEM_RSS
     };
 
-    static bool          IsSupported       ( int info_type );
-    static unsigned long GetInfo           ( int info_type );
+    static bool          isSupported       ( int info_type );
+    static unsigned long getInfo           ( int info_type );
 
-    static unsigned long GetMemoryUsed     ( void ) { return GetInfo( MEM_SIZE ); }
-    static unsigned long GetMemoryResident ( void ) { return GetInfo( MEM_RSS  ); }
+    static unsigned long getMemoryUsed     ( void ) { return getInfo( MEM_SIZE ); }
+    static unsigned long getMemoryResident ( void ) { return getInfo( MEM_RSS  ); }
+
+    // This function is mostly for outputting information to the user. It
+    // converts 'value' to Megabytes and includes "MBs" in the returned string.
+    static std::string   toHumanUnits( unsigned long value );
 
   private:
 

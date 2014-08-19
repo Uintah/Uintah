@@ -65,24 +65,23 @@ extern SCIRun::Mutex cerrLock;
 
 extern DebugStream mixedDebug;
 
-static DebugStream dbg("MPIScheduler",             false);
-static DebugStream dbgst("SendTiming", false);
-static DebugStream timeout("MPIScheduler.timings", false);
-static DebugStream reductionout("ReductionTasks",  false);
+static DebugStream dbg(          "MPIScheduler",         false );
+static DebugStream dbgst(        "SendTiming",           false );
+static DebugStream timeout(      "MPIScheduler.timings", false );
+static DebugStream reductionout( "ReductionTasks",       false );
 
-DebugStream taskorder("TaskOrder",             false);
-DebugStream waitout("WaitTimes", false);
-DebugStream execout("ExecTimes", false);
-DebugStream taskdbg("TaskDBG",   false);
-DebugStream taskLevel_dbg("TaskLevel", false);
-DebugStream mpidbg("MPIDBG",false);
+DebugStream taskorder(     "TaskOrder", false );
+DebugStream waitout(       "WaitTimes", false );
+DebugStream execout(       "ExecTimes", false );
+DebugStream taskdbg(       "TaskDBG",   false );
+DebugStream taskLevel_dbg( "TaskLevel", false );
+DebugStream mpidbg(        "MPIDBG",    false );
 
-extern ofstream wout;
-static double CurrentWaitTime=0;
+extern ofstream    wout;
+static double      CurrentWaitTime = 0;
 map<string,double> waittimes;
 map<string,double> exectimes;
 
- 
 MPIScheduler::MPIScheduler( const ProcessorGroup * myworld,
                             const Output         * oport,
                                   MPIScheduler   * parentScheduler) :
@@ -304,8 +303,8 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
     mpi_info_.totalwaitmpi = 0;
   }
 
-  emitNode(task, taskstart, dtask, 0);
-  
+  emitNode( task, taskstart, dtask, 0 );
+
 } // end runTask()
 
 void
