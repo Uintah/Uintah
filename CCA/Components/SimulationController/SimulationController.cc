@@ -587,14 +587,6 @@ namespace Uintah {
     //d_sumOfWallTimeSquares = 0; // sum all squares of walltimes
   }
 
-string
-toHumanUnits( unsigned long value )
-{
-  char tmp[64];
-  
-  sprintf( tmp, "%.2lf", value / 1000000.0 );
-  return tmp;
-}
 //______________________________________________________________________
 //
 void
@@ -624,8 +616,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     }
     *mallocPerProcStream << "Proc "     << d_myworld->myrank() << "   ";
     *mallocPerProcStream << "Timestep " << timestep << "   ";
-    *mallocPerProcStream << "Size "     << ProcessInfo::GetMemoryUsed() << "   ";
-    *mallocPerProcStream << "RSS "      << ProcessInfo::GetMemoryResident() << "   ";
+    *mallocPerProcStream << "Size "     << ProcessInfo::getMemoryUsed() << "   ";
+    *mallocPerProcStream << "RSS "      << ProcessInfo::getMemoryResident() << "   ";
     *mallocPerProcStream << "Sbrk "     << (char*)sbrk(0) - d_scheduler->getStartAddr() << "   ";
 #ifndef DISABLE_SCI_MALLOC
     *mallocPerProcStream << "Sci_Malloc_Memuse "    << memuse << "   ";
@@ -672,20 +664,26 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 
   // with the sum reduces, use double, since with memory it is possible that
   // it will overflow
-  double avg_memuse = memuse;
-  unsigned long max_memuse = memuse;
-  int max_memuse_loc = -1;
-  double avg_highwater = highwater;
-  unsigned long max_highwater = highwater;
+  double        avg_memuse     = memuse;
+  unsigned long max_memuse     = memuse;
+  int           max_memuse_loc = -1;
+  double        avg_highwater  = highwater;
+  unsigned long max_highwater  = highwater;
 
   // a little ugly, but do it anyway so we only have to do one reduce for sum and
   // one reduce for max
-  std::vector<double> toReduce, avgReduce;
-  std::vector<double_int> toReduceMax;
-  std::vector<double_int> maxReduce;
+  std::vector<double>      toReduce;
+  std::vector<double>      avgReduce;
+  std::vector<double_int>  toReduceMax;
+  std::vector<double_int>  maxReduce;
   std::vector<const char*> statLabels;
-  int rank=d_myworld->myrank();
-  double total_time=0, overhead_time=0, percent_overhead=0;
+
+  int    rank             = d_myworld->myrank();
+
+  double total_time       = 0,
+         overhead_time    = 0,
+         percent_overhead = 0;
+
   toReduce.push_back(memuse);
   toReduceMax.push_back(double_int(memuse,rank));
   toReduce.push_back(d_sharedState->compilationTime);
@@ -756,25 +754,23 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 #endif
 
   if (highwater) { // add highwater to the end so we know where everything else is (as highwater is conditional)
-    toReduce.push_back(highwater);
+    toReduce.push_back( highwater );
   }
-  avgReduce.resize(toReduce.size());
-  maxReduce.resize(toReduce.size());
 
+  avgReduce.resize( toReduce.size() );
+  maxReduce.resize( toReduce.size() );
 
   if (d_myworld->size() > 1) {
-    //if AMR and using dynamic dilation use an allreduce
+    // If AMR and using dynamic dilation use an allreduce.
     if(d_regridder && d_regridder->useDynamicDilation())
     {
-      MPI_Allreduce(&toReduce[0], &avgReduce[0], toReduce.size(), MPI_DOUBLE, MPI_SUM, d_myworld->getComm());
-      MPI_Allreduce(&toReduceMax[0], &maxReduce[0], toReduceMax.size(), MPI_DOUBLE_INT, MPI_MAXLOC, d_myworld->getComm());
+      MPI_Allreduce( &toReduce[0],    &avgReduce[0], toReduce.size(),    MPI_DOUBLE,     MPI_SUM,    d_myworld->getComm() );
+      MPI_Allreduce( &toReduceMax[0], &maxReduce[0], toReduceMax.size(), MPI_DOUBLE_INT, MPI_MAXLOC, d_myworld->getComm() );
     }
     else
     {
-      MPI_Reduce(&toReduce[0], &avgReduce[0], toReduce.size(), MPI_DOUBLE, MPI_SUM, 0,
-          d_myworld->getComm());
-      MPI_Reduce(&toReduceMax[0], &maxReduce[0], toReduceMax.size(), MPI_DOUBLE_INT, MPI_MAXLOC, 0,
-          d_myworld->getComm());
+      MPI_Reduce( &toReduce[0],    &avgReduce[0], toReduce.size(),    MPI_DOUBLE,     MPI_SUM,    0, d_myworld->getComm() );
+      MPI_Reduce( &toReduceMax[0], &maxReduce[0], toReduceMax.size(), MPI_DOUBLE_INT, MPI_MAXLOC, 0, d_myworld->getComm() );
     }
 
     // make sums averages
@@ -782,7 +778,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       avgReduce[i] /= d_myworld->size();
     }
 
-    // get specific values - pop front since we don't know if there is a highwater
+    // Get specific values - pop front since we don't know if there is a highwater.
     avg_memuse = avgReduce[0];
     max_memuse = static_cast<unsigned long>(maxReduce[0].val);
     max_memuse_loc = maxReduce[0].loc;
@@ -791,40 +787,42 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       avg_highwater = avgReduce[avgReduce.size()-1];
       max_highwater = static_cast<unsigned long>(maxReduce[maxReduce.size()-1].val);
     }
-    //sum up the average times for simulation components
-    total_time=0;
-    for(int i=1;i<10;i++)
-      total_time+=avgReduce[i];
-    //sum up the average time for overhead related components
-    for(int i=1;i<6;i++)
-      overhead_time+=avgReduce[i];
+    
+    // Sum up the average times for simulation components.
+    for( int i = 1; i < 10; i++ ) {
+      total_time += avgReduce[i];
+    }
+
+    // Sum up the average time for overhead related components.
+    for( int i = 1; i < 6; i++ ) {
+      overhead_time += avgReduce[i];
+    }
 
     //calculate percentage of time spent in overhead
-    percent_overhead=overhead_time/total_time;
+    percent_overhead = overhead_time / total_time;
   }
   else
   {
-    //sum up the times for simulation components
-    total_time=d_sharedState->compilationTime
-      +d_sharedState->regriddingTime
-      +d_sharedState->regriddingCompilationTime
-      +d_sharedState->regriddingCopyDataTime
-      +d_sharedState->loadbalancerTime
-      +d_sharedState->taskExecTime
-      +d_sharedState->taskGlobalCommTime
-      +d_sharedState->taskLocalCommTime
-      +d_sharedState->taskWaitCommTime;
+    // Sum up the times for simulation components.
+    total_time = d_sharedState->compilationTime +
+                 d_sharedState->regriddingTime +
+                 d_sharedState->regriddingCompilationTime +
+                 d_sharedState->regriddingCopyDataTime +
+                 d_sharedState->loadbalancerTime +
+                 d_sharedState->taskExecTime +
+                 d_sharedState->taskGlobalCommTime +
+                 d_sharedState->taskLocalCommTime +
+                 d_sharedState->taskWaitCommTime;
 
-    //sum up the average time for overhead related components
-    overhead_time=d_sharedState->compilationTime
-      +d_sharedState->regriddingTime
-      +d_sharedState->regriddingCompilationTime
-      +d_sharedState->regriddingCopyDataTime
-      +d_sharedState->loadbalancerTime;
+    // Sum up the average time for overhead related components.
+    overhead_time = d_sharedState->compilationTime +
+                    d_sharedState->regriddingTime +
+                    d_sharedState->regriddingCompilationTime +
+                    d_sharedState->regriddingCopyDataTime +
+                    d_sharedState->loadbalancerTime;
 
-    //calculate percentage of time spent in overhead
-    percent_overhead=overhead_time/total_time;
-
+    // Calculate percentage of time spent in overhead.
+    percent_overhead = overhead_time / total_time;
   }
 
   //set the overhead sample
@@ -898,23 +896,23 @@ if(d_myworld->myrank() == 0){
   ostringstream message;
 
   message << "Time="         << time
-    << " (timestep "  << timestep 
-    << "), delT="     << delt
-    << walltime;
-  message << ", Mem Use (MB)= ";
+          << " (timestep "  << timestep 
+          << "), delT="     << delt
+          << walltime;
+  message << ", Memory Use = ";
   if (avg_memuse == max_memuse && avg_highwater == max_highwater) {
-    message << toHumanUnits((unsigned long) avg_memuse);
+    message << ProcessInfo::toHumanUnits((unsigned long) avg_memuse);
     if(avg_highwater) {
-      message << "/" << toHumanUnits((unsigned long) avg_highwater);
+      message << "/" << ProcessInfo::toHumanUnits((unsigned long) avg_highwater);
     }
   } else {
-    message << toHumanUnits((unsigned long) avg_memuse);
+    message << ProcessInfo::toHumanUnits((unsigned long) avg_memuse);
     if(avg_highwater) {
-      message << "/" << toHumanUnits((unsigned long)avg_highwater);
+      message << "/" << ProcessInfo::toHumanUnits((unsigned long)avg_highwater);
     }
-    message << " (avg), " << toHumanUnits(max_memuse);
+    message << " (avg), " << ProcessInfo::toHumanUnits(max_memuse);
     if(max_highwater) {
-      message << "/" << toHumanUnits(max_highwater);
+      message << "/" << ProcessInfo::toHumanUnits(max_highwater);
     }
     message << " (max on rank:" << max_memuse_loc << ")";
   }

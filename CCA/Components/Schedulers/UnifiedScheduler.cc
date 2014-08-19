@@ -708,10 +708,11 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   }
 }
 
-void UnifiedScheduler::runTasks(int t_id)
+void
+UnifiedScheduler::runTasks( int t_id )
 {
+  while( numTasksDone < ntasks ) {
 
-  while (numTasksDone < ntasks) {
     DetailedTask* readyTask = NULL;
     DetailedTask* initTask = NULL;
 

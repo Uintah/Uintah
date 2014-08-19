@@ -58,17 +58,22 @@ namespace Uintah {
      ****************************************/
     
   class SingleProcessorLoadBalancer : public LoadBalancerCommon {
+
   public:
-    SingleProcessorLoadBalancer(const ProcessorGroup* myworld);
+    SingleProcessorLoadBalancer( const ProcessorGroup * myworld );
     ~SingleProcessorLoadBalancer();
-    virtual void assignResources(DetailedTasks& tg);
-    virtual int getPatchwiseProcessorAssignment(const Patch* patch);
-    virtual void createNeighborhood(const GridP& grid);
-    virtual bool inNeighborhood(const PatchSubset*, const MaterialSubset*);
-    virtual bool inNeighborhood(const Patch*);
+
+    virtual void assignResources( DetailedTasks & tg );
+    virtual int  getPatchwiseProcessorAssignment( const Patch * patch );
+            void createNeighborhood( const GridP & grid );
+
+    virtual bool inNeighborhood( const PatchSubset* );
+    virtual bool inNeighborhood( const Patch * );
     
-    virtual const PatchSet* createPerProcessorPatchSet(const LevelP& level);
+    virtual const PatchSet* createPerProcessorPatchSet( const LevelP & level );
+
   private:
+
     SingleProcessorLoadBalancer(const SingleProcessorLoadBalancer&);
     SingleProcessorLoadBalancer& operator=(const SingleProcessorLoadBalancer&);
       

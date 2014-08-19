@@ -313,13 +313,14 @@ Parallel::finalizeManager( Circumstances circumstances /* = NormalShutdown */ )
     // in turn calls finalizeManager.)
     return;
   }
+
   finalized = true;
 
   // worldRank is not reset here as even after finalizeManager,
   // some things need to know their rank...
 
-  // only finalize if MPI is initialized
-  if(determinedIfUsingMPI==false) {
+  // Only finalize if MPI is initialized.
+  if( determinedIfUsingMPI == false ) {
     return;
   }
 
@@ -329,8 +330,8 @@ Parallel::finalizeManager( Circumstances circumstances /* = NormalShutdown */ )
       if(getenv("LAMWORLD") || getenv("LAMRANK")) {
         errorcode = (errorcode << 16) + 1; // see LAM man MPI_Abort
       }
-      if (Parallel::getMPIRank() == 0) {
-        cout << "FinalizeManager() called... Calling MPI_Abort.\n";
+      if( worldRank == 0 ) {
+        cout << "FinalizeManager() called... Calling MPI_Abort on rank " << worldRank << ".\n";
       }
       cerr.flush();
       cout.flush();
