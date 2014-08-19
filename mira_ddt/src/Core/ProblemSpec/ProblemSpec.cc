@@ -1681,7 +1681,13 @@ ProblemSpec::output(const char* filename) const
 {
   if (filename) {
     xmlKeepBlanksDefault(0);
-    xmlSaveFormatFileEnc(filename, d_node->doc, "UTF-8", 1);
+    int num_bytes = xmlSaveFormatFileEnc(filename, d_node->doc, "UTF-8", 1);
+    if (num_bytes == -1) {
+      cout << "Trying to write again . . . . " << filename << endl;
+      int try_again = xmlSaveFormatFileEnc(filename, d_node->doc, "UTF-8", 1);
+      if (try_again == -1)
+        cout << "Failed to write: " << filename << endl;
+    }
   }
 }
 
