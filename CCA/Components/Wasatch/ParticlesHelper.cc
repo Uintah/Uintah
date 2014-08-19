@@ -950,7 +950,7 @@ namespace Uintah {
                       //                      pvar[p] = ((double) rand()/RAND_MAX)*(doubleVal*1.2 - doubleVal*0.8) + doubleVal*0.8;
                       pvar[p] = doubleVal;
                     }
-                  } else {
+                  } else if (varName != pXLabel_->getName() && varName != pYLabel_->getName() && varName != pZLabel_->getName() ){
                     // for all particle variables that do not have bcs specified in the input file, initialize them to zero
                     for (int j=0; j<newNParticles; j++, p++) {
                       pvar[p] = 0.0;
