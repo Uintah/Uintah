@@ -86,7 +86,6 @@ namespace Uintah {
     if (it == needsBC_.end()) {
       needsBC_.push_back(varName);
     }
-
   }
 
   //------------------------------------------------------------------
@@ -199,9 +198,9 @@ namespace Uintah {
     using namespace Uintah;
     particleEqsSpec_->get("ParticlesPerCell",pPerCell_);
     
-    for(int m = 0;m<matls->size();m++){
+    for(int m = 0;m<matls->size();m++) {
       const int matl = matls->get(m);
-      for(int p=0;p<patches->size();p++){
+      for(int p=0;p<patches->size();p++) {
         const Patch* patch = patches->get(p);
         const int patchID = patch->getID();
         
@@ -781,11 +780,9 @@ namespace Uintah {
     old_dw->get(DT, sharedState_->get_delt_label());
     const double dt = DT;
 
-    for(int m = 0;m<matls->size();m++)
-    {
+    for(int m = 0;m<matls->size();m++) {
       int matl = matls->get(m);
-      for(int p=0; p<patches->size(); p++)
-      {
+      for(int p=0; p<patches->size(); p++) {
         const Patch* patch = patches->get(p);
         const int patchID = patch->getID();
         // get the last particle ID created by this patch. will be used further down.
@@ -869,6 +866,7 @@ namespace Uintah {
                 ParticleVariable<Uintah::Point> ppostmp;
                 new_dw->allocateTemporary(ppostmp, pset);
 
+                // copy the data from old variables to temporary vars
                 for (int i=0; i<nVars; ++i) {
                   ParticleVariable<double>& oldVar = allVars[i];
                   ParticleVariable<double>& tmpVar = tmpVars[i];
@@ -876,12 +874,13 @@ namespace Uintah {
                     tmpVar[p] = oldVar[p];
                   }
                 }
+                // do the same for particle IDs and the position vector
                 for (int p=0; p<oldNParticles; p++) {
                   pidstmp[p] = pids[p];
                   ppostmp[p] = ppos[p];
                 }
                 
-                // find out which variables are the position variables
+                // find out which variables are the x, y, and z position variables
                 std::vector<VarLabel*>::iterator itx = std::find (needsBCLabels.begin(), needsBCLabels.end(), pXLabel_);
                 const int ix = std::distance(needsBCLabels.begin(), itx);
                 ParticleVariable<double>& pxtmp = tmpVars[ix];
@@ -894,26 +893,23 @@ namespace Uintah {
                 const int iz = std::distance(needsBCLabels.begin(), itz);
                 ParticleVariable<double>& pztmp = tmpVars[iz];
                 
-                // inject particles
+                // inject particles. This will place particles randomly on the injecting boundary
                 int i = oldNParticles;
-                Vector spacing = patch->dCell();
+                Vector spacing = patch->dCell()/2.0;
                 for (int j=0; j<newNParticles; j++, i++) {
                   
                   // pick a random cell on this boundary
                   const unsigned int r1 = ((float) rand()/RAND_MAX) * nCells;
                   bndIter.reset();
                   for (int t = 0; t < r1; t++) bndIter++;
-                  IntVector bcPointIJK = *bndIter - unitNormal;
-                  const bool hasit = patch->containsCell(bcPointIJK);
-                  Point     bcPoint = patch->getCellPosition(bcPointIJK);
-                  // set the bounds on this cell
-                  Point low(bcPoint.x() - spacing.x()/2.0,
-                            bcPoint.y() - spacing.y()/2.0,
-                            bcPoint.z() - spacing.z()/2.0);
                   
-                  Point high(bcPoint.x() + spacing.x()/2.0,
-                             bcPoint.y() + spacing.y()/2.0,
-                             bcPoint.z() + spacing.z()/2.0);
+                  // get the interior cell
+                  IntVector bcPointIJK = *bndIter - unitNormal;
+                  Point      bcPoint = patch->getCellPosition(bcPointIJK);
+
+                  // get the bounds of this cell
+                  Point low (bcPoint - spacing);
+                  Point high(bcPoint + spacing);
                   
                   // generate a random point inside this cell
                   Point pos( (((float) rand()) / RAND_MAX * ( high.x() - low.x()) + low.x()),
@@ -923,18 +919,14 @@ namespace Uintah {
                   
                   // set the particle ID
                   pidstmp[i] = lastPID + j + 1 + pidoffset;
-                  // set the particle position
+                  // set the particle positions
                   ppostmp[i] = pos;
-                  pxtmp[i] = pos.x();
-                  pytmp[i] = pos.y();
-                  pztmp[i] = pos.z();
+                  pxtmp[i]   = pos.x();
+                  pytmp[i]   = pos.y();
+                  pztmp[i]   = pos.z();
                 }
+                // save the last particle ID used on this patch
                 lastPID = pidstmp[oldNParticles + newNParticles - 1];
-                new_dw->put(pidstmp, pIDLabel_, true);
-                new_dw->put(ppostmp, pPosLabel_, true);
-                new_dw->put(pxtmp, pXLabel_, true);
-                new_dw->put(pytmp, pYLabel_, true);
-                new_dw->put(pztmp, pZLabel_, true);
                 
                 // go through the list of particle variables specified at this boundary
                 //__________________________________________________________________________________
@@ -964,7 +956,13 @@ namespace Uintah {
                       pvar[p] = 0.0;
                     }
                   }
-                  new_dw->put(pvar,needsBCLabels[ivar],true);
+                }
+                
+                // put back temporary data
+                new_dw->put(pidstmp, pIDLabel_, true);
+                new_dw->put(ppostmp, pPosLabel_, true);
+                for (int ivar=0; ivar < needsBCLabels.size(); ++ivar) {
+                  new_dw->put(tmpVars[ivar],needsBCLabels[ivar],true);
                 }
               }
             }
