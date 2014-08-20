@@ -806,7 +806,7 @@ namespace Uintah {
         const int patchID = patch->getID();
         // get the last particle ID created by this patch. will be used further down.
         long64& lastPID = lastPIDPerPatch_[patchID];
-        long64 pidoffset = patchID * PIDOFFSET;
+        long64  pidoffset = patchID * PIDOFFSET;
         
         std::vector<Uintah::Patch::FaceType> bndFaces;
         patch->getBoundaryFaces(bndFaces);
@@ -852,10 +852,10 @@ namespace Uintah {
                 std::vector<int> childBndParticles;
                 // get the iterator for the extracells for this child
                 bcDataArray->getCellFaceIterator(matl, bndIter, chid);
-                if (bndIter.done()) continue;
+                if (bndIter.done()) continue; // go to the next child if this iterator is empty
                 // get the number of cells on this boundary
                 const unsigned int nCells = bndIter.size();
-                // if the number of cells is zero, then return
+                // if the number of cells is zero, then return. this is extra proofing
                 if (nCells == 0 ) continue;
                 
                 ParticleSubset* pset = new_dw->haveParticleSubset(matl,patch) ? new_dw->getParticleSubset(matl, patch) : old_dw->getParticleSubset(matl, patch);
@@ -863,14 +863,17 @@ namespace Uintah {
                 const unsigned int newNParticles = dt * pPerSec;
                 const int oldNParticles = pset->addParticles(newNParticles);
                 
+                // deal with particles IDs separately from other particle variables
                 ParticleVariable<long64> pids;
                 new_dw->getModifiable(pids,    pIDLabel_,          pset);
-                
+
+                // deal with particles IDs separately from other particle variables
                 ParticleVariable<Uintah::Point> ppos;
                 new_dw->getModifiable(ppos,    pPosLabel_,          pset);
 
+                // deal with the rest of the particle variables below
                 const unsigned int nVars = needsBC_.size();
-                std::vector< Uintah::VarLabel*         > needsBCLabels;
+                std::vector< Uintah::VarLabel* > needsBCLabels; // vector of varlabels that need bcs
 
                 SCIRun::StaticArray< ParticleVariable<double> > allVars(nVars);
                 SCIRun::StaticArray< ParticleVariable<double> > tmpVars(nVars);
@@ -879,6 +882,10 @@ namespace Uintah {
                   new_dw->getModifiable(allVars[i], needsBCLabels[i], pset);
                   new_dw->allocateTemporary(tmpVars[i], pset);
                 }
+                
+                //__________________________________________________________________________________
+                // now allocate temporary variables of size new particlesubset
+                
                 ParticleVariable<long64> pidstmp;
                 new_dw->allocateTemporary(pidstmp, pset);
 
@@ -893,7 +900,7 @@ namespace Uintah {
                     tmpVar[p] = oldVar[p];
                   }
                 }
-                // do the same for particle IDs and the position vector
+                // copy data from old variables for particle IDs and the position vector
                 for (int p=0; p<oldNParticles; p++) {
                   pidstmp[p] = pids[p];
                   ppostmp[p] = ppos[p];
@@ -918,7 +925,7 @@ namespace Uintah {
                 for (int j=0; j<newNParticles; j++, i++) {
                   
                   // pick a random cell on this boundary
-                  const unsigned int r1 = rand() % nCells;//((float) rand()/RAND_MAX) * nCells;
+                  const unsigned int r1 = rand() % nCells;
                   bndIter.reset();
                   for (int t = 0; t < r1; t++) bndIter++;
                   
