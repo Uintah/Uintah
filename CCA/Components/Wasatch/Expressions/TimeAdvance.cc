@@ -103,11 +103,9 @@ evaluate()
 
   const double a2 = timeIntInfo_.alpha[1];
   const double a3 = timeIntInfo_.alpha[2];
-  const double a4 = timeIntInfo_.alpha[3];
 
   const double b2 = timeIntInfo_.beta[1];
   const double b3 = timeIntInfo_.beta[2];
-  const double b4 = timeIntInfo_.beta[3];
 
   // Since rkStage_ is a SpatialField, we cannot dereference it and use "if"
   // statements since that will break GPU execution. Therefore, we use cond here
@@ -118,7 +116,6 @@ evaluate()
   phi <<= cond( *rkStage_ == 1.0,      *phiOld_ +              *dt_ * *rhs_ )
               ( *rkStage_ == 2.0, a2 * *phiOld_ + b2 * ( phi + *dt_ * *rhs_ ) )
               ( *rkStage_ == 3.0, a3 * *phiOld_ + b3 * ( phi + *dt_ * *rhs_ ) )
-              ( *rkStage_ == 4.0, a4 * *phiOld_ + b4 * ( phi + *dt_ * *rhs_ ) )
               ( 0.0 ); // should never get here.
 }
 
