@@ -92,17 +92,19 @@ namespace Uintah {
    that you create three particle variables of type double for the three particle positions.   
    
    *
-   *  \Note: Visit currently makes the assumption that the particle position vector be named "p.x".
+   *  \note: Visit currently makes the assumption that the particle position vector be named "p.x".
    This will change in the next Uintah release.
-   *  \Note: Particle variable names typically start with "p." - a Uintah assumption made to simplify
+   *  \note: Particle variable names typically start with "p." - a Uintah assumption made to simplify
    some runtime decisions.
-   *  \Note: You will need to provide a basic xml support for particles:
+   *  \note: You will need to provide a basic xml support for particles:
+   \code{.xml}
    <ParticlesPerCell spec="OPTIONAL DOUBLE"/>
    <MaximumParticles spec="OPTIONAL INTEGER"/>
    <ParticlePosition spec="REQUIRED NO_DATA"
                      attribute1="x REQUIRED STRING"
                      attribute2="y REQUIRED STRING"
                      attribute3="z REQUIRED STRING"/>
+   \endcode
    */
   class ParticlesHelper
   {
@@ -201,7 +203,7 @@ namespace Uintah {
     /**
      * \brief Task that adds particles through boundaries. This task will parse the ups input file and
      add particles through the boundaries as specified.
-     * \Caution  Use AFTER schedule_particle_relocation.
+     * \warning  Use AFTER schedule_particle_relocation.
      */
     virtual void schedule_add_particles( const Uintah::LevelP& level,
                                          Uintah::SchedulerP& sched );

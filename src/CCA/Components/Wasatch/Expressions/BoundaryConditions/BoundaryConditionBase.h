@@ -214,8 +214,7 @@ public:
    *  \brief Set nebo-mask-friendly interior points. This is a vector of locally indexed ijk interior points. Interior
    points correspond to the interior cells adjacent to a boundary. For staggered fields that are normal
    to a boundary, the interior points correspond to the boundary faces instead of the cells.
-   *  \param vecInteriorPoints Pointer to a stl vector of ijk triplets of interior cells adjacent
-   to the boundary. These are indexed zero-based on the first interior cell of the patch.
+   *  \param boundaryParticles
    *
    */
   void set_boundary_particles( const std::vector<int>* boundaryParticles )
