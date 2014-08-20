@@ -50,11 +50,9 @@ class TimeAdvance
   const Expr::Tag phioldt_, rhst_, dtt_, rkstaget_;
 
   const Wasatch::TimeIntegrator timeIntInfo_;
-  int rkStage_;
-  double a_, b_;
   
   const SingleValue* dt_;
-  const SingleValue* rks_;
+  const SingleValue* rkStage_;
   
   const FieldT* phiOld_;
   const FieldT* phiNew_;
@@ -102,9 +100,6 @@ public:
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
-  void set_integrator_stage(const int rkStage){
-    rkStage_ = rkStage;
-  }
   void evaluate();
 };
 
