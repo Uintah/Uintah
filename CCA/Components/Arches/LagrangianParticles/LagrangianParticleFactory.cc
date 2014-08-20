@@ -56,6 +56,7 @@ LagrangianParticleFactory::register_all_tasks( ProblemSpecP& db )
       db_pv->getAttribute("label", label); 
 
       Uintah::ArchesParticlesHelper::mark_for_relocation(label); 
+      Uintah::ArchesParticlesHelper::needs_boundary_condition(label); 
 
     }
 

@@ -34,6 +34,12 @@ UpdateParticleSize::problemSetup( ProblemSpecP& db ){
   ProblemSpecP db_size = db->findBlock("ParticleSize"); 
   db_size->getAttribute("label",_size_name); 
   Uintah::ArchesParticlesHelper::mark_for_relocation(_size_name); 
+  Uintah::ArchesParticlesHelper::needs_boundary_condition(_size_name); 
+
+  //potentially remove later when Tony updates the particle helper class
+  Uintah::ArchesParticlesHelper::needs_boundary_condition(_px_name);
+  Uintah::ArchesParticlesHelper::needs_boundary_condition(_py_name);
+  Uintah::ArchesParticlesHelper::needs_boundary_condition(_pz_name);
 
 }
 
