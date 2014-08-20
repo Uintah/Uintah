@@ -53,6 +53,8 @@
 std::vector<std::string> Uintah::ParticlesHelper::needsRelocation_;
 std::vector<std::string> Uintah::ParticlesHelper::needsBC_;
 std::map<std::string, std::map<int, std::vector<int> > > Uintah::ParticlesHelper::bndParticlesMap_;
+std::string Uintah::ParticlesHelper::pPosName_;
+std::string Uintah::ParticlesHelper::pIDName_;
 
 namespace Uintah {
   
@@ -70,6 +72,7 @@ namespace Uintah {
   ParticlesHelper::mark_for_relocation(const std::string& varName )
   {
     using namespace std;
+    // disallow duplicates
     vector<string>::iterator it = find(needsRelocation_.begin(), needsRelocation_.end(), varName);
     if (it == needsRelocation_.end()) {
       needsRelocation_.push_back(varName);
@@ -82,6 +85,15 @@ namespace Uintah {
   ParticlesHelper::needs_boundary_condition(const std::string& varName )
   {
     using namespace std;
+
+    // disallow addition of particle position vector and particle ID to the list of
+    // boundary conditions for particles. Those are handled internally.
+    if (varName == pPosName_ ||
+        varName == pIDName_     ) {
+      return;
+    }
+
+    // disallow duplicates
     vector<string>::iterator it = find(needsBC_.begin(), needsBC_.end(), varName);
     if (it == needsBC_.end()) {
       needsBC_.push_back(varName);
@@ -101,6 +113,9 @@ namespace Uintah {
                                   VarLabel::PositionVariable );
     pIDLabel_ = Uintah::VarLabel::create("p.particleID",
                                          ParticleVariable<long64>::getTypeDescription());
+    
+    pPosName_ = pPosLabel_->getName();
+    pIDName_  = pIDLabel_->getName();
     
     destroyMe_.push_back(pPosLabel_);
     destroyMe_.push_back(pIDLabel_);
@@ -146,6 +161,10 @@ namespace Uintah {
     pPosSpec->getAttribute("x",px);
     pPosSpec->getAttribute("y",py);
     pPosSpec->getAttribute("z",pz);
+    
+    needs_boundary_condition(px);
+    needs_boundary_condition(py);
+    needs_boundary_condition(pz);
     
     pXLabel_ = VarLabel::find(px);
     pYLabel_ = VarLabel::find(py);
