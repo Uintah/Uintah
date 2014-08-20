@@ -497,7 +497,8 @@ public:
      *  Given the way particles are laid out in memory, two of the particle coordinates must be
      *  set in the transverse direction so as not to place all the particles on one line. Simply set
      *  this to false on one of the coordinates and true on the other two.
-     *  \param seed The seed for the random number generator. This is a required quantity.
+     *  \param coord String denoting the coordinate direction computed by this expression.
+     *  Allowed options are "X", "Y", and "Z".
      *  \param usePatchBounds If true, then use the boundaries of the uintah patch on which this
      *  expression is executing.
      */
@@ -506,7 +507,7 @@ public:
              const double hi,
              const bool transverse,
              const std::string coord,
-             const bool usePatchBounds);
+             const bool usePatchBounds );
     
     ~Builder(){}
     Expr::ExpressionBase* build() const;
