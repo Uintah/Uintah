@@ -917,12 +917,6 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         evv_new_step = pevv[idx] + beta_void*D.Trace()*delT;    
         eve_new_step = peve[idx]+(1-beta_void)*D.Trace()*delT;    
 
-        //if (pParticleID[idx]==55834574848 || pParticleID[idx]==55834640384){
-        //    cout<<" Existing void"<<endl;
-        //    cout<< "pID = "<<pParticleID[idx]<<" beta_void = "<<beta_void<<" evv_new_step = "<<evv_new_step<<" eve_new_step = "<<eve_new_step<< endl;
-        //    cout<<" trace(D)- before modification = "<<D.Trace()<<endl;
-        //}
-
         D = (1-beta_void)*D; 
         trial_stress_step = trial_stress_step - beta_void*stress_diff_step; 
         stress_new_step = trial_stress_step;
@@ -992,12 +986,6 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         evv_new_step = pevv[idx] + beta_void*D.Trace()*delT;    
         eve_new_step = peve[idx]+(1-beta_void)*D.Trace()*delT;
 
-        //if (pParticleID[idx]==55834574848 || pParticleID[idx]==55834640384){
-        //    cout<<" New void"<<endl;
-        //    cout<< "pID = "<<pParticleID[idx]<<" beta_void = "<<beta_void<<" evv_new_step = "<<evv_new_step<<" eve_new_step = "<<eve_new_step<< endl;
-        //    cout<<" trace(D)- before modification = "<<D.Trace()<<endl;
-        //}
-        
         D = (1-beta_void)*D; 
         trial_stress_step = trial_stress_step - beta_void*stress_diff_step; 
         stress_new_step = trial_stress_step; 
@@ -1013,10 +1001,6 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 #endif
                                           peakI1IDist[idx]);
         
-        //if (pParticleID[idx]==55834574848 || pParticleID[idx]==55834640384){
-        //    cout<<" I1_trial_step = "<<I1_trial_step<<" J2_trial_step = "<<J2_trial_step<<" trace(D) = "<<D.Trace()<<endl;
-        //}
-
         //EG: ----------------------- End of the Disaggregation Algorithm -----------------------
       }
       else{ //Begin here if Disaggregation Algorithm is turned off
@@ -1034,8 +1018,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
             cout << " elastic step";
           }
 #endif
-        }
-        else{  // plastic
+        } else{  // plastic
 
           // An elasto-plasic/fully plastic step: the plasticity return algrithm should be used.
           // We first subdivide our trial stress into smaller increments.  To determine a suitable
@@ -1052,12 +1035,12 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
           // distance from the vertex to the cap along the hydrostat.  To provide a
           // a measure in the case of no cap, we also compute the value of stress
           // corresponding to 0.1% volumetric strain.
-          clenI1 = min( bulk/1000 , PEAKI1Dist - pCapX[idx] );
+          clenI1 = min( 0.001*bulk, PEAKI1Dist - pCapX[idx] );
 
           // Similarly, for the deviator, the characteristic length the characteristic
           // length (units of sqrt(J2), Pa), is the value of linear drucker-prager
           // surface at X, or a stress corresponding to 0.1% shear strain.
-          clensqrtJ2 = min( 2*G0/1000 , FSLOPE * (PEAKI1Dist - pCapX[idx]) );
+          clensqrtJ2 = min( 0.002*G0 , FSLOPE * (PEAKI1Dist - pCapX[idx]) );
 
           // the general characteristic length (units of I1 and sqrt(J2), Pa)
           clen = sqrt( clenI1*clenI1 + clensqrtJ2*clensqrtJ2 );
@@ -1069,18 +1052,6 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                  << ", FSLOPE*(PEAKI1Dist-p0)=" << FSLOPE*(PEAKI1Dist-p0);
           }
 #endif
-
-          /* MH: Removed this
-          // If the characteristic length gets a negative value, it means that there is an issue
-          // with the yield surface, which should be reported.
-          if (clen<=0.0 || clenI1 <= 0 || clensqrtJ2<=0.0) {
-            cout<<"ERROR! in clen"<<endl;
-            cout<<"pParticleID="<<pParticleID[idx]<<endl;
-            cout<<"clen="<<clen<<endl;
-            throw InvalidValue("**ERROR**:in characteristic length of yield surface (clen)",
-                               __FILE__, __LINE__);
-          }
-          */
 
           //////////////////////////////////////////////////////////////////////
           //SUBCYCLING
@@ -1105,11 +1076,14 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                  << ", stress_diff_step.Norm()="<<stress_diff_step.Norm();
           }
 #endif
+#if 0
+          // This doesn't seem to be a common problem, so I'm turning it off for efficiency
           if (isnan(num_steps)) {  //Check stress_iteration for nan
              cerr << "pParticleID=" << pParticleID[idx]
                   << ", num_steps=" << num_steps << endl;
             throw InvalidValue("**ERROR**: Nan in num_steps", __FILE__, __LINE__);
           }
+#endif
 
           // define and initialize values for the substep
           double evp_new_substep   = evp_new_step,
@@ -1259,7 +1233,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
       pIota_new[idx]     = 0.0;             //Quasistatic new. T2D: Emad
       pep_new[idx]       = ep_new_step;
       pStressQS_new[idx] = stress_new_step; //new QS stress for end of timestep
-    
+
       // --------------Rate Dependence Code Last Portion-----------------------//
       // Determination if Rate Dependence / Duvaut-Lions will be used
       // d.cm.T1_rate_dependence and d.cm.T2_rate_dependence are defined by the user input
@@ -1282,8 +1256,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         if (d_cm.T2_rate_dependence == 0 && d_cm.T1_rate_dependence != 0){
           tau1 = d_cm.T1_rate_dependence;
           tau = max(tau1 , 1E-15); // asking non-zero tau 
-        }
-        else{
+        } else{
           // Compute the norm of strain rate
           double Dnormsq = D(0,0)*D(0,0) +
                            D(1,1)*D(1,1) +
@@ -1305,6 +1278,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         RAT   = delT/tau;                    
         pRH   = (1.0-exp(-RAT))/RAT;
         prh   = exp(-RAT) -pRH; 
+
 
         pStress_new[idx] = pStressQS_new[idx] + pRH*(stress_diff_step + unrotated_stress) 
                  - pRH*pStressQS_new[idx] + prh*unrotated_stress - prh*unrotated_stressQS;
@@ -1447,7 +1421,7 @@ int Arenisca::computeStressTensorStep(const Matrix3& sigma_trial, // trial stres
                                       double&  X_new,             // cap intercept (shifted)
                                       double&  Kappa_new,         // branch point (shifted)
                                       double&  Zeta_new,          // trace of isotropic backstress
-                                      double&  bulk,              // bulk modulus for the step !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                                      double&  bulk,              // bulk modulus for the step 
                                       double&  PEAKI1,
                                       long64   ParticleID)
 {
@@ -1573,8 +1547,9 @@ int Arenisca::computeStressTensorStep(const Matrix3& sigma_trial, // trial stres
 
     // Update unshifted untransformed stress
     sigma_new0 = one_third*(sqrt_three*z_new0+Zeta_old)*Identity;
-    if( r_trial != 0.0 )
+    if( r_trial != 0.0 ){
       sigma_new0 = sigma_new0 + (r_new0/r_trial)*S_trial;
+    }
 
     // Stress increment for non-hardening return
     d_sigma0 = sigma_new0 - sigma_old;
@@ -1588,18 +1563,6 @@ int Arenisca::computeStressTensorStep(const Matrix3& sigma_trial, // trial stres
     // Increment in plastic strain for the non-hardening return
     d_ep0 = d_e - d_ee0;
 
-    /*
-    cout << endl << "Non-Hardening step, n = " << n
-    << ", Trace d_ee = "  << d_e.Trace()
-    << ", Trace d_ee0 = " << d_ee0.Trace()
-    << ", Trace d_ep0 = " << d_ep0.Trace()
-    << ", Trace d_sigma0 = " << d_sigma0.Trace()
-    << ", r_trial = " << r_trial
-    << ", r_new0 = " << r_new0
-    << ", z_trial = " << z_trial
-    << ", z_new0 = " << z_new0
-    << ", gfcn = " << gfcn <<endl;
-    */
 
     // loop until the value of eta_mid is converged or max iterations exceeded
     while((eps_eta > TOL || evp_new <= -d_cm.p3_crush_curve) && (n <= nmax)){
