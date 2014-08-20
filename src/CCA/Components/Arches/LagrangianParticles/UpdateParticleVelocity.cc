@@ -33,6 +33,9 @@ UpdateParticleVelocity::problemSetup( ProblemSpecP& db ){
   Uintah::ArchesParticlesHelper::mark_for_relocation(_u_name); 
   Uintah::ArchesParticlesHelper::mark_for_relocation(_v_name); 
   Uintah::ArchesParticlesHelper::mark_for_relocation(_w_name); 
+  Uintah::ArchesParticlesHelper::needs_boundary_condition(_u_name); 
+  Uintah::ArchesParticlesHelper::needs_boundary_condition(_v_name); 
+  Uintah::ArchesParticlesHelper::needs_boundary_condition(_w_name); 
 
 }
 

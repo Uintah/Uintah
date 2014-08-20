@@ -1876,6 +1876,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     _particlesHelper->schedule_sync_particle_position(level,sched);
     _particlesHelper->schedule_transfer_particle_ids(level,sched);
     _particlesHelper->schedule_relocate_particles(level,sched);
+    _particlesHelper->schedule_add_particles(level, sched); 
 
   }
 
