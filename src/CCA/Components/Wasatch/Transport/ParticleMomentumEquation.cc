@@ -39,8 +39,10 @@
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/ParticleWallBC.h>
 
 namespace Wasatch{
-  extern bool is_normal_to_boundary(const Direction stagLoc,
-                                    const Uintah::Patch::FaceType face);
+
+  extern bool is_normal_to_boundary( const Direction stagLoc,
+                                     const Uintah::Patch::FaceType face );
+
   // #################################################################
   //
   //                          Implementation
@@ -55,10 +57,10 @@ namespace Wasatch{
                             Uintah::ProblemSpecP particleEqsSpec,
                             GraphCategories& gc )
   : ParticleEquationBase( solnVarName, pdir, particlePositionTags, particleSizeTag, particleEqsSpec, gc ),
-  pMassTag_( parse_nametag(particleEqsSpec->findBlock("ParticleMass"    )) ),
-  pRhoTag_ ( parse_nametag(particleEqsSpec->findBlock("ParticleDensity" )) ),
-  gViscTag_( parse_nametag(particleEqsSpec->findBlock("ParticleMomentum")->findBlock("GasProperties")->findBlock("GasViscosity")) ),
-  gRhoTag_ ( parse_nametag(particleEqsSpec->findBlock("ParticleMomentum")->findBlock("GasProperties")->findBlock("GasDensity"  )) )
+    pMassTag_( parse_nametag(particleEqsSpec->findBlock("ParticleMass"    )) ),
+    pRhoTag_ ( parse_nametag(particleEqsSpec->findBlock("ParticleDensity" )) ),
+    gViscTag_( parse_nametag(particleEqsSpec->findBlock("ParticleMomentum")->findBlock("GasProperties")->findBlock("GasViscosity")) ),
+    gRhoTag_ ( parse_nametag(particleEqsSpec->findBlock("ParticleMomentum")->findBlock("GasProperties")->findBlock("GasDensity"  )) )
   {
     Uintah::ProblemSpecP pMomSpec = particleEqsSpec->findBlock("ParticleMomentum");
     
@@ -67,14 +69,14 @@ namespace Wasatch{
     pMomSpec->getAttribute("x",puname);
     pMomSpec->getAttribute("y",pvname);
     pMomSpec->getAttribute("z",pwname);
-    pUTag_ = Expr::Tag(puname, Expr::STATE_DYNAMIC);
-    pVTag_ = Expr::Tag(pvname, Expr::STATE_DYNAMIC);
-    pWTag_ = Expr::Tag(pwname, Expr::STATE_DYNAMIC);
+    pUTag_ = Expr::Tag( puname, Expr::STATE_DYNAMIC );
+    pVTag_ = Expr::Tag( pvname, Expr::STATE_DYNAMIC );
+    pWTag_ = Expr::Tag( pwname, Expr::STATE_DYNAMIC );
     
     // get the gas velocities
-    gUTag_ = parse_nametag(pMomSpec->findBlock("GasProperties")->findBlock("GasVelocity")->findBlock("XVel"));
-    gVTag_ = parse_nametag(pMomSpec->findBlock("GasProperties")->findBlock("GasVelocity")->findBlock("YVel"));
-    gWTag_ = parse_nametag(pMomSpec->findBlock("GasProperties")->findBlock("GasVelocity")->findBlock("ZVel"));
+    gUTag_ = parse_nametag( pMomSpec->findBlock("GasProperties")->findBlock("GasVelocity")->findBlock("XVel") );
+    gVTag_ = parse_nametag( pMomSpec->findBlock("GasProperties")->findBlock("GasVelocity")->findBlock("YVel") );
+    gWTag_ = parse_nametag( pMomSpec->findBlock("GasProperties")->findBlock("GasVelocity")->findBlock("ZVel") );
     
     // pick up the gravity terms
     doGravity_ = false;
@@ -110,8 +112,7 @@ namespace Wasatch{
     
     //_____________________________
     // build a particle density expression
-    if( !factory.have_entry( pRhoTag_ ) )
-    {
+    if( !factory.have_entry( pRhoTag_ ) ){
       typedef ParticleDensity::Builder ParticleDensity;
       factory.register_expression( scinew ParticleDensity(pRhoTag_, pMassTag_, pSizeTag_ ) );
     }
@@ -121,7 +122,7 @@ namespace Wasatch{
     Expr::Tag pBodyForceTag;
     if (doGravity_)
     {
-      switch (direction_) {
+      switch( direction_ ){
         case XDIR: pBodyForceTag = TagNames::self().pbodyx; break;
         case YDIR: pBodyForceTag = TagNames::self().pbodyy; break;
         case ZDIR: pBodyForceTag = TagNames::self().pbodyz; break;
@@ -132,12 +133,11 @@ namespace Wasatch{
     }
 
     Expr::Tag pDragForceTag;
-    if (doDrag_) {
+    if( doDrag_ ){
       //_____________________________
       // build a particle relaxation time expression
       const Expr::Tag pTauTag = TagNames::self().presponse;
-      if( !factory.have_entry( pTauTag ) )
-      {
+      if( !factory.have_entry( pTauTag ) ){
         typedef ParticleResponseTime<SVolField>::Builder ParticleTau;
         factory.register_expression( scinew ParticleTau(pTauTag, pRhoTag_, pSizeTag_, gViscTag_, pPosTags_ ) );
       }
@@ -145,8 +145,7 @@ namespace Wasatch{
       //_____________________________
       // build a particle Re expression
       const Expr::Tag pReTag = TagNames::self().preynolds;
-      if (!factory.have_entry( pReTag) )
-      {
+      if( !factory.have_entry( pReTag) ){
         typedef ParticleRe<XVolField, YVolField, ZVolField, SVolField>::Builder ParticleReB;
         const Expr::TagList gVelTags(tag_list(gUTag_, gVTag_, gWTag_));
         const Expr::TagList pVelTags(tag_list(pUTag_, pVTag_, pWTag_));
@@ -156,36 +155,35 @@ namespace Wasatch{
       //_____________________________
       // build a drag coefficient expression
       const Expr::Tag pDragCoefTag = TagNames::self().pdragcoef;
-      if (!factory.have_entry(pDragCoefTag)) {
+      if( !factory.have_entry(pDragCoefTag) ){
         typedef  ParticleDragCoefficient::Builder DragCoef;
         factory.register_expression( scinew DragCoef(pDragCoefTag, pReTag ) );
       }
       
       //_____________________________
       // Drag Force
-      switch (direction_) {
+      switch( direction_ ){
         case XDIR:
         {
           pDragForceTag = TagNames::self().pdragx;
           typedef ParticleDragForce<XVolField>::Builder DragForce;
           factory.register_expression( scinew DragForce(pDragForceTag, gUTag_, pDragCoefTag, pTauTag, solution_variable_tag(), pSizeTag_, pPosTags_ ) );
-        }
           break;
+        }
         case YDIR:
         {
           pDragForceTag = TagNames::self().pdragy;
           typedef ParticleDragForce<YVolField>::Builder DragForce;
           factory.register_expression( scinew DragForce(pDragForceTag, gVTag_, pDragCoefTag, pTauTag, solution_variable_tag(), pSizeTag_, pPosTags_ ) );
-        }
           break;
+        }
         case ZDIR:
         {
           pDragForceTag = TagNames::self().pdragz;
           typedef ParticleDragForce<ZVolField>::Builder DragForce;
           factory.register_expression( scinew DragForce(pDragForceTag, gWTag_, pDragCoefTag, pTauTag, solution_variable_tag(), pSizeTag_, pPosTags_ ) );
-        }
           break;
-          
+        }
         default:
           break;
       }
@@ -212,12 +210,10 @@ namespace Wasatch{
   //------------------------------------------------------------------
   
   void
-  ParticleMomentumEquation::setup_boundary_conditions(BCHelper& bcHelper,
-                                                      GraphCategories& graphCat)
+  ParticleMomentumEquation::setup_boundary_conditions( BCHelper& bcHelper,
+                                                       GraphCategories& graphCat )
   {
     Expr::ExpressionFactory& advSlnFactory = *(graphCat[ADVANCE_SOLUTION]->exprFactory);
-    
-    const TagNames& tagNames = TagNames::self();
     
     // make logical decisions based on the specified boundary types
     BOOST_FOREACH( BndMapT::value_type& bndPair, bcHelper.get_boundary_information() )
@@ -227,20 +223,21 @@ namespace Wasatch{
       const bool isNormal = is_normal_to_boundary(direction_, myBndSpec.face);
       
       const Uintah::BCGeomBase::ParticleBndSpec pBndSpec = myBndSpec.particleBndSpec;
-      if (pBndSpec.hasParticlesBoundary()) {
+      if( pBndSpec.hasParticlesBoundary() ){
 
         switch (pBndSpec.bndType) {
           case Uintah::BCGeomBase::ParticleBndSpec::WALL:
           {
             const double restCoef = pBndSpec.restitutionCoef;
-            if (isNormal) {
+            if( isNormal ){
               // create particle wall bcs
               const Expr::Tag pVelBCTag( solution_variable_name() + "_" + bndName +"_wallbc", Expr::STATE_NONE);
               BndCondSpec particleWallBCSpec = {solution_variable_name(), pVelBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
               advSlnFactory.register_expression ( new ParticleWallBC::Builder(pVelBCTag, restCoef, false) );
               bcHelper.add_boundary_condition(bndName, particleWallBCSpec);
-            } else {
-              if (pBndSpec.wallType != Uintah::BCGeomBase::ParticleBndSpec::ELASTIC) {
+            }
+            else{
+              if( pBndSpec.wallType != Uintah::BCGeomBase::ParticleBndSpec::ELASTIC ){
                 // create particle wall bcs
                 const Expr::Tag pVelBCTag( solution_variable_name() + "_" + bndName +"_wallbc", Expr::STATE_NONE);
                 BndCondSpec particleWallBCSpec = {solution_variable_name(), pVelBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
@@ -249,8 +246,8 @@ namespace Wasatch{
               }
             }
           }
-            break;
-            
+          break;
+
           default:
             break;
         }
@@ -262,7 +259,7 @@ namespace Wasatch{
   
   void ParticleMomentumEquation::
   apply_boundary_conditions( const GraphHelper& graphHelper,
-                            BCHelper& bcHelper )
+                             BCHelper& bcHelper )
   {
     const Category taskCat = ADVANCE_SOLUTION;
     // set bcs for particle momentum
