@@ -83,14 +83,14 @@ namespace Wasatch{
      *   in the momentum transport equation.
      */
     void setup_boundary_conditions( BCHelper& bcHelper,
-                                   GraphCategories& graphCat);
+                                    GraphCategories& graphCat);
     
     /**
      *  \brief Set up the boundary condition on initial conditions evaluators for this
      *  Equation.
      */
     void apply_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                                   BCHelper& bcHelper )
+                                            BCHelper& bcHelper )
     {}
     
     /**
