@@ -109,7 +109,7 @@ SchedulerFactory::create( const ProblemSpecP   & ps,
   else {
     sch = 0;
     string error = "Unknown scheduler: '" + scheduler + "'";
-    throw ProblemSetupException("Unknown scheduler", __FILE__, __LINE__);
+    throw ProblemSetupException( error, __FILE__, __LINE__ );
   }
 
   if ((Uintah::Parallel::getNumThreads() > 0) && (scheduler != "UnifiedScheduler")) {
