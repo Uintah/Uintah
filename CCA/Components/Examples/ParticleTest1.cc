@@ -158,29 +158,28 @@ void ParticleTest1::initialize(const ProcessorGroup*,
 			  const MaterialSubset* matls,
 			  DataWarehouse* /*old_dw*/, DataWarehouse* new_dw)
 {
-  for(int p=0;p<patches->size();p++){
+  for( int p=0; p<patches->size(); ++p ){
     const Patch* patch = patches->get(p);
-    Point low = patch->cellPosition(patch->getCellLowIndex());
-    Point high = patch->cellPosition(patch->getCellHighIndex());
+    const Point low = patch->cellPosition(patch->getCellLowIndex());
+    const Point high = patch->cellPosition(patch->getCellHighIndex());
     for(int m = 0;m<matls->size();m++){
       srand(1);
-      int numParticles = 10;
-      int matl = matls->get(m);
+      const int numParticles = 10;
+      const int matl = matls->get(m);
 
       ParticleVariable<Point> px;
       ParticleVariable<double> pmass;
       ParticleVariable<long64> pids;
 
-
       ParticleSubset* subset = new_dw->createParticleSubset(numParticles,matl,patch);
-      new_dw->allocateAndPut(px,       lb_->pXLabel,             subset);
-      new_dw->allocateAndPut(pmass,          lb_->pMassLabel,          subset);
-      new_dw->allocateAndPut(pids,    lb_->pParticleIDLabel,    subset);
+      new_dw->allocateAndPut( px,    lb_->pXLabel,          subset );
+      new_dw->allocateAndPut( pmass, lb_->pMassLabel,       subset );
+      new_dw->allocateAndPut( pids,  lb_->pParticleIDLabel, subset );
 
-      for (int i = 0; i < numParticles; i++) {
-        Point pos( (((float) rand()) / RAND_MAX * ( high.x() - low.x()-1) + low.x()),
-          (((float) rand()) / RAND_MAX * ( high.y() - low.y()-1) + low.y()),
-          (((float) rand()) / RAND_MAX * ( high.z() - low.z()-1) + low.z()));
+      for( int i = 0; i < numParticles; ++i ){
+        const Point pos( (((float) rand()) / RAND_MAX * ( high.x() - low.x()-1) + low.x()),
+                         (((float) rand()) / RAND_MAX * ( high.y() - low.y()-1) + low.y()),
+                         (((float) rand()) / RAND_MAX * ( high.z() - low.z()-1) + low.z()) );
         px[i] = pos;
         pids[i] = patch->getID()*numParticles+i;
         pmass[i] = ((float) rand()) / RAND_MAX * 10;
@@ -194,9 +193,9 @@ void ParticleTest1::timeAdvance(const ProcessorGroup*,
 			const MaterialSubset* matls,
 			DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
-  for(int p=0;p<patches->size();p++){
+  for( int p=0; p<patches->size(); ++p ){
     const Patch* patch = patches->get(p);
-    for(int m = 0;m<matls->size();m++){
+    for( int m = 0; m<matls->size(); ++m ){
       int matl = matls->get(m);
       ParticleSubset* pset = old_dw->getParticleSubset(matl, patch);
       ParticleSubset* delset = scinew ParticleSubset(0,matl,patch);
@@ -218,7 +217,7 @@ void ParticleTest1::timeAdvance(const ProcessorGroup*,
       new_dw->allocateAndPut(pidsnew,  lb_->pParticleIDLabel_preReloc, pset);
 
       // every timestep, move down the +x axis, and decay the mass a little bit
-      for (int i = 0; i < pset->numParticles(); i++) {
+      for( unsigned i = 0; i < pset->numParticles(); ++i ){
         Point pos( px[i].x() + .25, px[i].y(), px[i].z());
         pxnew[i] = pos;
         pidsnew[i] = pids[i];
