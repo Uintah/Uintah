@@ -92,7 +92,7 @@ Uintah::ER_MMS( DataArchive * da, CommandLineFlags & clf )
 
         const Patch* patch = *iter;
         
-        int matl = clf.matl_jim;
+        int matl = clf.matl;
         ParticleVariable<Point>  value_pos;
         ParticleVariable<Vector> value_disp;
 
