@@ -94,9 +94,9 @@ void BCGeomBase::getNodeFaceIterator(Iterator& b_ptr)
 }
 
 
-void BCGeomBase::determineIteratorLimits(Patch::FaceType face, 
-                                         const Patch* patch, 
-                                         vector<Point>& test_pts)
+void BCGeomBase::determineIteratorLimits( const Patch::FaceType   face, 
+                                          const Patch           * patch, 
+                                          const vector<Point>   & test_pts )
 {
 #if 0
   cout << "BCGeomBase determineIteratorLimits() " << patch->getFaceName(face)<< endl;
