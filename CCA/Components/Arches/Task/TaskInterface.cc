@@ -170,6 +170,7 @@ TaskInterface::register_variable_work( std::string name,
       } else if ( type == PARTICLE ){ 
         info.label = VarLabel::create( name, ParticleVariable<double>::getTypeDescription() ); 
         info.local = true; 
+        _local_labels.push_back(info.label); 
       }
 
       info.depend = COMPUTES; 
@@ -771,9 +772,6 @@ void TaskInterface::do_task( const ProcessorGroup* pc,
     
     const Patch* patch = patches->get(p);
 
-    UintahVarMap variable_map;
-    ConstUintahVarMap const_variable_map; 
-
     const Wasatch::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
 
     ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch); 
@@ -803,13 +801,6 @@ void TaskInterface::do_task( const ProcessorGroup* pc,
     //clean up 
     delete tsk_info_mngr; 
     delete field_container; 
-    
-    for ( UintahVarMap::iterator i = variable_map.begin(); i != variable_map.end(); i++ ){
-      delete i->second; 
-    }
-    for ( ConstUintahVarMap::iterator i = const_variable_map.begin(); i != const_variable_map.end(); i++ ){
-      delete i->second; 
-    }
   }
 }
 
@@ -823,9 +814,6 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     
     const Patch* patch = patches->get(p);
-
-    UintahVarMap variable_map;
-    ConstUintahVarMap const_variable_map; 
 
     const Wasatch::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
 
@@ -854,13 +842,6 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
     //clean up 
     delete tsk_info_mngr; 
     delete field_container; 
-
-    for ( UintahVarMap::iterator i = variable_map.begin(); i != variable_map.end(); i++ ){
-      delete i->second; 
-    }
-    for ( ConstUintahVarMap::iterator i = const_variable_map.begin(); i != const_variable_map.end(); i++ ){
-      delete i->second; 
-    }
   }
 }
 
@@ -876,9 +857,6 @@ void TaskInterface::do_timestep_init( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
 
     const Wasatch::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
-
-    UintahVarMap variable_map;
-    ConstUintahVarMap const_variable_map; 
 
     ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch); 
 
@@ -905,13 +883,6 @@ void TaskInterface::do_timestep_init( const ProcessorGroup* pc,
     //clean up 
     delete tsk_info_mngr; 
     delete field_container; 
-
-    for ( UintahVarMap::iterator i = variable_map.begin(); i != variable_map.end(); i++ ){
-      delete i->second; 
-    }
-    for ( ConstUintahVarMap::iterator i = const_variable_map.begin(); i != const_variable_map.end(); i++ ){
-      delete i->second; 
-    }
 
   }
 }

@@ -46,6 +46,13 @@ InitLagrangianParticleSize::problemSetup( ProblemSpecP& db ){
 
 }
 
+void
+InitLagrangianParticleSize::create_local_labels(){ 
+
+  register_new_variable( _size_label, PARTICLE ); 
+
+}
+
 
 //
 //------------------------------------------------
@@ -56,7 +63,7 @@ InitLagrangianParticleSize::problemSetup( ProblemSpecP& db ){
 void 
 InitLagrangianParticleSize::register_initialize( std::vector<VariableInformation>& variable_registry ){ 
 
-  register_variable( _size_label  , PARTICLE , LOCAL_COMPUTES , 0 , NEWDW , variable_registry );
+  register_variable( _size_label , PARTICLE , COMPUTES , 0 , NEWDW , variable_registry );
 
 }
 

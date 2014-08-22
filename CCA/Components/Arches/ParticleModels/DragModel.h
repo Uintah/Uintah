@@ -35,6 +35,8 @@ namespace Uintah{
     ~DragModel<IT, DT>();
     
     void problemSetup( ProblemSpecP& db );
+
+    void create_local_labels(); 
     
     class Builder : public TaskInterface::TaskBuilder {
       
@@ -163,6 +165,16 @@ namespace Uintah{
     _gas_w_velocity_name = "CCWVelocity";
     _gas_density_name = "densityCP";
   }
+
+  template <typename IT, typename DT>
+  void DragModel<IT, DT>::create_local_labels(){ 
+    for ( int i = 0; i < _N; i++ ){
+
+      const std::string name = get_name(i, _base_var_name);
+      register_new_variable( name, _D_type ); 
+      
+    }
+  }
   
   //======INITIALIZATION:
   template <typename IT, typename DT>
@@ -171,7 +183,7 @@ namespace Uintah{
     for ( int i = 0; i < _N; i++ ){
       const std::string name = get_name(i, _base_var_name);
       std::cout << "Source label " << name << std::endl;
-      register_variable( name, _D_type, LOCAL_COMPUTES, 0, NEWDW, variable_registry );
+      register_variable( name, _D_type, COMPUTES, 0, NEWDW, variable_registry );
       
     }
   }

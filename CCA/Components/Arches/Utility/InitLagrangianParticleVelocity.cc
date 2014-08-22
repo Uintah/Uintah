@@ -45,6 +45,15 @@ InitLagrangianParticleVelocity::problemSetup( ProblemSpecP& db ){
 
 }
 
+void 
+InitLagrangianParticleVelocity::create_local_labels(){ 
+
+  register_new_variable( _pu_label, PARTICLE ); 
+  register_new_variable( _pv_label, PARTICLE ); 
+  register_new_variable( _pw_label, PARTICLE ); 
+
+}
+
 
 //
 //------------------------------------------------
@@ -55,9 +64,9 @@ InitLagrangianParticleVelocity::problemSetup( ProblemSpecP& db ){
 void 
 InitLagrangianParticleVelocity::register_initialize( std::vector<VariableInformation>& variable_registry ){ 
 
-  register_variable( _pu_label  , PARTICLE , LOCAL_COMPUTES , 0 , NEWDW , variable_registry );
-  register_variable( _pv_label  , PARTICLE , LOCAL_COMPUTES , 0 , NEWDW , variable_registry );
-  register_variable( _pw_label  , PARTICLE , LOCAL_COMPUTES , 0 , NEWDW , variable_registry );
+  register_variable( _pu_label  , PARTICLE , COMPUTES , 0 , NEWDW , variable_registry );
+  register_variable( _pv_label  , PARTICLE , COMPUTES , 0 , NEWDW , variable_registry );
+  register_variable( _pw_label  , PARTICLE , COMPUTES , 0 , NEWDW , variable_registry );
 
   register_variable( _px_label , PARTICLE , REQUIRES, 0 , NEWDW , variable_registry );
   register_variable( _py_label , PARTICLE , REQUIRES, 0 , NEWDW , variable_registry );

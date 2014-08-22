@@ -58,6 +58,8 @@ protected:
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                SpatialOps::OperatorDatabase& opr ){}
 
+    void create_local_labels(); 
+
 private:
 
     const std::string _var_name; 
@@ -77,6 +79,10 @@ private:
   };
 
   //Function definitions: 
+  
+  template <typename IT, typename DT>
+  void WaveFormInit<IT, DT>::create_local_labels(){ 
+  }
 
   template <typename IT, typename DT>
   WaveFormInit<IT, DT>::WaveFormInit( std::string task_name, int matl_index, const std::string var_name ) : 

@@ -18,6 +18,8 @@ public:
     /** @brief Input file interface **/ 
     void problemSetup( ProblemSpecP& db ); 
 
+    void create_local_labels(){}
+
     /** @brief Build instruction for this class **/ 
     class Builder : public TaskInterface::TaskBuilder { 
 

@@ -128,6 +128,8 @@ InitializeFactory::build_all_tasks( ProblemSpecP& db )
       TaskInterface* tsk = retrieve_task(task_name); 
       tsk->problemSetup( db_task ); 
 
+      tsk->create_local_labels(); 
+
     }
   }
 }

@@ -120,6 +120,9 @@ public:
     /** @brief Input file interface **/ 
     virtual void problemSetup( ProblemSpecP& db ) = 0; 
 
+    /** @brief Create local labels for the task **/ 
+    virtual void create_local_labels() = 0; 
+
     /** @brief Initialization method **/ 
     virtual void register_initialize( std::vector<VariableInformation>& variable_registry ) = 0; 
 
@@ -350,6 +353,50 @@ protected:
     const int _matl_index; 
     VAR_TYPE _mytype;
     std::vector<const VarLabel*> _local_labels;
+
+    /** @brief Get the Uintah typeDescription for a TaskType **/ 
+    inline const TypeDescription* get_TD(VAR_TYPE type){ 
+
+      if ( type == CC_DOUBLE ){ 
+        return CCVariable<double>::getTypeDescription(); 
+      } else if ( type == CC_INT ){ 
+        return CCVariable<int>::getTypeDescription(); 
+      } else if ( type == CC_VEC ){ 
+        return CCVariable<Vector>::getTypeDescription(); 
+      } else if ( type == FACEX ){ 
+        return SFCXVariable<double>::getTypeDescription(); 
+      } else if ( type == FACEY ){ 
+        return SFCYVariable<double>::getTypeDescription(); 
+      } else if ( type == FACEZ ){ 
+        return SFCZVariable<double>::getTypeDescription(); 
+      } else if ( type == PARTICLE ){ 
+        return ParticleVariable<double>::getTypeDescription();
+      } else { 
+        throw InvalidValue("Error: Variable type not recognized.",__FILE__,__LINE__); 
+      }
+
+    }
+
+    /** @brief Register a local varlabel for this task **/ 
+    void register_new_variable(const std::string name, VAR_TYPE type ){ 
+
+      const VarLabel* test = NULL; 
+      test = VarLabel::find( name );
+
+      if ( test == NULL ){
+
+        const VarLabel* label = VarLabel::create( name, get_TD(type) );
+        _local_labels.push_back(label); 
+
+      } else { 
+
+        std::stringstream msg; 
+        msg << "Error: Varlabel already registered: " << name << " (name your task variable something else and try again)." << std::endl;
+        throw InvalidValue(msg.str(), __FILE__, __LINE__); 
+
+      }
+    }
+
 
 private: 
 

@@ -26,6 +26,10 @@ RandParticleLoc::problemSetup( ProblemSpecP& db ){
 
 }
 
+void 
+RandParticleLoc::create_local_labels(){ 
+}
+
 
 //
 //------------------------------------------------

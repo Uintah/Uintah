@@ -118,6 +118,17 @@ ScalarRHS::problemSetup( ProblemSpecP& db ){
 
 }
 
+void 
+ScalarRHS::create_local_labels(){ 
+
+  register_new_variable( _rhs_name, CC_DOUBLE ); 
+  register_new_variable( _task_name, CC_DOUBLE ); 
+  register_new_variable( _D_name, CC_DOUBLE ); 
+  register_new_variable( _Fconv_name, CC_DOUBLE ); 
+  register_new_variable( _Fdiff_name, CC_DOUBLE ); 
+
+}
+
 //
 //------------------------------------------------
 //-------------- INITIALIZATION ------------------
@@ -128,11 +139,11 @@ void
 ScalarRHS::register_initialize( std::vector<VariableInformation>& variable_registry ){ 
 
   //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
-  register_variable(  _rhs_name  , CC_DOUBLE , LOCAL_COMPUTES , 0 , NEWDW , variable_registry );
-  register_variable(  _task_name , CC_DOUBLE , LOCAL_COMPUTES , 0 , NEWDW , variable_registry );
-  register_variable(  _D_name    , CC_DOUBLE , LOCAL_COMPUTES , 0 , NEWDW , variable_registry );
-  register_variable(  _Fconv_name, CC_DOUBLE , LOCAL_COMPUTES , 0 , NEWDW , variable_registry );
-  register_variable(  _Fdiff_name, CC_DOUBLE , LOCAL_COMPUTES , 0 , NEWDW , variable_registry );
+  register_variable(  _rhs_name  , CC_DOUBLE , COMPUTES , 0 , NEWDW , variable_registry );
+  register_variable(  _task_name , CC_DOUBLE , COMPUTES , 0 , NEWDW , variable_registry );
+  register_variable(  _D_name    , CC_DOUBLE , COMPUTES , 0 , NEWDW , variable_registry );
+  register_variable(  _Fconv_name, CC_DOUBLE , COMPUTES , 0 , NEWDW , variable_registry );
+  register_variable(  _Fdiff_name, CC_DOUBLE , COMPUTES , 0 , NEWDW , variable_registry );
 
 }
 
