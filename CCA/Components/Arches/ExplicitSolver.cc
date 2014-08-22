@@ -475,7 +475,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       bool doOperatorSplit;
       doOperatorSplit = d_cqmomSolver->getOperatorSplitting();
       CQMOMEqnFactory::EqnMap& moment_eqns = cqmomFactory.retrieve_all_eqns();
-      //for source terms later      CoalModelFactory& modelFactory = CoalModelFactory::self();
       
       if (!doOperatorSplit) {
       //Evaluate CQMOM equations
@@ -484,8 +483,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
          
           CQMOMEqn* cqmom_eqn = dynamic_cast<CQMOMEqn*>(iEqn->second);
           cqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );
-        
-          cqmom_eqn->sched_computeSources( level, sched, curr_level );
+          
         }
         //get new weights and absicissa
         d_cqmomSolver->sched_solveCQMOMInversion( level, sched, curr_level );
@@ -501,6 +499,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
           CQMOMEqn* cqmom_eqn = dynamic_cast<CQMOMEqn*>(iEqn->second);
           if (curr_level == 0)
             cqmom_eqn->sched_initializeVariables( level, sched );
+          cqmom_eqn->sched_computeSources( level, sched, curr_level );
         }
         //x-direction - do the CQMOM inversion of this permutation, then do the convection
         if ( uVelIndex > -1 ) {
@@ -545,10 +544,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
           cqmom_eqn->sched_solveTransportEqn( level, sched, curr_level );
         }
       }
-      
-      //schedule model evaluation later
-      //modelFactory.sched_coalParticleCalculation( level, sched, curr_level );
-      
     }
 
     // STAGE 0 
