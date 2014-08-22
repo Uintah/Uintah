@@ -257,13 +257,13 @@ namespace Wasatch{
     const std::set<std::string>& locked_fields() const{ return lockedFields_; }
     std::set<std::string>& locked_fields(){ return lockedFields_; }
     
-    void lock_field(const std::string fieldName)
+    void lock_field( const std::string fieldName )
     {
       if ( lockedFields_.find(fieldName) == lockedFields_.end() ) lockedFields_.insert(fieldName);
     }
     
-    void set_wasatch_materials(const Uintah::MaterialSet* const materials) { materials_ = materials; }
-    const Uintah::MaterialSet* const get_wasatch_materials() const{ return materials_; }
+    void set_wasatch_materials( const Uintah::MaterialSet* const materials ) { materials_ = materials; }
+    const Uintah::MaterialSet* get_wasatch_materials() const{ return materials_; }
     const Uintah::ProblemSpecP get_wasatch_spec(){return wasatchSpec_;}
     
   private:
