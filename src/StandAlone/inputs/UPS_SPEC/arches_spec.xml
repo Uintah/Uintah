@@ -800,6 +800,8 @@
                                         need_applies_to="type simple_rate"/>       <!-- label for the "concentration" -->
             <N                          spec="REQUIRED INTEGER"
                                         need_applies_to="type simple_rate, drag"/>       <!-- hack for now to deal with multiple environments -->
+                                        
+            <apply_to                   spec="OPTIONAL INTEGER"/> <!-- identify which IC this model affects -->
           <!-- drag model -->
             <particle_density           spec="REQUIRED NO_DATA"
                                         attribute1="type REQUIRED STRING 'constant, node_specific'"

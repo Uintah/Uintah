@@ -11,6 +11,7 @@
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <CCA/Components/Arches/Directives.h>
 #include <CCA/Components/Arches/TransportEqns/Convection_CQMOM.h>
+#include <CCA/Components/Arches/ParticleModels/CQMOMSourceWrapper.h>
 
 //==========================================================================
 
@@ -46,6 +47,7 @@ namespace Uintah{
   
   class ArchesLabel;
   class ExplicitTimeInt;
+  class CQMOMSourceWrapper;
   class CQMOMEqn:
   public EqnBase{
     
@@ -208,8 +210,6 @@ namespace Uintah{
     int wVelIndex;                       //internal coordinate index for wvel
     
     std::vector<std::string> d_models;   ///< This is the list of models for this internal coordinate
-    std::vector<std::string> d_sources;
-    bool d_addExtraSources; 
     double d_w_small;               ///< Value of "small" weights
     bool d_normalized;
     bool d_usePartVel;             //determine whether to use particle velocities, or fluid velocities for convection
@@ -217,6 +217,7 @@ namespace Uintah{
     
     Convection_CQMOM * d_cqmomConv; //class for cqmom-specific convection
     
+    std::vector<CQMOMSourceWrapper* > d_sources;
   }; // class CQMOMEqn
 } // namespace Uintah
 
