@@ -91,7 +91,7 @@ Uintah::jacquie( DataArchive * da, CommandLineFlags & clf )
 		for(Level::const_patchIterator iter = level->patchesBegin();
 			iter != level->patchesEnd(); iter++){
 			const Patch* patch = *iter;
-			int matl = clf.matl_jim; // material number
+			int matl = clf.matl; // material number
 			
 			CCVariable<double> press_CC;
 			CCVariable<double> vol_frac_CC;
@@ -126,7 +126,7 @@ Uintah::jacquie( DataArchive * da, CommandLineFlags & clf )
 		for(Level::const_patchIterator iter = level->patchesBegin();
 			iter != level->patchesEnd(); iter++){
 			const Patch* patch = *iter;
-			int matl = clf.matl_jim; // material number
+			int matl = clf.matl; // material number
 			
 			CCVariable<double> modelMass_src;
 			// get all the modelMass from the patch

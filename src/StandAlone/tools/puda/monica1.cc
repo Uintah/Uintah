@@ -78,7 +78,7 @@ Uintah::monica1( DataArchive * da, CommandLineFlags & clf )
       for(Level::const_patchIterator iter = level->patchesBegin();
           iter != level->patchesEnd(); iter++){
         const Patch* patch = *iter;
-        int matl = clf.matl_jim; // material number
+        int matl = clf.matl; // material number
         
         CCVariable<double> press_CC;
         // get all the pressures from the patch

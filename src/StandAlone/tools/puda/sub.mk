@@ -44,7 +44,8 @@ SRCS := \
         $(SRCDIR)/puda.cc        \
         $(SRCDIR)/GV_MMS.cc      \
         $(SRCDIR)/ER_MMS.cc      \
-        $(SRCDIR)/todd1.cc       
+        $(SRCDIR)/todd1.cc       \
+        $(SRCDIR)/ICE_momentum.cc
         
 
 ifeq ($(IS_STATIC_BUILD),yes)
