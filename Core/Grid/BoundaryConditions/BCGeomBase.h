@@ -66,14 +66,14 @@ namespace Uintah {
       /*
        *  \brief Particle boundary type wall or inlet
        */
-      enum  ParticleBndTypeEnum {
+      enum ParticleBndTypeEnum {
         WALL, INLET, NOTSET
       };
 
       /*
        *  \brief Wall boundary type: Elastic, Inelastic, etc...
        */
-      enum  ParticleWallTypeEnum {
+      enum ParticleWallTypeEnum {
         ELASTIC, INELASTIC, PARTIALLYELASTIC
       };
       
@@ -104,9 +104,9 @@ namespace Uintah {
       /*
        *  \brief Checks whether a particle boundary condition has been specified on this BCGeometry
        */
-      const bool hasParticlesBoundary() const
+      bool hasParticlesBoundary() const
       {
-        return (bndType != ParticleBndSpec::NOTSET);
+        return( bndType != ParticleBndSpec::NOTSET );
       }
       
       ParticleBndTypeEnum bndType;
@@ -114,6 +114,7 @@ namespace Uintah {
       double restitutionCoef;
       double particlesPerSec;
     };
+
     /// Constructor
     BCGeomBase();
 
@@ -155,27 +156,27 @@ namespace Uintah {
 
     /// Determine the cell centered boundary and node centered boundary
     /// iterators.
-    virtual void determineIteratorLimits(Patch::FaceType face, 
-                                         const Patch* patch, 
-                                         std::vector<Point>& test_pts);
+    virtual void determineIteratorLimits( const Patch::FaceType      face, 
+                                          const Patch              * patch, 
+                                          const std::vector<Point> & test_pts );
     
     /// Print out the iterators for the boundary.
     void printLimits() const;
 
     /// Get the name for this boundary specification
-    std::string getBCName(){ return d_bcname; };
-    void setBCName( std::string bcname ){ d_bcname = bcname; }; 
+    std::string getBCName(){ return d_bcname; }
+    void setBCName( std::string bcname ){ d_bcname = bcname; }
 
     /// Get the type for this boundary specification (type is usually associated with a user-friendly
     /// boundary type such as Wall, Inlet, Outflow...
-    std::string getBndType(){ return d_bndtype; };
-    void setBndType( std::string bndType ){ d_bndtype = bndType; };
+    std::string getBndType(){ return d_bndtype; }
+    void setBndType( std::string bndType ){ d_bndtype = bndType; }
     
     ParticleBndSpec getParticleBndSpec(){return d_particleBndSpec;}
     void setParticleBndSpec(const ParticleBndSpec pBndSpec){ d_particleBndSpec = pBndSpec; }
-    const bool hasParticlesBoundary(){return d_particleBndSpec.hasParticlesBoundary();}
+    bool hasParticlesBoundary(){ return d_particleBndSpec.hasParticlesBoundary(); }
 
-    const double surfaceArea(){return d_surfaceArea;}
+    double surfaceArea(){ return d_surfaceArea; }
     
   protected:
     Iterator          d_cells;
@@ -186,21 +187,24 @@ namespace Uintah {
     double            d_surfaceArea;
   };
 
-  template<class T> class cmp_type {
+  template<class T> 
+  class cmp_type {
     public:
     bool operator()(const BCGeomBase* p) {
       return (typeid(T) == typeid(*p));
     }
   };
 
-  template<class T> class not_type {
+  template<class T>
+  class not_type {
     public:
     bool operator()(const BCGeomBase* p) {
       return (typeid(T) != typeid(*p));
     }
   };
 
-  template<typename T> class delete_object {
+  template<typename T>
+  class delete_object {
   public:
     void operator() (T* ptr) {
       delete ptr;

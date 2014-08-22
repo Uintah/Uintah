@@ -30,8 +30,8 @@
 //   Note, make sure that MPI_Init (or MPI_Init_thread) is called
 //   before using proc0cout() or proc0thread0cout().
 //
-#define proc0cout         if( Uintah::Parallel::getMPIRank() == 0 ) std::cout
-#define proc0cerr         if( Uintah::Parallel::getMPIRank() == 0 ) std::cerr
+#define proc0cout        if( Uintah::Parallel::getMPIRank() == 0 ) std::cout
+#define proc0cerr        if( Uintah::Parallel::getMPIRank() == 0 ) std::cerr
 #define proc0thread0cout if( Uintah::Parallel::getMPIRank() == 0 && SCIRun::Thread::self()->myid()== 0 ) std::cout
 #define proc0thread0cerr if( Uintah::Parallel::getMPIRank() == 0 && SCIRun::Thread::self()->myid()== 0 ) std::cerr
 

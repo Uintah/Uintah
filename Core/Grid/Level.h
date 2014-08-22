@@ -36,7 +36,7 @@
 
 #ifdef max
 // some uintah 3p utilities define max, so undefine it before BBox chokes on it.
-#undef max
+#  undef max
 #endif
 
 #include <Core/Geometry/BBox.h>
