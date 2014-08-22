@@ -273,18 +273,20 @@ namespace Uintah{
       SpatialOps::SpatFldPtr<DT> psi = SpatialFieldStore::get<DT>( *model_value );
       
       SpatialOps::SpatFldPtr<DT> partVelMag = SpatialFieldStore::get<DT>( *model_value );
-      const std::string u_vel_name = get_name( i, u_vel_name );
-      ITptr partVelU = tsk_info->get_const_so_field<IT>(_base_u_velocity_name);
-      const std::string v_vel_name = get_name( i, _base_v_velocity_name );
-      ITptr partVelV = tsk_info->get_const_so_field<IT>(v_vel_name);
-      const std::string w_vel_name = get_name( i, _base_w_velocity_name );
-      ITptr partVelW = tsk_info->get_const_so_field<IT>(w_vel_name);
+      const std::string u_vel_name = get_name( i, _base_u_velocity_name );
+      ITptr partVelU = tsk_info->get_const_so_field<IT>(u_vel_name);
+      ITptr partVelV;
+      ITptr partVelW;
       
       *partVelMag <<= *partVelU * *partVelU;
       if ( _base_v_velocity_name != "none") {
+        const std::string v_vel_name = get_name( i, _base_v_velocity_name );
+        partVelV = tsk_info->get_const_so_field<IT>(v_vel_name);
         *partVelMag <<= *partVelMag + *partVelV * *partVelV;
       }
       if ( _base_w_velocity_name != "none" ) {
+        const std::string w_vel_name = get_name( i, _base_w_velocity_name );
+        ITptr partVelW = tsk_info->get_const_so_field<IT>(w_vel_name);
         *partVelMag <<= *partVelMag + *partVelW * *partVelW;
       }
       *partVelMag <<= sqrt( *partVelMag );
