@@ -94,6 +94,8 @@ TransportFactory::build_all_tasks( ProblemSpecP& db )
 
     tsk = retrieve_task("scalar_ssp_update"); 
     tsk->problemSetup( db ); 
+
+    tsk->create_local_labels(); 
   
   }
 }

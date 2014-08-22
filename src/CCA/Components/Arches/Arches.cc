@@ -336,7 +336,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     i->second->register_all_tasks( db ); 
   }
     
-  //building tasks (includes calling problemSetup): 
+  //building tasks (includes calling problemSetup)
   for ( iFACMAP i = _factory_map.begin(); i != _factory_map.end(); i++ ){ 
     i->second->build_all_tasks( db ); 
   }
@@ -1123,7 +1123,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     }
   }
 #endif
-  
 
 }
 
@@ -1348,7 +1347,6 @@ Arches::scheduleInitialize(const LevelP& level,
     //call the cqmom inversion so weights and abscissas are calculated at the start
     d_cqmomSolver->sched_solveCQMOMInversion( level, sched, 0 );
   }
-  
   
   // check to make sure that all the scalar variables have BCs set and set intrusions:
   EqnFactory& eqnFactory = EqnFactory::self();

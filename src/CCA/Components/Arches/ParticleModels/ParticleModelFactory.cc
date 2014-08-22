@@ -138,6 +138,8 @@ ParticleModelFactory::build_all_tasks( ProblemSpecP& db )
 
       tsk->problemSetup( db_model ); 
 
+      tsk->create_local_labels(); 
+
     }
   }
 }

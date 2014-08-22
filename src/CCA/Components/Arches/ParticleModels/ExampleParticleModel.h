@@ -19,6 +19,8 @@ public:
 
     void problemSetup( ProblemSpecP& db ); 
 
+
+
     class Builder : public TaskInterface::TaskBuilder { 
 
       public: 
@@ -56,6 +58,8 @@ protected:
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                SpatialOps::OperatorDatabase& opr );
 
+    void create_local_labels(); 
+
 private:
 
     const std::string _base_var_name; 
@@ -81,6 +85,19 @@ private:
   };
 
   //Function definitions: 
+  
+  template <typename IT, typename DT>
+  void ExampleParticleModel<IT,DT>::create_local_labels(){ 
+
+    for ( int i = 0; i < _N; i++ ){ 
+
+      const std::string name = get_name(i, _base_var_name); 
+      register_new_variable(name, _D_type); 
+
+    }
+
+  }
+
 
   template <typename IT, typename DT>
   ExampleParticleModel<IT, DT>::ExampleParticleModel( std::string task_name, int matl_index, 
@@ -119,7 +136,7 @@ private:
     for ( int i = 0; i < _N; i++ ){ 
 
       const std::string name = get_name(i, _base_var_name); 
-      register_variable( name, _D_type, LOCAL_COMPUTES, 0, NEWDW, variable_registry ); 
+      register_variable( name, _D_type, COMPUTES, 0, NEWDW, variable_registry ); 
 
     }
   

@@ -16,6 +16,15 @@ void
 GridInfo::problemSetup( ProblemSpecP& db ){ 
 }
 
+void 
+GridInfo::create_local_labels(){ 
+
+  register_new_variable( "gridX", CC_DOUBLE ); 
+  register_new_variable( "gridY", CC_DOUBLE ); 
+  register_new_variable( "gridZ", CC_DOUBLE ); 
+
+}
+
 //
 //------------------------------------------------
 //-------------- INITIALIZATION ------------------
@@ -26,9 +35,9 @@ void
 GridInfo::register_initialize( std::vector<VariableInformation>& variable_registry ){ 
 
   //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
-  register_variable( "gridX",             CC_DOUBLE, LOCAL_COMPUTES,       0, NEWDW,  variable_registry ); 
-  register_variable( "gridY",             CC_DOUBLE, LOCAL_COMPUTES,       0, NEWDW,  variable_registry ); 
-  register_variable( "gridZ",             CC_DOUBLE, LOCAL_COMPUTES,       0, NEWDW,  variable_registry ); 
+  register_variable( "gridX" , CC_DOUBLE , COMPUTES , 0 , NEWDW , variable_registry );
+  register_variable( "gridY" , CC_DOUBLE , COMPUTES , 0 , NEWDW , variable_registry );
+  register_variable( "gridZ" , CC_DOUBLE , COMPUTES , 0 , NEWDW , variable_registry );
 
 }
 
@@ -50,7 +59,6 @@ GridInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
 
   }
-
 }
 
 //
@@ -63,13 +71,13 @@ GridInfo::register_timestep_init( std::vector<VariableInformation>& variable_reg
 
   //carry forward the old values
   //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
-  register_variable( "gridX",             CC_DOUBLE, COMPUTES,       0, NEWDW,  variable_registry ); 
-  register_variable( "gridY",             CC_DOUBLE, COMPUTES,       0, NEWDW,  variable_registry ); 
-  register_variable( "gridZ",             CC_DOUBLE, COMPUTES,       0, NEWDW,  variable_registry ); 
+  register_variable( "gridX" , CC_DOUBLE , COMPUTES , 0 , NEWDW , variable_registry );
+  register_variable( "gridY" , CC_DOUBLE , COMPUTES , 0 , NEWDW , variable_registry );
+  register_variable( "gridZ" , CC_DOUBLE , COMPUTES , 0 , NEWDW , variable_registry );
 
-  register_variable( "gridX",             CC_DOUBLE, REQUIRES,       0, OLDDW,  variable_registry ); 
-  register_variable( "gridY",             CC_DOUBLE, REQUIRES,       0, OLDDW,  variable_registry ); 
-  register_variable( "gridZ",             CC_DOUBLE, REQUIRES,       0, OLDDW,  variable_registry ); 
+  register_variable( "gridX" , CC_DOUBLE , REQUIRES , 0 , OLDDW , variable_registry );
+  register_variable( "gridY" , CC_DOUBLE , REQUIRES , 0 , OLDDW , variable_registry );
+  register_variable( "gridZ" , CC_DOUBLE , REQUIRES , 0 , OLDDW , variable_registry );
 
 }
 

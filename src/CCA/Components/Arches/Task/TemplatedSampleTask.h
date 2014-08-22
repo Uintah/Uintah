@@ -53,6 +53,8 @@ protected:
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                SpatialOps::OperatorDatabase& opr ); 
 
+    void create_local_labels(); 
+
 private:
 
   
@@ -80,6 +82,13 @@ private:
 
   template <typename T>
   void TemplatedSampleTask<T>::problemSetup( ProblemSpecP& db ){ 
+  }
+
+  template <typename T>
+  void TemplatedSampleTask<T>::create_local_labels(){ 
+
+    register_new_variable( "templated_variable", _mytype ); 
+
   }
 
 

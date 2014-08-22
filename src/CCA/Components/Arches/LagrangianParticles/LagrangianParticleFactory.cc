@@ -101,5 +101,7 @@ LagrangianParticleFactory::build_all_tasks( ProblemSpecP& db )
     tsk = retrieve_task( "update_particle_size"); 
     tsk->problemSetup( db_lp ); 
 
+    tsk->create_local_labels(); 
+
   }
 }

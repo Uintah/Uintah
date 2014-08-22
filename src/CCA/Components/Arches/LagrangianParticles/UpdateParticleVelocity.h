@@ -30,6 +30,8 @@ public:
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                SpatialOps::OperatorDatabase& opr ); 
 
+    void create_local_labels(){}
+
     //Build instructions for this (UpdateParticleVelocity) class. 
     class Builder : public TaskInterface::TaskBuilder { 
 
