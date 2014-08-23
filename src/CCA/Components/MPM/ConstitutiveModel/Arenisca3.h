@@ -87,7 +87,6 @@ namespace Uintah {
       double fluid_pressure_initial;
       double T1_rate_dependence;
       double T2_rate_dependence;
-      double gruneisen_parameter;
       double subcycling_characteristic_number;
     };
     const VarLabel* pLocalizedLabel;
@@ -108,18 +107,8 @@ namespace Uintah {
     const VarLabel* peveLabel_preReloc;
     const VarLabel* pCapXLabel;
     const VarLabel* pCapXLabel_preReloc;
-    const VarLabel* pCapXQSLabel;
-    const VarLabel* pCapXQSLabel_preReloc;
-    const VarLabel* pKappaLabel;
-    const VarLabel* pKappaLabel_preReloc;
     const VarLabel* pZetaLabel;
     const VarLabel* pZetaLabel_preReloc;
-    const VarLabel* pZetaQSLabel;
-    const VarLabel* pZetaQSLabel_preReloc;
-    const VarLabel* pIotaLabel;
-    const VarLabel* pIotaLabel_preReloc;
-    const VarLabel* pIotaQSLabel;
-    const VarLabel* pIotaQSLabel_preReloc;
     const VarLabel* pStressQSLabel;
     const VarLabel* pStressQSLabel_preReloc;
     const VarLabel* pScratchMatrixLabel;
@@ -156,6 +145,8 @@ namespace Uintah {
            a2,
            a3,
            a4;
+
+    Matrix3 Identity;
 
     CMData d_cm;
 
@@ -232,8 +223,7 @@ namespace Uintah {
                            double& J2,
                            double& rJ2);
 
-    int computeSubstep(const Matrix3& D,         // Strain "rate"
-                       const double & dt,        // time substep (s)
+    int computeSubstep(const Matrix3& d_e,       // total strain increment for substep
                        const Matrix3& sigma_old, // stress at start of substep
                        const Matrix3& ep_old,    // plastic strain at start of substep
                        const double & X_old,     // hydrostatic comrpessive strength at start of substep
