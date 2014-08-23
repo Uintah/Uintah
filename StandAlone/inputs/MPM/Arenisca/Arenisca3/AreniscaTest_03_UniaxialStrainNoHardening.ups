@@ -3,14 +3,14 @@
 <Uintah_specification>
 
   <Meta>
-      <title>Arenisca_Verification_Test_02_Vertex_Treatment</title>
+      <title>Arenisca_Verification_Test_03a_Uniaxial_Strain_No_Hardening</title>
       <!--   See Arenisca user manual (sv://csm-slb) for verification test documentation -->
   </Meta>
 
   <SimulationComponent type="mpm" />
 
   <Time>
-      <maxTime>5.0</maxTime>
+      <maxTime>2.0</maxTime>
       <initTime>0.0</initTime>
       <delt_min>0.01</delt_min>
       <delt_max>0.01</delt_max>
@@ -18,7 +18,7 @@
   </Time>
 
   <DataArchiver>
-      <filebase>AreniscaTest_02_VertexTreatment.uda</filebase>
+      <filebase>AreniscaTest_03_UniaxialStrain_NoHardening.uda</filebase>
       <outputInterval>0.001</outputInterval>
       <save label = "p.x"/>
       <save label = "p.color"/>
@@ -49,7 +49,7 @@
     <UseMomentumForm>              false     </UseMomentumForm>
     <withColor>                    true      </withColor>
     <UsePrescribedDeformation>     true      </UsePrescribedDeformation>
-    <PrescribedDeformationFile>    inputs/MPM/Arenisca/AreniscaTest_02_PrescribedDeformation.inp  </PrescribedDeformationFile>
+    <PrescribedDeformationFile>    inputs/MPM/Arenisca/AreniscaTest_03_PrescribedDeformation.inp </PrescribedDeformationFile>
     <minimum_subcycles_for_F>       -2       </minimum_subcycles_for_F>
     <erosion algorithm = "none"/>
   </MPM>
@@ -68,31 +68,38 @@
         <specific_heat>134.0e-8</specific_heat>
 
         <constitutive_model type="Arenisca3">
-            <PEAKI1>150</PEAKI1>
-      <FSLOPE>0.235702260395516</FSLOPE>
-      <STREN>0.0</STREN>
-      <YSLOPE>0.0</YSLOPE>
-      <BETA_nonassociativity>0.707107</BETA_nonassociativity>
-      <B0>10000</B0>
-      <B1>0.0</B1>
-      <B2>0.0</B2>
-      <B3>0.0</B3>
-      <B4>0.0</B4>
-      <G0>3750</G0>
-      <G1>0.0</G1>
-      <G2>0.0</G2>
-      <G3>0.0</G3>
-      <G4>0.0</G4>
-      <p0_crush_curve>-1e99</p0_crush_curve>
-      <p1_crush_curve>1e-11</p1_crush_curve>
-      <p2_crush_curve>0.0</p2_crush_curve>
-      <p3_crush_curve>0.5</p3_crush_curve>
-      <CR>0.7</CR>
-      <fluid_B0>0.0</fluid_B0>
-      <fluid_pressure_initial>0.0</fluid_pressure_initial>
-      <T1_rate_dependence> 0.0 </T1_rate_dependence>
-      <T2_rate_dependence> 0.0 </T2_rate_dependence>
-      <subcycling_characteristic_number>256</subcycling_characteristic_number>
+<!--
+    <PEAKI1>35.355339059327378e10</PEAKI1>
+    <FSLOPE>1.0e-10</FSLOPE>
+    <STREN>0.0</STREN>
+    <YSLOPE>0.0</YSLOPE>
+-->
+                <PEAKI1>35.355339059327378e10</PEAKI1>
+    <FSLOPE>1.0e-10</FSLOPE>
+    <STREN>0.0</STREN>
+    <YSLOPE>0.0</YSLOPE>
+
+    <BETA_nonassociativity>1.0</BETA_nonassociativity>
+    <B0>10000</B0>
+    <B1>0.0</B1>
+    <B2>0.0</B2>
+    <B3>0.0</B3>
+    <B4>0.0</B4>
+    <G0>3750</G0>
+    <G1>0.0</G1>
+    <G2>0.0</G2>
+    <G3>0.0</G3>
+    <G4>0.0</G4>
+    <p0_crush_curve>-1e99</p0_crush_curve>
+    <p1_crush_curve>-1e99</p1_crush_curve>
+    <p2_crush_curve>0.0</p2_crush_curve>
+    <p3_crush_curve>0.5</p3_crush_curve>
+    <CR>0.5</CR>
+    <fluid_B0>0.0</fluid_B0>
+    <fluid_pressure_initial>0.0</fluid_pressure_initial>
+    <T1_rate_dependence> 0.0 </T1_rate_dependence>
+    <T2_rate_dependence> 0.0 </T2_rate_dependence>
+    <subcycling_characteristic_number>256</subcycling_characteristic_number>
         </constitutive_model>
 
         <geom_object>
