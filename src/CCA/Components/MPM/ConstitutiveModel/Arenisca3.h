@@ -50,7 +50,7 @@ namespace Uintah {
   class Arenisca3 : public ConstitutiveModel {
     // Create datatype for storing model parameters
   public:
-#ifdef MH_VARIABILITY
+
     // For usage instructions, see the 'WeibullParser' function
     // header in Kayenta.cc
     struct WeibParameters {
@@ -61,7 +61,7 @@ namespace Uintah {
       double WeibRefVol;      // Reference Volume
       std::string WeibDist;   // String for Distribution
     };
-#endif
+
     struct CMData {
       double PEAKI1;
       double FSLOPE;
@@ -114,13 +114,11 @@ namespace Uintah {
     const VarLabel* pScratchMatrixLabel;
     const VarLabel* pScratchMatrixLabel_preReloc;
 
-#ifdef MH_VARIABILITY
     // weibull parameter set
     WeibParameters wdist;
-
     const VarLabel* peakI1IDistLabel;
     const VarLabel* peakI1IDistLabel_preReloc;
-#endif
+
   private:
     double one_third,
            two_third,
@@ -140,11 +138,7 @@ namespace Uintah {
            Km,
            phi_i,
            ev0,
-           C1,
-           a1,
-           a2,
-           a3,
-           a4;
+           C1;
 
     Matrix3 Identity;
 
@@ -188,12 +182,11 @@ namespace Uintah {
                     const Matrix3& sigma_n,
                     const double & X_n,
                     const double & Zeta_n,
-                    const double & damage_n, // XXX
+                    const double & coher,
                     const Matrix3& ep_n,
                     Matrix3& sigma_p,
                     double & X_p,
                     double & Zeta_p,
-                    double & damage_p, // XXX
                     Matrix3& ep_p,
                     long64 ParticleID);
 
@@ -228,12 +221,11 @@ namespace Uintah {
                        const Matrix3& ep_old,    // plastic strain at start of substep
                        const double & X_old,     // hydrostatic comrpessive strength at start of substep
                        const double & Zeta_old,  // trace of isotropic backstress at start of substep
-                       const double & damage_old, // XXX
-                       Matrix3& sigma_new, // stress at end of substep
-                       Matrix3& ep_new,    // plastic strain at end of substep
-                       double & X_new,     // hydrostatic comrpessive strength at end of substep
-                       double & Zeta_new,   // trace of isotropic backstress at end of substep
-                       double & damage_new // XXX
+                       const double & coher,     // scalar valued coher
+                       Matrix3& sigma_new,    // stress at end of substep
+                       Matrix3& ep_new,       // plastic strain at end of substep
+                       double & X_new,        // hydrostatic comrpessive strength at end of substep
+                       double & Zeta_new      // trace of isotropic backstress at end of substep
                       );
 
     double computeX(double evp);
@@ -243,7 +235,7 @@ namespace Uintah {
 
     double computePorePressure(const double ev);
 
-    int nonHardeningReturn(const double & I1_trial,
+    void nonHardeningReturn(const double & I1_trial,
                            const double & rJ2_trial,
                            const Matrix3& S_trial,
                            const double & I1_old,
@@ -252,7 +244,7 @@ namespace Uintah {
                            const Matrix3& d_e,
                            const double & X,
                            const double & Zeta,
-                           const double & damage, // XXX
+                           const double & coher, // XXX
                            const double & bulk,
                            const double & shear,
                                  double & I1_new,
@@ -266,7 +258,7 @@ namespace Uintah {
                               const double& r_trial,
                               const double& X,
                               const double& Zeta,
-                              const double& damage, // XXX
+                              const double& coher, // XXX
                               const double& bulk,
                               const double& shear
                              );
@@ -275,7 +267,7 @@ namespace Uintah {
                                  const double& r,
                                  const double& X,
                                  const double& Zeta,
-                                 const double& damage, // XXX
+                                 const double& coher, // XXX
                                  const double& bulk,
                                  const double& shear
                                 );
@@ -283,13 +275,14 @@ namespace Uintah {
                              const double& rJ2,
                              const double& X,
                              const double& Zeta,
-                             const double& damage // XXX
+                             const double& coher // XXX
                             );
 
     void computeLimitParameters(double& a1,
                                 double& a2,
                                 double& a3,
-                                double& a4
+                                double& a4,
+                                const double& coher //XXX
                                );
 
 
@@ -356,7 +349,6 @@ namespace Uintah {
 
     virtual double getCompressibility();
 
-#ifdef MH_VARIABILITY
     // Weibull input parser that accepts a structure of input
     // parameters defined as:
     //
@@ -367,7 +359,6 @@ namespace Uintah {
     // double WeibScale     Scale parameter
     // std::string WeibDist  String for Distribution
     virtual void WeibullParser(WeibParameters &iP);
-#endif
 
   };
 } // End namespace Uintah
