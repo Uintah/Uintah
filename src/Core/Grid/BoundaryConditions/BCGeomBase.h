@@ -146,6 +146,7 @@ namespace Uintah {
 
     void getNodeFaceIterator(Iterator& b_ptr);
 
+    const bool hasIterator(){return (d_cells.size() > 0 && d_nodes.size() > 0);}
 
     /// Determine if a point is inside the geometry where the boundary
     /// condition is applied.
