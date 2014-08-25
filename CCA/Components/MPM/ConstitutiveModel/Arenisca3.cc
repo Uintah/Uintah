@@ -55,7 +55,7 @@ Software is furnished to do so, subject to the following conditions:
 //#define MH_VARIABILITY             // MH! Broken, not sure why since it works in Arenisca 2
 #define MHdebug                      // Prints errors messages when particles are deleted or subcycling fails
 #define MHdeleteBadF                 // Prints errors messages when particles are deleted or subcycling fails
-
+#define MHfastfcns                   // Use fast approximate exp(), log() and pow() in deep loops.
 
 // INCLUDE SECTION: tells the preprocessor to include the necessary files
 #include <CCA/Components/MPM/ConstitutiveModel/Arenisca3.h>
@@ -79,6 +79,10 @@ Software is furnished to do so, subject to the following conditions:
 #include <Core/Malloc/Allocator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <sci_values.h>
+
+#ifdef MHfastfcns
+#include <CCA/Components/MPM/ConstitutiveModel/fastapproximatefunctions.h>
+#endif
 
 #ifdef MH_VARIABILITY
 #include <Core/Math/Weibull.h>
@@ -998,9 +1002,16 @@ void Arenisca3::computeElasticProperties(const Matrix3 stress,
 // The low pressure bulk modulus is also used for the tensile response.
   bulk = b0;
   if(evp <= 0.0){// ...................................................Drained
+#ifdef MHfastfcns
+    if (I1 < 0.0){bulk = bulk + b1*fasterexp(b2/I1);}
+    // Elastic-plastic coupling
+    if (evp < 0.0){bulk = bulk - b3*fasterexp(b4/evp);}
+#else
     if (I1 < 0.0){bulk = bulk + b1*exp(b2/I1);}
     // Elastic-plastic coupling
     if (evp < 0.0){bulk = bulk - b3*exp(b4/evp);}
+#endif
+
   }
 
 // In  compression, or with fluid effects if the strain is more compressive
@@ -1013,10 +1024,17 @@ void Arenisca3::computeElasticProperties(const Matrix3 stress,
     // The dry bulk modulus, taken as the low pressure limit of the nonlinear
     // formulation:
     double Kd = b0;
+#ifdef MHfastfcns
+    if (evp < 0.0){Kd = b0 - b3*fasterexp(b4/evp);}
+    // Current unloaded porosity (phi):
+    double C2 = fasterexp(evp*Km/C1)*phi_i;
+    double phi = C2/(-fasterexp(evp*Kf/C1)*(phi_i-1.0) + C2);
+#else
     if (evp < 0.0){Kd = b0 - b3*exp(b4/evp);}
     // Current unloaded porosity (phi):
     double C2 = exp(evp*Km/C1)*phi_i;
     double phi = C2/(-exp(evp*Kf/C1)*(phi_i-1.0) + C2);
+#endif
 
     // Biot-Gassmann formula for the saturated bulk modulus, evaluated at the
     // current porosity.  This introduces some error since the Kd term is a
@@ -1428,6 +1446,7 @@ double Arenisca3::computePorePressure(const double ev)
     //double pfi = d_cm.fluid_pressure_initial;        // initial pore pressure
     //double phi_i = 1.0 - exp(-d_cm.p3_crush_curve);  // Initial porosity (inferred from crush curve)
     //double C1 = Kf*(1.0 - phi_i) + Km*(phi_i);       // Term to simplify the expression below
+
     pf = d_cm.fluid_pressure_initial +
          Kf*log(exp(ev*(-1.0 - Km/C1))*(-exp((ev*Kf)/C1)*(phi_i-1.0) + exp((ev*Km)/C1)*phi_i));
   }
@@ -1459,10 +1478,10 @@ int Arenisca3::nonHardeningReturn(const double & I1_trial,    // Trial Stress
   //
   // NOTE: all values of r and z in this function are transformed!
 
-  const double TOL = 1e-3;
-  double theta = pi_half,
-         n = 0.0;
-  int interior,
+  const int nmax = 19;  // If this is changed, make sure to uncomment the appropriate cases
+                        // in computeFastRotation()
+  int n = 0,
+      interior,
       returnFlag;
 
 // (1) Define an interior point, (I1_0 = Zeta, also, J2_0 = 0 but no need to  create this variable.)
@@ -1479,10 +1498,25 @@ int Arenisca3::nonHardeningReturn(const double & I1_trial,    // Trial Stress
          r_0     = 0.0,
          z_0     = I1_0*one_sqrt_three;
 
+  // Lookup tables for computing the sin/cos of the lookup table.
+  double sinV[]={0.7071067811865475,-0.5,0.3420201433256687,-0.2306158707424402,0.1545187928078405,
+                  -0.1032426220806015,0.06889665647555759,-0.04595133277786571,0.03064021661344469,
+                  -0.02042858745187096,0.01361958465478159,-0.009079879062402308,0.006053298918749807,
+                  -0.004035546304539714,0.002690368259933135,-0.001793580042002626,0.001195720384163988,
+                  -0.0007971470283055577,0.0005314313834717263,-0.00035428759824575,0.0002361917349088998};
+  double cosV[]={0.7071067811865475,0.8660254037844386,0.9396926207859084,0.9730448705798238,
+                  0.987989849476809,0.9946562024066014,0.9976238022052647,0.9989436796015769,
+                  0.9995304783376449,0.9997913146325693,0.999907249155556,0.9999587770484402,
+                  0.9999816786182636,0.999991857149859,0.9999963809527642,0.9999983915340229,
+                  0.9999992851261259,0.9999996822782572,0.9999998587903324,0.9999999372401469,
+                  0.9999999721067318};
+  double sinTheta = sinV[1],
+         cosTheta = cosV[1];
+
 // (3) Perform Bisection between in transformed space, to find the new point on the
 //  yield surface: [znew,rnew] = transformedBisection(z0,r0,z_trial,r_trial,X,Zeta,K,G)
   //int icount=1;
-  while ( fabs(theta) > TOL ){
+  while ( n < nmax ){
     // transformed bisection to find a new interior point, just inside the boundary of the
     // yield surface.  This function overwrites the inputs for z_0 and r_0
     //  [z_0,r_0] = transformedBisection(z_0,r_0,z_trial,r_trial,X_Zeta,bulk,shear)
@@ -1491,21 +1525,27 @@ int Arenisca3::nonHardeningReturn(const double & I1_trial,    // Trial Stress
 // (4) Perform a rotation of {z_new,r_new} about {z_trial,r_trial} until a new interior point
 // is found, set this as {z0,r0}
     interior = 0;
-    n = max(n-2.0,0.0);  //
+    n = max(n-2,0);  //
     // (5) Test for convergence:
-    while ( (interior==0)&&(fabs(theta)>TOL) ){
-      //changed this to prevent the possibility of symmetric bouncing about a symmetric feature
-      //theta = (pi/2.0)*Pow(-1.0,n+2.0)*Pow(0.5,(n+2.0)/2.0);
-      theta = pi_fourth*Pow(-two_third,n);
-      z_test = z_trial + cos(theta)*(z_0-z_trial) - sin(theta)*(r_0-r_trial);
-      r_test = r_trial + sin(theta)*(z_0-z_trial) + cos(theta)*(r_0-r_trial);
+    while ( (interior==0)&&(n < nmax) ){
+      // theta = pi_fourth*pow(-two_third,n);
+      // To avoid the cost of computing pow() to get theta, and then sin(), cos(),
+      // we use a lookup table defined by sinV and cosV.
+      //
+      // theta = pi_fourth*Pow(-two_third,n);
+      // z_test = z_trial + cos(theta)*(z_0-z_trial) - sin(theta)*(r_0-r_trial);
+      // r_test = r_trial + sin(theta)*(z_0-z_trial) + cos(theta)*(r_0-r_trial);
+      sinTheta = sinV[n+1];
+      cosTheta = cosV[n+1];
+      z_test = z_trial + cosTheta*(z_0-z_trial) - sinTheta*(r_0-r_trial);
+      r_test = r_trial + sinTheta*(z_0-z_trial) + cosTheta*(r_0-r_trial);
 
       if ( transformedYieldFunction(z_test,r_test,X,Zeta,damage,bulk,shear) == -1 ) { // new interior point
         interior = 1;
         z_0 = z_test;
         r_0 = r_test;
       }
-      else { n=n+1.0; }
+      else { n++; }
     }
   }
 
@@ -1623,8 +1663,11 @@ int Arenisca3::computeYieldFunction(const double& I1,
   // The a1,a2,a3,a4 parameters were previously computed from the input
   // parameters in the computeLimitParameters() function.  This avoids
   // having to recompute them every step.
+#ifdef MHfastfcns
+  Ff = a1 - a3*fasterexp(a2*I1mZ) - a4*I1mZ;
+#else
   Ff = a1 - a3*exp(a2*I1mZ) - a4*I1mZ;
-
+#endif
 // --------------------------------------------------------------------
 // *** Branch Point ***
 // --------------------------------------------------------------------
@@ -1672,11 +1715,13 @@ double Arenisca3::computedZetadevp(double Zeta, double evp)
   // Computes the partial derivative of the trace of the
   // isotropic backstress (Zeta) with respect to volumetric
   // plastic strain (evp).
-  double dZetadevp = 0.0;           // Evolution rate of isotorpic backstress
+  double dZetadevp = 0.0;           // Evolution rate of isotropic backstress
 
   if (evp <= ev0 && Kf != 0.0) { // ............................................ Fluid effects are active
     double pfi = d_cm.fluid_pressure_initial;      // initial fluid pressure
-    dZetadevp = (3.0*exp(evp)*Kf*Km)/(exp(evp)*(Kf + Km) + exp(Zeta/(3.0*Km))*Km*(-1.0 + phi_i) - exp((3.0*pfi + Zeta)/(3.0*Kf))*Kf*phi_i);
+    dZetadevp = (3.0*exp(evp)*Kf*Km)/(exp(evp)*(Kf + Km)
+                                      + exp(Zeta/(3.0*Km))*Km*(-1.0 + phi_i)
+                                      - exp((3.0*pfi + Zeta)/(3.0*Kf))*Kf*phi_i);
   }
   return dZetadevp;
   //
@@ -1737,7 +1782,6 @@ void Arenisca3::computeLimitParameters(double& a1,double& a2,double& a3,double& 
   throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 } //===================================================================
-
 
 
 // ****************************************************************************************************
