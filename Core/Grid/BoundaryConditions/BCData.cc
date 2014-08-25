@@ -115,16 +115,27 @@ BCData::setBCValues(BoundCondBase* bc)
     d_BCData.push_back(bc->clone());
 }
 
-
-
 const BoundCondBase*
 BCData::getBCValues(const string& var_name) const
 {
   // The default location for BCs defined for all materials is mat_id = -1.
   // Need to first check the actual mat_id specified.  If this is not found,
   // then will check mat_id = -1 case.  If it isn't found, then return 0.
+  vector<BoundCondBase*>::const_iterator itr;
+  for (itr = d_BCData.begin(); itr != d_BCData.end(); ++itr) {
+    if ((*itr)->getBCVariable() == var_name)
+      return (*itr);
+  }
+  return 0;
+}
 
 
+const BoundCondBase*
+BCData::cloneBCValues(const string& var_name) const
+{
+  // The default location for BCs defined for all materials is mat_id = -1.
+  // Need to first check the actual mat_id specified.  If this is not found,
+  // then will check mat_id = -1 case.  If it isn't found, then return 0.
   vector<BoundCondBase*>::const_iterator itr;
   for (itr = d_BCData.begin(); itr != d_BCData.end(); ++itr) {
     if ((*itr)->getBCVariable() == var_name)
@@ -154,7 +165,7 @@ bool BCData::find(const string& var_name) const
 
 bool BCData::find(const string& bc_type,const string& bc_variable) const
 {
-  const BoundCondBase* bc = getBCValues(bc_variable);
+  const BoundCondBase* bc = cloneBCValues(bc_variable);
 
   if (bc) {
     if (bc->getBCType() == bc_type) {

@@ -342,11 +342,11 @@ BCDataArray::getBoundCondData(int mat_id, const string type, int ichild) const
     itr->second[ichild]->getBCData(new_bc);
     bool found_it = new_bc.find(type);
     if (found_it == true)
-      return new_bc.getBCValues(type);
+      return new_bc.cloneBCValues(type);
 //    else {
 //      found_it = new_bc.find("Auxiliary");
 //      if (found_it)
-//        return new_bc.getBCValues("Auxiliary");
+//        return cloneBCValues("Auxiliary");
 //    }
   }
   // Check the mat_id = "all" case
@@ -356,11 +356,11 @@ BCDataArray::getBoundCondData(int mat_id, const string type, int ichild) const
       itr->second[ichild]->getBCData(new_bc_all);
       bool found_it = new_bc_all.find(type);
       if (found_it == true)
-        return new_bc_all.getBCValues(type);
+        return new_bc_all.cloneBCValues(type);
 //      else {
 //        found_it = new_bc_all.find("Auxiliary");
 //        if (found_it)
-//          return new_bc_all.getBCValues("Auxiliary");
+//          return new_bc_all.cloneBCValues("Auxiliary");
 //      }
 //      return 0;
     }

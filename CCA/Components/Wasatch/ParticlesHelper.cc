@@ -700,6 +700,7 @@ namespace Uintah {
     Uintah::PatchSet* patches = new Uintah::PatchSet;
     patches->addEach( localPatches->getVector() );
     parse_boundary_conditions(patches);
+    delete patches;
   }
   
   //--------------------------------------------------------------------
