@@ -70,6 +70,19 @@ WARNING
     bool operator==(const BCData&);
     bool operator<(const BCData&) const;
     void setBCValues(BoundCondBase* bc);
+
+    /*
+     *  \brief Clones the boundary conditions associated with this boundary. This is a deep copy
+     and the user is responsible for deleting the newly created variable.
+     */
+    const BoundCondBase* cloneBCValues(const std::string& type) const;
+    
+    /*
+     *  \author Tony Saad
+     *  \date   August 2014
+     *  \brief Returns a const pointer to the boundary conditions associated with this boundary.
+     This is a lightweight access to the BCValues and does not perform a deep copy.
+     */
     const BoundCondBase* getBCValues(const std::string& type) const;
     
     /**
