@@ -357,9 +357,10 @@ Patch::setArrayBCValues(Patch::FaceType face, BCDataArray* bc)
 {
   // At this point need to set up the iterators for each BCData type:
   // Side, Rectangle, Circle, Difference, and Union.
-
-  bc->determineIteratorLimits(face,this);
-  (*d_arrayBCS)[face] = bc->clone();
+  BCDataArray* bctmp = bc->clone();
+  bctmp->determineIteratorLimits(face,this);
+  (*d_arrayBCS)[face] = bctmp->clone();
+  delete bctmp;
 }  
  
 const BCDataArray* Patch::getBCDataArray(Patch::FaceType face) const
