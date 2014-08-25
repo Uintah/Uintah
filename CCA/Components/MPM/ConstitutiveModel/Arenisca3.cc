@@ -52,10 +52,9 @@ Software is furnished to do so, subject to the following conditions:
 //----------------suggested max line width (72char)-------------------->
 
 //----------DEFINE SECTION----------
-//#define MH_VARIABILITY             // MH! Broken, not sure why since it works in Arenisca 2
-#define MHdebug                      // Prints errors messages when particles are deleted or subcycling fails
-#define MHdeleteBadF                 // Prints errors messages when particles are deleted or subcycling fails
-#define MHfastfcns                   // Use fast approximate exp(), log() and pow() in deep loops.
+#define MHdebug       // Prints errors messages when particles are deleted or subcycling fails
+#define MHdeleteBadF  // Prints errors messages when particles are deleted or subcycling fails
+#define MHfastfcns    // Use fast approximate exp(), log() and pow() in deep loops.
 
 // INCLUDE SECTION: tells the preprocessor to include the necessary files
 #include <CCA/Components/MPM/ConstitutiveModel/Arenisca3.h>
@@ -79,17 +78,13 @@ Software is furnished to do so, subject to the following conditions:
 #include <Core/Malloc/Allocator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <sci_values.h>
+#include <Core/Math/Weibull.h> // For variability
+#include <fstream>             // For variability
+#include <iostream>
 
 #ifdef MHfastfcns
 #include <CCA/Components/MPM/ConstitutiveModel/fastapproximatefunctions.h>
 #endif
-
-#ifdef MH_VARIABILITY
-#include <Core/Math/Weibull.h>
-#include <fstream>
-#endif
-
-#include <iostream>
 
 using std::cerr;
 using namespace Uintah;
@@ -102,6 +97,7 @@ Arenisca3::Arenisca3(ProblemSpecP& ps, MPMFlags* Mflag)
   proc0cout << "Arenisca ver 3.0"<< endl;
   proc0cout << "University of Utah, Mechanical Engineering, Computational Solid Mechanics" << endl;
 
+  // Private Class Variables:
   one_third      = 1.0/3.0;
   two_third      = 2.0/3.0;
   four_third     = 4.0/3.0;
@@ -114,7 +110,6 @@ Arenisca3::Arenisca3(ProblemSpecP& ps, MPMFlags* Mflag)
   pi  = 3.141592653589793238462;
   pi_fourth = 0.25*pi;
   pi_half = 0.5*pi;
-
   Identity.Identity();
 
   ps->require("PEAKI1",d_cm.PEAKI1);  // Shear Limit Surface Parameter
@@ -143,11 +138,9 @@ Arenisca3::Arenisca3(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->require("T2_rate_dependence",d_cm.T2_rate_dependence);    // Rate dependence parameter
   ps->getWithDefault("subcycling_characteristic_number",d_cm.subcycling_characteristic_number, 256);    // allowable subcycles
 
-#ifdef MH_VARIABILITY
-  ps->get("PEAKI1IDIST",wdist.WeibDist);
-  WeibullParser(wdist);
-  proc0cout <<"WeibMed="<<wdist.WeibMed<<endl;
-#endif
+  ps->get("PEAKI1IDIST",wdist.WeibDist);        // For variability
+  WeibullParser(wdist);                         // For variability
+  proc0cout <<"WeibMed="<<wdist.WeibMed<<endl;  // For variability
 
   // These class variables are computed from input parameters and are used throughout the code
   // The are evaluates here to avoid repeated computation, or to simplify expressions.
@@ -156,9 +149,6 @@ Arenisca3::Arenisca3(ProblemSpecP& ps, MPMFlags* Mflag)
   Kf = d_cm.fluid_B0;                           // Fluid bulk modulus
   C1 = Kf*(1.0 - phi_i) + Km*(phi_i);           // Term to simplify the fluid model expressions
   ev0 = C1*d_cm.fluid_pressure_initial/(Kf*Km); // Zero fluid pressure vol. strain.  (will equal zero if pfi=0)
-
-  // Compute the a1,a2,a3,a4 parameters from FSLOPE,YSLOPE,STREN and PEAKI1
-  computeLimitParameters(a1,a2,a3,a4);
 
   initializeLocalMPMLabels();
 }
@@ -180,22 +170,21 @@ Arenisca3::Arenisca3(const Arenisca3* cm)
 
   Identity.Identity();
 
-#ifdef MH_VARIABILITY
-//Weibull distribution input
+  //Weibull distribution input
   wdist.WeibMed    = cm->wdist.WeibMed;
   wdist.WeibMod    = cm->wdist.WeibMod;
   wdist.WeibRefVol = cm->wdist.WeibRefVol;
   wdist.WeibSeed   = cm->wdist.WeibSeed;
   wdist.Perturb    = cm->wdist.Perturb;
   wdist.WeibDist   = cm->wdist.WeibDist;
+
   WeibullParser(wdist);
-#endif
 
   // Shear Strength
   d_cm.PEAKI1 = cm->d_cm.PEAKI1;
   d_cm.FSLOPE = cm->d_cm.FSLOPE;
-  d_cm.STREN = cm->d_cm.STREN;   // not used (except as temp input for damage model)
-  d_cm.YSLOPE = cm->d_cm.YSLOPE; // not used (except as temp input for damage model)
+  d_cm.STREN = cm->d_cm.STREN;
+  d_cm.YSLOPE = cm->d_cm.YSLOPE;
   d_cm.BETA_nonassociativity = cm->d_cm.BETA_nonassociativity;
   // Bulk Modulus
   d_cm.B0 = cm->d_cm.B0;
@@ -229,10 +218,8 @@ Arenisca3::Arenisca3(const Arenisca3* cm)
 // DESTRUCTOR
 Arenisca3::~Arenisca3()
 {
-#ifdef MH_VARIABILITY
-  VarLabel::destroy(peakI1IDistLabel);
-  VarLabel::destroy(peakI1IDistLabel_preReloc);
-#endif
+  VarLabel::destroy(peakI1IDistLabel);          // For variability
+  VarLabel::destroy(peakI1IDistLabel_preReloc); // For variability
   VarLabel::destroy(pLocalizedLabel);
   VarLabel::destroy(pLocalizedLabel_preReloc);
   VarLabel::destroy(pAreniscaFlagLabel);
@@ -292,15 +279,13 @@ void Arenisca3::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("T1_rate_dependence",d_cm.T1_rate_dependence);
   cm_ps->appendElement("T2_rate_dependence",d_cm.T2_rate_dependence);
   cm_ps->appendElement("subcycling_characteristic_number",d_cm.subcycling_characteristic_number);
-#ifdef MH_VARIABILITY
-//    Uintah Variability Variables
+  //    Uintah Variability Variables
   cm_ps->appendElement("peakI1IPerturb", wdist.Perturb);
   cm_ps->appendElement("peakI1IMed", wdist.WeibMed);
   cm_ps->appendElement("peakI1IMod", wdist.WeibMod);
   cm_ps->appendElement("peakI1IRefVol", wdist.WeibRefVol);
   cm_ps->appendElement("peakI1ISeed", wdist.WeibSeed);
   cm_ps->appendElement("PEAKI1IDIST", wdist.WeibDist);
-#endif
 }
 
 Arenisca3* Arenisca3::clone()
@@ -343,9 +328,7 @@ void Arenisca3::initializeCMData(const Patch* patch,
   // Allocate particle variables
   ParticleVariable<int> pLocalized,
                         pAreniscaFlag;
-#ifdef MH_VARIABILITY
-  ParticleVariable<double>  peakI1IDist;     // Holder for particles PEAKI1 value
-#endif
+  ParticleVariable<double>  peakI1IDist;     // Holder for particles PEAKI1 value for variability
   ParticleVariable<double>  pScratchDouble1, // Developer tool
                    pScratchDouble2, // Developer tool
                    pPorePressure,   // Plottable fluid pressure
@@ -361,15 +344,17 @@ void Arenisca3::initializeCMData(const Patch* patch,
   new_dw->allocateAndPut(pScratchDouble1, pScratchDouble1Label, pset);
   new_dw->allocateAndPut(pScratchDouble2, pScratchDouble2Label, pset);
   new_dw->allocateAndPut(pPorePressure,   pPorePressureLabel,   pset);
-#ifdef MH_VARIABILITY
-  new_dw->allocateAndPut(peakI1IDist,     peakI1IDistLabel,     pset);
-#endif
+  new_dw->allocateAndPut(peakI1IDist,     peakI1IDistLabel,     pset); // For variability
   new_dw->allocateAndPut(pep,             pepLabel,             pset);
   new_dw->allocateAndPut(pevp,            pevpLabel,            pset);
   new_dw->allocateAndPut(peve,            peveLabel,            pset);
   new_dw->allocateAndPut(pCapX,           pCapXLabel,           pset);
   new_dw->allocateAndPut(pZeta,           pZetaLabel,           pset);
   new_dw->allocateAndPut(pScratchMatrix,  pScratchMatrixLabel,  pset);
+
+  constParticleVariable<double> pVolume, pMass;
+  new_dw->get(pVolume, lb->pVolumeLabel, pset);
+  new_dw->get(pMass,   lb->pMassLabel,   pset);
 
   for(ParticleSubset::iterator iter = pset->begin();
       iter != pset->end();iter++){
@@ -378,9 +363,7 @@ void Arenisca3::initializeCMData(const Patch* patch,
     pScratchDouble1[*iter] = 0;
     pScratchDouble2[*iter] = 0;
     pPorePressure[*iter] = d_cm.fluid_pressure_initial;
-#ifdef MH_VARIABILITY
-    peakI1IDist[*iter] = d_cm.PEAKI1;
-#endif
+    peakI1IDist[*iter] = d_cm.PEAKI1;  // For variability
     pevp[*iter] = 0.0;
     peve[*iter] = 0.0;
     pCapX[*iter] = computeX(0.0);
@@ -388,36 +371,34 @@ void Arenisca3::initializeCMData(const Patch* patch,
     pScratchMatrix[*iter].set(0.0);
     pep[*iter].set(0.0);
   }
-#ifdef MH_VARIABILITY  // XXX if this is uncommented it seg faults!
-//if ( wdist.Perturb){
-//    // Make the seed differ for each patch, otherwise each patch gets the
-//    // same set of random #s.
-//    int patchID = patch->getID();
-//    int patch_div_32 = patchID/32;
-//    patchID = patchID%32;
-//    unsigned int unique_seed = ((wdist.WeibSeed+patch_div_32+1) << patchID);
-//    SCIRun::Weibull weibGen(wdist.WeibMed,wdist.WeibMod,wdist.WeibRefVol,
-//                unique_seed,wdist.WeibMod);
-//    //proc0cout << "Weibull Variables for PEAKI1I: (initialize CMData)\n"
-//    //          << "Median:            " << wdist.WeibMed
-//    //          << "\nModulus:         " << wdist.WeibMod
-//    //          << "\nReference Vol:   " << wdist.WeibRefVol
-//    //          << "\nSeed:            " << wdist.WeibSeed
-//    //          << "\nPerturb?:        " << wdist.Perturb << std::endl;
-//    constParticleVariable<double>pVolume;
-//    new_dw->get(pVolume, lb->pVolumeLabel, pset);
-//    ParticleSubset::iterator iter = pset->begin();
-//    for(;iter != pset->end();iter++){
-//      //set value with variability and scale effects
-//      peakI1IDist[*iter] = weibGen.rand(pVolume[*iter]);
-//
-//      //set value with ONLY scale effects
-//      if(wdist.WeibSeed==0)
-//        peakI1IDist[*iter]= pow(wdist.WeibRefVol/pVolume[*iter],1./wdist.WeibMod)
-//                  *wdist.WeibMed;
-//    }
-//}
-#endif
+
+  if ( wdist.Perturb){ // For variability
+    // Make the seed differ for each patch, otherwise each patch gets the
+    // same set of random #s.
+    int patchID = patch->getID();
+    int patch_div_32 = patchID/32;
+    patchID = patchID%32;
+    unsigned int unique_seed = ((wdist.WeibSeed+patch_div_32+1) << patchID);
+    SCIRun::Weibull weibGen(wdist.WeibMed,wdist.WeibMod,wdist.WeibRefVol,
+                            unique_seed,wdist.WeibMod);
+    //proc0cout << "Weibull Variables for PEAKI1I: (initialize CMData)\n"
+    //          << "Median:            " << wdist.WeibMed
+    //          << "\nModulus:         " << wdist.WeibMod
+    //          << "\nReference Vol:   " << wdist.WeibRefVol
+    //          << "\nSeed:            " << wdist.WeibSeed
+    //          << "\nPerturb?:        " << wdist.Perturb << std::endl;
+    ParticleSubset::iterator iter = pset->begin();
+    for(;iter != pset->end();iter++){
+      //set value with variability and scale effects
+      peakI1IDist[*iter] = weibGen.rand(pVolume[*iter]);
+
+      //set value with ONLY scale effects
+      if(wdist.WeibSeed==0)
+        peakI1IDist[*iter]= pow(wdist.WeibRefVol/pVolume[*iter],1./wdist.WeibMod)
+                            *wdist.WeibMed;
+    }
+  }
+
   computeStableTimestep(patch, matl, new_dw);
 }
 
@@ -455,7 +436,7 @@ void Arenisca3::computeStableTimestep(const Patch* patch,
 
   // Get particles mass, volume, and velocity
   constParticleVariable<double> pmass,
-                        pvolume;
+                                pvolume;
   constParticleVariable<long64> pParticleID;
   constParticleVariable<Vector> pvelocity;
 
@@ -519,9 +500,7 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
     delt_vartype                   delT;
     constParticleVariable<int>     pLocalized,
                                    pAreniscaFlag;
-#ifdef MH_VARIABILITY
-    constParticleVariable<double>  peakI1IDist;
-#endif
+    constParticleVariable<double>  peakI1IDist;  // For variability
     constParticleVariable<double>  pScratchDouble1,
                                    pScratchDouble2,
                                    pPorePressure,
@@ -540,9 +519,7 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
                                    pBackStressIso;
 
     old_dw->get(delT,            lb->delTLabel,   getLevel(patches));
-#ifdef MH_VARIABILITY
-    old_dw->get(peakI1IDist,     peakI1IDistLabel,             pset);
-#endif
+    old_dw->get(peakI1IDist,     peakI1IDistLabel,             pset);  // For variability
     old_dw->get(pLocalized,      pLocalizedLabel,              pset); //initializeCMData()
     old_dw->get(pAreniscaFlag,   pAreniscaFlagLabel,           pset); //initializeCMData()
     old_dw->get(pScratchDouble1, pScratchDouble1Label,         pset); //initializeCMData()
@@ -572,12 +549,10 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
     // Get the particle variables from compute kinematics
     ParticleVariable<int>     pLocalized_new,
                               pAreniscaFlag_new;
-#ifdef MH_VARIABILITY
-    ParticleVariable<double>  peakI1IDist_new;
-    new_dw->allocateAndPut(peakI1IDist_new, peakI1IDistLabel_preReloc,   pset);
-#endif
-    new_dw->allocateAndPut(pLocalized_new, pLocalizedLabel_preReloc,   pset);
-    new_dw->allocateAndPut(pAreniscaFlag_new,   pAreniscaFlagLabel_preReloc,    pset);
+    ParticleVariable<double>  peakI1IDist_new;  // For variability
+    new_dw->allocateAndPut(peakI1IDist_new,   peakI1IDistLabel_preReloc,  pset); // For variability
+    new_dw->allocateAndPut(pLocalized_new,    pLocalizedLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pAreniscaFlag_new, pAreniscaFlagLabel_preReloc,pset);
 
     // Allocate particle variables used in ComputeStressTensor
     ParticleVariable<double>  p_q,
@@ -678,25 +653,26 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
       // part of the plastic strain, volumetric part of the elastic strain, \kappa,
       // and the backstress. tentative assumption of elasticity
 
-#ifdef MH_VARIABILITY
-      //Weibull Distribution on PEAKI1
+      // Weibull Distribution on PEAKI1 for variability is passed to the subroutines
+      // as a single scalar coherence measure, which is 1 for a nominally intact material
+      // and 0 for a fully damaged material.  It is possible for d>1, corresponding to
+      // a stronger (either because of variability or scale effects) material than the
+      // reference sample.
       peakI1IDist_new[idx] = peakI1IDist[idx];
-      double PEAKI1Dist    = peakI1IDist_new[idx]; //Weibull Distribution on PEAKI1
-#endif
+      double coher = peakI1IDist[idx]/d_cm.PEAKI1; // Scalar-valued Damage (XXX)
 
       // Divides the strain increment into substeps, and calls substep function
-      int stepFlag = computeStep(D,                  // strain "rate"
-                                 delT,               // time step (s)
+      int stepFlag = computeStep(D,                    // strain "rate"
+                                 delT,                 // time step (s)
                                  sigmaQS_old,          // unrotated stress at start of step
-                                 pCapX[idx],         // hydrostatic comrpessive strength at start of step
-                                 pZeta[idx],         // trace of isotropic backstress at start of step
-                                 pScratchDouble1[idx],  // Scalar-valued damage (XXX)
-                                 pep[idx],           // plastic strain at start of step
+                                 pCapX[idx],           // hydrostatic comrpessive strength at start of step
+                                 pZeta[idx],           // trace of isotropic backstress at start of step
+                                 coher,                // Scalar-valued coherence (XXX)
+                                 pep[idx],             // plastic strain at start of step
                                  pStressQS_new[idx],   // unrotated stress at start of step
-                                 pCapX_new[idx],     // hydrostatic comrpessive strength at start of step
-                                 pZeta_new[idx],     // trace of isotropic backstress at start of step
-                                 pScratchDouble1_new[idx], // Scalar-valued damage Damage (XXX)
-                                 pep_new[idx],       // plastic strain at start of step
+                                 pCapX_new[idx],       // hydrostatic comrpessive strength at start of step
+                                 pZeta_new[idx],       // trace of isotropic backstress at start of step
+                                 pep_new[idx],         // plastic strain at start of step
                                  pParticleID[idx]
                                 );
 
@@ -835,12 +811,11 @@ int Arenisca3::computeStep(const Matrix3& D,       // strain "rate"
                            const Matrix3& sigma_n, // unrotated stress at start of step(t_n)
                            const double & X_n,     // hydrostatic comrpessive strength at start of step(t_n)
                            const double & Zeta_n,  // trace of isotropic backstress at start of step(t_n)
-                           const double & damage_n,// XXX
+                           const double & coher,   // scalar-valued coherence XXX
                            const Matrix3& ep_n,    // plastic strain at start of step(t_n)
                            Matrix3& sigma_p,       // unrotated stress at end of step(t_n+1)
                            double & X_p,           // hydrostatic comrpessive strength at end of step(t_n+1)
                            double & Zeta_p,        // trace of isotropic backstress at end of step(t_n+1)
-                           double & damage_p,      // XXX
                            Matrix3& ep_p,          // plastic strain at end of step (t_n+1)
                            long64 ParticleID)      // ParticleID for debug purposes
 {
@@ -855,9 +830,8 @@ int Arenisca3::computeStep(const Matrix3& D,       // strain "rate"
          X_old,                                     // X at start of substep
          X_new,                                     // X at end of substep
          Zeta_old,                                  // Zeta at start of substep
-         Zeta_new,                                  // Zeta at end of substep
-         damage_old,
-         damage_new;
+         Zeta_new;                                  // Zeta at end of substep
+
   Matrix3 sigma_old,                                // sigma at start of substep
           sigma_new,                                // sigma at end of substep
           ep_old,                                   // plastic strain at start of substep
@@ -903,15 +877,14 @@ computeInvariants(sigma_trial,S_trial,I1_trial,J2_trial,rJ2_trial);
   sigma_old = sigma_n;
   X_old     = X_n;
   Zeta_old  = Zeta_n;
-  damage_old = damage_n;
   ep_old    = ep_n;
   n = 1;
 
 // (5) Call substep function {sigma_new,ep_new,X_new,Zeta_new}
 //                               = computeSubstep(D,dt,sigma_old,ep_old,X_old,Zeta_old)
 computeSubstep:
-  substepFlag = computeSubstep(d_e,sigma_old,ep_old,X_old,Zeta_old,damage_old,
-                               sigma_new,ep_new,X_new,Zeta_new,damage_new);
+  substepFlag = computeSubstep(d_e,sigma_old,ep_old,X_old,Zeta_old,coher,
+                               sigma_new,ep_new,X_new,Zeta_new);
 
 // (6) Check error flag from substep calculation:
   if (substepFlag == 0) { // no errors in substep calculation
@@ -919,7 +892,6 @@ computeSubstep:
       sigma_old = sigma_new;
       X_old     = X_new;
       Zeta_old  = Zeta_new;
-      damage_old= damage_new;
       ep_old    = ep_new;
       n++;
       goto computeSubstep;
@@ -940,7 +912,6 @@ successfulStep:
   sigma_p   = sigma_new;
   X_p       = X_new;
   Zeta_p    = Zeta_new;
-  damage_p  = damage_new;
   ep_p      = ep_new;
   stepFlag  = 0;
   return stepFlag;
@@ -951,7 +922,6 @@ failedStep:
   sigma_p   = sigma_n;
   X_p       = X_n;
   Zeta_p    = Zeta_n;
-  damage_p  = damage_n;
   ep_p      = ep_n;
   stepFlag  = 1;
 #ifdef MHdebug
@@ -1124,18 +1094,16 @@ int Arenisca3::computeSubstep(const Matrix3& d_e,       // Total strain incremen
                               const Matrix3& ep_old,    // plastic strain at start of substep
                               const double & X_old,     // hydrostatic compressive strength at start of substep
                               const double & Zeta_old,  // trace of isotropic backstress at start of substep
-                              const double & damage_old, // XXX damage at start of substep
-                              Matrix3& sigma_new, // stress at end of substep
-                              Matrix3& ep_new,    // plastic strain at end of substep
-                              double & X_new,     // hydrostatic compressive strength at end of substep
-                              double & Zeta_new,   // trace of isotropic backstress at end of substep
-                              double & damage_new // XXX
+                              const double & coher,     // scalar valued coherence
+                              Matrix3& sigma_new,       // stress at end of substep
+                              Matrix3& ep_new,          // plastic strain at end of substep
+                              double & X_new,           // hydrostatic compressive strength at end of substep
+                              double & Zeta_new         // trace of isotropic backstress at end of substep
                              )
 {
 // Computes the updated stress state for a substep that may be either elastic, plastic, or
 // partially elastic.   Returns an integer flag 0/1 for a good/bad update.
-  int     substepFlag,
-          returnFlag;
+  int     substepFlag;
   double  p3  = d_cm.p3_crush_curve;
 
 // (1)  Compute the elastic properties based on the stress and plastic strain at
@@ -1155,12 +1123,11 @@ int Arenisca3::computeSubstep(const Matrix3& d_e,       // Total strain incremen
   computeInvariants(sigma_trial,S_trial,I1_trial,J2_trial,rJ2_trial);
 
 // (4) Evaluate the yield function at the trial stress:
-  int YIELD = computeYieldFunction(I1_trial,rJ2_trial,X_old,Zeta_old,damage_old);
+  int YIELD = computeYieldFunction(I1_trial,rJ2_trial,X_old,Zeta_old,coher);
   if (YIELD == -1) { // elastic substep
     sigma_new = sigma_trial;
     X_new = X_old;
     Zeta_new = Zeta_old;
-    damage_new = damage_old;
     ep_new = ep_old;
     substepFlag = 0;
     goto successfulSubstep;
@@ -1183,9 +1150,10 @@ int Arenisca3::computeSubstep(const Matrix3& d_e,       // Total strain incremen
 
     // returnFlag would be != 0 if there was an error in the nonHardeningReturn call, but
     // there are currently no tests in that function that could detect such an error.
-    returnFlag = nonHardeningReturn(I1_trial,rJ2_trial,S_trial,I1_old,rJ2_old,S_old,
-                                    d_e,X_old,Zeta_old,damage_old,bulk,shear,
-                                    I1_0,rJ2_0,S_0,d_ep_0);
+    nonHardeningReturn(I1_trial,rJ2_trial,S_trial,
+                       I1_old,rJ2_old,S_old,
+                       d_e,X_old,Zeta_old,coher,bulk,shear,
+                       I1_0,rJ2_0,S_0,d_ep_0);
 
     double d_evp_0 = d_ep_0.Trace();
 
@@ -1216,7 +1184,7 @@ updateISV:
 // (8) Check if the updated yield surface encloses trial stres.  If it does, there is too much
 //     plastic strain for this iteration, so we adjust the bisection parameters and recompute
 //     the state variable update.
-    if( computeYieldFunction(I1_trial,rJ2_trial,X_new,Zeta_new,damage_old)!=1 ){
+    if( computeYieldFunction(I1_trial,rJ2_trial,X_new,Zeta_new,coher)!=1 ){
       eta_out = eta_mid;
       if( i >= imax ){
         // solution failed to converge within the allowable iterations, which means
@@ -1244,10 +1212,10 @@ updateISV:
             d_evp_new;
     Matrix3 S_new,
             d_ep_new;
-    int returnFlag = nonHardeningReturn(I1_trial,rJ2_trial,S_trial,
-                                        I1_old,rJ2_old,S_old,
-                                        d_e,X_new,Zeta_new,damage_old,bulk,shear,
-                                        I1_new,rJ2_new,S_new,d_ep_new);
+    nonHardeningReturn(I1_trial,rJ2_trial,S_trial,
+                       I1_old,rJ2_old,S_old,
+                       d_e,X_new,Zeta_new,coher,bulk,shear,
+                       I1_new,rJ2_new,S_new,d_ep_new);
 
 // (10) Check whether the isotropic component of the return has changed sign, as this
 //      would indicate that the cap apex has moved past the trial stress, indicating
@@ -1291,41 +1259,6 @@ updateISV:
       // Update zeta. min() eliminates tensile fluid pressure from explicit integration error
       Zeta_new = min(Zeta_old + dZetadevp*d_evp_new,0.0);
 
-      // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-      // XXX Damage XXX:
-      // Recompute damage based on updated plastic strain.
-      // compute a nonhardening return to the updated surface and store this
-      // as the updated stress.
-      // The plastic strain for this return is not used to evolve the state
-      // variables.  This is certainly an error, but I suspect (though I still
-      // need to show) that there will be multiple solutions for some cases
-      // of combined hardening and softening).  If this is not the case, and
-      // the combined problem is well posed, it will simply be necessary to
-      // compute the damage above when X and Zeta are updated.
-      //
-      // Currently damage and porosity do not work together, because the plastic
-      // strain is modeled after the correct X is computed, but the value for X
-      // is not updated.  Thus on the next step it may not be possible to find
-      // a solution based on the total plastic strain.  If an incremental update
-      // to the cap function were used (rather than computing X(evp) exactly),
-      // this would not be a problem, but then there might be problems with
-      // nonphysical cap evolution.
-
-      if( d_cm.STREN < 0.0) {
-        damage_new = Min(1.0,damage_old + d_ep_new.Norm()/fabs(d_cm.STREN));
-
-        returnFlag = nonHardeningReturn(I1_new,rJ2_new,S_new,
-                                        I1_old,rJ2_old,S_old,
-                                        d_e,X_new,Zeta_new,damage_new,bulk,shear,
-                                        I1_new,rJ2_new,S_new,d_ep_new);
-
-        sigma_new = one_third*I1_new*Identity + S_new;
-      }
-      else {
-        damage_new = 0.0;
-      }
-      // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-
       goto successfulSubstep;
     }
     if( i >= imax ){
@@ -1337,7 +1270,7 @@ updateISV:
       // This code was never reached in testing, but is here to catch
       // unforseen errors.
 #ifdef MHdebug
-      cout << "1306: i>=imax, failed substep "<< endl;
+      cout << "1273: i>=imax, failed substep "<< endl;
 #endif
       goto failedSubstep;
     }
@@ -1396,9 +1329,11 @@ double Arenisca3::computeX(double evp)
     // We first compute the drained response.  If there are fluid effects, this value will
     // be used in detemining the elastic volumetric strain to yield.
     if(evp <= 0.0){
+          // This is an expensive calculation, but fasterlog() may cause errors.
       X = (p0*p1 + log((evp+p3)/p3))/p1;
     }
     else{
+      // This is an expensive calculation, but fastpow() may cause errors.
       X = p0*Pow(1.0 + evp, 1.0/(p0*p1*p3));
     }
 
@@ -1454,7 +1389,7 @@ double Arenisca3::computePorePressure(const double ev)
 } //===================================================================
 
 // Compute nonhardening return from trial stress to some yield surface
-int Arenisca3::nonHardeningReturn(const double & I1_trial,    // Trial Stress
+void Arenisca3::nonHardeningReturn(const double & I1_trial,    // Trial Stress
                                   const double & rJ2_trial,
                                   const Matrix3& S_trial,
                                   const double & I1_old,      // Stress at start of subtep
@@ -1463,7 +1398,7 @@ int Arenisca3::nonHardeningReturn(const double & I1_trial,    // Trial Stress
                                   const Matrix3& d_e,         // increment in total strain
                                   const double & X,           // cap position
                                   const double & Zeta,        // isotropic bacstress
-                                  const double & damage,
+                                  const double & coher,
                                   const double & bulk,        // elastic bulk modulus
                                   const double & shear,       // elastic shear modulus
                                   double & I1_new,      // New stress state on yield surface
@@ -1478,11 +1413,9 @@ int Arenisca3::nonHardeningReturn(const double & I1_trial,    // Trial Stress
   //
   // NOTE: all values of r and z in this function are transformed!
 
-  const int nmax = 19;  // If this is changed, make sure to uncomment the appropriate cases
-                        // in computeFastRotation()
+  const int nmax = 19;  // If this is changed, more entries may need to be added to sinV cosV.
   int n = 0,
-      interior,
-      returnFlag;
+      interior;
 
 // (1) Define an interior point, (I1_0 = Zeta, also, J2_0 = 0 but no need to  create this variable.)
   double  I1_0 = Zeta;
@@ -1498,7 +1431,7 @@ int Arenisca3::nonHardeningReturn(const double & I1_trial,    // Trial Stress
          r_0     = 0.0,
          z_0     = I1_0*one_sqrt_three;
 
-  // Lookup tables for computing the sin/cos of the lookup table.
+  // Lookup tables for computing the sin() and cos() of th rotation angle.
   double sinV[]={0.7071067811865475,-0.5,0.3420201433256687,-0.2306158707424402,0.1545187928078405,
                   -0.1032426220806015,0.06889665647555759,-0.04595133277786571,0.03064021661344469,
                   -0.02042858745187096,0.01361958465478159,-0.009079879062402308,0.006053298918749807,
@@ -1510,8 +1443,8 @@ int Arenisca3::nonHardeningReturn(const double & I1_trial,    // Trial Stress
                   0.9999816786182636,0.999991857149859,0.9999963809527642,0.9999983915340229,
                   0.9999992851261259,0.9999996822782572,0.9999998587903324,0.9999999372401469,
                   0.9999999721067318};
-  double sinTheta = sinV[1],
-         cosTheta = cosV[1];
+  double sinTheta = sinV[0],
+         cosTheta = cosV[0];
 
 // (3) Perform Bisection between in transformed space, to find the new point on the
 //  yield surface: [znew,rnew] = transformedBisection(z0,r0,z_trial,r_trial,X,Zeta,K,G)
@@ -1520,7 +1453,7 @@ int Arenisca3::nonHardeningReturn(const double & I1_trial,    // Trial Stress
     // transformed bisection to find a new interior point, just inside the boundary of the
     // yield surface.  This function overwrites the inputs for z_0 and r_0
     //  [z_0,r_0] = transformedBisection(z_0,r_0,z_trial,r_trial,X_Zeta,bulk,shear)
-    transformedBisection(z_0,r_0,z_trial,r_trial,X,Zeta,damage,bulk,shear);
+    transformedBisection(z_0,r_0,z_trial,r_trial,X,Zeta,coher,bulk,shear);
 
 // (4) Perform a rotation of {z_new,r_new} about {z_trial,r_trial} until a new interior point
 // is found, set this as {z0,r0}
@@ -1528,19 +1461,18 @@ int Arenisca3::nonHardeningReturn(const double & I1_trial,    // Trial Stress
     n = max(n-2,0);  //
     // (5) Test for convergence:
     while ( (interior==0)&&(n < nmax) ){
-      // theta = pi_fourth*pow(-two_third,n);
       // To avoid the cost of computing pow() to get theta, and then sin(), cos(),
-      // we use a lookup table defined by sinV and cosV.
+      // we use a lookup table defined above by sinV and cosV.
       //
       // theta = pi_fourth*Pow(-two_third,n);
       // z_test = z_trial + cos(theta)*(z_0-z_trial) - sin(theta)*(r_0-r_trial);
       // r_test = r_trial + sin(theta)*(z_0-z_trial) + cos(theta)*(r_0-r_trial);
-      sinTheta = sinV[n+1];
-      cosTheta = cosV[n+1];
+      sinTheta = sinV[n];
+      cosTheta = cosV[n];
       z_test = z_trial + cosTheta*(z_0-z_trial) - sinTheta*(r_0-r_trial);
       r_test = r_trial + sinTheta*(z_0-z_trial) + cosTheta*(r_0-r_trial);
 
-      if ( transformedYieldFunction(z_test,r_test,X,Zeta,damage,bulk,shear) == -1 ) { // new interior point
+      if ( transformedYieldFunction(z_test,r_test,X,Zeta,coher,bulk,shear) == -1 ) { // new interior point
         interior = 1;
         z_0 = z_test;
         r_0 = r_test;
@@ -1565,8 +1497,6 @@ int Arenisca3::nonHardeningReturn(const double & I1_trial,    // Trial Stress
   Matrix3 d_ee    = 0.5*d_sigma/shear + (one_ninth/bulk - one_sixth/shear)*d_sigma.Trace()*Identity;
   d_ep_new        = d_e - d_ee;
 
-  returnFlag = 0;
-  return returnFlag;
 } //===================================================================
 
 // Computes bisection between two points in transformed space
@@ -1576,7 +1506,7 @@ void Arenisca3::transformedBisection(double& z_0,
                                      const double& r_trial,
                                      const double& X,
                                      const double& Zeta,
-                                     const double& damage,
+                                     const double& coher,
                                      const double& bulk,
                                      const double& shear
                                     )
@@ -1607,7 +1537,7 @@ void Arenisca3::transformedBisection(double& z_0,
     z_test = z_0 + eta_mid*(z_trial-z_0);
     r_test = r_0 + eta_mid*(r_trial-r_0);
 // (4) Check if test point is within the yield surface:
-    if ( transformedYieldFunction(z_test,r_test,X,Zeta,damage,bulk,shear)!=1 ) {eta_in = eta_mid;}
+    if ( transformedYieldFunction(z_test,r_test,X,Zeta,coher,bulk,shear)!=1 ) {eta_in = eta_mid;}
     else {eta_out = eta_mid;}
   }
 // (5) Converged, return {z_new,r_new}={z_test,r_test}
@@ -1621,7 +1551,7 @@ int Arenisca3::transformedYieldFunction(const double& z,
                                         const double& r,
                                         const double& X,
                                         const double& Zeta,
-                                        const double& damage,
+                                        const double& coher,
                                         const double& bulk,
                                         const double& shear
                                        )
@@ -1636,7 +1566,7 @@ int Arenisca3::transformedYieldFunction(const double& z,
   double fac = beta*sqrt(1.5*bulk/shear);
   double I1  = sqrt_three*z,
          rJ2 = (r/fac)*one_sqrt_two;
-  int    YIELD = computeYieldFunction(I1,rJ2,X,Zeta,damage);
+  int    YIELD = computeYieldFunction(I1,rJ2,X,Zeta,coher);
   return YIELD;
 } //===================================================================
 
@@ -1645,34 +1575,50 @@ int Arenisca3::computeYieldFunction(const double& I1,
                                     const double& rJ2,
                                     const double& X,
                                     const double& Zeta,
-                                    const double& damage
+                                    const double& coher
                                    )
 {
   // Evaluate the yield criteria and return:
   //  -1: elastic
   //   0: on yield surface within tolerance (not used)
   //   1: plastic
+  //
+  //                        *** Developer Note ***
+  // THIS FUNCTION IS DEEP WITHIN A NESTED LOOP AND IS CALLED THOUSANDS
+  // OF TIMES PER TIMESTEP.  EVERYTHING IN THIS FUNCTION SHOULD BE
+  // OPTIMIZED FOR SPEED.
+  //
   int YIELD = -1;
   double I1mZ = I1 - Zeta;    // Shifted stress to evalue yield criteria
 
 // --------------------------------------------------------------------
-// *** SHEAR LIMIT FUNCTION ***
+// *** SHEAR LIMIT FUNCTION (Ff) ***
 // --------------------------------------------------------------------
   // Read input parameters to specify strength model
   double  Ff;
-  // The a1,a2,a3,a4 parameters were previously computed from the input
-  // parameters in the computeLimitParameters() function.  This avoids
-  // having to recompute them every step.
+  // Compute the a1,a2,a3,a4 parameters from FSLOPE,YSLOPE,STREN and PEAKI1,
+  // which are perturbed by variability according to coher.
+  //
+  // This is inefficient as it requires evaluating the exp() in finding a3
+  // from the perturbed inputs at each evaluation of the yield
+  // function.  The a_i are different for each particle, and cannot be
+  // class variables, but could be evaluated in computeStep and passed down
+  // through the functions.  This has been avoided, since it is specific to
+  // a specific yield function formulation, contrary to the benefits of the
+  // generalized return algorithm approach.
+  double a1,a2,a3,a4;
+  computeLimitParameters(a1,a2,a3,a4,coher);
+
 #ifdef MHfastfcns
   Ff = a1 - a3*fasterexp(a2*I1mZ) - a4*I1mZ;
 #else
   Ff = a1 - a3*exp(a2*I1mZ) - a4*I1mZ;
 #endif
 // --------------------------------------------------------------------
-// *** Branch Point ***
+// *** Branch Point (Kappa) ***
 // --------------------------------------------------------------------
   double  CR  = d_cm.CR,
-          PEAKI1 = d_cm.PEAKI1;
+          PEAKI1 = coher*d_cm.PEAKI1;  // perturbed point for variability
   double  Kappa  = PEAKI1-CR*(PEAKI1-X);
 
 // --------------------------------------------------------------------
@@ -1692,7 +1638,7 @@ int Arenisca3::computeYieldFunction(const double& I1,
     // so if a value of 0 has been specified this indicates the user
     // wishes to run without porosity, and no cap function is used, i.e. fc=1
     if(p3!=0.0){
-    // **Elliptical Cap Function:**
+    // **Elliptical Cap Function: (fc)**
     // fc = sqrt(1.0 - Pow((Kappa-I1mZ)/(Kappa-X)),2.0);
     // faster version: fc2 = fc^2
       fc2 = 1.0 - ((Kappa-I1mZ)/(Kappa-X))*((Kappa-I1mZ)/(Kappa-X));
@@ -1717,8 +1663,10 @@ double Arenisca3::computedZetadevp(double Zeta, double evp)
   // plastic strain (evp).
   double dZetadevp = 0.0;           // Evolution rate of isotropic backstress
 
-  if (evp <= ev0 && Kf != 0.0) { // ............................................ Fluid effects are active
-    double pfi = d_cm.fluid_pressure_initial;      // initial fluid pressure
+  if (evp <= ev0 && Kf != 0.0) { // .................................... Fluid effects are active
+    double pfi = d_cm.fluid_pressure_initial; // initial fluid pressure
+
+    // This is an expensive calculation, but fasterexp() seemed to cause errors.
     dZetadevp = (3.0*exp(evp)*Kf*Km)/(exp(evp)*(Kf + Km)
                                       + exp(Zeta/(3.0*Km))*Km*(-1.0 + phi_i)
                                       - exp((3.0*pfi + Zeta)/(3.0*Kf))*Kf*phi_i);
@@ -1728,17 +1676,17 @@ double Arenisca3::computedZetadevp(double Zeta, double evp)
 } //===================================================================
 
 // Compute (dZeta/devp) Zeta and vol. plastic strain
-void Arenisca3::computeLimitParameters(double& a1,double& a2,double& a3,double& a4)
+void Arenisca3::computeLimitParameters(double& a1, double& a2, double& a3, double& a4, const double& coher)
 { // The shear limit surface is defined in terms of the a1,a2,a3,a4 parameters, but
   // the user inputs are the more intuitive set of FSLOPE. YSLOPE, STREN, and PEAKI1.
 
   // This routine computes the a_i parameters from the user inputs.  The code was
   // originally written by R.M. Brannon, with modifications by M.S. Swan.
-  double  FSLOPE = d_cm.FSLOPE,  // Slope at I1=PEAKI1
-          STREN  = d_cm.STREN,   // Value of rootJ2 at I1=0
-          YSLOPE = d_cm.YSLOPE,  // High pressure slope
-          PEAKI1 = d_cm.PEAKI1;  // Value of I1 at strength=0
-  int     flag = 0;              // Error flag = 1 if inputs are bad.
+  double  FSLOPE = d_cm.FSLOPE,       // Slope at I1=PEAKI1
+          STREN  = d_cm.STREN,        // Value of rootJ2 at I1=0
+          YSLOPE = d_cm.YSLOPE,       // High pressure slope
+          PEAKI1 = coher*d_cm.PEAKI1; // Value of I1 at strength=0 (Perturbed by variability)
+  int     flag = 0;                   // Error flag = 1 if inputs are bad.
 
   if (FSLOPE > 0.0 && PEAKI1 >= 0.0 && STREN == 0.0 && YSLOPE == 0.0)
   {// ----------------------------------------------Linear Drucker Prager
@@ -1765,7 +1713,11 @@ void Arenisca3::computeLimitParameters(double& a1,double& a2,double& a3,double& 
   { // ------------------------------------------------------- Nonlinear Drucker-Prager
   a1 = STREN;
   a2 = (FSLOPE-YSLOPE)/(STREN-YSLOPE*PEAKI1);
+#ifdef MHfastfcns
+  a3 = (STREN-YSLOPE*PEAKI1)*fasterexp(-a2*PEAKI1);
+#else
   a3 = (STREN-YSLOPE*PEAKI1)*exp(-a2*PEAKI1);
+#endif
   a4 = YSLOPE;
   }
   else
@@ -1849,9 +1801,7 @@ void Arenisca3::addParticleState(std::vector<const VarLabel*>& from,
 {
   // Push back all the particle variables associated with Arenisca.
   // Important to keep from and to lists in same order!
-#ifdef MH_VARIABILITY
-  from.push_back(peakI1IDistLabel);
-#endif
+  from.push_back(peakI1IDistLabel);  // For variability
   from.push_back(pLocalizedLabel);
   from.push_back(pAreniscaFlagLabel);
   from.push_back(pScratchDouble1Label);
@@ -1864,9 +1814,7 @@ void Arenisca3::addParticleState(std::vector<const VarLabel*>& from,
   from.push_back(pZetaLabel);
   from.push_back(pStressQSLabel);
   from.push_back(pScratchMatrixLabel);
-#ifdef MH_VARIABILITY
-  to.push_back(  peakI1IDistLabel_preReloc);
-#endif
+  to.push_back(  peakI1IDistLabel_preReloc);  // For variability
   to.push_back(  pLocalizedLabel_preReloc);
   to.push_back(  pAreniscaFlagLabel_preReloc);
   to.push_back(  pScratchDouble1Label_preReloc);
@@ -1891,9 +1839,7 @@ void Arenisca3::addInitialComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
 
   // Other constitutive model and input dependent computes and requires
-#ifdef MH_VARIABILITY
-  task->computes(peakI1IDistLabel, matlset);
-#endif
+  task->computes(peakI1IDistLabel,     matlset);  // For variability
   task->computes(pLocalizedLabel,      matlset);
   task->computes(pAreniscaFlagLabel,   matlset);
   task->computes(pScratchDouble1Label, matlset);
@@ -1917,9 +1863,7 @@ void Arenisca3::addComputesAndRequires(Task* task,
   // base class.
   const MaterialSubset* matlset = matl->thisMaterial();
   addSharedCRForHypoExplicit(task, matlset, patches);
-#ifdef MH_VARIABILITY
-  task->requires(Task::OldDW, peakI1IDistLabel,     matlset, Ghost::None);
-#endif
+  task->requires(Task::OldDW, peakI1IDistLabel,     matlset, Ghost::None);  // For variability
   task->requires(Task::OldDW, pLocalizedLabel,      matlset, Ghost::None);
   task->requires(Task::OldDW, pAreniscaFlagLabel,   matlset, Ghost::None);
   task->requires(Task::OldDW, pScratchDouble1Label, matlset, Ghost::None);
@@ -1933,9 +1877,7 @@ void Arenisca3::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, pStressQSLabel,       matlset, Ghost::None);
   task->requires(Task::OldDW, pScratchMatrixLabel,  matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pParticleIDLabel, matlset, Ghost::None);
-#ifdef MH_VARIABILITY
-  task->computes(peakI1IDistLabel_preReloc,     matlset);
-#endif
+  task->computes(peakI1IDistLabel_preReloc,     matlset);  // For variability
   task->computes(pLocalizedLabel_preReloc,      matlset);
   task->computes(pAreniscaFlagLabel_preReloc,   matlset);
   task->computes(pScratchDouble1Label_preReloc, matlset);
@@ -2007,13 +1949,11 @@ double Arenisca3::getCompressibility()
 // Initialize all labels of the particle variables associated with Arenisca3.
 void Arenisca3::initializeLocalMPMLabels()
 {
-#ifdef MH_VARIABILITY
-  //peakI1Dist
+  //peakI1Dist for variability
   peakI1IDistLabel = VarLabel::create("p.peakI1IDist",
                                       ParticleVariable<double>::getTypeDescription());
   peakI1IDistLabel_preReloc = VarLabel::create("p.peakI1IDist+",
                               ParticleVariable<double>::getTypeDescription());
-#endif
   //pLocalized
   pLocalizedLabel = VarLabel::create("p.localized",
                                      ParticleVariable<int>::getTypeDescription());
@@ -2076,7 +2016,8 @@ void Arenisca3::initializeLocalMPMLabels()
                                  ParticleVariable<Matrix3>::getTypeDescription());
 }
 
-#ifdef MH_VARIABILITY
+// For variability:
+//
 // Weibull input parser that accepts a structure of input
 // parameters defined as:
 //
@@ -2099,60 +2040,65 @@ void Arenisca3::WeibullParser(WeibParameters &iP)
 {
   // Remove all unneeded characters
   // only remaining are alphanumeric '.' and ','
-  for ( int i = iP.WeibDist.length()-1; i >= 0; i--) {
+  for( int i = iP.WeibDist.length()-1; i >= 0; i--){
     iP.WeibDist[i] = tolower(iP.WeibDist[i]);
-    if ( !isalnum(iP.WeibDist[i]) &&
-         iP.WeibDist[i] != '.' &&
-         iP.WeibDist[i] != ',' &&
-         iP.WeibDist[i] != '-' &&
-         iP.WeibDist[i] != EOF) {
+    if(!isalnum(iP.WeibDist[i]) &&
+       iP.WeibDist[i] != '.' &&
+       iP.WeibDist[i] != ',' &&
+       iP.WeibDist[i] != '-' &&
+       iP.WeibDist[i] != EOF) {
       iP.WeibDist.erase(i,1);
     }
   } // End for
-  if (iP.WeibDist.substr(0,4) == "weib") {
+  if(iP.WeibDist.substr(0,4) == "weib"){
     iP.Perturb = true;
-  } else {
+  }
+  else{
     iP.Perturb = false;
   }
   // ######
   // If perturbation is NOT desired
   // ######
-  if ( !iP.Perturb ) {
+  if( !iP.Perturb ){
     bool escape = false;
     int num_of_e = 0;
     int num_of_periods = 0;
-    for ( unsigned int i = 0; i < iP.WeibDist.length(); i++) {
-      if ( iP.WeibDist[i] != '.'
-           && iP.WeibDist[i] != 'e'
-           && iP.WeibDist[i] != '-'
-           && !isdigit(iP.WeibDist[i]) ) escape = true;
-      if ( iP.WeibDist[i] == 'e' ) num_of_e += 1;
-      if ( iP.WeibDist[i] == '.' ) num_of_periods += 1;
-      if ( num_of_e > 1 || num_of_periods > 1 || escape ) {
+    for( unsigned int i = 0; i < iP.WeibDist.length(); i++){
+      if( iP.WeibDist[i] != '.'
+          && iP.WeibDist[i] != 'e'
+          && iP.WeibDist[i] != '-'
+          && !isdigit(iP.WeibDist[i]))
+        escape = true;
+      if( iP.WeibDist[i] == 'e' )
+        num_of_e += 1;
+      if( iP.WeibDist[i] == '.' )
+        num_of_periods += 1;
+      if( num_of_e > 1 || num_of_periods > 1 || escape ){
         std::cerr << "\n\nERROR:\nInput value cannot be parsed. Please\n"
-                  "check your input values.\n" << std::endl;
+                     "check your input values.\n" << std::endl;
         exit (1);
       }
     } // end for(int i = 0;....)
-    if ( escape ) exit (1);
+    if( escape )
+      exit (1);
     iP.WeibMed  = atof(iP.WeibDist.c_str());
   }
   // ######
   // If perturbation IS desired
   // ######
-  if ( iP.Perturb ) {
+  if( iP.Perturb ){
     int weibValues[4];
     int weibValuesCounter = 0;
-    for ( unsigned int r = 0; r < iP.WeibDist.length(); r++) {
-      if ( iP.WeibDist[r] == ',' ) {
+    for( unsigned int r = 0; r < iP.WeibDist.length(); r++){
+      if( iP.WeibDist[r] == ',' ){
         weibValues[weibValuesCounter] = r;
         weibValuesCounter += 1;
       } // end if(iP.WeibDist[r] == ',')
     } // end for(int r = 0; ...... )
-    if (weibValuesCounter != 4) {
+    if(weibValuesCounter != 4){
       std::cerr << "\n\nERROR:\nWeibull perturbed input string must contain\n"
-                "exactly 4 commas. Verify that your input string is\n"
-                "of the form 'weibull, 45e6, 4, 0.001, 1'.\n" << std::endl;
+                   "exactly 4 commas. Verify that your input string is\n"
+                   "of the form 'weibull, 45e6, 4, 0.001, 1'.\n" << std::endl;
       exit (1);
     } // end if(weibValuesCounter != 4)
     std::string weibMedian;
@@ -2167,7 +2113,5 @@ void Arenisca3::WeibullParser(WeibParameters &iP)
     iP.WeibMod    = atof(weibModulus.c_str());
     iP.WeibRefVol = atof(weibRefVol.c_str());
     iP.WeibSeed   = atoi(weibSeed.c_str());
-    //T2D: is this needed? d_cm.PEAKI1=iP.WeibMed;  // Set this here to satisfy KAYENTA_CHK
   } // End if (iP.Perturb)
 }
-#endif
