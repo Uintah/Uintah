@@ -322,7 +322,8 @@ namespace Uintah {
     Uintah::SimulationStateP sharedState_;
     Uintah::ProblemSpecP particleEqsSpec_;
     std::map<int, Uintah::ParticleSubset*> deleteSet_;
-    std::map<int, long64> lastPIDPerPatch_; // patchID -> last particle ID
+    std::vector< std::map<int, Uintah::ParticleSubset*> > deleteSets_; // patchID -> last particle ID
+    std::vector< std::map<int, long64> > lastPIDPerMaterialPerPatch_; // patchID -> last particle ID
   }; // Class ParticlesHelper
 
 } /* namespace Uintah */
