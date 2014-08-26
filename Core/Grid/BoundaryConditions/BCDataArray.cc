@@ -171,22 +171,6 @@ void BCDataArray::determineIteratorLimits(Patch::FaceType face,
     }
   }
 
-  // A BCDataArry contains a bunch of geometry objects. Here, we remove objects with empty iterators.
-  // The reason that we get geometry objects with zero iterators is that, for a given boundary face
-  // that is shared across several patches, geometry objects are created on ALL patches. Later,
-  // a geometry object is assigned an iterator depending on whether it lives on that patch or not.
-  for (mat_id_itr = d_BCDataArray.begin();
-       mat_id_itr != d_BCDataArray.end(); ++mat_id_itr) {
-    vector<BCGeomBase*>& bc_objects = mat_id_itr->second;
-    for (vector<BCGeomBase*>::iterator obj = bc_objects.begin();
-         obj < bc_objects.end();) {
-      if ( !( (*obj)->hasIterator()) ) {
-        bc_objects.erase(obj);
-      } else {
-        ++obj;
-      }
-    }
-  }
 }
 
 void BCDataArray::addBCData(int mat_id,BCGeomBase* bc)
