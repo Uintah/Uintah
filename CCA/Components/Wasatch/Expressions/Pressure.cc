@@ -182,6 +182,8 @@ Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
                            const int RKStage )
 {
   materialID_ = material;
+  patch_ = const_cast<Uintah::Patch*> (patch);
+  rkStage_ = RKStage;
   
   if( didAllocateMatrix_ ){
     // Todd: instead of checking for allocation - check for new timestep or some other ingenious solution
