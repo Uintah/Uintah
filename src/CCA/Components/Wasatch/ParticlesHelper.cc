@@ -221,12 +221,14 @@ namespace Uintah {
     
     for( int m = 0; m<matls->size(); ++m ){
       const int matl = matls->get(m);
+      std::map<int,long64> lastPIDPerPatch;
+      std::map<int,ParticleSubset*> thisMaterialDeleteSet;
       for( int p=0; p<patches->size(); ++p ){
         const Patch* patch = patches->get(p);
         const int patchID = patch->getID();
         
-        lastPIDPerPatch_.insert( std::pair<int, long64>(patchID, 0 ) );
-        deleteSet_.insert( std::pair<int, ParticleSubset*>(patchID, scinew ParticleSubset(0,matl,patch)));
+        lastPIDPerPatch.insert( std::pair<int, long64>(patchID, 0 ) );
+        thisMaterialDeleteSet.insert( std::pair<int, ParticleSubset*>(patchID, scinew ParticleSubset(0,matl,patch)));
         
         // create a subset with the correct number of particles. This will serve as the initial memory
         // block for particles
@@ -241,8 +243,10 @@ namespace Uintah {
         for (int i=0; i < nParticles; i++) {
           pid[i] = i + patchID;
         }
-        lastPIDPerPatch_[patchID] = nParticles > 0 ? pid[nParticles-1] : 0;
+        lastPIDPerPatch[patchID] = nParticles > 0 ? pid[nParticles-1] : 0;
       }
+      lastPIDPerMaterialPerPatch_.push_back( lastPIDPerPatch );
+      deleteSets_.push_back(thisMaterialDeleteSet);
     }
   }
 
@@ -266,17 +270,19 @@ namespace Uintah {
   {
     using namespace Uintah;
     
-    if (!deleteSet_.empty())
+    if (!deleteSets_.empty())
     {
       return;
     }
     
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
+      std::map<int, ParticleSubset*> thisMaterialDeleteSet;
       for(int p=0;p<patches->size();p++){
         const Patch* patch = patches->get(p);
-        deleteSet_.insert( std::pair<int, ParticleSubset*>(patch->getID(), scinew ParticleSubset(0,matl,patch)));
+        thisMaterialDeleteSet.insert( std::pair<int, ParticleSubset*>(patch->getID(), scinew ParticleSubset(0,matl,patch)));
       }
+      deleteSets_.push_back(thisMaterialDeleteSet);
     }
   }
   
@@ -304,10 +310,11 @@ namespace Uintah {
     using namespace Uintah;
     for( int m = 0; m<matls->size(); ++m ){
       const int matl = matls->get(m);
+      std::map<int, ParticleSubset*> thisMatDelSet;
       for( int p=0; p<patches->size(); ++p ){
         const Patch* patch = patches->get(p);
         ParticleSubset* pset = new_dw->getParticleSubset(matl, patch);
-        ParticleSubset* delset = deleteSet_[patch->getID()];
+        ParticleSubset* delset = thisMatDelSet[patch->getID()];
         
         const Point low  = patch->getBox().lower();
         const Point high = patch->getBox().upper();;
@@ -389,12 +396,13 @@ namespace Uintah {
     using namespace Uintah;
     for( int m = 0; m<matls->size(); ++m ){
       const int matl = matls->get(m);
+      std::map<int,ParticleSubset*>& thisMatDelSet = deleteSets_[m];
       for( int p=0; p<patches->size(); ++p ){
         const Patch* patch = patches->get(p);
-        ParticleSubset* existingDelset = deleteSet_[patch->getID()];
+        ParticleSubset* existingDelset = thisMatDelSet[patch->getID()];
         if( existingDelset->numParticles() > 0 ){
           ParticleSubset* delset = scinew ParticleSubset(0,matl, patch);
-          deleteSet_[patch->getID()] = delset;
+          thisMatDelSet[patch->getID()] = delset;
         }
       }
     }
@@ -467,13 +475,13 @@ namespace Uintah {
     using namespace Uintah;
     for(int m = 0; m<matls->size(); m++){
       const int matl = matls->get(m);
+      std::map<int,ParticleSubset*>& thisMatDelSet = deleteSets_[m];
       for(int p=0;p<patches->size();p++){
         const Patch* patch = patches->get(p);
         ParticleSubset* pset = initialization ? new_dw->getParticleSubset(matl, patch) : old_dw->getParticleSubset(matl, patch);
         const int numParticles =pset->numParticles();
         
-        //ParticleSubset* delset = scinew ParticleSubset(0,matl,patch);
-        new_dw->deleteParticles(deleteSet_[patch->getID()]);
+        new_dw->deleteParticles(thisMatDelSet[patch->getID()]);
         
         ParticleVariable<Point> ppos; // Uintah particle position
         
@@ -486,9 +494,6 @@ namespace Uintah {
         new_dw->get(py,    pYLabel_,                  pset);
         new_dw->get(pz,    pZLabel_,                  pset);
         if (initialization) {
-          //          ParticleVariable<Point> pxtmp;
-          //          new_dw->allocateTemporary(pxtmp, pset);
-          //          new_dw->put(pxtmp, pPosLabel, true);
           new_dw->getModifiable(ppos,    pPosLabel_,          pset);
         } else {
           new_dw->allocateAndPut(ppos,    pPosLabel_,          pset);
@@ -806,11 +811,12 @@ namespace Uintah {
 
     for( int m=0; m<matls->size(); ++m ){
       const int matl = matls->get(m);
+      std::map<int,long64>& lastPIDPerPatch = lastPIDPerMaterialPerPatch_[m];
       for( int p=0; p<patches->size(); ++p ){
         const Patch* patch = patches->get( p );
         const int patchID = patch->getID();
         // get the last particle ID created by this patch. will be used further down.
-        long64& lastPID = lastPIDPerPatch_[patchID];
+        long64& lastPID = lastPIDPerPatch[patchID];
         const long64 pidoffset = patchID * PIDOFFSET;
         
         std::vector<Uintah::Patch::FaceType> bndFaces;

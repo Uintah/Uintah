@@ -141,18 +141,18 @@ namespace Wasatch {
       }
     }
 
+    for(int m = 0;m<matls->size();m++){
+      const int matl = matls->get(m);
+      std::map<int,long64> lastPIDPerPatch;
+      std::map<int,ParticleSubset*> thisMatDelSet;
+      for(int p=0;p<patches->size();p++){
+        const Patch* patch = patches->get(p);
+        const int patchID = patch->getID();
     
-    for(int p=0;p<patches->size();p++){
-      const Patch* patch = patches->get(p);
-      const int patchID = patch->getID();
-      
-      for(int m = 0;m<matls->size();m++){
-        const int matl = matls->get(m);
-
         // create lastPIDPerPatch_ map
-        lastPIDPerPatch_.insert( std::pair<int, long64>(patchID, 0 ) );
+        lastPIDPerPatch.insert( std::pair<int, long64>(patchID, 0 ) );
         // create an empty delete set
-        deleteSet_.insert( std::pair<int, ParticleSubset*>(patch->getID(), scinew ParticleSubset(0,matl,patch)));
+        thisMatDelSet.insert( std::pair<int, ParticleSubset*>(patch->getID(), scinew ParticleSubset(0,matl,patch)));
         
         // If the particle position initialization is bounded, make sure that the bounds are within
         // this patch. If the bounds are NOT, then set the number of particles on this patch to 0.
@@ -219,8 +219,10 @@ namespace Wasatch {
         for (int i=0; i < nParticles; i++) {
           pid[i] = i + patch->getID() * nParticles;
         }
-        lastPIDPerPatch_[patchID] = nParticles > 0 ? pid[nParticles-1] : 0;
+        lastPIDPerPatch[patchID] = nParticles > 0 ? pid[nParticles-1] : 0;
       }
+      lastPIDPerMaterialPerPatch_.push_back(lastPIDPerPatch);
+      deleteSets_.push_back(thisMatDelSet);
     }
   }
   
