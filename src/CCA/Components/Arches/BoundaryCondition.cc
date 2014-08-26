@@ -2533,7 +2533,7 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
                 case ( SWIRL ):
                   bc_iter->second.mass_flow_rate = bc_value; 
                   bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate / 
-                                                   ( area * density[*bound_ptr] ); 
+                                                   ( area * bc_iter->second.density ); 
                   break; 
 
                 case ( STABL ): 
@@ -2750,9 +2750,9 @@ void BoundaryCondition::setSwirl( const Patch* patch, const Patch::FaceType& fac
    IntVector cp = *bound_ptr - insideCellDir; 
 
    uVel[c]  = bc_values.x();
-   uVel[cp] = bc_values.x() * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+   uVel[cp] = bc_values.x();
 
-   double ave_u = (uVel[c] + uVel[cp])/2.0;
+   double ave_u = bc_values.x(); 
 
    Point p = patch->cellPosition(c); 
    vector<double> my_p; 
@@ -2763,10 +2763,11 @@ void BoundaryCondition::setSwirl( const Patch* patch, const Patch::FaceType& fac
    double y = my_p[index_map[dir][1]] - swrl_cent[index_map[dir][1]];
    double z = my_p[index_map[dir][2]] + mDx.z()/2.0 - swrl_cent[index_map[dir][2]];
 
-   double denom = pow(y,2) + pow(z,2); 
+   double denom = pow(y,2.0) + pow(z,2.0); 
    denom = pow(denom,0.5); 
 
-   vVel[c] = -1.0 * z * swrl_no * ave_u /denom; 
+   double bc_v = -1.0 * z * swrl_no * ave_u /denom; 
+   vVel[c] = 2.0*vVel[cp] - bc_v;
 
    y = my_p[index_map[dir][1]] + mDx.y()/2.0 - swrl_cent[index_map[dir][1]];
    z = my_p[index_map[dir][2]] - swrl_cent[index_map[dir][2]]; 
@@ -2774,7 +2775,8 @@ void BoundaryCondition::setSwirl( const Patch* patch, const Patch::FaceType& fac
    denom = pow(y,2) + pow(z,2); 
    denom = pow(denom,0.5); 
 
-   wVel[c] = y * swrl_no * ave_u / denom;
+   double bc_w = y * swrl_no * ave_u / denom;
+   wVel[c] = 2.0*wVel[cp] - bc_w;
 
  }
 }
