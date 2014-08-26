@@ -81,7 +81,6 @@ class RadiationSource
   *boundFluxLabel_, *radiationVolqLabel_;
   
   const SVolField* divQ_;
-  const Uintah::Patch* patch_;
   Uintah::Ray* rmcrt_;
   void schedule_setup_bndflux( const Uintah::LevelP& level,
                               Uintah::SchedulerP sched,
@@ -135,7 +134,6 @@ public:
                             const Uintah::MaterialSubset* const materials,
                             const int RKStage );
 
-  void set_patch( const Uintah::Patch* const patch ){ patch_ = const_cast<Uintah::Patch*> (patch); }
   
   /**
    *  \brief allows Wasatch::TaskInterface to reach in and provide

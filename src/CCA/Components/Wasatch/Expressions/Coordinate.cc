@@ -60,6 +60,15 @@ namespace Wasatch {
   {}
   
   //--------------------------------------------------------------------
+  
+  template < typename FieldT >
+  void
+  Coordinates<FieldT>::bind_operators( const SpatialOps::OperatorDatabase& opDB )
+  {
+    patchContainer_ = opDB.retrieve_operator<UintahPatchContainer>();
+  }
+
+  //--------------------------------------------------------------------
 
   template < typename FieldT >
   void
@@ -70,11 +79,13 @@ namespace Wasatch {
 
   template < typename FieldT >
   void
-  Coordinates<FieldT>::set_patch( const Uintah::Patch* const patch )
+  Coordinates<FieldT>::evaluate()
   {
-    patch_ = const_cast<Uintah::Patch*> (patch);
-    const SCIRun::Vector spacing = patch_->dCell();
+    using namespace SpatialOps;
+    FieldT& phi = this->value();
 
+    const Uintah::Patch* patch = patchContainer_->get_uintah_patch();
+    const SCIRun::Vector spacing = patch->dCell();
     const Direction stagLoc = get_staggered_location<FieldT>();
     switch (stagLoc) {
       case XDIR:
@@ -99,24 +110,13 @@ namespace Wasatch {
       default:
         break;
     }
-  }
-
-  //--------------------------------------------------------------------
-
-  template < typename FieldT >
-  void
-  Coordinates<FieldT>::evaluate()
-  {
-    using namespace SpatialOps;
-    FieldT& phi = this->value();
-
-    const Uintah::IntVector patchCellOffset = patch_->getExtraCellLowIndex(1);
+    const Uintah::IntVector patchCellOffset = patch->getExtraCellLowIndex(1);
 
     // also touch ghost cells to avoid a communication on volume fractions
-    for(Uintah::CellIterator iter(patch_->getExtraCellIterator(1)); !iter.done(); iter++)
+    for(Uintah::CellIterator iter(patch->getExtraCellIterator(1)); !iter.done(); iter++)
     {
       Uintah::IntVector iCell = *iter;
-      const SCIRun::Point xyz( patch_->getCellPosition(iCell) );
+      const SCIRun::Point xyz( patch->getCellPosition(iCell) );
       const IntVector localUintahIJK = iCell - patchCellOffset;
       // now go to local indexing
       const SpatialOps::IntVec localIJK(localUintahIJK[0], localUintahIJK[1], localUintahIJK[2]);
