@@ -260,8 +260,8 @@ Parallel::initializeManager(int& argc, char**& argv)
 
 #ifdef THREADED_MPI_AVAILABLE
      if( provided < required ) {
-       cerr << "Provided MPI parallel support of " << provided 
-            << " is not enough for the required level of " << required <<".\n";
+       cerr << "Provided MPI parallel support of " << provided << " is not enough for the required level of " << required << "\n"
+            << "To use the Unified Scheduler, your MPI implementation needs to support MPI_THREAD_MULTIPLE (level-3)" << std::endl;
        throw InternalError( "Bad MPI level", __FILE__, __LINE__ );
      }
 #endif
