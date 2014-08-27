@@ -133,6 +133,28 @@ namespace Wasatch{
     return so::MemoryWindow( so::IntVec(1,1,1), so::IntVec(0,0,0), so::IntVec(nGhost,nGhost,nGhost) );
   }
 
+  //------------------------------------------------------------------
+  
+  template< typename FieldT >
+  SpatialOps::MemoryWindow
+  get_memory_window_for_masks( const Uintah::Patch* const patch )
+  {
+    so::IntVec bcMinus, bcPlus;
+    get_bc_logicals( patch, bcMinus, bcPlus );
+    
+    const SCIRun::IntVector gs = patch->getCellHighIndex(0) - patch->getCellLowIndex(0);
+    
+    const int nGhost = get_n_ghost<FieldT>();
+    const so::IntVec glob( gs[0] + nGhost*2 + (bcPlus[0] ? FieldT::Location::BCExtra::X : 0),
+                          gs[1] + nGhost*2 + (bcPlus[1] ? FieldT::Location::BCExtra::Y : 0),
+                          gs[2] + nGhost*2 + (bcPlus[2] ? FieldT::Location::BCExtra::Z : 0) );
+    
+    const so::IntVec extent = glob;
+    const so::IntVec offset(0,0,0);
+    
+    return so::MemoryWindow( glob, offset, extent );
+  }
+
 
   //------------------------------------------------------------------
   template<> Uintah::Ghost::GhostType get_uintah_ghost_type<int            >(){ return Uintah::Ghost::AroundCells; }
@@ -165,6 +187,7 @@ namespace Wasatch{
 #define declare_method( FIELDT )                                              \
   template so::MemoryWindow                                                   \
   get_memory_window_for_uintah_field<FIELDT>( const Uintah::Patch* const  );  \
+  template so::MemoryWindow get_memory_window_for_masks<FIELDT>( const Uintah::Patch* const  );  \
   template Uintah::Ghost::GhostType get_uintah_ghost_type<FIELDT>();
 
 #define declare_variants( VOLT )                \
