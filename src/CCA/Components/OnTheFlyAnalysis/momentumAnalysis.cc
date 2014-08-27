@@ -26,6 +26,7 @@
 #include <CCA/Components/OnTheFlyAnalysis/FileInfoVar.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Exceptions/InternalError.h>
 
 #include <Core/Grid/Box.h>
 #include <Core/Grid/DbgOutput.h>
@@ -33,10 +34,6 @@
 #include <Core/Grid/Material.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/SFCXVariable.h>
-#include <Core/Grid/Variables/SFCYVariable.h>
-#include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
 #include <Core/OS/Dir.h> // for MKDIR
@@ -52,7 +49,7 @@ using namespace std;
 //______________________________________________________________________
 //     T O D O
 //
-//  Create a vector of control volumes.  Remove the assumption that 
+//  Create a vector of control volumes.  Remove the assumption that
 //  the entire domain is the CV.
 //  This assumes that the control volume is cubic and aligned with the grid.
 //  The face centered velocities are used to compute the fluxes through
@@ -84,11 +81,13 @@ momentumAnalysis::momentumAnalysis(ProblemSpecP& module_spec,
 
   labels = scinew MA_Labels();
 
-  labels->lastCompTime    = VarLabel::create( "lastCompTime",     max_vartype::getTypeDescription() );
-  labels->fileVarsStruct  = VarLabel::create( "FileInfo_MA",      PerPatch<FileInfoP>::getTypeDescription() );
-  labels->totalCVMomentum = VarLabel::create( "totalCVMomentum",  sumvec_vartype::getTypeDescription() );
-  labels->CS_fluxes       = VarLabel::create( "CS_Fluxes",        sumvec_vartype::getTypeDescription() );
-  labels->delT            = d_sharedState->get_delt_label();
+  labels->lastCompTime       = VarLabel::create( "lastCompTime",      max_vartype::getTypeDescription() );
+  labels->fileVarsStruct     = VarLabel::create( "FileInfo_MA",       PerPatch<FileInfoP>::getTypeDescription() );
+  labels->totalCVMomentum    = VarLabel::create( "totalCVMomentum",   sumvec_vartype::getTypeDescription() );
+  labels->convectMom_fluxes  = VarLabel::create( "convectMom_fluxes", sumvec_vartype::getTypeDescription() );
+  labels->viscousMom_fluxes  = VarLabel::create( "viscousMom_fluxes", sumvec_vartype::getTypeDescription() );
+  labels->pressForces        = VarLabel::create( "pressForces",       sumvec_vartype::getTypeDescription() );
+  labels->delT               = d_sharedState->get_delt_label();
 }
 
 //__________________________________
@@ -111,8 +110,10 @@ momentumAnalysis::~momentumAnalysis()
   VarLabel::destroy( labels->lastCompTime );
   VarLabel::destroy( labels->fileVarsStruct );
   VarLabel::destroy( labels->totalCVMomentum );
-  VarLabel::destroy( labels->CS_fluxes );
-  VarLabel::destroy( labels->delT );
+  VarLabel::destroy( labels->convectMom_fluxes );
+  VarLabel::destroy( labels->viscousMom_fluxes );
+  VarLabel::destroy( labels->pressForces );
+
   delete labels;
 }
 
@@ -172,53 +173,33 @@ void momentumAnalysis::problemSetup(const ProblemSpecP&,
   vector<int> m;
   m.push_back(0);            // matl index for FileInfo label
   m.push_back( d_matlIndx );
+  
+  // remove any duplicate entries
+  sort(m.begin(), m.end());
+  vector<int>::iterator it;
+  it = unique(m.begin(), m.end());
+  m.erase(it, m.end());
+  
   d_matl_set = scinew MaterialSet();
   d_matl_set->addAll(m);
   d_matl_set->addReference();
 
-  //__________________________________
-  //  read in the VarLabel names
-  string uvelFC  = "NULL";
-  string vvelFC  = "NULL";
-  string wvelFC  = "NULL";
-  string velCC  = "NULL";
-  string rhoCC  = "NULL";
+  // HARDWIRED FOR ICE/MPMICE
+  labels->vel_CC    = assignLabel( "vel_CC" );
+  labels->rho_CC    = assignLabel( "rho_CC" );
 
-  if ( d_prob_spec->findBlock( "uvel_FC" ) ){ 
-    d_prob_spec->findBlock( "uvel_FC" )->getAttribute( "label", uvelFC ); 
-  } 
-  if ( d_prob_spec->findBlock( "vvel_FC" ) ){ 
-    d_prob_spec->findBlock( "vvel_FC" )->getAttribute( "label", vvelFC ); 
-  }
-  if ( d_prob_spec->findBlock( "wvel_FC" ) ){ 
-    d_prob_spec->findBlock( "wvel_FC" )->getAttribute( "label", wvelFC ); 
-  }
-  if ( d_prob_spec->findBlock( "vel_CC" ) ){ 
-    d_prob_spec->findBlock( "vel_CC" )->getAttribute( "label", velCC ); 
-  }
-  if ( d_prob_spec->findBlock( "rho_CC" ) ){ 
-    d_prob_spec->findBlock( "rho_CC" )->getAttribute( "label", rhoCC ); 
-  }  
+  labels->uvel_FC   = assignLabel( "uvel_FCME" );
+  labels->vvel_FC   = assignLabel( "vvel_FCME" );
+  labels->wvel_FC   = assignLabel( "wvel_FCME" );
 
-  //__________________________________
-  //  bulletproofing
-  labels->uvel_FC  = VarLabel::find( uvelFC );
-  labels->vvel_FC  = VarLabel::find( vvelFC );
-  labels->wvel_FC  = VarLabel::find( wvelFC );
-  labels->vel_CC  = VarLabel::find( velCC );
-  labels->rho_CC  = VarLabel::find( rhoCC );
-  
-  if( labels->uvel_FC == NULL || labels->uvel_FC == NULL || labels->uvel_FC == NULL ||
-      labels->vel_CC == NULL  || labels->rho_CC == NULL ){
-    ostringstream warn;
-    warn << "ERROR momentumAnalysis One of the VarLabels need to do the analysis does not exist\n"
-         << "    uvelFC address: " << labels->uvel_FC << "\n"
-         << "    vvelFC:         " << labels->vvel_FC << "\n"
-         << "    wvelFC:         " << labels->wvel_FC << "\n"
-         << "    vel_CC:         " << labels->vel_CC << "\n"
-         << "    rho_CC:         " << labels->rho_CC << "\n";
-    throw InternalError(warn.str(), __FILE__, __LINE__);
-  }
+  labels->pressX_FC = assignLabel( "pressX_FC" );
+  labels->pressY_FC = assignLabel( "pressY_FC" );
+  labels->pressZ_FC = assignLabel( "pressZ_FC" );
+
+  labels->tau_X_FC  = assignLabel( "tau_X_FC" );
+  labels->tau_Y_FC  = assignLabel( "tau_Y_FC" );
+  labels->tau_Z_FC  = assignLabel( "tau_Z_FC" );
+
 
   //__________________________________
   // Loop over each face and find the extents
@@ -226,7 +207,6 @@ void momentumAnalysis::problemSetup(const ProblemSpecP&,
   if(! ma_ps) {
     throw ProblemSetupException("ERROR Radiometer: Couldn't find <controlVolume> xml node", __FILE__, __LINE__);
   }
-  
 
   for (ProblemSpecP face_ps = ma_ps->findBlock("Face");
       face_ps != 0; face_ps=face_ps->findNextBlock("Face")) {
@@ -236,13 +216,13 @@ void momentumAnalysis::problemSetup(const ProblemSpecP&,
 
     string side = faceMap["side"];
     int p_dir;
+    int index;
     Vector norm;
-    Patch::FaceType f;
     Point start(-9,-9,-9);
     Point end(-9,-9,-9);
     FaceType type=none;
 
-    faceInfo(side, f, norm, p_dir);
+    faceInfo(side, norm, p_dir, index);
 
     if (faceMap["extents"] == "partialFace"){
 
@@ -254,15 +234,15 @@ void momentumAnalysis::problemSetup(const ProblemSpecP&,
     }else{
       type = entireFace;
     }
-    
+
     // put the input variables into the global struct
-    cv_face* cvFace   = scinew cv_face;
-    cvFace->p_dir     = p_dir;
-    cvFace->normalDir = norm;
-    cvFace->face      = type;
-    cvFace->startPt   = start;
-    cvFace->endPt     = end;
-    d_cv_faces[f]     = cvFace;
+    cv_face* cvFace    = scinew cv_face;
+    cvFace->p_dir      = p_dir;
+    cvFace->normalDir  = norm;
+    cvFace->face       = type;
+    cvFace->startPt    = start;
+    cvFace->endPt      = end;
+    d_cv_faces[index]  = cvFace;
   }
 }
 //______________________________________________________________________
@@ -282,14 +262,14 @@ void momentumAnalysis::scheduleInitialize( SchedulerP& sched,
   sched->addTask(t, d_zeroPatch, d_zeroMatlSet);
 }
 //______________________________________________________________________
-//    
+//
 //______________________________________________________________________
 //
 void momentumAnalysis::initialize( const ProcessorGroup*,
-                                const PatchSubset* patches,
-                                const MaterialSubset*,
-                                DataWarehouse*,
-                                DataWarehouse* new_dw )
+                                   const PatchSubset* patches,
+                                   const MaterialSubset*,
+                                   DataWarehouse*,
+                                   DataWarehouse* new_dw )
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -344,23 +324,34 @@ void momentumAnalysis::scheduleDoAnalysis(SchedulerP& sched,
   Task* t0 = scinew Task( "momentumAnalysis::integrateMomentumField",
                      this,&momentumAnalysis::integrateMomentumField );
 
-  Ghost::GhostType  gn  = Ghost::None; 
+  Ghost::GhostType  gn  = Ghost::None;
 
   MaterialSubset* matl_SS = scinew MaterialSubset();
   matl_SS->add( d_matlIndx );
   matl_SS->addReference();
-      
+
   t0->requires( Task::OldDW, labels->lastCompTime );
   t0->requires( Task::OldDW, labels->delT, level.get_rep() );
 
-  t0->requires( Task::NewDW, labels->vel_CC,   matl_SS, gn );   
-  t0->requires( Task::NewDW, labels->rho_CC,   matl_SS, gn );   
-  t0->requires( Task::NewDW, labels->uvel_FC,  matl_SS, gn );   
-  t0->requires( Task::NewDW, labels->vvel_FC,  matl_SS, gn );
-  t0->requires( Task::NewDW, labels->wvel_FC,  matl_SS, gn );
+  t0->requires( Task::NewDW, labels->vel_CC,    matl_SS, gn );
+  t0->requires( Task::NewDW, labels->rho_CC,    matl_SS, gn );
+
+  t0->requires( Task::NewDW, labels->uvel_FC,   matl_SS, gn );
+  t0->requires( Task::NewDW, labels->vvel_FC,   matl_SS, gn );
+  t0->requires( Task::NewDW, labels->wvel_FC,   matl_SS, gn );
+
+  t0->requires( Task::NewDW, labels->pressX_FC, matl_SS, gn );
+  t0->requires( Task::NewDW, labels->pressY_FC, matl_SS, gn );
+  t0->requires( Task::NewDW, labels->pressZ_FC, matl_SS, gn );
+
+  t0->requires( Task::NewDW, labels->tau_X_FC,  matl_SS, gn );
+  t0->requires( Task::NewDW, labels->tau_Y_FC,  matl_SS, gn );
+  t0->requires( Task::NewDW, labels->tau_Z_FC,  matl_SS, gn );
 
   t0->computes( labels->totalCVMomentum );
-  t0->computes( labels->CS_fluxes );
+  t0->computes( labels->convectMom_fluxes );
+  t0->computes( labels->viscousMom_fluxes );
+  t0->computes( labels->pressForces );  
 
   sched->addTask( t0, level->eachPatch(), d_matl_set );
 
@@ -373,23 +364,25 @@ void momentumAnalysis::scheduleDoAnalysis(SchedulerP& sched,
   t1->requires( Task::OldDW, labels->fileVarsStruct, d_zeroMatl, gn, 0 );
 
   t1->requires( Task::NewDW, labels->totalCVMomentum );
-  t1->requires( Task::NewDW, labels->CS_fluxes );
+  t1->requires( Task::NewDW, labels->convectMom_fluxes );
+  t1->requires( Task::NewDW, labels->viscousMom_fluxes );
+  t1->requires( Task::NewDW, labels->pressForces );
 
   t1->computes( labels->lastCompTime );
   t1->computes( labels->fileVarsStruct, d_zeroMatl );
-  sched->addTask( t1, d_zeroPatch, d_zeroMatlSet);        // you only need to schedule this  patch 0 since all you're doing is writing out data
+  sched->addTask( t1, d_zeroPatch, d_zeroMatlSet);        // you only need to schedule patch 0 since all you're doing is writing out data
 }
 
 //______________________________________________________________________
-//  Compute the total momentum of the control volume and the fluxes passing
-//  through the control surfaces.
+//  Compute the total momentum of the control volume, the fluxes passing
+//  through the control surfaces and the pressure forces
 //______________________________________________________________________
 //
 void momentumAnalysis::integrateMomentumField(const ProcessorGroup* pg,
-                                              const PatchSubset* patches,          
-                                              const MaterialSubset* matl_sub ,     
-                                              DataWarehouse* old_dw,               
-                                              DataWarehouse* new_dw)               
+                                              const PatchSubset* patches,
+                                              const MaterialSubset* matl_sub ,
+                                              DataWarehouse* old_dw,
+                                              DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
   max_vartype analysisTime;
@@ -409,25 +402,21 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup* pg,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing momentumAnalysis::integrateMomentumField");
-    
-    constCCVariable<double> rho_CC;
-    constCCVariable<Vector> vel_CC;
-    constSFCXVariable<double> uvel_FC;
-    constSFCYVariable<double> vvel_FC;
-    constSFCZVariable<double> wvel_FC;
+
+    Vector totalCVMomentum = Vector(0.,0.,0.);
+
+    faceQuantities* faceQ = scinew faceQuantities;
+
+    initializeVars( faceQ );
 
     Vector dx = patch->dCell();
     double vol = dx.x() * dx.y() * dx.z();
+    constCCVariable<double> rho_CC;
+    constCCVariable<Vector> vel_CC;
 
     Ghost::GhostType gn  = Ghost::None;
-    new_dw->get(rho_CC,  labels->rho_CC,     d_matlIndx, patch, gn,0);  
-    new_dw->get(vel_CC,  labels->vel_CC,     d_matlIndx, patch, gn,0);  
-    new_dw->get(uvel_FC, labels->uvel_FC,    d_matlIndx, patch, gn,0);
-    new_dw->get(vvel_FC, labels->vvel_FC,    d_matlIndx, patch, gn,0);
-    new_dw->get(wvel_FC, labels->wvel_FC,    d_matlIndx, patch, gn,0);
-
-    Vector totalCVMomentum = Vector(0.,0.,0.);
-    Vector total_flux      = Vector(0.,0.,0.);
+    new_dw->get(rho_CC,    labels->rho_CC,     d_matlIndx, patch, gn,0);
+    new_dw->get(vel_CC,    labels->vel_CC,     d_matlIndx, patch, gn,0);
 
     //__________________________________
     //  Sum the total momentum over the patch
@@ -437,143 +426,127 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup* pg,
       totalCVMomentum += rho_CC[c] * vol * vel_CC[c];
     }
 
-    cout_dbg.precision(15);
     //__________________________________
-    // Sum the fluxes passing through control volume surface
-    vector<Patch::FaceType> bf;
-    patch->getBoundaryFaces(bf);
+    //
+    if ( patch->hasBoundaryFaces() ) {
 
-    for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+      constSFCXVariable<double> uvel_FC, pressX_FC;
+      constSFCYVariable<double> vvel_FC, pressY_FC;
+      constSFCZVariable<double> wvel_FC, pressZ_FC;
 
-      Patch::FaceType face = *itr;
-      string faceName = patch->getFaceName(face );
-      cv_face* cvFace = d_cv_faces[face];
+      constSFCXVariable<Vector> tau_X_FC;
+      constSFCYVariable<Vector> tau_Y_FC;
+      constSFCZVariable<Vector> tau_Z_FC;
 
-      cout_dbg << "\ncvFace: " <<  faceName << " faceType " << cvFace->face
-               << " startPt: " << cvFace->startPt << " endPt: " << cvFace->endPt << endl;
-      cout_dbg << "          norm: " << cvFace->normalDir << " p_dir: " << cvFace->p_dir << endl;
+      new_dw->get(uvel_FC,   labels->uvel_FC,    d_matlIndx, patch, gn,0);
+      new_dw->get(vvel_FC,   labels->vvel_FC,    d_matlIndx, patch, gn,0);
+      new_dw->get(wvel_FC,   labels->wvel_FC,    d_matlIndx, patch, gn,0);
 
-      // define the iterator on this face  The defauls is the entire face
-      Patch::FaceIteratorType SFC = Patch::SFCVars;
-      CellIterator iterLimits=patch->getFaceIterator(face, SFC);
+      new_dw->get(pressX_FC, labels->pressX_FC,  d_matlIndx, patch, gn,0);
+      new_dw->get(pressY_FC, labels->pressY_FC,  d_matlIndx, patch, gn,0);
+      new_dw->get(pressZ_FC, labels->pressZ_FC,  d_matlIndx, patch, gn,0);
 
-      if( cvFace->face == partialFace ){
+      new_dw->get(tau_X_FC,  labels->tau_X_FC,   d_matlIndx, patch, gn,0);
+      new_dw->get(tau_Y_FC,  labels->tau_Y_FC,   d_matlIndx, patch, gn,0);
+      new_dw->get(tau_Z_FC,  labels->tau_Z_FC,   d_matlIndx, patch, gn,0);
 
-        IntVector lo  = level->getCellIndex( cvFace->startPt );
-        IntVector hi  = level->getCellIndex( cvFace->endPt );
-        IntVector pLo = patch->getCellLowIndex();
-        IntVector pHi = patch->getCellHighIndex();
 
-        IntVector low  = Max(lo, pLo);    // find the intersection
-        IntVector high = Min(hi, pHi);
-
-        iterLimits = CellIterator(low,high);
-      }
-
-      IntVector axes = patch->getFaceAxes(face);
-      int P_dir = axes[0];  // principal direction
-      double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
-
-      cout_dbg << "    face Direction " << patch->faceDirection(face) << endl;
-
+      cout_dbg.precision(15);
       //__________________________________
-      //           X faces
-      if (face == Patch::xminus || face == Patch::xplus) {
-        double area = dx.y() * dx.z();
-        Vector sumMom(0.);
-        cout_dbg << "    iterLimits: " << iterLimits << endl;
+      // Sum the fluxes passing through control volume surface
+      // and the pressure forces
+      vector<Patch::FaceType> bf;
+      patch->getBoundaryFaces(bf);
 
-        for(CellIterator iter = iterLimits; !iter.done();iter++) {
-          IntVector c = *iter;
-          double vel = uvel_FC[c];
+      for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
 
-          // find upwind cell
-          IntVector uw = c;
-          if (vel > 0 ){
-            uw.x( uw.x() -1 );
-          }
+        Patch::FaceType face = *itr;
+        string faceName = patch->getFaceName(face );
+        cv_face* cvFace = d_cv_faces[face];
 
-          double mdot   = plus_minus_one * vel * area * rho_CC[uw];
-          sumMom += mdot * vel_CC[uw];
-          //cout << "face: " << faceName << " c: " << c << " offset: " << offset << " vel = " << vel << " mdot = " << mdot << endl;
+        cout_dbg << "\ncvFace: " <<  faceName << " faceType " << cvFace->face
+                 << " startPt: " << cvFace->startPt << " endPt: " << cvFace->endPt << endl;
+        cout_dbg << "          norm: " << cvFace->normalDir << " p_dir: " << cvFace->p_dir << endl;
+
+        // define the iterator on this face  The default is the entire face
+        Patch::FaceIteratorType SFC = Patch::SFCVars;
+        CellIterator iterLimits=patch->getFaceIterator(face, SFC);
+
+        if( cvFace->face == partialFace ){
+
+          IntVector lo  = level->getCellIndex( cvFace->startPt );
+          IntVector hi  = level->getCellIndex( cvFace->endPt );
+          IntVector pLo = patch->getCellLowIndex();
+          IntVector pHi = patch->getCellHighIndex();
+
+          IntVector low  = Max(lo, pLo);    // find the intersection
+          IntVector high = Min(hi, pHi);
+
+          iterLimits = CellIterator(low,high);
         }
-        total_flux += sumMom;
-        cout_dbg << "    face: " << faceName << " sumMom = " << sumMom << endl;
-      }
-
-      //__________________________________
-      //        Y faces
-      if (face == Patch::yminus || face == Patch::yplus) {
-        double area = dx.x() * dx.z();
-        Vector sumMom(0.);
-        cout_dbg << "    iterLimits: " << iterLimits << endl;
 
 
-        for(CellIterator iter = iterLimits; !iter.done();iter++) {
-          IntVector c = *iter;
-          double vel = vvel_FC[c];
-
-          // find upwind cell
-          IntVector uw = c;
-          if (vel > 0 ){
-            uw.y( uw.y() -1 );
-          }
-
-          double mdot   = plus_minus_one * vel * area * rho_CC[uw];
-          sumMom += mdot * vel_CC[uw];
-
-          //cout << "face: " << faceName << " c: " << c << " offset: " << offset << " vel = " << vel << " mdot = " << mdot << endl;
+        //__________________________________
+        //           X faces
+        if (face == Patch::xminus || face == Patch::xplus) {
+          double area = dx.y() * dx.z();
+          integrateOverFace ( faceName, area, iterLimits, faceQ, uvel_FC, pressX_FC, tau_X_FC, rho_CC, vel_CC);
         }
-        total_flux += sumMom;
-        cout_dbg << "    face: " << faceName << " sumMom = "<< sumMom << endl;;
-      }
 
-      //__________________________________
-      //        Z faces
-      if (face == Patch::zminus || face == Patch::zplus) {
-        double area = dx.x() * dx.y();
-        Vector sumMom(0.);
-        cout_dbg << "    iterLimits: " << iterLimits << endl;
-
-        for(CellIterator iter = iterLimits; !iter.done();iter++) {
-          IntVector c = *iter;
-          double vel = wvel_FC[c];
-          
-          // find upwind cell
-          IntVector uw = c;
-          if (vel > 0 ){
-            uw.z( uw.z() -1 );
-          }
-
-          // compute the average values
-          IntVector cc = c - IntVector(0,0,1);
-
-          double mdot   = plus_minus_one * vel * area * rho_CC[uw];
-          sumMom += mdot * vel_CC[uw];
+        //__________________________________
+        //        Y faces
+        if (face == Patch::yminus || face == Patch::yplus) {
+          double area = dx.x() * dx.z();
+          integrateOverFace( faceName, area, iterLimits,  faceQ, vvel_FC, pressY_FC, tau_Y_FC, rho_CC, vel_CC);
         }
-        total_flux += sumMom;
-        cout_dbg << "    face: " << faceName << " sumMom = "<< sumMom << endl;;
-      }
-    }  // boundary faces
+        //__________________________________
+        //        Z faces
+        if (face == Patch::zminus || face == Patch::zplus) {
+          double area = dx.x() * dx.y();
+          integrateOverFace( faceName, area, iterLimits,  faceQ, wvel_FC, pressZ_FC, tau_Z_FC, rho_CC, vel_CC);
 
-    cout_dbg << "Patch: " << patch->getID() << " totalFlux: " << total_flux <<  " total CV: " << totalCVMomentum << endl;
+        }
 
-    new_dw->put( sumvec_vartype(totalCVMomentum), labels->totalCVMomentum );
-    new_dw->put( sumvec_vartype(total_flux),      labels->CS_fluxes );
+      }  // boundary faces
+
+    }  // patch has faces
+
+
+    //__________________________________
+    //  Now compute the net fluxes from the face quantites
+    Vector net_convect_flux = L_minus_R( faceQ->convect_faceFlux );
+
+    Vector net_viscous_flux = L_minus_R( faceQ->viscous_faceFlux );
+
+    // net force on control volume due to pressure forces
+    map<int, double> pressForce = faceQ->pressForce_face;  // for readability
+    double pressForceX = pressForce[0] - pressForce[1];
+    double pressForceY = pressForce[2] - pressForce[3];
+    double pressForceZ = pressForce[4] - pressForce[5];
+
+    Vector net_press_forces( pressForceX, pressForceY, pressForceZ );
+
+    //__________________________________
+    // put in the dw
+    //cout.precision(15);
+    //cout <<  " Total CV momentum: " << totalCVMomentum << " Net  convectiveFlux: " << net_convect_flux << " viscousFlux: " << net_viscous_flux << " pressForce " << net_press_forces << endl;
+
+    new_dw->put( sumvec_vartype( totalCVMomentum ),     labels->totalCVMomentum );
+    new_dw->put( sumvec_vartype( net_convect_flux ),    labels->convectMom_fluxes );
+    new_dw->put( sumvec_vartype( net_viscous_flux ),    labels->viscousMom_fluxes );
+    new_dw->put( sumvec_vartype( net_press_forces ),    labels->pressForces );
   }  // patch loop
 }
-
-
 
 //______________________________________________________________________
 //
 //______________________________________________________________________
 //
 void momentumAnalysis::doAnalysis(const ProcessorGroup* pg,
-                                const PatchSubset* patches,
-                                const MaterialSubset* matls ,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw)
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls ,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw)
 {
   max_vartype lastTime;
   old_dw->get( lastTime, labels->lastCompTime );
@@ -625,20 +598,33 @@ void momentumAnalysis::doAnalysis(const ProcessorGroup* pg,
       }
       //__________________________________
       //
-      sumvec_vartype totalCVMomentum, total_flux;
+      sumvec_vartype totalCVMomentum, convectFlux, viscousFlux, pressForce;
       new_dw->get( totalCVMomentum, labels->totalCVMomentum );
-      new_dw->get( total_flux,      labels->CS_fluxes );
+      new_dw->get( convectFlux,      labels->convectMom_fluxes );
+      new_dw->get( viscousFlux,      labels->viscousMom_fluxes );
+      new_dw->get( pressForce,       labels->pressForces );
 
+      // so fprintf can deal with it
       Vector momentum = totalCVMomentum;
-      Vector flux = total_flux;
+      Vector conFlux = convectFlux;
+      Vector visFlux = viscousFlux;
+      Vector pForce  = pressForce;
 
-      fprintf(fp, "%16.15E,      %16.15E,       %16.15E,       %16.15E,      %16.15E,       %16.15E,       %16.15E\n", now,
+      fprintf(fp, "%16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E\n", 
+                  now,
                   (double)momentum.x(),
                   (double)momentum.y(),
                   (double)momentum.z(),
-                  (double)flux.x(),
-                  (double)flux.y(),
-                  (double)flux.z() );
+                  (double)conFlux.x(),
+                  (double)conFlux.y(),
+                  (double)conFlux.z(),
+                  (double)visFlux.x(),
+                  (double)visFlux.y(),
+                  (double)visFlux.z(),
+                  (double)pForce.x(),
+                  (double)pForce.y(),
+                  (double)pForce.z()
+              );
 
 //      fflush(fp);   If you want to write the data right now, no buffering.
       time_dw = now;
@@ -655,6 +641,60 @@ void momentumAnalysis::doAnalysis(const ProcessorGroup* pg,
   new_dw->put(max_vartype( time_dw ), labels->lastCompTime);
 }
 
+//______________________________________________________________________
+//  Integrate fluxes/forces over the control volume face
+//______________________________________________________________________
+//
+template < class SFC_D, class SFC_V >
+void momentumAnalysis::integrateOverFace( const std::string faceName,
+                                          const double faceArea,
+                                          CellIterator iter,
+                                          faceQuantities* faceQ,
+                                          SFC_D&  vel_FC,
+                                          SFC_D&  press_FC,
+                                          SFC_V&  tau_FC,
+                                          constCCVariable<double>& rho_CC,
+                                          constCCVariable<Vector>& vel_CC)
+{
+  int dir;    // x, y or z
+  int f;      // face index
+  Vector norm;
+  faceInfo(faceName, norm, dir, f);
+
+  Vector convect_flux( 0. );
+  Vector viscous_flux( 0. );
+  double pressForce( 0. );
+
+  //__________________________________
+  //  Loop over a face
+  for(; !iter.done(); iter++) {
+    IntVector c = *iter;
+    double vel = vel_FC[c];
+
+    // find upwind cell
+    IntVector uw = c;
+    if (vel > 0 ){
+      uw[dir] = c[dir] - 1;
+    }
+
+    // One way to define m dot through face
+    double mdot  =  vel * faceArea * rho_CC[uw];
+
+    // Another way
+    // Vector mdotV  = faceArea * vel_CC[uw] * rho_CC[uw];
+    // double mdot = mdotV[dir];
+
+    convect_flux  += mdot * vel_CC[uw];
+    viscous_flux  += ( faceArea * tau_FC[c] );
+    pressForce    += ( faceArea * press_FC[c] );
+
+  }
+  faceQ->convect_faceFlux[f] = convect_flux;
+  faceQ->viscous_faceFlux[f] = viscous_flux;
+  faceQ->pressForce_face[f]  = pressForce;
+
+//  cout << "face: " << faceName << "\t dir: " << dir << " convect_Flux = " <<  convect_flux << " ViscousFlux " << viscous_flux << " pressForce " << pressForce << endl;
+}
 
 //______________________________________________________________________
 //  Open the file if it doesn't exist and write the file header
@@ -670,53 +710,64 @@ void momentumAnalysis::createFile(string& filename,  FILE*& fp)
   }
 
   fp = fopen(filename.c_str(), "w");
-  fprintf( fp,"# Definitions:\n");
-  fprintf( fp,"#    totalCVMomentum:  the total momentum in the control volume at that instant in time\n" );
-  fprintf( fp,"#    netFlux:          the net flux of momentum through the control surfaces\n" );
-  fprintf( fp,"#Time                      totalCVMomentum.x()         totalCVMomentum.y()         totalCVMomentum.z()         netFlux.x()                  netFlux.y()                  netFlux.z()\n");
-  cout << Parallel::getMPIRank() << " momentumAnalysis:Created file " << filename << endl;
+  fprintf(fp, "#                                                 total momentum in the control volume                                          Net convective momentum flux                                               net viscous flux                                                             pressure force on control vol.\n");                                                                      
+  fprintf(fp, "#Time                    CV_mom.x                 CV_mom.y                  CV_mom.z                  momFlux.x               momFlux.y                momFlux.z                 visFlux.x                 visFlux.y                visFlux.z                 pressForce.x              pressForce.y             pressForce.z\n");
+
+  
+  proc0cout << Parallel::getMPIRank() << " momentumAnalysis:Created file " << filename << endl;
 }
 
 
 //______________________________________________________________________
-//   This is a rip off of what's done int the boundary condition code
+//   This is a rip off of what's done in the boundary condition code
 //______________________________________________________________________
 //
-void momentumAnalysis::faceInfo(const std::string fc,
-                              Patch::FaceType& face_side,
-                              Vector& norm,
-                              int& p_dir)
+void momentumAnalysis::faceInfo( const std::string fc,
+                                 Vector& norm,
+                                 int& p_dir,
+                                 int& index)
 {
-  if (fc ==  "x-"){
+  if (fc == "x-" || fc == "xminus"){
     norm = Vector(-1, 0, 0);
     p_dir = 0;
-    face_side = Patch::xminus;
+    index = 0;
+    return;
   }
-  if (fc == "x+"){
+  if (fc == "x+" || fc == "xplus" ){
     norm = Vector(1, 0, 0);
     p_dir = 0;
-    face_side = Patch::xplus;
+    index = 1;
+    return;
   }
-  if (fc == "y-"){
+  if (fc == "y-" || fc == "yminus" ){
     norm = Vector(0, -1, 0);
     p_dir = 1;
-    face_side = Patch::yminus;
+    index = 2;
+    return;
   }
-  if (fc == "y+"){
+  if (fc == "y+" || fc == "yplus" ){
     norm = Vector(0, 1, 0);
     p_dir = 1;
-    face_side = Patch::yplus;
+    index = 3;
+    return;
   }
-  if (fc == "z-"){
+  if (fc == "z-" || fc == "zminus" ){
     norm = Vector(0, 0, -1);
     p_dir = 2;
-    face_side = Patch::zminus;
+    index = 4;
+    return;
   }
-  if (fc == "z+"){
+  if (fc == "z+" || fc == "zplus" ){
     norm = Vector(0, 0, 1);
     p_dir = 2;
-    face_side = Patch::zplus;
+    index = 5;
+    return;
   }
+
+  ostringstream warn;
+  warn <<" ERROR:MomentumAnalysis face name (" << fc << ") unknown. ";
+
+  throw InternalError( warn.str(), __FILE__, __LINE__ );
 }
 //______________________________________________________________________
 //  bulletProofing on the user inputs
@@ -806,3 +857,58 @@ void momentumAnalysis::bulletProofing(GridP& grid,
      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
    }
 }
+
+//______________________________________________________________________
+//  Find the VarLabel
+//______________________________________________________________________
+//
+VarLabel* momentumAnalysis::assignLabel( const std::string& varName )
+{
+  VarLabel* myLabel  = VarLabel::find( varName );
+
+  if( myLabel == NULL ){
+    ostringstream warn;
+    warn << "ERROR momentumAnalysis One of the VarLabels for the analysis does not exist or could not be found\n"
+         << varName << "  address: " << myLabel << "\n";
+    throw InternalError(warn.str(), __FILE__, __LINE__);
+  }
+
+  return myLabel;
+}
+
+
+//______________________________________________________________________
+//    Initialize the face quantities
+//______________________________________________________________________
+//
+void momentumAnalysis::initializeVars( faceQuantities* faceQ)
+{
+  for ( int f = 0; f < 6; f++ ){
+    faceQ->convect_faceFlux[f] = Vector( 0. ) ;
+    faceQ->viscous_faceFlux[f] = Vector( 0. ) ;
+    faceQ->pressForce_face[f]  = 0.;
+  }
+}
+
+//______________________________________________________________________
+//
+//______________________________________________________________________
+//
+Vector momentumAnalysis::L_minus_R( std::map <int, Vector >& faceFlux)
+{
+  double X_flux  = ( faceFlux[0].x() - faceFlux[1].x() ) +
+                   ( faceFlux[2].x() - faceFlux[3].x() ) +
+                   ( faceFlux[4].x() - faceFlux[5].x() );
+
+  double Y_flux  = ( faceFlux[0].y() - faceFlux[1].y() ) +
+                   ( faceFlux[2].y() - faceFlux[3].y() ) +
+                   ( faceFlux[4].y() - faceFlux[5].y() );
+
+  double Z_flux  = ( faceFlux[0].z() - faceFlux[1].z() ) +
+                   ( faceFlux[2].z() - faceFlux[3].z() ) +
+                   ( faceFlux[4].z() - faceFlux[5].z() );
+
+  Vector net_flux(X_flux, Y_flux, Z_flux);
+  return net_flux;
+}
+
