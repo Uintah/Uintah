@@ -146,11 +146,11 @@ namespace Wasatch{
 
       // plug in time advance expression
       if (rkStage == 1) {
-        create_time_advance_expressions<so::SVolField>(scalarFields_    , solnGraphHelper_, timeInt_);
-        create_time_advance_expressions<so::XVolField>(xVolFields_      , solnGraphHelper_, timeInt_);
-        create_time_advance_expressions<so::YVolField>(yVolFields_      , solnGraphHelper_, timeInt_);
-        create_time_advance_expressions<so::ZVolField>(zVolFields_      , solnGraphHelper_, timeInt_);
-        create_time_advance_expressions<ParticleField>(particleFields_  , solnGraphHelper_, timeInt_);
+        create_time_advance_expressions<so::SVolField>( scalarFields_  , solnGraphHelper_, timeInt_ );
+        create_time_advance_expressions<so::XVolField>( xVolFields_    , solnGraphHelper_, timeInt_ );
+        create_time_advance_expressions<so::YVolField>( yVolFields_    , solnGraphHelper_, timeInt_ );
+        create_time_advance_expressions<so::ZVolField>( zVolFields_    , solnGraphHelper_, timeInt_ );
+        create_time_advance_expressions<ParticleField>( particleFields_, solnGraphHelper_, timeInt_ );
       }
       
       TaskInterface* rhsTask = scinew TaskInterface( solnGraphHelper_->rootIDs,
