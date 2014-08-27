@@ -88,6 +88,7 @@ namespace Uintah {
       double T1_rate_dependence;
       double T2_rate_dependence;
       double subcycling_characteristic_number;
+      bool Use_Disaggregation_Algorithm;
     };
     const VarLabel* pLocalizedLabel;
     const VarLabel* pLocalizedLabel_preReloc;
@@ -109,6 +110,8 @@ namespace Uintah {
     const VarLabel* pCapXLabel_preReloc;
     const VarLabel* pZetaLabel;
     const VarLabel* pZetaLabel_preReloc;
+    const VarLabel* pP3Label;
+    const VarLabel* pP3Label_preReloc;
     const VarLabel* pStressQSLabel;
     const VarLabel* pStressQSLabel_preReloc;
     const VarLabel* pScratchMatrixLabel;
@@ -183,6 +186,7 @@ namespace Uintah {
                     const double & X_n,
                     const double & Zeta_n,
                     const double & coher,
+                    const double & P3,
                     const Matrix3& ep_n,
                     Matrix3& sigma_p,
                     double & X_p,
@@ -222,13 +226,14 @@ namespace Uintah {
                        const double & X_old,     // hydrostatic comrpessive strength at start of substep
                        const double & Zeta_old,  // trace of isotropic backstress at start of substep
                        const double & coher,     // scalar valued coher
+                       const double & P3,      // initial disaggregation strain
                        Matrix3& sigma_new,    // stress at end of substep
                        Matrix3& ep_new,       // plastic strain at end of substep
                        double & X_new,        // hydrostatic comrpessive strength at end of substep
                        double & Zeta_new      // trace of isotropic backstress at end of substep
                       );
 
-    double computeX(double evp);
+    double computeX(const double& evp, const double& P3);
 
     double computedZetadevp(double Zeta,
                             double evp);
