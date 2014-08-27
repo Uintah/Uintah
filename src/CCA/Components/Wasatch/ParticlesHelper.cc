@@ -81,6 +81,25 @@ namespace Uintah {
 
   //------------------------------------------------------------------
   
+  void ParticlesHelper::initialize_internal(const int matSize)
+  {
+    // allocate proper sizes for delete sets and particle IDs
+    if (lastPIDPerMaterialPerPatch_.size() == 0) {
+      for (int m = 0; m<matSize; ++m ) {
+        std::map<int,long64> lastPIDPerPatch;
+        lastPIDPerMaterialPerPatch_.push_back(lastPIDPerPatch);
+      }
+    }
+    if (deleteSets_.size() == 0) {
+      for (int m = 0; m<matSize; ++m ) {
+        std::map<int,ParticleSubset*> thisMaterialDeleteSet;
+        deleteSets_.push_back(thisMaterialDeleteSet);
+      }
+    }
+  }
+  
+  //------------------------------------------------------------------
+  
   void
   ParticlesHelper::needs_boundary_condition(const std::string& varName )
   {
@@ -217,12 +236,15 @@ namespace Uintah {
                                     Uintah::DataWarehouse* new_dw )
   {
     using namespace Uintah;
+    
+    initialize_internal(matls->size());
+    
     particleEqsSpec_->get("ParticlesPerCell",pPerCell_);
     
     for( int m = 0; m<matls->size(); ++m ){
       const int matl = matls->get(m);
-      std::map<int,long64> lastPIDPerPatch;
-      std::map<int,ParticleSubset*> thisMaterialDeleteSet;
+      std::map<int,long64>& lastPIDPerPatch = lastPIDPerMaterialPerPatch_[m];
+      std::map<int,ParticleSubset*>& thisMaterialDeleteSet = deleteSets_[m];
       for( int p=0; p<patches->size(); ++p ){
         const Patch* patch = patches->get(p);
         const int patchID = patch->getID();
@@ -245,8 +267,6 @@ namespace Uintah {
         }
         lastPIDPerPatch[patchID] = nParticles > 0 ? pid[nParticles-1] : 0;
       }
-      lastPIDPerMaterialPerPatch_.push_back( lastPIDPerPatch );
-      deleteSets_.push_back(thisMaterialDeleteSet);
     }
   }
 

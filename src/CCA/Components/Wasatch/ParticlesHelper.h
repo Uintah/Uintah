@@ -302,6 +302,8 @@ namespace Uintah {
                                   const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
                                  Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw );
 
+    void initialize_internal(const int materialSize);
+    
     /**
      * \brief Use this to parse boundary conditions specified in the input file and allocate appropriate
      memory for the boundary particles.
@@ -321,9 +323,8 @@ namespace Uintah {
     unsigned int maxParticles_; //number of maximum initial particles
     Uintah::SimulationStateP sharedState_;
     Uintah::ProblemSpecP particleEqsSpec_;
-    std::map<int, Uintah::ParticleSubset*> deleteSet_;
-    std::vector< std::map<int, Uintah::ParticleSubset*> > deleteSets_; // patchID -> last particle ID
-    std::vector< std::map<int, long64> > lastPIDPerMaterialPerPatch_; // patchID -> last particle ID
+    std::vector< std::map<int, Uintah::ParticleSubset*> > deleteSets_; // material [ patchID -> last particle ID ]
+    std::vector< std::map<int, long64> > lastPIDPerMaterialPerPatch_;  // material [ patchID -> last particle ID ]
   }; // Class ParticlesHelper
 
 } /* namespace Uintah */
