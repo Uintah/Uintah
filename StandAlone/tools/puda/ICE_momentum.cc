@@ -69,8 +69,8 @@ Uintah::ICE_momentum( DataArchive * da, CommandLineFlags & clf )
   // write header to file
   FILE *fp;
   fp = fopen( filename.c_str(),"w");       
-  fprintf(fp, "#                                                 total momentum in the control volume                                          Net convective momentum flux                                                                net viscous flux                                                         pressure force on control vol.\n");                                                                      
-  fprintf(fp, "#Time                      CV_mom.x                   CV_mom.y                    CV_mom.z                    momFlux.x                  momFlux.y                    momFlux.z                    visFlux.x                  visFlux.y                   visFlux.z                  pressForce.x               pressForce.y                pressForce.z               mDot.x                      mDot.y                      mDot.z\n");
+  fprintf(fp, "#                                                 total momentum in the control volume                                          Net convective momentum flux                                               net viscous flux                                                             pressure force on control vol.\n");                                                                      
+  fprintf(fp, "#Time                    CV_mom.x                 CV_mom.y                  CV_mom.z                  momFlux.x               momFlux.y                momFlux.z                 visFlux.x                 visFlux.y                visFlux.z                 pressForce.x              pressForce.y             pressForce.z            mDot.x                    mDot.y                    mDot.z\n");
   fclose(fp);
   
       
@@ -348,7 +348,7 @@ Uintah::ICE_momentum( DataArchive * da, CommandLineFlags & clf )
       
       FILE *fp;
       fp = fopen( filename.c_str(),"a");
-      fprintf(fp, "%16.15E      %16.15E      %16.15E       %16.15E       %16.15E      %16.15E       %16.15E       %16.15E       %16.15E       %16.15E      %16.15E      %16.15E       %16.15E      %16.15E      %16.15E       %16.15E\n", 
+      fprintf(fp, "%16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,    %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E\n", 
                   time, 
                   totalCV_mom.x(),
                   totalCV_mom.y(),
