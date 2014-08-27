@@ -343,6 +343,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
   }
 
+  //copy the temperature into a radiation temperature variable: 
+  d_boundaryCondition->sched_create_radiation_temperature( sched, level, matls, true );
+
   //========NEW STUFF =================================
   //TIMESTEP INIT: 
   typedef std::map<std::string, TaskFactoryBase*> FACMAP; 

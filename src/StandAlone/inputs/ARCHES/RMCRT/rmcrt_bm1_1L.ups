@@ -30,6 +30,7 @@
     <save label="divQ"/>
     <save label="abskg"/>
     <save label="temperature"/>
+    <save label="radiation_temperature"/>
     <save label="sigmaT4"/>
     <save label="cellType"/>
     <save label = "boundFlux" />
@@ -50,8 +51,8 @@
           <value>0.0</value>
         </BCType>
                                 <!-- for RMCRT-->
-        <BCType id="all"  label = "SolidWallTemperature" 
-                                                var="ForcedDirichlet">
+        <BCType id="all"  label = "radiation_temperature" 
+                                                var="Dirichlet">
           <value> 0. </value>
         </BCType>
         <BCType id="all"  label = "abskg"       var="ForcedDirichlet">
@@ -70,8 +71,8 @@
           <value>0.0</value>
         </BCType>
                                 <!-- for RMCRT-->
-        <BCType id="all"  label = "SolidWallTemperature" 
-                                                var="ForcedDirichlet">
+        <BCType id="all"  label = "radiation_temperature" 
+                                                var="Dirichlet">
           <value> 0. </value>
         </BCType>
         <BCType id="all"  label = "abskg"       var="ForcedDirichlet">
@@ -91,8 +92,8 @@
           <value>0.0</value>
         </BCType>
                                 <!-- for RMCRT-->
-        <BCType id="all"  label = "SolidWallTemperature" 
-                                                var="ForcedDirichlet">
+        <BCType id="all"  label = "radiation_temperature" 
+                                                var="Dirichlet">
           <value> 0. </value>
         </BCType>
         <BCType id="all"  label = "abskg"       var="ForcedDirichlet">
@@ -112,8 +113,8 @@
           <value>0.0</value>
         </BCType>
                                 <!-- for RMCRT-->
-        <BCType id="all"  label = "SolidWallTemperature" 
-                                                var="ForcedDirichlet">
+        <BCType id="all"  label = "radiation_temperature" 
+                                                var="Dirichlet">
           <value> 0. </value>
         </BCType>
         <BCType id="all"  label = "abskg"       var="ForcedDirichlet">
@@ -133,8 +134,8 @@
           <value>0.0</value>
         </BCType>
                                 <!-- for RMCRT-->
-        <BCType id="all"  label = "SolidWallTemperature" 
-                                                var="ForcedDirichlet">
+        <BCType id="all"  label = "radiation_temperature" 
+                                                var="Dirichlet">
           <value> 0. </value>
         </BCType>
         <BCType id="all"  label = "abskg"       var="ForcedDirichlet">
@@ -154,8 +155,8 @@
           <value>0.0</value>
         </BCType>
                                 <!-- for RMCRT-->
-        <BCType id="all"  label = "SolidWallTemperature" 
-                                                var="ForcedDirichlet">
+        <BCType id="all"  label = "radiation_temperature" 
+                                                var="Dirichlet">
           <value> 0. </value>
         </BCType>
         <BCType id="all"  label = "abskg"       var="ForcedDirichlet">

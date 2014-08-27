@@ -993,9 +993,6 @@
             <calc_frequency             spec="OPTIONAL INTEGER" need_applies_to="type do_radiation rmcrt_radiation" /> <!-- calculate radiation every N steps, default = 3 --> 
             <!--abskp_label                spec="OPTIONAL STRING"  need_applies_to="type do_radiation rmcrt_radiation" /--> <!-- Derek -->  
             <calc_on_all_RKsteps        spec="OPTIONAL BOOLEAN" need_applies_to="type do_radiation rmcrt_radiation" /> <!-- calculate radiation every RK step, default = false --> 
-            <temperature                spec="OPTIONAL NO_DATA"  
-                                        attribute1="label REQUIRED STRING"
-                                        need_applies_to="type do_radiation rmcrt_radiation" />                         <!-- string label of temperature, default = temperature -->
             <abskg                      spec="OPTIONAL NO_DATA"  
                                         attribute1="label REQUIRED STRING"
                                         need_applies_to="type do_radiation rmcrt_radiation" />                         <!-- string label of abskg, default = abskg. NOTE: This is referenced to the 
