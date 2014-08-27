@@ -384,6 +384,9 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
     
     d_ice->scheduleMaxMach_on_Lodi_BC_Faces(        sched, ice_level,ice_matls);
   }
+  
+  // diagnostic task
+  //d_mpm->scheduleTotalParticleCount(          sched, mpm_patches, mpm_matls);
    
   d_mpm->scheduleApplyExternalLoads(          sched, mpm_patches, mpm_matls);
   d_mpm->scheduleInterpolateParticlesToGrid(  sched, mpm_patches, mpm_matls);
