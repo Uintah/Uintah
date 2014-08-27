@@ -74,8 +74,8 @@ namespace Wasatch{
       Expr::Tag rhsTag;
       
       FieldInfo( const std::string& name,
-                Expr::Tag varTag,
-                Expr::Tag rhsVarTag )
+                 Expr::Tag varTag,
+                 Expr::Tag rhsVarTag )
         : varname( name ), solnVarTag(varTag), rhsTag(rhsVarTag)
       {}
       bool operator==( const FieldInfo& fi ) const{ return varname.compare(fi.varname); }
@@ -87,17 +87,17 @@ namespace Wasatch{
 
     Uintah::SimulationStateP sharedState_;
 
-    typedef std::set< FieldInfo<SpatialOps::SVolField> > ScalarFields;
-    typedef std::set< FieldInfo<SpatialOps::XVolField> > XVolFields;
-    typedef std::set< FieldInfo<SpatialOps::YVolField> > YVolFields;
-    typedef std::set< FieldInfo<SpatialOps::ZVolField> > ZVolFields;
+    typedef std::set< FieldInfo<SpatialOps::SVolField              > > ScalarFields;
+    typedef std::set< FieldInfo<SpatialOps::XVolField              > > XVolFields;
+    typedef std::set< FieldInfo<SpatialOps::YVolField              > > YVolFields;
+    typedef std::set< FieldInfo<SpatialOps::ZVolField              > > ZVolFields;
     typedef std::set< FieldInfo<SpatialOps::Particle::ParticleField> > ParticleFields;
 
-    ScalarFields   scalarFields_;   ///< A vector of the scalar fields being solved by this time integrator.
-    XVolFields     xVolFields_;     ///< A vector of the x-volume fields being solved by this time integrator.
-    YVolFields     yVolFields_;     ///< A vector of the y-volume fields being solved by this time integrator.
-    ZVolFields     zVolFields_;     ///< A vector of the z-volume fields being solved by this time integrator.
-    ParticleFields particleFields_; ///< A vector of the particle fields being solved by this time integrator.
+    ScalarFields   scalarFields_;   ///< the scalar   fields being solved by this time integrator.
+    XVolFields     xVolFields_;     ///< the x-volume fields being solved by this time integrator.
+    YVolFields     yVolFields_;     ///< the y-volume fields being solved by this time integrator.
+    ZVolFields     zVolFields_;     ///< the z-volume fields being solved by this time integrator.
+    ParticleFields particleFields_; ///< the particle fields being solved by this time integrator.
     
     GraphHelper* const solnGraphHelper_;
     GraphHelper* const postProcGraphHelper_;      
@@ -134,7 +134,6 @@ namespace Wasatch{
                          Uintah::DataWarehouse* const newDW,
                          Expr::ExpressionFactory* const factory,
                          const int rkStage );
-
 
   public:
 

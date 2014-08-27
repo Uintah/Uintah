@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -34,15 +34,15 @@
 template< typename FieldT >
 TimeAdvance<FieldT>::
 TimeAdvance( const std::string& solnVarName,
-            const Expr::Tag& phiOldTag,
-            const Expr::Tag& rhsTag,
-            const Wasatch::TimeIntegrator timeIntInfo )
+             const Expr::Tag& phiOldTag,
+             const Expr::Tag& rhsTag,
+             const Wasatch::TimeIntegrator timeIntInfo )
 : Expr::Expression<FieldT>(),
-  phioldt_     ( phiOldTag                         ),
-  rhst_        ( rhsTag                            ),
-  dtt_         ( Wasatch::TagNames::self().dt      ),
-  rkstaget_    ( Wasatch::TagNames::self().rkstage ),
-  timeIntInfo_ ( timeIntInfo                       )
+  phioldt_    ( phiOldTag                         ),
+  rhst_       ( rhsTag                            ),
+  dtt_        ( Wasatch::TagNames::self().dt      ),
+  rkstaget_   ( Wasatch::TagNames::self().rkstage ),
+  timeIntInfo_( timeIntInfo                       )
 {
   this->set_gpu_runnable( true );
 }
@@ -82,14 +82,6 @@ bind_fields( const Expr::FieldManagerList& fml )
   dt_     = &doublefm.field_ref(dtt_     );
   rkStage_= &doublefm.field_ref(rkstaget_);
 }
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-TimeAdvance<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
 
 //--------------------------------------------------------------------
 
@@ -148,7 +140,6 @@ Builder::Builder( const Expr::Tag& result,
   timeIntInfo_( timeIntInfo )
 {}
 
-
 //--------------------------------------------------------------------
 
 template< typename FieldT >
@@ -159,7 +150,6 @@ TimeAdvance<FieldT>::Builder::build() const
 }
 
 //--------------------------------------------------------------------
-
 
 //==========================================================================
 // Explicit template instantiation for supported versions of this expression
