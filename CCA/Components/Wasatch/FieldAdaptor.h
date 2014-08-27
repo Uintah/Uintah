@@ -99,6 +99,15 @@ namespace Wasatch{
   get_memory_window_for_uintah_field( const Uintah::Patch* const patch );
 
   /**
+   *  \ingroup WasatchFields
+   *  \brief Obtain a memory window that can be used to construct a SpatialMask for FieldT
+   *  \param patch - The patch that the field is associated with.
+   */
+  template<typename FieldT>
+  SpatialOps::MemoryWindow
+  get_memory_window_for_masks( const Uintah::Patch* const patch );
+
+  /**
    *  \ingroup WasatchParser
    *  \brief translate a string describing a field type to the FieldTypes enum.
    */
