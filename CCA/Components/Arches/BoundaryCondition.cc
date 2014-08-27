@@ -34,6 +34,7 @@
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #include <CCA/Components/Arches/IntrusionBC.h>
 #include <CCA/Components/Arches/Filter.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
@@ -106,6 +107,8 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
   index_map[2][1] = 2; 
   index_map[2][2] = 0; 
 
+  d_radiation_temperature_label = VarLabel::create("radiation_temperature", CCVariable<double>::getTypeDescription()); 
+
 }
 
 
@@ -128,6 +131,8 @@ BoundaryCondition::~BoundaryCondition()
   if (_using_new_intrusion) { 
     delete _intrusionBC; 
   } 
+
+  VarLabel::destroy(d_radiation_temperature_label); 
 }
 
 //****************************************************************************
@@ -4216,3 +4221,76 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
     }
   }
 }
+
+void 
+BoundaryCondition::sched_create_radiation_temperature( SchedulerP& sched, const LevelP& level, const MaterialSet* matls, const bool use_old_dw )
+{
+  bool radiation = false; 
+  SourceTermFactory& srcs = SourceTermFactory::self(); 
+  if ( srcs.source_type_exists("do_radiation") ){
+    radiation = true; 
+  }
+  if ( srcs.source_type_exists( "rmcrt_radiation") ){
+    radiation = true;
+  }
+
+  if ( radiation ){ 
+    string taskname = "BoundaryCondition::create_radiation_temperature"; 
+    Task* tsk = scinew Task(taskname, this, &BoundaryCondition::create_radiation_temperature, use_old_dw ); 
+
+    //WARNING! HACK HERE FOR CONSTANT TEMPERATURE NAME
+    d_temperature_label = VarLabel::find("temperature"); 
+
+    tsk->computes(d_radiation_temperature_label); 
+
+    //WARNING! THIS ASSUMES WE ARE DOING RADIATION ONCE PER TIMESTEP ON RK STEP = 0
+    if ( use_old_dw ){
+      tsk->requires(Task::OldDW, d_temperature_label, Ghost::None, 0); 
+    } else { 
+      tsk->requires(Task::NewDW, d_temperature_label, Ghost::None, 0); 
+    }
+ 
+
+    sched->addTask( tsk, level->eachPatch(), matls ); 
+  }
+}
+
+void 
+BoundaryCondition::create_radiation_temperature( const ProcessorGroup* pc, 
+                                                 const PatchSubset* patches, 
+                                                 const MaterialSubset* matls, 
+                                                 DataWarehouse* old_dw, 
+                                                 DataWarehouse* new_dw,
+                                                 const bool use_old_dw ) 
+{
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+
+    int archIndex = 0;
+
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> radiation_temperature; 
+
+    constCCVariable<double> old_temperature; 
+
+
+    new_dw->allocateAndPut( radiation_temperature, d_radiation_temperature_label, matlIndex, patch );
+
+    if ( use_old_dw ){ 
+      old_dw->get( old_temperature, d_temperature_label, matlIndex, patch, Ghost::None, 0 ); 
+    } else { 
+      new_dw->get( old_temperature, d_temperature_label, matlIndex, patch, Ghost::None, 0 ); 
+      d_newBC->checkForBC( pc, patch, "radiation_temperature"); 
+    }
+
+    radiation_temperature.copyData(old_temperature); 
+
+    d_newBC->setExtraCellScalarValueBC( pc, patch, radiation_temperature, "radiation_temperature" );
+
+  }
+}
+
+

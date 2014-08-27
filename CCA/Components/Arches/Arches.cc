@@ -1267,6 +1267,7 @@ Arches::scheduleInitialize(const LevelP& level,
   bool modify_ref_den = true;
   int time_substep = 0; //no meaning here, but is required to be zero for 
                         //variables to be properly allocated. 
+                        //
   d_props->doTableMatching();
   d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, time_substep );
 
@@ -1362,6 +1363,8 @@ Arches::scheduleInitialize(const LevelP& level,
   }
 
   d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
+  
+  d_boundaryCondition->sched_create_radiation_temperature( sched, level, matls, false );
 
   if ( _doLagrangianParticles ){ 
     _particlesHelper->schedule_sync_particle_position(level,sched,true);

@@ -5,9 +5,7 @@
 #include <CCA/Ports/SchedulerP.h>
 
 #include <Core/Exceptions/InvalidState.h>
-#include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Grid/BoundaryConditions/BCUtils.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Task.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -274,130 +272,6 @@ BoundaryCondition_new::readInputFile( std::string file_name, BoundaryCondition_n
 
   gzclose( file ); 
 
-}
-//---------------------------------------------------------------------------
-// Method: Set Scalar BC values 
-//---------------------------------------------------------------------------
-void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
-                                              const Patch* patch,
-                                              CCVariable<double>& scalar, 
-                                              string varname )
-{
-  // This method sets the value of the scalar in the boundary cell
-  // so that the boundary condition set in the input file is satisfied. 
-  vector<Patch::FaceType>::const_iterator iter;
-  vector<Patch::FaceType> bf;
-  patch->getBoundaryFaces(bf);
-  Vector Dx = patch->dCell(); 
-
-  for (iter = bf.begin(); iter !=bf.end(); iter++){
-    Patch::FaceType face = *iter;
-
-    //get the face direction
-    IntVector insideCellDir = patch->faceDirection(face);
-    //get the number of children
-    int numChildren = patch->getBCDataArray(face)->getNumberChildren(d_matl_id); //assumed one material
-
-    for (int child = 0; child < numChildren; child++){
-
-      double bc_value = -9; 
-      Vector bc_v_value(0,0,0); 
-      std::string bc_s_value = "NA";
-
-      Iterator bound_ptr;
-      string bc_kind = "NotSet"; 
-      string face_name; 
-      getBCKind( patch, face, child, varname, d_matl_id, bc_kind, face_name ); 
-
-      bool foundIterator = "false"; 
-      if ( bc_kind == "Tabulated" || bc_kind == "FromFile" ){ 
-        foundIterator = 
-          getIteratorBCValue<std::string>( patch, face, child, varname, d_matl_id, bc_s_value, bound_ptr ); 
-      } else {
-        foundIterator = 
-          getIteratorBCValue<double>( patch, face, child, varname, d_matl_id, bc_value, bound_ptr ); 
-      } 
-
-      if (foundIterator) {
-        // --- notation --- 
-        // bp1: boundary cell + 1 or the interior cell one in from the boundary
-        if (bc_kind == "Dirichlet") {
-
-          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-            IntVector bp1(*bound_ptr - insideCellDir);
-            scalar[*bound_ptr] = 2.0*bc_value - scalar[bp1];
-          }
-
-        } else if (bc_kind == "Neumann") {
-
-          IntVector axes = patch->getFaceAxes(face);
-          int P_dir = axes[0];  // principal direction
-          double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
-          double dx = Dx[P_dir];
-          
-          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-            IntVector bp1(*bound_ptr - insideCellDir); 
-            scalar[*bound_ptr] = scalar[bp1] + plus_minus_one * dx * bc_value;
-          }
-        } else if (bc_kind == "FromFile") { 
-
-          ScalarToBCValueMap::iterator i_scalar_bc_storage = scalar_bc_from_file.find( face_name ); 
-
-          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-
-            IntVector rel_bc = *bound_ptr - i_scalar_bc_storage->second.relative_ijk; 
-            CellToValueMap::iterator iter = i_scalar_bc_storage->second.values.find( rel_bc ); //<----WARNING ... May be slow here
-            if ( iter != i_scalar_bc_storage->second.values.end() ){ 
-
-              double file_bc_value = iter->second; 
-              IntVector bp1(*bound_ptr - insideCellDir);
-              scalar[*bound_ptr] = 2.0 * file_bc_value - scalar[bp1]; 
-
-            } else if ( i_scalar_bc_storage->second.default_type == "Neumann" ){  
-        
-              IntVector axes = patch->getFaceAxes(face);
-              int P_dir = axes[0];  // principal direction
-              double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
-              double dx = Dx[P_dir];
-              IntVector bp1(*bound_ptr - insideCellDir); 
-              scalar[*bound_ptr] = scalar[bp1] + plus_minus_one * dx * i_scalar_bc_storage->second.default_value;
-
-            } else if ( i_scalar_bc_storage->second.default_type == "Dirichlet" ){ 
-
-              IntVector bp1(*bound_ptr - insideCellDir); 
-              scalar[*bound_ptr] = 2.0*i_scalar_bc_storage->second.default_value - scalar[bp1];
-
-            } 
-          }
-        } else if ( bc_kind == "Tabulated") {
-
-          MapDoubleMap::iterator i_face = _tabVarsMap.find( face_name );
-
-          if ( i_face != _tabVarsMap.end() ){ 
-
-            DoubleMap::iterator i_var = i_face->second.find( varname ); 
-            double tab_bc_value = i_var->second;
-
-            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-              IntVector bp1(*bound_ptr - insideCellDir);
-              scalar[*bound_ptr] = 2.0 * tab_bc_value - scalar[bp1];
-            }
-
-          }
-        } else if ( bc_kind == "ForcedDirichlet") {
-          /* A Dirichlet condition to fix the cell value rather than use interpolate
-          This is required to use for cqmom with velocities as internal coordiantes,
-          and may help with some radiation physics */
-          
-          //Here the extra cell should be set to the face value so that the cqmom inversion
-          //doesn't return junk, with upwinding of the abscissas this should return correct face value
-          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-            scalar[*bound_ptr] = bc_value;
-          }
-        }
-      }
-    }
-  }
 }
 
 //---------------------------------------------------------------------------

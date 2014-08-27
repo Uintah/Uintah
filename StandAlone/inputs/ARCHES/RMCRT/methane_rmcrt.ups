@@ -36,6 +36,7 @@
 
     <!-- radiation properties --> 
     <save label="abskg"/>
+    <save label="radiation_temperature"/>
 
     <!-- table look ups --> 
     <save label="density"     table_lookup="true"/>
@@ -89,8 +90,8 @@
                             <value>adiabaticenthalpy</value> <!-- Pure oxidizer enthalpy --> 
         </BCType>
                         <!-- for RMCRT-->
-        <BCType id="0"  label= "SolidWallTemperature" var="Neumann">
-                            <value> 0. </value>
+        <BCType id="0"  label= "radiation_temperature" var="Tabulated">
+                            <value>temperature</value>
         </BCType>
         <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1. </value>
@@ -121,8 +122,8 @@
                             <value>0.0</value> <!-- Pure oxidizer enthalpy --> 
         </BCType>
                         <!-- for RMCRT-->
-        <BCType id="0"  label= "SolidWallTemperature"  var="Neumann">
-                            <value> 0. </value>
+        <BCType id="0"  label= "radiation_temperature"  var="Dirichlet">
+                            <value> 298 </value>
         </BCType>
         <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1. </value>
@@ -153,8 +154,8 @@
                             <value>adiabaticenthalpy</value> <!-- Pure oxidizer enthalpy --> 
         </BCType>
                         <!-- for RMCRT-->
-        <BCType id="0"  label= "SolidWallTemperature" var="Neumann">
-                            <value> 0. </value>
+        <BCType id="0"  label= "radiation_temperature" var="Tabulated">
+                            <value> temperature </value>
         </BCType>
         <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1. </value>
@@ -186,8 +187,8 @@
                             <value>0.0</value> 
         </BCType>
                         <!-- for RMCRT-->
-        <BCType id="0"  label= "SolidWallTemperature" var="Neumann">
-                            <value> 0. </value>
+        <BCType id="0"  label= "radiation_temperature" var="Dirichlet">
+                            <value> 298 </value>
         </BCType>
         <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1. </value>
@@ -217,8 +218,8 @@
                             <value>0.0</value> 
         </BCType>
                         <!-- for RMCRT-->
-        <BCType id="0"  label= "SolidWallTemperature"  var="Neumann">
-                            <value> 0. </value>
+        <BCType id="0"  label= "radiation_temperature"  var="Dirichlet">
+                            <value> 298 </value>
         </BCType>
         <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1. </value>
@@ -248,8 +249,8 @@
                             <value>0.0</value> 
         </BCType>
                         <!-- for RMCRT-->
-        <BCType id="0"  label= "SolidWallTemperature" var="Neumann">
-                            <value> 0. </value>
+        <BCType id="0"  label= "radiation_temperature" var="Dirichlet">
+                            <value> 298 </value>
         </BCType>
         <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1. </value>
@@ -279,8 +280,8 @@
                             <value>0.0</value> 
         </BCType>
                         <!-- for RMCRT-->
-        <BCType id="0"  label= "SolidWallTemperature" var="Neumann">
-                            <value> 0. </value>
+        <BCType id="0"  label= "radiation_temperature" var="Dirichlet">
+                            <value> 298 </value>
         </BCType>
         <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1. </value>
@@ -311,8 +312,8 @@
                             <value>0.0</value>
         </BCType>
                         <!-- for RMCRT-->
-        <BCType id="0"  label= "SolidWallTemperature"  var="Neumann">
-                            <value> 0. </value>
+        <BCType id="0"  label= "radiation_temperature"  var="Dirichlet">
+                            <value> 298 </value>
         </BCType>
         <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1. </value>

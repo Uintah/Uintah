@@ -32,6 +32,7 @@
     <save label="scalar_var"/>
     <save label="heat_loss"/>
 <!-- dv's -->
+    <save label="radiation_temperature"/>
     <save label="density" table_lookup="true"/>
     <save label="CO2" table_lookup="true"/>
     <save label="O2" table_lookup="true"/>
@@ -66,8 +67,8 @@
         <BCType id="all" label="scalar_var" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="SolidWallTemperature" var="Dirichlet">
-          <value>298</value>
+        <BCType id="all" label="radiation_temperature" var="Dirichlet">
+          <value>298.0</value>
         </BCType>
       </Face>
       <Face side="x+" name="x+ wall">
@@ -89,6 +90,9 @@
         <BCType id="all" label="scalar_var" var="Dirichlet">
           <value>0.0</value>
         </BCType>
+        <BCType id="all" label="radiation_temperature" var="Dirichlet">
+          <value>298.0</value>
+        </BCType>
       </Face>
       <Face side="y-" name="y- wall">
         <BCType id="all" label="y-pressure" var="PressureBC">
@@ -108,6 +112,9 @@
         </BCType>
         <BCType id="all" label="scalar_var" var="Dirichlet">
           <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="radiation_temperature" var="Dirichlet">
+          <value>298.</value>
         </BCType>
       </Face>
       <Face side="y+" name="y+ wall">
@@ -129,6 +136,9 @@
         <BCType id="all" label="scalar_var" var="Dirichlet">
           <value>0.0</value>
         </BCType>
+        <BCType id="all" label="radiation_temperature" var="Dirichlet">
+          <value>298</value>
+        </BCType>
       </Face>
       <Face side="z-" name="z- wall">
         <BCType id="all" label="z-pressure" var="PressureBC">
@@ -149,6 +159,9 @@
         <BCType id="all" label="scalar_var" var="Dirichlet">
           <value>0.0</value>
         </BCType>
+        <BCType id="all" label="radiation_temperature" var="Dirichlet">
+          <value>298</value>
+        </BCType>
       </Face>
       <Face side="z+" name="z+ wall">
         <BCType id="all" label="z+pressure" var="PressureBC">
@@ -168,6 +181,9 @@
         </BCType>
         <BCType id="all" label="scalar_var" var="Dirichlet">
           <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="radiation_temperature" var="Dirichlet">
+          <value>298</value>
         </BCType>
       </Face>
     </BoundaryConditions>

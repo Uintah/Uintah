@@ -95,11 +95,8 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
   _ps = inputdb; 
   _ps->getWithDefault( "calc_frequency",       _radiation_calc_freq, 3 ); 
   _ps->getWithDefault( "calc_on_all_RKsteps",  _all_rk,              false );  
-  _T_label_name = "temperature"; 
+  _T_label_name = "radiation_temperature"; 
   
-  if ( _ps->findBlock("temperature")){ 
-    _ps->findBlock("temperature")->getAttribute("label",_T_label_name); 
-  } 
   if ( _ps->findBlock("abskg")){ 
     _ps->findBlock("abskg")->getAttribute("label", _abskg_label_name); 
   } else { 
