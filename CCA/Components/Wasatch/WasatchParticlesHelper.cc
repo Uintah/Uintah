@@ -75,7 +75,7 @@ namespace Wasatch {
                                    Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw)
   {
     using namespace Uintah;
-
+    initialize_internal(matls->size());
     //____________________________________________
     /* In certain cases of particle initialization, a patch will NOT have any particles in it. For example,
      given a domain where x[0, 1] with patch0 [0,0.5] and patch1[0.5,1], assume one wants to initialize
@@ -140,11 +140,12 @@ namespace Wasatch {
         }
       }
     }
-
+  
+    
     for(int m = 0;m<matls->size();m++){
       const int matl = matls->get(m);
-      std::map<int,long64> lastPIDPerPatch;
-      std::map<int,ParticleSubset*> thisMatDelSet;
+      std::map<int,long64>& lastPIDPerPatch = lastPIDPerMaterialPerPatch_[m];
+      std::map<int,ParticleSubset*>& thisMatDelSet = deleteSets_[m];
       for(int p=0;p<patches->size();p++){
         const Patch* patch = patches->get(p);
         const int patchID = patch->getID();
@@ -221,8 +222,6 @@ namespace Wasatch {
         }
         lastPIDPerPatch[patchID] = nParticles > 0 ? pid[nParticles-1] : 0;
       }
-      lastPIDPerMaterialPerPatch_.push_back(lastPIDPerPatch);
-      deleteSets_.push_back(thisMatDelSet);
     }
   }
   
