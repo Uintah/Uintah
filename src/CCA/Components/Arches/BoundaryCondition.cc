@@ -2055,8 +2055,44 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
 
           my_info.type = SWIRL; 
           my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
+          my_info.velocity = Vector(0,0,0); 
+          my_info.mass_flow_rate = 0.0;
           db_BCType->require("swirl_no", my_info.swirl_no);
           db_BCType->require("swirl_centroid", my_info.swirl_cent); 
+
+          //compute the density:
+          typedef std::vector<std::string> StringVec; 
+          MixingRxnModel* mixingTable = d_props->getMixRxnModel(); 
+          StringVec iv_var_names = mixingTable->getAllIndepVars(); 
+          vector<double> iv; 
+
+          for ( StringVec::iterator iv_iter = iv_var_names.begin(); iv_iter != iv_var_names.end(); iv_iter++){
+
+            string curr_iv = *iv_iter; 
+
+            for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != 0; 
+                db_BCType2 = db_BCType2->findNextBlock("BCType") ){
+
+              string curr_var; 
+              db_BCType2->getAttribute("label",curr_var);
+
+              if ( curr_var == curr_iv ){
+                string type;
+                db_BCType2->getAttribute("var",type);
+                if ( type != "Dirichlet"){
+                  throw InvalidValue("Error: Cannot compute property values for MassFlowInlet because not all IVs are of type Dirichlet: "+curr_var, __FILE__, __LINE__); 
+                } else { 
+                  double value; 
+                  db_BCType2->require("value",value);
+                  iv.push_back(value);
+                }
+              }
+            }
+          }
+
+          double density = mixingTable->getTableValue(iv,"density");
+          my_info.density = density; 
+
 
           // note that the mass flow rate is in the BCstruct value 
 
