@@ -36,6 +36,8 @@ using namespace Uintah;
 const double MDConstants::PI= acos(-1.0);
 const double MDConstants::PI_Over_2 = PI/2.0;
 const double MDConstants::PI2 = PI*PI;
+const double MDConstants::rootPI = sqrt(PI);
+
 const double MDConstants::orthogonalAngle = 90.0;
 const double MDConstants::degToRad = PI/180.0;
 const double MDConstants::radToDeg = 180.0/PI;

@@ -55,6 +55,7 @@ namespace Uintah {
       static const double PI;                           // Pi
       static const double PI2;                          // Pi^2
       static const double PI_Over_2;                    // Pi/2
+      static const double rootPI;                       // sqrt(Pi)
       static const double orthogonalAngle;              // 90 degrees
       static const double degToRad;                     // (Pi/2) / 180.0
       static const double radToDeg;                     // 180.0  / (Pi/2)
