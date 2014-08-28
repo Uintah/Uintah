@@ -51,35 +51,34 @@ void SPME::addInitializeComputes(Task* task, MDLabel* label) const
   task->computes(label->electrostatic->sForwardTransformPlan);
   task->computes(label->electrostatic->sBackwardTransformPlan);
 
-  // The following may be required to be initialized to keep the DW
-  // from fouling itself.
-
-  task->computes(label->electrostatic->pF_electroInverse);
-  task->computes(label->electrostatic->pF_electroReal);
-
-  if (f_polarizable) {
-    task->computes(label->electrostatic->pMu);
-    task->computes(label->electrostatic->pE_electroReal);
-    task->computes(label->electrostatic->pE_electroInverse);
-  }
-
+// Universal reduction variables
   task->computes(label->electrostatic->rElectrostaticInverseEnergy);
   task->computes(label->electrostatic->rElectrostaticInverseStress);
   task->computes(label->electrostatic->rElectrostaticRealEnergy);
   task->computes(label->electrostatic->rElectrostaticRealStress);
 
-  if (f_polarizable) {
+// Universal particle variables
+  task->computes(label->electrostatic->pF_electroInverse);
+  task->computes(label->electrostatic->pF_electroReal);
+
+  if (f_polarizable)
+  {
+// Polarizable specific reduction variables
     task->computes(label->electrostatic->rElectrostaticInverseStressDipole);
+// Polarizable specific particle variables
+    task->computes(label->electrostatic->pMu);
+    task->computes(label->electrostatic->pE_electroReal);
+    task->computes(label->electrostatic->pE_electroInverse);
   }
 }
 
 void SPME::addSetupRequirements(Task* task, MDLabel* d_label) const
 {
-  // Empty
+// Empty
 }
 
-void SPME::addSetupComputes(Task* task, MDLabel* d_label) const {
-
+void SPME::addSetupComputes(Task* task, MDLabel* d_label) const
+{
   task->computes(d_label->electrostatic->dElectrostaticDependency);
 }
 
@@ -87,32 +86,40 @@ void SPME::addCalculateRequirements(Task* task, MDLabel* d_label) const {
 
   task->requires(Task::OldDW, d_label->global->pX, Ghost::None, 0);
   task->requires(Task::OldDW, d_label->global->pID, Ghost::None, 0);
+  // Ensures that SPME::Setup runs first
+  task->requires(Task::NewDW, d_label->electrostatic->dElectrostaticDependency);
+
   if (f_polarizable) {
     task->requires(Task::OldDW, d_label->electrostatic->pMu, Ghost::None, 0);
   }
-  // Ensures that SPME::Setup runs first
-  task->requires(Task::NewDW, d_label->electrostatic->dElectrostaticDependency);
 }
 
-void SPME::addCalculateComputes(Task* task, MDLabel* d_label) const {
+void SPME::addCalculateComputes(Task* task, MDLabel* d_label) const
+{
+// These are the variables provided at the end of the entire SPME routine,
+// and have nothing to do with computes/requires from the subscheduler.
 
-  // These are the variables provided at the end of the entire SPME routine, 
-  // and have nothing to do with computes/requires from the subscheduler.
+// Universal reduction variables
   task->computes(d_label->electrostatic->rElectrostaticInverseEnergy);
   task->computes(d_label->electrostatic->rElectrostaticRealEnergy);
   task->computes(d_label->electrostatic->rElectrostaticInverseStress);
   task->computes(d_label->electrostatic->rElectrostaticRealStress);
+// We should probably actually concatenate the forces into a single
+// pF_electrostatic for gating to the integrator.
+// Universal
+
+
+
+  task->computes(d_label->electrostatic->pF_electroInverse_preReloc);
+  task->computes(d_label->electrostatic->pF_electroReal_preReloc);
 
   if (f_polarizable) {
     task->computes(d_label->electrostatic->pMu_preReloc);
     task->computes(d_label->electrostatic->rElectrostaticInverseStressDipole);
+    task->computes(d_label->electrostatic->pE_electroInverse_preReloc);
+    task->computes(d_label->electrostatic->pE_electroReal_preReloc);
   }
-  // We should probably actually concatenate the forces into a single 
-  // pF_electrostatic for gating to the integrator.
-  task->computes(d_label->electrostatic->pF_electroInverse_preReloc);
-  task->computes(d_label->electrostatic->pF_electroReal_preReloc);
-  task->computes(d_label->electrostatic->pE_electroInverse_preReloc);
-  task->computes(d_label->electrostatic->pE_electroReal_preReloc);
+
 
 }
 
@@ -199,11 +206,22 @@ void SPME::scheduleCalculateRealspace(const ProcessorGroup*     pg,
 {
     printSchedule(patches, spme_cout, "SPME::scheduleCalculateRealspace");
 
+    /* if (ff->getPolarizableScreening() == THOLE ) {
+     * task = scinew TASK("SPME::calculateRealspaceTholeDipole",
+     *                    this,
+     *                    &SPME::calculateRealspaceTholeDipole,
+     *                    sharedState,
+     *                    label,
+     *                    coordSys,
+     *                    parentOldDW,
+     *
+           ff->getPolarizableScreening() == GAUSSIAN )
+    */
     Task* task;
     if (f_polarizable) {
-      task = scinew Task("SPME::calculateRealspaceDipole",
+      task = scinew Task("SPME::calculateRealspacePointDipole",
                          this,
-                         &SPME::calculateRealspaceDipole,
+                         &SPME::calculateRealspacePointDipole,
                          sharedState,
                          label,
                          coordSys,
@@ -550,28 +568,67 @@ void SPME::scheduleCalculateNewDipoles(const ProcessorGroup*    pg,
                                        const MaterialSet*       materials,
                                        DataWarehouse*           subOldDW,
                                        DataWarehouse*           subNewDW,
+                                       const SimulationStateP*  sharedState,
                                        const MDLabel*           label,
                                        SchedulerP&              sched)
 {
-    printSchedule(patches, spme_cout, "SPME::scheduleCalculateNewDipoles");
+  printSchedule(patches, spme_cout, "SPME::scheduleCalculateNewDipoles");
 
-    Task* task = scinew Task("SPME::calculateNewDipoles",
-                             this,
-                             &SPME::calculateNewDipoles,
-                             label);
+  Task* task = scinew Task("SPME::calculateNewDipoles",
+                           this,
+                           &SPME::calculateNewDipoles,
+                           sharedState,
+                           label);
 
-    // Requires the updated field from both the realspace and reciprocal calculation
-    // Also may want the dipoles from the previous iteration
-    task->requires(Task::OldDW, label->electrostatic->pMu, Ghost::None, 0);
-    task->requires(Task::NewDW, label->electrostatic->pE_electroReal_preReloc, Ghost::None, 0);
-    task->requires(Task::NewDW, label->electrostatic->pE_electroInverse_preReloc, Ghost::None, 0);
+  // Requires the updated field from both the realspace and reciprocal calculation
+  // Also may want the dipoles from the previous iteration
+  task->requires(Task::OldDW, label->electrostatic->pMu, Ghost::None, 0);
+  task->requires(Task::OldDW, label->global->pX, Ghost::None, 0);
+  task->requires(Task::OldDW, label->global->pID, Ghost::None, 0);
+  task->requires(Task::NewDW, label->electrostatic->pE_electroReal_preReloc,
+                 Ghost::None, 0);
+  task->requires(Task::NewDW, label->electrostatic->pE_electroInverse_preReloc,
+                 Ghost::None, 0);
 
-    // Overwrites each dipole array at iteration n with the full estimate of dipole array at iteration n+1
-    task->computes(label->electrostatic->pMu_preReloc);
+  // Overwrites each dipole array at iteration n with the full estimate of dipole array at iteration n+1
+  task->computes(label->electrostatic->pMu_preReloc);
+  task->computes(label->global->pX_preReloc);
+  task->computes(label->global->pID_preReloc);
 
-    sched->addTask(task, patches, materials);
+  sched->addTask(task, patches, materials);
 }
 
+//void SPME::scheduleDipoleUpdate(const ProcessorGroup*   pg,
+//                                const PatchSet*         patches,
+//                                const MaterialSet*      materials,
+//                                      DataWarehouse*    subOldDW,
+//                                      DataWarehouse*    subNewDW,
+//                                const SimulationStateP* sharedState,
+//                                const MDLabel*          label,
+//                                      SchedulerP&       sched)
+//{
+//    printSchedule(patches, spme_cout, "SPME::scheduleDipoleUpdate");
+//
+//    Task* task = scinew Task("SPME::dipoleUpdate",
+//                             this,
+//                             &SPME::dipoleUpdate,
+//                             sharedState,
+//                             label);
+//
+//    // Requires the new value of the dipoles.
+//    task->requires(Task::NewDW, label->electrostatic->pMu_preReloc);
+//
+//    sched->addTask(task, patches, materials);
+//}
+
+//void SPME::dipoleUpdate(const ProcessorGroup*   pg,
+//                        const PatchSet*         patches,
+//                        const MaterialSet*      materials,
+//                              DataWarehouse*    subOldDW,
+//                              DataWarehouse*    subNewDW,
+//                        const SimulatioNStateP* simState,
+//                        const MDLabel*          label,
+//                              SchedulerP&       sched)
 
 //void SPME::scheduleCalculatePostTransform(const ProcessorGroup* pg,
 //                                          const PatchSet*       patches,

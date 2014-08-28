@@ -39,6 +39,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Variables/VarTypes.h>
 
 #include <Core/Thread/ConditionVariable.h>
 
@@ -390,23 +391,24 @@ namespace Uintah {
        /*
         * @brief    Place the calculation of new dipoles into the task graph
         */
-       void scheduleCalculateNewDipoles(const ProcessorGroup*  pg,
-                                        const PatchSet*        patches,
-                                        const MaterialSet*     materials,
-                                        DataWarehouse*         subOldDW,
-                                        DataWarehouse*         subNewDW,
-                                        const MDLabel*         label,
-                                        SchedulerP&            sched);
+       void scheduleCalculateNewDipoles(const ProcessorGroup*   pg,
+                                        const PatchSet*         patches,
+                                        const MaterialSet*      materials,
+                                              DataWarehouse*    subOldDW,
+                                              DataWarehouse*    subNewDW,
+                                        const SimulationStateP* simState,
+                                        const MDLabel*          label,
+                                              SchedulerP&       sched);
 
        void scheduleCalculatePostTransform(const ProcessorGroup*    pg,
                                            const PatchSet*          patches,
                                            const MaterialSet*       materials,
-                                           DataWarehouse*           subOldDW,
-                                           DataWarehouse*           subNewDW,
-                                           const SimulationStateP*        simState,
+                                                 DataWarehouse*     subOldDW,
+                                                 DataWarehouse*     subNewDW,
+                                           const SimulationStateP*  simState,
                                            const MDLabel*           label,
-                                           CoordinateSystem*        coordSystem,
-                                           SchedulerP&              sched);
+                                                 CoordinateSystem*  coordSystem,
+                                                 SchedulerP&        sched);
 
 // ---->>>> Actual calculation routines; non-framework logic resides in these
        /*
@@ -432,19 +434,68 @@ namespace Uintah {
                                      CoordinateSystem*  coordSystem,
                                      DataWarehouse*     parentOldDW);
 
+
        /*
-        * @brief    Realspace portion of Ewald calculation for induced dipolar
-        *           systems
+        * @brief    Realspace portion of Ewald calculation or induced dipoles
+        *           with Thole screening
         */
-       void calculateRealspaceDipole(const ProcessorGroup*      pg,
-                                     const PatchSubset*         patches,
-                                     const MaterialSubset*      materials,
-                                           DataWarehouse*       subOldDW,
-                                           DataWarehouse*       subNewDW,
-                                     const SimulationStateP*    sharedState,
-                                     const MDLabel*             label,
-                                           CoordinateSystem*    coordSystem,
-                                           DataWarehouse*       parentOldDW);
+       void calculateRealspaceTholeDipole(const ProcessorGroup*     pg,
+                                          const PatchSubset*        patches,
+                                          const MaterialSubset*     materials,
+                                                DataWarehouse*      subOldDW,
+                                                DataWarehouse*      subNewDW,
+                                          const SimulationStateP*   sharedState,
+                                          const MDLabel*            label,
+                                                CoordinateSystem*   coordSystem,
+                                                DataWarehouse*      parentOldDW);
+
+       /*
+        * @brief    Realspace portion of Ewald calculation for induced point
+        *           dipole systems
+        */
+       void calculateRealspacePointDipole(const ProcessorGroup*     pg,
+                                          const PatchSubset*        patches,
+                                          const MaterialSubset*     materials,
+                                                DataWarehouse*      subOldDW,
+                                                DataWarehouse*      subNewDW,
+                                          const SimulationStateP*   sharedState,
+                                          const MDLabel*            label,
+                                                CoordinateSystem*   coordSystem,
+                                                DataWarehouse*      parentOldDW);
+
+       /*
+        * @brief    Functions which generate the necessary quantities for
+        *           calculation of realspace contributions to energy, stress,
+        *           and forces
+        */
+       void generatePointScreeningMultipliers(const double& radius,
+                                                    double& B0,
+                                                    double& B1,
+                                                    double& B2,
+                                                    double& B3);
+
+       void generateTholeScreeningMultipliers(const double& a_thole,
+                                              const double& sqrt_alphai_alphaj,
+                                              const double& r,
+                                                    double& B1,
+                                                    double& B2,
+                                                    double& B3);
+
+       void generateDipoleFunctionalTerms(const double&         q_i,
+                                          const double&         q_j,
+                                          const SCIRun::Vector& mu_i,
+                                          const SCIRun::Vector& mu_j,
+                                          const SCIRun::Vector& r_ij,
+                                                double&         mu_jDOTr_ij,
+                                                double&         G0,
+                                                double&         G1_mu_q,
+                                                double&         G1_mu_mu,
+                                                double&         G2,
+                                                SCIRun::Vector& gradG0,
+                                                SCIRun::Vector& gradG1,
+                                                SCIRun::Vector& gradG2);
+
+       void generateVectorSubsets(const SCIRun::Vector& R);
 
        /*
         * @brief    Generates the basic coefficients for mapping charge to the
@@ -527,8 +578,9 @@ namespace Uintah {
        void calculateNewDipoles(const ProcessorGroup*   pg,
                                 const PatchSubset*      patches,
                                 const MaterialSubset*   materials,
-                                DataWarehouse*          oldDW,
-                                DataWarehouse*          newDW,
+                                      DataWarehouse*    oldDW,
+                                      DataWarehouse*    newDW,
+                                const SimulationStateP* sharedState,
                                 const MDLabel*          label);
 
        /*

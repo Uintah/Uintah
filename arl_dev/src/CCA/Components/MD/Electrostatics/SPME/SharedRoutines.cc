@@ -50,6 +50,89 @@ using namespace Uintah;
 //  }
 //}
 
+void SPME::generatePointScreeningMultipliers(const double& radius, // |R_ij|
+                                                   double& B0,
+                                                   double& B1,
+                                                   double& B2,
+                                                   double& B3)
+{
+  double beta_r = d_ewaldBeta * radius;
+  double inv_r = 1.0 / radius;
+  double inv_r2 = inv_r * inv_r;
+  double twoBeta2 = 2.0 * d_ewaldBeta * d_ewaldBeta;
+  double invBetaRootPi = 1.0 / (d_ewaldBeta * MDConstants::rootPI);
+  double expNegBeta2r2 = exp(-beta_r * beta_r);
+
+  B0 = erfc(beta_r)*inv_r;
+  double rightSide = twoBeta2 * invBetaRootPi * expNegBeta2r2;
+  B1 = (B0 + rightSide)*inv_r2;
+  rightSide *= twoBeta2;
+  B2 = (3.0 * B1 + rightSide)*inv_r2;
+  rightSide *= twoBeta2;
+  B3 = (5.0 * B2 + rightSide)*inv_r2;
+}
+
+void SPME::generateTholeScreeningMultipliers(const double& a_Thole,
+                                             const double& sqrt_alphai_alphaj,
+                                             const double& radius,
+                                                   double& B1,
+                                                   double& B2,
+                                                   double& B3)
+{
+  double A = a_Thole / sqrt_alphai_alphaj;
+  double r2 = radius * radius;
+  double invR2 = 1.0 / (r2);
+  double denominator = invR2 / radius;
+  double u = radius * r2 * A;
+
+  double expTerm = exp(-u);
+  double polyTerm = 1.0;
+  B1 = (1.0 - polyTerm * expTerm) * denominator; // lambda_3
+  denominator *= invR2;                          //    1 - exp(-au^3)
+
+  polyTerm += u;
+  B2 = (1.0 - polyTerm * expTerm) * denominator; // lambda_5
+  denominator *= invR2;                          //    1 - (1 + au^3)exp(-au^3)
+  polyTerm += 0.6 * u * u;
+  B3 = (1.0 - polyTerm * expTerm) * denominator; // lambda_7
+  return;                                        //    1 -
+                                                 //     (1+au^3  (3/5)a^2u^6)*
+                                                 //      exp(-au^3)
+
+}
+
+void SPME::generateDipoleFunctionalTerms(const double&         q_i,
+                                         const double&         q_j,
+                                         const SCIRun::Vector& mu_i,
+                                         const SCIRun::Vector& mu_j,
+                                         const SCIRun::Vector& r_ij,
+                                               double&         mu_jDOTr_ij,
+                                               double&         G0,
+                                               double&         G1_mu_q,
+                                               double&         G1_mu_mu,
+                                               double&         G2,
+                                               SCIRun::Vector& gradG0,
+                                               SCIRun::Vector& gradG1,
+                                               SCIRun::Vector& gradG2)
+{
+  // GX and gradGX defined in:
+  // Toukmaji et. al., J. Chem. Phys. 113(24), 10913-10927 (2000)
+  // Eq. 2.10 and inline after Eq. 2.18
+  double mu_iDOTmu_j = Dot(mu_i,mu_j);
+  double mu_iDOTr_ij = Dot(mu_i,r_ij);
+  mu_jDOTr_ij = Dot(mu_j,r_ij);  // Passed back for field calculation
+
+  G0       =  q_i * q_j;
+  G1_mu_q  =  q_j * mu_iDOTr_ij - q_i * mu_jDOTr_ij;
+  G1_mu_mu =  mu_iDOTmu_j;
+  G2       = -mu_iDOTr_ij * mu_jDOTr_ij;
+
+  gradG0 =  MDConstants::V_ZERO;
+  gradG1 =  q_i*mu_j - q_j * mu_i;
+  gradG2 =  mu_i*(mu_jDOTr_ij) + mu_j*(mu_iDOTr_ij);
+
+  return;
+}
 
 void SPME::generateBVectorChunk(std::vector<dblcomplex>&    bVector,
                                 const int                   m_initial,
