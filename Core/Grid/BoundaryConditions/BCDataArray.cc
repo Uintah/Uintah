@@ -181,8 +181,8 @@ void BCDataArray::determineIteratorLimits(Patch::FaceType face,
     for (vector<BCGeomBase*>::iterator obj = bc_objects.begin();
          obj < bc_objects.end();) {
       if ( !( (*obj)->hasIterator()) ) {
-        bc_objects.erase(obj);
         delete *obj;
+        obj = bc_objects.erase(obj); // point the iterator to the next element that was after the one we deleted
       } else {
         ++obj;
       }
