@@ -780,7 +780,7 @@
 
         <model                        spec="MULTIPLE NO_DATA"
                                       attribute1="label REQUIRED STRING"
-                                      attribute2="type REQUIRED STRING 'simple_rate, drag'">
+                                      attribute2="type REQUIRED STRING 'simple_rate, drag, gravity'">
 
           <!-- Simple rate expression -->
             <grid                       spec="REQUIRED NO_DATA"
@@ -805,7 +805,7 @@
           <!-- drag model -->
             <particle_density           spec="REQUIRED NO_DATA"
                                         attribute1="type REQUIRED STRING 'constant, node_specific'"
-                                        need_applies_to="type drag"> <!-- use a constant density for all particles, or use a model for each-->
+                                        need_applies_to="type drag, gravity"> <!-- use a constant density for all particles, or use a model for each-->
               <constant                 spec="REQUIRED DOUBLE"
                                         need_applies_to="type constant"/>
               <density_label            spec="REQUIRED STRING"
