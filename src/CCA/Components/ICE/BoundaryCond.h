@@ -314,7 +314,7 @@ void setBC(T& vel_FC,
           }              
         }  // Children loop
       }
-      cout_BC_FC << patch->getFaceName(face) << " \t " << whichVel << " \t" << bc_kind << "\t faceDir: " << faceDir << " numChildren: " << numChildren 
+      cout_BC_FC << "               " << patch->getFaceName(face) << " \t " << whichVel << " \t" << bc_kind << "\t faceDir: " << faceDir << " numChildren: " << numChildren 
                  << " nCells: " << nCells << std::endl;
       //__________________________________
       //  bulletproofing
