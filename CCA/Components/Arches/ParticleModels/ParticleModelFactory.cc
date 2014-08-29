@@ -119,11 +119,11 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
             
             std::string task_name = type + "_" + model_name;
             
-            TaskInterface::TaskBuilder* tsk = scinew
-            BodyForce<SVol,SVol>::Builder(task_name, 0, model_name, N);
-            
-            register_task( task_name, tsk );
-            _active_tasks.push_back(task_name);
+//            TaskInterface::TaskBuilder* tsk = scinew
+//            BodyForce<SVol,SVol>::Builder(task_name, 0, model_name, N);
+//            
+//            register_task( task_name, tsk );
+//            _active_tasks.push_back(task_name);
             
           } else {
             throw InvalidValue("Error: Independent grid type not recognized.",__FILE__,__LINE__);
