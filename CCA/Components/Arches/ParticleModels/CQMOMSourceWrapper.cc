@@ -82,8 +82,6 @@ CQMOMSourceWrapper::initializeVariables( const ProcessorGroup* pc,
   //patch loop
   for (int p=0; p < patches->size(); p++){
     
-    Ghost::GhostType  gn  = Ghost::None;
-    
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
@@ -138,13 +136,11 @@ CQMOMSourceWrapper::buildSourceTerm( const ProcessorGroup* pc,
 {
   //patch loop
   for (int p=0; p < patches->size(); p++) {
-    Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn  = Ghost::None;
     
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    Vector Dx = patch->dCell();
     
     CCVariable<double> model;
     new_dw->getModifiable( model, d_modelLabel, matlIndex, patch );
