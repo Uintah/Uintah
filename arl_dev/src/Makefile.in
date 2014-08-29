@@ -87,6 +87,10 @@ ifeq ($(BUILD_ICE),yes)
   ICE_LIB            = CCA/Components/ICE
 endif
 
+ifeq ($(BUILD_FVM),yes)
+  FVM_LIB            = CCA/Components/FVM
+endif
+
 ifeq ($(BUILD_WASATCH),yes)
   WASATCH_LIB        = CCA/Components/Wasatch
 endif
@@ -126,6 +130,7 @@ ALL_PSE_LIBS =             \
         $(MPM_LIB)                          \
         $(MD_LIB)                           \
         $(ICE_LIB)                          \
+        $(FVM_LIB)                          \
         $(MPMICE_LIB)                       \
         $(WASATCH_LIB)                      
 
@@ -147,6 +152,7 @@ ALL_STATIC_PSE_LIBS =                   \
     $(MPM_LIB)                          \
     $(MD_LIB)                           \
     $(ICE_LIB)                          \
+    $(FVM_LIB)                          \
     $(MPMICE_LIB)                       \
     $(WASATCH_LIB)                      \
                                         \

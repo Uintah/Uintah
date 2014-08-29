@@ -71,6 +71,7 @@ SUBDIRS := \
         $(WASATCH)                     \
         $(SRCDIR)/DataArchiver         \
         $(SRCDIR)/Examples             \
+				$(SRCDIR)/FVM                  \
         $(SRCDIR)/LoadBalancers        \
         $(SRCDIR)/Models               \
         $(SRCDIR)/OnTheFlyAnalysis     \
