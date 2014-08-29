@@ -199,6 +199,7 @@ namespace Uintah {
 
     void computeElasticProperties(const Matrix3 stress,
                                   const Matrix3 ep,
+								  const double& P3,
                                   double & bulk,
                                   double & shear
                                  );
@@ -210,6 +211,7 @@ namespace Uintah {
 
     int computeStepDivisions(const double& X,
                              const double& Zeta,
+							 const double& P3,
                              const Matrix3& ep,
                              const Matrix3& sigma_n,
                              const Matrix3& sigma_trial);
@@ -263,33 +265,31 @@ namespace Uintah {
                               const double& r_trial,
                               const double& X,
                               const double& Zeta,
-                              const double& coher, // XXX
-                              const double& bulk,
-                              const double& shear
+							  const double& coher,
+                              const double limitParameters[4], // XXX
+                              const double& r_to_rJ2
                              );
 
     int transformedYieldFunction(const double& z,
                                  const double& r,
                                  const double& X,
                                  const double& Zeta,
-                                 const double& coher, // XXX
-                                 const double& bulk,
-                                 const double& shear
+								 const double& coher,
+                                 const double limitParameters[4], // XXX
+                                 const double& r_to_rJ2
                                 );
     int computeYieldFunction(const double& I1,
                              const double& rJ2,
                              const double& X,
                              const double& Zeta,
-                             const double& coher // XXX
+							 const double& coher,
+                             const double limitParameters[4] // XXX
                             );
 
-    void computeLimitParameters(double& a1,
-                                double& a2,
-                                double& a3,
-                                double& a4,
+    void computeLimitParameters(double *limitParameters,
                                 const double& coher //XXX
                                );
-
+    void checkInputParameters();
 
 
 
