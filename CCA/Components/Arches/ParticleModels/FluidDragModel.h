@@ -39,6 +39,8 @@ namespace Uintah{
     
     void problemSetup( ProblemSpecP& db );
     
+    void create_local_labels();
+    
     class Builder : public TaskInterface::TaskBuilder {
       
     public:
