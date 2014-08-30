@@ -1,0 +1,2 @@
+/usr/bin/ar cr libspatialops-stencil.a  CMakeFiles/spatialops-stencil.dir/StencilBuilder.cpp.o
+/usr/bin/ranlib libspatialops-stencil.a

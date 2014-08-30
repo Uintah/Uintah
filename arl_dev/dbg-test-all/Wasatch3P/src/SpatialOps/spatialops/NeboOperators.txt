@@ -1,0 +1,101 @@
+/**
+\page NeboOperations Supported Nebo Field Operations
+
+\tableofcontents 
+
+All Nebo field operations are within the `SpatialOps` namespace and are
+defined/implemented in the file NeboOperators.h.  For the most part, users 
+should not need to look at implementations, which use template metaprogramming
+extensively.
+
+To access any of these operators, please use:
+\code{.cpp}
+#include <spatialops/Nebo.h>
+\endcode
+
+All of the operations defined below function with the following argument types:
+ - A scalar: examples include `1.3`, `2` etc.
+ - A \link SpatialOps::SpatialField SpatialField \endlink
+ - Any valid Nebo expression
+ 
+ _______________________ 
+
+
+\section basicops Basic Algebraic Operations
+
+In the following table, `result` refers to a SpatialField whereas `arg1` and
+`arg2` can be a scalar, SpatialField or Nebo expression.  All operations are
+applied point-wise on the arguments.
+ 
+Operation      | Operator | Basic Syntax             | Reference
+---------------| :------: |--------------------------|------------
+Addition       | `+`      | `result <<= arg1 + arg2` | SpatialOps::SumOp
+Subtraction    | `-`      | `result <<= arg1 - arg2` | SpatialOps::DiffOp
+Multiplication | `*`      | `result <<= arg1 * arg2` | SpatialOps::ProdOp
+Division       | `/`      | `result <<= arg1 / arg2` | SpatialOps::DivOp
+Negation       | `-`      | `result <<= -arg`        | SpatialOps::NegFcn
+
+
+
+\section functions Functions
+
+In the following table, `result` refers to a SpatialField whereas `arg` can be
+a scalar, SpatialField or Nebo expression.  All operations are applied
+point-wise on the arguments.
+
+Operation                            | Operator   | Basic Syntax               | Reference
+---------------                      | :--------: |--------------------------  |------------
+cosine                               | `cos`      | `result <<= cos(arg)`      | SpatialOps::CosFcn
+sine                                 | `sin`      | `result <<= sin(arg)`      | SpatialOps::SinFcn
+tangent                              | `tan`      | `result <<= tan(arg)`      | SpatialOps::TanFcn
+exponential                          | `exp`      | `result <<= exp(arg)`      | SpatialOps::ExpFcn
+error function                       | `erf`      | `result <<= erf(arg)`      | SpatialOps::ErfFcn
+inverse error function               | `inv_erf`  | `result <<= inv_erf(arg)`  | SpatialOps::InvErfFcn
+complimentary error function         | `erfc`     | `result <<= erfc(arg)`     | SpatialOps::ErfcFcn
+inverse complimentary error function | `inv_erfc` | `result <<= inv_erfc(arg)` | SpatialOps::InvErfcFcn
+hyperbolic tan                       | `tanh`     | `result <<= tanh(arg)`     | SpatialOps::TanhFcn
+natural logarithm                    | `log`      | `result <<= log(arg)`      | SpatialOps::LogFcn       
+base 10 logarithm                    | `log10`    | `result <<= log10(arg)`    | SpatialOps::Log10Fcn       
+exponentiation                       | `pow`      | `result <<= pow(arg,val)`  | SpatialOps::PowFcn
+square root                          | `sqrt`     | `result <<= sqrt(arg)`     | SpatialOps::SqrtFcn
+absolute value                       | `abs`      | `result <<= abs(arg)`      | SpatialOps::AbsFcn
+
+
+
+\section compops Comparison Operations
+
+Comparison operators perform point-wise comparisons.  In the following table,
+`arg1` and `arg2` can be scalars, SpatialFields, or Nebo expressions.
+These comparison operations are typically used with \link NeboCond cond\endlink.
+
+Operation           | Operator | Basic Syntax    | Reference
+--------------------| :------: |-----------------|------------
+Greater than        | `>`      | `arg1 > arg2`   | SpatialOps::GreaterThanCmp
+Less than           | `<`      | `arg1 < arg2`   | SpatialOps::LessThanCmp
+Equal to            | `==`     | `arg1 == arg2`  | SpatialOps::EqualCmp
+Greater or equal to | `>=`     | `arg1 >= arg2`  | SpatialOps::GreaterThanEqualCmp
+Less or equal to    | `<=`     | `arg1 <= arg2`  | SpatialOps::LessThanEqualCmp
+Not equal to        | `!=`     | `arg1 != arg2`  | SpatialOps::InequalCmp
+
+Below, `result` is a field containing the pointwise result of the associated
+operation on `arg1` and `arg2` which can be scalars, SpatialFields or Nebo
+expressions:
+
+Operation   | Operator | Basic Syntax                | Reference
+------------| :------: |-----------------            |------------
+Maximum     | `max`    | `result <<= max(arg1,arg2)` | SpatialOps::MaxFcn
+Minimum     | `min`    | `result <<= min(arg1,arg2)` | SpatialOps::MinFcn
+
+
+\section logicalops Logical Operations
+
+Nebo logical operators perform pointwise combinations of the results of comparison operations and / or masks.
+
+Operation      | Operator | Basic Syntax                     | Reference
+---------------| :------: |----------------------------------|------------
+And            | `&&`     | `result <<= expr1 && expr2`      | SpatialOps::AndOp
+Or             |  \|\|    | `result <<= expr1 ` \|\| `expr2` | SpatialOps::OrOp
+Not            | `!`      | `result <<= !expr`               | SpatialOps::NotOp
+
+
+*/

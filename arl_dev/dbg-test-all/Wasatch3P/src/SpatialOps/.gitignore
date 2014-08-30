@@ -1,0 +1,3 @@
+# ignore doxygen output directory
+doc/html
+*.*~

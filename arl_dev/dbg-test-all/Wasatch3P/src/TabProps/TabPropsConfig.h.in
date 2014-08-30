@@ -1,0 +1,11 @@
+#ifndef TabProps_Config_h
+#define TabProps_Config_h
+
+#define TabPropsVersionHash @TABPROPS_REPO_HASH@
+#define TabPropsVersionDate @TABPROPS_REPO_DATE@
+
+#cmakedefine TabProps_ENABLE_IO
+
+#cmakedefine LAPACK_FOUND
+
+#endif // TabProps_Config_h

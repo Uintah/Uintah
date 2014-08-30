@@ -1,0 +1,2 @@
+/home/alan/uintah-md/md-dev/dbg-test-all/Wasatch3P/src/TabProps/build/tabprops/CMakeFiles/interp.dir
+/home/alan/uintah-md/md-dev/dbg-test-all/Wasatch3P/src/TabProps/build/tabprops/CMakeFiles/tabprops.dir

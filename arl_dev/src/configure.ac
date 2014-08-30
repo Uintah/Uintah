@@ -673,10 +673,10 @@ SCI_ARG_ENABLE(ice,
 
 SCI_ARG_ENABLE(fvm,
   AC_HELP_STRING(--enable-fvm,
-                 Turns on the Finite Volume component.),
+                 Turn on the Finite Volume component.),
   [BUILD_FVM="yes"],
-	[BUILD_FVM="no"
-	 DEF_FVM=["#define NO_FVM"]])
+  [BUILD_FVM="no"
+   DEF_FVM=["#define NO_FVM"]])
 
 SCI_ARG_ENABLE(mpm,
   AC_HELP_STRING(--enable-mpm,

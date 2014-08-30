@@ -1,0 +1,726 @@
+#lang fulmar
+
+"/*
+ * Copyright (c) 2014 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the \"Software\"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+"
+
+(require "../../../FulmarAbbreviations.fmr")
+(require "../../../NeboCore.fmr")
+
+(define (stringize . args) (immediate (concat "\"" args "\"")))
+
+                                        ;triplet of values for field locations and boundary condition locations
+(define (trip x y z)
+  (list x y z))
+
+                                        ;define a field type
+(define (field name offset bc)
+  (list name offset bc))
+
+                                        ;field accessors
+(define field-name first)
+(define field-offset second)
+(define field-bc third)
+
+                                        ;standard field definitions
+(define SVol   (field 'SVolField   (trip  0  0  0) (trip  0  0  0)))
+(define SSurfX (field 'SSurfXField (trip -1  0  0) (trip  1  0  0)))
+(define SSurfY (field 'SSurfYField (trip  0 -1  0) (trip  0  1  0)))
+(define SSurfZ (field 'SSurfZField (trip  0  0 -1) (trip  0  0  1)))
+(define XVol   (field 'XVolField   (trip -1  0  0) (trip  1  0  0)))
+(define XSurfX (field 'XSurfXField (trip  0  0  0) (trip  0  0  0)))
+(define XSurfY (field 'XSurfYField (trip -1 -1  0) (trip  0  1  0)))
+(define XSurfZ (field 'XSurfZField (trip -1  0 -1) (trip  0  0  1)))
+(define YVol   (field 'YVolField   (trip  0 -1  0) (trip  0  1  0)))
+(define YSurfX (field 'YSurfXField (trip -1 -1  0) (trip  1  0  0)))
+(define YSurfY (field 'YSurfYField (trip  0  0  0) (trip  0  0  0)))
+(define YSurfZ (field 'YSurfZField (trip  0 -1 -1) (trip  0  0  1)))
+(define ZVol   (field 'ZVolField   (trip  0  0 -1) (trip  0  0  1)))
+(define ZSurfX (field 'ZSurfXField (trip -1  0 -1) (trip  1  0  0)))
+(define ZSurfY (field 'ZSurfYField (trip  0 -1 -1) (trip  0  1  0)))
+(define ZSurfZ (field 'ZSurfZField (trip  0  0  0) (trip  0  0  0)))
+
+                                        ;define a point
+                                        ; given offset to target
+                                        ; returns how many cells invalidated on each face
+(define (point lst)
+  (define x (first lst))
+  (define y (second lst))
+  (define z (third lst))
+  (define (neg0 v)
+    (if (< v 0) (* -1 v) 0))
+  (define (pos0 v)
+    (if (> v 0) v 0))
+  (list (neg0 x)   ;negative X-face
+        (pos0 x)   ;positive X-face
+        (neg0 y)   ;negative Y-face
+        (pos0 y)   ;positive Y-face
+        (neg0 z)   ;negative Z-face
+        (pos0 z))) ;positive Z-face
+
+                                        ;simple definitions for directions/axes
+(define X 0)
+(define Y 1)
+(define Z 2)
+
+                                        ;simple defintions for faces
+(define negX 3)
+(define posX 4)
+(define negY 5)
+(define posY 6)
+(define negZ 7)
+(define posZ 8)
+
+                                        ;calculate low point given source location and destination location
+(define (lowPoint srcPoint destPoint)
+  (map (lambda (s d)
+         (- (if (> s d) 1 0)))
+       srcPoint
+       destPoint))
+
+                                        ;calculate high point given source location and destination location
+(define (highPoint srcPoint destPoint)
+  (map (lambda (s d)
+         (if (< s d) 1 0))
+       srcPoint
+       destPoint))
+
+                                        ;calculate list of points for a 1D (2-point) stencil from types
+                                        ;  dir is ignored, but included for convenience
+(define (1D-stencil-point-list src dest dir)
+  (map point
+       (list (lowPoint (field-offset src)
+                       (field-offset dest))
+             (highPoint (field-offset src)
+                        (field-offset dest)))))
+
+                                        ;calculate list of points for a 2D (4-point) stencil from types
+                                        ;  dir is ignored, but included for convenience
+(define (2D-stencil-point-list src dest dir)
+  (define src-offset (field-offset src))
+  (define dest-offset (field-offset dest))
+  (define X (list 1 0 0))
+  (define Y (list 0 1 0))
+  (define Z (list 0 0 1))
+  (define D1 (if (not (= (first src-offset)
+                         (first dest-offset)))
+                 X
+                 Y))
+  (define D2 (if (not (= (third src-offset)
+                         (third dest-offset)))
+                 Z
+                 Y))
+  (define srcD1 (map * src-offset D1))
+  (define srcD2 (map * src-offset D2))
+  (define destD1 (map * dest-offset D1))
+  (define destD2 (map * dest-offset D2))
+  (define lowPointD1 (lowPoint srcD1 destD1))
+  (define highPointD1 (highPoint srcD1 destD1))
+  (define lowPointD2 (lowPoint srcD2 destD2))
+  (define highPointD2 (highPoint srcD2 destD2))
+  (define (add point1 point2)
+    (map + point1 point2))
+  (map point
+       (list (add lowPointD1 lowPointD2)
+             (add highPointD1 lowPointD2)
+             (add lowPointD1 highPointD2)
+             (add highPointD1 highPointD2))))
+
+                                        ;calculate list of points for a DD (finite difference) stencil from types
+                                        ;  src and dest are ignored, but included for convenience
+(define (fd-stencil-point-list src dest dir)
+  (map point
+       (cond [(eq? dir X) (list (list -1  0  0)
+                                (list  1  0  0))]
+             [(eq? dir Y) (list (list  0 -1  0)
+                                (list  0  1  0))]
+             [(eq? dir Z) (list (list  0  0 -1)
+                                (list  0  0  1))]
+             [else (error "Undefined direction")])))
+
+                                        ;calculate list of points for a Null (1-point) stencil from types
+                                        ;  dir is ignored, but included for convenience
+(define (null-stencil-point-list src dest dir)
+  (map point (list (list 0 0 0))))
+
+                                        ;calculate faces invalidated by given point
+(define (point-invalid-faces point)
+  (define (invalidate v dir)
+    (if (> v 0) dir null))
+  (flatten* (list (invalidate (first point) negX)
+                  (invalidate (second point) posX)
+                  (invalidate (third point) negY)
+                  (invalidate (fourth point) posY)
+                  (invalidate (fifth point) negZ)
+                  (invalidate (sixth point) posZ))))
+
+                                        ;calculate directions (axes X, Y, or Z) invalidated by given point
+(define (point-invalid-dirs point)
+  (define invalid-faces (point-invalid-faces point))
+  (define (check-dir face1 face2 dir)
+    (if (or (member face1 invalid-faces)
+            (member face2 invalid-faces))
+        dir
+        null))
+  (flatten* (list (check-dir negX posX X)
+                  (check-dir negY posY Y)
+                  (check-dir negZ posZ Z))))
+
+                                        ;merge two lists of invalidated values (either faces or directions)
+(define (merge-invalid invalid1 invalid2)
+  (remove-duplicates (sort (append invalid1 invalid2) <)))
+
+                                        ;calculate faces invalidated by given list of points
+(define (point-list-invalid-faces point-list)
+  (foldl merge-invalid null (map point-invalid-faces point-list)))
+
+                                        ;calculate directions (axes X, Y, or Z) invalidated by given list of points
+(define (point-list-invalid-dirs point-list)
+  (foldl merge-invalid null (map point-invalid-dirs point-list)))
+
+                                        ;builds actual stencil information
+                                        ; type is the style of stencil to build: 1D (2-point), 2D (4-point), or FD (finite difference)
+(define (build-stencil op type src dest dir)
+  (define point-list (type src dest dir))
+  (list op
+        src
+        dest
+        point-list
+        (point-list-invalid-faces point-list)
+        (point-list-invalid-dirs point-list)))
+
+                                        ;stencil accessors
+(define stencil-op first)
+(define stencil-src second)
+(define stencil-dest third)
+(define stencil-point-list fourth)
+(define stencil-invalid-faces fifth)
+(define stencil-invalid-dirs sixth)
+
+                                        ;calculate which faces are invalidated in both lists of invalidated faces
+                                        ; since under the current version there is only 1 ghost cell along each face,
+                                        ;  using/invalidating the same face twice produces compile-time errors with chained stencils
+                                        ;                                     and incorrect results when running the stencils in series
+(define (has-double-use? invalid-faces1 invalid-faces2)
+  (define (check-face face)
+    (member face invalid-faces2))
+  (ormap check-face invalid-faces1))
+
+                                        ;calculates when boundary condition cells are invalidated where they are needed to be valid
+                                        ;WARNING: This code is delicate and if the tests change (more ghost cells, different fields,
+                                        ;  different stencils, etc.) this code will need to be rewritten
+                                        ; it is suggested to remove this check to find all tests that fail before rewriting or modifying
+                                        ; in short: HERE BE DRAGONS
+(define (bc-improperly-invalid? stencil1 stencil2)
+                                        ;returns direction of boundary condition of a given field
+  (define (get-bc field)
+    (define bc-list (field-bc field))
+    (cond [(eq? 1 (first bc-list))  X]
+          [(eq? 1 (second bc-list)) Y]
+          [(eq? 1 (third bc-list))  Z]
+          [else                    -1]))
+                                        ;returns the direction of given face
+                                        ; if given face is a positive face
+  (define (pos-face->dir face)
+    (cond [(eq? posX face) X]
+          [(eq? posY face) Y]
+          [(eq? posZ face) Z]
+          [else null]))
+                                        ;needed boundary conditions
+  (define srcBC  (get-bc (stencil-src stencil1)))
+  (define itmdBC (get-bc (stencil-dest stencil1)))
+  (define destBC (get-bc (stencil-dest stencil2)))
+                                        ;conditions for bc-improperly-invalid?
+                                        ;necessary:
+                                        ; source and destination boundary conditions are different
+  (define diff-BC (not (eq? srcBC destBC)))
+                                        ;necessary:
+                                        ; destination boundary condition is invalidated by second stencil operator
+  (define destBC-invalidated-by-second
+    (member destBC (stencil-invalid-dirs stencil2)))
+                                        ;necessary:
+                                        ; either:
+                                        ;   intermediate and destination boundary conditions the same
+  (define itmd-dest-BC-same (eq? itmdBC destBC))
+                                        ; or:
+                                        ;   both:
+                                        ;     intermediate boundary condition does not exist
+  (define no-itmdBC (eq? -1 itmdBC))
+                                        ;   and:
+                                        ;     destination boundary condition invalidated by first stencil on the positive face
+  (define destBC-invalidated-by-first-on-positive
+    (member destBC (flatten (map pos-face->dir
+                                 (stencil-invalid-faces stencil1)))))
+                                        ;complete condition for bc-improperly-invalid?:
+  (and diff-BC
+       destBC-invalidated-by-second
+       (or itmd-dest-BC-same
+           (and no-itmdBC
+                destBC-invalidated-by-first-on-positive))))
+
+(define (build-1Dstencil name src dest)
+  (build-stencil name 1D-stencil-point-list src dest null))
+
+(define (regular-stencil-list V X Y Z)
+  (list (build-1Dstencil 'Interpolant V X)
+        (build-1Dstencil 'Interpolant V Y)
+        (build-1Dstencil 'Interpolant V Z)
+        (build-1Dstencil 'Gradient V X)
+        (build-1Dstencil 'Gradient V Y)
+        (build-1Dstencil 'Gradient V Z)
+        (build-1Dstencil 'Divergence X V)
+        (build-1Dstencil 'Divergence Y V)
+        (build-1Dstencil 'Divergence Z V)))
+
+(define (build-2Dstencil src dest)
+  (build-stencil 'Interpolant 2D-stencil-point-list src dest null))
+
+(define (build-FDstencil name src dest dir)
+  (build-stencil name fd-stencil-point-list src dest dir))
+
+(define (build-null-stencil name src dest)
+  (build-stencil name null-stencil-point-list src dest null))
+
+(define stencil-list
+                                        ;1Dstencil
+  (append (regular-stencil-list SVol SSurfX SSurfY SSurfZ)
+          (regular-stencil-list XVol XSurfX XSurfY XSurfZ)
+          (regular-stencil-list YVol YSurfX YSurfY YSurfZ)
+          (regular-stencil-list ZVol ZSurfX ZSurfY ZSurfZ)
+
+          (list (build-1Dstencil 'Interpolant XVol YSurfX)
+                (build-1Dstencil 'Gradient    XVol YSurfX)
+                (build-1Dstencil 'Interpolant XVol ZSurfX)
+                (build-1Dstencil 'Gradient    XVol ZSurfX)
+
+                (build-1Dstencil 'Interpolant YVol XSurfY)
+                (build-1Dstencil 'Gradient    YVol XSurfY)
+                (build-1Dstencil 'Interpolant YVol ZSurfY)
+                (build-1Dstencil 'Gradient    YVol ZSurfY)
+
+                (build-1Dstencil 'Interpolant ZVol XSurfZ)
+                (build-1Dstencil 'Gradient    ZVol XSurfZ)
+                (build-1Dstencil 'Interpolant ZVol YSurfZ)
+                (build-1Dstencil 'Gradient    ZVol YSurfZ)
+
+                (build-1Dstencil 'Interpolant SVol XVol)
+                (build-1Dstencil 'Gradient    SVol XVol)
+                (build-1Dstencil 'Interpolant SVol YVol)
+                (build-1Dstencil 'Gradient    SVol YVol)
+                (build-1Dstencil 'Interpolant SVol ZVol)
+                (build-1Dstencil 'Gradient    SVol ZVol)
+
+                (build-1Dstencil 'Interpolant XVol SVol)
+                (build-1Dstencil 'Gradient    XVol SVol)
+                (build-1Dstencil 'Interpolant YVol SVol)
+                (build-1Dstencil 'Gradient    YVol SVol)
+                (build-1Dstencil 'Interpolant ZVol SVol)
+                (build-1Dstencil 'Gradient    ZVol SVol)
+
+                (build-1Dstencil 'Interpolant XSurfX XVol)
+                (build-1Dstencil 'Interpolant XSurfY XVol)
+                (build-1Dstencil 'Interpolant XSurfZ XVol)
+
+                (build-1Dstencil 'Interpolant YSurfX YVol)
+                (build-1Dstencil 'Interpolant YSurfY YVol)
+                (build-1Dstencil 'Interpolant YSurfZ YVol)
+
+                (build-1Dstencil 'Interpolant ZSurfX ZVol)
+                (build-1Dstencil 'Interpolant ZSurfY ZVol)
+                (build-1Dstencil 'Interpolant ZSurfZ ZVol)
+
+                                        ;2Dstencil
+                (build-2Dstencil SVol XSurfY)
+                (build-2Dstencil SVol XSurfZ)
+                (build-2Dstencil SVol YSurfX)
+                (build-2Dstencil SVol YSurfZ)
+                (build-2Dstencil SVol ZSurfX)
+                (build-2Dstencil SVol ZSurfY)
+
+                (build-2Dstencil XSurfY SVol)
+                (build-2Dstencil XSurfZ SVol)
+                (build-2Dstencil YSurfX SVol)
+                (build-2Dstencil YSurfZ SVol)
+                (build-2Dstencil ZSurfX SVol)
+                (build-2Dstencil ZSurfY SVol)
+
+                (build-2Dstencil XVol YVol)
+                (build-2Dstencil XVol ZVol)
+                (build-2Dstencil YVol XVol)
+                (build-2Dstencil YVol ZVol)
+                (build-2Dstencil ZVol XVol)
+                (build-2Dstencil ZVol YVol)
+
+                                        ;finite difference stencils
+                (build-FDstencil 'InterpolantX SVol SVol X)
+                (build-FDstencil 'InterpolantY SVol SVol Y)
+                (build-FDstencil 'InterpolantZ SVol SVol Z)
+                (build-FDstencil 'GradientX    SVol SVol X)
+                (build-FDstencil 'GradientY    SVol SVol Y)
+                (build-FDstencil 'GradientZ    SVol SVol Z)
+
+                (build-FDstencil 'InterpolantX XVol XVol X)
+                (build-FDstencil 'InterpolantY XVol XVol Y)
+                (build-FDstencil 'InterpolantZ XVol XVol Z)
+                (build-FDstencil 'GradientX    XVol XVol X)
+                (build-FDstencil 'GradientY    XVol XVol Y)
+                (build-FDstencil 'GradientZ    XVol XVol Z)
+
+                (build-FDstencil 'InterpolantX YVol YVol X)
+                (build-FDstencil 'InterpolantY YVol YVol Y)
+                (build-FDstencil 'InterpolantZ YVol YVol Z)
+                (build-FDstencil 'GradientX    YVol YVol X)
+                (build-FDstencil 'GradientY    YVol YVol Y)
+                (build-FDstencil 'GradientZ    YVol YVol Z)
+
+                (build-FDstencil 'InterpolantX ZVol ZVol X)
+                (build-FDstencil 'InterpolantY ZVol ZVol Y)
+                (build-FDstencil 'InterpolantZ ZVol ZVol Z)
+                (build-FDstencil 'GradientX    ZVol ZVol X)
+                (build-FDstencil 'GradientY    ZVol ZVol Y)
+                (build-FDstencil 'GradientZ    ZVol ZVol Z)
+
+                                        ;NullStencil
+                (build-null-stencil 'Interpolant SVol SVol)
+                (build-null-stencil 'Interpolant XVol XVol)
+                (build-null-stencil 'Interpolant YVol YVol)
+                (build-null-stencil 'Interpolant ZVol ZVol)
+
+                (build-null-stencil 'Interpolant XVol SSurfX)
+                (build-null-stencil 'Interpolant YVol SSurfY)
+                (build-null-stencil 'Interpolant ZVol SSurfZ)
+
+                (build-null-stencil 'Interpolant SVol XSurfX)
+                (build-null-stencil 'Interpolant SVol YSurfY)
+                (build-null-stencil 'Interpolant SVol ZSurfZ)
+
+                                        ;BoxFilter not implemented yet for chaining
+                )))
+
+                                        ;stencil short list
+                                        ; this list conatains only stencil with different stencil point lists
+(define stencil-short-list
+  (reverse (foldl (lambda (stencil previous)
+                    (if (member (stencil-point-list stencil)
+                                (map stencil-point-list previous))
+                        previous
+                        (cons stencil previous)))
+                  null
+                  stencil-list)))
+
+                                        ;builds string representation of stencil
+(define (build-stencil-string stencil)
+  (add-spaces (stencil-op stencil)
+              (paren (concat (field-name (stencil-src stencil))
+                             "->"
+                             (field-name (stencil-dest stencil))))))
+
+                                        ;builds string representation of stencil chain test
+(define (build-test-string stencil1 stencil2)
+  (stringize (build-stencil-string stencil1)
+             " -> "
+             (build-stencil-string stencil2)))
+
+                                        ;builds string representation of direction/axis
+(define (dir->string dir)
+  (cond [(= X dir) 0]
+        [(= Y dir) 1]
+        [(= Z dir) 2]
+        [else (error "Unknown direction; given: " dir)]))
+
+                                        ;builds runtime guard for length/direction-based conditions where given stencil chain test should not be run
+                                        ; guards on npts determine if the given stencils makes sense to be applied to the given fields
+                                        ;   because of field dimensions
+(define (build-guard stencil1 stencil2)
+                                        ;formats a direction-based guard
+  (define (dir-guard-format dir)
+    (concat (array-access 'npts (dir->string dir))
+            '>
+            1))
+                                        ;all invalidated directions by both stencils
+  (define invalid-dirs (merge-invalid (stencil-invalid-dirs stencil1)
+                                      (stencil-invalid-dirs stencil2)))
+                                        ;builds list of formatted directions that must have length > 1
+                                        ; if no invalidated directions (yeah, right), returns null
+  (define guard-list (if (> (length invalid-dirs) 3)
+                         (error "Stencils invalidate more than all possible  directions! Given: " stencil1 stencil2)
+                         (map dir-guard-format invalid-dirs)))
+  (if (null? guard-list)
+      null
+      (concat (val-call 'if (add-spaces (add-between guard-list '&)))
+              new-line)))
+
+                                        ;builds a chaining test for given stencils
+                                        ; adds guards for a sanity check:
+                                        ;  sometimes chaining two stencils together makes sense given field types, but not when given dimensions or boundary conditions
+(define (build-test stencil1 stencil2)
+  (cond [(not (eq? (stencil-dest stencil1)
+                   (stencil-src  stencil2)))
+         (error "First stencil's destination type does not equal second stencil's source type! Given: " stencil1 stencil2)]
+        [(or (has-double-use? (stencil-invalid-faces stencil1)
+                              (stencil-invalid-faces stencil2))
+             (bc-improperly-invalid? stencil1 stencil2))
+         null]
+        [else
+         (concat (build-guard stencil1 stencil2)
+                 (indent 1
+                         (val-call (type-template 'test_stencil_chain_with_status
+                                                  (stencil-op stencil1)
+                                                  (stencil-op stencil2)
+                                                  (field-name (stencil-src stencil1))
+                                                  (field-name (stencil-src stencil2))
+                                                  (field-name (stencil-dest stencil2)))
+                                   'status
+                                   'opdb
+                                   'npts
+                                   'bc
+                                   (build-test-string stencil1 stencil2))))]))
+
+                                        ; beginnning of file
+(pp-includes 'spatialops/SpatialOpsTools.h
+             'spatialops/structured/FVStaggeredFieldTypes.h
+             'spatialops/OperatorDatabase.h
+             'spatialops/structured/stencil/FVStaggeredOperatorTypes.h
+             'spatialops/structured/stencil/StencilBuilder.h
+             'test/TestHelper.h
+             'spatialops/structured/FieldHelper.h
+             'spatialops/Nebo.h
+             'boost/program_options.hpp
+             'string
+             'stdexcept)
+
+(pp-alt-include 'ReferenceStencil.h)
+
+(stmt 'using 'namespace 'SpatialOps)
+(stmt 'using (scope 'std 'cout))
+(stmt 'using (scope 'std 'endl))
+(stmt 'using (scope 'std 'string))
+(stmt 'namespace 'po '= (scope 'boost 'program_options))
+
+(def-template (list (typename 'FirstOpType)
+                    (typename 'SecondOpType)
+                    (typename 'SrcType)
+                    (typename 'ItmdType)
+                    (typename 'DestType))
+  (def-returning-function (dcl-function 'test_stencil_chain
+                                        'bool
+                                        (function-pmtr (ref 'OperatorDatabase) 'opdb)
+                                        (function-pmtr 'IntVec 'npts)
+                                        (function-pmtr 'bool (array-access 'bc)))
+    (list (described-smts "basic definitions:"
+                          (val-typed-const-assign GhostData 'ghosts (val-call GhostData 1))
+                          (val-typed-const-assign BCInfo 'srcbc (val-call (type-template (scope BCInfo 'build)
+                                                                                         'SrcType)
+                                                                          (array-access 'bc 0)
+                                                                          (array-access 'bc 1)
+                                                                          (array-access 'bc 2)))
+                          (val-typed-const-assign BCInfo 'itmbc (val-call (type-template (scope BCInfo 'build)
+                                                                                         'ItmdType)
+                                                                          (array-access 'bc 0)
+                                                                          (array-access 'bc 1)
+                                                                          (array-access 'bc 2)))
+                          (val-typed-const-assign BCInfo 'destbc (val-call (type-template (scope BCInfo 'build)
+                                                                                          'DestType)
+                                                                           (array-access 'bc 0)
+                                                                           (array-access 'bc 1)
+                                                                           (array-access 'bc 2)))
+                          (val-typed-const-assign 'MemoryWindow 'mwSrc (val-call 'get_window_with_ghost 'npts 'ghosts 'srcbc))
+                          (val-typed-const-assign 'MemoryWindow 'mwItmd (val-call 'get_window_with_ghost 'npts 'ghosts 'itmbc))
+                          (val-typed-const-assign 'MemoryWindow 'mwDest (val-call 'get_window_with_ghost 'npts 'ghosts 'destbc))
+                          (add-spaces 'SrcType (val-call 'src 'mwSrc 'srcbc 'ghosts 'NULL))
+                          (function-pmtr 'ItmdType (val-call 'itmd 'mwItmd 'itmbc 'ghosts 'NULL))
+                          (function-pmtr 'DestType (val-call 'ref 'mwDest 'destbc 'ghosts 'NULL))
+                          (function-pmtr 'DestType (val-call 'test 'mwDest 'destbc 'ghosts 'NULL)))
+          (described-smts "initialize source field / zero out result fields:"
+                          (val-call 'initialize_field 'src)
+                          (add-spaces 'itmd '<<= "0.0")
+                          (add-spaces 'ref '<<= "0.0")
+                          (add-spaces 'test '<<= "0.0"))
+          (described-smts "get first operator"
+                          (typedef (typename (scope (type-template 'OperatorTypeBuilder 'FirstOpType 'SrcType 'ItmdType)
+                                                    'type))
+                                   'FirstOp)
+                          (val-typed-const-assign (add-spaces (ptr 'FirstOp)
+                                                              'const)
+                                                  'firstOp
+                                                  (val-member-call 'opdb (type-template 'retrieve_operator 'FirstOp))))
+          (described-smts "get second operator:"
+                          (typedef (typename (scope (type-template 'OperatorTypeBuilder 'SecondOpType 'ItmdType 'DestType)
+                                                    'type))
+                                   'SecondOp)
+                          (val-typed-const-assign (add-spaces (ptr 'SecondOp)
+                                                              'const)
+                                                  'secondOp
+                                                  (val-member-call 'opdb (type-template 'retrieve_operator 'SecondOp))))
+          (described-smts "run reference:"
+                          (add-spaces 'itmd '<<= (val-call (paren (concat '* 'firstOp)) 'src))
+                          (add-spaces 'ref '<<= (val-call (paren (concat '* 'secondOp)) 'itmd)))
+          (described-smts "run operator:"
+                          (add-spaces 'test '<<= (val-call (paren (concat '* 'secondOp))
+                                                           (val-call (paren (concat '* 'firstOp))
+                                                                     'src)))))
+    (val-call 'interior_display_fields_compare 'ref 'test 'false 'false)))
+
+(def-template (list (typename 'FirstOpType)
+                    (typename 'SecondOpType)
+                    (typename 'SrcType)
+                    (typename 'ItmdType)
+                    (typename 'DestType))
+  (def-void-function 'test_stencil_chain_with_status
+    (list (function-pmtr (ref 'TestHelper) 'status)
+          (function-pmtr (ref 'OperatorDatabase) 'opdb)
+          (function-pmtr 'IntVec 'npts)
+          (function-pmtr 'bool (array-access 'bc))
+          (function-pmtr (ref (const 'string)) 'str))
+    (val-call 'status
+              (val-call (type-template 'test_stencil_chain 'FirstOpType 'SecondOpType 'SrcType 'ItmdType 'DestType)
+                        'opdb
+                        'npts
+                        'bc)
+              'str)))
+
+(def-returning-function (dcl-no-inline-function 'main
+                                                'int
+                                                (function-pmtr 'int 'iarg)
+                                                (function-pmtr (ptr 'char) (array-access 'carg)))
+  (list (function-pmtr 'int 'nx)
+        (function-pmtr 'int 'ny)
+        (function-pmtr 'int 'nz)
+        (val-typed-assign 'bool
+                          (array-access 'bc)
+                          (body-list "," 'false 'false 'false))
+        (add-spaces (scope 'po 'options_description)
+                    (val-call 'desc (stringize "Supported Options")))
+        (concat (val-member-call 'desc 'add_options)
+                new-line
+                (paren-list(stringize 'help)
+                           (stringize "print help message\\n"))
+                new-line
+                (paren-list (stringize 'nx)
+                            (concat (val-call (scope 'po (type-template 'value 'int))
+                                              (concat '& 'nx))
+                                    "->"
+                                    (val-call 'default_value 11))
+                            (stringize "number of points in x-dir for base mesh"))
+                new-line
+                (paren-list (stringize 'ny)
+                            (concat (val-call (scope 'po (type-template 'value 'int))
+                                              (concat '& 'ny))
+                                    "->"
+                                    (val-call 'default_value 11))
+                            (stringize "number of points in y-dir for base mesh"))
+                new-line
+                (paren-list (stringize 'nz)
+                            (concat (val-call (scope 'po (type-template 'value 'int))
+                                              (concat '& 'nz))
+                                    "->"
+                                    (val-call 'default_value 11))
+                            (stringize "number of points in z-dir for base mesh"))
+                new-line
+                (paren-list (stringize 'bcx)
+                            (stringize "physical boundary on +x side?"))
+                new-line
+                (paren-list (stringize 'bcy)
+                            (stringize "physical boundary on +y side?"))
+                new-line
+                (paren-list (stringize 'bcz)
+                            (stringize "physical boundary on +z side?")))
+        (add-spaces (scope 'po 'variables_map)
+                    'args)
+        (val-call (scope 'po 'store)
+                  (val-call (scope 'po 'parse_command_line)
+                            'iarg
+                            'carg
+                            'desc)
+                  'args)
+        (val-call (scope 'po 'notify) 'args)
+        (stmt-if (val-member-call 'args 'count (stringize 'bcx))
+                 (val-assign (array-access 'bc 0)
+                             'true))
+        (stmt-if (val-member-call 'args 'count (stringize 'bcy))
+                 (val-assign (array-access 'bc 1)
+                             'true))
+        (stmt-if (val-member-call 'args 'count (stringize 'bcz))
+                 (val-assign (array-access 'bc 2)
+                             'true))
+        (stmt-if (val-member-call 'args 'count (stringize 'help))
+                 (add-spaces 'cout '<< 'desc '<< 'endl
+                             '<< (stringize 'Examples:) '<< 'endl new-line
+                             '<< (stringize " test_stencil --nx 5 --ny 10 --nz 3 --bcx") '<< 'endl new-line
+                             '<< (stringize " test_stencil --bcx --bcy --bcz") '<< 'endl new-line
+                             '<< (stringize " test_stencil --nx 50 --bcz") '<< 'endl new-line
+                             '<< 'endl)
+                 (add-spaces 'return "-1"))
+        (add-spaces 'TestHelper (val-call 'status 'true))
+        (add-spaces 'const 'IntVec (val-call 'npts 'nx 'ny 'nz))
+        (add-spaces 'cout '<< (stringize "Run information:") '<< 'endl new-line
+                    '<< (stringize "  bcx    : ")
+                    '<< (ter-cond (array-access 'bc 0)
+                                  (stringize 'ON)
+                                  (stringize 'OFF))
+                    '<< 'endl new-line
+                    '<< (stringize "  bcy    : ")
+                    '<< (ter-cond (array-access 'bc 1)
+                                  (stringize 'ON)
+                                  (stringize 'OFF))
+                    '<< 'endl new-line
+                    '<< (stringize "  bcz    : ")
+                    '<< (ter-cond (array-access 'bc 2)
+                                  (stringize 'ON)
+                                  (stringize 'OFF))
+                    '<< 'endl new-line
+                    '<< (stringize "  domain : ") '<< 'npts '<< 'endl new-line
+                    '<< 'endl)
+        (val-typed-const-assign 'double 'length "10.0")
+        (add-spaces 'OperatorDatabase 'opdb)
+        (val-call 'build_stencils
+                  (array-access 'npts 0)
+                  (array-access 'npts 1)
+                  (array-access 'npts 2)
+                  'length
+                  'length
+                  'length
+                  'opdb)
+        (concat 'try
+                (body
+                 (for*/list ([first-stencil stencil-short-list])
+                            (define raw-tests (for*/list ([second-stencil stencil-short-list])
+                                                         (if (eq? (stencil-dest first-stencil)
+                                                                  (stencil-src  second-stencil))
+                                                             (build-test first-stencil
+                                                                         second-stencil)
+                                                             null)))
+                            (define tests (flatten* raw-tests))
+                            (if (not (null? tests))
+                                (described-smts (concat "Test for chains starting with " (stringize (build-stencil-string first-stencil)))
+                                                tests)
+                                null))
+                 (stmt-if (val-member-call 'status 'ok)
+                          (list (add-spaces 'cout '<< (stringize "ALL TESTS PASSED :)") '<< 'endl)
+                                (add-spaces 'return 0))))
+                new-line
+                (val-call 'catch (add-spaces (scope 'std 'runtime_error) '& 'e))
+                (body (add-spaces 'cout '<< (val-member-call 'e 'what) '<< 'endl)))
+        (add-spaces 'cout '<< (stringize "******************************") '<< 'endl new-line
+                    '<< (stringize " At least one test FAILED :(") '<< 'endl new-line
+                    '<< (stringize "******************************") '<< 'endl))
+  "-1")

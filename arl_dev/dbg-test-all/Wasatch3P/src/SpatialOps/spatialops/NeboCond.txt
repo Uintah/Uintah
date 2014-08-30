@@ -1,0 +1,53 @@
+/**
+\page NeboCond Conditional Operations using Nebo
+
+Frequently one wishes to perform calculations of the form:
+\verbatim
+for i
+  if     ( condition1 ) f[i] = something;
+  else if( condition2 ) f[i] = something else;
+  else                  f[i] = some default;
+end
+\endverbatim
+
+# Basic syntax
+In Nebo, this is accomplished via `cond` which has the basic syntax:
+\verbatim
+f <<= cond( condition1, result1 )
+          ( condition2, result2 )
+          ...
+          ( defaultResult );
+\endverbatim
+
+There are a few guidelines/rules when using `cond`
+ - A `cond` statument must always have a default assignment.
+
+ - There can be an arbitrary number of conditionals provided, and they are evaluated
+   in order just as the `for` loop example above.
+
+ - There are constraints on the arguments to `cond` as summarized in the following table:
+   Item      | Valid inputs
+   ----------|-------------
+   condition | Nebo \link compops comparison operators \endlink
+   result    | Scalar, SpatialField, or Nebo expression
+
+
+# Examples
+
+A few examples of cond:
+\code{.cpp}
+// here assume that f, a and b are all SpatialField objects
+
+f <<= cond( a > b, a )            // assign f=a where a>b 
+          ( b        );           // f=b otherwise
+          
+f <<= cond( sin(a) > 0, exp(b) )  // assign f = exp(b) where sin(a) is positive
+          ( a      < 5, 1.0    )  // for cases not covered above, and where a<5, set f=1.0
+          ( b                  ); // all other cases, set f=b
+
+f <<= cond( f > a, 0.0 )          // when f exceeds a (pointwise), clip it to 0.0
+          ( f          );         // otherwise, leave it unchanged
+\endcode
+
+\sa \ref example-field-operations for a more complete example.
+*/

@@ -1,0 +1,9 @@
+digraph G {
+node[style=filled]
+0[label="( c, STATE_NONE )  (0)"];
+1[label="( b, STATE_NONE )  (1)"];
+2[label="( d, STATE_NONE )  (2)"];
+0->1 ;
+0->2 ;
+1->2 ;
+}

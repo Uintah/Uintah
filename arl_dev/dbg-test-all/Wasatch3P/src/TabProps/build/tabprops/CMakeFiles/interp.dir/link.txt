@@ -1,0 +1,2 @@
+/usr/bin/ar cr libinterp.a  CMakeFiles/interp.dir/LagrangeInterpolant.cpp.o
+/usr/bin/ranlib libinterp.a

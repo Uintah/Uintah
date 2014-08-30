@@ -1,0 +1,834 @@
+#LyX 1.6.5 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass article
+\begin_preamble
+\usepackage{cite}
+\date{}
+\end_preamble
+\use_default_options false
+\language english
+\inputencoding auto
+\font_roman palatino
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\leftmargin 2.4cm
+\topmargin 2.4cm
+\rightmargin 2.4cm
+\bottommargin 2.4cm
+\headheight 1cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Poisson Equation - Operator Approach
+\end_layout
+
+\begin_layout Author
+James C.
+ Sutherland
+\end_layout
+
+\begin_layout Standard
+The Poisson equation is given as 
+\begin_inset Formula \[
+\nabla^{2}\phi=\gamma(\mathbf{x},t).\]
+
+\end_inset
+
+ The discrete representation of this is 
+\begin_inset Formula $\mathsf{L}\phi=\gamma$
+\end_inset
+
+ or 
+\begin_inset Formula $n$
+\end_inset
+
+ equations 
+\begin_inset Formula \begin{equation}
+\sum_{j=1}^{n}\mathsf{L}_{ij}\phi_{j}=\gamma_{i}.\label{eq:PoissonSystem}\end{equation}
+
+\end_inset
+
+Let us consider a staggered scheme where 
+\begin_inset Formula $\phi$
+\end_inset
+
+ is stored at cell centroids with 
+\begin_inset Formula $n_{g}$
+\end_inset
+
+ ghost cells on 
+\begin_inset Formula $\phi.$
+\end_inset
+
+ We solve 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:PoissonSystem"
+
+\end_inset
+
+ on the interior of the domain.
+ We define 
+\begin_inset Formula $\mathsf{S}=\mathsf{D}\mathsf{G},$
+\end_inset
+
+ where 
+\begin_inset Formula $\mathsf{D}$
+\end_inset
+
+ and 
+\begin_inset Formula $\mathsf{G}$
+\end_inset
+
+ are the discrete divergence and gradient operators, respectively.
+ Note that both 
+\begin_inset Formula $\mathsf{D}$
+\end_inset
+
+ and 
+\begin_inset Formula $\mathsf{G}$
+\end_inset
+
+ have ghost cell information embedded in them and, thus, 
+\begin_inset Formula $\mathsf{S}$
+\end_inset
+
+ has all ghost information retained.
+ 
+\begin_inset Formula $\mathsf{L}$
+\end_inset
+
+ has no ghost information, and is thus a subset of 
+\begin_inset Formula $\mathsf{S}.$
+\end_inset
+
+ We place a restriction on these operators (
+\begin_inset Formula $\mathsf{D},$
+\end_inset
+
+ 
+\begin_inset Formula $\mathsf{G},$
+\end_inset
+
+ and 
+\begin_inset Formula $\mathsf{R}$
+\end_inset
+
+ - the interpolant operator) at physical boundaries: they must have precisely
+ one nonzero ghost cell coefficient.
+ This implies that at physical boundaries the stencils may not be symmetric.
+ The reason for this restriction is that boundary condition implementation
+ can become problematic for more than one ghost point on a boundary.
+ Note that for second order FV schemes this is a moot point, since the stencils
+ have a half-width of one.
+ 
+\end_layout
+
+\begin_layout Standard
+Let 
+\begin_inset Formula $\phi_{BC}$
+\end_inset
+
+ represent the boundary value at the surface.
+ This can be expressed in terms of the boundary operator as 
+\begin_inset Formula \begin{equation}
+\phi_{BC}=\mathsf{B}_{kg}\phi_{g}+\sum_{j_{\mathrm{interior}}}\mathsf{B}_{kj}\phi_{j},\label{eq:BoundaryOp}\end{equation}
+
+\end_inset
+
+ where 
+\begin_inset Formula $\mathsf{B}$
+\end_inset
+
+ is an appropriate boundary operator which includes ghost cell coefficients,
+ 
+\begin_inset Formula $\phi_{g}$
+\end_inset
+
+ is the ghost value, and 
+\begin_inset Formula $\mathsf{B}_{kg}$
+\end_inset
+
+ is the stencil coefficient on the ghost cell.
+ For Dirichlet conditions, we choose 
+\begin_inset Formula $\mathsf{B}$
+\end_inset
+
+ as the interpolant operator (
+\begin_inset Formula $\mathsf{B}\!=\!\mathsf{R}$
+\end_inset
+
+) while for Neumann conditions we choose 
+\begin_inset Formula $\mathsf{B}$
+\end_inset
+
+ as the gradient operator, 
+\begin_inset Formula $(\mathsf{B}\!=\!\mathsf{G})$
+\end_inset
+
+.
+ If we have operators for the 
+\begin_inset Formula $x$
+\end_inset
+
+, 
+\begin_inset Formula $y,$
+\end_inset
+
+ and 
+\begin_inset Formula $z$
+\end_inset
+
+ directions and a unit normal 
+\begin_inset Formula $\mathbf{n}=n_{x}\vec{i}+n_{y}\vec{j}+n_{z}\vec{k}$
+\end_inset
+
+ then 
+\begin_inset Formula $\mathsf{B}=n_{x}\mathsf{B}_{x}+n_{y}\mathsf{B}_{y}+n_{z}\mathsf{B}_{z}.$
+\end_inset
+
+ We need to solve for the ghost value, 
+\begin_inset Formula $\phi_{g}$
+\end_inset
+
+, in terms of 
+\begin_inset Formula $\phi_{BC},$
+\end_inset
+
+ 
+\begin_inset Formula $\mathsf{B}_{kj_{\mathrm{interior}}},$
+\end_inset
+
+ and 
+\begin_inset Formula $\phi_{j_{\mathrm{interior}}}$
+\end_inset
+
+.
+ We can use the columns of 
+\begin_inset Formula $\mathsf{B}$
+\end_inset
+
+ to solve for 
+\begin_inset Formula $\phi_{g}$
+\end_inset
+
+, 
+\begin_inset Formula \begin{equation}
+\phi_{g}=\frac{1}{\mathsf{B}_{kg}}\left(\phi_{BC}-\sum_{j_{\mathrm{interior}}}\mathsf{B}_{kj}\phi_{j}\right).\label{eq:bcValOp}\end{equation}
+
+\end_inset
+
+ The 
+\begin_inset Formula $i^{th}$
+\end_inset
+
+ row in 
+\begin_inset Formula $\mathsf{S}$
+\end_inset
+
+ is now modified using the information contained in 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:bcValOp"
+
+\end_inset
+
+ to eliminate the coefficients on the ghost values
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+Need more detail.
+\end_layout
+
+\end_inset
+
+ by augmenting those in the interior.
+ This is done by writing 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+james: this actually requires modification of all elements in 
+\begin_inset Formula $\mathsf{S}$
+\end_inset
+
+ that involve ghost cell 
+\begin_inset Formula $g$
+\end_inset
+
+.
+ So equation 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:bcValOp"
+
+\end_inset
+
+ must be used at more points than simply 
+\begin_inset Formula $k$
+\end_inset
+
+.
+ It must be used for all rows where 
+\begin_inset Formula $g$
+\end_inset
+
+ is incorporated.
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset Formula \begin{eqnarray*}
+\sum_{j=1}^{n}\mathsf{S}_{ij}\phi_{j} & = & \gamma_{i},\\
+\mathsf{S}_{ig}\phi_{g}+\sum_{j_{interior}}\mathsf{S}_{ij}\phi_{j} & = & \gamma_{i}.\end{eqnarray*}
+
+\end_inset
+
+ Substituting 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:bcValOp"
+
+\end_inset
+
+ we find 
+\begin_inset Formula \begin{eqnarray*}
+\frac{\mathsf{S}_{ig}}{\mathsf{B}_{kg}}\phi_{BC}+\sum_{j_{interior}}\left(\mathsf{S}_{ij}-\frac{\mathsf{B}_{kj}}{\mathsf{B}_{kg}}\right)\phi_{j} & = & \gamma_{i},\\
+\sum_{j_{interior}}\left(\mathsf{S}_{ij}-\mathsf{S}_{ig}\frac{\mathsf{B}_{kj}}{\mathsf{B}_{kg}}\right)\phi_{j} & = & \gamma_{i}-\frac{\mathsf{S}_{ig}}{\mathsf{B}_{kg}}\phi_{BC}.\end{eqnarray*}
+
+\end_inset
+
+Therefore, 
+\begin_inset Formula $\mathsf{L}$
+\end_inset
+
+ can be written as 
+\begin_inset Formula \begin{equation}
+\mathsf{L}_{ij}=\mathsf{S}_{ij}-\mathsf{S}_{ig}\frac{\mathsf{B}_{kj}}{\mathsf{B}_{kg}}\quad\forall\;\mathrm{interior}\; j,\label{eq:Lcoefs}\end{equation}
+
+\end_inset
+
+ and 
+\begin_inset Formula $\gamma_{i}$
+\end_inset
+
+ is augmented on the interior as 
+\begin_inset Formula \begin{equation}
+\gamma_{i}=\gamma_{i}-\mathsf{S}_{ig}\frac{\phi_{BC}}{\mathsf{B}_{kg}}.\label{eq:gamMod}\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection*
+Example - One Dimensional FV Uniform Mesh, 
+\begin_inset Formula $2^{\mathrm{nd}}$
+\end_inset
+
+ Order
+\end_layout
+
+\begin_layout Standard
+Consider a one-dimensional, staggered, uniform mesh that we wish to discretize
+ with second order accuracy.
+ The elements of the divergence and gradient operators are given by 
+\begin_inset Formula \[
+\mathsf{D}_{ij}=\frac{1}{\Delta x}\left\{ \begin{array}{cl}
+-1 & j=i-\tfrac{1}{2}\\
+1 & j=i+\tfrac{1}{2}\end{array}\right.\quad i=1\ldots n+1.\]
+
+\end_inset
+
+ and 
+\begin_inset Formula \[
+\mathsf{G}_{ij}=\tfrac{1}{\Delta x}\left\{ \begin{array}{cl}
+-1 & j=i-\tfrac{1}{2}\\
+1 & j=i+\tfrac{1}{2}\end{array}\right.\quad\tfrac{1}{2}\le i\le n-\tfrac{1}{2},\]
+
+\end_inset
+
+ respectively so that 
+\begin_inset Formula $\mathsf{D}$
+\end_inset
+
+ is 
+\begin_inset Formula $(n\times n+1)$
+\end_inset
+
+ while 
+\begin_inset Formula $\mathsf{G}$
+\end_inset
+
+ is 
+\begin_inset Formula $(n+1\times n)$
+\end_inset
+
+ .
+ Application of 
+\begin_inset Formula $\mathsf{G}$
+\end_inset
+
+ to a cell-centered field results in a field shifted by 
+\begin_inset Formula $\frac{\Delta x}{2},$
+\end_inset
+
+ and 
+\begin_inset Formula $\mathsf{D}$
+\end_inset
+
+ is applied to a staggered field to produce a cell-centered field.
+ There are no modifications to 
+\begin_inset Formula $\mathsf{G}$
+\end_inset
+
+ or 
+\begin_inset Formula $\mathsf{D}$
+\end_inset
+
+ required at boundaries.
+ We have components of 
+\begin_inset Formula $\mathsf{S}=\mathsf{D}\mathsf{G}$
+\end_inset
+
+ defined as 
+\begin_inset Formula \[
+\mathsf{S}_{ij}=\frac{1}{\Delta x^{2}}\left\{ \begin{array}{cl}
+1 & j=i-1\\
+-2 & j=i\\
+1 & j=i+1\end{array}\right.\quad1\le i\le n,\]
+
+\end_inset
+
+ where the interior cells are numbered 
+\begin_inset Formula $1\ldots n.$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Dirichlet Conditions.
+\end_layout
+
+\begin_layout Standard
+At the left boundary 
+\begin_inset Formula $(k\!=\!1/2)$
+\end_inset
+
+, Dirichlet conditions are given by the interpolant operator, whose coefficients
+ for second-order interpolation are 
+\begin_inset Formula \[
+R_{ij}=\left\{ \begin{array}{cl}
+1/2 & j=i-\tfrac{1}{2}\\
+1/2 & j=i+\tfrac{1}{2}\end{array}\right.\quad\tfrac{1}{2}\le i\le n-\tfrac{1}{2}.\]
+
+\end_inset
+
+Therefore, at 
+\begin_inset Formula $i\!=\!1/2$
+\end_inset
+
+ we obtain (from 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:bcValOp"
+
+\end_inset
+
+) 
+\begin_inset Formula \[
+\phi_{BC}=\tfrac{1}{2}\phi_{0}+\tfrac{1}{2}\phi_{1}\quad\Rightarrow\quad\phi_{0}=2\phi_{BC}-\phi_{1}.\]
+
+\end_inset
+
+ Therefore, from 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:Lcoefs"
+
+\end_inset
+
+, the nonzero entries of 
+\begin_inset Formula $\mathsf{L}_{1j}$
+\end_inset
+
+ are 
+\begin_inset Formula \[
+\mathsf{L}_{1j}=\frac{1}{\Delta x^{2}}\left\{ \begin{array}{cl}
+-3 & j=1\\
+1 & j=2\end{array}\right.,\]
+
+\end_inset
+
+ and from 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:gamMod"
+
+\end_inset
+
+, 
+\begin_inset Formula $\gamma_{1}$
+\end_inset
+
+ is augmented by 
+\begin_inset Formula $-\frac{2\phi_{bc}}{\Delta x^{2}}.$
+\end_inset
+
+ The equation for the first cell is thus 
+\begin_inset Formula \[
+\gamma_{1}-\frac{2\phi_{bc}}{\Delta x^{2}}=\frac{-3\phi_{1}+\phi_{2}}{\Delta x^{2}}.\]
+
+\end_inset
+
+ Boundary conditions would still need to be applied on 
+\begin_inset Formula $\mathsf{L}_{nj}$
+\end_inset
+
+ following the same procedure for 
+\begin_inset Formula $i=n$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Paragraph
+Neumann Conditions.
+\end_layout
+
+\begin_layout Standard
+At the left boundary (
+\begin_inset Formula $i\!=\!1/2)$
+\end_inset
+
+, Neumann conditions are given by the gradient operator, whose coefficients
+ for second-order derivatives are 
+\begin_inset Formula \[
+\mathsf{G}_{ij}=\frac{1}{\Delta x}\left\{ \begin{array}{cl}
+-1 & j=i-\tfrac{1}{2}\\
+1 & j=i+\tfrac{1}{2}\end{array}\right.\quad\tfrac{1}{2}\le i\le n-\tfrac{1}{2}.\]
+
+\end_inset
+
+ At 
+\begin_inset Formula $i\!=\!1/2$
+\end_inset
+
+ we obtain (from 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:bcValOp"
+
+\end_inset
+
+) 
+\begin_inset Formula \[
+\phi_{BC}=\frac{-\phi_{0}+\phi_{1}}{\Delta x}\quad\Rightarrow\quad\phi_{0}=\phi_{1}-\Delta x\phi_{BC}.\]
+
+\end_inset
+
+From
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:Lcoefs"
+
+\end_inset
+
+, the nonzero entries of 
+\begin_inset Formula $\mathsf{L}_{1j}$
+\end_inset
+
+ are 
+\begin_inset Formula \[
+\mathsf{L}_{1j}=\frac{1}{\Delta x^{2}}\left\{ \begin{array}{cl}
+-1 & j=1\\
+1 & j=2\end{array}\right.,\]
+
+\end_inset
+
+and from 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:gamMod"
+
+\end_inset
+
+, 
+\begin_inset Formula $\gamma_{1}$
+\end_inset
+
+ is augmented by 
+\begin_inset Formula $\nicefrac{\phi_{BC}}{\Delta x}.$
+\end_inset
+
+ The equation for the first cell is thus 
+\begin_inset Formula \[
+\gamma_{1}+\frac{\phi_{BC}}{\Delta x}=\frac{-\phi_{1}+\phi_{2}}{\Delta x^{2}}.\]
+
+\end_inset
+
+Boundary conditions would still need to be applied on 
+\begin_inset Formula $\mathsf{L}_{nj}$
+\end_inset
+
+ following the same procedure for 
+\begin_inset Formula $i=n$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsubsection*
+Example - Higher Order FV Uniform mesh
+\end_layout
+
+\begin_layout Standard
+Consider a one-dimensional, finite-volume, uniform mesh that we wish to
+ discretize with fourth-order accuracy.
+ We have components of 
+\begin_inset Formula $\mathsf{S}=\mathsf{D}\mathsf{G}$
+\end_inset
+
+ defined as 
+\begin_inset Formula \[
+\mathsf{S}_{ij}=\frac{1}{\Delta x^{2}}\left\{ \begin{array}{cl}
+-1/12 & j=i-2\\
+4/3 & j=i-1\\
+-5/12 & j=i\\
+4/3 & j=i+1\\
+-1/12 & j=i+2\end{array}\right.\quad2\le i\le n-1,\]
+
+\end_inset
+
+ while at 
+\begin_inset Formula $n=1$
+\end_inset
+
+ we have 
+\begin_inset Formula \[
+\mathsf{S}_{1j}=\frac{1}{\Delta x^{2}}\left\{ \begin{array}{cl}
+11/12 & j=0\\
+-5/3 & j=1\\
+1/2 & j=2\\
+1/3 & j=3\\
+-1/12 & j=4\end{array}\right..\]
+
+\end_inset
+
+
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+I got this from the one-sided expansion for the second derivative.
+ Check this in terms of DG and explain.
+ (This is not consistent with DG).
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Dirichlet Condition.
+\end_layout
+
+\begin_layout Standard
+The fourth-order boundary point stencil for the interpolant operator is
+ given as 
+\begin_inset Formula \[
+\mathsf{B}_{\tfrac{1}{2}j}=\mathsf{R}_{\tfrac{1}{2}j}=\left\{ \begin{array}{cl}
+5/16 & j=0\\
+15/16 & j=1\\
+-5/16 & j=2\\
+1/16 & j=3\end{array}\right.,\]
+
+\end_inset
+
+Therefore, at 
+\begin_inset Formula $i\!=\!1/2$
+\end_inset
+
+ we obtain (from 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:bcValOp"
+
+\end_inset
+
+) 
+\begin_inset Formula \[
+\phi_{BC}=\tfrac{5}{16}\phi_{0}+\tfrac{15}{16}\phi_{1}-\tfrac{5}{16}\phi_{2}+\tfrac{1}{16}\phi_{3}\quad\Rightarrow\quad\phi_{0}=\tfrac{16}{5}\phi_{BC}-3\phi_{1}+\phi_{2}-\tfrac{1}{5}\phi_{3}.\]
+
+\end_inset
+
+Therefore, from 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:Lcoefs"
+
+\end_inset
+
+, the nonzero entries of 
+\begin_inset Formula $\mathsf{L}_{1j}$
+\end_inset
+
+ are 
+\begin_inset Formula \[
+\mathsf{L}_{1j}=\frac{1}{\Delta x^{2}}\left\{ \begin{array}{cl}
+-14/3 & j=1\\
+3/2 & j=2\\
+2/15 & j=3\\
+-1/12 & j=4\end{array}\right.,\]
+
+\end_inset
+
+and from 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:gamMod"
+
+\end_inset
+
+, 
+\begin_inset Formula $\gamma_{1}$
+\end_inset
+
+ is augmented by 
+\begin_inset Formula $-\frac{16\phi_{bc}}{5\Delta x^{2}}.$
+\end_inset
+
+ The equation for the first cell is thus 
+\begin_inset Formula \[
+\gamma_{1}-\frac{16\phi_{bc}}{5\Delta x^{2}}=\frac{-\tfrac{14}{3}\phi_{1}-\tfrac{3}{2}\phi_{2}+\tfrac{2}{15}\phi_{3}-\tfrac{1}{12}\phi_{4}}{\Delta x^{2}}.\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Neumann Conditions.
+\end_layout
+
+\begin_layout Standard
+At the left boundary (
+\begin_inset Formula $i\!=\!1/2)$
+\end_inset
+
+, Neumann conditions are given by the gradient operator, whose coefficients
+ for fourth-order derivatives at 
+\begin_inset Formula $i=\tfrac{1}{2}$
+\end_inset
+
+ are 
+\begin_inset Formula \[
+\mathsf{B}_{\tfrac{1}{2}j}=\mathsf{G}_{\tfrac{1}{2}j}=\frac{1}{\Delta x}\left\{ \begin{array}{cl}
+1/24 & j=0\\
+-9/8 & j=1\\
+9/8 & j=2\\
+-1/24 & j=3\end{array}\right..\]
+
+\end_inset
+
+ At 
+\begin_inset Formula $i\!=\!1/2$
+\end_inset
+
+ we obtain (from 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:bcValOp"
+
+\end_inset
+
+) 
+\begin_inset Formula \[
+\phi_{BC}=\frac{\tfrac{1}{24}\phi_{0}-\tfrac{9}{8}\phi_{1}+\tfrac{9}{8}\phi_{2}-\tfrac{1}{24}\phi_{3}}{\Delta x}\quad\Rightarrow\quad\phi_{0}=24\Delta x\phi_{BC}+\tfrac{9}{8}\phi_{1}-\tfrac{9}{8}\phi_{2}+\tfrac{1}{24}\phi_{3}.\]
+
+\end_inset
+
+From
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:Lcoefs"
+
+\end_inset
+
+, the nonzero entries of 
+\begin_inset Formula $\mathsf{L}_{1j}$
+\end_inset
+
+ are 
+\begin_inset Formula \[
+\mathsf{L}_{1j}=\frac{1}{\Delta x^{2}}\left\{ \begin{array}{cl}
+335/12 & j=1\\
+-53/2 & j=2\\
+-2/3 & j=3\\
+-1/12 & j=4\end{array}\right..\]
+
+\end_inset
+
+and from 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:gamMod"
+
+\end_inset
+
+, 
+\begin_inset Formula $\gamma_{1}$
+\end_inset
+
+ is augmented by 
+\begin_inset Formula $24\phi_{BC}/\Delta x.$
+\end_inset
+
+ The equation for the first cell is thus 
+\begin_inset Formula \[
+\gamma_{1}+\frac{24\phi_{BC}}{\Delta x}=\frac{\tfrac{335}{12}\phi_{1}-\tfrac{53}{2}\phi_{2}-\tfrac{2}{3}\phi_{3}-\tfrac{1}{12}\phi_{4}}{\Delta x^{2}}.\]
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

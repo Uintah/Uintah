@@ -1,0 +1,30 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/alan/uintah-md/md-dev/dbg-test-all/Wasatch3P/src/SpatialOps/spatialops/structured/onedim/LagrangePoly.cpp
+algorithm
+-
+cmath
+-
+cassert
+-
+LagrangePoly.h
+/home/alan/uintah-md/md-dev/dbg-test-all/Wasatch3P/src/SpatialOps/spatialops/structured/onedim/LagrangePoly.h
+iostream
+-
+
+/home/alan/uintah-md/md-dev/dbg-test-all/Wasatch3P/src/SpatialOps/spatialops/structured/onedim/LagrangePoly.h
+spatialops/SpatialOpsConfigure.h
+-
+vector
+-
+iterator
+-
+
+config/spatialops/SpatialOpsConfigure.h
+

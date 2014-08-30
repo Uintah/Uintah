@@ -1,0 +1,169 @@
+\documentclass[10pt]{book}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\begin{document}
+
+\title{Mixing \& Reaction Models}
+
+\author{James C. Sutherland}
+
+%\maketitle
+
+\bibliographystyle{unsrt}
+
+\chapter{Table Generation}
+%%----------------------------------------------------------
+\section{B-Splines}
+\subsection{L-U Factorization}
+%%----------------------------------------------------------
+\section{HDF5 Databases}
+%%----------------------------------------------------------
+\section{Software API}
+\subsection{Table Generation}
+\subsection{B-Splines}
+\subsubsection{1-D Splines}
+\subsubsection{2-D Splines}
+\subsubsection{Higher-Dimensional Splines}
+
+%%==========================================================
+
+\chapter{Reaction Models}
+Given a single-phase reacting system with $N_s$ species, one must
+specify $N_s \! +\! 1$ variables (\emph{e.g.}, $N_s \! -\! 1$ mass
+fractions, temperature and pressure) to uniquely specify the entire
+thermochemical state, $\boldsymbol{\phi}$, of the system
+\cite{williams85,felder86,smith01}.  Reaction models parameterize
+$\boldsymbol{\phi}$ by $N_\eta \ll N_s+1$ parameters called
+\emph{reaction variables}, which we represent collectively as
+$\boldsymbol{\eta}$.  A reaction model then provides a unique mapping
+from $\boldsymbol{\eta}$ to $\boldsymbol{\phi}$, \emph{i.e.}, each
+$\phi_i$ is represented by an $N_\eta$-dimensional surface in
+$\boldsymbol{\eta}$-space.
+
+We define a reaction model as a mapping between thermochemical state
+variables and reaction variables,
+\begin{equation}
+  \label{eqn:rxnMdlDef}
+  \boldsymbol{\phi} = \boldsymbol{\phi}(\boldsymbol{\eta}).
+\end{equation}
+
+%%----------------------------------------------------------
+%% The Mixture Fraction
+%%----------------------------------------------------------
+\section{The Mixture Fraction}
+As many of the results will use the mixture fraction as a reaction
+variable, it is briefly defined here.  Elemental mass fractions,
+$Z_\ell$, may be defined in terms of the species mass fractions,
+$Y_i$, as
+\begin{equation} \label{eqn:elemMassFrac}
+  Z_\ell = \sum_{i=1}^{N_s} \frac{a_{\ell,i} W_\ell}{W_i}  Y_i,
+\end{equation}
+where $N_s$ is the number of species, $a_{\ell,i}$ is the number of
+atoms of element $\ell$ in species $i$, $W_\ell$ is the molecular
+weight of element $\ell$, and $W_i$ is the molecular weight of species
+$i$.  The mixture fraction, $f$, may be written in terms of coupling
+functions, $\beta$, as \cite{williams85}
+\begin{equation}  \label{eqn:mixfrac_general}
+  f = \frac{\beta-\beta_0}{\beta_1-\beta_0},
+\end{equation}
+where $\beta_1$ and $\beta_0$ are constants evaluated in the fuel and
+oxidizer streams, respectively. The coupling function, $\beta$, is
+defined in terms of the elemental mass fractions as
+\begin{equation} \label{eqn:betas}
+  \beta = \sum_{\ell=1}^{N_e} \gamma_\ell Z_\ell 
+  = \sum_{\ell=1}^{N_e} \gamma_\ell \sum_{i=1}^{N_s} \frac{a_{\ell,i} W_\ell Y_i}{W_i},
+\end{equation}
+where $\gamma_\ell$ are weighting factors.  The $\gamma_\ell$ are not
+unique; for this study Bilger's definition \cite{bilger90} of the
+mixture fraction is adopted, for which
+$\gamma_\mathrm{C}=2/W_\mathrm{C}$, $\gamma_\mathrm{H}=1/(2
+W_\mathrm{H})$, $\gamma_O-1/W_\mathrm{O}$, $\gamma_\mathrm{N}=0$.  The
+stoichiometric mixture fraction, $f_{st}$, is determined from
+equation (\ref{eqn:mixfrac_general}) with $\beta=0$.  The dissipation rate is
+defined as $\chi=2D \nabla f \cdot \nabla f$, with $D$ obtained from
+$\mathrm{Le}=\lambda/(\rho c_p D)$.  In this study, the Lewis number
+of the mixture fraction was assumed to be unity.
+
+%%----------------------------------------------------------
+%% Effects of Heat Loss
+%%----------------------------------------------------------
+\section{Effects of Heat Loss}
+Heat loss is an important aspect of combustion modeling, and may occur
+through radiation or conduction/convection.  We define the fractional
+heat loss, $\gamma$ as
+\begin{equation}
+  \label{eqn:heatLoss}
+  \gamma = \frac{h_a - h}{h_a - h_c}
+         = \frac{h_a-h}{h_{a,s}}
+\end{equation}
+
+$h_{a,s} \equiv \sum_{i=1}^{N_s} Y_i h_{a,i}-h_i^o$
+
+with
+\begin{eqnarray}
+  c_p &=& \sum_{i=1}^{N_s} Y_i c_{p,i},  \label{eqn:cp} \\
+  h &=& \sum_{i=1}^{N_s} Y_i h_i,   \label{eqn:enthalpy} \\
+  h_i &=& h_i^o + \int_{T_o}^T c_{p,i} \mathrm{d}T, \label{eqn:hi}
+\end{eqnarray}
+where $h_i$ is the enthalpy of species $i$, $h_i^o$ is the enthalpy of
+of formation of species $i$ at temperature $T_o$, and $c_p$ is the
+isobaric heat capacity.
+
+%%----------------------------------------------------------
+%% Burke-Schumann Chemistry
+%%----------------------------------------------------------
+\section{Burke-Schuman Model}
+Burke-Schuman chemistry assumes infinitely fast, irreversible, and
+complete reaction.  Thus, composition is a piece-wise linear function
+of mixture fraction.  The enthalpy is determined from the composition
+and equation \eqref{eqn:enthalpy}.  For the adiabatic case, all state
+variables are unique functions of the mixture fraction,
+$\boldsymbol{\phi} = \boldsymbol{\phi}(f)$.
+
+\subsection{Heat Loss}
+
+%%----------------------------------------------------------
+%% Equilibrium
+%%----------------------------------------------------------
+\section{Equilibrium Model}
+The chemical equilibrium model is valid when chemistry is infinitely
+fast and reversible.  For an adiabatic two-stream mixing problem, the
+thermochemical state is uniquely parameterized by the mixture
+fraction, $\boldsymbol{\phi} = \boldsymbol{\phi}(f)$.
+
+\subsection{Heat Loss}
+
+
+%%==========================================================
+
+\chapter{Mixing Models}
+In a Reynolds-Avaraged Navier-Stokes (RANS) or Large-Eddy Simulation
+(LES) calculation, mean or filtered state state variables are needed as
+functions of the mean (or filtered) reaction variables.  This is
+typically achieved through
+\begin{equation}
+  \bar{\phi}_i = \int_{\eta_{N_\eta}} \cdots \int_{\eta_1}
+  \phi_i^\ast(\boldsymbol{\eta}) \; P(\eta_1 \cdots \eta_{N_\eta}) \;
+  \mathrm{d} \eta_1 \cdots \mathrm{d} \eta_{N_\eta},
+\end{equation}
+where $\phi_i^\ast(\boldsymbol{\eta})$ is the reaction model, which
+provides state variables, $\phi$, as unique functions of the set
+of reaction variables, $\boldsymbol{\eta}$, and $P(\eta_1 \cdots
+\eta_{N_\eta})$ is the joint probability density function (PDF) of all
+reaction variables.  Clearly, in a RANS or LES computation, the error
+in $\bar{\phi}$ has contributions from the reaction model as well as
+the model used to approximate the joint PDF.  This study examines only
+the error due to the reaction model, $\phi_i(\boldsymbol{\eta})$.
+
+%%==========================================================
+
+\chapter{User-Interface}
+\section{The Parser}
+
+\section{Line Commands}
+
+%%---------------------------------------------------------------------
+\bibliography{references}
+%%---------------------------------------------------------------------
+\end{document}

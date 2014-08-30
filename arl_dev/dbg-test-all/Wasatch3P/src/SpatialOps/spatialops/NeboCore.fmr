@@ -1,0 +1,345 @@
+#lang fulmar
+
+ ; Copyright (c) 2014 The University of Utah
+ ;
+ ; Permission is hereby granted, free of charge, to any person obtaining a copy
+ ; of this software and associated documentation files (the "Software"), to
+ ; deal in the Software without restriction, including without limitation the
+ ; rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ ; sell copies of the Software, and to permit persons to whom the Software is
+ ; furnished to do so, subject to the following conditions:
+ ;
+ ; The above copyright notice and this permission notice shall be included in
+ ; all copies or substantial portions of the Software.
+ ;
+ ; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ ; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ ; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ ; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ ; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ ; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ ; IN THE SOFTWARE.
+
+(require "FulmarAbbreviations.fmr")
+
+(provide (all-defined-out))
+
+(define SpatialOps-namespace (lambda args (namespace-define 'SpatialOps args)))
+(define DI-chunk 'deviceIndex)
+(define NE-chunk 'NeboExpression)
+(define NSVE-chunk 'NeboSingleValueExpression)
+(define NBE-chunk 'NeboBooleanExpression)
+(define NBSVE-chunk 'NeboBooleanSingleValueExpression)
+(define FT-chunk 'FieldType)
+(define ft-chunk 'field_type)
+(define AT-chunk 'AtomicType)
+(define vt-chunk 'value_type)
+(define NS-chunk 'NeboScalar)
+(define NCF-chunk 'NeboConstField)
+(define SVFT-chunk 'SingleValueFieldType)
+(define (SVFT-def-with-T T)
+  (type-template (scope 'SpatialOps 'SpatialField)
+                 (scope 'SpatialOps 'SingleValue)
+                 T))
+(define SVFT-def-chunk (SVFT-def-with-T 'T))
+(define NCSVF-chunk 'NeboConstSingleValueField)
+(define NF-chunk 'NeboField)
+(define Nil-chunk 'NeboNil)
+(define SClause-chunk 'NeboSimpleClause)
+(define SFClause-chunk 'NeboSimpleFinalClause)
+(define SCond-chunk 'NeboSimpleCond)
+(define SVClause-chunk 'NeboSingleValueClause)
+(define SVFClause-chunk 'NeboSingleValueFinalClause)
+(define SVCond-chunk 'NeboSingleValueCond)
+(define Clause-chunk 'NeboClause)
+(define Cond-chunk 'NeboCond)
+(define CT-chunk 'ClauseType)
+(define index-pmtr (list (function-pmtr (const 'int) 'x)
+                         (function-pmtr (const 'int) 'y)
+                         (function-pmtr (const 'int) 'z)))
+(define index-arg (list 'x 'y 'z))
+(define IntVec 'IntVec)
+(define GhostData 'GhostData)
+(define low-high-pmtr (function-pmtr (const GhostData) 'limits))
+(define low-high-arg 'limits)
+(define gpu-low-high-pmtr (list (function-pmtr (const 'int) 'xLow)
+                                (function-pmtr (const 'int) 'xHigh)
+                                (function-pmtr (const 'int) 'yLow)
+                                (function-pmtr (const 'int) 'yHigh)
+                                (function-pmtr (const 'int) 'zLow)
+                                (function-pmtr (const 'int) 'zHigh)))
+(define gpu-low-high-arg (list 'xLow 'xHigh 'yLow 'yHigh 'zLow 'zHigh))
+(define init-pmtr (list (function-pmtr (ref (const IntVec)) 'extents)
+                        (function-pmtr (ref (const GhostData)) 'ghosts)
+                        (function-pmtr (ref (const IntVec)) 'hasBC)))
+(define init-arg (list 'extents 'ghosts 'hasBC))
+(define gpu-init-pmtr (list init-pmtr (function-pmtr (const 'int) DI-chunk)))
+(define gpu-init-arg (list init-arg DI-chunk))
+(define SpatialMask (type-template 'SpatialMask FT-chunk))
+(define ghost-pmtr (function-pmtr (ref (const GhostData)) 'ghosts))
+(define ghost-arg 'ghosts)
+(define ZeroIntVec (val-call IntVec 0 0 0))
+(define BCInfo 'BoundaryCellInfo)
+(define NSP 'NeboStencilPoint)
+(define NSPC 'NeboStencilPointCollection)
+(define NSCC 'NeboStencilCoefCollection)
+(define (ignore . given)
+  null)
+
+(define (type-trans new-type)
+  (lambda (old-type)
+    (typename (scope old-type new-type))))
+
+(define (arg-swap proc num1 num2 report)
+  (lambda args1 (if (not (= num1 (length args1)))
+                    (error (string-append report ": first set of arguments does not match expected number"))
+                    (lambda args2 (if (not (= num2 (length args2)))
+                                      (error (string-append report ": second set of arguments does not match expected number"))
+                                      (apply proc (append args2 args1)))))))
+
+(define bm-constructor (arg-swap constructor 3 1 "bm-constructor"))
+
+(define (map* proc . lsts)
+  (apply map proc (map (lambda (lst) (if (list? lst)
+                                         (flatten* lst)
+                                         (list lst)))
+                       lsts)))
+
+(define no-FT #false)
+(define (FT? FT)
+  FT)
+(define (no-FT? FT)
+  (not (FT? FT)))
+
+(define scalar-FT (list 'scalar AT-chunk AT-chunk AT-chunk))
+(define (scalar-FT? FT)
+  (and (FT? FT)
+       (equal? 'scalar (first FT))))
+
+(define std-FT (list 'std FT-chunk FT-chunk FT-chunk))
+(define (std-FT? FT)
+  (and (FT? FT)
+       (equal? 'std (first FT))))
+
+(define SV-FT (list 'SV 'T SVFT-def-chunk 'T))
+(define (SV-FT? FT)
+  (and (FT? FT)
+       (equal? 'SV (first FT))))
+
+(define (FT-tpl FT)
+  (if (FT? FT)
+      (second FT)
+      null))
+(define (FT-use FT)
+  (if (FT? FT)
+      (third FT)
+      null))
+(define (FT-tpl-use FT)
+  (if (FT? FT)
+      (fourth FT)
+      null))
+(define (FT-def-vt FT)
+  (cond [(no-FT? FT)
+         null]
+        [(scalar-FT? FT)
+         (stmt-typedef AT-chunk vt-chunk)]
+        [else
+         (stmt-typedef (typename (scope ft-chunk vt-chunk))
+                       vt-chunk)]))
+
+(define (build-mode name
+                    mode
+                    FT
+                    tpl-pars
+                    typedefs
+                    constructor
+                    publics
+                    privates)
+  (def-template-struct name
+               (map typename (flatten* tpl-pars (FT-tpl FT)))
+               (list mode tpl-pars (FT-tpl-use FT))
+               (section-public (if (or (no-FT? FT)
+                                (scalar-FT? FT))
+                            null
+                            (stmt-typedef (FT-use FT) ft-chunk))
+                        typedefs
+                        (constructor name)
+                        publics)
+               (section-private privates)))
+
+(define (build-Initial-general name
+                               FT
+                               tpl-irreg-pars
+                               tpl-reg-pars
+                               typedefs
+                               tpl-irreg-args
+                               constructor
+                               publics
+                               privates)
+  (define SW-tpl-irreg-args (if (null? tpl-irreg-args) null (first tpl-irreg-args)))
+  (define RS-tpl-irreg-args (if (null? tpl-irreg-args) null (second tpl-irreg-args)))
+  (define gpu-tpl-irreg-args (if (null? tpl-irreg-args) null (third tpl-irreg-args)))
+  (define (tpl-reg-args type)
+    (map* (type-trans type)
+          tpl-reg-pars))
+  (build-mode name
+              'Initial
+              FT
+              (list tpl-irreg-pars tpl-reg-pars)
+              (list typedefs
+                    (stmt-typedef (type-template name
+                                           'SeqWalk
+                                           SW-tpl-irreg-args
+                                           (tpl-reg-args 'SeqWalkType)
+                                           (FT-tpl-use FT))
+                                  'SeqWalkType)
+                    (pp-threads-only (stmt-typedef (type-template name
+                                                         'Resize
+                                                         RS-tpl-irreg-args
+                                                         (tpl-reg-args 'ResizeType)
+                                                         (FT-tpl-use FT))
+                                                'ResizeType))
+                    (pp-gpu-only (stmt-typedef (type-template name
+                                                     'GPUWalk
+                                                     gpu-tpl-irreg-args
+                                                     (tpl-reg-args 'GPUWalkType)
+                                                     (FT-tpl-use FT))
+                                            'GPUWalkType)))
+              constructor
+              publics
+              privates))
+
+(define (build-Resize-general name
+                              FT
+                              tpl-irreg-pars
+                              tpl-reg-pars
+                              typedefs
+                              tpl-irreg-args
+                              constructor
+                              publics
+                              privates)
+  (pp-threads-only (build-mode name
+                            'Resize
+                            FT
+                            (list tpl-irreg-pars tpl-reg-pars)
+                            (list typedefs
+                                  (stmt-typedef (type-template name
+                                                         'SeqWalk
+                                                         tpl-irreg-args
+                                                         (map* (type-trans 'SeqWalkType)
+                                                               tpl-reg-pars)
+                                                         (FT-tpl-use FT))
+                                                'SeqWalkType))
+                            constructor
+                            publics
+                            privates)))
+
+(define (build-SeqWalk-general name
+                               FT
+                               tpl-irreg-pars
+                               tpl-reg-pars
+                               typedefs
+                               constructor
+                               publics
+                               privates)
+  (build-mode name
+              'SeqWalk
+              FT
+              (list tpl-irreg-pars tpl-reg-pars)
+              (list (FT-def-vt FT)
+                    typedefs)
+              constructor
+              publics
+              privates))
+
+(define (build-gpu-general name
+                           FT
+                           tpl-irreg-pars
+                           tpl-reg-pars
+                           typedefs
+                           constructor
+                           publics
+                           privates)
+  (pp-gpu-only
+   (build-mode name
+               'GPUWalk
+               FT
+               (list tpl-irreg-pars tpl-reg-pars)
+               (list (FT-def-vt FT)
+                     typedefs)
+               constructor
+               publics
+               privates)))
+
+(define (build-struct name
+                      FT
+                      tpl-irreg-pars
+                      tpl-reg-pars
+                      Initial
+                      Resize
+                      SeqWalk
+                      GPUWalk)
+  (internal-smt-list new-line
+                     (dcl-template-struct name
+                                  (map typename (flatten* 'CurrentMode tpl-irreg-pars tpl-reg-pars (FT-tpl FT)))
+                                  null)
+                     (map (lambda (mode) (mode name FT tpl-irreg-pars tpl-reg-pars))
+                          (list Initial Resize SeqWalk GPUWalk))))
+
+(define (base-offset-dir field dir)
+  (paren (val-add (val-member-call (val-member-call field 'window_with_ghost)
+                  'offset
+                  dir)
+             (val-member-call (val-member-call field 'get_valid_ghost_data)
+                  'get_minus
+                  dir))))
+
+(define (base-global-dir field dir)
+  (val-member-call (val-member-call 'f 'window_with_ghost)
+       'glob_dim
+       dir))
+
+(define (compute-base field input-index)
+  (let ([mem-type (if (equal? input-index 'none)
+                      'CPU_INDEX
+                      input-index)])
+    (val-add (val-member-call field 'field_values mem-type)
+             (val-add (base-offset-dir field 0)
+                      (paren (val-multiply (base-global-dir field 0)
+                                           (paren (val-add (base-offset-dir field 1)
+                                                           (paren (val-multiply (base-global-dir field 1)
+                                                                                (base-offset-dir field 2)))))))))))
+
+(define (build-error-with-call where . message)
+  (define < '<<)
+  (define (msg-add . line)
+    (stmt 'msg < line))
+  (between new-line
+           (stmt (function-pmtr (scope 'std 'ostringstream)
+                     'msg))
+           (msg-add "\"Nebo error in \"" < (concat "\"" (add-spaces where) "\"") < "\":\\n\"")
+           (msg-add (add-spaces message))
+           (msg-add "\"\\n\"")
+           (msg-add "\"\\t - \"" < '__FILE__ < "\" : \"" < '__LINE__)
+           (stmt (val-call 'throw (val-call (scope 'std 'runtime_error)
+                                            (val-member-call 'msg 'str))))))
+(define (build-error where . message)
+  (define < '<<)
+  (define (msg-add . line)
+    (stmt 'msg < line))
+  (between new-line
+           (stmt (function-pmtr (scope 'std 'ostringstream)
+                     'msg))
+           (msg-add "\"Nebo error in \"" < (concat "\"" (add-spaces where) "\"") < "\":\\n\"")
+           (msg-add (concat "\"" (add-spaces message) "\""))
+           (msg-add "\"\\n\"")
+           (msg-add "\"\\t - \"" < '__FILE__ < "\" : \"" < '__LINE__)
+           (val-call 'throw (val-call (scope 'std 'runtime_error)
+                                      (val-member-call 'msg 'str)))))
+(define (ic . chunks)  (immediate (concat chunks)))
+(define cout-end-line (list (ic "\"" ";" new-line 'msg)
+                            '<<))
+(define (cout-new-line chunk) (ic "\"" chunk))
+(define (cout-break chunk . chunks) (list cout-end-line
+                                          (cout-new-line chunk)
+                                          chunks))

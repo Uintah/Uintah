@@ -1,0 +1,1235 @@
+#lang fulmar
+
+"/*
+ * Copyright (c) 2014 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the \"Software\"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+"
+
+(require "FulmarAbbreviations.fmr")
+(require "NeboCore.fmr")
+(require "NeboRhsCore.fmr")
+
+(define (build-CondBuilder-private extra-tpl-pmtrs
+                                   remaining-type
+                                   new-result-type
+                                   private)
+  (section-private (stmt-dcl-template-struct 'ReverseClausesRecursive
+                                             (list (typename 'Remaining)
+                                                   (typename 'PreceedingResult)))
+                   (stmt-def-template-struct 'ReverseClausesRecursive
+                                             (typename 'PreceedingResult)
+                                             (list Nil-chunk 'PreceedingResult)
+                                             (stmt-typedef 'PreceedingResult
+                                                           'Result)
+                                             (def-returning-function (dcl-static-function 'reverse
+                                                                                          'Result
+                                                                                          (function-pmtr (ref (const Nil-chunk)) 'nil)
+                                                                                          (function-pmtr (ref (const 'PreceedingResult)) 'r))
+                                               null
+                                               'r))
+                   (stmt-def-template-struct 'ReverseClausesRecursive
+                                             (list extra-tpl-pmtrs
+                                                   (typename 'Following)
+                                                   (typename 'PreceedingResult))
+                                             (list remaining-type
+                                                   'PreceedingResult)
+                                             (stmt-typedef remaining-type 'Remaining)
+                                             (stmt-typedef new-result-type 'NewResult)
+                                             (stmt-typedef (type-template 'ReverseClausesRecursive 'Following 'NewResult)
+                                                           'InternalCall)
+                                             (stmt-typedef (typename (scope 'InternalCall 'Result))
+                                                           'Result)
+                                             (def-returning-function (dcl-static-function 'reverse
+                                                                                          'Result
+                                                                                          (function-pmtr (ref (const 'Remaining)) 'l)
+                                                                                          (function-pmtr (ref (const 'PreceedingResult)) 'r))
+                                               null
+                                               (val-call (scope 'InternalCall 'reverse)
+                                                         (val-member-call 'l 'otherwise)
+                                                         (val-call 'NewResult
+                                                                   (val-member-call 'l 'clause)
+                                                                   'r))))
+                   private))
+
+(define (build-CondBuilder-public construct-args
+                                  construct-asgns
+                                  public)
+  (section-public (constructor 'CondBuilder
+                               construct-args
+                               construct-asgns)
+                  (stmt-dcl-template-struct 'ReverseClauses
+                                            (typename 'Final))
+                  (stmt-def-template-struct 'ReverseClauses
+                                            (typename 'Final)
+                                            null
+                                            (stmt-typedef  (type-template 'ReverseClausesRecursive 'Clauses 'Final)
+                                                           'InternalCall)
+                                            (stmt-typedef  (typename (scope 'InternalCall 'Result))
+                                                           'Result)
+                                            (def-returning-function (dcl-static-function 'reverse
+                                                                                         'Result
+                                                                                         (function-pmtr (ref (const 'Clauses)) 'cs)
+                                                                                         (function-pmtr (ref (const 'Final)) 'f))
+                                              null
+                                              (val-call (scope 'InternalCall 'reverse)
+                                                        'cs
+                                                        'f)))
+                  (def-template (typename 'Final)
+                    (def-returning-function (dcl-function 'reverse
+                                                          (typename (scope (type-template 'ReverseClauses 'Final)
+                                                                           'Result))
+                                                          (function-pmtr (ref (const 'Final)) 'f))
+                      (typedef (type-template 'ReverseClauses 'Final)
+                               'InternalCall)
+                      (val-call (scope 'InternalCall 'reverse)
+                                'clauses_
+                                'f)))
+                  public))
+
+(define (build-CondBuilder extra-tpl-pmtrs
+                           remaining-type
+                           new-result-type
+                           tpl-pmtrs
+                           tpl-arg
+                           private
+                           construct-args
+                           construct-asgns
+                           public)
+  (def-template-struct 'CondBuilder
+    (map* typename tpl-pmtrs)
+    tpl-arg
+    (section-public (stmt-typedef tpl-arg 'Clauses))
+    (build-CondBuilder-private extra-tpl-pmtrs
+                               remaining-type
+                               new-result-type
+                               private)
+    (build-CondBuilder-public construct-args
+                              construct-asgns
+                              public)))
+
+(define FT-test
+  (typename (scope (type-template 'NeboFieldCheck
+                                  (typename (scope FT-chunk ft-chunk))
+                                  FT-chunk)
+                   'Result)))
+
+(define (atomic FT-T)
+  (cond [(equal? FT-chunk FT-T)
+         (typename (scope FT-chunk vt-chunk))]
+        [(equal? 'T FT-T)
+         'T]
+        [else
+         (scope FT-T vt-chunk)]))
+
+(define (if-uses-only-T FT-T then else)
+  (if (equal? 'T FT-T)
+      then
+      else))
+
+(define previous-style first)
+(define (previous-none? previous)
+  (eq? "none" (previous-style previous)))
+(define (previous-simple? previous)
+  (eq? "simple" (previous-style previous)))
+(define (previous-single? previous)
+  (eq? "single" (previous-style previous)))
+(define (previous-full? previous)
+  (eq? "full" (previous-style previous)))
+(define (previous-has-full-field? previous)
+  (match (previous-style previous)
+         ["full" #true]
+         [(or "none" "simple" "single") #false]
+         [else (error else "Unknown previous style")]))
+(define (previous-has-single-field? previous)
+  (match (previous-style previous)
+         ["single" #true]
+         [(or "none" "simple" "full") #false]
+         [else (error else "Unknown previous style")]))
+(define (previous-has-field? previous)
+  (or (previous-has-full-field? previous)
+      (previous-has-single-field? previous)))
+(define previous-have-FT-or-T second)
+(define previous-have-FT-ref third)
+(define previous-simple-type fourth)
+(define previous-single-type fifth)
+(define previous-full-type sixth)
+(define previous-typedef seventh)
+(define previous-converted-type eighth)
+(define previous-value ninth)
+(define previous-convert-value tenth)
+
+(define previous-none
+  (list "none"
+        "none"
+        #false
+        Nil-chunk
+        Nil-chunk
+        (lambda (FT-T) Nil-chunk)
+        (lambda (FT-T) null)
+        (lambda (FT-T) Nil-chunk)
+        (val-call Nil-chunk)
+        (lambda (FT-T) (val-call Nil-chunk))))
+(define previous-simple
+  (list "simple"
+        "none"
+        #false
+        'Clauses
+        (typename (scope (scope 'Clauses (type-template-function 'SingleConvert 'T))
+                         'result))
+        (lambda (FT-T) (typename (scope (scope 'Clauses (if-uses-only-T FT-T
+                                                                        (type-template-function 'SingleConvert 'T)
+                                                                        (type-template-function 'FullConvert FT-test)))
+                                        'result)))
+        (lambda (FT-T) (typedef (typename (scope (scope 'Clauses (if-uses-only-T FT-T
+                                                                                 (type-template-function 'SingleConvert 'T)
+                                                                                 (type-template-function 'FullConvert FT-chunk)))
+                                                 'result))
+                                'ConvertedClauses))
+        (lambda (FT-T) 'ConvertedClauses)
+        'clauses_
+        (lambda (FT-T) (val-member-call 'clauses_ (if-uses-only-T FT-T
+                                                                  (type-template-function 'single_convert 'T)
+                                                                  (type-template-function 'full_convert FT-chunk))))))
+(define previous-single
+  (list "single"
+        "single"
+        #false
+        'error!
+        'Clauses
+        (lambda (FT-T) (if-uses-only-T FT-T
+                                       'Clauses
+                                       (typename (scope (scope 'Clauses (type-template-function 'Convert FT-T))
+                                                        'Result))))
+        (lambda (FT-T) (if-uses-only-T FT-T
+                                       null
+                                       (typedef (typename (scope (scope 'Clauses (type-template-function 'Convert FT-chunk))
+                                                                 'Result))
+                                                'ConvertedClauses)))
+        (lambda (FT-T) (if-uses-only-T FT-T
+                                       'Clauses
+                                       'ConvertedClauses))
+        'clauses_
+        (lambda (FT-T) (if-uses-only-T FT-T
+                                       'clauses_
+                                       (val-member-call 'clauses_ (type-template-function 'convert FT-chunk))))))
+(define previous-full
+  (list "full"
+        "full"
+        #true
+        'error!
+        'Clauses
+        (lambda (FT-T) 'Clauses)
+        (lambda (FT-T) null)
+        (lambda (FT-T) 'Clauses)
+        'clauses_
+        (lambda (FT-T) 'clauses_)))
+
+(define condition-style first)
+(define (condition-final? condition)
+  (eq? "final" (condition-style condition)))
+(define (condition-bool? condition)
+  (eq? "bool" (condition-style condition)))
+(define (condition-single-expr? condition)
+  (eq? "single-expr" (condition-style condition)))
+(define (condition-expr? condition)
+  (eq? "expr" (condition-style condition)))
+(define (condition-mask? condition)
+  (eq? "mask" (condition-style condition)))
+(define (condition-has-full-field? condition)
+  (match (condition-style condition)
+         [(or "expr" "mask") #true]
+         [(or "final" "bool" "single-expr") #false]
+         [else (error else "Unknown condition style")]))
+(define (condition-has-single-field? condition)
+  (match (condition-style condition)
+         ["single-expr" #true]
+         [(or "final" "bool" "expr" "mask") #false]
+         [else (error else "Unknown condition style")]))
+(define (condition-has-field? condition)
+  (or (condition-has-full-field? condition)
+      (condition-has-single-field? condition)))
+(define condition-have-FT-or-T second)
+(define condition-tpl-pmtr third)
+(define condition-parameter fourth)
+(define (condition-result-type condition FT-T) ((fifth condition) FT-T))
+(define condition-typedef sixth)
+(define condition-result-name-type seventh)
+(define condition-simple-value eighth)
+(define condition-full-value ninth)
+
+(define condition-final
+  (list "final"
+        "none"
+        null
+        (lambda (FT-T) null)
+        'error!
+        null
+        'error!
+        'error!
+        'error!))
+(define condition-bool
+  (list "bool"
+        "none"
+        null
+        (lambda (FT-T) (function-pmtr (const 'bool) 'b))
+        (lambda (FT-T) (type-template NS-chunk 'Initial 'bool))
+        (typedef (type-template NS-chunk 'Initial 'bool)
+                 'Boolean)
+        'Boolean
+        'b
+        (val-call 'Boolean 'b)))
+(define condition-single-expr
+  (list "single-expr"
+        "single"
+        'BoolExpr
+        (lambda (FT-T) (function-pmtr (ref (const (type-template NBSVE-chunk 'BoolExpr (atomic FT-T))))
+                                      'nb))
+        (lambda (FT-T) 'BoolExpr)
+        null
+        'BoolExpr
+        (val-member-call 'nb 'expr)
+        (val-member-call 'nb 'expr)))
+(define condition-expr
+  (list "expr"
+        "full"
+        'BoolExpr
+        (lambda (FT-T) (function-pmtr (ref (const (type-template NBE-chunk 'BoolExpr FT-chunk))) 'nb))
+        (lambda (FT-T) 'BoolExpr)
+        null
+        'BoolExpr
+        (val-member-call 'nb 'expr)
+        (val-member-call 'nb 'expr)))
+(define condition-mask
+  (list "mask"
+        "full"
+        null
+        (lambda (FT-T) (function-pmtr (ref (const (type-template 'SpatialMask
+                                                                 FT-chunk)))
+                                      'mask))
+        (lambda (FT-T) (type-template 'NeboMask 'Initial FT-T))
+        (typedef (type-template 'NeboMask 'Initial FT-chunk)
+                 'Mask)
+        'Mask
+        'mask
+        (val-call 'Mask 'mask)))
+
+(define condition-list (list condition-final condition-bool condition-single-expr condition-expr condition-mask))
+
+(define value-style first)
+(define (value-double? value)
+  (eq? "double" (value-style value)))
+(define (value-single-field? value)
+  (eq? "single-field" (value-style value)))
+(define (value-single-expr? value)
+  (eq? "single-expr" (value-style value)))
+(define (value-field? value)
+  (eq? "field" (value-style value)))
+(define (value-expr? value)
+  (eq? "expr" (value-style value)))
+(define (value-has-full-field? value)
+  (match (value-style value)
+         [(or "field" "expr") #true]
+         [(or "double" "single-field" "single-expr") #false]
+         [else (error else "Unknown value style")]))
+(define (value-has-single-field? value)
+  (match (value-style value)
+         [(or "single-field" "single-expr") #true]
+         [(or "double" "field" "expr") #false]
+         [else (error else "Unknown value style")]))
+(define (value-has-field? value)
+  (or (value-has-full-field? value)
+      (value-has-single-field? value)))
+(define (value-is-expr? value)
+  (match (value-style value)
+         [(or "expr" "single-expr") #true]
+         [(or "double" "field" "single-field") #false]
+         [else (error else "Unknown value style")]))
+(define value-have-FT-or-T second)
+(define value-tpl-pmtr third)
+(define value-parameter fourth)
+(define (value-result-type value FT-T) ((fifth value) FT-T #false))
+(define (value-result-type-with-space value FT-T) ((fifth value) FT-T #true))
+(define value-typedef sixth)
+(define value-result-name-type seventh)
+(define value-simple-value eighth)
+(define value-full-value ninth)
+
+(define value-double
+  (list "double"
+        "none"
+        null
+        (lambda (FT-T) (function-pmtr (const 'double) 'd))
+        (lambda (FT-T add-space) ((if add-space space-after identity)
+                                  (type-template NS-chunk
+                                                 'Initial
+                                                 (atomic FT-T))))
+        (lambda (FT-T) (typedef (type-template NS-chunk 'Initial (atomic FT-T))
+                                'Scalar))
+        'Scalar
+        'd
+        (val-call 'Scalar 'd)))
+(define value-single-field
+  (list "single-field"
+        "single"
+        null
+        (lambda (FT-T) (function-pmtr (ref (const (SVFT-def-with-T (atomic FT-T))))
+                                      'f))
+        (lambda (FT-T add-space) ((if add-space space-after identity)
+                                  (type-template NCSVF-chunk 'Initial (atomic FT-T))))
+        (lambda (FT-T) (typedef (type-template NCSVF-chunk 'Initial (atomic FT-T))
+                                'Field))
+        'Field
+        (val-call 'ReturnType (val-call 'Field 'f))
+        (val-call 'Field 'f)))
+(define value-field
+  (list "field"
+        "full"
+        null
+        (lambda (FT-T) (function-pmtr (ref (const FT-chunk)) 'f))
+        (lambda (FT-T add-space) ((if add-space space-after identity)
+                                  (type-template NCF-chunk 'Initial FT-T)))
+        (lambda (FT-T) (typedef (type-template NCF-chunk 'Initial FT-chunk)
+                                'Field))
+        'Field
+        (val-call 'ReturnType (val-call 'Field 'f))
+        (val-call 'Field 'f)))
+(define value-single-expr
+  (list "single-expr"
+        "single"
+        'Expr
+        (lambda (FT-T) (function-pmtr (ref (const (type-template NSVE-chunk 'Expr (atomic FT-T)))) 'e))
+        (lambda (FT-T add-space) 'Expr)
+        (lambda (FT-T) null)
+        'Expr
+        'e
+        (val-member-call 'e 'expr)))
+(define value-expr
+  (list "expr"
+        "full"
+        'Expr
+        (lambda (FT-T) (function-pmtr (ref (const (type-template NE-chunk 'Expr FT-chunk))) 'e))
+        (lambda (FT-T add-space) 'Expr)
+        (lambda (FT-T) null)
+        'Expr
+        'e
+        (val-member-call 'e 'expr)))
+
+(define value-list (list value-double value-single-field value-single-expr value-field value-expr))
+
+(define condition-value-list
+  (foldr (lambda (condition acc)
+           (append (foldr (lambda (value acc)
+                            (cons (list condition value)
+                                  acc))
+                          null
+                          value-list)
+                   acc))
+         null
+         condition-list))
+
+(define (have-FT-or-T previous condition value need-test)
+  (match (list (previous-have-FT-or-T previous)
+               (condition-have-FT-or-T condition)
+               (value-have-FT-or-T value))
+         [(or (list "full" _ _)
+              (list _ "full" _)
+              (list _ _ "full"))
+          (if (or (not need-test)
+                  (previous-have-FT-ref previous))
+              FT-chunk
+              FT-test)]
+         [(or (list "single" _ _)
+              (list _ "single" _)
+              (list _ _ "single"))
+          'T]
+         [_ 'error!]))
+
+(define (has-field? previous condition value)
+  (or (previous-has-field? previous)
+      (condition-has-field? condition)
+      (value-has-field? value)))
+
+(define (has-full-field? previous condition value)
+  (or (previous-has-full-field? previous)
+      (condition-has-full-field? condition)
+      (value-has-full-field? value)))
+
+(define (if-full-field previous condition value then else)
+  (if (has-full-field? previous condition value)
+      then
+      else))
+
+(define (has-single-but-not-full-field? previous condition value)
+  (and (has-field? previous condition value)
+       (not (has-full-field? previous condition value))))
+
+(define (expr-type previous condition value)
+  (if (has-full-field? previous condition value)
+      NE-chunk
+      NSVE-chunk))
+
+(define (build-result-type previous condition value)
+  (define FT-T (have-FT-or-T previous condition value #true))
+  (if (condition-final? condition)
+      ;condition is final
+      (if (and (not (value-has-field? value))
+               (not (previous-has-field? previous)))
+          ;all clauses contain no fields (single or full)
+          'double
+          (type-template (expr-type previous condition value)
+                         (cond [(previous-none? previous)
+                                (value-result-type value FT-T)]
+                               [(previous-simple? previous)
+                                (cond [(value-has-full-field? value)
+                                       (typename (scope (scope (type-template 'CondBuilder (typename (scope (scope 'Clauses (type-template-function 'FullConvert FT-T))
+                                                                                                            'result)))
+                                                               (type-template-function 'ReverseClauses (value-result-type-with-space value FT-T)))
+                                                        'Result))]
+                                      [(value-has-single-field? value)
+                                       (typename (scope (scope (type-template 'CondBuilder (typename (scope (scope 'Clauses (type-template-function 'SingleConvert FT-T))
+                                                                                                            'result)))
+                                                               (type-template-function 'ReverseClauses (value-result-type-with-space value FT-T)))
+                                                        'Result))]
+                                      [else (error "Somehow value-has-field? and previous-has-field? returned incorrect values")])]
+                               [(previous-has-field? previous)
+                                (typename (scope (type-template 'ReverseClauses (value-result-type-with-space value FT-T))
+                                                 'Result))]
+                               [else (error "build-result-type:" (previous-style previous) 'does 'not 'match!)])
+                         FT-T))
+      ;condition is NOT final
+      (type-template 'CondBuilder
+                     (space-after (cond [(not (has-field? previous condition value))
+                                         ;simple
+                                         (type-template SCond-chunk (previous-simple-type previous))]
+                                        [(has-field? previous condition value)
+                                         ;single or full
+                                         (type-template (if-full-field previous
+                                                                       condition
+                                                                       value
+                                                                       Cond-chunk
+                                                                       SVCond-chunk)
+                                                        'Initial
+                                                        (type-template (if-full-field previous
+                                                                                      condition
+                                                                                      value
+                                                                                      Clause-chunk
+                                                                                      SVClause-chunk)
+                                                                       'Initial
+                                                                       (condition-result-type condition FT-T)
+                                                                       (value-result-type value FT-T)
+                                                                       FT-T)
+                                                        ((previous-full-type previous) FT-T)
+                                                        FT-T)]
+                                        [else (error "Unknown case for ressult type")])))))
+
+(define (build-body previous condition value)
+  (define FT-T (have-FT-or-T previous condition value #false))
+  (cond [(condition-final? condition)
+         ;final clause
+         (if (or (and (value-double? value)
+                      (not (previous-has-field? previous)))
+                 (and (value-is-expr? value)
+                      (previous-none? previous)))
+             ;no body
+             null
+             ;need body
+             (list ((value-typedef value)
+                    FT-T)
+                   (cond [(previous-none? previous)
+                          null]
+                         [(previous-simple? previous)
+                          (list (typedef (typename (scope (scope 'Clauses (if-uses-only-T FT-T
+                                                                                          (type-template-function 'SingleConvert 'T)
+                                                                                          (type-template-function 'FullConvert FT-chunk)))
+                                                          'result))
+                                         'ConvertedClauses)
+                                (typedef (type-template 'CondBuilder 'ConvertedClauses) 'NewBuilder)
+                                (typedef (typename (scope (scope 'NewBuilder (type-template-function 'ReverseClauses (value-result-name-type value)))
+                                                          'Result))
+                                         'ReversedClauses))]
+                         [(previous-has-field? previous)
+                          (typedef (typename (scope (type-template 'ReverseClauses (value-result-name-type value))
+                                                    'Result))
+                                   'ReversedClauses)]
+                         [else (error "build-body: unknown type of previous clauses")])
+                   (typedef (type-template (expr-type previous condition value)
+                                           (cond [(previous-none? previous)
+                                                  (value-result-name-type value)]
+                                                 [else
+                                                  'ReversedClauses])
+                                           FT-T)
+                            'ReturnType)))]
+        [(not (has-field? previous condition value))
+         ;simple everything
+         (list (typedef (type-template SCond-chunk (previous-simple-type previous)) 'Cond)
+               (typedef (type-template 'CondBuilder 'Cond) 'ReturnType))]
+        [else
+         ;not final clause, and not all simple
+         (list (condition-typedef condition)
+               ((value-typedef value)
+                FT-T)
+               (typedef (type-template (if-full-field previous
+                                                      condition
+                                                      value
+                                                      Clause-chunk
+                                                      SVClause-chunk)
+                                       'Initial
+                                       (condition-result-name-type condition)
+                                       (value-result-name-type value)
+                                       FT-T)
+                        'Clause)
+               ((previous-typedef previous) FT-T)
+               (typedef (type-template (if-full-field previous
+                                                      condition
+                                                      value
+                                                      Cond-chunk
+                                                      SVCond-chunk)
+                                       'Initial
+                                       'Clause
+                                       ((previous-converted-type previous) FT-T)
+                                       FT-T)
+                        'Cond)
+               (typedef (type-template 'CondBuilder 'Cond)
+                        'ReturnType))]))
+
+(define (build-result-call previous condition value)
+  (define FT-T (have-FT-or-T previous condition value #false))
+  (if (condition-final? condition)
+      (cond [(previous-none? previous)
+             (value-simple-value value)]
+            [(not (has-field? previous condition value))
+             (val-member-call (val-call 'reverse (val-call SFClause-chunk 'd))
+                              'eval)]
+            [(previous-simple? previous)
+             (val-call 'ReturnType (val-member-call (val-call 'NewBuilder ((previous-convert-value previous) FT-T))
+                                                    'reverse (value-full-value value)))]
+            [else
+             (val-call 'ReturnType (val-call 'reverse (value-full-value value)))])
+      (val-call 'ReturnType (val-call 'Cond
+                                      (if (not (has-field? previous condition value))
+                                          (list (val-call SClause-chunk
+                                                          (condition-simple-value condition)
+                                                          (value-simple-value value))
+                                                (previous-value previous))
+                                          (list (val-call 'Clause
+                                                          (condition-full-value condition)
+                                                          (value-full-value value))
+                                                ((previous-convert-value previous) FT-T)))))))
+
+(define (build-cond-case name previous condition value)
+  (define FT-T (have-FT-or-T previous condition value #false))
+  (define (def-template-proc fcn-def)
+    (define tpl-pmtrs
+      (flatten (list (condition-tpl-pmtr condition)
+                     (value-tpl-pmtr value)
+                     (cond [(equal? "full" (previous-have-FT-or-T previous))
+                            ;FT already defined
+                            null]
+                           [(or (equal? "full" (condition-have-FT-or-T condition))
+                                (equal? "full" (value-have-FT-or-T value)))
+                            ;FT not already defined but needed
+                            FT-chunk]
+                           [(equal? "single" (previous-have-FT-or-T previous))
+                            ;SVFT already defined
+                            null]
+                           [(or (equal? "single" (condition-have-FT-or-T condition))
+                                (equal? "single" (value-have-FT-or-T value)))
+                            ;SVFT not already defined but needed
+                            'T]
+                           [else
+                            ;need nothing...
+                            null]))))
+    (if (null? tpl-pmtrs)
+        fcn-def
+        (def-template (map typename tpl-pmtrs)
+          fcn-def)))
+  (described-smts (concat (add-between (list (previous-style previous)
+                                             (condition-style condition)
+                                             (value-style value))
+                                       (spaces-around 'X)))
+                  (def-template-proc (def-returning-function (dcl-function name
+                                                                           (build-result-type previous condition value)
+                                                                           (list ((condition-parameter condition)
+                                                                                  FT-T)
+                                                                                 ((value-parameter value)
+                                                                                  FT-T)))
+                                       (build-body previous condition value)
+                                       (build-result-call previous condition value)))))
+
+(define (build-cond-app name previous)
+  (map (lambda (condition-value)
+         (build-cond-case name
+                          previous
+                          (first condition-value)
+                          (second condition-value)))
+       condition-value-list))
+
+(define (build-clause name
+                      FT-style
+                      ghosts-with-bc
+                      ghosts-without-bc
+                      has-extents
+                      extents-check
+                      extents-expr
+                      has-bc-expr
+                      publics)
+  (build-struct name
+                FT-style
+                null
+                (list 'Test 'Expr)
+                (bs-Initial-rhs null
+                                null
+                                (bm-constructor (list (function-pmtr (ref (const 'Test)) 't)
+                                                      (function-pmtr (ref (const 'Expr)) 'e))
+                                                (list (val-construct 'test_ 't)
+                                                      (val-construct 'expr_ 'e))
+                                                null)
+                                ghosts-with-bc
+                                ghosts-without-bc
+                                has-extents
+                                extents-check
+                                extents-expr
+                                null
+                                has-bc-expr
+                                (list (val-member-call 'test_ 'init init-arg)
+                                      (val-member-call 'expr_ 'init init-arg))
+                                (list (val-member-call 'test_ 'resize)
+                                      (val-member-call 'expr_ 'resize))
+                                (val-and (val-member-call 'test_ 'cpu_ready)
+                                         (val-member-call 'expr_ 'cpu_ready))
+                                (val-and (val-member-call 'test_ 'gpu_ready DI-chunk)
+                                         (val-member-call 'expr_ 'gpu_ready DI-chunk))
+                                (list (val-member-call 'test_ 'gpu_init gpu-init-arg)
+                                      (val-member-call 'expr_ 'gpu_init gpu-init-arg))
+                                (list (val-member-call 'test_ 'gpu_prep DI-chunk)
+                                      (val-member-call 'expr_ 'gpu_prep DI-chunk))
+                                publics
+                                (list (stmt-dcl-variable (const 'Test) 'test_)
+                                      (stmt-dcl-variable (const 'Expr) 'expr_)))
+                (bs-Resize-rhs null
+                               null
+                               (bm-constructor (list (function-pmtr (ref (const 'Test)) 'test)
+                                                     (function-pmtr (ref (const 'Expr)) 'expr))
+                                               (list (val-construct 'test_ 'test)
+                                                     (val-construct 'expr_ 'expr))
+                                               null)
+                               (list (val-member-call 'test_ 'init init-arg)
+                                     (val-member-call 'expr_ 'init init-arg))
+                               null
+                               (list (stmt-dcl-variable (const 'Test) 'test_)
+                                     (stmt-dcl-variable (const 'Expr) 'expr_)))
+                (bs-SeqWalk-rhs null
+                                (bm-constructor (list (function-pmtr (ref (const 'Test)) 'test)
+                                                      (function-pmtr (ref (const 'Expr)) 'expr))
+                                                (list (val-construct 'test_ 'test)
+                                                      (val-construct 'expr_ 'expr))
+                                                null)
+                                vt-chunk
+                                (val-member-call 'expr_ 'eval index-arg)
+                                (def-returning-function (constize (dcl-function 'check 'bool index-pmtr))
+                                  null
+                                  (val-member-call 'test_ 'eval index-arg))
+                                (list (stmt-dcl-variable 'Test 'test_)
+                                      (stmt-dcl-variable 'Expr 'expr_)))
+                (bs-gpu-rhs null
+                            (bm-constructor (list (function-pmtr (ref (const 'Test)) 'test)
+                                                  (function-pmtr (ref (const 'Expr)) 'expr))
+                                            (list (val-construct 'test_ 'test)
+                                                  (val-construct 'expr_ 'expr))
+                                            null)
+                            vt-chunk
+                            (val-member-call 'expr_ 'eval index-arg)
+                            (device-only (def-returning-function (constize (dcl-function 'check
+                                                                                         'bool
+                                                                                         index-pmtr))
+                                           null
+                                           (val-member-call 'test_ 'eval index-arg)))
+                            (list (stmt-dcl-variable 'Test 'test_)
+                                  (stmt-dcl-variable 'Expr 'expr_)))))
+
+(define (build-cond name
+                    FT-style
+                    ghosts-with-bc
+                    ghosts-without-bc
+                    has-extents
+                    extents-check
+                    extents-expr
+                    has-bc-expr
+                    publics)
+  (build-struct name
+                FT-style
+                null
+                (list CT-chunk 'Otherwise)
+                (bs-Initial-rhs null
+                                null
+                                (bm-constructor (list (function-pmtr (ref (const CT-chunk)) 'c)
+                                                      (function-pmtr (ref (const 'Otherwise)) 'e))
+                                                (list (val-construct 'clause_ 'c)
+                                                      (val-construct 'otherwise_ 'e))
+                                                null)
+                                ghosts-with-bc
+                                ghosts-without-bc
+                                has-extents
+                                extents-check
+                                extents-expr
+                                null
+                                has-bc-expr
+                                (list (val-member-call 'clause_ 'init init-arg)
+                                      (val-member-call 'otherwise_ 'init init-arg))
+                                (list (val-member-call 'clause_ 'resize)
+                                      (val-member-call 'otherwise_ 'resize))
+                                (val-and (val-member-call 'clause_ 'cpu_ready)
+                                         (val-member-call 'otherwise_ 'cpu_ready))
+                                (val-and (val-member-call 'clause_ 'gpu_ready DI-chunk)
+                                         (val-member-call 'otherwise_ 'gpu_ready DI-chunk))
+                                (list (val-member-call 'clause_ 'gpu_init gpu-init-arg)
+                                      (val-member-call 'otherwise_ 'gpu_init gpu-init-arg))
+                                (list (val-member-call 'clause_ 'gpu_prep DI-chunk)
+                                      (val-member-call 'otherwise_ 'gpu_prep DI-chunk))
+                                (list publics
+                                      (def-returning-function (constize (dcl-function 'clause (ref (const CT-chunk))))
+                                        null
+                                        'clause_)
+                                      (def-returning-function (constize (dcl-function 'otherwise (ref (const 'Otherwise))))
+                                        null
+                                        'otherwise_))
+                                (list (stmt-dcl-variable (const CT-chunk) 'clause_)
+                                      (stmt-dcl-variable (const 'Otherwise) 'otherwise_)))
+                (bs-Resize-rhs null
+                               null
+                               (bm-constructor (list (function-pmtr (ref (const CT-chunk)) 'clause)
+                                                     (function-pmtr (ref (const 'Otherwise)) 'otherwise))
+                                               (list (val-construct 'clause_ 'clause)
+                                                     (val-construct 'otherwise_ 'otherwise))
+                                               null)
+                               (list (val-member-call 'clause_ 'init init-arg)
+                                     (val-member-call 'otherwise_ 'init init-arg))
+                               null
+                               (list (stmt-dcl-variable (const CT-chunk) 'clause_)
+                                     (stmt-dcl-variable (const 'Otherwise) 'otherwise_)))
+                (bs-SeqWalk-rhs null
+                                (bm-constructor (list (function-pmtr (ref (const CT-chunk)) 'clause)
+                                                      (function-pmtr (ref (const 'Otherwise)) 'otherwise))
+                                                (list (val-construct 'clause_ 'clause)
+                                                      (val-construct 'otherwise_ 'otherwise))
+                                                null)
+                                vt-chunk
+                                (ter-cond (val-member-call 'clause_ 'check index-arg)
+                                          (val-member-call 'clause_ 'eval index-arg)
+                                          (val-member-call 'otherwise_ 'eval index-arg))
+                                null
+                                (list (stmt-dcl-variable CT-chunk 'clause_)
+                                      (stmt-dcl-variable 'Otherwise 'otherwise_)))
+                (bs-gpu-rhs null
+                            (bm-constructor (list (function-pmtr (ref (const CT-chunk)) 'clause)
+                                                  (function-pmtr (ref (const 'Otherwise)) 'otherwise))
+                                            (list (val-construct 'clause_ 'clause)
+                                                  (val-construct 'otherwise_ 'otherwise))
+                                            null)
+                            vt-chunk
+                            (ter-cond (val-member-call 'clause_ 'check index-arg)
+                                      (val-member-call 'clause_ 'eval index-arg)
+                                      (val-member-call 'otherwise_ 'eval index-arg))
+                            null
+                            (list (stmt-dcl-variable CT-chunk 'clause_)
+                                  (stmt-dcl-variable 'Otherwise 'otherwise_)))))
+
+(define (build-clause-convert-struct name
+                                     template-type
+                                     atomic-type
+                                     Clause-type
+                                     function-name)
+  (stmt-def-template-struct name
+                            (typename template-type)
+                            null
+                            (stmt-typedef (type-template NS-chunk 'Initial 'bool)
+                                          'Boolean)
+                            (stmt-typedef (type-template NS-chunk 'Initial atomic-type)
+                                          'Scalar)
+                            (stmt-typedef (type-template Clause-type 'Initial 'Boolean 'Scalar template-type)
+                                          'result)
+                            (def-returning-function (dcl-static-function function-name
+                                                                         'result
+                                                                         (list (function-pmtr (const 'bool) 'b)
+                                                                               (function-pmtr (const atomic-type) 'd)))
+                              null
+                              (val-call 'result
+                                        (val-call 'Boolean 'b)
+                                        (val-call 'Scalar 'd)))))
+
+(define (build-nonempty-cond-convert-struct name
+                                            type
+                                            Cond-type
+                                            function-name)
+  (list (stmt-def-template-struct name
+                                  (typename type)
+                                  null
+                                  (stmt-typedef (scope SClause-chunk
+                                                       (type-template-function name type))
+                                                'ConvertingClause)
+                                  (stmt-typedef (typename (scope 'ConvertingClause
+                                                                 'result))
+                                                'ConvertedClause)
+                                  (stmt-typedef (typename (scope (scope 'Otherwise
+                                                                        (type-template-function name type))
+                                                                 'result))
+                                                'ConvertedClauses)
+                                  (stmt-typedef (type-template Cond-type 'Initial 'ConvertedClause 'ConvertedClauses type)
+                                                'result)
+                                  (def-returning-function (dcl-static-function function-name
+                                                                               'result
+                                                                               (list (function-pmtr (ref (const SClause-chunk)) 'c)
+                                                                                     (function-pmtr (ref (const 'Otherwise)) 'o)))
+                                    null
+                                    (val-call 'result
+                                              (val-call (scope 'ConvertingClause function-name)
+                                                        (val-member-call 'c 'check)
+                                                        (val-member-call 'c 'eval))
+                                              (val-member-call 'o (type-template-function function-name type)))))
+        (def-template (typename type)
+          (def-returning-function (constize (dcl-function function-name
+                                                          (typename (scope (type-template name type)
+                                                                           'result))))
+            null
+            (val-call (scope (type-template name type)
+                             function-name)
+                      (val-call 'clause)
+                      (val-call 'otherwise))))))
+
+(define (build-empty-cond-convert-struct name
+                                         type
+                                         Cond-type
+                                         function-name)
+  (list (stmt-def-template-struct name
+                                  (typename type)
+                                  null
+                                  (stmt-typedef (scope SClause-chunk
+                                                       (type-template-function name type))
+                                                'ConvertingClause)
+                                  (stmt-typedef (typename (scope 'ConvertingClause 'result))
+                                                'ConvertedClause)
+                                  (stmt-typedef Nil-chunk
+                                                'ConvertedClauses)
+                                  (stmt-typedef (type-template Cond-type
+                                                               'Initial
+                                                               'ConvertedClause
+                                                               'ConvertedClauses
+                                                               type)
+                                                'result)
+                                  (def-returning-function (dcl-static-function function-name
+                                                                               'result
+                                                                               (function-pmtr (ref (const SClause-chunk)) 'c))
+                                    null
+                                    (val-call 'result
+                                              (val-call (scope 'ConvertingClause function-name)
+                                                        (val-member-call 'c 'check)
+                                                        (val-member-call 'c 'eval))
+                                              (val-call Nil-chunk))))
+        (def-template (typename type)
+          (def-returning-function (constize (dcl-function function-name
+                                                          (typename (scope (type-template name type)
+                                                                           'result))))
+            null
+            (val-call (scope (type-template name type)
+                             function-name)
+                      (val-call 'clause))))))
+
+                                        ; beginnning of file
+(pp-header-file
+ 'NEBO_COND_H
+ (SpatialOps-namespace
+  (def-struct (dcl-struct Nil-chunk)
+    (pp-threads-only (stmt-typedef Nil-chunk 'ResizeType))
+    (stmt-typedef Nil-chunk 'SeqWalkType)
+    (pp-gpu-only (stmt-typedef Nil-chunk 'GPUWalkType))
+    (constructor Nil-chunk
+                 null
+                 null)
+    (stmt-def-template-struct 'Convert
+                              (typename FT-chunk)
+                              null
+                              (stmt-typedef Nil-chunk 'Result))
+    (def-template (typename FT-chunk)
+      (def-returning-function (constize (dcl-function 'convert
+                                                      Nil-chunk))
+        null
+        (val-call Nil-chunk))))
+
+  (build-clause Clause-chunk
+                std-FT
+                (val-call 'min
+                          (val-member-call 'test_ 'ghosts_with_bc)
+                          (val-member-call 'expr_ 'ghosts_with_bc))
+                (val-call 'min
+                          (val-member-call 'test_ 'ghosts_without_bc)
+                          (val-member-call 'expr_ 'ghosts_without_bc))
+                (add-spaces (val-member-call 'test_ 'has_extents)
+                            "||"
+                            (val-member-call 'expr_ 'has_extents))
+                (stmt-if (add-spaces (val-member-call 'test_ 'has_extents)
+                                     "&&"
+                                     (val-member-call 'expr_ 'has_extents))
+                         (val-call 'assert (val-equal  (val-member-call 'test_ 'extents)
+                                                       (val-member-call 'expr_ 'extents))))
+                (ter-cond (val-member-call 'test_ 'has_extents)
+                          (val-member-call 'test_ 'extents)
+                          (val-member-call 'expr_ 'extents))
+                (add-spaces (val-member-call 'test_ 'has_bc) ;not correct...
+                            "||"
+                            (val-member-call 'expr_ 'has_bc))
+                null)
+
+  (build-cond Cond-chunk
+              std-FT
+              (val-call 'min
+                        (val-member-call 'clause_ 'ghosts_with_bc)
+                        (val-member-call 'otherwise_ 'ghosts_with_bc))
+              (val-call 'min
+                        (val-member-call 'clause_ 'ghosts_without_bc)
+                        (val-member-call 'otherwise_ 'ghosts_without_bc))
+              (add-spaces (val-member-call 'clause_ 'has_extents)
+                          "||"
+                          (val-member-call 'otherwise_ 'has_extents))
+              (stmt-if (add-spaces (val-member-call 'clause_ 'has_extents)
+                                   "&&"
+                                   (val-member-call 'otherwise_ 'has_extents))
+                       (val-call 'assert (val-equal  (val-member-call 'clause_ 'extents)
+                                                     (val-member-call 'otherwise_ 'extents))))
+              (ter-cond (val-member-call 'clause_ 'has_extents)
+                        (val-member-call 'clause_ 'extents)
+                        (val-member-call 'otherwise_ 'extents))
+              (add-spaces (val-member-call 'clause_ 'has_bc) ;not correct...
+                          "||"
+                          (val-member-call 'otherwise_ 'has_bc))
+              null)
+
+  (build-clause SVClause-chunk
+                SV-FT
+                (val-call GhostData 'GHOST_MAX)
+                (val-call GhostData 'GHOST_MAX)
+                'false
+                null
+                (val-call IntVec 0 0 0)
+                (val-call IntVec 0 0 0)
+                (list (stmt-def-template-struct 'Convert
+                                                (typename FT-chunk)
+                                                null
+                                                (stmt-typedef (type-template Clause-chunk 'Initial 'Test 'Expr FT-chunk)
+                                                              'Result)
+                                                (def-returning-function (dcl-static-function 'convert
+                                                                                             'Result
+                                                                                             (list (function-pmtr (ref (const 'Test)) 't)
+                                                                                                   (function-pmtr (ref (const 'Expr)) 'e)))
+                                                  null
+                                                  (val-call 'Result
+                                                            't
+                                                            'e)))
+                      (def-returning-function (constize (dcl-function 'test
+                                                                      (ref (const 'Test))))
+                        null
+                        'test_)
+                      (def-returning-function (constize (dcl-function 'expr
+                                                                      (ref (const 'Expr))))
+                        null
+                        'expr_)))
+
+  (build-cond SVCond-chunk
+              SV-FT
+              (val-call GhostData 'GHOST_MAX)
+              (val-call GhostData 'GHOST_MAX)
+              'false
+              null
+              (val-call IntVec 0 0 0)
+              (val-call IntVec 0 0 0)
+              (list (stmt-def-template-struct 'Convert
+                                              (typename FT-chunk)
+                                              null
+                                              (stmt-typedef (typename (scope CT-chunk
+                                                                             (type-template-function 'Convert FT-chunk)))
+                                                            'ConvertingClause)
+                                              (stmt-typedef (typename (scope 'ConvertingClause
+                                                                             'Result))
+                                                            'ConvertedClause)
+                                              (stmt-typedef (typename (scope (scope 'Otherwise
+                                                                                    (type-template-function 'Convert FT-chunk))
+                                                                             'Result))
+                                                            'ConvertedClauses)
+                                              (stmt-typedef (type-template Cond-chunk 'Initial 'ConvertedClause 'ConvertedClauses FT-chunk)
+                                                            'Result)
+                                              (def-returning-function (dcl-static-function 'convert
+                                                                                           'Result
+                                                                                           (list (function-pmtr (ref (const CT-chunk)) 'c)
+                                                                                                 (function-pmtr (ref (const 'Otherwise)) 'o)))
+                                                null
+                                                (val-call 'Result
+                                                          (val-call (scope 'ConvertingClause 'convert)
+                                                                    (val-member-call 'c 'test)
+                                                                    (val-member-call 'c 'expr))
+                                                          (val-member-call 'o (type-template-function 'convert FT-chunk)))))
+                    (def-template (typename FT-chunk)
+                      (def-returning-function (constize (dcl-function 'convert
+                                                                      (typename (scope (type-template 'Convert FT-chunk)
+                                                                                       'Result))))
+                        null
+                        (val-call (scope (type-template 'Convert FT-chunk)
+                                         'convert)
+                                  (val-call 'clause)
+                                  (val-call 'otherwise))))))
+
+  (def-struct (dcl-struct SClause-chunk)
+    (section-public (constructor SClause-chunk
+                                 (list (function-pmtr (ref (const 'bool)) 'b)
+                                       (function-pmtr (ref (const 'double)) 'd))
+                                 (list (val-construct 'b_ 'b)
+                                       (val-construct 'd_ 'd)))
+                    (def-returning-function (constize (dcl-function 'check 'bool))
+                      null
+                      'b_)
+                    (def-returning-function (constize (dcl-function 'eval 'double))
+                      null
+                      'd_)
+                    (list (build-clause-convert-struct 'FullConvert
+                                                       FT-chunk
+                                                       (typename (scope FT-chunk vt-chunk))
+                                                       Clause-chunk
+                                                       'full_convert)
+                          (build-clause-convert-struct 'SingleConvert
+                                                       'T
+                                                       'T
+                                                       SVClause-chunk
+                                                       'single_convert)))
+    (section-private (stmt-dcl-variable (const 'bool) 'b_)
+                     (stmt-dcl-variable (const 'double) 'd_)))
+
+  (def-struct (dcl-struct SFClause-chunk)
+    (section-public (constructor SFClause-chunk
+                                 (function-pmtr (const 'double) 'd)
+                                 (val-construct 'd_ 'd))
+                    (def-returning-function (constize (dcl-function 'eval 'double))
+                      null
+                      'd_))
+    (section-private (stmt-dcl-variable (const 'double) 'd_)))
+
+  (def-template-struct SCond-chunk
+    (typename 'Otherwise)
+    null
+    (section-public (constructor SCond-chunk
+                                 (list (function-pmtr (ref (const SClause-chunk)) 'c)
+                                       (function-pmtr (ref (const 'Otherwise)) 'otherwise))
+                                 (list (val-construct 'c_ 'c)
+                                       (val-construct 'otherwise_ 'otherwise)))
+                    (def-returning-function (constize (dcl-function 'eval 'double null))
+                      null
+                      (ter-cond (val-member-call 'c_ 'check)
+                                (val-member-call 'c_ 'eval)
+                                (val-member-call 'otherwise_ 'eval)))
+                    (list (build-nonempty-cond-convert-struct 'FullConvert
+                                                              FT-chunk
+                                                              Cond-chunk
+                                                              'full_convert)
+                          (build-nonempty-cond-convert-struct 'SingleConvert
+                                                              'T
+                                                              SVCond-chunk
+                                                              'single_convert))
+                    (def-returning-function (constize (dcl-function 'clause (ref (const SClause-chunk))))
+                      null
+                      'c_)
+                    (def-returning-function (constize (dcl-function 'otherwise (ref (const 'Otherwise))))
+                      null
+                      'otherwise_))
+    (section-private (stmt-dcl-variable (const SClause-chunk) 'c_)
+                     (stmt-dcl-variable (const 'Otherwise) 'otherwise_)))
+
+  (def-template-struct SCond-chunk
+    null
+    Nil-chunk
+    (section-public (constructor SCond-chunk
+                                 (list (function-pmtr (ref (const SClause-chunk)) 'c)
+                                       (function-pmtr (ref (const Nil-chunk)) 'nil))
+                                 (val-construct 'c_ 'c))
+                    (list (build-empty-cond-convert-struct 'FullConvert
+                                                           FT-chunk
+                                                           Cond-chunk
+                                                           'full_convert)
+                          (build-empty-cond-convert-struct 'SingleConvert
+                                                           'T
+                                                           SVCond-chunk
+                                                           'single_convert))
+                    (def-returning-function (constize (dcl-function 'clause (ref (const SClause-chunk))))
+                      null
+                      'c_)
+                    (def-returning-function (constize (dcl-function 'otherwise Nil-chunk))
+                      null
+                      (val-call Nil-chunk)))
+    (section-private (stmt-dcl-variable (const SClause-chunk) 'c_)))
+
+                                        ;CondBuilder
+  (dcl-template-struct 'CondBuilder
+                       (typename 'Clauses))
+
+                                        ; FT
+  (build-CondBuilder (typename 'Next)
+                     (type-template Cond-chunk 'Initial 'Next 'Following FT-chunk)
+                     (type-template Cond-chunk 'Initial 'Next 'PreceedingResult FT-chunk)
+                     (list CT-chunk 'Otherwise FT-chunk)
+                     (space-after (type-template Cond-chunk 'Initial CT-chunk 'Otherwise FT-chunk))
+                     (stmt-dcl-variable (const 'Clauses) 'clauses_)
+                     (function-pmtr (ref (const (type-template Cond-chunk 'Initial CT-chunk 'Otherwise FT-chunk)))
+                                    'cs)
+                     (val-construct 'clauses_ 'cs)
+                     (build-cond-app (add-spaces 'operator (paren))
+                                     previous-full))
+
+                                        ; single
+  (build-CondBuilder (typename 'Next)
+                     (type-template SVCond-chunk 'Initial 'Next 'Following 'T)
+                     (type-template SVCond-chunk 'Initial 'Next 'PreceedingResult 'T)
+                     (list CT-chunk 'Otherwise 'T)
+                     (space-after (type-template SVCond-chunk 'Initial CT-chunk 'Otherwise 'T))
+                     (stmt-dcl-variable (const 'Clauses) 'clauses_)
+                     (function-pmtr (ref (const (type-template SVCond-chunk 'Initial CT-chunk 'Otherwise 'T)))
+                                    'cs)
+                     (val-construct 'clauses_ 'cs)
+                     (build-cond-app (add-spaces 'operator (paren))
+                                     previous-single))
+
+                                        ; simple
+  (build-CondBuilder null
+                     (type-template SCond-chunk 'Following)
+                     (type-template SCond-chunk 'PreceedingResult)
+                     'Otherwise
+                     (space-after (type-template SCond-chunk 'Otherwise))
+                     (stmt-dcl-variable (const 'Clauses) 'clauses_)
+                     (function-pmtr (ref (const (type-template SCond-chunk 'Otherwise))) 'cs)
+                     (val-construct 'clauses_ 'cs)
+                     (build-cond-app (add-spaces 'operator (paren))
+                                     previous-simple))
+
+                                        ; Nil
+  (def-template-struct 'CondBuilder
+    null
+    Nil-chunk
+    (section-public (constructor 'CondBuilder null null)))
+
+  (build-cond-app 'cond previous-none)
+
+  (macro-define 'nebo_cond null (literal 'cond '//))
+  ))

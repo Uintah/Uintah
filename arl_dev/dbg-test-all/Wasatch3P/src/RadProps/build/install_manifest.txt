@@ -1,0 +1,4 @@
+/home/alan/uintah-md/md-dev/dbg-test-all/Wasatch3P/install/RadProps/lib/radprops/libradprops.a
+/home/alan/uintah-md/md-dev/dbg-test-all/Wasatch3P/install/RadProps/include/radprops/AbsCoeffGas.h
+/home/alan/uintah-md/md-dev/dbg-test-all/Wasatch3P/install/RadProps/include/radprops/RadiativeSpecies.h
+/home/alan/uintah-md/md-dev/dbg-test-all/Wasatch3P/install/RadProps/include/radprops/Particles.h
