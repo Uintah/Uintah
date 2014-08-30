@@ -199,7 +199,7 @@ namespace Uintah {
 
     void computeElasticProperties(const Matrix3 stress,
                                   const Matrix3 ep,
-								  const double& P3,
+				  const double& P3,
                                   double & bulk,
                                   double & shear
                                  );
