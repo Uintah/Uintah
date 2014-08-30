@@ -1,4 +1,0 @@
-digraph G {
-node[style=filled]
-0[label="( G, STATE_NONE )  (0)"];
-}

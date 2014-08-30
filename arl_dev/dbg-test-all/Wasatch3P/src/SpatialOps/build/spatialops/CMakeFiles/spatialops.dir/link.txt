@@ -1,2 +1,0 @@
-/usr/bin/ar cr libspatialops.a  CMakeFiles/spatialops.dir/empty.cpp.o
-/usr/bin/ranlib libspatialops.a

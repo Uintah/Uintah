@@ -1,2 +1,0 @@
-/usr/bin/ar cr libspatialops-structured.a  CMakeFiles/spatialops-structured.dir/Grid.cpp.o CMakeFiles/spatialops-structured.dir/MemoryPool.cpp.o CMakeFiles/spatialops-structured.dir/MemoryWindow.cpp.o
-/usr/bin/ranlib libspatialops-structured.a

@@ -1,2 +1,0 @@
-/home/alan/uintah-md/md-dev/dbg-test-all/Wasatch3P/src/ExprLib/build/util/CMakeFiles/create_expr.dir
-/home/alan/uintah-md/md-dev/dbg-test-all/Wasatch3P/src/ExprLib/build/CMakeFiles/exprlib.dir
