@@ -82,21 +82,20 @@ static DebugStream affinity("CPUAffinity", false);
          DebugStream use_single_device("SingleDevice", false);
 #endif
 
-UnifiedScheduler::UnifiedScheduler(const ProcessorGroup* myworld,
-                                   Output* oport,
-                                   UnifiedScheduler* parentScheduler) :
-    MPIScheduler(myworld, oport, parentScheduler),
-      d_nextsignal("next condition"),
-      d_nextmutex("next mutex"),
-      dlbLock("loadbalancer lock"),
-      schedulerLock("scheduler lock"),
-      recvLock("MPI receive Lock")
+UnifiedScheduler::UnifiedScheduler( const ProcessorGroup * myworld,
+                                    const Output         * oport,
+                                    UnifiedScheduler     * parentScheduler ) :
+  MPIScheduler(myworld, oport, parentScheduler),
+  d_nextsignal("next condition"),
+  d_nextmutex("next mutex"),
+  dlbLock("loadbalancer lock"),
+  schedulerLock("scheduler lock"),
+  recvLock("MPI receive Lock")
 #ifdef HAVE_CUDA
-      ,
-      idleStreamsLock_("CUDA streams lock"),
-      d2hComputesLock_("Device-DB computes copy lock"),
-      h2dRequiresLock_("Device-DB requires copy lock")
-
+  ,
+  idleStreamsLock_("CUDA streams lock"),
+  d2hComputesLock_("Device-DB computes copy lock"),
+  h2dRequiresLock_("Device-DB requires copy lock")
 #endif
 {
 #ifdef HAVE_CUDA
@@ -741,10 +740,11 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   }
 }
 
-void UnifiedScheduler::runTasks(int t_id)
+void
+UnifiedScheduler::runTasks( int t_id )
 {
+  while( numTasksDone < ntasks ) {
 
-  while (numTasksDone < ntasks) {
     DetailedTask* readyTask = NULL;
     DetailedTask* initTask = NULL;
 

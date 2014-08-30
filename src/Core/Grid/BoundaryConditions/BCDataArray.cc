@@ -171,6 +171,23 @@ void BCDataArray::determineIteratorLimits(Patch::FaceType face,
     }
   }
 
+  // A BCDataArry contains a bunch of geometry objects. Here, we remove objects with empty iterators.
+  // The reason that we get geometry objects with zero iterators is that, for a given boundary face
+  // that is shared across several patches, geometry objects are created on ALL patches. Later,
+  // a geometry object is assigned an iterator depending on whether it lives on that patch or not.
+  for (mat_id_itr = d_BCDataArray.begin();
+       mat_id_itr != d_BCDataArray.end(); ++mat_id_itr) {
+    vector<BCGeomBase*>& bc_objects = mat_id_itr->second;
+    for (vector<BCGeomBase*>::iterator obj = bc_objects.begin();
+         obj < bc_objects.end();) {
+      if ( !( (*obj)->hasIterator()) ) {
+        delete *obj;
+        obj = bc_objects.erase(obj); // point the iterator to the next element that was after the one we deleted
+      } else {
+        ++obj;
+      }
+    }
+  }
 }
 
 void BCDataArray::addBCData(int mat_id,BCGeomBase* bc)
@@ -342,11 +359,11 @@ BCDataArray::getBoundCondData(int mat_id, const string type, int ichild) const
     itr->second[ichild]->getBCData(new_bc);
     bool found_it = new_bc.find(type);
     if (found_it == true)
-      return new_bc.getBCValues(type);
+      return new_bc.cloneBCValues(type);
 //    else {
 //      found_it = new_bc.find("Auxiliary");
 //      if (found_it)
-//        return new_bc.getBCValues("Auxiliary");
+//        return cloneBCValues("Auxiliary");
 //    }
   }
   // Check the mat_id = "all" case
@@ -356,11 +373,11 @@ BCDataArray::getBoundCondData(int mat_id, const string type, int ichild) const
       itr->second[ichild]->getBCData(new_bc_all);
       bool found_it = new_bc_all.find(type);
       if (found_it == true)
-        return new_bc_all.getBCValues(type);
+        return new_bc_all.cloneBCValues(type);
 //      else {
 //        found_it = new_bc_all.find("Auxiliary");
 //        if (found_it)
-//          return new_bc_all.getBCValues("Auxiliary");
+//          return new_bc_all.cloneBCValues("Auxiliary");
 //      }
 //      return 0;
     }

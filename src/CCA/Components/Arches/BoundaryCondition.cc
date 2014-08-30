@@ -34,6 +34,7 @@
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #include <CCA/Components/Arches/IntrusionBC.h>
 #include <CCA/Components/Arches/Filter.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
@@ -106,6 +107,8 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
   index_map[2][1] = 2; 
   index_map[2][2] = 0; 
 
+  d_radiation_temperature_label = VarLabel::create("radiation_temperature", CCVariable<double>::getTypeDescription()); 
+
 }
 
 
@@ -128,6 +131,8 @@ BoundaryCondition::~BoundaryCondition()
   if (_using_new_intrusion) { 
     delete _intrusionBC; 
   } 
+
+  VarLabel::destroy(d_radiation_temperature_label); 
 }
 
 //****************************************************************************
@@ -2050,8 +2055,44 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
 
           my_info.type = SWIRL; 
           my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
+          my_info.velocity = Vector(0,0,0); 
+          my_info.mass_flow_rate = 0.0;
           db_BCType->require("swirl_no", my_info.swirl_no);
           db_BCType->require("swirl_centroid", my_info.swirl_cent); 
+
+          //compute the density:
+          typedef std::vector<std::string> StringVec; 
+          MixingRxnModel* mixingTable = d_props->getMixRxnModel(); 
+          StringVec iv_var_names = mixingTable->getAllIndepVars(); 
+          vector<double> iv; 
+
+          for ( StringVec::iterator iv_iter = iv_var_names.begin(); iv_iter != iv_var_names.end(); iv_iter++){
+
+            string curr_iv = *iv_iter; 
+
+            for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != 0; 
+                db_BCType2 = db_BCType2->findNextBlock("BCType") ){
+
+              string curr_var; 
+              db_BCType2->getAttribute("label",curr_var);
+
+              if ( curr_var == curr_iv ){
+                string type;
+                db_BCType2->getAttribute("var",type);
+                if ( type != "Dirichlet"){
+                  throw InvalidValue("Error: Cannot compute property values for MassFlowInlet because not all IVs are of type Dirichlet: "+curr_var, __FILE__, __LINE__); 
+                } else { 
+                  double value; 
+                  db_BCType2->require("value",value);
+                  iv.push_back(value);
+                }
+              }
+            }
+          }
+
+          double density = mixingTable->getTableValue(iv,"density");
+          my_info.density = density; 
+
 
           // note that the mass flow rate is in the BCstruct value 
 
@@ -2533,7 +2574,7 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
                 case ( SWIRL ):
                   bc_iter->second.mass_flow_rate = bc_value; 
                   bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate / 
-                                                   ( area * density[*bound_ptr] ); 
+                                                   ( area * bc_iter->second.density ); 
                   break; 
 
                 case ( STABL ): 
@@ -2750,9 +2791,9 @@ void BoundaryCondition::setSwirl( const Patch* patch, const Patch::FaceType& fac
    IntVector cp = *bound_ptr - insideCellDir; 
 
    uVel[c]  = bc_values.x();
-   uVel[cp] = bc_values.x() * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+   uVel[cp] = bc_values.x();
 
-   double ave_u = (uVel[c] + uVel[cp])/2.0;
+   double ave_u = bc_values.x(); 
 
    Point p = patch->cellPosition(c); 
    vector<double> my_p; 
@@ -2763,10 +2804,11 @@ void BoundaryCondition::setSwirl( const Patch* patch, const Patch::FaceType& fac
    double y = my_p[index_map[dir][1]] - swrl_cent[index_map[dir][1]];
    double z = my_p[index_map[dir][2]] + mDx.z()/2.0 - swrl_cent[index_map[dir][2]];
 
-   double denom = pow(y,2) + pow(z,2); 
+   double denom = pow(y,2.0) + pow(z,2.0); 
    denom = pow(denom,0.5); 
 
-   vVel[c] = -1.0 * z * swrl_no * ave_u /denom; 
+   double bc_v = -1.0 * z * swrl_no * ave_u /denom; 
+   vVel[c] = 2.0*vVel[cp] - bc_v;
 
    y = my_p[index_map[dir][1]] + mDx.y()/2.0 - swrl_cent[index_map[dir][1]];
    z = my_p[index_map[dir][2]] - swrl_cent[index_map[dir][2]]; 
@@ -2774,7 +2816,8 @@ void BoundaryCondition::setSwirl( const Patch* patch, const Patch::FaceType& fac
    denom = pow(y,2) + pow(z,2); 
    denom = pow(denom,0.5); 
 
-   wVel[c] = y * swrl_no * ave_u / denom;
+   double bc_w = y * swrl_no * ave_u / denom;
+   wVel[c] = 2.0*wVel[cp] - bc_w;
 
  }
 }
@@ -4214,3 +4257,76 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
     }
   }
 }
+
+void 
+BoundaryCondition::sched_create_radiation_temperature( SchedulerP& sched, const LevelP& level, const MaterialSet* matls, const bool use_old_dw )
+{
+  bool radiation = false; 
+  SourceTermFactory& srcs = SourceTermFactory::self(); 
+  if ( srcs.source_type_exists("do_radiation") ){
+    radiation = true; 
+  }
+  if ( srcs.source_type_exists( "rmcrt_radiation") ){
+    radiation = true;
+  }
+
+  if ( radiation ){ 
+    string taskname = "BoundaryCondition::create_radiation_temperature"; 
+    Task* tsk = scinew Task(taskname, this, &BoundaryCondition::create_radiation_temperature, use_old_dw ); 
+
+    //WARNING! HACK HERE FOR CONSTANT TEMPERATURE NAME
+    d_temperature_label = VarLabel::find("temperature"); 
+
+    tsk->computes(d_radiation_temperature_label); 
+
+    //WARNING! THIS ASSUMES WE ARE DOING RADIATION ONCE PER TIMESTEP ON RK STEP = 0
+    if ( use_old_dw ){
+      tsk->requires(Task::OldDW, d_temperature_label, Ghost::None, 0); 
+    } else { 
+      tsk->requires(Task::NewDW, d_temperature_label, Ghost::None, 0); 
+    }
+ 
+
+    sched->addTask( tsk, level->eachPatch(), matls ); 
+  }
+}
+
+void 
+BoundaryCondition::create_radiation_temperature( const ProcessorGroup* pc, 
+                                                 const PatchSubset* patches, 
+                                                 const MaterialSubset* matls, 
+                                                 DataWarehouse* old_dw, 
+                                                 DataWarehouse* new_dw,
+                                                 const bool use_old_dw ) 
+{
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+
+    int archIndex = 0;
+
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> radiation_temperature; 
+
+    constCCVariable<double> old_temperature; 
+
+
+    new_dw->allocateAndPut( radiation_temperature, d_radiation_temperature_label, matlIndex, patch );
+
+    if ( use_old_dw ){ 
+      old_dw->get( old_temperature, d_temperature_label, matlIndex, patch, Ghost::None, 0 ); 
+    } else { 
+      new_dw->get( old_temperature, d_temperature_label, matlIndex, patch, Ghost::None, 0 ); 
+      d_newBC->checkForBC( pc, patch, "radiation_temperature"); 
+    }
+
+    radiation_temperature.copyData(old_temperature); 
+
+    d_newBC->setExtraCellScalarValueBC( pc, patch, radiation_temperature, "radiation_temperature" );
+
+  }
+}
+
+

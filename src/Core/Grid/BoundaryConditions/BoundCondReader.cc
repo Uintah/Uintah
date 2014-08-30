@@ -383,6 +383,31 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     bcGeom->setBndType( bndType );
   }
 
+  if (face_ps->findBlock("ParticleBC")) {
+    ProblemSpecP particleBCps = face_ps->findBlock("ParticleBC");
+    ProblemSpecP pWallBC = particleBCps->findBlock("Wall");
+    ProblemSpecP pInletBC= particleBCps->findBlock("Inlet");
+    BCGeomBase::ParticleBndSpec pBndSpec;
+    if (pWallBC) {
+      pBndSpec.bndType = BCGeomBase::ParticleBndSpec::WALL;
+      std::string wallType;
+      pWallBC->getAttribute("walltype",wallType);
+      if (wallType=="Elastic") {
+        pBndSpec.wallType = BCGeomBase::ParticleBndSpec::ELASTIC;
+        pBndSpec.restitutionCoef = 1.0;
+      } else if (wallType=="Inelastic") {
+        pBndSpec.wallType = BCGeomBase::ParticleBndSpec::INELASTIC;
+        pBndSpec.restitutionCoef = 0.0;
+      } else if (wallType=="PartiallyElastic") {
+        pBndSpec.wallType = BCGeomBase::ParticleBndSpec::PARTIALLYELASTIC;
+        pWallBC->get("Restitution", pBndSpec.restitutionCoef);
+      }
+    } else if (pInletBC) {
+      pBndSpec.bndType = BCGeomBase::ParticleBndSpec::INLET;
+      pInletBC->get("ParticlesPerSecond", pBndSpec.particlesPerSec);
+    }
+    bcGeom->setParticleBndSpec(pBndSpec);
+  }
 
   BCR_dbg << "Face = " << fc << endl;
   return bcGeom;
@@ -679,6 +704,7 @@ void BoundCondReader::combineBCS()
 
           diff_bc->setBCName( side_bc->getBCName() ); //make sure the new piece has the right name
           diff_bc->setBndType( side_bc->getBndType() ); //make sure the new piece has the correct boundary type
+          diff_bc->setParticleBndSpec(side_bc->getParticleBndSpec());
           
           rearranged.addBCData(mat_id,diff_bc->clone());
           rearranged.addBCData(mat_id,other_bc->clone());
@@ -711,7 +737,8 @@ void BoundCondReader::combineBCS()
 
           diff_bc->setBCName( side_bc->getBCName() ); //make sure the new piece has the right name
           diff_bc->setBndType( side_bc->getBndType() ); //make sure the new piece has the correct boundary type
-
+          diff_bc->setParticleBndSpec(side_bc->getParticleBndSpec());
+          
           rearranged.addBCData(mat_id,diff_bc->clone());
           delete side_bc;
           delete diff_bc;

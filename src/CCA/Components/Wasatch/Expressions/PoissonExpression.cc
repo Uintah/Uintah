@@ -150,6 +150,8 @@ namespace Wasatch {
                                        const int RKStage )
   {
     materialID_ = material;
+    patch_ = const_cast<Uintah::Patch*> (patch);
+    rkStage_ = RKStage;
     if (didAllocateMatrix_) {
       if (RKStage==1 ) dw->put( matrix_, matrixLabel_, materialID_, patch );
       else             dw->getModifiable( matrix_, matrixLabel_, materialID_, patch );

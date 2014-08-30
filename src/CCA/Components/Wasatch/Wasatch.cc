@@ -362,7 +362,7 @@ namespace Wasatch{
     //
     doParticles_ = wasatchSpec_->findBlock("ParticleTransportEquations");
     if (doParticles_) {
-      particlesHelper_->problem_setup(wasatchSpec_->findBlock("ParticleTransportEquations"));
+      particlesHelper_->problem_setup(wasatchSpec_->findBlock("ParticleTransportEquations"), sharedState);
     }
 
     // setup names for all the boundary condition faces that do NOT have a name or that have duplicate names
@@ -1149,10 +1149,10 @@ namespace Wasatch{
       if (isRestarting_) {
         particlesHelper_->schedule_restart_initialize(level,sched);
       }
-
-      particlesHelper_->schedule_sync_particle_position(level,sched);
       particlesHelper_->schedule_transfer_particle_ids(level,sched);
+      particlesHelper_->schedule_sync_particle_position(level,sched);
       particlesHelper_->schedule_relocate_particles(level,sched);
+      particlesHelper_->schedule_add_particles(level,sched);
     }
     
     if (isRestarting_) isRestarting_ = false;

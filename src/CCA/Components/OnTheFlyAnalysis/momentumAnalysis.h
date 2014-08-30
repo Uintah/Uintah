@@ -30,6 +30,10 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
 #include <map>
 
 namespace Uintah {
@@ -100,15 +104,15 @@ WARNING
                     DataWarehouse* new_dw);
 
     void integrateMomentumField(const ProcessorGroup* pg,
-                                const PatchSubset* patches,        
-                                const MaterialSubset* matl_sub ,   
-                                DataWarehouse* old_dw,             
-                                DataWarehouse* new_dw);            
+                                const PatchSubset* patches,
+                                const MaterialSubset* matl_sub ,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw);
 
-    void faceInfo(const std::string fc,
-                   Patch::FaceType& face_side,
+    void faceInfo( const std::string fc,
                    Vector& norm,
-                   int& p_dir);
+                   int& p_dir,
+                   int& index);
 
     void createFile(std::string& filename, FILE*& fp);
 
@@ -117,27 +121,69 @@ WARNING
                          const Point& start,
                          const Point& end );
 
+    VarLabel* assignLabel( const std::string& desc );
+
+
+
+    struct faceQuantities{
+      std::map< int, Vector > convect_faceFlux;      // convective momentum flux across control volume faces
+      std::map< int, Vector > viscous_faceFlux;      // viscous  momentum flux across control volume faces
+      std::map< int, double > pressForce_face;       // pressure force on each face
+    };
+
+    void initializeVars( faceQuantities* faceQ );
+
+    //__________________________________
+    //  accumulate fluxes across a control volume face
+    template < class SFC_D, class SFC_V >
+    void integrateOverFace( const std::string faceName,
+                            const double faceArea,
+                            CellIterator iterLimits,
+                            faceQuantities* faceQ,
+                            SFC_D& vel_FC,
+                            SFC_D& press_FC,
+                            SFC_V& tau_FC,
+                            constCCVariable<double>& rho_CC,
+                            constCCVariable<Vector>& vel_CC );
+
+    //__________________________________
+    //  left flux - right flux
+    Vector L_minus_R( std::map <int, Vector >& faceFlux);
+
     // VarLabels
     class MA_Labels {
       public:
+        const VarLabel* delT;
         VarLabel* lastCompTime;
         VarLabel* fileVarsStruct;
+
         VarLabel* totalCVMomentum;
-        VarLabel* CS_fluxes;
+        VarLabel* convectMom_fluxes;
+        VarLabel* viscousMom_fluxes;
+        VarLabel* pressForces;
+
         VarLabel* vel_CC;
         VarLabel* rho_CC;
+
         VarLabel* uvel_FC;
         VarLabel* vvel_FC;
         VarLabel* wvel_FC;
-        const VarLabel* delT;
+
+        VarLabel* pressX_FC;
+        VarLabel* pressY_FC;
+        VarLabel* pressZ_FC;
+
+        VarLabel* tau_X_FC;
+        VarLabel* tau_Y_FC;
+        VarLabel* tau_Z_FC;
     };
 
     MA_Labels* labels;
 
     enum FaceType {
-      partialFace=0, 
-      entireFace=1, 
-      none=2 
+      partialFace=0,
+      entireFace=1,
+      none=2
     };
 
     struct cv_face{
@@ -149,6 +195,7 @@ WARNING
     };
 
     std::map< int, cv_face* > d_cv_faces;
+    
 
     //__________________________________
     // global constants

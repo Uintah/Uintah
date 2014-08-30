@@ -7,6 +7,7 @@
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
+#include <CCA/Components/Arches/ParticleModels/CQMOMSourceWrapper.h>
 
 using namespace std;
 using namespace Uintah;
@@ -80,6 +81,9 @@ CQMOMEqn::~CQMOMEqn()
   VarLabel::destroy(d_FconvYLabel);
   VarLabel::destroy(d_FconvZLabel);
   delete d_cqmomConv;
+  for (int i = 0; i < d_sources.size(); i++ ) {
+    delete d_sources[i];
+  }
 }
 //---------------------------------------------------------------------------
 // Method: Problem Setup
@@ -91,6 +95,7 @@ CQMOMEqn::problemSetup(const ProblemSpecP& inputdb)
   
   ProblemSpecP db_root = db->getRootNode();
   ProblemSpecP cqmom_db = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("CQMOM");
+  ProblemSpecP models_db = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleModels");
   std::string which_cqmom;
   cqmom_db->getAttribute( "type", which_cqmom );
   cqmom_db->getAttribute( "partvel", d_usePartVel );
@@ -107,7 +112,6 @@ CQMOMEqn::problemSetup(const ProblemSpecP& inputdb)
   cqmom_db->getWithDefault( "doDiff", d_doDiff, false);
 
   d_addSources = false;
-  d_addExtraSources = false;
   cqmom_db->getWithDefault( "molecular_diffusivity", d_mol_diff, 0.0);
   
   // save the moment eqn label
@@ -160,10 +164,23 @@ CQMOMEqn::problemSetup(const ProblemSpecP& inputdb)
   }
   
   // Models (source terms):
-  for (ProblemSpecP m_db = db->findBlock("model"); m_db !=0; m_db = m_db->findNextBlock("model")){
-    //placeholder
+  if ( models_db ) {
+    d_addSources = true;
+    for (ProblemSpecP m_db = models_db->findBlock("model"); m_db !=0; m_db = m_db->findNextBlock("model")){
+      //parse the model blocks for var label
+      std::string model_name;
+      std::string source_label;
+      int nIC;
+      m_db->get("apply_to",nIC);
+      m_db->getAttribute("label",model_name);
+      source_label = d_eqnName + "_" + model_name + "_src";
+      proc0cout << "Creating source label: " << source_label << endl;
+      CQMOMSourceWrapper * cqmomSource;
+      cqmomSource =  scinew CQMOMSourceWrapper(d_fieldLabels, source_label, momentIndex, nIC) ;
+      cqmomSource->problemSetup( m_db );
+      d_sources.push_back(cqmomSource);
+    }
   }
-  
   // Clipping:
   clip.activated = false;
   clip.do_low  = false;
@@ -189,20 +206,6 @@ CQMOMEqn::problemSetup(const ProblemSpecP& inputdb)
   // Scaling information:
   //Use this if the moments should be normalized later
   //  cqmom_db->getWithDefault( "scaling_const", d_scalingConstant, 0.0 );
-  
-  // Extra Source terms (for mms and other tests):
-  //make these srouces exist in cqmom block instead of each moment block
-  if (cqmom_db->findBlock("src")){
-    string srcname;
-    d_addExtraSources = true;
-    for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
-      src_db->getAttribute("label", srcname);
-      //which sources are turned on for this equation
-      d_sources.push_back( srcname );
-      
-    }
-  }
-
 
   // Initialization (new way):
   ProblemSpecP db_initialValue = db->findBlock("initialization");
@@ -285,22 +288,9 @@ CQMOMEqn::sched_evalTransportEqn( const LevelP& level,
   
   if (timeSubStep == 0)
     sched_initializeVariables( level, sched );
-  
-#ifdef VERIFY_CQMOM_TRANSPORT
-  if (d_addExtraSources) {
-    proc0cout << endl;
-    proc0cout << endl;
-    proc0cout << "NOTICE: You have verification turned ON in your DQMOMEqn.h " << endl;
-    proc0cout << "Equation " << d_eqnName << " reporting" << endl;
-    proc0cout << endl;
-    proc0cout << endl;
-    
+
+  if (d_addSources)
     sched_computeSources( level, sched, timeSubStep );
-  }
-#endif
-  if (d_addExtraSources) {
-    sched_computeSources( level, sched, timeSubStep );
-  }
   
   sched_buildTransportEqn( level, sched, timeSubStep );
   
@@ -327,6 +317,10 @@ CQMOMEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
   tsk->computes(d_FconvXLabel);
   tsk->computes(d_FconvYLabel);
   tsk->computes(d_FconvZLabel);
+  
+  for (std::vector<CQMOMSourceWrapper* >::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
+    (*iter)->sched_initializeVariables( level, sched );
+  }
   
   //Old
   tsk->requires(Task::OldDW, d_transportVarLabel, gn, 0);
@@ -394,30 +388,31 @@ void CQMOMEqn::initializeVariables( const ProcessorGroup* pc,
 }
 //---------------------------------------------------------------------------
 // Method: Schedule compute the sources.
-// Probably not needed for DQMOM EQN
-// WILL need this for CQMOM as soruces are independent of linear solve
+// this calls the scedulers to add up the source term from each node
 //---------------------------------------------------------------------------
 void
 CQMOMEqn::sched_computeSources( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-//  string taskname = "CQMOMEqn::computeSources";
-//  Task* tsk = scinew Task(taskname, this, &CQMOMEqn::computeSources);
-//  // This scheduler only calls other schedulers
-// 
-//  SourceTermFactory& factory = SourceTermFactory::self();
-//  for (vector<std::string>::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
-//    
-//    SourceTermBase& temp_src = factory.retrieve_source_term( *iter );
-//    
-//    temp_src.sched_computeSource( level, sched, timeSubStep );
-//    
-//  }
+  string taskname = "CQMOMEqn::computeSources";
+  Task* tsk = scinew Task(taskname, this, &CQMOMEqn::computeSources);
+  
+  // This scheduler only calls other schedulers
+  for (vector<CQMOMSourceWrapper* >::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
+    const VarLabel * temp_src = (*iter)->getSourceLabel( );
+    tsk->requires(Task::NewDW, temp_src, Ghost::None, 0);
+    (*iter)->sched_buildSourceTerm( level, sched, timeSubStep );
+  }
+  
+  if (timeSubStep == 0) {
+    tsk->computes(d_sourceLabel);
+  } else {
+    tsk->modifies(d_sourceLabel);
+  }
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
 
 //---------------------------------------------------------------------------
 // Method: Actually compute the sources
-// Probably not needed for DQMOM EQN
-// WILL need this for CQMOM as soruces are independent of linear solve
 //---------------------------------------------------------------------------
 void
 CQMOMEqn::computeSources( const ProcessorGroup* pc,
@@ -426,8 +421,34 @@ CQMOMEqn::computeSources( const ProcessorGroup* pc,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw )
 {
-                          
-  
+  for (int p=0; p < patches->size(); p++) {
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gn  = Ghost::None;
+    
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+
+    CCVariable<double> totalSource;
+    if (new_dw->exists(d_sourceLabel, matlIndex, patch)) {
+      new_dw->getModifiable( totalSource, d_sourceLabel, matlIndex, patch);
+    } else {
+      new_dw->allocateAndPut( totalSource, d_sourceLabel, matlIndex, patch);
+    }
+    
+    totalSource.initialize(0.0);
+    
+    for (vector<CQMOMSourceWrapper* >::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
+      constCCVariable<double> thisSrc;
+      const VarLabel* temp_src = (*iter)->getSourceLabel( );
+      new_dw->get(thisSrc, temp_src, matlIndex, patch, gn, 0);
+    
+      for (CellIterator citer=patch->getCellIterator(); !citer.done(); citer++){
+        IntVector c = *citer;
+        totalSource[c] += thisSrc[c];
+      } //cell loop
+    }
+  }
 }
 //---------------------------------------------------------------------------
 // Method: Schedule build the transport equation.
@@ -456,21 +477,23 @@ CQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int t
   tsk->requires(Task::OldDW, d_fieldLabels->d_viscosityCTSLabel, Ghost::AroundCells, 1);
   tsk->requires(Task::OldDW, d_fieldLabels->d_cellTypeLabel, Ghost::AroundCells, 1);
   
-  if (timeSubStep == 0) {
-//    tsk->requires(Task::OldDW, d_sourceLabel, Ghost::None, 0);
-  } else {
-//    tsk->requires(Task::NewDW, d_sourceLabel, Ghost::None, 0);
+  if (d_addSources) {
+    if (timeSubStep == 0) {
+      tsk->requires(Task::OldDW, d_sourceLabel, Ghost::None, 0);
+    } else {
+      tsk->requires(Task::NewDW, d_sourceLabel, Ghost::None, 0);
+    }
   }
   
   //loop over requires for weights and abscissas needed for convection term if IC=u,v,w
   if (d_usePartVel) {
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
       const VarLabel* tempLabel = iW->second;
-      tsk->requires( Task::OldDW, tempLabel, Ghost::AroundCells, 1 );
+      tsk->requires( Task::OldDW, tempLabel, Ghost::AroundCells, 2 );
     }
     for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
       const VarLabel* tempLabel = iA->second;
-      tsk->requires( Task::OldDW, tempLabel, Ghost::AroundCells, 1 );
+      tsk->requires( Task::OldDW, tempLabel, Ghost::AroundCells, 2 );
     }
   } else {
     tsk->requires(Task::OldDW, d_fieldLabels->d_uVelocitySPBCLabel, Ghost::AroundCells, 1);
@@ -525,11 +548,13 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     CCVariable<double> FconvZ;
     
     new_dw->get(oldPhi, d_oldtransportVarLabel, matlIndex, patch, gac, 2);
- //   if (new_dw->exists(d_sourceLabel, matlIndex, patch)) {
- //     new_dw->get(src, d_sourceLabel, matlIndex, patch, gn, 0); // only get new_dw value on rkstep > 0
- //   } else {
- //     old_dw->get(src, d_sourceLabel, matlIndex, patch, gn, 0);
- //   }
+    if (d_addSources) {
+      if (new_dw->exists(d_sourceLabel, matlIndex, patch)) {
+        new_dw->get(src, d_sourceLabel, matlIndex, patch, gn, 0); // only get new_dw value on rkstep > 0
+      } else {
+        old_dw->get(src, d_sourceLabel, matlIndex, patch, gn, 0);
+      }
+    }
     
     old_dw->get(mu_t, d_fieldLabels->d_viscosityCTSLabel, matlIndex, patch, gac, 1);
     old_dw->get(areaFraction, d_fieldLabels->d_areaFractionLabel, matlIndex, patch, gac, 2);
@@ -577,14 +602,14 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
         for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
           const VarLabel* tempLabel = iW->second;
           constCCVarWrapper tempWrapper;
-          old_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 1 );
+          old_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
           cqmomWeights.push_back(tempWrapper);
         }
         
         for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
           const VarLabel* tempLabel = iA->second;
           constCCVarWrapper tempWrapper;
-          old_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 1 );
+          old_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
           cqmomAbscissas.push_back(tempWrapper);
         }
       } else if (!d_usePartVel) {
@@ -777,11 +802,11 @@ CQMOMEqn::sched_buildXConvection( const LevelP& level, SchedulerP& sched, int ti
   //loop over requires for weights and abscissas needed for convection term if IC=u,v,w
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
     const VarLabel* tempLabel = iW->second;
-    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 1 );
+    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
   }
   for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
     const VarLabel* tempLabel = iA->second;
-    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 1 );
+    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
   }
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -834,14 +859,14 @@ CQMOMEqn::buildXConvection( const ProcessorGroup* pc,
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
       const VarLabel* tempLabel = iW->second;
       constCCVarWrapper tempWrapper;
-      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 1 );
+      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
       cqmomWeights.push_back(tempWrapper);
     }
         
     for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
       const VarLabel* tempLabel = iA->second;
       constCCVarWrapper tempWrapper;
-      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 1 );
+      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
       cqmomAbscissas.push_back(tempWrapper);
      }
     
@@ -884,11 +909,11 @@ CQMOMEqn::sched_buildYConvection( const LevelP& level, SchedulerP& sched, int ti
   //loop over requires for weights and abscissas needed for convection term if IC=u,v,w
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
     const VarLabel* tempLabel = iW->second;
-    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 1 );
+    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
   }
   for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
     const VarLabel* tempLabel = iA->second;
-    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 1 );
+    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
   }
   
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -936,14 +961,14 @@ CQMOMEqn::buildYConvection( const ProcessorGroup* pc,
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
       const VarLabel* tempLabel = iW->second;
       constCCVarWrapper tempWrapper;
-      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 1 );
+      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
       cqmomWeights.push_back(tempWrapper);
     }
     
     for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
       const VarLabel* tempLabel = iA->second;
       constCCVarWrapper tempWrapper;
-      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 1 );
+      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
       cqmomAbscissas.push_back(tempWrapper);
     }
     
@@ -985,11 +1010,11 @@ CQMOMEqn::sched_buildZConvection( const LevelP& level, SchedulerP& sched, int ti
   //loop over requires for weights and abscissas needed for convection term if IC=u,v,w
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
     const VarLabel* tempLabel = iW->second;
-    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 1 );
+    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
   }
   for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
     const VarLabel* tempLabel = iA->second;
-    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 1 );
+    tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
   }
   
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -1037,14 +1062,14 @@ CQMOMEqn::buildZConvection( const ProcessorGroup* pc,
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
       const VarLabel* tempLabel = iW->second;
       constCCVarWrapper tempWrapper;
-      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 1 );
+      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
       cqmomWeights.push_back(tempWrapper);
     }
     
     for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
       const VarLabel* tempLabel = iA->second;
       constCCVarWrapper tempWrapper;
-      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 1 );
+      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
       cqmomAbscissas.push_back(tempWrapper);
     }
     
@@ -1090,9 +1115,9 @@ CQMOMEqn::sched_buildSplitRHS( const LevelP& level, SchedulerP& sched, int timeS
   tsk->requires(Task::OldDW, d_fieldLabels->d_viscosityCTSLabel, Ghost::AroundCells, 1);
   
   if (timeSubStep == 0) {
-    //    tsk->requires(Task::OldDW, d_sourceLabel, Ghost::None, 0);
+    tsk->requires(Task::OldDW, d_sourceLabel, Ghost::None, 0);
   } else {
-    //    tsk->requires(Task::NewDW, d_sourceLabel, Ghost::None, 0);
+    tsk->requires(Task::NewDW, d_sourceLabel, Ghost::None, 0);
   }
   
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
@@ -1143,11 +1168,11 @@ CQMOMEqn::buildSplitRHS( const ProcessorGroup* pc,
     constCCVariable<double> FconvZ;
     
     new_dw->get(oldPhi, d_oldtransportVarLabel, matlIndex, patch, gac, 2);
-    //   if (new_dw->exists(d_sourceLabel, matlIndex, patch)) {
-    //     new_dw->get(src, d_sourceLabel, matlIndex, patch, gn, 0); // only get new_dw value on rkstep > 0
-    //   } else {
-    //     old_dw->get(src, d_sourceLabel, matlIndex, patch, gn, 0);
-    //   }
+    if (new_dw->exists(d_sourceLabel, matlIndex, patch)) {
+      new_dw->get(src, d_sourceLabel, matlIndex, patch, gn, 0); // only get new_dw value on rkstep > 0
+    } else {
+      old_dw->get(src, d_sourceLabel, matlIndex, patch, gn, 0);
+    }
     
     old_dw->get(mu_t, d_fieldLabels->d_viscosityCTSLabel, matlIndex, patch, gac, 1);
     old_dw->get(areaFraction, d_fieldLabels->d_areaFractionLabel, matlIndex, patch, gac, 2);

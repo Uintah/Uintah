@@ -53,95 +53,244 @@ close all;
 
 %__________________________________
 % compute a moving average of the quantity Q
-function [q_ave] = moveAve(Q, windowsize)
+function [q_ave, size] = moveAve(Q, window, time)
 
- q_tmp(:,1) = filter( ones(windowsize,1)/windowsize, 1, Q(:,1) );  % X-dir
- q_tmp(:,2) = filter( ones(windowsize,1)/windowsize, 1, Q(:,2) );  % Y
- q_tmp(:,3) = filter( ones(windowsize,1)/windowsize, 1, Q(:,3) );  % Z
+  % compute window size from mean_delt
+  % compute a mean dt
+  for i = 2:length( time )
+    delt = abs( time(i) - time(i-1) );
+  end
+  mean_delt = mean(delt);
 
- % trim off the first "windowsize" data points.  They're junk
- lo = windowsize;
- hi = length( q_tmp(:,1) );
- q_ave = q_tmp( lo:hi, 1:3 );
+  windowsize = round(window / mean_delt);
+  windowsize  = max( 1, windowsize );
+
+  q_tmp(:,1) = filter( ones(windowsize,1)/windowsize, 1, Q(:,1) );  % X-dir
+  q_tmp(:,2) = filter( ones(windowsize,1)/windowsize, 1, Q(:,2) );  % Y
+  q_tmp(:,3) = filter( ones(windowsize,1)/windowsize, 1, Q(:,3) );  % Z
+
+  % trim off the first "windowsize" data points.  They're junk
+  lo = windowsize;
+  hi = length( q_tmp(:,1) );
+  q_ave = q_tmp( lo:hi, 1:3 );
+  size = ( lo:hi );
 
 endfunction
 
 
-%__________________________________
+%______________________________________________________________________
 % find lower and upper indicies
+
 function [lo, hi] = trim( t, tLo, tHi)
 
   lo = min( find( t>=tLo ) );
   hi = max( find( t<=tHi ) );
 endfunction
 
-%__________________________________
+
+%______________________________________________________________________
+%  convert string to bool
+
+function [ me ] = str2bool( input)
+  me = -9;
+  if( strcmp(input, "true") || strcmp( input, "True") || strcmp( input, "TRUE" ) )
+    me = 1;
+  endif
+  
+  if( strcmp(input, "false") || strcmp( input, "False") || strcmp( input, "FALSE" ) )
+    me = 0;
+  endif
+  
+  if (me == -9)
+    printf("ERROR:  ( %s ) is neither true or false, please correct \n", input);
+    printf("        now exiting." );
+    exit(1)
+  endif
+endfunction
+
+%______________________________________________________________________
 % generate a hardcopy
-function hardcopy(h,filename, pausePlot)
+
+function hardcopy(h, filename, hardcopy)
+  if ( !hardcopy )
+    return;
+  endif
 
   FN = findall(h,'-property','FontName');
   set(FN,'FontName','Times');
+  
   FS = findall(h, '-property','FontSize');
   set(FS,'FontSize',12);
-  saveas( h, filename, "jpg")
+  
+ % PS = findall(h, '-property','papersize');
+ % set(PS, 'papersize', [2.5, 3.5])
+ set(h, 'paperorientation', 'landscape');
+ 
+ set(h, 'position', [30,30,1024,840]);
+ 
+ saveas( h, filename, 'pdf')
 
-  if( strcmp(pausePlot, "true" ) )
-    pause
+endfunction
+
+%______________________________________________________________________
+%  Display usage
+
+function usage()
+  printf( " MomentumAnalysis  [options]   -file uda/datafile\n\n" );
+  printf( "______________________________________________________________________\n");
+  printf( " [options]       [default value]    [description] \n\n" );
+  
+  printf( "  -tmin          [0]                Physical time to start analysis\n" );       
+  printf( "  -tmax          [1000]             Physical time to end analysis\n" );
+  printf( "  -title         []                 Title for plots\n" );
+  printf( "  -downsample    [1]                Down sampling: include every Nth point in analysis\n" );
+  printf( "  -window        [0]                Amount of time used in the average windowing\n" );
+  printf( "  -hardCopy     [false]             Produce hard copy of plots\n" );
+  printf( "  -createPlots  [true]              Produce plots of: \n" );
+  printf( "                                      Net momentum flux vs time       (Instaneous / average )\n");
+  printf( "                                      Control volume momentum vs time (Instaneous / average )\n");
+  printf( "                                      Force vs time                   (Instaneous / average )\n");
+    
+endfunction
+
+%______________________________________________________________________
+%  
+function inputBulletProofing(opt, argumentlist)
+  errorFlag = false;
+  
+  if ( exist( opt.datFile, "file" ) == 0 )
+    printf ( "ERROR: The data file (%s) was not found. \n", opt.datFile );
+    errorFlag = true;
   endif
-
+  
+  %__________________________________  
+  %  Look for negative values
+  if ( opt.tmin < 0 || opt.tmax < 0)
+    printf ( "ERROR: tmin( %d ) or tmax( %d ) is negative. \n", opt.tmin, opt.tmax );
+    errorFlag = true;
+  endif
+  
+  if ( opt.nPoints < 0 )
+    printf ( "ERROR: downsample( %d ) is negative. \n", opt.nPoints );
+    errorFlag = true; 
+  endif
+  
+  if ( opt.window < 0 )
+    printf ( "ERROR: window( %d ) is negative. \n", opt.window );
+    errorFlag = true; 
+  endif
+  
+  if (errorFlag)
+    printf("\n\n");
+    argumentlist
+    usage()
+    printf ( "\n Now exiting..... \n");
+    exit(1)
+  endif 
+   
 endfunction
 
 %______________________________________________________________________
 %   USER INPUTS
 %______________________________________________________________________
 
-%arg_list = argv ()           % to be filled in
+% Command line defaults
+opt.help     =  false ;
+opt.tmin     =  0.0 ;
+opt.tmax     =  1000 ;
+opt.uda      = "";
+opt.window   = 1e-20;
+opt.nPoints  = 1;
+opt.hardcopy = false;
+opt.title    = "";
+opt.datFile  = "notSet";
+opt.doPlots  = true ;
 
-me        = "advect_mpmice.uda/momentumAnalysis.dat"
-baseTitle = "debugging "
+% Process command line options
+args = argv();
+i = 1 ;
+
+if(nargin < 2 )
+  usage(argv);
+  exit
+endif
+
+while i <= length(args)
+  option = args{i};
+  value  = args{++i};
+ 
+  switch option
+  case { "-h" "--help" }
+      opt.help   = true;
+  case { "-tmin" }
+      opt.tmin   = str2num( value );
+  case { "-tmax" }
+      opt.tmax   = str2num( value );
+  case { "-window" }
+      opt.window = str2num( value );
+  case { "-title" }
+      opt.title  = value;
+  case { "-downSample" }
+      opt.nPoints = str2num( value);
+  case { "-file" }
+      opt.datFile = value;
+  case { "-hardcopy" }
+      opt.hardcopy = str2bool( value );
+  case { "-createPlots" }
+      opt.doPlots = str2bool( value );
+  otherwise
+      printf("Unknown input option %s \n\n", option) ;
+      usage(argv);
+      exit(1)
+  endswitch
+  i++ ;
+endwhile
+
+inputBulletProofing(opt, args);
+
+if (opt.help)
+  opt
+  usage(argv) ;
+  exit(1) ;
+endif
 
 pausePlot = "true";
 
-%______________________________________________________________________
-%    DEFAULT VALUES
-%______________________________________________________________________
-nPoint = 1;                     % Down sampling:  include every n data point
-window = 50;                    % moving average window size
-
-tmin =  0.01;                   % time range min
-tmax =  0.3;                    % time range max
-
 format long e
+
 
 
 %______________________________________________________________________
 %     MAIN  
 %______________________________________________________________________
+
 %  Load the data into arrays and compute dM/dt where M is the total momentum
 %  in the control volume
-data = dlmread( me, ",", 4,0 );
+data = dlmread( opt.datFile, ",", 4,0 );
 
 %__________________________________
 % downsample the data with every nth element
-t           = downsample( data(:,1),   nPoint );  % column 1
-Mom_cv      = downsample( data(:,2:4), nPoint );  % columns 2 - 4
-Mom_netFlux = downsample( data(:,5:7), nPoint );  % columns 5 - 7
+t           = downsample( data(:,1),   opt.nPoints );  % column 1
+Mom_cv      = downsample( data(:,2:4), opt.nPoints );  % columns 2 - 4
+Mom_netFlux = downsample( data(:,5:7), opt.nPoints );  % columns 5 - 7
 
 %__________________________________
-%  Allow user to trim data between tMin and tMax
-tmax    = min( max(t), tmax);
-[lo,hi] = trim( t, tmin, tmax )
+%  Allow user to trim data between tmin and tmax
+opt.tmax    = min( max(t), opt.tmax);
 
-wlo  = lo-window         % subtract off the window size moving average creates needs them for intermediate values
-wlo = lo;
+[lo,hi] = trim( t, opt.tmin, opt.tmax );
 
-t           = t( wlo:hi );
-Mom_cv      = Mom_cv( wlo:hi,: );
-Mom_netFlux = Mom_netFlux( wlo:hi,: );
+croppedTime   = [ t(lo)- t(1), t(length(t)) - t(hi)];
+croppedPoints = length(t) - hi;
+printf( "    - Now removing the leading (%i points, %4.3g sec) and trailing  (%i points, %4.3g sec) from data\n", lo, croppedTime(1), croppedPoints, croppedTime(2)  )
 
+t           = t( lo:hi );
+Mom_cv      = Mom_cv( lo:hi,: );
+Mom_netFlux = Mom_netFlux( lo:hi,: );
 
 %__________________________________
 % Find the time rate of change of the momentum in the control volume (first order backward differenc)
+printf( "    - Now computing intantaneous time rate of change of momentum in the system and the force\n"   );
 
 for i = 2:length(t)
     dMdt(i,1:3) = ( Mom_cv(i,:) - Mom_cv(i-1,:) )./( t(i) - t(i-1) );
@@ -157,12 +306,15 @@ end
 %__________________________________
 % Compute a moving average the variables
 % Useful if the data is noisy
-ave.Mom_netFlux = moveAve( Mom_netFlux, window );
-ave.Mom_cv      = moveAve( Mom_cv,      window);
-t_crop          = t( window:length(t) );
+printf( "    - Now computing moving averages of the momentum flux and momentum in control volume\n"   );
+[ ave.Mom_netFlux, size ] = moveAve( Mom_netFlux, opt.window, t );
+[ ave.Mom_cv, size ]      = moveAve( Mom_cv,      opt.window, t );
+
+t_crop = t(size);
 
 %__________________________________
 % compute force and dM/dt with the averaged quantities
+printf( "    - Now computing average quantities\n"   );
 ave.dMdt  = zeros;
 ave.force = zeros;
 
@@ -171,124 +323,147 @@ for i = 2:length( ave.Mom_cv )
    ave.force(i,1:3) =   ave.dMdt(i,:) + ave.Mom_netFlux(i,:);
 end
 
-movingAveWindow = t(window) - t(1)
 
-printf( 'Loaded uda: %s, maximum time: %e \n',me, max(t))
+
+meanForce = mean ( force );
+printf( '______________________________________________________________________\n');
+printf( '  Mean force %e, %e, %e \n', meanForce(1), meanForce(2), meanForce(3) );
+printf( '______________________________________________________________________\n');
+
+
+%______________________________________________________________________
+%  Write to files
+%______________________________________________________________________
+fp = fopen ("Force.dat", "w");
+fprintf( fp, "# time                force.x                force.y                force.z\n");
+for i = 1:length( t )
+  fprintf( fp, "%15.14e, %15.14e, %15.14e, %15.14e\n", t(i), force( i,1 ), force( i,2 ), force( i,3 ) );
+end
+
+fp = fopen ("aveForce.dat", "w");
+fprintf( fp, "# time             ave.force.x             aave.force.y             ave.force.z\n");
+for i = 1:length( t_crop )
+  fprintf( fp, "%15.14e, %15.14e, %15.14e, %15.14e\n", t_crop(i), ave.force( i,1 ), ave.force( i,2 ), ave.force( i,3 ) );
+end
 
 
 %______________________________________________________________________
 %  Plot the momentum quantities, instantaneous and averaged
+%______________________________________________________________________
 
-%  Momentum Flux (  instaneous )
-graphics_toolkit("gnuplot")
-h = figure(1);
-subplot(2,1,1)
-ax = plot(t, Mom_netFlux );
+if( opt.doPlots )
 
-legend( "x", "y", "z" )
-title( baseTitle );
-xlabel( 'Time [s] ');
-ylabel( 'Net momentum flux' )
-xlim( [tmin, tmax] );
-grid('on');
+  %  Momentum Flux (  instaneous )
+  graphics_toolkit("gnuplot")
+  h = figure(1);
+  subplot(2,1,1)
+  ax = plot(t, Mom_netFlux );
 
-%  Average
-subplot(2,1,2)
+  legend( "x", "y", "z" )
+  title( opt.title );
+  xlabel( 'Time [s] ');
+  ylabel( 'Net momentum flux' )
+  xlim( [opt.tmin, opt.tmax] );
+  grid('on');
 
-ax = plot( t_crop, ave.Mom_netFlux );
+  %  Average
+  subplot(2,1,2)
 
-legend( "x", "y", "z" )
-title( baseTitle );
-xlabel( 'Time [s] ');
-ylabel( 'Average Net momentum flux' )
-xlim( [tmin, tmax] );
-grid('on');
-%hardcopy(h, "Mom_netFlux.jpg", pausePlot);
+  ax = plot( t_crop, ave.Mom_netFlux );
 
-
-%__________________________________
-%  Control Volume Momentum (instantenous)
-%__________________________________
-
-h = figure(2);
-
-subplot( 2,1,1 )
-ax = plot( t, Mom_cv );
-
-legend( "x", "y", "z" )
-title( baseTitle );
-xlabel( 'Time [s] ');
-ylabel( 'Total Momentum in CV' )
-xlim( [tmin, tmax] );
-grid( 'on' );
-
-%  Average
-subplot( 2,1,2 )
-ax = plot( t_crop, ave.Mom_cv );
-
-legend( "x", "y", "z" )
-title( baseTitle );
-xlabel( 'Time [s] ');
-ylabel( 'Average momentum in CV' )
-xlim( [tmin, tmax] );
-grid('on');
-
-%hardcopy(h, "Mom_netFlux.jpg", pausePlot);
-
-%__________________________________
-%  dM/dt   (instantenous)
-%__________________________________
-
-h = figure(3);
-
-subplot( 2,1,1 )
-ax = plot( t, dMdt );
-
-legend( "x", "y", "z" )
-title( baseTitle );
-xlabel( 'Time [s] ');
-ylabel( 'dM / dt' )
-xlim( [tmin, tmax] );
-grid( 'on' );
-
-%  Average
-subplot( 2,1,2 )
-ax = plot( t_crop, ave.dMdt );
-
-legend( "x", "y", "z" )
-title( baseTitle );
-xlabel( 'Time [s] ');
-ylabel( 'ave dM / dt' )
-xlim( [tmin, tmax] );
-grid( 'on' );
-
-%__________________________________
-%  Force
-%__________________________________
-
-h = figure(3);
-
-subplot( 2,1,1 )
-ax = plot( t, force );
-
-legend( "x", "y", "z" )
-title( baseTitle );
-ylabel( 'Force' )
-xlabel( 'Time [s] ');
-xlim( [tmin, tmax] );
-grid( 'on' );
+  legend( "x", "y", "z" )
+  xlabel( 'Time [s] ');
+  ylabel( 'Average Net momentum flux' )
+  xlim( [opt.tmin, opt.tmax] );
+  grid('on');
+  hardcopy(h, "momentum_netFlux.pdf", opt.hardcopy );
 
 
-subplot( 2,1,2 )
-ax = plot( t_crop, ave.force );
+  %__________________________________
+  %  Control Volume Momentum (instantenous)
+  %__________________________________
 
-legend( "x", "y", "z" )
-title( baseTitle );
-xlabel( 'Time [s] ');
-ylabel( 'Average Force' )
-xlim( [tmin, tmax] );
-grid( 'on' );
+  h = figure(2);
 
-pause
+  subplot( 2,1,1 )
+  ax = plot( t, Mom_cv );
+
+  legend( "x", "y", "z" )
+  title( opt.title );
+  xlabel( 'Time [s] ');
+  ylabel( 'Total Momentum in CV' )
+  xlim( [opt.tmin, opt.tmax] );
+  grid( 'on' );
+
+  %  Average
+  subplot( 2,1,2 )
+  ax = plot( t_crop, ave.Mom_cv );
+
+  legend( "x", "y", "z" )
+  xlabel( 'Time [s] ');
+  ylabel( 'Average momentum in CV' )
+  xlim( [opt.tmin, opt.tmax] );
+  grid('on');
+
+  hardcopy(h, "momentum_CV.pdf", opt.hardcopy );
+
+  %__________________________________
+  %  dM/dt   (instantenous)
+  %__________________________________
+
+  h = figure(3);
+
+  subplot( 2,1,1 )
+  ax = plot( t, dMdt );
+
+  legend( "x", "y", "z" )
+  title( opt.title );
+  xlabel( 'Time [s] ');
+  ylabel( 'dM / dt' )
+  xlim( [opt.tmin, opt.tmax] );
+  grid( 'on' );
+
+  %  Average
+  subplot( 2,1,2 )
+  ax = plot( t_crop, ave.dMdt );
+
+  legend( "x", "y", "z" )
+  xlabel( 'Time [s] ');
+  ylabel( 'ave dM / dt' )
+  xlim( [opt.tmin, opt.tmax] );
+  grid( 'on' );
+  
+  hardcopy(h, "dmomentum_dt.pdf", opt.hardcopy );
+
+  %__________________________________
+  %  Force
+  %__________________________________
+
+  h = figure(3);
+
+  subplot( 2,1,1 )
+  ax = plot( t, force );
+
+  legend( "x", "y", "z" )
+  title( opt.title );
+  ylabel( 'Force' )
+  xlabel( 'Time [s] ');
+  xlim( [opt.tmin, opt.tmax] );
+  grid( 'on' );
+
+
+  subplot( 2,1,2 )
+  ax = plot( t_crop, ave.force );
+
+  legend( "x", "y", "z" )
+  xlabel( 'Time [s] ');
+  ylabel( 'Average Force' )
+  xlim( [opt.tmin, opt.tmax] );
+  grid( 'on' );
+
+  hardcopy(h, "force.pdf", opt.hardcopy );
+  pause
+
+endif
 
 exit

@@ -208,18 +208,8 @@ public:
                             const Uintah::PatchSubset* const patches,
                             const Uintah::MaterialSubset* const materials,
                             const int RKStage );
-
-  void set_patch( const Uintah::Patch* const patch ){ patch_ = const_cast<Uintah::Patch*> (patch); }
   
   void set_bchelper( BCHelper* bcHelper ) { bcHelper_ = bcHelper;}
-  /**
-   *  \brief set the RKStage for the current pressure evaluation. We need this to
-             reduce the number of pressure-solve iterations in the 2nd and 3rd
-             stages of the RK3SSP integrator. Since these subsequent RK stages
-             use the guess pressure from the newDW, then we should NOT initialize
-             the pressure in the new DW to zero for those stages.
-   */  
-  void set_RKStage( const int RKStage ){ rkStage_ = RKStage; }
 
   /**
    *  \brief allows Wasatch::TaskInterface to reach in and provide

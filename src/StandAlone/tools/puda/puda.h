@@ -68,6 +68,7 @@ namespace Uintah {
     bool do_verbose;
     bool do_all_ccvars;
     bool do_todd1;
+    bool do_ice_momentum;
 
     bool use_extra_cells;
 
@@ -77,7 +78,7 @@ namespace Uintah {
     bool tslow_set;
     bool tsup_set;
     int tskip;
-    int matl_jim;
+    int matl;
     std::string i_xd;
     std::string filebase;
     std::string particleVariable;
@@ -120,6 +121,7 @@ namespace Uintah {
       do_verbose       = false;
       do_all_ccvars    = false;
       do_todd1         = false;
+      do_ice_momentum  = false;
 
       use_extra_cells = true;
 
@@ -129,7 +131,7 @@ namespace Uintah {
       tslow_set = false;
       tsup_set = false;
       tskip = 1;
-      matl_jim  = 0;
+      matl  = 0;
     }
   };
 

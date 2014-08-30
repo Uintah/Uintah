@@ -52,13 +52,13 @@ namespace Wasatch{
 /**
  *  \class 	  RadiationSource
  *  \ingroup 	Expressions
- *  \ingroup	 WasatchCore
- *  \authors 	James C. Sutherland, Tony Saad, Amir Biglari
- *  \date 	   January, 2011
+ *  \ingroup	WasatchCore
+ *  \authors  Tony Saad, James C. Sutherland
+ *  \date 	  January, 2014
  *
  *  \brief Expression to form and solve the poisson system for RadiationSource.
  *
- *  NOTE: this expression BREAKS WITH CONVENTION!  Notably, it has
+ *  \note: this expression BREAKS WITH CONVENTION!  Notably, it has
  *  uintah tenticles that reach into it, and mixes SpatialOps and
  *  Uintah constructs.  This is because we don't (currently) have a
  *  robust interface to deal with parallel linear solves through the
@@ -81,7 +81,6 @@ class RadiationSource
   *boundFluxLabel_, *radiationVolqLabel_;
   
   const SVolField* divQ_;
-  const Uintah::Patch* patch_;
   Uintah::Ray* rmcrt_;
   void schedule_setup_bndflux( const Uintah::LevelP& level,
                               Uintah::SchedulerP sched,
@@ -135,7 +134,6 @@ public:
                             const Uintah::MaterialSubset* const materials,
                             const int RKStage );
 
-  void set_patch( const Uintah::Patch* const patch ){ patch_ = const_cast<Uintah::Patch*> (patch); }
   
   /**
    *  \brief allows Wasatch::TaskInterface to reach in and provide

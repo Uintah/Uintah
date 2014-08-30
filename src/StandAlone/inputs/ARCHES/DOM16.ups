@@ -33,6 +33,7 @@
     <save label="radiationFluxS"/>
     <save label="radiationFluxT"/>
     <save label="radiationFluxB"/>
+    <save label="radiation_temperature"/>
     <save label="divQ"/>
     <save label="heat_loss"/>
     <save label="temperature" table_lookup="true"/>
@@ -58,6 +59,9 @@
     </Level>
     <BoundaryConditions>
       <Face side="x-">
+        <BCType id="0" var="Neumann" label="radiation_temperature"> 
+          <value>0.0</value>
+        </BCType>
         <BCType id="0" var="WallBC"  label="x-wall">  
           <value>0.0</value>
         </BCType>
@@ -75,6 +79,9 @@
         </BCType>
       </Face>
       <Face side="x+">
+        <BCType id="0" var="Neumann" label="radiation_temperature"> 
+          <value>0.0</value>
+        </BCType>
         <BCType id="0" var="OutletBC"  label="the outlet"> 
           <value>0.0</value>
         </BCType>
@@ -93,8 +100,8 @@
       </Face>
       <Face side="y-">
         <!---                one HOT wall               -->
-        <BCType id="0" var="Dirichlet" label="SolidWallTemperature"> 
-          <value>2000</value>
+        <BCType id="0" var="Dirichlet" label="radiation_temperature"> 
+          <value>2000.0</value>
         </BCType>
         <BCType id="0" var="WallBC"  label="y-pressure">  
           <value>0.0</value>
@@ -113,6 +120,9 @@
         </BCType>
       </Face>
       <Face side="y+">
+        <BCType id="0" var="Neumann" label="radiation_temperature"> 
+          <value>0.0</value>
+        </BCType>
         <BCType id="0" var="WallBC"  label="y+pressure">  
           <value>0.0</value>
         </BCType>
@@ -130,6 +140,9 @@
         </BCType>
       </Face>
       <Face side="z-">
+        <BCType id="0" var="Neumann" label="radiation_temperature"> 
+          <value>0.0</value>
+        </BCType>
         <BCType id="0" var="WallBC"  label="z-pressure">  
           <value>0.0</value>
         </BCType>
@@ -147,6 +160,9 @@
         </BCType>
       </Face>
       <Face side="z+">
+        <BCType id="0" var="Neumann" label="radiation_temperature"> 
+          <value>0.0</value>
+        </BCType>
         <BCType id="0" var="WallBC"  label="z+pressure">  
           <value>0.0</value>
         </BCType>

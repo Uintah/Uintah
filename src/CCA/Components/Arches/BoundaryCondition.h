@@ -330,6 +330,17 @@ namespace Uintah {
                        ArchesConstVariables* const_vars,
                        constCCVariable<double>& volFraction ); 
 
+      /** @brief Copy the temperature into a radiation temperature for use later. Also forces BCs in extra cell **/ 
+      void sched_create_radiation_temperature( SchedulerP& sched, const LevelP& level, const MaterialSet* matls, const bool use_old_dw );
+
+      /** @brief See sched_create_radiation_temperature **/ 
+      void create_radiation_temperature( const ProcessorGroup* pc, 
+                                         const PatchSubset* patches, 
+                                         const MaterialSubset* matls, 
+                                         DataWarehouse* old_dw, 
+                                         DataWarehouse* new_dw,
+                                         const bool use_old_dw);
+
       ////////////////////////////////////////////////////////////////////////
       // BoundaryCondition constructor used in  PSE
       BoundaryCondition(const ArchesLabel* label, 
@@ -859,6 +870,8 @@ namespace Uintah {
 
       int index_map[3][3];
 
+      const VarLabel* d_radiation_temperature_label;     // a copy of temperature from table with "forced" BC in the extra cell 
+      const VarLabel* d_temperature_label; 
 
   inline int getNormal( Patch::FaceType face ) {        // This routine can be replaced with:
                                                         //  IntVector axes = patch->getFaceAxes(face);

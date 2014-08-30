@@ -10,12 +10,12 @@
 
   <Solver type="hypre"/>
   <Time>
-    <maxTime>1.0</maxTime>
+    <maxTime>10.0</maxTime>
     <initTime>0.0</initTime>
     <delt_min>0.00001</delt_min>
     <delt_max>5</delt_max>
     <timestep_multiplier>0.5</timestep_multiplier>
-    <max_Timesteps>100</max_Timesteps>
+    <max_Timesteps>200</max_Timesteps>
   </Time>
 
   <DataArchiver>
@@ -35,6 +35,7 @@
     <save label="arches_task_scalar_RHS"/>
     <save label="arches_task_scalar_Fdiff"/>
     <save label="arches_task_scalar_D"/>
+    <save label="my_model_0"/>
     <checkpoint cycle="2" interval="0.05"/>
     <compression>gzip</compression>
   </DataArchiver>
@@ -72,19 +73,37 @@
       <ScalarTransport>
         <eqn label="arches_task_scalar">
           <diffusion/>
-          <convection scheme="upwind"/>
+          <!--<convection scheme="superbee"/>-->
+          <convection scheme="minmod"/>
         </eqn>
       </ScalarTransport>
 
       <Initialization>
         <task label="my_great_initializer" eqn="arches_task_scalar" type="wave">
-          <wave type="sine">
+          <!--<wave type="sine">-->
+            <!--<grid dependent_type="svol" independent_type="svol"/>-->
+            <!--<independent_variable label="gridX"/>-->
+            <!--<sine A="1.0" f=".5" offset="0"/>-->
+          <!--</wave>-->
+          <wave type="square">
             <grid dependent_type="svol" independent_type="svol"/>
             <independent_variable label="gridX"/>
-            <sine A="1.0" f=".5" offset="0"/>
+            <square min="0.0" max="1.0" f="1.0" offset="0.0"/>
           </wave>
         </task>
       </Initialization>
+
+      <ParticleModels>
+        <model type="simple_rate" label="my_model">
+          <A>1.0</A>
+          <ER>1.0</ER>
+          <m>1.0</m>
+          <grid dependent_type="svol" independent_type="svol"/>
+          <temperature label="gridX"/>
+          <concentration label="gridY"/>
+          <N>1</N>
+        </model>
+      </ParticleModels>
 
 <!-- END NEW STUFF -->
 

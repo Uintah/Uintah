@@ -157,12 +157,12 @@ bool LoadBalancerCommon::possiblyDynamicallyReallocate(const GridP& grid, int st
     // have it create a new patch set, and have the DLB version call this.
     // This is a good place to do it, as it is automatically called when the
     // grid changes.
-    levelPerProcPatchSets.clear();
-    outputPatchSets.clear();
-    gridPerProcPatchSet = createPerProcessorPatchSet(grid);
+    d_levelPerProcPatchSets.clear();
+    d_outputPatchSets.clear();
+    d_gridPerProcPatchSet = createPerProcessorPatchSet( grid );
     for (int i = 0; i < grid->numLevels(); i++) {
-      levelPerProcPatchSets.push_back(createPerProcessorPatchSet(grid->getLevel(i)));
-      outputPatchSets.push_back(createOutputPatchSet(grid->getLevel(i)));
+      d_levelPerProcPatchSets.push_back( createPerProcessorPatchSet( grid->getLevel(i) ) );
+      d_outputPatchSets.push_back( createOutputPatchSet( grid->getLevel(i) ) );
     }
   }
   return false;
@@ -171,7 +171,7 @@ bool LoadBalancerCommon::possiblyDynamicallyReallocate(const GridP& grid, int st
 // Creates a PatchSet containing PatchSubsets for each processor for a
 // single level.
 const PatchSet*
-LoadBalancerCommon::createPerProcessorPatchSet(const LevelP& level)
+LoadBalancerCommon::createPerProcessorPatchSet( const LevelP & level )
 {
   PatchSet* patches = scinew PatchSet();
   patches->createEmptySubsets(d_myworld->size());
@@ -190,7 +190,7 @@ LoadBalancerCommon::createPerProcessorPatchSet(const LevelP& level)
 // Creates a PatchSet containing PatchSubsets for each processor for an
 // entire grid.
 const PatchSet*
-LoadBalancerCommon::createPerProcessorPatchSet(const GridP& grid)
+LoadBalancerCommon::createPerProcessorPatchSet( const GridP & grid )
 {
   PatchSet* patches = scinew PatchSet();
   patches->createEmptySubsets(d_myworld->size());
@@ -215,7 +215,7 @@ LoadBalancerCommon::createOutputPatchSet(const LevelP& level)
 {
   if (d_outputNthProc == 1) {
     // assume the perProcessor set on the level was created first
-    return levelPerProcPatchSets[level->getIndex()].get_rep();
+    return d_levelPerProcPatchSets[level->getIndex()].get_rep();
   }
   else {
     PatchSet* patches = scinew PatchSet();

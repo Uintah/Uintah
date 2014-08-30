@@ -80,7 +80,6 @@ __global__ void rayTraceKernel(dim3 dimGrid,
   const GPUGridVariable<int> celltype;
 
   GPUGridVariable<double> divQ;
-  GPUGridVariable<double> VRFlux;
   GPUGridVariable<GPUStencil7> boundFlux;
   GPUGridVariable<double> radiationVolQ;
  
@@ -90,12 +89,10 @@ __global__ void rayTraceKernel(dim3 dimGrid,
 
   if( RT_flags.modifies_divQ ){
     new_gdw->getModifiable( divQ,         "divQ",          patch.ID, matl );
-    new_gdw->getModifiable( VRFlux,       "VRFlux",        patch.ID, matl );
     new_gdw->getModifiable( boundFlux,    "boundFlux",     patch.ID, matl );
     new_gdw->getModifiable( radiationVolQ,"radiationVolq", patch.ID, matl );
   }else{
     new_gdw->get( divQ,         "divQ",          patch.ID, matl );         // these should be allocateAntPut() calls
-    new_gdw->get( VRFlux,       "VRFlux",        patch.ID, matl );
     new_gdw->get( boundFlux,    "boundFlux",     patch.ID, matl );
     new_gdw->get( radiationVolQ,"radiationVolq", patch.ID, matl );
     
@@ -106,7 +103,6 @@ __global__ void rayTraceKernel(dim3 dimGrid,
       for (int z = patch.loEC.z; z < patch.hiEC.z; z++) { // loop through z slices
         gpuIntVector c = make_int3(tidX, tidY, z);
         divQ[c]          = 0.0;
-        VRFlux[c]        = 0.0;
         radiationVolQ[c] = 0.0;
       }
     }

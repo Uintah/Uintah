@@ -35,6 +35,7 @@
     <save label="density" table_lookup="true"/>
     <save label="O2" table_lookup="true"/>
     <save label="temperature" table_lookup="true"/>
+    <save label="radiation_temperature"/>
     <save label="sensibleenthalpy" table_lookup="true"/>
     <save label="adiabaticenthalpy" table_lookup="true"/>
     <checkpoint cycle="2" interval="0.02"/>
@@ -62,8 +63,8 @@
         <BCType id="all" label="mixture_fraction_2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="SolidWallTemperature" var="Dirichlet">
-          <value>298</value>
+        <BCType id="all" label="radiation_temperature" var="Dirichlet">
+          <value>298.0</value>
         </BCType>
       </Face>
       <Face side="x+" name="x+ wall">
@@ -85,6 +86,9 @@
         <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0</value>
         </BCType>
+        <BCType id="all" label="radiation_temperature" var="Dirichlet">
+          <value>298</value>
+        </BCType>
       </Face>
       <Face side="y-" name="y- wall">
         <BCType id="all" label="y-pressure" var="PressureBC">
@@ -104,6 +108,9 @@
         </BCType>
         <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="radiation_temperature" var="Dirichlet">
+          <value>298</value>
         </BCType>
       </Face>
       <Face side="y+" name="y+ wall">
@@ -125,6 +132,9 @@
         <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0</value>
         </BCType>
+        <BCType id="all" label="radiation_temperature" var="Dirichlet">
+          <value>298.0</value>
+        </BCType>
       </Face>
       <Face side="z-" name="z- wall">
         <BCType id="all" label="z-pressure" var="PressureBC">
@@ -145,6 +155,9 @@
         <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0</value>
         </BCType>
+        <BCType id="all" label="radiation_temperature" var="Dirichlet">
+          <value>298</value>
+        </BCType>
       </Face>
       <Face side="z+" name="z+ wall">
         <BCType id="all" label="z+pressure" var="PressureBC">
@@ -164,6 +177,9 @@
         </BCType>
         <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
           <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="radiation_temperature" var="Dirichlet">
+          <value>298</value>
         </BCType>
       </Face>
     </BoundaryConditions>

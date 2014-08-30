@@ -33,6 +33,7 @@
     <save label="divQ"/>
     <save label="heat_loss"/>
     <save label="temperature" table_lookup="true"/>
+    <save label="radiation_temperature"/>
     <save label="density"/>
     <save label="velocityDivergence"/>
     <save label="continuityResidual"/>
@@ -78,6 +79,9 @@
         <BCType id="0" var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
+        <BCType id="0" var="Neumann" label="radiation_temperature"> 
+          <value>0.0</value>
+        </BCType>
       </Face>
       <Face side="x+">
         <BCType id="0" var="OutletBC"  label="the outlet"> 
@@ -95,11 +99,14 @@
         <BCType id="0" var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
+        <BCType id="0" var="Neumann" label="radiation_temperature"> 
+          <value>0.0</value>
+        </BCType>
       </Face>
       <Face side="y-">
         <!---                one HOT wall               -->
-        <BCType id="0" var="Dirichlet" label="SolidWallTemperature"> 
-          <value>2000</value>
+        <BCType id="0" var="Dirichlet" label="radiation_temperature"> 
+          <value>2000.0</value>
         </BCType>
         <BCType id="0" var="WallBC"  label="y-pressure">  
           <value>0.0</value>
@@ -133,6 +140,9 @@
         <BCType id="0" var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
+        <BCType id="0" var="Neumann" label="radiation_temperature"> 
+          <value>0.0</value>
+        </BCType>
       </Face>
       <Face side="z-">
         <BCType id="0" var="WallBC"  label="z-pressure">  
@@ -150,6 +160,9 @@
         <BCType id="0" var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
+        <BCType id="0" var="Neumann" label="radiation_temperature"> 
+          <value>0.0</value>
+        </BCType>
       </Face>
       <Face side="z+">
         <BCType id="0" var="WallBC"  label="z+pressure">  
@@ -165,6 +178,9 @@
           <value>0.0</value>
         </BCType>
         <BCType id="0" var="Neumann" label="enthalpy"> 
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" var="Neumann" label="radiation_temperature"> 
           <value>0.0</value>
         </BCType>
       </Face>

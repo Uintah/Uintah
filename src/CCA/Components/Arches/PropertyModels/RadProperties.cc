@@ -257,7 +257,7 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
 
     }
     // update absk_tot at the walls
-    _boundaryCond->setScalarValueBC( pc, patch, absk_tot,_prop_name );
+    _boundaryCond->setScalarValueBC( pc, patch, absk_tot, _prop_name );
   }
 }
 

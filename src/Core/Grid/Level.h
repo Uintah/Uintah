@@ -36,7 +36,7 @@
 
 #ifdef max
 // some uintah 3p utilities define max, so undefine it before BBox chokes on it.
-#undef max
+#  undef max
 #endif
 
 #include <Core/Geometry/BBox.h>
@@ -197,7 +197,18 @@ public:
     }
     return d_dcell.x()*d_dcell.y()*d_dcell.z();
   }
-  
+
+  /**
+   * Returns the cell area dx*dy*dz. This will not work for stretched grids.
+   */
+  double cellArea(Vector unitNormal) const {
+    if (isStretched()) {
+      throw InternalError( "Cell area is not unique for stretched meshes, therefore, you cannot use Patch::cellArea or Level::cellArea.", __FILE__, __LINE__);
+    }
+    Vector areas(d_dcell.y() * d_dcell.z(), d_dcell.x() * d_dcell.z(), d_dcell.x() * d_dcell.y());
+    return Dot(areas, unitNormal);
+  }
+
   Point getAnchor() const {
     return d_anchor;
   }

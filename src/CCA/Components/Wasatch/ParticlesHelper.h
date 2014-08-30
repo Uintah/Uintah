@@ -50,6 +50,10 @@
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Material.h>
 
+#ifndef PIDOFFSET
+#define PIDOFFSET 1000000000000ul
+#endif
+
 namespace Uintah {
 
   class ProcessorGroup;
@@ -57,10 +61,50 @@ namespace Uintah {
   
   //==================================================================
   /**
-   *  \class  ParticlesHelper
-   *  \author Tony Saad
-   *  \date   June, 2014
-   *  \brief  This class provides support for creating particles.
+   *  \class    ParticlesHelper
+   
+   *  \author   Tony Saad
+   
+   *  \date     June, 2014
+   
+   *  \brief    This class provides support for creating and managing particles in Uintah.
+
+   *  \details  Uintah provides support for tracking particles using a ParticleSubset and a ParticleVariable.
+   A ParticleSubset represents the memory size of the particle field (e.g. number of particles on a
+   given patch and material). A ParticleVariable, as the name designates, represents a unique variable
+   associated with a particle. The size of a ParticleVariable is based on the ParticleSubset. As a 
+   rule of thumb, one will usually have one ParticleSubset per patch, per material, and an arbitrary
+   number of ParticleVariable vars per ParticleSubset.
+
+   A Uintah ParticleVariable can be templated on a variety of types (e.g. int, double, Point)
+   and is typically an array whose values are associated with different particles. An essential
+   variable that is intimately built into the Uintah particle support framework is the particle
+   position vector. This is a ParticleVariable templated on Uintah::Point, in other words, it is
+   an array of triplets. The particle position is required for load balancing, particle relocation
+   across patches, and visualization. From here on, ParticleVariable<Point> is referred to as the
+   particle position vector.
+   
+   Unfortunately, there are several reasons that require one to track particle position as three
+   separate particle variables instead of using a particle position vector. These include design
+   and personal preferences, and most importantly, the use of the Nebo EDSL. The Nebo EDSL was designed
+   (and for good reasons) to deal with vectors of doubles. It cannot handle vectors of triplets.
+   That being said, the ParticlesHelper is designed with Nebo in mind and will therefore require
+   that you create three particle variables of type double for the three particle positions.   
+   
+   *
+   *  \note: Visit currently makes the assumption that the particle position vector be named "p.x".
+   This will change in the next Uintah release.
+   *  \note: Particle variable names typically start with "p." - a Uintah assumption made to simplify
+   some runtime decisions.
+   *  \note: You will need to provide a basic xml support for particles:
+   \code{.xml}
+   <ParticlesPerCell spec="OPTIONAL DOUBLE"/>
+   <MaximumParticles spec="OPTIONAL INTEGER"/>
+   <ParticlePosition spec="REQUIRED NO_DATA"
+                     attribute1="x REQUIRED STRING"
+                     attribute2="y REQUIRED STRING"
+                     attribute3="z REQUIRED STRING"/>
+   \endcode
    */
   class ParticlesHelper
   {
@@ -70,26 +114,34 @@ namespace Uintah {
     virtual ~ParticlesHelper();
 
     /*
-     *  \brief Initializes particle memory. This must be called at schedule initialize. DO NOT call
-     it on restarts. Use schedule_restart_initialize instead
+     *  \brief Creates particle memory (ParticleSubset) which can be used to allocated particle variables. 
+     Also, this function will allocate memory for pPosLabel_ and pIDLabel_ without initializing them
+     given the assumptions made for this class. The component is supposed to track particle position
+     for x, y, and z seperately and then synchronize with the particle position vector required by 
+     Uintah. Finally, this function must be called in a component's schedule_initialize.
+     *
+     *  \note: This function will NOT allocate memory for pXLabel_, pYLabel_, and PZLabel_. You are 
+     responsible for allocating and initializing those.
+     *
+     *  \warning DO NOT call this function on restarts. Use schedule_restart_initialize instead for restarts.
      */
     virtual void schedule_initialize ( const Uintah::LevelP& level,
                                        Uintah::SchedulerP& sched   );
 
     /*
      *  \brief Will reallocate some essential objects for the particles helper such as the delete sets.
-     MUST be called at restarts. Since there is no way to schedule restart initialize, you should call this
-     function somewhere in scheduleTimeAdvance. See the Wasatch example.
+     *
+     *  \warning MUST be called at restarts. Since there is no way to schedule restart initialize, 
+     you should call this function somewhere in scheduleTimeAdvance. See how Wasatch handles this.
      */
     virtual void schedule_restart_initialize( const Uintah::LevelP& level,
                                               Uintah::SchedulerP& sched   );
 
     /*
-     *  \brief Task that synchronizes Wasatch-specific particle positions (x, y, w) that are store
-     as sepearte fields with the Uintah::Point position field. The Uintah::Point position field 
-     is essential for the relocation algorithm to Work. Wasatch does not support particle fields
-     of type Point. You should call this at the end of the scheduleTimeAdvance, after all internal
-     Wasatch tasks have completed.
+     *  \brief Task that synchronizes particle positions (x, y, w) that are stored
+     as sepearte fields with the Uintah::Point particle position vector. The Uintah::Point particle
+     position vector is essential for the relocation algorithm to Work. You should call this at the end of the
+     scheduleTimeAdvance, after all your particle transport has completed.
      */
     virtual void schedule_sync_particle_position( const Uintah::LevelP& level,
                                                   Uintah::SchedulerP& sched,
@@ -122,7 +174,9 @@ namespace Uintah {
      *  \brief Parse the particle spec and create the position varlabels. This is an essential step
      that MUST be called during Wasatch::ProblemSetup
      */
-    void problem_setup(Uintah::ProblemSpecP particleEqsSpec);
+    void problem_setup(Uintah::ProblemSpecP particleEqsSpec,
+                       Uintah::SimulationStateP sharedState);
+    
     void set_materials(const Uintah::MaterialSet* const materials)
     {
       isValidState_ = true;
@@ -130,10 +184,16 @@ namespace Uintah {
     }
     
     /**
-     * \brief Use to add particle variable names marked for relocation. Note, do NOT add particle
-     position to this list.
+     * \brief Use to mark a particle variable for relocation. Please do NOT add the Uintah particle
+     position vector ("p.x") to this list.
      */
-    static void add_particle_variable(const std::string& varName);
+    static void mark_for_relocation(const std::string& varName);
+
+    /**
+     * \brief Use to mark which particle variables require a boundary condition. Usually, these
+     are the transported particle variables. This is needed by the particle addition algorithm
+     */
+    static void needs_boundary_condition(const std::string& varName);
     
     /**
      * \brief Return a reference to the list of particle variables marked for relocation.
@@ -141,7 +201,16 @@ namespace Uintah {
     static const std::vector<std::string>& get_relocatable_particle_varnames();
 
     /**
-     * \brief Return a reference to the list of particle variables marked for relocation.
+     * \brief Task that adds particles through boundaries. This task will parse the ups input file and
+     add particles through the boundaries as specified.
+     * \warning  Use AFTER schedule_particle_relocation.
+     */
+    virtual void schedule_add_particles( const Uintah::LevelP& level,
+                                         Uintah::SchedulerP& sched );
+    
+    /**
+     * \brief Return a reference to the list of particle near the boundary specified by bndName and on patch ID 
+     specified via patchID.
      */
     static const std::vector<int>* get_boundary_particles(const std::string& bndName,
                                                           const int patchID);
@@ -151,7 +220,6 @@ namespace Uintah {
     virtual void schedule_find_boundary_particles(const Uintah::LevelP& level,
                                                   Uintah::SchedulerP& sched);
   protected:
-    
     
     //****************************************************************************
     /**
@@ -171,16 +239,17 @@ namespace Uintah {
       {
         return std::find(patchIDs.begin(), patchIDs.end(), patchID) != patchIDs.end();
       };
-      
     };
     
-    // This vector stores a list of all particle variables (except position). These variables require relocation.
-    static std::vector<std::string> otherParticleVarNames_;
+    // This vector stores a list of all particle variables that require relocation(except position).
+    static std::vector<std::string> needsRelocation_;
+    static std::vector<std::string> needsBC_;
 
     typedef std::vector<int> BndParticlesVector;
     typedef std::map <int, BndParticlesVector            > patchIDBndParticlesMapT;  // temporary typedef map that stores boundary particles per patch id: Patch ID -> Bnd particles
     typedef std::map <std::string, patchIDBndParticlesMapT    > MaskMapT         ;  // boundary name -> (patch ID -> boundary particles )
     static MaskMapT bndParticlesMap_;
+    static MaskMapT inletBndParticlesMap_;
 
     // particle position label of type Uintah::Point
     const Uintah::VarLabel *pPosLabel_;
@@ -188,6 +257,8 @@ namespace Uintah {
     const Uintah::VarLabel *pIDLabel_;
     // particle x, y, and z position (of type double)
     const Uintah::VarLabel *pXLabel_,*pYLabel_,*pZLabel_;
+
+    static std::string pPosName_, pIDName_;
     
     // list of varlabels to be destroyed
     std::vector<const Uintah::VarLabel*> destroyMe_;
@@ -197,36 +268,42 @@ namespace Uintah {
                              Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw );
 
     virtual void restart_initialize( const Uintah::ProcessorGroup*,
-                                     const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
-                                     Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw );
+                                    const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
+                                    Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw );
 
     virtual void transfer_particle_ids(const Uintah::ProcessorGroup*,
                               const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
                               Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
 
     virtual void delete_outside_particles(const Uintah::ProcessorGroup*,
-                              const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
-                              Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
+                                          const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
+                                          Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
 
     virtual void clear_deleteset(const Uintah::ProcessorGroup*,
-                          const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
-                          Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
+                                 const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
+                                 Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
 
     virtual void sync_particle_position(const Uintah::ProcessorGroup*,
-                        const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
-                        Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw, const bool initialization);
+                                        const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
+                                        Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw, const bool initialization);
+
+    virtual void add_particles( const Uintah::ProcessorGroup*,
+                                const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
+                                Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw );
 
     void allocate_boundary_particles_vector( const std::string& bndName,
-                                      const int& patchID );
+                                             const int& patchID );
 
     void update_boundary_particles_vector( const std::vector<int>& myIters,
-                                            const std::string& bndName,
-                                            const int& patchID );
+                                           const std::string& bndName,
+                                           const int& patchID );
     
     void find_boundary_particles( const Uintah::ProcessorGroup*,
                                   const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
                                  Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw );
 
+    void initialize_internal(const int materialSize);
+    
     /**
      * \brief Use this to parse boundary conditions specified in the input file and allocate appropriate
      memory for the boundary particles.
@@ -235,7 +312,7 @@ namespace Uintah {
     
     /**
      * \brief Use this to parse boundary conditions specified in the input file and allocate appropriate
-     memory for the boundary particles.
+     memory for the boundary particles. This function will call parse_boundary_conditions(const Uintah::PatchSet* const patches)
      */
     virtual void parse_boundary_conditions(const Uintah::LevelP& level,
                                            Uintah::SchedulerP& sched);
@@ -243,9 +320,11 @@ namespace Uintah {
     bool isValidState_;
     const Uintah::MaterialSet* materials_;
     double pPerCell_; // number of initial particles per cell
-    unsigned int maxParticles_;
+    unsigned int maxParticles_; //number of maximum initial particles
+    Uintah::SimulationStateP sharedState_;
     Uintah::ProblemSpecP particleEqsSpec_;
-    std::map<int, Uintah::ParticleSubset*> deleteSet_;
+    std::vector< std::map<int, Uintah::ParticleSubset*> > deleteSets_; // material [ patchID -> last particle ID ]
+    std::vector< std::map<int, long64> > lastPIDPerMaterialPerPatch_;  // material [ patchID -> last particle ID ]
   }; // Class ParticlesHelper
 
 } /* namespace Uintah */

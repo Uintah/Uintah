@@ -468,11 +468,21 @@ namespace Wasatch {
   //------------------------------------------------------------------------------------------------
   
   void BCHelper::add_boundary( const std::string&      bndName,
-                                Uintah::Patch::FaceType face,
-                                const BndTypeEnum&      bndType,
-                                const int               patchID )
+                               Uintah::Patch::FaceType face,
+                               const BndTypeEnum&      bndType,
+                               const int               patchID,
+                               const Uintah::BCGeomBase::ParticleBndSpec pBndSpec)
   {
     DBGBC << "adding boundary " << bndName << " of type " << bndType << " on patch " << patchID << std::endl;
+    
+    // if this boundary is a wall AND no particle boundaries have been specified, then default
+    // the particle boundary to a fully elastic wall.
+    Uintah::BCGeomBase::ParticleBndSpec myPBndSpec = pBndSpec;
+    if (bndType == WALL && pBndSpec.bndType == Uintah::BCGeomBase::ParticleBndSpec::NOTSET) {
+      myPBndSpec.bndType = Uintah::BCGeomBase::ParticleBndSpec::WALL;
+      myPBndSpec.wallType = Uintah::BCGeomBase::ParticleBndSpec::ELASTIC;
+      myPBndSpec.restitutionCoef = 1.0;
+    }
     if ( bndNameBndSpecMap_.find(bndName) != bndNameBndSpecMap_.end() ) {
       DBGBC << " adding to existing \n";
       BndSpec& existingBndSpec = (*bndNameBndSpecMap_.find(bndName)).second;
@@ -480,7 +490,7 @@ namespace Wasatch {
     } else {
       DBGBC << " adding new \n";
       // this is the first time that we are adding this boundary. create the necessary info to store this
-      BndSpec myBndSpec = {bndName, face, bndType, std::vector<int>(1, patchID) };
+      BndSpec myBndSpec = {bndName, face, bndType, std::vector<int>(1, patchID), myPBndSpec };
       bndNameBndSpecMap_.insert( BndMapT::value_type(bndName, myBndSpec) );
     }
   }
@@ -752,7 +762,7 @@ namespace Wasatch {
                 DBGBC << " boundary name = " << bndName << std::endl;
                 DBGBC << " geom bndtype  = " << thisGeom->getBndType() << std::endl;
                 BndTypeEnum bndType = select_bnd_type_enum(thisGeom->getBndType());
-                add_boundary( bndName, face, bndType, patchID );
+                add_boundary( bndName, face, bndType, patchID, thisGeom->getParticleBndSpec() );
                 DBGBC << " boundary type = " << bndType << std::endl;
                 
                 //__________________________________________________________________________________

@@ -92,7 +92,7 @@ Uintah::PIC( DataArchive * da, CommandLineFlags & clf, int cx, int cy, int cz )
          continue;
       }
 
-      int matl = clf.matl_jim;
+      int matl = clf.matl;
       //__________________________________
       //   P A R T I C L E   V A R I A B L E
       ParticleVariable<long64> value_pID;

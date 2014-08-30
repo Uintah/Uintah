@@ -55,3 +55,15 @@ TaskFactoryBase::retrieve_task( const std::string task_name ){
 
   }
 }
+
+void 
+TaskFactoryBase::create_varlabels(){ 
+
+  for ( std::vector<std::string>::iterator i = _active_tasks.begin(); 
+        i != _active_tasks.end(); i++){ 
+
+    TaskInterface* tsk = retrieve_task(*i); 
+    tsk->create_local_labels(); 
+
+  }
+}

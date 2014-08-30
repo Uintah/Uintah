@@ -53,6 +53,35 @@ ScalarRHS::problemSetup( ProblemSpecP& db ){
   if ( db->findBlock("convection")){ 
     db->findBlock("convection")->getAttribute("scheme", _conv_scheme); 
     _do_conv = true; 
+
+    if ( _conv_scheme == "superbee"){ 
+      _limiter_type = Wasatch::SUPERBEE;
+    } else if ( _conv_scheme == "central"){
+      _limiter_type = Wasatch::CENTRAL; 
+    } else if ( _conv_scheme == "upwind"){ 
+      _limiter_type = Wasatch::UPWIND; 
+    } else if ( _conv_scheme == "charm"){ 
+      _limiter_type = Wasatch::CHARM; 
+    } else if ( _conv_scheme == "koren"){ 
+      _limiter_type = Wasatch::KOREN; 
+    } else if ( _conv_scheme == "mc"){ 
+      _limiter_type = Wasatch::MC; 
+    } else if ( _conv_scheme == "ospre"){ 
+      _limiter_type = Wasatch::OSPRE; 
+    } else if ( _conv_scheme == "smart"){ 
+      _limiter_type = Wasatch::SMART; 
+    } else if ( _conv_scheme == "vanleer"){ 
+      _limiter_type = Wasatch::VANLEER; 
+    } else if ( _conv_scheme == "hcus"){ 
+      _limiter_type = Wasatch::HCUS; 
+    } else if ( _conv_scheme == "minmod"){ 
+      _limiter_type = Wasatch::MINMOD; 
+    } else if ( _conv_scheme == "hquick"){ 
+      _limiter_type = Wasatch::HQUICK; 
+    } else { 
+      throw InvalidValue("Error: Convection scheme not supported for scalar.",__FILE__,__LINE__);
+    }
+
   }
 
   _do_diff = false; 
@@ -89,6 +118,17 @@ ScalarRHS::problemSetup( ProblemSpecP& db ){
 
 }
 
+void 
+ScalarRHS::create_local_labels(){ 
+
+  register_new_variable( _rhs_name, CC_DOUBLE ); 
+  register_new_variable( _task_name, CC_DOUBLE ); 
+  register_new_variable( _D_name, CC_DOUBLE ); 
+  register_new_variable( _Fconv_name, CC_DOUBLE ); 
+  register_new_variable( _Fdiff_name, CC_DOUBLE ); 
+
+}
+
 //
 //------------------------------------------------
 //-------------- INITIALIZATION ------------------
@@ -99,11 +139,11 @@ void
 ScalarRHS::register_initialize( std::vector<VariableInformation>& variable_registry ){ 
 
   //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
-  register_variable(  _rhs_name  , CC_DOUBLE , LOCAL_COMPUTES , 0 , NEWDW , variable_registry );
-  register_variable(  _task_name , CC_DOUBLE , LOCAL_COMPUTES , 0 , NEWDW , variable_registry );
-  register_variable(  _D_name    , CC_DOUBLE , LOCAL_COMPUTES , 0 , NEWDW , variable_registry );
-  register_variable(  _Fconv_name, CC_DOUBLE , LOCAL_COMPUTES , 0 , NEWDW , variable_registry );
-  register_variable(  _Fdiff_name, CC_DOUBLE , LOCAL_COMPUTES , 0 , NEWDW , variable_registry );
+  register_variable(  _rhs_name  , CC_DOUBLE , COMPUTES , 0 , NEWDW , variable_registry );
+  register_variable(  _task_name , CC_DOUBLE , COMPUTES , 0 , NEWDW , variable_registry );
+  register_variable(  _D_name    , CC_DOUBLE , COMPUTES , 0 , NEWDW , variable_registry );
+  register_variable(  _Fconv_name, CC_DOUBLE , COMPUTES , 0 , NEWDW , variable_registry );
+  register_variable(  _Fdiff_name, CC_DOUBLE , COMPUTES , 0 , NEWDW , variable_registry );
 
 }
 
@@ -179,6 +219,7 @@ ScalarRHS::register_timestep_eval( std::vector<VariableInformation>& variable_re
   register_variable( "areaFractionFX" , FACEX     , REQUIRES , 1 , OLDDW  , variable_registry , time_substep );
   register_variable( "areaFractionFY" , FACEY     , REQUIRES , 1 , OLDDW  , variable_registry , time_substep );
   register_variable( "areaFractionFZ" , FACEZ     , REQUIRES , 1 , OLDDW  , variable_registry , time_substep );
+  register_variable( "volFraction"    , CC_DOUBLE , REQUIRES , 1 , OLDDW  , variable_registry , time_substep );
   register_variable( "density"        , CC_DOUBLE , REQUIRES , 1 , LATEST , variable_registry , time_substep );
 //  //register_variable( "areaFraction"   , CC_VEC    , REQUIRES , 2 , LATEST , variable_registry , time_substep );
 //
@@ -196,20 +237,22 @@ ScalarRHS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
   using namespace SpatialOps;
   using SpatialOps::operator *; 
-  SVolFP rhs       = tsk_info->get_so_field<SVolF>( _rhs_name        );
 
-  SVolFP Fdiff     = tsk_info->get_so_field<SVolF>( _Fdiff_name      );
-  SVolFP Fconv     = tsk_info->get_so_field<SVolF>( _Fconv_name      );
+  //variables: 
+  SVolFP rhs   = tsk_info->get_so_field<SVolF>( _rhs_name        );
+  SVolFP Fdiff = tsk_info->get_so_field<SVolF>( _Fdiff_name      );
+  SVolFP Fconv = tsk_info->get_so_field<SVolF>( _Fconv_name      );
   SVolFP phi   = tsk_info->get_const_so_field<SVolF>( _task_name       );
   XVolPtr epsX = tsk_info->get_const_so_field<SpatialOps::XVolField>( "areaFractionFX" );
   YVolPtr epsY = tsk_info->get_const_so_field<SpatialOps::YVolField>( "areaFractionFY" );
   ZVolPtr epsZ = tsk_info->get_const_so_field<SpatialOps::ZVolField>( "areaFractionFZ" );
   SVolFP rho   = tsk_info->get_const_so_field<SVolF>( "density"        );
   SVolFP gamma = tsk_info->get_const_so_field<SVolF>( _D_name          );
+  SVolFP eps   = tsk_info->get_const_so_field<SVolF>( "volFraction" );
 
-  XVolPtr const u         = tsk_info->get_const_so_field<SpatialOps::XVolField>( "uVelocitySPBC" );
-  YVolPtr const v         = tsk_info->get_const_so_field<SpatialOps::YVolField>( "vVelocitySPBC" );
-  ZVolPtr const w         = tsk_info->get_const_so_field<SpatialOps::ZVolField>( "wVelocitySPBC" );
+  XVolPtr const u = tsk_info->get_const_so_field<SpatialOps::XVolField>( "uVelocitySPBC" );
+  YVolPtr const v = tsk_info->get_const_so_field<SpatialOps::YVolField>( "vVelocitySPBC" );
+  ZVolPtr const w = tsk_info->get_const_so_field<SpatialOps::ZVolField>( "wVelocitySPBC" );
 
   //operators: 
   const GradX* const gradx = opr.retrieve_operator<GradX>();
@@ -224,10 +267,6 @@ ScalarRHS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   const DivY* const dy = opr.retrieve_operator<DivY>();
   const DivZ* const dz = opr.retrieve_operator<DivZ>();
 
-  Vector DX = patch->dCell(); 
-  double vol = DX.x()*DX.y()*DX.z(); 
-  const double dt = tsk_info->get_dt(); 
-
   typedef OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::XVolField, SpatialOps::SSurfXField >::type InterpTX;
   typedef OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::YVolField, SpatialOps::SSurfYField >::type InterpTY;
   typedef OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::ZVolField, SpatialOps::SSurfZField >::type InterpTZ;
@@ -236,26 +275,9 @@ ScalarRHS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   const InterpTY* const interpy = opr.retrieve_operator<InterpTY>();
   const InterpTZ* const interpz = opr.retrieve_operator<InterpTZ>();
 
-  SpatialOps::SpatFldPtr<SSurfXField> phiLowX = SpatialOps::SpatialFieldStore::get<SSurfXField>( *u );
-  SpatialOps::SpatFldPtr<SSurfXField> ufx     = SpatialOps::SpatialFieldStore::get<SSurfXField>( *u );
-  typedef UpwindInterpolant<SVolF,SurfX> UpwindX; 
-  UpwindX* upx = opr.retrieve_operator<UpwindX>();  
-
-  *ufx <<= (*interpx)(*u); 
-
-  SpatialOps::SpatFldPtr<SSurfYField> phiLowY = SpatialOps::SpatialFieldStore::get<SSurfYField>( *v );
-  SpatialOps::SpatFldPtr<SSurfYField> vfy     = SpatialOps::SpatialFieldStore::get<SSurfYField>( *v );
-  typedef UpwindInterpolant<SVolF,SurfY> UpwindY; 
-  UpwindY* upy = opr.retrieve_operator<UpwindY>();  
-
-  *vfy <<= (*interpy)(*v); 
-
-  SpatialOps::SpatFldPtr<SSurfZField> phiLowZ = SpatialOps::SpatialFieldStore::get<SSurfZField>( *w );
-  SpatialOps::SpatFldPtr<SSurfZField> wfz     = SpatialOps::SpatialFieldStore::get<SSurfZField>( *w );
-  typedef UpwindInterpolant<SVolF,SurfZ> UpwindZ; 
-  UpwindZ* upz = opr.retrieve_operator<UpwindZ>();  
-
-  *wfz <<= (*interpz)(*w); 
+  Vector DX = patch->dCell(); 
+  double vol = DX.x()*DX.y()*DX.z(); 
+  const double dt = tsk_info->get_dt(); 
 
   //
   //--------------- actual work below this line ---------------------
@@ -275,22 +297,15 @@ ScalarRHS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   }
 
   //convection: 
+  *Fconv <<= 0.0; 
   if ( _do_conv ){
-    //upwind fluxes for now...
-    upx->set_advective_velocity( *ufx ); 
-    upx->apply_to_field(*phi, *phiLowX);
 
-    upy->set_advective_velocity( *vfy ); 
-    upy->apply_to_field(*phi, *phiLowY);
-
-    upz->set_advective_velocity( *wfz ); 
-    upz->apply_to_field(*phi, *phiLowZ);
-
-    *Fconv <<= (*dx)(*ufx * *phiLowX) + (*dy)(*vfy * *phiLowY) + (*dz)(*wfz * *phiLowZ); 
-
-  } else { 
-
-    *Fconv <<= 0; 
+    //X
+    compute_convective_flux<SpatialOps::SSurfXField, SpatialOps::XVolField, DivX>( opr, dx, u, epsX, phi, rho, eps, Fconv ); 
+    //Y
+    compute_convective_flux<SpatialOps::SSurfYField, SpatialOps::YVolField, DivY>( opr, dy, v, epsY, phi, rho, eps, Fconv ); 
+    //Z
+    compute_convective_flux<SpatialOps::SSurfZField, SpatialOps::ZVolField, DivZ>( opr, dz, w, epsZ, phi, rho, eps, Fconv ); 
 
   } 
 
@@ -319,16 +334,3 @@ ScalarRHS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
   //*Fdiff <<= cond( mask, 3.0 )
                  //( *Fdiff ); 
-
-//
-//  //-->convection: 
-//  if ( _do_conv ){ 
-//    //not working yet:
-//    //_disc->computeConv( patch, *ui_fconv, *ui_old_phi, *ui_u, *ui_v, *ui_w, *ui_rho, *ui_eps, _conv_scheme );
-//  } else { 
-//    *Fconv <<= 0.0; 
-//  }
-//
-//  //Divide by volume because Nebo is using a differential form
-//  //and the computeConv function is finite volume.
-//  *rhs <<= *rho * *phi + dt * ( *Fdiff - *Fconv/vol ) ;

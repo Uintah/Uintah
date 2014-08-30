@@ -59,6 +59,7 @@
 #include <StandAlone/tools/puda/monica1.h>
 #include <StandAlone/tools/puda/monica2.h>
 #include <StandAlone/tools/puda/todd1.h>
+#include <StandAlone/tools/puda/ICE_momentum.h>
 
 #include <StandAlone/tools/puda/util.h>
 #include <StandAlone/tools/puda/varsummary.h>
@@ -109,7 +110,8 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -jim1\n";
   cerr << "  -jim2\n";
   cerr << "  -todd1               ( 1st Law of thermo. control volume analysis) \n";
-  cerr << "  -jacquie              (finds burn rate vs pressure)\n";
+  cerr << "  -ICE_momentum        ( momentum control volume analysis) \n";
+  cerr << "  -jacquie             (finds burn rate vs pressure)\n";
   cerr << "  -pressure            (finds  pressure)\n";
   cerr << "  -monica1             (Finds the maximum pressure in the domain.)\n";
   cerr << "  -monica2             (Finds the sum of the cell centered kinetic energy in the domain.)\n";
@@ -277,6 +279,8 @@ main(int argc, char** argv)
       clf.do_jim2 = true;
     } else if(s == "-todd1"){
       clf.do_todd1 = true;
+    } else if(s == "-ICE_momentum"){
+      clf.do_ice_momentum = true;
     }else if(s == "-pic"){
       clf.do_PIC = true;
 
@@ -402,9 +406,9 @@ main(int argc, char** argv)
          usage("-mat", argv[0]);
          return 0;
       }
-      clf.matl_jim = strtoul(argv[++i],(char**)NULL,10);
+      clf.matl = strtoul(argv[++i],(char**)NULL,10);
       clf.do_material = true;
-      mat = clf.matl_jim;
+      mat = clf.matl;
 
     } else if (s == "-verbose") {
       clf.do_verbose = true;
@@ -549,6 +553,10 @@ main(int argc, char** argv)
 
     if( clf.do_todd1 ){
       todd1( da, clf );
+    }
+    
+    if( clf.do_ice_momentum ){
+      ICE_momentum( da, clf );
     }
 
     if( clf.do_PIC ){

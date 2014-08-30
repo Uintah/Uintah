@@ -2510,6 +2510,7 @@ DataArchiver::needRecompile(double /*time*/, double /*dt*/,
   return recompile;
 */
 }
+
 //______________________________________________________________________
 //
 string
@@ -2526,35 +2527,42 @@ DataArchiver::TranslateVariableType( string type, bool isThisCheckpoint )
   return type;
 }
 
-bool DataArchiver::isLabelSaved( string label )
+bool
+DataArchiver::isLabelSaved( const string & label ) const
 {
-  if(d_outputInterval == 0.0 && d_outputTimestepInterval == 0)
+  if(d_outputInterval == 0.0 && d_outputTimestepInterval == 0) {
     return false;
+  }
 
-  for(list<SaveNameItem>::iterator it=d_saveLabelNames.begin();it!=d_saveLabelNames.end();it++)
-  {
-    if(it->labelName==label)
+  for( list<SaveNameItem>::const_iterator it = d_saveLabelNames.begin(); it != d_saveLabelNames.end(); it++ ) {
+    if( it->labelName == label ) {
       return true;
+    }
   }
   return false;
 }
+
 //__________________________________
 // Allow the component to set the output interval
-void DataArchiver::updateOutputInterval(double newinv)
+void
+DataArchiver::updateOutputInterval( double newinv )
 {
-  if (d_outputInterval ==  newinv) return;
+  if (d_outputInterval ==  newinv) { return; }
   else {
     d_outputInterval = newinv;
     d_nextOutputTime=0.0;  
   }
 }
+
 //__________________________________
 // Allow the component to set the checkpoint interval
-void DataArchiver::updateCheckpointInterval(double newinv)
+void
+DataArchiver::updateCheckpointInterval( double newinv )
 {
-  if (d_checkpointInterval ==  newinv){
-   return;
-  }else {
+  if (d_checkpointInterval ==  newinv) {
+    return;
+  }
+  else {
     d_checkpointInterval = newinv;
     d_nextCheckpointTime=0.0;  
   }
@@ -2563,9 +2571,9 @@ void DataArchiver::updateCheckpointInterval(double newinv)
 //______________________________________________________________________
 //  This will copy the portions of the timestep.xml from the old uda
 //  to the new uda.  Specifically, the sections related to the components.
-void DataArchiver::copy_outputProblemSpec(Dir& fromDir, Dir& toDir)
+void
+DataArchiver::copy_outputProblemSpec( Dir & fromDir, Dir & toDir )
 {
-
   int dir_timestep = getTimestepTopLevel();     // could be modified by reduceUda
   
   ostringstream tname;
@@ -2598,12 +2606,15 @@ void DataArchiver::copy_outputProblemSpec(Dir& fromDir, Dir& toDir)
 
 //______________________________________________________________________
 // If your using reduceUda then use use a mapping that's defined in reduceUdaSetup()
-int DataArchiver::getTimestepTopLevel(){
+int
+DataArchiver::getTimestepTopLevel()
+{
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
   
   if ( d_usingReduceUda ) {
     return d_restartTimestepIndicies[timestep];
-  }else{
+  }
+  else {
     return timestep;
   }
 }

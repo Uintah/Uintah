@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -33,14 +33,12 @@
 
 /**
  *  \class TimeAdvance
+ *  \author Tony Saad
  *  \ingroup Expressions
  *
  *  \brief calculates \f$ \nabla\cdot\mathbf{u} \f$
  *
  *  \tparam FieldT the field type for the TimeAdvance (nominally the scalar volume field)
- *  \tparam XmomT  the field type for the first velocity component
- *  \tparam YmomT  the field type for the second velocity component
- *  \tparam ZmomT  the field type for the third velocity component
  */
 template< typename FieldT >
 class TimeAdvance
@@ -50,11 +48,9 @@ class TimeAdvance
   const Expr::Tag phioldt_, rhst_, dtt_, rkstaget_;
 
   const Wasatch::TimeIntegrator timeIntInfo_;
-  int rkStage_;
-  double a_, b_;
   
   const SingleValue* dt_;
-  const SingleValue* rks_;
+  const SingleValue* rkStage_;
   
   const FieldT* phiOld_;
   const FieldT* phiNew_;
@@ -65,9 +61,9 @@ class TimeAdvance
                const Wasatch::TimeIntegrator timeIntInfo );
 
   TimeAdvance( const std::string& solnVarName,
-              const Expr::Tag& phiOldTag,
-              const Expr::Tag& rhsTag,
-              const Wasatch::TimeIntegrator timeIntInfo );
+               const Expr::Tag& phiOldTag,
+               const Expr::Tag& rhsTag,
+               const Wasatch::TimeIntegrator timeIntInfo );
 
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -75,9 +71,9 @@ public:
   public:
 
     /**
-     *  \param XmomTag the velocity corresponding to the XmomT template parameter
-     *  \param YmomTag the velocity corresponding to the YmomT template parameter
-     *  \param ZmomTag the velocity corresponding to the ZmomT template parameter
+     *  \param result tag for the variable at the new time state
+     *  \param rhsTag the tag for the RHS evaluation of this variable's evolution PDE.
+     *  \param timeIntInfo
      */
     Builder( const Expr::Tag& result,
              const Expr::Tag& rhsTag,
@@ -101,10 +97,6 @@ public:
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
-  void set_integrator_stage(const int rkStage){
-    rkStage_ = rkStage;
-  }
   void evaluate();
 };
 

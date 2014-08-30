@@ -54,27 +54,26 @@ int SingleProcessorLoadBalancer::getPatchwiseProcessorAssignment(const Patch*)
 }
 
 const PatchSet*
-SingleProcessorLoadBalancer::createPerProcessorPatchSet(const LevelP& level)
+SingleProcessorLoadBalancer::createPerProcessorPatchSet( const LevelP & level )
 {
   return level->allPatches();
 }
 
 
 void
-SingleProcessorLoadBalancer::createNeighborhood(const GridP&)
+SingleProcessorLoadBalancer::createNeighborhood( const GridP & grid )
 {
   // Nothing to do
 }
 
 bool
-SingleProcessorLoadBalancer::inNeighborhood(const PatchSubset*,
-					    const MaterialSubset*)
+SingleProcessorLoadBalancer::inNeighborhood( const PatchSubset* )
 {
   return true;
 }
 
 bool
-SingleProcessorLoadBalancer::inNeighborhood(const Patch*)
+SingleProcessorLoadBalancer::inNeighborhood( const Patch* )
 {
   return true;
 }

@@ -343,24 +343,27 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
   }
 
-  //========NEW STUFF =================================
-  ////TIMESTEP INIT: 
-  //typedef std::map<std::string, TaskFactoryBase*> FACMAP; 
-  //////utility factory
-  //FACMAP::iterator ifac = _factory_map->find("utility_factory"); 
-  //TaskFactoryBase::TaskMap init_all_tasks = ifac->second->retrieve_all_tasks(); 
-  //for ( TaskFactoryBase::TaskMap::iterator i = init_all_tasks.begin(); i != init_all_tasks.end(); i++){ 
-    //i->second->schedule_timestep_init(level, sched, matls ); 
-  //}
+  //copy the temperature into a radiation temperature variable: 
+  d_boundaryCondition->sched_create_radiation_temperature( sched, level, matls, true );
 
-  //////transport factory
-  //ifac = _factory_map->find("transport_factory"); 
-  //init_all_tasks = ifac->second->retrieve_all_tasks(); 
-  //for ( TaskFactoryBase::TaskMap::iterator i = init_all_tasks.begin(); i != init_all_tasks.end(); i++){ 
-    //if ( i->first != "scalar_fe_update" && i->first != "scalar_ssp_update") {
-      //i->second->schedule_timestep_init(level, sched, matls ); 
-    //}
-  //}
+  //========NEW STUFF =================================
+  //TIMESTEP INIT: 
+  typedef std::map<std::string, TaskFactoryBase*> FACMAP; 
+  ////utility factory
+  FACMAP::iterator ifac = _factory_map->find("utility_factory"); 
+  TaskFactoryBase::TaskMap init_all_tasks = ifac->second->retrieve_all_tasks(); 
+  for ( TaskFactoryBase::TaskMap::iterator i = init_all_tasks.begin(); i != init_all_tasks.end(); i++){ 
+    i->second->schedule_timestep_init(level, sched, matls ); 
+  }
+
+  ////transport factory
+  ifac = _factory_map->find("transport_factory"); 
+  init_all_tasks = ifac->second->retrieve_all_tasks(); 
+  for ( TaskFactoryBase::TaskMap::iterator i = init_all_tasks.begin(); i != init_all_tasks.end(); i++){ 
+    if ( i->first != "scalar_fe_update" && i->first != "scalar_ssp_update") {
+      i->second->schedule_timestep_init(level, sched, matls ); 
+    }
+  }
   //===================END NEW STUFF=======================
 
   // --------> START RK LOOP <---------
@@ -368,25 +371,33 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   {
 
     //================ NEW TASK STUFF============================= 
-    ////utility factory
-    //FACMAP::iterator ifac = _factory_map->find("utility_factory"); 
-    //TaskFactoryBase::TaskMap all_tasks = ifac->second->retrieve_all_tasks(); 
-    //for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
-      //i->second->schedule_task(level, sched, matls, curr_level); 
-    //}
+    //
+    //utility factory
+    FACMAP::iterator ifac = _factory_map->find("utility_factory"); 
+    TaskFactoryBase::TaskMap all_tasks = ifac->second->retrieve_all_tasks(); 
+    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+      i->second->schedule_task(level, sched, matls, curr_level); 
+    }
 
-    ////transport factory
-    //ifac = _factory_map->find("transport_factory"); 
-    //all_tasks = ifac->second->retrieve_all_tasks(); 
-    //for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
-      //if ( i->first != "scalar_fe_update" && i->first != "scalar_ssp_update") {
-        //i->second->schedule_task(level, sched, matls, curr_level); 
-      //}
-    //}
+    //transport factory
+    FACMAP::iterator itransport_factory = _factory_map->find("transport_factory"); 
+    TaskFactoryBase::TaskMap all_transport_tasks = itransport_factory->second->retrieve_all_tasks(); 
+    for ( TaskFactoryBase::TaskMap::iterator i = all_transport_tasks.begin(); i != all_transport_tasks.end(); i++){ 
+      if ( i->first != "scalar_fe_update" && i->first != "scalar_ssp_update") {
+        i->second->schedule_task(level, sched, matls, curr_level); 
+      }
+    }
 
-    ////uncoment to get this to work
-    //TaskFactoryBase::TaskMap::iterator i_fe_update = all_tasks.find("scalar_fe_update");  
-    //i_fe_update->second->schedule_task( level, sched, matls, curr_level ); 
+    //partcle model factory
+    ifac = _factory_map->find("particle_model_factory"); 
+    all_tasks = ifac->second->retrieve_all_tasks(); 
+    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+      i->second->schedule_task(level, sched, matls, curr_level); 
+    }
+
+    TaskFactoryBase::TaskMap::iterator i_fe_update = all_transport_tasks.find("scalar_fe_update");  
+    if ( i_fe_update != all_transport_tasks.end() )
+      i_fe_update->second->schedule_task( level, sched, matls, curr_level ); 
     //============== END NEW TASK STUFF ==============================
 
     // Create this timestep labels for properties
@@ -467,7 +478,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       bool doOperatorSplit;
       doOperatorSplit = d_cqmomSolver->getOperatorSplitting();
       CQMOMEqnFactory::EqnMap& moment_eqns = cqmomFactory.retrieve_all_eqns();
-      //for source terms later      CoalModelFactory& modelFactory = CoalModelFactory::self();
       
       if (!doOperatorSplit) {
       //Evaluate CQMOM equations
@@ -476,8 +486,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
          
           CQMOMEqn* cqmom_eqn = dynamic_cast<CQMOMEqn*>(iEqn->second);
           cqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );
-        
-          cqmom_eqn->sched_computeSources( level, sched, curr_level );
+          
         }
         //get new weights and absicissa
         d_cqmomSolver->sched_solveCQMOMInversion( level, sched, curr_level );
@@ -493,6 +502,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
           CQMOMEqn* cqmom_eqn = dynamic_cast<CQMOMEqn*>(iEqn->second);
           if (curr_level == 0)
             cqmom_eqn->sched_initializeVariables( level, sched );
+          cqmom_eqn->sched_computeSources( level, sched, curr_level );
         }
         //x-direction - do the CQMOM inversion of this permutation, then do the convection
         if ( uVelIndex > -1 ) {
@@ -537,10 +547,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
           cqmom_eqn->sched_solveTransportEqn( level, sched, curr_level );
         }
       }
-      
-      //schedule model evaluation later
-      //modelFactory.sched_coalParticleCalculation( level, sched, curr_level );
-      
     }
 
     // STAGE 0 
@@ -594,10 +600,11 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
 
     //==================NEW TASK STUFF =========================
-    ////uncomment to get this to work
-    ////this is updating the scalar with the latest density from the table lookup
-    //TaskFactoryBase::TaskMap::iterator i_ssp_update = all_tasks.find("scalar_ssp_update"); 
-    //i_ssp_update->second->schedule_task( level, sched, matls, curr_level ); 
+    //uncomment to get this to work
+    //this is updating the scalar with the latest density from the table lookup
+    TaskFactoryBase::TaskMap::iterator i_ssp_update = all_transport_tasks.find("scalar_ssp_update"); 
+    if ( i_ssp_update != all_transport_tasks.end() )
+      i_ssp_update->second->schedule_task( level, sched, matls, curr_level ); 
     //============= END NEW TASK STUFF===============================
 
 
@@ -997,11 +1004,17 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
       tsk->computes(d_lab->d_CCVelocityLabel);
       tsk->computes(d_lab->d_velocityDivergenceLabel);
       tsk->computes(d_lab->d_continuityResidualLabel);
+      tsk->computes(d_lab->d_CCUVelocityLabel);
+      tsk->computes(d_lab->d_CCVVelocityLabel);
+      tsk->computes(d_lab->d_CCWVelocityLabel);
     }
     else {
       tsk->modifies(d_lab->d_CCVelocityLabel);
       tsk->modifies(d_lab->d_velocityDivergenceLabel);
       tsk->modifies(d_lab->d_continuityResidualLabel);
+      tsk->modifies(d_lab->d_CCUVelocityLabel);
+      tsk->modifies(d_lab->d_CCVVelocityLabel);
+      tsk->modifies(d_lab->d_CCWVelocityLabel);
     }
 
     sched->addTask(tsk, patches, matls);
@@ -1061,6 +1074,9 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     constSFCYVariable<double> newVVel;
     constSFCZVariable<double> newWVel;
     CCVariable<Vector> CCVel;
+    CCVariable<double> ccUVel;
+    CCVariable<double> ccVVel;
+    CCVariable<double> ccWVel;
 
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -1091,15 +1107,24 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
       new_dw->allocateAndPut(newCCVel,      d_lab->d_CCVelocityLabel,     indx, patch);
       new_dw->allocateAndPut(divergence,    d_lab->d_velocityDivergenceLabel,indx, patch);
       new_dw->allocateAndPut(residual,      d_lab->d_continuityResidualLabel,indx, patch);
+      new_dw->allocateAndPut(ccUVel,        d_lab->d_CCUVelocityLabel,     indx, patch);
+      new_dw->allocateAndPut(ccVVel,        d_lab->d_CCVVelocityLabel,     indx, patch);
+      new_dw->allocateAndPut(ccWVel,        d_lab->d_CCWVelocityLabel,     indx, patch);
     }
     else {
       new_dw->getModifiable(newCCVel,       d_lab->d_CCVelocityLabel,      indx, patch);
       new_dw->getModifiable(divergence,     d_lab->d_velocityDivergenceLabel, indx, patch);
       new_dw->getModifiable(residual,       d_lab->d_continuityResidualLabel, indx, patch);
+      new_dw->getModifiable(ccUVel,         d_lab->d_CCUVelocityLabel,     indx, patch);
+      new_dw->getModifiable(ccVVel,         d_lab->d_CCVVelocityLabel,     indx, patch);
+      new_dw->getModifiable(ccWVel,         d_lab->d_CCWVelocityLabel,     indx, patch);
     }
     newCCVel.initialize(Vector(0.0,0.0,0.0));
     divergence.initialize(0.0);
     residual.initialize(0.0);
+    ccUVel.initialize(0.0);
+    ccVVel.initialize(0.0);
+    ccWVel.initialize(0.0);
 
     for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
       for (int jj = idxLo.y(); jj <= idxHi.y(); ++jj) {
@@ -1118,6 +1143,9 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                          cellinfo->tfac[kk] * newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
+          ccUVel[idx] = new_u;
+          ccVVel[idx] = new_v;
+          ccWVel[idx] = new_w;
 
         }
       }
@@ -1139,6 +1167,9 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                          cellinfo->tfac[kk] * newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
+          ccUVel[idx] = new_u;
+          ccVVel[idx] = new_v;
+          ccWVel[idx] = new_w;
         }
       }
     }
@@ -1158,6 +1189,9 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                          cellinfo->tfac[kk] * newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
+          ccUVel[idx] = new_u;
+          ccVVel[idx] = new_v;
+          ccWVel[idx] = new_w;
         }
       }
     }
@@ -1177,6 +1211,9 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                          cellinfo->tfac[kk] * newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
+          ccUVel[idx] = new_u;
+          ccVVel[idx] = new_v;
+          ccWVel[idx] = new_w;
         }
       }
     }
@@ -1196,6 +1233,9 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                          cellinfo->tfac[kk] * newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
+          ccUVel[idx] = new_u;
+          ccVVel[idx] = new_v;
+          ccWVel[idx] = new_w;
         }
       }
     }
@@ -1215,6 +1255,9 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           double new_w = newWVel[idxW];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
+          ccUVel[idx] = new_u;
+          ccVVel[idx] = new_v;
+          ccWVel[idx] = new_w;
         }
       }
     }
@@ -1234,6 +1277,9 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           double new_w = newWVel[idx];
 
           newCCVel[idx] = Vector(new_u,new_v,new_w);
+          ccUVel[idx] = new_u;
+          ccVVel[idx] = new_v;
+          ccWVel[idx] = new_w;
         }
       }
     }

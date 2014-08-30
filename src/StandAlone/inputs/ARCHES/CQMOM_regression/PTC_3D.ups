@@ -30,6 +30,7 @@
     <save label="m_030" />
     <save label="m_300" />
     
+    <save label="w_0" />
     <save label="w_1" />
     <save label="w_2" />
     <save label="w_3" />
@@ -37,19 +38,18 @@
     <save label="w_5" />
     <save label="w_6" />
     <save label="w_7" />
-    <save label="w_8" />
-    <save label="a_partUVel_1" /> 
-    <save label="a_partUVel_2" />
-    <save label="a_partUVel_3" />
-    <save label="a_partUVel_4" />
-    <save label="a_partVVel_1" />
-    <save label="a_partVVel_2" />
-    <save label="a_partVVel_3" />
-    <save label="a_partVVel_4" />
-    <save label="a_partWVel_1" />
-    <save label="a_partWVel_2" />
-    <save label="a_partWVel_3" />
-    <save label="a_partWVel_4" />
+    <save label="partUVel_0" />
+    <save label="partUVel_1" />
+    <save label="partUVel_2" />
+    <save label="partUVel_3" />
+    <save label="partVVel_0" />
+    <save label="partVVel_1" />
+    <save label="partVVel_2" />
+    <save label="partVVel_3" />
+    <save label="partWVel_0" />
+    <save label="partWVel_1" />
+    <save label="partWVel_2" />
+    <save label="partWVel_3" />
  <!--save label="mixture_fraction"/-->    
     <checkpoint cycle="2" interval="0.001"/>
   </DataArchiver>

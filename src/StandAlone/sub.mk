@@ -56,7 +56,7 @@ else
 endif
 
 ifeq ($(IS_STATIC_BUILD),yes)
-  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
+  LIBS := $(CORE_OS) $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
           $(HDF5_LIBRARY) $(BOOST_LIBRARY)         \
           $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
           $(RADPROPS_LIBRARY) $(TABPROPS_LIBRARY) \

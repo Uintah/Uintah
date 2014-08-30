@@ -411,7 +411,8 @@ namespace Wasatch{
             if (tree.is_persistent(fieldTag)) {
               // if a particle variable is managed by uintah, then pass it on to the particles helper
               // for use in relocation
-              Uintah::ParticlesHelper::add_particle_variable(fieldTag.name());
+              Uintah::ParticlesHelper::mark_for_relocation(fieldTag.name());
+              Uintah::ParticlesHelper::needs_boundary_condition(fieldTag.name());
             }
           }
         }
@@ -667,8 +668,6 @@ namespace Wasatch{
 
             if( hasPressureExpression_ ){
               Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( pressure_tag(), patchID, true ) );
-              pexpr.set_patch(patches->get(ip));
-              pexpr.set_RKStage(rkStage);
               pexpr.bind_uintah_vars( newDW, patch, material, rkStage );
             }
 
@@ -676,8 +675,7 @@ namespace Wasatch{
             BOOST_FOREACH( const Expr::Tag& ptag, PoissonExpression::poissonTagList ){
               if (tree->computes_field( ptag )) {
                 PoissonExpression& pexpr = dynamic_cast<PoissonExpression&>( factory.retrieve_expression( ptag, patchID, true ) );
-                pexpr.set_patch(patches->get(ip));
-                pexpr.set_RKStage(rkStage);
+                pexpr.bind_uintah_vars( newDW, patch, material, rkStage );
               }
             }
 
@@ -692,25 +690,21 @@ namespace Wasatch{
 
               if( coordFieldT == "SVOL"){
                 Coordinates<SVolField>& coordExpr = dynamic_cast<Coordinates<SVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
-                coordExpr.set_patch(patches->get(ip));
                 // In case we want to copy coordinates instead of recomputing them, uncomment the following line
                 // oldVar.add_variable<SVolField>( ADVANCE_SOLUTION, coordTag, true);
               }
               else if( coordFieldT == "XVOL" ){
                 Coordinates<XVolField>& coordExpr = dynamic_cast<Coordinates<XVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
-                coordExpr.set_patch(patches->get(ip));
                 // In case we want to copy coordinates instead of recomputing them, uncomment the following line
                 // oldVar.add_variable<XVolField>( ADVANCE_SOLUTION, coordTag, true);
               }
               else if( coordFieldT == "YVOL" ){
                 Coordinates<YVolField>& coordExpr = dynamic_cast<Coordinates<YVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
-                coordExpr.set_patch(patches->get(ip));
                 // In case we want to copy coordinates instead of recomputing them, uncomment the following line
                 // oldVar.add_variable<YVolField>( ADVANCE_SOLUTION, coordTag, true);
               }
               else if( coordFieldT == "ZVOL" ){
                 Coordinates<ZVolField>& coordExpr = dynamic_cast<Coordinates<ZVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
-                coordExpr.set_patch(patches->get(ip));
                 // In case we want to copy coordinates instead of recomputing them, uncomment the following line
                 // oldVar.add_variable<ZVolField>( ADVANCE_SOLUTION, coordTag, true);
               }

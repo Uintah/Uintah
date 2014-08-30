@@ -231,11 +231,10 @@ AMRSimulationController::run()
        d_regridder->setAdaptivity(false);
        proc0cout << "______________________________________________________________________\n";
      }
-     
+
      if (d_regridder && d_regridder->needsToReGrid(currentGrid) && (!first || (!d_restarting))) {
        doRegridding(currentGrid, false);
      }
-     
 
      // Compute number of dataWarehouses - multiplies by the time refinement
      // ratio for each level you increase
@@ -348,13 +347,12 @@ AMRSimulationController::run()
        if(d_doAMR && i != 0 && !d_sharedState->isLockstepAMR()){
          int rr = level->getRefinementRatioMaxDim();
         delt_fine /= rr;
-	 skip /= rr;
+         skip /= rr;
        }
        
-       for(int idw=0;idw<totalFine;idw+=skip){
-	 DataWarehouse* dw = d_scheduler->get_dw(idw);
-	 dw->override(delt_vartype(delt_fine), d_sharedState->get_delt_label(),
-		      level);
+       for( int idw = 0; idw < totalFine; idw += skip ){
+         DataWarehouse* dw = d_scheduler->get_dw( idw );
+         dw->override( delt_vartype( delt_fine ), d_sharedState->get_delt_label(), level );
        }
      }
      
@@ -434,7 +432,7 @@ AMRSimulationController::run()
 #endif
      time += delt;
      TAU_DB_DUMP();
-   } // end while ( time )
+   } // end while ( time is not up, etc )
 
    // print for the final timestep, as the one above is in the middle of a while loop - get new delt, and set walltime first
    delt_vartype delt_var;
@@ -549,7 +547,7 @@ AMRSimulationController::subCycleCompile(GridP& grid, int startDW, int dwStride,
 //______________________________________________________________________
 //
 void
-AMRSimulationController::subCycleExecute(GridP& grid, int startDW, int dwStride, int levelNum, bool rootCycle)
+AMRSimulationController::subCycleExecute( GridP & grid, int startDW, int dwStride, int levelNum, bool rootCycle )
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::subCycleExecutue()");
   // there are 2n+1 taskgraphs, n for the basic timestep, n for intermediate 
@@ -656,13 +654,13 @@ AMRSimulationController::subCycleExecute(GridP& grid, int startDW, int dwStride,
     d_scheduler->get_dw(curDW+newDWStride)->unfinalize();
     d_scheduler->execute(d_scheduler->getNumTaskGraphs()-1, 1);
   }
-}
+} // end subCycleExecute()
 
 //______________________________________________________________________
 bool
-AMRSimulationController::needRecompile(double time, 
-                                       double delt,
-				          const GridP& grid)
+AMRSimulationController::needRecompile( double        time, 
+                                        double        delt,
+                                        const GridP & grid )
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::needRecompile()");
   // Currently, d_output, d_sim, d_lb, d_regridder can request a recompile.  --bryan
@@ -761,7 +759,7 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
       d_output->writeto_xml_files(0, grid );
     }
   }
-}
+} // end doInitialTimestep()
 
 //______________________________________________________________________
 bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimestep)
@@ -973,8 +971,8 @@ AMRSimulationController::executeTimestep(double t, double& delt, GridP& currentG
       } else {
         d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);
       }
-    //}
     }
+    //}
     
     if (d_scheduler->getNumTaskGraphs() == 1){
       d_scheduler->execute(0, d_lastRecompileTimestep == d_sharedState->getCurrentTopLevelTimeStep() ? 0 : 1);
@@ -1017,16 +1015,15 @@ AMRSimulationController::executeTimestep(double t, double& delt, GridP& currentG
       for(int i=0;i<currentGrid->numLevels();i++){
         const Level* level = currentGrid->getLevel(i).get_rep();
         
-        if(i != 0 && !d_sharedState->isLockstepAMR()){
+        if( i != 0 && !d_sharedState->isLockstepAMR() ) {
           int trr = level->getRefinementRatioMaxDim();
           delt_fine /= trr;
           skip /= trr;
         }
         
-        for(int idw=0;idw<totalFine;idw+=skip){
+        for( int idw = 0; idw < totalFine; idw += skip ) {
           DataWarehouse* dw = d_scheduler->get_dw(idw);
-          dw->override(delt_vartype(delt_fine), d_sharedState->get_delt_label(),
-                       level);
+          dw->override( delt_vartype(delt_fine), d_sharedState->get_delt_label(), level );
         }
       }
       success = false;
@@ -1039,8 +1036,10 @@ AMRSimulationController::executeTimestep(double t, double& delt, GridP& currentG
     }
   } while(!success);
 } // end executeTimestep()
+
 //______________________________________________________________________
 //
+
 void
 AMRSimulationController::scheduleComputeStableTimestep( const GridP& grid,
                                                         SchedulerP& sched )
@@ -1076,11 +1075,11 @@ AMRSimulationController::scheduleComputeStableTimestep( const GridP& grid,
 //______________________________________________________________________
 //
 void
-AMRSimulationController::reduceSysVar( const ProcessorGroup*,
-                                      const PatchSubset* patches,
-                                      const MaterialSubset* /*matls*/,
-                                      DataWarehouse* /*old_dw*/,
-                                      DataWarehouse* new_dw )
+AMRSimulationController::reduceSysVar( const ProcessorGroup *,
+                                       const PatchSubset    * patches,
+                                       const MaterialSubset * /*matls*/,
+                                             DataWarehouse  * /*old_dw*/,
+                                             DataWarehouse  *  new_dw )
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::reduceSysVar()");
  
@@ -1118,6 +1117,7 @@ AMRSimulationController::reduceSysVar( const ProcessorGroup*,
   // that means no MPI rank want to change the interval
 
   if (d_sharedState->updateOutputInterval()) {
+
     if (patches->size() != 0 && !new_dw->exists(d_sharedState->get_outputInterval_label(), -1, 0)) {
       min_vartype inv;
       inv.setBenignValue();
@@ -1126,9 +1126,11 @@ AMRSimulationController::reduceSysVar( const ProcessorGroup*,
     if (d_myworld->size() > 1) {
       new_dw->reduceMPI(d_sharedState->get_outputInterval_label() , 0 , 0 , -1 ) ;
     }
+
   }
 
   if (d_sharedState->updateCheckpointInterval()) {
+
     if (patches->size() != 0 && !new_dw->exists(d_sharedState->get_checkpointInterval_label(), -1, 0)) {
       min_vartype inv;
       inv.setBenignValue();
@@ -1137,5 +1139,7 @@ AMRSimulationController::reduceSysVar( const ProcessorGroup*,
     if (d_myworld->size() > 1) {
       new_dw->reduceMPI(d_sharedState->get_checkpointInterval_label() , 0 , 0 , -1 ) ;
     }
+
   }
-}
+
+} // end reduceSysVar()

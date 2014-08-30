@@ -80,12 +80,12 @@ static DebugStream dbg("SchedulerCommon", false);
 char * SchedulerCommon::start_addr = NULL;
 
 
-SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
-  : UintahParallelComponent(myworld), m_outPort(oport),
-    trackingVarsPrintLocation_(0), d_maxMemUse(0), m_graphDoc(NULL), m_nodes(NULL)
+SchedulerCommon::SchedulerCommon( const ProcessorGroup * myworld, const Output * oport ) :
+  UintahParallelComponent(myworld), m_outPort(oport),
+  trackingVarsPrintLocation_(0), d_maxMemUse(0), m_graphDoc(NULL), m_nodes(NULL)
 {
   d_generation = 0;
-  numOldDWs = 0;
+  numOldDWs    = 0;
 
   emit_taskgraph      = false;
   d_useSmallMessages  = true;
@@ -141,7 +141,7 @@ SchedulerCommon::checkMemoryUse( unsigned long & memuse,
                                  unsigned long & maxMemUse )
 {
   highwater = 0; 
-  memuse = 0;
+  memuse    = 0;
 
 #if !defined(DISABLE_SCI_MALLOC)
   size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
@@ -157,12 +157,12 @@ SchedulerCommon::checkMemoryUse( unsigned long & memuse,
   highwater = highwater_mmap;
 
 #else
-  if ( ProcessInfo::IsSupported( ProcessInfo::MEM_SIZE ) ) {
-    memuse = ProcessInfo::GetMemoryResident();
-    // printf("1) memuse is %d\n", (int)memuse);
+  if ( ProcessInfo::isSupported( ProcessInfo::MEM_SIZE ) ) {
+    memuse = ProcessInfo::getMemoryResident();
+    //printf("1) memuse is %d (on proc %d)\n", (int)memuse, Uintah::Parallel::getMPIRank() );
   } else {
     memuse = (char*)sbrk(0)-start_addr;
-    // printf("2) memuse is %d\n", (int)memuse);
+    // printf("2) memuse is %d (on proc %d)\n", (int)memuse, Uintah::Parallel::getMPIRank() );
   }
 #endif
 

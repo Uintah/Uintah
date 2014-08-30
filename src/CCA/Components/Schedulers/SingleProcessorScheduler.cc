@@ -42,13 +42,13 @@ static DebugStream dbg("SingleProcessorScheduler", false);
 extern DebugStream taskdbg;
 extern DebugStream taskLevel_dbg;
 
-SingleProcessorScheduler::SingleProcessorScheduler(const ProcessorGroup* myworld,
-                                                   Output* oport,
-                                                   SingleProcessorScheduler* parent)
-	: SchedulerCommon(myworld, oport)
+SingleProcessorScheduler::SingleProcessorScheduler( const ProcessorGroup           * myworld,
+                                                    const Output                   * oport,
+                                                          SingleProcessorScheduler * parent ) :
+  SchedulerCommon(myworld, oport)
 {
   d_generation = 0;
-  m_parent = parent;
+  m_parent     = parent;
 }
 
 SingleProcessorScheduler::~SingleProcessorScheduler()

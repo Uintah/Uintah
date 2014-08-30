@@ -55,7 +55,8 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/SmagorinskyModel.cc          \
         $(SRCDIR)/Source.cc                    \
         $(SRCDIR)/TurbulenceModel.cc           \
-        $(SRCDIR)/TurbulenceModelPlaceholder.cc
+        $(SRCDIR)/TurbulenceModelPlaceholder.cc \
+				$(SRCDIR)/ArchesParticlesHelper.cc 
         
 
 ifeq ($(HAVE_CUDA),yes)
@@ -124,7 +125,9 @@ SUBDIRS := $(SRCDIR)/ChemMix            \
            $(SRCDIR)/TransportEqns      \
 					 $(SRCDIR)/Task               \
 					 $(SRCDIR)/Utility 						\
+					 $(SRCDIR)/ParticleModels     \
 					 $(SRCDIR)/Transport 					\
+					 $(SRCDIR)/LagrangianParticles \
 					 $(SRCDIR)/Operators
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

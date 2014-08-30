@@ -175,7 +175,7 @@ Uintah::POL( DataArchive * da, CommandLineFlags & clf, char axis, int ortho1, in
         // don't include extra cells -> false
         const Patch * patch = level->getPatchFromIndex(cell, true);
 
-        int matl = clf.matl_jim;
+        int matl = clf.matl;
         //__________________________________
         //   P A R T I C L E   V A R I A B L E
         ParticleVariable<long64> value_pID;

@@ -59,7 +59,7 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
   
   _gac = Ghost::AroundCells;
   _gn  = Ghost::None; 
-  _whichAlgo = coarseLevel;
+  _whichAlgo = singleLevel;
   
   //__________________________________
   //  define the materialSet
@@ -95,10 +95,8 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
   _ps = inputdb; 
   _ps->getWithDefault( "calc_frequency",       _radiation_calc_freq, 3 ); 
   _ps->getWithDefault( "calc_on_all_RKsteps",  _all_rk,              false );  
-  _T_label_name = "temperature"; 
-  if ( _ps->findBlock("temperature")){ 
-    _ps->findBlock("temperature")->getAttribute("label",_T_label_name); 
-  } 
+  _T_label_name = "radiation_temperature"; 
+  
   if ( _ps->findBlock("abskg")){ 
     _ps->findBlock("abskg")->getAttribute("label", _abskg_label_name); 
   } else { 
@@ -116,16 +114,21 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
     throw ProblemSetupException("ERROR:  RMCRT_radiation, the xml tag <RMCRT> was not found", __FILE__, __LINE__);
   }  
 
+
+  _RMCRT->setBC_onOff( false );
+
   //__________________________________
-  //  Read in the algorithm
+  //  Read in the RMCRT algorithm that will be used
   ProblemSpecP alg_ps = rmcrt_ps->findBlock("algorithm");
   if (alg_ps){
 
     string type="NULL";
     alg_ps->getAttribute("type", type);
 
-    if (type == "dataOnion" ) {
+    if (type == "dataOnion" ) {                   // DATA ONION
+    
       _whichAlgo = dataOnion;
+      _RMCRT->setBC_onOff( true );
 
       //__________________________________
       //  bulletproofing
@@ -136,8 +139,14 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
             << " inside of the <AMR> section. \n"; 
         throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
       }
-    } else if ( type == "RMCRT_coarseLevel" ) {
+    } else if ( type == "RMCRT_coarseLevel" ) {   // 2 LEVEL
+      
       _whichAlgo = coarseLevel;
+      _RMCRT->setBC_onOff( true );
+      
+    } else if ( type == "singleLevel" ) {         // 1 LEVEL
+      _whichAlgo = singleLevel;
+
     }
   }
 }
@@ -171,8 +180,12 @@ RMCRT_Radiation::extraSetup( GridP& grid )
                             _cellTypeLabel, 
                             _src_label);
 
+  // read in RMCRT problem spec
   ProblemSpecP rmcrt_ps = _ps->findBlock("RMCRT");
+  
   _RMCRT->problemSetup( _ps, rmcrt_ps, _sharedState);
+  
+  _RMCRT->BC_bulletproofing( rmcrt_ps );
   
   //__________________________________
   //  Bulletproofing: 
@@ -235,7 +248,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
 
   // common flags
   bool modifies_divQ     = false;
-  const bool includeExtraCells = false;  // domain for sigmaT4 computation
+  bool includeExtraCells = false;  // domain for sigmaT4 computation
 
   if (timeSubStep == 0) {
     modifies_divQ  = false;
@@ -316,6 +329,24 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
       const PatchSet* patches = level->eachPatch();
       _RMCRT->sched_Refine_Q (sched,  patches, _matlSet, _radiation_calc_freq);
     }
+  }
+  
+  //______________________________________________________________________
+  //   1 - L E V E L   A P P R O A C H
+  //  RMCRT is performed on the same level as CFD
+  if( _whichAlgo == singleLevel ){
+    const LevelP& level = grid->getLevel(_archesLevelIndex);
+    Task::WhichDW temp_dw = Task::OldDW;
+    includeExtraCells = true;
+      
+    // compute sigmaT4 on the CFD level
+    _RMCRT->sched_sigmaT4( level,  sched, temp_dw, _radiation_calc_freq, includeExtraCells );
+    
+    Task::WhichDW abskg_dw    = Task::NewDW;                                                                       
+    Task::WhichDW sigmaT4_dw  = Task::NewDW;                                                                       
+    Task::WhichDW celltype_dw = Task::NewDW;                                                                       
+
+    _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, _radiation_calc_freq ); 
   }
 }
 
