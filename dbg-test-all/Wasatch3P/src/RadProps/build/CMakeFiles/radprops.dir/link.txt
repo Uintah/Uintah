@@ -1,2 +1,0 @@
-/usr/bin/ar cr libradprops.a  CMakeFiles/radprops.dir/AbsCoeffGas.cpp.o CMakeFiles/radprops.dir/Particles.cpp.o
-/usr/bin/ranlib libradprops.a

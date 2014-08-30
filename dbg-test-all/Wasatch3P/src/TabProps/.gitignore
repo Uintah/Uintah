@@ -1,3 +1,0 @@
-# ignore html output directory produced by doxygen
-doc/html
-*.*~

@@ -1,7 +1,0 @@
-digraph G {
-node[style=filled]
-0[label="( B, STATE_NONE )  (0)"];
-1[label="( C, STATE_NONE )  (0)"];
-2[label="( E, STATE_NONE )  (1)"];
-0->2 ;
-}

@@ -1,2 +1,0 @@
-/usr/bin/ar cr libspatialops-onedim.a  CMakeFiles/spatialops-onedim.dir/LagrangePoly.cpp.o
-/usr/bin/ranlib libspatialops-onedim.a
