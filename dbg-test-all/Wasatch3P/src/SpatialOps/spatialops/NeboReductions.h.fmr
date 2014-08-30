@@ -1,0 +1,147 @@
+#lang fulmar
+
+"/*
+ * Copyright (c) 2014 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the \"Software\"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+"
+
+(require "FulmarAbbreviations.fmr")
+(require "NeboCore.fmr")
+
+(define value-type (typename (scope FT-chunk 'value_type)))
+
+(define (build-scalar-reduction name body)
+  (def-template (typename AT-chunk)
+    (def-returning-function (dcl-function name
+                                          AT-chunk
+                                          (function-pmtr AT-chunk 'a)
+                                          (function-pmtr AT-chunk 'b))
+      null
+      body)))
+
+(define (build-reduction name tpl-pmtrs arg body return-expr)
+  (def-template tpl-pmtrs
+    (def-returning-function (dcl-function name value-type arg)
+      body
+      return-expr)))
+
+(define (build-reduction-pair name return-expr)
+  (list (build-reduction name
+                         (list (typename 'ExprType)
+                               (typename FT-chunk))
+                         (function-pmtr (ref (const (type-template NE-chunk 'ExprType FT-chunk)))
+                                        'fexpr)
+                         null
+                         return-expr)
+        (build-reduction name
+                         (typename FT-chunk)
+                         (function-pmtr (ref (const FT-chunk)) 'field)
+                         (typedef (type-template NCF-chunk 'Initial FT-chunk) 'ExprType)
+                         (val-call name
+                                   (val-call (type-template NE-chunk 'ExprType FT-chunk)
+                                             (val-call 'ExprType 'field))))))
+
+(define (build-general-nebo-reduction name return-expr)
+  (list (build-reduction-pair name (return-expr #false))
+        (build-reduction-pair (literal name '_interior)
+                              (return-expr #true))))
+
+(define (build-nebo-reduction name scalar-name initial-value)
+  (build-general-nebo-reduction name (lambda (is-interior)
+                                       (val-call 'nebo_fold
+                                                 (if is-interior 'false 'true)
+                                                 scalar-name
+                                                 initial-value
+                                                 'fexpr))))
+
+                                        ; beginnning of file
+(pp-header-file
+ 'NEBO_REDUCTIONS_H
+ (map (lambda (name)
+        (list (macro-define (literal 'field_ name)
+                            null
+                            (literal 'nebo_ name))
+              (macro-define (literal 'field_ name '_interior)
+                            null
+                            (literal 'nebo_ name '_interior))))
+      (list 'max
+            'min
+            'sum
+            'norm))
+
+ (SpatialOps-namespace
+  (def-template (list (typename 'ExprType)
+                      (typename FT-chunk))
+    (def-returning-function (dcl-function 'nebo_fold
+                                          value-type
+                                          (function-pmtr 'bool 'useGhost)
+                                          (dcl-no-inline-function (paren (literal '* 'proc))
+                                                                  value-type
+                                                                  value-type
+                                                                  value-type)
+                                          (function-pmtr value-type 'initialValue)
+                                          (function-pmtr (ref (const (type-template NE-chunk 'ExprType FT-chunk))) 'fexpr))
+      (list (typedef value-type 'value_type)
+            (val-typed-assign (const 'ExprType) 'initial (val-member-call 'fexpr 'expr))
+            (val-typed-assign (const GhostData) 'ghosts (ter-cond 'useGhost
+                                                                  (val-member-call 'initial 'ghosts_without_bc)
+                                                                  (val-call GhostData 0)))
+            (val-typed-assign (const IntVec) 'extents (val-member-call 'initial 'extents))
+            (val-typed-assign (const IntVec) 'hasBC (val-member-call 'initial 'has_bc))
+            (val-typed-const-assign 'int 'xLow (add-spaces '- (val-member-call 'ghosts 'get_minus 0)))
+            (val-typed-const-assign 'int 'xHigh (val-add (array-access 'extents 0)
+                                                         (val-member-call 'ghosts 'get_plus 0)))
+            (val-typed-const-assign 'int 'yLow (add-spaces '- (val-member-call 'ghosts 'get_minus 1)))
+            (val-typed-const-assign 'int 'yHigh (val-add (array-access 'extents 1)
+                                                         (val-member-call 'ghosts 'get_plus 1)))
+            (val-typed-const-assign 'int 'zLow (add-spaces '- (val-member-call 'ghosts 'get_minus 2)))
+            (val-typed-const-assign 'int 'zHigh (val-add (array-access 'extents 2)
+                                                         (val-member-call 'ghosts 'get_plus 2)))
+            (val-typed-assign 'value_type 'result 'initialValue)
+            (val-typed-assign (typename (scope 'ExprType 'SeqWalkType))
+                              'expr
+                              (val-member-call 'initial 'init 'extents 'ghosts 'hasBC))
+            (stmt-for (val-typed-assign 'int 'z 'zLow)
+                      (val-less-than 'z 'zHigh)
+                      (val-increment 'z)
+                      (stmt-for (val-typed-assign 'int 'y 'yLow)
+                                (val-less-than 'y 'yHigh)
+                                (val-increment 'y)
+                                (stmt-for (val-typed-assign 'int 'x 'xLow)
+                                          (val-less-than 'x 'xHigh)
+                                          (val-increment 'x)
+                                          (val-assign 'result (val-call 'proc 'result (val-member-call 'expr 'eval index-arg)))))))
+      'result))
+
+  (build-scalar-reduction 'nebo_scalar_max (ter-cond (paren (add-spaces 'a '< 'b)) 'b 'a))
+  (build-scalar-reduction 'nebo_scalar_min (ter-cond (paren (add-spaces 'a '> 'b)) 'b 'a))
+  (build-scalar-reduction 'nebo_scalar_sum (val-add 'a 'b))
+
+  (build-nebo-reduction 'nebo_max 'nebo_scalar_max (val-negate (val-member-call (val-call (scope 'std (type-template 'numeric_limits 'double)))
+                                                                                'infinity)))
+  (build-nebo-reduction 'nebo_min 'nebo_scalar_min (val-member-call (val-call (scope 'std (type-template 'numeric_limits 'double)))
+                                                                    'infinity))
+  (build-nebo-reduction 'nebo_sum 'nebo_scalar_sum "0.0")
+  (build-general-nebo-reduction 'nebo_norm (lambda (is-interior)
+                                             (val-call (scope 'std 'sqrt)
+                                                       (val-call (if is-interior 'nebo_sum_interior 'nebo_sum)
+                                                                 (val-call 'pow 'fexpr 2)))))
+  ))

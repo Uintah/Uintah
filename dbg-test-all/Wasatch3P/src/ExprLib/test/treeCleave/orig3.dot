@@ -1,0 +1,13 @@
+digraph G {
+node[style=filled]
+0[label="( a1, STATE_NONE )  (0)"];
+1[label="( a2, STATE_NONE )  (0)"];
+2[label="( c, STATE_NONE )  (1)"];
+3[label="( b, STATE_NONE )  (2)"];
+4[label="( d, STATE_NONE )  (3)"];
+0->2 ;
+1->2 ;
+2->3 ;
+2->4 ;
+3->4 ;
+}

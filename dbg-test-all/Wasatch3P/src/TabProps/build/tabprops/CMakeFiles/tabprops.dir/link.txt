@@ -1,0 +1,2 @@
+/usr/bin/ar cr libtabprops.a  CMakeFiles/tabprops.dir/LagrangeInterpolant.cpp.o CMakeFiles/tabprops.dir/PropertyStash.cpp.o CMakeFiles/tabprops.dir/StateTable.cpp.o
+/usr/bin/ranlib libtabprops.a

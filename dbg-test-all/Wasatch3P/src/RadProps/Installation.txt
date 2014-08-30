@@ -1,0 +1,37 @@
+// this file includes installation instructions that will be formatted by Doxygen.
+
+/**
+   \page Installation
+
+   The expression library is built using <a
+   href="http://www.cmake.org/">CMake</a>.  Be sure that you have a
+   relatively recent version of CMake installed on your machine.
+
+   \section radprops_depends Required Libraries:
+   The following libraries are required to build the RadProps library:
+
+   - <a href="http://www.boost.org"> Boost libraries</a>.
+   
+   - <a href="http://www.cmake.org"> CMake build system</a>
+   
+   - <a href="http://git-scm.com/">git version control system</a> (to check out RadProps source) 
+
+
+   \section install_steps Build Instructions:
+
+   -# Install the \link radprops_depends required libraries \endlink as
+      listed above.
+   -# Clone the RadProps library: \code git clone git://software.crsim.utah.edu/RadProps.git RadProps \endcode
+   -# create a build directory, e.g. \code mkdir myBuildDir; cd myBuildDir \endcode
+   -# Run CMake:  \code cmake [path to source] [args] \endcode
+      where [args] can include any of the following statements:
+     - \code -DBoost_DIR=[dir] \endcode specifies that the boost installation can be found in [dir]
+     - \code -DCMAKE_BUILD_TYPE=[Release|Debug] \endcode
+     - \code -DCMAKE_INSTALL_PREFIX=[install dir] \endcode specifies the location to install RadProps
+     - \code -DRadProps_ENABLE_TESTING=[ON|OFF] \endcode
+     - \code -DTabProps_DIR=[path to tabprops installation] \endcode If not supplied, TabProps will be built and installed automatically.
+   -# Run the tests to ensure that RadProps is functioning properly: \code make test \endcode
+   -# install the library: \code make install \endcode
+  
+*/
+   

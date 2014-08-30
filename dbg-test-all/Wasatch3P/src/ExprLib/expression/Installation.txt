@@ -1,0 +1,72 @@
+// this file includes installation instructions that will be formatted by Doxygen.
+
+/**
+   \page Installation
+
+   The expression library is built using <a
+   href="http://www.cmake.org/"> CMake </a>.  Be sure that you have a
+   relatively recent version of CMake installed on your machine.
+
+   \section exprlib_depends Required Libraries:
+   The following libraries are required to build the Expression library:
+
+   - <a href="https://software.crsim.utah.edu"> SpatialOps
+     library</a>.  You should download and install this library.  It
+     also requires <a href="http://www.cmake.org/"> CMake </a>.
+
+   - <a href="http://www.boost.org"> Boost libraries</a>  Specifically, the boost::thread library is required.
+   
+   - <a href="http://www.cmake.org"> CMake build system</a> 
+
+
+   \section install_steps Instructions:
+
+   -# Install the \link exprlib_depends required libraries \endlink as
+      listed above.
+   -# Download the <a href="https://software.crsim.utah.edu">
+      Expression library</a>.
+   -# Select a build location for the Expression library, e.g. \code
+      mkdir myBuildDir; cd myBuildDir \endcode
+   -# Run CMake via one of three methods:
+      -# Use cmake from the command line and specify necessary variables, e.g.
+        \code cmake <path to exprlib> \
+       -D SpatialOps_DIR=<path> \
+       -D ThreadPool_DIR=<path> \
+       -D CMAKE_INSTALL_PREFIX=<path to install dir>
+       \endcode
+      -# Use ccmake to interactively select options. \code ccmake
+         <path to exprlib> \endcode At this point you should be able
+         to fill in the appropriate information and type
+         <code>c</code> and then <code>g</code>
+      -# Use the CMake GUI (if installed on your system).
+   -# Once you have run CMake, you will have a makefile in your build
+      directory.  Now type \code make \endcode and be patient while
+      the expression library and its associated tests build.  Once the
+      build is complete, you should run the tests, \code make test
+      \endcode and then install the code, \code make install \endcode
+
+   There are a few key variables that control the Expression build and
+   installation process:
+
+   - \c SpatialOps_DIR - this specifies the location where the SpatialOps
+     configuration file was installed.  This is nominally in
+     \c /usr/local/share
+
+   - \c CMAKE_INSTALL_PREFIX - this is the location where the library
+     will be installed.
+
+   - \c EXPR_CONFIG_INSTALL - this is the location where the configure
+     file for the expression library should be installed.  This is
+     important for projects that use the expression library with CMake
+     as a build system.  This defaults to \c CMAKE_INSTALL_PREFIX/share.
+
+   - \c CMAKE_BUILD_TYPE - Specify \c Release or \c Debug.
+
+   - \c BUILD_GUI [ON|OFF] builds the GUI utility for generating expressions (requires QT4)
+   - \c ENABLE_OUTPUT [ON|OFF] enables output of fields to disk through the library
+   - \c ENABLE_TESTS [ON|OFF] enables testing
+   - \c ENABLE_UINTAH [ON|OFF] enables the Uintah interface.  Incompatible with \c ENABLE_OUTPUT and \c ENABLE_LBMS
+   - \c ENABLE_LBMS [ON|OFF] enables the LBMS interface.  Incompatible with \c ENABLE_OUTPUT and \c ENABLE_UINTAH
+ Questions? Send them to James.Sutherland@utah.edu
+
+ */

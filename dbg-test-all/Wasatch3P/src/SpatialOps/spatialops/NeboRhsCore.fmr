@@ -1,0 +1,191 @@
+#lang fulmar
+
+ ; Copyright (c) 2014 The University of Utah
+ ;
+ ; Permission is hereby granted, free of charge, to any person obtaining a copy
+ ; of this software and associated documentation files (the "Software"), to
+ ; deal in the Software without restriction, including without limitation the
+ ; rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ ; sell copies of the Software, and to permit persons to whom the Software is
+ ; furnished to do so, subject to the following conditions:
+ ;
+ ; The above copyright notice and this permission notice shall be included in
+ ; all copies or substantial portions of the Software.
+ ;
+ ; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ ; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ ; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ ; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ ; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ ; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ ; IN THE SOFTWARE.
+
+(require "FulmarAbbreviations.fmr")
+(require "NeboCore.fmr")
+
+(provide (all-defined-out))
+
+(define (build-Initial-rhs name
+                           FT
+                           tpl-irreg-pars
+                           tpl-reg-pars
+                           typedefs
+                           tpl-irreg-args
+                           constructor
+                           ghosts-with-bc
+                           ghosts-without-bc
+                           has-extents
+                           extents-check
+                           extents-expr
+                           has-bc-check
+                           has-bc-expr
+                           SW-cons-args
+                           RS-cons-args
+                           cpu-ready-body
+                           gpu-ready-body
+                           gpu-cons-args
+                           gpu-prep-body
+                           publics
+                           privates)
+  (build-Initial-general name
+                         FT
+                         tpl-irreg-pars
+                         tpl-reg-pars
+                         typedefs
+                         tpl-irreg-args
+                         constructor
+                         (list (def-returning-function (constize (dcl-function 'ghosts_with_bc GhostData))
+                                 null
+                                 ghosts-with-bc)
+                               (def-returning-function (constize (dcl-function 'ghosts_without_bc GhostData))
+                                 null
+                                 ghosts-without-bc)
+                               (def-returning-function (constize (dcl-function 'has_extents 'bool))
+                                 null
+                                 has-extents)
+                               (def-returning-function (constize (dcl-function 'extents IntVec))
+                                 (if (not (null? extents-check))
+                                     (pp-debug-only extents-check)
+                                     null)
+                                 extents-expr)
+                               (def-returning-function (constize (dcl-function 'has_bc IntVec))
+                                 (if (not (null? has-bc-check))
+                                     (pp-debug-only has-bc-check)
+                                     null)
+                                 has-bc-expr)
+                               (def-returning-function (constize (dcl-function 'init 'SeqWalkType init-pmtr))
+                                 null
+                                 (val-call 'SeqWalkType SW-cons-args))
+                               (pp-threads-only (def-returning-function (constize (dcl-function 'resize 'ResizeType))
+                                                  null
+                                                  (val-call 'ResizeType RS-cons-args)))
+                               (pp-gpu-only (add-blank-lines (def-returning-function (constize (dcl-function 'cpu_ready 'bool))
+                                                               null
+                                                               cpu-ready-body)
+                                                             (def-returning-function (constize (dcl-function 'gpu_ready 'bool (function-pmtr (const 'int) DI-chunk)))
+                                                               null
+                                                               gpu-ready-body)
+                                                             (def-returning-function (constize (dcl-function 'gpu_init 'GPUWalkType gpu-init-pmtr))
+                                                               null
+                                                               (val-call 'GPUWalkType gpu-cons-args))
+                                                             (pp-gpu-test-only (def-function (constize (dcl-function 'gpu_prep 'void (function-pmtr (const 'int) DI-chunk)))
+                                                                                 gpu-prep-body))))
+                               publics)
+                         privates))
+(define bs-Initial-rhs (arg-swap build-Initial-rhs 18 4 "bs-Initial-rhs"))
+(define (build-Resize-rhs name
+                          FT
+                          tpl-irreg-pars
+                          tpl-reg-pars
+                          typedefs
+                          tpl-irreg-args
+                          constructor
+                          SW-cons-args
+                          publics
+                          privates)
+  (build-Resize-general name
+                        FT
+                        tpl-irreg-pars
+                        tpl-reg-pars
+                        typedefs
+                        tpl-irreg-args
+                        constructor
+                        (list (def-returning-function (constize (dcl-function 'init 'SeqWalkType init-pmtr))
+                                null
+                                (val-call 'SeqWalkType SW-cons-args))
+                              publics)
+                        privates))
+(define bs-Resize-rhs (arg-swap build-Resize-rhs 6 4 "bs-Resize-rhs"))
+(define (build-SeqWalk-rhs-with-eval-body name
+                                          FT
+                                          tpl-irreg-pars
+                                          tpl-reg-pars
+                                          typedefs
+                                          constructor
+                                          eval-type
+                                          eval-body
+                                          eval-result
+                                          publics
+                                          privates)
+  (build-SeqWalk-general name
+                         FT
+                         tpl-irreg-pars
+                         tpl-reg-pars
+                         typedefs
+                         constructor
+                         (list (def-returning-function (constize (dcl-function 'eval
+                                                                               eval-type
+                                                                               index-pmtr))
+                                 eval-body
+                                 eval-result)
+                               publics)
+                         privates))
+(define bs-SeqWalk-rhs-with-eval-body (arg-swap build-SeqWalk-rhs-with-eval-body 7 4 "bs-SeqWalk-rhs"))
+(define (build-SeqWalk-rhs name
+                           FT
+                           tpl-irreg-pars
+                           tpl-reg-pars
+                           typedefs
+                           constructor
+                           eval-type
+                           eval-result
+                           publics
+                           privates)
+  (build-SeqWalk-general name
+                         FT
+                         tpl-irreg-pars
+                         tpl-reg-pars
+                         typedefs
+                         constructor
+                         (list (def-returning-function (constize (dcl-function 'eval
+                                                                               eval-type
+                                                                               index-pmtr))
+                                 null
+                                 eval-result)
+                               publics)
+                         privates))
+(define bs-SeqWalk-rhs (arg-swap build-SeqWalk-rhs 6 4 "bs-SeqWalk-rhs"))
+(define (build-gpu-rhs name
+                       FT
+                       tpl-irreg-pars
+                       tpl-reg-pars
+                       typedefs
+                       constructor
+                       eval-type
+                       eval-result
+                       publics
+                       privates)
+  (build-gpu-general name
+                     FT
+                     tpl-irreg-pars
+                     tpl-reg-pars
+                     typedefs
+                     constructor
+                     (list (device-only (def-returning-function (constize (dcl-function 'eval
+                                                                                        eval-type
+                                                                                        index-pmtr))
+                                          null
+                                          eval-result))
+                           publics)
+                     privates))
+(define bs-gpu-rhs (arg-swap build-gpu-rhs 6 4 "bs-gpu-rhs"))

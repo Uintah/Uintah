@@ -1,0 +1,24 @@
+/**
+
+\page examples Examples
+
+Field Creation & Manipulation
+--------------
+ - \subpage example-field-creation
+ - \subpage example-field-operations
+ - \subpage example-field-reductions
+ - \subpage example-field-types
+ - \subpage example-field-type-inference
+ - \subpage example-masks
+
+Stencil Usage
+------------------
+ - \subpage example-stencil-type-inference
+ - \subpage example-stencils
+ - \subpage example-3d-laplacian
+
+A Mini-Application
+--------------
+  - \subpage example-heat-equation
+
+*/

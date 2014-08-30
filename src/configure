@@ -1696,7 +1696,7 @@ Optional Features:
 --enable-rpath          Set a default runtime library search path
 --enable-arches         Turn on the Arches component - and Radiation Model.
 --enable-ice            Turn on the Ice component.
---enable-fvm            Turns on the Finite Volume component.
+--enable-fvm            Turn on the Finite Volume component.
 --enable-mpm            Turn on the Mpm component.
 --enable-md             Turn on the MD component.
 --enable-wasatch        Turn on the Wasatch component.
@@ -4168,7 +4168,7 @@ if test "${enable_fvm+set}" = set; then :
   enableval=$enable_fvm; BUILD_FVM="yes"
 else
   BUILD_FVM="no"
-	 DEF_FVM="#define NO_FVM"
+   DEF_FVM="#define NO_FVM"
 fi
 
   sci_arg_enable_list="$sci_arg_enable_list --enable-fvm --disable-fvm"
