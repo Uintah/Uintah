@@ -281,6 +281,11 @@ Radiometer::radiometerFlux( const Patch* patch,
                             constCCVariable<int> celltype,
                             const bool modifiesFlux )
 {
+
+  if ( dbg.active() ){
+    printTask(patch, dbg,"Doing Ray::Radiometer::radiometerFlux");
+  }
+  
   CCVariable<double> VRFlux;
   if( modifiesFlux ){
     new_dw->getModifiable( VRFlux,  d_VRFluxLabel,  d_matl, patch );

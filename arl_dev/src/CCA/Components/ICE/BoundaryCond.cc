@@ -72,7 +72,7 @@ namespace Uintah {
 void ImplicitMatrixBC( CCVariable<Stencil7>& A, 
                        const Patch* patch)        
 { 
-  cout_BC_CC << "ImplicitMatrixBC Patch: "<< patch->getID()<< endl;
+  cout_BC_CC << "-------- ImplicitMatrixBC Patch: "<< patch->getID()<< endl;
   
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
@@ -174,7 +174,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
         }
       } // if iterator found
     } // child loop
-    cout_BC_CC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
+    cout_BC_CC << "      "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
                << " nCellsTouched: " << nCells << endl;
     
     //__________________________________
@@ -261,7 +261,7 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
                       const VarLabel* label,
                       DataWarehouse* new_dw)        
 { 
-  cout_BC_CC << "set_imp_DelP_BC, Patch: "<< patch->getID()<< endl;
+  cout_BC_CC << "-------- set_imp_DelP_BC, Patch: "<< patch->getID()<< endl;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
   for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
@@ -313,7 +313,7 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
       } // if(foundIterator)
     } // child loop
     
-    cout_BC_CC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
+    cout_BC_CC << "      "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
                << " nCellsTouched: " << nCells << endl;
     //__________________________________
     // bulletproofing      
@@ -406,7 +406,7 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
                    DataWarehouse* new_dw,
                    customBC_globalVars* globalVars)
 {
-  BC_dbg << " get_rho_micro: (" << which_Var <<")"<< endl;
+  BC_dbg << "-------- get_rho_micro: (" << which_Var <<")"<< endl;
   
   if( which_Var !="rho_micro" && which_Var !="sp_vol" ){
     throw InternalError("setBC (pressure): Invalid option for which_var", __FILE__, __LINE__);
@@ -681,7 +681,7 @@ void setBC(CCVariable<double>& press_CC,
       }  // if bcKind != LODI
     }  // child loop
     
-    cout_BC_CC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
+    cout_BC_CC << "      "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
                         << " nCellsTouched: " << nCells << " nCells_LODI: " << nCells_LODI[face] << endl;
     //__________________________________
     //  bulletproofing   
@@ -831,7 +831,7 @@ void setBC(CCVariable<double>& var_CC,
       }  // found iterator
     }  // child loop
     
-    cout_BC_CC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
+    cout_BC_CC << "      "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
                         << " nCellsTouched: " << nCells << " nCells_LODI: " << nCells_LODI[face] << endl;
     //__________________________________
     //  bulletproofing
@@ -923,7 +923,7 @@ void setBC(CCVariable<Vector>& var_CC,
       bool foundIterator = 
           getIteratorBCValueBCKind<Vector>(patch, face, child, desc, mat_id,
                                             bc_value, bound_ptr ,bc_kind);
-     
+      
       if (foundIterator && bc_kind != "LODI") {
         
         //__________________________________
@@ -969,7 +969,6 @@ void setBC(CCVariable<Vector>& var_CC,
         //__________________________________
         //  debugging
         if( BC_dbg.active() ) {
-          bound_ptr.reset();
           BC_dbg <<"Face: "<< patch->getFaceName(face) <<"\t numCellsTouched " << nCells
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
@@ -977,7 +976,7 @@ void setBC(CCVariable<Vector>& var_CC,
         }
       }  // found iterator
     }  // child loop
-    cout_BC_CC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
+    cout_BC_CC << "      "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
                         << " nCellsTouched: " << nCells <<" nCells_LODI: " << nCells_LODI[face] << endl;
     //__________________________________
     //  bulletproofing
@@ -1093,7 +1092,7 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
       }  // if iterator found
     }  // child loop
     
-    cout_BC_CC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
+    cout_BC_CC << "      "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
                << " nCellsTouched: " << nCells << endl;
     //__________________________________
     //  bulletproofing

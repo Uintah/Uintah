@@ -1,12 +1,16 @@
 #ifndef Uintah_Component_Arches_TaskInterface_h
 #define Uintah_Component_Arches_TaskInterface_h
 
+#include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
+#include <CCA/Components/Wasatch/Operators/FluxLimiterInterpolant.h>
+#include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
+
 #include <spatialops/structured/FVStaggered.h>
 #include <spatialops/structured/MemoryWindow.h>
-
+#include <spatialops/particles/ParticleFieldTypes.h>
+#include <spatialops/particles/ParticleOperators.h>
 #include <CCA/Components/Arches/Task/FieldContainer.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
-#include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -42,7 +46,7 @@ public:
 
     enum VAR_DEPEND { COMPUTES, MODIFIES, REQUIRES, LOCAL_COMPUTES };
     enum WHICH_DW { OLDDW, NEWDW, LATEST };
-    enum VAR_TYPE { CC_INT, CC_DOUBLE, CC_VEC, FACEX, FACEY, FACEZ, SUM, MAX, MIN };
+    enum VAR_TYPE { CC_INT, CC_DOUBLE, CC_VEC, FACEX, FACEY, FACEZ, SUM, MAX, MIN, PARTICLE };
 
     /** @brief The variable registry information **/ 
     struct VariableInformation { 
@@ -95,6 +99,7 @@ public:
 
     }
 
+    /** @brief Sets the enum for a particular variable type **/ 
     template <class T> 
     void set_type(T var, VAR_TYPE& type){
       if ( typeid(var) == typeid(SpatialOps::SVolField*)){
@@ -105,6 +110,8 @@ public:
         type = FACEY; 
       } else if ( typeid(var) == typeid(SpatialOps::ZVolField*)){
         type = FACEZ; 
+      } else if ( typeid(var) == typeid(ParticleField)){ 
+        type = PARTICLE; 
       } else { 
         throw InvalidValue("Arches Task Error: Not able to deduce a type.", __FILE__, __LINE__); 
       }
@@ -112,6 +119,9 @@ public:
 
     /** @brief Input file interface **/ 
     virtual void problemSetup( ProblemSpecP& db ) = 0; 
+
+    /** @brief Create local labels for the task **/ 
+    virtual void create_local_labels() = 0; 
 
     /** @brief Initialization method **/ 
     virtual void register_initialize( std::vector<VariableInformation>& variable_registry ) = 0; 
@@ -274,24 +284,39 @@ protected:
         //====================================================================================
         // GRID VARIABLE ACCESS
         //====================================================================================
+
+        /** @brief Return a CONST UINTAH field **/ 
         template <typename T>
         T* get_uintah_const_field( const std::string name ){ 
           return _field_container->get_const_field<T>(name); 
         } 
 
+        /** @brief Return a UINTAH field **/ 
         template <typename T>
         T* get_uintah_field( const std::string name ){ 
           return _field_container->get_field<T>(name); 
         }
 
+        /** @brief Return a SPATIAL field **/ 
         template <typename T>
         SpatialOps::SpatFldPtr<T> get_so_field( const std::string name ){ 
           return _field_container->get_so_field<T>(name); 
         }
 
+        /** @brief Return a CONST SPATIAL field **/ 
         template <typename T>
         SpatialOps::SpatFldPtr<T> get_const_so_field( const std::string name ){ 
           return _field_container->get_const_so_field<T>(name); 
+        }
+
+        /** @brief Return a SPATIAL OPS PARTICLE FIELD **/ 
+        SpatialOps::SpatFldPtr<ParticleField> get_particle_field( const std::string name ){ 
+          return _field_container->get_so_particle_field(name); 
+        }
+
+        /** @brief Return a CONST SPATIAL OPS PARTICLE FIELD **/ 
+        SpatialOps::SpatFldPtr<ParticleField> get_const_particle_field( const std::string name ){ 
+          return _field_container->get_const_so_particle_field(name); 
         }
 
       private: 
@@ -309,7 +334,8 @@ protected:
                          DataWarehouse* new_dw, 
                          const Patch* patch, 
                          ArchesFieldContainer* field_container, 
-                         ArchesTaskInfoManager* f_collector );
+                         ArchesTaskInfoManager* f_collector, 
+                         const bool doing_initialization );
 
     /** @brief The actual work done within the derived class **/ 
     virtual void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, 
@@ -327,6 +353,50 @@ protected:
     const int _matl_index; 
     VAR_TYPE _mytype;
     std::vector<const VarLabel*> _local_labels;
+
+    /** @brief Get the Uintah typeDescription for a TaskType **/ 
+    inline const TypeDescription* get_TD(VAR_TYPE type){ 
+
+      if ( type == CC_DOUBLE ){ 
+        return CCVariable<double>::getTypeDescription(); 
+      } else if ( type == CC_INT ){ 
+        return CCVariable<int>::getTypeDescription(); 
+      } else if ( type == CC_VEC ){ 
+        return CCVariable<Vector>::getTypeDescription(); 
+      } else if ( type == FACEX ){ 
+        return SFCXVariable<double>::getTypeDescription(); 
+      } else if ( type == FACEY ){ 
+        return SFCYVariable<double>::getTypeDescription(); 
+      } else if ( type == FACEZ ){ 
+        return SFCZVariable<double>::getTypeDescription(); 
+      } else if ( type == PARTICLE ){ 
+        return ParticleVariable<double>::getTypeDescription();
+      } else { 
+        throw InvalidValue("Error: Variable type not recognized.",__FILE__,__LINE__); 
+      }
+
+    }
+
+    /** @brief Register a local varlabel for this task **/ 
+    void register_new_variable(const std::string name, VAR_TYPE type ){ 
+
+      const VarLabel* test = NULL; 
+      test = VarLabel::find( name );
+
+      if ( test == NULL ){
+
+        const VarLabel* label = VarLabel::create( name, get_TD(type) );
+        _local_labels.push_back(label); 
+
+      } else { 
+
+        std::stringstream msg; 
+        msg << "Error: Varlabel already registered: " << name << " (name your task variable something else and try again)." << std::endl;
+        throw InvalidValue(msg.str(), __FILE__, __LINE__); 
+
+      }
+    }
+
 
 private: 
 

@@ -46,6 +46,8 @@ SampleFactory::build_all_tasks( ProblemSpecP& db )
     TaskInterface* tsk = retrieve_task(*i); 
     tsk->problemSetup( db ); 
 
+    tsk->create_local_labels(); 
+
   }
 
 

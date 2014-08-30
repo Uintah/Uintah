@@ -30,6 +30,7 @@
     <save label="divQ"/>
     <save label="abskg"/>
     <save label="temperature"/>
+    <save label="radiation_temperature"/>
     <save label="sigmaT4"/>
     <save label="cellType"/>
     <save label = "boundFlux" />
@@ -49,14 +50,16 @@
         <BCType id="all" label="enthalpy"       var="Neumann">
           <value>0.0</value>
         </BCType>
-        <!-- for RMCRT-->
-        <BCType id="all"  label = "temperature" var="Dirichlet">
+                                <!-- for RMCRT-->
+        <BCType id="all"  label = "radiation_temperature" 
+                                                var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"       var="Dirichlet">
+        <BCType id="all"  label = "abskg"       var="ForcedDirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
+      
       <Face side="x+" name="inlet">
         <BCType id="all" label="x+ wall" var="WallBC">
           <value>0</value>
@@ -67,14 +70,17 @@
         <BCType id="all" label="enthalpy"       var="Neumann">
           <value>0.0</value>
         </BCType>
-        <!-- for RMCRT-->
-        <BCType id="all"  label = "temperature" var="Dirichlet">
+                                <!-- for RMCRT-->
+        <BCType id="all"  label = "radiation_temperature" 
+                                                var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"       var="Dirichlet">
+        <BCType id="all"  label = "abskg"       var="ForcedDirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
+      
+      
       <Face side="y-" name="inlet">
         <BCType id="all" label="y- wall" var="WallBC">
           <value>0</value>
@@ -85,14 +91,17 @@
         <BCType id="all" label="enthalpy"       var="Neumann">
           <value>0.0</value>
         </BCType>
-        <!-- for RMCRT-->
-        <BCType id="all"  label = "temperature" var="Dirichlet">
+                                <!-- for RMCRT-->
+        <BCType id="all"  label = "radiation_temperature" 
+                                                var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"       var="Dirichlet">
+        <BCType id="all"  label = "abskg"       var="ForcedDirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
+      
+      
       <Face side="y+" name="inlet">
         <BCType id="all" label="y+ wall" var="WallBC">
           <value>0</value>
@@ -103,14 +112,17 @@
         <BCType id="all" label="enthalpy"       var="Neumann">
           <value>0.0</value>
         </BCType>
-        <!-- for RMCRT-->
-        <BCType id="all"  label = "temperature" var="Dirichlet">
+                                <!-- for RMCRT-->
+        <BCType id="all"  label = "radiation_temperature" 
+                                                var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"       var="Dirichlet">
+        <BCType id="all"  label = "abskg"       var="ForcedDirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
+      
+      
       <Face side="z-" name="inlet">
         <BCType id="all" label="z- wall" var="WallBC">
           <value>0</value>
@@ -121,14 +133,17 @@
         <BCType id="all" label="enthalpy"       var="Neumann">
           <value>0.0</value>
         </BCType>
-        <!-- for RMCRT-->
-        <BCType id="all"  label = "temperature" var="Dirichlet">
+                                <!-- for RMCRT-->
+        <BCType id="all"  label = "radiation_temperature" 
+                                                var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"       var="Dirichlet">
+        <BCType id="all"  label = "abskg"       var="ForcedDirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
+      
+      
       <Face side="z+" name="inlet">
         <BCType id="all" label="z+ wall" var="WallBC">
           <value>0</value>
@@ -139,11 +154,12 @@
         <BCType id="all" label="enthalpy"       var="Neumann">
           <value>0.0</value>
         </BCType>
-        <!-- for RMCRT-->
-        <BCType id="all"  label = "temperature" var="Dirichlet">
+                                <!-- for RMCRT-->
+        <BCType id="all"  label = "radiation_temperature" 
+                                                var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"       var="Dirichlet">
+        <BCType id="all"  label = "abskg"       var="ForcedDirichlet">
           <value> 1. </value>
         </BCType>
       </Face>

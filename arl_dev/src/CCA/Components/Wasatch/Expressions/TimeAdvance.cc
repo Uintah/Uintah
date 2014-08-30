@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,6 +26,7 @@
 
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
+#include <spatialops/Nebo.h>
 
 #include <CCA/Components/Wasatch/TagNames.h>
 
@@ -33,20 +34,17 @@
 template< typename FieldT >
 TimeAdvance<FieldT>::
 TimeAdvance( const std::string& solnVarName,
-            const Expr::Tag& phiOldTag,
-            const Expr::Tag& rhsTag,
-            const Wasatch::TimeIntegrator timeIntInfo )
+             const Expr::Tag& phiOldTag,
+             const Expr::Tag& rhsTag,
+             const Wasatch::TimeIntegrator timeIntInfo )
 : Expr::Expression<FieldT>(),
-phioldt_        ( phiOldTag                                   ),
-rhst_        ( rhsTag                                      ),
-dtt_   ( Wasatch::TagNames::self().dt                ),
-rkstaget_    ( Wasatch::TagNames::self().rkstage           ),
-timeIntInfo_ ( timeIntInfo                                 ),
-rkStage_     ( 1                                           )
+  phioldt_    ( phiOldTag                         ),
+  rhst_       ( rhsTag                            ),
+  dtt_        ( Wasatch::TagNames::self().dt      ),
+  rkstaget_   ( Wasatch::TagNames::self().rkstage ),
+  timeIntInfo_( timeIntInfo                       )
 {
   this->set_gpu_runnable( true );
-  a_ = timeIntInfo_.alpha[rkStage_-1];
-  b_ = timeIntInfo_.beta[rkStage_-1];
 }
 
 //--------------------------------------------------------------------
@@ -63,11 +61,10 @@ void
 TimeAdvance<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  exprDeps.requires_expression( phioldt_    );
-  exprDeps.requires_expression( rhst_    );
-  
-  exprDeps.requires_expression( dtt_ );
-  exprDeps.requires_expression( rkstaget_    );
+  exprDeps.requires_expression( phioldt_  );
+  exprDeps.requires_expression( rhst_     );
+  exprDeps.requires_expression( dtt_      );
+  exprDeps.requires_expression( rkstaget_ );
 }
 
 //--------------------------------------------------------------------
@@ -78,22 +75,13 @@ TimeAdvance<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
   const typename Expr::FieldMgrSelector<FieldT>::type& svfm = fml.template field_manager<FieldT>();
-  phiOld_     = &svfm.field_ref( phioldt_    );
-  rhs_     = &svfm.field_ref( rhst_ );
+  phiOld_ = &svfm.field_ref( phioldt_ );
+  rhs_    = &svfm.field_ref( rhst_    );
   
   const Expr::FieldMgrSelector<SingleValue>::type& doublefm = fml.field_manager<SingleValue>();
-  dt_ = &doublefm.field_ref(dtt_);
-  rks_= &doublefm.field_ref(rkstaget_);
-  rkStage_ =(int) (*rks_)[0];
+  dt_     = &doublefm.field_ref(dtt_     );
+  rkStage_= &doublefm.field_ref(rkstaget_);
 }
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-TimeAdvance<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
 
 //--------------------------------------------------------------------
 
@@ -104,13 +92,23 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& phi = this->value();
-  if (rkStage_ == 1)  {
-    phi <<= *phiOld_ + *dt_ * *rhs_;
-  } else {
-    a_ = timeIntInfo_.alpha[rkStage_-1];
-    b_ = timeIntInfo_.beta[rkStage_-1];
-    phi <<= a_ * *phiOld_ + b_ * (phi + *dt_ * *rhs_);
-  }
+
+  const double a2 = timeIntInfo_.alpha[1];
+  const double a3 = timeIntInfo_.alpha[2];
+
+  const double b2 = timeIntInfo_.beta[1];
+  const double b3 = timeIntInfo_.beta[2];
+
+  // Since rkStage_ is a SpatialField, we cannot dereference it and use "if"
+  // statements since that will break GPU execution. Therefore, we use cond here
+  // to allow GPU execution of this expression, despite the fact that it causes
+  // branching on the inner loop.  However, the same branch is followed for all
+  // points in the loop, which shouldn't degrade GPU execution and branch
+  // prediction on CPU should limit performance degradation.
+  phi <<= cond( *rkStage_ == 1.0,      *phiOld_ +              *dt_ * *rhs_ )
+              ( *rkStage_ == 2.0, a2 * *phiOld_ + b2 * ( phi + *dt_ * *rhs_ ) )
+              ( *rkStage_ == 3.0, a3 * *phiOld_ + b3 * ( phi + *dt_ * *rhs_ ) )
+              ( 0.0 ); // should never get here.
 }
 
 //--------------------------------------------------------------------
@@ -121,10 +119,10 @@ Builder::Builder( const Expr::Tag& result,
                   const Expr::Tag& rhsTag,
                   const Wasatch::TimeIntegrator timeIntInfo )
   : ExpressionBuilder(result),
-    solnVarName_(result.name()),
-    phioldt_(Expr::Tag(solnVarName_, Expr::STATE_N)),
-    rhst_(rhsTag),
-    timeIntInfo_(timeIntInfo)
+    solnVarName_( result.name() ),
+    phioldt_( Expr::Tag(solnVarName_, Expr::STATE_N) ),
+    rhst_( rhsTag ),
+    timeIntInfo_( timeIntInfo )
 {}
 
 //--------------------------------------------------------------------
@@ -132,16 +130,15 @@ Builder::Builder( const Expr::Tag& result,
 template< typename FieldT >
 TimeAdvance<FieldT>::
 Builder::Builder( const Expr::Tag& result,
-                 const Expr::Tag& phiOldTag,
-                 const Expr::Tag& rhsTag,
-                 const Wasatch::TimeIntegrator timeIntInfo )
-: ExpressionBuilder(result),
-  solnVarName_(result.name()),
-  phioldt_(phiOldTag),
-  rhst_(rhsTag),
-  timeIntInfo_(timeIntInfo)
+                  const Expr::Tag& phiOldTag,
+                  const Expr::Tag& rhsTag,
+                  const Wasatch::TimeIntegrator timeIntInfo )
+: ExpressionBuilder( result ),
+  solnVarName_( result.name() ),
+  phioldt_( phiOldTag ),
+  rhst_( rhsTag ),
+  timeIntInfo_( timeIntInfo )
 {}
-
 
 //--------------------------------------------------------------------
 
@@ -153,7 +150,6 @@ TimeAdvance<FieldT>::Builder::build() const
 }
 
 //--------------------------------------------------------------------
-
 
 //==========================================================================
 // Explicit template instantiation for supported versions of this expression

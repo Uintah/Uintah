@@ -28,6 +28,7 @@
     <outputInitTimestep/>
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label="divQ"  levels="-1"/>
+    <save label="radiation_temperature"  levels = "-1"/>
     <!--<save label="abskg" />-->
     <save label="sigmaT4" />
     <save label="cellType" />
@@ -49,7 +50,7 @@
           <value>0.0</value>
         </BCType>
         <!-- for RMCRT-->
-        <BCType id="all"  label = "temperature" var="Dirichlet">
+        <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
         <BCType id="all"  label = "abskg"    var="Dirichlet">
@@ -67,7 +68,7 @@
           <value>0.0</value>
         </BCType>
         <!-- for RMCRT-->
-        <BCType id="all"  label = "temperature" var="Dirichlet">
+        <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
         <BCType id="all"  label = "abskg"    var="Dirichlet">
@@ -85,7 +86,7 @@
           <value>0.0</value>
         </BCType>
         <!-- for RMCRT-->
-        <BCType id="all"  label = "temperature" var="Dirichlet">
+        <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
         <BCType id="all"  label = "abskg"    var="Dirichlet">
@@ -103,7 +104,7 @@
           <value>0.0</value>
         </BCType>
         <!-- for RMCRT-->
-        <BCType id="all"  label = "temperature" var="Dirichlet">
+        <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
         <BCType id="all"  label = "abskg"    var="Dirichlet">
@@ -121,7 +122,7 @@
           <value>0.0</value>
         </BCType>
         <!-- for RMCRT-->
-        <BCType id="all"  label = "temperature" var="Dirichlet">
+        <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
         <BCType id="all"  label = "abskg"    var="Dirichlet">
@@ -139,7 +140,7 @@
           <value>0.0</value>
         </BCType>
         <!-- for RMCRT-->
-        <BCType id="all"  label = "temperature" var="Dirichlet">
+        <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
         <BCType id="all"  label = "abskg"    var="Dirichlet">

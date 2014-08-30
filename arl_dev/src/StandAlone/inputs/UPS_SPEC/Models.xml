@@ -23,7 +23,6 @@
       <VRLocationsMax         spec="OPTIONAL VECTOR 'positive'"/>
       <nRadRays               spec="OPTIONAL INTEGER 'positive'"/>
       <nFluxRays              spec="OPTIONAL INTEGER 'positive'"/>
-      <shouldSetBCs           spec="OPTIONAL BOOLEAN"/>
       <allowReflect           spec="OPTIONAL BOOLEAN"/>
       <solveDivQ              spec="OPTIONAL BOOLEAN"/>
       <applyFilter            spec="OPTIONAL BOOLEAN"/>

@@ -1,17 +1,19 @@
 #ifndef Uintah_Component_Arches_RadPropertyCalculator_h
 #define Uintah_Component_Arches_RadPropertyCalculator_h
 
-#include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/DataWarehouseP.h>
+#include <CCA/Ports/SchedulerP.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/VarLabel.h>
+
 #include <sci_defs/uintah_defs.h>
+
 #ifdef HAVE_RADPROPS
 #  include <radprops/AbsCoeffGas.h>
 #  include <radprops/RadiativeSpecies.h>
@@ -49,14 +51,14 @@ namespace Uintah {
       class PropertyCalculatorBase { 
 
         public: 
-          PropertyCalculatorBase() {}; 
+          PropertyCalculatorBase() {}
           virtual ~PropertyCalculatorBase(){
 
             VarLabel::destroy(_abskg_label); 
-            if ( _local_abskp )
+            if ( _local_abskp ) {
               VarLabel::destroy(_abskp_label); 
-          
-          };
+            }
+          }
 
           virtual bool problemSetup( const ProblemSpecP& db )=0; 
           virtual void computeProps( const Patch* patch, constCCVariable<double>& VolFractionBC, 
@@ -77,10 +79,10 @@ namespace Uintah {
           virtual std::vector<std::string> get_sp() = 0;
           virtual bool does_scattering() = 0;
 
-          inline const VarLabel* get_abskg_label(){return _abskg_label;} 
-          inline const VarLabel* get_abskp_label(){return _abskp_label;}
-          inline bool has_abskp_local(){ return _local_abskp; }
-          inline bool use_abskp(){ return _use_abskp; }
+          inline const VarLabel* get_abskg_label() { return _abskg_label; } 
+          inline const VarLabel* get_abskp_label() { return _abskp_label; }
+          inline       bool      has_abskp_local() { return _local_abskp; }
+          inline       bool      use_abskp()       { return _use_abskp;   }
 
           /** @brief Matches label names to labels **/ 
           inline void resolve_labels(){

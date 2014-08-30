@@ -24,16 +24,6 @@
 
 #include <TauProfilerForSCIRun.h>
 
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Thread/Runnable.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Util/DebugStream.h>
-#include <Core/Util/ProgressiveWarning.h>
-#include <Core/Util/FancyAssert.h>
-
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/LoadBalancer.h>
@@ -41,32 +31,42 @@
 #include <CCA/Components/Schedulers/DependencyException.h>
 #include <CCA/Components/Schedulers/IncorrectAllocation.h>
 #include <CCA/Components/Schedulers/MPIScheduler.h>
+
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/TypeMismatchException.h>
-#include <Core/Grid/UnknownVariable.h>
-#include <Core/Grid/Variables/VarLabel.h>
-#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Grid/Box.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/UnknownVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Grid/Box.h>
-#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/PSPatchMatlGhost.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/OS/ProcessInfo.h>
 #include <Core/Parallel/BufferInfo.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Runnable.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Util/DebugStream.h>
+#include <Core/Util/FancyAssert.h>
+#include <Core/Util/ProgressiveWarning.h>
 
 #include <iostream>
 #include <string>
 #include <sstream>
 #include <cstdio>
 #include <cstring>
-
 
 using namespace std;
 using namespace SCIRun;
@@ -719,10 +719,10 @@ OnDemandDataWarehouse::recvMPI( DependencyBatch* batch,
 //______________________________________________________________________
 //
 void
-OnDemandDataWarehouse::reduceMPI( const VarLabel* label,
-                                  const Level* level,
-                                  const MaterialSubset* inmatls,
-                                  int nComm )
+OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
+                                  const Level          * level,
+                                  const MaterialSubset * inmatls,
+                                  const int              nComm )
 {
   const MaterialSubset* matls;
   if( !inmatls ) {
@@ -741,6 +741,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel* label,
   MPI_Datatype datatype = MPI_DATATYPE_NULL;
 
   for( int m = 0; m < nmatls; m++ ) {
+
     int matlIndex = matls->get( m );
 
     ReductionVariableBase* var;
@@ -781,6 +782,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel* label,
       ASSERTEQ( datatype, senddatatype );
     }
     count += sendcount;
+
   }
   int packsize;
   MPI_Pack_size( count, datatype, d_myworld->getgComm( nComm ), &packsize );
@@ -853,8 +855,10 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel* label,
     delete matls;
   }
 }
+
 //______________________________________________________________________
 //
+
 void
 OnDemandDataWarehouse::put( const ReductionVariableBase& var,
                             const VarLabel* label,

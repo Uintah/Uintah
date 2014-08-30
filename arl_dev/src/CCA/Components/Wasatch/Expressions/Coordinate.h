@@ -29,6 +29,7 @@
 #include <expression/Expression.h>
 
 //-- Wasatch Includes --//
+#include <CCA/Components/Wasatch/PatchInfo.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/Operators/Operators.h>
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
@@ -59,7 +60,7 @@ namespace Wasatch{
   class Coordinates
   : public Expr::Expression<FieldT>
   {
-    const Uintah::Patch* patch_;
+    UintahPatchContainer* patchContainer_;
     int idir_; // x = 0, y = 1, z = 2
     SCIRun::Vector shift_; // shift spacing by -dx/2 for staggered fields
     Coordinates(const int idir);
@@ -77,15 +78,9 @@ namespace Wasatch{
     };
     
     ~Coordinates();
-    
-    
-    /**
-     *  \brief Save pointer to the patch associated with this expression. This
-     *          is needed to set boundary conditions and extract other mesh info.
-     */
-    void set_patch( const Uintah::Patch* const patch );
-    
+        
     void advertise_dependents( Expr::ExprDeps& exprDeps );
+    void bind_operators( const SpatialOps::OperatorDatabase& opDB );
     void bind_fields( const Expr::FieldManagerList& fml );
     void evaluate();
     

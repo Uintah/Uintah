@@ -46,7 +46,9 @@ namespace Uintah {
   The boundary conditions may be applied to \b all materials.  In this case,
   we use the mat_id of -1.  Other materials are stored according to the mat_id
   specified such as 0, 1, 2, etc.  
-        
+  
+ The BCDataArray typically represents a domain's Face and stores the list of boundary conditions
+ applied on that face.
 
   \author John A. Schmidt \n
   Department of Mechanical Engineering \n

@@ -50,7 +50,7 @@ namespace Uintah {
   class Arenisca3 : public ConstitutiveModel {
     // Create datatype for storing model parameters
   public:
-#ifdef MH_VARIABILITY
+
     // For usage instructions, see the 'WeibullParser' function
     // header in Kayenta.cc
     struct WeibParameters {
@@ -61,7 +61,7 @@ namespace Uintah {
       double WeibRefVol;      // Reference Volume
       std::string WeibDist;   // String for Distribution
     };
-#endif
+
     struct CMData {
       double PEAKI1;
       double FSLOPE;
@@ -87,8 +87,8 @@ namespace Uintah {
       double fluid_pressure_initial;
       double T1_rate_dependence;
       double T2_rate_dependence;
-      double gruneisen_parameter;
       double subcycling_characteristic_number;
+      bool Use_Disaggregation_Algorithm;
     };
     const VarLabel* pLocalizedLabel;
     const VarLabel* pLocalizedLabel_preReloc;
@@ -108,30 +108,20 @@ namespace Uintah {
     const VarLabel* peveLabel_preReloc;
     const VarLabel* pCapXLabel;
     const VarLabel* pCapXLabel_preReloc;
-    const VarLabel* pCapXQSLabel;
-    const VarLabel* pCapXQSLabel_preReloc;
-    const VarLabel* pKappaLabel;
-    const VarLabel* pKappaLabel_preReloc;
     const VarLabel* pZetaLabel;
     const VarLabel* pZetaLabel_preReloc;
-    const VarLabel* pZetaQSLabel;
-    const VarLabel* pZetaQSLabel_preReloc;
-    const VarLabel* pIotaLabel;
-    const VarLabel* pIotaLabel_preReloc;
-    const VarLabel* pIotaQSLabel;
-    const VarLabel* pIotaQSLabel_preReloc;
+    const VarLabel* pP3Label;
+    const VarLabel* pP3Label_preReloc;
     const VarLabel* pStressQSLabel;
     const VarLabel* pStressQSLabel_preReloc;
     const VarLabel* pScratchMatrixLabel;
     const VarLabel* pScratchMatrixLabel_preReloc;
 
-#ifdef MH_VARIABILITY
     // weibull parameter set
     WeibParameters wdist;
-
     const VarLabel* peakI1IDistLabel;
     const VarLabel* peakI1IDistLabel_preReloc;
-#endif
+
   private:
     double one_third,
            two_third,
@@ -152,6 +142,8 @@ namespace Uintah {
            phi_i,
            ev0,
            C1;
+
+    Matrix3 Identity;
 
     CMData d_cm;
 
@@ -193,12 +185,12 @@ namespace Uintah {
                     const Matrix3& sigma_n,
                     const double & X_n,
                     const double & Zeta_n,
-                    const double & damage_n, // XXX
+                    const double & coher,
+                    const double & P3,
                     const Matrix3& ep_n,
                     Matrix3& sigma_p,
                     double & X_p,
                     double & Zeta_p,
-                    double & damage_p, // XXX
                     Matrix3& ep_p,
                     long64 ParticleID);
 
@@ -207,6 +199,7 @@ namespace Uintah {
 
     void computeElasticProperties(const Matrix3 stress,
                                   const Matrix3 ep,
+								  const double& P3,
                                   double & bulk,
                                   double & shear
                                  );
@@ -218,6 +211,7 @@ namespace Uintah {
 
     int computeStepDivisions(const double& X,
                              const double& Zeta,
+							 const double& P3,
                              const Matrix3& ep,
                              const Matrix3& sigma_n,
                              const Matrix3& sigma_trial);
@@ -228,28 +222,27 @@ namespace Uintah {
                            double& J2,
                            double& rJ2);
 
-    int computeSubstep(const Matrix3& D,         // Strain "rate"
-                       const double & dt,        // time substep (s)
+    int computeSubstep(const Matrix3& d_e,       // total strain increment for substep
                        const Matrix3& sigma_old, // stress at start of substep
                        const Matrix3& ep_old,    // plastic strain at start of substep
                        const double & X_old,     // hydrostatic comrpessive strength at start of substep
                        const double & Zeta_old,  // trace of isotropic backstress at start of substep
-                       const double & damage_old, // XXX
-                       Matrix3& sigma_new, // stress at end of substep
-                       Matrix3& ep_new,    // plastic strain at end of substep
-                       double & X_new,     // hydrostatic comrpessive strength at end of substep
-                       double & Zeta_new,   // trace of isotropic backstress at end of substep
-                       double & damage_new // XXX
+                       const double & coher,     // scalar valued coher
+                       const double & P3,      // initial disaggregation strain
+                       Matrix3& sigma_new,    // stress at end of substep
+                       Matrix3& ep_new,       // plastic strain at end of substep
+                       double & X_new,        // hydrostatic comrpessive strength at end of substep
+                       double & Zeta_new      // trace of isotropic backstress at end of substep
                       );
 
-    double computeX(double evp);
+    double computeX(const double& evp, const double& P3);
 
     double computedZetadevp(double Zeta,
                             double evp);
 
     double computePorePressure(const double ev);
 
-    int nonHardeningReturn(const double & I1_trial,
+    void nonHardeningReturn(const double & I1_trial,
                            const double & rJ2_trial,
                            const Matrix3& S_trial,
                            const double & I1_old,
@@ -258,7 +251,7 @@ namespace Uintah {
                            const Matrix3& d_e,
                            const double & X,
                            const double & Zeta,
-                           const double & damage, // XXX
+                           const double & coher, // XXX
                            const double & bulk,
                            const double & shear,
                                  double & I1_new,
@@ -272,25 +265,33 @@ namespace Uintah {
                               const double& r_trial,
                               const double& X,
                               const double& Zeta,
-                              const double& damage, // XXX
-                              const double& bulk,
-                              const double& shear
+							  const double& coher,
+                              const double limitParameters[4], // XXX
+                              const double& r_to_rJ2
                              );
 
     int transformedYieldFunction(const double& z,
                                  const double& r,
                                  const double& X,
                                  const double& Zeta,
-                                 const double& damage, // XXX
-                                 const double& bulk,
-                                 const double& shear
+								 const double& coher,
+                                 const double limitParameters[4], // XXX
+                                 const double& r_to_rJ2
                                 );
     int computeYieldFunction(const double& I1,
                              const double& rJ2,
                              const double& X,
                              const double& Zeta,
-                             const double& damage // XXX
+							 const double& coher,
+                             const double limitParameters[4] // XXX
                             );
+
+    void computeLimitParameters(double *limitParameters,
+                                const double& coher //XXX
+                               );
+    void checkInputParameters();
+
+
 
   public: //Uintah MPM constitutive model specific functions
     ////////////////////////////////////////////////////////////////////////
@@ -353,7 +354,6 @@ namespace Uintah {
 
     virtual double getCompressibility();
 
-#ifdef MH_VARIABILITY
     // Weibull input parser that accepts a structure of input
     // parameters defined as:
     //
@@ -364,7 +364,6 @@ namespace Uintah {
     // double WeibScale     Scale parameter
     // std::string WeibDist  String for Distribution
     virtual void WeibullParser(WeibParameters &iP);
-#endif
 
   };
 } // End namespace Uintah

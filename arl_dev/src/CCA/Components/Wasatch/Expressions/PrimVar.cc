@@ -42,7 +42,9 @@ PrimVar( const Expr::Tag& rhoPhiTag,
     rhophit_( rhoPhiTag ),
     rhot_   ( rhoTag    ),
     volfract_(volFracTag)
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 template< typename FieldT >
 PrimVar<FieldT,FieldT>::
@@ -101,8 +103,7 @@ bind_fields( const Expr::FieldManagerList& fml )
   rhophi_ = &phifm.field_ref( rhophit_ );
   rho_    = &denfm.field_ref( rhot_    );
   
-  if (volfract_ != Expr::Tag() )
-    volfrac_ = &phifm.field_ref( volfract_ );
+  if( volfract_ != Expr::Tag() ) volfrac_ = &phifm.field_ref( volfract_ );
 }
 
 template< typename FieldT >
@@ -137,7 +138,7 @@ evaluate()
 
   SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( phi );
   *tmp <<= 1.0; // we need to set this to 1.0 so that we don't get random values in out-of-domain faces
-  interpOp_->apply_to_field( *rho_, *tmp );
+  *tmp <<= (*interpOp_)( *rho_ );
   if( volfract_ != Expr::Tag() ) phi <<= *volfrac_ * *rhophi_ / *tmp;
   else                           phi <<= *rhophi_ / *tmp;
 }

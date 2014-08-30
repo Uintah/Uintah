@@ -46,10 +46,10 @@ using namespace Uintah;
 //  - copy On-the-Fly files directories
 //______________________________________________________________________
 //
-UdaReducer::UdaReducer(const ProcessorGroup* world, 
-                       string udaDir)
-  : UintahParallelComponent(world), d_udaDir(udaDir), d_dataArchive(0),
-    d_timeIndex(0)
+UdaReducer::UdaReducer( const ProcessorGroup * world, 
+                        const string         & udaDir ) :
+  UintahParallelComponent( world ), d_udaDir(udaDir), d_dataArchive(0),
+  d_timeIndex(0)
 {
 }
 
@@ -347,9 +347,10 @@ double UdaReducer::getInitialTime()
 //______________________________________________________________________
 //  If the number of materials on a level changes or if the grid
 //  has changed then call for a recompile
-bool UdaReducer::needRecompile(double time, 
-                               double dt,
-                               const GridP& grid)
+bool
+UdaReducer::needRecompile( const double   /* time */,
+                           const double   /* dt */,
+                           const GridP  & /* grid */ )
 {
   bool recompile = d_gridChanged;
   d_gridChanged = false;   // reset flag

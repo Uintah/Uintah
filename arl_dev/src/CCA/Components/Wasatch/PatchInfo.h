@@ -75,7 +75,7 @@ namespace Wasatch{
       UintahPatchContainer(const Uintah::Patch* const patch) :
       patch_(patch)
       {}
-    const Uintah::Patch* const get_uintah_patch()
+    const Uintah::Patch* get_uintah_patch()
     {
       return patch_;
     }

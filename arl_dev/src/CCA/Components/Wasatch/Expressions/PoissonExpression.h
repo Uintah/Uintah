@@ -169,21 +169,6 @@ namespace Wasatch{
                               const int RKStage );
     
     /**
-     *  \brief Save pointer to the patch associated with this expression. This
-     *         is needed to set boundary conditions and extract other mesh info.
-     */    
-    void set_patch( const Uintah::Patch* const patch ){ patch_ = const_cast<Uintah::Patch*> (patch); }
-    
-    /**
-     *  \brief set the RKStage for the current PoissonExpression evaluation. We need this to
-     *  reduce the number of PoissonExpression-solve iterations in the 2nd and 3rd
-     *  stages of the RK3SSP integrator. Since these subsequent RK stages
-     *  use the guess PoissonExpression from the newDW, then we should NOT initialize
-     *  the PoissonExpression in the new DW to zero for those stages.
-     */  
-    void set_RKStage( const int RKStage ){ rkStage_ = RKStage; }
-    
-    /**
      *  \brief allows Wasatch::TaskInterface to reach in and provide
      *         this expression with a way to retrieve Uintah-specific
      *         variables from the data warehouse.

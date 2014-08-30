@@ -4,6 +4,8 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <CCA/Components/Arches/Directives.h>
+#include <Core/Grid/BoundaryConditions/BCUtils.h>
+#include <Core/Exceptions/InvalidValue.h>
 
 //===========================================================================
 
@@ -55,11 +57,332 @@ public:
 
   /** @brief This method sets the boundary value of a scalar to 
              a value such that the interpolated value on the face results
-             in the actual boundary condition. */   
+             in the actual boundary condition. Note that the boundary condition 
+             from the input file can be overridden by the last two arguments. */   
   void setScalarValueBC(const ProcessorGroup*,
                         const Patch* patch,
                         CCVariable<double>& scalar, 
-                        std::string varname );
+                        const std::string varname, 
+                        bool  change_bc=false, 
+                        const std::string override_bc="NA")
+  {
+
+    using std::vector; 
+    using std::string; 
+
+    // This method sets the value of the scalar in the boundary cell
+    // so that the boundary condition set in the input file is satisfied. 
+    vector<Patch::FaceType>::const_iterator iter;
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
+    Vector Dx = patch->dCell(); 
+  
+    for (iter = bf.begin(); iter !=bf.end(); iter++){
+      Patch::FaceType face = *iter;
+  
+      //get the face direction
+      IntVector insideCellDir = patch->faceDirection(face);
+      //get the number of children
+      int numChildren = patch->getBCDataArray(face)->getNumberChildren(d_matl_id); //assumed one material
+  
+      for (int child = 0; child < numChildren; child++){
+  
+        double bc_value = -9; 
+        Vector bc_v_value(0,0,0); 
+        std::string bc_s_value = "NA";
+  
+        Iterator bound_ptr;
+        string bc_kind = "NotSet"; 
+        string face_name; 
+        getBCKind( patch, face, child, varname, d_matl_id, bc_kind, face_name ); 
+  
+        if ( change_bc == true ){ 
+          bc_kind = override_bc; 
+        }
+  
+        bool foundIterator = "false"; 
+        if ( bc_kind == "Tabulated" || bc_kind == "FromFile" ){ 
+          foundIterator = 
+            getIteratorBCValue<std::string>( patch, face, child, varname, d_matl_id, bc_s_value, bound_ptr ); 
+        } else {
+          foundIterator = 
+            getIteratorBCValue<double>( patch, face, child, varname, d_matl_id, bc_value, bound_ptr ); 
+        } 
+  
+        if (foundIterator) {
+          // --- notation --- 
+          // bp1: boundary cell + 1 or the interior cell one in from the boundary
+          if (bc_kind == "Dirichlet") {
+  
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              IntVector bp1(*bound_ptr - insideCellDir);
+              scalar[*bound_ptr] = 2.0*bc_value - scalar[bp1];
+            }
+  
+          } else if (bc_kind == "Neumann") {
+  
+            IntVector axes = patch->getFaceAxes(face);
+            int P_dir = axes[0];  // principal direction
+            double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
+            double dx = Dx[P_dir];
+            
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              IntVector bp1(*bound_ptr - insideCellDir); 
+              scalar[*bound_ptr] = scalar[bp1] + plus_minus_one * dx * bc_value;
+            }
+          } else if (bc_kind == "FromFile") { 
+  
+            ScalarToBCValueMap::iterator i_scalar_bc_storage = scalar_bc_from_file.find( face_name ); 
+  
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+  
+              IntVector rel_bc = *bound_ptr - i_scalar_bc_storage->second.relative_ijk; 
+              CellToValueMap::iterator iter = i_scalar_bc_storage->second.values.find( rel_bc ); //<----WARNING ... May be slow here
+              if ( iter != i_scalar_bc_storage->second.values.end() ){ 
+  
+                double file_bc_value = iter->second; 
+                IntVector bp1(*bound_ptr - insideCellDir);
+                scalar[*bound_ptr] = 2.0 * file_bc_value - scalar[bp1]; 
+  
+              } else if ( i_scalar_bc_storage->second.default_type == "Neumann" ){  
+          
+                IntVector axes = patch->getFaceAxes(face);
+                int P_dir = axes[0];  // principal direction
+                double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
+                double dx = Dx[P_dir];
+                IntVector bp1(*bound_ptr - insideCellDir); 
+                scalar[*bound_ptr] = scalar[bp1] + plus_minus_one * dx * i_scalar_bc_storage->second.default_value;
+  
+              } else if ( i_scalar_bc_storage->second.default_type == "Dirichlet" ){ 
+  
+                IntVector bp1(*bound_ptr - insideCellDir); 
+                scalar[*bound_ptr] = 2.0*i_scalar_bc_storage->second.default_value - scalar[bp1];
+  
+              } 
+            }
+          } else if ( bc_kind == "Tabulated") {
+  
+            MapDoubleMap::iterator i_face = _tabVarsMap.find( face_name );
+  
+            if ( i_face != _tabVarsMap.end() ){ 
+  
+              DoubleMap::iterator i_var = i_face->second.find( varname ); 
+              double tab_bc_value = i_var->second;
+  
+              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+                IntVector bp1(*bound_ptr - insideCellDir);
+                scalar[*bound_ptr] = 2.0 * tab_bc_value - scalar[bp1];
+              }
+  
+            }
+          } else if ( bc_kind == "ForcedDirichlet") {
+            /* A Dirichlet condition to fix the cell value rather than use interpolate
+            This is required to use for cqmom with velocities as internal coordiantes,
+            and may help with some radiation physics */
+            
+            //Here the extra cell should be set to the face value so that the cqmom inversion
+            //doesn't return junk, with upwinding of the abscissas this should return correct face value
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              scalar[*bound_ptr] = bc_value;
+            }
+          } else { 
+            throw InvalidValue( "Error: Cannot determine boundary condition type for variable: "+varname, __FILE__, __LINE__);
+          }
+        }
+      }
+    }
+  }
+  /** @brief This method sets the boundary value of a scalar to 
+             a value such that the interpolated value on the face results
+             in the actual boundary condition. Note that the boundary condition 
+             from the input file can be overridden by the last two arguments. */   
+  void setExtraCellScalarValueBC(const ProcessorGroup*,
+                                 const Patch* patch,
+                                 CCVariable<double>& scalar, 
+                                 const std::string varname, 
+                                 bool  change_bc=false, 
+                                 const std::string override_bc="NA")
+  {
+
+    using std::vector; 
+    using std::string; 
+
+    vector<Patch::FaceType>::const_iterator iter;
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
+    Vector Dx = patch->dCell(); 
+  
+    for (iter = bf.begin(); iter !=bf.end(); iter++){
+      Patch::FaceType face = *iter;
+  
+      //get the face direction
+      IntVector insideCellDir = patch->faceDirection(face);
+      //get the number of children
+      int numChildren = patch->getBCDataArray(face)->getNumberChildren(d_matl_id); //assumed one material
+  
+      for (int child = 0; child < numChildren; child++){
+  
+        double bc_value = -9; 
+        Vector bc_v_value(0,0,0); 
+        std::string bc_s_value = "NA";
+  
+        Iterator bound_ptr;
+        string bc_kind = "NotSet"; 
+        string face_name; 
+        getBCKind( patch, face, child, varname, d_matl_id, bc_kind, face_name ); 
+  
+        if ( change_bc == true ){ 
+          bc_kind = override_bc; 
+        }
+  
+        bool foundIterator = "false"; 
+        if ( bc_kind == "Tabulated" || bc_kind == "FromFile" ){ 
+          foundIterator = 
+            getIteratorBCValue<std::string>( patch, face, child, varname, d_matl_id, bc_s_value, bound_ptr ); 
+        } else {
+          foundIterator = 
+            getIteratorBCValue<double>( patch, face, child, varname, d_matl_id, bc_value, bound_ptr ); 
+        } 
+  
+        if (foundIterator) {
+          // --- notation --- 
+          // bp1: boundary cell + 1 or the interior cell one in from the boundary
+          if (bc_kind == "Dirichlet") {
+  
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              IntVector bp1(*bound_ptr - insideCellDir);
+              scalar[*bound_ptr] = bc_value;
+            }
+  
+          } else if (bc_kind == "Neumann") {
+  
+            IntVector axes = patch->getFaceAxes(face);
+            int P_dir = axes[0];  // principal direction
+            double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
+            double dx = Dx[P_dir];
+            
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              IntVector bp1(*bound_ptr - insideCellDir); 
+              scalar[*bound_ptr] = scalar[bp1] + plus_minus_one * dx * bc_value;
+            }
+          } else if (bc_kind == "FromFile") { 
+  
+            ScalarToBCValueMap::iterator i_scalar_bc_storage = scalar_bc_from_file.find( face_name ); 
+  
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+  
+              IntVector rel_bc = *bound_ptr - i_scalar_bc_storage->second.relative_ijk; 
+              CellToValueMap::iterator iter = i_scalar_bc_storage->second.values.find( rel_bc ); //<----WARNING ... May be slow here
+              if ( iter != i_scalar_bc_storage->second.values.end() ){ 
+  
+                double file_bc_value = iter->second; 
+                IntVector bp1(*bound_ptr - insideCellDir);
+                scalar[*bound_ptr] = file_bc_value; 
+  
+              } else if ( i_scalar_bc_storage->second.default_type == "Neumann" ){  
+          
+                IntVector axes = patch->getFaceAxes(face);
+                int P_dir = axes[0];  // principal direction
+                double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
+                double dx = Dx[P_dir];
+                IntVector bp1(*bound_ptr - insideCellDir); 
+                scalar[*bound_ptr] = i_scalar_bc_storage->second.default_value;
+  
+              } else if ( i_scalar_bc_storage->second.default_type == "Dirichlet" ){ 
+  
+                IntVector bp1(*bound_ptr - insideCellDir); 
+                scalar[*bound_ptr] = i_scalar_bc_storage->second.default_value;
+  
+              } 
+            }
+          } else if ( bc_kind == "Tabulated") {
+  
+            MapDoubleMap::iterator i_face = _tabVarsMap.find( face_name );
+  
+            if ( i_face != _tabVarsMap.end() ){ 
+  
+              DoubleMap::iterator i_var = i_face->second.find( varname ); 
+              double tab_bc_value = i_var->second;
+  
+              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+                IntVector bp1(*bound_ptr - insideCellDir);
+                scalar[*bound_ptr] = tab_bc_value;
+              }
+  
+            }
+          } else { 
+            throw InvalidValue( "Error: Cannot determine boundary condition type for variable: "+varname, __FILE__, __LINE__);
+          }
+        }
+      }
+    }
+  }
+
+  /** @brief Check to ensure that valid BCs are set for a specified variable. */   
+  void checkForBC( const ProcessorGroup*,
+                   const Patch* patch,
+                   const std::string varname )
+  {
+
+    using std::vector; 
+    using std::string; 
+
+    vector<Patch::FaceType>::const_iterator iter;
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
+    Vector Dx = patch->dCell(); 
+
+    for (iter = bf.begin(); iter !=bf.end(); iter++){
+      Patch::FaceType face = *iter;
+  
+      //get the face direction
+      IntVector insideCellDir = patch->faceDirection(face);
+      //get the number of children
+      int numChildren = patch->getBCDataArray(face)->getNumberChildren(d_matl_id); //assumed one material
+  
+      for (int child = 0; child < numChildren; child++){
+  
+        double bc_value = -9; 
+        Vector bc_v_value(0,0,0); 
+        std::string bc_s_value = "NA";
+  
+        Iterator bound_ptr;
+        string bc_kind = "NotSet"; 
+        string face_name; 
+        getBCKind( patch, face, child, varname, d_matl_id, bc_kind, face_name ); 
+  
+        bool foundIterator = "false"; 
+        if ( bc_kind == "Tabulated" || bc_kind == "FromFile" ){ 
+          foundIterator = 
+            getIteratorBCValue<std::string>( patch, face, child, varname, d_matl_id, bc_s_value, bound_ptr ); 
+        } else {
+          foundIterator = 
+            getIteratorBCValue<double>( patch, face, child, varname, d_matl_id, bc_value, bound_ptr ); 
+        } 
+  
+        if (foundIterator) {
+
+          if ( bc_kind != "Dirichlet" && bc_kind != "Neumann" && bc_kind != "Tabulated" 
+              && bc_kind != "FromFile" && bc_kind != "ForcedDirichlet" ){ 
+            throw InvalidValue( "Error: Cannot determine boundary condition type for variable: "+varname+ " with bc type: "+bc_kind, __FILE__, __LINE__);
+          }
+
+        } else { 
+
+          bool   foundIterator2 = false;  // if iterator is not found, ensure it isn't on any other patches before throwing an exception.
+          for (int child2 = 0; child2 < numChildren; child2++){
+            foundIterator2 =
+              ( getIteratorBCValue<double>( patch, face, child2, varname, d_matl_id, bc_value, bound_ptr ) || foundIterator2 );
+          }
+
+          if(!foundIterator2){
+            throw InvalidValue( "Error: Missing boundary condition for "+ varname, __FILE__, __LINE__);
+          }
+        }
+      }
+    }
+  }
+
   /** @brief This method set the boundary values of a vector to a 
    * value such that the interpolation or gradient computed between the 
    * interior cell and boundary cell match the boundary condition. */ 

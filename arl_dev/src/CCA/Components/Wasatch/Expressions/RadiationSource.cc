@@ -46,225 +46,231 @@
 #include <spatialops/OperatorDatabase.h>
 
 namespace Wasatch {
-
-//==================================================================
-
-Expr::Tag RadiationSource_tag()
-{
-  return Expr::Tag( "RadiationSource", Expr::STATE_NONE );
-}
-
-//==================================================================
-
-RadiationSource::RadiationSource( const std::string& radiationSourceName,
-                                  const Expr::Tag& temperatureTag,
-                                  const Expr::Tag& absorptionTag,
-                                  const Expr::Tag& celltypeTag,
-                                  const Uintah::ProblemSpecP& radiationSpec,
-                                  Uintah::SimulationStateP sharedState)
-  : Expr::Expression<SVolField>(),
-
-    temperatureTag_( temperatureTag ),
-    absorptionTag_( absorptionTag ),
-    celltypeTag_( celltypeTag),
-
-    // note that this does not provide any ghost entries in the matrix...
-    temperatureLabel_( Uintah::VarLabel::create( temperatureTag_.name(),
-                                                 Wasatch::get_uintah_field_type_descriptor<SVolField>() ) ),
-    absorptionLabel_ ( Uintah::VarLabel::create( absorptionTag_.name(),
-                                                 Wasatch::get_uintah_field_type_descriptor<SVolField>() ) ),
-    celltypeLabel_   ( Uintah::VarLabel::create( celltypeTag_.name(),
-                                                 Wasatch::get_uintah_field_type_descriptor<int>() ) ),
-    divqLabel_       ( Uintah::VarLabel::create( radiationSourceName,
-                                                 Wasatch::get_uintah_field_type_descriptor<SVolField>() ) )
-{
-  rmcrt_ = scinew Uintah::Ray();
   
-  rmcrt_->registerVarLabels( 0,
-                             absorptionLabel_,
-                             temperatureLabel_,
-                             celltypeLabel_,
-                             divqLabel_ );
+  //==================================================================
   
-  rmcrt_->problemSetup(radiationSpec, radiationSpec, sharedState);
-}
-//--------------------------------------------------------------------
-void
-RadiationSource::schedule_setup_bndflux( const Uintah::LevelP& level,
-                                         Uintah::SchedulerP sched,
-                                         const Uintah::MaterialSet* const materials )
-{
-  // hack in a task to apply boundary condition on the pressure after the pressure solve
-  Uintah::Task* task = scinew Uintah::Task( "RadiationSource: setup bndflux", this,
-                                            &RadiationSource::setup_bndflux );
-
-  task->computes(Uintah::VarLabel::find("boundFlux"));
-  sched->addTask(task, level->eachPatch(), materials);
-}
-
-void
-RadiationSource::setup_bndflux ( const Uintah::ProcessorGroup* const pg,
-                                 const Uintah::PatchSubset* const patches,
-                                 const Uintah::MaterialSubset* const materials,
-                                 Uintah::DataWarehouse* const oldDW,
-                                 Uintah::DataWarehouse* const newDW )
-{
-  for (int p=0; p < patches->size(); p++){
-    const Uintah::Patch* patch = patches->get(p);
-    Uintah::CCVariable<Uintah::Stencil7> boundFlux;
-    newDW->allocateAndPut( boundFlux, Uintah::VarLabel::find("boundFlux"), 0, patch );
-
-    for (Uintah::CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
-      Uintah::IntVector origin = *iter;
-      boundFlux[origin].initialize(0.0);
-    }
-
-  }
-}
-
-//--------------------------------------------------------------------
-
-RadiationSource::~RadiationSource()
-{
-  Uintah::VarLabel::destroy( temperatureLabel_ );
-  Uintah::VarLabel::destroy( absorptionLabel_  );
-  Uintah::VarLabel::destroy( celltypeLabel_    );
-  Uintah::VarLabel::destroy( divqLabel_        );
-}
-
-//--------------------------------------------------------------------
-
-void
-RadiationSource::schedule_ray_tracing( const Uintah::LevelP& level,
-                                       Uintah::SchedulerP sched,
-                                       const Uintah::MaterialSet* const materials,
-                                       const int RKStage )
-{
-  using namespace Uintah;
-  
-  GridP grid = level->getGrid();
-  const bool modifiesDivQ      = true;
-  const bool includeExtraCells = false;  // domain for sigmaT4 computation
-  const int radiationCalcFreq = 5;
-  // only sched on RK step 0 and on arches level
-  if ( RKStage > 1 ) {
-    return;
-  }
-  
-  schedule_setup_bndflux(level, sched, materials);
-  
-  int maxLevels = grid->numLevels();
+  Expr::Tag RadiationSource_tag()
   {
-    const LevelP& fineLevel = grid->getLevel(0);
-    Uintah::Task::WhichDW tempDW = Task::NewDW;
-
-    rmcrt_->sched_sigmaT4( fineLevel,  sched, tempDW, 1, includeExtraCells );
-    
-    for (int l = 0; l < maxLevels; l++) {
-      const LevelP& level = grid->getLevel(l);
-      const bool modifies_abskg   = false;
-      const bool modifies_sigmaT4 = false;
-      
-      rmcrt_->sched_CoarsenAll( level, sched, modifies_abskg, modifies_sigmaT4, radiationCalcFreq );
-      
-      if(level->hasFinerLevel() || maxLevels == 1){
-        const Task::WhichDW abskgDW    = Task::NewDW;
-        const Task::WhichDW sigmaT4DW  = Task::NewDW;
-        const Task::WhichDW celltypeDW = Task::NewDW;
-
-        rmcrt_->sched_setBoundaryConditions( level, sched, tempDW, radiationCalcFreq, false );
-        rmcrt_->sched_rayTrace( level, sched, abskgDW, sigmaT4DW, celltypeDW, modifiesDivQ, radiationCalcFreq );
-      }
-    }
-    
-    // push divQ  to the coarser levels
-    for (int l = 0; l < maxLevels; l++) {
-      const LevelP& level = grid->getLevel(l);
-      const PatchSet* patches = level->eachPatch();
-      rmcrt_->sched_Refine_Q( sched,  patches, materials, radiationCalcFreq );
-    }
+    return Expr::Tag( "RadiationSource", Expr::STATE_NONE );
   }
-
-}
-
-
-//--------------------------------------------------------------------
-
-void
-RadiationSource::declare_uintah_vars( Uintah::Task& task,
-                                      const Uintah::PatchSubset* const patches,
-                                      const Uintah::MaterialSubset* const materials,
-                                      const int RKStage )
-{}
-
-//--------------------------------------------------------------------
-
-void
-RadiationSource::bind_uintah_vars( Uintah::DataWarehouse* const dw,
-                                   const Uintah::Patch* const patch,
-                                   const int material,
-                                   const int RKStage )
-{}
-
-//--------------------------------------------------------------------
-
-void
-RadiationSource::advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( temperatureTag_ );
-  exprDeps.requires_expression( absorptionTag_ );
-}
-
-//--------------------------------------------------------------------
-
-void
-RadiationSource::bind_fields( const Expr::FieldManagerList& fml )
-{}
-
-//--------------------------------------------------------------------
-
-void
-RadiationSource::bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
-
-//--------------------------------------------------------------------
-
-void
-RadiationSource::evaluate()
-{
-  using namespace SpatialOps;
   
-  typedef std::vector<SVolField*> SVolFieldVec;
-  SVolFieldVec& results = this->get_value_vec();
-  SVolField& radvolq = *results[1];
-  radvolq <<= 0.0;
-  SVolField& radvrflux = *results[2];
-  radvrflux <<= 0.0;
-}
-
-//--------------------------------------------------------------------
-
-RadiationSource::Builder::Builder( const Expr::TagList& results,
+  //==================================================================
+  
+  RadiationSource::RadiationSource( const std::string& radiationSourceName,
                                    const Expr::Tag& temperatureTag,
                                    const Expr::Tag& absorptionTag,
                                    const Expr::Tag& celltypeTag,
-                                   Uintah::ProblemSpecP& radiationSpec,
-                                   Uintah::SimulationStateP& sharedState )
-: ExpressionBuilder  ( results        ),
+                                   const Uintah::ProblemSpecP& radiationSpec,
+                                   Uintah::SimulationStateP sharedState)
+  : Expr::Expression<SVolField>(),
+  
+  temperatureTag_( temperatureTag ),
+  absorptionTag_( absorptionTag ),
+  celltypeTag_( celltypeTag),
+  
+  // note that this does not provide any ghost entries in the matrix...
+  temperatureLabel_( Uintah::VarLabel::create( temperatureTag_.name(),
+                                              Wasatch::get_uintah_field_type_descriptor<SVolField>() ) ),
+  absorptionLabel_ ( Uintah::VarLabel::create( absorptionTag_.name(),
+                                              Wasatch::get_uintah_field_type_descriptor<SVolField>() ) ),
+  celltypeLabel_   ( Uintah::VarLabel::create( celltypeTag_.name(),
+                                              Wasatch::get_uintah_field_type_descriptor<int>() ) ),
+  divqLabel_       ( Uintah::VarLabel::create( radiationSourceName,
+                                              Wasatch::get_uintah_field_type_descriptor<SVolField>() ) )
+  {
+    rmcrt_ = scinew Uintah::Ray();
+    
+    rmcrt_->registerVarLabels( 0,
+                              absorptionLabel_,
+                              temperatureLabel_,
+                              celltypeLabel_,
+                              divqLabel_ );
+    
+    rmcrt_->problemSetup(radiationSpec, radiationSpec, sharedState);
+    
+    rmcrt_->BC_bulletproofing( radiationSpec );
+  }
+  
+  //--------------------------------------------------------------------
+  
+  void
+  RadiationSource::schedule_setup_bndflux( const Uintah::LevelP& level,
+                                          Uintah::SchedulerP sched,
+                                          const Uintah::MaterialSet* const materials )
+  {
+    // hack in a task to apply boundary condition on the pressure after the pressure solve
+    Uintah::Task* task = scinew Uintah::Task( "RadiationSource: setup bndflux", this,
+                                             &RadiationSource::setup_bndflux );
+    
+    task->computes(Uintah::VarLabel::find("boundFlux"));
+    sched->addTask(task, level->eachPatch(), materials);
+  }
+
+  //--------------------------------------------------------------------
+  
+  void
+  RadiationSource::setup_bndflux ( const Uintah::ProcessorGroup* const pg,
+                                  const Uintah::PatchSubset* const patches,
+                                  const Uintah::MaterialSubset* const materials,
+                                  Uintah::DataWarehouse* const oldDW,
+                                  Uintah::DataWarehouse* const newDW )
+  {
+    for (int p=0; p < patches->size(); p++){
+      const Uintah::Patch* patch = patches->get(p);
+      Uintah::CCVariable<Uintah::Stencil7> boundFlux;
+      newDW->allocateAndPut( boundFlux, Uintah::VarLabel::find("boundFlux"), 0, patch );
+      
+      for (Uintah::CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+        Uintah::IntVector origin = *iter;
+        boundFlux[origin].initialize(0.0);
+      }
+      
+    }
+  }
+  
+  //--------------------------------------------------------------------
+  
+  RadiationSource::~RadiationSource()
+  {
+    Uintah::VarLabel::destroy( temperatureLabel_ );
+    Uintah::VarLabel::destroy( absorptionLabel_  );
+    Uintah::VarLabel::destroy( celltypeLabel_    );
+    Uintah::VarLabel::destroy( divqLabel_        );
+  }
+  
+  //--------------------------------------------------------------------
+  
+  void
+  RadiationSource::schedule_ray_tracing( const Uintah::LevelP& level,
+                                        Uintah::SchedulerP sched,
+                                        const Uintah::MaterialSet* const materials,
+                                        const int RKStage )
+  {
+    using namespace Uintah;
+    
+    GridP grid = level->getGrid();
+    const bool modifiesDivQ      = true;
+    const bool includeExtraCells = false;  // domain for sigmaT4 computation
+    const int radiationCalcFreq = 5;
+    // only sched on RK step 0 and on arches level
+    if ( RKStage > 1 ) {
+      return;
+    }
+    
+    schedule_setup_bndflux(level, sched, materials);
+    
+    int maxLevels = grid->numLevels();
+    {
+      const LevelP& fineLevel = grid->getLevel(0);
+      Uintah::Task::WhichDW tempDW = Task::NewDW;
+      
+      rmcrt_->sched_sigmaT4( fineLevel,  sched, tempDW, 1, includeExtraCells );
+      
+      for (int l = 0; l < maxLevels; l++) {
+        const LevelP& level = grid->getLevel(l);
+        const bool modifies_abskg   = false;
+        const bool modifies_sigmaT4 = false;
+        
+        rmcrt_->sched_CoarsenAll( level, sched, modifies_abskg, modifies_sigmaT4, radiationCalcFreq );
+        
+        if(level->hasFinerLevel() || maxLevels == 1){
+          const Task::WhichDW abskgDW    = Task::NewDW;
+          const Task::WhichDW sigmaT4DW  = Task::NewDW;
+          const Task::WhichDW celltypeDW = Task::NewDW;
+          
+          rmcrt_->sched_setBoundaryConditions( level, sched, tempDW, radiationCalcFreq, false );
+          rmcrt_->sched_rayTrace( level, sched, abskgDW, sigmaT4DW, celltypeDW, modifiesDivQ, radiationCalcFreq );
+        }
+      }
+      
+      // push divQ  to the coarser levels
+      for (int l = 0; l < maxLevels; l++) {
+        const LevelP& level = grid->getLevel(l);
+        const PatchSet* patches = level->eachPatch();
+        rmcrt_->sched_Refine_Q( sched,  patches, materials, radiationCalcFreq );
+      }
+    }
+    
+  }
+  
+  
+  //--------------------------------------------------------------------
+  
+  void
+  RadiationSource::declare_uintah_vars( Uintah::Task& task,
+                                       const Uintah::PatchSubset* const patches,
+                                       const Uintah::MaterialSubset* const materials,
+                                       const int RKStage )
+  {}
+  
+  //--------------------------------------------------------------------
+  
+  void
+  RadiationSource::bind_uintah_vars( Uintah::DataWarehouse* const dw,
+                                    const Uintah::Patch* const patch,
+                                    const int material,
+                                    const int RKStage )
+  {}
+  
+  //--------------------------------------------------------------------
+  
+  void
+  RadiationSource::advertise_dependents( Expr::ExprDeps& exprDeps )
+  {
+    exprDeps.requires_expression( temperatureTag_ );
+    exprDeps.requires_expression( absorptionTag_ );
+  }
+  
+  //--------------------------------------------------------------------
+  
+  void
+  RadiationSource::bind_fields( const Expr::FieldManagerList& fml )
+  {}
+  
+  //--------------------------------------------------------------------
+  
+  void
+  RadiationSource::bind_operators( const SpatialOps::OperatorDatabase& opDB )
+  {}
+  
+  //--------------------------------------------------------------------
+  
+  void
+  RadiationSource::evaluate()
+  {
+    using namespace SpatialOps;
+    
+    typedef std::vector<SVolField*> SVolFieldVec;
+    SVolFieldVec& results = this->get_value_vec();
+    SVolField& radvolq = *results[1];
+    radvolq <<= 0.0;
+    SVolField& radvrflux = *results[2];
+    radvrflux <<= 0.0;
+  }
+  
+  //--------------------------------------------------------------------
+  
+  RadiationSource::Builder::Builder( const Expr::TagList& results,
+                                    const Expr::Tag& temperatureTag,
+                                    const Expr::Tag& absorptionTag,
+                                    const Expr::Tag& celltypeTag,
+                                    Uintah::ProblemSpecP& radiationSpec,
+                                    Uintah::SimulationStateP& sharedState )
+  : ExpressionBuilder  ( results        ),
   temperatureTag_    ( temperatureTag ),
   absorptionTag_     ( absorptionTag  ),
   celltypeTag_       ( celltypeTag    ),
   radiationSpec_     ( radiationSpec  ),
   sharedState_       ( sharedState    )
-{}
-
-//--------------------------------------------------------------------
-
-Expr::ExpressionBase*
-RadiationSource::Builder::build() const
-{
-  const Expr::TagList radTags = get_tags();
-  return new RadiationSource( radTags[0].name(), temperatureTag_, absorptionTag_, celltypeTag_, radiationSpec_, sharedState_ );
-}
-
+  {}
+  
+  //--------------------------------------------------------------------
+  
+  Expr::ExpressionBase*
+  RadiationSource::Builder::build() const
+  {
+    const Expr::TagList radTags = get_tags();
+    return new RadiationSource( radTags[0].name(), temperatureTag_, absorptionTag_, celltypeTag_, radiationSpec_, sharedState_ );
+  }
+  
 } // namespace Wasatch

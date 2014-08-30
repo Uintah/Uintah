@@ -167,6 +167,10 @@ TaskInterface::register_variable_work( std::string name,
         info.label = VarLabel::create( name, min_vartype::getTypeDescription() );
         info.local = true; 
         _local_labels.push_back(info.label); 
+      } else if ( type == PARTICLE ){ 
+        info.label = VarLabel::create( name, ParticleVariable<double>::getTypeDescription() ); 
+        info.local = true; 
+        _local_labels.push_back(info.label); 
       }
 
       info.depend = COMPUTES; 
@@ -278,7 +282,6 @@ void TaskInterface::resolve_field_requires( DataWarehouse* old_dw,
     }
   }
 
-
 }
 
 //====================================================================================
@@ -304,6 +307,7 @@ void TaskInterface::resolve_field_modifycompute( DataWarehouse* old_dw, DataWare
       throw InvalidValue("Arches Task Error: Cannot resolve DW dependency for variable: "+info.name, __FILE__, __LINE__); 
 
   }
+
 }
 
 //====================================================================================
@@ -313,7 +317,8 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
                                     DataWarehouse* new_dw, 
                                     const Patch* patch, 
                                     ArchesFieldContainer* field_container, 
-                                    ArchesTaskInfoManager* f_collector ){ 
+                                    ArchesTaskInfoManager* f_collector, 
+                                    const bool doing_init ){ 
 
 
   std::vector<VariableInformation>& variable_registry = f_collector->get_variable_reg(); 
@@ -524,6 +529,70 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
         }
         break; 
 
+      case PARTICLE: 
+
+        if ( ivar.depend == REQUIRES ){ 
+
+          constParticleVariable<double>* var = scinew constParticleVariable<double>; 
+
+          if ( ivar.dw_inquire ){ 
+            if ( time_substep > 0 ){ 
+              ParticleSubset* subset = new_dw->getParticleSubset( _matl_index, patch ); 
+              new_dw->get( *var, ivar.label, subset ); 
+            } else { 
+              ParticleSubset* subset = old_dw->getParticleSubset( _matl_index, patch ); 
+              old_dw->get( *var, ivar.label, subset ); 
+            }
+          } else { 
+            if ( ivar.dw == OLDDW ){ 
+              ParticleSubset* subset = old_dw->getParticleSubset( _matl_index, patch ); 
+              old_dw->get( *var, ivar.label, subset ); 
+            } else { 
+              ParticleSubset* subset = new_dw->getParticleSubset( _matl_index, patch ); 
+              new_dw->get( *var, ivar.label, subset ); 
+            }
+          }
+
+          ArchesFieldContainer::ConstParticleFieldContainer icontain; 
+          icontain.set_field(var); 
+          icontain.set_field_type(ArchesFieldContainer::PARTICLE); 
+          icontain.set_ghosts(ivar.nGhost);
+          field_container->add_const_particle_variable(ivar.name, icontain); 
+
+        } else if ( ivar.depend == MODIFIES ){ 
+
+          //not sure what to do here about the particleSubset...
+          //for now grabbing only from old: 
+          ParticleSubset* subset = old_dw->getParticleSubset( _matl_index, patch ); 
+          ParticleVariable<double>* var = scinew ParticleVariable<double>; 
+          new_dw->getModifiable( *var, ivar.label, subset ); 
+          ArchesFieldContainer::ParticleFieldContainer icontain; 
+          icontain.set_field(var); 
+          icontain.set_field_type(ArchesFieldContainer::PARTICLE); 
+          icontain.set_ghosts(0);
+          field_container->add_particle_variable(ivar.name, icontain); 
+
+        } else { 
+
+          //not sure what to do here about the particleSubset...
+          //for now grabbing only from old except for the case of initialization: 
+          ParticleSubset* subset; 
+          if ( doing_init ){ 
+            subset = new_dw->getParticleSubset( _matl_index, patch ); 
+          } else { 
+            subset = old_dw->getParticleSubset( _matl_index, patch ); 
+          }
+          ParticleVariable<double>* var = scinew ParticleVariable<double>; 
+          new_dw->allocateAndPut( *var, ivar.label, subset ); 
+          ArchesFieldContainer::ParticleFieldContainer icontain; 
+          icontain.set_field(var); 
+          icontain.set_field_type(ArchesFieldContainer::PARTICLE); 
+          icontain.set_ghosts(0);
+          field_container->add_particle_variable(ivar.name, icontain); 
+
+        }
+        break;
+
       default: 
         throw InvalidValue("Arches Task Error: Cannot resolve DW dependency for variable: "+ivar.name, __FILE__, __LINE__); 
         break; 
@@ -703,9 +772,6 @@ void TaskInterface::do_task( const ProcessorGroup* pc,
     
     const Patch* patch = patches->get(p);
 
-    UintahVarMap variable_map;
-    ConstUintahVarMap const_variable_map; 
-
     const Wasatch::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
 
     ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch); 
@@ -721,7 +787,7 @@ void TaskInterface::do_task( const ProcessorGroup* pc,
     ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info); 
 
     //doing DW gets...
-    resolve_fields( old_dw, new_dw, patch, field_container, tsk_info_mngr ); 
+    resolve_fields( old_dw, new_dw, patch, field_container, tsk_info_mngr, false ); 
 
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
     tsk_info_mngr->set_field_container( field_container ); 
@@ -735,13 +801,6 @@ void TaskInterface::do_task( const ProcessorGroup* pc,
     //clean up 
     delete tsk_info_mngr; 
     delete field_container; 
-    
-    for ( UintahVarMap::iterator i = variable_map.begin(); i != variable_map.end(); i++ ){
-      delete i->second; 
-    }
-    for ( ConstUintahVarMap::iterator i = const_variable_map.begin(); i != const_variable_map.end(); i++ ){
-      delete i->second; 
-    }
   }
 }
 
@@ -756,9 +815,6 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
     
     const Patch* patch = patches->get(p);
 
-    UintahVarMap variable_map;
-    ConstUintahVarMap const_variable_map; 
-
     const Wasatch::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
 
     ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch); 
@@ -772,7 +828,7 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
     ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info); 
 
     //doing DW gets...
-    resolve_fields( old_dw, new_dw, patch, field_container, tsk_info_mngr ); 
+    resolve_fields( old_dw, new_dw, patch, field_container, tsk_info_mngr, true ); 
 
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
     tsk_info_mngr->set_field_container( field_container ); 
@@ -786,13 +842,6 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
     //clean up 
     delete tsk_info_mngr; 
     delete field_container; 
-
-    for ( UintahVarMap::iterator i = variable_map.begin(); i != variable_map.end(); i++ ){
-      delete i->second; 
-    }
-    for ( ConstUintahVarMap::iterator i = const_variable_map.begin(); i != const_variable_map.end(); i++ ){
-      delete i->second; 
-    }
   }
 }
 
@@ -809,9 +858,6 @@ void TaskInterface::do_timestep_init( const ProcessorGroup* pc,
 
     const Wasatch::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
 
-    UintahVarMap variable_map;
-    ConstUintahVarMap const_variable_map; 
-
     ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch); 
 
     SchedToTaskInfo info; 
@@ -823,7 +869,7 @@ void TaskInterface::do_timestep_init( const ProcessorGroup* pc,
     ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info); 
 
     //doing DW gets...
-    resolve_fields( old_dw, new_dw, patch, field_container, tsk_info_mngr ); 
+    resolve_fields( old_dw, new_dw, patch, field_container, tsk_info_mngr, false ); 
 
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
     tsk_info_mngr->set_field_container( field_container ); 
@@ -837,13 +883,6 @@ void TaskInterface::do_timestep_init( const ProcessorGroup* pc,
     //clean up 
     delete tsk_info_mngr; 
     delete field_container; 
-
-    for ( UintahVarMap::iterator i = variable_map.begin(); i != variable_map.end(); i++ ){
-      delete i->second; 
-    }
-    for ( ConstUintahVarMap::iterator i = const_variable_map.begin(); i != const_variable_map.end(); i++ ){
-      delete i->second; 
-    }
 
   }
 }

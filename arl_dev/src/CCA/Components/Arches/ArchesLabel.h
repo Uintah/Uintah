@@ -189,6 +189,9 @@ namespace Uintah {
 
       // For storing the interpolated CC Velocity Variables
       const VarLabel* d_CCVelocityLabel;
+      const VarLabel* d_CCUVelocityLabel;
+      const VarLabel* d_CCVVelocityLabel;
+      const VarLabel* d_CCWVelocityLabel;
 
       // for multimaterial
       const VarLabel* d_mmcellTypeLabel;

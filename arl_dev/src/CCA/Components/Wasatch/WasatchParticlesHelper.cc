@@ -75,7 +75,7 @@ namespace Wasatch {
                                    Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw)
   {
     using namespace Uintah;
-
+    initialize_internal(matls->size());
     //____________________________________________
     /* In certain cases of particle initialization, a patch will NOT have any particles in it. For example,
      given a domain where x[0, 1] with patch0 [0,0.5] and patch1[0.5,1], assume one wants to initialize
@@ -125,7 +125,7 @@ namespace Wasatch {
           if (coord == "Z") {zmin = lo; zmax = hi;}
         }
         
-        if ( pICSpec->findBlock("Geometry") ) {
+        if ( pICSpec->findBlock("Geometry") && geomObjects.size() == 0 ) { // only allow one vector of geom objects to be created. this is because all particle initialization with geometry shapes must have the same geometry
           hasGeom = true;
           ProblemSpecP geomBasedSpec = pICSpec->findBlock("Geometry");
           double seed = 0.0;
@@ -140,15 +140,20 @@ namespace Wasatch {
         }
       }
     }
-
+  
     
-    for(int p=0;p<patches->size();p++){
-      const Patch* patch = patches->get(p);
-      for(int m = 0;m<matls->size();m++){
-        const int matl = matls->get(m);
-        
+    for(int m = 0;m<matls->size();m++){
+      const int matl = matls->get(m);
+      std::map<int,long64>& lastPIDPerPatch = lastPIDPerMaterialPerPatch_[m];
+      std::map<int,ParticleSubset*>& thisMatDelSet = deleteSets_[m];
+      for(int p=0;p<patches->size();p++){
+        const Patch* patch = patches->get(p);
+        const int patchID = patch->getID();
+    
+        // create lastPIDPerPatch_ map
+        lastPIDPerPatch.insert( std::pair<int, long64>(patchID, 0 ) );
         // create an empty delete set
-        deleteSet_.insert( std::pair<int, ParticleSubset*>(patch->getID(), scinew ParticleSubset(0,matl,patch)));
+        thisMatDelSet.insert( std::pair<int, ParticleSubset*>(patch->getID(), scinew ParticleSubset(0,matl,patch)));
         
         // If the particle position initialization is bounded, make sure that the bounds are within
         // this patch. If the bounds are NOT, then set the number of particles on this patch to 0.
@@ -177,16 +182,18 @@ namespace Wasatch {
           nCells = patch->getNumCells();
         }
         
+        int nPatchCells = 0;
         if (hasGeom) {
           std::vector<GeometryPieceP>::iterator geomIter;
           // get the total cells inside the geometries
           nCells = 0;
           bool isInside;
           for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
+            nPatchCells++;
             IntVector iCell = *iter;
             // loop over all geometry objects
             geomIter = geomObjects.begin();
-            Point p = patch->getCellPosition(iCell);
+            SCIRun::Point p = patch->getCellPosition(iCell);
             while (geomIter != geomObjects.end()) {
               isInside = (*geomIter)->inside(p);
               if (isInside)
@@ -213,6 +220,7 @@ namespace Wasatch {
         for (int i=0; i < nParticles; i++) {
           pid[i] = i + patch->getID() * nParticles;
         }
+        lastPIDPerPatch[patchID] = nParticles > 0 ? pid[nParticles-1] : 0;
       }
     }
   }
@@ -225,35 +233,6 @@ namespace Wasatch {
     wasatch_ = wasatch;
     wasatchSync_ = true;
   }
-    
-  //  //--------------------------------------------------------------------
-  //
-  //  void WasatchParticlesHelper::schedule_add_particles( const Uintah::LevelP& level,
-  //                                                Uintah::SchedulerP& sched )
-  //  {
-  //    // this task will allocate a particle subset and create particle positions
-  //    Uintah::Task* task = scinew Uintah::Task( "add particles",
-  //                                              this, &WasatchParticlesHelper::add_particles );
-  //    sched->addTask(task, level->eachPatch(), wasatch_->get_wasatch_materials());
-  //  }
-  //
-  //  //--------------------------------------------------------------------
-  //  void WasatchParticlesHelper::add_particles( const Uintah::ProcessorGroup*,
-  //                                       const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
-  //                                       Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw )
-  //  {
-  //    using namespace Uintah;
-  //    for(int p=0; p<patches->size(); p++)
-  //    {
-  //      const Patch* patch = patches->get(p);
-  //      for(int m = 0;m<matls->size();m++)
-  //      {
-  //        int matl = matls->get(m);
-  //        ParticleSubset* pset = new_dw->haveParticleSubset(matl,patch) ? new_dw->getParticleSubset(matl, patch) : old_dw->getParticleSubset(matl, patch);
-  //        pset->addParticles(20);
-  //      }
-  //    }
-  //  }
   
   //--------------------------------------------------------------------
   

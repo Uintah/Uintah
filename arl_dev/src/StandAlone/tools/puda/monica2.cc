@@ -80,7 +80,7 @@ Uintah::monica2( DataArchive * da, CommandLineFlags & clf )
       for(Level::const_patchIterator iter = level->patchesBegin();
           iter != level->patchesEnd(); iter++){
         const Patch* patch = *iter;
-        int matl = clf.matl_jim;
+        int matl = clf.matl;
         //____________________________________________
         //   C E L L C E N T E R E D   V A R I A B L E
         CCVariable<Vector> value_velocity;

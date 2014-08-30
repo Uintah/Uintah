@@ -107,7 +107,7 @@ namespace Wasatch{
      *   in the momentum transport equation.
      */
     virtual void setup_boundary_conditions( BCHelper& bcHelper,
-                                             GraphCategories& graphCat) = 0;
+                                            GraphCategories& graphCat) = 0;
     
     /**
      *  \brief Set up the boundary condition on initial conditions evaluators for this
@@ -118,7 +118,7 @@ namespace Wasatch{
      *  via the <code>Expression::process_after_evaluate</code> method.
      */
     virtual void apply_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                                   BCHelper& bcHelper ) = 0;
+                                                    BCHelper& bcHelper ) = 0;
 
     /**
      *  \brief Set up the boundary condition evaluators for this
@@ -157,13 +157,13 @@ namespace Wasatch{
     std::string dir_name() const;
 
   protected:
-    const Direction direction_;             ///< staggered direction for this equation
+    const Direction direction_;      ///< staggered direction for this equation
     Uintah::ProblemSpecP params_;
     GraphCategories& gc_;
-    const std::string  solnVarName_;      ///< Name of the solution variable for this EquationBase.
-    const Expr::Tag solnVarTag_;          ///< Tag for the solution variable (at STATE_N)
-    const Expr::Tag rhsTag_;              ///< Tag for the rhs
-    Expr::ExpressionID rhsExprID_;  ///< The label for the rhs expression for this EquationBase.
+    const std::string  solnVarName_; ///< Name of the solution variable for this EquationBase.
+    const Expr::Tag solnVarTag_;     ///< Tag for the solution variable (at STATE_N)
+    const Expr::Tag rhsTag_;         ///< Tag for the rhs
+    Expr::ExpressionID rhsExprID_;   ///< The label for the rhs expression for this EquationBase.
   };
 
 } // namespace Wasatch

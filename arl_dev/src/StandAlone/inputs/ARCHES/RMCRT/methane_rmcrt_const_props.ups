@@ -65,10 +65,10 @@
         <BCType id="0" var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="temperature"> 
+        <BCType id="0" var="Neumann" label="SolidWallTemperature"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="abskg"> 
+        <BCType id="0" var="ForcedDirichlet" label="abskg"> 
           <value>1.0</value>
         </BCType>
       </Face>
@@ -88,10 +88,10 @@
         <BCType id="0" var="Tabulated" label="enthalpy"> 
           <value>adiabaticenthalpy</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="temperature"> 
+        <BCType id="0" var="Neumann" label="SolidWallTemperature"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="abskg"> 
+        <BCType id="0" var="ForcedDirichlet" label="abskg"> 
           <value>1.0</value>
         </BCType>
       </Face> 
@@ -111,10 +111,10 @@
         <BCType id="0" var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="temperature"> 
+        <BCType id="0" var="Neumann" label="SolidWallTemperature"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="abskg"> 
+        <BCType id="0" var="ForcedDirichlet" label="abskg"> 
           <value>1.0</value>
         </BCType>
       </Face>
@@ -134,10 +134,10 @@
         <BCType id="0" var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="temperature"> 
+        <BCType id="0" var="Neumann" label="SolidWallTemperature"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="abskg"> 
+        <BCType id="0" var="ForcedDirichlet" label="abskg"> 
           <value>1.0</value>
         </BCType>
       </Face>
@@ -157,10 +157,10 @@
         <BCType id="0" var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="temperature"> 
+        <BCType id="0" var="Neumann" label="SolidWallTemperature"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="abskg"> 
+        <BCType id="0" var="ForcedDirichlet" label="abskg"> 
           <value>1.0</value>
         </BCType>
       </Face>
@@ -180,10 +180,10 @@
         <BCType id="0" var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="temperature"> 
+        <BCType id="0" var="Neumann" label="SolidWallTemperature"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="abskg"> 
+        <BCType id="0" var="ForcedDirichlet" label="abskg"> 
           <value>1.0</value>
         </BCType>
       </Face>
@@ -203,10 +203,10 @@
         <BCType id="0" var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="temperature"> 
+        <BCType id="0" var="Neumann" label="SolidWallTemperature"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="abskg"> 
+        <BCType id="0" var="ForcedDirichlet" label="abskg"> 
           <value>1.0</value>
         </BCType>
       </Face>

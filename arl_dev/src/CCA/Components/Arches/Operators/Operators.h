@@ -3,6 +3,8 @@
 
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/stencil/StencilBuilder.h>
+#include <Core/Grid/Task.h>
+#include <CCA/Ports/Scheduler.h>
 
 namespace Uintah { 
 
@@ -22,14 +24,25 @@ namespace Uintah {
 
     PatchInfoMap patch_info_map; 
 
+    void sched_create_patch_operators( const LevelP& level, SchedulerP& sched,
+                                       const MaterialSet* matls ); 
+
   private: 
 
     Operators(); 
 
     ~Operators(); 
 
+    void create_patch_operators( const ProcessorGroup* pg,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* matls,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw);
+
 
   };
+
+
 }
 
 #endif

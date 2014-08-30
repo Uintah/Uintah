@@ -89,10 +89,8 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
 
   db->getWithDefault( "calc_frequency",   _radiation_calc_freq, 3 ); 
   db->getWithDefault( "calc_on_all_RKsteps", _all_rk, false ); 
-  _T_label_name = "temperature"; 
-  if ( db->findBlock("temperature")){ 
-    db->findBlock("temperature")->getAttribute("label",_T_label_name); 
-  } 
+  _T_label_name = "radiation_temperature"; 
+
   if ( db->findBlock("abskg")){ 
     db->findBlock("abskg")->getAttribute("label", _abskg_label_name); 
   } else { 
@@ -120,7 +118,7 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
   _T_label = VarLabel::find(_T_label_name); 
   if ( _T_label == 0){
-    throw InvalidValue("Error: For DO Radiation source term -- Could not find the temperature label.", __FILE__, __LINE__);
+    throw InvalidValue("Error: For DO Radiation source term -- Could not find the radiation temperature label.", __FILE__, __LINE__);
   }
   _abskg_label = VarLabel::find(_abskg_label_name); 
   if ( _abskg_label == 0){
@@ -137,7 +135,7 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   if (timeSubStep == 0) { 
 
     tsk->computes(_src_label);
-    tsk->requires( Task::OldDW, _T_label, gac, 1 ); 
+    tsk->requires( Task::NewDW, _T_label, gac, 1 ); 
     tsk->requires( Task::OldDW, _abskg_label, gn, 0 ); 
 
     for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
@@ -213,7 +211,7 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 
     if ( timeSubStep == 0 ) { 
 
-      old_dw->get( const_radiation_vars.temperature, _T_label, matlIndex , patch , gac , 1 );
+      new_dw->get( const_radiation_vars.temperature, _T_label, matlIndex , patch , gac , 1 );
 
       new_dw->allocateAndPut( radiation_vars.qfluxe , _radiationFluxELabel                , matlIndex , patch );
       new_dw->allocateAndPut( radiation_vars.qfluxw , _radiationFluxWLabel                , matlIndex , patch );
@@ -263,8 +261,6 @@ DORadiation::computeSource( const ProcessorGroup* pc,
     if ( do_radiation ){ 
 
       if ( timeSubStep == 0 ) {
-
-        _DO_model->boundarycondition( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars ); 
 
         //Note: The final divQ is initialized (to zero) and set after the solve in the intensity solve itself.
         _DO_model->intensitysolve( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars, divQ, BoundaryCondition::WALL ); 
@@ -322,6 +318,7 @@ DORadiation::initialize( const ProcessorGroup* pc,
       temp_var.initialize(0.0);
       
     }
+
   }
 }
 

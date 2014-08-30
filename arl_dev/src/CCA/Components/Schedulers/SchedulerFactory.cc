@@ -46,9 +46,10 @@ static DebugStream SingleProcessor("SingleProcessor", false);
 static DebugStream MPI("MPI", false);
 static DebugStream DynamicMPI("DynamicMPI", false);
 
-SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
-                                          const ProcessorGroup* world,
-                                          Output* output)
+SchedulerCommon*
+SchedulerFactory::create( const ProblemSpecP   & ps,
+                          const ProcessorGroup * world,
+                          const Output         * output )
 {
   SchedulerCommon* sch = 0;
   string scheduler = "";
@@ -81,11 +82,9 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
         scheduler = "SingleProcessorScheduler";
       }
       else {
+        // Unified Scheduler without threads or MPI (Single-Processor mode)
         scheduler = "UnifiedScheduler";
       }
-    }
-    if ((Uintah::Parallel::getNumThreads() > 0) && (scheduler != "UnifiedScheduler")) {
-      throw ProblemSetupException("Unified Scheduler needed for -nthreads", __FILE__, __LINE__);
     }
   }
 
@@ -109,7 +108,12 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
   }
   else {
     sch = 0;
-    throw ProblemSetupException("Unknown scheduler", __FILE__, __LINE__);
+    string error = "Unknown scheduler: '" + scheduler + "'";
+    throw ProblemSetupException( error, __FILE__, __LINE__ );
+  }
+
+  if ((Uintah::Parallel::getNumThreads() > 0) && (scheduler != "UnifiedScheduler")) {
+    throw ProblemSetupException("Unified Scheduler needed for -nthreads", __FILE__, __LINE__);
   }
 
   return sch;

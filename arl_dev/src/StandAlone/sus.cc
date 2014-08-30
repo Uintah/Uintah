@@ -51,34 +51,37 @@
 
 #include <TauProfilerForSCIRun.h>
 
-#include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
-#include <CCA/Components/SimulationController/AMRSimulationController.h>
+#include <CCA/Components/DataArchiver/DataArchiver.h>
+#include <CCA/Components/LoadBalancers/LoadBalancerFactory.h>
 #include <CCA/Components/Models/ModelFactory.h>
+#include <CCA/Components/Parent/ComponentFactory.h>
+#include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
+#include <CCA/Components/ReduceUda/UdaReducer.h>
+#include <CCA/Components/Regridder/RegridderFactory.h>
+#include <CCA/Components/Schedulers/SchedulerFactory.h>
+#include <CCA/Components/SimulationController/AMRSimulationController.h>
 #include <CCA/Components/Solvers/CGSolver.h>
 #include <CCA/Components/Solvers/DirectSolve.h>
 #ifdef HAVE_HYPRE
 #  include <CCA/Components/Solvers/HypreSolver.h>
 #endif
-#include <CCA/Components/ReduceUda/UdaReducer.h>
-#include <CCA/Components/DataArchiver/DataArchiver.h>
 #include <CCA/Components/Solvers/SolverFactory.h>
-#include <CCA/Components/Regridder/RegridderFactory.h>
-#include <CCA/Components/LoadBalancers/LoadBalancerFactory.h>
-#include <CCA/Components/Schedulers/SchedulerFactory.h>
-#include <CCA/Components/Parent/ComponentFactory.h>
+
 #include <CCA/Ports/DataWarehouse.h>
+
 #include <Core/Disclosure/TypeDescription.h>
-#include <Core/Exceptions/InvalidGrid.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Parallel/Parallel.h>
-#include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Tracker/TrackerClient.h>
 #include <Core/Exceptions/Exception.h>
 #include <Core/Exceptions/InternalError.h>
+#include <Core/Exceptions/InvalidGrid.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/OS/ProcessInfo.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Thread.h>
+#include <Core/Tracker/TrackerClient.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
@@ -328,13 +331,14 @@ main( int argc, char *argv[], char *env[] )
         usage("You must provide a number of threads for -nthreads", arg, argv[0]);
       }
       numThreads = atoi(argv[i]);
-      if (numThreads < 1) {
+      if( numThreads < 1 ) {
         usage("Number of threads is too small", arg, argv[0]);
       }
-      else if (numThreads > MAX_THREADS) {
-        usage("Number of threads is out of range. Try to increase MAX_THREADS and recompile", arg, argv[0]);
+      else if( numThreads > MAX_THREADS ) {
+        usage( "Number of threads is out of range. Specify fewer threads, "
+               "or increase MAX_THREADS (.../src/Core/Thread/Threads.h) and recompile.", arg, argv[0] );
       }
-      Uintah::Parallel::setNumThreads(numThreads);
+      Uintah::Parallel::setNumThreads( numThreads );
     }
     else if (arg == "-threadmpi") {
       //used threaded mpi (this option is handled in MPI_Communicator.cc  MPI_Init_thread

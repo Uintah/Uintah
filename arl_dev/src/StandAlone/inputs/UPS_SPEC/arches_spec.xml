@@ -660,11 +660,40 @@
 
 <!-- 
 
-   ╔╗╔┌─┐┬ ┬  ╔═╗┌┬┐┬ ┬┌─┐┌─┐  
-   ║║║├┤ │││  ╚═╗ │ │ │├┤ ├┤   
-   ╝╚╝└─┘└┴┘  ╚═╝ ┴ └─┘└  └  
+         NEW STUFF
 
 -->
+
+      <LagrangianParticles              spec="OPTIONAL NO_DATA">
+      
+			  <ParticlesPerCell               spec="OPTIONAL DOUBLE"/>
+			  <MaximumParticles               spec="OPTIONAL INTEGER"/>
+
+        <!-- Position, Velocity, and Size are the min. spec -->
+			  <ParticlePosition               spec="REQUIRED NO_DATA"
+			  									              attribute1="x REQUIRED STRING"
+			  									              attribute2="y REQUIRED STRING"
+			  									              attribute3="z REQUIRED STRING"/>	
+
+        <ParticleVelocity               spec="REQUIRED NO_DATA"
+                                        attribute1="u REQUIRED STRING"
+                                        attribute2="v REQUIRED STRING"
+                                        attribute3="w REQUIRED STRING"/>
+
+        <ParticleSize                   spec="REQUIRED NO_DATA"
+                                        attribute1="label REQUIRED STRING"/>
+
+        <!-- these are additional particle variable (besides position and velocity that
+            are loaded onto the particles -->
+        <ParticleVariables spec="OPTIONAL NO_DATA">
+
+          <variable       spec="MULTIPLE NO_DATA"
+                          attribute1="label REQUIRED STRING"/>
+
+        </ParticleVariables> 
+      
+      </LagrangianParticles>
+
 
       <!-- New Task interface transport for CC-scalars -->
       <ScalarTransport                  spec="OPTIONAL NO_DATA">
@@ -694,8 +723,9 @@
              type  = type of initialization -->
         <task                           spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING" 
-                                        attribute2="eqn   REQUIRED STRING"
-                                        attribute3="type  REQUIRED STRING 'wave'">
+                                        attribute2="eqn   OPTIONAL STRING"
+                                        attribute3="type  REQUIRED STRING 'wave, random_lagrangian_particles, 
+                                                                           lagrangian_particle_velocity, lagrangian_particle_size'">
 
           <!-- 1D WAVE FORM -->
           <wave                         spec="OPTIONAL NO_DATA"
@@ -722,22 +752,93 @@
                                         need_applies_to="type square"/>
 
           </wave>
+
+          <!-- LAGRANGIAN PARTICLE POSITION -->
+          <!-- nothing here yet -->
+
+          <!-- LAGRANGIAN PARTICLE VELOCITY -->
+          <velocity_init              spec="REQUIRED NO_DATA"
+                                      attribute1="type REQUIRED STRING 'as_gas_velocity'"
+                                      need_applies_to="type lagrangian_particle_velocity"/>
+
+          <!-- LAGRANGIAN PARTICLE SIZE -->
+          <size_init                  spec="REQUIRED NO_DATA"
+                                      attribute1="type REQUIRED STRING 'fixed, random'"
+                                      need_applies_to="type lagrangian_particle_size"/>
+          <fixed_diameter             spec="OPTIONAL DOUBLE 'positive'"
+                                      need_applies_to="type lagrangian_particle_size"/>
+          <max_diameter               spec="OPTIONAL DOUBLE 'positive'"
+                                      need_applies_to="type lagrangian_particle_size"/>
                                     
-
-
-
-
 
 
 
         </task>
       </Initialization>
 
+      <ParticleModels                 spec="OPTIONAL NO_DATA">
+
+        <model                        spec="MULTIPLE NO_DATA"
+                                      attribute1="label REQUIRED STRING"
+                                      attribute2="type REQUIRED STRING 'simple_rate, drag, gravity'">
+
+          <!-- Simple rate expression -->
+            <grid                       spec="REQUIRED NO_DATA"
+                                        attribute1="dependent_type REQUIRED STRING 'svol'"
+                                        attribute2="independent_type REQUIRED STRING 'svol'"/>
+            <A                          spec="REQUIRED DOUBLE 'positive'"
+                                        need_applies_to="type simple_rate"/>       <!-- Pre-exponential factor -->
+            <ER                         spec="REQUIRED DOUBLE 'positive'"
+                                        need_applies_to="type simple_rate"/>       <!-- E/R -->
+            <m                          spec="REQUIRED DOUBLE"
+                                        need_applies_to="type simple_rate"/>       <!-- Concentration raised to the m power -->
+            <temperature                spec="REQUIRED NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        need_applies_to="type simple_rate"/>       <!-- label for the "temperature" -->
+            <concentration              spec="REQUIRED NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        need_applies_to="type simple_rate"/>       <!-- label for the "concentration" -->
+            <N                          spec="REQUIRED INTEGER"
+                                        need_applies_to="type simple_rate, drag"/>       <!-- hack for now to deal with multiple environments -->
+                                        
+            <apply_to                   spec="OPTIONAL INTEGER"/> <!-- identify which IC this model affects -->
+          <!-- drag model -->
+            <particle_density           spec="REQUIRED NO_DATA"
+                                        attribute1="type REQUIRED STRING 'constant, node_specific'"
+                                        need_applies_to="type drag, gravity"> <!-- use a constant density for all particles, or use a model for each-->
+              <constant                 spec="REQUIRED DOUBLE"
+                                        need_applies_to="type constant"/>
+              <density_label            spec="REQUIRED STRING"
+                                        need_applies_to="type node_specific"/> <!-- base density label -->
+            </particle_density>
+            
+            <radius                     spec="REQUIRED NO_DATA"
+                                        attribute1="type REQUIRED STRING 'constant, node_specific"
+                                        need_applies_to="type drag"> <!-- use a constant radius for all particles, or use a model for each-->
+              <constant                 spec="REQUIRED DOUBLE"
+                                        need_applies_to="type constant"/>
+              <radius_label             spec="REQUIRED STRING"
+                                        need_applies_to="type node_specific"/> <!-- base radius label -->
+            </radius>
+            
+            <kinematic_viscosity        spec="REQUIRED DOUBLE"
+                                        need_applies_to="type drag"/>         <!-- kinematic viscosity of fluid -->
+            <direction                  spec="REQUIRED STRING 'x,y,z'"
+                                        need_applies_to="type drag"/>         <!-- apply this source to which velocity -->
+            <u_velocity_label           spec="REQUIRED STRING"
+                                        need_applies_to="type drag"/>         <!-- base u velocity label for IC -->
+            <v_velocity_label           spec="OPTIONAL STRING"
+                                        need_applies_to="type drag"/>         <!-- base v velocity label for IC -->
+            <w_velocity_label           spec="OPTIONAL STRING"
+                                        need_applies_to="type drag"/>         <!-- base w velocity label for IC -->
+
+        </model>
+
+      </ParticleModels>
+
 <!-- 
 
-   ╔═╗┌┐┌┌┬┐  ╔╗╔┌─┐┬ ┬  ╔═╗┌┬┐┬ ┬┌─┐┌─┐  
-   ║╣ │││ ││  ║║║├┤ │││  ╚═╗ │ │ │├┤ ├┤   
-   ╚═╝┘└┘─┴┘  ╝╚╝└─┘└┴┘  ╚═╝ ┴ └─┘└  └  
+    END NEW STUFF
 
 -->
 
@@ -892,14 +993,11 @@
             <calc_frequency             spec="OPTIONAL INTEGER" need_applies_to="type do_radiation rmcrt_radiation" /> <!-- calculate radiation every N steps, default = 3 --> 
             <!--abskp_label                spec="OPTIONAL STRING"  need_applies_to="type do_radiation rmcrt_radiation" /--> <!-- Derek -->  
             <calc_on_all_RKsteps        spec="OPTIONAL BOOLEAN" need_applies_to="type do_radiation rmcrt_radiation" /> <!-- calculate radiation every RK step, default = false --> 
-            <temperature                spec="OPTIONAL NO_DATA"  
-                                        attribute1="label REQUIRED STRING"
-                                        need_applies_to="type do_radiation rmcrt_radiation" /> <!-- string label of temperature, default = temperature -->
             <abskg                      spec="OPTIONAL NO_DATA"  
                                         attribute1="label REQUIRED STRING"
-                                        need_applies_to="type do_radiation rmcrt_radiation" /> <!-- string label of abskg, default = abskg. NOTE: This is referenced to the 
-                                                                                                    total absorption coeffient. When using particles, the abskg label defined there
-                                                                                                    includes the effect of the abskp. abskg = abskg(gas only) + abskp -->
+                                        need_applies_to="type do_radiation rmcrt_radiation" />                         <!-- string label of abskg, default = abskg. NOTE: This is referenced to the 
+                                                                                                                            total absorption coeffient. When using particles, the abskg label defined there
+                                                                                                                            includes the effect of the abskp. abskg = abskg(gas only) + abskp -->
             <DORadiationModel           spec="OPTIONAL NO_DATA" need_applies_to="type do_radiation" >
               <ordinates                  spec="OPTIONAL INTEGER" />                                   <!-- number of ordinants, default = 2 --> 
               <LinearSolver               spec="OPTIONAL NO_DATA"                                      
@@ -928,12 +1026,10 @@
             
             <!-- RMCRT -->
             <RMCRT                       spec="OPTIONAL NO_DATA" need_applies_to="type rmcrt_radiation" >
-              <!-- <include href="Models.xml" section="Models/RMCRT" />          Dav -->
               <randomSeed                spec="OPTIONAL BOOLEAN"/>
               <Temperature               spec="OPTIONAL DOUBLE  'positive'"/>      <!-- needed by RMCRT_test -->
               <abskg                     spec="OPTIONAL DOUBLE  'positive'"/>                   
               <sigmaScat                 spec="OPTIONAL DOUBLE  'positive'"/>
-              <abskgBench4               spec="OPTIONAL DOUBLE  'positive'"/>
               <nDivQRays                 spec="OPTIONAL INTEGER 'positive'"/>        
               <Threshold                 spec="OPTIONAL DOUBLE  'positive'"/>        
               <Slice                     spec="OPTIONAL DOUBLE"/>                    
@@ -954,7 +1050,7 @@
               <applyFilter               spec="OPTIONAL BOOLEAN"/>
               <ignore_BC_bulletproofing  spec="OPTIONAL BOOLEAN"/>
  
-              <algorithm                spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel'">
+              <algorithm                spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel singleLevel'">
                                     
                 <orderOfInterpolation   spec="REQUIRED INTEGER 'positive'" need_applies_to="type RMCRT_coarseLevel" />
                 <halo                   spec="REQUIRED VECTOR  'positive'" need_applies_to="type dataOnion" />

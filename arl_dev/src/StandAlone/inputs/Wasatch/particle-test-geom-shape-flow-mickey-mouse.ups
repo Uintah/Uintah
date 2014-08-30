@@ -215,7 +215,7 @@
     <Level>
       <Box label="1">
         <lower>[0,-0.4,-0.4]</lower>
-        <upper>[3.6,0.4,0.4]</upper>
+        <upper>[4,0.4,0.4]</upper>
         <resolution>[120,40,40]</resolution>
         <patches>[1,1,1]</patches>
       </Box>

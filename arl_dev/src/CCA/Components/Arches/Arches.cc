@@ -49,6 +49,7 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/ScalarEqn.h>
+#include <CCA/Components/Arches/ArchesParticlesHelper.h>
 //NOTE: new includes for CQMOM
 #include <CCA/Components/Arches/CQMOM.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqnFactory.h>
@@ -79,6 +80,8 @@
 #include <CCA/Components/Arches/Utility/InitializeFactory.h>
 #include <CCA/Components/Arches/Transport/TransportFactory.h>
 #include <CCA/Components/Arches/Task/TaskFactoryBase.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleModelFactory.h>
+#include <CCA/Components/Arches/LagrangianParticles/LagrangianParticleFactory.h>
 //#include <CCA/Components/Arches/Task/SampleFactory.h>
 
 
@@ -235,6 +238,11 @@ Arches::Arches(const ProcessorGroup* myworld, const bool doAMR) :
   CQMOMEqnFactory& cqmomfactory    = CQMOMEqnFactory::self();
   cqmomfactory.set_number_moments(0);
   d_doCQMOM                        = false;
+
+  //lagrangian particles: 
+  _particlesHelper = scinew ArchesParticlesHelper(); 
+  _particlesHelper->sync_with_arches(this); 
+
 }
 
 // ****************************************************************************
@@ -283,6 +291,8 @@ Arches::~Arches()
     delete i->second; 
   }
 
+  delete _particlesHelper; 
+
 }
 
 // ****************************************************************************
@@ -298,22 +308,27 @@ Arches::problemSetup(const ProblemSpecP& params,
   ArchesMaterial* mat= scinew ArchesMaterial();
   sharedState->registerArchesMaterial(mat);
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
+  _arches_spec = db; 
   d_lab->problemSetup( db );
 
-
-  //NEW TASK STUFF
+  //==============NEW TASK STUFF
   //build the factories
   UtilityFactory* utility_factory = scinew UtilityFactory(); 
-  //SampleFactory* sample_factory = scinew SampleFactory(); 
   TransportFactory* transport_factory = scinew TransportFactory(); 
   InitializeFactory* init_factory = scinew InitializeFactory(); 
+  ParticleModelFactory* particle_model_factory = scinew ParticleModelFactory(); 
+  LagrangianParticleFactory* lagrangian_particle_factory = scinew LagrangianParticleFactory(); 
+  lagrangian_particle_factory->set_particle_helper(_particlesHelper); 
+  //SampleFactory* sample_factory = scinew SampleFactory(); 
 
   //insert the factories into a map
   _factory_map.clear(); 
   _factory_map.insert(std::make_pair("utility_factory",utility_factory));
-  //_factory_map.insert(std::make_pair("sample_factory",sample_factory)); 
   _factory_map.insert(std::make_pair("transport_factory",transport_factory)); 
   _factory_map.insert(std::make_pair("init_factory",init_factory)); 
+  _factory_map.insert(std::make_pair("particle_model_factory",particle_model_factory));
+  _factory_map.insert(std::make_pair("lagrangian_particle_factory",lagrangian_particle_factory));
+  //_factory_map.insert(std::make_pair("sample_factory",sample_factory)); 
 
   typedef std::map<std::string, TaskFactoryBase*>::iterator iFACMAP; 
   //registering tasks: 
@@ -321,12 +336,17 @@ Arches::problemSetup(const ProblemSpecP& params,
     i->second->register_all_tasks( db ); 
   }
     
-  //building tasks (includes calling problemSetup): 
+  //building tasks (includes calling problemSetup)
   for ( iFACMAP i = _factory_map.begin(); i != _factory_map.end(); i++ ){ 
     i->second->build_all_tasks( db ); 
   }
-  //END NEW TASK STUFF
+  //===================END NEW TASK STUFF
 
+  //Checking for lagrangian particles: 
+  _doLagrangianParticles = _arches_spec->findBlock("LagrangianParticles"); 
+  if ( _doLagrangianParticles ){ 
+    _particlesHelper->problem_setup(_arches_spec->findBlock("LagrangianParticles"), sharedState);
+  }
 
   //__________________________________
   //  Multi-level related
@@ -1103,7 +1123,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     }
   }
 #endif
-  
 
 }
 
@@ -1117,9 +1136,15 @@ Arches::scheduleInitialize(const LevelP& level,
  if( level->getIndex() != d_archesLevelIndex )
   return;
 
-  sched_create_patch_operators( level, sched ); 
-
   const MaterialSet* matls = d_sharedState->allArchesMaterials();
+
+  Operators& opr = Operators::self(); 
+  opr.sched_create_patch_operators( level, sched, matls ); 
+
+  if ( _doLagrangianParticles ){ 
+    _particlesHelper->set_materials(d_sharedState->allArchesMaterials()); 
+    _particlesHelper->schedule_initialize(level, sched);
+  }
 
   //Initialize several parameters
   sched_paramInit(level, sched);
@@ -1141,6 +1166,8 @@ Arches::scheduleInitialize(const LevelP& level,
 
   d_turbModel->sched_computeFilterVol( sched, level, matls ); 
 
+  //=========== NEW TASK INTERFACE ==============================
+  // why not put this in a loop? 
   typedef std::map<std::string, TaskFactoryBase*> FACMAP; 
   //utility factory
   FACMAP::iterator ifac = _factory_map.find("utility_factory"); 
@@ -1148,13 +1175,6 @@ Arches::scheduleInitialize(const LevelP& level,
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
     i->second->schedule_init(level, sched, matls); 
   }
-
-  //sample factory
-  //ifac = _factory_map.find("sample_factory"); 
-  //all_tasks = ifac->second->retrieve_all_tasks(); 
-  //for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
-  //  i->second->schedule_init(level, sched, matls); 
-  //}
 
   //transport factory
   ifac = _factory_map.find("transport_factory"); 
@@ -1166,9 +1186,58 @@ Arches::scheduleInitialize(const LevelP& level,
   //initialize 
   ifac = _factory_map.find("init_factory"); 
   all_tasks = ifac->second->retrieve_all_tasks(); 
+
+  bool break_it = false; 
+
+  //this is a hack to get the particle stuff going in the correct order.  Not sure why the 
+  //framework isn't ordering these tasks based on the dependencies.: 
+  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+
+    if ( break_it ){ 
+      i->second->schedule_init(level, sched, matls ); 
+    } else { 
+      if ( i->first == "Lx" || i->first == "Lvel" || i->first == "Ld"){ 
+        std::cout << " Delaying task schedule.." << std::endl;
+      } else { 
+        i->second->schedule_init(level, sched, matls ); 
+      }
+    }
+
+  }
+
+  if ( !break_it ){ 
+ 
+    TaskFactoryBase::TaskMap::iterator iLX = all_tasks.find("Lx");
+    if ( iLX != all_tasks.end() ) iLX->second->schedule_init(level, sched, matls); 
+    TaskFactoryBase::TaskMap::iterator iLD = all_tasks.find("Ld"); 
+    if ( iLD != all_tasks.end() ) iLD->second->schedule_init(level, sched, matls); 
+    TaskFactoryBase::TaskMap::iterator iLV = all_tasks.find("Lvel");
+    if ( iLV != all_tasks.end() ) iLV->second->schedule_init(level, sched, matls); 
+
+  }
+
+  //particle models
+  ifac = _factory_map.find("particle_model_factory"); 
+  all_tasks = ifac->second->retrieve_all_tasks(); 
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
     i->second->schedule_init(level, sched, matls ); 
   }
+
+  //lagrangian particles
+  ifac = _factory_map.find("lagrangian_particle_factory"); 
+  all_tasks = ifac->second->retrieve_all_tasks(); 
+  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+    i->second->schedule_init(level, sched, matls ); 
+  }
+
+  //sample factory
+  //ifac = _factory_map.find("sample_factory"); 
+  //all_tasks = ifac->second->retrieve_all_tasks(); 
+  //for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+  //  i->second->schedule_init(level, sched, matls); 
+  //}
+
+  //===============================================================
 
   // base initialization of all scalars
   sched_scalarInit(level, sched);
@@ -1179,8 +1248,7 @@ Arches::scheduleInitialize(const LevelP& level,
   d_turbModel->set3dPeriodic(d_3d_periodic);
   d_props->set3dPeriodic(d_3d_periodic);
 
-  init_timelabel = scinew TimeIntegratorLabel(d_lab,
-                                                TimeIntegratorStepType::FE);
+  init_timelabel = scinew TimeIntegratorLabel(d_lab, TimeIntegratorStepType::FE);
   init_timelabel_allocated = true;
 
   // Property model initialization
@@ -1199,6 +1267,7 @@ Arches::scheduleInitialize(const LevelP& level,
   bool modify_ref_den = true;
   int time_substep = 0; //no meaning here, but is required to be zero for 
                         //variables to be properly allocated. 
+                        //
   d_props->doTableMatching();
   d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, time_substep );
 
@@ -1280,7 +1349,6 @@ Arches::scheduleInitialize(const LevelP& level,
     d_cqmomSolver->sched_solveCQMOMInversion( level, sched, 0 );
   }
   
-  
   // check to make sure that all the scalar variables have BCs set and set intrusions:
   EqnFactory& eqnFactory = EqnFactory::self();
   EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
@@ -1295,6 +1363,12 @@ Arches::scheduleInitialize(const LevelP& level,
   }
 
   d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
+  
+  d_boundaryCondition->sched_create_radiation_temperature( sched, level, matls, false );
+
+  if ( _doLagrangianParticles ){ 
+    _particlesHelper->schedule_sync_particle_position(level,sched,true);
+  }
 
   //d_rad_prop_calc->sched_compute_radiation_properties( level, sched, matls, 0, true ); 
 
@@ -1312,62 +1386,6 @@ Arches::scheduleInitialize(const LevelP& level,
   d_wasatch->scheduleInitialize( level, sched );
 # endif // WASATCH_IN_ARCHES
 
-}
-
-#define BUILD_UPWIND( VOLT )                                          \
-{                                                                     \
-  typedef UpwindInterpolant<VOLT,FaceTypes<VOLT>::XFace> OpX;         \
-  typedef UpwindInterpolant<VOLT,FaceTypes<VOLT>::YFace> OpY;         \
-  typedef UpwindInterpolant<VOLT,FaceTypes<VOLT>::ZFace> OpZ;         \
-  pi._sodb.register_new_operator<OpX>( scinew OpX() );                \
-  pi._sodb.register_new_operator<OpY>( scinew OpY() );                \
-  pi._sodb.register_new_operator<OpZ>( scinew OpZ() );                \
-}
-
-void 
-Arches::sched_create_patch_operators( const LevelP& level, SchedulerP& sched ){ 
-
-  Task* tsk = scinew Task( "Arches::create_patch_operators", this, &Arches::create_patch_operators);
-  
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
-
-}
-
-void 
-Arches::create_patch_operators( const ProcessorGroup* pg,
-                                const PatchSubset* patches,
-                                const MaterialSubset* matls,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw)
-{
-  for (int p = 0; p < patches->size(); p++) {
-
-    using namespace SpatialOps; 
-
-    const Patch* patch = patches->get(p);
-    Operators& opr = Operators::self(); 
-
-    IntVector low = patch->getExtraCellLowIndex(); 
-    IntVector high = patch->getExtraCellHighIndex(); 
-
-    IntVector size = high - low; 
-
-    Vector Dx = patch->dCell(); 
-    Vector L(size[0]*Dx.x(),size[1]*Dx.y(),size[2]*Dx.z());
-
-    Operators::PatchInfo pi;
-
-    int pid = patch->getID(); 
-
-    BUILD_UPWIND(SpatialOps::SVolField); 
-
-    SpatialOps::build_stencils( size[0], size[1], size[2],
-                                L[0],    L[1],    L[2],
-                                pi._sodb );
-
-    opr.patch_info_map.insert(std::make_pair(pid, pi)); 
-
-  }
 }
 
 void
@@ -1403,6 +1421,9 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_vVelRhoHatLabel);
     tsk->computes(d_lab->d_wVelRhoHatLabel);
     tsk->computes(d_lab->d_CCVelocityLabel);
+    tsk->computes(d_lab->d_CCUVelocityLabel);
+    tsk->computes(d_lab->d_CCVVelocityLabel);
+    tsk->computes(d_lab->d_CCWVelocityLabel);
     tsk->computes(d_lab->d_pressurePSLabel);
     tsk->computes(d_lab->d_densityGuessLabel);
     tsk->computes(d_lab->d_totalKineticEnergyLabel); 
@@ -1477,6 +1498,9 @@ Arches::paramInit(const ProcessorGroup* pg,
     CCVariable<double> turb_viscosity; 
     CCVariable<double> pPlusHydro;
     CCVariable<double> mmgasVolFrac;
+    CCVariable<double> ccUVelocity;
+    CCVariable<double> ccVVelocity;
+    CCVariable<double> ccWVelocity;
 
     CCVariable<double> ke; 
     new_dw->allocateAndPut( ke, d_lab->d_kineticEnergyLabel, indx, patch ); 
@@ -1485,6 +1509,13 @@ Arches::paramInit(const ProcessorGroup* pg,
 
     new_dw->allocateAndPut(ccVelocity, d_lab->d_CCVelocityLabel, indx, patch);
     ccVelocity.initialize(Vector(0.,0.,0.));
+    
+    new_dw->allocateAndPut( ccUVelocity, d_lab->d_CCUVelocityLabel , indx, patch );
+    new_dw->allocateAndPut( ccVVelocity, d_lab->d_CCVVelocityLabel , indx, patch );
+    new_dw->allocateAndPut( ccWVelocity, d_lab->d_CCWVelocityLabel , indx, patch );
+    ccUVelocity.initialize(0.0);
+    ccVVelocity.initialize(0.0);
+    ccWVelocity.initialize(0.0);
 
     new_dw->allocateAndPut(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
     new_dw->allocateAndPut(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch);
@@ -1793,15 +1824,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     d_doingRestart = true;                  // this task is called twice on a regrid.
   }
 
-//  const MaterialSet* matls2 = d_sharedState->allArchesMaterials();
-//  typedef std::map<std::string, TaskFactoryBase*> FM;  
-//  for ( FM::iterator ifac = _factory_map.begin(); ifac != _factory_map.end(); ifac++){ 
-//    TaskFactoryBase::TaskMap all_tasks = ifac->second->retrieve_all_tasks(); 
-//    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
-//      i->second->schedule_task(level, sched, matls2, 0); 
-//    }
-//  }
-  
   if (d_doingRestart  ) {
 
     const PatchSet* patches= level->eachPatch();
@@ -1832,7 +1854,32 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 
 #else 
 
+
   d_nlSolver->nonlinearSolve(level, sched);
+
+  if ( _doLagrangianParticles ){ 
+
+    typedef std::map<std::string, TaskFactoryBase*> FACMAP; 
+    FACMAP::iterator ifac = _factory_map.find("lagrangian_particle_factory"); 
+    TaskFactoryBase::TaskMap all_tasks = ifac->second->retrieve_all_tasks(); 
+
+    TaskFactoryBase::TaskMap::iterator i_part_size_update = all_tasks.find("update_particle_size");  
+    TaskFactoryBase::TaskMap::iterator i_part_pos_update = all_tasks.find("update_particle_position");  
+    TaskFactoryBase::TaskMap::iterator i_part_vel_update = all_tasks.find("update_particle_velocity");  
+
+    //UPDATE SIZE
+    i_part_size_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), 0); 
+    //UPDATE POSITION 
+    i_part_pos_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), 0); 
+    //UPDATE VELOCITY
+    i_part_vel_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), 0); 
+
+    _particlesHelper->schedule_sync_particle_position(level,sched);
+    _particlesHelper->schedule_transfer_particle_ids(level,sched);
+    _particlesHelper->schedule_relocate_particles(level,sched);
+    _particlesHelper->schedule_add_particles(level, sched); 
+
+  }
 
 #endif 
 
@@ -2382,6 +2429,9 @@ Arches::sched_getCCVelocities(const LevelP& level, SchedulerP& sched)
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
 
   tsk->modifies(d_lab->d_CCVelocityLabel);
+  tsk->modifies(d_lab->d_CCUVelocityLabel);
+  tsk->modifies(d_lab->d_CCVVelocityLabel);
+  tsk->modifies(d_lab->d_CCWVelocityLabel);
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 }
@@ -2405,6 +2455,9 @@ Arches::getCCVelocities(const ProcessorGroup* ,
     constSFCYVariable<double> vvel_FC;
     constSFCZVariable<double> wvel_FC;
     CCVariable<Vector> vel_CC;
+    CCVariable<double> uVel_CC;
+    CCVariable<double> vVel_CC;
+    CCVariable<double> wVel_CC;
 
     IntVector idxLo = patch->getFortranCellLowIndex();
     IntVector idxHi = patch->getFortranCellHighIndex();
@@ -2422,7 +2475,14 @@ Arches::getCCVelocities(const ProcessorGroup* ,
 
     new_dw->getModifiable(vel_CC,  d_lab->d_CCVelocityLabel, indx, patch);
     vel_CC.initialize(Vector(0.0,0.0,0.0));
-
+    
+    new_dw->getModifiable(uVel_CC,  d_lab->d_CCUVelocityLabel, indx, patch);
+    new_dw->getModifiable(vVel_CC,  d_lab->d_CCVVelocityLabel, indx, patch);
+    new_dw->getModifiable(wVel_CC,  d_lab->d_CCWVelocityLabel, indx, patch);
+    uVel_CC.initialize( 0.0 );
+    vVel_CC.initialize( 0.0 );
+    wVel_CC.initialize( 0.0 );
+    
     //__________________________________
     //
     for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
@@ -2447,6 +2507,10 @@ Arches::getCCVelocities(const ProcessorGroup* ,
           cellinfo->tfac[k] * wvel_FC[idxW];
 
       vel_CC[c] = Vector(u, v, w);
+      //NOTE: this function could probably be nebo-ized with interp later
+      uVel_CC[c] = u;
+      vVel_CC[c] = v;
+      wVel_CC[c] = w;
     }
     //__________________________________
     // Apply boundary conditions
@@ -2498,6 +2562,9 @@ Arches::getCCVelocities(const ProcessorGroup* ,
             (1.0 - one_or_zero.z()) * wvel_FC[idxW];
 
         vel_CC[c] = Vector( u, v, w );
+        uVel_CC[c] = u;
+        vVel_CC[c] = v;
+        wVel_CC[c] = w;
       }
     }
   }

@@ -1600,7 +1600,6 @@ void SerialMPM::scheduleInterpolateParticleVelToGridMom(SchedulerP& sched,
 void SerialMPM::scheduleSetPrescribedMotion(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls)
-
 {
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
                            getLevel(patches)->getGrid()->numLevels()))
@@ -3134,11 +3133,10 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
         s = smin;
       }
 
-      Matrix3 F_high = d_prescribedF[s+1]; //next prescribed deformation gradient
-      Matrix3 F_low  = d_prescribedF[s]; //last prescribed deformation gradient
+      Matrix3 F_high = d_prescribedF[s+1]; // next prescribed deformation gradient
+      Matrix3 F_low  = d_prescribedF[s];   // last prescribed deformation gradient
       double t1 = d_prescribedTimes[s];    // time of last prescribed deformation
-      double t2 = d_prescribedTimes[s+1];  //time of next prescribed deformation
-
+      double t2 = d_prescribedTimes[s+1];  // time of next prescribed deformation
 
       //Interpolate to get the deformation gradient at the current time:
       Matrix3 Ft = F_low*(t2-time)/(t2-t1) + F_high*(time-t1)/(t2-t1);
@@ -3147,8 +3145,11 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
       Fdot = (F_high - F_low)/(t2-t1);
 
       // Now we need to construct the rotation matrix and its time rate:
-      // We are only interested in the rotation information at the next specified time since the rotations specified should be relative to the previously specified time.  For example if I specify Theta=90 at time=1.0, and Theta = 91 and time=2.0 the total rotation at time=2.0 will be 181 degrees.
-      //
+      // We are only interested in the rotation information at the next
+      // specified time since the rotations specified should be relative 
+      // to the previously specified time.  For example if I specify Theta=90
+      // at time=1.0, and Theta = 91 and time=2.0 the total rotation at
+      // time=2.0 will be 181 degrees.
       const double pi = M_PI; //3.1415926535897932384626433832795028841972;
       const double degtorad= pi/180.0;
       double PrescribedTheta = d_prescribedAngle[s+1]; //The final angle of rotation
@@ -3160,23 +3161,21 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
       const double sinthetat = sin(thetat);
       Matrix3 aa(a,a);
       Matrix3 A(0.0,-a.z(),a.y(),a.z(),0.0,-a.x(),-a.y(),a.x(),0.0);
+
       Matrix3 Qt;
       Qt = (Ident-aa)*costhetat+A*sinthetat + aa;
-     
+
       //calculate thetadot:
       double thetadot = PrescribedTheta*(degtorad)/(t2-t1);
 
-
-      if (flags->d_exactDeformation)//Exact Deformation Update
-      {
+      if (flags->d_exactDeformation){  //Exact Deformation Update
          double t3 = d_prescribedTimes[s+2];    
          double t4 = d_prescribedTimes[s+3];  
-         if (time == 0 && t4 != 0)
-         {
-            new_dw->put(delt_vartype(t3 - t2), d_sharedState->get_delt_label(), getLevel(patches));
+         if (time == 0 && t4 != 0) {
+            new_dw->put(delt_vartype(t3 - t2), 
+                    d_sharedState->get_delt_label(), getLevel(patches));
          } 
-         else
-         {
+         else {
             F_high = d_prescribedF[s + 2]; //next prescribed deformation gradient
             F_low  = d_prescribedF[s + 1]; //last prescribed deformation gradient
             t3 = d_prescribedTimes[s+2];
@@ -3193,52 +3192,43 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
       Matrix3 Qdot(0.0);
       Qdot = (Ident-aa)*(-sinthetat*thetadot) + A*costhetat*thetadot;
 
-
-
       Matrix3 Previous_Rotations;
       Previous_Rotations.Identity();
       int i;
       //now we need to compute the total previous rotation:
       for(i=0;i<s+1;i++){
-              Vector ai;
-              double thetai = d_prescribedAngle[i]*degtorad;
-              ai = d_prescribedRotationAxis[i];
-              const double costhetati = cos(thetai);
-              const double sinthetati = sin(thetai);
+        Vector ai;
+        double thetai = d_prescribedAngle[i]*degtorad;
+        ai = d_prescribedRotationAxis[i];
+        const double costhetati = cos(thetai);
+        const double sinthetati = sin(thetai);
 
-              Matrix3 aai(ai,ai);
-              Matrix3 Ai(0.0,-ai.z(),ai.y(),ai.z(),0.0,-ai.x(),-ai.y(),ai.x(),0.0);
-              Matrix3 Qi;
-              Qi = (Ident-aai)*costhetati+Ai*sinthetati + aai;
-
-              Previous_Rotations = Qi*Previous_Rotations;
+        Matrix3 aai(ai,ai);
+        Matrix3 Ai(0.0,-ai.z(),ai.y(),ai.z(),0.0,-ai.x(),-ai.y(),ai.x(),0.0);
+        Matrix3 Qi;
+        Qi = (Ident-aai)*costhetati+Ai*sinthetati + aai;
+        Previous_Rotations = Qi*Previous_Rotations;
       }
      
-
-
-      // Fstar is the deformation gradient with the superimposed rotations included
-      // Fdotstar is the rate of the deformation gradient with superimposed rotations included
+      // Fstar is the def grad with the superimposed rotations included
+      // Fdotstar is the rate of the def grad with superimposed rotations incl.
       Matrix3 Fstar;
       Matrix3 Fdotstar;
       Fstar = Qt*Previous_Rotations*Ft;
       Fdotstar = Qdot*Previous_Rotations*Ft + Qt*Previous_Rotations*Fdot;
-      
-      
+
       for(NodeIterator iter=patch->getExtraNodeIterator();!iter.done(); iter++){
         IntVector n = *iter;
 
         Vector NodePosition = patch->getNodePosition(n).asVector();
 
-        if (flags->d_exactDeformation)//Exact Deformation Update
-        {
+        if (flags->d_exactDeformation){ //Exact Deformation Update
            gvelocity_star[n] = (F_high*F_low.Inverse() - Ident)*Previous_Rotations.Inverse()*Qt.Transpose()*NodePosition/delT;
-        }
-        else           
-        {
+        } else {
            gvelocity_star[n] = Fdotstar*Ft.Inverse()*Previous_Rotations.Inverse()*Qt.Transpose()*NodePosition;
         }
-
       } // Node Iterator
+
       if(!flags->d_doGridReset){
         NCVariable<Vector> displacement;
         constNCVariable<Vector> displacementOld;

@@ -36,7 +36,7 @@
  | $$$$$$$ | $$$$$$$$| $$$$$$$\  | $$     | $$  | $$   __ | $$      | $$$$$    _\$$$$$$\
  | $$      | $$  | $$| $$  | $$  | $$    _| $$_ | $$__/  \| $$_____ | $$_____ |  \__| $$
  | $$      | $$  | $$| $$  | $$  | $$   |   $$ \ \$$    $$| $$     \| $$     \ \$$    $$
- \$$       \$$   \$$ \$$   \$$   \$$    \$$$$$$  \$$$$$$  \$$$$$$$$ \$$$$$$$$  \$$$$$$
+ \ $$      \ $$  \ $$ \$$   \$$   \$$    \$$$$$$  \$$$$$$  \$$$$$$$$ \$$$$$$$$  \$$$$$$
  **************************************************************************************/
 
 #include "ParticlesHelper.h"
@@ -50,8 +50,11 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
-std::vector<std::string> Uintah::ParticlesHelper::otherParticleVarNames_;
+std::vector<std::string> Uintah::ParticlesHelper::needsRelocation_;
+std::vector<std::string> Uintah::ParticlesHelper::needsBC_;
 std::map<std::string, std::map<int, std::vector<int> > > Uintah::ParticlesHelper::bndParticlesMap_;
+std::string Uintah::ParticlesHelper::pPosName_;
+std::string Uintah::ParticlesHelper::pIDName_;
 
 namespace Uintah {
   
@@ -60,15 +63,60 @@ namespace Uintah {
   const std::vector<std::string>&
   ParticlesHelper::get_relocatable_particle_varnames()
   {
-    return otherParticleVarNames_;
+    return needsRelocation_;
   }
   
   //------------------------------------------------------------------
   
   void
-  ParticlesHelper::add_particle_variable(const std::string& varName )
+  ParticlesHelper::mark_for_relocation(const std::string& varName )
   {
-    otherParticleVarNames_.push_back(varName);
+    using namespace std;
+    // disallow duplicates
+    vector<string>::iterator it = find(needsRelocation_.begin(), needsRelocation_.end(), varName);
+    if (it == needsRelocation_.end()) {
+      needsRelocation_.push_back(varName);
+    }
+  }
+
+  //------------------------------------------------------------------
+  
+  void ParticlesHelper::initialize_internal(const int matSize)
+  {
+    // allocate proper sizes for delete sets and particle IDs
+    if (lastPIDPerMaterialPerPatch_.size() == 0) {
+      for (int m = 0; m<matSize; ++m ) {
+        std::map<int,long64> lastPIDPerPatch;
+        lastPIDPerMaterialPerPatch_.push_back(lastPIDPerPatch);
+      }
+    }
+    if (deleteSets_.size() == 0) {
+      for (int m = 0; m<matSize; ++m ) {
+        std::map<int,ParticleSubset*> thisMaterialDeleteSet;
+        deleteSets_.push_back(thisMaterialDeleteSet);
+      }
+    }
+  }
+  
+  //------------------------------------------------------------------
+  
+  void
+  ParticlesHelper::needs_boundary_condition(const std::string& varName )
+  {
+    using namespace std;
+
+    // disallow addition of particle position vector and particle ID to the list of
+    // boundary conditions for particles. Those are handled internally.
+    if (varName == pPosName_ ||
+        varName == pIDName_     ) {
+      return;
+    }
+
+    // disallow duplicates
+    vector<string>::iterator it = find(needsBC_.begin(), needsBC_.end(), varName);
+    if (it == needsBC_.end()) {
+      needsBC_.push_back(varName);
+    }
   }
 
   //------------------------------------------------------------------
@@ -76,7 +124,7 @@ namespace Uintah {
   ParticlesHelper::ParticlesHelper() :
   isValidState_(false),
   pPerCell_(0.0),
-  maxParticles_(0x10000u) // 2^32 maximum particles per patch
+  maxParticles_(0x10000u) // 2^32 ~ 4.3 billion particles per patch - maximum
   {
     pPosLabel_ = VarLabel::create("p.x",
                                   ParticleVariable<Uintah::Point>::getTypeDescription(),
@@ -84,6 +132,9 @@ namespace Uintah {
                                   VarLabel::PositionVariable );
     pIDLabel_ = Uintah::VarLabel::create("p.particleID",
                                          ParticleVariable<long64>::getTypeDescription());
+    
+    pPosName_ = pPosLabel_->getName();
+    pIDName_  = pIDLabel_->getName();
     
     destroyMe_.push_back(pPosLabel_);
     destroyMe_.push_back(pIDLabel_);
@@ -103,10 +154,12 @@ namespace Uintah {
   
   //------------------------------------------------------------------
   
-  void ParticlesHelper::problem_setup(Uintah::ProblemSpecP particleEqsSpec)
+  void ParticlesHelper::problem_setup(Uintah::ProblemSpecP particleEqsSpec,
+                                      Uintah::SimulationStateP sharedState)
   {
     using namespace Uintah;
     particleEqsSpec_ = particleEqsSpec;
+    sharedState_     = sharedState;
 
     //
     // set the position varlabels
@@ -127,6 +180,10 @@ namespace Uintah {
     pPosSpec->getAttribute("x",px);
     pPosSpec->getAttribute("y",py);
     pPosSpec->getAttribute("z",pz);
+    
+    needs_boundary_condition(px);
+    needs_boundary_condition(py);
+    needs_boundary_condition(pz);
     
     pXLabel_ = VarLabel::find(px);
     pYLabel_ = VarLabel::find(py);
@@ -173,22 +230,31 @@ namespace Uintah {
   
   // this will create the particle subset
   void ParticlesHelper::initialize( const Uintah::ProcessorGroup*,
-                                   const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
-                                   Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw)
+                                    const Uintah::PatchSubset* patches,
+                                    const Uintah::MaterialSubset* matls,
+                                    Uintah::DataWarehouse* old_dw,
+                                    Uintah::DataWarehouse* new_dw )
   {
     using namespace Uintah;
+    
+    initialize_internal(matls->size());
+    
     particleEqsSpec_->get("ParticlesPerCell",pPerCell_);
     
-    for(int m = 0;m<matls->size();m++){
+    for( int m = 0; m<matls->size(); ++m ){
       const int matl = matls->get(m);
-      for(int p=0;p<patches->size();p++){
+      std::map<int,long64>& lastPIDPerPatch = lastPIDPerMaterialPerPatch_[m];
+      std::map<int,ParticleSubset*>& thisMaterialDeleteSet = deleteSets_[m];
+      for( int p=0; p<patches->size(); ++p ){
         const Patch* patch = patches->get(p);
+        const int patchID = patch->getID();
         
-        deleteSet_.insert( std::pair<int, ParticleSubset*>(patch->getID(), scinew ParticleSubset(0,matl,patch)));
+        lastPIDPerPatch.insert( std::pair<int, long64>(patchID, 0 ) );
+        thisMaterialDeleteSet.insert( std::pair<int, ParticleSubset*>(patchID, scinew ParticleSubset(0,matl,patch)));
         
         // create a subset with the correct number of particles. This will serve as the initial memory
         // block for particles
-        int nParticles = pPerCell_ * patch->getNumCells();
+        const int nParticles = pPerCell_ * patch->getNumCells();
         ParticleSubset* subset = new_dw->createParticleSubset(nParticles,matl,patch);
         
         // allocate memory for Uintah particle position and particle IDs
@@ -197,8 +263,9 @@ namespace Uintah {
         new_dw->allocateAndPut(ppos,    pPosLabel_,           subset);
         new_dw->allocateAndPut(pid,    pIDLabel_,           subset);
         for (int i=0; i < nParticles; i++) {
-          pid[i] = i + patch->getID();
+          pid[i] = i + patchID;
         }
+        lastPIDPerPatch[patchID] = nParticles > 0 ? pid[nParticles-1] : 0;
       }
     }
   }
@@ -223,17 +290,19 @@ namespace Uintah {
   {
     using namespace Uintah;
     
-    if (!deleteSet_.empty())
+    if (!deleteSets_.empty())
     {
       return;
     }
     
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
+      std::map<int, ParticleSubset*> thisMaterialDeleteSet;
       for(int p=0;p<patches->size();p++){
         const Patch* patch = patches->get(p);
-        deleteSet_.insert( std::pair<int, ParticleSubset*>(patch->getID(), scinew ParticleSubset(0,matl,patch)));
+        thisMaterialDeleteSet.insert( std::pair<int, ParticleSubset*>(patch->getID(), scinew ParticleSubset(0,matl,patch)));
       }
+      deleteSets_.push_back(thisMaterialDeleteSet);
     }
   }
   
@@ -259,34 +328,33 @@ namespace Uintah {
                                                  Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw)
   {
     using namespace Uintah;
-    for(int m = 0; m<matls->size(); m++){
+    for( int m = 0; m<matls->size(); ++m ){
       const int matl = matls->get(m);
-      for(int p=0;p<patches->size();p++){
+      std::map<int, ParticleSubset*> thisMatDelSet;
+      for( int p=0; p<patches->size(); ++p ){
         const Patch* patch = patches->get(p);
         ParticleSubset* pset = new_dw->getParticleSubset(matl, patch);
-        ParticleSubset* delset = deleteSet_[patch->getID()];
+        ParticleSubset* delset = thisMatDelSet[patch->getID()];
         
-        Point low  = patch->getBox().lower();
-        Point high = patch->getBox().upper();;
+        const Point low  = patch->getBox().lower();
+        const Point high = patch->getBox().upper();;
         
         // Wasatch particle positions
         ParticleVariable<double> px;
         ParticleVariable<double> py;
         ParticleVariable<double> pz;
         
-        new_dw->getModifiable(px,    pXLabel_,                  pset);
-        new_dw->getModifiable(py,    pYLabel_,                  pset);
-        new_dw->getModifiable(pz,    pZLabel_,                  pset);
-        
-        
-        for(ParticleSubset::iterator iter = pset->begin();
-            iter != pset->end(); iter++)
-        {
+        new_dw->getModifiable( px, pXLabel_, pset);
+        new_dw->getModifiable( py, pYLabel_, pset);
+        new_dw->getModifiable( pz, pZLabel_, pset);
+
+        for( ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); ++iter ){
           particleIndex idx = *iter;
           // delete particles that are outside this patch
-          if (   px[idx] >= high.x() || px[idx] <= low.x()
-              || py[idx] >= high.y() || py[idx] <= low.y()
-              || pz[idx] >= high.z() || pz[idx] <= low.z()){
+          if(   px[idx] >= high.x() || px[idx] <= low.x()
+             || py[idx] >= high.y() || py[idx] <= low.y()
+             || pz[idx] >= high.z() || pz[idx] <= low.z() )
+          {
             px[idx] = low.x() + (high.x() - low.x())/2.0;
             py[idx] = low.y() + (high.y() - low.y())/2.0;
             pz[idx] = low.z() + (high.z() - low.z())/2.0;;
@@ -301,7 +369,7 @@ namespace Uintah {
   
   void
   ParticlesHelper::schedule_relocate_particles( const Uintah::LevelP& level,
-                                               Uintah::SchedulerP& sched    )
+                                                Uintah::SchedulerP& sched )
   {
     using namespace std;
     using namespace Uintah;
@@ -311,13 +379,12 @@ namespace Uintah {
     vector<const VarLabel*> otherParticleVarLabels;
     const vector<string>& otherParticleVarNames = ParticlesHelper::get_relocatable_particle_varnames();
     vector<string>::const_iterator varNameIter = otherParticleVarNames.begin();
-    //    vector<string>::iterator varNameIter = otherParticleVarNames_.begin();
-    for (; varNameIter != otherParticleVarNames.end(); ++varNameIter) {
-      if (VarLabel::find( *varNameIter ) ) {
-        VarLabel* theVarLabel = VarLabel::find( *varNameIter );
+    //    vector<string>::iterator varNameIter = needsRelocation_.begin();
+    for( ; varNameIter != otherParticleVarNames.end(); ++varNameIter ){
+      if( VarLabel::find( *varNameIter ) ){
+        const VarLabel* theVarLabel = VarLabel::find( *varNameIter );
         
-        if (std::find(otherParticleVarLabels.begin(), otherParticleVarLabels.end(),theVarLabel) == otherParticleVarLabels.end())
-        {
+        if (std::find(otherParticleVarLabels.begin(), otherParticleVarLabels.end(),theVarLabel) == otherParticleVarLabels.end() ){
           otherParticleVarLabels.push_back(VarLabel::find( *varNameIter ));
         }
       }
@@ -327,48 +394,49 @@ namespace Uintah {
     otherParticleVarLabels.push_back(pIDLabel_);
     
     vector< vector<const VarLabel*> > otherParticleVars;
-    for (int m = 0; m < materials_->size(); m++) {
-      otherParticleVars.push_back(otherParticleVarLabels);
+    for( int m = 0; m < materials_->size(); ++m ){
+      otherParticleVars.push_back( otherParticleVarLabels );
     }
     sched->scheduleParticleRelocation(level, pPosLabel_, otherParticleVars, materials_);
     
     // clean the delete set
-    Task* task = scinew Task("cleanup deleteset",
-                             this, &ParticlesHelper::clear_deleteset);
+    Task* task = scinew Task("cleanup deleteset", this, &ParticlesHelper::clear_deleteset);
     sched->addTask(task, level->eachPatch(), materials_);
   }
   
   //--------------------------------------------------------------------
   
   // this will create the particle subset
-  void ParticlesHelper::clear_deleteset(const Uintah::ProcessorGroup*,
-                                        const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
-                                        Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw)
+  void ParticlesHelper::clear_deleteset( const Uintah::ProcessorGroup*,
+                                         const Uintah::PatchSubset* patches,
+                                         const Uintah::MaterialSubset* matls,
+                                         Uintah::DataWarehouse* old_dw,
+                                         Uintah::DataWarehouse* new_dw )
   {
     using namespace Uintah;
-    for(int m = 0; m<matls->size(); m++){
+    for( int m = 0; m<matls->size(); ++m ){
       const int matl = matls->get(m);
-      for(int p=0;p<patches->size();p++){
+      std::map<int,ParticleSubset*>& thisMatDelSet = deleteSets_[m];
+      for( int p=0; p<patches->size(); ++p ){
         const Patch* patch = patches->get(p);
-        ParticleSubset* existingDelset = deleteSet_[patch->getID()];
-        if (existingDelset->numParticles() > 0)
-        {
+        ParticleSubset* existingDelset = thisMatDelSet[patch->getID()];
+        if( existingDelset->numParticles() > 0 ){
           ParticleSubset* delset = scinew ParticleSubset(0,matl, patch);
-          deleteSet_[patch->getID()] = delset;
+          thisMatDelSet[patch->getID()] = delset;
         }
       }
     }
   }
   
-  
   //--------------------------------------------------------------------
+  
   // this task will sync particle position with wasatch computed values
   void ParticlesHelper::schedule_transfer_particle_ids(const Uintah::LevelP& level,
                                                        Uintah::SchedulerP& sched)
   {
     using namespace Uintah;
-    Uintah::Task* task = scinew Uintah::Task("transfer particles IDs",
-                                             this, &ParticlesHelper::transfer_particle_ids);
+    Uintah::Task* task = scinew Uintah::Task( "transfer particles IDs",
+                                              this, &ParticlesHelper::transfer_particle_ids );
     task->computes(pIDLabel_);
     task->requires(Task::OldDW, pIDLabel_, Uintah::Ghost::None, 0);
     sched->addTask(task, level->eachPatch(), materials_);
@@ -376,14 +444,16 @@ namespace Uintah {
   
   //--------------------------------------------------------------------
   
-  void ParticlesHelper::transfer_particle_ids(const Uintah::ProcessorGroup*,
-                                              const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
-                                              Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw )
+  void ParticlesHelper::transfer_particle_ids( const Uintah::ProcessorGroup*,
+                                               const Uintah::PatchSubset* patches,
+                                               const Uintah::MaterialSubset* matls,
+                                               Uintah::DataWarehouse* old_dw,
+                                               Uintah::DataWarehouse* new_dw )
   {
     using namespace Uintah;
-    for(int m = 0; m<matls->size(); m++){
+    for( int m = 0; m<matls->size(); ++m ){
       const int matl = matls->get(m);
-      for(int p=0;p<patches->size();p++){
+      for( int p=0; p<patches->size(); ++p ){
         const Patch* patch = patches->get(p);
         ParticleSubset* pset = old_dw->getParticleSubset(matl, patch);
         ParticleVariable<long64> pid;
@@ -396,17 +466,19 @@ namespace Uintah {
   }
   
   //--------------------------------------------------------------------
+
   // this task will sync particle position with wasatch computed values
-  void ParticlesHelper::schedule_sync_particle_position(const Uintah::LevelP& level,
-                                                        Uintah::SchedulerP& sched, const bool initialization)
+  void ParticlesHelper::schedule_sync_particle_position( const Uintah::LevelP& level,
+                                                         Uintah::SchedulerP& sched,
+                                                         const bool initialization )
   {
     using namespace Uintah;
-    Uintah::Task* task = scinew Uintah::Task("sync particles",
-                                             this, &ParticlesHelper::sync_particle_position, initialization);
-    if (initialization) {
-      task->modifies(pPosLabel_);
-    } else {
-      task->computes(pPosLabel_);
+    Uintah::Task* task = scinew Uintah::Task("sync particles", this, &ParticlesHelper::sync_particle_position, initialization );
+    if( initialization ){
+      task->modifies( pPosLabel_ );
+    }
+    else{
+      task->computes( pPosLabel_ );
     }
     task->requires(Task::NewDW, pXLabel_, Uintah::Ghost::None, 0);
     task->requires(Task::NewDW, pYLabel_, Uintah::Ghost::None, 0);
@@ -415,6 +487,7 @@ namespace Uintah {
   }
   
   //--------------------------------------------------------------------
+  
   void ParticlesHelper::sync_particle_position(const Uintah::ProcessorGroup*,
                                                const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
                                                Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw, const bool initialization)
@@ -422,13 +495,13 @@ namespace Uintah {
     using namespace Uintah;
     for(int m = 0; m<matls->size(); m++){
       const int matl = matls->get(m);
+      std::map<int,ParticleSubset*>& thisMatDelSet = deleteSets_[m];
       for(int p=0;p<patches->size();p++){
         const Patch* patch = patches->get(p);
         ParticleSubset* pset = initialization ? new_dw->getParticleSubset(matl, patch) : old_dw->getParticleSubset(matl, patch);
         const int numParticles =pset->numParticles();
         
-        //ParticleSubset* delset = scinew ParticleSubset(0,matl,patch);
-        new_dw->deleteParticles(deleteSet_[patch->getID()]);
+        new_dw->deleteParticles(thisMatDelSet[patch->getID()]);
         
         ParticleVariable<Point> ppos; // Uintah particle position
         
@@ -441,9 +514,6 @@ namespace Uintah {
         new_dw->get(py,    pYLabel_,                  pset);
         new_dw->get(pz,    pZLabel_,                  pset);
         if (initialization) {
-          //          ParticleVariable<Point> pxtmp;
-          //          new_dw->allocateTemporary(pxtmp, pset);
-          //          new_dw->put(pxtmp, pPosLabel, true);
           new_dw->getModifiable(ppos,    pPosLabel_,          pset);
         } else {
           new_dw->allocateAndPut(ppos,    pPosLabel_,          pset);
@@ -570,16 +640,27 @@ namespace Uintah {
           constParticleVariable<Point> pos;
           old_dw->get(pos,pPosLabel_,bndParticleSubset);
           
-          std::vector<int> bndParticlesIndices;
-          std::vector<Uintah::IntVector> bndCellIndices;
+          // map that holds particle indices per boundary cell: boundary cell index -> (vector of particles in that cell)
+          std::map<Uintah::IntVector, std::vector<int> > bndCIdxPIdx;
+          
+          // loop over all particles in this patch
           for (ParticleSubset::iterator it = bndParticleSubset->begin(); it!=bndParticleSubset->end();++it)
           {
+            // get particle index
             particleIndex idx = *it;
+            // get the cell index in which this particle lives
             const Uintah::IntVector cellIdx = patch->getCellIndex(pos[idx]);
+            // if this cell is part of the boundary face, then add it to the list of boundary cells and particles
             if(Patch::containsIndex(low,high,cellIdx) )
             {
-              bndParticlesIndices.push_back(idx);
-              bndCellIndices.push_back(cellIdx);
+              map<IntVector, vector<int> >::iterator it = bndCIdxPIdx.find(cellIdx);
+              map<IntVector, vector<int> >::iterator iend = bndCIdxPIdx.end();
+              if ( it == iend ) {
+                bndCIdxPIdx.insert(pair<IntVector, vector<int> >(cellIdx, vector<int>(1,idx)));
+              } else {
+                it->second.push_back(idx);
+              }
+              
             }
           }
           
@@ -620,13 +701,11 @@ namespace Uintah {
             // for every boundary point on this child, see which particles belong
             for( bndIter.reset(); !bndIter.done(); ++bndIter ) {
               const Uintah::IntVector bcPointIJK = *bndIter - unitNormal;
-              vector<Uintah::IntVector>::iterator cit = bndCellIndices.begin();
-              vector<int>::iterator pit = bndParticlesIndices.begin();
-              for (; cit != bndCellIndices.end() && pit != bndParticlesIndices.end(); ++cit, ++pit)
-              {
-                if (*cit == bcPointIJK) {
-                  childBndParticles.push_back(*pit);
-                }
+              // find this boundary cell in the bndCIdxPIdx
+              map<IntVector, vector<int> >::iterator it = bndCIdxPIdx.find(bcPointIJK);
+              map<IntVector, vector<int> >::iterator iend = bndCIdxPIdx.end();
+              if ( it != iend ) {
+                childBndParticles.insert(childBndParticles.end(),it->second.begin(), it->second.end());
               }
             }
             update_boundary_particles_vector( childBndParticles, bndName, patchID );
@@ -646,7 +725,9 @@ namespace Uintah {
     Uintah::PatchSet* patches = new Uintah::PatchSet;
     patches->addEach( localPatches->getVector() );
     parse_boundary_conditions(patches);
+    delete patches;
   }
+  
   //--------------------------------------------------------------------
   
   void ParticlesHelper::parse_boundary_conditions( const Uintah::PatchSet* const localPatches)
@@ -654,20 +735,21 @@ namespace Uintah {
     using namespace std;
     using namespace SCIRun;
     using namespace Uintah;
+
     // loop over the material set
-    BOOST_FOREACH( const Uintah::MaterialSubset* matSubSet, materials_->getVector() ) {
-      
+    for (int ms = 0; ms < materials_->size(); ms++) {
+      const Uintah::MaterialSubset* matSubSet = materials_->getSubset(ms);
       // loop over materials
-      for( int im=0; im<matSubSet->size(); ++im ) {
+      for( int im=0; im < matSubSet->size(); ++im ) {
         
         const int materialID = matSubSet->get(im);
         
         // loop over local patches
-        BOOST_FOREACH( const Uintah::PatchSubset* const patches, localPatches->getVector() ) {
-          
+        for (int ps = 0; ps < localPatches->size(); ps++) {
+          const Uintah::PatchSubset* const patches = localPatches->getSubset(ps);
           // loop over every patch in the patch subset
-          BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() ) {
-            
+          for (int p=0; p<patches->size(); p++) {
+            const Uintah::Patch* const patch = patches->get(p);
             const int patchID = patch->getID();
             
             std::vector<Uintah::Patch::FaceType> bndFaces;
@@ -675,8 +757,8 @@ namespace Uintah {
             
             // loop over the physical boundaries of this patch. These are the LOGICAL boundaries
             // and do NOT include intrusions
-            BOOST_FOREACH(const Uintah::Patch::FaceType face, bndFaces) {
-              
+            for (size_t f=0; f<bndFaces.size(); f++) {
+              const Patch::FaceType face = bndFaces[f];
               // for a full boundary face, get the list of particles that are near that boundary
               IntVector low, high;
               patch->getFaceCells(face,-1,low,high);
@@ -703,10 +785,9 @@ namespace Uintah {
                   msg << "ERROR: It looks like you have not set a name for one of your boundary conditions! "
                   << "You MUST specify a name for your <Face> spec boundary condition. Please revise your input file." << std::endl;
                   throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-                }
-                
+                }                
                 // for every child, allocate a new vector for boundary particles. this vector will
-                // be referenced by the boundary condition expressions.
+                // be referenced by the boundary condition expressions/tasks.
                 allocate_boundary_particles_vector(bndName, patchID );
               } // boundary child loop (note, a boundary child is what Wasatch thinks of as a boundary condition
             } // boundary faces loop
@@ -716,35 +797,242 @@ namespace Uintah {
     }
   }
   
-  //  //--------------------------------------------------------------------
-  //
-  //  void ParticlesHelper::schedule_add_particles( const Uintah::LevelP& level,
-  //                                                Uintah::SchedulerP& sched )
-  //  {
-  //    // this task will allocate a particle subset and create particle positions
-  //    Uintah::Task* task = scinew Uintah::Task( "add particles",
-  //                                              this, &ParticlesHelper::add_particles );
-  //    sched->addTask(task, level->eachPatch(), wasatch_->get_wasatch_materials());
-  //  }
-  //
-  //  //--------------------------------------------------------------------
-  //  void ParticlesHelper::add_particles( const Uintah::ProcessorGroup*,
-  //                                       const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
-  //                                       Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw )
-  //  {
-  //    using namespace Uintah;
-  //    for(int p=0; p<patches->size(); p++)
-  //    {
-  //      const Patch* patch = patches->get(p);
-  //      for(int m = 0;m<matls->size();m++)
-  //      {
-  //        int matl = matls->get(m);
-  //        ParticleSubset* pset = new_dw->haveParticleSubset(matl,patch) ? new_dw->getParticleSubset(matl, patch) : old_dw->getParticleSubset(matl, patch);
-  //        pset->addParticles(20);
-  //      }
-  //    }
-  //  }
+  //--------------------------------------------------------------------
+  
+  void ParticlesHelper::schedule_add_particles( const Uintah::LevelP& level,
+                                               Uintah::SchedulerP& sched )
+  {
+    if( needsBC_.size() == 0 ) return;
+    // this task will allocate a particle subset and create particle positions
+    Uintah::Task* task = scinew Uintah::Task( "add particles",
+                                              this, &ParticlesHelper::add_particles );
+    for( size_t i=0; i<needsBC_.size(); ++i ){
+      task->modifies(Uintah::VarLabel::find(needsBC_[i]));
+    }
+    task->modifies(pIDLabel_ );
+    task->modifies(pPosLabel_);
+    task->requires(Task::OldDW, sharedState_->get_delt_label());
+    sched->addTask(task, level->eachPatch(), materials_);
+  }
   
   //--------------------------------------------------------------------
   
-} /* namespace Wasatch */
+  void ParticlesHelper::add_particles( const Uintah::ProcessorGroup*,
+                                       const Uintah::PatchSubset* patches,
+                                       const Uintah::MaterialSubset* matls,
+                                       Uintah::DataWarehouse* old_dw,
+                                       Uintah::DataWarehouse* new_dw )
+  {
+    using namespace Uintah;
+    
+    delt_vartype DT;
+    old_dw->get(DT, sharedState_->get_delt_label());
+    const double dt = DT;
+
+    for( int m=0; m<matls->size(); ++m ){
+      const int matl = matls->get(m);
+      std::map<int,long64>& lastPIDPerPatch = lastPIDPerMaterialPerPatch_[m];
+      for( int p=0; p<patches->size(); ++p ){
+        const Patch* patch = patches->get( p );
+        const int patchID = patch->getID();
+        // get the last particle ID created by this patch. will be used further down.
+        long64& lastPID = lastPIDPerPatch[patchID];
+        const long64 pidoffset = patchID * PIDOFFSET;
+        
+        std::vector<Uintah::Patch::FaceType> bndFaces;
+        patch->getBoundaryFaces(bndFaces);
+        
+        // loop over the physical boundaries of this patch. These are the LOGICAL boundaries
+        // and do NOT include intrusions
+        for( size_t f=0; f < bndFaces.size(); ++f ){
+          Patch::FaceType face = bndFaces[f];
+          
+          // Get the number of "boundaries" (children) specified on this boundary face.
+          // example: x- boundary face has a circle specified as inlet while the rest of the
+          // face is specified as wall. This results in two "boundaries" or children.
+          // the BCDataArray will store this list of children
+          const Uintah::BCDataArray* bcDataArray = patch->getBCDataArray(face);
+          
+          // Grab the number of children on this boundary face
+          const int numChildren = bcDataArray->getNumberChildren(matl);
+          
+          const Uintah::IntVector unitNormal = patch->faceDirection(face); // this is needed to construct interior cells
+          // now go over every child-boundary (sub-boundary) specified on this domain boundary face
+          for( int chid = 0; chid<numChildren; ++chid ) {
+            
+            // here is where the fun starts. Now we can get information about this boundary condition.
+            // The BCDataArray stores information related to its children as BCGeomBase objects.
+            // Each child is associated with a BCGeomBase object. Grab that
+            Uintah::BCGeomBase* thisGeom = bcDataArray->getChild(matl,chid);
+            const std::string bndName = thisGeom->getBCName();
+            if( bndName=="NotSet" ){
+              std::ostringstream msg;
+              msg << "ERROR: It looks like you have not set a name for one of your boundary conditions! "
+              << "You MUST specify a name for your <Face> spec boundary condition. Please revise your input file." << std::endl;
+              throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+            }
+            
+            const Uintah::BCGeomBase::ParticleBndSpec& pBndSpec = thisGeom->getParticleBndSpec();
+            if( pBndSpec.hasParticlesBoundary() ){
+              if( pBndSpec.bndType == Uintah::BCGeomBase::ParticleBndSpec::INLET ){
+                // This is a particle inlet. get the number of boundary particles per second
+                const double pPerSec = pBndSpec.particlesPerSec;
+
+                //__________________________________________________________________________________
+                Uintah::Iterator bndIter; // allocate iterator
+                std::vector<int> childBndParticles;
+                // get the iterator for the extracells for this child
+                bcDataArray->getCellFaceIterator(matl, bndIter, chid);
+                if( bndIter.done() ) continue; // go to the next child if this iterator is empty
+                // get the number of cells on this boundary
+                const unsigned int nCells = bndIter.size();
+                // if the number of cells is zero, then return. this is extra proofing
+                if( nCells == 0 ) continue;
+                
+                ParticleSubset* pset = new_dw->haveParticleSubset(matl,patch) ? new_dw->getParticleSubset(matl, patch) : old_dw->getParticleSubset(matl, patch);
+
+                const unsigned int newNParticles = dt * pPerSec;
+                const unsigned int oldNParticles = pset->addParticles(newNParticles);
+                
+                // deal with particles IDs separately from other particle variables
+                ParticleVariable<long64> pids;
+                new_dw->getModifiable(pids, pIDLabel_, pset);
+
+                // deal with particles IDs separately from other particle variables
+                ParticleVariable<Uintah::Point> ppos;
+                new_dw->getModifiable(ppos, pPosLabel_, pset);
+
+                // deal with the rest of the particle variables below
+                const unsigned int nVars = needsBC_.size();
+                std::vector< Uintah::VarLabel* > needsBCLabels; // vector of varlabels that need bcs
+
+                SCIRun::StaticArray< ParticleVariable<double> > allVars(nVars);
+                SCIRun::StaticArray< ParticleVariable<double> > tmpVars(nVars);
+                for( size_t i=0; i<needsBC_.size(); ++i ){
+                  needsBCLabels.push_back( VarLabel::find(needsBC_[i]) );
+                  new_dw->getModifiable( allVars[(unsigned)i], needsBCLabels[i], pset );
+                  new_dw->allocateTemporary( tmpVars[(unsigned)i], pset );
+                }
+                
+                //__________________________________________________________________________________
+                // now allocate temporary variables of size new particlesubset
+                
+                ParticleVariable<long64> pidstmp;
+                new_dw->allocateTemporary(pidstmp, pset);
+
+                ParticleVariable<Uintah::Point> ppostmp;
+                new_dw->allocateTemporary(ppostmp, pset);
+
+                // copy the data from old variables to temporary vars
+                for( unsigned i=0; i<nVars; ++i ){
+                  ParticleVariable<double>& oldVar = allVars[i];
+                  ParticleVariable<double>& tmpVar = tmpVars[i];
+                  for( unsigned int p=0; p<oldNParticles; ++p ){
+                    tmpVar[p] = oldVar[p];
+                  }
+                }
+                // copy data from old variables for particle IDs and the position vector
+                for( unsigned int p=0; p<oldNParticles; ++p ){
+                  pidstmp[p] = pids[p];
+                  ppostmp[p] = ppos[p];
+                }
+                
+                // find out which variables are the x, y, and z position variables
+                std::vector<VarLabel*>::iterator itx = std::find (needsBCLabels.begin(), needsBCLabels.end(), pXLabel_);
+                const int ix = std::distance(needsBCLabels.begin(), itx);
+                ParticleVariable<double>& pxtmp = tmpVars[ix];
+                
+                std::vector<VarLabel*>::iterator ity = std::find (needsBCLabels.begin(), needsBCLabels.end(), pYLabel_);
+                const int iy = std::distance(needsBCLabels.begin(), ity);
+                ParticleVariable<double>& pytmp = tmpVars[iy];
+                
+                std::vector<VarLabel*>::iterator itz = std::find (needsBCLabels.begin(), needsBCLabels.end(), pZLabel_);
+                const int iz = std::distance(needsBCLabels.begin(), itz);
+                ParticleVariable<double>& pztmp = tmpVars[iz];
+                
+                // inject particles. This will place particles randomly on the injecting boundary
+                unsigned int i = oldNParticles;
+                Vector spacing = patch->dCell()/2.0;
+                for( unsigned int j=0; j<newNParticles; ++j, ++i ){
+                  
+                  // pick a random cell on this boundary
+                  const unsigned int r1 = rand() % nCells;
+                  bndIter.reset();
+                  for( unsigned int t = 0; t < r1; ++t ) bndIter++;
+                  
+                  // get the interior cell
+                  const IntVector bcPointIJK = *bndIter - unitNormal;
+                  const Point        bcPoint = patch->getCellPosition(bcPointIJK);
+
+                  // get the bounds of this cell
+                  const Point low (bcPoint - spacing);
+                  const Point high(bcPoint + spacing);
+                  
+                  // generate a random point inside this cell
+                  const Point pos( (((float) rand()) / RAND_MAX * ( high.x() - low.x()) + low.x()),
+                                   (((float) rand()) / RAND_MAX * ( high.y() - low.y()) + low.y()),
+                                   (((float) rand()) / RAND_MAX * ( high.z() - low.z()) + low.z()) );
+
+                  // set the particle ID
+                  pidstmp[i] = lastPID + j + 1 + pidoffset;
+
+                  // set the particle positions
+                  ppostmp[i] = pos;
+                  pxtmp[i]   = pos.x();
+                  pytmp[i]   = pos.y();
+                  pztmp[i]   = pos.z();
+                }
+                // save the last particle ID used on this patch
+                lastPID = pidstmp[oldNParticles + newNParticles - 1];
+                
+                // go through the list of particle variables specified at this boundary
+                //__________________________________________________________________________________
+                // Now, each BCGeomObject has BCData associated with it. This BCData contains the list
+                // of variables and types (Dirichlet, etc...), and values that the user specified
+                // through the input file!
+                Uintah::BCData bcData;
+                thisGeom->getBCData(bcData);
+                
+                // loop over needs bc data
+                for( size_t ivar=0; ivar < needsBC_.size(); ++ivar ){
+                  const std::string varName = needsBC_[ivar];
+                  const Uintah::BoundCondBase* bndCondBase = bcData.getBCValues(varName);
+                  int p = oldNParticles;
+                  ParticleVariable<double>& pvar = tmpVars[(unsigned)ivar];
+                  if( bndCondBase ){
+                    const Uintah::BoundCond<double>* const new_bc = dynamic_cast<const Uintah::BoundCond<double>*>(bndCondBase);
+                    const double doubleVal = new_bc->getValue();
+                    // right now, we only support constant boundary conditions
+                    for( unsigned int j=0; j<newNParticles; ++j, ++p ){
+                      //                      pvar[p] = ((double) rand()/RAND_MAX)*(doubleVal*1.2 - doubleVal*0.8) + doubleVal*0.8;
+                      pvar[p] = doubleVal;
+                    }
+                  }
+                  else if( varName != pXLabel_->getName() &&
+                           varName != pYLabel_->getName() &&
+                           varName != pZLabel_->getName() )
+                  {
+                    // for all particle variables that do not have bcs specified in the input file, initialize them to zero
+                    for( unsigned int j=0; j<newNParticles; ++j, ++p ){
+                      pvar[p] = 0.0;
+                    }
+                  }
+                }
+                
+                // put back temporary data
+                new_dw->put(pidstmp, pIDLabel_, true);
+                new_dw->put(ppostmp, pPosLabel_, true);
+                for( size_t ivar=0; ivar < needsBCLabels.size(); ++ivar ){
+                  new_dw->put(tmpVars[(unsigned)ivar],needsBCLabels[ivar],true);
+                }
+              }
+            }
+          } // boundary child loop
+        }
+      }
+    }
+  }
+  
+  //--------------------------------------------------------------------
+  
+} /* namespace Uintah */

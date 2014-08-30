@@ -161,45 +161,40 @@ using SCIRun::Mutex;
                                 DataWarehouse* new_dw);
 
        //! Recommended to use sharedState directly if you can.
-       virtual int getCurrentTimestep()
-       { return d_sharedState->getCurrentTopLevelTimeStep(); }
+       virtual int getCurrentTimestep() const { return d_sharedState->getCurrentTopLevelTimeStep(); }
 
        //! Recommended to use sharedState directly if you can.
-       virtual double getCurrentTime()
-       { return  d_sharedState->getElapsedTime(); }
+       virtual double getCurrentTime() const { return  d_sharedState->getElapsedTime(); }
 
        //! Get the time the next output will occur
-       virtual double getNextOutputTime() { return d_nextOutputTime; }
+       virtual double getNextOutputTime() const { return d_nextOutputTime; }
 
        //! Get the timestep the next output will occur
-       virtual int getNextOutputTimestep() { return d_nextOutputTimestep; }
+       virtual int getNextOutputTimestep() const { return d_nextOutputTimestep; }
 
        //! Get the time the next checkpoint will occur
-       virtual double getNextCheckpointTime() { return d_nextCheckpointTime; }
+       virtual double getNextCheckpointTime() const { return d_nextCheckpointTime; }
 
        //! Get the timestep the next checkpoint will occur
-       virtual int getNextCheckpointTimestep(){return d_nextCheckpointTimestep;}
+       virtual int getNextCheckpointTimestep() const { return d_nextCheckpointTimestep; }
 
        //! Returns true if data will be output this timestep
-       virtual bool isOutputTimestep()
-       { return d_isOutputTimestep; }
+       virtual bool isOutputTimestep() const { return d_isOutputTimestep; }
 
        //! Returns true if data will be checkpointed this timestep
-       virtual bool isCheckpointTimestep()
-       { return d_isCheckpointTimestep; }
+       virtual bool isCheckpointTimestep() const { return d_isCheckpointTimestep; }
 
        //! Get the directory of the current time step for outputting info.
-       virtual const std::string& getLastTimestepOutputLocation() const
-       { return d_lastTimestepLocation; }
+       virtual const std::string& getLastTimestepOutputLocation() const { return d_lastTimestepLocation; }
 
-       bool isLabelSaved( std::string label );
+       bool isLabelSaved ( const std::string & label ) const;
        
        //! Allow a component to define the output and checkpoint interval on the fly.
-       void updateOutputInterval(double inv);
-       void updateCheckpointInterval(double inv);
+       void updateOutputInterval(     double inv );
+       void updateCheckpointInterval( double inv );
 
-       double getOutputInterval(){return d_outputInterval;};
-       double getCheckpointInterval(){return d_checkpointInterval;};       
+       double getOutputInterval() const {     return d_outputInterval; }
+       double getCheckpointInterval() const { return d_checkpointInterval; }
 
      public:
 
