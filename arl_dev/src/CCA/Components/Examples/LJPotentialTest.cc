@@ -26,6 +26,8 @@
  */
 
 #include <CCA/Components/Examples/LJPotentialTest.h>
+#include <CCA/Ports/Scheduler.h>
+
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/NodeIterator.h>
@@ -36,7 +38,6 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <CCA/Ports/Scheduler.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Thread/Mutex.h>
@@ -438,7 +439,6 @@ void LJPotentialTest::calculateNonbondedForces(const ProcessorGroup* pg,
       int matl = matls->get(m);
 
       ParticleSubset* pset = old_dw->getParticleSubset(matl, patch);
-      ParticleSubset* delset = scinew ParticleSubset(0, matl, patch);
 
       // requires variables
       constParticleVariable<Point> px;
@@ -543,8 +543,6 @@ void LJPotentialTest::calculateNonbondedForces(const ProcessorGroup* pg,
         cerrLock.unlock();
       }
 
-      new_dw->deleteParticles(delset);
-
     }  // end materials loop
 
     // global reduction on
@@ -617,9 +615,13 @@ void LJPotentialTest::updatePosition(const ProcessorGroup* pg,
         pidsnew[idx] = pids[idx];
 
         // update position
+//        paccelnew[idx] = pforce[idx] / pmass[idx];
+//        pvelocitynew[idx] = pvelocity[idx] + paccel[idx] * delT;
+//        pxnew[idx] = px[idx] + pvelocity[idx] + pvelocitynew[idx] * 0.5 * delT;
+
         paccelnew[idx] = pforce[idx] / pmass[idx];
-        pvelocitynew[idx] = pvelocity[idx] + paccel[idx] * delT;
-        pxnew[idx] = px[idx] + pvelocity[idx] + pvelocitynew[idx] * 0.5 * delT;
+        pvelocitynew[idx] = pvelocity[idx];
+        pxnew[idx] = px[idx];
 
         if (ljdbg.active()) {
           cerrLock.lock();
