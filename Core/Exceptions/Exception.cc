@@ -156,15 +156,11 @@ void Exception::sci_throw(const Exception& exc)
       // exception will be thrown by the SCI_THROW macro
       return;
     } else if(strcasecmp(emode, "dbx") == 0){
-#if defined( REDSTORM )
-      cout << "Error: running debugger at exception is not supported on RedStorm\n";
-#else
       // Fire up the debugger
       char command[100];
       if(getenv("SCI_DBXCOMMAND")){
         sprintf(command, getenv("SCI_DBXCOMMAND"), getpid());
       } else {
-      cout << "Error: running debugger at exception is not supported on RedStorm\n";
 #ifdef HAVE_EXC
         sprintf(command, "winterm -c dbx -p %d &", getpid());
 #else
@@ -174,18 +170,13 @@ void Exception::sci_throw(const Exception& exc)
       cerr << "Starting: " << command << '\n';
       system(command);
       emode="ask";
-#endif
     } else if(strcasecmp(emode, "cvd") == 0){
-#if defined( REDSTORM )
-      cout << "Error: running debugger at exception is not supported on RedStorm\n";
-#else
       // Fire up the slow, fancy debugger
       char command[100];
       sprintf(command, "cvd -pid %d &", getpid());
       cerr << "Starting: " << command << '\n';
       system(command);
       emode="ask";
-#endif
     } else if(strcasecmp(emode, "abort") == 0){
       // This will trigger the thread library, but we cannot
       // directly call the thread library here or it would create
@@ -201,7 +192,7 @@ void Exception::sci_throw(const Exception& exc)
 string getStackTrace(void* context /*=0*/)
 {
   ostringstream stacktrace;
-#if defined(HAVE_EXC) || (defined(__GNUC__) && defined(__linux)) || defined(REDSTORM)
+#if defined(HAVE_EXC) || (defined(__GNUC__) && defined(__linux))
   static const int MAXSTACK = 100;
 #endif
 
@@ -223,27 +214,6 @@ string getStackTrace(void* context /*=0*/)
     for( int i = 1; i < nframes; i++ ) {
       stacktrace << "0x" << (void*)addrs[i] << ": " << names[i] << '\n';
     }
-  }
-#elif defined(REDSTORM)
-
-  // FYI, RedStorm doesn't seem to provide the function names as might be expected
-  // when using backtrace_symbols.  So in the Uintah/tools/StackTrace/ directory
-  // is code to get the function names.
-  void * callstack[ MAXSTACK ];
-  int    nframes = backtrace( callstack, MAXSTACK );
-
-  if( nframes == 0 ){
-    stacktrace << "Backtrace not available!\n";
-  } else {
-    char ** strs = backtrace_symbols( callstack, nframes );
-
-    stacktrace << "RedStorm Stack Trace:\n";
-    stacktrace.flags( ios::hex );
-
-    for( int pos = 0; pos < nframes; ++pos ) {
-      stacktrace << strs[pos] << "\n";
-    }
-    free(strs);
   }
 
 #elif defined(__GNUC__) && defined(__linux)

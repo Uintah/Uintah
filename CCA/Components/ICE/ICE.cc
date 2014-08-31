@@ -406,7 +406,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     if( !id ) {
       // stringstream parsing failed... on many (most) systems, the
       // original value assigned to index_val would be left
-      // intact... but on some systems (redstorm) it inserts garbage,
+      // intact... but on some systems it inserts garbage,
       // so we have to manually restore the value.
       index_val = DEFAULT_VALUE;
     }

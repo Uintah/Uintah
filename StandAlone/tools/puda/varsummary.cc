@@ -50,7 +50,7 @@ namespace SCIRun {
 
 // Need these min/max functions for Matrix3 in order for the templated findMinMax functions to work.
 //
-#if defined(OSX_SNOW_LEOPARD_OR_LATER) || defined(__PGI) || ( !defined(SCI_64BITS) && !defined(REDSTORM) )
+#if defined(OSX_SNOW_LEOPARD_OR_LATER) || defined(__PGI) || ( !defined(SCI_64BITS) )
   long64  Min( long64 l, long64 r) { return l < r ? l : r;  }
   long64  Max( long64 l, long64 r) { return l > r ? l : r;  }
 #endif
