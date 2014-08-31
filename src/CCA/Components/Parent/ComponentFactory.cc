@@ -26,6 +26,7 @@
 #include <CCA/Components/Examples/Benchmark.h>
 #include <CCA/Components/Examples/Burger.h>
 #include <CCA/Components/Examples/RMCRT_Test.h>
+#include <CCA/Components/Examples/LJPotentialTest.h>
 #include <CCA/Components/Examples/ParticleTest1.h>
 #include <CCA/Components/Examples/Poisson1.h>
 #include <CCA/Components/Examples/Poisson2.h>
@@ -199,10 +200,6 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   } 
 #endif
 
-  if (sim_comp == "poisson1" || sim_comp == "POISSON1") {
-    return scinew Poisson1(world);
-  }
-
 #ifdef HAVE_CUDA
   if (sim_comp == "poissongpu1" || sim_comp == "POISSONGPU1") {
     return scinew PoissonGPU1(world);
@@ -212,6 +209,9 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   }
 #endif
 
+  if (sim_comp == "poisson1" || sim_comp == "POISSON1") {
+    return scinew Poisson1(world);
+  }
   if (sim_comp == "regriddertest" || sim_comp == "REGRIDDERTEST") {
     return scinew RegridderTest(world);
   } 
@@ -226,7 +226,10 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   }
   if (sim_comp == "benchmark" || sim_comp == "BENCHMARK") {
     return scinew Benchmark(world);
-  } 
+  }
+  if (sim_comp == "ljpotentialtest" || sim_comp == "LJPOTENTIALTEST") {
+    return scinew LJPotentialTest(world);
+  }
 
 #ifndef NO_MODELS_RADIATION
   if (sim_comp == "RMCRT_Test") {

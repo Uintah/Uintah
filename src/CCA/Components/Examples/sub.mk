@@ -38,6 +38,7 @@ SRCS += \
         $(SRCDIR)/ExamplesLabel.cc     \
         $(SRCDIR)/HeatEquation.cc      \
         $(SRCDIR)/Interpolator.cc      \
+        $(SRCDIR)/LJPotentialTest.cc   \
         $(SRCDIR)/ParticleTest1.cc     \
         $(SRCDIR)/Poisson1.cc          \
         $(SRCDIR)/Poisson2.cc          \
