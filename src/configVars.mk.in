@@ -88,7 +88,6 @@ SUBDIRS += testprograms
 
 IS_OSX := @IS_OSX@
 IS_AIX := @IS_AIX@
-IS_REDSTORM := no
 IS_BGQ := @IS_BGQ@
 MAKE_ARCHIVES := @MAKE_ARCHIVES@
 IS_DEBUG := @DEBUG@

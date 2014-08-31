@@ -5,7 +5,7 @@
 #
 # pscp <num Processors>  <login@Machine>:<remote dir> < localDirectory>
 # You must be able to ssh onto the remote machine without a password
-# or it won't work... On some systems (Redstorm) you may need to use 
+# or it won't work... On some systems you may need to use 
 # a different 'ssh'... You may set the SSH environment variable to this
 # ssh (eg: setenv SSH rssh) to use the specified SSH.
 # 
