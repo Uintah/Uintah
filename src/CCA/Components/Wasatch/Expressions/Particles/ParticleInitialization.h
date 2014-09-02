@@ -216,25 +216,7 @@ evaluate()
   
   //________________________________________________
   // collect the grid points that live inside the geometry
-  std::vector<SCIRun::Point> insidePoints;
-  int nPatchCells=0;
-  for(Uintah::CellIterator iter(patch->getCellIterator()); !iter.done(); iter++)
-  {
-    nPatchCells++;
-    IntVector iCell = *iter;
-    // loop over all geometry objects
-    GeomValueMapT::iterator geomIter = geomObjects_.begin();
-    SCIRun::Point p = patch->getCellPosition(iCell);
-    while (geomIter != geomObjects_.end())
-    {
-      const bool isInside = (*geomIter)->inside(p);
-      if ( isInside )
-      {
-        insidePoints.push_back(p);
-      }
-      ++geomIter;
-    }
-  }
+  const std::vector<SCIRun::Point>& insidePoints = GeometryPieceFactory::getInsidePoints(patch);
 
   ParticleField::iterator phiIter = result.begin();
   ParticleField::iterator phiIterEnd = result.end();
