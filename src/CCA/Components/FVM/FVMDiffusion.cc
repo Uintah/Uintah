@@ -64,8 +64,6 @@ void FVMDiffusion::problemSetup(const ProblemSpecP& params,
 	diffspec->require("delt", delt_);
   mymat_ = scinew SimpleMaterial();
   sharedState->registerSimpleMaterial(mymat_);
-	cout << "diffusivity is: " << diffusivity << endl;
-	cout << "delt is: " << delt_ << endl;
 }
  
 void FVMDiffusion::scheduleInitialize(const LevelP& level,
@@ -75,6 +73,7 @@ void FVMDiffusion::scheduleInitialize(const LevelP& level,
 			   this, &FVMDiffusion::initialize);
   task->computes(concentration_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+	cout << "Doing Schedule Initialize" << endl;
 }
  
 void FVMDiffusion::scheduleComputeStableTimestep(const LevelP& level,
@@ -139,49 +138,6 @@ void FVMDiffusion::timeAdvance(const ProcessorGroup* pg,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     for(int m = 0;m<matls->size();m++){
-      int matl = matls->get(m);
-      constNCVariable<double> temperature;
-
-      old_dw->get(temperature, concentration_label, matl, patch, 
-                  Ghost::AroundNodes, 1);
-
-      NCVariable<double> newtemperature;
-
-      new_dw->allocateAndPut(newtemperature, concentration_label, matl, patch);
-      newtemperature.copyPatch(temperature, newtemperature.getLow(), 
-                               newtemperature.getHigh());
-
-      double residual=0;
-      IntVector l = patch->getNodeLowIndex();
-      IntVector h = patch->getNodeHighIndex(); 
-
-      l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1,
-		     patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1,
-		     patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1);
-      h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor?0:1,
-		     patch->getBCType(Patch::yplus) == Patch::Neighbor?0:1,
-		     patch->getBCType(Patch::zplus) == Patch::Neighbor?0:1);
-
-      delt_vartype dt;
-      old_dw->get(dt, sharedState_->get_delt_label());
-      Vector dx = patch->getLevel()->dCell();
-      Vector diffusion_number(1./(dx.x()*dx.x()), 1./(dx.y()*dx.y()),
-                              1./(dx.z()*dx.z()));
-      
-      double k = .5;
-
-      cout << "dx = " << dx << endl;
-      diffusion_number = diffusion_number* k*dt;
-      cout << "diffusion_number = " << diffusion_number << endl;
-
-      for(NodeIterator iter(l, h);!iter.done(); iter++){
-	newtemperature[*iter]=(1./6)*(
-	  temperature[*iter+IntVector(1,0,0)]+temperature[*iter+IntVector(-1,0,0)]+
-	  temperature[*iter+IntVector(0,1,0)]+temperature[*iter+IntVector(0,-1,0)]+
-	  temperature[*iter+IntVector(0,0,1)]+temperature[*iter+IntVector(0,0,-1)]);
-	double diff = newtemperature[*iter]-temperature[*iter];
-	residual += diff*diff;
-      }
     }
   }
 }
