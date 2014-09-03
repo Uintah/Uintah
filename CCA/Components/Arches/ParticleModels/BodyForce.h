@@ -105,6 +105,14 @@ namespace Uintah{
   //Function definitions:
   
   template <typename IT, typename DT>
+  void BodyForce<IT,DT>::create_local_labels(){
+    for ( int i = 0; i < _N; i++ ){
+      const std::string name = get_name(i, _base_var_name);
+      register_new_variable(name, _D_type);
+    }
+  }
+  
+  template <typename IT, typename DT>
   BodyForce<IT, DT>::BodyForce( std::string task_name, int matl_index,
                                          const std::string base_var_name, const int N ) :
   _base_var_name(base_var_name), TaskInterface( task_name, matl_index ), _N(N){
