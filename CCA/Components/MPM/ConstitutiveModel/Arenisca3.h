@@ -165,7 +165,6 @@ namespace Uintah {
     virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
 
     // clone
-
     Arenisca3* clone();
 
     // compute stable timestep for this patch
@@ -199,7 +198,7 @@ namespace Uintah {
 
     void computeElasticProperties(const Matrix3 stress,
                                   const Matrix3 ep,
-				  const double& P3,
+				                  const double& P3,
                                   double & bulk,
                                   double & shear
                                  );
