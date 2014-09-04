@@ -812,17 +812,15 @@
                                         need_applies_to="type node_specific"/> <!-- base density label -->
             </particle_density>
             
-            <radius                     spec="REQUIRED NO_DATA"
+            <diameter                   spec="REQUIRED NO_DATA"
                                         attribute1="type REQUIRED STRING 'constant, node_specific"
-                                        need_applies_to="type drag"> <!-- use a constant radius for all particles, or use a model for each-->
+                                        need_applies_to="type drag"> <!-- use a constant diameter for all particles, or use a model for each-->
               <constant                 spec="REQUIRED DOUBLE"
                                         need_applies_to="type constant"/>
-              <radius_label             spec="REQUIRED STRING"
+              <diameter_label           spec="REQUIRED STRING"
                                         need_applies_to="type node_specific"/> <!-- base radius label -->
-            </radius>
+            </diameter>
             
-            <kinematic_viscosity        spec="REQUIRED DOUBLE"
-                                        need_applies_to="type drag"/>         <!-- kinematic viscosity of fluid -->
             <direction                  spec="REQUIRED STRING 'x,y,z'"
                                         need_applies_to="type drag"/>         <!-- apply this source to which velocity -->
             <u_velocity_label           spec="REQUIRED STRING"
@@ -945,7 +943,8 @@
                                                                            pc_transport,
                                                                            moment2_mixture_fraction_src,
                                                                            dissipation_src,
-                                                                           manifold_rxn'">                                                           
+                                                                           manifold_rxn,
+                                                                           momentum_drag_src'">
 
             <!-- Specs for coal gas devol model -->
             <devol_model_name           spec="REQUIRED STRING" need_applies_to="type coal_gas_devol" />
@@ -1135,7 +1134,13 @@
                                         attribute1="type REQUIRED STRING 'super_bee, roe_minmod, upwind, central'"
                                         need_applies_to="type manifold_rxn"/> <!-- choose a convection scheme --> 
 
-                      
+
+            <!-- momentum drag src -->
+            <N                          spec="REQUIRED INTEGER 'positive'" need_applies_to="type momentum_drag_src"/> <!-- number of quad nodes -->
+            <base_x_label               spec="OPTIONAL STRING" need_applies_to="type momentum_drag_src"/>  <!-- base labels for the quad node srcs -->
+            <base_y_label               spec="OPTIONAL STRING" need_applies_to="type momentum_drag_src"/>
+            <base_z_label               spec="OPTIONAL STRING" need_applies_to="type momentum_drag_src"/>
+            
           </src>
 
         </Sources>
