@@ -734,6 +734,7 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
     t->requires(Task::NewDW, Mlb->gVolumeLabel,     Ghost::AroundCells, 1);
     t->requires(Task::NewDW, Mlb->gVelocityBCLabel, Ghost::AroundCells, 1); 
     t->requires(Task::NewDW, Mlb->gTemperatureLabel,Ghost::AroundCells, 1);
+    t->requires(Task::NewDW, Mlb->gConcentrationLabel,Ghost::AroundCells, 1);
     t->requires(Task::NewDW, Mlb->gSp_volLabel,     Ghost::AroundCells, 1);
     t->requires(Task::OldDW, Mlb->NC_CCweightLabel,one_matl,
                                                     Ghost::AroundCells, 1);
@@ -1265,14 +1266,17 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       int indx = mpm_matl->getDWIndex();
       // Create arrays for the grid data
       constNCVariable<double> gmass, gvolume, gtemperature, gSp_vol;
+      constNCVariable<double> gconcentration;
       constNCVariable<Vector> gvelocity;
       CCVariable<double> cmass,Temp_CC, sp_vol_CC, rho_CC;
+      CCVariable<double> Conc_CC;
       CCVariable<Vector> vel_CC;
       constCCVariable<double> Temp_CC_ice, sp_vol_CC_ice;
 
       new_dw->allocateAndPut(cmass,    MIlb->cMassLabel,     indx, patch);  
       new_dw->allocateAndPut(vel_CC,   MIlb->vel_CCLabel,    indx, patch);  
       new_dw->allocateAndPut(Temp_CC,  MIlb->temp_CCLabel,   indx, patch);  
+      new_dw->allocateAndPut(Conc_CC,  MIlb->conc_CCLabel,   indx, patch);  
       new_dw->allocateAndPut(sp_vol_CC, Ilb->sp_vol_CCLabel, indx, patch); 
       new_dw->allocateAndPut(rho_CC,    Ilb->rho_CCLabel,    indx, patch);
       
@@ -1283,6 +1287,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       new_dw->get(gvolume,      Mlb->gVolumeLabel,      indx, patch,gac, 1);
       new_dw->get(gvelocity,    Mlb->gVelocityBCLabel,  indx, patch,gac, 1);
       new_dw->get(gtemperature, Mlb->gTemperatureLabel, indx, patch,gac, 1);
+      new_dw->get(gconcentration, Mlb->gConcentrationLabel, indx, patch,gac, 1);
       new_dw->get(gSp_vol,      Mlb->gSp_volLabel,      indx, patch,gac, 1);
       old_dw->get(sp_vol_CC_ice,Ilb->sp_vol_CCLabel,    indx, patch,gn, 0); 
       old_dw->get(Temp_CC_ice,  MIlb->temp_CCLabel,     indx, patch,gn, 0);
@@ -1297,6 +1302,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         patch->findNodesFromCell(*iter,nodeIdx);
  
         double Temp_CC_mpm = 0.0;  
+        double Conc_CC_mpm = 0.0;  
         double sp_vol_mpm = 0.0;   
         Vector vel_CC_mpm  = Vector(0.0, 0.0, 0.0);
         
@@ -1306,10 +1312,12 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
           sp_vol_mpm  += gSp_vol[nodeIdx[in]]      * NC_CCw_mass;
           vel_CC_mpm  += gvelocity[nodeIdx[in]]    * NC_CCw_mass;
           Temp_CC_mpm += gtemperature[nodeIdx[in]] * NC_CCw_mass;
+          Conc_CC_mpm += gconcentration[nodeIdx[in]] * NC_CCw_mass;
         }
         double inv_cmass = 1.0/cmass[c];
         vel_CC_mpm  *= inv_cmass;    
         Temp_CC_mpm *= inv_cmass;
+        Conc_CC_mpm *= inv_cmass;
         sp_vol_mpm  *= inv_cmass;
 
         //__________________________________
