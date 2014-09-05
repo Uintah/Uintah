@@ -603,7 +603,7 @@ void SPME::transformRealToFourier(const ProcessorGroup* pg,
   MPI_Allreduce(sendbuf,
                 recvbuf,
                 totalElements,
-                MPI_C_DOUBLE_COMPLEX,
+                MPI_DOUBLE_COMPLEX,
                 MPI_SUM,
                 pg->getComm());
 
@@ -774,7 +774,7 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
   MPI_Allreduce(sendbuf,
                 recvbuf,
                 totalElements,
-                MPI_C_DOUBLE_COMPLEX,
+                MPI_DOUBLE_COMPLEX,
                 MPI_SUM,  // If forces aren't coming out right, look here!  FIXME
                 pg->getComm());
 
