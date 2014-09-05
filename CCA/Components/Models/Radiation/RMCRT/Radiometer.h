@@ -53,6 +53,7 @@ namespace Uintah{
       /** @brief Interface to input file information */
       void  problemSetup( const ProblemSpecP& prob_spec,
                           const ProblemSpecP& rmcrt_ps,
+                          const GridP& grid,
                           SimulationStateP& sharedState,
                           const bool getExtraInputs );
 
