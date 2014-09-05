@@ -19,9 +19,12 @@
 using namespace std;
 using namespace Uintah;
 
+Uintah::BoundaryCondition_new::PatchToSVolBoundary BoundaryCondition_new::svol_boundary_info; 
+
 BoundaryCondition_new::BoundaryCondition_new( const int matl_id):
   d_matl_id(matl_id)
 {
+
 } 
 
 BoundaryCondition_new::~BoundaryCondition_new()
@@ -94,6 +97,8 @@ void BoundaryCondition_new::problemSetup( ProblemSpecP& db, std::string eqn_name
   //   2) create a task that actually populates 1) 
   //   3) use the storage container for the BC and iterate through to apply BC's
   //   **RIGHT NOW IT IS CHECKING EACH CELL FOR BC!
+  //
+
 }
 
 void 
@@ -878,6 +883,63 @@ void BoundaryCondition_new::Tabulated::applyBC( const Patch* patch, Patch::FaceT
         phi[*bound_ptr] = 2.0 * tab_bc_value - phi[bp1];
       }
 
+    }
+  }
+}
+
+//new stuff ---------------------------------
+void
+BoundaryCondition_new::sched_create_masks(const LevelP& level, SchedulerP& sched, const MaterialSet* matls)
+{
+
+  Task* tsk = scinew Task( "BoundaryCondition_new::create_masks", this, &BoundaryCondition_new::create_masks);
+  sched->addTask(tsk, level->eachPatch(), matls);
+
+}
+void 
+BoundaryCondition_new::create_masks( const ProcessorGroup* pg,
+                                     const PatchSubset* patches,
+                                     const MaterialSubset* matls,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw){
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+
+    vector<Patch::FaceType>::const_iterator iter;
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
+
+    //Patch boundary face iterator
+    for (iter = bf.begin(); iter !=bf.end(); iter++){
+
+      Patch::FaceType face = *iter;
+
+      typedef std::map<int,std::vector<BCGeomBase*> > BCDataArrayType;
+      const BoundCondBase* bc;
+      const BCDataArray* bc_data_array = patch->getBCDataArray(face); 
+      const int matl_id = 0; 
+
+      //get the face direction
+      IntVector insideCellDir = patch->faceDirection(face);
+
+      //get the number of children
+      int numChildren = bc_data_array->getNumberChildren(d_matl_id); //assumed one material
+
+      for (int child = 0; child < numChildren; child++){
+
+        Uintah::BCGeomBase* thisGeom = bc_data_array->getChild(d_matl_id,child); 
+
+        const std::string child_name = thisGeom->getBCName(); 
+        if ( child_name == "NotSet"){ 
+          //need to enforce a name being set? 
+        }
+
+        Uintah::Iterator bnd_iter;
+        bc_data_array->getCellFaceIterator(d_matl_id, bnd_iter, child); 
+
+
+      }
     }
   }
 }

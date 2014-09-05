@@ -35,6 +35,7 @@
 #include <CCA/Components/Arches/IntrusionBC.h>
 #include <CCA/Components/Arches/Filter.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
+#include <CCA/Components/Arches/Task/TaskInterface.h>
 
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
@@ -1796,6 +1797,8 @@ void BoundaryCondition::sched_setAreaFraction( SchedulerP& sched,
   tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells, 1 ); 
  
   sched->addTask(tsk, level->eachPatch(), matls);
+
+  d_newBC->sched_create_masks(level, sched, matls); 
 
 }
 void 
