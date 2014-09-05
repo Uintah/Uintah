@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- No Porosity -->
+<Uintah_Include>
+  <CR> 1.0 </CR>
+  <p0_crush_curve>  -1e30   </p0_crush_curve>
+  <p1_crush_curve>  1e-11 </p1_crush_curve>
+  <p3_crush_curve>  0.5   </p3_crush_curve>
+  <p4_fluid_effect> 0.0     </p4_fluid_effect>
+  <fluid_B0>        0.0     </fluid_B0>
+</Uintah_Include>

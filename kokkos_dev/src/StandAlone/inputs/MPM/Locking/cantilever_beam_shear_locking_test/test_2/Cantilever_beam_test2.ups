@@ -1,0 +1,123 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+   <Meta>
+       <title>checkerboard test 2</title>
+   </Meta>
+   <SimulationComponent type="mpm" />
+   <Time>
+       <maxTime>0.385219527172</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>1e-5</delt_min>
+       <delt_max>1e-5</delt_max>
+       <timestep_multiplier>0.1</timestep_multiplier>
+   </Time>
+
+   <DataArchiver>
+       <filebase> checkerboard_test_2.uda </filebase>
+       <outputInterval>1e-6</outputInterval>
+       <save label = "p.x"/>
+       <save label = "p.mass"/>
+       <save label = "p.color"/>
+       <save label = "p.stress"/>
+       <save label = "p.volume"/>
+       <save label = "p.velocity"/>
+       <save label = "p.particleID"/>
+       <save label = "p.scalefactor" />
+       <save label = "p.deformationMeasure"/>
+
+       <save label = "TotalMomentum"/>
+       <save label = "KineticEnergy"/>
+       <save label = "TotalMass"/>
+       <save label = "StrainEnergy"/>
+
+       <checkpoint cycle = "2" interval = "1.0e-6"/>
+   </DataArchiver>
+
+    <MPM>
+       <time_integrator>explicit</time_integrator>
+       <interpolator>gimp</interpolator>
+       <DoExplicitHeatConduction>false</DoExplicitHeatConduction>
+       <artificial_viscosity>true</artificial_viscosity>
+       <artificial_viscosity_heating>false</artificial_viscosity_heating>
+       <do_contact_friction_heating>false</do_contact_friction_heating>
+       <withColor>      true      </withColor>
+       <erosion algorithm = "RemoveMass"/>
+    </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+ 
+    <MaterialProperties>
+       <MPM>
+         <material name="beam">
+           <constitutive_model type="comp_neo_hook">
+             <bulk_modulus>  70.28e9 </bulk_modulus>
+             <shear_modulus> 26.23e9 </shear_modulus>
+           </constitutive_model>
+           <density> 2710.0 </density>
+
+           <thermal_conductivity>1.3</thermal_conductivity>
+           <specific_heat>1366.0</specific_heat>
+           <melt_temp>3695.0</melt_temp>
+           <room_temp>294.0</room_temp>
+
+           <include href="beam_include_test2.xml"/>
+         </material>
+
+       <contact>
+         <type>single_velocity</type>
+         <mu>0.0</mu>
+       </contact>
+       </MPM>
+    </MaterialProperties>
+
+    <Grid>
+         <BoundaryConditions>
+          <Face side = "x-">
+             <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                     <value> [0.0,0.0,0.0] </value>
+             </BCType>
+           </Face>
+           <Face side = "x+">
+             <BCType id = "all" var = "Neumann" label = "Velocity">
+                     <value>[0.0,0.0,0.0]</value>
+             </BCType>
+           </Face>
+           <Face side = "y-">
+                   <BCType id = "all" var = "Neumann" label = "Velocity">
+                           <value>[0.0,0.0,0.0]</value>
+                   </BCType>
+           </Face>
+           <Face side = "y+">
+                   <BCType id = "all" var = "Neumann" label = "Velocity">
+                           <value>[0.0,0.0,0.0]</value>
+                   </BCType>
+           </Face>                           
+           <Face side = "z-">
+                  <BCType id = "all" var = "Neumann" label = "Velocity">
+                           <value>[0.0,0.0,0.0]</value>
+                  </BCType>
+           </Face>                  
+          <Face side = "z+">
+                   <BCType id = "all" var = "Neumann" label = "Velocity">
+                          <value>[0.0,0.0,0.0]</value>
+                  </BCType>
+           </Face>
+       </BoundaryConditions>
+
+       <Level>
+           <Box label = "1">
+              <lower>[0.0, -3, -3]</lower>
+              <upper>[12, 3, 3]</upper>
+              <patches>[2,2,2]</patches>
+              <extraCells> [1,1,1] </extraCells>
+           </Box>
+           <spacing>[ 0.5, 0.5, 0.5]</spacing>
+	   
+       </Level>
+
+    </Grid>
+</Uintah_specification> 

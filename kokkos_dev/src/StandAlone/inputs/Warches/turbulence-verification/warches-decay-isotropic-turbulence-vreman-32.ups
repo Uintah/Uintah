@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Uintah_specification>
+  <Meta>
+    <title>Arches Decay of Isotropic Turbulence - Vreman - 32^3</title>
+  </Meta>
+
+  <SimulationComponent type="arches"/>
+
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>     0.67   </maxTime>
+    <initTime>    0.0     </initTime>
+    <delt_min>    1e-3 </delt_min>
+    <delt_max>    1e-3     </delt_max>
+    <max_Timesteps> 1000 </max_Timesteps>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+<!--__________________________________-->
+  <DataArchiver>
+    <filebase>warches-decay-isotropic-turbulence-vreman-32.uda</filebase>
+	<outputTimestepInterval>10</outputTimestepInterval>
+    <outputInitTimestep/>    
+    <save label="uVelocitySPBC"/>    
+    <save label="vVelocitySPBC"/>    
+    <save label="wVelocitySPBC"/>            
+    <save label="dilatation"/>    
+    <save label="TurbulentViscosity"/>    
+    <checkpoint cycle="2" timestepInterval="0.001"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+
+<!--__________________________________-->
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>       [0,0,0]         </lower>
+        <upper>       [0.56548668,0.56548668,0.56548668]</upper>
+        <resolution>  [32,32,32]      </resolution>        
+        <patches>     [2,2,2]         </patches>
+        <extraCells>[0,0,0]</extraCells>        
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+  <PhysicalConstants>
+    <gravity>   [0,0,0]   </gravity>
+    <reference_point> [0,0,0]   </reference_point>
+    <viscosity> 1e-5  </viscosity>
+  </PhysicalConstants>
+
+
+     <Wasatch>
+
+    <Turbulence model="VREMAN">
+      <EddyViscosityCoefficient>0.2</EddyViscosityCoefficient>
+    </Turbulence>
+
+    <Density>
+      <Constant name="rho-wasatch" value="1.0" />     
+    </Density>
+
+    </Wasatch>
+<!--__________________________________-->
+  <CFD>
+    <ARCHES>
+
+      <TimeIntegrator>
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+
+      <TransportEqns>
+        <Eqn label="mixture_fraction" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>super_bee</conv_scheme>
+          <determines_properties/>
+          <initialization type="constant">
+            <constant>.0</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+      </TransportEqns>
+
+      <Properties>
+        <ConstantProps>
+          <density>1.0</density>
+          <temperature>298.0</temperature>
+        </ConstantProps>
+      </Properties>
+
+      <BoundaryConditions>
+    </BoundaryConditions>
+
+      <ExplicitSolver>
+        <initial_dt>                   1           </initial_dt>
+        <kineticEnergy_fromFC>true    </kineticEnergy_fromFC>
+        <PressureSolver>
+          <normalize_pressure>true    </normalize_pressure>
+          <Parameters>
+            <tolerance>      1.0e-12  </tolerance>
+            <solver>          cg      </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <maxiterations>   25     </maxiterations>
+            <skip>             1      </skip>
+          </Parameters>
+        </PressureSolver>
+
+        <MomentumSolver>
+ 	 	 	 	 	 	 <use_wasatch_momentum_rhs/>
+          <convection_scheme>central</convection_scheme>
+          <initialization type="input">
+            <input_file>inputs/ARCHES/periodicTurb/cbc32_uvw_arches.gz</input_file>
+          </initialization>
+        </MomentumSolver>
+
+
+      </ExplicitSolver>
+    </ARCHES>
+
+  </CFD>
+
+</Uintah_specification>
