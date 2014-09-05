@@ -448,6 +448,7 @@ public:
   enum BCMaskType {BOUNDARY_CELL, BOUNDARY_FACE, FIRST_NORMAL_INTERIOR};
 
   //copied from Tony...passes the number of ghosts
+  /** @brief Copied from Tony and added passed ghosts. This creates a memory window for mask creation. **/ 
   template< typename T >
   static SpatialOps::MemoryWindow
   get_mem_win_for_masks( const Uintah::Patch* const patch, const int nGhost ){
@@ -464,12 +465,15 @@ public:
 
   }
 
+  /** @brief For a specific boundary and field type, this struct will hold the mask **/ 
   template <typename FieldT>
   struct BoundaryBase { 
 
     public: 
+      /** @brief Return the boundary name **/ 
       const std::string get_name(){ return _boundary_name; }
 
+      /** @brief Create the mask.  Note the mask is a function of the num. of ghost cells...this is going to be tricky **/ 
       void create_mask( const Patch* patch, int nGhosts, const std::vector<SpatialOps::IntVec> ijk, BCMaskType bc_mask_type ){ 
         
         typename MaskStorage::iterator iter = _mask_storage.find(bc_mask_type); 
@@ -489,6 +493,7 @@ public:
 
       }
 
+      /** @brief Get the mask given the enum type.  Note that is must (?) be ghost compatable. Huh? **/ 
       SpatialOps::SpatialMask<FieldT>* get_mask( BCMaskType bc_mask_type ){ 
         typename MaskStorage::iterator iter = _mask_storage.find(bc_mask_type); 
         if ( iter == _mask_storage.end() ){ 
@@ -507,13 +512,16 @@ public:
 
   typedef std::map<int, BoundaryBase<SpatialOps::SVolField> > PatchToSVolBoundary;
   static PatchToSVolBoundary svol_boundary_info; 
- 
+
+  /** @brief This struct contains the helper function to retrieve boundary struct **/ 
   template <typename FieldT>
   struct BCInterfaceStruct;
 
+  /** @brief Public access to the BC struct given the patch ID and a field **/ 
   template <typename FieldT>
   static BoundaryBase<FieldT>& get_bc_info( const int patchID, FieldT field ){ return BCInterfaceStruct<FieldT>::get_bc( patchID, field ); }
 
+  /** @brief This struct contains the helper function to retrieve boundary struct **/ 
   template <typename FieldT>
   struct BCInterfaceStruct{ 
 
@@ -523,6 +531,7 @@ public:
         throw InvalidValue("Mask Error: No known BC struct for this variable type.", __FILE__, __LINE__); 
       }; 
 
+      /** @brief SVolField interface for BCBase **/ 
       static BoundaryBase<SpatialOps::SVolField>& get_bc( const int patchID, SpatialOps::SVolField field ){
 
         PatchToSVolBoundary::iterator iter = BoundaryCondition_new::svol_boundary_info.find(patchID);
@@ -532,7 +541,6 @@ public:
         return iter->second; 
 
       }; 
-
   };
 
   //------------------------------------------------------------------ end NEW --------------------
