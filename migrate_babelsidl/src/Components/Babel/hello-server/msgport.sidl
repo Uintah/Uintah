@@ -1,8 +1,0 @@
-package HelloServer version 1.0 {
-
-  class MsgPort implements-all gov.cca.Port {
-    void printMsg(in string msg);
-  }
-
-}
-

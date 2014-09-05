@@ -1,7 +1,0 @@
-
-class z extends CIA.Throwable {
-};
-
-class x {
-      void y() throws z, z;
-};

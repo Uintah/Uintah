@@ -1,8 +1,0 @@
-package pde version 0.1 {
-
-  class PDEreader implements-all pdeports.PDEdescriptionPort, 
-  	                         gov.cca.Component 
-  {
-  }
-
-}

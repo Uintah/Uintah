@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='ISO-8859-1' ?>
-<!-- 4340 Steel -->
-<Uintah_Include>
-  <Cp_constA> 0.09278 </Cp_constA>
-  <Cp_constB> 7.454e-4 </Cp_constB>
-  <Cp_constC> 12404.0 </Cp_constC>
-</Uintah_Include>

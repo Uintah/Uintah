@@ -1,8 +1,0 @@
-
-class x {
-      void y(in int);
-};
-
-class y extends x {
-      void y(out int);
-};

@@ -1,3 +1,0 @@
-void m_radarray(OffsetArray1<double> rgamma, OffsetArray1<double> sd15, 
-	      OffsetArray1<double> sd, OffsetArray1<double> sd7,
-	      OffsetArray1<double> sd3);

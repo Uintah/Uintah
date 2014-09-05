@@ -1,1 +1,0 @@
-sed -i '/<Parameters/a \ \t \t \t \t \t \t <setupFrequency>0<\/setupFrequency>' *.ups 

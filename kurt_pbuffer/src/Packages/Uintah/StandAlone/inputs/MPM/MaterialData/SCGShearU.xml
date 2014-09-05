@@ -1,9 +1,0 @@
-<?xml version='1.0' encoding='ISO-8859-1' ?>
-<!-- Uranium -->
-<Uintah_Include>
-  <shear_modulus_model type="scg_shear">
-    <mu_0> 86.7e9 </mu_0> 
-    <A> 35.0e-12 </A>
-    <B> 0.78e-3 </B>
-  </shear_modulus_model>
-</Uintah_Include>

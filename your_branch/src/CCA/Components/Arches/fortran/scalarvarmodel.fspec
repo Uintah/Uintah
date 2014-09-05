@@ -1,6 +1,0 @@
-void scalarvarmodel(constCCVariable<double> scalar,
-     IntVector idxLo, IntVector idxHi, CCVariable<double> scalarvar, 
-     OffsetArray1<double> dxpw, OffsetArray1<double> dyps,
-     OffsetArray1<double> dzpb, OffsetArray1<double> sew,
-     OffsetArray1<double> sns, OffsetArray1<double> stb,
-     double cfvar, double fac_mesh, double filterl);
