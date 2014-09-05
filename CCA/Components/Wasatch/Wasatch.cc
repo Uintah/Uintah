@@ -731,7 +731,8 @@ namespace Wasatch{
                                                                                                                                            absorptionCoefTag,
                                                                                                                                            TagNames::self().celltype,
                                                                                                                                            radSpec,
-                                                                                                                                           sharedState_
+                                                                                                                                           sharedState_,
+                                                                                                                                           grid
                                                                                                                                            )
                                                                                                              );
       graphCategories_[ADVANCE_SOLUTION]->exprFactory->cleave_from_parents(exprID);
