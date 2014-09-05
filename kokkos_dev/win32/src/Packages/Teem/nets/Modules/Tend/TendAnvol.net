@@ -1,0 +1,228 @@
+# SCIRun Network v1.25.0
+
+# The MIT License
+# 
+# Copyright (c) 2004 Scientific Computing and Imaging Institute,
+# University of Utah.
+# 
+# License for the specific language governing rights and limitations under
+# Permission is hereby granted, free of charge, to any person obtaining a 
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation 
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+# and/or sell copies of the Software, and to permit persons to whom the 
+# Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included 
+# in all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+# DEALINGS IN THE SOFTWARE.
+# 
+
+set name {Main}
+set bbox {15 2 529 709}
+set creationDate {Fri Dec 02 2005}
+set creationTime {14:55:29}
+set runDate {}
+set runTime {}
+set notes {}
+set geometry {800x800+0+0}
+
+# Create a SCIRun->FieldsCreate->SampleLattice Module
+set m1 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleLattice" 304 2]
+
+# Create a Teem->Converters->FieldToNrrd Module
+set m2 [addModuleAtPosition "Teem" "Converters" "FieldToNrrd" 346 242]
+
+# Create a SCIRun->FieldsData->TransformData Module
+set m3 [addModuleAtPosition "SCIRun" "FieldsData" "TransformData" 304 143]
+
+# Create a SCIRun->Render->Viewer Module
+set m4 [addModuleAtPosition "SCIRun" "Render" "Viewer" 124 665]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 15 489]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 20 243]
+
+# Create a Teem->Converters->NrrdToField Module
+set m7 [addModuleAtPosition "Teem" "Converters" "NrrdToField" 346 402]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m8 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 364 570]
+
+# Create a Teem->Tend->TendAnvol Module
+set m9 [addModuleAtPosition "Teem" "Tend" "TendAnvol" 346 324]
+
+# Create a SCIRun->FieldsData->ChangeFieldDataType Module
+set m10 [addModuleAtPosition "SCIRun" "FieldsData" "ChangeFieldDataType" 304 70]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m11 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 186 489]
+
+# Create the Connections between Modules
+set c1 [addConnection $m1 0 $m10 0]
+set c2 [addConnection $m10 0 $m3 0]
+set c3 [addConnection $m3 0 $m5 0]
+set c4 [addConnection $m3 0 $m2 0]
+set c5 [addConnection $m6 0 $m11 0]
+set c6 [addConnection $m5 0 $m4 0]
+set c7 [addConnection $m2 2 $m9 0]
+set c8 [addConnection $m7 0 $m8 0]
+set c9 [addConnection $m6 0 $m5 1]
+set c10 [addConnection $m11 0 $m8 1]
+set c11 [addConnection $m8 0 $m4 1]
+set c12 [addConnection $m7 0 $m11 1]
+set c13 [addConnection $m9 0 $m7 2]
+set c14 [addConnection $m3 0 $m7 3]
+
+# Set GUI variables for the SCIRun->FieldsData->TransformData Module
+set $m3-function {result = x*x + y*y + z*z + sin(x*30.) + sin(y*30.) + sin(z*30.);
+
+
+
+
+}
+set $m3-ui_geometry {433x175+35+186}
+
+# Open the SCIRun->FieldsData->TransformData UI
+$m3 initialize_ui
+
+$m4 addViewer
+set $m4-ViewWindow_0-geometry 654x621+542+149
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m4-ViewWindow_0-view-eyep-x {11.5377655968}
+set $m4-ViewWindow_0-view-eyep-y {8.4164999716}
+set $m4-ViewWindow_0-view-eyep-z {5.40112389103}
+set $m4-ViewWindow_0-view-lookat-x {0.443328459069}
+set $m4-ViewWindow_0-view-lookat-y {0.425119174978}
+set $m4-ViewWindow_0-view-lookat-z {-0.0312846508317}
+set $m4-ViewWindow_0-view-up-x {0.582422122647}
+set $m4-ViewWindow_0-view-up-y {-0.812862063044}
+set $m4-ViewWindow_0-view-up-z {0.00630376992817}
+set $m4-ViewWindow_0-view-fov {20}
+set $m4-ViewWindow_0-view-eyep_offset-x {}
+set $m4-ViewWindow_0-view-eyep_offset-y {}
+set $m4-ViewWindow_0-view-eyep_offset-z {}
+set $m4-ViewWindow_0-sr {1}
+set $m4-ViewWindow_0-do_stereo {0}
+set $m4-ViewWindow_0-ortho-view {0}
+set $m4-ViewWindow_0-trackViewWindow0 {1}
+set $m4-ViewWindow_0-raxes {1}
+set $m4-ViewWindow_0-ambient-scale {1.0}
+set $m4-ViewWindow_0-diffuse-scale {1.0}
+set $m4-ViewWindow_0-specular-scale {0.4}
+set $m4-ViewWindow_0-emission-scale {1.0}
+set $m4-ViewWindow_0-shininess-scale {1.0}
+set $m4-ViewWindow_0-polygon-offset-factor {1.0}
+set $m4-ViewWindow_0-polygon-offset-units {0.0}
+set $m4-ViewWindow_0-point-size {1.0}
+set $m4-ViewWindow_0-line-width {1.0}
+set $m4-ViewWindow_0-sbase {0.4}
+set $m4-ViewWindow_0-bgcolor-r {0}
+set $m4-ViewWindow_0-bgcolor-g {0}
+set $m4-ViewWindow_0-bgcolor-b {0}
+set $m4-ViewWindow_0-fogusebg {1}
+set $m4-ViewWindow_0-fogcolor-r {0.0}
+set $m4-ViewWindow_0-fogcolor-g {0.0}
+set $m4-ViewWindow_0-fogcolor-b {1.0}
+set $m4-ViewWindow_0-fog-start {0.0}
+set $m4-ViewWindow_0-fog-end {0.714265}
+set $m4-ViewWindow_0-fog-visibleonly {1}
+set $m4-ViewWindow_0-inertia_mag {1.0}
+set $m4-ViewWindow_0-inertia_x {1.0}
+set $m4-ViewWindow_0-inertia_y {0}
+set $m4-ViewWindow_0-currentvisual {0}
+set $m4-ViewWindow_0-caxes {0}
+set $m4-ViewWindow_0-pos {}
+set $m4-ViewWindow_0-global-light0 {1}
+set $m4-ViewWindow_0-global-light1 {0}
+set $m4-ViewWindow_0-global-light2 {0}
+set $m4-ViewWindow_0-global-light3 {0}
+set $m4-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m4-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m4-ViewWindow_0-global-light {1}
+set $m4-ViewWindow_0-global-fog {0}
+set $m4-ViewWindow_0-global-debug {0}
+set $m4-ViewWindow_0-global-clip {1}
+set $m4-ViewWindow_0-global-cull {0}
+set $m4-ViewWindow_0-global-dl {0}
+set $m4-ViewWindow_0-global-type {Gouraud}
+set "$m4-ViewWindow_0-Transparent Nodes (1)" {1}
+set "$m4-ViewWindow_0-Tensors (1)" {1}
+set "$m4-ViewWindow_0-Nodes (2)" {1}
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m5-nodes-transparency {1}
+set $m5-edges-on {0}
+set $m5-faces-on {0}
+set $m5-normalize-vectors {}
+set $m5-tensors-on {1}
+set $m5-has_tensor_data {1}
+set $m5-tensor_display_type {Ellipsoids}
+set $m5-active_tab {Tensors}
+set $m5-node_scale {0.03}
+set $m5-edge_scale {0.015}
+set $m5-tensors_scale {0.0142}
+set $m5-scalars_scale {0.3}
+set $m5-show_progress {}
+set $m5-ui_geometry {366x663+30+163}
+
+# Open the SCIRun->Visualization->ShowField UI
+$m5 initialize_ui
+
+# Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
+set $m6-width {674}
+set $m6-height {40}
+set $m6-mapName {Darkhue}
+set $m6-minRes {19}
+set $m6-ui_geometry {686x515+25+140}
+
+# Open the SCIRun->Visualization->GenStandardColorMaps UI
+$m6 initialize_ui
+
+# Set GUI variables for the Teem->Converters->NrrdToField Module
+set $m7-datasets {{Points : (none)} {Connections : (none)} {Data : Unknown} {Original Field : Unknown} }
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m8-edges-on {0}
+set $m8-faces-on {0}
+set $m8-use-transparency {1}
+set $m8-normalize-vectors {}
+set $m8-has_scalar_data {1}
+set $m8-node_display_type {Spheres}
+set $m8-active_tab {Faces}
+set $m8-node_scale {0.03}
+set $m8-edge_scale {0.015}
+set $m8-scalars_scale {0.3}
+set $m8-show_progress {}
+set $m8-ui_geometry {366x663+20+117}
+
+# Open the SCIRun->Visualization->ShowField UI
+$m8 initialize_ui
+
+# Set GUI variables for the Teem->Tend->TendAnvol Module
+set $m9-aniso_metric {tenAniso_Tr}
+set $m9-ui_geometry {314x473+15+94}
+
+# Set GUI variables for the SCIRun->FieldsData->ChangeFieldDataType Module
+set $m10-outputdatatype {Tensor}
+set $m10-ui_geometry {397x181+10+71}
+
+# Open the SCIRun->FieldsData->ChangeFieldDataType UI
+$m10 initialize_ui
+
+# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
+set $m11-min {0.0}
+set $m11-max {0.0}
+
+
+::netedit scheduleok

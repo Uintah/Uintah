@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<?xml-stylesheet href="../../../../Dataflow/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="ApplyFEMCurrentSource" category="Forward">
+  <overview>
+    <authors>
+      <author>David Weinstein</author>
+    </authors>
+    <summary>The ApplyFEMCurrentSource module builds the right-hand
+    side (ColumnMatrix) to reflect monopolar and dipolar current sources
+    for finite-element based bioelectric field problems.</summary>
+    <description>
+      <p>Version Date: March 2001</p><p>Version: 1.0</p>
+      <orderedlist>
+	<listitem>
+	  <p>If an input RHS ColumnMatrix is present, this module adds
+	  the contributions for the current sources into that matrix
+	  (i.e. multiple ApplyFEMCurrentSource modules can be cascaded
+	  together).  If no RHS is present, this module will generate
+	  one.  The RHS ColumnMatrix will be of length n, where n is
+	  the number of nodes in the finite element mesh.</p>
+	</listitem>
+	<listitem>
+	  <p>We assume the mesh will be stored in a TetVolMesh, a
+	  HexVolMesh, or a TriSurfMesh.</p>
+	</listitem>
+	<listitem>
+	  <p>There are two types of current sources supported by this
+	  module: dipoles, and sources-and-sinks.  With dipoles, the
+	  user must pass in a PointCloudFieldd&lt;Vector> into the
+	  Sources input port.  The position of each PointCloud node
+	  corresponds to the location of the dipole, and the
+	  corresponding Vector corresponds to the moment of the
+	  dipole.  If the user wishes to use dipolar sources, they
+	  must pass in a PointCloudField&lt;Vector> AND they must
+	  select "dipole" for the Source Model on the UI window.  In
+	  contrast to the dipole model, the sources-and-sinks option
+	  has several sub-models.  To activate any of these, the user
+	  must select the "sources and sinks" option from the UI.
+	  The values that are used for sources-and-sinks are a
+	  combination of: the source and sink indices entered in the
+	  UI; a PointCloudField&lt;double> passed into the Source
+	  port; and a MappingMatrix.  Here is the logic for how those
+	  values are used: 1) if we don't have a Mapping matrix, we
+	  use the source/sink indices from the UI as node indices from
+	  the volume mesh between which one unit of current is passed;
+	  2) if we have a Mapping matrix, but we don't have a Source
+	  field, then the source/sink indices refer to the PointCloud
+	  and we use the Mapping matrix to get their corresponding
+	  volume node indices, and we then pass one unit of current
+	  between them; 3) if we have a Mapping matrix AND a Source
+	  field, then ignore the source/sink indices from the UI, and
+	  assume that the Mapping matrix maps the PointCloud nodes to
+	  Volume mesh nodes and that the data values (doubles) from
+	  the PointCloud indicate the strength (current density) for
+	  each point source.</p>
+	</listitem>
+      </orderedlist>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <!-- one of (device port file) -->
+      <port>
+	<name>Mesh</name>
+	<description>
+	  <p>Field containing the volume mesh</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+	<componentname>FieldReader</componentname>
+      </port>
+      <port>
+	<name>Sources</name>
+	<description>
+	  <p>Either a PointCloudField&lt;Vector> (for dipoles) or a
+	  PointCloudField&lt;double> for current densities.</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+	<componentname>FieldReader</componentname>
+      </port>
+      <port>
+	<name>Mapping</name>
+	<description>
+	  <p>Maps source nodes indicies to volume mesh nodes indices.</p>
+	</description>
+	<datatype>SCIRun::Matrix</datatype>
+	<componentname>MatrixReader</componentname>
+      </port>
+      <port>
+	<name>Input RHS</name>
+	<description>
+	  <p>(Optional) Handle to the matrix containing RHS for FE
+	  discretization obtained from SetupFEMatrix.</p>
+	</description>
+	<datatype>SCIRun::Matrix</datatype>
+	<componentname>SetupFEMatrix</componentname>
+	<componentname>MatrixReader</componentname>
+      </port>
+    </inputs>
+
+    <outputs>
+      <!-- one of (device port file) -->
+      <port>
+	<name>Output RHS</name>
+	<description>
+	  <p>Sends handle to Matrix containing dipole terms to downstream modules</p>
+	</description>
+	<datatype>SCIRun::Matrix</datatype>
+	<componentname>SolveMatrix</componentname>
+	<componentname>MatrixWriter</componentname>
+      </port>
+      <port>
+        <name>Output Weights</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  
+  <testing>
+  </testing>
+</component>

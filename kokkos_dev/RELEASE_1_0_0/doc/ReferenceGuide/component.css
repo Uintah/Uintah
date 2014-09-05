@@ -1,0 +1,33 @@
+/* Century Schoolbook font is very similar to Computer Modern Math: cmmi */
+.MATH    { font-family: "Century Schoolbook", serif; }
+.MATH I  { font-family: "Century Schoolbook", serif; font-shape: italic }
+.BOLDMATH { font-family: "Century Schoolbook", serif; font-weight: bold }
+
+/* implement both fixed-size and relative sizes */
+SMALL.XTINY		{ font-size : xx-small }
+SMALL.TINY		{ font-size : x-small  }
+SMALL.SCRIPTSIZE	{ font-size : smaller  }
+SMALL.FOOTNOTESIZE	{ font-size : small    }
+SMALL.SMALL		{  }
+BIG.LARGE		{  }
+BIG.XLARGE		{ font-size : large    }
+BIG.XXLARGE		{ font-size : x-large  }
+BIG.HUGE		{ font-size : larger   }
+BIG.XHUGE		{ font-size : xx-large }
+
+/* heading styles */
+H1		{ color:#0000FF; font-size:1.4em; font-family:"arial", "helvetica", "sans-serif" }
+H2		{ color:#0074FF; font-size:1.2em; font-family:"arial", "helvetica", "sans-serif" }
+H3		{ color:#60979d; font-size:1.0em; font-family:"arial", "helvetica", "sans-serif" }
+H4		{  }
+H5		{  }
+
+/* mathematics styles */
+DIV.displaymath		{ }	/* math displays */
+TD.eqno			{ }	/* equation-number cells */
+
+
+/* document-specific styles come next */
+body {background-color:#DDDDDD; text-color:#000000; font-family:"arial", "helvetica", "sans-serif"; margin-left:2em; margin-right:2em}
+pre {font-family: "monospace"; margin-left:25px}
+tt {font-family: "monospace"}

@@ -1,0 +1,346 @@
+
+Release Notes - SCIRun Version 1.10 - Apr 23, 2003
+
+Future Plans
+------------
+
+After this release of SCIRun (version 1.10), the SCI Institute will
+begin work on a major new upgrade.  This will be the upgrade of SCIRun
+to version 2.0 and will include separating the GUI from the SCIRun
+compute engine, adding macro-module support to the GUI, allowing
+scripting (and thus batch mode runs and easier regression testing),
+and better Boundary Element method support.  We anticipate the release
+of SCIRun 2.0 in late August.
+
+Macintosh support: Preliminary work has been done to port SCIRun to
+the Macintosh resulting in the ability to run SCIRun on a Macintosh
+here at SCI; however there are still a number of issues that must be
+addressed.  In the near future (early May, '03), the Mac will become
+an officially supported platform.  Updates to SCIRun version 1.10 will
+be provided to those interested in running SCIRun on a Mac.
+
+Data Sets
+---------
+
+The only differences between the SCIRunData directory from release
+1.8.0 to release 1.10.0 are the new "convert-examples" and
+"time-dependent" subdirectories.  The "convert-examples" show how to
+use the new SCIRun data conversion process to convert generic data to
+SCIRun data (please see the "New Converters" section later in this
+document).  The "time-dependent" directory contains new examples of
+time dependent data.
+
+If you already have the 1.8.0 SCIRunData directory, you can update it
+to version 1.10.0 by downloading SCIRunData.1.8-to-1.10-update.tar.gz
+and untaring it on top of the 1.8 directory.  
+
+
+New Projects in Version 1.10
+----------------------------
+
+- Support for constructing and processing segmented data volumes and
+  their dual (the Separating Surfaces).  This update is part of the
+  BioPSE package; most of these modules are in the BioPSE::Modeling
+  category.
+
+  - SegLatVolField can be built from a LatVolField by passing it into
+    the SegFieldOps module
+
+  - SegLatVolField can be turned back into a LatVolField with
+    SegFieldToLatVol module.
+
+  - SegLatVolField can be turned into a set of Separating Surfaces
+    (SepSurf) using the ExtractSepSurf module.
+
+  - An individual QuadSurf component can be extracted from a
+    SegLatVolField with the ExtractSingleSurface module
+
+  - SepSurf can be turned into a normal QuadSurfField via the
+    SepSurfToQuadSurf module
+
+- Support for Masked meshes and fields and for Quadratic basis
+  functions.
+
+- Support for hexahedral finite elements (finite differences are
+  currently under development): Hexahedral finite elements with linear
+  basis functions can be used to solve the Poisson equation. In order
+  to employ these finite elements, the computational domain should be
+  discretized using a 'HexVolMesh'. Each finite element can have a
+  tensor, representing material properties. Note: Within this release,
+  only parallelepiped hexahedral elements are supported.
+
+- Support for analytic anisotropic concentric sphere solutions: A
+  four-layer anisotropic concentric spherical volume conductor is
+  available which computes a dipole-induced potential on the outer
+  sphere surface. Each of the four spherical layers can have different
+  radial and tangential conductivities.  See:  Minor Net Descriptions:
+  Sphere.
+
+- Support for PETSc (See PETSc Installation in the Installation Guide).
+
+- Preliminary support for TriSurf and TetVol mesh refinement via
+  bisection, node insertion, and Watson-style node insertion
+
+- Three new inverse-problem modules are now available in the
+  BioPSE/Inverse category: Tikhonov, TikhonovSVD, and TSVD.  These
+  implement Tikhonov inversion with flexible control of 
+  regularization, Tikhonov inversion via singular value decomposition,
+  and matrix inversion via truncated singular value decomposition,
+  respectively.
+
+- Two time-dependent EEG datasets (scalp electrode recordings), and
+  one time-dependent ECG dataset (epicardial sock recordings) for
+  users interested in time-dependent problems have been added.  These
+  datasets are available in the new SCIRunData/time-dependent
+  subdirectory, and are used in the BioPSE show-eeg-data and
+  tikhonov-inversion nets, respectively.
+
+- A complete set of StandAlone "converter" programs to enable users to
+  import their datasets into SCIRun, and to export SCIRun datasets to
+  their systems have been added.  These are described in more detail
+  in the "New Converters" section below.
+
+---------------------------------------------------------------------------
+
+New Modules  (SCIRun, unless noted otherwise.)
+-----------
+
+- ChangeCoordinates: move between Cartesian, Polar, Euclidean, and
+  Range coordinates.
+
+- ConfigureWireElectrode (BioPSE): turns a non-bifurcating CurveField
+  into a QuadSurf by inflating it by a specified radius and specifying
+  a constant voltage over the surface.
+
+- HexToTet: convert a HexVolField into a TetVolField by splitting
+  each hex into five tets.
+
+- IndicesToTensors (BioPSE) and TensorsToIndices (BioPSE): converts
+  between Fields that store their Tensors in lookup tables (Field<int>
+  and a conductivity_table property), and full Field<Tensor> (instead
+  of Field<int>).
+
+- InterpolantToTransferMatrix: convert an Interpolant Field (generated by
+  BuildInterpolant or FieldBoundary) into its equivalent
+  SparseRowMatrix format.  Multiplying resultant matrix by source data
+  produces data vector for destination field.
+
+- MaskedLatVolMesh created for iteration through Lattice Volumes
+  masked at a cellular level.
+
+- SynchronizeGeometry: (written by Kai Li (University of Oregon)):
+  allows for synchronized redrawing of geometry in the Viewer module.
+  Useful when generating time-dependent animations, where several
+  visualization components (e.g. isosurface, streamlines, color-mapped
+  geometry) need to update with each new time-step, and you only want
+  one redraw event from the Viewer for all of them.
+
+- Teem/Nrrd support: The following modules have been created in
+  the Teem package in order to support storing time dependent or
+  multiple sets of data for a given field.  Teem now supports
+  conversion of all SCIRun Fields to Nrrds (through dynamic
+  compilation).  All Teem modules now support N-dimensional data
+  (NRRDS).  All Teem modules now have run-time help information.
+
+  Many Teem user interfaces now update dynamically to reflect the
+  N-dimensional NRRDs that may be input. This means that a new net may
+  need to execute twice, once to update the GUI and allow correct
+  selection of GUI options, and again to send along the correct NRRD.
+
+  - NrrdToField tries to create a Field that is as close as possible
+    to the Field type that was originally converted to a Nrrd. If it
+    cannot, Scanline, Image, and LatVol Fields are defaults for 1, 2,
+    and 3 dimensional NRRDS.
+
+  - NrrdReader now displays all info about the N-axis upon reading a
+    NRRD and allows the user to either select which axis should become
+    the tuple axis, or choose to add a new tuple axis before sending
+    the nrrd downstream.
+
+  - NrrdJoin module added which takes N (NRRD) inputs and joins them
+    into a single NrrdData along the user selected axis.
+
+  - Added test networks for all the new/changed Teem modules in
+    Teem/nets/tests.
+
+- TransformVectorData module: analogous to the existing
+  TransformScalarData module.
+
+- QuadToTri: convert a QuadSurfField into a TriSurfField by
+  splitting each quad into two tris.
+
+---------------------------------------------------------------------------
+
+Module Enhancements
+-------------------
+
+- BuildInterpolant and DirectInterpolate: UIs reorganized to better
+  reflect the different interpolation options.  We now support
+  constant and linear, as well as a special constant interpolation
+  method where each source only contributes to a single destination
+  (useful for mapping current densities and other quantities that need
+  to be conserved).
+
+- BuildFEMatrix (BioPSE): now supports construction of basis matrices.
+  One matrix is constructed for each conductivity type.  This allows
+  for rapid re-construction of stiffness matrix when only the Field
+  conductivities have changed, since the basis matrices can simply be
+  scaled and summed.  This feature is enabled via a check-button on
+  the UI, and only works for isostropic conductivities.
+
+- ChangeFieldDataType: GUI rewritten to be more user friendly.  The
+  data type is now specified independently of the field type, and can
+  be saved with networks.
+
+- Centroids: module now works on (ie: dynamically compiles) all mesh
+  types.
+
+- FieldBoundary: module was extended to support output of QuadSurf and
+  Curve fields when appropriate.
+
+- FieldMeasures: Complete module rewrite to support dynamic input of
+  any field type.
+
+- ManageFieldData: Fixed crash bug when field/images sizes where
+  mismatched.
+
+- MatrixSelectVector: 
+
+  - Module can now output variable sized arrays of, for example,
+    vectors and tensors.
+
+  - Fixed delay bug on the SGI.
+
+- ShowField: Added option for rendering text on fields.  Added support
+  for separate color/orientation fields.  The color field is still
+  passed into the first port, but now a separate orientation field can
+  be passed into the third port for colored arrows, display of
+  tensors, etc.
+
+- TetVolField and TriSurfField: Added subdivision of Triangular and
+  Tetrahedral fields for local refinement of meshes accessed via
+  insert_node(Point) and bisect_element() methods.
+
+- Viewer: 
+
+   - Added an orientation axis (displayed in the upper right corner of
+     the Viewer Window.)  It can be turned off by pressing the "+"
+     button on the Viewer Window and then pressing the "Orientation"
+     toggle button.
+
+   - Fixed Multipass transparency, text overlays, and stickies so that
+     they all draw in the correct order.
+
+   - Specify PointSize, LineThickness, and PolygonOffset via Edit
+     menu, and save values with net.
+
+   - Specify light directions and colors via Edit menu.
+
+---------------------------------------------------------------------------
+
+Retired Modules
+---------------
+
+- CastField: Replaced by EditField, which was subsequently split into
+             three separate modules: ChangeFieldBounds,
+             ChangeFieldDataType and ChangeFieldDataAt.
+
+- ChangeCellType: Replaced by HexToTet.
+
+- FDMtoFEM (BioPSE): Also replaced by HexToTet.
+
+- LocateNbrhd: Replaced by BuildInterpolant.
+
+- ManipFields and ManipMatrix: Never actually functional and so removed.
+
+- SampleColorMap and Rescale: Earlier version of what has now become
+                              GenStandardColorMaps and RescaleColorMap.
+
+- TetVolFieldCellToNode: Replaced by ChangeFieldDataAt.
+
+---------------------------------------------------------------------------
+
+New Converters
+--------------
+
+- Rewrote all conversion applications (in SCIRun/src/StandAlone/convert/).
+  New converters have a standardized set of command-line arguments, and
+  are comprehensive in providing import and export functionality for all
+  Field, Matrix, and ColorMap classes.
+
+- Each converter provides full usage information if invoked with no
+  arguments.
+
+- A complete document describing the philosophy and design of these
+  converters has been added to the User's Guide.
+
+- We have created example datasets, and documented example
+  invocations of the converters; these datasets, along with README
+  files are located in the new SCIRunData/convert-examples
+  subdirectory.
+
+---------------------------------------------------------------------------
+
+Developer
+---------
+
+- Introduce "Tuple" axis on all nrrds loaded into the Teem package.
+  The tuple axis is used to store sets of data.  For example a vector,
+  and 2 scalar fields.  Therefore all N-dimensional data becomes n+1
+  dimension within the Teem package.
+
+- Added a min max widget designed to allow non overlapping range
+  selection.
+
+- Implemented clone in NrrdData to support detach.
+
+- The Component Wizard window is now resizeable so that all buttons
+  able to be visible on all platforms.
+
+- Reworked configure to be more user friendly.  It is now autoconf
+  2.53 compliant.
+
+- Uniprocessor PETSc support via configure option.  New documentation
+  on the support and programming of Uniprocessor PETSc within SCIRun.
+
+- Support to allow SCIRun to be run from any directory (assuming the
+  'scirun' executable's directory is part of the user's PATH
+  environment variable.)
+
+- Thorough implementation of meshes based on mesh concept.
+
+- Added mesh concept method:  bool get_dim(vector<unsigned int> &dims) const;
+  Mesh concept is described at: http://software.sci.utah.edu/doc/Developer/CodeViews/html/classSCIRun_1_1MeshConcept.html
+
+- Nicer quit function.  Asks for permission before exiting SCIRun.
+
+- Expanded support for isosurfacing cell centered data.
+
+- Allow probe to work with no input field.  This allows them to be
+  computed more quickly if they are used as inputs to other modules
+  and the actual probed values are not being used.
+
+- Fixed memory leak of CompileInfo objects.
+
+- Update GeomObj and scene graph objects to use Handles and use less
+  memory.
+
+- Renamed Core/Geom/Sticky.* to Core/Geom/GeomSticky.* and
+  Core/Geom/Switch.* to Core/Geom/GeomSwitch.*
+
+- Fixed cell locate for LatVolMesh.
+
+- Better interp for HexVolMesh and StructHexVolMesh.
+
+- Fix the (int) conversion for a number of mesh index types.
+
+- Index TriSurfMesh and QuadSurfMesh edges uniquely instead of by
+  half-edge.
+
+- Disable display lists.  GeomDL destructor often crashes because
+  display_list_ variable is not associated with a context, but is
+  global.  Display list per DrawInfoOpenGL item is needed.
+
+- Add RawToStructHexVol converter.
+
+- Preliminary QuadraticLatVolField support.

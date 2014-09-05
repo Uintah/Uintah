@@ -1,0 +1,41 @@
+*** teem-1.9.0-src/src/GNUmakefile	2006-08-30 15:18:06.788102340 -0600
+--- teem-1.9.0-src/src/GNUmakefile.fix	2006-08-30 15:18:07.644417239 -0600
+*************** SUBARCH = $(patsubst .%,%,$(suffix $(TEE
+*** 71,78 ****
+  ## defining the various programs we'll need, and some of their flags.
+  ## If these are not over-written, we assume that they'll work.
+  ##
+! CC ?= cc
+! LD = ld
+  AR = ar
+  ARFLAGS = ru
+  RM = rm -f
+--- 71,78 ----
+  ## defining the various programs we'll need, and some of their flags.
+  ## If these are not over-written, we assume that they'll work.
+  ##
+! #CC ?= cc
+! LD = $(CC)
+  AR = ar
+  ARFLAGS = ru
+  RM = rm -f
+
+*** teem-1.9.0-src/src/make/linux.mk	2005-10-02 22:09:28.000000000 -0600
+--- teem-1.9.0-src/src/make/linux.mk.fix	2006-08-30 15:00:35.257072730 -0600
+*************** TEEM_SHEXT = so
+*** 23,29 ****
+  
+  OPT_CFLAG ?= -O2
+  STATIC_CFLAG = -static
+! SHARED_CFLAG = -shared
+  SHARED_LDFLAG = -shared
+  SHARED_RPATH = -Wl,-rpath -Wl,
+  
+--- 23,29 ----
+  
+  OPT_CFLAG ?= -O2
+  STATIC_CFLAG = -static
+! SHARED_CFLAG =
+  SHARED_LDFLAG = -shared
+  SHARED_RPATH = -Wl,-rpath -Wl,
+  

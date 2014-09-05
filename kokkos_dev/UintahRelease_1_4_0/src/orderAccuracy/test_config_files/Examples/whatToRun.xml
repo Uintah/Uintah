@@ -1,0 +1,12 @@
+<config>
+<postProcessCmd_path></postProcessCmd_path>
+
+<symbolicLinks></symbolicLinks>
+
+<test>
+  <name>RMCRT</name>
+  <ups>RMCRT_test_1L.ups</ups>
+  <tst>ray.tst</tst>
+</test>
+
+</config>

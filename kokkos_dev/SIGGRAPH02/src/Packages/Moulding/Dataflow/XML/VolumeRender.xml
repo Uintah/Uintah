@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<component name="VolumeRender" category="Visualization">
+  <overview>
+    <authors>
+      <author>Chris Moulding</author>
+    </authors>
+    <summary>
+      <p>
+        Uses standard volume rendering techniques, such as ray casting,
+        splatting and stacked space-filling slices, to generate either
+        geometry that can be viewed in a 3D viewer, or an image that can
+        be viewed in a 2D viewer.
+      </p>
+    </summary>
+    <description>
+      <p>
+        VolumeRender generates 2D or 3D images of volumes by mapping
+        color and opacity (from the Colormap input) to data values inside
+        the volumes (attributes of the Field input).  There are three
+        algorithms used to generate the images:  ray casting, splatting,
+        and stacked spack-filling slices.
+      </p>
+      <p>
+        The ray casting algorithm generates 2D images.  It can only be
+        used on rectilinearly structured fields, which can be of any
+        size and shape.  Of the three algorithms used by this component,
+	it produces the highest quality images at the cost of being the
+	slowest.  It is implementented by generating a large number of
+	rays that share the same origin and pass through the volume.  The
+	intersection points, along a particular ray, with the data values
+	in the volume are mapped to color and opacity and then composited
+	to generate a single pixel in an image plane that exists between
+	the ray origin and the volume.  That image plane can be thought
+        of as a "photograph" of the volume.
+      </p>
+      <p>
+        The splatting algorithm generates 3D images.  It can be used on
+	fields of any size, shape and structure.  It is implemented
+	by generating a square texture mapped with a guassian "splat" 
+        for each data point in the volume.  The value of the data point
+	of a splat determines it's color and opacity.  When viewed
+	collectively, the individual splats composite to form a 3D image
+        of the volume.
+      </p>
+      <p>
+        The stacked space-filling slices algorithm generates 3D images.  
+	It can only be used on rectilinearly structured fields, which
+        can be of any size and shape.
+      </p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs>
+      <port>
+        <name>Volume</name>
+        <description>
+          <p>
+            The volume to be rendered.
+          </p>
+        </description>
+        <datatype>SCIRun::Field</datatype>
+        <componentname>GenField</componentname>
+        <componentname>ReadField</componentname>
+        <componentname>Kindlmann</componentname>
+      </port>
+      <port>
+        <name>Transfer function</name>
+        <description>
+          <p>
+            The table used to map color and opacity to data values.
+          </p>
+        </description>
+        <datatype>SCIRun::ColorMap</datatype>
+        <componentname>GenStandardColormaps</componentname>
+        <componentname>GenTransferFunc</componentname>
+        <componentname>Kindlmann</componentname>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>3D image</name>
+        <description>
+          <p>
+            The geometry that represents the volume.
+          </p>
+        </description>
+        <datatype>SCIRun::Geometry</datatype>
+        <componentname>Render3D</componentname>
+        <componentname>WriteGeometry</componentname>
+      </port>
+      <port>
+        <name>2D image</name>
+        <description>
+          <p>
+            A "photograph" of the volume.
+          </p>
+        </description>
+        <datatype>SCIRun::Image</datatype>
+        <componentname>Render2D</componentname>
+        <componentname>WriteImage</componentname>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+      <p>
+        The GUI for VolumeRender allows the user to control the 
+        parameters for the volume rendering algorithms.
+      </p>
+    </description>
+    <parameter>
+      <widget>Button</widget>
+      <label>Execute</label>
+      <description>
+        <p>
+          Sends a request to the scheduler to have this component
+          started.
+        </p>
+      </description>
+    </parameter>
+  </gui>
+  <testing>
+    <plan>
+      <description>
+        <p>
+          Splatting is the simplest of all the volume rendering 
+          algorithms.  It is inherently invariant to the size,
+          shape and structure of the volume to be rendered.  Test
+          by inputing fields with known structure and verify that
+          the output represents that structure.
+        </p>
+      </description>
+      <step>
+        <p>
+          nothing yet.
+        </p>
+      </step>
+    </plan>
+    <plan>
+      <description>
+        <p>
+          Stacked space-filling slices are generated as texture
+          mapped rectangles.  Since OpenGL texture maps must have
+          power-of-2 dimensions, and have limits on their size,
+          this algorithm needs to be tested by sending in various
+          shapes and sizes of volumes.  Verify that the algorithm
+          correctly reconstructs the structure of the volume.
+        </p>
+      </description>
+      <step>
+        <p>
+          nothing yet.
+        </p>
+      </step>
+    </plan>
+    <plan>
+      <description>
+        <p>
+          Ray casting is invariant on data size, shape and structure
+          of the volume to be rendered.
+        </p>
+      </description>
+      <step>
+        <p>
+          nothing yet.
+        </p>
+      </step>
+    </plan>
+  </testing>
+</component>
+

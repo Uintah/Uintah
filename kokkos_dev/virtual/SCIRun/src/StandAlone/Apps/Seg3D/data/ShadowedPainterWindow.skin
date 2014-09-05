@@ -1,0 +1,47 @@
+<definition class="ShadowedPainterWindow">
+  <object class="ShadowedFocusBox">
+    <var name="PainterWindow::show_tools" propagate="yes">0</var>
+    <var name="LabeledGradientBackground::text_bgcolor" overwrite="no" propagate="yes">#33333333</var>  
+    <var name="LabeledGradientBackground::text_fgcolor" overwrite="no" propagate="yes">#FFFFFF99</var>  
+    
+    <signal name="ShadowedFocusBox::focus" 
+            target="Arithmetic::set_value">
+      <var name="variable">$PainterWindow::show_tools</var>
+      <var name="value">1</var>
+    </signal>
+    
+    <signal name="ShadowedFocusBox::focus" 
+            target="Arithmetic::set_value">
+      <var name="variable">$LabeledGradientBackground::text_bgcolor</var>
+      <var name="value">#000000FF</var>
+    </signal>
+    
+    <signal name="ShadowedFocusBox::focus" 
+            target="Arithmetic::set_value">
+      <var name="variable">$LabeledGradientBackground::text_fgcolor</var>
+      <var name="value">#FFFFFFFF</var>
+    </signal>
+    
+    <signal name="ShadowedFocusBox::unfocus" 
+            target="Arithmetic::set_value">
+      <var name="variable">$PainterWindow::show_tools</var>
+      <var name="value">0</var>
+    </signal>
+    
+    <signal name="ShadowedFocusBox::unfocus" 
+            target="Arithmetic::set_value">
+        <var name="variable">$LabeledGradientBackground::text_bgcolor</var>
+        <var name="value">#33333399</var>
+    </signal>
+    
+    <signal name="ShadowedFocusBox::unfocus" 
+            target="Arithmetic::set_value">
+      <var name="variable">$LabeledGradientBackground::text_fgcolor</var>
+      <var name="value">#FFFFFF99</var>
+    </signal>
+    
+    <definition class="ShadowedFocusBox::child">
+      <object class="NicePainterWindow"/>
+    </definition>
+  </object>
+</definition>

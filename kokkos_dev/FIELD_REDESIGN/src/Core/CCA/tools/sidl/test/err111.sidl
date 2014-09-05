@@ -1,0 +1,5 @@
+
+class x;
+
+class y implements x {
+};

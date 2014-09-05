@@ -1,0 +1,204 @@
+#!/bin/sh
+
+# The compare_all script is for those who wish to compare different 
+# architectures' runs against each other.  The RT by default only compares
+# against stored information
+
+# To run, we need a compiled compare_uda that lives in SUSDIR
+
+UDA1_1=""
+UDA1_2=""
+UDA1_3=""
+UDA1_4=""
+UDA2_1=""
+UDA2_2=""
+UDA2_3=""
+UDA2_4=""
+
+SUSDIR=""
+OUTPUT=""
+HELPERS=""
+showusage="no"
+
+# command line arguments
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+    -u1)
+	if [ "$#" -gt 1 ]; then
+	    shift
+            if [ "$UDA1_1" = "" ]; then
+                UDA1_1=$1
+            elif [ "$UDA1_2" = "" ]; then
+                UDA1_2=$1
+            elif [ "$UDA1_3" = "" ]; then
+                UDA1_3=$1
+            elif [ "$UDA1_4" = "" ]; then
+                UDA1_4=$1
+            else
+                echo "Can only compare 4 udas"
+                showusage="yes"
+            fi
+	else
+            echo '-u1 needs an argument'
+        fi
+	;;
+    -u2)
+	if [ "$#" -gt 1 ]; then
+	    shift
+            if [ "$UDA2_1" = "" ]; then
+                UDA2_1=$1
+            elif [ "$UDA2_2" = "" ]; then
+                UDA2_2=$1
+            elif [ "$UDA2_3" = "" ]; then
+                UDA2_3=$1
+            elif [ "$UDA2_4" = "" ]; then
+                UDA2_4=$1
+            else
+                echo "Can only compare 4 udas"
+                showusage="yes"
+            fi
+	else
+            echo '-u2 needs an argument'
+        fi
+	;;
+     -o)
+	if [ "$#" -gt 1 ]; then
+	    shift
+            OUTPUT=$1
+        else
+            echo '-o needs an argument'
+        fi
+        ;;
+     -s)
+        if [ "$#" -gt 1 ]; then
+            shift
+            SUSDIR=$1
+        else
+            echo '-s needs an argument'
+        fi
+        
+        ;;
+     -h)
+        if [ "$#" -gt 1 ]; then
+            shift
+            HELPERS=$1
+        else
+            echo '-s needs an argument'
+        fi
+        
+        ;;
+     *)
+        echo "Unknown option: $1"
+        showusage="yes"
+	;;
+     esac
+     shift
+done
+
+if [ "$UDA1_1" = "" -o "$UDA1_2" = "" ]; then
+    showusage="yes"
+fi
+
+if [ "$SUSDIR" = "" -o "$OUTPUT" = "" -o "$HELPERS" = "" ]; then
+    echo "Make sure to specify susdir, helper path, and outputfile"
+    showusage="yes"
+fi
+
+if [ "$showusage" = "yes" ]; then
+    cat <<EOF
+Usage: 
+compare_all -u1 udadir -u1 udadir [...] [-u2 udadir] [...] -s susdir -o file -h helper_path
+
+  -u1 uda_dir  paths to uda dirs you wish to compare, 2 required, up to 4
+               These udas will all be compared against each other
+  -u2 uda_dir  up to 4 optional uda dirs.  These udas will be compared
+               against each other, in addition to the corresponding uda
+               from the u1 group.
+  susdir       directory where compare_uda lives
+  file         file to output to
+  helper_path  SCIRun/src/Packages/Uintah/Test/helpers path
+
+  Prerequisites:
+    Make sure that compare_uda has been compiled
+
+  Examples:
+  compare_all -u1 IRIX64/dbg/.../m.uda -u1 IRIX64/opt SCIRun/.../StandAlone -o file -h SCIRun/src/Packages/Uintah/Test/helpers
+  compare_all -u1 IRIX64/dbg/m.uda -u1 Lin/opt/m.uda -u2 IRIX64/dbg/m2.uda -u2 Lin/opt/m2.uda .../StandAlone -o file -h .../helpers
+
+    (paths in these examples have been shortened to fit on one line)
+
+    All the paths specified by -u1 will be compared against each other, and 
+    all paths specified by -u2 will be compared against each other. In
+    addition, the first path specified by u1 will be compared against the
+    first specified by u2, the second against the second, and so on.
+
+EOF
+    exit 1
+fi
+
+PATH="$PATH":"$HELPERS"
+export PATH
+
+rm -f $OUTPUT
+
+if [ "$UDA1_4" != "" ]; then
+    echo "comparing $UDA1_4 against $UDA1_3"
+    compare_sus_runs_by_udas $UDA1_4 $UDA1_3 $SUSDIR > "$OUTPUT" 2>&1
+
+    echo "comparing $UDA1_4 against $UDA1_2"
+    compare_sus_runs_by_udas $UDA1_4 $UDA1_2 $SUSDIR >> "$OUTPUT" 2>&1
+
+    echo "comparing $UDA1_4 against $UDA1_1"
+    compare_sus_runs_by_udas $UDA1_4 $UDA1_1 $SUSDIR >> "$OUTPUT" 2>&1
+
+    if [ "$UDA2_4" != "" ]; then
+        echo "comparing $UDA2_4 against $UDA2_3"
+        compare_sus_runs_by_udas $UDA2_4 $UDA2_3 $SUSDIR >> "$OUTPUT" 2>&1
+
+        echo "comparing $UDA2_4 against $UDA2_2"
+        compare_sus_runs_by_udas $UDA2_4 $UDA2_2 $SUSDIR >> "$OUTPUT" 2>&1
+
+        echo "comparing $UDA2_4 against $UDA2_1"
+        compare_sus_runs_by_udas $UDA2_4 $UDA2_1 $SUSDIR >> "$OUTPUT" 2>&1
+
+        echo "comparing $UDA2_4 against $UDA1_4"
+        compare_sus_runs_by_udas $UDA2_4 $UDA1_4 $SUSDIR >> "$OUTPUT" 2>&1
+    fi
+
+fi
+
+if [ "$UDA1_3" != "" ]; then
+    echo "comparing $UDA1_3 against $UDA1_2"
+    compare_sus_runs_by_udas $UDA1_3 $UDA1_2 $SUSDIR >> "$OUTPUT" 2>&1
+
+    echo "comparing $UDA1_3 against $UDA1_1"
+    compare_sus_runs_by_udas $UDA1_3 $UDA1_1 $SUSDIR >> "$OUTPUT" 2>&1
+
+    if [ "$UDA2_3" != "" ]; then
+        echo "comparing $UDA2_3 against $UDA2_2"
+        compare_sus_runs_by_udas $UDA2_3 $UDA2_2 $SUSDIR >> "$OUTPUT" 2>&1
+
+        echo "comparing $UDA2_3 against $UDA2_1"
+        compare_sus_runs_by_udas $UDA2_3 $UDA2_1 $SUSDIR >> "$OUTPUT" 2>&1
+
+        echo "comparing $UDA2_3 against $UDA1_3"
+        compare_sus_runs_by_udas $UDA2_3 $UDA1_3 $SUSDIR >> "$OUTPUT" 2>&1
+    fi
+
+fi
+
+echo "comparing $UDA1_2 against $UDA1_1"
+compare_sus_runs_by_udas $UDA1_2 $UDA1_1 $SUSDIR >> "$OUTPUT" 2>&1
+
+if [ "$UDA2_2" != "" ]; then
+    echo "comparing $UDA2_2 against $UDA2_1"
+    compare_sus_runs_by_udas $UDA2_2 $UDA2_1 $SUSDIR >> "$OUTPUT" 2>&1
+    
+    echo "comparing $UDA2_2 against $UDA1_2"
+    compare_sus_runs_by_udas $UDA2_2 $UDA1_2 $SUSDIR >> "$OUTPUT" 2>&1
+fi
+
+if [ "$UDA2_1" != "" ]; then
+    echo "comparing $UDA2_1 against $UDA1_1"
+    compare_sus_runs_by_udas $UDA2_1 $UDA1_1 $SUSDIR >> "$OUTPUT" 2>&1
+fi    

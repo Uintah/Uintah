@@ -1,0 +1,26 @@
+
+
+The Thermo directory contains models
+
+The primitive variables are internal energy and specific volume.
+Temperature, viscosity, specific heats, gamma and thermal conductivity
+are derived from those variables.  Some models may have other state
+that affect these values as well (such as species concentrations).
+
+
+Energy goes through the following state changes:
+
+react       m_0 -> m_L  (reaction at constant energy and volume)
+compute ThermoA (int_eng_0, sp_vol_0, m_L)
+computeEquilibrationPressure (int_eng_0, sp_vol_0, m_L)   -> sp_vol_eq           (needs ThermoA)
+compute ThermoB (int_eng_0, sp_vol_eq, m_L)
+accumulateEnergySourceSinks (needs ThermoB)
+computeLagrangianSpecificVolume (int_eng_0, sp_vol_eq, m_L)  -> sp_vol_L    (needs ThermoB)
+addExchangeToMomentumAndEnergy (int_eng_0, sp_vol_1, m_1), (int_eng_L, sp_vol_1  (needs Thermo?? and Thermo???)
+advect   m_L -> m_1, int_eng_L -> int_eng_1, sp_vol_L -> sp_vol_1
+compute ThermoD(int_eng_1, sp_vol_1, m_1)
+computeStableTimestep (int_eng_1, sp_vol_1, m_1)
+
+
+
+where m_0 and m_1 are the old and new model state variables, 

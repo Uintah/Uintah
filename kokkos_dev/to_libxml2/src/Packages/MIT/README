@@ -1,0 +1,11 @@
+This package depends code that was removed from the core SCIRun source tree.  If you'd like to work in this package, you must first resurrect the following directories:
+
+src/Core/2d
+src/Core/Parts
+src/Core/PartsGui
+
+These directories were removed with the subversion revision 'r32514'.
+
+-McKay Davis
+ 
+November 11, 2005

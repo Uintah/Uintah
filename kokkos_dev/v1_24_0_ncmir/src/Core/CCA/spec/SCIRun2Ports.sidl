@@ -1,0 +1,179 @@
+/*
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+*/
+
+//Port to Framework properties
+interface FrameworkProperties extends sci.cca.Port
+{
+    TypeMap getProperties();
+    void setProperties(in TypeMap properties);
+}
+
+//Temp test (Bridge)
+interface IDPort extends sci.cca.Port
+{
+  collective string getID();
+}
+interface BridgeTestPort extends sci.cca.Port
+{
+  //int m1(in int i);
+  void m2(in array<int, 1> a);  
+}
+
+
+//Port to SCIRun(1) scheduler interface
+interface DataflowScheduler extends sci.cca.Port
+{
+  bool toggleOnOffScheduling();
+  void do_scheduling();
+};
+
+//abstract interface 
+interface StringPort extends sci.cca.Port
+{
+  collective string getString();
+}
+
+
+//abstract interface 
+interface UIPort extends sci.cca.Port
+{
+	//return 0 for success, -1 for fatal error, other values for others errors
+	collective int ui();
+}
+
+//abstract interface 
+interface BuilderPort extends sci.cca.Port
+{
+	/** The builder port is designed for the Builder only
+	 *  There is only one port for convenience.
+	 *  All final modification should be done through 
+	 *  the BuilderService and the BuilderService will tranverse
+	 *  each Builder
+	 */
+	void buildRemotePackageMenus(in sci.cca.ports.ComponentRepository reg, in string frameworkURL); 	
+
+}
+
+
+//abstract interface
+interface ZListPort extends sci.cca.Port
+{
+	array<double> getList();
+}
+/* $Source$ */
+
+
+
+//abstract interface 
+interface Field2DPort extends sci.cca.Port
+{
+	//provides a interface to 
+	array<double> getField();
+}
+
+//abstract interface 
+interface PDEDescriptionPort extends sci.cca.Port
+{
+	//provides a interface to 
+	array<double> getNodes();
+	array<int> getBoundaries();
+	array<int> getDirichletNodes();
+	array<double> getDirichletValues();
+}
+
+//abstract interface 
+interface MeshPort extends sci.cca.Port
+{
+	//provides a interface to 
+	array<int> getTriangles();
+	array<double> getNodes();
+}
+
+
+//abstract interface 
+interface PDEMatrixPort extends sci.cca.Port
+{
+	//provides a interface to 
+	void getMatrix(out DMatrix);
+	array<double> getVector();
+	int getSize();
+}
+
+// BEGIN proposed sparker
+// Builder events
+// Component created
+// Component destroyed
+// Component moved
+// Connection created
+// Connection destroyed
+// Connection moved
+enum ComponentEventType {
+  AllComponentEvents = 0,
+  InstantiatePending=1,
+  ComponentInstantiated=2,
+  DestroyPending=3,
+  ComponentDestroyed=4,
+  ComponentMoved=5,
+}
+interface ComponentEventListener {
+  void componentActivity(in ComponentEvent evt);
+}
+interface ComponentEvent {
+  ComponentEventType getEventType() ;
+
+  ComponentID getComponentID();
+
+   /** Get the Properties of the affected Port. */
+  TypeMap getComponentProperties() ;
+}
+interface ComponentEventService  extends Port
+{
+  /** Sign up to be told about component activity.
+      @param ComponentEventType must be one of the integer values 
+             ALL, ConnectPending, Connected, DisconnectPending, Disconnected
+             as defined in @see ContainerEventType. 
+             ALL means listening to all of the other four listed here.
+      @param l, an object (this component or its delegate) that listens
+             by implementing the ConnectionEventListener callback.
+      @param playInitialEvents, send events for components that have
+             already been instantiated
+  */
+   void addComponentEventListener(in ComponentEventType type, in ComponentEventListener l, in bool playInitialEvents);
+
+  /** Ignore future ComponentEvents of the given type.
+      Removing a non-added listener is not an error. 
+      @param ComponentEventType must be one of the integer values defined in
+             addConnectionEventListener.
+      @param l, a previously added listener interface.
+   */
+   void removeComponentEventListener(in ComponentEventType type, in ComponentEventListener l) ;
+ 
+   void moveComponent(in ComponentID component, in int x, in int y);
+}
+
+// END proposed - sparker

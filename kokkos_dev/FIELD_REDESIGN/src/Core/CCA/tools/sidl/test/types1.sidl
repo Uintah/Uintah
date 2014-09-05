@@ -1,0 +1,18 @@
+
+/*
+ * This should succeed
+ */
+
+package x {
+    class y {
+    };
+    package x {
+	class z {
+	    void a(in x.z y);
+	    void b(in x.x.z y);
+	    void c(in x.y y);
+	    void d(in .x.y y);
+	    void e(in .x.x.z y);
+	};
+    };
+};

@@ -1,0 +1,245 @@
+/*
+ *
+ * NetInterface: Provides access to the network
+ * $Id$
+ *
+ * Written by:
+ *   Author: Eric Luke
+ *   Department of Computer Science
+ *   University of Utah
+ *   Date: January 2001
+ *
+ */
+
+#ifndef __NetInterface_h_
+#define __NetInterface_h_
+
+#include <list>
+#include <stdio.h>
+
+#include <Network/PTPConnection.h>
+#include <Network/MulticastConnection.h>
+#include <Network/NetConnection.h>
+#include <Network/NetDispatchManager.h>
+
+#define ASIP_SHORT_NAMES
+#include <Network/AppleSeeds/ipseed.h>
+
+#include <Thread/Runnable.h>
+#include <Thread/Mailbox.h>
+#include <Thread/CrowdMonitor.h>
+#include <Thread/Mutex.h>
+
+#include <Logging/Log.h>
+
+#include <Properties/ServerProperties.h>
+
+namespace SemotusVisum {
+namespace Network {
+
+using namespace Thread;
+
+class NetInterface;
+
+
+
+////////////////
+// Connection info for creating a data connection.
+struct connectItem {
+  int socket;
+};
+
+//////////
+// Default server port to listen on
+const int DEFAULT_SERVER_PORT = 6210;
+
+/**************************************
+ 
+CLASS
+   NetListener
+   
+KEYWORDS
+   Network
+   
+DESCRIPTION
+
+   NetListener listens on a socket. When a client connects, NetListener
+   passes on the connection request to NetInterface and resumes listening.
+   
+****************************************/
+
+class NetListener : public Runnable {
+public:
+
+  //////////
+  // Constructor. Passes in a reference to the network interface and
+  // an optional port.
+  NetListener( NetInterface &net, int port );
+
+  //////////
+  // Destructor
+  ~NetListener();
+
+  //////////
+  // Run method. Runs as a new thread, listening on the predetermined
+  // port.
+  virtual void run();
+  
+protected:
+  int port;                   // Port to listen to
+  NetInterface &net;          // The network interface that owns us.
+  Mailbox<connectItem>& mbox; // The mailbox that we put connection info
+                              // into for the network interface.
+  Socket listenSocket;        // Listening socket.
+};
+
+/**************************************
+ 
+CLASS
+   NetInterface
+   
+KEYWORDS
+   Network
+   
+DESCRIPTION
+
+   NetInterface provides an interface for listening for connections,
+   receiving data from clients, and sending data to clients.
+   
+****************************************/
+
+class NetInterface {
+  friend class NetListener;
+  friend class NetConnection;
+public:
+
+  ///////////
+  // Initiates a listener on the given port. This call does not block...
+  void   listen( int port=DEFAULT_SERVER_PORT );
+
+  //////////
+  // Initiates a listener for multicast connections on the given
+  // port. NOT DONE.
+  void   listenMulticast(int port);
+
+  //////////
+  // Sends data to the given client. This call does not block.
+  void   sendDataToClient(const char * clientName, const char * data,
+			  const int numBytes );
+
+  //////////
+  // Sends message to the given client. This call does not block.
+  inline void sendDataToClient( const char * clientName,
+				MessageBase &message ) {
+    sendDataToClient( clientName, message.getOutput(),
+		      strlen( message.getOutput() ) );
+  }
+  
+  //////////
+  // Sends data to all clients. This call does not block.
+  void   sendDataToAllClients(const char * data, const int numBytes );
+  
+  //////////
+  // Sends message to all clients. This call does not block.
+  inline void sendDataToClient( MessageBase &message ) { 
+    sendDataToAllClients( message.getOutput(),
+			  strlen( message.getOutput() ) );
+  }
+  
+  //////////
+  // Returns a reference to the singleton instance of the network
+  // interface
+  static NetInterface&  getInstance();
+
+  //////////
+  // Blocks until we have at least one client connection. Returns the
+  // name of the last client to connect.
+  char *   waitForConnections();
+
+  //////////
+  // Returns a freshly allocated list (nothing aliased) of client names.
+  // Returns NULL if no clients connected.
+  list<char *>*   getClientNames();
+  
+  //////////
+  // Data marker for the end of XML data and the beginning of raw data.
+  static const char * const dataMarker; 
+  
+protected:
+  list<NetConnection*>  clientConnections;   // Client network connections
+  MulticastConnection  multicastConnection;  // Multicast connection.
+  Mailbox<connectItem> connectMBox;          // Mailbox for network connection
+                                             // communication.
+  
+  NetListener          *listener;            // Listener for new connections.
+  CrowdMonitor          netConnectionLock;   // Monitor for network connection
+                                             // list, so we don't munge our
+                                             // data structures.
+  
+  static NetInterface net;                   // The singleton network
+                                             // interface.
+
+  Mutex                 haveConnections;     // Allows blocking until
+                                             // we have a connection.
+  void   addConnection( Connection &c, const char * hostname );
+  void   removeConnection( NetConnection * nc );
+
+  // Can't create or destroy them.
+  NetInterface() : connectMBox( "ConnectionMailbox", MAX_PENDING_ITEMS ),
+		   netConnectionLock( "NetConnectionMutex" ),
+		   haveConnections( "ConnectionBlock" )
+  {
+    haveConnections.lock(); // We have no connections yet.
+  }
+  
+  ~NetInterface();
+  
+};
+
+}
+}
+#endif
+//
+// $Log$
+// Revision 1.1  2003/07/22 15:46:26  simpson
+// Moved CollabVis Server files to Packages/CollabVis/Standalone -- adding these files
+//
+// Revision 1.1  2003/06/18 21:28:46  simpson
+// Adding CollabVis files/dirs
+//
+// Revision 1.12  2001/05/21 22:00:45  luke
+// Got basic set viewing method to work. Problems still with reading 0 data from net and ignoring outbound messages
+//
+// Revision 1.11  2001/05/17 19:38:58  luke
+// New network data reading code.
+//
+// Revision 1.10  2001/05/14 22:39:02  luke
+// Fixed compiler warnings
+//
+// Revision 1.9  2001/05/14 20:08:50  luke
+// Added block for client & client name list features
+//
+// Revision 1.8  2001/05/14 18:07:56  luke
+// Finished documentation
+//
+// Revision 1.7  2001/05/12 03:29:11  luke
+// Now uses messages instead of XML. Also moved drivers to new location
+//
+// Revision 1.6  2001/05/03 18:18:41  luke
+// Writing from server to client works. Server sends handshake upon client connection.
+//
+// Revision 1.5  2001/05/01 20:55:55  luke
+// Works for a single client, but client disconnect causes the server to seg fault
+//
+// Revision 1.4  2001/04/11 17:47:25  luke
+// Net connections and net interface work, but with a few bugs
+//
+// Revision 1.3  2001/04/05 22:28:01  luke
+// Documentation done
+//
+// Revision 1.2  2001/04/04 21:45:29  luke
+// Added NetDispatch Driver. Fixed bugs in NDM.
+//
+// Revision 1.1  2001/02/08 23:53:29  luke
+// Added network stuff, incorporated SemotusVisum namespace
+//

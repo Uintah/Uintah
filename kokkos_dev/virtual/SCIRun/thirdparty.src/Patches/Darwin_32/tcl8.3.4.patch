@@ -1,0 +1,62 @@
+diff -ru tcl8.3.4/generic/tclEnv.c tcl8.3.4-patch/generic/tclEnv.c
+--- tcl8.3.4/generic/tclEnv.c	2001-04-03 16:54:37.000000000 -0600
++++ tcl8.3.4-patch/generic/tclEnv.c	2006-03-02 15:31:53.000000000 -0700
+@@ -91,7 +91,7 @@
+      * For MacOS X
+      */
+ #if defined(__APPLE__) && defined(__DYNAMIC__)
+-    environ = *_NSGetEnviron();
++    if( !environ ) /* Dd: hack ala Dav...*/ environ = *_NSGetEnviron();
+ #endif
+ 
+     /*
+diff -ru tcl8.3.4/generic/tclMain.c tcl8.3.4-patch/generic/tclMain.c
+--- tcl8.3.4/generic/tclMain.c	2001-08-27 18:12:45.000000000 -0600
++++ tcl8.3.4-patch/generic/tclMain.c	2006-03-02 15:31:53.000000000 -0700
+@@ -59,7 +59,7 @@
+ 				 * terminal-like device.  Zero means it's
+ 				 * a file. */
+ } ThreadSpecificData;
+-Tcl_ThreadDataKey dataKey;
++static Tcl_ThreadDataKey dataKey;
+ 
+ /*
+  * Forward declarations for procedures defined later in this file.
+diff -ru tcl8.3.4/unix/Makefile.in tcl8.3.4-patch/unix/Makefile.in
+--- tcl8.3.4/unix/Makefile.in	2001-10-19 18:24:15.000000000 -0600
++++ tcl8.3.4-patch/unix/Makefile.in	2006-03-02 15:31:53.000000000 -0700
+@@ -92,7 +92,7 @@
+ # Flags to pass to the linker
+ LDFLAGS_DEBUG		= @LDFLAGS_DEBUG@
+ LDFLAGS_OPTIMIZE	= @LDFLAGS_OPTIMIZE@
+-LDFLAGS			= @LDFLAGS@ @LDFLAGS_DEFAULT@
++LDFLAGS			= -flat_namespace @LDFLAGS@ @LDFLAGS_DEFAULT@
+ 
+ # To disable ANSI-C procedure prototypes reverse the comment characters
+ # on the following lines:
+diff -ru tcl8.3.4/unix/configure tcl8.3.4-patch/unix/configure
+--- tcl8.3.4/unix/configure	2001-10-19 18:24:15.000000000 -0600
++++ tcl8.3.4-patch/unix/configure	2006-03-02 15:32:30.000000000 -0700
+@@ -5409,7 +5409,7 @@
+ 	    LDFLAGS="-prebind"
+ 	    LD_SEARCH_FLAGS=""
+ 	    CFLAGS_OPTIMIZE="-O3"
+-	    EXTRA_CFLAGS="-arch ppc -pipe"
++	    EXTRA_CFLAGS="-pipe"
+ 	    ;;
+ 	NEXTSTEP-*)
+ 	    SHLIB_CFLAGS=""
+Only in tcl8.3.4-patch/unix: configure~
+diff -ru tcl8.3.4/unix/tclUnixPort.h tcl8.3.4-patch/unix/tclUnixPort.h
+--- tcl8.3.4/unix/tclUnixPort.h	2001-09-04 16:26:49.000000000 -0600
++++ tcl8.3.4-patch/unix/tclUnixPort.h	2006-03-02 15:31:53.000000000 -0700
+@@ -58,7 +58,9 @@
+ #endif
+ #include <sys/file.h>
+ #ifdef HAVE_SYS_SELECT_H
++#   undef panic
+ #   include <sys/select.h>
++#   define panic Tcl_Panic
+ #endif
+ #include <sys/stat.h>
+ #if TIME_WITH_SYS_TIME

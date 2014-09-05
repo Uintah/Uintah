@@ -1,0 +1,90 @@
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+#
+
+# SCI Network 1.0
+
+#######################################################################
+# Check environment variables.  Ask user for input if not set:
+set results [sourceSettingsFile]
+set DATADIR [lindex $results 0]
+set DATASET [lindex $results 1]
+#######################################################################
+
+source $DATADIR/$DATASET/$DATASET.settings
+
+::netedit dontschedule
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 44 2]
+set m1 [addModuleAtPosition "SCIRun" "Fields" "InterpolantToTransferMatrix" 346 248]
+set m2 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 231 160]
+set m3 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 180 248]
+set m4 [addModuleAtPosition "SCIRun" "Math" "LinAlgBinary" 276 334]
+set m5 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 32 244]
+set m6 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 59 335]
+set m7 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 147 438]
+set m8 [addModuleAtPosition "SCIRun" "Fields" "SampleLattice" 291 80]
+
+addConnection $m2 0 $m1 0
+addConnection $m0 0 $m3 0
+addConnection $m0 0 $m5 0
+addConnection $m2 0 $m5 1
+addConnection $m5 0 $m6 0
+addConnection $m6 1 $m7 0
+addConnection $m4 0 $m7 1
+addConnection $m0 0 $m2 0
+addConnection $m8 0 $m2 1
+addConnection $m0 0 $m8 0
+addConnection $m1 0 $m4 0
+addConnection $m3 1 $m4 1
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-filename $DATADIR/$DATASET/$DATASET-voltage.tvd.fld
+set $m1-notes {}
+set $m1-show_status {1}
+set $m2-notes {}
+set $m2-show_status {1}
+set $m2-interpolation_basis {linear}
+set $m2-map_source_to_single_dest {0}
+set $m2-exhaustive_search {1}
+set $m2-exhaustive_search_max_dist {-1}
+set $m2-np {1}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m4-notes {}
+set $m4-show_status {1}
+set $m4-op {Mult}
+set $m4-function {x+y}
+set $m5-notes {}
+set $m5-show_status {1}
+set $m6-notes {}
+set $m6-show_status {1}
+set $m7-notes {}
+set $m7-show_status {1}
+set $m7-haveUI {1}
+set $m7-methodTCL {CCinv}
+set $m7-pTCL {1}
+set $m8-notes {}
+set $m8-show_status {1}
+set $m8-sizex {5}
+set $m8-sizey {5}
+set $m8-sizez {5}
+set $m8-padpercent {0}
+set $m8-data-at {Nodes}
+$m7 initialize_ui
+
+::netedit scheduleok

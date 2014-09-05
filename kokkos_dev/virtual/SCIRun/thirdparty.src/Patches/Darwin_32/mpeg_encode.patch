@@ -1,0 +1,182 @@
+diff -ru mpeg_encode/Makefile mpeg_encode-patch/Makefile
+--- mpeg_encode/Makefile	Wed Aug 16 16:16:56 1995
++++ mpeg_encode-patch/Makefile	Mon Jul 28 10:12:50 2003
+@@ -96,7 +96,7 @@
+ # 
+ 
+ #	gcc
+-CFLAGS	      =  $(INCLUDEDIR) $(DEBUGFLAG) -Wall -Wmissing-prototypes $(PROFLAG) $(PROTOFLAG)
++CFLAGS	      =  $(INCLUDEDIR) $(DEBUGFLAG) -Wall -Wmissing-prototypes $(PROFLAG) $(PROTOFLAG) -fno-common
+ 
+ #	gcc-strict
+ #CFLAGS	      =  $(INCLUDEDIR) $(DEBUGFLAG) -pedantic -Wall -Waggregate-return -Wtraditional -Wshadow -Wpointer-arith -Wno-parentheses -Wwrite-strings -Wconversion -Wcast-qual -Wcast-align -Wnested-externs -Wuninitialized -Wmissing-prototypes $(PROFLAG) $(PROTOFLAG)
+diff -ru mpeg_encode/Makefile.lib mpeg_encode-patch/Makefile.lib
+--- mpeg_encode/Makefile.lib	Mon Jul 28 10:13:53 2003
++++ mpeg_encode-patch/Makefile.lib	Mon Jul 28 10:12:51 2003
+@@ -19,10 +19,11 @@
+ INSTALL= cp
+ 
+ # by default this is installed in your home dir
+-prefix = $$HOME
++prefix = @INSTALL_DIR@
+ libdir = $(prefix)/lib
+ incdir = $(prefix)/include
+ 
++CFLAGS = -dynamic -fno-common
+ # it uses the makefile which you have set up for mpeg_encode
+ MAKEFILE=./Makefile
+ 
+@@ -39,26 +40,36 @@
+ MP_PARALLEL_OBJS = noparallel.fix.o
+ MP_PARALLEL_SRCS = noparallel.fix.c
+ 
++MP_OTHER_OBJS = $(ARKOBJ) subsample.o param.o rgbtoycc.o \
++	readframe.o combine.o jrevdct.o frame.o fsize.o frametype.o \
++	libpnmrw.o specifics.o rate.o opts.o
++MP_OTHER_SRCS = $(ARKSRC) subsample.c param.c rgbtoycc.c \
++	readframe.c combine.c jrevdct.c frame.c fsize.c frametype.c \
++	libpnmrw.c specifics.c rate.c opts.c
++
+ MP_LIB_SRCS = $(MP_BASE_SRCS) $(MP_OTHER_SRCS) $(MP_ENCODE_SRCS) \
+-            $(MP_PARALLEL_SRCS) $(MP_JPEG_SRCS) $(ARKSRC)
++            $(MP_PARALLEL_SRCS) $(MP_JPEG_SRCS) 
+ MP_LIB_OBJS = $(MP_BASE_OBJS) $(MP_OTHER_OBJS) $(MP_ENCODE_OBJS) \
+-	    $(MP_PARALLEL_OBJS) $(MP_JPEG_OBJS) $(ARKOBJ)
++	    $(MP_PARALLEL_OBJS) $(MP_JPEG_OBJS) 
+ 
+ lib: libmpege
+ 
+-libmpege: libmpege.a
++libmpege: libmpege.a libmpege.dylib
+ 
+ libmpege.a:  $(MP_LIB_OBJS) $(ARKHEADERS)
+ 	$(AR) r $@ $(MP_LIB_OBJS)
+ 	$(RANLIB) $@
+ 
++libmpege.dylib: $(MP_LIB_OBJS) $(ARKHEADERS)
++	gcc -dynamiclib -o libmpege.dylib -install_name $(libdir)/libmpege.dylib $(MP_LIB_OBJS)
++
+ ARKmpeg.o: ARKmpeg.c
+ 
+ # this makes some of the functions in mpeg.c visable to my library
+ ARKmpeg.c: mpeg.c
+ 	./mkarkmpeg
+ 
+-mpegelib.o: mpegelib.c
++mpegelib.o: mpegelib.c 
+ 
+ # setversion grabs the version of mpeg_encode you are using
+ mpegelib.c: arklib.c
+@@ -66,5 +77,8 @@
+ 
+ install: libmpege.a $(ARKHEADERS)
+ 	$(INSTALL) libmpege.a $(libdir)/libmpege.a
++	$(INSTALL) libmpege.dylib $(libdir)/libmpege.dylib
+ 	$(INSTALL) mpege.h    $(incdir)/mpege.h
+ 	$(INSTALL) mpege_im.h $(incdir)/mpege_im.h
++
++
+diff -ru mpeg_encode/bitio.c mpeg_encode-patch/bitio.c
+--- mpeg_encode/bitio.c	Wed Jun 21 12:36:12 1995
++++ mpeg_encode-patch/bitio.c	Mon Jul 28 10:12:51 2003
+@@ -78,7 +78,8 @@
+ /*==============*
+  * HEADER FILES *
+  *==============*/
+-
++#include <time.h>
++#include <unistd.h>
+ #include <assert.h>
+ #include "all.h"
+ #include "byteorder.h"
+diff -ru mpeg_encode/headers/libpnmrw.h mpeg_encode-patch/headers/libpnmrw.h
+--- mpeg_encode/headers/libpnmrw.h	Wed Nov 28 15:33:06 2001
++++ mpeg_encode-patch/headers/libpnmrw.h	Mon Jul 28 10:12:51 2003
+@@ -19,10 +19,10 @@
+ ** malloc.h at all.  A sad situation.  If you have compilation problems
+ ** that point here, feel free to tweak or remove these declarations.
+ */
+-#include <malloc.h>
+-#if !defined(sco)  &&  !defined(sgi) && !defined(IRIX) && !defined(LINUX)
+-extern char* malloc();
+-#endif
++//#include <malloc.h>
++//#if !defined(sco)  &&  !defined(sgi) && !defined(IRIX) && !defined(LINUX)
++//extern char* malloc();
++//#endif
+ /* End of configurable definitions. */
+ 
+ 
+diff -ru mpeg_encode/headers/opts.h mpeg_encode-patch/headers/opts.h
+--- mpeg_encode/headers/opts.h	Tue Aug 15 17:43:43 1995
++++ mpeg_encode-patch/headers/opts.h	Mon Jul 28 10:12:51 2003
+@@ -118,6 +118,7 @@
+ int     CalcRLEHuffLength _ANSI_ARGS_((FlatBlock in));
+ void    ParseTuneParam _ANSI_ARGS_((char *charPtr));
+ int     mse _ANSI_ARGS_((Block blk1, Block blk2));
++void    Mpost_UnQuantZigBlockLaplace _ANSI_ARGS_((FlatBlock in, Block out, int qscale, boolean iblock));
+ 
+ 
+ 
+diff -ru mpeg_encode/jpeg.c mpeg_encode-patch/jpeg.c
+--- mpeg_encode/jpeg.c	Fri Aug  4 17:35:07 1995
++++ mpeg_encode-patch/jpeg.c	Mon Jul 28 10:12:51 2003
+@@ -65,6 +65,7 @@
+  *==============*/
+ 
+ #include <stdio.h>
++#include <unistd.h>
+ #include "all.h"
+ #include "mtypes.h"
+ #include "frames.h"
+@@ -77,8 +78,7 @@
+ 
+ /* make it happier.... */
+ #undef DCTSIZE2
+-#include "jpeg/jpeglib.h"
+-
++#include "jpeglib.h"
+ 
+ #define HEADER_SIZE 607   /*JFIF header size used on output images*/
+ 
+diff -ru mpeg_encode/libpnmrw.c mpeg_encode-patch/libpnmrw.c
+--- mpeg_encode/libpnmrw.c	Tue Nov 27 20:54:05 2001
++++ mpeg_encode-patch/libpnmrw.c	Mon Jul 28 10:12:51 2003
+@@ -28,6 +28,7 @@
+ #endif
+ 
+ #include <stdio.h>
++#include <stdlib.h>
+ #include "libpnmrw.h"
+ 
+ /* if don't have string.h, try strings.h */
+@@ -127,7 +128,7 @@
+ char* reason;
+ {
+ #if !defined(LINUX)
+-  extern char* sys_errlist[];
++//  extern char* sys_errlist[];
+ #endif
+   extern int errno;
+   char* e;
+diff -ru mpeg_encode/opts.c mpeg_encode-patch/opts.c
+--- mpeg_encode/opts.c	Tue Aug 15 12:34:09 1995
++++ mpeg_encode-patch/opts.c	Mon Jul 28 10:13:19 2003
+@@ -38,7 +38,8 @@
+ #include <stdio.h>
+ #include <string.h>
+ #include "opts.h"
+-#include <malloc.h>
++//#include <malloc.h>
++//#include <stdlib.h>
+ #include <math.h>
+ 
+ /*==============*
+@@ -91,7 +92,6 @@
+ void    SetupWriteDistortions _ANSI_ARGS_((char *charPtr));
+ void    SetupLaplace _ANSI_ARGS_((void));
+ void    CalcLambdas  _ANSI_ARGS_((void));
+-void    Mpost_UnQuantZigBlockLaplace _ANSI_ARGS_((FlatBlock in, Block out, int qscale, boolean iblock));
+ 
+ /* define this as it too much of a pain to find toupper on different arch'es */
+ #define ASCII_TOUPPER(c) ((c>='a') && (c<='z')) ? c-'a'+'A' : c

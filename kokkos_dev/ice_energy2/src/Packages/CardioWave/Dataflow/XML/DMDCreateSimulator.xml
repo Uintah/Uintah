@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="DMDCreateSimulator" category="DiscreteMultiDomain" optional="false">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      Create the files needed for the simulation.
+
+    </summary>
+    <description>
+      <p>        Create the files needed for the simulation.
+</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="yes">
+      <port>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
+      </port>
+      <port>
+        <name>Domain</name>
+        <datatype>SCIRun::Bundle</datatype>
+      </port>
+      <port>
+        <name>Membrane</name>
+        <datatype>SCIRun::Bundle</datatype>
+      </port>
+      <port>
+        <name>Stimulation</name>
+        <datatype>SCIRun::Bundle</datatype>
+      </port>
+      <port>
+        <name>Reference</name>
+        <datatype>SCIRun::Bunde</datatype>
+      </port>
+    </inputs>
+  </io>
+</component>

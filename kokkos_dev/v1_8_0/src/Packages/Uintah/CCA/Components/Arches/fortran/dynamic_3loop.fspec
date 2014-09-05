@@ -1,0 +1,7 @@
+void dynamic_3loop(CCVariable<double> sij1, CCVariable<double> sij2,
+     CCVariable<double> sij3, CCVariable<double> sij4,
+     CCVariable<double> sij5, CCVariable<double> sij6,
+     constSFCXVariable<double> uvel, constSFCYVariable<double> vvel,
+     constSFCZVariable<double> wvel, OffsetArray1<double> sew,
+     OffsetArray1<double> sns, OffsetArray1<double> stb,
+     IntVector idxLo, IntVector idxHi);

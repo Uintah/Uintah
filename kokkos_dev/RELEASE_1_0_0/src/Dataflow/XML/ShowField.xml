@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/ReferenceGuide/component.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="ShowField" category="Visualization">
+  <overview>
+    <authors>
+      <author>Marty Cole</author>
+    </authors>
+    <summary>
+          ShowField is used to visualize the geometry that makes up a 
+          Mesh inside a Field. The field takes its color from the Data 
+          values that permeate the field where possible.
+    </summary>
+    <description>
+      <p>Version Date: March 2001</p><p>Version: 1.0</p>
+      <p>
+          If all input ports are connected and have data, then the data in 
+          input two is used as a color index into input three, which together 
+          define how each element in the mesh are drawn.
+      </p>
+      <p>
+          If the only connected input with data is the first port, then 
+          all geometry in the Mesh are drawn grey.
+      </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <!-- one of (device port file) -->
+      <port>
+	<name>Field-Geometry</name>
+	<description>
+	  <p>
+             The only required input to function properly. This Field need 
+             only have a Mesh. Its data is never referenced.
+          </p>
+	</description>
+	<datatype>Field</datatype>
+	<componentname>FieldReader</componentname>
+      </port>
+      <port>
+	<name>Field-ColorIndex</name>
+	<description>
+	  <p>
+             Optional Input.  If this input exists, the third input port 
+             is required. (See ColorMap port)  This Field must have the 
+             same Mesh type as the Field-Geometry Field. Its data must be 
+             of a scalar type, and is used to fetch MaterialHandles out of 
+             the ColorMap from the third port.
+          </p>
+	</description>
+	<datatype>Field</datatype>
+	<componentname>ManipFields</componentname>
+      </port>
+      <port>
+	<name>ColorMap</name>
+	<description>
+	  <p>
+            Required if second input port has data. This input holds the 
+            color map that is used to color the geometry in the visualization.
+          </p>
+	</description>
+	<datatype>ColorMap</datatype>
+	<componentname>GenStandardColorMaps</componentname>
+      </port>
+    </inputs>
+    <outputs>
+      <!-- one of (device port file) -->
+      <port>
+	<name>Geometry</name>
+	<description>
+	  <p>
+             A scene graph is sent out through this port expecting to be 
+             rendered by the downstream port.
+          </p>
+	</description>
+	<datatype>GeomObj</datatype>
+	<componentname>Viewer</componentname>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+      <p>
+         The user can control wether or not to render nodes, edges, or 
+         faces independently. Also some option for how to render them 
+         are available.
+      </p>
+    </description>
+    <parameter>
+      <widget>checkbox</widget>
+      <datatype>bool</datatype>
+      <label>Display Nodes</label>
+      <description>
+	<p>Toggles display of nodes in the scene.</p>
+	<developer>
+	  <p>This toggles the state of a GeomSwitch on the C++ side.</p>
+	</developer>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>radiobutton</widget>
+      <datatype>string</datatype>
+      <label>Node Display Type</label>
+      <description>
+	<p>
+           Choices are Spheres, Axes, Points. These are options for how to 
+           draw the nodes. Spheres will draw spheres centered on the node, 
+           Axes will draw a miniature coordinate frame centered on each 
+           node, while Points will draw a single point at each node.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>scale</widget>
+      <datatype>double</datatype>
+      <label>NodeScale</label>
+      <description>
+	<p>
+           Effects the size of rendered nodes (Point rendered nodes, 
+           are always a single point therefore not affected by this value)
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>checkbox</widget>
+      <datatype>bool</datatype>
+      <label>Show Edges</label>
+      <description>
+	<p>Toggles display of edges in the scene.</p>
+	<developer>
+	  <p>This toggles the state of a GeomSwitch on the C++ side.</p>
+	</developer>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>checkbox</widget>
+      <datatype>bool</datatype>
+      <label>Show Faces</label>
+      <description>
+	<p>Toggles display of faces in the scene.</p>
+	<developer>
+	  <p>This toggles the state of a GeomSwitch on the C++ side.</p>
+	</developer>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>button</widget>
+      <datatype>none</datatype>
+      <label>Excecute</label>
+      <description>
+	<p>Force the module to execute.</p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>button</widget>
+      <datatype>none</datatype>
+      <label>Dismiss</label>
+      <description>
+	<p>Closes the ui window for ShowField.</p>
+      </description>
+    </parameter>
+    <img>../Modules/Visualization/doc/ShowFieldGUI.jpg</img>
+  </gui>
+  <testing>
+    <plan>
+      <description>
+	<p>
+           To test this module all of the steps below need to be attempted 
+           with all types of valid fields. Render with/without nodes, 
+           edges, and faces.  Also with and without color input.
+        </p>
+      </description>
+      <step>
+	<p>connect all inputs, and output to the viewer module.</p>
+      </step>
+      <step>
+	<p>turn off/on faces</p>
+      </step>
+      <step>
+	<p>turn off/on edges</p>
+      </step>
+      <step>
+	<p>turn off/on nodes</p>
+      </step>
+      <step>
+	<p>turn off bothe edges and faces</p>
+      </step>
+      <step>
+	<p>change NodeScale</p>
+      </step>
+      <step>
+	<p>select Axes</p>
+      </step>
+      <step>
+	<p>change NodeScale</p>
+      </step>
+      <step>
+	<p>select Points</p>
+      </step>
+      <step>
+	<p>turn off nodes</p>
+      </step>
+      <step>
+	<p>turn on edges</p>
+      </step>
+      <step>
+	<p>turn on faces</p>
+      </step>
+      <step>
+	<p>turn on nodes</p>
+      </step>
+      <step>
+	<p>select Spheres</p>
+      </step>
+    </plan>
+  </testing>
+</component>

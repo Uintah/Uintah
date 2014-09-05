@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/component.dtd">
+<?xml-stylesheet href="../../../doc/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="StreamLines" category="Visualization">
+  <overview>
+    <authors>
+      <author>Chris Moulding</author>
+    </authors>
+    <summary>
+      <p>
+        StreamLines is used to visualize vector fields by generating
+	curves that interpolate the flow represented by the vectors in
+	a field. 
+      </p>
+    </summary>
+    <description>
+      <p>
+        StreamLines generates, as output, curves that interpolate the flow
+	represented by the vectors in a field.  StreamLines takes two
+	arguments as input: a generic field of vectors (Flow Field)
+	and a field of scalars (Seeds).  Flow field and Seeds are both
+	required.  StreamLines outputs a ContourField (Streamlines)
+	that represents a collection of stream lines that interpolate
+	the Flow field.
+      </p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Flow field</name>
+        <description>
+          <p>
+            Flow field is the field to be visualized.  It can be 
+     	    2D or 3D and can be structured or unstructured.
+	    StreamLines is more effective if Flow field represents the
+	    flow present in a field rather than the gradient of a generic
+	    field. 
+          </p>
+        </description>
+        <datatype>SCIRun::Field</datatype>
+        <componentname>GenField</componentname>
+        <componentname>ReadField</componentname>
+      </port>
+      <port>
+        <name>Seeds</name>
+        <description>
+          <p>
+            Seeds is a field whose nodes will be used as seed points, or
+            starting points, for the generation of the stream lines.
+          </p>
+        </description>
+        <datatype>SCIRun::Field</datatype>
+        <componentname>GenField</componentname>
+        <componentname>ReadField</componentname>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Streamlines</name>
+        <description>
+          <p>
+            Streamlines is a ContourField&lt;double&gt;
+          </p>
+        </description>
+        <datatype>SCIRun::Field</datatype>
+        <componentname>Render3D</componentname>
+        <componentname>WriteGeometry</componentname>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+      <p>
+        The GUI for StreamLines allows the user to control the 
+        parameters for the advection algorithm (Runge-Kutta-Fehlberg)
+        used to extract the streamlines. 
+      </p>
+    </description>
+    <img>../Modules/Visualization/doc/StreamLinesGUI.jpg</img>
+    <parameter>
+      <widget>Button</widget>
+      <label>Execute</label>
+      <description>
+        <p>
+          Sends a request to the scheduler to have this component
+          executed.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>Entry</widget>
+      <label>Error Tolerance</label>
+      <description>
+        <p>
+          The value entered here will control the RKF step-size
+          variable.  It will adaptively change the step-size based on
+          how close the local truncation error is to this value.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>Entry</widget>
+      <label>Step Size</label>
+      <description>
+        <p>
+          The value entered here will provide RKF with the initial
+          step size.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>Entry</widget>
+      <label>Maximum Steps</label>
+      <description>
+        <p>
+          The value entered here will be the maximum number of nodes
+          allowed in a single stream line (to prevent infinite run
+          time). 
+        </p>
+      </description>
+    </parameter>
+  </gui>
+  <testing>
+    <plan>
+      <description>
+        <p>
+        </p>
+      </description>
+      <step>
+        <p>
+          nothing yet.
+        </p>
+      </step>
+    </plan>
+  </testing>
+</component>
+

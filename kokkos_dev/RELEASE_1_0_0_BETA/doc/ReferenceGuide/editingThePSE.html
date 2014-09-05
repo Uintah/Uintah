@@ -1,0 +1,180 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<HTML>
+<HEAD>
+  <TITLE>Editing SCIRun Source Code</TITLE>
+  <LINK REL="STYLESHEET" HREF="/csafe_style_sheet.css" TYPE="text/css">
+</HEAD>
+<BODY>
+
+<H2> How to Edit SCIRun </H2>
+
+<H3> Contents </H3>
+
+<UL>
+  <LI> <A HREF="#overview">Overview</A>
+  <LI> <A HREF="#cvs">CVS</A>
+  <LI> <A HREF="#cvsMailingList">CVS Updates Mailing List</A>
+  <LI> <A HREF="#manuals">CVS Manuals</A>
+  <LI> <A HREF="#problems">Possible Problems/Solutions</A>
+</UL>
+
+<A NAME="overview">
+<H3> Overview </H3>
+
+SCIRun source code is stored in a CVS repository.  CVS is a file
+revision control tool which facilitates multiple users developing the
+same source codes at the same time. It maintains a history of what has
+changed in a file, who made the change, and when it occurred, and
+allows for tagging a specific level of codes as a version release.
+<P>
+
+In order to check out a copy of the SCIRun source code from the
+repository, you must do the following:
+
+<UL>
+  <LI> Have a CS computer account created for you.  Get access to
+  csf.cs.utah.edu.  Be added to the appropriate unix groups (csafe,
+  scirun, biopse, etc.)  See the complete <A HREF="">New User's
+  Checklist</A> for more details.<P>
+
+  <LI> Set the following unix environment variables.  You will
+  probably want to do this in you .cshrc file so that they will
+  be set each time you log in:
+    <UL>
+      <LI><I>setenv CVSROOT csf.cs.utah.edu:/csafe_noexport/cvs/cvsroot</I>
+      <LI><I>setenv CVS_RSH ssh</I>
+    </UL><P>
+
+  <LI>Create a working directory for the copy of the files that
+  you will be editing. <P>
+
+  <LI>Change directories to the working directory. <P>
+
+  <LI><B>NOTE:</B> When running cvs commands, you may be querried
+  for your password, depending on whether you have a .rhosts/.shosts
+  file and where you are logging in from. If so, just type in your
+  password. The examples below do not show a password query. <P>
+
+  <LI>Checkout all or part of the repository that you are interested
+  in. To do this, run the following CVS command: "cvs checkout
+  SCIRun".<P>
+
+</UL>
+
+<P>
+
+<A NAME="cvs">
+<H3> CVS </H3>
+
+Once you have a copy of the source tree, you are free to edit and
+check in source files using CVS.  Here are the main CVS commands you
+will likely use:
+
+<UL>
+  <LI> <I>cvs update [-d]</I>:  When typed from within your working
+  directory, this command will copy all files that have been updated
+  in the repository (usually by other people) into your working
+  directory.  Any files that you have also modified will be marked
+  with the differences.  The "-d" argument is optional, and tells
+  CVS to bring in new directories.  By default, new directories added
+  to the repository are not added to your working directory.
+  <P>
+  <LI> <I>cvs status <filename></I>: Tells you about <filename>.
+  <P>
+  <LI> <I>cvs log <filename></I>: Gives you the update log on <filename>.
+  <P>
+  <LI> <I>cvs diff <filename></I>: Shows you the differences between
+  <filename> in your working directory, and the most recent version in
+  the repository.
+</UL>
+
+<A NAME="cvsMailingList">
+
+If you are interested in being notified when any source files are
+modified, you may use majordomo to subscribe to either (or both) of
+"scirun-cvs" or "csafe-cvs" mailing lists.
+
+<P>
+
+Send mail to majordomo@cs.utah.edu with the following in the body of
+the e-mail:
+
+<P>
+
+subscribe scirun-cvs <yourid@yourmachine>
+
+<P>
+
+<A NAME="manuals">
+<H3>Other sources of information about CVS:</H3>
+
+<UL>
+  <LI>CVS FAQ <A HREF="cvs_faq.txt">(txt)</A>
+  <LI>CVS Manual (local copy from below URL) <A HREF="cvs_local.ps.Z">(ps.Z)</A>
+  <LI><A HREF="http://www.loria.fr/~molli/cvs/doc/cvs_toc.html">http://www.loria.fr/~molli/cvs/doc/cvs_toc.html</A>
+</UL>
+
+<A NAME="problems">
+<H2> Possible Problems and Their Solutions </H2>
+
+<UL>
+  <LI> You get "Permission Denied" when checking out or updating your
+       working directory.  This is (usually) caused when someone has
+       added a new directory to the repository.  When a new directory
+       is created, CVS (incorrectly) sets the permissions to the
+       defaults of directory's creator.  Either a superuser or the
+       owner of the directory may go to the cvs repository on csf and
+       fix the file permissions.
+  <P>
+</UL>
+
+<!----- Generic Page Trailer -------------------------------------------></P>
+
+<P><HR ALIGN=LEFT>
+
+<BR>
+
+<IMG SRC="/images/weblogo.jpg" WIDTH="100" HEIGHT="100" ALIGN="RIGHT"
+     BORDER="0">
+
+<FONT COLOR="#ff0000" SIZE="-1">
+Copyright &COPY; 2000, University of Utah.  All rights reserved. <BR><BR>
+</FONT>
+
+<FONT SIZE="-1">
+This page is maintained by <STRONG>C-SAFE Webmaster</STRONG>.
+
+<BR><BR>
+
+Last modified on 
+</FONT>
+
+<SCRIPT LANGUAGE="JavaScript">document.write(document.lastModified)</SCRIPT>
+
+<BR>
+
+<FONT SIZE="-1">
+  Please feel free to send any comments, complaints, or suggestions to
+  me (<A HREF="mailto:csafe-webmaster@cs.utah.edu">
+  csafe-webmaster@cs.utah.edu</A>).
+</FONT>
+
+</BODY>
+</HTML>
+

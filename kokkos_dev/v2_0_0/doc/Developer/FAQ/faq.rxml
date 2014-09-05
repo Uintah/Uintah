@@ -1,0 +1,499 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+
+<!--% require("../../Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+"../../Utilities/XML/Docbook_dtd/docbookx.dtd" [
+<!ENTITY sr "SCIRun">
+]>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<article class="faq">
+<title>Developer FAQ (for &sr; v. <!--%= doc.edition %-->)</title>
+
+<qandaset defaultlabel="number">
+
+<qandaentry>
+
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>2/15/03</date>
+</revision>
+</revhistory>
+
+<question>
+<para>
+Should <type>std::vector</type> or <type>SCIRun::Array1</type> be used?
+</para>
+</question>
+<answer>
+<para>
+In cases where performance does not matter, use
+<type>std::vector</type>.  However, in cases where optimal
+performance is needed, compare the performance of
+<type>std::vector</type> and <type>SCIRun::Array1</type>. In some cases, <type>SCIRun::Array1</type> is significantly
+faster. 
+</para>
+</answer>
+
+</qandaentry>
+
+<qandaentry>
+
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>1/31/03</date>
+</revision>
+</revhistory>
+
+<question>
+<para>SCIRun dies with a memory allocation error.  Specifically:
+<literallayout class="monospaced">
+Error allocating memory (32833536 bytes requested) mmap: errno=12 Thread
+</literallayout>
+</para>
+</question>
+
+<answer>
+<para>If SCIRun is not configured with <option>--enable-64bit</option>,
+the program will not be able to use more than approximately 2G of
+memory.</para>
+</answer>
+
+</qandaentry>
+
+<qandaentry>
+
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>7/29/01</date>
+</revision>
+</revhistory>
+
+<question>
+<para>
+What is the granularity of modules?
+</para>
+</question>
+
+<answer>
+<para>
+Modules that start at
+one level sometimes divide or merge to a different level.
+When designing and writing the code, it is important to
+think in terms of modularity, even within a single module, so
+subsequent divisions or reorganization is possible.  One approach is to
+present the design for a new module or set
+of modules to the group. Perhaps others are interested in some
+part of the functionality, or can provide existing modules for the new
+module.  This way, there is benefit from the collective plans and
+knowledge of the group.
+</para>
+</answer>
+
+</qandaentry>
+ 
+<qandaentry>
+
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>7/29/01</date>
+</revision>
+</revhistory>
+
+<question>
+<para>
+Are there Emacs tools for coding standard?
+</para>
+</question>
+
+<answer>
+<para>
+Yes, here is the code used to support the coding standard:
+</para>
+
+<programlisting>
+<![CDATA[
+; Filename: sci-c++-style.el
+; Author: Marty Cole
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun c-no-initializer-indent (langelem)
+  ;; using in a statement block intro...
+    (save-excursion
+        (let* ((curpos (point))
+     retval)
+(setq retval (if (search-forward "{" (c-point 'eol) t)
+                 (* -1 c-basic-offset) c-basic-offset))
+(goto-char curpos)
+retval)))
+
+(defun my-c-mode-common-hook ()
+;; my customizations for all of c-mode and related modes
+(c-set-style "gnu")
+(set 'c-label-minimum-indentation 0)
+(c-set-offset 'substatement-open 0)
+(c-set-offset 'innamespace 0)
+(c-set-offset 'statement-cont 'c-no-initializer-indent)
+)
+
+(add-hook 'c-mode-common-hook 'my-c-mode-common-hook)
+]]>
+</programlisting>
+
+<para>
+Place this in the .emacs file.
+</para>
+
+<para>
+The SCIRun coding standard can be found <ulink
+url=<!--%=doc.treeUrl("doc/Developer/Guide/dev.codingstandards.html") %-->>online</ulink>.
+</para>
+</answer>
+
+</qandaentry>
+
+<qandaentry>
+
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>7/29/01</date>
+</revision>
+</revhistory>
+
+<question>
+<para>
+Are accounts needed for the CVS? How are the latest version of SCIRun or BioPSE checked out?
+</para>
+</question>
+
+<answer>
+<para>
+At present, remote access to the code repository requires a
+SCI account.  To get the most recent released version,
+visit SCI's web site to download archives.  Users may place the resulting
+files on their own code repository site and manage their own
+development.
+</para>
+</answer>
+
+</qandaentry>
+ 
+<qandaentry>
+
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>7/29/01</date>
+</revision>
+</revhistory>
+
+<question>
+<para>
+Are there guidelines for module testing? What is the testing
+strategy?
+</para>
+</question>
+
+<answer>
+<para>
+The nature of SCIRun as an interactive, user driven
+program makes testing modules and their interactions 
+challenging.  A user interface that
+contains a state manager that accepts and manages input from all
+user interface elements is being developed.  One advantage of such a manager is the replacement  of the interactive input with a program that
+supplies a script of interaction requests. the state manager
+can respond as if a user executed the requests manually.
+Development of this structure is in progress.
+</para>
+</answer>
+
+</qandaentry>
+
+<qandaentry>
+
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>7/29/01</date>
+</revision>
+</revhistory>
+
+<question>
+<para>
+What is XML?
+</para>
+</question>
+
+<answer>
+<para>
+Go to an XML web
+site such as <ulink url="http://faq.oreillynet.com/XML/index0.shtm">
+faq.oreillynet.com/XML/index0.shtm</ulink> or
+<ulink url="http://www.xml.com/pub/a/98/10/guide0.html">
+www.xml.com/pub/a/98/10/guide0.html</ulink>.
+</para>
+</answer>
+
+</qandaentry>
+
+<qandaentry>
+
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>7/29/01</date>
+</revision>
+</revhistory>
+
+<question>
+<para>
+What does XML have to do with SCIRun?
+</para>
+</question>
+
+<answer>
+<para>
+Each module in BioPSE requires an XML-based  description of its
+functionality.  The information in the XML module description provides
+information to assist the <ulink
+url=<!--%=doc.treeUrl("doc/Developer/Guide/create_module.html") %-->>
+module-maker</ulink>, and helps create the template for a module.  The
+XML module description also forms the
+basis of a Reference Manual of all modules, and provides
+information to SCIRun about the number of types of ports the
+module needs when it appears in a network diagram.  The document
+<citetitle><ulink url=<!--%=doc.treeUrl("doc/Documentum/module-xml/index.html") %-->>XML
+Module Descriptions (Explicated)</ulink></citetitle> describes the
+format and content of the XML file in detail.
+</para>
+</answer>
+
+</qandaentry>
+
+<qandaentry>
+
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>7/29/01</date>
+</revision>
+</revhistory>
+
+<question>
+<para>
+What does it mean to <firstterm>validate</firstterm> a design
+specification in XML?
+</para>
+</question>
+
+<answer>
+<para>
+XML requires adherence to
+the language standard, unlike HTML, that permits  implicit
+actions such as environments that are never closed properly.   
+Use a <ulink
+url="http://mom.cvrti.utah.edu/~dustman/srvalidate.html">validation
+tool</ulink> to ensure an XML module description file adheres to
+BioPSE specifications.
+</para>
+</answer>
+
+</qandaentry>
+
+<qandaentry>
+
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>7/29/01</date>
+</revision>
+</revhistory>
+
+<question>
+<para>
+The following message appears
+while running SCIRun on sgi octane:
+<literallayout class="monospaced">
+Error unmapping memory
+munmap: errno=16
+Unmap failed - leaking memory
+</literallayout>
+</para>
+
+<para>
+Is this a coding error, or is this a
+memory issue with the machine?
+</para>
+</question>
+
+<answer>
+<para>
+There is nothing wrong with the machine, nor is it a coding error.
+There is a conflict with IRIX and the SCIRun memory allocator that
+has never been tracked down. It is a rare occurrence.
+</para>
+</answer>
+
+</qandaentry>
+
+<qandaentry>
+
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>7/29/01</date>
+</revision>
+</revhistory>
+
+<question>
+<para>
+How does one customize the color of simple geometry objects such as cylinders?
+</para>
+</question>
+
+<answer>
+<para>
+There are container classes for GeomObj's -- these are themselves
+GeomObj's that contain one or more GeomObj's inside of them.
+They are useful for building up scene graphs.  The
+container used is a GeomMaterial -- its constructor
+takes a GeomObj (e.g. a GeomCylinder) and a MaterialHandle.  (Note:
+the constructor for a Material can be as simple as passing in a
+Color triple!)
+</para>
+</answer>
+
+</qandaentry>
+
+<qandaentry>
+
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>7/29/01</date>
+</revision>
+</revhistory>
+
+<question>
+<para>
+When creating a user data type, how does one specify a new
+color to represent its port type in the module. 
+</para>
+</question>
+
+<answer>
+<para>
+When creating a new Port, add a file into Dataflow/Ports/.
+The .cc file for the new Port type should have a specification for
+a name and for a color.  See
+<filename>SCIRun/src/Dataflow/Ports/MatrixPort.cc</filename> as an
+example.
+</para>
+</answer>
+
+</qandaentry>
+
+<qandaentry>
+
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>7/29/01</date>
+</revision>
+</revhistory>
+
+<question>
+<para>
+Why don't the settings in the modules GUI save when saving the network?
+</para>
+</question>
+
+<answer>
+<para>
+GuiVars are needed. GuiVars enable the sharing of a variable between 
+C++ and tcl, and are the only values that save to the tcl 
+scripts.
+
+Look at any module with a gui for an example (GuiString,
+GuiInt,  GuiDouble, and in particular, look at their constructor).   
+Synch with the tcl side by specifying the name of the var 
+on the tcl side.  
+</para>
+<para>
+On the C++ side:
+<programlisting>
+GuiInt myint_;
+
+// Initialization in constructor --
+myint_("myint", id, &hellip;)
+</programlisting>
+</para>
+
+<para>
+One the tcl side:
+
+<programlisting>
+set $this-myint 1    # or whatever value you want
+</programlisting>
+</para>
+<para>
+Look at ShowField.cc and .tcl for examples.
+</para>
+</answer>
+</qandaentry>
+
+<qandaentry>
+
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>7/29/01</date>
+</revision>
+</revhistory>
+
+<question>
+<para>When does a thread start running?</para>
+</question>
+
+
+<answer>
+<para>A thread starts running immediately, unless Stopped or
+NotActivated in the Thread constructor.  In that case, use
+thread->resume() or thread->activate() (respectively) to start the thread running.  Stopped/thread->resume() is the preferred method.</para>
+</answer>
+</qandaentry>
+
+</qandaset>
+
+</article>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../../doc/Utilities/XML/docbook.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->

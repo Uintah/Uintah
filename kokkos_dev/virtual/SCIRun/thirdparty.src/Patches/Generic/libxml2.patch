@@ -1,0 +1,12 @@
+*** libxml2-2.6.22/catalog.c	Fri Apr  1 06:15:01 2005
+--- libxml2-2.6.22/catalog.c.fixed	Tue Feb 28 11:52:13 2006
+*************** xmlAddXMLCatalog(xmlCatalogEntryPtr cata
+*** 1546,1551 ****
+--- 1546,1552 ----
+  	cur->next = xmlNewCatalogEntry(typ, orig, replace,
+  		                       NULL, catal->prefer, NULL);
+      if (doregister) {
++       catal->type = XML_CATA_CATALOG; // SCI Fix/Hack for SGI/Mac/Windows... should be incorporated in the next release 
+  	cur = xmlHashLookup(xmlCatalogXMLFiles, catal->URL);
+  	if (cur != NULL)
+  	    cur->children = catal->children;

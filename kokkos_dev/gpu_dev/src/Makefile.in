@@ -1,0 +1,276 @@
+#
+#  For more information, please see: http://software.sci.utah.edu
+# 
+#  The MIT License
+# 
+#  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+#  University of Utah.
+# 
+#  License for the specific language governing rights and limitations under
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+# 
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+# 
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+#
+
+
+# If you change this file, you must re-run configure before the changes
+# will be effective
+# This makefile was inspired by:
+# http://www.canb.auug.org.au/~millerp/rmch/recu-make-cons-harm.html
+
+# Default target
+default: all
+
+# Directory variables
+SRCTOP  := @top_srcdir@
+SRCDIR  := @srcdir@
+OBJTOP  := .
+OBJTOP_ABS    := $(shell cd $(OBJTOP) ; pwd)
+SRCTOP_ABS    := $(shell cd $(SRCTOP) ; pwd)
+SCIRUN_SCRIPTS = $(SRCTOP_ABS)/build_scripts
+
+OS_NAME = $(shell uname)
+
+include configVars.mk
+
+# Rules for autoconf
+#${SRCTOP}/configure: ${SRCTOP}/configure.in
+#	cd ${SRCTOP} && autoconf
+
+config.status: ${SRCTOP}/configure
+	@if test -n "`find ${SRCTOP}/configure.in -newer config.cache`"; then echo "removing config.cache and confdefs.h as they may be out of date"; /bin/rm -f config.cache confdefs.h; fi
+	./config.status --recheck
+
+Makefile: ${SRCTOP}/Makefile.in ${OBJTOP}/config.status
+	@( Here="`pwd`" ; cd ${OBJTOP} ; Top="`pwd`" ; CONFIG_FILES=`echo $${Here} | sed -e "s%^"$${Top}"/%%" -e "s%^"$${Top}"%.%"`/Makefile CONFIG_HEADERS="" ./config.status ) 1>&2
+
+configVars.mk: ${SRCTOP}/configVars.mk.in ${OBJTOP}/config.status
+	@( Here="`pwd`" ; cd ${OBJTOP} ; Top="`pwd`" ; CONFIG_FILES=`echo $${Here} | sed -e "s%^"$${Top}"/%%" -e "s%^"$${Top}"%.%"`/configVars.mk CONFIG_HEADERS="" ./config.status )
+
+# Actually include the module makefile fragments
+ALLSUBDIRS := . 
+include $(SCIRUN_SCRIPTS)/recurse.mk
+
+## Remove duplicates from the final list of include paths.
+#    Also, split 'our' thirdparty includes off of the list so
+#    that they can be placed at the beginning of the includes.
+#    This (hopefully on all systems) will mean that our (thirdparty)
+#    include files will be used before any "system" include files.
+
+TP_INCLUDES := $(shell                                 \
+       uniques=;                                       \
+       for i in $(INCLUDES); do                        \
+          found=`echo \"$$uniques\" | grep -- "$$i "`; \
+          if test -z "$$found"; then                   \
+            echo $$i;                                  \
+            uniques="$$uniques$$i ";                   \
+          fi;                                          \
+       done                                            \
+       | grep Thirdparty; )
+
+OTHER_INCLUDES := $(shell                              \
+       uniques=;                                       \
+       for i in $(INCLUDES); do                        \
+          found=`echo \"$$uniques\" | grep -- "$$i "`; \
+          if test -z "$$found"; then                   \
+            echo $$i;                                  \
+            uniques="$$uniques$$i ";                   \
+          fi;                                          \
+       done                                            \
+       | grep -v Thirdparty; )
+
+INCLUDES := $(TP_INCLUDES) $(OTHER_INCLUDES)
+
+
+ALLOBJSUBDIRS :=$(patsubst $(SRCTOP)%,$(OBJTOP)%, $(ALLSUBDIRS))
+
+MAKEFILEDIRS := $(wordlist 2,$(words $(ALLSUBDIRS)),$(ALLSUBDIRS))
+MAKEFILEDIRS := $(subst $(SRCTOP),$(OBJTOP_ABS),$(MAKEFILEDIRS))
+
+SUBMAKEFILES := $(patsubst %,%/Makefile,$(MAKEFILEDIRS))
+
+# Don't use the list of dirs directly because the timestamp on the directly changes
+# when files are modified inside of it... by using a '.created' file, the MAKEFILEDIRS
+# dependency is not invoked accept as needed.
+MAKEFILEDIRSTAG := $(addsuffix /.created, $(MAKEFILEDIRS)) 
+
+ifeq ($(IS_WIN),yes)
+  VCDIR=projects
+  VCSOLUTION=SCIRun.sln
+  VCDEPS:=$(ALLVCPROJECTS) $(VCSOLUTION)
+endif
+
+
+# etags generation
+C_FILES := $(patsubst %,%/*.c, $(ALLSUBDIRS))
+CPP_FILES := $(patsubst %,%/*.cc, $(ALLSUBDIRS))
+HEADER_FILES := $(patsubst %,%/*.h, $(ALLSUBDIRS))
+
+ETAGS_FILES := $(wildcard $(HEADER_FILES) $(C_FILES) $(CPP_FILES) )
+TCL_ETAGS_FILES := $(wildcard $(TCL_FILES))
+ETAGS := @ETAGS@
+CTAGS := ctags
+
+all:: prereqs packmaker $(ALLTARGETS) uintah
+
+prereqs : $(MAKEFILEDIRSTAG) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN) $(VCDIR) $(VCDEPS)
+	@if test ! -f prereqs; then \
+	  echo "Dummy file to keep Makefile 'prereqs' from continually firing..." >  prereqs; \
+	fi;
+
+$(MAKEFILEDIRSTAG) :
+	@echo creating directory `dirname $@`
+	@mkdir -p `dirname $@`
+	@echo "Dummy file indicating that $@ has been created..." > $@
+	@touch `dirname $@`
+
+packmaker: $(SRCTOP)/build_scripts/packmaker.in $(OBJTOP)/Makefile
+	@echo creating packmaker
+	-@sed -e 's,REPLACE_SCIRUN_OBJTOP,$(OBJTOP_ABS),g' \
+              -e 's,REPLACE_SCIRUN_SRCTOP,$(SRCTOP_ABS),g' \
+              $(SRCTOP)/build_scripts/packmaker.in > packmaker
+	-@chmod a+x packmaker
+
+
+$(LIBDIR):
+	mkdir -p $(LIBDIR)
+
+$(VCDIR):
+	mkdir -p $@
+
+
+# Make emacs etags file
+sciTAGS:  $(ETAGS_FILES) $(TCL_ETAGS_FILES)
+	$(ETAGS) -o sciTAGS $(ETAGS_FILES)
+	$(ETAGS) -o sciTAGS -a -l none --regex='/itcl_class[ \t]+\([^ \t]+\)/\1/' --regex='/[ \t]+method[ \t]+\([^ \t]+\)/\1/' $(TCL_ETAGS_FILES)
+
+# Make ctags file
+sciCTAGS:  $(ETAGS_FILES)
+	$(CTAGS) -o sciCTAGS $(ETAGS_FILES)
+
+# The sophsticated looking $(...) mess below is just to convert a
+# subdirectory of the form a/b/c into ../../..
+ifeq ($(LARGESOS),yes)
+  HERE = $(LIBDIR)/lib$(firstword $(subst /," ",$(subst $(OBJTOP_ABS)/,,$@))).so
+else
+  HERE = $(LIBDIR)/lib$(subst /,_,$(patsubst $(OBJTOP_ABS)/%/,%,$(dir $@))).so
+endif
+$(SUBMAKEFILES): build_scripts/Makefile.tmpl
+	@echo creating $@
+	@sed -e s,@OBJTOP@,$(shell echo $(foreach t,$(subst /," ",$(dir $(subst $(OBJTOP_ABS)/,,$@))),../) | sed -e 's,../ ,../,g' -e 's,/../$$,,'), -e s,@SRCTOP@,$(strip $(SRCTOP)), -e 's,@HERE_TARGET@,$(strip $(HERE)),' $< > $@
+
+ifeq ($(CC_DEPEND_REGEN),-MD)
+  ALLDEPENDS :=  $(patsubst %,%/*.d, $(ALLOBJSUBDIRS))
+else
+  ALLDEPENDS := $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
+endif
+
+# This is a temporary fix until we implement a better version of clean.
+# This should help avoid people accidently cleaning the entire tree when
+# what they really want is just from the current directory down.
+clean::
+	@echo "If you really want to clean up everything in the whole tree,"
+	@echo "type 'make cleanreally'.  If you want to clean this directory"
+	@echo "on down, type:"
+	@echo "   find . -name \"*.$(OBJEXT)\" -o -name depend.mk -o -name \\"
+	@echo "                      ii_files -print | xargs rm -rf"
+
+cleanreally::
+	rm -f $(patsubst %,%/*.$(OBJEXT), $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
+ifneq ($(IS_OSX),yes)
+        # Fails on Mac case-insensitive file systems... (sigh)
+	rm -f $(patsubst %,%/core, $(ALLOBJSUBDIRS))
+endif
+	rm -f $(patsubst %,%/*.d, $(ALLOBJSUBDIRS))
+	for fname in $(patsubst %,%/ii_files, $(ALLOBJSUBDIRS)); \
+	  do if test -d $$fname; then rm -rf $$fname; fi; done
+	rm -f $(patsubst %,%/*~, $(ALLOBJSUBDIRS))
+	rm -f $(LIBDIR)/so_locations ./so_locations
+       
+reallyclean:: cleanreally
+
+ifeq ($(CC_DEPEND_EXT),depend.mk)
+	rm -f $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
+else
+	rm -f $(patsubst %,%/*.$(CC_DEPEND_EXT), $(ALLOBJSUBDIRS))
+endif
+	rm -f $(CLEANLIBS)
+	rm -f $(CLEANPROGS)
+	rm -f y.output
+	rm -Rf $(LIBDIR)
+	-rm -f sciTAGS
+	rm -f Uintah/VisIt/udaReaderMTMD/*
+
+distclean:: clean
+	rm -f config.status config.log config.cache
+	rm -f $(CREATETCLINDEX) build_scripts/CC build_scripts/cc
+	rm -f $(patsubst %,%/Makefile, $(ALLOBJSUBDIRS))
+	rm -f include/sci_defs/*.h stamp-h
+
+
+objs: $(CLEANOBJS)
+
+cleantau:
+	rm -f Uintah/CCA/Components/Schedulers/MPIScheduler.$(OBJEXT)
+	rm -f Uintah/CCA/Components/Schedulers/ThreadPool.$(OBJEXT)
+	rm -f Uintah/StandAlone/sus.$(OBJEXT)
+
+cleanVisIt:
+	@echo "Removing udaReaderMTMD directory,"
+	rm -rf VisIt/udaReaderMTMD
+
+ifeq (,$(findstring objs,$(MAKECMDGOALS)))
+# This includes all of the dependencies.  We prepend the absolute path
+# to the obj dir to prevent make from wasting time searching for them
+# in other directories
+  ifeq ($(CC_DEPEND_EXT),depend.mk)
+    -include $(patsubst %,$(OBJTOP_ABS)/%/depend.mk, $(patsubst $(SRCTOP)/%,%,$(ALLSUBDIRS)))
+  else
+    -include $(patsubst %.$(OBJEXT),$(OBJTOP_ABS)/%.$(CC_DEPEND_EXT), $(CLEANOBJS))
+  endif
+else
+  # If we are making the special target "objs", we skip the dependencies.
+  # This is a hack for a "quick" compile.
+endif
+
+vc: prereqs $(VCSOLUTION) $(ALLTCLINDEXES)
+
+# have to be on one line, since \ adds a space, and the space breaks the parser
+# since foreach inserts a space at the end of the line that VS can't have, remove it
+$(VCSOLUTION): $(ALLVCPROJECTS)
+	@echo -e "Microsoft Visual Studio Solution File, Format Version 8.00$(foreach project,$^,\nProject(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"$(basename $(notdir $(project)))\", \"$(project)\", \"{$($(project)_ID)}\"\n\tProjectSection(ProjectDependencies) = postProject$(foreach dep,$($(project)_PROJ_DEPS),\n\t\t{$($(dep)_ID)} = {$($(dep)_ID)}PPPPP)\n\tEndProjectSection\nEndProject)\nGlobal\n\tGlobalSection(SolutionConfiguration) = preSolution\n\t\t$(CONF_NAME) = $(CONF_NAME)\n\tEndGlobalSection\n\tGlobalSection(ProjectConfiguration) = postSolution$(foreach project,$^,\n\t\t{$($(project)_ID)}.$(CONF_NAME).ActiveCfg = $(CONF_NAME)|Win32\n\t\t{$($(project)_ID)}.$(CONF_NAME).Build.0 = $(CONF_NAME)|Win32PPPPP)\n\tEndGlobalSection\n\tGlobalSection(ExtensibilityGlobals) = postSolution\n\tEndGlobalSection\n\tGlobalSection(ExtensibilityAddIns) = postSolution\n\tEndGlobalSection\nEndGlobal" | sed 's,PPPPP ,,g' | sed 's,PPPPP,,g' > $@
+
+#########################################################################################################
+# Targets for regression testing...
+
+gold_standards :
+	@mkdir -p $(OBJTOP_ABS)/TestData;                    \
+         cd $(OBJTOP_ABS)/TestData;                          \
+	 components=`$(SRCTOP_ABS)/R_Tester/helpers/selectComponents.sh $(SRCTOP_ABS)/R_Tester`; \
+	 if test "$$?" -eq 0; then                            \
+            export PYTHONPATH="$(SRCTOP_ABS)/R_Tester/toplevel:$(SRCTOP_ABS)/R_Tester"; \
+            $(SRCTOP_ABS)/R_Tester/toplevel/generateGoldStandards.py \
+	                                           -d $(IS_DEBUG) -b $(OBJTOP_ABS) -s $(SRCTOP_ABS) $$components \
+	                                           -m $(SCI_MALLOC_ON) -j $(MAKE_PARALLELISM) -v; \
+         fi
+
+#__________________________________
+#  to execute the local regression tester
+runLocalRT:
+	@cd $(OBJTOP_ABS)
+	@$(SRCTOP)/R_Tester/toplevel/startLocalTest $(OBJTOP_ABS) $(SRCTOP_ABS) $(IS_DEBUG) $(SCI_MALLOC_ON)

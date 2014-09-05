@@ -1,0 +1,61 @@
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<table id="tbl.req_os_bld_tools">
+<title>Required OS and Build Tools</title>
+<tgroup cols="3">
+<thead>
+<row>
+<entry>Platforms</entry>
+<entry>Software</entry>
+<entry>Version</entry>
+</row>
+</thead>
+<tbody>
+<row>
+<entry>SGI</entry>
+<entry> <ulink url="http://www.sgi.com/developers/technology/irix/index.html"> IRIX</ulink></entry>
+<entry>6.5</entry>
+</row>
+<row>
+<entry>SGI</entry>
+<entry><ulink url="http://www.sgi.com/developers/devtools/languages/mipspro.html">MIPSpro compilers</ulink> </entry>
+<entry>7.3.1.1m</entry>              
+</row>
+<row>
+<entry>Linux</entry>
+<entry><ulink url="http://www.gnu.org/software/gcc/gcc.html">GCC</ulink> </entry>
+<entry>Latest <ulink url="http://gcc.gnu.org">stable GCC</ulink>.</entry>              
+</row>
+<row>
+<entry>All</entry>
+<entry><ulink url="http://www.gnu.org/software/make/make.html">GNU make</ulink> </entry>
+<entry><ulink url="ftp://ftp.gnu.org/gnu/make/make-3.79.1.tar.gz">3.79.1</ulink> </entry>             
+</row>
+</tbody>
+</tgroup>
+</table>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../Utilities/XML/docbook.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->

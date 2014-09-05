@@ -1,0 +1,167 @@
+# SCIRun Network v1.24.2
+
+# The MIT License
+# 
+# Copyright (c) 2004 Scientific Computing and Imaging Institute,
+# University of Utah.
+# 
+# License for the specific language governing rights and limitations under
+# Permission is hereby granted, free of charge, to any person obtaining a 
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation 
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+# and/or sell copies of the Software, and to permit persons to whom the 
+# Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included 
+# in all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+# DEALINGS IN THE SOFTWARE.
+# 
+
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
+
+set name {Main}
+set bbox {66 8 596 647}
+set creationDate {Thu Jun 02 2005}
+set creationTime {10:48:12}
+set runDate {}
+set runTime {}
+set notes {}
+
+# Create a SCIRun->DataIO->FieldReader Module
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 66 8]
+
+# Create a SCIRun->FieldsCreate->ClipByFunction Module
+set m2 [addModuleAtPosition "SCIRun" "FieldsCreate" "ClipByFunction" 181 116]
+
+# Create a SCIRun->FieldsCreate->FieldBoundary Module
+set m3 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldBoundary" 114 208]
+
+# Create a SCIRun->FieldsData->ApplyMappingMatrix Module
+set m4 [addModuleAtPosition "SCIRun" "FieldsData" "ApplyMappingMatrix" 88 374]
+
+# Create a SCIRun->Math->LinAlgBinary Module
+set m5 [addModuleAtPosition "SCIRun" "Math" "LinAlgBinary" 192 291]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 226 464]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 401 285]
+
+# Create a SCIRun->Render->Viewer Module
+set m8 [addModuleAtPosition "SCIRun" "Render" "Viewer" 66 603]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 86 528]
+
+# Create a SCIRun->Math->CastMatrix Module
+set m10 [addModuleAtPosition "SCIRun" "Math" "CastMatrix" 320 209]
+
+# Create the Connections between Modules
+set c1 [addConnection $m1 0 $m2 0]
+set c2 [addConnection $m1 0 $m4 0]
+set c3 [addConnection $m2 0 $m3 0]
+set c4 [addConnection $m3 1 $m10 0]
+set c5 [addConnection $m4 0 $m9 0]
+set c6 [addConnection $m10 0 $m5 0]
+set c7 [addConnection $m7 0 $m6 0]
+set c8 [addConnection $m9 0 $m8 0]
+set c9 [addConnection $m2 1 $m5 1]
+set c10 [addConnection $m3 0 $m4 1]
+set c11 [addConnection $m4 0 $m6 1]
+set c12 [addConnection $m6 0 $m9 1]
+set c13 [addConnection $m5 0 $m4 2]
+
+# Set GUI variables for the SCIRun->DataIO->FieldReader Module
+set $m1-filename "$DATADIR$DATASET/$DATASET-voltage.tvd.fld"
+set $m1-filetype {SCIRun Field File (*.fld)}
+
+# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
+set $m6-min {-1.14602}
+set $m6-max {4.31926}
+
+$m8 addViewer
+set $m8-ViewWindow_0-geometry 654x610+579+197
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m8-ViewWindow_0-view-eyep-x {10.7437094535}
+set $m8-ViewWindow_0-view-eyep-y {2.80676388836}
+set $m8-ViewWindow_0-view-eyep-z {3.98933373552}
+set $m8-ViewWindow_0-view-lookat-x {0.0}
+set $m8-ViewWindow_0-view-lookat-y {0.0}
+set $m8-ViewWindow_0-view-lookat-z {0.0}
+set $m8-ViewWindow_0-view-up-x {-0.202209197751}
+set $m8-ViewWindow_0-view-up-y {0.969624152739}
+set $m8-ViewWindow_0-view-up-z {-0.137624281177}
+set $m8-ViewWindow_0-view-fov {20.0}
+set $m8-ViewWindow_0-sr {1}
+set $m8-ViewWindow_0-do_stereo {0}
+set $m8-ViewWindow_0-ortho-view {0}
+set $m8-ViewWindow_0-trackViewWindow0 {1}
+set $m8-ViewWindow_0-raxes {1}
+set $m8-ViewWindow_0-ambient-scale {1.0}
+set $m8-ViewWindow_0-diffuse-scale {1.0}
+set $m8-ViewWindow_0-specular-scale {0.4}
+set $m8-ViewWindow_0-emission-scale {1.0}
+set $m8-ViewWindow_0-shininess-scale {1.0}
+set $m8-ViewWindow_0-polygon-offset-factor {1.0}
+set $m8-ViewWindow_0-polygon-offset-units {0.0}
+set $m8-ViewWindow_0-point-size {1.0}
+set $m8-ViewWindow_0-line-width {1.0}
+set $m8-ViewWindow_0-sbase {0.4}
+set $m8-ViewWindow_0-bgcolor-r {0.0}
+set $m8-ViewWindow_0-bgcolor-g {0.0}
+set $m8-ViewWindow_0-bgcolor-b {0.0}
+set $m8-ViewWindow_0-fogusebg {1}
+set $m8-ViewWindow_0-fogcolor-r {0.0}
+set $m8-ViewWindow_0-fogcolor-g {0.0}
+set $m8-ViewWindow_0-fogcolor-b {1.0}
+set $m8-ViewWindow_0-fog-start {0.0}
+set $m8-ViewWindow_0-fog-end {0.714265}
+set $m8-ViewWindow_0-fog-visibleonly {1}
+set $m8-ViewWindow_0-total_frames {6}
+set $m8-ViewWindow_0-currentvisual {0}
+set $m8-ViewWindow_0-caxes {0}
+set $m8-ViewWindow_0-global-light0 {1}
+set $m8-ViewWindow_0-global-light1 {0}
+set $m8-ViewWindow_0-global-light2 {0}
+set $m8-ViewWindow_0-global-light3 {0}
+set $m8-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m8-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m8-ViewWindow_0-global-light {1}
+set $m8-ViewWindow_0-global-fog {0}
+set $m8-ViewWindow_0-global-debug {0}
+set $m8-ViewWindow_0-global-clip {1}
+set $m8-ViewWindow_0-global-cull {0}
+set $m8-ViewWindow_0-global-dl {0}
+set $m8-ViewWindow_0-global-type {Gouraud}
+set "$m8-ViewWindow_0-Nodes (1)" {1}
+set "$m8-ViewWindow_0-Edges (1)" {1}
+set "$m8-ViewWindow_0-Faces (1)" {1}
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m9-has_scalar_data {1}
+set $m9-node_scale {0.03}
+set $m9-edge_scale {0.015}
+set $m9-scalars_scale {0.3}
+
+# Open the SCIRun->Visualization->ShowField UI
+$m9 initialize_ui
+
+# Set GUI variables for the SCIRun->Math->CastMatrix Module
+set $m10-oldtype {SparseRowMatrix}
+set $m10-newtype {DenseMatrix}
+set $m10-nrow {231}
+set $m10-ncol {556}
+
+
+::netedit scheduleok

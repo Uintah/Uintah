@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="LinkFieldBoundaryByElement" category="FiniteElements" optional="false">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      This module will build a table which will indicate which nodes at the edges are connected to the opposite edges.
+
+    </summary>
+    <description>
+      <p>        This module will build a table which will indicate which nodes at the edges are connected to the opposite edges. </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>GeomToComp</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>CompToGeom</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>DomainLink</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>MembraneLink</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>

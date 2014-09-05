@@ -1,0 +1,19 @@
+<config>
+<postProcessCmd_path>/home/harman/Builds/Fresh/NB/opt_Linux/Packages/Uintah/StandAlone/tools/compare_mms:/home/harman/working_on/orderAccuracy/comparisonUtils</postProcessCmd_path>
+
+<symbolicLinks> 
+  /usr/local/home/harman/Builds/Fresh/NB/src/scripts/ /usr/local/home/harman/Builds/Fresh/NB/src/StandAlone/inputs
+</symbolicLinks>
+
+<test>
+  <name>MMS_dt</name>
+  <ups>almgrenMMS.ups</ups>
+  <tst>dt.tst</tst>
+</test>
+<test>
+  <name>MMS_dx</name>
+  <ups>almgrenMMS.ups</ups>
+  <tst>dx.tst</tst>
+</test>
+
+</config>

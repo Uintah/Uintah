@@ -1,0 +1,106 @@
+
+-----------------------------------------------------------------
+
+jp2.c will not compile if a bad version of jasper is installed on the
+machine.  To fix it, the following needs to be added near the top of
+the ImageMagick-5.4.3/coders/jp2.c file:
+
+/*************** Added by Dav (Dd) ********************/
+/* ... the jasper folks eliminated the JAS_IMAGE_CM_GRAY and
+       JAS_IMAGE_CM_RGB defines from jasper 1.5-3.  See ImageMagick is
+       not the only distribution that is incompatible between releases
+       :-).  For a fix, try this:
+*/
+#if !defined(JAS_IMAGE_CM_GRAY)
+#  define JAS_IMAGE_CM_GRAY  1
+#endif
+#if !defined(JAS_IMAGE_CM_RGB)
+#  define JAS_IMAGE_CM_RGB  2
+#endif
+/********************* Done ***************************/
+
+-----------------------------------------------------------------
+
+The configure script (on 64 bit linux) seems to be broken with respect
+to getting the correct LDFLAGS variable.
+
+These lines in configure.ac:
+
+          freetype_prefix=`freetype-config --prefix`
+          LDFLAGS="-L${freetype_prefix}/lib $LDFLAGS" 2> /dev/null
+
+need to be changed to these lines:
+
+          freetype_prefix=`freetype-config --prefix`
+          freetype_libs=`freetype-config --libs`
+          LDFLAGS="$freetype_libs $LDFLAGS" 2> /dev/null
+
+Then run autoconf.
+
+
+-----------------------------------------------------------------
+
+Need to add -fPIC to CXXFLAGS and CFLAGS when building under linux 
+64 bit mode.  I've attempted this with the 'install' script.
+
+-----------------------------------------------------------------
+
+[At some point in the future this needs to be added to the install
+script so that it will just do it automatically. -Dav]
+
+To build ImageMagick on some 64 bit platforms (specifically: x86_64),
+you need to follow these steps: (Note, you must do this manually after
+the 'install' script has finished.)
+
+Fixes for thirdparty install script for 64 bit linux (based on working
+on Martin Cuma's 3p on his machine):
+
+To fix ImageMagick build...
+
+In src/ImageMagick-5.4.3/configure, change these lines:
+
+sys_lib_dlsearch_path_spec="/lib /usr/lib"
+sys_lib_search_path_spec="/lib /usr/lib /usr/local/lib"
+
+to:
+
+sys_lib_dlsearch_path_spec="/lib64 /usr/lib64"
+sys_lib_search_path_spec="/lib64 /usr/lib64 /usr/local/lib64"
+
+There are 3 sets of them.  Note, there are a number of similar lines
+to the above but are for different systems (they are in a case
+statement based on architecture).  If you search for most of the
+entire 2nd line, you will find the groups of these lines you are
+looking for.
+
+Do the same thing for src/ImageMagick-5.4.3/ltdl/configure.
+
+Also change (ie: add '64' to) this line (in the 1st configure file you
+already edited):
+
+          LDFLAGS="-L${freetype_prefix}/lib $LDFLAGS" 2> /dev/null
+
+should now be this:
+
+          LDFLAGS="-L${freetype_prefix}/lib64 $LDFLAGS" 2> /dev/null
+
+Then go to back to the src dir (src/ImageMagick-5.4.3) and configure
+with something like this (You can find th exact line if you search
+through the original output of the 3P install script (but all you have
+to do is make sure you get the 'prefix' correct.)):
+
+(If you do this, make sure you set CXXFLAGS and CFLAGS to "-fPIC".)
+
+./configure --disable-dependency-tracking --without-xml --without-x \
+            --without-perl --without-jp2 --without-threads          \
+            --prefix="/usr/sci/projects/SCIRun/Thirdparty/1.24.1/Linux/gcc-3.3.5-64bit" 
+
+make install
+
+(Update permissions in <path_to_thirdparty>/<lib|include> as necessary.)
+
+
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+-----------------------------------------------------------------

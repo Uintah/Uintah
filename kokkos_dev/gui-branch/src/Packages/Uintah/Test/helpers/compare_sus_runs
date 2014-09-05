@@ -1,0 +1,96 @@
+#!/bin/sh
+
+TEST=$1
+TEST_ROOT=$2
+COMPARE_ROOT=$3
+SUS_DIR=$4
+ERRORS_TO=$5
+
+cd $TEST_ROOT/$TEST
+UDADIR=`ls -d *.uda`
+
+TEST_UDADIR=$TEST_ROOT/$TEST/$UDADIR
+COMPARE_UDADIR=$COMPARE_ROOT/$TEST/$UDADIR
+TMPDIR=$TEST_ROOT/$TEST
+
+echo "Testing $TEST"
+
+if [ -d "$TEST_UDADIR" ]; then
+  if [ ! -d "$COMPARE_ROOT" ]; then
+    echo "Creating $COMPARE_ROOT directory"
+    COMPARE_PARENT_DIR=`echo "$COMPARE_ROOT" | sed 's|/[^/]*$||'`
+    cd $COMPARE_PARENT_DIR
+    COMPARE_DIR=`echo "$COMPARE_ROOT" | sed "s|.*/||"`
+    mkdir $COMPARE_DIR
+#    cvs add $COMPARE_DIR
+  fi
+  if [ ! -d "$COMPARE_ROOT/$TEST" ]; then
+    echo "Creating $COMPARE_ROOT/$TEST directory"
+    cd $COMPARE_ROOT
+    mkdir $TEST
+#    cvs add $TEST
+  fi
+  if [ ! -d "$COMPARE_UDADIR" ]; then
+    echo "Storing uda directory"
+    cp -r $TEST_UDADIR $COMPARE_UDADIR
+    cd $COMPARE_ROOT/$TEST
+#    find $UDADIR -type d | xargs cvs add
+#    find $UDADIR -name "*.dat" | xargs cvs add
+#    find $UDADIR -name "*.data" | xargs cvs add
+#    find $UDADIR -name "*.xml" | xargs cvs add
+#    cvs commit -R -m "Automated Tester storing dat files" $UDADIR
+  else
+    echo
+    echo "Checking input files"
+    echo
+    diff -q $TEST_UDADIR/input.xml $COMPARE_UDADIR/input.xml
+    if [ $? != "0" ]; then
+	echo
+	echo "Input files differ."
+	exit 5;
+    else
+	echo "Input files are the same."
+    fi
+
+    echo
+    echo "Comparing dat files"
+    echo
+
+    compare_dats $TEST $TEST_UDADIR $COMPARE_UDADIR $TMPDIR $ERRORS_TO
+    compare_dats_retval=$?
+    if [ $compare_dats_retval == "1" ]; then
+	echo "  failed"
+	exit 1
+    fi
+
+    echo
+    echo "Comparing udas"
+    echo
+    compare_udas $SUS_DIR $TEST $TEST_UDADIR $COMPARE_UDADIR $TMPDIR $ERRORS_TO
+    retval=$?
+    if [ $retval == "1" ]; then
+	echo "  failed"
+	exit 1
+    fi
+
+    echo
+    echo "Comparing checkpoints"
+    echo
+    compare_udas $SUS_DIR $TEST $TEST_UDADIR/checkpoints $COMPARE_UDADIR/checkpoints $TMPDIR $ERRORS_TO
+    retval=$?
+    if [ $retval == "1" ]; then
+	echo "  failed"
+	exit 1
+    fi
+
+    if [ $compare_dats_retval == "-1" ]; then
+	exit -1
+    fi
+  fi
+else
+  echo "$TEST_UDADIR was not created"
+  exit 1
+fi
+
+exit 0
+

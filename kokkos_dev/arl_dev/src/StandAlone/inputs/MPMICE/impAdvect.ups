@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+
+
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+   <Meta>
+       <title>Advection test for a MPM and ICE material</title>
+   </Meta>
+
+   <SimulationComponent type="rmpmice" /> 
+   <Solver type = "hypre"/>
+    
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            1.0       </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          1.0e-9      </delt_init>
+       <max_delt_increase>  2.0        </max_delt_increase>
+    <!--   <max_Timesteps>      50          </max_Timesteps> -->
+       <timestep_multiplier>0.3         </timestep_multiplier>
+   </Time>
+   
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>                  
+      <Face side = "z+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+       <Level>
+           <Box label="1">
+              <lower>        [0,0,0]          </lower>
+              <upper>        [5.0,5.0,5.0]    </upper>
+              <extraCells>   [1,1,1]          </extraCells>
+              <patches>      [2,2,2]          </patches>
+           </Box>
+           <spacing>        [0.1,0.1,0.1]     </spacing>
+       </Level>
+    </Grid>
+   
+    <!--____________________________________________________________________-->
+    <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>advect_mpmice.uda</filebase>
+      <outputInterval>0.02</outputInterval>
+      <save label="press_CC"/>
+      <save label="delP_Dilatate"/>
+      <save label="press_CC"/>
+      <save label="mom_L_ME_CC"/>
+      <save label="rho_CC"/>
+      <save label="vel_CC"/>
+      <save label="p.x"/>
+      <save label="p.volume"/>
+      <save label="p.velocity"/>
+   </DataArchiver>
+
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+         <cfl>0.1</cfl>
+       <ICE>
+        <advection type = "SecondOrder" />
+       
+        <TimeStepControl>
+          <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
+          <knob_for_speedSound>  0.0            </knob_for_speedSound>
+        </TimeStepControl>
+        
+        <ImplicitSolver>
+           <max_outer_iterations>      20       </max_outer_iterations>
+           <outer_iteration_tolerance> 1e-8     </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 15   </iters_before_timestep_restart>           
+           <Parameters variable="implicitPressure">
+             <tolerance>    1.e-10     </tolerance>
+             <solver>         cg      </solver>
+             <preconditioner> pfmg    </preconditioner>
+             <maxiterations>  500     </maxiterations>
+             <npre>           1       </npre>
+             <npost>          1       </npost>
+             <skip>           1       </skip>
+             <jump>           0       </jump>
+             <relax_type>     2       </relax_type>
+           </Parameters>
+        </ImplicitSolver>
+        
+      </ICE>        
+    </CFD>
+    <MPM>
+        <time_integrator>explicit</time_integrator>
+    </MPM>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+
+
+    <!--____________________________________________________________________-->
+    <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+
+       <MPM> 
+        <material name="Aluminium">
+            <density>             2700    </density>
+            <thermal_conductivity>237     </thermal_conductivity>
+            <specific_heat>       903     </specific_heat>
+          
+          <constitutive_model type="comp_neo_hook">
+          
+            <useModifiedEOS>true</useModifiedEOS>
+            <bulk_modulus>    76000000000   </bulk_modulus>
+            <shear_modulus>   26000000000   </shear_modulus>
+            <yield_stress>    70.e6         </yield_stress>
+            <hardening_modulus>43.8e5       </hardening_modulus>
+            <alpha>            0.0          </alpha>
+            <strain_limit>    3.05          </strain_limit>
+            <reduction_factor>1.0           </reduction_factor>
+          
+          </constitutive_model>         
+            <geom_object>
+              <box label="mpmBlock">
+                  <min>           [1.0,1.0,1.0]   </min>
+                  <max>           [1.5,1.5,1.5]   </max>
+              </box>
+              <res>               [2,2,2]         </res>
+              <velocity>          [2.0,2.0,2.0]   </velocity>
+              <temperature>       300             </temperature>
+            </geom_object>
+         </material>
+
+         <contact>
+           <type>null</type>
+           <materials>              [0]         </materials>
+         </contact>
+      </MPM>
+       <ICE>
+         <material>
+           <EOS type = "ideal_gas">                     </EOS>
+           <dynamic_viscosity>          0.0             </dynamic_viscosity>
+           <thermal_conductivity>       0.0             </thermal_conductivity>
+           <specific_heat>              716.0           </specific_heat>
+           <gamma>                      1.4             </gamma>           
+           <geom_object>
+              <difference>
+                <box label="gpice">
+                    <min>           [-1.0,-1.0,-1.0]    </min>
+                    <max>           [6.0,6.0,6.0 ]      </max>
+                </box>
+                <box label="mpmBlock"/>
+              </difference>
+              <res>                      [2,2,2]        </res>
+              <velocity>           [0.0,0.0,0.0]        </velocity>
+              <temperature>        300.0                </temperature>
+              <density>    1.1792946927374306000e+00    </density>
+              <pressure>           101325.0             </pressure>
+           </geom_object>
+         </material>
+      </ICE>       
+       
+      <exchange_properties> 
+         <exchange_coefficients>
+              <momentum>               [1e10]         </momentum>
+              <heat>                  [1e10]           </heat>
+          </exchange_coefficients>
+       </exchange_properties> 
+    </MaterialProperties>
+            
+
+       
+</Uintah_specification>

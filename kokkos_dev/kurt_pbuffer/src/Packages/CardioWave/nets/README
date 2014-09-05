@@ -1,0 +1,219 @@
+This README file explains how to use the CardioWave nets and the
+SCIRun conversion programs to get data into and out of CardioWave
+simulations.
+
+NOTE: I will refer to the place where the data files are being stored as
+        $CWDATA, and the root of SCIRun as $SCIRUN.  In orde to run
+	the nets I have created in $SCIRun/src/Packages/CardioWave/nets/ 
+	you have to have two enviornment variables set:
+	setenv CWDATA /scratch/data/ (or wherever you want to put it)
+	setenv CWRES 128 (or whatever resolution you want to use)
+
+
+Resampling the Original Data Files
+==================================
+
+Original data is in $CWDATA/../OriginalAucklandHEART.dat
+That data was split into position (.pts) and orientation (.f1, .f2) files
+	using $CWDATA/../splitData.csh
+The .pts, .f1, and .f2 files were resampled to produce smaller versions
+	using the "SubsetPts" utility:
+    % cd $CWDATA
+    % $SCIRUN/src/Packages/CardioWave/StandAlone/convert/SubsetPts \
+      ../OriginalAucklandHEART.pts 0.1 0.1.pts
+We're using 10% (randomly chosen) of the original data for these
+	simulations -- thus the names 0.1.*
+Our starting points file (0.1.pts) was tetrahedralized using a standard
+	unconstrained Delauny mesh generation algorithm, resulting in the
+	file 0.1.tet
+From these 4 starting files: 0.1.{pts,tet,f1,f2} we will be generating
+	new files -- those that are SCIRun data formats will be stored in
+	the sr-data/ directory, and those that are CardioWave data
+	will be stored in the cw-data/ directory.
+
+
+
+
+Running SCIRun and CardioWave
+=============================
+
+We start by building SCIRun matrices from the .f1 and .f2 files --
+	we do this with the StandAlone/convert/RawToColumnMatrix
+	program -- this results in 0.1.f1.mat and 0.1.f2.mat
+   % cd $CWDATA
+   % $SCIRUN/src/StandAlone/convert/RawToDenseMatrix \
+     0.1.f1 sr-data/0.1.f1.mat
+   % $SCIRUN/src/StandAlone/convert/RawToDenseMatrix \
+     0.1.f2 sr-data/0.1.f2.mat
+
+Then we build a SCIRun TetVol<Vector> Field using
+	StandAlone/convert/RawToTetVol -- this results in 0.1.tvv.fld
+   % $SCIRUN/src/StandAlone/convert/RawToTetVol 0.1.pts 0.1.tet \
+     sr-data/0.1.tvv.fld
+
+Now we need to rescale the tet mesh to have sensical dimenions, and to
+        remove the tet elements that weren't supposed to be there
+        in the first place, i.e. the ones that are inside the convex
+        hull of the heart surface, but that are far away from sample
+        points.  We do that with cw1:rescale-and-remove-interior-tets.net
+   % cd $SCIRUN/src/Packages/CardioWave/nets
+   % ../../../scirun cw1:rescale-and-remove-interior-tets.net
+	In this net, the "threshold" parameter controls how many tets
+        are removed.  Algorithmically, it says if the centroid of the
+        tet is further than this distance from any of its nodes,
+        remove it.
+
+Now we can run the first SCIRun visualization net
+        (cw2:show-original-fibers.net) to visualize the original fiber
+        orientations of the resampled data...
+   % ../../../scirun cw2:show-original-fibers.net
+
+We are now ready to construct a HexMesh and to run Vulcan to generate
+        the CardioWave input files (SPR and VOLUME).  We use the
+        SCIRun net - cw3:build-hex-mesh-and-fv-files.net for this.
+   % ../../../scirun cw3:build-hex-mesh-and-fv-files.net
+	The UI's for the CastTVtoMLV modules control the number of
+        regularly spaced samples in the x/y/z directions -- note:
+        these numbers must be changed in BOTH CastTVtoMLV UI's to be
+        kept consistent.  This net also allows the user to select cell
+        type populations -- using the BoxWidget in the scene, the user
+        can drag it over a population of cells, and can then press the
+        "Replace" or "Accumulate" buttons on the SelectField's UI to
+        replace/accumulate the "Selection Value" into the nodes within
+        the box.  Lastly, via the SetupFVMatrix UI, the user can
+        specify the output file locations, can choose whether or not
+        to perform Cuthill-McKee bandwidth minimization, and can set
+        the conductivity velocities for the eigen-directions of both
+        cell types.  This new also saves out a vector of cell-types
+        (re-ordered if bandwidth minimization was performed) as a
+        SCIRun ColumnMatrix.
+
+As a side-result of running the above net (cw3), we have saved off
+        Vector fields containing the primary and secondary fiber
+        directions resampled to our hexahedral mesh.  These can be
+        visualized using cw4:show-interpolated-fibers.net
+   % ../../../scirun cw4:show-interpolated-fibers.net
+
+Having generated the input files for CardioWave, we can now run
+        simulations to output activation times.  First, though, we
+        must convert the cell-type ColumnMatrix into a CardioWave .vec
+        file.  We do this using another SCIRun converter:
+   % cd $CWDATA
+   % $SCIRUN/src/Packages/CardioWave/StandAlone/convert/ColumnMatToCardioWave \
+     sr-data/0.1.32.ct.mat cw-data/0.1.32.ct.vec
+	After the file has been converted, we run CardioWave, which
+        produces 0.1.32.act.vec (the activation times for each cell)
+        and 0.1.32.time.vm (the time-series voltage for each cell).
+        We can convert those into SCIRun format using the
+        CardioWaveToColumnMat (for the activation times) and
+        CardioWaveToDenseMat (for the time-series) converters.
+   % $SCIRUN/src/Packages/CardioWave/StandAlone/convert/CardioWaveToColumnMat \
+     cw-data/0.1.32.act.vec sr-data/0.1.32.act.mat
+   % $SCIRUN/src/Packages/CardioWave/StandAlone/convert/CardioWaveToDenseMat \
+     9678 301 cw-data/0.1.32.time.vm sr-data/0.1.32.time.mat
+
+Now we are ready to visualize the simulation results in SCIRun.  We
+        can see the activation times using
+        cw5:show-activation-times.net
+   % cd $SCIRUN/src/Packages/CardioWave/nets
+   % ../../../scirun cw5:show-activation-times.net
+        [NOTE: at the moment, the GenStandardColorMaps module is
+        having some problems -- on its UI, grab the slider that's all
+        the way to the left and showing "12" and drag it to the right
+        till it's at around "60", then release.  The author promises
+        to fix this soon...]
+And we can visualize the time-series data using
+        cw6:show-time-series-voltages.net
+   % ../../../scirun cw6:show-time-series-voltages.net
+	Using the UI on the MatrixSelectVector, we can choose which
+        row (time-step) from the data set to visualize by dragging the
+        "Row #" slider.  Once we've chosen a time-step we're
+        interested in, pressing the "Execute" button will send it
+        downstream to be rendered.  If the "Animate" box is selected,
+        then the next time the module is executed, it will begin
+        marching through time-steps, sending them downstream one after
+        the other.  The animation can be stopped by pressing the
+        "Stop" button.
+	[Same NOTE: as above applies to GenStandardColorMaps.]
+
+
+
+Dumping an Image or Making A Movie 
+==================================
+
+To dump the ViewWindow rendering to an output file, just click the "+"
+button at the bottom-right of the ViewWindow.  In the "Record Movie
+as:" box on the left, type the name of the file you want to save to,
+and press the "Raw Frames" button once... then press the "Stop
+Recording" button.  This will dump one raw file that you can convert
+use rawtorle (or some such program).
+
+To dump a movie, you do essentially the same things, except that you
+press the "Mpeg" button, and leave it selected for as long as you want
+it to add frames.  Make sure you press "Stop Recording" before you
+quit SCIRun, so it can close the output file correctly.
+
+To create a camera path, add an EditPath module to your net
+(SCIRun->Render->EditPath) and attach its second output port (purple)
+to a Viewer module input port.  On the EditPath UI, you can choose
+viewpoint "key frames" and have it interpolate between them (linear or
+cubic), and/or you can have it create a circle of key frames.  My
+suggestion would be to play with this module to get a feel for it --
+just create a new net from scratch with a Viewer and a EditPath, hook
+them together, and play around with the settings on this module.
+
+
+
+
+Adding Bandwidth Minimization
+=============================
+
+I've set up the infrastructure for your bandwidth minimization code.
+It will go in:
+$SCIRUN/src/Packages/CardioWave/Core/Algorithms/CuthillMcKee.{c,h}
+The code I have in there now is a place holder (it just prints to the
+screen the names of the input and output SPR files, and build a
+default "map" vector that has every node index mapping to itself).
+I extended the SetupFVMatrix UI to include a text-entry field for the
+name of the bandwidth minimized matrix.  Anyhow, you should go into
+that file and add your code there.  Let me know if you have any
+questions, but I think it should be pretty straight-forward once you
+look at that .c file.
+
+
+
+
+General Notes on Using SCIRun
+=============================
+
+Read through the SCIRun User Guide at:
+     http://ampano.cs.utah.edu/software/doc/index.html
+
+After you've started SCIRun with a net file as an argument, typically
+everything will come up but none of the modules will actually
+execute.  You can force an exection by placing your mouse over a
+module icon (around the name) and clicking the right-mouse-button.
+This will reveal a menu -- select "Execute" from the menu and that
+module will fire (as will all of the upstream modules it needs data
+from and all of the donwstream modules it's sending data to).
+
+To interact with a box frame widget (as in cw3), you can select the
+parts of the widget by pressing the shift-button and clicking on the
+piece with the left-mouse-button.  By selecting the frame (gray), you
+can move the box around.  Selecting the green cylinders allows you to
+resize the box in each dimension.  The blue balls allow you to rotate
+the box, and the brown cylinders allow you to specify
+application-specific values -- you shouldn't select either of them
+with this application.
+
+When viewing data in the ViewWindow, it's often useful to use "Fog" to
+make closer things appear brighter and more distant things dimmer
+(point clouds, vector fields, etc).  Fog can be enabled by clicking
+the "+" button on the bottom-right of the ViewWindow and selecting the
+"Fog" box on the left.  It's also useful to make points show up as
+larger than one pixel (for point clouds) -- to change the size of
+points, select "PointSize" from the "Edit" menu at the top of the
+ViewWindow.
+
+Running any of the converter programs without any arguments will give
+you back usage information.

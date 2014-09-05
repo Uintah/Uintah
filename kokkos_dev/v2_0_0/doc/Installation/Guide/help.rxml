@@ -1,0 +1,60 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<!--% require("../../Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<section id="sec.help">
+<title id="title.help">Getting Help</title>
+
+<para>
+Subscribe to the &sr; users list.  Use it to get answers to 
+installation and use questions.  To subscribe send email to:
+<email>majordomo@sci.utah.edu</email> with the following in the body
+of the message (no subject):
+<literallayout class="monospaced">
+subscribe scirun-users
+</literallayout>
+</para>
+
+<para> To ask a question send email to:
+<email>scirun-users@sci.utah.edu</email></para>
+
+<para>
+Include a verbatim (cut and paste) copy of errors
+displayed.  Also include a short paragraph describing the context of
+the error (creating a module, running a network, etc.) and the
+version of &sr; used.
+</para>
+
+<para>
+See also the <ulink url=<!--%= doc.treeUrl("doc/Installation/FAQ/faq.html") %--> >Installation</ulink> 
+and
+<ulink url=<!--%= doc.treeUrl("doc/User/FAQ/faq.html") %--> >User</ulink> FAQs.
+</para>
+
+</section>
+
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../Utilities/XML/docbook.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->

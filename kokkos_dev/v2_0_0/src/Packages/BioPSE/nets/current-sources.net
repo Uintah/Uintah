@@ -1,0 +1,201 @@
+# SCI Network 1.0
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+
+set results [sourceSettingsFile]
+
+if { $results == "failed" } {
+
+    ::netedit scheduleok
+    return 
+
+} else {
+
+    set DATADIR [lindex $results 0]
+    set DATASET [lindex $results 1]
+}
+
+source $DATADIR/$DATASET/$DATASET.settings
+
+::netedit dontschedule
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 9 6]
+set m1 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 43 237]
+set m2 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 415 239]
+set m3 [addModuleAtPosition "SCIRun" "Fields" "FieldMeasures" 162 90]
+set m4 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 144 152]
+set m5 [addModuleAtPosition "SCIRun" "Fields" "TransformScalarData" 43 300]
+set m6 [addModuleAtPosition "SCIRun" "Fields" "TransformScalarData" 415 301]
+set m7 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 379 90]
+set m8 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 25 446]
+set m9 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 61 383]
+set m10 [addModuleAtPosition "SCIRun" "Fields" "ChangeFieldDataAt" 236 280]
+set m11 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 433 385]
+set m12 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 397 525]
+set m13 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 379 589]
+set m14 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 9 667]
+set m15 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 9 748]
+set m16 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 197 979]
+set m17 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 151 809]
+set m18 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 27 901]
+set m19 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 9 976]
+set m20 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 233 382]
+set m21 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 606 385]
+set m22 [addModuleAtPosition "SCIRun" "Render" "Viewer" 197 1123]
+set m23 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 9 822]
+
+addConnection $m0 0 $m3 0
+addConnection $m3 0 $m4 1
+addConnection $m0 0 $m4 0
+addConnection $m4 0 $m1 0
+addConnection $m4 0 $m2 0
+addConnection $m1 0 $m5 0
+addConnection $m2 0 $m6 0
+addConnection $m0 0 $m7 0
+addConnection $m5 0 $m8 1
+addConnection $m9 0 $m8 2
+addConnection $m0 0 $m8 0
+addConnection $m5 0 $m9 1
+addConnection $m0 0 $m10 0
+addConnection $m10 0 $m9 0
+addConnection $m6 0 $m11 1
+addConnection $m10 0 $m11 0
+addConnection $m6 0 $m12 1
+addConnection $m11 0 $m12 2
+addConnection $m8 0 $m12 3
+addConnection $m0 0 $m12 0
+addConnection $m12 0 $m13 1
+addConnection $m7 0 $m13 0
+addConnection $m0 0 $m14 0
+addConnection $m13 0 $m14 1
+addConnection $m17 0 $m18 0
+addConnection $m14 0 $m15 0
+addConnection $m14 0 $m16 0
+addConnection $m18 0 $m16 1
+addConnection $m18 0 $m19 1
+addConnection $m5 0 $m20 0
+addConnection $m6 0 $m21 0
+addConnection $m19 0 $m22 0
+addConnection $m16 1 $m22 1
+addConnection $m20 0 $m22 2
+addConnection $m21 0 $m22 3
+addConnection $m15 1 $m23 1
+addConnection $m14 0 $m23 0
+addConnection $m23 0 $m19 0
+addConnection $m23 0 $m18 1
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-filename $DATADIR/$DATASET/$DATASET-mesh.tvt.fld
+set $m1-maxseeds {15}
+set $m1-numseeds {10}
+set $m1-rngseed {6}
+set $m1-dist {impuni}
+set $m1-whichtab {Random}
+set $m2-maxseeds {15}
+set $m2-numseeds {10}
+set $m2-rngseed {8}
+set $m2-dist {impuni}
+set $m2-whichtab {Random}
+set $m3-simplexString {Cell}
+set $m3-xFlag {0}
+set $m3-yFlag {0}
+set $m3-zFlag {0}
+set $m3-idxFlag {0}
+set $m3-sizeFlag {1}
+set $m3-numNbrsFlag {0}
+set $m5-method {function}
+set $m5-function {-1}
+set $m6-method {function}
+set $m6-function {1}
+set $m8-modeTCL {sources-and-sinks}
+set $m9-interpolation_basis {linear}
+set $m9-map_source_to_single_dest {0}
+set $m10-outputdataat {Nodes}
+set $m11-interpolation_basis {constant}
+set $m11-map_source_to_single_dest {0}
+set $m12-modeTCL {sources-and-sinks}
+set $m13-target_error {0.000001}
+set $m13-flops {      1.61976e+06}
+set $m13-floprate {          206.152}
+set $m13-memrefs {      2.85573e+07}
+set $m13-memrate {          3634.56}
+set $m13-orig_error {                1}
+set $m13-current_error {9.70938e-07}
+set $m13-method {Conjugate Gradient & Precond. (SCI)}
+set $m13-precond {jacobi}
+set $m13-iteration {141}
+set $m13-maxiter {200}
+set $m13-use_previous_soln {0}
+set $m13-emit_partial {0}
+set $m13-emit_iter {50}
+set $m13-status {}
+set $m13-np {4}
+set $m16-isoval {0}
+set $m16-isoval-min {-1.29765}
+set $m16-isoval-max {2.95469}
+set $m16-extract-from-new-field {1}
+set $m16-algorithm {0}
+set $m16-active-isoval-selection-tab {0}
+set $m16-active_tab {MC}
+set $m16-update_type {on release}
+set $m19-nodes-on {0}
+set $m19-edges-on {1}
+set $m19-faces-on {0}
+set $m19-edge_display_type {Cylinders}
+set $m19-active_tab {Edges}
+set $m19-edge_scale [expr 0.004 * ${global-scale}]
+set $m20-nodes-on {1}
+set $m20-nodes-as-disks {0}
+set $m20-edges-on {0}
+set $m20-faces-on {0}
+set $m20-node_display_type {Spheres}
+set $m20-active_tab {Nodes}
+set $m20-node_scale [expr 0.03 * ${global-scale}]
+set $m20-node-resolution {15}
+set $m20-def-color-r {0.0}
+set $m20-def-color-g {0.0}
+set $m20-def-color-b {1.0}
+set $m20-def-color-a {1.0}
+set $m21-nodes-on {1}
+set $m21-nodes-as-disks {0}
+set $m21-edges-on {0}
+set $m21-faces-on {0}
+set $m21-node_display_type {Spheres}
+set $m21-active_tab {Nodes}
+set $m21-node_scale [expr 0.03 * ${global-scale}]
+set $m21-node-resolution {15}
+set $m21-def-color-r {1.0}
+set $m21-def-color-g {0.0}
+set $m21-def-color-b {0.0}
+set $m21-def-color-a {1.0}
+
+$m22 ui
+set $m22-ViewWindow_0-view-eyep-x ${view-eyep-x}
+set $m22-ViewWindow_0-view-eyep-y ${view-eyep-y}
+set $m22-ViewWindow_0-view-eyep-z ${view-eyep-z}
+set $m22-ViewWindow_0-view-lookat-x ${view-lookat-x}
+set $m22-ViewWindow_0-view-lookat-y ${view-lookat-y}
+set $m22-ViewWindow_0-view-lookat-z ${view-lookat-z}
+set $m22-ViewWindow_0-view-up-x ${view-up-x}
+set $m22-ViewWindow_0-view-up-y ${view-up-y}
+set $m22-ViewWindow_0-view-up-z ${view-up-z}
+set $m22-ViewWindow_0-view-fov ${view-fov}
+set $m22-ViewWindow_0-specular-scale {0.4}
+
+$m16 initialize_ui
+
+::netedit scheduleok

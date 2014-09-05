@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="LinAlgBinary" category="Math">
+  <overview>
+    <authors>
+      <author>David Weinstein</author>
+    </authors>
+    <summary>
+        Performs one of a number of selectable matrix operations using the
+	two input matrices.
+    </summary>
+    <description>
+	
+	<p>One of a number of binary matrix operations can be selected
+	from the GUI and is then applied to the two input matrices to
+	produce a new matrix that is then sent to the output port.
+	The operations are X, +, Normalize, Select Rows, Select
+	Columns, or Function.</p>
+
+	<p>"A X B" does a matrix multiply of the two matrices.  The
+	number of rows in the first matrix must match the number of
+	columns in the second matrix.  The output matrix has the same
+	number of columns as the first matrix and the same number of
+	rows as the second.</p>
+
+	<p>"A + B" performs a matrix addition.  The two input matrices
+	must be the same size.  The elements are added in a piecewise
+	fashion.  This is equivalent to selecting "Function" and using
+	'x+y' as the function description</p>
+
+        <p>"Normalize A to B" computes the min and max values of the
+	second matrix, and then linearly transforms all of the
+	elements in the first matrix so that they fall within the
+	range of those min and max values.</p>
+
+	<p>"Select Rows" uses the values in the B input matrix as row
+	indices to extract from the A input matrix.  The B input
+	matrix must be a Column Matrix containing valid row index
+	values into the A matrix.  For example, if the B matrix
+	contains [3 5] and the A matrix is 100x200, then the resulting
+	matrix will be 2x200 and contain rows 3 and 5 from the A matrix.</p>
+
+	<p>"Select Columns" uses the values in the B input matrix as
+	column indices to extract from the A input matrix.  The B
+	input matrix must be a ColumnMatrix containing the valid
+	column index values into the A matrix.  For example, if the B
+	matrix contained [3 5] and the A matrix is 100x200, then the
+	resulting matrix will be 100x2 and contain columns 3 and 5
+	from the A matrix.</p>
+
+	<p>"Function" allows an arbitrary function of two variables to
+	be evaluated for each number pair in the two input matrices.
+	This requires that the two matrices are the same size.  The
+	variable representing the element from the A matrix is 'x',
+	and the variable for the element from the B matrix is 'y'.
+	The function is specified using SCIRun's simple function
+	parser.  There are a number of mathematical functions
+	available for use.  They are:</p>
+
+	<p>+: Add two numbers.  Example: 4+3 = 7</p>
+	<p>-: Subtract one number from another.  Example: 4-3 = 1</p>
+	<p>*: Multiply two numbers.  Example: 4*3 = 12</p>
+        <p>/: Divide one number from another.  Example: 12/3 = 4</p>
+	<p>sin: Sine of a number in radians.  Example: sin(x)</p>
+	<p>cos: Cosine of a number in radians.  Example: cos(x)</p>
+	<p>sqrt: Square root of a number.  Example: sqrt(4) = 2</p>
+	<p>sqr: Square of a number.  Example: sqr(2) = 4, sqrt(sqr(x))
+	= x</p>
+	<p>ln: Natural logarithm of a number.  Example: ln(x)</p>
+	<p>exp: e raised to the nth power. Example: exp(ln(x)) = x</p>
+	<p>log: Log base 10 of a number.  Example: log(100) = 2</p>
+	<p>abs: Absolute value of a number.  Example: abs(-3) = 3</p>
+        <p>pow: One number raised to the power of another.  Example:
+	pow(3, 2) = 9</p>
+	<p>random: Return a uniform random number between 0 and 1.
+	Example: random()</p>
+
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>A</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>B</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Output</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <img>../Modules/Math/doc/LinAlgBinaryUI.jpg</img>
+  </gui>
+  <testing>
+  </testing>
+</component>

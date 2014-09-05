@@ -1,0 +1,214 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE dir SYSTEM "../../../../doc/UserGuide/dirspec.dtd">
+
+<!-- Note: This document is about 75% complete.  Debug and DebugStream
+phase 2 content files still need work. * tjd * -->
+
+<dir name="Core/Util">
+  <fit>
+    <p>
+      Core/Util is a miscellaneous collection of code.  The code can be
+      classified into 3 groups: debugging tools, timing routines, and
+      SCIRun internal code.
+    </p>
+    <p>The debugging tools and timing routines are generally useful.  The
+      SCIRun internal code is not.
+    </p>
+    <p>The SCIRun internal code consists of routines for accessing shared
+      libraries and work arounds of bugs on Linux platforms.
+    </p>
+  </fit>
+  <use>
+    <when>
+      <p>Use the the debugging and timing tools when developing any kind of code.</p>
+    </when>
+    <why>
+      <p>
+	Use the debugging tools to specify data invariants, catch
+	programming errors, and log messages during program execution.
+      </p>
+      <p>
+	The timer tools can be used to analyze code bottlenecks and perform
+	other timing tasks.
+      </p>
+    </why>
+  </use>
+  <definition>
+    <term>
+      Assertion
+    </term>
+    <p>
+      Assertions have 2 (related) uses.  They are used to catch programming
+      errors and they may used to make promises between a routine
+      and its caller, i.e. "If you the caller send me data that does not
+      violate my assertion(s) then I, the routine, promise to do the
+      right thing by you." 
+    </p>
+    <p>
+      Assertions express a set of valid states a data object (or objects)
+      may possess at some point in the code.  If a piece of data is not in
+      a valid state, i.e. it violates the assertion, then the assertion
+      will catch this violation, report the violation, and perhaps terminate
+      the program.
+    </p>
+  </definition>
+  <example>
+    <p>
+      SCIRun supports a number of assertion styles which can be found in
+      Assert.h and FancyAssert.h.  Here are a few examples:
+    </p>
+    <p>
+      Ensure that the variable 'n' is greater than 0:
+    </p>
+    <code>
+      ASSERT(n > 0);
+    </code>
+    <p>
+      Ensure that 'a' is equal to 999:
+    </p>
+    <code>
+      ASSERTEQ(a, 999);
+    </code>
+    <p>
+      Other examples:
+    </p>
+    <code>
+      ASSERTNE(a, 0);
+      ASSERTRANGE(a, 0.0, 1.0);
+    </code>
+  </example>
+  <definition>
+    <term>
+      Timer
+    </term>
+    <p>
+      A Timer keeps track of time.  Class Timer is an abstract base class -
+      you can't create a Timer object.  But you can create objects of the
+      derived types CPUTimer, WallClockTimer, and TimeThrottle.  These all
+      provide the functions start(), stop(), clear(), time(), and add().  A
+      TimeThrottle also provides the function wait_for_time().  Functions
+      common to all timers are:
+    </p>
+    <p>
+      start() starts or resumes a timer.
+    </p>
+    <p>
+      stop() stops a timer.  It does not clear accumulated time.  The timer
+      may be resumed with start().
+    </p>
+    <p>
+      clear() sets the timer's accumulated time to 0.  clear() may be executed
+      while a timer is running (although a warning will be written to std error).
+    </p>
+    <p>
+      time() returns the timer's accumulated time.  It may be executed
+      while the timer is running or stopped.
+    </p>
+    <p>
+      add(double t) adds t seconds to the current elapsed time.
+    </p>
+    <p>
+      Individual timer types are discussed next.
+    </p>
+  </definition>
+  <definition>
+    <term>
+      CPUTimer
+    </term>
+    <p>
+      CPUTimer records the elasped CPU time (seconds) used by the calling
+      process (including system CPU time used on behalf of the calling
+      process).
+    </p>
+  </definition>
+  <example>
+    <p>
+      Sample use of a CPUTimer:
+    </p>
+    <code>
+      CPUTimer cpuTimer;
+      cpuTimer.start();
+      for (i =0; i<3; ++i) {
+        .
+        .
+        .
+      }
+      cpuTimer.stop();
+      cout << "Loop used " << cpuTimer.time()
+           << " seconds of cpu" << endl;
+    </code>
+  </example>
+  <definition>
+    <term>
+      WallClockTimer
+    </term>
+    <p>
+      WallClockTimer records elasped real time (seconds).
+    </p>
+  </definition>
+  <example>
+    <p>
+      Sample use of a WallClockTimer:
+    </p>
+    <code>
+      WallClockTimer wcTimer;
+      wcTimer.start();
+      for (i =0; i<3; ++i) {
+        .
+        .
+        .
+      }
+      wcTimer.stop();
+      cout << "Loop used " << wcTimer.time()
+           << " seconds of real time" << endl;
+    </code>
+  </example>
+  <definition>
+    <term>
+      TimeThrottle
+    </term>
+    <p>
+      TimeThrottle is a WallClockTimer with the added function wait_for_time().
+    </p>
+    <p>
+      wait_for_time(double endtime) will suspend the calling thread until
+      the given endtime (seconds) has elapsed.  This function is only
+      implemented on SGI systems.
+    </p>
+  </definition>
+  <example>
+    <p>
+      Sample use of a TimeThrottle:
+    </p>
+    <code>
+      TimeThrottle timeThrottle;
+      timeThrottle.start();
+      double startTime = timeThrottle.time();
+      // Start doing stuff.
+      .
+      .
+      .
+      // Make sure that not less than 1 second has elapsed since we started
+      // doing stuff.
+      timeThrottle.wait_for_time(startTime + 1);
+    </code>
+  </example>
+</dir>
+

@@ -1,0 +1,178 @@
+<Uintah_specification>
+
+  <Meta>
+    <title> Channel Flow with Pressure Outlet at y+ </title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+   <Solver type="hypre" />
+  <Wasatch>
+    <Density>
+      <IsConstant>true</IsConstant>
+      <NameTag name="density" state="STATE_NONE" />
+    </Density>
+    
+    <BasicExpression type="SVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="pressure" state="STATE_N" />
+       <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <!-- Set the initial condition expression for x-momentum -->
+    <BasicExpression type="YVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="y-mom" state="STATE_N" />
+       <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="ZVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="z-mom" state="STATE_N" />
+       <Constant>0.0</Constant>
+    </BasicExpression>
+               
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="viscosity" state="STATE_NONE" />
+      <Constant>0.01</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="density" state="STATE_NONE" />
+      <Constant>1.0</Constant>
+    </BasicExpression>
+
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+      <Y-Velocity>v</Y-Velocity>
+      <Y-Momentum>y-mom</Y-Momentum>
+      <Z-Velocity>w</Z-Velocity>
+      <Z-Momentum>z-mom</Z-Momentum>
+      <Viscosity>
+        <NameTag name="viscosity" state="STATE_NONE" />
+      </Viscosity>
+      
+      <Pressure>
+        <!-- ReferencePressure value="0.0">
+              <ReferenceCell>[0,0,0]</ReferenceCell>
+        </ReferencePressure -->
+        <Use3DLaplacian>    false</Use3DLaplacian>
+        <Parameters>
+            <!-- Hypre options -->
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1e-15  </tolerance>
+            <maxiterations>  200    </maxiterations>
+            <relax_type>     2       </relax_type>
+           </Parameters>
+      </Pressure>
+    </MomentumEquations>
+
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>100</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.001</delt_min>
+    <delt_max>0.001</delt_max>
+    <max_Timesteps>5</max_Timesteps>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>channel-flow-yz-yplus-pressure-outlet.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle = "2" interval = "0.001"/>
+    <compression>gzip</compression>
+    <save label="y-mom"/>
+    <save label="z-mom"/>
+    <save label="pressure"/>
+    <save label="dilatation"/>
+  </DataArchiver> 
+
+  <Grid>
+      <BoundaryConditions>
+      <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
+      <Face side="y-">
+
+        <BCType id="all" var="Dirichlet" label="y-mom">
+          <value> 1.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="z-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="y-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>                                               
+
+      </Face>
+      
+      <Face side="y+">
+
+        <BCType id="all" var="Neumann" label="z-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="pressure">
+          <value> 0.0 </value>
+        </BCType>                       
+        
+        <BCType id="all" var="Dirichlet" label="y-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>                                               
+
+      </Face>
+      
+      <Face side="z-">
+      
+        <BCType id="all" var="Dirichlet" label="y-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="z-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="z-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>        
+                        
+      </Face>
+      
+      <Face side="z+">
+      
+        <BCType id="all" var="Dirichlet" label="y-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="z-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="z-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>        
+                        
+      </Face>
+
+      </BoundaryConditions>
+      <Level>
+      <Box label="1">
+        <lower>[0,      0,  0]</lower>
+        <upper>[0.01, 6, 1]</upper>
+        <!-- extraCells>[1,1,0]</extraCells -->
+        <resolution>[2,30,10]</resolution>
+        <patches>[1,3,2]</patches>
+      </Box>
+      <periodic>[1,0,0]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

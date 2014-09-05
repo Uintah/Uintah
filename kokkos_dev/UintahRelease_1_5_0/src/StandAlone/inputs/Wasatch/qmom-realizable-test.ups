@@ -1,0 +1,96 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Test QMOM Realizable Model</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>  
+
+
+  <Wasatch>    
+    <BasicExpression type="SVOL">
+    <TaskList>initialization</TaskList>
+    <NameTag name="m_CACO3_0" state="STATE_N" />
+    <Constant>0.695237824224621</Constant>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+    <TaskList>initialization</TaskList>
+    <NameTag name="m_CACO3_1" state="STATE_N" />
+    <Constant>0.464617179659112</Constant>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+    <TaskList>initialization</TaskList>
+    <NameTag name="m_CACO3_2" state="STATE_N" />
+    <Constant>0.310469654411472</Constant>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+    <TaskList>initialization</TaskList>
+    <NameTag name="m_CACO3_3" state="STATE_N" />
+    <Constant>0.209925424119099</Constant>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+    <TaskList>initialization</TaskList>
+    <NameTag name="m_CACO3_4" state="STATE_N" />
+    <Constant>0.338591051272169</Constant>
+    </BasicExpression>
+   
+    <BasicExpression type="SVOL">
+    <TaskList>initialization</TaskList>
+    <NameTag name="m_CACO3_5" state="STATE_N" />
+    <Constant>16.759040794776848</Constant>
+    </BasicExpression>
+    
+    <MomentTransportEquation>
+        <PopulationName>CACO3</PopulationName>
+        <NumberOfEnvironments>3</NumberOfEnvironments>
+        <RealizableQMOM/>
+        <GrowthExpression>
+            <GrowthModel>MONOSURFACE</GrowthModel>
+            <PreGrowthCoefficient>1.0</PreGrowthCoefficient>
+        </GrowthExpression>
+
+    </MomentTransportEquation>
+  </Wasatch>
+
+  <Time>
+    <maxTime>0.001</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.00001</delt_min>
+    <delt_max>0.00001</delt_max>
+    <max_Timesteps> 4 </max_Timesteps>            
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>qmom-realizable-test.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle = "2" interval = "0.00001"/>
+    <compression>gzip</compression>
+    <save label="m_CACO3_0"/>
+    <save label="m_CACO3_1"/>
+    <save label="m_CACO3_2"/>    
+    <save label="m_CACO3_3"/>    
+    <save label="w_CACO3_0"/>    
+    <save label="w_CACO3_1"/>    
+    <save label="a_CACO3_0"/>    
+    <save label="a_CACO3_1"/>    
+  </DataArchiver> 
+
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[10,10,10]</resolution>
+        <patches>[2,2,2]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

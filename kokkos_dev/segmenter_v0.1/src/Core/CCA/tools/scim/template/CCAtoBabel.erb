@@ -1,0 +1,33 @@
+
+using namespace SCIRun;
+using namespace <%= $inPackage%>;
+using namespace std;
+
+extern "C" BridgeComponent* make_Bridge_<%= $templateArgv[0]%>()
+{
+  return static_cast<BridgeComponent*>(new <%= rndBridgeName%>());
+}
+
+<%= rndBridgeName%>::<%= rndBridgeName%>(){
+}
+
+<%= rndBridgeName%>::~<%= rndBridgeName%>(){
+}
+
+void <%= rndBridgeName%>::setServices(const BridgeServices* svc) {
+  services=const_cast<BridgeServices*>(svc);
+ <port> 
+  <%= $inPortName%>::pointer dp = <%= $inPortName%>::pointer(new <%= $inPortName%>(services));
+  services->addProvidesPort((void*)&dp,"pport","sci.cca.ports.<%= $inPortName%>",CCA);
+  services->registerUsesPort("uport","gov.cca.ports.<%= $inPortName%>",Babel);
+ </port>
+}
+
+<port> 
+ <method> 
+<%= $inMethodType%> SCIRun::<%= $inPortName%>::<%= $inMethodName%>(<%= outDefArgs(method(:ccaType))%>) {
+  <%= $inPackage%>::<%= $inPortName%> pp = mysvcs->getBabelPort("uport"); //except builtins (eg IDPort)
+  return pp.<%= $outMethodName%>(<%= outCallArgs%>);
+}
+ </method>
+</port>

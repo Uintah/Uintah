@@ -1,0 +1,7 @@
+
+class x {
+};
+
+class y {
+      void z() throws x;
+};

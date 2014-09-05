@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/component.dtd">
+<?xml-stylesheet href="../../../doc/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="Isosurface" category="Visualization">
+  <overview>
+    <authors>
+      <author>Yarden Livnat</author>
+    </authors>
+    <summary>Isosurface allows visualization of an isopotential
+     surface within a model.
+     </summary>
+     <description>
+      <p>Changing the Iso Value allows visualization of any
+      isopotential surface.</p>
+      <p>Method Marching Cubes (MC) looks at the isopotential at the
+      corners of every cell.  You can specify the number of processor
+      (np).</p>
+      <p>Noise method stores the min and max of all cells into a
+      table.
+      </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Color Map</name>
+	<datatype>SCIRun::ColorMap</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Surface</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Geometry</name>
+	<datatype>SCIRun::Geometry</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <img>../Modules/Visualization/doc/IsoSurfaceUI.jpg</img>
+  </gui>
+  <testing>
+  </testing>
+</component>

@@ -1,0 +1,22 @@
+
+//version BridgeTest 1.0;
+
+package BridgeTest version 1.0{
+
+  class GoPort implements-all gov.cca.ports.GoPort{
+    void setService(in gov.cca.Services svc);
+  };
+
+  interface iBridgeTestPort extends gov.cca.Port
+  {
+    void m2(in array<int, 1> a);
+  };
+
+  class BridgeTestPort implements-all iBridgeTestPort 
+  { };
+
+  class Com implements-all gov.cca.Component{
+
+  };
+
+};

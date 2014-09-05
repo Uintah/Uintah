@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="TexCuttingPlanes" category="Visualization">
+  <overview>
+    <authors>
+      <author>Kurt Zimmerman</author>
+    </authors>
+    <summary>This module is used to view slices of data using hardware
+    3D textures.</summary>
+    <description>
+      <p> Under Standard tab, select the X, Y, Z and or View plane and use
+      the "+" and "-" buttons to move the cutting planes. The X, Y,
+      and Z planes can also be moved with a selection widget displayed
+      in the view window.
+      </p> 
+      <p>Under Cylindrical tab, select Phi-0, Phi-1, and or Z plane.
+      The "+" and "-" buttons move only the Z plane.  The Phi-0 and
+      Phi-1 planes are controlled by entries in the gui.  The
+      selection widget in the view window, allows user control of the
+      Z plane and locates the rotation points for Phi-0 and Phi-1 planes.
+      </p>
+      <p> The Interplation Mode allows the user to select between
+      linear interpolation "Interpolate" and nearest neighbor
+      interpolation "Nearest".
+      </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>GL Texture</name>
+	<datatype>SCIRun::GLTexture3D</datatype>
+      </port>
+      <port>
+        <name>ColorMap</name>
+	<datatype>SCIRun::ColorMap</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Geometry</name>
+        <datatype>SCIRun::Geometry</datatype>
+      </port>
+      <port>
+	<name>ColorMap</name>
+	<datatype>SCIRun::ColorMap</datatype>
+      </port>
+    </outputs>
+ </io>
+  <gui>
+    <img>../Modules/Visualization/doc/TexCuttingPlanesUI.jpg</img>
+  </gui>
+  <testing>
+  </testing>
+</component>

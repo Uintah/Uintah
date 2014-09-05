@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="SetupFVMatrix" category="CreateModel">
+  <overview>
+    <authors>
+      <author>Joe Tranquillo</author>
+    </authors>
+    <summary>
+      Generate Finite Volume Sparse Matrix and Volume file from mesh data
+    </summary>
+    <description>
+      <p>Version Date: August 2001</p>
+      <p>Version: 1.1</p>
+      <p>SetupFVMatrix computes blab blab blab
+      </p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>PrimaryFiberOrientation</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>SecondaryFiberOrientation</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>CellType</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>ReorderedMesh</name> <datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

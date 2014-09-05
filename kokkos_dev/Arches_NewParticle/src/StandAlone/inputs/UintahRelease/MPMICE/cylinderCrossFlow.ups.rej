@@ -1,0 +1,199 @@
+***************
+*** 14,22 ****
+         <initTime>           0.0         </initTime>
+         <delt_min>           0.0         </delt_min>
+         <delt_max>           1.0         </delt_max>
+-        <delt_init>          1.0e-4      </delt_init>
+-        <max_delt_increase>    2.0       </max_delt_increase>
+         <timestep_multiplier>0.8 </timestep_multiplier>
+     </Time>
+     
+     <LoadBalancer type="DLB">
+--- 14,23 ----
+         <initTime>           0.0         </initTime>
+         <delt_min>           0.0         </delt_min>
+         <delt_max>           1.0         </delt_max>
++        <delt_init>          1.0e-7      </delt_init>
++        <max_delt_increase>    1.0       </max_delt_increase>
+         <timestep_multiplier>0.8 </timestep_multiplier>
++        <!--<max_Timesteps>         16 </max_Timesteps> -->
+     </Time>
+     
+     <LoadBalancer type="DLB">
+***************
+*** 32,39 ****
+        <LODI>
+          <press_infinity> 1.01325e+05             </press_infinity>
+          <sigma>          0.27                    </sigma>
+-         <ice_material_index> 0                   </ice_material_index>
+        </LODI>
+        <!--  pseudo dye injection jet -->
+        <Face circle = "x-" origin = "-0.1 0.0 0.0" radius = ".001">
+          <BCType id = "all" label = "scalar-f"            var = "Dirichlet">
+--- 33,42 ----
+        <LODI>
+          <press_infinity> 1.01325e+05             </press_infinity>
+          <sigma>          0.27                    </sigma>
++         <material> atmosphere                    </material>
++         <Li_scale>    0.1                        </Li_scale>
+        </LODI>
++ 
+        <!--  pseudo dye injection jet -->
+        <Face circle = "x-" origin = "-0.1 0.0 0.0" radius = ".001">
+          <BCType id = "all" label = "scalar-f"            var = "Dirichlet">
+***************
+*** 57,63 ****
+          <BCType id = "all"  label = "SpecificVol"       var = "computeFromDensity">
+                                <value> 0.0  </value>
+          </BCType>
+-         <BCType id = "0"    label = "scalar-f"          var = "Dirichlet">
+                                <value> 0.0</value>
+          </BCType>
+        </Face>
+--- 60,66 ----
+          <BCType id = "all"  label = "SpecificVol"       var = "computeFromDensity">
+                                <value> 0.0  </value>
+          </BCType>
++         <BCType id = "1"    label = "scalar-f"          var = "Dirichlet">
+                                <value> 0.0</value>
+          </BCType>
+        </Face>
+***************
+*** 81,87 ****
+          <BCType id = "all"  label = "SpecificVol"       var = "computeFromDensity">
+                                <value> 0.0  </value>
+          </BCType>
+-         <BCType id = "0"    label = "scalar-f"          var = "Dirichlet">
+                                <value> 0.0</value>
+          </BCType>
+        </Face>
+--- 84,90 ----
+          <BCType id = "all"  label = "SpecificVol"       var = "computeFromDensity">
+                                <value> 0.0  </value>
+          </BCType>
++         <BCType id = "1"    label = "scalar-f"          var = "Dirichlet">
+                                <value> 0.0</value>
+          </BCType>
+        </Face>
+***************
+*** 105,110 ****
+                                <value> 0.0</value>
+          </BCType>
+        </Face>
+        <Face side = "x+">
+          <BCType id = "1"  label = "Velocity"          var = "Neumann">
+                                <value> [0.,0.,0.] </value>
+--- 108,114 ----
+                                <value> 0.0</value>
+          </BCType>
+        </Face>
++ 
+        <Face side = "x+">
+          <BCType id = "1"  label = "Velocity"          var = "Neumann">
+                                <value> [0.,0.,0.] </value>
+***************
+*** 122,127 ****
+                                <value> 0.0</value>
+          </BCType>
+        </Face>
+        <Face side = "y-">
+          <BCType id = "0"    label = "Pressure"        var = "Neumann">
+                                <value> 0.0   </value>
+--- 126,132 ----
+                                <value> 0.0</value>
+          </BCType>
+        </Face>
++       
+        <Face side = "y-">
+          <BCType id = "0"    label = "Pressure"        var = "Neumann">
+                                <value> 0.0   </value>
+***************
+*** 138,144 ****
+          <BCType id = "all" label = "SpecificVol"      var = "computeFromDensity">
+                                <value> 0.0  </value>
+          </BCType>
+-         <BCType id = "0"    label = "scalar-f"           var = "Dirichlet">
+                                <value> 0.0</value>
+          </BCType>
+        </Face>
+--- 143,149 ----
+          <BCType id = "all" label = "SpecificVol"      var = "computeFromDensity">
+                                <value> 0.0  </value>
+          </BCType>
++         <BCType id = "1"    label = "scalar-f"           var = "Dirichlet">
+                                <value> 0.0</value>
+          </BCType>
+        </Face>
+***************
+*** 158,164 ****
+          <BCType id = "all" label = "SpecificVol"      var = "computeFromDensity">
+                                <value> 0.0  </value>
+          </BCType>
+-         <BCType id = "0"    label = "scalar-f"         var = "Dirichlet">
+                                <value> 0.0</value>
+          </BCType>
+        </Face>
+--- 163,169 ----
+          <BCType id = "all" label = "SpecificVol"      var = "computeFromDensity">
+                                <value> 0.0  </value>
+          </BCType>
++         <BCType id = "1"    label = "scalar-f"         var = "Dirichlet">
+                                <value> 0.0</value>
+          </BCType>
+        </Face>
+***************
+*** 188,195 ****
+      <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+      <!--____________________________________________________________________-->
+     <DataArchiver>
+-       <filebase>cyl_crossFlow2.uda</filebase>
+        <outputInterval>0.1</outputInterval>
+        <save label = "press_CC"/>
+        <save label = "vol_frac_CC"/>
+        <save label = "vel_CC"/>
+--- 193,202 ----
+      <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+      <!--____________________________________________________________________-->
+     <DataArchiver>
++       <filebase>cyl_crossFlow.uda</filebase>
+        <outputInterval>0.1</outputInterval>
++       <!--<outputTimestepInterval> 1 </outputTimestepInterval> -->
++       <outputInitTimestep/>
+        <save label = "press_CC"/>
+        <save label = "vol_frac_CC"/>
+        <save label = "vel_CC"/>
+***************
+*** 197,202 ****
+        <save label = "temp_CC"/>
+        <save label = "delP_Dilatate"/>
+        <save label = "scalar-f"/>
+        <save label = "TotalMass"/>
+        <save label = "TotalMomentum"/>
+        <save label = "p.x"             levels = "-1"/>
+--- 204,212 ----
+        <save label = "temp_CC"/>
+        <save label = "delP_Dilatate"/>
+        <save label = "scalar-f"/>
++       <save label = "rhs"/>
++       <save label = "Li1"/>
++       <save label = "Li5"/>
+        <save label = "TotalMass"/>
+        <save label = "TotalMomentum"/>
+        <save label = "p.x"             levels = "-1"/>
+***************
+*** 293,299 ****
+           </material>
+        </ICE>       
+         <MPM>
+-          <material>
+             <density>             8900.0         </density>
+             <constitutive_model type = "comp_neo_hook">
+                <useModifiedEOS>     true          </useModifiedEOS>
+--- 303,309 ----
+           </material>
+        </ICE>       
+         <MPM>
++          <material name="unknown">
+             <density>             8900.0         </density>
+             <constitutive_model type = "comp_neo_hook">
+                <useModifiedEOS>     true          </useModifiedEOS>

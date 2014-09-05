@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/component.dtd">
+<?xml-stylesheet href="../../../doc/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="TetVolCellToNode" category="Fields">
+  <overview>
+    <authors>
+      <author>Chris Moulding</author>
+    </authors>
+    <summary>
+      <p>
+       Convert a cell centered TetVol to a Node centered TetVol
+      </p>
+    </summary>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Cell centered volume</name>
+        <description>
+          <p>
+            The volume to be converted
+          </p>
+        </description>
+        <datatype>SCIRun::Field</datatype>
+        <componentname>GenField</componentname>
+        <componentname>ReadField</componentname>
+        <componentname>Kindlmann</componentname>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Node centered volume</name>
+        <description>
+          <p>
+            The converted volume
+          </p>
+        </description>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

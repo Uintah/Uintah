@@ -1,0 +1,131 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<!--
+        
+Datatype documentation dtd.
+
+-->
+
+<!-- ********** Parameter Entities ********** -->
+
+<!ENTITY % filename "(#PCDATA)">
+
+<!ENTITY % rpath "CDATA">
+
+<!-- Link stuff -->
+<!ENTITY % links "rlink | slink">
+<!ENTITY % rlink.attr "path %rpath; #REQUIRED">
+
+<!-- Text level stuff -->
+<!ENTITY % phrase "term | keyword | keyboard | cite | acronym">
+<!ENTITY % phrase.content "(#PCDATA)">
+<!ENTITY % inline "%phrase; | %links;">
+<!ENTITY % Inline "(#PCDATA | %inline;)*">
+<!ENTITY % link.content "(#PCDATA | %phrase;)*">
+
+<!-- Higher level stuff -->
+<!ENTITY % lists "orderedlist | unorderedlist | desclist">
+<!ENTITY % admonition "note | tip | warning">
+<!ENTITY % block "p">
+<!ENTITY % flow "%block; | %lists;">
+<!ENTITY % BasicFlow "(%flow;)*">
+<!ENTITY % DescFlow "(%flow; | developer | %admonition;)*">
+<!ENTITY % DevFlow "(%flow; | %admonition;)*">
+<!ENTITY % AdmonFlow "(%flow;)*">
+
+<!-- ********** Elements ********** -->
+
+<!-- Top level -->
+<!ELEMENT datatype (authors, summary, description, examplesr, senders, receivers, testing)>
+<!ATTLIST datatype name CDATA #REQUIRED>
+
+<!--  Author(s) -->
+<!ELEMENT authors (author+)>
+
+<!--  1 author  -->
+<!ELEMENT author (#PCDATA)>
+
+<!-- Brief (1 or 2 sentence) summary. -->
+<!ELEMENT summary (#PCDATA)>
+
+<!-- Name of sr file which demonstrates use of this datatype.  -->
+<!ELEMENT examplesr %filename;>
+
+<!-- Name of a SCIRun component -->
+<!ELEMENT componentname (#PCDATA)>
+
+<!-- List of commonly used components that send this datatype as output. -->
+<!ELEMENT senders (componentname+)>
+
+<!-- List of commonly used components that receive this datatype as input. -->
+<!ELEMENT receivers (componentname+)>
+
+<!-- Specify testing plan(s) -->
+<!ELEMENT testing (plan+)>
+
+<!-- Specify 1 testing plan.  -->
+<!ELEMENT plan (description, steps)>
+
+<!-- Collection of testing steps -->
+<!ELEMENT steps (step+)>
+
+<!-- Specify 1 testing step -->
+<!ELEMENT  step (#PCDATA)>
+
+<!-- Mini-documentation environment -->
+<!ELEMENT description %DescFlow;>
+
+<!-- Description information targeted at developers -->
+<!ELEMENT developer %DevFlow;>
+
+<!-- Calls attention to some piece of information. -->
+<!ELEMENT note %AdmonFlow;>
+
+<!-- A friendly word of advice. --> 
+<!ELEMENT tip %AdmonFlow;>
+
+<!-- A warning of some sort. -->
+<!ELEMENT warning %AdmonFlow;>
+
+<!-- Paragraph. -->
+<!ELEMENT p %Inline;>
+
+<!-- Relative link (relative to location of spec.xml file). -->
+<!ELEMENT rlink %link.content;>
+<!ATTLIST rlink %rlink.attr;>
+
+<!-- Sci web site relative link -->
+<!ELEMENT slink %link.content;>
+<!ATTLIST slink %rlink.attr;>
+
+<!-- "Phrases" - Content-based style tags. Inline stuff. -->
+<!ELEMENT term %phrase.content;>        <!-- Introduce a new term -->
+<!ELEMENT keyword %phrase.content;>     <!-- Introduce a keyword -->
+<!ELEMENT keyboard %phrase.content;>    <!-- Show something typed at a keyboard -->
+<!ELEMENT cite %phrase.content;>        <!-- Citation -->
+<!ELEMENT acronym %phrase.content;>     <!-- An acronym -->             
+
+<!-- Ordered list, unordered list, and description list. -->
+<!ELEMENT orderedlist (listitem)+>
+<!ELEMENT unorderedlist (listitem)+>
+<!ELEMENT listitem %BasicFlow;>
+<!ELEMENT desclist (desclistitem)+>
+<!ELEMENT desclistitem (desclistterm, desclistdef)>
+<!ELEMENT desclistterm (#PCDATA)>
+<!ELEMENT desclistdef %BasicFlow;>
+

@@ -1,0 +1,120 @@
+//minimum set of cca specification for components
+
+version govcca 1.0;
+
+package govcca{
+
+  interface Port{};
+ 
+  interface TypeMap {
+	void temp();
+  };  // end interface TypeMap
+  	
+
+  interface Services {
+        /** Ask for a previously registered Port; will return a Port or generate an error. */
+        Port getPort(in string name);
+     
+        /** Ask for a previously registered Port and return that Port if it is
+	    available or return null otherwise. */
+        Port getPortNonblocking(in string name);
+
+         /** Register a request for a Port that will be retrieved subsequently 
+        with a call to getPort(). */
+
+	/** Modified according to Motion 31 */
+        void registerUsesPort(in string name, in string type,
+	   		      in TypeMap properties);
+
+        /** Notify the framework that a Port, previously registered by this component,
+         is no longer needed. 
+         */
+        void unregisterUsesPort(in string name);
+
+        /** Exports a Port implemented by this component to the framework.  
+            This Port is now available for the framework to connect to other components. 
+	    Modified according to Motion 31 
+         */
+	void addProvidesPort(in Port inPort, in string name, in string type,
+			     in TypeMap properties);  
+      
+        /** Notifies the framework that a previously exported Port is no longer 
+            available for use.
+        */
+        void removeProvidesPort(in string name);
+
+        /** Notifies the framework that this component is finished with this Port.   
+        releasePort() method calls exactly match getPort() mehtod calls.  After 
+        releasePort() is invoked all references to the released Port become invalid. */
+        void releasePort(in string name);
+
+	TypeMap createTypeMap();
+	
+	TypeMap getPortProperties(in string portName);
+   
+        /** Get a reference to the component to which this Services object belongs. */
+        ComponentID  getComponentID();
+    };
+
+    interface Component {
+        /** Obtain Services handle, through which the component communicates with the
+            framework. This is the one method that every CCA Component must implement. 
+         */
+        void setServices(in Services svc);
+    };
+
+    interface ComponentID{
+        /** Produce a string that, within the current framework, uniquely defines 
+        this component reference. */
+        string toString();
+    };
+
+    interface GoPort extends Port{
+        /** Execute some encapsulated functionality on the component. 
+           @return 0 if ok, -1 if internal error but component may be used further,
+                   -2 if error so severe that component cannot be further used safely.
+        */
+	int go();
+    };
+
+    interface UIPort extends Port{
+        /** Execute some encapsulated functionality on the component. 
+           @return 0 if ok, -1 if internal error but component may be used further,
+                   -2 if error so severe that component cannot be further used safely.
+        */
+	int ui();
+    };
+
+
+    interface IDPort extends Port{
+	/** Test prot. Return a string as an ID for Hello component
+        */
+	string getID();
+    };
+
+}; // end package govcca
+
+
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

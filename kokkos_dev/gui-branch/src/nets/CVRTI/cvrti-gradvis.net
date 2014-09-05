@@ -1,0 +1,132 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+global userName
+set userName "dmw"
+
+global runDate
+set runDate " Fri  May 18 2001"
+
+global runTime
+set runTime " 0:35:30"
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 171 11]
+set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 208 390]
+set m2 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 48 101]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 48 184]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 244 199]
+set m5 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 262 100]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 244 300]
+
+addConnection $m0 0 $m2 0
+addConnection $m2 0 $m3 0
+addConnection $m3 0 $m1 0
+addConnection $m4 0 $m6 0
+addConnection $m5 0 $m4 1
+addConnection $m0 0 $m5 0
+addConnection $m0 0 $m4 0
+addConnection $m5 1 $m1 1
+addConnection $m6 0 $m1 2
+
+set $m0-notes {}
+set $m0-show_status 1
+set $m0-filename {/home/sci/dmw/SCIRun/src/StandAlone/convert/rob/ts5_106_fem.tvv.fld}
+set $m1-notes {}
+set $m1-show_status 1
+$m1 ui
+set $m1-ViewWindow_0-pos {}
+set $m1-ViewWindow_0-caxes 0
+set $m1-ViewWindow_0-iaxes -2147483647
+set $m1-ViewWindow_0-view-eyep-x 39.4072
+set $m1-ViewWindow_0-view-eyep-y -26.0039
+set $m1-ViewWindow_0-view-eyep-z 30.2173
+set $m1-ViewWindow_0-view-lookat-x -0.0871383
+set $m1-ViewWindow_0-view-lookat-y -0.267035
+set $m1-ViewWindow_0-view-lookat-z -0.369898
+set $m1-ViewWindow_0-view-up-x -0.510366
+set $m1-ViewWindow_0-view-up-y 0.208384
+set $m1-ViewWindow_0-view-up-z 0.834328
+set $m1-ViewWindow_0-view-fov 20
+set $m1-ViewWindow_0-view-eyep-x 39.4072
+set $m1-ViewWindow_0-view-eyep-y -26.0039
+set $m1-ViewWindow_0-view-eyep-z 30.2173
+set $m1-ViewWindow_0-view-eyep-x 39.4072
+set $m1-ViewWindow_0-view-eyep-y -26.0039
+set $m1-ViewWindow_0-view-eyep-z 30.2173
+set $m1-ViewWindow_0-view-lookat-x -0.0871383
+set $m1-ViewWindow_0-view-lookat-y -0.267035
+set $m1-ViewWindow_0-view-lookat-z -0.369898
+set $m1-ViewWindow_0-view-lookat-x -0.0871383
+set $m1-ViewWindow_0-view-lookat-y -0.267035
+set $m1-ViewWindow_0-view-lookat-z -0.369898
+set $m1-ViewWindow_0-view-up-x -0.510366
+set $m1-ViewWindow_0-view-up-y 0.208384
+set $m1-ViewWindow_0-view-up-z 0.834328
+set $m1-ViewWindow_0-view-up-x -0.510366
+set $m1-ViewWindow_0-view-up-y 0.208384
+set $m1-ViewWindow_0-view-up-z 0.834328
+set $m1-ViewWindow_0-view-fov 20
+set $m1-ViewWindow_0-view-eyep_offset-x -1.79769e+308
+set $m1-ViewWindow_0-view-eyep_offset-y -1.79769e+308
+set $m1-ViewWindow_0-view-eyep_offset-z -1.79769e+308
+set $m1-ViewWindow_0-view-eyep_offset-x -1.79769e+308
+set $m1-ViewWindow_0-view-eyep_offset-y -1.79769e+308
+set $m1-ViewWindow_0-view-eyep_offset-z -1.79769e+308
+set $m1-ViewWindow_0-bgcolor-r 0
+set $m1-ViewWindow_0-bgcolor-g 0
+set $m1-ViewWindow_0-bgcolor-b 0
+set $m1-ViewWindow_0-bgcolor-r 0
+set $m1-ViewWindow_0-bgcolor-g 0
+set $m1-ViewWindow_0-bgcolor-b 0
+set $m1-ViewWindow_0-shading {}
+set $m1-ViewWindow_0-do_stereo 0
+set $m1-ViewWindow_0-sbase 1
+set $m1-ViewWindow_0-sr 1
+set $m1-ViewWindow_0-do_bawgl 0
+set $m1-ViewWindow_0-drawimg -2147483647
+set $m1-ViewWindow_0-saveprefix {}
+set $m2-notes {}
+set $m2-show_status 1
+set $m3-notes {}
+set $m3-show_status 1
+set $m3-nodes-on 1
+set $m3-edges-on 1
+set $m3-faces-on 1
+set $m3-def-color-r 0.5
+set $m3-def-color-g 0.5
+set $m3-def-color-b 0.5
+set $m3-node_display_type {Points}
+set $m3-edge_display_type {Lines}
+set $m3-node_scale 1
+set $m3-edge_scale 1
+set $m3-show_progress -2147483647
+set $m3-resolution 4
+set $m4-notes {}
+set $m4-show_status 1
+set $m4-stepsize 10
+set $m4-tolerance 0.1
+set $m4-maxsteps 100
+set $m5-notes {}
+set $m5-show_status 1
+set $m5-maxseeds 15
+set $m5-numseeds 10
+set $m5-rngseed 1234
+set $m5-type {}
+set $m5-dist {importance}
+set $m6-notes {}
+set $m6-show_status 1
+set $m6-nodes-on 1
+set $m6-edges-on 1
+set $m6-faces-on 0
+set $m6-def-color-r 0.5
+set $m6-def-color-g 0.5
+set $m6-def-color-b 0.5
+set $m6-node_display_type {Points}
+set $m6-edge_display_type {Lines}
+set $m6-node_scale 1
+set $m6-edge_scale 1
+set $m6-show_progress -2147483647
+set $m6-resolution 4
+
+::netedit scheduleok

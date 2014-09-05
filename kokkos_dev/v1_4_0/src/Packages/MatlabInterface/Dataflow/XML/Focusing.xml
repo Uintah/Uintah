@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/component.dtd">
+<?xml-stylesheet href="../../../../../doc/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="Focusing" category="Math">
+  <overview>
+    <authors>
+      <author>Oleg</author>
+    </authors>
+    <description>
+      <p>Version Date: May 2001</p><p>Version: 1.0</p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Lead Field</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>RHS (data)</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Sources</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>Residual</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

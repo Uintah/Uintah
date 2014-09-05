@@ -1,0 +1,151 @@
+/*
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+*/
+
+
+
+package XXX {
+    class Class;
+    class Method;
+    class Object;
+
+    /*
+     * All interfaces extend this interface and all class implement it.
+     * It provides basic reference counting services and run-time type
+     * identification.
+     */
+    interface BaseInterface {
+	SSIDL.Object addReference();
+	void deleteReference();
+	SSIDL.Class getClass();
+	bool isSame(in BaseInterface object);
+	bool isInstanceOf(in Class type);
+	bool supportsInterface(in Class type);
+	SSIDL.BaseInterface queryInterface(in Class type);
+    };
+
+    /*
+     * All class directly or indirectly extend this class. The member
+     * functions are identical to that of BaseInterface except that this class
+     * provides the implementations.  Note that supportsInterface and
+     * queryInterface are not final and thus may be redefined in subclasses
+     * to support a query interface protocol.  Initially, the query interface
+     * calls default to the equivalent functionality based on the static
+     * IDL type information
+     */
+    class Object implements BaseInterface {
+	final SSIDL.Object xxaddReference();
+	final void xxdeleteReference();
+	final SSIDL.Class xxgetClass();
+	final bool xxisSame(in BaseInterface object);
+	final bool xxisInstanceOf(in Class type);
+	bool supportsInterface(in Class type);
+	SSIDL.BaseInterface queryInterface(in Class type);
+    };
+
+    /*
+     * Base class for all exceptions.  This class will provide simple
+     * stack trace mechanisms usable by the stubs and skeletons.
+     */
+    class Throwable {
+	// need to add something for error reporting
+    };
+
+    /*
+     * Must define standard exception classes.  Left as an excercise for
+     * the reader...
+     */
+    class ClassNotFoundException extends Throwable {
+	// say something here
+    };
+
+    /*
+     * Must define standard exception classes.  Left as an excercise for
+     * the reader...
+     */
+    class InstantiationException extends Throwable {
+	// say something here
+    };
+
+    /*
+     * Must define standard exception classes.  Left as an excercise for
+     * the reader...
+     */
+    class NoSuchMethodException extends Throwable {
+	// say something here
+    };
+
+    /*
+     * Must define standard exception classes.  Left as an excercise for
+     * the reader...
+     */
+    class IllegalArgumentException extends Throwable {
+	// say something here
+    };
+
+    /*
+     * Similar to Java java.lang.Class, this class provides basic meta-data
+     * about classes in the system.  This meta-data is created from the IDL
+     * specification.  Class, along with Method and its associated classes,
+     * forms the foundation for run-time type indentification, reflection,
+     * and dynamic method invocation.
+     */
+    class Class {
+	static SSIDL.Class lookupClass(in string class_name)
+	    throws SSIDL.ClassNotFoundException;
+	final SSIDL.Object xxnewInstance() throws SSIDL.InstantiationException;
+	final bool xxisInterface();
+	final bool xxisArray();
+	final bool xxisPrimitive();
+	final string xxgetName();
+	final SSIDL.Class xxgetSuperclass();
+	final array<SSIDL.Class,1> xxgetInterfaces();
+	final SSIDL.Class xxgetCore/CCA/ComponentType();
+	final array<Method,1> xxgetMethods();
+	final SSIDL.Method xxgetMethod() throws SSIDL.NoSuchMethodException;
+	// and so on - see the Java spec for more information
+    };
+
+    /*
+     * The method class represents a method of an object.  It also
+     * supports the invokeMember() and invokeStatic() functions that
+     * allow for dynamic invocation of methods by GUI builder tools.
+     */
+    class Method {
+	final SSIDL.Class xxgetDeclaringClass();
+	final string xxgetName();
+	final SSIDL.Class xxgetReturnType();
+	final array<SSIDL.Class,1> xxgetParameterTypes();
+	final array<SSIDL.Class,1> xxgetExceptionTypes();
+	final void xxinvokeStatic(in array<SSIDL.Object,1> arguments)
+	    throws SSIDL.IllegalArgumentException;
+	final void xxinvokeMember(in Object this, in array<Object,1> arguments)
+	    throws SSIDL.IllegalArgumentException;
+	// and so on - see the Java spec for more information
+    };
+};
+

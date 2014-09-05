@@ -1,0 +1,52 @@
+#!/usr/local/bin/python
+
+from os import environ,mkdir,path,system
+from time import asctime,localtime,time
+from types import *
+from sys import argv,exit
+
+TESTS = [   ("disks.ups",		    ["dbg", "opt"]),    \
+    	    ("disks2mat.ups",		    ["dbg", "opt"]),    \
+	    ("disks2mat4patch.ups",	    ["dbg", "opt"]),	\
+    	    ("disks2mat_fc.ups",	    ["dbg", "opt"]),    \
+    	    ("disks_complex.ups",	    ["dbg", "opt"]),    \
+	    ("disks_fracture.ups",	    ["dbg", "opt"]),	\
+	    ("heatcond.ups",		    ["dbg", "opt"]),	\
+	    ("heatcond2mat.ups",	    ["dbg", "opt"]),	\
+    	    ("inclined_plane_sphere.ups",   ["dbg", "opt"]),	\
+	    ("twomatburn.ups",		    ["dbg", "opt"]),	\
+	    ("sidecrack.ups",		    ["dbg", "opt"])	\
+    	]
+
+def input (test):
+    return test[0]
+def modes (test):
+    return test[1]
+def date ():
+    return asctime(localtime(time()))
+
+if len(argv) < 2:
+    print "usage: %s <mode>" % argv[0]
+    print "    where <mode> is a short string used to select tests to run."
+    exit(1)
+mode = argv[1]
+
+mkdir("%s/MPM-%s" % (environ['BUILDROOT'], mode))
+
+failcode = 0
+
+for test in TESTS:
+    if mode not in modes(test):
+    	continue
+
+    testname = path.splitext(input(test))[0]
+    testlog = "%s/MPM-%s/%s.log" % (environ['BUILDROOT'], mode, testname)
+
+    print "MPM-%s: Running test %s on %s" % (mode, testname, date())
+    rc = system("StandAlone/sus -mpm StandAlone/inputs/MPM/%s > %s 2>&1" % (input(test), testlog))
+    if rc != 0:
+    	print "MPM-%s: Test %s failed with code %d" % (mode, testname, rc)
+    	failcode = 1
+    system("/bin/rm -rf %s.uda*" % testname)
+
+exit(failcode)

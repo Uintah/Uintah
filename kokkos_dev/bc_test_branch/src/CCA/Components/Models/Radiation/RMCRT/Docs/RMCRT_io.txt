@@ -1,0 +1,6 @@
+The RMCRT component requires temperature, absorption coefficient field, cellType, and 
+(optionally) scattering coefficient fields. RMCRT calculates divQ, which is a cell centered
+double, and q, which is a stencil7 double.  The first 6 of thestencil 7 values correspond 
+to the flux on the west, east, south, north, bottom, and top faces, respectively.  The 7th
+value may be 0.000000 or 1.000000 depending on whether or not a given cell has any boundary
+faces on which a flux value is calculated.

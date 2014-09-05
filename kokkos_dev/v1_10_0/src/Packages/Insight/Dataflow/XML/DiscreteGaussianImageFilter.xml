@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/Utilities/XML/package-component.xsl"type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+<component name="DiscreteGaussianImageFilter" category="Filters">
+  <overview>
+    <authors>
+    </authors>
+    <summary>    
+  Blurs an image by separable convolution with 
+  discrete gaussian kernels. This filter performs 
+  Gaussian blurring by separable convolution of an 
+  image and a discrete Gaussian operator (kernel).
+    </summary>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">  
+      <port>
+        <name>InputImage</name>
+        <datatype>Insight::ITKDatatype</datatype>
+      </port>
+    </inputs>
+    <outputs>  
+      <port>
+        <name>OutputImage</name>
+        <datatype>Insight::ITKDatatype</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>
+
+  
+
+ 
+
+
+
+

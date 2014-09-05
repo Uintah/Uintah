@@ -1,0 +1,1 @@
+0 0 * * * /usr/csafe/raid1/tester/bin/tcsh_run "/usr/csafe/raid1/tester/bin/startTester -j 8 -sendmail -malloc_strict"

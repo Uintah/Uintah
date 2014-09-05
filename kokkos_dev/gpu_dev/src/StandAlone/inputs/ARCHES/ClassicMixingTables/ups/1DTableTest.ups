@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>One Dimensional Test Case</title>
+  </Meta>
+
+  <SimulationComponent type="arches"/>
+
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>.50</maxTime>
+    <max_Timesteps>25</max_Timesteps>
+    <initTime>0.0</initTime>
+    <delt_min>0.00001</delt_min>
+    <delt_max>0.01</delt_max>
+    <timestep_multiplier>0.2</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>OneDimTable.uda</filebase>
+    <outputTimestepInterval>5</outputTimestepInterval>
+<!-- Table Variables -->
+<!-- iv's -->
+    <save label="mixture_fraction"/>
+<!-- dv's -->
+    <save label="temperature" table_lookup="true"/>
+    <save label="linear_test" table_lookup="true"/>
+    <save label="density" table_lookup="true"/>
+    <checkpoint cycle="2" interval="0.02"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[3,3,3]</upper>
+        <resolution>[15,15,15]</resolution>
+        <extraCells>[1,1,1]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+    </Level>
+    <BoundaryConditions>
+      <Face side="x-">
+        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face circle="x-" origin="0 1.5 1.5" radius=".5">
+        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+      </Face>
+      <Face side="x+" name="x+ wall">
+        <BCType id="all" label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="y-" name="y- wall">
+        <BCType id="all" label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="y+" name="y+ wall">
+        <BCType id="all" label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="z-" name="z- wall">
+        <BCType id="all" label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="z+" name="z+ wall">
+        <BCType id="all" label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+
+  </Grid>
+
+  <PhysicalConstants>
+    <gravity>[-9.8,0,0]</gravity>
+    <reference_point>[-1,-1,-1]</reference_point>
+    <viscosity>0.001</viscosity>
+  </PhysicalConstants>
+
+  <CFD>
+<!-- ARCHES specification -->
+    <ARCHES>
+
+<!-- TIME INTEGRATOR -->
+      <TimeIntegrator>
+        <ExplicitIntegrator order="second"/>
+      </TimeIntegrator>
+
+
+<!-- SCALARS -->
+      <TransportEqns>
+        <Eqn label="mixture_fraction" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>super_bee</conv_scheme>
+          <addSources>false</addSources>
+          <initialization type="constant">
+            <constant>.0</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+
+      </TransportEqns>
+
+      <Turbulence model="compdynamicprocedure">
+        <variance_coefficient>0.1</variance_coefficient>
+        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+      </Turbulence>
+
+      <Properties>
+        <use_mixing_model>false</use_mixing_model>
+        <ClassicTable>
+          <inputfile>inputs/ARCHES/ClassicMixingTables/acidbase/MixTable1D.mix.gz</inputfile>
+          <cold_flow>true</cold_flow>
+        </ClassicTable>
+      </Properties>
+
+      <BoundaryConditions>
+        <FlowInlet>
+          <Flow_rate>5000</Flow_rate>
+          <mixture_fraction>1.0</mixture_fraction>
+          <geom_object>
+            <cylinder label="inlet">
+              <bottom>[-5,1.5,1.5]</bottom>
+              <top>[0,1.5,1.5]</top>
+              <radius> .5 </radius>
+            </cylinder>
+          </geom_object>
+        </FlowInlet>
+        <WallBC>
+          <geom_object>
+            <box label="botWall">
+              <min>[-1,-1,-1]</min>
+              <max>[0,4,4]</max>
+            </box>
+          </geom_object>
+        </WallBC>
+        <PressureBC>
+          <mixture_fraction>0.0</mixture_fraction>
+          <geom_object>
+            <box label="posY_xzWall">
+              <min>[0,3,-1]</min>
+              <max>[3,4,4]</max>
+            </box>
+            <box label="zeroY_xzWall">
+              <min>[0,-1,-1]</min>
+              <max>[3,0,4]</max>
+            </box>
+            <box label="posZ_xyWall">
+              <min>[0,-1,3]</min>
+              <max>[3,4,4]</max>
+            </box>
+            <box label="zeroZ_xyWall">
+              <min>[0,-1,-1]</min>
+              <max>[3,4,0]</max>
+            </box>
+          </geom_object>
+        </PressureBC>
+        <OutletBC>
+          <mixture_fraction>0.0</mixture_fraction>
+          <geom_object>
+            <box label="topWall">
+              <min>[3,-1,-1]</min>
+              <max>[4,4,4]</max>
+            </box>
+          </geom_object>
+        </OutletBC>
+      </BoundaryConditions>
+
+      <ExplicitSolver>
+        <initial_dt>0.05</initial_dt>
+        <variable_dt>true</variable_dt>
+        <PressureSolver>
+          <Parameters>
+            <tolerance>     1.0e-9 </tolerance>
+            <solver>         cg    </solver>
+            <preconditioner> pfmg  </preconditioner>
+            <maxiterations> 250    </maxiterations>
+          </Parameters>
+        </PressureSolver>
+
+        <MomentumSolver>
+          <convection_scheme>central</convection_scheme>
+        </MomentumSolver>
+
+        <MixtureFractionSolver>
+          <convection_scheme>flux_limited</convection_scheme>
+          <limiter_type>upwind</limiter_type>
+        </MixtureFractionSolver>
+
+      </ExplicitSolver>
+    </ARCHES>
+
+  </CFD>
+
+</Uintah_specification>

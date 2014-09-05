@@ -1,0 +1,67 @@
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <script type="text/javascript" src="../Utilities/HTML/tools.js"></script>
+    <script type="text/javascript">var doc = new ReleaseNotesDocument();</script>
+    <title>Version 1.20.3 Release Notes</title>
+  </head>
+
+  <body>
+    <script type="text/javascript">doc.preContent();</script>
+
+    <h1 class="page-title">
+      Release Notes - SCIRun Version 1.20.3 - Mar 8, 2004
+    </h1>
+    <h1>
+      Infrastructure
+    </h1>
+    <ul>
+      <li> Fixed suspend and foreground bug for RHE3. </li>
+      <li> Fixed unlock/unlock/delete bug in ~Mutex for RHE3. </li>
+      <li> Fixed OSX problem with mutex::lock(). </li>
+      <li> Dynamic compilation types are now thread safe. </li>
+      <li> Fixed save image directory listing. </li>
+      <li> Call initialize_ui instead of ui in PowerApps.  Before we
+      were calling the ui method and it would not display the GUI
+      window more than once.</li>
+    </ul>
+    <h1>
+      Packages
+    </h1>
+    <ul>
+      <li>
+	Teem: Fixed initialization of TendEvecRGB's evec variable to store integer
+	instead of string.
+      </li>
+    </ul>
+    <script type="text/javascript">doc.postContent();</script>
+  </body>
+</html>

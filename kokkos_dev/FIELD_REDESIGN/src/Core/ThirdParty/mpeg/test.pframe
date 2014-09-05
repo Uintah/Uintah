@@ -1,0 +1,22 @@
+/* The coding decision used for the predicted frame.  We only change
+things if the picture type is for predicted frames.  Otherwise, we don't
+change anything and the default C-code routine decision holds. */
+open 0
+  rcl PTYPE
+  2 eq
+  ifng END:            /* Not predicted, so don't bother */
+  rcl BD 3.0 lt rcl FDBD rcl BD 0.5 mul gt and
+  rcl FDBD rcl BD 1.1 div gt or
+  ifng DOMC:
+  1 sto MTYPE
+  rcl DVAR 64 gt
+  rcl DVAR rcl VAROR gt and ifng END:
+  3 sto MTYPE
+  exit
+DOMC:
+  0 sto MTYPE
+  rcl FVAR 64 gt
+  rcl FVAR rcl VAROR gt and ifng END:
+  3 sto MTYPE
+END: exit
+close

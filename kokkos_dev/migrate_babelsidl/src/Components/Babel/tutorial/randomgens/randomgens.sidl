@@ -1,0 +1,8 @@
+package randomgens version 1.0 {
+
+  class RandNumGenerator implements-all randomgen.RandomGeneratorPort, 
+                                        gov.cca.Component
+  {
+  }
+
+}

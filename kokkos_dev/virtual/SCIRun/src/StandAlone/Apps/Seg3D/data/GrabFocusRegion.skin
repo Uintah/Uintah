@@ -1,0 +1,10 @@
+<definition class="GrabFocusRegion">
+  <object class="Root::FocusRegion">
+    <signal name="FocusRegion::focus"
+            target="FocusGrab::Grab"/>
+    
+    <signal name="FocusRegion::unfocus"
+            target="FocusGrab::Ungrab"/>
+  </object>
+</definition>
+                    

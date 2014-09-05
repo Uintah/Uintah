@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ 
+<packages>
+   <package>
+        <name>SCIRun</name>
+        <path>Dataflow/XML</path>
+        <level>Critical</level>
+   </package>
+</packages>

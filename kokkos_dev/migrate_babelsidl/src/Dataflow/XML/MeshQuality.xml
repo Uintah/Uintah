@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="MeshQuality" category="FieldsData" optional="true">
+  <overview>
+    <authors>
+      <author>Jason Shepherd</author>
+    </authors>
+    <summary>Nodal movement to improve mesh quality.</summary>
+    <description>
+      <p>The MeshQuality module is used to calculate multiple mesh
+quality metrics and report these metrics to the user.  The Sandia
+National Laboratories VERDICT library
+(http://cubit.sandia.gov/verdict.html) performs the metric
+calculations.</p>
+      <p>Metric descriptions are taken from VERDICT as follows (descriptions are by element type.)
+</p><p>
+Description of Tetrahedral Quality Measures
+</p><p>
+Function Name     Dimension    Full Range   Acceptable Range    Reference
+-------------     ----------    --------     ---------------     ---------
+Aspect Ratio Bet    L^0        1 to inf       1 to 3             1
+Aspect Ratio Gam    L^0        1 to inf       1 to 3             1
+Element Volume      L^3     -inf to +inf       None              1
+Condition No.       L^0        1 to inf       1 to 3             2
+Jacobian            L^3     -inf to inf        None              2
+Scaled Jacobian     L^0   -1.414 to +1.414  0.5 to +1.414        2
+Shape               L^0        0 to 1       0.2 to 1             3
+Relative Size       L^0        0 to 1       0.2 to 1             3
+Shape and Size      L^0        0 to 1       0.2 to 1             3
+Distortion          L^2       -1 to 1       0.6 to 1             4
+-------------     ----------   --------     --------------      ---------
+</p><p>
+ Approximate Tetrahedral Quality Definitions: 
+   Aspect Ratio Beta:   CR / (3.0 * IR)  where CR = circumsphere radius,
+                                          IR = inscribed sphere radius
+   Aspect Ratio Gamma: Srms**3 / (8.479670*V) 
+      where Srms = sqrt(Sum(Si**2)/6), Si = edge length
+   Element Volume:   (1/6) * Jacobian at corner node
+   Condition No.     Condition number of the Jacobian matrix at any corner
+   Jacobian:         Minimum pointwise volume at any corner
+   Scaled Jacobian:  Minimum Jacobian divided by the lengths of 3 edge vectors
+   Shape:            3/Mean Ratio of weighted Jacobian matrix
+   Relative Size:    Min( J, 1/J ), where J is determinant of weighted
+                      Jacobian matrix
+   Shape and Size:   Product of Shape and Relative Size
+   Distortion:       {min(|J|)/actual volume}*parent volume, parent volume = 1/6 for tet
+</p><p>
+ References for Tetrahedral Quality Measures: 
+    1. V. N. Parthasarathy et al, A comparison of tetrahedron quality measures,
+          Finite Elem. Anal. Des., Vol 15(1993), 255-261.
+    2. P. Knupp, Achieving Finite Element Mesh Quality via Optimization of the
+          Jacobian Matrix Norm and Associated Quantities, 
+          Intl. J. Numer. Meth. Engng. 2000, 48:1165-1185. 
+    3. P. Knupp, Algebraic Mesh Quality Metrics for
+          Unstructured Initial Meshes, submitted for publication. 
+    4. SDRC/IDEAS Simulation: Finite Element Modeling--User's Guide 
+</p><p>
+Description of Hexahedral Quality Measures
+</p><p>
+Function Name     Dimension   Full Range  Acceptable Range    Reference
+-------------     ----------    -----     ---------------     ---------
+Aspect Ratio        L^0       1 to inf       1 to 4             1
+Skew                L^0       0 to 1         0 to 0.5           1
+Taper               L^0       0 to +inf      0 to 0.4           1
+Element Volume      L^3    -inf to +inf       None              1
+Stretch             L^0       0 to 1       0.25 to 1            2
+Diagonal Ratio      L^0       0 to 1       0.65 to 1            3
+Dimension           L^1       0 to inf        None              1
+Condition No.       L^0       1 to inf       1 to 8             4
+Jacobian            L^3   - inf to inf        None              4
+Scaled Jacobian     L^0      -1 to +1      0.5 to 1             4
+Shear               L^0       0 to 1       0.3 to 1             5
+Shape               L^0       0 to 1       0.3 to 1             5
+Relative Size       L^0       0 to 1       0.5 to 1             5
+Shear and Size      L^0       0 to 1       0.2 to 1             5
+Shape and Size      L^0       0 to 1       0.2 to 1             5
+Distortion          L^2      -1 to 1       0.6 to 1             6
+-------------     ----------    -----    ----------------     ---------
+</p><p>
+ Approximate Hexahedral Quality Definitions: 
+   Aspect Ratio:   Maximum edge length ratios at hex center.
+   Skew:           Maximum |cos A| where A is the angle between edges at hex center.
+   Taper:          Maximum ratio of lengths derived from opposite edges.
+   Element Volume: Jacobian at hex center.
+   Stretch:        Sqrt(3) * minimum edge length / maximum diagonal length.
+   Diagonal Ratio: Minimum diagonal length / maximum diagonal length.
+   Dimension:      Pronto-specific characteristic length for stable time step
+                    calculation.  Char_length = Volume / 2 grad Volume.
+   Condition No.   Maximum condition number of the Jacobian matrix at 8 corners.
+   Jacobian:       Minimum pointwise volume of local map at 8 corners and center of hex.
+   Scaled Jacobian: Minimum Jacobian divided by the lengths of the 3 edge vectors.
+   Shear:          3/Mean Ratio of Jacobian Skew matrix
+   Shape:          3/Mean Ratio of weighted Jacobian matrix
+   Relative Size:  Min( J, 1/J ), where J is determinant of weighted
+                      Jacobian matrix
+   Shear and Size: Product of Shear and Relative Size
+   Shape and Size: Product of Shape and Relative Size
+   Distortion:       {min(|J|)/actual volume}*parent volume, parent volume = 8 for hex
+</p><p>
+ References for Hexahedral Quality Measures: 
+    1. L.M. Taylor, and D.P. Flanagan, Pronto3D - A Three Dimensional Transient
+        Solid Dynamics Program, SAND87-1912, Sandia National Laboratories, 1989.
+    2. FIMESH code
+    3. Unknown 
+    4. P. Knupp, Achieving Finite Element Mesh Quality via Optimization of the
+          Jacobian Matrix Norm and Associated Quantities, 
+          Intl. J. Numer. Meth. Engng. 2000, 48:1165-1185. 
+    5. P. Knupp, Algebraic Mesh Quality Metrics for
+          Unstructured Initial Meshes, submitted for publication. 
+    6. SDRC/IDEAS Simulation: Finite Element Modeling--User's Guide 
+</p><p>
+Description of Triangular Quality Measures
+</p><p>
+Function Name     Dimension    Full Range   Acceptable Range    Reference
+-------------     ----------   ---------    ---------------     ---------
+Element Area        L^2        0 to inf          None             1
+Maximum Angle     degrees     60 to 180        60 to 90           1
+Minimum Angle     degrees      0 to 60         30 to 60           1
+Condition No.       L^0        1 to inf         1 to 1.3          2
+Scaled Jacobian     L^0   -1.155 to +1.155    0.5 to 1.155        2
+Relative Size       L^0        0 to 1        0.25 to 1            3
+Shape               L^0        0 to 1        0.25 to 1            3
+Shape and Size      L^0        0 to 1        0.25 to 1            3
+Distortion          L^2       -1 to 1        0.6 to 1             4
+-------------     ----------   --------     ---------------     ---------
+</p><p>
+ Approximate Triangular Quality Definitions: 
+    Element Area:     (1/2) * Jacobian at corner node
+    Maximum Angle:    Maximum included angle in triangle
+    Minimum Angle:    Minimum included angle in triangle
+    Condition No.     Condition number of the Jacobian matrix 
+    Scaled Jacobian:  Minimum Jacobian divided by the lengths of 2 edge vectors
+    Relative Size:    Min( J, 1/J ), where J is determinant of weighted
+                      Jacobian matrix
+    Shape:            2/Condition number of weighted Jacobian matrix
+    Shape and Size:   Product of Shape and Relative Size
+    Distortion:       {min(|J|)/actual area}*parent area, parent area = 1/2 for triangular element
+</p><p>
+ References for Triangular Quality Measures: 
+    1. Traditional.
+    2. P. Knupp, Achieving Finite Element Mesh Quality via Optimization of the
+          Jacobian Matrix Norm and Associated Quantities, 
+          Intl. J. Numer. Meth. Engng. 2000, 48:1165-1185. 
+    3. P. Knupp, Algebraic Mesh Quality Metrics for
+          Unstructured Initial Meshes, submitted for publication. 
+    4. SDRC/IDEAS Simulation: Finite Element Modeling--User's Guide 
+</p><p>
+Description of Quadrilateral Quality Measures
+</p><p>
+Function Name     Dimension   Full Range  Acceptable Range    Reference
+-------------     ----------    -----     ---------------     ---------
+Aspect Ratio        L^0       1 to inf       1 to 4             1
+Skew                L^0       0 to 1         0 to 0.5           1
+Taper               L^0       0 to inf       0 to 0.7           1
+Warpage             L^0       0 to 1       0.9 to 1.0           1
+Element Area        L^2    -inf to +inf       None              1
+Stretch             L^0       0 to 1      0.25 to 1             2
+Minimum Angle      degrees    0 to 90       45 to 90            3
+Maximum Angle      degrees   90 to 360      90 to 135           3
+Condition No.       L^0       1 to inf       1 to 4             4
+Jacobian            L^2   - inf to inf        None              4
+Scaled Jacobian     L^0      -1 to +1      0.5 to 1             4
+Shear               L^0       0 to 1       0.3 to 1             5
+Shape               L^0       0 to 1       0.3 to 1             5
+Relative Size       L^0       0 to 1       0.3 to 1             5
+Shear and Size      L^0       0 to 1       0.2 to 1             5
+Shape and Size      L^0       0 to 1       0.2 to 1             5
+Distortion          L^2      -1 to 1       0.6 to 1             6
+-------------     ----------    -----     --------------      ---------
+</p><p>
+ Approximate Quadrilateral Quality Definitions: 
+   Aspect Ratio:    Maximum edge length ratios at quad center
+   Skew:            Maximum |cos A| where A is the angle between edges at quad center
+   Taper:           Maximum ratio of lengths derived from opposite edges
+   Warpage:         Cosine of Minimum Dihedral Angle formed by Planes
+                    Intersecting in Diagonals
+   Element Area:    Jacobian at quad center
+   Stretch:         Sqrt(2) * minimum edge length / maximum diagonal length
+   Minimum Angle:   Smallest included quad angle (degrees). 
+   Maximum Angle:   Largest included quad angle (degrees). 
+   Condition No.    Maximum condition number of the Jacobian matrix at 4 corners
+   Jacobian:        Minimum pointwise volume of local map at 4 corners and center of quad
+   Scaled Jacobian: Minimum Jacobian divided by the lengths of the 2 edge vectors
+   Shear:            2/Condition number of Jacobian Skew matrix
+   Shape:            2/Condition number of weighted Jacobian matrix
+   Relative Size:    Min( J, 1/J ), where J is determinant of weighted
+                      Jacobian matrix
+   Shear and Size:   Product of Shear and Relative Size
+   Shape and Size:   Product of Shape and Relative Size
+   Distortion:       {min(|J|)/actual area}*parent area, parent area = 4 for quad
+</p><p>
+ References for Quadrilateral Quality Measures: 
+    1. J. Robinson, CRE Method of element testing and the Jacobian shape parameters, Eng. Comput., Vol 4, 1987.
+    2. FIMESH code.
+    3. Unknown. 
+    4. P. Knupp, Achieving Finite Element Mesh Quality via Optimization of the
+          Jacobian Matrix Norm and Associated Quantities, 
+          Intl. J. Numer. Meth. Engng. 2000, 48:1165-1185. 
+    5. P. Knupp, Algebraic Mesh Quality Metrics for
+          Unstructured Initial Meshes, submitted for publication. 
+    6. SDRC/IDEAS Simulation: Finite Element Modeling--User's Guide 
+</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+	<name>Input</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+	<name>Checked</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>

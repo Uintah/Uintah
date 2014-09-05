@@ -1,0 +1,22 @@
+<definition class="ExpandArrowCheckButton" state="normal">
+  <object class="CheckButtonTemplate">
+    <definition class="CheckButtonTemplate::OffObject"> 
+      <object class="Root::Arrow">
+        <var name="color">#000000FF</var>
+        <var name="degrees">0</var>
+        <var name="point_angle">60</var>
+      </object>
+    </definition>
+
+    <definition class="CheckButtonTemplate::OnObject"> 
+      <object class="Box">
+        <var name="color">$Button::color</var>
+        <object class="Root::Arrow">
+          <var name="color">#000000FF</var>
+          <var name="degrees">270</var>
+          <var name="point_angle">60</var>
+        </object>
+      </object>
+    </definition>
+  </object>
+</definition>

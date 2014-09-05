@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Uintah_specification>
+
+  <Meta>
+      <title>RMCRT</title>
+  </Meta>
+
+  <SimulationComponent type="RMCRT_Test" />
+  
+  <!--__________________________________-->
+  <!-- run for 10 timesteps for RT memory -->
+  <!-- and checkpoint testing             -->
+  <Time>
+    <maxTime>       10.0      </maxTime>
+    <initTime>      0.0       </initTime>
+    <delt_min>      0.00001   </delt_min>
+    <delt_max>      1         </delt_max>
+    <max_Timesteps> 1        </max_Timesteps>
+    <timestep_multiplier>  1  </timestep_multiplier>
+  </Time>
+
+  <!--____________________________________________________________________-->
+  <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+  <!--____________________________________________________________________-->
+  <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"   label = "color"     var = "Dirichlet"> 
+                            <value> 0. </value> 
+        </BCType> 
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                            <value> 1. </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
+                           <value> 0. </value>                
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
+                           <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                           <value> 1. </value>
+        </BCType> 
+      </Face>               
+      <Face side = "y+">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
+                            <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
+                           <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
+                           <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+
+
+    <Level>
+      <Box label = "0">                              
+        <lower>      [0,0,0]      </lower>            
+        <upper>      [1, 1, 1]    </upper>            
+        <resolution> [32,32,1]    </resolution>
+        <patches>    [1,1,1]      </patches>
+        <extraCells> [1,1,1]      </extraCells>
+      </Box>                                         
+    </Level>
+    <Level>
+      <Box label = "1">                              
+        <lower>      [0,0,0]      </lower>          
+        <upper>      [1, 1, 1]    </upper>          
+        <resolution> [64,64,1]    </resolution>     
+        <patches>    [2,2,1]      </patches>      
+        <extraCells> [1,1,1]      </extraCells>       
+      </Box>                                         
+    </Level>
+    <Level>
+      <Box label = "2">                              
+        <lower>      [0,0,0]      </lower>          
+        <upper>      [1, 1, 1]    </upper>          
+        <resolution> [128,128,1]  </resolution>     
+        <patches>    [4,4,1]      </patches>      
+        <extraCells> [1,1,1]      </extraCells>       
+      </Box>                                        
+    </Level>
+  </Grid>
+  <!--__________________________________-->
+  <AMR>
+    <useLockStep> true </useLockStep>
+  </AMR>    
+  <!--__________________________________-->
+  <DataArchiver>
+  <filebase>RMCRT_bm1_DO.uda</filebase>
+      <outputTimestepInterval>1</outputTimestepInterval>
+      <save label = "abskg" />
+      <save label = "sigmaT4"/>
+      
+      <save label = "color"          levels="-1"/>
+      <save label = "divQ"           levels="-1"/>
+<!--
+      <save label = "mag_grad_abskg"   levels="-1"/>
+      <save label = "mag_grad_sigmaT4" levels="-1"/>
+      <save label = "flaggedCells"     levels="-1"/> -->
+      
+      <checkpoint cycle = "2" timestepInterval = "2"/>
+  </DataArchiver>
+  
+  
+  <!--__________________________________ -->
+  <RMCRT>
+    <randomSeed>        false      </randomSeed>
+    <Temperature>       64.804     </Temperature>
+    <abskg>             999        </abskg>
+    <NoOfRays>          1          </NoOfRays>
+    <Threshold>         0.05       </Threshold>
+    <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
+    <benchmark>         1          </benchmark>
+
+    <algorithm type='dataOnion'>
+      <halo>           [4,4,4]     </halo>
+           
+      <ROI_extents type='patch_based'/>
+<!--       
+      <ROI_extents type='dynamic'>
+        <abskg_threshold>     0.1    </abskg_threshold>
+      </ROI_extents>
+      
+      <ROI_extents type='fixed'>  currently crashing 
+        <min>          [ 0.25,0.25,0.25 ]    </min>
+        <max>          [ 0.75,0.75,0.75]     </max>
+      </ROI_extents>
+ -->     
+    </algorithm>
+    
+  </RMCRT>
+</Uintah_specification>

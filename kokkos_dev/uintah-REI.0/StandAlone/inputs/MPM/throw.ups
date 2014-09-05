@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!-- @version: -->
+<Uintah_specification>
+
+
+
+   <Meta>
+       <title>Advection test</title>
+   </Meta>    
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            3.00e-4    </maxTime>
+       <initTime>           0.0        </initTime>
+       <delt_min>           2.4e-16    </delt_min>
+       <delt_max>           2.0e-06    </delt_max>
+       <delt_init>          1.0e-07    </delt_init>
+       <timestep_multiplier>0.5          </timestep_multiplier>
+   </Time>
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+    </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>        [0.0,-1.0,0.0]      </lower>
+              <upper>        [2.4, 0.75,2.5e-2]   </upper>
+              <extraCells>   [1,1,1]             </extraCells>
+              <patches>      [1,1,1]             </patches>
+           </Box>
+           <spacing>      [0.025, 0.025,0.025]   </spacing>
+       </Level>
+    </Grid>    
+    <!--____________________________________________________________________-->
+    <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>REI.IMPACT.uda</filebase>
+      <outputInterval>.00001</outputInterval>
+      <compression>gzip</compression>
+      <save label = "g.mass"/>
+      <save label = "p.x"/>
+      <save label = "p.mass"/>
+      <save label = "p.volume"/>
+      <save label = "p.velocity"/>
+      <save label = "p.stress"/>
+      <save label = "p.displacement"/>
+      <save label = "p.particleID"/>
+      <checkpoint cycle = "4" timestepInterval = "500"/>
+   </DataArchiver>
+
+
+    <MPM>
+        <time_integrator>explicit</time_integrator>
+        <nodes8or27>27</nodes8or27>
+        <minimum_particle_mass> 1.0e-10</minimum_particle_mass>
+        <maximum_particle_velocity> 8.0e4</maximum_particle_velocity>
+        <artificial_damping_coeff> 0.0 </artificial_damping_coeff>
+        <artificial_viscosity> false </artificial_viscosity>
+        <accumulate_strain_energy> true </accumulate_strain_energy>
+        <turn_on_adiabatic_heating> true </turn_on_adiabatic_heating>
+        <use_load_curves> false </use_load_curves>
+        <create_new_particles> false </create_new_particles>
+        <erosion algorithm = "none"/>
+    </MPM>
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0.0,0]   </gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+
+
+    <!--____________________________________________________________________-->
+    <!--     Material Properties and Initial Conditions                     -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <MPM>
+         <material name = "Copper">
+            <includeFlowWork>        false           </includeFlowWork>
+               <density>             7830.0          </density>
+               <constitutive_model type = "comp_neo_hook_plastic">
+                  <useModifiedEOS>     true          </useModifiedEOS>
+                  <bulk_modulus>      173.33e9       </bulk_modulus>
+                  <shear_modulus>      80.0e9        </shear_modulus>
+                  <yield_stress>       78.94e7        </yield_stress>
+                  <hardening_modulus>  43.8e5        </hardening_modulus>
+                  <alpha>               0.0          </alpha>
+               </constitutive_model> 
+               <toughness>              10.e6        </toughness>
+               <thermal_conductivity>  386.0         </thermal_conductivity>
+               <specific_heat>         383.0         </specific_heat>
+               <room_temp>             294.0         </room_temp>
+               <melt_temp>            1356.0         </melt_temp>
+               <gamma>                  1.4           </gamma>
+               <geom_object>
+                   <box label = "plate">
+                       <min>      [1.0, 0.35,  -990.0 ]   </min>
+                       <max>      [1.4, 0.55,  1000.0 ]   </max>
+                   </box> 
+                 <res>                 [2,2,2]         </res>
+                 <velocity>            [0.0,-1000.0,0.0]   </velocity>
+                 <temperature>        300.0            </temperature>
+               </geom_object>
+         </material>
+         <material name = "Soil">
+            <includeFlowWork>        false           </includeFlowWork>
+<!--
+               <density>             7830.0          </density>
+               <constitutive_model type = "comp_neo_hook_plastic">
+                  <useModifiedEOS>     true          </useModifiedEOS>
+                  <bulk_modulus>      173.33e9       </bulk_modulus>
+                  <shear_modulus>      80.0e9        </shear_modulus>
+                  <yield_stress>       78.94e7        </yield_stress>
+                  <hardening_modulus>  43.8e5        </hardening_modulus>
+                  <alpha>               0.0          </alpha>
+               </constitutive_model> 
+-->
+               <density>             1700.0          </density>
+               <constitutive_model type = "soil_foam">
+                    <elastic_shear>4.488E+9</elastic_shear>
+                    <a0>1000.0</a0>
+                    <a1>0.0</a1>
+                    <a2>0.00333</a2>
+                    <pc>0.0</pc>
+                    <eps0>0.0</eps0>
+                    <eps1>-4.88E-02</eps1>
+                    <eps2>-9.53E-02</eps2>
+                    <eps3>-1.82E-01</eps3>
+                    <eps4>-2.62E-01</eps4>
+                    <eps5>-3.36E-01</eps5>
+                    <eps6>-4.05E-01</eps6>
+                    <eps7>-4.70E-01</eps7>
+                    <eps8>-5.31E-01</eps8>
+                    <eps9>-5.88E-01</eps9>
+
+
+   <!-- The following are the original pressures and unloading modulus -->
+                    <bulk>5.880E+10</bulk>
+                    <p0>0.0</p0>
+                    <p1>8.02E+07</p1>
+                    <p2>1.57E+08</p2>
+                    <p3>3.69E+08</p3>
+                    <p4>7.71E+08</p4>
+                    <p5>1.50E+09</p5>
+                    <p6>2.68E+09</p6>
+                    <p7>4.45E+09</p7>
+                    <p8>6.95E+09</p8>
+                    <p9>1.03E+10</p9>
+   <!--  Below, I've computed the pressures assuming a constant bulk
+         modulus, which is the unloading modulus                   -->
+<!--
+                    <p0>0.0</p0>
+                    <p1>1.11E+09</p1>
+                    <p2>2.12E+09</p2>
+                    <p3>3.88E+09</p3>
+                    <p4>5.37E+09</p4>
+                    <p5>6.65E+09</p5>
+                    <p6>7.76E+09</p6>
+                    <p7>8.74E+09</p7>
+                    <p8>9.60E+09</p8>
+                    <p9>1.03E+10</p9>
+-->
+   <!--  Below, I've computed the pressures assuming a constant bulk
+         modulus, which is the modulus from p0/eps0 to p1/eps1   -->
+<!--
+                    <bulk>1.68E+9</bulk>
+                    <p0>0.0</p0>
+                    <p1>8.02E+07</p1>
+                    <p2>1.53E+08</p2>
+                    <p3>2.79E+08</p3>
+                    <p4>3.87E+08</p4>
+                    <p5>4.79E+08</p5>
+                    <p6>5.59E+08</p6>
+                    <p7>6.30E+08</p7>
+                    <p8>6.92E+08</p8>
+                    <p9>7.46E+08</p9>
+-->
+   <!--  This is the original pressure data and unloading modulus  -->
+<!--
+                    <p0>101325. </p0>
+                    <p1>8.02E+07</p1>
+                    <p2>1.57E+08</p2>
+                    <p3>3.69E+08</p3>
+                    <p4>7.71E+08</p4>
+                    <p5>1.50E+09</p5>
+                    <p6>2.68E+09</p6>
+                    <p7>4.45E+09</p7>
+                    <p8>6.95E+09</p8>
+                    <p9>1.03E+10</p9>
+-->
+                </constitutive_model>
+                <thermal_conductivity>1.0</thermal_conductivity>
+                <specific_heat>5</specific_heat>
+                <geom_object>
+                    <box label = "below_ground_level">
+                        <min>           [-990.0, -3.0,  -990.0 ]   </min>
+                        <max>           [1000.0,  0.24, 1000.0 ]   </max>
+                    </box>
+                 <res>                 [2,2,2]         </res>
+                 <velocity>            [0.0,0.0,0.0]   </velocity>
+                 <temperature>        300.0            </temperature>
+                </geom_object>
+         </material>
+         <contact>
+           <type>friction</type>
+           <vel_fields>[0,1]</vel_fields>
+           <mu>0.1</mu>
+         </contact>
+       </MPM>
+    </MaterialProperties>
+
+
+    <PhysicalBC>
+      <MPM>
+      </MPM>
+    </PhysicalBC>
+
+
+
+</Uintah_specification>

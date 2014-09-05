@@ -1,0 +1,51 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+<html>
+<head>
+<script language="JavaScript">
+var treetop="";
+var path = location.pathname;
+while (path.substr(path.lastIndexOf("/")+1) != "doc") {
+treetop += "../";
+path = path.substr(0, path.lastIndexOf("/"));
+document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='stylesheet' type='text/css'>")
+}
+</script>
+<title>Developer Documentation</title>
+<!-- Changed by: Ted Dustman, 20-Jun-2002 -->
+</head>
+<body>
+<!-- ******************** DOCUMENTATION HEADER ********************* -->
+<script language="JavaScript">
+document.write('<script language="JavaScript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
+</script>
+<!-- ****************** END DOCUMENTATION HEADER ******************* -->
+
+<p class="title">Developer Documentation</p>
+<hr size="1">
+<p class="firstpara">
+The <a href="Guide/index.html"><b><i>Developer's Guide</i></b></a> contains
+information related to writing
+SCIRun modules, Data Types, and other code.  Topics such as dataflow programming, memory managment, dynamic compilation, thread
+managment, data IO are
+addressed. 
+</p>
+
+<p class="nextpara">
+The <a href="CodeViews/html/index.html"><b><i>Code Views</i></b></a>
+page is a reference to the organization of SCIRun source code and will help
+you navigate the source code.  
+</p>
+
+<p class="nextpara"> Module references can be located from the <a
+href="Modules/index.html"><b><i>Module Reference</i></b></a> page.  The
+purpose and use of each module is described by its module reference page.
+</p>
+
+<!-- ******************** DOCUMENTATION FOOTER ********************* -->
+<script language="JavaScript">
+document.write('<script language="JavaScript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\/script>');
+</script>
+<!-- ****************** END DOCUMENTATION FOOTER ******************* -->
+
+</body>
+</html>

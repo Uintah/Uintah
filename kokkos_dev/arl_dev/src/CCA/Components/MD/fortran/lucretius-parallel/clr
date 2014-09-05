@@ -1,0 +1,211 @@
+#!/bin/bash
+inside_files=
+working_dirs="./runs/ ./runs/z_atoms/ ./runs/z_mols/ ./runs/z_atoms/ ./runs/mols/"
+AUTHOR="Jenel Vatamau"
+VERSION="0.55.9.1.b7"
+
+helper()
+{
+echo HELP
+echo This script will clean the directory ./runs
+echo Options:
+echo -h help
+echo -all delete all 
+echo -c   clean everithing except for the initial ./runs/config file
+echo -reset save the last config and restart its counter while deleting the others
+return
+}
+len_string()
+{
+len=`echo "$1" | wc -c`
+len=`expr $len - 1`
+printf $len
+}
+maxval()
+{
+local max j i size arrval
+size=$1 ; shift
+max=-999999999
+i=0
+while [ $i -lt $size ]
+do
+ arrval="$1"
+ if [ $max -le $arrval ]
+ then
+  max=$arrval
+ fi
+ shift
+ let i=i+1
+done
+mvvv=$max
+return $max
+}
+get_inside_files()
+{
+inside_files="$(find ./runs/z_atoms/ -type f ) $(find ./runs/z_mols/ -type f ) \
+  $(find ./runs/atoms/ -type f ) $( find ./runs/mols/ -type f )"
+return
+}
+
+clean_but_keep_initial_config()
+{
+local files
+get_inside_files
+files="$(find ./runs -maxdepth 1 -type f -regex '.*/runs/.*_[0-9]+') $inside_files"
+rm -f $files
+rm -f ./runs/continuing_job_last_index
+rm -f ./runs/HISTORY_*
+rm -f ./runs/short_sysdef*.f90
+rm -f ./runs/*.final
+return
+}
+
+reset()
+{
+local cfg_files i1 i11 i j max1 max2 a2 a3  OK1 OK2 in_conti vv1 vv2 nf ch line ch iline
+declare -a ind21
+declare -a ind1
+declare -a ind2
+local ind1 ind2 ind21
+cfg_files=$(find ./runs -maxdepth 1 -type f -regex '.*/runs/.*config_[0-9]+_[0-9]+')
+echo cfg_files $cfg_files
+i1=0
+i11=0
+for i in $cfg_files
+do 
+  ((i1++))
+  a1=${i#./runs/config*_}
+  a11=`expr $a1 : '\([0-9]*_[0-9][0-9][0-9][0-9]\)' `
+  a2=${a1#[0-9]*_}
+#  echo $i1 $a1 $a2 "a11:" $a11 "\\\\\\"
+  len=$(len_string $a11)
+  echo "len " $len
+  if [ $len -ne 0 ]; then
+   ind2[$i11]=$a2
+   a3=${a1%_[0-9][0-9][0-9][0-9]}
+   ind1[$i11]=$a3
+   ((i11++))
+  fi
+done
+
+ for j in $(seq 0 $((i11-1)))  
+ do  
+ echo $j ${ind2[$j]}   ${ind1[$j]}
+ done 
+
+
+maxval `echo ${#ind1[@]} ${ind1[@]}` ; max1=$mvvv #max1=$? do not work ; that is quite interesting
+
+ i1=0
+ for j in $(seq 0 $((i11-1)))
+ do
+   if [ ${ind1[$j]} -eq $max1 ]
+   then
+     ind21[$i1]=${ind2[$j]}
+     ((i1++))
+   fi
+ done
+
+maxval `echo ${#ind21[@]} ${ind21[@]}` ; max2=$mvvv  # transfering via mvvv ; not sure $? does not work.....
+
+in_conti=` egrep -v '^#|^$' ./runs/continuing_job_last_index`
+i1=0
+for i in $in_conti
+do
+  ((i1++))
+   if [ $i1 -eq 1 ]; then
+   vv1=$i
+     if [ $max1 -eq $i ]; then
+       OK1=1
+     else
+       OK1=0
+     fi
+   fi
+   if [ $i1 -eq 2 ]; then
+   vv2=$i
+     if [ $max2 -eq $i ]; then
+       OK2=1
+     else
+       OK2=0
+     fi
+   fi
+done
+
+if [ $OK1 -ne 1 ]; then
+echo "First Indicies from ./runs/continuing_job_last_index do not correspond with those from config"  $vv1  $max1
+echo "The script will do nothing"
+exit 0
+fi
+if [ $OK2 -ne 1 ]; then
+echo "Second Indicies from ./runs/continuing_job_last_index do not correspond with those from config"  $vv2  $max2
+echo "The script will do nothing"
+exit 0
+fi
+
+ch=""
+ len2=$(len_string "$max2") 
+ for j in $(seq $((len2)) 3)
+ do
+  ch=$ch"0"
+ done 
+nf="./runs/config_""$max1""_""$ch""$max2"
+echo nf $nf 
+
+cp "$nf" ./runs/config
+line=`grep -n INDEX_CONTINUE_JOB ./runs/config`
+ch=${line%:*}
+iline=`expr $ch + 2 `
+echo iline $iline
+cp ./runs/config ./runs/config.saved
+sed -n 1,`echo $ch`p ./runs/config  > d2_temp343123
+echo ' 0 0 0 ' >> d2_temp343123
+sed -n `echo $iline`,`echo $`p ./runs/config  >> d2_temp343123
+echo ' 0 0 0 ' > ./runs/continuing_job_last_index
+mv d2_temp343123 ./runs/config
+ 
+clean_but_keep_initial_config
+rm -f ./runs/continuing_job_last_index
+rm -f ./runs/HISTORY_*
+rm -f ./runs/short_sysdef*.f90
+rm -f ./runs/*final
+
+return
+}
+
+delete_all()
+{
+local time_limit var files
+time_limit=5
+echo "Do you really wish to delete the content of " $working_dirs directories?
+echo "Choose between Yes or No"
+read -t $time_limit var <&1
+if [ -z $var ]; then
+ echo " ... Too much time to think if use this option....therefore you are uncertain...in this case the script will just stop \
+      without executing anything..."
+
+else
+ if [ "$var" == "Yes" ]; then
+   get_inside_files
+   files="$(find ./runs -maxdepth 1 -type f -regex '.*/runs/.*') $inside_files"
+   rm -f $files
+ else
+   echo Option= $var  Nothing to be done.
+ fi
+fi
+}
+
+if [ $# -ne 1 ]
+then
+echo " Ussage : ./clean followed by 1 option only "
+helper
+exit 0
+fi 
+
+case $1 in
+ -h) helper;;
+ -all) delete_all;;
+ -reset) reset;;
+ -c)     clean_but_keep_initial_config;;
+ *) echo $1 "Incorect option "; helper;;
+esac
+

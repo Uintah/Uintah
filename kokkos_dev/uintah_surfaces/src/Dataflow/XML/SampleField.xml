@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="SampleField" category="FieldsCreate">
+  <overview>
+    <authors>
+      <author>Chris Moulding</author>
+    </authors>
+    <summary>
+      <p>
+        SampleField generates samples from any type of input field and
+        outputs the samples as a PointCloudField field.
+      </p>
+    </summary>
+    <description>
+      <p>
+        SampleField generates samples from any type of input field and outputs
+        the samples as a PointCloudField field.  The samples can be generated
+        randomly or user selected via a 3D widget.  
+      </p>
+      <p>
+        The random sampling can be weighted by importance (determined by
+        the data value of the sample) or left unweighted.  The random sampling
+        can also be limited to the selection of node points, rather than points
+        from the interior of the fields elements, by clamping the samples to
+        nodes. 
+      </p>
+      <p>
+        The "uniform" distributions are a uniformly random function over the
+        spacial extents of the field (i.e. the elements are weighted by their
+        volume or area), whereas the "scattered" distributions are a uniformly
+        random function over the elements only (i.e. all elements have the same
+        weight).  The "importance weighted" distributions multiply the existing
+        weight of a sample by the interpolated data value associated with it,
+        while the "not weighted" distributions leave the existing weight of 
+        a sample unchanged.
+      </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Field to Sample</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Samples</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Sampling Widget</name>
+	<datatype>SCIRun::Geometry</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+      <p>
+        The UI has two main tabs which determine how the samples will be
+        generated: Widget and Random.
+      </p>
+    </description>
+    <parameter>
+      <widget>radiobuttons</widget>
+      <datatype>enum</datatype>
+      <label>Distribution</label>
+      <description>
+        <p>
+          The selected radio button determines which probability distribution 
+          function is used to generate random samples.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>entry</widget>
+      <datatype>integer</datatype>
+      <label>Seed value for RNG</label>
+      <description>
+        <p>
+          The number indicated is used to seed the random number generator.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>entry</widget>
+      <datatype>integer</datatype>
+      <label>number of seeds</label>
+      <description>
+        <p>
+          SampleField will generate the number of samples indicated here.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>checkbox</widget>
+      <datatype>boolean</datatype>
+      <label>Clamp to nodes</label>
+      <description>
+        <p>
+          Checking this box will force SampleField to select node points from
+          the input field as samples, rather than any point from the interior
+          of the fields elements.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>radiobuttons</widget>
+      <datatype>enum</datatype>
+      <label>Widget type</label>
+      <description>
+        <p>
+          The selected radio button determines the type of 3D widget used
+          to select samples from the field.  Currently only Rake is 
+          supported.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>entry</widget>
+      <datatype>integer</datatype>
+      <label>Maximum number of samples</label>
+      <description>
+        <p>
+          The number of samples selected by the chosen widget is determined
+          by the collar slider(s) on the widget.  The minimum number of 
+          samples is usually zero, sometimes higher.  The maximum number is
+          set here.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>button</widget>
+      <datatype>callback function</datatype>
+      <label>Execute</label>
+      <description>
+        <p>
+          This button forces the SampleField module (and possibly downstream
+          modules) to execute.
+        </p>
+      </description>
+    </parameter>
+    <img>../Modules/Fields/doc/SampleFieldGUI.jpg</img>
+  </gui>
+  <testing>
+  </testing>
+<nets>
+<net id="SampleField-rakestreamlines">
+<title>SampleField-rakestreamlines Regression Test</title>
+
+<p>Use the rake widget from the SampleField module to select some seed
+points for streamlines in a vector field.  The vector field is created
+by using the gradients from the sphere-voltage model.  All of the
+streamlines should pass through the rake widget at regular intervals.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/SampleField-rakestreamlines.net.</p>
+
+</net>
+<net id="SampleField-weightedrandom">
+<title>SampleField-weightedrandom Regression Test</title>
+
+<p>Use the SampleField module to resample a point cloud field onto the
+sphere-voltage model.  In this example the density of the point cloud
+is determined by the square of the voltage magnitude in the original
+model.  This gives us a nice way to visualize the voltage magnitude of
+the original field.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/SampleField-weightedrandom.net.</p>
+
+</net>
+</nets>
+</component>
+

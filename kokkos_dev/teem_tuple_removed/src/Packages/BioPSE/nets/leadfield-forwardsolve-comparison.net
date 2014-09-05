@@ -1,0 +1,145 @@
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+#
+
+# SCI Network 1.0
+
+set results [sourceSettingsFile]
+
+if { $results == "failed" } {
+
+    ::netedit scheduleok
+    return 
+
+} else {
+
+    set DATADIR [lindex $results 0]
+    set DATASET [lindex $results 1]
+}
+
+source $DATADIR/$DATASET/$DATASET.settings
+
+::netedit dontschedule
+
+global userName
+set userName "dmw"
+
+global runDate
+set runDate " Wed  May 23 2001"
+
+global runTime
+set runTime " 14:50:24"
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 220 146]
+set m1 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 218 238]
+set m2 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 443 151]
+set m3 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 266 7]
+set m4 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 24 85]
+set m5 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 425 235]
+set m6 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 380 574]
+set m7 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 461 15]
+set m8 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 461 91]
+set m9 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 656 101]
+set m10 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 656 170]
+set m11 [addModuleAtPosition "SCIRun" "Render" "Viewer" 638 252]
+set m12 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 425 378]
+set m13 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 551 299]
+set m14 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 407 437]
+set m15 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 407 299]
+set m16 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 407 496]
+set m17 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 235 299]
+set m18 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMVoltageSource" 6 147]
+
+addConnection $m0 0 $m1 0
+addConnection $m2 1 $m1 1
+addConnection $m3 0 $m2 0
+addConnection $m3 0 $m4 0
+addConnection $m2 0 $m5 1
+addConnection $m7 0 $m8 0
+addConnection $m8 0 $m2 1
+addConnection $m9 0 $m10 0
+addConnection $m3 0 $m9 0
+addConnection $m8 1 $m11 0
+addConnection $m10 0 $m11 1
+addConnection $m1 0 $m6 0
+addConnection $m13 0 $m12 1
+addConnection $m12 0 $m14 1
+addConnection $m3 0 $m15 0
+addConnection $m5 0 $m15 1
+addConnection $m15 0 $m14 0
+addConnection $m14 0 $m16 0
+addConnection $m16 1 $m6 1
+addConnection $m17 0 $m12 0
+addConnection $m4 0 $m18 1
+addConnection $m3 0 $m18 0
+addConnection $m18 0 $m5 0
+
+set $m0-filename $DATADIR/$DATASET/generated/$DATASET-leadfield.mat
+set $m1-row 0
+set $m1-row_max 148
+set $m1-col 0
+set $m1-col_max 18380
+set $m1-row_or_col {col}
+set $m1-animate 0
+set $m3-filename $DATADIR/$DATASET/$DATASET-mesh.tvt.fld
+set $m4-UseCondTCL 1
+set $m4-BCFlag {GroundZero}
+set $m5-target_error 0.000001
+set $m5-orig_error 1.21558
+set $m5-current_error {9.76383e-07}
+set $m5-method {Conjugate Gradient & Precond. (SCI)}
+set $m5-precond {jacobi}
+set $m5-iteration 119
+set $m5-maxiter 2000
+set $m5-use_previous_soln 1
+set $m5-emit_partial 0
+set $m5-np 1
+set $m6-haveUI 1
+set $m6-methodTCL {CCinv}
+set $m6-pTCL {1}
+set $m7-filename $DATADIR/$DATASET/$DATASET-dipole.pcv.fld
+set $m8-widgetSizeGui_ [expr 0.05 * ${global-scale}]
+set $m8-scaleModeGui_ {normalize}
+set $m8-showLastVecGui_ 1
+set $m8-showLinesGui_ 0
+set $m10-nodes-on 0
+set $m10-edges-on 1
+set $m10-faces-on 0
+set $m10-node_display_type {Spheres}
+set $m10-edge_display_type {Lines}
+set $m10-edge_scale 1
+set $m10-resolution 10
+$m11 initialize_ui
+set $m11-ViewWindow_0-view-eyep-x ${view-eyep-x}
+set $m11-ViewWindow_0-view-eyep-y ${view-eyep-y}
+set $m11-ViewWindow_0-view-eyep-z ${view-eyep-z}
+set $m11-ViewWindow_0-view-lookat-x ${view-lookat-x}
+set $m11-ViewWindow_0-view-lookat-y ${view-lookat-y}
+set $m11-ViewWindow_0-view-lookat-z ${view-lookat-z}
+set $m11-ViewWindow_0-view-up-x ${view-up-x}
+set $m11-ViewWindow_0-view-up-y ${view-up-y}
+set $m11-ViewWindow_0-view-up-z ${view-up-z}
+set $m11-ViewWindow_0-view-fov ${view-fov}
+set $m11-ViewWindow_0-specular-scale {0.4}
+set $m12-use_interp {0}
+set $m13-filename $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld
+set $m17-filename $DATADIR/$DATASET/$DATASET-voltage.tvd.fld
+$m6 initialize_ui
+set $m18-notes {}
+set $m18-show_status {1}
+set $m18-bcFlag {GroundZero}
+
+::netedit scheduleok

@@ -1,0 +1,7 @@
+class Matrix
+{
+	double getElement(in int row, in int col);
+	void setElement(in int row, in int col, in double val);
+	int numOfRows();
+	int numOfCols();
+}

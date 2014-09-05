@@ -1,0 +1,19 @@
+/* This program sets intraframe decoding for the sequence regardless of */
+/* type of picture frame.  It first checks the picture type, and sets */
+/* the macroblock type accordingly */
+open 0
+  rcl PTYPE
+  1 GT 
+  IFG NEXT1:
+  0 sto MTYPE            /* Picture type intra */
+  exit
+NEXT1:
+  rcl PTYPE 
+  2 GT
+  IFG NEXT2:
+  3 sto MTYPE            /* Picture type predicted */
+   exit
+NEXT2:
+  6 sto MTYPE            /* Picture type interpolated */
+exit
+close

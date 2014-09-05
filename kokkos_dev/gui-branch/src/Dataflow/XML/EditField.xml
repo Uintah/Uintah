@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/component.dtd">
+<?xml-stylesheet href="../../../doc/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+ 
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+ 
+  The Original Source Code is SCIRun, released March 12, 2001.
+ 
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
+  University of Utah. All Rights Reserved.
+-->
+
+<component name="EditField" category="Fields">
+  <overview>
+    <authors>
+      <author>Chris Moulding</author>
+    </authors>
+    <summary>
+      <p>
+        EditField is used to change some attributes of fields.
+      </p>
+    </summary>
+    <description>
+      <p>
+        EditField can change certain attributes of fields including
+        repositioning the field in object space, rescaling the data
+        values, changing the type of the data stored at the elements
+        and change/add properties such as the name of the field. 
+      </p>
+      <p>
+        EditField creates an exact copy of the input field, edits the
+        copy as indicated by the various UI widgets, then sends the
+        copy to the output port. 
+      </p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Input Field</name>
+        <datatype>SCIRun::Field</datatype>
+	<description>
+          <p>
+            The field to be edited.
+          </p>
+        </description>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Output Field</name>
+        <datatype>SCIRun::Field</datatype>
+        <description>
+          <p>
+            The edited field.
+          </p>
+        </description>
+      </port>
+      <port>
+        <name>Transformation Widget</name>
+        <datatype>SCIRun::Geometry</datatype>
+        <description>
+          <p>
+            A box widget used to translate and/or resize the field.
+          </p>
+        </description>
+      </port>
+      <port>
+        <name>Transformation Matrix</name>
+        <datatype>SCIRun::Matrix</datatype>
+        <description>
+          <p>
+            The matrix that represents the transformations made by the widget.
+          </p>
+        </description>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+      <p>
+        The EditField UI consists of two major sections: input field
+        attributes and output field attributes.
+      </p>
+      <p>
+        The input field attributes describe the field on the input
+        port, and the output field attributes describe the field to be
+        sent to the output port.
+      </p>
+      <p>
+        When EditField is included in a network that is saved to disk,
+        only the output field attributes are saved.  When such a
+        network is later loaded from disk and executed, the field that
+        is sent to EditField must be type compatible with the contents
+        of the saved UI elements.  If the field is not type compatible,
+        EditField will return NULL instead of an edited field.
+      </p>
+    </description>
+    <img>../Modules/Fields/doc/EditFieldUI.jpg</img>
+    <parameter>
+      <widget>Entry</widget>
+      <label>Name</label>
+      <description>
+        <p>
+          The "name" property of the field.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>Optionmenu</widget>
+      <label>Typename</label>
+      <description>
+        <p>
+          The field's datatype.  Includes information about the type
+          of mesh (TetVol, LatticeVol, TriSurf, etc.) as well as the
+          type of the data (unsigned char, double, Vector, Tensor, etc.).
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>Entry</widget>
+      <label>BBox min and BBox max</label>
+      <description>
+        <p>
+          The 6 entries describe two 3D points, which are the min and
+          max points of the axis aligned bounding box of the field.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>Entry</widget>
+      <label>Data min,max</label>
+      <description>
+        <p>
+          The 2 entries are the min and max data values present in the
+          field.  It applies only if the data is scalar.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>Optionmenu</widget>
+      <label>Data at</label>
+      <description>
+        <p>
+          The location where data "lives" within the field.  Can be
+          Cell (data lives at the center of the cells), Node (data
+          lives at the nodes) or None (no data present, just a mesh).
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>Text</widget>
+      <label># nodes</label>
+      <description>
+        <p>
+          The number of nodes present in the field.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>Text</widget>
+      <label># Elems</label>
+      <description>
+        <p>
+          The number of elements present in the field.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>Checkboxes</widget>
+      <label></label>
+      <description>
+        <p>
+          Each of the checkboxes in the output field attributes
+          section controls whether that attribute will be included as
+          part of the edited output field.  Unchecked means that the
+          associated attribute will not be edited (even if the values
+          are different from the input field attributes), and checked
+          means that it will be edited.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>Button</widget>
+      <label>Copy input to output</label>
+      <description>
+        <p>
+          Click this button to copy the values from the input field
+          attributes section to the output field attributes section.
+          Doing this will fill the typename option menu with
+          compatible types.
+        </p>
+      </description>
+    </parameter>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

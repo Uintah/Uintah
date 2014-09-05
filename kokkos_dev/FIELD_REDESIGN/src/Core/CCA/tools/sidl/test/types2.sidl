@@ -1,0 +1,23 @@
+
+interface a {
+};
+
+interface b {
+};
+
+package x {
+    interface a extends b {
+    };
+    package y {
+	interface a {
+	};
+	interface b extends a {
+	};
+	interface c extends .a {
+	};
+	interface d extends x.a {
+	};
+	interface e extends x.y.a {
+	};
+    };
+};

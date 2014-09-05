@@ -1,0 +1,301 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<chapter id="thirdparty">
+<title>Thirdparty Software Installation and Build Information</title>
+
+<section>
+<para>
+This chapter may help expedite installation of the
+required third party software. However, this information is not
+intended to replace the installation instructions that come with
+the software, but to supplement them. Please read the install
+instructions for each software distribution before attempting to
+use this information. 
+</para> 
+</section>
+
+<section>
+<title>Prerequisites</title>
+<para>
+Use of this document requires experience with the SGI Irix 
+operating system and/or the Linux operating system. Knowledge of
+file systems, programming in C/C++, building software from
+tarball distributions and shell scripting will be useful, if not
+required. The installation or upgrade of core system components
+(such as the OS and compilers) may be required. As such, a
+system administrator's assistance may be warranted. 
+</para> 
+
+<para>
+This information does not apply to the installation and upgrade of
+the OS and build tools, as those topics are quite involved.
+</para>
+</section>
+
+<section>
+<title>Automatic Installation of All Thirdparty Software</title>
+
+<para>
+Because of many bugs and &quot;gotchas&quot; in the thirdparty
+installation process, the easiest and most dependable means of
+installation is the SCI Institute's thirdparty install
+script.
+</para> 
+
+<para>
+However, users may conduct a manual installation by following
+the instructions on this page found in <xref linkend="miorts"/>
+</para> 
+
+<para>
+The automatic install script comes with all the necessary
+thirdparty software, and does not require additional
+downloads. 
+</para> 
+
+<para>
+To use the automatic install script do the following: 
+</para>
+
+<orderedlist>
+<listitem>
+<para>
+Download the install script tar ball from <ulink url="http://software.sci.utah.edu/software/download.xml?dir=0">here</ulink>.
+</para>
+</listitem>
+<listitem>
+<para>
+Put the tar ball into a directory of your choosing.
+</para>
+
+<para>
+Unzip and untar the tar ball:
+</para>
+
+<literallayout>
+gunzip Thirdparty_install.<replaceable>x.x.x</replaceable>.tar.gz
+tar xvf Thirdparty_install.<replaceable>x.x.x</replaceable>.tar
+cd Thirdparty_install.<replaceable>x.x.x</replaceable>
+</literallayout>
+</listitem>
+<listitem>
+<para>
+	The install script is designed to help organize multiple installations for different architectures or compilers. 
+	
+Run the install script by typing:
+</para>
+
+<literallayout>
+python install <replaceable>base-path</replaceable> <replaceable>architecture</replaceable> <replaceable>compiler bit-size</replaceable>
+</literallayout>
+
+<para>
+Like this for: 32 bit binaries,  on Linux,  with a gcc 3.0.4 compiler, installed to /usr/local/SCIRun_Thirdparty :
+</para>
+
+<literallayout>
+python install /usr/local/SCIRun_Thirdparty Linux gcc-3.0.4 32
+</literallayout>
+
+<para>
+Your installation would then be under /usr/local/SCIRun_Thirdparty/Linux/gcc-3.0.4-32bit
+</para>
+
+<para>
+You can also specify a faster parallel build by giving an
+integer which provides the "number of jobs" argument for GNU make
+For example,to build 32 bit binaries and libraries using 12 jobs,
+type the following: 
+</para> 
+
+<literallayout>
+python install 32 12
+</literallayout>
+
+<para>
+When the install script finishes, it will display a message
+regarding the <option>--with-thirdparty</option> SCIRun configure option.
+Cut and paste that option when running the configure command 
+for SCIRun. 
+</para>
+
+<para>
+The install script requires Python version 1.5.2 or greater
+</para>
+</listitem>
+</orderedlist>
+</section>
+
+<section id="miorts">
+<title>Manual Installation of Required Thirdparty Software</title>
+
+<section>
+<title>Recommended Build Tools</title>
+
+<para>
+You should use the same build tools to build the third party
+software as is required for building SCIRun itself.
+</para>
+</section>
+
+<section>
+<title>Recommended Installation Location</title>
+
+<para>
+SCIRun uses the latest versions of all the software that it
+requires, and can be configured to use those versions regardless
+of where that software is installed, whether it is all
+installed in the same location or not.  However, if the
+target install machine requires older versions of the same
+software (for other programs) then it is recommended that all
+the required third party software be installed into a
+centralized and out-of-the-way directory rather than in a
+directory already occupied by older versions of the third
+party software. 
+</para>
+
+<para>
+That said, if the target install machine only needs the
+latest versions of software, or if it doesn't matter one way
+or the other, then it is perfectly safe to install the
+required thirdparty software into any directory including
+directories where older versions are already installed.
+</para>
+
+<para>
+An example of a centralized and out-of-the-way location would be:
+/usr/local/SCIRun_Thirdparty_32 such that after installation
+the contents of that directory would look like this (assuming that
+the tarballs were unzipped and untarred in the /src directory inside
+/usr/local/SCIRun_Thirdparty_32):
+</para>
+
+<literallayout>
+/usr/local/SCIRun_Thirdparty_32/bin
+/usr/local/SCIRun_Thirdparty_32/include
+/usr/local/SCIRun_Thirdparty_32/lib
+/usr/local/SCIRun_Thirdparty_32/man 
+/usr/local/SCIRun_Thirdparty_32/src/blt2.4u
+/usr/local/SCIRun_Thirdparty_32/src/itcl3.1.0
+/usr/local/SCIRun_Thirdparty_32/src/tcl8.3.2
+/usr/local/SCIRun_Thirdparty_32/src/tk8.3.2
+/usr/local/SCIRun_Thirdparty_32/src/xerces-c-src1_5_1
+</literallayout>
+</section>
+
+<section>
+<title>Recommended Configure Options</title>
+
+
+<note>
+<replaceable>INST_DIR</replaceable> 
+represents
+the chosen installation directory for the indicated software
+distribution.  <replaceable>INST_DIR</replaceable>
+would be "/usr/local/SCIRun_Thirdparty_32" for the example given
+above.  Note that the <replaceable>INST_DIR</replaceable>
+does not have to be the same for each distribution, but can be if it
+is desired as is demonstrated in the example.
+</note>
+
+<para>
+<emphasis>For Tcl, Tk and [incr Tcl/Tk]</emphasis>
+</para>
+
+<literallayout>
+configure --prefix=<replaceable>INST_DIR</replaceable>
+</literallayout>
+
+<para>
+<emphasis>For BLT</emphasis>
+</para>
+
+<para>
+On SGI machines:
+</para>
+
+<literallayout>
+configure --with-cc=cc --prefix=<replaceable>INST_DIR</replaceable>
+</literallayout>
+
+<para>
+On Linux machines:
+</para>
+
+<literallayout>
+configure --prefix=<replaceable>INST_DIR</replaceable>
+</literallayout>
+
+<para>
+<emphasis>For Xerces-C++</emphasis>
+</para>
+
+<para>
+First, set the indicated environment variables listed below,
+then type: 
+</para>
+
+<literallayout>
+configure --prefix=<replaceable>INST_DIR</replaceable>
+</literallayout>
+
+<para>
+On SGI machines:
+</para>
+
+<programlisting>
+XERCESCROOT = <replaceable>XERCES_C_ROOT</replaceable>
+TRANSCODER = NATIVE
+MESSAGELOADER = INMEM
+NETACCESSOR = FileOnly
+CC = cc
+CXX = CC 
+LDFLAGS = " -n32 "
+LIBS = " -n32 "
+CXXFLAGS = "-O -DXML_USE_NATIVE_TRANSCODER -DXML_USE_INMEM_MESSAGELOADER \
+-n32 -DAPP_NO_THREADS"
+CFLAGS = "-O -DXML_USE_NATIVE_TRANSCODER -DXML_USE_INMEM_MESSAGELOADER \
+-n32 -DAPP_NO_THREADS"
+</programlisting>
+
+<para>
+On Linux machines:
+</para>
+
+<programlisting>
+XERCESCROOT = <replaceable>XERCES_C_ROOT</replaceable>
+TRANSCODER = NATIVE
+MESSAGELOADER = INMEM
+NETACCESSOR = FileOnly
+CC = gcc
+CXX = g++ 
+LIBS = " -lpthread "
+CXXFLAGS = "-O -DXML_USE_NATIVE_TRANSCODER -DXML_USE_INMEM_MESSAGELOADER"
+CFLAGS = "-O -DXML_USE_NATIVE_TRANSCODER -DXML_USE_INMEM_MESSAGELOADER"
+</programlisting>
+
+<para>
+Where <replaceable>XERCES_C_ROOT</replaceable> is the root of the unzipped
+and untarred xerces 1.5.1 distribution.  For the example
+given above, <replaceable>XERCES_C_ROOT</replaceable> would be
+"/usr/local/SCIRun_Thirdparty_32/src/xerces-c-src1_5_1". 
+</para>
+</section>
+</section>
+</chapter>
+

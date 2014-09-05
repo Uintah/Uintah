@@ -1,0 +1,302 @@
+.TH MPEG 1 "14 June 1993"
+.UC 4
+.SH NAME
+mpeg \- MPEG compression and decompression
+.SH SYNOPSIS
+.B
+mpeg [-d] [-NTSC] [-CIF] [-QCIF] [-PF] [-NPS] [-MBPS mbps] [-UTC]
+.B
+     [-XING] [-DMVB] [-MVNT]
+.B
+     [-a StartNumber] [-b EndNumber]
+.B
+     [-h HorizontalSize] [-v VerticalSize]
+.B
+     [-f FrameInterval] [-g GroupInterval]
+.B
+     [-4] [-c] [-i MCSearchLimit] [-o] [-p PictureRate]
+.B
+     [-q Quantization] [-r Target Rate]
+.B
+     [-s StreamFile]  [-x Target Filesize] [-y]
+.B
+     [-z ComponentFileSuffix i]
+.B
+     ComponentFilePrefix1 [ComponentFilePrefix2 ComponentFilePrefix3]
+.br
+.SH DESCRIPTION
+.I mpeg
+is a multimedia image sequence compression/decompression
+program that performs MPEG encoding and decoding.
+.PP
+.SH OPTIONS
+.TP
+.B -NTSC
+indicates that the source frame size for the Luminance component is
+352x240 and for the Chrominance components is 176x120. This is the
+default size.
+.TP
+.B -CIF
+indicates that the source frame size for the Luminance component is
+352x288 and for the Chrominance components is 176x144.
+.TP
+.B -QCIF
+indicates that the source frame size for the Luminance component is
+176x144 and for the Chrominance components is 88x72.
+.TP
+.B -PF
+indicates that the component sizes specified by 
+.B -h
+and
+.B -v
+are not multiples of 16 and furthermore that the input files (or output
+files) should be exactly that specified by the component size
+.B -h
+and
+.B -v
+(or as read from the compressed stream).
+Otherwise the input and output files will be the component size
+rounded up to a multiple of 16 in each dimension.
+.TP
+.B -NPS
+The NPS option allows the encoder to encode without having the
+restriction that the last macroblock in a slice cannot be skipped.
+For coding purposes, the first macroblock in a slice must be coded,
+although the decoder will probably handle that case as well.
+.TP
+.B -MBPS
+This specifies the macroblocks per slice.  If left unspecified then
+the number of macroblocks per slice is the number of macroblocks on
+one row of the image.
+.TP
+.B -UTC
+Forces the frame number of the image to match
+the Group-of-Pictures time code.  Only useful for the decoder.
+.TP
+.B -XING
+enables XING compatible encoding for intra-frame only files
+for the XING decoders.  May not be robust, but eventually XING
+encoders and decoders will become more MPEG compatible. This specifies
+160x120 encoding (apparently the defacto) for XING decoders.  If you
+wish to overide the 160x120 encoding for XING image format, use the
+.B -h
+and 
+.B -v
+options after the
+.B -XING
+option.  By default
+.B -PF
+is always selected with 
+-XING
+option.
+.TP
+.B -DMVB
+denotes Dynamic Motion Vector Bounding.
+Should reduce the overall bits spent in the motion vectors if set.
+Generally doesn't do that much for the default
+settings, but changing the search limit will automatically enable the
+dynamic motion vector bounding feature.
+.TP
+.B -MVNT
+disables the motion vector telescoping.  Generally telescoping is
+a big gain when the search window is small, though if the search
+window grows large, telescoping may not be beneficial.
+.TP
+.B -a
+denotes the following value to be the start of the filename index
+[inclusive]. Defaults to 0.
+.TP
+.B -b
+denotes the following value to be the end of the filename index
+[inclusive]. Defaults to 0.
+.TP
+.B -d
+enables the decoder.
+The only options useful for the decoder are the filename
+specifications and the
+.B
+-NPS, -UTC
+commmands; the rest of the command-line
+information is used for encoding.
+.TP
+.B -h
+is the horizontal size of the picture in terms of the luminance component,
+used for a non 
+.B
+-NTSC, -CIF, -QCIF
+filesize.  See the preceding note about
+.B -PF
+about the dimensions of the file relative to that of the component.
+.TP
+.B -v
+is the vertical size of the picture in terms of the luminance component,
+used for a non 
+.B
+-NTSC, -CIF, -QCIF
+filesize.  See the preceding note about
+.B -PF
+about the dimensions of the file relative to that of the component.
+.TP
+.B -f
+is the number of interpolated frames between each intra/predicted
+frame.
+.B FrameInterval-1
+is the number of interpolated frames within each frame interval.
+.TP
+.B -g
+is the number of frame intervals per group-of-pictures.  With a group
+interval of 1 then there are no predicted frames.  The value
+.B GroupInterval-1
+is the number of predicted frames in each group of pictures.
+.TP
+.B -4
+is used to DC Intraframe mode where only the DC components of each picture
+block is coded.
+.TP
+.B -i
+is the diameter of the motion estimation search. The diameter must be
+be positive.  The default value is 15 for a search window of approx
+(+- 7.5, +- 7.5).   The motion estimation is telescopic for frame
+distances greater than 1 (thus having
+a greater effective range).  The telescopic motion estimation can be turned
+off by the
+.B -MVNT
+flag.  This option can now have a value greater than 15
+but less than approximately 960.  For large values the estimation becomes
+very slow.
+.TP
+.B -o
+signals that the program interpreter will read the control algorithms
+from the standard input.
+.TP
+.B -p
+specifies the picture rate by a code directly placed into the stream.
+It must be a number between 0 and 8. (default 5=30Hz).
+.TP
+.B -q
+gives a value for the quantization not in the presence of rate
+control (rate control automatically changes the quantization values).
+If rate control is specified, this parameter gives a value for the
+initial quantization of the first frame (which the program usually
+takes an educated guess at).
+.TP
+.B -r
+specified a rate for the coded stream. If this is enabled, a buffer
+model is used to limit the size of the coding stream. Note this is
+given in bits per second.
+.TP
+.B -s
+specifies the filename to store the coded image. If unspecified it
+defaults to
+.B ComponentFilePrefix0.mpg.
+.TP
+.B -v
+designates that quantization decisions are to be written to standard
+output. This is the verbose mode.
+.TP
+.B -x
+gives a target filesize for the compressed stream. This overrides the
+rate option
+.B -r,
+if specified. This is specified in bits.  The
+actual implementation of this technique is through calculating the
+equivalent bit-rate. Since the buffer usually has some contents at the
+end of coding, the final filesize is larger than actually designated.
+.TP
+.B -y
+enables the double-precision floating point Reference DCT. The default
+is the Chen DCT.
+.TP
+.B -z
+denotes the component file suffixes in sequential order. For example
+.B
+ -z .y.clr -z .u.clr -z .v.clr
+indicates that the luminance and the two chrominance files
+end with a suffix of
+.B
+\&.y.clr, \&.u.clr,
+and
+.B \&.v.clr,
+in that order. If unspecified, the suffixes
+default to
+.B
+\&.Y, \*.U,\fR
+and
+.B \&.V.
+.TP
+.B ComponentFilePrefix\fIn\fR
+must be specified. In general, the other component files share the
+same prefix and will default to
+.B ComponentFilePrefix1
+if not
+explicitly specified. However, in some cases the prefix is what
+changes in the file and we can specify this individually.
+.PP
+.SH EXAMPLES
+To encode a set of raw raster scan YCbCr (also known as digital YUV) files with
+dimension 352x240 Y, 176x120 U,V,
+with labels,
+.B
+hello0.Y hello0.U hello0.V,
+.B
+hello1.Y hello1.U hello1.V,
+.B
+\&...,
+.B
+hello12.Y hello12.U hello12.V
+through the mpeg encoder, type
+
+.br
+.B
+mpeg -a 0 -b 12 hello -s hello.mpg
+.br
+
+This creates the output file 
+.B hello.mpg.
+In order to decode such a file into a sequence of image files with
+prefix
+.B goodbye,
+type
+
+.br
+.B
+mpeg -d -s hello.mpg goodbye
+.br
+
+The output will be placed in the files
+.B
+goodbye0.Y goodbye0.U goodbye0.V,
+.B
+goodbye1.Y goodbye1.U goodbye1.V,
+.B
+\&...,
+.B
+goodbye12.Y goodbye12.U goodbye12.V.
+These image sequences can be displayed by the
+.I cv
+program.
+The image sequences can also be converted to ppm and back through
+the programs
+.I cyuv2ppm
+and 
+.I ppm2cyuv
+Those utility programs available by anonymous ftp from
+.I havefun.stanford.edu:pub/cv/CVv1.2.1.tar.Z.
+There are more options within an internal program interpreter.
+Please see the accompanying documentation in
+.I doc.ps
+for more details.
+.PP
+.SH FTP
+.I mpeg
+is available by anonymous ftp
+from 
+.I havefun.stanford.edu:pub/mpeg/MPEGv1.2.tar.Z.
+.PP
+.SH BUGS
+Somewhat slower than many commercial implementations.
+Please inform the author at achung@cs.stanford.edu if any bugs are found.
+.PP
+.SH AUTHOR
+.PP
+Andy Hung

@@ -1,0 +1,240 @@
+#
+#  The MIT License
+#
+#  Copyright (c) 1997-2012 The University of Utah
+# 
+#  Permission is hereby granted, free of charge, to any person obtaining a copy
+#  of this software and associated documentation files (the "Software"), to
+#  deal in the Software without restriction, including without limitation the
+#  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+#  sell copies of the Software, and to permit persons to whom the Software is
+#  furnished to do so, subject to the following conditions:
+# 
+#  The above copyright notice and this permission notice shall be included in
+#  all copies or substantial portions of the Software.
+# 
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+#  IN THE SOFTWARE.
+# 
+# Makefile.vc.master
+# written by Chris Moulding 7/99
+
+
+
+########################################################################################
+# you shouldn't need to edit, or add anything to, this file
+########################################################################################
+
+
+
+
+########################################################################################
+# try to guess the architecture
+
+!if !defined(PROCESSOR_ARCHITECTURE)||(("$(PROCESSOR_ARCHITECTURE)"!="x86")&&("$(PROCESSOR_ARCHITECTURE)"=="ALPHA"))
+!message ***
+!message *** Environment variable PROCESSOR_ARCHITECTURE not set.
+!message *** It must be set to "x86" for Intel processors, or "ALPHA" 
+!message *** for DEC Alpha processors.  No other processors are
+!message *** supported at this time.
+!message ***
+!error One or more environment variables not set.
+!endif
+
+
+
+
+########################################################################################
+# include the user specified build configuration
+
+!include <$(TOP)\src\scripts\Makefile.vc.config>
+
+
+
+
+########################################################################################
+# set the command macros (with or without echo suppression)
+
+!if ($(SILENT_ECHO))
+CC   = @cl
+LINK = @link
+MAKE = @nmake
+RM   = @del
+!else
+CC   = cl
+LINK = link
+MAKE = nmake
+RM   = del
+!endif
+
+
+
+
+########################################################################################
+# Set processor architecture specific flags
+
+!if ("$(PROCESSOR_ARCHITECTURE)"=="x86")
+ARCHFLAGS        = -D_X86_
+DLLENTRY         = @12
+MACHINE          = -MACHINE:IX86
+!elseif ("$(PROCESSOR_ARCHITECTURE)"=="ALPHA")
+ARCHFLAGS        = -D_ALPHA_
+DLLENTRY         = 
+MACHINE          = -MACHINE:ALPHA
+!endif
+
+
+  
+
+########################################################################################
+# Set version (debug or release) specific flags
+
+!if ("$(VERSION)"=="Debug")
+VERSION_CFLAGS   = -Zi -Od -GZ -MDd -DDEBUG
+VERSION_LFLAGS   = -DEBUG -DEBUGTYPE:BOTH -PDBTYPE:SEPT -nodefaultlib:libcd.lib msvcrtd.lib
+APPENDIX         = d
+!elseif ("$(VERSION)"=="Release")
+VERSION_CFLAGS   = -O2 -MD
+VERSION_LFLAGS   = -RELEASE -nodefaultlib:libc.lib msvcrt.lib
+APPENDIX         =
+!endif
+
+
+
+
+########################################################################################
+# Set SCI and 3rdParty specific flags
+
+SCI_FLAGS        = -DTEMPLATE_TAG="" -DTEMPLATE_BOX="" -DSCI_NOMMAP_IO
+3RDPARTYFLAGS    = -DUSE_TCLALLOC=0 -DUSE_NATIVEMALLOC
+
+
+
+
+########################################################################################
+# Concatenate all current flags with flags that will build .exe binaries
+
+EXE_CFLAGS       = -c -nologo -D_MT -D_WIN32 -GX $(WARNING) $(ARCHFLAGS) $(VERSION_CFLAGS) $(SCI_FLAGS) $(3RDPARTYFLAGS)
+EXE_LFLAGS       = -nologo $(MACHINE) $(VERSION_LFLAGS)  
+
+
+
+
+########################################################################################
+# Concatenate all current flags with flags that will build .dll binaries
+
+DLL_CFLAGS       = $(EXE_CFLAGS) -D_DLL
+DLL_LFLAGS       = $(EXE_LFLAGS) -entry:_DllMainCRTStartup$(DLLENTRY) -DLL
+
+
+
+
+########################################################################################
+# A dll's fullname is it's name (from the including Makefile.vc) plus a 'd' at the
+# end if it's a debug version
+
+FULLDLLNAME = $(DLLNAME)$(APPENDIX)
+
+
+
+
+########################################################################################
+# Make a target macro for either, or both, a .dll and .exe if the including Makefile.vc has
+# names for a .dll and/or a .exe
+
+!if ("$(DLLNAME)"!="")
+ALLDLL = $(FULLDLLNAME).dll
+!else
+ALLDLL = 
+!endif
+
+!if ("$(EXENAME)"!="")
+ALLEXE = $(EXENAME).exe
+!else
+ALLEXE = 
+!endif
+
+ALL = $(ALLDLL) $(ALLEXE)
+
+
+
+
+########################################################################################
+# Set the library path to be the SCI defaults plus the 3rdParty paths indicated in Makefile.vc.config
+
+SCILIBPATH = -LIBPATH:$(TOP)\src\Core\
+		     -LIBPATH:$(TOP)\src\Dataflow\
+             -LIBPATH:$(TOP)\src\Dataflow\
+		     -LIBPATH:$(TOP)\src\Dataflow\
+			 $(LIBPATH)
+
+
+
+
+########################################################################################
+# Set the libraries to be linked against to the SCI defaults plus those indicated
+# in the including Makefile.vc
+
+SCILIBS    = OpenGL32.lib Glu32.lib\
+             oncrpc.lib\
+			 zlib.lib\
+			 tcl80$(APPENDIX).lib tk80$(APPENDIX).lib itcl30$(APPENDIX).lib itk30$(APPENDIX).lib\
+			 $(LIBS)
+
+
+
+
+########################################################################################
+# Set the include path to be the SCI defaults plus the paths indicated in Makefile.vc.config
+
+SCIINCPATH = -I.\
+             -I..\
+			 -I$(TOP)\src\
+			 -I$(TOP)\src\Core\Winfix\include\
+			 $(INCPATH)
+
+
+
+
+########################################################################################
+# And finally, the description blocks
+
+all: $(ALL)
+
+clean: soclean
+	-$(RM) *.idb 2> NUL
+	-$(RM) *.ilk 2> NUL
+	-$(RM) /s *.odll 2> NUL 1> NUL
+	-$(RM) /s *.oexe 2> NUL 1> NUL
+	-$(RM) /s *.pdb 2> NUL 1> NUL
+	-$(RM) /s *.exp 2> NUL 1> NUL
+
+soclean:
+	-$(RM) $(EXENAME).exe 2> NUL
+	-$(RM) $(FULLDLLNAME).dll 2> NUL
+	-$(RM) $(FULLDLLNAME).lib 2> NUL
+
+$(EXENAME).exe: $(OBJS)
+	$(LINK) $(EXE_LFLAGS) $(LF) $(SCILIBS) $(SCILIBPATH) $(OBJS) -out:$(EXENAME).exe
+
+$(FULLDLLNAME).dll: $(OBJS)
+	$(LINK) $(DLL_LFLAGS) $(LF) $(SCILIBS) $(SCILIBPATH) $(OBJS) -out:$(FULLDLLNAME).dll
+
+.SUFFIXES: .cc .c
+
+.cc.odll:
+	$(CC) $(DLL_CFLAGS) $(CF) $(SCIINCPATH) -TP -Fo$(TOP)\src\$(DLLNAME)\$*.odll $<
+
+.c.odll:
+	$(CC) $(DLL_CFLAGS) $(CF) $(SCIINCPATH) -TC -Fo$(TOP)\src\$(DLLNAME)\$*.odll $<
+
+.cc.oexe:
+	$(CC) $(EXE_CFLAGS) $(CF) $(SCIINCPATH) -TP -Fo$(TOP)\src\$(EXENAME)\$*.oexe $<
+
+.c.oexe:
+	$(CC) $(EXE_CFLAGS) $(CF) $(SCIINCPATH) -TC -Fo$(TOP)\src\$(EXENAME)\$*.oexe $<

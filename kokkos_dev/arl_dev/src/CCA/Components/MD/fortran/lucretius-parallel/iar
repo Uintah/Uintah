@@ -1,0 +1,5 @@
+#!/bin/bash
+make again
+make a.out
+make clean
+./a.out

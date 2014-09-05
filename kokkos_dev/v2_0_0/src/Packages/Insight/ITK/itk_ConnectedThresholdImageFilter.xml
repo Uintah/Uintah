@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+<!DOCTYPE filter-itk SYSTEM "itk_filter.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<filter-itk name="itk::ConnectedThresholdImageFilter">
+  <description>
+Label pixels that are connected to a seed and lie within a range of values.
+  </description>
+  <templated>
+    <template>InputImageType</template>
+    <template>OutputImageType</template>
+    <defaults>
+      <default>itk::Image&lt;float, 2&gt;</default>
+      <default>itk::Image&lt;float, 2&gt;</default>
+    </defaults>
+    <defaults>
+      <default>itk::Image&lt;float, 3&gt;</default>
+      <default>itk::Image&lt;float, 3&gt;</default>
+    </defaults>
+  </templated>
+
+  <datatypes>
+    <array name="FilterType::IndexType">
+      <elem-type>int</elem-type>
+      <size-call>GetIndexDimension</size-call>
+    </array>
+  </datatypes>
+
+  <inputs>
+    <input name="InputImage">
+      <type>InputImageType</type>
+      <call>SetInput</call>
+    </input>  
+  </inputs>
+  <outputs>
+    <output name="OutputImge">
+      <type>OutputImageType</type>
+      <call>GetOutput</call>
+    </output>
+  </outputs>
+
+  <parameters>
+    <param>
+      <name>seed_point</name>
+      <type>FilterType::IndexType</type>
+      <call>SetSeed</call>
+      <default>60</default>
+    </param>
+    <param>
+      <name>replace_value</name>
+      <type>double</type>
+      <call>SetReplaceValue</call>
+      <default>255.0</default>
+    </param>
+    <param>
+      <name>lower_threshold</name>
+      <type>double</type>
+      <call>SetLower</call>
+      <default>150</default>
+    </param>
+    <param>
+      <name>upper_threshold</name>
+      <type>double</type>
+      <call>SetUpper</call>
+      <default>180</default>
+    </param>
+  </parameters>
+
+
+  <includes>
+    <file>itkConnectedThresholdImageFilter.h</file>
+  </includes>
+</filter-itk>

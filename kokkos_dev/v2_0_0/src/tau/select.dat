@@ -1,0 +1,41 @@
+# Selective instrumentation: Specify an exclude/include list.
+
+BEGIN_EXCLUDE_LIST
+
+void Uintah::Patch::findCellAndShapeDerivatives(const SCIRun::Point &, SCIRun::IntVector *, SCIRun::Vector *) const  
+
+SCIRun::Point Uintah::Level::positionToIndex(const SCIRun::Point &) const  
+
+void Uintah::Patch::findCellAndWeightsAndShapeDerivatives(const SCIRun::Point &, SCIRun::IntVector *, double *, SCIRun::Vector *) const  
+
+Uintah::Box Uintah::Level::getBox(const SCIRun::IntVector &, const SCIRun::IntVector &) const  
+
+SCIRun::Point Uintah::Level::getNodePosition(const SCIRun::IntVector &) const  
+
+Uintah::Box Uintah::Patch::getBox() const  
+
+void Uintah::Patch::findCellAndWeights(const SCIRun::Point &, SCIRun::IntVector *, double *) const  
+
+bool Uintah::BoxGeometryPiece::inside(const SCIRun::Point &) const  
+
+int SCIRun::Point::operator==(const SCIRun::Point &) const  
+
+std::string Uintah::ForceBC::getType() const  
+
+int Uintah::Material::getDWIndex() const  
+
+const SCIRun::Point &Uintah::ForceBC::getUpperRange() const  
+
+const SCIRun::Point &Uintah::ForceBC::getLowerRange() const  
+
+bool SCIRun::Thread::isInitialized()  
+
+END_EXCLUDE_LIST
+
+BEGIN_FILE_EXCLUDE_LIST
+*AllocOS.cc
+*Allocator.cc
+*malloc.cc
+*new.cc
+*sus.cc
+END_FILE_EXCLUDE_LIST

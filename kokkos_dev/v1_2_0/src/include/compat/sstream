@@ -1,0 +1,31 @@
+
+
+#ifndef STRSTREAM_H
+#define STRSTREAM_H
+
+#include <string>
+#include <strstream>
+
+namespace std {
+class ostringstream : public ostrstream {
+public:
+   ostringstream() {}
+// void append() { ((strstreambuf*)_strbuf)->padn('\0',1); }
+   void append() { streampos pos = tellp(); ostream::put('\0'); ostream::seekp(pos); }
+   string str() 
+   { 
+     append(); 
+     return string(ostrstream::str(), ostrstream::pcount());
+   }
+};
+
+class istringstream : public istrstream {
+public:
+   istringstream(string& s) : istrstream(s.c_str()){}
+   istringstream(const string& s) : istrstream(s.c_str()){}
+   istringstream(const char * s) : istrstream(s){}
+};
+
+} // End namespace std
+
+#endif

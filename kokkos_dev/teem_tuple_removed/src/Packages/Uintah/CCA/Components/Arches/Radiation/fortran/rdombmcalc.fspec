@@ -1,0 +1,12 @@
+void rdombmcalc(IntVector idxlo, IntVector idxhi, 
+             OffsetArray1<double> xx,
+             OffsetArray1<double> zz,
+             OffsetArray1<double> srcbm,
+             OffsetArray1<double> qfluxbbm,
+	     CCVariable<double> src,
+             CCVariable<double> qfluxb,
+             CCVariable<double> qfluxw,
+             bool lprobone, bool lprobtwo, bool lprobthree,
+             OffsetArray1<double> srcpone,
+             CCVariable<double> volq);
+

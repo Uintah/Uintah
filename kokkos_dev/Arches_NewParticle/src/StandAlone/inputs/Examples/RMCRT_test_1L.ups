@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Uintah_specification>
+
+  <Meta>
+      <title>test</title>
+  </Meta>
+
+  <SimulationComponent type="RMCRT_Test" />
+  <!--__________________________________-->
+  <Time>
+    <maxTime>       10.0      </maxTime>
+    <initTime>      0.0       </initTime>
+    <delt_min>      0.00001   </delt_min>
+    <delt_max>      1         </delt_max>
+    <max_Timesteps> 1         </max_Timesteps>
+    <timestep_multiplier>  1  </timestep_multiplier>
+  </Time>
+  <!--__________________________________-->
+  <Grid>
+    <Level>
+      <Box label = "0">                              
+         <lower>      [0,0,0]     </lower>         
+         <upper>      [1, 1, 1]   </upper>         
+         <resolution> [10,10,10]  </resolution>    
+         <patches>    [1,1,1]     </patches> 
+         <extraCells> [1,1,1]     </extraCells>      
+      </Box>                                         
+    </Level>
+  </Grid>
+  <!--__________________________________-->
+  <DataArchiver>
+  <filebase>rmcrt_1L.uda</filebase>
+      <outputTimestepInterval>1</outputTimestepInterval>
+      <save label = "color"   />
+      <save label = "divQ"    />
+      <save label = "abskg"   />
+      <save label = "sigmaT4" />
+      <checkpoint cycle = "2" timestepInterval = "1"/>
+  </DataArchiver>
+  
+  
+  <!--__________________________________ -->
+  <RMCRT>
+    <Temperature>       1        </Temperature>
+    <NoOfRays>          100        </NoOfRays>
+    <Threshold>         0.05      </Threshold>
+    <Alpha>             1          </Alpha>
+    <Slice>             20         </Slice>
+    <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
+    <benchmark_1>       true       </benchmark_1>
+  </RMCRT>
+</Uintah_specification>

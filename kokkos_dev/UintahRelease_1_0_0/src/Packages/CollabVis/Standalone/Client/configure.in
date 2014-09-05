@@ -1,0 +1,381 @@
+AC_INIT(README)
+
+
+##-- Canonical Host Type -----------------------------------------------------
+
+AC_CANONICAL_HOST
+
+
+##-- Thread libraries --------------------------------------------------------
+
+AC_ARG_ENABLE(threads,
+	[  --enable-threads	  Specify a thread implementation (pthreads, irix)],
+	[threads="$enableval"],
+	[threads=${threads='unknown'}])
+AC_SUBST(LOCK_IMPL)
+AC_SUBST(THREAD_IMPL)
+AC_SUBST(TIME_IMPL)
+
+##-- Check for library ------------------------------------------------------
+
+AC_ARG_ENABLE(xerces,
+	[  --enable-xerces=<path>  Path to Xerces XML ],
+	[xerces="$enableval"],
+	[xerces=${xerces='unknown'}])
+
+
+echo $xerces
+
+if test "$xerces" != "unknown" ; then
+	XML_LIB_DIR="$xerces/lib"
+	XML_INCLUDE_DIR="$xerces/include"
+else
+case $host in
+  *-irix*) 
+	if test "$is_64bit" = "yes"; then
+	  XML_LIB_DIR="/res/sci/data1/SCIRun_Thirdparty_64/lib"
+	else
+	  XML_LIB_DIR="/res/sci/data1/SCIRun_Thirdparty_32/lib"
+	fi
+	XML_INCLUDE_DIR="/res/sci/data1/SCIRun_Thirdparty_32/include/xercesc"
+        ;;
+  *linux*) 
+  	XML_LIB_DIR="/res/sci/data4/luke/SCIRun/Xerxes/xerces-c_1_1_0-linux/lib"
+	XML_INCLUDE_DIR="/res/sci/data4/luke/SCIRun/Xerxes/xerces-c_1_1_0-linux/include"
+	
+	;;
+  *)       
+           ;;
+esac
+fi
+
+XML_LIB_FLAG="-lxerces-c"
+AC_SUBST(XML_LIB_DIR)
+AC_SUBST(XML_LIB_FLAG)
+AC_SUBST(XML_LIBRARY)
+AC_SUBST(XML_INCLUDE_DIR)
+
+##-- Thirdparty stuff --#
+AC_ARG_ENABLE(thirdparty,
+	[  --enable-Thirdparty=<path>  Path to Thirdparty Libs ],
+	[thirdparty="$enableval"],
+	[thirdparty=${thirdparty='unknown'}])
+
+
+if test "$thirdparty" != "unknown" ; then
+	TKINCLUDE="$thirdparty/src/tk8.3.2/generic"
+	TCLINCLUDE="$thirdparty/src/tcl8.3.2/generic"
+fi	
+	
+BASE="$thirdparty"
+
+AC_SUBST(BASE)
+AC_SUBST(TKINCLUDE)
+AC_SUBST(TCLINCLUDE)
+
+##-- Host-Specific Defaults --------------------------------------------------
+
+# Get ar, as well
+AC_PATH_PROG(AR, ar)
+AC_SUBST(AR)
+
+AC_SUBST(CC)
+AC_SUBST(CXX)
+AC_SUBST(AS)
+AC_SUBST(LD)
+AC_SUBST(CFLAGS)
+AC_SUBST(SOFLAGS)
+AC_SUBST(LDFLAGS)
+AC_SUBST(ASFLAGS)
+AC_SUBST(LDRUN_PREFIX)
+AC_SUBST(BINARYFLAGS)
+
+case $host in
+  *-irix*) echo -n "Checking for /opt/MIPSpro/bin/cc... "
+	   if test "$is_64bit" = "yes" ; then
+             BINARYFLAGS="-64 -mips4"
+           else
+             BINARYFLAGS="-n32 -mips4"
+           fi
+           if test -f /opt/MIPSpro/bin/cc; then
+             echo "yes"
+             echo "  Using MIPSpro compilers instead of gcc; they're better"
+             CC=/opt/MIPSpro/bin/cc
+             CXX=/opt/MIPSpro/bin/CC
+             AS=/opt/MIPSpro/bin/as
+             LD=/opt/MIPSpro/bin/ld
+           else
+             echo "no"
+           fi
+           if test "${CC}" = "" ; then
+             if type CC | sed 's/^.* //' > /dev/null 2>&1 ; then
+               CXX=`type CC | sed 's/^.* //' `
+               echo "Using C++ compiler ${CXX}"
+             fi
+             if type cc | sed 's/^.* //' > /dev/null 2>&1 ; then
+               CC=`type cc | sed 's/^.* //' `
+               echo "Using C compiler ${CC}"
+             fi
+             if type as | sed 's/^.* //' > /dev/null 2>&1 ; then
+               AS=`type as | sed 's/^.* //' `
+               echo "Using Assembler ${AS}"
+             fi
+           fi
+## EJL
+AC_TRY_CPP
+	MAKE_PARALLELISM=4
+	   F77=f77
+	   LD=ld
+	   FFLAGS="$BINARYFLAGS"
+           CFLAGS="-fullwarn -xansi -g -LANG:std ${CFLAGS} $BINARYFLAGS $extra_cflags -DIRIX -woff 1375,3303,3201,1424"
+	   ASFLAGS="$BINARYFLAGS ${ASFLAGS}"
+	   NO_INLINE="-noinline"
+           SOFLAGS="-shared $BINARYFLAGS -LANG:std -J${MAKE_PARALLELISM} -update_registry \$(LIBDIR)so_locations $(TLINK) ${SOFLAGS}"
+           #LDFLAGS="$BINARYFLAGS -LANG:std -no_unresolved -J${MAKE_PARALLELISM} ${TLINK}"
+           LDRUN_PREFIX="-Wl,-rpath -Wl,"
+	   TEMPLATE_TAG=
+	   TEMPLATE_BOX="<>"
+	   LOCK_IMPL=lock_mips.s
+           if test "$threads" = "unknown"; then
+             threads="irix"
+           fi
+	   TIME_IMPL=Time_irix.cc
+	   TRACEBACK_LIB=-lexc
+	   LINKER_ARCHIVE="-all"
+           ;;
+  *-linux-gnu)
+     AC_PROG_CC
+     AC_PROG_CXX
+## EJL
+AC_PROG_CPP
+#     AC_PROG_F77
+     CFLAGS="-Wall ${CFLAGS}"
+     TEMPLATE_TAG=
+     TEMPLATE_BOX="<>"
+     LOCK_IMPL=""
+     SOFLAGS="-shared ${SOFLAGS}"
+     NO_INLINE="-fno-default-inline"
+     LDFLAGS=""
+     NEED_SONAME=yes
+     LDRUN_PREFIX="-Wl,-rpath -Wl,"
+     TIME_IMPL=Time_unix.cc
+     PLATFORM_LDFLAGS="-ldl"
+     TRACEBACK_LIB=""
+     LINKER_ARCHIVE="--whole-archive"
+     echo "checking for sstream"
+     AC_CHECK_HEADER(sstream, SSTREAM_COMPAT="no", SSTREAM_COMPAT="yes")
+           ;;
+  *)
+     echo "WARNING: Untested configuration - you are on your own!"
+     LD=ld
+     AC_PROG_CC
+     AC_PROG_CXX
+     LINKER_ARCHIVE="--whole-archive"
+     ;;
+esac
+AC_SUBST(F77)
+AC_SUBST(FFLAGS)
+AC_SUBST(PLATFORM_LDFLAGS)
+AC_SUBST(NEED_SONAME)
+AC_SUBST(SSTREAM_COMPAT)
+AC_SUBST(TRACEBACK_LIB)
+AC_SUBST(LD)
+AC_SUBST(LINKER_ARCHIVE)
+AC_SUBST(NO_INLINE)
+
+##-- Part II thread configuration --------------------------------------------
+
+if test "$threads" = "unknown"; then
+   threads="pthreads"
+fi
+case $threads in
+  pthreads*) THREAD_LIBS="-lpthread"
+	     # CFLAGS="$CFLAGS -DSCI_PTHREAD"
+	     THREAD_FLAG="-DSCI_PTHREAD"
+	     THREAD_DEFINE="#define SCI_PTHREAD"
+  ;;
+  irix)     THREAD_LIBS="-lfetchop"
+	    CFLAGS="$CFLAGS -DSTL_SGI_THREADS"
+	    THREAD_DEFINE=""
+  ;;  
+  *)
+    echo "Unknown thread implementation: $threads"
+    exit 1
+  ;;
+esac
+AC_SUBST(THREAD_FLAG)
+AC_SUBST(THREAD_LIBS)
+AC_SUBST(THREAD_DEFINE)
+THREAD_IMPL="Thread_"$threads".cc"
+
+##-- Dependency Regen Switch -------------------------------------------------
+
+echo -n "Determining cc dependency regen switch: "
+rm -f configure-test.*
+echo "#include <stdio.h>" > configure-test.c
+CC_DEPEND_REGEN=''
+
+# GCC just puts the dependency info in a .d when you provide the -MD switch.
+if test "${CC_DEPEND_REGEN}" = "" ; then
+  ${CC} -MD -c configure-test.c > /dev/null 2>&1
+  if test -f configure-test.d ; then
+    CC_DEPEND_REGEN='-MD'
+  fi
+fi
+
+# SGI cc wants -MDupdate <filename>.
+if test "${CC_DEPEND_REGEN}" = "" ; then
+  ${CC} -MDupdate configure-test.d -c configure-test.c
+  if test -f configure-test.d ; then
+    CC_DEPEND_REGEN='-MDupdate $(dir $@)depend.mk'
+  fi
+fi
+
+rm -f configure-test.*
+
+if test "${CC_DEPEND_REGEN}" = "" ; then
+  echo unknown
+  echo "  Warning: Dependency information will not be maintained."
+else
+  echo $CC_DEPEND_REGEN
+fi
+AC_SUBST(CC_DEPEND_REGEN)
+F77_DEPEND_REGEN=$CC_DEPEND_REGEN
+AC_SUBST(F77_DEPEND_REGEN)
+
+##-- How Many Processors -----------------------------------------------------
+
+unset NUM_CPUS
+echo -n "Determining physical processor count: "
+case $host in
+  *-irix*) NUM_CPUS="`TERM=dumb top -n 1 | fgrep CPUs | cut -d' ' -f1`"
+           ;;
+  *linux*) NUM_CPUS="`cat /proc/cpuinfo | fgrep processor | wc | cut -c1-7`"
+           ;;
+  *)       NUM_CPUS="1"
+           ;;
+esac
+if ! NUM_CPUS="`expr $NUM_CPUS + 0 2> /dev/null`" ; then
+  NUM_CPUS="1"
+fi
+echo $NUM_CPUS
+
+MAKE_PARALLELISM="`expr ${NUM_CPUS} \* 2`"
+export MAKE_PARALLELISM
+AC_SUBST(MAKE_PARALLELISM)
+
+##-- Find location of GL headers --------------------------------------------
+
+echo -n "Looking for location of GL headers... "
+
+if test -e /usr/include/GL; then
+  GL_INCLUDE_DIR="/usr/include"
+elif test -e /usr/X11R6/include/GL; then
+  GL_INCLUDE_DIR="/usr/X11R6/include"
+fi
+
+if test "$GL_INCLUDE_DIR" = ""; then
+  echo "couldn't find the location of the GL headers."
+  echo "by standard convention, they should be in /usr/include/GL"
+  echo ""
+  exit 1
+else
+  echo $GL_INCLUDE_DIR/GL
+fi
+
+AC_SUBST(GL_INCLUDE_DIR)
+
+echo -n "Looking for glut.h..."
+
+LOCAL_GLUT="/usr/local/contrib/moulding/glut"
+
+if test -f $GL_INCLUDE_DIR/GL/glut.h; then
+   GLUT_INCLUDE_DIR=$GL_INCLUDE_DIR
+elif test -f $LOCAL_GLUT/include/GL/glut.h; then
+   GLUT_INCLUDE_DIR="$LOCAL_GLUT/include"
+else
+   echo "damn! Couldn't find location of glut!"
+   echo ""
+   exit 1
+fi
+
+echo "$GLUT_INCLUDE_DIR/GL/glut.h"
+
+AC_SUBST(GLUT_INCLUDE_DIR)
+
+## -------  Find GLU - we need this to get glut lib. :(
+if test -e /usr/X11R6/lib; then
+ GLU_LIB_DIR=-L/usr/X11R6/lib
+elif test -e $LOCAL_GLUT/lib; then
+ GLU_LIB_DIR=-L$LOCAL_GLUT/lib
+else
+ GLU_LIB_DIR=""
+fi
+
+GLUT_LIB_DIR=$GLU_LIB_DIR
+GLUT_AUX_LIBS="-lX11 -lXmu"
+
+AC_CHECK_LIB( glut, glutGetWindow, FOUND_GLUT="true", FOUND_GLUT="false",
+	$GLU_LIB_DIR -lGL -lGLU -lX11 -lXmu )
+
+if test "$FOUND_GLUT" = "false"; then
+ case $host in
+   *-irix*)
+     if test "$is_64bit" = "yes"; then
+	 if test -f $LOCAL_GLUT/lib/glut.n64/libglut.a; then
+		GLUT_LIB_DIR="$GLUT_LIB_DIR -L$LOCAL_GLUT/lib/glut.n64"
+		GLUT_AUX_LIBS="-lX11 -lXmu"
+	 fi
+     elif test -f $LOCAL_GLUT/lib/glut.n32/libglut.a; then
+	 GLUT_LIB_DIR="$GLUT_LIB_DIR -L$LOCAL_GLUT/lib/glut.n32"	
+	 GLUT_AUX_LIBS="-lX11 -lXmu"
+     else
+ 	echo "Can't find an IRIX version of glut!"
+	exit 1
+     fi
+	;;
+  *) 
+	echo "Don't know where else to look for glut!"
+	exit 1
+     ;;
+ esac
+ if test $(GLUT_LIB_DIR) = ""; then
+	echo "Not able to find glut!"
+	exit 1
+ else
+	echo "Found glut in $GLUT_LIB_DIR"
+ fi
+fi
+AC_SUBST(GLUT_LIB_DIR)
+AC_SUBST(GLUT_AUX_LIBS)
+
+##-- Check for header files --------------------------------------------------
+
+AC_CHECK_HEADERS(limits.h)
+AC_CHECK_HEADERS(sys/select.h)
+AC_CHECK_HEADERS(unistd.h)
+AC_CHECK_HEADERS(sys/time.h)
+AC_PATH_XTRA()
+if test x"$X_LIBS" = x"-L/usr/lib" -o x"$X_LIBS" = x" -L/usr/lib"; then
+  X_LIBS=""
+fi
+
+if ! test x"$X_LIBS" = x; then
+  X_LIBS="-Wl,-rpath,$x_libraries $X_LIBS"
+fi
+
+##-- Stupid defines we have to use... -----------------------------------
+DEFS="SCICORESHARE=\"\""
+
+##-- Top level object directory --------------------
+ROOT_DIR="`pwd`"
+AC_SUBST(ROOT_DIR)
+
+##-- Configure LZO and Appleseed Packages -------------------------------
+AC_CONFIG_SUBDIRS(Compression/lzo)
+AC_CONFIG_SUBDIRS(Network/AppleSeeds)
+
+
+##-- Output top-level makefile and make.include -------------------------
+AC_OUTPUT(make.include Makefile Drivers/Makefile Compression/Makefile Drivers/Compression/Makefile Thread/Makefile Exceptions/Makefile Malloc/Makefile Logging/Makefile Message/Makefile Network/Makefile Rendering/Makefile UI/Makefile Util/Makefile Drivers/Logging/Makefile XML/Makefile Drivers/XML/Makefile Drivers/Message/Makefile Drivers/UI/Makefile Drivers/Client/Makefile )
+

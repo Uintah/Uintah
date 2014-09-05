@@ -1,0 +1,7 @@
+
+class z;
+
+interface x {
+      void y(in z);
+      void y(in z);
+};

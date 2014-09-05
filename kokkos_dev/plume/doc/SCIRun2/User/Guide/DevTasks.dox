@@ -1,0 +1,44 @@
+/*!
+\page devtasks SCIRun2 Release Criteria tasks
+
+\section TODO Developer TODO lists
+
+\subsection ayla Ayla
+
+\li GUI Prototypes: by September 2
+\li CCA spec upgrade, Services interface: by August 26
+\li CCA spec upgrade, ComponentRelease interface: by August 26
+\li Bug 2770, getPort should not return null: TBD
+\li Replace Qt GUI toolkit: by November 7
+\li Migrate loading/saving network files to a Framework service: TBD
+<!-- MPICH done, others? -->
+
+\subsection keming Keming
+
+\li Updates to text builder: by Aug 25
+\li Complete parallel component implementation: by Sep 25 
+\li PRMI without data redistribution, by Sep 4 
+\li PRMI data redistribution, by Sep 11 
+\li PRMI synchronization, by Sep 18
+\li PRMI concurrency control, by Sep 25
+\li Update parallel component examples: TDB
+\li Bug 2710, Viewer CCA component broken: TBD
+
+\subsection kosta Kosta
+
+\li Bug 2768, Race conditions in SCIRun2: TBD
+\li Test Dataflow component model: TBD
+\li Audit existing test programs: find broken tests, write some documentation for each, locate script for test automation: (Waiting on Keming to finish parallel components)
+
+\subsection rc Unassigned Release Criteria tasks
+
+\li New name for SCIRun2
+\li Incorporate %SCIRun GUI features to SCIRun2 GUI
+\li Tests: framework, components, interfaces
+\li Standardize addition of a component model and individual components
+\li Tutorial for component authors
+\li RMI Security model
+<!-- list assumptions made in implementation with appropriate warnings to the user -->
+
+
+*/

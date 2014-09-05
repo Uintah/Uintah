@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+ 
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+ 
+  The Original Source Code is SCIRun, released March 12, 2001.
+ 
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
+  University of Utah. All Rights Reserved.
+-->
+
+<component name="NrrdInfo" category="NrrdData">
+  <overview>
+    <authors>
+      <author>Martin Cole</author>
+    </authors>
+    <summary>NrrdInfo is used to view the attributes of Nrrd's.</summary>
+    <description>
+      <p> Display in the ui all attributes of the input nrrd for each
+axis in the Nrrd. Display all info in the modules UI. The data type,
+dimensionality, and label, data center, size, spacing, min, max along
+each axis in the Nrrd.  If it is not stored in the Nrrd --- is
+displayed. The tuple axis tab shows all the elements of the tuple in
+order, i.e. the first listing is the 0'th element of the tuple.</p>
+    </description>
+    <examplesr>Teem/nets/test/NrrdInfo-test.net</examplesr>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Query Nrrd</name>
+        <datatype>Teem::Nrrd</datatype>
+	<description>
+          <p>
+             The NrrdData that will be queried for attributes to
+display.
+          </p>
+        </description>
+      </port>
+    </inputs>
+    <outputs>
+
+    </outputs>
+  </io>
+  <gui>
+    <description>
+      <p>
+      </p>
+    </description>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

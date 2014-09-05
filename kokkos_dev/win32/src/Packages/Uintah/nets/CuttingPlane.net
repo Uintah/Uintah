@@ -1,0 +1,173 @@
+# SCIRun Network v1.24.0
+
+addSubnetToDatabase {
+   set name {CuttingPlane}
+   set bbox {10 25 569 208}
+   set creationDate {Wed Feb 16 2005}
+   set creationTime {21:20:39}
+   set runDate {}
+   set runTime {}
+   set notes {}
+
+   # Create a SCIRun->FieldsOther->FieldInfo Module
+   set m1 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldInfo" 404 25]
+
+   # Create a SCIRun->FieldsCreate->SamplePlane Module
+   set m2 [addModuleAtPosition "SCIRun" "FieldsCreate" "SamplePlane" 219 36]
+
+   # Create a SCIRun->FieldsGeometry->ChangeFieldBounds Module
+   set m3 [addModuleAtPosition "SCIRun" "FieldsGeometry" "ChangeFieldBounds" 217 113]
+
+   # Create a SCIRun->FieldsData->DirectInterpolate Module
+   set m4 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 10 54]
+
+   # Create a SCIRun->Visualization->RescaleColorMap Module
+   set m5 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 395 131]
+
+   # Create a SCIRun->Visualization->ShowField Module
+   set m6 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 20 151]
+
+   # Create the Connections between Modules
+   set c1 [addConnection $m2 0 $m3 0]
+   set c2 [addConnection $m4 0 $m6 0]
+   set c3 [addConnection $m6 0 Subnet 0]
+   set c4 [addConnection Subnet 0 $m2 0]
+   set c5 [addConnection Subnet 0 $m4 0]
+   set c6 [addConnection Subnet 0 $m1 0]
+   set c7 [addConnection Subnet 1 $m5 0]
+   set c8 [addConnection $m4 0 $m5 1]
+   set c9 [addConnection $m3 0 $m4 1]
+   set c10 [addConnection $m3 1 Subnet 1]
+   set c11 [addConnection $m5 0 $m6 1]
+
+   # Set GUI variables for the SCIRun->FieldsCreate->SamplePlane Module
+   set $m2-sizex {51}
+   set $m2-sizey {51}
+   set $m2-axis {2}
+   set $m2-data-at {Faces}
+
+   # Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
+   set $m5-main_frame {.uiSCIRun_Visualization_RescaleColorMap_0}
+   set $m5-min {101324.977452}
+   set $m5-max {229481.534415}
+
+   # Set GUI variables for the SCIRun->Visualization->ShowField Module
+   set $m6-nodes-on {0}
+   set $m6-edges-on {0}
+   set $m6-has_scalar_data {1}
+   set $m6-active_tab {Faces}
+   set $m6-scalars_scale {0.3}
+}
+
+
+set name {Main}
+set bbox {10 10 386 401}
+set creationDate {Wed Feb 16 2005}
+set creationTime {21:20:32}
+set runDate {}
+set runTime {}
+set notes {}
+
+# Create a Uintah->DataIO->ArchiveReader Module
+set m1 [addModuleAtPosition "Uintah" "DataIO" "ArchiveReader" 10 10]
+
+# Create a Uintah->Selectors->TimestepSelector Module
+set m2 [addModuleAtPosition "Uintah" "Selectors" "TimestepSelector" 10 81]
+
+# Create a Uintah->Selectors->ScalarFieldExtractor Module
+set m3 [addModuleAtPosition "Uintah" "Selectors" "ScalarFieldExtractor" 10 168]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 191 11]
+
+# Create a SCIRun->Render->Viewer Module
+set m5 [addModuleAtPosition "SCIRun" "Render" "Viewer" 23 357]
+
+# Create an instance of a CuttingPlane Sub-Network
+set m6 [instanceSubnet "CuttingPlane" 23 245]
+
+# Create the Connections between Modules
+set c1 [addConnection $m6 0 $m5 0]
+set c2 [addConnection $m1 0 $m2 0]
+set c3 [addConnection $m3 0 $m6 0]
+set c4 [addConnection $m2 0 $m3 0]
+set c5 [addConnection $m4 0 $m6 1]
+set c6 [addConnection $m6 1 $m5 1]
+
+# Set GUI variables for the Uintah->DataIO->ArchiveReader Module
+set $m1-filebase {/usr/sci/data/CSAFE/uda/James_Testdata.uda}
+set $m1-tcl_status {Executing}
+
+# Set GUI variables for the Uintah->Selectors->TimestepSelector Module
+set $m2-tcl_status {Done}
+set $m2-time {43}
+set $m2-max_time {51}
+set $m2-timeval {0.00430069987502}
+
+# Set GUI variables for the Uintah->Selectors->ScalarFieldExtractor Module
+set $m3-tcl_status {Calling FieldExtractor!}
+set $m3-sVar {press_CC}
+
+# Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
+set $m4-width {302}
+set $m4-height {40}
+
+$m5 addViewer
+set $m5-ViewWindow_0-geometry 654x608+690+66
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m5-ViewWindow_0-view-eyep-x {-0.31894904471}
+set $m5-ViewWindow_0-view-eyep-y {0.439353902138}
+set $m5-ViewWindow_0-view-eyep-z {11.8544732131}
+set $m5-ViewWindow_0-view-lookat-x {-0.142282609558}
+set $m5-ViewWindow_0-view-lookat-y {-0.109274886071}
+set $m5-ViewWindow_0-view-lookat-z {0.0694065855985}
+set $m5-ViewWindow_0-view-up-x {0.0566546852591}
+set $m5-ViewWindow_0-view-up-y {0.997352835292}
+set $m5-ViewWindow_0-view-up-z {-0.0455803529281}
+set $m5-ViewWindow_0-view-fov {20.0}
+set $m5-ViewWindow_0-sr {1}
+set $m5-ViewWindow_0-do_stereo {0}
+set $m5-ViewWindow_0-ortho-view {0}
+set $m5-ViewWindow_0-trackViewWindow0 {1}
+set $m5-ViewWindow_0-raxes {1}
+set $m5-ViewWindow_0-ambient-scale {1.0}
+set $m5-ViewWindow_0-diffuse-scale {1.0}
+set $m5-ViewWindow_0-specular-scale {0.4}
+set $m5-ViewWindow_0-emission-scale {1.0}
+set $m5-ViewWindow_0-shininess-scale {1.0}
+set $m5-ViewWindow_0-polygon-offset-factor {1.0}
+set $m5-ViewWindow_0-polygon-offset-units {0.0}
+set $m5-ViewWindow_0-point-size {1.0}
+set $m5-ViewWindow_0-line-width {1.0}
+set $m5-ViewWindow_0-sbase {0.4}
+set $m5-ViewWindow_0-bgcolor-r {0.0}
+set $m5-ViewWindow_0-bgcolor-g {0.0}
+set $m5-ViewWindow_0-bgcolor-b {0.0}
+set $m5-ViewWindow_0-fogusebg {1}
+set $m5-ViewWindow_0-fogcolor-r {0.0}
+set $m5-ViewWindow_0-fogcolor-g {0.0}
+set $m5-ViewWindow_0-fogcolor-b {1.0}
+set $m5-ViewWindow_0-fog-start {0.0}
+set $m5-ViewWindow_0-fog-end {0.714265}
+set $m5-ViewWindow_0-fog-visibleonly {1}
+set $m5-ViewWindow_0-currentvisual {0}
+set $m5-ViewWindow_0-caxes {0}
+set $m5-ViewWindow_0-global-light0 {1}
+set $m5-ViewWindow_0-global-light1 {0}
+set $m5-ViewWindow_0-global-light2 {0}
+set $m5-ViewWindow_0-global-light3 {0}
+set $m5-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m5-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m5-ViewWindow_0-global-light {1}
+set $m5-ViewWindow_0-global-fog {0}
+set $m5-ViewWindow_0-global-debug {0}
+set $m5-ViewWindow_0-global-clip {1}
+set $m5-ViewWindow_0-global-cull {0}
+set $m5-ViewWindow_0-global-dl {0}
+set $m5-ViewWindow_0-global-type {Gouraud}
+set "$m5-ViewWindow_0-ChangeFieldBounds Transform widget (2)" {1}
+set "$m5-ViewWindow_0-Faces (1)" {1}
+
+
+::netedit scheduleok

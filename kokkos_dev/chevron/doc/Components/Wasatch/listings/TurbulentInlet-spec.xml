@@ -1,0 +1,6 @@
+<TurbulentInlet  spec="OPTIONAL NO_DATA"
+                 attribute1="period OPTIONAL INTEGER"
+                 attribute2="timeperiod OPTIONAL DOUBLE">
+  <BaseName      spec="REQUIRED STRING" />  <!-- this will create 3 expressions: x-basename, y-basename, z-basename !-->
+  <InputFile     spec="REQUIRED STRING"/>
+</TurbulentInlet>      

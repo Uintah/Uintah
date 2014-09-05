@@ -1,0 +1,196 @@
+<html>
+<title>TBONCL module</title>
+<body>
+
+<h1>TBONCL</h1>
+
+<b>Description:</b><p>
+
+<a href="template.html">Template class</a> (Please read!)<p>
+
+Implementation of the Temporal Branch-on-Need Octree (T-BON) for 
+isosurface extraction in curvilinear scalar fields (see thesis 
+for details).<p>
+
+Some preprocessing must be done before isosurface extraction.
+This preprocess step is DIFFERENT from that of the
+<a href="bonocl.html">BONOCL</a> module, so it should be done again
+(still once per data set) if the BONOCL preprocess is all you have.
+You may want to use a different set of metafiles if you want to
+run both BONOCL and TBONCL.<p>
+
+During execution (run the module on an execution metafile), the
+user controls isovalue and time value sliders.  Nodes and data are read
+in whenever needed to construct the current isosurface, otherwise
+left on disk.  The data files are read in in blocks to improve I/O
+performance (again, see the thesis).  A Marching Cubes-type 
+interpolation is performed to create triangles for rendering.<p>
+
+Curvilinear grids strongly resemble rectilinear grids.  The only
+differences are (a) most CL data sets contain multiple grids, or
+"zones," and (b) vertex positions are defined explicitly in (x,y,z).
+Vertex connections are still implicit.<p>
+
+
+<p><b>Metafile format:</b><p>
+
+<table align=center cols=2 border=1 cellpadding=2>
+<tr>
+<td align=center>Preprocessing</td>
+<td align=center>Execution</td>
+</tr>
+<tr>
+<td align=left>
+PREPROCESS<br>
+<i>filename for data file list*</i><br>
+<i>geometry file name**</i><br>
+<i>new geometry (bricked) file name</i><br>
+<i>filename for common tree data</i><br>
+<i>per-tree file base</i><br>
+num_zones<br>
+zone0_circularity***<br>
+nx0 ny0 nz0<br>
+zone1_circularity<br>
+nx1 ny1 nz1<br>
+...<br>
+</td>
+<td align=left>
+EXECUTE<br>
+<i>filename for common tree data</i><br>
+<i>new geometry (bricked) file name</i><br>
+<i>filename for per-tree data file list*</i><br>
+miniso maxiso slider_resolution<br>
+num_timesteps
+</td>
+</tr>
+<tr>
+<td align=left>* <i>format as follows:</i><br>
+  <table cols=2 border=0 cellpadding=0>
+  <tr>
+  <td align=left>data filename (time=0)</td>
+  <td align=right>bricked filename 0</td>
+  </tr>
+  <tr>
+  <td align=left>data filename (time=1)</td>
+  <td align=right>bricked filename 1</td>
+  </tr>
+  <tr>
+  <td align=left>data filename (time=2)</td>
+  <td align=right>bricked filename 2</td>
+  </tr>
+  </table>
+...<br>
+</td>
+<td>* <i>format as follows:</i><br>
+  <table align=center cols=2 border=0 cellpadding=0>
+  <tr>
+  <td>per-tree file 0</td>
+  <td>bricked filename 0</td>
+  </tr>
+  <tr>
+  <td>per-tree file 1</td>
+  <td>bricked filename 1</td>
+  </tr>
+  <tr>
+  <td>per-tree file 2</td>
+  <td>bricked filename 2</td>
+  </tr>
+  </table>
+...<br>
+</td>
+</tr>
+<tr>
+<td>** A file containing the explicit vertex positions.
+Should come with the data set (you may need to massage the 
+format, I certainly did).  Read as binary, just x0 y0 z0 x1 y1 z1 ...
+</td>
+<td></td>
+</tr>
+<tr>
+<td>*** Circularity defines whether or not a grid is circular, i.e.
+if point nx-1 and point 0 are adjacent.  Should be one of the following:<br>
+NONCIRCULAR: no coordinate is circular (a la bluntfin)<br>
+CIRCULAR_X: x-coordinate is circular (a la impinging jet)<br>
+CIRCULAR_Y: y-coordinate is circular (not supported)<br>
+CIRCULAR_Z: z-coordinate is circular (not supported)<br>
+</td>
+<td></td>
+</tr>
+</table>
+
+<p>
+<b>Example metafiles and explanations:</b><p>
+
+
+<hr>
+<i>meta_preprocess</i><p>
+
+<pre>
+PREPROCESS
+./filelist
+./geometry
+./newgeometry
+./common_data
+./tree
+3
+CIRCULAR_X
+32 64 32
+NONCIRCULAR
+128 128 64
+CIRCULAR_X
+64 64 32
+</pre>
+
+<hr>
+<i>./filelist</i><p>
+
+<pre>
+/local/sci/raid0/psutton/impinging_jet/Tbon/solution0  ./data0
+/local/sci/raid0/psutton/impinging_jet/Tbon/solution1  ./data1
+...
+/local/sci/raid0/psutton/impinging_jet/Tbon/solution98  ./data98
+</pre>
+
+<hr>
+The preprocess will read ./filelist and create 199 files.  ./common_data
+will contain data common to all trees, and ./tree0 .. ./tree98 will
+contain time-specific data.  ./data0 .. ./data98 contain bricked versions
+of the data files from each time step.  Once the preprocess is 
+finished, the module can be run on:
+<p>
+
+<hr>
+<i>meta_execute</i><p>
+
+<pre>
+EXECUTE
+./common_data
+./newgeometry
+./trees_file
+.945 1.016 0.0001
+99
+</pre>
+
+<hr>
+<i>./trees_file</i><p>
+
+<pre>
+./tree0      ./data0
+./tree1      ./data1
+...
+./tree98     ./data98
+</pre>
+
+<hr>
+The Impinging Jet data set contains float data in the range 0.945 .. 1.016.
+This metafile specifies that the isosurface slider should move in increments
+of 0.0001 (there are some interesting features near 0.999, thus the
+very fine resolution).  99 time steps exist for this data set.
+
+<hr>
+Packages/Philip Sutton (psutton@cs.utah.edu)<br>
+Last modified: 1 February 2000
+
+
+</body>
+</html>

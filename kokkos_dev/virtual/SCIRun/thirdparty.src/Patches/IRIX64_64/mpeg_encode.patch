@@ -1,0 +1,125 @@
+diff -p mpeg_encode/Makefile mpeg_encode-patch/Makefile
+*** mpeg_encode/Makefile	Wed Aug 16 16:16:56 1995
+--- mpeg_encode-patch/Makefile	Tue Dec 13 15:51:25 2005
+*************** LIBDIRS = $(JPEG_LIB_DIR)
+*** 68,79 ****
+  #####################################################################
+  # COMPILER # specify compiler; should be ANSI-compliant if possible #
+  #####################################################################
+! CC = gcc
+  
+  ################################################
+  # MAKE # command to use for the "make" command #
+  ################################################
+! MAKE = make
+  
+  ###################################################
+  # COMPILER FLAGS # modify for different compilers #
+--- 68,79 ----
+  #####################################################################
+  # COMPILER # specify compiler; should be ANSI-compliant if possible #
+  #####################################################################
+! CC = cc
+  
+  ################################################
+  # MAKE # command to use for the "make" command #
+  ################################################
+! #MAKE = make
+  
+  ###################################################
+  # COMPILER FLAGS # modify for different compilers #
+*************** CFLAGS	      =  $(INCLUDEDIR) $(DEBUGFLA
+*** 117,123 ****
+  #CFLAGS = $(INCLUDEDIR) $(DEBUGFLAG) -Wall -Wmissing-prototypes $(PROFLAG) $(PROTOFLAG) -DMIPS
+  
+  # 	SGI cc
+! #CFLAGS = $(INCLUDEDIR) $(DEBUGFLAG) $(PROFLAG) $(PROTOFLAG) -cckr -DIRIX
+  
+  #	Intel-based SVR4.0 cc
+  #CFLAGS = $(INCLUDEDIR) $(DEBUGFLAG) $(PROFLAG) $(PROTOFLAG) -DLONG_32 -DSVR4 -DSYSV386
+--- 117,123 ----
+  #CFLAGS = $(INCLUDEDIR) $(DEBUGFLAG) -Wall -Wmissing-prototypes $(PROFLAG) $(PROTOFLAG) -DMIPS
+  
+  # 	SGI cc
+! CFLAGS = $(INCLUDEDIR) $(DEBUGFLAG) $(PROFLAG) $(PROTOFLAG) -64 -DIRIX
+  
+  #	Intel-based SVR4.0 cc
+  #CFLAGS = $(INCLUDEDIR) $(DEBUGFLAG) $(PROFLAG) $(PROTOFLAG) -DLONG_32 -DSVR4 -DSYSV386
+diff -p mpeg_encode/Makefile.lib mpeg_encode-patch/Makefile.lib
+*** mpeg_encode/Makefile.lib	Tue Oct  8 12:21:54 1996
+--- mpeg_encode-patch/Makefile.lib	Tue Dec 13 15:52:26 2005
+***************
+*** 9,17 ****
+  # but you must specify if ranlib is needed here
+  
+  #if your system doens't need ranlib use this (Solaris/ Hpux)
+! # RANLIB=echo
+! #if your system needs ranlib use this
+! RANLIB=ranlib
+  
+  
+  # Chnage thsi to your installation program
+--- 9,15 ----
+  # but you must specify if ranlib is needed here
+  
+  #if your system doens't need ranlib use this (Solaris/ Hpux)
+! RANLIB=echo
+  
+  
+  # Chnage thsi to your installation program
+*************** RANLIB=ranlib
+*** 19,25 ****
+  INSTALL= cp
+  
+  # by default this is installed in your home dir
+! prefix = $$HOME
+  libdir = $(prefix)/lib
+  incdir = $(prefix)/include
+  
+--- 17,23 ----
+  INSTALL= cp
+  
+  # by default this is installed in your home dir
+! prefix = @INSTALL_DIR@
+  libdir = $(prefix)/lib
+  incdir = $(prefix)/include
+  
+Common subdirectories: mpeg_encode/convert and mpeg_encode-patch/convert
+Common subdirectories: mpeg_encode/docs and mpeg_encode-patch/docs
+Common subdirectories: mpeg_encode/examples and mpeg_encode-patch/examples
+Common subdirectories: mpeg_encode/headers and mpeg_encode-patch/headers
+Common subdirectories: mpeg_encode/html and mpeg_encode-patch/html
+Common subdirectories: mpeg_encode/jpeg and mpeg_encode-patch/jpeg
+Common subdirectories: mpeg_encode/libexample and mpeg_encode-patch/libexample
+diff -p mpeg_encode/libpnmrw.c mpeg_encode-patch/libpnmrw.c
+*** mpeg_encode/libpnmrw.c	Tue Nov 27 20:54:05 2001
+--- mpeg_encode-patch/libpnmrw.c	Tue Dec 13 15:50:18 2005
+***************
+*** 10,15 ****
+--- 10,17 ----
+   ** implied warranty.
+   */
+  
++ #include <errno.h>
++ 
+  #define pm_error(x) exit(1)
+  
+  
+*************** char* reason;
+*** 129,135 ****
+  #if !defined(LINUX)
+    extern char* sys_errlist[];
+  #endif
+!   extern int errno;
+    char* e;
+  
+    e = sys_errlist[errno];
+--- 131,137 ----
+  #if !defined(LINUX)
+    extern char* sys_errlist[];
+  #endif
+! 
+    char* e;
+  
+    e = sys_errlist[errno];
+Common subdirectories: mpeg_encode/tst and mpeg_encode-patch/tst

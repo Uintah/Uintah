@@ -1,0 +1,147 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Test for Superbee Limiter</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+
+  <Wasatch>
+
+    <Density>
+      <IsConstant>true</IsConstant>
+    </Density>
+
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi0-scalar" state="STATE_N" />
+      <SineFunction amplitude="10.0" frequency="2.0" offset="0.0">
+         <NameTag name="XSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+    
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi1-scalar" state="STATE_N" />
+      <SineFunction amplitude="10.0" frequency="1.0" offset="0.0">
+         <NameTag name="YSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+    
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi2-scalar" state="STATE_N" />
+      <SineFunction amplitude="10.0" frequency="3.0" offset="0.0">
+         <NameTag name="ZSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+  
+    <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
+    <BasicExpression type="XVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="advective-velocity-x" state="STATE_N" />
+      <Constant>1.0</Constant>
+    </BasicExpression>
+    
+    <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
+    <BasicExpression type="YVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="advective-velocity-y" state="STATE_N" />
+      <Constant>1.0</Constant>
+    </BasicExpression>
+    
+    <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
+    <BasicExpression type="ZVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="advective-velocity-z" state="STATE_N" />
+      <Constant>1.0</Constant>
+    </BasicExpression>
+    
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi0-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
+      
+      <ConvectiveFluxExpression>
+        <Method>SUPERBEE</Method> 
+        <Direction>X</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-x" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+    
+    </TransportEquation>
+    
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi1-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>SUPERBEE</Method>
+        <Direction>Y</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-y" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+      
+    </TransportEquation>
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi2-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>SUPERBEE</Method>
+        <Direction>Z</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-z" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>0.1</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.001</delt_min>
+    <delt_max>0.001</delt_max>
+    <max_Timesteps> 3 </max_Timesteps>        
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>convection-test-superbee.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle = "2" interval = "0.001"/>
+    <compression>gzip</compression>
+    <save label="phi0-scalar"/>
+    <save label="phi1-scalar"/>
+    <save label="phi2-scalar"/>
+  </DataArchiver> 
+
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[3,3,3]</upper>
+        <resolution>[12,12,12]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

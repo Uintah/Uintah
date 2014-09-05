@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="GageProbe" category="Gage">
+  <overview>
+    <authors>
+      <author>Anastasia Mironova</author>
+    </authors>
+    <summary>
+      This module adds the functionality of gage to SCIRun.
+    </summary>
+    <description>
+      None at present.
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>nin</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>nout</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+      Allows to set parameters for gageProbe
+    </description>
+    <parameter>
+      <widget>Place Widget Name Here</widget>
+      <label>Place Label Name Here</label>
+    </parameter>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

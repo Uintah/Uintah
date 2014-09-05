@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<component name="GenField" category="Visualization">
+  <overview>
+    <authors>
+      <author>Michael Callahan</author>
+    </authors>
+    <summary>
+      Used to generate various kinds of fields.
+    </summary>
+    <description>
+      <p>Version Date: Oct 2000</p><p>Version: 1.0</p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs>
+    </inputs>
+    <outputs>
+      <port>
+        <description>
+          Generated field.
+        </description>
+        <datatype>PSECore::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

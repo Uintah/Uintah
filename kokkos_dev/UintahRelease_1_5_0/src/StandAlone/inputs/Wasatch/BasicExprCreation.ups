@@ -1,0 +1,60 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Basic expression creation</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+
+
+   <Wasatch>
+
+     <BasicExpression type="SVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="temperature" state="STATE_N" />
+       <Constant>543.21</Constant>
+     </BasicExpression>
+
+     <BasicExpression type="SVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="MyTestVariable" state="STATE_NONE" />
+       <Constant>123.456</Constant>
+     </BasicExpression>
+
+     <BasicExpression type="SVOL">
+       <TaskList>advance_solution</TaskList>
+       <NameTag name="thermal conductivity" state="STATE_NONE" />
+       <Constant>1.0</Constant>
+     </BasicExpression>
+
+  </Wasatch>
+
+   <!-- no timestepping -->
+  <Time>
+    <maxTime>0.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.00</delt_min>
+    <delt_max>2.0</delt_max>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>wasatch_test.uda</filebase>
+    <outputInitTimestep />
+    <outputTimestepInterval>10</outputTimestepInterval>
+    <checkpoint cycle = "1" interval = "0.01"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[9,9,9]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

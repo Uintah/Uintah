@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<component name="HexMeshCuthillMcKee" category="CreateModel">
+  <overview>
+    <authors>
+      <author>Michael Callahan</author>
+    </authors>
+    <summary>Reorder the nodes in order to have a bandwidth minimized
+    connectivity graph (and therefore a bandwidth minimized stiffness
+    matrix).</summary>
+    <description>
+      <p>
+      Given a HexVolField of ints, data at the nodes, reorder the
+      nodes (and fix the elements and data) so that the connectivity
+      graph produces a bandwidth minimized stiffness matrix.
+      </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>HexVol</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Bandwidth Minimized HexVol</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

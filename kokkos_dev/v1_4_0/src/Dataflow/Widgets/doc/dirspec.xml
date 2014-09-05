@@ -1,0 +1,72 @@
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<dir name="Dataflow/Widgets">
+  <fit>
+  <!-- describe how this directory fits into SCIRun - why does it 
+       exist, how does SCIRun benefit from it, etc. -->
+    <p>
+      Dataflow/Widgets contains a set of 3D interaction widgets.
+      These widgets have a graphical representation within the scene
+      graph of the Viewer, and can be directly manipulated within a
+      visualization.  Furthermore, the module that creates a widget
+      maintains access to and control of the widget, and is alerted
+      through a callback when a widget is manipulated within a scence.
+      Through this callback mechanism, the module can respond
+      appropriately as the widget interaction is taking place -
+      thereby allowing compuational feedback to be directly coupled
+      with the visual feedback.
+    </p>
+  </fit>
+  <use>
+    <why>
+    <!-- Discuss why a developer would need or want to use the
+         functions and/or classes in this directory. -->
+      <p>
+        Widgets are useful in any context where direct manipulation
+        has clear advantages over indirect manipulation.  For example,
+        when specifying a cutting plane for a scene, it is possible to
+        specify that plane by entering the A, B, C, and D of a plane
+        equation (Ax + By + Cz + D = 0) with sliders or text-entry
+        boxes; however, it is often much more natural to place a
+        graphical representation of that plane (for example, a
+        rectangular frame widget) into the scene and provide the user
+        handles to translate and rotate the clipping plane directly.
+        By manipulating the object directly, a greater sense of
+        immersion is obtained, and the user has a more natural
+        mechanism for setting parameters.
+      </p>
+    </why>
+    <when>
+    <!-- Discuss when or where to use the functions and classes in
+         this directory: From within modules?, when a certain event
+	 occurs? -->
+      <p>
+        Widgets should be constructed within the module that will be
+        using them, and should be sent to a Viewer module through a
+        Geom outport.  The developer should implement the virtual
+        get_pick() method for their module if they want catch the
+        callbacks when the widget is manipulated.
+      </p>
+    </when>
+  </use>
+</dir>
+
+<!-- author comments: suggestions for new/better tags for this xml file
+
+-->

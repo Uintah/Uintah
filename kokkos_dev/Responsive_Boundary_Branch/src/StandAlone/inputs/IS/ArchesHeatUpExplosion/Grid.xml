@@ -1,0 +1,163 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!--____________________________________________________________________-->
+<!--     This contains the grid variables used for all 3 phases         -->
+<!--____________________________________________________________________-->
+<Uintah_Include>
+  <Grid>
+    <BoundaryConditions>
+      <!--______________LEFT____________________-->
+      <Face side = "x-">
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 101325.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <!--______________RIGHT____________________-->
+      <Face side = "x+">
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 101325.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <!--______________BOTTOM____________-->
+      <Face side = "y-">
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 101325.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.0,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>   
+      <!--______________TOP____________________-->               
+      <Face side = "y+">
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 101325.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <!--______________BACK____________________-->
+      <Face side = "z-">
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 101325.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>  
+      <!--______________FRONT____________________--> 
+      <Face side = "z+">
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 101325.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+    <!--____________________________________________________________________-->
+
+    <Level>
+           <Box label = "3D">
+              <lower>        [-0.1,-0.1,-0.1]   </lower>
+              <upper>        [ 0.1, 0.1, 0.1]   </upper>
+
+              <extraCells>   [1,1,1]            </extraCells>
+              <patches>      [2,2,2]            </patches>
+              <resolution>   [20,20,20]          </resolution>
+           </Box>
+    </Level>
+<!--
+    <Level>
+           <Box label = "16mm res.">
+              <lower>        [-0.48,-0.48,-0.48]   </lower>
+              <upper>        [ 0.48, 0.48, 0.48]   </upper>
+              <extraCells>   [1,1,1]            </extraCells>
+              <patches>      [4,4,4]            </patches>
+              <resolution>   [60,60,60]         </resolution>
+           </Box>
+    </Level>
+        <Level>
+           <Box label = "4mm res.">
+              <lower>        [-0.16,-0.16,-0.16]   </lower>
+              <upper>        [ 0.16, 0.16, 0.16]   </upper>
+
+              <extraCells>   [1,1,1]            </extraCells>
+              <patches>      [4,4,4]            </patches>
+              <resolution>   [80,80,80]         </resolution>
+           </Box>
+    </Level>
+        
+   
+    <Level>
+           <Box label = "1mm res.">
+              <lower>        [-0.06,-0.06,-0.072]   </lower>
+              <upper>        [ 0.06, 0.06, 0.072]   </upper>
+
+              <extraCells>   [1,1,1]                </extraCells>
+              <patches>      [10,10,6]                </patches>
+              <resolution>   [120,120,144]          </resolution>
+           </Box>
+    </Level>
+-->
+  </Grid>
+</Uintah_Include>

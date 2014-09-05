@@ -1,0 +1,44 @@
+To store information for the SPME calculation, we have an SPME patch object.
+The SPMEPatch object has the following data containers:
+
+Type							Name				Use
+----							----				---
+IntVector						d_localExtents		The number of kGrid points 
+													mapped to the current patch
+													
+IntVector						d_globalOffset		The index into the global 
+													kGrid map that coincides
+													with the current patch's local
+												    0,0,0 location.
+													(Real grid location = 
+														globalOffset + 
+														internal grid index)
+
+IntVector						d_posGhostExtents	Number of ghost cells in 
+													positive directions
+													
+IntVector						d_negGhostExtents	Number of ghost cells in 
+													negative directions
+
+SimpleGrid<double>*				d_theta				Patch's compositied B*C
+													component in fourier space
+											
+SimpleGrid<Matrix3>				d_stressPrefactor	Patch's stress tensor 
+													premultiplier grid
+													
+SimpleGrid<dblcomplex>			d_Q_patchLocal		Grid which holds complex 
+													valued function which reduces
+													to the total SPME 3D data set
+
+const Patch*					d_patch				Pointer to the Uintah patch
+													this SPME patch represents
+													
+vector< vector<SPMEMapPoint> >	d_chargeMapVector	An array of SPME Map Points
+													which map each particle on
+													the patch to it's delocalized
+													grid representation of charge,
+													dipole, and dipole derivative
+													influence on the underlying
+													SPME data grid.
+													
+																				

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/component.dtd">
+<?xml-stylesheet href="../../../doc/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="FieldBoundary" category="Fields">
+  <overview>
+    <authors>
+      <author>Martin Cole</author>
+    </authors>
+    <summary>Extract boundary surface from volume field.</summary>
+    <description>
+      <p>Builds a TriSurface of doubles (with no data) from the incoming 
+         volume field boundary.  Does nothing if the input is not high 
+         enough order to have faces.</p>
+      <developer>
+	<p>Walks all the cells, checking each face for neigbors.  The
+           faces without neighbors are the boundary faces.</p>
+      </developer>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <!-- one of (device port file) -->
+      <port>
+	<name>Field</name>
+	<description>
+	  <p>
+             Accepts any field. Only useful with fields that at least 
+             have faces.
+          </p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+	<componentname>FieldReader</componentname>
+      </port>
+    </inputs>
+    <outputs>
+      <!-- one of (device port file) -->
+      <port>
+	<name>TriSurf</name>
+	<description>
+	  <p>outputs a TriSurface of doubles.</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+	<componentname>ShowField</componentname>
+      </port>
+      <port>
+	<name>Interpolant</name>
+	<description>
+	  <p>outputs the interpolant for the TriSurface.</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+	<componentname>ShowField</componentname>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+    <plan>
+      <description>
+	<p>Feed the module a volume mesh and render the output.</p>
+      </description>
+      <step>
+	<p>Load ./doc/FieldBoundary_test.net</p>
+      </step>
+      <step>
+	<p>Execute the net.</p>
+      </step>
+      <step>
+	<p>You should see the correct gouraud shaded faces, along with 
+           normals and edges.</p>
+      </step>
+      <step>
+	<p>Select wireframe in the viewer.  There should be no interior faces,
+           although this could be caused by bad input (unconnected volume)</p>
+      </step>
+    </plan>
+  </testing>
+</component>

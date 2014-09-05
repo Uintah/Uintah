@@ -1,0 +1,209 @@
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+#
+
+# SCI Network 1.0
+
+set results [sourceSettingsFile]
+
+if { $results == "failed" } {
+
+    ::netedit scheduleok
+    return 
+
+} else {
+
+    set DATADIR [lindex $results 0]
+    set DATASET [lindex $results 1]
+}
+
+source $DATADIR/$DATASET/$DATASET.settings
+
+::netedit dontschedule
+
+global userName
+set userName "dmw"
+
+global runDate
+set runDate " Tue  Jan 22 2002"
+
+global runTime
+set runTime " 1:52:13"
+
+set bbox {6.0 5.0 705 711}
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 6 5]
+set m1 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 24 133]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 24 198]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 6 279]
+set m4 [addModuleAtPosition "SCIRun" "Render" "Viewer" 204 667]
+set m5 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 456 54]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 245 356]
+set m7 [addModuleAtPosition "BioPSE" "Forward" "InsertElectrodes" 456 151]
+set m8 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 492 230]
+set m9 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 474 359]
+set m10 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 456 420]
+set m11 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 409 501]
+set m12 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 222 6]
+set m13 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 235 580]
+set m14 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 222 283]
+set m15 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 391 588]
+set m16 [addModuleAtPosition "BioPSE" "Forward" "ConfigureElectrode" 6 66]
+set m17 [addModuleAtPosition "BioPSE" "Forward" "ConfigureElectrode" 222 72]
+set m18 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 572 501]
+set m19 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMVoltageSource" 474 291]
+set m20 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 590 420]
+
+addConnection $m1 0 $m2 0
+addConnection $m2 0 $m3 1
+addConnection $m3 0 $m4 0
+addConnection $m9 0 $m10 1
+addConnection $m6 0 $m11 0
+addConnection $m10 0 $m11 1
+addConnection $m10 0 $m13 0
+addConnection $m11 0 $m13 1
+addConnection $m2 0 $m14 1
+addConnection $m14 0 $m4 1
+addConnection $m13 1 $m4 2
+addConnection $m15 0 $m4 3
+addConnection $m12 0 $m17 0
+addConnection $m0 0 $m16 0
+addConnection $m16 0 $m2 1
+addConnection $m10 0 $m18 0
+addConnection $m18 0 $m15 0
+addConnection $m11 0 $m15 1
+addConnection $m8 0 $m19 1
+addConnection $m19 0 $m9 0
+addConnection $m19 1 $m9 1
+addConnection $m5 0 $m7 0
+addConnection $m7 0 $m8 0
+addConnection $m7 0 $m19 0
+addConnection $m7 0 $m10 0
+addConnection $m7 0 $m20 0
+addConnection $m20 0 $m18 1
+addConnection $m16 0 $m3 0
+addConnection $m17 0 $m7 1
+addConnection $m16 0 $m7 2
+addConnection $m17 0 $m14 0
+
+set $m0-filename $DATADIR/$DATASET/$DATASET-square-electrode.cfi.fld
+
+set $m1-mapType {9}
+set $m1-minRes {19}
+set $m1-resolution {19}
+set $m1-realres {12}
+
+set $m3-nodes-on {1}
+set $m3-nodes-as-disks {0}
+set $m3-edges-on {1}
+set $m3-use-normals {0}
+set $m3-use-transparency {0}
+set $m3-faces-on {0}
+set $m3-vectors-on {0}
+set $m3-node_display_type {Spheres}
+set $m3-edge_display_type {Cylinders}
+set $m3-active_tab {Edges}
+set $m3-edge_scale [expr 0.01 * ${global-scale}]
+set $m3-node_scale [expr 0.01 * ${global-scale}]
+
+$m4 ui
+set $m4-ViewWindow_0-view-eyep-x ${view-eyep-x}
+set $m4-ViewWindow_0-view-eyep-y ${view-eyep-y}
+set $m4-ViewWindow_0-view-eyep-z ${view-eyep-z}
+set $m4-ViewWindow_0-view-lookat-x ${view-lookat-x}
+set $m4-ViewWindow_0-view-lookat-y ${view-lookat-y}
+set $m4-ViewWindow_0-view-lookat-z ${view-lookat-z}
+set $m4-ViewWindow_0-view-up-x ${view-up-x}
+set $m4-ViewWindow_0-view-up-y ${view-up-y}
+set $m4-ViewWindow_0-view-up-z ${view-up-z}
+set $m4-ViewWindow_0-view-fov ${view-fov}
+set $m4-ViewWindow_0-specular-scale {0.4}
+
+set $m5-filename $DATADIR/$DATASET/$DATASET-mesh.tvt.fld
+
+set $m6-positionList {{0 9} {398 9}}
+set $m6-nodeList {258 437}
+set $m6-width {398}
+set $m6-height {40}
+set $m6-mapType {2}
+set $m6-minRes {12}
+set $m6-resolution {128}
+set $m6-realres {128}
+set $m6-gamma {0}
+
+set $m9-target_error {1e-06}
+set $m9-flops {1.61374e+08}
+set $m9-floprate {224.576}
+set $m9-memrefs {2.8849e+10}
+set $m9-memrate {3964.74}
+set $m9-orig_error {1}
+set $m9-current_error {9.54371e-07}
+set $m9-method {Conjugate Gradient & Precond. (SCI)}
+set $m9-precond {jacobi}
+set $m9-iteration {330}
+set $m9-maxiter {12500}
+set $m9-use_previous_soln {0}
+set $m9-emit_partial {0}
+set $m9-status {}
+set $m9-np {4}
+
+set $m11-isFixed {1}
+set $m11-min {-1}
+set $m11-max {1}
+
+set $m12-filename $DATADIR/$DATASET/$DATASET-circle-electrode.cfi.fld
+
+set $m13-extract-from-new-field {1}
+set $m13-algorithm {0}
+set $m13-update_type {on release}
+set $m13-color-r {0.4}
+set $m13-color-g {0.2}
+set $m13-color-b {0.9}
+
+set $m14-nodes-on {1}
+set $m14-nodes-as-disks {0}
+set $m14-edges-on {1}
+set $m14-use-normals {0}
+set $m14-use-transparency {0}
+set $m14-faces-on {0}
+set $m14-vectors-on {0}
+set $m14-node_display_type {Spheres}
+set $m14-edge_display_type {Cylinders}
+set $m14-active_tab {Edges}
+set $m14-edge_scale [expr 0.01 * ${global-scale}]
+set $m14-node_scale [expr 0.01 * ${global-scale}]
+set $m14-resolution {4}
+
+set $m15-nodes-on {0}
+set $m15-nodes-as-disks {0}
+set $m15-edges-on {1}
+set $m15-use-normals {0}
+set $m15-use-transparency {1}
+set $m15-faces-on {1}
+set $m15-vectors-on {0}
+set $m15-edge_display_type {Lines}
+set $m15-active_tab {Edges}
+set $m15-edge_scale {1}
+
+set $m16-flip {0}
+set $m16-voltage {5}
+
+set $m17-flip {1}
+set $m17-voltage {-5}
+
+set $m19-bcFlag {DirSub}
+
+::netedit scheduleok

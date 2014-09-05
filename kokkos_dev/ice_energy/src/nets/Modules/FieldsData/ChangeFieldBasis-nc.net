@@ -1,0 +1,170 @@
+# SCIRun Network v1.22.0
+
+#  For more information, please see: http://software.sci.utah.edu
+# 
+#  The MIT License
+# 
+#  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+#  University of Utah.
+# 
+#  License for the specific language governing rights and limitations under
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+# 
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+# 
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+#
+
+set results [sourceSettingsFile]
+
+if { $results == "failed" } {
+    ::netedit scheduleok
+    return
+} else {
+    set DATADIR [lindex $results 0]
+    set DATASET [lindex $results 1]
+}
+
+source $DATADIR/$DATASET/$DATASET.settings
+
+set name {Main}
+set bbox {49 18 681 487}
+set creationDate {Mon May 03 2004}
+set creationTime {14:03:25}
+set runDate {}
+set runTime {}
+set notes {}
+
+# Create a SCIRun->DataIO->FieldReader Module
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 49 18]
+
+# Create a SCIRun->Render->Viewer Module
+set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 188 443]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 486 42]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 422 254]
+
+# Create a SCIRun->FieldsData->ChangeFieldDataAt Module
+set m5 [addModuleAtPosition "SCIRun" "FieldsData" "ChangeFieldDataAt" 103 169]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 188 360]
+
+# Create a SCIRun->FieldsData->ApplyInterpMatrix Module
+set m7 [addModuleAtPosition "SCIRun" "FieldsData" "ApplyInterpMatrix" 85 258]
+
+# Create a SCIRun->FieldsCreate->FieldBoundary Module
+set m8 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldBoundary" 296 96]
+
+# Create a SCIRun->FieldsData->ApplyInterpMatrix Module
+set m9 [addModuleAtPosition "SCIRun" "FieldsData" "ApplyInterpMatrix" 278 174]
+
+# Create the Connections between Modules
+set c1 [addConnection $m1 0 $m8 0]
+set c2 [addConnection $m1 0 $m7 0]
+set c3 [addConnection $m1 0 $m9 0]
+set c4 [addConnection $m1 0 $m5 0]
+set c5 [addConnection $m7 0 $m6 0]
+set c6 [addConnection $m3 0 $m4 0]
+set c7 [addConnection $m6 0 $m2 0]
+set c8 [addConnection $m8 0 $m9 1]
+set c9 [addConnection $m9 0 $m4 1]
+set c10 [addConnection $m5 0 $m7 1]
+set c11 [addConnection $m4 0 $m6 1]
+set c12 [addConnection $m8 1 $m9 2]
+set c13 [addConnection $m5 1 $m7 2]
+
+# Set GUI variables for the SCIRun->DataIO->FieldReader Module
+set $m1-filename "$DATADIR/$DATASET/$DATASET-voltage.tvd.fld"
+
+$m2 ui
+set $m2-ViewWindow_0-geometry 654x648+616+0
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m2-ViewWindow_0-pos {}
+set $m2-ViewWindow_0-caxes {0}
+set $m2-ViewWindow_0-raxes {1}
+set $m2-ViewWindow_0-have_collab_vis {0}
+set $m2-ViewWindow_0-view-eyep-x {2.100000000000000089e+00}
+set $m2-ViewWindow_0-view-eyep-y {1.600000000000000089e+00}
+set $m2-ViewWindow_0-view-eyep-z {11.5}
+set $m2-ViewWindow_0-view-lookat-x {0}
+set $m2-ViewWindow_0-view-lookat-y {0}
+set $m2-ViewWindow_0-view-lookat-z {0}
+set $m2-ViewWindow_0-view-up-x {0}
+set $m2-ViewWindow_0-view-up-y {1}
+set $m2-ViewWindow_0-view-up-z {0}
+set $m2-ViewWindow_0-view-fov {20}
+set $m2-ViewWindow_0-global-light0 {1}
+set $m2-ViewWindow_0-global-light1 {0}
+set $m2-ViewWindow_0-global-light2 {0}
+set $m2-ViewWindow_0-global-light3 {0}
+set $m2-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m2-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m2-ViewWindow_0-bgcolor-r {0}
+set $m2-ViewWindow_0-bgcolor-g {0}
+set $m2-ViewWindow_0-bgcolor-b {0}
+set $m2-ViewWindow_0-do_stereo {0}
+set $m2-ViewWindow_0-ambient-scale {1.0}
+set $m2-ViewWindow_0-diffuse-scale {1.0}
+set $m2-ViewWindow_0-specular-scale {0.4}
+set $m2-ViewWindow_0-emission-scale {1.0}
+set $m2-ViewWindow_0-shininess-scale {1.0}
+set $m2-ViewWindow_0-polygon-offset-factor {1.0}
+set $m2-ViewWindow_0-polygon-offset-units {0.0}
+set $m2-ViewWindow_0-point-size {1.0}
+set $m2-ViewWindow_0-line-width {1.0}
+set $m2-ViewWindow_0-sbase {0.40}
+set $m2-ViewWindow_0-sr {1}
+set $m2-ViewWindow_0-do_bawgl {0}
+set $m2-ViewWindow_0-global-light {1}
+set $m2-ViewWindow_0-global-fog {0}
+set $m2-ViewWindow_0-global-debug {0}
+set $m2-ViewWindow_0-global-clip {1}
+set $m2-ViewWindow_0-global-cull {0}
+set $m2-ViewWindow_0-global-dl {0}
+set $m2-ViewWindow_0-global-type {Gouraud}
+set $m2-ViewWindow_0-ortho-view {0}
+set "$m2-ViewWindow_0-Scalars (1)" {1}
+
+# Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
+set $m3-resolution {255}
+set $m3-realres {255}
+
+# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
+set $m4-min {-6.49646999999999974484e-01}
+set $m4-max {3.7080299999999999372e-01}
+
+# Set GUI variables for the SCIRun->FieldsData->ChangeFieldDataAt Module
+set $m5-outputdataat {Cells}
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m6-nodes-on {0}
+set $m6-edges-on {0}
+set $m6-faces-on {0}
+set $m6-normalize-vectors {0}
+set $m6-scalars-on {1}
+set $m6-has_scalar_data {1}
+set $m6-scalar_display_type {Spheres}
+set $m6-node_scale {0.0300}
+set $m6-edge_scale {0.0150}
+set $m6-vectors_scale {0.300}
+set $m6-scalars_scale {0.01356}
+
+
+::netedit scheduleok

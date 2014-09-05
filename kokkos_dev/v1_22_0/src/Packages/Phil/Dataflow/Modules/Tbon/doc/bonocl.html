@@ -1,0 +1,122 @@
+<html>
+<title>BONOCL module</title>
+<body>
+
+<h1>BONOCL</h1>
+
+<b>Description:</b><p>
+
+<a href="template.html">Template class</a> (Please read!)<p>
+
+Implementation of the Branch-on-Need Octree (BONO) for isosurface
+extraction in curvilinear scalar fields (see Wilhelms & van Gelder's 
+1992 ACM ToG paper for details).<p>
+
+Some preprocessing must be done before isosurface extraction (once per 
+data set).  Run the module using a preprocessing metafile if this has
+not already been done.<p>
+
+During execution (run the module on an execution metafile), the
+user controls isovalue and time value sliders.  Data set is read
+in whenever the time value changes, left in memory when only isovalue
+changes.  A Marching Cubes-type interpolation is performed to 
+create triangles for rendering.<p>
+
+Curvilinear grids strongly resemble rectilinear grids.  The only
+differences are (a) most CL data sets contain multiple grids, or
+"zones," and (b) vertex positions are defined explicitly in (x,y,z).
+Vertex connections are still implicit.<p>
+
+
+<p><b>Metafile format:</b><p>
+
+<table align=center cols=2 border=1 cellpadding=2>
+<tr>
+<td align=center>Preprocessing</td>
+<td align=center>Execution</td>
+</tr>
+<tr>
+<td align=left>
+PREPROCESS<br>
+<i>filename for data file list*</i><br>
+<i>geometry file name**</i><br>
+<i>new geometry file name (ignored)</i><br>
+<i>filename for common tree data</i><br>
+<i>per-tree file base</i><br>
+num_zones<br>
+zone0_circularity***<br>
+nx0 ny0 nz0<br>
+zone1_circularity<br>
+nx1 ny1 nz1<br>
+...<br>
+</td>
+<td align=left>
+EXECUTE<br>
+<i>filename for common tree data</i><br>
+<i>geometry file name</i><br>
+<i>filename for per-tree data file list*</i><br>
+miniso maxiso slider_resolution<br>
+num_timesteps
+</td>
+</tr>
+<tr>
+<td align=left>* <i>format as follows:</i><br>
+data filename for timestep 0<br>
+data filename for timestep 1<br>
+data filename for timestep 2<br>
+...<br>
+</td>
+<td>* <i>format as follows:</i><br>
+<table align=center cols=2 border=0 cellpadding=0>
+<tr>
+<td>per-tree file 0</td>
+<td>data file (timestep 0)</td>
+</tr>
+<tr>
+<td>per-tree file 1</td>
+<td>data file (timestep 1)</td>
+</tr>
+<tr>
+<td>per-tree file 2</td>
+<td>data file (timestep 2)</td>
+</tr>
+</table>
+...<br>
+</td>
+</tr>
+<tr>
+<td>** A file containing the explicit vertex positions.
+Should come with the data set (you may need to massage the 
+format, I certainly did).  Read as binary, just x0 y0 z0 x1 y1 z1 ...
+</td>
+<td></td>
+</tr>
+<tr>
+<td>*** Circularity defines whether or not a grid is circular, i.e.
+if point nx-1 and point 0 are adjacent.  Should be one of the following:<br>
+NONCIRCULAR: no coordinate is circular (a la bluntfin)<br>
+CIRCULAR_X: x-coordinate is circular (a la impinging jet)<br>
+CIRCULAR_Y: y-coordinate is circular (not supported)<br>
+CIRCULAR_Z: z-coordinate is circular (not supported)<br>
+</td>
+<td></td>
+</tr>
+</table>
+
+<p>
+<b>Example metafiles and explanations:</b><p>
+
+See the <a href="bono.html#bonoexamples">BONO</a> page for examples for the
+rectilinear case.  Extrapolation from these is fairly obvious.
+The <a href="tboncl.html">TBONCL</a> page has some more examples,
+but be careful.  TBONCL uses bricking, and so there are some extra
+filenames in the metafiles that could easily cause unwanted behavior.
+<p>
+
+<hr>
+Packages/Philip Sutton (psutton@cs.utah.edu)<br>
+Last modified: 31 January 2000
+
+
+</body>
+</html>

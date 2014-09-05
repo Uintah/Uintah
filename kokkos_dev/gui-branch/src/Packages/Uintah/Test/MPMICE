@@ -1,0 +1,48 @@
+#!/usr/local/bin/python
+
+from os import environ,mkdir,path,system,chdir
+from time import asctime,localtime,time
+from sys import argv,exit
+from helpers.runSusTest import runSusTest,input,modes,num_processes
+
+TESTS = [   ("advect.ups",		    ["dbg", "opt"]),	\
+            ("thermx.ups",		    ["dbg", "opt"])     \
+    	]
+
+if len(argv) < 2:
+    print "usage: %s <mode>" % argv[0]
+    print "    where <mode> is a short string used to select tests to run."
+    exit(1)
+mode = argv[1]
+
+testdir = "%s/MPMICE-%s" % (environ['BUILDROOT'], mode)
+susdir = "%s/SCIRun/src/Packages/Uintah/StandAlone" % (environ['BUILDROOT'])
+mkdir(testdir)
+chdir(testdir)
+
+failcode = 0
+
+DO_RESTART = "yes"
+
+for test in TESTS:
+  if mode not in modes(test):
+    continue
+
+  testname = path.splitext(input(test))[0];
+  mkdir(testname)
+  chdir(testname)
+
+  # Run normal test
+  rc = runSusTest(test, mode, susdir, "mpmice")
+  if rc == 0:
+    # Run restart test
+    rc = runSusTest(test, mode, susdir, "mpmice", DO_RESTART)
+    if rc == 1:
+	failcode = 1
+  else:
+    failcode = 1
+
+  chdir("..")
+
+exit(failcode)
+

@@ -1,0 +1,45 @@
+*                       SIMULATION PARAMETERS
+*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*1  ---- Ensemble control variables
+* NVE (microcanonical)   NVT (canonical)    NPT (isothermal-isobaric) 
+  .false.                .true.             .false.
+*2  ----  Dispersive interaction and integration control
+* Cutoff Radius    Max "Drift"    Delta(fs)   Number of steps 
+ 10.0              1.0            0.5         10000
+*3  ---- Thermostat and Barostat
+* Temperature (K)     Pressure (atm)  Num_NHC  OmegaQ (1/fs)  OmegaW(1/fs)
+  423.00              1.00            1        0.01           0.0005
+*XXX ---- Static Polarization Model [No Longer Used - Do Not Change (DNC) ]
+* Do Not Change  Do Not Change  Do Not Change  Do Not Change   Do Not Change
+ .FALSE.         13.0           14.5           50.0            4.5
+*4  ---- Statistic collection and output control
+* Initialize(fs)  Average(fs)  Pressure(fs)    Energy Split(fs)  Coord Output(fs)
+  40.0            120.0        4.0             1000000.0         1000.0
+*------- Trajectory file settings
+*5  ----   Trajectory Output Flags (Filenames: fort.XX)
+* Box Dipole(76)   Coordinates(77)   Stress Tensor(78)  Velocities(79)
+  .false.          .false.           .false.            .false.
+*6  ----   Trajectory Output Frequency (femtoseconds) 
+* Dipole Time      Coordinate Time   Stress Time        Velocity Time
+  100              1000              4                  1000
+*7  ---- System Adjustment and Debugging
+* Resize Box?      Target Box Size   Output Additional Information?
+  .TRUE.           45.5             .false.
+*8  ----  Interaction control
+* Calc Intermolecular?   Exclude 1-4?      Isokinetic Ensemble?
+  .TRUE.                 .false.           .TRUE.
+*9  ----  1-4 Interaction Scaling 
+* Reduce 1-4(Exc. mu-mu)  Reduce 1-4 Factor  Reduce Q-mu 1-4  Red. Q-mu Factor
+  .false.                 0.0                .TRUE.           0.8
+*10 ----  Bond constraints (SHAKE Algorithm)
+* Constrain Bonds?     Tolerance (SHAKE)
+  .TRUE.               1.d-14
+*11 ----  Long range electrostatic calculation (Ewald Sum)
+* Electrostatic Calculation Type      Alpha      Maximum K Vector
+  Ewald                              10.0        7
+*12 ----  Integrator control
+* Integrator Type     Medium Steps   Large Steps   Medium Timestep Cutoff
+  Multiple3           4              8             6.5
+*13 ----  Many body polarization control
+* Q-mu     mu-mu     |  Polarization Tol.  Tapering   Taper Start  Epsilon(RF)
+  Ewald    RF/Taper  |  1.0d-9             .TRUE.     9.3          1.0

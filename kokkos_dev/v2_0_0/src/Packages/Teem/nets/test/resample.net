@@ -1,0 +1,54 @@
+# SCI Network 1.0
+
+if {[llength [array get env SCIRUN_DATA]] == 0} {
+   puts ""
+   puts "*** Error: This net depends on the SCIRUN_DATA enviroment variable."
+   puts "*** Please exit, set it in your shell, and rerun."
+   puts "*** (e.g. setenv SCIRUN_DATA /local/data/SCIRunData/)"
+   puts ""
+   ::netedit scheduleok
+   return
+}
+
+set DATADIR $env(SCIRUN_DATA)
+puts "*** Using SCIRUN_DATA $DATADIR"
+
+::netedit dontschedule
+
+global notes
+set notes ""
+
+set m0 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 190 169]
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 10 10]
+set m2 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 10 90]
+set m3 [addModuleAtPosition "Teem" "Unu" "UnuResample" 10 169]
+set m4 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 10 235]
+
+addConnection $m1 0 $m2 0
+addConnection $m2 0 $m0 0
+addConnection $m2 0 $m3 0
+addConnection $m3 0 $m4 0
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m1-notes {}
+set $m1-show_status {1}
+set $m1-filename $DATADIR/aneurysm/aneurysm-mra-lowres.lvs.fld
+set $m2-notes {}
+set $m2-show_status {1}
+set $m2-label {aneurysm}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m3-filtertype {gaussian}
+set $m3-resampAxis1 {x0.25}
+set $m3-resampAxis2 {x0.5}
+set $m3-resampAxis3 {x0.75}
+set $m3-sigma {1}
+set $m3-extent {6}
+set $m4-notes {}
+set $m4-show_status {1}
+$m0 initialize_ui
+$m3 initialize_ui
+$m4 initialize_ui
+
+::netedit scheduleok

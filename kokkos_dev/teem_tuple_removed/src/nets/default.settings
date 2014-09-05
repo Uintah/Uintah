@@ -1,0 +1,12 @@
+set view-eyep-x -6.5
+set view-eyep-y 1.8
+set view-eyep-z 9.7
+set view-lookat-x 0
+set view-lookat-y 0
+set view-lookat-z 0
+set view-up-x 0.0
+set view-up-y 1.0
+set view-up-z 0.0
+set view-fov 16.5
+
+set global-scale 1

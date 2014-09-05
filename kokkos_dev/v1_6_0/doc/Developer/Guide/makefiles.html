@@ -1,0 +1,636 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<html>
+<head>
+
+	<title>SCIRun Makefile design rationale</title>
+	<!-- Changed by: Ted Dustman, 05-Mar-2002 -->
+
+	<link rel=stylesheet type="text/css" href="../doc_styles.css">
+</head>
+
+<body>
+<!-- ******************** DOCUMENTATION HEADER ********************* -->
+<div class="top-banner-margins">
+<table border="0" cellspacing="0" cellpadding="0" width="100%" height="91">
+<tr>
+	<td align="center" width="%100" background="../images/banner_top_fill.jpg"><img src="../images/banner_top.jpg" width="744" height="91" border="0" usemap="#banner" /></td>
+<map name="banner">
+	<area href="http://www.sci.utah.edu" alt="Home" coords="92,62,186,83" />
+	<area href="http://software.sci.utah.edu" alt="Software" coords="193,61,289,83" />
+	<area href=".." alt="Documentation" coords="296,62,437,83" />
+	<area href="../UserGuide/usersguide" alt="User Guide" coords="449,62,544,83" />
+	<area href="../TechnicalGuide/TOC.html" alt="Technical Guide" coords="550,62,692,83" />
+</map>
+</tr>
+</table>
+</div>
+<!-- ****************** END DOCUMENTATION HEADER ******************* -->
+<p class="title">SCIRun Makefile design rationale</p>
+
+<h1>Introduction</h1>
+
+<p>Make is an essential part of the compilation process.  It manages
+the dependencies between different software libraries, and provides a
+mechanism to describe "what goes into" a software packages.  Due to
+the size of SCIRun and the number of different ways that it is being
+used, the makefiles in SCIRun have become especially important.
+
+<p>In the beginning, SCIRun used imake from the X windows
+distribution.  This worked great for many things, but relied on a slew
+of convoluted C preprocessor macros that nobody really understood.
+Then, John McCorquodale took over the brave job of converting to the
+use of GNU autoconf.  Autoconf is also a preprocessor (and just as
+convoluted), but is easier to configure for the average mortal.
+
+<p>Both of these approaches used a makefile per subdirectory.  So,
+they shared a common weakness: dependencies between directories are
+not adequately represented.  Then, Thant Tesseman introduced me to
+this paper: <a
+href="http://www.canb.auug.org.au/~millerp/rmch/recu-make-cons-harm.html">Recursive
+make considered harmful</a>, which described a methodology to use a
+single makefile to get around this problem.  I have adopted a
+variation of this strategy here.  It still uses autoconf, but only
+build the "top level" Makefile, instead of a Makefile in each
+subdirectory.
+
+<h1>Features</h1>
+
+<ol>
+ <li> There is no more recursive make - it analyzes the entire tree at
+   once
+ <li> most makes should be faster - especially when there isn't very much
+   to rebuild
+ <li> parallel builds should be much faster
+ <li> You no longer have to cd to the right directory to build the right .so
+ <li> Compilation targets are now in a file called sub.mk in each
+   directory, which is very simple for most directories.
+ <li> We new have a better way of building multiple executables, such as
+   the "convert" directories of old.
+ <li> Fewer .d files on irix - there is now one per directory.
+ <li> No more addfile Fred/Foo/Makefile to the configure.in
+ <li> No more --enable-Fred options, use --enable-package="Uintah Fred" 
+   instead.
+ <li> All of the .so's get built into a single "lib" directory, which
+   makes the management of -rpath much simpler.
+ <li> configures are much faster (39 seconds to 6 seconds on a crude benchmark)
+ <li> You can configure with --enable-largesos to build a few large
+   shared libraries.  The default (--disable-largesos) builds many
+   small .sos, in an effort to reduce build times.  If you ever switch
+   from largeso to smallso or vice-vera - make sure that you do a make
+   clean BEFORE you make the switch.
+</ol>
+
+
+There are a few disadvantages to the new system:
+<ol>
+ <li> Because of the make dependencies, it will rebuild all of the shared
+   libraries that depend on another shared library.  This can be very
+   tedious if you are changing a lower-level library. To get around
+   this, type something like "gmake lib/libPSECommon_Modules_Salmon.so"
+ <li> Parallel makes are no longer the default.  Use gmake -j 64 to
+   thrash rapture and build really fast.  Perhaps we will need to come
+   up with some etiquette.
+</ol>
+
+<h1>Basic approach</h1>
+
+<p>There is a single "top-level" makefile.  It recursively includes
+makefile fragments for other subdirectories.  In this fashion,
+dependencies between directories are preserved.  The makefile
+fragments in each subdirectory are called "sub.mk", and are designed
+to be terse.
+
+<p>There are five different basic functions for the makefiles:
+<ul>
+  <li>Top-level makefile: Defines a number of variables (some of which
+are substituted from autoconf
+  <li>Recursion.  One defines the variable SUBDIRS, and includes
+recurse.mk, which performs the actual recursion.  Here is an example:
+<pre>
+SUBDIRS := $(SRCDIR)/ThirdParty $(SRCDIR)/Modules $(SRCDIR)/GUI
+
+include $(SRCTOP)/scripts/recurse.mk
+</pre>
+  <li>Building a library.  One includes the appropriate so_prologue,
+defines the sources for this directory, defines the other SCIRun
+libraries used to link this library, and any other (external)
+libraries.  Finally, it includes the so_epilogue which generates the
+rules for the subdirectory.  Here is an example:
+<pre>
+include $(SRCTOP)/scripts/smallso_prologue.mk
+
+SRCDIR   := PSECommon/Modules/FEM
+
+SRCS     += $(SRCDIR)/ApplyBC.cc $(SRCDIR)/BuildFEMatrix.cc \
+	$(SRCDIR)/ComposeError.cc $(SRCDIR)/ErrorInterval.cc \
+	$(SRCDIR)/FEMError.cc $(SRCDIR)/MeshRefiner.cc
+
+PSELIBS := PSECore/Dataflow PSECore/Datatypes SCICore/Datatypes \
+	SCICore/Persistent SCICore/Thread SCICore/Containers \
+	SCICore/Exceptions SCICore/TclInterface SCICore/Geometry
+LIBS := 
+
+include $(SRCTOP)/scripts/smallso_epilogue.mk
+</pre>
+  <li>Build a tclIndex file.  This one is not automated but is very
+simple, such as:
+<pre>
+SRCDIR := SCICore/GUI
+
+ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
+
+$(SRCDIR)/tclIndex: $(SRCDIR)/BaseDial.tcl $(SRCDIR)/ColorPicker.tcl \
+	$(SRCDIR)/DebugSettings.tcl $(SRCDIR)/Dial.tcl \
+	$(SRCDIR)/Dialbox.tcl $(SRCDIR)/Doublefile.tcl \
+	$(SRCDIR)/Filebox.tcl $(SRCDIR)/HelpPage.tcl \
+	$(SRCDIR)/Histogram.tcl $(SRCDIR)/MaterialEditor.tcl \
+	$(SRCDIR)/MemStats.tcl $(SRCDIR)/PointVector.tcl \
+	$(SRCDIR)/ThreadStats.tcl $(SRCDIR)/Util.tcl \
+	$(SRCDIR)/VTRDial.tcl
+	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/SCICore/GUI
+
+CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
+</pre>
+<li>Creating an executable program.  One sets the SRCS, PROGRAM,
+PSELIBS and LIBS variables, and includes program.mk.  Here is an example.
+<pre>
+SRCS := $(SRCDIR)/Spec.cc $(SRCDIR)/SymbolTable.cc $(SRCDIR)/emit.cc \
+	$(SRCDIR)/main.cc $(SRCDIR)/parser.y $(SRCDIR)/scanner.l \
+	$(SRCDIR)/static_check.cc
+
+PROGRAM := $(SRCDIR)/sidl
+PSELIBS :=
+LIBS :=
+
+include $(SRCTOP)/scripts/program.mk
+</pre>
+</ul>
+
+<p>In addition to the top-level Makefile, a Makefile will get created
+(by the first make) in each subdirectory.  This is simply a
+convenience to allow the user to type "make" in any subdirectory.  It
+will change directories to the top of the source tree and build the
+entire tree.
+
+<h1>FAQ</h1>
+We will update this as questions get frequently asked.  Here are a few
+that I anticipate:
+
+<ol>
+  <li><ul>
+        <li><b>Question:</b> What does this mean: gmake: Circular lib/libSCICore_Containers.so <- lib/libSCICore_Persistent.so dependency dropped.
+	<li><b>Answer:</b> It means that you have a circular
+dependency between two different libraries.  You need to examine the
+PSELIBS variable for the two libraries (SCICore/Containers and
+SCICore/Persistent in this case) and make it so that they do not
+depend on one another.  This may require changing the code, but it is
+a cleaner design, so it should be done anyway.
+      </ul>
+  <li><ul>
+        <li><b>Question:</b> How can I build multiple executables in a
+single directory.
+	<li><b>Answer:</b> See DaveW/convert for an example
+      </ul>
+</ol>
+
+<h1>Adding a file to a subdirectory</h1>
+Simply add the file to the SRCS list in the sub.mk for that directory.
+
+<h1>Adding a new subdirectory</h1>
+Add the directory to the SUBDIRS list in the sub.mk for the parent
+directory.  Then use this to create the sub.mk in your new directory.
+You will need to fill in the @...@ values.
+<pre>
+#
+# Makefile fragment for this subdirectory
+# $Id$
+#
+
+include $(SRCTOP)/scripts/smallso_prologue.mk
+
+SRCDIR   := @this source dir@
+
+SRCS     += @my sources, in the form $(SRCDIR)/foo.cc@
+
+PSELIBS := @the list of pre-requisite libraries, in the form:
+		SCICore/Thread SCICore/Malloc ...@
+LIBS := @the list of external libraries@
+
+include $(SRCTOP)/scripts/smallso_epilogue.mk
+
+#
+# $Log$
+# Revision 1.1  2002/03/22 18:27:49  dustman
+# Doc reorg
+#
+# Revision 1.4  2002/03/05 19:04:30  dustman
+# Implement top and bottom div sections
+#
+# Revision 1.3  2002/02/26 23:12:00  dustman
+# Oops, left out the disclaimer
+#
+# Revision 1.2  2002/02/26 22:24:34  dustman
+# Insert new banners
+#
+# Revision 1.1  2001/11/14 19:30:00  moulding
+# add new files to reflect new book organization
+#
+# Revision 1.3  2001/07/16 00:02:20  moulding
+#
+# - convert all of faq to xml
+# - fix all references to faq and installguide
+# - update faq xsl
+# - fix bugs
+#
+# Revision 1.2  2001/07/14 08:43:58  moulding
+# change reference to new devguide.xml file
+#
+# Revision 1.1  2001/06/22 22:19:09  moulding
+#
+# moved from ReferenceGuide
+#
+# Revision 1.9  2001/06/18 16:54:18  erikj
+# Changed banner on doc pages
+#
+# Revision 1.8  2001/04/16 19:54:33  moulding
+# make all Installation Guide buttons point to the new installguide.html front cover
+#
+# Revision 1.7  2001/03/27 21:43:54  moulding
+#
+# - newly stylized
+# - turn all absolute links to be relative
+#
+# Revision 1.6  2001/03/13 01:00:27  mcole
+# add license
+#
+# Revision 1.5  2000/12/22 00:42:22  dmw
+# fixed a typo
+#
+# Revision 1.4  2000/12/22 00:23:05  dmw
+# changed the name from PSE to SCIRun in all the documentation
+#
+# Revision 1.3  2000/11/28 03:37:42  moulding
+# added the --with-? options for the tcl distributions and the xerces-c
+# library.
+#
+# Revision 1.2  2000/11/27 23:51:14  moulding
+# added a named anchor above the configure section.
+#
+# Revision 1.1  2000/07/07 16:59:15  dav
+# moving things to the right place
+#
+# Revision 1.2  2000/03/20 19:33:23  sparker
+# Updated document to contain template and examples for
+# updated, VPATH-friendly sub.mk's
+#
+# Revision 1.1  2000/03/17 09:23:59  sparker
+# Added a document on the new makefiles
+#
+#
+</pre>
+
+<h1>Adding a new program</h1>
+Use this template: You will need to fill in the @...@ values.
+<pre>
+#
+# Makefile fragment for this subdirectory
+# $Id$
+#
+
+SRCDIR   := @this source dir@
+
+SRCS := @my sources, in the form $(SRCDIR)/foo.cc@
+
+PROGRAM := @my program name, in the form $(SRCDIR)/program@
+PSELIBS := @the list of pre-requisite libraries, in the form:
+		SCICore/Thread SCICore/Malloc ...@
+LIBS := @the list of external libraries@
+
+include $(SRCTOP)/scripts/program.mk
+
+#
+# $Log$
+# Revision 1.1  2002/03/22 18:27:49  dustman
+# Doc reorg
+#
+# Revision 1.4  2002/03/05 19:04:30  dustman
+# Implement top and bottom div sections
+#
+# Revision 1.3  2002/02/26 23:12:00  dustman
+# Oops, left out the disclaimer
+#
+# Revision 1.2  2002/02/26 22:24:34  dustman
+# Insert new banners
+#
+# Revision 1.1  2001/11/14 19:30:00  moulding
+# add new files to reflect new book organization
+#
+# Revision 1.3  2001/07/16 00:02:20  moulding
+#
+# - convert all of faq to xml
+# - fix all references to faq and installguide
+# - update faq xsl
+# - fix bugs
+#
+# Revision 1.2  2001/07/14 08:43:58  moulding
+# change reference to new devguide.xml file
+#
+# Revision 1.1  2001/06/22 22:19:09  moulding
+#
+# moved from ReferenceGuide
+#
+# Revision 1.9  2001/06/18 16:54:18  erikj
+# Changed banner on doc pages
+#
+# Revision 1.8  2001/04/16 19:54:33  moulding
+# make all Installation Guide buttons point to the new installguide.html front cover
+#
+# Revision 1.7  2001/03/27 21:43:54  moulding
+#
+# - newly stylized
+# - turn all absolute links to be relative
+#
+# Revision 1.6  2001/03/13 01:00:27  mcole
+# add license
+#
+# Revision 1.5  2000/12/22 00:42:22  dmw
+# fixed a typo
+#
+# Revision 1.4  2000/12/22 00:23:05  dmw
+# changed the name from PSE to SCIRun in all the documentation
+#
+# Revision 1.3  2000/11/28 03:37:42  moulding
+# added the --with-? options for the tcl distributions and the xerces-c
+# library.
+#
+# Revision 1.2  2000/11/27 23:51:14  moulding
+# added a named anchor above the configure section.
+#
+# Revision 1.1  2000/07/07 16:59:15  dav
+# moving things to the right place
+#
+# Revision 1.2  2000/03/20 19:33:23  sparker
+# Updated document to contain template and examples for
+# updated, VPATH-friendly sub.mk's
+#
+# Revision 1.1  2000/03/17 09:23:59  sparker
+# Added a document on the new makefiles
+#
+#
+</pre>
+
+<h1>Building a new shared object</h1>
+These are done one per directory.  If you have some creative need for
+something different, please talk to Steve.
+
+<a name="configure"></a>
+<h1>Configure and configure options</h1>
+
+<table border="2" cellspacing="2" cellpadding="4">
+<tr><td>--enable-package</td><td>Compile the listed packages.  SCIRun 
+modules are compiled automatically.  To also build the BioPSE and
+Uintah modules, use:
+--enable-package="BioPSE Uintah".</td></tr>
+<tr><td>--enable-exename</td><td>Overrides the default executable name
+for SCIRun.  The default is scirun.</td></tr>
+<tr><td>--enable-threads</td><td>Threads are always enabled, but this
+allows one to use a different implementation.  On the SGI,
+--enable-threads=pthreads and --enable-threads=sproc (default) are
+supported.  On other platforms, only --enable-threads=pthreads is
+supported.</td></tr>
+<tr><td>--enable-debug</td><td>Turn on debugging.  To simply use "-g",
+just use --enable-debug.  To use flags other than "-g", use
+--enable-debug="-myflags".</td></tr>
+<tr><td>--enable-optimize</td><td>Turn on optimization.  To simply use "-O2",
+just use --enable-optimize.  To use flags other than "-O2", use
+--enable-optimize="-myflags".</td></tr>
+<tr><td>--enable-largesos</td><td>Instead of building a shared object
+per subdirectory, build a few "large" shared objects for the top level
+subdirectories.  This is more appropriate for distribution, and
+--disable-largesos (the default) is more appropriate for
+development.</td></tr>
+<tr><td>--enable-64bit</td><td>Compile in 64 bit mode.  Currently
+supported only on the SGI.</td></tr>
+<tr><td>--enable-assertion-level=N</td><td>Set the level of assertions
+to the level N.  0 means no assertions are caught, and level 3 (the
+default) performs extensive checking (including array bounds
+checks).</td></tr>
+<tr><td>--enable-parallel</td><td>Enable the "distributed memory"
+parallel SCIRun.  This requires the globus library (see the next
+flag).</td></tr>
+<tr><td>--with-globus=GLOBUS_DIR</td><td>Uses the globus libraries in
+GLOBUS_DIR.</td></tr>
+<tr><td>--with-tcl=INST_DIR</td><td>the directory containing the /bin,
+/lib, /include and /src directories for the tcl
+distribution.</td></tr>
+<tr><td>--with-tk=INST_DIR</td><td>the directory containing the /bin, 
+/lib, /include and /src directories for the tk distribution.  defaults
+to value given by --with-tcl.</td></tr>
+<tr><td>--with-itcl=INST_DIR</td><td>the directory containing the /bin, 
+/lib, /include and /src directories for the itcl and itk
+distributions.  defaults to value given by --with-tcl.</td></tr>
+<tr><td>--with-blt=INST_DIR</td><td>the directory containing the /bin, 
+/lib, /include and /src directories for the BLT distribution.
+defaults to value given by --with-tcl.</td></tr>
+<tr><td>--with-xerces=INST_DIR</td><td>the directory containing the
+xerces-c shared object library (.so) 
+</td></tr>
+</table>
+<a name="targets"></a>
+<h1>Targets</h1>
+
+Useful targets include:
+
+<ul>
+  <li><b>all:</b> -   Build everything.  This is the default target.
+  <li><b>clean:</b> -  Remove all object files, programs and other files
+created in the build process.
+  <li><b>distclean:</b> -  Performs a "make clean", and then removes all
+of the Makefiles.
+  <li><b>lib/libSCIRun_Thread.so</b> -  Builds only the Thread library.
+This can be used for any individual shared object.
+</ul>
+
+<h1>Variable names</h1>
+
+The Makefile uses a number of variables to keep track of different
+targets.  Each of these variables is defined here.  Individual
+sub.mk's may define additional variables.
+<ul>
+  <li><b>SRCTOP</b> - The relative path to the top of the source
+directory.  The value is set by autoconf.
+  <li><b>SRCDIR</b> - The current source directory, set within each sub.mk.
+  <li><b>OBJTOP</b> - The top of the source tree.  This will be "."
+unless you use VPATH (i.e. if you configure in a different directory
+than SCIRun/src).
+  <li><b>OBJTOP_ABS</b> - The absolute path to the $(OBJTOP) directory.
+  <li><b>SRCTOP_ABS</b> - The absolute path to the $(SRCTOP) directory.
+  <li><b>LIBDIR</b> - The directory in which to put libraries.
+  <li><b>LIBDIR_ABS</b> - The absolute path to the $(LIBDIR) directory.
+  <li><b>PACKAGE_DIRS</b> - The list of packages to be built, created
+from the --enable-package option.
+  <li><b>PACKAGE_PATH</b> - The default value of the PACKAGE_PATH
+variable, which points to the components.xml files for each component.
+Created by autoconf from the --enable-package flag.
+  <li><b>BUILD_PARALLEL</b> - Has the value "yes" if --enable-parallel is
+set in configure.
+  <li><b>COMPONENT_DIRS</b> - The list of subdirectories to be traversed
+if BUILD_PARALLEL is set.
+  <li><b>THREAD_IMPL</b> - The source file of the machine specific thread
+implementation.  This will usually have the values
+$(SRCDIR)/Thread_irix.cc or $(SRCDIR)/Thread_pthreads.cc
+  <li><b>TIME_IMPL</b> - The source file of the machine specific time
+access class.  This will usually have the values
+$(SRCDIR)/Time_irix.cc or $(SRCDIR)/Time_unix.cc
+  <li><b>LOCK_IMPL</b> - The source file of the implementation of atomic
+locks for the platform.
+  <li><b>SUBDIRS</b> - The list of subdirectories for the current directory.
+  <li><b>TCL_LIB_DIR</b> - The directory in which to find the Tcl
+libraries.
+  <li><b>TCL_LIB_FLAG</b> - The flag to tell the compiler how to search
+for Tcl libraries.
+  <li><b>TK_LIB_DIR</b> - The directory in which to find the Tk
+libraries.
+  <li><b>TK_LIB_FLAG</b> - The flag to tell the compiler how to search
+for Tk libraries.
+  <li><b>ITCL_LIB_DIR</b> - The directory in which to find the Itcl
+libraries.
+  <li><b>ITCL_LIB_FLAG</b> - The flag to tell the compiler how to search
+for Itcl libraries.
+  <li><b>BLT_LIB_DIR</b> - The directory in which to find the Blt
+libraries.
+  <li><b>BLT_LIB_FLAG</b> - The flag to tell the compiler how to search
+for Blt libraries.
+  <li><b>BLT_TLINK</b> - set to BLT_LIB_FLAG if the compiler requires the
+BLT library for transitive linking.
+  <li><b>ITCL_WIDGETS</b> - Where to look for the Itcl widget library
+(Tcl files).
+  <li><b>LDRUN_PREFIX</b> - Set to -Wl,-rpath -Wl, on the SGI and linux.
+  <li><b>X_LIBS</b> - Used by autoconf to find the X11 libraries.
+  <li><b>X_PRE_LIBS</b> - Used by autoconf to find the X11 libraries.
+  <li><b>X_EXTRA_LIBS</b> - Used by autoconf to find the X11 libraries.
+  <li><b>THREAD_LIBS</b> - Libraries needed for the thread
+implementation.  This will be -lfetchop (for --enable-threads=irix) or
+-lpthreads (for --enable-threads=pthreads).
+  <li><b>PLATFORM_LDFLAGS</b> - Other flags required by the loader for
+this platform.
+  <li><b>GL_LIBS</b> - How to find the OpenGL libraries.
+  <li><b>X11_LIBS</b> - How to find the X11 libraries.  This is a
+combination of X_LIBS, X_PRE_LIBS, and X_EXTRA_LIBS described above.
+  <li><b>LEX</b> - How to run lex.
+  <li><b>YACC</b> - How to run yacc.
+  <li><b>MAKE_PARALLELISM</b> - The number of processors to use for
+parallel makes performed by prelinker.
+  <li><b>LARGESOS</b> - Set to "yes" to build "large" shared objects (one
+per top level directory, instead of one per subdirectory).
+  <li><b>MALLOCLIB</b> - Points to the library in which to find the
+SCIRun malloc implementation.
+  <li><b>BLT_LIBRARY</b> - How to find the Blt library.
+  <li><b>TCL_LIBRARY</b> - How to find the Tcl library.
+  <li><b>TK_LIBRARY</b> - How to find the Tk library.
+  <li><b>ITCL_LIBRARY</b> - How to find the Itcl library.
+  <li><b>XML_LIB_DIR</b> - The directory in which to find the XML (Xerces-c)
+libraries.
+  <li><b>XML_LIB_FLAG</b> - The flag to tell the compiler how to search
+for XML (Xerces-c) libraries.
+  <li><b>XML_INCLUDE</b> - How to find the XML (Xerces-c) include files.
+  <li><b>XML_TLINK</b> - Set to XML_LIB_FLAG if the compiler requires the
+XML library for transitive linking.
+  <li><b>GLOBUS_LIB_DIR</b> - The directory in which to find the Globus
+libraries.
+  <li><b>GLOBUS_LIBS</b> - The flag to tell the compiler how to search
+for Globus libraries.
+  <li><b>GLOBUS_COMMON</b> - How to find the globus_common library.
+  <li><b>GLOBUS_TLINK</b> - Set to -L$(GLOBUS_LIB_DIR) if the compiler
+requires the globus libraries for transitive linking.
+  <li><b>TLINK</b> - All of the *_TLINK variables concatenated, used by
+the linker to eliminate warnings about transitive linking on the SGI.
+  <li><b>INCLUDES</b> - All of the includes to use for each compile.
+  <li><b>CC</b> - The C compiler.
+  <li><b>CXX</b> - The C++ compiler.
+  <li><b>AS</b> - The assembler.
+  <li><b>LD</b> - The linker (usually the C++ compiler).
+  <li><b>CFLAGS</b> - Flags to pass to the C compiler.
+  <li><b>SOFLAGS</b> - Flags to pass to the linker to create a shared library.
+  <li><b>LDFLAGS</b> - Flags to pass to the linker to create an executable.
+  <li><b>ASFLAGS</b> - Flags to pass to the assembler.
+  <li><b>CC_DEPEND_REGEN</b> - The flag to tell the compiler to create
+depend.mk for this directory.
+  <li><b>ALLSUBDIRS</b> - Created by recurse.mk to keep track of the
+entire list of subdirectories for the whole project.
+  <li><b>MAKEFILEDIRS</b> - All of the subdirectories in which to create
+a "convenience" Makefile.  This is $(ALLSUBDIRS) minus the top directory.
+  <li><b>MAKEFILES</b> - A list of the "convenience" Makefiles, derived
+from $(MAKEFILEDIRS).
+  <li><b>OBJS</b> - The object files being currently addressed.  This
+value changes constantly, and is derived from $(SRCS) in
+so_epilogue.mk and program.mk
+  <li><b>PSELIBS</b> - A list of libraries within the SCIRun tree to link
+against.  Used by so_epilogue.mk and progam.mk
+  <li><b>LIBS</b> - A list of libraries *not* within the SCIRun tree to link
+against.  Used by so_epilogue.mk and progam.mk
+  <li><b>ALLTARGETS</b> - A list of the complete list of targets that
+will be built from "make all".  This includes an entry for each shared
+library (from so_epilogue.mk) and one for each program (from progam.mk).
+  <li><b>PROGAM</b> - Used to pass the name of the program to build into progam.mk
+  <li><b>$(PROGRAM)_LIBS</b> - The $(LIBS) variable to be used when
+linking $(PROGRAM).  This saved in a "indirect" variable to keep it
+from being clobbered by another program.
+  <li><b>CLEANOBJS</b> - A complete list of object files to be removed by
+make clean.  This will be built-up from $(OBJS) in program.mk and so_epilogue.mk
+  <li><b>CLEANLIBS</b> - A complete list of shared libraries to be
+removed by make clean.  This will be built-up from individual
+libraries by so_epilogue.mk.
+  <li><b>CLEANPROGS</b> - A complete list of programs to be removed by
+make clean.  This will be built-up from individual programs by program.mk.
+  <li><b>SRCDIR_STACK</b> - Used by recurse.mk to keep track of the
+parent source directories during recursive makes.
+  <li><b>TMPSUBDIRS</b> - Temporarily used by recurse.mk.
+  <li><b>LIBNAME</b> - Used to pass the name of the library to be built
+into so_epilogue.mk
+  <li><b>$(LIBNAME)_LIBS</b> - The $(LIBS) variable to be used when
+linking $(LIBNAME).  This saved in a "indirect" variable to keep it
+from being clobbered by another library.
+  <li><b>GENHDRS</b> - A list of header files that are auto-generated and
+must be built before any sources are compiled.
+  <li><b>ALLGEN</b> - A list of all auto-generated sources and headers.
+These will be removed by make clean.  Creates from $(GENHDRS) and
+$(GENSRCS) by so_epilogue.mk
+</ul>
+
+<!-- ******************** DOCUMENTATION FOOTER ********************* -->
+<div class="bottom-banner-margins">
+<table border="0" cellspacing="0" cellpadding="0" height="32" width="100%">
+<tr>
+	<td align="left" background="../images/banner_bottom_fill.jpg" width="%100"><img src="../images/banner_bottom.jpg" width="444" height="32" border="0"></td>
+</tr>
+</table>
+</div>
+<center><font size="-2" face="arial, helvetica, sans-serif">Scientific
+Computing and Imaging Institute &#149; 50 S. Central Campus Dr. Rm
+3490 &#149; Salt Lake City, UT 84112<br />
+
+(801) 585-1867 &#149; fax: (801) 585-6513 &#149; <a href="http://www.utah.edu/disclaimer/disclaimer_home.html">Disclaimer</a></font></center>
+<!-- ****************** END DOCUMENTATION FOOTER ******************* -->
+
+</body>
+</html>

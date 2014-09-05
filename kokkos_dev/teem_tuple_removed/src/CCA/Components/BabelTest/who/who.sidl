@@ -1,0 +1,41 @@
+//test components
+
+version who 1.0;
+
+package who{
+
+  class IDPort implements-all gov.cca.ports.IDPort{
+  };
+
+  class UIPort implements-all gov.cca.ports.UIPort{
+  };	
+
+  class Com implements-all gov.cca.Component{
+  };
+
+};
+
+
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

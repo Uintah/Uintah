@@ -1,0 +1,62 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+set m0 [addModuleAtPosition "Fusion" "DataIO" "FusionFieldReader" 18 19]
+set m1 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 36 207]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 18 348]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 92 104]
+set m4 [addModuleAtPosition "SCIRun" "Render" "Viewer" 36 459]
+
+addConnection $m1 0 $m2 1
+addConnection $m3 0 $m1 0
+addConnection $m0 0 $m1 1
+addConnection $m2 1 $m4 0
+addConnection $m0 0 $m2 0
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-filename {/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10089_00.mds}
+set $m1-notes {}
+set $m1-show_status {1}
+set $m1-isFixed {0}
+set $m1-min {      1.04083e-17}
+set $m1-max {           476463}
+set $m1-makeSymmetric {0}
+set $m2-notes {}
+set $m2-show_status {1}
+set $m2-isoval {250527.000}
+set $m2-isoval-min {1.04083e-17}
+set $m2-isoval-max {476463}
+set $m2-isoval-typed {0}
+set $m2-isoval-quantity {1}
+set $m2-quantity-range {colormap}
+set $m2-quantity-min {0}
+set $m2-quantity-max {100}
+set $m2-isoval-list {0}
+set $m2-extract-from-new-field {1}
+set $m2-algorithm {0}
+set $m2-build_trisurf {0}
+set $m2-np {1}
+set $m2-active-isoval-selection-tab {0}
+set $m2-active_tab {MC}
+set $m2-update_type {on release}
+set $m2-color-r {0.4}
+set $m2-color-g {0.2}
+set $m2-color-b {0.9}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m3-tcl_status {Calling GenStandardColorMaps!}
+set $m3-positionList {}
+set $m3-nodeList {}
+set $m3-width {389}
+set $m3-height {40}
+set $m3-mapType {3}
+set $m3-minRes {12}
+set $m3-resolution {255}
+set $m3-realres {255}
+set $m3-gamma {0}
+set $m4-notes {}
+set $m4-show_status {1}
+
+::netedit scheduleok

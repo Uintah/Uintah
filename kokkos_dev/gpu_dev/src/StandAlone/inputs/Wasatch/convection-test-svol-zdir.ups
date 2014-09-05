@@ -1,0 +1,358 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Convection Test SVOL Fields zdir, multipatch, no bcs</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+
+  <Wasatch>
+
+    <Density>
+      <IsConstant>true</IsConstant>
+    </Density>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi_central" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
+         <NameTag name="ZSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi_upwind" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
+         <NameTag name="ZSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi_superbee" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
+         <NameTag name="ZSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi_charm" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
+         <NameTag name="ZSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi_koren" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
+         <NameTag name="ZSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi_mc" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
+         <NameTag name="ZSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi_ospre" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
+         <NameTag name="ZSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi_smart" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
+         <NameTag name="ZSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi_vanleer" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
+         <NameTag name="ZSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi_hcus" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
+         <NameTag name="ZSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi_minmod" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
+         <NameTag name="ZSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi_hquick" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
+         <NameTag name="ZSVOL" state="STATE_NONE" />
+       </SineFunction>
+    </BasicExpression>
+
+
+    <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
+    <BasicExpression type="ZVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="advective-velocity-z" state="STATE_N" />
+      <Constant>1.0</Constant>
+    </BasicExpression>
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi_central</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>CENTRAL</Method> 
+        <Direction>Z</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-z" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi_upwind</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>UPWIND</Method> 
+        <Direction>Z</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-z" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi_superbee</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>SUPERBEE</Method> 
+        <Direction>Z</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-z" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi_charm</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>CHARM</Method> 
+        <Direction>Z</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-z" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi_koren</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>KOREN</Method> 
+        <Direction>Z</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-z" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi_mc</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>MC</Method> 
+        <Direction>Z</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-z" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi_ospre</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>OSPRE</Method> 
+        <Direction>Z</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-z" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi_smart</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>SMART</Method> 
+        <Direction>Z</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-z" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi_vanleer</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>VANLEER</Method> 
+        <Direction>Z</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-z" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi_hcus</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>HCUS</Method> 
+        <Direction>Z</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-z" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi_minmod</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>MINMOD</Method> 
+        <Direction>Z</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-z" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi_hquick</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <ConvectiveFluxExpression>
+        <Method>HQUICK</Method> 
+        <Direction>Z</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-z" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>0.1</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.0001</delt_min>
+    <delt_max>0.0001</delt_max>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>convection_test_svol_zdir.uda</filebase>
+    <outputTimestepInterval>250</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle = "2" interval = "0.0002"/>
+    <compression>gzip</compression>
+    <save label="phi_central"/>
+    <save label="phi_upwind"/>
+    <save label="phi_superbee"/>
+    <save label="phi_charm"/>
+    <save label="phi_koren"/>
+    <save label="phi_mc"/>
+    <save label="phi_ospre"/>
+    <save label="phi_smart"/>
+    <save label="phi_vanleer"/>
+    <save label="phi_hcus"/>
+    <save label="phi_minmod"/>
+    <save label="phi_hquick"/>
+  </DataArchiver> 
+
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[2,2,100]</resolution>
+        <patches>[1,1,4]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+
+<!-- @version: -->
+
+<Uintah_specification>
+
+   <Meta>
+       <title>Reacting Pipe Flow</title>
+   </Meta>
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            1e-3       </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          1.0e-9      </delt_init>
+       <timestep_multiplier>1.0         </timestep_multiplier>
+   </Time>
+   
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann"> 
+                            <value> 0. </value> 
+        </BCType> 
+        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0" 
+                           label = "Temperature"  var = "Neumann"> 
+                            <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>                
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>       
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+       <Level>
+           <Box label="1">
+              <lower>        [0,0,0]             </lower>
+              <upper>        [0.15,0.02,0.02]    </upper>
+              <extraCells>   [1,1,1]             </extraCells>
+              <patches>      [2,1,1]             </patches>
+           </Box>
+           <spacing>         [.003,0.002,0.02]  </spacing>
+       </Level>
+    </Grid>    
+    <!--____________________________________________________________________-->
+    <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>React_Pipeflow.uda</filebase>
+      <outputInterval>2e-5</outputInterval>
+      <save label="press_equil_CC"/>
+      <save label="delP_Dilatate"/>
+      <save label="delP_MassX"/>
+      <save label="press_CC"/>
+      <save label="vol_frac_CC"/>  
+      <save label="mom_source_CC"/>  
+      <save label="mom_L_ME_CC"/>
+      <save label="eng_L_ME_CC"/>
+      <save label="vel_CC"/>
+      <save label="rho_CC"/>
+      <save label="temp_CC"/>
+   </DataArchiver>
+
+  <Debug>
+      <dbg_timeStart>       0.00    </dbg_timeStart>
+      <dbg_timeStop>        0.01    </dbg_timeStop>
+      <dbg_outputInterval>  1e-9    </dbg_outputInterval>
+   <!--
+      <dbg_BeginIndex>      [0,0,0] </dbg_BeginIndex>
+      <dbg_EndIndex>        [2,2,2] </dbg_EndIndex>
+      <dbg_SigFigs>         10      </dbg_SigFigs>
+    -->
+      <!--     
+    <debug label = "switchDebugSource_Sink"/>
+    <debug label = "switchDebugLagrangianValues"/>
+    <debug label = "switchDebug_advance_advect"/>
+
+      <debug label = "switchDebug_explicit_press"/>
+      <debug label = "switchDebug_vel_FC"/>
+      <debug label = "switchDebug_EQ_RF_press"/>
+       <debug label = "switchDebug_press"/>
+       <debug label = "switchDebug_vel_FC"/>
+       <debug label = "switchDebug_Exchange_FC"/>            
+       <debug label = "switchDebug_explicit_press"/>   
+       <debug label = "switchDebug_PressFC"/>         
+       <debug label = "switchDebugLagrangianValues"/>   
+       <debug label = "switchDebugSource_Sink"/>     
+       <debug label = "switchDebug_advance_advect"/> 
+    -->
+    </Debug>
+    
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+         <cfl>0.5</cfl>
+       <ICE>
+        <max_iteration_equilibration> 50 </max_iteration_equilibration>
+        <advection type = "FirstOrderCE" />
+        <solution technique = "EqForm" />
+      </ICE>        
+    </CFD>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+    
+    <!--____________________________________________________________________-->
+    <!--      material Properties and Initial Conditions                    -->
+    <!--____________________________________________________________________-->                      
+    <MaterialProperties>
+       <ICE>
+           <material Rx = "product" >
+           <burn type = "null" />
+           <EOS type = "ideal_gas">                     </EOS>
+           <viscosity>          1e-2                    </viscosity>
+           <thermal_conductivity>0.0                    </thermal_conductivity>
+           <specific_heat>      716                     </specific_heat>
+           <speed_of_sound>     376                     </speed_of_sound>
+           <gamma>              1.4                     </gamma>           
+           <geom_object>
+             <difference>
+                <box label="wholeDomain">
+                    <min>       [ 0.0, 0.0, 0.0 ]       </min>
+                    <max>       [ 0.2, 0.03, 0.03 ]     </max>
+                </box>
+                <box label="ReactingMatl">
+                    <min>       [ 0.0, 0.0, 0.0 ]       </min>
+                    <max>       [ 0.03, 0.03, 0.03 ]     </max>
+                </box>
+             </difference>
+               <res>          [2,2,2]                  </res>
+               <velocity>      [0,0,0]                  </velocity>
+               <density>       0.88447101955307283      </density>
+               <pressure>      101325.0                 </pressure>     
+               <temperature>   300.0                    </temperature>
+           </geom_object>
+         </material>
+           <material Rx = "reactant" >
+           <burn type = "null" />
+           <EOS type = "ideal_gas">                     </EOS>
+           <viscosity>          1e-2                     </viscosity>
+           <thermal_conductivity>0.0                    </thermal_conductivity>
+           <specific_heat>      652.9                   </specific_heat>
+           <speed_of_sound>     270.28699999999998      </speed_of_sound>
+           <gamma>              1.289                   </gamma>
+           <geom_object>
+                <box label="ReactingMatl">
+                    <min>       [ 0.0, 0.0, 0.0 ]       </min>
+                    <max>       [ 0.03, 0.03, 0.03 ]     </max>
+                </box>
+               <res>                  [2,2,2]                 </res>
+               <velocity>       [0,0,0]                 </velocity>
+               <density>        1.789990995722571500e+00</density>
+               <pressure>       101325.0                </pressure>
+               <temperature>    300.0                   </temperature>
+           </geom_object>
+         </material>
+      </ICE>       
+       <exchange_properties>
+         <exchange_coefficients>
+            <momentum>          [1e10]            </momentum>
+            <heat>              [1e10]              </heat>
+        </exchange_coefficients>
+        <mass_exchange> true </mass_exchange>
+        </exchange_properties>
+    </MaterialProperties> 
+</Uintah_specification>

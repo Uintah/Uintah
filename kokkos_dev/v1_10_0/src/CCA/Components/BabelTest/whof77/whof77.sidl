@@ -1,0 +1,41 @@
+//test components
+
+version whof77 1.0;
+
+package whof77{
+
+  class IDPort implements-all gov.cca.ports.IDPort{
+  };
+
+  class UIPort implements-all gov.cca.ports.UIPort{
+  };	
+
+  class Com implements-all gov.cca.Component{
+  };
+
+};
+
+
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

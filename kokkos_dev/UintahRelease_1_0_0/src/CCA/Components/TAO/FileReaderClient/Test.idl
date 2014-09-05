@@ -1,0 +1,20 @@
+//
+// Test.idl,v 1.1 2001/03/23 17:09:20 coryan Exp
+//
+
+/// Put the interfaces in a module, to avoid global namespace pollution
+module Test
+{
+  /// A very simple interface
+  interface FileReader
+  {
+    /// Return a simple string
+    typedef sequence<double> double_array;
+    typedef sequence<long> long_array;
+
+    long getPDEdescription(out double_array nodes, 
+			   out long_array boundaries,
+			   out long_array dirichletNodes,
+			   out double_array dirichletValues);
+  };
+};

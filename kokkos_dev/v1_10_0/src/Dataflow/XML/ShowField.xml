@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="ShowField" category="Visualization">
+  <overview>
+    <authors>
+      <author>Martin Cole</author>
+    </authors>
+    <summary>
+          The ShowField module visualizes the geometry that makes up a 
+          Mesh inside a Field. Where possible, the field takes its color from the Data 
+          values that permeate the field.
+    </summary>
+    <description>
+      <p>
+         The field in the first input port holds the mesh that is
+         to be visualized. It only needs to have a mesh, in which case 
+         it will be rendered in the default color, which is editable from
+         the UI. If there is a color map attached to port 2, and there is
+         valid data in field, then the data serves as an index into the
+         color map, and the mesh is rendered with appropriate colors.
+      </p>
+      <p>
+         Nodes can be rendered as spheres, axes, or as points. Edges can be
+         rendered as lines or cylinders. All of which have editable size.
+         Faces and text can be rendered or not.
+      </p>
+      <p>
+         If the Orientation Field contains Vector data, then that
+         field is used to draw vectors or oriented glyphs.  These can
+         then be colored with the values derived from the first input
+         port.  In order for the vectors to be colored properly, the
+         Field and Orientation Field ports must share the same mesh
+         and have data at the same locations.
+      </p>
+      <developer>
+	<p>
+           ShowField uses the dynamic loader to compile and load a 
+           RenderField Algorithm templated on field type. RenderField does 
+           all the rendering work, it loads the scene graph to be rendered. 
+        </p>
+      </developer>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <!-- one of (device port file) -->
+      <port>
+	<name>Field</name>
+	<description>
+	  <p>
+             The only required input to function properly. This field need 
+             only have a valid mesh. Its data is accessed only if the ColorMap 
+             port has valid data.
+          </p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+	<componentname>FieldReader</componentname>
+      </port>
+      <port>
+	<name>ColorMap</name>
+	<description>
+	  <p>
+             Optional Input. This is the color indexed by the
+             input field's data, and defines the colors the mesh is 
+             rendered with.
+          </p>
+	</description>
+	<datatype>SCIRun::ColorMap</datatype>
+	<componentname>GenStandardColorMap</componentname>
+      </port>
+      <port>
+	<name>Orientation Field</name>
+	<description>
+	  <p>
+	     Optional Input.  If this is a Vector or Tensor field,
+  then arrows or oriented glyphs can be drawn where the data are in
+  the field.  These glyphs are then colored by the data values from
+the first input port.  In order for the coloring to work properly,
+  both the Field and Orientation Field input ports must contain fields
+  with the same mesh and data at the same locations.
+          </p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+	<componentname>FieldReader</componentname>
+      </port>
+    </inputs>
+    <outputs>
+      <!-- one of (device port file) -->
+      <port>
+	<name>Scene Graph</name>
+	<description>
+	  <p>
+             A scene graph is sent out through this port expecting to be 
+             rendered by the downstream port.
+          </p>
+	</description>
+	<datatype>SCIRun::Geometry</datatype>
+	<componentname>Viewer</componentname>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+      <p>
+         The user can control wether or not to render nodes, edges, or 
+         faces independently. Also some option for how to render them 
+         are available.
+      </p>
+    </description>
+    <parameter>
+      <widget>checkbox</widget>
+      <datatype>bool</datatype>
+      <label>Show Nodes</label>
+      <description>
+	<p>Toggles display of nodes in the scene.</p>
+	<developer>
+	  <p>This toggles the state of a GeomSwitch on the C++ side.</p>
+	</developer>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>radiobutton</widget>
+      <datatype>string</datatype>
+      <label>Node Display Type</label>
+      <description>
+	<p>
+           Choices are Spheres, Axes, Points and possibly Disks. These are 
+           options for how to draw the nodes. Spheres will draw spheres 
+           centered on the node, 
+           Axes will draw a miniature coordinate frame centered on each 
+           node, while Points will draw a single point at each node. 
+           Disks will show up as an option only if the input Field has Vector
+           data.  It will render a disk oriented by the vector, and color 
+           indexed based on the lenght of the vector.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>expontial scale</widget>
+      <datatype>double</datatype>
+      <label>NodeScale</label>
+      <description>
+	<p>
+           Effects the size of rendered nodes (Point rendered nodes, 
+           are always a single point therefore not affected by this value)
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>checkbox</widget>
+      <datatype>bool</datatype>
+      <label>Show Edges</label>
+      <description>
+	<p>Toggles display of edges in the scene.</p>
+	<developer>
+	  <p>This toggles the state of a GeomSwitch on the C++ side.</p>
+	</developer>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>radiobutton</widget>
+      <datatype>string</datatype>
+      <label>Edge Display Type</label>
+      <description>
+	<p>
+           Choices are Cylinders or Lines. These are options for how to 
+           draw the edges. Cylinders draw cylinders to represent edges, while 
+           lines always draw lines.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>expontial scale</widget>
+      <datatype>double</datatype>
+      <label>CylinderScale</label>
+      <description>
+	<p>
+           Effects the thickness of both cylinders and lines rendered for 
+           edges.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>checkbox</widget>
+      <datatype>bool</datatype>
+      <label>Show Faces</label>
+      <description>
+	<p>Toggles display of faces in the scene.</p>
+	<developer>
+	  <p>This toggles the state of a GeomSwitch on the C++ side.</p>
+	</developer>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>slider</widget>
+      <datatype>int</datatype>
+      <label>Cylinder and Sphere Resolution</label>
+      <description>
+	<p>
+           This effects how smooth spheres and cylinders appear when rendered.
+           The greater the number the smoother they appear, but the longer 
+           it takes to draw.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>button</widget>
+      <datatype>Material</datatype>
+      <label>Default Color</label>
+      <description>
+	<p>
+           This button will pop up a color selector when activated. This 
+           allows you to control the default color a mesh will render with.  
+           Default color is ignored if a color map is attached to input port 2.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>button</widget>
+      <datatype>none</datatype>
+      <label>Calculate Defaults</label>
+      <description>
+	<p>This button will trigger the module to calculate reasonable scale
+           values for the various scale sliders (Nodes, Edges, Vectors) based
+           on the bounding box of the module.</p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>radio button</widget>
+      <datatype>none</datatype>
+      <label>Execute Policy</label>
+      <description>
+	<p>Choices are "Interactively update" and "Execute button only".  
+           The default is interactive, which means that anytime you change a 
+           value in the gui, the display changes are sent downstream. If you 
+           choose execute button only, then you can change all the values in 
+           gui, but they will not be sent downstream until you hit the 
+           execute button.</p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>button</widget>
+      <datatype>none</datatype>
+      <label>Excecute</label>
+      <description>
+	<p>Force the module to execute.</p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>button</widget>
+      <datatype>none</datatype>
+      <label>Dismiss</label>
+      <description>
+	<p>Closes the ui window for ShowField.</p>
+      </description>
+    </parameter>
+    <img>../Modules/Visualization/doc/ShowFieldGUI.jpg</img>
+  </gui>
+  <testing>
+    <plan>
+      <description>
+	<p>
+           To test this module all of the steps below need to be attempted 
+           with all types of valid fields. Render with/without nodes, 
+           edges, and faces.  Also with and without color input.
+        </p>
+      </description>
+      <step>
+	<p>connect all inputs, and output to the viewer module.</p>
+      </step>
+      <step>
+	<p>turn off/on faces</p>
+      </step>
+      <step>
+	<p>turn off/on edges</p>
+      </step>
+      <step>
+	<p>turn off/on nodes</p>
+      </step>
+      <step>
+	<p>turn off both edges and faces</p>
+      </step>
+      <step>
+	<p>change NodeScale</p>
+      </step>
+      <step>
+	<p>select Axes</p>
+      </step>
+      <step>
+	<p>change NodeScale</p>
+      </step>
+      <step>
+	<p>select Points</p>
+      </step>
+      <step>
+	<p>turn off nodes</p>
+      </step>
+      <step>
+	<p>turn on edges</p>
+      </step>
+      <step>
+	<p>turn on faces</p>
+      </step>
+      <step>
+	<p>turn on nodes</p>
+      </step>
+      <step>
+	<p>select Spheres</p>
+      </step>
+    </plan>
+  </testing>
+</component>

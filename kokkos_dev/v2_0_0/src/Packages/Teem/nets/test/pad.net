@@ -1,0 +1,46 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+set m0 [addModuleAtPosition "Teem" "Unu" "UnuPad" 45 195]
+set m1 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 61 281]
+set m2 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 269 203]
+set m3 [addModuleAtPosition "SCIRun" "Fields" "SampleLattice" 30 10]
+set m4 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 31 88]
+
+addConnection $m0 0 $m1 0
+addConnection $m3 0 $m4 0
+addConnection $m4 0 $m0 0
+addConnection $m4 0 $m2 0
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-dim {4}
+set $m0-minAxis0 {0}
+set $m0-maxAxis0 {0}
+set $m0-minAxis1 {10}
+set $m0-maxAxis1 {10}
+set $m0-minAxis2 {0}
+set $m0-maxAxis2 {0}
+set $m0-minAxis3 {0}
+set $m0-maxAxis3 {5}
+set $m1-notes {}
+set $m1-show_status {1}
+set $m2-notes {}
+set $m2-show_status {1}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m3-sizex {16}
+set $m3-sizey {16}
+set $m3-sizez {16}
+set $m3-padpercent {0}
+set $m3-data-at {Nodes}
+set $m4-notes {}
+set $m4-show_status {1}
+set $m4-label {empty}
+$m0 initialize_ui
+$m1 initialize_ui
+$m2 initialize_ui
+$m3 initialize_ui
+
+::netedit scheduleok

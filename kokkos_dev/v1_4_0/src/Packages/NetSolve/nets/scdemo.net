@@ -1,0 +1,242 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+global userName
+set userName "dmw"
+
+global runDate
+set runDate " Tue  Mar 13 2001"
+
+global runTime
+set runTime " 0:22:14"
+
+set bbox {91.0 3.0 702 823}
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 91 8]
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 401 3]
+set m2 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 148 168]
+set m3 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 307 168]
+set m4 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 401 69]
+set m5 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 91 360]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 294 462]
+set m7 [addModuleAtPosition "SCIRun" "Fields" "Gradient" 91 448]
+set m8 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 91 525]
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 92 610]
+set m10 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 294 700]
+set m11 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 312 264]
+set m12 [addModuleAtPosition "SCIRun" "Render" "Viewer" 498 779]
+set m13 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 558 70]
+set m14 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 540 169]
+set m15 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 522 253]
+set m16 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 522 365]
+set m17 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 312 363]
+set m18 [addModuleAtPosition "NetSolve" "Matrix" "SparseSolve" 148 274]
+
+addConnection $m0 0 $m3 0
+addConnection $m0 0 $m2 0
+addConnection $m4 0 $m3 1
+addConnection $m1 0 $m4 0
+addConnection $m0 0 $m5 0
+addConnection $m5 0 $m6 0
+addConnection $m5 0 $m7 0
+addConnection $m7 0 $m8 0
+addConnection $m8 0 $m9 1
+addConnection $m7 0 $m9 0
+addConnection $m9 0 $m10 0
+addConnection $m10 0 $m12 0
+addConnection $m8 1 $m12 1
+addConnection $m6 1 $m12 2
+addConnection $m4 1 $m12 3
+addConnection $m13 0 $m14 1
+addConnection $m5 0 $m14 0
+addConnection $m14 0 $m15 1
+addConnection $m5 0 $m15 0
+addConnection $m17 0 $m6 1
+addConnection $m17 0 $m10 1
+addConnection $m17 0 $m16 1
+addConnection $m11 0 $m17 0
+addConnection $m15 0 $m16 0
+addConnection $m16 0 $m12 4
+addConnection $m15 0 $m17 1
+addConnection $m2 0 $m18 0
+addConnection $m3 0 $m18 1
+addConnection $m18 0 $m5 1
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-filename {/local/SCIRunData/sphere/sphere-mesh.tvt.fld}
+set $m1-notes {}
+set $m1-show_status {1}
+set $m1-filename {/local/SCIRunData/sphere/sphere-dipole.pcv.fld}
+set $m2-notes {}
+set $m2-show_status {1}
+set $m2-UseCondTCL {1}
+set $m2-BCFlag {none}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m3-sourceNodeTCL {0}
+set $m3-sinkNodeTCL {1}
+set $m3-modeTCL {dipole}
+set $m4-notes {}
+set $m4-show_status {1}
+set $m4-widgetSizeGui_ {0.05}
+set $m4-scaleModeGui_ {scale}
+set $m4-showLastVecGui_ {1}
+set $m4-showLinesGui_ {0}
+set $m5-notes {}
+set $m5-show_status {1}
+set $m6-notes {}
+set $m6-show_status {1}
+set $m6-isoval {0.1}
+set $m6-extract-from-new-field {1}
+set $m6-algorithm {0}
+set $m6-build_trisurf {0}
+set $m6-np {1}
+set $m6-active_tab {MC}
+set $m6-update_type {on release}
+set $m7-notes {}
+set $m7-show_status {1}
+set $m7-interpolate {0}
+set $m8-notes {}
+set $m8-show_status {1}
+set $m8-maxseeds {15}
+set $m8-numseeds {10}
+set $m8-rngseed {1234}
+set $m8-clamp {0}
+set $m8-type {}
+set $m8-dist {impuni}
+set $m8-whichtab {Widget}
+set $m9-notes {}
+set $m9-show_status {1}
+set $m9-stepsize {0.1}
+set $m9-tolerance {0.01}
+set $m9-maxsteps {200}
+set $m10-notes {}
+set $m10-show_status {1}
+set $m10-nodes-on {1}
+set $m10-edges-on {1}
+set $m10-faces-on {1}
+set $m10-vectors-on {0}
+set $m10-normalize-vectors {1650551903}
+set $m10-has_vec_data {0}
+set $m10-def-color-r {0.5}
+set $m10-def-color-g {0.5}
+set $m10-def-color-b {0.5}
+set $m10-node_display_type {Spheres}
+set $m10-edge_display_type {Lines}
+set $m10-active_tab {Nodes}
+set $m10-node_scale {0.03}
+set $m10-edge_scale {0.03}
+set $m10-vectors_scale {0.03}
+set $m10-show_progress {0}
+set $m10-resolution {4}
+set $m11-notes {}
+set $m11-show_status {1}
+set $m11-tcl_status {Calling GenStandardColorMaps!}
+set $m11-positionList {}
+set $m11-nodeList {}
+set $m11-width {1}
+set $m11-height {1}
+set $m11-mapType {3}
+set $m11-minRes {12}
+set $m11-resolution {12}
+set $m11-realres {12}
+set $m11-gamma {0}
+set $m12-notes {}
+set $m12-show_status {1}
+$m12 ui
+set $m12-ViewWindow_0-pos {}
+set $m12-ViewWindow_0-caxes {1}
+set $m12-ViewWindow_0-iaxes {138684964}
+set $m12-ViewWindow_0-view-eyep-x {-6.5}
+set $m12-ViewWindow_0-view-eyep-y {1.8}
+set $m12-ViewWindow_0-view-eyep-z {9.7}
+set $m12-ViewWindow_0-view-lookat-x {0}
+set $m12-ViewWindow_0-view-lookat-y {0}
+set $m12-ViewWindow_0-view-lookat-z {0}
+set $m12-ViewWindow_0-view-up-x {0}
+set $m12-ViewWindow_0-view-up-y {1}
+set $m12-ViewWindow_0-view-up-z {0}
+set $m12-ViewWindow_0-view-fov {16.5}
+set $m12-ViewWindow_0-view-eyep-x {-6.5}
+set $m12-ViewWindow_0-view-eyep-y {1.8}
+set $m12-ViewWindow_0-view-eyep-z {9.7}
+set $m12-ViewWindow_0-view-eyep-x {-6.5}
+set $m12-ViewWindow_0-view-eyep-y {1.8}
+set $m12-ViewWindow_0-view-eyep-z {9.7}
+set $m12-ViewWindow_0-view-lookat-x {0}
+set $m12-ViewWindow_0-view-lookat-y {0}
+set $m12-ViewWindow_0-view-lookat-z {0}
+set $m12-ViewWindow_0-view-lookat-x {0}
+set $m12-ViewWindow_0-view-lookat-y {0}
+set $m12-ViewWindow_0-view-lookat-z {0}
+set $m12-ViewWindow_0-view-up-x {0}
+set $m12-ViewWindow_0-view-up-y {1}
+set $m12-ViewWindow_0-view-up-z {0}
+set $m12-ViewWindow_0-view-up-x {0}
+set $m12-ViewWindow_0-view-up-y {1}
+set $m12-ViewWindow_0-view-up-z {0}
+set $m12-ViewWindow_0-view-fov {16.5}
+set $m12-ViewWindow_0-view-eyep_offset-x {0}
+set $m12-ViewWindow_0-view-eyep_offset-y {0}
+set $m12-ViewWindow_0-view-eyep_offset-z {0}
+set $m12-ViewWindow_0-view-eyep_offset-x {0}
+set $m12-ViewWindow_0-view-eyep_offset-y {0}
+set $m12-ViewWindow_0-view-eyep_offset-z {0}
+set $m12-ViewWindow_0-bgcolor-r {0}
+set $m12-ViewWindow_0-bgcolor-g {0}
+set $m12-ViewWindow_0-bgcolor-b {0}
+set $m12-ViewWindow_0-bgcolor-r {0}
+set $m12-ViewWindow_0-bgcolor-g {0}
+set $m12-ViewWindow_0-bgcolor-b {0}
+set $m12-ViewWindow_0-shading {}
+set $m12-ViewWindow_0-do_stereo {0}
+set $m12-ViewWindow_0-sbase {1}
+set $m12-ViewWindow_0-sr {1}
+set $m12-ViewWindow_0-do_bawgl {0}
+set $m12-ViewWindow_0-drawimg {0}
+set $m12-ViewWindow_0-saveprefix {}
+set $m13-notes {}
+set $m13-show_status {1}
+set $m13-filename {/local/SCIRunData/sphere/sphere-electrodes.pcd.fld}
+set $m14-notes {}
+set $m14-show_status {1}
+set $m14-interp_op_gui {}
+set $m15-notes {}
+set $m15-show_status {1}
+set $m16-notes {}
+set $m16-show_status {1}
+set $m16-nodes-on {1}
+set $m16-edges-on {0}
+set $m16-faces-on {0}
+set $m16-vectors-on {0}
+set $m16-normalize-vectors {1663989540}
+set $m16-has_vec_data {0}
+set $m16-def-color-r {0.5}
+set $m16-def-color-g {0.5}
+set $m16-def-color-b {0.5}
+set $m16-node_display_type {Spheres}
+set $m16-edge_display_type {Lines}
+set $m16-active_tab {Nodes}
+set $m16-node_scale {0.03}
+set $m16-edge_scale {0.03}
+set $m16-vectors_scale {0.03}
+set $m16-show_progress {1711868536}
+set $m16-resolution {10}
+set $m17-notes {}
+set $m17-show_status {1}
+set $m17-isFixed {0}
+set $m17-min {-0.254406}
+set $m17-max {1.22203}
+set $m18-notes {}
+set $m18-show_status {1}
+set $m18-target_error {0.0001}
+set $m18-final_error {6.36599e-314}
+set $m18-final_iterations {7}
+set $m18-maxiter {100}
+set $m18-method {PETSc}
+$m6 initialize_ui
+$m18 initialize_ui
+
+::netedit scheduleok

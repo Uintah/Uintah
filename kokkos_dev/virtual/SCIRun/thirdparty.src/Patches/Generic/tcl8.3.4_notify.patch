@@ -1,0 +1,133 @@
+--- tcl8.3.4/unix/tclUnixNotfy.c	Mon Apr 24 17:32:13 2000
++++ tcl8.3.4-patch/unix/tclUnixNotfy.c	Tue May 17 14:10:33 2005
+@@ -1,4 +1,16 @@
+ /*
++  !!!!BEGIN WARNING!!!!
++
++  This file has been modified by the SCIRun Thirdparty installation
++  script.  It has been changed in the following way:
++
++  - A threading lock has been placed around the select statement.
++  - A C++ comment has been replaced with a C comment.
++
++  !!!!END WARNING!!!!
++*/
++
++/*
+  * tclUnixNotify.c --
+  *
+  *	This file contains the implementation of the select-based
+@@ -18,6 +30,27 @@
+ #include "tclPort.h"
+ #include <signal.h> 
+ 
++/**********************************
++ * Added by Steven G. Parker for threaded SCIRun use.
++ */ 
++typedef void (LockProc)();
++
++static LockProc* do_lock=0;
++static LockProc* do_unlock=0;
++
++void Tcl_SetLock(LockProc* lock, LockProc* unlock)
++{
++    do_lock=lock;
++    do_unlock=unlock;
++}
++
++#define Lock if(do_lock)(*do_lock)
++#define Unlock if(do_unlock)(*do_unlock)
++
++/*
++ * End of modifications by Steven G. Parker for SCIRun use.
++ **************************/
++
+ extern TclStubs tclStubs;
+ 
+ /*
+@@ -768,10 +801,13 @@
+ #else
+     memcpy((VOID *) tsdPtr->readyMasks, (VOID *) tsdPtr->checkMasks,
+ 	    3*MASK_SIZE*sizeof(fd_mask));
++
++    Unlock(); /* <= SCIRun Thirdparty Change (added Unlock()) */
+     numFound = select(tsdPtr->numFdBits,
+ 	    (SELECT_MASK *) &tsdPtr->readyMasks[0],
+ 	    (SELECT_MASK *) &tsdPtr->readyMasks[MASK_SIZE],
+ 	    (SELECT_MASK *) &tsdPtr->readyMasks[2*MASK_SIZE], timeoutPtr);
++    Lock(); /* <= SCIRun Thirdparty Change (added Lock()) */
+ 
+     /*
+      * Some systems don't clear the masks after an error, so
+*** tcl8.3.4/unix/tcl.m4	Fri Oct 19 18:24:15 2001
+--- tcl8.3.4/unix/tcl-patch.m4	Wed Jan 25 15:28:44 2006
+*************** AC_DEFUN(SC_CONFIG_CFLAGS, [
+*** 584,590 ****
+  	    # results, and the version is kept in special file).
+  	
+  	    if test -r /etc/.relid -a "X`uname -n`" = "X`uname -s`" ; then
+! 		system=MP-RAS-`awk '{print $3}' /etc/.relid'`
+  	    fi
+  	    if test "`uname -s`" = "AIX" ; then
+  		system=AIX-`uname -v`.`uname -r`
+--- 584,590 ----
+  	    # results, and the version is kept in special file).
+  	
+  	    if test -r /etc/.relid -a "X`uname -n`" = "X`uname -s`" ; then
+! 		system=MP-RAS-`awk '{print $3}' /etc/.relid`
+  	    fi
+  	    if test "`uname -s`" = "AIX" ; then
+  		system=AIX-`uname -v`.`uname -r`
+*************** AC_DEFUN(SC_BLOCKING_STYLE, [
+*** 1707,1713 ****
+  	    # results, and the version is kept in special file).
+  	
+  	    if test -r /etc/.relid -a "X`uname -n`" = "X`uname -s`" ; then
+! 		system=MP-RAS-`awk '{print $3}' /etc/.relid'`
+  	    fi
+  	    if test "`uname -s`" = "AIX" ; then
+  		system=AIX-`uname -v`.`uname -r`
+--- 1707,1713 ----
+  	    # results, and the version is kept in special file).
+  	
+  	    if test -r /etc/.relid -a "X`uname -n`" = "X`uname -s`" ; then
+! 		system=MP-RAS-`awk '{print $3}' /etc/.relid`
+  	    fi
+  	    if test "`uname -s`" = "AIX" ; then
+  		system=AIX-`uname -v`.`uname -r`
+*** tcl8.3.4/unix/configure	Fri Oct 19 18:24:15 2001
+--- configure	Thu Jan 26 13:30:47 2006
+*************** echo "configure:4710: checking system ve
+*** 4719,4725 ****
+  	    # results, and the version is kept in special file).
+  	
+  	    if test -r /etc/.relid -a "X`uname -n`" = "X`uname -s`" ; then
+! 		system=MP-RAS-`awk '{print }' /etc/.relid'`
+  	    fi
+  	    if test "`uname -s`" = "AIX" ; then
+  		system=AIX-`uname -v`.`uname -r`
+--- 4719,4725 ----
+  	    # results, and the version is kept in special file).
+  	
+  	    if test -r /etc/.relid -a "X`uname -n`" = "X`uname -s`" ; then
+! 		system=MP-RAS-`awk '{print }' /etc/.relid`
+  	    fi
+  	    if test "`uname -s`" = "AIX" ; then
+  		system=AIX-`uname -v`.`uname -r`
+*************** echo "configure:6008: checking FIONBIO v
+*** 6016,6022 ****
+  	    # results, and the version is kept in special file).
+  	
+  	    if test -r /etc/.relid -a "X`uname -n`" = "X`uname -s`" ; then
+! 		system=MP-RAS-`awk '{print }' /etc/.relid'`
+  	    fi
+  	    if test "`uname -s`" = "AIX" ; then
+  		system=AIX-`uname -v`.`uname -r`
+--- 6016,6022 ----
+  	    # results, and the version is kept in special file).
+  	
+  	    if test -r /etc/.relid -a "X`uname -n`" = "X`uname -s`" ; then
+! 		system=MP-RAS-`awk '{print }' /etc/.relid`
+  	    fi
+  	    if test "`uname -s`" = "AIX" ; then
+  		system=AIX-`uname -v`.`uname -r`

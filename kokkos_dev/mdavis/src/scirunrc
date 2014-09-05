@@ -1,0 +1,321 @@
+#
+#  For more information, please see: http://software.sci.utah.edu
+# 
+#  The MIT License
+# 
+#  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+#  University of Utah.
+# 
+#  License for the specific language governing rights and limitations under
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+# 
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+# 
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+#
+
+#
+# Sample .scirunrc file.
+#
+# This file is copied from the SCIRun src tree file:
+#   ./SCIRun/src/scirunrc
+#
+# Lines beginning with '#' are commented out.
+#
+# All variables in this file have been commented out or set
+# to their default values.
+#
+# This file contains a list of environment variables that can be either set
+# in your shell or here. If you set these variables in your shell, they will 
+# override the values in this file.
+#
+# All variable declarations must use the syntax:
+#    Environment_Variable_Name = Value
+#
+# Boolean variable declarations use this syntax:
+#    Environment_Variable_Name = <true,1,on,yes|false,0,off,no>
+#
+
+#####################################
+### ENVIRONMENT VARIABLES SECTION ###
+#####################################
+
+# REMEMBER, if these variables are set in your shell environment, they will
+# override the valuse in this file.
+
+### SCIRUN_RCFILE_VERSION = [string]
+#   The version number of this .scirunrc file.
+#   Used in determining if the users existing.scirunrc 
+#   needs to be updated upon starup of SCIRun.
+SCIRUN_RCFILE_VERSION = 1.25.0.1
+
+
+# The MALLOC_* environment variables can be set in order to help
+# monitor and control the allocation of memory.  The environment
+# variables are ONLY USED if DISABLE_SCI_MALLOC was NOT defined when
+# SCIRun was configured.  If DISABLE_SCI_MALLOC is defined, then
+# SCIRun will use the built in new, free, alloc, etc and will ignore
+# the MALLOC_STRICT, MALLOC_LAZY, MALLOC_TRACE, and MALLOC_STATS variables.
+
+
+### MALLOC_STRICT = [true if set]
+#   Places markers in unused memory and uses them to
+#   verify memory integrity.  Unless you wish to check memory integrity
+#   explicitly using the "audit()" function, MALLOC_LAZY should NOT be set
+# MALLOC_STRICT = false
+
+
+### MALLOC_LAZY = [true if set]
+#   By default, memory is audited for problems on each
+#   allocation and deallocation.  If MALLOC_LAZY is set, then auditing
+#   is turned off.  This can speed up code that allocates and
+#   deallocates memory frequently.
+# MALLOC_LAZY = false
+
+
+### MALLOC_TRACE = [filename]
+#   If MALLOC_TRACE is set, then every memory
+#   allocation, reallocation, and deallocation will be logged.  If
+#   "filename" is not provided, this information will be printed to "stderr".
+# MALLOC_TRACE = trace.out
+
+
+### MALLOC_STATS = [filename]
+#   If MALLOC_STATS is set, when SCIRun exits,
+#   it will output a list of statistics regarding memory usage during
+#   the run.  This includes the number of alloc/free calls, the amount
+#   of fragmentation, the amount of memory that is free and that is in
+#   use, etc.  If "filename" is not provided, then "stderr" is used.
+# MALLOC_stats = stats.out
+
+
+### SCI_TA_DISABLE = [true if set]
+#   Turns off the SCI Trivial Allocator
+# SCI_TA_DISABLE = true
+
+
+### SCIRUN_PACKAGE_LIB_PATH = [path]
+#   Path to use in searching for package libraries.
+# SCIRUN_PACKAGE_LIB_PATH = /path/to/package/libs
+ 
+
+### SCIRUN_PACKAGE_SRC_PATH = [path]
+#   Path to use in searching for package .xml and .tcl files.
+# SCIRUN_PACKAGE_SRC_PATH = /path/to/package/src
+
+
+### SCIRUN_LOAD_PACKAGE = [comma-seperated list]
+#   The format of SCIRUN_LOAD_PACKAGE is a comma seperated list of
+#   package names.  This list specifies the package libraries to load
+#   when SCIRun is first brought up.
+# SCIRUN_LOAD_PACKAGE = BioPSE,Uintah,Teem
+
+
+### SCIRUN_DATA = [path]
+#   Directory location that 'Reader' modules will default to.
+# SCIRUN_DATA = /usr/sci/data/SCIRunData/$(SCIRUN_VERISON)
+
+
+### SCIRUN_DATASET = [name]
+#   Name of data set in SCIRUN_DATA to default to.
+# SCIRUN_DATASET = sphere
+
+
+### SCIRUN_NET_SUBSTITUTE_DATADIR = [boolean]
+#   If true, module filename variables will be automatically substituted for
+#   'SCIRUN_DATADIR' and 'SCIRUN_DATASET' in saved .net files.
+# SCIRUN_NET_SUBSTITUTE_DATADIR = false
+
+
+### SCIRUN_MYDATA_DIR = [path]
+#   Directory, or list of directories separated by colons, 
+#   that data 'Reader' and 'Writer' modules will list as
+#   optional paths in the directories drop down menu.
+# SCIRUN_MYDATA_DIR = $HOME/data:/scratch/data
+
+
+### SCIRUN_ON_THE_FLY_LIBS_DIR = [path]
+#   User writable directory to build 'on-the-fly' .h, .cc, .o and .so files.
+# SCIRUN_ON_THE_FLY_LIBS_DIR = $(HOME)/SCIRun/on-the-fly-libs
+
+
+### SCIRUN_FONT_PATH = [path]
+#   The directory in which scirun.ttf (default font) resides.
+SCIRUN_FONT_PATH = $(SCIRUN_SRCDIR)/pixmaps
+
+
+### SCIRUN_TMP_DIR = [path]
+#   Directory for writting temporary files - must be world read/writeable
+SCIRUN_TMP_DIR = /tmp
+
+### SCIRUN_SERV_TMP_DIR = [path]
+#   Directory for writting temporary files - must be world read/writeable
+#   This is one is used by the external application interface. Both scirun
+#   and scirunremote use this one to exchange files.
+SCIRUN_SERV_TMP_DIR = /tmp
+
+
+### SCI_DBXCOMMAND = [command]
+#   Command to run when SCIRun dies and the user chooses to run a debugger
+# SCI_DBXCOMMAND = "dbx"
+
+
+### SCI_EXCEPTIONMODE = <ask, throw, dbx, cvd, abort>
+# Default action to take if scirun crashes
+# SCI_EXCEPTIONMODE = ask
+
+
+### SCI_SIGNALMODE = <ask, ???, ???, ???>
+#   Action to take when a signal interrupts scirun.
+# SCI_SIGNALMODE = ask
+
+
+### SCIRUN_CONFIRM_OVERWRITE = [boolean]
+#   If false, SCIRun writer will not prompt the user before overwriting a file
+# SCIRUN_CONFIRM_OVERWRITE = true
+
+
+### SCIRUN_INSERT_NET_COPYRIGHT = [boolean]
+#   If true, adds SCI copyright to any SCI .net files that are created.
+# SCIRUN_INSERT_NET_COPYRIGHT = false
+
+
+### SCIRUN_NOCLEANUPCOMPILE = [boolean]
+#   If true, the dynamic compiler will not clean up bad code compiles.
+#   Useful for debugging dynamic compilation code.
+# SCIRUN_NOCLEANUPCOMPILE = true
+
+
+### SCIRUN_NOSPLASH = [boolean]
+#   If true, SCIRun will not display the splash screen at startup.
+# SCIRUN_NOSPLASH = false
+
+
+### SCIRUN_HIDE_PROGRESS = [boolean]
+#   If true, SCIRun will not display progress bars during startup and loading
+# SCIRUN_HIDE_PROGRESS = false
+
+
+### SCIRUN_FAST_QUIT = [boolean]
+#   If true, SCIRun will not ask the user to save a network before quitting
+# SCIRUN_FAST_QUIT = false
+
+
+### SCI_NPROCESSORS = [integer]
+#   On SGIs, override the system setting for number of processors on a machine
+# SCI_NPROCESSORS = 1
+
+
+### SCI_REGRESSION_TESTING = [boolean]
+#   If True, regression testing mode will turn on.  Execution starts after a
+#   network is loaded and SCIRun will exit immediately after creating an image.
+# SCI_REGRESSION_TESTING = false
+
+
+### SCIRUN_REGRESSION_TESTING_TIMEOUT = [integer]
+#   If set, and if SCI_REGRESSION_TESTING is True, SCIRun will automatically
+#   kill itself after specified seconds.
+# SCI_REGRESSION_TESTING_TIMEOUT = 300
+
+
+### THREAD_NO_CATCH_SIGNALS = [boolean]
+#   Turns off the SCI Signal handlers.
+# THREAD_NO_CATCH_SIGNALS = true
+
+
+### THREAD_SHOWINIT = [boolean]
+#   Debugging flag that, when turned on, shows information about the
+#   initialization of the thread library.
+# THREAD_SHOWINIT = true
+
+
+### FLIP_CAM_MANIP = [boolean]
+#   Flips the XY values of the render window. (Not 100% sure on this one...)
+# FLIP_CAM_MANIP = false
+
+
+### SCIRUN_NO_PORT_CACHING = [boolean]
+#   If true then SCIRun will no longer cache intermediate results in
+#   its ports.  This will break interactive SCIRun usage as the
+#   program will be confused about which modules it needs to reexecute
+#   when a network is changed.  However it can save memory usage for
+#   batch-type operation.  Smarter caching should deprecate this option
+#   in the future.
+# SCIRUN_NO_PORT_CACHING = false
+
+
+### SCIRUN_DRAWARRAYS_DISABLE = [boolean]
+#   Turns off use of glDrawArrays.  This should be set to true if you wish
+#   to avoid drawing artifacts on _ATI_ Radeon cards under Linux or to fix
+#   cross-platform remote display problems.
+# SCIRUN_DRAWARRAYS_DISABLE = false
+
+
+### SCIRUN_DISABLE_PBUFFERS = [boolean]
+#   Turns off the use of pbuffers even if they are supported by the
+#   platform.  pbuffers are used to save images from the viewer and
+#   for some background tasks related to volume rendering.  However on
+#   Linux with ATI they seem to have OpenGL state issues in that
+#   transparency is disabled and volume rendering can lock up the
+#   screen.
+# SCIRUN_DISABLE_PBUFFERS = false
+
+
+### SCIRUN_MPEG_LICENSE_ACCEPT = [boolean]
+#   License information describing the mpeg_encode software can be found
+#   in SCIRun's Thirdparty directory, in the mpeg_encode/README file:
+#   This software is freely distributed.  That means, you may use it
+#   for any non-commercial purpose.  However, patents are held by
+#   several companies on various aspects of the MPEG video standard.  
+#   Companies or individuals who want to develop commercial products 
+#   that include this code must acquire licenses from these companies.  
+#   For information on licensing, see Appendix F in the standard.
+#   For more information, please see the mpeg_encode README file.
+#   If you are allowed to use the MPEG functionality based on the above
+#   license, you may
+#   enable MPEG movie recording in SCIRun (accessible via the SCIRun
+#   Viewer's "File->Record Movie" menu) by setting the value of
+#   SCIRUN_MPEG_LICENSE_ACCEPT to "true".
+# SCIRUN_MPEG_LICENSE_ACCEPT = false
+
+
+############################
+# GUI PREFERENCES SECTION ##
+############################
+
+### SCIRUN_GUI_UseGuiFetch = [boolean]
+#   Allows the user to tell a module to fetch the GUI from wherever it
+#   happens to be on the screen and bring it to the mouse, and then
+#   return it to its previous location.
+SCIRUN_GUI_UseGuiFetch = on
+
+
+### SCIRUN_GUI_MoveGuiToMouse = [boolean] 
+#   Makes GUIs appear near the mouse on GUI creation. 
+SCIRUN_GUI_MoveGuiToMouse = on
+
+
+### SCIRUN_STRAIGHT_CONNECTIONS = [boolean]
+#   Use straight lines to represent connections between modules in the
+#   network editor.
+# SCIRUN_STRAIGHT_CONNECTIONS = off
+
+#################
+# UNDOCUMENTED ##
+#################
+# LOGNAME
+# USER
+# SCI_DEBUG
+

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="CreateSimpleMesh" category="CreateModel">
+  <overview>
+    <authors>
+      <author>Joe Tranquillo</author>
+    </authors>
+    <summary>
+      Genenerate xyz locations, connectivity, and fiber tensors for simple geomoetries
+    </summary>
+    <description>
+      <p>Version Date: August 2001</p>
+      <p>Version: 1.1</p>
+      <p>CreateSimpleMesh is used to create the xyz locations of the nodes in a domain
+	along with fiber directions at those location. In addition, a connectivity file is created
+	which defines the hexahedral volumes.
+      </p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+    </inputs>
+    <outputs>
+      <port>
+        <name>Mesh</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

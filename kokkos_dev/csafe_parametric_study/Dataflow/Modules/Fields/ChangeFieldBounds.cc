@@ -1,0 +1,453 @@
+/*
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+*/
+
+
+
+//    File   : ChangeFieldBounds.cc
+//    Author : McKay Davis
+//    Date   : July 2002
+
+
+#include <Dataflow/Network/Module.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Datatypes/FieldInterface.h>
+
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Core/Geometry/Transform.h>
+#include <Core/Thread/CrowdMonitor.h>
+#include <Dataflow/Widgets/BoxWidget.h>
+#include <Dataflow/Network/NetworkEditor.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Containers/StringUtil.h>
+#include <map>
+#include <iostream>
+
+namespace SCIRun {
+
+using std::endl;
+using std::pair;
+
+class ChangeFieldBounds : public Module {
+public:
+  ChangeFieldBounds(GuiContext* ctx);
+  virtual ~ChangeFieldBounds();
+
+  GuiDouble		outputcenterx_;	// the out geometry (center point and size)
+  GuiDouble		outputcentery_;
+  GuiDouble		outputcenterz_;
+  GuiDouble		outputsizex_;
+  GuiDouble		outputsizey_;
+  GuiDouble		outputsizez_;
+  GuiInt		useoutputcenter_;   // center checkbox
+  GuiInt		useoutputsize_;   // size checkbox
+
+  GuiString		inputcenterx_;
+  GuiString		inputcentery_;
+  GuiString		inputcenterz_;
+  GuiString		inputsizex_;
+  GuiString		inputsizey_;
+  GuiString		inputsizez_;
+
+  // NOTE: box_scale_ isn't actually the scale of the box.  It keeps
+  // track of whether or not the box has been edited by hand or was
+  // automatically generated.  It will have a negative value if the
+  // box was automatically generated and a positive value if it was
+  // edited by hand (widget_moved called).  The name has been
+  // preserved for backwards compatability.
+  GuiDouble             box_scale_;
+
+  GuiInt                box_mode_;
+  GuiDouble             box_real_scale_;
+  GuiPoint              box_center_;
+  GuiPoint              box_right_;
+  GuiPoint              box_down_;
+  GuiPoint              box_in_;
+
+  GuiInt                resetting_;
+
+  CrowdMonitor		widget_lock_;
+  BoxWidget *		box_;
+  Transform		box_initial_transform_;
+  Transform		field_initial_transform_;
+  BBox			box_initial_bounds_;
+  int			generation_;
+  int			widgetid_;
+
+  void clear_vals();
+  void update_input_attributes(FieldHandle);
+  void build_widget(FieldHandle, bool reset);
+
+  virtual void execute();
+  virtual void widget_moved(bool, BaseWidget*);
+};
+
+DECLARE_MAKER(ChangeFieldBounds)
+
+ChangeFieldBounds::ChangeFieldBounds(GuiContext* ctx)
+  : Module("ChangeFieldBounds", ctx, Filter, "FieldsGeometry", "SCIRun"),
+    outputcenterx_(get_ctx()->subVar("outputcenterx"), 0.0),
+    outputcentery_(get_ctx()->subVar("outputcentery"), 0.0),
+    outputcenterz_(get_ctx()->subVar("outputcenterz"), 0.0),
+    outputsizex_(get_ctx()->subVar("outputsizex"), 0.0),
+    outputsizey_(get_ctx()->subVar("outputsizey"), 0.0),
+    outputsizez_(get_ctx()->subVar("outputsizez"), 0.0),
+    useoutputcenter_(get_ctx()->subVar("useoutputcenter"), 0),
+    useoutputsize_(get_ctx()->subVar("useoutputsize"), 0),
+    inputcenterx_(get_ctx()->subVar("inputcenterx", false), "---"),
+    inputcentery_(get_ctx()->subVar("inputcentery", false), "---"),
+    inputcenterz_(get_ctx()->subVar("inputcenterz", false), "---"),
+    inputsizex_(get_ctx()->subVar("inputsizex", false), "---"),
+    inputsizey_(get_ctx()->subVar("inputsizey", false), "---"),
+    inputsizez_(get_ctx()->subVar("inputsizez", false), "---"),
+    box_scale_(get_ctx()->subVar("box-scale"), -1.0),
+    box_mode_(get_ctx()->subVar("box-mode"), 0),
+    box_real_scale_(get_ctx()->subVar("box-real_scale"), -1.0),
+    box_center_(get_ctx()->subVar("box-center"), Point(0.0, 0.0, 0.0)),
+    box_right_(get_ctx()->subVar("box-right"), Point(0.0, 0.0, 0.0)),
+    box_down_(get_ctx()->subVar("box-down"), Point(0.0, 0.0, 0.0)),
+    box_in_(get_ctx()->subVar("box-in"), Point(0.0, 0.0, 0.0)),
+    resetting_(get_ctx()->subVar("resetting", false), 0),
+    widget_lock_("ChangeFieldBounds widget lock"),
+    generation_(-1),
+    widgetid_(0)
+{
+  box_ = scinew BoxWidget(this, &widget_lock_, 1.0, false, false);
+  box_->Connect((GeometryOPort*)get_oport("Transformation Widget"));
+
+  inputcenterx_.set("---");
+  inputcentery_.set("---");
+  inputcenterz_.set("---");
+  inputsizex_.set("---");
+  inputsizey_.set("---");
+  inputsizez_.set("---");
+}
+
+
+ChangeFieldBounds::~ChangeFieldBounds()
+{
+  delete box_;
+}
+
+
+void
+ChangeFieldBounds::clear_vals() 
+{
+  inputcenterx_.set("---");
+  inputcentery_.set("---");
+  inputcenterz_.set("---");
+  inputsizex_.set("---");
+  inputsizey_.set("---");
+  inputsizez_.set("---");
+}
+
+
+void
+ChangeFieldBounds::update_input_attributes(FieldHandle f) 
+{
+  Point center;
+  Vector size;
+  
+  BBox bbox = f->mesh()->get_bounding_box();
+
+  if (!bbox.valid()) {
+    warning("Input field is empty -- using unit cube.");
+    bbox.extend(Point(0,0,0));
+    bbox.extend(Point(1,1,1));
+  }
+  size = bbox.diagonal();
+  center = bbox.center();
+
+  inputcenterx_.set(to_string(center.x()));
+  inputcentery_.set(to_string(center.y()));
+  inputcenterz_.set(to_string(center.z()));
+  inputsizex_.set(to_string(size.x()));
+  inputsizey_.set(to_string(size.y()));
+  inputsizez_.set(to_string(size.z()));
+}
+
+
+void
+ChangeFieldBounds::build_widget(FieldHandle f, bool reset)
+{
+  if (reset || box_scale_.get() <= 0 ||
+      box_center_.get() == Point(0.0, 0.0, 0.0) &&
+      box_right_.get() == Point(0.0, 0.0, 0.0) &&
+      box_down_.get() == Point(0.0, 0.0, 0.0) &&
+      box_in_.get() == Point(0.0, 0.0, 0.0))
+  {
+    Point center;
+    Vector size;
+    BBox bbox = f->mesh()->get_bounding_box();
+    if (!bbox.valid()) {
+      warning("Input field is empty -- using unit cube.");
+      bbox.extend(Point(0,0,0));
+      bbox.extend(Point(1,1,1));
+    }
+    box_initial_bounds_ = bbox;
+
+    // build a widget identical to the BBox
+    size = Vector(bbox.max()-bbox.min());
+    if (fabs(size.x())<1.e-4) {
+      size.x(2.e-4); 
+      bbox.extend(bbox.min()-Vector(1.0e-4, 0.0, 0.0));
+      bbox.extend(bbox.max()+Vector(1.0e-4, 0.0, 0.0));
+    }
+    if (fabs(size.y())<1.e-4) {
+      size.y(2.e-4); 
+      bbox.extend(bbox.min()-Vector(0.0, 1.0e-4, 0.0));
+      bbox.extend(bbox.max()+Vector(0.0, 1.0e-4, 0.0));
+    }
+    if (fabs(size.z())<1.e-4) {
+      size.z(2.e-4); 
+      bbox.extend(bbox.min()-Vector(0.0, 0.0, 1.0e-4));
+      bbox.extend(bbox.max()+Vector(0.0, 0.0, 1.0e-4));
+    }
+    center = Point(bbox.min() + size/2.);
+
+    Vector sizex(size.x(),0,0);
+    Vector sizey(0,size.y(),0);
+    Vector sizez(0,0,size.z());
+
+    Point right(center + sizex/2.);
+    Point down(center + sizey/2.);
+    Point in(center +sizez/2.);
+
+    // Translate * Rotate * Scale.
+    Transform r;
+    Point unused;
+    box_initial_transform_.load_identity();
+    box_initial_transform_.pre_scale(Vector((right-center).length(),
+					    (down-center).length(),
+					    (in-center).length()));
+    r.load_frame(unused, (right-center).normal(),
+		 (down-center).normal(),
+		 (in-center).normal());
+    box_initial_transform_.pre_trans(r);
+    box_initial_transform_.pre_translate(center.asVector());
+
+    const double newscale = size.length() * 0.015;
+    double bscale = box_real_scale_.get();
+    if (bscale < newscale * 1e-2 || bscale > newscale * 1e2)
+    {
+      bscale = newscale;
+    }
+    box_->SetScale(bscale); // callback sets box_scale for us.
+    box_->SetPosition(center, right, down, in);
+    box_->SetCurrentMode(box_mode_.get());
+    box_center_.set(center);
+    box_right_.set(right);
+    box_down_.set(down);
+    box_in_.set(in);
+    box_scale_.set(-1.0);
+  }
+  else
+  {
+    const double l2norm = (box_right_.get().vector() +
+			   box_down_.get().vector() +
+			   box_in_.get().vector()).length();
+    const double newscale = l2norm * 0.015;
+    double bscale = box_real_scale_.get();
+    if (bscale < newscale * 1e-2 || bscale > newscale * 1e2)
+    {
+      bscale = newscale;
+    }
+    box_->SetScale(bscale); // callback sets box_scale for us.
+    box_->SetPosition(box_center_.get(), box_right_.get(),
+		      box_down_.get(), box_in_.get());
+    box_->SetCurrentMode(box_mode_.get());
+  }
+
+  GeomGroup *widget_group = scinew GeomGroup;
+  widget_group->add(box_->GetWidget());
+
+  GeometryOPort *ogport = (GeometryOPort*)get_oport("Transformation Widget");
+  widgetid_ = ogport->addObj(widget_group,"ChangeFieldBounds Transform widget",
+			     &widget_lock_);
+  ogport->flushViews();
+}
+
+
+void
+ChangeFieldBounds::execute()
+{
+  FieldHandle fh;
+  if (!get_input_handle("Input Field", fh))
+  {
+    clear_vals();
+    return;
+  }
+
+  // The output port is required.
+  update_state(Executing);
+
+  // build the transform widget and set the the initial
+  // field transform.
+  if (generation_ != fh.get_rep()->generation || resetting_.get()) 
+  {
+    generation_ = fh.get_rep()->generation;
+    // get and display the attributes of the input field
+    update_input_attributes(fh);
+    build_widget(fh, resetting_.get());
+    BBox bbox = fh->mesh()->get_bounding_box();
+    if (!bbox.valid()) {
+      warning("Input field is empty -- using unit cube.");
+      bbox.extend(Point(0,0,0));
+      bbox.extend(Point(1,1,1));
+    }
+    Vector size(bbox.max()-bbox.min());
+     if (fabs(size.x())<1.e-4) {
+      size.x(2.e-4); 
+      bbox.extend(bbox.min()-Vector(1.e-4,0,0));
+    }
+    if (fabs(size.y())<1.e-4) {
+      size.y(2.e-4); 
+      bbox.extend(bbox.min()-Vector(0,1.e-4,0));
+    }
+    if (fabs(size.z())<1.e-4) {
+      size.z(2.e-4); 
+      bbox.extend(bbox.min()-Vector(0,0,1.e-4));
+    }
+    Point center(bbox.min() + size/2.);
+    Vector sizex(size.x(),0,0);
+    Vector sizey(0,size.y(),0);
+    Vector sizez(0,0,size.z());
+
+    Point right(center + sizex/2.);
+    Point down(center + sizey/2.);
+    Point in(center +sizez/2.);
+
+    Transform r;
+    Point unused;
+    field_initial_transform_.load_identity();
+    field_initial_transform_.pre_scale(Vector((right-center).length(),
+					      (down-center).length(),
+					      (in-center).length()));
+    r.load_frame(unused, (right-center).normal(),
+		 (down-center).normal(),
+		 (in-center).normal());
+    field_initial_transform_.pre_trans(r);
+    field_initial_transform_.pre_translate(center.asVector());
+
+    resetting_.set(0);
+  }
+
+  if (useoutputsize_.get() || useoutputcenter_.get()) {
+    Point center, right, down, in;
+    outputcenterx_.reset(); outputcentery_.reset(); outputcenterz_.reset();
+    outputsizex_.reset(); outputsizey_.reset(); outputsizez_.reset();
+    if (outputsizex_.get() < 0 || 
+	outputsizey_.get() < 0 || 
+	outputsizez_.get() < 0) {
+      error("Degenerate BBox requested.");
+      return;                    // degenerate 
+    }
+    Vector sizex, sizey, sizez;
+    box_->GetPosition(center,right,down,in);
+    if (useoutputsize_.get()) {
+      sizex=Vector(outputsizex_.get(),0,0);
+      sizey=Vector(0,outputsizey_.get(),0);
+      sizez=Vector(0,0,outputsizez_.get());
+    } else {
+      sizex=(right-center)*2;
+      sizey=(down-center)*2;
+      sizez=(in-center)*2;
+    }
+    if (useoutputcenter_.get()) {
+      center = Point(outputcenterx_.get(),
+		     outputcentery_.get(),
+		     outputcenterz_.get());
+    }
+    right = Point(center + sizex/2.);
+    down = Point(center + sizey/2.);
+    in = Point(center + sizez/2.);
+    box_->SetPosition(center,right,down,in);
+  }
+
+  // Transform the mesh if necessary.
+  // Translate * Rotate * Scale.
+  Point center, right, down, in;
+  box_->GetPosition(center, right, down, in);
+  Transform t, r;
+  Point unused;
+  t.load_identity();
+  t.pre_scale(Vector((right-center).length(),
+       (down-center).length(),
+       (in-center).length()));
+  r.load_frame(unused, (right-center).normal(),
+	 (down-center).normal(),
+	 (in-center).normal());
+  t.pre_trans(r);
+  t.pre_translate(center.asVector());
+
+  Transform inv(field_initial_transform_);
+  inv.invert();
+  t.post_trans(inv);
+
+  // Change the input field handle here.
+  fh.detach();
+  fh->mesh_detach();
+  fh->mesh()->transform(t);
+
+  send_output_handle("Output Field", fh);
+
+  // Convert the transform into a matrix and send it out.
+  DenseMatrix *matrix_transform = scinew DenseMatrix(t);
+  MatrixHandle mh = matrix_transform;
+  send_output_handle("Transformation Matrix", mh);
+}
+
+    
+void
+ChangeFieldBounds::widget_moved(bool last, BaseWidget*)
+{
+  if (last) {
+    Point center, right, down, in;
+    outputcenterx_.reset(); outputcentery_.reset(); outputcenterz_.reset();
+    outputsizex_.reset(); outputsizey_.reset(); outputsizez_.reset();
+    box_->GetPosition(center,right,down,in);
+    outputcenterx_.set(center.x());
+    outputcentery_.set(center.y());
+    outputcenterz_.set(center.z());
+    outputsizex_.set((right.x()-center.x())*2.);
+    outputsizey_.set((down.y()-center.y())*2.);
+    outputsizez_.set((in.z()-center.z())*2.);
+    box_mode_.set(box_->GetMode());
+    box_center_.set(center);
+    box_right_.set(right);
+    box_down_.set(down);
+    box_in_.set(in);
+    box_scale_.set(1.0);
+    want_to_execute();
+  }
+  box_real_scale_.set(box_->GetScale());
+}
+
+
+} // End namespace SCIRun

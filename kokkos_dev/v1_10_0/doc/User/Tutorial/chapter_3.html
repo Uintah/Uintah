@@ -1,0 +1,310 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+<meta name="generator" content="Adobe GoLive 4">
+<title>Derived Fields</title>
+</head>
+
+<body bgcolor="#a9a9a9">
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="306" bgcolor="#cccccc">
+<tr>
+<td><img height="92" width="600" src="images/sub-banner.jpg" border="0"
+    usemap="#sub-banner8662a0c4"><map name="sub-banner8662a0c4"><area
+    coords="581,65,598,84" shape="rect" title nohref><area
+    href="chapter_7.html" coords="557,64,575,83" shape="rect"
+    title="Feedback"><area href="chapter_6.html" coords="532,64,550,82"
+    shape="rect" title="Putting Simulation and Visualization
+    Together"><area href="chapter_5.html" coords="508,64,527,83"
+    shape="rect" title="Bioelectric Field Simulation"><area
+    href="chapter_4.html" coords="483,64,502,83" shape="rect"
+    title="Multi-Vis"><area href="chapter_3.html" coords="460,64,478,83"
+    shape="rect" title="Derived Fields"><area href="chapter_2.html"
+    coords="436,64,454,83" shape="rect" title="Looking at the Data"><area
+    href="chapter_1.html" coords="412,64,430,81" shape="rect"
+    title="Geometry Visualization"><area href="Intro.html"
+    coords="354,64,406,84" shape="rect" title="Introduction"><area
+    href="../../index.html"
+    coords="205,63,343,83" shape="rect" title="Documentation"><area
+    href="http://software.sci.utah.edu/" coords="103,63,195,82"
+    shape="rect" title="Software"><area href="index.html"
+    coords="1,65,92,81" shape="rect" title="Tutorial Home"></map></td> 
+</tr>
+
+<tr>
+<td>
+<center>
+<table border="0" cellpadding="0" cellspacing="5" width="600">
+	<tr>
+	<td>
+	<center>
+	<br><p><A name="section-5"></A>
+	<font size="4"
+	face="Arial,Helvetica,Geneva,Swiss,SunSans-Regular"
+	color="maroon">
+	<b>Chapter 3: Derived Fields</b></font> </p>
+        <p>&nbsp; </p>
+        </center>
+        <div align="left">
+	<p><b><H4><A href="#section-1">3A: FieldBoundary</H4></b></A>
+	<p><b><H4><A href="#section-2">3B: DirectInterpolate</H4></b></A>
+	<p><b><H4><A href="#section-3">3C: Streamlines</H4></b></A>
+	<p><b><H4><A href="#section-4">Network execution and data
+	    dependence</H4></b></A> 
+
+        <p><b>Chapter Overview</b><br>
+
+        <p> Chapters 1 and 2 demonstrate the construction of SCIRun networks to
+        visualize the geometry and data values in a Field. This
+        chapter explores additional visualization techniques,
+        and examines <i>filter</i> modules that receive a Field as input,
+        and output a newly derived Field.  
+
+	<p>Rather than building one net to introduce these 
+	    modules, several nets will be constructed. Each net will describe a single
+        visualization technique. This chapter is divided
+        into three sections, one for each method.  
+                
+        <p><b><A name="section-1">3A: FieldBoundary</b><br></A>
+
+	<p>First, perform a boundary extraction. The FieldBoundary module extracts a boundary surface from a volume. For example, given a TetVolMesh, the module extracts the boundary faces and outputs a TriSurfMesh.
+
+	<p>Create a net using the FieldBoundary module
+	    (SCIRun/Fields/FieldBoundary):</p>
+
+	  <p><ol><li >Add a FieldReader module to the canvas, and load the utahtorso-lowres-voltage.tvd.fld file.</p>
+<p><li>Also add a FieldBoundary module from SCIRun/Fields/FieldBoundary.</p>
+<p><li>Attach the output from a FieldReader into the FieldBoundary input port.</p> 
+	  <li >Add a ShowField module and connect the FieldBoundary's output to the ShowField's input.</p>   
+	  <p><li>Set the ShowField module to display edges only (turn off the
+	      nodes and the faces).</p>
+	  <p><li>In the SHowField UI, render the edges as a cylinder, with a scale of 1.0.</p>
+	  <p><li>Connect the output from the ShowField module into a Viewer.</p>
+	    <p><li>Press the Autoview button and rotate the image downward, to look like <b>Figure 3.2</b>.</p></ol>
+
+<p>The net should look like <b>Figure 3.1</b>. Save this net as <i>3A.net</i>, it will be used in Chapter 4 of this tutorial, <b><A href="chapter_4.html#section-1">Putting the nets together</b></A>.</p><br>
+
+      </div>
+	<center>
+	<p><img height="461" width="450" src="images/figures/3_1.gif"><br>
+	<b>Figure 3.1, net for section 3A</b></p>
+	</center>
+	<div align="left">
+	<p><br>
+
+      </div>
+	<center>
+	<p><img height="451" width="450" src="images/figures/3_2.gif"><br>
+	<b>Figure 3.2, Field boundary of the utahtorso-lowres-voltage.tvd.fld</b></p>
+	</center>
+	<div align="left">
+	<p><br>
+
+
+        <p><b><A name="section-2">3B:DirectInterpolate</b><br></A>
+
+	<p>Next, interpolate data values from one Field to another Field.  This section, demonstrates how to load two datasets:</p> 
+	  <p><ul><li>The first contains the utahtorso-lowres-voltage.tvd.fld that we examined in <A href="chapter_1.html#voltage">Chapter 1</a>, which we will refer to as the <i>volume Field</i>.</p>
+	  <p><li>The second contains the electrode positions in utahtorso-lowres-electrodes.pcd.fld, from
+	      <a href="chapter_2.html#electrodes">Chapter 2</a>.</p>
+	</ul>
+	
+	<p>Now that the datasets are loaded, create a new Field by interpolating the electrode positions and voltage values.</p>
+
+	<p>Interpolation is the means by which we calculate the value at a certain point by using the known values at surrounding points. For each electrode, 
+	we must find the corresponding voltage value
+	from the volume Field. 
+		
+	<p>The DirectInterpolate module implements this algorithm (SCIRun/Fields/DirectInterpolate). The following modules are needed to run the DirectInterpolate net:</p>
+	<ul>
+	<li>Two FieldReader modules 
+	<li>One DirectInterpolate module 
+	<li>One ShowField module
+	<li>One GenStandardColorMaps module 
+	<li>One RescaleColorMap module 
+	<li>One Viewer module  
+	</ul>
+	<p>These modules should be hooked together as shown in <b>Figure 3.3</b>.  NOTE: </b>be sure to set the Node Scale in the ShowField UI to be at
+	least 4-6, and hit the Autoview button in the ViewWindow.</p> 
+
+      </div>
+	<center>
+	<p><img height="461" width="450" src="images/figures/3_3.gif"><br>
+	<b>Figure 3.3, showing the DirectInterpolate net</b></p>
+	</center>
+	<div align="left">
+	</p>
+<p>Also, make sure to rotate the image in the ViewWindow downward as it appears in <b>Figure 3.4</b>. The FieldReader on the left should read in the
+	utahtorso-lowres-voltage.tvd.fld input file, and the
+	FieldReader on the right should read in the
+	utahtorso-lowres-electrodes.pcd.fld input file.</p>
+
+      </div>
+	<center>
+	<p><img height="451" width="450" src="images/figures/3_4.gif"><br>
+	<b>Figure 3.4, ViewWindow for the DirectInterpolate net</b></p>
+	</center>
+	<div align="left">
+	<p><br>
+
+Save this net as <i>3B.net</i>. It will be used in Chapter 4 of this tutorial, <b><A href="chapter_4.html#section-2">Putting the nets together</b></A>.</p>
+        <p><b><A name="section-3">3C: StreamLines</b><br></A>
+
+        <p>Streamline advection is the last visualization technique 
+	explored in this 
+        chapter. The StreamLines module visualizes vector Fields by integrating curves through a gradient vector flow Field.</p>
+
+	<p>Generate the input vector Field by using the
+	Gradient module (SCIRun/Fields/Gradient) in order to compute the
+	gradient of the utahtorso-lowres-voltage.tvd.fld.</p> 
+
+<p>The SampleField module will generate a sample distribution of StreamLine seed
+	points.  SampleField
+	generates samples from any type of Field input and outputs the
+	samples as a PointCloud Field.    
+	The following modules are needed to run the StreamLines net:</p>
+	<ul>
+	<li>One FieldReader module 
+	<li>One Gradient module 
+	<li>One SampleField module
+	<li>Two ShowField modules 
+	<li>One DirectInterpolate module
+	<li>One GenStandardColorMaps module
+	<li>One RescaleColorMap module 
+	<li>One Viewer module
+<li>One StreamLines module</p>  
+	</ul>
+	<p>These modules should be hooked together as shown in <b>Figure 3.5</b>.</p> 
+	
+      </div>
+	<center>
+	<p><img height="461" width="450" src="images/figures/3_5.gif"><br>
+	<b>Figure 3.5, showing the StreamLines net</b></p>
+	</center>
+	<div align="left">
+	</p>
+
+<p>The SampleField module can generate samples randomly or the user
+	can select samples using a 3D widget.  For Streamline visualization, 
+	use a 3D <i>rake</i> widget for distributing seed points. The user can interactively position the rake of seed points within the volume:</p>
+
+	    <p><ul><li>From the SampleField UI, select the rake option and 
+	      set the number of samples to 30.</p>
+	</ul>
+
+	<p>To attach scalar data values to the
+        StreamLine nodes, set the following options:</p>
+	<ul>
+	  <p><li> With the FieldReader, select the input file
+	  utahtorso-lowres-voltage.tvd.fld.</p> 
+	  <p><li>In the ShowField UI, display only Nodes, either as spheres
+	      or points, with NodeScale set to approximately 1--2.</p>
+	   <li> For the second ShowField module lower-left in <b>Figure 3.5</b>, set the UI to display Edges only as cylinders with a Cylinder Scale of 2.</p> 
+	</ul>
+
+        
+     
+
+<p>The StreamLines module works by integrating the seed points
+	through the vector Field.  A fifth order
+	integration method is used; the Runge-Kutta-Fehlberg algorithm.  Three parameters must be to run this algorithm: Error Tolerance,
+	Step Size, and a Maximum Number of Steps.  Set these three
+	parameters, respectively, to 0.01, 0.1, and 200.  The other UI options can remain at their default settings.
+
+	</div>
+	<center>
+	<p><img height="378" width="250" src="images/figures/3_6.gif"><br>
+	<b>Figure 3.6, StreamLines UI</b></p>
+	</center>
+	<div align="left">
+	<p><br>
+<p>Save this net as <i>3C.net</i>. lt will be used in Chapter 4 of this tutorial, <b><A href="chapter_4.html#section-2">Putting the nets together</b></A>.</p>
+
+	<p><b><A name="section-9">Controlling Widgets</b><br></A> 
+
+	<p>The rake is one of many widgets used in SCIRun.  Widgets are graphical elements in the Viewer that allow the user 
+	to interactively control features of the display.  The SCIRun
+	widgets have similar visual characteristics, but manipulate different
+	aspects of the display, as detailed in the <a
+	 HREF="../Guide/usersguide/srug5.html#sec:view-widgets">User's Guide
+	5.4, Control Widgets</a>. 
+	
+	
+	<p>Control widgets by:
+
+	  <p><ul><li>Press and hold the shift key, left-click the mouse on the widget and move
+	      it around the region of view in order to change its location and action.</p>
+	  <p><li>Press and hold the shift key, left-click the mouse on a <b>sphere</b> in the widget and change the
+	      position of that widget.</p>
+	  <p><li>Press and hold the shift key, left-click the mouse on the end <b>knob</b> (green resize cylinders) in the widget and change, for example, the density of streamlines.</p>
+	  <p><li> SCIRun redraws the image in the ViewWindow when
+	      the mouse button is released.</p>
+	</ul>
+	
+	<p><b><A name="section-4">Network execution and data
+	dependence</b></p></A> 
+	
+	<p>There are several ways to execute a SCIRun
+	network that has not fired.</p>
+
+	<p>In the StreamLines network:</p>
+
+	<p><ul><li>On the module itself, right-click the mouse and select the Execute option from the
+	      dropdown menu (<b>Figure 3.7</b>).</p> 
+	<p><li>Or, in several modules, such as ShowField and StreamLines, the UI has its own Execute option.</p>  
+	</ul> 
+
+	<p>These actions will execute the selected module, and any modules 
+	that depend on that module.</p>
+
+	</div>
+	<center>
+	<p><img height="165" width="270" src="images/figures/3_7.gif"><br>
+	<b>Figure 3.7</b></p>
+	</center>
+	<div align="left">
+	<p><br>
+
+	<P> After executing the StreamLines network, an image like 
+	<b>Figure 3.8</b> should appear in the ViewWindow.  The rake widget will appear as a gray bar with spheres at the ends.
+	The user's  image may be somewhat different than <b>Figure 3.8</b>, but the user should see the rake and colored streamlines.  If the streamlines do not appear, the user may need to check the object list and turn on the Edges.
+
+	</div>
+	<center>
+	<p><img height="451" width="450" src="images/figures/3_8.gif"><br>
+	<b>Figure 3.8</b></p>
+	</center>
+	<div align="left">
+	<p>
+	<br>
+
+	
+	<b><H4>Summary</b></H4> Three nets were constructed in this
+	chapter, each describing a single method of visualizing the
+	utahtorso-lowres-voltage dataset.
+
+	<p>In the next chapter, the nets will be merged into a single,
+	larger network  
+	that performs concurrent visualizations.
+
+	<br>
+	<br><A HREF="#section-5">Return to Top</A>
+        </div>
+	</td>
+	</tr>
+
+	
+</table>
+</center>
+</td>
+</tr>
+<tr>
+<td><img height="35" width="600" src="images/sub-banner-bottom.jpg"
+    border="0" usemap="#sub-banner-bottom8ac341b7"><map
+    name="sub-banner-bottom8ac341b7"><area href="chapter_4.html"
+    coords="563,1,590,21" shape="rect"><area href="chapter_2.html"
+    coords="533,1,561,21" shape="rect"><area href="http://www.sci.utah.edu"
+    coords="6,6,67,31" shape="rect"></map></td> 
+</tr>
+</table>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="SolveMatrix" category="Math">
+  <overview>
+    <authors>
+      <author>Steven G. Parker</author>
+    </authors>
+    <summary>The SolveMatrix module is used to solve the linear system
+    Ax=b, where A is a given Matrix, b is a given right-hand-side
+    vector, and the user wants to find the solution vector x.</summary>
+    <description>
+      <p>We support several different iteratve solution techniques
+      within SCIRun, including Jacobi, Conjugate Gradient, and
+      Biconjugate Gradient.
+      </p>
+      <p>As the module iteratively approaches the solution, a
+      graphical user interface depicts the norm of the residual.  This
+      feedback allows the user to visually confirm whether a solution
+      is converging, and if so how quickly.  It also provides a
+      convenient interface for specifying a convergrence threshold, as
+      the user can interactively raise of lower the maximum acceptable
+      error tolerance in real-time.  As the solver is converging, the
+      module can send out the current guess at the solution and
+      continue to iterate; this intermediate result is passed
+      downstream to dependent modules, and can be useful for
+      visualizing how a system is physically converging.
+      </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Matrix</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>RHS</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Solution</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <img>../Modules/Math/doc/SolveMatrixUI.jpg</img>
+  </gui>
+  <testing>
+  </testing>
+</component>

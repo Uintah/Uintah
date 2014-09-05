@@ -1,0 +1,66 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+<script language="JavaScript">
+var treetop="";
+var path = location.pathname;
+while (path.substr(path.lastIndexOf("/")+1) != "doc") {
+treetop += "../";
+path = path.substr(0, path.lastIndexOf("/"));
+}
+document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='stylesheet' type='text/css'>")
+</script>
+<title>Installation Guide</title>
+<!-- Changed by: Ted Dustman, 03-Jul-2002 -->
+ 
+<link href="../Utilities/HTML/doc_styles.css/doc_styles.css" rel="stylesheet"
+type="text/css">
+</head>
+<body>
+<!-- ******************** DOCUMENTATION HEADER ********************* -->
+<script language="JavaScript">
+document.write('<script language="JavaScript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
+</script>
+<!-- ****************** END DOCUMENTATION HEADER ******************* -->
+
+<table border="0" align="center" cellpadding="0" cellspacing="0" width="600">
+
+<p class="title">Installation Documentation</p>
+<hr size="1">
+    <p class="firstpara">
+      The <a href="Guide/index.html"><b><i>Installation
+      Guide</i></b></a> contains
+      instructions and information for installing and building SCIRun,
+      it's packages and the thirdparty libraries that it requires.
+      See the <a href="../FAQBook/faq1.html"><b><i>Installation FAQ
+      </i></b></a> for information on troubleshooting these
+      processes.
+    </p>
+  <hr size="1"><p class="head">1  <a href="Guide/quickstart.html">Quick Start SCIRun Installation</a></p><p class="firstpara">
+      This chapter is a quick installation checklist.
+    </p><p class="head">2  <a href="Guide/inst.html">SCIRun Installation and Build Instructions</a></p><p class="firstpara">
+      This chapter provides detailed instructions for installing and
+      building SCIRun and it's packages.
+    </p><p class="head">3  <a href="Guide/thirdparty.html">Thirdparty Software Installation and Build Information</a></p><p class="firstpara">
+      This chapter may help expedite installation of the
+      required third party software. However, this information is not
+      intended to replace the installation instructions that come with
+      the software, but to supplement them. Please read the install
+      instructions for each software distribution before attempting to
+      use this information. 
+    </p>
+<p class="head">4 <a href="../FAQBook/faq1.html">FAQ</a></p>
+
+<p class="head"><a href="Guide/appendix.html">Appendix</a></p><p class="firstpara">
+      The appendix holds tables and details pertinent to building and
+      installing SCIRun.
+    </p>
+</table>
+<!-- ******************** DOCUMENTATION FOOTER ********************* -->
+<script language="JavaScript">
+document.write('<script language="JavaScript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\/script>');
+</script>
+<!-- ****************** END DOCUMENTATION FOOTER ******************* -->
+
+</body>
+</html>

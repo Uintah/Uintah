@@ -1,0 +1,164 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+<meta name="generator" content="Adobe GoLive 4">
+<title>Feedback</title>
+<!-- Last update: Fri Mar  1 01:37:07 2002 by Rob MacLeod
+    -  last round before first release -->
+</head>
+
+<body bgcolor="#a9a9a9">
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="306" bgcolor="#cccccc">
+<tr>
+<td><img height="92" width="600" src="images/sub-banner.jpg" border="0"
+    usemap="#sub-banner8662a0c4"><map name="sub-banner8662a0c4"><area
+    coords="581,65,598,84" shape="rect" title nohref><area
+    href="chapter_7.html" coords="557,64,575,83" shape="rect"
+    title="Feedback"><area href="chapter_6.html" coords="532,64,550,82"
+    shape="rect" title="Putting Simulation and Visualization
+    Together"><area href="chapter_5.html" coords="508,64,527,83"
+    shape="rect" title="Bioelectric Field Simulation"><area
+    href="chapter_4.html" coords="483,64,502,83" shape="rect"
+    title="Multi-Vis"><area href="chapter_3.html" coords="460,64,478,83"
+    shape="rect" title="Derived Fields"><area href="chapter_2.html"
+    coords="436,64,454,83" shape="rect" title="Looking at the Data"><area
+    href="chapter_1.html" coords="412,64,430,81" shape="rect"
+    title="Geometry Visualization"><area href="Intro.html"
+    coords="354,64,406,84" shape="rect" title="Introduction"><area
+    href="http://software.sci.utah.edu/doc/index.html"
+    coords="205,63,343,83" shape="rect" title="Documentation"><area
+    href="http://software.sci.utah.edu/" coords="103,63,195,82"
+    shape="rect" title="Software"><area href="index.html"
+    coords="1,65,92,81" shape="rect" title="Tutorial Home"></map></td> 
+</tr>
+
+<tr>
+<td>
+<center>
+<table border="0" cellpadding="0" cellspacing="5" width="600">
+  <tr>
+    <td>
+	<center>
+	<br><A name="section-2"></A>
+	<font size="4" face="Arial,Helvetica,Geneva,Swiss,SunSans-Regular"
+	color="maroon"><b>Chapter 7: Feedback</b></font> </p> 
+	<p>&nbsp; </p>
+	</center>
+	<div align="left">
+	<A href="#section-1"><H4><b>ShowDipoles</A></H4></b>
+	<p><b>Chapter Overview</b><br>
+	
+	<p>In Chapter 6, we combined simulation and visualization
+	components to form a single, large dataflow network.  While
+	the visualization components were dynamic (<i>e.g.</i>, you could
+	change the isovalue or streamline seed positions), the models
+	were static.  In our final chapter, we will add a feedback module
+	that will allow you to change the position of the dipole
+	model, and interactively visualize the results.
+	
+	<p><b><A name="section-1">ShowDipoles</b><br></A>
+	
+	<p>We will insert a module into the net from the previous
+	chapter as shown in  <b>Figure 7.1</b>.  This module is located
+	under the BioPSE/Visualization  
+	menu, and is called ShowDipoles. The ShowDipoles module
+	takes in a  
+	PointCloud of vectors (the SCIRun representation for a group of
+	dipoles), 
+	and allows the user to visualize and interact with those
+	dipoles. 
+	
+	</div>
+	<center>
+	<p><img height="506" width="500"
+	src="images/figures/chap7-network.gif"><br> 
+	<b>Figure 7.1</b></p>
+	</center>
+	<div align="left">
+	<p><br>
+
+	
+	<p>ShowDipoles has two outputs: a Field and a Geometry
+	object. The Geometry object attaches to the Viewer module,
+	providing a graphical depiction of the dipoles as arrow
+	widgets.  
+	<ol>
+	  <li value="1.">Select the dipoles by pressing the
+	  Shift button and clicking on a dipole with the left mouse
+	  button.  
+	<li>Once selected, you can move and rotate the dipoles,
+	    depending on which part of the widget you select.
+
+	<LI>At each release of the mouse button, the latest version of the
+	    dipole positions and orientations goes
+	    through the Field output port and into the ApplyFEMCurrentSource
+	    module. 
+        </ol>  
+
+	<p>The ShowDipoles UI (<b>Figure 7.2</b>) has several
+	configuration options for controlling how the dipoles are
+	graphically displayed.
+ 
+	<p><ol><li value="1.">Select the "Normalize Largest" radio
+	button.
+	<li>Set the Widget Size to 10.
+	<li>Select "Show Last As Vector." 
+	<li>Unselect "Show Lines."  
+	</ol>	
+	<p>These options result in a set of dipoles whose lengths have been 
+	uniformly scaled, such that the longest vector now has length 1.
+
+	</div>
+	<center>
+	<p><img height="152" width="232" src="images/figures/7_1.gif"><br>
+	<b>Figure 7.2</b></p>
+	</center>
+	<div align="left">
+	<p><br>
+
+	<p> As the result of connecting the last module, we now have a
+	complete forward finite element network.  <b>Figure 7.3</b>
+	contains the resulting visualization.   This
+	is actually the same net that we have provided  
+	in the installed SCIRun software
+	as:Packages/BioPSE/nets/forward-fem.net 
+
+      </div>
+	<center>
+	<p><img height="451" width="450" src="images/figures/7_2.gif"><br>
+	<b>Figure 7.3</b></p>
+	</center>
+	<div align="left">
+	<p><br>
+	<p> The white arrows in <b>Figure7.3</b> indicate that you can 
+	move the widget around to interactively rotate and shift the torso image
+	(these arrows will not appear in the Viewer when you build this network).<br>	
+
+	<p><b>Summary</b>
+	<p>Please experiment with your completed network.
+	You can explore how different dipole source positions and
+	directions effect the voltage and electric field distributions
+	through the volume.  
+
+	<p>You can also compare different linear solution
+	methods with the SolveMatrix module, or compare isosurface
+	extraction times using MC (Marching Cubes) versus the NOISE
+	(Near-Optimal IsoSurface Extraction) algorithm.  SCIRun is a
+	flexible environment designed for interactive exploration of
+	what-if scenarios.  
+
+	<br>
+	<br><A href="#section-2">Back to Top</A>
+	</div>
+	</td>
+	</tr>
+</table>
+</center>
+</td>
+</tr>
+<tr>
+<td><img height="35" width="600" src="images/sub-banner-bottom.jpg" border="0" usemap="#sub-banner-bottom8ac9a275"><map name="sub-banner-bottom8ac9a275"><area href="index.html" coords="560,0,591,23" shape="rect"><area href="chapter_6.html" coords="532,1,559,23" shape="rect"><area href="http://www.sci.utah.edu" coords="6,6,68,31" shape="rect" title="SCI Institute"></td>
+</tr>
+</table>
+</body>
+</html>

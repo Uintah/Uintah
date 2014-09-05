@@ -1,0 +1,129 @@
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+#
+
+# SCI Network 1.0
+
+# Because this net only works for the 'aneurysm' dataset, we can't use
+# the generic "sourceSettingsFile" call...  So we just print out the
+# error message.  This will need to be fixed at some point.
+
+if {[llength [array get env SCIRUN_DATA]] == 0} {
+
+   displayErrorWarningOrInfo "" error
+   displayErrorWarningOrInfo "*** Error: This net depends on the SCIRUN_DATA enviroment variable." error
+   displayErrorWarningOrInfo "*** Please exit, set it in your shell, and rerun." error
+   displayErrorWarningOrInfo "*** (e.g. setenv SCIRUN_DATA /usr/sci/data/SCIRunData/1.10.0)" error
+   displayErrorWarningOrInfo "" error
+   ::netedit scheduleok
+   return
+}
+
+set DATADIR $env(SCIRUN_DATA)
+
+if {![file isfile $DATADIR/aneurysm/aneurysm.settings]} {
+   displayErrorWarningOrInfo "" error
+   displayErrorWarningOrInfo "*** Error: $DATADIR/aneurysm/aneurysm.settings does not exist." error
+   displayErrorWarningOrInfo "*** Please exit and make sure that the environment varaible SCIRUN_DATA" error
+   displayErrorWarningOrInfo "*** points to a directory with a 'aneurysm' subdirectory." error
+   displayErrorWarningOrInfo "" error
+   ::netedit scheduleok
+   return
+}
+
+displayErrorWarningOrInfo "*** Using SCIRun data directory: $DATADIR" info
+
+source $DATADIR/aneurysm/aneurysm.settings
+
+::netedit dontschedule
+
+global userName
+set userName "dmw"
+
+global runDate
+set runDate " Sat  Oct 7 19100"
+
+global runTime
+set runTime " 16:35:33"
+
+set bbox {13.0 17.0 398 318}
+
+set m0 [addModuleAtPosition "SCIRun" "Visualization" "GLTextureBuilder" 13 93]
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 13 17]
+set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 13 274]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "TextureVolVis" 13 181]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 203 78]
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "TexCuttingPlanes" 185 192]
+
+addConnection $m0 0 $m3 0
+addConnection $m3 0 $m2 0
+addConnection $m5 0 $m2 1
+addConnection $m0 0 $m5 0
+addConnection $m1 0 $m0 0
+addConnection $m4 0 $m3 1
+addConnection $m4 0 $m5 1
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-is_fixed {0}
+set $m0-max_brick_dim {64}
+set $m0-sel_brick_dim {64}
+set $m0-min {0}
+set $m0-max {181}
+set $m1-notes {}
+set $m1-show_status {1}
+set $m1-filename $DATADIR/aneurysm/aneurysm-mra-lowres.lvs.fld
+set $m2-notes {}
+set $m2-show_status {1}
+$m2 initialize_ui
+set $m2-ViewWindow_0-view-eyep-x ${view-eyep-x}
+set $m2-ViewWindow_0-view-eyep-y ${view-eyep-y}
+set $m2-ViewWindow_0-view-eyep-z ${view-eyep-z}
+set $m2-ViewWindow_0-view-lookat-x ${view-lookat-x}
+set $m2-ViewWindow_0-view-lookat-y ${view-lookat-y}
+set $m2-ViewWindow_0-view-lookat-z ${view-lookat-z}
+set $m2-ViewWindow_0-view-up-x ${view-up-x}
+set $m2-ViewWindow_0-view-up-y ${view-up-y}
+set $m2-ViewWindow_0-view-up-z ${view-up-z}
+set $m2-ViewWindow_0-view-fov ${view-fov}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m3-num_slices {417}
+set $m3-draw_mode {0}
+set $m3-render_style {1}
+set $m3-alpha_scale {-0.613}
+set $m3-interp_mode {1}
+set $m4-notes {}
+set $m4-show_status {1}
+set $m4-tcl_status {Calling GenStandardColorMaps!}
+set $m4-positionList {{0 40} {47 40} {121 32} {241 18} {313 8} {471 0}}
+set $m4-nodeList {13 14 15 16 598 797}
+set $m4-width {471}
+set $m4-height {40}
+set $m4-mapType {0}
+set $m4-minRes {2}
+set $m4-resolution {12}
+set $m4-realres {12}
+set $m4-gamma {0}
+set $m5-notes {}
+set $m5-show_status {1}
+set $m5-drawX {1}
+set $m5-drawY {1}
+set $m5-drawZ {1}
+set $m5-drawView {0}
+set $m5-interp_mode {1}
+
+::netedit scheduleok

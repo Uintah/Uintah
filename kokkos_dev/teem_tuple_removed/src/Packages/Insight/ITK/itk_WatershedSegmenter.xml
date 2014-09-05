@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<!DOCTYPE filter-itk SYSTEM "itk_filter.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<filter-itk name="itk::watershed::Segmenter">
+  <description>
+This filter implements the first step in the N-d watershed segmentation algorithm. It produces a segmented, labeled image from a scalar-valued image input. This filter is used in conjunction with WatershedSegmentTreeGenerator and WatershedRelabeler to produce a final segmented image volume. See itk::WatershedImageFilter for an overview of the entire algorithm and notes on the terminology used in describing it.
+  </description>
+  <templated>
+    <template>InputImageType</template>
+    <defaults>
+      <default>itk::Image&lt;float, 2&gt;</default>
+    </defaults>
+  </templated>
+
+  <inputs>
+    <input name="Scalar_Image">
+      <type>InputImageType</type>
+      <call>SetInputImage</call>
+    </input>  
+  </inputs>
+  <outputs>
+    <output name="Labeled_Image">
+      <type>LabeledImageType</type>
+      <call>GetOutputImage</call>
+    </output>
+    <output name="Segment_Table">
+      <type>SegmentTableType</type>
+      <call>GetSegmentTable</call>
+    </output>
+    <output name="Boundary">
+      <type>BoundaryType</type>
+      <call>GetBoundary</call>
+    </output>
+  </outputs>
+
+  <parameters>
+    <param>
+      <name>threshold</name>
+      <type>double</type>
+      <call>SetThreshold</call>
+      <default>0.01</default>
+    </param>
+  </parameters>
+
+  <includes>
+    <file>itkWatershedSegmenter.h</file>
+  </includes>
+</filter-itk>
+

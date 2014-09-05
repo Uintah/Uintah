@@ -1,0 +1,63 @@
+
+inPackage=
+outPackage=
+
+   
+  PORT
+  iStringPort
+  oStringPort
+  EOF_PORT
+   
+  PORT
+  Margaritaville
+  Margaritaville
+  EOF_PORT
+
+
+   
+        
+  PORTMETHOD
+  m1
+  m2
+  Thing t1->SameThing
+
+  EOF_PORTMETHOD
+    
+  PORTMETHOD
+  m3
+  m4
+  OneT t1->TwoT
+
+  EOF_PORTMETHOD
+    
+  PORTMETHOD
+  m5
+  m5
+  OneT t1->TwoT
+
+  EOF_PORTMETHOD
+    
+  PORTMETHOD
+  m6
+  m6
+  ThreeT t1->FourT
+
+  EOF_PORTMETHOD
+    
+  PORTMETHOD
+  m7
+  m7
+  ThreeT t1->FourT
+
+  EOF_PORTMETHOD
+ 
+   
+        
+  PORTMETHOD
+  jimmy_buffet
+  jimmy_buffet
+  coctail.Margarita m->
+
+  EOF_PORTMETHOD
+ 
+

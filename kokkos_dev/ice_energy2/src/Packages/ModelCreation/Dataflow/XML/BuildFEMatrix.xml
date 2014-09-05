@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="BuildFEMatrix" category="FiniteElements" optional="false">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      This module builds the Finite Element Method stiffness matrix.
+
+    </summary>
+    <description>
+      <p>        This module builds the Finite Element Method stiffness matrix.</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>ConductivityTable</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>GeomToComp</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>CompToGeom</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>FEMatrix</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>

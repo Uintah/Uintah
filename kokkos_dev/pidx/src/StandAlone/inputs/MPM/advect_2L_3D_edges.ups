@@ -1,0 +1,294 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+  <Meta>
+      <title>pure translation of particles through CFI edges </title>
+  </Meta>
+
+  <SimulationComponent type="amrmpm" />
+
+  <Time>
+      <maxTime>         0.015    </maxTime>     
+      <initTime>        0.0      </initTime>    
+      <delt_min>        1e-10    </delt_min>    
+      <delt_max>        0.001    </delt_max>    
+      <max_Timesteps>   20       </max_Timesteps>
+      <timestep_multiplier> 0.05 </timestep_multiplier>
+  </Time>
+
+
+  <!--__________________________________-->
+  <DataArchiver>
+    <filebase>advect_2L_3D_edges.uda</filebase>
+    <outputTimestepInterval>5</outputTimestepInterval>
+    <save label = "KineticEnergy"/>
+    <save label = "TotalMass"/>
+    <save label = "StrainEnergy"/>
+    <save label = "TotalMomentum"/>
+
+    <save label = "g.mass"/>
+    <save label = "g.velocity"/>
+    <save label = "g.acceleration"/>
+    <save label = "g.internalforce"/>
+    <save label = "g.externalforce"/>
+
+    <save label = "p.x"/>
+    <save label = "p.particleID"/>
+    <save label = "particleCount"/>
+    <save label = "p.volume"/>
+    <save label = "p.color"/>
+    <save label = "p.stress"/>
+    <save label = "p.mass"/>
+    <save label = "p.temperature"/>
+
+    <save label = "p.displacement"/>
+    <save label = "p.deformationMeasure"/>
+    <save label = "p.velocity"/>
+
+     <checkpoint cycle = "2" timestepInterval = "5"/>
+  </DataArchiver>
+   <!--__________________________________-->
+  <AMR>
+     <useLockStep> true </useLockStep>
+     <MPM>
+       <manualGrid> true </manualGrid>
+     </MPM>
+   </AMR>
+
+   <!--__________________________________-->
+   <MPM>
+     <time_integrator>explicit</time_integrator>
+     <interpolator>       linear    </interpolator>
+     <withColor>          true      </withColor>
+     <minimum_mass_for_acc>  1.0e-15  </minimum_mass_for_acc>
+   </MPM>
+
+   <PhysicalConstants>
+      <gravity>[0,0,0]</gravity>
+   </PhysicalConstants>
+
+   <!--__________________________________-->
+   <MaterialProperties>
+     <MPM>
+       <material name="blocks">
+         <density>1000.0</density>
+         <constitutive_model type="comp_mooney_rivlin"> 
+            <he_constant_1>       100000.0  </he_constant_1>
+            <he_constant_2>       20000.0   </he_constant_2>
+            <he_PR>               .49       </he_PR>
+         </constitutive_model>
+         <thermal_conductivity>   1.0   </thermal_conductivity>
+         <specific_heat>            5   </specific_heat>
+         <!--_________________________________________________-->
+                        <!--Xminus-->
+         <geom_object>
+         
+            <box label = "top-xminus">
+              <min>  [-0.525, 0.475, -0.3] </min>
+              <max>  [-0.475, 0.525,  0.3] </max>
+            </box>
+             
+            <res>         [2,2,2]       </res>
+            <velocity>    [-100,100,0] </velocity>
+            <temperature>     12        </temperature>
+            <color>            0        </color>
+         </geom_object> 
+                        <!--X plus -->
+         <geom_object>
+
+            <box label = "top-xplus">
+              <min>  [0.475,  0.475, -0.3] </min>
+              <max>  [0.525,  0.525,  0.3]  </max>
+            </box>
+             
+            <res>         [2,2,2]       </res>
+            <velocity>    [100,100,0]   </velocity>
+            <temperature>     12        </temperature>
+            <color>            0        </color>
+         </geom_object>
+                        <!--zminus -->
+         <geom_object>  
+            <box label = "top-zminus">
+              <min>  [-0.3, 0.475,-0.525] </min>
+              <max>  [ 0.3, 0.525,-0.475] </max>
+            </box>
+             
+            <res>         [2,2,2]         </res>
+            <velocity>    [0, 100,-100]  </velocity>
+            <temperature>     12          </temperature>
+            <color>            0          </color>
+         </geom_object>
+                        <!--zplus --> 
+         <geom_object>
+            <box label = "top-zplus">
+              <min>  [-0.3,  0.475,0.475] </min>
+              <max>  [ 0.3,  0.525,0.525] </max>
+            </box>
+             
+            <res>         [2,2,2]       </res>
+            <velocity>    [0,100,100]     </velocity>
+            <temperature>     12        </temperature>
+            <color>            0        </color>
+         </geom_object>
+         
+         <!--_________________________________________________-->
+                        <!-- bot X minus-->
+         <geom_object>
+         
+            <box label = "bot-xminus">
+              <min>  [-0.525, -0.525, -0.3] </min>
+              <max>  [-0.475, -0.475,  0.3] </max>
+            </box>
+             
+            <res>         [2,2,2]       </res>
+            <velocity>    [-100,-100,0] </velocity>
+            <temperature>     12        </temperature>
+            <color>            0        </color>
+         </geom_object> 
+                        <!--bot X plus -->
+         <geom_object>
+
+            <box label = "bot-xplus">
+              <min>  [0.475,  -0.525, -0.3] </min>
+              <max>  [0.525,  -0.475,  0.3]  </max>
+            </box>
+             
+            <res>         [2,2,2]       </res>
+            <velocity>    [100,-100,0]  </velocity>
+            <temperature>     12        </temperature>
+            <color>            0        </color>
+         </geom_object>
+                        <!--bot-zminus -->
+         <geom_object>  
+            <box label = "bot-zminus">
+              <min>  [-0.3, -0.525,-0.525] </min>
+              <max>  [ 0.3, -0.475,-0.475] </max>
+            </box>
+             
+            <res>         [2,2,2]         </res>
+            <velocity>    [0, -100,-100]  </velocity>
+            <temperature>     12          </temperature>
+            <color>            0          </color>
+         </geom_object>
+                        <!--bot-zplus --> 
+         <geom_object>
+            <box label = "bot-zplus">
+              <min>  [-0.3,  -0.525,0.475] </min>
+              <max>  [ 0.3,  -0.475,0.525] </max>
+            </box>
+             
+            <res>         [2,2,2]       </res>
+            <velocity>    [0,-100,100]  </velocity>
+            <temperature>     12        </temperature>
+            <color>            0        </color>
+         </geom_object>
+         <!--_________________________________________________-->         
+                        <!--back X minus-->
+         <geom_object>
+            <box label = "back-xminus">
+              <min>  [-0.525,-0.3, -0.525] </min>
+              <max>  [-0.475, 0.3, -0.475] </max>
+            </box>
+             
+            <res>         [2,2,2]       </res>
+            <velocity>    [-100,0,-100] </velocity>
+            <temperature>     12        </temperature>
+            <color>            0        </color>
+         </geom_object> 
+                        <!-- back X plus -->
+         <geom_object>
+
+            <box label = "back-xplus">
+              <min>  [0.475,-0.3,  -0.525] </min>
+              <max>  [0.525, 0.3,  -0.475]  </max>
+            </box>
+             
+            <res>         [2,2,2]       </res>
+            <velocity>    [100,0,-100]  </velocity>
+            <temperature>     12        </temperature>
+            <color>            0        </color>
+         </geom_object>
+         <!--_________________________________________________-->
+                        <!--front X minus-->
+         <geom_object>
+            <box label = "front-xminus">
+              <min>  [-0.525,-0.3, 0.475] </min>
+              <max>  [-0.475, 0.3, 0.525] </max>
+            </box>
+             
+            <res>         [2,2,2]       </res>
+            <velocity>    [-100,0,100]  </velocity>
+            <temperature>     12        </temperature>
+            <color>            0        </color>
+         </geom_object> 
+                        <!--front X plus -->
+         <geom_object>
+
+            <box label = "front-xplus">
+              <min>  [0.475,-0.3,  0.475] </min>
+              <max>  [0.525, 0.3,  0.525]  </max>
+            </box>
+             
+            <res>         [2,2,2]       </res>
+            <velocity>    [100, 0,100]  </velocity>
+            <temperature>     12        </temperature>
+            <color>            0        </color>
+         </geom_object>
+                  
+       </material>
+       <contact>
+         <type>null</type>
+       </contact>
+     </MPM>
+   </MaterialProperties>
+
+   <Grid>
+      <!--__________________________________-->
+      <!--       3D    -->
+      <Level>
+        <Box label = "0">
+          <lower>       [-2, -2, -2]    </lower>
+          <upper>       [ 2,  2,  2]    </upper>
+          <resolution>  [40, 40, 40]    </resolution>
+          <patches>     [1,1,1]         </patches>
+          <extraCells>  [0,0,0]         </extraCells>
+        </Box>
+      </Level>
+
+      <Level>
+        <Box label = "1">
+          <lower>       [-0.5, -0.5, -0.5]   </lower>
+          <upper>       [ 0.5,  0.5,  0.5]   </upper>
+          <resolution>  [20, 20, 20]         </resolution>
+          <patches>     [1,1,1]              </patches>
+          <extraCells>  [0,0,0]              </extraCells>
+        </Box>
+      </Level>
+      
+      <!--__________________________________-->
+      <BoundaryConditions>
+        <Face side = "x-">
+          <BCType id = "all"    label = "Symmetric" var = "symmetry"> </BCType>
+        </Face>
+        <Face side = "x+">
+           <BCType id = "all"   label = "Symmetric" var = "symmetry"> </BCType>
+        </Face>
+        <Face side = "y-">
+          <BCType id = "all"    label = "Symmetric" var = "symmetry"> </BCType>
+        </Face>
+        <Face side = "y+">
+           <BCType id = "all"   label = "Symmetric" var = "symmetry"> </BCType>
+        </Face>
+        <Face side = "z-">
+          <BCType id = "all"    label = "Symmetric" var = "symmetry"> </BCType>
+        </Face>
+        <Face side = "z+">
+           <BCType id = "all"   label = "Symmetric" var = "symmetry"> </BCType>
+        </Face>
+      </BoundaryConditions>  
+   </Grid>
+   
+</Uintah_specification>
+

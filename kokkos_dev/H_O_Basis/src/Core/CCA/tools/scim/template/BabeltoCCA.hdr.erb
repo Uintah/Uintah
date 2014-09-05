@@ -1,0 +1,40 @@
+
+#include <Core/CCA/spec/cca_sidl.h>
+<port> 
+#include <CCA/Components/BabelTest/<%= $inPackage%>/<%= $inPackage%>_<%= $inPortName%>.hh>
+</port>
+#include <sidl_String.h>
+
+#include <SCIRun/Bridge/BridgeComponent.h>
+#include <SCIRun/Bridge/BridgeServices.h>
+
+using namespace std;
+
+namespace SCIRun {
+  class <%= rndBridgeName%> : public BridgeComponent{
+  public:
+    <%= rndBridgeName%>();
+    virtual ~<%= rndBridgeName%>();
+    virtual void setServices(const BridgeServices* svc);
+  private:
+    <%= rndBridgeName%>(const <%= rndBridgeName%>&);
+    <%= rndBridgeName%>& operator=(const <%= rndBridgeName%>&);
+    BridgeServices* services;
+  };
+} //end of namespace
+
+namespace somethingspc {
+<port> 
+  class <%= $inPortName%> {
+  public:
+    <%= $inPortName%>();
+    ~<%= $inPortName%>();
+    <method> 
+    <%= $inMethodType%> <%= $inMethodName%>(<%= outDefArgs(method(:babelType))%>);
+    </method>
+    ::SCIRun::BridgeServices* mysvcs;
+  };
+</port>
+} //end of namespace
+
+

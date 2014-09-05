@@ -1,0 +1,54 @@
+<?xml version="1.0" ?>
+<!DOCTYPE network
+  PUBLIC '-//SCIRun/Network DTD'
+  'network.dtd'>
+<network bbox="{9 9 381 230}" creationDate="{Thu Mar 16 2006}" creationTime="{11:06:32}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.2">
+  <environment>
+    <var name="scisub_datadir" val="SCIRUN_DATA"/>
+    <var name="scisub_datafile" val="SCIRUN_DATAFILE"/>
+    <var name="scisub_dataset" val="SCIRUN_DATASET"/>
+  </environment>
+  <note>{}</note>
+  <modules>
+    <module category="DataIO" id="m1" name="ReadField" package="SCIRun">
+      <position x="9" y="9"/>
+      <var name="filename" val="scisub_datadir/scisub_dataset/scisub_dataset-mesh.tvt.fld"/>
+    </module>
+    <module category="Forward" id="m2" name="BuildFEMatrix" package="BioPSE">
+      <position x="9" y="88"/>
+    </module>
+    <module category="Forward" id="m3" name="ApplyFEMCurrentSource" package="BioPSE">
+      <position x="181" y="88"/>
+    </module>
+    <module category="Math" id="m4" name="SolveLinearSystem" package="SCIRun">
+      <position x="9" y="173"/>
+      <var name="target_error" val="{1e-06}"/>
+      <var name="flops" val="{0}"/>
+      <var name="floprate" val="{0}"/>
+      <var name="memrefs" val="{0}"/>
+      <var name="memrate" val="{0}"/>
+      <var name="orig_error" val="{1}"/>
+      <var name="current_error" val="{9.84662e-07}"/>
+      <var name="method" val="{Conjugate Gradient &amp; Precond. (SCI)}"/>
+      <var name="precond" val="{jacobi}"/>
+      <var name="iteration" val="{86}"/>
+      <var name="maxiter" val="{500}"/>
+      <var name="use_previous_soln" val="{1}"/>
+      <var name="emit_partial" val="{0}"/>
+      <var name="emit_iter" val="{50}"/>
+      <var name="status" val="{}"/>
+      <var name="np" val="{4}"/>
+    </module>
+    <module category="DataIO" id="m5" name="ReadField" package="SCIRun">
+      <position x="199" y="10"/>
+      <var name="filename" val="scisub_datadir/scisub_dataset/scisub_dataset-dipole.pcv.fld"/>
+    </module>
+  </modules>
+  <connections>
+    <connection from="m2" fromport="0" id="c1" to="m4" toport="0"/>
+    <connection from="m1" fromport="0" id="c2" to="m3" toport="0"/>
+    <connection from="m1" fromport="0" id="c3" to="m2" toport="0"/>
+    <connection from="m3" fromport="0" id="c4" to="m4" toport="1"/>
+    <connection from="m5" fromport="0" id="c5" to="m3" toport="1"/>
+  </connections>
+</network>

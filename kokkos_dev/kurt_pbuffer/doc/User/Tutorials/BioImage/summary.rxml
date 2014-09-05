@@ -1,0 +1,114 @@
+<!--
+    For more information, please see: http://software.sci.utah.edu
+
+The MIT License
+
+Copyright (c) 2004 Scientific Computing and Imaging Institute,
+University of Utah.
+
+License for the specific language governing rights and limitations under
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+-->
+
+<chapter id="summary">
+  <title>Summary</title>
+  
+  <para>
+    We have now seen how to use and manipulate some of the various
+    aspects of BioImage.  Not only can BioImage read in multiple
+    data types, but it can also directly manipulate that data to
+    facilitate visualization and exploration.
+  </para>
+  
+  <para>
+    We have seen how BioImage is capable of loading a Nrrd-based
+    dataset, the CT Tooth.  After loading in this data, several
+    filters were applied to directly manipulate the data before the
+    visualization of it.  These filters included a Cropping filter
+    and a Resampling filter.
+  </para>
+  
+  <para>
+    After the modifying the data, it is sent down for visualization.
+    The first part of the tutorial showed how to view data in the 3
+    2-d viewing panes.  Changing the data in these 2-d panes was
+    accomplished with the sliders under each pane.  The window and
+    level of these 2-d viewers were changed in order to more easily
+    view parts of the tooth structures.
+  </para>
+  
+  <para>
+    BioImage also has a volume renderer for data visualization and
+    exploration.  Not only was the volume renderer activated, but
+    the 3-d viewer was also manipulated in order to present a
+    desired view to the user.  The volume renderer is not only
+    controlled by the window and level set in the 2-d panes, but
+    also by the renderer's transfer function.  It was shown how to
+    properly edit this transfer function in order to highlight
+    various aspects of the dataset.
+  </para>
+  
+  <para>
+    The basic use of BioImage has been explored through the use of
+    the CT Tooth dataset.  For further questions and reference,
+    please see the reference guide.
+  </para>
+
+  <section>
+    <title>Other Demo Datasets</title>
+    
+    <para>The SCIRunData download contains other sample datasets and their
+    corresponding transfer functions. Two of these are the Engine and 
+    CT Head datasets as seen in <xref linkend="fig.Engine"/> and
+    <xref linkend="fig.CThead"/> respectively and are found in the volume
+    directory of SCIRunData.
+    </para>
+
+    <figure id="fig.Engine">
+      <title><ulink url="Figures/Engine_hires.jpg">Engine Dataset in BioImage</ulink></title>
+      <mediaobject>
+	<textobject>
+	  <phrase>Engine Dataset in BioImage</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/Engine.eps" align="center" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/Engine.jpg" align="center" format="JPG"/>
+	</imageobject>
+      </mediaobject>
+    </figure>
+
+    <figure id="fig.CThead">
+      <title><ulink url="Figures/CThead_hires.jpg">CThead Dataset in BioImage</ulink></title>
+      <mediaobject>
+	<textobject>
+	  <phrase>CThead Dataset in BioImage</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/CThead.eps" align="center" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/CThead.jpg" align="center" format="JPG"/>
+	</imageobject>
+      </mediaobject>
+    </figure>
+
+  </section>
+</chapter>

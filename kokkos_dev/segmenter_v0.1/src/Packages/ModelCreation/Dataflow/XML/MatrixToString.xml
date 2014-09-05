@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="MatrixToString" category="Converter" optional="false">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      MatrixToString converts a matrix and prints its contents in a string. This module exists mainly for debugging purposes.
+
+    </summary>
+    <description>
+      <p>        MatrixToString converts a matrix and prints its contents in a string. This module exists mainly for debugging purposes.
+</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Matrix</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>String</name>
+        <datatype>SCIRun::String</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>

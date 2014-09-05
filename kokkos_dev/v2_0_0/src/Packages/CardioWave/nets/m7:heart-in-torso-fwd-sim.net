@@ -1,0 +1,295 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+global notes
+set notes ""
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 11 82]
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 188 82]
+set m2 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMVoltageSource" 29 393]
+set m3 [addModuleAtPosition "BioPSE" "Forward" "InsertVoltageSource" 29 241]
+set m4 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 47 321]
+set m5 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 29 462]
+set m6 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 188 153]
+set m7 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 370 11]
+set m8 [addModuleAtPosition "SCIRun" "Fields" "HexToTet" 11 160]
+set m9 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 11 543]
+set m10 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 370 73]
+set m11 [addModuleAtPosition "SCIRun" "Math" "AppendMatrix" 774 625]
+set m12 [addModuleAtPosition "SCIRun" "DataIO" "MatrixWriter" 773 714]
+set m13 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 329 406]
+set m14 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 329 633]
+set m15 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 137 788]
+set m16 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 552 342]
+set m17 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 534 405]
+set m18 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 516 627]
+set m19 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 155 543]
+set m20 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 348 707]
+set m21 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 329 788]
+set m22 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 516 788]
+set m23 [addModuleAtPosition "SCIRun" "Render" "Viewer" 311 878]
+set m24 [addModuleAtPosition "SCIRun" "Fields" "ChangeFieldDataAt" 329 301]
+set m25 [addModuleAtPosition "SCIRun" "Math" "Submatrix" 603 714]
+set m26 [addModuleAtPosition "SCIRun" "Math" "LinAlgUnary" 792 549]
+
+addConnection $m3 0 $m2 0
+addConnection $m4 0 $m2 1
+addConnection $m2 0 $m5 0
+addConnection $m2 1 $m5 1
+addConnection $m6 0 $m3 1
+addConnection $m8 0 $m3 0
+addConnection $m5 0 $m9 1
+addConnection $m8 0 $m9 0
+addConnection $m13 1 $m14 1
+addConnection $m9 0 $m14 0
+addConnection $m17 0 $m18 1
+addConnection $m9 0 $m18 0
+addConnection $m19 0 $m20 0
+addConnection $m14 0 $m21 0
+addConnection $m18 0 $m22 0
+addConnection $m20 0 $m15 1
+addConnection $m20 0 $m21 1
+addConnection $m20 0 $m22 1
+addConnection $m9 0 $m15 0
+addConnection $m15 1 $m23 0
+addConnection $m21 0 $m23 1
+addConnection $m22 0 $m23 2
+addConnection $m1 0 $m6 0
+addConnection $m0 0 $m8 0
+addConnection $m7 0 $m10 0
+addConnection $m16 0 $m17 1
+addConnection $m8 0 $m4 0
+addConnection $m18 0 $m20 1
+addConnection $m24 0 $m17 0
+addConnection $m24 0 $m13 0
+addConnection $m8 0 $m24 0
+addConnection $m11 0 $m12 0
+addConnection $m10 0 $m6 1
+addConnection $m11 0 $m25 0
+addConnection $m26 0 $m11 1
+addConnection $m5 0 $m26 0
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-filename {/usr/sci/data/Medical/mouse/activation/sr/torso/mouse-torso-coreg.hvt.fld}
+set $m1-notes {}
+set $m1-show_status {1}
+set $m1-filename {/usr/sci/data/Medical/mouse/activation/sr/64/mouse-heart-64-clipped-flooded.hvt.fld}
+set $m2-notes {}
+set $m2-show_status {1}
+set $m2-bcFlag {DirSub}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m3-outside {1}
+set $m3-groundfirst {0}
+set $m4-notes {}
+set $m4-show_status {1}
+set $m4-UseCondTCL {1}
+set $m5-notes {}
+set $m5-show_status {1}
+set $m5-target_error {1e-05}
+set $m5-flops {      2.36117e+08}
+set $m5-floprate {          468.222}
+set $m5-memrefs {      5.60896e+10}
+set $m5-memrate {          8109.66}
+set $m5-orig_error {                1}
+set $m5-current_error {9.86605e-06}
+set $m5-method {Conjugate Gradient & Precond. (SCI)}
+set $m5-precond {jacobi}
+set $m5-iteration {242}
+set $m5-maxiter {1000}
+set $m5-use_previous_soln {0}
+set $m5-emit_partial {0}
+set $m5-emit_iter {50}
+set $m5-petsc_installed {0}
+set $m5-status {}
+set $m5-np {4}
+set $m6-notes {}
+set $m6-show_status {1}
+set $m7-notes {}
+set $m7-show_status {1}
+set $m7-filename {/usr/sci/data/Medical/mouse/activation/sr/64/mouse-heart-64-v.mat}
+set $m8-notes {}
+set $m8-show_status {1}
+set $m9-notes {}
+set $m9-show_status {1}
+set $m10-notes {}
+set $m10-show_status {1}
+set $m10-row_or_col {row}
+set $m10-selectable_min {0}
+set $m10-selectable_max {              250}
+set $m10-selectable_inc {251}
+set $m10-selectable_units {Units}
+set $m10-range_min {6}
+set $m10-range_max {12}
+set $m10-playmode {once}
+set $m10-current {6}
+set $m10-execmode {init}
+set $m10-delay {0}
+set $m11-notes {}
+set $m11-show_status {1}
+set $m11-append {1}
+set $m11-row {1}
+set $m11-front {0}
+set $m12-notes {}
+set $m12-show_status {1}
+set $m12-filename {/usr/sci/data/Medical/mouse/activation/sr/64/mouse-torso-v.mat}
+set $m12-filetype {Binary}
+set $m12-split {0}
+set $m13-notes {}
+set $m13-show_status {1}
+set $m14-notes {}
+set $m14-show_status {1}
+set $m15-notes {}
+set $m15-show_status {1}
+set $m15-isoval {}
+set $m15-isoval-min {-80.4936}
+set $m15-isoval-max {44.3559}
+set $m15-extract-from-new-field {0}
+set $m15-algorithm {0}
+set $m15-build_trisurf {0}
+set $m15-np {1}
+set $m15-active_tab {MC}
+set $m15-update_type {on release}
+set $m15-color-r {0.4}
+set $m15-color-g {0.2}
+set $m15-color-b {0.9}
+set $m16-notes {}
+set $m16-show_status {1}
+set $m16-filename {/usr/sci/data/Medical/mouse/activation/sr/torso/mouse-heart-surf.ts.fld}
+set $m17-notes {}
+set $m17-show_status {1}
+set $m17-use_interp {1}
+set $m17-use_closest {1}
+set $m17-closeness_distance {1.0e15}
+set $m18-notes {}
+set $m18-show_status {1}
+set $m19-notes {}
+set $m19-show_status {1}
+set $m19-tcl_status {Calling GenStandardColorMaps!}
+set $m19-positionList {{0 9} {425 9}}
+set $m19-nodeList {766 1034}
+set $m19-width {425}
+set $m19-height {40}
+set $m19-mapType {3}
+set $m19-minRes {12}
+set $m19-resolution {255}
+set $m19-realres {255}
+set $m19-gamma {0}
+set $m20-notes {}
+set $m20-show_status {1}
+set $m20-isFixed {1}
+set $m20-min {  -50}
+set $m20-max {10}
+set $m21-notes {}
+set $m21-show_status {1}
+set $m21-nodes-on {0}
+set $m21-nodes-as-disks {0}
+set $m21-edges-on {1}
+set $m21-use-normals {1}
+set $m21-use-transparency {1}
+set $m21-faces-on {0}
+set $m21-vectors-on {0}
+set $m21-normalize-vectors {}
+set $m21-has_vec_data {0}
+set $m21-bidirectional {0}
+set $m21-arrow-heads-on {1}
+set $m21-def-color-r {0.5}
+set $m21-def-color-g {0.5}
+set $m21-def-color-b {0.5}
+set $m21-def-color-a {0.5}
+set $m21-node_display_type {Spheres}
+set $m21-edge_display_type {Lines}
+set $m21-active_tab {Edges}
+set $m21-node_scale {0.01}
+set $m21-edge_scale {0.015}
+set $m21-vectors_scale {0.30}
+set $m21-show_progress {}
+set $m21-interactive_mode {Interactive}
+set $m21-resolution {4}
+set $m22-notes {}
+set $m22-show_status {1}
+set $m22-nodes-on {0}
+set $m22-nodes-as-disks {0}
+set $m22-edges-on {0}
+set $m22-use-normals {1}
+set $m22-use-transparency {0}
+set $m22-faces-on {1}
+set $m22-vectors-on {0}
+set $m22-normalize-vectors {}
+set $m22-has_vec_data {0}
+set $m22-bidirectional {0}
+set $m22-arrow-heads-on {1}
+set $m22-def-color-r {0.5}
+set $m22-def-color-g {0.5}
+set $m22-def-color-b {0.5}
+set $m22-def-color-a {0.5}
+set $m22-node_display_type {Spheres}
+set $m22-edge_display_type {Lines}
+set $m22-active_tab {Faces}
+set $m22-node_scale {0.03}
+set $m22-edge_scale {0.015}
+set $m22-vectors_scale {0.30}
+set $m22-show_progress {}
+set $m22-interactive_mode {Interactive}
+set $m22-resolution {4}
+set $m23-notes {}
+set $m23-show_status {1}
+$m23 ui
+set $m23-ViewWindow_0-pos {}
+set $m23-ViewWindow_0-caxes {0}
+set $m23-ViewWindow_0-iaxes {}
+set $m23-ViewWindow_0-view-eyep-x {          9.07442}
+set $m23-ViewWindow_0-view-eyep-y {         -1.07864}
+set $m23-ViewWindow_0-view-eyep-z {         -7.46396}
+set $m23-ViewWindow_0-view-lookat-x {                0}
+set $m23-ViewWindow_0-view-lookat-y {                0}
+set $m23-ViewWindow_0-view-lookat-z {                0}
+set $m23-ViewWindow_0-view-up-x {        -0.292741}
+set $m23-ViewWindow_0-view-up-y {         0.829427}
+set $m23-ViewWindow_0-view-up-z {        -0.475767}
+set $m23-ViewWindow_0-view-fov {               20}
+set $m23-ViewWindow_0-view-eyep_offset-x {}
+set $m23-ViewWindow_0-view-eyep_offset-y {}
+set $m23-ViewWindow_0-view-eyep_offset-z {}
+set $m23-ViewWindow_0-bgcolor-r {                0}
+set $m23-ViewWindow_0-bgcolor-g {                0}
+set $m23-ViewWindow_0-bgcolor-b {                0}
+set $m23-ViewWindow_0-shading {}
+set $m23-ViewWindow_0-do_stereo {0}
+set $m23-ViewWindow_0-ambient-scale {1.0}
+set $m23-ViewWindow_0-diffuse-scale {1.0}
+set $m23-ViewWindow_0-specular-scale {0.4}
+set $m23-ViewWindow_0-emission-scale {1.0}
+set $m23-ViewWindow_0-shininess-scale {1.0}
+set $m23-ViewWindow_0-sbase {0.40}
+set $m23-ViewWindow_0-sr {1}
+set $m23-ViewWindow_0-do_bawgl {0}
+set $m23-ViewWindow_0-drawimg {}
+set $m23-ViewWindow_0-saveprefix {}
+set $m23-ViewWindow_0-resx {}
+set $m23-ViewWindow_0-resy {}
+set $m23-ViewWindow_0-aspect {}
+set $m23-ViewWindow_0-aspect_ratio {}
+set $m23-ViewWindow_0-unused {1}
+set $m23-ViewWindow_0-unused {1}
+set $m24-notes {}
+set $m24-show_status {1}
+set $m24-dataat2 {Nodes}
+set $m25-notes {}
+set $m25-show_status {1}
+set $m25-mincol {0}
+set $m25-maxcol {0}
+set $m25-minrow {0}
+set $m25-maxrow {0}
+set $m25-nrow {8}
+set $m25-ncol {96385}
+set $m26-notes {}
+set $m26-show_status {1}
+set $m26-op {Transpose}
+set $m26-function {x+10}
+$m5 initialize_ui
+$m10 initialize_ui
+
+::netedit scheduleok

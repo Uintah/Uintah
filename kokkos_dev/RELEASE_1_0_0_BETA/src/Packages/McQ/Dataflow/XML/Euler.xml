@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/ReferenceGuide/component.dtd">
+
+<component name="Euler" category="Euler.cc">
+  <overview>
+    <authors>
+      <author>John McCorquodale</author>
+    </authors>
+    <summary>Summary not available yet.</summary>
+    <description>
+      <p>Version Date: October 1999</p><p>Version: 1.0</p>
+    </description>
+  </overview>
+  <io>
+  </io>
+  <testing>
+  </testing>
+</component>

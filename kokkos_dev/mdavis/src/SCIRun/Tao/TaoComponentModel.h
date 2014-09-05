@@ -1,0 +1,143 @@
+/*
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+*/
+
+
+/*
+ *  TaoComponentModel.h: 
+ *
+ *  Written by:
+ *   Steven G. Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   October 2001
+ *
+ */
+
+#ifndef SCIRun_Tao_TaoComponentModel_h
+#define SCIRun_Tao_TaoComponentModel_h
+
+#include <SCIRun/ComponentModel.h>
+#include <SCIRun/ComponentInstance.h>
+#include <Core/CCA/spec/cca_sidl.h>
+#include <vector>
+#include <string>
+#include <map>
+
+namespace SCIRun {
+
+class SCIRunFramework;
+class TaoComponentDescription;
+class TaoComponentInstance;
+
+/**
+ * \class TaoComponentModel
+ *
+ * A SCIRun metacomponent model for Tao compliant components.  This class
+ * handles the allocation/destruction of Tao components and maintains a
+ * database of Tao components that may be instantiated by the SCIRun
+ * framework. See ComponentModel for more information.
+ *
+ * \sa BabelComponentModel InternalComponentModel SCIRunComponentModel TaoComponentModel
+*/
+class TaoComponentModel : public ComponentModel
+{
+public:
+  TaoComponentModel(SCIRunFramework* framework);
+  virtual ~TaoComponentModel();
+
+  /** ? */
+  sci::cca::TaoServices::pointer createServices(const std::string& instanceName,
+                                             const std::string& className,
+                                             const sci::cca::TypeMap::pointer& properties);
+
+  /** ? */
+  bool destroyServices(const sci::cca::TaoServices::pointer& svc);
+
+  /** Returns true if component type \em type has been registered with this
+      component model.  In other words, returns true if this ComponentModel
+      knows how to instantiate component \em type. */
+  virtual bool haveComponent(const std::string& type);
+
+  /** Allocates an instance of the component of type \em type.  The parameter
+      \em name is assigned as the unique name of the newly created instance.
+      Returns a smart pointer to the newly created instance, or a null pointer
+      on failure. */
+  virtual ComponentInstance* createInstance(const std::string& name,
+                                            const std::string& type);
+  
+  /** Deallocates the component instance \em ci.  Returns \code true on success and
+      \code false on failure. */
+  virtual bool destroyInstance(ComponentInstance *ci);
+
+  /** Returns the name (as a string) of this component model. */
+  virtual std::string getName() const;
+  
+  /** Creates a list of all the available components (as ComponentDescriptions)
+      registered in this ComponentModel. */
+  virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
+                                     bool);
+
+  /** ? */
+  virtual void destroyComponentList();
+
+  /** ? */
+  virtual void buildComponentList();
+
+  /** ? */
+  int addLoader(resourceReference *rr);
+
+  /** ? */
+  int removeLoader(const std::string &loaderName);
+
+  /** Get/set the directory path to component DLLs.  By default,
+   * the sidlDLLPath is initialized to the environment variable
+   * SIDL_DLL_PATH. */
+  std::string getSidlDLLPath() const { return sidlDLLPath; }
+  void setSidlDLLPath( const std::string& s) { sidlDLLPath = s; }
+
+  static const std::string DEFAULT_PATH;
+  
+private:
+  SCIRunFramework* framework;
+  typedef std::map<std::string, TaoComponentDescription*> componentDB_type;
+  componentDB_type components;
+    
+  void readComponentDescription(const std::string& file);
+  resourceReference *getLoader(std::string loaderName);
+
+  TaoComponentModel(const TaoComponentModel&);
+  TaoComponentModel& operator=(const TaoComponentModel&);
+ 
+  std::string sidlDLLPath;
+ 
+  std::vector<resourceReference*> loaderList;
+};
+
+} // end namespace SCIRun
+
+#endif

@@ -1,0 +1,252 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE dir SYSTEM "dirspec.dtd">
+
+<dir name="Core/Malloc">
+
+<!-- ************** phase 1 content ************** -->
+
+  <fit>
+  <!-- describe how this directory fits into SCIRun - why does it 
+       exist, how does SCIRun benefit from it, etc. -->
+    <p>
+      Core/Malloc implements the SCIRun memory allocation and tracking
+      system.  This system is an abstracted layer built upon the
+      normal memory management tools provided in C/C++.  
+
+      At one point or another, most programs run into problems with
+      dynamically allocated memory such as stray pointers and memory
+      leakage.  Because SCIRun is a large and complex collection of
+      core routines as well as a framework for the creation and use of
+      user modules (used to extend its base functionality,) it is
+      important to be able to track the allocation and usage of
+      memory.
+
+      Core/Malloc provides a transparent, non-invasive method of
+      tracking memory usage.  By overloading the basic C memory
+      management routines (malloc, free, calloc, realloc, memalign,
+      and valloc) as well as the C++ routines (new and delete,) SCIRun
+      can record and monitor the allocation of memory throughout the
+      system.  This makes it much easier to perform two very important
+      functions: 1) Know where memory was allocated, and thus, if
+      appropriate, where it was not freed, and 2) easily track the
+      amount of memory being used by the entire system.  Core/Malloc
+      provides one other important benefit:  Memory allocation can be,
+      and often is, faster because of the smarter algorithms it uses.
+    </p>
+  </fit>
+
+  <use>
+    <why>
+    <!-- Discuss why a developer would need or want to use the
+         functions and/or classes in this directory. -->
+      <p>
+        For the reasons mentioned above, it is important for
+        developers to use the Core/Malloc routines in order for
+        themselves or others to localize and fix and memory problems
+        encountered when using SCIRun.
+      </p>
+    </why>
+
+    <when>
+    <!-- Discuss when or where to use the functions and classes in
+         this directory: From within modules?, when a certain event
+	 occurs? -->
+      <p>
+        Anytime a developer needs to allocate memory, he or she should
+        use the Core/Malloc routines, thereby receiving for free, the
+        ability to track memory usage.  The important thing to note is
+        that the developer need only do one thing to make this happen:
+        Use the SCIRun macro "scinew" anywhere he or she would
+        normally use "new".  Because "scinew" is a macro, it can be
+        easily configured to allow the default "new" to be used when
+        desired.
+      </p>
+    </when>
+  </use>
+
+<!-- ************** phase 2 content ************** -->
+
+  <definition>
+  <!-- Give the definition for a term, or concept, that is embodied
+       by this directory.  Please provide feature length rather than
+       short story definitions. -->
+    <term>
+      Module
+    </term>
+    <p>
+      From the most abstract perspective, a module is considered to
+      be a one or more algorithms that solves a single, specific and
+      coarse grained, problem.  For example, suppose you have a large
+      database of english words that you want to display in sorted
+      order.  There are several algorithms that you may employ to
+      to solve this problem such as bubble sort, quick sort, etc.
+      A module that solves this problem, likely named Sort, would
+      be a collection of one or more of these algorithms.
+    </p>
+
+    <p>
+      On a slightly more concrete level, a module can be compared 
+      to a function or procedure (of a high level text based
+      programming language) that also implements one or more
+      algorithms to solve a specific problem.  The prototype for
+      such a function (in C like syntax) might look like this:
+    </p>
+
+    <p>
+        int Sort(string *words_to_sort, int alg_to_use);
+    </p>
+
+    <p>
+      Where words_to_sort is a random , possibly large, list of words
+      to be sorted (the data), and alg_to_use is a single integer used
+      to control which of the implemented algorithms to use.
+    </p>
+
+    <p>
+      The Sort module is identical to the Sort function in many ways:
+      They both have input (data and control), they both have output,
+      they both have a single point of entry for execution, and they
+      can both be used modularly in any program, provided that they are
+      simultaneously specific and general enough to be used universally.
+    </p>
+
+    <p>
+      Some important differences include: The Sort module seperates
+      the mode for communicating inputs of different kinds (i.e. data
+      is treated differently and seperately from control) and the sort
+      module can have more than one output.
+    </p>
+    
+    <p>
+      On the lowest level a module is exactly like the function.  The
+      module is actually implemented as a C++ class with one member
+      function named execute().  The execute member function is
+      similar to the C function in many ways.  In fact, it is possible
+      to cut the contents out of the C function and paste them into
+      the execute function of the module and achieve the same 
+      functionality, with one exception: the module does not pass 
+      data to the execute function through formal parameters, instead
+      it passes them through the use of seperate member functions
+      (pseudo code):
+    </p>
+    
+    <p>
+      void execute() {
+        string *words_to_sort;
+	int alg_to_use;
+
+	words_to_sort = get_data_from_input_port() ;
+	alg_to_use = get_chosen_algorithm_from_gui();
+
+	/* paste contents of sort function here */
+	
+	send_data_to_output_port(words_to_sort);
+      }
+    </p>
+
+    <p>
+      Modules are often manifested as graphical boxes with ports, 
+      a name, a timer and a progress bar.  Modules can exist outside
+      this graphical representation as well.  Outside it's graphical
+      manifestation, a module can be viewed as a node in an dataflow
+      graph.
+    </p>
+  </definition>
+
+  <definition>
+    <term>
+      Port
+    </term>
+    <p>
+      Ports are the analog of formal paramaters of a C function.
+      They are used to connect modules together and they enforce type
+      matching.
+    </p>
+  </definition>
+
+  <definition>
+    <term>
+      Connection
+    </term>
+    <p>
+    </p>
+  </definition>
+
+  <definition>
+    <term>
+      Network
+    </term>
+    <p>
+    </p>
+  </definition>
+
+  <definition>
+    <term>
+      Network Editor
+    </term>
+    <p>
+    </p>
+  </definition>
+
+  <example>
+  <!-- give an example of how to use the classes and/or functions
+       here.  Again, more is better, however give only exactly 
+       that which is being explained, no superfluous text (i.e.
+       please don't cut and paste from existing code.) -->
+    
+    <p>
+      To get data into and out of your module's execute function, you
+      need to use the module's ports.  In order to use the ports, 
+      you first need to get a pointer to a specific port.  Then, call
+      that port's get() function with a handle to the type of data
+      expected on the port.  On success, the handle passed to get()
+      will represent the data that is on that input port:
+
+      #include <Dataflow/Ports/MatrixPort.h>
+
+      ...
+
+      void SomeModule::execute() {
+
+        //The input port for this module is of type Matrix, and is
+        // named "Input Matrix"
+
+        MatrixIPort *iport = get_iport("Input Matrix");
+
+        MatrixHandle InputMatrix;
+
+        int connected = iport->get(InputMatrix);
+
+        if (!connected) {
+          printf("There is no connection for 'Input Matrix'!");
+	  return;
+        }
+        
+	...
+      }
+    </p>
+  </example>
+</dir>
+
+<!-- author comments: suggestions for new/better tags for this xml file
+
+  Hey, I think this file should address known bugs, i.e. have a <bugs> tag.
+
+-->

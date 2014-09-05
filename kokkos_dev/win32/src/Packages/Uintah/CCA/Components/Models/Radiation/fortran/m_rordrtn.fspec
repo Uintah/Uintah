@@ -1,0 +1,3 @@
+void m_rordrtn(int sn, OffsetArray1<double> ord, OffsetArray1<double> oxi, 
+	OffsetArray1<double> omu , OffsetArray1<double> oeta, 
+	OffsetArray1<double> wt);

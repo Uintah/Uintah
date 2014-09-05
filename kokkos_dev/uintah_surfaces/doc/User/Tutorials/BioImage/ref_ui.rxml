@@ -1,0 +1,385 @@
+<!--
+For more information, please see: http://software.sci.utah.edu
+
+The MIT License
+
+Copyright (c) 2004 Scientific Computing and Imaging Institute,
+University of Utah.
+
+License for the specific language governing rights and limitations under
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+-->
+
+<chapter>
+  <title>User Interface</title>
+  <para>
+      BioImage is divided into three main panes: the Processing Pane on the left, 
+      the Visualization Pane in the center, and the Visualization Settings Pane 
+      on the right as shown in <xref linkend="fig.gui-launch"/>. The two side 
+      panes can be detached from the Visualization Pane by clicking on 
+      the pane detachment/attachment controls.  These are the vertical dashed lines 
+      separating the panes.  Detaching these panes allows the user to resize the 
+      Visualization Pane for better viewing.
+  </para>
+  <section>
+    <title>Processing Pane</title>
+    <section>
+      <title>File and Help Menus</title>
+      <para>
+	The Processing Pane guides the user through processing their data for 
+	visualization.  It has two top-level menus: File and Help. The File menu 
+	items Save Session... and Load Session... allow the user to stop and resume 
+	BioImage sessions. After loading a saved session with Load Session..., 
+	resume processing and visualization by clicking Update.  The Help menu item 
+	Show Tooltips toggles tooltips. &quot;Hovering&quot; the mouse pointer over 
+	a control displays a tooltip describing a control. 
+      </para>
+    </section> <!-- End of File and Help Menus section -->
+    <section>
+      <title>Filter Buttons</title>
+      <para>
+	Under the Processing Pane menus are the filter buttons.  These buttons allow
+	the user to add steps to a dynamic pipeline. See 
+	<xref linkend="sec.dynamic_filters"/> 
+	below for more information regarding adding filters to the pipeline.
+      </para>
+    </section> <!-- End of Filter Buttons section -->
+    <section>
+      <title>History</title>
+      <para>
+	Directly below the filter buttons, is a scrolled window containing the History
+	of steps in the user's dynamic pipeline.  A BioImage pipeline will always
+	contain a Load section as the first step in the pipeline.  See  
+	<xref linkend="ch.ref_data"/> for more information regarding loading data. 
+	Any filters added by the user will appear in the pipeline with their unique UI.
+      </para>
+      <section id="sec.dynamic_filters">
+	<title>Dynamic Filters</title>
+	<para>
+	  Not every user's pre-processing steps will be the same nor in the same
+	  order.  One user may want to crop first then resample while another may
+	  prefer to resample first and crop later.  BioImage does not impose an order
+	  to the processing steps.  The user can add and delete steps to form the
+	  desired pipeline.  This pipeline is represented in the History section
+	  of the Processing Pane.
+	</para>
+	<para>
+	  The history will always start with a Load Data step and 
+	  corresponding user interface.  All subsequent filters will appear under the
+	  Load Data UI.  
+	</para>
+	<section>
+	  <title>Anatomy of a Filter UI</title>
+	  <para>
+	  Each filter UI contains four main components as shown in
+	  in <xref linkend="fig.anatomy-filter"/>: the visibility icon to
+	  collapse or expand the filter UI, the filter label, insert bar, 
+	  and close button. In addition to these four things, each filter 
+	  contains a unique interface representing its particular parameters.
+	  </para>
+	  <para>
+	    The visibility icon is located in the top left of each filter UI 
+	    and is labeled 1 in <xref linkend="fig.anatomy-filter"/>.  
+	    This icon controls whether the entire filter UI is displayed 
+	    and in full view or just 
+	    the label and close button.  By clicking this icon, the user can hide or 
+	    show the filter UI.
+	  </para>
+	  <para>
+	    To the right of the visibility icon is a label which will remain 
+	    visible whether the UI is in full view or hidden.  It is labeled
+	    2 in <xref linkend="fig.anatomy-filter"/>. The label defaults 
+	    to be the string &quot;Filter - Unknown&quot;.  By right 
+	    clicking on the label, the user can edit the label to be 
+	    something more meaningful.  This is especially useful when 
+	    a pipeline contains many filters.
+	  </para>
+	  <para>
+	    The red close button, labeled 3 in 
+	    <xref linkend="fig.anatomy-filter"/> will delete the filter from 
+	    the pipeline.  See the section Deleting Filters for more 
+	    information.
+	  </para>
+	  <para>
+	    The insert bar is used for inserting new filters between 
+	    existing filters and is discussed more in the Adding and 
+	    Inserting Filters section. It is shown by the label 4 in 
+	    <xref linkend="fig.anatomy-filter"/>
+	  </para>
+	  <figure id="fig.anatomy-filter">
+	    <title>Each filter UI contains four main components: the visibility icon, label insert bar, and close button.</title>
+	    <mediaobject>
+	      <textobject>
+		<phrase>Anatomy of a filter.</phrase>
+	      </textobject>
+	      <imageobject>
+		<imagedata fileref="Figures/anatomy-filter.eps" align="center" format="EPS"/>
+	      </imageobject>
+	      <imageobject>
+		<imagedata fileref="Figures/anatomy-filter.jpg" align="center" format="JPG"/>
+	      </imageobject>
+	    </mediaobject>
+	  </figure>
+	</section> <!-- End of Anatomy of a Filter section -->
+	<section>
+	  <title>Adding and Inserting Filters</title>
+	  <para>
+	    There are two ways to add a new filter to the pipeline.  The first approach
+	    is to click the button for the corresponding filter.  These buttons are 
+	    located directly above the history section as shown in 
+	    <xref linkend="fig.filter-buttons"/>. When clicking one of these
+	    buttons, the filter will always be added to the end of the pipeline.
+	  </para>
+	  
+	  <figure id="fig.filter-buttons">
+	    <title>Filter butttons available in BioImage.</title>
+	    <mediaobject>
+	      <textobject>
+		<phrase>Filter buttons.</phrase>
+	      </textobject>
+	      <imageobject>
+		<imagedata fileref="Figures/filter-buttons.eps" align="center" format="EPS"/>
+	      </imageobject>
+	      <imageobject>
+		<imagedata fileref="Figures/filter-buttons.jpg" align="center" format="JPG"/>
+	      </imageobject>
+	    </mediaobject>
+	  </figure>
+	  <para>
+	    There is another approach to adding filters to the pipeline which allows
+	    the user to insert a filter between two existing filters.  One of these
+	    filters may also be the Load Data step.  To insert a filter, the user
+	    must click the blue bar which separates the two filters, causing a menu
+	    of available filters to appear.  Selecting one of these filters will 
+	    add the appropriate filter in the specified location into the pipeline.
+	  </para>
+	</section> <!-- End of Adding and Inserting Filters section -->
+	<section>
+	  <title>Deleting Filters</title>
+	  <para>
+	    The red close button is located in the top right corner. Clicking
+	    this button will delete the filter from the pipeline and remove the UI from
+	    the history.  All settings for that filter will be lost. Since there must
+	    always be data to process, the Load Data UI does not have the close button.
+	  </para>
+	</section> <!-- End of Deleting Filters section -->
+	<section>
+	  <title>Currently Viewed Data - The Eye</title>
+	  <para>
+	    The radiobuttons to the left of the filters indicate the currenlty viewed data
+	    or the eye.  For example, if the radiobutton next to a crop filter is 
+	    selected, the cropped image will be shown in the Visualization Pane. As filters
+	    are added or inserted, the eye will update to be the set to the output of the
+	    new filter.  It is especially helpful when editing Crop value to have the eye
+	    selected for the Crop filter being edited. Note: If a filter hasn't been 
+	    executed yet, the last generated output will be shown. 
+	  </para>
+	</section> <!-- End of Currently Viewed Data section-->
+      </section> <!-- End of Dynamic Filters Section -->
+    </section> <!-- End of History section -->
+    <section>
+      <title>Update Button</title>
+      <para>
+	Anytime a filter parameter has changed, or the eye has been moved, the user
+	must click the green Update button located towards the bottom of the
+	Processing Pane to see the results. The Update button is only enabled
+	when a change has been made which requires re-execution.
+      </para>
+    </section>
+    <section>
+      <title>Progress Indicator</title>
+      <para>
+	The bottom of the Processing Pane contains a Progress Indicator, a text 
+	description indicating the current state of the application, and suggests 
+	the next processing step. The Progress Indicator indicates an error if an 
+	error occurs. Clicking on the Progress Indicator displays an error log. 
+      </para>
+    </section>
+  </section> <!-- End of the Processing Pane Section -->
+  <section>
+    <title>Visualization Pane</title>
+    <para>
+      The Visualization Pane is composed of four sub-panes, which
+      can be resized by clicking and dragging the bars which separate
+      them. 
+    </para>
+    <section>
+      <title>Volume Pane</title>
+      <para>
+	The upper window is the 3D volume pane. The volume pane can 
+	display slice planes of the axial, sagittal and coronal planes oriented 
+	relative to each other in 3-space, maximum intensity projectsions,
+	and a view a full 3D volume rendering of the data.
+	The volume pane is manipulated using the mouse. Please see the SCIRun Userguide for
+	more information on navigating inside of the volume pane's Viewer Window.
+	<ulink url="../../Guide/usersguide/srug6_3.html"><citetitle>Section 6.3 of the SCIRun Userguide:
+	"Mouse Control in the Viewer Window"</citetitle></ulink>.
+	http://software.sci.utah.edu/doc/Guide/usersguide/srug6_3.html
+      </para>
+    </section> <!-- End of the 3D Viewing Windows section -->
+    <section>
+      <title>Slice Panes</title>
+      <para>
+	The remaining slice panes display 2D images of the individual
+	slice planes as well as maximum intensity projections (MIP). The lower 
+	right pane controls the axial plane, the lower center pane 
+	controls the coronal plane, and the lower left pane controls 
+	the saggital plane. The sagittal plane and its controls can be seen
+	in <xref linkend="fig.2dview"/>.
+      </para>
+      <para>
+	Each slice pane contains a mode UI located in the bottom of the pane,
+	which contains the modes Slice mode, Slab mode, and MIP mode.
+	This mode UI can be hidden or expanded by clicking the bar on the bottom.
+	To change the mode, click the corresponding radiobutton.  The slider
+	configuration below the radiobuttons will change.  
+      </para>
+      <para>
+	Slice mode uses a single slider to specify which slice along the axis to 
+	view. The user can change the slice in four ways: move the slice slider,
+	enter a value in the entry box to the right of the slider and hit the
+	Enter key, use the mouse scroll wheel to view the previous/next slice,
+	or use the &lt; and &gt; keys to scroll through slices.
+      </para>
+      <para>
+	For Slab mode, a range widget will appear below the radiobuttons 
+	that allow the user to specify a minimum and maximum slice value.  
+	The resulting image will be a maximum intensity projection of 
+	just the slab of slices specified with the range widget. Users
+	can click on the minimum or maximum sliders to change their values
+	or click on the red bar between the two sliders.  When dragging
+	the red bar, the range width will remain the same and the minimum
+	and maximum sliders will move in sync.
+      </para>
+      <para>
+	Clicking the MIP mode removes the sliders and shows the maximum
+	intensity projection of all of the slices.  This would be equivalent
+	to using the Slab mode and setting the minimum and maximum to zero
+	and the maximum slice respectively.
+      </para>
+    </section> <!-- End of the 2D Viewing Windows section -->
+  </section> <!-- End of the Rendering Windows Section -->
+  <section>
+    <title>Visualization Settings Pane</title>
+    <para>
+      The Visualization Settings Pane is located to the right of the 
+      Visualization Pane. It controls parameters for all of the visualization in
+      BioImage and contains three tabs: Planes, Volume Rendering, and
+      3D Options.
+    </para>
+    <section>
+      <title>Planes Tab</title>
+      <para>
+	The Planes tab as illustrated in <xref linkend="fig.planesTab"/>
+	contains all of the controls regarding the slice, slab and MIP 
+	planes. Depending on the mode selected in each of the slice panes,
+	the corresponding slice, slab, or MIP will be shown in the 
+	volume pane. To turn these objects on or off in the volume pane,
+	click the corresponding Plane Toggle (labeled 2). In addition
+	to the views from the slice panes, MIP views may be shown at the
+	borders of the volume.  To turn these on or off, use the MIP
+	Toggles (labeled 3).
+      </para>
+      <para>
+	The &quot;window width&quot; and &quot;level&quot; controls can be 
+	used to emphasise data values in all four viewer windows. The 
+	default &quot;level&quot; (or center value) is the center 
+	value of the dataset, and the &quot;range&quot; (range of displayed 
+	values)	is the whole dataset. With the default window and level, 
+	all values in the dataset are visible in the viewer. Changing the 
+	&quot;window width&quot; and &quot;level&quot; may allow us to view 
+	certain features of the dataset. Users can change the window width
+	and level in three ways: use the slider shown in label 4 of 
+	<xref linkend="fig.planesTab"/>, type in a numerical value for the 
+	window with and level in the entry boxes next to the sliders and hit
+	the Enter key, or using the mouse buttons in the slice panes.
+	Left cicking and dragging the mouse up and down inside of the slice pane 
+	changes the level.  Left clicking and dragging the mouse side to side 
+	inside of the slice pane changes the window width. 
+      </para>
+      <para>
+	By default, the window width and level controls for the Planes tab are
+	linked to the window width and level controls in the Volume Rendering
+	tab. For more information regarding the controls on the Volume 
+	Rendering tab, see <xref linkend="s.volRenTab"/>.
+      </para>
+      <para>
+	The Background Threshold slider (labeled 5) corresponds to the range
+	of data values and indicates a threshold of values to be displayed in 
+	all of the viewing panes.  Dragging the slider will essentially
+	clip out any points in the volume less than or equal to the threshold.
+      </para>
+      <para>
+	The Show Guidelines checkbox allows the user to toggle the slice panes 
+	guidelines on or off.
+      </para>
+      <para>
+	The Filter 2D Textures checkbox forces BioImage to linearally
+	interpolate the textures for a smoother appearance when zooming
+	in.  With this option off, when the user zooms in on a slice 
+	either the volume or slice panes then each pixel is represented as a 
+	little square, with it on, each pixel is linearally interpolated 
+	for a smoother appearance.
+      </para>
+      <para>
+	The Color Planes By frame allows the user to change the planes
+	colormaps to use other ranges of colors. Select the radiobutton
+	for the desired colormap and the planes should be re-colored
+	immediately.
+      </para>
+    </section> <!-- End of Planes Tab section -->
+    <section id="s.volRenTab">
+      <title>Volume Rendering Tab</title>
+      <para>
+	The Volume Rendering tab contains all of the controls pertaining
+	to the 3D volume rendering. To turn the volume rendering on or
+	off in the volume pane, click the Show Volume Rendering checkbox.
+      </para>
+      <para>
+	<!-- Edit Transfer Function... -->
+	<!-- Resolution... -->
+	<!-- Shading... -->
+	<!-- Lights... -->
+	The Mode allows the selection of standard (Over Operator), 
+	maximum intensity projection (MIP) rendering styles.
+      </para>
+      <para>
+	The Sampling frame controls the rendering quality. 
+	Increasing the value of the Sampling Rate improve rendering
+	quality. The Interactive Sampling Rate controls the number
+	of samples while translating, rotating, or zomming into the
+	volume and when decreased allows for faster interaction.
+	<!-- Global Opacity... -->
+	<!-- Window/level controls... -->
+      </para>
+    </section> <!-- End of Volume Rendering Tab section -->
+    <section>
+      <title>3D Options Tab</title>
+      <para>
+	The full control pane normally found at the bottom of
+	the SCIRun ViewWindow, has been replaced with the most
+	frequently used subset of those controls, and is located on
+	the 3D Options tab. For example, to visualize data, press the 
+	AutoView button to move the rendered geometry into the 
+	middle of the volume pane, or press Ctrl-V while the mouse 
+	is in the pane. 
+      </para>
+    </section> <!-- End of 3D Options section -->
+  </section> <!-- End of Visualization Settings Pane section -->
+</chapter>

@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>Periodic box with constant properties as dictated from the table lookup</title>
+  </Meta>
+
+  <SimulationComponent type="arches"/>
+
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>0.1</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.00001</delt_min>
+    <delt_max>5</delt_max>
+    <timestep_multiplier>0.1</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>constant_periodic_box.uda</filebase>
+    <outputInterval>0.01</outputInterval>
+    <save label="CCVelocity"/>
+<!-- Table Variables -->
+<!-- iv's -->
+    <save label="scalarVarSP"/>
+    <save label="mixture_fraction"/>
+    <save label="heat_loss"/>
+<!-- dv's -->
+    <save label="mixture_molcular_weight" table_lookup="true"/>
+    <save label="CH4" table_lookup="true"/>
+    <save label="O2" table_lookup="true"/>
+    <save label="CO2" table_lookup="true"/>
+    <save label="H2O" table_lookup="true"/>
+    <save label="NO" table_lookup="true"/>
+    <save label="CO" table_lookup="true"/>
+    <checkpoint cycle="2" interval="0.05"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1.0,1.0,3.0]</upper>
+        <resolution>[8,8,8]</resolution>
+        <extraCells>[0,0,0]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>0.0</viscosity>
+  </PhysicalConstants>
+
+  <CFD>
+
+<!-- ARCHES specification -->
+    <ARCHES>
+
+      <TimeIntegrator>
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+
+<!-- SCALARS -->
+      <TransportEqns>
+        <Eqn label="mixture_fraction" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>super_bee</conv_scheme>
+          <addSources>false</addSources>
+          <determines_properties/>
+          <initialization type="constant">
+            <constant>.10</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+
+        <Eqn label="enthalpy" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>upwind</conv_scheme>
+          <addSources>true</addSources>
+          <determines_properties/>
+          <initialization type="tabulated">
+            <depend_varname>adiabaticenthalpy</depend_varname>
+          </initialization>
+          <src label="divQ"/>
+        </Eqn>
+
+        <Sources>
+          <src label="divQ" type="rmcrt_radiation">
+            <calc_frequency>1</calc_frequency>
+            
+            <RMCRT>
+                <opl>               0.01       </opl>
+                <randomSeed>        false      </randomSeed>
+                <abskg>             999        </abskg>
+                <NoOfRays>          10         </NoOfRays>
+                <Threshold>         0.05       </Threshold>
+                <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
+                <property_calculator type="radprops">
+                  <grey_gas>
+                    <inputfile>inputs/ARCHES/RMCRT/GreyGasProperties.txt</inputfile>
+                  </grey_gas> 
+                </property_calculator>
+            </RMCRT>
+          </src>
+          <!--src label="divQ" type="do_radiation">
+            <calc_frequency>5</calc_frequency>
+            <calc_on_all_RKsteps>false</calc_on_all_RKsteps>
+            <DORadiationModel>
+              <opl>3.0</opl>
+              <LinearSolver type="hypre">
+                <res_tol>1.0e-10</res_tol>
+                <ksptype>gmres</ksptype>
+                <pctype>jacobi</pctype>
+                <max_iter>75</max_iter>
+              </LinearSolver>
+            </DORadiationModel>
+          </src-->
+        </Sources>
+
+      </TransportEqns>
+
+      <PropertyModels>
+        <model type="heat_loss" label="heat_loss">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <enthalpy_label>enthalpy</enthalpy_label>
+        </model>
+      </PropertyModels>
+
+      <Turbulence model="compdynamicprocedure">
+        <variance_coefficient>0.1</variance_coefficient>
+        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+      </Turbulence>
+
+      <Properties>
+        <use_mixing_model>true</use_mixing_model>
+        <ClassicTable>
+          <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_equil_nonadiabatic.mix.gz</inputfile>
+        </ClassicTable>
+      </Properties>
+
+      <ExplicitSolver>
+        <initial_dt>1</initial_dt>
+        <variable_dt>true</variable_dt>
+        <PressureSolver>
+          <Parameters>
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-10  </tolerance>
+            <maxiterations>    75     </maxiterations>
+            <skip>              1     </skip>
+          </Parameters>
+        </PressureSolver>
+
+        <MomentumSolver>
+          <convection_scheme>central</convection_scheme>
+        </MomentumSolver>
+
+        <MixtureFractionSolver>
+          <convection_scheme>flux_limited</convection_scheme>
+          <limiter_type>upwind</limiter_type>
+        </MixtureFractionSolver>
+
+      </ExplicitSolver>
+    </ARCHES>
+
+  </CFD>
+
+</Uintah_specification>

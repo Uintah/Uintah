@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="ParticleFlow" category="Visualization" optional="false">
+  <overview>
+    <authors>
+      <author>Kurt Zimmerman</author>
+    </authors>
+    <summary>
+      This module inserts particles into 3D vector data.
+
+
+    </summary>
+    <description>
+      <p> The ParticleFlow module is used to visualize particles in 3D vector data.  The two inputs are a Vector Field and a Colormap. This module requires that pixel and fragment programs be available.  The code is substantially faster if framebuffer support is available.</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Vector Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>ColorMap</name>
+        <datatype>SCIRun::ColorMap</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Geometry</name>
+        <datatype>SCIRun::Geometry</datatype>
+      </port>
+      <port>
+        <name>ColorMap</name>
+        <datatype>SCIRun::ColorMap</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>

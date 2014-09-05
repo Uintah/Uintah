@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<component name="StreamLines" category="Visualization">
+  <overview>
+    <authors>
+      <author>Chris Moulding</author>
+    </authors>
+    <summary>
+      <p>
+        Used to visualize vector fields by generating curves that interpolate
+	the flow represented by the vectors in a field.
+      </p>
+    </summary>
+    <description>
+      <p>
+        StreamLines generates, as output, curves that interpolate the flow
+	represented by the vectors in a field.  StreamLines takes three
+	arguments as input: a VField (Flow field), an SField (Colormap domain)
+	and a ColorMap (Colormap range).  Flow field is required, but Colormap
+	domain and Colormap range are optional.  StreamLines outputs Geometry
+	(Streamlines).
+      </p>
+      <p>
+        Flow field is the VField to be visualized.  It can be of
+	dimensions 1,2 or 3 and can be structured or unstructured.  StreamLines
+	is more effective if Flow field represents the flow present in a field
+	rather than the gradient of a field.
+      </p>
+      <p>
+        Colormap domain is an SField that is used as the domain for a function
+	that maps a data value to a color and opacity.  It must have the same
+	dimensionality and geometry as Flow field.
+      </p>
+      <p>
+        Colormap range is a ColorMap which describes the function that maps
+	a data value to a color and opacity.
+      </p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Flow field</name>
+        <description>
+          <p>
+            The field to be visualized.
+          </p>
+        </description>
+        <datatype>PSECore::Field</datatype>
+        <componentname>GenField</componentname>
+        <componentname>ReadField</componentname>
+      </port>
+      <port>
+        <name>Colormap domain</name>
+        <description>
+          <p>
+            The domain for a function that maps a data value to a color and
+	    opacity.
+          </p>
+        </description>
+        <datatype>PSECore::Field</datatype>
+        <componentname>GenField</componentname>
+        <componentname>ReadField</componentname>
+      </port>
+      <port>
+        <name>Colormap range</name>
+        <description>
+          The function that maps a data value to a color and opacity.
+        </description>
+        <datatype>PSECore::ColorMap</datatype>
+        <componentname>GenStandardColormaps</componentname>
+        <componentname>GenTransferFunc</componentname>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Streamlines</name>
+        <description>
+          <p>
+            The geometry that represents the flow present in the vector field.
+          </p>
+        </description>
+        <datatype>PSECore::Geometry</datatype>
+        <componentname>Render3D</componentname>
+        <componentname>WriteGeometry</componentname>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+      <p>
+        The GUI for StreamLines allows the user to control the 
+        parameters for the advection algorithm used to find the streamlines.
+      </p>
+    </description>
+    <parameter>
+      <widget>Button</widget>
+      <label>Execute</label>
+      <description>
+        <p>
+          Sends a request to the scheduler to have this component
+          started.
+        </p>
+      </description>
+    </parameter>
+  </gui>
+  <testing>
+    <plan>
+      <description>
+        <p>
+        </p>
+      </description>
+      <step>
+        <p>
+          nothing yet.
+        </p>
+      </step>
+    </plan>
+  </testing>
+</component>
+

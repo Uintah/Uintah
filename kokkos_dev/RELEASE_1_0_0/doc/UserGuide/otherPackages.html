@@ -1,0 +1,94 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<HTML>
+<HEAD>
+  <TITLE>Building Third Party Libraries</TITLE>
+  <LINK REL="STYLESHEET" HREF="/csafe_style_sheet.css" TYPE="text/css">
+</HEAD>
+<BODY>
+
+<H2> This document describes how to build third party libraries needed
+by SCIRun</H2>
+
+<H3> Contents </H3>
+
+<UL>
+  <LI> <A HREF="#globus">Globus</A>
+  <LI> <A HREF="#itcltk">Itcltk</A>
+  <LI> <A HREF="#problems">Possible Problems/Solutions</A>
+</UL>
+
+<A NAME="globus">
+<H3> Globus </H3>
+
+Use the <B>make-globus</B> script to build the globus library.  The
+<B>make-globus</B> script will use cvs to checkout the globus (and
+other necessary codes) tarbal from the <B>dist</B> directory, and then
+will proceed to compile them.
+
+<UL>
+  <LI> <B> &gt; cd ./SCIRun/src/ThirdParty </B>
+  <LI> If you want a 64 bit build, edit <B>../scripts/make-globus</B>
+       and change <B>CFLAG=-O</B> to <B>CFLAG="-O -64"</B> (on both
+       lines.)
+  <LI> <B> &gt; ../scripts . .. -lfetchop </B>
+</UL>
+
+<A NAME="itcltk">
+<H3> Itcltk </H3>
+
+Nothing here yet...
+
+<A NAME="problems">
+<H2> Possible Problems and Their Solutions </H2>
+
+
+<!----- Generic Page Trailer -------------------------------------------></P>
+
+<P><HR ALIGN=LEFT>
+
+<BR>
+
+<IMG SRC="/images/weblogo.jpg" WIDTH="100" HEIGHT="100" ALIGN="RIGHT"
+     BORDER="0">
+
+<FONT COLOR="#ff0000" SIZE="-1">
+Copyright &COPY; 2000, University of Utah.  All rights reserved. <BR><BR>
+</FONT>
+
+<FONT SIZE="-1">
+This page is maintained by <STRONG>C-SAFE Webmaster</STRONG>.
+
+<BR><BR>
+
+Last modified on 
+</FONT>
+
+<SCRIPT LANGUAGE="JavaScript">document.write(document.lastModified)</SCRIPT>
+
+<BR>
+
+<FONT SIZE="-1">
+  Please feel free to send any comments, complaints, or suggestions to
+  me (<A HREF="mailto:csafe-webmaster@cs.utah.edu">
+  csafe-webmaster@cs.utah.edu</A>).
+</FONT>
+
+</BODY>
+</HTML>
+

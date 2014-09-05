@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<component name="MRITissueClassifier" category="Segmentation">
+  <overview>
+    <authors>
+      <author>McKay Davis</author>
+    </authors>
+    <summary>
+      <p>
+	Tolga Tasdizen's MRI Tissue Classifier Code
+      </p>
+    </summary>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no"> 
+      <port>
+        <name>T1</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+
+      <port>
+        <name>T2</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+
+      <port>
+        <name>PD</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+
+      <port>
+        <name>FATSAT</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+
+    </inputs>
+    <outputs>
+      <port>
+        <name>Tissue</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

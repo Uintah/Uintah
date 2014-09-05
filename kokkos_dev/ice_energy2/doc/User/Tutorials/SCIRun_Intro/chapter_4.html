@@ -1,0 +1,262 @@
+<html>
+<head>
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+<meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+<meta name="generator" content="Adobe GoLive 4">
+<title>Multiple Concurrent Visualizations</title>
+</head>
+
+<body bgcolor="#a9a9a9">
+
+<A name="chapter-4">
+
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="306" bgcolor="#cccccc">
+<tr>
+<td><img height="92" width="600" src="images/sub-banner.jpg" border="0"
+    usemap="#sub-banner8662a0c4"><map name="sub-banner8662a0c4"><area
+    coords="581,65,598,84" shape="rect" title nohref><area
+    href="chapter_7.html" coords="557,64,575,83" shape="rect"
+    title="Feedback"><area href="chapter_6.html" coords="532,64,550,82"
+    shape="rect" title="Putting Simulation and Visualization
+    Together"><area href="chapter_5.html" coords="508,64,527,83"
+    shape="rect" title="Bioelectric Field Simulation"><area
+    href="chapter_4.html" coords="483,64,502,83" shape="rect"
+    title="Multi-Vis"><area href="chapter_3.html" coords="460,64,478,83"
+    shape="rect" title="Derived Fields"><area href="chapter_2.html"
+    coords="436,64,454,83" shape="rect" title="Looking at the Data"><area
+    href="chapter_1.html" coords="412,64,430,81" shape="rect"
+    title="Geometry Visualization"><area href="Intro.html"
+    coords="354,64,406,84" shape="rect" title="Introduction"><area
+    href="../../index.html"
+    coords="205,63,343,83" shape="rect" title="Documentation"><area
+    href="http://software.sci.utah.edu/" coords="103,63,195,82"
+    shape="rect" title="Software"><area href="index.html"
+    coords="1,65,92,81" shape="rect" title="Tutorial Home"></map></td> 
+</tr>
+
+<tr>
+<td>
+<center>
+<table border="0" cellpadding="0" cellspacing="5" width="600">
+        <tr>
+	<td>
+
+<center>
+<font face="Arial,Helvetica,Geneva,Swiss,SunSans-Regular" color="maroon">
+<H1>Chapter 4: Multiple Concurrent Visualizations</H1></font>
+</center>
+
+<H2>Chapter Sections</H2>
+
+<UL>
+  <LI> <A href="#section-0">Chapter Overview</A>
+  <LI> <A href="#section-1">Isosurfacing</A>
+  <LI> <A href="#section-2">Putting Nets Together</A>
+  <LI> <A href="#summary">Summary</A>
+</UL>    
+
+<H2><A name="section-0">Chapter Overview</A></H2>
+<P>
+Chapter 3 demonstrated the construction of three separate networks
+used to visualize the utahtorso-lowres-voltage dataset. Chapter 4
+discusses a fourth visualization tool; isosurface extraction. This
+chapter also demonstrates merging all four visualization networks
+into one larger network that performs all visualizations
+concurrently.
+
+<H2><A name="section-1">Isosurfacing</A></H2>
+
+To begin, examine a fourth visualization method; isosufacing.
+Isosufacing takes a volumetric field, and finds areas in the field
+with the same value (e.g. in a voltage field, all areas
+where the voltage is 0.2 amps). Surfaces representing these areas
+are produced to make it easier to understand and visualize the field's
+data.
+<P>
+To perform isosufacing in SCIRun, do the following:
+<ul>
+   <li> <p>Create a FieldReader module, and load the utahtorso-lowres-voltage.tvd.fld file.</p>
+   
+   <li> <p>Create an Isosurface module from the SCIRun-&gt;Visualization
+        menu.  Connect it to the FieldReader.</p>
+   
+   <li> <p>Create a Viewer module, and connect it to the Isosurface
+        Module. Connect these two modules
+	using the purple Geometry ports. In order to determine the
+	type and/or name of a port, press the middle mouse button when
+	the cursor is over the port.</p>
+</ul>
+The Isosurface module takes a volume Field as input, and outputs a
+surface Field and Geometry data. Geometry data is represented by
+purple pipes, and consists of data that can be directly rendered by the
+Viewer module. The isosurface can be visualized with or without a
+color map. This demonstration does not deal with the output
+field, only the output Geometry data.  (Note,
+geometry data is also referred to as <I>scene graph</I> data.)
+<p>
+<b>Figure 4.1</b> shows the Isosurface module UI.  The Iso Value
+slider widget determines which "surface" of the incoming volume Field
+is displayed. Upon releasing the slider, the module executes and
+the portion of the Field corresponding to the chosen isosurface is
+displayed. In addition to using the <I>Slider</I> to select a single
+iso value, the <I>Quantity</I> tab can be used to select multiple
+evenly spaced isosufaces, or use the <I>List</I> tab to select a list
+of specific isosufaces.
+
+<br /><br />
+<A NAME="figure-4.1">
+<center>
+<img src="images/figures/4_3.gif"><br>
+<b>Figure 4.1: Isosurface UI</b><br /><br />
+</center>
+
+If a color map is not connected to the Isosurface input port, the
+module uses the Default Color. By default, the module extracts a
+surface using the Marching Cubes algorithm. The user can choose the
+number of threads (processors) the algorithm will use, or use the
+NOISE algorithm.
+<P>
+It can be more informative to see color associated with the 
+data, so add our standard color map modules to this net.
+<UL>
+   <LI> <p>Create a GenStandardColorMaps module.</p>
+
+   <LI> <p>Create a RescaleColorMap module.  Connect the ColorMap output
+        port from GenStandardColorMaps to the ColorMap input port on
+        RescaleColorMap.  The ColorMap port is dark purple.</p> 
+   <LI> <p>Connect the field output port from the FieldReader module to the Field
+        input port on RescaleColorMap.</p>  
+   <LI> <p>Finally, connect the output ColorMap port from RescaleColorMap
+        to the Isosurface module.</p>
+   <LI> <p>Determining the best iso values to use for isosurfacing can
+        take some practice.  For this data set, bring up the UI for
+        RescaleColorMap and select <I>Fixed Scale</I>.  Use a
+        <I>Min</I> of -30, and a <I>Max</I> of 30.  On the Isosurface
+        UI, Select <I>List</I> and use the values: -20 0 20 40.  Note,
+        the more surfaces, the longer it takes to generate.  On slower
+        computers, you may want to only use two iso values in your
+        list: 0 20.</p>
+</UL>
+<H2><A name="section-2">Putting Nets Together</A></H2>
+
+Now add the visualization techniques covered in Chapter
+3. This process involves sharing the FieldReader and Viewer
+modules across the 3A, 3B, and 3C networks.  Choose from the following
+two options for rebuilding the nets saved in Chapter 3.  
+
+<P>
+Option one, follow the instructions from Chapter 3, taking note of the
+following items:
+<p>
+<ul>
+  <LI> <p>For help, refer to the complete, color-coded
+       network in <b>Figure 4.2</b>. This figure shows the combined net using
+       the previous chapter's networks. Blue corresponds to 3A,
+       orange to 3B, and yellow to 3C.</p>
+  <li> <p>Repeat all steps for creating <a
+       href="chapter_3.html#section-1">3A</a> in Chapter 3.</p>
+  <li> <p>Do the same for <a href="chapter_3.html#section-2">3B</a>
+       and <a href="chapter_3.html#section-3">3C</a>, but <b>reuse the
+       FieldReader, GenStandardColorMaps, RescaleColorMap and Viewer modules created for net 3A.</p></B>
+  <P>
+</UL>
+<p>
+Option two:
+<P>
+Use the <I>File-&gt;Insert</I> menu to insert all nets and their settinga
+saved in Chapter 3. Keep one Viewer module.   Destroy the other Viewer
+modules by
+right-clicking on each one, and selecting the <I>Destroy</I> option.  To
+destroy a connection between two modules, right-click on the pipe
+connecting the modules, and select <I>Delete</I>. These nets share the FieldReader module (in the upper left
+corner of <a href="#figure-4.2"<b>Figure 4.2</b></a>), which loads the
+utahtorso-lowres-voltage.tvd.fld file. 
+Keep one FieldReader module that reads voltage
+data, and destroy the others.  Do not destroy the FieldReader module reading electrode
+data  (There should be two FieldReader modules, one reading voltage data,
+and one reading electrode data).  Also, use the same GenStandardColorMaps and RescaleColorMap for all the ShowFields except the one connected to the FieldBoundary module.
+<P>
+Note, <B>Figure 4.2</B> has been annotated to display the important
+user interface settings for each module.  If the image does not look
+similar to <a href="#figure-4.3>"<b>Figure 4.3</b></a>, check the 
+user interface settings.
+<p>
+<B>Grouping Modules</B>
+<P>
+Select (group) modules by drawing a rectangle around the
+modules using the left mouse button. The selected modules will turn
+light blue.  Left-click and drag the mouse on any of the modules to
+move the entire group to a new location in the NetEdit frame.
+<p>
+Save this net, it will be used in Chapter 6.
+	
+<center>
+<p>
+<A name="figure-4.2">
+<img width="570" height="935" src="images/figures/4_1.gif"><br>
+<b>Figure 4.2: Merged, Color-Coded Net</b><br /><br />
+<p>
+<A name="figure-4.3">
+<img width="570" height="568" src="images/figures/4_2.gif"><br>
+<b>Figure 4.3:  ViewWindow Displaying Combined Visualizations</b>
+<br /><br />
+</center>
+	
+<H2><A name="summary">Summary</A></H2>
+
+At this point in the tutorial, four methods of visualizing data have
+been discussed. The tutorial has covered integrating separate module
+groups to perform concurrent visualizations.  The modules 
+used are part of the SCIRun Core modules.  Chapter 5 
+discusses using modules from the bioelectric problem solving environment
+(BioPSE) package.
+<P>
+<A HREF="#chapter-4">Return to Top</A>
+
+</td>
+</tr>
+</table>
+</center>
+</td>
+</tr>
+<tr>
+<td><img height="35" width="600" src="images/sub-banner-bottom.jpg"
+    border="0" usemap="#sub-banner-bottom8ac548fb"><map
+    name="sub-banner-bottom8ac548fb"><area href="chapter_5.html"
+    coords="565,1,589,22" shape="rect"><area href="chapter_3.html"
+    coords="532,2,561,22" shape="rect"><area href="http://www.sci.utah.edu"
+    coords="6,7,68,31" shape="rect" title="SCI Institute"></map></td> 
+</tr>
+</table>
+</body>
+</html>
+
+
+

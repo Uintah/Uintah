@@ -1,0 +1,115 @@
+#
+#  For more information, please see: http://software.sci.utah.edu
+# 
+#  The MIT License
+# 
+#  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+#  University of Utah.
+# 
+#  License for the specific language governing rights and limitations under
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+# 
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+# 
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+#
+
+
+# SCI Network 1.0
+
+if {[string length [netedit getenv SCIRUN_DATA]] == 0} {
+   puts ""
+   puts "*** Error: This net depends on the SCIRUN_DATA enviroment variable."
+   puts "*** Please exit, set it in your shell, and rerun."
+   puts "*** (e.g. setenv SCIRUN_DATA /local/data/SCIRunData/)"
+   puts ""
+}
+
+set DATADIR [netedit getenv SCIRUN_DATA]
+
+
+::netedit dontschedule
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 156 6]
+set m1 [addModuleAtPosition "SCIRun" "FieldsData" "Gradient" 19 99]
+set m2 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldInfo" 376 100]
+set m3 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldInfo" 9 285]
+set m4 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 171 366]
+set m5 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 183 100]
+set m6 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJoin" 342 367]
+set m7 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 138 195]
+set m8 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 359 470]
+set m9 [addModuleAtPosition "Teem" "UnuAtoM" "UnuCrop" 119 471]
+set m10 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 119 546]
+
+addConnection $m0 0 $m1 0
+addConnection $m0 0 $m2 0
+addConnection $m0 0 $m5 0
+addConnection $m4 2 $m6 0
+addConnection $m5 2 $m6 1
+addConnection $m7 0 $m3 0
+addConnection $m1 0 $m7 0
+addConnection $m0 0 $m7 1
+addConnection $m7 0 $m4 0
+addConnection $m6 0 $m8 0
+addConnection $m6 0 $m9 0
+addConnection $m9 0 $m10 0
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-filename $DATADIR/sphere/sphere-voltage.tvd.fld
+set $m1-notes {}
+set $m1-show_status {1}
+set $m2-notes {}
+set $m2-show_status {1}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m4-notes {}
+set $m4-show_status {1}
+set $m4-label {gradients}
+set $m5-notes {}
+set $m5-show_status {1}
+set $m5-label {potentials}
+set $m6-notes {}
+set $m6-show_status {1}
+set $m6-join-axis {0}
+set $m6-incr-dim {0}
+set $m6-dim {2}
+set $m7-notes {}
+set $m7-show_status {1}
+set $m7-interpolation_basis {linear}
+set $m7-map_source_to_single_dest {0}
+set $m7-exhaustive_search {1}
+set $m7-exhaustive_search_max_dist {-1}
+set $m7-np {1}
+set $m8-notes {}
+set $m8-show_status {1}
+set $m9-notes {}
+set $m9-show_status {1}
+set $m9-num-axes {2}
+set $m9-minAxis0 {0}
+set $m9-maxAxis0 {2}
+set $m9-absmaxAxis0 {3}
+set $m9-minAxis1 {0}
+set $m9-maxAxis1 {999}
+set $m9-absmaxAxis1 {999}
+set $m10-notes {}
+set $m10-show_status {1}
+$m6 initialize_ui
+$m8 initialize_ui
+$m9 initialize_ui
+$m10 initialize_ui
+
+::netedit scheduleok

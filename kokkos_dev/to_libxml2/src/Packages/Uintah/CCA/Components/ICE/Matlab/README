@@ -1,0 +1,27 @@
+--------------------------------------------------------------
+README - ICE/Matlab directory
+This directory contains MATLAB scripts related to ICE.
+Please keep some log messages here describing the contents of
+the directories. Add a date and name.
+--------------------------------------------------------------
+
+Oren 18-JUL-2005
+
+Description of current directories:
+
+ICETodd - Todd's original (~2004) matlab simulation of ICE for
+          the one-dimensional shocktube problem,
+          mid-2004.
+
+Regrider - AMR patch generation algorithm (clustering from refinement
+          flags) in matlab. Both Berger-Rigotsous (BR directory) for
+          2 levels and hierarchical (for multi-level) are supported.
+
+ShockTube1D - Oren's modified 1D shock tube simulation of ICE,
+          building on Todd's code and adding some printouts, bug
+          corrections, etc,
+          October 2004 - May 2005.
+
+SolverBug - matlab scripts and data files comparing the Uintah and
+          Hypre matrices in implicit ICE (one level, not AMR),
+          July 2005.

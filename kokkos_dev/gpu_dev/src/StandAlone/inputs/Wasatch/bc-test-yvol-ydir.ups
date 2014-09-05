@@ -1,0 +1,226 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Test Boundary Conditions</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+
+  <Wasatch>
+
+    <Density>
+      <IsConstant>true</IsConstant>
+    </Density>
+  
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="YVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi-dirichlet-dirichlet-a" state="STATE_N" />
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="YVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi-dirichlet-dirichlet-b" state="STATE_N" />
+      <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="YVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi-dirichlet-neumann" state="STATE_N" />
+      <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="YVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi-neumann-dirichlet" state="STATE_N" />
+      <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="YVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi-neumann-neumann" state="STATE_N" />
+      <Constant>0.0</Constant>
+    </BasicExpression>
+
+    
+    <!-- Build a y-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi-dirichlet-dirichlet-a</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <StaggeredDirection> Y </StaggeredDirection>
+      
+      <DiffusiveFluxExpression>
+        <Direction>Y</Direction>
+        <ConstantDiffusivity>1.0</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+    </TransportEquation>
+    
+    <!-- Build a y-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi-dirichlet-dirichlet-b</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <StaggeredDirection> Y </StaggeredDirection>
+
+      <DiffusiveFluxExpression>
+        <Direction>Y</Direction>
+        <ConstantDiffusivity>1.0</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+    </TransportEquation>
+    
+    <!-- Build a y-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi-dirichlet-neumann</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <StaggeredDirection> Y </StaggeredDirection>
+
+      <DiffusiveFluxExpression>
+        <Direction>Y</Direction>
+        <ConstantDiffusivity>1.0</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+    </TransportEquation>
+    <!-- Build a y-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi-neumann-dirichlet</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <StaggeredDirection> Y </StaggeredDirection>
+
+      <DiffusiveFluxExpression>
+        <Direction>Y</Direction>
+        <ConstantDiffusivity>1.0</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+    </TransportEquation>
+    <!-- Build a y-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi-neumann-neumann</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <StaggeredDirection> Y </StaggeredDirection>
+
+      <DiffusiveFluxExpression>
+        <Direction>Y</Direction>
+        <ConstantDiffusivity>1.0</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+    </TransportEquation>
+
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>0.0005</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.00001</delt_min>
+    <delt_max>0.00001</delt_max>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>bc-test-yvol-ydir.uda</filebase>
+    <outputTimestepInterval>2</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle = "2" interval = "0.0001"/>
+    <compression>gzip</compression>
+    <save label="phi-dirichlet-dirichlet-a"/>
+    <save label="phi-dirichlet-dirichlet-b"/>
+    <save label="phi-dirichlet-neumann"/>
+    <save label="phi-neumann-dirichlet"/>
+    <save label="phi-neumann-neumann"/>
+  </DataArchiver> 
+
+  <Grid>
+      <BoundaryConditions>
+      
+      <!-- BOUNDARY CONDITIONS -->
+      <Face side="y-">
+        <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-a">
+          <value> 10.0 </value>
+        </BCType>
+      </Face>
+      <Face side="y+">
+        <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-a">
+          <value> 5.0 </value>
+        </BCType>
+      </Face>
+
+      <!-- BOUNDARY CONDITIONS -->
+      <Face side="y-">
+        <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-b">
+          <value> 5.0 </value>
+        </BCType>
+      </Face>
+      <Face side="y+">
+        <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-b">
+          <value> 10.0 </value>
+        </BCType>
+      </Face>
+            
+      <!-- BOUNDARY CONDITIONS -->
+      <Face side="y-">
+        <BCType id="all" var="Dirichlet" label="phi-dirichlet-neumann">
+          <value> 10.0 </value>
+        </BCType>
+      </Face>
+      <Face side="y+">
+        <BCType id="all" var="Neumann" label="phi-dirichlet-neumann">
+          <value> 1.0 </value>
+        </BCType>
+      </Face>
+
+      <!-- BOUNDARY CONDITIONS -->
+      <Face side="y-">
+        <BCType id="all" var="Neumann" label="phi-neumann-dirichlet">
+          <value> -1.0 </value>
+        </BCType>
+      </Face>
+      <Face side="y+">
+        <BCType id="all" var="Dirichlet" label="phi-neumann-dirichlet">
+          <value> 10.0 </value>
+        </BCType>
+      </Face>
+
+      <!-- BOUNDARY CONDITIONS -->
+      <Face side="y-">
+        <BCType id="all" var="Neumann" label="phi-neumann-neumann">
+          <value> 1.0 </value>
+        </BCType>
+      </Face>
+      <Face side="y+">
+        <BCType id="all" var="Neumann" label="phi-neumann-neumann">
+          <value> 1.0 </value>
+        </BCType>
+      </Face>
+
+    </BoundaryConditions>
+
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[0.25,1,0.01]</upper>
+        <resolution>[2,80,2]</resolution>
+        <patches>[1,4,1]</patches>
+      </Box>
+      <periodic>[1,0,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

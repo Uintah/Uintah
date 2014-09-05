@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="LinkToCompGridByDomain" category="FiniteElements" optional="false">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      This module computes how nodes should be merged over the boundary. It calculates the needed ordering in the computational grid.
+
+    </summary>
+    <description>
+      <p>        This module computes how nodes should be merged over the boundary. It calculates the needed ordering in the computational grid.
+
+The output matrix GeomToComp maps the geometrical nodes to the computational nodes, the CompToGeom is the opposite mapping.</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>NodeLink</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>GeomToComp</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>CompToGeom</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>

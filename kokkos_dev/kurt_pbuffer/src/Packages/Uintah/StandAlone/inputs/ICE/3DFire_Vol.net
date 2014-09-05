@@ -1,0 +1,154 @@
+# SCIRun Network v1.23.0
+
+
+set name {Main}
+set bbox {385 0 758 678}
+set creationDate {Tue Sep 07 2004}
+set creationTime {17:32:06}
+set runDate {}
+set runTime {}
+set notes {}
+
+# Create a Uintah->DataIO->ArchiveReader Module
+set m1 [addModuleAtPosition "Uintah" "DataIO" "ArchiveReader" 385 0]
+
+# Create a Uintah->Selectors->TimestepSelector Module
+set m2 [addModuleAtPosition "Uintah" "Selectors" "TimestepSelector" 385 90]
+
+# Create a Uintah->Selectors->ScalarFieldExtractor Module
+set m3 [addModuleAtPosition "Uintah" "Selectors" "ScalarFieldExtractor" 385 170]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 563 51]
+
+# Create a SCIRun->Visualization->GLTextureBuilder Module
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "GLTextureBuilder" 438 280]
+
+# Create a SCIRun->Visualization->ShowColorMap Module
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "ShowColorMap" 458 453]
+
+# Create a SCIRun->Render->SynchronizeGeometry Module
+set m7 [addModuleAtPosition "SCIRun" "Render" "SynchronizeGeometry" 402 552]
+
+# Create a SCIRun->Render->Viewer Module
+set m8 [addModuleAtPosition "SCIRun" "Render" "Viewer" 402 634]
+
+# Create a SCIRun->Visualization->TextureVolVis Module
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "TextureVolVis" 440 367]
+
+# Create the Connections between Modules
+set c1 [addConnection $m7 0 $m8 0]
+set c2 [addConnection $m5 0 $m9 0]
+set c3 [addConnection $m9 1 $m6 0]
+set c4 [addConnection $m1 0 $m2 0]
+set c5 [addConnection $m3 0 $m5 0]
+set c6 [addConnection $m2 0 $m3 0]
+set c7 [addConnection $m2 1 $m7 0]
+set c8 [addConnection $m4 0 $m9 1]
+set c9 [addConnection $m6 0 $m7 1]
+set c10 [addConnection $m9 0 $m7 2]
+
+# Set GUI variables for the Uintah->DataIO->ArchiveReader Module
+set $m1-filebase {/usr/csafe/raid1/guilkey/LaborDay/Fire/3DJP8_SO_CoFlow.uda.002}
+set $m1-tcl_status {Executing}
+
+# Set GUI variables for the Uintah->Selectors->TimestepSelector Module
+set $m2-tcl_status {Done}
+set $m2-max_time {297}
+set $m2-timeval {1e-08}
+set $m2-anisleep {15}
+set $m2-def-color-a {}
+
+# Open the Uintah->Selectors->TimestepSelector UI
+$m2 initialize_ui
+
+# Set GUI variables for the Uintah->Selectors->ScalarFieldExtractor Module
+set $m3-tcl_status {Calling FieldExtractor!}
+set $m3-sVar {temp_CC}
+
+# Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
+set $m4-positionList {{0 40} {48 40} {49 20}}
+set $m4-nodeList {256 257 258}
+set $m4-width {471}
+set $m4-height {40}
+set $m4-mapName {Blackbody}
+set $m4-minRes {13}
+
+# Set GUI variables for the SCIRun->Visualization->GLTextureBuilder Module
+set $m5-is_fixed {1}
+set $m5-max_brick_dim {128}
+set $m5-sel_brick_dim {128}
+set $m5-min {300}
+set $m5-max {2600}
+
+# Set GUI variables for the SCIRun->Visualization->ShowColorMap Module
+set $m6-numlabels {3}
+set $m6-scale {1}
+set $m6-numsigdigits {5}
+set $m6-units {K}
+
+$m8 addViewer
+set $m8-ViewWindow_0-geometry 654x648+889+81
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m8-ViewWindow_0-view-eyep-x {-20.9388389692}
+set $m8-ViewWindow_0-view-eyep-y {6.31213799844}
+set $m8-ViewWindow_0-view-eyep-z {9.86323600631}
+set $m8-ViewWindow_0-view-lookat-x {0.0762119231385}
+set $m8-ViewWindow_0-view-lookat-y {2.7560314938}
+set $m8-ViewWindow_0-view-lookat-z {-0.0897218629326}
+set $m8-ViewWindow_0-view-up-x {0.138700315872}
+set $m8-ViewWindow_0-view-up-y {0.988495449418}
+set $m8-ViewWindow_0-view-up-z {-0.0603238663887}
+set $m8-ViewWindow_0-view-fov {20.0}
+set $m8-ViewWindow_0-view-eyep_offset-x {}
+set $m8-ViewWindow_0-view-eyep_offset-y {}
+set $m8-ViewWindow_0-view-eyep_offset-z {}
+set $m8-ViewWindow_0-sr {1}
+set $m8-ViewWindow_0-do_stereo {0}
+set $m8-ViewWindow_0-ortho-view {0}
+set $m8-ViewWindow_0-trackViewWindow0 {1}
+set $m8-ViewWindow_0-raxes {0}
+set $m8-ViewWindow_0-ambient-scale {1.0}
+set $m8-ViewWindow_0-diffuse-scale {1.0}
+set $m8-ViewWindow_0-specular-scale {0.4}
+set $m8-ViewWindow_0-emission-scale {1.0}
+set $m8-ViewWindow_0-shininess-scale {1.0}
+set $m8-ViewWindow_0-polygon-offset-factor {1.0}
+set $m8-ViewWindow_0-polygon-offset-units {0.0}
+set $m8-ViewWindow_0-point-size {1.0}
+set $m8-ViewWindow_0-line-width {1.0}
+set $m8-ViewWindow_0-sbase {0.4}
+set $m8-ViewWindow_0-bgcolor-r {0}
+set $m8-ViewWindow_0-bgcolor-g {0}
+set $m8-ViewWindow_0-bgcolor-b {0}
+set $m8-ViewWindow_0-currentvisual {0}
+set $m8-ViewWindow_0-caxes {0}
+set $m8-ViewWindow_0-pos {z1_y1}
+set $m8-ViewWindow_0-global-light0 {1}
+set $m8-ViewWindow_0-global-light1 {0}
+set $m8-ViewWindow_0-global-light2 {0}
+set $m8-ViewWindow_0-global-light3 {0}
+set $m8-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m8-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m8-ViewWindow_0-global-light {1}
+set $m8-ViewWindow_0-global-fog {0}
+set $m8-ViewWindow_0-global-debug {0}
+set $m8-ViewWindow_0-global-clip {1}
+set $m8-ViewWindow_0-global-cull {0}
+set $m8-ViewWindow_0-global-dl {0}
+set $m8-ViewWindow_0-global-type {Gouraud}
+set "$m8-ViewWindow_0-TimeStamp (1) (1)" {1}
+set "$m8-ViewWindow_0-VolumeRenderer TransParent (3) (1)" {1}
+set "$m8-ViewWindow_0-Control Widget (3) (1)" {0}
+set "$m8-ViewWindow_0-ShowColorMap Sticky (2) (1)" {1}
+
+# Set GUI variables for the SCIRun->Visualization->TextureVolVis Module
+set $m9-num_slices {533}
+set $m9-alpha_scale {-0.649}
+
+# Open the SCIRun->Visualization->TextureVolVis UI
+$m9 initialize_ui
+
+
+::netedit scheduleok

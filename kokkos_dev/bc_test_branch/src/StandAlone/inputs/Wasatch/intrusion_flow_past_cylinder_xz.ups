@@ -1,0 +1,201 @@
+<Uintah_specification>
+
+  <Meta>
+    <title> Flow past stationary cylinder perpendicular to the xz plane </title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+   <Solver type="hypre" />
+  <Wasatch>
+
+    <Density>
+      <IsConstant>true</IsConstant>
+      <NameTag name="density" state="STATE_NONE" />
+    </Density>
+    
+
+    <EmbeddedGeometry>
+     <Intrusion>
+        <geom_object>
+				 <cylinder>
+					<bottom>[0,-1,0]</bottom>
+					<top>[0,1,0]</top>
+					<radius>0.15</radius>
+				 </cylinder>
+       </geom_object>
+     </Intrusion>    
+    </EmbeddedGeometry>
+
+    <!-- Set the initial condition expression for x-momentum -->
+    <BasicExpression type="XVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="x-mom" state="STATE_N" />
+       <Constant>0.1</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="ZVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="z-mom" state="STATE_N" />
+       <Constant>0.0</Constant>
+    </BasicExpression>
+               
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="viscosity" state="STATE_NONE" />
+      <Constant>0.01</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="density" state="STATE_NONE" />
+      <Constant>1.0</Constant>
+    </BasicExpression>
+
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Z-Velocity>w</Z-Velocity>
+      <Z-Momentum>z-mom</Z-Momentum>
+      <Viscosity>
+        <NameTag name="viscosity" state="STATE_NONE" />
+      </Viscosity>
+      
+      <Pressure>
+        <!-- ReferencePressure value="0.0">
+              <ReferenceCell>[0,0,0]</ReferenceCell>
+        </ReferencePressure -->
+        <Use3DLaplacian>    false</Use3DLaplacian>
+        <Parameters>
+            <!-- Hypre options -->
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1e-12  </tolerance>
+            <setupFrequency> 0 </setupFrequency>
+            <maxiterations>  500    </maxiterations>
+            <relax_type>     2       </relax_type>
+           </Parameters>
+      </Pressure>
+  </MomentumEquations>
+
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>1000</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.001</delt_min>
+    <delt_max>0.001</delt_max>
+    <max_Timesteps>5</max_Timesteps>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>intrusion_flow_past_cylinder_xz.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle = "2" interval = "0.001"/>
+    <compression>gzip</compression>
+    <save label="x-mom_rhs_partial"/>
+    <save label="z-mom_rhs_partial"/>    
+    <save label="svolFraction"/>    
+    <save label="xvolFraction"/>    
+    <save label="zvolFraction"/>    
+    <save label="x-mom_convFlux_x"/>
+    <save label="x-mom_convFlux_z"/>    
+    <save label="z-mom_convFlux_x"/>
+    <save label="z-mom_convFlux_z"/>        
+    <save label="tau_xx"/>
+    <save label="tau_xz"/>    
+    <save label="tau_zx"/>
+    <save label="tau_zz"/>            
+    <save label="x-mom"/>    
+    <save label="z-mom"/>        
+    <save label="u"/>
+    <save label="w"/>    
+    <save label="pressure"/>
+    <save label="dilatation"/>
+  </DataArchiver> 
+
+  <Grid>
+      <BoundaryConditions>
+      <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
+      <Face side="x-">
+
+        <BCType id="all" var="Dirichlet" label="x-mom">
+          <value> 1.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="z-mom">
+          <value> 0.0 </value>
+        </BCType>
+                                                  
+        <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>                                               
+
+      </Face>
+      
+      <Face side="x+">
+
+        <BCType id="all" var="Neumann" label="z-mom">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="pressure">
+          <value> 0.0 </value>
+        </BCType>                       
+        
+        <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>      
+
+      </Face>
+      
+      <Face side="z-">
+      
+        <BCType id="all" var="Dirichlet" label="x-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="z-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+
+        <BCType id="all" var="Dirichlet" label="z-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>     
+                                
+      </Face>
+      <Face side="z+">
+
+        <BCType id="all" var="Dirichlet" label="x-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="z-mom">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="z-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>     
+        
+      </Face>
+
+      </BoundaryConditions>
+      <Level>
+      <Box label="1">
+        <lower>[-1,-1, -1]</lower>
+        <upper>[ 3, 1, 1]</upper>
+        <resolution>[200,2,100]</resolution>
+        <patches>[4,1,2]</patches>
+      </Box>
+      <periodic>[0,1,0]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

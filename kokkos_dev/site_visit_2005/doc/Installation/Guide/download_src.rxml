@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+    For more information, please see: http://software.sci.utah.edu
+
+The MIT License
+
+Copyright (c) 2004 Scientific Computing and Imaging Institute,
+University of Utah.
+
+License for the specific language governing rights and limitations under
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+-->
+
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<!--% tpsuffix = (Doc::Platform == Doc::OSX) ? "osx_src" : "install" %-->
+
+<section id="sec.sources">
+  <title id="sec.title.sources">Downloading and Unpacking
+  Sources</title>
+
+  <orderedlist>
+
+    <listitem id="src_download">
+      <para>
+	Any number of SCIRun <firstterm>Problem Solving
+	Environment</firstterm> (<acronym>PSE</acronym>) Packages may be built
+	from source code.  A <acronym>PSE</acronym> is built from a
+	particular set of SCIRun packages, which can be downloaded
+	from SCI's <ulink
+	url="http://software.sci.utah.edu/archive_entry.html">software
+	archive</ulink> web site.  For example, to build the BioPSE
+	<acronym>PSE</acronym>, download the following:
+
+	<simplelist>
+	  <member>
+	    <filename>SCIRun.<!--%= doc.version() %-->.tar.gz</filename>
+	  </member>
+	  <member>
+	    <filename>BioPSE.PKG.<!--%= doc.version() %-->.tar.gz</filename>
+	  </member>
+	  <member>
+	    <filename>MatlabInterface.PKG.<!--%= doc.version() %-->.tar.gz</filename>
+	  </member>
+	  <member>
+	    <filename>Teem.PKG.<!--%= doc.version() %-->.tar.gz</filename>
+	  </member>
+	</simplelist>
+      </para>
+
+      <para os="linux;osx">
+	To build the Insight <acronym>PSE</acronym>, download the following:
+	<simplelist>
+	  <member>
+	    <filename>SCIRun.<!--%= doc.version() %-->.tar.gz</filename>
+	  </member>
+	  <member>
+	    <filename>Teem.PKG.<!--%= doc.version() %-->.tar.gz</filename>
+	  </member>
+	  <member>
+	    <filename>Insight.PKG.<!--%= doc.version() %-->.tar.gz</filename>
+	  </member>
+	</simplelist>
+      </para>
+
+      <para>
+	To build the Fusion <acronym>PSE</acronym>, download the following:
+	<simplelist>
+	  <member>
+	    <filename>SCIRun<!--%= doc.version() %-->.tar.gz</filename>
+	  </member>
+	  <member>
+	    <filename>Fusion.PKG.<!--%= doc.version() %-->.tar.gz</filename>
+	  </member>
+	  <member>
+	    <filename>Teem.PKG.<!--%= doc.version() %-->.tar.gz</filename>
+	  </member>
+	  <member>
+	    <filename>DataIO.PKG.<!--%= doc.version() %-->.tar.gz</filename>
+	  </member>
+	</simplelist>
+      </para>
+
+      <para>In all cases, the file <filename>Thirdparty_<!--%= tpsuffix
+      %-->.<!--%= doc.version() %-->.tar.gz</filename> must also be
+      obtained.</para>
+
+      <para>SCIRun's sample data, <filename>SCIRunData.<!--%=
+      doc.version() %-->.tar.gz</filename> should also be
+      downloaded.</para>
+
+      <para>SCIRun documentation, <filename>SCIRunDocs.<!--%=
+      doc.version() %-->.tar.gz</filename>, may also be
+      downloaded.</para>
+
+    </listitem>
+    
+    <listitem id="src_unpack">
+      <para>
+	Unpack SCIRun sources:
+	<literallayout class="monospaced">
+gunzip -c SCIRun.<!--%= doc.version() %-->.tar.gz | tar xf -
+	</literallayout>
+	This creates a directory called <filename>SCIRun</filename>.
+	Below, the term <filename>SCIRun</filename> refers to this directory.
+      </para>
+    </listitem>
+
+    <listitem>
+      <para>
+	Unpack the compressed package sources into
+	<filename>SCIRun/src/Packages</filename>. For example, to unpack the
+	BioPSE package type:
+	<literallayout class="monospaced">
+gunzip -c BioPSE.PKG.<!--%= doc.version() %-->.tar.gz | (cd SCIRun/src/Packages &amp;&amp; tar xf -)
+	</literallayout>
+	Repeat for other packages.
+      </para>
+    </listitem>
+
+    <listitem>
+      <para>
+	Unpack the sample dataset tarball(s).  The following instructions
+	install the datasets in directory
+	<filename>SCIRunData</filename> inside of the download
+	directory.
+	<itemizedlist>
+	  <listitem>
+	    <para>
+	      If unpacking
+	      <filename>SCIRunData.1.24.0b_to_1.24.1.tar.gz</filename>,
+	      first rename the existing <filename>SCIRunData/1.20.0b</filename> to
+	      <filename>SCIRunData/1.20.1</filename>:
+	      <literallayout class="monospaced">
+pushd SCIRunData
+mv 1.20.0b 1.20.1
+	      </literallayout>
+	      then:
+	      <literallayout class="monospaced">
+popd
+gunzip -c SCIRunData.1.24.0b_to_1.24.1.tar.gz | tar xf -
+	      </literallayout>
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      If installing <filename>SCIRunData.<!--%= doc.version
+	      %-->.tar.gz</filename> type:
+	      <literallayout class="monospaced">
+gunzip -c SCIRunData.<!--%= doc.version %-->.tar.gz | tar xf -
+	      </literallayout>
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      If installing <filename>FusionData.<!--%= doc.version
+	      %-->.tar.gz</filename> type:
+	      <literallayout class="monospaced">
+gunzip -c FusionData.<!--%= doc.version %-->.tar.gz | tar xf -
+	      </literallayout>
+	    </para>
+	  </listitem>
+	</itemizedlist>
+     </para>
+    </listitem>
+
+    <listitem>
+      <para>
+	Unpack third party sources.
+      </para>
+      <para>
+	<literallayout class="monospaced">
+gunzip -c Thirdparty_<!--%= tpsuffix %-->.<!--%= doc.version() %-->.tar.gz | tar xf -
+	</literallayout>
+	This creates the directory <filename>Thirdparty_<!--%= tpsuffix %-->.<!--%= doc.version() %--></filename>.
+      </para>
+    </listitem>
+
+    <listitem>
+      <para>
+	Unpack the documentation:
+	<literallayout class="monospaced">
+gunzip -c SCIRunDocs.<!--%= doc.version() %-->.tar.gz | tar xf -
+	</literallayout>
+	This creates the directory
+	<filename>SCIRunDocs</filename>.<!--%= doc.version()
+	%-->.  Point a browser at <filename>SCIRunDocs.<!--%=
+	doc.version() %-->/doc/index.html</filename> to access
+	SCIRun's online documentation.
+      </para>
+    </listitem>
+
+  </orderedlist>
+
+  <note>
+    <title>Note</title>
+
+    <para><xref linkend="ap.lsrcvs"/> discusses a
+    method for putting the downloaded SCIRun sources under control of the
+    CVS version control system.  This is useful if the SCIRun distribution
+    will be used for development.  This is <emphasis>not</emphasis> a
+    requirement for installing SCIRun.</para>
+  </note>
+
+  <para>Proceed to <xref linkend="sec.third_party_inst"/></para>
+
+</section>

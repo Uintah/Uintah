@@ -1,0 +1,114 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+global userName
+set userName "dmw"
+
+global runDate
+set runDate "Thu Mar  1 2001"
+
+global runTime
+set runTime " 21:53:29"
+
+global notes
+set notes "This net builds an element-centered finite element lead-field for an input finite element
+mesh and set of electrodes.
+
+"
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 226 15]
+set m1 [addModuleAtPosition "BioPSE" "Forward" "BuildFEMatrix" 45 179]
+set m2 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 387 14]
+set m3 [addModuleAtPosition "BioPSE" "LeadField" "RecipBasis" 262 179]
+set m4 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 244 263]
+set m5 [addModuleAtPosition "SCIRun" "DataIO" "MatrixWriter" 398 263]
+set m6 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 226 333]
+set m7 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 281 104]
+
+addConnection $m1 0 $m4 0
+addConnection $m3 0 $m4 1
+addConnection $m3 2 $m5 0
+addConnection $m0 0 $m1 0
+addConnection $m0 0 $m3 0
+addConnection $m0 0 $m7 0
+addConnection $m2 0 $m7 1
+addConnection $m4 0 $m6 1
+addConnection $m0 0 $m6 0
+
+set $m0-notes {Output file is a TetVolField -- data values at the elements are conductivity tensors.
+
+}
+set $m0-show_status 1
+set $m0-filename {}
+set $m1-notes {Using the zero'th node as a ground reference, we build the finite element stiffness matrix
+for the incoming TetVolField.  The TetVolField has a conductivity tensor at each element.
+
+}
+set $m1-show_status 1
+set $m1-BCFlag {none}
+set $m1-UseCondTCL 1
+set $m1-refnodeTCL {0}
+set $m2-notes {Input field is a TriSurf specifying the electrode positions (no faces).
+
+}
+set $m2-show_status 1
+set $m2-filename {}
+set $m3-notes {Build the element-centered leadfield matrix for the input TetVolField (port 1) and TriSurf
+interpolant Field (port 2).  We set the last electrode to ground, and iteratively pair it with
+each of the other electrodes.  For each pairing, we build a right-hand-side column matrix 
+that specifies the source-sink pair to have unit current.  That right-hand-side is passed
+to a solve matrix module, the system is solved, the gradient is computed, and the ouput
+is passed back to us and stored as one column in our lead-field matrix.
+
+}
+set $m3-show_status 1
+set $m4-notes {Solve the: A x phi = flux
+linear system.  A is the stiffness matrix, with node 0 pinned to ground, the flux vetor is all
+zeroes except for the TetVol source and sink node positions, which have a 1 and a -1 
+respectively (unit current passed between them).  Solving for phi gives us the voltages
+everywhere at the nodes in the TetVolMesh.
+
+}
+set $m4-show_status 1
+set $m4-target_error 1
+set $m4-flops 0
+set $m4-floprate 0
+set $m4-memrefs 0
+set $m4-memrate 0
+set $m4-orig_error 0
+set $m4-current_error {0}
+set $m4-method {conjugate_gradient_sci}
+set $m4-precond {Diag_P}
+set $m4-iteration 0
+set $m4-maxiter 200
+set $m4-use_previous_soln 1
+set $m4-emit_partial 1
+set $m4-status {}
+set $m4-np 4
+set $m5-notes {Store the lead-field.  The size is nr=(# of electrodes - 1) x nc=(# of elements x 3).  Each
+row is stored [ex1 ey1 ez1 ex2 ey2 ez2 ex3 ey3 ez3 ... exn eyn ezn] where [exi eyi ezi] is 
+the electric field vector in element i.
+ 
+}
+set $m5-show_status 1
+set $m5-filename {}
+set $m5-filetype {Binary}
+set $m5-split 0
+set $m6-notes {Having solving for the voltages at the nodes of the TetVolMesh, we combine those scalar
+values with the TetVolMesh to produce a TetVolField of scalar double potentials at the
+nodes.
+
+}
+set $m6-show_status 1
+set $m6-data_op_gui {}
+set $m6-data_loc_gui {}
+set $m6-data_type_gui {}
+set $m7-notes {Build the interpolant weights for the electrodes.  For each node in the TriSurf (second input
+field port), we record the single nearest node from the TetVol and assign it a weight of 1.
+
+}
+set $m7-show_status 1
+set $m7-interp_op_gui {}
+
+::netedit scheduleok

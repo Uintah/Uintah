@@ -1,0 +1,19 @@
+*** itcl3.1.0/itk/unix/configure	1999-08-17 13:51:00.000000000 -0600
+--- itcl3.1.0/itk/unix/configure-patch	2006-01-27 10:45:38.000000000 -0700
+*************** if test "$ok" = "yes"; then
+*** 1215,1221 ****
+      TCL_STUB_FLAGS=-DUSE_TCL_STUBS
+      eval "ITK_LIB_FILE=libitk${VERSION}${SHLIB_SUFFIX}"
+      ITK_PKG_FILE="[file join [file dirname \$dir] ${ITK_LIB_FILE}]"
+!     MAKE_LIB="\$(SHLIB_LD) -o ${ITK_LIB_FILE} \$(OBJS) ${SHLIB_LD_LIBS}"
+      RANLIB=":"
+  else
+      SHLIB_CFLAGS=""
+--- 1215,1221 ----
+      TCL_STUB_FLAGS=-DUSE_TCL_STUBS
+      eval "ITK_LIB_FILE=libitk${VERSION}${SHLIB_SUFFIX}"
+      ITK_PKG_FILE="[file join [file dirname \$dir] ${ITK_LIB_FILE}]"
+!     MAKE_LIB="\$(SHLIB_LD) \$(LD_SEARCH_FLAGS) -o ${ITK_LIB_FILE} \$(OBJS) ${SHLIB_LD_LIBS}"
+      RANLIB=":"
+  else
+      SHLIB_CFLAGS=""

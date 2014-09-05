@@ -1,0 +1,172 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Momentum Test with Taylor-Green Vortex MMS</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+   <Solver type="hypre" />
+  <Wasatch>
+
+    <Density>
+      <IsConstant>true</IsConstant>
+      <NameTag name="density" state="STATE_NONE" />
+    </Density>
+
+    <BasicExpression type="SVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="pressure" state="STATE_N" />
+       <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <!-- Set the initial condition expression for x-momentum -->
+    <TaylorVortexMMS type="XVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="x-mom" state="STATE_N" />
+      <TGVel3D angle="1.570796326794897">
+        <VelComponent>X</VelComponent>
+        <XCoordinate> <NameTag name="XXVOL" state="STATE_NONE"/> </XCoordinate>
+        <YCoordinate> <NameTag name="YXVOL" state="STATE_NONE"/> </YCoordinate>
+        <ZCoordinate> <NameTag name="ZXVOL" state="STATE_NONE"/> </ZCoordinate>        
+      </TGVel3D>
+    </TaylorVortexMMS>
+
+    <!-- Set the initial condition for y-momentum -->
+    <TaylorVortexMMS type="YVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="y-mom" state="STATE_N" />
+      <TGVel3D angle="1.570796326794897">
+        <VelComponent>Y</VelComponent>      
+        <XCoordinate> <NameTag name="XYVOL" state="STATE_NONE"/> </XCoordinate>
+        <YCoordinate> <NameTag name="YYVOL" state="STATE_NONE"/> </YCoordinate>
+        <ZCoordinate> <NameTag name="ZYVOL" state="STATE_NONE"/> </ZCoordinate>        
+      </TGVel3D>
+    </TaylorVortexMMS>
+
+    <!-- Set the initial condition for z-momentum -->
+    <TaylorVortexMMS type="ZVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="z-mom" state="STATE_N" />
+      <TGVel3D angle="1.570796326794897">
+        <VelComponent>Z</VelComponent>      
+        <XCoordinate> <NameTag name="XZVOL" state="STATE_NONE"/> </XCoordinate>
+        <YCoordinate> <NameTag name="YZVOL" state="STATE_NONE"/> </YCoordinate>
+        <ZCoordinate> <NameTag name="ZZVOL" state="STATE_NONE"/> </ZCoordinate>        
+      </TGVel3D>
+    </TaylorVortexMMS>
+                
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="viscosity" state="STATE_NONE" />
+      <Constant>0.001</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="density" state="STATE_NONE" />
+      <Constant>1.0</Constant>
+    </BasicExpression>
+
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Y-Velocity>v</Y-Velocity>
+      <Y-Momentum>y-mom</Y-Momentum>
+      <Z-Velocity>w</Z-Velocity>
+      <Z-Momentum>z-mom</Z-Momentum>      
+      <Viscosity>
+        <NameTag name="viscosity" state="STATE_NONE" />
+      </Viscosity>
+      
+      <Pressure>
+        <!-- ReferencePressure value="0.0">
+              <ReferenceCell>[0,0,0]</ReferenceCell>
+        </ReferencePressure -->
+        <Use3DLaplacian> true</Use3DLaplacian>
+        <Parameters>
+
+            <!-- CGSolver options -->
+              <norm>     LInfinity  </norm>
+              <criteria> Absolute   </criteria>
+
+            <!-- Hypre options -->
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1.e-13  </tolerance>
+            <maxiterations>  1000    </maxiterations>
+            <relax_type> 2 </relax_type>
+            <jump>           0       </jump>
+           </Parameters>
+
+      </Pressure>
+    </MomentumEquations>
+
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>0.01</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.001</delt_min>
+    <delt_max>0.001</delt_max>
+    <max_Timesteps> 4 </max_Timesteps>            
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>momentum-test-mms-3d.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle = "2" interval = "0.001"/>
+    <compression>gzip</compression>
+    <save label="x-mom"/>
+    <save label="y-mom"/>
+    <save label="z-mom"/>    
+    <save label="u"/>
+    <save label="v"/>
+    <save label="w"/>    
+    <save label="pressure"/>
+    <save label="x-mom_convFlux_x"/>
+    <save label="x-mom_convFlux_y"/>
+    <save label="x-mom_convFlux_z"/>
+    <save label="y-mom_convFlux_x"/>
+    <save label="y-mom_convFlux_y"/>
+    <save label="y-mom_convFlux_z"/>
+    <save label="z-mom_convFlux_x"/>
+    <save label="z-mom_convFlux_y"/>
+    <save label="z-mom_convFlux_z"/>
+    <save label="dilatation"/>
+    <save label="density"/>
+    <save label="tau_xx"/>
+    <save label="tau_xy"/>
+    <save label="tau_xz"/>
+    <save label="tau_yy"/>
+    <save label="tau_yx"/>
+    <save label="tau_yz"/>
+    <save label="tau_zz"/>
+    <save label="tau_zx"/>
+    <save label="tau_zy"/>
+    <save label="x-mom_rhs_partial"/>
+    <save label="y-mom_rhs_partial"/>
+    <save label="z-mom_rhs_partial"/>
+    <save label="x-mom_rhs_full"/>
+    <save label="y-mom_rhs_full"/>
+    <save label="z-mom_rhs_full"/>
+  </DataArchiver> 
+
+  <Grid>
+      <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[32,32,32]</resolution>
+        <patches>[2,2,2]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

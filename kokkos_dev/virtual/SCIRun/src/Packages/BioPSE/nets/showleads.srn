@@ -1,0 +1,25 @@
+<?xml version="1.0" ?>
+<!DOCTYPE network
+  PUBLIC '-//SCIRun/Network DTD'
+  'network.dtd'>
+<network bbox="{154 28 343 195}" creationDate="{Thu Mar 16 2006}" creationTime="{11:07:07}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.2">
+  <environment>
+    <var name="scisub_datadir" val="SCIRUN_DATA"/>
+    <var name="scisub_datafile" val="SCIRUN_DATAFILE"/>
+    <var name="scisub_dataset" val="SCIRUN_DATASET"/>
+  </environment>
+  <note>{}</note>
+  <modules>
+    <module category="DataIO" id="m1" name="ReadMatrix" package="SCIRun">
+      <position x="154" y="28"/>
+      <var name="filename" val="scisub_datadir/brain-eg/brain-eg-condparams.mat"/>
+    </module>
+    <module category="Visualization" gui_visible="yes" id="m2" name="ViewLeadSignals" package="BioPSE">
+      <position x="178" y="138"/>
+      <var name="ui_geometry" val="{495x616+53+18}"/>
+    </module>
+  </modules>
+  <connections>
+    <connection from="m1" fromport="0" id="c1" to="m2" toport="0"/>
+  </connections>
+</network>

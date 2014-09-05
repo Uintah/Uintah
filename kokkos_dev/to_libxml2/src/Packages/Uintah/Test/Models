@@ -1,0 +1,9 @@
+#!/usr/local/bin/python
+
+from sys import argv,exit
+from helpers.runSusTests import runSusTests
+
+TESTS = [   ("HePlume", "HePlume.ups", "-solver hypre", 1.1, "ALL", "ice")
+    	]
+
+exit(runSusTests(argv, TESTS, "models"))

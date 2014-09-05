@@ -1,0 +1,810 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+
+<!--% require("../../Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+<!--% doc.insertDocType("article", {"sr"=>"SCIRun"}) %-->
+
+<article class="faq">
+  <title>Developer FAQ (for &sr; v. <!--%= doc.edition %-->)</title>
+
+  <qandaset defaultlabel="number">
+
+    <qandaentry>
+      <revhistory>
+	<revision>
+	  <revnumber>001</revnumber>
+	  <date>03/29/04</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para>When I run SCIRun on OS X, it produces only one
+	process. When I bring up more than one module and select the info
+	buttons, the modules have the same PID. Usually there is a thread
+	for each module. Did I set something up wrong?</para>
+      </question>
+      <answer>
+	<para>SCIRun threads run in a single process space, so they have
+	the same PID. The distinct PIDs that Linux and SGI report are not
+	their process as much as their thread Ids.</para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <revhistory>
+	<revision>
+	  <revnumber>001</revnumber>
+	  <date>03/29/04</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para>Is there a simple way to make a SCIRun net automatically
+	execute as it loads</para>
+      </question>
+      <answer>
+	<para>Add a line like: $m1-c needexecute to the end of the .net
+	file. This causes that module, in this case $m1, and all modules
+	it depends on, or depends on it, to execute.
+	</para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <revhistory>
+	<revision>
+	  <revnumber>001</revnumber>
+	  <date>03/29/04</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para>When should I use Vector and when should I use
+	Array1?</para>
+      </question>
+      <answer>
+	<para>In cases where performance does not matter, use Vector. When
+	peak performance is required, consider using Array1. In some
+	cases, Array1 is significantly faster.
+	</para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <revhistory>
+	<revision>
+	  <revnumber>001</revnumber>
+	  <date>03/29/04</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para>
+	  TCL provides a mechanism to
+	  initialize variables: Global $this-max_vector_z Set $this-max_vector_z
+	  0. Or, variables can be initialized in the constructor: MyModule: :
+	  MyModule(GuiContext *ctx): Module("MyModule", ctx, ...),
+	  Max_vector_z("max_vector_z", O 
+	</para>
+	<para>Where should GuiVars be initialized?</para>
+      </question>
+      <answer>
+	<para>Set the initial value in the TCL set_defaults
+	method. Otherwise, there is a race condition between values being
+	set in the saved net, and setting their defaults in the c++
+	constructor.</para>
+      </answer>
+    </qandaentry>
+
+
+    <qandaentry>
+      <revhistory>
+	<revision>
+	  <revnumber>001</revnumber>
+	  <date>03/29/04</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para>Is there an easy way to find the second spatial derivative
+	in a volume?</para>
+      </question>
+      <answer>
+	<para>This is currently unimplemented.</para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <revhistory>
+	<revision>
+	  <revnumber>001</revnumber>
+	  <date>03/29/04</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para>
+	  I was trying to import some modules to the newest version of SCIRun
+	  and received the error message:</para><screen>
+	  
+	  read in expect failed (after read)
+	  Rest of line is:
+	  Next line is:
+	  String input failed
+	  Rest of line is:
+	  String input failed
+	  Rest of line is:</screen>
+
+	  <para> What function would cause this error message?</para>
+      </question>
+      <answer>
+	<para>The network may have been executed with a Reader, and one of
+	two things is happening: one, data was saved with an older version
+	of SCIRun that is not recognized (this can be fixed), or two, the
+	data is corrupted and has somehow been truncated.</para> <para>
+	Both errors occur when TextPioStream is reading a stream of data
+	from the disk. SCIRun uses the TextPioStream class to serialize
+	data to the disk for save and read operations on data such as
+	Fields and Matrices. The first error message occurs at line 566 of
+	SCIRun/src/Core/Persistant/Pstreams.cc in TextPioStream::expect
+	(char). That function was called by TextPioStream::io(string &amp;)
+	on line 503 of the same file, which prints the (String input
+	failed) messages. The TextPioStream was expecting to read a quoted
+	("") string from the data stream, but received the end of the
+	file. </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <revhistory>
+	<revision> 
+	  <revnumber>001</revnumber>
+	  <date>03/29/04</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para>
+	  Why do my ports not show up on the Module in the Net Edit Frame of the
+	  GUI?
+	</para>
+      </question>
+      <answer>
+	<para>Two Possibilities:</para>
+	<para>1) The port visibility is determined by the .xml file. It is
+	likely that there is a dangling parenthesis; you did not close a
+	tag. Also, make sure the "&lt;!DOCTYPE" tag at the top of the file
+	contains the right path, because it is the file location. Moving
+	files can sometimes cause the file to break.</para>
+	<para>2) The problem can be in the tcl_command method of the .cc
+	file. Every module that implements this virtual method is required
+	to pass unrecognizable messages to the Module base class. If these
+	messages are not passed, the network editor's request for the
+	"impotinfo" and "oportinfo", needed to create ports, is not
+	handled.  To verify if this is the problem, look at the end of the
+	tcl_command method to see if you have the Module::tcl_command()
+	call: If(args[1} = = "redraw") {...} else { Module:
+	:tcl_command(args, userdata); }
+	</para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <revhistory>
+	<revision>
+	  <revnumber>001</revnumber>
+	  <date>03/29/04</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para> Is there a way to compile SCIRun modules with fortran
+	functions? Is there a way to allow SCIRun to create a fortran
+	object file, then link that object file to other C++ objects? What
+	kind of modifications would have to be made to the makefiles and
+	sub.mk files?
+	</para>
+      </question>
+      <answer>
+	<para>To use fortran in the sub.mk file, there are lines such as:</para>
+	<screen>
+	  SRC += $(SRCDIR)/file.F
+
+	  LIBS := $(F_LIBRARY)
+
+	$(SRCDIR)?file.o: $(SCRCDIR)/file.h</screen>
+
+	<para>They add the .F file to the list of sources. Tell make to use
+	F_LIBRARY (fortran library) in linking, and tell it the .o file
+	depends on a .h file.  The calls to these fortran functions are direct
+	calls from the C++ side.
+	</para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <revhistory>
+	<revision>
+	  <revnumber>001</revnumber>
+	  <date>03/29/04</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para>Can SCIRun support 2D visualization?
+	</para>
+      </question>
+      <answer>
+	<para>In BioPSE there is a module called ShowLeads that takes a
+	matrix as input, and renders a 2d graph. The module assumes that
+	rows are a time series of data, with columns the timestep
+	values.</para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <revhistory>
+	<revision>
+	  <revnumber>1.0</revnumber>
+	  <date>2/15/03</date>
+	</revision>
+      </revhistory>
+
+      <question>
+	<para>
+	  Should <type>std::vector</type> or <type>SCIRun::Array1</type> be used?
+	</para>
+      </question>
+      <answer>
+	<para>
+	  In cases where performance does not matter, use
+	  <type>std::vector</type>.  In cases where optimal
+	  performance is needed ,however, compare the performance of
+	  <type>std::vector</type> and <type>SCIRun::Array1</type>. In some cases, <type>SCIRun::Array1</type> is significantly
+	  faster. 
+	</para>
+      </answer>
+
+    </qandaentry>
+
+    <qandaentry>
+
+      <revhistory>
+	<revision>
+	  <revnumber>1.0</revnumber>
+	  <date>1/31/03</date>
+	</revision>
+      </revhistory>
+
+      <question>
+	<para>SCIRun dies with a memory allocation error.  Specifically:
+	<literallayout class="monospaced">
+	  Error allocating memory (32833536 bytes requested) mmap: errno=12 Thread
+	</literallayout>
+	</para>
+      </question>
+
+      <answer>
+	<para>If SCIRun is not configured with <option>--enable-64bit</option>,
+	the program will not be able to use more than approximately 2G of
+	memory.</para>
+      </answer>
+
+    </qandaentry>
+
+    <qandaentry>
+
+      <revhistory>
+	<revision>
+	  <revnumber>1.0</revnumber>
+	  <date>7/29/01</date>
+	</revision>
+      </revhistory>
+
+      <question>
+	<para>
+	  What is the granularity of modules?
+	</para>
+      </question>
+
+      <answer>
+	<para>
+	  Modules that start at
+	  one level sometimes divide or merge to a different level.
+	  When designing and writing the code, it is important to
+	  think in terms of modularity, even within a single module, so
+	  subsequent divisions or reorganization is possible.  One approach is to
+	  present the design for a new module or set
+	  of modules to the group. Perhaps others are interested in some
+	  part of the functionality, or can provide existing modules for the new
+	  module.  This way, there is benefit from the collective plans and
+	  knowledge of the group.
+	</para>
+      </answer>
+
+    </qandaentry>
+    
+    <qandaentry>
+
+      <revhistory>
+	<revision>
+	  <revnumber>1.0</revnumber>
+	  <date>7/29/01</date>
+	</revision>
+      </revhistory>
+
+      <question>
+	<para>
+	  Are there Emacs tools for coding standard?
+	</para>
+      </question>
+
+      <answer>
+	<para>
+	  Yes, here is the code used to support the coding standard:
+	</para>
+
+
+
+	<programlisting>
+	  <![CDATA[
+	  ; Filename: sci-c++-style.el
+	  ; Author: Marty Cole
+	  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	  (defun c-no-initializer-indent (langelem)
+	  ;; using in a statement block intro...
+	  (save-excursion
+	  (let* ((curpos (point))
+	  retval)
+	  (setq retval (if (search-forward "{" (c-point 'eol) t)
+	  (* -1 c-basic-offset) c-basic-offset))
+	  (goto-char curpos)
+	  retval)))
+
+	  (defun my-c-mode-common-hook ()
+	  ;; my customizations for all of c-mode and related modes
+	  (c-set-style "gnu")
+	  (set 'c-label-minimum-indentation 0)
+	  (c-set-offset 'substatement-open 0)
+	  (c-set-offset 'innamespace 0)
+	  (c-set-offset 'statement-cont 'c-no-initializer-indent)
+	  )
+
+	  (add-hook 'c-mode-common-hook 'my-c-mode-common-hook)
+	  ]]>
+	</programlisting>
+
+	<para>
+	  Place this in the .emacs file.
+	</para>
+
+	<para>
+	  The SCIRun coding standard can be found <ulink url="(%=doc.treeUrl(%Q{doc/Developer/Guide/dev.codingstandards.html}) %)" >online</ulink>.
+	</para>
+      </answer>
+
+    </qandaentry>
+
+    <qandaentry>
+
+      <revhistory>
+	<revision>
+	  <revnumber>1.0</revnumber>
+	  <date>7/29/01</date>
+	</revision>
+      </revhistory>
+
+      <question>
+	<para>
+	  Are accounts needed for the CVS? How are the latest version of SCIRun or BioPSE checked out?
+	</para>
+      </question>
+
+      <answer>
+	<para>
+	  At present, remote access to the code repository requires a
+	  SCI account.  To get the most recent released version,
+	  visit SCI's web site to download archives.  Users may place the resulting
+	  files on their own code repository site and manage their own
+	  development.
+	</para>
+      </answer>
+
+    </qandaentry>
+    
+    <qandaentry>
+
+      <revhistory>
+	<revision>
+	  <revnumber>1.0</revnumber>
+	  <date>7/29/01</date>
+	</revision>
+      </revhistory>
+
+      <question>
+	<para>
+	  Are there guidelines for module testing? What is the testing
+	  strategy?
+	</para>
+      </question>
+
+      <answer>
+	<para>
+	  The nature of SCIRun as an interactive, user driven
+	  program makes testing modules and their interactions 
+	  challenging.  A user interface that
+	  contains a state manager that accepts and manages input from all
+	  user interface elements is being developed.  One advantage of such a manager is the replacement  of the interactive input with a program that
+	  supplies a script of interaction requests. the state manager
+	  can respond as if a user executed the requests manually.
+	  Development of this structure is in progress.
+	</para>
+      </answer>
+
+    </qandaentry>
+
+    <qandaentry>
+
+      <revhistory>
+	<revision>
+	  <revnumber>1.0</revnumber>
+	  <date>7/29/01</date>
+	</revision>
+      </revhistory>
+
+      <question>
+	<para>
+	  What is XML?
+	</para>
+      </question>
+
+      <answer>
+	<para>
+	  Go to an XML web
+	  site such as <ulink url="http://faq.oreillynet.com/XML/index0.shtm">
+	  faq.oreillynet.com/XML/index0.shtm</ulink> or
+	  <ulink url="http://www.xml.com/pub/a/98/10/guide0.html">
+	    www.xml.com/pub/a/98/10/guide0.html</ulink>.
+	</para>
+      </answer>
+
+    </qandaentry>
+
+    <qandaentry>
+
+      <revhistory>
+	<revision>
+	  <revnumber>1.0</revnumber>
+	  <date>7/29/01</date>
+	</revision>
+      </revhistory>
+
+      <question>
+	<para>
+	  What does XML have to do with SCIRun?
+	</para>
+      </question>
+
+      <answer>
+	<para>
+	  Each module in BioPSE requires an XML-based description of
+	  its functionality.  The information in the XML module
+	  description provides information to assist the <ulink
+	  url="(%=doc.treeUrl(%Q{doc/Developer/Guide/create_module.html})
+	  %)"> module-maker</ulink>, and helps create the template
+	  for a module.  The XML module description also forms the
+	  basis of a Reference Manual of all modules, and provides
+	  information to SCIRun about the number of types of ports the
+	  module needs when it appears in a network diagram.  The
+	  document <citetitle><ulink
+	  url="(%=doc.treeUrl(%Q{doc/Documentum/module-xml/index.html})
+	  %)">XML Module Descriptions
+	  (Explicated)</ulink></citetitle> describes the format and
+	  content of the XML file in detail.
+	</para>
+      </answer>
+
+    </qandaentry>
+
+    <qandaentry>
+
+      <revhistory>
+	<revision>
+	  <revnumber>1.0</revnumber>
+	  <date>7/29/01</date>
+	</revision>
+      </revhistory>
+
+      <question>
+	<para>
+	  What does it mean to <firstterm>validate</firstterm> a design
+	  specification in XML?
+	</para>
+      </question>
+
+      <answer>
+	<para>
+	  XML requires adherence to
+	  the language standard, unlike HTML, that permits  implicit
+	  actions such as environments that are never closed properly.   
+	  Use a <ulink
+	  url="http://mom.cvrti.utah.edu/~dustman/srvalidate.html">validation
+	  tool</ulink> to ensure an XML module description file adheres to
+	  BioPSE specifications.
+	</para>
+      </answer>
+
+    </qandaentry>
+
+    <qandaentry>
+
+      <revhistory>
+	<revision>
+	  <revnumber>1.0</revnumber>
+	  <date>7/29/01</date>
+	</revision>
+      </revhistory>
+
+      <question>
+	<para>
+	  The following message appears
+	  while running SCIRun on sgi octane:
+	  <literallayout class="monospaced">
+	    Error unmapping memory
+	    munmap: errno=16
+	    Unmap failed - leaking memory
+	  </literallayout>
+	</para>
+
+	<para>
+	  Is this a coding error, or is this a
+	  memory issue with the machine?
+	</para>
+      </question>
+
+      <answer>
+	<para>
+	  There is nothing wrong with the machine, nor is it a coding error.
+	  There is a conflict with IRIX and the SCIRun memory allocator that
+	  has never been tracked down. It is a rare occurrence.
+	</para>
+      </answer>
+
+    </qandaentry>
+
+    <qandaentry>
+
+      <revhistory>
+	<revision>
+	  <revnumber>1.0</revnumber>
+	  <date>7/29/01</date>
+	</revision>
+      </revhistory>
+
+      <question>
+	<para>
+	  How does one customize the color of simple geometry objects such as cylinders?
+	</para>
+      </question>
+
+      <answer>
+	<para>
+	  There are container classes for GeomObj's -- these are themselves
+	  GeomObj's that contain one or more GeomObj's inside of them.
+	  They are useful for building up scene graphs.  The
+	  container used is a GeomMaterial -- its constructor
+	  takes a GeomObj (e.g. a GeomCylinder) and a MaterialHandle.  (Note:
+	  the constructor for a Material can be as simple as passing in a
+	  Color triple!)
+	</para>
+      </answer>
+
+    </qandaentry>
+
+    <qandaentry>
+
+      <revhistory>
+	<revision>
+	  <revnumber>1.0</revnumber>
+	  <date>7/29/01</date>
+	</revision>
+      </revhistory>
+
+      <question>
+	<para>
+	  When creating a user data type, how does one specify a new
+	  color to represent its port type in the module. 
+	</para>
+      </question>
+
+      <answer>
+	<para>
+	  When creating a new Port, add a file into Dataflow/Ports/.
+	  The .cc file for the new Port type should have a specification for
+	  a name and for a color.  See
+	  <filename>SCIRun/src/Dataflow/Ports/MatrixPort.cc</filename> as an
+	  example.
+	</para>
+      </answer>
+
+    </qandaentry>
+
+    <qandaentry>
+
+      <revhistory>
+	<revision>
+	  <revnumber>1.0</revnumber>
+	  <date>7/29/01</date>
+	</revision>
+      </revhistory>
+
+      <question>
+	<para>
+	  Why don't the settings in the modules GUI save when saving the network?
+	</para>
+      </question>
+
+      <answer>
+	<para>
+	  GuiVars are needed. GuiVars enable the sharing of a variable between 
+	  C++ and tcl, and are the only values that save to the tcl 
+	  scripts.
+
+	  Look at any module with a gui for an example (GuiString,
+	  GuiInt,  GuiDouble, and in particular, look at their constructor).   
+	  Synch with the tcl side by specifying the name of the var 
+	  on the tcl side.  
+	</para>
+	<para>
+	  On the C++ side:
+	  <programlisting>
+	    GuiInt myint_;
+
+	    // Initialization in constructor --
+	    myint_("myint", id, &hellip;)
+	  </programlisting>
+	</para>
+
+	<para>
+	  One the tcl side:
+
+	  <programlisting>
+	    set $this-myint 1    # or whatever value you want
+	  </programlisting>
+	</para>
+	<para>
+	  Look at ShowField.cc and .tcl for examples.
+	</para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+
+      <revhistory>
+	<revision>
+	  <revnumber>1.0</revnumber>
+	  <date>7/29/01</date>
+	</revision>
+      </revhistory>
+
+      <question>
+	<para>When does a thread start running?</para>
+      </question>
+
+
+      <answer>
+	<para>A thread starts running immediately, unless Stopped or
+	NotActivated in the Thread constructor.  In that case, use
+	thread->resume() or thread->activate() (respectively) to start the thread running.  Stopped/thread->resume() is the preferred method.</para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+
+      <revhistory>
+	<revision>
+	  <revnumber>1.20</revnumber>
+	  <date>12/03/2003</date>
+	</revision>
+      </revhistory>
+
+      <question>
+	<para>How come when I added the .tcl file to the GUI directory the
+	user interface still doesn't show up in SCIRun.</para>
+      </question>
+
+
+      <answer>
+	<para>After adding the file to the GUI directory two things must be
+	done in order for the interface to show up in SCIRun.  First you must
+	add the file's name to the sub.mk file located in the
+	GUI directory where your file was place.  Add it to SRCS placing it
+	before the INSERT FILE HERE comment.  The second thing you need to do
+	is recompile.  This generates a new tclIndex file with the information
+	SCIRun needs to load your user interface.
+	</para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <revhistory>
+	<revision>
+	  <revnumber>1.20</revnumber>
+	  <date>5/12/2004</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para>
+            When I downloaded your network and all the files, I was
+            able to run the network, but saw only B&amp;W torso. The probe
+            was there and I could grab and move it and I could see the
+            slice planes moving along with it. But I got the error:
+            Some sort of texturing error. I was expecting a colored
+            rendering.  I am sending this along to you to see if you
+            can make anything of it. I am running this on my new Linux
+            box (runs RedHat Enterprise WS 3.0).
+	</para>
+	<para>
+            I see a number of these errors: Some sort of texturing error.
+        </para>
+	<para>
+            Also, do I need PETSc?
+        </para>
+
+      </question>
+      <answer>
+	<para>You need to copy the gl headers from the nvidia driver
+	installation into place, then recompile scirun.  The volume
+	vis uses extensions, so it needs them defined in the
+	headers.</para>
+	<para>You also need a graphics card that supports 3d textures,
+	which I believe you have or you would see a solid white
+	cube.</para>
+	<para>cp /usr/share/doc/NVIDIA_GLX-1.0/include/GL/* to /usr/include/GL</para>
+	<para>See: /scratch/usr/share/doc/NVIDIA_GLX-1.0/README</para>
+	<para>PETsc is not required. You only need it if there was some
+	specific solvers you wanted.</para>
+      </answer>
+    </qandaentry>
+
+<!-- TEMPLATE
+    <qandaentry>
+      <revhistory>
+	<revision>
+	  <revnumber>1.20</revnumber>
+	  <date>5/12/2004</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para></para>
+      </question>
+      <answer>
+	<para></para>
+      </answer>
+    </qandaentry>
+ END TEMPLATE -->
+
+  </qandaset>
+
+</article>

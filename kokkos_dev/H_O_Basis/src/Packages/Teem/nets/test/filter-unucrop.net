@@ -1,0 +1,162 @@
+# SCIRun Network v1.24.1
+
+# The MIT License
+# 
+# Copyright (c) 2004 Scientific Computing and Imaging Institute,
+# University of Utah.
+# 
+# License for the specific language governing rights and limitations under
+# Permission is hereby granted, free of charge, to any person obtaining a 
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation 
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+# and/or sell copies of the Software, and to permit persons to whom the 
+# Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included 
+# in all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+# DEALINGS IN THE SOFTWARE.
+# 
+
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
+
+set name {Main}
+set bbox {17 5 433 484}
+set creationDate {Sat Mar 05 2005}
+set creationTime {14:02:24}
+set runDate {}
+set runTime {}
+set notes {}
+
+# Create a SCIRun->DataIO->FieldReader Module
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 268 5]
+
+# Create a SCIRun->Visualization->Isosurface Module
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 17 84]
+
+# Create a SCIRun->Render->Viewer Module
+set m3 [addModuleAtPosition "SCIRun" "Render" "Viewer" 35 440]
+
+# Create a Teem->UnuAtoM->UnuCrop Module
+set m4 [addModuleAtPosition "Teem" "UnuAtoM" "UnuCrop" 250 179]
+
+# Create a Teem->Converters->FieldToNrrd Module
+set m5 [addModuleAtPosition "Teem" "Converters" "FieldToNrrd" 268 80]
+
+# Create a Teem->Converters->NrrdToField Module
+set m6 [addModuleAtPosition "Teem" "Converters" "NrrdToField" 268 291]
+
+# Create a SCIRun->Visualization->Isosurface Module
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 268 356]
+
+# Create the Connections between Modules
+set c1 [addConnection $m1 0 $m2 0]
+set c2 [addConnection $m1 0 $m5 0]
+set c3 [addConnection $m2 1 $m3 0]
+set c4 [addConnection $m5 2 $m4 0]
+set c5 [addConnection $m6 0 $m7 0]
+set c6 [addConnection $m7 1 $m3 1]
+set c7 [addConnection $m4 0 $m6 2]
+set c8 [addConnection $m1 0 $m6 3]
+
+# Set GUI variables for the SCIRun->DataIO->FieldReader Module
+set $m1-filename "$DATADIR/brain-dmw/brain-dmw-mri-16.lvd.fld"
+
+# Set GUI variables for the SCIRun->Visualization->Isosurface Module
+set $m2-isoval-min {0}
+set $m2-isoval-max {121}
+set $m2-isoval {28.35}
+set $m2-isoval-typed {28.35}
+set $m2-build_trisurf {0}
+set $m2-active_tab {MC}
+
+$m3 addViewer
+set $m3-ViewWindow_0-geometry 654x613+664+213
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m3-ViewWindow_0-view-eyep-x {3.36342}
+set $m3-ViewWindow_0-view-eyep-y {-4.98077}
+set $m3-ViewWindow_0-view-eyep-z {10.531}
+set $m3-ViewWindow_0-view-lookat-x {0.503947}
+set $m3-ViewWindow_0-view-lookat-y {0.344085}
+set $m3-ViewWindow_0-view-lookat-z {0.41157}
+set $m3-ViewWindow_0-view-up-x {0.970114}
+set $m3-ViewWindow_0-view-up-y {0.108278}
+set $m3-ViewWindow_0-view-up-z {-0.217151}
+set $m3-ViewWindow_0-view-fov {8.6338}
+set $m3-ViewWindow_0-sr {1}
+set $m3-ViewWindow_0-do_stereo {0}
+set $m3-ViewWindow_0-ortho-view {0}
+set $m3-ViewWindow_0-trackViewWindow0 {1}
+set $m3-ViewWindow_0-raxes {1}
+set $m3-ViewWindow_0-ambient-scale {1.0}
+set $m3-ViewWindow_0-diffuse-scale {1.0}
+set $m3-ViewWindow_0-specular-scale {0.4}
+set $m3-ViewWindow_0-emission-scale {1}
+set $m3-ViewWindow_0-shininess-scale {1}
+set $m3-ViewWindow_0-polygon-offset-factor {1.0}
+set $m3-ViewWindow_0-polygon-offset-units {0.0}
+set $m3-ViewWindow_0-point-size {1.0}
+set $m3-ViewWindow_0-line-width {1.0}
+set $m3-ViewWindow_0-sbase {1}
+set $m3-ViewWindow_0-bgcolor-r {0.0}
+set $m3-ViewWindow_0-bgcolor-g {0.0}
+set $m3-ViewWindow_0-bgcolor-b {0.0}
+set $m3-ViewWindow_0-fogusebg {1}
+set $m3-ViewWindow_0-fogcolor-r {0.0}
+set $m3-ViewWindow_0-fogcolor-g {0.0}
+set $m3-ViewWindow_0-fogcolor-b {1.0}
+set $m3-ViewWindow_0-fog-start {0.0}
+set $m3-ViewWindow_0-fog-end {0.714265}
+set $m3-ViewWindow_0-fog-visibleonly {1}
+set $m3-ViewWindow_0-currentvisual {0}
+set $m3-ViewWindow_0-caxes {0}
+set $m3-ViewWindow_0-global-light0 {1}
+set $m3-ViewWindow_0-global-light1 {0}
+set $m3-ViewWindow_0-global-light2 {0}
+set $m3-ViewWindow_0-global-light3 {0}
+set $m3-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m3-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m3-ViewWindow_0-global-light {1}
+set $m3-ViewWindow_0-global-fog {0}
+set $m3-ViewWindow_0-global-debug {0}
+set $m3-ViewWindow_0-global-clip {1}
+set $m3-ViewWindow_0-global-cull {0}
+set $m3-ViewWindow_0-global-dl {0}
+set $m3-ViewWindow_0-global-type {Gouraud}
+set "$m3-ViewWindow_0-Isosurface (1)" {1}
+set "$m3-ViewWindow_0-Unknown-Data (2)" {1}
+
+# Set GUI variables for the Teem->UnuAtoM->UnuCrop Module
+set $m4-num-axes {3}
+set $m4-uis {3}
+set $m4-minAxis0 {5}
+set $m4-maxAxis0 {M-2}
+set $m4-absmaxAxis0 {15}
+set $m4-absmaxAxis1 {15}
+set $m4-absmaxAxis2 {15}
+
+# Set GUI variables for the Teem->Converters->NrrdToField Module
+set $m6-datasets {{Points : (none)} {Connections : (none)} {Data : Unknown-Data} {Original Field : Unknown} }
+
+# Set GUI variables for the SCIRun->Visualization->Isosurface Module
+set $m7-isoval-min {0}
+set $m7-isoval-max {121}
+set $m7-isoval {2}
+set $m7-isoval-typed {2.0}
+set $m7-build_trisurf {0}
+set $m7-active_tab {MC}
+set $m7-color-r {0.7}
+set $m7-color-g {0.3}
+set $m7-color-b {0.3}
+
+
+::netedit scheduleok

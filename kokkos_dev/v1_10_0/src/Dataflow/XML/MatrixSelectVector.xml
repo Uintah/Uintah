@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="MatrixSelectVector" category="Math">
+  <overview>
+    <authors>
+      <author>David Weinstein</author>
+      <author>Michael Callahan</author>
+    </authors>
+    <summary><p>The MatrixSelectVector module allows users to select a single
+    row or column from a matrix.  The user can also select a range of rows
+    or columns and send them to the output port one at a time.  The
+    MatrixSelectVector module has three input ports: Matrix, Weight Vector
+    and Current Index, which may run concurrently or one at a time.</p> 
+      
+      <p>This module allows the user to animate points on a mesh if computing
+    a whole time series of results packaged within a row or column.  As
+    data propogates throughout the image, the Viewer window displays the
+    animation of points on the mesh.</p>  
+    </summary>
+      <description>
+	<p>The MatrixSelectVector module runs in one of three different modes: interactive mode uses
+      the "Matrix" input port (first port) only.  The other two ports,
+      Weight Vector and Current Index, run the module without having to
+      select vectors by hand.</p>
+      
+	<p>When the module runs in interactive mode, the user selects which 
+           vectors they want to include in the playback.  In the 
+           MatrixSelectVector module dialog window, Start and End sliders 
+           enable the user to set the playback range, the Current Value 
+           function specifies which row or column to send downstream, and 
+           the Delay function controls the time delay and speed of the
+           animated points on the mesh.</p>
+	
+	<p>There are several Play Modes in the MatrixSelectVector GUI dialog
+window: Once, Loop, Bounce1, and Bounce2.  The Once mode plays the
+animation from current value to the end of the selected range of column and
+rows on the matrix.  The Loop mode plays the selected range endlessly,
+reversing directions after reaching the start or end of the range.  Bounce1
+only plays endpoints once, while Bounce2 repeats them.  For example, if the
+range is 1 through 3, Bounce1 will play { 1 2 3 2 1 2 3 2 1 . . .}, while
+Bounce2 will play {1 2 3 3 2 1 2 3 3 2 1}.  Using the Delay text field in
+the GUI dialog window, the user specifies a delay (in milliseconds) that
+controls the speed at which the selected rows or columns may be sent to the
+output port.</p>
+
+        <p>The Increment entry can be used to skip through the input matrix
+        by more than one element at a time.  This can be used with the
+        Send Amount entry to send more than one row/column at a time.
+        For instance, if both entries are set to three, the module
+        will send three rows/columns at a time, which can then be
+        mapped onto a vector field by the ManageFieldData module. </p>
+
+	<p>The second input port of the MatrixSelectVector module, Weight
+Vector, allows the user to to select mutliple columns of a matrix and add
+them together. The Weight Vector port can only take a column vector as
+input.  In the MatrixSelectVector module, the user selects the indices of
+the column or row they are working with to calculate this
+weighting.</p>
+
+	<p>The third input port, Current Index, synchronizes the playback
+of two MatrixSelectVector modules; the Selected Index of one can be
+connected to the Current Index Port of another.</p>
+
+	    <p>The following examples show use of the input ports. First, to send Row 5 of a matrix, select Row, making sure that 5 falls between the start and end ranges.  Then, enter '5' into the Current Index slot, and execute the module. To send Rows 1 through 5 of a matrix: select Row with a start value of 1.  Next, set the end value to 5 and set the Current Index to 1.  Select 'Once' from the play modes, press the 'Play' buttons, and rows 1-5 will be sent, one after the other, to the output port.</p>
+			 
+	  <p>Synchronize two MatrixSelectVector modules as follows.  First, attach the module's Selected Index output port to the MatrixSelectVector module to be synchronized, making certain that the Row and Column selections for each module are consistent. You have now synchronized the downstream and upstream MatrixSelectVector modules.</p>
+	  
+	    
+	<p>The following example illustrates use of the second input port: Current Index. The LeadFieldSourceLocalization module uses this second input port to
+extract three components from a matrix and add them together with
+weighting. For example, if you wanted to extract the matrix 2, 5, and 7, the column
+matrix would have only those column entries.  Since we also have weighting,
+you can take the weighted combination of that matrix.  You can do this by
+taking half of column 2, half of column 5, and a quarter of column 7.  The
+column matrix would show these weights in column 2 as 1/2, column 5 as 1/2,
+and column 7 as 1/4, for a vector length of 6 as a column matrix for that
+second entry.</p></description>
+	 
+  </overview>
+  <io>
+    <inputs lastportdynamic="no"> /usr/local/gnu/bin/emacs
+      <port>
+        <name>Matrix</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>Weight Vector</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>Current Index</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Vector</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>Selected Index</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <img>../Modules/Math/doc/MatrixSelectVectorUI.jpg</img>
+  </gui>
+  <testing>
+  </testing>
+</component>
+
+
+
+
+
+
+
+
+
+
+
+

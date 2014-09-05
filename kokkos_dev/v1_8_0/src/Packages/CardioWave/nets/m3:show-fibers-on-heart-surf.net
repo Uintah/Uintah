@@ -1,0 +1,173 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+global notes
+set notes ""
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 19 22]
+set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 189 336]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 19 246]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 450 246]
+set m4 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 450 15]
+set m5 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 225 18]
+set m6 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 19 180]
+set m7 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 450 182]
+set m8 [addModuleAtPosition "SCIRun" "Fields" "ChangeFieldDataType" 259 101]
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 225 229]
+
+addConnection $m2 0 $m1 0
+addConnection $m3 0 $m1 1
+addConnection $m7 0 $m3 0
+addConnection $m6 0 $m2 0
+addConnection $m0 0 $m6 0
+addConnection $m4 0 $m7 0
+addConnection $m5 0 $m8 0
+addConnection $m8 0 $m7 1
+addConnection $m8 0 $m6 1
+addConnection $m5 0 $m9 0
+addConnection $m9 0 $m1 2
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-filename {/usr/sci/data/Medical/mouse/activation/sr/64/mouse-heart-64-e1.lvv.fld}
+set $m1-notes {}
+set $m1-show_status {1}
+$m1 ui
+set $m1-ViewWindow_0-pos {}
+set $m1-ViewWindow_0-caxes {0}
+set $m1-ViewWindow_0-iaxes {-2147483647}
+set $m1-ViewWindow_0-view-eyep-x {          3.78809}
+set $m1-ViewWindow_0-view-eyep-y {          3.00747}
+set $m1-ViewWindow_0-view-eyep-z {         -22.3133}
+set $m1-ViewWindow_0-view-lookat-x {         0.469701}
+set $m1-ViewWindow_0-view-lookat-y {         0.435495}
+set $m1-ViewWindow_0-view-lookat-z {         0.432645}
+set $m1-ViewWindow_0-view-up-x {        -0.957335}
+set $m1-ViewWindow_0-view-up-y {        -0.236277}
+set $m1-ViewWindow_0-view-up-z {        -0.166382}
+set $m1-ViewWindow_0-view-fov {          2.55316}
+set $m1-ViewWindow_0-view-eyep_offset-x {-1.79769e+308}
+set $m1-ViewWindow_0-view-eyep_offset-y {-1.79769e+308}
+set $m1-ViewWindow_0-view-eyep_offset-z {-1.79769e+308}
+set $m1-ViewWindow_0-bgcolor-r {0}
+set $m1-ViewWindow_0-bgcolor-g {0}
+set $m1-ViewWindow_0-bgcolor-b {0}
+set $m1-ViewWindow_0-shading {}
+set $m1-ViewWindow_0-do_stereo {0}
+set $m1-ViewWindow_0-ambient-scale {1.0}
+set $m1-ViewWindow_0-diffuse-scale {1.0}
+set $m1-ViewWindow_0-specular-scale {0.4}
+set $m1-ViewWindow_0-emission-scale {1.0}
+set $m1-ViewWindow_0-shininess-scale {1.0}
+set $m1-ViewWindow_0-sbase {1.00}
+set $m1-ViewWindow_0-sr {1}
+set $m1-ViewWindow_0-do_bawgl {0}
+set $m1-ViewWindow_0-drawimg {-2147483647}
+set $m1-ViewWindow_0-saveprefix {}
+set $m1-ViewWindow_0-resx {}
+set $m1-ViewWindow_0-resy {}
+set $m1-ViewWindow_0-aspect {}
+set $m1-ViewWindow_0-aspect_ratio {}
+set $m1-ViewWindow_0-unused {1}
+set $m1-ViewWindow_0-unused {1}
+set $m1-ViewWindow_0-unused {1}
+set $m2-notes {}
+set $m2-show_status {1}
+set $m2-nodes-on {0}
+set $m2-nodes-as-disks {1}
+set $m2-edges-on {0}
+set $m2-use-normals {0}
+set $m2-use-transparency {0}
+set $m2-faces-on {0}
+set $m2-vectors-on {1}
+set $m2-normalize-vectors {-2147483647}
+set $m2-has_vec_data {1}
+set $m2-bidirectional {1}
+set $m2-arrow-heads-on {0}
+set $m2-def-color-r {0.91}
+set $m2-def-color-g {0.30}
+set $m2-def-color-b {0.30}
+set $m2-def-color-a {0.50}
+set $m2-node_display_type {Spheres}
+set $m2-edge_display_type {Lines}
+set $m2-active_tab {Vectors}
+set $m2-node_scale {0.005}
+set $m2-edge_scale {1.0}
+set $m2-vectors_scale {0.05}
+set $m2-show_progress {-2147483647}
+set $m2-interactive_mode {Interactive}
+set $m2-resolution {4}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m3-nodes-on {0}
+set $m3-nodes-as-disks {1}
+set $m3-edges-on {0}
+set $m3-use-normals {0}
+set $m3-use-transparency {0}
+set $m3-faces-on {0}
+set $m3-vectors-on {1}
+set $m3-normalize-vectors {0}
+set $m3-has_vec_data {1}
+set $m3-bidirectional {1}
+set $m3-arrow-heads-on {0}
+set $m3-def-color-r {0.30}
+set $m3-def-color-g {0.90}
+set $m3-def-color-b {0.30}
+set $m3-def-color-a {0.50}
+set $m3-node_display_type {Spheres}
+set $m3-edge_display_type {Lines}
+set $m3-active_tab {Vectors}
+set $m3-node_scale {0.03}
+set $m3-edge_scale {0.03}
+set $m3-vectors_scale {0.05}
+set $m3-show_progress {-2147483647}
+set $m3-interactive_mode {Interactive}
+set $m3-resolution {4}
+set $m4-notes {}
+set $m4-show_status {1}
+set $m4-filename {/usr/sci/data/Medical/mouse/activation/sr/64/mouse-heart-64-e2.lvv.fld}
+set $m5-notes {}
+set $m5-show_status {1}
+set $m5-filename {/usr/sci/data/Medical/mouse/activation/sr/torso/mouse-heart-surf.ts.fld}
+set $m6-notes {}
+set $m6-show_status {1}
+set $m6-use_interp {1}
+set $m6-use_closest {1}
+set $m6-closeness_distance {1.0e15}
+set $m7-notes {}
+set $m7-show_status {1}
+set $m7-use_interp {1}
+set $m7-use_closest {1}
+set $m7-closeness_distance {1.0e15}
+set $m8-notes {}
+set $m8-show_status {1}
+set $m8-typename2 {TriSurfField<Vector> }
+set $m9-notes {}
+set $m9-show_status {1}
+set $m9-nodes-on {0}
+set $m9-nodes-as-disks {0}
+set $m9-edges-on {0}
+set $m9-use-normals {1}
+set $m9-use-transparency {0}
+set $m9-faces-on {1}
+set $m9-vectors-on {0}
+set $m9-normalize-vectors {}
+set $m9-has_vec_data {0}
+set $m9-bidirectional {0}
+set $m9-arrow-heads-on {1}
+set $m9-def-color-r {0.30}
+set $m9-def-color-g {0.30}
+set $m9-def-color-b {0.30}
+set $m9-def-color-a {0.50}
+set $m9-node_display_type {Spheres}
+set $m9-edge_display_type {Lines}
+set $m9-active_tab {Faces}
+set $m9-node_scale {0.03}
+set $m9-edge_scale {0.015}
+set $m9-vectors_scale {0.30}
+set $m9-show_progress {}
+set $m9-interactive_mode {Interactive}
+set $m9-resolution {4}
+
+::netedit scheduleok

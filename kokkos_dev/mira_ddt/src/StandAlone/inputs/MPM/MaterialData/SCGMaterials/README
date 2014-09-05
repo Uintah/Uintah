@@ -1,0 +1,18 @@
+README
+------
+
+The include files found in this directory include an entire material definition 
+including all material constants and a complete constitutive model based on the 
+works of Daniel J. Steinberg, Stephen Cochran and Michael Guinan.  The parameters 
+are taken from the LLNL report number URCL-MA-106439.  
+
+A few things should be considered before using these material definitions.
+
+1) Values were copied verbatim from the report where possible
+2) Thermal conductivities were taken from Wikipedia.org on Feb. 18, 2012
+3) For mixtures/alloys the thermal conductivity of the major constitutent was used
+4) No parameters have been checked for physical validity
+5) The Mie Gruneisen EOS used in the paper contained a volume dependence of the Gruneisen Gamma
+that is not currently utilized in the Uintah Computational Framework, though the parameters have been included in the input files as comment lines
+6) Several of the materials were presented with rate dependent parameters that have been excluded from these files
+

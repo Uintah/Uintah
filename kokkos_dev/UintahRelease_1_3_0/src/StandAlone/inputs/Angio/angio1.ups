@@ -1,0 +1,101 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+       <title>First angio problem</title>
+   </Meta>
+
+   <SimulationComponent type="angio" />
+
+   <Time>
+       <maxTime>7.0</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.00001</delt_min>
+       <delt_max>0.5</delt_max>
+       <end_on_max_time_exactly>true</end_on_max_time_exactly>
+       <timestep_multiplier>0.6</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+       <filebase>Angio.uda</filebase>
+       <outputTimestepInterval>1</outputTimestepInterval>
+       <save label = "p.x"/>
+       <save label = "p.volume"/>
+       <save label = "p.tip0"/>
+       <save label = "p.tip1"/>
+       <save label = "p.parent"/>
+       <save label = "p.tofb"/>
+       <save label = "p.length"/>
+       <save label = "p.particleID"/>
+       <checkpoint cycle = "2" interval = "1.0"/>
+   </DataArchiver>
+
+    <Angio>
+       <time_integrator>explicit</time_integrator>
+       <interpolator>linear</interpolator>
+       <Growth_Parameter_a>568.5588</Growth_Parameter_a>
+       <Growth_Parameter_b>1.2832</Growth_Parameter_b>
+       <Growth_Parameter_x0>4.7771</Growth_Parameter_x0>
+       <Growth_Parameter_y0>38.7894</Growth_Parameter_y0>
+       <Branch_Parameter_a1>-1.2653</Branch_Parameter_a1>
+       <Branch_Parameter_a2>1.535</Branch_Parameter_a2>
+       <Branch_Parameter_a3>0.1108</Branch_Parameter_a3>
+    </Angio>
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <Angio>
+           <material>
+              <density>1000.0</density>
+              <fragment_file>five_frags.txt</fragment_file>
+           </material>
+       </Angio>
+
+    </MaterialProperties>
+       
+    <Grid>
+       <BoundaryConditions>
+          <Face side = "x-">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                        <value> [0.0,0.0,0.0] </value>
+                   </BCType>
+           </Face>
+           <Face side = "x+">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                    <value> [0.0,0.0,0.0] </value>
+                  </BCType>
+           </Face>
+           <Face side = "y-">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                      <value> [0.0,0.0,0.0] </value>
+                  </BCType>
+           </Face>                  
+          <Face side = "y+">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                     <value> [0.0,0.0,0.0] </value>
+                 </BCType>
+           </Face>
+           <Face side = "z-">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+           <Face side = "z+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>                           
+       </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>[0.0,0.0,0.0]</lower>
+              <upper>[1000.0,1000.0,10.0]</upper>
+              <resolution>[100,100,1]</resolution>
+              <patches>[2,2,1]</patches>
+              <extraCells>[0,0,0]</extraCells>
+           </Box>
+           <periodic>[1,1,0]</periodic>
+       </Level>
+    </Grid>
+
+</Uintah_specification>

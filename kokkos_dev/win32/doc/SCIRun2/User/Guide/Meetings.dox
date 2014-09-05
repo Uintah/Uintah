@@ -1,0 +1,58 @@
+/*!
+\page meetings CCA Group Meeting Schedule
+
+
+\section fall2005 Fall 2005
+
+\htmlonly
+<br>
+<center>
+<table border=0 cellpadding=2 cellspacing=2>
+  <tr>
+    <td>September 5</td>
+    <td colspan=2><b>canceled</b> (Labor Day)</td>
+  </tr>
+  <tr>
+    <td>September 22</td>
+    <td>Kosta</td>
+    <td>practice talk</td>
+  </tr>
+  <tr>
+    <td>October 3</td>
+    <td><b>canceled</b> (CSAFE site visit)</td>
+  </tr>
+  <tr>
+    <td>October 17</td>
+    <td>Keming</td>
+    <td>Parallel CCA design</td>
+  </tr>
+  <tr>
+    <td>October 31</td>
+    <td>Yarden</td>
+    <td>Plume framework</td>
+  </tr>
+  <tr>
+    <td>November 14</td>
+    <td><b>canceled</b> (Supercomputing 2005)</td>
+  </tr>
+  <tr>
+    <td>November 21</td>
+    <td>Kosta</td>
+    <td>Bridging Domain Specific Language (DSL)</td>
+  </tr>
+  <tr>
+    <td>November 28</td>
+    <td>Oscar</td>
+    <td>Smart Re-runs in Kepler... Past, Present, Future</td>
+  </tr>
+  <tr>
+    <td>December 12</td>
+    <td>Ayla</td>
+    <td>wxWidgets</td>
+  </tr>
+</table>
+</center>
+
+\endhtmlonly
+
+*/

@@ -1,0 +1,201 @@
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+#
+
+# SCI Network 1.0
+
+# Because this net only works for the 'radial' dataset, we can't use
+# the generic "sourceSettingsFile" call...  So we just print out the
+# error message.  This will need to be fixed at some point.
+
+if {[llength [array get env SCIRUN_DATA]] == 0} {
+
+   displayErrorWarningOrInfo "" error
+   displayErrorWarningOrInfo "*** Error: This net depends on the SCIRUN_DATA enviroment variable." error
+   displayErrorWarningOrInfo "*** Please exit, set it in your shell, and rerun." error
+   displayErrorWarningOrInfo "*** (e.g. setenv SCIRUN_DATA /usr/sci/data/SCIRunData/1.10.0)" error
+   displayErrorWarningOrInfo "" error
+   ::netedit scheduleok
+   return
+}
+
+set DATADIR $env(SCIRUN_DATA)
+
+if {![file isfile $DATADIR/radial/radial.settings]} {
+   displayErrorWarningOrInfo "" error
+   displayErrorWarningOrInfo "*** Error: $DATADIR/radial/radial.settings does not exist." error
+   displayErrorWarningOrInfo "*** Please exit and make sure that the environment varaible SCIRUN_DATA" error
+   displayErrorWarningOrInfo "*** points to a directory with a 'radial' subdirectory." error
+   displayErrorWarningOrInfo "" error
+   ::netedit scheduleok
+   return
+}
+
+displayErrorWarningOrInfo "*** Using SCIRun data directory: $DATADIR" info
+
+::netedit dontschedule
+
+global notes
+set notes ""
+
+set m0 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 222 424]
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 222 11]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 12 246]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 12 163]
+set m4 [addModuleAtPosition "SCIRun" "Render" "Viewer" 442 504]
+set m5 [addModuleAtPosition "SCIRun" "Fields" "SamplePlane" 240 92]
+set m6 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 222 161]
+set m7 [addModuleAtPosition "SCIRun" "Fields" "MapDataToMeshCoord" 222 355]
+set m8 [addModuleAtPosition "SCIRun" "Fields" "Unstructure" 222 289]
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 460 334]
+
+addConnection $m3 0 $m2 0
+addConnection $m2 0 $m0 1
+addConnection $m0 1 $m4 0
+addConnection $m1 0 $m5 0
+addConnection $m5 0 $m6 1
+addConnection $m1 0 $m6 0
+addConnection $m6 0 $m2 1
+addConnection $m7 0 $m0 0
+addConnection $m6 0 $m8 0
+addConnection $m8 0 $m7 0
+addConnection $m6 0 $m9 0
+addConnection $m9 0 $m4 1
+addConnection $m2 0 $m9 1
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-isoval {0.4260}
+set $m0-isoval-min {0.0864115}
+set $m0-isoval-max {1.41458}
+set $m0-isoval-typed {1.2}
+set $m0-isoval-quantity {30}
+set $m0-extract-from-new-field {1}
+set $m0-algorithm {0}
+set $m0-build_trisurf {0}
+set $m0-np {1}
+set $m0-active-isoval-selection-tab {1}
+set $m0-active_tab {MC}
+set $m0-update_type {on release}
+set $m0-color-r {0.4}
+set $m0-color-g {0.2}
+set $m0-color-b {0.9}
+set $m1-notes {}
+set $m1-show_status {1}
+set $m1-filename $DATADIR/radial/radial-distance.lvd.fld
+set $m2-notes {}
+set $m2-show_status {1}
+set $m2-isFixed {0}
+set $m2-min {        0.0864115}
+set $m2-max {          1.41458}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m3-tcl_status {Calling GenStandardColorMaps!}
+set $m3-positionList {}
+set $m3-nodeList {}
+set $m3-width {1}
+set $m3-height {1}
+set $m3-mapType {3}
+set $m3-minRes {12}
+set $m3-resolution {255}
+set $m3-realres {255}
+set $m3-gamma {0}
+set $m4-notes {}
+set $m4-show_status {1}
+$m4 ui
+set $m4-ViewWindow_0-pos {}
+set $m4-ViewWindow_0-caxes {1}
+set $m4-ViewWindow_0-iaxes {}
+set $m4-ViewWindow_0-view-eyep-x {           5.2125}
+set $m4-ViewWindow_0-view-eyep-y {          1.88035}
+set $m4-ViewWindow_0-view-eyep-z {          10.4233}
+set $m4-ViewWindow_0-view-lookat-x {         0.328577}
+set $m4-ViewWindow_0-view-lookat-y {        0.0158785}
+set $m4-ViewWindow_0-view-lookat-z {        -0.154507}
+set $m4-ViewWindow_0-view-up-x {          0.90916}
+set $m4-ViewWindow_0-view-up-y {       -0.0222251}
+set $m4-ViewWindow_0-view-up-z {        -0.415854}
+set $m4-ViewWindow_0-view-fov {          15.8887}
+set $m4-ViewWindow_0-view-eyep_offset-x {}
+set $m4-ViewWindow_0-view-eyep_offset-y {}
+set $m4-ViewWindow_0-view-eyep_offset-z {}
+set $m4-ViewWindow_0-bgcolor-r {0}
+set $m4-ViewWindow_0-bgcolor-g {0}
+set $m4-ViewWindow_0-bgcolor-b {0}
+set $m4-ViewWindow_0-shading {}
+set $m4-ViewWindow_0-do_stereo {0}
+set $m4-ViewWindow_0-ambient-scale {1.0}
+set $m4-ViewWindow_0-diffuse-scale {1.0}
+set $m4-ViewWindow_0-specular-scale {0.4}
+set $m4-ViewWindow_0-emission-scale {1.0}
+set $m4-ViewWindow_0-shininess-scale {1.0}
+set $m4-ViewWindow_0-sbase {0.40}
+set $m4-ViewWindow_0-sr {1}
+set $m4-ViewWindow_0-do_bawgl {0}
+set $m4-ViewWindow_0-drawimg {}
+set $m4-ViewWindow_0-saveprefix {}
+set $m4-ViewWindow_0-resx {}
+set $m4-ViewWindow_0-resy {}
+set $m4-ViewWindow_0-aspect {}
+set $m4-ViewWindow_0-aspect_ratio {}
+set $m4-ViewWindow_0-unused {1}
+set $m4-ViewWindow_0-unused {1}
+set $m5-notes {}
+set $m5-show_status {1}
+set $m5-sizex {20}
+set $m5-sizey {20}
+set $m5-axis {0}
+set $m5-padpercent {0}
+set $m5-data-at {Nodes}
+set $m6-notes {}
+set $m6-show_status {1}
+set $m6-use_interp {1}
+set $m6-use_closest {1}
+set $m6-closeness_distance {1.0e15}
+set $m7-notes {}
+set $m7-show_status {1}
+set $m7-coord {0}
+set $m8-notes {}
+set $m8-show_status {1}
+set $m9-notes {}
+set $m9-show_status {1}
+set $m9-nodes-on {0}
+set $m9-nodes-as-disks {0}
+set $m9-edges-on {0}
+set $m9-use-normals {0}
+set $m9-use-transparency {0}
+set $m9-faces-on {1}
+set $m9-vectors-on {0}
+set $m9-normalize-vectors {}
+set $m9-has_vec_data {0}
+set $m9-bidirectional {0}
+set $m9-arrow-heads-on {1}
+set $m9-def-color-r {0.5}
+set $m9-def-color-g {0.5}
+set $m9-def-color-b {0.5}
+set $m9-def-color-a {0.5}
+set $m9-node_display_type {Spheres}
+set $m9-edge_display_type {Lines}
+set $m9-active_tab {Faces}
+set $m9-node_scale {0.03}
+set $m9-edge_scale {0.015}
+set $m9-vectors_scale {0.30}
+set $m9-show_progress {}
+set $m9-interactive_mode {Interactive}
+set $m9-resolution {4}
+$m0 initialize_ui
+
+::netedit scheduleok

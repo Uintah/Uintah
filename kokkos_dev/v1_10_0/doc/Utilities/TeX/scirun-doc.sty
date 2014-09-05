@@ -1,0 +1,211 @@
+% -*-latex-*-
+%
+%  The contents of this file are subject to the University of Utah Public
+%  License (the "License"); you may not use this file except in compliance
+%  with the License.
+%
+%  Software distributed under the License is distributed on an "AS IS"
+%  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+%  License for the specific language governing rights and limitations under
+%  the License.
+%
+%  The Original Source Code is SCIRun, released March 12, 2001.
+%
+%  The Original Source Code was developed by the University of Utah.
+%  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
+%  University of Utah. All Rights Reserved.
+%
+
+%
+% Recommened markup for latex docs.
+%
+                                %
+% (Mostly) Short cuts  ==============================
+\newcommand{\SCI}{{\em SCI}}
+\newcommand{\sci}{\SCI}
+\newcommand{\scii}{SCI Institute}
+\newcommand{\BIOPSE}{{\em BioPSE}}
+\newcommand{\biopse}{\BIOPSE}
+\newcommand{\SR}{{\em SCIRun}}
+\newcommand{\sr}{\SR}
+\newcommand{\eg}{{\em e.g.,}}
+\newcommand{\ie}{{\em i.e.,}}
+\newcommand{\etc}{{\em etc.}}
+\newcommand{\etal}{{\em et al.}}
+\newcommand{\degrees}{{$^{\circ}$}}
+\newcommand{\splitline}{\begin{center}\rule{\columnwidth}{.7mm}\end{center}}
+\newcommand{\X}[1]{#1\index{#1}}
+\newcommand{\rob}{Rob MacLeod (macleod@cvrti.utah.edu)}
+\newcommand{\ted}{Ted Dustman (dustman@cvrti.utah.edu)}
+\newcommand{\blythe}{Blythe D Nobleman (blythe@cs.utah.edu)}
+\newcommand{\srig}{\sr{} Installation Guide}
+\newcommand{\srug}{\sr{} User's Guide}
+\newcommand{\srdg}{\sr{} Developer's Guide}
+
+% Literal ~ character
+\newcommand{\ltilde}{\textasciitilde}
+
+% Encloses its argument between angle brackets.
+\newcommand{\ab}[1]{\latexhtml{\textless{}#1\textgreater}{<#1>}}
+
+% Inserts a left angle bracket.
+\newcommand{\la}{\latexhtml{\textless}{<}}
+
+% Inserts a right angle bracket.
+\newcommand{\ra}{\latexhtml{\textgreater}{>}}
+
+% Mark up commands =================================
+
+% Url
+%\newcommand{\url}[1]{#1}
+
+% ip address
+\newcommand{\ipaddr}[1]{#1}
+\newcommand{\localhost}{\ipaddr{127.0.0.1}}
+
+% Acronym
+\newcommand{\acronym}[1]{#1}
+
+% Predefined acronyms
+\newcommand{\gui}{\acronym{GUI}}
+\newcommand{\tcl}{\acronym{TCL}}
+\newcommand{\xml}{\acronym{XML}}
+\newcommand{\pse}{\acronym{PSE}}
+
+% Markup the first time use of term that may be unfamiliar to the
+% reader. 
+\newcommand{\dfn}[1]{\emph{#1}}
+
+% In the next command #1 is the term and #2 is the shortcut or acronym that
+% will be used in the rest of the document. 
+\newcommand{\dfna}[2]{\emph{#1} (#2)}
+
+% Directory name markup.
+\newcommand{\directory}[1]{\texttt{#1}}
+
+% Markup a file name.
+\newcommand{\filename}[1]{\texttt{#1}}
+
+% Markup text which is the name of a command.
+\newcommand{\command}[1]{\texttt{#1}} 
+
+% Command option.
+\newcommand{\option}[1]{\texttt{#1}}
+
+% Markup text typed at the keyboard.
+\newcommand{\keyboard}[1]{\texttt{#1}} 
+
+% Parameterized text - marks up text that is to be
+% substituted for by the reader.
+\newcommand{\ptext}[1]{\textit{#1}}
+
+% Markup text the user might see on his screen.
+\newcommand{\screen}[1]{\texttt{#1}}
+
+% Markup the name of a GUI menu.
+\newcommand{\guimenu}[1]{\textbf{#1}}
+
+% Markup the name of a GUI menu.
+\newcommand{\menu}[1]{\guimenu{#1}}
+
+% Markup a gui menu item name.
+\newcommand{\guimenuitem}[1]{\textbf{#1}}
+
+% Markup a menu item name.
+\newcommand{\menuitem}[1]{\guimenuitem{#1}}
+
+% Markup name of a ui button.
+\newcommand{\guibutton}[1]{\textbf{#1}}
+
+% Markup name of a ui button.
+\newcommand{\button}[1]{\guibutton{#1}}
+
+% Markup name of a gui text item.
+\newcommand{\guitext}[1]{\textit{#1}}
+
+% Markup name of a gui label.
+\newcommand{\guilabel}[1]{\textbf{#1}}
+
+% GUI variable
+\newcommand{\guivar}[1]{\texttt{#1}}
+
+% Scirun port
+\newcommand{\srport}[1]{\texttt{#1}}
+
+% Sockets port
+\newcommand{\port}[1]{\texttt{#1}}
+
+% Socket
+\newcommand{\socket}[2]{\texttt{#1:#2}}
+
+% Variable
+\newcommand{\variable}[1]{\texttt{#1}}
+
+% Data type
+\newcommand{\datatype}[1]{\texttt{#1}}
+
+% Markup an inline code fragment.
+\newcommand{\icode}[1]{\texttt{#1}}
+
+% Markup a module name.
+\newcommand{\module}[1]{\texttt{#1}}
+
+% Markup a sr package name.
+\newcommand{\package}[1]{\texttt{#1}}
+
+% Markup a sr category name.
+\newcommand{\category}[1]{\texttt{#1}}
+
+% Call attention to some useful bit of information.
+\newcommand{\note}[1]{\emph{Note: #1}} 
+
+% Call attention to a warning.
+\newcommand{\warning}[1]{\emph{Warning: #1}} 
+
+% Call attention to a tip.
+\newcommand{\tip}[1]{\emph{Tip: #1}} 
+
+% Env variable markup.
+\newcommand{\envvar}[1]{\texttt{#1}}
+
+% Markup for the title of a book or article or whatever.
+\newcommand{\etitle}[1]{\texttt{#1}}
+
+% Markup name of a latex section.  First arg is section name.  Second arg
+% is section's label.  When processed with latex, the section
+% name is emphasized.  When processed with latex2html section name is made
+% into a link to section.
+\newcommand{\secname}[2]{\latexhtml{\emph{#1}}{\htmlref{#1}{#2}}}
+
+% Section ref command.  Use of this command
+% in place of \ref to reference sections (subsections etc.) will
+% create a more web friendly version of your document.
+% The command's first argument is the link text (used only on the html
+% page) and the second argument is the section's label
+\newcommand{\secref}[2]{\hyperref[ref]{\emph{#1}}{Section~}{}{#2}}
+
+% A latex command
+\newcommand{\latexcommand}[1]{\texttt{\textbackslash#1}}
+
+% A latex package
+\newcommand{\latexpackage}[1]{\textit{#1}}
+
+% Use these in place of missing content.
+\newcommand{\missing}[1]{\emph{#1 - Coming Soon.}}
+
+% Use this to make note of incomplete content.
+\newcommand{\incomplete}{\emph{More Comming Soon.}}
+
+% Mark up a mail address
+\newcommand{\mailto}[1]{\texttt{#1}}
+
+% Sci Urls ========================================= 
+
+% www style urls.
+\newcommand{\scisoftware}{http://software.sci.utah.edu}
+\newcommand{\scisoftwareurl}{\htmlurl{\scisoftware}}
+\newcommand{\sciurl}{\htmlurl{http://www.sci.utah.edu}}
+\newcommand{\scidocurl}{\htmlurl{\scisoftware{}/doc}}
+\newcommand{\scidocurlplus}[1]{\htmlurl{\scisoftware{}/doc/#1}}
+\newcommand{\bugsurl}{\htmlurl{\scisoftware{}/bugzilla}}
+\newcommand{\scisoftwarearchiveurl}{\htmlurl{\scisoftware{}/archive\_entry.html}}

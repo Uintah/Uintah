@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- New JP8 constants, inlet fuel temperature = 419.4444 density = 0.930025 -->
+<Uintah_Include>
+  <defaultValue name="Hl">0.0</defaultValue>
+  <defaultValue name="Fvar">0.0</defaultValue>
+  <derivedValue name="heat_capac_Cv">[heat_capac]-8314*[mix_mol_wt]</derivedValue>
+  <derivedValue name="gamma">[heat_capac]/[heat_capac_Cv]</derivedValue>
+  <constantValue name="viscosity">0.000020</constantValue>
+  <constantValue name="thermal_conductivity">0.1</constantValue>
+  <derivedValue name="reference_Temp">300*(1-{F})+419.4444*{F}</derivedValue>
+  <derivedValue name="reference_heat_capac_Cp">1009.6699999996*(1-{F}) + 1971.65999998987*{F}</derivedValue>
+  <derivedValue name="reference_mix_mol_wt">0.034661600*(1-{F}) + 0.0312402*{F}</derivedValue>
+  <derivedValue name="reference_heat_capac_Cv">[reference_heat_capac_Cp]-8314*[reference_mix_mol_wt]</derivedValue>
+  <derivedValue name="reference_gamma">[reference_heat_capac_Cp]/[reference_heat_capac_Cv]</derivedValue>
+  <filename>inputs/ARCHES/NewStaticMixingTables/JP8_reaction.tbl</filename>
+</Uintah_Include>

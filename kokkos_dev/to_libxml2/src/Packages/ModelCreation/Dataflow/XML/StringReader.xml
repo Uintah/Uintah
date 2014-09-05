@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="StringReader" category="DataIO">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      This module reads a text file into a string.
+    </summary>
+    <description>
+      This module reads a text file from disk. The file needs to be an ascii text file and does not to be formatted in a special way like all other SCIRun file types.
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>String</name>
+        <datatype>SCIRun::String</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+      --
+    </description>
+    <parameter>
+      <widget>Place Widget Name Here</widget>
+      <label>Place Label Name Here</label>
+    </parameter>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

@@ -1,0 +1,8 @@
+To configure Uintah, use:
+../src/configure  --enable-64bit --enable-package=Uintah --enable-debug 
+
+For an optimized 64bit build, use:
+./src/configure  --enable-64bit --enable-package=Uintah \
+ '--enable-optimize=-Ofast -G0 -OPT:Olimit=20000 -IPA:plimit=20000' \
+ --disable-sci-malloc --enable-assertion-level=0  
+

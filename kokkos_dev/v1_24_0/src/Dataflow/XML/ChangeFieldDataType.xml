@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+<component name="ChangeFieldDataType" category="FieldsData">
+  <overview>
+    <authors>
+      <author>McKay Davis</author>
+    </authors>
+    <summary>
+      <p>
+        ChangeFieldDataType is used to change the type of data associated with the field elements.
+      </p>
+    </summary>
+    <description>
+      <p>
+        ChangeFieldDataType allows the user to change the datatype
+        at each field data_at location.  This module also attempts to convert the
+        data in the field to the new type, if possible.  If no
+        conversion is possible, the output field will contain default
+        zero values.  Note that conversion from a large datatype to a
+        smaller datatype usually results in a loss of precision.
+      </p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Input Field</name>
+        <datatype>SCIRun::Field</datatype>
+	<description>
+          <p>
+            The field to be edited.
+          </p>
+        </description>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Output Field</name>
+        <datatype>SCIRun::Field</datatype>
+        <description>
+          <p>
+            The field with the changed Typename.
+          </p>
+        </description>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+      <p>
+      </p>
+    </description>
+    <parameter>
+      <widget>Optionmenu</widget>
+      <label>Typename</label>
+      <description>
+        <p>
+          The field's datatype.  Includes information about the type
+          of mesh (TetVolField, LatVolField, TriSurfField, etc.) as well as the
+          type of the data (unsigned char, double, Vector, Tensor, etc.).
+        </p>
+      </description>
+    </parameter>
+  </gui>
+  <testing>
+  </testing>
+<nets>
+<net id="ChangeFieldDataType">
+<title>ChangeFieldDataType Regression Test</title>
+
+<p>Here we convert the input from a field of doubles to a field of short
+integers.  Because the original field ranges from around -6.0 to 5.0,
+we first scale the data values such that they fall between 0 and 255.
+Otherwise the output field would be mostly truncated to integers
+between -6 and 4.</p>
+
+<p>Note that the scale and data type change could be handled by the
+TransformData module by selecting 'Short' as the output type and using
+a function that first converted the data values to the desired range.</p>
+
+<p>See also <modref package="SCIRun" name="TransformData"/>, <modref package="SCIRun" name="TransformData2"/>, <modref package="SCIRun" name="TransformData3"/>.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsData/ChangeFieldDataType.net.</p>
+
+</net>
+</nets>
+</component>
+

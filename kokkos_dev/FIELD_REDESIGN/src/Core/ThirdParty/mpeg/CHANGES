@@ -1,0 +1,92 @@
+2/24/93 (MPEG Version 1.1)
+
+CODE:
+
+(transform.c) The encoding non-intra quantizer function has been
+changed to reflect the reference encoder.  This is not to say that the
+previous quantizer was incorrect, significantly different, or even
+worse; there are advantages (statistical) and disadvantages (biased).
+The short.mpg and short.trace have been modified accordingly.
+
+(mpeg.c) The default output name is componentfile0.mpg rather than
+componentfile0.M
+
+(stat.c) The statistics now include mean-removed squared error. 
+MRSNR calculated based on (E[X^2]-E[X]^2)/E[error^2]
+SNR calculated based on E[X^2]/E[error^2].
+PSNR calculated based on 255*255/E[error^2].
+
+DOCUMENTATION:
+
+The colorspace section was edited to include more precise matrices and
+a description of CCIR-601 versus JFIF style YUV->RGB conversion.
+
+The description on motion estimation is increased, for example, it
+describes telescopic motion estimation.  The motion estimation search
+window for frame distances greater than one is anchored on the
+location of the previous frame's motion vector.
+
+Some printers (non-laserwriters) have been unable to cope with the
+doc.ps files, specifically problems occurred in the postscript include
+files.  For some reason, Apple laserwriters and ghostscript do not
+seem to be afflicted by the above problem.  We have found a change in
+the dvi2ps postscript header that seems to fix this problem for Sun
+newsprint (and probably other) printers as well.  If this still is a
+problem, the raw tex and .ps files are available in the file
+MPEGDOCv1.1.tar.Z.  Caution: the special scaling command has different
+relative scales for different dvi2ps, dvips programs - can be a factor
+of 100 off depending on the version of the header file.
+
+3/15/93
+
+Changed extend_mask[8] to extend{mask[7] in the codec.c.
+Changed 0x3fff to 0x3ffff in the variable rate buffer read/save in marker.c.
+
+5/29/93
+
+Added a greater motion search window through the searchlimit command.
+This requires a scan of the motion vector field for the greatest
+displacements.  We use the variable flag DynamicMVBound to indicate
+that the motion vector field is searched.  Then the procedure
+MVBoundIndex is called to calculate the forward and backward indices.
+
+Added a new flag MVTelescope which enables telescopic motion
+estimation if set.  In general MVTelescope is always set, though can
+be disabled if desired.
+
+Added XING compatibility, or what I hope is XING compatible.  Changes
+made to mpeg.c marker.c.
+
+6/13/93
+
+Completed changes to XING compatibility.  Tested on a short sequence.
+Added the changes to the documentation, along with clarification of
+MPEG sampled 4:2:0 versus CCIR sampled 4:1:1, along with the issues of
+YUV versus YCbCr.  The library function rint which rounds a floating
+point value to the nearest integer has been replaced by a macro
+expansion to improve compatibility.
+
+8/16/93
+
+Changed a small line in me.c that was incorrect even though it was
+never actually used (bounds checking).
+
+*IMPORTANT* Changed a line in the skipped blocks to reset the DC
+prediction.  May cause slight problems with old files (a bit of block
+flicker), but shouldn't happen very often - the precise anamoly is
+when a motion compensated block is coded, followed by skipped blocks,
+the next block - if intra-coded - has an incorrect DC prediction.
+
+Changed default Brate from 0x3fff to 0x3ffff in mpeg.c; a small change
+that does not affect software decoding.
+
+(9/6/93 version 1.2 released)
+
+9/30/93 Version 1.2.1
+
+marker.c: Changed the loading of non-default MPEG quantization
+matrices into a zig-zag fashion.
+
+4/4/94 Changed the transform.c #ifdef to be VERSION1, eliminating a
+compiler problem on the SGI machines.
+

@@ -1,0 +1,20 @@
+<definition class="EyeCheckButton" state="normal">
+  <object class="CheckButtonTemplate">
+    <var name="ImageFrameButton::on_filename" propagate="yes" overwrite="no">eye.png</var>
+    <var name="ImageFrameButton::off_filename" propagate="yes" overwrite="no">closedeye.png</var>
+
+    <definition class="CheckButtonTemplate::OffObject"> 
+      <object class="Texture"> 
+        <var name="file">$ImageFrameButton::off_filename</var>
+        <var name="color">#FFFFFFFF</var>
+      </object>
+    </definition>
+    
+    <definition class="CheckButtonTemplate::OnObject"> 
+      <object class="Texture"> 
+        <var name="file">$ImageFrameButton::on_filename</var>
+        <var name="color">#FFFFFFFF</var>
+      </object>
+    </definition>
+  </object>
+</definition>

@@ -1,0 +1,57 @@
+The file "header_list.f90" contains all variables such as atom coordinates, charges etc
+The file "allocating.f90" contains subroutine that manage the memory (allocate arrays)
+The file "variables_smpe.f90"  contains all variables required for smpe Ewald
+The file "slow_fourier_ewald.f90" contains a subroutine that compute Ewald sumation in a slow way (no smpe)
+The "main.f90" is the main code.
+
+Files that contains other unrelated to smpe things such as input output or math operations:
+c_functions.c
+math.f90
+IO_module.f90 (subroutine to read write data)
+random_generator.f90  (subroutine wit hrandom generator)
+periodic_boundary.f90 (compute the distance between atoms subject to periodic boundary conditions)
+
+----
+The important files that are actually related to smpe: 
+fft-3d.f90 - does a 3D Fourier transform; these are from dl-poly program; they are the fastest fft addapted for SERIAL molecular dynamics
+spline2.f90 - contains subroutine that show how to compute the spline functions in real and complex space
+smpe_utility_pack.f90 - subroutines that actually does the smpe operations
+smpe_driver.f90 - the main driver subroutine that does smpe; mostly call subroutines from smpe_utility_pack.f90
+ Folloowing what is in subroutine "smpe_Q" from the file "smpe_driver.f90" one can see the required instructions to do smpe
+
+----------
+
+Makefile : compile
+make 
+make a.out
+1) To compile the code
+make
+make a.out
+2) To clean the directory of all unwanted files
+make clean
+3) To clean the directory of all unwanted files and of executable
+make again
+
+-----
+
+input files:
+in.in : the required parameters 
+1) i_type_EWALD_CTRL = 1 (for smpe Ewald) or 2 (for slow (non-smpe) Ewald)
+2) nfftx,nffty,nfftz : The grid points to compute the reqular grid charge. Typicall 1 point / Angstom. Must be 2^n
+3) order splines along xx yy zz directions  for smpe : could be 4, 6 or 8
+4) k_max_x,k_max_y,k_max_z : The k vectors for slow Ewald ; could be any positive inveger. 
+
+config.small or config.large: The actual coordinates of atoms;
+NOTE: after reading the config I randomize it a bit to make sure I won;t get zero due to symmetry.
+
+----------
+
+To run smpe one needs the grid points nfftx,nffty,nfftz and the order of spline functions
+The Ewald spliting parameter alpha = 0.25d0 and for now it is hard coded; let's keep it for a while unchanged.
+
+---
+
+The file "slow_fourier_ewald.f90" contains a subroutine which evaluate Ewald in classical (slow) way as in Lucretius. 
+It could be used to validate smpe.
+
+-----

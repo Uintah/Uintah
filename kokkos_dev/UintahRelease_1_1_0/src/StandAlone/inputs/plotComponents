@@ -1,0 +1,131 @@
+#!/bin/csh
+#__________________________________
+#  This script parses output from sus 
+#  and plots the various component times using gnuplot.
+#  Note you must have set the environmental variable:
+#
+#  SCI_DEBUG ComponentTimings:+
+#
+#  Usage:
+#     plotComponents <sus output file> <dump postScript File (y/Y), default is no>
+#
+#  This requires gnuplot 3.8 or greater.
+#__________________________________
+
+if( $#argv == 0 ) then
+  echo "plotComponents <sus output file> <dump postScript File (y/Y), default is no>"
+  exit(1)
+endif
+set out = $argv[1]
+if ( !(-e $out) ) then
+    echo "Couldn't find your file $out"
+  exit(1)
+endif
+
+grep -q TaskGlobalCom $out
+if($status) then
+  echo "Couldn't task communication output in the output file"
+  echo "You must have the environmental variable:
+  echo "    SCI_DEBUG ComponentTimings:+"
+  echo "set.
+  exit
+endif
+    
+
+set hardcopy = "n"
+if ( $#argv == 2 ) then
+  set hardcopy = $argv[2]
+endif 
+
+unalias rm
+#__________________________________
+# remove your droppings and make a copy of the output file
+rm -f gp .data .tmp .data.sed
+
+cp $out .tmp
+#__________________________________
+# extract the average and maximum values data
+echo "Now extracting the data"
+
+grep elap           .tmp | cut -d"=" -f4 | cut -d"," -f1 >& .elapsedTime
+grep TaskExec       .tmp | awk -F : '{print $2,$3}'| tr -d "[:alpha:]" >& .exec
+grep TaskGlobalComm .tmp | awk -F : '{print $2,$3}'| tr -d "[:alpha:]" >& .global
+grep TaskLocalComm  .tmp | awk -F : '{print $2,$3}'| tr -d "[:alpha:]" >& .local
+grep TaskWaitComm   .tmp | awk -F : '{print $2,$3}'| tr -d "[:alpha:]" >& .wait
+
+set procs   = `grep processors $out| cut -d" " -f 2`
+set machine = `grep Machine    $out | cut -d":" -f 2`
+set date    = `grep -m1 Date   $out | cut -d" " -f2-8,10`
+
+paste -d "  " .elapsedTime .exec .global .local .wait>& .data
+
+#__________________________________
+# bulletproofing
+# - delete any lines with alphabetical letters
+# - delete any line without 5 columns
+sed '/[:alpha:]/d' .data >& .data.sed
+awk 'NF == 9 {print $1, " ", $2, " ", $3, " ", $4, " ", $5, " ", $6, " ", $7, " ", $8, " ", $9}' .data.sed >& .data
+
+rm -f .elapsedTime .exec .global .local .wait .data.sed
+
+echo "Done extracting data"
+
+echo "" > gp
+#__________________________________
+# if making a hardcopy
+if( $hardcopy == "y" || $hardcopy == "Y" ) then 
+echo "Generating the postscript file plotStats.ps"
+/bin/rm gp
+cat > gp << fin
+set terminal x11 1
+set terminal postscript color solid "Times-Roman" 12
+set output "plotComp.ps"
+fin
+endif
+
+#__________________________________
+# generate the  plot script
+cat >> gp << fin
+set multiplot
+set size 1.0,0.5 # for three plots
+set origin 0.0,0.5
+set autoscale
+
+set grid xtics ytics
+set title "$date : $machine : $procs Processors \n Averaged over all processors"
+set xlabel 'Elaspsed Time'
+set ylabel 'Time'
+
+plot '.data' using 1:2 t 'Task Execution' with lines,\
+     '.data' using 1:4 t 'Global Communication' with lines,\
+     '.data' using 1:6 t 'Local Communication' with lines,\
+     '.data' using 1:8 t 'Waiting' with lines 
+     
+set origin 0.0,0.0
+set title 'Maximum'
+plot '.data' using 1:3 t 'Task Execution' with lines,\
+     '.data' using 1:5 t 'Global Communication' with lines,\
+     '.data' using 1:7 t 'Local Communication' with lines,\
+     '.data' using 1:9 t 'Waiting' with lines 
+set nomultiplot
+
+fin
+
+if( $hardcopy == "n") then
+  echo "pause -1 'Hit return to exit'" >> gp
+endif
+
+#__________________________________
+# plot it up
+gnuplot gp
+
+if($hardcopy == "y" || $hardcopy == "Y") then
+  convert plotComp.ps plotComp.jpg
+  mogrify -rotate 90 plotComp.jpg
+endif
+#__________________________________
+# clean up
+chmod g+rw gp .data
+rm -f gp .data
+
+exit

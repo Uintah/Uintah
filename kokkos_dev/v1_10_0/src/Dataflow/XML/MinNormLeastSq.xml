@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="MinNormLeastSq" category="Math">
+  <overview>
+    <authors>
+      <author>David Weinstein</author>
+    </authors>
+    <summary>
+      This module computes the minimal norm, least squared solution to a
+        nx3 linear system.
+    </summary>
+    <description>
+      <p>This module computes the minimal norm, least squared solution to a
+      nx3 linear system.</p>
+
+      <p>Given four input ColumnMatrices (v0,v1,v2,b),
+        find the three coefficients (w0,w1,w2) that minimize:
+        | (w0v0 + w1v1 + w2v2) - b |.
+      If more than one minimum exisits (the system is under-determined),
+        choose the coefficients such that (w0,w1,w2) has minimum norm.
+      We output the vector (w0,w1,w2) as a row-matrix,
+        and we ouput the ColumnMatrix (called x), which is: 
+        | w0v0 + w1v1 + w2v2 |.</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>BasisVec1(Col)</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>BasisVec2(Col)</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>BasisVec3(Col)</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>TargetVec(Col)</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>WeightVec(Col)</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>ResultVec(Col)</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

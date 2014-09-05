@@ -1,0 +1,91 @@
+/*
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+*/
+
+
+} // End namespace SCIRun
+
+The String class is a useful tool for manipulating strings.  To avoid
+namespace SCIRun {
+called clString (for Class Library String).
+
+The string operates through a reference counting model to avoid
+excessive copying and to provide automatic garbage collection.
+
+Interface:
+
+    // Constructores
+    clString();
+    clString(const clString&);
+    clString(const char*);
+    ~clString();
+
+    // I/O
+    friend ostream& operator<<(ostream& s, const clString&);
+    friend istream& operator>>(istream& s, clString&);
+
+    // Comparison
+    clString& operator=(const clString& str);
+    clString& operator=(const char*);
+    int operator==(const char*) const;
+    int operator==(const clString&) const;
+    int operator!=(const char*) const;
+    int operator!=(const clString&) const;
+    int operator<(const char*) const;
+    int operator<(const clString&) const;
+    int operator>(const char*) const;
+    int operator>(const clString&) const;
+
+    // Append
+    clString operator+(const char*) const;
+    clString operator+(const clString&) const;
+    clString operator+=(const char*);
+    clString operator+=(const clString&);
+
+    // Convert to char*
+    char* operator()() const;
+
+    // For operating on characters in the string
+    // Get ith character
+    char operator()(int i);
+    // Is ith character alphabetic?
+    int is_alpha(int i);
+    // Is ith character a digit?
+    int is_digit(int i);
+    // Find where srch appears in the String.  -1 indicates failure.
+    int index(const char srch) const;
+    // The length of the string
+    int len();
+    // A part of the string
+    // start=0 is first character
+    // length=-1 means to end of string
+    clString substr(int start, int length=-1);
+
+    // Convert to double/int.  Returns 1 if ok, 0 if bad
+    int get_double(double&) const;
+    int get_int(int&) const;
+
+    // For the HashTable class
+    int hash(int hash_size) const;
+
+    // Remove directory name
+    friend clString basename(const clString&);
+
+
+// Build a string from an int/double
+clString to_string(int);
+clString to_string(double);
+

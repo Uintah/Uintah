@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/component.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<component name="SetupBEMatrix" category="Forward">
+  <overview>
+    <authors>
+      <author>Alexei Samsonov</author>
+    </authors>
+    <summary>The module takes two triangulated meshes representing two
+    closed surfaces, one inside the other, and calculates transfer
+    matrix to transfer potential values from inner to outer surface
+    </summary>
+    
+    <description>
+      <p>Version Date: March 2001</p><p>Version: 1.0</p>
+      <p>The basic idea underlying the module implementation was taken
+      from [1]. The methods in numerical estimation of integral parts
+      of the problem setup were provided by Rob McLeod and Guo Tang</p>
+      
+      <p>References:
+      </p>
+      <orderedlist>
+	<listitem>
+	  <p>R.C.Barr, et.al., "Relating Epicardial to Body Surface
+	    Potential Distributions by Means of Transfer Coefficients
+	    Based on Geometry Measurements", IEEE Trans Biom Eng, v.24,
+	    no.1, Jan. 1977</p>
+	</listitem>
+      </orderedlist>      
+      <note>
+	<p>The actual computation of the matrix is done by the
+	  BioPSE::Algorithm::BuildBEMatrix::build_BEMatrix()</p>
+      </note>
+    </description>
+  </overview>
+
+  <io>
+    <inputs lastportdynamic="no">
+      <!-- one of (device port file) -->
+      <port>
+	<name>Inner Surface</name>
+	<description>
+	  <p>Takes a handle to Field object representing inner surface</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+	<name>Outer Surface</name>
+	<description>
+	  <p>Takes a handle to Field object representing outer surface</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+
+    <outputs>
+      <!-- one of (device port file) -->
+      <port>
+	<name>Zbh Matrix</name>
+	<description>
+	  <p>Sends a handle to the transfer matrix</p>
+	  <note>
+	    <p>The handle is to base class of DenseMatrix (Matrix)</p>
+	  </note>
+	</description>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+	<name>Outer Surf with Pots</name>
+	<description>
+	  <p>Sends handle to the field object containing outer surface
+	  and calculated potentials at the nodes. If no potentials
+	  were supplied on inner surface, the field contains zero potentials</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+	<componentname>ShowField</componentname>
+      </port>
+    </outputs>
+  </io>
+
+  <gui>
+    <description>
+      <p></p>
+    </description>
+    <parameter>
+      <widget></widget>
+      <datatype></datatype>
+      <label></label>
+      <description>
+	<p></p>
+      </description>
+    </parameter>
+    <img></img>
+  </gui>
+  <testing>
+  </testing>
+</component>

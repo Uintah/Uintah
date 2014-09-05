@@ -1,0 +1,109 @@
+# SCIRun Network v1.23.0
+
+#######################################################################
+# Check environment variables.  Ask user for input if not set:
+set results [sourceSettingsFile]
+set DATADIR [lindex $results 0]
+set DATASET [lindex $results 1]
+######################################################################
+
+set name {Main}
+set bbox {10 10 394 243}
+set creationDate {Wed Dec 01 2004}
+set creationTime {22:40:56}
+set runDate {}
+set runTime {}
+set notes {}
+
+# Create a Teem->DataIO->NrrdReader Module
+set m1 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 10 10]
+
+# Create a VS->Render->ICUMonitor Module
+set m2 [addModuleAtPosition "VS" "Render" "ICUMonitor" 70 186]
+
+# Create a Teem->DataIO->NrrdReader Module
+set m3 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 229 49]
+
+# Create the Connections between Modules
+set c1 [addConnection $m1 0 $m2 0]
+set c2 [addConnection $m3 0 $m2 1]
+
+# Set GUI variables for the Teem->DataIO->NrrdReader Module
+set $m1-filename $DATADIR/$DATASET/CH105_040412_1016_w_100.nrrd
+set $m3-filename $DATADIR/$DATASET/CH105_040412_1051_w_107.nrrd
+
+# Set GUI variables for the VS->Render->ICUMonitor Module
+set $m2-time {0.008}
+set $m2-plot_count {6}
+set $m2-nw_label-0 {I}
+set $m2-sw_label-0 {F}
+set $m2-label-0 {ECG}
+set $m2-min_ref_label-0 {}
+set $m2-max_ref_label-0 {}
+set $m2-min-0 {-20}
+set $m2-max-0 {30}
+set $m2-idx-0 {6}
+set $m2-plot_color-0-r {0.91}
+set $m2-plot_color-0-g {0.63}
+set $m2-plot_color-0-b {0.0}
+set $m2-nw_label-1 {APB}
+set $m2-sw_label-1 {}
+set $m2-label-1 {APB}
+set $m2-min_ref_label-1 {0}
+set $m2-max_ref_label-1 {120}
+set $m2-min-1 {0}
+set $m2-max-1 {120}
+set $m2-idx-1 {0}
+set $m2-plot_color-1-r {0.11}
+set $m2-plot_color-1-g {0.67}
+set $m2-plot_color-1-b {0.5}
+set $m2-nw_label-2 {PAP}
+set $m2-sw_label-2 {}
+set $m2-label-2 {PAP}
+set $m2-min_ref_label-2 {0}
+set $m2-max_ref_label-2 {30}
+set $m2-min-2 {0}
+set $m2-max-2 {30}
+set $m2-idx-2 {3}
+set $m2-plot_color-2-r {1.0}
+set $m2-plot_color-2-g {1.0}
+set $m2-plot_color-2-b {0.0}
+set $m2-nw_label-3 {}
+set $m2-sw_label-3 {}
+set $m2-label-3 {SvO2}
+set $m2-min_ref_label-3 { 70}
+set $m2-max_ref_label-3 { 75}
+set $m2-min-3 {70}
+set $m2-max-3 {75}
+set $m2-idx-3 {4}
+set $m2-plot_color-3-r {0.31}
+set $m2-plot_color-3-g {0.56}
+set $m2-plot_color-3-b {0.78}
+set $m2-nw_label-4 {}
+set $m2-sw_label-4 {}
+set $m2-label-4 {Hem Bal}
+set $m2-min_ref_label-4 {-10}
+set $m2-max_ref_label-4 {20}
+set $m2-min-4 {-10}
+set $m2-max-4 {20}
+set $m2-idx-4 {7}
+set $m2-plot_color-4-r {1.0}
+set $m2-plot_color-4-g {0.0}
+set $m2-plot_color-4-b {1.0}
+set $m2-nw_label-5 {}
+set $m2-sw_label-5 {}
+set $m2-label-5 {grams}
+set $m2-min_ref_label-5 {0.04}
+set $m2-max_ref_label-5 {0.09}
+set $m2-min-5 {0.04}
+set $m2-max-5 {0.09}
+set $m2-idx-5 {8}
+set $m2-plot_color-5-r {0.0}
+set $m2-plot_color-5-g {0.37}
+set $m2-plot_color-5-b {1.0}
+
+# Open the VS->Render->ICUMonitor UI
+$m2 initialize_ui
+
+
+::netedit scheduleok

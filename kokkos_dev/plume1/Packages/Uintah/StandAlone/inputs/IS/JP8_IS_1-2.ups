@@ -1,0 +1,284 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+        <title>Compaction of cylinders using both impm and mpm</title>
+   </Meta>
+
+   <SimulationComponent>
+       <type>switcher</type>
+       <subcomponent>
+           <SimulationComponent>
+               <type> rigidmpmice </type>
+           </SimulationComponent>
+           <input_file> inputs/IS/JP8_IS_lowres1.ups</input_file>
+       </subcomponent>
+       <subcomponent>
+           <SimulationComponent>
+               <type> mpmice </type>
+           </SimulationComponent>
+           <input_file> inputs/IS/JP8_IS_lowres2.ups</input_file>
+       </subcomponent>
+   </SimulationComponent>
+
+  <Time>
+    <maxTime>            1.0         </maxTime>
+    <initTime>           0.0         </initTime>
+    <delt_min>           1.0e-19     </delt_min>
+    <delt_max>           1.0e-4      </delt_max>
+    <delt_init>          1.0e-7      </delt_init>
+    <max_delt_increase>  0.15        </max_delt_increase>
+    <timestep_multiplier>0.4         </timestep_multiplier>
+    <override_restart_delt> 2.5e-10   </override_restart_delt>
+    <!--<max_iterations>      10         </max_iterations>-->
+  </Time>
+
+  <DataArchiver>
+    <filebase>JP8_IS.uda</filebase>
+    <outputInterval> 0.0005  </outputInterval>
+    <!--
+    use the following for the explosion phase
+    <outputInterval> 0.0000025 </outputInterval>
+    -->
+    <compression>gzip</compression>
+    <save label="vol_frac_CC"/>
+    <save label="press_CC"/>
+    <save label="temp_CC"/>
+    <save label="rho_CC"/>
+    <save label="sp_vol_CC"/>
+    <save label="delP_Dilatate"/>
+    <save label="vel_CC"/>
+    <save label="scalar-f"/> 
+    <save label= "cumulativeEnergyReleased"/>
+      
+    <save label="p.x"/>
+    <save label="p.particleID"/>
+    <save label="p.mass"/>
+    <save label="p.temperature"/>
+    <!-- 
+    <save label="p.volume"/>
+    <save label="p.stress"/> 
+    <save label="p.plasticStrain"/> 
+    <save label="p.strainRate"/> 
+    <save label="p.localized"/> 
+    <save label="p.velocity"/>
+    <save label= "modelMass_src"/>
+    <save label= "modelMom_src"/> 
+    <save label= "modelEng_src"/>
+    <save label="g.mass"/>
+    <save label="g.temperature"/>  -->
+    <checkpoint cycle = "4" timestepInterval = "500"/>
+  </DataArchiver>
+
+
+  <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+<!--      UNCOMMENT THIS FOR 3D AND COMMENT OUT THE STUFF BELOW -->
+         <BCType id = "all" var = "symmetry" label = "Symmetric">
+        </BCType>
+<!-- 
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "scalar-f"     var = "Dirichlet">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "all" label = "cumulativeEnergyReleased" var = "Dirichlet">
+                              <value> 0.0</value>
+        </BCType>
+ -->
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "scalar-f"     var = "Dirichlet">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "all" label = "cumulativeEnergyReleased" var = "Dirichlet">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+      <!--______________BOTTOM____________-->
+            
+      <!--  fuel jet -->
+      <Face annulus = "y-" origin = "0.0 -0.1 0.0" inner_radius = ".015" outer_radius = ".035">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "3" label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,10.,0.] </value>
+        </BCType>
+        <BCType id = "3" label = "Temperature"  var = "Dirichlet">
+                              <value> 627.46570  </value>
+        </BCType>
+        <BCType id = "3" label = "Density"      var = "Dirichlet">
+                              <value> 0.23861344  </value>
+        </BCType>
+        <BCType id = "3" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "3" label = "scalar-f"     var = "Dirichlet">
+                              <value> 1.0</value>
+        </BCType>
+        <BCType id = "3" label = "cumulativeEnergyReleased" var = "Dirichlet">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+      <!-- outside air Coflow -->
+      <Face side = "y-">    
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "3" label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,2.0,0.] </value>
+        </BCType>
+        <BCType id = "3" label = "Temperature"  var = "Dirichlet">
+                              <value> 298.0  </value>
+        </BCType>
+        <BCType id = "3" label = "Density"      var = "Dirichlet">
+                              <value> 1.1792946927374306  </value>
+        </BCType>
+        <BCType id = "3" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "3" label = "scalar-f"     var = "Dirichlet">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "3" label = "cumulativeEnergyReleased" var = "Dirichlet">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+      <!-- rest of materials -->
+      <Face side = "y-">
+        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.0,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "scalar-f"     var = "Dirichlet">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "all" label = "cumulativeEnergyReleased" var = "Dirichlet">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>   
+      <!--______________TOP____________________-->               
+      <Face side = "y+">
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 101325.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "scalar-f"     var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "cumulativeEnergyReleased" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <!--__________________________________-->
+      <Face side = "z-">
+        <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+      </Face>  
+<!--
+      <Face side = "z+">
+        <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+      </Face>
+-->      
+<!--      UNCOMMENT THIS FOR 3D AND COMMENT OUT THE ABOVE -->
+      <Face side = "z+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "scalar-f"     var = "Dirichlet">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "cumulativeEnergyReleased" var = "Dirichlet">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+
+    </BoundaryConditions>
+    <!--____________________________________________________________________-->
+       <Level>
+ <!-- 
+           <Box label="2D">
+              <lower>        [-0.1,-0.1,0.0]     </lower>
+              <upper>        [ 0.1, 0.3,0.00125] </upper>
+              <extraCells>   [1,1,1]            </extraCells>
+              <patches>      [10,20,1]            </patches>
+              <resolution>   [320,640,1]         </resolution>
+           </Box>
+-->
+<!--      UNCOMMENT THIS FOR 3D AND COMMENT OUT THE ABOVE -->
+           <Box label = "3D">      
+              <lower>        [0.0,-0.1,0.0]     </lower>
+              <upper>        [0.1, 0.3,0.1]     </upper>
+              <extraCells>   [1,1,1]            </extraCells>
+              <patches>      [1,1,1]            </patches>
+              <resolution>   [20,80,20]         </resolution>
+           </Box> 
+       </Level>
+  </Grid>
+
+
+
+</Uintah_specification>
+

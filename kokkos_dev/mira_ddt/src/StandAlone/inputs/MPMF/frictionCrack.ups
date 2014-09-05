@@ -1,0 +1,161 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 3/29/2004-->
+<Uintah_specification>
+
+   <Meta>
+       <title>SIF calculation of a frictional contact crack</title>
+   </Meta>
+
+   <SimulationComponent type="mpmf" />
+
+   <Time>
+       <maxTime>200.e-6</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.0</delt_min>
+       <delt_max>0.002</delt_max>
+       <timestep_multiplier>0.8</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+        <filebase>frictionCrack.uda</filebase>
+       <outputInterval>4e-6</outputInterval>
+        <save label = "p.x"/>
+        <save label = "p.volume"/>
+       <!--<save label = "p.stress"/>
+        <save label = "KineticEnergy"/>
+       <save label = "TotalMass"/>
+       <save label = "StrainEnergy"/>
+       <save label = "CenterOfMassPosition"/>
+       <save label = "TotalMomentum"/>
+        <save label = "p.particleID"/>
+       <save label = "g.mass"/>
+       <save label = "g.stressFS"/>-->
+        <save_crack_geometry>true</save_crack_geometry>
+
+       <checkpoint cycle = "2" interval = "0.2"/>
+   </DataArchiver>
+
+    <MPM>
+       <time_integrator>fracture</time_integrator>
+        <artificial_damping_coeff>0.005</artificial_damping_coeff>
+        <calculate_fracture_parameters>true</calculate_fracture_parameters>
+        <use_volume_integral>false</use_volume_integral>
+        <J_radius>2.5e-3</J_radius>
+        <do_crack_propagation>false</do_crack_propagation>
+    </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material>
+              <density>1500</density>
+              <constitutive_model type="hypo_elastic"> 
+                 <G>37594.e6</G>
+                 <K>98039.e6</K>
+               </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                  <box label = "square">
+                     <min>[-50.0e-3, -50.e-3,  -0.5e-3]</min>
+                     <max>[ 50.0e-3,  50.0e-3,  0.5e-3]</max>
+                  </box>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+
+                <crack>
+                   <type>friction</type>
+                   <mu>0.2</mu>
+                   <crack_segments>
+                      <quad>
+                        <p1> [-4.95e-3, 0., -0.6e-3] </p1>
+                        <p2> [-4.95e-3, 0.,  0.6e-3] </p2>
+                        <p3> [ 4.95e-3, 0.,  0.6e-3] </p3>
+                        <p4> [ 4.95e-3, 0., -0.6e-3] </p4>
+                        <resolution_p1_p2> 1 </resolution_p1_p2>
+                        <resolution_p2_p3> 10 </resolution_p2_p3>
+                        <crack_front_sides>NNYN</crack_front_sides>
+                      </quad>
+                   </crack_segments>
+                </crack>
+           </material>
+
+           <contact>
+             <type>null</type>
+             <vel_fields>[0,0,0]</vel_fields>
+           </contact>
+       </MPM>
+
+    </MaterialProperties>
+       
+    <Grid>
+        <Level>
+            <Box label = "1">
+                <lower>[-56.0e-3, -56.0e-3, -1.5e-3]</lower>
+                <upper>[ 56.0e-3,  56.0e-3,  1.5e-3]</upper>
+                <resolution>[112,112,3]</resolution>
+                <patches>[8,8,1]</patches>
+            </Box>
+        </Level>
+        <BoundaryConditions>
+           <Face side = "x-">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                        <value> [0.0,0.0,0.0] </value>
+                   </BCType>
+           </Face>
+           <Face side = "x+">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                      <value> [0.0,0.0,0.0] </value>
+                  </BCType>
+           </Face>
+           <Face side = "y-">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                      <value> [0.0,0.0,0.0] </value>
+                  </BCType>
+           </Face>
+           <Face side = "y+">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                      <value> [0.0,0.0,0.0] </value>
+                 </BCType>
+           </Face>
+           <Face side = "z-">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+           <Face side = "z+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+        </BoundaryConditions>
+    </Grid>
+
+    <PhysicalBC>
+       <MPM>
+           <force>
+             <lower>[-50.0e-3, 49.5e-3, -0.5e-3]</lower>
+             <upper>[ 50.0e-3, 50.0e-3,  0.5e-3]</upper>
+             <force_density>[0.1333333e9, -0.2666667e9, 0.0]</force_density>
+           </force>
+           <force>
+             <lower>[-50.0e-3, -50.0e-3, -0.5e-3]</lower>
+             <upper>[ 50.0e-3, -49.5e-3,  0.5e-3]</upper>
+             <force_density>[-0.1333333e9, 0.2666667e9, 0.0]</force_density>
+           </force>
+           <force>
+             <lower>[-50.0e-3, -50.0e-3, -0.5e-3]</lower>
+             <upper>[-49.5e-3,  50.0e-3,  0.5e-3]</upper>
+             <force_density>[0.0, -0.1333333e9, 0.0]</force_density>
+           </force>
+           <force>
+             <lower>[49.5e-3, -50.0e-3, -0.5e-3]</lower>
+             <upper>[50.0e-3,  50.0e-3,  0.5e-3]</upper>
+             <force_density>[0.0, 0.1333333e9, 0.0]</force_density>
+           </force>
+       </MPM>
+    </PhysicalBC>
+    
+</Uintah_specification>
+

@@ -1,0 +1,162 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 1/31/01-->
+<Uintah_specification>
+
+   <Meta>
+       <title>Compaction of cylinders</title>
+   </Meta>
+
+   <SimulationComponent type ="mpm" /> 
+
+   <Time>
+       <maxTime>1.e-6</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>1e-10</delt_min>
+       <delt_max>5.e-8</delt_max>
+       <timestep_multiplier>0.1</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+        <filebase>4disks_2d_mpm.uda</filebase>
+       <outputInterval>5.e-7</outputInterval>
+       <save label = "p.x"/>
+       <save label = "p.velocity"/>
+       <save label = "p.volume"/>
+       <save label = "p.stress"/>
+       <save label = "p.temperature"/>
+       <save label = "p.stress"/>
+       
+       <save label = "g.stressFS"/>
+       <save label = "g.mass"/>
+       <save label = "g.temperature"/>
+       <save label = "g.velocity"/>
+        <checkpoint cycle = "2" interval = "0.4e-6"/>
+   </DataArchiver>
+
+    <MPM>
+       <time_integrator>explicit</time_integrator>
+        <dynamic>true</dynamic>
+        <solver>simple</solver>
+        <convergence_criteria_disp>1.e-10</convergence_criteria_disp>
+        <convergence_criteria_energy>4.e-10</convergence_criteria_energy>
+        <DoImplicitHeatConduction>true</DoImplicitHeatConduction>
+    </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+            <material name = "HMX">
+                <density>1.9</density>
+              <constitutive_model type = "comp_neo_hook"> 
+                 <shear_modulus>7.2e11</shear_modulus>
+                 <bulk_modulus>10.2e11</bulk_modulus>
+               </constitutive_model>
+                <thermal_conductivity>1.0e-7</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+
+              <geom_object>
+                  <box label = "mpiston">
+                     <min>[-0.5,0.0, -0.05]</min>
+                     <max>[ 0.5,0.05, 0.0]</max>
+                  </box>
+                  <res>[2,1,2]</res>
+                  <velocity>[0.0,0.0,560.0]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+
+              <geom_object>
+                  <cylinder label = "mcyl1">
+                     <bottom>[0.0,0.0, 0.5]</bottom>
+                     <top>[   0.0,0.05,0.5]</top>
+                     <radius> .5 </radius>
+                  </cylinder>
+                  <res>[2,1,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+              <geom_object>
+                  <cylinder label = "mcyl2">
+                     <bottom>[0.0,0.0, 1.5]</bottom>
+                     <top>[   0.0,0.05,1.5]</top>
+                     <radius> .5 </radius>
+                  </cylinder>
+                  <res>[2,1,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+
+              <geom_object>
+                  <cylinder label = "mcyl3">
+                     <bottom>[0.0,0.0, 2.5]</bottom>
+                     <top>[   0.0,0.05,2.5]</top>
+                     <radius> .5 </radius>
+                  </cylinder>
+                  <res>[2,1,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+
+              <geom_object>
+                  <cylinder label = "mcyl4">
+                     <bottom>[0.0,0.0, 3.5]</bottom>
+                     <top>[   0.0,0.05,3.5]</top>
+                     <radius> .5 </radius>
+                  </cylinder>
+                  <res>[2,1,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+
+           </material>
+
+           <contact>
+             <type>null</type>
+             <materials>[0,1]</materials>
+              <stop_time>999999.9 </stop_time>
+           </contact>
+       </MPM>
+
+    </MaterialProperties>
+       
+    <Grid>
+       <BoundaryConditions>
+               <Face side = "x-">
+                   <BCType id = "all" var = "symmetry" label = "Symmetric">
+              </BCType>
+                </Face>
+                <Face side = "x+">
+                   <BCType id = "all" var = "symmetry" label = "Symmetric">
+              </BCType>
+                </Face>
+                <Face side = "y-">
+                   <BCType id = "all" var = "symmetry" label = "Symmetric">
+              </BCType>
+                </Face>                  
+              <Face side = "y+">
+                   <BCType id = "all" var = "symmetry" label = "Symmetric">
+              </BCType>
+                </Face>
+                <Face side = "z-">
+                   <BCType id = "all" var = "symmetry" label = "Symmetric">
+              </BCType>
+                </Face>
+                <Face side = "z+">
+                   <BCType id = "all" var = "symmetry" label = "Symmetric">
+              </BCType>
+                </Face>
+       </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>[-0.55, 0.00, -0.10]</lower>
+              <upper>[ 0.55, 0.05,  4.10]</upper>
+               <resolution>[22,1,84]</resolution>
+              <patches>[1,1,1]</patches>
+           </Box>
+       </Level>
+    </Grid>
+
+    
+</Uintah_specification>

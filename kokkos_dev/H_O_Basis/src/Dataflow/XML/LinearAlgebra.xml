@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="LinearAlgebra" category="Math">
+  <overview>
+    <authors>
+      <author>Michael Callahan</author>
+    </authors>
+    <summary>Do some linear algebra on input matrices.</summary>
+    <description>
+
+      <p>The LinearAlgebra module allows the user to input C++ code
+      linear algebra expressions and then have them dynamically
+      compiled and executed.</p>
+
+      <p>The input variables are all of MatrixHandle type and are
+      represented by the variables i1, i2, i3, i4, and i5 correlating
+      with which input ports they are connected to.  The output
+      variables are MatrixHandle references and are labeled o1, o2,
+      o3, o4, and o5.</p>
+
+      <p>The supported matrix operations can be found in
+      src/Core/Datatypes/MatrixOperations.h, and are basically
+      addition and multiplication.</p>
+
+      <p>For example, the default "o1 = i1 * i2;" function would multiply
+      the first two input matrices and put the result on the first
+      output port.  "o2 = i1 * 3;" would multiply all of the values in
+      the first input port and put the resulting matrix on the second
+      output port.  If you used both lines it would do both.</p>
+
+      <p>The various SCIRun Matrix headers are also included in addition
+      to MatrixOperations.h.  So for example
+      "o1 = scinew DenseMatrix(10, 20);" could be used to return a
+      blank 10x20 dense matrix on the first output port.  It is also
+      possible to write loops over the various matrix elements, etc.</p>
+
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>i1</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>i2</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>i3</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>i4</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>i5</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>o1</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>o2</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>o3</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>o4</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>o5</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>

@@ -1,0 +1,38 @@
+#!/usr/local/bin/python
+
+from os import symlink,environ
+from sys import argv,exit,platform
+from helpers.runSusTests import runSusTests, inputs_root
+from helpers.modUPS import modUPS
+
+methane8patch_ups = modUPS("%s/ARCHES" % inputs_root(), \
+                           "methane_explicit_table.ups", \
+                           ["<patches>[2,2,2]</patches>", \
+                            "<maxTime>10.0</maxTime>"])
+
+
+UNUSED = [ ("methane_explicit_8patch", methane8patch_ups, "", 8, "ALL","chem_meth", "arches") \
+]
+
+TESTS = [ ("ice_perf_test", "performanceTest.ups", "", 1, "IRIX64","","ice"),  \
+          ("mpmice_perf_test", "performanceTest.ups", "", 1, "ALL","","mpmice"),\
+          ("disks2mat4patch4proc", "disks2mat4patch.ups", "", 4, "IRIX64","","mpm"), \
+    	]
+
+def chemfile (test):
+    return test[5]
+
+def chemfileCallback (test, susdir, inputsdir, compare_root, algo, mode, max_parallelism):
+
+  # if the cfile exists, then we can assume that there's an input.dtd as well
+  cfile = chemfile(test)
+  if cfile != "":    
+    if platform[0:5] == "linux":
+      cfile = cfile + ".linux.bin"
+    else:
+      cfile = cfile + ".bin"
+    symlink("%s/%s" % (inputsdir, cfile), "chem.bin")
+    symlink("%s/input.dtd" % (inputsdir), "input.dtd")
+
+
+exit(runSusTests(argv, TESTS, "performance", chemfileCallback))

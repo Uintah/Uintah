@@ -1,0 +1,283 @@
+<html>
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta name=Generator content="Microsoft Word 10 (filtered)">
+<title>Simulation Control File Format for Lucretius&trade Molecular Dynamics Package</title>
+
+<style>
+<!--
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin:0in;
+	margin-bottom:.0001pt;
+	font-size:12.0pt;
+	font-family:"Times New Roman";}
+a:link, span.MsoHyperlink
+	{color:blue;
+	text-decoration:underline;}
+a:visited, span.MsoHyperlinkFollowed
+	{color:purple;
+	text-decoration:underline;}
+@page Section1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.25in 1.0in 1.25in;}
+div.Section1
+	{page:Section1;}
+-->
+</style>
+
+</head>
+
+<body lang=EN-US link=blue vlink=purple>
+
+<div class=Section1>
+
+<p class=MsoNormal>mdrun.params (Parameters for Lucretius MD simulation run)</p>
+<pre>
+*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*                       SIMULATION PARAMETERS
+*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</pre>
+<pre>*1  ---- Ensemble control variables
+* NVE (microcanonical)   NVT (canonical)    NPT (isothermal-isobaric) 
+  .false.                .false.            .TRUE.
+*
+*2  ----  Dispersive interaction and integration control
+* <a href="#CutoffRadius">Cutoff Radius</a>    <a href="#MaxDrift">Max&quot;Drift&quot;</a>     <a href="#MaxDrift">Delta(fs)</a>   <a href="#Nsteps">Number of steps</a>
+  10.0             1.0            0.5         1000000
+*
+*3  ---- Thermostat and Barostat
+* <a href="#Temp">Temperature (K)</a>    <a href="#Press">Pressure (atm)</a>  <a href="#Nnos">Num_NHC</a>  <a href="#Qfreq">OmegaQ (1/fs)</a>  <a href="#Wfreq">OmegaW(1/fs)</a>
+  313.15             1.00            1        0.01           0.005
+*
+*XXX ---- Static Polarization Model [No Longer Used - Do Not Change (DNC) ]
+* Do Not Change  Do Not Change  Do Not Change  Do Not Change   Do Not Change
+ .FALSE.         13.0           14.5           50.0            4.5
+*
+*4  ---- Statistic collection and output control
+* <a href="#Ninit">Initialize(fs)</a>  <a href="#Nav">Average(fs)</a>  <a href="#PressCalc">Pressure(fs)</a>    <a href="#NonBondStat">Energy Split(fs)</a>   <a href="#InstantCoords">Coord Output(fs)</a>
+  120.0           120.0        4.0             1000000            1000
+*
+*------- Trajectory file settings
+*5  ----   Trajectory Output Flags (Filenames: fort.XX)
+* <a href="#BinaryOutput">BoxDipole(76)   Coordinates(77)   Stress Tensor(78)   Velocities(79)</a>
+ .TRUE.           .TRUE.            .FALSE.             .FALSE.
+*6  ----   Trajectory Output Frequency (femtoseconds) 
+* <a href="#BinaryOutput">Dipole Time      Coordinate Time   Stress Time        Velocity Time</a>
+  100              1000              9                  1000
+*
+*7  ---- System Adjustment and Debugging
+* <a href="#ChangeBox">Resize Box?      Target Box Size</a>   <a href="#AddStat">Output Additional Information?</a>
+  .false.          24.93             .false.
+*
+*8  ----  Interaction control
+* <a href="#IncludeInterchain">Calc Intermolecular?</a>   <a href="#Exclude14">Exclude 1-4?</a>      <a href="#Isokinetic">Isokinetic Ensemble?</a>
+  .TRUE.                 .false.           .false.
+*
+*9  ----  1-4 Interaction Scaling 
+* <a href="#Reduce14">Reduce 1-4(Exc. mu-mu)</a>  <a href="#Reduce14">Reduce 1-4 Factor</a>  <a href="#Red14Qmu">Reduce Q-mu 1-4  Red. Q-mu Factor</a>
+  .false.                 0.0                .TRUE.           0.8
+*
+*10 ----  Bond constraints (SHAKE Algorithm)
+* <a href="#ConstrBonds">Constrain Bonds?</a>     <a href="#ConstrBonds">Tolerance (SHAKE)</a>
+  .TRUE.                  1.d-14
+*
+*11 ----  Long range electrostatic calculation (Ewald Sum)
+* <a href="#Electrostatic">Electrostatic Calculation Type      Alpha      Maximum K Vector</a>
+  Ewald                               6.5        4
+*
+*12 ----  Integrator control
+* Integrator Type     <a href="#Integrator">Medium Steps   Large Steps   Small Timestep Cutoff</a>
+  Multiple3           4              8             6.0
+*
+*13 ----  Many body polarization control
+* Q-mu    mu-mu     |  <a href="#TolerancePol">Polarization Tol.</a>  <a href="#TaperingPol">Tapering   Taper Start</a>  Epsilon(RF)
+  Ewald   RF/Taper  |  1.0d-6             .TRUE.     9.0          1.0
+</pre>
+<p class=MsoNormal>&nbsp;</p>
+
+<h1>Description of MD simulation parameters</h1>
+<p class=MsoNormal>Please note that lines beginning with the &quot*&quot character are comments</p>
+<br>
+<a name=CutoffRadius>
+<b>Cutoff Radius</b><br> 
+The <i>cutoff radius</i> represents the distance (in Angstroms) at which the dispersion
+interactions are truncated to zero.  The appropriate pressure correction term due to the
+cutoff of dispersion interactions (C<b>r</b><sup>-6</sup>) is included.  Corrections to
+the energy due to the truncation are not calculated.  No shifting or cutting of the 
+potential is implemented.
+
+<a name=MaxDrift>
+<b>Max&quot;Drift&quot;:</b><br>
+The <i>max drift</i> represents the cumulative maximum displacement (in Angstroms) since
+ the previous neighbor list calculation which is allowed to occur for any molecular before
+ a new neighbor list calculation is required.</a></p>
+
+<a name=Delta>
+<b>Delta(fs)</b><br>
+Delta is the smallest integration time step.</a></p>
+
+<a name=Nsteps>
+<b>Number of Steps</b><br>
+The total number of integration time steps for the MD run.  If a multiple time step 
+integrator is used, the the number of steps represents the total overall number of 
+the largest time steps which occur during the simulation.</a></p>
+
+<a name=Temp>
+<b>Temparature</b><br>
+Temperature is the desired temperature (in Kelvin) for NPT and NVT runs that use the 
+Nose-Hoover thermostat, as well as the set temperature for IsoKinetic simulations.</a></p>
+
+<a name=Press>
+<b>Pressure</b><br>
+Pressure is the desired simulation pressure in atmospheres for NPT runs that use the
+Nose-Hoover barostat.</a></p>
+
+<a name=Nnos>
+<b>Num_NHC</b><br>
+Num_NHC is the number of individual coupled thermostats in the thermostatting system.
+The coupling method is that outlined by Martyna, Klein, and Tuckerman in their Nose-Hoover
+ Chains technique (<i>J. Chem. Phys.</i> <b>97</b>(4), 2635 (1992))</a></p>
+
+<a name=Qfreq>
+<b>OmegaQ and OmegaW</b><br>
+OmegaQ and OmegaW represent the frequencies (in 1/fs) of the Nose-Hoover thermostat and
+barostat.</a></p>
+
+<a name=Ninit>
+<b>Initialize(fs)</b><br>
+The Initialize variable specifies the amount of time (in femtoseconds) for initialization
+ of the system before variables are counted toward contribution to the overall statistics
+ of the system (output in fort.70) begins.</a></p>
+
+<a name=Nav>
+<b>Average(fs)</b><br>
+The Average variable specifies the length of time block (in femtoseconds) over which 
+thermodynamic quantities are averaged for reporting in fort.65.</a></p>
+
+<a name=PressCalc>
+<b>Pressure(fs)</b><br>
+The Pressure variable specifies the time interval (in femtoseconds) between calculations 
+of the system stress tensor and overall pressure.  This time should be an integral 
+multiple of the largest time step.</a></p>
+
+<a name=NonBondStat>
+<b>Energy Split(fs)</b><br>
+The Energy Split value determines the frequency of calculation of detailed statistics
+which include information about the individual contributions of energetic sources within
+the system to the overall energy of the system.  This information has no impact on the
+evolution of the simulation, and is generally only necessary for debugging or tracking
+the evolution of the energy in specific cases.  For that reason, a large value is 
+recommended for this paramater in most situations, in order to avoid spending excess
+time on the calculation of these statistics.</a></p>
+
+<a name=InstantCoords>
+<b>Coord Outputs(fs)</b><br>
+This setting determines the time interval between outputting the instantaneous
+coordinates and velocities to the file <i>coords.out</i>.  This file serves as a
+system checkpoint, saving the current overall configuration of the system when
+output.</a></p>
+
+<a name=BinaryOutput>
+<b>Binary Output Flags</b><br>
+A set of four binary values which determine whether or not to output the following binary
+format output files:
+<ul>
+<li>BoxDipole(76)     - Average dipole moment of the molecules in the system.
+<li>Coordinates(77)   - Coordinates vector of each force center in the system.
+<li>Stress Tensor(78) - Stress tensor of the overall system.
+<li>Velocities(79)    - Velocity vector of each force center in the system.
+</ul>
+Each file is output as <i>fort.XX</i> where <i>XX</i> is equal to the number in parentheses
+ after the output variable name.
+</p>
+<b>Trajectory Output Frequency</b>
+<br>
+Controls the respective output frequency for each of the above file types.  Output frequencies
+ are listed in femtoseconds, and should be integral multiples of the largest time step in the system.</a></p>
+
+<a name=ChangeBox>
+<b>Resize Box?</b><br>
+In NVT and NVE runs the box can be rescaled to change the overall box volume (and system density)
+ from the initial size set from the input files.  The <b>Target Box Size</b> field determines
+ the final system box side length.  The rate of change is therefore the difference between the
+ initial and final sizes, divided by the number of simulation steps.</a></p>
+
+<a name=AddStat>
+<b>Output Additional Information?</b><br>
+If true, this option toggles screen output of additional information such as instantaneous
+pressure, temperature, stress tensor, etc. at every simulation step.</a></p>
+
+<a name=IncludeInterchain>
+<b>Calc Intermolecular?</b><br>
+This parameter allows for toggling on/off intermolecular interations.  Setting this parameter 
+to false allows for a gas-phase type calculation, where individual molecules do not interact 
+with one another.  For liquid simulations, or simulations of realistic gases where intermolecular
+ interactions are important, this parameter should be set to true.</a></p>
+
+<a name=Exclude14>
+<b>Exclude 1-4?</b><br>
+This parameter controls inclusion of 1-(2-3)-4 nonbonded interactions in the force field.
+ Most of the explicit atom force fields include 1-4 nonbonded interaction terms, so this
+parameter should be set to false.</a></p>
+
+<a name=Isokinetic>
+<b>Isokinetic Ensemble?</b><br>
+This parameter toggles the use of the IsoKinetic ensemble to control temperature.  If strict
+ rescaling of the temperature to the target value via simple velocity scaling is desired, this 
+variable should be set to true.  Enabling this option necessarily overrides Nose-Hoover 
+thermostat control.</a></p>
+
+<a name=Reduce14>
+<b>Reduce 1-4(Exc. mu-mu)?</b><br>
+If this parameter is set to true, all nonbonded 1-4 interactions (except for dipole-dipole) 
+ are reduced by the <b>Reduce 1-4 Factor</b>.  The reduction implementation is consistent with 
+those commonly incorporated in AMBER and OPLS-AA force fields.</a></p>
+
+<a name=Red14Qmu>
+<b>Reduce Q-mu 1-4?</b><br>
+Setting this parameter to true enables the reduction of static charge-induced dipole nonbonded
+1-4 interactions by the <b>Red. Q-mu Factor</b> without affecting other nonbonded 1-4
+interactions.</a></p>
+
+<a name=ConstrBonds>
+<b>Constrain Bonds?</b><br>
+If true, this enables the SHAKE algorithm for constraining bonds, with the maximum average 
+constrained bond length deviation set by the value in <b>Tolerance (SHAKE)</b> with units of 
+10<sup>-20</sup> m<sup>2</sup>.</a></p>
+
+<a name=Electrostatic>
+<b>Electrostatic Calculation Type</b><br>
+Lucretius uses an Ewald summation technique for the calculation of long range electrostatics.
+ The parameter <b>Alpha</b> represents the screening length parameter for the Ewald summation, 
+while the <b>Maximum K Vector</b> dictates the maximum magnitude of the longest inverse lattice 
+vector employe in the Ewald calculation.</a></p> 
+
+<a name=Integrator>
+<b>Integrator: </b><br>
+Lucretius implements the RESPA integrator with a three level multiple time step breakdown.
+There are three adjustable components of the 3 time step integrator:
+<ul>
+<li>  Medium Steps   - Number of small steps (<b>Delta</b> - see line 2) performed for every medium step performed.
+<li>  Large Steps    - Number of small steps (<b>Delta</b>) performed for every large step performed.
+</ul>
+
+A single <i>small</i> time step (<b>Delta</b>) includes calculation and integration of bonds, bends, and
+ improper torsions.<br>
+A single <i>medium</i> time step includes the above, plus torsions and short-range nonbonded interactions (with cutoff radius set by <b>Medium Timestep Cutoff</b>).<br>
+A single <i>large</i> time step includes the above (with nonbonded interactions being performed with the full, rather than reduced, cutoff radius), plus long range electrostatics, polarizability calculations, and any extended lagrangian (e.g. thermostatted) contributions present.</a></p>
+
+<a name=TolerancePol>
+<b>Polarization Tol.</b><br>
+Tolerance threshold under which the induced many-body polarization values of the polarizable atoms are considered to be self-consistent.  This value is in units of A<sup>2</sup>e<sup>2</sup></a></p>
+
+<a name=TaperingPol>
+<b>Taper Start:</b><br>
+Induced dipole-induced dipole interactions are scaled from nominal values to zero to prevent discontinuous forces arising from polarizable interactions.  Rescaling of the induced dipole-induced dipole interaction begins at the radial value set by <b>Taper Start</b> and is driven to zero at the distance specified by the <b><a href="#CutoffRadius">Cutoff Radius</a></b>.</a></p>
+
+
+</div>
+
+</body>
+
+</html>

@@ -1,0 +1,385 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+ <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+ <meta name="Author" content="Erik Jorgensen">
+ <link rel=stylesheet type="text/css" href="http://www.sci.utah.edu/scirun_docs/doc/doc_styles.css">
+ <title>SCIRun inst and build instructions - Unix version</title>
+</head>
+
+<body>
+<a href="http://www.sci.utah.edu"><img style="margin-left:-2em"
+src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height="66" width="150"></a>
+
+<p class="title">Thirdparty Software Installation and Build Instructions</p>
+<p class="subtitle">(Unix version - Updated February 17, 2001)</p>
+
+<p class="head">Table of contents</p>
+<ol class="toc">
+      <LI><A HREF="#Prerequisites">Prerequisites</A></LI>
+      <LI><A HREF="#Auto">Installation of Thirdparty Software (automatic)</A>
+      <LI><A HREF="#Install">Installation Location of Thirdparty Software
+      (manual)</A>
+      </LI>
+      <LI><A HREF="#Configure">Configure Options for Thirdparty Software
+      (manual)</A></LI>
+      <LI><A HREF="#Environment">Environment Variables (automatic and manual)
+      </A></LI>
+      <LI><A HREF="#Gotchas">Known Issues (automatic and manual)</A></LI>
+</ol>
+
+<br><br><br>
+<p class="head"><a name="Prerequisites">Prerequisites</a></p>
+    <p class="firstpara">
+      Use of this document requires experience with the SGI
+      Irix operating system and/or the Linux operating system.
+      Knowledge of file systems, programming in C/C++, building
+      software from tarball distributions and shell scripting will
+      be useful if not required.  The installation or upgrade of
+      core system components (such as the OS and compilers) may be
+      required.  As such, a system administrator's assistance may
+      be warranted.
+    </p>
+
+    <p class="firstpara">
+      The following information may help expedite the process of
+      installing the required third party software.  However, It is not
+      intended to replace the installation instructions, provided with
+      the software, only to supplement them.  Please read the
+      build instructions for each software distribution before attempting to
+      use these instructions.
+    </p>
+
+    <p class="firstpara">
+      This section does not apply to the installation and upgrade of
+      the OS and build tools, as those topics are quite involved.
+    </p>
+
+<br><br><br>
+<p class="head"><a name="Auto">Installation of Thirdparty Software (automatic)
+</a></p>
+    <p class="firstpara">
+      Because of many bugs and gotchas in the thirdparty installation
+      processes, the easiest and most dependable way to install the
+      third party software is by using the thirdparty install script created
+      by the SCI Institute.
+    </p>
+
+    <p class="firstpara">
+      However, if you want or need to install the third party software by
+      hand, you can continue by following the instructions on this page
+      starting at <a href="#Install">Installation Location of Thirdparty
+      Software (manual)</a>.
+    </p>
+
+    <p class="firstpara">
+      The automatic install script comes with all the necessary thirdparty
+      software, and does not require you to download anything else.
+    </p>
+    
+    <p class="firstpara">
+      To use the automatic install script do the following:
+    </p>
+
+    <p class="firstpara">
+      <b>1.  Download the install script tar ball from <a href="">here</a>.</b>
+    </p>
+
+    <p class="firstpara">
+      <b>2.  Put the tar ball into a directory of your choosing.</b>
+    </p>
+
+    <p class="firstpara">
+      <b>3.  Unzip and untar the tar ball:</b>
+    </p>
+
+    <pre class="example"><font color=blue>gunzip Thirdparty_install.tar.gz
+tar xvf Thirdparty_install.tar</font></pre>
+
+    <p class="firstpara">
+      <b>4.  Run the install script by typing:</b>
+    </p>
+
+    <pre class="example"><font color=blue>python install</font></pre>
+
+    <p class="firstpara">
+      <b>5.  Continue on to <a href="#Environment">Environment Variables</a>
+      </b>.
+    </p>
+
+    <p class="firstpara">
+      The install script will create a directory named SCIRun_Thirdparty_32 
+      in the directory chosen in step 2 above.  When it finishes, it will
+      display a message regarding the --with-thirdparty SCIRun configure 
+      option.  Cut and paste that option when running the configure command
+      for SCIRun (see step 2 of <a href="pseInstall.html#Building">Building
+      SCIRun</a>).
+    </p>
+      
+<br><br><br>
+<p class="head"><a name="Install">Installation Location of Third Party Software
+(manual)</a></p>
+    <p class="firstpara">
+      SCIRun can easily be used with existing instances of the
+      required third party software, regardless of where it is
+      installed.  However, it is recommended that all the
+      required third party software be installed into a centralized and
+	  out of the way location, to prevent conflicts with other software,
+	  if it is not yet already installed.
+    </p>
+    
+    <p class="firstpara">
+      For example, install all the third party software into the
+      directory called "/usr/local/SCIRun_Thirdparty_32" such that
+      after installing all the distributions, the 
+      /usr/local/SCIRun_Thirdparty_32 directory has the
+      following contents:
+    </p>
+
+    <pre class="example">/usr/local/SCIRun_Thirdparty_32/tcl8.3.2
+/usr/local/SCIRun_Thirdparty_32/tk8.3.2
+/usr/local/SCIRun_Thirdparty_32/itcl3.1.0
+/usr/local/SCIRun_Thirdparty_32/blt2.4u
+/usr/local/SCIRun_Thirdparty_32/xerces-c-src1_4_0
+/usr/local/SCIRun_Thirdparty_32/make-3.79.1
+/usr/local/SCIRun_Thirdparty_32/man
+/usr/local/SCIRun_Thirdparty_32/lib
+/usr/local/SCIRun_Thirdparty_32/bin
+/usr/local/SCIRun_Thirdparty_32/include
+    </pre>
+
+    <p class="firstpara">
+      Where all the executable binaries are in the /bin directory, all
+      the shared object binaries are in the /lib directory and all 
+      the header files are in the /include directory.
+    </p>
+        
+    <br><br><br>
+<p class="head"><a name="Configure">Configure Options for Third Party Software (manual)</a></p>
+      
+    <p class="firstpara">
+      The following represent the recommended configure
+      commands for the indicated software distributions.
+    </p>
+
+    <p class="firstpara">
+      NOTE: <i><b><font color=green>INST_DIR</font></b></i> represents
+      the chosen installation directory for the indicated software
+      distribution.  <i><b><font color=green>INST_DIR</font></b></i>
+      would be "/usr/local/SCIRun_Thirdparty_32" for the example given
+      above. 
+    </p>
+
+    <p class="firstpara">
+      <b>For Tcl, Tk, [incr Tcl/Tk] and GNU make</b>
+    </p>
+
+    <pre class="example"><font color=blue>configure --prefix=</font><i><b><font
+	  color=green>INST_DIR</font></b></i>
+    </pre>
+
+    <p class="firstpara">
+      <b>For BLT</b>
+    </p>
+
+    <pre class="example"><font color=blue>configure --with-cc=cc --prefix=</font><i><b><font
+	  color=green>INST_DIR</font></b></i>
+    </pre>
+
+    <p class="firstpara">
+      <b>For Xerces-C</b>
+    </p>
+
+    <p class="firstpara">
+      On SGI machines:
+    <p>
+    <pre class="example"><font color=blue>runConfigure -nfileonly -tnative -minmem \
+             -pirix -ccc -xCC -z-DAPP_NO_THREADS -P</font><i><b><font
+		 color=green>INST_DIR</font></b></i>
+    </pre>
+
+    <p class="firstpara">
+      On Linux machines:
+    </p>
+    <pre class="example"><font color=blue>runConfigure -nfileonly -tnative -minmem \
+             -plinux -cgcc -xg++ -rpthreads -P</font><i><b><font
+		 color=green>INST_DIR</font></b></i>
+    </pre>
+
+<br><br><br>
+<p class="head"><a name="Environment">Environment Variables (automatic and manual)</a></p>
+    <p class="firstpara">
+      Once the third party software is properly installed, set or edit 
+      environment variables to use those executables and libraries.
+    </p>
+
+    <p class="firstpara">
+      Usually, depending on the startup shell being used, there are two
+      environment variables that may need to be edited: one defining the
+      search path for executables and the other defining the search path
+      for libraries.  Edit (or set) those variables, for the shell being
+      used, to include the third party executables located in the /bin
+      directory(s) and to include the the third party libraries located
+      in the /lib directory(s).
+    </p>
+
+    <p class="firstpara">
+      As before, <i><b><font color=green>INST_DIR</font></b></i> represents
+      the chosen installation directory.
+    </p>
+
+    <p class="firstpara">
+      For csh or tcsh:
+    </p>
+
+    <pre class="example">setenv PATH <i><b><font color=green>INST_DIR</font></b></i>/bin:$PATH</pre>
+    <pre class="example">setenv LD_LIBRARY_PATH <i><b><font color=green>INST_DIR</font></b></i>/lib:$LD_LIBRARY_PATH</pre>
+
+    <p class="firstpara">
+      For bash or ksh:
+    </p>
+
+    <pre class="example">export PATH=<i><b><font color=green>INST_DIR</font></b></i>/bin:$PATH</pre>
+    <pre class="example">export LD_LIBRARY_PATH=<i><b><font color=green>INST_DIR</font></b></i>/lib:$LD_LIBRARY_PATH</pre>
+
+    <p class="firstpara">
+      Note that if the PATH and LD_LIBRARY_PATH variables were not already set,
+      then the trailing :$PATH and/or :$LD_LIBRARY_PATH are not needed and may
+      cause the command to fail.
+    </p>
+
+    <p class="firstpara">
+      Also, for machines using rld (e.g. SGI machines) the environment 
+      variable named above as LD_LIBRARY_PATH may need to changed to
+      LD_LIBRARY32_PATH or LD_LIBRARY64_PATH depending upon the machine's
+      default ABI (Application Binary Interface).
+    </p>
+
+<br><br><br>
+<p class="head"><a name="Gotchas">Known Issues (automatic and manual)</a></p>
+    <p class="firstpara">
+      This section describes known issues with installing and building the
+      required third party software.  It also includes solutions when
+      available. 
+    </p>
+
+<p class="subhead">Path Specifications</p>
+    <p class="firstpara">
+     If any of the software, SCIRun or thirdparty, is installed into a user's
+     home directory, <i><b>do not</b></i> use abbreviations such as tilde
+     expansion when specifying paths.  Instead, use full absolute paths.
+     For example, use /home/bob/SCIRun instead of ~bob/SCIRun for the 
+     --prefix arguments when configuring.  Most abbreviation techniques will
+     not get expanded by the build scripts for any of the software.
+    </p>
+
+<p class="subhead">Building with 64 bit enabled on SGI</p>
+    <p class="firstpara">
+      Unfortunately, most of the required third party software didn't have
+      64 bit SGI platforms in mind when they wrote their configure scripts
+      and makefiles.  However, it is possible to build all the software in
+      64 bit with some effort.  In general, to get 64 bit versions of the
+      third party software it is necessarty to edit Makefiles such that
+      the CFLAGS and LFLAGS macros have "-64" listed instead of "-n32".
+      In the case of the tcl distributions, this means editing the
+      makefiles (after configuring) by hand and replacing all instances of 
+      "-n32" with "-64".  Getting xerces to build in 64 bits is a little
+      more complicated: first start the runConfigure script as usual, then
+      (before making) type the export commands indicated at the conclusion
+      of the runConfigure script verbatim with the exception that you
+      insert "-64" into the CFLAGS and LFLAGS environment variables.
+    </p>
+
+<p class="subhead">Building [incr Tcl/Tk]</p>
+    <p class="firstpara">
+      The [incr Tcl/Tk] distribution listed in the system requirements has a
+      bug in it:  The installation scripts are bundled without execute
+      permissions.  Before attempting to configure or make [incr Tcl/Tk],
+      type the following commands:
+    </p>
+
+    <pre class="example"><font color=blue>cd itcl3.1.0/config
+chmod a+x install-sh mkinstalldirs</font></pre>
+
+    <p class="firstpara">
+      Then, proceed normally with the configure and make.
+    </p>
+
+<p class="subhead">Building BLT</p>
+    <p class="firstpara">
+      The BLT make files have bugs in them that prevent building the necessary
+      shared object libraries.  To build the necessary files type the following
+      , after configuring:
+    </p>
+
+    <pre class="example"><font color=blue>cd blt2.4u
+make 
+cd src/shared
+make 
+cd blt2.4u
+make -k install
+cd src/shared
+make -k install</font>
+    </pre>
+
+<p class="subhead">Building Xerces-c</p>
+    <p class="firstpara">
+      The make system for Xerces-c is not standard and has many bugs.  The
+      following all apply after configuring xerces.
+    </p>
+
+    <p class="firstpara">
+      The configure scripts are bundled without execute permissions.  Before
+      attempting to configure or make Xerces-C, type the following commands:
+    </p>
+
+    <pre class="example"><font color=blue>cd xerces-c-src1_4_0/src
+chmod a+x configure runConfigure</font></pre>
+
+    <p class="firstpara">
+      Then, proceed normally with the configure and make.
+    </p>
+
+    <p class="firstpara">
+      After typing "make", but before compilation begins, the make system
+      copies certain files around.  This copying is not specified in any
+      dependancy tree, so using a -j flag (use multiple threads) as a make
+      argument will cause the build to fail.
+    </p>
+
+    <p class="firstpara">
+      There is no dependancy tree for the "install" target within the make
+      files, so passing install as an argument to the first time "make" is
+      typed will cause the build to fail.  Instead type "make" first, then
+      "make install".
+    </p>
+
+    <p class="firstpara">
+      The make system ignores errors in compilation and forces a link.  Verify
+      that the build was actually successful by checking the size of 
+      libxerces-c1_4.so.  The sizes should be: ~2.1MB for SGI 32 bit, ~2.4MB
+      for SGI 64 bit, and ~1.4MB for linux.
+    </p>
+
+    <p class="firstpara">
+      <br><br><hr>
+    </p>
+
+</body>

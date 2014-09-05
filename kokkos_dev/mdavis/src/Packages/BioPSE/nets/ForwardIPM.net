@@ -1,0 +1,82 @@
+# SCIRun Network v1.25.0
+
+# The MIT License
+# 
+# Copyright (c) 2004 Scientific Computing and Imaging Institute,
+# University of Utah.
+# 
+# License for the specific language governing rights and limitations under
+# Permission is hereby granted, free of charge, to any person obtaining a 
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation 
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+# and/or sell copies of the Software, and to permit persons to whom the 
+# Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included 
+# in all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+# DEALINGS IN THE SOFTWARE.
+# 
+
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
+
+set name {Main}
+set bbox {28 24 673 301}
+set creationDate {Mon Apr 11 2005}
+set creationTime {11:36:33}
+set runDate {}
+set runTime {}
+set notes {}
+
+# Create a BioPSE->NeuroFEM->ForwardIPM Module
+set m1 [addModuleAtPosition "BioPSE" "NeuroFEM" "ForwardIPM" 239 244]
+
+# Create a SCIRun->DataIO->FieldReader Module
+set m2 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 28 24]
+
+# Create a SCIRun->DataIO->FieldReader Module
+set m3 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 290 32]
+
+# Create a SCIRun->DataIO->FieldReader Module
+set m4 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 508 32]
+
+# Create a BioPSE->Forward->IndicesToTensors Module
+set m5 [addModuleAtPosition "BioPSE" "Forward" "IndicesToTensors" 78 128]
+
+# Create a SCIRun->FieldsData->ManageFieldData Module
+set m6 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 500 151]
+
+# Create a SCIRun->FieldsGeometry->ManageFieldMesh Module
+set m7 [addModuleAtPosition "SCIRun" "FieldsGeometry" "ManageFieldMesh" 348 140]
+
+# Create the Connections between Modules
+set c1 [addConnection $m5 0 $m1 0]
+set c2 [addConnection $m2 0 $m5 0]
+set c3 [addConnection $m4 0 $m6 0]
+set c4 [addConnection $m4 0 $m7 0]
+set c5 [addConnection $m3 0 $m1 1]
+set c6 [addConnection $m7 1 $m1 2]
+set c7 [addConnection $m6 1 $m1 3]
+
+# Set GUI variables for the SCIRun->DataIO->FieldReader Module
+set $m2-filename "$DATADIR/$DATASET/$DATASET-mesh.tvt.fld"
+set $m2-filetype {SCIRun Field File (*.fld)}
+
+# Set GUI variables for the SCIRun->DataIO->FieldReader Module
+set $m3-filename "$DATADIR/$DATASET/$DATASET-electrodes.pcv.fld"
+set $m3-filetype {SCIRun Field File (*.fld)}
+
+# Set GUI variables for the SCIRun->DataIO->FieldReader Module
+set $m4-filename "$DATADIR/$DATASET/$DATASET-dipole.pcv.fld"
+set $m4-filetype {SCIRun Field File (*.fld)}
+
+
+::netedit scheduleok

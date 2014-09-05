@@ -1,0 +1,55 @@
+./rtrt -np 15 -res 128x128 -no_shadows -bv 0 -scene scenes/uintahparticle2 /local/csafe/raid1/guilkey/annulus5.8.uda.001.keepme -timesteplow 25 -timestephigh 25 -radius 0.000075
+./rtrt -np 15 -res 128x128 -no_shadows -bv 0 -scene scenes/uintahparticle2 /local/csafe/raid1/bard/bigrun/stiff_1603grains_62_1000.uda.000/checkpoints -timestephigh 0 -radius 0.000225
+./rtrt -np 28 -no_shadows -bv 0 -scene scenes/uintahparticle2 /local/csafe/raid1/bard/bigrun/stiff_1603grains_62_1000.uda.000/checkpoints -timesteplow 7 -timestephigh 7 -radius 0.000225 -patch -material
+setenv LD_LIBRARY_FLAG /home/bigler/work/SCIRun/optimized/lib
+setenv DISPLAY rapture:4.0
+xhost +ray
+xhost +ray.cs.utah.edu
+./rtrt -np 28 -no_shadows -bv 0 -scene scenes/uintahparticle2 /local/csafe/raid1/bard/stiff_1603grains_62_1000.uda.001 -radius 0.000225 -patches 100
+eye=[-0.125468, 0.177887, -0.178737]
+lookat=[0.071265, 0.0346664, 0.0832745]
+up=[0.534546, 0.843044, 0.0594573]
+fov=29.3863
+eye=[0.16607, -0.280832, 0.16405]
+lookat=[0.0366738, 0.0489414, 0.115341]
+up=[0.898023, 0.384062, 0.214592]
+fov=40
+eye=[0.161916, -0.284346, 0.151299]
+lookat=[0.0325196, 0.045428, 0.10259]
+up=[0.898023, 0.384062, 0.214592]
+fov=18.2015
+./rtrt -np 1 -res 128x128 -bv 0 -scene scenes/flux /local/csafe/raid1/bigler/scidac/temperature/flux_iso_ts_{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20}
+./rtrt -np 1 -res 128x128 -bv 0 -scene scenes/flux /local/csafe/raid1/bigler/scidac/temperature/flux_iso_ts_{0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,105,110,115,120,125,130,135,140,145,150,155,160,165,170}
+
+
+
+./rtrt -np 16 -res 370x230 -no_shadows -bv 0 -scene scenes/uintahparticle2 /local/csafe/raid1/bard/stiff_1603grains_62_1000.uda.001/ -radius 0.000225
+./rtrt -np 6 -res 3700x2300 -displayless -no_shadows -bv 0 -eye 0.304247 0.150179 -0.0586935 -lookat 0.0539122 0.0122023 0.156159 -up -0.264042 0.921676 0.284244 -fov 34.3352 -scene scenes/uintahparticle2 /local/csafe/raid1/bard/stiff_1603grains_62_1000.uda.001/ -radius 0.000225 -dpyconfig bigrun1.cfg
+eye=[0.304247, 0.150179, -0.0586935]
+lookat=[0.0539122, 0.0122023, 0.156159]
+up=[-0.264042, 0.921676, 0.284244]
+fov=34.3352
+
+./rtrt -np 6 -res 3700x2300 -displayless -no_shadows -bv 0 -eye 0.293355 0.184511 -0.0647604 -lookat 0.0639648 0.0101112 0.146973 -up -0.301463 0.870052 0.390037 -fov 36.5124 -scene scenes/uintahparticle2 /local/csafe/raid1/bard/stiff_1603grains_62_1000.uda.001/ -radius 0.000225 -dpyconfig bigrun1.cfg
+eye=[0.293355, 0.184511, -0.0647604]
+lookat=[0.0639648, 0.0101112, 0.146973]
+up=[-0.301463, 0.870052, 0.390037]
+fov=36.5124
+bigrun1.cfg
+~/work/SCIRun/optimized/Packages/rtrt/StandAlone/rtrt -np 6 -res 14800x9200 -displayless -no_shadows -bv 0 -eye 0.293355 0.184511 -0.0647604 -lookat 0.0639648 0.0101112 0.146973 -up -0.301463 0.870052 0.390037 -fov 36.5124 -scene ../../../../../../nfs/sci/cs0/bigler/SCIRun/optimized/Packages/rtrt/StandAlone/scenes/uintahparticle2 /local/csafe/raid1/bard/stiff_1603grains_62_1000.uda.001/ -radius 0.000225 -dpyconfig /nfs/sci/cs0/bigler/SCIRun/optimized/Packages/rtrt/StandAlone/bigrun1.cfg
+
+./rtrt -np 6 -res 3700x2300 -displayless -no_shadows -bv 0 -eye 0.25736 0.17903 -0.108271 -lookat 0.0279696 0.00463038 0.103462 -up -0.301463  0.870052  0.390037 -fov 8.91334 -scene scenes/uintahparticle2 /local/csafe/raid1/bard/stiff_1603grains_62_1000.uda.001/ -radius 0.000225 -dpyconfig bigrun3.cfg
+eye=[0.25736, 0.17903, -0.108271]
+lookat=[0.0279696, 0.00463038, 0.103462]
+up=[-0.301463, 0.870052, 0.390037]
+fov=8.91334
+bigrun2.cfg
+bigrun3.cfg
+
+./rtrt -np 6 -res 3700x2300 -displayless -no_shadows -bv 0 -eye 0.225679 -0.135768 -0.144982 -lookat 0.0469022 0.0375948 0.111632 -up 0.863058 0.210093 0.459337 -fov 10.852 -scene scenes/uintahparticle2 /local/csafe/raid1/bard/stiff_1603grains_62_1000.uda.001/ -radius 0.000225 -dpyconfig bigrun4.cfg
+eye=[0.225679, -0.135768, -0.144982]
+lookat=[0.0469022, 0.0375948, 0.111632]
+up=[0.863058, 0.210093, 0.459337]
+fov=10.852
+bigrun4.cfg
+~/work/SCIRun/optimized/Packages/rtrt/StandAlone/rtrt -np 16 -res 14800x9200 -displayless -no_shadows -bv 0 -eye 0.225679 -0.135768 -0.144982 -lookat 0.0469022 0.0375948 0.111632 -up 0.863058 0.210093 0.459337 -fov 10.852 -scene ../../../../../../nfs/sci/cs0/bigler/SCIRun/optimized/Packages/rtrt/StandAlone/scenes/uintahparticle2 /local/csafe/raid1/bard/stiff_1603grains_62_1000.uda.001/ -radius 0.000225 -dpyconfig /nfs/sci/cs0/bigler/SCIRun/optimized/Packages/rtrt/StandAlone/bigrun4.cfg

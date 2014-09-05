@@ -1,0 +1,26 @@
+LINUX_XERCES = /res/sci/data4/luke/SCIRun/Xerxes/xerces-c_1_1_0-linux
+LINUX_XERCESLIB = $(LINUX_XERCES)/lib
+LINUX_SERVER = /res/sci/data4/luke/SV_Server
+LINUX_CC = g++
+LINUX_CXX = g++
+LINUX_CPPFLAGS = -I${SERVER} -I${XERCES}/include -g -DSCICORESHARE="" -Wall
+
+
+IRIX_XERCES = /res/sci/data6/sparker/xerces-c
+IRIX_XERCESLIB = $(XERCES)/lib32
+IRIX_SERVER = /res/sci/data4/luke/Rapture/SV_Server
+IRIX_CC       = CC -LANG:std
+IRIX_CXX	 = CC -LANG:std
+IRIX_CPPFLAGS = -I${SERVER} -I${XERCES}/include -g -DSCICORESHARE="" -DIRIX
+
+
+
+XERCES = $(LINUX_XERCES)
+XERCESLIB = $(LINUX_XERCESLIB)
+SERVER = $(LINUX_SERVER)
+LIBDIR = $(SERVER)/lib
+
+CC = $(LINUX_CC)
+CXX = $(LINUX_CXX)
+CPPFLAGS = $(LINUX_CPPFLAGS)
+LINK     = -shared 

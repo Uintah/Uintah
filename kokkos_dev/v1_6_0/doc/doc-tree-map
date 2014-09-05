@@ -1,0 +1,38 @@
+Doc tree map:
+
+Directory                               Files/Description
+---------------------------------       -----------------------------------------------
+doc                                     index.html (Cover page for all docs). Makefile.
+
+doc/Utilities/                          Root for doc utilities
+doc/Utilities/XML/                      XSL style files, DTDs, and schemas
+doc/Utilities/TeX/                      latex style files and macro files
+doc/Utilities/HTML/                     CSS style sheets
+doc/Utilities/Figures                   Shared figures (e.g. scirun headers and footers).
+
+doc/User                                index.html (cover page).  Makefile
+doc/User/Tutorial                       Html sources
+doc/User/Tutorial/images                Images for tutorial,
+doc/User/Tutorial/images/figures        Figures for tutorial.
+doc/User/Guide                          Userguide tex sources. Makefile
+doc/User/Guide/Figures                  Userguide figures (if needed)
+doc/User/FAQ                            faq.xml
+doc/User/FAQ/Figures                    user FAQ figures (if needed)
+
+doc/Developer/                          index.html (cover page). Makefile
+doc/Developer/Guide                     Developer Guide XML sources.  Makefile
+doc/Developer/Guide/Figures             Developer Guide Figures (if needed).
+doc/Developer/FAQ                       faq.xml
+doc/Developer/FAQ/Figures               FAQ figures
+doc/Developer/CodeViews                 Makefile
+doc/Developer/Modules			Makefile, index.html
+
+doc/Installation/                       index.html (cover page). Makefile
+doc/Installation/Guide                  Installation Guide XML sources.  Makefile
+doc/Installation/Guide/Figures          Figures.
+doc/Installation/FAQ                    faq.xml.
+doc/Installation/FAQ/Figures            FAQ figures
+
+doc/FAQ                                 faqbook.xml (Cover page for all faqs). Makefile
+
+

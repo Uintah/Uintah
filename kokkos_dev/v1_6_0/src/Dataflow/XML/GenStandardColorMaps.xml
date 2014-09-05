@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="GenStandardColorMaps" category="Visualization">
+  <overview>
+    <authors>
+      <author>Kurt Zimmerman</author>
+    </authors>
+    <summary>A module that generates fixed Colormaps for
+       visualization tools.
+    </summary>
+    <description>
+      <p>This module is used to create some
+         "standard" non-editable colormaps in Dataflow/Uintah.
+         Non-editable simply means that the colors cannot be
+         interactively manipulated.  The Module does, allow
+         for the the resolution of the colormaps to be changed.
+         This class sets up the data structures for Colormaps and
+         creates a module from which the user can choose from several
+         popular colormaps.  By clicking in the Color band the user 
+         manipulate the transparency of the color.  This is useful,
+         for example, when volume rendering, though many visualization
+         tools ignore the transparency data.</p>
+      <developer>
+	<p>Most of the important work for this module is performed
+           in the GenStandardColorMaps.tcl file.  There you can 
+           easily add new colormaps by making the obvious changes
+           to the buildColorMaps function and the ui function
+           (where the make_labeled_radio buttons are created).
+           The C++ code merely queries the tcl code and fills
+           the Colormap.</p>
+      </developer>
+    </description>
+    <examplesr>../doc/GenStandarColorMaps.sr</examplesr>
+  </overview>
+  <io>
+    <inputs>
+      <!-- one of (device port file) -->
+    </inputs>
+    <outputs>
+      <!-- one of (device port file) -->
+      <port>
+	<description>
+	  <p>The only output port.  GenStandardColormaps outputs a
+             colormap.</p>
+	</description>
+	<name>ColorMap</name>
+	<datatype>SCIRun::ColorMap</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+      <p>The GenStandardColorMaps allows the user to switch between
+         several "fixed" colormaps and manipulate the alpha value.</p>
+    </description>
+    <parameter>
+      <label> ColorMaps </label>
+      <description>
+	<p> Select one of the listed colormaps.</p>
+      </description>
+    </parameter>
+    <parameter>
+      <label> Resolution </label>
+      <description>
+	<p> Adjust the number of discrete colors used in colormap</p>
+      </description>
+    </parameter>
+    <parameter>
+      <label>  Left click ... Alpha defaults to 0.5.</label>
+      <description>
+	<p> Clicking the left mouse button in the color canvas creates a
+            node which can be moved to manipulate the opacity
+            function. Moving a node to the top of the canvas sets the
+            opacity to 1.0.  Moving a node to the bottom of the canvas
+            sets the opacity to 0.  Opacity is linearly interpolated
+	    between nodes.  Clicking on a node with the right mouse button
+	    removes it.
+       </p>
+	<note> If you happen to move a node off of the canvas so that
+               you cannot re-select it, you can close the window and 
+               re-open it. Half of the node will appear on the screen
+               and the node can be selected.
+	</note>
+      </description>
+    </parameter>
+    <parameter>
+      <label> close </label>
+      <description>
+	<p> Close the GUI window. </p>
+	<note> This does not destroy the window.  The window is only
+               unmapped from the screen.
+	</note>
+      </description>
+    </parameter>
+    <img>../Modules/Visualization/doc/GenStandardColorMapsGUI.gif</img>
+  </gui>
+  <testing>
+  </testing>
+</component>

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+<component name="TimeDataReader" category="DataIO">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    
+   	<summary>  
+    This module lets you read a vector from a 2D matrix stored on Disk. The file on Disk needs to be
+    a nrrd header file plus a datafile. This module is especially intended for large data files that one
+    does not want to load into SCIRun's memory and of which one only wants to extract one time instant.
+    </summary>
+
+    <description>
+    <section>
+    <title> Overview </title>
+    
+    This module reads a vector (column or row) from a 2D matrix stored on Disk and only reads one vector at
+    a time in memory. It is in fact a combined NrrdReader and MatrixSelectVector including all the conversions
+    needed. The module's output is intended to be used in FieldManageData to load time dependend data onto 
+    large meshes. When compiled under Unix the module will try to use the low level open, close, and lseek
+    instructions to allow for browsing through files that are bigger than 2Gb. The module has both a matrix
+    and a nrrd output with data being send to these ports as soon as they are connected to a module downstream.
+    The nrrd output will maintain the type of data, whereas for the matrix output everything is casted to doubles.
+    </section>
+    
+    <section>
+    <title>Input ports </title>
+    
+    All input ports are optional. The filename port will accept a nrrd of char type with the filename as its contents.
+    This filename will override the one given in the GUI. This port is intended for future scripting access of the module.
+    The other input port is an index port, so the module can be couple to other TimeDataReader or MatrixSelectVector modules.
+    If this port is connected, the selection of the index overrules the settings in the GUI. The latter index can as well
+    be used to probe time signals by retrieving the index from the Probe module and using the module in row mode a time
+    signal can be selected.
+    </section>
+
+    <section>
+    <title>Output ports </title>
+    The output can be rendered as NrrdVector or as a ColumnMatrix. Depending on which port is connected the data will be
+    generated. Only when one or both ports are connected data is read from the file on disk. The third port outputs the
+    current index that is being read. The latter can be used to synchronize multiple TimeDataReaders. For example if one
+    has two separate files with intra and extracellular potentials, two TimeDataReaders can be coupled and synchronized
+    through this port.
+    </section>
+
+    <section>
+    <title>File format </title>
+    Currently only 2D nrrds are supported. Although the complete nrrd header is read, spacing and axis information
+    is ignored. The module should be compatible with all nrrd headers currently in use.  The following  fields must be
+    set in the header "dimension" which must be 2, "sizes" indicating rows times columns, "encoding" which must be raw, and
+    "endian" and "datafile" information must be stored. The Nrrd fields "lineskip" and "byteskip" are read and are taken into account.
+    All other fields in the nrrd header files are read but currently ignored.
+    </section>
+
+    <section>
+    <title>File format </title>
+    The latest version of CardioWave should be generating files that can be read by this module. A new version OutputDump.c is
+    needed to automatically generate proper header files that can be read directly into SCIRun.
+    </section>
+
+    </description>
+
+
+
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Current Index</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>Filename</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Vector</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>NrrdVector</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Selected Index</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

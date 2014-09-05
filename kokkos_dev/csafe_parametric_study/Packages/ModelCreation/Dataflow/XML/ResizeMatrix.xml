@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="ResizeMatrix" category="Math" optional="false">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      This module resizes a matrix.
+
+    </summary>
+    <description>
+      <p>        This module resizes a matrix. One can specify the new size of the matrix by connecting scalar values to the input or by setting the appropriate values in the GUI. </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Matrix</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>M</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>N</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Matrix</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>  
+  </io>
+</component>

@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+
+
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+   <Meta>
+       <title>none</title>
+   </Meta>    
+
+   <SimulationComponent type="ice" />
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            10.0        </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <max_delt_increase>  2.0         </max_delt_increase>
+       <delt_init>          1.0e-5      </delt_init>
+       <timestep_multiplier>1.0         </timestep_multiplier>
+   </Time>
+    <!--____________________________________________________________________-->
+    <!--   B O U N D A R Y   C O N D I T I O N S                            -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+
+      <Face side = "x-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0" label = "SpecificVol"    var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-f"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "cumulativeEnergyReleased" var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0" label = "SpecificVol"    var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-f"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "cumulativeEnergyReleased" var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+                     
+      <Face side = "y-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0" label = "SpecificVol"    var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-f"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "cumulativeEnergyReleased" var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side = "y+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0" label = "SpecificVol"    var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-f"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "cumulativeEnergyReleased" var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+
+      <Face side = "z-">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+
+    </BoundaryConditions>
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+       <Level>
+           <Box label="1">
+              <lower>        [-2.5,-2.5,2.5]    </lower>
+              <upper>        [2.5,  2.5,2.55]    </upper>
+              <extraCells>   [1,1,1]    </extraCells>
+              <patches>      [1,1,1]    </patches>
+              <resolution>   [100,100,1] </resolution>
+           </Box>
+       </Level>
+    </Grid>    
+    <!--____________________________________________________________________-->
+    <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>HeliumBlob2.uda</filebase>
+      <outputInterval>0.1</outputInterval>
+      <save label="vel_CC"/>
+      <save label="temp_CC"/>
+      <save label="press_CC"/>
+      <save label="rho_CC"/>
+      <save label="sp_vol_CC"/>
+      <save label="delP_Dilatate"/>
+      <save label="viscosity"/>
+      <save label= "modelEng_src"/>
+      <save label= "cumulativeEnergyReleased"/>
+      <save label= "rhs"/>
+      <save label="sum_scalar_f"/>
+      <save label="TotalIntEng"/>
+      <save label="TotalMass"/>
+      <checkpoint interval="0.005" cycle="2"/>
+   </DataArchiver>
+   
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+         <cfl>0.35</cfl>
+       <ICE>
+       <advection type = "SecondOrder"/>
+       
+        <TimeStepControl>
+          <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
+          <knob_for_speedSound>  0.00           </knob_for_speedSound>
+        </TimeStepControl>
+       
+         
+        <ImplicitSolver>
+           <max_outer_iterations>      20    </max_outer_iterations>
+           <outer_iteration_tolerance> 1e-6  </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 10 </iters_before_timestep_restart>
+           <Parameters variable="implicitPressure">
+              <tolerance>     1.e-8   </tolerance>
+              <norm>     LInfinity    </norm>
+              <criteria> Absolute     </criteria>
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <maxiterations>  7500    </maxiterations>
+            <npre>           1       </npre>
+            <npost>          1       </npost>
+            <skip>           0       </skip>
+            <jump>           0       </jump>
+           </Parameters>
+        </ImplicitSolver>
+      </ICE>        
+    </CFD>
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>[0,-9.81,0]</gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+    <!--____________________________________________________________________-->
+    <!--     MATERIAL PROPERTIES AND INITIAL CONDITIONS                     -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <ICE>
+         <material name = "BackgroundGas">
+           <EOS type = "ideal_gas">                     </EOS>
+           <isSurroundingMatl>      true                </isSurroundingMatl>
+           
+           <dynamic_viscosity>      0.0                 </dynamic_viscosity>     
+           <thermal_conductivity>   0.0                 </thermal_conductivity>  
+           <specific_heat>          716.5               </specific_heat>         
+           <gamma>                  1.4                 </gamma>                 
+           <!--____________________________________ -->
+           <!-- How domain gets initialized         -->
+           <!--____________________________________ -->
+           <geom_object>
+              <difference>
+                <box label="world">
+                  <min>       [ -6.0, -6.0, -6.0 ]    </min>
+                  <max>       [ 6.0, 6.0, 6.0 ]       </max>
+                </box>
+                <cylinder label = "HeBlob">
+                   <bottom>           [0.0,0.0,-5]   </bottom>
+                   <top>              [0.0,0.0, 5]   </top>
+                   <radius>           0.5             </radius>
+                </cylinder>
+              </difference>
+              <res>                [2,2,2]             </res>
+              <velocity>           [.0,.0,.0]          </velocity>
+              <density>       1.176829268292683           </density>
+              <pressure>      101325.0                 </pressure>     
+              <temperature>   300.0                    </temperature>
+           </geom_object>
+           <geom_object>
+              <cylinder label = "HeBlob">              </cylinder>
+              <res>                [2,2,2]             </res>
+              <velocity>           [0.0,0.0,0.0]       </velocity>
+              <density>        0.1626119988637622      </density>
+              <pressure>      101325.0                 </pressure>     
+              <temperature>   300.0                    </temperature>
+           </geom_object>
+         </material>
+      </ICE>       
+       
+
+    </MaterialProperties>
+  
+    <Models>
+       <Model type="AdiabaticTable">
+        <table name="adiabatic" type="Arches">
+          <defaultValue name="heat_loss">0.0</defaultValue>
+           <derivedValue name="reference_heat_capac_Cv">[heat_capac_Cv]</derivedValue>
+           <derivedValue name="reference_gamma">[gamma]</derivedValue>
+           <constantValue name="reference_Temp">300</constantValue>
+          <filename>inputs/Models/he.rxn</filename>
+       </table>
+        <material>BackgroundGas</material>
+        <scalar name="f">
+        <test_conservation>  true  </test_conservation>
+        <constants>
+        </constants>
+       <geom_object>
+              <difference>
+                <box label="world">                  </box>
+                <cylinder label = "HeBlob">          </cylinder>
+              </difference>
+              <scalar>    0.00   </scalar>
+           </geom_object>
+           <geom_object>
+              <cylinder label = "HeBlob">           </cylinder>
+              <scalar>    1.00   </scalar>
+           </geom_object>
+       </scalar>
+      </Model>
+    </Models>                
+
+</Uintah_specification>

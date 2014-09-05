@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="MappingMatrixToField" category="FieldsData">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      This module puts the index of the original field onto the field.
+    </summary>
+    <description>
+      A mapping amtrix is generated every time the nodes in the mesh are remapped. This module takes the mapping from the original mesh to the new mesh and puts the original node indices onto the data of the new mesh. The input of the module takes the newly created field and its mapping matrix and combines it again so the new field contains the numbers of the indices that refer to the old field.
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>MappingMatrix</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>IndicesField</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

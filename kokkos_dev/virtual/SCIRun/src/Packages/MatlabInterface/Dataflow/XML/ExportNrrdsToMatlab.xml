@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<?xml-stylesheet href="../../../../Dataflow/XML/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you mays not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<component name="ExportNrrdsToMatlab" category="DataIO">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary> The ExportNrrdsToMatlab Module saves a SCIRun NRRD object
+into a MATLAB .mat file.
+	</summary>
+  
+  
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Nrrd1</name>
+	<datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Nrrd2</name>
+	<datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Nrrd3</name>
+	<datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Nrrd4</name>
+	<datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Nrrd5</name>
+	<datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Nrrd6</name>
+	<datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
+      </port>            
+    </inputs>
+  </io>
+ 
+  <gui>
+    <parameter>
+      <widget> Entry </widget>
+      <label> .mat file </label>
+      <description>
+	<p> The name of the MATLAB file </p>
+      </description>
+    </parameter>
+
+    <parameter>
+      <widget> Button </widget>
+      <label> Browse </label>
+      <description>
+	<p> Open a filesectionbox and choose a MATLAB file </p>
+      </description>
+    </parameter>
+	
+    <parameter>
+      <widget> Entry </widget>
+      <label> Port N </label>
+      <description> 
+	<p>Enter the name of the MATLAB matrix here. When the matrix
+is loaded into MATLAB it will have this name.</p>
+      </description>
+    </parameter>
+	
+    <parameter>
+      <widget> Popup Menu </widget>
+      <label> Array Type </label>
+      <description>
+	<p>	Use this button to select the output format. In case
+"numeric array" is selected, the Nrrd object will be exported as a
+plain dense matrix without any additional information. This is the
+default option and will be sufficient in most cases. In case "struct
+array" is chosen, a structured MATLAB array will be created with a
+field .data containing the matrix, a field .axis containing the Nrrd
+axis properties and a field .property containing the properties from
+the property manager. Note: that not every type in the property
+manager can be converted to matlab currently. </p>
+      </description>
+    </parameter>
+	
+    <parameter>
+      <widget> Popup Menu </widget>
+      <label> Data type </label>
+      <description>
+	<p>Use this menu to select the datatype of the MATLAB matrix.
+By default the matrix will be exported as the same data type  as the
+Nrrd Object, which seems the most logical choice. However one can opt
+to use a different format, for instance for integer. The module will
+automatically cast the data into the proper format before exporting
+the data to disk.</p>
+      </description>
+    </parameter>
+
+  </gui>
+</component>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<?xml-stylesheet href="../../../../Dataflow/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="Schlieren" category="Operators">
+  <overview>
+    <authors>
+      <author>Todd Harman</author>
+    </authors>
+    <summary>Summary not available yet.</summary>
+    <description>
+      <p>Version Date: Dec. 2004</p>
+      <p>This module is used to generate a Schlieren image which is 
+      commonly used in compressible and reactive flows.  The module
+      reads in the density and computes
+             sqrt( gx^2 + gy^2 + gz^2)
+      where gx, gy, gz are gradients in the different directions.</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Scalar Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+       <name>Scalar Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+   </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

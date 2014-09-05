@@ -1,0 +1,92 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE dir SYSTEM "../../../doc/UserGuide/dirspec.dtd">
+
+<dir name="Core/Exceptions">
+  <fit>
+  <!-- describe how this directory fits into SCIRun - why does it 
+       exist, how does SCIRun benefit from it, etc. -->
+    <p>
+       The Exceptions directory contains common exceptions and the Exception
+       base class.  Developers can create new exception classes, and these
+       will need to be in other directories if they depend on other data
+       structures outside of the Exception dir.
+    </p>
+
+    <p>
+       All exceptions in SCIRun are derived from the SCIRun::Exception
+       base class.  All derived classes implement a message method and a
+       type method.   The type method just returns a string (const char*
+       actually) that indicates the classname of the exception.  The message
+       returns a human readable string that can be printed out when the
+       exception is caught.
+    </p>
+
+    <p>
+       This directory also contains some general exceptions used throughout 
+       SCIRun. 
+       AssertionFailed - thrown when an assertion fails.
+       ArrayIndexOutOfBounds - thrown to indicate a failed bounds check.
+       DimensionMismatch - thrown to indicate dimensionality differences.
+       FileNotFound - thrown when a file is not found.
+       InternalError - thrown when an internal error occurs.
+    </p>
+  </fit>
+  <use>
+    <why>
+    <!-- Discuss why a developer would need or want to use the
+         functions and/or classes in this directory. -->
+      <p>
+        Exceptions are the preffered method of error handling in SCIRun.
+        A developer is likely to use this code in two possible ways.  One is
+        to use a predefined exception that we provide here in this directory.
+        The other is to inherit from Exception to create a new exception 
+        specific to the developers code.
+      </p>
+    </why>
+    <when>
+    <!-- Discuss when or where to use the functions and classes in
+         this directory: From within modules?, when a certain event
+	 occurs? -->
+      <p>
+        A developer is likely to use this code from within written modules 
+        as well as within new datatypes. Anywhere that flexible error 
+        handling is preffered.
+      </p>
+
+      <p>
+         A couple development specific hints follow. 
+      </p> 
+      <p>
+         All exception classes must implement a copy constructor (for some
+         compilers).
+      </p>
+      <p>
+         On the SGI, the exception classes will give you a stacktrace when
+         they are caught (uses -lexc).
+      </p>
+    </when>
+  </use
+</dir>
+
+<!-- author comments: suggestions for new/better tags for this xml file
+
+  I think this file should address known bugs, i.e. have a <bugs> tag.
+
+-->

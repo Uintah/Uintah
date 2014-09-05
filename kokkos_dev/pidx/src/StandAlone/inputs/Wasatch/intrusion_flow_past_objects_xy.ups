@@ -1,0 +1,272 @@
+<Uintah_specification>
+
+  <Meta>
+    <title> Flow past various objects in the xy plane </title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+   <Solver type="hypre" />
+  <Wasatch>
+
+    <Density>
+      <IsConstant>true</IsConstant>
+      <NameTag name="density" state="STATE_NONE" />
+    </Density>
+
+
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi-scalar" state="STATE_N" />
+      <Constant>1.0</Constant>
+    </BasicExpression>
+    
+    <!-- Build a cell-centered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <DiffusiveFluxExpression>
+        <Direction>X</Direction>
+        <ConstantDiffusivity>0.0001</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>Y</Direction>
+        <ConstantDiffusivity>0.0001</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <ConvectiveFluxExpression>
+        <Method>UPWIND</Method> 
+        <Direction>X</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="u" state="STATE_NONE"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+      <ConvectiveFluxExpression>
+        <Method>UPWIND</Method> 
+        <Direction>Y</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="v" state="STATE_NONE"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+      
+    <EmbeddedGeometry>
+     <Intrusion>
+        <geom_object>
+        <union>
+           <cylinder>
+              <bottom>[0,0,-1]</bottom>
+              <top>[0,0,1]</top>
+              <radius>0.15</radius>
+           </cylinder>
+           <parallelepiped>
+             <p1>[0,0.3,1]</p1>
+             <p2>[0,0.55,1]</p2>
+             <p3>[0.5,0.55,1]</p3>
+             <p4>[0,0.3,-1]</p4>                                       
+           </parallelepiped>             
+           <parallelepiped>
+             <p1>[0.35, -0.3,  1]</p1>
+             <p2>[0.35, -0.55, 1]</p2>
+             <p3>[0.65, -0.55, 1]</p3>
+             <p4>[0.35, -0.3, -1]</p4>                                       
+           </parallelepiped>                        
+         </union>
+       </geom_object>
+     </Intrusion>    
+    </EmbeddedGeometry>
+
+    <!-- Set the initial condition expression for x-momentum -->
+    <BasicExpression type="XVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="x-mom" state="STATE_N" />
+       <Constant>0.1</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="YVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="y-mom" state="STATE_N" />
+       <Constant>0.0</Constant>
+    </BasicExpression>
+               
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="viscosity" state="STATE_NONE" />
+      <Constant>0.01</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="density" state="STATE_NONE" />
+      <Constant>1.0</Constant>
+    </BasicExpression>
+
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Y-Velocity>v</Y-Velocity>
+      <Y-Momentum>y-mom</Y-Momentum>
+      <Viscosity>
+        <NameTag name="viscosity" state="STATE_NONE" />
+      </Viscosity>
+      
+      <Pressure>
+        <!-- ReferencePressure value="0.0">
+              <ReferenceCell>[0,0,0]</ReferenceCell>
+        </ReferencePressure -->
+        <Use3DLaplacian>    false</Use3DLaplacian>
+        <Parameters>
+            <!-- Hypre options -->
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1e-12  </tolerance>
+            <setupFrequency> 0 </setupFrequency>
+            <maxiterations>  100    </maxiterations>
+            <relax_type>     2       </relax_type>
+           </Parameters>
+      </Pressure>
+  </MomentumEquations>
+
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>1000</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.0001</delt_min>
+    <delt_max>0.0001</delt_max>
+    <max_Timesteps>5</max_Timesteps>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>intrusion_flow_past_objects_xy.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle = "2" interval = "0.0001"/>
+    <compression>gzip</compression>
+		<save label="svolFraction"/>    
+		<save label="xvolFraction"/>    
+		<save label="yvolFraction"/>            
+    <save label="x-mom"/>    
+    <save label="y-mom"/>        
+    <save label="u"/>
+    <save label="v"/>    
+    <save label="pressure"/>
+    <save label="dilatation"/>
+    <save label="phi-scalar"/>
+  </DataArchiver> 
+
+  <Grid>
+      <BoundaryConditions>
+      <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
+      <Face side="x-">
+
+        <BCType id="all" var="Dirichlet" label="x-mom">
+          <value> 2.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="y-mom">
+          <value> 0.0 </value>
+        </BCType>
+                                                  
+        <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>                                               
+        <BCType id="all" var="Dirichlet" label="x-mom_rhs_full">
+          <value> 0.0 </value>
+        </BCType>                                               
+
+        <BCType id="all" var="Dirichlet" label="phi-scalar">
+          <value> 10.0 </value>
+        </BCType>
+
+      </Face>
+      
+      <Face side="x+">
+
+        <BCType id="all" var="Neumann" label="y-mom">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="pressure">
+          <value> 0.0 </value>
+        </BCType>                       
+        
+        <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>      
+
+        <BCType id="all" var="Neumann" label="phi-scalar">
+          <value> 0.0 </value>
+        </BCType>
+
+      </Face>
+      
+      <Face side="y-">
+      
+        <BCType id="all" var="Dirichlet" label="x-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="y-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="y-mom_rhs_full">
+          <value> 0.0 </value>
+        </BCType>                                               
+
+        <BCType id="all" var="Dirichlet" label="y-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>     
+
+        <BCType id="all" var="Dirichlet" label="phi-scalar">
+          <value> 1.0 </value>
+        </BCType>
+                                
+      </Face>
+      <Face side="y+">
+
+        <BCType id="all" var="Dirichlet" label="x-mom">
+          <value> 0.0 </value>
+        </BCType>
+        
+        <BCType id="all" var="Dirichlet" label="y-mom">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType id="all" var="Dirichlet" label="y-mom_rhs_full">
+          <value> 0.0 </value>
+        </BCType>                                               
+
+        <BCType id="all" var="Dirichlet" label="y-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>     
+
+        <BCType id="all" var="Dirichlet" label="phi-scalar">
+          <value> 1.0 </value>
+        </BCType>
+        
+      </Face>
+
+      </BoundaryConditions>
+      <Level>
+      <Box label="1">
+        <lower>[-1,-1, -1]</lower>
+        <upper>[ 3, 1, 1]</upper>
+        <resolution>[200,100,2]</resolution>
+        <patches>[4,4,1]</patches>
+      </Box>
+      <periodic>[0,0,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

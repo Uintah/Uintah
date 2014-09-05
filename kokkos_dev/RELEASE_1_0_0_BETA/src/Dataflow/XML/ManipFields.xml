@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/ReferenceGuide/component.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="ManipFields" category="Fields">
+  <overview>
+    <authors>
+      <author>Chris Moulding</author>
+    </authors>
+    <summary>
+      <p>
+        Manipulate one or more fields to generate another field.  Example
+        manipulations are merge, clip, cull, re-scale, re-position, etc.
+      </p>
+    </summary>
+    <description>
+      <p>
+        ManipFields is used to create a new Field from applying some operation
+        (or manipulation) on one or more other fields.  Example operations
+        include merging two (or more) fields into one field, clipping a field
+        against a clipping plane, culling elements from a field based on some
+        criteria, re-scaling or re-positioning a field's mesh.
+      </p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="yes">
+      <port>
+        <name>Input Field</name>
+        <description>
+          <p>
+            A field, or fields, to be manipulated. (dynamic)
+          </p>
+        </description>
+        <datatype>SCIRun::Field</datatype>
+        <componentname>GenField</componentname>
+        <componentname>ReadField</componentname>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Output Field</name>
+        <description>
+          <p>
+            The field that results from applying the indicated manipulation
+            to the input fields.
+          </p>
+        </description>
+        <datatype>SCIRun::Field</datatype>
+        <componentname>Render3D</componentname>
+        <componentname>WriteGeometry</componentname>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+      <p>
+        A tab control that contains all the currently known manipulations,
+        which have UI's specific to those manipulations.
+      </p>
+    </description>
+    <parameter>
+      <widget>Button</widget>
+      <label>Execute</label>
+      <description>
+        <p>
+          Sends a request to the scheduler to have this component
+          started.
+        </p>
+      </description>
+    </parameter>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

@@ -1,0 +1,41 @@
+/*!
+\page devtasks SCIRun2 Release Criteria tasks
+
+\section TODO Developer TODO lists
+
+\subsection ayla Ayla
+
+\li GUI Prototypes: by Aug 24
+\li Replace Qt GUI toolkit: TBD
+\li CCA spec upgrade: TBD
+\li Migrate loading/saving network files to a Framework service: TBD
+<!-- merge branch babel_sidl_v0_9_1 to trunk -->
+<!-- MPICH done, others? -->
+
+\subsection keming Keming
+
+\li Complete parallel component implementation: by Aug 15
+\li Updates to text builder: by July 18
+\li PRMI without data redistribution, by July 25
+\li PRMI data redistribution, by Aug 1
+\li PRMI synchronization, by Aug 8
+\li PRMI concurrency control, by Aug 15
+\li Update parallel component examples: TDB
+
+\subsection kosta Kosta
+
+\li Audit existing test programs: find broken tests, write some documentation for each, locate script for test automation: (Waiting on Keming to finish parallel components)
+\li Test Dataflow component model (TBD)
+
+\subsection rc Unassigned Release Criteria tasks
+
+\li New name for SCIRun2
+\li Incorporate %SCIRun GUI features to SCIRun2 GUI
+\li Tests: framework, components, interfaces
+\li Standardize addition of a component model and individual components
+\li Tutorial for component authors
+\li RMI Security model
+<!-- list assumptions made in implementation with appropriate warnings to the user -->
+
+
+*/

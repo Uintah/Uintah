@@ -1,0 +1,4196 @@
+
+
+\chapter{MPM} \label{Sec:MPM}
+
+\section{Introduction}
+
+The material point method (MPM) was described by Sulsky et al.~\cite{sulskycmame,sulskycpc} as
+an extension to the FLIP (Fluid-Implicit Particle) method of
+Brackbill~\cite{brackbill-ruppel86}, which itself is an
+extension of the particle-in-cell (PIC) method of
+Harlow~\cite{harlow1963}.  Interestingly, the name ``material point method"
+first appeared in the literature two years later in a description of
+an axisymmetric form of the method~\cite{sulsky_axisym_1996}.  In both
+FLIP and MPM, the basic idea is the same: objects are discretized into
+particles, or material points, each of which contains all state data for the
+small region of material that it represents.  This includes the position, mass, volume,
+velocity, stress and state of deformation of that material.  MPM differs from
+other so called ``mesh-free" particle methods in that, while each object
+is primarily represented by a collection of particles, a computational mesh
+is also an important part of the calculation.  Particles do not interact
+with each other directly, rather the particle information is accumulated
+to the grid, where the equations of motion are integrated forward in time.
+This time advanced solution is then used to update the particle state.
+
+The method usually uses a regular structured grid as a computational mesh.
+While this grid, in principle, deforms as the material that it is representing
+deforms, at the end of each timestep, it is reset to its original undeformed
+position, in effect providing a new computational grid for each timestep.
+The use of a regular structured grid for each time step has a number of
+computational advantages.  Computation of spatial gradients is simplified.
+Mesh entanglement, which can plague fully Lagrangian techniques, such as
+the Finite Element Method (FEM), is avoided.  MPM has also been successful
+in solving problems involving contact between colliding objects, having an
+advantage over FEM in that the use of the regular grid eliminates the
+need for doing costly searches for contact surfaces\cite{bard}.
+
+In addition to the advantages that MPM brings, as with any numerical technique, it has its own set of shortcomings.  It is computationally more
+expensive than a comparable FEM code.  Accuracy for MPM is typically lower
+than FEM, and errors associated with particles moving around the computational
+grid can introduce non-physical oscillations into the solution.  Finally,
+numerical difficulties can still arise in simulations involving large
+deformation that will prematurely terminate the simulation.  The severity of
+all of these issues (except for the expense) has been significantly reduced
+with the introduction of the Generalized Interpolation Material Point Method,
+or GIMP\cite{bardgimp}.  The basic concepts associated with GIMP will be
+described below.  Throughout this document, MPM (which
+ends up being a special case of GIMP) will frequently be referred to
+interchangably with GIMP.
+
+In addition, MPM can be incorporated with a multi-material CFD algorithm
+as the structural component in a fluid-structure interaction formulation.
+This capability was first demonstrated in the CFDLIB codes from
+Los Alamos by Bryan Kashiwa and co-workers\cite{kashiwa2000}.  There, as
+in the Uintah-MPMICE component,
+MPM serves as the Lagrangian description of the solid
+material in a multimaterial CFD code.  Certain elements of the
+solution procedure are based in the Eulerian CFD algorithm, including
+intermaterial heat and momentum transfer as well as satisfaction
+of a multimaterial equation of state.  The use of a Lagrangian method
+such as MPM to advance the solution of the solid material eliminates
+the diffusion typically associated with Eulerian methods.  The Uintah-MPM
+component will be described in later chapter of this manual.
+
+Subsequent sections of this chapter will first give a relatively brief
+description of the MPM and GIMP algorithms.  This will, of course, be
+focused mainly on describing the capabilities of the Uintah-MPM component.
+This is followed by a section that attempts to relate the information in
+Section~\ref{Sec:AlgDesc} to the implementation in Uintah.
+Following that is a description of the information that goes into an input
+file.  Finally, a number of examples are provided, along with representative
+results.
+
+\section{Algorithm Description} \label{Sec:AlgDesc}
+
+Time and space prohibit an exhaustive description of the theoretical
+underpinnings of the Material Point Method.   Here we will concentrate
+on the discrete equations that result from applying a weak form analysis
+to the governing equations.  The interested reader should
+consult \cite{sulskycmame,sulskycpc} for the development of these discrete
+equations in MPM, and \cite{bardgimp} for the development of the equations
+for the GIMP method.  These end up being very similar, the differences in
+how the two developments affect implementation will be described in
+Section~\ref{gimp_mpm}.
+
+In solving a structural mechanics problem with MPM, one begins by discretizing
+the object of interest into a suitable number of particles, or ``material
+points".  ({\bf Aside:}  What constitutes a suitable number is something of an open
+question, but it is typically advisable to use at least two particles in each
+computational cell in each direction, i.e. 4 particles per cell (PPC) in 2-D,
+8 PPC in 3-D. In choosing the resolution of the computational grid, similar
+considerations apply as for any computational method (trade-off between
+time to solution and accuracy, use of resolution studies to ensure convergence
+in results, etc.).)  Each of these particles will carry, minimally, the
+following variables:
+\begin{itemize}
+
+\item position - $\bfx_p$
+\item mass - $m_p$
+\item volume - $v_p$
+\item velocity - $\bfv_p$
+\item stress - $\sig_p$ 
+\item deformation gradient - $\bfF_p$
+
+\end{itemize}
+
+The description that follows is a recipe for advancing each of these
+variables from the current (discrete) time $n$ to the subsequent
+time $n+1$.  Note that particle mass, $m_p$, typically remains constant
+throughout a simulation unless solid phase reaction models are utilized,
+a feature that is not present in Uintah-MPM.  (Such models are available
+in MPMICE, see Section \ref{Sec:MPMICE}.)  It is also important to point
+out that the algorithm for advancing the timestep is based on the so-called
+Update Stress Last (USL) algorithm.  The superiority of this approach over
+the Update Stress First (USF) approach was clearly demonstrated by Wallstedt
+and Guilkey \cite{WallstedtJCP}.  USF was the formulation used in Uintah
+until mid-2008.
+
+The discrete momentum equation that results from the weak form is given as:
+\begin{eqnarray}
+        \bfm \bfa &=& \bfF^{\rm{ext}} - \bfF^{\rm{int}}  \label{newton2}
+\end{eqnarray}
+where $\bfm$ is the mass matrix, $\bfa$ is the acceleration vector,
+$\bfF^{\rm{ext}}$ is the external force vector (sum of the body forces and
+tractions), and $\bfF^{\rm{int}}$ is the internal force vector resulting from
+the divergence of the material stresses.  The construction of each of these
+quantities, which are based at the nodes of the computational grid,
+will be described below.
+
+The solution begins by accumulating the particle state on the
+nodes of the computational grid, to form the mass matrix $\bfm$ and to find
+the nodal external forces $\bfF^{\rm{ext}}$, and velocities,
+$\bfv$.  In practice, a lumped mass matrix is used to avoid the need to
+invert a system of equations to solve Eq. \ref{newton2} for acceleration.
+These quantities are calculated at individual nodes by the following equations,
+where the $\sum\limits_{p}$ represents a summation over all particles:
+\begin{eqnarray}
+m_i = \sum_{p} S_{ip} m_p,  \;\;\;\;\;\; 
+\bfv_i = \frac{\sum\limits_{p} S_{ip} m_p \bfv_p}{m_i},  \;\;\;\;\;\;
+\bfF^{\rm{ext}}_i &=& \sum_{p} S_{ip} \bfF^{\rm{ext}}_p
+\label{accumulate}
+\end{eqnarray}
+and $i$ refers to individual nodes of the grid.  $m_p$ is the particle
+mass, $\bfv_p$ is the particle velocity, and $\bfF^{\rm{ext}}_p$ is the
+external force on the particle.  The external forces that start on the
+particles typically the result of tractions, the application of which will
+be discussed in Section \ref{sec:PhysicalBCs}.
+$S_{ip}$ is the shape function of the $ith$ node evaluated at $\bfx_p$.
+The functional form of the shape functions differs between MPM and GIMP.
+This difference is discussed in Section \ref{gimp_mpm}.
+
+Following the operations in Eq.~\ref{accumulate}, $\bfF^{\rm{int}}$
+is still required in order to solve for acceleration at the nodes.
+This is computed at the nodes as a volume integral of the divergence
+of the stress on the particles, specifically:
+
+\begin{eqnarray}
+\bfF^{\rm{int}}_i &=& \sum_{p} \bfG_{ip} \sig_p v_p,
+\label{computeIntForce}  
+\end{eqnarray}
+where $\bfG_{ip}$ is the gradient of the shape function of the $ith$ node
+evaluated at $\bfx_p$, and $\sig_p$ and $v_p$ are the time $n$ values of
+particle stress and volume respectively.  
+
+Equation \ref{newton2} can then be solved for $\bfa$.
+\begin{eqnarray}
+\bfa_i &=& \frac{\bfF_i^{\rm{ext}} - \bfF_i^{\rm{int}}}{m_i}
+\label{MPM:acceleration}
+\end{eqnarray}
+An explicit forward Euler method is used for the time integration:
+\begin{eqnarray}
+\bfv_i^L= \bfv_i + \bfa_i \Delta{t}
+\label{MPM:euler}
+\end{eqnarray}
+
+The time advanced grid velocity, $\bfv^L$ is used to compute a velocity
+gradient at each particle according to:
+
+\begin{equation}
+\nabla \bfv_p = \sum_i \bfG_{ip} \bfv^L_i
+\label{velgrad}
+\end{equation}
+This velocity gradient is used to update the particle's deformation gradient,
+volume and stress.  First, an incremental deformation gradient is computed
+using the velocity gradient:
+
+\begin{equation}
+\bfd \bfF_p^{n+1} = (\bfI+\nabla \bfv_p \Delta{t})
+\label{Finc}
+\end{equation}
+Particle volume and deformation gradient are updated by:
+
+\begin{eqnarray}
+v_p^{n+1} = \rm{Det}(\bfd\bfF_p^{n+1})v_p^n,  \;\;\;\;\;\;\;\;\;
+\bfF_p^{n+1}=\bfd\bfF_p^{n+1} \bfF_{p}^{n}
+\label{p_vol}
+\end{eqnarray}
+Finally, the velocity gradient, and/or the deformation gradient are
+provided to a constitutive model, which outputs a time advanced stress
+at the particles.  Specifics of this operation will be further discussed
+in Section~\ref{Sec:ConstitutiveModels}
+
+At this point in the timestep, the particle position and velocity are explicitly
+updated by:
+\begin{eqnarray}
+\bfv_p (t + \Delta{t})  &=& \bfv_p (t)  + \sum_{i} S_{ip} \bfa_i  \Delta{t} 
+\label{MPM:updateVp}
+\end{eqnarray}
+\begin{eqnarray}
+\bfx_p (t + \Delta{t})  &=& \bfx_p (t)  + \sum_{i} S_{ip} \bfv^L_i  \Delta{t}
+\label{MPM:updateXp}
+\end{eqnarray}
+This completes one timestep, in that the update of all six of the variables
+enumerated above (with the exception of mass, which is assumed to remain
+constant) has been accomplished.  Conceptually, one can imagine that, since an
+acceleration and velocity were computed at the grid, and an interval of time
+has passed, the grid nodes also experienced a displacement.  This 
+displacement also moved the particles in an isoparametric fashion.  In
+practice, particle motion is accomplished by Equation~\ref{MPM:updateXp},
+and the grid never deforms.  So, while the MPM literature will often refer
+to resetting the grid to its original configuration, in fact, this 
+isn't necessary as the grid nodes never leave that configuration.  Regardless,
+at this point, one is ready to advance to the next timestep.
+
+The algorithm described above is the core of the Uintah-MPM implementation.
+However, it neglects a number of important considerations.  The first is
+kinematic boundary conditions on the grid for velocity and acceleration.
+The manner in which these are handled will be described in
+Section~\ref{Sec:UintahImp}.  Next, is the use of advanced contact
+algorithms.  By default, MPM enforces no-slip, no-interpenetration contact.
+This feature is extremely useful, but it also means that two bodies initially
+in ``contact" (meaning that they both contain particles whose data are
+accumulated to common nodes) behave as if they are a single body.  To enable
+multi-field simulations with frictional contact, or to impose displacement
+based boundary conditions, e.g. a rigid piston, additional steps must be
+taken.  These steps implement contact formulations such as that described
+by Bardenhagen, et al.\cite{bard_contact}.  The {\it use} of the contact
+algorithms is described in Section~\ref{Sec:Contact}, but the reader will be
+referred to the relevant literature for their development.  Lastly, heat
+conduction is also available in the explicit MPM code, although it may be
+neglected via a run time option in the input file.  Explicit MPM is typically
+used for high rate simulations in which heat conduction is negligible.
+
+\section{Shape functions for MPM and GIMP} \label{gimp_mpm}
+
+In both MPM and GIMP, the basic idea is the same: objects are discretized into
+particles, or material points, each of which contains all state data for the
+small region of material that it represents.  In MPM, these particles are spatially
+Dirac delta functions, meaning that the material that each represents is
+assumed to exist at a single point in space, namely the position of the
+particle.  Interactions between the particles and the grid take place
+using weighting functions, also known as shape functions or interpolation
+functions.  These are typically, but not necessarily, linear, bilinear or
+trilinear in one, two and three dimensions, respectively.
+
+More recently, Bardenhagen and Kober~\cite{bardgimp} generalized the
+development that gives rise to MPM, and suggested that MPM
+may be thought of as a subset of their ``Generalized Interpolation
+Material Point" (GIMP) method.  In the family of GIMP methods
+one chooses a characteristic function $\chi_p$ to represent
+the particles and a shape function $S_i$ as a basis of support on the
+computational nodes.  An effective shape function $\bar{S}_{ip}$  is found
+by the convolution of the $\chi_p$ and $S_i$ which is written as:
+\begin{equation}
+\bar{S}_{ip}(\bfx_p) = \frac{1}{V_p}  \int_{\Omega_p \cap \Omega} \chi_p(\bfx - \bfx_p) S_i(\bfx)\,\mathrm{d}\bfx .
+\label{effectiveS}
+\end{equation}
+While the user has significant latitude in choosing
+these two functions, in practice, the choice of $S_i$ is usually given
+(in one-dimension) as,
+\begin{equation}
+S_i\left(x\right) = \begin{cases} 1 + {\left(x-x_i\right) / h} & {-h < x-x_i \le 0} \\
+                    1 - {\left(x-x_i\right) / h} & {0  < x-x_i \le h} \\
+                    0 & \text{otherwise},
+       \end{cases}
+\label{linear_shape}
+\end{equation}
+where $x_i$ is the vertex location, and $h$ is the cell width, 
+assumed to be constant in this formulation, 
+although this is not a general restriction on the method.
+Multi-dimensional versions are constructed by forming tensor products of the
+one-dimensional version in the orthogonal directions.  
+
+When the choice of characteristic function is the Dirac delta,
+\begin{equation}
+\chi_p(\bfx) = \delta(\bfx-\bfx_p)V_p , \label{MPM_char}
+\end{equation}
+where $\bfx_p$ is the particle position, and $V_p$ is the particle volume,
+then traditional MPM is recovered.  In that case, the effective shape function
+is still that given by Equation~\ref{linear_shape}.  Its gradient is given by:
+
+\begin{equation}
+G_i\left(x\right) = \begin{cases} {1 / h} & {-h < x-x_i \le 0} \\
+                    {-1 / h} & {0  < x-x_i \le h} \\
+                    0 & \text{otherwise},
+       \end{cases}
+\label{linear_shape_grad}
+\end{equation}
+
+Plots of Equations~\ref{linear_shape} and~\ref{linear_shape_grad} are shown
+below.  The discontinuity in the gradient gives rise to poor accuracy and
+stability properties.
+
+\begin{figure}
+  \includegraphics[scale=.85]{mpm_basis.pdf}
+  \caption{Effective shape function when using traditional MPM.}
+  \label{Fig:MPMShape}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[scale=.85]{mpm_grad.pdf}
+  \caption{Gradient of the effective shape function when using traditional MPM.}
+  \label{Fig:MPMShapeGrad}
+\end{figure}
+
+Typically, when an analyst indicates that
+they are ``using GIMP" this implies use of the linear grid basis function
+given in Eq.~\ref{linear_shape} and a ``top-hat" characteristic function,
+given by (in one-dimension),
+\begin{equation}
+\chi_p(x) = H(x-(x_p-l_p))-H(x-(x_p+l_p)) , \label{GIMP_char}
+\end{equation}
+where $H(x)$ is the Heaviside function
+($H(x)=0$ if $x<0$ and $H(x)=1$ if $x\ge0$) and $l_p$ is the half-length
+of the particle.  When the convolution indicated in Eq.~\ref{effectiveS}
+is carried out using the expressions in Eqns.~\ref{linear_shape}
+ and~\ref{GIMP_char}, a closed form for the effective shape function can be
+written as:
+\begin{equation}
+S_{i}\left(x_p\right) = \begin{cases}
+   \frac{\left(h+l_p+\left(x_p-x_i\right)\right)^2}{4hl_p} & {-h -l_p < x_p-x_i \le -h+l_p} \\
+   1 + \frac{\left(x_p-x_i\right)}{h} & {-h + l_p < x_p-x_i \le -l_p} \\
+   1 - \frac{\left(x_p-x_i\right)^2 + l_p^2}{2hl_p} & {-l_p < x_p-x_i \le l_p} \\
+   1 - \frac{\left(x_p-x_i\right)}{h} & {l_p  < x_p-x_i \le h-l_p} \\
+   \frac{\left(h+l_p-\left(x_p-x_i\right)\right)^2}{4hl_p} & {h -l_p < x_p-x_i \le h+l_p} \\
+   0 & \text{otherwise},
+\end{cases}
+\label{gimp_shape}
+\end{equation}
+%
+The gradient of which is:
+\begin{equation}
+G_i(x_p) = \begin{cases}
+   \frac{h+l_p+\left(x_p-x_i\right)}{2 h l_p} & {-h -l_p < x_p-x_i \le -h+l_p} \\
+   \frac{1}{h} & {-h + l_p < x_p-x_i \le -l_p} \\
+   - \frac{\left(x_p-x_i\right)}{h l_p} & {-l_p < x_p-x_i \le l_p} \\
+   - \frac{1}{h} & {l_p  < x_p-x_i \le h-l_p} \\
+   - \frac{h+l_p-\left(x_p-x_i\right)}{2 h l_p} & {h -l_p < x_p-x_i \le h+l_p} \\
+   0 & \text{otherwise},
+\end{cases}
+\label{gimpGrad}
+\end{equation}
+
+Plots of Equations~\ref{gimp_shape} and~\ref{gimpGrad} are shown
+below.  The continuous nature of the gradients are largely responsible
+for the improved robustness and accuracy of GIMP over MPM.
+
+\begin{figure}
+  \includegraphics[scale=.85]{gimp_basis.pdf}
+  \caption{Effective shape function when using GIMP.}
+  \label{Fig:GIMP}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[scale=.85]{gimp_grad.pdf}
+  \caption{Gradient of the effective shape function when using GIMP.}
+  \label{Fig:GradGIMP}
+\end{figure}
+%
+There is one further consideration in defining the effective shape function,
+and that is whether or not the size (length in 1-D) of the particle is kept
+fixed (denoted as ``UGIMP" here)
+or is allowed to evolve due to material deformations 
+(``Finite GIMP" or ``Contiguous GIMP" in (1) and ``cpGIMP" here).
+In one-dimensional
+simulations, evolution of the particle (half-)length is straightforward,
+\begin{equation}
+l_p^n = F_p^n l_p^0 ,  \label{particle_length}
+\end{equation} 
+where $F_p^n$ is the deformation gradient at time $n$.
+In multi-dimensional simulations, a similar approach can be used, assuming
+an initially rectangular or cuboid particle, to find the current particle
+shape.  The difficulty arises in evaluating Eq.~\ref{effectiveS} for
+these general shapes.  One approach, apparently effective, has been to create
+a cuboid that circumscribes the deformed particle shape~\cite{jinmaCMES2006}.
+Alternatively, one can assume that the particle size remains constant (insofar
+as it applies to the effective shape function evaluations only).  This is
+the approach currently implemented in Uintah.
+
+\section{Uintah Implementation} \label{Sec:UintahImp}
+
+Users of Uintah-MPM needn't necessarily bother themselves with the
+implementation in code of the algorithm described above.  This section
+is intended to serve as a reference for users who find themselves needing
+to modify the source code, or those who are simply interested.  Anyone
+just wishing to run MPM simulations may skip ahead to
+Sections~\ref{Sec:UintahSpecMPM} and~\ref{Sec:ExamplesMPM}.  The goal of
+this section is to provide a mapping from the the algorithm described above
+to the software that carries it out.  This won't be exhaustive, but will be a
+good starting point for the motivated reader.
+
+The source code for the Uintah-MPM implementation can be found in
+
+\begin{Verbatim}[fontsize=\footnotesize]
+src/CCA/Components/MPM
+\end{Verbatim}
+Within that directory are a number of files and subdirectories, these will be
+discussed as needed.  For the moment, consider the various files that end in
+``{MPM.cc}":
+\begin{Verbatim}[fontsize=\footnotesize]
+AMRMPM.cc  FractureMPM.cc  ImpMPM.cc  RigidMPM.cc  SerialMPM.cc  ShellMPM.cc
+\end{Verbatim}
+
+\tt AMRMPM.cc \normalfont is the nascent beginnings of an AMR implementation of MPM. 
+It is far from complete and should be ignored.  \tt FractureMPM.cc \normalfont is an implementation of
+the work of Guo and Nairn \cite{GuoNairn}, and while it is viable, it is
+undocumented and unsupported.  \tt ShellMPM.cc \normalfont is a treatment of MPM particles
+as shell and membrane elements, developed by Biswajit Bannerjee.  It is also
+viable, but also undocumented and unsupported.  \tt ImpMPM.cc \normalfont is an implicit
+time integration form of MPM based on the work of Guilkey and Weiss
+\cite{Guilkey03}.  It is also viable, and future releases of Uintah will include
+documentation of its capabilities and uses.  For now, interested readers
+should contact Jim Guilkey directly for more information.  \tt RigidMPM.cc \normalfont contains
+a very reduced level of functionality, and is used solely in conjunction with
+the MPMArches component.
+
+This leaves \tt SerialMPM.cc. \normalfont  This contains, despite its name, the parallel
+implementation of the algorithm described above in Section~\ref{Sec:AlgDesc}.
+For now, we will skip over the initialization procedures such as:
+\begin{Verbatim}[fontsize=\footnotesize]
+SerialMPM::problemSetup
+SerialMPM::scheduleInitialize
+SerialMPM::actuallyInitialize
+\end{Verbatim}
+and focus mainly on the timestepping algorithm described above.  Reference
+will be made back to these functions as needed in
+Section~\ref{Sec:UintahSpecMPM}.
+
+Each of the Uintah components contains a function called \tt
+scheduleTimeAdvance. \normalfont The algorithms implemented in these
+components are broken into a number of steps.  The implementation of
+these steps in Uintah take place in ``tasks".  Each task is
+responsible for performing the calculations needed to accomplish that
+step in the algorithm.  Thus, each task requires some data upon which
+to operate, and it also creates some data, either as a final result,
+or as input to a subsequent task.  Before individual tasks are
+executed, each is first ``scheduled".  The scheduling of tasks
+describes the dataflow and data dependencies for a given algorithm.
+By describing the data dependencies, both temporally and spatially,
+each task can be executed in the proper order, and communication tasks
+can automatically be generated by the Uintah infrastructure to achieve
+parallelism.  Thus, scheduleTimeAdvance calls a series of functions,
+each of which schedules the individual tasks.  Let's begin by looking
+at the \tt scheduleTimeAdvance \normalfont for \tt SerialMPM,
+\normalfont pasted below.
+
+\begin{Verbatim}[fontsize=\footnotesize]
+void
+SerialMPM::scheduleTimeAdvance(const LevelP & level,
+                               SchedulerP   & sched)
+{
+  MALLOC_TRACE_TAG_SCOPE("SerialMPM::scheduleTimeAdvance()");
+  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))
+    return;
+
+  const PatchSet* patches = level->eachPatch();
+  const MaterialSet* matls = d_sharedState->allMPMMaterials();
+
+  scheduleApplyExternalLoads(             sched, patches, matls);
+  scheduleInterpolateParticlesToGrid(     sched, patches, matls);
+  scheduleExMomInterpolated(              sched, patches, matls);
+  scheduleComputeContactArea(             sched, patches, matls);
+  scheduleComputeInternalForce(           sched, patches, matls);
+
+  scheduleComputeAndIntegrateAcceleration(sched, patches, matls);
+  scheduleExMomIntegrated(                sched, patches, matls);
+  scheduleSetGridBoundaryConditions(      sched, patches, matls);
+  scheduleSetPrescribedMotion(            sched, patches, matls);
+  scheduleComputeStressTensor(            sched, patches, matls);
+  if(flags->d_doExplicitHeatConduction){
+    scheduleComputeHeatExchange(          sched, patches, matls);
+    scheduleComputeInternalHeatRate(      sched, patches, matls);
+    scheduleComputeNodalHeatFlux(         sched, patches, matls);
+    scheduleSolveHeatEquations(           sched, patches, matls);
+    scheduleIntegrateTemperatureRate(     sched, patches, matls);
+  }
+  scheduleAddNewParticles(                sched, patches, matls);
+  scheduleConvertLocalizedParticles(      sched, patches, matls);
+  scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
+
+  if(flags->d_canAddMPMMaterial){
+    //  This checks to see if the model on THIS patch says that it's
+    //  time to add a new material
+    scheduleCheckNeedAddMPMMaterial(         sched, patches, matls);
+
+    //  This one checks to see if the model on ANY patch says that it's
+    //  time to add a new material
+    scheduleSetNeedAddMaterialFlag(         sched, level,   matls);
+  }
+
+  sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
+                                    d_sharedState->d_particleState_preReloc,
+                                    lb->pXLabel,
+                                    d_sharedState->d_particleState,
+                                    lb->pParticleIDLabel, matls);
+  if(d_analysisModule){
+    d_analysisModule->scheduleDoAnalysis( sched, level);
+  }
+}
+\end{Verbatim}
+
+The preceding includes scheduling for a number of rarely used features.
+For now, let's condense the preceding to the essential tasks:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+void
+SerialMPM::scheduleTimeAdvance(const LevelP & level,
+                               SchedulerP   & sched)
+{
+  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))
+    return;
+
+  const PatchSet* patches = level->eachPatch();
+  const MaterialSet* matls = d_sharedState->allMPMMaterials();
+
+  scheduleApplyExternalLoads(             sched, patches, matls);
+  scheduleInterpolateParticlesToGrid(     sched, patches, matls);
+  scheduleExMomInterpolated(              sched, patches, matls);
+  scheduleComputeInternalForce(           sched, patches, matls);
+
+  scheduleComputeAndIntegrateAcceleration(sched, patches, matls);
+  scheduleExMomIntegrated(                sched, patches, matls);
+  scheduleSetGridBoundaryConditions(      sched, patches, matls);
+  scheduleComputeStressTensor(            sched, patches, matls);
+  scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
+
+  sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
+                                    d_sharedState->d_particleState_preReloc,
+                                    lb->pXLabel,
+                                    d_sharedState->d_particleState,
+                                    lb->pParticleIDLabel, matls);
+}
+\end{Verbatim}
+
+As described above, each of the ``schedule" functions describes
+dataflow, and it also calls the function that actually executes the
+task.  The naming convention is illustrated by an example, \tt
+scheduleComputeAndIntegrateAcceleration \normalfont calls \tt
+computeAndIntegrateAcceleration. \normalfont Let's examine this
+particular task, which executes Equations~\ref{MPM:acceleration}
+and~\ref{MPM:euler}, more carefully.  First, the scheduling of the
+task:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+void SerialMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
+                                                       const PatchSet* patches,
+                                                       const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+
+  printSchedule(patches,cout_doing,"MPM::scheduleComputeAndIntegrateAcceleration\t\t\t\t");
+
+  Task* t = scinew Task("MPM::computeAndIntegrateAcceleration",
+                        this, &SerialMPM::computeAndIntegrateAcceleration);
+
+  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+
+  t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
+  t->requires(Task::NewDW, lb->gInternalForceLabel, Ghost::None);
+  t->requires(Task::NewDW, lb->gExternalForceLabel, Ghost::None);
+  t->requires(Task::NewDW, lb->gVelocityLabel,      Ghost::None);
+
+  t->computes(lb->gVelocityStarLabel);
+  t->computes(lb->gAccelerationLabel);
+
+  sched->addTask(t, patches, matls);
+}
+\end{Verbatim}
+
+The \tt if \normalfont statement basically directs the schedule to only do this task on the 
+finest level (MPM can be used in AMR simulations, but only at the finest
+level.)  The \tt printSchedule \normalfont command is in place for debugging purposes,
+this type of print statement can be turned on by setting an environmental
+variable.  The real business of this task begins with the declaration of the
+Task.  In the task declaration, the function associated with that task is
+identified.  Subsequent to that is a description of the data dependencies.
+Namely, this task \tt requires \normalfont the mass, internal and external forces as well
+as velocity on the grid.  No ghost data are required as this task is a 
+node by node calculation.  It also requires the timestep size.  Note also
+that most of the required data are needed from the \tt NewDW \normalfont where
+\tt DW \normalfont refers to
+DataWarehouse.  This simply means that these data were calculated by an
+earlier task in the current timestep.  The timestep size for this step
+was computed in the previous timestep, and thus is required from the \tt OldDW. \normalfont
+Finally, this task \tt computes \normalfont the acceleration and time advanced velocity
+at each node.
+
+The code to execute this task is as follows:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
+                                                const PatchSubset* patches,
+                                                const MaterialSubset*,
+                                                DataWarehouse* old_dw,
+                                                DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing,"Doing computeAndIntegrateAcceleration\t\t\t\t");
+
+    Ghost::GhostType  gnone = Ghost::None;
+    Vector gravity = d_sharedState->getGravity();
+    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+
+      // Get required variables for this patch
+      constNCVariable<Vector> internalforce, externalforce, velocity;
+      constNCVariable<double> mass;
+
+      delt_vartype delT;
+      old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+
+      new_dw->get(internalforce,lb->gInternalForceLabel, dwi, patch, gnone, 0);
+      new_dw->get(externalforce,lb->gExternalForceLabel, dwi, patch, gnone, 0);
+      new_dw->get(mass,         lb->gMassLabel,          dwi, patch, gnone, 0);
+      new_dw->get(velocity,     lb->gVelocityLabel,      dwi, patch, gnone, 0);
+
+      // Create variables for the results
+      NCVariable<Vector> velocity_star,acceleration;
+      new_dw->allocateAndPut(velocity_star, lb->gVelocityStarLabel, dwi, patch);
+      new_dw->allocateAndPut(acceleration,  lb->gAccelerationLabel, dwi, patch);
+
+      acceleration.initialize(Vector(0.,0.,0.));
+      double damp_coef = flags->d_artificialDampCoeff;
+
+      for(NodeIterator iter=patch->getExtraNodeIterator__New();
+                        !iter.done();iter++){
+        IntVector c = *iter;
+        Vector acc(0.,0.,0.);
+        if (mass[c] > flags->d_min_mass_for_acceleration){
+          acc  = (internalforce[c] + externalforce[c])/mass[c];
+          acc -= damp_coef*velocity[c];
+        }
+        acceleration[c] = acc +  gravity;
+        velocity_star[c] = velocity[c] + acceleration[c] * delT;
+      }
+    }    // matls
+  }
+}
+\end{Verbatim}
+
+This task contains three nested for loops.  First, is a loop over all of the
+``patches" that the processor executing this task is responsible for.  Next
+is a loop over all materials (imagine a simulation involving the interaction
+between, say, tungsten and copper).  Within this loop, the required data
+are retrieved from the \tt new\_dw \normalfont (New DataWarehouse) and space for the data
+to be created is allocated.  The final loop is over all of the nodes on
+the current patch, and the calculations described by
+Equations~\ref{MPM:acceleration} and~\ref{MPM:euler} are carried out.  (This
+also includes a linear damping term not described above.)
+
+Let's consider each task in turn.  The remaining tasks will be described
+in much less detail, but the preceding dissection of a fairly simple task,
+along with a description of what the remaining tasks are intended to 
+accomplish, should allow interested individuals to follow the remainder
+of the Uintah-MPM implementation.
+
+\begin{enumerate}
+\item {\tt scheduleApplyExternalLoads \normalfont} This task is mainly responsible for
+applying traction boundary conditions described in the input file.  This is
+done by assigning external force vectors to the particles.  If the user
+wishes to apply a load that is not possible to acheive via the input file
+options, it is straightforward to modify the code here to do ``one-off" tests.
+
+\item {\tt scheduleInterpolateParticlesToGrid \normalfont}   The name of this task was
+poorly chosen, but has persisted.  This task carries out the operations given
+in Equation~\ref{accumulate}.  It also sets boundary conditions on some of
+the variables, such as the grid temperature, and grid velocity 
+(in the case of symmetry BCs).
+
+\item {\tt scheduleExMomInterpolated \normalfont}  This task actually exists in one
+of the contact models which can be found in the \tt Contact \normalfont directory.  Each of those
+models has two main tasks. This is the the first of those. It is responsible
+for modifying the grid velocity computed by interpolateParticlesToGrid according
+to the rules for the particular contact model chosen in the input file.  These
+models are briefly described in Section~\ref{Sec:Contact}. 
+
+\item {\tt scheduleComputeInternalForce \normalfont} This task computes the volume
+integral of the divergence of stress.  Specifically, it carries out the
+operation given in Equation~\ref{computeIntForce}.  It also computes some
+diagnostic data, if requested in the input file, such as the reaction forces
+(tractions) on the boundaries of the computational domain.
+
+\item {\tt scheduleComputeAndIntegrateAcceleration \normalfont} As described previously,
+this task carries out the operations described in 
+Equations~\ref{MPM:acceleration} and~\ref{MPM:euler}.
+
+\item {\tt scheduleExMomIntegrated \normalfont}  This is the second of the contact tasks
+(see above).  It is responsible for modifiying the time advanced grid velocity
+computed in \tt computeAndIntegrateAcceleration. \normalfont
+
+\item {\tt scheduleSetGridBoundaryConditions \normalfont}  This task sets boundary conditions
+on the time advanced grid velocity.  It also sets an acceleration boundary
+condition as well.  However, rather than just setting the acceleration
+to a given value, it is computed by solving Equation~\ref{MPM:euler} for
+acceleration, and then recomputing the acceleration (on all nodes) as:
+\begin{eqnarray}
+\bfa_i= \frac{\bfv^L_i - \bfv_i}{\Delta{t}}
+\label{MPM:accBC}
+\end{eqnarray}
+Doing this operation on all nodes has several advantages.  For most interior
+nodes, the value for acceleration will be unchanged, but for nodes on the 
+where the velocity has been altered by enforcing boundary conditions, and
+for nodes at which the contact models have altered the velocity, the acceleration
+will be modified to reflect that alteration.
+
+\item{\tt scheduleComputeStressTensor \normalfont}  The task, \tt computeStressTensor, \normalfont
+exists in each of the models in the \tt ConstitutiveModel \normalfont directory.  Each
+model is responsible for carrying out the operations given in
+Equation~\ref{p_vol}, and of course, as the name implies, it also computes
+the material stress.  This task has one additional important function,
+and that is computing the timestep size for the subsequent step.  The CFL
+condition dictates that the timestep size be limited according to:
+\begin{eqnarray}
+\Delta{t} < \frac{\Delta{x}}{c+|u|}
+\label{MPM:CFL}
+\end{eqnarray}
+where $\Delta{x}$ is the cell spacing, $c$ is the wavespeed in the material,
+and $|u|$ is the magnitude of the local velocity.  Because the wavespeed 
+may depend on the state of stress that a material is in, this task provides
+a convenient time at which to make this calculation.  A timestep size is
+computed for all particles, and the minimum for the particle set on a given
+patch is put into a ``reduction variable".  The Uintah infrastructure then
+does a global reduction to select the smallest timestep from across the
+domain.
+
+\item {\tt scheduleInterpolateToParticlesAndUpdate \normalfont}  This task carries out the
+operations in Equations~\ref{MPM:updateVp} and~\ref{MPM:updateXp}, namely updating
+the particle state based on the grid solution.
+
+\item {\tt scheduleParticleRelocation \normalfont}  This task is not actually located
+in the MPM code, but in the Uintah infrastructure.  The idea is that as particles
+move, some will cross patch boundaries, and their data will need to be sent to
+other processors.  This task is responsible for identifying particles that have
+left the patch that they were on, finding where they went, and sending their
+data to the correct processor.
+
+\end{enumerate}
+
+\section{Uintah Specification} \label{Sec:UintahSpecMPM}
+
+Uintah input files are constructed in XML format.  Each begins with:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+\end{Verbatim}
+while the remainder of the file is enclosed within the following tags:
+\begin{Verbatim}[fontsize=\footnotesize]
+<Uintah_specification>
+</Uintah_specification>
+\end{Verbatim}
+
+The following subsections describe the remaining inputs needed to construct
+an input file for an MPM simulation.  The order of the various sections 
+of the input file is not important.  {\bf The MPM, ICE and MPMICE components
+are dimensionless calculations.  It is the responsibility of the analyst
+to provide the following inputs using a consistent set of units.}
+
+\subsubsection{Common Inputs} \label{Sec:commonInputs}
+
+Each Uintah component is invoked using a single executable called
+\it sus \normalfont, which chooses the type of simulation
+to execute based on the \it SimulationComponent \normalfont tag in the
+input file.  For the case of MPM simulations, this looks like:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+ <SimulationComponent type="mpm" />
+\end{Verbatim}
+
+There are a number of fields that are required for any component.  The first
+is that describing the timestepping parameters, these are largely common to
+all components, and are described in Section~\ref{Sec:TimeRelatedVariables}.
+The only one that bears commenting on at this point is:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+  <timestep_multiplier>    0.5     </timestep_multiplier>
+\end{Verbatim}
+This is effectively the CFL number for MPM simulations, that is the number
+multiplied by the timestep size that is automatically calculated by the MPM
+code.  Experience indicates that one should generally keep this value below
+$0.5$, and should expect to use smaller values for high-rate, large-deformation
+simulations.
+
+The next field common to the input files for all components is:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+   <DataArchiver>
+   </DataArchiver>
+\end{Verbatim}
+This is described in Section~\ref{Sec:DataArchiver}.  To see a list of
+variables available for saving in MPM simulations, execute the following
+command from the \tt StandAlone \normalfont directory:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+inputs/labelNames mpm
+\end{Verbatim}
+Note that for visualizing particle data, one must save \tt p.x, \normalfont
+and at least one other variable by which to color the particles.
+
+The other principle common field is that which describes the computational
+grid.  For MPM, this is typically broken up into two parts, the
+\tt <Level> \normalfont section specifies the physical extents and spatial
+resolution of the grid.  For more information, consult Section~\ref{Sec:Grid}.
+The other part specifies kinematic boundary conditions on the grid boundaries.
+These are discussed below in Section~\ref{Sec:MPM_BCs}.
+
+\subsubsection{Physical Constants} \label{Sec:physicalConstants}
+The only physical constant required (or optional for that matter) for
+MPM simulations is gravity, this is specified as:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<PhysicalConstants>
+   <gravity>            [0,0,0]   </gravity>
+</PhysicalConstants>
+\end{Verbatim}
+
+\subsubsection{MPM Flags} \label{Sec:MPMFlags}
+
+There are many options available when running MPM simulations.  These
+are generally specified in the \tt <MPM> \normalfont section of the input file.
+Below is a list of these options taken from
+\tt inputs/UPS\_SPEC/mpm\_spec.xml \normalfont 
+This file also gives possible values, or at least expected datatype,
+for these flags.  A description of their functionality is forthcoming,
+in the meantime, consult the code and input files.  A default value is
+set for many, see \tt MPM/MPMFlags.cc \normalfont for more.
+
+\begin{Verbatim}[fontsize=\footnotesize]
+    <MPM>
+     <!-- These are commonly used options -->
+      <artificial_damping_coeff           spec="OPTIONAL DOUBLE 'positive'"/>
+      <artificial_viscosity               spec="OPTIONAL BOOLEAN" />
+      <artificial_viscosity_coeff1        spec="OPTIONAL DOUBLE" />
+      <artificial_viscosity_coeff2        spec="OPTIONAL DOUBLE" />
+      <axisymmetric                       spec="OPTIONAL BOOLEAN" />
+      <boundary_traction_faces            spec="OPTIONAL STRING" />
+      <DoExplicitHeatConduction           spec="OPTIONAL BOOLEAN" />
+      <DoPressureStabilization            spec="OPTIONAL BOOLEAN" />
+      <erosion                            spec="OPTIONAL NO_DATA"
+            attribute1="algorithm REQUIRED STRING 'none, KeepStress, ZeroStress, RemoveMass'" />
+      <interpolator                       spec="OPTIONAL STRING 'linear, gimp, 3rdorderBS, 4thorderBS'" />
+      <minimum_particle_mass              spec="OPTIONAL DOUBLE 'positive'"/>
+      <minimum_mass_for_acc               spec="OPTIONAL DOUBLE 'positive'"/>
+      <maximum_particle_velocity          spec="OPTIONAL DOUBLE 'positive'"/>
+      <testForNegTemps_mpm                spec="OPTIONAL BOOLEAN" />
+      <time_integrator                    spec="OPTIONAL STRING 'explicit, fracture, implicit'" />
+      <use_load_curves                    spec="OPTIONAL BOOLEAN" />
+      <UsePrescribedDeformation           spec="OPTIONAL BOOLEAN" />
+      <withColor                          spec="OPTIONAL BOOLEAN" />
+
+     <!-- These are not commonly used options -->
+      <CanAddMPMMaterial                  spec="OPTIONAL BOOLEAN" />
+      <create_new_particles               spec="OPTIONAL BOOLEAN" />
+      <do_contact_friction_heating        spec="OPTIONAL BOOLEAN" />
+      <do_grid_reset                      spec="OPTIONAL BOOLEAN" />
+      <DoThermalExpansion                 spec="OPTIONAL BOOLEAN" />
+      <ForceBC_force_increment_factor     spec="OPTIONAL DOUBLE" />
+      <manual_new_material                spec="OPTIONAL BOOLEAN" />
+      <interpolateParticleTempToGridEveryStep spec="OPTIONAL BOOLEAN" />
+      <temperature_solve                  spec="OPTIONAL BOOLEAN" />
+
+     <!-- THE FOLLOWING APPLY ONLY TO THE IMPLICIT MPM CODE -->
+      <dynamic                            spec="OPTIONAL BOOLEAN" />
+      <solver                             spec="OPTIONAL STRING 'petsc, simple'" />
+      <convergence_criteria_disp          spec="OPTIONAL DOUBLE 'positive'"/>
+      <convergence_criteria_energy        spec="OPTIONAL DOUBLE 'positive'"/>
+      <num_iters_to_decrease_delT         spec="OPTIONAL INTEGER" />
+      <num_iters_to_increase_delT         spec="OPTIONAL INTEGER" />
+      <iters_before_timestep_restart      spec="OPTIONAL INTEGER" />
+      <DoTransientImplicitHeatConduction  spec="OPTIONAL BOOLEAN" />
+      <delT_decrease_factor               spec="OPTIONAL DOUBLE" />
+      <delT_increase_factor               spec="OPTIONAL DOUBLE" />
+      <DoImplicitHeatConduction           spec="OPTIONAL BOOLEAN" />
+      <DoMechanics                        spec="OPTIONAL BOOLEAN" />
+
+      <!-- THE FOLLOWING APPLY ONLY TO THE FRACTURE MPM CODE -->
+      <dadx                               spec="OPTIONAL DOUBLE" />
+      <smooth_crack_front                 spec="OPTIONAL BOOLEAN" />
+      <calculate_fracture_parameters      spec="OPTIONAL BOOLEAN" />
+      <do_crack_propagation               spec="OPTIONAL BOOLEAN" />
+      <use_volume_integral                spec="OPTIONAL BOOLEAN" />
+    </MPM>
+\end{Verbatim}
+
+
+
+\subsubsection{Material Properties} \label{Sec:mat_props}
+
+The \tt Material Properties \normalfont section of the input file
+actually contains not only those, but also the geometry and initial
+condition data as well.  Below is a simple example, copied from
+\tt inputs/MPM/disks.ups. \normalfont  The \tt name \normalfont field
+is optional.  The first field is the material \tt <density>. \normalfont
+The \tt <constitutive\_model> \normalfont field refers
+to the model used to generate a stress tensor on each material point.
+The use of these models is described in detail in
+Section~\ref{Sec:ConstitutiveModels}.  Next are the thermal transport properties,
+\tt <thermal\_conductivity> \normalfont and 
+\tt <specific\_heat>. \normalfont  Note that these are required even if
+heat conduction is not being computed.  These are the required material
+properties.  There are additional optional parameters that are used in
+other auxiliary calculations, for a list of these
+see the \tt inputs/UPS\_SPEC/mpm\_spec.xml \normalfont.
+
+Next is the specification of the geometry, and, along with it, the initial
+state of the material contained in that geometry.  For more information on
+how initial geometry can be specified, see Section~\ref{Sec:GeometryObjects}.  Within the
+\tt <geom\_object> \normalfont is the \tt <res> \normalfont field.  This
+indicates how many particles per cell are to be used in each of the 
+coordinate directions.  Following that are initial values for velocity and
+temperature.  Finally, the \tt <color> \normalfont designation has a number
+of uses, for example when one wishes to identify initially distinct regions
+of the same material.  In Section~\ref{Sec:OTFA_MPM} is a description of how
+this field is used to identify particles for on the fly data extraction.
+
+An arbitray number of \tt <material> \normalfont fields can be specified.
+As the calculation proceeds, each of these materials has their own field
+variables, and, as such, each material behaves independently of the others.
+Interactions between materials occur as a result of ``contact" models.
+Their use is described in detail in Section~\ref{Sec:Contact}.
+
+\begin{Verbatim}[fontsize=\footnotesize]
+    <MaterialProperties>
+       <MPM>
+           <material name="disks">
+              <density>1000.0</density>
+              <constitutive_model type="comp_mooney_rivlin">
+                 <he_constant_1>100000.0</he_constant_1>
+                 <he_constant_2>20000.0</he_constant_2>
+                 <he_PR>.49</he_PR>
+              </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                  <cylinder label = "gp1">
+                     <bottom>[.25,.25,.05]</bottom>
+                     <top>[.25,.25,.1]</top>
+                     <radius> .2 </radius>
+                  </cylinder>
+                  <res>[2,2,2]</res>
+                  <velocity>[2.0,2.0,0]</velocity>
+                  <temperature>300</temperature>
+                  <color>             0               </color>
+               </geom_object>
+           </material>
+
+           <contact>
+             <type>null</type>
+             <materials>[0]</materials>
+           </contact>
+       </MPM>
+    </MaterialProperties>
+\end{Verbatim}
+
+\subsubsection{Constitutive Models} \label{Sec:ConstitutiveModels}
+
+The MPM code contains a large number of constitutive models that provide
+a Cauchy stress on each particle based on the velocity gradient computed at
+that particle.  The following is a list and very brief description of 
+the most commonly used models.  The reader may wish to consult the
+\tt inputs/MPM \normalfont and \tt inputs/MPMICE \normalfont directories
+to find explicit examples of the use of these models, and others not
+described below.
+
+\begin{enumerate}
+\item{\bf Compressible Neo-Hookean Model} There are implementations of several
+hyperelastic-plastic model described by Simo and Hughes\cite{simo1998} (pp. 307 -- 321). 
+ The model is dubbed "Unified Compressible Neo-Nookean Model" or UCNH for short.  Models can 
+still be specified with old input file specifications, (i.e. comp\_neo\_hook, comp\_neo\_hook\_plastic,
+cnh\_damage, cnhp\_damage) however these are merely wrappers for the underyling UCNH model.
+ Plastic flow and failure can be modelled in addition to elasticity by  specifying 
+several additional options with input flags. This models is very robust, and relatively 
+straightforward because hyperelastic models don't require rotation back and forth 
+between laboratory and material frames of reference.
+
+NOTE: Support for Implicit CNH and CNH with specified solver is still lacking (for a short time).
+
+The basic input section for UCNH:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+            <constitutive_model type="UCNH"> 
+              <!-- Necessary flags for all CNH models -->
+               <bulk_modulus>   8.9e9  </bulk_modulus>
+               <shear_modulus>  3.52e9 </shear_modulus>
+               <useModifiedEOS> true   </useModifiedEOS>
+                
+              <!-- Plasticity Parameters -->
+               <usePlasticity>     true  </usePlasticity>
+               <yield_stress>      100.0 </yield_stress>
+               <hardening_modulus> 500.0 </hardening_modulus>
+               <alpha>             1.0   </alpha>
+
+            </constitutive_model>
+\end{Verbatim}
+
+A fairly sophisticated means of seeding explicit material heterogeneity is also provided for. 
+To use these features the following four steps are required: 
+
+1. To allow for failure (by material point erosion) the following must be set: 
+
+In the \tt <MPM> \normalfont block, the erosion algorithm must be set to one of the following: 
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<erosion algorithm="AllowNoTension"/>
+<erosion algorithm="AllowNoShear"/>
+<erosion algorithm="ZeroStress"/>
+\end{Verbatim}
+
+In the \tt <constitutive\_model> \normalfont block:
+\begin{Verbatim}[fontsize=\footnotesize]
+<useDamage>true</useDamage>
+\end{Verbatim}
+
+2. The failure surface type must be specified.  This is also in the \tt <constitutive\_model> \normalfont 
+block.  One of the following must be specified:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<failure_criteria>  MohrCoulomb </failure_criteria>
+<failure_criteria>  MaximumPrincipalStress </failure_criteria>
+<failure_criteria>  MaximumPrincipalStrain </failure_criteria>
+\end{Verbatim}
+
+The cohesion, $c$, is assigned using a distribution, as described below.  For the maximum 
+principal stress and strain failure criteria, the cohesion is the maximum value of principal 
+stress or strain that may be obtained (must be positive).  The MohrCoulomb failure criteria is
+given by 
+\begin{equation}
+\frac{\sigma_3-\sigma_1}{2}=c\cos(\phi)-\frac{\sigma_3+\sigma_1}{2}\sin(\phi)
+\end{equation}
+where $\sigma_i$ are the ordered principal stresses, positive in tension 
+($\sigma_3 > \sigma_2 > \sigma_1$).  Note, the MohrCoulomb failure 
+surface also requires a friction angle, $\phi$, (in degrees):
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<friction_angle> friction angle </friction_angle>
+\end{Verbatim}
+
+A tensile cutoff failure surface may be added for MohrCoulomb.
+The tensile cutoff is taken to be a fraction of the cohesion.  
+This parameter is specified using:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<tensile_cutoff_fraction> 0.1 </tensile_cutoff_fraction> 
+\end{Verbatim}
+
+Setting this to a large number effectively removes this failure surface, leaving just Mohr-Coulomb.
+
+3. Material heterogeneity type must be specified.  For MohrCoulomb the cohesion is distributed 
+spatially (an independent assignment for each material point).  For MaximumPrincipalStress and 
+MaximumPrincipalStrain, the threshold stress or strain for failure, respectively, is distributed 
+spatially (an independent assignment for each material point).  Material heterogeneity is 
+distributed spatially by assigning values consistent with a distribution function.  Three different 
+distributions may be used.  All parameters are in the \tt <constitutive\_model> \normalfont block:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<failure_distrib> gauss </failure_distrib>
+<failure_distrib> weibull </failure_distrib>
+<failure_distrib> constant </failure_distrib>
+\end{Verbatim}
+
+A Gaussian (gauss) distribution requires the following parameters:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<failure_mean> Gaussian mean value of cohesion </failure_mean>
+<failure_std> Gaussian standard deviation of cohesion </failure_std>
+<failure_seed> random number generator seed </failure_seed>
+\end{Verbatim}
+
+A Weibull (weibull) distribution requires the following parameters:
+\begin{Verbatim}[fontsize=\footnotesize]
+<failure_mean> Weibull mean value of cohesion </failure_mean>
+<failure_std> Weibull modulus </failure_std>
+<failure_seed> random number generator seed </failure_seed>
+\end{Verbatim}
+
+A homogeneous (constant) assignment requires the following parameters:
+\begin{Verbatim}[fontsize=\footnotesize]
+<failure_mean> value (all particles assigned one value) </failure_mean>
+\end{Verbatim}
+
+4. Distribution scaling with numerical resolution may optionally be specified.  This is only 
+available for Gaussian and Weibull distributions.  All parameters are in the 
+\tt <constitutive\_model> \normalfont block:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<scaling> kayenta </scaling>
+<scaling> none (default) </scaling>
+\end{Verbatim}
+
+For kayenta scaling, the mean value of the distribution is scaled by the factor
+\begin{equation}
+\biggl(\frac{\bar V}{V}\biggr)^{1/n}
+\end{equation}
+where $V$ is the particle volume, a function of numerical resolution.  The reference volume, 
+$\bar V$ and exponent, $n$, both must be specified
+\begin{Verbatim}[fontsize=\footnotesize]
+<reference_volume> $\bar V$ </reference_volume>
+<exponent> n </exponent>
+\end{Verbatim}
+The exponent defaults to the Weibull modulus if the Weibull distribution is used.  This physically
+motivated scaling provides for an increase in mean cohesion with decreasing particle size, generallly
+consistent with the observation that smaller quantities of material contain fewer critical flaws.
+
+\tt <comp\_neo\_hook> \normalfont is a basic elastic model, which calls the underlying \tt <UCNH> \normalfont .
+The specifications for CNH are:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+          <constitutive_model type="comp_neo_hook">
+               <bulk_modulus> 8.9e9  </bulk_modulus>
+               <shear_modulus>3.52e9  </shear_modulus>
+               <useModifiedEOS> true  </useModifiedEOS>
+          </constitutive_model>
+\end{Verbatim}
+
+\tt <comp\_neo\_hook\_plastic> \normalfont as the constitutive model type,
+ tells Uintah to use the basic elastic model extended
+to include plasticity with isotropic linear hardening, 
+which is equivalent to \tt <usePlasticity> \normalfont in UCNH.
+The specifications for CNHP are:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+          <constitutive_model type="comp_neo_hook_plastic">
+               <bulk_modulus> 8.9e9     </bulk_modulus>
+               <shear_modulus>3.52e9    </shear_modulus>
+               <useModifiedEOS> true    </useModifiedEOS>
+               <yield_stress>100.0      </yield_stress>
+               <hardening_modulus>500.0 </hardening_modulus>
+               <alpha>     1.0          </alpha>
+          </constitutive_model>
+\end{Verbatim}
+
+
+\tt <cnh\_damage> \normalfont as the constiutive model or \tt <useDamage> \normalfont 
+tells Uintah to use a basic elastic model, with an extension
+to failure based on a stress or strain as given below, thus yielding an
+elastic-brittle failure model.  This model also allows a distribution
+of failure strain (or stress) based on normal or Weibull distributions.
+Note that the post-failure behaviour of simulations is not always robust.
+
+The specification for CNHD are:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+            <constitutive_model type="cnh_damage"> 
+               <bulk_modulus>   8.9e9  </bulk_modulus>
+               <shear_modulus>  3.52e9 </shear_modulus>
+               <useModifiedEOS> true   </useModifiedEOS>
+                
+            </constitutive_model>
+\end{Verbatim}
+
+When specifying \tt <cnh\_damage> \normalfont, the material heterogeneity and damage 
+specification described for the general model (UCNH) may also be specified.
+
+\tt <cnhp\_damage> \normalfont as the constitutive model (or both damage and plasticity
+ flags discussed above) uses an extension
+to failure based on a stress or strain as given below, thus yielding an
+elastic-plastic model with failure.  Note that the post-failure behaviour of
+simulations is not always robust.  The input section for damage and plasticity is
+similar to that for UCNH without \tt <useDamage> \normalfont and \tt <usePlasticity>. \normalfont
+
+When a particle has failed, the value of the particle variable \tt p.localized \normalfont
+will be larger than one (0 means the particle has not failed) and can be output in the \tt DataArchiver
+\normalfont section of the input file. In addition, the total number of failed particles as
+a function of time \tt TotalLocalizedParticle \normalfont can be output. 
+
+Another damage model that can be used with \tt <cnh\_damage> \normalfont and
+\tt <cnhp\_damage> \normalfont is a subset of the brittle damage model of LS-DYNA's Concrete
+ Model 159 (FHWA-HRT-057-062, 2007). The model is invoked by the following MPMFlag
+\begin{Verbatim}[fontsize=\footnotesize]
+     <erosion algorithm="BrittleDamage"/>
+\end{Verbatim}
+in the \tt <MPM> \normalfont section of the input file. Two key features of the model are the use of
+progressive (as opposed to sudden) damage due to softening to improve numerical stability, 
+and the reduction of mesh size sensitivity via the specification of fracture energy. 
+
+Brittle damage occurs when the mean stress $\sigma_{kk}/3$ is tensile
+and the energy $\tau_b$, related to the maximum principal 
+strain $\epsilon_{max}$, has exceeded a threshold value $r_0^b$
+
+\begin{equation}
+\sigma_{kk}>0, \phantom{ijkl}
+\tau_b = \sqrt{E \epsilon_{max}^2} \geq r_0^b
+\end{equation}
+where $E$ is the Young's modulus. If at the next time step the mean stress is less than
+zero (compressive), the damage mechanism can be optionally inactivated such that the current stress 
+is set temporarily to a fraction of the undamaged stress to 
+model stiffness recovery due to crack closing. When the mean stress becomes tensile again,
+the value of the previous maximum damage $d$ can be restored; recovery is a user option in Uintah
+but should be used with caution since stiffening is more prone to instability.
+The softening function for brittle damage is assumed to be
+\begin{equation}
+d(\tau_b)= \frac{0.999}{D} \left(\frac{1+D}{1+D \exp^{-C(\tau_b-r_0^b)}} \right)
+\end{equation}
+where $C$ and $D$ are constants that define the shape of the softening
+stress-strain curve.
+  
+To regulate mesh size sensitivity, the fracture energy
+($G_f$), defined as the area under the stress-displacement
+curve for displacement larger than $x_0$ (the displacement at peak strength), is to be maintained constant.
+The user needs to input $G_f$ and $D$; $C$ is calculated internally. 
+
+The maximum increment of damage that can accumulate over a single time
+step is a user-defined input to avoid excessive damage accumulation over
+a single time step to reduce numerical instability.
+
+The brittle damage model is applicable to \tt <cnh\_damage> \normalfont and 
+\tt <cnhp\_damage>. \normalfont For \tt cnh\_damage, \normalfont 
+the parameters for brittle damage can be specified as
+
+\begin{Verbatim}[fontsize=\footnotesize]
+                <constitutive_model type="cnh_damage">
+               <shear_modulus>3.52e9</shear_modulus>
+                 <bulk_modulus>8.9e9</bulk_modulus>
+   <brittle_damage_initial_threshold>57.0 </brittle_damage_initial_threshold>
+  <brittle_damage_fracture_energy>11.2</brittle_damage_fracture_energy>
+  <brittle_damage_constant_D>0.1</brittle_damage_constant_D>
+ <brittle_damage_max_damage_increment>0.1</brittle_damage_max_damage_increment>
+<brittle_damage_allowRecovery> false </brittle_damage_allowRecovery>
+<brittle_damage_recoveryCoeff> 1.0 </brittle_damage_recoveryCoeff>
+   <brittle_damage_printDamage> false </brittle_damage_printDamage>
+                </constitutive_model>
+
+\end{Verbatim}
+
+The tags in the input file for brittle damage are shown in the following table.
+
+\begin{table}[ht]
+\centering
+\begin{tabular} {c c l}
+\hline
+Tag & Symbol & Description \\
+\hline
+brittle\_damage\_initial\_threshold & $r_0^b$ &  material property \\
+brittle\_damage\_fracture\_energy & $G_f$ &  material property \\
+brittle\_damage\_constant\_D & $D$ & material property \\
+brittle\_damage\_max\_damage\_increment & & optional, default=0.1 \\
+brittle\_damage\_allowRecovery & & allow crack closing (stiffening) \\
+& & optional, default=false \\
+brittle\_damage\_recoveryCoeff & & fraction of undamaged stress to recover\\
+& & (between 0 and 1), optional\\
+& & default=1.0 (full recovery) used only\\
+& & when brittle\_damage\_allowRecovery \\
+& & is set to true  \\
+brittle\_damage\_printDamage & & print the state of damage \\
+& & of damaged particles, default=false \\
+& & (to reduce large amounts of output) \\
+\hline
+\end{tabular}
+\end{table}
+
+When a particle is damaged, the value of the particle variable \tt p.damage \normalfont
+can be output in the \tt DataArchiver \normalfont section of the input file.
+
+\item{\bf Compressible Mooney-Rivlin Model} This model is generally parameterized
+for rubber type materials.  Usage is as follows:
+\begin{Verbatim}[fontsize=\footnotesize]
+              <constitutive_model type="comp_mooney_rivlin">
+                 <he_constant_1>100000.0</he_constant_1>
+                 <he_constant_2>20000.0</he_constant_2>
+                 <he_PR>.49</he_PR>
+               </constitutive_model>
+\end{Verbatim}
+where \tt <he\_constant\_(1,2)> \normalfont are usually referred to
+as $C1$ and $C2$ in the literature.
+
+\item{\bf Kayenta} This is the model formerly known as the Sandia Geomodel.  Use
+is limited to licensees, see Rebecca Brannon for details.  It also requires
+an obscene number of input parameters which are best covered in the users
+guide for this model.  For a simple list, see the source code in
+\tt Kayenta.cc. \normalfont
+
+\item{\bf Simplified Geomodel} This is a simplified model which has the basic features
+needed for geomaterials. The yield function of this model is a two-surface plasticity model 
+which includes a linear Drucker-Prager part and a cap yield function. The “cap” part reflects
+the fact that plastic deformations can occur even under purely hydrostatic compression as
+a consequence of void collapse. It means that the simplified geomodel considers the presence 
+of both microscale flaws such as porosity and networks of microcracks. This mdel uses a 
+multi-stage return algorithm proposed in \cite{brannon10}. Usage is as follows:
+\begin{Verbatim}[fontsize=\footnotesize]
+        <constitutive_model type="simplified_geo_model">
+            <B0>10000</B0>
+            <G0>3750</G0>
+            <hardening_modulus>0.0</hardening_modulus>
+            <FSLOPE> 0.057735026919 </FSLOPE>
+            <FSLOPE_p> 0.057735026919 </FSLOPE_p>
+            <PEAKI1> 612.3724356953976 </PEAKI1>
+            <CR> 6.0 </CR>
+            <p0_crush_curve> -1837.0724 </p0_crush_curve>
+            <p1_crush_curve> 6.666666666666666e-4 </p1_crush_curve>
+            <p3_crush_curve> 0.5 </p3_crush_curve>
+            <p4_fluid_effect> 0.2 </p4_fluid_effect>
+            <fluid_B0> 0.0 </fluid_B0>
+            <fluid_pressur_initial> 0.0 </fluid_pressur_initial>
+            <kinematic_hardening_constant> 0.0 </kinematic_hardening_constant>
+        </constitutive_model>
+\end{Verbatim}
+where \tt <B0> \normalfont and \tt <G0> \normalfont are the bulk and 
+shear moduli of the material, \tt <FSLOPE> \normalfont is the tangent of the friction angle 
+of the Drucker-Prager part, \tt <FSLOPE\_p> \normalfont is the tangent of the dilation angle 
+of the Drucker-Prager part, \tt <hardening\_modulus> \normalfont is the ensemble hardening 
+modulus, and \tt <PEAKI1> \normalfont is the initial tensile limit of the 
+first stress invariant, $I_1$. The Drucker-Prager yield criterion is given as
+\begin{equation}
+\sqrt{J_2}+FSLOPE \times (I_1-PEAKI1)=0,
+\end{equation}
+\tt <CR> \normalfont is a shape parameter that allows porosity to affect shear
+strength which equals the eccentricity (width divided by
+height) of the elliptical cap function, \tt <p0\_crush\_curve> 
+\normalfont, \tt <p1\_crush\_curve> \normalfont, and \tt <p3\_crush\_curve> \normalfont are the
+constants in the fitted post yielding part of the crush curve
+\begin{equation}
+p_3-\bar{\epsilon}_v^p=p_3\exp{-3p_1(\bar{p}-p_0)}
+\end{equation}
+in which $\bar{p}$ is the pressure.
+
+In pure kinematic hardening the center of the yield surface changes with its size and
+shape remaining unchanged.
+Generally, kinematic hardening is modeled by introducing the back stress tensor, and defining
+an appropriate evolution rule for it. In the simplified geomodel, linear Ziegler’s rule is used:
+\begin{equation}
+\dot{\alpha}_{ij}=\dot{\mu}(\Bsig_{ij}-\alpha_{ij})
+\end{equation}
+in which $\alpha_{ij}$ is the back stress tensor, $\dot{\alpha}_{ij}$ is time derivative of 
+the back stress tensor, and
+\begin{equation}
+\dot{\mu}=c\dot{\xi}^p
+\end{equation}
+where $\dot{\xi}^p$ is the deviatoric invariant of the rate of plastic strain and $c$ is a 
+constant defined yb the user as \tt <kinematic\_hardening\_constant> \normalfont.
+
+Based on the research work done by M. Homel at the University of Utah, the following equations
+are used in the simplified geomodel to consider the fluid-filled porous effects:
+\begin{eqnarray}
+\frac{\partial X}{\partial\varepsilon^p_v}=
+&& \frac{1}{p_1p_3}\exp{(-p_1X-p_0)}
+-\frac{3K_f\left(\exp(p_3+p_4)-1\right)\exp(p_3+p_4+\varepsilon^p_v)}
+{\left(\exp(p_3+p_4+\varepsilon^p_v)-1\right)^2} \nonumber \\
+&& +\frac{3K_f\left(\exp(p_3+p_4)-1\right)\exp(p_3+\varepsilon^p_v)}
+{\left(\exp(p_3+\varepsilon^p_v)-1\right)^2}
+\end{eqnarray}
+in which $X$ is the value of the first stress invariant at the 
+intersection of the cap yield surface and the mean pressure axis, 
+$K_f$ is the fluid bulk modulus, which is defined by the user as \tt <fluid\_B0>\normalfont, 
+$\varepsilon^p_v$ is the volumetric part 
+of the plastic strain, and $p_4$ is a constant defined by the user as 
+\tt <p4\_fluid\_effect>\normalfont. The isotropic part of the back stress tensor
+is updated using the following equation
+\begin{equation}
+\alpha^{\mathrm{iso}}_{n+1}=\alpha^{\mathrm{iso}}_{n}+
+\frac{3K_f\exp(p_3)\left(\exp(p_4)-\exp(\varepsilon^p_v)\right)}
+{\left(\exp(p_3+\varepsilon^p_v)-1\right)}
+\dot{\varepsilon}^p_v\Delta t ~\Bone
+\end{equation}
+in which $~\Bone$ is the second-order identity tensor. Also, the effective bulk modulus 
+is calculated as
+\begin{equation}
+K_e=B0+
+\frac{K_f\left(\exp(p_3+p_4)-1\right)\exp(p_3+p_4+\varepsilon^e_v+\varepsilon^p_v)}
+{\left(\exp(p_3+p_4+\varepsilon^e_v+\varepsilon^p_v)-1\right)^2}
+\end{equation}
+in which $\varepsilon^e_v$ is the volumetric part of the elastic strain.
+           
+\item{\bf Water}  This is a model for water, reported in \cite{water_model_ref}.
+The P-V relationship is given by:
+\begin{equation}
+p=\kappa\left[\left(\frac{\rho}{\rho_0}\right)^{\gamma} - 1\right]
+\end{equation}
+Shear stress is simple Newtonian behavior.  It has not been validated,
+but gives qualitatively reasonable behavior.  Usage is given by:
+\begin{Verbatim}[fontsize=\footnotesize]
+              <constitutive_model type="water">
+                 <bulk_modulus>15000.0</bulk_modulus>
+                 <viscosity>.5</viscosity>
+                 <gamma>7.0</gamma>
+               </constitutive_model>
+\end{Verbatim}
+
+\item{\bf Ideal Gas}  This is simply an equation of state, with no shear stress.
+Usage is given by:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+              <constitutive_model type="ideal_gas">
+                  <specific_heat>  717.5        </specific_heat>
+                  <gamma>  1.4        </gamma>
+              </constitutive_model>
+\end{Verbatim}
+
+\item{\bf Rigid Material}  This model was designed for use with the
+\tt specified \normalfont contact model described in Section~\ref{Sec:Contact}.
+It is designed to compute zero stress and deformation of the material,
+and is basically a fast place holder for materials that won't be developing
+a stress anyway.
+
+\item{\bf ElasticPlastic} The \tt <elastic\_plastic> \normalfont model is a
+general purpose model that was primarily implemented for the purpose of
+modeling high strain rate metal plasticity.  Dr. Biswajit Banerjee has
+written an extensive description of the theory, implementation and use of
+this model.  Because of the amount of detail involved, and because these
+subtopics are interwoven, this model is given its own section below.
+
+\end{enumerate}
+
+There is a large number remaining models but these are not frequently utilized. 
+This includes models for viscoelasticity, soil models, and transverse isotropic materials (i.e., fiber reinforced composites).
+Examples of their use can be found in the \tt inputs \normalfont directory.
+Input files can also be constructed by checking the source code to see
+what parameters are required.
+
+There are a few models whose use is explicitly not recommended.  In particular,
+\tt HypoElasticPlastic, Membrane and SmallStrainPlastic. \normalfont  Input
+files calling for the first of these should be switched to the
+\tt ElasticPlastic \normalfont model instead.
+
+\subsubsection{Hypo-Elastic Plasticity in Uintah}  \label{Sec:ElasticPlastic}
+
+The hypoelastic-plastic stress update is a mix and match combination
+of isotropic models.  The equation of state may be varied
+independently of the deviatoric response.  For elastic deviatoric
+response the shear moduli may be taken to be functions of temperature
+and pressure.  Plasticity is based on an additive decomposition of the
+rate of deformation tensor into elastic and plastic parts.
+Incompressibility is assumed for plastic deformations, i.e. the
+plastic strain rate is proportional to the deviatoric stress.  Various
+yield conditions and flow stresses may be mixed and matched.  There
+are also options for damage/melting modeling.  {\it Note that there
+  are few checks to prevent users from mixing and matching
+  inappropriate models}.
+
+Additional models can be added to this framework.  Presently, the
+material models available are:
+\begin{enumerate}
+    \item Adiabatic Heating and Specific Heat:
+      \begin{itemize}
+        \item Taylor-Quinney coefficient.
+        \item Constant Specific Heat ({\bf default}).
+        \item Cubic Specific Heat.
+        \item Specific Heat for Copper.
+        \item Specific Heat for Steel.
+      \end{itemize}
+    \item The equation of state (pressure/volume response):
+      \begin{itemize}
+        \item Hypoelastic ({\bf default}).
+        \item Neo-Hookean.
+        \item Mie-Gruneisen.
+      \end{itemize}
+    \item The deviatoric stress model:
+      \begin{itemize}
+        \item Linear hypoelasticity ({\bf default}).
+        \item Linear hypoviscoelasticity.
+      \end{itemize}
+    \item The melting model:
+      \begin{itemize}
+        \item Constant melt temperature ({\bf default}).
+        \item Linear melt temperature.
+        \item Steinberg-Cochran-Guinan (SCG) melt.
+        \item Burakovsky-Preston-Silbar (BPS) melt.
+      \end{itemize}
+    \item Temperature and pressure dependent shear moduli (only works
+      with linear hypoelastic deviatoric stress model):
+      \begin{itemize}
+        \item Constant shear modulus ({\bf default}).
+        \item Mechanical Threshold Stress (MTS) model.
+        \item Steinberg-Cochran-Guinan (SCG) model.
+        \item Nadal-LePoac (NP) model.
+        \item Preston-Tonks-Wallace (PTW) model.
+      \end{itemize}
+    \item The yield condition:
+      \begin{itemize}
+        \item von Mises.
+        \item Gurson-Tvergaard-Needleman (GTN).
+      \end{itemize}
+    \item The flow stress:
+      \begin{itemize}
+        \item the Isotropic Hardening model
+        \item the Johnson-Cook (JC) model
+        \item the Steinberg-Cochran-Guinan-Lund (SCG) model.
+        \item the Zerilli-Armstrong (ZA) model.
+        \item the Zerilli-Armstrong for polymers model.
+        \item the Mechanical Threshold Stress (MTS) model.
+        \item the Preston-Tonks-Wallace (PTW) model.
+      \end{itemize}
+    \item The plastic return algorithm:
+      \begin{itemize}
+        \item Radial Return ({\bf default}).
+        \item Modified Nemat-Nasser/Maudlin.
+      \end{itemize}
+    \item The damage model:
+      \begin{itemize}
+        \item Johnson-Cook damage model.
+      \end{itemize}
+\end{enumerate}
+
+This model is invoked using
+  \begin{Verbatim}[fontsize=\footnotesize]  
+      <constitutive_model="elastic_plastic_hp">
+        <shear_modulus>0.2845e4</shear_modulus>
+        <bulk_modulus>1.41e4</bulk_modulus>
+        <initial_material_temperature>298</initial_material_temperature>
+        <plastic_convergence_algo>radialReturn</plastic_convergence_algo>
+        <taylor_quinney_coeff> 0.9 </taylor_quinney_coeff>
+
+        submodels
+
+      </constitutive_model>
+  \end{Verbatim}
+  where ``submodels'' indicates subsets of tags corresponding to the
+  listed above (and detailed below).  {\it Note that the specified
+    bulk and shear moduli are used to calcuate a stable time step size
+    for the first time step (hence it is important that they be
+    consistent with EOS and deviatoric stress submodel material
+    constants).  However, if the default EOS and/or deviatoric stress
+    models are used, then these material constants are sufficient for
+    bulk and/or deviatoric stress response, and are automatically used
+    in those models.}  The bulk modulus is also used to determine
+  artificial viscosity parameters (throughout the simulation).
+
+  \paragraph{Adiabatic Heating and Specific Heat}
+  A part of the plastic work done is converted into heat and used to update the
+  temperature of a particle.  The increase in temperature ($\Delta T$) due to
+  an increment in plastic strain ($\Delta\epsilon_p$) is given by the equation
+  \begin{equation}
+    \Delta T = \cfrac{\chi\sigma_y}{\rho C_p} \Delta \epsilon_p
+  \end{equation}
+  where $\chi$ is the Taylor-Quinney coefficient, and $C_p$ is the specific
+  heat.  The value of the Taylor-Quinney coefficient is taken to be 0.9
+  in all our simulations (see \cite{Ravi01} for more details on the
+  variation of $\chi$ with strain and strain rate).
+
+  The Taylor-Quinney coefficient is taken as input in the ElasticPlastic model
+  using the tags
+  \begin{Verbatim}[fontsize=\footnotesize]
+    <taylor_quinney_coeff> 0.9 </taylor_quinney_coeff>
+  \end{Verbatim}
+
+  \subparagraph{Default specific heat model}
+  The default model returns a constant specific heat and is invoked using
+  \begin{Verbatim}[fontsize=\footnotesize]
+    <specific_heat_model type="constant_Cp">
+    </specific_heat_model>
+  \end{Verbatim}
+
+  \subparagraph{Cubic specific heat model}
+  The specific heat model is of the form \cite{Menikoff2003}:
+  \Beq
+    C_v = \frac{\tilde{T}^3}{c_3\tilde{T}^3+c_2\tilde{T}^2+c_1\tilde{T}+c_0} 
+  \Eeq
+  where $\tilde{T}$ is the reduced temperature, and $c_0$-$c_3$ are fit parameters.
+  The reduced temperature is calculated using $\tilde{T}=T/\theta (V)$ and the
+  Debye temperature is:
+  \Beq
+    \theta (V)=\theta_0\left(\frac{V_0}{V}\right)^ae^{b\left(V_0-V\right)/V}
+  \Eeq
+  where $V$ is the specific volume and $\theta_0$ is the reference Debye temperature and
+  a and b are fit parameters.
+  The constant pressure specific heat is calculated via:
+  \Beq
+    C_p = C_v+\beta^2TVK_T
+  \Eeq
+  where $\beta$ and $K_T$ are the volumetric expansion coefficeint and 
+  isothermal bulk modulus respectively.
+  
+  The model is invoked using:
+  \begin{Verbatim}[fontsize=\footnotesize]
+    <specific_heat_model type="cubic_Cp">
+      <a> 1.0 </a>
+      <b> 1.0 </b>
+      <beta> 1.0 </beta>
+      <c0> 1.0 </c0>
+      <c1> 1.0 </c1>
+      <c2> 1.0 </c2>
+      <c3> 1.0 </c3>
+    </specific_heat_model>
+  \end{Verbatim}
+  where all parameters but $\beta$, $a$ and $b$ are required.
+
+
+  \subparagraph{Specific heat model for copper}
+  The specific heat model for copper is of the form
+  \Beq
+    C_p =
+    \begin{cases}
+      A_0~T^3 - B_0~T^2 + C_0~T - D_0 & \text{if} ~~T < T_0 \\
+      A_1~T + B_1 & \text{if} ~~T \ge T_0 ~.
+    \end{cases}
+  \Eeq
+  The model is invoked using
+  \begin{Verbatim}[fontsize=\footnotesize]
+  <specific_heat_model type = "copper_Cp"> </specific_heat_model>
+  \end{Verbatim}
+
+  \subparagraph{Specific heat model for steel}
+  A relation for the dependence of $C_p$ upon temperature is
+  used for the steel (\cite{Lederman74}).
+  \begin{align}
+    C_p & = \begin{cases}
+            A_1 + B_1~t + C_1~|t|^{-\alpha} & \text{if}~~ T < T_c \\
+            A_2 + B_2~t + C_2~t^{-\alpha^{'}} & \text{if}~~ T > T_c 
+          \end{cases} \label{eq:CpSteel}\\
+    t & = \cfrac{T}{T_c} - 1 
+  \end{align}
+  where $T_c$ is the critical temperature at which the phase transformation
+  from the $\alpha$ to the $\gamma$ phase takes place, and $A_1, A_2, B_1, B_2,
+  \alpha, \alpha^{'}$ are constants.
+
+  The model is invoked using
+  \begin{Verbatim}[fontsize=\footnotesize]
+  <specific_heat_model type = "steel_Cp"> </specific_heat_model>
+  \end{Verbatim}
+
+  The heat generated at a material point is conducted away at the end of a
+  time step using the transient heat equation.  The effect of conduction on
+  material point temperature is negligible (but non-zero) for the high
+  strain-rate problems simulated using Uintah.
+
+\paragraph{Equation of State Models}
+The elastic-plastic stress update assumes that the volumetric part of
+the Cauchy stress can be calculated using an equation of state.  There
+are three equations of state that are implemented in Uintah.  These
+are
+\begin{enumerate}
+    \item A default hypoelastic equation of state.
+    \item A neo-Hookean equation of state.
+    \item A Mie-Gruneisen type equation of state.
+\end{enumerate}
+
+\subparagraph{Default hypoelastic equation of state}
+In this case we assume that the stress rate is given by
+\Beq
+    \dot{\Bsig} = \lambda~\Tr(\Bd^e)~\Bone + 2~\mu~\Bd^e
+\Eeq
+where $\Bsig$ is the Cauchy stress, $\Bd^e$ is the elastic part of
+the rate of deformation, and $\lambda, \mu$ are constants.
+
+If $\Beta^e$ is the deviatoric part of $\Bd^e$ then we can write
+\Beq
+    \dot{\Bsig} = \left(\lambda + \frac{2}{3}~\mu\right)~\Tr(\Bd^e)~\Bone +
+        2~\mu~\Beta^e = \kappa~\Tr(\Bd^e)~\Bone + 2~\mu~\Beta^e ~.
+\Eeq
+If we split $\Bsig$ into a volumetric and a deviatoric part, i.e.,
+$\Bsig = p~\Bone + \Bs$ and take the time derivative to get
+$\dot{\Bsig} = \dot{p}~\Bone + \dot{\Bs}$ then
+\Beq
+    \dot{p} = \kappa~\Tr(\Bd^e) ~.
+\Eeq
+In addition we assume that $\Bd = \Bd^e + \Bd^p$.  If we also assume that
+the plastic volume change is negligible, we can then write that
+\Beq
+    \dot{p} = \kappa~\Tr(\Bd) ~.
+\Eeq
+This is the equation that is used to calculate the pressure $p$ in the
+default hypoelastic equation of state, i.e.,
+\Beq
+    \boxed{
+    p_{n+1} = p_n + \kappa~\Tr(\Bd_{n+1})~\Delta t ~.
+    }
+\Eeq
+To get the derivative of $p$ with respect to $J$, where $J = \det(\BF)$,
+we note that
+\Beq
+    \dot{p} = \Partial{p}{J}~\dot{J} = \Partial{p}{J}~J~\Tr(\Bd) ~.
+\Eeq
+Therefore,
+\Beq
+    \boxed{
+    \Partial{p}{J} = \cfrac{\kappa}{J} ~.
+    }
+\Eeq
+
+This model is invoked in Uintah using
+\begin{Verbatim}[fontsize=\footnotesize]
+  <equation_of_state type="default_hypo">
+  </equation_of_state>
+\end{Verbatim}
+The code is in \tt.../MPM/ConstitutiveModel/PlasticityModels/DefaultHypoElasticEOS.cc \normalfont
+If an EOS is not specified then this model is the {\bf default}.
+
+\subparagraph{Default hyperelastic equation of state}
+In this model the pressure is computed using the relation
+\begin{equation}
+  p = \Half~\kappa~\left(J^e - \cfrac{1}{J^e}\right)
+\end{equation}
+where $\kappa$ is the bulk modulus and $J^e$ is determinant of the elastic
+part of the deformation gradient.
+
+We can also compute
+\begin{equation}
+  \Deriv{p}{J} = \Half~\kappa~\left(1 + \cfrac{1}{(J^e)^2}\right) ~.
+\end{equation}
+
+This model is invoked in Uintah using
+\begin{Verbatim}[fontsize=\footnotesize]
+  <equation_of_state type="default_hyper">
+  </equation_of_state>
+\end{Verbatim}
+The code is in \verb|.../MPM/ConstitutiveModel/PlasticityModels/HyperElasticEOS.cc|.
+
+\subparagraph{Mie-Gruneisen equation of state}
+The pressure ($p$) is calculated using a Mie-Gr{\"u}neisen equation of state
+\begin{equation} \label{eq:MG}
+  p = p_{ref} +\rho \Gamma (e - e_{ref})
+\end{equation}
+where $\rho$ is the mass density, $\Gamma$ the Gr{\"u}neisen parameter (unitless) and $p_{ref}$
+and $e_{ref}$ are known pressure and internal specific energy on a reference curve {\it and are a function
+of volume only}.  As the form can be formally viewed as an expansion valid near the reference curve,
+ideally the reference curve prescribes states near those of interest.  The reference curve could be
+the shock Hugoniot, the standard adiabat (through the initial state), the 0 K isotherm, the isobar $p=0$,
+the curve $e=0$, or some composite of these curves to cover the range of interest.  
+
+For shock calculations it makes sense to use the Hugoniot as a reference curve.  We Assume the following
+relationship between shock wave velocity, $U_s$ and particle velocity,  $U_p$,
+\begin{equation} \label{eq:SteinbergUsUp}
+  U_s = C_0 + s_\alpha U_p + s_2 \frac{U_p^2}{U_s} + s_3 \frac{U_p^3}{U_s^2}
+\end{equation}
+where $C_0$ is the bulk speed of sound, and the $s$'s are dimensionless coefficients.
+This form is due to Steinberg (\cite{Steinberg91}), and is a straight--forward extension to a nonlinear 
+shock velocity, particle velocity relationship.  It reduces to the linear relationship most frequently 
+used, e.g. (\cite{Wilkins99,Zocher00}), with $s_2 = s_3 = 0$.  Using the steady shock jump conditions for
+conservation of mass, momentum and energy, the Hugoniot reference pressure, $p_H$ and specific energy,
+$e_H$ may be determined
+\begin{equation} \label{eq:pH}
+  p_H = \frac{\rho_0 C_0^2 \eta}{1 - s_\alpha \eta - s_2 \eta^2 - s_3 \eta^3}
+\end{equation}
+\begin{equation} \label{eq:eH}
+  e_H = \frac{p_H \eta}{2 \rho_0}
+\end{equation}
+where $\rho_0$ is the initial density (pre-shock) and
+\begin{equation} \label{eq:eta}
+  \eta = 1-\frac{\rho_0}{\rho}
+\end{equation}
+is a measure of volumetric deformation.  Using these relationships and the additional assumption that
+$\rho\Gamma=\rho_0\Gamma_0$ the Mie-Gr{\"u}neisen equation of state may be written
+\begin{equation} \label{eq:EOSMG_upd}
+  \boxed{
+  p =  \frac{\rho_0~C_0^2~\eta(1-\frac{\Gamma_0\eta}{2})}{(1 - s_\alpha \eta - s_2 \eta^2 - s_3 \eta^3)^2}
+           + \rho_0\Gamma_0~e
+  }
+\end{equation}
+To extend the Mie Gr{\"u}neisen EOS into tensile stress regimes, for $\eta<0$ the pressure is evaluated as
+\begin{equation} \label{eq:EOSMG_upd}
+  \boxed{
+  p =  \rho_0~C_0^2~\eta + \rho_0\Gamma_0~e
+  }
+\end{equation}
+This equation is integrated explicitly, using beginning timestep values for energy and the current value
+of density to update the pressure.  For isochoric plasticity,
+\begin{equation*}
+  J^e = J = \det(\BF) = \cfrac{\rho_0}{\rho} ~.
+\end{equation*}
+where $\BF^e$ is the elastic part of the deformation gradient.  
+The increment in specific internal energy is computed using
+  \begin{equation}
+    \rho^* \Delta e = (\sigma^*_{ij} D_{ij} - q D_{kk}) \Delta t
+  \end{equation}
+where $\sigma^*_{ij}$ and $\rho^*$ are the average stress and density over the time step, 
+$D_{ij}$ is the rate of deformation tensor, and $q$ is
+the artificial viscosity.  Note that the artificial velocity term must be included explicitly
+since it is not accumulated in the total stress.
+
+The temperature, $T$, is calculated using the thermodynamic relationship
+  \begin{equation}\label{eq:dTthermo}
+    dT = -\rho\Gamma T dv + \frac{TdS}{C_v}
+  \end{equation}
+where $v$ is the specific volume, $S$ the entropy and $C_v$ the specific heat at constant volume.
+Entropy change is associated with irreversible, or dissipative, processes.  Equating $TdS$ to the
+dissipated work terms, those components of temperature change are computed in the appropriate routines,
+such as plasticity or artificial viscosity.  In fact, not all of the dissipated energy needs be
+converted to heat, as allowed for by using the Taylor--Quinney coefficient (see below).  The first term
+in \label{eq:dT} may be integrated to give the isentropic temperature change
+  \begin{equation}\label{eq:dTisentropic}
+    \Delta T_{isentropic} = -T\Gamma_0\frac{\rho_0}{\rho}D_{kk}\Delta t
+  \end{equation}
+where the same assumption, $\rho\Gamma=\rho_0\Gamma_0$ is used.  The isentropic temperature change
+is computed as part of the EOS response.
+
+Should an implicit integration scheme be used the tangent moduli are needed, which in turn require calculation of
+\Beq
+  \boxed{
+  \Partial{p}{J^e} =
+  \cfrac{\rho_0~C_0^2~[1 + (S_{\alpha}-\Gamma_0)~(1-J^e)]}
+        {[1-S_{\alpha}~(1-J^e)]^3} - \Gamma_0~\Partial{e}{J^e}.
+  }
+\Eeq
+We neglect the $\Partial{e}{J^e}$ term in our calculations.  {\it Note: this calculation hasn't been updated for
+the Steinberg nonlinear shock velocity, particle velocity relationship.}
+
+This model is invoked in Uintah using
+\begin{Verbatim}[fontsize=\footnotesize]
+  <equation_of_state type="mie_gruneisen">
+    <C_0>5386</C_0>
+    <Gamma_0>1.99</Gamma_0>
+    <S_alpha>1.339</S_alpha>
+    <S_2>1.339</S_2>
+    <S_3>1.339</S_3>
+  </equation_of_state>
+\end{Verbatim}
+The code is in \verb|.../MPM/ConstitutiveModel/PlasticityModels/MieGruneisenEOS.cc|.
+
+It is worth noting that this approach to calculating energy and temperature is not necessarily consistent
+with existing implementations.  In fact, it does not appear that there is a standard approach, many shock
+codes have unique implementations.  In particular, it appears that the elastic stored energy term is 
+often neglected, as well as the isentropic temperature change.
+
+It is worth noting that the approach outlined above is consistent with that taken fairly
+recently by Wilkins (\cite{Wilkins99}).  Wilkins expands the pressure and energy as polynomials in $\eta$
+and uses Hugoniot data (and a linear $U_s$, $U_p$ relationship) to determine the coefficients.  Using the
+additional thermodynamic relationship
+  \begin{equation}\label{eq:de}
+    de = -p dv + TdS
+  \end{equation}
+and substituting for $TdS$ from \ref{eq:dTthermo}, assuming $C_v$ constant and 
+$\rho\Gamma=\rho_0\Gamma_0$ (as in Wilkins), the following relationship may be derived
+  \begin{equation}\label{eq:e}
+    e = -\int_{v_0}^v (p - \rho_0 \Gamma_0 C_v T) dv + C_v(T-T_0)
+  \end{equation}
+Since the integral is for $dS=0$, it may be integrated to give an alternate form of \ref{eq:dTisentropic},
+  \begin{equation}\label{eq:dTisentropic2}
+    T_{isentropic} = T_0\exp(\Gamma_0(1-\frac{\rho_0}{\rho}))
+  \end{equation}
+which may be substituted into \ref{eq:e} along with the expansion for $p(\eta)$ (here for $s_2=s_3=0$)
+  \begin{equation}\label{eq:pofeta}
+    p = \rho_0\Gamma_0 e + \rho_0 C_0^2(\eta + (2s_\alpha-\frac{\Gamma_0}{2})\eta^2 + s_\alpha(3s_\alpha-\Gamma_0)\eta^3) + O(\eta^4)
+  \end{equation}
+to give the equation
+  \begin{equation}\label{eq:e2}
+    e+\int_{v_0}^v\rho_0\Gamma_0 e dv = C_v(T-T_0) + \rho_0 \Gamma_0C_vT_0\int_{v_0}^v \exp(\Gamma_0\eta)dv 
+       -\rho_0\Gamma_0\int_{v_0}^v(\eta + (2s_\alpha-\frac{\Gamma_0}{2})\eta^2 + s_\alpha(3s_\alpha-\Gamma_0)\eta^3)dv
+  \end{equation}
+Finally, using 
+  \begin{equation}
+    e = e_0(\eta) + \int_{T_0}^T C_vdT
+  \end{equation}
+with a polynomial expansion for $e(\eta)$ in powers of $\eta$, \ref{eq:e2} can be integrated 
+to determine the coefficients in the expansion.  Determining the coefficients this way gives 
+exactly the same expansion for energy as derived in
+Wilkins, using a different approach.  The advantages of the approach outlined above are it's relative simplicity,
+and generality -- no assumption of constant specific heat is needed.
+
+\paragraph{Deviatoric Stress Models}
+The elastic-plastic stress update assumes that the deviatoric part of
+the Cauchy stress can be calculated independently of the equation of
+state.  There are two deviatoric stress models that are implemented in
+Uintah.  These are
+\begin{enumerate}
+    \item A default hypoelastic deviatoric stress.
+    \item A linear hypoviscooelastic deviatoric stress.
+\end{enumerate}
+
+\subparagraph{Default Hypoelastic Deviatoric Stress}
+  In this case the stress rate is given by
+  \begin{equation}
+    \dot{\Bs} = 2\mu(\Beta - \Beta^p)
+  \end{equation}
+  where $\mu$ is the shear modulus.  This model is invoked using
+  \begin{Verbatim}[fontsize=\footnotesize]  
+      <deviatoric_stress_model type="hypoElastic">
+      </deviatoric_stress_model>
+  \end{Verbatim}
+  If a deviatoric stress model is not specified then this model is the
+  {\bf default}.
+
+\subparagraph{Linear Hypoviscoelastic Deviatoric Stress}
+  This model is a three--dimensional version of a Generalized Maxwell
+  model, as presented in \cite{Zerilli07}.  It is specifically
+  implemented to be combined with the ZA for Polymers Flow Stress
+  Model described previously.  Together these models combine into a
+  hypoviscoplastic model.  The stress update is given by
+  \begin{equation}
+    \dot{\Bs} = 2\mu(\Beta - \Beta^p) - \sum_{i=1}^N {\Bs_i\over \tau_i}
+  \end{equation}
+  where $\mu$ is the shear modulus and $\Bs_i$ are maxwell element
+  stresses which are tracked internally.  Also
+  \begin{equation}
+    \Bs = \sum_{i=1}^N \Bs_i \quad\quad \mu = \sum_{i=1}^N \mu_i
+  \end{equation}
+  This model is invoked using
+  \begin{Verbatim}[fontsize=\footnotesize]  
+      <deviatoric_stress_model type="hypoViscoElastic">
+        <mu> [3.0, 5.0, 7.0] </mu>
+        <tau> [1.67, 10.7, 107.0] </tau>
+      </deviatoric_stress_model>
+  \end{Verbatim}
+where the number of elements in arrays mu and tau must be the same.
+
+\paragraph{Melting Temperature}
+  \subparagraph{Default model}
+  The default model is to use a constant melting temperature.  This model
+  is invoked using
+  \begin{Verbatim}[fontsize=\footnotesize]  
+      <melting_temp_model type="constant_Tm">
+      </melting_temp_model>
+  \end{Verbatim}
+
+  \subparagraph{Linear melt model}
+  A melting temperature model designed to be linear in pressure can be invoked using
+  \begin{Verbatim}[fontsize=\footnotesize]
+      <melting_temp_model type="linear_Tm">
+        <T_m0> </T_m0>
+        <a>   </a>
+        <b> </b>
+        <Gamma_0> </Gamma_0>
+        <K_T> </K_T>
+      </melting_temp_model>
+  \end{Verbatim}
+
+  where T\_m0 is required, and either a or Gamma\_0 along with K\_T, or b.  
+  T\_m0 is the initial melting temperature in Kelvin, a is the Kraut-Kennedy coefficient,
+  Gamma\_0 is the Gruniesen Gamma, b is the pressure coefficient in Kelvin per Pascal, and K\_T
+  is the isothermal bulk modulus in Pascals.
+  The pressure is calculated using either
+  \begin{equation}
+    T_{m}=T_{m0}+bP
+  \end{equation}
+  or
+  \begin{equation}
+    T_{m}=T_{m0}\left(1+a\frac{\rho_0}{\rho}\right)
+  \end{equation}
+  The constants in these equations are linked together via the following equation
+  \begin{equation}
+   b=\frac{aT_{m0}}{K_T}
+  \end{equation}
+  and a is related to the Gruneisen Gamma by the Lindemann Law \cite{Poirier91}:
+  \begin{equation}
+   a=2\left(\Gamma_0-\frac{1}{3}\right)
+  \end{equation}
+
+  
+
+  \subparagraph{SCG melt model}
+  We use a pressure dependent relation to determine the melting
+  temperature ($T_m$).  The Steinberg-Cochran-Guinan (SCG) melt model
+  (\cite{Steinberg80}) has been used for our simulations of copper.
+  This model is based on a modified Lindemann law and has the form
+  \begin{equation} \label{eq:TmSCG}
+    T_m(\rho) = T_{m0} \exp\left[2a\left(1-\frac{1}{\eta}\right)\right]
+              \eta^{2(\Gamma_0-a-1/3)}; \quad
+    \eta = \frac{\rho}{\rho_0}
+  \end{equation}
+  where $T_{m0}$ is the melt temperature at $\eta = 1$,
+  $a$ is the coefficient of the first order volume correction to
+  Gr{\"u}neisen's gamma ($\Gamma_0$).
+
+  This model is invoked with
+  \begin{Verbatim}[fontsize=\footnotesize]
+    <melting_temp_model type="scg_Tm">
+      <T_m0> 2310.0 </T_m0>
+      <Gamma_0> 3.0 </Gamma_0>
+      <a> 1.67 </a>
+    </melting_temp_model>
+  \end{Verbatim}
+
+  \subparagraph{BPS melt model}
+  An alternative melting relation that is based on dislocation-mediated
+  phase transitions - the Burakovsky-Preston-Silbar (BPS) model
+  (\cite{Burakovsky00}) can also be used.  This model has been used to
+  determine the melt temperature for 4340 steel.  The BPS model has the form
+  \begin{align}
+    T_m(p) & = T_m(0)
+      \left[\cfrac{1}{\eta} + 
+            \cfrac{1}{\eta^{4/3}}~\cfrac{\mu_0^{'}}{\mu_0}~p\right]~; 
+    \quad
+    \eta = \left(1 + \cfrac{K_0^{'}}{K_0}~p\right)^{1/K_0^{'}} 
+    \label{eq:TmBPS}\\
+    T_m(0) & = \cfrac{\kappa\lambda\mu_0~v_{WS}}{8\pi\ln(z-1)~k_b}
+               \ln\left(\cfrac{\alpha^2}{4~b^2\rho_c(T_m)}\right)
+  \end{align}
+  where $p$ is the pressure, $\eta = \rho/\rho_0$ is the compression,
+  $\mu_0$ is the shear modulus at room temperature and zero pressure,
+  $\mu_0^{'} = \partial\mu/\partial p$ is the derivative of the shear modulus
+  at zero pressure, $K_0$ is the bulk modulus at room temperature and
+  zero pressure, $K_0^{'} = \partial K/\partial p$ is the derivative of the
+  bulk modulus at zero pressure, $\kappa$ is a constant, $\lambda = b^3/v_{WS}$
+  where $b$ is the magnitude of the Burgers' vector, $v_{WS}$ is the
+  Wigner-Seitz volume, $z$ is the coordination number, $\alpha$ is a
+  constant, $\rho_c(T_m)$ is the critical density of dislocations, and
+  $k_b$ is the Boltzmann constant.
+
+  This model is invoked with
+  \begin{Verbatim}[fontsize=\footnotesize]
+    <melting_temp_model type="bps_Tm">
+      <B0> 137e9 </B0>
+      <dB_dp0> 5.48 <dB_dp0>
+      <G0> 47.7e9 <G0>
+      <dG_dp0> 1.4 <dG_dp0>
+      <kappa> 1.25 <kappa>
+      <z> 12 <z>
+      <b2rhoTm> 0.64 <b2rhoTm>
+      <alpha> 2.9 <alpha>
+      <lambda> 1.41 <lambda>
+      <a> 3.6147e-9<a>
+      <v_ws_a3_factor> 1/4 <v_ws_a3_factor>
+      <Boltzmann_Constant> <Boltzmann_Constant>
+    </melting_temp_model>
+  \end{Verbatim}
+
+  \paragraph{Shear Modulus} \label{sec:ModelShear}
+  Three models for the shear modulus ($\mu$) have been tested in our
+  simulations.  The first has been associated with the Mechanical
+  Threshold Stress (MTS) model and we call it the MTS shear model.
+  The second is the model used by Steinberg-Cochran-Guinan and we call
+  it the SCG shear model while the third is a model developed by
+  Nadal and Le Poac that we call the NP shear model.
+
+  \subparagraph{Default model}
+  The default model gives a constant shear modulus.  The model is
+  invoked using
+  \begin{Verbatim}[fontsize=\footnotesize]
+    <shear_modulus_model type="constant_shear">
+    </shear_modulus_model>
+  \end{Verbatim}
+
+  \subparagraph{MTS Shear Modulus Model}
+  The simplest model is of the form suggested by \cite{Varshni70}
+  (\cite{Chen96})
+  \begin{equation} \label{eq:MTSShear}
+    \mu(T) = \mu_0 - \frac{D}{exp(T_0/T) - 1}
+  \end{equation}
+  where $\mu_0$ is the shear modulus at 0K, and $D, T_0$ are material
+  constants.
+
+  The model is invoked using
+  \begin{Verbatim}[fontsize=\footnotesize]
+    <shear_modulus_model type="mts_shear">
+      <mu_0>28.0e9</mu_0>
+      <D>4.50e9</D>
+      <T_0>294</T_0>
+    </shear_modulus_model>
+  \end{Verbatim}
+
+  \subparagraph{SCG Shear Modulus Model}
+  The Steinberg-Cochran-Guinan (SCG) shear modulus
+  model (\cite{Steinberg80,Zocher00}) is pressure dependent and
+  has the form
+  \begin{equation} \label{eq:SCGShear}
+    \mu(p,T) = \mu_0 + \Partial{\mu}{p} \frac{p}{\eta^{1/3}} +
+         \Partial{\mu}{T}(T - 300) ; \quad
+    \eta = \rho/\rho_0
+  \end{equation}
+  where, $\mu_0$ is the shear modulus at the reference state($T$ = 300 K,
+  $p$ = 0, $\eta$ = 1), $p$ is the pressure, and $T$ is the temperature.
+  When the temperature is above $T_m$, the shear modulus is instantaneously
+  set to zero in this model.
+
+  The model is invoked using
+  \begin{Verbatim}[fontsize=\footnotesize]
+  <shear_modulus_model type="scg_shear">
+    <mu_0> 81.8e9 </mu_0>
+    <A> 20.6e-12 </A>
+    <B> 0.16e-3 </B>
+  </shear_modulus_model>
+  \end{Verbatim}
+
+  \subparagraph{NP Shear Modulus Model}
+  A modified version of the SCG model has been developed by
+  \cite{Nadal03} that attempts to capture the sudden drop in the
+  shear modulus close to the melting temperature in a smooth manner.
+  The Nadal-LePoac (NP) shear modulus model has the form
+  \begin{equation} \label{eq:NPShear}
+    \mu(p,T) = \frac{1}{\mathcal{J}(\That)}
+      \left[
+        \left(\mu_0 + \Partial{\mu}{p} \cfrac{p}{\eta^{1/3}} \right)
+        (1 - \That) + \frac{\rho}{Cm}~k_b~T\right]; \quad
+    C := \cfrac{(6\pi^2)^{2/3}}{3} f^2
+  \end{equation}
+  where
+  \begin{equation}
+    \mathcal{J}(\That) := 1 + \exp\left[-\cfrac{1+1/\zeta}
+        {1+\zeta/(1-\That)}\right] \quad
+       \text{for} \quad \That:=\frac{T}{T_m}\in[0,1+\zeta],
+  \end{equation}
+  $\mu_0$ is the shear modulus at 0 K and ambient pressure, $\zeta$ is
+  a material parameter, $k_b$ is the Boltzmann constant, $m$ is the atomic
+  mass, and $f$ is the Lindemann constant.
+
+  The model is invoked using
+  \begin{Verbatim}[fontsize=\footnotesize]
+    <shear_modulus_model type="np_shear">
+      <mu_0>26.5e9</mu_0>
+      <zeta>0.04</zeta>
+      <slope_mu_p_over_mu0>65.0e-12</slope_mu_p_over_mu0>
+      <C> 0.047 </C>
+      <m> 26.98 </m>
+    </shear_modulus_model>
+  \end{Verbatim}
+
+  \subparagraph{PTW Shear model}
+  The PTW shear model is a simplified version of the SCG shear model.
+  The inputs can be found in \verb|.../MPM/ConstitutiveModel/PlasticityModel/PTWShear.h|.
+
+\paragraph{Yield conditions}
+When failure is to be simulated we can use the
+Gurson-Tvergaard-Needleman yield condition instead of the von Mises
+condition.
+
+  \subparagraph{The von Mises yield condition}
+  The von Mises yield condition is the default.  It specifies a yield condition of
+  the form
+  \begin{equation}
+    \Phi = \sqrt{3J_2} - \sigma_y
+  \end{equation}
+  where $J_2$ is the second invariant of the deviatoric stress tensor
+  ($J_2={1\over2}\Bs:\Bs$) and $\sigma_y$ is the flow stress. Currently
+  the return algorithms are restricted to plastic flow in the
+  direction of the deviatoric stress
+  (Eqn. \ref{eq:associated_flow}). See the discussion in the Radial
+  Return algorithm description for details.  The von Mises yield
+  condition is invoked using the tags
+  \begin{Verbatim}[fontsize=\footnotesize]
+    <yield_condition type="vonMises">
+    </yield_condition>
+  \end{Verbatim}
+
+  \subparagraph{The Gurson-Tvergaard-Needleman (GTN) yield condition}
+  The Gurson-Tvergaard-Needleman (GTN) yield
+  condition~\cite{Gurson77,Tver84} depends on porosity.  {\it This
+  model is for experts only!!!}  Here are some caveats: Formally,
+  you can replace the flow stress in Gurson’s model with the flow
+  stresses of Johnson-Cook, ZA, etc., but the internal variable
+  updates would have to be modified extensively.  For example, the JC
+  yield stress depends on the equivalent plastic strain, but this
+  needs to be the equivalent plastic strain of the matrix material,
+  which is very different from the equivalent plastic strain of the
+  porous composite. For example, under pure hydrostatic compression at
+  the macroscale, the matrix material will suffer massive amounts of
+  plastic SHEAR strains at the microscale (even though, for
+  hydrostatic loading, it has zero plastic shear strain at the
+  macroscale) and thus would need to harden. While the models should
+  run, they are unlikely to give realistic results.
+
+  The GTN yield condition is a fairly good bound in compression but a
+  TERRIBLE bound in tension (in fact using it in tension can produce
+  non-physical predictions of negative plastic work tantamount to
+  tension causing pore COLLAPSE; very few Gurson implementations catch
+  this problem because very few of them include run-time checks of
+  solution quality, including this one).
+
+  The GTN yield condition will not work with Radial Return.  An error
+  will be generated in this case.  Presently it only runs with the
+  modified Nemat-Nasser/Maudlin return algorithm.  Plastic flow is
+  assumed to be in the direction of deviatoric stress.  Hence this
+  is nonassociated flow for this pressure dependent yield condition.
+
+  The GTN yield condition can be written as
+  \begin{equation}
+    \Phi = \left(\frac{\sigma_{eq}}{\sigma_f}\right)^2 +
+    2 q_1 f_* \cosh \left(q_2 \frac{Tr(\sigma)}{2\sigma_f}\right) -
+    (1+q_3 f_*^2) = 0
+  \end{equation}
+  where $q_1,q_2,q_3$ are material constants and $f_*$ is the porosity
+  (damage) function given by
+  \begin{equation}
+    f* = 
+    \begin{cases}
+      f & \text{for}~~ f \le f_c,\\ 
+      f_c + k (f - f_c) & \text{for}~~ f > f_c 
+    \end{cases}
+  \end{equation}
+  where $k$ is a constant and $f$ is the porosity (void volume fraction).  The
+  flow stress in the matrix material is computed using either of the two
+  plasticity models discussed earlier.  Note that the flow stress in the matrix
+  material also remains on the undamaged matrix yield surface and uses an
+  associated flow rule.
+
+  This yield condition is invoked using
+  \begin{Verbatim}[fontsize=\footnotesize]
+    <yield_condition type="gurson">
+      <q1> 1.5 </q1>
+      <q2> 1.0 </q2>
+      <q3> 2.25 </q3>
+      <k> 4.0 </k>
+      <f_c> 0.05 </f_c>
+    </yield_condition>
+  \end{Verbatim}
+
+  \subparagraph{Porosity model}
+  The evolution of porosity is calculated as the sum of the rate of growth
+  and the rate of nucleation~\cite{Ramaswamy98a}.  The rate of growth of
+  porosity and the void nucleation rate are given by the following equations
+  ~\cite{Chu80}
+  \begin{align}
+    \dot{f} &= \dot{f}_{\text{nucl}} + \dot{f}_{\text{grow}} \\
+    \dot{f}_{\text{grow}} & = (1-f) \text{Tr}(\BD_p) \\
+    \dot{f}_{\text{nucl}} & = \cfrac{f_n}{(s_n \sqrt{2\pi})}
+            \exp\left[-\Half \cfrac{(\epsilon_p - \epsilon_n)^2}{s_n^2}\right]
+            \dot{\epsilon}_p
+  \end{align}
+  where $\BD_p$ is the rate of plastic deformation tensor, $f_n$ is the volume
+  fraction of void nucleating particles , $\epsilon_n$ is the mean of the
+  distribution of nucleation strains, and $s_n$ is the standard
+  deviation of the distribution.
+
+  The inputs tags for porosity are of the form
+  \begin{Verbatim}[fontsize=\footnotesize]
+    <evolve_porosity> true </evolve_porosity>
+    <initial_mean_porosity>         0.005 </initial_mean_porosity>
+    <initial_std_porosity>          0.001 </initial_std_porosity>
+    <critical_porosity>             0.3   </critical_porosity>
+    <frac_nucleation>               0.1   </frac_nucleation>
+    <meanstrain_nucleation>         0.3   </meanstrain_nucleation>
+    <stddevstrain_nucleation>       0.1   </stddevstrain_nucleation>
+    <initial_porosity_distrib>      gauss </initial_porosity_distrib>
+  \end{Verbatim}
+
+
+\paragraph{Flow Stress}
+  We have explored seven temperature and strain rate dependent
+  models that can be used to compute the flow stress.  Some of these are also
+  pressure dependent (note that plastic flow does is non-associative for
+  pressure dependent models):
+  \begin{enumerate}
+    \item the Isotropic Hardening model
+    \item the Johnson-Cook (JC) model
+    \item the Steinberg-Cochran-Guinan-Lund (SCG) model.
+    \item the Zerilli-Armstrong (ZA) model.
+    \item the Zerilli-Armstrong for polymers model.
+    \item the Mechanical Threshold Stress (MTS) model.
+    \item the Preston-Tonks-Wallace (PTW) model.
+  \end{enumerate}
+
+  \subparagraph{Isotropic Hardening Flow Stress Model}
+  The Isotropic Hardening model is a simple linear relationship for the flow stress
+  \begin{equation}
+    \sigma_y(\Ep) = \sigma_y + K (\Ep)
+  \end{equation}
+  where $\Ep$ is the equivalent plastic strain, $\sigma_y$ and $k$ are material constants.
+
+  The inputs for this model are
+  \begin{Verbatim}[fontsize=\footnotesize]
+  <flow_model type="isotropic_hardening">
+    <sigma_Y>792.0e6</sigma_y>
+    <K>510.0e6</K>
+  </flow_model>
+  \end{Verbatim}
+
+  \subparagraph{JC Flow Stress Model}
+  The Johnson-Cook (JC) model (\cite{Johnson83}) is purely empirical and gives
+  the following relation for the flow stress ($\sigma_y$)
+  \begin{equation}
+    \sigma_y(\Ep,\Epdot{},T) = 
+    \left[A + B (\Ep)^n\right]\left[1 + C \ln(\Epdot{}^{*})\right]
+    \left[1 - (T^*)^m\right]
+  \end{equation}
+  where $\Ep$ is the equivalent plastic strain, $\Epdot{}$ is the
+  plastic strain rate, A, B, C, n, m are material constants,
+  \begin{equation}
+    \Epdot{}^{*} = \cfrac{\Epdot{}}{\Epdot{0}}; \quad
+    T^* = \cfrac{(T-T_0)}{(T_m-T_0)}~,
+  \end{equation}
+  $\Epdot{0}$ is a user defined plastic strain rate,
+  $T_0$ is a reference temperature, and $T_m$ is the melt temperature.
+  For conditions where $T^* < 0$, we assume that $m = 1$.
+
+  The inputs for this model are
+  \begin{Verbatim}[fontsize=\footnotesize]
+  <flow_model type="johnson_cook">
+    <A>792.0e6</A>
+    <B>510.0e6</B>
+    <C>0.014</C>
+    <n>0.26</n>
+    <m>1.03</m>
+    <T_r>298.0</T_r>
+    <T_m>1793.0</T_m>
+    <epdot_0>1.0</epdot_0>
+  </flow_model>
+  \end{Verbatim}
+
+  \subparagraph{SCG Flow Stress Model}
+  The Steinberg-Cochran-Guinan-Lund (SCG) model is a semi-empirical model
+  that was developed by \cite{Steinberg80} for high strain rate
+  situations and extended to low strain rates and bcc materials by
+  \cite{Steinberg89}.  The flow stress in this model is given by
+  \begin{equation}\label{eq:SCGL}
+    \sigma_y(\Ep,\Epdot{},T) = 
+     \left[\sigma_a f(\Ep) + \sigma_t (\Epdot{}, T)\right]
+     \frac{\mu(p,T)}{\mu_0} 
+  \end{equation}
+  where $\sigma_a$ is the athermal component of the flow stress,
+  $f(\Ep)$ is a function that represents strain hardening,
+  $\sigma_t$ is the thermally activated component of the flow stress,
+  $\mu(p,T)$ is the shear modulus, and $\mu_0$ is the shear modulus
+  at standard temperature and pressure.  The strain hardening function
+  has the form
+  \begin{equation}
+    f(\Ep) = [1 + \beta(\Ep + \Epi)]^n ; \quad
+    \sigma_a f(\Ep) \le \sigma_{\text{max}}
+  \end{equation}
+  where $\beta, n$ are work hardening parameters, and $\Epi$ is the
+  initial equivalent plastic strain.  The thermal component $\sigma_t$
+  is computed using a bisection algorithm from the following equation (based
+  on the work of \cite{Hoge77})
+  \begin{equation}
+    \Epdot{} = \left[\frac{1}{C_1}\exp\left[\frac{2U_k}{k_b~T}
+      \left(1 - \frac{\sigma_t}{\sigma_p}\right)^2\right] + 
+      \frac{C_2}{\sigma_t}\right]^{-1}; \quad
+    \sigma_t \le \sigma_p
+  \end{equation}
+  where $2 U_k$ is the energy to form a kink-pair in a dislocation segment
+  of length $L_d$, $k_b$ is the Boltzmann constant, $\sigma_p$ is the Peierls
+  stress. The constants $C_1, C_2$ are given by the relations
+  \begin{equation}
+    C_1 := \frac{\rho_d L_d a b^2 \nu}{2 w^2}; \quad
+    C_2 := \frac{D}{\rho_d b^2}
+  \end{equation}
+  where $\rho_d$ is the dislocation density, $L_d$ is the length of a
+  dislocation segment, $a$ is the distance between Peierls valleys,
+  $b$ is the magnitude of the Burgers' vector, $\nu$ is the Debye frequency,
+  $w$ is the width of a kink loop, and $D$ is the drag coefficient.
+
+  The inputs for this model are of the form
+  \begin{Verbatim}[fontsize=\footnotesize]
+    <flow_model type="steinberg_cochran_guinan">
+      <mu_0> 81.8e9 </mu_0>
+      <sigma_0> 1.15e9 </sigma_0>
+      <Y_max> 0.25e9 </Y_max>
+      <beta> 2.0 </beta>
+      <n> 0.50 </n>
+      <A> 20.6e-12 </A>
+      <B> 0.16e-3 </B>
+      <T_m0> 2310.0 </T_m0>
+      <Gamma_0> 3.0 </Gamma_0>
+      <a> 1.67 </a>
+      <epsilon_p0> 0.0 </epsilon_p0>
+    </flow_model>
+  \end{Verbatim}
+
+  \subparagraph{ZA Flow Stress Model}
+  The Zerilli-Armstrong (ZA) model (\cite{Zerilli87,Zerilli93,Zerilli04})
+  is based on simplified dislocation mechanics.  The general form of the
+  equation for the flow stress is
+  \begin{equation}
+    \sigma_y(\Ep,\Epdot{},T) = 
+      \sigma_a + B\exp(-\beta(\Epdot{}) T) + 
+                           B_0\sqrt{\Ep}\exp(-\alpha(\Epdot{}) T)
+  \end{equation}
+  where $\sigma_a$ is the athermal component of the flow stress given by
+  \begin{equation}
+    \sigma_a := \sigma_g + \frac{k_h}{\sqrt{l}} + K\Ep^n,
+  \end{equation}
+  $\sigma_g$ is the contribution due to solutes and initial dislocation
+  density, $k_h$ is the microstructural stress intensity, $l$ is the
+  average grain diameter, $K$ is zero for fcc materials,
+  $B, B_0$ are material constants.  The functional forms of the exponents
+  $\alpha$ and $\beta$ are
+  \begin{equation}
+    \alpha = \alpha_0 - \alpha_1 \ln(\Epdot{}); \quad
+    \beta = \beta_0 - \beta_1 \ln(\Epdot{}); 
+  \end{equation}
+  where $\alpha_0, \alpha_1, \beta_0, \beta_1$ are material parameters that
+  depend on the type of material (fcc, bcc, hcp, alloys).  The Zerilli-Armstrong
+  model has been modified by \cite{Abed05} for better performance at high
+  temperatures.  However, we have not used the modified equations in our
+  computations.
+
+  The inputs for this model are of the form
+  \begin{Verbatim}[fontsize=\footnotesize]
+    
+    <flow_model type="zerilli_armstrong">
+       <sigma_g>     50.0e6   </sigma_g>
+       <k_H>         5.0e6    </k_H>
+       <sqrt_l_inv>  5.0      </sqrt_l_inv>
+       <B>           25.0e6   </B>
+       <beta_0>      0.0      </beta_0>
+       <beta_1>      0.0      </beta_1>
+       <B_0>         0.0      </B_0>
+       <alpha_0>     0.0      </alpha_0>
+       <alpha_1>     0.0      </alpha_1>
+       <K>           5.0e9    </K>
+       <n>           1.0      </n>
+     </flow_model>
+  \end{Verbatim}
+
+  \subparagraph{ZA for Polymers Flow Stress Model}
+  The Zerilli-Armstrong flow stress model for polymers(\cite{Zerilli07})
+  is a modification to the ZA flow stress model for metals motivated by considering
+  thermally activated processess appropriate to polymers, in place of
+  dislocations.  The ZA flow stress function for polymers has three terms.  
+  The first term accounts for a saturation of the flow stress to finite stress 
+  at higher temperatures (Although such stress component is specified as ``athermal'' 
+  it should follow the generally weaker temperature dependence of the elastic 
+  shear modulus, hence the subscript ``g''). The second gives the yield stress as 
+  a function of temperature and plastic strain rate. The third gives an increment 
+  due to strain hardening, influenced by the pressure. The general form of the
+  equation for the flow stress implemented in Uintah is
+  \begin{equation}
+    \sigma_y(\Ep,\Epdot{},p,T) = 
+      \sigma_g + B\exp(-\beta(T-T_0)) + 
+                           B_0\sqrt{\omega\Ep}\exp(-\alpha(T-T_0))
+  \end{equation}
+  where it should be noted that the equation is slightly modified from the
+  original to include a reference temperature $T_0$ and an athermal stress, 
+  $\sigma_g$, which is a constant.  The other terms are specified via
+  \begin{equation}
+    B=B_{pa}(1+B_{pb}\sqrt{p})^{B_{pn}};\quad
+    B_0=B_{0pa}(1+B_{0pb}\sqrt{p})^{B_{0pn}};\quad
+    \omega=\omega_a+\omega_b\ln(\Epdot{})+\omega_p \sqrt{p}
+  \end{equation}
+  where $B_{pa}$, $B_{pb}$, $B_{pn}$, $B_{0pa}$, $B_{0pb}$, $B_{0pn}$, $\omega_a$, $\omega_b$, 
+  and $\omega_p$ are material parameters.  The functional forms of the exponents
+  $\alpha$ and $\beta$ are (as in the original)
+  \begin{equation}
+    \alpha = \alpha_0 - \alpha_1 \ln(\Epdot{}); \quad
+    \beta = \beta_0 - \beta_1 \ln(\Epdot{}); 
+  \end{equation}
+  where $\alpha_0, \alpha_1, \beta_0, \beta_1$ are material parameters.  Note that the
+  pressure is taken to be min(p,0), eliminating pressure dependence in tension.
+
+  The inputs for this model are of the form
+  \begin{Verbatim}[fontsize=\footnotesize]
+    
+         <flow_model type="zerilli_armstrong_polymer">
+           <sigma_g>     50.0e6      </sigma_g>
+           <B_pa>        0.0      </B_pa>
+           <B_pb>        0.0      </B_pb>
+           <B_pn>        0.0      </B_pn>
+           <beta_0>      0.0      </beta_0>
+           <beta_1>      0.0      </beta_1>
+           <T_0>         0.0      </T_0>
+           <B_0pa>       500.0e6      </B_0pa>
+           <B_0pb>       0.0      </B_0pb>
+           <B_0pn>       0.0      </B_0pn>
+           <omega_a>     1.0      </omega_a>
+           <omega_b>     0.0      </omega_b>
+           <omega_p>     0.0      </omega_p>
+           <alpha_0>     0.0      </alpha_0>
+           <alpha_1>     0.0      </alpha_1>
+         </flow_model>
+
+  \end{Verbatim}
+
+  \subparagraph{MTS Flow Stress Model}
+  The Mechanical Threshold Stress (MTS) model
+  (\cite{Follans88,Goto00a,Kocks01})
+  gives the following form for the flow stress
+  \begin{equation}
+    \sigma_y(\Ep,\Epdot{},T) = 
+      \sigma_a + (S_i \sigma_i + S_e \sigma_e)\frac{\mu(p,T)}{\mu_0} 
+  \end{equation}
+  where $\sigma_a$ is the athermal component of mechanical threshold stress,
+  $\mu_0$ is the shear modulus at 0 K and ambient pressure,
+  $\sigma_i$ is the component of the flow stress due to intrinsic barriers
+  to thermally activated dislocation motion and dislocation-dislocation
+  interactions, $\sigma_e$ is the component of the flow stress due to
+  microstructural evolution with increasing deformation (strain hardening),
+  ($S_i, S_e$) are temperature and strain rate dependent scaling factors.  The
+  scaling factors take the Arrhenius form
+  \begin{align}
+    S_i & = \left[1 - \left(\frac{k_b~T}{g_{0i}b^3\mu(p,T)}
+    \ln\frac{\Epdot{0i}}{\Epdot{}}\right)^{1/q_i}
+    \right]^{1/p_i} \\
+    S_e & = \left[1 - \left(\frac{k_b~T}{g_{0e}b^3\mu(p,T)}
+    \ln\frac{\Epdot{0e}}{\Epdot{}}\right)^{1/q_e}
+    \right]^{1/p_e}
+  \end{align}
+  where $k_b$ is the Boltzmann constant, $b$ is the magnitude of the Burgers'
+  vector, ($g_{0i}, g_{0e}$) are normalized activation energies,
+  ($\Epdot{0i}, \Epdot{0e}$) are constant reference strain rates, and
+  ($q_i, p_i, q_e, p_e$) are constants.  The strain hardening component
+  of the mechanical threshold stress ($\sigma_e$) is given by a
+  modified Voce law
+  \begin{equation}\label{eq:MTSsige}
+    \frac{d\sigma_e}{d\Ep} = \theta(\sigma_e)
+  \end{equation}
+  where
+  \begin{align}
+    \theta(\sigma_e) & = 
+       \theta_0 [ 1 - F(\sigma_e)] + \theta_{IV} F(\sigma_e) \\
+    \theta_0 & = a_0 + a_1 \ln \Epdot{} + a_2 \sqrt{\Epdot{}} - a_3 T \\
+    F(\sigma_e) & = 
+      \cfrac{\tanh\left(\alpha \cfrac{\sigma_e}{\sigma_{es}}\right)}
+      {\tanh(\alpha)}\\
+    \ln(\cfrac{\sigma_{es}}{\sigma_{0es}}) & =
+    \left(\frac{kT}{g_{0es} b^3 \mu(p,T)}\right)
+    \ln\left(\cfrac{\Epdot{}}{\Epdot{0es}}\right)
+  \end{align}
+  and $\theta_0$ is the hardening due to dislocation accumulation,
+  $\theta_{IV}$ is the contribution due to stage-IV hardening,
+  ($a_0, a_1, a_2, a_3, \alpha$) are constants,
+  $\sigma_{es}$ is the stress at zero strain hardening rate,
+  $\sigma_{0es}$ is the saturation threshold stress for deformation at 0 K,
+  $g_{0es}$ is a constant, and $\Epdot{0es}$ is the maximum strain rate.  Note
+  that the maximum strain rate is usually limited to about $10^7$/s.
+
+  The inputs for this model are of the form
+  \begin{Verbatim}[fontsize=\footnotesize]
+    <flow_model type="mts_model">
+      <sigma_a>363.7e6</sigma_a>
+      <mu_0>28.0e9</mu_0>
+      <D>4.50e9</D>
+      <T_0>294</T_0>
+      <koverbcubed>0.823e6</koverbcubed>
+      <g_0i>0.0</g_0i>
+      <g_0e>0.71</g_0e>
+      <edot_0i>0.0</edot_0i>
+      <edot_0e>2.79e9</edot_0e>
+      <p_i>0.0</p_i>
+      <q_i>0.0</q_i>
+      <p_e>1.0</p_e>
+      <q_e>2.0</q_e>
+      <sigma_i>0.0</sigma_i>
+      <a_0>211.8e6</a_0>
+      <a_1>0.0</a_1>
+      <a_2>0.0</a_2>
+      <a_3>0.0</a_3>
+      <theta_IV>0.0</theta_IV>
+      <alpha>2</alpha>
+      <edot_es0>3.42e8</edot_es0>
+      <g_0es>0.15</g_0es>
+      <sigma_es0>1679.3e6</sigma_es0>
+    </flow_model>
+  \end{Verbatim}
+
+  \subparagraph{PTW Flow Stress Model}
+  The Preston-Tonks-Wallace (PTW) model (\cite{Preston03}) attempts to
+  provide a model for the flow stress for extreme strain rates
+  (up to $10^{11}$/s) and temperatures up to melt.  The flow stress is
+  given by
+  \begin{equation}
+    \sigma_y(\Ep,\Epdot{},T) = 
+       \begin{cases}
+         2\left[\tau_s + \alpha\ln\left[1 - \varphi
+          \exp\left(-\beta-\cfrac{\theta\Ep}{\alpha\varphi}\right)\right]\right]
+         \mu(p,T) & \text{thermal regime} \\
+         2\tau_s\mu(p,T) & \text{shock regime}
+       \end{cases}
+  \end{equation}
+  with
+  \begin{equation}
+    \alpha := \frac{s_0 - \tau_y}{d}; \quad
+    \beta := \frac{\tau_s - \tau_y}{\alpha}; \quad
+    \varphi := \exp(\beta) - 1
+  \end{equation}
+  where $\tau_s$ is a normalized work-hardening saturation stress,
+  $s_0$ is the value of $\tau_s$ at 0K,
+  $\tau_y$ is a normalized yield stress, $\theta$ is the hardening constant
+  in the Voce hardening law, and $d$ is a dimensionless material
+  parameter that modifies the Voce hardening law.  The saturation stress
+  and the yield stress are given by
+  \begin{align}
+    \tau_s & = \max\left\{s_0 - (s_0 - s_{\infty})
+       \erf\left[\kappa
+         \That\ln\left(\cfrac{\gamma\Xidot}{\Epdot{}}\right)\right],
+       s_0\left(\cfrac{\Epdot{}}{\gamma\Xidot}\right)^{s_1}\right\} \\
+    \tau_y & = \max\left\{y_0 - (y_0 - y_{\infty})
+       \erf\left[\kappa
+         \That\ln\left(\cfrac{\gamma\Xidot}{\Epdot{}}\right)\right],
+       \min\left\{
+         y_1\left(\cfrac{\Epdot{}}{\gamma\Xidot}\right)^{y_2}, 
+         s_0\left(\cfrac{\Epdot{}}{\gamma\Xidot}\right)^{s_1}\right\}\right\} 
+  \end{align}
+  where $s_{\infty}$ is the value of $\tau_s$ close to the melt temperature,
+  ($y_0, y_{\infty}$) are the values of $\tau_y$ at 0K and close to melt,
+  respectively, $(\kappa, \gamma)$ are material constants, $\That = T/T_m$,
+  ($s_1, y_1, y_2$) are material parameters for the high strain rate
+  regime, and
+  \begin{equation}
+    \Xidot = \frac{1}{2}\left(\cfrac{4\pi\rho}{3M}\right)^{1/3}
+             \left(\cfrac{\mu(p,T)}{\rho}\right)^{1/2}
+  \end{equation}
+  where $\rho$ is the density, and $M$ is the atomic mass.
+
+  The inputs for this model are of the form
+  \begin{Verbatim}[fontsize=\footnotesize]
+    <flow_model type="preston_tonks_wallace">
+      <theta> 0.025 </theta>
+      <p> 2.0 </p>
+      <s0> 0.0085 </s0>
+      <sinf> 0.00055 </sinf>
+      <kappa> 0.11 </kappa>
+      <gamma> 0.00001 </gamma>
+      <y0> 0.0001 </y0>
+      <yinf> 0.0001 </yinf>
+      <y1> 0.094 </y1>
+      <y2> 0.575 </y2>
+      <beta> 0.25 </beta>
+      <M> 63.54 </M>
+      <G0> 518e8 </G0>
+      <alpha> 0.20 </alpha>
+      <alphap> 0.20 </alphap>
+    </flow_model>
+  \end{Verbatim}
+
+\paragraph{Return Algorithms}
+
+Two return algorithms are presently available.  Both assume the direction
+of plastic flow is proportional to the current deviatoric stress.
+  \begin{enumerate}
+    \item Radial Return ({\bf default}).
+    \item Modified Nemat-Nasser/Maudlin Return Algorithm.
+  \end{enumerate}
+
+\subparagraph{Radial Return Algorithm}
+The plastic state is obtained using an iterative radial return
+procedure as described in \cite{Simo98}, page 124, except that the
+Newton procedure has been generalized to allow flow stresses to be
+functions of both equivalent plastic strain and equivalent plastic
+strain rate.
+
+The rotated spatial rate of deformation tensor ($\Bd$) is additively
+decomposed into an elastic part, $\Bd^e$, and a plastic part, $\Bd^p$,
+  \begin{equation}
+     \Bd = \Bd^e + \Bd^p
+  \end{equation}
+  It is convenient to work with the deviatoric parts of $\Bd$,
+  $\Bd^e$, and $\Bd^p$, denoted $\Beta$, $\Beta^e$, and
+  $\Beta^p$ respectively. The same additive decomposition obtains
+  \begin{equation}
+     \Beta = \Beta^e + \Beta^p
+  \end{equation}
+  Presently these models are limited to the case of plastic
+  incompressibility ($\Tr{(\Bd^p)} = 0$), so that $\Bd^p=\Beta^p$.
+
+The radial return algorithm assumes a yield condition of the form 
+  \begin{equation}\label{eq:yield_condition}
+    f(\Bs,\Ep,\dot{\Ep}) = \sqrt{3J_2} - \sigma_y(\Ep,\dot{\Ep})
+  \end{equation}
+where $\sigma_y$ is the flow stress, $J_2 = {1\over2}\Bs:\Bs$ is the
+second invariant of the deviatoric part of the Cauchy stress, $\Bs$,
+and the equivalent plastic strain is defined as
+  \begin{equation}\label{eq:ep}
+    \Ep = \int_0^t\sqrt{{2\over3}\Bd^p:\Bd^p}dt = \int_0^t\sqrt{{2\over3}\Beta^p:\Beta^p}dt
+  \end{equation}
+Assuming a state at the end of the previous time step, time $t^n$,
+satisfying $f(\Bs^n,\Ep^n,\Epdot{}^n)\le0$, a new state satisfying
+Eqn. \ref{eq:yield_condition} at time $t^{n+1}=t^n+\Delta t$, where
+$\Delta t$ is the time step size, is sought.
+
+Attention is further restricted to plastic flow associated with the yield condition,
+Eqn. \ref{eq:yield_condition}, i.e.
+  \begin{equation}\label{eq:associated_flow}
+    \Bd^p = \Beta^p \propto \Partial{f}{\Bsig} = \lambdadot{\Bs\over\norm{\Bs}} = \lambdadot\Bn
+  \end{equation}
+where $\Bsig$ is the Cauchy stress , $\Bn={\Bs/\norm{\Bs}}$ and
+$\lambdadot>0$ is a proportionality constant to be determined.
+Attention is also restricted to isotropic materials, for which the
+deviatoric response may be separated from the volumetric response.
+The linear hypoelastic/plastic constitutive equation for deviatoric
+response is
+  \begin{equation}\label{eq:linearhypoelasticity}
+    \dot{\Bs} = 2\mu(\Beta - \Beta^p)
+  \end{equation}
+where $\mu$ is the shear modulus.  The shear modulus is required to be
+constant over the time step.  This permits evolution of the shear
+modulus based on the state at the beginning of the time step using the
+various shear modulus models described later, which are pressure and
+temperature dependent.  It also allows for a visoelastic deviatoric
+stress response provided an instantaneous shear modulus may be
+defined, as described later in this section for linear
+hypoviscoelasticity.
+
+A trial stress is calculated assuming no plastic deformation, i.e.
+  \begin{equation}\label{eq:strial}
+    {\Bs^{\text{trial}}} = \Bs^n + 2\mu\Beta\Delta t
+  \end{equation}
+If $f(\Bs^{\text{trial}},\Ep^n,0)\le0$, the deformation is purely
+elastic and the solution at time $t^{n+1}$ is
+$\Bs^{n+1}=\Bs^{\text{trial}}$, $\Ep^{n+1}=\Ep^n$.  If
+$f(\Bs^{\text{trial}},\Ep^n,0)>0$, the deformation is at least
+partially plastic.  In this case
+  \begin{equation}\label{eq:stress_update_0}
+    \Bs^{n+1} = \Bs^n + \dot{\Bs}\Delta t
+  \end{equation}
+where $\dot{\Bs}$ is given by Eqn. \ref{eq:linearhypoelasticity}.
+Eqn. \ref{eq:stress_update_0} may be rewritten in terms of the trial
+stress
+  \begin{equation}\label{eq:stress_update_1}
+    \Bs^{n+1} = \Bs^{\text{trial}} - 2\mu\Beta^p\Delta t = \Bs^{\text{trial}} - 2\mu\lambdadot\Delta t {\Bs^{n+1}\over\norm{\Bs^{n+1}}}
+  \end{equation}
+using Eqn.s \ref{eq:strial}, \ref{eq:linearhypoelasticity} and
+\ref{eq:associated_flow}.  This equation may be rearranged to give
+  \begin{equation}
+    \Bs^{\text{trial}} = \Bs^{n+1} \left[ 1 + {2\mu\lambdadot\Delta t\over\norm{\Bs^{n+1}}}\right]
+  \end{equation}
+which gives the key result that $\Bs^{\text{trial}} \propto
+\Bs^{n+1}$, i.e. the trial stress and the updated stress are in the
+same direction.  Consequently the flow direction may be written
+  \begin{equation}\label{eq:flow_direction}
+    \Bn={\Bs^{n+1}\over\norm{\Bs^{n+1}}}={\Bs^{\text{trial}}\over\norm{\Bs^{\text{trial}}}}
+  \end{equation}
+and Eqn. \ref{eq:stress_update_1} may be rewritten
+  \begin{equation}\label{eq:stress_update_2}
+    \Bs^{n+1} = \Bs^{\text{trial}} - 2\mu\lambdadot\Delta t \Bn
+  \end{equation}
+or, contracting both sides with $\Bn$, and using Eqn. \ref{eq:flow_direction},
+  \begin{equation}
+    \norm{\Bs^{n+1}} = \norm{\Bs^{\text{trial}}} - 2\mu\lambdadot\Delta t
+  \end{equation}
+which is a scalar equation for the proportionality constant
+$\lambdadot$.  Using the yield condition
+$f(\Bs^{n+1},\Ep^{n+1},\Epdot{}^{n+1})=0$
+(Eqn. \ref{eq:yield_condition}), this equation may be written in terms
+of $\lambdadot$
+  \begin{equation}\label{eq:stress_update_3}
+     \sqrt{2\over3}\sigma_y(\Ep^{n+1},\Epdot{}^{n+1}) = \norm{\Bs^{\text{trial}}} - 2\mu\lambdadot\Delta t
+  \end{equation}
+where from Eqn.s \ref{eq:ep} and \ref{eq:associated_flow},
+$\Ep^{n+1}=\Ep^n+\sqrt{2\over3}\lambdadot\Delta t$ and $\dot{\Ep}^{n+1}=\sqrt{2\over3}\lambdadot$.
+
+For the special case of linear isotropic hardening,
+$\sigma_y(\Ep,\Epdot{})=\sigma_{y0}+k\Ep$, where $\sigma_{y0}$ is the
+initial yield stress and $k$ is the hardening modulus,
+Eqn. \ref{eq:stress_update_3} may be solved exactly.  More generally
+the solution may be found using Newton iteration.  Defining
+$\Delta\lambda = \lambdadot\Delta t$, and letting $j$ denote the
+iteration, define
+  \begin{equation}
+     g(\Delta\lambda_j) = \norm{\Bs^{\text{trial}}} - 2\mu\Delta\lambda_j - \sqrt{2\over3}\sigma_y(\Epj^{n+1},\dot{\epsilon}_{p,j}^{n+1})
+  \end{equation}
+and, using the chain rule, the derivative may be calculated
+  \begin{equation}
+     {dg\over d\Delta\lambda}(\Delta\lambda_j) = - 2\mu - {2\over3}\left[{\partial\sigma_y\over \partial\Ep}(\Epj^{n+1},\dot{\epsilon}_{p,j}^{n+1}) + {\partial\sigma_y\over \partial{\dot{\epsilon}_{p,j}^{n+1}}}(\Epj^{n+1},\dot{\epsilon}_{p,j}^{n+1}){1\over\Delta t} \right]
+  \end{equation}
+Then until $|g(\Delta\lambda_{j+1})| < \text{TOL}$, calculate
+  \begin{equation}
+     \Delta\lambda_{j+1}=\Delta\lambda_j-{g(\Delta\lambda_j)\over{dg\over d\Delta\lambda}(\Delta\lambda_j)}
+  \end{equation}
+where $\Delta\lambda_0=0$, $\Epo^{n+1}=\Ep^n$,
+$\dot{\epsilon}_{p,0}^{n+1}=0$, and, once $\Delta\lambda$ has been
+determined to a specified accuracy, the final values of plastic strain
+and strain rate are given by
+  \begin{equation}
+    \Ep^{n+1}=\Ep^n+\sqrt{2\over3}\Delta\lambda_{j+1}
+  \end{equation}
+  \begin{equation}
+    \dot{\Ep}^{n+1}=\sqrt{2\over3}{\Delta\lambda_{j+1}\over\Delta t}
+  \end{equation}
+and the final value of $\Bs^{n+1}$ is calculated from Eqn. \ref{eq:stress_update_2}.
+
+While several of the allowed flow stresses are of the form
+$\sigma_y(\Ep,\dot{\Ep})$ as given in Eqn. \ref{eq:yield_condition},
+others include temperature and/or pressure dependence.  Similarly,
+several of the shear moduli models are functions of temperature and/or
+pressure.  Using the radial return algorithm in these cases amounts to
+convergence to the yield surface neglecting temperature changes, and
+assuming a non-associated flow rule of the form in
+Eqn. \ref{eq:associated_flow} (which is non-associated because the
+pressure dependence of the flow stress has been neglected,
+i.e. Eqn. \ref{eq:associated_flow} no longer holds).  This non
+associated flow rule results in zero plastic dilation (actually
+dilitation).  The end result is convergence to the flow stress with
+temperature and pressure held constant, i.e. to
+$\sigma_y(\Ep^{n+1},\dot{\Ep}^{n+1},p^n,T^n)$ with $\mu(p^n,T^n)$ and
+no plastic dilitation.  While holding pressure and temperature fixed
+over a time step is probably a good approximation for most explicit
+calculations, non-associated flow may not be.
+
+Finally, it was found that this return algorithm worked equally well
+for linear hypoviscoelastic deviatoric response, i.e.
+  \begin{equation}\label{eq:linearhypoviscoelasticity}
+    \dot{\Bs} = 2\mu(\Beta - \Beta^p) - \sum_{i=1}^N {\Bs_i\over \tau_i}
+  \end{equation}
+rather than Eqn. \ref{eq:linearhypoelasticity}.
+Eqn. \ref{eq:linearhypoviscoelasticity} is the constitutive equation
+for $N$ linear Maxwell elements in parallel, each with shear modulus
+$\mu_i$, time constant $\tau_i$, and deviatoric stress $\Bs_i$, and
+  \begin{equation}
+    \Bs = \sum_{i=1}^N \Bs_i \quad\quad \mu = \sum_{i=1}^N \mu_i
+  \end{equation}
+This model is detailed in the Deviatoric Stress Models section.
+Combined with a yield condition, the combination results in a
+model for viscoplastic material response.
+
+The radial return algorith is the {\bf default}, and also may be
+explicitely invoked with the tag
+  \begin{Verbatim}[fontsize=\footnotesize]
+    <plastic_convergence_algo>radialReturn</plastic_convergence_algo>
+  \end{Verbatim}
+
+\subparagraph{Modified Nemat-Nasser/Maudlin Return Algorithm}
+
+This stress update algorithm is a slightly modified version of the
+approach taken by Nemat-Nasser et
+al. (1991,1992)~\cite{Nemat91,Nemat92}, Wang (1994)~\cite{Wang94},
+Maudlin (1996)~\cite{Maudlin96}, and Zocher et
+al. (2000)~\cite{Zocher00}.  It is presently only documented in the
+code itself.  It is also known to give erroneous results under uniaxial
+stress conditions.
+
+The modified Nemat-Nasser/Maudlin return algorith is invoked with
+the tag
+  \begin{Verbatim}[fontsize=\footnotesize]
+    <plastic_convergence_algo>biswajit</plastic_convergence_algo>
+  \end{Verbatim}
+{\it This is an experts only algorithm!!!}
+
+\paragraph{Damage Models and Failure}
+Only the Johnson-Cook damage evolution rule has been added to the
+DamageModelFactory so far.  The damage model framework is designed
+to be similar to the plasticity model framework.  New models can
+be added using the approach described later in this section.
+
+  A particle is tagged as ``failed'' when its temperature is greater than the
+  melting point of the material at the applied pressure.  An additional
+  condition for failure is when the porosity of a particle increases beyond a
+  critical limit and the strain exceeds the fracture strain of the material.
+  Another condition for failure is when a material bifurcation
+  condition such as the Drucker stability postulate is satisfied.  Upon failure,
+  a particle is either removed from the computation by setting the stress to
+  zero or is converted into a material with a different velocity field
+  which interacts with the remaining particles via contact.  Either approach
+  leads to the simulation of a newly created surface.  More details of the
+  approach can be found in ~\cite{Banerjee04a,Banerjee04c,Banerjee05}.
+
+  \paragraph{Damage model}
+  After the stress state has been determined on the basis of the yield condition
+  and the associated flow rule, a scalar damage state in each material point can
+  be calculated using the Johnson-Cook model ~\cite{Johnson85}.
+  The Johnson-Cook model has an explicit dependence on temperature, plastic
+  strain, ans strain rate.
+
+  The damage evolution rule for the Johnson-Cook damage model can be written as
+  \begin{equation}
+    \dot{D} = \cfrac{\dot{\epsilon_p}}{\epsilon_p^f} ~;~~
+    \epsilon_p^f = 
+      \left[D_1 + D_2 \exp \left(\cfrac{D_3}{3} \sigma^*\right)\right]
+      \left[1+ D_4 \ln(\dot{\epsilon_p}^*)\right]
+      \left[1+D_5 T^*\right]~;~~
+    \sigma^*= \cfrac{\text{Tr}(\Bsig)}{\sigma_{eq}}~;~~
+  \end{equation}
+  where $D$ is the damage variable which has a value of 0 for virgin material
+  and a value of 1 at fracture, $\epsilon_p^f$ is the fracture strain,
+  $D_1, D_2, D_3, D_4, D_5$ are constants, $\Bsig$ is the Cauchy stress, and
+  $T^*$ is the scaled temperature as in the Johnson-Cook plasticity model.
+
+  The input tags for the damage model are :
+  \begin{Verbatim}[fontsize=\footnotesize]
+    <damage_model type="johnson_cook">
+      <D1>0.05</D1>
+      <D2>3.44</D2>
+      <D3>-2.12</D3>
+      <D4>0.002</D4>
+      <D5>0.61</D5>
+    </damage_model>
+  \end{Verbatim}
+
+  An initial damage distribution can be created using the following tags
+  \begin{Verbatim}[fontsize=\footnotesize]
+    <evolve_damage>                 true  </evolve_damage>
+    <initial_mean_scalar_damage>    0.005  </initial_mean_scalar_damage>
+    <initial_std_scalar_damage>     0.001 </initial_std_scalar_damage>
+    <critical_scalar_damage>        1.0   </critical_scalar_damage>
+    <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
+  \end{Verbatim}
+
+  \paragraph{Erosion algorithm}
+  Under normal conditions, the heat generated at a material point is conducted
+  away at the end of a time step using the heat equation.  If special adiabatic
+  conditions apply (such as in impact problems), the heat is accumulated at a
+  material point and is not conducted to the surrounding particles.  This
+  localized heating can be used to determine whether a material point has
+  melted.
+
+  The determination of whether a particle has failed can be made on the
+  basis of either or all of the following conditions:
+  \begin{itemize}
+    \item The particle temperature exceeds the melting temperature.
+    \item The TEPLA-F fracture condition~\cite{Johnson88} is satisfied.
+       This condition can be written as
+       \begin{equation}
+         (f/f_c)^2 + (\epsilon_p/\epsilon_p^f)^2 = 1
+       \end{equation}
+       where $f$ is the current porosity, $f_c$ is the maximum
+       allowable porosity, $\epsilon_p$ is the current plastic strain, and
+       $\epsilon_p^f$ is the plastic strain at fracture.
+    \item An alternative to ad-hoc damage criteria is to use the concept of
+       bifurcation to determine whether a particle has failed or not.  Two
+       stability criteria have been explored in this paper - the Drucker
+       stability postulate~\cite{Drucker59} and the loss of hyperbolicity
+       criterion (using the determinant of the acoustic tensor)
+       \cite{Rudnicki75,Perzyna98}.
+  \end{itemize}
+
+  The simplest criterion that can be used is the Drucker stability postulate
+  \cite{Drucker59} which states that time rate of change of the rate of
+  work done by a material cannot be negative.  Therefore, the material is
+  assumed to become unstable (and a particle fails) when
+  \begin{equation}
+    \dot\Bsig:\BD^p \le 0
+  \end{equation}
+  Another stability criterion that is less restrictive is the acoustic
+  tensor criterion which states that the material loses stability if the
+  determinant of the acoustic tensor changes sign~\cite{Rudnicki75,Perzyna98}.
+  Determination of the acoustic tensor requires a search for a normal vector
+  around the material point and is therefore computationally expensive.  A
+  simplification of this criterion is a check which assumes that the direction
+  of instability lies in the plane of the maximum and minimum principal
+  stress~\cite{Becker02}.  In this approach, we assume that the strain is
+  localized in a band with normal $\Bn$, and the magnitude of the velocity
+  difference across the band is $\Bg$.  Then the bifurcation condition
+  leads to the relation
+  \begin{equation} 
+    R_{ij} g_{j} = 0 ~;~~~
+    R_{ij} = M_{ikjl} n_k n_l + M_{ilkj} n_k n_l - \sigma_{ik} n_j n_k
+  \end{equation}
+  where $M_{ijkl}$ are the components of the co-rotational tangent
+  modulus tensor and $\sigma_{ij}$ are the components of the co-rotational
+  stress tensor.  If $\det(R_{ij}) \le 0 $, then $g_j$ can be arbitrary and
+  there is a possibility of strain localization.  If this condition for
+  loss of hyperbolicity is met,  then a particle deforms in an unstable
+  manner and failure can be assumed to have occurred at that particle.
+  We use a combination of these criteria to simulate failure.
+
+  Since the material in the container may unload locally after fracture, the
+  hypoelastic-plastic stress update may not work accurately under certain
+  circumstances.  An improvement would be to use a hyperelastic-plastic stress
+  update algorithm.  Also, the plasticity models are temperature dependent.
+  Hence there is the issue of severe mesh dependence due to change of the
+  governing equations from hyperbolic to elliptic in the softening regime
+  ~\cite{Hill75,Bazant85,Tver90}.  Viscoplastic stress update models or
+  nonlocal/gradient plasticity models~\cite{Ramaswamy98,Hao00} can be used
+  to eliminate some of these effects and are currently under investigation.
+
+  The tags used to control the erosion algorithm are in two places.
+  In the \verb|<MPM> </MPM>| section the following flags can be set
+  \begin{Verbatim}[fontsize=\footnotesize]
+    <erosion algorithm = "ZeroStress"/>
+    <create_new_particles>           false      </create_new_particles>
+    <manual_new_material>            false      </manual_new_material>
+  \end{Verbatim}
+  If the erosion algorithm is \verb|"none"| then no particle failure is done.
+
+  In the \verb|<constitutive_model type="elastic_plastic">| section, the
+  following flags can be set
+  \begin{Verbatim}[fontsize=\footnotesize]
+    <evolve_porosity>               true  </evolve_porosity>
+    <evolve_damage>                 true  </evolve_damage>
+    <do_melting>                    true  </do_melting>
+    <useModifiedEOS>                true  </useModifiedEOS>
+    <check_TEPLA_failure_criterion> true  </check_TEPLA_failure_criterion>
+    <check_max_stress_failure>      false </check_max_stress_failure>
+    <critical_stress>              12.0e9 </critical_stress>
+  \end{Verbatim}
+
+\paragraph{Implementation}
+The elastic response is assumed to be isotropic.  The material
+constants that are taken as input for the elastic response are the
+bulk and shear modulus.  The flow rule is determined from the input
+and the appropriate plasticity model is created using the
+\verb+PlasticityModelFactory+ class.  The damage evolution rule
+is determined from the input and a damage model is created using
+the \verb+DamageModelFactory+ class.  The equation of state
+that is used to determine the pressure is also determined from the
+input.  The equation of state model is created using the
+\verb+MPMEquationOfStateFactory+ class.
+
+In addition, a damage evolution variable ($D$) is stored at each time
+step (this need not be the case and will be transfered to the
+damage models in the future).  The left stretch and rotation are
+updated incrementally at each
+time step (instead of performing a polar decomposition) and the
+rotation tensor is used to rotate the Cauchy stress and rate of deformation
+to the material coordinates at each time step (instead of using a
+objective stress rate formulation).
+
+Any evolution variables for the plasticity model, damage model or the
+equation of state are specified in the class that encapsulates the
+particular model.
+
+The flow stress is calculated from the plasticity model using a
+function call of the form
+\begin{Verbatim}[fontsize=\footnotesize]
+    double flowStress = d_plasticity->computeFlowStress(tensorEta, tensorS, 
+                                                        pTemperature[idx],
+                                                        delT, d_tol, matl, idx);
+\end{Verbatim}
+A number of plasticity models can be evaluated using the inputs in the
+\verb+computeFlowStress+ call.  The variable \verb+d_plasticity+ is
+polymorphic and can represent any of the plasticity models that can be
+created by the plasticity model factory.  The plastic evolution variables
+are updated using a polymorphic function along the lines of
+\verb+computeFlowStress+.
+
+The equation of state is used to calculate the hydrostatic stress using
+a function call of the form
+\begin{Verbatim}[fontsize=\footnotesize]
+    Matrix3 tensorHy = d_eos->computePressure(matl, bulk, shear, 
+                                              tensorF_new, tensorD, 
+                                              tensorP, pTemperature[idx], 
+                                              rho_cur, delT);
+\end{Verbatim}
+
+Similarly, the damage model is called using a function of the type
+\begin{Verbatim}[fontsize=\footnotesize]
+    double damage = d_damage->computeScalarDamage(tensorEta, tensorS, 
+                                                  pTemperature[idx],
+                                                  delT, matl, d_tol, 
+                                                  pDamage[idx]);
+\end{Verbatim}
+
+Therefore, the plasticity, damage and equation of state models are
+easily be inserted into any other type of stress update algorithm
+without any change being needed in them as can be seen in the
+hyperelastic-plastic stress update algorithm discussed below.
+
+  \paragraph{Example input file for the elastic-plastic model}
+  An example of the portion of an input file that specifies a copper body
+  with a hypoelastic stress update, Johnson-Cook plasticity model,
+  Johnson-Cook Damage Model and Mie-Gruneisen Equation of State is shown
+  below.
+  \begin{Verbatim}[fontsize=\footnotesize]
+  <material>
+
+    <include href="inputs/MPM/MaterialData/MaterialConstAnnCopper.xml"/>
+    <constitutive_model type="elastic_plastic">
+      <tolerance>5.0e-10</tolerance>
+      <include href="inputs/MPM/MaterialData/IsotropicElasticAnnCopper.xml"/>
+      <include href="inputs/MPM/MaterialData/JohnsonCookPlasticAnnCopper.xml"/>
+      <include href="inputs/MPM/MaterialData/JohnsonCookDamageAnnCopper.xml"/>
+      <include href="inputs/MPM/MaterialData/MieGruneisenEOSAnnCopper.xml"/>
+    </constitutive_model>
+
+    <geom_object>
+      <cylinder label = "Cylinder">
+        <bottom>[0.0,0.0,0.0]</bottom>
+        <top>[0.0,2.54e-2,0.0]</top>
+        <radius>0.762e-2</radius>
+      </cylinder>
+      <res>[3,3,3]</res>
+      <velocity>[0.0,-208.0,0.0]</velocity>
+      <temperature>294</temperature>
+    </geom_object>
+
+  </material>
+  \end{Verbatim}
+
+  The general material constants for copper are in the file
+  \verb+MaterialConstAnnCopper.xml+.  The contents are shown below
+  \begin{Verbatim}[fontsize=\footnotesize]
+  <?xml version='1.0' encoding='ISO-8859-1' ?>
+  <Uintah_Include>
+    <density>8930.0</density>
+    <toughness>10.e6</toughness>
+    <thermal_conductivity>1.0</thermal_conductivity>
+    <specific_heat>383</specific_heat>
+    <room_temp>294.0</room_temp>
+    <melt_temp>1356.0</melt_temp>
+  </Uintah_Include>
+  \end{Verbatim}
+
+  The elastic properties are in the file \verb+IsotropicElasticAnnCopper.xml+.
+  The contents of this file are shown below.
+  \begin{Verbatim}[fontsize=\footnotesize]
+  <?xml version='1.0' encoding='ISO-8859-1' ?>
+  <Uintah_Include>
+    <shear_modulus>45.45e9</shear_modulus>
+    <bulk_modulus>136.35e9</bulk_modulus>
+  </Uintah_Include>
+  \end{Verbatim}
+
+  The constants for the Johnson-Cook plasticity model are in the file
+  \verb+JohnsonCookPlasticAnnCopper.xml+.  The contents of this file are
+  shown below.
+  \begin{Verbatim}[fontsize=\footnotesize]
+  <?xml version='1.0' encoding='ISO-8859-1' ?>
+  <Uintah_Include>
+    <flow_model type="johnson_cook">
+      <A>89.6e6</A>
+      <B>292.0e6</B>
+      <C>0.025</C>
+      <n>0.31</n>
+      <m>1.09</m>
+    </flow_model>
+  </Uintah_Include>
+  \end{Verbatim}
+
+  The constants for the Johnson-Cook damage model are in the file
+  \verb+JohnsonCookDamageAnnCopper.xml+.  The contents of this file are
+  shown below.
+  \begin{Verbatim}[fontsize=\footnotesize]
+  <?xml version='1.0' encoding='ISO-8859-1' ?>
+  <Uintah_Include>
+    <damage_model type="johnson_cook">
+      <D1>0.54</D1>
+      <D2>4.89</D2>
+      <D3>-3.03</D3>
+      <D4>0.014</D4>
+      <D5>1.12</D5>
+    </damage_model>
+  </Uintah_Include>
+  \end{Verbatim}
+
+  The constants for the Mie-Gruneisen model (as implemented in the
+  Uintah Computational Framework) are in the file
+  \verb+MieGruneisenEOSAnnCopper.xml+.  The contents of this file are
+  shown below.
+  \begin{Verbatim}[fontsize=\footnotesize]
+  <?xml version='1.0' encoding='ISO-8859-1' ?>
+  <Uintah_Include>
+    <equation_of_state type="mie_gruneisen">
+      <C_0>3940</C_0>
+      <Gamma_0>2.02</Gamma_0>
+      <S_alpha>1.489</S_alpha>
+    </equation_of_state>
+  </Uintah_Include>
+  \end{Verbatim}
+
+  As can be seen from the input file, any other plasticity model, damage
+  model and equation of state can be used to replace the Johnson-Cook
+  and Mie-Gruneisen models without any extra effort (provided the models
+  have been implemented and the data exist).
+
+  The material data can easily be taken from a material database or specified
+  for a new material in an input file kept at a centralized location.  At this
+  stage material data for a range of materials is kept in the directory
+  \verb|.../Uintah/StandAlone/inputs/MPM/MaterialData|.
+
+
+\paragraph{Adding new models}
+  In the parallel implementation of the stress update algorithm, sockets have
+  been added to allow for the incorporation of a variety of plasticity, damage,
+  yield, and bifurcation models without requiring any change in the stress
+  update code.  The algorithm is shown in Algorithm~\ref{algo1}.  The
+  equation of state, plasticity model, yield condition, damage model, and
+  the stability criterion are all polymorphic objects created using a
+  factory idiom in C++~(\cite{Coplien92}).
+  \begin{table}[p]
+    \caption{Stress Update Algorithm} \label{algo1}
+    \vspace{12pt}
+    \begin{tabbing}
+    \quad \=\quad \=\quad \=\quad \=\quad \kill
+    {\bf Persistent}:Initial moduli, temperature, porosity, \\
+      \>\>        scalar damage, equation of state, plasticity model, \\
+      \>\>        yield condition, stability criterion, damage model\\
+    {\bf Temporary}:Particle state at time $t$ \\
+    {\bf Output:} Particle state at time $t+\Delta t$\\ \\
+
+    {\bf For} {\it all the patches in the domain}\\
+      \> Read the particle data and initialize updated data storage\\
+      \> {\bf For} {\it all the particles in the patch}\\
+      \>\>   Compute the velocity gradient and the rate of deformation tensor\\
+      \>\>   Compute the deformation gradient and the rotation tensor\\
+      \>\>   Rotate the Cauchy stress and the rate of deformation tensor \\
+      \>\>\> to the material configuration\\
+      \>\>   Compute the current shear modulus and melting temperature\\
+      \>\>   Compute the pressure using the equation of state,  \\
+      \>\>\>  update the hydrostatic stress, and  \\
+      \>\>\>  compute the trial deviatoric stress\\
+      \>\>   Compute the flow stress using the plasticity model\\
+      \>\>   Evaluate the yield function\\
+      \>\>   {\bf If} {\it particle is elastic} \\
+      \>\>\>     Update the elastic deviatoric stress from the trial stress\\
+      \>\>\>     Rotate the stress back to laboratory coordinates\\
+      \>\>\>     Update the particle state\\
+      \>\>   {\bf Else} \\
+      \>\>\>     Compute the elastic-plastic deviatoric stress\\
+      \>\>\>     Compute updated porosity, scalar damage, and \\
+      \>\>\>\>       temperature increase due to plastic work\\
+      \>\>\>     Compute elastic-plastic tangent modulus and
+                     evaluate stability condition\\
+      \>\>\>     Rotate the stress back to laboratory coordinates\\
+      \>\>\>     Update the particle state\\
+      \>\>   {\bf End If} \\
+      \>\>  {\bf If}
+             {\it Temperature $>$ Melt Temperature} or
+             {\it Porosity $>$ Critical Porosity} or
+             {\it Unstable}\\
+      \>\>\>       Tag particle as failed\\
+      \>\>  {\bf End If} \\
+      \>\> Convert failed particles into a material with a different
+           velocity field \\
+      \> {\bf End For} \\
+    {\bf End For}
+    \end{tabbing}
+  \end{table}
+
+Addition of a new model requires the following steps (the example below is only
+for the flow stress model but the same idea applies to other models) :
+\begin{enumerate}
+    \item Creation of a new class that encapsulates the plasticity
+    model.  The template for this class can be copied from the
+    existing plasticity models.  The data that is unique to
+    the new model are specified in the form of
+    \begin{itemize}
+      \item A structure containing the constants for the plasticity
+            model.
+      \item Particle variables that specify the variables that
+            evolve in the plasticity model.
+    \end{itemize}
+    \item The implementation of the plasticity model involves the
+    following steps.
+    \begin{itemize}
+      \item Reading the input file for the model constants in the
+            constructor.
+      \item Adding the variables that evolve in the plasticity model
+            appropriately to the task graph.
+      \item Adding the appropriate flow stress calculation method.
+    \end{itemize}
+    \item The \verb+PlasticityModelFactory+ is then modified so that
+          it recognizes the added plasticity model.
+\end{enumerate}
+
+
+\subsubsection{Contact}  \label{Sec:Contact}
+
+When multiple materials are specified in the input file, each material
+interacts with its own field variables.  In other words, each material has
+its own mass, velocity, acceleration, etc.  Without any mechanism for their
+interaction, each material would behave as if it were the only one in the
+domain.  Contact models provide the mechanism by which to specify rules
+for inter material interactions.  There are a number of contact models
+from which to choose, the use of each is described next.  See the input
+file segment in Section~\ref{Sec:mat_props} for an example of their proper
+placement in the input file, namely, after all of the MPM materials have
+been described.
+
+The simplest contact model is the \tt null \normalfont model, which indicates
+that no inter material interactions are to take place.  This is typically only
+used in single material simulations.  Its usage looks like:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+           <contact>
+             <type>null</type>
+           </contact>
+\end{Verbatim}
+
+The next simplest model is the \tt single\_velocity \normalfont model.
+The basic MPM formulation provides ``free" no-slip, no-interpenetration
+contact, assuming that all particle data communicates with a single field
+on the grid.  For a single material simulation with multiple objects, that
+is the case.  If one wishes to achieve that behavior in Uintah-MPM when
+multiple materials are present, the \tt single\_velocity \normalfont contact
+model should be used.  It is specified as:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+           <contact>
+             <type>single_velocity</type>
+             <materials>[0,1]</materials>
+           </contact>
+\end{Verbatim}
+Note that for this, and all of the contact models,
+the \tt <materials> \normalfont tag is optional.  If it is omitted,
+the assumption is that all materials will interact via the same contact model.
+(This will be further discussed below.)
+
+The ultimate in contact models is the \tt friction \normalfont contact 
+model.  For a full description, the reader is directed to the paper by
+Bardenhagen et al.\cite{bard_contact}.  Briefly, the model both overcomes
+some deficiences in the single velocity field contact (either the ``free"
+contact or the model described above, which behave identically), and it
+enables some additional features.  With single velocity field contact,
+initially adjacent objects are treated as if they are effectively stuck
+together.  The friction contact model overcomes this by detecting if
+materials are approaching or departing at a given node.  If they are
+approaching, contact is ``enforced" and if they are departing, another
+check is made to determine if the objects are in compression or tension.
+If they are in compression, then they are still rebounding from each other,
+and so contact is enforced.  If tension is detected, they are allowed
+to move apart independently.  Frictional sliding is allowed, based on
+the value specified for \tt <mu> \normalfont and the normal force between
+the objects.  An example of the use of this model is given here:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+           <contact>
+              <type>friction</type>
+              <materials>[0,1,2]</materials>
+              <mu> 0.5 </mu>
+           </contact>
+\end{Verbatim}
+
+A slightly simplified version of the friction model is the
+\tt <approach> \normalfont model.  It is the same as the frictional model
+above, except that it doesn't make the additional check on the traction
+between two bodies at each node.  At times, it is necessary to neglect this,
+but some loss of energy will result.  Specification is of the model is 
+also nearly identical:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+           <contact>
+              <type>approach</type>
+              <materials>[0,1,2]</materials>
+              <mu> 0.5 </mu>
+           </contact>
+\end{Verbatim}
+
+Finally, the contact infrastructure is also used to provide a moving
+displacement boundary condition.  Imagine a billet being smashed by a
+rigid platen, for example.  Usage of this model, known as
+\tt <specified> \normalfont contact, looks like:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+           <contact>
+             <type>specified</type>
+             <filename>TXC.txt</filename>
+             <materials>[0,1,2]</materials>
+             <master_material>0</master_material>
+             <direction>[1,1,1]</direction>
+             <stop_time>1.0 </stop_time>
+             <velocity_after_stop>[0, 0, 0]</velocity_after_stop>
+           </contact>
+\end{Verbatim}
+For reasons of backwards compatibility, the
+\tt <type>specified</type> \normalfont is interchangable with
+\tt <type>rigid</type>. \normalfont  By default, when either model is
+chosen, material 0 is the ``rigid" material, although this can be
+over ridden by the use of the
+\tt <master\_material> \normalfont field.  If no
+\tt <filename> \normalfont field is specified, then the particles of the
+rigid material proceed with the velocity that they were given as their
+initial condition, either until the reach a computational boundary, or
+until the simulation time has reached \tt <stop\_time>, \normalfont after
+which, their velocity becomes that given in the
+\tt <velocity\_after\_stop> \normalfont field.  The \tt <direction> \normalfont
+field indicates in which cartesian directions contact should be specified.
+Values of $1$ indicate that contact should be specified, $0$ indicates that
+the subject materials should be allowed to slide in that direction.  If
+a \tt <filename> \normalfont field {\it is} specified, then the user can
+create a text file which contains four entries per line.  These are:
+\begin{Verbatim}[fontsize=\footnotesize]
+time1 velocity_x1 velocity_y1 velocity_z1
+time2 velocity_x2 velocity_y2 velocity_z2
+     .
+     .
+     .
+\end{Verbatim}
+The velocity of the rigid material particles will be set to these values,
+based on linear interpolation between times, until \tt <stop\_time> \normalfont
+is reached.  Note, one should not try to apply traction boundary conditions
+(via the  \verb|<PhysicalBC>| tag), to the rigid material used in this type of contact, as this constitutes trying to mix displacement and traction boundary
+conditions. 
+
+Finally, it is possible to specify more than one contact model.  Suppose
+one has a simulation with three materials, one rigid, and the other two
+deformable.  The user may want to have the rigid material interact in a
+rigid manner with the other two materials, while the two deformable materials
+interact with each other in a single velocity field manner.  Specification
+for this, assuming the rigid material is $0$ would look like:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+            <contact>
+                <type>single_velocity</type>
+                <materials>[1,2]</materials>
+            </contact>
+
+            <contact>
+                <type>specified</type>
+                <filename>prof.txt</filename>
+                <stop_time>1.0</stop_time>
+                <direction>[0, 0, 1]</direction>
+            </contact>
+\end{Verbatim}
+An example of this usage can be found in \tt inputs/MPM/twoblock-single-rigid.ups. \normalfont
+
+\subsubsection{BoundaryConditions} \label{Sec:MPM_BCs}
+
+Boundary conditions must be specified on each face of the computational
+domain $(x^-, x^+, y^-, y^+,z^-,z^+)$ for each material.  An example of their
+specification is as follows, where the entire \tt <Grid> \normalfont field
+is included for context:
+\begin{Verbatim}[fontsize=\footnotesize]
+    <Grid>
+       <BoundaryConditions>
+         <Face side = "x-">
+             <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                   <value> [0.0,0.0,0.0] </value>
+             </BCType>
+         </Face>
+         <Face side = "x+">
+            <BCType id = "all" var = "Neumann" label = "Velocity">
+                 <value> [0.0,0.0,0.0] </value>
+            </BCType>
+         </Face>
+         <Face side = "y-">
+           <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                  <value> [0.0,0.0,0.0] </value>
+           </BCType>
+         </Face>
+         <Face side = "y+">
+           <BCType id = "all" var = "Neumann" label = "Velocity">
+                  <value> [0.0,0.0,0.0] </value>
+           </BCType>
+         </Face>
+         <Face side = "z-">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+         </Face>
+         <Face side = "z+">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+         </Face>
+       </BoundaryConditions>
+       <Level>
+\end{Verbatim}
+
+... See Section~\ref{Sec:Grid} ...
+
+\begin{Verbatim}[fontsize=\footnotesize]
+       </Level>
+    </Grid>
+\end{Verbatim}
+
+The three main types of numerical boundary conditions (BCs) that can
+be applied are ``Neumann", ``Dirichlet", and ``Symmetric", and the use of
+each is illustrated above.  In the case of
+MPM simulations, Neumann BCs are used when one wishes to allow particles to
+advect freely out of the computational domain.  Dirichlet BCs are used to
+specify a velocity, zero or otherwise (indicated by the \tt <value> \normalfont
+tag), on one of the computational boundaries.
+Symmetric BCs are used to indicate a plane of symmetry.  This has a variety
+of uses.  The most obvious is simply when a simulation of interest has symmetry
+that one can take advantage of to reduce the cost of a calculation.  Similarly,
+since Uintah is a three-dimensional code, if one wishes to achieve plane-strain
+conditions, this can be done by carrying out a simulation that is one cell thick
+with Symmetric BCs applied to each face of the plane, as in the example above.
+Finally, Symmetric BCs also provide a free slip boundary.
+
+There is also the field \tt id = "all" \normalfont.  In principal, one could
+set different boundary condition types for different materials.  In practice,
+this is rarely used, so the usage illustrated here should be used.
+
+\subsubsection{Physical Boundary Conditions} \label{sec:PhysicalBCs}
+
+It is often more convenient to apply a specified load at the MPM particles.
+The load may be a function of time.  Such a load versus time curve is called
+a {\bf load curve}.
+In Uintah, the load curve infrastructure is available for general use
+(and not only for particles).  However, it has been implemented only for
+a special case of pressure loading.  Namely, a surface is
+specified through the use of the \tt <geom\_object> \normalfont description,
+and a pressure vs. time curve is described by specifying their values
+at discrete points in time, between which linear interpolation is used
+to find values at any time.  At $t=0$, those particles in the vicinity
+of the the surface are tagged with a load curve ID, and those particles
+are assigned external forces such that the desired pressure is achieved.
+
+We invoke the load curve in the \verb|<MPM>| section
+(See Section~\ref{Sec:MPMFlags})of the input file
+using  \verb|<use_load_curves> true </use_load_curves>|.  The default value
+is \verb|<use_load_curves> false </use_load_curves>|.
+
+In Uintah, a load curve infrastructure is implemented in the file \\
+\verb|.../MPM/PhysicalBC/LoadCurve.h|.  This file is essentially a templated
+structure that has the following private data
+\begin{Verbatim}[fontsize=\footnotesize]
+  // Load curve information 
+  std::vector<double> d_time;
+  std::vector<T> d_load;
+  int d_id;
+\end{Verbatim}
+The variable \verb|d_id| is the load curve ID, \verb|d_time| is the time,
+and \verb|d_load| is the load.  Note that the load can have any form - scalar,
+vector, matrix, etc.
+
+In our current implementation, the actual specification of the load curve
+information is in the \verb|<PhysicalBC>| section of the input file.  The
+implementation is limited in that it applies only to pressure boundary
+conditions for some special geometries (the implementation is in
+\verb|.../MPM/PhysicalBC/PressureBC.cc|).  However, the load curve template can
+be used in other, more general, contexts.
+
+A sample input file specification of a pressure load curve is shown below.
+In this case, a pressure is applied to the inside and outside of a cylinder.
+The pressure is ramped up from 0 to 1 GPa on the inside and from 0 to 0.1 MPa
+on the outside over a time of 10 microsecs.
+\begin{Verbatim}[fontsize=\footnotesize]
+   <PhysicalBC>
+     <MPM>
+       <pressure>
+         <geom_object>
+           <cylinder label = "inner cylinder">
+             <bottom>           [0.0,0.0,0.0]   </bottom>
+             <top>              [0.0,0.0,.02]   </top>
+             <radius>           0.5             </radius>
+           </cylinder>
+         </geom_object>
+         <load_curve>
+           <id>1</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 0 </load>
+           </time_point>
+           <time_point>
+             <time> 1.0e-5 </time>
+             <load> 1.0e9 </load>
+           </time_point>
+         </load_curve>
+       </pressure>
+       <pressure>
+         <geom_object>
+           <cylinder label = "outer cylinder">
+             <bottom>           [0.0,0.0,0.0]   </bottom>
+             <top>              [0.0,0.0,.02]   </top>
+             <radius>           1.0             </radius>
+           </cylinder>
+         </geom_object>
+         <load_curve>
+           <id>2</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 0 </load>
+           </time_point>
+           <time_point>
+             <time> 1.0e-5 </time>
+             <load> 101325.0 </load>
+           </time_point>
+         </load_curve>
+       </pressure>
+     </MPM>
+   </PhysicalBC>
+\end{Verbatim}
+The complete input file can be found in \verb|inputs/MPM/thickCylinderMPM.ups|. 
+An additional example which is used to achieve triaxial loading can be found
+at \verb|inputs/MPM/TXC.ups|.  There, the material geometry is a block, and so
+the regions described are flat surfaces upon which the pressure is applied.
+
+\subsubsection{On the Fly DataAnalysis} \label{Sec:OTFA_MPM}
+
+In the event that one wishes to monitor the data for a small region of a
+simulation at a rate that is more frequent than the what the DataArchiver
+can reasonably provide (for reasons of data storage and effect on run time),
+Uintah provides a \tt <DataAnalysis> \normalfont feature.  As it applies
+to MPM, it allows one to specify a group of particles, by assigning those
+particles a particular value of the \tt <color> \normalfont parameter.
+In addition, a list of variables and a frequency of output is provided.
+Then, at run time, a sub-directory (\tt particleExtract/L-0 \normalfont)
+is created inside the uda which contains
+a series of files, named according to their particle IDs, one for each
+tagged particle.  Each of these files contains the time and position for
+that particle, along with whatever other data is specified.  {\bf To use this
+feature, one must include the} \tt <withColor>   true   </withColor> \normalfont
+{\bf tag in the} \tt <MPM> \normalfont {\bf section of the input file.}
+(See Section~\ref{Sec:MPMFlags}.)
+
+The following input file snippet is taken from
+\tt inputs/MPM/disks.ups \normalfont  
+\begin{Verbatim}[fontsize=\footnotesize]
+    <DataAnalysis>
+       <Module name="particleExtract">
+
+        <material>disks</material>
+        <samplingFrequency> 1e10 </samplingFrequency>
+        <timeStart>          0   </timeStart>
+        <timeStop>          100  </timeStop>
+        <colorThreshold>
+          0
+        </colorThreshold>
+
+        <Variables>
+          <analyze label="p.velocity"/>
+          <analyze label="p.stress"/>
+        </Variables>
+
+      </Module>
+    </DataAnalysis>
+\end{Verbatim}
+
+For all particles that are assigned a color greater than the
+\tt <colorThreshold>, \normalfont the variables
+\tt p.velocity \normalfont and
+\tt p.stress \normalfont are saved every every
+$1/$\tt <samplingFrequency> \normalfont time units, starting at
+\tt <timeStart> \normalfont until
+\tt <timeStop>. \normalfont
+
+It is also possible to save grid based data with this module,
+see Section~\ref{Sec:ICE} for more information.
+
+\subsubsection{Prescribed Motion} \label{Sec:PrescribedMotion} The prescribed motion
+capability in Uintah allows the user to prescribe arbitrary material
+deformations and superimposed rotations.  This capability is particularly
+useful in verifying that the constitutive model is behaving as expected and is
+frame indifferent.  To prescribe material motion the following tag must be
+included in the \tt <MPM> \normalfont section of the input file:
+
+\begin{Verbatim}
+ <MPM>
+     <UsePrescribedDeformation>true</UsePrescribedDeformation>
+ </MPM>
+\end{Verbatim}
+
+The desired motion must then be specified in a file named \tt time\_defgrad\_rotation \normalfont.  The format of this file is as follows:
+
+\begin{Verbatim}
+t0 F11 F12 F13 F21 F22 F23 F31 F32 F33 theta0 a0 a1 a2
+t1 F11 F12 F13 F21 F22 F23 F31 F32 F33 theta1 a0 a1 a2
+. . .
+tn F11 F12 F13 F21 F22 F23 F31 F32 F33 thetan a0 a1 a2
+
+\end{Verbatim}
+where the first column is time, columns two through ten are the nine components of the prescribed deformation gradient, the eleventh column is the desired rotation angle, and the remaining three columns are the three components of the axis of prescribed rotation.  The components of the deformation gradient are linearly interpolated for times between those specified in the table.  The axis of rotation may be changed for each specified time.  As a result, the angle of rotation about the specified axis linearly increases from zero to the specified value at the end of the specified interval.  For example, the following table:
+
+\begin{Verbatim}
+0 1 0 0 0 1 0 0 0 1 0 0 0 0
+1 1 0 0 0 1 0 0 0 1 90 0 0 1
+2 1 0 0 0 1 0 0 0 1 91 0 0 1
+\end{Verbatim}
+specifies a pure rotation (no stretch) about the 3-axis.  At time=0 the material will have rotated 90 degrees about the 3-axis.  At time=2 the material will have rotated an additional 91 degrees about the 3-axis for a total of 181 degrees of rotation.  As a warning to the user, it is possible to specify the deformation gradient such that interpolating between to entries in the table results in a singular deformation gradient.  For example:
+\begin{Verbatim}
+0 1 0 0 0 1 0 0 0 1 0 0 0 0
+1 1 0 0 0 1 0 0 0 1 0 0 0 1
+2 -1 0 0 0 -1 0 0 0 1 0 0 0 1
+\end{Verbatim}
+would result in the simulation failing due to a negative jacobian error between time=1 and time=2 since the 11 and 22 components are linearly varying from 1 to -1 during that time, which will attempt to invert the computational cell.  The deformation gradient at time=2 corresponds to a 180 degree rotation about the 3-axis, and can be accomplished using the rotation feature described above.
+
+As a final example the table:
+\begin{Verbatim}
+0 1 0 0 0 1 0 0 0 1 0 0 0 0
+1 0.5 0 0 0 0.5 0 0 0 0.5 45 0 1 0
+2 0.5 0 0 0.5 0.5 0 0 0 0.5 90 0 0 1
+\end{Verbatim}
+would result in 50\% hydrostatic compression at time=1 with a 45 degree superimposed rotation about the 2-axis, followed by  simple shear and a 90 degree rotation about the 3-axis between time=1 and time=2.
+
+
+\subsubsection{Cohesive Zones} \label{Sec:CohesiveZones}
+A cohesive zone formulation is available in Uintah based on the description
+by Daphalapurkar, et al.~\cite{Daphalapurkar}.  As in their implementation,
+that in Uintah has several limitations.  It is limited to a 2D implementation,
+and the cohesive zone segments are assumed to not rotate or deform.
+
+In order to use cohesive zones, the following field must be added to the
+\tt <MPM> \normalfont section of the input file:
+
+\begin{Verbatim}
+ <MPM>
+     <use_cohesive_zones>true</use_cohesive_zones>
+ </MPM>
+\end{Verbatim}
+
+The traction functions used in Uintah are those given in Eq. 15
+of~\cite{Daphalapurkar}.  These require 4 input parameters.  They are
+$\sig_{max}$, $\tau_{max}$, $\delta_n$ and $\delta_t$, the cohesive strengths
+in the normal and shear directions, and the displacement jumps in the normal and
+tangential directions corresponding to the maximum normal and shear strength
+values, respectively.
+
+In an input file, the description of a cohesive zone looks like:
+
+\begin{Verbatim}
+            <cohesive_zone>
+              <sig_max> 240. </sig_max>
+              <tau_max> 240. </tau_max>
+              <delta_n> 0.00004   </delta_n>
+              <delta_t> 0.0000933 </delta_t>
+              <cz_filename>HOM.txt</cz_filename>
+            </cohesive_zone>
+\end{Verbatim}
+
+Note that in addition to the four parameters listed above, a cohesive zone
+filename is also specified.  The format of this file will be described below.
+Units on the strength and displacement correspond to the units for
+stress and length used in the remainder of the input file.
+
+Cohesive zones describe a cohesion law between adjacent materials. As such,
+they take the place of a contact model.  Thus, when using cohesive zones to
+describe the interaction of materials 1 and 2, the contact section of the input
+file would be:
+
+\begin{Verbatim}
+            <contact>
+                <type>null</type>
+                <materials>[1,2]</materials>
+            </contact>
+\end{Verbatim}
+
+Use of friction or approach contact to describe interaction between objects
+subsequent to decohesion should be possible and is being investigated.
+
+The traction that is applied to the two materials governed by a
+cohesive zone model is based on the displacement between those two materials,
+both normal and tangential.  The two adjacent materials are referred to in the
+implementation as the ``Top" and ``Bottom" materials.  A normal and tangential
+vector describes the orientation of the cohesive zone surface.  The convention
+for the normal vector is that it points in the direction from the bottom
+material to the top material.  With this information in hand, we can describe
+the format of the \tt <cz\_filename> \normalfont mentioned above.
+
+\begin{Verbatim}
+px1 py1 pz1 length1 normx1 normy1 normz1 tangx1 tangy1 tangz1 botmat1 topmat1
+px2 py2 pz2 length2 normx2 normy2 normz2 tangx2 tangy2 tangz2 botmat2 topmat2
+. . .
+pxN pyN pzN lengthN normxN normyN normzN tangxN tangyN tangzN botmatN topmatN
+\end{Verbatim}
+
+where the first three columns are the x, y and z coordinates of the position, 
+the fourth column is the length, the fifth through seventh column is the normal
+direction (x, y, z) and the eighth through tenth column is the tangential
+direction (x, y, z).  Finally, the eleventh and twelth columns are the bottom
+and top material indices, respectively.
+
+An example of 3 cohesive zone segments follows:
+
+\begin{Verbatim}
+2.5125 0.0 0.025 0.00125 0.0 1.0 0.0 1.0 0.0 0.0 1 2
+2.5375 0.0 0.025 0.00125 0.0 1.0 0.0 1.0 0.0 0.0 1 2
+2.5625 0.0 0.025 0.00125 0.0 1.0 0.0 1.0 0.0 0.0 1 2
+\end{Verbatim}
+
+As a 2D simulation in Uintah is actually a 3D simulation that is 1 cell thick,
+the ``length" parameter described above is actually going to be an area.
+Namely, the length in the plane of the simulation multiplied by the domain
+thickness in the out of plane direction.
+
+\subsubsection{Particle Insertion} \label{Sec:ParticleInsert}
+MPM has the ability to insert or transport blocks of particles into or
+ around the computational domain.  The functionality uses a time threshold for 
+activation of the insertion. Currently, capabilities include translation some 
+distances x, y and z and initiation of a new ``initial" velocity vector.  Particles, 
+defined by color, specified as an integer, in the geometry object section of the 
+input file, can have a limitless number of transformations applied to them.  
+There are no limits to how many geometry objects can be specified, however,
+each transformation can only act on one color index.  Thus movement of more than
+one block of particles can require multiple input lines.
+ 
+This functionality is defined in a text file in the order: 
+
+\begin{verbatim}
+<time> <color> <trans x> <trans y> <trans z> <new x vel> <new y vel> <new z vel>
+\end{verbatim}  
+
+During the first timestep in which the current physical time plus the calculated 
+$\Delta$t for the current timestep exceeds the time specified for a color block, the 
+particles of that color will be translated along the three coordinates and given 
+a new velocity.  Each line in the file can be used to define a unique transformation
+for one particle color group.  For instance, if a file contained the line:
+
+\begin{verbatim}
+0.1 1 10 10 0 0 0 8 
+\end{verbatim}
+
+\noindent after `0.1 s' of physical time any particle of color `1' will be translated 10 
+units in the positive x and y direction, 0 units in the positive z direction 
+and given a new velocity of 8 units/s in the positive z direction, with no 
+velocity in the x or y direction.
+
+Particle insertion is activated and directed with the following flags found in the 
+MPM section of the input file:
+\begin{verbatim}
+<MPM>
+    <withColor>         true   </withColor>
+    <InsertParticles>   true   </InsertParticles>
+    <InsertParticlesFile>  "path/to/file.txt" </InsertParticlesFile>
+</MPM>
+\end{verbatim}
+
+An example problem exists in ``inputs/MPM/" named Extrude that demonstrates 
+particle insertion.  ``extrude.ups" defines the problem setup, ``extrude.xml" defines 
+the geometry objects (also where the color is defined) and then pulled in to 
+``extrude.ups", and ``insert.dat" which defines the times, translations and new 
+velocity of the particle blocks.  Figure ~\ref{figinsertparticles} shows an image 
+of a simulation in progress that uses particle insertion.  The image shows a stream 
+of rubbery material flying into the domain and folding on itself.  Another particularly 
+useful idea to note from the image, is the secondary box above the normal domain, in which 
+the particles to be inserted reside before they are inserted.  Current application 
+of particle insertion tends to follow this motif.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=.35]{insertParticles.png}
+  \caption{Particles being inserted from top box into bottom box.}
+  \label{figinsertparticles}
+\end{figure}
+
+
+%
+%______________________________________________________________________
+\section{Examples} \label{Sec:ExamplesMPM}
+
+The following examples are meant to be illustrative of a variety of
+capabilities of Uintah-MPM, but are by no means exhaustive.  Input files
+for the examples given here can be found in:
+\begin{Verbatim}[fontsize=\footnotesize]
+inputs/UintahRelease/MPM
+\end{Verbatim}
+
+Additional (mostly undocumented) input files that exercise a greater range
+of code capabilities can be found in:
+\begin{Verbatim}[fontsize=\footnotesize]
+inputs/MPM
+\end{Verbatim}
+
+
+\subsection*{\center Colliding Disks}
+\subsubsection*{\underline{Problem Description}}
+This is an implementation of an example calculation from \cite{sulskycmame} in
+which two elastic disks collide and rebound.  See Section 7.3 of that
+manuscript for a description of the problem.
+ 
+\subsubsection*{\underline{Simulation Specifics}}
+\begin{description} 
+\item [Component used:] \hfill MPM
+\item [Input file name:] \hfill disks\_sulsky.ups
+\item [Command used to run input file:]\hfill sus disks\_sulsky.ups
+\item [Simulation Domain:]\hfill    1.0 x 1.0 x 0.05 m
+
+\item [Cell Spacing:]\hfill \\ 
+.05 x .05 x .05 m (Level 0)
+
+\item [Example Runtimes:] \hfill \\
+ 4 seconds  (1 processor, 3.16 GHz Xeon)\\
+
+\item [Physical time simulated:] \hfill 3.0 seconds
+
+\item [Associate VisIt session:] \hfill disks.session
+
+\end{description}
+
+\subsubsection*{\underline{Results}}
+
+Figure~\ref{figdisks} shows a snapshot of the simulation, as the disks
+are beginning to collide.
+\begin{figure}
+  \center
+  \includegraphics[scale=.25]{disks.png}
+  \caption{Colliding elastic disks.  Particles colored according to
+velocity magnitude.}
+  \label{figdisks}
+\end{figure}
+
+Additional data is available within the uda in the form of "dat" files.
+In this case, both the kinetic and strain energies are avaiable and can
+be plotted to create a graph similar to that in Fig. 5a of \cite{sulskycmame}.
+e.g. using gnuplot:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+cd disks.uda.000
+gnuplot
+gnuplot> plot "StrainEnergy.dat", "KineticEnergy.dat"
+gnuplot> quit
+\end{Verbatim}
+%
+%__________________________________
+\subsection*{\center Taylor Impact Test}
+\addcontentsline{toc}{subsection}{Taylor Impact Test}
+\subsubsection*{\underline{Problem Description}}
+This is a simulation of an Taylor impact experiment calculation from 
+\cite{Gust82} in a copper cylinder at 718 K that is fired at a
+rigid anvil at 188 m/s.  The copper cylinder has a length of 30 mm and
+a diameter of 6 mm.  The cylinder rebounds from the anvil after 100 $\mu$s.
+ 
+\subsubsection*{\underline{Simulation Specifics}}
+\begin{description} 
+\item [Component used:] \hfill MPM
+\item [Input file name:] \hfill taylorImpact.ups
+\item [Command used to run input file:]\hfill sus inputs/UintahRelease/MPM/taylorImpact.ups
+\item [Simulation Domain:]\hfill 8 mm x 33 mm x 8 mm
+
+\item [Cell Spacing:]\hfill \\ 
+  1/3 mm x 1/3 mm x 1/3 mm (Level 0)
+
+\item [Example Runtimes:] \hfill \\
+  1 hour   (1 processor, Xeon 3.16 GHz)\\
+
+\item [Physical time simulated:] \hfill 100 $\mu$seconds
+
+\item [Associate VisIt session:] \hfill taylorImpact.session
+
+\end{description}
+
+\subsubsection*{\underline{Results}}
+Figure~\ref{fig:taylorImpact_slide} shows a snapshot from the end of the simulation.
+There, the cylinder is allowed to slide laterally across the plate due
+to the following optional specification in the \tt <contact> \normalfont
+section:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+        <direction>[0,1,0]</direction>
+\end{Verbatim}
+
+\begin{figure}
+  \center
+  \includegraphics[scale=.25]{taylorImpact_slide.png}
+  \caption{Taylor impact simulation with sliding between cylinder and
+           target.  Particles colored according to temperature.}
+  \label{fig:taylorImpact_slide}
+\end{figure}
+
+Figure~\ref{fig:taylorImpact_stick} shows a snapshot from the end of a
+similar simulation.  In this case, the cylinder is restricted from sliding
+laterally across the plate by altering the \tt <contact> \normalfont
+section as follows:
+\begin{Verbatim}[fontsize=\footnotesize]
+        <direction>[1,1,1]</direction>
+\end{Verbatim}
+
+\begin{figure}
+  \center
+  \includegraphics[scale=.25]{taylorImpact_stick.png}
+  \caption{Taylor impact simulation with sliding prohibited between
+           cylinder and target.  Particles colored according to temperature.}
+  \label{fig:taylorImpact_stick}
+\end{figure}
+
+%__________________________________
+\subsection*{\center Sphere Rolling Down an Inclined Plane}
+\addcontentsline{toc}{subsection}{Sphere Rolling Down an Inclined Plane}
+\subsubsection*{\underline{Problem Description}}
+Here, a sphere of soft plastic, initially at rest, rolls under the
+influence of gravity down a plane of a harder plastic.  Gravity is
+oriented such that the plane is effectively angled at 45 degrees to
+the horizontal.  This simulation demonstrates the effectiveness of
+the contact algorithm, described in~\cite{bard01}.  Frictional
+contact, using a friction coefficient of $\mu = 0.495$ causes the ball
+to start rolling as it impacts the plane, after being dropped from
+barely above it.  The same simulation is also run using a friction
+coefficient of $\mu = 0.0$.  The difference in the results is shown
+below.
+ 
+\subsubsection*{\underline{Simulation Specifics}}
+\begin{description} 
+\item [Component used:] \hfill MPM
+\item [Input file name:] \hfill inclinedPlaneSphere.ups
+\item [Command used to run input file:]\hfill sus inputs/UintahRelease/MPM/inclinedPlaneSphere.ups
+\item [Simulation Domain:]\hfill    12.0 x 2.0 x 4.8 m
+
+\item [Cell Spacing:]\hfill \\ 
+.2 x .2 x .2 m (Level 0)
+
+\item [Example Runtimes:] \hfill \\
+ 2.7 hours  (1 core, 3.16 GHz Xeon)\\
+
+\item [Physical time simulated:] \hfill 2.2 seconds
+
+\item [Associate VisIt session:] \hfill incplane.session
+
+\end{description}
+
+\subsubsection*{\underline{Results}}
+Figure~\ref{figincplaneSphere_bigmu} and Figure~\ref{figincplaneSphere_0mu}
+show snapshots of the simulation, as
+the sphere is about halfway down the plane.
+\begin{figure}
+  \center
+  \vspace{-35pt}
+  \includegraphics[width=.5\textwidth]{incplane_mu_495.png}
+  \caption{Sphere rolling down an ``inclined" plane.  The gravity vector
+is oriented at a 45 degree angle relative to the plane.  Particles are colored
+by velocity magnitude. A friction coefficient of $\mu = 0.495$ is used.
+Particles are colored according
+to velocity magnitude, note that the particles at the top of the sphere
+are moving most rapidly, and those near the surface of the plane are 
+basically stationary, as expected.}
+  \label{figincplaneSphere_bigmu}
+\end{figure}
+
+\begin{figure}
+  \center
+  \vspace{-15pt}
+  \includegraphics[width=.5\textwidth]{incplane_mu_0.png}
+  \caption{Sphere rolling down an ``inclined" plane.  The gravity vector
+is oriented at a 45 degree angle relative to the plane.  Particles are colored
+by velocity magnitude.  A friction coefficient of $\mu = 0.0$ is used.
+Particles are colored according to velocity magnitude.  In this case,
+the particles throughout the sphere are moving at roughly the same velocity,
+because the sphere is sliding as it moves down the plane, as opposed to
+sticking and rolling.}
+  \label{figincplaneSphere_0mu}
+\end{figure}
+
+%__________________________________
+\subsection*{\center Crushing a Foam Microstructure}
+\addcontentsline{toc}{subsection}{Crushing a Foam Microstructure}
+\subsubsection*{\underline{Problem Description}}
+This calculation demonstrates two important strength of MPM.  The first
+is the ability to quickly generate a computational representation of
+complex geometries.  The second is the ability of the method to handle
+large deformations, including self contact.
+
+In particular, in this calculation a small sample of foam, the geometry
+for which was collected using microCT, is represented via material points.
+The sample is crushed to 87.5\% compaction through the use of a rigid plate, which
+acts as a constant velocity boundary condition on the top of the sample.  This
+calculation is a small example of those described in \cite{brydonfoam}.  The
+geometry of the foam is created by image procesing the CT data, and based
+on the intensity of each voxel in the image data, the space represented
+by that voxel either recieves a particle with the material properties of the
+foam's constituent material, or is left as void space.  This particle
+representation avoids the time consuming steps required to build a suitable
+unstructured mesh for this very complicated geometry.
+ 
+\subsubsection*{\underline{Simulation Specifics}}
+\begin{description} 
+\item [Component used:] \hfill MPM
+\item [Input file name:] \hfill foam.ups
+\item [Instruction to run input file:]
+
+First, copy foam.ups and foam.pts.gz to the same directory as sus.
+Adjust the number of patches in the ups file based on
+the number of processors available to you for this run.
+First, uncompress the pts file:
+\begin{Verbatim}[fontsize=\footnotesize]
+ gunzip foam.pts.gz
+\end{Verbatim}
+
+Then the command:
+\begin{Verbatim}[fontsize=\footnotesize]
+ tools/pfs/pfs foam.ups
+\end{Verbatim}
+will divide the foam.pts
+file, which contains the geometric description of the foam,
+into number of patches smaller files, named foam.pts.0,
+foam.pts.1, etc.  This is done so that for large simulations,
+each processor is only reading that data which it needs, and
+prevents the thrashing of the file system that would occur
+if each processor needed to read the entire pts file.  This
+command only needs to be done once, or anytime the patch
+distibution is changed.  Note that this step must be done even
+if only one processor is available.
+
+To run this simulation:
+\begin{Verbatim}[fontsize=\footnotesize]
+  mpirun -np NP sus foam.ups
+\end{Verbatim}
+where NP is the number of processors being used.
+
+\item [Simulation Domain:]\hfill  0.2 X 0.2 X 0.2125 mm
+
+\item [Number of Computational Cells:]\hfill \\ 
+102 X 102 X 85 (Level 0)
+
+\item [Example Runtimes:] \hfill \\
+2.4 hours  (4 cores, 3.16 GHz Xeon)\\
+
+\item [Physical time simulated:] \hfill 3.75 seconds
+
+\item [Associated VisIt session 1:] \hfill foam.iso.session
+\item [Associated VisIt session 2:] \hfill foam.part.session
+
+\end{description}
+
+\subsubsection*{\underline{Results}}
+
+Figure~\ref{figfoam} shows a snapshot of the simulation via isosurfacing,
+as the foam is at about 50\% compaction.
+\begin{figure}
+  \center
+  \includegraphics[scale=.15]{foam_iso.png}
+  \caption{Compaction of a foam microstructure shown via isosurfacing.}
+  \label{figfoam}
+\end{figure}
+
+Figure~\ref{figfoampart} shows a snapshot of the simulation via particles
+colored by equivalent stress as the foam is at about 60\% compaction.
+\begin{figure}
+  \center
+  \includegraphics[scale=.15]{foam_part.png}
+  \caption{Compaction of a foam microstructure rendered as particles colored
+           by equivalent stress.}
+  \label{figfoampart}
+\end{figure}
+
+In this simulation, the reaction forces at 5 of the 6 computational boundaries
+are also recorded and can be viewed using a simple plotting package such
+as gnuplot.  At each timestep, the internal force at each of the boundaries
+is accumulated and stored in ``dat" files within the uda,
+e.g. BndyForce\_zminus.dat.  Because the reaction force is a vector, it
+is enclosed in square brackets which may be removed by use of a script in
+the inputs directory:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+cd foam.uda.000
+../inputs/ICE/Scripts/removeBraces BndyForce\_zminus.dat
+gnuplot
+gnuplot> plot "BndyForce\_zminus.dat" using 1:4
+gnuplot> quit
+\end{Verbatim}
+
+These reaction forces are similar to what would be measured on a mechanical
+testing device, and help to understand the material behavior.
+
+%__________________________________
+\subsection*{\center Hole in an Elastic Plate}
+\addcontentsline{toc}{subsection}{Hole in an Elastic Plate}
+\subsubsection*{\underline{Problem Description}}
+A flat plate with a hole in the center is loaded in tension.  To achieve a
+quasi-static solution, the load is applied slowly and a viscous damping force
+is used to reduce transients in the solution.  As such, this simulation
+demonstrates those two capabilities.  Specifically, take note of:
+\begin{Verbatim}[fontsize=\footnotesize]
+       <use_load_curves> true </use_load_curves>
+       <artificial_damping_coeff>1.0</artificial_damping_coeff>
+\end{Verbatim}
+in the \tt <MPM> \normalfont section of the input file, and:
+\begin{Verbatim}[fontsize=\footnotesize]
+   <PhysicalBC>
+     <MPM>
+       <pressure>
+	.
+	.
+	.
+\end{Verbatim}
+section below that.
+
+ 
+\subsubsection*{\underline{Simulation Specifics}}
+\begin{description} 
+\item [Component used:] \hfill MPM
+\item [Input file name:] \hfill holePlate.ups
+\item [Command used to run input file:]\hfill sus inputs/UintahRelease/MPM/holePlate.ups
+\item [Simulation Domain:]\hfill 5.0 m x 5.0 m x 0.1 m
+
+\item [Cell Spacing:]\hfill \\ 
+  0.1 m x 0.1 m x 0.1 m (Level 0)
+
+\item [Example Runtimes:] \hfill \\
+ 2 minutes  (1 processor, Xeon 3.16 GHz)\\
+
+\item [Physical time simulated:] \hfill 10 seconds
+
+\item [Associate VisIt session:] \hfill holeInPlate.session
+
+\end{description}
+
+\subsubsection*{\underline{Results}}
+
+Figure~\ref{fig:holeInPlate} shows a snapshot of the equivalent stress
+throughout the plate, as well as the load applied to the vectors near the
+edge of the plate.  Expected maximum stress is $300 Pa$.  The $238 Pa$ maximum
+observed here is significantly lower, but upon doubling the resolution in the
+x and y directions, the maximum stress is $308 Pa$.  To recreate this image, select
+Controls in the upper left corner of the screen.  Select Expressions, then click the New 
+button.  Now select Insert Function, then Tensor, then effective\_tensor.  The last step is
+to select Insert Variable, then Tensor, then p. stress.  
+\begin{figure}
+  \center
+  \includegraphics[scale=.25]{holeInPlate.png}
+  \caption{Elastic plate with a hole loaded in tension.  Particles are
+           colored by equivalent stress, vectors indicate applied load.}
+  \label{fig:holeInPlate}
+\end{figure}
+\newpage
+
+%__________________________________
+\subsection*{\center Tungsten Sphere Impacting a Steel Target}
+\addcontentsline{toc}{subsection}{Tungsten Sphere Impacting a Steel Target}
+\subsubsection*{\underline{Problem Description}}
+A $1 mm$ tungsten sphere with an initial velocity of $5000 m/s$
+impacts a steel target.  Axisymmetric conditions are used in this case,
+conversion of the input file to the full 3D simulation is straightforward.
+The user may wish to do both simulations of both to gain confidence in the
+applicability of axisymmetry. 
+
+This simulation exercises the \tt elastic\_plastic \normalfont
+constitutive model for the
+steel material. This includes sub-models for equations of state,
+variable shear modulus, melting, plasticity, etc.  The tungsten is modeled
+using the \tt comp\_neo\_hook\_plastic, \normalfont which is simple vonMises
+plasticity with linear hardening.  One difficulty with using the more 
+sophisticated models is that parameters can be difficult to find for many
+materials.
+
+\subsubsection*{\underline{Simulation Specifics}}
+\begin{description}
+\item [Component used:] \hfill MPM
+\item [Input file name:] \hfill WSphereIntoSteel.axi.ups
+\item [Command used to run input file:]\hfill sus inputs/UintahRelease/MPM/WSphereIntoSteel.axi.ups
+\item [Simulation Domain:]\hfill 1.0 cm x 1.5 cm x axisymmetric
+
+\item [Cell Spacing:]\hfill \\
+  0.333 mm x 0.333 mm x axisymmetry (Level 0)
+
+\item [Example Runtimes:] \hfill \\
+ 15 seconds  (1 processor, Xeon 3.16 GHz)\\
+
+\item [Physical time simulated:] \hfill 4 $\mu$seconds
+
+\item [Associate VisIt session:] \hfill WSphereSteel.session
+
+\end{description}
+
+\subsubsection*{\underline{Results}}
+
+Figure~\ref{fig:WSphereSteelInit} shows the initial configuration for
+this simulation, with particles colored by the magnitude of their velocity.
+Figure~\ref{fig:WSphereSteelFinal} shows the state of the simulation after
+$4 \mu$seconds this simulation, with particles still colored by velocity
+magnitude.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=.20]{WShereInitAxi.png}
+  \caption{Initial configuration of hypervelocity impact of tungsten sphere
+           into a steel target.  Particles are
+           colored by velocity magnitude.}
+  \label{fig:WSphereSteelInit}
+\end{figure}
+\newpage
+\begin{figure}
+  \center
+  \includegraphics[scale=.20]{WShereFinalAxi.png}
+  \caption{State of the tunsgsten and steel after $4 \mu$seconds.
+           Particles are colored by velocity magnitude.}
+  \label{fig:WSphereSteelFinal}
+\end{figure}
+
+%______________________________________________________________________
+%\section{References}
+\bibliographystyle{plain}
+\bibliography{mpm}
+

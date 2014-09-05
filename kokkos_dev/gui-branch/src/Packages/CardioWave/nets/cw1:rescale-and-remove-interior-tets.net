@@ -1,0 +1,198 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+global userName
+set userName "dmw"
+
+global runDate
+set runDate " Fri  Aug 24 2001"
+
+global runTime
+set runTime " 17:7:30"
+
+set bbox {11.0 12.0 514 530}
+
+set m0 [addModuleAtPosition "CardioWave" "CreateModel" "RemoveInteriorTets" 83 284]
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 11 12]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 175 393]
+set m3 [addModuleAtPosition "SCIRun" "Render" "Viewer" 352 486]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 370 286]
+set m5 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 238 192]
+set m6 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 310 100]
+set m7 [addModuleAtPosition "SCIRun" "DataIO" "FieldWriter" 15 391]
+set m8 [addModuleAtPosition "SCIRun" "Fields" "TransformField" 109 103]
+set m9 [addModuleAtPosition "SCIRun" "Math" "BuildTransform" 171 12]
+set m10 [addModuleAtPosition "SCIRun" "Fields" "EditField" 14 195]
+
+addConnection $m0 0 $m2 0
+addConnection $m2 0 $m3 0
+addConnection $m4 0 $m3 1
+addConnection $m5 0 $m4 0
+addConnection $m5 0 $m0 0
+addConnection $m6 0 $m5 1
+addConnection $m0 0 $m7 0
+addConnection $m1 0 $m8 0
+addConnection $m9 0 $m8 1
+addConnection $m8 0 $m5 0
+addConnection $m8 0 $m10 0
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-threshold {0.170806}
+set $m1-notes {}
+set $m1-show_status {1}
+set $m1-filename {/home/sci/dmw/mydata/duke/mesh/sr-data/0.1.tvv.fld}
+set $m2-notes {}
+set $m2-show_status {1}
+set $m2-nodes-on {0}
+set $m2-edges-on {0}
+set $m2-faces-on {1}
+set $m2-vectors-on {0}
+set $m2-normalize-vectors {-2147483647}
+set $m2-has_vec_data {1}
+set $m2-def-color-r {0.99}
+set $m2-def-color-g {0.05}
+set $m2-def-color-b {0.05}
+set $m2-node_display_type {Points}
+set $m2-edge_display_type {Lines}
+set $m2-active_tab {Faces}
+set $m2-node_scale {0.03}
+set $m2-edge_scale {0.03}
+set $m2-vectors_scale {0.03}
+set $m2-show_progress {-2147483647}
+set $m2-resolution {4}
+set $m3-notes {}
+set $m3-show_status {1}
+$m3 ui
+set $m3-ViewWindow_0-pos {}
+set $m3-ViewWindow_0-caxes {1}
+set $m3-ViewWindow_0-iaxes {-2147483647}
+set $m3-ViewWindow_0-view-eyep-x {-11.5869}
+set $m3-ViewWindow_0-view-eyep-y {-0.354006}
+set $m3-ViewWindow_0-view-eyep-z {-0.0671589}
+set $m3-ViewWindow_0-view-lookat-x {0.19262}
+set $m3-ViewWindow_0-view-lookat-y {-0.0154077}
+set $m3-ViewWindow_0-view-lookat-z {-0.340137}
+set $m3-ViewWindow_0-view-up-x {0.0285064}
+set $m3-ViewWindow_0-view-up-y {-0.999546}
+set $m3-ViewWindow_0-view-up-z {-0.00972127}
+set $m3-ViewWindow_0-view-fov {20}
+set $m3-ViewWindow_0-view-eyep-x {-11.5869}
+set $m3-ViewWindow_0-view-eyep-y {-0.354006}
+set $m3-ViewWindow_0-view-eyep-z {-0.0671589}
+set $m3-ViewWindow_0-view-eyep-x {-11.5869}
+set $m3-ViewWindow_0-view-eyep-y {-0.354006}
+set $m3-ViewWindow_0-view-eyep-z {-0.0671589}
+set $m3-ViewWindow_0-view-lookat-x {0.19262}
+set $m3-ViewWindow_0-view-lookat-y {-0.0154077}
+set $m3-ViewWindow_0-view-lookat-z {-0.340137}
+set $m3-ViewWindow_0-view-lookat-x {0.19262}
+set $m3-ViewWindow_0-view-lookat-y {-0.0154077}
+set $m3-ViewWindow_0-view-lookat-z {-0.340137}
+set $m3-ViewWindow_0-view-up-x {0.0285064}
+set $m3-ViewWindow_0-view-up-y {-0.999546}
+set $m3-ViewWindow_0-view-up-z {-0.00972127}
+set $m3-ViewWindow_0-view-up-x {0.0285064}
+set $m3-ViewWindow_0-view-up-y {-0.999546}
+set $m3-ViewWindow_0-view-up-z {-0.00972127}
+set $m3-ViewWindow_0-view-fov {20}
+set $m3-ViewWindow_0-view-eyep_offset-x {-1.79769e+308}
+set $m3-ViewWindow_0-view-eyep_offset-y {-1.79769e+308}
+set $m3-ViewWindow_0-view-eyep_offset-z {-1.79769e+308}
+set $m3-ViewWindow_0-view-eyep_offset-x {-1.79769e+308}
+set $m3-ViewWindow_0-view-eyep_offset-y {-1.79769e+308}
+set $m3-ViewWindow_0-view-eyep_offset-z {-1.79769e+308}
+set $m3-ViewWindow_0-bgcolor-r {0}
+set $m3-ViewWindow_0-bgcolor-g {0}
+set $m3-ViewWindow_0-bgcolor-b {0}
+set $m3-ViewWindow_0-bgcolor-r {0}
+set $m3-ViewWindow_0-bgcolor-g {0}
+set $m3-ViewWindow_0-bgcolor-b {0}
+set $m3-ViewWindow_0-shading {}
+set $m3-ViewWindow_0-do_stereo {0}
+set $m3-ViewWindow_0-sbase {1}
+set $m3-ViewWindow_0-sr {1}
+set $m3-ViewWindow_0-do_bawgl {0}
+set $m3-ViewWindow_0-drawimg {-2147483647}
+set $m3-ViewWindow_0-saveprefix {}
+set $m3-ViewWindow_0-unused {1}
+set $m3-ViewWindow_0-unused {1}
+set $m4-notes {}
+set $m4-show_status {1}
+set $m4-nodes-on {0}
+set $m4-edges-on {1}
+set $m4-faces-on {0}
+set $m4-vectors-on {0}
+set $m4-normalize-vectors {-2147483647}
+set $m4-has_vec_data {1}
+set $m4-def-color-r {0.5}
+set $m4-def-color-g {0.5}
+set $m4-def-color-b {0.5}
+set $m4-node_display_type {Points}
+set $m4-edge_display_type {Lines}
+set $m4-active_tab {Faces}
+set $m4-node_scale {2}
+set $m4-edge_scale {1}
+set $m4-vectors_scale {0.03}
+set $m4-show_progress {-2147483647}
+set $m4-resolution {4}
+set $m5-notes {}
+set $m5-show_status {1}
+set $m6-notes {}
+set $m6-show_status {1}
+set $m6-filename {/home/sci/dmw/mydata/duke/mesh/sr-data/0.1.f1.mat}
+set $m7-notes {}
+set $m7-show_status {1}
+set $m7-filename {/home/sci/dmw/mydata/duke/mesh/sr-data/2cm/0.1.resized-no-interior.tvv.fld}
+set $m7-filetype {Binary}
+set $m8-notes {}
+set $m8-show_status {1}
+set $m9-notes {}
+set $m9-show_status {1}
+set $m9-rotate_x {0}
+set $m9-rotate_y {0}
+set $m9-rotate_z {1}
+set $m9-rotate_theta {0}
+set $m9-translate_x {0}
+set $m9-translate_y {0}
+set $m9-translate_z {0}
+set $m9-scale_uniform {-1.617}
+set $m9-scale_x {0}
+set $m9-scale_y {0}
+set $m9-scale_z {0}
+set $m9-shear_plane_a {0}
+set $m9-shear_plane_b {0}
+set $m9-shear_plane_c {1}
+set $m9-shear_plane_d {1}
+set $m9-widget_resizable {1}
+set $m9-permute_x {1}
+set $m9-permute_y {2}
+set $m9-permute_z {3}
+set $m9-pre_transform {1}
+set $m9-which_transform {scale}
+set $m9-widget_scale {1}
+set $m10-notes {}
+set $m10-show_status {1}
+set $m10-numnodes2 {}
+set $m10-fldname2 {}
+set $m10-typename2 {--- No typename ---}
+set $m10-datamin2 {0}
+set $m10-datamax2 {0}
+set $m10-dataat2 {Nodes}
+set $m10-minx2 {1}
+set $m10-miny2 {1}
+set $m10-minz2 {1}
+set $m10-maxx2 {0}
+set $m10-maxy2 {0}
+set $m10-maxz2 {0}
+set $m10-cfldname {0}
+set $m10-ctypename {0}
+set $m10-cdataat {0}
+set $m10-cdataminmax {0}
+set $m10-cbbox {0}
+$m0 initialize_ui
+$m9 initialize_ui
+$m10 initialize_ui
+
+::netedit scheduleok

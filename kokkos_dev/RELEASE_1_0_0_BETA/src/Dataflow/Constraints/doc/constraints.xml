@@ -1,0 +1,65 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE dir SYSTEM "dirspec.dtd">
+
+<dir name="Dataflow/Constraints">
+  <fit>
+  <!-- describe how this directory fits into SCIRun - why does it 
+       exist, how does SCIRun benefit from it, etc. -->
+    <p>
+      Dataflow/Constraints contains a set of constraint classes.
+      These classes can be used to maintain constrained relationships
+      such that when one variable changes, the other inter-dependent
+      variables can be updated accordingly.  For example, with the
+      DistanceConstraint, two points are constrained to be a fixed
+      distance apart.  If one point moves to a new location, the other
+      point must be moved in order to maintain that constraint.  Some
+      of the simpler constraints are solved using direct methods,
+      while more complex constraints are solved using interative
+      methods.
+    </p>
+  </fit>
+  <use>
+    <why>
+    <!-- Discuss why a developer would need or want to use the
+         functions and/or classes in this directory. -->
+      <p>
+        The classes in this directory are useful when there is a
+        constrained relationship between data values.  The specific
+        constraints we have implemented are geometric in nature,
+        arrising from our primary application of these classes: 3D
+        widget controls.
+      </p>
+    </why>
+    <when>
+    <!-- Discuss when or where to use the functions and classes in
+         this directory: From within modules?, when a certain event
+	 occurs? -->
+      <p>
+        To date, these constraints have only been used within the
+        widget classes, but they are general enough that they can
+        directly be used elsewhere.
+      </p>
+    </when>
+  </use
+</dir>
+
+<!-- author comments: suggestions for new/better tags for this xml file
+
+-->

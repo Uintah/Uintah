@@ -1,0 +1,8 @@
+To migrate:
+=============
+IR_wrap.cc: change Init_scim to Init_Lib_Core_CCA_tools_scim
+
+To run:
+============
+add this directory (../src/Core/CCA/tools/scim) to RUBYLIB
+

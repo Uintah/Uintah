@@ -1,0 +1,3 @@
+<component name="SCIRun.World" model="cca">
+<sidl source="/home/sci/damevski/dev/strauss/StringPort.sidl"></sidl>
+</component>

@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<?xml-stylesheet href="../../../../Dataflow/XML/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+<component name="MatlabNrrdsReader" category="DataIO">
+  <overview>
+    <authors>
+	<author>Jeroen Stinstra</author>
+    </authors>
+	
+	<summary>  
+	The MatlabNrrdsReader module reads a matrix from a MATLAB .mat file and exports it as a Nrrd 
+	</summary>
+    
+	<description>
+	<section>
+	<title> Module Description </title>
+	
+	<p>	This module reads a N-dimensional matrix from MATLAB .mat files and exports this matrix as a Nrrd
+	object. Currently only files from matlab version 5 and higher are supported by this module. 
+	The module reads dense matrices of any of the supported data classes in matlab (short, int, double, etc.).
+	Sparse matrices however are not supported by this module. Use the <modref Package="MatlabInterface" Module="MatlabmatricesReader" />
+	module to read sparse matrices. In order to facilitate the selection process the module will list all matrices in the file that
+	are compatible with the SCIRun NRRD class and will select the most obvious one as a default. </p>
+	
+		<p> Follow the next two steps in order to setup the GUI properly: </p>
+	
+	<orderedlist>
+		<listitem>
+		Choose the MATLAB file that contains the matrix data. You can either use the BROWSE button to select a file or enter the filename in the 
+		filename entry on top of the GUI and press the OPEN button to list the contents of the file in the listbox in the center of the GUI.
+		</listitem>
+		<listitem>
+		Next the MATLAB matrices in the file need to be connected to an output port. In order to do this click on one of the PORT buttons and then
+		select the MATLAB matrix you want to load on that outport. Note that for convenience the first suitable matrix in the file is automatically 
+		connected to port 1, when a MATLAB file is opened. Hence, if your file only contains one field, you can skip this step 
+		as the matrix will be selected automatically. 
+		</listitem>
+	</orderedlist>
+	</section>
+	
+		<section>
+	<title>See Also </title>
+	<p>
+	<modref package="MatlabInterface" name="Matlab" />,	
+	<modref package="MatlabInterface" name="MatlabBundelsReader" />,	
+	<modref package="MatlabInterface" name="MatlabBundlesWriter" />,	
+	<modref package="MatlabInterface" name="MatlabDataReader" />,	
+	<modref package="MatlabInterface" name="MatlabDataWriter" />,	
+	<modref package="MatlabInterface" name="MatlabFieldsReader" />,
+	<modref package="MatlabInterface" name="MatlabFieldsWriter" />,
+	<modref package="MatlabInterface" name="MatlabMatricesReader" />,
+	<modref package="MatlabInterface" name="MatlabMatricesReader" />,
+	<modref package="MatlabInterface" name="MatlabNrrdsWriter" />,
+	<modref package="MatlabInterface" name="MatlabNrrdsReader" />	
+	</p>
+	</section>
+	
+	</description>   
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>filename</name>
+        <datatype>SCIRun::Nrrd</datatype>
+        <description>filename stored as a char array in a nrrd</description>
+      </port>        
+    </inputs>
+    <outputs>
+      <port>
+        <name>Nrrd1</name>
+		<datatype>SCIRun::Nrrd</datatype>
+		<description>
+		<p> SCIRun Nrrd Object imported from the MATLAB file using port 1. </p>
+		</description>		
+      </port>
+	  <port>
+        <name>Nrrd2</name>
+		<datatype>SCIRun::Nrrd</datatype>
+		<description>
+		<p> SCIRun Nrrd Object imported from the MATLAB file using port 2. </p>
+		</description>	
+      </port>
+	  <port>
+        <name>Nrrd3</name>
+		<datatype>SCIRun::Nrrd</datatype>
+		<description>
+		<p> SCIRun Nrrd Object imported from the MATLAB file using port 3. </p>
+		</description>			
+      </port>
+	  <port>
+        <name>Nrrd4</name>
+		<datatype>SCIRun::Nrrd</datatype>
+		<description>
+		<p> SCIRun Nrrd Object imported from the MATLAB file using port 4. </p>
+		</description>			
+      </port>
+	  <port>
+        <name>Nrrd5</name>
+		<datatype>SCIRun::Nrrd</datatype>
+		<description>
+		<p> SCIRun Nrrd Object imported from the MATLAB file using port 5. </p>
+		</description>			
+      </port>
+	  <port>
+        <name>Nrrd6</name>
+		<datatype>SCIRun::Nrrd</datatype>
+		<description>
+		<p> SCIRun Nrrd Object imported from the MATLAB file using port 6. </p>
+		</description>			
+      </port>
+    </outputs>
+  </io>
+
+  <gui>
+    <parameter>
+    <widget> Entry </widget>
+	<label> .mat file </label>
+	<description> The name of the MATLAB file </description>
+	</parameter>
+
+    <parameter>
+    <widget> Button </widget>
+	<label> Open </label>
+	<description> Opens the file specified in the MATLAB file entrybox </description>
+	</parameter>
+
+    <parameter>
+    <widget> Button </widget>
+	<label> Browse </label>
+	<description> Open a filesectionbox and choose a MATLAB file </description>
+	</parameter>
+
+    <parameter>
+    <widget> Listbox </widget>
+	<label> matlab matrix selector </label>
+	<description> Displays the matrices that are stored in the MATLAB file and an information 
+	              string describing the data in the matrix</description>
+	</parameter>
+
+    <parameter>
+    <widget> Button </widget>
+	<label> Port N </label>
+	<description> Button for selecting which output port is used to export the data. The button highlighted
+	white is currently selected one. Selecting a matrix from the list below will put that matrix
+	on the port whose label is highlighted in white. </description>
+	</parameter>
+  </gui>
+
+  <testing>
+  </testing>
+</component>

@@ -1,0 +1,17 @@
+***************
+*** 167,173 ****
+      <!--____________________________________________________________________-->
+     <DataArchiver>
+        <filebase>pulse_Lodi_2d.uda</filebase>
+-       <outputInterval>0.0002</outputInterval>
+        <save label="vel_CC"/>
+        <save label="temp_CC"/>
+        <save label="rho_CC"/>
+--- 169,175 ----
+      <!--____________________________________________________________________-->
+     <DataArchiver>
+        <filebase>pulse_Lodi_2d.uda</filebase>
++       <outputTimestepInterval>1</outputTimestepInterval>
+        <save label="vel_CC"/>
+        <save label="temp_CC"/>
+        <save label="rho_CC"/>

@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="Isosurface" category="Visualization">
+  <overview>
+    <authors>
+      <author>Yarden Livnat</author>
+    </authors>
+
+    <summary>Isosurface extracts an isopotential surface from a scalar
+    field.</summary>
+
+    <description>
+
+      <p>The Isosurface module is used to extract one or more
+      isopotential surfaces from a scalar field.  The isopotential
+      surfaces are surfaces for which the scalar value would
+      interpolate to a constant isovalue.  The isovalues can be
+      specified in one of several ways.</p>
+
+      <p>Isovalues can be passed into the field in the 'Optional
+      Isovalues' port.  A surface will be created for each value in
+      that matrix.  The Isosurface-probe.net example network
+      demonstrates using the <modref package="SCIRun" name="Probe"/> and <modref package="SCIRun" name="ManageFieldData"/> modules to
+      interactively select the isosurface with a probe using this
+      port.</p>
+
+      <p>Slider allows the user to select one isovalue using a slider
+      bar or to type in one isovalue manually.  The slider bar ranges
+      from the minimum and maximum values of the input field.  This
+      can be used with great effect to interactively move the
+      isosurface around when the Update: Auto option is specified.</p>
+
+      <p>Quantity allows for the selection of several regularly spaced
+      isosurfaces.  This is particularly useful for isocontouring as
+      it gives a contour-map effect for where the isosurfaces would be
+      located.</p>
+
+      <p>List allows the user to type in an arbitrary list of
+      isovalues to be used.  The numbers should be space separated.
+      In addition to hard numbers, percentages relative to the field
+      minimum and maximum may be specified as well.  For instance,
+      '50%' would specify the isovalue in the center of the min-max
+      range, whereas '50.0' would isosurface at a value of 50.0.</p>
+
+      <p>This module supports several other options.  The Update:
+      options are On Release, Manual and Auto.  On Release will not
+      re-execute the module until the user releases the Iso Value
+      scroll bar. If the user selects the Manual option, the module
+      will not re-execute until they press the Execute button.  The
+      Auto option re-executes the module every time the Iso Value
+      scroll bar moves. If the user selects the Auto Extract from New
+      Field option and a new Field comes in, the module completely
+      re-executes, calculating a new Isosurface.  The Build Output
+      Field determines whether or not a surface field is created.  If
+      it is turned off then only the Geometry output port will contain
+      anything.  If there is no ColorMap present then the Default
+      Color is used for the output geometry.</p>
+
+      <p>The Isosurface can be computed using either the Marching Cubes
+      or NOISE method.  Marching cubes requires each element in the
+      field to be examined for those containing the isovalues used to
+      extrac the isosurface.  NOISE builds a search structure and then
+      uses that to construct the isosurface.</p>
+
+      <p>The Marching Cubes method examines the isopotential at the
+      corners of every element within the input field to compute where
+      the isosurface should be located.  This operation may be
+      parallelized, and allows the user to specify how many threads
+      are used to do the computation.  This is a good choice if
+      examining only a few isovalues.</p>
+
+      <p>NOISE builds a search structure for the field, and then uses
+      that stucture to more quickly compute isosurfaces.  This search
+      structure takes longer to create than extracting one Marching
+      Cubes surface, however once the structure is built NOISE can
+      extract subsequent surfaces more quickly.  This is a good choice
+      if multiple isosurfaces are to be computed for each field, and
+      can offer better interactive performance than Marching Cubes.
+      Only one thread is used for this method.</p>
+
+      <p>As of September 2002, this module can manage scalar fields of
+      the following geometry type: LatVolField, StructHexVolField,
+      TetVolField,HexVolField, TriSurfField, QuadSurfField and
+      ImageField.  Isocontours are generated for the surface input
+      fields, and Isosurfaces are generated for the volume input
+      fields.</p>
+
+      <p>As of Febuary 2003, this module can handle scalar fields that
+      contain cell-centered data.  If the data is located at the
+      cells, then the surfaces are created along the appropriate cell
+      faces rather than using interpolated values from the nodes.</p>
+
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Optional Color Map</name>
+	<datatype>SCIRun::ColorMap</datatype>
+      </port>
+      <port>
+        <name>Optional Isovalues</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Surface</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Geometry</name>
+	<datatype>SCIRun::Geometry</datatype>
+      </port>
+      <port>
+        <name>Mapping</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <img>../Modules/Visualization/doc/IsoSurfaceUI.jpg</img>
+  </gui>
+  <testing>
+  </testing>
+<nets>
+<net id="Isosurface-list">
+<title>Isosurface-list Regression Test</title>
+
+<p>Test the Isosurface module by creating a list of values to isocontour
+on the boundary of the sphere-voltage test model.</p>
+
+<p>This network can be found at src/nets/Modules/Visualization/Isosurface-list.net.</p>
+
+</net>
+<net id="Isosurface-mcmp">
+<title>Isosurface-mcmp Regression Test</title>
+
+<p>Test the Field output of the Isosurface module in multiprocessor
+marching cubes mode.  This network demonstrates that the code which
+does the join for the different parts leaves a seam on the output
+field where the points are duplicated and thus breaks subsequent
+FieldBoundary and similar computations.  The lines across the middle
+of the sphere reflect the places where the data was cut up and
+assigned to different processors.</p>
+
+<p>This network can be found at src/nets/Modules/Visualization/Isosurface-mcmp.net.</p>
+
+</net>
+<net id="Isosurface-probe">
+<title>Isosurface-probe Regression Test</title>
+
+<p>Test useage of the Probe module to dynamically select which isovalue
+to use in the IsoSurface module.  The <modref package="SCIRun" name="Probe"/> widget can be moved around
+and the isovalue will cut through that point.</p>
+
+<p>This network can be found at src/nets/Modules/Visualization/Isosurface-probe.net.</p>
+
+</net>
+<net id="Isosurface-quantity">
+<title>Isosurface-quantity Regression Test</title>
+
+<p>Test the 'Quantity' method of selecting isovalues in the Isosurface
+module.  The boundary of the sphere-voltage model is isocontoured at
+10 evenly spaced intervals and the result is then displayed.</p>
+
+<p>This network can be found at src/nets/Modules/Visualization/Isosurface-quantity.net.</p>
+
+</net>
+<net id="Isosurface-slider">
+<title>Isosurface-slider Regression Test</title>
+
+<p>Test the 'Slider' method of selecting an isovalue in the IssSurface
+module.  The slider is used to select the value for an isocontour on
+the boundary of the sphere-volume data set.</p>
+
+<p>This network can be found at src/nets/Modules/Visualization/Isosurface-slider.net.</p>
+
+</net>
+</nets>
+</component> 

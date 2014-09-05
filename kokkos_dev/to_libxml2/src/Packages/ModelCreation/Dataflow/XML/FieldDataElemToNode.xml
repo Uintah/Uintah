@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="FieldDataElemToNode" category="FieldsData">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      Compute the value of the nodes based on the data from the adjoining elements. This module supports various operations to map element data to node data.
+    </summary>
+    <description>
+      Compute the value of the nodes based on the data from the adjoining elements. This module supports various operations to map element data to node data.
+Supported methods are:
+AVERAGE - Compute the average of adjoining elements
+MIN - Compute the minimum value of adjoining elements
+MAX - Compute the maximum value of adjoinint elements
+SUM - Compute the sum of the adjoining elements
+INTERPOLATE - Compute a weighted average of the adjoining elements
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Mapping</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+      NEED COMPLETION
+    </description>
+    <parameter>
+      <widget>Place Widget Name Here</widget>
+      <label>Place Label Name Here</label>
+    </parameter>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

@@ -1,0 +1,8 @@
+
+package memstress {
+    interface Server {
+	void ping();
+	Server newObject();
+	Server returnReference();
+    };
+};

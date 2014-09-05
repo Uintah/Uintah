@@ -1,0 +1,1826 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<!--% require("../Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+"../Utilities/XML/Docbook_dtd/docbookx.dtd" [
+<!ENTITY ltx "LaTeX">
+<!ENTITY sr "SCIRun">
+<!ENTITY dbk "DocBook">
+]>
+
+<article class="techreport">
+<title>&sr; Documentum</title>
+<subtitle>&sr; Documentation Explicated (v. <!--%= doc.edition %-->)</subtitle>
+<articleinfo>
+<author>
+<firstname>Ted</firstname>
+<surname>Dustman</surname>
+<affiliation>
+<orgname>Scientific Computing and Imaging Institute</orgname>
+<address>
+<street>50 S. Central Campus Dr.</street>
+<city>Salt Lake City</city>
+<state>UT</state>
+<postcode>84112</postcode>
+<email>dustman@cvrti.utah.edu</email>
+<phone>801-587-9513</phone>
+</address>
+</affiliation>
+</author>
+</articleinfo>
+
+<section id="sec.intro">
+<title>Introduction</title>
+
+<para>This document is for those want to write or build &sr; documentation.</para>
+
+<para>It describes:
+
+<itemizedlist>
+<listitem>
+<para>The organization of the documentation tree.</para>
+</listitem>
+<listitem>
+<para>The types of documents in the tree.</para >
+</listitem>
+<listitem>
+<para>Building document products from their sources and the tools
+needed.</para>
+</listitem>
+<listitem>
+<para>Editing documents.</para>
+</listitem>
+</itemizedlist>
+
+</para>
+
+</section>
+
+<section id="sec.overview">
+<title>Doc Tree Organization</title>
+
+<para><xref linkend="tbl.doc-tree"/> shows the organization of the
+doc tree.  It  shows only those directories and files that are part of CVS.
+Generated files (aka products) are 
+discussed in <link endterm="sec.builddocs.title"
+linkend="sec.builddocs"/>.
+</para>
+
+<table frame="none" id="tbl.doc-tree">
+<title>Doc Tree Organization</title>
+<tgroup cols="4">
+<colspec colname="doc" colwidth="1*"/>
+<colspec colname="docsub" colwidth="1*"/>
+<colspec colname="docsubsub" colwidth="1*"/>
+<colspec colname="descrip" colwidth="4*"/>
+<spanspec spanname="dirhead" namest="doc" nameend="docsubsub"/>
+<spanspec spanname="deschead" namest="descrip" nameend="descrip"/>
+<spanspec spanname="docspan" namest="doc" nameend="docsubsub"/>
+<spanspec spanname="docsubspan" namest="docsub" nameend="docsubsub"/>
+<thead>
+<row>
+<entry spanname="dirhead">Directories</entry>
+<entry spanname="deschead">Description</entry>
+</row>
+</thead>
+<tbody>
+<row>
+<entry colname="doc" spanname="docspan"><filename>doc/</filename></entry>
+<entry colname="descrip"><para>Root of doc tree.
+<filename>Index.rhtml</filename> is the main 
+cover page for the documentation tree.  This directory's Makefile
+initiates the building of the entire doc tree.</para></entry>
+</row>
+<row>
+<entry colname="docsub" spanname="docsubspan"><filename>Documentum/</filename></entry>
+<entry colname="descrip"><para><quote>Document documentation</quote>.  Document
+templates for XHTML, DocBook, and &ltx; documents.</para></entry>
+</row>
+<row>
+<entry colname="docsub" spanname="docsubspan"><filename>Utilities/</filename></entry>
+<entry colname="descrip"><para>Utility directory.</para></entry>
+</row>
+<row>
+<entry colname="docsubsub"><filename>XML/</filename></entry>
+<entry colname="descrip">
+<para>XSL style files, DTDs and CEDs (precompiled dtds for use with Emacs PSGML
+mode), and XML related scripts.</para>
+</entry>
+</row>
+<row>
+<entry colname="docsubsub"><filename>TeX/</filename></entry>
+<entry colname="descrip">
+<para>&ltx; related style files, macros files, and scripts.
+</para>
+</entry>
+</row>
+<row>
+<entry colname="docsubsub"><filename>HTML/</filename></entry>
+<entry colname="descrip"><para>CSS style files, javascript sources, and HTML related
+scripts.</para></entry>
+</row>
+<row>
+<entry colname="docsubsub"><filename>Figures/</filename></entry>
+<entry colname="descrip"><para>Shared figures (e.g. page header and footer banners).</para></entry>
+</row>
+<row>
+<entry colname="docsub" spanname="docsubspan"><filename>User/</filename></entry>
+<entry colname="descrip">
+<para>User documentation root.  <filename>Index.rhtml</filename> is
+the cover page for &sr; user documentation.  This directory's
+<filename>Makefile</filename> initiates the building of the user
+documentation set.
+</para>
+</entry>
+</row>
+<row>
+<entry colname="docsubsub"><filename>Tutorial/</filename></entry>
+<entry colname="descrip"><para>HTML sources and figures for the &sr; Tutorial</para></entry>
+</row>
+<row>
+<entry colname="docsubsub"><filename>Guide/</filename></entry>
+<entry colname="descrip"><para>&ltx; sources for the &sr; users guide.
+<filename>Makefile</filename> is responsible for building web and print
+versions of the guide.
+</para></entry>
+</row>
+<row>
+<entry colname="docsubsub"><filename>FAQ/</filename></entry> <entry
+colname="descrip"><para>XML sources for the user FAQ and
+<filename>Makefile</filename> which generates the HTML version of the
+FAQ.</para></entry>
+</row>
+<row>
+<entry colname="docsub" spanname="docsubspan"><filename>Developer/</filename></entry>
+<entry colname="descrip">
+<para>
+Developer documentation root. <filename>Index.rhtml</filename> is the
+cover page for &sr; developer documentation.  This directory's
+<filename>Makefile</filename> initiates the building of the developer
+documentation set.
+</para>
+</entry>
+</row>
+<row>
+<entry colname="docsubsub"><filename>Guide/</filename></entry>
+<entry colname="descrip">
+<para>XML and HTML sources for the &sr; developers
+guide.  <filename>Makefile</filename> builds the HTML version of the
+guide.</para>
+</entry>
+</row>
+<row>
+<entry colname="docsubsub"><filename>FAQ/</filename></entry>
+<entry colname="descrip">
+<para>XML sources for developer FAQ and <filename>Makefile</filename>
+that generate the HTML version of the FAQ.</para>
+</entry>
+</row>
+<row>
+<entry colname="docsubsub"><filename>CodeViews/</filename></entry>
+<entry colname="descrip">
+<para>Tools (<filename>Makefile</filename>, configuration file, and
+script) for building source code (C++) based documentation using
+Doxygen.
+</para>
+</entry>
+</row>
+<row>
+<entry colname="docsubsub"><filename>Modules/</filename></entry>
+<entry colname="descrip">
+<para>
+<filename>Makefile</filename> builds HTML versions of the module
+descriptions.  <filename>Index.rhtml</filename> is the cover page for module
+descriptions. Note that module description sources live in the
+<filename>XML</filename> and <filename>TeX</filename> directories on the
+<filename>src</filename> side of the tree.
+</para>
+</entry>
+</row>
+<row>
+<entry colname="docsub" spanname="docsubspan"><filename>Installation/</filename></entry>
+<entry colname="descrip">
+<para>Installation documentation root.  <filename>Makefile</filename>
+invokes sub-makes.  <filename>Index.rhtml</filename> is the cover page for
+&sr; installation documentation.</para>
+</entry>
+</row>
+<row>
+<entry colname="docsubsub"><filename>Guide/</filename></entry>
+<entry colname="descrip">
+<para>XML sources for installation guide and
+<filename>Makefile</filename> for generating the guide.</para>
+</entry>
+</row>
+<row>
+<entry colname="docsubsub"><filename>FAQ/</filename></entry>
+<entry colname="descrip">
+<para>XML sources for installation FAQ and
+<filename>Makefile</filename> that generate the HTML version of the
+FAQ.</para>
+</entry>
+</row>
+<row>
+<entry colname="docsub" spanname="docsubspan"><filename>ReleaseNotes/</filename></entry>
+<entry colname="descrip">
+<para>Release notes.  Plain text.</para>
+</entry>
+</row>
+</tbody>
+</tgroup>
+</table>
+
+</section>
+
+<section id="sec.builddocs">
+<title id="sec.builddocs.title">Building Docs</title>
+
+<para>
+&sr; documents are written in  <firstterm><link
+linkend="sec.docmls">markup</link></firstterm> languages: XML, &ltx;,
+and HTML (plus their <firstterm>eruby</firstterm>
+equivalents&mdash;see <xref endterm="sec.docmls.title"
+linkend="sec.docmls"/> for more information).  XML and &ltx; document
+sources must be <quote>built</quote> or transformed into other forms
+(e.g. HTML) for presentation.  This section briefly describes the
+build system and its use.
+</para>
+
+<para>The term <firstterm>sources</firstterm> refers to files that are
+created and edited manually.  The term <firstterm>products</firstterm>
+refers to files that are generated from sources by a tool. Sources are always part of the CVS repository. Products are never part of the CVS repository.</para>
+
+<para>Makefiles generate products from sources.
+The doc tree uses a conventional recursive makefile approach to
+building documentation.  Some Makefiles generate products, while others
+(<filename>doc/Developer/Makefile</filename>,
+<filename>doc/Installation/Makefile</filename>,
+<filename>doc/User/Makefile</filename>) invoke sub-make
+processes.  The topmost Makefile (<filename>doc/Makefile</filename>
+initiates the build of the entire documentation set, and also creates a documentation tarball</para>
+
+<para>The doc tree and its build system are designed so that anyone can build documentation with the proper <link linkend="sec.tools">tools</link>.
+This facilitates the edit/compile/test/debug cycle. Bugs and errors can be discovered before the doc tree is published on the internal website.  The doc developer can edit sources, invoke
+make to build products, test and debug the docs with his or her web browser, and
+correct problems before committing changes to the CVS
+repository.</para>
+
+<para>Note that Makefiles are written in the GNU make dialect.</para>
+
+<para>Source files with extensions
+<filename>.rxml</filename>, <filename>.rhtml</filename>, and
+<filename>.rtex</filename>  are <firstterm>eruby</firstterm>
+sources.  Information on these files can be found in <xref
+endterm="sec.docmls.title" linkend="sec.docmls"/>.</para>
+
+<para>
+Before using the build system:
+<itemizedlist>
+<listitem>
+<para>
+Install the required tools.  See
+<link endterm="sec.tools.title" linkend="sec.tools"/>.
+</para>
+</listitem>
+<listitem>
+<para><link linkend="sec.catalog">Prepare
+<firstterm>catalog</firstterm> files</link>.</para>
+</listitem>
+<listitem>
+<para><link linkend="sec.bld-vars">Setup environment variables</link>.</para>
+</listitem>
+</itemizedlist>
+The build system can be invoked from the <link
+linkend="sec.cmd-line-invoke">command line</link>, from a script, or
+from the program <link
+linkend="sec.using-publish-rb">Publish.rb</link>
+</para>
+
+<section id="sec.catalog">
+<title id="sec.catalog.title">Catalog Files</title> 
+
+<para>
+This section assumes OpenJade and the ISO character entity sets
+have been installed.  See <link endterm="sec.tools.title"
+linkend="sec.tools"/> for information on these tools.
+</para>
+
+<para>
+Two catalog files must be prepared.  The first maps ISO entity set
+<firstterm>public identifiers</firstterm> (abstract names) to
+corresponding <firstterm>system identifiers</firstterm> (file names).
+The second catalog lists system identifiers of other catalog files
+(including the ISO entity set catalog) needed by OpenJade.
+</para>
+
+<para>The ISO entity set catalog is named
+<filename>isoent.cat</filename> and has the following content:
+<literallayout class="monospaced">
+  PUBLIC "ISO 8879:1986//ENTITIES Diacritical Marks//EN" "ISOdia"
+  PUBLIC "ISO 8879:1986//ENTITIES Numeric and Special Graphic//EN" "ISOnum"
+  PUBLIC "ISO 8879:1986//ENTITIES Publishing//EN" "ISOpub"
+  PUBLIC "ISO 8879:1986//ENTITIES General Technical//EN" "ISOtech"
+  PUBLIC "ISO 8879:1986//ENTITIES Added Latin 1//EN" "ISOlat1"
+  PUBLIC "ISO 8879:1986//ENTITIES Added Latin 2//EN" "ISOlat2"
+  PUBLIC "ISO 8879:1986//ENTITIES Greek Letters//EN" "ISOgrk1"
+  PUBLIC "ISO 8879:1986//ENTITIES Monotoniko Greek//EN" "ISOgrk2"
+  PUBLIC "ISO 8879:1986//ENTITIES Greek Symbols//EN" "ISOgrk3"
+  PUBLIC "ISO 8879:1986//ENTITIES Alternative Greek Symbols//EN" "ISOgrk4"
+  PUBLIC "ISO 8879:1986//ENTITIES Added Math Symbols: Arrow Relations//EN" "ISOamsa"
+  PUBLIC "ISO 8879:1986//ENTITIES Added Math Symbols: Binary Operators//EN" "ISOamsb"
+  PUBLIC "ISO 8879:1986//ENTITIES Added Math Symbols: Delimiters//EN" "ISOamsc"
+  PUBLIC "ISO 8879:1986//ENTITIES Added Math Symbols: Negated Relations//EN" "ISOamsn"
+  PUBLIC "ISO 8879:1986//ENTITIES Added Math Symbols: Ordinary//EN" "ISOamso"
+  PUBLIC "ISO 8879:1986//ENTITIES Added Math Symbols: Relations//EN" "ISOamsr"
+  PUBLIC "ISO 8879:1986//ENTITIES Box and Line Drawing//EN" "ISObox"
+  PUBLIC "ISO 8879:1986//ENTITIES Russian Cyrillic//EN" "ISOcyr1"
+  PUBLIC "ISO 8879:1986//ENTITIES Non-Russian Cyrillic//EN" "ISOcyr2"
+</literallayout>
+The above catalog entries assume <filename>isoent.cat</filename> is in
+the directory containting the ISO entity sets.  If this is not true,
+the system identifiers (e.g. <quote>ISOdia</quote>) must be
+changed (e.g. <quote>/path/to/ISOdia</quote>) appropriately.
+</para>
+
+<para>The second catalog (<quote>OpenJade</quote> catalog)
+lists system identifiers of other catalog files needed by OpenJade, including the ISO entity set catalog. This catalog file can be
+located anywhere.  It has the following content:
+<literallayout class="monospaced">
+  CATALOG /path/to/openjade/dsssl/catalog
+  CATALOG /path/to/isoent.cat
+</literallayout>
+where <quote>/path/to/</quote> is replaced by a real path.  The first
+entry in this catalog references a file named <quote>catalog</quote>
+within the OpenJade distribution.
+</para>
+</section>
+
+<section id="sec.bld-vars">
+<title>Environment Variables</title>
+
+<para>Six environment variables must be set before building
+the documentation:
+<itemizedlist>
+<listitem>
+<para>
+<envar>CLASSPATH</envar> is the path to the
+file <filename>saxon.jar</filename> within the Saxon distribution.
+</para>
+</listitem>
+<listitem>
+<para>
+<envar>STYLESHEET_XSL_HTML</envar> is the path of the
+<filename>html</filename> directory within the &dbk;
+<acronym>XSL</acronym> stylesheet distribution.
+</para>
+</listitem>
+<listitem>
+<para>
+<envar>STYLESHEET_DSSSL_PRINT</envar> is the path of the
+<filename>print</filename> directory within the &dbk;
+<acronym>DSSSL</acronym> stylesheet distribution.
+</para>
+</listitem>
+<listitem>
+<para>
+<envar>XML_DCL</envar> is the path to the file
+<filename>xml.dcl</filename> within the &dbk;
+<acronym>DSSSL</acronym> stylesheet distribution.
+</para>
+</listitem>
+<listitem>
+<para>
+<envar>CATALOG</envar> is the path to the <quote>OpenJade</quote>
+catalog file.
+</para>
+</listitem>
+<listitem>
+<para>
+<envar>WITH_CV</envar> should be set to the string <quote>true</quote>
+if Doxygen is to build the C++ based documentation.
+</para>
+</listitem>
+</itemizedlist>
+For instance (assuming a Bourne type shell):
+<programlisting>
+  export CLASSPATH=/usr/local/lib/Saxon/saxon.jar
+  export STYLESHEET_XSL_HTML=/usr/local/xsl/docbook/html/
+  export STYLESHEET_DSSSL_PRINT=/usr/share/sgml/dsssl/docbook-dsssl-nwalsh/print
+  export XML_DCL=/usr/share/sgml/dsssl/docbook-dsssl-nwalsh/dtds/decls/xml.dcl
+  export CATALOG=~/Documents/sgml/catalog
+  export WITH_CV=true
+</programlisting>
+
+</para>
+</section>
+
+<section id="sec.cmd-line-invoke">
+<title>Command line Invocation</title>
+
+<para>To make all docs <command>cd</command> to the toplevel
+<filename>doc</filename> directory and type <command>make</command>.
+</para>
+
+<para>To also make a doc tarball type:
+<programlisting>
+cd doc                  # cd to toplevel doc directory
+make tarball
+</programlisting>
+</para>
+
+<para>Build one particular doc or a particular set of docs
+by <command>cd</command>'ing to the directory of interest and typing
+<command>make</command>.  For example:
+<programlisting>
+cd doc/Developer        # Make all developer docs.
+make
+</programlisting> or
+<programlisting>
+cd doc/Developer/Guide  # Make just the developer's guide.
+make
+</programlisting>
+</para>
+
+<para>To remove <quote>incidental</quote> files (but
+no products) from a directory (and its sub-directories) type:
+<programlisting>make clean</programlisting> 
+</para>
+
+<para>To also remove products (generated files) type:
+<programlisting>make veryclean</programlisting>
+</para>
+</section>
+
+<section id="sec.using-publish-rb">
+<title>Publish.rb</title> <para>The script
+<filename>doc/Utilities/Publish/publish.rb</filename> is used to
+build &sr; documentation.  It can also deliver &sr; documentation
+to a local or remote site.  Driven by configuration files, the script
+can build the entire documentation tree or selected parts of
+it.</para>
+
+<para>The script is used as follows:
+<literallayout class="monospaced">
+publish.rb <replaceable>config-file</replaceable>
+</literallayout>
+where <replaceable>config-file</replaceable> is the name of a
+configuration file.
+</para>
+
+<para>Two configuration files can be found in
+<filename>doc/Utilities/Publish</filename>.  One,
+<filename>template.conf</filename> builds all documentation.  The
+other, <filename>pwd.conf</filename>, builds documentation in the
+current working directory.  The configuration files should be copied elsewhere and
+edited appropriately.  Read the comments in each configuration file
+for editing instructions.</para>
+</section>
+
+<section>
+<title>Diagnosing Errors</title>
+<para>Coming soon&hellip;</para>
+</section>
+
+</section>
+
+<section id="sec.docmls">
+<title id="sec.docmls.title">Documents and Their Markup Languages</title> 
+
+<para>Each document is composed in one (or more) of the following markup
+languages (ML): 
+<itemizedlist>
+<listitem>
+<para><ulink url="http://www.latex.org">&ltx;</ulink></para></listitem>
+<listitem>
+<para><ulink
+url="http://docbook.org/tdg/en/html/docbook.html">&dbk;</ulink></para></listitem>
+<listitem>
+<para>The (home grown) Component (or module) ML</para>
+</listitem>
+<listitem>
+<para>HTML</para>
+</listitem>
+</itemizedlist>
+<xref linkend="tbl.mls"/> provides document specific details.
+</para>
+
+<para>A number of &dbk;, HTML, and &ltx; source documents contain
+snippets of Ruby code.  These <quote>eruby</quote> (embedded ruby)
+source documents can be identified by their extensions:
+<filename>.rxml</filename> for &dbk; or other XML sources,
+<filename>.rhtml</filename> for HTML sources, and
+<filename>.rtex</filename> for &ltx; documents.  Products
+(<filename>.xml</filename>, <filename>.html</filename>, and
+<filename>.tex</filename> files) are generated by replacing  code
+snippets with  results of their execution&mdash;the eruby tool
+executes this code and performs the replacement.  <note> <para>Be sure
+to edit the eruby version of a document (if it exists) rather than its
+product equivalent.</para></note></para>
+
+<para>
+
+<table id="tbl.mls">
+<title>Document Types</title>
+<tgroup cols="2">
+<thead>
+<row>
+<entry>Document(s)</entry>
+<entry>ML(s)</entry>
+</row>
+</thead>
+<tbody>
+<row>
+<entry>Developer Guide</entry>
+<entry>&dbk; and HTML</entry>
+</row>
+<row>
+<entry>FAQs</entry>
+<entry>&dbk;</entry>
+</row>
+<row>
+<entry>Installation Guide</entry>
+<entry>&dbk;</entry>
+</row>
+<row>
+<entry>Module Descriptions</entry>
+<entry>&sr; Component (or Module) ML and &ltx;</entry>
+</row>
+<row>
+<entry>Tutorial</entry>
+<entry>HTML</entry>
+</row>
+<row>
+<entry>Users Guide</entry>
+<entry>&ltx;</entry>
+</row>
+<row>
+<entry>"Cover Pages" (index.html files)</entry>
+<entry>HTML</entry>
+</row>
+</tbody>
+</tgroup>
+</table>
+</para>
+
+<para>Later sections provide information on editing these documents.</para>
+
+<para>The Component (or module)  markup language was developed by
+SCI.  It is defined by its DTD which is the file
+<filename>doc/Utilities/XML/component.dtd</filename>.
+</para>
+
+<para>This document is composed in &dbk;
+ML.</para>
+
+
+</section>
+
+<section>
+<title>Documents and Their CSS Stylesheets</title>
+
+<para>
+<xref linkend="cssusage"/> shows CSS stylesheets and the documents
+that use them.  Stylesheets can be found in
+<filename>doc/Utilities/HTML</filename>
+</para>
+
+<para>
+<table id="cssusage">
+<title id="cssusagetitle">Stylesheet Usage</title>
+<tgroup cols="2">
+<thead>
+<row>
+<entry>Stylesheet</entry>
+<entry>Document(s)</entry>
+</row>
+</thead>
+<tbody>
+<row>
+<entry><filename>common.css</filename></entry>
+<entry>Included by all other stylesheets</entry>
+</row>
+<row>
+<entry><filename>srdocbook.css</filename></entry>
+<entry>Docbook Documents including the FAQs</entry>
+</row>
+<row>
+<entry><filename>srlatex2html.css</filename></entry>
+<entry>Latex Documents</entry>
+</row>
+<row>
+<entry><filename>mainindex.css</filename></entry>
+<entry><filename>doc/index.html</filename></entry>
+</row>
+<row>
+<entry><filename>subindex.css</filename></entry>
+<entry>Second level index files (e.g. <filename>doc/User/index.html</filename>)</entry>
+</row>
+<row>
+<entry><filename>pkgindex.css</filename></entry>
+<entry><filename>doc/Developer/Modules/index.html</filename></entry>
+</row>
+<row>
+<entry><filename>moduleindex.css</filename></entry>
+<entry><filename>doc/Developer/Modules/SCIRun.html</filename>,
+etc. (i.e. HTML files generated by the program
+<filename>doc/Utilities/HTML/makepkgindex.rb)</filename></entry>
+</row>
+<row>
+<entry><filename>component.css</filename></entry> <entry>Module
+descriptions generated by
+<filename>doc/Utilities/XML/component.xsl</filename>.</entry>
+</row>
+</tbody>
+</tgroup>
+</table>
+</para>
+
+<para><quote>Why so many bloody style sheets?</quote>. Because it is too bloody hard to write, debug, and maintain a
+one-size-fits-all stylesheet!</para>
+
+<note>
+<title>A Philosophical Note</title> 
+
+<para>My personal philosophy:
+<itemizedlist>
+<listitem>
+<para>Avoid writing a "one-size-fits-all" stylesheet.  Doing so
+creates a large stylesheet (filled with many classes) that is hard
+to understand and debug, which makes writing documents more
+difficult.</para>
+</listitem>
+<listitem>
+<para>Associate 1 stylesheet per  document class&mdash;which is why there are
+so many stylesheets above.</para>
+</listitem>
+<listitem>
+<para>Write XHTML/HTML documents
+using no presentational markup or inline
+<literal>style</literal> attribute (although I sometimes use the<sgmltag
+class="starttag">style</sgmltag> element).</para>
+</listitem>
+<listitem>
+<para>Write stylesheets using the minimum number of style classes.
+This rule simplifies stylesheets and the documents that use them,
+although it increases the number of stylesheets needed.</para>
+</listitem>
+</itemizedlist>
+</para>
+</note>
+</section>
+
+<section>
+<title>Editing Documents</title>
+
+<section id="sec.xmlmode">
+<title>Editing XML Documents</title>
+<para>This section discusses the use of emacs to edit XML documents.</para>
+<para>
+It is easy to get lost in the noise of XML syntax.  Therefore, it is best
+to use an XML DTD aware editor.  This type of editor will help
+construct valid XML documents.
+</para>
+
+<para>Emacs is one such editor.  It supports an editing environment called
+XML mode, a derivative of PSGML mode.  XML mode highlights
+XML syntax, indents nested elements and their content, and automatically
+inserts elements and attributes based on the position of the insertion
+point.  It is still possible, however, to create invalid documents using
+Emacs XML mode.
+</para>
+
+<para>Emacs XML mode can be used to edit XML based module descriptions,
+XHTML documents, &dbk; documents, and any XML based language that is
+described by a DTD.</para>
+
+<para>
+Recent versions of Emacs come with XML mode installed.  Check to see if you have XML mode
+by typing <userinput>M-x xml-mode</userinput>.  You do not have
+XML mode if you get the message
+<screen>[No match]</screen> in return.
+XML mode can be obtained
+<ulink url="http://www.lysator.liu.se/~lenst/about_psgml/psgml.html">online</ulink>.
+</para>
+
+<section id="sec.dotemacs">
+<title>Emacs Initialization (.emacs)</title>
+<para>The following lisp code should be inserted into the <filename>.emacs</filename>
+file:
+<programlisting>
+<![CDATA[
+; Tell emacs to use sgml/xml mode for the following file types.
+(setq auto-mode-alist
+(append
+'(("\\.xml" . xml-mode)
+  ("\\.xhtml" . xml-mode))
+auto-mode-alist))
+(autoload 'sgml-mode "psgml" "Major mode to edit SGML files." t)
+(autoload 'xml-mode "psgml" "Major mode to edit XML files." t) 
+
+; Create some faces for use with sgml/xml mode.
+; Change colors to suite your fancy.
+(make-face 'sgml-start-tag-face) 
+(set-face-foreground 'sgml-start-tag-face "MediumSeaGreen") 
+(make-face 'sgml-end-tag-face) 
+(set-face-foreground 'sgml-end-tag-face "SeaGreen") 
+(make-face 'sgml-entity-face) 
+(set-face-foreground 'sgml-entity-face "Red") 
+(make-face 'sgml-doctype-face) 
+(set-face-foreground 'sgml-doctype-face "firebrick") 
+(make-face 'sgml-comment-face) 
+(set-face-foreground 'sgml-comment-face "blue") 
+
+; Use faces defined above.
+(setq sgml-set-face t)
+(setq sgml-markup-faces 
+'((comment   . sgml-comment-face) 
+(start-tag . sgml-start-tag-face) 
+(end-tag   . sgml-end-tag-face) 
+(doctype   . sgml-doctype-face) 
+(entity    . sgml-entity-face))) 
+]]>
+</programlisting>
+</para>
+</section>
+
+<section id="sec.createxmldoc">
+<title>Creating an XML Document </title>
+<para>
+To start a new XML document:
+<itemizedlist>
+<listitem>
+<para>Create a new file (<userinput>C-x C-f</userinput>) with a suffix of <filename>.xml</filename></para>
+</listitem>
+<listitem>
+<para>Insert a preamble. The following is a preamble for a  &dbk; document:
+<programlisting>
+<![CDATA[
+<?xml version="1.0"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD &dbk; XML V4.1.2//EN"
+"http://www.oasis-open.org/docbook/xml/4.0/docbookx.dtd">
+]]>
+</programlisting>
+</para>
+</listitem>
+<listitem>
+<para>Insert the following XML comment at the bottom of the file.
+<programlisting>
+<![CDATA[
+<!-- Keep this comment at the end of the file
+]]>
+Local variables:
+mode: xml
+sgml-default-dtd-file:"<replaceable>top-of-cvs-tree</replaceable>/Utilities/XML/docbook.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+<![CDATA[
+-->
+]]>
+</programlisting>
+Replace <replaceable>top-of-cvs-tree</replaceable> with the relative
+path from the document to the <filename>doc</filename> directory of
+the &sr; CVS tree.
+</para>
+<para>Note that the file <filename>docbook.ced</filename> is a precompiled
+DTD for the docbook language.  Replace
+<filename>docbook.ced</filename> with
+<filename>xhtml1-transitional.ced</filename> when creating a
+<acronym>XHTML</acronym> document.   Replace
+<filename>docbook.ced</filename> with
+<filename>component.ced</filename> when creating a
+module description document.
+</para>
+</listitem>
+<listitem>
+<para>
+Save the file, close it, and re-open it.  Now begin editing the
+file using xml mode.
+</para>
+</listitem>
+</itemizedlist>
+</para>
+</section>
+
+<section>
+<title>XML-Mode Survival</title>
+<para>
+This section presents some of the most important XML-mode editing
+commands.  See the <ulink
+url="http://www.lysator.liu.se/~lenst/about_psgml/psgml.html">online
+manual</ulink> for complete documentation.  <emphasis>FIX
+ME!</emphasis> The following is taken from the <ulink
+url="http://www.lysator.liu.se/~lenst/about_psgml/psgml.html">online
+manual</ulink>.  It should be replaced by original text.
+
+<variablelist>
+<varlistentry>
+<term><userinput>C-c C-e</userinput></term>
+<listitem>
+<para>
+Inserts start and end-tags for an element (sgml-insert-element). The
+name of the element is read from the mini-buffer with completion on
+valid elements. If sgml-insert-end-tag-on-new-line is non-nil or the
+element has element content, the end-tag is inserted on a new line
+after the start-tag.
+</para>
+<para>
+If sgml-omittag-transparent is nil, the list of valid elements only
+contain the elements that can be in the content of the current
+element.  </para>
+<para>
+Required elements in the content are automatically inserted if the
+option sgml-auto-insert-required-elements is non-nil. When the content
+model demands an element, but there is more than one to choose from, a
+comment can be inserted with the available choices if the option
+sgml-insert-missing-element-comment is non-nil.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><userinput>C-c C-i</userinput></term>
+<listitem>
+<para>Inserts a new element in the current element where it is
+legal. Prompts for element name with completion. The completion list
+contains all elements that could be added to the current element, 
+without making the content invalid. This assumes the content is valid
+to begin with. Currently, this list only has regular elements, not
+inclusions. The new element is inserted as late as possible in the
+current element (unless prefix argument is given, then as early as
+possible.)  </para></listitem>
+</varlistentry>
+<varlistentry>
+<term><userinput>C-c C-r</userinput></term>
+<listitem>
+<para>Makes the region into a new element (sgml-tag-region). Reads element
+name from mini-buffer with completion as for C-c C-e.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><userinput>C-c &lt;</userinput></term>
+<listitem>
+<para>Will ask, for the tag to insert, in the mini-buffer with completion
+on the tags that are valid at point (sgml-insert-tag).</para> <para>If
+sgml-auto-insert-required-elements is non-nil, tags for elements required
+between the inserted tags will also be inserted.
+</para>
+<para>The list of valid tags, computed for a position in the buffer, will
+contain:
+<orderedlist>
+<listitem>
+<para>The end-tag for the current element, if it can be ended at the
+position. It will contain end-tags for enclosing elements if
+the necessary omissible end-tag declarations have been made in the DTD.
+</para>
+</listitem>
+<listitem>
+<para>The start-tags of all elements that could occur after point. If
+sgml-omittag-transparent is nil, the above will be limited to the elements
+that can occur within the current element.</para> </listitem></orderedlist>
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><userinput>C-c /</userinput></term>
+<listitem>
+<para>Inserts an end-tag for the current element (sgml-insert-end-tag).</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><userinput>C-c RET</userinput></term>
+<listitem>
+<para>Splits the current element at point. If repeated, the containing
+element is split before the beginning of then current element.</para>
+<para>Typical use is to start a new paragraph element when inside a
+paragraph.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><userinput>C-c C-a</userinput></term>
+<listitem>
+<para>
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><userinput>C-c +</userinput></term>
+<listitem>
+<para>
+Read attribute name and value from mini-buffer and insert attribute
+specification (sgml-insert-attribute). If point is immediately after a
+start-tag, this command operates on that start-tag. Otherwise, the command
+operates on the element after point.
+</para>
+<para>The attribute name is read with completion. If the attribute has a
+token list as declared value, the attribute value also reads with
+completion. The prompt for attribute value typically looks like:
+<screen>Value for attribute (type Default: current value):</screen>
+</para>
+</listitem>
+</varlistentry>
+</variablelist>
+</para> 
+</section>
+
+<section id="charent">
+<title id="charenttitle">Charater Literals&mdash;Do's and Dont's</title>
+
+<para>Some characters or character combinations should not be used
+literally, because they will not typeset in an optimal
+way.  Here is a list of things to watch for:
+<variablelist>
+<varlistentry>
+<term>Quotations</term>
+<listitem>
+<para>Enclose quotations in the <sgmltag
+class="element">quote</sgmltag> element.</para>
+
+<para>Rather than typing, say, "He said
+thus and such", type <sgmltag class="starttag">quote</sgmltag>He said
+thus and such<sgmltag class="endtag">quote</sgmltag>.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>Horizontal Ellipsis</term>
+<listitem>
+<para>Use <sgmltag class="genentity">hellip</sgmltag> to produce
+ellipsis.</para> 
+
+<para>Rather than typing:
+<literallayout> 
+<![CDATA[
+<quote>He said thus and such and ...</quote>
+]]>
+</literallayout>
+type:
+<![CDATA[
+<quote>He said thus and such and &hellip;</quote>
+]]>
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>Vertical Ellipsis</term>
+<listitem>
+<para>Use <sgmltag class="genentity">vellip</sgmltag> to produce
+ellipsis.</para> 
+
+<para>Type:
+<literallayout>
+<![CDATA[
+<para>
+&vellip;
+Above me and below me there is stuff.
+&vellip;
+</para>
+]]>
+</literallayout>
+rather than:
+<literallayout>
+<![CDATA[
+<para>
+.
+.
+.
+Above me and below me there is stuff.
+.
+.
+.
+</para>
+]]>
+</literallayout>
+</para>
+
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>En Dash</term>
+<listitem>
+<para>Use <sgmltag class="genentity">ndash</sgmltag> to produce an en
+dash.</para> 
+
+<para>Type <quote>1<sgmltag
+class="genentity">ndash</sgmltag>10</quote> rather than
+<quote>1-10</quote></para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>Em Dash</term>
+<listitem>
+<para>Use <sgmltag class="genentity">mdash</sgmltag> to produce an em
+dash.</para> 
+
+<para>Type <quote>You stink!<sgmltag
+class="genentity">mdash</sgmltag>Well, a little bit anyway</quote> rather than
+<quote>You stink!---Well, a little bit anyway.</quote></para>
+</listitem>
+</varlistentry>
+</variablelist>
+</para>
+
+</section>
+
+</section>
+
+<section id="sec.editdocbkdocs">
+<title>Editing &dbk; Documents</title> <para>&dbk; is an XML based
+language for composing technical documents, specifically documents about
+computer software.  The <citetitle>Installation Guide</citetitle>,
+<citetitle>Developers Guide</citetitle>, and this document are
+composed in the &dbk; language.</para>
+
+<para>It is beyond the scope of this article to introduce the &dbk;
+language in detail. Read the <ulink
+url="http://docbook.org/tdg/en/html/docbook.html">online &dbk;
+guide</ulink> for an introduction to &dbk;, and a complete
+reference to all &dbk;'s elements and attributes.  
+</para>
+
+<para>Peruse this document's XML source to get a feel for
+the &dbk; language.  It is the file
+<filename>doc/Documentum/documentum.xml</filename>
+</para>
+
+<section>
+<title>Single File Document</title>
+
+<para>&dbk; documents can be contained in one file, or segmented into
+several files.  A multi-file document consists of a
+<firstterm>main</firstterm> file and one or more additional file.</para>
+
+<para>
+A new single file document looks like this:
+<programlisting>
+<![CDATA[
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE]]> <replaceable>root-element</replaceable> <![CDATA[PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+"http://www.oasis-open.org/docbook/xml/4.0/docbookx.dtd" [
+<!ENTITY sr "SCIRun">
+]>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<!-- Insert root element here. -->
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../doc/Utilities/XML/docbook.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->
+]]>
+</programlisting>
+In the DOCTYPE declaration, <replaceable>root-element</replaceable>
+should be replaced by the name of the document's root element, usually
+<sgmltag>book</sgmltag> or <sgmltag>article</sgmltag>.  The path to
+<filename>docbook.ced</filename> should be altered appropriately.
+</para>
+
+</section>
+
+<section>
+<title>Multi-file Document</title>
+
+<para>A multi-file document consists of a main file that usually does
+nothing but <quote>include</quote> other files.  Here is the main
+file for a book consisting of five chapters:
+<programlisting>
+<![CDATA[
+<?xml version="1.0"? encoding="iso-8859-1" >
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+"http://www.oasis-open.org/docbook/xml/4.0/docbookx.dtd" [
+<!ENTITY sr "SCIRun">
+<!ENTITY chap1 SYSTEM "chap1.xml">
+<!ENTITY chap2 SYSTEM "chap2.xml">
+<!ENTITY chap3 SYSTEM "chap3.xml">
+<!ENTITY chap4 SYSTEM "chap4.xml">
+<!ENTITY chap5 SYSTEM "chap5.xml">
+]>
+
+<book id="main">
+  <title>My Great Book <title>
+    &chap1;
+    &chap2;
+    &chap3;
+    &chap4;
+    &chap5;
+</book>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../doc/Utilities/XML/docbook.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->
+]]>
+</programlisting>
+<filename>chap1.xml</filename> look like this:
+<programlisting>
+<![CDATA[
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<chapter>
+<title>My First Chapter</title>
+<section>
+<title>First Section, First Chapter</title>
+<para>Blah, blah, blah</para>
+</section>
+</chapter>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../doc/Utilities/XML/docbook.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->
+]]>
+</programlisting>
+</para>
+
+</section>
+
+</section>
+
+<section id="sec.editfaqdocs">
+<title>Editing FAQ Documents</title>
+<para>Currently, there are three FAQs:
+<simplelist>
+<member>Installation FAQ - <filename>doc/Installation/FAQ/faq.rxml</filename></member>
+<member>User FAQ - <filename>doc/User/FAQ/faq.rxml</filename></member>
+<member>Developer FAQ - <filename>doc/Developer/FAQ/faq.rxml</filename></member>
+</simplelist>
+</para>
+<para>To add a new entry to a FAQs (using emacs/xemacs XML mode):
+<orderedlist>
+<listitem>
+<para>Open the appropriate file with emacs/xemacs (recommended)</para>
+</listitem>
+<listitem>
+<para>Move point to just before the first
+<sgmltag>qandaentry</sgmltag> element or just after the last
+<sgmltag>qandaentry</sgmltag> element.</para>
+</listitem>
+<listitem>
+<para>
+Insert the following template at point: 
+<programlisting>
+<![CDATA[
+<qandaentry>
+<revhistory>
+<revision>
+<revnumber></revnumber>
+<date></date>
+</revision>
+</revhistory>
+<question>
+<para>
+</para>
+</question>
+<answer>
+<para>
+</para>
+</answer>
+</qandaentry>
+]]>
+</programlisting>
+Fill out the template (using additional DocBook markup if necessary).
+</para>
+</listitem>
+</orderedlist>
+</para>
+</section>
+
+<section id="sec.editxmlmoddocs">
+<title>Editing XML Module Descriptions</title>
+<para>See <ulink url="module-xml/index.html"><citetitle>XML Module
+Descriptions (Explicated)</citetitle></ulink> for information on
+creating/editing XML based module descriptions.</para>
+</section>
+
+<section id="sec.editltxmoddocs">
+<title>Editing &ltx; Module Descriptions</title>
+<para>See <ulink url="module-latex/index.html"><citetitle>Latex Module
+Descriptions (Explicated)</citetitle></ulink> for information on
+creating/editing &ltx; based module descriptions.</para>
+</section>
+
+<section id="sec.edithtmldocs">
+<title>Editing HTML and XHTML Documents</title> 
+<para>Avoid HTML/XHTML.  Use a higher-level markup
+language such as &dbk; or &ltx;.</para> 
+<para>If HTML must be used,
+consider using XHTML instead.  XHTML is an XML formulation of HTML. It is
+not yet possible or practical to write pure XHTML, but as much as possible,
+implement  HTML-type documents using XHTML.  The
+following rules for composing XHTML (and HTML) documents should be
+followed:
+<itemizedlist>
+<listitem>
+<para>Use Emacs XML mode for composing XHTML documents.</para>
+</listitem>
+<listitem>
+<para>Write tag and attribute names in lower case.</para>
+</listitem>
+<listitem>
+<para>Enclose attribute values in quotes
+(e.g. <userinput>id="sec.edithtmldocs"</userinput>)</para>
+</listitem>
+<listitem>
+<para>Close all elements..  I.e. never omit end tags.  Empty
+elements should be closed by an end tag or by ending the start tag
+with <userinput>/&gt;</userinput>, e.g. the horizontal rule element should
+be written as <userinput>&lt;hr/&gt;</userinput></para>
+</listitem>
+<listitem>
+<para>Nest elements properly.</para>
+</listitem>
+<listitem>
+<para>&hellip; and in general try to produce valid XHTML/HTML
+documents.</para>
+</listitem>
+<listitem>
+<para>Mind character entities (see <xref endterm="charenttitle"
+linkend="charent"/>).</para>
+</listitem>
+<listitem>
+<para>Avoid presentational markup (e.g. <sgmltag
+class="starttag">font</sgmltag> elements) &mdash; Instead, use external CSS stylesheets
+or the <sgmltag class="starttag">style</sgmltag> element ,but avoid
+the inline <literal>style</literal> attribute.</para>
+</listitem>
+</itemizedlist>
+These rules are explained on the <ulink
+url="http://www.w3schools.com/xhtml/xhtml_html.asp">W3Schools.com</ulink>
+web site. </para>
+
+<para>Documents that live in the <filename>doc</filename> side of the tree
+should be derived from
+<filename>doc/Documentum/doc_template.html</filename>. Documents that live
+in the <filename>src</filename> side of the tree should be based on
+<filename>doc/Documentum/src_template.html</filename>.</para>
+</section>
+
+<section id="sec.editltxdocs">
+<title>Editing &ltx; Documents</title>
+<para>&vellip;</para>
+<para>Some day I need to put something here.</para>
+<para>&vellip;</para>
+ </section>
+
+<section id="sec.eruby">
+<title id="sec.eruby.title">Using Embedded Ruby</title>
+<para>Coming soon&hellip;</para>
+</section>
+
+</section>
+
+<section>
+<title>Publishing to SCI Web Sites</title>
+
+<para>
+&sr; documentation is published to SCI's external web site.
+</para>
+
+<para>
+Documentation for current &sr; release is published at <ulink
+url="http://software.sci.utah.edu/doc/present/doc">http://software.sci.utah.edu/doc/present/doc</ulink>.
+</para>
+<para>
+Documentation under development is published at <ulink
+url="http://software.sci.utah.edu/doc/future/doc">http://software.sci.utah.edu/doc/future/doc</ulink>.
+</para>
+<para>
+Documentation being tested for release is published at <ulink
+url="http://software.sci.utah.edu/doc/pre-release">http://software.sci.utah.edu/doc/pre-release/doc</ulink>.
+</para>
+
+<para>The following sections describe (approximately) how to publish
+documentation to these sites.</para>
+
+
+<section>
+<title>Publishing Current Release Documentation</title>
+
+<para>Documentation for current &sr; release (from the current
+release branch of the CVS tree) is published on SCI's external web
+site.</para>
+
+<para>To publish docs on this web site:
+<orderedlist>
+<listitem>
+<para>Build a doc tarball from the sources on the release branch.
+Rename the tarball:
+<filename>docs-<replaceable>d.d.d</replaceable>.tar.gz</filename>,
+where <replaceable>d.d.d</replaceable> is the version
+number of the documentation set contained in the tarball.</para>
+</listitem>
+<listitem>
+<para>
+Log on to virgil.sci.utah.edu. <command>Cd</command> to
+<filename>/w01/docs/scirun-biopse</filename>.
+</para>
+<para>
+Move the directory named <filename>present</filename> to the
+<filename>past</filename> directory and rename it to reflect the
+version of the docs contained therein, e.g.:
+<literallayout>
+mv present past/1.6.1
+</literallayout>
+</para>
+</listitem>
+<listitem>
+<para>
+Create a new <filename>present</filename> directory. Copy the new
+doc tarball to the new directory.
+</para>
+</listitem>
+<listitem>
+<para>
+<command>Cd</command> to <filename>present</filename> and unpack the
+tarball using GNU tar.
+</para>
+<para>
+The resulting directory contains <filename>doc</filename> and
+<filename>src</filename> sub-directories.  Move
+<filename>doc</filename> and <filename>src</filename> up one level (so
+they are children of <filename>present</filename>).  Remove the
+remaining empty directory from <filename>present</filename>.
+</para>
+</listitem>
+</orderedlist>
+</para>
+
+<note>
+<para>
+The symbolic links <filename>/w01/sciweb/software/doc</filename> and
+<filename>/w01/sciweb/software/src</filename> must exist and must
+point to <filename>/w01/docs/scirun-biopse/present/doc</filename> and
+<filename>/w01/docs/scirun-biopse/present/src</filename>
+respectively.  Verify that this is so.
+</para>
+</note>
+
+</section>
+
+<section>
+<title>Publishing <quote>Trunk</quote> Documentation</title>
+
+<para>
+Documentation under developement for a future &sr; release, is
+derived from the trunk of the CVS tree and is published on SCI's
+external web site.
+</para>
+
+<para>
+To publish docs on this web site:
+<orderedlist>
+<listitem>
+<para>
+Build a doc tarball from sources on the trunk.
+</para>
+</listitem>
+<listitem>
+<para>
+Log on to virgil.sci.utah.edu. <command>Cd</command> to
+<filename>/w01/docs/scirun-biopse</filename>.
+</para>
+<para>
+Delete current contents of the directory named
+<filename>future</filename>.  Copy the new doc tarball to
+<filename>future</filename>.
+</para>
+</listitem>
+<listitem>
+<para>
+<command>Cd</command> to <filename>future</filename> and unpack the
+tarball using GNU tar.
+</para>
+<para>
+The resulting directory contains <filename>doc</filename> and
+<filename>src</filename> sub-directories.  Move
+<filename>doc</filename> and <filename>src</filename> up one level (so
+they are children of <filename>future</filename>).  Remove the
+remaining empty directory from <filename>future</filename>.
+</para>
+</listitem>
+</orderedlist>
+</para>
+<note>
+<para>
+The symbolic link <filename>/w01/sciweb/software/future</filename>
+must exist and must point to
+<filename>/w01/docs/scirun-biopse/future</filename>.
+Verify that this is so.
+</para>
+</note>
+
+</section>
+
+<section>
+<title>Publishing Pre-release Documentation</title> 
+
+<para>
+Pre-release documentation is documentation derived from a branch that
+has been created in anticipation of a new &sr; release.  It is
+published on the pre-release web site, so it can be tested and
+debugged prior to a release of &sr;
+</para>
+
+<para>To publish pre-release docs:
+<orderedlist>
+<listitem>
+<para>Build a doc tarball from sources on the newly created branch.
+Rename the tarball:
+<filename>docs-<replaceable>d.d.d</replaceable>.tar.gz</filename>,
+where <replaceable>d.d.d</replaceable> is the version
+number of the documentation set contained in the tarball.</para>
+</listitem>
+<listitem>
+<para>
+Log on to virgil.sci.utah.edu. <command>Cd</command> to
+<filename>/w01/docs/scirun-biopse</filename>.
+</para>
+<para>
+Delete current contents of the directory named
+<filename>pre-release</filename>.  Copy the doc tarball to
+<filename>pre-release</filename>.
+</para>
+</listitem>
+<listitem>
+<para>
+<command>Cd</command> to <filename>pre-release</filename> and unpack the
+tarball using GNU tar.
+</para>
+<para>
+The resulting directory contains <filename>doc</filename> and
+<filename>src</filename> sub-directories.  Move
+<filename>doc</filename> and <filename>src</filename> up one level (so
+they are children of <filename>pre-release</filename>).  Remove the
+remaining empty directory from <filename>future</filename>.
+</para>
+</listitem>
+</orderedlist>
+</para>
+<note>
+<para>
+The symbolic link <filename>/w01/sciweb/software/pre-release</filename>
+must exist and must point to the directory 
+<filename>/w01/docs/scirun-biopse/pre-release</filename>.
+Verify that this is so.
+</para>
+</note>
+
+<para>
+The pre-release site should be updated until the new
+version of &sr; is released.  After release, the
+<filename>pre-release</filename> directory should be emptied and the
+<filename>present</filename> directory should be updated with
+documentation for new release.
+</para>
+</section>
+
+</section>
+
+<section id="sec.tools">
+<title id="sec.tools.title">Tools</title>
+
+<para>
+The following tools are
+needed to build &sr; documentation:
+<variablelist>
+<varlistentry>
+<term><ulink url="http://www.gnu.org/software/make/make.html">GNU
+Make</ulink> (3.79 or later)</term>
+<listitem>
+<para>GNU's version of the make utility.  Makefiles in the doc tree are
+incompatible with other versions of the make utility.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><ulink url="http://www.gnu.org/software/tar/tar.html">GNU
+Tar</ulink> (1.12 or later)</term>
+<listitem>
+<para>GNU's version of tar.  Tar is used to package
+the documentation into a single file (tarball) for distribution.  GNU
+tar must be used to extract documentation from its tarball.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>Java (1.3 or later)</term>
+<listitem>
+<para>Saxon (see below) requires the Java runtime system and
+libraries.</para> 
+<para>
+Note that SGI systems ship with an ancient java
+distribution&mdash;newer distributions can be found on SGI's <ulink
+url="http://www.sgi.com/developers/devtools/languages/java_releases.html">web
+site</ulink>.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><ulink url="http://saxon.sourceforge.net/">Saxon</ulink> (6.5.2 or later)</term>
+<listitem>
+<para>An XSLT processor that applies XSL stylesheets to XML
+sources to translate them to other forms (e.g. HTML).  Saxon is written in
+Java.  Saxon is used to translate the Developers guide, the Installation
+guide, the FAQs, and the XML based module descriptions to HTML and
+&ltx;.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><ulink url="http://www.latex-project.org/">&ltx;</ulink></term>
+<listitem>
+<para>A document markup language and typesetting system.  The User's
+guide and some module descriptions require &ltx;.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><ulink url="http://www.latex2html.org">Latex2html</ulink></term>
+<listitem>
+<para>A tool that translates &ltx; documents to HTML.  Latex2html is used to
+translate the User's guide and latex module descriptions to HTML.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><ulink url="http://jadetex.sourceforge.net/">JadeTeX</ulink></term>
+<listitem>
+<para>
+A TeX macro package for processing TeX output generated by OpenJade.
+See <ulink
+url="http://jadetex.sourceforge.net/">http://jadetex.sourceforge.net/</ulink>
+for installation instructions.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>Dvipdfm</term>
+<listitem>
+<para>Converts dvi files to pdf.  Dvipdf is part of modern
+&ltx; distributions.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><ulink url="http://openjade.sourceforge.net">OpenJade</ulink></term>
+<listitem>
+<para>An implementation of the <acronym>DSSSL</acronym> stylesheet
+language.  OpenJade applies a <acronym>DSSSL</acronym> stylesheet to
+<acronym>SGML</acronym>/<acronym>XML</acronym> input to produce TeX
+output.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><ulink url="http://www.oasis-open.org/cover/ISOEnts.zip">ISO character entity sets</ulink></term>
+<listitem>
+<para>Needed Character entities sets.</para> <para>A catalog file must
+that references these entity sets must be prepared.  See <citetitle><link
+endterm="sec.catalog.title" linkend="sec.catalog"/></citetitle> for
+instructions.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><ulink url="http://docbook.sourceforge.net/">&dbk; Style
+Sheets</ulink></term>
+<listitem>
+<para>The &dbk; stylesheets translate &dbk; XML documents (Developers
+Guide, Installation Guide, and FAQs) to HTML.</para> 
+<para>
+&sr; specific stylesheets, which override templates in the &dbk;
+distribution, must be copied into the &dbk; distribution. Copy the
+files <filename>doc/Utilities/XML/srdocbook.xsl</filename>,
+<filename>doc/Utilities/XML/srdocbook-common.xsl</filename>,
+<filename>doc/Utilities/XML/srdocbook-chunk.xsl</filename>, and
+<filename>doc/Utilities/XML/srqandaset.xsl</filename> to the
+<filename>html</filename> directory of the &dbk; distribution.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><ulink url="http://www.stack.nl/~dimitri/doxygen/">Doxygen</ulink></term>
+<listitem>
+<para>A documentation system for C++.  Doxygen generates and extracts
+documentation from C++ source files.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><ulink url="http://www.pragmaticprogrammer.com/ruby/">Ruby</ulink> (1.6
+or later)</term>
+<listitem>
+<para>A number of scripts in the doc tree are written in the
+programming language Ruby.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>ERuby (a modified version of eruby 0.9.8)</term>
+<listitem>
+<para>A number of XML, HTML, and &ltx; source documents contain
+snippets of Ruby code.  ERuby is a tool that produces a new document
+by replacing the code with result of its execution. A modified version
+of eruby 0.9.8 is used.  <ulink
+url="mailto:dustman@cvrti.utah.edu">Contact me</ulink> to get the
+sources. More information on these type of files can be found in <xref
+endterm="sec.docmls.title" linkend="sec.docmls"/></para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><ulink url="http://www.imagemagick.org">ImageMagick</ulink></term>
+<listitem>
+<para>From the ImageMagick <filename>README</filename> file: ImageMagick
+<quote>...is a robust collection of tools and libraries to read, write, and
+manipulate an image in any of the more popular image formats including GIF,
+JPEG, PNG, PDF, and Photo CD...</quote></para> 
+<para>The <command>convert</command> utility from the ImageMagick package
+is used to translate jpg and gif files to eps for use in the
+printable version of the user's guide.</para>
+</listitem>
+
+</varlistentry>
+</variablelist>
+</para>
+
+</section>
+
+<section id="goals">
+<title>Goals for &sr; 2.0</title>
+<itemizedlist>
+<listitem>
+<para>
+Produce PDF versions of all docs.
+</para>
+</listitem>
+<listitem>
+<para>Developers Guide</para>
+</listitem>
+<listitem>
+<para>
+Complete module descriptions
+</para>
+</listitem>
+<listitem>
+<para>
+Enhance <filename>component.dtd</filename>
+<itemizedlist>
+<listitem>
+<para>Enhance <sgmltag class="starttag">description</sgmltag> element
+to allow the <sgmltag class="starttag">img</sgmltag> element (as a
+block level element).</para>
+</listitem>
+<listitem>
+<para>
+Enhance <sgmltag class="starttag">img</sgmltag> element, to include
+<sgmltag class="starttag">title</sgmltag> and/or <sgmltag
+class="starttag">caption</sgmltag> elements.
+</para>
+</listitem>
+<listitem>
+<para>Do not require  basic flow patterns to start with a <sgmltag
+class="starttag">p</sgmltag> element.</para>
+</listitem>
+<listitem>
+<para>
+Extend <sgmltag class="starttag">gui</sgmltag> element to accommodate
+multiple panes.  This would change the
+<sgmltag class="starttag">gui</sgmltag> grammer to look like this:
+<literallayout class="monospaced">
+<![CDATA[
+<!ELEMENT gui ((description, parameter+, (img, caption?)+)+)>
+]]>
+</literallayout>
+</para>
+</listitem>
+<listitem>
+<para>Convert <filename>component.dtd</filename> to RelaxNG schema for
+purposes of validation.</para>
+</listitem>
+<listitem>
+<para>Replace <sgmltag class="starttag">slink</sgmltag> and <sgmltag
+class="starttag">rlink</sgmltag> elements with <sgmltag
+class="starttag">ulink</sgmltag> element.</para>
+</listitem>
+</itemizedlist>
+</para>
+</listitem>
+<listitem>
+<para>Net descriptions
+<itemizedlist>
+<listitem>
+<para>Create <filename>doc/User/Nets</filename>.  Cover page and index
+files live here.</para>
+</listitem>
+<listitem>
+<para>Cover page is index into major and minor net
+descriptions.</para>
+</listitem>
+<listitem>
+<para>Major and Minor net descriptions written in docbook.</para>
+</listitem>
+</itemizedlist>
+</para>
+</listitem>
+<listitem>
+<para>User's Guide</para>
+</listitem>
+<listitem>
+<para>Pdf versions of docs</para>
+</listitem>
+<listitem>
+<para>Document &sr; installation on Mac OS X.</para>
+</listitem>
+<listitem>
+<para>Install doc build tools on SCI Linux and OSX machines</para>
+</listitem>
+<listitem>
+<para>Documment creation of LaTeX documents</para>
+</listitem>
+<listitem>
+<para>Document use of eruby and the use of srdoc.rb.</para>
+</listitem>
+<listitem>
+<para>Document use of Publish.rb</para>
+</listitem>
+</itemizedlist>
+</section>
+
+</article>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../doc/Utilities/XML/docbook.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->

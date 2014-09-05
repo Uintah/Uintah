@@ -1,0 +1,147 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+	<title>DCB specimen</title>
+   </Meta>
+
+   <Time>
+	<maxTime>.2</maxTime>
+	<initTime>0.0</initTime>
+	<delt_min>0.00001</delt_min>
+	<delt_max>0.001</delt_max>
+	<timestep_multiplier>0.8</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+        <filebase>DCB.uda</filebase>
+	<outputInterval>.005</outputInterval>
+	<save label = "KineticEnergy"/>
+	<save label = "TotalMass"/>
+	<save label = "StrainEnergy"/>
+	<save label = "CenterOfMassPosition"/>
+	<save label = "CenterOfMassVelocity"/>
+	<save label = "p.x"/>
+	<save label = "p.volume"/>
+	<save label = "p.stress"/>
+	<save label = "g.mass"/>
+	<save label = "g.stressFS"/>
+
+	<checkpoint cycle = "2" interval = "0.01"/>
+   </DataArchiver>
+
+    <MPM>
+	<time_integrator>fracture</time_integrator>
+	<nodes8or27>8</nodes8or27>
+    </MPM>
+
+    <PhysicalConstants>
+	<gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+	<MPM>
+	    <material>
+                <burn type = "null" />
+		<density>1500</density>
+		<constitutive_model type="hypo_elastic"> 
+		   <G>37594</G>
+		   <K>294118</K>
+	        </constitutive_model>
+		<toughness>10.e6</toughness>
+		<thermal_conductivity>1.0</thermal_conductivity>
+		<specific_heat>5</specific_heat>
+		<geom_object>
+		    <box label = "box">
+			<min>[0.0, -0.012, -0.0005]</min>
+			<max>[0.1, 0.012, 0.0005]</max>
+		    </box>
+		    <res>[2,2,2]</res>
+		    <velocity>[0.0,0.0,0]</velocity>
+		    <temperature>12</temperature>
+ 		</geom_object>
+		<velocity_field>0</velocity_field>
+
+                <crack>
+                   <type>frictional</type>
+                   <mu>0.0</mu>
+                   <separateVol>0.9</separateVol>
+                   <contactVol>1.1</contactVol>
+                   <cracksegments>
+                      <quadrilateral>
+                        <pt1> [0.051, 0.0, 0.001]  </pt1>
+                        <pt2> [0.102, 0.0, 0.001]  </pt2>
+                        <pt3> [0.102, 0.0, -0.001] </pt3>
+                        <pt4> [0.051, 0.0, -0.001] </pt4>
+                        <n12> 4 </n12>
+                        <n23> 1 </n23>
+                      </quadrilateral>
+                   </cracksegments>
+                </crack>
+	    </material>
+
+	    <contact>
+	      <type>null</type>
+	      <vel_fields>[0,0,0]</vel_fields>
+	    </contact>
+	</MPM>
+
+    </MaterialProperties>
+	
+    <Grid>
+        <BoundaryConditions>
+           <Face side = "x-">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                        <value> [0.0,0.0,0.0] </value>
+                   </BCType>
+           </Face>
+           <Face side = "x+">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                      <value> [0.0,0.0,0.0] </value>
+                  </BCType>
+           </Face>
+           <Face side = "y-">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                      <value> [0.0,0.0,0.0] </value>
+                  </BCType>
+           </Face>
+           <Face side = "y+">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                      <value> [0.0,0.0,0.0] </value>
+                 </BCType>
+           </Face>
+           <Face side = "z-">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+           <Face side = "z+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+        </BoundaryConditions>
+	<Level>
+	    <Box label = "1">
+		<lower>[0.0, -0.018, -0.0015]</lower>
+		<upper>[0.11, 0.018, 0.0015]</upper>
+	        <resolution>[22,12,3]</resolution>
+		<patches>[1,1,1]</patches>
+	    </Box>
+	</Level>
+    </Grid>
+
+    <PhysicalBC>
+	<MPM>
+           <force>
+             <lower>[0.0975, 0.0, -0.0005]</lower>
+             <upper>[0.1, 0.012, 0.0005]</upper>
+             <force_density>[0.0, 8.8888888889, 0.0]</force_density>
+           </force>
+           <force>
+             <lower>[0.0975, -0.012, -0.0005]</lower>
+             <upper>[0.1, 0.0, 0.0005]</upper>
+             <force_density>[0.0, -8.8888888889, 0.0]</force_density>
+           </force>
+	</MPM>
+    </PhysicalBC>
+    
+</Uintah_specification>
+

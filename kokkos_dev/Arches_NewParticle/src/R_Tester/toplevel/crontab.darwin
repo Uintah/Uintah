@@ -1,0 +1,5 @@
+# With lam
+#0 0 * * * export PATH=$PATH:/usr/local/bin; lamboot ; /home/csafe/csafe-tester/scripts/tcsh_run "/home/csafe/csafe-tester/scripts/startTester -j 4 -sendmail" ; lamhalt
+
+
+0 0 * * * export PATH=$PATH:/usr/local/bin; /home/csafe/csafe-tester/scripts/tcsh_run "/home/csafe/csafe-tester/scripts/startTester -j 4 -sendmail"

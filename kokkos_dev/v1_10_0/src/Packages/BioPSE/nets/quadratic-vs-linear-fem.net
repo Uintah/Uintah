@@ -1,0 +1,461 @@
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+#
+
+# SCI Network 1.0
+
+set results [sourceSettingsFile]
+
+if { $results == "failed" } {
+
+    ::netedit scheduleok
+    return 
+
+} else {
+
+    set DATADIR [lindex $results 0]
+    set DATASET [lindex $results 1]
+}
+
+source $DATADIR/$DATASET/$DATASET.settings
+
+::netedit dontschedule
+
+global userName
+set userName "dmw"
+
+global runDate
+set runDate " Tue  Jan 1 2002"
+
+global runTime
+set runTime " 14:25:13"
+
+set bbox {4.0 4.0 1572 822}
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 4 4]
+set m1 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 45 199]
+set m2 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 7 295]
+set m3 [addModuleAtPosition "SCIRun" "Fields" "Gradient" 609 287]
+set m4 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 353 186]
+set m5 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 157 4]
+set m6 [addModuleAtPosition "SCIRun" "Render" "Viewer" 474 778]
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 52 366]
+set m8 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 67 466]
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 4 612]
+set m10 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 290 300]
+set m11 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 294 389]
+set m12 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 230 540]
+set m13 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 715 506]
+set m14 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 547 537]
+set m15 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 600 375]
+set m16 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 591 462]
+set m17 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 468 316]
+set m18 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 415 467]
+set m19 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 24 85]
+set m20 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 214 104]
+set m21 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 895 281]
+set m22 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 764 345]
+set m23 [addModuleAtPosition "SCIRun" "Fields" "Gradient" 1270 403]
+set m24 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 851 438]
+set m25 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 851 597]
+set m26 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 750 680]
+set m27 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 1093 332]
+set m28 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 1053 439]
+set m29 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 1063 523]
+set m30 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 1428 366]
+set m31 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 1179 669]
+set m32 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 1243 493]
+set m33 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 1250 578]
+set m34 [addModuleAtPosition "BioPSE" "Forward" "DipoleMatrixSourceRHSQuadratic" 1065 180]
+set m35 [addModuleAtPosition "BioPSE" "Forward" "BuildFEMatrixQuadratic" 842 191]
+set m36 [addModuleAtPosition "SCIRun" "Fields" "TetVol2QuadraticTetVol" 797 98]
+
+addConnection $m1 0 $m2 1
+addConnection $m2 0 $m3 0
+addConnection $m5 0 $m4 0
+addConnection $m7 0 $m8 0
+addConnection $m8 0 $m9 1
+addConnection $m2 0 $m9 0
+addConnection $m10 0 $m11 1
+addConnection $m2 0 $m11 0
+addConnection $m11 0 $m12 0
+addConnection $m8 0 $m12 1
+addConnection $m3 0 $m15 0
+addConnection $m13 0 $m15 1
+addConnection $m2 0 $m13 0
+addConnection $m15 0 $m16 1
+addConnection $m2 0 $m16 0
+addConnection $m16 0 $m14 0
+addConnection $m8 0 $m14 1
+addConnection $m4 1 $m6 0
+addConnection $m11 0 $m8 1
+addConnection $m17 0 $m18 0
+addConnection $m18 0 $m6 1
+addConnection $m13 1 $m6 2
+addConnection $m14 0 $m6 3
+addConnection $m0 0 $m17 0
+addConnection $m0 0 $m2 0
+addConnection $m0 0 $m19 0
+addConnection $m19 0 $m1 0
+addConnection $m20 0 $m1 1
+addConnection $m0 0 $m20 0
+addConnection $m4 0 $m20 1
+addConnection $m21 0 $m22 1
+addConnection $m22 0 $m23 0
+addConnection $m24 0 $m25 0
+addConnection $m25 0 $m26 1
+addConnection $m22 0 $m26 0
+addConnection $m27 0 $m28 1
+addConnection $m22 0 $m28 0
+addConnection $m28 0 $m29 0
+addConnection $m25 0 $m29 1
+addConnection $m23 0 $m32 0
+addConnection $m30 0 $m32 1
+addConnection $m22 0 $m30 0
+addConnection $m32 0 $m33 1
+addConnection $m22 0 $m33 0
+addConnection $m33 0 $m31 0
+addConnection $m25 0 $m31 1
+addConnection $m28 0 $m25 1
+addConnection $m34 0 $m21 1
+addConnection $m35 0 $m21 0
+addConnection $m36 0 $m35 0
+addConnection $m36 0 $m34 0
+addConnection $m36 0 $m22 0
+addConnection $m0 0 $m36 0
+addConnection $m4 0 $m34 1
+addConnection $m31 0 $m6 4
+addConnection $m30 1 $m6 5
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-filename $DATADIR/utahtorso-lowres/utahtorso-lowres-mesh.tvt.fld
+
+set $m1-target_error {0.000001}
+set $m1-orig_error {1}
+set $m1-current_error {9.84662e-07}
+set $m1-iteration {86}
+set $m1-maxiter {5000}
+set $m1-use_previous_soln {0}
+set $m1-emit_partial {0}
+set $m1-np 10
+
+set $m2-notes {}
+set $m2-show_status {1}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m3-interpolate {1203}
+set $m4-notes {}
+set $m4-show_status {1}
+set $m4-widgetSizeGui_ {5}
+set $m4-scaleModeGui_ {normalize}
+set $m4-showLastVecGui_ {1}
+set $m4-showLinesGui_ {0}
+set $m5-notes {}
+set $m5-show_status {1}
+set $m5-filename $DATADIR/utahtorso-lowres/utahtorso-lowres-dipole.pcv.fld
+set $m6-notes {}
+set $m6-show_status {1}
+$m6 ui
+set $m6-ViewWindow_0-pos {}
+set $m6-ViewWindow_0-caxes {0}
+set $m6-ViewWindow_0-iaxes {483}
+set $m6-ViewWindow_0-view-eyep-x ${view-eyep-x}
+set $m6-ViewWindow_0-view-eyep-y ${view-eyep-y}
+set $m6-ViewWindow_0-view-eyep-z ${view-eyep-z}
+set $m6-ViewWindow_0-view-lookat-x ${view-lookat-x}
+set $m6-ViewWindow_0-view-lookat-y ${view-lookat-y}
+set $m6-ViewWindow_0-view-lookat-z ${view-lookat-z}
+set $m6-ViewWindow_0-view-up-x ${view-up-x}
+set $m6-ViewWindow_0-view-up-y ${view-up-y}
+set $m6-ViewWindow_0-view-up-z ${view-up-z}
+set $m6-ViewWindow_0-view-fov ${view-fov}
+set $m6-ViewWindow_0-bgcolor-r {0}
+set $m6-ViewWindow_0-bgcolor-g {0}
+set $m6-ViewWindow_0-bgcolor-b {0}
+set $m6-ViewWindow_0-bgcolor-r {0}
+set $m6-ViewWindow_0-bgcolor-g {0}
+set $m6-ViewWindow_0-bgcolor-b {0}
+set $m6-ViewWindow_0-shading {}
+set $m6-ViewWindow_0-do_stereo {0}
+set $m6-ViewWindow_0-ambient-scale {1}
+set $m6-ViewWindow_0-diffuse-scale {1}
+set $m6-ViewWindow_0-specular-scale {0.4}
+set $m6-ViewWindow_0-emission-scale {1}
+set $m6-ViewWindow_0-shininess-scale {1}
+set $m6-ViewWindow_0-sbase {0.4}
+set $m6-ViewWindow_0-sr {1}
+set $m6-ViewWindow_0-do_bawgl {0}
+set $m6-ViewWindow_0-drawimg {0}
+set $m6-ViewWindow_0-saveprefix {}
+set $m6-ViewWindow_0-unused {1}
+set $m6-ViewWindow_0-unused {1}
+set $m6-ViewWindow_0-unused {1}
+set $m6-ViewWindow_0-unused {0}
+set $m6-ViewWindow_0-unused {1}
+set $m6-ViewWindow_0-unused {0}
+set $m7-notes {}
+set $m7-show_status {1}
+set $m7-tcl_status {Calling GenStandardColorMaps!}
+set $m7-positionList {}
+set $m7-nodeList {}
+set $m7-width {1}
+set $m7-height {1}
+set $m7-mapType {3}
+set $m7-minRes {12}
+set $m7-resolution {128}
+set $m7-realres {128}
+set $m7-gamma {0}
+set $m8-notes {}
+set $m8-show_status {1}
+set $m8-isFixed {0}
+set $m8-min {-35.5736}
+set $m8-max {38.866}
+set $m9-notes {}
+set $m9-show_status {1}
+set $m9-isoval {0}
+set $m9-extract-from-new-field {1}
+set $m9-algorithm {0}
+set $m9-build_trisurf {0}
+set $m9-np {1}
+set $m9-active_tab {MC}
+set $m9-update_type {on release}
+set $m9-color-r {0.4}
+set $m9-color-g {0.2}
+set $m9-color-b {0.9}
+set $m10-notes {}
+set $m10-show_status {1}
+set $m10-filename $DATADIR/utahtorso-lowres/utahtorso-lowres-electrodes.pcd.fld
+set $m11-notes {}
+set $m11-show_status {1}
+set $m11-interp_op_gui {}
+set $m12-notes {}
+set $m12-show_status {1}
+set $m12-nodes-on {1}
+set $m12-nodes-as-disks {0}
+set $m12-edges-on {0}
+set $m12-use-normals {0}
+set $m12-use-transparency {0}
+set $m12-faces-on {0}
+set $m12-vectors-on {0}
+set $m12-normalize-vectors {-1}
+set $m12-has_vec_data {0}
+set $m12-def-color-r {0.5}
+set $m12-def-color-g {0.5}
+set $m12-def-color-b {0.5}
+set $m12-node_display_type {Spheres}
+set $m12-edge_display_type {Lines}
+set $m12-active_tab {Nodes}
+set $m12-node_scale {6}
+set $m12-edge_scale {0.03}
+set $m12-vectors_scale {0.03}
+set $m12-show_progress {0}
+set $m12-resolution {7}
+set $m13-notes {}
+set $m13-show_status {1}
+set $m13-maxseeds {50}
+set $m13-numseeds {35}
+set $m13-rngseed {1}
+set $m13-clamp {0}
+set $m13-type {}
+set $m13-dist {impuni}
+set $m13-whichtab {Widget}
+set $m14-notes {}
+set $m14-show_status {1}
+set $m14-nodes-on {0}
+set $m14-nodes-as-disks {0}
+set $m14-edges-on {1}
+set $m14-use-normals {0}
+set $m14-use-transparency {0}
+set $m14-faces-on {0}
+set $m14-vectors-on {0}
+set $m14-normalize-vectors {-1}
+set $m14-has_vec_data {0}
+set $m14-def-color-r {0.5}
+set $m14-def-color-g {0.5}
+set $m14-def-color-b {0.5}
+set $m14-node_display_type {Spheres}
+set $m14-edge_display_type {Cylinders}
+set $m14-active_tab {Edges}
+set $m14-node_scale {0.01}
+set $m14-edge_scale {2}
+set $m14-vectors_scale {0.03}
+set $m14-show_progress {0}
+set $m14-resolution {7}
+set $m15-notes {}
+set $m15-show_status {1}
+set $m15-stepsize {0.8}
+set $m15-tolerance {0.8}
+set $m15-maxsteps {250}
+set $m16-notes {}
+set $m16-show_status {1}
+set $m16-interp_op_gui {}
+set $m17-notes {}
+set $m17-show_status {1}
+set $m18-notes {}
+set $m18-show_status {1}
+set $m18-nodes-on {0}
+set $m18-nodes-as-disks {0}
+set $m18-edges-on {1}
+set $m18-use-normals {0}
+set $m18-use-transparency {0}
+set $m18-faces-on {0}
+set $m18-vectors-on {0}
+set $m18-normalize-vectors {1702063980}
+set $m18-has_vec_data {0}
+set $m18-def-color-r {0.3}
+set $m18-def-color-g {0.3}
+set $m18-def-color-b {0.3}
+set $m18-node_display_type {Spheres}
+set $m18-edge_display_type {Cylinders}
+set $m18-active_tab {Nodes}
+set $m18-node_scale {5}
+set $m18-edge_scale {1}
+set $m18-vectors_scale {0.03}
+set $m18-show_progress {0}
+set $m18-resolution {4}
+set $m19-notes {}
+set $m19-show_status {1}
+set $m19-UseCondTCL {1}
+set $m20-notes {}
+set $m20-show_status {1}
+set $m20-sourceNodeTCL {0}
+set $m20-sinkNodeTCL {1}
+set $m20-modeTCL {dipole}
+
+set $m21-target_error {0.000001}
+set $m21-orig_error {1}
+set $m21-current_error {9.84662e-07}
+set $m21-iteration {86}
+set $m21-maxiter {5000}
+set $m21-use_previous_soln {0}
+set $m21-emit_partial {0}
+set $m21-np 10
+
+set $m22-notes {}
+set $m22-show_status {1}
+set $m23-notes {}
+set $m23-show_status {1}
+set $m23-interpolate {1203}
+set $m24-notes {}
+set $m24-show_status {1}
+set $m24-tcl_status {Calling GenStandardColorMaps!}
+set $m24-positionList {}
+set $m24-nodeList {}
+set $m24-width {1}
+set $m24-height {1}
+set $m24-mapType {3}
+set $m24-minRes {12}
+set $m24-resolution {128}
+set $m24-realres {128}
+set $m24-gamma {0}
+set $m25-notes {}
+set $m25-show_status {1}
+set $m25-isFixed {0}
+set $m25-min {-0.0468455}
+set $m25-max {0.0380873}
+set $m26-notes {}
+set $m26-show_status {1}
+set $m26-isoval {0}
+set $m26-extract-from-new-field {1}
+set $m26-algorithm {0}
+set $m26-build_trisurf {0}
+set $m26-np {1}
+set $m26-active_tab {MC}
+set $m26-update_type {on release}
+set $m26-color-r {0.4}
+set $m26-color-g {0.2}
+set $m26-color-b {0.9}
+set $m27-notes {}
+set $m27-show_status {1}
+set $m27-filename $DATADIR/utahtorso-lowres/utahtorso-lowres-electrodes.pcd.fld
+set $m28-notes {}
+set $m28-show_status {1}
+set $m28-interp_op_gui {}
+set $m29-notes {}
+set $m29-show_status {1}
+set $m29-nodes-on {1}
+set $m29-nodes-as-disks {0}
+set $m29-edges-on {0}
+set $m29-use-normals {0}
+set $m29-use-transparency {0}
+set $m29-faces-on {0}
+set $m29-vectors-on {0}
+set $m29-normalize-vectors {-1}
+set $m29-has_vec_data {0}
+set $m29-def-color-r {0.5}
+set $m29-def-color-g {0.5}
+set $m29-def-color-b {0.5}
+set $m29-node_display_type {Spheres}
+set $m29-edge_display_type {Lines}
+set $m29-active_tab {Nodes}
+set $m29-node_scale {6}
+set $m29-edge_scale {0.03}
+set $m29-vectors_scale {0.03}
+set $m29-show_progress {0}
+set $m29-resolution {7}
+set $m30-notes {}
+set $m30-show_status {1}
+set $m30-maxseeds {50}
+set $m30-numseeds {35}
+set $m30-rngseed {1}
+set $m30-clamp {0}
+set $m30-type {}
+set $m30-dist {impuni}
+set $m30-whichtab {Widget}
+set $m31-notes {}
+set $m31-show_status {1}
+set $m31-nodes-on {0}
+set $m31-nodes-as-disks {0}
+set $m31-edges-on {1}
+set $m31-use-normals {0}
+set $m31-use-transparency {0}
+set $m31-faces-on {0}
+set $m31-vectors-on {0}
+set $m31-normalize-vectors {-1}
+set $m31-has_vec_data {0}
+set $m31-def-color-r {0.5}
+set $m31-def-color-g {0.5}
+set $m31-def-color-b {0.5}
+set $m31-node_display_type {Spheres}
+set $m31-edge_display_type {Cylinders}
+set $m31-active_tab {Edges}
+set $m31-node_scale {0.01}
+set $m31-edge_scale {2}
+set $m31-vectors_scale {0.03}
+set $m31-show_progress {0}
+set $m31-resolution {7}
+set $m32-notes {}
+set $m32-show_status {1}
+set $m32-stepsize {0.8}
+set $m32-tolerance {0.8}
+set $m32-maxsteps {250}
+set $m33-notes {}
+set $m33-show_status {1}
+set $m33-interp_op_gui {}
+set $m34-notes {}
+set $m34-show_status {1}
+set $m35-notes {}
+set $m35-show_status {1}
+set $m35-BCFlag {none}
+set $m35-UseCondTCL {1}
+set $m35-refnodeTCL {0}
+set $m36-notes {}
+set $m36-show_status {1}
+$m1 initialize_ui
+$m21 initialize_ui
+
+::netedit scheduleok

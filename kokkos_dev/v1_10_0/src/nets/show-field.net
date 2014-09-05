@@ -1,0 +1,164 @@
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+#
+
+# SCI Network 1.0
+
+#######################################################################
+# Check environment variables.  Ask user for input if not set:
+set results [sourceSettingsFile]
+set DATADIR [lindex $results 0]
+set DATASET [lindex $results 1]
+#######################################################################
+
+source $DATADIR/$DATASET/$DATASET.settings
+
+::netedit dontschedule
+
+global userName
+set userName "dmw"
+
+global runDate
+set runDate " Tue  Mar 13 2001"
+
+global runTime
+set runTime " 0:22:14"
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 7 10]
+set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 373 552]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 7 468]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 25 367]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 180 457]
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 389 239]
+set m6 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 407 176]
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 353 446]
+set m8 [addModuleAtPosition "SCIRun" "Fields" "Gradient" 389 96]
+set m9 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 371 303]
+
+addConnection $m3 0 $m2 1
+addConnection $m0 0 $m2 0
+addConnection $m2 0 $m1 0
+addConnection $m0 0 $m4 0
+addConnection $m3 0 $m4 1
+addConnection $m4 1 $m1 1
+addConnection $m3 0 $m7 1
+addConnection $m6 0 $m5 1
+addConnection $m0 0 $m8 0
+addConnection $m8 0 $m6 0
+addConnection $m9 0 $m7 0
+addConnection $m5 0 $m9 1
+addConnection $m0 0 $m9 0
+addConnection $m8 0 $m5 0
+addConnection $m7 0 $m1 2
+addConnection $m6 1 $m1 3
+
+set $m0-notes {}
+set $m0-show_status 1
+set $m0-filename $DATADIR/$DATASET/$DATASET-voltage.tvd.fld
+set $m1-notes {}
+set $m1-show_status 1
+$m1 initialize_ui
+set $m1-ViewWindow_0-view-eyep-x ${view-eyep-x}
+set $m1-ViewWindow_0-view-eyep-y ${view-eyep-y}
+set $m1-ViewWindow_0-view-eyep-z ${view-eyep-z}
+set $m1-ViewWindow_0-view-lookat-x ${view-lookat-x}
+set $m1-ViewWindow_0-view-lookat-y ${view-lookat-y}
+set $m1-ViewWindow_0-view-lookat-z ${view-lookat-z}
+set $m1-ViewWindow_0-view-up-x ${view-up-x}
+set $m1-ViewWindow_0-view-up-y ${view-up-y}
+set $m1-ViewWindow_0-view-up-z ${view-up-z}
+set $m1-ViewWindow_0-view-fov ${view-fov}
+set $m2-notes {}
+set $m2-show_status 1
+set $m2-nodes-on 1
+set $m2-edges-on 0
+set $m2-faces-on 0
+set $m2-vectors-on 0
+set $m2-has_vec_data 0
+set $m2-def-color-r 0.5
+set $m2-def-color-g 0.5
+set $m2-def-color-b 0.5
+set $m2-node_display_type {Spheres}
+set $m2-edge_display_type {Lines}
+set $m2-active_tab {Nodes}
+set $m2-node_scale [expr 0.01 * ${global-scale}]
+set $m2-edge_scale 1
+set $m2-show_progress 0
+set $m2-resolution 4
+set $m3-notes {}
+set $m3-show_status 1
+set $m3-tcl_status {Calling GenStandardColorMaps!}
+set $m3-positionList {}
+set $m3-nodeList {}
+set $m3-width 1
+set $m3-height 1
+set $m3-mapType 3
+set $m3-minRes 12
+set $m3-resolution 255
+set $m4-notes {}
+set $m4-show_status 1
+set $m4-isoval 0
+set $m4-extract-from-new-field 1
+set $m4-algorithm 0
+set $m4-build_trisurf 0
+set $m4-np 1
+set $m4-active_tab {MC}
+set $m4-update_type {on release}
+set $m5-notes {}
+set $m5-show_status {1}
+set $m5-stepsize {0.1}
+set $m5-tolerance {0.001}
+set $m5-maxsteps {200}
+set $m5-direction {1}
+set $m5-color {1}
+set $m5-remove-colinear {1}
+set $m5-method {3}
+set $m5-np {1}
+set $m6-notes {}
+set $m6-show_status 1
+set $m6-maxseeds 15
+set $m6-numseeds 10
+set $m6-rngseed 1
+set $m6-type {}
+set $m6-dist {impuni}
+set $m6-whichtab {Widget}
+set $m7-notes {}
+set $m7-show_status 1
+set $m7-nodes-on 0
+set $m7-edges-on 1
+set $m7-faces-on 0
+set $m7-vectors-on 0
+set $m7-has_vec_data 0
+set $m7-def-color-r 0.5
+set $m7-def-color-g 0.5
+set $m7-def-color-b 0.5
+set $m7-node_display_type {Spheres}
+set $m7-edge_display_type {Cylinders}
+set $m7-active_tab {Edges}
+set $m7-node_scale [expr 0.007 * ${global-scale}]
+set $m7-edge_scale [expr 0.007 * ${global-scale}]
+set $m7-resolution 6
+set $m8-notes {}
+set $m8-show_status 1
+set $m9-notes {}
+set $m9-show_status 1
+set $m9-interp_op_gui {}
+$m2 initialize_ui
+$m4 initialize_ui
+$m5 initialize_ui
+$m7 initialize_ui
+
+::netedit scheduleok

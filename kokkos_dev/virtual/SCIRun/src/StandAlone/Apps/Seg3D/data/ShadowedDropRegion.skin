@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE definition PUBLIC "-//Skinner/Drawable DTD" "skinner.dtd">
+
+<definition class="ShadowedDropRegion"> 
+  <object class="Collection"> 
+    <var name="ShadowedDropRegion::color" propagate="yes" overwrite="no">#FF0000FF</var>
+    <var name="ShadowedDropRegion::inside" propagate="yes" overwrite="no">#00000000</var>
+    <var name="ShadowedDropRegion::outside" propagate="yes" overwrite="no">#00000080</var>
+
+    <var name="ShadowedDropRegion::border-size1" propagate="yes" overwrite="no">10</var>
+    <var name="ShadowedDropRegion::border-size2" propagate="yes" overwrite="no">10</var>
+
+    <var name="ShadowedDropRegion::border-size3" propagate="yes" overwrite="no">20</var>
+    <var name="ShadowedDropRegion::border-size4" propagate="yes" overwrite="no">20</var>
+
+    <var name="ShadowedDropRegion::border-size1" propagate="yes" overwrite="yes">50</var>
+    <var name="ShadowedDropRegion::border-size2" propagate="yes" overwrite="yes">50</var>
+
+    <var name="ShadowedDropRegion::border-size3" propagate="yes" overwrite="yes">50</var>
+    <var name="ShadowedDropRegion::border-size4" propagate="yes" overwrite="yes">50</var>
+
+    <object class="Grid">
+      <var name="rows">3</var>
+      <var name="cols">3</var>
+      
+      <object class="Collection">
+        <var name="row">1</var>
+        <var name="col">1</var>
+        <var name="cell-height">$ShadowedDropRegion::border-size2</var>
+        <var name="cell-width">$ShadowedDropRegion::border-size2</var>
+<!--        
+        <object class="Root::Arc">
+          <var name="anchor">SE</var>
+          <var name="ne-color">$ShadowedDropRegion::outside</var>
+          <var name="se-color">$ShadowedDropRegion::inside</var>
+          <var name="nw-color">$ShadowedDropRegion::outside</var>
+          <var name="sw-color">$ShadowedDropRegion::outside</var>
+        </object>
+-->
+
+        <object class="Root::Arc">
+          <var name="anchor">SE</var>
+          <var name="reverse">1</var>
+          <var name="ne-color">$ShadowedDropRegion::color</var>
+          <var name="nw-color">$ShadowedDropRegion::color</var>
+          <var name="se-color">$ShadowedDropRegion::color</var>
+          <var name="sw-color">$ShadowedDropRegion::color</var>
+        </object>
+      </object>
+
+        
+      
+      <object class="Gradient">
+        <var name="row">1</var>
+        <var name="col">2</var>
+        <var name="cell-height">$ShadowedDropRegion::border-size2</var>
+        <var name="top-color">$ShadowedDropRegion::outside</var>
+        <var name="bottom-color">$ShadowedDropRegion::inside</var>
+      </object>
+
+
+
+      <object class="Collection">
+        <var name="row">1</var>
+        <var name="col">3</var>
+        <var name="cell-height">$ShadowedDropRegion::border-size2</var>
+        <var name="cell-width">$ShadowedDropRegion::border-size1</var>
+        
+        <object class="Root::Arc">
+          <var name="anchor">SW</var>
+          <var name="ne-color">$ShadowedDropRegion::outside</var>
+          <var name="sw-color">$ShadowedDropRegion::inside</var>
+          <var name="nw-color">$ShadowedDropRegion::outside</var>
+          <var name="se-color">$ShadowedDropRegion::outside</var>
+        </object>
+
+        <object class="Root::Arc">
+          <var name="anchor">SW</var>
+          <var name="reverse">1</var>
+          <var name="ne-color">$ShadowedDropRegion::color</var>
+          <var name="nw-color">$ShadowedDropRegion::color</var>
+          <var name="se-color">$ShadowedDropRegion::color</var>
+          <var name="sw-color">$ShadowedDropRegion::color</var>
+        </object>
+      </object>
+      
+      <object class="Gradient">
+        <var name="row">2</var>
+        <var name="col">1</var>
+        <var name="cell-width">$ShadowedDropRegion::border-size2</var>
+        <var name="left-color">$ShadowedDropRegion::outside</var>
+        <var name="right-color">$ShadowedDropRegion::inside</var>
+      </object>
+      
+      <object class="Box">
+        <var name="row">2</var>
+        <var name="col">2</var>
+        <var name="color">$ShadowedDropRegion::inside</var>
+      </object>
+      
+      
+      
+      <object class="Gradient">
+        <var name="row">2</var>
+        <var name="col">3</var>
+        <var name="cell-width">$ShadowedDropRegion::border-size1</var>
+        <var name="right-color">$ShadowedDropRegion::outside</var>
+        <var name="left-color">$ShadowedDropRegion::inside</var>
+      </object>
+          
+      
+      
+      <object class="Collection">
+        <var name="row">3</var>
+        <var name="col">1</var>
+        <var name="cell-height">$ShadowedDropRegion::border-size1</var>
+        <var name="cell-width">$ShadowedDropRegion::border-size2</var>
+        
+        <object class="Root::Arc">
+          <var name="anchor">NE</var>
+          <var name="sw-color">$ShadowedDropRegion::outside</var>
+          <var name="ne-color">$ShadowedDropRegion::inside</var>
+          <var name="nw-color">$ShadowedDropRegion::outside</var>
+          <var name="se-color">$ShadowedDropRegion::outside</var>
+        </object>
+
+        <object class="Root::Arc">
+          <var name="anchor">NE</var>
+          <var name="reverse">1</var>
+          <var name="ne-color">$ShadowedDropRegion::color</var>
+          <var name="nw-color">$ShadowedDropRegion::color</var>
+          <var name="se-color">$ShadowedDropRegion::color</var>
+          <var name="sw-color">$ShadowedDropRegion::color</var>
+        </object>
+      </object> 
+     
+      <object class="Gradient">
+        <var name="row">3</var>
+        <var name="col">2</var>
+        <var name="cell-height">$ShadowedDropRegion::border-size1</var>
+        <var name="bottom-color">$ShadowedDropRegion::outside</var>
+        <var name="top-color">$ShadowedDropRegion::inside</var>
+      </object>
+
+
+      <object class="Collection">
+        <var name="row">3</var>
+        <var name="col">3</var>
+        <var name="cell-height">$ShadowedDropRegion::border-size1</var>
+        <var name="cell-width">$ShadowedDropRegion::border-size1</var>
+        
+        <object class="Root::Arc">
+          <var name="anchor">NW</var>
+          <var name="sw-color">$ShadowedDropRegion::outside</var>
+          <var name="nw-color">$ShadowedDropRegion::inside</var>
+          <var name="ne-color">$ShadowedDropRegion::outside</var>
+          <var name="se-color">$ShadowedDropRegion::outside</var>
+        </object>
+        
+        <object class="Root::Arc">
+          <var name="anchor">NW</var>
+          <var name="reverse">1</var>
+          <var name="ne-color">$ShadowedDropRegion::color</var>
+          <var name="nw-color">$ShadowedDropRegion::color</var>
+          <var name="se-color">$ShadowedDropRegion::color</var>
+          <var name="sw-color">$ShadowedDropRegion::color</var>
+        </object>
+      </object> 
+    </object>
+    
+    <object class="Grid">
+      <var name="rows">3</var>
+      <var name="cols">3</var>
+      
+      <object class="Collection">
+        <var name="row">1</var>
+        <var name="col">1</var>
+        <var name="cell-height">$ShadowedDropRegion::border-size3</var>
+        <var name="cell-width">$ShadowedDropRegion::border-size3</var>
+      </object>
+
+      <object class="Collection">
+        <var name="row">3</var>
+        <var name="col">3</var>
+        <var name="cell-height">$ShadowedDropRegion::border-size4</var>
+        <var name="cell-width">$ShadowedDropRegion::border-size4</var>
+      </object>
+
+
+      <object class="ShadowedDropRegion::child">
+        <var name="row">2</var>
+        <var name="col">2</var>
+      </object>
+    </object>
+      
+
+  </object>
+</definition>
+

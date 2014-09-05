@@ -1,0 +1,10 @@
+GLEW does not compile GLX support on OSX by default.  We set an
+environment variable in the install script to make it always compile
+that way.
+
+GLEW has -L/usr/X11R6/lib hardcoded as the X11 library path.  On some
+64 bit linuxes this should be -L/usr/X11R6/lib64, and should probably
+be -L/usr/X11R6/lib32 on 32 bit builds for 64 bit linuxes.  We work
+around this hardcoding by patching in an extra GLEW_LDFLAGS_EXTRA
+variable to config/Makefile.linux that can be overridden from the
+installation script.

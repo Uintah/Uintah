@@ -1,0 +1,202 @@
+/*
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+*/
+
+// SSIDL interface descriptions of CCA and implementations.
+// The one disturbing property of this is that Babel.Object or equivalent
+// makes an appearance, as you would expect. Not surprisingly,
+// this is in the ConnectionEvent interface.
+// We haven't yet escaped completely from framework dependence
+// if we believe in events.
+// This could be the source for
+// specifying (or at least generating) all the language bindings.
+
+//=============================================================================
+//  The ports/services spec itself
+//=============================================================================
+
+package CCA {
+  interface Port {
+  };
+
+  interface PortInfo{
+    /** Returns the type of the Port referred to by this PortInfo: 
+	corresponds to the class or interface name for this Port.*/
+    string getType();
+
+    /** Returns the instance name for this Port.  This name must be 
+	unique within the scope of a CCA component.*/
+    string getName();
+
+    /** Returns the string value for this property, or null if it is 
+	nonexistent. */
+    string getProperty(in string name);
+  };
+
+  interface Services {
+    /** Ask for a previously registered Port; will return a Port or 
+	generate an error. */
+    Port getPort(in string name);
+           
+    /** Ask for a previously registered Port and return that Port if it is
+	available or return null otherwise. */
+    Port getPortNonblocking(in string name);
+
+    /** Creates a PortInfo to be used in subsequent calls to 
+	describe a Port. */
+    PortInfo createPortInfo(in string name, 
+			    in string type, 
+			    in array<string, 1> properties );
+
+    /** Register a request for a Port that will be retrieved subsequently 
+	with a call to getPort(). */
+    void registerUsesPort(in PortInfo name_and_type);
+
+    /** Notify the framework that a Port, previously registered by this 
+	component, is no longer needed. */
+    void unregisterUsesPort(in string name);
+
+    /** Exports a Port implemented by this component to the framework.  
+	This Port is now available for the framework to connect to other 
+	components. */
+    void addProvidesPort(in Port inPort, in PortInfo name);
+
+    /** Notifies the framework that a previously exported Port is no longer 
+	available for use. */
+    void removeProvidesPort(in string name);
+
+    /** Notifies the framework that this component is finished with this Port.
+	releasePort() method calls exactly match getPort() method calls.  
+	After releasePort() is invoked all references to the released Port 
+	become invalid. */
+    void releasePort(in string name);
+    /** Get a reference to the component to which this Services 
+	object belongs. */
+    ComponentID  getComponentID();
+  };
+  interface Component {
+    /** Obtain Services handle, through which the component communicates 
+	with the framework. 
+	This is the one method that every CCA Component must implement. */
+      void setServices(in Services svc);
+  };
+
+  interface ComponentID{
+    /** Produce a string that, within the current framework, uniquely defines 
+	this component reference. */
+    string toString();
+  };
+
+
+}; // end package gov.cca
+
+
+package CCAPORTS {
+  interface GoPort{
+    /** Execute some encapsulated functionality on the component. 
+	@return 0 if ok, -1 if internal error but component may be used 
+	further, -2 if error so severe that component cannot be further 
+	used safely.
+    */
+    int go();
+  };
+  interface ConnectionEventService extends CCA.Port{
+    /** Sign up to be told about connection activity.
+	@param connectionEventType must be one of the integer values defined in
+	ConnectionEvent. */
+    void addConnectionEventListener(in int connectionEventType, 
+				    in ConnectionEventListener l);
+
+    /** Ignore future ConnectionEvents of the given type.
+	@param connectionEventType must be one of the integer values defined in
+	ConnectionEvent. */
+    void removeConnectionEventListener(in int connectionEventType, 
+				       in ConnectionEventListener l);
+
+  };
+  interface ConnectionEventListener {
+    /** Called on all listeners when a connection is made or broken. */
+    void connectionActivity(in ConnectionEvent evt);
+  };
+  interface ConnectionEvent {
+    /** Returns the integer from those enumerated that describes the event.
+	The semantics are noted before
+	each member of the enum/static constant. We can add in different
+	types of connect/disconnect as multiports and
+	explicit local/global/sync/async semantics are agreed to in the future.
+	At present we assume that:
+              
+	# All instances in a component cohort (often thought of as a single
+	"parallel component") receive all the events
+	and in the same order, but not necessarily globally synchronously.
+	# For disconnections, within a process the events are delivered first
+	to the using component then (if necessary) to the providing component.
+	# For connections, within a process the events are delivered first
+	to the providing component then (if necessary) to the using component.
+
+	Clearly some of the assumptions above may not suit a component
+	instance in which multiple execution threads act on a
+	single instance of the gov::cca::Services object (SMP). The Services
+	specification is ambiguous as to whether such a component is even 
+	allowed. When this is clarified, additional members of the enum may 
+	arise, in which case the assumptions here apply only to
+	ConnectPending, Connected, DisconnectPending, Disconnected types.
+    */
+    int getEventType();
+
+    /** Returns the PortInfo of the affected Port. */
+    CCA.PortInfo getPortInfo();
+             
+    /** The minimum kinds of events needed. List to be extended in the future.
+	as clearly SMP architectures and threads may violate the simple 
+	assumptions.
+    */
+//      enumeration Type { 
+//        Error = -1;            /* Someone got their hands on a bogus event 
+//  				object somehow. */
+//        ALL = 0;               /* Component wants to receive all event notices. 
+//  				ALL itself never received. */
+//        ConnectPending = 1;    // A connection is about to be attempted.
+//        Connected = 2;         // A connection has been made.
+//        DisconnectPending = 3; // A disconnection is about to be attempted.
+//        Disconnected = 4;      // A disconnection has been made.
+//      };
+
+  };
+}; // end package gov.cca.ports
+
+
+
+/* --------------------------------------------------------------------------
+ * Non specification interfaces.  Ideally these could exist in its own sidl
+ * file, and just include all the standard interfaces above.  Until this is 
+ * supported by the sidl compiler this comment will separate specification
+ * from implementation specific interfaces.
+ * --------------------------------------------------------------------------*/
+
+package spectest {
+  interface IntegerStream extends CCA.Port {
+    int pop(); //Return the next integer
+    void push(in int i);
+    bool is_full();
+    bool is_empty();
+  };
+
+  interface Framework {
+    CCA.Services get_services();
+  };
+     
+};

@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE Uintah_specification SYSTEM "input.dtd">
+
+<!-- @version: -->
+
+
+<Uintah_specification>
+
+   <Meta>
+	<title>MPMArches Heptane with MPM Box with Radiation</title>
+   </Meta>
+
+   <Time>
+	<maxTime>60.00</maxTime>
+	<initTime>0.0</initTime>
+	<delt_min>0.0000001</delt_min>
+	<delt_max>0.01</delt_max>
+	<timestep_multiplier>0.4</timestep_multiplier>
+   </Time>
+
+   <DataArchiver>
+        <filebase>cylhept.uda</filebase>
+	<outputInterval>0.05</outputInterval>
+	<compression>gzip</compression>
+        <outputDoubleAsFloat/>
+
+	<save label="mmgasVolFrac"/>
+	<save label = "KineticEnergy"/>
+	<save label = "TotalMass"/>
+	<save label = "CenterOfMassPosition"/>
+	<save label = "CenterOfMassVelocity"/>
+	<save label = "p.particleID"/>
+	<save label = "p.x"/>
+	<save label = "p.temperature"/>
+	<save label="uvwout"/>
+	<save label="totalflowIN"/>
+	<save label="totalflowOUT"/>
+	<save label="denAccum"/>
+	<save label = "netflowOUTBC"/>
+	<save label = "totalKineticEnergy"/>
+	<save label = "oldDeltaT"/>
+
+        <save label="newCCVelocity"/>
+
+	<save label = "densityCP"/>
+	<save label = "enthalpySP"/>
+	<save label="pressurePS"/>
+        <save label="newCCUVelocity"/>	
+        <save label="newCCVVelocity"/>	
+        <save label="newCCWVelocity"/>	
+	<save label="scalarSP"/>
+	<save label="cellType"/>
+	<save label="tempIN"/>
+        <save label="continuityResidual"/>
+
+	<save label="radiationFluxWIN"/>
+
+	<save label = "htfluxRadX"/>
+	<save label = "htfluxRadY"/>
+	<save label = "htfluxRadZ"/>
+	<save label = "tempSolid_CC"/>
+
+	<checkpoint cycle = "2" interval = "0.01"/>
+
+   </DataArchiver>
+
+    <MPM>
+	<time_integrator>explicit</time_integrator>
+    </MPM>
+
+    <PhysicalConstants>
+	<gravity>[0.0,0.0,0.0]</gravity>
+	<ideal_gas_constant>1.0</ideal_gas_constant>
+	<pressure>0.0</pressure>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+	<MPM>
+           <material name = "Composite Cylinder" >
+              <burn type = "null" />
+              <density>   2489.0   </density>
+	      <constitutive_model type="comp_mooney_rivlin"> 
+                 <he_constant_1>5.0</he_constant_1>
+                 <he_constant_2>1.0</he_constant_2>
+	         <he_PR>.49</he_PR>
+              </constitutive_model>
+              <toughness>             10.e6           </toughness>
+              <thermal_conductivity>  0.4494           </thermal_conductivity>
+              <specific_heat>         940.36           </specific_heat>
+	      <geom_object>
+                 <cylinder label = "mpmcylinder">
+		    <bottom> [0.36, 0.75, 0.90] </bottom>
+	            <top>    [0.36, 1.05, 0.90] </top>
+		    <radius> .06 </radius>
+                 </cylinder>
+                 <res>               [2,2,2]         </res>
+                 <velocity>          [0.0,0.0,0.0]   </velocity>
+                 <temperature>       298             </temperature>
+              </geom_object>
+              <velocity_field>0</velocity_field>
+           </material>
+
+              <contact>
+                 <type>null</type>
+                 <vel_fields>              [0,0,0]         </vel_fields>
+                 <mu> 0.0 </mu>
+              </contact>
+	   </MPM>
+
+       </MaterialProperties>
+	
+    <Grid>
+	<BoundaryConditions>
+
+		 <Face side = "x-">
+                        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+				<value> [0.0,0.0,0.0] </value>
+                        </BCType>
+                        <BCType id = "all" var = "Dirichlet" label = "Temperature">
+				<value> 298.0 </value>
+                        </BCType>
+                </Face>
+
+                <Face side = "x+">
+                        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+				<value> [0.0,0.0,0.0] </value>
+                        </BCType>
+                        <BCType id = "all" var = "Dirichlet" label = "Temperature">
+				<value> 298.0 </value>
+                        </BCType>
+                </Face>
+
+                <Face side = "y-">
+                        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+				<value> [0.0,0.0,0.0] </value>
+                        </BCType>
+                        <BCType id = "all" var = "Dirichlet" label = "Temperature">
+				<value> 298.0 </value>
+                        </BCType>
+                </Face>                  
+
+		<Face side = "y+">
+                        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+				<value> [0.0,0.0,0.0] </value>
+                        </BCType>
+                        <BCType id = "all" var = "Dirichlet" label = "Temperature">
+				<value> 298.0 </value>
+                        </BCType>
+                </Face>
+
+                <Face side = "z-">
+                        <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+                        <BCType id = "all" var = "Dirichlet" label = "Temperature">
+				<value> 298.0 </value>
+                        </BCType>
+                </Face>
+
+                <Face side = "z+">
+                        <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+                        <BCType id = "all" var = "Dirichlet" label = "Temperature">
+				<value> 298.0 </value>
+                        </BCType>
+                </Face>                           
+
+	</BoundaryConditions>
+	<Level>
+	    <Box label="1">
+	        <lower>[0,0,0]</lower>
+	        <upper>[1.80,1.80,1.80]</upper>
+	        <resolution>[80,80,80]</resolution>
+                <extraCells>[1,1,1]</extraCells>
+		<patches>[2,2,2]</patches>
+	    </Box>
+	</Level>
+    </Grid>
+
+   <CFD>
+	<!-- ARCHES specification -->
+
+	<ARCHES>
+
+	    <grow_dt>0.01</grow_dt>
+	    <variable_dt>true</variable_dt>
+   	    <nonlinear_solver>explicit</nonlinear_solver>
+    	    <turbulence_model>dynamicprocedure</turbulence_model>
+            <reacting_flow>true</reacting_flow>
+            <solve_enthalpy>true</solve_enthalpy>	
+	    <solve_reactingscalar>false</solve_reactingscalar>
+
+	    <Turbulence>
+		<cf>0.17</cf>
+		<fac_mesh>1.0</fac_mesh>
+		<filterl>0.000001</filterl>
+	        <var_const>0.1</var_const>
+	        <filter_cs_squared>true</filter_cs_squared>
+	    </Turbulence>
+            <ScaleSimilarity>
+                <cf>0.9</cf>
+            </ScaleSimilarity>
+
+	    <Properties>
+
+		<denUnderrelax>1.0</denUnderrelax>
+		<first_order_drhodt>true</first_order_drhodt>
+	        <ref_point>[-1,-1,-1]</ref_point>
+	        <radiation>true</radiation>
+	        <filter_drhodt>false</filter_drhodt>
+	        <opl>0.108</opl>
+	        <empirical_soot>true</empirical_soot>
+                <discrete_ordinates>true</discrete_ordinates>
+	        <mixing_model>StaticMixingTable</mixing_model>
+
+	        <StaticMixingTable>
+                  <adiabatic>false</adiabatic>
+                  <mixstatvars>0</mixstatvars>
+                  <rxnvars>0</rxnvars>
+                  <inputfile>NAE.rxn.new</inputfile>
+                  <h_fuel>-1566119.0</h_fuel>
+                  <h_air>-125.3610</h_air>
+                </StaticMixingTable>
+
+	    </Properties>
+
+	    <BoundaryConditions>
+	        <ramping_inlet_flowrate>false</ramping_inlet_flowrate>
+		<FlowInlet>
+		    <Flow_rate>0.002</Flow_rate>
+		    <MixtureFraction>
+			<Mixfrac>1.0</Mixfrac>
+	            </MixtureFraction>
+		    <TurblengthScale>0.04</TurblengthScale>
+		    <inletType>primary</inletType>
+		    <geom_object>
+
+		      <cylinder label = "inlet">
+			<bottom>[-1.0, 0.9, 0.9]</bottom>
+			<top>    [0.0, 0.9, 0.9]</top>
+			<radius> .15 </radius>
+		      </cylinder>
+
+		    </geom_object>
+		</FlowInlet>
+
+		<WallBC>
+		    <geom_object>
+
+		      <box label="botWall">
+			<min>[-1.0,-1.0,-1.0]</min>
+			<max>[ 0.0, 2.8, 2.8]</max>
+		      </box>
+
+		    </geom_object>
+		</WallBC>
+
+		<PressureBC>
+		    <flowRate>0</flowRate>
+		    <MixtureFraction>
+			<Mixfrac>0.0</Mixfrac>
+	            </MixtureFraction>
+		    <TurblengthScale>0.04</TurblengthScale>
+		    <RefPressure>0.0</RefPressure>
+		    <geom_object>
+
+		      <box label="posY_xzWall">
+			<min>[0.0, 1.8,-1.0]</min>
+			<max>[1.8, 2.8, 2.8]</max>
+		      </box>
+
+		      <box label="zeroY_xzWall">
+			<min>[0.0,-1.0,-1.0]</min>
+			<max>[1.8, 0.0, 2.8]</max>
+		      </box>
+
+		      <box label="posZ_xyWall">
+			<min>[0.0,-1.0, 1.8]</min>
+			<max>[1.8, 2.8, 2.8]</max>
+		      </box>
+
+                      <box label="zeroZ_xyWall">	
+			<min>[0.0,-1.0,-1.0]</min>
+			<max>[1.8, 2.8, 0.0]</max>
+		      </box>
+
+		    </geom_object>
+		</PressureBC>
+
+		<outletBC>
+		    <flowRate>0</flowRate>
+		    <MixtureFraction>
+			<Mixfrac>0.0</Mixfrac>
+	            </MixtureFraction>
+		    <TurblengthScale>0.04</TurblengthScale>
+		    <RefPressure>0.0</RefPressure>
+		    <geom_object>
+
+		      <box label="topWall">
+			<min>[1.8,-1.0,-1.0]</min>
+			<max>[2.8, 2.8, 2.8]</max>
+		      </box>
+
+		    </geom_object>
+		</outletBC>
+
+	    </BoundaryConditions>
+
+	    <PhysicalConstants>
+		<gravity>[-9.8,0,0]</gravity>
+		<pressure>0.0</pressure>
+		<viscosity>0.000020</viscosity>
+		<schmidtNo>0.7</schmidtNo>
+	    </PhysicalConstants>
+
+	    <ExplicitSolver>
+
+		<max_iter>0</max_iter>	
+		<res_tol>2.0</res_tol>
+		<timeIntegratorType>RK2SSP</timeIntegratorType>
+
+		<probe_data>false</probe_data>
+
+
+	        <cal_pressure>true</cal_pressure>
+		<PressureSolver>
+		    <ref_point>[3,3,3]</ref_point>
+		    <finite_difference>second</finite_difference>
+		    <linear_solver>hypre</linear_solver>
+		    <LinearSolver>
+		        <res_tol>1.0e-9</res_tol>
+			<ksptype>cg</ksptype>
+			<pctype>pfmg</pctype>
+			<fill>1</fill>		!---for ilu preconditioner
+			<overlap>1</overlap>	!---for asm preconditioner
+			<max_iter>75</max_iter>
+		        <underrelax>1.0</underrelax>
+		    </LinearSolver>
+		</PressureSolver>
+
+		<cal_momentum>true</cal_momentum>
+		<MomentumSolver>
+		    <finite_difference>second</finite_difference>
+		    <linear_solver>linegs</linear_solver>
+		    <central>true</central>
+		    <LinearSolver>
+			<max_iter>8</max_iter>
+			<res_tol>1.0e-9</res_tol>
+			<underrelax>1.0</underrelax>
+		    </LinearSolver>
+		</MomentumSolver>
+
+		<cal_mixturescalar>true</cal_mixturescalar>
+		<MixtureFractionSolver>
+		    <finite_difference>second</finite_difference>
+		    <linear_solver>linegs</linear_solver>
+		    <LinearSolver>
+			<max_iter>6</max_iter>
+			<res_tol>0.0003</res_tol>
+			<underrelax>1.0</underrelax>
+		    </LinearSolver>
+		</MixtureFractionSolver>
+
+		<cal_enthalpy>true</cal_enthalpy>
+		<EnthalpySolver>
+                    <radiation>true</radiation>
+                    <discrete_ordinates>true</discrete_ordinates>
+                    <radiationCalcFreq>5</radiationCalcFreq>
+                    <radCalcForAllRKSteps>false</radCalcForAllRKSteps>
+                    <DORadiationModel>
+	                <opl>0.108</opl>
+                        <ordinates>2</ordinates>
+                    </DORadiationModel>
+		    <finite_difference>second</finite_difference>
+		    <linear_solver>linegs</linear_solver>
+		    <LinearSolver>
+			<max_iter>6</max_iter>
+			<res_tol>0.0003</res_tol>
+			<underrelax>1.0</underrelax>
+		    </LinearSolver>
+		</EnthalpySolver>
+
+	    </ExplicitSolver>
+
+        </ARCHES>
+
+    </CFD>
+
+    <Multimaterial>
+
+	<fluidThermalConductivity>0.03</fluidThermalConductivity>
+	<heatExchange>true</heatExchange>
+	<turbulentPrandtNo>0.7</turbulentPrandtNo>
+	<fluidHeatCapacity>1007.</fluidHeatCapacity>
+	<IfCutCell>false</IfCutCell>
+	<StationarySolid>true</StationarySolid>
+	<inviscid>false</inviscid>
+	<restart>true</restart>
+
+    </Multimaterial>
+
+    <MaterialProperties>
+
+	<ARCHES>
+	</ARCHES>
+
+    </MaterialProperties>
+	
+    <!-- Question - how do we want to attach a bc to a region of the grid? -->
+    <PhysicalBC>
+    
+	<MPM>
+	</MPM>
+
+	<ARCHES>
+	</ARCHES>
+
+    </PhysicalBC>
+    
+    <InitialConditions>
+
+	<ARCHES>
+	</ARCHES>
+
+    </InitialConditions>
+
+</Uintah_specification>

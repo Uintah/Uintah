@@ -1,0 +1,90 @@
+#! /bin/sh
+############################################
+# validateInputs
+#   Validates that all the files in 
+#   ICE/MPMICE/UCF/Models run with current
+#   code and prints out failed messages.
+#   Will either check a specific directory
+#   or all directories within 'inputs'
+############################################
+# usage:
+#    validateInputs <optional: specific dir>
+############################################
+
+# Set Constants 
+flags=0
+checkDirectory="grr"
+usage0="Run from '$(pwd)'"
+usage1="This utility checks each *ups file in the directories contained in the current directory or optionally the specified directory.  It prints out the exit status or exception if one is thrown."
+usage2="Usage: validateInputs <optional: specific directory to search>"
+
+
+
+# Logic for checking only one directory
+if [ $# > 0 ]
+then
+if [ "$1" = "-h" ]
+then
+echo
+echo $usage0
+echo $usage1
+echo $usage2
+echo
+fi
+checkDirectory=$1
+flags=$#
+fi
+
+# Start First For Loop
+for directorys in `find * -type d -prune`
+do
+# Check if only perform on one directory
+if [ $flags -eq 1 ]
+then
+if [ $checkDirectory != $directorys ]
+then
+continue
+fi
+fi
+
+cd $directorys
+echo "Checking $directorys Files"
+echo "--------------------------"
+
+# Start Second For Loop
+for file in `ls .`
+do
+extens=$(basename $file |awk -F. '{print $NF}')
+if [ "$extens" = 'ups' ] 
+then
+
+# Copy file such that it is not modified
+cat $file > upsfile.ups
+echo "--------------------------------------------------------------"
+echo "Checking $file......."
+# Add one timestep option
+sed -i /\<Time\>/a\ "<max_Timesteps> 1 </max_Timesteps>" upsfile.ups
+
+# Run file
+echo "Running $file"
+mpirun -np 1 sus $file >& outfile
+
+# Tell results
+grep Sus outfile
+grep Thread outfile
+grep -A 10 Caught outfile 
+
+echo
+
+# Clean up before next iteration
+rm -rf upsfile.ups outfile *uda*
+fi
+
+# End first for loop
+done
+cd ..
+
+# End second for loop
+done
+
+

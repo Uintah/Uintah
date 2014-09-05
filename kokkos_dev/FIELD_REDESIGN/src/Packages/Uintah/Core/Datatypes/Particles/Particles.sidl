@@ -1,0 +1,41 @@
+
+package Uintah {
+    package Datatypes {
+	package Particles {
+	    interface Simulation {
+		// Set up variable name to index mapping
+		void setup(in array<string> names);
+
+		// One processor should call this before sending data
+		// below - in order to update the GUI to the "receiving..."
+		// state before all of the data gets sent.
+		void notifyGUI(in double time);
+
+		// Called for each timestamp.  data should be a
+		// nparticles by nvariables array.  The first dimension
+		// of data should be the same as particleID.size()
+		void timestep(in double time, in int myrank, in int nproc,
+			      in array<int> particleID,
+			      in array<double, 2> data);
+	    };
+
+	    interface TimestepNotify {
+		void notifyNewTimestep(in double time);
+	    };
+
+	    interface Visualization {
+		array<string> listVariables();
+		array<double> listTimesteps();
+		void getTimestep(in double time, in int dataIndex,
+				 out array<int> ids,
+				 out array<double, 2> data);
+		void getParticle(in int id, out array<double, 2> data,
+				 out array<double> timesteps);
+		int registerNotify(in TimestepNotify callback);
+		void unregisterNotify(in int callbackID);
+	    };
+	    interface Database extends Simulation, Visualization {
+	    };
+	};
+    };
+};
