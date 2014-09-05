@@ -68,6 +68,7 @@ Radiometer::~Radiometer()
 void
 Radiometer::problemSetup( const ProblemSpecP& prob_spec,
                           const ProblemSpecP& radps,
+                          const GridP&        grid,
                           SimulationStateP&   sharedState,
                           const bool getExtraInputs)
 {
@@ -90,6 +91,32 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
   
   //__________________________________
   //  Warnings and bulletproofing
+  //
+  //the VRLocations can't exceed computational domain
+  BBox compDomain;
+  grid->getSpatialRange(compDomain);
+  Point start = d_VRLocationsMin;
+  Point end   = d_VRLocationsMax;
+
+  Point min = compDomain.min();
+  Point max = compDomain.max();
+
+  if(start.x() < min.x() || start.y() < min.y() ||start.z() < min.z() ||
+     end.x() > max.x()   ||end.y() > max.y()    || end.z() > max.z() ) {
+    ostringstream warn;
+    warn << "\n ERROR:Radiometer::problemSetup: the radiometer that you've specified " << start 
+         << " " << end << " begins or ends outside of the computational domain. \n" << endl;
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+
+  if(start.x() > end.x() || start.y() > end.y() || start.z() > end.z() ) {
+    ostringstream warn;
+    warn << "\n ERROR:Radiometer::problemSetup: the radiometerthat you've specified " << start 
+         << " " << end << " the starting point is > than the ending point \n" << endl;
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+
+
 #ifndef RAY_SCATTER
   proc0cout<< "sigmaScat: " << d_sigmaScat << endl;
   if(d_sigmaScat>0){
@@ -161,9 +188,9 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
   double deltaTheta = d_viewAng/360*M_PI;       // divides view angle by two and converts to radians
   double range      = 1 - cos(deltaTheta);      // cos(0) to cos(deltaTheta) gives the range of possible vals
   d_VR.sldAngl      = 2*M_PI*range;             // the solid angle that the radiometer can view
-  d_VR.deltaTheta = deltaTheta;
-  d_VR.range      = range;
-  d_sigma_over_pi = d_sigma/M_PI;
+  d_VR.deltaTheta   = deltaTheta;
+  d_VR.range        = range;
+  d_sigma_over_pi   = d_sigma/M_PI;
 
   //__________________________________
   // bulletproofing

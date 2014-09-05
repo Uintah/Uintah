@@ -191,6 +191,7 @@ Ray::~Ray()
 void
 Ray::problemSetup( const ProblemSpecP& prob_spec,
                    const ProblemSpecP& rmcrtps,
+                   const GridP& grid,
                    SimulationStateP&   sharedState)
 {
 
@@ -216,7 +217,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   if( rad_ps ) {
     d_radiometer = scinew Radiometer();
     bool getExtraInputs = false;
-    d_radiometer->problemSetup( prob_spec, rad_ps, sharedState, getExtraInputs );
+    d_radiometer->problemSetup( prob_spec, rad_ps, grid, sharedState, getExtraInputs );
     d_VRFluxLabel = d_radiometer->getRadiometerLabel();
   }
 
