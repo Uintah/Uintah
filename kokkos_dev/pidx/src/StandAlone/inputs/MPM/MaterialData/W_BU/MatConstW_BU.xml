@@ -1,9 +1,0 @@
-<?xml version='1.0' encoding='ISO-8859-1' ?>
-<!-- Tungsten -->
-<Uintah_Include>
-  <density>19235.0e3</density>
-  <thermal_conductivity>174.e-7</thermal_conductivity>
-  <specific_heat>134.e-8</specific_heat>
-  <room_temp>294.0</room_temp>
-  <melt_temp>3695.0</melt_temp>
-</Uintah_Include>

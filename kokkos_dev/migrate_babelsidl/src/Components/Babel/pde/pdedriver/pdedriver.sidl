@@ -1,8 +1,0 @@
-package pde version 0.1 {
-
-  class PDEdriver implements-all gov.cca.Component,
-                                 gov.cca.ports.GoPort 
-  {
-  }
-
-}

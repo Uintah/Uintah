@@ -1,5 +1,0 @@
-
-interface x;
-
-class y implements x {
-};
