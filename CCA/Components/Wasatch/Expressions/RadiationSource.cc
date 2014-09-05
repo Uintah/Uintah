@@ -61,7 +61,8 @@ namespace Wasatch {
                                    const Expr::Tag& absorptionTag,
                                    const Expr::Tag& celltypeTag,
                                    const Uintah::ProblemSpecP& radiationSpec,
-                                   Uintah::SimulationStateP sharedState)
+                                   Uintah::SimulationStateP sharedState,
+                                   Uintah::GridP grid)
   : Expr::Expression<SVolField>(),
   
   temperatureTag_( temperatureTag ),
@@ -86,7 +87,7 @@ namespace Wasatch {
                               celltypeLabel_,
                               divqLabel_ );
     
-    rmcrt_->problemSetup(radiationSpec, radiationSpec, sharedState);
+    rmcrt_->problemSetup(radiationSpec, radiationSpec, grid, sharedState);
     
     rmcrt_->BC_bulletproofing( radiationSpec );
   }
@@ -255,13 +256,15 @@ namespace Wasatch {
                                     const Expr::Tag& absorptionTag,
                                     const Expr::Tag& celltypeTag,
                                     Uintah::ProblemSpecP& radiationSpec,
-                                    Uintah::SimulationStateP& sharedState )
+                                    Uintah::SimulationStateP& sharedState,
+                                    Uintah::GridP& grid)
   : ExpressionBuilder  ( results        ),
   temperatureTag_    ( temperatureTag ),
   absorptionTag_     ( absorptionTag  ),
   celltypeTag_       ( celltypeTag    ),
   radiationSpec_     ( radiationSpec  ),
-  sharedState_       ( sharedState    )
+  sharedState_       ( sharedState    ),
+  grid_              ( grid           )
   {}
   
   //--------------------------------------------------------------------
@@ -270,7 +273,7 @@ namespace Wasatch {
   RadiationSource::Builder::build() const
   {
     const Expr::TagList radTags = get_tags();
-    return new RadiationSource( radTags[0].name(), temperatureTag_, absorptionTag_, celltypeTag_, radiationSpec_, sharedState_ );
+    return new RadiationSource( radTags[0].name(), temperatureTag_, absorptionTag_, celltypeTag_, radiationSpec_, sharedState_, grid_ );
   }
   
 } // namespace Wasatch
