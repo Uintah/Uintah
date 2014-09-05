@@ -1,6 +1,7 @@
 #include <CCA/Components/Arches/Transport/ScalarRHS.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <CCA/Components/Arches/TransportEqns/Discretization_new.h>
+#include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <spatialops/structured/FVStaggered.h>
 
 using namespace Uintah;
@@ -320,6 +321,29 @@ ScalarRHS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     *rhs <<= *rhs + dt * i->weight * *src;
 
   }
+
+  //------------test run on new mask stuff-------------//
+  ////create a base boundary object which holds the masks
+  //BoundaryCondition_new::BoundaryBase<SpatialOps::SVolField> bc; 
+  //SpatialOps::IntVec ijk(1,1,0); 
+  //std::vector<SpatialOps::IntVec> pass_ijk; 
+  //pass_ijk.push_back(ijk);
+
+  ////create the mask with the points created above 
+  //bc.create_mask( patch, 0, pass_ijk, BoundaryCondition_new::BOUNDARY_FACE );
+  ////insert the object into permanent storage
+  //BoundaryCondition_new::svol_boundary_info.insert(std::make_pair(0,bc)); 
+
+  ////---get the mask back--
+  //const int pid = 0;
+  ////retrieve a reference to the object which contains the mask
+  //BoundaryCondition_new::BoundaryBase<SpatialOps::SVolField>& bc_ref = BoundaryCondition_new::get_bc_info(pid,*phi);  
+  ////get a mask pointer
+  //SpatialOps::SpatialMask<SpatialOps::SVolField>* a_mask = bc_ref.get_mask(BoundaryCondition_new::BOUNDARY_FACE); 
+
+  //*rhs <<= cond(*a_mask, 1.1)
+               //(*rhs); 
+  //----------end test run on new mask stuff-------------//
 
 }
 
