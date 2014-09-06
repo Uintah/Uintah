@@ -23,12 +23,9 @@
  */
 
 #include <CCA/Components/Wasatch/Expressions/TimeAdvance.h>
-
-#include <spatialops/OperatorDatabase.h>
-#include <spatialops/structured/SpatialFieldStore.h>
-#include <spatialops/Nebo.h>
-
 #include <CCA/Components/Wasatch/TagNames.h>
+
+#include <spatialops/Nebo.h>
 
 
 template< typename FieldT >
@@ -38,7 +35,7 @@ TimeAdvance( const std::string& solnVarName,
              const Expr::Tag& rhsTag,
              const Wasatch::TimeIntegrator timeIntInfo )
 : Expr::Expression<FieldT>(),
-  phioldt_    ( phiOldTag                         ),
+  phiOldt_    ( phiOldTag                         ),
   rhst_       ( rhsTag                            ),
   dtt_        ( Wasatch::TagNames::self().dt      ),
   rkstaget_   ( Wasatch::TagNames::self().rkstage ),
@@ -61,7 +58,7 @@ void
 TimeAdvance<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  exprDeps.requires_expression( phioldt_  );
+  exprDeps.requires_expression( phiOldt_  );
   exprDeps.requires_expression( rhst_     );
   exprDeps.requires_expression( dtt_      );
   exprDeps.requires_expression( rkstaget_ );
@@ -75,12 +72,12 @@ TimeAdvance<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
   const typename Expr::FieldMgrSelector<FieldT>::type& svfm = fml.template field_manager<FieldT>();
-  phiOld_ = &svfm.field_ref( phioldt_ );
+  phiOld_ = &svfm.field_ref( phiOldt_ );
   rhs_    = &svfm.field_ref( rhst_    );
   
   const Expr::FieldMgrSelector<SingleValue>::type& doublefm = fml.field_manager<SingleValue>();
-  dt_     = &doublefm.field_ref(dtt_     );
-  rkStage_= &doublefm.field_ref(rkstaget_);
+  dt_     = &doublefm.field_ref( dtt_      );
+  rkStage_= &doublefm.field_ref( rkstaget_ );
 }
 
 //--------------------------------------------------------------------
@@ -120,7 +117,7 @@ Builder::Builder( const Expr::Tag& result,
                   const Wasatch::TimeIntegrator timeIntInfo )
   : ExpressionBuilder(result),
     solnVarName_( result.name() ),
-    phioldt_( Expr::Tag(solnVarName_, Expr::STATE_N) ),
+    phiOldt_( Expr::Tag(solnVarName_, Expr::STATE_N) ),
     rhst_( rhsTag ),
     timeIntInfo_( timeIntInfo )
 {}
@@ -135,7 +132,7 @@ Builder::Builder( const Expr::Tag& result,
                   const Wasatch::TimeIntegrator timeIntInfo )
 : ExpressionBuilder( result ),
   solnVarName_( result.name() ),
-  phioldt_( phiOldTag ),
+  phiOldt_( phiOldTag ),
   rhst_( rhsTag ),
   timeIntInfo_( timeIntInfo )
 {}
@@ -146,7 +143,7 @@ template< typename FieldT >
 Expr::ExpressionBase*
 TimeAdvance<FieldT>::Builder::build() const
 {
-  return new TimeAdvance<FieldT>( solnVarName_, phioldt_, rhst_, timeIntInfo_ );
+  return new TimeAdvance<FieldT>( solnVarName_, phiOldt_, rhst_, timeIntInfo_ );
 }
 
 //--------------------------------------------------------------------
