@@ -109,13 +109,21 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 
-  if(start.x() > end.x() || start.y() > end.y() || start.z() > end.z() ) {
+  if( start.x() > end.x() || start.y() > end.y() || start.z() > end.z() ) {
     ostringstream warn;
     warn << "\n ERROR:Radiometer::problemSetup: the radiometerthat you've specified " << start 
          << " " << end << " the starting point is > than the ending point \n" << endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
-
+  
+  // you need at least one cell that's a radiometer
+  if( start.x() == end.x() || start.y() == end.y() || start.z() == end.z() ){
+    ostringstream warn;
+    warn << "\n ERROR:Radiometer::problemSetup: The specified radiometer has the same "
+         << "starting and ending points.  All of the directions must differ by one cell\n "
+         << "                                start: " << start << " end: " << end << endl;
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
 
 #ifndef RAY_SCATTER
   proc0cout<< "sigmaScat: " << d_sigmaScat << endl;
