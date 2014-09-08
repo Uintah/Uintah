@@ -24,7 +24,8 @@ SRCS += \
         $(SRCDIR)/MMS1.cc \
         $(SRCDIR)/SecondMFMoment.cc \
 				$(SRCDIR)/ManifoldRxn.cc \
-        $(SRCDIR)/DissipationSource.cc
+        $(SRCDIR)/DissipationSource.cc \
+        $(SRCDIR)/MomentumDragSrc.cc
 
 
 

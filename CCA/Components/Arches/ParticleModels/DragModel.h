@@ -5,6 +5,10 @@
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <spatialops/structured/FVStaggered.h>
 
+#ifndef PI
+#define PI 3.141592653589793
+#endif
+
 //-------------------------------------------------------
 
 /**
@@ -376,7 +380,7 @@ namespace Uintah{
       if (!constDensity ) {
         *gas_model_value <<= - *model_value * *weight * *density / (*interp)(*rhoG);
       } else {
-        *gas_model_value <<= - *model_value * *weight * _rho / (*interp)(*rhoG);
+        *gas_model_value <<= - *model_value * *weight * _rho / (*interp)(*rhoG) * PI/6.0 * _d * _d * _d;
       }
       
     }
