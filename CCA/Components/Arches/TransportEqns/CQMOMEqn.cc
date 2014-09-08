@@ -477,11 +477,7 @@ CQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int t
   tsk->requires(Task::OldDW, d_fieldLabels->d_cellTypeLabel, Ghost::AroundCells, 1);
   
   if (d_addSources) {
-    if (timeSubStep == 0) {
-      tsk->requires(Task::OldDW, d_sourceLabel, Ghost::None, 0);
-    } else {
-      tsk->requires(Task::NewDW, d_sourceLabel, Ghost::None, 0);
-    }
+    tsk->requires(Task::NewDW, d_sourceLabel, Ghost::None, 0);
   }
   
   //loop over requires for weights and abscissas needed for convection term if IC=u,v,w
@@ -548,11 +544,7 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     
     new_dw->get(oldPhi, d_oldtransportVarLabel, matlIndex, patch, gac, 2);
     if (d_addSources) {
-      if (new_dw->exists(d_sourceLabel, matlIndex, patch)) {
-        new_dw->get(src, d_sourceLabel, matlIndex, patch, gn, 0); // only get new_dw value on rkstep > 0
-      } else {
-        old_dw->get(src, d_sourceLabel, matlIndex, patch, gn, 0);
-      }
+      new_dw->get(src, d_sourceLabel, matlIndex, patch, gn, 0);
     }
     
     old_dw->get(mu_t, d_fieldLabels->d_viscosityCTSLabel, matlIndex, patch, gac, 1);
