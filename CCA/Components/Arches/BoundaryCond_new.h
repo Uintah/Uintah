@@ -379,16 +379,7 @@ public:
           }
 
         } else { 
-
-          bool   foundIterator2 = false;  // if iterator is not found, ensure it isn't on any other patches before throwing an exception.
-          for (int child2 = 0; child2 < numChildren; child2++){
-            foundIterator2 =
-              ( getIteratorBCValue<double>( patch, face, child2, varname, d_matl_id, bc_value, bound_ptr ) || foundIterator2 );
-          }
-
-          if(!foundIterator2){
             throw InvalidValue( "Error: Missing boundary condition for "+ varname, __FILE__, __LINE__);
-          }
         }
       }
     }
