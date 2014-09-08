@@ -198,6 +198,8 @@
               <mix_mol_w_label            spec="OPTIONAL STRING"/> <!-- default is "mixture_molecular_weight" --> 
             </grey_gas>
             <particles                    spec="OPTIONAL NO_DATA" need_applies_to="type radprops">
+              <part_temp_label            spec="REQUIRED STRING"                                />    <!--base label used for particle temp in DQMOM-->                      
+              <part_size_label            spec="REQUIRED STRING"                                />    <!--base label used for particle size in DQMOM-->                     
               <model_type                 spec="REQUIRED STRING 'planck, rossland'"/> <!-- Type of absorption coefficient --> 
               <complex_ir_real            spec="REQUIRED DOUBLE 'positive'"/> <!-- Real part of the complex index of refraction --> 
               <complex_ir_imag            spec="REQUIRED DOUBLE 'negative'"/> <!-- Imaginary part of the complex index of refraction --> 

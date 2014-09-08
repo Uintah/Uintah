@@ -1,6 +1,7 @@
 #include <CCA/Components/Arches/PropertyModels/RadProperties.h>
 #include <CCA/Components/Arches/Radiation/RadPropertyCalculator.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
+#include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 using namespace Uintah; 
 
 //---------------------------------------------------------------------------
@@ -15,6 +16,8 @@ RadProperties::RadProperties( std::string prop_name, SimulationStateP& shared_st
 
   int matlIndex = _shared_state->getArchesMaterial(0)->getDWIndex(); 
   _boundaryCond = scinew BoundaryCondition_new( matlIndex );
+
+
 
 }
 
@@ -70,6 +73,15 @@ void RadProperties::problemSetup( const ProblemSpecP& inputdb )
     db_calc->findBlock("temperature")->getAttribute("label", _temperature_name); 
   } else { 
     _temperature_name = "temperature"; 
+  }
+
+
+
+  _nQn_part = 0;
+  if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM") && _calc->has_abskp_local() ){
+    db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->require( "number_quad_nodes", _nQn_part ); 
+    db->findBlock("calculator")->findBlock("particles")->getWithDefault( "part_temp_label", _base_temperature_label_name, "heat_pT" ); 
+    db->findBlock("calculator")->findBlock("particles")->getWithDefault( "part_size_label", _base_size_label_name, "length" ); 
   }
 
   bool complete; 
@@ -241,7 +253,7 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
     }
 
     //actually compute the properties
-    _calc->computeProps( patch, vol_fraction, species, temperature, abskg ); 
+    _calc->compute_abskg( patch, vol_fraction, species, temperature, abskg ); 
 
     //copy the gas portion to the total: 
     absk_tot.copyData(abskg); 
@@ -250,6 +262,65 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
     if ( use_abskp ){ 
 
       if ( local_abskp ){ 
+      // Create containers to be passed to function that populates abskp
+         DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self(); // DQMOM singleton object
+         CCCV pWeight;      // particle weights
+         CCCV pSize;        // particle sizes
+         CCCV pTemperature; // particle Temperatures
+         typedef std::vector<const VarLabel*> CCCVL; // object used for iterating over quadrature nodes
+
+
+         // Get labels and scaling constants for DQMOM size, temperature and weights
+         std::vector<const VarLabel*> s_varlabels;     // DQMOM size label
+         std::vector<const VarLabel*> w_varlabels;     // DQMOM weight label
+         std::vector<const VarLabel*> t_varlabels;     // DQMOM Temperature label
+         s_varlabels.resize(0);
+         w_varlabels.resize(0);
+         t_varlabels.resize(0);
+         double s_scaling_constant; // scaling constant for sizes
+         double w_scaling_constant; // scaling constant for weights
+
+         for ( int i = 0; i < _nQn_part; i++ ){
+           std::string label_name_s = _base_size_label_name + "_qn"; 
+           std::string label_name_t = _base_temperature_label_name + "_qn"; 
+           std::string label_name_w =   "w_qn"; 
+           std::stringstream out; 
+           out << i; 
+           label_name_s += out.str(); 
+           label_name_t += out.str(); 
+           label_name_w += out.str(); 
+           if (i == 0){
+             s_scaling_constant = dqmom_eqn_factory.retrieve_scalar_eqn(label_name_s).getScalingConstant();
+             w_scaling_constant = dqmom_eqn_factory.retrieve_scalar_eqn(label_name_w).getScalingConstant();
+           }
+           s_varlabels.push_back(VarLabel::find( label_name_s ));
+           t_varlabels.push_back(VarLabel::find( label_name_t ) );
+           w_varlabels.push_back(VarLabel::find( label_name_w ) );
+         }
+
+        ////size
+        for ( CCCVL::iterator iterx = s_varlabels.begin(); iterx != s_varlabels.end(); iterx++ ){ 
+          constCCVariable<double> var; 
+          which_dw->get( var,*iterx, matlIndex, patch, Ghost::None, 0 ); 
+          pSize.push_back( var ); 
+        }
+        /////--temperature
+        for ( CCCVL::iterator iterx = t_varlabels.begin(); iterx != t_varlabels.end(); iterx++ ){ 
+          constCCVariable<double> var; 
+          which_dw->get( var, *iterx, matlIndex, patch, Ghost::None, 0 ); 
+          pTemperature.push_back( var ); 
+        } 
+
+        //////--weight--
+        for ( CCCVL::iterator iterx = w_varlabels.begin(); iterx != w_varlabels.end(); iterx++ ){ 
+          constCCVariable<double> var; 
+          which_dw->get( var, *iterx, matlIndex, patch, Ghost::None, 0 ); 
+          pWeight.push_back( var ); 
+        } 
+
+        _calc->compute_abskp( patch, vol_fraction, s_scaling_constant, pSize, pTemperature, 
+            w_scaling_constant, pWeight, _nQn_part,  abskp);
+
         _calc->sum_abs( absk_tot, abskp, patch ); 
       } else { 
         _calc->sum_abs( absk_tot, const_abskp, patch ); 
@@ -309,6 +380,7 @@ void RadProperties::initialize( const ProcessorGroup* pc,
 
     if ( use_abskp && local_abskp ){ 
       new_dw->allocateAndPut( abskp, _calc->get_abskp_label(), matlIndex, patch ); 
+      abskp.initialize(0.0); 
     }
 
     PropertyModelBase::base_initialize( patch, prop ); // generic initialization functionality 
