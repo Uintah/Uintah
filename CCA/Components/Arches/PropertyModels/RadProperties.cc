@@ -75,7 +75,8 @@ void RadProperties::problemSetup( const ProblemSpecP& inputdb )
     _temperature_name = "temperature"; 
   }
 
-
+  bool complete; 
+  complete = _calc->problemSetup( db_calc );
 
   _nQn_part = 0;
   if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM") && _calc->has_abskp_local() ){
@@ -83,9 +84,6 @@ void RadProperties::problemSetup( const ProblemSpecP& inputdb )
     db->findBlock("calculator")->findBlock("particles")->getWithDefault( "part_temp_label", _base_temperature_label_name, "heat_pT" ); 
     db->findBlock("calculator")->findBlock("particles")->getWithDefault( "part_size_label", _base_size_label_name, "length" ); 
   }
-
-  bool complete; 
-  complete = _calc->problemSetup( db_calc );
 
   if ( !complete )
     throw InvalidValue("Error: Unable to setup radiation property calculator: "+calculator_type,__FILE__, __LINE__); 
