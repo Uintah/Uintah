@@ -171,7 +171,28 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
   }
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
-    
+
+
+  // Require DQMOM labels if needed 
+  if (  _calc->has_abskp_local() ){
+    for ( int i = 0; i < _nQn_part; i++ ){
+      std::string label_name_s = _base_size_label_name + "_qn"; 
+      std::string label_name_t = _base_temperature_label_name + "_qn"; 
+      std::string label_name_w =   "w_qn"; 
+      std::stringstream out; 
+      out << i; 
+      label_name_s += out.str();  // size
+      label_name_t += out.str();  // temperature
+      label_name_w += out.str();  // weight
+
+      tsk->requires( Task::OldDW, VarLabel::find( label_name_s ) , Ghost::None, 0 ); 
+      tsk->requires( Task::OldDW, VarLabel::find( label_name_t ) , Ghost::None, 0 ); 
+      tsk->requires( Task::OldDW, VarLabel::find( label_name_w ) , Ghost::None, 0 ); 
+      tsk->requires( Task::NewDW, VarLabel::find( label_name_s ) , Ghost::None, 0 ); 
+      tsk->requires( Task::NewDW, VarLabel::find( label_name_t ) , Ghost::None, 0 ); 
+      tsk->requires( Task::NewDW, VarLabel::find( label_name_w ) , Ghost::None, 0 ); 
+    }
+  }
 }
 
 //---------------------------------------------------------------------------
