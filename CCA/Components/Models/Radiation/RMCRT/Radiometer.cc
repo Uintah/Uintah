@@ -81,12 +81,23 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
   rad_ps->get(            "VRLocationsMin" ,    d_VRLocationsMin );                    // minimum extent of the string or block of virtual radiometers in physical units
   rad_ps->get(            "VRLocationsMax" ,    d_VRLocationsMax );                    // maximum extent
 
-  if(getExtraInputs){
+  if( getExtraInputs ){
     rad_ps->getWithDefault( "sigmaScat"  ,      d_sigmaScat  ,      0 );                // scattering coefficient
     rad_ps->getWithDefault( "Threshold" ,       d_threshold ,      0.01 );              // When to terminate a ray
     rad_ps->getWithDefault( "randomSeed",       d_isSeedRandom,    true );              // random or deterministic seed.
     rad_ps->getWithDefault( "StefanBoltzmann",  d_sigma,           5.67051e-8);         // Units are W/(m^2-K)
     rad_ps->getWithDefault( "allowReflect"   ,  d_allowReflect,     true );             // Allow for ray reflections. Make false for DOM comparisons.
+  } else {
+                   // bulletproofing.
+    for( ProblemSpecP n = rad_ps->getFirstChild(); n != 0; n=n->getNextSibling() ){
+      string me = n->getNodeName();
+      if( ( me == "sigmaScat"  ||  me == "Threshold" || me == "randomSeed" ||  me == "StefanBoltzmann" || me == "allowReflect" ) && me !="text" ){
+        ostringstream warn;
+        warn << "\n ERROR:Radiometer::problemSetup: You've specified the variable (" << me << ")"
+             << " which will be ignored.  You should set the variable outside <Radiometer> section. \n";
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+      }
+    }
   }
   
   //__________________________________
@@ -101,8 +112,8 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
   Point min = compDomain.min();
   Point max = compDomain.max();
 
-  if(start.x() < min.x() || start.y() < min.y() ||start.z() < min.z() ||
-     end.x() > max.x()   ||end.y() > max.y()    || end.z() > max.z() ) {
+  if(start.x() < min.x() || start.y() < min.y() || start.z() < min.z() ||
+     end.x() > max.x()   || end.y() > max.y()   || end.z() > max.z() ) {
     ostringstream warn;
     warn << "\n ERROR:Radiometer::problemSetup: the radiometer that you've specified " << start 
          << " " << end << " begins or ends outside of the computational domain. \n" << endl;
