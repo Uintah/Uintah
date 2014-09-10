@@ -435,7 +435,14 @@ SCI_ARG_WITH(magma,
                  Use the MAGMA installation in DIR),
   [with_magma="$withval"
    sci_required_magma=yes],
-  [with_magma=""]) 
+  [with_magma=""])
+
+SCI_ARG_WITH(kokkos,
+  AC_HELP_STRING(--with-kokkos=DIR,
+                 Use the Kokkos installation in DIR),
+  [with_kokkos="$withval"
+   sci_required_kokkos=yes],
+  [with_kokkos=""])  
   
 SCI_ARG_WITH(unp,
   AC_HELP_STRING(--with-unp=DIR,
@@ -3673,6 +3680,47 @@ AC_SUBST(GPERFTOOLS_LIB_FLAG)
 
 sci_defs_files="$sci_defs_files include/sci_defs/gperftools_testdefs.h"
 
+
+##  --  search for kokkos stuff  -------------------------------------------
+_sci_lib=
+_sci_inc=
+_sci_optional=optional
+if test "$sci_required_kokkos" = "yes"; then
+ 
+  if test "$with_kokkos" = "yes"; then
+    _sci_optional=required
+  else
+    _sci_optional=specific
+    _sci_lib="$with_kokkos"
+    BASE_LIB_PATH(_sci_lib,$_sci_lib)
+    _sci_inc="$with_kokkos/include"
+  fi
+ 
+  AC_LANG(C++)
+  SCI_TRY_LINK(KOKKOS, KOKKOS libraries and headers,
+               Kokkos_Core.hpp,
+               $_sci_inc,
+               kokkoscore,
+               $_sci_lib,
+               ,
+               [long long flops;
+               float x=0.0;
+               x++;],
+               $_sci_optional)
+  AC_LANG(C)   
+  
+  DEF_PAPI="#define USE_KOKKOS 1"
+
+fi #end sci_required_kokkos
+
+# these are all defined after the call to SCI_COMPILE_LINK_TEST
+AC_SUBST(HAVE_KOKKOS)
+AC_SUBST(DEF_KOKKOS)
+AC_SUBST(INC_KOKKOS_H)
+AC_SUBST(KOKKOS_LIB_DIR_FLAG)
+AC_SUBST(KOKKOS_LIB_FLAG)
+
+sci_defs_files="$sci_defs_files include/sci_defs/kokkos_testdefs.h"
 
 ##  --  search for cuda stuff  ------------------------------------------
 if test "$sci_required_cuda" = "yes"; then
