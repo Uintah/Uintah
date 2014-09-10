@@ -109,11 +109,19 @@ CQMOMSourceWrapper::sched_buildSourceTerm( const LevelP& level, SchedulerP& sche
   //loop over requires for weights and abscissas needed
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
     const VarLabel* tempLabel = iW->second;
-    tsk->requires( Task::OldDW, tempLabel, Ghost::None, 0 );
+    if (timeSubStep == 0 ) {
+      tsk->requires( Task::OldDW, tempLabel, Ghost::None, 0 );
+    } else {
+      tsk->requires( Task::NewDW, tempLabel, Ghost::None, 0 );
+    }
   }
   for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
     const VarLabel* tempLabel = iA->second;
-    tsk->requires( Task::OldDW, tempLabel, Ghost::None, 0 );
+    if (timeSubStep == 0 ) {
+      tsk->requires( Task::OldDW, tempLabel, Ghost::None, 0 );
+    } else {
+      tsk->requires( Task::NewDW, tempLabel, Ghost::None, 0 );
+    }
   }
 
   //loop over all the d\phi/dt sources
@@ -153,14 +161,22 @@ CQMOMSourceWrapper::buildSourceTerm( const ProcessorGroup* pc,
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
       const VarLabel* tempLabel = iW->second;
       constCCVarWrapper tempWrapper;
-      old_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gn, 0 );
+      if (new_dw->exists( tempLabel, matlIndex, patch) ) {
+        new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gn, 0 );
+      } else {
+        old_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gn, 0 );
+      }
       cqmomWeights.push_back(tempWrapper);
     }
         
     for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
       const VarLabel* tempLabel = iA->second;
       constCCVarWrapper tempWrapper;
-      old_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gn, 0 );
+      if (new_dw->exists( tempLabel, matlIndex, patch) ) {
+        new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gn, 0 );
+      } else {
+        old_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gn, 0 );
+      }
       cqmomAbscissas.push_back(tempWrapper);
     }
 
