@@ -1951,21 +1951,15 @@ void SerialMPM::readInsertParticlesFile(string filename)
       throw ProblemSetupException("ERROR Opening particle insertion file '"+filename+"'\n",
                                   __FILE__, __LINE__);
     }
-
-    double t0(-1.e9);
     while(is) {
         double t1,color,transx,transy,transz,v_new_x,v_new_y,v_new_z;
         is >> t1 >> color >> transx >> transy >> transz >> v_new_x >> v_new_y >> v_new_z;
         if(is) {
-            if(t1<=t0){
-              throw ProblemSetupException("ERROR: Time in insertParticleFile is not monotomically increasing", __FILE__, __LINE__);
-            }
             d_IPTimes.push_back(t1);
             d_IPColor.push_back(color);
             d_IPTranslate.push_back(Vector(transx,transy,transz));
             d_IPVelNew.push_back(Vector(v_new_x,v_new_y,v_new_z));
         }
-        t0 = t1;
     }
   }
 }
@@ -4289,52 +4283,50 @@ void SerialMPM::insertParticles(const ProcessorGroup*,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw)
 {
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,
-              "Doing insertParticles");
-
-    // Get current time and timestep size
-    double time = d_sharedState->getElapsedTime();
-    delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
-
-    int index = -999;
-
-    for(int i = 0; i<(int) d_IPTimes.size(); i++){
-       if(time+delT > d_IPTimes[i] && time <= d_IPTimes[i]){
-         index = i;
-       }
-    }
-
-    if(index>=0){
-      int numMPMMatls=d_sharedState->getNumMPMMatls();
-      for(int m = 0; m < numMPMMatls; m++){
-        MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-        int dwi = mpm_matl->getDWIndex();
-        ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-
-        // Get the arrays of particle values to be changed
-        ParticleVariable<Point> px;
-        ParticleVariable<Vector> pvelocity;
-        constParticleVariable<double> pcolor;
-
-        old_dw->get(pcolor,               lb->pColorLabel,              pset);
-        new_dw->getModifiable(px,         lb->pXLabel_preReloc,         pset);
-        new_dw->getModifiable(pvelocity,  lb->pVelocityLabel_preReloc,  pset);
-
-        // Loop over particles here
-        for(ParticleSubset::iterator iter  = pset->begin();
-                                     iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-           if(pcolor[idx]==d_IPColor[index]){
-             pvelocity[idx]=d_IPVelNew[index];
-             px[idx] = px[idx] + d_IPTranslate[index];
-           }
-        }
-      }
-    }
-  }
+	for(int p=0;p<patches->size();p++){
+		const Patch* patch = patches->get(p);
+		printTask(patches, patch,cout_doing,
+				  "Doing insertParticles");
+		
+		// Get current time and timestep size
+		double time = d_sharedState->getElapsedTime();
+		delt_vartype delT;
+		old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+		
+		int index = -999;
+		for(int i = 0; i<(int) d_IPTimes.size(); i++){
+			if(time+delT > d_IPTimes[i] && time <= d_IPTimes[i]){
+				index = i;
+				if(index>=0){
+					int numMPMMatls=d_sharedState->getNumMPMMatls();
+					for(int m = 0; m < numMPMMatls; m++){
+						MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+						int dwi = mpm_matl->getDWIndex();
+						ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+						
+						// Get the arrays of particle values to be changed
+						ParticleVariable<Point> px;
+						ParticleVariable<Vector> pvelocity;
+						constParticleVariable<double> pcolor;
+						
+						old_dw->get(pcolor,               lb->pColorLabel,              pset);
+						new_dw->getModifiable(px,         lb->pXLabel_preReloc,         pset);
+						new_dw->getModifiable(pvelocity,  lb->pVelocityLabel_preReloc,  pset);
+						
+						// Loop over particles here
+						for(ParticleSubset::iterator iter  = pset->begin();
+								iter != pset->end(); iter++){
+							particleIndex idx = *iter;
+							if(pcolor[idx]==d_IPColor[index]){
+								pvelocity[idx]=d_IPVelNew[index];
+								px[idx] = px[idx] + d_IPTranslate[index];
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,
