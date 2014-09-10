@@ -38,6 +38,20 @@ CQMOMSourceWrapper::problemSetup(const ProblemSpecP& inputdb)
   db->get("N", _N ); //total number of nodes
   
   inputdb->getAttribute("label",model_name);
+  
+  for ( int i = 0; i < _N; i++ ) {
+    string thisNodeSource;
+    string node;
+    std::stringstream index;
+    index << i;
+    node = index.str();
+    
+    thisNodeSource = model_name + "_" + node;
+    const VarLabel * tempLabel;
+    tempLabel = VarLabel::find( thisNodeSource );
+    //      cout << "found varlabel for " << thisNodeSource << " " << tempLabel << endl; //check that this is finding right varlabels made by model
+    d_nodeSources.push_back(tempLabel);
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -48,22 +62,6 @@ CQMOMSourceWrapper::sched_initializeVariables( const LevelP& level, SchedulerP& 
 {
   string taskname = "CQMOMSourceWrapper::initializeVariables";
   Task* tsk = scinew Task(taskname, this, &CQMOMSourceWrapper::initializeVariables);
-  
-  if ( d_nodeSources.empty() ) {
-    for ( int i = 0; i < _N; i++ ) {
-      string thisNodeSource;
-      string node;
-      std::stringstream index;
-      index << i;
-      node = index.str();
-    
-      thisNodeSource = model_name + "_" + node;
-      const VarLabel * tempLabel;
-      tempLabel = VarLabel::find( thisNodeSource );
-//      cout << "found varlabel for " << thisNodeSource << " " << tempLabel << endl; //check that this is finding right varlabels made by model
-      d_nodeSources.push_back(tempLabel);
-    }
-  }
 
   //New
   tsk->computes(d_modelLabel);
