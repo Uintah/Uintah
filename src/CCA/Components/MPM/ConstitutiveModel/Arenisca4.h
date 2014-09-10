@@ -50,6 +50,18 @@ namespace Uintah {
   class Arenisca4 : public ConstitutiveModel {
     // Create datatype for storing model parameters
   public:
+
+    // For usage instructions, see the 'WeibullParser' function
+    // header in Kayenta.cc
+    struct WeibParameters {
+      bool Perturb;           // 'True' for perturbed parameter
+      double WeibMed;         // Medain distrib. value OR const value depending on bool Perturb
+      int    WeibSeed;        // seed for random number generator
+      double WeibMod;         // Weibull modulus
+      double WeibRefVol;      // Reference Volume
+      std::string WeibDist;   // String for Distribution
+    };
+
     struct CMData {
       double PEAKI1;
       double FSLOPE;
@@ -75,8 +87,8 @@ namespace Uintah {
       double fluid_pressure_initial;
       double T1_rate_dependence;
       double T2_rate_dependence;
-      double gruneisen_parameter;
       double subcycling_characteristic_number;
+      bool Use_Disaggregation_Algorithm;
     };
     const VarLabel* pLocalizedLabel;
     const VarLabel* pLocalizedLabel_preReloc;
@@ -96,31 +108,43 @@ namespace Uintah {
     const VarLabel* peveLabel_preReloc;
     const VarLabel* pCapXLabel;
     const VarLabel* pCapXLabel_preReloc;
-    const VarLabel* pCapXQSLabel;
-    const VarLabel* pCapXQSLabel_preReloc;
-    const VarLabel* pKappaLabel;
-    const VarLabel* pKappaLabel_preReloc;
     const VarLabel* pZetaLabel;
     const VarLabel* pZetaLabel_preReloc;
-    const VarLabel* pZetaQSLabel;
-    const VarLabel* pZetaQSLabel_preReloc;
-    const VarLabel* pIotaLabel;
-    const VarLabel* pIotaLabel_preReloc;
-    const VarLabel* pIotaQSLabel;
-    const VarLabel* pIotaQSLabel_preReloc;
+    const VarLabel* pP3Label;
+    const VarLabel* pP3Label_preReloc;
     const VarLabel* pStressQSLabel;
     const VarLabel* pStressQSLabel_preReloc;
     const VarLabel* pScratchMatrixLabel;
     const VarLabel* pScratchMatrixLabel_preReloc;
 
+    // weibull parameter set
+    WeibParameters wdist;
+    const VarLabel* peakI1IDistLabel;
+    const VarLabel* peakI1IDistLabel_preReloc;
+
   private:
     double one_third,
            two_third,
            four_third,
+           sqrt_two,
+           one_sqrt_two,
            sqrt_three,
            one_sqrt_three,
+           one_sixth,
+           one_ninth,
+           pi,
+           pi_fourth,
+           pi_half,
            small_number,
-           big_number;
+           big_number,
+           Kf,
+           Km,
+           phi_i,
+           ev0,
+           C1;
+
+    Matrix3 Identity;
+
     CMData d_cm;
 
     // Prevent copying of this class
@@ -141,7 +165,6 @@ namespace Uintah {
     virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
 
     // clone
-
     Arenisca4* clone();
 
     // compute stable timestep for this patch
@@ -161,6 +184,8 @@ namespace Uintah {
                     const Matrix3& sigma_n,
                     const double & X_n,
                     const double & Zeta_n,
+                    const double & coher,
+                    const double & P3,
                     const Matrix3& ep_n,
                     Matrix3& sigma_p,
                     double & X_p,
@@ -173,6 +198,7 @@ namespace Uintah {
 
     void computeElasticProperties(const Matrix3 stress,
                                   const Matrix3 ep,
+				                  const double& P3,
                                   double & bulk,
                                   double & shear
                                  );
@@ -184,6 +210,7 @@ namespace Uintah {
 
     int computeStepDivisions(const double& X,
                              const double& Zeta,
+                             const double& P3,
                              const Matrix3& ep,
                              const Matrix3& sigma_n,
                              const Matrix3& sigma_trial);
@@ -192,65 +219,85 @@ namespace Uintah {
                            Matrix3& S,
                            double& I1,
                            double& J2,
-                           double& rJ2);
+                           double& rJ2,
+						   double& J3);
 
-    int computeSubstep(const Matrix3& D,         // Strain "rate"
-                       const double & dt,        // time substep (s)
+    int computeSubstep(const Matrix3& d_e,       // total strain increment for substep
                        const Matrix3& sigma_old, // stress at start of substep
                        const Matrix3& ep_old,    // plastic strain at start of substep
                        const double & X_old,     // hydrostatic comrpessive strength at start of substep
                        const double & Zeta_old,  // trace of isotropic backstress at start of substep
-                       Matrix3& sigma_new, // stress at end of substep
-                       Matrix3& ep_new,    // plastic strain at end of substep
-                       double & X_new,     // hydrostatic comrpessive strength at end of substep
-                       double & Zeta_new   // trace of isotropic backstress at end of substep
+                       const double & coher,     // scalar valued coher
+                       const double & P3,      // initial disaggregation strain
+                       Matrix3& sigma_new,    // stress at end of substep
+                       Matrix3& ep_new,       // plastic strain at end of substep
+                       double & X_new,        // hydrostatic comrpessive strength at end of substep
+                       double & Zeta_new      // trace of isotropic backstress at end of substep
                       );
 
-    double computeX(double evp);
+    double computeX(const double& evp, const double& P3);
 
     double computedZetadevp(double Zeta,
                             double evp);
-    double computeev0();
 
-    int nonHardeningReturn(const double & I1_trial,
-                           const double & rJ2_trial,
-                           const Matrix3& S_trial,
-                           const double & I1_old,
-                           const double &rJ2_old,
-                           const Matrix3& S_old,
+    double computePorePressure(const double ev);
+
+    void nonHardeningReturn(const Matrix3 & sigma_trial,
+                           const Matrix3 & sigma_old,
                            const Matrix3& d_e,
                            const double & X,
                            const double & Zeta,
+                           const double & coher, // XXX
                            const double & bulk,
                            const double & shear,
-                                 double & I1_new,
-                                 double & rJ2_new,
-                                 Matrix3& S_new,
+                                 Matrix3 & sigma_new,
                                  Matrix3& d_ep_new);
 
-    void transformedBisection(double& z_0,
-                              double& r_0,
-                              const double& z_trial,
-                              const double& r_trial,
+    void transformedBisection(Vector& sigma_0,
+                              const Vector& sigma_trial,
                               const double& X,
                               const double& Zeta,
-                              const double& bulk,
-                              const double& shear
+                              const double& coher,
+                              const double  limitParameters[4], // XXX
+                              const double& S_star_to_S
                              );
 
-    int transformedYieldFunction(const double& z,
-                                 const double& r,
+    int transformedYieldFunction(const Matrix3& sigma_star,
                                  const double& X,
                                  const double& Zeta,
-                                 const double& bulk,
-                                 const double& shear
+                                 const double& coher,
+                                 const double  limitParameters[4], // XXX
+                                 const double& S_star_to_S
                                 );
-    int computeYieldFunction(const double& I1,
-                             const double& rJ2,
+    int computeYieldFunction(const Matrix3& sigma,
                              const double& X,
-                             const double& Zeta
+                             const double& Zeta,
+                             const double& coher,
+                             const double  limitParameters[4] // XXX
                             );
 
+    void computeLimitParameters(double *limitParameters,
+                                const double& coher //XXX
+                               );
+
+    void checkInputParameters();
+
+    void spherical2cartesian(const Vector& p,  	// spherical point {r,theta,phi}
+	                               Vector& c	// cartesian point {x,y,z}
+							);
+	
+	void computeRotationToSphericalCS(const Vector& pnew,// interior point
+		                              const Vector& p0,	 // origin (i.e. trial stress)
+		                                    Matrix3& R	 // Rotation matrix
+									  );
+
+	void computeEigenProjectors(const Matrix3& A,// Input tensor
+								Vector& lambda,  // Ordered eigenvalues {LMH}
+								Matrix3& PL,	 // Low eigenprojector
+								Matrix3& PM,	 // Mid eigenprojector
+								Matrix3& PH		 // High eigenprojector
+							   );
+	
   public: //Uintah MPM constitutive model specific functions
     ////////////////////////////////////////////////////////////////////////
     /* Make the value for pLocalized computed locally available outside of the model. */
@@ -311,6 +358,17 @@ namespace Uintah {
                                    double temperature);
 
     virtual double getCompressibility();
+
+    // Weibull input parser that accepts a structure of input
+    // parameters defined as:
+    //
+    // bool Perturb        'True' for perturbed parameter
+    // double WeibMed       Medain distrib. value OR const value
+    //                         depending on bool Perturb
+    // double WeibMod       Weibull modulus
+    // double WeibScale     Scale parameter
+    // std::string WeibDist  String for Distribution
+    virtual void WeibullParser(WeibParameters &iP);
 
   };
 } // End namespace Uintah

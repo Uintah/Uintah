@@ -768,19 +768,19 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
 
       // Use polar decomposition to compute the rotation and stretch tensors
 #ifdef MHdeleteBadF
-      if(pDefGrad[idx].MaxAbsElem()>1.0e2){
+      if(pDefGrad_new[idx].MaxAbsElem()>1.0e2){
 		  pLocalized_new[idx]=-999;
 		  cout<<"Large deformation gradient component: [F_new] = "<<pDefGrad[idx]<<endl;
 		  cout<<"Resetting [F_new]=[I] for this step and deleting particle"<<endl;
 		  Identity.polarDecompositionRMB(tensorU, tensorR);
       }
-      else if(pDefGrad[idx].Determinant()<1.0e-3){
+      else if(pDefGrad_new[idx].Determinant()<1.0e-3){
 		  pLocalized_new[idx]=-999;
 		  cout<<"Small deformation gradient determinant: [F_new] = "<<pDefGrad[idx]<<endl;
 		  cout<<"Resetting [F_new]=[I] for this step and deleting particle"<<endl;
 		  Identity.polarDecompositionRMB(tensorU, tensorR);
       }
-	  else if(pDefGrad[idx].Determinant()>1.0e2){
+	  else if(pDefGrad_new[idx].Determinant()>1.0e2){
 		  pLocalized_new[idx]=-999;
 		  cout<<"Large deformation gradient determinant: [F_new] = "<<pDefGrad[idx]<<endl;
 		  cout<<"Resetting [F_new]=[I] for this step and deleting particle"<<endl;
@@ -1058,7 +1058,7 @@ void Arenisca3::computeElasticProperties(const Matrix3 stress,
 			double expb2byI1 = fasterexp(b2/I1);
 			bulk = bulk + b1*expb2byI1;
 			if(d_cm.G1!=0.0 && d_cm.G2!=0.0){
-				double nu = d_cm.G1 + d_cm.G1*expb2byI1;
+				double nu = d_cm.G1 + d_cm.G2*expb2byI1;
 				shear = 1.5*bulk*(1.0-2.0*nu)/(1.0+nu);
 			}
 		}
