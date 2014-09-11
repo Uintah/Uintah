@@ -912,6 +912,7 @@ BoundaryCondition_new::create_masks( const ProcessorGroup* pg,
     patch->getBoundaryFaces(bf);
 
     IntVector plow  = patch->getCellLowIndex(); 
+    IntVector phigh = patch->getCellHighIndex(); 
 
     BoundaryCondition_new::NameToSVolMask svol_boundary_faces; 
 
@@ -920,6 +921,8 @@ BoundaryCondition_new::create_masks( const ProcessorGroup* pg,
 
       Patch::FaceType face = *iter;
 
+      IntVector axes = patch->getFaceAxes(face);
+      int P_dir = axes[0];  // principal direction
       typedef std::map<int,std::vector<BCGeomBase*> > BCDataArrayType;
       const BoundCondBase* bc;
       const BCDataArray* bc_data_array = patch->getBCDataArray(face); 
@@ -945,15 +948,28 @@ BoundaryCondition_new::create_masks( const ProcessorGroup* pg,
         bc_data_array->getCellFaceIterator(d_matl_id, bnd_iter, child); 
 
         //create the mask points: 
-        std::vector<SpatialOps::IntVec> points; 
+        std::vector<SpatialOps::IntVec> face_points; 
+        std::vector<SpatialOps::IntVec> extracell_points;
 
         for ( ;!bnd_iter.done(); bnd_iter++){ 
 
           IntVector c = *bnd_iter; 
-          IntVector cmod = c - plow; 
+          IntVector cmod_face  = c - plow - insideCellDir; 
+          IntVector cmod_extra = c - plow;  
 
-          SpatialOps::IntVec ijk(cmod.x(),cmod.y(),cmod.z());
-          points.push_back(ijk);
+          SpatialOps::IntVec ijk_face(cmod_face.x(),cmod_face.y(),cmod_face.z());
+          SpatialOps::IntVec ijk_extra(cmod_extra.x(),cmod_extra.y(),cmod_extra.z());
+
+          //don't add corner cells
+          //ask tony about this...
+          if ( cmod_face[axes[1]] >= plow[axes[1]] && 
+               cmod_face[axes[2]] >= plow[axes[2]] &&
+               cmod_face[axes[1]] < phigh[axes[1]] &&
+               cmod_face[axes[2]] < phigh[axes[2]] 
+              ) {
+            face_points.push_back(ijk_face);
+            extracell_points.push_back(ijk_extra); 
+          }
         
         }
 
@@ -962,7 +978,9 @@ BoundaryCondition_new::create_masks( const ProcessorGroup* pg,
 
         //put in the points. 
         //WARNING: THIS IS FOR A FIXED NUM OF GHOSTS...WHAT TO DO HERE? 
-        mask_cont.create_mask( patch, 0, points, BoundaryCondition_new::BOUNDARY_FACE ); 
+        mask_cont.create_mask( patch, 1, face_points, BoundaryCondition_new::BOUNDARY_FACE ); 
+        mask_cont.create_mask( patch, 1, face_points, BoundaryCondition_new::FIRST_NORMAL_INTERIOR); 
+        mask_cont.create_mask( patch, 1, extracell_points, BoundaryCondition_new::BOUNDARY_CELL ); 
 
         //now insert this specific child face into the name to mask_cont container: 
         svol_boundary_faces.insert(std::make_pair(child_name,mask_cont));
