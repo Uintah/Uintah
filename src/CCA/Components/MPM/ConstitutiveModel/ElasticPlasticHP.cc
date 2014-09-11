@@ -985,7 +985,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
            cerr << "The material has exceed the melt temperature, but you haven't turned \n";
            cerr << "melting on.  ElasticPlasticHP does nonsensical things here.  You should \n";
            cerr << "probably either set <do_melting>true</do_melting>, or increase the material\n";
-           cerr << "<melt_temp> to a level that won't be exceeded."
+           cerr << "<melt_temp> to a level that won't be exceeded.\n";
         }
 
         d_flow->updateElastic(idx);
