@@ -458,12 +458,9 @@ public:
 
   /** @brief For a specific boundary and field type, this struct will hold the mask **/ 
   template <typename FieldT>
-  struct BoundaryBase { 
+  struct MaskContainer { 
 
     public: 
-      /** @brief Return the boundary name **/ 
-      const std::string get_name(){ return _boundary_name; }
-
       /** @brief Create the mask.  Note the mask is a function of the num. of ghost cells...this is going to be tricky **/ 
       void create_mask( const Patch* patch, int nGhosts, const std::vector<SpatialOps::IntVec> ijk, BCMaskType bc_mask_type ){ 
         
@@ -494,15 +491,18 @@ public:
       }
 
     protected: 
-      std::string _boundary_name; 
       typedef std::map<BCMaskType, SpatialOps::SpatialMask<FieldT>* > MaskStorage; 
 
       MaskStorage _mask_storage; 
 
   }; 
 
-  typedef std::map<int, BoundaryBase<SpatialOps::SVolField> > PatchToSVolBoundary;
-  static PatchToSVolBoundary svol_boundary_info; 
+  // maps boundary name -> mask contianer
+  typedef std::map<const std::string, MaskContainer<SpatialOps::SVolField> > NameToSVolMask;
+  // maps patchID -> list of mask containers
+  typedef std::map<const int, NameToSVolMask> PatchToSVolMasks; 
+  //static PatchToSVolBoundary svol_boundary_info; 
+  static PatchToSVolMasks patch_svol_masks; 
 
   /** @brief This struct contains the helper function to retrieve boundary struct **/ 
   template <typename FieldT>
@@ -510,7 +510,8 @@ public:
 
   /** @brief Public access to the BC struct given the patch ID and a field **/ 
   template <typename FieldT>
-  static BoundaryBase<FieldT>& get_bc_info( const int patchID, FieldT field ){ return BCInterfaceStruct<FieldT>::get_bc( patchID, field ); }
+  static MaskContainer<FieldT>& get_bc_info( const int patchID, const std::string bc_name ){ 
+    return BCInterfaceStruct<FieldT>::get_bc( patchID, bc_name ); }
 
   /** @brief This struct contains the helper function to retrieve boundary struct **/ 
   template <typename FieldT>
@@ -518,18 +519,25 @@ public:
 
     public: 
       /** @brief Generic interface. Overloading should overide this call hence the error.  **/ 
-      static BoundaryBase<FieldT>& get_bc( ){
+      static MaskContainer<FieldT>& get_bc( ){
         throw InvalidValue("Mask Error: No known BC struct for this variable type.", __FILE__, __LINE__); 
       }; 
 
       /** @brief SVolField interface for BCBase **/ 
-      static BoundaryBase<SpatialOps::SVolField>& get_bc( const int patchID, SpatialOps::SVolField field ){
+      static MaskContainer<SpatialOps::SVolField>& get_bc( const int patchID, const std::string bc_name ){
 
-        PatchToSVolBoundary::iterator iter = BoundaryCondition_new::svol_boundary_info.find(patchID);
-        if ( iter == BoundaryCondition_new::svol_boundary_info.end() ){
-          throw InvalidValue("Mask Error: Cannot find SVol mask from PatchToSVolBoundary container.", __FILE__, __LINE__); 
+        //patch -> map with names, mask
+        PatchToSVolMasks::iterator iter = BoundaryCondition_new::patch_svol_masks.find(patchID); 
+        if ( iter == BoundaryCondition_new::patch_svol_masks.end() ){ 
+          throw InvalidValue("Mask Error: Cannot find SVol masks from PatchToSVolMasks container.", __FILE__, __LINE__); 
         }
-        return iter->second; 
+
+        //name -> mask
+        NameToSVolMask::iterator name_iter = iter->second.find(bc_name); 
+        if ( name_iter == iter->second.end()){ 
+          throw InvalidValue("Mask Error: Boundary name doesn't exist in mask map: "+bc_name, __FILE__, __LINE__); 
+        }
+        return name_iter->second; 
 
       }; 
   };
