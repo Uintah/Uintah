@@ -905,10 +905,15 @@ BoundaryCondition_new::create_masks( const ProcessorGroup* pg,
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
+    const int pID = patch->getID(); 
 
     vector<Patch::FaceType>::const_iterator iter;
     vector<Patch::FaceType> bf;
     patch->getBoundaryFaces(bf);
+
+    IntVector plow  = patch->getCellLowIndex(); 
+
+    BoundaryCondition_new::NameToSVolMask svol_boundary_faces; 
 
     //Patch boundary face iterator
     for (iter = bf.begin(); iter !=bf.end(); iter++){
@@ -932,14 +937,43 @@ BoundaryCondition_new::create_masks( const ProcessorGroup* pg,
 
         const std::string child_name = thisGeom->getBCName(); 
         if ( child_name == "NotSet"){ 
-          //need to enforce a name being set? 
+          //FIX THIS TO AUTONAME THE BCS
+          throw ProblemSetupException( "Error: Make sure all bcs have names.", __FILE__, __LINE__);
         }
 
         Uintah::Iterator bnd_iter;
         bc_data_array->getCellFaceIterator(d_matl_id, bnd_iter, child); 
 
+        //create the mask points: 
+        std::vector<SpatialOps::IntVec> points; 
+
+        for ( ;!bnd_iter.done(); bnd_iter++){ 
+
+          IntVector c = *bnd_iter; 
+          IntVector cmod = c - plow; 
+
+          SpatialOps::IntVec ijk(cmod.x(),cmod.y(),cmod.z());
+          points.push_back(ijk);
+        
+        }
+
+        //for this child, we need a mask container: 
+        BoundaryCondition_new::MaskContainer<SpatialOps::SVolField> mask_cont; 
+
+        //put in the points. 
+        //WARNING: THIS IS FOR A FIXED NUM OF GHOSTS...WHAT TO DO HERE? 
+        mask_cont.create_mask( patch, 0, points, BoundaryCondition_new::BOUNDARY_FACE ); 
+
+        //now insert this specific child face into the name to mask_cont container: 
+        svol_boundary_faces.insert(std::make_pair(child_name,mask_cont));
 
       }
     }
+
+    //Now put it into perma-storage: 
+    if ( svol_boundary_faces.size() > 0 ){
+      BoundaryCondition_new::patch_svol_masks.insert(std::make_pair(pID,svol_boundary_faces)); 
+    }
+
   }
 }
