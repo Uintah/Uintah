@@ -218,6 +218,13 @@ protected:
                             WHICH_DW dw, 
                             std::vector<VariableInformation>& var_reg );
 
+    /** @brief Inteface to register_variable_work -- this function is overloaded. 
+     *         This version assumes NewDW and zero ghosts. **/ 
+    void register_variable( std::string name, 
+                            VAR_TYPE type, 
+                            VAR_DEPEND dep, 
+                            std::vector<VariableInformation>& var_reg );
+
     /** @brief Builds a struct for each variable containing all pertinent uintah
      * DW information **/ 
     void register_variable_work( std::string name, 
