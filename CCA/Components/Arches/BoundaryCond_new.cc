@@ -19,7 +19,7 @@
 using namespace std;
 using namespace Uintah;
 
-Uintah::BoundaryCondition_new::PatchToSVolBoundary BoundaryCondition_new::svol_boundary_info; 
+Uintah::BoundaryCondition_new::PatchToSVolMasks BoundaryCondition_new::patch_svol_masks; 
 
 BoundaryCondition_new::BoundaryCondition_new( const int matl_id):
   d_matl_id(matl_id)
