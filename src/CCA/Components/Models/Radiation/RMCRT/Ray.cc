@@ -373,12 +373,19 @@ Ray::sched_rayTrace( const LevelP& level,
 
   printSchedule(level,dbg,taskname);
 
-  // require an infinite number of ghost cells so you can access the entire domain.
-  Ghost::GhostType  gac  = Ghost::AroundCells;
-  tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
-  tsk->requires( sigma_dw ,    d_sigmaT4_label,  gac, SHRT_MAX);
-  tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
-
+  //__________________________________
+  // Require an infinite number of ghost cells so you can access the entire domain.
+  // THIS IS VERY EXPENSIVE.  ONLY REQUIRE THESE VARIABLES ON CALCULATION TIMESTEPS.
+  // The taskgraph must be recompiled whenever this conditional changes from true to false
+  // and vice versa.  See the needsRecompile() function in the driving component.  The
+  // logic in that function must match this.  
+  if ( !doCarryForward( radCalc_freq) ) {
+    Ghost::GhostType  gac  = Ghost::AroundCells;
+    tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
+    tsk->requires( sigma_dw ,    d_sigmaT4_label,  gac, SHRT_MAX);
+    tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
+  }
+  
   // TODO This is a temporary fix until we can generalize GPU/CPU carry forward functionality.
   if (!(Uintah::Parallel::usingDevice())) {
     // needed for carry Forward
@@ -431,9 +438,8 @@ Ray::rayTrace( const ProcessorGroup* pc,
 {
 
   const Level* level = getLevel(patches);
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
 
-  if ( doCarryForward( timestep, radCalc_freq) ) {
+  if ( doCarryForward( radCalc_freq ) ) {
     printTask(patches,patches->get(0), dbg,"Doing Ray::rayTrace (carryForward)");
     bool replaceVar = true;
     new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls, replaceVar );
@@ -721,8 +727,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
   const Level* fineLevel = getLevel(finePatches);
    //__________________________________
   //  Carry Forward (old_dw -> new_dw)
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  if ( doCarryForward( timestep, radCalc_freq) ) {
+  if ( doCarryForward( radCalc_freq ) ) {
     printTask( fineLevel->getPatch(0), dbg, "Coing Ray::rayTrace_dataOnion carryForward ( divQ )" );
 
     new_dw->transferFrom( old_dw, d_divQLabel,          finePatches, matls, true );
@@ -1155,8 +1160,7 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
                             const bool backoutTemp )
 {
   // Only run if it's time
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  if ( doCarryForward( timestep, radCalc_freq) ) {
+  if ( doCarryForward( radCalc_freq ) ) {
     return;
   }
 
@@ -1366,8 +1370,7 @@ void Ray::refine_Q(const ProcessorGroup*,
 
   //__________________________________
   //  Carry Forward (old_dw -> new_dw)
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  if ( doCarryForward( timestep, radCalc_freq) ) {
+  if ( doCarryForward( radCalc_freq ) ) {
     printTask( fineLevel->getPatch(0), dbg, "Doing Ray::refine_Q carryForward ( divQ )" );
 
     new_dw->transferFrom( old_dw, d_divQLabel, patches, matls, true );

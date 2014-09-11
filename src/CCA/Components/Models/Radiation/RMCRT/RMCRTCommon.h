@@ -138,8 +138,7 @@ namespace Uintah{
                                   SchedulerP& scheduler,
                                   const VarLabel* variable );
                                        
-    bool doCarryForward( const int timestep,
-                         const int radCalc_freq);
+    bool doCarryForward( const int radCalc_freq );
                         
     void carryForward_Var ( const ProcessorGroup*,
                             const PatchSubset* ,

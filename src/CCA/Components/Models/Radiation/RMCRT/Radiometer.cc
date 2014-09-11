@@ -269,9 +269,8 @@ Radiometer::radiometer( const ProcessorGroup* pc,
                         const int radCalc_freq )
 {
   const Level* level = getLevel(patches);
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
 
-  if ( doCarryForward( timestep, radCalc_freq) ) {
+  if ( doCarryForward( radCalc_freq ) ) {
     printTask(patches,patches->get(0), dbg,"Doing Radiometer::radiometer (carryForward)");
     bool replaceVar = true;
     new_dw->transferFrom( old_dw, d_VRFluxLabel, patches, matls, replaceVar );
