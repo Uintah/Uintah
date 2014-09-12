@@ -941,7 +941,7 @@ BoundaryCondition_new::create_masks( const ProcessorGroup* pg,
         const std::string child_name = thisGeom->getBCName(); 
         if ( child_name == "NotSet"){ 
           //FIX THIS TO AUTONAME THE BCS
-          throw ProblemSetupException( "Error: Make sure all bcs have names.", __FILE__, __LINE__);
+         // throw ProblemSetupException( "Error: Make sure all bcs have names.", __FILE__, __LINE__);
         }
 
         Uintah::Iterator bnd_iter;
