@@ -142,11 +142,9 @@ public:
   int getNumWasatchMatls() const {
     return (int)wasatch_matls.size();
   }  
-
   MaterialSubset* getAllInOneMatl() {
     return allInOneMatl;
   }
-
   Material* getMaterial(int idx) const {
     return matls[idx];
   }
@@ -202,6 +200,10 @@ public:
   void setCurrentTopLevelTimeStep( int ts ) { d_topLevelTimeStep = ts; }
   void incrementCurrentTopLevelTimeStep() { d_topLevelTimeStep++; }
 
+
+  bool getRecompileTaskGraph() const { return d_recompileTaskGraph; }   
+  void setRecompileTaskGraph(bool ans) { d_recompileTaskGraph = ans; }    
+
   Material* parseAndLookupMaterial(ProblemSpecP& params,
                                    const std::string& name) const;
   Material* getMaterialByName(const std::string& name) const;
@@ -219,6 +221,7 @@ public:
   
   bool updateOutputInterval() { return d_updateOutputInterval; }
   void updateOutputInterval(bool ans) { d_updateOutputInterval = ans; }
+  
   bool updateCheckpointInterval() { return d_updateCheckpointInterval; }
   void updateCheckpointInterval(bool ans) { d_updateCheckpointInterval = ans; }
 
@@ -241,6 +244,7 @@ public:
   bool d_lockstepAMR;
   bool d_updateCheckpointInterval;
   bool d_updateOutputInterval;
+  bool d_recompileTaskGraph;
 
   // timing statistics to test load balance
   void clearStats();
