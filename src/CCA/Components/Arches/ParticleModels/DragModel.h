@@ -335,7 +335,7 @@ namespace Uintah{
       }
       if ( _base_w_velocity_name != "none" ) {
         const std::string w_vel_name = get_name( i, _base_w_velocity_name );
-        ITptr partVelW = tsk_info->get_const_so_field<IT>(w_vel_name);
+        partVelW = tsk_info->get_const_so_field<IT>(w_vel_name);
         *partVelMag <<= *partVelMag + *partVelW * *partVelW;
       }
       *partVelMag <<= sqrt( *partVelMag );
