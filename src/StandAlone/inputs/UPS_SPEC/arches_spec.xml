@@ -393,6 +393,10 @@
                                         attribute1="f_label REQUIRED STRING"     
                                         attribute2="extent_label REQUIRED STRING"/> 
 
+          <mixfrac_with_heatloss        spec="OPTIONAL NO_DATA"
+                                        attribute1="f_label REQUIRED STRING"
+                                        attribute2="hl_label REQUIRED STRING"/>
+
           <post_mix                     spec="OPTIONAL NO_DATA">
             <!-- Notes on post stream mixing: 
               1) Dependent variables that are not specified are assumed to be ZERO (even density)
