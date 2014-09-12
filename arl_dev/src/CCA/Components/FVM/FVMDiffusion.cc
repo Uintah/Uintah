@@ -24,9 +24,13 @@
 
 
 #include <CCA/Components/FVM/FVMDiffusion.h>
+#include <Core/Labels/FVMLabel.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Task.h>
@@ -45,13 +49,12 @@ using namespace Uintah;
 FVMDiffusion::FVMDiffusion(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
-  concentration_label = VarLabel::create("g.concentration", 
-                               NCVariable<double>::getTypeDescription());
+	lb = scinew FVMLabel();
 }
 
 FVMDiffusion::~FVMDiffusion()
 {
-  VarLabel::destroy(concentration_label);
+  delete lb;
 }
 
 void FVMDiffusion::problemSetup(const ProblemSpecP& params,
@@ -71,7 +74,7 @@ void FVMDiffusion::scheduleInitialize(const LevelP& level,
 {
   Task* task = scinew Task("initialize",
 			   this, &FVMDiffusion::initialize);
-  task->computes(concentration_label);
+  task->computes(lb->concentration_CCLabel);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 	cout << "Doing Schedule Initialize" << endl;
 }
@@ -90,8 +93,8 @@ void FVMDiffusion::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   Task* task = scinew Task("timeAdvance",
 			   this, &FVMDiffusion::timeAdvance);
 
-  task->requires(Task::OldDW, concentration_label, Ghost::AroundNodes, 1);
-  task->computes(concentration_label);
+  task->requires(Task::OldDW, lb->concentration_CCLabel, Ghost::AroundNodes, 1);
+  task->computes(lb->concentration_CCLabel);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 
 }
@@ -114,19 +117,21 @@ void FVMDiffusion::initialize(const ProcessorGroup*,
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
 
-      NCVariable<double> concentration;
-      new_dw->allocateAndPut(concentration, concentration_label, matl, patch);
+      CCVariable<double> concentration;
+      new_dw->allocateAndPut(concentration, lb->concentration_CCLabel, matl, patch);
       concentration.initialize(0);
 
       if(patch->getBCType(Patch::xminus) != Patch::Neighbor){
-	IntVector l,h;
-	patch->getFaceNodes(Patch::xminus, 0, l, h);
+				IntVector l,h;
+				patch->getFaceNodes(Patch::xminus, 0, l, h);
 
-	for(NodeIterator iter(l,h); !iter.done(); iter++)
-	  concentration[*iter]=1;
+			for(NodeIterator iter(l,h); !iter.done(); iter++)
+	  		concentration[*iter]=1;
       }
     }
   }
+
+	cout << "Initialized Grid" << endl;
 }
 
 void FVMDiffusion::timeAdvance(const ProcessorGroup* pg,

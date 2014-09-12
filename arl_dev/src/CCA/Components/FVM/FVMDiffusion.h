@@ -33,7 +33,7 @@
 
 namespace Uintah {
   class SimpleMaterial;
-  class ExamplesLabel;
+  class FVMLabel;
 
   class FVMDiffusion : public UintahParallelComponent, public SimulationInterface {
   public:
@@ -67,8 +67,9 @@ namespace Uintah {
 		 const MaterialSubset* matls,
 		 DataWarehouse* old_dw, DataWarehouse* new_dw);
 
-    const VarLabel* concentration_label;
     SimulationStateP sharedState_;
+		FVMLabel* lb;
+		
     double diffusivity;
 		double delt_;
     SimpleMaterial* mymat_;
