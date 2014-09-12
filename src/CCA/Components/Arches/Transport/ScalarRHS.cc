@@ -360,6 +360,28 @@ ScalarRHS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
 }
 
+//
+//------------------------------------------------
+//------------- BOUNDARY CONDITIONS --------------
+//------------------------------------------------
+//
+
+void 
+ScalarRHS::register_compute_bcs( std::vector<VariableInformation>& variable_registry, const int time_substep ){ 
+}
+
+void 
+ScalarRHS::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
+                        SpatialOps::OperatorDatabase& opr ){ 
+
+
+  using namespace SpatialOps;
+  using SpatialOps::operator *; 
+
+}
+
+
+
   //mask example
   //std::vector<SpatialOps::IntVec> maskset;  
 

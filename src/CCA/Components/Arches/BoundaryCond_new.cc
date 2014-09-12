@@ -962,7 +962,6 @@ BoundaryCondition_new::create_masks( const ProcessorGroup* pg,
           SpatialOps::IntVec ijk_extra(cmod_extra.x(),cmod_extra.y(),cmod_extra.z());
 
           //don't add corner cells
-          //ask tony about this...
           if ( cmod_face[axes[1]] >= plow[axes[1]] && 
                cmod_face[axes[2]] >= plow[axes[2]] &&
                cmod_face[axes[1]] < phigh[axes[1]] &&
@@ -979,6 +978,7 @@ BoundaryCondition_new::create_masks( const ProcessorGroup* pg,
 
         //put in the points. 
         //WARNING: THIS IS FOR A FIXED NUM OF GHOSTS...WHAT TO DO HERE? 
+        //SVOL MASKS:
         mask_cont.create_mask( patch, 1, face_points, BoundaryCondition_new::BOUNDARY_FACE ); 
         mask_cont.create_mask( patch, 1, face_points, BoundaryCondition_new::FIRST_NORMAL_INTERIOR); 
         mask_cont.create_mask( patch, 1, extracell_points, BoundaryCondition_new::BOUNDARY_CELL ); 
