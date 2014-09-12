@@ -64,6 +64,20 @@ TaskInterface::register_variable( std::string name,
 
 }
 
+void 
+TaskInterface::register_variable( std::string name, 
+                                  VAR_TYPE type, 
+                                  VAR_DEPEND dep, 
+                                  std::vector<VariableInformation>& variable_registry, 
+                                  const int timesubstep ){
+
+  WHICH_DW dw = NEWDW; 
+  int nGhost = 0; 
+
+  register_variable_work( name, type, dep, nGhost, dw, variable_registry, timesubstep );
+
+}
+
 //====================================================================================
 //
 //====================================================================================

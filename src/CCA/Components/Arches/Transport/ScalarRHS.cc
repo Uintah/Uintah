@@ -140,11 +140,11 @@ void
 ScalarRHS::register_initialize( std::vector<VariableInformation>& variable_registry ){ 
 
   //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
-  register_variable(  _rhs_name  , CC_DOUBLE , COMPUTES , variable_registry );
-  register_variable(  _task_name , CC_DOUBLE , COMPUTES , variable_registry );
-  register_variable(  _D_name    , CC_DOUBLE , COMPUTES , variable_registry );
-  register_variable(  _Fconv_name, CC_DOUBLE , COMPUTES , variable_registry );
-  register_variable(  _Fdiff_name, CC_DOUBLE , COMPUTES , variable_registry );
+  register_variable(  _rhs_name  , CC_DOUBLE , COMPUTES , 0 , NEWDW , variable_registry );
+  register_variable(  _task_name , CC_DOUBLE , COMPUTES , 0 , NEWDW , variable_registry );
+  register_variable(  _D_name    , CC_DOUBLE , COMPUTES , 0 , NEWDW , variable_registry );
+  register_variable(  _Fconv_name, CC_DOUBLE , COMPUTES , 0 , NEWDW , variable_registry );
+  register_variable(  _Fdiff_name, CC_DOUBLE , COMPUTES , 0 , NEWDW , variable_registry );
 
 }
 
@@ -175,9 +175,9 @@ ScalarRHS::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 //
 void 
 ScalarRHS::register_timestep_init( std::vector<VariableInformation>& variable_registry ){ 
-  register_variable( _D_name    , CC_DOUBLE , COMPUTES , variable_registry  );
+  register_variable( _D_name    , CC_DOUBLE , COMPUTES , 0 , NEWDW , variable_registry  );
   register_variable( _D_name    , CC_DOUBLE , REQUIRES , 0 , OLDDW , variable_registry );
-  register_variable( _task_name , CC_DOUBLE , COMPUTES , variable_registry  );
+  register_variable( _task_name , CC_DOUBLE , COMPUTES , 0 , NEWDW , variable_registry  );
   register_variable( _task_name , CC_DOUBLE , REQUIRES , 0 , OLDDW , variable_registry  );
 }
 
@@ -209,11 +209,11 @@ void
 ScalarRHS::register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ){ 
 
 //  //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
-  register_variable( _rhs_name        , CC_DOUBLE , COMPUTES , variable_registry , time_substep );
-  register_variable( _D_name          , CC_DOUBLE , REQUIRES , 1 , NEWDW  , variable_registry , time_substep );
+  register_variable( _rhs_name        , CC_DOUBLE , COMPUTES , 0 , NEWDW  , variable_registry , time_substep );
+  register_variable( _D_name          , CC_DOUBLE , REQUIRES,  1 , NEWDW  , variable_registry , time_substep );
   register_variable( _task_name       , CC_DOUBLE , REQUIRES , 1 , LATEST , variable_registry , time_substep );
-  register_variable( _Fconv_name      , CC_DOUBLE , COMPUTES , variable_registry , time_substep );
-  register_variable( _Fdiff_name      , CC_DOUBLE , COMPUTES , variable_registry , time_substep );
+  register_variable( _Fconv_name      , CC_DOUBLE , COMPUTES , 0 , NEWDW  , variable_registry , time_substep );
+  register_variable( _Fdiff_name      , CC_DOUBLE , COMPUTES , 0 , NEWDW  , variable_registry , time_substep );
   register_variable( "uVelocitySPBC"  , FACEX     , REQUIRES , 1 , LATEST , variable_registry , time_substep );
   register_variable( "vVelocitySPBC"  , FACEY     , REQUIRES , 1 , LATEST , variable_registry , time_substep );
   register_variable( "wVelocitySPBC"  , FACEZ     , REQUIRES , 1 , LATEST , variable_registry , time_substep );
