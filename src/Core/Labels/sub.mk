@@ -35,7 +35,8 @@ SRCDIR   := Core/Labels
 SRCS     += \
 	$(SRCDIR)/ICELabel.cc \
 	$(SRCDIR)/MPMLabel.cc \
-	$(SRCDIR)/MPMICELabel.cc 
+	$(SRCDIR)/MPMICELabel.cc \
+	$(SRCDIR)/FVMLabel.cc 
 
 PSELIBS := \
 	Core/Exceptions \

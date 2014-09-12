@@ -22,7 +22,7 @@
    <DataArchiver>
        <filebase>diffusion1.uda</filebase>
        <outputTimestepInterval>1</outputTimestepInterval>
-       <save label = "g.concentration"/>
+       <save label = "cc.concentration"/>
        <!--<checkpoint cycle = "2" interval = "0.01"/>-->
    </DataArchiver>
 
@@ -30,6 +30,14 @@
        <diffusivity>.01</diffusivity>
 			 <delt>.01</delt>
    </FVMDiffusion>
+
+	 <MaterialProperties>
+	 	<FVM>
+			<material>
+				<concentration>0.0</concentration>
+			</material>
+		</FVM>
+	 </MaterialProperties>
 
 
     <PhysicalConstants>
@@ -49,22 +57,22 @@
          </BCType>
        </Face>
        <Face side = "y-">
-         <BCType id = "all" var = "Neumann" label = "Concentration">
+         <BCType id = "all" var = "Dirichlet" label = "Concentration">
               <value> 0. </value>
          </BCType>
        </Face>
        <Face side = "y+">
-         <BCType id = "all" var = "Neumann" label = "Concentration">
+         <BCType id = "all" var = "Dirichlet" label = "Concentration">
               <value> 0. </value>
          </BCType>
        </Face>
        <Face side = "z-">
-       <BCType id = "all" var = "Neumann" label = "Concentration">
+         <BCType id = "all" var = "Dirichlet" label = "Concentration">
               <value> 0. </value>
          </BCType>
        </Face>
        <Face side = "z+">
-         <BCType id = "all" var = "Neumann" label = "Concentration">
+         <BCType id = "all" var = "Dirichlet" label = "Concentration">
               <value> 0. </value>
          </BCType>
        </Face>

@@ -744,6 +744,7 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
     t->computes(MIlb->cMassLabel);
     t->computes(MIlb->vel_CCLabel);
     t->computes(MIlb->temp_CCLabel);
+    t->computes(MIlb->conc_CCLabel);
     t->computes(Ilb->sp_vol_CCLabel, mss);
     t->computes(Ilb->rho_CCLabel, mss); 
    
@@ -765,6 +766,9 @@ void MPMICE::scheduleCoarsenCC_0(SchedulerP& sched,
                             1.9531e-15,   modifies, "sum");
                             
   scheduleCoarsenVariableCC(sched, patches, mpm_matls, MIlb->temp_CCLabel,
+                            0.,           modifies,"massWeighted");
+
+  scheduleCoarsenVariableCC(sched, patches, mpm_matls, MIlb->conc_CCLabel,
                             0.,           modifies,"massWeighted");
                             
   scheduleCoarsenVariableCC(sched, patches, mpm_matls, MIlb->vel_CCLabel,
@@ -929,6 +933,7 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
   t->modifies(Mlb->gAccelerationLabel, mss);
   t->computes(Mlb->massBurnFractionLabel,mss);
   t->computes(Mlb->dTdt_NCLabel);
+  t->computes(Mlb->dCdt_NCLabel);
 
   sched->addTask(t, patches, mpm_matls);
 }
