@@ -134,6 +134,9 @@ public:
     virtual void register_timestep_eval( std::vector<VariableInformation>& variable_registry, 
                                          const int time_substep ) = 0; 
 
+    /** @brief Register all variables needed to compute boundary conditions **/
+    virtual void register_compute_bcs( std::vector<VariableInformation>& variable_registry, const int time_substep ) = 0; 
+
     /** @brief Matches labels to variables in the registry **/ 
     void resolve_labels( std::vector<VariableInformation>& variable_registry ); 
 
@@ -181,6 +184,22 @@ public:
                            DataWarehouse* old_dw, 
                            DataWarehouse* new_dw, 
                            std::vector<VariableInformation> variable_registry );
+
+    /** @brief Add this task to the Uintah task scheduler **/ 
+    void schedule_bcs( const LevelP& level, 
+                        SchedulerP& sched, 
+                        const MaterialSet* matls,
+                        int time_substep );
+
+    /** @brief The actual task interface function that references the 
+     *         derived class implementation **/ 
+    void do_bcs( const ProcessorGroup* pc, 
+                 const PatchSubset* patches, 
+                 const MaterialSubset* matls, 
+                 DataWarehouse* old_dw, 
+                 DataWarehouse* new_dw, 
+                 std::vector<VariableInformation> variable_registry, 
+                 int time_substep );
 
     /** @brief Builder class containing instructions on how to build the task **/ 
     class TaskBuilder { 
@@ -364,10 +383,17 @@ protected:
     virtual void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, 
                        SpatialOps::OperatorDatabase& opr ) = 0; 
 
+    /** @brief The actual work done within the derived class for computing the boundary conditions **/ 
+    virtual void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, 
+                              SpatialOps::OperatorDatabase& opr ) = 0; 
+
     std::string _task_name; 
     const int _matl_index; 
     VAR_TYPE _mytype;
     std::vector<const VarLabel*> _local_labels;
+    bool _do_init_task;                  ///< Should this task schedule the t=0 initialization. Default = true. 
+    bool _do_bcs_task;                   ///< Should this task compute BCs. Default = true
+    bool _do_ts_init_task;               ///< Should this task schedule the timestep startup initialization. Default = true
 
     /** @brief Get the Uintah typeDescription for a TaskType **/ 
     inline const TypeDescription* get_TD(VAR_TYPE type){ 
