@@ -88,13 +88,16 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   all_matls         = 0;
   orig_all_matls    = 0;
   allInOneMatl      = 0;
+  
   max_matl_index    = 0;
   refine_flag_matls = 0;
-  d_isCopyDataTimestep = 0;
   d_isRegridTimestep = 0;
-  d_switchState = false;
   d_simTime         = 0;
   d_numDims         = 0;
+  
+  d_isCopyDataTimestep = 0;
+  d_recompileTaskGraph = false;
+  d_switchState        = false;
   d_activeDims[0] = d_activeDims[1] = d_activeDims[2] = 0;
   
   //initialize the overhead percentage
