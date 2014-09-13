@@ -116,14 +116,7 @@ RMCRT_Test::~RMCRT_Test ( void )
   dbg << UintahParallelComponent::d_myworld->myrank() << " Doing: RMCRT destructor " << endl;
 
 }
-//______________________________________________________________________
-//  Logic for determing when to carry forward
-bool RMCRT_Test::doCarryForward( const int radCalc_freq){
 
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  bool test = ( timestep%radCalc_freq != 0 && timestep != 1 );
-  return test;
-}
 //______________________________________________________________________
 void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
@@ -720,7 +713,7 @@ void RMCRT_Test::initProperties( const ProcessorGroup* pc,
                                  const int radCalc_freq )
 {
   // Only run if it's time
-  if ( doCarryForward( radCalc_freq ) ) {
+  if ( d_RMCRT->doCarryForward( radCalc_freq ) ) {
     return;
   }
 
@@ -874,21 +867,6 @@ void RMCRT_Test::areGridsEqual( const GridP& uda_grid,
          <<  " is not equal to the initialization uda's grid\n"
          <<  " For the Data Onion algorithm the finest level in the input file must be equal";
     throw ProblemSetupException(warn.str(),__FILE__,__LINE__);
-  }
-}
-
-//______________________________________________________________________
-//   Returns true if it is a calculation timestep and you need to recompile the taskgraph
-bool RMCRT_Test::needRecompile(double,
-                               double ,
-                               const GridP&)
-{
-  
-  if( doCarryForward( d_radCalc_freq ) ){
-    return false;
-  } else{
-    proc0cout << " RMCRT_test: requesting taskgraph recompilation" << endl;
-    return true;
   }
 }
 
