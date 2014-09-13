@@ -150,7 +150,7 @@ void OnTheFly_radiometer::problemSetup(const ProblemSpecP& ,
 
   d_module_ps->getWithDefault( "radiometerCalc_freq", d_radiometerCalc_freq, 1 );
   bool getExtraInputs = true;
-  d_radiometer->problemSetup(rad_ps, rad_ps, d_sharedState, getExtraInputs);
+  d_radiometer->problemSetup(rad_ps, rad_ps, grid, d_sharedState, getExtraInputs);
   
   if(!d_dataArchiver->isLabelSaved( "VRFlux" ) ){
     throw ProblemSetupException("\nERROR:  You've activated the radiometer but your not saving the variable (radiometerFlux)\n",__FILE__, __LINE__);
