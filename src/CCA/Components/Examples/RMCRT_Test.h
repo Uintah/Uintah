@@ -89,7 +89,6 @@ WARNING
     virtual void scheduleCoarsen               ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleRefine                ( const PatchSet* patches, SchedulerP& scheduler );
     virtual void scheduleRefineInterface       ( const LevelP& level, SchedulerP& scheduler, bool needCoarseOld, bool needCoarseNew);
-    virtual bool needRecompile                 (double time, double dt, const GridP&);
   private:
     void initialize ( const ProcessorGroup*,
                       const PatchSubset* patches, 
