@@ -375,12 +375,15 @@ Ray::sched_rayTrace( const LevelP& level,
 
   //__________________________________
   // Require an infinite number of ghost cells so you can access the entire domain.
-  // THIS IS VERY EXPENSIVE.  ONLY REQUIRE THESE VARIABLES ON CALCULATION TIMESTEPS.
-  // The taskgraph must be recompiled whenever this conditional changes from true to false
-  // and vice versa.  See the needsRecompile() function in the driving component.  The
-  // logic in that function must match this.  
+  //
+  // THIS IS VERY EXPENSIVE.  THIS EXPENSE IS INCURRED ON NON-CALCULATION TIMESTEPS,
+  // ONLY REQUIRE THESE VARIABLES ON A CALCULATION TIMESTEPS.
+  //
+  // The taskgraph must be recompiled to detect a change in the conditional.
+  // The taskgraph recompilation is activated from RMCRTCommon:doRecompileTaskgraph() 
   if ( !doCarryForward( radCalc_freq) ) {
     Ghost::GhostType  gac  = Ghost::AroundCells;
+    dbg << "    sched_rayTrace: adding requires for all-to-all variables " << endl; 
     tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
     tsk->requires( sigma_dw ,    d_sigmaT4_label,  gac, SHRT_MAX);
     tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
@@ -438,6 +441,9 @@ Ray::rayTrace( const ProcessorGroup* pc,
 {
 
   const Level* level = getLevel(patches);
+  
+  
+  doRecompileTaskgraph( radCalc_freq );
 
   if ( doCarryForward( radCalc_freq ) ) {
     printTask(patches,patches->get(0), dbg,"Doing Ray::rayTrace (carryForward)");

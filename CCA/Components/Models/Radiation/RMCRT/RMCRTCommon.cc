@@ -531,11 +531,31 @@ RMCRTCommon::carryForward_Var ( const ProcessorGroup*,
 
 
 //______________________________________________________________________
+//  Trigger a taskgraph recompilation if the *next* timestep is a 
+//  calculation timestep
+//______________________________________________________________________
+void
+RMCRTCommon::doRecompileTaskgraph( const int radCalc_freq ){
+
+  if( radCalc_freq > 1 ){
+
+    int timestep     = d_sharedState->getCurrentTopLevelTimeStep();
+    int nextTimestep = timestep + 1;
+
+    if( nextTimestep%radCalc_freq == 0 ){
+      proc0cout << "  RMCRT recompile taskgraph" << endl;
+      d_sharedState->setRecompileTaskGraph( true );
+    }
+  }
+}
+
+//______________________________________________________________________
 //  Logic for determing when to carry forward
 //______________________________________________________________________
 bool 
 RMCRTCommon::doCarryForward( const int radCalc_freq ){
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
   bool test = (timestep%radCalc_freq != 0 && timestep != 1);
+  
   return test;
 }

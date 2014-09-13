@@ -242,11 +242,21 @@ Radiometer::sched_radiometer( const LevelP& level,
 
   printSchedule( level,dbg,"Radiometer::sched_radiometer" );
 
-  // require an infinite number of ghost cells so you can access the entire domain.
-  Ghost::GhostType  gac  = Ghost::AroundCells;
-  tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
-  tsk->requires( sigma_dw ,    d_sigmaT4_label,  gac, SHRT_MAX);
-  tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
+  //__________________________________
+  // Require an infinite number of ghost cells so you can access the entire domain.
+  //
+  // THIS IS VERY EXPENSIVE.  THIS EXPENSE IS INCURRED ON NON-CALCULATION TIMESTEPS,
+  // ONLY REQUIRE THESE VARIABLES ON A CALCULATION TIMESTEPS.
+  //
+  // The taskgraph must be recompiled to detect a change in the conditional.
+  // The taskgraph recompilation is activated from RMCRTCommon:doRecompileTaskgraph() 
+  if ( !doCarryForward( radCalc_freq) ) {
+    dbg << "    sched_radiometer: adding requires for all-to-all variables " << endl;
+    Ghost::GhostType  gac  = Ghost::AroundCells;
+    tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
+    tsk->requires( sigma_dw ,    d_sigmaT4_label,  gac, SHRT_MAX);
+    tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
+  }
 
   tsk->requires(Task::OldDW, d_VRFluxLabel, d_gn, 0);
   tsk->computes( d_VRFluxLabel );
@@ -268,6 +278,9 @@ Radiometer::radiometer( const ProcessorGroup* pc,
                         Task::WhichDW which_celltype_dw,
                         const int radCalc_freq )
 {
+  // recompile taskgraph on calc timesteps
+  doRecompileTaskgraph( radCalc_freq );
+    
   const Level* level = getLevel(patches);
 
   if ( doCarryForward( radCalc_freq ) ) {
