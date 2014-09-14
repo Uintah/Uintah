@@ -27,6 +27,7 @@
 #include <CCA/Components/Examples/Burger.h>
 #include <CCA/Components/Examples/RMCRT_Test.h>
 #include <CCA/Components/Examples/ParticleTest1.h>
+#include <CCA/Components/Examples/LJPotentialTest.h>
 #include <CCA/Components/Examples/Poisson1.h>
 #include <CCA/Components/Examples/Poisson2.h>
 #include <CCA/Components/Examples/Poisson3.h>
@@ -211,7 +212,10 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
 #endif
   if (sim_comp == "particletest" || sim_comp == "PARTICLETEST") {
     return scinew ParticleTest1(world);
-  } 
+  }
+  if (sim_comp == "ljpotentialtest" || sim_comp == "LJPOTENTIALTEST") {
+    return scinew LJPotentialTest(world);
+  }
   if (sim_comp == "solvertest" || sim_comp == "SOLVERTEST") {
     return scinew SolverTest1(world);
   } 

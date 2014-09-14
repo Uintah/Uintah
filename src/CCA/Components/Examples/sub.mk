@@ -38,6 +38,7 @@ SRCS += \
         $(SRCDIR)/ExamplesLabel.cc     \
         $(SRCDIR)/HeatEquation.cc      \
         $(SRCDIR)/Interpolator.cc      \
+        $(SRCDIR)/LJPotentialTest.cc   \
         $(SRCDIR)/ParticleTest1.cc     \
         $(SRCDIR)/Poisson1.cc          \
         $(SRCDIR)/Poisson2.cc          \
@@ -76,7 +77,7 @@ PSELIBS := \
         Core/ProblemSpec      \
         Core/Util             
 
-LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(CUDA_LIBRARY)
+LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(CUDA_LIBRARY) $(KOKKOS_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
