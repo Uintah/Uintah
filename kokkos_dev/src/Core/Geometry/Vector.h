@@ -119,6 +119,7 @@ public:
   inline double normalize();
   inline double safe_normalize();
   Vector normal() const;
+  Vector vec_rint() const;
   friend inline Vector Cross(const Vector&, const Vector&);
   friend inline Vector Abs(const Vector&);
   inline void x(double);

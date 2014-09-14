@@ -363,7 +363,7 @@
     <SimulationComponent          spec="REQUIRED NO_DATA"
                                     attribute1="type REQUIRED STRING 'arches, burger, ice, impm, mpm, mpmarches, 
                                                                       mpmf, mpmice, amrmpm, wasatch, reduce_uda,
-                                                                      advectslabs, unifiedschedulertest, poissongpu1,
+                                                                      advectslabs, unifiedschedulertest, poissongpu1, ljpotentialtest,
                                                                       poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, reduce_uda, 
                                                                       rmpmice, smpm, smpmice, switcher, wave, solvertest, RMCRT_Test particletest'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
@@ -884,6 +884,16 @@
     <doOutput                 spec="OPTIONAL INTEGER" />
     <doGhostCells             spec="OPTIONAL INTEGER" />
   </ParticleTest1>
+  
+  <!--  Lennard Jones Potential Test Component -->
+  <LJPotentialTest            spec="OPTIONAL NO_DATA" >
+    <coordinateFile           spec="REQUIRED STRING" />
+    <numAtoms                 spec="REQUIRED INTEGER"/>
+    <boxSize                  spec="REQUIRED VECTOR" />
+    <cutoffRadius             spec="REQUIRED DOUBLE" />
+    <R12                      spec="REQUIRED DOUBLE" />
+    <R6                       spec="REQUIRED DOUBLE" />
+  </LJPotentialTest>  
   
   <!--  Wave  Component -->
   <Wave                       spec="OPTIONAL NO_DATA" >
