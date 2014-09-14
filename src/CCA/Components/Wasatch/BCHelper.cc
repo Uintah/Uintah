@@ -1060,8 +1060,8 @@ namespace Wasatch {
       const BndCondSpec* myBndCondSpec = bndSpecPair.second.find(pressure_tag().name()); // get the bc spec - we will check if the user specified anything for pressure here
       const Uintah::IntVector unitNormal = patch->getFaceDirection(myBndSpec.face);
 //      if (myBndCondSpec) {
-        //_____________________________________________________________________________________
-        // check if we have this patchID in the list of patchIDs
+      //_____________________________________________________________________________________
+      // check if we have this patchID in the list of patchIDs
       // here are the scenarios here:
       /*
        1. Inlet/Wall/Moving wall: dp/dx = 0 -> p_outside = p_inside. Therefore for d2p/dx2 = (p_{-1} - 2 p_0 + p_1)/dx2, p_1 = p_0, therefore we decrement the coefficient for p0 by 1.

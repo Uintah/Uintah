@@ -129,6 +129,8 @@
     <StefanBoltzmann>   5.67051e-8  </StefanBoltzmann>
     <solveBoundaryFlux> false       </solveBoundaryFlux>
     <CCRays>            false       </CCRays>
+    <sigmaScat>         0           </sigmaScat>
+    <allowReflect>      true        </allowReflect>
 
     <Radiometer>
       <VRViewAngle>       180         </VRViewAngle>
@@ -136,12 +138,6 @@
       <VRLocationsMin>    [0,0,0]     </VRLocationsMin>
       <VRLocationsMax>    [1,1,1]     </VRLocationsMax>
       <nRadRays>          10          </nRadRays>
-
-
-      <randomSeed>        false       </randomSeed>
-      <Threshold>         0.05        </Threshold>
-      <sigmaScat>         0           </sigmaScat>
-      <allowReflect>      true        </allowReflect>
     </Radiometer>
     
   </RMCRT>

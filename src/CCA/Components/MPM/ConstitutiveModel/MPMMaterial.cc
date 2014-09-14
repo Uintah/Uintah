@@ -110,7 +110,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
   d_Cp = d_Cv;
   ps->get("C_p",d_Cp);
 
-  d_troom = 294.0; d_tmelt = 295.0;
+  d_troom = 294.0; d_tmelt = 295.0e10;
   ps->get("room_temp", d_troom);
   ps->get("melt_temp", d_tmelt);
 

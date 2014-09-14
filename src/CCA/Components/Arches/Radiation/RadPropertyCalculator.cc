@@ -318,16 +318,16 @@ bool RadPropertyCalculator::ConstantProperties::problemSetup( const ProblemSpecP
 
 
     
-void RadPropertyCalculator::ConstantProperties::computeProps( const Patch* patch, constCCVariable<double>& VolFractionBC, 
+void RadPropertyCalculator::ConstantProperties::compute_abskg( const Patch* patch, constCCVariable<double>& VolFractionBC, 
                                                               RadCalcSpeciesList species, constCCVariable<double>& mixT, 
                                                               CCVariable<double>& abskg ){ 
   abskg.initialize(_abskg_value); 
 
 }
 
-void RadPropertyCalculator::ConstantProperties::computePropsWithParticles( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, 
-                                double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weight_scaling_constant, RadCalcSpeciesList weight, 
-                                const int N, constCCVariable<double>& mixT, CCVariable<double>& abskg, CCVariable<double>& abskp ){
+void RadPropertyCalculator::ConstantProperties::compute_abskp( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
+                                    double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
+                                    const int Nqn,   CCVariable<double>& abskp ){
 
   throw InvalidValue( "Error: No particle properties implemented for constant radiation properties.",__FILE__,__LINE__);
 
@@ -380,7 +380,7 @@ bool RadPropertyCalculator::BurnsChriston::problemSetup( const ProblemSpecP& db 
   return property_on; 
 }
 
-void RadPropertyCalculator::BurnsChriston::computeProps( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg ){ 
+void RadPropertyCalculator::BurnsChriston::compute_abskg( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg ){ 
   
   BBox domain(_min,_max);
   
@@ -409,9 +409,9 @@ void RadPropertyCalculator::BurnsChriston::computeProps( const Patch* patch, con
   } 
 }
 
-void RadPropertyCalculator::BurnsChriston::computePropsWithParticles( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, 
-                                    double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weight_scaling_constant, RadCalcSpeciesList weight, 
-                                    const int N, constCCVariable<double>& mixT, CCVariable<double>& abskg, CCVariable<double>& abskp ){
+void RadPropertyCalculator::BurnsChriston::compute_abskp( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
+                                    double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
+                                    const int Nqn,   CCVariable<double>& abskp ){
 
   throw InvalidValue( "Error: No particle properties implemented for Burns/Christon radiation properties.",__FILE__,__LINE__);
 }
@@ -466,7 +466,7 @@ RadPropertyCalculator::HottelSarofim::problemSetup( const ProblemSpecP& db ) {
 }
 
 void 
-RadPropertyCalculator::HottelSarofim::computeProps( const Patch* patch, 
+RadPropertyCalculator::HottelSarofim::compute_abskg( const Patch* patch, 
     constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, 
     constCCVariable<double>& mixT, CCVariable<double>& abskg ){ 
 
@@ -480,9 +480,9 @@ RadPropertyCalculator::HottelSarofim::computeProps( const Patch* patch,
 }
 
 void 
-RadPropertyCalculator::HottelSarofim::computePropsWithParticles( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, 
-                                double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weight_scaling_constant, RadCalcSpeciesList weight, 
-                                const int N, constCCVariable<double>& mixT, CCVariable<double>& abskg, CCVariable<double>& abskp ){
+RadPropertyCalculator::HottelSarofim::compute_abskp( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
+                                    double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
+                                    const int Nqn,   CCVariable<double>& abskp ){
 
   throw InvalidValue( "Error: No particle properties implemented for constant radiation properties.",__FILE__,__LINE__);
 
@@ -609,7 +609,7 @@ bool RadPropertyCalculator::RadPropsInterface::problemSetup( const ProblemSpecP&
     } else if ( which_model == "rossland" ){ 
       _p_ros_abskp = true; 
     } else { 
-      throw InvalidValue( "Error: Particle model not recognized.",__FILE__,__LINE__);
+      throw InvalidValue( "Error: Particle model not recognized for abskp.",__FILE__,__LINE__);
     }   
 
     std::complex<double> complex_ir( real_part, imag_part ); 
@@ -626,7 +626,7 @@ bool RadPropertyCalculator::RadPropsInterface::problemSetup( const ProblemSpecP&
   
 }
     
-void RadPropertyCalculator::RadPropsInterface::computeProps( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species,  constCCVariable<double>& mixT, CCVariable<double>& abskg)
+void RadPropertyCalculator::RadPropsInterface::compute_abskg( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species,  constCCVariable<double>& mixT, CCVariable<double>& abskg)
 { 
 
   int N = species.size(); 
@@ -675,11 +675,9 @@ void RadPropertyCalculator::RadPropsInterface::computeProps( const Patch* patch,
   }
 }
 
-void RadPropertyCalculator::RadPropsInterface::computePropsWithParticles( const Patch* patch,  constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, 
+void RadPropertyCalculator::RadPropsInterface::compute_abskp( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
                                     double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
-                                    const int Nqn, constCCVariable<double>& mixT, CCVariable<double>& abskg, CCVariable<double>& abskp )
-{
-  int N = species.size(); 
+                                    const int Nqn, CCVariable<double>& abskp ){
 
   for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
@@ -688,31 +686,14 @@ void RadPropertyCalculator::RadPropsInterface::computePropsWithParticles( const 
     double plankCff = 0.0;
     double rossCff  = 0.0; 
     double effCff   = 0.0; 
-    std::vector<double> mol_frac; 
-    double T        = mixT[c];
     double VolFraction = VolFractionBC[c];
     double unscaled_weight;
     double unscaled_size;
 
-    //convert mass frac to mol frac
-    for ( int i = 1; i < N; i++ ){ 
-
-      double value = (species[0])[c]==0.0 ? 0.0 : (species[i])[c] * _sp_mw[i-1] * 1.0/(species[0])[c];
-      //                                           ^^species^^^^    ^^1/MW^^^^^   ^^^^^MIX MW^^^^^^^^
-
-      if(value<0){
-        throw InvalidValue( "Error: For some reason I am getting negative mol fractions in the radiation property calculator.",__FILE__,__LINE__);
-      }
-
-      mol_frac.push_back(value); 
-
-    } 
 
     if ( VolFraction > 1.e-16 ){
 
-      _gg_radprops->mixture_coeffs( plankCff, rossCff, effCff, mol_frac, T );
 
-      abskg[c] = effCff*100; // from cm^-1 to m^-1 //need to generalize this to the other coefficients
     
       //now compute the particle values: 
       abskp[c] = 0.0; 
@@ -734,12 +715,10 @@ void RadPropertyCalculator::RadPropsInterface::computePropsWithParticles( const 
         } 
       }
 
-      abskg[c] += abskp[c]; 
 
     }else{    
 
       abskp[c] = 0.0;
-      abskg[c] = 0.0;
 
     }
   }

@@ -36,7 +36,7 @@
  *  \author Tony Saad
  *  \ingroup Expressions
  *
- *  \brief calculates \f$ \nabla\cdot\mathbf{u} \f$
+ *  \brief calculates an updated solution variable
  *
  *  \tparam FieldT the field type for the TimeAdvance (nominally the scalar volume field)
  */
@@ -45,7 +45,7 @@ class TimeAdvance
  : public Expr::Expression<FieldT>
 {
   typedef typename SpatialOps::SingleValueField SingleValue;
-  const Expr::Tag phioldt_, rhst_, dtt_, rkstaget_;
+  const Expr::Tag phiOldt_, rhst_, dtt_, rkstaget_;
 
   const Wasatch::TimeIntegrator timeIntInfo_;
   
@@ -89,7 +89,7 @@ public:
 
   private:
     const std::string solnVarName_;
-    const Expr::Tag phioldt_, rhst_;
+    const Expr::Tag phiOldt_, rhst_;
     const Wasatch::TimeIntegrator timeIntInfo_;
   };
 

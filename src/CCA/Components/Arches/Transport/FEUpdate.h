@@ -48,6 +48,11 @@ protected:
 
     void register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ); 
 
+    void register_compute_bcs( std::vector<VariableInformation>& variable_registry, const int time_substep ){}; 
+
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
+                      SpatialOps::OperatorDatabase& opr ){}; 
+
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                      SpatialOps::OperatorDatabase& opr );
     
@@ -85,6 +90,11 @@ private:
 
   template <typename T>
   void FEUpdate<T>::problemSetup( ProblemSpecP& db ){ 
+
+    _do_ts_init_task = false;
+    _do_init_task    = false;
+    _do_bcs_task     = false;
+
   }
 
 

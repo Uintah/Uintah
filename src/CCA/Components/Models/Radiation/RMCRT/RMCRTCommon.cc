@@ -158,8 +158,7 @@ RMCRTCommon::sigmaT4( const ProcessorGroup*,
 {
   //__________________________________
   //  Carry Forward
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  if ( doCarryForward( timestep, radCalc_freq) ) {
+  if ( doCarryForward( radCalc_freq ) ) {
     printTask( patches, patches->get(0), dbg, "Doing RMCRTCommon::sigmaT4 carryForward (sigmaT4)" );
     
     new_dw->transferFrom( old_dw, d_sigmaT4_label, patches, matls, true );
@@ -535,8 +534,8 @@ RMCRTCommon::carryForward_Var ( const ProcessorGroup*,
 //  Logic for determing when to carry forward
 //______________________________________________________________________
 bool 
-RMCRTCommon::doCarryForward( const int timestep,
-                            const int radCalc_freq){
+RMCRTCommon::doCarryForward( const int radCalc_freq ){
+  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
   bool test = (timestep%radCalc_freq != 0 && timestep != 1);
   return test;
 }

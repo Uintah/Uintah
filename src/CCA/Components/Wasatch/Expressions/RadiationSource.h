@@ -37,6 +37,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 //-- Uintah Includes --//
+#include <Core/Grid/Grid.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/Stencil4.h>
@@ -91,14 +92,16 @@ class RadiationSource
                    const Expr::Tag& absorptionTag,
                    const Expr::Tag& celltypeTag,
                    const Uintah::ProblemSpecP& radiationSpec,
-                   Uintah::SimulationStateP sharedState);
+                   Uintah::SimulationStateP sharedState,
+                   Uintah::GridP grid);
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
     const Expr::Tag temperatureTag_, absorptionTag_, celltypeTag_;
-    Uintah::ProblemSpecP radiationSpec_;
+    Uintah::ProblemSpecP     radiationSpec_;
     Uintah::SimulationStateP sharedState_;
+    Uintah::GridP            grid_;
     
   public:
     Builder( const Expr::TagList& results,
@@ -106,7 +109,8 @@ public:
              const Expr::Tag& absorptionTag,
              const Expr::Tag& celltypeTag,
              Uintah::ProblemSpecP& radiationSpec,
-             Uintah::SimulationStateP& sharedState);
+             Uintah::SimulationStateP& sharedState,
+             Uintah::GridP& grid);
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   };

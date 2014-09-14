@@ -2,15 +2,12 @@
 Note: StackTrace is compiled on the 'src' side of the tree (as opposed
 to the binary tree where most everything else is compiled).  The
 reason for this is that it should not be compiled using the same
-compiler as the rest of the code (on Redstorm, in particular).  (Ie,
-on Redstorm, the main code is built using the PGI cross compiler so
-that the code can be run on the compute nodes.  However, StackTrace is
-to be run on the front end nodes.)  To build, just type 'make' in this
+compiler as the rest of the code.To build, just type 'make' in this
 source directory.
 
 The StackTrace program was written to take a stacktrace that includes
 addresses by not function names and find the corresponding function
-names.  Specifically this happens on Sandia's RedStorm computer.
+names.
 
 StackTrace requires a current symbol list of the program in question.
 This list MUST be sorted and can be produced in the following manner:
@@ -19,8 +16,8 @@ This list MUST be sorted and can be produced in the following manner:
 
 [Note: pgdecode is a symbol demangler (like c++filt) for the PGI compiler.]
 
-FYI, StackTrace is to be compiled and run on a linux box (NOT on the
-RedStorm compute nodes).  However, in test mode (#define DO_TESTING),
+FYI, StackTrace is to be compiled and run on a linux box.
+However, in test mode (#define DO_TESTING),
 it can be compiled for and run on the compute nodes to show that a
 valid stack trace can be generated there.
 
