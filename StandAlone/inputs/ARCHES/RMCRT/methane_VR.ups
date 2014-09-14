@@ -14,11 +14,11 @@
     <delt_min>0.00001</delt_min>
     <delt_max>0.01</delt_max>
     <timestep_multiplier>0.35</timestep_multiplier>
-    <max_Timesteps>5</max_Timesteps>
+    <max_Timesteps>20</max_Timesteps>
   </Time>
 
   <DataArchiver>
-    <filebase>methane_1m.uda</filebase>
+    <filebase>methane_VR.uda</filebase>
     <outputInterval>0.01</outputInterval>
     <save label="totalKineticEnergy"/>
     <save label="pressurePS"/>
@@ -30,8 +30,7 @@
     <save label="cellType"/>
 
     <save label="mixture_fraction"/>
-    <save label="enthalpy_rmcrt"/>
-    <!-- <save label="enthalpy_do"/>       -->
+    <save label="enthalpy"/>
     <save label="heat_loss"/>
     <save label="areaFraction"/>
 
@@ -48,8 +47,8 @@
     <save label="mixture_molecular_weight" table_lookup="true"/>
     <save label="OH"          table_lookup="true"/>
     <save label="NO"          table_lookup="true"/>
-    <save label="divQ_rmcrt"/>
-    <!-- <save label="divQ_do"/>  -->
+    <save label="divQ"/>
+    <save label="VRFlux"/>
 
     <checkpoint cycle="2" interval="0.01"/>
     <outputDoubleAsFloat/>
@@ -75,27 +74,27 @@
                             <value>1.204</value>
         </BCType>
         <!-- Table BCs --> 
-        <BCType id="0" label="mixture_fraction"       var="Dirichlet">
+        <BCType id="0" label="mixture_fraction"     var="Dirichlet">
                             <value>0.0</value>
         </BCType>
-        <BCType id="0" label="heat_loss"              var="Dirichlet">
+        <BCType id="0" label="heat_loss"            var="Dirichlet">
                             <value>0.0</value>
         </BCType>
-        <BCType id="0" label="normalizedScalarVar"    var="Dirichlet">
+        <BCType id="0" label="normalizedScalarVar"  var="Dirichlet">
                             <value>0.0</value>
         </BCType>
         <!-- Energy BC --> 
-        <BCType id="0" label="enthalpy_rmcrt"         var="Tabulated">
+        <BCType id="0" label="enthalpy"             var="Tabulated">
                             <value>adiabaticenthalpy</value> <!-- Pure oxidizer enthalpy --> 
         </BCType>
-        <BCType id="0" label="enthalpy_do"             var="Tabulated">
+        <BCType id="0" label="enthalpy"             var="Tabulated">
                             <value>adiabaticenthalpy</value> <!-- Pure oxidizer enthalpy --> 
         </BCType>
                         <!-- for RMCRT-->
-        <BCType id="0"  label= "radiation_temperature"  var="Tabulated">
+        <BCType id="0"  label= "radiation_temperature" var="Tabulated">
                             <value>temperature</value>
         </BCType>
-        <BCType id="0"  label= "abskg"                  var="ForcedDirichlet">
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1. </value>
         </BCType>
       </Face>
@@ -107,27 +106,27 @@
                             <value>0.0</value>
         </BCType>
         <!-- Table BCs --> 
-        <BCType id="0" label="mixture_fraction"       var="Neumann">
+        <BCType id="0" label="mixture_fraction"     var="Neumann">
                             <value>0.0</value>
         </BCType>
-        <BCType id="0" label="heat_loss"              var="Neumann">
+        <BCType id="0" label="heat_loss"            var="Neumann">
                             <value>0.0</value>
         </BCType>
-        <BCType id="0" label="normalizedScalarVar"    var="Neumann">
+        <BCType id="0" label="normalizedScalarVar"  var="Neumann">
                             <value>0.0</value>
         </BCType>
         <!-- Energy BC --> 
-        <BCType id="0" label="enthalpy_rmcrt"         var="Neumann">
+        <BCType id="0" label="enthalpy"             var="Neumann">
                             <value>0.0</value> 
         </BCType> 
-        <BCType id="0" label="enthalpy_do"             var="Neumann">
+        <BCType id="0" label="enthalpy"             var="Neumann">
                             <value>0.0</value> <!-- Pure oxidizer enthalpy --> 
         </BCType>
                         <!-- for RMCRT-->
         <BCType id="0"  label= "radiation_temperature"  var="Dirichlet">
                             <value> 298 </value>
         </BCType>
-        <BCType id="0"  label= "abskg"                  var="ForcedDirichlet">
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1. </value>
         </BCType>
       </Face>
@@ -149,10 +148,10 @@
                             <value>0.0</value>
         </BCType>
         <!-- Energy BC --> 
-        <BCType id="0" label="enthalpy_rmcrt"       var="Tabulated">
+        <BCType id="0" label="enthalpy"             var="Tabulated">
                             <value>adiabaticenthalpy</value> <!-- Pure fuel enthalpy --> 
         </BCType>
-        <BCType id="0" label="enthalpy_do"          var="Tabulated">
+        <BCType id="0" label="enthalpy"          var="Tabulated">
                             <value>adiabaticenthalpy</value> <!-- Pure oxidizer enthalpy --> 
         </BCType>
                         <!-- for RMCRT-->
@@ -182,10 +181,10 @@
                             <value>0.0</value>
         </BCType>
         <!-- Energy BC --> 
-        <BCType id="0" label="enthalpy_rmcrt"       var="Neumann">
+        <BCType id="0" label="enthalpy"             var="Neumann">
                             <value>0.0</value> 
         </BCType>
-        <BCType id="0" label="enthalpy_do"          var="Neumann">
+        <BCType id="0" label="enthalpy"          var="Neumann">
                             <value>0.0</value> 
         </BCType>
                         <!-- for RMCRT-->
@@ -213,10 +212,10 @@
                             <value>0.0</value>
         </BCType>
         <!-- Energy BC --> 
-        <BCType id="0" label="enthalpy_rmcrt"       var="Neumann">
+        <BCType id="0" label="enthalpy"             var="Neumann">
                             <value>0.0</value> 
         </BCType>
-        <BCType id="0" label="enthalpy_do"          var="Neumann">
+        <BCType id="0" label="enthalpy"          var="Neumann">
                             <value>0.0</value> 
         </BCType>
                         <!-- for RMCRT-->
@@ -244,10 +243,10 @@
                             <value>0.0</value>
         </BCType>
         <!-- Energy BC --> 
-        <BCType id="0" label="enthalpy_rmcrt"       var="Neumann">
+        <BCType id="0" label="enthalpy"             var="Neumann">
                             <value>0.0</value> 
         </BCType>
-        <BCType id="0" label="enthalpy_do"          var="Neumann">
+        <BCType id="0" label="enthalpy"          var="Neumann">
                             <value>0.0</value> 
         </BCType>
                         <!-- for RMCRT-->
@@ -275,10 +274,10 @@
                             <value>0.0</value>
         </BCType>
         <!-- Energy BC --> 
-        <BCType id="0" label="enthalpy_rmcrt"       var="Neumann">
+        <BCType id="0" label="enthalpy"             var="Neumann">
                             <value>0.0</value> 
         </BCType>
-        <BCType id="0" label="enthalpy_do"          var="Neumann">
+        <BCType id="0" label="enthalpy"          var="Neumann">
                             <value>0.0</value> 
         </BCType>
                         <!-- for RMCRT-->
@@ -307,10 +306,10 @@
                             <value>0.0</value>
         </BCType>
         <!-- Energy BC --> 
-        <BCType id="0" label="enthalpy_rmcrt"       var="Neumann">
+        <BCType id="0" label="enthalpy"             var="Neumann">
                             <value>0.0</value>
         </BCType>
-        <BCType id="0" label="enthalpy_do"          var="Neumann">
+        <BCType id="0" label="enthalpy"          var="Neumann">
                             <value>0.0</value>
         </BCType>
                         <!-- for RMCRT-->
@@ -355,36 +354,22 @@
           </Clipping>
         </Eqn>
         
-        <!-- enthalpy using RMCRT --> 
-        <Eqn label="enthalpy_rmcrt" type = "CCscalar">
+        <!-- enthalpy using DO -->
+        <Eqn label="enthalpy" type = "CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
           <conv_scheme>super_bee</conv_scheme>
           <initialization type="tabulated">
             <depend_varname>adiabaticenthalpy</depend_varname>
           </initialization>
-          <src label="divQ_rmcrt" >
-            <weight>-1 </weight> 
+          <src label="divQ" >
+            <weight>1</weight> 
           </src>        
         </Eqn>
         
-        <!-- enthalpy using DO 
-        <Eqn label="enthalpy_do" type = "CCscalar">
-          <doDiff>true</doDiff>
-          <doConv>true</doConv>
-          <conv_scheme>super_bee</conv_scheme>
-          <initialization type="tabulated">
-            <depend_varname>adiabaticenthalpy</depend_varname>
-          </initialization>
-          <src label="divQ_do" >
-            <weight>1</weight> 
-          </src>        
-        </Eqn> -->
-        
-        
+        <!--__________________________________-->
         <Sources>
-          <!--       DO radiation   
-          <src label="divQ_do" type="do_radiation">
+          <src label="divQ" type="do_radiation">
             <calc_frequency>    10      </calc_frequency>
             <abskg label="gas_abskg"/>
             <DORadiationModel>
@@ -395,21 +380,6 @@
                   <max_iter>  275       </max_iter>
               </LinearSolver>
             </DORadiationModel>
-          </src>  -->
-          
-          <!--       RMCRT radiation   -->
-          <src label="divQ_rmcrt" type="rmcrt_radiation">
-            <calc_frequency>    1       </calc_frequency>
-            <abskg label="gas_abskg"/>
-            
-            <RMCRT>
-                <randomSeed>        false      </randomSeed>
-                <nDivQRays>          5         </nDivQRays>
-                <Threshold>         0.05       </Threshold>
-                <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
-                <solveBoundaryFlux>    true    </solveBoundaryFlux>
-                <nFluxRays>         2          </nFluxRays>
-            </RMCRT>
           </src>
        </Sources> 
       </TransportEqns>
@@ -417,6 +387,7 @@
       <!--______________________________________________________________________ -->
       
       <PropertyModels>
+        
         <model type="radiation_properties" label="gas_abskg">
           <initialization type="constant">
             <constant>0.0</constant>
@@ -430,7 +401,7 @@
           <initialization type="constant">
             <constant>0.0</constant>
           </initialization>
-          <enthalpy_label>enthalpy_rmcrt</enthalpy_label>
+          <enthalpy_label>enthalpy</enthalpy_label>
         </model>
         
         <model type="scalsim_variance" label="normalizedScalarVar">
@@ -489,5 +460,31 @@
       </ExplicitSolver>
     </ARCHES>
   </CFD>
+  
+  <!--____________________________________________________________________-->
+  <DataAnalysis>
+    <Module name="radiometer">
+      <radiometerCalc_freq>    5   </radiometerCalc_freq>
+      <Radiometer>
+        <temperature label   ="radiation_temperature"/>
+        <cellType    label   = "cellType"/>
+        <abskg       label   = "abskg"/>
+        
+        <randomSeed>        false       </randomSeed>
+        <Threshold>         0.05        </Threshold>
+
+        <VRViewAngle>       2           </VRViewAngle>
+        <VROrientation>     [1,0,0]     </VROrientation>
+
+        <VRLocationsMin>    [0,  0, 2]   </VRLocationsMin>
+        <VRLocationsMax>    [0.2,4, 2.2] </VRLocationsMax>
+
+        <sigmaScat>         0           </sigmaScat>
+        <allowReflect>      false       </allowReflect>
+
+        <nRadRays>          20          </nRadRays>
+      </Radiometer>
+    </Module>
+  </DataAnalysis>
 
 </Uintah_specification>
