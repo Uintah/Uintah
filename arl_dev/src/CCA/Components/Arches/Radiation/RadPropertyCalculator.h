@@ -61,21 +61,12 @@ namespace Uintah {
           }
 
           virtual bool problemSetup( const ProblemSpecP& db )=0; 
-          virtual void computeProps( const Patch* patch, constCCVariable<double>& VolFractionBC, 
+          virtual void compute_abskg( const Patch* patch, constCCVariable<double>& VolFractionBC, 
                                      RadCalcSpeciesList species, constCCVariable<double>& mixT,  
                                      CCVariable<double>& abskg )=0; 
-          virtual void computePropsWithParticles( const Patch* patch,
-                                                  constCCVariable<double>& VolFractionBC,
-                                                  RadCalcSpeciesList species,
-                                                  double size_scaling_constant,
-                                                  RadCalcSpeciesList size,
-                                                  RadCalcSpeciesList pT,
-                                                  double weights_scaling_constant,
-                                                  RadCalcSpeciesList weight,
-                                                  const int N,
-                                                  constCCVariable<double>& mixT,
-                                                  CCVariable<double>& abskg,
-                                                  CCVariable<double>& abskp ) = 0;
+          virtual void compute_abskp( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
+                                          double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
+                                          const int Nqn, CCVariable<double>& abskp )=0;
           virtual std::vector<std::string> get_sp() = 0;
           virtual bool does_scattering() = 0;
 
@@ -137,10 +128,10 @@ namespace Uintah {
           ~ConstantProperties();
           
           bool problemSetup( const ProblemSpecP& db ); 
-          void computeProps( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg );
-          void computePropsWithParticles( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, 
-                                          double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weight_scaling_constant, RadCalcSpeciesList weight, 
-                                          const int N, constCCVariable<double>& mixT, CCVariable<double>& abskg, CCVariable<double>& abskp );
+          void compute_abskg( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg );
+          void compute_abskp( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
+                                          double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
+                                          const int Nqn,   CCVariable<double>& abskp );
           std::vector<std::string> get_sp(){
             std::vector<std::string> void_vec; 
             return void_vec; 
@@ -161,10 +152,10 @@ namespace Uintah {
           BurnsChriston();
           ~BurnsChriston();
           bool problemSetup( const ProblemSpecP& db ); 
-          void computeProps( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg );
-          void computePropsWithParticles( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, 
-                                          double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weight_scaling_constant, RadCalcSpeciesList weight, 
-                                          const int N, constCCVariable<double>& mixT, CCVariable<double>& abskg, CCVariable<double>& abskp );
+          void compute_abskg( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg );
+          void compute_abskp( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
+                                          double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
+                                          const int Nqn,   CCVariable<double>& abskp );
           std::vector<std::string> get_sp(){
             std::vector<std::string> void_vec; 
             return void_vec; 
@@ -186,10 +177,10 @@ namespace Uintah {
           ~HottelSarofim();
           
           bool problemSetup( const ProblemSpecP& db ); 
-          void computeProps( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg );
-          void computePropsWithParticles( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, 
-                                          double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weight_scaling_constant, RadCalcSpeciesList weight, 
-                                          const int N, constCCVariable<double>& mixT, CCVariable<double>& abskg, CCVariable<double>& abskp );
+          void compute_abskg( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg );
+          void compute_abskp( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
+                                          double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
+                                          const int Nqn,   CCVariable<double>& abskp );
           std::vector<std::string> get_sp();
           bool does_scattering(); 
 
@@ -211,15 +202,15 @@ namespace Uintah {
           RadPropsInterface();
           ~RadPropsInterface(); 
           bool problemSetup( const ProblemSpecP& db );
-          void computeProps( const Patch* patch, 
+          void compute_abskg( const Patch* patch, 
               constCCVariable<double>& VolFractionBC, 
               RadCalcSpeciesList species,  
               constCCVariable<double>& mixT, 
               CCVariable<double>& abskg); 
 
-          void computePropsWithParticles( const Patch* patch,  constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, 
+          void compute_abskp( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
                                           double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
-                                          const int Nqn, constCCVariable<double>& mixT, CCVariable<double>& abskg, CCVariable<double>& abskp );
+                                          const int Nqn,  CCVariable<double>& abskp );
 
           std::vector<std::string> get_sp(){ return _species; }
           bool does_scattering(){ return _does_scattering; }

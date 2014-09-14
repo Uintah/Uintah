@@ -24,7 +24,7 @@
 
 #include <expression/ExprLib.h>
 
-#include "SetCurrentTime.h"
+#include <CCA/Components/Wasatch/Expressions/SetCurrentTime.h>
 
 namespace Wasatch{
 
@@ -35,6 +35,7 @@ namespace Wasatch{
       simTime_ ( 0.0 ),
       timeStep_( 0.0 )
   {
+    this->set_gpu_runnable(true);
     timeCor_[0] = 0.0; // for the first rk stage, the time is t0
     timeCor_[1] = 1.0; // for the second rk stage, the time is t0 + dt
     timeCor_[2] = 0.5; // for the third rk stage, the time is t0 + 0.5*dt

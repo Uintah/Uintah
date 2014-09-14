@@ -214,24 +214,7 @@ link_localRT:
 	       ln -sf $(SRCTOP_ABS)/R_Tester/toplevel/localRT StandAlone/localRT; \
 	   fi )
 
-# The REDSTORM portion of the following command somehow prevents Make, on Redstorm,
-# from running a bogus compile line of sus...
-#
-# This is the bogus line:
-#
-# cc -Minline -O3 -fastsse -fast   -Minform=severe -DREDSTORM  -Llib -lgmalloc \
-#       sus.o prereqs StandAlone/sus   -o sus
-#
-# Notice that is using the generic 'cc' compiler, and only a subset of
-# the CFLAGS, and the bogus 'prereqs' target that has not been
-# expanded...  This happens after _successfully_ running the real link
-# line for sus... I have no idea why it is being triggered, but this
-# hack seems to prevent the 2nd 'compilation' from running...
-#
 sus: prereqs StandAlone/sus
-ifeq ($(IS_REDSTORM),yes)
-	@echo "Built sus"
-endif
 
 tools: puda dumpfields compare_uda compute_Lnorm_udas restart_merger partextract partvarRange selectpart async_mpi_test mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 rawToUniqueGrains timeextract faceextract lineextract compare_mms compare_scalar fsspeed
 

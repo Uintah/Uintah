@@ -18,6 +18,7 @@
 #include <CCA/Components/Arches/SourceTerms/SecondMFMoment.h>
 #include <CCA/Components/Arches/SourceTerms/DissipationSource.h>
 #include <CCA/Components/Arches/SourceTerms/ManifoldRxn.h>
+#include <CCA/Components/Arches/SourceTerms/MomentumDragSrc.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
@@ -336,6 +337,10 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
 
       } else if ( src_type == "manifold_rxn" ) { 
         SourceTermBase::Builder* srcBuilder = scinew ManifoldRxn::Builder(src_name, required_varLabels, shared_state );
+        factory.register_source_term( src_name, srcBuilder );
+        
+      } else if ( src_type == "momentum_drag_src" ) {
+        SourceTermBase::Builder* srcBuilder = scinew MomentumDragSrc::Builder(src_name, required_varLabels, shared_state );
         factory.register_source_term( src_name, srcBuilder );
         
       } else {

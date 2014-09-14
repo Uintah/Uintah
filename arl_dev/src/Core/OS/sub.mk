@@ -40,9 +40,7 @@ ifeq ($(HAVE_BOOST),yes)
 else
    SRCS += $(SRCDIR)/Dir.cc
 endif
-ifneq ($(IS_REDSTORM),yes)
    SRCS += $(SRCDIR)/sock.cc
-endif
 
 
 PSELIBS := Core/Exceptions

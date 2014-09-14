@@ -87,10 +87,14 @@ TransportFactory::build_all_tasks( ProblemSpecP& db )
       TaskInterface* tsk = retrieve_task(eqn_name); 
       tsk->problemSetup( eqn_db );
 
+      tsk->create_local_labels(); 
+
     }
 
     TaskInterface* tsk = retrieve_task("scalar_fe_update"); 
     tsk->problemSetup( db ); 
+
+    tsk->create_local_labels(); 
 
     tsk = retrieve_task("scalar_ssp_update"); 
     tsk->problemSetup( db ); 

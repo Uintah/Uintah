@@ -5,6 +5,7 @@ The MIT License
 Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI),
              University of Utah.
+             University of Utah.
 
 License for the specific language governing rights and limitations under
 Permission is hereby granted, free of charge, to any person obtaining a
@@ -56,6 +57,7 @@ Software is furnished to do so, subject to the following conditions:
 #define MHdeleteBadF  // Prints errors messages when particles are deleted or subcycling fails
 #define MHfastfcns    // Use fast approximate exp(), log() and pow() in deep loops.
 #define MHdisaggregationStiffness // reduce stiffness with disaggregation
+
 // INCLUDE SECTION: tells the preprocessor to include the necessary files
 #include <CCA/Components/MPM/ConstitutiveModel/Arenisca3.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
@@ -208,15 +210,15 @@ Arenisca3::Arenisca3(const Arenisca3* cm)
   d_cm.p1_crush_curve = cm->d_cm.p1_crush_curve;
   d_cm.p2_crush_curve = cm->d_cm.p2_crush_curve; // not used
   d_cm.p3_crush_curve = cm->d_cm.p3_crush_curve;
-  d_cm.CR = cm->d_cm.CR; // not used
+  d_cm.CR = cm->d_cm.CR;
   // Fluid Effects
   d_cm.fluid_B0 = cm->d_cm.fluid_B0;
-  d_cm.fluid_pressure_initial = cm->d_cm.fluid_pressure_initial; // pfi
+  d_cm.fluid_pressure_initial = cm->d_cm.fluid_pressure_initial;
   // Rate Dependence
-  d_cm.T1_rate_dependence = cm->d_cm.T1_rate_dependence; //not used
-  d_cm.T2_rate_dependence = cm->d_cm.T2_rate_dependence; //not used
+  d_cm.T1_rate_dependence = cm->d_cm.T1_rate_dependence;
+  d_cm.T2_rate_dependence = cm->d_cm.T2_rate_dependence;
   // Subcycling
-  d_cm.subcycling_characteristic_number = cm->d_cm.subcycling_characteristic_number; // not used
+  d_cm.subcycling_characteristic_number = cm->d_cm.subcycling_characteristic_number;
   initializeLocalMPMLabels();
   // Disaggregation Strain
   d_cm.Use_Disaggregation_Algorithm = cm->d_cm.Use_Disaggregation_Algorithm;
@@ -628,31 +630,33 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
       // Compute the symmetric part of the velocity gradient
       Matrix3 D = (pVelGrad_new[idx] + pVelGrad_new[idx].Transpose())*.5;
 
-      // Use poYieldFxn:I1=-35.3311, J2=7516lar decomposition to compute the rotation and stretch tensors
+      // Use polar decomposition to compute the rotation and stretch tensors
       Matrix3 tensorR, tensorU;
 
 #ifdef MHdeleteBadF
       if(pDefGrad[idx].MaxAbsElem()>1.0e2){
-        pLocalized_new[idx]=-999;
-#ifdef MHdebug
-        cout<<"Large deformation gradient component: [F] = "<<pDefGrad[idx]<<endl;
-        cout<<"Resetting [F]=[I] for this step and deleting particle"<<endl;
-#endif
-        Identity.polarDecompositionRMB(tensorU, tensorR);
+		  pLocalized_new[idx]=-999;
+		  cout<<"Large deformation gradient component: [F] = "<<pDefGrad[idx]<<endl;
+		  cout<<"Resetting [F]=[I] for this step and deleting particle"<<endl;
+		  Identity.polarDecompositionRMB(tensorU, tensorR);
       }
       else if(pDefGrad[idx].Determinant()<1.0e-3){
-        pLocalized_new[idx]=-999;
-#ifdef MHdebug
-        cout<<"Small deformation gradient determinant: [F] = "<<pDefGrad[idx]<<endl;
-        cout<<"Resetting [F]=[I] for this step and deleting particle"<<endl;
-#endif
-        Identity.polarDecompositionRMB(tensorU, tensorR);
+		  pLocalized_new[idx]=-999;
+		  cout<<"Small deformation gradient determinant: [F] = "<<pDefGrad[idx]<<endl;
+		  cout<<"Resetting [F]=[I] for this step and deleting particle"<<endl;
+		  Identity.polarDecompositionRMB(tensorU, tensorR);
+      }
+	  else if(pDefGrad[idx].Determinant()>1.0e2){
+		  pLocalized_new[idx]=-999;
+		  cout<<"Large deformation gradient determinant: [F] = "<<pDefGrad[idx]<<endl;
+		  cout<<"Resetting [F]=[I] for this step and deleting particle"<<endl;
+		  Identity.polarDecompositionRMB(tensorU, tensorR);
       }
       else{
-        pDefGrad[idx].polarDecompositionRMB(tensorU, tensorR);
+		  pDefGrad[idx].polarDecompositionRMB(tensorU, tensorR);
       }
 #else
-        pDefGrad[idx].polarDecompositionRMB(tensorU, tensorR);
+	  pDefGrad[idx].polarDecompositionRMB(tensorU, tensorR);
 #endif
       // Compute the unrotated symmetric part of the velocity gradient
       D = (tensorR.Transpose())*(D*tensorR);
@@ -686,20 +690,20 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
       } // Scalar-valued Damage (XXX)
 
       // Divides the strain increment into substeps, and calls substep function
-      int stepFlag = computeStep(D,                    // strain "rate"
-                                 delT,                 // time step (s)
-                                 sigmaQS_old,          // unrotated stress at start of step
-                                 pCapX[idx],           // hydrostatic comrpessive strength at start of step
-                                 pZeta[idx],           // trace of isotropic backstress at start of step
-                                 coher,                // Scalar-valued coherence (XXX)
-                                 pP3[idx],             // Modified p3 for initial disaggregation strain.
-                                 pep[idx],             // plastic strain at start of step
-                                 pStressQS_new[idx],   // unrotated stress at end of step
-                                 pCapX_new[idx],       // hydrostatic compressive strength at end of step
-                                 pZeta_new[idx],       // trace of isotropic backstress at end of step
-                                 pep_new[idx],         // plastic strain at end of step
-                                 pParticleID[idx]
-                                );
+      int stepFlag = computeStep(D,                  // strain "rate"
+                                 delT,               // time step (s)
+                                 sigmaQS_old,        // unrotated stress at start of step
+                                 pCapX[idx],         // hydrostatic comp. strength at start of step
+                                 pZeta[idx],         // trace of isotropic backstress at start of step
+                                 coher,              // Scalar-valued coherence (XXX)
+                                 pP3[idx],           // Modified p3 for initial disaggregation strain.
+                                 pep[idx],           // plastic strain at start of step
+                                 pStressQS_new[idx], // unrotated stress at end of step
+                                 pCapX_new[idx],     // hydrostatic compressive strength at end of step
+                                 pZeta_new[idx],     // trace of isotropic backstress at end of step
+                                 pep_new[idx],       // plastic strain at end of step
+                                 pParticleID[idx]);
+
       //MH! add P3 as an input:
       pP3_new[idx] = pP3[idx];
 
@@ -707,9 +711,7 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
       // has failed, and the particle will be deleted.
       if(stepFlag!=0){
         pLocalized_new[idx]=-999;
-#ifdef MHdebug
        cout<<"bad step, deleting particle"<<endl;
-#endif
       }
 
       // Plastic volumetric strain at end of step
@@ -727,49 +729,69 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
       // using Duvaut-Lions rate dependence, as described in "Elements of Phenomenological Plasticity",
       // by RM Brannon.
 
-      if (d_cm.T1_rate_dependence != 0.0 && d_cm.T2_rate_dependence != 0.0 )
-      {
-      // This is not straightforward, due to nonlinear elasticity.  The equation requires that we
-      // compute the trial stress for the step, but this is not known, since the bulk modulus is
-      // evolving through the substeps.  It would be necessary to to loop through the substeps to
-      // compute the trial stress assuming nonlinear elasticity, but instead we will approximate
-      // the trial stress the average of the elastic moduli at the start and end of the step.
-      double bulk_n, shear_n, bulk_p, shear_p;
-      computeElasticProperties(sigmaQS_old,pep[idx],pP3[idx],bulk_n,shear_n);
-      computeElasticProperties(pStressQS_new[idx],pep_new[idx],pP3[idx],bulk_p,shear_p);
+      if (d_cm.T1_rate_dependence != 0.0 && d_cm.T2_rate_dependence != 0.0 ) {
+        // This is not straightforward, due to nonlinear elasticity.  The equation requires that we
+        // compute the trial stress for the step, but this is not known, since the bulk modulus is
+        // evolving through the substeps.  It would be necessary to to loop through the substeps to
+        // compute the trial stress assuming nonlinear elasticity, but instead we will approximate
+        // the trial stress the average of the elastic moduli at the start and end of the step.
+        double bulk_n, shear_n, bulk_p, shear_p;
+        computeElasticProperties(sigmaQS_old,       pep[idx],    pP3[idx],bulk_n,shear_n);
+        computeElasticProperties(pStressQS_new[idx],pep_new[idx],pP3[idx],bulk_p,shear_p);
+ 
+        Matrix3 sigma_trial = computeTrialStress(sigma_old,  // Dynamic stress at the start of the step
+                                                 D*delT,     // Total train increment over the step
+                                                 0.5*(bulk_n + bulk_p),  // midstep bulk modulus
+                                                 0.5*(shear_n + shear_p) ); // midstep shear modulus
 
-      Matrix3 sigma_trial = computeTrialStress(sigma_old,  // Dynamic stress at the start of the step
-                                               D*delT,     // Total train increment over the step
-                                               0.5*(bulk_n + bulk_p),  // midstep bulk modulus
-                                               0.5*(shear_n + shear_p) // midstep shear modulus
-                                               );
+        // The characteristic time is defined from the rate dependence input parameters and the
+        // magnitude of the strain rate.  MH!: I don't have a reference for this equation.
+        //
+        // tau = T1*(epsdot)^(-T2) = T1*(1/epsdot)^T2, modified to avoid division by zero.
+        double tau = d_cm.T1_rate_dependence*Pow(1.0/max(D.Norm(), 1.0e-15),d_cm.T2_rate_dependence);
 
-      // The characteristic time is defined from the rate dependence input parameters and the
-      // magnitude of the strain rate.  MH!: I don't have a reference for this equation.
-      //
-      // tau = T1*(epsdot)^(-T2) = T1*(1/epsdot)^T2, modified to avoid division by zero.
-      double tau = d_cm.T1_rate_dependence*Pow(1.0/max(D.Norm(), 1.0e-15),d_cm.T2_rate_dependence);
+        // RH and rh are defined by eq. 6.93 in the book chapter, but there seems to be a sign error
+        // in the text, and I've rewritten it to avoid computing the exponential twice.
+        double dtbytau = delT/tau;
+        double rh  = exp(-dtbytau);
+        double RH  = (1.0 - rh)/dtbytau;
 
-      // RH and rh are defined by eq. 6.93 in the book chapter, but there seems to be a sign error
-      // in the text, and I've rewritten it to avoid computing the exponential twice.
-      double dtbytau = delT/tau;
-      double rh  = exp(-dtbytau);
-      double RH  = (1.0 - rh)/dtbytau;
-
-      // sigma_new = sigmaQS_new + sigma_over_new, as defined by eq. 6.92
-      // sigma_over_new = [(sigma_trial_new - sigma_old) - (sigmaQS_new-sigmaQS_old)]*RH + sigma_over_old*rh
-      pStress_new[idx] = pStressQS_new[idx]
-                         + ((sigma_trial - sigma_old) - (pStressQS_new[idx] - sigmaQS_old))*RH
-                         + (sigma_old - sigmaQS_old)*rh;
-
+        // sigma_new = sigmaQS_new + sigma_over_new, as defined by eq. 6.92
+        // sigma_over_new = [(sigma_trial_new - sigma_old) - (sigmaQS_new-sigmaQS_old)]*RH + sigma_over_old*rh
+        pStress_new[idx] = pStressQS_new[idx]
+                           + ((sigma_trial - sigma_old) - (pStressQS_new[idx] - sigmaQS_old))*RH
+                           + (sigma_old - sigmaQS_old)*rh;
       }
-      else
-      { // No rate dependence, the dynamic stress equals the static stress.
-      pStress_new[idx] = pStressQS_new[idx];
+      else { // No rate dependence, the dynamic stress equals the static stress.
+        pStress_new[idx] = pStressQS_new[idx];
       } // ==========================================================================================
 
       // Use polar decomposition to compute the rotation and stretch tensors
+#ifdef MHdeleteBadF
+      if(pDefGrad_new[idx].MaxAbsElem()>1.0e2){
+		  pLocalized_new[idx]=-999;
+		  cout<<"Large deformation gradient component: [F_new] = "<<pDefGrad[idx]<<endl;
+		  cout<<"Resetting [F_new]=[I] for this step and deleting particle"<<endl;
+		  Identity.polarDecompositionRMB(tensorU, tensorR);
+      }
+      else if(pDefGrad_new[idx].Determinant()<1.0e-3){
+		  pLocalized_new[idx]=-999;
+		  cout<<"Small deformation gradient determinant: [F_new] = "<<pDefGrad[idx]<<endl;
+		  cout<<"Resetting [F_new]=[I] for this step and deleting particle"<<endl;
+		  Identity.polarDecompositionRMB(tensorU, tensorR);
+      }
+	  else if(pDefGrad_new[idx].Determinant()>1.0e2){
+		  pLocalized_new[idx]=-999;
+		  cout<<"Large deformation gradient determinant: [F_new] = "<<pDefGrad[idx]<<endl;
+		  cout<<"Resetting [F_new]=[I] for this step and deleting particle"<<endl;
+		  Identity.polarDecompositionRMB(tensorU, tensorR);
+      }
+      else{
+		  pDefGrad_new[idx].polarDecompositionRMB(tensorU, tensorR);
+      }
+#else
       pDefGrad_new[idx].polarDecompositionRMB(tensorU, tensorR);
+#endif
 
       // Compute the rotated dynamic and quasistatic stress at the end of the current timestep
       pStress_new[idx] = (tensorR*pStress_new[idx])*(tensorR.Transpose());
@@ -781,15 +803,14 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
       double bulk,
              shear;
              computeElasticProperties(bulk,shear); // High pressure bulk and shear moduli.
-
-			 
- #ifdef MHdisaggregationStiffness
+		 
+#ifdef MHdisaggregationStiffness
 	  // Compute the wave speed for the particle based on the reduced stiffness, which
 	  // is computed when the value of P3 is sent to computeElasticProperties.
 		if(d_cm.Use_Disaggregation_Algorithm){
 	    computeElasticProperties(pStressQS_new[idx],pep_new[idx],pP3[idx],bulk,shear);
 		}
- #endif
+#endif
 			 
       double rho_cur = pmass[idx]/pvolume[idx];
              c_dil = sqrt((bulk+four_third*shear)/rho_cur);
@@ -886,6 +907,7 @@ computeElasticProperties(bulk,shear);
 
 //Compute the trial stress: [sigma_trial] = computeTrialStress(sigma_old,d_e,K,G)
 Matrix3 sigma_trial = computeTrialStress(sigma_old,D*Dt,bulk,shear);
+
 double  I1_trial,
         J2_trial,
         rJ2_trial;
@@ -978,9 +1000,17 @@ void Arenisca3::computeElasticProperties(double & bulk,
 // When computeElasticProperties() is called with two doubles as arguments, it
 // computes the high pressure limit tangent elastic shear and bulk modulus
 // This is used to esimate wave speeds and make conservative estimates of substepping.
-  shear   = d_cm.G0;            // Shear Modulus
+  shear   = d_cm.G0;            // Linear elastic shear Modulus
   bulk    = d_cm.B0 + d_cm.B1;  // Bulk Modulus
   
+  // If the user has specified a nonzero G1 and G2, these are used to define a pressure
+  // dependent poisson ratio, which is used to adjust the shear modulus along with the
+  // bulk modulus.  The high pressure limit has nu=G1+G2;
+  if ((d_cm.G1!=0.0)&&(d_cm.G2!=0.0)){
+	  // High pressure bulk modulus:
+	  double nu = d_cm.G1+d_cm.G2;
+	  shear = 1.5*bulk*(1.0-2.0*nu)/(1.0+nu);
+  }
 } //===================================================================
 
 // [shear,bulk] = computeElasticProperties(stress, ep)
@@ -992,76 +1022,94 @@ void Arenisca3::computeElasticProperties(const Matrix3 stress,
 {
 // Compute the nonlinear elastic tangent stiffness as a function of the pressure
 // plastic strain, and fluid parameters.
-  double  b0 = d_cm.B0,
-          b1 = d_cm.B1,
-          b2 = d_cm.B2,
-          b3 = d_cm.B3,
-          b4 = d_cm.B4,
-          g0 = d_cm.G0,
-          I1 = stress.Trace(),
-          evp = ep.Trace();
+	double  b0 = d_cm.B0,
+			b1 = d_cm.B1,
+			b2 = d_cm.B2,
+			b3 = d_cm.B3,
+			b4 = d_cm.B4,
+			g0 = d_cm.G0,
+			I1 = stress.Trace(),
+			evp = ep.Trace();
 
-// SHEAR MODULUS -------------------------------------------------------
-// Need to modify this to support nonlinear elasticity, but currently do
-// not have parameterization for this feature
-  //
-  // MH! look at brian's nonlinear shear modulus from the 2010 slb report
-  shear = g0;     // Shear Modulus
-
-// BULK MODULUS -------------------------------------------------------
-// The low pressure bulk modulus is also used for the tensile response.
-  bulk = b0;
-  if(evp <= 0.0){// ...................................................Drained
+// ..........................................................Undrained
+// The low pressure bulk and shear moduli are also used for the tensile response.
+	bulk = b0;
+	shear = g0;
+	// To be thermodynamically consistent, the shear modulus in an isotropic model
+	// must be constant, but the bulk modulus can depend on pressure.  However, this
+	// leads to a Poisson's ratio that approaches 0.5 at high pressures, which is
+	// inconsistent with experimental data for the Poisson's ratio, inferred from the 
+	// Young's modulus.  Induced anisotropy is likely the cause of the discrepency, 
+	// but it may be better to allow the shear modulus to vary so the Poisson's ratio
+	// remains reasonable.
+	//
+	// If the user has specified a nonzero value of G1 and G2, the shear modulus will
+	// vary with pressure so the drained Poisson's ratio transitions from G1 to G1+G2 as 
+	// the bulk modulus varies from B0 to B0+B1.  The fluid model further affects the 
+	// bulk modulus, but does not alter the shear modulus, so the pore fluid does
+	// increase the Poisson's ratio.  
+	if(evp <= 0.0){
 #ifdef MHfastfcns
-    if (I1 < 0.0){bulk = bulk + b1*fasterexp(b2/I1);}
-    // Elastic-plastic coupling
-    if (evp < 0.0){bulk = bulk - b3*fasterexp(b4/evp);}
+		// Elastic-plastic coupling
+		if (evp < 0.0){bulk = bulk - b3*fasterexp(b4/evp);}
+		
+		// Pressure dependence
+		if (I1 < 0.0){
+			double expb2byI1 = fasterexp(b2/I1);
+			bulk = bulk + b1*expb2byI1;
+			if(d_cm.G1!=0.0 && d_cm.G2!=0.0){
+				double nu = d_cm.G1 + d_cm.G2*expb2byI1;
+				shear = 1.5*bulk*(1.0-2.0*nu)/(1.0+nu);
+			}
+		}
 #else
-    if (I1 < 0.0){bulk = bulk + b1*exp(b2/I1);}
-    // Elastic-plastic coupling
-    if (evp < 0.0){bulk = bulk - b3*exp(b4/evp);}
-#endif
-
-  }
-  
+		if (I1 < 0.0){
+			double expb2byI1 = exp(b2/I1);
+			bulk = bulk + b1*expb2byI1;
+		}
+		// Elastic-plastic coupling
+		if (evp < 0.0){bulk = bulk - b3*exp(b4/evp);}
+#endif	
+	}
+	
 #ifdef MHdisaggregationStiffness
-  if(d_cm.Use_Disaggregation_Algorithm){
-	  double fac = fasterexp(-(P3+evp));
-	  double scale = max(fac,0.05);
-	  bulk = bulk*scale;
-	  shear = shear*scale;
-  }
+	if(d_cm.Use_Disaggregation_Algorithm){
+		double fac = fasterexp(-(P3+evp));
+		double scale = max(fac,0.001);
+		bulk = bulk*scale;
+		shear = shear*scale;
+	}
 #endif
 
 // In  compression, or with fluid effects if the strain is more compressive
 // than the zero fluid pressure volumetric strain:
-  if (evp <= ev0 && Kf!=0.0){// ..........................................................Undrained
+	if (evp <= ev0 && Kf!=0.0){// ..........................................................Undrained
+		// Compute the porosity from the strain using Homel's simplified model, and
+		// then use this in the Biot-Gassmann formula to compute the bulk modulus.
 
-    // Compute the porosity from the strain using Homel's simplified model, and
-    // then use this in the Biot-Gassmann formula to compute the bulk modulus.
-
-    // The dry bulk modulus, taken as the low pressure limit of the nonlinear
-    // formulation:
-    double Kd = b0;
+		// The dry bulk modulus, taken as the low pressure limit of the nonlinear
+		// formulation:
+		double Kd = b0;
 #ifdef MHfastfcns
-    if (evp < 0.0){Kd = b0 - b3*fasterexp(b4/evp);}
-    // Current unloaded porosity (phi):
-    double C2 = fasterexp(evp*Km/C1)*phi_i;
-    double phi = C2/(-fasterexp(evp*Kf/C1)*(phi_i-1.0) + C2);
+		if (evp < 0.0){Kd = b0 - b3*fasterexp(b4/evp);}
+		// Current unloaded porosity (phi):
+		double C2 = fasterexp(evp*Km/C1)*phi_i;
+		double phi = C2/(-fasterexp(evp*Kf/C1)*(phi_i-1.0) + C2);
 #else
-    if (evp < 0.0){Kd = b0 - b3*exp(b4/evp);}
-    // Current unloaded porosity (phi):
-    double C2 = exp(evp*Km/C1)*phi_i;
-    double phi = C2/(-exp(evp*Kf/C1)*(phi_i-1.0) + C2);
+		if (evp < 0.0){Kd = b0 - b3*exp(b4/evp);}
+		// Current unloaded porosity (phi):
+		double C2 = exp(evp*Km/C1)*phi_i;
+		double phi = C2/(-exp(evp*Kf/C1)*(phi_i-1.0) + C2);
 #endif
 
-    // Biot-Gassmann formula for the saturated bulk modulus, evaluated at the
-    // current porosity.  This introduces some error since the Kd term is a
-    // function of the initial porosity, but since large strains would also
-    // modify the bulk modulus through damage
-    double oneminusKdbyKm = 1.0 - Kd / Km;
-    bulk = Kd + oneminusKdbyKm*oneminusKdbyKm/((oneminusKdbyKm - phi)/Km + (1.0/Kf - 1.0/Km)*phi);
-  }
+		// Biot-Gassmann formula for the saturated bulk modulus, evaluated at the
+		// current porosity.  This introduces some error since the Kd term is a
+		// function of the initial porosity, but since large strains would also
+		// modify the bulk modulus through damage
+		double oneminusKdbyKm = 1.0 - Kd / Km;
+		bulk = Kd + oneminusKdbyKm*oneminusKdbyKm/((oneminusKdbyKm - phi)/Km + (1.0/Kf - 1.0/Km)*phi);
+	}
+	
 } //===================================================================
 
 // [sigma_trial] = computeTrialStress(sigma_old,d_e,K,G)
@@ -1368,8 +1416,7 @@ double Arenisca3::computeX(const double& evp,const double& P3)
          p1  = d_cm.p1_crush_curve,
          X;
 
-  if(evp<=-P3)
-  { // --------------------Plastic strain exceeds allowable limit--------------------------
+  if(evp<=-P3) { // ------------Plastic strain exceeds allowable limit--------------------------
     // The plastic strain for this iteration has exceed the allowable
     // value.  X is not defined in this region, so we set it to a large
     // negative number.
@@ -1379,12 +1426,11 @@ double Arenisca3::computeX(const double& evp,const double& P3)
     // X=1e12*p0, the material will respond as though there is no porosity.
     X = 1.0e12*p0;
   }
-  else
-  { // --------------------Plastic strain is within allowable domain------------------------
+  else { // ------------------Plastic strain is within allowable domain------------------------
     // We first compute the drained response.  If there are fluid effects, this value will
     // be used in detemining the elastic volumetric strain to yield.
     if(evp <= 0.0){
-          // This is an expensive calculation, but fasterlog() may cause errors.
+      // This is an expensive calculation, but fasterlog() may cause errors.
       X = (p0*p1 + log((evp+P3)/P3))/p1;
     }
     else{
@@ -1392,8 +1438,8 @@ double Arenisca3::computeX(const double& evp,const double& P3)
       X = p0*Pow(1.0 + evp, 1.0/(p0*p1*P3));
     }
 
-    if(Kf!=0.0 && evp<=ev0)
-    { // --------------------------------------------------------------------- Fluid Effects
+    if(Kf!=0.0 && evp<=ev0) { // ------------------------------------------- Fluid Effects
+      // This is an expensive calculation, but fastpow() may cause errors.
       // First we evaluate the elastic volumetric strain to yield from the
       // empirical crush curve (Xfit) and bulk modulus (Kfit) formula for
       // the drained material.  Xfit was computed as X above.

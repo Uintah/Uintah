@@ -172,12 +172,27 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
   
   // New Source terms (ala the new transport eqn):
   if (db->findBlock("src")){
-    string srcname; 
+    string srcname;
+    SourceTermFactory& src_factory = SourceTermFactory::self();
+  
     for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
       src_db->getAttribute("label", srcname);
       //which sources are turned on for this equation
-      d_new_sources.push_back( srcname ); 
-
+      d_new_sources.push_back( srcname );
+      SourceTermBase& a_src = src_factory.retrieve_source_term( srcname );
+      
+      ProblemSpecP db_root = db->getRootNode();
+      ProblemSpecP db_sources = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources");
+      for (ProblemSpecP tmp_src_db = db_sources->findBlock("src"); tmp_src_db != 0; tmp_src_db = tmp_src_db->findNextBlock("src")){
+        std::string tempSrcName;
+        tmp_src_db->getAttribute("label", tempSrcName);
+        
+        if ( tempSrcName == srcname ) {
+          //actually call the problem setup on momentum source terms now
+          a_src.problemSetup( tmp_src_db );
+          break;
+        }
+      }
     }
   }
 

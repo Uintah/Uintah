@@ -352,9 +352,6 @@ Thread::niceAbort(void* context /* = 0 */, bool print /*= true */)
       return;
     } else if (strcasecmp(smode, "dbx") == 0) {
 
-#if defined( REDSTORM )
-      printf("Error: running debugger at exception is not supported on RedStorm\n");
-#else
       char command[500];
       if(getenv("SCI_DBXCOMMAND")){
 	sprintf(command, getenv("SCI_DBXCOMMAND"), getpid());
@@ -363,16 +360,11 @@ Thread::niceAbort(void* context /* = 0 */, bool print /*= true */)
       }
       system(command);
       smode = "ask";
-#endif
     } else if (strcasecmp(smode, "cvd") == 0) {
-#if defined( REDSTORM )
-      printf("Error: running debugger at exception is not supported on RedStorm\n");
-#else
       char command[500];
       sprintf(command, "cvd -pid %d &", getpid());
       system(command);
       smode = "ask";
-#endif
     } else if (strcasecmp(smode, "kill") == 0) {
       exit();
     } else if (strcasecmp(smode, "exit") == 0) {
