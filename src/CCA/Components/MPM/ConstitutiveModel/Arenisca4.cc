@@ -58,6 +58,8 @@ Software is furnished to do so, subject to the following conditions:
 #define MHfastfcns    // Use fast approximate exp(), log() and pow() in deep loops.
 #define MHdisaggregationStiffness // reduce stiffness with disaggregation
 
+//#define MHcout
+
 // INCLUDE SECTION: tells the preprocessor to include the necessary files
 #include <CCA/Components/MPM/ConstitutiveModel/Arenisca4.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
@@ -1182,7 +1184,7 @@ void Arenisca4::computeInvariants(const Matrix3& A,
   I1 = A(0,0) + A(1,1) + A(2,2);  //Pa
 
   // Compute the deviatoric part of the tensor
-  S = A - one_third*Identity*I1;  //Pa
+  S = A - one_third*I1*Identity;  //Pa
 
   // Compute the second invariant
   J2 = 0.5*(S(0,0)*S(0,0) + S(1,1)*S(1,1) + S(2,2)*S(2,2))
@@ -1263,6 +1265,13 @@ int Arenisca4::computeSubstep(const Matrix3& d_e,       // Total strain incremen
                        sigma_old,
                        d_e,X_old,Zeta_old,coher,bulk,shear,
                        sigma_0,d_ep_0);
+	
+	//cout<<"\n First nonhardeningReturn() call"<<endl;
+	//cout<<"sigma_trial = "<<sigma_trial<<endl;
+	//cout<<"sigma_old = "<<sigma_old<<endl;
+	//cout<<"sigma_0 = "<<sigma_0<<endl;
+	//cout<<"d_ep_0 = "<<d_ep_0<<endl;
+	
     double d_evp_0 = d_ep_0.Trace();
 	
 	double I1_0,	// I1 at stress update for non-hardening return
@@ -1496,61 +1505,88 @@ double Arenisca4::computePorePressure(const double ev)
 } //===================================================================
 
 // Compute nonhardening return from trial stress to some yield surface
-void Arenisca4::nonHardeningReturn(const Matrix3 & sigma_trial,    // Trial Stress
-                                  const Matrix3 & sigma_old,      // Stress at start of subtep
-                                  const Matrix3& d_e,         // increment in total strain
-                                  const double & X,           // cap position
-                                  const double & Zeta,        // isotropic bacstress
-                                  const double & coher,
-                                  const double & bulk,        // elastic bulk modulus
-                                  const double & shear,       // elastic shear modulus
-                                  Matrix3 & sigma_new,      // New stress state on yield surface
-                                  Matrix3 & d_ep_new)    // increment in plastic strain for return
+void Arenisca4::nonHardeningReturn(const Matrix3 & sigma_trial, // Trial Stress (untransformed)
+                                   const Matrix3 & sigma_old,   // Stress at start of subtep (untransformed)
+                                   const Matrix3& d_e,          // increment in total strain
+                                   const double & X,            // cap position
+                                   const double & Zeta,         // isotropic backstress
+                                   const double & coher,
+                                   const double & bulk,         // elastic bulk modulus
+                                   const double & shear,        // elastic shear modulus
+                                   Matrix3 & sigma_new,         // New stress state on yield surface
+                                   Matrix3 & d_ep_new)          // increment in plastic strain for return
 {
   // Computes a non-hardening return to the yield surface in the meridional profile
   // (constant Lode angle) based on the current values of the internal state variables
   // and elastic properties.  Returns the updated stress and  the increment in plastic
   // strain corresponding to this return.
-  //
-  // NOTE: all values of r and z in this function are transformed!
-
-  const int nmax = 19;  // If this is changed, more entries may need to be added to sinV cosV.
-  int n = 0,
-      interior;
-
-// (1) Define an interior point, (I1_0 = Zeta, also, J2_0 = 0 but no need to  create this variable.)
-  Matrix3  sigma_0 = one_third*Zeta*Identity,
-		   PL_0,		// Eigenprojector for interior point (Low)
+	
+// (1) Transform sigma_trial and define interior point sigma_0.
+  double S_to_S_star = d_cm.BETA_nonassociativity*sqrt(1.5*bulk/shear);
+  double S_star_to_S = 1.0/S_to_S_star;
+	
+  Matrix3 iso_sigma_trial = one_third*sigma_trial.Trace()*Identity;
+  Matrix3 sigma_trial_star = iso_sigma_trial + S_to_S_star*(sigma_trial - iso_sigma_trial);
+  
+  Matrix3 sigma_0 = one_third*Zeta*Identity;
+   
+// (2) Convert 3x3 stresses to vectors of ordered eigenvalues and ordered eigen projectors:
+  
+  Matrix3  PL_0,		// Eigenprojector for interior point (Low)
 		   PM_0,		// Eigenprojector for interior point (Mid)
 		   PH_0,		// Eigenprojector for interior point (High)
 		   PL_trial,	// Eigenprojector for trial stress (Low)
 		   PM_trial,	// Eigenprojector for trial stress (Mid)
 		   PH_trial;	// Eigenprojector for trial stress (High)
-
+  
   Vector lambda_trial, // Ordered eigenvalues {L,M,H} for trial stress
 		 lambda_0,     // Ordered eigenvalues {L,M,H} for interior point
 		 lambda_test;  // Ordered eigenvalues {L,M,H} for test point
-  
-  computeEigenProjectors(sigma_trial,	// Input tensor (trial stress)
-						 lambda_trial,	// Ordered eigenvalues {L,M,H}
-						 PL_trial,		// Low eigenprojector
-						 PM_trial,		// Mid eigenprojector
-						 PH_trial		// High eigenprojector
+   
+  computeEigenProjectors(sigma_trial_star,	// Input tensor (transformed trial stress)
+						 lambda_trial,	    // Ordered eigenvalues {L,M,H}
+						 PL_trial,		    // Low eigenprojector
+						 PM_trial,		    // Mid eigenprojector
+						 PH_trial		    // High eigenprojector
 						);
-  computeEigenProjectors(sigma_0, 	// Input tensor (interior point)
+ 
+  computeEigenProjectors(sigma_0, 	// Input tensor (interior point) Isotropic so doesn't need transformation
 						 lambda_0,	// Ordered eigenvalues {L,M,H}
 						 PL_0,		// Low eigenprojector
 						 PM_0,		// Mid eigenprojector
 						 PH_0		// High eigenprojector
 						);
+#ifdef MHcout
+  cout.precision(16);
+  cout<<"\nNonhardening return (1559), computeEigenProjectors"<<endl;
+  cout<<"sigma_trial = "<<sigma_trial<<endl;
+  cout<<"sigma_trial_star = "<<sigma_trial_star<<endl;
+  cout<<"lambda_trial = "<<lambda_trial<<endl;
+  cout<<"PL_trial = "<<PL_trial<<endl;
+  cout<<"PM_trial = "<<PM_trial<<endl;
+  cout<<"PH_trial = "<<PH_trial<<endl;
   
-// (2) Transform the trial and interior points as follows where beta defines the degree
-//  of non-associativity.
-  // multiplier to compute Lode R to sqrt(J2)
-  double S_to_S_star = d_cm.BETA_nonassociativity*sqrt(1.5*bulk/shear);
-  double S_star_to_S = 1.0/S_to_S_star;
-
-  //// Lookup tables for computing the sin() and cos() of the rotation angle.
+  cout<<"sigma_0 = "<<sigma_0<<endl;
+  cout<<"lambda_0 = "<<lambda_0<<endl;
+  cout<<"PL_0 = "<<PL_0<<endl;
+  cout<<"PM_0 = "<<PM_0<<endl;
+  cout<<"PH_0 = "<<PH_0<<endl;
+#endif
+  
+// (3) Perform Bisection between in transformed space, to find the new point on the
+//  yield surface: [znew,rnew] = transformedBisection(z0,r0,z_trial,r_trial,X,Zeta,K,G)
+  //int icount=1;
+  const int nmax = 50;  // If this is changed, more entries may need to be added to sinV cosV.
+  int n = 0,
+	  interior;
+  
+  // Compute the a1,a2,a3,a4 parameters from FSLOPE,YSLOPE,STREN and PEAKI1,
+  // which are perturbed by variability according to coher.  These are then 
+  // passed down to the computeYieldFunction, to avoid the expense of computing a3
+  double limitParameters[4];  //double a1,a2,a3,a4;
+  computeLimitParameters(limitParameters,coher);
+  
+  //// Modify this to use lookup tables for computing the sin() and cos() of the rotation angle.
   //double sinV[]={0.7071067811865475,-0.5,0.3420201433256687,-0.2306158707424402,0.1545187928078405,
   //                -0.1032426220806015,0.06889665647555759,-0.04595133277786571,0.03064021661344469,
   //                -0.02042858745187096,0.01361958465478159,-0.009079879062402308,0.006053298918749807,
@@ -1565,49 +1601,68 @@ void Arenisca4::nonHardeningReturn(const Matrix3 & sigma_trial,    // Trial Stre
   //double sinTheta = sinV[0],
   //       cosTheta = cosV[0];
   
-  // Compute the a1,a2,a3,a4 parameters from FSLOPE,YSLOPE,STREN and PEAKI1,
-  // which are perturbed by variability according to coher.  These are then 
-  // passed down to the computeYieldFunction, to avoid the expense of computing a3
-  double limitParameters[4];  //double a1,a2,a3,a4;
-  computeLimitParameters(limitParameters,coher);
-
-// (3) Perform Bisection between in transformed space, to find the new point on the
-//  yield surface: [znew,rnew] = transformedBisection(z0,r0,z_trial,r_trial,X,Zeta,K,G)
-  //int icount=1;
   double phi,
 		 theta;
   while ( n < nmax ){
     // transformed bisection to find a new interior point, just inside the boundary of the
     // yield surface.  This function overwrites the inputs for z_0 and r_0
     //  [z_0,r_0] = transformedBisection(z_0,r_0,z_trial,r_trial,X_Zeta,bulk,shear)
+
+#ifdef MHcout
+	cout.precision(16);
+	cout<<"\nNonhardening return (1595), see if yield stress is plastic"<<endl;
+	cout<<"sigma_trial = "<<sigma_trial<<endl;
+	cout<<"f(sigma_trial) = "<<computeYieldFunction(sigma_trial,X,Zeta,coher,limitParameters)<<endl;
+	cout<<"\nBefore and after call to trasnformedBisection():"<<endl;
+	cout<<"lambda_0 = "<<lambda_0<<endl;
+	cout<<"lambda_trial = "<<lambda_trial<<endl;
+#endif	
     transformedBisection(lambda_0,lambda_trial,X,Zeta,coher,limitParameters,S_star_to_S);
 	
+#ifdef MHcout
+	cout<<"lambda_new = "<<lambda_0<<endl;
+    cout<<"\nBefore and after call to computeRotationToSphericalCS():"<<endl;
+	cout<<"lambda_trial-lambda_0 = "<<lambda_trial-lambda_0<<endl;
+#endif	
 	Matrix3 R; // rotation matrix to transform to spherical coordinates
 	computeRotationToSphericalCS(lambda_0,lambda_trial,R);
+	//cout<<"[R] = "<<R<<endl;
+	Vector r_test = lambda_0 - lambda_trial;
+	double r_test_norm = sqrt(r_test[0]*r_test[0] + r_test[1]*r_test[1] + r_test[2]*r_test[2]);	
 
 // (4) Perform a rotation of {z_new,r_new} about {z_trial,r_trial} until a new interior point
 // is found, set this as {z0,r0}
     interior = 0;
-    n = max(n-2,0);
+    n = max(n-6,0);
     // (5) Test for convergence:
-    while ( (interior==0)&&(n < nmax) ){
+	
+	// Check to see if we the test point is equal to the trial stress within precision:
+	while ( (interior==0)&&(n < nmax) ){
       // To avoid the cost of computing pow() to get theta, and then sin(), cos(),
       // we use a lookup table defined above by sinV and cosV.
       //
-      // theta = pi_fourth*Pow(-two_third,n);
-      // z_test = z_trial + cos(theta)*(z_0-z_trial) - sin(theta)*(r_0-r_trial);
-      // r_test = r_trial + sin(theta)*(z_0-z_trial) + cos(theta)*(r_0-r_trial);
+      // cout<<"\n Nonhardening return (1630): n = "<<n<<endl;
       // sinTheta = sinV[n];
       // cosTheta = cosV[n];
+	  
 	  phi = pi_half*Pow(2.0,-0.25*n);
 	  theta = pi_fourth*n;
-	  Vector r_test = lambda_0 - lambda_trial;
-	  Vector sphere = Vector(r_test.normalize(),theta,phi),
-			 cart;
-	  spherical2cartesian(sphere,cart);
+	  Vector sphere = Vector(r_test_norm,theta,phi);
+	  Vector cart;
+	  spherical2cartesian(sphere,cart);	  
 	  lambda_test = lambda_trial + R*cart;
-	
-	  Matrix3 sigma_test = Matrix3(lambda_test[0],0,0,0,lambda_test[1],0,0,0,lambda_test[2]);
+
+#ifdef MHcout	
+	  cout.precision(15);
+	  cout<<"n = "<<n<<endl;
+	  cout<<"theta = "<<theta<<endl;
+	  cout<<"phi = "<<phi<<endl;
+	  cout<<"r_test = "<<r_test<<endl;
+	  cout<<"sphere = "<<sphere<<endl;
+	  cout<<"cart = "<<cart<<endl;
+	  cout<<"lambda_test = "<<lambda_test<<endl;
+#endif	  
+	  Matrix3 sigma_test = Matrix3(lambda_test[0],0.,0.,0.,lambda_test[1],0.,0.,0.,lambda_test[2]);
       if ( transformedYieldFunction(sigma_test,X,Zeta,coher,limitParameters,S_star_to_S) == -1 ) { // new interior point
         interior = 1;
         lambda_0 = lambda_test;
@@ -1631,7 +1686,7 @@ void Arenisca4::nonHardeningReturn(const Matrix3 & sigma_trial,    // Trial Stre
 
 // Computes bisection between two points in transformed space
 void Arenisca4::transformedBisection(Vector& sigma_0,			// {lamda_L,lamda_M,lamda_H}
-                                     const Vector& sigma_trial,		// {lamda_L,lamda_M,lamda_H}
+                                     const Vector& sigma_trial,	// {lamda_L,lamda_M,lamda_H}
                                      const double& X,
                                      const double& Zeta,
 									 const double& coher,
@@ -1653,7 +1708,8 @@ void Arenisca4::transformedBisection(Vector& sigma_0,			// {lamda_L,lamda_M,lamd
   double eta_out = 1.0,  // This is for the accerator.  Must be > TOL
          eta_in  = 0.0,
          eta_mid,
-         TOL = 1.0e-6;
+         TOL = 1.0e-11;
+  Vector sigma_test;
   Matrix3 sigma_test_3x3; //diagonal matrix to call yield function:
 
 // (2) Test for convergence
@@ -1661,15 +1717,17 @@ void Arenisca4::transformedBisection(Vector& sigma_0,			// {lamda_L,lamda_M,lamd
 
 // (3) Transformed test point
     eta_mid = 0.5*(eta_out+eta_in);
-	Vector sigma_test = sigma_0 + eta_mid*(sigma_trial-sigma_0);
+	sigma_test = sigma_0 + eta_mid*(sigma_trial-sigma_0);
 	
 // (4) Check if test point is within the yield surface:
-	sigma_test_3x3 = Matrix3(sigma_test[0],0,0,0,sigma_test[1],0,0,0,sigma_test[2]);
+	sigma_test_3x3 = Matrix3(sigma_test[0],0.0,0.0,0.0,sigma_test[1],0.0,0.0,0.0,sigma_test[2]);
     if ( transformedYieldFunction(sigma_test_3x3,X,Zeta,coher,limitParameters,S_star_to_S)!=1 ) {eta_in = eta_mid;}
     else {eta_out = eta_mid;}
+	
+	//cout<<"eta_mid = "<<eta_mid<<", sigma_test = "<<sigma_test<<endl;
   }
 // (5) Converged, return {z_new,r_new}={z_test,r_test}
-  sigma_0 = sigma_0 + eta_out*(sigma_trial - sigma_0);  //sigma_0 = sigma_test
+  sigma_0 = sigma_test;
 
 } //===================================================================
 
@@ -1887,27 +1945,30 @@ void Arenisca4::computeRotationToSphericalCS(const Vector& pnew,// interior poin
 		                                     Matrix3& R			// Rotation matrix
 											)
 {
+    cout.precision(16);
 	// The basis is rotated so that e3 is aligned with z' in the new spherical coordinate system
 	// but the rotation around that axis is arbitrary.
+	if(pnew == p0){
+		cout << "Error in computeRotationToSphericalCS: pnew = p0 " << endl;
+	}
 	Vector x,
 		   y,
 		   z = pnew - p0;
-	       z = z/z.normalize();
-	
+   z = z/sqrt(z[0]*z[0]+z[1]*z[1]+z[2]*z[2]);
+	// Dyadic product zz_ij = z_i*z_j
 	Matrix3 zz = Matrix3(z[0]*z[0],z[0]*z[1],z[0]*z[2],
 						 z[1]*z[0],z[1]*z[1],z[1]*z[2],
 						 z[2]*z[0],z[2]*z[1],z[2]*z[2]);
-
 	if( z==Vector(1.0,0.0,0.0)||z==Vector(-1.0,0.0,0.0))
 	{
 		y = (Identity-zz)*Vector(0.0,1.0,0.0);
-		y = y/y.normalize();
+		y = y/sqrt(y[0]*y[0]+y[1]*y[1]+y[2]*y[2]);
 		x = Cross(y,z);
 	}
 	else
 	{
 		x = (Identity-zz)*Vector(1.0,0.0,0.0);
-		x = x/x.normalize();
+		x = x/sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]);
 		y = Cross(z,x);
 	}
 	//R = Matrix3(x[0],x[1],x[2],
@@ -1916,6 +1977,12 @@ void Arenisca4::computeRotationToSphericalCS(const Vector& pnew,// interior poin
 	R = Matrix3(x[0],y[0],z[0],
 				x[1],y[1],z[1],
 				x[2],y[2],z[2]);
+	
+
+	//cout << "pnew = "<<pnew<<endl;
+	//cout << "p0 = "<<p0<<endl;
+	//cout << "R = "<<R<<endl;
+	
 } //===================================================================
 
 // Compute the unique set of eigenvalues and eigenprojectors of [A]
@@ -1930,31 +1997,27 @@ void Arenisca4::computeEigenProjectors(const Matrix3& A,// Input tensor
 	// are set to zero so that A=lambda_k P_k, summed for k=1:3
 	//
 	// This only works on symmetric positive definite 3x3 tensors, i.e. the stress tensor.
-	
-	// Compute ordered eigenvalues
-	double lambdaL, lambdaM, lambdaH;
-	A.getEigenValues(lambdaL, lambdaM, lambdaH);
-	lambda = Vector(lambdaL, lambdaM, lambdaH);
+	computeEigenValues(A,lambda);	// Ordered eigenvalues for [A] lambda = {L,M,H}
 
 	// Number of unique eigenvalues:
 	int d=1;
-	if(lambda[1]!=lambda[0]) d++;
-	if(lambda[2]!=lambda[1]) d++;
+	if(lambda[1] != lambda[0]) d++;
+	if(lambda[2] != lambda[1]) d++;
 	
 	if(d==3){ //-----------------------------------------------------------------------------------LMH
-		PL = (A - lambdaM*Identity)*(A-lambdaH*Identity) / ((lambdaL-lambdaM)*(lambdaL-lambdaH));
-		PM = (A - lambdaH*Identity)*(A-lambdaL*Identity) / ((lambdaM-lambdaH)*(lambdaM-lambdaL));
-		PH = (A - lambdaL*Identity)*(A-lambdaM*Identity) / ((lambdaH-lambdaL)*(lambdaH-lambdaM));
+		PL = (A - lambda[1]*Identity)*(A-lambda[2]*Identity) / ((lambda[0]-lambda[1])*(lambda[0]-lambda[2]));
+		PM = (A - lambda[2]*Identity)*(A-lambda[0]*Identity) / ((lambda[1]-lambda[2])*(lambda[1]-lambda[0]));
+		PH = (A - lambda[0]*Identity)*(A-lambda[1]*Identity) / ((lambda[2]-lambda[0])*(lambda[2]-lambda[1]));
 	}
 	else if(d==2){
-		if(lambdaM>lambdaL){ //--------------------------------------------------------------------LMM
+		if(lambda[1]>lambda[0]){ //--------------------------------------------------------------------LMM
 			PH = 0.0*Identity;
-			PM = (A - lambdaL*Identity)/(lambdaM-lambdaL);
+			PM = (A - lambda[0]*Identity)/(lambda[1]-lambda[0]);
 			PL = Identity - PM;			
 		}
 		else{ //-----------------------------------------------------------------------------------MMH
 			PL = 0.0*Identity;
-			PM = (A - lambdaH*Identity)/(lambdaM-lambdaH);
+			PM = (A - lambda[2]*Identity)/(lambda[1]-lambda[2]);
 			PH = Identity-PM;			
 		}
 	}
@@ -1963,7 +2026,66 @@ void Arenisca4::computeEigenProjectors(const Matrix3& A,// Input tensor
 		PM = 0.0*Identity;
 		PH = Identity;		
 	}
+	
+	//cout<<"[A] = "<<A<<endl;
+	//cout<<"lambda = "<<lambda<<endl;
+	//cout<<"d = "<<d<<endl;
+	//cout<<"PL = "<<PL<<endl;
+	//cout<<"PM = "<<PM<<endl;
+	//cout<<"PH = "<<PH<<endl;
 } //===================================================================
+
+// Compute Eigenvalues for some real symmetric 3x3 matrix [A]
+void Arenisca4::computeEigenValues(const Matrix3& A,// Input tensor
+								   Vector& lambda	// Ordered eigenvalues {L,M,H}
+								  )
+{
+	Matrix3 stress(A);
+	Matrix3 eigVec;
+	stress.eigen(lambda, eigVec);
+	// Sort these:
+	Vector temp = lambda;
+	for(int i=1;i<4;i++)
+	{
+		if(lambda[1]<lambda[0]){
+			temp[0]=lambda[1];
+			temp[1]=lambda[0];
+			lambda = temp;
+		}
+		if(lambda[2]<lambda[1]){
+			temp[2]=lambda[1];
+			temp[1]=lambda[2];
+			lambda = temp;
+		}
+	}
+	
+	//// Compute Lode coordinates {r,z,theta}
+	//double I1 = A.Trace();
+	//Matrix3 S = A - one_third*I1*Identity;
+	//Matrix3 SdotS = S*S;
+	//double J2 = 0.5*SdotS.Trace();
+	//double z = one_sqrt_three*I1,
+	//	   r = sqrt(2.0*J2);
+	//double theta;
+	//if(r>0.0){
+	//	Matrix3 Shat = S/r;
+	//	theta = one_third*asin(3.0*sqrt(6.0)*Shat.Determinant());
+	//}
+	//else{
+	//	theta = 0.0;
+	//}
+	//// Analytical solution to eigenvalues:
+	//double lambdaL = z*one_sqrt_three + (sqrt_two/sqrt_three)*r*cos(theta - one_sixth*pi),
+	//	   lambdaM = z*one_sqrt_three - (sqrt_two/sqrt_three)*r*sin(theta),
+	//	   lambdaH = z*one_sqrt_three - (sqrt_two/sqrt_three)*r*cos(theta + one_sixth*pi);
+	
+	//// Form a vector
+	//lambda = Vector(lambdaL,lambdaM,lambdaH);
+    
+	//cout<<"[A] = "<<A<<endl;
+	//cout<<"lambda = "<<lambda<<endl;
+} //===================================================================
+
 
 // Series of checks that input parameters are within allowable limits
 void Arenisca4::checkInputParameters(){

@@ -297,6 +297,10 @@ namespace Uintah {
 								Matrix3& PM,	 // Mid eigenprojector
 								Matrix3& PH		 // High eigenprojector
 							   );
+	void computeEigenValues(const Matrix3& A,// Input tensor
+							Vector& lambda  // Ordered eigenvalues {LMH}
+							);
+	
 	
   public: //Uintah MPM constitutive model specific functions
     ////////////////////////////////////////////////////////////////////////
