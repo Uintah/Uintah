@@ -58,8 +58,6 @@ Software is furnished to do so, subject to the following conditions:
 #define MHfastfcns    // Use fast approximate exp(), log() and pow() in deep loops.
 #define MHdisaggregationStiffness // reduce stiffness with disaggregation
 
-//#define MHcout
-
 // INCLUDE SECTION: tells the preprocessor to include the necessary files
 #include <CCA/Components/MPM/ConstitutiveModel/Arenisca4.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
@@ -142,10 +140,13 @@ Arenisca4::Arenisca4(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->require("T1_rate_dependence",d_cm.T1_rate_dependence);    // Rate dependence parameter
   ps->require("T2_rate_dependence",d_cm.T2_rate_dependence);    // Rate dependence parameter
   ps->getWithDefault("subcycling_characteristic_number",d_cm.subcycling_characteristic_number, 256);    // allowable subcycles
-  ps->getWithDefault("Use_Disaggregation_Algorithm",d_cm.Use_Disaggregation_Algorithm, false);
-  ps->get("PEAKI1IDIST",wdist.WeibDist);        // For variability
-  WeibullParser(wdist);                         // For variability
-  proc0cout <<"WeibMed="<<wdist.WeibMed<<endl;  // For variability
+  ps->getWithDefault("Use_Disaggregation_Algorithm",d_cm.Use_Disaggregation_Algorithm, false);          // CVD jet
+  ps->getWithDefault("J3_type",d_cm.J3_type, 0);				// Lode angle dependence
+  ps->getWithDefault("J3_psi",d_cm.J3_psi, 1.0);  				// Lode angle dependence
+  ps->getWithDefault("principal_stress_cutoff",d_cm.principal_stress_cutoff, 1.0e99); 	// Principal stress cutoff
+  ps->get("PEAKI1IDIST",wdist.WeibDist);        // Variability
+  WeibullParser(wdist);                         // Variability
+  proc0cout <<"WeibMed="<<wdist.WeibMed<<endl;  // Variability
 
   // These class variables are computed from input parameters and are used throughout the code
   // The are evaluates here to avoid repeated computation, or to simplify expressions.
@@ -225,6 +226,10 @@ Arenisca4::Arenisca4(const Arenisca4* cm)
   initializeLocalMPMLabels();
   // Disaggregation Strain
   d_cm.Use_Disaggregation_Algorithm = cm->d_cm.Use_Disaggregation_Algorithm;
+  // 3rd Invariant Dependence
+  d_cm.J3_type = cm->d_cm.J3_type;
+  d_cm.J3_psi = cm->d_cm.J3_psi;
+  d_cm.principal_stress_cutoff = cm->d_cm.principal_stress_cutoff;
 }
 // DESTRUCTOR
 Arenisca4::~Arenisca4()
@@ -293,6 +298,9 @@ void Arenisca4::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("T2_rate_dependence",d_cm.T2_rate_dependence);
   cm_ps->appendElement("subcycling_characteristic_number",d_cm.subcycling_characteristic_number);
   cm_ps->appendElement("Use_Disaggregation_Algorithm",d_cm.Use_Disaggregation_Algorithm);
+  cm_ps->appendElement("J3_type",d_cm.J3_type);  
+  cm_ps->appendElement("J3_psi",d_cm.J3_psi);
+  cm_ps->appendElement("principal_stress_cutoff",d_cm.principal_stress_cutoff); 
 
   //    Uintah Variability Variables
   cm_ps->appendElement("peakI1IPerturb", wdist.Perturb);
@@ -1556,27 +1564,11 @@ void Arenisca4::nonHardeningReturn(const Matrix3 & sigma_trial, // Trial Stress 
 						 PM_0,		// Mid eigenprojector
 						 PH_0		// High eigenprojector
 						);
-#ifdef MHcout
-  cout.precision(16);
-  cout<<"\nNonhardening return (1559), computeEigenProjectors"<<endl;
-  cout<<"sigma_trial = "<<sigma_trial<<endl;
-  cout<<"sigma_trial_star = "<<sigma_trial_star<<endl;
-  cout<<"lambda_trial = "<<lambda_trial<<endl;
-  cout<<"PL_trial = "<<PL_trial<<endl;
-  cout<<"PM_trial = "<<PM_trial<<endl;
-  cout<<"PH_trial = "<<PH_trial<<endl;
-  
-  cout<<"sigma_0 = "<<sigma_0<<endl;
-  cout<<"lambda_0 = "<<lambda_0<<endl;
-  cout<<"PL_0 = "<<PL_0<<endl;
-  cout<<"PM_0 = "<<PM_0<<endl;
-  cout<<"PH_0 = "<<PH_0<<endl;
-#endif
   
 // (3) Perform Bisection between in transformed space, to find the new point on the
 //  yield surface: [znew,rnew] = transformedBisection(z0,r0,z_trial,r_trial,X,Zeta,K,G)
   //int icount=1;
-  const int nmax = 50;  // If this is changed, more entries may need to be added to sinV cosV.
+  const int nmax = 40; // If this is changed, more entries may need to be added to sinTheta,cosTheta,sinPhi,cosPhi
   int n = 0,
 	  interior;
   
@@ -1597,22 +1589,23 @@ void Arenisca4::nonHardeningReturn(const Matrix3 & sigma_trial, // Trial Stress 
 				   0.02063723796402109,0.01735414027907056,0.01459324891806791,0.01227153828571993,
 				   0.01031916841618379,0.008677396837596723,0.007296818715934582,0.006135884649154475,
 				   0.005159652888734864,0.004338739256632612,0.003648433640322288,0.003067956762965976,
-				   0.002579835029490658,0.002169374733063605,0.001824219855463094,0.001533980186284766,
-				   0.001289918587887071,0.001084688004625778,0.0009121103071445277,0.0007669903187427045,
-				   0.0006449594280862953,0.0005423440820746535,0.0004560552009988938,0.0003834951875713956,
-				   0.0003224797308109939,0.0002711720510075479,0.0002280276064277759,0.0001917475973107033,
-				   0.0001612398675014778,0.0001355860267500516,0.0001140138039549291,0.00009587379909597735,
-				   0.00008061993401273649,0.00006779301353081051,0.00005700690207009467,0.00004793689960306688,
-				   0.00004030996703911794,0.00003389650678487834,0.0000285034510466261,0.00002396844980841822,
-				   0.00002015498352365268,0.00001694825339487331,0.0000142517255247604,0.00001198422490506971,
-				   0.00001007749176233806,8.474126697740921e-6,7.125862762561117e-6,5.992112452642428e-6,
-				   5.038745881232993e-6,4.237063348908494e-6,3.562931381303173e-6,2.996056226334661e-6,
-				   2.519372940624492e-6,2.118531674459001e-6,1.781465690654414e-6,1.498028113169011e-6,
-				   1.259686470313245e-6,1.059265837230095e-6,8.907328453275602e-7,7.490140565847157e-7,
-				   6.298432351567476e-7,5.296329186151217e-7,4.453664226638242e-7,3.745070282923841e-7,
-				   3.149216175783894e-7,2.648164593075701e-7,2.226832113319176e-7,1.872535141461953e-7,
-				   1.574608087891967e-7,1.324082296537862e-7,1.113416056659595e-7,9.362675707309808e-8,
-				   7.873040439459857e-8,6.620411482689326e-8,5.567080283297984e-8,4.681337853654909e-8};
+				   0.002579835029490658,0.002169374733063605,0.001824219855463094,0.001533980186284766};
+				   //,0.001289918587887071,0.001084688004625778,0.0009121103071445277,0.0007669903187427045,
+				   //0.0006449594280862953,0.0005423440820746535,0.0004560552009988938,0.0003834951875713956,
+				   //0.0003224797308109939,0.0002711720510075479,0.0002280276064277759,0.0001917475973107033,
+				   //0.0001612398675014778,0.0001355860267500516,0.0001140138039549291,0.00009587379909597735,
+				   //0.00008061993401273649,0.00006779301353081051,0.00005700690207009467,0.00004793689960306688,
+				   //0.00004030996703911794,0.00003389650678487834,0.0000285034510466261,0.00002396844980841822,
+				   //0.00002015498352365268,0.00001694825339487331,0.0000142517255247604,0.00001198422490506971,
+				   //0.00001007749176233806,8.474126697740921e-6,7.125862762561117e-6,5.992112452642428e-6,
+				   //5.038745881232993e-6,4.237063348908494e-6,3.562931381303173e-6,2.996056226334661e-6,
+				   //2.519372940624492e-6,2.118531674459001e-6,1.781465690654414e-6,1.498028113169011e-6,
+				   //1.259686470313245e-6,1.059265837230095e-6,8.907328453275602e-7,7.490140565847157e-7,
+				   //6.298432351567476e-7,5.296329186151217e-7,4.453664226638242e-7,3.745070282923841e-7,
+				   //3.149216175783894e-7,2.648164593075701e-7,2.226832113319176e-7,1.872535141461953e-7,
+				   //1.574608087891967e-7,1.324082296537862e-7,1.113416056659595e-7,9.362675707309808e-8,
+				   //7.873040439459857e-8,6.620411482689326e-8,5.567080283297984e-8,4.681337853654909e-8};
+										
   double cosPhi[] = {0,0.2473257928926614,0.4440158403262132,0.5946218568493312,0.7071067811865475,
 				   0.7897233037250013,0.8497104919695335,0.8929226889404623,0.9238795325112868,
 				   0.9459712743326304,0.9616939461100744,0.9728624488951309,0.9807852804032304,
@@ -1622,22 +1615,22 @@ void Arenisca4::nonHardeningReturn(const Matrix3 & sigma_trial, // Trial Stress 
 				   0.9997870295263969,0.9998494055682457,0.9998935128732536,0.9999247018391445,
 				   0.9999467559641355,0.9999623506833259,0.9999733778639443,0.9999811752826011,
 				   0.9999866889024412,0.9999905876265351,0.9999933444438379,0.9999952938095762,
-				   0.9999966722200732,0.9999976469038652,0.9999983361095752,0.9999988234517019,
-				   0.9999991680546722,0.9999994117257933,0.9999995840273073,0.9999997058628822,
-				   0.9999997920136464,0.9999998529314375,0.9999998960068214,0.9999999264657179,
-				   0.9999999480034103,0.9999999632328587,0.999999974001705,0.9999999816164293,
-				   0.9999999870008525,0.9999999908082146,0.9999999935004262,0.9999999954041073,
-				   0.9999999967502131,0.9999999977020537,0.9999999983751066,0.9999999988510268,
-				   0.9999999991875533,0.9999999994255134,0.999999999593777,0.999999999712757,
-				   0.999999999796888,0.999999999856378,0.999999999898444,0.999999999928189,
-				   0.999999999949222,0.999999999964095,0.999999999974611,0.999999999982047,
-				   0.999999999987306,0.999999999991024,0.999999999993653,0.999999999995512,
-				   0.999999999996826,0.999999999997756,0.999999999998413,0.999999999998878,
-				   0.999999999999207,0.999999999999439,0.999999999999603,0.999999999999719,
-				   0.999999999999802,0.99999999999986,0.999999999999901,0.99999999999993,
-				   0.99999999999995,0.999999999999965,0.999999999999975,0.999999999999982,
-				   0.999999999999988,0.999999999999991,0.999999999999994,0.999999999999996,
-				   0.999999999999997,0.999999999999998,0.999999999999998,0.999999999999999};
+				   0.9999966722200732,0.9999976469038652,0.9999983361095752,0.9999988234517019};
+				   //,0.9999991680546722,0.9999994117257933,0.9999995840273073,0.9999997058628822,
+				   //0.9999997920136464,0.9999998529314375,0.9999998960068214,0.9999999264657179,
+				   //0.9999999480034103,0.9999999632328587,0.999999974001705,0.9999999816164293,
+				   //0.9999999870008525,0.9999999908082146,0.9999999935004262,0.9999999954041073,
+				   //0.9999999967502131,0.9999999977020537,0.9999999983751066,0.9999999988510268,
+				   //0.9999999991875533,0.9999999994255134,0.999999999593777,0.999999999712757,
+				   //0.999999999796888,0.999999999856378,0.999999999898444,0.999999999928189,
+				   //0.999999999949222,0.999999999964095,0.999999999974611,0.999999999982047,
+				   //0.999999999987306,0.999999999991024,0.999999999993653,0.999999999995512,
+				   //0.999999999996826,0.999999999997756,0.999999999998413,0.999999999998878,
+				   //0.999999999999207,0.999999999999439,0.999999999999603,0.999999999999719,
+				   //0.999999999999802,0.99999999999986,0.999999999999901,0.99999999999993,
+				   //0.99999999999995,0.999999999999965,0.999999999999975,0.999999999999982,
+				   //0.999999999999988,0.999999999999991,0.999999999999994,0.999999999999996,
+				   //0.999999999999997,0.999999999999998,0.999999999999998,0.999999999999999};
   
 double sinTheta[] = {0,0.6530800292138481,0.9891405116101687,0.8450502273278872,0.2907537996606676,
 					 -0.4046809781025658,-0.9036746237763955,-0.9640045423646659,-0.5563852518516206,
@@ -1648,22 +1641,22 @@ double sinTheta[] = {0,0.6530800292138481,0.9891405116101687,0.8450502273278872,
 					 -0.8715932306494945,-0.3398885962773765,0.3568055094310588,0.8802982985443536,
 					 0.9764747478750539,0.5986486734679712,-0.06977475911309192,-0.7043279743794996,
 					 -0.9969847523632076,-0.8056829950374929,-0.2232848229694142,0.4675007598639339,
-					 0.9313510937243198,0.9431029274729957,0.4970516600769691,-0.190279519387695,
-					 -0.7852447952776354,-0.9990348123874233,-0.7278711495336058,-0.1033826694373081,
-					 0.5712900538569543,0.9686459003924745,0.8957995195857675,0.3881121621222028,
-					 -0.3079734562688337,-0.8545619209102743,-0.986327054909366,-0.6393071365809022,
-					 0.01804666067516924,0.6666402081411824,0.9916317968554326,0.8352632937178742,
-					 0.2734394420734792,-0.4211179860554405,-0.9112553934761619,-0.959049199879731,
-					 -0.5412992304499267,0.1392094041567632,0.7521427030551485,0.9999692337191986,
-					 0.7623884955578118,0.15472745398924,-0.5280417292307387,-0.9544877327280404,
-					 -0.9176041978277584,-0.4352952113126279,0.2583157358340115,0.8265344893033894,
-					 0.9935350497383921,0.6782516371133961,0.03372982029961126,-0.6271652002063631,
-					 -0.983620307293945,-0.8626042774456625,-0.322860978524602,0.373606208003528,
-					 0.8887166458157811,0.9724242911634413,0.5840955943952939,-0.08776607283622896,
-					 -0.7170241396024485,-0.9982227685879364,-0.7948619017002729,-0.2056574190418587,
-					 0.4833777411260093,0.9377706130923654,0.9369488077102126,0.4813112475589719,
-					 -0.207965478933031,-0.7962911443974866,-0.9980794079518292,-0.7153777660688891,
-					 -0.08541587267359811,0.586008781845477,0.9729717622334742,0.8876326458925173};
+					 0.9313510937243198,0.9431029274729957,0.4970516600769691,-0.190279519387695};
+					 //,-0.7852447952776354,-0.9990348123874233,-0.7278711495336058,-0.1033826694373081,
+					 //0.5712900538569543,0.9686459003924745,0.8957995195857675,0.3881121621222028,
+					 //-0.3079734562688337,-0.8545619209102743,-0.986327054909366,-0.6393071365809022,
+					 //0.01804666067516924,0.6666402081411824,0.9916317968554326,0.8352632937178742,
+					 //0.2734394420734792,-0.4211179860554405,-0.9112553934761619,-0.959049199879731,
+					 //-0.5412992304499267,0.1392094041567632,0.7521427030551485,0.9999692337191986,
+					 //0.7623884955578118,0.15472745398924,-0.5280417292307387,-0.9544877327280404,
+					 //-0.9176041978277584,-0.4352952113126279,0.2583157358340115,0.8265344893033894,
+					 //0.9935350497383921,0.6782516371133961,0.03372982029961126,-0.6271652002063631,
+					 //-0.983620307293945,-0.8626042774456625,-0.322860978524602,0.373606208003528,
+					 //0.8887166458157811,0.9724242911634413,0.5840955943952939,-0.08776607283622896,
+					 //-0.7170241396024485,-0.9982227685879364,-0.7948619017002729,-0.2056574190418587,
+					 //0.4833777411260093,0.9377706130923654,0.9369488077102126,0.4813112475589719,
+					 //-0.207965478933031,-0.7962911443974866,-0.9980794079518292,-0.7153777660688891,
+					 //-0.08541587267359811,0.586008781845477,0.9729717622334742,0.8876326458925173};
  
 double cosTheta[] = {1.,0.7572888982693721,0.1469729508840787,-0.5346869301685671,-0.9567979034168524,
 					 -0.9144579301214193,-0.4282197734138278,0.2658857692699838,0.8309244559657687,
@@ -1674,57 +1667,39 @@ double cosTheta[] = {1.,0.7572888982693721,0.1469729508840787,-0.534686930168567
 					 0.4902297831486548,0.940465704914642,0.9341786919212205,0.4744205998688464,
 					 -0.2156317851392739,-0.8010117138688038,-0.9975627714538619,-0.7098747104288692,
 					 -0.07759770328607386,0.5923469519693802,0.9747532445862991,0.8839926693851281,
-					 0.3641224247674308,-0.3325009296105281,-0.8677209500840285,-0.9817299549782454,
-					 -0.6191854419230029,0.04392543270163517,0.6857139269962564,0.9946416559042841,
-					 0.8207482405489019,0.2484454057793229,-0.4444583453034808,-0.9216121470623252,
-					 -0.9513949496575167,-0.5193495194280458,0.1647996988887314,0.7689514842411891,
-					 0.9998371457584857,0.7453796568792852,0.1290983325425473,-0.5498501888401678,
-					 -0.9618892199825011,-0.9070058664753,-0.4118417267113732,0.2832395315100768,
-					 0.8408300322385715,0.99026296598142,0.6590002687714889,0.00784420901294187,
-					 -0.6471196039690781,-0.9879571928894529,-0.8492184243120325,-0.2982501769851695,
-					 0.397495328436544,0.9002877756630347,0.9660605470779423,0.5628860790532889,
-					 -0.1135257897630787,-0.7348297195629733,-0.9994309877237927,-0.7788862636162693,
-					 -0.1802528531784318,0.5058792944294583,0.9464464002499753,0.9275874090031756,
-					 0.4584568937751372,-0.2332187770212312,-0.8116848751874143,-0.9961411127239482,
-					 -0.697048336363676,-0.05959282064674551,0.6067903733789996,0.9786240473200326,
-					 0.875411879850803,0.3472553487282364,-0.3494666389376975,-0.8765497606942951,
-					 -0.9781361661712315,-0.6049135585801836,0.06194752152044655,0.698737899225658,
-					 0.9963453862468615,0.8103047004676575,0.2309241215124303,-0.4605521533397157};
+					 0.3641224247674308,-0.3325009296105281,-0.8677209500840285,-0.9817299549782454};
+					 //,-0.6191854419230029,0.04392543270163517,0.6857139269962564,0.9946416559042841,
+					 //0.8207482405489019,0.2484454057793229,-0.4444583453034808,-0.9216121470623252,
+					 //-0.9513949496575167,-0.5193495194280458,0.1647996988887314,0.7689514842411891,
+					 //0.9998371457584857,0.7453796568792852,0.1290983325425473,-0.5498501888401678,
+					 //-0.9618892199825011,-0.9070058664753,-0.4118417267113732,0.2832395315100768,
+					 //0.8408300322385715,0.99026296598142,0.6590002687714889,0.00784420901294187,
+					 //-0.6471196039690781,-0.9879571928894529,-0.8492184243120325,-0.2982501769851695,
+					 //0.397495328436544,0.9002877756630347,0.9660605470779423,0.5628860790532889,
+					 //-0.1135257897630787,-0.7348297195629733,-0.9994309877237927,-0.7788862636162693,
+					 //-0.1802528531784318,0.5058792944294583,0.9464464002499753,0.9275874090031756,
+					 //0.4584568937751372,-0.2332187770212312,-0.8116848751874143,-0.9961411127239482,
+					 //-0.697048336363676,-0.05959282064674551,0.6067903733789996,0.9786240473200326,
+					 //0.875411879850803,0.3472553487282364,-0.3494666389376975,-0.8765497606942951,
+					 //-0.9781361661712315,-0.6049135585801836,0.06194752152044655,0.698737899225658,
+					 //0.9963453862468615,0.8103047004676575,0.2309241215124303,-0.4605521533397157};
 
   while ( n < nmax ){
     // transformed bisection to find a new interior point, just inside the boundary of the
-    // yield surface.  This function overwrites the inputs for z_0 and r_0
-    //  [z_0,r_0] = transformedBisection(z_0,r_0,z_trial,r_trial,X_Zeta,bulk,shear)
-
-#ifdef MHcout
-	cout.precision(16);
-	cout<<"\nNonhardening return (1595), see if yield stress is plastic"<<endl;
-	cout<<"sigma_trial = "<<sigma_trial<<endl;
-	cout<<"f(sigma_trial) = "<<computeYieldFunction(sigma_trial,X,Zeta,coher,limitParameters)<<endl;
-	cout<<"\nBefore and after call to trasnformedBisection():"<<endl;
-	cout<<"lambda_0 = "<<lambda_0<<endl;
-	cout<<"lambda_trial = "<<lambda_trial<<endl;
-#endif	
+    // yield surface.  This function overwrites the inputs for lambda_0
     transformedBisection(lambda_0,lambda_trial,X,Zeta,coher,limitParameters,S_star_to_S);
-	
-#ifdef MHcout
-	cout<<"lambda_new = "<<lambda_0<<endl;
-    cout<<"\nBefore and after call to computeRotationToSphericalCS():"<<endl;
-	cout<<"lambda_trial-lambda_0 = "<<lambda_trial-lambda_0<<endl;
-#endif	
-	Matrix3 R; // rotation matrix to transform to spherical coordinates
+	// rotation matrix to transform to spherical coordinates
+	Matrix3 R; 
 	computeRotationToSphericalCS(lambda_0,lambda_trial,R);
-	//cout<<"[R] = "<<R<<endl;
+	// Find the radial coordinate of lambda_0 in the spherical CS centered around the trial stress.
 	Vector r_test = lambda_0 - lambda_trial;
 	double r_test_norm = sqrt(r_test[0]*r_test[0] + r_test[1]*r_test[1] + r_test[2]*r_test[2]);	
 
-// (4) Perform a rotation of {z_new,r_new} about {z_trial,r_trial} until a new interior point
-// is found, set this as {z0,r0}
+// (4) Perform a rotation of lamda_0 about lambda_trial until a new interior point is found, set this as lambda_0
     interior = 0;
-    n = max(n-6,0);
-    // (5) Test for convergence:
+    n = max(n-2,0);
 	
-	// Check to see if we the test point is equal to the trial stress within precision:
+    // (5) Test for convergence:
 	while ( (interior==0)&&(n < nmax) ){
       // To avoid the cost of computing pow() to get theta, and then sin(), cos(),
       // we use a lookup table defined above by sinV and cosV.
@@ -1735,18 +1710,8 @@ double cosTheta[] = {1.,0.7572888982693721,0.1469729508840787,-0.534686930168567
 			 y = r_test_norm*sinTheta[n]*sinPhi[n],
 			 z = r_test_norm*cosPhi[n];
 	  Vector cart = Vector(x,y,z); 
-	  lambda_test = lambda_trial + R*cart;
-
-#ifdef MHcout	
-	  cout.precision(15);
-	  cout<<"n = "<<n<<endl;
-	  cout<<"theta = "<<theta<<endl;
-	  cout<<"phi = "<<phi<<endl;
-	  cout<<"r_test = "<<r_test<<endl;
-	  cout<<"sphere = "<<sphere<<endl;
-	  cout<<"cart = "<<cart<<endl;
-	  cout<<"lambda_test = "<<lambda_test<<endl;
-#endif	  
+	  // Test point (by rotation of lambda_0)
+	  lambda_test = lambda_trial + R*cart;  
 	  Matrix3 sigma_test = Matrix3(lambda_test[0],0.,0.,0.,lambda_test[1],0.,0.,0.,lambda_test[2]);
       if ( transformedYieldFunction(sigma_test,X,Zeta,coher,limitParameters,S_star_to_S) == -1 ) { // new interior point
         interior = 1;
@@ -1781,8 +1746,7 @@ void Arenisca4::transformedBisection(Vector& sigma_0,			// {lamda_L,lamda_M,lamd
 {
 // Computes a bisection in transformed stress space between point sigma_0 (interior to the
 // yield surface) and sigma_trial (exterior to the yield surface).  Returns this new point,
-// which will be just outside the yield surface, overwriting the input arguments for
-// z_0 and r_0.
+// which will be just outside the yield surface, overwriting the input arguments for lambda_0
 
 // After the first iteration of the nonhardening return, the subseqent bisections will likely
 // converge with eta << 1.  It may be faster to put in some logic to try to start bisection
@@ -1793,7 +1757,7 @@ void Arenisca4::transformedBisection(Vector& sigma_0,			// {lamda_L,lamda_M,lamd
   double eta_out = 1.0,  // This is for the accerator.  Must be > TOL
          eta_in  = 0.0,
          eta_mid,
-         TOL = 1.0e-11;
+         TOL = 1.0e-6;
   Vector sigma_test;
   Matrix3 sigma_test_3x3; //diagonal matrix to call yield function:
 
@@ -1886,13 +1850,25 @@ int Arenisca4::computeYieldFunction(const Matrix3& sigma,
 // --------------------------------------------------------------------
 // *** Lode Angle Function (Gamma) ***
 // --------------------------------------------------------------------
+  
+  // All of these are far too slow to be in computeYieldFunction
   double Gamma = 1.0;
-  //if(J2 != 0.0){
-  //double psi = 0.8;
-  //double sinphi = 3.0*(1.0-psi)/(1.0+psi);
-  //double theta = one_third*arcsin(-0.5*J3*Pow(3.0/J2,1.5));
-  //Gamma = 2*sqrt(3.0)/(3.0-sinphi)*(cos(theta)-sinphi*sin(theta)/sqrt(3.0));
-  //}
+  if(d_cm.J3_type==1){// Gudehus: valid for 7/9<psi<9/7
+	  if(J2 != 0.0){
+		  double psi = d_cm.J3_psi;
+		  double sin3theta = -0.5*J3*fasterpow(3.0/J2,1.5);
+		  Gamma = 0.5*(1 + sin3theta + (1./psi)*(1. - sin3theta));
+	  }
+  }
+  if(d_cm.J3_type==3){// Mohr Coulomb: convex for 1/2<=psi<=2
+	  if(J2 != 0.0){
+		  double psi = d_cm.J3_psi;
+		  double sinphi = 3.0*(1.0-psi)/(1.0+psi);
+		  double theta = one_third*asin(-0.5*J3*fasterpow(3.0/J2,1.5));
+		  //double theta = one_third*asin(-0.5*J3*Pow(3.0/J2,1.5));
+		  Gamma = 2*sqrt_three/(3.0-sinphi)*(cos(theta)-sinphi*sin(theta)/sqrt_three);
+	  }
+  }
   
 // --------------------------------------------------------------------
 // *** Branch Point (Kappa) ***
@@ -2011,29 +1987,15 @@ void Arenisca4::computeLimitParameters(double limitParameters[4], const double& 
   limitParameters[3] = a4;
 } //===================================================================
 
-
-// Compute cartesian coordinates c={x,y,z} for the spherical coordinates p={r,theta,phi}
-void Arenisca4::spherical2cartesian(const Vector& p,  	// spherical point {r,theta,phi}
-									      Vector& c		// cartesian point {x,y,z}
-								   )
-{
-	double x = p[0]*cos(p[1])*sin(p[2]),
-		   y = p[0]*sin(p[1])*sin(p[2]),
-		   z = p[0]*cos(p[2]);
-	
-	c = Vector(x,y,z);
-} //===================================================================
-
 // Compute rotation matrix [R] to transform to new basis z' aligned with p_new-p0
 void Arenisca4::computeRotationToSphericalCS(const Vector& pnew,// interior point
 		                                     const Vector& p0,	// origin (i.e. trial stress)
 		                                     Matrix3& R			// Rotation matrix
 											)
 {
-    cout.precision(16);
 	// The basis is rotated so that e3 is aligned with z' in the new spherical coordinate system
 	// but the rotation around that axis is arbitrary.
-	if(pnew == p0){
+	if(pnew == p0){ // This shouldn't happen, but will cause nan in computeR if it does.
 		cout << "Error in computeRotationToSphericalCS: pnew = p0 " << endl;
 	}
 	Vector x,
@@ -2056,18 +2018,9 @@ void Arenisca4::computeRotationToSphericalCS(const Vector& pnew,// interior poin
 		x = x/sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]);
 		y = Cross(z,x);
 	}
-	//R = Matrix3(x[0],x[1],x[2],
-	//            y[0],y[1],y[2],
-	//			  z[0],z[1],z[2]);
 	R = Matrix3(x[0],y[0],z[0],
 				x[1],y[1],z[1],
 				x[2],y[2],z[2]);
-	
-
-	//cout << "pnew = "<<pnew<<endl;
-	//cout << "p0 = "<<p0<<endl;
-	//cout << "R = "<<R<<endl;
-	
 } //===================================================================
 
 // Compute the unique set of eigenvalues and eigenprojectors of [A]
@@ -2111,13 +2064,7 @@ void Arenisca4::computeEigenProjectors(const Matrix3& A,// Input tensor
 		PM = 0.0*Identity;
 		PH = Identity;		
 	}
-	
-	//cout<<"[A] = "<<A<<endl;
-	//cout<<"lambda = "<<lambda<<endl;
-	//cout<<"d = "<<d<<endl;
-	//cout<<"PL = "<<PL<<endl;
-	//cout<<"PM = "<<PM<<endl;
-	//cout<<"PH = "<<PH<<endl;
+
 } //===================================================================
 
 // Compute Eigenvalues for some real symmetric 3x3 matrix [A]
@@ -2125,10 +2072,13 @@ void Arenisca4::computeEigenValues(const Matrix3& A,// Input tensor
 								   Vector& lambda	// Ordered eigenvalues {L,M,H}
 								  )
 {
-	Matrix3 stress(A);
+	// The Matrix3 eigen() option seems robust, but does not order the eigenvectors. Also,
+	// it doesn't accept a const Matrix3 as an input so we copy A to B.
+	Matrix3 B(A);
 	Matrix3 eigVec;
-	stress.eigen(lambda, eigVec);
-	// Sort these:
+	B.eigen(lambda, eigVec);
+	
+	// Sort the eigenvalues in lambda {L,M,H}
 	Vector temp = lambda;
 	for(int i=1;i<4;i++)
 	{
@@ -2144,6 +2094,8 @@ void Arenisca4::computeEigenValues(const Matrix3& A,// Input tensor
 		}
 	}
 	
+	// Analytical solution (causes nan due to roundoff in some cases)
+	// ==============================================================
 	//// Compute Lode coordinates {r,z,theta}
 	//double I1 = A.Trace();
 	//Matrix3 S = A - one_third*I1*Identity;
@@ -2279,6 +2231,11 @@ void Arenisca4::checkInputParameters(){
   if(d_cm.Use_Disaggregation_Algorithm&&d_cm.PEAKI1!=0.0){
 	  ostringstream warn;
 	  warn << "Disaggregation algorithm not supported with PEAKI1 > 0.0"<<endl;
+	  throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+  if(d_cm.principal_stress_cutoff<0.0){
+	  ostringstream warn;
+	  warn << "Principal stress cutoff must be nonnegative"<<endl;
 	  throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 } //===================================================================
