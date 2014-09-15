@@ -543,7 +543,12 @@ RMCRTCommon::doRecompileTaskgraph( const int radCalc_freq ){
     int nextTimestep = timestep + 1;
 
     if( nextTimestep%radCalc_freq == 0 ){
-      proc0cout << "  RMCRT recompile taskgraph" << endl;
+      proc0cout << "  RMCRT recompile taskgraph to turn on all-to-all communications" << endl;
+      d_sharedState->setRecompileTaskGraph( true );
+    }
+    
+    if( timestep%radCalc_freq == 0 ){
+      proc0cout << "  RMCRT recompile taskgraph to turn off all-to-all communications" << endl;
       d_sharedState->setRecompileTaskGraph( true );
     }
   }
