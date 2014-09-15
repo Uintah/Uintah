@@ -57,11 +57,23 @@ FVMDiffusion::~FVMDiffusion()
   delete lb;
 }
 
-void FVMDiffusion::problemSetup(const ProblemSpecP& params,
+void FVMDiffusion::problemSetup(const ProblemSpecP& prob_spec,
                             const ProblemSpecP& restart_prob_spec,
                             GridP&, SimulationStateP& sharedState)
 {
   sharedState_ = sharedState;
+
+  ProblemSpecP restart_mat_ps = 0;
+  ProblemSpecP prob_spec_mat_ps = 
+    prob_spec->findBlockWithOutAttribute("MaterialProperties");
+
+  if (prob_spec_mat_ps)
+    restart_mat_ps = prob_spec;
+  else if (restart_prob_spec)
+    restart_mat_ps = restart_prob_spec;
+  else
+    restart_mat_ps = prob_spec;
+	
   ProblemSpecP diffspec = params->findBlock("FVMDiffusion");
   diffspec->require("diffusivity", diffusivity);
 	diffspec->require("delt", delt_);
