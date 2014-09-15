@@ -172,7 +172,7 @@ WARNING
     int      d_benchmark;
 
     
-    enum Algorithm{ dataOnion, coarseLevel}; 
+    enum Algorithm{ dataOnion, coarseLevel, singleLevel}; 
     
     std::vector<GeometryPieceP>  d_intrusion_geom;
     
