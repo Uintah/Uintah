@@ -991,7 +991,7 @@ BoundaryCondition_new::create_masks( const ProcessorGroup* pg,
 
     //Now put it into perma-storage: 
     if ( svol_boundary_faces.size() > 0 ){
-      BoundaryCondition_new::patch_svol_masks.insert(std::make_pair(pID,svol_boundary_faces)); 
+      //BoundaryCondition_new::patch_svol_masks.insert(std::make_pair(pID,svol_boundary_faces)); 
     }
 
   }
