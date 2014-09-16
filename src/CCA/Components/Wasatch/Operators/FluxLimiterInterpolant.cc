@@ -375,4 +375,17 @@ template class FluxLimiterInterpolant< SpatialOps::SVolField, SpatialOps::SSurfX
 template class FluxLimiterInterpolant< SpatialOps::SVolField, SpatialOps::SSurfYField >;
 template class FluxLimiterInterpolant< SpatialOps::SVolField, SpatialOps::SSurfZField >;
 
+template class FluxLimiterInterpolant< SpatialOps::XVolField, SpatialOps::XSurfXField >;
+template class FluxLimiterInterpolant< SpatialOps::XVolField, SpatialOps::XSurfYField >;
+template class FluxLimiterInterpolant< SpatialOps::XVolField, SpatialOps::XSurfZField >;
+
+template class FluxLimiterInterpolant< SpatialOps::YVolField, SpatialOps::YSurfXField >;
+template class FluxLimiterInterpolant< SpatialOps::YVolField, SpatialOps::YSurfYField >;
+template class FluxLimiterInterpolant< SpatialOps::YVolField, SpatialOps::YSurfZField >;
+
+template class FluxLimiterInterpolant< SpatialOps::ZVolField, SpatialOps::ZSurfXField >;
+template class FluxLimiterInterpolant< SpatialOps::ZVolField, SpatialOps::ZSurfYField >;
+template class FluxLimiterInterpolant< SpatialOps::ZVolField, SpatialOps::ZSurfZField >;
+
+
 //==================================================================
