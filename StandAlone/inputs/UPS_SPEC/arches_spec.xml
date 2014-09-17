@@ -252,15 +252,19 @@
       </EfficiencyCalculator>
 
       <Coal_Properties                  spec="OPTIONAL NO_DATA">
-        <C                              spec="REQUIRED DOUBLE" />
-        <H                              spec="REQUIRED DOUBLE" />
-        <N                              spec="REQUIRED DOUBLE" />
-        <O                              spec="REQUIRED DOUBLE" />
-        <S                              spec="REQUIRED DOUBLE" />
-        <initial_ash_mass               spec="REQUIRED MULTIPLE_DOUBLES" />
-        <initial_rawcoal_mass           spec="OPTIONAL MULTIPLE_DOUBLES" />
-        <initial_fixcarb_mass           spec="OPTIONAL MULTIPLE_DOUBLES" />
-        <particle_density               spec="OPTIONAL DOUBLE" />
+        <particle_sizes                 spec="REQUIRED MULTIPLE_DOUBLES" />
+        <particle_density               spec="REQUIRED DOUBLE" />
+        <as_received                    spec="REQUIRED MULTIPLE_DOUBLES" /> <!-- as received mass fractions C+H+O+N+S+char+ash+moisture=1 -->
+        <ksi                            spec="OPTIONAL DOUBLE" /> <!-- Fraction of heat released by char oxidation that goes to the particle, default = 1.0 -->
+        <raw_coal_enthalpy              spec="REQUIRED DOUBLE" /> <!-- Enthalpy of formation for raw coal at 298.15 K -->
+        <char_enthalpy                  spec="REQUIRED DOUBLE" /> <!-- Enthalpy of formation for char at 298.15 K -->
+        <ash_enthalpy                   spec="REQUIRED DOUBLE" /> <!-- Enthalpy of formation for ash at 298.15 K -->
+        <Yamamoto_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" /> 
+        <!-- Yamamto 1 step rate coefficients in the following order:  -->
+        <!-- Av[1/s], Ev[J/mole], Yv[-], c0[-], c1[-], c2[-] c3[-], c4[-], c5[-]  -->
+        <Shaddix_char_coefficients      spec="OPTIONAL MULTIPLE_DOUBLES" /> 
+        <!-- Shaddix char oxidation coefficients in the following order:  -->
+        <!-- D1[O2/CO2 m2/s], D2[O2/H2O m2/s], D3[O2/CO2 m2/s], T0[K], As[mol/s.m^2.atm^n], Es[J/mol] n[], HF_CO2[J/mol], HF_CO[J/mol]  -->
       </Coal_Properties>
       
       <Turbulence                       spec="OPTIONAL NO_DATA"
