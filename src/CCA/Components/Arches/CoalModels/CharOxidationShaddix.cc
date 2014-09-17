@@ -50,35 +50,9 @@ CharOxidationShaddix::CharOxidationShaddix( std::string modelName,
   R = 8.314; // J/K/mol
   WC = 12.0e-3;  //kg/mol
   WO2 = 32.0; //g/mol
-  WCO2 = 44.0;
-  WH2O = 18.0;
-  WN2 = 28.0;
-  D1 = 0.153e-4; // Binary diffusion coef. O2/CO2
-  D2 = 0.24e-4;  // Binary diffusion coef. O2/H2O
-  D3 = 0.219e-4; // Binary diffusion coef. O2/N2
-  T0 = 293;
-
-  // Eastern bituminous coal, non-linear regression
-  As = 344.0;  // mol/s.m^2.atm^n
-  Es = 45.5e3; // J/mol
-  n = 0.18;
-
-  // Eastern bituminous coal, Hurt & Mitchell
-  //As = 94.0;  // mol/s.m^2.atm^n
-  //Es = 10.4e3; // J/mol
-  //n = 0.5;
-
-  // Eastern bituminous coal, non-linear regression, LH expression
-  //A1 = 61.0;
-  //E1 = 0.5e3;
-  //n = 0.1;
-  //A2 = 20.0;
-  //E2 = 107.4e3;
-
-  // Enthalpy of formation (J/mol)
-  HF_CO2 = -393509.0;
-  HF_CO  = -110525.0;
-
+  WCO2 = 44.0; //g/mol
+  WH2O = 18.0; //g/mol
+  WN2 = 28.0; //g/mol
   part_temp_from_enth = false;
 }
 
@@ -116,6 +90,26 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
 
   string temp_ic_name;
   string temp_ic_name_full;
+
+
+  if (params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties")) {
+    ProblemSpecP db_coal = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties");
+    db_coal->require("Shaddix_char_coefficients", Shaddix_char_coefficients);
+    D1 = Shaddix_char_coefficients[0]; // Binary diffusion coef. O2/CO2
+    D2 = Shaddix_char_coefficients[1];  // Binary diffusion coef. O2/H2O
+    D3 = Shaddix_char_coefficients[2]; // Binary diffusion coef. O2/N2
+    T0 = Shaddix_char_coefficients[3];
+    // Eastern bituminous coal, non-linear regression
+    As = Shaddix_char_coefficients[4];  // mol/s.m^2.atm^n
+    Es = Shaddix_char_coefficients[5]; // J/mol
+    n = Shaddix_char_coefficients[6];
+    // Enthalpy of formation (J/mol)
+    HF_CO2 = Shaddix_char_coefficients[7];
+    HF_CO  = Shaddix_char_coefficients[8];
+
+  } else {
+    throw InvalidValue("ERROR: EnthalpyShaddix: problemSetup(): Missing <Coal_Properties> section in input file!",__FILE__,__LINE__);
+  }
 
   // Look for required internal coordinates
   ProblemSpecP db_icvars = params->findBlock("ICVars");
