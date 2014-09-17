@@ -82,6 +82,8 @@ static double      CurrentWaitTime = 0;
 map<string,double> waittimes;
 map<string,double> exectimes;
 
+//______________________________________________________________________
+//
 MPIScheduler::MPIScheduler( const ProcessorGroup * myworld,
                             const Output         * oport,
                                   MPIScheduler   * parentScheduler) :
@@ -111,7 +113,8 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld,
   }
 }
 
-
+//______________________________________________________________________
+//
 void
 MPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
                            SimulationStateP& state)
@@ -131,6 +134,8 @@ MPIScheduler::~MPIScheduler()
   }
 }
 
+//______________________________________________________________________
+//
 SchedulerP
 MPIScheduler::createSubScheduler()
 {
@@ -141,6 +146,8 @@ MPIScheduler::createSubScheduler()
   return newsched;
 }
 
+//______________________________________________________________________
+//
 void
 MPIScheduler::verifyChecksum()
 {
@@ -153,15 +160,18 @@ MPIScheduler::verifyChecksum()
   //  - make a flag to turn this off
   //  - make the checksum more sophisticated
   int checksum = 0;
-  for (unsigned i = 0; i < graphs.size(); i++)
+  for (unsigned i = 0; i < graphs.size(); i++) {
     checksum += graphs[i]->getTasks().size();
+  }
+  
   mpidbg << d_myworld->myrank() << " (Allreduce) Checking checksum of " << checksum << '\n';
+  
   int result_checksum;
-  MPI_Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN,
-                d_myworld->getComm());
+  MPI_Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN, d_myworld->getComm());
+  
   if(checksum != result_checksum){
-    cerr << "Failed task checksum comparison!\n";
-    cerr << "Processor: " << d_myworld->myrank() << " of "
+    cerr << "MPIScheduler::Failed task checksum comparison! Not all processes are executing the same taskgraph\n";
+    cerr << "  Processor: " << d_myworld->myrank() << " of "
          << d_myworld->size() - 1 << ": has sum " << checksum
          << " and global is " << result_checksum << '\n';
     MPI_Abort(d_myworld->getComm(), 1);
@@ -170,11 +180,15 @@ MPIScheduler::verifyChecksum()
 #endif
 }
 
+//______________________________________________________________________
+//
 #ifdef USE_TAU_PROFILING
 extern int create_tau_mapping( const string & taskname,
                                const PatchSubset * patches );  // ThreadPool.cc
 #endif
 
+//______________________________________________________________________
+//
 void
 MPIScheduler::wait_till_all_done()
 {
@@ -186,6 +200,8 @@ MPIScheduler::wait_till_all_done()
   return;
 }
 
+//______________________________________________________________________
+//
 void
 MPIScheduler::initiateTask( DetailedTask          * task,
                             bool only_old_recvs, int abort_point, int iteration )
@@ -199,6 +215,8 @@ MPIScheduler::initiateTask( DetailedTask          * task,
   }
 } // end initiateTask()
 
+//______________________________________________________________________
+//
 void
 MPIScheduler::initiateReduction( DetailedTask          * task)
 {
@@ -222,6 +240,8 @@ MPIScheduler::initiateReduction( DetailedTask          * task)
   }
 }
 
+//______________________________________________________________________
+//
 void
 MPIScheduler::runTask( DetailedTask         * task, int iteration)
 {
@@ -307,6 +327,8 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
 
 } // end runTask()
 
+//______________________________________________________________________
+//
 void
 MPIScheduler::runReductionTask( DetailedTask         * task)
 {
@@ -323,6 +345,8 @@ MPIScheduler::runReductionTask( DetailedTask         * task)
 
 }
 
+//______________________________________________________________________
+//
 void
 MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
 {
@@ -456,12 +480,17 @@ MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
 } // end postMPISends();
 
 
+//______________________________________________________________________
+//
 struct CompareDep {
 bool operator()(DependencyBatch* a, DependencyBatch* b)
 {
   return a->messageTag < b->messageTag;
 }
 };
+
+//______________________________________________________________________
+//
 void
 MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_point, int iteration)
 {
@@ -652,6 +681,8 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_
 
 } // end postMPIRecvs()
 
+//______________________________________________________________________
+//
 void
 MPIScheduler::processMPIRecvs(int how_much)
 {
@@ -689,6 +720,8 @@ MPIScheduler::processMPIRecvs(int how_much)
 
 } // end processMPIRecvs()
 
+//______________________________________________________________________
+//
 void
 MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 {
@@ -1091,6 +1124,8 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   //pg_ = 0;
 }
 
+//______________________________________________________________________
+//
 void
 MPIScheduler::emitTime(const char* label)
 {
@@ -1099,6 +1134,8 @@ MPIScheduler::emitTime(const char* label)
    d_lasttime=time;
 }
 
+//______________________________________________________________________
+//
 void
 MPIScheduler::emitTime(const char* label, double dt)
 {
@@ -1106,6 +1143,8 @@ MPIScheduler::emitTime(const char* label, double dt)
    d_times.push_back(dt);
 }
 
+//______________________________________________________________________
+//
 void 
 MPIScheduler::addToSendList(const MPI_Request& request, int bytes, AfterCommunicationHandler* handler, const string& var)
 {
