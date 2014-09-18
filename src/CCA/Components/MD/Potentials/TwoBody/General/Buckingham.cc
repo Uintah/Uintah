@@ -57,11 +57,11 @@ namespace Uintah {
     double r2 = R_ij.length2();
     double r = sqrt(r2);
     double rinv = 1.0 / r;
-    double expBetaR = exp(-B * r);
+    double expNegBR = exp(-B * r);
     double C_over_R6 = C / (r2 * r2 * r2);
 
-    energy = A * expBetaR - C_over_R6;
-    force = R_ij * (A * B * expBetaR - C_over_R6 * rinv) * rinv;
+    energy = A * expNegBR - C_over_R6;
+    force = (R_ij*rinv)*(A*B*expNegBR - rinv*6.0*C_over_R6);
     return;
   }
 
@@ -69,10 +69,10 @@ namespace Uintah {
                               const SCIRun::Vector& R_ij) const {
     double r2 = R_ij.length2();
     double r = sqrt(r2);
-    double expBetaR = exp(-B * r);
+    double expNegBR = exp(-B * r);
     double C_over_R6 = C / (r2 * r2 * r2);
 
-    energy = A * expBetaR - C_over_R6;
+    energy = A * expNegBR - C_over_R6;
 
     return;
   }
@@ -82,10 +82,10 @@ namespace Uintah {
     double r2 = R_ij.length2();
     double r = sqrt(r2);
     double rinv = 1.0 / r;
-    double expBetaR = exp(-B * r);
+    double expNegBR = exp(-B * r);
     double C_over_R6 = C / (r2 * r2 * r2);
 
-    force = R_ij * (A * B * expBetaR - C_over_R6 * rinv) * rinv;
+    force = (R_ij*rinv)*(A*B*expNegBR - rinv*6.0*C_over_R6);
     return;
   }
 }

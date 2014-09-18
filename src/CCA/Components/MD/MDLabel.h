@@ -116,6 +116,8 @@ namespace Uintah {
       // per-Particle variables
       const VarLabel* pMu;                          // Dipole
       const VarLabel* pMu_preReloc;
+      const VarLabel* pMuSub;                       // Dipole for subscheduler
+      const VarLabel* pMuSub_preReloc;
       const VarLabel* pQ;                           // Charge; only needed for non-constant charge forcefields
       const VarLabel* pQ_preReloc;
       // ---------------------------------

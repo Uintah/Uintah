@@ -29,6 +29,7 @@
  *      Author: jbhooper
  */
 
+#include <CCA/Components/MD/MDUnits.h>
 #include <CCA/Components/MD/MDUtil.h>
 
 using namespace Uintah;
@@ -38,12 +39,29 @@ const double MDConstants::PI_Over_2 = PI/2.0;
 const double MDConstants::PI2 = PI*PI;
 const double MDConstants::rootPI = sqrt(PI);
 
+// Physical constants
+const double MDConstants::epsilon_0 = 8.854187817620e-12; // Coulomb^2/(J*m)
+const double MDConstants::kB_SI = 1.3806488e-23; // Boltzmann's constant in SI units (J/K)
+
+const double MDConstants::electrostaticForceConstant =
+               1.0/(4.0*PI*(epsilon_0*
+                            (  MDUnits::siToCharge()*MDUnits::siToCharge()/
+                              (MDUnits::siToEnergy()*MDUnits::siToDistance())
+                            )
+                           )
+                   );  // Force constant converted to sim units using unit conversion
+                       // defined in MDUnits.h
+const double MDConstants::kB = kB_SI * (MDUnits::siToEnergy());
+const double MDConstants::Avogadro = 6.0221413e+23; // Avogadro's number
+
+// Simulation constants
 const double MDConstants::orthogonalAngle = 90.0;
 const double MDConstants::degToRad = PI/180.0;
 const double MDConstants::radToDeg = 180.0/PI;
 const double MDConstants::zeroTol = 1.0e-13;
 const double MDConstants::defaultDipoleMixRatio = 0.15;
 const double MDConstants::defaultPolarizationTolerance = 1.0e-9;
+
 // Define some useful vector constants
 const SCIRun::IntVector MDConstants::IV_ZERO(0,0,0);
 const SCIRun::IntVector MDConstants::IV_ONE(1,1,1);
@@ -64,5 +82,6 @@ const Uintah::Matrix3   MDConstants::M3_I(1.0, 0.0, 0.0,
 const Uintah::Matrix3   MDConstants::M3_0(0.0, 0.0, 0.0,
                                           0.0, 0.0, 0.0,
                                           0.0, 0.0, 1.0);
+
 
 

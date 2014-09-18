@@ -94,11 +94,11 @@ namespace Uintah {
     private:
       static const std::string d_potentialSubtype;
       mutable std::string d_potentialDescriptor;
-      const std::string d_comment;
+      double A, B, C, D;
       const std::string d_label;
+      const std::string d_comment;
       bool REL_format;
       double Rmin, epsilon, lambda;
-      double A, B, C, D;
       bool findAlternativeRepresentation(const double, const double, const double, double&, double&, double&);
   };
 }

@@ -52,7 +52,12 @@ namespace Uintah {
 
   class MDConstants {
     public:
+      // Physical constants
+      static const double Avogadro;
+      static const double kB_SI;                        // Boltzmann's constant
+      static const double epsilon_0;
       static const double PI;                           // Pi
+
       static const double PI2;                          // Pi^2
       static const double PI_Over_2;                    // Pi/2
       static const double rootPI;                       // sqrt(Pi)
@@ -60,6 +65,10 @@ namespace Uintah {
       static const double degToRad;                     // (Pi/2) / 180.0
       static const double radToDeg;                     // 180.0  / (Pi/2)
       static const double zeroTol;                      // Double approx. of zero
+      // Compound constants in internal units
+      static const double electrostaticForceConstant;   // 1/4PiEps_0 in internal units
+      static const double kB;
+
       static const double defaultDipoleMixRatio;
       static const double defaultPolarizationTolerance;
       static const SCIRun::IntVector    IV_ZERO;

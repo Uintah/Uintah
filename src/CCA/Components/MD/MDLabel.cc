@@ -103,9 +103,11 @@ electrostaticLabels::electrostaticLabels() { // create variable labels used in e
   // Particle variables
   // --> Timestep n
   pMu                           = VarLabel::create("pMu", ParticleVariable<SCIRun::Vector>::getTypeDescription());
+  pMuSub                        = VarLabel::create("pMuSub", ParticleVariable<SCIRun::Vector>::getTypeDescription());
   pQ                            = VarLabel::create("pQ", ParticleVariable<double>::getTypeDescription());
   // --> Timestep n+1
   pMu_preReloc                  = VarLabel::create("pMu+", ParticleVariable<SCIRun::Vector>::getTypeDescription());
+  pMuSub_preReloc               = VarLabel::create("pMuSub+", ParticleVariable<SCIRun::Vector>::getTypeDescription());
   pQ_preReloc                   = VarLabel::create("pQ+", ParticleVariable<double>::getTypeDescription());
 
   //  The remainder of the particle variables should not be necessary in the long run?
@@ -139,8 +141,10 @@ electrostaticLabels::~electrostaticLabels() { // destroy variable labels used in
   VarLabel::destroy(dSubschedulerDependency);
 
   VarLabel::destroy(pMu);
+  VarLabel::destroy(pMuSub);
   VarLabel::destroy(pQ);
   VarLabel::destroy(pMu_preReloc);
+  VarLabel::destroy(pMuSub_preReloc);
   VarLabel::destroy(pQ_preReloc);
 
   VarLabel::destroy(pF_electroReal);
