@@ -350,6 +350,10 @@ Ray::BC_bulletproofing( const ProblemSpecP& rmcrtps )
 
 //---------------------------------------------------------------------------
 // Method: Schedule the ray tracer
+// This task has both temporal and spatial scheduling and is tricky to follow
+// The temporal scheduling is controlled by doCarryForward() and doRecompileTaskgraph()
+// The spatial scheduling only occurs if the radiometer is used and is specified
+// by the radiometerPatchSet.
 //---------------------------------------------------------------------------
 void
 Ray::sched_rayTrace( const LevelP& level,
@@ -380,7 +384,7 @@ Ray::sched_rayTrace( const LevelP& level,
   // ONLY REQUIRE THESE VARIABLES ON A CALCULATION TIMESTEPS.
   //
   // The taskgraph must be recompiled to detect a change in the conditional.
-  // The taskgraph recompilation is activated from RMCRTCommon:doRecompileTaskgraph() 
+  // The taskgraph recompilation is activated from RMCRTCommon:doRecompileTaskgraph()
   if ( !doCarryForward( radCalc_freq) ) {
     Ghost::GhostType  gac  = Ghost::AroundCells;
     dbg << "    sched_rayTrace: adding requires for all-to-all variables " << endl; 
@@ -410,6 +414,10 @@ Ray::sched_rayTrace( const LevelP& level,
   //__________________________________
   // Radiometer
   if ( d_radiometer ){
+  
+    const PatchSet* radiometerPatchSet;
+    radiometerPatchSet = d_radiometer->getPatchSet( sched, level );
+  
     if (!(Uintah::Parallel::usingDevice())) {
       // needed for carry Forward                       CUDA HACK
       tsk->requires(Task::OldDW, d_VRFluxLabel, d_gn, 0);

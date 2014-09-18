@@ -33,8 +33,6 @@
  * @author Todd Harman
  * @date June, 2014
  *
- * @brief This file traces N (usually 1000+) rays per cell until the intensity reaches a predetermined threshold
- *
  *
  */
 class MTRand;
@@ -64,6 +62,18 @@ namespace Uintah{
                              Task::WhichDW sigma_dw,
                              Task::WhichDW celltype_dw,
                              const int radCalc_freq );
+
+      void sched_initializeRadVars( const LevelP& level,
+                                    SchedulerP& sched,
+                                    const int radCalc_freq );
+
+      void initializeRadVars( const ProcessorGroup*,
+                              const PatchSubset* patches,
+                              const MaterialSubset* ,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw,
+                               const int radCalc_freq );
+
       //__________________________________
       //  FUNCTIONS
       void radiometerFlux(  const Patch* patch,
@@ -75,9 +85,13 @@ namespace Uintah{
                             constCCVariable<int> celltype,
                             const bool modifiesFlux );
 
-    const VarLabel* getRadiometerLabel() const {
-      return d_VRFluxLabel;
-    }
+      const PatchSet* getPatchSet( SchedulerP& sched,
+                                   const LevelP& level );
+      
+
+      const VarLabel* getRadiometerLabel() const {
+        return d_VRFluxLabel;
+      }
 
     private:
 
@@ -96,7 +110,7 @@ namespace Uintah{
         double sldAngl;
       };
       VR_variables d_VR;
-      const VarLabel* d_VRFluxLabel;
+      const VarLabel* d_VRFluxLabel;      // computed radiometer flux
 
       //__________________________________
       //
