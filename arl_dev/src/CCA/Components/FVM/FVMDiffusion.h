@@ -69,11 +69,9 @@ namespace Uintah {
 
     SimulationStateP sharedState_;
 		FVMLabel* lb;
-		
-    double diffusivity;
-		double delt_;
-    SimpleMaterial* mymat_;
 
+		double delt_;
+		
     FVMDiffusion(const FVMDiffusion&);
     FVMDiffusion& operator=(const FVMDiffusion&);
 	 

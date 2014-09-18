@@ -24,6 +24,7 @@
 
 
 #include <CCA/Components/FVM/FVMDiffusion.h>
+#include <CCA/Components/FVM/FVMMaterial.h>
 #include <Core/Labels/FVMLabel.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -36,7 +37,6 @@
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/SimpleMaterial.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <CCA/Ports/Scheduler.h>
@@ -64,21 +64,22 @@ void FVMDiffusion::problemSetup(const ProblemSpecP& prob_spec,
   sharedState_ = sharedState;
 
   ProblemSpecP restart_mat_ps = 0;
-  ProblemSpecP prob_spec_mat_ps = 
+  ProblemSpecP mat_ps = 
     prob_spec->findBlockWithOutAttribute("MaterialProperties");
 
-  if (prob_spec_mat_ps)
-    restart_mat_ps = prob_spec;
+  if (mat_ps)
+    restart_mat_ps = mat_ps;
   else if (restart_prob_spec)
-    restart_mat_ps = restart_prob_spec;
-  else
-    restart_mat_ps = prob_spec;
+    restart_mat_ps =
+			restart_prob_spec->findBlockWithOutAttribute("MaterialProperties");
 	
-  ProblemSpecP diffspec = params->findBlock("FVMDiffusion");
-  diffspec->require("diffusivity", diffusivity);
-	diffspec->require("delt", delt_);
-  mymat_ = scinew SimpleMaterial();
-  sharedState->registerSimpleMaterial(mymat_);
+  ProblemSpecP fvm_mat_ps = restart_mat_ps->findBlock("FVM");
+  ProblemSpecP ps = fvm_mat_ps->findBlock("material");
+	for(ProblemSpecP ps = fvm_mat_ps->findBlock("material"); ps != 0;
+			ps = ps->findNextBlock("material")){
+  	FVMMaterial* mat = scinew FVMMaterial(ps, sharedState);
+  	sharedState->registerFVMMaterial(mat);
+	}
 }
  
 void FVMDiffusion::scheduleInitialize(const LevelP& level,
@@ -87,7 +88,7 @@ void FVMDiffusion::scheduleInitialize(const LevelP& level,
   Task* task = scinew Task("initialize",
 			   this, &FVMDiffusion::initialize);
   task->computes(lb->concentration_CCLabel);
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  sched->addTask(task, level->eachPatch(), sharedState_->allFVMMaterials());
 	cout << "Doing Schedule Initialize" << endl;
 }
  
@@ -122,15 +123,16 @@ void FVMDiffusion::computeStableTimestep(const ProcessorGroup*,
 void FVMDiffusion::initialize(const ProcessorGroup*,
 		       const PatchSubset* patches,
 		       const MaterialSubset* matls,
-		       DataWarehouse*, DataWarehouse* new_dw)
+		       DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     for(int m = 0;m<matls->size();m++){
-      int matl = matls->get(m);
+			FVMMaterial* fvm_matl = sharedState_->getFVMMaterial(m);
+      int index = fvm_matl->getDWIndex();
 
       CCVariable<double> concentration;
-      new_dw->allocateAndPut(concentration, lb->concentration_CCLabel, matl, patch);
+      new_dw->allocateAndPut(concentration, lb->concentration_CCLabel, index, patch);
       concentration.initialize(0);
 
       if(patch->getBCType(Patch::xminus) != Patch::Neighbor){

@@ -32,7 +32,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR	:= CCA/Components/FVM
 
-SRCS += $(SRCDIR)/FVMDiffusion.cc 
+SRCS += $(SRCDIR)/FVMDiffusion.cc \
+        $(SRCDIR)/FVMMaterial.cc 
 
 #include $(SCIRUN_SCRIPTS)/recurse.mk
 
