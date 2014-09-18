@@ -1070,7 +1070,7 @@ void Arenisca4::computeElasticProperties(const Matrix3 stress,
 			double expb2byI1 = fasterexp(b2/I1);
 			bulk = bulk + b1*expb2byI1;
 			if(d_cm.G1!=0.0 && d_cm.G2!=0.0){
-				double nu = d_cm.G1 + d_cm.G1*expb2byI1;
+				double nu = d_cm.G1 + d_cm.G2*expb2byI1;
 				shear = 1.5*bulk*(1.0-2.0*nu)/(1.0+nu);
 			}
 		}
