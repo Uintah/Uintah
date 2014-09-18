@@ -965,7 +965,7 @@ Box Level::getBox(const IntVector& l,
 //
 const PatchSet* Level::eachPatch() const
 {
-  ASSERT(each_patch != 0);
+  ASSERT(d_each_patch != 0);
   return d_each_patch;
 }
 
@@ -973,7 +973,7 @@ const PatchSet* Level::eachPatch() const
 //
 const PatchSet* Level::allPatches() const
 {
-  ASSERT(all_patches != 0);
+  ASSERT(d_all_patches != 0);
   return d_all_patches;
 }
 
