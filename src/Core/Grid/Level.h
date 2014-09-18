@@ -249,6 +249,7 @@ public:
   // this level with one patch per PatchSubSet.  Eg: { {1}, {2}, {3} }
   const PatchSet* eachPatch() const;
   const PatchSet* allPatches() const;
+  
   const Patch* selectPatchForCellIndex( const IntVector& idx) const;
   const Patch* selectPatchForNodeIndex( const IntVector& idx) const;
   
@@ -287,8 +288,8 @@ private:
   IntVector d_patchDistribution;
   IntVector d_periodicBoundaries;
 
-  PatchSet* each_patch;
-  PatchSet* all_patches;
+  PatchSet* d_each_patch;
+  PatchSet* d_all_patches;
 
   long d_totalCells;
   IntVector d_extraCells;
