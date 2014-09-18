@@ -26,15 +26,12 @@
        <!--<checkpoint cycle = "2" interval = "0.01"/>-->
    </DataArchiver>
 
-   <FVMDiffusion>
-       <diffusivity>.01</diffusivity>
-			 <delt>.01</delt>
-   </FVMDiffusion>
-
 	 <MaterialProperties>
 	 	<FVM>
 			<material>
 				<concentration>0.0</concentration>
+       	<diffusivity>.01</diffusivity>
+			  <delt>.01</delt>
 			</material>
 		</FVM>
 	 </MaterialProperties>

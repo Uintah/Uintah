@@ -35,6 +35,7 @@
 #include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MD/MDMaterial.h>
+#include <CCA/Components/FVM/FVMMaterial.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Wasatch/WasatchMaterial.h>
@@ -87,6 +88,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   all_wasatch_matls = 0;  
   all_arches_matls  = 0;
   all_md_matls      = 0;
+  all_fvm_matls     = 0;
   all_matls         = 0;
   orig_all_matls    = 0;
   allInOneMatl      = 0;
@@ -225,7 +227,21 @@ void SimulationState::registerMDMaterial(MDMaterial* matl,unsigned int index)
   md_matls.push_back(matl);
   registerMaterial(matl,index);
 }
+//__________________________________
+//
+void SimulationState::registerFVMMaterial(FVMMaterial* matl)
+{
+  fvm_matls.push_back(matl);
+  registerMaterial(matl);
+}
 
+void SimulationState::registerFVMMaterial(FVMMaterial* matl,unsigned int index)
+{
+  fvm_matls.push_back(matl);
+  registerMaterial(matl,index);
+}
+//__________________________________
+//
 void SimulationState::registerSimpleMaterial(SimpleMaterial* matl)
 {
   simple_matls.push_back(matl);
@@ -282,6 +298,18 @@ void SimulationState::finalizeMaterials()
     tmp_ice_matls[i] = ice_matls[i]->getDWIndex();
   }
   all_ice_matls->addAll(tmp_ice_matls);
+
+                                    // FVM Matls
+  if (all_fvm_matls && all_fvm_matls->removeReference()){
+    delete all_fvm_matls;
+  }
+  all_fvm_matls = scinew MaterialSet();
+  all_fvm_matls->addReference();
+  vector<int> tmp_fvm_matls(fvm_matls.size());
+  for(int i=0;i<(int)fvm_matls.size();i++) {
+    tmp_fvm_matls[i] = fvm_matls[i]->getDWIndex();
+  }
+  all_fvm_matls->addAll(tmp_fvm_matls);
 
                                     // Wasatch Matls
   if (all_wasatch_matls && all_wasatch_matls->removeReference()){
@@ -368,6 +396,10 @@ void SimulationState::clearMaterials()
   if(all_ice_matls && all_ice_matls->removeReference()){
     delete all_ice_matls;
   }
+
+  if(all_fvm_matls && all_fvm_matls->removeReference()){
+    delete all_fvm_matls;
+  }
   
   if(all_wasatch_matls && all_wasatch_matls->removeReference()){
     delete all_wasatch_matls;
@@ -387,6 +419,7 @@ void SimulationState::clearMaterials()
   ice_matls.clear();
   wasatch_matls.clear();
   md_matls.clear();
+  fvm_matls.clear();
   simple_matls.clear();
   named_matls.clear();
   d_particleState.clear();
@@ -401,6 +434,7 @@ void SimulationState::clearMaterials()
   all_ice_matls     = 0;
   all_wasatch_matls = 0;
   all_md_matls      = 0;
+  all_fvm_matls      = 0;
   allInOneMatl      = 0;
 }
 //__________________________________
@@ -470,7 +504,15 @@ const MaterialSet* SimulationState::allMDMaterials() const
   ASSERT(all_md_matls != 0);
   return all_md_matls;
 }
-
+//__________________________________
+//
+const MaterialSet* SimulationState::allFVMMaterials() const
+{
+  ASSERT(all_fvm_matls != 0);
+  return all_fvm_matls;
+}
+//__________________________________
+//
 const MaterialSet* SimulationState::allMaterials() const
 {
   ASSERT(all_matls != 0);
