@@ -265,6 +265,11 @@
         <Shaddix_char_coefficients      spec="OPTIONAL MULTIPLE_DOUBLES" /> 
         <!-- Shaddix char oxidation coefficients in the following order:  -->
         <!-- D1[O2/CO2 m2/s], D2[O2/H2O m2/s], D3[O2/CO2 m2/s], T0[K], As[mol/s.m^2.atm^n], Es[J/mol] n[], HF_CO2[J/mol], HF_CO[J/mol]  -->
+       
+
+
+        <HHV                            spec="OPTIONAL DOUBLE" /> <!-- used in python script only -->
+        <use_HHV_est                    spec="OPTIONAL STRING" /> <!-- used in python script only -->
       </Coal_Properties>
       
       <Turbulence                       spec="OPTIONAL NO_DATA"
