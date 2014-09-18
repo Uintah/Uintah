@@ -16,6 +16,7 @@
 #include <Core/Exceptions/InvalidValue.h>
 
 #include <CCA/Components/MD/atomMap.h>
+#include <CCA/Components/MD/Forcefields/Forcefield.h>
 #include <CCA/Components/MD/Forcefields/Lucretius/lucretiusAtomData.h>
 
 #include <sstream>
@@ -30,23 +31,32 @@ namespace Uintah {
   class lucretiusAtomMap : public atomMap {
     public:
      ~lucretiusAtomMap();
-      lucretiusAtomMap(const ProblemSpecP&, const SimulationStateP&);
-      inline std::vector<atomData*>* operator[](const std::string& searchLabel) {
+      lucretiusAtomMap(const ProblemSpecP&,
+                       const SimulationStateP&,
+                       const Forcefield*);
+
+      inline std::vector<atomData*>* operator[](const std::string& searchLabel)
+      {
         lucretiusMapIterator labelLocation = findValidAtomList(searchLabel);
-        if (labelLocation != atomSet.end()) {
+        if (labelLocation != atomSet.end())
+        {
           return (labelLocation->second);
         }
-        else {
+        else
+        {
           return (NULL);
         }
       }
 
-      inline std::vector<atomData*>* getAtomList(const std::string& searchLabel) {
+      inline std::vector<atomData*>* getAtomList(const std::string& searchLabel)
+      {
         lucretiusMapIterator labelLocation = findValidAtomList(searchLabel);
-        if (labelLocation != atomSet.end()) {
+        if (labelLocation != atomSet.end())
+        {
           return (labelLocation->second);
         }
-        else {
+        else
+        {
           return (NULL);
         }
       }
@@ -54,15 +64,18 @@ namespace Uintah {
       inline size_t getAtomListSize(const std::string& searchLabel) const
       {
         constLucretiusMapIterator labelLocation = findValidAtomList(searchLabel);
-        if (labelLocation != atomSet.end()) {
+        if (labelLocation != atomSet.end())
+        {
           return (labelLocation->second->size());
         }
-        else {
+        else
+        {
           return (0);
         }
       }
 
-      inline size_t getNumberAtomTypes() const {
+      inline size_t getNumberAtomTypes() const
+      {
         return atomSet.size();
       }
 
@@ -71,7 +84,7 @@ namespace Uintah {
     private:
       constLucretiusMapIterator findValidAtomList(const std::string&) const;
       lucretiusMapIterator      findValidAtomList(const std::string&);
-      size_t addAtomToList(const std::string&, atomData*);
+      size_t                    addAtomToList(const std::string&, atomData*);
 
       lucretiusMap atomSet;
   };

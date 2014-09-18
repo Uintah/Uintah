@@ -68,7 +68,7 @@
 
 using namespace Uintah;
 
-extern SCIRun::Mutex cerrLock;
+//extern SCIRun::Mutex cerrLock;
 
 static DebugStream md_dbg("MDDebug", false);
 static DebugStream md_cout("MDCout", false);
@@ -761,7 +761,7 @@ void MD::initialize(const ProcessorGroup*   pg,
 
   // Input coordinates from problem spec
   atomMap* parsedCoordinates    =
-               atomFactory::create(d_problemSpec, d_sharedState);
+               atomFactory::create(d_problemSpec, d_sharedState, d_forcefield);
 
   size_t numTypesParsed         =   parsedCoordinates->getNumberAtomTypes();
   size_t numMaterialTypes       =   d_sharedState->getNumMDMatls();

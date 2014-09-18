@@ -17,7 +17,8 @@
 using namespace Uintah;
 
 atomMap* atomFactory::create(const ProblemSpecP&        spec,
-                             const SimulationStateP&    shared_state) {
+                             const SimulationStateP&    shared_state,
+                             const Forcefield*          forcefield) {
 
   atomMap* atomList = 0;
   std::string type = "";
@@ -33,7 +34,7 @@ atomMap* atomFactory::create(const ProblemSpecP&        spec,
 
   if (type == "Lucretius") {
     // Parse lucretius input file here?
-    atomList = scinew lucretiusAtomMap(spec, shared_state);
+    atomList = scinew lucretiusAtomMap(spec, shared_state, forcefield);
   }
 
   return atomList;

@@ -59,7 +59,6 @@
 //#include <CCA/Components/MD/SimpleGrid.h>
 #include <Core/Thread/Thread.h>
 
-
 #include <CCA/Components/MD/Electrostatics/SPME/SPME.h>
 #include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
 
@@ -306,18 +305,9 @@ void SPME::calculateRealspaceTholeDipole(const ProcessorGroup*      pg,
   size_t numPatches = patches->size();
   size_t numTypes   = materials->size();
 
-  // Static constants we'll use but that are calculated once
-  double twobeta2 = 2.0 * d_ewaldBeta * d_ewaldBeta;
-  double Pi = acos(-1.0);
-  double rootPi = sqrt(Pi);
-  double one_over_betarootPi = 1.0/(d_ewaldBeta*rootPi);
-  SCIRun::Vector ZERO_VECTOR(0.0, 0.0, 0.0);
-
   double cutoff2 = d_electrostaticRadius * d_electrostaticRadius;
   double realElectrostaticEnergy = 0;
-  Matrix3 realElectrostaticStress = Matrix3(0.0,0.0,0.0,
-                                            0.0,0.0,0.0,
-                                            0.0,0.0,0.0);
+  Matrix3 realElectrostaticStress = MDConstants::M3_0;
 
   // Method global vector to catch the distance offset and avoid lots of
   // spurious temporary vector creations.
@@ -355,8 +345,8 @@ void SPME::calculateRealspaceTholeDipole(const ProcessorGroup*      pg,
                              localSubset);
 
       for (size_t Index = 0; Index < numLocalAtoms; ++ Index) {
-        localForce[Index] = ZERO_VECTOR;
-        localField[Index] = ZERO_VECTOR;
+        localForce[Index] = MDConstants::V_ZERO;
+        localField[Index] = MDConstants::V_ZERO;
       }
 
       for (size_t neighborIndex = 0; neighborIndex < numTypes; ++neighborIndex)
@@ -386,8 +376,8 @@ void SPME::calculateRealspaceTholeDipole(const ProcessorGroup*      pg,
         // loop over the local atoms
         for (size_t patchAtom=0; patchAtom < numLocalAtoms; ++patchAtom) {
           SCIRun::Vector atomDipole = localMu[patchAtom];
-          localForce[patchAtom]=ZERO_VECTOR;
-          localField[patchAtom]=ZERO_VECTOR;
+          localForce[patchAtom]=MDConstants::V_ZERO;
+          localField[patchAtom]=MDConstants::V_ZERO;
           // loop over the neighbors
           for (size_t neighborAtom=0; neighborAtom < numNeighborAtoms; ++neighborAtom) {
             // Ensure i != j
@@ -467,13 +457,6 @@ void SPME::calculateRealspacePointDipole(const ProcessorGroup*      pg,
   size_t numPatches = patches->size();
   size_t numMaterials = materials->size();
 
-  // Static constants we'll use but that are calculated once
-  double twobeta2 = 2.0 * d_ewaldBeta * d_ewaldBeta;
-  double Pi = acos(-1.0);
-  double rootPi = sqrt(Pi);
-  double one_over_betarootPi = 1.0/(d_ewaldBeta*rootPi);
-  SCIRun::Vector ZERO_VECTOR(0.0, 0.0, 0.0);
-
   double cutoff2 = d_electrostaticRadius * d_electrostaticRadius;
   double realElectrostaticEnergy = 0;
   Matrix3 realElectrostaticStress = Matrix3(0.0,0.0,0.0,
@@ -514,8 +497,8 @@ void SPME::calculateRealspacePointDipole(const ProcessorGroup*      pg,
                              atomSubset);
 
       for (size_t Index = 0; Index < numLocalAtoms; ++ Index) {
-        localForce[Index] = ZERO_VECTOR;
-        localField[Index] = ZERO_VECTOR;
+        localForce[Index] = MDConstants::V_ZERO;
+        localField[Index] = MDConstants::V_ZERO;
       }
 
       for (size_t neighborIndex = 0; neighborIndex < numMaterials; ++neighborIndex) {
@@ -540,8 +523,8 @@ void SPME::calculateRealspacePointDipole(const ProcessorGroup*      pg,
         // loop over the local atoms
         for (size_t patchAtom=0; patchAtom < numLocalAtoms; ++patchAtom) {
           SCIRun::Vector atomDipole = localMu[patchAtom];
-          localForce[patchAtom]=ZERO_VECTOR;
-          localField[patchAtom]=ZERO_VECTOR;
+          localForce[patchAtom]=MDConstants::V_ZERO;
+          localField[patchAtom]=MDConstants::V_ZERO;
           // loop over the neighbors
           for (size_t neighborAtom=0; neighborAtom < numNeighborAtoms; ++neighborAtom) {
             // Ensure i != j
@@ -605,7 +588,6 @@ void SPME::calculatePreTransformDipole(const ProcessorGroup*    pg,
   size_t numAtomTypes = materials->size();
   Uintah::Matrix3 inverseUnitCell = coordSys->getInverseCell();
 
-
   for (size_t currPatch = 0; currPatch < numPatches; ++currPatch) {
     const Patch* patch = patches->get(currPatch);
 
@@ -643,17 +625,8 @@ void SPME::calculatePreTransformDipole(const ProcessorGroup*    pg,
                  label->SPME_dep->dPreTransform,
                  atomType,
                  patch);
-
     } // end Atom Type Loop
-
-
-
-    } // end Patch Loop
-
-    // TODO keep an eye on this to make sure it works like we think it should
-    if (Thread::self()->myid() == 0) {
-      d_Q_nodeLocal->initialize(dblcomplex(0.0, 0.0));
-    }
+  } // end Patch Loop
 }
 
 void SPME::calculatePostTransformDipole(const ProcessorGroup*   pg,
@@ -962,9 +935,8 @@ void SPME::calculateNewDipoles(const ProcessorGroup*    pg,
         newDipoles[Index] = polarizability*(reciprocalField[Index] +
                                             realField[Index] +
                                             selfField); // Total field
-        newDipoles[Index] *= (1.0 - d_dipoleMixRatio);
-        newDipoles[Index] += d_dipoleMixRatio*oldDipoles[Index];
-//        newDipoles[Index] = oldDipoles[Index];
+        newDipoles[Index] *= d_dipoleMixRatio;
+        newDipoles[Index] += newMix*oldDipoles[Index];
       }
       ParticleVariable<Point> X;
       ParticleVariable<long64> ID;
@@ -972,13 +944,11 @@ void SPME::calculateNewDipoles(const ProcessorGroup*    pg,
       oldDW->copyOut(X, label->global->pX, localSet);
       newDW->allocateAndPut(ID, label->global->pID_preReloc, localSet);
       oldDW->copyOut(ID, label->global->pID, localSet);
+
       ParticleSubset* delset = scinew ParticleSubset(0, atomType, patch);
       newDW->deleteParticles(delset);
     }
   }
-
-
-  // TODO fixme [APH]
 }
 
 void SPME::checkConvergence(const ProcessorGroup*       pg,
@@ -1020,21 +990,7 @@ void SPME::checkConvergence(const ProcessorGroup*       pg,
 
   subNewDW->put(sum_vartype(sumSquaredDeviation),
                 label->electrostatic->rPolarizationDeviation);
-//
-//
-//  if (!f_polarizable) {
-//    return true;
-//  } else {
-//    double sumSquaredDeviation = 0.0;
-//    size_t numPatches = patches->size();
-//    // throw an exception for now, but eventually will check convergence here.
-//    throw InternalError("Error: Polarizable force field not yet implemented!", __FILE__, __LINE__);
-//  }
 
-//  // TODO keep an eye on this to make sure it works like we think it should
-//  if (Thread::self()->myid() == 0) {
-//    d_Q_nodeLocal->initialize(dblcomplex(0.0, 0.0));
-//  }
 }
 
 

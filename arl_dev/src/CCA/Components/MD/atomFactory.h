@@ -13,6 +13,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <CCA/Components/MD/atomMap.h>
+#include <CCA/Components/MD/Forcefields/Forcefield.h>
 
 namespace Uintah {
 
@@ -33,7 +34,8 @@ namespace Uintah {
        *          shared_state:     SimulationStateP  - Handle to the simulation state for material definitions
        */
       static atomMap* create(const ProblemSpecP&      spec,
-                             const SimulationStateP&  shared_state);
+                             const SimulationStateP&  shared_state,
+                             const Forcefield*        forcefield);
   };
 }
 

@@ -61,6 +61,25 @@ namespace Uintah {
                                      const MDLabel*     label,
                                      SimulationStateP&  simState) const = 0;
 
+      // All forcefields should define how they convert from their innate units
+      //   to internal units for the simulation.
+
+      // Simulation internal units are:
+      //   distance ->  nanometer  (1e-9 m)
+      //   time     ->  nanosecond (1e-9 s)
+      //   mass     ->  grams
+
+      virtual double ffDistanceToInternal()     const = 0;
+      virtual double ffVelocityToInternal()     const = 0;
+      virtual double ffAccelerationToInternal() const = 0;
+
+      virtual double ffChargeToInternal()       const = 0;
+
+      virtual double ffTimeToInternal()         const = 0;
+
+      virtual double ffEnergyToInternal()       const = 0;
+      virtual double ffStressToInternal()       const = 0;
+
     private:
 
   };

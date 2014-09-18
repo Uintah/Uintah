@@ -18,6 +18,7 @@
 #include <CCA/Components/MD/MDLabel.h>
 #include <CCA/Components/MD/MDMaterial.h>
 #include <CCA/Components/MD/MDUtil.h>
+#include <CCA/Components/MD/MDUnits.h>
 
 #include <CCA/Components/MD/Potentials/TwoBody/NonbondedTwoBodyPotential.h>
 
@@ -38,7 +39,7 @@ namespace Uintah {
 
   class LucretiusForcefield : public TwoBodyForcefield {
     public:
-      LucretiusForcefield() {};
+//      LucretiusForcefield() {};
       LucretiusForcefield(const ProblemSpecP& ps, SimulationStateP& sharedState);
      ~LucretiusForcefield() {};
      inline BondPotential* getBondPotential(int Index) const {
@@ -65,6 +66,65 @@ namespace Uintah {
                                     const LabelArray&   particleState_preReloc,
                                     const MDLabel*      label,
                                     SimulationStateP&   simState) const;
+
+     virtual double ffDistanceToInternal() const
+     {
+       // Internal:  1 A = 1e-10 m
+       // Lucretius: 1 A = 1e-10 m
+       return 1.0;
+     }
+
+     virtual double ffTimeToInternal() const
+     {
+       // Internal:  1fs = 1e-15  s
+       // Lucretius: 1fs = 1e-15 s
+       return 1.0;
+     }
+
+     virtual double ffVelocityToInternal() const
+     {
+       // Internal:   A / fs
+       // Lucretius:  m /  s
+
+       return 1e-5;
+     }
+
+     virtual double ffAccelerationToInternal() const
+     {
+       // Internal:  A / fs^2
+       // Lucretius: A / fs^2
+       // Note:  Only extended lagrangian quantities ever have explicit accelerations
+       //        in a Lucretius forcefield implementation.
+       return 1.0;
+     }
+
+     virtual double ffChargeToInternal() const
+      {
+        // Internal:  1e
+        // Lucretius: 1e
+        return 1.0;
+      }
+
+     virtual double ffEnergyToInternal() const
+     {
+       // Internal:  g * nm^2 / ns^2
+       // Lucretius: kCal/mol
+       // Lucretius->Internal = L/MDUnits::energyTokCal/MDUnits::atomToMoles
+
+       return 1.0 / (MDUnits::energyTokCal() * MDUnits::molesPerAtom());
+
+     }
+
+
+     virtual double ffStressToInternal() const
+     {
+       // Internal   1 g / nm * ns ^ 2
+       // Lucretius  atm
+       // Lucretius->Internal = L/MDUnits::pressureToAtm();
+
+       return 1.0 / MDUnits::pressureToAtm();
+     }
+
 
     private:
       // Private functions related to parsing of the input forcefield file

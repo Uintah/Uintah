@@ -37,11 +37,11 @@ using namespace SCIRun;
 const std::string LucretiusExp6::d_potentialSubtype = "Lucretius_Exp6";
 
 bool LucretiusExp6::findAlternativeRepresentation(const double A,
-                                             const double B,
-                                             const double C,
-                                             double& Rmin,
-                                             double& epsilon,
-                                             double& lambda) {
+                                                  const double B,
+                                                  const double C,
+                                                        double& Rmin,
+                                                        double& epsilon,
+                                                        double& lambda) {
   // FIXME
   return (false);
 }
@@ -72,12 +72,12 @@ void LucretiusExp6::fillEnergyAndForce(SCIRun::Vector& force,
   double rinv = 1.0 / r;
   double r6 = r2 * r2 * r2;
   double r12 = r6 * r6;
-  double expBetaR = exp(-B * r);
+  double expNegBR = exp(-B * r);
   double C_over_R6 = C / (r6);
   double D_over_R12 = D / (r12);
 
-  energy = A * expBetaR - C_over_R6 + D / r12;
-  force = R_ij * (A * B * expBetaR + rinv * (D_over_R12 - C_over_R6)) * rinv;
+  energy = A * expNegBR - C_over_R6 + D_over_R12;
+  force = (R_ij*rinv)*(A*B*expNegBR + rinv*(12.0*D_over_R12 - 6.0*C_over_R6));
   return;
 }
 
@@ -87,11 +87,8 @@ void LucretiusExp6::fillEnergy(double& energy,
   double r = sqrt(r2);
   double r6 = r2 * r2 * r2;
   double r12 = r6 * r6;
-  double expBetaR = exp(-B * r);
-  double C_over_R6 = C / (r6);
-  double D_over_R12 = D / (r12);
 
-  energy = A * expBetaR - C_over_R6 + D / r12;
+  energy = A * exp(-B*r) - (C / r6) + (D / r12);
   return;
 }
 
@@ -102,11 +99,8 @@ void LucretiusExp6::fillForce(SCIRun::Vector& force,
   double rinv = 1.0 / r;
   double r6 = r2 * r2 * r2;
   double r12 = r6 * r6;
-  double expBetaR = exp(-B * r);
-  double C_over_R6 = C / (r2 * r2 * r2);
-  double D_over_R12 = D / (r12);
 
-  force = R_ij * (A * B * expBetaR + rinv * (D_over_R12 - C_over_R6)) * rinv;
+  force = (R_ij*rinv)*(A*B*exp(-B*r) + rinv * (12.0 * (D / r12) - 6.0 * ( C / r6) ));
   return;
 }
 
