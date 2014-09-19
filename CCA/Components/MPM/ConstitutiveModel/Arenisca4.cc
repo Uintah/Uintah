@@ -55,7 +55,7 @@ Software is furnished to do so, subject to the following conditions:
 //----------DEFINE SECTION----------
 #define MHdebug       // Prints errors messages when particles are deleted or subcycling fails
 #define MHdeleteBadF  // Prints errors messages when particles are deleted or subcycling fails
-#define MHfastfcns    // Use fast approximate exp(), log() and pow() in deep loops.
+//#define MHfastfcns    // Use fast approximate exp(), log() and pow() in deep loops.
 #define MHdisaggregationStiffness // reduce stiffness with disaggregation
 
 // INCLUDE SECTION: tells the preprocessor to include the necessary files
@@ -779,21 +779,21 @@ void Arenisca4::computeStressTensor(const PatchSubset* patches,
 
       // Use polar decomposition to compute the rotation and stretch tensors
 #ifdef MHdeleteBadF
-      if(pDefGrad[idx].MaxAbsElem()>1.0e2){
+      if(pDefGrad_new[idx].MaxAbsElem()>1.0e2){
 		  pLocalized_new[idx]=-999;
-		  cout<<"Large deformation gradient component: [F_new] = "<<pDefGrad[idx]<<endl;
+		  cout<<"Large deformation gradient component: [F_new] = "<<pDefGrad_new[idx]<<endl;
 		  cout<<"Resetting [F_new]=[I] for this step and deleting particle"<<endl;
 		  Identity.polarDecompositionRMB(tensorU, tensorR);
       }
-      else if(pDefGrad[idx].Determinant()<1.0e-3){
+      else if(pDefGrad_new[idx].Determinant()<1.0e-3){
 		  pLocalized_new[idx]=-999;
-		  cout<<"Small deformation gradient determinant: [F_new] = "<<pDefGrad[idx]<<endl;
+		  cout<<"Small deformation gradient determinant: [F_new] = "<<pDefGrad_new[idx]<<endl;
 		  cout<<"Resetting [F_new]=[I] for this step and deleting particle"<<endl;
 		  Identity.polarDecompositionRMB(tensorU, tensorR);
       }
-	  else if(pDefGrad[idx].Determinant()>1.0e2){
+	  else if(pDefGrad_new[idx].Determinant()>1.0e2){
 		  pLocalized_new[idx]=-999;
-		  cout<<"Large deformation gradient determinant: [F_new] = "<<pDefGrad[idx]<<endl;
+		  cout<<"Large deformation gradient determinant: [F_new] = "<<pDefGrad_new[idx]<<endl;
 		  cout<<"Resetting [F_new]=[I] for this step and deleting particle"<<endl;
 		  Identity.polarDecompositionRMB(tensorU, tensorR);
       }
@@ -1090,7 +1090,11 @@ void Arenisca4::computeElasticProperties(const Matrix3 stress,
 	
 #ifdef MHdisaggregationStiffness
 	if(d_cm.Use_Disaggregation_Algorithm){
+#ifdef MHfastfcns		
 		double fac = fasterexp(-(P3+evp));
+#else
+	    double fac = exp(-(P3+evp));
+#endif
 		double scale = max(fac,0.001);
 		bulk = bulk*scale;
 		shear = shear*scale;
@@ -1867,7 +1871,12 @@ int Arenisca4::computeYieldFunction(const Matrix3& sigma,
   if(d_cm.J3_type==1){// Gudehus: valid for 7/9<psi<9/7
 	  if(J2 != 0.0){
 		  double psi = d_cm.J3_psi;
+#ifdef MHfastfcns		  
 		  double sin3theta = -0.5*J3*fasterpow(3.0/J2,1.5);
+#else
+		  //double sin3theta = -0.5*J3*Pow(3.0/J2,1.5);
+		  double sin3theta = -0.5*J3*sqrt(27.0/(J2*J2*J2));
+#endif		  
 		  Gamma = 0.5*(1 + sin3theta + (1./psi)*(1. - sin3theta));
 	  }
   }
@@ -1875,7 +1884,12 @@ int Arenisca4::computeYieldFunction(const Matrix3& sigma,
 	  if(J2 != 0.0){
 		  double psi = d_cm.J3_psi;
 		  double sinphi = 3.0*(1.0-psi)/(1.0+psi);
+#ifdef MHfastfcns		  
 		  double theta = one_third*asin(-0.5*J3*fasterpow(3.0/J2,1.5));
+#else
+		  //double theta = one_third*asin(-0.5*J3*Pow(3.0/J2,1.5));
+		  double theta = one_third*asin(-0.5*J3*sqrt(27.0/(J2*J2*J2)));
+#endif		  
 		  //double theta = one_third*asin(-0.5*J3*Pow(3.0/J2,1.5));
 		  Gamma = 2*sqrt_three/(3.0-sinphi)*(cos(theta)-sinphi*sin(theta)/sqrt_three);
 	  }
