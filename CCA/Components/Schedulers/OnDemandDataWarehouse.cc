@@ -184,6 +184,7 @@ OnDemandDataWarehouse::clear()
     delete iter->second;
   }
   d_plock.writeUnlock();
+
   d_lock.writeLock();
   for( dataLocationDBtype::const_iterator iter = d_dataLocation.begin();
       iter != d_dataLocation.end(); iter++ ) {
@@ -193,9 +194,9 @@ OnDemandDataWarehouse::clear()
     delete iter->second;
   }
   d_lock.writeUnlock();
+
   d_varDB.clear();
   d_levelDB.clear();
-  d_lvlock.writeUnlock();
 
 #ifdef HAVE_CUDA
   if (Uintah::Parallel::usingDevice()) {
