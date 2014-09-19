@@ -75,7 +75,6 @@ namespace Uintah {
                     DataWarehouse*);
     
       const VarLabel* d_roughnessLabel;
-      const VarLabel* d_roughnessLabel2;
       
       SimulationStateP d_sharedState;
       Patch::FaceType d_face;

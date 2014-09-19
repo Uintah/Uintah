@@ -270,7 +270,6 @@ public:
   inline
   static void get_derivate_weights(const std::vector<double> &coords, double *w) 
   {
-    const double x = coords[0];
     w[0] = -1.;
     w[1] = 1.;
   }

@@ -81,7 +81,6 @@ namespace Uintah {
     Smagorinsky_Model d_smag;
     
     double filter_width;
-    double d_test_filter_width;
     double d_model_constant;   
 
     void computeVariance(const ProcessorGroup*, 
