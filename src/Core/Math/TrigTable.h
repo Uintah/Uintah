@@ -40,7 +40,6 @@
 class SinCosTable {
     double* sindata;
     double* cosdata;
-    int n;
 public:
     SinCosTable(int n, double min, double max, double scale=1.0);
     ~SinCosTable();

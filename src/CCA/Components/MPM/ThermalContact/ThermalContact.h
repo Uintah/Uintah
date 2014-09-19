@@ -95,10 +95,7 @@ WARNING
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
 
   protected:
-    MPMFlags* flag;
-  private:
-    MPMLabel* lb;
-    
+    MPMFlags* flag;    
   };
       
 } // End namespace Uintah
