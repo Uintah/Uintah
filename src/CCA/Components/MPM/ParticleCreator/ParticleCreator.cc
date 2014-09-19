@@ -84,6 +84,9 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     numParticles += countAndCreateParticles(patch,*geom, vars);
   }
   
+  int dwi = matl->getDWIndex();
+  allocateVariables(numParticles,dwi,patch,new_dw, pvars);
+
   particleIndex start = 0;
   
   vector<GeometryObject*>::const_iterator obj;
