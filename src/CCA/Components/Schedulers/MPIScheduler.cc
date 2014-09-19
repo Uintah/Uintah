@@ -159,7 +159,7 @@ MPIScheduler::verifyChecksum()
   //  - make a flag to turn this off
   //  - make the checksum more sophisticated
   int checksum = 0;
-  int numIndependentTasks = 0;
+  int numSpatialTasks = 0;
   for ( unsigned i = 0; i < graphs.size(); i++ ) {
     checksum += graphs[i]->getTasks().size();
 
@@ -172,13 +172,13 @@ MPIScheduler::verifyChecksum()
     for ( ; tasks_iter != tasks.end(); ++tasks_iter ) {
       Task* task = *tasks_iter;
       if ( task->getType() == Task::Spatial ) {
-        numIndependentTasks++;
+        numSpatialTasks++;
       }
     }
   }
 
   // Spatial tasks don't count against the global checksum
-  checksum -= numIndependentTasks;
+  checksum -= numSpatialTasks;
   mpidbg << d_myworld->myrank() << " (Allreduce) Checking checksum of " << checksum << '\n';
 
   int result_checksum;
