@@ -76,11 +76,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
                                  const Patch* patch,DataWarehouse* new_dw,
                                  vector<GeometryObject*>& d_geom_objs)
 {
-  // Print the physical boundary conditions
-  //  printPhysicalBCs();
-  //d_lock.writeLock();
-
-//  particleIndex numParticles = countParticles(patch, d_geom_objs);
   ObjectVars vars;
   ParticleVars pvars;
   particleIndex numParticles = 0;
@@ -89,9 +84,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     numParticles += countAndCreateParticles(patch,*geom, vars);
   }
   
-  int dwi = matl->getDWIndex();
-  ParticleSubset* subset = allocateVariables(numParticles,dwi,patch,new_dw, pvars);
-
   particleIndex start = 0;
   
   vector<GeometryObject*>::const_iterator obj;
@@ -249,8 +241,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     }
     start += count;
   }
-  //d_lock.writeUnlock();
- // return subset;
   return numParticles;
 }
 
