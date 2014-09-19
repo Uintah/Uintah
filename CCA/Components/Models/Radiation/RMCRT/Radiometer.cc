@@ -305,6 +305,7 @@ Radiometer::sched_radiometer( const LevelP& level,
   std::string taskname = "Radiometer::radiometer";
   Task *tsk;
   tsk = scinew Task( taskname, this, &Radiometer::radiometer, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
+  tsk->setType(Task::Spatial);
 
   printSchedule( level,dbg,"Radiometer::sched_radiometer" );
 

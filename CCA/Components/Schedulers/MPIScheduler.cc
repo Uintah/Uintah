@@ -152,29 +152,43 @@ void
 MPIScheduler::verifyChecksum()
 {
 #if SCI_ASSERTION_LEVEL >= 3
-  TAU_PROFILE("MPIScheduler::verifyChecksum()", " ", TAU_USER); 
+  TAU_PROFILE("MPIScheduler::verifyChecksum()", " ", TAU_USER);
 
-  // Compute a simple checksum to make sure that all processes
-  // are trying to execute the same graph.  We should do two
-  // things in the future:
+  // Compute a simple checksum to make sure that all processes are trying to
+  // execute the same graph.  We should do two things in the future:
   //  - make a flag to turn this off
   //  - make the checksum more sophisticated
   int checksum = 0;
-  for (unsigned i = 0; i < graphs.size(); i++) {
+  int numIndependentTasks = 0;
+  for ( unsigned i = 0; i < graphs.size(); i++ ) {
     checksum += graphs[i]->getTasks().size();
+
+    // This begins addressing the issue of making the global checksum more sophisticated:
+    //   check if any tasks were spatially scheduled - TaskType::Spatial, meaning no computes, requires or modifies
+    //     e.g. RMCRT radiometer task, which is not scheduled on all patches
+    //          these Spatial tasks won't count toward the global checksum
+    std::vector<Task*> tasks = graphs[i]->getTasks();
+    std::vector<Task*>::const_iterator tasks_iter = tasks.begin();
+    for ( ; tasks_iter != tasks.end(); ++tasks_iter ) {
+      Task* task = *tasks_iter;
+      if ( task->getType() == Task::Spatial ) {
+        numIndependentTasks++;
+      }
+    }
   }
-  
+
+  // Spatial tasks don't count against the global checksum
+  checksum -= numIndependentTasks;
   mpidbg << d_myworld->myrank() << " (Allreduce) Checking checksum of " << checksum << '\n';
-  
+
   int result_checksum;
-  MPI_Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN, d_myworld->getComm());
-  
-  if(checksum != result_checksum){
+  MPI_Allreduce( &checksum, &result_checksum, 1, MPI_INT, MPI_MIN, d_myworld->getComm() );
+
+  if ( checksum != result_checksum ) {
     cerr << "MPIScheduler::Failed task checksum comparison! Not all processes are executing the same taskgraph\n";
-    cerr << "  Processor: " << d_myworld->myrank() << " of "
-         << d_myworld->size() - 1 << ": has sum " << checksum
+    cerr << "  Processor: " << d_myworld->myrank() << " of " << d_myworld->size() - 1 << ": has sum " << checksum
          << " and global is " << result_checksum << '\n';
-    MPI_Abort(d_myworld->getComm(), 1);
+    MPI_Abort( d_myworld->getComm(), 1 );
   }
   mpidbg << d_myworld->myrank() << " (Allreduce) Check succeeded\n";
 #endif
