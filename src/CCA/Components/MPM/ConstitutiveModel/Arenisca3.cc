@@ -55,7 +55,7 @@ Software is furnished to do so, subject to the following conditions:
 //----------DEFINE SECTION----------
 #define MHdebug       // Prints errors messages when particles are deleted or subcycling fails
 #define MHdeleteBadF  // Prints errors messages when particles are deleted or subcycling fails
-#define MHfastfcns    // Use fast approximate exp(), log() and pow() in deep loops.
+//#define MHfastfcns    // Use fast approximate exp(), log() and pow() in deep loops.
 #define MHdisaggregationStiffness // reduce stiffness with disaggregation
 
 // INCLUDE SECTION: tells the preprocessor to include the necessary files
@@ -770,19 +770,19 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
 #ifdef MHdeleteBadF
       if(pDefGrad_new[idx].MaxAbsElem()>1.0e2){
 		  pLocalized_new[idx]=-999;
-		  cout<<"Large deformation gradient component: [F_new] = "<<pDefGrad[idx]<<endl;
+		  cout<<"Large deformation gradient component: [F_new] = "<<pDefGrad_new[idx]<<endl;
 		  cout<<"Resetting [F_new]=[I] for this step and deleting particle"<<endl;
 		  Identity.polarDecompositionRMB(tensorU, tensorR);
       }
       else if(pDefGrad_new[idx].Determinant()<1.0e-3){
 		  pLocalized_new[idx]=-999;
-		  cout<<"Small deformation gradient determinant: [F_new] = "<<pDefGrad[idx]<<endl;
+		  cout<<"Small deformation gradient determinant: [F_new] = "<<pDefGrad_new[idx]<<endl;
 		  cout<<"Resetting [F_new]=[I] for this step and deleting particle"<<endl;
 		  Identity.polarDecompositionRMB(tensorU, tensorR);
       }
 	  else if(pDefGrad_new[idx].Determinant()>1.0e2){
 		  pLocalized_new[idx]=-999;
-		  cout<<"Large deformation gradient determinant: [F_new] = "<<pDefGrad[idx]<<endl;
+		  cout<<"Large deformation gradient determinant: [F_new] = "<<pDefGrad_new[idx]<<endl;
 		  cout<<"Resetting [F_new]=[I] for this step and deleting particle"<<endl;
 		  Identity.polarDecompositionRMB(tensorU, tensorR);
       }
@@ -1077,7 +1077,11 @@ void Arenisca3::computeElasticProperties(const Matrix3 stress,
 	
 #ifdef MHdisaggregationStiffness
 	if(d_cm.Use_Disaggregation_Algorithm){
+#ifdef MHfastfcns
 		double fac = fasterexp(-(P3+evp));
+#else
+	    double fac = exp(-(P3+evp));
+#endif
 		double scale = max(fac,0.001);
 		bulk = bulk*scale;
 		shear = shear*scale;
