@@ -270,6 +270,8 @@
 
         <HHV                            spec="OPTIONAL DOUBLE" /> <!-- used in python script only -->
         <use_HHV_est                    spec="OPTIONAL STRING" /> <!-- used in python script only -->
+        <particle_weights               spec="OPTIONAL MULTIPLE_DOUBLES" /> <!-- used in python script only -->
+        <particle_temperature           spec="OPTIONAL DOUBLE" /> <!-- used in python script only -->
       </Coal_Properties>
       
       <Turbulence                       spec="OPTIONAL NO_DATA"
