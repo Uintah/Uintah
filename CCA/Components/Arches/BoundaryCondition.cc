@@ -2061,7 +2061,19 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
           my_info.velocity = Vector(0,0,0); 
           my_info.mass_flow_rate = 0.0;
           db_BCType->require("swirl_no", my_info.swirl_no);
-          db_BCType->require("swirl_centroid", my_info.swirl_cent); 
+
+
+          std::string str_vec;  // This block sets the default centroid to the origin unless otherwise specified by swirl_cent
+          bool  Luse_origin =   db_face->getAttribute("origin", str_vec);
+          if( Luse_origin ){
+          std::stringstream ss;
+          ss << str_vec;
+          Vector origin ;
+          ss >> origin[0] >> origin[1] >> origin[2] ;
+            db_BCType->getWithDefault("swirl_centroid", my_info.swirl_cent,origin); 
+          }else{
+            db_BCType->require("swirl_centroid", my_info.swirl_cent); 
+          }
 
           //compute the density:
           typedef std::vector<std::string> StringVec; 
