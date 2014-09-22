@@ -419,7 +419,7 @@ void SPME::calculate(   const ProcessorGroup*   pg,
 
     for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex)
     {
-      Patch* currPatch = perProcPatches->get(patchIndex);
+      const Patch* currPatch = perProcPatches->get(patchIndex);
       for (size_t materialIndex = 0; materialIndex < numMaterials; ++materialIndex)
       {
         ParticleSubset* pSubset = parentOldDW->getParticleSubset(materialIndex,
