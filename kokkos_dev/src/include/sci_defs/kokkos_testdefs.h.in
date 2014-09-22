@@ -29,6 +29,10 @@
 
 #ifdef USE_KOKKOS
 #  include <Kokkos_Core.hpp>
+#  include <Kokkos_Atomic.hpp>
+#  include <Kokkos_DualView.hpp>
+#  include <Kokkos_UnorderedMap.hpp>
+#  include <Kokkos_Vector.hpp>
 #endif
 
 #endif

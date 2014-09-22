@@ -35770,9 +35770,9 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ##
 ## arg 1 : KOKKOS
 ## arg 2 : KOKKOS libraries and headers
-## arg 3 : Kokkos_Core.hpp
+## arg 3 : Kokkos_Core.hpp  Kokkos_Atomic.hpp Kokkos_DualView.hpp Kokkos_UnorderedMap.hpp Kokkos_Vector.hpp
 ## arg 4 : $_sci_inc
-## arg 5 : kokkoscore
+## arg 5 : kokkoscore kokkoscontainers
 ## arg 6 : $_sci_lib
 ## arg 7 :
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -35852,10 +35852,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "kokkoscore"; then
+if test -n "kokkoscore kokkoscontainers"; then
 
    found_framework=no
-   for lib in kokkoscore; do
+   for lib in kokkoscore kokkoscontainers; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -36004,7 +36004,7 @@ LIBS="$_sci_libs  $LIBS"
 __extern_c="no"
 __sci_pound_includes=""
 
-for inc in "" Kokkos_Core.hpp; do
+for inc in "" Kokkos_Core.hpp  Kokkos_Atomic.hpp Kokkos_DualView.hpp Kokkos_UnorderedMap.hpp Kokkos_Vector.hpp; do
     if test "$inc" = "extern_C"; then
        __sci_pound_includes="extern \"C\" {"
        __extern_c=yes
@@ -36145,14 +36145,14 @@ rm -f core conftest.err conftest.$ac_objext \
 if test "$_sci_optional" = "specific"; then
   #echo specific
   # Make sure the exact includes were found
-  for i in "" Kokkos_Core.hpp; do
+  for i in "" Kokkos_Core.hpp  Kokkos_Atomic.hpp Kokkos_DualView.hpp Kokkos_UnorderedMap.hpp Kokkos_Vector.hpp; do
     #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
      as_fn_error $? "Specifically requested KOKKOS include file '$_sci_inc/$i' was not found" "$LINENO" 5
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" kokkoscore; do
+  for i in "" kokkoscore kokkoscontainers; do
     if test -z "$i"; then
        continue
     fi
