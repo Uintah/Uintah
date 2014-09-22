@@ -85,8 +85,8 @@ namespace Uintah{
                             constCCVariable<int> celltype,
                             const bool modifiesFlux );
 
-      const PatchSet* getPatchSet( SchedulerP& sched,
-                                   const LevelP& level );
+      std::vector<const Patch*> getPatchSet( SchedulerP& sched,
+                                             const LevelP& level );
       
 
       const VarLabel* getRadiometerLabel() const {
