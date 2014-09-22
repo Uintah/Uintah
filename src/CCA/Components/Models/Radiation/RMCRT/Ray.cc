@@ -414,10 +414,18 @@ Ray::sched_rayTrace( const LevelP& level,
   //__________________________________
   // Radiometer
   if ( d_radiometer ){
-  
-    const PatchSet* radiometerPatchSet;
-    radiometerPatchSet = d_radiometer->getPatchSet( sched, level );
-  
+
+#if 0
+    PatchSet* radiometerPatchSet;
+    radiometerPatchSet = scinew PatchSet();
+    radiometerPatchSet->addReference();
+    vector<const Patch*> myPatches = d_radiometer->getPatchSet( sched, level );
+
+    radiometerPatchSet->addAll( myPatches );
+
+    
+    delete radiometerPatchSet;              // THIS PATCHSET IS NOT BEING USED BUT WILL BE IN THE FUTURE.
+ #endif 
     if (!(Uintah::Parallel::usingDevice())) {
       // needed for carry Forward                       CUDA HACK
       tsk->requires(Task::OldDW, d_VRFluxLabel, d_gn, 0);

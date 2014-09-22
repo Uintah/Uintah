@@ -325,10 +325,16 @@ Radiometer::sched_radiometer( const LevelP& level,
 
   // only schedule on the patches that contain radiometers
   // Spatial task scheduling
-  const PatchSet* radiometerPatchSet = getPatchSet( sched, level );
+  PatchSet* radiometerPatchSet;
+  radiometerPatchSet = scinew PatchSet();
+  radiometerPatchSet->addReference();
+  vector<const Patch*> myPatches = getPatchSet( sched, level );
 
+  radiometerPatchSet->addAll( myPatches );
+  
   tsk->modifies( d_VRFluxLabel );
   sched->addTask( tsk, radiometerPatchSet, d_matlSet );
+  delete radiometerPatchSet;
 }
 
 //---------------------------------------------------------------------------
@@ -526,7 +532,7 @@ Radiometer::rayDirection_VR( MTRand& mTwister,
 //______________________________________________________________________
 //  Return the patchSet that contains radiometers a process owns
 //______________________________________________________________________
-const PatchSet*
+std::vector< const Patch* >
 Radiometer::getPatchSet( SchedulerP& sched,
                         const LevelP& level )
 {
@@ -559,11 +565,6 @@ Radiometer::getPatchSet( SchedulerP& sched,
       }
     }
   }
-
-  PatchSet* radiometerPatchSet;
-  radiometerPatchSet = scinew PatchSet();
-  radiometerPatchSet->addReference();
-  radiometerPatchSet->addAll( myPatches );
-  dbg << "    Radiometer::getPatches " << *radiometerPatchSet <<  " procPatches " << *procPatches << endl;
-  return radiometerPatchSet;
+  
+  return myPatches;
 }
