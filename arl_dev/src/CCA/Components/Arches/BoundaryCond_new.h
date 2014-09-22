@@ -291,11 +291,7 @@ public:
                 scalar[*bound_ptr] = file_bc_value; 
   
               } else if ( i_scalar_bc_storage->second.default_type == "Neumann" ){  
-          
-                IntVector axes = patch->getFaceAxes(face);
-                int P_dir = axes[0];  // principal direction
-                double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
-                double dx = Dx[P_dir];
+
                 IntVector bp1(*bound_ptr - insideCellDir); 
                 scalar[*bound_ptr] = i_scalar_bc_storage->second.default_value;
   

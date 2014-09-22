@@ -29,19 +29,28 @@
 #include <CCA/Components/Solvers/HypreSolver.h>
 
 //-- Wasatch includes --//
-#include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/Wasatch.h>
+#include <CCA/Components/Wasatch/BCHelper.h>
+#include <CCA/Components/Wasatch/TagNames.h>
+#include <CCA/Components/Wasatch/FieldTypes.h>
+#include <CCA/Components/Wasatch/ParseTools.h>
+#include <CCA/Components/Wasatch/OldVariable.h>
+#include <CCA/Components/Wasatch/ReductionHelper.h>
+
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
-#include <CCA/Components/Wasatch/Expressions/TimeDerivative.h>
-#include <CCA/Components/Wasatch/Expressions/MomentumPartialRHS.h>
-#include <CCA/Components/Wasatch/Expressions/MomentumRHS.h>
+#include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
+#include <CCA/Components/Wasatch/Operators/FluxLimiterInterpolant.h>
+
 #include <CCA/Components/Wasatch/Expressions/Strain.h>
 #include <CCA/Components/Wasatch/Expressions/Dilatation.h>
+#include <CCA/Components/Wasatch/Expressions/MomentumRHS.h>
+#include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
+#include <CCA/Components/Wasatch/Expressions/TimeDerivative.h>
+#include <CCA/Components/Wasatch/Expressions/MomentumPartialRHS.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulentViscosity.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/StrainTensorBase.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/StrainTensorMagnitude.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/DynamicSmagorinskyCoefficient.h>
-#include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/OutflowBC.h>
@@ -55,16 +64,10 @@
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/InterpolateExpression.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/ContinuityResidual.h>
-
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
-#include <CCA/Components/Wasatch/OldVariable.h>
-#include <CCA/Components/Wasatch/FieldTypes.h>
-#include <CCA/Components/Wasatch/ParseTools.h>
-#include <CCA/Components/Wasatch/ReductionHelper.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/KineticEnergy.h>
-#include <CCA/Components/Wasatch/BCHelper.h>
 
 //-- ExprLib Includes --//
 #include <expression/ExprLib.h>
@@ -472,13 +475,29 @@ namespace Wasatch{
   Expr::ExpressionID
   setup_convective_flux( const Expr::Tag& fluxTag,
                          const Expr::Tag& momTag,
-                         const Expr::Tag& advelTag, Expr::ExpressionFactory& factory )
+                         const Expr::Tag& advelTag,
+                        ConvInterpMethods convInterpMethod,
+                        const Expr::Tag& volFracTag,
+                        Expr::ExpressionFactory& factory )
   {
-    typedef typename SpatialOps::VolType<FluxT>::VolField  MomT;
-    typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, MomT,   FluxT >::type  MomInterpOp;
-    typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, AdvelT, FluxT >::type  AdvelInterpOp;
-    typedef typename ConvectiveFlux<MomInterpOp, AdvelInterpOp >::Builder ConvFlux;
-    return factory.register_expression( scinew ConvFlux( fluxTag, momTag, advelTag ) );
+    using namespace SpatialOps;
+    if (convInterpMethod == CENTRAL) {
+      typedef typename SpatialOps::VolType<FluxT>::VolField  MomT;
+      typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, MomT,   FluxT >::type  MomInterpOp;
+      typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, AdvelT, FluxT >::type  AdvelInterpOp;
+      typedef typename ConvectiveFlux<MomInterpOp, AdvelInterpOp >::Builder ConvFlux;
+      return factory.register_expression( scinew ConvFlux( fluxTag, momTag, advelTag ) );
+    } else {
+      typedef typename SpatialOps::VolType<FluxT>::VolField  MomT;
+      typedef typename ConvectiveFluxLimiter<
+      FluxLimiterInterpolant< MomT, FluxT >,
+      UpwindInterpolant< MomT, FluxT >,
+      typename OperatorTypeBuilder<Interpolant,MomT,FluxT>::type, // scalar interp type
+      typename OperatorTypeBuilder<Interpolant,AdvelT,FluxT>::type  // velocity interp type
+      >::Builder ConvFluxLim;
+      return factory.register_expression( scinew ConvFluxLim( fluxTag, momTag, advelTag, convInterpMethod, volFracTag ) );
+      
+    }
   }
 
   //==================================================================
@@ -488,7 +507,9 @@ namespace Wasatch{
   register_convective_fluxes( const bool* const doMom,
                               const Expr::TagList& velTags,
                               Expr::TagList& cfTags,
+                              ConvInterpMethods convInterpMethod,
                               const Expr::Tag& momTag,
+                              const Expr::Tag& volFracTag,
                               Expr::ExpressionFactory& factory )
   {
     set_convflux_tags( doMom, cfTags, momTag );
@@ -504,15 +525,15 @@ namespace Wasatch{
     Direction stagLoc = get_staggered_location<FieldT>();
     
     if( doMom[0] ){
-      const Expr::ExpressionID id = setup_convective_flux< XFace, XVolField >( cfxt, momTag, velTags[0], factory );
+      const Expr::ExpressionID id = setup_convective_flux< XFace, XVolField >( cfxt, momTag, velTags[0],convInterpMethod, volFracTag, factory );
       if( stagLoc == XDIR )  normalConvFluxID = id;
     }
     if( doMom[1] ){
-      const Expr::ExpressionID id = setup_convective_flux< YFace, YVolField >( cfyt, momTag, velTags[1], factory );
+      const Expr::ExpressionID id = setup_convective_flux< YFace, YVolField >( cfyt, momTag, velTags[1], convInterpMethod, volFracTag, factory );
       if( stagLoc == YDIR )  normalConvFluxID = id;
     }
     if( doMom[2] ){
-      const Expr::ExpressionID id = setup_convective_flux< ZFace, ZVolField >( cfzt, momTag, velTags[2], factory );
+      const Expr::ExpressionID id = setup_convective_flux< ZFace, ZVolField >( cfzt, momTag, velTags[2], convInterpMethod, volFracTag, factory );
       if( stagLoc == ZDIR )  normalConvFluxID = id;
     }
     // convective fluxes require ghost updates after they are calculated
@@ -605,7 +626,12 @@ namespace Wasatch{
     //__________________
     // convective fluxes
     Expr::TagList cfTags; // these tags will be filled by register_convective_fluxes
-    normalConvFluxID_ = register_convective_fluxes<FieldT>(doMom, velTags_, cfTags, solnVarTag_, factory);
+    std::string convInterpMethod = "CENTRAL";
+    if (params_->findBlock("ConvectiveInterpMethod")) {
+      params_->findBlock("ConvectiveInterpMethod")->getAttribute("method",convInterpMethod);
+    }
+    
+    normalConvFluxID_ = register_convective_fluxes<FieldT>(doMom, velTags_, cfTags, get_conv_interp_method(convInterpMethod), solnVarTag_, thisVolFracTag_, factory );
 
     //__________________
     // dilatation - needed by pressure source term and strain tensor

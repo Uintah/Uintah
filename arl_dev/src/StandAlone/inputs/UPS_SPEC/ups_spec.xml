@@ -533,7 +533,8 @@
                             attribute2="value REQUIRED DOUBLE" need_applies_to="var VelocityFileInput FromFile"/> 
           
           <swirl_no         spec="REQUIRED DOUBLE"  need_applies_to="var Swirl"/>
-          <swirl_centroid   spec="REQUIRED VECTOR"  need_applies_to="var Swirl"/>
+                        <!--swirl_centriod is only required for geometries that don't have "origin" set.  See BoundaryCondition.cc for details.-->
+          <swirl_centroid   spec="OPTIONAL VECTOR"  need_applies_to="var Swirl"/>
 
           <!-- Stabilized Atmospheric Boundary Layer --> 
           <!-- When using StABL, the free stream velocity is specified in the <value> tag. --> 

@@ -22,18 +22,17 @@ RESTART_LIST = [[],[]]
 POST_PROCESS_LIST = [
   'AreniscaTest_01_UniaxialStrainRotate.ups',
   'AreniscaTest_02_VertexTreatment.ups',
-  'AreniscaTest_03a_UniaxialStrain_NoHardening.ups',
-  'AreniscaTest_03b_UniaxialStrain_wIsotropicHardening.ups',
-  'AreniscaTest_03c_UniaxialStrain_wKinematicHardening.ups',
+  'AreniscaTest_03_UniaxialStrainNoHardening.ups',
   'AreniscaTest_04_CurvedYieldSurface.ups',
   'AreniscaTest_05_HydrostaticCompressionFixedCap.ups',
   'AreniscaTest_06_UniaxialStrainCapEvolution.ups',
   'AreniscaTest_07_HydrostaticCompressionCapEvolution.ups',
   'AreniscaTest_08_LoadingUnloading.ups',
   'AreniscaTest_09_FluidFilledPoreSpace.ups',
-  'AreniscaTest_10_PureIsochoricStrainRates.ups',
+  'AreniscaTest_10_TransientStressEigenvaluesConstVectors.ups',
   'AreniscaTest_11_UniaxialStrainJ2plasticity.ups',
   'AreniscaTest_12_NonlinearElasticity.ups',
+  'AreniscaTest_13_UniaxialStrainRateDependence.ups',
 ]
 
 #get uintah/src path as enviornmental variable
@@ -65,21 +64,19 @@ for test in TEST_LIST:
 
 ### COMMENT ME OUT!!!!!!! ###
 TEST_LIST = [
-  #TEST_LIST[0],  #Test 01
-  TEST_LIST[1],  #Test 02
-  #TEST_LIST[2],  #Test 03a
-  #TEST_LIST[3],  #Test 03b
-  #TEST_LIST[4],  #Test 03c
-  #TEST_LIST[5],  #Test 04
-  #TEST_LIST[6],  #Test 05
-  #TEST_LIST[7],  #Test 06
-  #TEST_LIST[8],  #Test 07
-  #TEST_LIST[9],  #Test 08
-  #TEST_LIST[10], #Test 09
-  #TEST_LIST[11], #Test 10
-  #TEST_LIST[12], #Test 11
-  #TEST_LIST[13], #Test 12
-  
+  TEST_LIST[0], #Test 01
+  TEST_LIST[1], #Test 02
+  TEST_LIST[2], #Test 03
+  TEST_LIST[3], #Test 04
+  TEST_LIST[4], #Test 05
+  TEST_LIST[5], #Test 06
+  TEST_LIST[6], #Test 07
+  TEST_LIST[7], #Test 08
+  TEST_LIST[8], #Test 09
+  #TEST_LIST[9], #Test 10
+  TEST_LIST[10],#Test 11
+  TEST_LIST[11],#Test 12
+  TEST_LIST[12],#Test 13
   ]
 ### --------------------- ###
 
@@ -217,12 +214,8 @@ def post_proc(test,uda_path,save_path):
       test01_postProc(uda_path,save_path)
     if test_name == 'AreniscaTest_02_VertexTreatment.ups':
       test02_postProc(uda_path,save_path)
-    if test_name == 'AreniscaTest_03a_UniaxialStrain_NoHardening.ups':
-      test03_postProc(uda_path,save_path,a=True)
-    if test_name == 'AreniscaTest_03b_UniaxialStrain_wIsotropicHardening.ups':
-      test03_postProc(uda_path,save_path,b=True)
-    if test_name == 'AreniscaTest_03c_UniaxialStrain_wKinematicHardening.ups':
-      test03_postProc(uda_path,save_path,c=True)
+    if test_name == 'AreniscaTest_03_UniaxialStrainNoHardening.ups':
+      test03_postProc(uda_path,save_path)
     if test_name == 'AreniscaTest_04_CurvedYieldSurface.ups':
       test04_postProc(uda_path,save_path)
     if test_name == 'AreniscaTest_05_HydrostaticCompressionFixedCap.ups':
@@ -235,12 +228,14 @@ def post_proc(test,uda_path,save_path):
       test08_postProc(uda_path,save_path)
     if test_name == 'AreniscaTest_09_FluidFilledPoreSpace.ups':
       test09_postProc(uda_path,save_path)
-    if test_name == 'AreniscaTest_10_PureIsochoricStrainRates.ups':
+    if test_name == 'AreniscaTest_10_TransientStressEigenvaluesConstVectors.ups':
       test10_postProc(uda_path,save_path,WORKING_PATH=default_working_dir)       
     if test_name == 'AreniscaTest_11_UniaxialStrainJ2plasticity.ups':
       test11_postProc(uda_path,save_path,WORKING_PATH=default_working_dir)       
     if test_name == 'AreniscaTest_12_NonlinearElasticity.ups':
-      test12_postProc(uda_path,save_path,WORKING_PATH=default_working_dir)   
+      test12_postProc(uda_path,save_path,WORKING_PATH=default_working_dir)
+    if test_name == 'AreniscaTest_13_UniaxialStrainRateDependence.ups':
+      test13_postProc(uda_path,save_path,WORKING_PATH=default_working_dir)   
   else:
     print '\nERROR: test: ',test,'\n\tNot on post processing list.\n'
 

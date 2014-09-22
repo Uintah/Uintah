@@ -1810,7 +1810,7 @@ double Arenisca::ComputeNonHardeningReturn(const double& R,   // Transformed Tri
          ZApex,
          dgdr,
          dgdz,
-         g;
+         g=0.0;
 
   double CapR2 = CapR*CapR,
          R2 = R*R,

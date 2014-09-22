@@ -82,13 +82,28 @@ SimpleHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
 
   if (params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties")) {
     ProblemSpecP db_coal = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties");
-    db_coal->require("C", yelem[0]);
-    db_coal->require("H", yelem[1]);
-    db_coal->require("N", yelem[2]);
-    db_coal->require("O", yelem[3]);
-    db_coal->require("S", yelem[4]);
-    db_coal->require("initial_ash_mass", ash_mass_init);
-    db_coal->require("initial_fixcarb_mass", fixcarb_mass_init);
+    db_coal->require("as_received", as_received);
+    db_coal->require("particle_density", rhop); // kg/m^3 
+    db_coal->require("particle_sizes", particle_sizes); // read the particle sizes [m]
+    total_rc=as_received[0]+as_received[1]+as_received[2]+as_received[3]+as_received[4]; // (C+H+O+N+S) dry ash free total
+    total_dry=as_received[0]+as_received[1]+as_received[2]+as_received[3]+as_received[4]+as_received[5]+as_received[6]; // (C+H+O+N+S+char+ash)  moisture free total
+    rc_mass_frac=total_rc/total_dry; // mass frac of rc (dry) 
+    char_mass_frac=as_received[5]/total_dry; // mass frac of char (dry)
+    ash_mass_frac=as_received[6]/total_dry; // mass frac of ash (dry)
+    yelem[0]=as_received[0]/total_rc; // C daf
+    yelem[1]=as_received[1]/total_rc; // H daf
+    yelem[2]=as_received[3]/total_rc; // N daf
+    yelem[3]=as_received[2]/total_rc; // O daf
+    yelem[4]=as_received[4]/total_rc; // S daf
+    int p_size=particle_sizes.size();
+    for (int n=0; n<p_size; n=n+1)
+      {
+        vol_dry.push_back((pi/6)*pow(particle_sizes[n],3)); // m^3/particle
+        mass_dry.push_back(vol_dry[n]*rhop); // kg/particle
+        ash_mass_init.push_back(mass_dry[n]*ash_mass_frac); // kg_ash/particle (initial)  
+        char_mass_init.push_back(mass_dry[n]*char_mass_frac); // kg_char/particle (initial)
+        rawcoal_mass_init.push_back(mass_dry[n]*rc_mass_frac); // kg_ash/particle (initial)
+      }
   } else {
     throw InvalidValue("ERROR: SimpleHeatTransfer: problemSetup(): Missing <Coal_Properties> section in input file!",__FILE__,__LINE__);
   }
@@ -493,7 +508,6 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
       double gas_temperature = temperature[c];
 
       double unscaled_ash_mass = ash_mass_init[d_quadNode];
-      double unscaled_fixcarb_mass = fixcarb_mass_init[d_quadNode];
       double density = den[c];
       // viscosity should be grabbed from data warehouse... right now it's constant
 
@@ -509,7 +523,6 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
       double Cpc;
       double Cph;
       double Cpa; 
-      double mp_Cp;
       double rkg;
       double Q_convection;
       double Q_radiation;
@@ -577,9 +590,6 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
         // Heat capacity of ash
         Cpa = heatap( unscaled_particle_temperature );
 
-        // Heat capacity
-        mp_Cp = (Cpc*unscaled_raw_coal_mass + Cph*unscaled_fixcarb_mass + Cpa*unscaled_ash_mass);
-   
         // Gas thermal conductivity
         rkg = props(gas_temperature, unscaled_particle_temperature); // [=] J/s/m/K
 
@@ -608,11 +618,6 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
           abskp_ = 0.0;
         }
     
-        if(d_unweighted){  
-          heat_rate_ = (Q_convection + Q_radiation)/(mp_Cp*d_pt_scaling_constant);
-        } else {
-          heat_rate_ = (Q_convection + Q_radiation)*unscaled_weight/(mp_Cp*d_pt_scaling_constant*d_w_scaling_constant);
-        }
         //cout << "Qconv " << Q_convection << " Qrad " << Q_radiation << endl;
         gas_heat_rate_ = -unscaled_weight*Q_convection;
  

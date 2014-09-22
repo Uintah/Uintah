@@ -303,6 +303,8 @@ def generateGS() :
         tests = THE_COMPONENT.getTestList( componentTests[counter] )
                   
         if options.verbose :
+            print ""
+            print "______________________________________________________________________"
             print "About to run tests for component: " + component
 
         for test in tests :
@@ -380,7 +382,6 @@ def generateGS() :
             # catch if sus doesn't run to completion
             if rc != 0:
               print "\nERROR: %s: Test (%s) failed to complete\n" % (component,test)
-              exit(-1)
             
             os.chdir( ".." ) # Back to the component (eg: 'ICE') directory
 

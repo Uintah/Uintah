@@ -250,5 +250,8 @@ template class ConvectiveFluxLimiter< OpTypes<VOL>::InterpC2FYLimiter, OpTypes<V
 template class ConvectiveFluxLimiter< OpTypes<VOL>::InterpC2FZLimiter, OpTypes<VOL>::InterpC2FZUpwind, OperatorTypeBuilder<Interpolant,VOL,FaceTypes<VOL>::ZFace>::type, OperatorTypeBuilder<Interpolant,ZVolField,FaceTypes<VOL>::ZFace>::type >; \
 
 CONV_FLUX_LIMITER_DECLARE_LIMITER( SVolField );
+CONV_FLUX_LIMITER_DECLARE_LIMITER( XVolField );
+CONV_FLUX_LIMITER_DECLARE_LIMITER( YVolField );
+CONV_FLUX_LIMITER_DECLARE_LIMITER( ZVolField );
 
 //============================================================================

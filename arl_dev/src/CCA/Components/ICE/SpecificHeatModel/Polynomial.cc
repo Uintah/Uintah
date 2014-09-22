@@ -33,8 +33,6 @@
 
 using namespace Uintah;
 
-const double kb = 1.3806503e-23; // Boltzmann constant (m^2*kg/s^2*K)
-
 PolynomialCv::PolynomialCv(ProblemSpecP& ps)
  : SpecificHeat(ps)
 {

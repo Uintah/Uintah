@@ -82,6 +82,8 @@ static double      CurrentWaitTime = 0;
 map<string,double> waittimes;
 map<string,double> exectimes;
 
+//______________________________________________________________________
+//
 MPIScheduler::MPIScheduler( const ProcessorGroup * myworld,
                             const Output         * oport,
                                   MPIScheduler   * parentScheduler) :
@@ -111,7 +113,8 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld,
   }
 }
 
-
+//______________________________________________________________________
+//
 void
 MPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
                            SimulationStateP& state)
@@ -131,6 +134,8 @@ MPIScheduler::~MPIScheduler()
   }
 }
 
+//______________________________________________________________________
+//
 SchedulerP
 MPIScheduler::createSubScheduler()
 {
@@ -141,40 +146,63 @@ MPIScheduler::createSubScheduler()
   return newsched;
 }
 
+//______________________________________________________________________
+//
 void
 MPIScheduler::verifyChecksum()
 {
 #if SCI_ASSERTION_LEVEL >= 3
-  TAU_PROFILE("MPIScheduler::verifyChecksum()", " ", TAU_USER); 
+  TAU_PROFILE("MPIScheduler::verifyChecksum()", " ", TAU_USER);
 
-  // Compute a simple checksum to make sure that all processes
-  // are trying to execute the same graph.  We should do two
-  // things in the future:
+  // Compute a simple checksum to make sure that all processes are trying to
+  // execute the same graph.  We should do two things in the future:
   //  - make a flag to turn this off
   //  - make the checksum more sophisticated
   int checksum = 0;
-  for (unsigned i = 0; i < graphs.size(); i++)
+  int numSpatialTasks = 0;
+  for ( unsigned i = 0; i < graphs.size(); i++ ) {
     checksum += graphs[i]->getTasks().size();
+
+    // This begins addressing the issue of making the global checksum more sophisticated:
+    //   check if any tasks were spatially scheduled - TaskType::Spatial, meaning no computes, requires or modifies
+    //     e.g. RMCRT radiometer task, which is not scheduled on all patches
+    //          these Spatial tasks won't count toward the global checksum
+    std::vector<Task*> tasks = graphs[i]->getTasks();
+    std::vector<Task*>::const_iterator tasks_iter = tasks.begin();
+    for ( ; tasks_iter != tasks.end(); ++tasks_iter ) {
+      Task* task = *tasks_iter;
+      if ( task->getType() == Task::Spatial ) {
+        numSpatialTasks++;
+      }
+    }
+  }
+
+  // Spatial tasks don't count against the global checksum
+  checksum -= numSpatialTasks;
   mpidbg << d_myworld->myrank() << " (Allreduce) Checking checksum of " << checksum << '\n';
+
   int result_checksum;
-  MPI_Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN,
-                d_myworld->getComm());
-  if(checksum != result_checksum){
-    cerr << "Failed task checksum comparison!\n";
-    cerr << "Processor: " << d_myworld->myrank() << " of "
-         << d_myworld->size() - 1 << ": has sum " << checksum
+  MPI_Allreduce( &checksum, &result_checksum, 1, MPI_INT, MPI_MIN, d_myworld->getComm() );
+
+  if ( checksum != result_checksum ) {
+    cerr << "MPIScheduler::Failed task checksum comparison! Not all processes are executing the same taskgraph\n";
+    cerr << "  Processor: " << d_myworld->myrank() << " of " << d_myworld->size() - 1 << ": has sum " << checksum
          << " and global is " << result_checksum << '\n';
-    MPI_Abort(d_myworld->getComm(), 1);
+    MPI_Abort( d_myworld->getComm(), 1 );
   }
   mpidbg << d_myworld->myrank() << " (Allreduce) Check succeeded\n";
 #endif
 }
 
+//______________________________________________________________________
+//
 #ifdef USE_TAU_PROFILING
 extern int create_tau_mapping( const string & taskname,
                                const PatchSubset * patches );  // ThreadPool.cc
 #endif
 
+//______________________________________________________________________
+//
 void
 MPIScheduler::wait_till_all_done()
 {
@@ -186,6 +214,8 @@ MPIScheduler::wait_till_all_done()
   return;
 }
 
+//______________________________________________________________________
+//
 void
 MPIScheduler::initiateTask( DetailedTask          * task,
                             bool only_old_recvs, int abort_point, int iteration )
@@ -199,6 +229,8 @@ MPIScheduler::initiateTask( DetailedTask          * task,
   }
 } // end initiateTask()
 
+//______________________________________________________________________
+//
 void
 MPIScheduler::initiateReduction( DetailedTask          * task)
 {
@@ -222,6 +254,8 @@ MPIScheduler::initiateReduction( DetailedTask          * task)
   }
 }
 
+//______________________________________________________________________
+//
 void
 MPIScheduler::runTask( DetailedTask         * task, int iteration)
 {
@@ -307,6 +341,8 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
 
 } // end runTask()
 
+//______________________________________________________________________
+//
 void
 MPIScheduler::runReductionTask( DetailedTask         * task)
 {
@@ -323,6 +359,8 @@ MPIScheduler::runReductionTask( DetailedTask         * task)
 
 }
 
+//______________________________________________________________________
+//
 void
 MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
 {
@@ -456,12 +494,17 @@ MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
 } // end postMPISends();
 
 
+//______________________________________________________________________
+//
 struct CompareDep {
 bool operator()(DependencyBatch* a, DependencyBatch* b)
 {
   return a->messageTag < b->messageTag;
 }
 };
+
+//______________________________________________________________________
+//
 void
 MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_point, int iteration)
 {
@@ -652,6 +695,8 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_
 
 } // end postMPIRecvs()
 
+//______________________________________________________________________
+//
 void
 MPIScheduler::processMPIRecvs(int how_much)
 {
@@ -689,6 +734,8 @@ MPIScheduler::processMPIRecvs(int how_much)
 
 } // end processMPIRecvs()
 
+//______________________________________________________________________
+//
 void
 MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 {
@@ -1091,6 +1138,8 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   //pg_ = 0;
 }
 
+//______________________________________________________________________
+//
 void
 MPIScheduler::emitTime(const char* label)
 {
@@ -1099,6 +1148,8 @@ MPIScheduler::emitTime(const char* label)
    d_lasttime=time;
 }
 
+//______________________________________________________________________
+//
 void
 MPIScheduler::emitTime(const char* label, double dt)
 {
@@ -1106,6 +1157,8 @@ MPIScheduler::emitTime(const char* label, double dt)
    d_times.push_back(dt);
 }
 
+//______________________________________________________________________
+//
 void 
 MPIScheduler::addToSendList(const MPI_Request& request, int bytes, AfterCommunicationHandler* handler, const string& var)
 {

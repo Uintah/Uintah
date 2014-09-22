@@ -169,8 +169,19 @@ private:
 
   double visc;
   double yelem[5];              ///< Fractions of each element in coal (C, H, N, O, S respectively)
-  std::vector<double>  ash_mass_init;         ///< Initial ash mass
+  std::vector<double>  particle_sizes;        /// particle sizes in diameters
+  std::vector<double>  vol_dry;         ///volume of each particle size
+  std::vector<double>  mass_dry;         ///mass of each particle size
+  std::vector<double>  rawcoal_mass_init;    ///< Initial raw coal mass
+  std::vector<double>  char_mass_init;        ///< Initial char mass
+  std::vector<double>  ash_mass_init;        ///< Initial ash mass
+  std::vector<double>  as_received; // wt fraction of [C,H,O,N,S,char,ash,moisture] as received components 
   double rhop;                  ///< Density of particle 
+  double total_rc;
+  double total_dry;
+  double rc_mass_frac;
+  double char_mass_frac;
+  double ash_mass_frac;
 
   double Pr;
   double blow;

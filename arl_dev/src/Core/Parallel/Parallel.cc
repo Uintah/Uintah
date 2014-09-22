@@ -267,6 +267,7 @@ Parallel::initializeManager(int& argc, char**& argv)
      if(rootContext->myrank() == 0) {
        cout << "Parallel: " << rootContext->size() << " processors (using MPI)\n";
 #ifdef THREADED_MPI_AVAILABLE
+       cout << "Parallel: " << ::numThreads << " threads per MPI process\n";
        cout << "Parallel: MPI Level Required: " << required << ", provided: " << provided << "\n";
 #endif
      }

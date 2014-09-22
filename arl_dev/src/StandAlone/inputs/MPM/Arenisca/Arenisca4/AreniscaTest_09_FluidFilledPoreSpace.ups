@@ -10,16 +10,16 @@
   <SimulationComponent type="mpm" />
 
   <Time>
-      <maxTime>1.0</maxTime>
+      <maxTime>4.0</maxTime>
       <initTime>0.0</initTime>
       <delt_min>0.01</delt_min>
       <delt_max>0.01</delt_max>
-      <timestep_multiplier>0.3</timestep_multiplier>
+      <timestep_multiplier>0.1</timestep_multiplier>
   </Time>
 
   <DataArchiver>
       <filebase>AreniscaTest_09_FluidFilledPoreSpace.uda</filebase>
-      <outputInterval>0.001</outputInterval>
+      <outputInterval>0.0001</outputInterval>
       <save label = "p.x"/>
       <save label = "p.color"/>
       <save label = "p.temperature"/>
@@ -29,10 +29,8 @@
       <save label = "g.mass"/>
       <save label = "p.deformationMeasure"/>
       <save label = "g.acceleration"/>
-      <save label = "p.ep"/>
       <save label = "p.evp"/>
       <save label = "p.eve"/>
-      <save label = "p.Kappa"/>
       <checkpoint cycle = "2" timestepInterval = "20"/>
   </DataArchiver>
 
@@ -70,31 +68,31 @@
         <specific_heat>134.0e-8</specific_heat>
 
         <constitutive_model type="Arenisca4">
-            <PEAKI1>20.9882e6</PEAKI1>
-	    <FSLOPE>0.435438</FSLOPE>
-	    <STREN>0.0</STREN>
-	    <YSLOPE>0.0</YSLOPE>
-	    <BETA_nonassociativity>1.0</BETA_nonassociativity>
-	    <B0>2.7e9</B0>
-	    <B1>10.0e9</B1>
-	    <B2>0.0</B2>
-	    <B3>0.0</B3>
-	    <B4>0.0</B4>
-	    <G0>11.8e9</G0>
-	    <G1>0.0</G1>
-	    <G2>0.0</G2>
-	    <G3>0.0</G3>
-	    <G4>0.0</G4>
-	    <p0_crush_curve>-30e6</p0_crush_curve>
-	    <p1_crush_curve>5.9e-11 </p1_crush_curve>
-	    <p2_crush_curve>0.0</p2_crush_curve>
-	    <p3_crush_curve>0.5</p3_crush_curve>
-	    <CR>0.5</CR>
-	    <fluid_B0>2.2e9</fluid_B0>
-	    <fluid_pressure_initial>0.0</fluid_pressure_initial>
-	    <T1_rate_dependence> 0.0 </T1_rate_dependence>
-	    <T2_rate_dependence> 0.0 </T2_rate_dependence> 
-	    <gruneisen_parameter> 0.0</gruneisen_parameter>
+            <PEAKI1>6.123724356953976e2</PEAKI1>
+      <FSLOPE>0.057735026919</FSLOPE>
+      <STREN>0.0</STREN>
+      <YSLOPE>0.0</YSLOPE>
+      <BETA_nonassociativity>1.0</BETA_nonassociativity>
+      <B0>6000</B0>
+      <B1>20000</B1>
+      <B2>1500</B2>
+      <B3>0.0</B3>
+      <B4>0.0</B4>
+      <G0>3750</G0>
+      <G1>0.0</G1>
+      <G2>0.0</G2>
+      <G3>0.0</G3>
+      <G4>0.0</G4>
+      <p0_crush_curve>-1837.0724</p0_crush_curve>
+      <p1_crush_curve>6.6666666666666666e-4</p1_crush_curve>
+      <p2_crush_curve>0.0</p2_crush_curve>
+      <p3_crush_curve>0.5</p3_crush_curve>
+      <CR>0.5</CR>
+      <fluid_B0>3000</fluid_B0>
+      <fluid_pressure_initial>300</fluid_pressure_initial>
+      <T1_rate_dependence> 0.0 </T1_rate_dependence>
+      <T2_rate_dependence> 0.0 </T2_rate_dependence>
+      <subcycling_characteristic_number>256</subcycling_characteristic_number>
         </constitutive_model>
 
         <geom_object>
@@ -117,7 +115,7 @@
   </MaterialProperties>
 
   <Grid>
-      <BoundaryConditions>                      
+      <BoundaryConditions>
       </BoundaryConditions>
       <Level>
         <Box label = "1">
