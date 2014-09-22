@@ -35,6 +35,7 @@
 #include <CCA/Components/Arches/IntrusionBC.h>
 #include <CCA/Components/Arches/Filter.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
+#include <CCA/Components/Arches/Task/TaskInterface.h>
 
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
@@ -1797,6 +1798,8 @@ void BoundaryCondition::sched_setAreaFraction( SchedulerP& sched,
  
   sched->addTask(tsk, level->eachPatch(), matls);
 
+  d_newBC->sched_create_masks(level, sched, matls); 
+
 }
 void 
 BoundaryCondition::setAreaFraction( const ProcessorGroup*,
@@ -2058,7 +2061,19 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
           my_info.velocity = Vector(0,0,0); 
           my_info.mass_flow_rate = 0.0;
           db_BCType->require("swirl_no", my_info.swirl_no);
-          db_BCType->require("swirl_centroid", my_info.swirl_cent); 
+
+
+          std::string str_vec;  // This block sets the default centroid to the origin unless otherwise specified by swirl_cent
+          bool  Luse_origin =   db_face->getAttribute("origin", str_vec);
+          if( Luse_origin ){
+          std::stringstream ss;
+          ss << str_vec;
+          Vector origin ;
+          ss >> origin[0] >> origin[1] >> origin[2] ;
+            db_BCType->getWithDefault("swirl_centroid", my_info.swirl_cent,origin); 
+          }else{
+            db_BCType->require("swirl_centroid", my_info.swirl_cent); 
+          }
 
           //compute the density:
           typedef std::vector<std::string> StringVec; 
@@ -2527,6 +2542,9 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
         //get the number of children
         int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
 
+        //get the face direction
+        IntVector insideCellDir = patch->faceDirection(face);
+
         for (int child = 0; child < numChildren; child++){
 
           double bc_value = 0;
@@ -2564,13 +2582,15 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
                 case (TURBULENT_INLET):
                   bc_iter->second.mass_flow_rate = bc_iter->second.velocity[norm] * area * density[*bound_ptr];
                   break;
-                case ( MASSFLOW_INLET ):
+                case ( MASSFLOW_INLET ):{
                   bc_iter->second.mass_flow_rate = bc_value;
+                  double pm = -1.0*insideCellDir[norm]; 
                   if ( bc_iter->second.density > 0.0 ) { 
-                    bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate / 
+                    bc_iter->second.velocity[norm] = pm*bc_iter->second.mass_flow_rate / 
                                                    ( area * bc_iter->second.density );
                   }
                   break;
+                }
                 case ( SWIRL ):
                   bc_iter->second.mass_flow_rate = bc_value; 
                   bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate / 

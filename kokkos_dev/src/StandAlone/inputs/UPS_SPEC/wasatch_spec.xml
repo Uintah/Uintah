@@ -911,6 +911,9 @@
     <MomentumEquations        spec="OPTIONAL NO_DATA">
       <DisableTurbulenceModel spec="OPTIONAL NO_DATA" />    
       <DisablePressureSolve   spec="OPTIONAL NO_DATA" /> <!-- disable du/dt in the pressure rhs - !DEVELOPERS ONLY! -->   
+      <ConvectiveInterpMethod  spec="OPTIONAL NO_DATA"
+                              attribute1="method REQUIRED STRING 'CENTRAL, UPWIND, SUPERBEE,
+														  CHARM, KOREN, MC, OSPRE, SMART, VANLEER, HCUS, MINMOD, HQUICK'" />
       <ComputeMassResidual    spec="OPTIONAL NO_DATA" />
       <ComputeKE              spec="OPTIONAL NO_DATA"
                               attribute1="total OPTIONAL BOOLEAN"

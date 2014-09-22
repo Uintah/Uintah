@@ -50,6 +50,7 @@ CUDA_ENABLED_SRCS =       \
      PressureSource       \
      PrimVar              \
      ScalarRHS            \
+	 SetCurrentTime       \
      SolnVarEst           \
      Strain               \
      ScalabilityTestSrc   \
@@ -80,7 +81,6 @@ endif
 #
 SRCS += \
         $(SRCDIR)/DensityCalculator.cc    \
-        $(SRCDIR)/SetCurrentTime.cc       \
         $(SRCDIR)/RadPropsEvaluator.cc    \
         $(SRCDIR)/StableTimestep.cc       \
         $(SRCDIR)/Reduction.cc            \
@@ -151,6 +151,9 @@ ifeq ($(HAVE_CUDA),yes)
 	cp $< $@
 
   $(OBJTOP_ABS)/$(SRCDIR)/ScalarRHS.cu : $(SRCTOP_ABS)/$(SRCDIR)/ScalarRHS.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/SetCurrentTime.cu : $(SRCTOP_ABS)/$(SRCDIR)/SetCurrentTime.cc
 	cp $< $@
 
   $(OBJTOP_ABS)/$(SRCDIR)/SolnVarEst.cu : $(SRCTOP_ABS)/$(SRCDIR)/SolnVarEst.cc

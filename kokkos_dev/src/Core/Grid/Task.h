@@ -750,13 +750,13 @@ class Task {
       Reduction,
       InitialSend,
       OncePerProc,  // make sure to pass a PerProcessorPatchSet to the addTask function
-      Output
+      Output,
+      Spatial       // e.g. Radiometer task (spatial scheduling); must call task->setType(Task::Spatial)
     };  
     
 
 
-    Task(const std::string& taskName,
-         TaskType type)
+    Task(const std::string& taskName, TaskType type)
         : d_taskName(taskName), d_action(0)
     {
       d_tasktype = type;
@@ -1360,6 +1360,7 @@ class Task {
                    Ghost::GhostType gtype = Ghost::None,
                    int numGhostCells = 0,
                    int level_offset = 0);
+
         Dependency(DepType deptype,
                    Task* task,
                    WhichDW dw,

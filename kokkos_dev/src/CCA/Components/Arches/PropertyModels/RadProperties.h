@@ -37,6 +37,8 @@ namespace Uintah{
       RadProperties( std::string prop_name, SimulationStateP& shared_state );
       ~RadProperties(); 
 
+
+
       void problemSetup( const ProblemSpecP& db ); 
 
       void sched_computeProp( const LevelP& level, SchedulerP& sched, int time_substep ); 
@@ -73,6 +75,10 @@ namespace Uintah{
       }; // class Builder 
 
     private: 
+
+      int _nQn_part ;                                // number of quadrature nodes in DQMOM
+      std::string  _base_temperature_label_name;          // DQMOM Temperature name
+      std::string  _base_size_label_name;                 // DQMOM size_name
 
       RadPropertyCalculator::PropertyCalculatorBase* _calc; 
       const VarLabel* _temperature_label; 

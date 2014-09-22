@@ -55,7 +55,7 @@ Software is furnished to do so, subject to the following conditions:
 //----------DEFINE SECTION----------
 #define MHdebug       // Prints errors messages when particles are deleted or subcycling fails
 #define MHdeleteBadF  // Prints errors messages when particles are deleted or subcycling fails
-#define MHfastfcns    // Use fast approximate exp(), log() and pow() in deep loops.
+//#define MHfastfcns    // Use fast approximate exp(), log() and pow() in deep loops.
 #define MHdisaggregationStiffness // reduce stiffness with disaggregation
 
 // INCLUDE SECTION: tells the preprocessor to include the necessary files
@@ -768,21 +768,21 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
 
       // Use polar decomposition to compute the rotation and stretch tensors
 #ifdef MHdeleteBadF
-      if(pDefGrad[idx].MaxAbsElem()>1.0e2){
+      if(pDefGrad_new[idx].MaxAbsElem()>1.0e2){
 		  pLocalized_new[idx]=-999;
-		  cout<<"Large deformation gradient component: [F_new] = "<<pDefGrad[idx]<<endl;
+		  cout<<"Large deformation gradient component: [F_new] = "<<pDefGrad_new[idx]<<endl;
 		  cout<<"Resetting [F_new]=[I] for this step and deleting particle"<<endl;
 		  Identity.polarDecompositionRMB(tensorU, tensorR);
       }
-      else if(pDefGrad[idx].Determinant()<1.0e-3){
+      else if(pDefGrad_new[idx].Determinant()<1.0e-3){
 		  pLocalized_new[idx]=-999;
-		  cout<<"Small deformation gradient determinant: [F_new] = "<<pDefGrad[idx]<<endl;
+		  cout<<"Small deformation gradient determinant: [F_new] = "<<pDefGrad_new[idx]<<endl;
 		  cout<<"Resetting [F_new]=[I] for this step and deleting particle"<<endl;
 		  Identity.polarDecompositionRMB(tensorU, tensorR);
       }
-	  else if(pDefGrad[idx].Determinant()>1.0e2){
+	  else if(pDefGrad_new[idx].Determinant()>1.0e2){
 		  pLocalized_new[idx]=-999;
-		  cout<<"Large deformation gradient determinant: [F_new] = "<<pDefGrad[idx]<<endl;
+		  cout<<"Large deformation gradient determinant: [F_new] = "<<pDefGrad_new[idx]<<endl;
 		  cout<<"Resetting [F_new]=[I] for this step and deleting particle"<<endl;
 		  Identity.polarDecompositionRMB(tensorU, tensorR);
       }
@@ -885,10 +885,13 @@ int Arenisca3::computeStep(const Matrix3& D,       // strain "rate"
       chi = 1,                                      // subcycle multiplier
       stepFlag,                                     // 0/1 good/bad step
       substepFlag;                                  // 0/1 good/bad substep
+  
+  // MH! Need to initialize X_old and Zeta_old BEFORE compute StepDivisions!
+  // currently this breaks the step division code.
   double dt,                                        // substep time increment
-         X_old,                                     // X at start of substep
+         X_old = X_n,                               // X at start of substep
          X_new,                                     // X at end of substep
-         Zeta_old,                                  // Zeta at start of substep
+         Zeta_old= Zeta_n,                          // Zeta at start of substep
          Zeta_new;                                  // Zeta at end of substep
 
   Matrix3 sigma_old,                                // sigma at start of substep
@@ -1058,7 +1061,7 @@ void Arenisca3::computeElasticProperties(const Matrix3 stress,
 			double expb2byI1 = fasterexp(b2/I1);
 			bulk = bulk + b1*expb2byI1;
 			if(d_cm.G1!=0.0 && d_cm.G2!=0.0){
-				double nu = d_cm.G1 + d_cm.G1*expb2byI1;
+				double nu = d_cm.G1 + d_cm.G2*expb2byI1;
 				shear = 1.5*bulk*(1.0-2.0*nu)/(1.0+nu);
 			}
 		}
@@ -1074,7 +1077,11 @@ void Arenisca3::computeElasticProperties(const Matrix3 stress,
 	
 #ifdef MHdisaggregationStiffness
 	if(d_cm.Use_Disaggregation_Algorithm){
+#ifdef MHfastfcns
 		double fac = fasterexp(-(P3+evp));
+#else
+	    double fac = exp(-(P3+evp));
+#endif
 		double scale = max(fac,0.001);
 		bulk = bulk*scale;
 		shear = shear*scale;
@@ -1137,25 +1144,36 @@ int Arenisca3::computeStepDivisions(const double& X,
 // compute the number of step divisions (substeps) based on a comparison
 // of the trial stress relative to the size of the yield surface, as well
 // as change in elastic properties between sigma_n and sigma_trial.
-  double PEAKI1 = d_cm.PEAKI1,
-         FSLOPE = d_cm.FSLOPE;
   int nmax = ceil(d_cm.subcycling_characteristic_number);
-
-  Matrix3 d_sigma = sigma_trial - sigma_n;
-
+  
+  // Compute change in bulk modulus:
   double  bulk_n,shear_n,bulk_trial,shear_trial;
   computeElasticProperties(sigma_n,ep,P3,bulk_n,shear_n);
   computeElasticProperties(sigma_trial,ep,P3,bulk_trial,shear_trial);
+  int n_bulk = ceil(fabs(bulk_n-bulk_trial)/bulk_n);  
+  
+  // Compute trial stress increment relative to yield surface size:
+  Matrix3 d_sigma = sigma_trial - sigma_n;
+  double size = 0.5*(d_cm.PEAKI1 - X);
+  if (d_cm.STREN > 0.0){
+	  size = min(size,d_cm.STREN);
+  }  
+  int n_yield = ceil(0.001*d_sigma.Norm()/size);
 
-  int n_bulk = ceil(fabs(bulk_n-bulk_trial)/bulk_n),
-      n_iso = ceil(.03125*fabs(d_sigma.Trace())/(PEAKI1-X)),
-      n_dev = ceil(.0625*d_sigma.Norm()/(FSLOPE*(PEAKI1-X)));
-
-  int nsub = max(max(n_bulk,n_iso),n_dev);
+  // nsub is the maximum of the two values.above.  If this exceeds allowable,
+  // throw warning and delete particle.
+  int nsub = max(n_bulk,n_yield);
 
   if (nsub>d_cm.subcycling_characteristic_number){
 #ifdef MHdebug
-    cout<<"stepDivide out of range. nsub = "<<nsub<<" > "<< d_cm.subcycling_characteristic_number<<endl;
+    cout<<"\nstepDivide out of range."<<endl;
+	cout<<"d_sigma.Norm() = "<<d_sigma.Norm()<<endl;
+	cout<<"size = "<<size<<endl;
+	cout<<"n_yield = "<<n_yield<<endl;
+	cout<<"bulk_n = "<<bulk_n<<endl;
+	cout<<"bulk_trial = "<<bulk_trial<<endl;
+	cout<<"n_bulk = "<<n_bulk<<endl;
+	cout<<"nsub = "<<nsub<<" > "<< d_cm.subcycling_characteristic_number<<endl;
 #endif
     nsub = -1;
   }

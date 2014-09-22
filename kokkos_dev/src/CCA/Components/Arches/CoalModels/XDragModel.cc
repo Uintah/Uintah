@@ -89,8 +89,22 @@ XDragModel::problemSetup(const ProblemSpecP& params, int qn)
   if (params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties")) {
     ProblemSpecP db_coal = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties");
     db_coal->require("particle_density", rhop);
-    db_coal->require("initial_rawcoal_mass", rc_mass_init);
-    db_coal->require("initial_ash_mass", ash_mass_init);
+    db_coal->require("particle_sizes", particle_sizes); // read the particle sizes [m]
+    db_coal->require("as_received", as_received);
+    total_rc=as_received[0]+as_received[1]+as_received[2]+as_received[3]+as_received[4]; // (C+H+O+N+S) dry ash free total
+    total_dry=as_received[0]+as_received[1]+as_received[2]+as_received[3]+as_received[4]+as_received[5]+as_received[6]; // (C+H+O+N+S+char+ash)  moisture free total
+    rc_mass_frac=total_rc/total_dry; // mass frac of rc (dry) 
+    char_mass_frac=as_received[5]/total_dry; // mass frac of char (dry)
+    ash_mass_frac=as_received[6]/total_dry; // mass frac of ash (dry)
+    int p_size=particle_sizes.size();
+    for (int n=0; n<p_size; n=n+1)
+      {
+        vol_dry.push_back((pi/6)*pow(particle_sizes[n],3)); // m^3/particle
+        mass_dry.push_back(vol_dry[n]*rhop); // kg/particle
+        ash_mass_init.push_back(mass_dry[n]*ash_mass_frac); // kg_ash/particle (initial)  
+        char_mass_init.push_back(mass_dry[n]*char_mass_frac); // kg_char/particle (initial)
+        rc_mass_init.push_back(mass_dry[n]*rc_mass_frac); // kg_ash/particle (initial)
+      }
   } else {
     throw InvalidValue("ERROR: XDragmodel: problemSetup(): Missing <Coal_Properties> section in input file!",__FILE__,__LINE__);
   }

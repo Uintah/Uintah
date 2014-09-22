@@ -98,7 +98,20 @@ private:
 
   const VarLabel* d_gas_temperature_label;
 
+  std::vector<double>  as_received;
+  std::vector<double>  particle_sizes;
+  std::vector<double>  ash_mass_init;
+  std::vector<double>  char_mass_init;
+  std::vector<double>  vol_dry;
+  std::vector<double>  mass_dry;
   std::vector<double>  rc_mass_init;
+  std::vector<double>  Yamamoto_coefficients;  
+  double rhop;
+  double total_rc;
+  double total_dry;
+  double rc_mass_frac;
+  double char_mass_frac;
+  double ash_mass_frac;
   double Av;
   double Ev;
   double Yv;
@@ -112,6 +125,7 @@ private:
   double Fv;
   double Xv;
   
+  double pi;
   double R;         ///< Ideal gas constant
   
   bool compute_part_temp; ///< Boolean: is particle temperature computed? 

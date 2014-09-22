@@ -74,51 +74,6 @@ void cpdiInterpolator::findCellAndWeights(const Point& pos,
   Matrix3 dsize=defgrad*size;
   vector<Vector> relative_node_location(8,Vector(0.0,0.0,0.0));
 
-  relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
-                                   -dsize(1,0)-dsize(1,1)+dsize(1,2),
-                                   -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
-  relative_node_location[5]=Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
-                                    dsize(1,0)-dsize(1,1)+dsize(1,2),
-                                    dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
-  relative_node_location[6]=Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
-                                    dsize(1,0)+dsize(1,1)+dsize(1,2),
-                                    dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
-  relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
-                                   -dsize(1,0)+dsize(1,1)+dsize(1,2),
-                                   -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
-
-  double lcrit = d_lcrit;
-  double lcritsq = lcrit*lcrit;
-  Vector la = relative_node_location[6];
-  Vector lb = relative_node_location[5];
-  Vector lc = relative_node_location[7];
-  Vector ld = relative_node_location[4];
-
-  if(la.length2()>lcritsq){
-    la = la*(lcrit/la.length());
-  }
-  if(lb.length2()>lcritsq){
-    lb = lb*(lcrit/lb.length());
-  }
-  if(lc.length2()>lcritsq){
-    lc = lc*(lcrit/lc.length());
-  }
-  if(ld.length2()>lcritsq){
-    ld = ld*(lcrit/ld.length());
-  }
-
-  dsize(0,0)=.5*(la.x()+lb.x()-lc.x()-ld.x());
-  dsize(1,0)=.5*(la.y()+lb.y()-lc.y()-ld.y());
-  dsize(2,0)=.5*(la.z()+lb.z()-lc.z()-ld.z());
-
-  dsize(0,1)=.5*(la.x()-lb.x()+lc.x()-ld.x());
-  dsize(1,1)=.5*(la.y()-lb.y()+lc.y()-ld.y());
-  dsize(2,1)=.5*(la.z()-lb.z()+lc.z()-ld.z());
-
-  dsize(0,2)=.5*(la.x()+lb.x()+lc.x()+ld.x());
-  dsize(1,2)=.5*(la.y()+lb.y()+lc.y()+ld.y());
-  dsize(2,2)=.5*(la.z()+lb.z()+lc.z()+ld.z());
-
   relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
                                    -dsize(1,0)-dsize(1,1)-dsize(1,2),
                                    -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
@@ -144,6 +99,78 @@ void cpdiInterpolator::findCellAndWeights(const Point& pos,
                                    -dsize(1,0)+dsize(1,1)+dsize(1,2),
                                    -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
 
+  double lcrit = d_lcrit;
+  double lcritsq = lcrit*lcrit;
+  Vector la = relative_node_location[6];
+  Vector lb = relative_node_location[5];
+  Vector lc = relative_node_location[7];
+  Vector ld = relative_node_location[4];
+
+  int scale_flag = 0;
+  if(la.length2()>lcritsq){
+    la = la*(lcrit/la.length());
+    scale_flag = 1;
+  }
+  if(lb.length2()>lcritsq){
+    lb = lb*(lcrit/lb.length());
+    scale_flag = 1;
+  }
+  if(lc.length2()>lcritsq){
+    lc = lc*(lcrit/lc.length());
+    scale_flag = 1;
+  }
+  if(ld.length2()>lcritsq){
+    ld = ld*(lcrit/ld.length());
+    scale_flag = 1;
+  }
+
+  if(scale_flag==1){  // Don't do these calcs if the particle isn't needing to be rescaled
+    dsize(0,0)=.5*(la.x()+lb.x()-lc.x()-ld.x());
+    dsize(1,0)=.5*(la.y()+lb.y()-lc.y()-ld.y());
+    dsize(2,0)=.5*(la.z()+lb.z()-lc.z()-ld.z());
+
+    dsize(0,1)=.5*(la.x()-lb.x()+lc.x()-ld.x());
+    dsize(1,1)=.5*(la.y()-lb.y()+lc.y()-ld.y());
+    dsize(2,1)=.5*(la.z()-lb.z()+lc.z()-ld.z());
+
+    dsize(0,2)=.5*(la.x()+lb.x()+lc.x()+ld.x());
+    dsize(1,2)=.5*(la.y()+lb.y()+lc.y()+ld.y());
+    dsize(2,2)=.5*(la.z()+lb.z()+lc.z()+ld.z());
+
+
+    relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[1]=Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                      dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                      dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[2]=Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                      dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                      dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[3]=Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                     -dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                     -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+    relative_node_location[5]=Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                      dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                      dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+    relative_node_location[6]=Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                      dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                      dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+    relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                     -dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                     -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+
+//    for(int i = 0;i<8;i++){
+//      if(fabs(rln[i].length()-relative_node_location[i].length())>1.e-10){
+//        cout << "RLN = " << rln[i] << endl;
+//        cout << "rln = " << relative_node_location[i] << endl;
+//     }
+//    }
+  }
+
   Vector current_corner_pos;
   double fx;
   double fy;
@@ -166,7 +193,7 @@ void cpdiInterpolator::findCellAndWeights(const Point& pos,
     int i85 = i*8+5;
     int i86 = i*8+6;
     int i87 = i*8+7;
-    //    first we need to find the position vector of the ith corner of the particle with respect to the particle center:
+    // first we need to find the position vector of the ith corner of the particle with respect to the particle center:
     current_corner_pos = Vector(cellpos) + relative_node_location[i];
     ix = Floor(current_corner_pos.x());
     iy = Floor(current_corner_pos.y());
@@ -219,51 +246,6 @@ void cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
   Matrix3 dsize=defgrad*size;
   vector<Vector> relative_node_location(8,Vector(0.0,0.0,0.0));
 
-  relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
-                                   -dsize(1,0)-dsize(1,1)+dsize(1,2),
-                                   -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
-  relative_node_location[5]=Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
-                                    dsize(1,0)-dsize(1,1)+dsize(1,2),
-                                    dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
-  relative_node_location[6]=Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
-                                    dsize(1,0)+dsize(1,1)+dsize(1,2),
-                                    dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
-  relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
-                                   -dsize(1,0)+dsize(1,1)+dsize(1,2),
-                                   -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
-
-  double lcrit = d_lcrit;
-  double lcritsq = lcrit*lcrit;
-  Vector la = relative_node_location[6];
-  Vector lb = relative_node_location[5];
-  Vector lc = relative_node_location[7];
-  Vector ld = relative_node_location[4];
-
-  if(la.length2()>lcritsq){
-    la = la*(lcrit/la.length());
-  }
-  if(lb.length2()>lcritsq){
-    lb = lb*(lcrit/lb.length());
-  }
-  if(lc.length2()>lcritsq){
-    lc = lc*(lcrit/lc.length());
-  }
-  if(ld.length2()>lcritsq){
-    ld = ld*(lcrit/ld.length());
-  }
-
-  dsize(0,0)=.5*(la.x()+lb.x()-lc.x()-ld.x());
-  dsize(1,0)=.5*(la.y()+lb.y()-lc.y()-ld.y());
-  dsize(2,0)=.5*(la.z()+lb.z()-lc.z()-ld.z());
-
-  dsize(0,1)=.5*(la.x()-lb.x()+lc.x()-ld.x());
-  dsize(1,1)=.5*(la.y()-lb.y()+lc.y()-ld.y());
-  dsize(2,1)=.5*(la.z()-lb.z()+lc.z()-ld.z());
-
-  dsize(0,2)=.5*(la.x()+lb.x()+lc.x()+ld.x());
-  dsize(1,2)=.5*(la.y()+lb.y()+lc.y()+ld.y());
-  dsize(2,2)=.5*(la.z()+lb.z()+lc.z()+ld.z());
-
   relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
                                    -dsize(1,0)-dsize(1,1)-dsize(1,2),
                                    -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
@@ -288,6 +270,70 @@ void cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
   relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
                                    -dsize(1,0)+dsize(1,1)+dsize(1,2),
                                    -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+
+  double lcrit = d_lcrit;
+  double lcritsq = lcrit*lcrit;
+  Vector la = relative_node_location[6];
+  Vector lb = relative_node_location[5];
+  Vector lc = relative_node_location[7];
+  Vector ld = relative_node_location[4];
+
+  int scale_flag = 0;
+  if(la.length2()>lcritsq){
+    la = la*(lcrit/la.length());
+    scale_flag = 1;
+  }
+  if(lb.length2()>lcritsq){
+    lb = lb*(lcrit/lb.length());
+    scale_flag = 1;
+  }
+  if(lc.length2()>lcritsq){
+    lc = lc*(lcrit/lc.length());
+    scale_flag = 1;
+  }
+  if(ld.length2()>lcritsq){
+    ld = ld*(lcrit/ld.length());
+    scale_flag = 1;
+  }
+
+  if(scale_flag==1){  // Don't do these calcs if the particle isn't needing to be rescaled
+    dsize(0,0)=.5*(la.x()+lb.x()-lc.x()-ld.x());
+    dsize(1,0)=.5*(la.y()+lb.y()-lc.y()-ld.y());
+    dsize(2,0)=.5*(la.z()+lb.z()-lc.z()-ld.z());
+
+    dsize(0,1)=.5*(la.x()-lb.x()+lc.x()-ld.x());
+    dsize(1,1)=.5*(la.y()-lb.y()+lc.y()-ld.y());
+    dsize(2,1)=.5*(la.z()-lb.z()+lc.z()-ld.z());
+
+    dsize(0,2)=.5*(la.x()+lb.x()+lc.x()+ld.x());
+    dsize(1,2)=.5*(la.y()+lb.y()+lc.y()+ld.y());
+    dsize(2,2)=.5*(la.z()+lb.z()+lc.z()+ld.z());
+
+    relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[1]=Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                      dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                      dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[2]=Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                      dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                      dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[3]=Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                     -dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                     -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+    relative_node_location[5]=Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                      dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                      dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+    relative_node_location[6]=Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                      dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                      dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+    relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                     -dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                     -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+  }
 
   int i;
   Vector current_corner_pos;
@@ -429,50 +475,6 @@ void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
 
   vector<Vector> relative_node_location(8,Vector(0.0,0.0,0.0));
 
-  relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
-                                   -dsize(1,0)-dsize(1,1)+dsize(1,2),
-                                   -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
-  relative_node_location[5]=Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
-                                    dsize(1,0)-dsize(1,1)+dsize(1,2),
-                                    dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
-  relative_node_location[6]=Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
-                                    dsize(1,0)+dsize(1,1)+dsize(1,2),
-                                    dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
-  relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
-                                   -dsize(1,0)+dsize(1,1)+dsize(1,2),
-                                   -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
-  double lcrit = d_lcrit;
-  double lcritsq = lcrit*lcrit;
-  Vector la = relative_node_location[6];
-  Vector lb = relative_node_location[5];
-  Vector lc = relative_node_location[7];
-  Vector ld = relative_node_location[4];
-
-  if(la.length2()>lcritsq){
-    la = la*(lcrit/la.length());
-  }
-  if(lb.length2()>lcritsq){
-    lb = lb*(lcrit/lb.length());
-  }
-  if(lc.length2()>lcritsq){
-    lc = lc*(lcrit/lc.length());
-  }
-  if(ld.length2()>lcritsq){
-    ld = ld*(lcrit/ld.length());
-  }
-
-  dsize(0,0)=.5*(la.x()+lb.x()-lc.x()-ld.x());
-  dsize(1,0)=.5*(la.y()+lb.y()-lc.y()-ld.y());
-  dsize(2,0)=.5*(la.z()+lb.z()-lc.z()-ld.z());
-
-  dsize(0,1)=.5*(la.x()-lb.x()+lc.x()-ld.x());
-  dsize(1,1)=.5*(la.y()-lb.y()+lc.y()-ld.y());
-  dsize(2,1)=.5*(la.z()-lb.z()+lc.z()-ld.z());
-
-  dsize(0,2)=.5*(la.x()+lb.x()+lc.x()+ld.x());
-  dsize(1,2)=.5*(la.y()+lb.y()+lc.y()+ld.y());
-  dsize(2,2)=.5*(la.z()+lb.z()+lc.z()+ld.z());
-
   relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
                                    -dsize(1,0)-dsize(1,1)-dsize(1,2),
                                    -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
@@ -497,6 +499,69 @@ void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
   relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
                                    -dsize(1,0)+dsize(1,1)+dsize(1,2),
                                    -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+  double lcrit = d_lcrit;
+  double lcritsq = lcrit*lcrit;
+  Vector la = relative_node_location[6];
+  Vector lb = relative_node_location[5];
+  Vector lc = relative_node_location[7];
+  Vector ld = relative_node_location[4];
+
+  int scale_flag = 0;
+  if(la.length2()>lcritsq){
+    la = la*(lcrit/la.length());
+    scale_flag=1;
+  }
+  if(lb.length2()>lcritsq){
+    lb = lb*(lcrit/lb.length());
+    scale_flag=1;
+  }
+  if(lc.length2()>lcritsq){
+    lc = lc*(lcrit/lc.length());
+    scale_flag=1;
+  }
+  if(ld.length2()>lcritsq){
+    ld = ld*(lcrit/ld.length());
+    scale_flag=1;
+  }
+
+  if(scale_flag==1){  // Don't do these calcs if the particle isn't needing to be rescaled
+    dsize(0,0)=.5*(la.x()+lb.x()-lc.x()-ld.x());
+    dsize(1,0)=.5*(la.y()+lb.y()-lc.y()-ld.y());
+    dsize(2,0)=.5*(la.z()+lb.z()-lc.z()-ld.z());
+
+    dsize(0,1)=.5*(la.x()-lb.x()+lc.x()-ld.x());
+    dsize(1,1)=.5*(la.y()-lb.y()+lc.y()-ld.y());
+    dsize(2,1)=.5*(la.z()-lb.z()+lc.z()-ld.z());
+
+    dsize(0,2)=.5*(la.x()+lb.x()+lc.x()+ld.x());
+    dsize(1,2)=.5*(la.y()+lb.y()+lc.y()+ld.y());
+    dsize(2,2)=.5*(la.z()+lb.z()+lc.z()+ld.z());
+
+    relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[1]=Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                      dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                      dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[2]=Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                      dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                      dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[3]=Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                     -dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                     -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+    relative_node_location[5]=Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                      dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                      dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+    relative_node_location[6]=Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                      dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                      dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+    relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                     -dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                     -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+  }
 
   Vector current_corner_pos;
   double fx;

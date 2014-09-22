@@ -477,22 +477,26 @@ CQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int t
   tsk->requires(Task::OldDW, d_fieldLabels->d_cellTypeLabel, Ghost::AroundCells, 1);
   
   if (d_addSources) {
-    if (timeSubStep == 0) {
-      tsk->requires(Task::OldDW, d_sourceLabel, Ghost::None, 0);
-    } else {
-      tsk->requires(Task::NewDW, d_sourceLabel, Ghost::None, 0);
-    }
+    tsk->requires(Task::NewDW, d_sourceLabel, Ghost::None, 0);
   }
   
   //loop over requires for weights and abscissas needed for convection term if IC=u,v,w
   if (d_usePartVel) {
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
       const VarLabel* tempLabel = iW->second;
-      tsk->requires( Task::OldDW, tempLabel, Ghost::AroundCells, 2 );
+      if (timeSubStep == 0 ) {
+        tsk->requires( Task::OldDW, tempLabel, Ghost::AroundCells, 2 );
+      } else {
+        tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
+      }
     }
     for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
       const VarLabel* tempLabel = iA->second;
-      tsk->requires( Task::OldDW, tempLabel, Ghost::AroundCells, 2 );
+      if (timeSubStep == 0 ) {
+        tsk->requires( Task::OldDW, tempLabel, Ghost::AroundCells, 2 );
+      } else {
+        tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
+      }
     }
   } else {
     tsk->requires(Task::OldDW, d_fieldLabels->d_uVelocitySPBCLabel, Ghost::AroundCells, 1);
@@ -548,11 +552,7 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     
     new_dw->get(oldPhi, d_oldtransportVarLabel, matlIndex, patch, gac, 2);
     if (d_addSources) {
-      if (new_dw->exists(d_sourceLabel, matlIndex, patch)) {
-        new_dw->get(src, d_sourceLabel, matlIndex, patch, gn, 0); // only get new_dw value on rkstep > 0
-      } else {
-        old_dw->get(src, d_sourceLabel, matlIndex, patch, gn, 0);
-      }
+      new_dw->get(src, d_sourceLabel, matlIndex, patch, gn, 0);
     }
     
     old_dw->get(mu_t, d_fieldLabels->d_viscosityCTSLabel, matlIndex, patch, gac, 1);
@@ -601,14 +601,22 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
         for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
           const VarLabel* tempLabel = iW->second;
           constCCVarWrapper tempWrapper;
-          old_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
+          if (new_dw->exists( tempLabel, matlIndex, patch) ) {
+            new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
+          } else {
+            old_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
+          }
           cqmomWeights.push_back(tempWrapper);
         }
         
         for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
           const VarLabel* tempLabel = iA->second;
           constCCVarWrapper tempWrapper;
-          old_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
+          if (new_dw->exists( tempLabel, matlIndex, patch) ) {
+            new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
+          } else {
+            old_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
+          }
           cqmomAbscissas.push_back(tempWrapper);
         }
       } else if (!d_usePartVel) {

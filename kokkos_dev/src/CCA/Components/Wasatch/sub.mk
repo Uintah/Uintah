@@ -2,17 +2,17 @@
 #  The MIT License
 #
 #  Copyright (c) 2010-2012 The University of Utah
-# 
+#
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
 #  deal in the Software without restriction, including without limitation the
 #  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 #  sell copies of the Software, and to permit persons to whom the Software is
 #  furnished to do so, subject to the following conditions:
-# 
+#
 #  The above copyright notice and this permission notice shall be included in
 #  all copies or substantial portions of the Software.
-# 
+#
 #  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 #  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 #  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,12 +20,12 @@
 #  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 #  IN THE SOFTWARE.
-# 
-# 
-# 
-# 
-# 
-# Makefile fragment for this subdirectory 
+#
+#
+#
+#
+#
+# Makefile fragment for this subdirectory
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
@@ -39,8 +39,9 @@ SRCDIR := CCA/Components/Wasatch
 # corresponding rule at the end of this file!
 #
 CUDA_ENABLED_SRCS =       \
-	TimeStepper
-     
+	TimeStepper           \
+	Wasatch
+
 ifeq ($(HAVE_CUDA),yes)
 
    # CUDA enabled files, listed here (and with a rule at the end of
@@ -72,8 +73,7 @@ SRCS +=                                              \
         $(SRCDIR)/TaskInterface.cc                   \
         $(SRCDIR)/BCHelper.cc                        \
         $(SRCDIR)/CoordinateHelper.cc                \
-        $(SRCDIR)/VardenParameters.cc                \
-        $(SRCDIR)/Wasatch.cc
+        $(SRCDIR)/VardenParameters.cc
 
 PSELIBS :=                        \
         CCA/Components/Schedulers \
@@ -88,12 +88,12 @@ PSELIBS :=                        \
         Core/Math                 \
         Core/Parallel             \
         Core/ProblemSpec          \
-        Core/Util                 
+        Core/Util
 
 LIBS := $(Z_LIBRARY) $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)    \
         $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)                    \
         $(RADPROPS_LIBRARY) $(TABPROPS_LIBRARY)                     \
-        $(BOOST_LIBRARY) $(LAPACK_LIBRARY) $(BLAS_LIBRARY) 
+        $(BOOST_LIBRARY) $(LAPACK_LIBRARY) $(BLAS_LIBRARY)
 
 INCLUDES := $(INCLUDES) $(SPATIALOPS_INCLUDE) $(EXPRLIB_INCLUDE)    \
             $(HDF5_INCLUDE) $(TABPROPS_INCLUDE) $(RADPROPS_INCLUDE) \
@@ -118,6 +118,9 @@ ifeq ($(HAVE_CUDA),yes)
   # If Copy the 'original' .cc files into the binary tree and rename as .cu
 
   $(OBJTOP_ABS)/$(SRCDIR)/TimeStepper.cu : $(SRCTOP_ABS)/$(SRCDIR)/TimeStepper.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/Wasatch.cu : $(SRCTOP_ABS)/$(SRCDIR)/Wasatch.cc
 	cp $< $@
 
 endif

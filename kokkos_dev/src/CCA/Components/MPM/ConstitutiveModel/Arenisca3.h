@@ -241,22 +241,22 @@ namespace Uintah {
 
     double computePorePressure(const double ev);
 
-    void nonHardeningReturn(const double & I1_trial,
-                           const double & rJ2_trial,
-                           const Matrix3& S_trial,
-                           const double & I1_old,
-                           const double &rJ2_old,
-                           const Matrix3& S_old,
-                           const Matrix3& d_e,
-                           const double & X,
-                           const double & Zeta,
-                           const double & coher, // XXX
-                           const double & bulk,
-                           const double & shear,
-                                 double & I1_new,
-                                 double & rJ2_new,
-                                 Matrix3& S_new,
-                                 Matrix3& d_ep_new);
+    void nonHardeningReturn(const double& I1_trial,
+							const double& rJ2_trial,
+                            const Matrix3& S_trial,
+							const double& I1_old,
+							const double& rJ2_old,
+                            const Matrix3& S_old,
+                            const Matrix3& d_e,
+                            const double& X,
+                            const double& Zeta,
+                            const double& coher,
+                            const double& bulk,
+                            const double& shear,
+							double& I1_new,
+							double& rJ2_new,
+                            Matrix3& S_new,
+                                  Matrix3& d_ep_new);
 
     void transformedBisection(double& z_0,
                               double& r_0,
@@ -278,7 +278,7 @@ namespace Uintah {
                                  const double& r_to_rJ2
                                 );
     int computeYieldFunction(const double& I1,
-                             const double& rJ2,
+							 const double& rJ2,
                              const double& X,
                              const double& Zeta,
                              const double& coher,

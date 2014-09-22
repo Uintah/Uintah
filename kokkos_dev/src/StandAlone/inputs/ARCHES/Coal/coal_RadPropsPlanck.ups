@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!-- @version: -->
+<!--This is a copy of coal_channel, but adds a test for a model computing-->
+<!--the radiative absorption coefficient from particles-->
+
 <Uintah_specification>
   <Meta>
     <title>DQMOM_coal</title>
@@ -9,15 +12,15 @@
 
   <Solver type="hypre"/>
   <Time>
-    <maxTime>50.0</maxTime>
+    <maxTime>0.020</maxTime>
     <initTime>0.0</initTime>
     <delt_min>1e-16</delt_min>
-    <delt_max>1e-2</delt_max>
+    <delt_max>1e-3</delt_max>
     <timestep_multiplier>0.4</timestep_multiplier>
-    <max_Timesteps>25</max_Timesteps>
+    <max_Timesteps>0</max_Timesteps>
   </Time>
   <DataArchiver>
-    <filebase>coal_channel.uda</filebase>
+    <filebase>coal_RadPropsPlanck.uda</filebase>
     <outputInitTimestep/>
     <outputTimestepInterval>5</outputTimestepInterval>
     <save label = "eta_source1"/>
@@ -34,9 +37,9 @@
     <save label="coal_gas_mix_frac_Fdiff"/>
     <save label="coal_gas_mix_frac_Fconv"/>
     <save label = "radiationVolq"/>
+    <save label = "abskt"/>
     <save label = "abskg"/>
-    <save label = "gas_abskg"/>
-    <save label = "Julien_abskp"/>
+    <save label = "abskp"/>
     <save label = "divQ"/>
     <save label = "enthalpy"/>
     <save label = "length_qn0_icv" />
@@ -54,12 +57,6 @@
     <save label="char_qn0_surfacerate"/>
     <save label="char_qn1_surfacerate"/>
     <save label="char_qn2_surfacerate"/>
-    <!--save label="devol_qn0"/>
-    <save label="devol_qn1"/>
-    <save label="devol_qn2"/-->
-    <!--save label="char_qn0_PO2surf"/>
-        <save label="char_qn1_PO2surf"/>
-        <save label="char_qn2_PO2surf"/-->
     <save label="Charmass_qn0_icv"/>
     <save label="Charmass_qn1_icv"/>
     <save label="Charmass_qn2_icv"/>
@@ -87,13 +84,14 @@
     <save label = "CO2"         table_lookup = "true"/>
     <save label = "H2O"         table_lookup = "true"/>
     <save label = "OH"          table_lookup = "true"/>
+    <save label = "NO"          table_lookup = "true"/>
     <!--save label = "CH4"         table_lookup = "true"/-->
     <save label = "O2"          table_lookup = "true"/>
     <save label = "sensibleenthalpy" table_lookup = "true"/>
     <save label = "adiabaticenthalpy"   table_lookup = "true"/>
     <save label = "N2"          table_lookup = "true"/>
     <save label = "mixture_molecular_weight" table_lookup = "true"/>
-    <checkpoint cycle="2" interval="0.005"/>
+    <checkpoint cycle="2" interval="0.00001"/>
     <outputDoubleAsFloat/>
     <compression>gzip</compression>
   </DataArchiver>
@@ -105,9 +103,6 @@
         <BCType id="all" label="secondaryflow" var="VelocityInlet">
           <value>[10.0, 0, 0]</value>
         </BCType>
-        <!--BCType id="all" label="enthalpy" var="Dirichlet">
-          <value>-4.930e6</value>
-        </BCType-->
         <BCType id="all" label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -860,7 +855,7 @@
         <Sources>
           <src label="divQ" type="do_radiation">
             <calc_frequency>5</calc_frequency>
-            <abskg label="abskg"/>
+            <abskg label="abskt"/>
             <DORadiationModel>
                 <LinearSolver type="hypre">
                 <res_tol>1.0e-10</res_tol>
@@ -891,20 +886,26 @@
       </TransportEqns>
 
       <PropertyModels>
-        <model type="radiation_properties" label="abskg">
+        <model type="radiation_properties" label="abskt">
           <initialization type="constant">
             <constant>0.0</constant>
           </initialization>
-          <calculator type="hottel_sarofim">
-            <opl>.432</opl>
-            <abskg label="gas_abskg"/>
-            <abskp label="Julien_abskp"/>
+          <calculator type="radprops">
+          <opl>0.3</opl>
+          <abskg label = "abskg"/>
+          <abskp label = "abskp"/>
+            <particles>
+              <model_type>planck</model_type> 
+              <!--<model_type>rossland</model_type> -->
+              <complex_ir_real>2</complex_ir_real>    
+              <complex_ir_imag>-0.6</complex_ir_imag> 
+              <part_temp_label>heat_pT</part_temp_label>
+              <part_size_label>length</part_size_label>
+            </particles>
+          <grey_gas>
+            <inputfile>inputs/ARCHES/rad_tables/GreyGasOPL1_0.txt</inputfile>
+          </grey_gas>
           </calculator>
-        </model>
-        <model label="Julien_abskp" type="particle_absorption_coefficient">
-          <initialization type="constant">
-            <constant>0.0</constant>
-          </initialization>
         </model>
         <model type="heat_loss" label="heat_loss">
           <initialization type="constant">

@@ -378,6 +378,109 @@ namespace Uintah {
 
     };
 
+    class MFHLTransform : public TransformBase { 
+
+      //Double IV assumes that the IVs are ordered: 
+      //(1) mixture fraction (2) heat loss
+
+      public: 
+
+        MFHLTransform( std::map<std::string, double>& keys, MixingRxnModel* const model);
+        ~MFHLTransform(); 
+
+        bool problemSetup( const ProblemSpecP& ps, std::vector<std::string> names ){
+
+          bool sf_transform = false; 
+          ProblemSpecP p = ps; 
+
+          bool cold_flow; 
+          p->getWithDefault( "cold_flow",cold_flow,false); 
+
+          if ( p->findBlock("mixfrac_with_heatloss")){
+
+            p->findBlock("mixfrac_with_heatloss")->getAttribute("f_label", _f_name); 
+            p->findBlock("mixfrac_with_heatloss")->getAttribute("hl_label",_hl_name); 
+            sf_transform = true; 
+          
+          }
+
+          if ( p->findBlock("reference_state") ){
+            p->findBlock("reference_state")->getAttribute("f",_f_ref); 
+            p->findBlock("reference_state")->getAttribute("hl",_hl_ref); 
+          } else { 
+            throw ProblemSetupException("Error: Reference state not defined.",__FILE__, __LINE__ ); 
+          }
+
+          _f_index = 0;
+          _hl_index = 1; 
+
+          if ( !cold_flow ){ 
+            std::vector<double> my_ivs;
+            my_ivs.push_back(1.0);
+            my_ivs.push_back(0.0); 
+            double h = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
+            _H_fuel = h; 
+
+            my_ivs[0] = 0; 
+            my_ivs[1] = 0; 
+            h = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
+            _H_ox = h; 
+          } else { 
+            _H_ox = 0.0; 
+            _H_fuel = 0.0; 
+          }
+
+          return sf_transform; 
+
+        };  
+
+        bool inline has_heat_loss(){ return true; }; 
+
+        void inline transform( std::vector<double>& iv, double inert ){
+          //do nothing here since there is only one iv. 
+        };
+
+        double inline get_adiabatic_enthalpy( std::vector<double>& iv, double inerts ){
+          return iv[0]*_H_fuel + ( 1.0 - iv[0] )*_H_ox;
+        };
+
+        const std::vector<double> get_hl_bounds( std::vector<std::vector<double> > const iv_grids, std::vector<int> const size )
+        {
+          std::vector<double> hl_bounds;
+
+          hl_bounds.push_back(iv_grids[0][0]);
+          hl_bounds.push_back(iv_grids[0][size[1]-1]);
+
+          return hl_bounds; 
+        };  
+
+        std::vector<double> get_reference_iv(){ 
+          std::vector<double> iv; 
+          iv.push_back(_f_ref); 
+          iv.push_back(_hl_ref); 
+          return iv; 
+        };
+
+      private: 
+
+        std::string _f_name;
+        std::string _hl_name;
+
+        double _f_ref; 
+        double _hl_ref;
+
+        std::map<std::string,double> _keys;
+
+        int _f_index; 
+        int _hl_index; 
+
+        double _H_fuel; 
+        double _H_ox;
+
+        MixingRxnModel* const _model; 
+
+    };
+
     class SingleMF : public TransformBase { 
 
       //Single mixture fraction assumes that the IVs are ordered: 

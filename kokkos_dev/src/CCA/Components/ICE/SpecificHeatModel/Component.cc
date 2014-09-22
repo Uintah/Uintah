@@ -32,7 +32,6 @@
 
 using namespace Uintah;
 
-const double kb = 1.3806503e-23; // Boltzmann constant (m^2*kg/s^2*K)
 const double R  = 8.3144621;     // Gas Constant (J/mol*K)
 const double upperbound = 1.0 + 1.0e-12;
 const double lowerbound = 1.0 - 1.0e-12;

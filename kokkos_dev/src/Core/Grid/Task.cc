@@ -1026,24 +1026,27 @@ namespace Uintah {
   
 //__________________________________
   ostream&
-  operator << (ostream &out, const Task::TaskType & tt)
+  operator <<( ostream &out, const Task::TaskType & tt )
   {
-    switch( tt ) {
-    case Task::Normal:
-      out << "Normal";
-      break;
-    case Task::Reduction:
-      out << "Reduction";
-      break;
-    case Task::InitialSend:
-      out << "InitialSend";
-      break;
-    case Task::Output:
-      out << "Output";
-      break;
-    case Task::OncePerProc:
-      out << "OncePerProc";
-      break;
+    switch ( tt ) {
+      case Task::Normal :
+        out << "Normal";
+        break;
+      case Task::Reduction :
+        out << "Reduction";
+        break;
+      case Task::InitialSend :
+        out << "InitialSend";
+        break;
+      case Task::Output :
+        out << "Output";
+        break;
+      case Task::OncePerProc :
+        out << "OncePerProc";
+        break;
+      case Task::Spatial :
+        out << "Spatial";
+        break;
     }
     return out;
   }
