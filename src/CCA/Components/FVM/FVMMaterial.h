@@ -42,9 +42,11 @@ class FVMMaterial : public Material {
 
 
     double getDiffusivity() const;
+		double getConcentration() const;
 
   private:
     double d_diffusivity;
+		double d_concentration;
 
     FVMMaterial(const FVMMaterial &fvmm);
     FVMMaterial& operator=(const FVMMaterial &fvmm);        
