@@ -109,11 +109,21 @@ private:
   const VarLabel* d_gas_velocity_label;
   const VarLabel* d_weight_label;
 
+  std::vector<double>  as_received;
+  std::vector<double>  particle_sizes;
   std::vector<double>  rc_mass_init;
   std::vector<double>  ash_mass_init;
+  std::vector<double>  char_mass_init;
+  std::vector<double>  vol_dry;
+  std::vector<double>  mass_dry;
   Vector gravity;
   double kvisc;
   double rhop;
+  double total_rc;
+  double total_dry;
+  double rc_mass_frac;
+  double char_mass_frac;
+  double ash_mass_frac;
   double d_lowModelClip;
   double d_highModelClip;
   double d_pl_scaling_factor;

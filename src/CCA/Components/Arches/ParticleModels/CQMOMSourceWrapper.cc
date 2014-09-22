@@ -38,6 +38,20 @@ CQMOMSourceWrapper::problemSetup(const ProblemSpecP& inputdb)
   db->get("N", _N ); //total number of nodes
   
   inputdb->getAttribute("label",model_name);
+  
+  for ( int i = 0; i < _N; i++ ) {
+    string thisNodeSource;
+    string node;
+    std::stringstream index;
+    index << i;
+    node = index.str();
+    
+    thisNodeSource = model_name + "_" + node;
+    const VarLabel * tempLabel;
+    tempLabel = VarLabel::find( thisNodeSource );
+    //      cout << "found varlabel for " << thisNodeSource << " " << tempLabel << endl; //check that this is finding right varlabels made by model
+    d_nodeSources.push_back(tempLabel);
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -48,22 +62,6 @@ CQMOMSourceWrapper::sched_initializeVariables( const LevelP& level, SchedulerP& 
 {
   string taskname = "CQMOMSourceWrapper::initializeVariables";
   Task* tsk = scinew Task(taskname, this, &CQMOMSourceWrapper::initializeVariables);
-  
-  if ( d_nodeSources.empty() ) {
-    for ( int i = 0; i < _N; i++ ) {
-      string thisNodeSource;
-      string node;
-      std::stringstream index;
-      index << i;
-      node = index.str();
-    
-      thisNodeSource = model_name + "_" + node;
-      const VarLabel * tempLabel;
-      tempLabel = VarLabel::find( thisNodeSource );
-//      cout << "found varlabel for " << thisNodeSource << " " << tempLabel << endl; //check that this is finding right varlabels made by model
-      d_nodeSources.push_back(tempLabel);
-    }
-  }
 
   //New
   tsk->computes(d_modelLabel);
@@ -109,11 +107,19 @@ CQMOMSourceWrapper::sched_buildSourceTerm( const LevelP& level, SchedulerP& sche
   //loop over requires for weights and abscissas needed
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
     const VarLabel* tempLabel = iW->second;
-    tsk->requires( Task::OldDW, tempLabel, Ghost::None, 0 );
+    if (timeSubStep == 0 ) {
+      tsk->requires( Task::OldDW, tempLabel, Ghost::None, 0 );
+    } else {
+      tsk->requires( Task::NewDW, tempLabel, Ghost::None, 0 );
+    }
   }
   for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
     const VarLabel* tempLabel = iA->second;
-    tsk->requires( Task::OldDW, tempLabel, Ghost::None, 0 );
+    if (timeSubStep == 0 ) {
+      tsk->requires( Task::OldDW, tempLabel, Ghost::None, 0 );
+    } else {
+      tsk->requires( Task::NewDW, tempLabel, Ghost::None, 0 );
+    }
   }
 
   //loop over all the d\phi/dt sources
@@ -153,14 +159,22 @@ CQMOMSourceWrapper::buildSourceTerm( const ProcessorGroup* pc,
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
       const VarLabel* tempLabel = iW->second;
       constCCVarWrapper tempWrapper;
-      old_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gn, 0 );
+      if (new_dw->exists( tempLabel, matlIndex, patch) ) {
+        new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gn, 0 );
+      } else {
+        old_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gn, 0 );
+      }
       cqmomWeights.push_back(tempWrapper);
     }
         
     for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
       const VarLabel* tempLabel = iA->second;
       constCCVarWrapper tempWrapper;
-      old_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gn, 0 );
+      if (new_dw->exists( tempLabel, matlIndex, patch) ) {
+        new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gn, 0 );
+      } else {
+        old_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gn, 0 );
+      }
       cqmomAbscissas.push_back(tempWrapper);
     }
 

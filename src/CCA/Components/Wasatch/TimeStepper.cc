@@ -25,7 +25,6 @@
 //-- Wasatch Includes --//
 #include <CCA/Components/Wasatch/TimeStepper.h>
 #include <CCA/Components/Wasatch/TaskInterface.h>
-#include <CCA/Components/Wasatch/CoordinateHelper.h>
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/Expressions/SetCurrentTime.h>
 #include <CCA/Components/Wasatch/TimeIntegratorTools.h>
@@ -224,7 +223,6 @@ namespace Wasatch{
 
     typedef Expr::PlaceHolder<FieldT>  FieldExpr;
     solnGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_N      )), true );
-    solnGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1    )), true );
     solnGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_DYNAMIC)), true );
     
     postProcGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1)), true );    

@@ -92,11 +92,8 @@ MembraneParticleCreator::createParticles(MPMMaterial* matl,
   
   int dwi = matl->getDWIndex();
 
-  ParticleSubset* subset =  allocateVariables(numParticles,
-                                              dwi,patch,
-                                              new_dw, pvars);
+  allocateVariables(numParticles, dwi,patch, new_dw, pvars);
 
-  
   particleIndex start = 0;
 
   vector<GeometryObject*>::const_iterator obj;

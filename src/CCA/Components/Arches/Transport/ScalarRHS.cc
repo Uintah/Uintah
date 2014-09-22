@@ -1,6 +1,7 @@
 #include <CCA/Components/Arches/Transport/ScalarRHS.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <CCA/Components/Arches/TransportEqns/Discretization_new.h>
+#include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <spatialops/structured/FVStaggered.h>
 
 using namespace Uintah;
@@ -321,7 +322,65 @@ ScalarRHS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
   }
 
+  //------------test run on new mask stuff-------------//
+  ////create a base boundary object which holds the masks
+  //BoundaryCondition_new::MaskContainer<SpatialOps::SVolField> bc; 
+  //SpatialOps::IntVec ijk(1,1,0); 
+  //std::vector<SpatialOps::IntVec> pass_ijk; 
+  //pass_ijk.push_back(ijk);
+
+  ////create the mask with the points created above 
+  //bc.create_mask( patch, 0, pass_ijk, BoundaryCondition_new::BOUNDARY_FACE );
+  ////insert the object into permanent storage
+  ////make a fake bc:
+  //BoundaryCondition_new::NameToSVolMask some_boundary; 
+  //std::string bc_name = "some_boundary"; 
+  //some_boundary.insert(std::make_pair(bc_name,bc)); 
+  ////now insert it into the patch id->mask storage
+  //BoundaryCondition_new::patch_svol_masks.insert(std::make_pair(0,some_boundary)); 
+
+  ////---get the mask back--
+  //const int pid = 0; 
+  ////retrieve a reference to the object which contains the mask
+  //BoundaryCondition_new::MaskContainer<SpatialOps::SVolField>& bc_ref = BoundaryCondition_new::get_bc_info<SpatialOps::SVolField>(pid,bc_name);  
+  ////get a mask pointer
+  //SpatialOps::SpatialMask<SpatialOps::SVolField>* a_mask = bc_ref.get_mask(BoundaryCondition_new::BOUNDARY_FACE); 
+
+  //*rhs <<= cond(*a_mask, 0.0)
+               //(*rhs); 
+
+  //// Given a variable and a patch.
+  //// loop through all bc's on this patch 
+  //// get the bc type for this variable
+  //// given the bc name + patch, get the mask
+  //// apply bcs
+
+
+  //----------end test run on new mask stuff-------------//
+
 }
+
+//
+//------------------------------------------------
+//------------- BOUNDARY CONDITIONS --------------
+//------------------------------------------------
+//
+
+void 
+ScalarRHS::register_compute_bcs( std::vector<VariableInformation>& variable_registry, const int time_substep ){ 
+}
+
+void 
+ScalarRHS::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
+                        SpatialOps::OperatorDatabase& opr ){ 
+
+
+  using namespace SpatialOps;
+  using SpatialOps::operator *; 
+
+}
+
+
 
   //mask example
   //std::vector<SpatialOps::IntVec> maskset;  

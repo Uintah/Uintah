@@ -106,6 +106,7 @@ private:
   const VarLabel* d_particle_length_label;      ///< Label for particle length
   const VarLabel* d_weight_label;               ///< Weight label
  
+  std::vector<double>  Shaddix_char_coefficients;
   double As;
   double Es;
   double n;

@@ -109,8 +109,8 @@ void
 DiffusiveVelocity<VelT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  gradOp_       = opDB.retrieve_operator<GradT      >();
-  interpOp_     = opDB.retrieve_operator<InterpT    >();
+  gradOp_   = opDB.retrieve_operator<GradT  >();
+  interpOp_ = opDB.retrieve_operator<InterpT>();
 }
 
 //--------------------------------------------------------------------

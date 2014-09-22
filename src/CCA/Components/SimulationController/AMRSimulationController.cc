@@ -309,13 +309,15 @@ AMRSimulationController::run()
 
      bool nr;
      if( (nr=needRecompile( time, delt, currentGrid )) || first ){
-       if(nr){
-         //if needRecompile returns true it has reload balanced and thus we need 
-         //to assign the boundary conditions.
+        
+       if(nr){  // recompile taskgraph, re-assign BCs, reset recompile flag
           currentGrid->assignBCS(d_grid_ps,d_lb);
           currentGrid->performConsistencyCheck();
+          d_sharedState->setRecompileTaskGraph( false );
        }
+       
        new_init_delt = d_timeinfo->max_initial_delt;
+       
        if (new_init_delt != old_init_delt) {
          // writes to the DW in the next section below
          delt = new_init_delt;
@@ -667,12 +669,13 @@ AMRSimulationController::needRecompile( double        time,
   bool recompile = false;
   
   // do it this way so everybody can have a chance to maintain their state
-  recompile |= (d_output && d_output->needRecompile(time, delt, grid));
-  recompile |= (d_sim    && d_sim->needRecompile(time, delt, grid));
-  recompile |= (d_lb     && d_lb->needRecompile(time, delt, grid));
+  recompile |= ( d_output && d_output->needRecompile(time, delt, grid));
+  recompile |= ( d_sim    && d_sim->needRecompile(time, delt, grid));
+  recompile |= ( d_lb     && d_lb->needRecompile(time, delt, grid));
+  recompile |= ( d_sharedState->getRecompileTaskGraph() );
   
   if (d_doAMR){
-    recompile |= (d_regridder && d_regridder->needRecompile(time, delt, grid));
+    recompile |= ( d_regridder && d_regridder->needRecompile(time, delt, grid) );
   }
   return recompile;
 }

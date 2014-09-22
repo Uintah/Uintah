@@ -184,6 +184,7 @@ OnDemandDataWarehouse::clear()
     delete iter->second;
   }
   d_plock.writeUnlock();
+
   d_lock.writeLock();
   for( dataLocationDBtype::const_iterator iter = d_dataLocation.begin();
       iter != d_dataLocation.end(); iter++ ) {
@@ -193,9 +194,9 @@ OnDemandDataWarehouse::clear()
     delete iter->second;
   }
   d_lock.writeUnlock();
+
   d_varDB.clear();
   d_levelDB.clear();
-  d_lvlock.writeUnlock();
 
 #ifdef HAVE_CUDA
   if (Uintah::Parallel::usingDevice()) {
@@ -2721,8 +2722,6 @@ OnDemandDataWarehouse::transferFrom( DataWarehouse* from,
             SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl, "in transferFrom", __FILE__, __LINE__) );
           }
 
-          d_plock.writeLock();
-          // or else the readLock in haveParticleSubset will hang
           ParticleSubset* subset;
           if( !haveParticleSubset( matl, copyPatch ) ) {
             ParticleSubset* oldsubset = fromDW->getParticleSubset( matl, patch );
@@ -2731,9 +2730,8 @@ OnDemandDataWarehouse::transferFrom( DataWarehouse* from,
           else {
             subset = getParticleSubset( matl, copyPatch );
           }
-          d_plock.writeUnlock();
-          ParticleVariableBase* v = dynamic_cast<ParticleVariableBase*>( fromDW->d_varDB.get(
-              var, matl, patch ) );
+
+          ParticleVariableBase* v = dynamic_cast<ParticleVariableBase*>( fromDW->d_varDB.get( var, matl, patch ) );
           if( patch == copyPatch ) {
             d_varDB.put( var, matl, copyPatch, v->clone(), d_scheduler->isCopyDataTimestep(), replace );
           }
@@ -2750,8 +2748,7 @@ OnDemandDataWarehouse::transferFrom( DataWarehouse* from,
             SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl, "in transferFrom", __FILE__, __LINE__) );
           }
           PerPatchBase* v = dynamic_cast<PerPatchBase*>( fromDW->d_varDB.get( var, matl, patch ) );
-          d_varDB.put( var, matl, copyPatch, v->clone(), d_scheduler->isCopyDataTimestep(),
-                       replace );
+          d_varDB.put( var, matl, copyPatch, v->clone(), d_scheduler->isCopyDataTimestep(), replace );
         }
           break;
         case TypeDescription::ReductionVariable :

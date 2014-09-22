@@ -1399,6 +1399,7 @@ Arches::restartInitialize()
   d_wasatch->restartInitialize();
   d_wasatch->set_wasatch_materials(d_sharedState->allArchesMaterials());  
 # endif // WASATCH_IN_ARCHES
+
 }
 
 // ****************************************************************************
@@ -1844,6 +1845,8 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     d_boundaryCondition->sched_setupNewIntrusionCellType( sched, level, matls, d_doingRestart );
     d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
 
+    Operators& opr = Operators::self();
+    opr.sched_create_patch_operators( level, sched, matls );
   }
   
 #ifdef WASATCH_IN_ARCHES

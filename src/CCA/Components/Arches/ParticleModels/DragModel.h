@@ -5,6 +5,10 @@
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <spatialops/structured/FVStaggered.h>
 
+#ifndef PI
+#define PI 3.141592653589793
+#endif
+
 //-------------------------------------------------------
 
 /**
@@ -20,9 +24,9 @@
  *
  *           \f$ du_p/dt = f_{drag} / \tau_p (u_{g,i} - u_{p,i} ) \f$ with
  *           \f$ \tau_p = \frac{\rho_p d_p^2}{18 \mu_g} \f$
- *           \f$ f_{drag} = 1 \f$ for \f$Re_p < 1\f$
- *           \f$ f_{drag} = 1+0.15 Re_p^{0.687} \f$ for \f$1 < Re_p < 1000\f$
- *           \f$ f_{drag} = 0.0183 Re_p \f$ for \f$Re_p > 1000\f$  with
+ *           note: usign 994 instead of 1000 limits incontinuity
+ *           \f$ f_{drag} = 1+0.15 Re_p^{0.687} \f$ for \f$ Re_p < 994\f$
+ *           \f$ f_{drag} = 0.0183 Re_p \f$ for \f$Re_p > 994\f$  with
  *           \f$ Re_p \frac{ \rho_g d_p | u_p - u_g |}{\mu_g}
  *           the corrseponding gas source term is then
  *           \f$ du_g/dt = - du_p/dt * \rho_p / \rho_g * w
@@ -75,6 +79,11 @@ namespace Uintah{
     
     void register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep );
     
+    void register_compute_bcs( std::vector<VariableInformation>& variable_registry, const int time_substep ){}; 
+
+    void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
+                      SpatialOps::OperatorDatabase& opr ){}; 
+
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                      SpatialOps::OperatorDatabase& opr );
     
@@ -134,6 +143,10 @@ namespace Uintah{
   
   template <typename IT, typename DT>
   void DragModel<IT, DT>::problemSetup( ProblemSpecP& db ){
+
+    _do_ts_init_task = false; 
+    _do_bcs_task = false; 
+
     //This sets the type of the independent and dependent variable types as needed by the variable
     //registration step.
     DT* d_test;
@@ -321,6 +334,7 @@ namespace Uintah{
       ITptr partVelV;
       ITptr partVelW;
       ITptr density;
+      ITptr diameter;
       
       *partVelMag <<= *partVelU * *partVelU;
       if ( _base_v_velocity_name != "none") {
@@ -330,7 +344,7 @@ namespace Uintah{
       }
       if ( _base_w_velocity_name != "none" ) {
         const std::string w_vel_name = get_name( i, _base_w_velocity_name );
-        ITptr partVelW = tsk_info->get_const_so_field<IT>(w_vel_name);
+        partVelW = tsk_info->get_const_so_field<IT>(w_vel_name);
         *partVelMag <<= *partVelMag + *partVelW * *partVelW;
       }
       *partVelMag <<= sqrt( *partVelMag );
@@ -339,7 +353,7 @@ namespace Uintah{
         const std::string density_name = get_name( i, _base_density_name );
         density = tsk_info->get_const_so_field<IT>(density_name);
         const std::string diameter_name = get_name( i, _base_diameter_name );
-        ITptr diameter = tsk_info->get_const_so_field<IT>(diameter_name);
+        diameter = tsk_info->get_const_so_field<IT>(diameter_name);
         *tauP <<= (*density) * (*diameter) * (*diameter) / (18.0 * _visc);
         *Re <<= abs( *gasVelMag - *partVelMag ) * (*diameter) * (*interp)(*rhoG) / _visc ;
       } else if ( !constDensity && constDiameter ) {
@@ -349,7 +363,7 @@ namespace Uintah{
         *Re <<= abs( *gasVelMag - *partVelMag ) * _d * (*interp)(*rhoG) / _visc;
       } else if ( constDensity && !constDiameter ) {
         const std::string diameter_name = get_name( i, _base_diameter_name );
-        ITptr diameter = tsk_info->get_const_so_field<IT>(diameter_name);
+        diameter = tsk_info->get_const_so_field<IT>(diameter_name);
         *tauP <<= _rho * (*diameter) * (*diameter) / (18.0 * _visc);
         *Re <<= abs( *gasVelMag - *partVelMag ) * (*diameter) * (*interp)(*rhoG) / _visc;
       } else {
@@ -357,9 +371,10 @@ namespace Uintah{
         *Re <<= abs( *gasVelMag - *partVelMag ) * _d * (*interp)(*rhoG) / _visc;
       }
       
-      *fDrag <<= cond( *Re < 1.0, 1.0 )
-                     ( *Re > 1000.0, 0.0183* (*Re) )
-                     ( 1.0 + 0.15 * pow( (*Re), 0.687) );
+      *fDrag <<= cond( *Re < 994.0, 1.0 + 0.15 * pow( (*Re), 0.687) )
+                     ( 0.0183* (*Re) );
+      //an alternative drag law in case its needed later
+      //*fDrag <<= 1.0 + 0.15 * pow( (*Re), 0.687 ) + 0.0175* (*Re) / ( 1.0 + 4.25e4 * pow( (*Re), -1.16) ); //valid over all Re
       
       //compute a rate term
       if ( _direction=="x" ) {
@@ -374,9 +389,9 @@ namespace Uintah{
       ITptr weight = tsk_info->get_const_so_field<IT>(w_name);
       
       if (!constDensity ) {
-        *gas_model_value <<= - *model_value * *weight * *density / (*interp)(*rhoG);
+        *gas_model_value <<= - *model_value * *weight * *density / (*interp)(*rhoG) * PI/6.0 * (*diameter) * (*diameter) * (*diameter);
       } else {
-        *gas_model_value <<= - *model_value * *weight * _rho / (*interp)(*rhoG);
+        *gas_model_value <<= - *model_value * *weight * _rho / (*interp)(*rhoG) * PI/6.0 * _d * _d * _d;
       }
       
     }

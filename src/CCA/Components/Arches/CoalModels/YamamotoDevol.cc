@@ -45,16 +45,6 @@ YamamotoDevol::YamamotoDevol( std::string modelName,
                                               int qn ) 
 : Devolatilization(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
-  R   =  8.314;
-  Av = 3.2159e16;
-  Ev = 2.647e5;
-  Yv = 0.58;
-  c0 = 7.008;
-  c1 = -79.38;
-  c2 = 379.9;
-  c3 = -853.0;
-  c4 = 836.7;
-  c5 = -301.1;
 
   part_temp_from_enth = false;
   compute_part_temp = false;
@@ -86,12 +76,40 @@ YamamotoDevol::problemSetup(const ProblemSpecP& params, int qn)
   string temp_ic_name;
   string temp_ic_name_full;
 
+  pi = 3.141592653589793;
+  R = 8.314;
   const ProblemSpecP params_root = db->getRootNode();
   if (params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties")) {
     ProblemSpecP db_coal = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties");
-    db_coal->require("initial_rawcoal_mass", rc_mass_init);
+    db_coal->require("Yamamoto_coefficients", Yamamoto_coefficients);
+    db_coal->require("particle_density", rhop);
+    db_coal->require("particle_sizes", particle_sizes); // read the particle sizes [m]
+    db_coal->require("as_received", as_received);
+    total_rc=as_received[0]+as_received[1]+as_received[2]+as_received[3]+as_received[4]; // (C+H+O+N+S) dry ash free total
+    total_dry=as_received[0]+as_received[1]+as_received[2]+as_received[3]+as_received[4]+as_received[5]+as_received[6]; // (C+H+O+N+S+char+ash)  moisture free total
+    rc_mass_frac=total_rc/total_dry; // mass frac of rc (dry) 
+    char_mass_frac=as_received[5]/total_dry; // mass frac of char (dry)
+    ash_mass_frac=as_received[6]/total_dry; // mass frac of ash (dry)
+    int p_size=particle_sizes.size();
+    for (int n=0; n<p_size; n=n+1)
+      {
+        vol_dry.push_back((pi/6)*pow(particle_sizes[n],3)); // m^3/particle
+        mass_dry.push_back(vol_dry[n]*rhop); // kg/particle
+        ash_mass_init.push_back(mass_dry[n]*ash_mass_frac); // kg_ash/particle (initial)  
+        char_mass_init.push_back(mass_dry[n]*char_mass_frac); // kg_char/particle (initial)
+        rc_mass_init.push_back(mass_dry[n]*rc_mass_frac); // kg_ash/particle (initial)
+      }
+    Av=Yamamoto_coefficients[0];
+    Ev=Yamamoto_coefficients[1];
+    Yv=Yamamoto_coefficients[2];
+    c0=Yamamoto_coefficients[3];
+    c1=Yamamoto_coefficients[4];
+    c2=Yamamoto_coefficients[5];
+    c3=Yamamoto_coefficients[6];
+    c4=Yamamoto_coefficients[7];
+    c5=Yamamoto_coefficients[8];
   } else {
-    throw InvalidValue("ERROR: YamamotoDevol: problemSetup(): Missing <initial_rawcoal_mass> in <Coal_Properties> section in input file!",__FILE__,__LINE__);
+    throw InvalidValue("ERROR: YamamotoDevol: problemSetup(): Missing <Coal_Properties> section in input file!",__FILE__,__LINE__);
   }
 
 

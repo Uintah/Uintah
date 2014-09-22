@@ -29,6 +29,10 @@ SampleTask::problemSetup( ProblemSpecP& db ){
 
   _value = 1.0;
   //db->findBlock("sample_task")->getAttribute("value",_value); 
+  
+  //turn off a couple things: 
+  _do_ts_init_task = false; 
+  _do_bcs_task = false; 
 
 }
 
@@ -137,3 +141,19 @@ SampleTask::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   *result <<= (*field)*(*field); 
 
 }
+//
+//------------------------------------------------
+//------------- BOUNDARY CONDITIONS --------------
+//------------------------------------------------
+//
+
+void 
+SampleTask::register_compute_bcs( std::vector<VariableInformation>& variable_registry, const int time_substep ){ 
+}
+
+void 
+SampleTask::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
+                        SpatialOps::OperatorDatabase& opr ){ 
+
+}
+

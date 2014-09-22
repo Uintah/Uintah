@@ -123,6 +123,10 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* 
 
     _iv_transform = scinew SingleIV( d_constants, model ); 
 
+  } else if ( db->findBlock("mixfrac_with_heatloss") ) { 
+
+    _iv_transform = scinew MFHLTransform( d_constants, model ); 
+
   } else { 
 
     _iv_transform = scinew NoTransform();
@@ -302,3 +306,5 @@ MixingRxnModel::SingleMF::SingleMF( std::map<string,double>& keys, MixingRxnMode
 MixingRxnModel::SingleMF::~SingleMF(){}; 
 MixingRxnModel::SingleIV::SingleIV( std::map<string,double>& keys, MixingRxnModel* const model) : _keys(keys), _model(model) {}; 
 MixingRxnModel::SingleIV::~SingleIV(){}; 
+MixingRxnModel::MFHLTransform::MFHLTransform( std::map<string,double>& keys, MixingRxnModel* const model) : _keys(keys), _model(model) {}; 
+MixingRxnModel::MFHLTransform::~MFHLTransform(){}; 

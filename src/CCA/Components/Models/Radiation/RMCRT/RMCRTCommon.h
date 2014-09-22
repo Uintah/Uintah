@@ -131,22 +131,24 @@ namespace Uintah{
                                const IntVector& = IntVector(-9,-9,-9),
                                const int iRay = -9);
 
-     //______________________________________________________________________
-    //    Carry Foward tasks
-    // transfer a variable from old_dw -> new_dw for convience */   
-    void sched_CarryForward_Var ( const LevelP& level,
-                                  SchedulerP& scheduler,
-                                  const VarLabel* variable );
-                                       
-    bool doCarryForward( const int timestep,
-                         const int radCalc_freq);
-                        
-    void carryForward_Var ( const ProcessorGroup*,
-                            const PatchSubset* ,
-                            const MaterialSubset*,
-                            DataWarehouse*,
-                            DataWarehouse*,
-                            const VarLabel* variable);
+      //______________________________________________________________________
+      //    Carry Foward tasks
+      // transfer a variable from old_dw -> new_dw for convience */   
+      void sched_CarryForward_Var ( const LevelP& level,
+                                    SchedulerP& scheduler,
+                                    const VarLabel* variable );
+
+      bool doCarryForward( const int radCalc_freq );
+
+      void carryForward_Var ( const ProcessorGroup*,
+                              const PatchSubset* ,
+                              const MaterialSubset*,
+                              DataWarehouse*,
+                              DataWarehouse*,
+                              const VarLabel* variable);
+
+
+      void doRecompileTaskgraph( const int radCalc_freq );
                             
       //______________________________________________________________________
       //    Public variables that are used by Radiometer & RMCRT classes

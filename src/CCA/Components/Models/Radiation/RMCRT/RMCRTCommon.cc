@@ -158,8 +158,7 @@ RMCRTCommon::sigmaT4( const ProcessorGroup*,
 {
   //__________________________________
   //  Carry Forward
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  if ( doCarryForward( timestep, radCalc_freq) ) {
+  if ( doCarryForward( radCalc_freq ) ) {
     printTask( patches, patches->get(0), dbg, "Doing RMCRTCommon::sigmaT4 carryForward (sigmaT4)" );
     
     new_dw->transferFrom( old_dw, d_sigmaT4_label, patches, matls, true );
@@ -532,11 +531,38 @@ RMCRTCommon::carryForward_Var ( const ProcessorGroup*,
 
 
 //______________________________________________________________________
+//  Trigger a taskgraph recompilation if the *next* timestep is a 
+//  calculation timestep
+//______________________________________________________________________
+void
+RMCRTCommon::doRecompileTaskgraph( const int radCalc_freq ){
+
+  if( radCalc_freq > 1 ){
+
+    int timestep     = d_sharedState->getCurrentTopLevelTimeStep();
+    int nextTimestep = timestep + 1;
+    
+    // if the _next_ timestep is a calculation timestep
+    if( nextTimestep%radCalc_freq == 0 ){
+      proc0cout << "  RMCRT recompile taskgraph to turn on all-to-all communications" << endl;
+      d_sharedState->setRecompileTaskGraph( true );
+    }
+    
+    // if the _current_ timestep is a calculation timestep 
+    if( timestep%radCalc_freq == 0 ){
+      proc0cout << "  RMCRT recompile taskgraph to turn off all-to-all communications" << endl;
+      d_sharedState->setRecompileTaskGraph( true );
+    }
+  }
+}
+
+//______________________________________________________________________
 //  Logic for determing when to carry forward
 //______________________________________________________________________
 bool 
-RMCRTCommon::doCarryForward( const int timestep,
-                            const int radCalc_freq){
+RMCRTCommon::doCarryForward( const int radCalc_freq ){
+  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
   bool test = (timestep%radCalc_freq != 0 && timestep != 1);
+  
   return test;
 }
