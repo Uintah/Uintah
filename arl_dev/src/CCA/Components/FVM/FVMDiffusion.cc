@@ -67,12 +67,14 @@ void FVMDiffusion::problemSetup(const ProblemSpecP& prob_spec,
   ProblemSpecP mat_ps = 
     prob_spec->findBlockWithOutAttribute("MaterialProperties");
 
+	// Testing for restart. !!!!Find out why this is needed!!!!
   if (mat_ps)
     restart_mat_ps = mat_ps;
   else if (restart_prob_spec)
     restart_mat_ps =
 			restart_prob_spec->findBlockWithOutAttribute("MaterialProperties");
-	
+
+	//Iterate through different fvm materials and add to sharedState
   ProblemSpecP fvm_mat_ps = restart_mat_ps->findBlock("FVM");
   ProblemSpecP ps = fvm_mat_ps->findBlock("material");
 	for(ProblemSpecP ps = fvm_mat_ps->findBlock("material"); ps != 0;
@@ -133,7 +135,7 @@ void FVMDiffusion::initialize(const ProcessorGroup*,
 
       CCVariable<double> concentration;
       new_dw->allocateAndPut(concentration, lb->concentration_CCLabel, index, patch);
-      concentration.initialize(0);
+      concentration.initialize(fvm_matl->getConcentration());
 
       if(patch->getBCType(Patch::xminus) != Patch::Neighbor){
 				IntVector l,h;
@@ -142,6 +144,10 @@ void FVMDiffusion::initialize(const ProcessorGroup*,
 			for(NodeIterator iter(l,h); !iter.done(); iter++)
 	  		concentration[*iter]=1;
       }
+			for(CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter){
+				IntVector n = *iter;
+				cout << n << concentration[n] <<endl;
+			}
     }
   }
 

@@ -40,6 +40,7 @@ FVMMaterial::FVMMaterial(ProblemSpecP& ps,
 {
 
   ps->require("diffusivity",d_diffusivity);
+	ps->require("concentration",d_concentration);
 }
 
 //__________________________________
@@ -49,8 +50,14 @@ FVMMaterial::~FVMMaterial()
 }
 //______________________________________________________________________
 //
-
 double FVMMaterial::getDiffusivity() const
 {
   return d_diffusivity;
 }
+//______________________________________________________________________
+//
+double FVMMaterial::getConcentration() const
+{
+  return d_concentration;
+}
+
