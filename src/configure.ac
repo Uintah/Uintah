@@ -3698,9 +3698,9 @@ if test "$sci_required_kokkos" = "yes"; then
  
   AC_LANG(C++)
   SCI_TRY_LINK(KOKKOS, KOKKOS libraries and headers,
-               Kokkos_Core.hpp,
+               Kokkos_Core.hpp  Kokkos_Atomic.hpp Kokkos_DualView.hpp Kokkos_UnorderedMap.hpp Kokkos_Vector.hpp,
                $_sci_inc,
-               kokkoscore,
+               kokkoscore kokkoscontainers,
                $_sci_lib,
                ,
                [long long flops;
