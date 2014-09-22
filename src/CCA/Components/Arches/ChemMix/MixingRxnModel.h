@@ -448,8 +448,8 @@ namespace Uintah {
         {
           std::vector<double> hl_bounds;
 
-          hl_bounds.push_back(iv_grids[1][0]);
-          hl_bounds.push_back(iv_grids[1][size[2]-1]);
+          hl_bounds.push_back(iv_grids[0][0]);
+          hl_bounds.push_back(iv_grids[0][size[1]-1]);
 
           return hl_bounds; 
         };  

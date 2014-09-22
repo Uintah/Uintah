@@ -149,4 +149,16 @@ template class UpwindInterpolant< SpatialOps::SVolField, SpatialOps::SSurfXField
 template class UpwindInterpolant< SpatialOps::SVolField, SpatialOps::SSurfYField >;
 template class UpwindInterpolant< SpatialOps::SVolField, SpatialOps::SSurfZField >;
 
+template class UpwindInterpolant< SpatialOps::XVolField, SpatialOps::XSurfXField >;
+template class UpwindInterpolant< SpatialOps::XVolField, SpatialOps::XSurfYField >;
+template class UpwindInterpolant< SpatialOps::XVolField, SpatialOps::XSurfZField >;
+
+template class UpwindInterpolant< SpatialOps::YVolField, SpatialOps::YSurfXField >;
+template class UpwindInterpolant< SpatialOps::YVolField, SpatialOps::YSurfYField >;
+template class UpwindInterpolant< SpatialOps::YVolField, SpatialOps::YSurfZField >;
+
+template class UpwindInterpolant< SpatialOps::ZVolField, SpatialOps::ZSurfXField >;
+template class UpwindInterpolant< SpatialOps::ZVolField, SpatialOps::ZSurfYField >;
+template class UpwindInterpolant< SpatialOps::ZVolField, SpatialOps::ZSurfZField >;
+
 //==================================================================

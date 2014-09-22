@@ -688,7 +688,7 @@
   <!-- The following are for the Arenisca model -->
     <Use_Disaggregation_Algorithm     spec="OPTIONAL BOOLEAN" need_applies_to="type Arenisca Arenisca3 Arenisca4 arena" />
     <FSLOPE                           spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4 arena" />
-    <FSLOPE_p                         spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4 arena" />
+    <FSLOPE_p                         spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arena" />
     <PEAKI1                           spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4 arena" />
     <STREN                            spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4 arena" />
     <YSLOPE                           spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4 arena" />
@@ -710,12 +710,15 @@
     <CR                               spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4 arena" />
     <T1_rate_dependence               spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4 arena" />
     <T2_rate_dependence               spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4 arena" />
-    <kinematic_hardening_constant     spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4 arena" />
+    <kinematic_hardening_constant     spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arena" />
     <fluid_B0                         spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4 arena" />
     <fluid_pressure_initial           spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4 arena" />
-    <p4_fluid_effect                  spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4 arena" />
-    <gruneisen_parameter              spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4 arena" />
+    <p4_fluid_effect                  spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arena" />
+    <gruneisen_parameter              spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arena" />
     <subcycling_characteristic_number spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4 arena" />
+    <J3_type                          spec="OPTIONAL INTEGER" need_applies_to="type Arenisca4" />
+	<J3_psi                           spec="OPTIONAL INTEGER" need_applies_to="type Arenisca4" />
+	<principal_stress_cutoff          spec="OPTIONAL INTEGER" need_applies_to="type Arenisca4" />			
 
   <!--______________________________________________________________________ -->
   <!-- The following are for the UCNH & JWLppMPM model initial stress -->

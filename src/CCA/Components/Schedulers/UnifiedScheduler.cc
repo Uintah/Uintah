@@ -81,7 +81,8 @@ static DebugStream affinity("CPUAffinity", false);
   static DebugStream gpu_stats("GPUStats", false);
          DebugStream use_single_device("SingleDevice", false);
 #endif
-
+//______________________________________________________________________
+//
 UnifiedScheduler::UnifiedScheduler( const ProcessorGroup * myworld,
                                     const Output         * oport,
                                     UnifiedScheduler     * parentScheduler ) :
@@ -115,6 +116,8 @@ UnifiedScheduler::UnifiedScheduler( const ProcessorGroup * myworld,
 #endif
 }
 
+//______________________________________________________________________
+//
 UnifiedScheduler::~UnifiedScheduler()
 {
   if (Uintah::Parallel::usingMPI()) {
@@ -139,7 +142,8 @@ UnifiedScheduler::~UnifiedScheduler()
   freeCudaStreams();
 #endif
 }
-
+//______________________________________________________________________
+//
 void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
                                     SimulationStateP& state)
 {
@@ -237,6 +241,8 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
   }
 }
 
+//______________________________________________________________________
+//
 SchedulerP UnifiedScheduler::createSubScheduler()
 {
   UnifiedScheduler* subsched = scinew UnifiedScheduler(d_myworld, m_outPort, this);
@@ -273,6 +279,8 @@ SchedulerP UnifiedScheduler::createSubScheduler()
   return subsched;
 }
 
+//______________________________________________________________________
+//
 void UnifiedScheduler::verifyChecksum()
 {
 #if SCI_ASSERTION_LEVEL >= 3
@@ -285,15 +293,17 @@ void UnifiedScheduler::verifyChecksum()
     //  - make a flag to turn this off
     //  - make the checksum more sophisticated
     int checksum = 0;
-    for (unsigned i = 0; i < graphs.size(); i++)
-    checksum += graphs[i]->getTasks().size();
+    for (unsigned i = 0; i < graphs.size(); i++) {
+      checksum += graphs[i]->getTasks().size();
+    }
+    
     mpidbg << d_myworld->myrank() << " (Allreduce) Checking checksum of " << checksum << '\n';
     int result_checksum;
-    MPI_Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN,
-        d_myworld->getComm());
+    MPI_Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN,d_myworld->getComm());
+    
     if(checksum != result_checksum) {
-      cerr << "Failed task checksum comparison!\n";
-      cerr << "Processor: " << d_myworld->myrank() << " of "
+      cerr << "UnifiedScheduler::Failed task checksum comparison! Not all processes are executing the same taskgraph\n";
+      cerr << "  Processor: " << d_myworld->myrank() << " of "
       << d_myworld->size() - 1 << ": has sum " << checksum
       << " and global is " << result_checksum << '\n';
       MPI_Abort(d_myworld->getComm(), 1);
@@ -302,7 +312,8 @@ void UnifiedScheduler::verifyChecksum()
   }
 #endif
 }
-
+//______________________________________________________________________
+//
 void UnifiedScheduler::initiateTask(DetailedTask * task,
                                     bool only_old_recvs,
                                     int abort_point,
@@ -317,6 +328,8 @@ void UnifiedScheduler::initiateTask(DetailedTask * task,
   }
 }  // end initiateTask()
 
+//______________________________________________________________________
+//
 void UnifiedScheduler::runTask(DetailedTask * task,
                                int iteration,
                                int t_id /*=0*/,
@@ -393,6 +406,8 @@ void UnifiedScheduler::runTask(DetailedTask * task,
   }
 }  // end runTask()
 
+//______________________________________________________________________
+//
 void UnifiedScheduler::execute(int tgnum /*=0*/,
                                int iteration /*=0*/)
 {
@@ -739,7 +754,8 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
     dbg << me << " UnifiedScheduler finished\n";
   }
 }
-
+//______________________________________________________________________
+//
 void
 UnifiedScheduler::runTasks( int t_id )
 {
@@ -1001,7 +1017,8 @@ UnifiedScheduler::runTasks( int t_id )
     }
   }  //end while tasks
 }
-
+//______________________________________________________________________
+//
 struct CompareDep {
     bool operator()(DependencyBatch* a,
                     DependencyBatch* b)
@@ -1009,7 +1026,8 @@ struct CompareDep {
       return a->messageTag < b->messageTag;
     }
 };
-
+//______________________________________________________________________
+//
 void UnifiedScheduler::postMPIRecvs(DetailedTask * task,
                                     bool only_old_recvs,
                                     int abort_point,
@@ -1202,6 +1220,8 @@ void UnifiedScheduler::postMPIRecvs(DetailedTask * task,
 
 }  // end postMPIRecvs()
 
+//______________________________________________________________________
+//
 int UnifiedScheduler::pendingMPIRecvs()
 {
   int num = 0;
@@ -1210,7 +1230,8 @@ int UnifiedScheduler::pendingMPIRecvs()
   recvLock.readUnlock();
   return num;
 }
-
+//______________________________________________________________________
+//
 void UnifiedScheduler::processMPIRecvs(int how_much)
 {
   MALLOC_TRACE_TAG_SCOPE("MPIScheduler::processMPIRecvs");
@@ -1249,7 +1270,8 @@ void UnifiedScheduler::processMPIRecvs(int how_much)
   CurrentWaitTime += Time::currentSeconds() - start;
 
 }  // end processMPIRecvs()
-
+//______________________________________________________________________
+//
 void UnifiedScheduler::postMPISends(DetailedTask * task,
                                     int iteration,
                                     int t_id)
@@ -1396,6 +1418,8 @@ void UnifiedScheduler::postMPISends(DetailedTask * task,
   }
 }  // end postMPISends();
 
+//______________________________________________________________________
+//
 int UnifiedScheduler::getAviableThreadNum()
 {
   int num = 0;
@@ -1429,6 +1453,8 @@ void UnifiedScheduler::gpuInitialize(bool reset)
   currentDevice_ = 0;
 }
 
+//______________________________________________________________________
+//
 void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
 
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::postH2DCopies");
@@ -1748,6 +1774,8 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
 
 }
 
+//______________________________________________________________________
+//
 void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
 
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::preallocateDeviceMemory");
@@ -1913,6 +1941,8 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
 
 }
 
+//______________________________________________________________________
+//
 void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
 
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::postD2HCopies");
@@ -2156,6 +2186,8 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
 
 }
 
+//______________________________________________________________________
+//
 void UnifiedScheduler::createCudaStreams(int numStreams, int device)
 {
   cudaError_t retVal;
@@ -2170,7 +2202,8 @@ void UnifiedScheduler::createCudaStreams(int numStreams, int device)
   idleStreamsLock_.writeUnlock();
 }
 
-
+//______________________________________________________________________
+//
 void UnifiedScheduler::freeCudaStreams()
 {
   cudaError_t retVal;
@@ -2188,7 +2221,8 @@ void UnifiedScheduler::freeCudaStreams()
   idleStreamsLock_.writeUnlock();
 }
 
-
+//______________________________________________________________________
+//
 cudaStream_t* UnifiedScheduler::getCudaStream(int device)
 {
   cudaError_t retVal;
@@ -2214,7 +2248,8 @@ cudaStream_t* UnifiedScheduler::getCudaStream(int device)
   return stream;
 }
 
-
+//______________________________________________________________________
+//
 cudaError_t UnifiedScheduler::unregisterPageLockedHostMem()
 {
   cudaError_t retVal;
@@ -2246,18 +2281,20 @@ void UnifiedScheduler::reclaimCudaStreams(DetailedTask* dtask)
 UnifiedSchedulerWorker::UnifiedSchedulerWorker(UnifiedScheduler* scheduler,
                                                int id) :
     d_id(id),
-      d_scheduler(scheduler),
-      d_idle(true),
-      d_runmutex("run mutex"),
-      d_runsignal("run condition"),
-      d_quit(false),
-      d_waittime(0.0),
-      d_waitstart(0.0),
-      d_rank(scheduler->getProcessorGroup()->myrank())
+    d_scheduler(scheduler),                           
+    d_idle(true),                                     
+    d_runmutex("run mutex"),                          
+    d_runsignal("run condition"),                     
+    d_quit(false),                                    
+    d_waittime(0.0),                                  
+    d_waitstart(0.0),                                 
+    d_rank(scheduler->getProcessorGroup()->myrank())  
 {
   d_runmutex.lock();
 }
 
+//______________________________________________________________________
+//
 void UnifiedSchedulerWorker::run()
 {
   Thread::self()->set_myid(d_id + 1);
@@ -2310,11 +2347,15 @@ void UnifiedSchedulerWorker::run()
   }
 }
 
+//______________________________________________________________________
+//
 double UnifiedSchedulerWorker::getWaittime()
 {
   return d_waittime;
 }
 
+//______________________________________________________________________
+//
 void UnifiedSchedulerWorker::resetWaittime(double start)
 {
   d_waitstart = start;

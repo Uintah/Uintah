@@ -478,12 +478,14 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 
 	}
 
+/*  This is commented out because apparently f_new is never used
 	double f_new;
 	if (current_yield_strength<minimum_yield_stress){
 	  f_new=YieldFunction(stress_new[idx],alpha,minimum_yield_stress,0.0,0.0,hardening_type);
 	}else{
 	  f_new=YieldFunction(stress_new[idx],alpha,k_o[idx],eta_new[idx],eta_nl_new[idx],hardening_type);
 	}
+*/
 	// this is just generating an initial estimate, so it doesn't need to actually hit the yield surface
 	/*if (abs(f_new)>10.0){
 	  cerr<<"ERROR!  did not return to yield surface"<<endl;
@@ -597,13 +599,15 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 	  stress_new[idx] = trial_stress[idx] - A*pdlambda[idx];
 	  
 
-	  double f_new;
 	  current_yield_strength = k_o[idx] + (eta_old[idx]+h_local*pdlambda[idx]) + (eta_nl_old[idx]+h_nonlocal*dlambda_nl);
+/*  This is commented out because apparently f_new is never used
+	  double f_new;
 	  if (current_yield_strength<minimum_yield_stress){
 	    f_new=YieldFunction(stress_new[idx],alpha,minimum_yield_stress,0.0,0.0,hardening_type);
 	  }else{
 	    f_new=YieldFunction(stress_new[idx],alpha,k_o[idx],eta_new[idx],eta_nl_new[idx],hardening_type);
 	  }
+*/
 
 	  //cerr<<"yield function value after nonlocal iteration "<<q-1<<" is "<<f_new<<endl;
 

@@ -54,7 +54,7 @@ OnTheFly_radiometer::OnTheFly_radiometer(ProblemSpecP& module_spec,
   d_sharedState = sharedState;
 
 #ifdef USE_RADIOMETER
-  d_radiometer       = scinew Radiometer();
+  d_radiometer  = scinew Radiometer();
 #endif
   d_module_ps   = module_spec;
   d_dataArchiver = dataArchiver;
@@ -150,10 +150,10 @@ void OnTheFly_radiometer::problemSetup(const ProblemSpecP& ,
 
   d_module_ps->getWithDefault( "radiometerCalc_freq", d_radiometerCalc_freq, 1 );
   bool getExtraInputs = true;
-  d_radiometer->problemSetup(rad_ps, rad_ps, d_sharedState, getExtraInputs);
+  d_radiometer->problemSetup(rad_ps, rad_ps, grid, d_sharedState, getExtraInputs);
   
   if(!d_dataArchiver->isLabelSaved( "VRFlux" ) ){
-    throw ProblemSetupException("\nERROR:  You've activated the radiometer but your not saving the variable (radiometerFlux)\n",__FILE__, __LINE__);
+    throw ProblemSetupException("\nERROR:  You've activated the radiometer but your not saving the variable (VRFlux)\n",__FILE__, __LINE__);
   }
 #endif  
 }
@@ -164,7 +164,6 @@ void OnTheFly_radiometer::problemSetup(const ProblemSpecP& ,
 void OnTheFly_radiometer::scheduleInitialize(SchedulerP& sched,
                                              const LevelP& level)
 {
-  return;  // do nothing
 }
 
 void OnTheFly_radiometer::initialize(const ProcessorGroup*,
@@ -194,6 +193,8 @@ void OnTheFly_radiometer::scheduleDoAnalysis(SchedulerP& sched,
   Task::WhichDW celltype_dw = Task::NewDW;
   bool includeEC = true;
  
+  d_radiometer->sched_initializeRadVars( level, sched, d_radiometerCalc_freq );
+  
   d_radiometer->sched_sigmaT4( level, sched, temp_dw, d_radiometerCalc_freq, includeEC );
 
   d_radiometer->sched_radiometer( level, sched, abskg_dw, sigmaT4_dw, celltype_dw, d_radiometerCalc_freq );

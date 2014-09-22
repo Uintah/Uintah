@@ -89,6 +89,10 @@ namespace Uintah {
       double T2_rate_dependence;
       double subcycling_characteristic_number;
       bool Use_Disaggregation_Algorithm;
+	  int J3_type;
+	  double J3_psi;
+	  double principal_stress_cutoff;
+	  
     };
     const VarLabel* pLocalizedLabel;
     const VarLabel* pLocalizedLabel_preReloc;
@@ -281,10 +285,6 @@ namespace Uintah {
                                );
 
     void checkInputParameters();
-
-    void spherical2cartesian(const Vector& p,  	// spherical point {r,theta,phi}
-	                               Vector& c	// cartesian point {x,y,z}
-							);
 	
 	void computeRotationToSphericalCS(const Vector& pnew,// interior point
 		                              const Vector& p0,	 // origin (i.e. trial stress)
@@ -297,6 +297,10 @@ namespace Uintah {
 								Matrix3& PM,	 // Mid eigenprojector
 								Matrix3& PH		 // High eigenprojector
 							   );
+	void computeEigenValues(const Matrix3& A,// Input tensor
+							Vector& lambda  // Ordered eigenvalues {LMH}
+							);
+	
 	
   public: //Uintah MPM constitutive model specific functions
     ////////////////////////////////////////////////////////////////////////

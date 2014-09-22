@@ -89,7 +89,7 @@ RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld ): UintahParallelComponen
   d_matl = 0;
   d_initColor = -9;
   d_initAbskg = -9;
-  d_whichAlgo = coarseLevel;
+  d_whichAlgo = singleLevel;
   d_wall_cell = 8; //<----HARD CODED WALL CELL
   d_flow_cell = -1; //<----HARD CODED FLOW CELL
 
@@ -116,14 +116,7 @@ RMCRT_Test::~RMCRT_Test ( void )
   dbg << UintahParallelComponent::d_myworld->myrank() << " Doing: RMCRT destructor " << endl;
 
 }
-//______________________________________________________________________
-//  Logic for determing when to carry forward
-bool RMCRT_Test::doCarryForward( const int radCalc_freq){
 
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  bool test = ( timestep%radCalc_freq != 0 && timestep != 1 );
-  return test;
-}
 //______________________________________________________________________
 void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
@@ -198,11 +191,12 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
               << " inside of the <AMR> section. \n";
           throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
         }
-      } else if ( type == "RMCRT_coarseLevel" ) {
+      } else if ( type == "RMCRT_coarseLevel" ) {  // 2 Level
         d_whichAlgo = coarseLevel;
+      } else if ( type == "singleLevel" ) {         // 1 LEVEL
+        d_whichAlgo = singleLevel;
       }
     }
-
   }
 
   //__________________________________
@@ -435,6 +429,27 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
       const PatchSet* patches = level->eachPatch();
       d_RMCRT->sched_Refine_Q (sched,  patches, matls, d_radCalc_freq);
     }
+  }
+  
+  //______________________________________________________________________
+  //   1 - L E V E L   A P P R O A C H
+  //  RMCRT is performed on one level
+  if( d_whichAlgo == singleLevel ){
+    Task::WhichDW temp_dw = Task::NewDW;
+    
+    sched_initProperties( level, sched, d_radCalc_freq );
+
+    d_RMCRT->sched_sigmaT4( level,  sched, temp_dw, d_radCalc_freq, false );
+    
+    Task::WhichDW abskg_dw    = Task::NewDW;                                                                       
+    Task::WhichDW sigmaT4_dw  = Task::NewDW;                                                                       
+    Task::WhichDW celltype_dw = Task::NewDW;
+    const bool modifies_divQ  = false;
+    const bool backoutTemp    = true;                                                                   
+    
+    d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, d_radCalc_freq, backoutTemp );
+    
+    d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, d_radCalc_freq ); 
   }
 }
 
@@ -720,7 +735,7 @@ void RMCRT_Test::initProperties( const ProcessorGroup* pc,
                                  const int radCalc_freq )
 {
   // Only run if it's time
-  if ( doCarryForward( radCalc_freq ) ) {
+  if ( d_RMCRT->doCarryForward( radCalc_freq ) ) {
     return;
   }
 
@@ -874,21 +889,6 @@ void RMCRT_Test::areGridsEqual( const GridP& uda_grid,
          <<  " is not equal to the initialization uda's grid\n"
          <<  " For the Data Onion algorithm the finest level in the input file must be equal";
     throw ProblemSetupException(warn.str(),__FILE__,__LINE__);
-  }
-}
-
-//______________________________________________________________________
-//   Returns true if it is a calculation timestep and you need to recompile the taskgraph
-bool RMCRT_Test::needRecompile(double,
-                               double ,
-                               const GridP&)
-{
-  
-  if( doCarryForward( d_radCalc_freq ) ){
-    return false;
-  } else{
-    proc0cout << " RMCRT_test: requesting taskgraph recompilation" << endl;
-    return true;
   }
 }
 

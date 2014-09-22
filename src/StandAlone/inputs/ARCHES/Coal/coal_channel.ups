@@ -775,17 +775,8 @@
 <!-- ARCHES specification -->
     <ARCHES>
  
-      <Coal_Properties>
-        <C>0.7775</C>
-        <H>0.0503</H>
-        <N>0.0144</N>
-        <O>0.1533</O>
-        <S>0.0045</S>
-        <initial_rawcoal_mass>[3.8298e-11,1.496e-10,5.984e-10]</initial_rawcoal_mass>
-        <initial_ash_mass>[5.265e-12,2.057e-11,8.2268e-11]</initial_ash_mass>
-        <initial_fixcarb_mass>[0.0,0.0,0.0]</initial_fixcarb_mass>
-        <particle_density>1300.0</particle_density>
-      </Coal_Properties>
+      <!-- include the coal data base that you are using -->
+      <include href="inputs/ARCHES/CoalDataBase/example_coal.xml" section="Coal_Properties" />
 
 <!-- TIME INTEGRATOR -->
       <TimeIntegrator>

@@ -350,6 +350,10 @@ Ray::BC_bulletproofing( const ProblemSpecP& rmcrtps )
 
 //---------------------------------------------------------------------------
 // Method: Schedule the ray tracer
+// This task has both temporal and spatial scheduling and is tricky to follow
+// The temporal scheduling is controlled by doCarryForward() and doRecompileTaskgraph()
+// The spatial scheduling only occurs if the radiometer is used and is specified
+// by the radiometerPatchSet.
 //---------------------------------------------------------------------------
 void
 Ray::sched_rayTrace( const LevelP& level,
@@ -375,12 +379,15 @@ Ray::sched_rayTrace( const LevelP& level,
 
   //__________________________________
   // Require an infinite number of ghost cells so you can access the entire domain.
-  // THIS IS VERY EXPENSIVE.  ONLY REQUIRE THESE VARIABLES ON CALCULATION TIMESTEPS.
-  // The taskgraph must be recompiled whenever this conditional changes from true to false
-  // and vice versa.  See the needsRecompile() function in the driving component.  The
-  // logic in that function must match this.  
+  //
+  // THIS IS VERY EXPENSIVE.  THIS EXPENSE IS INCURRED ON NON-CALCULATION TIMESTEPS,
+  // ONLY REQUIRE THESE VARIABLES ON A CALCULATION TIMESTEPS.
+  //
+  // The taskgraph must be recompiled to detect a change in the conditional.
+  // The taskgraph recompilation is activated from RMCRTCommon:doRecompileTaskgraph()
   if ( !doCarryForward( radCalc_freq) ) {
     Ghost::GhostType  gac  = Ghost::AroundCells;
+    dbg << "    sched_rayTrace: adding requires for all-to-all variables " << endl; 
     tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
     tsk->requires( sigma_dw ,    d_sigmaT4_label,  gac, SHRT_MAX);
     tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
@@ -407,6 +414,18 @@ Ray::sched_rayTrace( const LevelP& level,
   //__________________________________
   // Radiometer
   if ( d_radiometer ){
+
+#if 0
+    PatchSet* radiometerPatchSet;
+    radiometerPatchSet = scinew PatchSet();
+    radiometerPatchSet->addReference();
+    vector<const Patch*> myPatches = d_radiometer->getPatchSet( sched, level );
+
+    radiometerPatchSet->addAll( myPatches );
+
+    
+    delete radiometerPatchSet;              // THIS PATCHSET IS NOT BEING USED BUT WILL BE IN THE FUTURE.
+ #endif 
     if (!(Uintah::Parallel::usingDevice())) {
       // needed for carry Forward                       CUDA HACK
       tsk->requires(Task::OldDW, d_VRFluxLabel, d_gn, 0);
@@ -438,6 +457,9 @@ Ray::rayTrace( const ProcessorGroup* pc,
 {
 
   const Level* level = getLevel(patches);
+  
+  
+  doRecompileTaskgraph( radCalc_freq );
 
   if ( doCarryForward( radCalc_freq ) ) {
     printTask(patches,patches->get(0), dbg,"Doing Ray::rayTrace (carryForward)");
