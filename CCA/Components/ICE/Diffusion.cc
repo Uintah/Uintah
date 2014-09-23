@@ -249,30 +249,6 @@ void computeTauComponents( const Patch* patch,
   hi[2] += patch->getBCType(patch->zplus) ==Patch::Neighbor?1:0; 
   CellIterator Z_iterLimits( low,hi );
   computeTauZ_driver( Z_iterLimits, vol_frac_CC,  vel_CC, viscosity, dx, tau_Z_FC);
-    
-  //__________________________________
-  //  Loop over all the faces of the computational domain and recompute the 
-  // shear stress terms using the corrected  dx
-  vector<Patch::FaceType> bf;
-  patch->getBoundaryFaces(bf);
-  for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
-    Patch::FaceType face = *itr;
-         
-    CellIterator faceIterLimits=patch->getFaceIterator(face, Patch::SFCVars);
-    
-    if (face == Patch::xminus || face == Patch::xplus) {
-      Vector modDx( dx.x()/2, dx.y(), dx.z() );      
-      computeTauX_driver( faceIterLimits, vol_frac_CC,  vel_CC, viscosity, modDx, tau_X_FC);
-    }
-    if (face == Patch::yminus || face == Patch::yplus) {
-      Vector modDx( dx.x(), dx.y()/2, dx.z() );
-      computeTauY_driver( faceIterLimits, vol_frac_CC,  vel_CC, viscosity, modDx, tau_Y_FC);
-    }
-    if (face == Patch::zminus || face == Patch::zplus) {
-      Vector modDx( dx.x(), dx.y(), dx.z()/2 );
-      computeTauZ_driver( faceIterLimits, vol_frac_CC,  vel_CC, viscosity, modDx, tau_Z_FC);
-    }
-  }
 }
 
 
