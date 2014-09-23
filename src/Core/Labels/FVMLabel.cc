@@ -48,10 +48,10 @@ FVMLabel::FVMLabel()
   flux_SFCXLabel = VarLabel::create( "fcx.flux",
 			SFCXVariable<Vector>::getTypeDescription() );
 			
-  flux_SFCXLabel = VarLabel::create( "fcy.flux",
+  flux_SFCYLabel = VarLabel::create( "fcy.flux",
 			SFCYVariable<Vector>::getTypeDescription() );
 
-  flux_SFCXLabel = VarLabel::create( "fcz.flux",
+  flux_SFCZLabel = VarLabel::create( "fcz.flux",
 			SFCZVariable<Vector>::getTypeDescription() );
 
 } 

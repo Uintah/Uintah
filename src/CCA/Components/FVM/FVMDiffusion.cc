@@ -111,7 +111,7 @@ void FVMDiffusion::scheduleComputeStableTimestep(const LevelP& level,
   Task* task = scinew Task("computeStableTimestep",
 			   this, &FVMDiffusion::computeStableTimestep);
   task->computes(sharedState_->get_delt_label(),level.get_rep());
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  sched->addTask(task, level->eachPatch(), sharedState_->allFVMMaterials());
 }
 
 void FVMDiffusion::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
@@ -121,7 +121,7 @@ void FVMDiffusion::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 
   task->requires(Task::OldDW, lb->concentration_CCLabel, Ghost::AroundNodes, 1);
   task->computes(lb->concentration_CCLabel);
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  sched->addTask(task, level->eachPatch(), sharedState_->allFVMMaterials());
 
 }
 
@@ -147,18 +147,6 @@ void FVMDiffusion::initialize(const ProcessorGroup*,
       CCVariable<double> concentration;
       new_dw->allocateAndPut(concentration, lb->concentration_CCLabel, index, patch);
       concentration.initialize(fvm_matl->getConcentration());
-
-      if(patch->getBCType(Patch::xminus) != Patch::Neighbor){
-				IntVector l,h;
-				patch->getFaceNodes(Patch::xminus, 0, l, h);
-
-			for(NodeIterator iter(l,h); !iter.done(); iter++)
-	  		concentration[*iter]=1;
-      }
-			for(CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter){
-				IntVector n = *iter;
-				cout << n << concentration[n] <<endl;
-			}
     }
   }
 
@@ -174,6 +162,13 @@ void FVMDiffusion::timeAdvance(const ProcessorGroup* pg,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     for(int m = 0;m<matls->size();m++){
+			FVMMaterial* fvm_matl = sharedState_->getFVMMaterial(m);
+      int index = fvm_matl->getDWIndex();
+
+			constCCVariable<double> old_conc;
+			CCVariable<double> new_conc;
+			old_dw->get(old_conc, lb->concentration_CCLabel, index, patch, Ghost::AroundNodes, 1);
+			new_dw->allocateAndPut(new_conc, lb->concentration_CCLabel, index, patch);
     }
   }
 }
