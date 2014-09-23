@@ -44,6 +44,8 @@
     <save label="temp_qn1"/>
     <save label="temp_1"/>
     <save label="temp_qn1_src"/>
+    <save label="w_qn0"/>
+    <save label="w_0"/>
     <checkpoint cycle="2" interval="0.05"/>
     <compression>gzip</compression>
   </DataArchiver>
@@ -144,7 +146,7 @@
           <initialization type="constant">
             <constant>0.2</constant>
           </initialization>
-          <scaling_const>1</scaling_const>
+          <scaling_const>2</scaling_const>
         </Weights>
 
         <Ic label="length">

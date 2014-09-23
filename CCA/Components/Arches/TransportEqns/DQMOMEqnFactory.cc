@@ -160,6 +160,7 @@ void DQMOMEqnFactory::registerDQMOMEqns(ProblemSpecP& db, ArchesLabel* field_lab
     for ( int iqn = 0; iqn < n_quad_nodes; iqn++) {
 
       std::string weight_name = "w_qn";
+      std::string ic_name = "w";
       std::string node;
       std::stringstream out;
       out << iqn;
@@ -168,7 +169,7 @@ void DQMOMEqnFactory::registerDQMOMEqns(ProblemSpecP& db, ArchesLabel* field_lab
 
       proc0cout << "creating a weight for: " << weight_name << std::endl;
 
-      DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( field_labels, time_integrator, weight_name, weight_name, iqn );
+      DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( field_labels, time_integrator, weight_name, ic_name, iqn );
       this->register_scalar_eqn( weight_name, eqnBuilder );
 
     }
