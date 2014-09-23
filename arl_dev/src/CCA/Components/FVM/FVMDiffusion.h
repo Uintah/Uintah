@@ -32,7 +32,6 @@
 #include <Core/Grid/Variables/VarLabel.h>
 
 namespace Uintah {
-  class SimpleMaterial;
   class FVMLabel;
 
   class FVMDiffusion : public UintahParallelComponent, public SimulationInterface {
@@ -63,9 +62,9 @@ namespace Uintah {
 		     DataWarehouse* old_dw, DataWarehouse* new_dw);
 
     void iterate(const ProcessorGroup*,
-		 const PatchSubset* patches,
-		 const MaterialSubset* matls,
-		 DataWarehouse* old_dw, DataWarehouse* new_dw);
+		const PatchSubset* patches,
+		const MaterialSubset* matls,
+		DataWarehouse* old_dw, DataWarehouse* new_dw);
 
     SimulationStateP sharedState_;
 		FVMLabel* lb;
