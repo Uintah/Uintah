@@ -34,11 +34,16 @@ class DQMOMEqnBuilder: public DQMOMEqnBuilderBase
 public:
   DQMOMEqnBuilder( ArchesLabel* fieldLabels, 
                    ExplicitTimeInt* timeIntegrator, 
-                   std::string eqnName );
+                   std::string eqnName, 
+                   std::string ic_name, 
+                   const int quadNode );
   ~DQMOMEqnBuilder();
 
   EqnBase* build(); 
 private:
+
+  std::string d_ic_name; 
+  const int d_quadNode;
 
 }; 
 // End Builder
@@ -51,13 +56,12 @@ public EqnBase{
 
 public: 
 
-  DQMOMEqn( ArchesLabel* fieldLabels, ExplicitTimeInt* timeIntegrator, std::string eqnName );
+  DQMOMEqn( ArchesLabel* fieldLabels, ExplicitTimeInt* timeIntegrator, std::string eqnName, std::string ic_name, const int quadNode );
 
   ~DQMOMEqn();
 
   /** @brief Set any parameters from input file, initialize any constants, etc.. */
-  void problemSetup(const ProblemSpecP& inputdb, int qn);
-  void problemSetup(const ProblemSpecP& inputdb){};
+  void problemSetup(const ProblemSpecP& inputdb);
 
   /** @brief not needed here. **/ 
   void assign_stage_to_sources(){};
@@ -170,12 +174,8 @@ public:
   inline void setAsWeight(){
     d_weight = true; }; 
 
-  /** @brief Set the quadrature node value. */
-  inline void setQuadNode(int node){
-    d_quadNode = node; };
-
   /** @brief Get the quadrature node value. */
-  inline int getQuadNode(){
+  inline const int getQuadNode(){
     return d_quadNode; };
 
  
@@ -186,12 +186,14 @@ private:
   const VarLabel* d_weightLabel;  ///< Label for weight corresponding to this quadrature node
 
   std::vector<std::string> d_models;   ///< This is the list of models for this internal coordinate
-  int d_quadNode;                 ///< The quadrature node for this equation object 
   bool d_weight;                  ///< Boolean: is this equation object for a weight?
   std::vector<std::string> d_sources;
   bool d_addExtraSources; 
   double d_w_small;               ///< Value of "small" weights
   bool d_unweighted;
+  DQMOMEqnFactory::NDF_DESCRIPTOR d_descriptor;    ///< This actor plays this role.  
+  std::string d_ic_name; 
+  const int d_quadNode;
 
 
 }; // class DQMOMEqn

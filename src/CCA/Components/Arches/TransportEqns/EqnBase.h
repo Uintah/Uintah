@@ -55,7 +55,6 @@ public:
 
   /** @brief Set any parameters from input file, initialize any constants, etc.. */
   virtual void problemSetup(const ProblemSpecP& inputdb) = 0;
-  virtual void problemSetup(const ProblemSpecP& inputdb, int qn) = 0;
 
   /** @brief Assign the algorithmic stage to the dependent sources **/ 
   virtual void assign_stage_to_sources() = 0; 
