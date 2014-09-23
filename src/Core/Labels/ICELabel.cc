@@ -67,6 +67,7 @@ ICELabel::ICELabel()
   sumKappaLabel           = VarLabel::create("sumKappa",      CC_double);
   rho_CCLabel             = VarLabel::create("rho_CC",        CC_double);
   temp_CCLabel            = VarLabel::create("temp_CC",       CC_double);
+  conc_CCLabel            = VarLabel::create("conc_CC",       CC_double);
   vel_CCLabel             = VarLabel::create("vel_CC",        CC_Vector);
   rho_micro_CCLabel       = VarLabel::create("rho_micro_CC",  CC_double);
   sp_vol_CCLabel          = VarLabel::create("sp_vol_CC",     CC_double);
@@ -133,6 +134,9 @@ ICELabel::ICELabel()
   TempX_FCLabel      = VarLabel::create("TempX_FC",   SFCX_double);
   TempY_FCLabel      = VarLabel::create("TempY_FC",   SFCY_double);
   TempZ_FCLabel      = VarLabel::create("TempZ_FC",   SFCZ_double);
+  ConcX_FCLabel      = VarLabel::create("ConcX_FC",   SFCX_double);
+  ConcY_FCLabel      = VarLabel::create("ConcY_FC",   SFCY_double);
+  ConcZ_FCLabel      = VarLabel::create("ConcZ_FC",   SFCZ_double);
   grad_P_XFCLabel    = VarLabel::create("grad_P_XFC", SFCX_double);
   grad_P_YFCLabel    = VarLabel::create("grad_P_YFC", SFCY_double);
   grad_P_ZFCLabel    = VarLabel::create("grad_P_ZFC", SFCZ_double);
@@ -270,6 +274,7 @@ ICELabel::~ICELabel()
     VarLabel::destroy(compressibilityLabel);
     VarLabel::destroy(sumKappaLabel);    
     VarLabel::destroy(temp_CCLabel);
+    VarLabel::destroy(conc_CCLabel);
     VarLabel::destroy(temp_CC_XchangeLabel);
     VarLabel::destroy(vel_CCLabel);
     VarLabel::destroy(vel_CC_XchangeLabel);
@@ -333,6 +338,9 @@ ICELabel::~ICELabel()
     VarLabel::destroy(TempX_FCLabel);
     VarLabel::destroy(TempY_FCLabel);
     VarLabel::destroy(TempZ_FCLabel);
+    VarLabel::destroy(ConcX_FCLabel);
+    VarLabel::destroy(ConcY_FCLabel);
+    VarLabel::destroy(ConcZ_FCLabel);
     VarLabel::destroy(grad_P_XFCLabel);
     VarLabel::destroy(grad_P_YFCLabel);
     VarLabel::destroy(grad_P_ZFCLabel);

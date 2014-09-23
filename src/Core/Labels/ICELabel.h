@@ -53,6 +53,7 @@ namespace Uintah {
     const VarLabel* sumKappaLabel;
     const VarLabel* rho_CCLabel;
     const VarLabel* temp_CCLabel;
+    const VarLabel* conc_CCLabel;
     const VarLabel* temp_CC_XchangeLabel;
     const VarLabel* vel_CCLabel;
     const VarLabel* vel_CC_XchangeLabel;
@@ -113,6 +114,9 @@ namespace Uintah {
     const VarLabel* TempX_FCLabel;
     const VarLabel* TempY_FCLabel;
     const VarLabel* TempZ_FCLabel;
+    const VarLabel* ConcX_FCLabel;
+    const VarLabel* ConcY_FCLabel;
+    const VarLabel* ConcZ_FCLabel;
     const VarLabel* grad_P_XFCLabel;
     const VarLabel* grad_P_YFCLabel;
     const VarLabel* grad_P_ZFCLabel;

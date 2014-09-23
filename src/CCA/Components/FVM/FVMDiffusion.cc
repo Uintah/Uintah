@@ -63,6 +63,17 @@ void FVMDiffusion::problemSetup(const ProblemSpecP& prob_spec,
 {
   sharedState_ = sharedState;
 
+	//Finding FVM block in problem spec
+	ProblemSpecP restart_fvm_ps = 0;
+	ProblemSpecP fvm_ps = prob_spec->findBlock("FVM");
+	if(fvm_ps)
+		restart_fvm_ps = fvm_ps;
+	else
+		restart_fvm_ps = restart_prob_spec->findBlock("FVM");
+	
+	// Getting timestep
+	restart_fvm_ps->require("delt", delt_);
+
   ProblemSpecP restart_mat_ps = 0;
   ProblemSpecP mat_ps = 
     prob_spec->findBlockWithOutAttribute("MaterialProperties");
