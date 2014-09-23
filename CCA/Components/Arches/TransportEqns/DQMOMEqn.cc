@@ -15,22 +15,29 @@ using namespace Uintah;
 // Builder:
 DQMOMEqnBuilder::DQMOMEqnBuilder( ArchesLabel* fieldLabels, 
                                   ExplicitTimeInt* timeIntegrator,
-                                  string eqnName ) : 
-DQMOMEqnBuilderBase( fieldLabels, timeIntegrator, eqnName )
+                                  string eqnName, 
+                                  string ic_name,
+                                  const int quadNode ) : 
+DQMOMEqnBuilderBase( fieldLabels, timeIntegrator, eqnName ), d_quadNode(quadNode)
+{
+  d_ic_name = ic_name; 
+}
+DQMOMEqnBuilder::~DQMOMEqnBuilder()
 {}
-DQMOMEqnBuilder::~DQMOMEqnBuilder(){}
 
 EqnBase*
 DQMOMEqnBuilder::build(){
-  return scinew DQMOMEqn(d_fieldLabels, d_timeIntegrator, d_eqnName);
+  return scinew DQMOMEqn(d_fieldLabels, d_timeIntegrator, d_eqnName, d_ic_name, d_quadNode);
 }
 // End Builder
 //---------------------------------------------------------------------------
 
-DQMOMEqn::DQMOMEqn( ArchesLabel* fieldLabels, ExplicitTimeInt* timeIntegrator, string eqnName )
+DQMOMEqn::DQMOMEqn( ArchesLabel* fieldLabels, ExplicitTimeInt* timeIntegrator, string eqnName, string ic_name, const int quadNode )
 : 
-EqnBase( fieldLabels, timeIntegrator, eqnName )
+EqnBase( fieldLabels, timeIntegrator, eqnName ), d_quadNode(quadNode)
 {
+  d_ic_name = ic_name; 
+  d_weight = false; 
   
   string varname = eqnName+"_Fdiff"; 
   d_FdiffLabel = VarLabel::create(varname, 
@@ -47,14 +54,18 @@ EqnBase( fieldLabels, timeIntegrator, eqnName )
   varname = eqnName;
   d_transportVarLabel = VarLabel::create(varname,
             CCVariable<double>::getTypeDescription());
-  varname = eqnName+"_icv"; // icv = internal coordinate value (this is the unscaled/unweighted value)
-  d_icLabel = VarLabel::create(varname, 
-            CCVariable<double>::getTypeDescription());
   varname = eqnName+"_src";
   d_sourceLabel = VarLabel::create(varname, 
             CCVariable<double>::getTypeDescription());
 
-  d_weight = false; 
+  std::string node;
+  std::stringstream sqn;
+  sqn << d_quadNode; 
+  node = sqn.str(); 
+  varname = d_ic_name+"_"+node; 
+  d_icLabel = VarLabel::create(varname, 
+            CCVariable<double>::getTypeDescription());
+
 }
 
 DQMOMEqn::~DQMOMEqn()
@@ -71,11 +82,11 @@ DQMOMEqn::~DQMOMEqn()
 // Method: Problem Setup 
 //---------------------------------------------------------------------------
 void
-DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
+DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
 {
+
   // NOTE: some of this may be better off in the EqnBase.cc class
   ProblemSpecP db = inputdb; 
-  d_quadNode = qn; 
 
   ProblemSpecP db_root = db->getRootNode();
   ProblemSpecP dqmom_db = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
@@ -176,7 +187,19 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
 
       } 
     }
-  } 
+  } else { 
+
+    // Actor to role matching: 
+    // Only needed for ICs
+    //std::string descriptor; 
+    //db->require( "ndf_descriptor", descriptor ); 
+
+    //DQMOMEqnFactory::NDF_DESCRIPTOR ndf_desc_enum = dqmomFactory.get_descriptor(descriptor); 
+
+    ////now register it
+    //dqmomFactory.assign_descriptor(d_ic_name, ndf_desc_enum);
+
+  }
 
   // Scaling information:
   db->require( "scaling_const", d_scalingConstant ); 
@@ -202,7 +225,6 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
   // There should be some mechanism to make sure that when environment-specific
   // initialization functions are used, ALL environments are specified
   // (Charles)
-
 
   // Initialization (new way):
   ProblemSpecP db_initialValue = db->findBlock("initialization");
@@ -246,7 +268,6 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
         if( i_tempQuadNode == d_quadNode )
           d_constant_init = constantValue / d_scalingConstant;
       }
- 
 
     // ------- (Environment & Uniform) Step initialization function ------------
     // NOTE: Right now the only environment-specific attribute of the step function

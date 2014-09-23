@@ -845,6 +845,10 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   ProblemSpecP dqmom_db = db->findBlock("DQMOM");
   if (dqmom_db) {
+
+    //turn on DQMOM
+    d_doDQMOM = true;
+
     // require that we have weighted or unweighted explicitly specified as an attribute to DQMOM
     // type = "unweightedAbs" or type = "weighedAbs"
     dqmom_db->getAttribute( "type", d_which_dqmom );
@@ -858,16 +862,13 @@ Arches::problemSetup(const ProblemSpecP& params,
       if( d_which_dqmom == "unweightedAbs" && d_solverType != "Optimize" ) {
         throw ProblemSetupException("Error!: The unweighted abscissas only work with the optimized solver.", __FILE__, __LINE__);
       }
-
     }
 
-    proc0cout << endl;
-    proc0cout << "WARNING: If you are trying to do DQMOM make sure you added the <TimeIntegrator> section!\n";
-
-    d_doDQMOM = true;
+    DQMOMEqnFactory& eqn_factory = DQMOMEqnFactory::self();
 
     //register all equations.
-    Arches::registerDQMOMEqns(dqmom_db);
+    eqn_factory.registerDQMOMEqns(dqmom_db, d_lab, d_timeIntegrator );
+
     //register all models
     CoalModelFactory& model_factory = CoalModelFactory::self();
     model_factory.problemSetup(dqmom_db);
@@ -879,7 +880,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_partVel->problemSetup( dqmom_db );
     d_nlSolver->setPartVel( d_partVel );
     // Do through and initialze all DQMOM equations and call their respective problem setups.
-    DQMOMEqnFactory& eqn_factory = DQMOMEqnFactory::self();
     const int numQuadNodes = eqn_factory.get_quad_nodes();
 
     model_factory.setArchesLabel( d_lab );
@@ -899,7 +899,7 @@ Arches::problemSetup(const ProblemSpecP& params,
       eqn_factory.set_weight_eqn( weight_name, &a_weight );
       DQMOMEqn& weight = dynamic_cast<DQMOMEqn&>(a_weight);
       weight.setAsWeight();
-      weight.problemSetup( w_db, iqn );
+      weight.problemSetup( w_db );
 
     }
 
@@ -919,7 +919,7 @@ Arches::problemSetup(const ProblemSpecP& params,
 
         EqnBase& an_ic = eqn_factory.retrieve_scalar_eqn( final_name );
         eqn_factory.set_abscissa_eqn( final_name, &an_ic );
-        an_ic.problemSetup( ic_db, iqn );
+        an_ic.problemSetup( ic_db );
 
       }
     }
@@ -2874,84 +2874,6 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
         throw InvalidValue("This property model is not recognized or supported! ", __FILE__, __LINE__);
 
       }
-    }
-  }
-}
-//---------------------------------------------------------------------------
-// Method: Register DQMOM Eqns
-//---------------------------------------------------------------------------
-void Arches::registerDQMOMEqns(ProblemSpecP& db)
-{
-
-  // Now do the same for DQMOM equations.
-  ProblemSpecP dqmom_db = db;
-
-  // Get reference to the source factory
-  DQMOMEqnFactory& dqmom_eqnFactory = DQMOMEqnFactory::self();
-
-  if (dqmom_db) {
-
-    int n_quad_nodes;
-    dqmom_db->require("number_quad_nodes", n_quad_nodes);
-    dqmom_eqnFactory.set_quad_nodes( n_quad_nodes );
-
-    proc0cout << "\n";
-    proc0cout << "******* DQMOM Equation Registration ********" << endl;
-
-    // Make the weight transport equations
-    for ( int iqn = 0; iqn < n_quad_nodes; iqn++) {
-
-      std::string weight_name = "w_qn";
-      std::string node;
-      std::stringstream out;
-      out << iqn;
-      node = out.str();
-      weight_name += node;
-
-      proc0cout << "creating a weight for: " << weight_name << endl;
-
-      DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( d_lab, d_timeIntegrator, weight_name );
-      dqmom_eqnFactory.register_scalar_eqn( weight_name, eqnBuilder );
-
-    }
-    // Make the weighted abscissa
-    for (ProblemSpecP ic_db = dqmom_db->findBlock("Ic"); ic_db != 0; ic_db = ic_db->findNextBlock("Ic")){
-      std::string ic_name;
-      ic_db->getAttribute("label", ic_name);
-      std::string eqn_type = "dqmom"; // by default
-
-      proc0cout << "Found  an internal coordinate: " << ic_name << endl;
-
-      // loop over quad nodes.
-      for (int iqn = 0; iqn < n_quad_nodes; iqn++){
-
-        // need to make a name on the fly for this ic and quad node.
-        std::string final_name = ic_name + "_qn";
-        std::string node;
-        std::stringstream out;
-        out << iqn;
-        node = out.str();
-        final_name += node;
-
-        proc0cout << "created a weighted abscissa for: " << final_name << endl;
-
-        DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( d_lab, d_timeIntegrator, final_name );
-        dqmom_eqnFactory.register_scalar_eqn( final_name, eqnBuilder );
-
-      }
-    }
-    // Make the velocities for each quadrature node
-    for ( int iqn = 0; iqn < n_quad_nodes; iqn++) {
-      string name = "vel_qn";
-      std::string node;
-      std::stringstream out;
-      out << iqn;
-      node = out.str();
-      name += node;
-
-      const VarLabel* tempVarLabel = VarLabel::create(name, CCVariable<Vector>::getTypeDescription());
-      d_lab->partVel.insert(make_pair(iqn, tempVarLabel));
-
     }
   }
 }

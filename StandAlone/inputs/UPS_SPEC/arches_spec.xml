@@ -1318,6 +1318,18 @@
           <conv_scheme                  spec="OPTIONAL STRING 'upwind, roe_minmod, super_bee'"/>
           <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
           <molecular_diffusivity        spec="OPTIONAL DOUBLE 'positive'"/>
+
+          <!-- developer note: When you add a new descriptor here, make sure you add it in the 
+               enum definition and the constructor of the DQMOMEqnFactory -->
+          <!--<ndf_descriptor               spec="REQUIRED STRING 'size,-->
+                                                               <!--mass, -->
+                                                               <!--temperature, -->
+                                                               <!--enthalpy, -->
+                                                               <!--coal_gas_mix_frac,-->
+                                                               <!--uvel, -->
+                                                               <!--vvel, -->
+                                                               <!--wvel'"/> [> This is a fix descriptor that indicates what function this IC takes <]-->
+
           <initialization               spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'env_constant, constant, env_step'">
             <!-- environment constant value initialization -->
