@@ -56,6 +56,7 @@ namespace Uintah {
     const VarLabel* temp_CC_XchangeLabel;
     const VarLabel* vel_CCLabel;
     const VarLabel* vel_CC_XchangeLabel;
+    const VarLabel* velTau_CCLabel;
     const VarLabel* speedSound_CCLabel;
     const VarLabel* vol_frac_CCLabel;
     const VarLabel* viscous_src_CCLabel;
