@@ -425,6 +425,10 @@ Ray::sched_rayTrace( const LevelP& level,
 
     
     delete radiometerPatchSet;              // THIS PATCHSET IS NOT BEING USED BUT WILL BE IN THE FUTURE.
+
+    if( radiometerPatchSet && radiometerPatchSet->removeReference() ){ 
+      delete radiometerPatchSet;
+    }
  #endif 
     if (!(Uintah::Parallel::usingDevice())) {
       // needed for carry Forward                       CUDA HACK
