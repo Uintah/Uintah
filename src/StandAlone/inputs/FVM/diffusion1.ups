@@ -33,7 +33,7 @@
 	 <MaterialProperties>
 	 	<FVM>
 			<material>
-				<concentration>0.0</concentration>
+				<concentration>1.0</concentration>
        	<diffusivity>.01</diffusivity>
 			</material>
 		</FVM>

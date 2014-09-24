@@ -63,7 +63,7 @@ void FVMDiffusion::problemSetup(const ProblemSpecP& prob_spec,
 {
   sharedState_ = sharedState;
 
-	//Finding FVM block in problem spec
+	//Finding FVM block in problem spec, Testing for restart
 	ProblemSpecP restart_fvm_ps = 0;
 	ProblemSpecP fvm_ps = prob_spec->findBlock("FVM");
 	if(fvm_ps)
@@ -78,7 +78,7 @@ void FVMDiffusion::problemSetup(const ProblemSpecP& prob_spec,
   ProblemSpecP mat_ps = 
     prob_spec->findBlockWithOutAttribute("MaterialProperties");
 
-	// Testing for restart. !!!!Find out why this is needed!!!!
+	// Getting MPM Material, Testing for restart. !!!!Find out why this is needed!!!!
   if (mat_ps)
     restart_mat_ps = mat_ps;
   else if (restart_prob_spec)
@@ -165,10 +165,18 @@ void FVMDiffusion::timeAdvance(const ProcessorGroup* pg,
 			FVMMaterial* fvm_matl = sharedState_->getFVMMaterial(m);
       int index = fvm_matl->getDWIndex();
 
+			double diffusivity = fvm_matl->getDiffusivity();
+
 			constCCVariable<double> old_conc;
 			CCVariable<double> new_conc;
-			old_dw->get(old_conc, lb->concentration_CCLabel, index, patch, Ghost::AroundNodes, 1);
+			old_dw->get(old_conc, lb->concentration_CCLabel, index, patch, Ghost::AroundCells, 1);
 			new_dw->allocateAndPut(new_conc, lb->concentration_CCLabel, index, patch);
+			for(CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter){
+				new_conc[*iter] = old_conc[*iter]*2;
+			}
+			for(CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter){
+				cout << *iter << " , new conc: " << new_conc[*iter] << " , old conc: " << old_conc[*iter] << endl;
+			}
     }
   }
 }
