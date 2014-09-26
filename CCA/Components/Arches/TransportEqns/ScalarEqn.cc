@@ -48,9 +48,6 @@ EqnBase( fieldLabels, timeIntegrator, eqnName )
   varname = eqnName+"_RHS";
   d_RHSLabel = VarLabel::create(varname, 
             CCVariable<double>::getTypeDescription());
-  varname = eqnName+"_old";
-  d_oldtransportVarLabel = VarLabel::create(varname,
-            CCVariable<double>::getTypeDescription());
   varname = eqnName+"_scalar_prNo"; 
   d_prNo_label = VarLabel::create( varname, 
             CCVariable<double>::getTypeDescription()); 
@@ -65,7 +62,6 @@ ScalarEqn::~ScalarEqn()
   VarLabel::destroy(d_FconvLabel); 
   VarLabel::destroy(d_RHSLabel);
   VarLabel::destroy(d_transportVarLabel);
-  VarLabel::destroy(d_oldtransportVarLabel);
   VarLabel::destroy(d_prNo_label); 
 }
 //---------------------------------------------------------------------------
@@ -350,7 +346,6 @@ ScalarEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
 
   //New
   tsk->computes(d_transportVarLabel);
-  tsk->computes(d_oldtransportVarLabel); // for rk sub stepping 
   tsk->computes(d_RHSLabel); 
   tsk->computes(d_FconvLabel);
   tsk->computes(d_FdiffLabel);
@@ -400,10 +395,8 @@ void ScalarEqn::initializeVariables( const ProcessorGroup* pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> newVar;
-    CCVariable<double> rkoldVar; 
     constCCVariable<double> oldVar; 
     new_dw->allocateAndPut( newVar, d_transportVarLabel, matlIndex, patch );
-    new_dw->allocateAndPut( rkoldVar, d_oldtransportVarLabel, matlIndex, patch ); 
 
     if ( _reinitialize_from_other_var && d_fieldLabels->recompile_taskgraph ){ 
 
@@ -415,11 +408,6 @@ void ScalarEqn::initializeVariables( const ProcessorGroup* pc,
 
     } 
 
-    newVar.initialize(0.0);
-    rkoldVar.initialize(0.0);
-    // copy old into new
-    newVar.copyData(oldVar);
-    rkoldVar.copyData(oldVar); 
 
     CCVariable<double> Fdiff; 
     CCVariable<double> Fconv; 
@@ -429,9 +417,12 @@ void ScalarEqn::initializeVariables( const ProcessorGroup* pc,
     new_dw->allocateAndPut( Fconv, d_FconvLabel, matlIndex, patch );
     new_dw->allocateAndPut( RHS, d_RHSLabel, matlIndex, patch ); 
     
+    newVar.initialize(0.0);
     Fdiff.initialize(0.0);
     Fconv.initialize(0.0);
     RHS.initialize(0.0);
+
+    newVar.copyData(oldVar); 
 
     CCVariable<double> pr_no; 
     new_dw->allocateAndPut( pr_no, d_prNo_label, matlIndex, patch ); 
@@ -465,13 +456,18 @@ ScalarEqn::sched_computeSources( const LevelP& level, SchedulerP& sched, int tim
 // Method: Schedule build the transport equation. 
 //---------------------------------------------------------------------------
 void
-ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int timeSubStep )
+ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, const int timeSubStep )
 {
   string taskname = "ScalarEqn::buildTransportEqn"; 
 
   Task* tsk = scinew Task(taskname, this, &ScalarEqn::buildTransportEqn, timeSubStep);
   printSchedule(level,dbg,taskname);
   
+  if ( timeSubStep == 0 ){ 
+    tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
+  } else { 
+    tsk->requires(Task::NewDW, d_transportVarLabel, Ghost::AroundCells, 2);
+  }
   //----NEW----
   // note that rho and U are copied into new DW in ExplicitSolver::setInitialGuess
   if ( _stage == 0 ){ 
@@ -490,7 +486,6 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int 
   tsk->modifies(d_FdiffLabel);
   tsk->modifies(d_FconvLabel);
   tsk->modifies(d_RHSLabel);
-  tsk->requires(Task::NewDW, d_oldtransportVarLabel, Ghost::AroundCells, 2);
   tsk->requires(Task::NewDW, d_prNo_label, Ghost::None, 0); 
 
   // srcs
@@ -514,6 +509,7 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int 
   }
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+
 }
 //---------------------------------------------------------------------------
 // Method: Actually build the transport equation. 
@@ -524,7 +520,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
                               const MaterialSubset* matls, 
                               DataWarehouse* old_dw, 
                               DataWarehouse* new_dw,
-                              int timeSubStep )
+                              const int timeSubStep )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
@@ -537,9 +533,16 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
+    DataWarehouse* which_dw; 
+    if ( timeSubStep == 0 ){ 
+      which_dw = old_dw; 
+    } else { 
+      which_dw = new_dw; 
+    }
+
     Vector Dx = patch->dCell(); 
 
-    constCCVariable<double> oldPhi;
+    constCCVariable<double> phi;
     constCCVariable<double> den;
     constCCVariable<double> mu_t;
     constCCVariable<double> D_mol; 
@@ -553,7 +556,8 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     CCVariable<double> Fconv; 
     CCVariable<double> RHS; 
 
-    new_dw->get(oldPhi, d_oldtransportVarLabel, matlIndex, patch, gac, 2);
+    which_dw->get(phi, d_transportVarLabel, matlIndex, patch, gac, 2);
+
     if ( _stage == 0 ){ 
       new_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gac, 1); 
     } else { 
@@ -600,7 +604,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
 
     //----CONVECTION
     if (d_doConv) { 
-      d_disc->computeConv( patch, Fconv, oldPhi, uVel, vVel, wVel, den, areaFraction, d_convScheme );
+      d_disc->computeConv( patch, Fconv, phi, uVel, vVel, wVel, den, areaFraction, d_convScheme );
       // look for and add contribution from intrusions.
       if ( _using_new_intrusion ) { 
         _intrusions->addScalarRHS( patch, Dx, d_eqnName, RHS, den ); 
@@ -610,10 +614,10 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     //----DIFFUSION
     if ( d_use_constant_D ) { 
       if (d_doDiff)
-        d_disc->computeDiff( patch, Fdiff, oldPhi, mu_t, d_mol_diff, den, areaFraction, prNo ); 
+        d_disc->computeDiff( patch, Fdiff, phi, mu_t, d_mol_diff, den, areaFraction, prNo ); 
     } else { 
       if (d_doDiff)
-        d_disc->computeDiff( patch, Fdiff, oldPhi, mu_t, D_mol, den, areaFraction, prNo );
+        d_disc->computeDiff( patch, Fdiff, phi, mu_t, D_mol, den, areaFraction, prNo );
     }
 
     //----SUM UP RHS
@@ -681,14 +685,12 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
     double dt = DT; 
 
-    // Here, j is the rk step and n is the time step.  
-    //
-    CCVariable<double> phi_at_jp1;   // phi^{(j+1)}
+    CCVariable<double> phi; 
     constCCVariable<double> RHS; 
     constCCVariable<double> old_den; 
     constCCVariable<double> new_den; 
 
-    new_dw->getModifiable(phi_at_jp1, d_transportVarLabel, matlIndex, patch);
+    new_dw->getModifiable(phi, d_transportVarLabel, matlIndex, patch);
     new_dw->get(RHS, d_RHSLabel, matlIndex, patch, gn, 0);
 
     if ( _stage == 0 ){ 
@@ -701,14 +703,16 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
 
     // ----FE UPDATE
     //     to get phi^{(j+1)}
-    d_timeIntegrator->singlePatchFEUpdate( patch, phi_at_jp1, old_den, new_den, RHS, dt, curr_ssp_time, d_eqnName);
+    d_timeIntegrator->singlePatchFEUpdate( patch, phi, old_den, new_den, RHS, dt, curr_ssp_time, d_eqnName);
 
     if ( clip.activated ) 
-      clipPhi( patch, phi_at_jp1 ); 
+      clipPhi( patch, phi ); 
 
     //----BOUNDARY CONDITIONS
-    //    re-compute the boundary conditions after the update.  
-    computeBCs( patch, d_eqnName, phi_at_jp1 );
+    // re-compute the boundary conditions after the update.  
+    // This is needed because of the table lookup before the time 
+    // averaging occurs
+    computeBCs( patch, d_eqnName, phi );
 
   }
 }
@@ -725,7 +729,6 @@ ScalarEqn::sched_timeAve( const LevelP& level, SchedulerP& sched, int timeSubSte
  
   //New
   tsk->modifies(d_transportVarLabel);
-  tsk->modifies(d_oldtransportVarLabel);
   tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
 
   //Old
@@ -764,13 +767,11 @@ ScalarEqn::timeAve( const ProcessorGroup* pc,
     curr_ssp_time = curr_time + factor * dt;
 
     CCVariable<double> new_phi; 
-    CCVariable<double> last_rk_phi; 
     constCCVariable<double> old_phi;
     constCCVariable<double> new_den; 
     constCCVariable<double> old_den; 
 
     new_dw->getModifiable( new_phi, d_transportVarLabel, matlIndex, patch ); 
-    new_dw->getModifiable( last_rk_phi, d_oldtransportVarLabel, matlIndex, patch ); 
     old_dw->get( old_phi, d_transportVarLabel, matlIndex, patch, gn, 0 ); 
     new_dw->get( new_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0); 
     old_dw->get( old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0); 
@@ -781,10 +782,6 @@ ScalarEqn::timeAve( const ProcessorGroup* pc,
     //----BOUNDARY CONDITIONS
     //    must update BCs for next substep
     computeBCs( patch, d_eqnName, new_phi );
-
-    //----COPY averaged phi into oldphi
-    //  I don't think this is needed but keeping it until it is proven...
-    last_rk_phi.copyData(new_phi); 
 
   }
 }
