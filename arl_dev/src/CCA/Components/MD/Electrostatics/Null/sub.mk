@@ -27,16 +27,10 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR	:= CCA/Components/MD/Electrostatics
+SRCDIR	:= CCA/Components/MD/Electrostatics/Null
 
-SRCS += $(SRCDIR)/Electrostatics.cc         \
-        $(SRCDIR)/ElectrostaticsFactory.cc   
-
-SUBDIRS := $(SRCDIR)/SPME \
-           $(SRCDIR)/Null
-
-include $(SCIRUN_SCRIPTS)/recurse.mk
-
+SRCS += $(SRCDIR)/Null.cc				
+        
 PSELIBS :=
 
 LIBS := 

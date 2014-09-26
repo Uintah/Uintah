@@ -62,14 +62,14 @@ Electrostatics* ElectrostaticsFactory::create(const ProblemSpecP& ps,
   // Find the resolution to determine the cutoff cell information
   Vector resInverse = coords->getCellExtent().asVector() * coords->getInverseCell();
 
-  // Default settings
-  if (type == "") {
-    if (spme.active()) {
-      type = "SPME";
-    } else {
-      throw ProblemSetupException("Must specify Electrostatics type in input file ", __FILE__, __LINE__);
-    }
-  }
+//  // Default settings
+//  if (type == "") {
+//    if (spme.active()) {
+//      type = "SPME";
+//    } else {
+//      throw ProblemSetupException("Must specify Electrostatics type in input file ", __FILE__, __LINE__);
+//    }
+//  }
 
   // Pull cutoff radius from upstream in case there's not a specific one in the electrostatics specification
   double cutoffRadius = -1.0;
@@ -120,7 +120,13 @@ Electrostatics* ElectrostaticsFactory::create(const ProblemSpecP& ps,
                                  polMaxIterations,
                                  polTolerance);
 
-  } else {
+  }
+  else if (type == "NONE" || type == "none" || type == "NULL" || type == "null")
+  {
+    electrostatics = scinew ElectrostaticNull();
+  }
+  else
+  {
     throw ProblemSetupException("Unknown Electrostatics type", __FILE__, __LINE__);
   }
 

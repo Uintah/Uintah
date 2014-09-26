@@ -98,10 +98,10 @@ namespace Uintah {
 		static const std::string d_potentialSubtype;
 		static const int sc_maxIntegralPower;
 		mutable std::string d_potentialDescriptor;
-		const std::string d_comment;
-		const std::string d_label;
 		double sigma, epsilon;
+        const std::string d_label;
 		int m, n;
+        const std::string d_comment;
 		double A, C;
 	};
 

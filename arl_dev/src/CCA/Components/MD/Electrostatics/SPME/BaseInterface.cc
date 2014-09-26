@@ -46,7 +46,7 @@ using namespace Uintah;
 //-------1_________2---------3_________4---------5________6---------7_________8
 
 
-const double SPME::d_dipoleMixRatio = 0.75;
+const double SPME::d_dipoleMixRatio = 0.90;
 
 SPME::SPME(const double             ewaldBeta,
            const double             cutoffRadius,
@@ -414,68 +414,28 @@ void SPME::calculate(   const ProcessorGroup*   pg,
 
   if (f_polarizable) // Transfer information for dipole self-consistent loop
   {
-    size_t numPatches = perProcPatches->size();
-    size_t numMaterials = materials->size();
+//    size_t numPatches = perProcPatches->size();
+//    size_t numMaterials = materials->size();
 
-    for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex)
-    {
-      const Patch* currPatch = perProcPatches->get(patchIndex);
-      for (size_t materialIndex = 0; materialIndex < numMaterials; ++materialIndex)
-      {
-        ParticleSubset* pSubset = parentOldDW->getParticleSubset(materialIndex,
-                                                                 currPatch,
-                                                                 Ghost::None,
-                                                                 0,
-                                                                 label->global->pX);
-        ParticleVariable<SCIRun::Vector> subMu;
-        parentOldDW->getCopy(subMu,
-                             label->electrostatic->pMu,
-                             pSubset);
-
-        subNewDW->allocateAndPut(subMu,
-                                 label->electrostatic->pMuSub,
-                                 pSubset);
-      }
-    }
-
-//    subNewDW->transferFrom(parentOldDW,
-//                           label->global->pX,
-//                           perProcPatches,
-//                           allMaterialsUnion);
-//    subNewDW->transferFrom(parentOldDW,
-//                           label->global->pID,
-//                           perProcPatches,
-//                           allMaterialsUnion);
-
-//    subNewDW->transferFrom(parentOldDW,
-//                           label->electrostatic->pMu,
-//                           perProcPatches,
-//                           allMaterialsUnion);
+    subNewDW->transferFrom(parentOldDW,
+                           label->electrostatic->pMu,
+                           perProcPatches,
+                           allMaterialsUnion);
   }
-
-//  subNewDW->transferFrom(parentOldDW,
-//                         label->global->pX,
-//                         perProcPatches,
-//                         allMaterialsUnion);
-//
-//  subNewDW->transferFrom(parentOldDW,
-//                         label->global->pID,
-//                         perProcPatches,
-//                         allMaterialsUnion);
 
   subscheduler->setInitTimestep(false);
 
-//  // Initialize new parent DW for reduction variables.
-//  //   Note:  We should probably skip this and just initialize them with the
-//  //          converged value after the polarization loop is done instead.
-//  parentNewDW->put(sum_vartype(0.0),
-//                   label->electrostatic->rElectrostaticInverseEnergy);
-//  parentNewDW->put(matrix_sum(0.0),
-//                   label->electrostatic->rElectrostaticInverseStress);
-//  parentNewDW->put(sum_vartype(0.0),
-//                   label->electrostatic->rElectrostaticRealEnergy);
-//  parentNewDW->put(matrix_sum(0.0),
-//                   label->electrostatic->rElectrostaticRealStress);
+  // Initialize new parent DW for reduction variables.
+  //   Note:  We should probably skip this and just initialize them with the
+  //          converged value after the polarization loop is done instead.
+  parentNewDW->put(sum_vartype(0.0),
+                   label->electrostatic->rElectrostaticInverseEnergy);
+  parentNewDW->put(matrix_sum(0.0),
+                   label->electrostatic->rElectrostaticInverseStress);
+  parentNewDW->put(sum_vartype(0.0),
+                   label->electrostatic->rElectrostaticRealEnergy);
+  parentNewDW->put(matrix_sum(0.0),
+                   label->electrostatic->rElectrostaticRealStress);
 
   // Prime variables for the loop
   bool                  converged           =   false;
@@ -487,7 +447,6 @@ void SPME::calculate(   const ProcessorGroup*   pg,
   //         loop?  Could we compile once in initialize?
 
   subscheduler->initialize(3,1);
-
   scheduleInitializeLocalStorage(pg, individualPatches, allMaterials,
                                  subOldDW, subNewDW,
                                  label,
@@ -503,7 +462,8 @@ void SPME::calculate(   const ProcessorGroup*   pg,
   scheduleCalculatePretransform(pg, individualPatches, allMaterials,
                                 subOldDW, subNewDW,
                                 simState, label, coordSys,
-                                subscheduler);
+                                subscheduler,
+                                parentOldDW);
 
   scheduleReduceNodeLocalQ(pg, individualPatches, allMaterials,
                            subOldDW, subNewDW,
@@ -538,105 +498,60 @@ void SPME::calculate(   const ProcessorGroup*   pg,
 //                                 subscheduler);
 
   if (f_polarizable) {
-    // Set up variables which need to be relocated per iteration
-//    LabelArray subPState, subPState_preReloc;
-//
-//    subPState.push_back(label->electrostatic->pMu);
-//    subPState.push_back(label->electrostatic->pE_electroReal);
-//    subPState.push_back(label->electrostatic->pE_electroInverse);
-//    subPState.push_back(label->global->pID);
-//
-//    subPState_preReloc.push_back(label->electrostatic->pMu_preReloc);
-//    subPState_preReloc.push_back(label->electrostatic->pE_electroReal_preReloc);
-//    subPState_preReloc.push_back(label->electrostatic->pE_electroInverse_preReloc);
-//    subPState_preReloc.push_back(label->global->pID_preReloc);
-
-    // Add varLabels for all atom ypes
-//    size_t numAtomTypes = allMaterialsUnion->size();
-//    std::cerr << "Adding labels to subscheduler for " << numAtomTypes << " atom Types." << std::endl;
-//    for (size_t atomType = 0; atomType < numAtomTypes; ++atomType)
-//    {
-//      polParticleVarList.push_back(subPState);
-//      polParticleVarList_preReloc.push_back(subPState_preReloc);
-//    }
 
     scheduleUpdateFieldAndStress(pg, individualPatches, allMaterials,
                                  subOldDW, subNewDW,
                                  label, coordSys,
-                                 subscheduler);
+                                 subscheduler,
+                                 parentOldDW);
     scheduleCalculateNewDipoles(pg, individualPatches, allMaterials,
                                 subOldDW, subNewDW,
                                 simState,
                                 label,
-                                subscheduler);
+                                subscheduler,
+                                parentOldDW);
     scheduleCheckConvergence(pg, individualPatches, allMaterials,
                              subOldDW, subNewDW,
                              label,
-                             subscheduler);
+                             subscheduler,
+                             parentOldDW);
 
-//    subscheduler->scheduleParticleRelocation(level,
-//                                             label->global->pX_preReloc,
-//                                             polParticleVarList_preReloc,
-//                                             label->global->pX,
-//                                             polParticleVarList,
-//                                             label->global->pID,
-//                                             allMaterials);
-//    scheduleDipoleUpdate(pg, individualPatches, allMaterials,
-//                         subOldDW, subNewDW,
-//                         label,
-//                         subscheduler);
   }
   subscheduler->compile();
 
-  // transfer data from parentOldDW to subDW
-//  subNewDW->transferFrom(parentOldDW, label->electrostatic->pMu, perProcPatches,
-//                         allMaterialsUnion);
-//  subNewDW->transferFrom(parentOldDW, label->global->pX, perProcPatches,
-//                         allMaterialsUnion);
-//  subNewDW->transferFrom(parentOldDW, label->global->pID, perProcPatches,
-//                         allMaterialsUnion);
-
-//  DataWarehouse* origOld = subOldDW;
-//  DataWarehouse* origNew = subNewDW;
   while (!converged && (numIterations < d_maxPolarizableIterations)) {
+    // NOTE:  subNewDW is ALWAYS subscheduler->get_dw(3)
+    //        subOldDW is ALWAYS subscheduler->get_dw(2)
+    //        However, subNewDW and subOldDW are wrong after
+    //        subscheduler->advanceDataWarehouse until these variables are reassigned.
     converged = true;
-    // Map subNewDW
-//    subNewDW    =   subscheduler->get_dw(3);
     // Cycle data warehouses
     subscheduler->advanceDataWarehouse(grid);
-//    subNewDW->setScrubbing(DataWarehouse::ScrubNone);
-    subscheduler->get_dw(2)->setScrubbing(DataWarehouse::ScrubNone); // Functionally equivalent;
-    // Sets current subOldDW to scrubmode ScrubNone
 
-//    DataWarehouse* newOld = subscheduler->get_dw(2);
-//    DataWarehouse* newNew = subscheduler->get_dw(3);
+    // Set the old sub DW to Scrubmode::ScrubNone
+    subscheduler->get_dw(3)->setScrubbing(DataWarehouse::ScrubNone);
+
     // Run our compiled calculation taskgraph
     subscheduler->execute();
-
-//    DataWarehouse* updatedOld = subscheduler->get_dw(2);
-//    DataWarehouse* updatedNew = subscheduler->get_dw(3);
 
     // Extract the reduced deviation value from the subNewDW
     sum_vartype polarizationDeviation;
     subscheduler->get_dw(3)->get(polarizationDeviation,
                                  label->electrostatic->rPolarizationDeviation);
 
-//    subNewDW->get(polarizationDeviation,
-//                  label->electrostatic->rPolarizationDeviation);
-
     double deviationValue = sqrt(polarizationDeviation);
     if (f_polarizable && (deviationValue > d_polarizationTolerance)) {
       converged = false;
-//      subOldDW = subscheduler->get_dw(2);
-//      subNewDW = subscheduler->get_dw(3);
     }
     numIterations++;
     std::cerr << "Polarization iteration: " << numIterations
               << " deviation: " << deviationValue << std::endl;
   }
-
-  subNewDW  =   subscheduler->get_dw(3);
   std::cout << "Polarization loop completed with " << numIterations << " iterations." << std::endl;
+
+  // Done with polarization, so associate the subNewDW variable name with the
+  // correct DW one last time.
+  subNewDW  =   subscheduler->get_dw(3);
   // Push energies up to parent DW
   // Should write a transfer function for this
   sum_vartype spmeEnergyTemp;
@@ -670,98 +585,43 @@ void SPME::calculate(   const ProcessorGroup*   pg,
   parentOldDW->setScrubbing(parentOldDW_scrubmode);
   parentNewDW->setScrubbing(parentNewDW_scrubmode);
 
+  // We cannot simply transfer dipoles from the subNewDW to the parentNewDW,
+  //   because they have different variable names.  Therefore, we have to kludge this
+  //   by looping through the patches.
 
-//  // FIXME APH  Work around for below error (patch/material loop)
-//  size_t numPatches = perProcPatches->size();
-//  size_t numAtomTypes = materials->size();
-//
-//  for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) {
-//    const Patch* patch = perProcPatches->get(patchIndex);
-//    for (size_t typeIndex = 0; typeIndex < numAtomTypes; ++typeIndex) {
-//      int atomType = materials->get(typeIndex);
-//      ParticleSubset* atomSet = subscheduler->get_dw(2)->getParticleSubset(atomType, patch);
-//
-//
-//      constParticleVariable<Vector> pMuPull, pERealPull, pEInversePull;
-//      ParticleVariable<Vector>      pMuPush, pERealPush, pEInversePush;
-//      if (f_polarizable) { // Transfer dipole and field
-//        subNewDW->get(pMuPull,
-//                      label->electrostatic->pMu_preReloc,
-//                      atomSet);
-//        subNewDW->get(pERealPull,
-//                      label->electrostatic->pE_electroReal_preReloc,
-//                      atomSet);
-//        subNewDW->get(pEInversePull,
-//                      label->electrostatic->pE_electroInverse_preReloc,
-//                      atomSet);
-//
-//        parentNewDW->allocateAndPut(pMuPush,
-//                                    label->electrostatic->pMu_preReloc,
-//                                    atomSet);
-//        parentNewDW->allocateAndPut(pERealPush,
-//                                    label->electrostatic->pE_electroReal_preReloc,
-//                                    atomSet);
-//        parentNewDW->allocateAndPut(pEInversePush,
-//                                    label->electrostatic->pE_electroInverse_preReloc,
-//                                    atomSet);
-//
-//      }
-//
-//      constParticleVariable<Vector> pFRealPull, pFInversePull;
-//      ParticleVariable<Vector>      pFRealPush, pFInversePush;
-//      subNewDW->get(pFRealPull,
-//                    label->electrostatic->pF_electroReal_preReloc,
-//                    atomSet);
-////      subNewDW->get(pFInversePull,
-////                    label->electrostatic->pF_electroInverse_preReloc,
-////                    atomSet);
-//      parentNewDW->allocateAndPut(pFRealPush,
-//                                  label->electrostatic->pF_electroReal_preReloc,
-//                                  atomSet);
-////      parentNewDW->allocateAndPut(pFInversePush,
-////                                  label->electrostatic->pF_electroInverse_preReloc,
-////                                  atomSet);
-//
-//      size_t numAtoms = atomSet->numParticles();
-//      for (size_t atom = 0; atom < numAtoms; ++atom) {
-//        if (f_polarizable) {
-//          pMuPush[atom]         =   pMuPull[atom];
-//          pERealPush[atom]      =   pERealPull[atom];
-//          pEInversePush[atom]   =   pEInversePull[atom];
-//        }
-//        pFRealPush[atom]    =   pFRealPull[atom];
-////        pFInversePush[atom] =   pFInversePull[atom];
-//      } // Loop over atoms
-//    } // Loop over atom types
-//  } // Loop over patches
+  size_t numPatches = perProcPatches->size();
+  size_t numAtomTypes = allMaterialsUnion->size();
 
-  // FIXME APH I would like to use this instead of the above, however this complains:
-  // 0 Caught exception: An UnknownVariable exception was thrown.
-  // /home/jbhooper/arlDev/UintahARL/src/CCA/Components/Schedulers/OnDemandDataWarehouse.cc:1131
-  // Unknown variable: ParticleSubset, (low: [int 0, 0, 0], high: [int 50, 50, 25] DWID 1) requested from DW 1, Level 0, patch 0([ [0.00, 0.00, 0.00] [135.18, 135.18, 67.59] ]), material index: 0 (Cannot find particle set on patch)
-  if (f_polarizable) {
+  // TODO FIXME:  Clunky, but either required or can be replaced with a getCopy call.
+  for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex)
+  {
+    const Patch* currPatch = perProcPatches->get(patchIndex);
+    for (size_t typeIndex = 0; typeIndex < numAtomTypes; ++typeIndex)
+    {
+      ParticleSubset* currPset = parentOldDW->getParticleSubset(typeIndex,
+                                                                currPatch,
+                                                                Ghost::None,
+                                                                0,
+                                                                label->global->pX);
+      constParticleVariable<SCIRun::Vector> pMuSub, pFRealSub, pFInvSub;
+      subNewDW->get(pMuSub, label->electrostatic->pMu, currPset);
+      subNewDW->get(pFRealSub, label->electrostatic->pF_electroReal_preReloc, currPset);
+//      subNewDW->get(pFInvSub, label->electrostatic->pF_electroInverse_preReloc, currPset);
+      ParticleVariable<SCIRun::Vector> pMuParent, pFRealParent, pFInvParent;
+      parentNewDW->allocateAndPut(pMuParent, label->electrostatic->pMu_preReloc, currPset);
+      parentNewDW->allocateAndPut(pFRealParent, label->electrostatic->pF_electroReal_preReloc, currPset);
+//      parentNewDW->allocateAndPut(pFInvParent, label->electrostatic->pF_electroInverse_preReloc, currPset);
 
-    parentNewDW->transferFrom(subNewDW,
-                              label->electrostatic->pMu_preReloc,
-                              perProcPatches,
-                              allMaterialsUnion);
-    parentNewDW->transferFrom(subNewDW,
-                              label->electrostatic->pE_electroInverse_preReloc,
-                              perProcPatches,
-                              allMaterialsUnion);
-    parentNewDW->transferFrom(subNewDW,
-                              label->electrostatic->pE_electroReal_preReloc,
-                              perProcPatches,
-                              allMaterialsUnion);
+      size_t numParticles = currPset->numParticles();
+      for (size_t particleIndex = 0; particleIndex < numParticles; ++particleIndex)
+      {
+        pMuParent[particleIndex] = pMuSub[particleIndex];
+        pFRealParent[particleIndex] = pFRealSub[particleIndex];
+//        pFInvParent[particleIndex] = pFInvSub[particleIndex];
+      }
+
+    }
   }
-//  parentNewDW->transferFrom(subNewDW,
-//                            label->electrostatic->pF_electroInverse_preReloc,
-//                            perProcPatches,
-//                            allMaterialsUnion);
-  parentNewDW->transferFrom(subNewDW,
-                            label->electrostatic->pF_electroReal_preReloc,
-                            perProcPatches,
-                            allMaterialsUnion);
 
   // Dipoles have converged, calculate forces
   if (f_polarizable) {

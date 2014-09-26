@@ -83,11 +83,11 @@ namespace Uintah {
 
 
     private:
+      NonbondedTwoBodyPotential* nonbonded;
       double d_mass;
       double d_charge;
       double d_polarizability;
       size_t d_subtypeNumber;
-      NonbondedTwoBodyPotential* nonbonded;
 
       static const std::string materialClassDescriptor;
 

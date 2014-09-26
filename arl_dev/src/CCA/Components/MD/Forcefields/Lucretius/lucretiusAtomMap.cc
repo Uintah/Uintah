@@ -105,7 +105,7 @@ lucretiusAtomMap::lucretiusAtomMap(const ProblemSpecP&      spec,
     if (ffType == "Lucretius") // All as expected
     {
       std::string coordFilename;
-      forcefieldType currentForcefieldType = Lucretius;
+//      forcefieldType currentForcefieldType = Lucretius;
       coordSpec->require("coordinateFile", coordFilename);
 
       std::ifstream coordFile;

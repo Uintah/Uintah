@@ -34,24 +34,16 @@
 
 #include <vector>
 
-#include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Grid/Variables/VarTypes.h>
 
 #include <Core/Thread/ConditionVariable.h>
 
 #include <Core/Util/DebugStream.h>
 
-#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
-
 #include <CCA/Components/MD/SimpleGrid.h>
 #include <CCA/Components/MD/MDSubcomponent.h>
-#include <CCA/Components/MD/MDSystem.h>
-#include <CCA/Components/MD/MDUtil.h>
-#include <CCA/Components/MD/MDLabel.h>
 
 #include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
 #include <CCA/Components/MD/Electrostatics/Electrostatics.h>
@@ -63,7 +55,6 @@
 //-------1_________2---------3_________4---------5________6---------7_________8
 
 namespace Uintah {
-
   typedef std::complex<double> dblcomplex;
   typedef std::vector<SPMEMapPoint> spmeMapVector;
 
@@ -304,7 +295,8 @@ namespace Uintah {
                                           const SimulationStateP*   simState,
                                           const MDLabel*            label,
                                                 CoordinateSystem*   coordSystem,
-                                                SchedulerP&         sched);
+                                                SchedulerP&         sched,
+                                                DataWarehouse*      parentOldDW);
        /*
         * @brief    Places the reduction of nodewide fourier space data into
         *           the task graph
@@ -375,7 +367,8 @@ namespace Uintah {
                                          DataWarehouse*         subNewDW,
                                          const MDLabel*         label,
                                          CoordinateSystem*      coordSystem,
-                                         SchedulerP&            sched);
+                                         SchedulerP&            sched,
+                                               DataWarehouse*   parentOldDW);
 
        /*
         * @brief    Check convergence of the iterated dipoles in polarizable systems
@@ -383,10 +376,11 @@ namespace Uintah {
        void scheduleCheckConvergence(const ProcessorGroup*  pg,
                                      const PatchSet*        patches,
                                      const MaterialSet*     materials,
-                                     DataWarehouse*         subOldDW,
-                                     DataWarehouse*         subNewDW,
+                                           DataWarehouse*   subOldDW,
+                                           DataWarehouse*   subNewDW,
                                      const MDLabel*         label,
-                                     SchedulerP&            sched);
+                                           SchedulerP&      sched,
+                                           DataWarehouse*   parentOldDW);
 
        /*
         * @brief    Place the calculation of new dipoles into the task graph
@@ -398,7 +392,8 @@ namespace Uintah {
                                               DataWarehouse*    subNewDW,
                                         const SimulationStateP* simState,
                                         const MDLabel*          label,
-                                              SchedulerP&       sched);
+                                              SchedulerP&       sched,
+                                              DataWarehouse*    parentOldDW);
 
        void scheduleCalculatePostTransform(const ProcessorGroup*    pg,
                                            const PatchSet*          patches,
@@ -527,11 +522,12 @@ namespace Uintah {
        void calculatePreTransform(const ProcessorGroup*     pg,
                                   const PatchSubset*        patches,
                                   const MaterialSubset*     materials,
-                                  DataWarehouse*            oldDW,
-                                  DataWarehouse*            newDW,
-                                  const SimulationStateP*         simState,
+                                        DataWarehouse*      oldDW,
+                                        DataWarehouse*      newDW,
+                                  const SimulationStateP*   simState,
                                   const MDLabel*            label,
-                                  CoordinateSystem*         coordSys);
+                                        CoordinateSystem*   coordSys,
+                                        DataWarehouse*      parentOldDW);
 
        /*
         * @brief    Performs calculations necessary to fill the fourier charge
@@ -540,11 +536,12 @@ namespace Uintah {
        void calculatePreTransformDipole(const ProcessorGroup*   pg,
                                         const PatchSubset*      patches,
                                         const MaterialSubset*   materials,
-                                        DataWarehouse*          oldDW,
-                                        DataWarehouse*          newDW,
+                                              DataWarehouse*          oldDW,
+                                              DataWarehouse*          newDW,
                                         const SimulationStateP*       simState,
                                         const MDLabel*          label,
-                                        CoordinateSystem*       coordSys);
+                                              CoordinateSystem*       coordSys,
+                                              DataWarehouse*    parentOldDW);
 
        /*
         * @brief    Maps the particle charge value onto the K-space grid
@@ -581,7 +578,8 @@ namespace Uintah {
                                       DataWarehouse*    oldDW,
                                       DataWarehouse*    newDW,
                                 const SimulationStateP* sharedState,
-                                const MDLabel*          label);
+                                const MDLabel*          label,
+                                      DataWarehouse*    parentOldDW);
 
        /*
         * @brief    Determine the force of the charge-only system
@@ -636,10 +634,11 @@ namespace Uintah {
        void dipoleUpdateFieldAndStress(const ProcessorGroup*    pg,
                                        const PatchSubset*       patches,
                                        const MaterialSubset*    materials,
-                                       DataWarehouse*           oldDW,
-                                       DataWarehouse*           newDW,
+                                             DataWarehouse*     oldDW,
+                                             DataWarehouse*     newDW,
                                        const MDLabel*           label,
-                                       CoordinateSystem*        coordSystem);
+                                             CoordinateSystem*  coordSystem,
+                                             DataWarehouse*     parentOldDW);
 
        /*
         * @brief    On-processor reduction of the local, per-thread instances
@@ -648,8 +647,8 @@ namespace Uintah {
        void reduceNodeLocalQ(const ProcessorGroup*  pg,
                              const PatchSubset*     patches,
                              const MaterialSubset*  materials,
-                             DataWarehouse*         oldDW,
-                             DataWarehouse*         newDW,
+                                   DataWarehouse*         oldDW,
+                                   DataWarehouse*         newDW,
                              const MDLabel*         label);
 
        /*
@@ -659,15 +658,15 @@ namespace Uintah {
        void distributeNodeLocalQ(const ProcessorGroup*  pg,
                                  const PatchSubset*     patches,
                                  const MaterialSubset*  materials,
-                                 DataWarehouse*         oldDW,
-                                 DataWarehouse*         newDW,
+                                       DataWarehouse*         oldDW,
+                                       DataWarehouse*         newDW,
                                  const MDLabel*         label);
 
        void transformRealToFourier(const ProcessorGroup*    pg,
                                    const PatchSubset*       patches,
                                    const MaterialSubset*    materials,
-                                   DataWarehouse*           oldDW,
-                                   DataWarehouse*           newDW,
+                                         DataWarehouse*           oldDW,
+                                         DataWarehouse*           newDW,
                                    const MDLabel*           label);
 
        void transformFourierToReal(const ProcessorGroup*    pg,
@@ -681,9 +680,10 @@ namespace Uintah {
        void checkConvergence(const ProcessorGroup*      pg,
                              const PatchSubset*         patches,
                              const MaterialSubset*      materials,
-                             DataWarehouse*             oldDW,
-                             DataWarehouse*             newDW,
-                             const MDLabel*             label);
+                                   DataWarehouse*       oldDW,
+                                   DataWarehouse*       newDW,
+                             const MDLabel*             label,
+                                   DataWarehouse*       parentOldDW);
 
 //  Data members
    // Implementation type for electrostatic calculation
