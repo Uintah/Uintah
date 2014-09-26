@@ -314,30 +314,6 @@ ScalarEqn::assign_stage_to_sources(){
 
 }
 //---------------------------------------------------------------------------
-// Method: Schedule clean up. 
-//---------------------------------------------------------------------------
-void 
-ScalarEqn::sched_cleanUp( const LevelP& level, SchedulerP& sched )
-{
-  printSchedule(level,dbg,"ScalarEqn::sched_cleanUp");
-  
-  string taskname = "ScalarEqn::cleanUp";
-  Task* tsk = scinew Task(taskname, this, &ScalarEqn::cleanUp);
-
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
-}
-//---------------------------------------------------------------------------
-// Method: Actually clean up. 
-//---------------------------------------------------------------------------
-void ScalarEqn::cleanUp( const ProcessorGroup* pc, 
-                         const PatchSubset* patches, 
-                         const MaterialSubset* matls, 
-                         DataWarehouse* old_dw, 
-                         DataWarehouse* new_dw )
-{
-  printTask(patches,dbg,"ScalarEqn::cleanUp");
-}
-//---------------------------------------------------------------------------
 // Method: Schedule the evaluation of the transport equation. 
 //---------------------------------------------------------------------------
 void

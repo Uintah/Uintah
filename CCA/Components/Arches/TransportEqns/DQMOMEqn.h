@@ -72,13 +72,14 @@ public:
 
   /** @brief Schedule the build for the terms needed in the transport equation */
   void sched_buildTransportEqn( const LevelP& level, 
-                                SchedulerP& sched, int timeSubStep );
+                                SchedulerP& sched, const int timeSubStep );
   /** @brief Actually build the transport equation */ 
-  void buildTransportEqn(const ProcessorGroup*, 
-                         const PatchSubset* patches, 
-                         const MaterialSubset*, 
-                         DataWarehouse* old_dw, 
-                         DataWarehouse* new_dw);
+  void buildTransportEqn( const ProcessorGroup*, 
+                          const PatchSubset* patches, 
+                          const MaterialSubset*, 
+                          DataWarehouse* old_dw, 
+                          DataWarehouse* new_dw, 
+                          const int timeSubStep );
 
   /** @brief Schedule the solution the transport equation */
   void sched_solveTransportEqn(const LevelP& level, 
@@ -108,9 +109,6 @@ public:
   template <class phiType> void computeBCs( const Patch* patch, std::string varName, phiType& phi ){
     d_boundaryCond->setScalarValueBC( 0, patch, phi, varName );
   };
-
-  /** @brief Schedule the cleanup after this equation. */ 
-  void sched_cleanUp( const LevelP&, SchedulerP& sched ); 
 
   /** @brief Time averaging method required by base class. This method is empty (not needed) at the moment */
   void sched_timeAve( const LevelP& level, SchedulerP& sched, int timeSubStep ){};
