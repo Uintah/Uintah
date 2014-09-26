@@ -54,6 +54,7 @@ namespace Uintah {
 using namespace SCIRun;
 
 class ThermalContact;
+class ConcentrationContact;
 class HeatConduction;
 class AnalysisModule;
 class ConcentrationDiffusion;
@@ -93,6 +94,7 @@ public:
 
   Contact*         			contactModel;
   ThermalContact*  			thermalContactModel;
+  ConcentrationContact* concentrationContactModel;
   HeatConduction* 			heatConductionModel;
   ConcentrationDiffusion* 	concentrationDiffusionModel;
  

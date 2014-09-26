@@ -28,6 +28,8 @@
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <CCA/Components/MPM/HeatConduction/HeatConduction.h>
 #include <CCA/Components/MPM/ReactiveFlow/ConcentrationDiffusion.h>
+#include <CCA/Components/MPM/ReactiveFlow/ConcentrationContact/ConcentrationContact.h>
+#include <CCA/Components/MPM/ReactiveFlow/ConcentrationContact/ConcentrationContactFactory.h>
 #include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
@@ -124,6 +126,7 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   d_SMALL_NUM_MPM=1e-200;
   contactModel        = 0;
   thermalContactModel = 0;
+  concentrationContactModel = 0;
   heatConductionModel = 0;
   concentrationDiffusionModel = 0;
   NGP     = 1;
@@ -140,6 +143,7 @@ SerialMPM::~SerialMPM()
   delete flags;
   delete contactModel;
   delete thermalContactModel;
+  delete concentrationContactModel;
   delete heatConductionModel;
   delete concentrationDiffusionModel;
   MPMPhysicalBCFactory::clean();
@@ -248,6 +252,9 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   contactModel = ContactFactory::create(UintahParallelComponent::d_myworld, restart_mat_ps,sharedState,lb,flags);
   thermalContactModel =
     ThermalContactFactory::create(restart_mat_ps, sharedState, lb,flags);
+
+  concentrationContactModel =
+    ConcentrationContactFactory::create(restart_mat_ps, sharedState, lb,flags);
 
   heatConductionModel = scinew HeatConduction(sharedState,lb,flags);
 

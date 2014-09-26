@@ -55,6 +55,7 @@ namespace Uintah {
     const VarLabel* temp_CCLabel;
     const VarLabel* conc_CCLabel;
     const VarLabel* temp_CC_XchangeLabel;
+    const VarLabel* conc_CC_XchangeLabel;
     const VarLabel* vel_CCLabel;
     const VarLabel* vel_CC_XchangeLabel;
     const VarLabel* speedSound_CCLabel;
@@ -85,6 +86,7 @@ namespace Uintah {
     const VarLabel* gammaLabel;
     const VarLabel* specific_heatLabel;
     const VarLabel* dTdt_CCLabel;
+    const VarLabel* dCdt_CCLabel;
     const VarLabel* dVdt_CCLabel;
 //__________________________________
 //    IMPLICIT      
@@ -175,6 +177,7 @@ namespace Uintah {
     const VarLabel* AMR_SyncTaskgraphLabel;
     const VarLabel* mag_grad_rho_CCLabel;
     const VarLabel* mag_grad_temp_CCLabel;
+    const VarLabel* mag_grad_conc_CCLabel;
     const VarLabel* mag_div_vel_CCLabel;
     const VarLabel* mag_grad_vol_frac_CCLabel;
     const VarLabel* mag_grad_press_CCLabel;

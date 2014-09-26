@@ -28,13 +28,10 @@
 # Makefile fragment for this subdirectory 
 
 
-SRCDIR   := CCA/Components/MPM/ReactiveFlow
+SRCDIR   := CCA/Components/MPM/ReactiveFlow/ConcentrationContact
 
 SRCS     += \
-	$(SRCDIR)/ConcentrationDiffusion.cc \
-	$(SRCDIR)/PotentialField.cc
-
-SUBDIRS := \
-	$(SRCDIR)/ConcentrationContact
-
-include $(SCIRUN_SCRIPTS)/recurse.mk
+	$(SRCDIR)/ConcentrationContact.cc \
+	$(SRCDIR)/ConcentrationContactFactory.cc \
+	$(SRCDIR)/NullConcentrationContact.cc \
+	$(SRCDIR)/STConcentrationContact.cc
