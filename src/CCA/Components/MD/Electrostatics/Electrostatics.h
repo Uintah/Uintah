@@ -26,10 +26,15 @@
 #define UINTAHMD_ELECTROSTATICS_H
 
 #include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/VarTypes.h>
 
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 
 #include <CCA/Components/MD/MDSystem.h>
+#include <CCA/Components/MD/MDUtil.h>
+#include <CCA/Components/MD/MDLabel.h>
+
 #include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
 
 namespace Uintah {

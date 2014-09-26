@@ -578,11 +578,12 @@ void SPME::calculateRealspacePointDipole(const ProcessorGroup*      pg,
 void SPME::calculatePreTransformDipole(const ProcessorGroup*    pg,
                                        const PatchSubset*       patches,
                                        const MaterialSubset*    materials,
-                                       DataWarehouse*           oldDW,
-                                       DataWarehouse*           newDW,
+                                             DataWarehouse*     oldDW,
+                                             DataWarehouse*     newDW,
                                        const SimulationStateP*  simState,
                                        const MDLabel*           label,
-                                       CoordinateSystem*        coordSys)
+                                             CoordinateSystem*  coordSys,
+                                             DataWarehouse*     parentOldDW)
 {
   size_t numPatches   = patches->size();
   size_t numAtomTypes = materials->size();
@@ -605,7 +606,8 @@ void SPME::calculatePreTransformDipole(const ProcessorGroup*    pg,
       int       atomType    = materials->get(currType);
       double    atomCharge  = (*simState)->getMDMaterial(atomType)->getCharge();
 
-      ParticleSubset* atomSet = oldDW->getParticleSubset(atomType, patch);
+      ParticleSubset* atomSet = parentOldDW->getParticleSubset(atomType,
+                                                               patch);
 
       constParticleVariable<Vector> p_Dipole;
       oldDW->get(p_Dipole, label->electrostatic->pMu, atomSet);
@@ -805,7 +807,8 @@ void SPME::dipoleUpdateFieldAndStress(const ProcessorGroup* pg,
                                       DataWarehouse*        oldDW,
                                       DataWarehouse*        newDW,
                                       const MDLabel*        label,
-                                      CoordinateSystem*     coordSystem) {
+                                      CoordinateSystem*     coordSystem,
+                                            DataWarehouse*  parentOldDW) {
 
   size_t numPatches = patches->size();
   size_t numAtomTypes = materials->size();
@@ -836,7 +839,8 @@ void SPME::dipoleUpdateFieldAndStress(const ProcessorGroup* pg,
 
       std::vector<SPMEMapPoint>* gridMap;
                       gridMap  = spmePatch->getChargeMap(currType);
-      ParticleSubset* pset     = oldDW->getParticleSubset(currType, patch);
+      ParticleSubset* pset     = parentOldDW->getParticleSubset(currType,
+                                                                patch);
 
       constParticleVariable<Vector> pDipole;
       ParticleVariable<Vector>      pRecipField;
@@ -898,7 +902,8 @@ void SPME::calculateNewDipoles(const ProcessorGroup*    pg,
                                      DataWarehouse*     oldDW,
                                      DataWarehouse*     newDW,
                                const SimulationStateP*  sharedState,
-                               const MDLabel*           label) {
+                               const MDLabel*           label,
+                                     DataWarehouse*     parentOldDW) {
 
   size_t numPatches = patches->size();
   size_t numMaterials = materials->size();
@@ -913,7 +918,7 @@ void SPME::calculateNewDipoles(const ProcessorGroup*    pg,
       double    polarizability  = (*sharedState)->getMDMaterial(atomType)
                                                   ->getPolarizability();
 
-      ParticleSubset* localSet = oldDW->getParticleSubset(atomType, patch);
+      ParticleSubset* localSet = parentOldDW->getParticleSubset(atomType, patch);
 
 
       constParticleVariable<Vector> oldDipoles;
@@ -929,7 +934,7 @@ void SPME::calculateNewDipoles(const ProcessorGroup*    pg,
       ParticleVariable<SCIRun::Vector> newDipoles;
 
       // And we'll be calculating into the new dipole container
-      newDW->allocateAndPut(newDipoles, label->electrostatic->pMu_preReloc, localSet);
+      newDW->allocateAndPut(newDipoles, label->electrostatic->pMu, localSet);
       size_t localAtoms = localSet->numParticles();
       for (size_t Index = 0; Index < localAtoms; ++ Index) {
         newDipoles[Index] = polarizability*(reciprocalField[Index] +
@@ -938,15 +943,6 @@ void SPME::calculateNewDipoles(const ProcessorGroup*    pg,
         newDipoles[Index] *= d_dipoleMixRatio;
         newDipoles[Index] += newMix*oldDipoles[Index];
       }
-      ParticleVariable<Point> X;
-      ParticleVariable<long64> ID;
-      newDW->allocateAndPut(X, label->global->pX_preReloc, localSet);
-      oldDW->copyOut(X, label->global->pX, localSet);
-      newDW->allocateAndPut(ID, label->global->pID_preReloc, localSet);
-      oldDW->copyOut(ID, label->global->pID, localSet);
-
-      ParticleSubset* delset = scinew ParticleSubset(0, atomType, patch);
-      newDW->deleteParticles(delset);
     }
   }
 }
@@ -954,10 +950,11 @@ void SPME::calculateNewDipoles(const ProcessorGroup*    pg,
 void SPME::checkConvergence(const ProcessorGroup*       pg,
                             const PatchSubset*          patches,
                             const MaterialSubset*       materials,
-                            DataWarehouse*              subOldDW,
-                            DataWarehouse*              subNewDW,
-                            const MDLabel*              label) {
-
+                                  DataWarehouse*        subOldDW,
+                                  DataWarehouse*        subNewDW,
+                            const MDLabel*              label,
+                                  DataWarehouse*        parentOldDW)
+{
   // Subroutine determines if polarizable component has converged
   double sumSquaredDeviation = 0.0;
   size_t numPatches = patches->size();
@@ -966,18 +963,17 @@ void SPME::checkConvergence(const ProcessorGroup*       pg,
     const Patch* patch = patches->get(patchIndex);
     for (size_t typeIndex = 0; typeIndex < numAtomTypes; ++typeIndex) {
       int atomType = materials->get(typeIndex);
-      ParticleSubset* atomSubset;
-      atomSubset = subOldDW->getParticleSubset(atomType, patch);
-
       // Particle subsets are constant, so can get the subset once and index into it
       // for both old and new DW.
+      ParticleSubset* atomSubset = parentOldDW->getParticleSubset(atomType, patch);
+
       constParticleVariable<SCIRun::Vector> oldDipole;
       constParticleVariable<SCIRun::Vector> newDipole;
       subOldDW->get(oldDipole,
                     label->electrostatic->pMu,
                     atomSubset);
       subNewDW->get(newDipole,
-                    label->electrostatic->pMu_preReloc,
+                    label->electrostatic->pMu,
                     atomSubset);
 
       size_t numAtoms = atomSubset->numParticles();

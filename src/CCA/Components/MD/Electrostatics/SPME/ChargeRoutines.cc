@@ -284,14 +284,15 @@ void SPME::generateChargeMap(const ProcessorGroup*    pg,
     }
 }
 
-void SPME::calculatePreTransform(const ProcessorGroup*  pg,
-                                 const PatchSubset*     patches,
-                                 const MaterialSubset*  materials,
-                                 DataWarehouse*         oldDW,
-                                 DataWarehouse*         newDW,
-                                 const SimulationStateP*      simState,
-                                 const MDLabel*         label,
-                                 CoordinateSystem*      coordSys)
+void SPME::calculatePreTransform(const ProcessorGroup*      pg,
+                                 const PatchSubset*         patches,
+                                 const MaterialSubset*      materials,
+                                       DataWarehouse*       oldDW,
+                                       DataWarehouse*       newDW,
+                                 const SimulationStateP*    simState,
+                                 const MDLabel*             label,
+                                       CoordinateSystem*    coordSys,
+                                       DataWarehouse*       parentOldDW)
 {
 
   size_t numPatches   = patches->size();

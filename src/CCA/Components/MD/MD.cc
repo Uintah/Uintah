@@ -552,7 +552,7 @@ void MD::scheduleElectrostaticsInitialize(SchedulerP& sched,
   printSchedule(perProcPatches, md_cout, flowLocation);
 
   // initialize electrostatics instance; if we're doing electrostatics
-  if (d_electrostatics->getType() != Electrostatics::NONE) {
+//  if (d_electrostatics->getType() != Electrostatics::NONE) {
 
     Task* task = scinew Task("MD::electrostaticsInitialize",
                              this,
@@ -567,7 +567,7 @@ void MD::scheduleElectrostaticsInitialize(SchedulerP& sched,
 
     task->setType(Task::OncePerProc);
     sched->addTask(task, perProcPatches, matls);
-  }
+//  }
   if (mdFlowDebug.active()) {
     mdFlowDebug << flowLocation
                 << "END"
@@ -584,7 +584,7 @@ void MD::scheduleElectrostaticsSetup(SchedulerP& sched,
   const std::string flowLocation = "MD::scheduleElectrostaticsSetup | ";
   printSchedule(patches, md_cout, flowLocation);
 
-  if (d_electrostatics->getType() != Electrostatics::NONE) {
+//  if (d_electrostatics->getType() != Electrostatics::NONE) {
     Task* task = scinew Task("MD::electrostaticsSetup", this, &MD::electrostaticsSetup);
 
     // cast electrostatics to a subcomponent interface
@@ -594,7 +594,7 @@ void MD::scheduleElectrostaticsSetup(SchedulerP& sched,
     d_electroInterface->addSetupComputes(task, d_label);
     sched->addTask(task, patches, matls);
 
-  }
+//  }
   if (mdFlowDebug.active()) {
     mdFlowDebug << flowLocation
                 << "END"
@@ -611,7 +611,7 @@ void MD::scheduleElectrostaticsCalculate(SchedulerP& sched,
   const std::string flowLocation = "MD::scheduleElectrostaticsCalculate | ";
   printSchedule(patches, md_cout, flowLocation);
 
-  if (d_electrostatics->getType() != Electrostatics::NONE) {
+//  if (d_electrostatics->getType() != Electrostatics::NONE) {
     Task* task = scinew Task("electrostaticsCalculate", this, &MD::electrostaticsCalculate, level);
 
 //    task->requires(Task::OldDW,
@@ -639,7 +639,7 @@ void MD::scheduleElectrostaticsCalculate(SchedulerP& sched,
     const PatchSet* perProcPatches = loadBal->getPerProcessorPatchSet(level);
 
     sched->addTask(task, perProcPatches, matls);
-  }
+//  }
   if (mdFlowDebug.active()) {
     mdFlowDebug << flowLocation
                 << "END"
@@ -656,7 +656,7 @@ void MD::scheduleElectrostaticsFinalize(SchedulerP& sched,
   const std::string flowLocation = "MD::scheduleElectrostaticsFinalize | ";
   printSchedule(patches, md_cout, flowLocation);
 
-  if (d_electrostatics->getType() != Electrostatics::NONE) {
+//  if (d_electrostatics->getType() != Electrostatics::NONE) {
     Task* task = scinew Task("MD::electrostaticsFinalize", this, &MD::electrostaticsFinalize);
 
     MDSubcomponent* d_electroInterface = dynamic_cast<MDSubcomponent*> (d_electrostatics);
@@ -664,7 +664,7 @@ void MD::scheduleElectrostaticsFinalize(SchedulerP& sched,
     d_electroInterface->addFinalizeComputes(task, d_label);
 
     sched->addTask(task, patches, matls);
-  }
+//  }
 
   if (mdFlowDebug.active()) {
     mdFlowDebug << flowLocation

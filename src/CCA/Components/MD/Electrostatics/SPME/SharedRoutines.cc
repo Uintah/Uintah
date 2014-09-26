@@ -371,10 +371,10 @@ void SPME::initializeLocalStorage(const ProcessorGroup* pg,
              label->SPME_dep->dInitializeQ);
 }
 
-void SPME::reduceNodeLocalQ(const ProcessorGroup*   pg,
+void SPME::reduceNodeLocalQ(const ProcessorGroup* /*pg*/,
                             const PatchSubset*      patches,
                             const MaterialSubset*   materials,
-                            DataWarehouse*          oldDW,
+                            DataWarehouse*        /*oldDW*/,
                             DataWarehouse*          newDW,
                             const MDLabel*          label)
 {
@@ -461,59 +461,10 @@ void SPME::reduceNodeLocalQ(const ProcessorGroup*   pg,
   } // Patch
 }
 
-//void SPME::copyToNodeLocalQ(const ProcessorGroup* pg,
-//                             const PatchSubset* patches,
-//                             const MaterialSubset* materials,
-//                             DataWarehouse* oldDW,
-//                             DataWarehouse* newDW)
-//{
-//  size_t numPatches = patches->size();
-//
-//  for (size_t p=0; p < numPatches; ++p) {
-//    const Patch* patch = patches->get(p);
-//    //Extract current spmePatch
-//    SPMEPatch* currentSPMEPatch = d_spmePatchMap.find(patch->getID())->second;
-//
-//    SimpleGrid<dblcomplex>* Q_patchLocal = currentSPMEPatch->getQ();
-//    IntVector localQOffset = Q_patchLocal->getOffset(); // Location of the local Q patch's 0,0,0 origin
-//    IntVector localQExtent = Q_patchLocal->getExtents(); // No ghost cells here, because we only want what's internal to the patch to transfer
-//
-//    //IntVector globalBoundaries = d_Q_nodeLocal->getExtents();
-//
-//    int xBase = localQOffset[0];
-//    int yBase = localQOffset[1];
-//    int zBase = localQOffset[2];
-//
-//    int xExtent = localQExtent[0];
-//    int yExtent = localQExtent[1];
-//    int zExtent = localQExtent[2];
-//
-//    //int xMax = globalBoundaries[0];
-//    //int yMax = globalBoundaries[1];
-//    //int zMax = globalBoundaries[2];
-//
-//    // We SHOULDN'T need to lock because we should never hit the same memory location with any two threads..
-//    // Wrapping shouldn't be needed since the patch spatial decomposition ensures no internals to a patch cross boundary conditions.
-//    for (int xmask = 0; xmask < xExtent; ++xmask) {
-//      int x_local = xmask;
-//      int x_global = xBase + xmask;
-//      for (int ymask = 0; ymask < yExtent; ++ymask) {
-//        int y_local = ymask;
-//        int y_global = yBase + ymask;
-//        for (int zmask = 0; zmask < zExtent; ++zmask) {
-//          int z_local = zmask;
-//          int z_global = zBase + zmask;
-//          (*d_Q_nodeLocal)(x_global, y_global, z_global) = (*Q_patchLocal)(x_local, y_local, z_local);
-//        }
-//      }
-//    }
-//  }
-//}
-
-void SPME::distributeNodeLocalQ(const ProcessorGroup*   pg,
+void SPME::distributeNodeLocalQ(const ProcessorGroup* /*pg*/,
                                 const PatchSubset*      patches,
                                 const MaterialSubset*   materials,
-                                DataWarehouse*          oldDW,
+                                DataWarehouse*        /*oldDW*/,
                                 DataWarehouse*          newDW,
                                 const MDLabel*          label)
 {

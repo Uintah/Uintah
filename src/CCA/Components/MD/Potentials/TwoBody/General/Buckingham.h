@@ -96,9 +96,9 @@ namespace Uintah {
 
     private:
       static const std::string d_potentialSubtype;
-      const std::string& d_comment;
-      const std::string& d_label;
       double Rmin, epsilon, lambda;
+      const std::string& d_label;
+      const std::string& d_comment;
       double A, B, C;
   };
 
