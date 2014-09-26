@@ -100,8 +100,10 @@ ICELabel::ICELabel()
   gammaLabel              = VarLabel::create("gamma",         CC_double);
   specific_heatLabel      = VarLabel::create("specific_heat", CC_double);
   temp_CC_XchangeLabel    = VarLabel::create("temp_CC_Xchange",CC_double);
+  conc_CC_XchangeLabel    = VarLabel::create("conc_CC_Xchange",CC_double);
   vel_CC_XchangeLabel     = VarLabel::create("vel_CC_Xchange",CC_Vector);
   dTdt_CCLabel            = VarLabel::create("dTdt_CC",       CC_double);
+  dCdt_CCLabel            = VarLabel::create("dCdt_CC",       CC_double);
   dVdt_CCLabel            = VarLabel::create("dVdt_CC",       CC_Vector);
  
   //__________________________________
@@ -276,6 +278,7 @@ ICELabel::~ICELabel()
     VarLabel::destroy(temp_CCLabel);
     VarLabel::destroy(conc_CCLabel);
     VarLabel::destroy(temp_CC_XchangeLabel);
+    VarLabel::destroy(conc_CC_XchangeLabel);
     VarLabel::destroy(vel_CCLabel);
     VarLabel::destroy(vel_CC_XchangeLabel);
     VarLabel::destroy(rho_micro_CCLabel);
@@ -309,6 +312,7 @@ ICELabel::~ICELabel()
     VarLabel::destroy(gammaLabel);
     VarLabel::destroy(specific_heatLabel);      
     VarLabel::destroy(dTdt_CCLabel);
+    VarLabel::destroy(dCdt_CCLabel);
     VarLabel::destroy(dVdt_CCLabel);
     
     // Implicit Labels
@@ -400,6 +404,7 @@ ICELabel::~ICELabel()
     // magnitude of the gradient of ()
     VarLabel::destroy(mag_grad_rho_CCLabel);
     VarLabel::destroy(mag_grad_temp_CCLabel);
+    VarLabel::destroy(mag_grad_conc_CCLabel);
     VarLabel::destroy(mag_div_vel_CCLabel);
     VarLabel::destroy(mag_grad_vol_frac_CCLabel);
     VarLabel::destroy(mag_grad_press_CCLabel);

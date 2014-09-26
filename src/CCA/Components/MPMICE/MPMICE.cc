@@ -34,6 +34,7 @@
 #include <CCA/Components/MPM/SerialMPM.h>
 #include <CCA/Components/MPM/ShellMPM.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
+#include <CCA/Components/MPM/ReactiveFlow/ConcentrationContact/ConcentrationContact.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
 #include <CCA/Ports/ModelMaker.h>
 #include <CCA/Ports/Scheduler.h>
@@ -515,10 +516,14 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
    
   d_mpm->scheduleComputeInternalForce(        sched, mpm_patches, mpm_matls);
   d_mpm->scheduleComputeInternalHeatRate(     sched, mpm_patches, mpm_matls);
+  d_mpm->scheduleComputeInternalDiffusionRate(sched, mpm_patches, mpm_matls);
   d_mpm->scheduleComputeNodalHeatFlux(        sched, mpm_patches, mpm_matls);
+  d_mpm->scheduleComputeNodalConcentrationFlux(sched, mpm_patches, mpm_matls);
   d_mpm->scheduleSolveHeatEquations(          sched, mpm_patches, mpm_matls);
+  d_mpm->scheduleSolveDiffusionEquations(     sched, mpm_patches, mpm_matls);
   d_mpm->scheduleComputeAndIntegrateAcceleration(sched, mpm_patches, mpm_matls);
   d_mpm->scheduleIntegrateTemperatureRate(    sched, mpm_patches, mpm_matls);
+  d_mpm->scheduleIntegrateDiffusionRate(    sched, mpm_patches, mpm_matls);
   
   scheduleComputeLagrangianValuesMPM(         sched, mpm_patches, one_matl,
                                                                   mpm_matls); 
@@ -740,6 +745,7 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
                                                     Ghost::AroundCells, 1);
     t->requires(Task::OldDW, Ilb->sp_vol_CCLabel,   Ghost::None, 0); 
     t->requires(Task::OldDW, MIlb->temp_CCLabel,    Ghost::None, 0);
+    t->requires(Task::OldDW, MIlb->conc_CCLabel,    Ghost::None, 0);
 
     t->computes(MIlb->cMassLabel);
     t->computes(MIlb->vel_CCLabel);
@@ -1633,8 +1639,10 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       int indx = mpm_matl->getDWIndex();
       NCVariable<Vector> gacceleration, gvelocity;
       NCVariable<double> dTdt_NC,massBurnFraction;
+      NCVariable<double> dCdt_NC;
 
       constCCVariable<double> dTdt_CC;
+      constCCVariable<double> dCdt_CC;
       constCCVariable<Vector> dVdt_CC;
       
       new_dw->getModifiable(gvelocity,    Mlb->gVelocityStarLabel,indx,patch);
