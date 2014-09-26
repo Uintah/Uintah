@@ -103,8 +103,6 @@ public:
   /** @brief Apply boundary conditions */
   template <class phiType> void computeBCs( const Patch* patch, std::string varName, phiType& phi );
 
-  /** @brief Schedule the cleanup after this equation. */ 
-  void sched_cleanUp( const LevelP&, SchedulerP& sched ); 
   /** @brief Actually clean up after the equation. This just reinitializes 
              source term booleans so that the code can determine if the source
              term label should be allocated or just retrieved from the data 

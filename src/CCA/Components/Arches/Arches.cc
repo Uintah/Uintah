@@ -1939,9 +1939,7 @@ Arches::sched_scalarInit( const LevelP& level,
     EqnBase* eqn = ieqn->second;
 
     const VarLabel* tempVar = eqn->getTransportEqnLabel();
-    const VarLabel* oldtempVar = eqn->getoldTransportEqnLabel();
     tsk->computes( tempVar );
-    tsk->computes( oldtempVar );
   }
   
   tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None );
@@ -1982,29 +1980,23 @@ Arches::scalarInit( const ProcessorGroup* ,
       EqnBase* eqn = ieqn->second;
       std::string eqn_name = ieqn->first;
       const VarLabel* phiLabel = eqn->getTransportEqnLabel();
-      const VarLabel* oldPhiLabel = eqn->getoldTransportEqnLabel();
 
       CCVariable<double> phi;
       CCVariable<double> oldPhi;
       constCCVariable<double> eps_v;
       new_dw->allocateAndPut( phi, phiLabel, matlIndex, patch );
-      new_dw->allocateAndPut( oldPhi, oldPhiLabel, matlIndex, patch );
       new_dw->get( eps_v, d_lab->d_volFractionLabel, matlIndex, patch, Ghost::None, 0 );
 
       phi.initialize(0.0);
-      oldPhi.initialize(0.0);
 
       // initialize to something other than zero if desired.
       eqn->initializationFunction( patch, phi, eps_v );
-
-      oldPhi.copyData(phi);
 
       //do Boundary conditions
       eqn->computeBCsSpecial( patch, eqn_name, phi );
 
     }
   }
-  //std::cout << std::endl;
   coutLock.unlock();
 }
 //___________________________________________________________________________
@@ -2027,12 +2019,10 @@ Arches::sched_weightInit( const LevelP& level,
 
     if (eqn->weight()){
       const VarLabel* tempVar = eqn->getTransportEqnLabel();
-      const VarLabel* oldtempVar = eqn->getoldTransportEqnLabel();
       const VarLabel* tempVar_icv = eqn->getUnscaledLabel();
       const VarLabel* tempSource = eqn->getSourceLabel();
 
       tsk->computes( tempVar );
-      tsk->computes( oldtempVar );
       tsk->computes( tempVar_icv );
       tsk->computes( tempSource );
     }
@@ -2088,22 +2078,18 @@ Arches::weightInit( const ProcessorGroup* ,
         // This is a weight equation
         const VarLabel* sourceLabel  = eqn->getSourceLabel();
         const VarLabel* phiLabel     = eqn->getTransportEqnLabel();
-        const VarLabel* oldPhiLabel  = eqn->getoldTransportEqnLabel();
         const VarLabel* phiLabel_icv = eqn->getUnscaledLabel();
 
         CCVariable<double> source;
         CCVariable<double> phi;
-        CCVariable<double> oldPhi;
         CCVariable<double> phi_icv;
 
         new_dw->allocateAndPut( source,  sourceLabel,  matlIndex, patch );
         new_dw->allocateAndPut( phi,     phiLabel,     matlIndex, patch );
-        new_dw->allocateAndPut( oldPhi,  oldPhiLabel,  matlIndex, patch );
         new_dw->allocateAndPut( phi_icv, phiLabel_icv, matlIndex, patch );
 
         source.initialize(0.0);
         phi.initialize(0.0);
-        oldPhi.initialize(0.0);
         phi_icv.initialize(0.0);
 
         // initialize phi
@@ -2134,12 +2120,10 @@ Arches::sched_weightedAbsInit( const LevelP& level,
 
     if (!eqn->weight()) {
       const VarLabel* tempVar = eqn->getTransportEqnLabel();
-      const VarLabel* oldtempVar = eqn->getoldTransportEqnLabel();
       const VarLabel* tempVar_icv = eqn->getUnscaledLabel();
       const VarLabel* tempSource = eqn->getSourceLabel();
 
       tsk->computes( tempVar );
-      tsk->computes( oldtempVar );
       tsk->computes( tempVar_icv );
       tsk->computes( tempSource );
     } else {
@@ -2234,7 +2218,6 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
         // This is a weighted abscissa
         const VarLabel* sourceLabel  = eqn->getSourceLabel();
         const VarLabel* phiLabel     = eqn->getTransportEqnLabel();
-        const VarLabel* oldPhiLabel  = eqn->getoldTransportEqnLabel();
         const VarLabel* phiLabel_icv = eqn->getUnscaledLabel();
         std::string weight_name;
         std::string node;
@@ -2248,19 +2231,16 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
 
         CCVariable<double> source;
         CCVariable<double> phi;
-        CCVariable<double> oldPhi;
         CCVariable<double> phi_icv;
         constCCVariable<double> weight;
 
         new_dw->allocateAndPut( source,  sourceLabel,  matlIndex, patch );
         new_dw->allocateAndPut( phi,     phiLabel,     matlIndex, patch );
-        new_dw->allocateAndPut( oldPhi,  oldPhiLabel,  matlIndex, patch );
         new_dw->allocateAndPut( phi_icv, phiLabel_icv, matlIndex, patch );
         new_dw->get( weight, weightLabel, matlIndex, patch, gn, 0 );
 
         source.initialize(0.0);
         phi.initialize(0.0);
-        oldPhi.initialize(0.0);
         phi_icv.initialize(0.0);
 
         // initialize phi
@@ -2343,11 +2323,9 @@ Arches::sched_momentInit( const LevelP& level,
     CQMOMEqn* eqn = dynamic_cast<CQMOMEqn*>(temp_eqn);
     
     const VarLabel* tempVar = eqn->getTransportEqnLabel();
-    const VarLabel* oldtempVar = eqn->getoldTransportEqnLabel();
     const VarLabel* tempSource = eqn->getSourceLabel();
       
     tsk->computes( tempVar );
-    tsk->computes( oldtempVar );
     tsk->computes( tempSource );
   }
   
@@ -2388,19 +2366,15 @@ Arches::momentInit( const ProcessorGroup* ,
       
       const VarLabel* sourceLabel  = eqn->getSourceLabel();
       const VarLabel* phiLabel     = eqn->getTransportEqnLabel();
-      const VarLabel* oldPhiLabel  = eqn->getoldTransportEqnLabel();
       
       CCVariable<double> source;
       CCVariable<double> phi;
-      CCVariable<double> oldPhi;
       
       new_dw->allocateAndPut( source,  sourceLabel,  matlIndex, patch );
       new_dw->allocateAndPut( phi,     phiLabel,     matlIndex, patch );
-      new_dw->allocateAndPut( oldPhi,  oldPhiLabel,  matlIndex, patch );
         
       source.initialize(0.0);
       phi.initialize(0.0);
-      oldPhi.initialize(0.0);
       
       // initialize phi
       eqn->initializationFunction( patch, phi, eps_v );
