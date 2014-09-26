@@ -974,24 +974,24 @@ BoundaryCondition_new::create_masks( const ProcessorGroup* pg,
         }
 
         //for this child, we need a mask container: 
-        //BoundaryCondition_new::MaskContainer<SpatialOps::SVolField> mask_cont; 
+        BoundaryCondition_new::MaskContainer<SpatialOps::SVolField> mask_cont; 
 
         //put in the points. 
         //WARNING: THIS IS FOR A FIXED NUM OF GHOSTS...WHAT TO DO HERE? 
         //SVOL MASKS:
-        //mask_cont.create_mask( patch, 1, face_points, BoundaryCondition_new::BOUNDARY_FACE ); 
-        //mask_cont.create_mask( patch, 1, face_points, BoundaryCondition_new::FIRST_NORMAL_INTERIOR); 
-        //mask_cont.create_mask( patch, 1, extracell_points, BoundaryCondition_new::BOUNDARY_CELL ); 
+        mask_cont.create_mask( patch, 1, face_points, BoundaryCondition_new::BOUNDARY_FACE ); 
+        mask_cont.create_mask( patch, 1, face_points, BoundaryCondition_new::FIRST_NORMAL_INTERIOR); 
+        mask_cont.create_mask( patch, 1, extracell_points, BoundaryCondition_new::BOUNDARY_CELL ); 
 
         //now insert this specific child face into the name to mask_cont container: 
-        //svol_boundary_faces.insert(std::make_pair(child_name,mask_cont));
+        svol_boundary_faces.insert(std::make_pair(child_name,mask_cont));
 
       }
     }
 
     //Now put it into perma-storage: 
     if ( svol_boundary_faces.size() > 0 ){
-      //BoundaryCondition_new::patch_svol_masks.insert(std::make_pair(pID,svol_boundary_faces)); 
+      BoundaryCondition_new::patch_svol_masks.insert(std::make_pair(pID,svol_boundary_faces)); 
     }
 
   }
