@@ -435,7 +435,7 @@ YDragModel::computeModel( const ProcessorGroup* pc,
         sphGas = cart2sph( cartGas );
         sphPart = cart2sph( cartPart );
 
-        double diff = sphGas.z() - sphPart.z();
+        double diff = sphGas.z() - sphPart.z();  // z is the velocity magnitude in spherical coordinates, not the z-velocity component
         double Re  = std::abs(diff)*length / (kvisc/den[c]);
         double phi;
 
