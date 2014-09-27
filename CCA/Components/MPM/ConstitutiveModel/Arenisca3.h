@@ -241,7 +241,7 @@ namespace Uintah {
 
     double computePorePressure(const double ev);
 
-    void nonHardeningReturn(const double& I1_trial,
+    int nonHardeningReturn(const double& I1_trial,
 							const double& rJ2_trial,
                             const Matrix3& S_trial,
 							const double& I1_old,

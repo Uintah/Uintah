@@ -1239,7 +1239,8 @@ int Arenisca4::computeSubstep(const Matrix3& d_e,       // Total strain incremen
 {
 // Computes the updated stress state for a substep that may be either elastic, plastic, or
 // partially elastic.   Returns an integer flag 0/1 for a good/bad update.
-  int     substepFlag;
+  int     returnFlag,
+		  substepFlag;
 
 // (1)  Compute the elastic properties based on the stress and plastic strain at
 // the start of the substep.  These will be constant over the step unless elastic-plastic
@@ -1284,11 +1285,16 @@ int Arenisca4::computeSubstep(const Matrix3& d_e,       // Total strain incremen
     
     // returnFlag would be != 0 if there was an error in the nonHardeningReturn call, but
     // there are currently no tests in that function that could detect such an error.
-    nonHardeningReturn(sigma_trial,
+    returnFlag = nonHardeningReturn(sigma_trial,
                        sigma_old,
                        d_e,X_old,Zeta_old,coher,bulk,shear,
                        sigma_0,d_ep_0);
-	
+	if (returnFlag!=0){
+#ifdef MHdebug
+		cout << "1344: failed nonhardeningReturn in substep "<< endl;
+#endif
+		goto failedSubstep;
+	}
 	//cout<<"\n First nonhardeningReturn() call"<<endl;
 	//cout<<"sigma_trial = "<<sigma_trial<<endl;
 	//cout<<"sigma_old = "<<sigma_old<<endl;
@@ -1356,11 +1362,16 @@ updateISV:
 //            ep_new    = ...,
 //    computeElasticProperties((sigma_old+sigma_new)/2,(ep_old+ep_new)/2,bulk,shear);
     Matrix3 d_ep_new;
-    nonHardeningReturn(sigma_trial,
+    returnFlag = nonHardeningReturn(sigma_trial,
                        sigma_old,
                        d_e,X_new,Zeta_new,coher,bulk,shear,
                        sigma_new,d_ep_new);
-	
+	if (returnFlag!=0){
+#ifdef MHdebug
+		cout << "1344: failed nonhardeningReturn in substep "<< endl;
+#endif
+		goto failedSubstep;
+	}	
 // (10) Check whether the isotropic component of the return has changed sign, as this
 //      would indicate that the cap apex has moved past the trial stress, indicating
 //      too much plastic strain in the return.
@@ -1528,7 +1539,7 @@ double Arenisca4::computePorePressure(const double ev)
 } //===================================================================
 
 // Compute nonhardening return from trial stress to some yield surface
-void Arenisca4::nonHardeningReturn(const Matrix3 & sigma_trial, // Trial Stress (untransformed)
+int Arenisca4::nonHardeningReturn(const Matrix3 & sigma_trial, // Trial Stress (untransformed)
                                    const Matrix3 & sigma_old,   // Stress at start of subtep (untransformed)
                                    const Matrix3& d_e,          // increment in total strain
                                    const double & X,            // cap position
@@ -1544,6 +1555,8 @@ void Arenisca4::nonHardeningReturn(const Matrix3 & sigma_trial, // Trial Stress 
   // and elastic properties.  Returns the updated stress and  the increment in plastic
   // strain corresponding to this return.
 	
+  int returnFlag = 0;
+  
 // (1) Transform sigma_trial and define interior point sigma_0.
   double S_to_S_star = d_cm.BETA_nonassociativity*sqrt(1.5*bulk/shear);
   double S_star_to_S = 1.0/S_to_S_star;
@@ -1699,7 +1712,8 @@ double cosTheta[] = {1.,0.7572888982693721,0.1469729508840787,-0.534686930168567
 					 //-0.9781361661712315,-0.6049135585801836,0.06194752152044655,0.698737899225658,
 					 //0.9963453862468615,0.8103047004676575,0.2309241215124303,-0.4605521533397157};
 
-  while ( n < nmax ){
+	int k = 0;
+  while ( (n < nmax)&&(k<10*nmax) ){
     // transformed bisection to find a new interior point, just inside the boundary of the
     // yield surface.  This function overwrites the inputs for lambda_0
     transformedBisection(lambda_0,lambda_trial,X,Zeta,coher,limitParameters,S_star_to_S);
@@ -1716,6 +1730,7 @@ double cosTheta[] = {1.,0.7572888982693721,0.1469729508840787,-0.534686930168567
 	
     // (5) Test for convergence:
 	while ( (interior==0)&&(n < nmax) ){
+		k++;
       // To avoid the cost of computing pow() to get theta, and then sin(), cos(),
       // we use a lookup table defined above by sinV and cosV.
 	  // phi = pi_half*Pow(2.0,-0.25*n);
@@ -1735,6 +1750,13 @@ double cosTheta[] = {1.,0.7572888982693721,0.1469729508840787,-0.534686930168567
       else { n++; }
     }
   }
+  
+  if (k>=10*nmax){
+	  returnFlag = 1;
+#ifdef MHdebug
+	  cout<<"k >= 10*nmax, nonHardening return failed."<<endl;
+#endif
+  }
 
 // (6) Solution Converged, Compute Untransformed Updated Stress:
   Matrix3 sigma_new_star = lambda_0[0]*PL_trial + lambda_0[1]*PM_trial + lambda_0[2]*PH_trial;
@@ -1746,6 +1768,8 @@ double cosTheta[] = {1.,0.7572888982693721,0.1469729508840787,-0.534686930168567
 //  d_ep0 = d_e - [C]^-1:(sigma_new-sigma_old)
   Matrix3 d_ee    = 0.5*d_sigma/shear + (one_ninth/bulk - one_sixth/shear)*d_sigma.Trace()*Identity;
   d_ep_new        = d_e - d_ee;
+  
+  return returnFlag;
 
 } //===================================================================
 
