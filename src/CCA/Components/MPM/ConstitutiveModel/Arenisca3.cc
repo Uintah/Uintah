@@ -1220,7 +1220,8 @@ int Arenisca3::computeSubstep(const Matrix3& d_e,       // Total strain incremen
 {
 // Computes the updated stress state for a substep that may be either elastic, plastic, or
 // partially elastic.   Returns an integer flag 0/1 for a good/bad update.
-  int     substepFlag;
+  int     substepFlag,
+		  returnFlag;
 
 // (1)  Compute the elastic properties based on the stress and plastic strain at
 // the start of the substep.  These will be constant over the step unless elastic-plastic
@@ -1271,10 +1272,16 @@ int Arenisca3::computeSubstep(const Matrix3& d_e,       // Total strain incremen
 
     // returnFlag would be != 0 if there was an error in the nonHardeningReturn call, but
     // there are currently no tests in that function that could detect such an error.
-    nonHardeningReturn(I1_trial,rJ2_trial,S_trial,
-                       I1_old,rJ2_old,S_old,
-                       d_e,X_old,Zeta_old,coher,bulk,shear,
-                       I1_0,rJ2_0,S_0,d_ep_0);
+    returnFlag = nonHardeningReturn(I1_trial,rJ2_trial,S_trial,
+									I1_old,rJ2_old,S_old,
+									d_e,X_old,Zeta_old,coher,bulk,shear,
+									I1_0,rJ2_0,S_0,d_ep_0);
+	if (returnFlag!=0){
+#ifdef MHdebug
+		cout << "1344: failed nonhardeningReturn in substep "<< endl;
+#endif
+		goto failedSubstep;
+	}
 
     double d_evp_0 = d_ep_0.Trace();
 
@@ -1334,10 +1341,16 @@ updateISV:
             d_evp_new;
     Matrix3 S_new,
             d_ep_new;
-    nonHardeningReturn(I1_trial,rJ2_trial,S_trial,
-                       I1_old,rJ2_old,S_old,
-                       d_e,X_new,Zeta_new,coher,bulk,shear,
-                       I1_new,rJ2_new,S_new,d_ep_new);
+    returnFlag = nonHardeningReturn(I1_trial,rJ2_trial,S_trial,
+									I1_old,rJ2_old,S_old,
+									d_e,X_new,Zeta_new,coher,bulk,shear,
+									I1_new,rJ2_new,S_new,d_ep_new);
+	if (returnFlag!=0){
+#ifdef MHdebug
+		cout << "1344: failed nonhardeningReturn in substep "<< endl;
+#endif
+		goto failedSubstep;
+	}
 
 // (10) Check whether the isotropic component of the return has changed sign, as this
 //      would indicate that the cap apex has moved past the trial stress, indicating
@@ -1508,7 +1521,7 @@ double Arenisca3::computePorePressure(const double ev)
 } //===================================================================
 
 // Compute nonhardening return from trial stress to some yield surface
-void Arenisca3::nonHardeningReturn(const double & I1_trial,    // Trial Stress
+int Arenisca3::nonHardeningReturn(const double & I1_trial,    // Trial Stress
                                   const double & rJ2_trial,
                                   const Matrix3& S_trial,
                                   const double & I1_old,      // Stress at start of subtep
@@ -1534,6 +1547,7 @@ void Arenisca3::nonHardeningReturn(const double & I1_trial,    // Trial Stress
 
   const int nmax = 19;  // If this is changed, more entries may need to be added to sinV cosV.
   int n = 0,
+	  returnFlag = 0,   // error flag = 0 for successful return.
       interior;
 
 // (1) Define an interior point, (I1_0 = Zeta, also, J2_0 = 0 but no need to  create this variable.)
@@ -1576,7 +1590,11 @@ void Arenisca3::nonHardeningReturn(const double & I1_trial,    // Trial Stress
 // (3) Perform Bisection between in transformed space, to find the new point on the
 //  yield surface: [znew,rnew] = transformedBisection(z0,r0,z_trial,r_trial,X,Zeta,K,G)
   //int icount=1;
-  while ( n < nmax ){
+  
+  // It may be getting stuck in this loop, perhaps bouncing back and forth so interior = 1, 
+  // with with fewer than two iterations, so n never gets to nmax.
+  int k = 0;
+  while ( (n < nmax)&&(k < 10*nmax) ){
     // transformed bisection to find a new interior point, just inside the boundary of the
     // yield surface.  This function overwrites the inputs for z_0 and r_0
     //  [z_0,r_0] = transformedBisection(z_0,r_0,z_trial,r_trial,X_Zeta,bulk,shear)
@@ -1588,6 +1606,7 @@ void Arenisca3::nonHardeningReturn(const double & I1_trial,    // Trial Stress
     n = max(n-2,0);  //
     // (5) Test for convergence:
     while ( (interior==0)&&(n < nmax) ){
+		k++;
       // To avoid the cost of computing pow() to get theta, and then sin(), cos(),
       // we use a lookup table defined above by sinV and cosV.
       //
@@ -1608,6 +1627,13 @@ void Arenisca3::nonHardeningReturn(const double & I1_trial,    // Trial Stress
     }
   }
 
+  if (k>=10*nmax){
+	  returnFlag = 1;
+#ifdef MHdebug
+	  cout<<"k >= 10*nmax, nonHardening return failed."<<endl;
+#endif
+  }
+  
 // (6) Solution Converged, Compute Untransformed Updated Stress:
   I1_new = sqrt_three*z_0;
   rJ2_new = r_to_rJ2*r_0;
@@ -1624,6 +1650,7 @@ void Arenisca3::nonHardeningReturn(const double & I1_trial,    // Trial Stress
   Matrix3 d_ee    = 0.5*d_sigma/shear + (one_ninth/bulk - one_sixth/shear)*d_sigma.Trace()*Identity;
   d_ep_new        = d_e - d_ee;
 
+  return returnFlag;
 } //===================================================================
 
 // Computes bisection between two points in transformed space
