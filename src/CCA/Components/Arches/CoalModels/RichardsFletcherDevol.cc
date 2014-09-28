@@ -1,4 +1,4 @@
-#include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h>
+#include <CCA/Components/Arches/CoalModels/RichardsFletcherDevol.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
@@ -20,7 +20,7 @@ using namespace Uintah;
 
 //---------------------------------------------------------------------------
 // Builder:
-KobayashiSarofimDevolBuilder::KobayashiSarofimDevolBuilder( const std::string         & modelName,
+RichardsFletcherDevolBuilder::RichardsFletcherDevolBuilder( const std::string         & modelName,
                                                             const vector<std::string> & reqICLabelNames,
                                                             const vector<std::string> & reqScalarLabelNames,
                                                             ArchesLabel         * fieldLabels,
@@ -30,15 +30,15 @@ KobayashiSarofimDevolBuilder::KobayashiSarofimDevolBuilder( const std::string   
 {
 }
 
-KobayashiSarofimDevolBuilder::~KobayashiSarofimDevolBuilder(){}
+RichardsFletcherDevolBuilder::~RichardsFletcherDevolBuilder(){}
 
-ModelBase* KobayashiSarofimDevolBuilder::build() {
-  return scinew KobayashiSarofimDevol( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+ModelBase* RichardsFletcherDevolBuilder::build() {
+  return scinew RichardsFletcherDevol( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
 
-KobayashiSarofimDevol::KobayashiSarofimDevol( std::string modelName, 
+RichardsFletcherDevol::RichardsFletcherDevol( std::string modelName, 
                                               SimulationStateP& sharedState,
                                               ArchesLabel* fieldLabels,
                                               vector<std::string> icLabelNames, 
@@ -46,7 +46,6 @@ KobayashiSarofimDevol::KobayashiSarofimDevol( std::string modelName,
                                               int qn ) 
 : Devolatilization(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
-  R   =  1.987;       // [=] kcal/kmol; ideal gas constant
   pi = 3.141592653589793;
 
 
@@ -55,7 +54,7 @@ KobayashiSarofimDevol::KobayashiSarofimDevol( std::string modelName,
   part_temp_from_enth = false;
 }
 
-KobayashiSarofimDevol::~KobayashiSarofimDevol()
+RichardsFletcherDevol::~RichardsFletcherDevol()
 {
 }
 
@@ -63,7 +62,7 @@ KobayashiSarofimDevol::~KobayashiSarofimDevol()
 // Method: Problem Setup
 //---------------------------------------------------------------------------
   void 
-KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
+RichardsFletcherDevol::problemSetup(const ProblemSpecP& params, int qn)
 {
   // call parent's method first
   Devolatilization::problemSetup(params, qn);
@@ -112,7 +111,7 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
         compute_char_mass = true;                           
       } else {
         std::string errmsg;
-        errmsg = "Invalid variable role for Kobayashi Sarofim Devolatilization model: must be \"particle_temperature\" or \"raw_coal_mass\" or \"char_mass\", you specified \"" + role_name + "\".";
+        errmsg = "Invalid variable role for Richards Fletcher Devolatilization model: must be \"particle_temperature\" or \"raw_coal_mass\" or \"char_mass\", you specified \"" + role_name + "\".";
         throw InvalidValue(errmsg,__FILE__,__LINE__);
       }
     }
@@ -140,17 +139,46 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
   const ProblemSpecP params_root = db->getRootNode();
   if (params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties")) {
     ProblemSpecP db_coal = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties");
-    db_coal->require("KobayashiSarofim_coefficients", KobayashiSarofim_coefficients);
+    db_coal->require("RichardsFletcher_coefficients", RichardsFletcher_coefficients);
     // Values from Ubhayakar (1976):
-    A1=KobayashiSarofim_coefficients[0];  // [=] 1/s; k1 pre-exponential factor
-    A2=KobayashiSarofim_coefficients[1];  // [=] 1/s; k2 pre-exponential factor
-    E1=KobayashiSarofim_coefficients[2];  // [=] kcal/kmol;  k1 activation energy
-    E2=KobayashiSarofim_coefficients[3];  // [=] kcal/kmol;  k2 activation energy
+    Av1=RichardsFletcher_coefficients[0];  // [=] 1/s; k1 pre-exponential factor
+    Av2=RichardsFletcher_coefficients[1];  // [=] 1/s; k2 pre-exponential factor
+    Ev1=RichardsFletcher_coefficients[2];  // [=] K; k1 activation energy
+    Ev2=RichardsFletcher_coefficients[3];  // [=] K;  k2 activation energy
     // Y values from white book:
-    Y1_=KobayashiSarofim_coefficients[4];  // volatile fraction from proximate analysis
-    Y2_=KobayashiSarofim_coefficients[5];  // fraction devolatilized at higher temperatures
+    Y1_=RichardsFletcher_coefficients[4];  // volatile fraction from proximate analysis
+    Y2_=RichardsFletcher_coefficients[5];  // fraction devolatilized at higher temperatures
+    c0_1=RichardsFletcher_coefficients[6]; 
+    c1_1=RichardsFletcher_coefficients[7]; 
+    c2_1=RichardsFletcher_coefficients[8]; 
+    c3_1=RichardsFletcher_coefficients[9]; 
+    c4_1=RichardsFletcher_coefficients[10]; 
+    c5_1=RichardsFletcher_coefficients[11]; 
+    c0_2=RichardsFletcher_coefficients[12]; 
+    c1_2=RichardsFletcher_coefficients[13]; 
+    c2_2=RichardsFletcher_coefficients[14]; 
+    c3_2=RichardsFletcher_coefficients[15]; 
+    c4_2=RichardsFletcher_coefficients[16]; 
+    c5_2=RichardsFletcher_coefficients[17]; 
+    db_coal->require("particle_density", rhop);
+    db_coal->require("particle_sizes", particle_sizes); // read the particle sizes [m]
+    db_coal->require("as_received", as_received);
+    total_rc=as_received[0]+as_received[1]+as_received[2]+as_received[3]+as_received[4]; // (C+H+O+N+S) dry ash free total
+    total_dry=as_received[0]+as_received[1]+as_received[2]+as_received[3]+as_received[4]+as_received[5]+as_received[6]; // (C+H+O+N+S+char+ash)  moisture free total
+    rc_mass_frac=total_rc/total_dry; // mass frac of rc (dry) 
+    char_mass_frac=as_received[5]/total_dry; // mass frac of char (dry)
+    ash_mass_frac=as_received[6]/total_dry; // mass frac of ash (dry)
+    int p_size=particle_sizes.size();
+    for (int n=0; n<p_size; n=n+1)
+      {
+        vol_dry.push_back((pi/6)*pow(particle_sizes[n],3)); // m^3/particle
+        mass_dry.push_back(vol_dry[n]*rhop); // kg/particle
+        ash_mass_init.push_back(mass_dry[n]*ash_mass_frac); // kg_ash/particle (initial)  
+        char_mass_init.push_back(mass_dry[n]*char_mass_frac); // kg_char/particle (initial)
+        rc_mass_init.push_back(mass_dry[n]*rc_mass_frac); // kg_ash/particle (initial)
+      }
   } else {
-    throw InvalidValue("ERROR: KobayashiSarofimDevol: problemSetup(): Missing <Coal_Properties> section in input file!",__FILE__,__LINE__);
+    throw InvalidValue("ERROR: RichardsFletcherDevol: problemSetup(): Missing <Coal_Properties> section in input file!",__FILE__,__LINE__);
   }
 
   // fix the d_scalarLabels to point to the correct quadrature node (since there is 1 model per quad node)
@@ -173,10 +201,10 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
 // Method: Schedule the calculation of the Model 
 //---------------------------------------------------------------------------
 void 
-KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
+RichardsFletcherDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  std::string taskname = "KobayashiSarofimDevol::computeModel";
-  Task* tsk = scinew Task(taskname, this, &KobayashiSarofimDevol::computeModel);
+  std::string taskname = "RichardsFletcherDevol::computeModel";
+  Task* tsk = scinew Task(taskname, this, &RichardsFletcherDevol::computeModel);
 
   Ghost::GhostType gn = Ghost::None;
 
@@ -239,7 +267,7 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
           d_pt_scaling_factor = current_eqn.getScalingConstant();
           tsk->requires(Task::OldDW, d_particle_temperature_label, Ghost::None, 0);
         } else {
-          std::string errmsg = "ARCHES: KobayashiSarofimDevol: Invalid variable given in <variable> tag for KobayashiSarofimDevol model";
+          std::string errmsg = "ARCHES: RichardsFletcherDevol: Invalid variable given in <variable> tag for RichardsFletcherDevol model";
           errmsg += "\nCould not find given particle temperature variable \"";
           errmsg += *iter;
           errmsg += "\" in EqnFactory or in DQMOMEqnFactory.";
@@ -261,7 +289,7 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
           tsk->requires(Task::OldDW, d_raw_coal_mass_label, Ghost::None, 0);
 
         } else {
-          std::string errmsg = "ARCHES: KobayashiSarofimDevol: Invalid variable given in <variable> tag for KobayashiSarofimDevol model";
+          std::string errmsg = "ARCHES: RichardsFletcherDevol: Invalid variable given in <variable> tag for RichardsFletcherDevol model";
           errmsg += "\nCould not find given raw coal mass variable \"";
           errmsg += *iter;
           errmsg += "\" in DQMOMEqnFactory.";
@@ -277,7 +305,7 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
           tsk->requires(Task::OldDW, d_char_mass_label, Ghost::None, 0);
 
         } else {
-          std::string errmsg = "ARCHES: KobayashiSarofimDevol: Invalid variable given in <variable> tag for KobayashiSarofimDevol model";
+          std::string errmsg = "ARCHES: RichardsFletcherDevol: Invalid variable given in <variable> tag for RichardsFletcherDevol model";
           errmsg += "\nCould not find given raw coal mass variable \"";
           errmsg += *iter;
           errmsg += "\" in DQMOMEqnFactory.";
@@ -287,7 +315,7 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
 
     } else {
       // can't find this required variable in the labels-to-roles map!
-      std::string errmsg = "ARCHES: KobayashiSarofimDevol: You specified that the variable \"" + *iter + 
+      std::string errmsg = "ARCHES: RichardsFletcherDevol: You specified that the variable \"" + *iter + 
                            "\" was required, but you did not specify a role for it!\n";
       throw InvalidValue( errmsg, __FILE__, __LINE__);
     }
@@ -301,7 +329,7 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
 // Method: Actually compute the source term 
 //---------------------------------------------------------------------------
 void
-KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc, 
+RichardsFletcherDevol::computeModel( const ProcessorGroup * pc, 
                                      const PatchSubset    * patches, 
                                      const MaterialSubset * matls, 
                                      DataWarehouse        * old_dw, 
@@ -365,7 +393,7 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> weight;
     old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
 
-#if !defined(VERIFY_KOBAYASHI_MODEL)
+#if !defined(VERIFY_RICHARDS_MODEL)
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
@@ -451,9 +479,15 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
         double gas_devol_rate_;
         double char_rate_;
 #endif
-
-        k1 = A1*exp(-E1/(R*unscaled_temperature)); // [=] 1/s
-        k2 = A2*exp(-E2/(R*unscaled_temperature)); // [=] 1/s
+        double unscaled_rawcoal_mass = rc_mass_init[d_quadNode];
+        Xv = (unscaled_rawcoal_mass-unscaled_raw_coal_mass)/unscaled_rawcoal_mass;
+        Xv = min(max(Xv,0.0),1.0);
+        
+        Fv1 = c5_1*pow(Xv,5.0) + c4_1*pow(Xv,4.0) + c3_1*pow(Xv,3.0) + c2_1*pow(Xv,2.0) + c1_1*Xv +c0_1;
+        k1 = exp(Fv1)*Av1*exp(-Ev1/(unscaled_temperature));
+        
+        Fv2 = c5_2*pow(Xv,5.0) + c4_2*pow(Xv,4.0) + c3_2*pow(Xv,3.0) + c2_2*pow(Xv,2.0) + c1_2*Xv +c0_2;
+        k2 = exp(Fv2)*Av2*exp(-Ev2/(unscaled_temperature));
  
         if(d_unweighted){ 
           rateMax = max((0.2*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass))/dt),0.0);
@@ -488,24 +522,9 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
         }
       }      
 
-      //cout << "koba " << max(0,0.5) << " " << min(0,0.5) << endl;
-      //cout << "devol_rate_ " << devol_rate_ << " char_rate_ " << char_rate_ << " unscaled_char_mass " << unscaled_char_mass
-      //     << " unscaled_raw_coal_mass " << unscaled_raw_coal_mass << endl;
- 
-
-      //proc0cout << "Verification error, Kobayashi-Sarofim Devolatilization model:   " << endl;
-      //  proc0cout << "temp: " << unscaled_temperature  << endl;
-      //  proc0cout << "E1: " << E1  << endl;
-      //  proc0cout << "E2: " << E1  << endl;
-      //  proc0cout << "A1: " << A1  << endl;
-      //  proc0cout << "A2: " << A2  << endl;
-      //  proc0cout << "R: " << R  << endl;
-      //  proc0cout << "k1: " << k1  << endl;
-      //  proc0cout << "k2: " << k2  << endl;
-      //  proc0cout << "****************************************************************" << endl;
-#if defined(VERIFY_KOBAYASHI_MODEL)
+#if defined(VERIFY_RICHARDS_MODEL)
       proc0cout << "****************************************************************" << endl;
-      proc0cout << "Verification error, Kobayashi-Sarofim Devolatilization model:   " << endl;
+      proc0cout << "Verification error, Richards-Fletcher Devolatilization model:   " << endl;
       proc0cout << endl;
 
       double error; 
