@@ -1,5 +1,5 @@
-#ifndef Uintah_Component_Arches_KobayashiSarofimDevol_h
-#define Uintah_Component_Arches_KobayashiSarofimDevol_h
+#ifndef Uintah_Component_Arches_RichardsFletcherDevol_h
+#define Uintah_Component_Arches_RichardsFletcherDevol_h
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Components/Arches/CoalModels/Devolatilization.h>
@@ -11,7 +11,7 @@
 //===========================================================================
 
 /**
-  * @class    KobayashiSarofimDevol
+  * @class    RichardsFletcherDevol
   * @author   Jeremy Thornock, Julien Pedel, Charles Reid
   * @date     May 2009        Check-in of initial version
   *           November 2009   Verification
@@ -29,17 +29,17 @@
 namespace Uintah{
 
 class ArchesLabel;
-class KobayashiSarofimDevolBuilder: public ModelBuilder 
+class RichardsFletcherDevolBuilder: public ModelBuilder 
 {
 public: 
-  KobayashiSarofimDevolBuilder( const std::string               & modelName,
+  RichardsFletcherDevolBuilder( const std::string               & modelName,
                                 const std::vector<std::string>  & reqICLabelNames,
                                 const std::vector<std::string>  & reqScalarLabelNames,
                                 ArchesLabel                     * fieldLabels,
                                 SimulationStateP                & sharedState,
                                 int qn );
 
-  ~KobayashiSarofimDevolBuilder(); 
+  ~RichardsFletcherDevolBuilder(); 
 
   ModelBase* build(); 
 
@@ -50,17 +50,17 @@ private:
 // End Builder
 //---------------------------------------------------------------------------
 
-class KobayashiSarofimDevol: public Devolatilization {
+class RichardsFletcherDevol: public Devolatilization {
 public: 
 
-  KobayashiSarofimDevol( std::string modelName, 
+  RichardsFletcherDevol( std::string modelName, 
                          SimulationStateP& shared_state, 
                          ArchesLabel* fieldLabels,
                          std::vector<std::string> reqICLabelNames,
                          std::vector<std::string> reqScalarLabelNames,
                          int qn );
 
-  ~KobayashiSarofimDevol();
+  ~RichardsFletcherDevol();
 
   ////////////////////////////////////////////////
   // Initialization method
@@ -93,17 +93,44 @@ private:
   const VarLabel* d_particle_temperature_label;
   const VarLabel* d_gas_temperature_label;
 
-  std::vector<double>  KobayashiSarofim_coefficients;  
-  double A1;        ///< Pre-exponential factors for devolatilization rate constants
-  double A2;        ///< Pre-exponential factors for devolatilization rate constants
-  double E1;        ///< Activation energy for devolatilization rate constant
-  double E2;        ///< Activation energy for devolatilization rate constant
+  std::vector<double>  RichardsFletcher_coefficients;  
+  std::vector<double>  as_received;
+  std::vector<double>  particle_sizes;
+  std::vector<double>  ash_mass_init;
+  std::vector<double>  char_mass_init;
+  std::vector<double>  vol_dry;
+  std::vector<double>  mass_dry;
+  std::vector<double>  rc_mass_init;
+  double Av1;        ///< Pre-exponential factors for devolatilization rate constants
+  double Av2;        ///< Pre-exponential factors for devolatilization rate constants
+  double Ev1;        ///< Activation energy for devolatilization rate constant
+  double Ev2;        ///< Activation energy for devolatilization rate constant
   double Y1_;       ///< Volatile fraction from proximate analysis
   double Y2_;       ///< Fraction devolatilized at higher temperatures (often near unity)
   double k1;        ///< Rate constant for devolatilization reaction 1
   double k2;        ///< Rate constant for devolatilization reaction 2
+  double c0_1;
+  double c1_1;
+  double c2_1;
+  double c3_1;
+  double c4_1;
+  double c5_1;
+  double c0_2;
+  double c1_2;
+  double c2_2;
+  double c3_2;
+  double c4_2;
+  double c5_2;
+  double Xv;
+  double Fv1;
+  double Fv2;
+  double rhop;
+  double total_rc;
+  double total_dry;
+  double rc_mass_frac;
+  double char_mass_frac;
+  double ash_mass_frac;
   
-  double R;         ///< Ideal gas constant
   double pi;
   
   bool compute_part_temp; ///< Boolean: is particle temperature computed? 
