@@ -220,7 +220,7 @@
        <MPM>
          <material name="pillar">
               <density>             1000.0           </density>
-              <constitutive_model type = "comp_neo_hook">
+              <constitutive_model type = "reactive_flow">
                   <bulk_modulus>      3.50e7        </bulk_modulus>
                   <shear_modulus>     8.40e7        </shear_modulus>
               </constitutive_model>
