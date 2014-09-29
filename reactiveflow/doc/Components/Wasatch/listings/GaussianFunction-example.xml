@@ -1,0 +1,7 @@
+<BasicExpression type="SVOL">
+	<TaskList>initialization</TaskList>
+	<NameTag name="f" state="STATE_NONE" />
+	<GaussianFunction amplitude="20.0" deviation="2.0" mean="5.0" baseline="1.0">
+		<NameTag name="XSVOL" state="STATE_NONE" />
+	</GaussianFunction>
+</BasicExpression>

@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Polyethylene PE -->
+<!-- 
+    From: 
+          Steinberg, D.J. Equation of State and Strength Properties of Selected Materials.
+           UCRL-MA-106439: Change 1, Feb. 1996.
+-->
+<Uintah_Include>
+  <equation_of_state type="mie_gruneisen">
+    <C_0> 3050.0   </C_0>
+    <Gamma_0>0.67  </Gamma_0>
+    <S_alpha>1.328 </S_alpha>
+    <S_2>    1.139 </S_2>
+    <S_3>   -1.871 </S_3>
+    <!-- <b>  0.0 </b> -->
+  </equation_of_state>
+</Uintah_Include>
