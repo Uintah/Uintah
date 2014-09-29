@@ -128,6 +128,7 @@ DEBUGTESTS = [
 NIGHTLYTESTS = [
 #   ("scalar-transport-equation_perf",    scalarequationperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),
 #	("particle-test-driven-cavity-upper-half-IC", "particle-test-driven-cavity-upper-half-IC.ups",   4,  "Linux",   ["exactComparison","no_memoryTest"] ),
+	("interior-bc-test", "interior-bc-test.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
 	("particle-test-injection-multiple", "particle-test-injection-multiple.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
 	("particle-test-wall-bc-all-dir", "particle-test-wall-bc-all-dir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
 	("particle-test-wall-bc-xdir", "particle-test-wall-bc-xdir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
@@ -316,6 +317,7 @@ CONVECTIONTESTS=[
 ]
 
 BCTESTS=[
+	("interior-bc-test", "interior-bc-test.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
   ("bc-linear-inlet-channel-flow-test",     "bc-linear-inlet-channel-flow-test.ups",             6,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
   ("bc-parabolic-inlet-channel-flow-test",  "bc-parabolic-inlet-channel-flow-test.ups",             6,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
   ("bc-test-svol-xdir",             "bc-test-svol-xdir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),

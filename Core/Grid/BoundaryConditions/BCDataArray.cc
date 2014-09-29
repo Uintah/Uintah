@@ -213,7 +213,7 @@ void BCDataArray::determineInteriorBndIteratorLimits(Patch::FaceType face,
     for (vector<BCGeomBase*>::iterator obj = bc_objects.begin();
          obj != bc_objects.end(); ++obj) {
       (*obj)->determineInteriorBndIteratorLimits(face,patch);
-#if 1
+#if 0
       (*obj)->printLimits();
 #endif
     }

@@ -96,7 +96,6 @@ bool CircleBCData::inside(const Point &p) const
   }
   else
   {
-    std::cout << p << " ---- " << diff.length() << std::endl;
     return true;
   }
 }
