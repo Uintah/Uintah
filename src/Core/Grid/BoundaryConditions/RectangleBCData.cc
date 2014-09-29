@@ -47,6 +47,7 @@ RectangleBCData::RectangleBCData(Point& low, Point& up)
   d_min(low),
   d_max(up)
 {
+  d_origin = d_min;
 }
 
 RectangleBCData::~RectangleBCData()
