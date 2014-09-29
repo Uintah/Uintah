@@ -86,7 +86,7 @@ namespace Uintah {
      
      /// Print out the boundary condition geometry types.
      virtual void print();
-
+     
      /// Determine the cell and node boundary iterators.
      virtual void determineIteratorLimits(Patch::FaceType face,
                                           const Patch* patch, 
