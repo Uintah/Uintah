@@ -2605,7 +2605,7 @@ if test "$with_fortran" != "no"; then
   case $host in 
     *aix*)
       # AIX Fortran Library Check
-      SCI_TRY_LINK(F,fortran libraries,,,xlf90,$_sci_lib,,,$_sci_optional)
+      SCI_TRY_LINK(F,fortran libraries (aix),,,xlf90,$_sci_lib,,,$_sci_optional)
       ;;
     *linux*)
       case $F77 in
@@ -2617,46 +2617,46 @@ if test "$with_fortran" != "no"; then
       # Linux Library Check
       case $F77 in
         *pgf77*)
-          SCI_TRY_LINK(F,fortran libraries,,,pgftnrtl,$_sci_lib,$RT_LIB_FLAG,,$_sci_optional)
+          SCI_TRY_LINK(F,fortran libraries (pgf77),,,pgftnrtl,$_sci_lib,$RT_LIB_FLAG,,$_sci_optional)
           ;;
         *gfortran* | *mpif77* )
-          SCI_TRY_LINK(F,fortran libraries,,,gfortran,$_sci_lib,,,$_sci_optional)
+          SCI_TRY_LINK(F,fortran libraries (gfortran/mpif77),,,gfortran,$_sci_lib,,,$_sci_optional)
           ;;
         *xlf* )
 	  # bgxlf and /usr/local/tools/toolchain-4.7.2/gnu-linux-4.7.2/powerpc64-bgq-linux/lib
-          SCI_TRY_LINK(F,fortran libraries,,,xlf90_r xl xlopt dl,$_sci_lib,,,optional)
+          SCI_TRY_LINK(F,fortran libraries (xlf),,,xlf90_r xl xlopt dl,$_sci_lib,,,optional)
           ;;
         *ifort*)
-          SCI_TRY_LINK(F,fortran libraries,,,ifcore,$_sci_lib,,,$_sci_optional)
+          SCI_TRY_LINK(F,fortran libraries (ifort),,,ifcore,$_sci_lib,,,$_sci_optional)
           ;;
         *ftn*)
-          SCI_TRY_LINK(F,fortran libraries,,,,$_sci_lib,,,$_sci_optional)
+          SCI_TRY_LINK(F,fortran libraries (ftn),,,,$_sci_lib,,,$_sci_optional)
           ;;
         *)
-          SCI_TRY_LINK(F,fortran libraries,,,g2c,$_sci_lib,,,$_sci_optional)
+          SCI_TRY_LINK(F,fortran libraries (other),,,g2c,$_sci_lib,,,$_sci_optional)
           ;;
        esac
       ;;
     *dec*)
-      SCI_TRY_LINK(F,fortran libraries,,,for Ufor,$_sci_lib,,,$_sci_optional)
+      SCI_TRY_LINK(F,fortran libraries (dec),,,for Ufor,$_sci_lib,,,$_sci_optional)
       ;;
     *-darwin*)
       # OSX Library Check
       if test "$F77" = "xlf"; then
-        SCI_TRY_LINK(F,Mac fortran library - xlf90,,$_sci_inc,xlf90,$_sci_lib,,,$_sci_optional)
+        SCI_TRY_LINK(F,Mac fortran library (xlf) - xlf90,,$_sci_inc,xlf90,$_sci_lib,,,$_sci_optional)
       else
-        SCI_TRY_LINK(F,Mac fortran library - gfortran,,$_sci_inc,gfortran,$_sci_lib,,,optional)
+        SCI_TRY_LINK(F,2 - Mac fortran library (other) - gfortran,,$_sci_inc,gfortran,$_sci_lib,,,optional)
         if test "$HAVE_F" = "no"; then
-             SCI_TRY_LINK(F,mac fortran library - g2c,,$_sci_inc,g2c,$_sci_lib,,,$_sci_optional)
+             SCI_TRY_LINK(F,3 - Mac fortran library - g2c,,$_sci_inc,g2c,$_sci_lib,,,$_sci_optional)
         fi
       fi
       ;;
     *-pc-mingw*)
       # Mingw g77 and libg2c
-      SCI_TRY_LINK(F,fortran libraries,,,g2c,$_sci_lib,,,$_sci_optional)
+      SCI_TRY_LINK(F,fortran libraries (pc-mingw),,,g2c,$_sci_lib,,,$_sci_optional)
       ;;
     *)
-      SCI_TRY_LINK(F,fortran libraries,,,F77,$_sci_lib,,,$_sci_optional)
+      SCI_TRY_LINK(F,fortran libraries (other),,,F77,$_sci_lib,,,$_sci_optional)
       ;;
   esac
 fi
@@ -4130,6 +4130,11 @@ if test "$with_boost_library" -o "$with_boost_include" ; then
       AC_MSG_ERROR( Directory does not exist: '$with_boost_include' )
    elif test ! -d $with_boost_library; then
       AC_MSG_ERROR( Directory does not exist: '$with_boost_library' )
+   fi
+   # Following magic line removes any trailing / from with_boost_include.
+   inc=${with_boost_include%/}
+   if test "$inc" = "/usr/include" ; then
+      with_boost_include=
    fi
    BOOST_INCLUDE_DIR=$with_boost_include
    BOOST_LIBRARY_DIR=$with_boost_library

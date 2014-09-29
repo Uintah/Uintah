@@ -18361,7 +18361,7 @@ if test "$with_fortran" != "no"; then
       # AIX Fortran Library Check
 
 ##
-## SCI_TRY_LINK (F):  fortran libraries
+## SCI_TRY_LINK (F):  fortran libraries (aix)
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -18393,7 +18393,7 @@ if test "$with_fortran" != "no"; then
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : F
-## arg 2 : fortran libraries
+## arg 2 : fortran libraries (aix)
 ## arg 3 :
 ## arg 4 :
 ## arg 5 : xlf90
@@ -18413,12 +18413,12 @@ if test "$with_fortran" != "no"; then
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (aix).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for fortran libraries ($_sci_optional)" >&5
-$as_echo_n "checking for fortran libraries ($_sci_optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for fortran libraries (aix) ($_sci_optional)" >&5
+$as_echo_n "checking for fortran libraries (aix) ($_sci_optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -18428,7 +18428,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (aix) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -18758,7 +18758,7 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (F):  fortran libraries
+## END of SCI_TRY_LINK (F):  fortran libraries (aix)
 ##
 
 
@@ -18776,7 +18776,7 @@ $as_echo "$as_me: WARNING: $msg" >&2;}
         *pgf77*)
 
 ##
-## SCI_TRY_LINK (F):  fortran libraries
+## SCI_TRY_LINK (F):  fortran libraries (pgf77)
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -18808,7 +18808,7 @@ $as_echo "$as_me: WARNING: $msg" >&2;}
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : F
-## arg 2 : fortran libraries
+## arg 2 : fortran libraries (pgf77)
 ## arg 3 :
 ## arg 4 :
 ## arg 5 : pgftnrtl
@@ -18828,12 +18828,12 @@ $as_echo "$as_me: WARNING: $msg" >&2;}
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (pgf77).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for fortran libraries ($_sci_optional)" >&5
-$as_echo_n "checking for fortran libraries ($_sci_optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for fortran libraries (pgf77) ($_sci_optional)" >&5
+$as_echo_n "checking for fortran libraries (pgf77) ($_sci_optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -18843,7 +18843,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (pgf77) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -19173,7 +19173,7 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (F):  fortran libraries
+## END of SCI_TRY_LINK (F):  fortran libraries (pgf77)
 ##
 
 
@@ -19181,7 +19181,7 @@ _sci_includes=''
         *gfortran* | *mpif77* )
 
 ##
-## SCI_TRY_LINK (F):  fortran libraries
+## SCI_TRY_LINK (F):  fortran libraries (gfortran/mpif77)
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -19213,7 +19213,7 @@ _sci_includes=''
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : F
-## arg 2 : fortran libraries
+## arg 2 : fortran libraries (gfortran/mpif77)
 ## arg 3 :
 ## arg 4 :
 ## arg 5 : gfortran
@@ -19233,12 +19233,12 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (gfortran/mpif77).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for fortran libraries ($_sci_optional)" >&5
-$as_echo_n "checking for fortran libraries ($_sci_optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for fortran libraries (gfortran/mpif77) ($_sci_optional)" >&5
+$as_echo_n "checking for fortran libraries (gfortran/mpif77) ($_sci_optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -19248,7 +19248,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (gfortran/mpif77) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -19578,7 +19578,7 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (F):  fortran libraries
+## END of SCI_TRY_LINK (F):  fortran libraries (gfortran/mpif77)
 ##
 
 
@@ -19587,7 +19587,7 @@ _sci_includes=''
 	  # bgxlf and /usr/local/tools/toolchain-4.7.2/gnu-linux-4.7.2/powerpc64-bgq-linux/lib
 
 ##
-## SCI_TRY_LINK (F):  fortran libraries
+## SCI_TRY_LINK (F):  fortran libraries (xlf)
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -19619,7 +19619,7 @@ _sci_includes=''
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : F
-## arg 2 : fortran libraries
+## arg 2 : fortran libraries (xlf)
 ## arg 3 :
 ## arg 4 :
 ## arg 5 : xlf90_r xl xlopt dl
@@ -19639,12 +19639,12 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (xlf).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for fortran libraries (optional)" >&5
-$as_echo_n "checking for fortran libraries (optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for fortran libraries (xlf) (optional)" >&5
+$as_echo_n "checking for fortran libraries (xlf) (optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -19654,7 +19654,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (xlf) must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -19984,7 +19984,7 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (F):  fortran libraries
+## END of SCI_TRY_LINK (F):  fortran libraries (xlf)
 ##
 
 
@@ -19992,7 +19992,7 @@ _sci_includes=''
         *ifort*)
 
 ##
-## SCI_TRY_LINK (F):  fortran libraries
+## SCI_TRY_LINK (F):  fortran libraries (ifort)
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -20024,7 +20024,7 @@ _sci_includes=''
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : F
-## arg 2 : fortran libraries
+## arg 2 : fortran libraries (ifort)
 ## arg 3 :
 ## arg 4 :
 ## arg 5 : ifcore
@@ -20044,12 +20044,12 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (ifort).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for fortran libraries ($_sci_optional)" >&5
-$as_echo_n "checking for fortran libraries ($_sci_optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for fortran libraries (ifort) ($_sci_optional)" >&5
+$as_echo_n "checking for fortran libraries (ifort) ($_sci_optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -20059,7 +20059,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (ifort) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -20389,7 +20389,7 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (F):  fortran libraries
+## END of SCI_TRY_LINK (F):  fortran libraries (ifort)
 ##
 
 
@@ -20397,7 +20397,7 @@ _sci_includes=''
         *ftn*)
 
 ##
-## SCI_TRY_LINK (F):  fortran libraries
+## SCI_TRY_LINK (F):  fortran libraries (ftn)
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -20429,7 +20429,7 @@ _sci_includes=''
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : F
-## arg 2 : fortran libraries
+## arg 2 : fortran libraries (ftn)
 ## arg 3 :
 ## arg 4 :
 ## arg 5 :
@@ -20449,12 +20449,12 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (ftn).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for fortran libraries ($_sci_optional)" >&5
-$as_echo_n "checking for fortran libraries ($_sci_optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for fortran libraries (ftn) ($_sci_optional)" >&5
+$as_echo_n "checking for fortran libraries (ftn) ($_sci_optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -20464,7 +20464,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (ftn) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -20794,7 +20794,7 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (F):  fortran libraries
+## END of SCI_TRY_LINK (F):  fortran libraries (ftn)
 ##
 
 
@@ -20802,7 +20802,7 @@ _sci_includes=''
         *)
 
 ##
-## SCI_TRY_LINK (F):  fortran libraries
+## SCI_TRY_LINK (F):  fortran libraries (other)
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -20834,7 +20834,7 @@ _sci_includes=''
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : F
-## arg 2 : fortran libraries
+## arg 2 : fortran libraries (other)
 ## arg 3 :
 ## arg 4 :
 ## arg 5 : g2c
@@ -20854,12 +20854,12 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (other).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for fortran libraries ($_sci_optional)" >&5
-$as_echo_n "checking for fortran libraries ($_sci_optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for fortran libraries (other) ($_sci_optional)" >&5
+$as_echo_n "checking for fortran libraries (other) ($_sci_optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -20869,7 +20869,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (other) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -21199,7 +21199,7 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (F):  fortran libraries
+## END of SCI_TRY_LINK (F):  fortran libraries (other)
 ##
 
 
@@ -21209,7 +21209,7 @@ _sci_includes=''
     *dec*)
 
 ##
-## SCI_TRY_LINK (F):  fortran libraries
+## SCI_TRY_LINK (F):  fortran libraries (dec)
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -21241,7 +21241,7 @@ _sci_includes=''
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : F
-## arg 2 : fortran libraries
+## arg 2 : fortran libraries (dec)
 ## arg 3 :
 ## arg 4 :
 ## arg 5 : for Ufor
@@ -21261,12 +21261,12 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (dec).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for fortran libraries ($_sci_optional)" >&5
-$as_echo_n "checking for fortran libraries ($_sci_optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for fortran libraries (dec) ($_sci_optional)" >&5
+$as_echo_n "checking for fortran libraries (dec) ($_sci_optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -21276,7 +21276,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (dec) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -21606,7 +21606,7 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (F):  fortran libraries
+## END of SCI_TRY_LINK (F):  fortran libraries (dec)
 ##
 
 
@@ -21616,7 +21616,7 @@ _sci_includes=''
       if test "$F77" = "xlf"; then
 
 ##
-## SCI_TRY_LINK (F):  Mac fortran library - xlf90
+## SCI_TRY_LINK (F):  Mac fortran library (xlf) - xlf90
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -21648,7 +21648,7 @@ _sci_includes=''
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : F
-## arg 2 : Mac fortran library - xlf90
+## arg 2 : Mac fortran library (xlf) - xlf90
 ## arg 3 :
 ## arg 4 : $_sci_inc
 ## arg 5 : xlf90
@@ -21668,12 +21668,12 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for Mac fortran library - xlf90.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for Mac fortran library (xlf) - xlf90.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for Mac fortran library - xlf90 ($_sci_optional)" >&5
-$as_echo_n "checking for Mac fortran library - xlf90 ($_sci_optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for Mac fortran library (xlf) - xlf90 ($_sci_optional)" >&5
+$as_echo_n "checking for Mac fortran library (xlf) - xlf90 ($_sci_optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -21683,7 +21683,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for Mac fortran library - xlf90 must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for Mac fortran library (xlf) - xlf90 must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -22054,14 +22054,14 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (F):  Mac fortran library - xlf90
+## END of SCI_TRY_LINK (F):  Mac fortran library (xlf) - xlf90
 ##
 
 
       else
 
 ##
-## SCI_TRY_LINK (F):  Mac fortran library - gfortran
+## SCI_TRY_LINK (F):  2 - Mac fortran library (other) - gfortran
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -22093,7 +22093,7 @@ _sci_includes=''
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : F
-## arg 2 : Mac fortran library - gfortran
+## arg 2 : 2 - Mac fortran library (other) - gfortran
 ## arg 3 :
 ## arg 4 : $_sci_inc
 ## arg 5 : gfortran
@@ -22113,12 +22113,12 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for Mac fortran library - gfortran.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for 2 - Mac fortran library (other) - gfortran.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for Mac fortran library - gfortran (optional)" >&5
-$as_echo_n "checking for Mac fortran library - gfortran (optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for 2 - Mac fortran library (other) - gfortran (optional)" >&5
+$as_echo_n "checking for 2 - Mac fortran library (other) - gfortran (optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -22128,7 +22128,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for Mac fortran library - gfortran must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for 2 - Mac fortran library (other) - gfortran must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -22499,14 +22499,14 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (F):  Mac fortran library - gfortran
+## END of SCI_TRY_LINK (F):  2 - Mac fortran library (other) - gfortran
 ##
 
 
         if test "$HAVE_F" = "no"; then
 
 ##
-## SCI_TRY_LINK (F):  mac fortran library - g2c
+## SCI_TRY_LINK (F):  3 - Mac fortran library - g2c
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -22538,7 +22538,7 @@ _sci_includes=''
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : F
-## arg 2 : mac fortran library - g2c
+## arg 2 : 3 - Mac fortran library - g2c
 ## arg 3 :
 ## arg 4 : $_sci_inc
 ## arg 5 : g2c
@@ -22558,12 +22558,12 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for mac fortran library - g2c.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for 3 - Mac fortran library - g2c.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mac fortran library - g2c ($_sci_optional)" >&5
-$as_echo_n "checking for mac fortran library - g2c ($_sci_optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for 3 - Mac fortran library - g2c ($_sci_optional)" >&5
+$as_echo_n "checking for 3 - Mac fortran library - g2c ($_sci_optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -22573,7 +22573,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for mac fortran library - g2c must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for 3 - Mac fortran library - g2c must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -22944,7 +22944,7 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (F):  mac fortran library - g2c
+## END of SCI_TRY_LINK (F):  3 - Mac fortran library - g2c
 ##
 
 
@@ -22955,7 +22955,7 @@ _sci_includes=''
       # Mingw g77 and libg2c
 
 ##
-## SCI_TRY_LINK (F):  fortran libraries
+## SCI_TRY_LINK (F):  fortran libraries (pc-mingw)
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -22987,7 +22987,7 @@ _sci_includes=''
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : F
-## arg 2 : fortran libraries
+## arg 2 : fortran libraries (pc-mingw)
 ## arg 3 :
 ## arg 4 :
 ## arg 5 : g2c
@@ -23007,12 +23007,12 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (pc-mingw).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for fortran libraries ($_sci_optional)" >&5
-$as_echo_n "checking for fortran libraries ($_sci_optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for fortran libraries (pc-mingw) ($_sci_optional)" >&5
+$as_echo_n "checking for fortran libraries (pc-mingw) ($_sci_optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -23022,7 +23022,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (pc-mingw) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -23352,7 +23352,7 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (F):  fortran libraries
+## END of SCI_TRY_LINK (F):  fortran libraries (pc-mingw)
 ##
 
 
@@ -23360,7 +23360,7 @@ _sci_includes=''
     *)
 
 ##
-## SCI_TRY_LINK (F):  fortran libraries
+## SCI_TRY_LINK (F):  fortran libraries (other)
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -23392,7 +23392,7 @@ _sci_includes=''
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : F
-## arg 2 : fortran libraries
+## arg 2 : fortran libraries (other)
 ## arg 3 :
 ## arg 4 :
 ## arg 5 : F77
@@ -23412,12 +23412,12 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (other).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for fortran libraries ($_sci_optional)" >&5
-$as_echo_n "checking for fortran libraries ($_sci_optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for fortran libraries (other) ($_sci_optional)" >&5
+$as_echo_n "checking for fortran libraries (other) ($_sci_optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -23427,7 +23427,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (other) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -23757,7 +23757,7 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (F):  fortran libraries
+## END of SCI_TRY_LINK (F):  fortran libraries (other)
 ##
 
 
@@ -39344,6 +39344,11 @@ if test "$with_boost_library" -o "$with_boost_include" ; then
       as_fn_error $? "Directory does not exist: '$with_boost_include' " "$LINENO" 5
    elif test ! -d $with_boost_library; then
       as_fn_error $? "Directory does not exist: '$with_boost_library' " "$LINENO" 5
+   fi
+   # Following magic line removes any trailing / from with_boost_include.
+   inc=${with_boost_include%/}
+   if test "$inc" = "/usr/include" ; then
+      with_boost_include=
    fi
    BOOST_INCLUDE_DIR=$with_boost_include
    BOOST_LIBRARY_DIR=$with_boost_library
