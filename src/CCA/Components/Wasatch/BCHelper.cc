@@ -852,10 +852,7 @@ namespace Wasatch {
                 
                 // Grab the number of children on this boundary face
                 const int numChildren = bcDataArray->getNumberChildren(materialID);
-                
-                std::cout << "Face = " << face_side << std::endl;
-                //bcDataArray->print();
-                
+                                
                 // now go over every child-boundary (sub-boundary) specified on this domain boundary face
                 for( int chid = 0; chid<numChildren; ++chid ) {
                   DBGBC << " child ID = " << chid << std::endl;
