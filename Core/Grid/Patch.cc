@@ -134,7 +134,11 @@ Patch::~Patch()
     d_arrayBCS->clear();
     delete d_arrayBCS;
   }
-  
+
+  if (d_interiorBndArrayBCS) {
+    d_interiorBndArrayBCS->clear();
+    delete d_interiorBndArrayBCS;
+  }
 }
 
 /**
