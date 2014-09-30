@@ -124,7 +124,6 @@ BCDataArray& BCDataArray::operator=(const BCDataArray& rhs)
 BCDataArray* BCDataArray::clone()
 {
   return scinew BCDataArray(*this);
-
 }
 
 //------------------------------------------------------------------------------------------------
