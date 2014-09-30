@@ -173,7 +173,7 @@ public:
     d_weight = true; }; 
 
   /** @brief Get the quadrature node value. */
-  inline const int getQuadNode(){
+  inline int getQuadNode(){
     return d_quadNode; };
 
  

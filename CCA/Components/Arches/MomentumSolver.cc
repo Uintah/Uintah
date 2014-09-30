@@ -586,6 +586,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     constCCVariable<double> volFraction; 
     new_dw->get(volFraction, d_lab->d_volFractionLabel, indx, patch, gac, 2);
 
+    //multiple_steps is false on rk step = 0
     if (timelabels->multiple_steps){
       new_dw->get(constVelocityVars.density, d_lab->d_densityTempLabel, indx, patch, gac, 2);
     }else{
