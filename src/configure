@@ -38312,7 +38312,7 @@ $as_echo "$as_me: WARNING: PIDX is already required - you do not need to specify
   else
     # If --with-pidx has a parameter, then use it
     _sci_lib="$with_pidx"
-    _sci_inc="$with_pidx"
+    _sci_inc="$with_pidx/include"
 
 ##
 ## BASE_LIB_PATH:
@@ -38395,7 +38395,7 @@ $as_echo "$as_me: WARNING: PIDX is already required - you do not need to specify
 ## arg 2 : pidx library and headers
 ## arg 3 : PIDX.h
 ## arg 4 : $_sci_inc $INC_MPI_H
-## arg 5 : $MPI_LIB_FLAG PIDX PIDX_agg PIDX_hz_encode PIDX_io PIDX_rst
+## arg 5 : $MPI_LIB_FLAG pidx
 ## arg 6 : $MPI_LIB_DIR_FLAG $_sci_lib
 ## arg 7 : -DMPIPP_H
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -38475,10 +38475,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "$MPI_LIB_FLAG PIDX PIDX_agg PIDX_hz_encode PIDX_io PIDX_rst"; then
+if test -n "$MPI_LIB_FLAG pidx"; then
 
    found_framework=no
-   for lib in $MPI_LIB_FLAG PIDX PIDX_agg PIDX_hz_encode PIDX_io PIDX_rst; do
+   for lib in $MPI_LIB_FLAG pidx; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -38773,7 +38773,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" $MPI_LIB_FLAG PIDX PIDX_agg PIDX_hz_encode PIDX_io PIDX_rst; do
+  for i in "" $MPI_LIB_FLAG pidx; do
     if test -z "$i"; then
        continue
     fi
