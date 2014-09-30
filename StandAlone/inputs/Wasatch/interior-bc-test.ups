@@ -25,12 +25,12 @@
     <initTime>0.0</initTime>
     <delt_min>1e-4</delt_min>
     <delt_max>1e-4</delt_max>
-    <max_Timesteps> 3 </max_Timesteps>
+    <max_Timesteps> 10 </max_Timesteps>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
   <DataArchiver>
     <filebase>interior-bc-test.uda</filebase>
-    <outputTimestepInterval>10</outputTimestepInterval>
+    <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle="2" interval="1e-4"/>
     <save label="f"/>
@@ -61,22 +61,22 @@
         <BCType var="Dirichlet" label="f" value="12.0"/>
       </InteriorFace>
       <Face side="x-" name="left-wall">
-        <BCType var="Dirichlet" label="phi-scalar" value="10.0"/>
+        <BCType var="Dirichlet" label="f" value="10.0"/>
       </Face>
       <Face side="x+" name="right-wall">
-        <BCType var="Dirichlet" label="phi-scalar" value="0.0"/>
+        <BCType var="Dirichlet" label="f" value="0.0"/>
       </Face>
       <Face side="y-" name="bottom-wall">
-        <BCType var="Neumann" label="phi-scalar" value="0.0"/>
+        <BCType var="Neumann" label="f" value="0.0"/>
       </Face>
       <Face side="y+" name="top-wall">
-        <BCType var="Neumann" label="phi-scalar" value="0.0"/>
+        <BCType var="Neumann" label="f" value="0.0"/>
       </Face>
       <Face side="z-" name="zminus-wall">
-        <BCType var="Neumann" label="phi-scalar" value="0.0"/>
+        <BCType var="Neumann" label="f" value="0.0"/>
       </Face>
       <Face side="z+" name="zplus-wall">
-        <BCType var="Neumann" label="phi-scalar" value="0.0"/>
+        <BCType var="Neumann" label="f" value="0.0"/>
       </Face>
     </BoundaryConditions>
     <Level>
