@@ -1296,7 +1296,7 @@
             <constant                   spec="OPTIONAL DOUBLE"/>
             <env_constant               spec="MULTIPLE NO_DATA"
                                         attribute1="qn REQUIRED INTEGER 'positive'"
-                                        attribute2="value REQUIRED DOUBLE" />
+                                        attribute2="value REQUIRED DOUBLE" /> <!-- this is the unscaled initial value for the weight -->
             <!-- step function initialization --> 
             <!-- Note: the only difference between 'step' and 'env_step' is the use of <step_value></step_value> or <env_step_value qn="" value=""/> -->
             <step_direction             spec="OPTIONAL STRING 'x,y,z'"/> <!-- direction in which the step occurs -->
