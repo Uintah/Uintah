@@ -1383,10 +1383,11 @@
         <CutOff                         spec="OPTIONAL DOUBLE"/>
         <Adaptive                       spec="OPTIONAL BOOLEAN"/>
         <UseLapack                      spec="OPTIONAL BOOLEAN"/>
-        <WeightRatio                    spec="OPTIONAL DOUBLE"/>
-        <AbscissaRatio                  spec="OPTIONAL DOUBLE"/>
+        <WeightRatio                    spec="OPTIONAL DOUBLE"/>  <!-- minimum ratio of maximum to minimum weight in adaptive method -->
+        <AbscissaRatio                  spec="OPTIONAL DOUBLE"/>  <!-- minimum ratio of difference between abscissas -->
         <OperatorSplitting              spec="OPTIONAL BOOLEAN"/> <!-- turn on operator splitting for convective fluxes -->
-        <RestitutionCoefficient         spec="OPTIONAL DOUBLE"/>
+        <RestitutionCoefficient         spec="OPTIONAL DOUBLE"/>  <!-- determines how much energy is lost in wall collision default = 1 - elastic-->
+        <ConvectionWeightLimit          spec="OPTIONAL DOUBLE"/>  <!-- minimum value of the weight for the quadrature node to actually do convection, scale this value up for higher number densities of population balance-->
         
         <!-- order these same as index moment order -->
         <InternalCoordinate             spec="MULTIPLE NO_DATA"
