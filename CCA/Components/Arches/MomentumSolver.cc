@@ -677,17 +677,18 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
 
     if (!(this->get_use_wasatch_mom_rhs())) {
-//      velocityVars.uVelRhoHat.copy(constVelocityVars.old_uVelocity,
-//                                   velocityVars.uVelRhoHat.getLowIndex(),
-//                                   velocityVars.uVelRhoHat.getHighIndex());
-//                                   
-//      velocityVars.vVelRhoHat.copy(constVelocityVars.old_vVelocity,
-//                                   velocityVars.vVelRhoHat.getLowIndex(),
-//                                   velocityVars.vVelRhoHat.getHighIndex());
-//                                   
-//      velocityVars.wVelRhoHat.copy(constVelocityVars.old_wVelocity,
-//                                   velocityVars.wVelRhoHat.getLowIndex(),
-//                                   velocityVars.wVelRhoHat.getHighIndex());
+
+      velocityVars.uVelRhoHat.copy(constVelocityVars.old_uVelocity,
+                                   velocityVars.uVelRhoHat.getLowIndex(),
+                                   velocityVars.uVelRhoHat.getHighIndex());
+                                   
+      velocityVars.vVelRhoHat.copy(constVelocityVars.old_vVelocity,
+                                   velocityVars.vVelRhoHat.getLowIndex(),
+                                   velocityVars.vVelRhoHat.getHighIndex());
+                                   
+      velocityVars.wVelRhoHat.copy(constVelocityVars.old_wVelocity,
+                                   velocityVars.wVelRhoHat.getLowIndex(),
+                                   velocityVars.wVelRhoHat.getHighIndex());
 
       //__________________________________
       //  compute coefficients and vel src
@@ -947,7 +948,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                                         constVelocityVars.old_uVelocity, 
                                                         constVelocityVars.old_vVelocity, 
                                                         constVelocityVars.old_wVelocity ); 
-    
 
   }
 }
