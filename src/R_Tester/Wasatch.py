@@ -122,7 +122,7 @@ decayIsotropicTurbulenceDSmag64_ups = modUPS( turbulenceDir, \
 #______________________________________________________________________
 
 DEBUGTESTS = [
-  ("coal-boiler-mini",                         "coal-boiler-mini.ups",    16,  "All",  ["exactComparison","no_restart"]               )
+	("interior-bc-test", "interior-bc-test.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] )
     ]
 
 NIGHTLYTESTS = [
