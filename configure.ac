@@ -4045,12 +4045,12 @@ if test "$with_pidx"; then
   else
     # If --with-pidx has a parameter, then use it
     _sci_lib="$with_pidx"
-    _sci_inc="$with_pidx"
+    _sci_inc="$with_pidx/include"
     BASE_LIB_PATH(_sci_lib,$_sci_lib)
     _sci_optional=required
   fi 
 
-  SCI_TRY_LINK(PIDX,pidx library and headers,PIDX.h,$_sci_inc $INC_MPI_H,$MPI_LIB_FLAG PIDX PIDX_agg PIDX_hz_encode PIDX_io PIDX_rst,$MPI_LIB_DIR_FLAG $_sci_lib,-DMPIPP_H,,$_sci_optional)
+  SCI_TRY_LINK(PIDX,pidx library and headers,PIDX.h,$_sci_inc $INC_MPI_H,$MPI_LIB_FLAG pidx,$MPI_LIB_DIR_FLAG $_sci_lib,-DMPIPP_H,,$_sci_optional)
 
   if test "$HAVE_PIDX" = "yes"; then
      DEF_PIDX="#define HAVE_PIDX 1"
