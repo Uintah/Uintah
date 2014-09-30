@@ -115,12 +115,14 @@ private:
   double c3_1;
   double c4_1;
   double c5_1;
+  double c6_1;
   double c0_2;
   double c1_2;
   double c2_2;
   double c3_2;
   double c4_2;
   double c5_2;
+  double c6_2;
   double Xv;
   double Fv1;
   double Fv2;

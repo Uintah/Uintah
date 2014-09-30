@@ -154,12 +154,15 @@ RichardsFletcherDevol::problemSetup(const ProblemSpecP& params, int qn)
     c3_1=RichardsFletcher_coefficients[9]; 
     c4_1=RichardsFletcher_coefficients[10]; 
     c5_1=RichardsFletcher_coefficients[11]; 
-    c0_2=RichardsFletcher_coefficients[12]; 
-    c1_2=RichardsFletcher_coefficients[13]; 
-    c2_2=RichardsFletcher_coefficients[14]; 
-    c3_2=RichardsFletcher_coefficients[15]; 
-    c4_2=RichardsFletcher_coefficients[16]; 
-    c5_2=RichardsFletcher_coefficients[17]; 
+    c6_1=RichardsFletcher_coefficients[12]; 
+    c0_2=RichardsFletcher_coefficients[13]; 
+    c1_2=RichardsFletcher_coefficients[14]; 
+    c2_2=RichardsFletcher_coefficients[15]; 
+    c3_2=RichardsFletcher_coefficients[16]; 
+    c4_2=RichardsFletcher_coefficients[17]; 
+    c5_2=RichardsFletcher_coefficients[18]; 
+    c5_2=RichardsFletcher_coefficients[19]; 
+    c6_2=RichardsFletcher_coefficients[20]; 
     db_coal->require("particle_density", rhop);
     db_coal->require("particle_sizes", particle_sizes); // read the particle sizes [m]
     db_coal->require("as_received", as_received);
@@ -483,10 +486,10 @@ RichardsFletcherDevol::computeModel( const ProcessorGroup * pc,
         Xv = (unscaled_rawcoal_mass-unscaled_raw_coal_mass)/unscaled_rawcoal_mass;
         Xv = min(max(Xv,0.0),1.0);
         
-        Fv1 = c5_1*pow(Xv,5.0) + c4_1*pow(Xv,4.0) + c3_1*pow(Xv,3.0) + c2_1*pow(Xv,2.0) + c1_1*Xv +c0_1;
+        Fv1 = c6_1*pow(Xv,6.0) + c5_1*pow(Xv,5.0) + c4_1*pow(Xv,4.0) + c3_1*pow(Xv,3.0) + c2_1*pow(Xv,2.0) + c1_1*Xv +c0_1;
         k1 = exp(Fv1)*Av1*exp(-Ev1/(unscaled_temperature));
         
-        Fv2 = c5_2*pow(Xv,5.0) + c4_2*pow(Xv,4.0) + c3_2*pow(Xv,3.0) + c2_2*pow(Xv,2.0) + c1_2*Xv +c0_2;
+        Fv2 = c6_2*pow(Xv,6.0) + c5_2*pow(Xv,5.0) + c4_2*pow(Xv,4.0) + c3_2*pow(Xv,3.0) + c2_2*pow(Xv,2.0) + c1_2*Xv +c0_2;
         k2 = exp(Fv2)*Av2*exp(-Ev2/(unscaled_temperature));
  
         if(d_unweighted){ 
