@@ -128,6 +128,10 @@ Patch::~Patch()
       face <= Patch::endFace; face=Patch::nextFace(face)) {
     if ( d_arrayBCS)
       delete (*d_arrayBCS)[face];
+    
+    if (d_interiorBndArrayBCS) {
+      delete (*d_interiorBndArrayBCS)[face];
+    }
   }
 
   if (d_arrayBCS) {
