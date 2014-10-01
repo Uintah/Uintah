@@ -20,6 +20,7 @@
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4      </delt_init>
        <timestep_multiplier>0.8         </timestep_multiplier>
+			 <max_Timesteps> 2 </max_Timesteps>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -233,7 +234,7 @@
                  </box>
                  <res>               [2,2,2]         </res>
                  <velocity>          [0.0,0.0,0.0]   </velocity>
-                 <temperature>       100             </temperature>
+                 <temperature>       10              </temperature>
               </geom_object>
          </material>
 

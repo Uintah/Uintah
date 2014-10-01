@@ -1096,6 +1096,13 @@ void ReactiveFlow::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<int>     pLocalized;
     constParticleVariable<double>  pTimeOfLoc;
     constParticleVariable<double>  pFailureStrain, pMass, pDamage, pVolume_new;
+
+		// *****************************************************************
+		// Temperature will be used as a subsitution for concentration until
+		// the concentration portion of MPMICE is working. 
+    constParticleVariable<double>  pTempConc;
+		// *****************************************************************
+
     constParticleVariable<double>  pPlasticStrain_old, pYieldStress_old;
     constParticleVariable<long64>  pParticleID;
     constParticleVariable<Vector>  pVelocity;
@@ -1155,6 +1162,10 @@ void ReactiveFlow::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pVelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(bElBar,              bElBarLabel,                  pset);
     old_dw->get(pDefGrad,            lb->pDeformationMeasureLabel, pset);
+		// ********************************************************************
+		// Note that currently temperature is used as a subsitute for concentration
+    old_dw->get(pTempConc,            lb->pTemperatureLabel, pset);
+		// ********************************************************************
     new_dw->get(velGrad,             lb->pVelGradLabel_preReloc,   pset);
     new_dw->get(pVolume_new,         lb->pVolumeLabel_preReloc,    pset);
     new_dw->get(pDefGrad_new,lb->pDeformationMeasureLabel_preReloc,pset);
@@ -1168,7 +1179,13 @@ void ReactiveFlow::computeStressTensor(const PatchSubset* patches,
     ParticleSubset::iterator iter = pset->begin();
     for(; iter != pset->end(); iter++){
       particleIndex idx = *iter;
-      
+
+			// *****************************************************************
+			// Normalizing the temperature to have it be a concentation that
+			// is between 0 and 1
+			double concentration = pTempConc[idx]/300.0;
+			// *****************************************************************
+
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
 
