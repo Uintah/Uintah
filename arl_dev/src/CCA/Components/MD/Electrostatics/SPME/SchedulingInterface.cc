@@ -219,9 +219,16 @@ void SPME::scheduleCalculateRealspace(const ProcessorGroup*     pg,
     */
     Task* task;
     if (f_polarizable) {
-      task = scinew Task("SPME::calculateRealspacePointDipole",
+//      task = scinew Task("SPME::calculateRealspacePointDipole",
+//                         this,
+//                         &SPME::calculateRealspacePointDipole,
+//                         sharedState,
+//                         label,
+//                         coordSys,
+//                         parentOldDW);
+      task = scinew Task("SPME::calculateRealspaceTholeDipole",
                          this,
-                         &SPME::calculateRealspacePointDipole,
+                         &SPME::calculateRealspaceTholeDipole,
                          sharedState,
                          label,
                          coordSys,
