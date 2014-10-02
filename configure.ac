@@ -192,7 +192,7 @@ for my_pwd in pwd /bin/pwd /usr/bin/pwd; do
   fi
 done
 if test -z "$sci_pwd"; then
-   AC_MSG_WARN("Using unstable version of pwd")
+   AC_MSG_WARN(Using unstable version of pwd)
    sci_pwd=pwd
 fi
 
@@ -748,9 +748,9 @@ AC_SUBST(DEF_MEMORY_INIT_NUMBER)
 sci_defs_files="$sci_defs_files Core/Malloc/testmem_init.h"
 
 if test "$enable_rpath" = "no"; then
-   AC_MSG_WARN("You have removed the rpath flag from some libraries.")
-   AC_MSG_WARN("This may have unpredictable affects.")
-   AC_MSG_WARN("Do not do this unless you really know what you are doing.")
+   AC_MSG_WARN(You have removed the rpath flag from some libraries.)
+   AC_MSG_WARN(This may have unpredictable affects.)
+   AC_MSG_WARN(Do not do this unless you really know what you are doing.)
 fi
 
 
@@ -819,7 +819,7 @@ case $host in
     ;;
   *)
     echo
-    AC_MSG_WARN( !!!!!! This system is untested - You are on your own !!!!!!)
+    AC_MSG_WARN(!!!!!! This system is untested - You are on your own !!!!!!)
     echo
     NUM_CPUS="1"
     ;;
@@ -931,8 +931,7 @@ if test "$CXX" = ""; then
         # its value first, so...
         CXXFLAGS=$CXXFLAGS
         AC_PROG_CXX(CC g++ c++)
-        AC_MSG_WARN(C++ compiler not specified with 'CXX' environment variable.\
-	         Using default... $CXX)
+        AC_MSG_WARN(C++ compiler not specified with 'CXX' environment variable.  Using default... $CXX)
         ;;
   esac
 fi
@@ -1517,7 +1516,7 @@ case $host in
 #####
     OS_VERSION=`uname -r | cut -f1 -d.`
     if test "$OS_VERSION" -ge 10; then
-        AC_MSG_WARN( Running under Snow Leopard or later)
+        AC_MSG_WARN( Running under Snow Leopard or later )
         DEF_OSX_SNOW_LEOPARD_OR_LATER="#define OSX_SNOW_LEOPARD_OR_LATER"
         IS_OSX_SNOW_LEOPARD_OR_LATER="yes"
     fi
@@ -2608,19 +2607,25 @@ if test "$with_fortran" != "no"; then
       SCI_TRY_LINK(F,fortran libraries (aix),,,xlf90,$_sci_lib,,,$_sci_optional)
       ;;
     *linux*)
+      F77TEST=$F77
       case $F77 in
         *mpif77* )
-          msg="Assuming mpif77 behaves the same as gfortran..."
-          add_important_warning "$msg"
-          AC_MSG_WARN($msg)
+          mpif77 --version | grep -i -q ifort
+          if test $? = 0; then
+             F77TEST=ifort
+          else
+             F77TEST=gfortran
+          fi
       esac
+
+
       # Linux Library Check
-      case $F77 in
+      case $F77TEST in
         *pgf77*)
           SCI_TRY_LINK(F,fortran libraries (pgf77),,,pgftnrtl,$_sci_lib,$RT_LIB_FLAG,,$_sci_optional)
           ;;
-        *gfortran* | *mpif77* )
-          SCI_TRY_LINK(F,fortran libraries (gfortran/mpif77),,,gfortran,$_sci_lib,,,$_sci_optional)
+        *gfortran*)
+          SCI_TRY_LINK(F,fortran libraries (gfortran),,,gfortran,$_sci_lib,,,$_sci_optional)
           ;;
         *xlf* )
 	  # bgxlf and /usr/local/tools/toolchain-4.7.2/gnu-linux-4.7.2/powerpc64-bgq-linux/lib
@@ -4490,6 +4495,13 @@ if test "$BUILD_ARCHES" = "yes"; then
   fi
 fi
 
+if test "$BUILD_WASATCH" = "yes" -o "$BUILD_ARCHES" = "yes"; then
+  if test "$with_hypre" = ""; then
+    AC_MSG_WARN( [ Requiring Hypre due to Arches or Wasatch...] )
+    with_hypre=yes
+  fi
+fi
+
 ##  --  search for hypre stuff  ------------------------------------------
 
 _sci_lib=
@@ -4498,7 +4510,7 @@ _sci_optional=optional
 
 # Handle --without option
 if test "$with_hypre" = "no"; then
-   AC_MSG_WARN( "Hypre is turned off." )
+   AC_MSG_WARN(Hypre is turned off.)
 else
   if test "$with_hypre" = "built-in"; then
      HAVE_HYPRE="yes"
@@ -4560,20 +4572,6 @@ AC_SUBST(HYPRE_LIB_DIR_FLAG)
 
 sci_defs_files="$sci_defs_files include/sci_defs/hypre_testdefs.h"
 
-
-##  --  finis flags  ------------------------------------------------
-case $host in
-  *linux*)
-    ;;
-  *aix*)
-    ;;
-  *dec*)
-    ;;
-  *)
-    ;;
-esac
-
-
 ##  ---------------------------------------------------------------------
 ##  --------------------  Fix Frost config vars  ------------------------
 ##  ---------------------------------------------------------------------
@@ -4582,19 +4580,18 @@ esac
 ##  the mpi libraries, so we need to set the MPI variables to be blank.
 ##  ---------------------------------------------------------------------
 
-  case $host in
-    *aix*)
-        AC_MSG_WARN(Changing the compiler for AIX computers...)
-        AC_MSG_WARN(...to (probably) mpxlC, etc, and removing MPI flags...)
-	CC=`echo $CC | sed 's,x,mpx,g'`
-	CXX=`echo $CXX | sed 's,x,mpx,g'`
-	F77=`echo $F77 | sed 's,x,mpx,g'`
-	MPI_LIB_FLAG=""
-	MPI_LIB_DIR_FLAG=""
-	INC_MPI_H=""
-	;;
-  esac
-
+case $host in
+  *aix*)
+      AC_MSG_WARN(Changing the compiler for AIX computers...)
+      AC_MSG_WARN( [...to (probably) mpxlC, etc, and removing MPI flags...] )
+      CC=`echo $CC | sed 's,x,mpx,g'`
+      CXX=`echo $CXX | sed 's,x,mpx,g'`
+      F77=`echo $F77 | sed 's,x,mpx,g'`
+      MPI_LIB_FLAG=""
+      MPI_LIB_DIR_FLAG=""
+      INC_MPI_H=""
+      ;;
+esac
 
 ##  ---------------------------------------------------------------------
 ##  --------------------  generate output files  ------------------------
