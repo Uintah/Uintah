@@ -249,79 +249,91 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
    ProblemSpecP checkpoint = p->findBlock("checkpoint");
    if( checkpoint != 0 ) {
 
-     string attrib_1, attrib_2, attrib_3, attrib_4, attrib_5;
+     string interval, timestepInterval, walltimeStart, walltimeInterval, walltimeStartHours, walltimeIntervalHours, cycle;
 
      attributes.clear();
-     checkpoint->getAttributes(attributes);
+     checkpoint->getAttributes( attributes );
       
-     attrib_1 = attributes["interval"];
-     if (attrib_1 != "")
-       d_checkpointInterval = atof(attrib_1.c_str());
-      
-     attrib_2 = attributes["timestepInterval"];
-     if (attrib_2 != "")
-       d_checkpointTimestepInterval = atoi(attrib_2.c_str());
-     
-     attrib_3 = attributes["walltimeStart"];
-     if (attrib_3 != "")
-       d_checkpointWalltimeStart = atoi(attrib_3.c_str());
-      
-     attrib_4 = attributes["walltimeInterval"];
-     if (attrib_4 != "")
-       d_checkpointWalltimeInterval = atoi(attrib_4.c_str());
-       
-     attrib_5 = attributes["cycle"];
-     if (attrib_5 != "")
-       d_checkpointCycle = atoi(attrib_5.c_str());
+     interval         = attributes[ "interval" ];
+     timestepInterval = attributes[ "timestepInterval" ];
+     walltimeStart    = attributes[ "walltimeStart" ];
+     walltimeInterval = attributes[ "walltimeInterval" ];
+     walltimeStart    = attributes[ "walltimeStartHours" ];
+     walltimeInterval = attributes[ "walltimeIntervalHours" ];
+     cycle            = attributes[ "cycle" ];
+
+     if( interval != "" ) {
+       d_checkpointInterval = atof( interval.c_str() );
+     }
+     if( timestepInterval != "" ) {
+       d_checkpointTimestepInterval = atoi( timestepInterval.c_str() );
+     }
+     if( walltimeStart != "" ) {
+       d_checkpointWalltimeStart = atof( walltimeStart.c_str() );
+     }      
+     if( walltimeInterval != "" ) {
+       d_checkpointWalltimeInterval = atof( walltimeInterval.c_str() );
+     }
+     if( walltimeStartHours != "" ) {
+       d_checkpointWalltimeStart = atof( walltimeStartHours.c_str() ) * 3600.0;
+     }      
+     if( walltimeInterval != "" ) {
+       d_checkpointWalltimeInterval = atof( walltimeIntervalHours.c_str() ) * 3600.0;
+     }
+     if( cycle != "" ) {
+       d_checkpointCycle = atoi( cycle.c_str() );
+     }
 
      // Verify that an interval was specified:
-     if ( attrib_1 == "" && attrib_2 == "" && attrib_4 == "") {
-       throw ProblemSetupException("ERROR: \n In checkpointing: must specify either interval, timestepInterval, walltimeInterval",
-                                   __FILE__, __LINE__);
+     if( interval == "" && timestepInterval == "" && walltimeInterval == "" ) {
+       throw ProblemSetupException( "ERROR: \n  <checkpoint> must specify either interval, timestepInterval, walltimeInterval",
+				    __FILE__, __LINE__ );
      }
    }
 
-   // can't use both checkpointInterval and checkpointTimestepInterval
-   if (d_checkpointInterval != 0.0 && d_checkpointTimestepInterval != 0)
+   // Can't use both checkpointInterval and checkpointTimestepInterval.
+   if (d_checkpointInterval != 0.0 && d_checkpointTimestepInterval != 0) {
      throw ProblemSetupException("Use <checkpoint interval=...> or <checkpoint timestepInterval=...>, not both",
                                  __FILE__, __LINE__);
-
-   // can't have a walltimeStart without a walltimeInterval
-   if (d_checkpointWalltimeStart != 0 && d_checkpointWalltimeInterval == 0)
+   }
+   // Can't have a walltimeStart without a walltimeInterval.
+   if (d_checkpointWalltimeStart != 0 && d_checkpointWalltimeInterval == 0) {
      throw ProblemSetupException("<checkpoint walltimeStart must have a corresponding walltimeInterval",
                                  __FILE__, __LINE__);
-
-   // set walltimeStart to walltimeInterval if not specified
-   if (d_checkpointWalltimeInterval != 0 && d_checkpointWalltimeStart == 0)
+   }
+   // Set walltimeStart to walltimeInterval if not specified.
+   if (d_checkpointWalltimeInterval != 0 && d_checkpointWalltimeStart == 0) {
      d_checkpointWalltimeStart = d_checkpointWalltimeInterval;
-   
+   }
    //d_currentTimestep = 0;
    
-   int startTimestep;
-   if (p->get("startTimestep", startTimestep)) {
-     //d_currentTimestep = startTimestep - 1;
-   }
+   //int startTimestep;
+   //if (p->get("startTimestep", startTimestep)) {
+   //  d_currentTimestep = startTimestep - 1;
+   //}
   
-   d_lastTimestepLocation = "invalid";
-   d_isOutputTimestep = false;
+   d_lastTimestepLocation   = "invalid";
+   d_isOutputTimestep       = false;
 
-   // set up the next output and checkpoint time
-   d_nextOutputTime=0.0;
-   d_nextOutputTimestep    = d_outputInitTimestep?0:1;
-   d_nextCheckpointTime    = d_checkpointInterval; 
-   d_nextCheckpointTimestep= d_checkpointTimestepInterval+1;
+   // Set up the next output and checkpoint time.
+   d_nextOutputTime         = 0.0;
+   d_nextOutputTimestep     = d_outputInitTimestep?0:1;
+   d_nextCheckpointTime     = d_checkpointInterval; 
+   d_nextCheckpointTimestep = d_checkpointTimestepInterval+1;
    
+   proc0cout << "Next checkpoint time is " << d_checkpointInterval << "\n";
+
    if (d_checkpointWalltimeInterval > 0) {
-     d_nextCheckpointWalltime=d_checkpointWalltimeStart + 
-       (int) Time::currentSeconds();
-     if(Parallel::usingMPI()){
-       // make sure we are all writing at same time,
-       // even if our clocks disagree
-       // make decision based on processor zero time
+     d_nextCheckpointWalltime = d_checkpointWalltimeStart + (int) Time::currentSeconds();
+     if( Parallel::usingMPI() ){
+       // Make sure we are all writing at same time.  When node clocks disagree,
+       // make decision based on processor zero time.
        MPI_Bcast(&d_nextCheckpointWalltime, 1, MPI_INT, 0, d_myworld->getComm());
      }
-   } else 
-     d_nextCheckpointWalltime=0;
+   }
+   else { 
+     d_nextCheckpointWalltime = 0;
+   }
 }
 //______________________________________________________________________
 //

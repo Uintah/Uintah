@@ -326,15 +326,15 @@ Patch::setBCType(Patch::FaceType face, BCType newbc)
 void
 Patch::printPatchBCs(ostream& out) const
 {
-   out << " BC types: x- " << getBCType(xminus) << ", x+ "<<getBCType(xplus)
-                 << ", y- "<< getBCType(yminus) << ", y+ "<< getBCType(yplus)
-                 << ", z- "<< getBCType(zminus) << ", z+ "<< getBCType(zplus)<< endl;
+  out << " BC types: x- " << getBCType(xminus) << ", x+ "<< getBCType(xplus)
+                << ", y- "<< getBCType(yminus) << ", y+ "<< getBCType(yplus)
+                << ", z- "<< getBCType(zminus) << ", z+ "<< getBCType(zplus) << endl;
 }
 
 //-----------------------------------------------------------------------------------------------
 
 void
-Patch::setArrayBCValues(Patch::FaceType face, BCDataArray* bc)
+Patch::setArrayBCValues( Patch::FaceType face, BCDataArray * bc )
 {
   // At this point need to set up the iterators for each BCData type:
   // Side, Rectangle, Circle, Difference, and Union.

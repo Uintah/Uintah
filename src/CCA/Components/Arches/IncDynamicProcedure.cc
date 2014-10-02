@@ -874,19 +874,17 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch, VV, filterVolume, cellType, filterVV);
     d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch, VW, filterVolume, cellType, filterVW);
     d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch, WW, filterVolume, cellType, filterWW);
+
     for (int ii = 0; ii < d_lab->d_symTensorMatl->size(); ii++) {
       d_filter->applyFilter_noPetsc< constCCVariable<double> >(pc, patch, SIJ[ii], filterVolume, cellType, SHATIJ[ii]);
       d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch,betaIJ[ii], filterVolume, cellType, betaHATIJ[ii]);
     }
 
     string msg = "Time for the Filter operation in Turbulence Model: ";
-    if (Uintah::Parallel::getNumThreads() > 1) {
-      proc0thread0cerr << msg << Time::currentSeconds() - start_turbTime << " seconds\n";
-    } else {
-      proc0cerr << msg << Time::currentSeconds() - start_turbTime << " seconds\n";
-    }
+    proc0cerr << msg << Time::currentSeconds() - start_turbTime << " seconds\n";
 
-  TAU_PROFILE_START(compute2);
+    TAU_PROFILE_START( compute2 );
+
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
         for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {

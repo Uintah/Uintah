@@ -922,13 +922,14 @@ void Level::setBCTypes()
 
 //______________________________________________________________________
 //
-void Level::assignBCS(const ProblemSpecP& grid_ps,LoadBalancer* lb)
+void
+Level::assignBCS( const ProblemSpecP & grid_ps, LoadBalancer * lb )
 {
   TAU_PROFILE("Level::assignBCS()", " ", TAU_USER);
   
-  ProblemSpecP bc_ps = grid_ps->findBlock("BoundaryConditions");
-  if (bc_ps == 0 ) {
-    if ( Parallel::getMPIRank()==0 ){
+  ProblemSpecP bc_ps = grid_ps->findBlock( "BoundaryConditions" );
+  if( bc_ps == 0 ) {
+    if ( Parallel::getMPIRank() == 0 ){
       static ProgressiveWarning warn("No BoundaryConditions specified", -1);
       warn.invoke();
     }
@@ -936,12 +937,13 @@ void Level::assignBCS(const ProblemSpecP& grid_ps,LoadBalancer* lb)
   }
   
   BoundCondReader reader;
-  reader.read(bc_ps, grid_ps, this);
+
+  reader.read( bc_ps, grid_ps, this );
     
-  for(patchIterator iter=d_virtualAndRealPatches.begin(); iter != d_virtualAndRealPatches.end(); iter++){
+  for( patchIterator iter = d_virtualAndRealPatches.begin(); iter != d_virtualAndRealPatches.end(); iter++ ){
     Patch* patch = *iter;
     
-    //if we have a lb then only apply bcs this processors patches
+    // If we have a lb, then only apply bcs this processors patches.
     if(lb==0 || lb->getPatchwiseProcessorAssignment(patch)==Parallel::getMPIRank()) {
       patch->initializeBoundaryConditions();
 

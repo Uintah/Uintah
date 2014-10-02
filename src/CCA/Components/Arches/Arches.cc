@@ -2184,11 +2184,7 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
   // ***************************************
 
   string msg = "Initializing all DQMOM weighted abscissa equations...";
-  if (Uintah::Parallel::getNumThreads() > 1) {
-    proc0thread0cout << msg << std::endl;
-  } else {
-    proc0cout << msg << std::endl;
-  }
+  proc0cout << msg << std::endl;
 
   for (int p = 0; p < patches->size(); p++){
     //assume only one material for now.

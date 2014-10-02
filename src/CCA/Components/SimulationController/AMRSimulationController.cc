@@ -28,34 +28,33 @@
 #include <CCA/Components/SimulationController/AMRSimulationController.h>
 
 #include <Core/Containers/Array3.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Math/MiscMath.h>
-#include <Core/OS/ProcessInfo.h>
-#include <Core/Thread/Time.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Parallel/Parallel.h>
-
-#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/SimulationTime.h>
 #include <Core/Grid/SimulationState.h>
+#include <Core/Grid/SimulationTime.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/ReductionVariable.h>
 #include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarLabelMatl.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/OS/ProcessInfo.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Thread/Time.h>
 #include <Core/Tracker/TrackerClient.h>
 
 #include <CCA/Components/ReduceUda/UdaReducer.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
+
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Output.h>
@@ -99,38 +98,30 @@ void
 AMRSimulationController::run()
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::run()");
- 
 
-  if (gprofile.active()){
 #ifdef USE_GPERFTOOLS
+  if (gprofile.active()){
     char gprofname[512];
     sprintf(gprofname, "cpuprof-rank%d", d_myworld->myrank());
     ProfilerStart(gprofname);
-#endif
   }
-  
   if (gheapprofile.active()){
-#ifdef USE_GPERFTOOLS
     char gheapprofname[512];
     sprintf(gheapprofname, "heapprof-rank%d", d_myworld->myrank());
     HeapProfilerStart(gheapprofname);
-#endif
   }
 
-#ifdef USE_GPERFTOOLS
   HeapLeakChecker * heap_checker=NULL;
-#endif
   if (gheapchecker.active()){
     if (!gheapprofile.active()){
-#ifdef USE_GPERFTOOLS
       char gheapchkname[512];
       sprintf(gheapchkname, "heapchk-rank%d", d_myworld->myrank());
       heap_checker= new HeapLeakChecker(gheapchkname);
-#endif
     } else {
       cout<< "HEAPCHECKER: Cannot start with heapprofiler" <<endl;
     }
   }
+#endif
 
   bool log_dw_mem=false;
 
@@ -189,6 +180,7 @@ AMRSimulationController::run()
    double start;
   
    d_lb->resetCostForecaster();
+
    d_scheduler->setInitTimestep(false);
 
    // scheduler needs to know if it's doing the first timestep in a restart
@@ -200,13 +192,13 @@ AMRSimulationController::run()
           ( iterations < d_timeinfo->maxTimestep ) && 
           ( d_timeinfo->max_wall_time == 0 || getWallTime() < d_timeinfo->max_wall_time )  ) {
   
-     if (gheapprofile.active()){
 #ifdef USE_GPERFTOOLS
+     if (gheapprofile.active()){
        char heapename[512];
        sprintf(heapename, "Timestep %d", iterations);
        HeapProfilerDump(heapename);
-#endif
      }
+#endif
      TrackerClient::trackEvent( Tracker::TIMESTEP_STARTED, time );
 
      MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::run()::control loop");
@@ -434,6 +426,7 @@ AMRSimulationController::run()
 #endif
      time += delt;
      TAU_DB_DUMP();
+
    } // end while ( time is not up, etc )
 
    // print for the final timestep, as the one above is in the middle of a while loop - get new delt, and set walltime first
@@ -445,23 +438,21 @@ AMRSimulationController::run()
    printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, time );
 
    // d_ups->releaseDocument();
-  if (gprofile.active()){
 #ifdef USE_GPERFTOOLS
-    ProfilerStop();
-#endif
-  }
-  if (gheapprofile.active()){
-#ifdef USE_GPERFTOOLS
-    HeapProfilerStop();
-#endif
-  }
-   if (gheapchecker.active() && !gheapprofile.active()){
-#ifdef USE_GPERFTOOLS
-     if (heap_checker && !heap_checker->NoLeaks()) 
-       cout << "HEAPCHECKER: MEMORY LEACK DETECTED!" << endl;
-     delete heap_checker;
-#endif
+   if (gprofile.active()){
+     ProfilerStop();
    }
+   if (gheapprofile.active()){
+     HeapProfilerStop();
+   }
+   if (gheapchecker.active() && !gheapprofile.active()){
+     if (heap_checker && !heap_checker->NoLeaks()) {
+       cout << "HEAPCHECKER: MEMORY LEACK DETECTED!\n";
+     }
+     delete heap_checker;
+   }
+#endif
+
 } // end run()
 
 //______________________________________________________________________
