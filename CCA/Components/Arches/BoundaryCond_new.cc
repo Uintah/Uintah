@@ -153,7 +153,7 @@ BoundaryCondition_new::setupTabulatedBC( ProblemSpecP& db, std::string eqn_name,
             //probably should add FromFile here too....
             if ( name == iv_name ){ 
 
-              if ( type != "Dirichlet" && type != "FromFile" ){ 
+              if ( type != "Dirichlet" ){ 
                 proc0cout << "Cannot set a boundary condition for a dependent variable because " << name << " is not of Dirichlet type." << endl;
                 throw ProblemSetupException( "Error: When using a tabulated BC, all independent variables must be of type Dirichlet.", __FILE__, __LINE__);
               } 
