@@ -678,6 +678,8 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
     if (!(this->get_use_wasatch_mom_rhs())) {
 
+      //This copy is needed for BCs that are reapplied using the 
+      //extra cell value. 
       velocityVars.uVelRhoHat.copy(constVelocityVars.old_uVelocity,
                                    velocityVars.uVelRhoHat.getLowIndex(),
                                    velocityVars.uVelRhoHat.getHighIndex());
