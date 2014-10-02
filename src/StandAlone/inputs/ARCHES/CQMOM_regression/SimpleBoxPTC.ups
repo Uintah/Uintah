@@ -286,7 +286,6 @@
         <!-- base information-->
         <NumberInternalCoordinates> 2 </NumberInternalCoordinates>
         <QuadratureNodes> [2,1] </QuadratureNodes>
-        <HighestOrder> [3,1] </HighestOrder>
         <CutOff> 1.0e-5 </CutOff>
         <Adaptive> true </Adaptive>
         <WeightRatio> 1.0e-5 </WeightRatio>

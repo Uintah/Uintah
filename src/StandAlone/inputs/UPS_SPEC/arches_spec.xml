@@ -1379,7 +1379,6 @@
         </Models>
         <NumberInternalCoordinates      spec="REQUIRED INTEGER"/>
         <QuadratureNodes                spec="REQUIRED MULTIPLE_INTEGERS"/> <!-- this is per direction -->
-        <HighestOrder                   spec="REQUIRED MULTIPLE_INTEGERS"/> <!-- this is per direction -->
         <CutOff                         spec="OPTIONAL DOUBLE"/>
         <Adaptive                       spec="OPTIONAL BOOLEAN"/>
         <UseLapack                      spec="OPTIONAL BOOLEAN"/>
