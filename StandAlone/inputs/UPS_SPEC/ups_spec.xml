@@ -434,13 +434,16 @@
                        walltimeInterval - How much real time (in seconds) must pass before the next check point is written.
       -->
       <checkpoint             spec="OPTIONAL NO_DATA"
-                                children1="ONE_OF(ATTRIBUTE interval, walltimeInterval, timestepInterval)"
+                                children1="ONE_OF(ATTRIBUTE interval, walltimeInterval, walltimeIntervalHours, timestepInterval)"
                                 children2="ALL_OR_NONE_OF(ATTRIBUTE walltimeStart, walltimeInterval)"
-                                attribute1="interval         OPTIONAL DOUBLE  'positive'"
-                                attribute2="cycle            REQUIRED INTEGER 'positive'"
-                                attribute3="timestepInterval OPTIONAL INTEGER 'positive'"
-                                attribute4="walltimeStart    OPTIONAL DOUBLE  'positive'"
-                                attribute5="walltimeInterval OPTIONAL DOUBLE  'positive'" />
+                                children3="ALL_OR_NONE_OF(ATTRIBUTE walltimeStartHours, walltimeIntervalHours)"
+                                attribute1="interval              OPTIONAL DOUBLE  'positive'"
+                                attribute2="cycle                 REQUIRED INTEGER 'positive'"
+                                attribute3="timestepInterval      OPTIONAL INTEGER 'positive'"
+                                attribute4="walltimeStart         OPTIONAL DOUBLE  'positive'"
+                                attribute5="walltimeInterval      OPTIONAL DOUBLE  'positive'"
+                                attribute6="walltimeStartHours    OPTIONAL DOUBLE  'positive'"
+                                attribute7="walltimeIntervalHours OPTIONAL DOUBLE  'positive'" />
       <compression            spec="OPTIONAL STRING 'gzip'" />
       <filebase               spec="REQUIRED STRING" />
       <outputInterval         spec="OPTIONAL DOUBLE 'positive'" />

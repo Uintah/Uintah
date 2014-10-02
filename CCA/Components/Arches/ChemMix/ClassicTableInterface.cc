@@ -108,7 +108,7 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
       table_size = gzipInflate( tableFileName, uncomp_table_contents );
     }
     catch( Exception & e ) {
-      throw InvalidState( string("Call to gzipInflate failed: ") + e.message(), __FILE__, __LINE__ );
+      throw ProblemSetupException( string("Call to gzipInflate() failed: ") + e.message(), __FILE__, __LINE__ );
     }
 
     table_contents = (char*) uncomp_table_contents.c_str();

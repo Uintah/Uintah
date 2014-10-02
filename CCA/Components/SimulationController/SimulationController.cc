@@ -865,134 +865,134 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 
   }
   /*
-     if (d_n > 3) {
-// divide by n-2 and not n, because we wait till n>2 to keep track
-// of our stats
-stdDev = stdDeviation(d_sumOfWallTimes, d_sumOfWallTimeSquares, d_n-2);
-//mean = d_sumOfWallTimes / (d_n-2);
-//         ofstream timefile("avg_elapsed_wallTime.txt");
-//         timefile << mean << " +- " << stdDev << "\n";
-}
-*/
-
-// output timestep statistics
-
-if (istats.active()) {
-  for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
-    if (toReduce[i] > 0)
-      istats << "rank: " << d_myworld->myrank() << " " << statLabels[i] << " avg: " << toReduce[i] << "\n";
-  }
-} 
-
-if(d_myworld->myrank() == 0){
-  char walltime[96];
-  if (d_n > 3) {
-    //sprintf(walltime, ", elap T = %.2lf, mean: %.2lf +- %.3lf", d_wallTime, mean, stdDev);
-    sprintf(walltime, ", elap T = %.2lf, mean: %.2lf", d_wallTime, mean);
-  }
-  else {
-    sprintf(walltime, ", elap T = %.2lf", d_wallTime);
-  }
-  ostringstream message;
-
-  message << "Time="         << time
-          << " (timestep "  << timestep 
-          << "), delT="     << delt
-          << walltime;
-  message << ", Memory Use = ";
-  if (avg_memuse == max_memuse && avg_highwater == max_highwater) {
-    message << ProcessInfo::toHumanUnits((unsigned long) avg_memuse);
-    if(avg_highwater) {
-      message << "/" << ProcessInfo::toHumanUnits((unsigned long) avg_highwater);
+    if (d_n > 3) {
+    // divide by n-2 and not n, because we wait till n>2 to keep track
+    // of our stats
+    stdDev = stdDeviation(d_sumOfWallTimes, d_sumOfWallTimeSquares, d_n-2);
+    //mean = d_sumOfWallTimes / (d_n-2);
+    //         ofstream timefile("avg_elapsed_wallTime.txt");
+    //         timefile << mean << " +- " << stdDev << "\n";
     }
-  } else {
-    message << ProcessInfo::toHumanUnits((unsigned long) avg_memuse);
-    if(avg_highwater) {
-      message << "/" << ProcessInfo::toHumanUnits((unsigned long)avg_highwater);
-    }
-    message << " (avg), " << ProcessInfo::toHumanUnits(max_memuse);
-    if(max_highwater) {
-      message << "/" << ProcessInfo::toHumanUnits(max_highwater);
-    }
-    message << " (max on rank:" << max_memuse_loc << ")";
-  }
+  */
 
-  dbg << message.str() << "\n";
-  dbg.flush();
-  cout.flush();
+  // Output timestep statistics...
 
-  if (stats.active()) {
-    if(d_myworld->size()>1)
-    {
-      for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
-        if (maxReduce[i].val > 0)
-          stats << "  "<< left << setw(17)<< statLabels[i] << " avg: " << setw(10)<< avgReduce[i] 
-                << " max: " << setw(10) <<maxReduce[i].val << " maxloc:" << maxReduce[i].loc
-                << " LIB%: " << 100*(1-(avgReduce[i]/maxReduce[i].val)) << "\n";
-      }
+  if (istats.active()) {
+    for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
+      if (toReduce[i] > 0)
+	istats << "rank: " << d_myworld->myrank() << " " << statLabels[i] << " avg: " << toReduce[i] << "\n";
     }
-    else //runing in serial
-    {
-      for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
-        if (toReduce[i] > 0)
-          stats << statLabels[i] << " avg: " << toReduce[i] << " max: " << toReduce[i] << " maxloc:" << 0
-            << " LIB%: " << 0 << "\n";
-      }
-
-    }
-    if(d_n>2 && !isnan(d_sharedState->overheadAvg))
-      stats << "  Percent Time in overhead:" << d_sharedState->overheadAvg*100 <<  "\n";
   } 
 
+  if(d_myworld->myrank() == 0){
+    char walltime[96];
+    if (d_n > 3) {
+      //sprintf(walltime, ", elap T = %.2lf, mean: %.2lf +- %.3lf", d_wallTime, mean, stdDev);
+      sprintf(walltime, ", elap T = %.2lf, mean: %.2lf", d_wallTime, mean);
+    }
+    else {
+      sprintf(walltime, ", elap T = %.2lf", d_wallTime);
+    }
+    ostringstream message;
 
-  if ( d_n > 0 ) {
-    double realSecondsNow = (d_wallTime - d_prevWallTime)/delt;
-    double realSecondsAvg = (d_wallTime - d_startTime)/(time-d_startSimTime);
-
-    dbgTime << "1 sim second takes ";
-
-    dbgTime << left << showpoint << setprecision(3) << setw(4);
-
-    if (realSecondsNow < SECONDS_PER_MINUTE) {
-      dbgTime << realSecondsNow << " seconds (now), ";
-    } else if ( realSecondsNow < SECONDS_PER_HOUR ) {
-      dbgTime << realSecondsNow/SECONDS_PER_MINUTE << " minutes (now), ";
-    } else if ( realSecondsNow < SECONDS_PER_DAY  ) {
-      dbgTime << realSecondsNow/SECONDS_PER_HOUR << " hours (now), ";
-    } else if ( realSecondsNow < SECONDS_PER_WEEK ) {
-      dbgTime << realSecondsNow/SECONDS_PER_DAY << " days (now), ";
-    } else if ( realSecondsNow < SECONDS_PER_YEAR ) {
-      dbgTime << realSecondsNow/SECONDS_PER_WEEK << " weeks (now), ";
+    message << "Time="        << time
+	    << " (timestep "  << timestep 
+	    << "), delT="     << delt
+	    << walltime;
+    message << ", Memory Use = ";
+    if (avg_memuse == max_memuse && avg_highwater == max_highwater) {
+      message << ProcessInfo::toHumanUnits((unsigned long) avg_memuse);
+      if(avg_highwater) {
+	message << "/" << ProcessInfo::toHumanUnits((unsigned long) avg_highwater);
+      }
     } else {
-      dbgTime << realSecondsNow/SECONDS_PER_YEAR << " years (now), ";
+      message << ProcessInfo::toHumanUnits((unsigned long) avg_memuse);
+      if(avg_highwater) {
+	message << "/" << ProcessInfo::toHumanUnits((unsigned long)avg_highwater);
+      }
+      message << " (avg), " << ProcessInfo::toHumanUnits(max_memuse);
+      if(max_highwater) {
+	message << "/" << ProcessInfo::toHumanUnits(max_highwater);
+      }
+      message << " (max on rank:" << max_memuse_loc << ")";
     }
 
-    dbgTime << setw(4);
+    dbg << message.str() << "\n";
+    dbg.flush();
+    cout.flush();
 
-    if (realSecondsAvg < SECONDS_PER_MINUTE) {
-      dbgTime << realSecondsAvg << " seconds (avg) ";
-    } else if ( realSecondsAvg < SECONDS_PER_HOUR ) {
-      dbgTime << realSecondsAvg/SECONDS_PER_MINUTE << " minutes (avg) ";
-    } else if ( realSecondsAvg < SECONDS_PER_DAY  ) {
-      dbgTime << realSecondsAvg/SECONDS_PER_HOUR << " hours (avg) ";
-    } else if ( realSecondsAvg < SECONDS_PER_WEEK ) {
-      dbgTime << realSecondsAvg/SECONDS_PER_DAY << " days (avg) ";
-    } else if ( realSecondsAvg < SECONDS_PER_YEAR ) {
-      dbgTime << realSecondsAvg/SECONDS_PER_WEEK << " weeks (avg) ";
-    } else {
-      dbgTime << realSecondsAvg/SECONDS_PER_YEAR << " years (avg) ";
+    if (stats.active()) {
+      if(d_myworld->size()>1)
+	{
+	  for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
+	    if (maxReduce[i].val > 0)
+	      stats << "  "<< left << setw(17)<< statLabels[i] << " avg: " << setw(10)<< avgReduce[i] 
+		    << " max: " << setw(10) <<maxReduce[i].val << " maxloc:" << maxReduce[i].loc
+		    << " LIB%: " << 100*(1-(avgReduce[i]/maxReduce[i].val)) << "\n";
+	  }
+	}
+      else //runing in serial
+	{
+	  for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
+	    if (toReduce[i] > 0)
+	      stats << statLabels[i] << " avg: " << toReduce[i] << " max: " << toReduce[i] << " maxloc:" << 0
+		    << " LIB%: " << 0 << "\n";
+	  }
+
+	}
+      if(d_n>2 && !isnan(d_sharedState->overheadAvg))
+	stats << "  Percent Time in overhead:" << d_sharedState->overheadAvg*100 <<  "\n";
+    } 
+
+
+    if ( d_n > 0 ) {
+      double realSecondsNow = (d_wallTime - d_prevWallTime)/delt;
+      double realSecondsAvg = (d_wallTime - d_startTime)/(time-d_startSimTime);
+
+      dbgTime << "1 sim second takes ";
+
+      dbgTime << left << showpoint << setprecision(3) << setw(4);
+
+      if (realSecondsNow < SECONDS_PER_MINUTE) {
+	dbgTime << realSecondsNow << " seconds (now), ";
+      } else if ( realSecondsNow < SECONDS_PER_HOUR ) {
+	dbgTime << realSecondsNow/SECONDS_PER_MINUTE << " minutes (now), ";
+      } else if ( realSecondsNow < SECONDS_PER_DAY  ) {
+	dbgTime << realSecondsNow/SECONDS_PER_HOUR << " hours (now), ";
+      } else if ( realSecondsNow < SECONDS_PER_WEEK ) {
+	dbgTime << realSecondsNow/SECONDS_PER_DAY << " days (now), ";
+      } else if ( realSecondsNow < SECONDS_PER_YEAR ) {
+	dbgTime << realSecondsNow/SECONDS_PER_WEEK << " weeks (now), ";
+      } else {
+	dbgTime << realSecondsNow/SECONDS_PER_YEAR << " years (now), ";
+      }
+
+      dbgTime << setw(4);
+
+      if (realSecondsAvg < SECONDS_PER_MINUTE) {
+	dbgTime << realSecondsAvg << " seconds (avg) ";
+      } else if ( realSecondsAvg < SECONDS_PER_HOUR ) {
+	dbgTime << realSecondsAvg/SECONDS_PER_MINUTE << " minutes (avg) ";
+      } else if ( realSecondsAvg < SECONDS_PER_DAY  ) {
+	dbgTime << realSecondsAvg/SECONDS_PER_HOUR << " hours (avg) ";
+      } else if ( realSecondsAvg < SECONDS_PER_WEEK ) {
+	dbgTime << realSecondsAvg/SECONDS_PER_DAY << " days (avg) ";
+      } else if ( realSecondsAvg < SECONDS_PER_YEAR ) {
+	dbgTime << realSecondsAvg/SECONDS_PER_WEEK << " weeks (avg) ";
+      } else {
+	dbgTime << realSecondsAvg/SECONDS_PER_YEAR << " years (avg) ";
+      }
+
+      dbgTime << "to calculate." << "\n";
     }
 
-    dbgTime << "to calculate." << "\n";
+    d_prevWallTime = d_wallTime;
   }
+  d_n++;
 
-  d_prevWallTime = d_wallTime;
-}
-d_n++;
-
-// Reset mem use tracking variable for next iteration
-d_scheduler->resetMaxMemValue();
+  // Reset mem use tracking variable for next iteration
+  d_scheduler->resetMaxMemValue();
 
 } // end printSimulationStats()
   
-} // namespace Uintah {
+} // namespace Uintah

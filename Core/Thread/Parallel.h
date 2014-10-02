@@ -41,6 +41,11 @@
 #include <Core/Thread/Semaphore.h>
 
 namespace SCIRun {
+
+  // There is already a class named Parallel in the Uintah namespace (Core/Parallel/Parallel.h)... 
+  // Need to 'hide' this one, so put it in a sub-namespace.
+  namespace ThreadNS { 
+
 /**************************************
  
   CLASS
@@ -102,7 +107,8 @@ Parallel<T>::~Parallel()
 {
 }
 
-} //End namespace SCIRun
+  } // End namespace ThreadNS
+} // End namespace SCIRun
 
 #endif
 
