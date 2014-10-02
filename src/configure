@@ -3107,8 +3107,8 @@ for my_pwd in pwd /bin/pwd /usr/bin/pwd; do
   fi
 done
 if test -z "$sci_pwd"; then
-   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: \"Using unstable version of pwd\"" >&5
-$as_echo "$as_me: WARNING: \"Using unstable version of pwd\"" >&2;}
+   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Using unstable version of pwd" >&5
+$as_echo "$as_me: WARNING: Using unstable version of pwd" >&2;}
    sci_pwd=pwd
 fi
 
@@ -4229,12 +4229,12 @@ fi
 sci_defs_files="$sci_defs_files Core/Malloc/testmem_init.h"
 
 if test "$enable_rpath" = "no"; then
-   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: \"You have removed the rpath flag from some libraries.\"" >&5
-$as_echo "$as_me: WARNING: \"You have removed the rpath flag from some libraries.\"" >&2;}
-   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: \"This may have unpredictable affects.\"" >&5
-$as_echo "$as_me: WARNING: \"This may have unpredictable affects.\"" >&2;}
-   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: \"Do not do this unless you really know what you are doing.\"" >&5
-$as_echo "$as_me: WARNING: \"Do not do this unless you really know what you are doing.\"" >&2;}
+   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: You have removed the rpath flag from some libraries." >&5
+$as_echo "$as_me: WARNING: You have removed the rpath flag from some libraries." >&2;}
+   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: This may have unpredictable affects." >&5
+$as_echo "$as_me: WARNING: This may have unpredictable affects." >&2;}
+   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Do not do this unless you really know what you are doing." >&5
+$as_echo "$as_me: WARNING: Do not do this unless you really know what you are doing." >&2;}
 fi
 
 
@@ -6397,10 +6397,8 @@ ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
-        { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: C++ compiler not specified with 'CXX' environment variable.\
-	         Using default... $CXX" >&5
-$as_echo "$as_me: WARNING: C++ compiler not specified with 'CXX' environment variable.\
-	         Using default... $CXX" >&2;}
+        { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: C++ compiler not specified with 'CXX' environment variable.  Using default... $CXX" >&5
+$as_echo "$as_me: WARNING: C++ compiler not specified with 'CXX' environment variable.  Using default... $CXX" >&2;}
         ;;
   esac
 fi
@@ -7333,8 +7331,8 @@ case $host in
 #####
     OS_VERSION=`uname -r | cut -f1 -d.`
     if test "$OS_VERSION" -ge 10; then
-        { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Running under Snow Leopard or later" >&5
-$as_echo "$as_me: WARNING: Running under Snow Leopard or later" >&2;}
+        { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Running under Snow Leopard or later " >&5
+$as_echo "$as_me: WARNING: Running under Snow Leopard or later " >&2;}
         DEF_OSX_SNOW_LEOPARD_OR_LATER="#define OSX_SNOW_LEOPARD_OR_LATER"
         IS_OSX_SNOW_LEOPARD_OR_LATER="yes"
     fi
@@ -18764,15 +18762,20 @@ _sci_includes=''
 
       ;;
     *linux*)
+      F77TEST=$F77
       case $F77 in
         *mpif77* )
-          msg="Assuming mpif77 behaves the same as gfortran..."
-          add_important_warning "$msg"
-          { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $msg" >&5
-$as_echo "$as_me: WARNING: $msg" >&2;}
+          mpif77 --version | grep -i -q ifort
+          if test $? = 0; then
+             F77TEST=ifort
+          else
+             F77TEST=gfortran
+          fi
       esac
+
+
       # Linux Library Check
-      case $F77 in
+      case $F77TEST in
         *pgf77*)
 
 ##
@@ -19178,10 +19181,10 @@ _sci_includes=''
 
 
           ;;
-        *gfortran* | *mpif77* )
+        *gfortran*)
 
 ##
-## SCI_TRY_LINK (F):  fortran libraries (gfortran/mpif77)
+## SCI_TRY_LINK (F):  fortran libraries (gfortran)
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -19213,7 +19216,7 @@ _sci_includes=''
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : F
-## arg 2 : fortran libraries (gfortran/mpif77)
+## arg 2 : fortran libraries (gfortran)
 ## arg 3 :
 ## arg 4 :
 ## arg 5 : gfortran
@@ -19233,12 +19236,12 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (gfortran/mpif77).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (gfortran).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for fortran libraries (gfortran/mpif77) ($_sci_optional)" >&5
-$as_echo_n "checking for fortran libraries (gfortran/mpif77) ($_sci_optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for fortran libraries (gfortran) ($_sci_optional)" >&5
+$as_echo_n "checking for fortran libraries (gfortran) ($_sci_optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -19248,7 +19251,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (gfortran/mpif77) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (gfortran) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -19578,7 +19581,7 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (F):  fortran libraries (gfortran/mpif77)
+## END of SCI_TRY_LINK (F):  fortran libraries (gfortran)
 ##
 
 
@@ -41122,6 +41125,14 @@ if test "$BUILD_ARCHES" = "yes"; then
   fi
 fi
 
+if test "$BUILD_WASATCH" = "yes" -o "$BUILD_ARCHES" = "yes"; then
+  if test "$with_hypre" = ""; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:  Requiring Hypre due to Arches or Wasatch... " >&5
+$as_echo "$as_me: WARNING:  Requiring Hypre due to Arches or Wasatch... " >&2;}
+    with_hypre=yes
+  fi
+fi
+
 ##  --  search for hypre stuff  ------------------------------------------
 
 _sci_lib=
@@ -41130,8 +41141,8 @@ _sci_optional=optional
 
 # Handle --without option
 if test "$with_hypre" = "no"; then
-   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: \"Hypre is turned off.\" " >&5
-$as_echo "$as_me: WARNING: \"Hypre is turned off.\" " >&2;}
+   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Hypre is turned off." >&5
+$as_echo "$as_me: WARNING: Hypre is turned off." >&2;}
 else
   if test "$with_hypre" = "built-in"; then
      HAVE_HYPRE="yes"
@@ -42080,20 +42091,6 @@ fi
 
 sci_defs_files="$sci_defs_files include/sci_defs/hypre_testdefs.h"
 
-
-##  --  finis flags  ------------------------------------------------
-case $host in
-  *linux*)
-    ;;
-  *aix*)
-    ;;
-  *dec*)
-    ;;
-  *)
-    ;;
-esac
-
-
 ##  ---------------------------------------------------------------------
 ##  --------------------  Fix Frost config vars  ------------------------
 ##  ---------------------------------------------------------------------
@@ -42102,21 +42099,20 @@ esac
 ##  the mpi libraries, so we need to set the MPI variables to be blank.
 ##  ---------------------------------------------------------------------
 
-  case $host in
-    *aix*)
-        { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Changing the compiler for AIX computers..." >&5
+case $host in
+  *aix*)
+      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Changing the compiler for AIX computers..." >&5
 $as_echo "$as_me: WARNING: Changing the compiler for AIX computers..." >&2;}
-        { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: ...to (probably) mpxlC" >&5
-$as_echo "$as_me: WARNING: ...to (probably) mpxlC" >&2;}
-	CC=`echo $CC | sed 's,x,mpx,g'`
-	CXX=`echo $CXX | sed 's,x,mpx,g'`
-	F77=`echo $F77 | sed 's,x,mpx,g'`
-	MPI_LIB_FLAG=""
-	MPI_LIB_DIR_FLAG=""
-	INC_MPI_H=""
-	;;
-  esac
-
+      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: ...to (probably) mpxlC, etc, and removing MPI flags... " >&5
+$as_echo "$as_me: WARNING: ...to (probably) mpxlC, etc, and removing MPI flags... " >&2;}
+      CC=`echo $CC | sed 's,x,mpx,g'`
+      CXX=`echo $CXX | sed 's,x,mpx,g'`
+      F77=`echo $F77 | sed 's,x,mpx,g'`
+      MPI_LIB_FLAG=""
+      MPI_LIB_DIR_FLAG=""
+      INC_MPI_H=""
+      ;;
+esac
 
 ##  ---------------------------------------------------------------------
 ##  --------------------  generate output files  ------------------------
