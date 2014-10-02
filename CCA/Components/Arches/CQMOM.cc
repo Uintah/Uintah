@@ -65,7 +65,10 @@ void CQMOM::problemSetup(const ProblemSpecP& params)
   int index_length = 0;
   db->get("NumberInternalCoordinates",M);   //get number of coordiantes
   db->get("QuadratureNodes",N_i);           //get vector of quad nodes per internal coordiante
-  db->get("HighestOrder",maxInd);           //vector of maxium moment order NOTE: this could be made automatic from indexes later
+  maxInd.resize(M);
+  for (int i = 0; i < M; i++) {
+    maxInd[i] = N_i[i]*2 - 1;
+  }
   db->getWithDefault("Adaptive",d_adaptive,false);   //use adaptive quadrature or not - NYI
   db->getWithDefault("CutOff",d_small,1.0e-10);      //value of moment 0 to fix weights and abscissas to 0
   db->getWithDefault("UseLapack",d_useLapack,false); //pick which linear solve to use
