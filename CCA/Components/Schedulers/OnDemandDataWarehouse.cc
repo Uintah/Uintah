@@ -695,6 +695,11 @@ OnDemandDataWarehouse::recvMPI( DependencyBatch* batch,
       //allocate the variable
       GridVariableBase* var =
           dynamic_cast<GridVariableBase*>( label->typeDescription()->createInstance() );
+
+      cerrLock.lock();
+      proc0cout << "Allocating: " << label->getName() << "\n";
+      cerrLock.unlock();
+
       var->allocate( dep->low, dep->high );
 
       //set the var as foreign
@@ -1636,6 +1641,10 @@ OnDemandDataWarehouse:: allocateTemporary(GridVariableBase& var,
                       
   patch->computeExtents(basis, boundaryLayer, lowOffset, highOffset,lowIndex, highIndex);
 
+  cerrLock.lock();
+  proc0cout << "Allocating: temp grid var\n";
+  cerrLock.unlock();
+
   var.allocate(lowIndex, highIndex);
 }
 
@@ -1693,6 +1702,10 @@ OnDemandDataWarehouse::allocateAndPut( GridVariableBase& var,
       delete tmpVar;
     }
     // allocate the memory
+    cerrLock.lock();
+    proc0cout << "Allocating 2: " << label->getName() << "\n";
+    cerrLock.unlock();
+
     var.allocate( lowIndex, highIndex );
     // put the variable in the database
     d_varDB.put( label, matlIndex, patch, var.clone(), d_scheduler->isCopyDataTimestep(), true );
@@ -1725,6 +1738,9 @@ OnDemandDataWarehouse::allocateAndPut( GridVariableBase& var,
       else {
         // It was allocated and put as part of the superpatch of another patch
         d_lock.writeUnlock();
+        cerrLock.lock();
+        proc0cout << "rewindowing: " << label->getName() << "\n";
+        cerrLock.unlock();
         var.rewindow( lowIndex, highIndex );
         return;  // got it -- done
       }
@@ -1740,6 +1756,10 @@ OnDemandDataWarehouse::allocateAndPut( GridVariableBase& var,
         superLowIndex, superHighIndex );
 
     ASSERT( superPatchGroup != 0 );
+
+    cerrLock.lock();
+    proc0cout << "Allocating 3: " << label->getName() << "\n";
+    cerrLock.unlock();
 
     var.allocate( superLowIndex, superHighIndex );
 
@@ -1920,6 +1940,9 @@ OnDemandDataWarehouse::getCopy(GridVariableBase& var,
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::getCopy(Grid Variable):" + label->getName());
   GridVariableBase* tmpVar = var.cloneType();
   getGridVar(*tmpVar, label, matlIndex, patch, gtype, numGhostCells);
+  cerrLock.lock();
+  proc0cout << "getcopy: " << label->getName() << "\n";
+  cerrLock.unlock();
   var.allocate(tmpVar);
   var.copyData(tmpVar);
   delete tmpVar;
@@ -2007,6 +2030,9 @@ OnDemandDataWarehouse::getRegion( constGridVariableBase& constVar,
   MALLOC_TRACE_TAG_SCOPE( "OnDemandDataWarehouse::getRegion(Grid Variable):" + label->getName() );
 
   GridVariableBase* var = constVar.cloneType();
+  cerrLock.lock();
+  proc0cout << "getregion: " << label->getName() << "\n";
+  cerrLock.unlock();
   var->allocate( low, high );
   Patch::VariableBasis basis = Patch::translateTypeToBasis( label->typeDescription()->getType(),
                                                             false );
@@ -2149,6 +2175,9 @@ OnDemandDataWarehouse::getRegion( GridVariableBase& var,
 {
   MALLOC_TRACE_TAG_SCOPE( "OnDemandDataWarehouse::getRegion(Grid Variable):" + label->getName() );
 
+  cerrLock.lock();
+  proc0cout << "getreion 2: " << label->getName() << "\n";
+  cerrLock.unlock();
   var.allocate( low, high );
   Patch::VariableBasis basis = Patch::translateTypeToBasis( label->typeDescription()->getType(),
                                                             false );
