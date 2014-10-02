@@ -23,6 +23,7 @@
  */
 
 #include <CCA/Components/MD/Electrostatics/SPME/ShiftedCardinalBSpline.h>
+#include <CCA/Components/MD/MDUtil.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Util/FancyAssert.h>
 
@@ -65,74 +66,127 @@ vector<double> ShiftedCardinalBSpline::evaluateGridAligned(const double X) const
   return splineArray;
 }
 
-void ShiftedCardinalBSpline::evaluateThroughSecondDerivative(const SCIRun::Vector& inputValues,
-                                                             std::vector<SCIRun::Vector>& base,
-                                                             std::vector<SCIRun::Vector>& first,
-                                                             std::vector<SCIRun::Vector>& second) const
+void ShiftedCardinalBSpline::evaluateThroughSecondDerivative(
+    const SCIRun::Vector& inputValues,
+    std::vector<SCIRun::Vector>& base,
+    std::vector<SCIRun::Vector>& first,
+    std::vector<SCIRun::Vector>& second) const
 {
 	// Generate the raw splines of two orders lower than our base order
 	vector<SCIRun::Vector> rawSpline(d_splineOrder + 1, SCIRun::Vector(0.0));
-
 	evaluateVectorizedInternalInPlace(inputValues, d_splineOrder - 2, rawSpline);
-	size_t currentMaxIndex = d_splineOrder - 2; // Set the index backstop for the raw Spline's current order
 
-	// rawSpline is currently order d_splineOrder - 2 to allow calculation of 2nd derivative
-//	d2S
-//	---  =  S   (u) - 2S   (u-1) + S   (u-2)
-//	dU2      p-2        p-2         p-2
+	// Set the index backstop for the raw Spline's current order
+	size_t currentMaxIndex = d_splineOrder - 2; 
+	
+	SCIRun::Vector p(d_splineOrder);
+	double firstDenom = 1.0/static_cast<double> (d_splineOrder - 2);
+	double baseDenom = firstDenom / static_cast<double> (d_splineOrder -1);
 
-	second[0]=rawSpline[0];
-	second[1]=rawSpline[1] - 2*rawSpline[0];
+	// rawSpline is currently order d_splineOrder - 2 to allow calculation 
+	//   of 2nd derivative
+
+    /*	d2S
+      	---  =  S   (u) - 2S   (u-1) + S   (u-2)
+    	du2      p-2        p-2         p-2  */
+
+	/*  dS       1 /                                                \
+	    ---  =  ---| u * S   (u) + (p-2u)*S   (u-1) + (p-u)S   (u-2) |
+	    du      p-2\      p-2              p-2              p-2     /  */
+
+	/*           1    1  /  2                                      2        \
+	    S(u) =  ---  --- | u S   (u) + (2u(p-u)-p)S   (u-1) + (p-u) S   (u-2)|
+	           (p-2)(p-1)\    p-2                  p-2               p-2    / */
+
+	SCIRun::Vector u = inputValues;
+	second[0]=                                  rawSpline[0];
+    first[0] =                                u*rawSpline[0];
+    base[0]  =                              u*u*rawSpline[0];
+
+    u = u + MDConstants::V_ONE;
+    SCIRun::Vector pMinusu = p - u;
+    second[1]=         rawSpline[1]  -                2*rawSpline[0];
+	first[1] =       u*rawSpline[1]  +          (p-2*u)*rawSpline[0];
+	base[1]  =     u*u*rawSpline[1]  +  (2*u*pMinusu-p)*rawSpline[0];
 	for (size_t Index=2; Index <= currentMaxIndex; ++Index) {
-		second[Index] = rawSpline[Index] - 2*rawSpline[Index-1] + rawSpline[Index-2];
-	}
-	second[currentMaxIndex+1] = -2*rawSpline[currentMaxIndex] + rawSpline[currentMaxIndex-1];
-	second[currentMaxIndex+2] = rawSpline[currentMaxIndex];
+	    u = u + MDConstants::V_ONE;
+	    pMinusu = p - u;
+		second[Index] =   rawSpline[Index]
+		              - 2*rawSpline[Index-1]
+		              +   rawSpline[Index-2];
 
+		first[Index]  =          u*rawSpline[Index]
+		               +   (p-2*u)*rawSpline[Index-1]
+		               -   pMinusu*rawSpline[Index-2];
 
-	// Bring raw Spline up to order d_splineOrder - 1
-//           u            (p-1)-u
-//	S (u) = --- S   (u) + ------- S   (u-1)
-//	 p      p-2  p-2        p-2    p-2
-    ++currentMaxIndex;
-	rawSpline[currentMaxIndex] = -inputValues * rawSpline[currentMaxIndex - 1];
-	SCIRun::Vector rightmost = SCIRun::Vector(static_cast<double>(d_splineOrder - 1));
-	for ( int k = currentMaxIndex - 1; k > 0; --k) {
-		SCIRun::Vector input_plus_k = inputValues + SCIRun::Vector(static_cast<double>(k));
-		rawSpline[k] = input_plus_k * rawSpline[k] + (rightmost - input_plus_k) * rawSpline[k-1];
-	}
-	rawSpline[0] = inputValues * rawSpline[0];
-	double denom = 1.0/static_cast<double> (d_splineOrder - 1);
-	for (size_t Index = 0; Index <= currentMaxIndex; ++Index) {
-		rawSpline[Index] *= denom;
+		base[Index]   =              u*u*rawSpline[Index]
+		               + (2*u*pMinusu-p)*rawSpline[Index-1]
+		               + pMinusu*pMinusu*rawSpline[Index-2];
 	}
 
-	//raw Spline is now order p-1
-//	dS
-//	-- = S   (u) - S   (u-1)
-//	du    p-1       p-1
-	first[0] = rawSpline[0];
-	for (size_t Index=1; Index <= currentMaxIndex; ++Index) {
-		first[Index] = rawSpline[Index] - rawSpline[Index-1];
-	}
-	first[currentMaxIndex+1] = - rawSpline[currentMaxIndex];
+    u = u + MDConstants::V_ONE;
+    pMinusu = p - u;
+	second[currentMaxIndex+1] =               -2*rawSpline[currentMaxIndex]
+	                            +                rawSpline[currentMaxIndex-1];
+    first[currentMaxIndex+1]  =          (p-2*u)*rawSpline[currentMaxIndex]
+                                -      (pMinusu)*rawSpline[currentMaxIndex-1];
+    base[currentMaxIndex+1]   =  (2*u*pMinusu-p)*rawSpline[currentMaxIndex]
+                                +pMinusu*pMinusu*rawSpline[currentMaxIndex-1];
 
-	// Bring raw Spline up to order d_splineOrder
-//	          u            p - u
-//	S  (u) = --- S   (u) + ----- S   (u-1)
-//	  p      p-1  p-1      p - 1  p-1
-	++currentMaxIndex;
-	rawSpline[currentMaxIndex] = -inputValues * rawSpline[currentMaxIndex - 1];
-	rightmost = SCIRun::Vector(static_cast<double> (d_splineOrder));
-	for ( int k = currentMaxIndex - 1; k > 0; --k) {
-		SCIRun::Vector input_plus_k = inputValues + SCIRun::Vector(static_cast<double>(k));
-		rawSpline[k] = input_plus_k * rawSpline[k] + (rightmost - input_plus_k) * rawSpline[k-1];
-	}
-	rawSpline[0] = inputValues * rawSpline[0];
-	denom = 1.0/static_cast<double> (d_splineOrder);
-	for (size_t Index = 0; Index <= currentMaxIndex; ++Index) {
-		base[Index] = rawSpline[Index]*denom;
-	}
+    u = u + MDConstants::V_ONE;
+    pMinusu = p - u;
+	second[currentMaxIndex+2] =                 rawSpline[currentMaxIndex];
+    first[currentMaxIndex+2]  =        -pMinusu*rawSpline[currentMaxIndex];
+    base[currentMaxIndex+2]   = pMinusu*pMinusu*rawSpline[currentMaxIndex];
+
+    for (size_t Index=0; Index < base.size(); ++Index)
+    {
+      base[Index] *= baseDenom;
+      first[Index]*= firstDenom;
+    }
+//	// Bring raw Spline up to order d_splineOrder - 1
+////           u            (p-1)-u
+////	S (u) = --- S   (u) + ------- S   (u-1)
+////	 p      p-2  p-2        p-2    p-2
+//    ++currentMaxIndex;
+//	rawSpline[currentMaxIndex] = -inputValues * rawSpline[currentMaxIndex - 1];
+//	SCIRun::Vector rightmost = SCIRun::Vector(static_cast<double>(d_splineOrder - 1));
+//	for ( int k = currentMaxIndex - 1; k > 0; --k) {
+//		SCIRun::Vector input_plus_k = inputValues + SCIRun::Vector(static_cast<double>(k));
+//		rawSpline[k] = input_plus_k * rawSpline[k] + (rightmost - input_plus_k) * rawSpline[k-1];
+//	}
+//	rawSpline[0] = inputValues * rawSpline[0];
+//	double denom = 1.0/static_cast<double> (d_splineOrder - 1);
+//	for (size_t Index = 0; Index <= currentMaxIndex; ++Index) {
+//		rawSpline[Index] *= denom;
+//	}
+//
+//	//raw Spline is now order p-1
+////	dS
+////	-- = S   (u) - S   (u-1)
+////	du    p-1       p-1
+//	first[0] = rawSpline[0];
+//	for (size_t Index=1; Index <= currentMaxIndex; ++Index) {
+//		first[Index] = rawSpline[Index] - rawSpline[Index-1];
+//	}
+//	first[currentMaxIndex+1] = - rawSpline[currentMaxIndex];
+//
+//	// Bring raw Spline up to order d_splineOrder
+////	          u            p - u
+////	S  (u) = --- S   (u) + ----- S   (u-1)
+////	  p      p-1  p-1      p - 1  p-1
+//	++currentMaxIndex;
+//	rawSpline[currentMaxIndex] = -inputValues * rawSpline[currentMaxIndex - 1];
+//	rightmost = SCIRun::Vector(static_cast<double> (d_splineOrder));
+//	for ( int k = currentMaxIndex - 1; k > 0; --k) {
+//		SCIRun::Vector input_plus_k = inputValues + SCIRun::Vector(static_cast<double>(k));
+//		rawSpline[k] = input_plus_k * rawSpline[k] + (rightmost - input_plus_k) * rawSpline[k-1];
+//	}
+//	rawSpline[0] = inputValues * rawSpline[0];
+//	denom = 1.0/static_cast<double> (d_splineOrder);
+//	for (size_t Index = 0; Index <= currentMaxIndex; ++Index) {
+//		base[Index] = rawSpline[Index]*denom;
+//	}
     return;
 }
 
@@ -161,35 +215,37 @@ vector<double> ShiftedCardinalBSpline::derivativeGridAligned(double X) const
 }
 
 // Private Methods
-void ShiftedCardinalBSpline::evaluateVectorizedInternalInPlace(const SCIRun::Vector& offset,
-                                                               const int Order,
-                                                               vector<SCIRun::Vector>& array) const
+void ShiftedCardinalBSpline::evaluateVectorizedInternalInPlace
+     ( const SCIRun::Vector& offset,
+       const int Order,
+       vector<SCIRun::Vector>& array) const
 {
-	// Initialize the second order spline into the array
-	size_t arraySize = array.size();
-	assert(arraySize >= (Order + 1));
+  // Initialize the second order spline into the array
+  int arraySize = array.size();
+  assert(arraySize >= (Order + 1));
 
-	array.assign(arraySize,SCIRun::Vector(0.0,0.0,0.0));
-	array[0] = S2(offset);
-	array[1] = S2(offset + SCIRun::Vector(1));
-	array[2] = S2(offset + SCIRun::Vector(2));
+  array.assign(arraySize,SCIRun::Vector(0.0,0.0,0.0));
+  array[0] = S2(offset);
+  array[1] = S2(offset + SCIRun::Vector(1));
+  array[2] = S2(offset + SCIRun::Vector(2));
 
-	double denominator = 1.0;
-	for (int n = 3; n <= Order; ++n) {
-		int n_minus_1 = n - 1;
-		denominator /= static_cast<double> (n_minus_1);
-		array[n] = -offset * array[n_minus_1];
-		SCIRun::Vector n_double = SCIRun::Vector(static_cast<double>(n));
-		for (int k = n - 1; k > 0; --k) {
-			SCIRun::Vector offset_plus_k = offset + SCIRun::Vector(static_cast<double>(k));
-			array[k] = offset_plus_k * array[k] + (n_double - offset_plus_k) * array[k-1];
-		}
-		array[0] = offset * array[0];
-	}
-	size_t splineSize = array.size();
-	for (size_t Index = 0; Index < splineSize; ++Index) {
-		array[Index] *= denominator;
-	}
+  double denominator = 1.0;
+  for (int n = 3; n <= Order; ++n) {
+    int n_minus_1 = n - 1;
+    denominator /= static_cast<double> (n_minus_1);
+    array[n] = -offset * array[n_minus_1];
+    SCIRun::Vector n_double = SCIRun::Vector(n);
+    for (int k = n - 1; k > 0; --k) {
+      SCIRun::Vector offset_plus_k = offset + SCIRun::Vector(k);
+      array[k] = offset_plus_k * array[k] +
+                   (n_double - offset_plus_k) * array[k-1];
+    }
+    array[0] = offset * array[0];
+  }
+  size_t splineSize = array.size();
+  for (size_t Index = 0; Index < splineSize; ++Index) {
+    array[Index] *= denominator;
+  }
 }
 
 vector<double> ShiftedCardinalBSpline::evaluateInternal(const double X,

@@ -37,6 +37,8 @@
 
 #include <CCA/Components/MD/Electrostatics/SPME/SPME.h>
 
+#include <fstream>
+#include <iomanip>
 
 #ifdef DEBUG
 #include <Core/Util/FancyAssert.h>
@@ -109,6 +111,33 @@ void SPME::initialize(const ProcessorGroup*   pg,
                       const MDLabel*          label,
                       CoordinateSystem*       coordSys) {
   // SPME::initialize is called from MD::initialize
+
+  // JBH FIXME TODO Debugging spline generation output here
+  std::ofstream outFile;
+  outFile.open("SplineTest.out");
+  int splineSupport = d_interpolatingSpline.getSupport();
+  int maxPoints = 100;
+  double dMax = 1.0/static_cast<double> (maxPoints);
+  std::vector<SCIRun::Vector> base(splineSupport);
+  std::vector<SCIRun::Vector> first(splineSupport);
+  std::vector<SCIRun::Vector> second(splineSupport);
+  for (int point = 0; point < maxPoints; ++point)
+  {
+    SCIRun::Vector currOffset = SCIRun::Vector(point * dMax);
+    d_interpolatingSpline.evaluateThroughSecondDerivative(currOffset,
+                                                          base,
+                                                          first,
+                                                          second);
+    for (int index = 0; index < splineSupport; ++index)
+    {
+      outFile << std::setw(10) << std::left << std::fixed << currOffset.x() + index
+              << std::setw(10) << std::left << std::fixed << base[index].x()
+              << std::setw(10) << std::left << std::fixed << first[index].x()
+              << std::setw(10) << std::left << std::fixed << second[index].x()
+              << std::endl;
+    }
+  }
+  outFile.close();
 
   /* Initialize the local version of the global Q and Q_scratch arrays
    *   Rather than forcing reductions on processor for each patch, we have a
@@ -584,6 +613,10 @@ void SPME::calculate(   const ProcessorGroup*   pg,
 
   parentOldDW->setScrubbing(parentOldDW_scrubmode);
   parentNewDW->setScrubbing(parentNewDW_scrubmode);
+
+  // We've converged, so can now calculate the self-correction terms for
+  // electrostatics:
+  //  E_self = - beta/sqrt(pi) sum(charge_i^2 + 2*beta^2*Dot(Mu_i,Mu_i)/3)
 
   // We cannot simply transfer dipoles from the subNewDW to the parentNewDW,
   //   because they have different variable names.  Therefore, we have to kludge this
