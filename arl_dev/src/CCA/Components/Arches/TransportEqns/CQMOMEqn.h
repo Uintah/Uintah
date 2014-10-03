@@ -214,6 +214,7 @@ namespace Uintah{
     bool d_normalized;
     bool d_usePartVel;             //determine whether to use particle velocities, or fluid velocities for convection
     double epW;                    //particle-wall restituion coefficient
+    double d_convWeightLimit;      //the minimum value for a calculated weight to be to actually compute convection, this helps limit bad abscissa
     
     Convection_CQMOM * d_cqmomConv; //class for cqmom-specific convection
     

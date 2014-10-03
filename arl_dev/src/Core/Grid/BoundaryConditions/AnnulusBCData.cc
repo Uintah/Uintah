@@ -43,8 +43,9 @@ AnnulusBCData::AnnulusBCData() : BCGeomBase()
 }
 
 AnnulusBCData::AnnulusBCData(Point& p, double inRadius,double outRadius)
-  : BCGeomBase(), d_innerRadius(inRadius), d_outerRadius(outRadius), d_origin(p)
+  : BCGeomBase(), d_innerRadius(inRadius), d_outerRadius(outRadius)
 {
+  d_origin = p;
 }
 
 AnnulusBCData::~AnnulusBCData()

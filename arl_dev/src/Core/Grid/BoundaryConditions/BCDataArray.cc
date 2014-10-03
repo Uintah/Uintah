@@ -46,9 +46,13 @@ using namespace std;
 // export SCI_DEBUG="BCDA_DBG:+"
 static DebugStream BCDA_dbg("BCDA_DBG",false);
 
+//------------------------------------------------------------------------------------------------
+
 BCDataArray::BCDataArray() 
 {
 }
+
+//------------------------------------------------------------------------------------------------
 
 BCDataArray::~BCDataArray()
 {
@@ -68,6 +72,8 @@ BCDataArray::~BCDataArray()
   
 }
 
+//------------------------------------------------------------------------------------------------
+
 BCDataArray::BCDataArray(const BCDataArray& mybc)
 {
   bcDataArrayType::const_iterator mat_id_itr;
@@ -82,6 +88,8 @@ BCDataArray::BCDataArray(const BCDataArray& mybc)
     }
   }
 }
+
+//------------------------------------------------------------------------------------------------
 
 BCDataArray& BCDataArray::operator=(const BCDataArray& rhs)
 {
@@ -116,8 +124,9 @@ BCDataArray& BCDataArray::operator=(const BCDataArray& rhs)
 BCDataArray* BCDataArray::clone()
 {
   return scinew BCDataArray(*this);
-
 }
+
+//------------------------------------------------------------------------------------------------
 
 void BCDataArray::determineIteratorLimits(Patch::FaceType face,
                                           const Patch* patch)
@@ -125,15 +134,15 @@ void BCDataArray::determineIteratorLimits(Patch::FaceType face,
   SCIRun::IntVector lpts,hpts;
   patch->getFaceCells(face,-1,lpts,hpts);
   std::vector<Point> test_pts;
-
+  
   for (CellIterator candidatePoints(lpts,hpts); !candidatePoints.done();
        candidatePoints++) {
     IntVector nodes[8];
     patch->findNodesFromCell(*candidatePoints,nodes);
     Point pts[8];
     Vector p( 0.0, 0.0, 0.0 );
-
-    for (int i = 0; i < 8; i++) 
+    
+    for (int i = 0; i < 8; i++)
       pts[i] = patch->getLevel()->getNodePosition(nodes[i]);
     
     if (face == Patch::xminus)
@@ -154,7 +163,7 @@ void BCDataArray::determineIteratorLimits(Patch::FaceType face,
     if (face == Patch::zplus)
       p = (pts[1].toVector()+pts[3].toVector()+pts[5].toVector()
            +pts[7].toVector())/4.;
-
+    
     test_pts.push_back(Point(p.x(),p.y(),p.z()));
   }
   
@@ -165,6 +174,44 @@ void BCDataArray::determineIteratorLimits(Patch::FaceType face,
     for (vector<BCGeomBase*>::iterator obj = bc_objects.begin();
          obj != bc_objects.end(); ++obj) {
       (*obj)->determineIteratorLimits(face,patch,test_pts);
+#if 0
+      std::cout << "printing domain bc on face: " << face << std::endl;
+      (*obj)->printLimits();
+#endif
+    }
+  }
+  
+  // A BCDataArry contains a bunch of geometry objects. Here, we remove objects with empty iterators.
+  // The reason that we get geometry objects with zero iterators is that, for a given boundary face
+  // that is shared across several patches, geometry objects are created on ALL patches. Later,
+  // a geometry object is assigned an iterator depending on whether it lives on that patch or not.
+  for (mat_id_itr = d_BCDataArray.begin();
+       mat_id_itr != d_BCDataArray.end(); ++mat_id_itr) {
+    vector<BCGeomBase*>& bc_objects = mat_id_itr->second;
+    for (vector<BCGeomBase*>::iterator obj = bc_objects.begin();
+         obj < bc_objects.end();) {
+      if ( !( (*obj)->hasIterator()) ) {
+        delete *obj;
+        obj = bc_objects.erase(obj); // point the iterator to the next element that was after the one we deleted
+      } else {
+        ++obj;
+      }
+    }
+  }
+}
+
+//------------------------------------------------------------------------------------------------
+
+void BCDataArray::determineInteriorBndIteratorLimits(Patch::FaceType face,
+                                          const Patch* patch)
+{
+  BCDataArray::bcDataArrayType::iterator mat_id_itr;
+  for (mat_id_itr = d_BCDataArray.begin();
+       mat_id_itr != d_BCDataArray.end(); ++mat_id_itr) {
+    vector<BCGeomBase*>& bc_objects = mat_id_itr->second;
+    for (vector<BCGeomBase*>::iterator obj = bc_objects.begin();
+         obj != bc_objects.end(); ++obj) {
+      (*obj)->determineInteriorBndIteratorLimits(face,patch);
 #if 0
       (*obj)->printLimits();
 #endif
@@ -190,11 +237,15 @@ void BCDataArray::determineIteratorLimits(Patch::FaceType face,
   }
 }
 
+//------------------------------------------------------------------------------------------------
+
 void BCDataArray::addBCData(int mat_id,BCGeomBase* bc)
 {
   vector<BCGeomBase*>& d_BCDataArray_vec = d_BCDataArray[mat_id];
   d_BCDataArray_vec.push_back(bc);
 }
+
+//------------------------------------------------------------------------------------------------
 
 void BCDataArray::combineBCGeometryTypes(int mat_id)
 {
@@ -253,6 +304,7 @@ void BCDataArray::combineBCGeometryTypes(int mat_id)
   
 }
 
+//------------------------------------------------------------------------------------------------
 
 void BCDataArray::combineBCGeometryTypes_NEW(int mat_id)
 {
@@ -346,6 +398,8 @@ void BCDataArray::combineBCGeometryTypes_NEW(int mat_id)
 
 }
 
+//------------------------------------------------------------------------------------------------
+
 const BoundCondBase* 
 BCDataArray::getBoundCondData(int mat_id, const string type, int ichild) const
 {
@@ -385,6 +439,7 @@ BCDataArray::getBoundCondData(int mat_id, const string type, int ichild) const
   return 0;
 }
 
+//------------------------------------------------------------------------------------------------
 
 void BCDataArray::getCellFaceIterator(int mat_id, Iterator& b_ptr, int ichild) const
 {
@@ -400,6 +455,7 @@ void BCDataArray::getCellFaceIterator(int mat_id, Iterator& b_ptr, int ichild) c
 
 }
 
+//------------------------------------------------------------------------------------------------
 
 void BCDataArray::getNodeFaceIterator(int mat_id, Iterator& b_ptr, int ichild) const
 {
@@ -413,6 +469,8 @@ void BCDataArray::getNodeFaceIterator(int mat_id, Iterator& b_ptr, int ichild) c
       itr->second[ichild]->getNodeFaceIterator(b_ptr);
   }
 }
+
+//------------------------------------------------------------------------------------------------
 
 int BCDataArray::getNumberChildren(int mat_id) const
 {
@@ -440,6 +498,8 @@ BCGeomBase* BCDataArray::getChild(int mat_id,int i) const
   return 0;
 }
 
+//------------------------------------------------------------------------------------------------
+
 void BCDataArray::print() const
 {
   bcDataArrayType::const_iterator bcda_itr;
@@ -454,6 +514,6 @@ void BCDataArray::print() const
       (*i)->print();
     }
   }
-        
-  
 }
+
+//------------------------------------------------------------------------------------------------

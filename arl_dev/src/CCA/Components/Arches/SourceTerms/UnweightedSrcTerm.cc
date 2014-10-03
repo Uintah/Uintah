@@ -70,7 +70,7 @@ UnweightedSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, 
     //     ieqn != dqmom_eqns.end(); ieqn++){
           
     DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(&eqn);
-    int d_quadNode = dqmom_eqn->getQuadNode(); 
+    int const d_quadNode = dqmom_eqn->getQuadNode(); 
 
     // require particle velocity
     string partVel_name = "vel_qn";

@@ -75,7 +75,7 @@ namespace Uintah {
     void getBCData(BCData& bc) const;
 
     /// Determines if a point is inside the circle
-    bool inside(const Point& p) const;
+    bool inside(const Point& p) const;    
 
     /// Print out the boundary condition geometry type.
     virtual void print();
@@ -88,7 +88,6 @@ namespace Uintah {
   private:
     BCData d_bc;
     double d_radius;
-    Point  d_origin;
   };
   
 } // End namespace Uintah

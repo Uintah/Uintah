@@ -87,7 +87,7 @@ namespace Wasatch {
                                  const bool reduceOnAllRKStages )
   {
     reduceOnAllRKStages_ = reduceOnAllRKStages;
-    std::cout << "adding reduction variable " << resultTag << std::endl;
+    proc0cout << "adding reduction variable " << resultTag << std::endl;
     if( hasDoneSetup_ ){
       std::ostringstream msg;
       msg << "ReductionHelper error: cannot add new variables after tasks have been registered!" << std::endl;

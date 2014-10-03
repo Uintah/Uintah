@@ -43,7 +43,7 @@ InvalidState::InvalidState( const std::string & message, const char * file, int 
     : message_( message )
 {
   std::ostringstream s;
-  s << "An InvalidState exception was thrown.\n"
+  s << "An InvalidState exception was thrown (" << message << ")\n"
     << file << ":" << line << "\n";
   message_ = (char*)(s.str().c_str());
 

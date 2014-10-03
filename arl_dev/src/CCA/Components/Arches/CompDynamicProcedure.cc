@@ -25,28 +25,29 @@
 //----- CompDynamicProcedure.cc --------------------------------------------------
 
 #include <TauProfilerForSCIRun.h>
-#include <CCA/Components/Arches/CompDynamicProcedure.h>
-#include <CCA/Components/Arches/PhysicalConstants.h>
-#include <CCA/Components/Arches/BoundaryCondition.h>
-#include <CCA/Components/Arches/CellInformation.h>
+
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Components/Arches/BoundaryCondition.h>
+#include <CCA/Components/Arches/CellInformation.h>
+#include <CCA/Components/Arches/CompDynamicProcedure.h>
+#include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/StencilMatrix.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
+
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/DataWarehouse.h>
+
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Exceptions/VariableNotFoundInGrid.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-#include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/SimulationState.h>
 #include <Core/Parallel/Parallel.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/Parallel/ProcessorGroup.h>
-
 #include <Core/Thread/Time.h>
 
 using namespace std;
@@ -843,12 +844,8 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
       d_filter->applyFilter<Array3<double> >(pc, patch, betaIJ[ii], filterVolume, vol_fraction, betaHATIJ[ii]);
     }
 
-    string msg = "Time for the Filter operation in Turbulence Model: ";
-    if (Uintah::Parallel::getNumThreads() > 1) {
-      proc0thread0cerr << msg << Time::currentSeconds() - start_turbTime << " seconds\n";
-    } else {
-      proc0cerr << msg << Time::currentSeconds() - start_turbTime << " seconds\n";
-    }
+    string msg = "Time for the Filter operation in Turbulence Model: (patch: ";
+    proc0cerr << msg << p << ") " << Time::currentSeconds() - start_turbTime << " seconds\n";
 
     TAU_PROFILE_START(compute2);
 

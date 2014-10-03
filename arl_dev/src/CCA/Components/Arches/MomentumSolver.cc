@@ -586,6 +586,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     constCCVariable<double> volFraction; 
     new_dw->get(volFraction, d_lab->d_volFractionLabel, indx, patch, gac, 2);
 
+    //multiple_steps is false on rk step = 0
     if (timelabels->multiple_steps){
       new_dw->get(constVelocityVars.density, d_lab->d_densityTempLabel, indx, patch, gac, 2);
     }else{
@@ -676,17 +677,20 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
 
     if (!(this->get_use_wasatch_mom_rhs())) {
-//      velocityVars.uVelRhoHat.copy(constVelocityVars.old_uVelocity,
-//                                   velocityVars.uVelRhoHat.getLowIndex(),
-//                                   velocityVars.uVelRhoHat.getHighIndex());
-//                                   
-//      velocityVars.vVelRhoHat.copy(constVelocityVars.old_vVelocity,
-//                                   velocityVars.vVelRhoHat.getLowIndex(),
-//                                   velocityVars.vVelRhoHat.getHighIndex());
-//                                   
-//      velocityVars.wVelRhoHat.copy(constVelocityVars.old_wVelocity,
-//                                   velocityVars.wVelRhoHat.getLowIndex(),
-//                                   velocityVars.wVelRhoHat.getHighIndex());
+
+      //This copy is needed for BCs that are reapplied using the 
+      //extra cell value. 
+      velocityVars.uVelRhoHat.copy(constVelocityVars.old_uVelocity,
+                                   velocityVars.uVelRhoHat.getLowIndex(),
+                                   velocityVars.uVelRhoHat.getHighIndex());
+                                   
+      velocityVars.vVelRhoHat.copy(constVelocityVars.old_vVelocity,
+                                   velocityVars.vVelRhoHat.getLowIndex(),
+                                   velocityVars.vVelRhoHat.getHighIndex());
+                                   
+      velocityVars.wVelRhoHat.copy(constVelocityVars.old_wVelocity,
+                                   velocityVars.wVelRhoHat.getLowIndex(),
+                                   velocityVars.wVelRhoHat.getHighIndex());
 
       //__________________________________
       //  compute coefficients and vel src
@@ -946,7 +950,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                                         constVelocityVars.old_uVelocity, 
                                                         constVelocityVars.old_vVelocity, 
                                                         constVelocityVars.old_wVelocity ); 
-    
 
   }
 }
@@ -978,6 +981,8 @@ MomentumSolver::sched_averageRKHatVelocities(SchedulerP& sched,
 
   tsk->requires(Task::NewDW,   d_lab->d_densityTempLabel,  gac,1);
   tsk->requires(Task::NewDW,   d_lab->d_densityCPLabel,    gac,1);
+
+  tsk->requires(Task::NewDW,   d_lab->d_volFractionLabel, gac, 1); 
 
   tsk->modifies(d_lab->d_uVelRhoHatLabel);
   tsk->modifies(d_lab->d_vVelRhoHatLabel);
@@ -1015,6 +1020,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
     SFCXVariable<double> new_uvel;
     SFCYVariable<double> new_vvel;
     SFCZVariable<double> new_wvel;
+    constCCVariable<double> vol_frac; 
 
     Ghost::GhostType  gn = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -1032,6 +1038,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
     new_dw->getModifiable(new_uvel, d_lab->d_uVelRhoHatLabel, indx, patch);
     new_dw->getModifiable(new_vvel, d_lab->d_vVelRhoHatLabel, indx, patch);
     new_dw->getModifiable(new_wvel, d_lab->d_wVelRhoHatLabel, indx, patch);
+    new_dw->get(vol_frac, d_lab->d_volFractionLabel, indx, patch, gac, 1 ); 
 
     double factor_old, factor_new, factor_divide;
     factor_old = timelabels->factor_old;
@@ -1045,13 +1052,13 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
     //__________________________________
     //  X  (This includes the extra cells)
     CellIterator SFCX_iter = patch->getSFCXIterator();
+
+    const double small = 1e-12; 
     
     for(; !SFCX_iter.done(); SFCX_iter++) {
       IntVector c = *SFCX_iter;
       IntVector L = c - x_offset;
-      if (new_density[c]<=1.0e-12 || new_density[L]<=1.0e-12){     // CLAMP
-        new_uvel[c] = 0.0;
-      }else{
+      if ( vol_frac[c] >= small && vol_frac[L] >= small ){ 
         new_uvel[c] = (factor_old * old_uvel[c] * (old_density[c]  + old_density[L])
                     +  factor_new * new_uvel[c] * (temp_density[c] + temp_density[L]))/
                        (factor_divide * (new_density[c] + new_density[L]));
@@ -1064,9 +1071,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
     for(; !SFCY_iter.done(); SFCY_iter++) {
       IntVector c = *SFCY_iter;
       IntVector L = c - y_offset;
-      if (new_density[c]<=1.0e-12 || new_density[L]<=1.0e-12){     // CLAMP
-        new_vvel[c] = 0.0;
-      }else{
+      if ( vol_frac[c] >= small && vol_frac[L] >= small ){ 
         new_vvel[c] = (factor_old * old_vvel[c] * (old_density[c]  + old_density[L])
                     +  factor_new * new_vvel[c] * (temp_density[c] + temp_density[L]))/
                        (factor_divide * (new_density[c] + new_density[L]));
@@ -1079,9 +1084,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
     for(; !SFCZ_iter.done(); SFCZ_iter++) {
       IntVector c = *SFCZ_iter;
       IntVector L = c - z_offset;
-      if (new_density[c]<=1.0e-12 || new_density[L]<=1.0e-12){     // CLAMP
-        new_wvel[c] = 0.0;
-      }else{
+      if ( vol_frac[c] >= small && vol_frac[L] >= small ){ 
         new_wvel[c] = (factor_old * old_wvel[c] * (old_density[c]  + old_density[L])
                     +  factor_new * new_wvel[c] * (temp_density[c] + temp_density[L]))/
                        (factor_divide * (new_density[c] + new_density[L]));
@@ -1096,6 +1099,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
                                                         old_uvel, old_vvel, old_wvel );
 
     d_boundaryCondition->setHattedIntrusionVelocity( patch, new_uvel, new_vvel, new_wvel, new_density ); 
+
   }  // patches
 }
 

@@ -1,5 +1,6 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h> 
+#include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <sstream>
 #include <iostream>
@@ -12,6 +13,27 @@ using namespace Uintah;
 DQMOMEqnFactory::DQMOMEqnFactory()
 { 
   n_quad_ = 0; // initialize this to zero 
+
+  // this names string names to descriptors
+  // size
+  string_to_ndf_desc.insert(std::make_pair("size",DQMOMEqnFactory::SIZE)); 
+  // mass
+  string_to_ndf_desc.insert(std::make_pair("mass",DQMOMEqnFactory::MASS)); 
+  // temperature 
+  string_to_ndf_desc.insert(std::make_pair("temperature",DQMOMEqnFactory::TEMPERATURE));
+  // enthalpy
+  string_to_ndf_desc.insert(std::make_pair("enthalpy", DQMOMEqnFactory::ENTHALPY)); 
+  // uvel
+  string_to_ndf_desc.insert(std::make_pair("uvel", DQMOMEqnFactory::UVEL)); 
+  // vvel 
+  string_to_ndf_desc.insert(std::make_pair("vvel", DQMOMEqnFactory::VVEL)); 
+  // wvel
+  string_to_ndf_desc.insert(std::make_pair("wvel", DQMOMEqnFactory::WVEL)); 
+  // coal gas mix frac
+  string_to_ndf_desc.insert(std::make_pair("coal_gas_mix_frac", DQMOMEqnFactory::COAL_MASS_FRAC)); 
+
+
+
 }
 
 DQMOMEqnFactory::~DQMOMEqnFactory()
@@ -25,6 +47,7 @@ DQMOMEqnFactory::~DQMOMEqnFactory()
   for( EqnMap::iterator i=eqns_.begin(); i!=eqns_.end(); ++i ){
     delete i->second;
   }
+
 }
 //---------------------------------------------------------------------------
 // Method: Self, Returns an instance of itself
@@ -115,4 +138,80 @@ DQMOMEqnFactory::find_scalar_eqn( const std::string name )
   return return_value;
 }
 
+//---------------------------------------------------------------------------
+// Method: Register DQMOM Eqns
+//---------------------------------------------------------------------------
+void DQMOMEqnFactory::registerDQMOMEqns(ProblemSpecP& db, ArchesLabel* field_labels, ExplicitTimeInt* time_integrator )
+{
+
+  // Now do the same for DQMOM equations.
+  ProblemSpecP dqmom_db = db;
+
+  if (dqmom_db) {
+
+    int n_quad_nodes;
+    dqmom_db->require("number_quad_nodes", n_quad_nodes);
+    this->set_quad_nodes( n_quad_nodes );
+
+    proc0cout << "\n";
+    proc0cout << "******* DQMOM Equation Registration ********\n";
+
+    // Make the weight transport equations
+    for ( int iqn = 0; iqn < n_quad_nodes; iqn++) {
+
+      std::string weight_name = "w_qn";
+      std::string ic_name = "w";
+      std::string node;
+      std::stringstream out;
+      out << iqn;
+      node = out.str();
+      weight_name += node;
+
+      proc0cout << "creating a weight for: " << weight_name << std::endl;
+
+      DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( field_labels, time_integrator, weight_name, ic_name, iqn );
+      this->register_scalar_eqn( weight_name, eqnBuilder );
+
+    }
+    // Make the weighted abscissa
+    for (ProblemSpecP ic_db = dqmom_db->findBlock("Ic"); ic_db != 0; ic_db = ic_db->findNextBlock("Ic")){
+      std::string ic_name;
+      ic_db->getAttribute("label", ic_name);
+      std::string eqn_type = "dqmom"; // by default
+
+      proc0cout << "Found  an internal coordinate: " << ic_name << std::endl;
+
+      // loop over quad nodes.
+      for (int iqn = 0; iqn < n_quad_nodes; iqn++){
+
+        // need to make a name on the fly for this ic and quad node.
+        std::string final_name = ic_name + "_qn";
+        std::string node;
+        std::stringstream out;
+        out << iqn;
+        node = out.str();
+        final_name += node;
+
+        proc0cout << "created a weighted abscissa for: " << final_name << std::endl;
+
+        DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( field_labels, time_integrator, final_name, ic_name, iqn );
+        this->register_scalar_eqn( final_name, eqnBuilder );
+
+      }
+    }
+    // Make the velocities for each quadrature node
+    for ( int iqn = 0; iqn < n_quad_nodes; iqn++) {
+      std::string name = "vel_qn";
+      std::string node;
+      std::stringstream out;
+      out << iqn;
+      node = out.str();
+      name += node;
+
+      const VarLabel* tempVarLabel = VarLabel::create(name, CCVariable<Vector>::getTypeDescription());
+      field_labels->partVel.insert(std::make_pair(iqn, tempVarLabel));
+
+    }
+  }
+}
 

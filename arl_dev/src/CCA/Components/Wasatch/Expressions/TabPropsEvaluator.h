@@ -28,6 +28,7 @@
 #include <tabprops/TabPropsConfig.h>
 #include <tabprops/StateTable.h>
 
+#include <spatialops/Nebo.h>
 #include <expression/Expression.h>
 
 /**
@@ -55,6 +56,72 @@ class TabPropsEvaluator
 
   TabPropsEvaluator( const InterpT& interp,
                      const Expr::TagList& ivarNames );
+
+  class Functor1D{
+    static const InterpT*& get_evaluator(){
+      static const InterpT* eval = NULL;
+      return eval;
+    }
+  public:
+    static void set_evaluator( const InterpT* eval ){
+      get_evaluator() = eval;
+    }
+    double operator()( const double x ) const{
+      return get_evaluator()->value(&x);
+    }
+  };
+
+  class Functor2D{
+    static const InterpT*& get_evaluator(){
+      static const InterpT* eval = NULL;
+      return eval;
+    }
+  public:
+    static void set_evaluator( const InterpT* eval ){ get_evaluator() = eval; }
+    double operator()( const double x1, const double x2 ) const{
+      double vals[2] = {x1,x2};
+      return get_evaluator()->value( vals );
+    }
+  };
+
+  class Functor3D{
+    static const InterpT*& get_evaluator(){
+      static const InterpT* eval = NULL;
+      return eval;
+    }
+  public:
+    static void set_evaluator( const InterpT* eval ){ get_evaluator() = eval; }
+    double operator()( const double x1, const double x2, const double x3 ) const{
+      double vals[3] = {x1,x2,x3};
+      return get_evaluator()->value( vals );
+    }
+  };
+
+  class Functor4D{
+    static const InterpT*& get_evaluator(){
+      static const InterpT* eval = NULL;
+      return eval;
+    }
+  public:
+    static void set_evaluator( const InterpT* eval ){ get_evaluator() = eval; }
+    double operator()( const double x1, const double x2, const double x3, const double x4 ) const{
+      double vals[4] = {x1,x2,x3,x4};
+      return get_evaluator()->value( vals );
+    }
+  };
+
+  class Functor5D{
+    static const InterpT*& get_evaluator(){
+      static const InterpT* eval = NULL;
+      return eval;
+    }
+  public:
+    static void set_evaluator( const InterpT* eval ){ get_evaluator() = eval; }
+    double operator()( const double x1, const double x2, const double x3, const double x4, const double x5 ) const{
+      double vals[5] = {x1,x2,x3,x4,x5};
+      return get_evaluator()->value( vals );
+    }
+  };
 
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -139,27 +206,34 @@ evaluate()
 {
   FieldT& result = this->value();
 
-  typedef std::vector< typename FieldT::const_iterator > IVarIter;
-  IVarIter ivarIters;
-  for( typename IndepVarVec::const_iterator i=indepVars_.begin(); i!=indepVars_.end(); ++i ){
-    ivarIters.push_back( (*i)->begin() );
-  }
-
-  std::vector<double> ivarsPoint(indepVars_.size(),0.0);
-
-  // loop over grid points
-  for( typename FieldT::iterator iresult=result.begin(); iresult!=result.end(); ++iresult ){
-
-    // extract indep vars at this grid point
-    for( size_t i=0; i<ivarIters.size(); ++i ){
-      ivarsPoint[i] = *ivarIters[i];
+  switch( indepVars_.size() ){
+    case 1:{
+      Functor1D::set_evaluator( &evaluator_ );
+      result <<= SpatialOps::apply_pointwise<Functor1D>( *indepVars_[0] );
+      break;
     }
-
-    // calculate the result
-    *iresult = evaluator_.value(ivarsPoint );
-
-    // increment all iterators to the next grid point
-    for( typename IVarIter::iterator i=ivarIters.begin(); i!=ivarIters.end(); ++i )  ++(*i);
+    case 2:{
+      Functor2D::set_evaluator( &evaluator_ );
+      result <<= SpatialOps::apply_pointwise<Functor2D>( *indepVars_[0], *indepVars_[1] );
+      break;
+    }
+    case 3:{
+      Functor3D::set_evaluator( &evaluator_ );
+      result <<= SpatialOps::apply_pointwise<Functor3D>( *indepVars_[0], *indepVars_[1], *indepVars_[2] );
+      break;
+    }
+    case 4:{
+      Functor4D::set_evaluator( &evaluator_ );
+      result <<= SpatialOps::apply_pointwise<Functor4D>( *indepVars_[0], *indepVars_[1], *indepVars_[2], *indepVars_[3] );
+      break;
+    }
+    case 5:{
+      Functor5D::set_evaluator( &evaluator_ );
+      result <<= SpatialOps::apply_pointwise<Functor5D>( *indepVars_[0], *indepVars_[1], *indepVars_[2], *indepVars_[3], *indepVars_[4] );
+      break;
+    }
+    default:
+      throw std::invalid_argument( "Unsupported dimensionality for interpolant in TabPropsEvaluator" );
   }
 }
 

@@ -630,14 +630,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         eqn->sched_evalTransportEqn( level, sched, curr_level );
     }
 
-    // Clean up after Scalar equation evaluations
-    if (curr_level == numTimeIntegratorLevels-1){
-      for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
-        EqnBase* eqn = iter->second;
-        eqn->sched_cleanUp( level, sched );
-      }
-    }
-
     sched_computeDensityLag(sched, patches, matls,
                            d_timeIntegratorLabels[curr_level],
                            false);

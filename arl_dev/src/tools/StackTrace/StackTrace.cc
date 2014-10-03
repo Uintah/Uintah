@@ -39,6 +39,7 @@
 #include <cstdlib>
 #include <cmath>
 
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -103,7 +104,7 @@ readSymbolLocations( char * filename )
       printf( "Number of symbols read: %d\n", cnt );
     }
     
-    const int LINE_SIZE = 4000;
+    const int LINE_SIZE = 40000;
     char      line[ LINE_SIZE ];
 
     fgets( line, LINE_SIZE, fp );
@@ -127,7 +128,7 @@ readSymbolLocations( char * filename )
     int numRead = sscanf( line, "%s %c %s %s", address, &info->type, name, moreName );
 
     if( numRead < 3 ) {
-      printf( "Skipping invalid line. Reason: Failed to parse this line: '%s'\n", line );
+      printf( "Skipping invalid line (#%d). Reason: Failed to parse this line: '%s'\n", cnt, line );
       continue;
     }
 
