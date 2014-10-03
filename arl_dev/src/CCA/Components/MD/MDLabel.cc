@@ -49,6 +49,9 @@ globalLabels::globalLabels() { // create variable labels used across all simulat
                                    IntVector(0,0,0), VarLabel::PositionVariable);
   pV_preReloc   = VarLabel::create("p.v+", ParticleVariable<SCIRun::Vector>::getTypeDescription());
   pID_preReloc  = VarLabel::create("p.ID+", ParticleVariable<long64>::getTypeDescription());
+
+  rKineticEnergy= VarLabel::create("e_kin", sum_vartype::getTypeDescription());
+  rKineticStress= VarLabel::create("S_kin", matrix_sum::getTypeDescription());
 }
 
 globalLabels::~globalLabels() { // destroy variable labels used across all simulation aspects
@@ -58,6 +61,8 @@ globalLabels::~globalLabels() { // destroy variable labels used across all simul
   VarLabel::destroy(pX_preReloc);
   VarLabel::destroy(pV_preReloc);
   VarLabel::destroy(pID_preReloc);
+  VarLabel::destroy(rKineticEnergy);
+  VarLabel::destroy(rKineticStress);
 }
 
 nonbondedLabels::nonbondedLabels() { // create variable labels used in nonbonded calculation contexts

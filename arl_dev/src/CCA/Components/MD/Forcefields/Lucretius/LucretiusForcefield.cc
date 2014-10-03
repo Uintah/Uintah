@@ -59,7 +59,7 @@ LucretiusForcefield::parseHomoatomicNonbonded(std::string&         parseLine,
     throw ProblemSetupException(errorOut.str(), __FILE__, __LINE__);
   }
 
-  currentMass = Parse::stringToDouble(token_list[4]);
+  currentMass = Parse::stringToDouble(token_list[4])*this->ffMassToInternal();
   std::string potentialType = token_list[5];
   std::string fullComment = "";
 
@@ -69,7 +69,7 @@ LucretiusForcefield::parseHomoatomicNonbonded(std::string&         parseLine,
 
 // Create our potential
   NonbondedTwoBodyPotential* potential;
-  potential = NonbondedTwoBodyFactory::create(currFFType,
+  potential = NonbondedTwoBodyFactory::create(this,
                                               potentialType,
                                               token_list,
                                               nbLabel,
@@ -176,7 +176,7 @@ LucretiusForcefield::parseHeteroatomicNonbonded(std::string&         parseLine,
     }
   }
 
-  potential = NonbondedTwoBodyFactory::create(currFFType,
+  potential = NonbondedTwoBodyFactory::create(this,
                                               potentialType,
                                               token_list,
                                               nbLabel,

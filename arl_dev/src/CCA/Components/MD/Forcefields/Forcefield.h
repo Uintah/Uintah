@@ -80,6 +80,8 @@ namespace Uintah {
       virtual double ffEnergyToInternal()       const = 0;
       virtual double ffStressToInternal()       const = 0;
 
+      virtual double ffMassToInternal()         const = 0;
+
     private:
 
   };

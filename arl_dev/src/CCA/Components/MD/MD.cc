@@ -321,6 +321,9 @@ void MD::scheduleInitialize(const LevelP&   level,
   //FIXME:  Do we still need this here?
   task->computes(d_label->electrostatic->dSubschedulerDependency);
 
+  task->computes(d_label->global->rKineticEnergy);
+  task->computes(d_label->global->rKineticStress);
+
   // FIXME -- Original, no longer correct?
   //sched->addTask(task, level->eachPatch(), materials);
   sched->addTask(task, perProcPatches, materials);
@@ -354,6 +357,8 @@ void MD::scheduleComputeStableTimestep(const LevelP& level,
                  d_label->electrostatic->rElectrostaticInverseEnergy);
   task->requires(Task::NewDW,
                  d_label->electrostatic->rElectrostaticRealEnergy);
+  task->requires(Task::NewDW,
+                 d_label->global->rKineticEnergy);
 
   // We only -need- stress tensors if we're doing NPT
   if ( NPT == d_system->getEnsemble()) {
@@ -412,6 +417,8 @@ void MD::scheduleTimeAdvance(const LevelP& level,
 
   scheduleElectrostaticsFinalize(sched, patches, matls, level);
 
+  scheduleKineticCalculations(sched, patches, matls, level);
+
   scheduleUpdatePosition(sched, patches, matls, level);
 
   sched->scheduleParticleRelocation(level,
@@ -432,10 +439,36 @@ void MD::scheduleTimeAdvance(const LevelP& level,
 //                                    d_sharedState->d_particleState, d_label->pParticleIDLabel, matls, 1);
 }
 
+void MD::scheduleKineticCalculations(      SchedulerP&  baseScheduler,
+                                     const PatchSet*    patches,
+                                     const MaterialSet* atomTypes,
+                                     const LevelP&      level)
+{
+  const std::string flowLocation = "MD::scheduleKineticCalculations | ";
+  printSchedule(patches, md_cout, flowLocation);
+
+  Task* task = scinew Task("MD::calculateKineticEnergy",
+                           this,
+                           &MD::calculateKineticEnergy);
+
+  // Reads in old velocities
+  task->requires(Task::OldDW, d_label->global->pV, Ghost::None, 0);
+
+  // Compures kinetic energy and stress.
+  task->computes(d_label->global->rKineticEnergy);
+  task->computes(d_label->global->rKineticStress);
+
+  baseScheduler->addTask(task, patches, atomTypes);
+}
+
 // Schedule indirect calls to subcomponents
 // Note:    Taskgraph can't schedule direct object reference tasks, since
 //          we don't know the explicit form of the subcomponents at compile
 //          time.
+
+
+
+
 void MD::scheduleNonbondedInitialize(SchedulerP&        sched,
                                      const PatchSet*    perProcPatches,
                                      const MaterialSet* matls,
@@ -909,6 +942,9 @@ void MD::initialize(const ProcessorGroup*   pg,
     } // Loop over materials
   } // Loop over patches
 
+  newDW->put(sum_vartype(0),d_label->global->rKineticEnergy);
+  newDW->put(matrix_sum(MDConstants::M3_0),d_label->global->rKineticStress);
+
   if (mdFlowDebug.active()) {
     mdFlowDebug << flowLocation
                 << "END"
@@ -930,8 +966,11 @@ void MD::computeStableTimestep(const ProcessorGroup*    pg,
 
   printTask(patches, md_cout, "MD::computeStableTimestep");
 
-  sum_vartype vdwEnergy;
-  sum_vartype spmeFourierEnergy;
+  sum_vartype nonbondedEnergy;
+  sum_vartype kineticEnergy;
+  sum_vartype electrostaticInverseEnergy;
+  sum_vartype electrostaticRealEnergy;
+
   matrix_sum spmeFourierStress;
   matrix_sum spmeRealStress;
   matrix_sum spmeFourierStressDipole;
@@ -939,23 +978,51 @@ void MD::computeStableTimestep(const ProcessorGroup*    pg,
   // This is where we would actually map the correct timestep/taskgraph
   // for a multistep integrator
 
-  newDW->get(vdwEnergy, d_label->nonbonded->rNonbondedEnergy);
-  newDW->get(spmeFourierEnergy,
+  newDW->get(nonbondedEnergy, d_label->nonbonded->rNonbondedEnergy);
+  newDW->get(electrostaticInverseEnergy,
               d_label->electrostatic->rElectrostaticInverseEnergy);
+  newDW->get(electrostaticRealEnergy,
+              d_label->electrostatic->rElectrostaticRealEnergy);
+  newDW->get(kineticEnergy, d_label->global->rKineticEnergy);
+
+  double totalEnergy = nonbondedEnergy + kineticEnergy
+                      + electrostaticInverseEnergy + electrostaticRealEnergy;
+  proc0cout << std::endl;
+  proc0cout << "-----------------------------------------------------"
+            << std::endl
+            << " Electrostatic Energy: "
+            << std::setprecision(16)
+            << std::setw(20) << std::fixed << std::right
+            << electrostaticInverseEnergy + electrostaticRealEnergy << std::endl
+            << "\tInverse: " << std::setprecision(16)
+            << std::setw(20) << std::fixed << std::right
+            << electrostaticInverseEnergy << std::endl
+            << "\tReal:    " << std::setprecision(16)
+            << std::setw(20) << std::fixed << std::right
+            << electrostaticRealEnergy << std::endl;
+
+  proc0cout << "-----------------------------------------------------"
+            << std::endl
+            << "Nonbonded Energy:      "
+            << std::setprecision(16)
+            << std::setw(20) << std::fixed << std::right
+            << nonbondedEnergy << std::endl;
+
+  proc0cout << "-----------------------------------------------------"
+            << std::endl
+            << "Kinetic Energy:        "
+            << std::setprecision(16)
+            << std::setw(20) << std::fixed << std::right
+            << kineticEnergy << std::endl;
+
+  proc0cout << "-----------------------------------------------------"
+            << std::endl
+            << "Total Energy:           "
+            << std::setprecision(16)
+            << std::setw(20) << std::fixed << std::right
+            << totalEnergy << std::endl;
 
   proc0cout << std::endl;
-  proc0cout << "-----------------------------------------------------"           << std::endl;
-  proc0cout << "Total Energy = "
-            << std::setprecision(16)
-            << vdwEnergy
-            << std::endl;
-  proc0cout << "-----------------------------------------------------"           << std::endl;
-  proc0cout << "Fourier Energy = "
-            << std::setprecision(16)
-            << spmeFourierEnergy
-            << std::endl;
-  proc0cout << "-----------------------------------------------------"           << std::endl;
-
 
   if (NPT == d_system->getEnsemble()) {
     newDW->get(spmeFourierStress,
@@ -986,6 +1053,53 @@ void MD::computeStableTimestep(const ProcessorGroup*    pg,
                 << std::endl;
   }
 
+}
+
+void MD::calculateKineticEnergy(const ProcessorGroup*   pg,
+                                const PatchSubset*      patches,
+                                const MaterialSubset*   localAtomTypes,
+                                      DataWarehouse*    oldDW,
+                                      DataWarehouse*    newDW)
+{
+  size_t numPatches     = patches->size();
+  size_t numAtomTypes   = localAtomTypes->size();
+  
+  double            kineticEnergy   = 0.0;
+  Uintah::Matrix3   kineticStress   = MDConstants::M3_0;
+  SCIRun::Vector    currentVelocity = MDConstants::V_ZERO;
+
+  for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex)
+  {
+    const Patch* currPatch = patches->get(patchIndex);
+    for (size_t atomIndex = 0; atomIndex < numAtomTypes; ++atomIndex)
+    {
+      double          atomTypeEnergy = 0.0;
+      Uintah::Matrix3 atomTypeStress = MDConstants::M3_0;
+
+      int             atomType = localAtomTypes->get(atomIndex);
+      ParticleSubset* atomSet  = oldDW->getParticleSubset(atomType,currPatch);
+
+      constParticleVariable<SCIRun::Vector> V;
+      oldDW->get(V, d_label->global->pV, atomSet);
+
+      size_t numAtoms = atomSet->numParticles();
+      for (size_t atom = 0; atom < numAtoms; ++atom)
+      {
+        currentVelocity = V[atom];
+        atomTypeEnergy += currentVelocity.length2();
+        atomTypeStress += OuterProduct(currentVelocity,currentVelocity);
+      }
+      double mass    = d_sharedState->getMDMaterial(atomType)->getMass();
+      kineticEnergy += 0.5 * atomTypeEnergy / mass;
+      kineticStress += atomTypeStress * mass;
+    }
+  }
+  newDW->put(sum_vartype(kineticEnergy),d_label->global->rKineticEnergy);
+  newDW->put(matrix_sum(kineticStress),d_label->global->rKineticStress);
+  // Fixme TODO:
+  // Find appropriate place to calculate the stress contribution from
+  // truncation term.  Also normalize stress tensor by degrees of freedom
+  // and account for unit conversion.
 }
 
 void MD::nonbondedInitialize(const ProcessorGroup*  pg,

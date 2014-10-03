@@ -122,6 +122,10 @@ namespace Uintah {
                                        SchedulerP&);
 
     protected:
+      void scheduleKineticCalculations(      SchedulerP&    sched,
+                                       const PatchSet*      perProcPatches,
+                                       const MaterialSet*   atomTypes,
+                                       const LevelP&        level);
 
       /**
        * @brief
@@ -255,6 +259,11 @@ namespace Uintah {
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw);
 
+      void calculateKineticEnergy(const ProcessorGroup* pg,
+                                  const PatchSubset*    patches,
+                                  const MaterialSubset* atomTypes,
+                                        DataWarehouse*  oldDW,
+                                        DataWarehouse*  newDW);
       /**
        * @brief
        * @param
