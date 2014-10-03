@@ -218,22 +218,28 @@ void SPME::scheduleCalculateRealspace(const ProcessorGroup*     pg,
            ff->getPolarizableScreening() == GAUSSIAN )
     */
     Task* task;
+    bool do_thole = false;
     if (f_polarizable) {
-//      task = scinew Task("SPME::calculateRealspacePointDipole",
-//                         this,
-//                         &SPME::calculateRealspacePointDipole,
-//                         sharedState,
-//                         label,
-//                         coordSys,
-//                         parentOldDW);
-      task = scinew Task("SPME::calculateRealspaceTholeDipole",
-                         this,
-                         &SPME::calculateRealspaceTholeDipole,
-                         sharedState,
-                         label,
-                         coordSys,
-                         parentOldDW);
-
+      if (!do_thole)
+      {
+        task = scinew Task("SPME::calculateRealspacePointDipole",
+                           this,
+                           &SPME::calculateRealspacePointDipole,
+                           sharedState,
+                           label,
+                           coordSys,
+                           parentOldDW);
+      }
+      else
+      {
+        task = scinew Task("SPME::calculateRealspaceTholeDipole",
+                           this,
+                           &SPME::calculateRealspaceTholeDipole,
+                           sharedState,
+                           label,
+                           coordSys,
+                           parentOldDW);
+      }
       // Also requires the last iteration's dipole guess, which does change
       // for the polarizability iteration
       task->requires(Task::OldDW,

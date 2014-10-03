@@ -28,6 +28,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <CCA/Components/MD/Forcefields/forcefieldTypes.h>
+#include <CCA/Components/MD/Forcefields/definedForcefields.h>
 #include <CCA/Components/MD/Potentials/TwoBody/NonbondedTwoBodyPotential.h>
 #include <CCA/Components/MD/Potentials/TwoBody/definedTwoBodyPotentials.h>
 #include <string>
@@ -57,7 +58,7 @@ namespace Uintah {
        * @param ps The ProblemSpec handle with which to get properties from the input file.
        * @param system The MD system handle to pass off to the appropriate Electrostatics constructor.
        */
-      static NonbondedTwoBodyPotential* create(forcefieldType,
+      static NonbondedTwoBodyPotential* create(      Forcefield*,
                                                const std::string&,
                                                const std::vector<std::string>&,
                                                const std::string& label,

@@ -111,10 +111,9 @@ namespace Uintah {
        // Lucretius: kCal/mol
        // Lucretius->Internal = L/MDUnits::energyTokCal/MDUnits::atomToMoles
 
-       return 1.0 / (MDUnits::energyTokCal() * MDUnits::molesPerAtom());
+       return 1.0 / (MDUnits::energyTokCal());
 
      }
-
 
      virtual double ffStressToInternal() const
      {
@@ -125,6 +124,13 @@ namespace Uintah {
        return 1.0 / MDUnits::pressureToAtm();
      }
 
+     virtual double ffMassToInternal() const
+     {
+       // Internal  1 g
+       // Lucretius 1 g/mol
+       // Lucretius->Internal = L/MDUnits::molesPerAtom
+       return 1.0;
+     }
 
     private:
       // Private functions related to parsing of the input forcefield file

@@ -68,6 +68,8 @@ namespace Uintah {
       const VarLabel* pV_preReloc;
       const VarLabel* pID;
       const VarLabel* pID_preReloc;
+      const VarLabel* rKineticEnergy;
+      const VarLabel* rKineticStress;
   };
 
   class nonbondedLabels {
