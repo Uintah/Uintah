@@ -307,6 +307,8 @@ ReactiveFlow2::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, lb->pParticleIDLabel,   matlset, gnone);
   task->requires(Task::OldDW, pEnergyLabel,           matlset, gnone);
 
+  task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
+
   task->computes(pRotationLabel_preReloc,       matlset);
   task->computes(pStrainRateLabel_preReloc,     matlset);
   task->computes(pLocalizedLabel_preReloc,      matlset);
@@ -337,6 +339,7 @@ ReactiveFlow2::computeStressTensor(const PatchSubset* patches,
 
   double bulk  = d_initialData.Bulk;
   double shear = d_initialData.Shear;
+  double rho_0 = matl->getInitialDensity();
   double sqrtThreeTwo = sqrt(1.5);
   double sqrtTwoThird = 1.0/sqrtThreeTwo;
   
@@ -357,6 +360,7 @@ ReactiveFlow2::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<double> pMass;
     constParticleVariable<double> pVolume;
     constParticleVariable<double> pTemperature;
+    constParticleVariable<double> pTemp_prenew;
     constParticleVariable<Vector> pVelocity;
     constParticleVariable<Matrix3> pDeformGrad;
     constParticleVariable<Matrix3> pStress;
@@ -364,6 +368,7 @@ ReactiveFlow2::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pMass,        lb->pMassLabel,               pset);
     old_dw->get(pVolume,      lb->pVolumeLabel,             pset);
     old_dw->get(pTemperature, lb->pTemperatureLabel,        pset);
+    old_dw->get(pTemp_prenew, lb->pTempPreviousLabel,       pset);
     old_dw->get(pVelocity,    lb->pVelocityLabel,           pset);
     old_dw->get(pStress,      lb->pStressLabel,             pset);
     old_dw->get(pDeformGrad,  lb->pDeformationMeasureLabel, pset);
@@ -375,7 +380,7 @@ ReactiveFlow2::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pStrainRate,        pStrainRateLabel,        pset);
     old_dw->get(pEnergy,            pEnergyLabel,            pset);
     old_dw->get(pLocalized,         pLocalizedLabel,         pset);
-    old_dw->get(pRotation,    pRotationLabel,               pset);
+    old_dw->get(pRotation,          pRotationLabel,          pset);
 
     // Get the particle IDs, useful in case a simulation goes belly up
     constParticleVariable<long64> pParticleID; 
@@ -449,6 +454,9 @@ ReactiveFlow2::computeStressTensor(const PatchSubset* patches,
           tensorF_new.Identity();
       }
 
+      // Calculate the current density and deformed volume
+      double rho_cur = rho_0/J;
+
       // Calculate rate of deformation tensor (D)
       tensorD = (tensorL + tensorL.Transpose())*0.5;
 
@@ -473,7 +481,13 @@ ReactiveFlow2::computeStressTensor(const PatchSubset* patches,
       tensorS = sigma - one * pressure;
 
       double temperature = pTemperature[idx];
+			double concentration = pTemperature[idx]/300;
+			double concentration_pn = pTemp_prenew[idx]/300;
 
+			double mu_cur = shear;
+
+      // compute the local sound wave speed
+      double c_dil = sqrt((bulk + 4.0*mu_cur/3.0)/rho_cur);
       //-----------------------------------------------------------------------
       // Stage 2:
       //-----------------------------------------------------------------------
@@ -500,6 +514,9 @@ ReactiveFlow2::computeStressTensor(const PatchSubset* patches,
       // Calculate the updated hydrostatic stress
       //double p = d_eos->computePressure(matl, state, tensorF_new, tensorD,delT);
 
+			double p = -(pressure + 200*concentration);
+			//cout << "pressure: " << pressure << " p: " << p << endl;
+
       //double Dkk = tensorD.Trace();
       //double dTdt_isentropic = d_eos->computeIsentropicTemperatureRate(
       //                                           temperature,rho_0,rho_cur,Dkk);
@@ -509,7 +526,7 @@ ReactiveFlow2::computeStressTensor(const PatchSubset* patches,
       //pdTdt[idx] += Tdot_VW;
 
 
-      Matrix3 tensorHy = one*1; //p;
+      Matrix3 tensorHy = one*p;
    
       // Calculate the total stress
       sigma = tensorS + tensorHy;
@@ -540,7 +557,20 @@ ReactiveFlow2::computeStressTensor(const PatchSubset* patches,
       // Rotate the deformation rate back to the laboratory coordinates
       tensorD = (tensorR*tensorD)*(tensorR.Transpose());
 
+      // Compute wave speed at each particle, store the maximum
+      Vector pVel = pVelocity[idx];
+      WaveSpeed=Vector(Max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
+                       Max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
+                       Max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
+
+			delete defState;
+
     }  // end particle loop
+
+    WaveSpeed = dx/WaveSpeed;
+    double delT_new = WaveSpeed.minComponent();
+
+    new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
 	}
 }
 

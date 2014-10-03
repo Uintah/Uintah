@@ -241,6 +241,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (mat_type ==  "reactive_flow")
     return(scinew ReactiveFlow(child,flags,false,false));
 
+  else if (mat_type ==  "reactive_flow2")
+    return(scinew ReactiveFlow2(child,flags));
+
   else
     throw ProblemSetupException("Unknown Material Type R ("+mat_type+")", __FILE__, __LINE__);
 

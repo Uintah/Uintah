@@ -20,7 +20,7 @@
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4      </delt_init>
        <timestep_multiplier>0.8         </timestep_multiplier>
-			 <max_Timesteps> 2 </max_Timesteps>
+			 <!--<max_Timesteps> 2 </max_Timesteps>-->
    </Time>
    
     <!--____________________________________________________________________-->
@@ -135,7 +135,7 @@
            <Box label="1">
               <lower>        [0,0,0]          </lower>
               <upper>        [2.0,2.0,0.5]    </upper>
-           		<resolution>   [10,10,1]     </resolution>
+           		<resolution>   [20,20,1]     </resolution>
               <extraCells> [1,1,1]            </extraCells>
               <patches>    [1,1,1]            </patches>
            </Box>
@@ -221,11 +221,12 @@
        <MPM>
          <material name="pillar">
               <density>             1000.0           </density>
-              <constitutive_model type = "reactive_flow">
+              <constitutive_model type = "reactive_flow2">
                   <bulk_modulus>      3.50e7        </bulk_modulus>
                   <shear_modulus>     8.40e7        </shear_modulus>
               </constitutive_model>
-              <thermal_conductivity>  427.0  </thermal_conductivity>
+              <!--<thermal_conductivity>  427.0  </thermal_conductivity>-->
+              <thermal_conductivity>  1427.0  </thermal_conductivity>
               <specific_heat>         234.0  </specific_heat>
               <geom_object>
                 <box label="gpmpm">
