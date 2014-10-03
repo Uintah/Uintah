@@ -211,9 +211,9 @@ namespace Wasatch{
      *  \param treeMap - the trees that this object is associated with (one per patch)
      *  \param taskName - the name of this task
      *  \param scheduler - the scheduler that this task is associated with
-     *  \param patches 	- the list of patches that this TreeTaskExecute object is to be executed on.
+     *  \param patches  - the list of patches that this TreeTaskExecute object is to be executed on.
      *  \param materials - the list of materials that this task is to be associated with.
-     *  \param info	- the PatchInfoMap object that holds patch-specific information (like operators).
+     *  \param info     - the PatchInfoMap object that holds patch-specific information (like operators).
      *  \param rkStage - the stage of the RK integrator that this is associated with
      *  \param state
      *  \param ioFieldSet - the set of fields that are requested for IO.  This prevents these fields from being recycled internally.
@@ -663,7 +663,12 @@ namespace Wasatch{
                 << endl;
             if( dbg_tasks_on ) fml_->dump_fields(std::cout);
 
-            AllocInfo ainfo( oldDW, newDW, material, patch, pg, isGPUTask );
+            
+            Uintah::ParticleSubset* const pset = newDW->haveParticleSubset(material, patch) ?
+                                                 newDW->getParticleSubset(material, patch) :
+                                                ( oldDW ? (oldDW->haveParticleSubset(material, patch) ? oldDW->getParticleSubset(material, patch) : NULL ) : NULL );
+            
+            AllocInfo ainfo( oldDW, newDW, material, patch, pset, pg, isGPUTask );
             fml_->allocate_fields( ainfo );
 
             if( hasPressureExpression_ ){
