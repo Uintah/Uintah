@@ -59,6 +59,7 @@ PSELIBS := \
         Core/OS                  \
         Core/Parallel            \
         Core/ProblemSpec         \
+        Core/Thread              \
         Core/Util
 
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY)
