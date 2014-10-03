@@ -42,6 +42,7 @@
 #endif
 
 #include <CCA/Components/MPM/ConstitutiveModel/ReactiveFlow.h>
+#include <CCA/Components/MPM/ConstitutiveModel/ReactiveFlow2.h>
 
 #include <CCA/Components/MPM/ConstitutiveModel/Kayenta.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Diamm.h>
