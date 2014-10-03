@@ -92,8 +92,6 @@ class DQMOM {
 
 public:
 
-  //enum NDF_DESCRIPTORS { TEMPERATURE, SIZE, ENTHALPY, ... }
-
   DQMOM( ArchesLabel* fieldLabels, std::string which_dqmom );
 
   ~DQMOM();

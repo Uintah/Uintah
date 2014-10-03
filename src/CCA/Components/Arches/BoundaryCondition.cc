@@ -3253,7 +3253,7 @@ void BoundaryCondition::setVelFromExtraValue__NEW( const Patch* patch, const Pat
        IntVector c  = *bound_ptr; 
        IntVector cp = *bound_ptr - insideCellDir; 
 
-       uVel[cp] = uVel[c] * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+       uVel[cp] = uVel[c];
 
      }
 
@@ -3265,7 +3265,7 @@ void BoundaryCondition::setVelFromExtraValue__NEW( const Patch* patch, const Pat
        IntVector c  = *bound_ptr; 
        IntVector cp = *bound_ptr - insideCellDir; 
 
-       uVel[cp] = uVel[c] * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+       uVel[cp] = uVel[c];
 
      }
      break; 
@@ -3276,7 +3276,7 @@ void BoundaryCondition::setVelFromExtraValue__NEW( const Patch* patch, const Pat
        IntVector c  = *bound_ptr; 
        IntVector cp = *bound_ptr - insideCellDir; 
 
-       vVel[cp] = vVel[c] * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+       vVel[cp] = vVel[c];
 
      }
      break; 
@@ -3287,7 +3287,7 @@ void BoundaryCondition::setVelFromExtraValue__NEW( const Patch* patch, const Pat
        IntVector c  = *bound_ptr; 
        IntVector cp = *bound_ptr - insideCellDir; 
 
-       vVel[cp] = vVel[c] * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+       vVel[cp] = vVel[c];
 
      }
      break; 
@@ -3298,7 +3298,7 @@ void BoundaryCondition::setVelFromExtraValue__NEW( const Patch* patch, const Pat
        IntVector c  = *bound_ptr; 
        IntVector cp = *bound_ptr - insideCellDir; 
 
-       wVel[cp] = wVel[c] * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+       wVel[cp] = wVel[c];
 
      }
      break; 
@@ -3309,7 +3309,7 @@ void BoundaryCondition::setVelFromExtraValue__NEW( const Patch* patch, const Pat
        IntVector c  = *bound_ptr; 
        IntVector cp = *bound_ptr - insideCellDir; 
 
-       wVel[cp] = wVel[c] * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+       wVel[cp] = wVel[c];
 
      }
      break; 

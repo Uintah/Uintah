@@ -37,26 +37,25 @@ SRCS := $(SRCDIR)/Switcher.cc \
 
 # ARCHES et. al. should have been seen by CCA/Components/sub.mk
 PSELIBS := \
-        Core/Containers  \
-        Core/Exceptions  \
-        Core/Util        \
-        Core/Geometry    \
-        Core/GeometryPiece  \
-        CCA/Ports        \
-        Core/Disclosure  \
-        Core/Exceptions  \
-        Core/Grid        \
-        Core/Math        \
-        Core/Parallel    \
-        Core/ProblemSpec \
-        Core/Util        \
-        $(ARCHES)        \
-        $(MPMARCHES)     \
-        $(ICE)           \
-        $(FVM)           \
-        $(MPM)           \
-        $(MPMICE)        \
-        $(MD)            \
+        CCA/Ports                          \
+        Core/Containers                    \
+        Core/Disclosure                    \
+        Core/Exceptions                    \
+        Core/Grid                          \
+        Core/Geometry                      \
+        Core/GeometryPiece                 \
+        Core/Math                          \
+        Core/Parallel                      \
+        Core/ProblemSpec                   \
+        Core/Util                          \
+        Core/Thread                        \
+        $(ARCHES)                          \
+        $(MPMARCHES)                       \
+        $(ICE)                             \
+        $(FVM)                             \
+        $(MPM)                             \
+        $(MPMICE)                          \
+        $(MD)                              \
         $(COMPONENTS)/Examples             \
         $(COMPONENTS)/ReduceUda            \
         $(COMPONENTS)/ProblemSpecification \

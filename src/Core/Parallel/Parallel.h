@@ -25,15 +25,19 @@
 #ifndef UINTAH_HOMEBREW_PARALLEL_H
 #define UINTAH_HOMEBREW_PARALLEL_H
 
+#include <Core/Thread/Thread.h>
+
 // Macros used to eliminate excess spew on large parallel runs...
 //
 //   Note, make sure that MPI_Init (or MPI_Init_thread) is called
-//   before using proc0cout() or proc0thread0cout().
+//   before using proc0cout().
 //
-#define proc0cout        if( Uintah::Parallel::getMPIRank() == 0 ) std::cout
-#define proc0cerr        if( Uintah::Parallel::getMPIRank() == 0 ) std::cerr
-#define proc0thread0cout if( Uintah::Parallel::getMPIRank() == 0 && SCIRun::Thread::self()->myid()== 0 ) std::cout
-#define proc0thread0cerr if( Uintah::Parallel::getMPIRank() == 0 && SCIRun::Thread::self()->myid()== 0 ) std::cerr
+#define proc0cout        if( Uintah::Parallel::getMPIRank() == 0 && \
+			       ( ( Uintah::Parallel::getNumThreads() > 1 && SCIRun::Thread::self()->myid() == 0 ) || \
+				 ( Uintah::Parallel::getNumThreads() <= 1 ) ) ) std::cout
+#define proc0cerr        if( Uintah::Parallel::getMPIRank() == 0 && \
+			       ( ( Uintah::Parallel::getNumThreads() > 1 && SCIRun::Thread::self()->myid() == 0 ) || \
+				 ( Uintah::Parallel::getNumThreads() <= 1 ) ) ) std::cerr
 
 namespace Uintah {
 
@@ -146,6 +150,20 @@ WARNING
       Parallel(const Parallel&);
       ~Parallel();
       Parallel& operator=(const Parallel&);
+
+     // static bool          allowThreads;
+
+      static int             numThreads_;
+      static bool            determinedIfUsingMPI_;
+
+      static bool            initialized_;
+      static bool            usingMPI_;
+      static bool            usingDevice_;
+     //      static MPI_Comm        worldComm_;
+      static int             worldRank_;
+      static int             worldSize_;
+      static ProcessorGroup* rootContext_;
+
    };
 } // End namespace Uintah
 

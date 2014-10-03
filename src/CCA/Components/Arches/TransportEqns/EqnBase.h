@@ -55,7 +55,6 @@ public:
 
   /** @brief Set any parameters from input file, initialize any constants, etc.. */
   virtual void problemSetup(const ProblemSpecP& inputdb) = 0;
-  virtual void problemSetup(const ProblemSpecP& inputdb, int qn) = 0;
 
   /** @brief Assign the algorithmic stage to the dependent sources **/ 
   virtual void assign_stage_to_sources() = 0; 
@@ -97,9 +96,6 @@ public:
   void computeConv( const Patch* patch, fT& Fdiff, 
                          oldPhiT& oldPhi );
 
-  /** @brief Method for cleaning up after a transport equation at the end of a timestep */
-  virtual void sched_cleanUp( const LevelP&, SchedulerP& sched ) = 0; 
-
   /** @brief Apply boundary conditions */
   // probably want to make this is a template
   template <class phiType> void computeBCs( const Patch* patch, std::string varName, phiType& phi );
@@ -133,10 +129,6 @@ public:
   /** @brief Return VarLabel for the scalar transported by this equation object, pointing to NEW data warehouse */
   inline const VarLabel* getTransportEqnLabel(){
     return d_transportVarLabel; };
-  
-  /** @brief Return VarLabel for the scalar transported by this equation object, pointing to OLD data warehouse */
-  inline const VarLabel* getoldTransportEqnLabel(){
-    return d_oldtransportVarLabel; };
   
   /** @brief Return a string containing the human-readable label for this equation object */
   inline const std::string getEqnName(){

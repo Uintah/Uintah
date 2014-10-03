@@ -58,7 +58,6 @@ public:
 
   /** @brief Set any parameters from input file, initialize any constants, etc.. */
   void problemSetup(const ProblemSpecP& inputdb);
-  void problemSetup(const ProblemSpecP& inputdb, int qn){};
 
   /** @brief Assign the stage to the sources as dictated by the eqn **/ 
   void assign_stage_to_sources(); 
@@ -104,8 +103,6 @@ public:
   /** @brief Apply boundary conditions */
   template <class phiType> void computeBCs( const Patch* patch, std::string varName, phiType& phi );
 
-  /** @brief Schedule the cleanup after this equation. */ 
-  void sched_cleanUp( const LevelP&, SchedulerP& sched ); 
   /** @brief Actually clean up after the equation. This just reinitializes 
              source term booleans so that the code can determine if the source
              term label should be allocated or just retrieved from the data 

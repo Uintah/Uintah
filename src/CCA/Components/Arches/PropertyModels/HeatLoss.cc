@@ -345,5 +345,8 @@ void HeatLoss::initialize( const ProcessorGroup* pc,
 
     PropertyModelBase::base_initialize( patch, prop ); // generic initialization functionality 
 
+    //Apply boundary conditions
+    _boundary_condition->setScalarValueBC( 0, patch, prop, _prop_name ); 
+
   }
 }

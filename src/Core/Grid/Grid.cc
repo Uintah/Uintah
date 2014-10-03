@@ -1101,22 +1101,24 @@ const Patch* Grid::getPatchByID(int patchid, int startingLevel) const
   return patch;
 }
 
-void Grid::assignBCS(const ProblemSpecP &grid_ps,LoadBalancer *lb)
+void
+Grid::assignBCS( const ProblemSpecP & grid_ps, LoadBalancer * lb )
 {
   TAU_PROFILE("Grid::assignBCS()", " ", TAU_USER);
-  for(int l=0;l<numLevels();l++)
+  for( int l = 0; l < numLevels(); l++ )
   {
-    LevelP level= getLevel(l);
-    level->assignBCS(grid_ps,lb);
+    LevelP level = getLevel( l );
+    level->assignBCS( grid_ps, lb );
   }
 }
 
-void Grid::setExtraCells(IntVector ex)
+void
+Grid::setExtraCells( const IntVector & ex )
 {
-  if (numLevels()>0)  {
+  if( numLevels() > 0 ) {
      throw ProblemSetupException("Cannot set extraCells after grid setup",
                                 __FILE__, __LINE__);
      return;
   }
-  d_extraCells= ex;
+  d_extraCells = ex;
 }

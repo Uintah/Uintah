@@ -730,7 +730,6 @@
         <!-- base information-->
         <NumberInternalCoordinates> 3 </NumberInternalCoordinates>
         <QuadratureNodes> [2,2,2] </QuadratureNodes>
-        <HighestOrder> [3,3,3] </HighestOrder>
         <InternalCoordinate name="partUVel" type="uVel"/> 
         <InternalCoordinate name="partVVel" type="vVel"/> 
         <InternalCoordinate name="partWVel" type="wVel"/> 

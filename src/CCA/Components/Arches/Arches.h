@@ -297,9 +297,6 @@ private:
   /** @brief Registers all possible equations by instantiating a builder in the factory */
   void registerTransportEqns(ProblemSpecP& db);
 
-  /** @brief Registers all possible DQMOM equations by instantiating a builder in the factory */
-  void registerDQMOMEqns(ProblemSpecP& db);
-  
   /** @brief Registers all possible CQMOM equations by instantiating a builder in the factory */
   void registerCQMOMEqns(ProblemSpecP& db);
 

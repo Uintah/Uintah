@@ -47,7 +47,7 @@
 
 namespace SCIRun {
   class ThreadGroup;
-class 	ThreadPoolHelper;
+class   ThreadPoolHelper;
 /**************************************
 
  CLASS
@@ -82,38 +82,38 @@ public:
   // The caller will block until all of the threads return.
   template<class T>
   void parallel(T* ptr, void (T::*pmf)(int), int numThreads) {
-    parallel(Parallel<T>(ptr, pmf),
-	     numThreads);
+    parallel( ThreadNS::Parallel<T>(ptr, pmf),
+              numThreads );
   }
 
   //////////
   // Another overloaded version of parallel that passes 1 argument
   template<class T, class Arg1>
   void parallel(T* ptr, void (T::*pmf)(int, Arg1),
-		int numThreads,
-		Arg1 a1) {
+                int numThreads,
+                Arg1 a1) {
     parallel(Parallel1<T, Arg1>(ptr, pmf, a1),
-	     numThreads);
+             numThreads);
   }
 
   //////////
   // Another overloaded version of parallel that passes 2 arguments
   template<class T, class Arg1, class Arg2>
   void parallel(T* ptr, void (T::* pmf)(int, Arg1, Arg2),
-		int numThreads,
-		Arg1 a1, Arg2 a2) {
+                int numThreads,
+                Arg1 a1, Arg2 a2) {
     parallel(Parallel2<T, Arg1, Arg2>(ptr, pmf, a1, a2),
-	     numThreads);
+             numThreads);
   }
 
   //////////
   // Another overloaded version of parallel that passes 3 arguments
   template<class T, class Arg1, class Arg2, class Arg3>
   void parallel(T* ptr, void (T::* pmf)(int, Arg1, Arg2, Arg3),
-		int numThreads,
-		Arg1 a1, Arg2 a2, Arg3 a3) {
+                int numThreads,
+                Arg1 a1, Arg2 a2, Arg3 a3) {
     parallel(Parallel3<T, Arg1, Arg2, Arg3>(ptr, pmf, a1, a2, a3),
-	     numThreads);
+             numThreads);
   }
 
 private:

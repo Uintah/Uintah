@@ -438,8 +438,8 @@ XDragModel::computeModel( const ProcessorGroup* pc,
         sphGas = cart2sph( cartGas );
         sphPart = cart2sph( cartPart );
 
-        double diff = sphGas.z() - sphPart.z();
-        double Re  = std::abs(diff)*length/(kvisc/den[c]);
+        double diff = sphGas.z() - sphPart.z(); // z is the velocity magnitude, not the z-veloctiy component
+        double Re  = std::abs(diff)*length/(kvisc/den[c]);  
         double phi;
 
         if(Re < 1.0) {

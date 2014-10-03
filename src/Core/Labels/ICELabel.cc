@@ -69,6 +69,7 @@ ICELabel::ICELabel()
   temp_CCLabel            = VarLabel::create("temp_CC",       CC_double);
   conc_CCLabel            = VarLabel::create("conc_CC",       CC_double);
   vel_CCLabel             = VarLabel::create("vel_CC",        CC_Vector);
+  velTau_CCLabel          = VarLabel::create("velTau_CC",     CC_Vector);
   rho_micro_CCLabel       = VarLabel::create("rho_micro_CC",  CC_double);
   sp_vol_CCLabel          = VarLabel::create("sp_vol_CC",     CC_double);
   DLabel                  = VarLabel::create("D",             CC_Vector); 
@@ -281,6 +282,7 @@ ICELabel::~ICELabel()
     VarLabel::destroy(conc_CC_XchangeLabel);
     VarLabel::destroy(vel_CCLabel);
     VarLabel::destroy(vel_CC_XchangeLabel);
+    VarLabel::destroy(velTau_CCLabel);
     VarLabel::destroy(rho_micro_CCLabel);
     VarLabel::destroy(sp_vol_CCLabel);
     VarLabel::destroy(DLabel);
