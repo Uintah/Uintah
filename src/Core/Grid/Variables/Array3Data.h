@@ -31,13 +31,6 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Core/Thread/Mutex.h>
-#include <iostream>
-#include <Core/Parallel/Parallel.h>
-
-// Used to sync cerr so it is readable when output by multiple threads
-extern SCIRun::Mutex cerrLock;
-
 namespace Uintah {
 
   using SCIRun::IntVector;
@@ -153,7 +146,6 @@ namespace Uintah {
     {
       CHECKARRAYBOUNDS(to_lowIndex.x(), 0, d_size.x());
       CHECKARRAYBOUNDS(to_lowIndex.y(), 0, d_size.y());
-
       CHECKARRAYBOUNDS(to_lowIndex.z(), 0, d_size.z());
       CHECKARRAYBOUNDS(to_highIndex.x(), to_lowIndex.x(), d_size.x()+1);
       CHECKARRAYBOUNDS(to_highIndex.y(), to_lowIndex.y(), d_size.y()+1);
@@ -195,7 +187,6 @@ namespace Uintah {
     Array3Data<T>::Array3Data(const IntVector& size)
     : d_size(size)
     {
-      cerrLock.lock();
       long s=d_size.x()*d_size.y()*d_size.z();
       if(s){
         d_data=new T[s];
@@ -208,23 +199,16 @@ namespace Uintah {
         for(int j=1;j<d_size.z()*d_size.y();j++){
           d_data3[0][j]=d_data3[0][j-1]+d_size.x();
         }
-        proc0cout << "Array3Data:  " << this << ", d_data: " << d_data << ", d_data3: " << d_data3 << ", size: " << s << "\n";
-
       } else {
-        proc0cout << "Array3Data:  " << this << ", not allocating anything\n";
         d_data=0;
         d_data3=0;
       }
-      cerrLock.unlock();
     }
 
   template<class T>
     Array3Data<T>::~Array3Data()
     {
-      cerrLock.lock();
-      proc0cout << "~Array3Data: " << this << ", ";
       if(d_data){
-        proc0cout << "d_data: " << d_data << ", d_data3: " << d_data3;
         delete[] d_data;
         d_data=0;
         delete[] d_data3[0];
@@ -232,8 +216,6 @@ namespace Uintah {
         delete[] d_data3;
         d_data3=0;
       }
-      proc0cout << "\n";
-      cerrLock.unlock();
     }
 
 } // End namespace Uintah
