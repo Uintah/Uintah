@@ -263,6 +263,7 @@ namespace Wasatch{
     Uintah::DataWarehouse* const newDW;
     const int materialIndex;
     const Uintah::Patch* const patch;
+    Uintah::ParticleSubset* const pset;
     const Uintah::ProcessorGroup* const procgroup;
     const bool isGPUTask;
 
@@ -270,15 +271,33 @@ namespace Wasatch{
                Uintah::DataWarehouse* const newdw,
                const int matlIndex,
                const Uintah::Patch* p,
+               Uintah::ParticleSubset* particlesubset,
                const Uintah::ProcessorGroup* const pg,
                const bool isgpu=false )
     : oldDW( olddw ),
       newDW( newdw ),
       materialIndex( matlIndex ),
       patch( p ),
+      pset (particlesubset),
       procgroup( pg ),
       isGPUTask( isgpu )
     {}
+    
+    AllocInfo( Uintah::DataWarehouse* const olddw,
+              Uintah::DataWarehouse* const newdw,
+              const int matlIndex,
+              const Uintah::Patch* p,
+              const Uintah::ProcessorGroup* const pg,
+              const bool isgpu=false )
+    : oldDW( olddw ),
+    newDW( newdw ),
+    materialIndex( matlIndex ),
+    patch( p ),
+    pset (NULL),
+    procgroup( pg ),
+    isGPUTask( isgpu )
+    {}
+    
   };
 
 
