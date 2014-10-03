@@ -254,13 +254,13 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
      attributes.clear();
      checkpoint->getAttributes( attributes );
       
-     interval         = attributes[ "interval" ];
-     timestepInterval = attributes[ "timestepInterval" ];
-     walltimeStart    = attributes[ "walltimeStart" ];
-     walltimeInterval = attributes[ "walltimeInterval" ];
-     walltimeStart    = attributes[ "walltimeStartHours" ];
+     interval              = attributes[ "interval" ];
+     timestepInterval      = attributes[ "timestepInterval" ];
+     walltimeStart         = attributes[ "walltimeStart" ];
+     walltimeInterval      = attributes[ "walltimeInterval" ];
+     walltimeStartHours    = attributes[ "walltimeStartHours" ];
      walltimeIntervalHours = attributes[ "walltimeIntervalHours" ];
-     cycle            = attributes[ "cycle" ];
+     cycle                 = attributes[ "cycle" ];
 
      if( interval != "" ) {
        d_checkpointInterval = atof( interval.c_str() );
