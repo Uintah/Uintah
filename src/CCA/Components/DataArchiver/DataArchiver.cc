@@ -259,7 +259,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
      walltimeStart    = attributes[ "walltimeStart" ];
      walltimeInterval = attributes[ "walltimeInterval" ];
      walltimeStart    = attributes[ "walltimeStartHours" ];
-     walltimeInterval = attributes[ "walltimeIntervalHours" ];
+     walltimeIntervalHours = attributes[ "walltimeIntervalHours" ];
      cycle            = attributes[ "cycle" ];
 
      if( interval != "" ) {
