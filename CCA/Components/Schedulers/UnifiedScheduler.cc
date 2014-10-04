@@ -1595,9 +1595,9 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
-                  gpu_stats << "Post H2D copy of " << reqVarName <<  ", size (bytes) = "  << std::dec << host_bytes
-                            << " from " << std::hex << host_ptr << " to " << std::hex <<  device_ptr << ", using stream "
-                            << std::hex << dtask->getCUDAStream() << std::dec << std::endl;
+                  gpu_stats << "Post H2D copy of REQUIRES (" << reqVarName <<  "), size (bytes) = "  << std::dec << host_bytes
+                            << " from " << std::hex << host_ptr << " to " << std::hex <<  device_ptr
+                            << ", using stream " << std::hex << dtask->getCUDAStream() << std::dec << std::endl;
                 }
                 cerrLock.unlock();
               }
@@ -1659,9 +1659,9 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
-                  gpu_stats << "Post H2D copy of \"" << reqVarName << "\", size = " << std::dec << host_bytes << " from "
-                            << std::hex << host_ptr << " to " << std::hex << device_var.getPointer() << ", using stream "
-                            << std::hex << dtask->getCUDAStream() << std::dec << std::endl;
+                  gpu_stats << "Post H2D copy of REQUIRES (" << reqVarName <<  "), size (bytes) = "  << std::dec << host_bytes
+                            << " from " << std::hex << host_ptr << " to " << std::hex <<  device_ptr
+                            << ", using stream " << std::hex << dtask->getCUDAStream() << std::dec << std::endl;
                 }
                 cerrLock.unlock();
               }
@@ -1710,9 +1710,9 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
-                  gpu_stats << "Post H2D copy of \"" << reqVarName << "\", size = " << std::dec << host_bytes << " from "
-                            << std::hex << host_ptr << " to " << std::hex << device_var.getPointer() << ", using stream "
-                            << std::hex << dtask->getCUDAStream() << std::dec << std::endl;
+                  gpu_stats << "Post H2D copy of REQUIRES (" << reqVarName <<  "), size (bytes) = "  << std::dec << host_bytes
+                            << " from " << std::hex << host_ptr << " to " << std::hex <<  device_ptr
+                            << ", using stream " << std::hex << dtask->getCUDAStream() << std::dec << std::endl;
                 }
                 cerrLock.unlock();
               }
@@ -1834,7 +1834,7 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
-                  gpu_stats << "Allocated device copy of \"" << compVarName << "\", size = " << std::dec << num_bytes
+                  gpu_stats << "Allocated device memory for COMPUTES (" << compVarName << "), size = " << std::dec << num_bytes
                             << " at " << std::hex << device_ptr << " on device " << std::dec << dtask->getDeviceNum()
                             << std::dec << std::endl;
                 }
@@ -1857,7 +1857,7 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
-                  gpu_stats << "Allocated device copy of \"" << compVarName << "\", size = " << std::dec << num_bytes
+                  gpu_stats << "Allocated device memory for COMPUTES (" << compVarName << "), size = " << std::dec << num_bytes
                             << " at " << std::hex << device_ptr << " on device " << std::dec << dtask->getDeviceNum()
                             << std::dec << std::endl;
                 }
@@ -1880,7 +1880,7 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
                         if (gpu_stats.active()) {
                           cerrLock.lock();
                           {
-                            gpu_stats << "Allocated device copy of \"" << compVarName << "\", size = " << std::dec << num_bytes
+                            gpu_stats << "Allocated device memory for COMPUTES (" << compVarName << "), size = " << std::dec << num_bytes
                                       << " at " << std::hex << device_ptr << " on device " << std::dec << dtask->getDeviceNum()
                                       << std::dec << std::endl;
                           }
@@ -2024,9 +2024,9 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
                 if (gpu_stats.active()) {
                   cerrLock.lock();
                   {
-                    gpu_stats << "Post D2H copy of \"" << compVarName << "\", size = " << std::dec << host_bytes << " to "
-                              << std::hex << host_ptr << " from " << std::hex << device_ptr << ", using stream "
-                              << std::hex << dtask->getCUDAStream() << std::dec << std::endl;
+                    gpu_stats << "Post D2H copy of COMPUTES (" << compVarName << "), size = " << std::dec << host_bytes
+                              << " from " << std::hex << device_ptr << " to " << std::hex << host_ptr
+                              << ", using stream " << std::hex << dtask->getCUDAStream() << std::dec << std::endl;
                   }
                   cerrLock.unlock();
                 }
@@ -2077,9 +2077,9 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
                 if (gpu_stats.active()) {
                   cerrLock.lock();
                   {
-                    gpu_stats << "Post D2H copy of \"" << compVarName << "\", size = " << std::dec << host_bytes << " to "
-                              << std::hex << host_ptr << " from " << std::hex << device_ptr << ", using stream "
-                              << std::hex << dtask->getCUDAStream() << std::dec << std::endl;
+                    gpu_stats << "Post D2H copy of COMPUTES (" << compVarName << "), size = " << std::dec << host_bytes
+                              << " from " << std::hex << device_ptr << " to " << std::hex << host_ptr
+                              << ", using stream " << std::hex << dtask->getCUDAStream() << std::dec << std::endl;
                   }
                   cerrLock.unlock();
                 }
@@ -2117,9 +2117,9 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
                 if (gpu_stats.active()) {
                   cerrLock.lock();
                   {
-                    gpu_stats << "Post D2H copy of \"" << compVarName << "\", size = " << std::dec << host_bytes << " to "
-                              << std::hex << host_ptr << " from " << std::hex << device_ptr << ", using stream "
-                              << std::hex << dtask->getCUDAStream() << std::dec << std::endl;
+                    gpu_stats << "Post D2H copy of COMPUTES (" << compVarName << "), size = " << std::dec << host_bytes
+                              << " from " << std::hex << device_ptr << " to " << std::hex << host_ptr
+                              << ", using stream " << std::hex << dtask->getCUDAStream() << std::dec << std::endl;
                   }
                   cerrLock.unlock();
                 }
