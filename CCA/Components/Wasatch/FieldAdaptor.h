@@ -326,8 +326,7 @@ namespace Wasatch{
                                    const AllocInfo& ainfo,
                                    const SpatialOps::GhostData ghostData,
                                    short int deviceIndex=CPU_INDEX,
-                                   double* uintahDeviceVar = NULL,
-                                   const bool isGPUTask = false )
+                                   double* uintahDeviceVar = NULL )
   {
     /*
      * NOTE: before changing things here, look at the line:
@@ -354,10 +353,11 @@ namespace Wasatch{
 
     double* fieldValues_ = NULL;
     FieldT* field;
-    if( isGPUTask && IS_GPU_INDEX(deviceIndex) ){ // homogeneous GPU task
-#     ifdef HAVE_CUDA
-      fieldValues_ = const_cast<double*>( uintahDeviceVar );
-#     endif
+    if( ainfo.isGPUTask && IS_GPU_INDEX(deviceIndex) ){ // homogeneous GPU task
+      assert( uintahVar != NULL );
+      fieldValues_ = uintahDeviceVar;
+      std::cout << "Wrapping field with size " << size << ", offset="
+                << offset << ", extent=" << extent << std::endl;
       field = new FieldT( so::MemoryWindow( size, offset, extent ),
                           so::BoundaryCellInfo::build<FieldT>(bcPlus),
                           ghostData,
@@ -390,8 +390,7 @@ namespace Wasatch{
       const AllocInfo& ainfo,
       const SpatialOps::GhostData ghostData,
       const short int deviceIndex,
-      double* uintahDeviceVar,
-      const bool isGPUTask ) // abhi : not being used yet)
+      double* uintahDeviceVar ) // abhi : not being used yet)
   {
     namespace so = SpatialOps;
     typedef ParticleField::value_type ValT;
@@ -425,8 +424,7 @@ namespace Wasatch{
       const AllocInfo& ainfo,
       const SpatialOps::GhostData ghostData,
       const short int deviceIndex,
-      double* uintahDeviceVar,
-      const bool isGPUTask ) // abhi : not being used yet)
+      double* uintahDeviceVar ) // abhi : not being used yet)
   {
     namespace so = SpatialOps;
     typedef ParticleField::value_type ValT;
@@ -465,8 +463,7 @@ namespace Wasatch{
       const AllocInfo& ainfo,
       const SpatialOps::GhostData ghostData,
       const short int deviceIndex,
-      double* uintahDeviceVar,
-      const bool isGPUTask ) // abhi : not being used yet
+      double* uintahDeviceVar ) // abhi : not being used yet
   {
     namespace so = SpatialOps;
     typedef so::SingleValueField FieldT;
@@ -489,8 +486,7 @@ namespace Wasatch{
       const AllocInfo& ainfo,
       const SpatialOps::GhostData ghostData,
       const short int deviceIndex,
-      double* uintahDeviceVar,
-      const bool isGPUTask ) // abhi : not being used yet
+      double* uintahDeviceVar ) // abhi : not being used yet
   {
     namespace so = SpatialOps;
     typedef so::SingleValueField FieldT;
