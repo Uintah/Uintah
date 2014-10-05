@@ -354,7 +354,7 @@ namespace Wasatch{
     double* fieldValues_ = NULL;
     FieldT* field;
     if( ainfo.isGPUTask && IS_GPU_INDEX(deviceIndex) ){ // homogeneous GPU task
-      assert( uintahVar != NULL );
+      assert( uintahDeviceVar != NULL );
       fieldValues_ = uintahDeviceVar;
       std::cout << "Wrapping field with size " << size << ", offset="
                 << offset << ", extent=" << extent << std::endl;
