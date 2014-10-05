@@ -97,7 +97,7 @@ namespace Uintah {
     private:
       static const std::string nonbondedType;
       const double d_nonbondedRadius;
-      const double d_nonbondedGhostCells;
+      const int d_nonbondedGhostCells;
 
   };
 }

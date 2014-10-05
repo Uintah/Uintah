@@ -1257,7 +1257,7 @@ C
       mv2tot = 0.0d0
       do iat = 1,nat
         mv2tot = mv2tot + (v(1,iat)*v(1,iat)+v(2,iat)*v(2,iat)+
-     +      v(3,iat)*v(3,iat)) * mass(iat)
+     +                     v(3,iat)*v(3,iat)) * mass(iat)
       end do
 C
       kinen = 0.5d0 * mv2tot/(41.84d5)
@@ -1265,7 +1265,6 @@ C
       temp   = mv2tot/(dble(ndof) * gask * 1000.0d0)
 C
 C     *****for fixed temperature
-C
       if (fixtemp) then 
         ratio = sqrt(tstart/temp)
         do iat = 1,nat
@@ -1277,22 +1276,19 @@ C
       end if
 C
 C     *****Pressure and stress tensor calculations
-C
       if (newpress) then
         volinv =1.0d0/(box*box*box)
         dndof = dble(ndof-3)/dble(ndof)
 C       etrunc = esumninj*volinv
 C
 C     *****pressure terms
-C
         ptrunc = psumninj*volinv*volinv
-        pke = 45.42d0*dble(ndof-3)*temp*volinv
-        pvir  = 2.2857d+04*vir*volinv
-        pintr =  pvir + ptrunc 
-        pres       =  pke + pintr
+        pke    = 45.42d0*dble(ndof-3)*temp*volinv
+        pvir   = 2.2857d+04*vir*volinv
+        pintr  = pvir + ptrunc
+        pres   = pke + pintr
 C
 C     *****stress terms
-C
         do kk = 1,3
           do jj = 1,3
             prtkine(kk,jj) = 0.0d0
@@ -1311,7 +1307,7 @@ C
         do kk = 1,3
           do jj = 1,3
             stresstr(kk,jj) = 0.0d0
-            if (kk  .eq. jj) stresstr(kk,jj) = ptrunc
+            if (kk .eq. jj) stresstr(kk,jj) = ptrunc
           end do
         end do
 C
@@ -1330,8 +1326,7 @@ C
             stressold(kk,jj) = stress(kk,jj)
           end do
         end do
-C
-       else 
+      else
         pres = presold
         do kk = 1,3
           do jj = 1,3
@@ -1909,7 +1904,7 @@ C
       kinterch = 0
 C
       do istep = 1,multibig
-C
+C     ***** Update velocity by half step
         do iat = 1, nat
           rmass = 41.84d0*massinv(iat)
           do kk = 1,3
@@ -1965,7 +1960,7 @@ C
         if (istep .eq. multibig) then
           if (mod(kount,kvir) .eq. 0) then
             newpress = .true.
-           else
+          else
             newpress = .false.
           end if
         endif
@@ -1987,102 +1982,90 @@ C
           end do
         end do
       
-         if ((mod(istep,multimed).eq.0).and.
-     +                 (istep.ne.multibig)) then
-C
+        if ( (mod(istep,multimed).eq.0) .and.
+     +       (istep.ne.multibig)              ) then
 C     *****Energy block
-C
-C
-C
-           CALL en4cen()
-           CALL interchs()
-           CALL DoDummy(f)
-C
+          CALL en4cen()
+          CALL interchs()
+          CALL DoDummy(f)
 C     *****End of energy block
-C
-C
-C
-           do iat = 1,nat
-             do kk = 1,3
-               fnow(kk,iat) = fref(kk,iat) +
-     $                       multimed*(f(kk,iat)-fref(kk,iat)) 
-             end do
-           end do
-         endif   ! medium timestep 
-C          
-         if (istep .eq. multibig)then
-C
-C     *****Energy block
-C
-           do iat = 1,nat
+          do iat = 1,nat
             do kk = 1,3
-             f(kk,iat) = 0.0d0
+              fnow(kk,iat) = fref(kk,iat) +
+     $                         multimed*(f(kk,iat)-fref(kk,iat))
             end do
-           end do
-           CALL en4cen()
-           do iat = 1,nat
+          end do
+        endif   ! medium timestep
+C          
+        if (istep .eq. multibig)then
+C     *****Energy block
+          do iat = 1,nat
+            do kk = 1,3
+              f(kk,iat) = 0.0d0
+            end do
+          end do
+          CALL en4cen()
+          do iat = 1,nat
             do kk = 1,3
              fshort(kk,iat) = fref(kk,iat)+f(kk,iat)
              f(kk,iat) = fref(kk,iat)+f(kk,iat)
             end do
-           end do
+          end do
 C
-           unbd = 0.0d0
+          unbd = 0.0d0
 C
-           CALL reciprocal()
-           CALL correct()
-           CALL interch()
-           CALL recipQmu()
-           CALL DoDummy(fshort)
-           CALL DoDummy(f)
+          CALL reciprocal()
+          CALL correct()
+          CALL interch()
+          CALL recipQmu()
+          CALL DoDummy(fshort)
+          CALL DoDummy(f)
 C
-           if (newpress) then
-             vir=vir+virdummy
-             do kk = 1,3
-               do jj=1,3
-                 tvirpo(kk,jj)=tvirpo(kk,jj)+tvirdummy(kk,jj)
-               end do
-             end do
-           endif
+          if (newpress) then
+            vir=vir+virdummy
+            do kk = 1,3
+              do jj=1,3
+                tvirpo(kk,jj)=tvirpo(kk,jj)+tvirdummy(kk,jj)
+              end do
+            end do
+          endif
 C        
-           do iat = 1,nat
+          do iat = 1,nat
             do kk = 1,3
               fnow(kk,iat) = fref(kk,iat)+
-     $                      multimed*(fshort(kk,iat)-fref(kk,iat))
+     $                         multimed*(fshort(kk,iat)-fref(kk,iat))
             end do
-           end do
+          end do
 C
-           if (mod(kount,knben) .eq. 0) CALL nbenergy()
-C
+          if (mod(kount,knben) .eq. 0) CALL nbenergy()
 C     *****End of energy block
-C
-           if (constrain .and. newpress)then
-             do iat = 1,nat
+          if (constrain .and. newpress)then
+            do iat = 1,nat
               rmass = 41.84d0*massinv(iat)
               do kk =1 ,3
                 x2(kk,iat) = x(kk,iat)+1.0d-5*delt*v(kk,iat)+
-     +                  1.0d-5*(delt*delt)*f(kk,iat)*rmass
+     +                         1.0d-5*(delt*delt)*f(kk,iat)*rmass
                 if (x2(kk,iat) .gt. box) x2(kk,iat) = x2(kk,iat) - box
                 if (x2(kk,iat) .lt. 0.0) x2(kk,iat) = x2(kk,iat) + box
               end do
-             end do
-             CALL shake(x,x2,x2)
-           end if
-C
+            end do
+            CALL shake(x,x2,x2)
+          end if
+
           do iat = 1,nat
             do kk = 1,3
               fnow(kk,iat)=fnow(kk,iat)+
-     $                     multibig*(f(kk,iat)-fshort(kk,iat))
+     $                       multibig*(f(kk,iat)-fshort(kk,iat))
             end do
           end do
         end if   !(istep .eq. multibig) 
 C
-        if (constrain)then
+        if (constrain) then
           do iat = 1,nat
             rmass = 41.84d0*massinv(iat)
             do kk =1 ,3
               x2(kk,iat) = x(kk,iat)+1.0d-5*delt*v(kk,iat)+
-     +              1.0d-5*(delt*delt)*fnow(kk,iat)*rmass
+     +                       1.0d-5*(delt*delt)*fnow(kk,iat)*rmass
               if (x2(kk,iat) .gt. box) x2(kk,iat) = x2(kk,iat) - box
               if (x2(kk,iat) .lt. 0.0) x2(kk,iat) = x2(kk,iat) + box
             end do
@@ -2097,12 +2080,11 @@ C
             do kk = 1,3
               diff = x2(kk,iat) - x(kk,iat)
               if (abs(diff) .gt. el2) diff = diff - dsign(box,diff)
-              fnow(kk,iat) =(diff - 1.0d-5*delt*v(kk,iat))*mass(iat)/
-     +                 (41.84d-5*delt*delt)
+              fnow(kk,iat) =(diff - 1.0d-5*delt*v(kk,iat))*
+     +                        mass(iat)/(41.84d-5*delt*delt)
             end do
           end do
         end if
-C
         do iat = 1, nat
           rmass = 41.84d0*massinv(iat)
           do kk = 1,3
@@ -2125,7 +2107,6 @@ C
       if (nve) CALL getkin()
 C
       poten = ebond + ebend + etort + eopbs + unbd
-C
       CALL result()
 C
       return

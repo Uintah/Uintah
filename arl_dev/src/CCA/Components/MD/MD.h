@@ -405,6 +405,10 @@ namespace Uintah {
       // copy constructor and assignment operator (privatized on purpose)
       MD(const MD&);
       MD& operator=(const MD&);
+
+      double d_referenceEnergy;
+      double d_baseTimeStep;
+      bool d_referenceStored;
   };
 
 }
