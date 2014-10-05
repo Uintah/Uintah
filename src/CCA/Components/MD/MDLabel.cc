@@ -52,6 +52,8 @@ globalLabels::globalLabels() { // create variable labels used across all simulat
 
   rKineticEnergy= VarLabel::create("e_kin", sum_vartype::getTypeDescription());
   rKineticStress= VarLabel::create("S_kin", matrix_sum::getTypeDescription());
+  rTotalMomentum= VarLabel::create("momentum", sumvec_vartype::getTypeDescription());
+  rTotalMass    = VarLabel::create("mass", sum_vartype::getTypeDescription());
 }
 
 globalLabels::~globalLabels() { // destroy variable labels used across all simulation aspects
@@ -63,6 +65,8 @@ globalLabels::~globalLabels() { // destroy variable labels used across all simul
   VarLabel::destroy(pID_preReloc);
   VarLabel::destroy(rKineticEnergy);
   VarLabel::destroy(rKineticStress);
+  VarLabel::destroy(rTotalMomentum);
+  VarLabel::destroy(rTotalMass);
 }
 
 nonbondedLabels::nonbondedLabels() { // create variable labels used in nonbonded calculation contexts

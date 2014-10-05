@@ -13,11 +13,11 @@
    <!--____________________________________________________________________-->
 
    <Time>
-       <maxTime>1.0</maxTime>
+       <maxTime>10.0</maxTime>
        <initTime>0.0</initTime>
-       <delt_min>0.0</delt_min>
-       <delt_max>0.01</delt_max>
-       <delt_init>0.001</delt_init>
+       <delt_min>0.25</delt_min>
+       <delt_max>0.25</delt_max>
+       <delt_init>0.25</delt_init>
        <max_Timesteps>5</max_Timesteps>
        <timestep_multiplier>1</timestep_multiplier>
 
@@ -57,23 +57,26 @@
     
    <MD>
      <Forcefield type="Lucretius">
-       <coordinateFile>NaCl_coords.inp</coordinateFile>
-       <forcefieldFile>NaCl_ff.dat</forcefieldFile>
+<!--       <coordinateFile>NaCl_coords.inp</coordinateFile>
+       <forcefieldFile>NaCl_ff.dat</forcefieldFile> -->
+       <coordinateFile>2Particle_coords.inp</coordinateFile>
+           <forcefieldFile>2Particle_ff.dat</forcefieldFile>
      </Forcefield>
 
      <System ensemble="NVE">
        <unitCell format="Isotropic">
-         <boxSize>135.1780555</boxSize>
+         <boxSize>50.0</boxSize>
+<!--       <boxSize>44.2</boxSize> -->
        </unitCell>
        <cutoffRadius>10.0</cutoffRadius>
      </System>
 
      <Integrator type="velocity">
-       <timestep>0.5</timestep>
+       <timestep>0.25</timestep>
        <numberSteps>10</numberSteps>
      </Integrator>
 
-     <Electrostatics type="SPME">
+     <Electrostatics type="none">
        <ewaldBeta>0.25</ewaldBeta>
        <kGrids>[32,32,32]</kGrids>
        <splineOrder>6</splineOrder>
@@ -97,7 +100,7 @@
               <lower>[0,0,0]</lower>
               <upper>[50,50,50]</upper>
               <resolution>[50,50,50]</resolution>
-              <patches>[1,1,2]</patches>
+              <patches>[1,1,1]</patches>
            </Box>
            <periodic>[1,1,1]</periodic>
        </Level>

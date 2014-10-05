@@ -107,11 +107,10 @@ namespace Uintah {
 
      virtual double ffEnergyToInternal() const
      {
-       // Internal:  g * nm^2 / ns^2
+       // Internal:  J/mol
        // Lucretius: kCal/mol
-       // Lucretius->Internal = L/MDUnits::energyTokCal/MDUnits::atomToMoles
-
-       return 1.0 / (MDUnits::energyTokCal());
+       // Lucretius->Internal = 4184.0
+       return 4184.0;  //Convert from kCal/mol to J/mol
 
      }
 

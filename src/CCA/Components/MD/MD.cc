@@ -81,6 +81,8 @@ MD::MD(const ProcessorGroup* myworld) :
     UintahParallelComponent(myworld)
 {
   d_label = scinew MDLabel();
+  d_referenceEnergy = 0.0;
+  d_referenceStored = false;
 }
 
 MD::~MD()
@@ -323,6 +325,8 @@ void MD::scheduleInitialize(const LevelP&   level,
 
   task->computes(d_label->global->rKineticEnergy);
   task->computes(d_label->global->rKineticStress);
+  task->computes(d_label->global->rTotalMomentum);
+  task->computes(d_label->global->rTotalMass);
 
   // FIXME -- Original, no longer correct?
   //sched->addTask(task, level->eachPatch(), materials);
@@ -417,7 +421,7 @@ void MD::scheduleTimeAdvance(const LevelP& level,
 
   scheduleElectrostaticsFinalize(sched, patches, matls, level);
 
-  scheduleKineticCalculations(sched, patches, matls, level);
+//  scheduleKineticCalculations(sched, patches, matls, level);
 
   scheduleUpdatePosition(sched, patches, matls, level);
 
@@ -457,6 +461,7 @@ void MD::scheduleKineticCalculations(      SchedulerP&  baseScheduler,
   // Compures kinetic energy and stress.
   task->computes(d_label->global->rKineticEnergy);
   task->computes(d_label->global->rKineticStress);
+  task->computes(d_label->global->rTotalMomentum);
 
   baseScheduler->addTask(task, patches, atomTypes);
 }
@@ -723,25 +728,15 @@ void MD::scheduleUpdatePosition(SchedulerP& sched,
   task->requires(Task::OldDW, d_label->global->pID, Ghost::None, 0);
   task->requires(Task::OldDW, d_label->global->pV, Ghost::None, 0);
 
-  // d_forcefield->addUpdateRequires();
+  // Need these to offset center of mass momentum
+  task->requires(Task::OldDW, d_label->global->rTotalMomentum);
+  task->requires(Task::OldDW, d_label->global->rTotalMass);
+
   task->requires(Task::NewDW, d_label->nonbonded->pF_nonbonded_preReloc, Ghost::None, 0);
-  // d_electrostatics->addUpdateRequires();
   task->requires(Task::NewDW, d_label->electrostatic->pF_electroInverse_preReloc, Ghost::None, 0);
   task->requires(Task::NewDW, d_label->electrostatic->pF_electroReal_preReloc, Ghost::None, 0);
 
-//  task->requires(Task::OldDW, d_label->pXLabel, Ghost::None, 0);
-//  task->requires(Task::OldDW, d_label->pParticleIDLabel, Ghost::None, 0);
-
-  // And the newly calculated forces
-//  task->requires(Task::NewDW, d_label->pNonbondedForceLabel_preReloc, Ghost::None, 0);
-//  task->requires(Task::NewDW, d_label->pElectrostaticsReciprocalForce_preReloc, Ghost::None, 0);
-//  task->requires(Task::NewDW, d_label->pElectrostaticsRealForce_preReloc, Ghost::None, 0);
-//  task->requires(Task::NewDW, d_lb->pElectrostaticsForceLabel_preReloc, Ghost::None, 0);
-//  task->requires(Task::OldDW, d_lb->pAccelLabel, Ghost::None, 0);
-//  task->requires(Task::OldDW, d_lb->pVelocityLabel, Ghost::None, 0);
-//  task->requires(Task::OldDW, d_lb->pMassLabel, Ghost::None, 0);
-
-  // Not sure what this does atm - JBH, 4-7-14
+  // Grabs delta_t from the previous step
   task->requires(Task::OldDW, d_sharedState->get_delt_label());
 
   // From integration we get new positions and velocities
@@ -749,6 +744,10 @@ void MD::scheduleUpdatePosition(SchedulerP& sched,
   task->computes(d_label->global->pID_preReloc);
   task->computes(d_label->global->pV_preReloc);
 
+  task->computes(d_label->global->rKineticEnergy);
+  task->computes(d_label->global->rKineticStress);
+  task->computes(d_label->global->rTotalMomentum);
+  task->computes(d_label->global->rTotalMass);
 //  task->computes(d_label->pXLabel_preReloc);
 //  task->computes(d_label->pVelocityLabel_preReloc);
 //  task->modifies(d_lb->pNonbondedForceLabel_preReloc);
@@ -826,6 +825,12 @@ void MD::initialize(const ProcessorGroup*   pg,
                 << std::endl;
   }
 
+
+  double          kineticEnergy = 0.0;
+  double          totalMass     = 0.0;
+  SCIRun::Vector  totalMomentum = MDConstants::V_ZERO;
+  Uintah::Matrix3 kineticStress = MDConstants::M3_0;
+
   for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) {
     // Loop over perProcPatches
     const Patch*        currPatch           =   perProcPatches->get(patchIndex);
@@ -834,48 +839,50 @@ void MD::initialize(const ProcessorGroup*   pg,
 
     (const_cast<Patch*> (currPatch))->getLevel(true)->setdCell(cellDimensions);
 
+    double          atomTypeVelocitySquared     = 0.0;
+    SCIRun::Vector  atomTypeCumulativeVelocity  = MDConstants::V_ZERO;
+    Uintah::Matrix3 atomTypeStressTensor        = MDConstants::M3_0;
     for (size_t localType = 0; localType < numAtomTypes; ++localType) {
       // Loop over materials
       size_t        globalID    = matls->get(localType);
       MDMaterial*   atomType    = d_sharedState->getMDMaterial(globalID);
       std::string   typeLabel   = atomType->getMaterialLabel();
-
       // Match coordinates to material and extract coordinate list
       std::vector<atomData*>* currAtomList =
                                   parsedCoordinates->getAtomList(typeLabel);
-
       size_t numAtomsOfType     = parsedCoordinates->getAtomListSize(typeLabel);
 
       std::vector<Point>            localAtomCoordinates;
       std::vector<size_t>           localAtomID;
       std::vector<SCIRun::Vector>   localAtomVelocity;
 
-//      std::cout << "Checking for location of atoms from pool of "
-//                << numAtomsOfType << " atoms with the label "
-//                << typeLabel << " with material ID: "
-//                << globalID << std::endl;
-
+      double atomMass = atomType->getMass();
       for (size_t atomIndex = 0; atomIndex < numAtomsOfType; ++atomIndex) {
         // Loop over all atoms of material
         atomData*   currAtom        = (*currAtomList)[atomIndex];
         Point       currPosition    = currAtom->getPosition();
-//        IntVector   currCell        =
-//                        currPatch
-//                        ->getLevel()
-//                          ->getCellIndex(currPosition);
 
-        // Build local atom list for atoms of material in current patch
-        bool atomInPatch = currPatch->containsPoint(currPosition);
-
-        if (atomInPatch) { // Atom is on this patch
+        if (currPatch->containsPoint(currPosition))
+        { // Atom is on this patch
           size_t currID = currAtom->getID();
           SCIRun::Vector currVelocity = currAtom->getVelocity();
+
+          // Use the forcefield to set the units of the read in coordinates
+          // and velocity to internally consistent values
+          currPosition *= d_forcefield->ffDistanceToInternal();
+          currVelocity *= d_forcefield->ffVelocityToInternal();
+
+          totalMass         += atomMass;
+          atomTypeVelocitySquared       += currVelocity.length2();
+          atomTypeCumulativeVelocity    += currVelocity;
+          atomTypeStressTensor          += OuterProduct(currVelocity,currVelocity);
 
           localAtomCoordinates.push_back(currPosition);
           localAtomID.push_back(currID);
           localAtomVelocity.push_back(currVelocity);
         }
       }
+
 
       // Create this patch's particle set for atoms of current material
       size_t            numAtoms = localAtomCoordinates.size();
@@ -914,20 +921,6 @@ void MD::initialize(const ProcessorGroup*   pg,
         pX[atomIndex]    = localAtomCoordinates[atomIndex];
         pV[atomIndex]    = localAtomVelocity[atomIndex];
         pID[atomIndex]   = localAtomID[atomIndex];
-
-//        if (md_dbg.active()) { // Output for debug..
-//          cerrLock.lock();
-//          std::cout.setf(std::ios_base::showpoint);  // print decimal and trailing zeros
-//          std::cout.setf(std::ios_base::left);  // pad after the value
-//          std::cout.setf(std::ios_base::uppercase);  // use upper-case scientific notation
-//          std::cout << std::setw(10) << " Patch_ID: " << std::setw(4) << currPatch->getID();
-//          std::cout << std::setw(14) << " Particle_ID: " << std::setw(4) << pID[atomIndex];
-//          std::cout << std::setw(12) << " Position: " << pX[atomIndex];
-//          std::cout << std::endl;
-//          cerrLock.unlock();
-//        }
-
-
       }
 
       CCVariable<int> subSchedulerDependency;
@@ -938,12 +931,18 @@ void MD::initialize(const ProcessorGroup*   pg,
                             Ghost::None,
                             0);
       subSchedulerDependency.initialize(0);
-
+      kineticEnergy += atomTypeVelocitySquared * atomMass;
+      totalMomentum += atomTypeCumulativeVelocity * atomMass;
+      kineticStress += atomTypeStressTensor * atomMass;
     } // Loop over materials
   } // Loop over patches
 
-  newDW->put(sum_vartype(0),d_label->global->rKineticEnergy);
-  newDW->put(matrix_sum(MDConstants::M3_0),d_label->global->rKineticStress);
+  kineticEnergy *= 0.5e+7;
+  kineticStress *= 1e+7;
+  newDW->put(sum_vartype(kineticEnergy),d_label->global->rKineticEnergy);
+  newDW->put(sumvec_vartype(totalMomentum),d_label->global->rTotalMomentum);
+  newDW->put(matrix_sum(kineticStress),d_label->global->rKineticStress);
+  newDW->put(sum_vartype(totalMass),d_label->global->rTotalMass);
 
   if (mdFlowDebug.active()) {
     mdFlowDebug << flowLocation
@@ -992,35 +991,48 @@ void MD::computeStableTimestep(const ProcessorGroup*    pg,
             << std::endl
             << " Electrostatic Energy: "
             << std::setprecision(16)
-            << std::setw(20) << std::fixed << std::right
+            << std::setw(22) << std::fixed << std::right
             << electrostaticInverseEnergy + electrostaticRealEnergy << std::endl
             << "\tInverse: " << std::setprecision(16)
-            << std::setw(20) << std::fixed << std::right
+            << std::setw(22) << std::fixed << std::right
             << electrostaticInverseEnergy << std::endl
             << "\tReal:    " << std::setprecision(16)
-            << std::setw(20) << std::fixed << std::right
+            << std::setw(22) << std::fixed << std::right
             << electrostaticRealEnergy << std::endl;
 
   proc0cout << "-----------------------------------------------------"
             << std::endl
             << "Nonbonded Energy:      "
             << std::setprecision(16)
-            << std::setw(20) << std::fixed << std::right
-            << nonbondedEnergy << std::endl;
+            << std::setw(22) << std::fixed << std::right
+            << nonbondedEnergy/4184.0 << std::endl;
 
   proc0cout << "-----------------------------------------------------"
             << std::endl
             << "Kinetic Energy:        "
             << std::setprecision(16)
-            << std::setw(20) << std::fixed << std::right
-            << kineticEnergy << std::endl;
+            << std::setw(22) << std::fixed << std::right
+            << kineticEnergy/4184.0 << std::endl;
 
   proc0cout << "-----------------------------------------------------"
             << std::endl
-            << "Total Energy:           "
+            << "Total Energy:          "
             << std::setprecision(16)
-            << std::setw(20) << std::fixed << std::right
-            << totalEnergy << std::endl;
+            << std::setw(22) << std::fixed << std::right
+            << totalEnergy/4184.0;
+
+  if (d_referenceStored) {
+    proc0cout << "\t" << " Relative to reference: "
+              << std::setprecision(5) << std::setw(6) << std::right
+              << (totalEnergy/d_referenceEnergy)*100.0 << "%";
+  }
+  proc0cout << std::endl;
+
+  if (!d_referenceStored && kineticEnergy != 0.0 && nonbondedEnergy != 0.0)
+  {
+    d_referenceEnergy = totalEnergy;
+    d_referenceStored = true;
+  }
 
   proc0cout << std::endl;
 
@@ -1043,7 +1055,7 @@ void MD::computeStableTimestep(const ProcessorGroup*    pg,
 
   proc0cout << std::endl;
 
-  newDW->put(delt_vartype(1),
+  newDW->put(delt_vartype(0.25),
               d_sharedState->get_delt_label(),
               getLevel(patches));
 
@@ -1067,7 +1079,7 @@ void MD::calculateKineticEnergy(const ProcessorGroup*   pg,
   double            kineticEnergy   = 0.0;
   Uintah::Matrix3   kineticStress   = MDConstants::M3_0;
   SCIRun::Vector    currentVelocity = MDConstants::V_ZERO;
-
+  SCIRun::Vector    cellMomentum    = MDConstants::V_ZERO;
   for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex)
   {
     const Patch* currPatch = patches->get(patchIndex);
@@ -1075,6 +1087,7 @@ void MD::calculateKineticEnergy(const ProcessorGroup*   pg,
     {
       double          atomTypeEnergy = 0.0;
       Uintah::Matrix3 atomTypeStress = MDConstants::M3_0;
+      SCIRun::Vector  atomTypeCumulativeVelocity = MDConstants::V_ZERO;
 
       int             atomType = localAtomTypes->get(atomIndex);
       ParticleSubset* atomSet  = oldDW->getParticleSubset(atomType,currPatch);
@@ -1086,16 +1099,20 @@ void MD::calculateKineticEnergy(const ProcessorGroup*   pg,
       for (size_t atom = 0; atom < numAtoms; ++atom)
       {
         currentVelocity = V[atom];
+        atomTypeCumulativeVelocity += V[atom];
         atomTypeEnergy += currentVelocity.length2();
         atomTypeStress += OuterProduct(currentVelocity,currentVelocity);
       }
       double mass    = d_sharedState->getMDMaterial(atomType)->getMass();
-      kineticEnergy += 0.5 * atomTypeEnergy / mass;
+      kineticEnergy += atomTypeEnergy * mass;
       kineticStress += atomTypeStress * mass;
+      cellMomentum   += atomTypeCumulativeVelocity *mass;
     }
   }
+  kineticEnergy *= 0.5e+7;
   newDW->put(sum_vartype(kineticEnergy),d_label->global->rKineticEnergy);
   newDW->put(matrix_sum(kineticStress),d_label->global->rKineticStress);
+  newDW->put(sumvec_vartype(cellMomentum),d_label->global->rTotalMomentum);
   // Fixme TODO:
   // Find appropriate place to calculate the stress contribution from
   // truncation term.  Also normalize stress tensor by degrees of freedom
@@ -1287,118 +1304,140 @@ void MD::electrostaticsFinalize(const ProcessorGroup*   pg,
   }
 }
 
+
+
 void MD::updatePosition(const ProcessorGroup*   pg,
                         const PatchSubset*      patches,
-                        const MaterialSubset*   matls,
-                        DataWarehouse*          oldDW,
-                        DataWarehouse*          newDW)
+                        const MaterialSubset*   localAtomTypes,
+                              DataWarehouse*    oldDW,
+                              DataWarehouse*    newDW)
 {
+  // The generic update algorithm for a velocity verlet looks like this:
+  /*
+   *
+   * 1)  V_n+0.5 = V_n + 0.5 * dT * (1/m)*F_n
+   * 2)  X_n+1   = X_n + dT * V_n+0.5
+   * 3)  F_n+1   = f(X_n+1)
+   * 4)  V_n+1   = V_n+0.5 * 0.5 * dT * (1/m)*F_n+1
+   *
+   * So the repeated steps are:
+   * 1) Calculate half step velocity (No comm needed)
+   * 2) Calculate new positions and communicate them
+   * 3) Calculate new forces (don't need communication for forces)
+   * 4) Calculate full step velocity (Comm needed for center of mass adj.)
+   *
+   * Or:  1,2 ||COMM1|| 3,4 ||COMM2||
+   *
+   * If we build the algorithm as 3,4,1,2 we can lump all comm into the end
+   * of the algorithm.  But we have to save half-step quantities for application
+   * on the next iteration.  This is okay since we'll have old DW copies to
+   * store things in.
+   *
+   */
+
   const std::string location = "MD::updatePosition";
   const std::string flowLocation = location + " | ";
   const std::string particleLocation = location + " P ";
   printTask(patches, md_cout, location);
 
   // loop through all patches
-  unsigned int numPatches = patches->size();
+  sumvec_vartype previousMomentum;
+  oldDW->get(previousMomentum, d_label->global->rTotalMomentum);
+  sum_vartype previousMass;
+  oldDW->get(previousMass, d_label->global->rTotalMass);
+  SCIRun::Vector momentumFraction = previousMomentum;
+  double totalMass = previousMass;
+  momentumFraction /= totalMass;
 
-  for (unsigned int p = 0; p < numPatches; ++p) {
+  totalMass = 0.0; // Reset to begin accumulation for this run
+  SCIRun::Vector F_n, A_n, V_n;
+
+  unsigned int numPatches   = patches->size();
+  unsigned int numAtomTypes = localAtomTypes->size();
+
+  double            kineticEnergy = 0.0;
+  SCIRun::Vector    totalMomentum = MDConstants::V_ZERO;
+  Uintah::Matrix3   kineticStress = MDConstants::M3_0;
+  for (unsigned int p = 0; p < numPatches; ++p)
+  {
     const Patch* patch = patches->get(p);
-    unsigned int numMatls = matls->size();
+    // Track K.E. related quantities in the middle of the atomType loop
+    double          atomTypeKE                  = 0.0;
+    Uintah::Matrix3 atomTypeStressTensor        = MDConstants::M3_0;
+    SCIRun::Vector  atomTypeCumulativeVelocity  = MDConstants::V_ZERO;
+    for (unsigned int typeIndex = 0; typeIndex < numAtomTypes; ++typeIndex)
+    {
+      int    atomType = localAtomTypes->get(typeIndex);
+      double atomMass = d_sharedState->getMDMaterial(atomType)->getMass();
+      double massInv  = 1.0/atomMass;
 
-    for (unsigned int m = 0; m < numMatls; ++m) {
-      int matl = matls->get(m);
-      double massInv = 1.0/(d_sharedState->getMDMaterial(matl)->getMass());
+      ParticleSubset* pset = oldDW->getParticleSubset(atomType, patch);
+      // Particle ID variables
+      constParticleVariable<long64> pID_n;
+      oldDW->get(pID_n, d_label->global->pID, pset);
+      ParticleVariable<long64> pID_nPlus1;
+      newDW->allocateAndPut(pID_nPlus1, d_label->global->pID_preReloc, pset);
 
-      ParticleSubset* pset = oldDW->getParticleSubset(matl, patch);
-      ParticleSubset* delset = scinew ParticleSubset(0, matl, patch);
+      // --> Position variables
+      constParticleVariable<Point> X_n;
+      oldDW->get(X_n, d_label->global->pX, pset);
+      ParticleVariable<Point> X_nPlus1;
+      newDW->allocateAndPut(X_nPlus1, d_label->global->pX_preReloc, pset);
 
-      // Variables required in order to integrate
-      // --> Position at last time step
-      constParticleVariable<Point> pX;
-      oldDW->get(pX,
-                  d_label->global->pX, pset);
+      // Velocity and force variables
+      constParticleVariable<SCIRun::Vector> V_nMinusHalf;
+      oldDW->get(V_nMinusHalf, d_label->global->pV, pset);
+      ParticleVariable<SCIRun::Vector> V_nPlusHalf;
+      newDW->allocateAndPut(V_nPlusHalf, d_label->global->pV_preReloc, pset);
 
-      // --> Velocity at last time step (velocity verlet algorithm)
-      constParticleVariable<SCIRun::Vector> pV;
-      oldDW->get(pV,
-                  d_label->global->pV, pset);
-      constParticleVariable<long64> pID;
-      oldDW->get(pID,
-                  d_label->global->pID, pset);
+//      // Forces from the previous time step
+//      constParticleVariable<SCIRun::Vector> F_eReal_n;
+//      constParticleVariable<SCIRun::Vector> F_eInv_n;
+//      constParticleVariable<SCIRun::Vector> F_nb_n;
+//      oldDW->get(F_eReal_n, d_label->electrostatic->pF_electroReal, pset);
+//      oldDW->get(F_eInv_n, d_label->electrostatic->pF_electroInverse, pset);
+//      oldDW->get(F_nb_n, d_label->nonbonded->pF_nonbonded, pset);
+//
+      // Forces from this time step
+      constParticleVariable<SCIRun::Vector> F_eReal_n;
+      constParticleVariable<SCIRun::Vector> F_eInv_n;
+      constParticleVariable<SCIRun::Vector> F_nb_n;
+      newDW->get(F_eReal_n, d_label->electrostatic->pF_electroReal_preReloc, pset);
+      newDW->get(F_eInv_n, d_label->electrostatic->pF_electroInverse_preReloc, pset);
+      newDW->get(F_nb_n, d_label->nonbonded->pF_nonbonded_preReloc, pset);
 
-//      // --> Acceleration at last time step (velocity verlet algorithm)
-//      constParticleVariable<SCIRun::Vector> pA;
-//      old_dw->get(pA, d_lb->pAccelLabel, pset);
-      // --> Forces for this time step
-
-      constParticleVariable<SCIRun::Vector> pForceElectroReal;
-      constParticleVariable<SCIRun::Vector> pForceElectroRecip;
-      constParticleVariable<SCIRun::Vector> pForceNonbonded;
-      newDW->get(pForceElectroReal,
-                  d_label->electrostatic->pF_electroReal_preReloc,
-                  pset);
-      newDW->get(pForceElectroRecip,
-                  d_label->electrostatic->pF_electroInverse_preReloc,
-                  pset);
-      newDW->get(pForceNonbonded,
-                  d_label->nonbonded->pF_nonbonded_preReloc,
-                  pset);
-
-      // Variables which the integrator calculates
-      // --> New position
-      ParticleVariable<Point> pXNew;
-      newDW->allocateAndPut(pXNew,
-                             d_label->global->pX_preReloc,
-                             pset);
-      // --> New velocity
-      ParticleVariable<SCIRun::Vector> pVNew;
-      newDW->allocateAndPut(pVNew,
-                             d_label->global->pV_preReloc,
-                             pset);
-      ParticleVariable<long64> pIDNew;
-      newDW->allocateAndPut(pIDNew,
-                             d_label->global->pID_preReloc,
-                             pset);
-
-      // get delT
+      // get timestep
       delt_vartype delT;
-      oldDW->get(delT,
-                  d_sharedState->get_delt_label(),
-                  getLevel(patches));
+      oldDW->get(delT,  d_sharedState->get_delt_label(),  getLevel(patches));
 
       size_t numAtoms = pset->numParticles();
+      totalMass     += numAtoms*atomMass;
 
       // Loop over the atom set
-      for (size_t atomIndex = 0; atomIndex < numAtoms; ++atomIndex) {
-        SCIRun::Vector totalForce;
-        totalForce = pForceElectroReal[atomIndex] +
-                     pForceElectroRecip[atomIndex] +
-                     pForceNonbonded[atomIndex];
-        // pX = X_n; pV = V_n-1/2; we will now calculate A_n
-        // --> Force is calculated for position X_n, therefore the acceleration is A_n
-        SCIRun::Vector A_n = totalForce*massInv;
+      for (size_t atom = 0; atom < numAtoms; ++atom)
+      {
+        F_n = F_eReal_n[atom] + F_eInv_n[atom] + F_nb_n[atom];
+        A_n = F_n * massInv * 1e-7;
 
-        // pV is velocity at time n - 1/2
-        pVNew[atomIndex] = pV[atomIndex] + 0.5 * (A_n) * delT;
-        // pVNew is therefore actually V_n
+        // Integrate V(t-0.5dT) to V(t)
+//        V_n = (V_nMinusHalf[atom] - momentumFraction) + 0.5 * A_n * delT;
+        V_n = (V_nMinusHalf[atom]) + 0.5 * A_n * delT;
 
-        // Calculate velocity related things here, based on pVNew;
-        // NPT integration temperature determination goes here
+        // Calculate kinetic energy here!!!
+        atomTypeKE                  += V_n.length2();
+        atomTypeStressTensor        += OuterProduct(V_n,V_n);
+        atomTypeCumulativeVelocity  += V_n;
 
-        // --> This may eventually be the end of this routine to allow for
-        //     reduction to gather the total temperature for NPT and
-        //     Isokinetic integrators
+        // Integrate velocity up to the next half step
+        V_nPlusHalf[atom] = V_n + 0.5 * delT * A_n;
+        X_nPlus1[atom] = X_n[atom] + V_nPlusHalf[atom] * delT;
 
-
-        // -->  For now we simply integrate again to get to V_n+1/2
-        pVNew[atomIndex] = pVNew[atomIndex] + 0.5 * (A_n) * delT;
-        // pVNew = V_n+1/2
-
-        // pXNew = X_n+1
-        pXNew[atomIndex] = pX[atomIndex] + pVNew[atomIndex] * delT;
+//        std::cerr << "atomType: " << atomType << " atomNumber: " << atomIndex << "\t"
+//                  << " X_0: " << X_n[atomIndex] << " V: " << pVNew[atomIndex] << " A: " << A
+//                  << "\t" << "X_1: " << pXNew[atom] << std::endl;
 
         // Simply copy over particle IDs; they never change
-        pIDNew[atomIndex]= pID[atomIndex];
+        pID_nPlus1[atom]= pID_n[atom];
 //        if (md_dbg.active()) {
 //          cerrLock.lock();
 //          std::cout << "PatchID: " << std::setw(4) << patch->getID() << std::setw(6);
@@ -1410,13 +1449,20 @@ void MD::updatePosition(const ProcessorGroup*   pg,
 //          std::cout << std::endl;
 //          cerrLock.unlock();
       } // end Atom Loop
-
+      kineticEnergy += atomTypeKE * atomMass;
+      kineticStress += atomTypeStressTensor * atomMass;
+      totalMomentum += atomTypeCumulativeVelocity * atomMass;
+      ParticleSubset* delset = scinew ParticleSubset(0, atomType, patch);
       newDW->deleteParticles(delset);
-
     }  // end materials loop
-
   }  // end patch loop
-
+  kineticEnergy *= 0.5e+7;  // Fix units for KE to be internally consistent
+  kineticStress *= 1e+7;  // Also for stress.  TODO FIXME Verify this value!! JBH - 10/4/14
+  newDW->put(sum_vartype(kineticEnergy), d_label->global->rKineticEnergy);
+  newDW->put(matrix_sum(kineticStress), d_label->global->rKineticStress);
+  newDW->put(sumvec_vartype(totalMomentum), d_label->global->rTotalMomentum);
+  newDW->put(sum_vartype(totalMass), d_label->global->rTotalMass);
+//  calculateKineticEnergy()
   //d_coordinate->clearCellChanged();
   if (mdFlowDebug.active()) {
     mdFlowDebug << flowLocation
