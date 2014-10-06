@@ -344,8 +344,8 @@ SCALARTRANSPORTTESTS=[
 
 GPUTESTS=[
   ("BasicScalarTransportEquation", "BasicScalarTransportEquation.ups", 1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
-  ("ScalarTransportEquation",      "ScalarTransportEquation.ups",      1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
-  ("scalability-test",             "scalability-test.ups",             1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "])
+  ("ScalarTransportEquation",      "ScalarTransportEquation.ups",      1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "])
+#  ("scalability-test",             "scalability-test.ups",             1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "])
 #  ("taylor-green-vortex-2d-xy",    "taylor-green-vortex-2d-xy.ups",    4, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-mpi -gpu -nthreads 2 "]),
 #  ("taylor-green-vortex-2d-xz",    "taylor-green-vortex-2d-xz.ups",    4, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-mpi -gpu -nthreads 2 "]),
 #  ("taylor-green-vortex-2d-yz",    "taylor-green-vortex-2d-yz.ups",    4, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-mpi -gpu -nthreads 2 "])
