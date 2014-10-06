@@ -867,7 +867,7 @@ UnifiedScheduler::runTasks( int t_id )
       else if (dts->numInitiallyReadyDeviceTasks() > 0) {
         readyTask = dts->peekNextInitiallyReadyDeviceTask();
         if (readyTask->queryCUDAStreamCompletion()) {
-          // All of this task's h2d copies is complete, so add it to the completion
+          // All of this task's h2d copies are complete, so add it to the completion
           // pending GPU task queue and prepare to run.
           readyTask = dts->getNextInitiallyReadyDeviceTask();
           gpuRunReady = true;
@@ -1530,21 +1530,25 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
                 }
               }
 
-              // if the extents and offsets are the same, then the variable already exists on the GPU... no H2D copy
-              if (device_offset.x == host_offset.x() && device_offset.y == host_offset.y() && device_offset.z == host_offset.z()
-                  && device_size.x == host_size.x() && device_size.y == host_size.y() && device_size.z == host_size.z()) {
-                // report the above fact
-                if (gpu_stats.active()) {
-                  cerrLock.lock();
-                  {
-                    gpu_stats << "GridVariable: " << reqVarName << " already exists, skipping H2D copy..." << std::endl;
-                  }
-                  cerrLock.unlock();
-                }
-                continue;
-              } else {
+//---------------------------------------------------------------------------------------------------
+// TODO - fix this logic (APH 10/5/14)
+//        Need to handle Wasatch case where a field exists on the GPU, but requires a ghost update
+//---------------------------------------------------------------------------------------------------
+//              // if the extents and offsets are the same, then the variable already exists on the GPU... no H2D copy
+//              if (device_offset.x == host_offset.x() && device_offset.y == host_offset.y() && device_offset.z == host_offset.z()
+//                  && device_size.x == host_size.x() && device_size.y == host_size.y() && device_size.z == host_size.z()) {
+//                // report the above fact
+//                if (gpu_stats.active()) {
+//                  cerrLock.lock();
+//                  {
+//                    gpu_stats << "GridVariable (" << reqVarName << ") already exists, skipping H2D copy..." << std::endl;
+//                  }
+//                  cerrLock.unlock();
+//                }
+//                continue;
+//              } else {
                 dw->getGPUDW()->remove(reqVarName.c_str(), patchID, matlID);
-              }
+//              }
             }
 
             // Otherwise, variable doesn't exist on the GPU, so prepare and async copy to the device
@@ -1628,7 +1632,7 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
                 if (gpu_stats.active()) {
                   cerrLock.lock();
                   {
-                    gpu_stats << "ReductionVariable: \"" << reqVarName << "\" already exists, skipping H2D copy..." << std::endl;
+                    gpu_stats << "ReductionVariable (" << reqVarName << ") already exists, skipping H2D copy..." << std::endl;
                   }
                   cerrLock.unlock();
                 }
@@ -1692,7 +1696,7 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
                 if (gpu_stats.active()) {
                   cerrLock.lock();
                   {
-                    gpu_stats << "PerPatch: \"" << reqVarName << "\" already exists, skipping H2D copy..." << std::endl;
+                    gpu_stats << "PerPatch (" << reqVarName << ") already exists, skipping H2D copy..." << std::endl;
                   }
                   cerrLock.unlock();
                 }
@@ -1905,7 +1909,7 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
         }  // end switch
       }  // end matl loop
     }  // end patch loop
-  }  // end requires gathering loop
+  }  // end computes gathering loop
 
 }
 
@@ -2150,22 +2154,33 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
         }  // end switch
       }  // end matl loop
     }  // end patch loop
-  }  // end requires gathering loop
+  }  // end computes gathering loop
 
 }
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::createCudaStreams(int numStreams, int device)
+void UnifiedScheduler::createCudaStreams(int device, int numStreams /*=1*/)
 {
   cudaError_t retVal;
 
   idleStreamsLock_.writeLock();
-  for (int j = 0; j < numStreams; j++) {
-    CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device));
-    cudaStream_t* stream = (cudaStream_t*)malloc(sizeof(cudaStream_t));
-    CUDA_RT_SAFE_CALL(retVal = cudaStreamCreate(&(*stream)));
-    idleStreams[device].push(stream);
+  {
+    for (int j = 0; j < numStreams; j++) {
+      CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device));
+      cudaStream_t* stream = (cudaStream_t*)malloc(sizeof(cudaStream_t));
+      CUDA_RT_SAFE_CALL(retVal = cudaStreamCreate(&(*stream)));
+      idleStreams[device].push(stream);
+
+      if (gpu_stats.active()) {
+        cerrLock.lock();
+        {
+          gpu_stats << "Created CUDA stream " << std::hex << stream << " on device "
+                    << std::dec << device << std::endl;
+        }
+        cerrLock.unlock();
+      }
+    }
   }
   idleStreamsLock_.writeUnlock();
 }
@@ -2175,15 +2190,39 @@ void UnifiedScheduler::createCudaStreams(int numStreams, int device)
 void UnifiedScheduler::freeCudaStreams()
 {
   cudaError_t retVal;
-  idleStreamsLock_.writeLock();
-  int numQueues = idleStreams.size();
 
-  for (int i = 0; i < numQueues; i++) {
-    CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(i));
-    while (!idleStreams[i].empty()) {
-      cudaStream_t* stream = idleStreams[i].front();
-      idleStreams[i].pop();
-      CUDA_RT_SAFE_CALL(retVal = cudaStreamDestroy(*stream));
+  idleStreamsLock_.writeLock();
+  {
+    size_t numQueues = idleStreams.size();
+
+    if (gpu_stats.active()) {
+      size_t totalStreams = 0;
+      for (size_t i = 0; i < numQueues; i++) {
+        totalStreams += idleStreams[i].size();
+      }
+      cerrLock.lock();
+      {
+        gpu_stats << "Deallocating " << totalStreams << " total CUDA stream(s) for " << numQueues << " device(s)"<< std::endl;
+      }
+      cerrLock.unlock();
+    }
+
+    for (size_t i = 0; i < numQueues; i++) {
+      CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(i));
+
+      if (gpu_stats.active()) {
+        cerrLock.lock();
+        {
+          gpu_stats << "Deallocating " << idleStreams[i].size() << " CUDA stream(s) on device " << retVal << std::endl;
+        }
+        cerrLock.unlock();
+      }
+
+      while (!idleStreams[i].empty()) {
+        cudaStream_t* stream = idleStreams[i].front();
+        idleStreams[i].pop();
+        CUDA_RT_SAFE_CALL(retVal = cudaStreamDestroy(*stream));
+      }
     }
   }
   idleStreamsLock_.writeUnlock();
@@ -2197,18 +2236,33 @@ cudaStream_t* UnifiedScheduler::getCudaStream(int device)
   cudaStream_t* stream;
 
   idleStreamsLock_.writeLock();
-  if (idleStreams[device].size() > 0) {
-    stream = idleStreams[device].front();
-    idleStreams[device].pop();
-  } else {  // shouldn't need any more than the queue capacity, but in case
-    CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device));
-    // this will get put into idle stream queue and properly disposed of later
-    stream = ((cudaStream_t*)malloc(sizeof(cudaStream_t)));
-    CUDA_RT_SAFE_CALL( retVal = cudaStreamCreate(&(*stream)));
-    if (gpu_stats.active()) {
-      cerrLock.lock();
-      gpu_stats << "created CUDA stream " << stream << " on device " << std::dec << device << std::endl;
-      cerrLock.unlock();
+  {
+    if (idleStreams[device].size() > 0) {
+      stream = idleStreams[device].front();
+      idleStreams[device].pop();
+      if (gpu_stats.active()) {
+        cerrLock.lock();
+        {
+          gpu_stats << "Issued CUDA stream " << std::hex << stream
+                    << " on device " << std::dec << device << std::endl;
+          cerrLock.unlock();
+        }
+      }
+    }
+    else {  // shouldn't need any more than the queue capacity, but in case
+      CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device));
+      // this will get put into idle stream queue and ultimately deallocated after final timestep
+      stream = ((cudaStream_t*)malloc(sizeof(cudaStream_t)));
+      CUDA_RT_SAFE_CALL(retVal = cudaStreamCreate(&(*stream)));
+
+      if (gpu_stats.active()) {
+        cerrLock.lock();
+        {
+          gpu_stats << "Needed to create 1 additional CUDA stream " << std::hex << stream
+                    << " for device " << std::dec << device << std::endl;
+        }
+        cerrLock.unlock();
+      }
     }
   }
   idleStreamsLock_.writeUnlock();
@@ -2223,21 +2277,38 @@ cudaError_t UnifiedScheduler::unregisterPageLockedHostMem()
   cudaError_t retVal;
   std::set<void*>::iterator iter;
 
-  // unregister the page-locked host requires memory
+  // unregister the page-locked host memory
   for (iter = pinnedHostPtrs.begin(); iter != pinnedHostPtrs.end(); iter++) {
     CUDA_RT_SAFE_CALL(retVal = cudaHostUnregister(*iter));
   }
   pinnedHostPtrs.clear();
+
   return retVal;
 }
 
+//______________________________________________________________________
+//
 void UnifiedScheduler::reclaimCudaStreams(DetailedTask* dtask)
 {
+  cudaStream_t* stream;
+  int deviceNum;
+
   idleStreamsLock_.writeLock();
-  // reclaim DetailedTask streams
-  idleStreams[dtask->getDeviceNum()].push(dtask->getCUDAStream());
-  dtask->setCUDAStream(NULL);
+  {
+    stream = dtask->getCUDAStream();
+    deviceNum = dtask->getDeviceNum();
+    idleStreams[deviceNum].push(stream);
+    dtask->setCUDAStream(NULL);
+  }
   idleStreamsLock_.writeUnlock();
+
+  if (gpu_stats.active()) {
+    cerrLock.lock();
+    {
+      gpu_stats << "Reclaimed CUDA stream " << std::hex << stream << " on device " << std::dec << deviceNum << std::endl;
+    }
+    cerrLock.unlock();
+  }
 }
 
 
