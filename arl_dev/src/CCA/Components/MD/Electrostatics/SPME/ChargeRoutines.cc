@@ -281,8 +281,8 @@ void SPME::calculateRealspace(const ProcessorGroup*     pg,
           { // Ensure i != j
             if (localID[localAtom] != neighborID[neighborAtom])
             {
-              coordSys->minimumImageDistance(neighborX[neighborAtom],
-                                             localX[localAtom],
+              coordSys->minimumImageDistance(localX[localAtom],
+                                             neighborX[neighborAtom],
                                              offset);
               double radius2 = offset.length2();
               // only calculate if neighbor within spherical cutoff around 

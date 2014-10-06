@@ -161,7 +161,13 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
                                      const MDLabel*         label,
                                      CoordinateSystem*      coordSys)
 {
-
+  // TODO FIXME
+  // Note:  It is theoretically possible that the material subset on a given
+  // source patch doesn't contain a material type, but a nearby target patch
+  // does.  If that's the case, we will fail to calculate the influence of that
+  // target material type on all source material types in the patch, I believe.
+  // This is important, and should be fixed!!!
+  // TODO FIXME (10/5/2014)
   double cutoff2 = d_nonbondedRadius * d_nonbondedRadius;
   TwoBodyForcefield* forcefield = dynamic_cast<TwoBodyForcefield*>
                                         ( systemInfo->getForcefieldPointer() );
@@ -210,10 +216,10 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
         ParticleSubset* targetAtomSet;
         targetAtomSet = oldDW->getParticleSubset(targetAtomType,
                                                  currPatch
-//                                                 );
-                                                 ,Ghost::AroundCells,
-                                                 d_nonbondedGhostCells,
-                                                 label->global->pX);
+                                                 );
+//                                                 ,Ghost::AroundCells,
+//                                                 d_nonbondedGhostCells,
+//                                                 label->global->pX);
 std::cout << "NonbondedGhostCells: " << d_nonbondedGhostCells << std::endl;
         size_t numTargetAtoms = targetAtomSet->numParticles();
         std::cout << "Source Type ("<< sourceAtomType << ") --> Target Atom Type ("
@@ -240,8 +246,8 @@ std::cout << "NonbondedGhostCells: " << d_nonbondedGhostCells << std::endl;
           { // Loop over local plus nearby atoms
             if (sourceID[sourceAtom] != targetID[targetAtom])
             { // Ensure we're not working with the same particle
-              coordSys->minimumImageDistance(targetX[targetAtom],
-                                             sourceX[sourceAtom],
+              coordSys->minimumImageDistance(sourceX[sourceAtom],
+                                             targetX[targetAtom],
                                              atomOffsetVector);
 
               if (atomOffsetVector.length2() <= cutoff2)
@@ -258,7 +264,6 @@ std::cout << "NonbondedGhostCells: " << d_nonbondedGhostCells << std::endl;
 //                            << "SourceAtom: " << sourceAtom << " | TargetAtom: " << targetAtom
 //                            << std::endl;
 //                }
-
                 SCIRun::Vector  tempForce;
                 double          tempEnergy;
                 currPotential->fillEnergyAndForce(tempForce,
@@ -268,6 +273,13 @@ std::cout << "NonbondedGhostCells: " << d_nonbondedGhostCells << std::endl;
                 nbEnergy_patchLocal     +=  tempEnergy;
                 stressTensor_patchLocal +=  OuterProduct(atomOffsetVector,
                                                          tempForce);
+//                if (sourceID[sourceAtom] == 1 && (targetID[targetAtom]%10 == 0))
+//                {
+//                  std::cout << std::setprecision(5) << std::setw(5) << targetID[targetAtom]
+//                            << test << "<->" << atomOffsetVector
+//                            << "--->" << tempForce << std::endl;
+//                }
+
               }
             }  // IDs not the same
           } // Loop over target Atoms

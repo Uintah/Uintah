@@ -320,8 +320,8 @@ void SPME::calculateRealspaceTholeDipole(const ProcessorGroup*      pg,
             // Ensure i != j
             if (localID[localAtom] != neighborID[neighborAtom])
             {
-              coordSys->minimumImageDistance(neighborX[neighborAtom],
-                                             localX[localAtom],
+              coordSys->minimumImageDistance(localX[localAtom],
+                                             neighborX[neighborAtom],
                                              offset);
               double radius2 = offset.length2();
               // only calculate if neighbor within spherical cutoff around
@@ -471,7 +471,7 @@ void SPME::calculateRealspacePointDipole(const ProcessorGroup*      pg,
             if (localID[localAtom] != neighborID[neighborAtom]) {
               // d_offsetProxy contains the proper implementation for distance offsets based on
               // orthorhombic nature of the cell and the current inverse cell
-              coordSys->minimumImageDistance(neighborX[neighborAtom],localX[localAtom],offset);
+              coordSys->minimumImageDistance(localX[localAtom],neighborX[neighborAtom],offset);
 //              SCIRun::Vector atomicDistanceVector = neighborX[neighborIdx]-localX[localIdx];
               // Periodic boundary condition; should eventually check against actual BC of system
 //              atomicDistanceVector -= (atomicDistanceVector / box).vec_rint() * box; // For orthorhombic only
