@@ -86,7 +86,7 @@ namespace Uintah {
        // Internal:   A / fs
        // Lucretius:  m /  s
 
-       return 1e-5;
+       return 1.0;//1e-5;
      }
 
      virtual double ffAccelerationToInternal() const
@@ -110,7 +110,7 @@ namespace Uintah {
        // Internal:  J/mol
        // Lucretius: kCal/mol
        // Lucretius->Internal = 4184.0
-       return 4184.0;  //Convert from kCal/mol to J/mol
+       return 1.0;  //4184.0;  //Convert from kCal/mol to J/mol
 
      }
 

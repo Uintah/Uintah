@@ -937,8 +937,8 @@ void MD::initialize(const ProcessorGroup*   pg,
     } // Loop over materials
   } // Loop over patches
 
-  kineticEnergy *= 0.5e+7;
-  kineticStress *= 1e+7;
+  kineticEnergy /= (2.0*41.84e+5); //0.5e+7;
+  kineticStress *= 1.0; //1e+7;
   newDW->put(sum_vartype(kineticEnergy),d_label->global->rKineticEnergy);
   newDW->put(sumvec_vartype(totalMomentum),d_label->global->rTotalMomentum);
   newDW->put(matrix_sum(kineticStress),d_label->global->rKineticStress);
@@ -1417,7 +1417,7 @@ void MD::updatePosition(const ProcessorGroup*   pg,
       for (size_t atom = 0; atom < numAtoms; ++atom)
       {
         F_n = F_eReal_n[atom] + F_eInv_n[atom] + F_nb_n[atom];
-        A_n = F_n * massInv * 1e-7;
+        A_n = F_n * massInv * 41.84;//1e-7;
 
         // Integrate V(t-0.5dT) to V(t)
 //        V_n = (V_nMinusHalf[atom] - momentumFraction) + 0.5 * A_n * delT;
@@ -1430,7 +1430,7 @@ void MD::updatePosition(const ProcessorGroup*   pg,
 
         // Integrate velocity up to the next half step
         V_nPlusHalf[atom] = V_n + 0.5 * delT * A_n;
-        X_nPlus1[atom] = X_n[atom] + V_nPlusHalf[atom] * delT;
+        X_nPlus1[atom] = X_n[atom] + V_nPlusHalf[atom] * delT * 1e-5;
 
 //        std::cerr << "atomType: " << atomType << " atomNumber: " << atomIndex << "\t"
 //                  << " X_0: " << X_n[atomIndex] << " V: " << pVNew[atomIndex] << " A: " << A
@@ -1456,8 +1456,8 @@ void MD::updatePosition(const ProcessorGroup*   pg,
       newDW->deleteParticles(delset);
     }  // end materials loop
   }  // end patch loop
-  kineticEnergy *= 0.5e+7;  // Fix units for KE to be internally consistent
-  kineticStress *= 1e+7;  // Also for stress.  TODO FIXME Verify this value!! JBH - 10/4/14
+  kineticEnergy /= (2.0*41.84e+5); //0.5e+7;  // Fix units for KE to be internally consistent
+  kineticStress *= 1.0; //1e+7;  // Also for stress.  TODO FIXME Verify this value!! JBH - 10/4/14
   newDW->put(sum_vartype(kineticEnergy), d_label->global->rKineticEnergy);
   newDW->put(matrix_sum(kineticStress), d_label->global->rKineticStress);
   newDW->put(sumvec_vartype(totalMomentum), d_label->global->rTotalMomentum);
