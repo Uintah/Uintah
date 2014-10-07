@@ -470,7 +470,8 @@ ReactiveFlow2::computeStressTensor(const PatchSubset* patches,
       // Calculate the deviatoric part of the non-thermal part
       // of the rate of deformation tensor
       tensorEta = tensorD - one*(tensorD.Trace()/3.0);
-      
+     
+		  // Calculate strain rate
       pStrainRate_new[idx] = sqrtTwoThird*tensorD.Norm();
 
       // Rotate the Cauchy stress back to the 
@@ -500,7 +501,7 @@ ReactiveFlow2::computeStressTensor(const PatchSubset* patches,
       defState->tensorEta  = tensorEta;
       defState->viscoElasticWorkRate = 0.0;
       
-      Matrix3 trialS = tensorS + defState->devStressInc;
+      Matrix3 trialS = tensorS + tensorEta*2*shear*delT;
 
       // Calculate the equivalent stress
       // this will be removed next, 
