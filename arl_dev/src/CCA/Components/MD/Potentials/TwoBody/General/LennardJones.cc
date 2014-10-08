@@ -32,6 +32,7 @@
 #include <CCA/Components/MD/Potentials/TwoBody/General/LennardJones.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/FancyAssert.h>
+#include <iostream>
 
 namespace Uintah {
 
@@ -97,9 +98,16 @@ namespace Uintah {
 
     double r_to_m = RToPower(r, r2, m);
     double r_to_n = RToPower(r, r2, n);
+    double mTerm = A/r_to_m;
+    double nTerm = C/r_to_n;
 
-    energy = A / r_to_m - C / r_to_n;
-    force = R_ij * (m * A / r_to_m - n * C / r_to_n) / r2;
+    // R = vector; r = |R| = magnitude of vector
+    // U(|R|) = A/r^m - C/r^n
+    energy = mTerm - nTerm;
+    // F(|R|) = -grad(U|R|) = (R/r)*-(m * A/r^(m+1) + n * C/(r^n+1))
+    //                      = (R/r^2)*(-m * A/r^m + n * C/r^n)
+    force = R_ij * (-m * mTerm + n * nTerm) / r2;
+//    std::cerr << std::setprecision(10) << "Distance: " << r << " A: " << A << " C: " << C << " Energy: " << energy << " Force: " << force << std::endl;
     return;
   }
 
@@ -123,7 +131,7 @@ namespace Uintah {
     double r_to_m = RToPower(r, r2, m);
     double r_to_n = RToPower(r, r2, n);
 
-    force = R_ij * (m * A / r_to_m - n * C / r_to_n) / r2;
+    force = R_ij * (-m * A / r_to_m + n * C / r_to_n) / r2;
     return;
   }
 
