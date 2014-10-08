@@ -122,6 +122,11 @@ namespace Uintah {
                                        SchedulerP&);
 
     protected:
+      void scheduleOutputStatistics(      SchedulerP&   sched,
+                                    const PatchSet*     patches,
+                                    const MaterialSet*  atomTypes,
+                                    const LevelP&       level);
+
       void scheduleKineticCalculations(      SchedulerP&    sched,
                                        const PatchSet*      perProcPatches,
                                        const MaterialSet*   atomTypes,
@@ -235,6 +240,11 @@ namespace Uintah {
                                   const MaterialSet* matls,
                                   const LevelP& level);
 
+      void scheduleNewUpdatePosition(      SchedulerP&  sched,
+                                     const PatchSet*    patches,
+                                     const MaterialSet* atomTypes,
+                                     const LevelP&      level);
+
     private:
 
       /**
@@ -247,6 +257,12 @@ namespace Uintah {
                       const MaterialSubset* matls,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw);
+
+      void outputStatistics(const ProcessorGroup* pg,
+                            const PatchSubset*    patches,
+                            const MaterialSubset* atomTypes,
+                                  DataWarehouse*  oldDW,
+                                  DataWarehouse*  newDW);
 
       /**
        * @brief
@@ -353,6 +369,11 @@ namespace Uintah {
                                   DataWarehouse*            oldDW,
                                   DataWarehouse*            newDW);
 
+      void newUpdatePosition(const ProcessorGroup*  pg,
+                             const PatchSubset*     patches,
+                             const MaterialSubset*  atomTypes,
+                                   DataWarehouse*   oldDW,
+                                   DataWarehouse*   newDW);
       /**
        * @brief
        * @param
@@ -409,6 +430,11 @@ namespace Uintah {
       double d_referenceEnergy;
       double d_baseTimeStep;
       bool d_referenceStored;
+
+      bool d_firstIntegration;
+      bool d_secondIntegration;
+      double d_KineticBase;
+      double d_PotentialBase;
   };
 
 }

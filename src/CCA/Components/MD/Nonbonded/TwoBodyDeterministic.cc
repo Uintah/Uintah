@@ -130,12 +130,12 @@ void TwoBodyDeterministic::addCalculateRequirements(Task* task,
   std::cout << "Registering for " << CUTOFF_CELLS << " ghost cells required." << std::endl;
   task->requires(Task::OldDW,
                  label->global->pX,
-                 Ghost::AroundCells,
+                 Ghost::AroundNodes,
                  CUTOFF_CELLS);
 
   task->requires(Task::OldDW,
                  label->global->pID,
-                 Ghost::AroundCells,
+                 Ghost::AroundNodes,
                  CUTOFF_CELLS);
 
 }
@@ -177,6 +177,7 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
 
   size_t numPatches     = patches->size();
   size_t numAtomTypes   = processorAtomTypes->size();
+
   SCIRun::Vector atomOffsetVector(0.0);
   for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex)
   { // Loop over all patches
@@ -207,6 +208,10 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
 //      { // Initialize force array
 //        pForce[sourceAtom] = 0.0;
 //      }
+      for (size_t sourceAtom = 0; sourceAtom < numSourceAtoms; ++sourceAtom)
+      {
+        pForce[sourceAtom] = 0.0;
+      }
 
       // (Internal + ghost) patch material loop
       for (size_t targetIndex = 0; targetIndex < numAtomTypes; ++targetIndex)
@@ -217,13 +222,13 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
         targetAtomSet = oldDW->getParticleSubset(targetAtomType,
                                                  currPatch
                                                  );
-//                                                 ,Ghost::AroundCells,
+//                                                 ,Ghost::AroundNodes,
 //                                                 d_nonbondedGhostCells,
 //                                                 label->global->pX);
-std::cout << "NonbondedGhostCells: " << d_nonbondedGhostCells << std::endl;
+//std::cout << "NonbondedGhostCells: " << d_nonbondedGhostCells << std::endl;
         size_t numTargetAtoms = targetAtomSet->numParticles();
-        std::cout << "Source Type ("<< sourceAtomType << ") --> Target Atom Type ("
-                  << targetAtomType << ") | Set Size: " << numTargetAtoms << std::endl;
+//        std::cout << "Source Type ("<< sourceAtomType << ") --> Target Atom Type ("
+//                  << targetAtomType << ") | Set Size: " << numTargetAtoms << std::endl;
         // Get atom ID and positions
         constParticleVariable<long64> targetID;
         oldDW->get(targetID, label->global->pID, targetAtomSet);
@@ -241,7 +246,7 @@ std::cout << "NonbondedGhostCells: " << d_nonbondedGhostCells << std::endl;
 
         for (size_t sourceAtom = 0; sourceAtom < numSourceAtoms; ++sourceAtom)
         { // Loop over atoms in local patch
-          pForce[sourceAtom] = 0.0;
+
           for (size_t targetAtom = 0; targetAtom < numTargetAtoms; ++targetAtom)
           { // Loop over local plus nearby atoms
             if (sourceID[sourceAtom] != targetID[targetAtom])
@@ -253,7 +258,7 @@ std::cout << "NonbondedGhostCells: " << d_nonbondedGhostCells << std::endl;
               if (atomOffsetVector.length2() <= cutoff2)
               { // Interaction is within range
                 SCIRun::Vector test = targetX[targetAtom]-sourceX[sourceAtom];
-//                if (test.length2() != atomOffsetVector.length2())
+//                if (test != atomOffsetVector)
 //                {
 //                  std::cout << "SHOULD BE WRAPPED: " << std::setprecision(5) << std::right
 //                            << test << ": " << test.length() << std::endl
@@ -261,7 +266,7 @@ std::cout << "NonbondedGhostCells: " << d_nonbondedGhostCells << std::endl;
 //                            << atomOffsetVector << ": " << atomOffsetVector.length() << std::endl
 //                            << "Patch: " << patchIndex << " | "
 //                            << "SourceIndex: " << sourceIndex << " | " << "TargetIndex" << targetIndex
-//                            << "SourceAtom: " << sourceAtom << " | TargetAtom: " << targetAtom
+//                            << "SourceAtom: " << sourceID[sourceAtom] << " | TargetAtom: " << targetID[targetAtom]
 //                            << std::endl;
 //                }
                 SCIRun::Vector  tempForce;
@@ -273,11 +278,12 @@ std::cout << "NonbondedGhostCells: " << d_nonbondedGhostCells << std::endl;
                 nbEnergy_patchLocal     +=  tempEnergy;
                 stressTensor_patchLocal +=  OuterProduct(atomOffsetVector,
                                                          tempForce);
-//                if (sourceID[sourceAtom] == 1 && (targetID[targetAtom]%10 == 0))
+//                if ((sourceID[sourceAtom] == 1))
+//                //&& (targetID[targetAtom]%10 == 9))
 //                {
 //                  std::cout << std::setprecision(5) << std::setw(5) << targetID[targetAtom]
 //                            << test << "<->" << atomOffsetVector
-//                            << "--->" << tempForce << std::endl;
+//                            << "--->" << tempForce << "  Total Force: " << pForce[sourceAtom] << std::endl;
 //                }
 
               }

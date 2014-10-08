@@ -73,6 +73,7 @@ namespace Uintah {
       }
 
       inline int requiredGhostCells() const {
+        return SHRT_MAX;
         return d_nonbondedGhostCells;
       }
 
