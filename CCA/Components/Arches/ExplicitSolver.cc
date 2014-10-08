@@ -772,8 +772,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     }
 
-    d_boundaryCondition->sched_setInitProfile__NEW(sched, level, matls);
-
     d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
 
     d_boundaryCondition->sched_setIntrusionDensity( sched, level, matls ); 
