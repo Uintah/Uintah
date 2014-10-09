@@ -457,6 +457,12 @@ ReactiveFlow2::computeStressTensor(const PatchSubset* patches,
       // Calculate the current density and deformed volume
       double rho_cur = rho_0/J;
 
+			// Get concentrations
+      double temperature = pTemperature[idx];
+			double concentration = pTemperature[idx]/300;
+			double concentration_pn = pTemp_prenew[idx]/300;
+			double conc_rate = (concentration - concentration_pn)/delT;
+
       // Calculate rate of deformation tensor (D)
       tensorD = (tensorL + tensorL.Transpose())*0.5;
 
@@ -467,9 +473,13 @@ ReactiveFlow2::computeStressTensor(const PatchSubset* patches,
       // material configuration
       tensorD = (tensorR.Transpose())*(tensorD*tensorR);
 
+			// Add concentration component
+			tensorD = tensorD - one*(conc_rate/3);
+
       // Calculate the deviatoric part of the non-thermal part
       // of the rate of deformation tensor
-      tensorEta = tensorD - one*(tensorD.Trace()/3.0);
+			double dTrace = tensorD.Trace();
+      tensorEta = tensorD - one*(dTrace/3.0);
      
 		  // Calculate strain rate
       pStrainRate_new[idx] = sqrtTwoThird*tensorD.Norm();
@@ -478,12 +488,9 @@ ReactiveFlow2::computeStressTensor(const PatchSubset* patches,
       // material configuration and calculate the deviatoric part
       sigma = pStress[idx];
       sigma = (tensorR.Transpose())*(sigma*tensorR);
-      double pressure = sigma.Trace()/3.0; 
-      tensorS = sigma - one * pressure;
 
-      double temperature = pTemperature[idx];
-			double concentration = pTemperature[idx]/300;
-			double concentration_pn = pTemp_prenew[idx]/300;
+      //double pressure = sigma.Trace()/3.0; 
+      //tensorS = sigma - one * pressure;
 
 			double mu_cur = shear;
 
@@ -515,7 +522,8 @@ ReactiveFlow2::computeStressTensor(const PatchSubset* patches,
       // Calculate the updated hydrostatic stress
       //double p = d_eos->computePressure(matl, state, tensorF_new, tensorD,delT);
 
-			double p = -(pressure + 200*concentration);
+			//double p = pressure + 200*(concentration); //-concentration_pn);
+      //double p = 0.5*bulk*(J - 1.0/J) - 10*concentration;
 			//cout << "pressure: " << pressure << " p: " << p << endl;
 
       //double Dkk = tensorD.Trace();
@@ -527,10 +535,11 @@ ReactiveFlow2::computeStressTensor(const PatchSubset* patches,
       //pdTdt[idx] += Tdot_VW;
 
 
-      Matrix3 tensorHy = one*p;
+      //Matrix3 tensorHy = one*p;
    
       // Calculate the total stress
-      sigma = tensorS + tensorHy;
+      //sigma = tensorS + tensorHy;
+      sigma = sigma + (2*shear*tensorEta + one*bulk*dTrace) * delT;
 
       //-----------------------------------------------------------------------
       // Stage 4:
