@@ -182,7 +182,8 @@
         <NameTag                spec="REQUIRED" />
       </WallDistanceFunction>
       
-      <ReadFromFile     spec="OPTIONAL NO_DATA">
+      <ReadFromFile     spec="OPTIONAL NO_DATA"
+                        attribute1="format OPTIONAL STRING 'FLAT'"> <!-- value or x y z value? -->
         <FileName       spec="REQUIRED STRING" />
       </ReadFromFile>
 
