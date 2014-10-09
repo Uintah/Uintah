@@ -13,13 +13,13 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.90       </maxTime>
+       <maxTime>            3.00       </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4      </delt_init>
        <timestep_multiplier>0.8         </timestep_multiplier>
-			 <!--<max_Timesteps> 2 </max_Timesteps>-->
+			 <!--<max_Timesteps> 4 </max_Timesteps> -->
    </Time>
    
     <!--____________________________________________________________________-->
@@ -44,7 +44,7 @@
         </BCType>
       </Face>
       <Face side = "y-">
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
+        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
                               <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "all" label = "Temperature"  var = "Dirichlet">
@@ -79,8 +79,8 @@
        <Level>
            <Box label="1">
               <lower>       [0,0,0]          </lower>
-              <upper>       [1.0,0.75,0.25]  </upper>
-           		<resolution>  [10,10,1]     </resolution>
+              <upper>       [1.0,0.75,1.00]  </upper>
+           		<resolution>  [20,20,20]     </resolution>
               <extraCells> [1,1,1]            </extraCells>
               <patches>    [1,1,1]            </patches>
            </Box>
@@ -127,16 +127,16 @@
                   <shear_modulus>     8.40e7        </shear_modulus>
               </constitutive_model>
               <!--<thermal_conductivity>  427.0  </thermal_conductivity>-->
-              <thermal_conductivity>  2427.0  </thermal_conductivity>
+              <thermal_conductivity>  3427.0  </thermal_conductivity>
               <specific_heat>         234.0  </specific_heat>
               <geom_object>
                 <box label="gpmpm">
-                  <min>           [0.25,0.00,0.0]   </min>
-                  <max>           [0.75,0.50,0.25]   </max>
+                  <min>           [0.25,0.00,0.25]   </min>
+                  <max>           [0.75,0.50,0.75]   </max>
                  </box>
                  <res>               [2,2,2]         </res>
                  <velocity>          [0.0,0.0,0.0]   </velocity>
-                 <temperature>       10              </temperature>
+                 <temperature>       0               </temperature>
               </geom_object>
          </material>
 
