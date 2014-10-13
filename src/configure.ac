@@ -3691,6 +3691,10 @@ _sci_lib=
 _sci_inc=
 _sci_optional=optional
 if test "$sci_required_ipm" = "yes"; then
+
+  if test "$static" != "yes"; then
+    AC_MSG_ERROR( [Only use \"--with-ipm\" for static builds. For dynamic usage use: \"LD_PRELOAD=/path/to/ipm/lib/libipm.so\" ] )
+  fi
  
   if test "$with_ipm" = "yes"; then
     _sci_optional=required
@@ -3702,9 +3706,10 @@ if test "$sci_required_ipm" = "yes"; then
   fi
  
   AC_LANG(C++)
-  SCI_TRY_LINK(IPM, IPM libraries and headers,
-               ipm.h,
-               $_sci_inc,
+  SCI_TRY_LINK(IPM,
+               IPM library,
+               ,
+               ,
                ipm,
                $_sci_lib,
                ,
