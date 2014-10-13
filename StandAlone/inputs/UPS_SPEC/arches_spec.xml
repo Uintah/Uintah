@@ -804,7 +804,7 @@
 
         <model                        spec="MULTIPLE NO_DATA"
                                       attribute1="label REQUIRED STRING"
-                                      attribute2="type REQUIRED STRING 'simple_rate, drag, gravity'">
+                                      attribute2="type REQUIRED STRING 'simple_rate, drag, gravity, constant'">
 
           <!-- Simple rate expression -->
             <grid                       spec="REQUIRED NO_DATA"
@@ -853,7 +853,8 @@
                                         need_applies_to="type drag"/>         <!-- base v velocity label for IC -->
             <w_velocity_label           spec="OPTIONAL STRING"
                                         need_applies_to="type drag"/>         <!-- base w velocity label for IC -->
-
+            <constant                   spec="REQUIRED DOUBLE"
+                                        need_applies_to="type constant"/>
         </model>
 
       </ParticleModels>
