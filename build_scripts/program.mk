@@ -69,17 +69,13 @@ $(PROGRAM)_LIBS := $(LIBS) ${MALLOC_TRACE_LIBRARY}
 # build directories, etc, will be properly created.
 
 $(PROGRAM) : prereqs $(OBJS) $(patsubst %,$(LIBDIR)/lib%.$(SO_OR_A_FILE),$(PSELIBS))
-ifeq ($(IS_WIN),yes)
-	$(CXX) $(filter %.$(OBJEXT),$^) -o $@ $(LDFLAGS) $(PROGRAM_LDFLAGS) $(SCI_THIRDPARTY_LIBRARY) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(patsubst $(LIBDIR)/%.$(SO_OR_A_FILE),%.lib,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($@_LIBS) $(TAU_LIBRARY)
-else
-  ifeq ($(SCI_MAKE_BE_QUIET),true)
+ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@rm -f $@
 	@echo "Building:  $@"
 	@$(CXX) $(PROGRAM_LDFLAGS) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ $(filter %.$(OBJEXT),$^) $(patsubst $(LIBDIR)/lib%.$(SO_OR_A_FILE),-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($@_LIBS) $(TAU_LIBRARY)
-  else
+else
 	rm -f $@
 	$(CXX) $(PROGRAM_LDFLAGS) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ $(filter %.$(OBJEXT),$^) $(patsubst $(LIBDIR)/lib%.$(SO_OR_A_FILE),-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($@_LIBS) $(TAU_LIBRARY)
-  endif
 endif
 
 
@@ -88,11 +84,6 @@ CLEANOBJS := $(CLEANOBJS) $(OBJS)
 CLEANPROGS := $(CLEANPROGS) $(PROGRAM)
 ifneq ($(REPOSITORY_FLAGS),)
   ALL_LIB_ASSOCIATIONS := $(ALL_LIB_ASSOCIATIONS) $(patsubst %,$(SRCDIR)/ptrepository_$(notdir $(PROGRAM)):%,$(OBJS))
-endif
-
-ifeq ($(IS_WIN), yes)
-  MAKE_WHAT:=EXE
-  include $(SCIRUN_SCRIPTS)/vcproj.mk
 endif
 
 

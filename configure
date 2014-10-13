@@ -35682,6 +35682,10 @@ _sci_inc=
 _sci_optional=optional
 if test "$sci_required_ipm" = "yes"; then
 
+  if test "$static" != "yes"; then
+    as_fn_error $? "Only use \"--with-ipm\" for static builds. For dynamic usage use: \"LD_PRELOAD=/path/to/ipm/lib/libipm.so\"  " "$LINENO" 5
+  fi
+
   if test "$with_ipm" = "yes"; then
     _sci_optional=required
   else
@@ -35740,7 +35744,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 
 ##
-## SCI_TRY_LINK (IPM):  IPM libraries and headers
+## SCI_TRY_LINK (IPM):  IPM library
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -35772,9 +35776,9 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : IPM
-## arg 2 : IPM libraries and headers
-## arg 3 : ipm.h
-## arg 4 : $_sci_inc
+## arg 2 : IPM library
+## arg 3 :
+## arg 4 :
 ## arg 5 : ipm
 ## arg 6 : $_sci_lib
 ## arg 7 :
@@ -35792,12 +35796,12 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ##      HAVE_IPM_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for IPM libraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for IPM library.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for IPM libraries and headers ($_sci_optional)" >&5
-$as_echo_n "checking for IPM libraries and headers ($_sci_optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for IPM library ($_sci_optional)" >&5
+$as_echo_n "checking for IPM library ($_sci_optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -35807,51 +35811,10 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for IPM libraries and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for IPM library must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
-# If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
-
-for inc in $_sci_inc; do
-
-  # Remove any trailing / from inc.
-  inc=${inc%/}
-
-  if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
-     echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for IPM include files." "$LINENO" 5
-  fi
-
-  # Make sure it doesn't have any thing but -I
-  #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
-  has_minus_faltivec=no
-  has_minus=`echo $inc | sed 's/-.*//'`
-  if test -z "$has_minus"; then
-     has_minus_i=`echo $inc | sed 's/-I.*//'`
-     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
-     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
-        # Has some other -?.
-        if test "$verbose" = "yes"; then
-          echo
-          { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of IPM check.  Skipping $inc." >&5
-$as_echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of IPM check.  Skipping $inc." >&2;}
-        fi
-        continue
-     fi
-  fi
-
-  the_inc=`echo $inc | grep "^\-I"`
-  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
-     # If the include arg does not already have -I on it.
-     if test -d $inc; then
-        # If the directory exists
-        _sci_includes="$_sci_includes -I$inc"
-     fi
-  else
-     # It already has -I so just add it directly.
-     _sci_includes="$_sci_includes $inc"
-  fi
-done
+# If  (the -I paths) is blank, do nothing, else do the for statement.
 
 ### Take care of arg 5 (the list of libs)
 
@@ -35968,10 +35931,10 @@ if test "$_sci_optional" = "specific"; then
        as_fn_error $? "For specific SCI-TRY-LINK test for IPM only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
-  ### Determine if there is only one item in $_sci_inc
+  ### Determine if there is only one item in
   __sci_pass=false
   __sci_first_time=true
-  for value in "" $_sci_inc; do
+  for value in "" ; do
     if test "$value" = ""; then
       continue
     fi
@@ -35982,8 +35945,8 @@ if test "$_sci_optional" = "specific"; then
       __sci_pass=false
     fi
   done
-  if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for IPM only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+  if test -n "" && test $__sci_pass != "true"; then
+       as_fn_error $? "For specific SCI-TRY-LINK test for IPM only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -36007,7 +35970,7 @@ LIBS="$_sci_libs  $LIBS"
 __extern_c="no"
 __sci_pound_includes=""
 
-for inc in "" ipm.h; do
+for inc in "" ; do
     if test "$inc" = "extern_C"; then
        __sci_pound_includes="extern \"C\" {"
        __extern_c=yes
@@ -36146,10 +36109,10 @@ rm -f core conftest.err conftest.$ac_objext \
 if test "$_sci_optional" = "specific"; then
   #echo specific
   # Make sure the exact includes were found
-  for i in "" ipm.h; do
-    #echo looking for $_sci_inc/$i
-    if test ! -e $_sci_inc/$i; then
-     as_fn_error $? "Specifically requested IPM include file '$_sci_inc/$i' was not found" "$LINENO" 5
+  for i in "" ; do
+    #echo looking for /$i
+    if test ! -e /$i; then
+     as_fn_error $? "Specifically requested IPM include file '/$i' was not found" "$LINENO" 5
     fi
   done
   # Make sure the exact libraries were found
@@ -36178,7 +36141,7 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (IPM):  IPM libraries and headers
+## END of SCI_TRY_LINK (IPM):  IPM library
 ##
 
 

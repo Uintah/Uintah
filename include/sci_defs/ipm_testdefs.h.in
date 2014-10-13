@@ -27,9 +27,6 @@
 
 @DEF_IPM@
 
-#ifdef USE_IPM
-#  include <ipm.h>
-#endif
 
 #endif
 
