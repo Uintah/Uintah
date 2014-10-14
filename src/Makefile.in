@@ -238,14 +238,26 @@ CTAGS := ctags
 # number has changed.
 
 $(OBJTOP_ABS)/include/svn_info.h : .FORCE
-	@sed -e "s,UNKNOWN_REVISION,`svn info $(SRCTOP_ABS) | grep Revision`," \
-             -e "s%UNKNOWN_DATE%`svn info $(SRCTOP_ABS) | grep Date`%" $(SRCTOP_ABS)/include/svn_info.h.template > $(OBJTOP_ABS)/include/svn_info.h.new; \
-         cmp -s  $(OBJTOP_ABS)/include/svn_info.h.new $(OBJTOP_ABS)/include/svn_info.h; \
-         if test "$$?" -eq 0; then \
-            rm $(OBJTOP_ABS)/include/svn_info.h.new;  \
-         else \
-            echo "Creating .../<bin>/svn_info.h"; \
-            mv $(OBJTOP_ABS)/include/svn_info.h.new $(OBJTOP_ABS)/include/svn_info.h;  \
+	@IFS=' ';                                                                                \
+         tmp_svn=`svn info $(SRCTOP_ABS) 2> /dev/null` ;                                         \
+         sed -e "s%UNKNOWN_REVISION%`echo $$tmp_svn | grep Revision`%" -e "s%UNKNOWN_DATE%`echo $$tmp_svn | grep Date`%" \
+             $(SRCTOP_ABS)/include/svn_info.h.template > $(OBJTOP_ABS)/include/svn_info.h.new;   \
+         if test -z "$$tmp_svn"; then                                                            \
+            rm $(OBJTOP_ABS)/include/svn_info.h.new;                                             \
+            if test -f $(OBJTOP_ABS)/include/svn_info.h; then                                    \
+               echo "WARNING: svn info failed... svn_info.h will not contain revision number.";  \
+            else                                                                                 \
+               echo "Warning, svn info failed... using generic .../<bin>/include/svn_info.h";    \
+               cp $(SRCTOP_ABS)/include/svn_info.h.template $(OBJTOP_ABS)/include/svn_info.h;    \
+            fi                                                                                   \
+         else                                                                                    \
+            cmp -s  $(OBJTOP_ABS)/include/svn_info.h.new $(OBJTOP_ABS)/include/svn_info.h;       \
+            if test "$$?" -eq 0; then                                                            \
+               rm $(OBJTOP_ABS)/include/svn_info.h.new;                                          \
+            else                                                                                 \
+               echo "Creating .../<bin>/svn_info.h";                                             \
+               mv $(OBJTOP_ABS)/include/svn_info.h.new $(OBJTOP_ABS)/include/svn_info.h;         \
+            fi                                                                                   \
          fi
 
 # Dummy target to force above svn_info target to kick off every time.

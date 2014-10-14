@@ -188,19 +188,19 @@ link_inputs:
                echo "Creating link to inputs directory." ; \
 	       ln -sf $(SRCTOP_ABS)/StandAlone/inputs StandAlone/inputs; \
 	   fi )
-	   
+
 link_scripts:
 	@( if ! test -L StandAlone/scripts; then \
                echo "Creating link to scripts directory." ; \
 	       ln -sf $(SRCTOP_ABS)/scripts StandAlone/scripts; \
 	   fi )
-	             
+
 link_orderAccuracy:
 	@( if ! test -L StandAlone/orderAccuracy; then \
                echo "Creating link to orderAccuracy directory." ; \
 	       ln -sf $(SRCTOP_ABS)/orderAccuracy StandAlone; \
 	   fi )          
-          
+
 link_tools:
 	@( if ! test -L StandAlone/puda; then \
                echo "Creating link to all the tools." ; \
