@@ -2015,9 +2015,9 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
       if( tries >= 50 ) {
         ostringstream msg;
 
-        msg << "DataArchiver::output(): Failed to open file '" << dataFilename << "' (after 50 tries).\n";
-        cerr << msg;
-        throw ErrnoException( msg, errno, __FILE__, __LINE__ );
+        msg << "DataArchiver::output(): Failed to open file '" << dataFilename << "' (after 50 tries).";
+        cerr << msg.str() << "\n";
+        throw ErrnoException( msg.str(), errno, __FILE__, __LINE__ );
       }
 
       fd = open( filename, flags, 0666 );
