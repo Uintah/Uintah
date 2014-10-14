@@ -76,7 +76,7 @@ def main(argv):
 
   return (inputfile, inputdir)
 
-# Removes the material id and adds a default material
+# goes through all xml blocks in an input file and counts the number of different expression states
 def count_state(fname):
   print 'now processing: ', fname
   
