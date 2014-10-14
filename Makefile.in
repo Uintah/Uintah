@@ -233,6 +233,25 @@ ETAGS := @ETAGS@
 CTAGS := ctags
 
 ################################################################################
+# Place SVN code revision number into .../bin/include/svn_info.h.  This target
+# will kick off every time you run make in order to determine if the SVN revision 
+# number has changed.
+
+$(OBJTOP_ABS)/include/svn_info.h : .FORCE
+	@sed -e "s,UNKNOWN_REVISION,`svn info $(SRCTOP_ABS) | grep Revision`," \
+             -e "s%UNKNOWN_DATE%`svn info $(SRCTOP_ABS) | grep Date`%" $(SRCTOP_ABS)/include/svn_info.h.template > $(OBJTOP_ABS)/include/svn_info.h.new; \
+         cmp -s  $(OBJTOP_ABS)/include/svn_info.h.new $(OBJTOP_ABS)/include/svn_info.h; \
+         if test "$$?" -eq 0; then \
+            rm $(OBJTOP_ABS)/include/svn_info.h.new;  \
+         else \
+            echo "Creating .../<bin>/svn_info.h"; \
+            mv $(OBJTOP_ABS)/include/svn_info.h.new $(OBJTOP_ABS)/include/svn_info.h;  \
+         fi
+
+# Dummy target to force above svn_info target to kick off every time.
+.FORCE :
+
+################################################################################
 # 'uintah' target is defined in StandAlone/sub.mk
 #
 all:: prereqs packmaker $(ALLTARGETS) uintah
