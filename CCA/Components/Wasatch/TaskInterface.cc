@@ -287,8 +287,10 @@ namespace Wasatch{
 #     endif
 
       if( !hasPressureExpression_ ){
-        if( tree->computes_field( pressure_tag() ) )
+        if( tree->computes_field( pressure_tag() ) && taskName != "initialization" )
+        {
           hasPressureExpression_ = true;
+        }
       }
       tree->register_fields( *fml_ );
 

@@ -1157,7 +1157,7 @@ namespace Wasatch{
     // apply velocity boundary condition, if specified
     bcHelper.apply_boundary_condition<FieldT>(thisVelTag_, taskCat);
     // apply momentum boundary condition, if specified
-    bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
+    bcHelper.apply_boundary_condition<FieldT>( initial_condition_tag(), taskCat );
 
     if (!isConstDensity_) {
       const TagNames& tagNames = TagNames::self();
@@ -1217,9 +1217,8 @@ namespace Wasatch{
   initial_condition( Expr::ExpressionFactory& icFactory )
   {
     // register an initial condition for da pressure
-    Expr::Tag ptag(pressure_tag().name(), Expr::STATE_N);
-    if( !icFactory.have_entry( ptag ) ) {
-      icFactory.register_expression( new typename Expr::ConstantExpr<SVolField>::Builder(ptag, 0.0 ) );
+    if( !icFactory.have_entry( pressure_tag() ) ) {
+      icFactory.register_expression( new typename Expr::ConstantExpr<SVolField>::Builder(pressure_tag(), 0.0 ) );
     }
     
     if( icFactory.have_entry( thisVelTag_ ) ) {
@@ -1231,7 +1230,7 @@ namespace Wasatch{
       // velocity and density in the cases that we are initializing velocity in the input file
       typedef ExprAlgebra<FieldT> ExprAlgbr;
       const Expr::TagList theTagList( tag_list( thisVelTag_, interpolatedDensityTag ) );
-      icFactory.register_expression( new typename ExprAlgbr::Builder( solution_variable_tag(),
+      icFactory.register_expression( new typename ExprAlgbr::Builder( initial_condition_tag(),
                                                                       theTagList,
                                                                       ExprAlgbr::PRODUCT ) );
     }
@@ -1247,9 +1246,9 @@ namespace Wasatch{
                                                                       theTagList,
                                                                       ExprAlgbr::PRODUCT,
                                                                       true ) );
-      icFactory.attach_modifier_expression( modifierTag, solution_variable_tag() );
+      icFactory.attach_modifier_expression( modifierTag, initial_condition_tag() );
     }
-    return icFactory.get_id( solution_variable_tag() );
+    return icFactory.get_id( initial_condition_tag() );
   }
 
   //==================================================================

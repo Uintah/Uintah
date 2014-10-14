@@ -21,7 +21,7 @@
     <!-- Set the initial condition expression for phi1 -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi1" state="STATE_DYNAMIC"/>
+      <NameTag name="phi1" state="STATE_NONE"/>
       <GaussianFunction amplitude="20.0" deviation="2.0" mean="5.0" baseline="1.0">
         <NameTag name="XSVOL" state="STATE_NONE"/>
       </GaussianFunction>
@@ -62,7 +62,7 @@
     <!-- Set the initial condition for phi2 -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi2" state="STATE_DYNAMIC"/>
+      <NameTag name="phi2" state="STATE_NONE"/>
       <LinearFunction slope="1.0" intercept="-2.0">
         <NameTag name="YSVOL" state="STATE_NONE"/>
       </LinearFunction>
@@ -77,7 +77,7 @@
     <!-- Set the initial condition for phi3 -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi3" state="STATE_DYNAMIC"/>
+      <NameTag name="phi3" state="STATE_NONE"/>
       <SineFunction amplitude="20.0" frequency="0.75" offset="0">
         <NameTag name="ZSVOL" state="STATE_NONE"/>
       </SineFunction>
@@ -92,7 +92,7 @@
     <!-- Set the initial condition for phi3 -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi4" state="STATE_DYNAMIC"/>
+      <NameTag name="phi4" state="STATE_NONE"/>
       <SineFunction amplitude="20.0" frequency="0.75" offset="0">
         <NameTag name="ZSVOL" state="STATE_NONE"/>
       </SineFunction>

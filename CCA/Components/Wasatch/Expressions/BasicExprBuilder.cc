@@ -1419,7 +1419,7 @@ namespace Wasatch{
         double val = initialMoments[i];
         std::stringstream ss;
         ss << i;
-        Expr::Tag thisMomentTag("m_" + populationName + "_" + ss.str(), Expr::STATE_DYNAMIC);
+        Expr::Tag thisMomentTag("m_" + populationName + "_" + ss.str(), Expr::STATE_NONE);
         graphHelper->exprFactory->register_expression( scinew Builder( thisMomentTag, val ) );
       }
     }

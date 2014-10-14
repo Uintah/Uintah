@@ -97,7 +97,7 @@
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
-       <NameTag name="p.size" state="STATE_DYNAMIC"/>
+       <NameTag name="p.size" state="STATE_NONE"/>
        <Constant>1e-4</Constant>
 <!--        <RandomField low="1e-5" high="1e-3" seed="10"/> -->
     </BasicExpression>
@@ -117,7 +117,7 @@
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
-       <NameTag name="p.xw" state="STATE_DYNAMIC"/>
+       <NameTag name="p.xw" state="STATE_NONE"/>
        <ParticlePositionIC coordinate="X" bounds="PATCHBASED">
        		<Random seed="1"/>
        </ParticlePositionIC>
@@ -125,7 +125,7 @@
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
-       <NameTag name="p.yw" state="STATE_DYNAMIC"/>
+       <NameTag name="p.yw" state="STATE_NONE"/>
        <ParticlePositionIC coordinate="Y" bounds="PATCHBASED">
        		<Random seed="2"/>
        </ParticlePositionIC>
@@ -133,25 +133,25 @@
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
-       <NameTag name="p.zw" state="STATE_DYNAMIC"/>
+       <NameTag name="p.zw" state="STATE_NONE"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
-       <NameTag name="p.u" state="STATE_DYNAMIC"/>
+       <NameTag name="p.u" state="STATE_NONE"/>
        <Constant>0.0</Constant>
     </BasicExpression>
     
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
-       <NameTag name="p.v" state="STATE_DYNAMIC"/>
+       <NameTag name="p.v" state="STATE_NONE"/>
        <Constant>0.0</Constant>
     </BasicExpression>
     
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
-       <NameTag name="p.w" state="STATE_DYNAMIC"/>
+       <NameTag name="p.w" state="STATE_NONE"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
@@ -159,13 +159,13 @@
     <!-- Set the initial condition expression for momentum -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="x-mom" state="STATE_DYNAMIC"/>
+       <NameTag name="x-mom" state="STATE_NONE"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="y-mom" state="STATE_DYNAMIC"/>
+       <NameTag name="y-mom" state="STATE_NONE"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 

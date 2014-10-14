@@ -200,7 +200,7 @@ namespace Wasatch{
       ss << iEq;
       std::string thisPhiName = basePhiName + ss.str();
       // set initial condition and register it
-      const Expr::Tag icTag( thisPhiName, Expr::STATE_DYNAMIC );
+      const Expr::Tag icTag( thisPhiName, Expr::STATE_NONE );
       const Expr::Tag indepVarTag( "XSVOL", Expr::STATE_NONE );
       typedef Expr::SinFunction<SVolField>::Builder Builder;
       icGraphHelper->exprFactory->register_expression( scinew Builder( icTag, indepVarTag, 1.0, 1, 0.0) );
@@ -638,7 +638,7 @@ namespace Wasatch{
       proc0cout << "Setting initial conditions for pressure: "
       << pressure_tag().name()
       << std::endl;
-      icGraphHelper->rootIDs.insert( (*icGraphHelper->exprFactory).get_id( Expr::Tag(pressure_tag().name(), Expr::STATE_N) ) );
+      icGraphHelper->rootIDs.insert( (*icGraphHelper->exprFactory).get_id( pressure_tag() ) );
     }
     catch( std::runtime_error& e ){
       std::ostringstream msg;
