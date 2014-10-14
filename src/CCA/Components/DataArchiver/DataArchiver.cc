@@ -277,7 +277,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
      if( walltimeStartHours != "" ) {
        d_checkpointWalltimeStart = atof( walltimeStartHours.c_str() ) * 3600.0;
      }      
-     if( walltimeInterval != "" ) {
+     if( walltimeIntervalHours != "" ) {
        d_checkpointWalltimeInterval = atof( walltimeIntervalHours.c_str() ) * 3600.0;
      }
      if( cycle != "" ) {
@@ -285,7 +285,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
      }
 
      // Verify that an interval was specified:
-     if( interval == "" && timestepInterval == "" && walltimeInterval == "" ) {
+     if( interval == "" && timestepInterval == "" && walltimeInterval == "" && walltimeIntervalHours == "" ) {
        throw ProblemSetupException( "ERROR: \n  <checkpoint> must specify either interval, timestepInterval, walltimeInterval",
 				    __FILE__, __LINE__ );
      }
@@ -1998,16 +1998,35 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
     }
 
     //__________________________________
-    // Open the data file
-    int fd;
-    char* filename;
+    // Open the data file:
+    //
+    // Note: At least one time on a BGQ machine (Vulcan@LLNL), with 160K patches, a single checkpoint
+    // file failed to open, and it 'crashed' the simulation.  As the other processes on the node 
+    // successfully opened their file, it is possible that a second open call would have succeeded.
+    // (The original error no was 71.)  Therefore I am using a while loop and counting the 'tries'.
 
-    filename = (char*) dataFilename.c_str();
-    fd = open(filename, flags, 0666);
+    int         tries = 1;
 
-    if ( fd == -1 ) {
-      cerr << "Cannot open dataFile: " << dataFilename << '\n';
-      throw ErrnoException("DataArchiver::output (open call)", errno, __FILE__, __LINE__);
+    const char* filename = dataFilename.c_str();
+    int         fd       = open( filename, flags, 0666 );
+
+    while( fd == -1 ) {
+
+      if( tries >= 50 ) {
+        ostringstream msg;
+
+        msg << "DataArchiver::output(): Failed to open file '" << dataFilename << "' (after 50 tries).\n";
+        cerr << msg;
+        throw ErrnoException( msg, errno, __FILE__, __LINE__ );
+      }
+
+      fd = open( filename, flags, 0666 );
+      tries++;
+    }
+
+    if( tries > 1 ) {
+      proc0cout << "WARNING: There was a glitch in trying to open the checkpoint file: " 
+                << dataFilename << ". It took " << tries << " tries to successfully open it.";
     }
 
     //__________________________________
