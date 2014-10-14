@@ -18,21 +18,21 @@
     <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
     <BasicExpression type="XVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="x-vel" state="STATE_N"/>
+      <NameTag name="x-vel" state="STATE_NONE"/>
       <Constant>1.0</Constant>
     </BasicExpression>
     
     <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
     <BasicExpression type="YVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="y-vel" state="STATE_N"/>
+      <NameTag name="y-vel" state="STATE_NONE"/>
       <Constant>1.0</Constant>
     </BasicExpression>
     
     <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
     <BasicExpression type="ZVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="z-vel" state="STATE_N"/>
+      <NameTag name="z-vel" state="STATE_NONE"/>
       <Constant>1.0</Constant>
     </BasicExpression>
 
@@ -42,13 +42,13 @@
         <NumberOfEquations>30</NumberOfEquations>
         <DoConvection>false</DoConvection>
         <X-Velocity> 
-            <NameTag name="x-vel" state="STATE_N"/>
+            <NameTag name="x-vel" state="STATE_NONE"/>
         </X-Velocity>
         <Y-Velocity>
-            <NameTag name="y-vel" state="STATE_N"/>
+            <NameTag name="y-vel" state="STATE_NONE"/>
         </Y-Velocity>
         <Z-Velocity> 
-            <NameTag name="z-vel" state="STATE_N"/>
+            <NameTag name="z-vel" state="STATE_NONE"/>
         </Z-Velocity>        
         <DoDiffusion>true</DoDiffusion>
         <DoSourceTerm>true</DoSourceTerm>

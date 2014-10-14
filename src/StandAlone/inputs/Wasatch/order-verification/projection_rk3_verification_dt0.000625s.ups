@@ -16,7 +16,7 @@
     <!-- Set the initial condition expression for x-momentum -->
     <TaylorVortexMMS type="XVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="x-mom" state="STATE_DYNAMIC" />
+      <NameTag name="x-mom" state="STATE_NONE" />
       <VelocityX amplitude="1.0" viscosity="0.0">
         <XCoordinate> <NameTag name="XXVOL" state="STATE_NONE"/> </XCoordinate>
         <YCoordinate> <NameTag name="YXVOL" state="STATE_NONE"/> </YCoordinate>
@@ -26,7 +26,7 @@
     <!-- Set the initial condition for y-momentum -->
     <TaylorVortexMMS type="YVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="y-mom" state="STATE_DYNAMIC" />
+      <NameTag name="y-mom" state="STATE_NONE" />
       <VelocityY amplitude="1.0" viscosity="0.0" >
         <XCoordinate> <NameTag name="XYVOL" state="STATE_NONE"/> </XCoordinate>
         <YCoordinate> <NameTag name="YYVOL" state="STATE_NONE"/> </YCoordinate>
