@@ -238,7 +238,8 @@ namespace Wasatch{
   void parse_poisson_equation( Uintah::ProblemSpecP poissonEqParams,
                                GraphCategories& gc,
                                Uintah::SolverInterface& linSolver,
-                               Uintah::SimulationStateP& sharedState) {
+                               Uintah::SimulationStateP& sharedState )
+  {
     std::string slnVariableName;
     poissonEqParams->get("SolutionVariable", slnVariableName);
     const Expr::Tag poissonVariableTag(slnVariableName, Expr::STATE_N);
@@ -248,7 +249,7 @@ namespace Wasatch{
     double refValue = 0.0;
     SCIRun::IntVector refLocation(0,0,0);
     
-    if (poissonEqParams->findBlock("ReferenceValue")) {
+    if( poissonEqParams->findBlock("ReferenceValue") ){
       useRefPoint = true;
       Uintah::ProblemSpecP refPhiParams = poissonEqParams->findBlock("ReferenceValue");      
       refPhiParams->getAttribute("value", refValue);
@@ -256,20 +257,19 @@ namespace Wasatch{
     }
     
     bool use3DLaplacian = true;
-    poissonEqParams->getWithDefault("Use3DLaplacian",use3DLaplacian, true);
+    poissonEqParams->getWithDefault( "Use3DLaplacian",use3DLaplacian, true );
         
-    Uintah::SolverParameters* sparams = linSolver.readParameters( poissonEqParams, "",
-                                                                  sharedState );
+    Uintah::SolverParameters* sparams = linSolver.readParameters( poissonEqParams, "", sharedState );
     sparams->setSolveOnExtraCells( false );
     sparams->setUseStencil4( true );
     sparams->setOutputFileName( "WASATCH" );
     
     PoissonExpression::poissonTagList.push_back(poissonVariableTag);
     
-    const Expr::ExpressionBuilder* const pbuilder  = new PoissonExpression::Builder( poissontags, rhsTag,useRefPoint, refValue, refLocation, use3DLaplacian,*sparams, linSolver);    
-    const Expr::ExpressionBuilder* const pbuilder1 = new PoissonExpression::Builder( poissontags, rhsTag,useRefPoint, refValue, refLocation, use3DLaplacian,*sparams, linSolver);            
+    const Expr::ExpressionBuilder* const pbuilder  = new PoissonExpression::Builder( poissontags, rhsTag, useRefPoint, refValue, refLocation, use3DLaplacian, *sparams, linSolver);
+    const Expr::ExpressionBuilder* const pbuilder1 = new PoissonExpression::Builder( poissontags, rhsTag, useRefPoint, refValue, refLocation, use3DLaplacian, *sparams, linSolver);
     
-    GraphHelper* const icgraphHelper = gc[INITIALIZATION];        
+    GraphHelper* const icgraphHelper  = gc[INITIALIZATION  ];
     GraphHelper* const slngraphHelper = gc[ADVANCE_SOLUTION];    
 
     const Expr::ExpressionID slnPoissonID = slngraphHelper->exprFactory->register_expression( pbuilder1 );            
@@ -278,15 +278,16 @@ namespace Wasatch{
     //icgraphHelper->exprFactory->cleave_from_parents(icPoissonID);
 
     slngraphHelper->rootIDs.insert( slnPoissonID );
-    icgraphHelper->rootIDs.insert( icPoissonID );    
+    icgraphHelper ->rootIDs.insert( icPoissonID  );
   }
 
   //==================================================================
   
   void parse_var_den_mms( Uintah::ProblemSpecP wasatchParams,
-                           Uintah::ProblemSpecP varDensMMSParams,
-                           const bool computeContinuityResidual,
-                           GraphCategories& gc) {
+                          Uintah::ProblemSpecP varDensMMSParams,
+                          const bool computeContinuityResidual,
+                          GraphCategories& gc )
+  {
     std::string solnVarName;
     double rho0=1.29985, rho1=0.081889, D=0.0658;
     varDensMMSParams->get("scalar",solnVarName);
@@ -294,9 +295,9 @@ namespace Wasatch{
     varDensMMSParams->get("rho0",rho0);
 
     for( Uintah::ProblemSpecP bcExprParams = wasatchParams->findBlock("BCExpression");
-        bcExprParams != 0;
-        bcExprParams = bcExprParams->findNextBlock("BCExpression") ) {
-      
+         bcExprParams != 0;
+         bcExprParams = bcExprParams->findNextBlock("BCExpression") )
+    {
       if (bcExprParams->findBlock("VarDenMMSMomentum")) {
         double bcRho0=1.29985, bcRho1=0.081889;
         Uintah::ProblemSpecP valParams = bcExprParams->findBlock("VarDenMMSMomentum");

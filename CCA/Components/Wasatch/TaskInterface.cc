@@ -579,7 +579,6 @@ namespace Wasatch{
       radExpr.schedule_ray_tracing( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
     }
 
-    Expr::Tag ptag;
     for( Expr::TagList::iterator ptag=PoissonExpression::poissonTagList.begin();
         ptag!=PoissonExpression::poissonTagList.end();
         ++ptag ){
@@ -676,9 +675,8 @@ namespace Wasatch{
               pexpr.bind_uintah_vars( newDW, patch, material, rkStage );
             }
 
-            Expr::Tag ptag;
             BOOST_FOREACH( const Expr::Tag& ptag, PoissonExpression::poissonTagList ){
-              if (tree->computes_field( ptag )) {
+              if( tree->computes_field( ptag ) ){
                 PoissonExpression& pexpr = dynamic_cast<PoissonExpression&>( factory.retrieve_expression( ptag, patchID, true ) );
                 pexpr.bind_uintah_vars( newDW, patch, material, rkStage );
               }
