@@ -305,21 +305,12 @@ namespace Wasatch{
       std::string fileName;
       valParams->get("FileName",fileName);
       
-      std::string format;
-      bool hasFormat = valParams->getAttribute("format",format);
-      bool isFlatFormat = false;
-      if (hasFormat) {
-        if (format == "FLAT") {
-          isFlatFormat = true;
-        }
-      }
-      
       const Expr::Tag xTag("X" + fieldType, Expr::STATE_NONE);
       const Expr::Tag yTag("Y" + fieldType, Expr::STATE_NONE);
       const Expr::Tag zTag("Z" + fieldType, Expr::STATE_NONE);
       
       typedef typename ReadFromFileExpression<FieldT>::Builder Builder;
-      builder = isFlatFormat ? scinew Builder( tag, fileName ) : scinew Builder( tag, xTag, yTag, zTag, fileName );
+      builder = scinew Builder( tag, xTag, yTag, zTag, fileName );
     }
     
     else if ( params->findBlock("StepFunction") ) {
