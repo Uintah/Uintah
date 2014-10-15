@@ -182,8 +182,10 @@
         <NameTag                spec="REQUIRED" />
       </WallDistanceFunction>
       
-      <ReadFromFile     spec="OPTIONAL NO_DATA"
-                        attribute1="format OPTIONAL STRING 'FLAT'"> <!-- value or x y z value? -->
+      <!-- NOTE: the first line in the data file should indicate the format of the file. We currently support: FLAT and XYZ formats -->
+      <!-- FLAT format: values are directly specified in x, y, and z directions, respectively. -->
+      <!-- XYZ format: x, y, z, value -->
+      <ReadFromFile     spec="OPTIONAL NO_DATA">
         <FileName       spec="REQUIRED STRING" />
       </ReadFromFile>
 

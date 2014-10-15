@@ -201,7 +201,6 @@ private:
   const FieldT* x_;
   const FieldT* y_;  
   const FieldT* z_;
-  const bool flatInput_;
   Wasatch::UintahPatchContainer* patchContainer_;
 };
 
@@ -217,8 +216,7 @@ ReadFromFileExpression( const Expr::Tag& xTag,
   xtag_( xTag ),
   ytag_( yTag ),
   ztag_( zTag	),
-  filename_(fileName),
-  flatInput_(xTag == Expr::Tag() && yTag == Expr::Tag() && zTag == Expr::Tag())
+  filename_(fileName)
 {}
 
 //--------------------------------------------------------------------
@@ -228,11 +226,9 @@ void
 ReadFromFileExpression<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  if (!flatInput_) {
-    exprDeps.requires_expression( xtag_ );
-    exprDeps.requires_expression( ytag_ );
-    exprDeps.requires_expression( ztag_ );
-  }
+  exprDeps.requires_expression( xtag_ );
+  exprDeps.requires_expression( ytag_ );
+  exprDeps.requires_expression( ztag_ );
 }
 
 //--------------------------------------------------------------------
@@ -242,12 +238,10 @@ void
 ReadFromFileExpression<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  if (!flatInput_) {
-    const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-    x_ = &fm.field_ref( xtag_ );
-    y_ = &fm.field_ref( ytag_ );
-    z_ = &fm.field_ref( ztag_ );
-  }
+  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
+  x_ = &fm.field_ref( xtag_ );
+  y_ = &fm.field_ref( ytag_ );
+  z_ = &fm.field_ref( ztag_ );
 }
 
 //--------------------------------------------------------------------
@@ -306,7 +300,9 @@ evaluate()
   double x,y,z,val;
   int    i,j,k;
   
-  if (flatInput_) {
+  const std::string inputFormat = Uintah::getString(inputFile);
+  
+  if (inputFormat == "FLAT") {
     int nx, ny, nz;
     nx   = Uintah::getInt(inputFile);
     ny   = Uintah::getInt(inputFile);
@@ -326,7 +322,7 @@ evaluate()
         }
       }
     }
-  } else {
+  } else if (inputFormat == "XYZ") {
     const double xMax = field_max_interior(*x_);
     const double xMin = field_min_interior(*x_);
     const double yMax = field_max_interior(*y_);
@@ -360,6 +356,10 @@ evaluate()
         ++phiiter;
       }
     }
+  } else {
+    std::ostringstream warn;
+    warn << "ERROR: Wasatch::ReadFromFileExpresssion: \n unsupported file format. Supported file formats are FLAT and XYZ. You must include that in the first line of your data." << filename_;
+    throw Uintah::ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   gzclose( inputFile );
 }
