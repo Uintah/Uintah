@@ -104,9 +104,9 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
   index_map[1][1] = 2; 
   index_map[1][2] = 0; 
   // z-direction
-  index_map[2][0] = 1;
-  index_map[2][1] = 2; 
-  index_map[2][2] = 0; 
+  index_map[2][0] = 2;
+  index_map[2][1] = 0; 
+  index_map[2][2] = 1; 
 
   d_radiation_temperature_label = VarLabel::create("radiation_temperature", CCVariable<double>::getTypeDescription()); 
 
