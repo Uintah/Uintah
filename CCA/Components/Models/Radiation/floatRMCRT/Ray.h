@@ -73,6 +73,7 @@ namespace Uintah{
       /** @brief Interface to input file information */
       void  problemSetup( const ProblemSpecP& prob_spec,
                           const ProblemSpecP& rmcrt_ps,
+                          const GridP& grid,
                           SimulationStateP& sharedState ); 
 
       /** @brief Algorithm for tracing rays through a single level*/ 
@@ -138,6 +139,8 @@ namespace Uintah{
       void sched_CarryForward_Var ( const LevelP& level,
                                     SchedulerP& scheduler,
                                     const VarLabel* variable );
+                                    
+      bool doCarryForward( const int radCalc_freq );
 
                                
       //__________________________________
@@ -458,9 +461,7 @@ namespace Uintah{
                        DataWarehouse*,
                        DataWarehouse* new_dw);
     //______________________________________________________________________
-    //    Carry Foward tasks       
-    bool doCarryForward( const int timestep,
-                         const int radCalc_freq);
+    //    Carry Foward tasks
                         
     void carryForward_Var ( const ProcessorGroup*,
                             const PatchSubset* ,
