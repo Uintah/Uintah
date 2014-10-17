@@ -4154,6 +4154,38 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
               //reassign the values now with the correct index for the face direction
               i_uvel_bc_storage->second.values = temp_map; 
 
+              temp_map.clear(); 
+              for ( CellToValue::iterator check_iter = i_vvel_bc_storage->second.values.begin(); check_iter != 
+                  i_vvel_bc_storage->second.values.end(); check_iter++ ){ 
+
+                //need to reset the values to get the right [index] int value for the face
+                double value = check_iter->second; 
+                IntVector location = check_iter->first;
+                location[index] = face_index_value; 
+
+                temp_map.insert(make_pair(location, value)); 
+
+              }
+
+              //reassign the values now with the correct index for the face direction
+              i_vvel_bc_storage->second.values = temp_map; 
+
+              temp_map.clear(); 
+              for ( CellToValue::iterator check_iter = i_wvel_bc_storage->second.values.begin(); check_iter != 
+                  i_wvel_bc_storage->second.values.end(); check_iter++ ){ 
+
+                //need to reset the values to get the right [index] int value for the face
+                double value = check_iter->second; 
+                IntVector location = check_iter->first;
+                location[index] = face_index_value; 
+
+                temp_map.insert(make_pair(location, value)); 
+
+              }
+
+              //reassign the values now with the correct index for the face direction
+              i_wvel_bc_storage->second.values = temp_map; 
+
               for ( CellToValue::iterator check_iter = i_uvel_bc_storage->second.values.begin(); check_iter != 
                   i_uvel_bc_storage->second.values.end(); check_iter++ ){ 
 
@@ -4197,6 +4229,38 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
               //reassign the values now with the correct index for the face direction
               i_vvel_bc_storage->second.values = temp_map; 
 
+              temp_map.clear(); 
+              for ( CellToValue::iterator check_iter = i_uvel_bc_storage->second.values.begin(); check_iter != 
+                  i_uvel_bc_storage->second.values.end(); check_iter++ ){ 
+
+                //need to reset the values to get the right [index] int value for the face
+                double value = check_iter->second; 
+                IntVector location = check_iter->first;
+                location[index] = face_index_value; 
+
+                temp_map.insert(make_pair(location, value)); 
+
+              }
+
+              //reassign 
+              i_uvel_bc_storage->second.values = temp_map; 
+
+              temp_map.clear(); 
+              for ( CellToValue::iterator check_iter = i_wvel_bc_storage->second.values.begin(); check_iter != 
+                  i_wvel_bc_storage->second.values.end(); check_iter++ ){ 
+
+                //need to reset the values to get the right [index] int value for the face
+                double value = check_iter->second; 
+                IntVector location = check_iter->first;
+                location[index] = face_index_value; 
+
+                temp_map.insert(make_pair(location, value)); 
+
+              }
+
+              //reassign 
+              i_wvel_bc_storage->second.values = temp_map; 
+
               for ( CellToValue::iterator check_iter = i_vvel_bc_storage->second.values.begin(); check_iter != 
                   i_vvel_bc_storage->second.values.end(); check_iter++ ){ 
 
@@ -4239,6 +4303,38 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
 
               //reassign the values now with the correct index for the face direction
               i_wvel_bc_storage->second.values = temp_map; 
+
+              temp_map.clear(); 
+              for ( CellToValue::iterator check_iter = i_uvel_bc_storage->second.values.begin(); check_iter != 
+                  i_uvel_bc_storage->second.values.end(); check_iter++ ){ 
+
+                //need to reset the values to get the right [index] int value for the face
+                double value = check_iter->second; 
+                IntVector location = check_iter->first;
+                location[index] = face_index_value; 
+
+                temp_map.insert(make_pair(location, value)); 
+
+              }
+
+              //reassign the values now with the correct index for the face direction
+              i_uvel_bc_storage->second.values = temp_map; 
+
+              temp_map.clear(); 
+              for ( CellToValue::iterator check_iter = i_vvel_bc_storage->second.values.begin(); check_iter != 
+                  i_vvel_bc_storage->second.values.end(); check_iter++ ){ 
+
+                //need to reset the values to get the right [index] int value for the face
+                double value = check_iter->second; 
+                IntVector location = check_iter->first;
+                location[index] = face_index_value; 
+
+                temp_map.insert(make_pair(location, value)); 
+
+              }
+
+              //reassign the values now with the correct index for the face direction
+              i_vvel_bc_storage->second.values = temp_map; 
 
               for ( CellToValue::iterator check_iter = i_wvel_bc_storage->second.values.begin(); check_iter != 
                   i_wvel_bc_storage->second.values.end(); check_iter++ ){ 
