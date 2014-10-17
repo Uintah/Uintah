@@ -210,9 +210,13 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
             } 
 
             std::string default_type; 
-            double default_value; 
+            Vector default_value(9999,9999,9999); 
             db_BCType->findBlock("default")->getAttribute("type",default_type);
-            db_BCType->findBlock("default")->getAttribute("value",default_value);
+            db_BCType->findBlock("default")->getAttribute("velvalue",default_value);
+
+            if ( !db_BCType->findBlock("default")->findAttribute("velvalue") ){
+              throw ProblemSetupException("Error: The default for velocity handoff files must be specified using the \'velvalue\' attribute.", __FILE__, __LINE__);
+            }
 
             std::string file_name;
             db_BCType->require("value", file_name); 
@@ -223,9 +227,9 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
             readInputFile__NEW( file_name, u_info, 0 ); 
             u_info.relative_xyz = rel_xyz;
             u_info.default_type = default_type;
-            u_info.default_value = default_value;
+            u_info.default_value = default_value[0];
 
-            if ( default_type == "Neumann" && default_value != 0.0 ){ 
+            if ( default_type == "Neumann" && default_value[0] != 0.0 ){ 
               throw ProblemSetupException("Error: Sorry.  I currently cannot support non-zero Neumann default for handoff velocity at this time.", __FILE__, __LINE__);
             } 
 
@@ -241,9 +245,9 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
             readInputFile__NEW( file_name, v_info, 1 ); 
             v_info.relative_xyz = rel_xyz;
             v_info.default_type = default_type;
-            v_info.default_value = default_value;
+            v_info.default_value = default_value[1];
 
-            if ( default_type == "Neumann" && default_value != 0.0 ){ 
+            if ( default_type == "Neumann" && default_value[1] != 0.0 ){ 
               throw ProblemSetupException("Error: Sorry.  I currently cannot support non-zero Neumann default for handoff velocity at this time.", __FILE__, __LINE__);
             } 
 
@@ -259,9 +263,9 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
             readInputFile__NEW( file_name, w_info, 2 ); 
             w_info.relative_xyz = rel_xyz;
             w_info.default_type = default_type;
-            w_info.default_value = default_value;
+            w_info.default_value = default_value[2];
 
-            if ( default_type == "Neumann" && default_value != 0.0 ){ 
+            if ( default_type == "Neumann" && default_value[2] != 0.0 ){ 
               throw ProblemSetupException("Error: Sorry.  I currently cannot support non-zero Neumann default for handoff velocity at this time.", __FILE__, __LINE__);
             } 
 
