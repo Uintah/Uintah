@@ -84,6 +84,11 @@ namespace Wasatch{
     inline const Expr::Tag& solution_variable_tag() const{ return solnVarTag_; }
 
     /**
+     *  \brief Obtain the tag of the solution variable for this transport equation.
+     */
+    inline const Expr::Tag initial_condition_tag() const{ return Expr::Tag(solnVarName_, Expr::STATE_NONE); }
+
+    /**
      *  \brief Obtain the rhs tag of the solution variable for this transport equation.
      */
     inline const Expr::Tag& rhs_tag() const { return rhsTag_; }

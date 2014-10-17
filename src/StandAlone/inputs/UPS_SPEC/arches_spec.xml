@@ -262,6 +262,12 @@
         <Yamamoto_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" /> 
         <!-- Yamamto 1 step rate coefficients in the following order:  -->
         <!-- Av[1/s], Ev[J/mole], Yv[-], c0[-], c1[-], c2[-] c3[-], c4[-], c5[-]  -->
+        <KobayashiSarofim_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" />
+        <!-- KobayashiSarofim 2 step rate coefficients in the following order:  -->
+        <!-- A1[1/s], A2[1/s], E1[kcal/kmol], E2[kcal/kmol], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures]  --> 
+        <RichardsFletcher_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" />
+        <!-- RichardsFletcher 2 step rate coefficients in the following order:  -->
+        <!-- A1[1/s], A2[1/s], E1[kcal/kmol], E2[kcal/kmol], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures], c0_1-c5_1, c0_2-c5_2  --> 
         <Shaddix_char_coefficients      spec="OPTIONAL MULTIPLE_DOUBLES" /> 
         <!-- Shaddix char oxidation coefficients in the following order:  -->
         <!-- D1[O2/CO2 m2/s], D2[O2/H2O m2/s], D3[O2/CO2 m2/s], T0[K], As[mol/s.m^2.atm^n], Es[J/mol] n[], HF_CO2[J/mol], HF_CO[J/mol]  -->
@@ -270,6 +276,7 @@
 
         <HHV                            spec="OPTIONAL DOUBLE" /> <!-- used in python script only -->
         <use_HHV_est                    spec="OPTIONAL STRING" /> <!-- used in python script only -->
+        <compute_scaling_const          spec="OPTIONAL STRING" /> <!-- used in python script only -->
         <particle_weights               spec="OPTIONAL MULTIPLE_DOUBLES" /> <!-- used in python script only -->
         <particle_temperature           spec="OPTIONAL DOUBLE" /> <!-- used in python script only -->
       </Coal_Properties>
@@ -797,7 +804,7 @@
 
         <model                        spec="MULTIPLE NO_DATA"
                                       attribute1="label REQUIRED STRING"
-                                      attribute2="type REQUIRED STRING 'simple_rate, drag, gravity'">
+                                      attribute2="type REQUIRED STRING 'simple_rate, drag, gravity, constant'">
 
           <!-- Simple rate expression -->
             <grid                       spec="REQUIRED NO_DATA"
@@ -846,7 +853,8 @@
                                         need_applies_to="type drag"/>         <!-- base v velocity label for IC -->
             <w_velocity_label           spec="OPTIONAL STRING"
                                         need_applies_to="type drag"/>         <!-- base w velocity label for IC -->
-
+            <constant                   spec="REQUIRED DOUBLE"
+                                        need_applies_to="type constant"/>
         </model>
 
       </ParticleModels>
@@ -1248,7 +1256,7 @@
         
           <model                        spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'KobayashiSarofimDevol, YamamotoDevol, ConstantModel, 
+                                        attribute2="type REQUIRED STRING 'RichardsFletcherDevol, KobayashiSarofimDevol, YamamotoDevol, ConstantModel, 
                                                                           SimpleHeatTransfer, 
                                                                           XDrag, YDrag, ZDrag, 
                                                                           ShaddixHeatTransfer, EnthalpyShaddix, CharOxidationShaddix'">
@@ -1289,7 +1297,7 @@
             <constant                   spec="OPTIONAL DOUBLE"/>
             <env_constant               spec="MULTIPLE NO_DATA"
                                         attribute1="qn REQUIRED INTEGER 'positive'"
-                                        attribute2="value REQUIRED DOUBLE" />
+                                        attribute2="value REQUIRED DOUBLE" /> <!-- this is the unscaled initial value for the weight -->
             <!-- step function initialization --> 
             <!-- Note: the only difference between 'step' and 'env_step' is the use of <step_value></step_value> or <env_step_value qn="" value=""/> -->
             <step_direction             spec="OPTIONAL STRING 'x,y,z'"/> <!-- direction in which the step occurs -->
@@ -1318,6 +1326,18 @@
           <conv_scheme                  spec="OPTIONAL STRING 'upwind, roe_minmod, super_bee'"/>
           <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
           <molecular_diffusivity        spec="OPTIONAL DOUBLE 'positive'"/>
+
+          <!-- developer note: When you add a new descriptor here, make sure you add it in the 
+               enum definition and the constructor of the DQMOMEqnFactory -->
+          <!--<ndf_descriptor               spec="REQUIRED STRING 'size,-->
+                                                               <!--mass, -->
+                                                               <!--temperature, -->
+                                                               <!--enthalpy, -->
+                                                               <!--coal_gas_mix_frac,-->
+                                                               <!--uvel, -->
+                                                               <!--vvel, -->
+                                                               <!--wvel'"/> [> This is a fix descriptor that indicates what function this IC takes <]-->
+
           <initialization               spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'env_constant, constant, env_step'">
             <!-- environment constant value initialization -->
@@ -1360,14 +1380,14 @@
         </Models>
         <NumberInternalCoordinates      spec="REQUIRED INTEGER"/>
         <QuadratureNodes                spec="REQUIRED MULTIPLE_INTEGERS"/> <!-- this is per direction -->
-        <HighestOrder                   spec="REQUIRED MULTIPLE_INTEGERS"/> <!-- this is per direction -->
         <CutOff                         spec="OPTIONAL DOUBLE"/>
         <Adaptive                       spec="OPTIONAL BOOLEAN"/>
         <UseLapack                      spec="OPTIONAL BOOLEAN"/>
-        <WeightRatio                    spec="OPTIONAL DOUBLE"/>
-        <AbscissaRatio                  spec="OPTIONAL DOUBLE"/>
+        <WeightRatio                    spec="OPTIONAL DOUBLE"/>  <!-- minimum ratio of maximum to minimum weight in adaptive method -->
+        <AbscissaRatio                  spec="OPTIONAL DOUBLE"/>  <!-- minimum ratio of difference between abscissas -->
         <OperatorSplitting              spec="OPTIONAL BOOLEAN"/> <!-- turn on operator splitting for convective fluxes -->
-        <RestitutionCoefficient         spec="OPTIONAL DOUBLE"/>
+        <RestitutionCoefficient         spec="OPTIONAL DOUBLE"/>  <!-- determines how much energy is lost in wall collision default = 1 - elastic-->
+        <ConvectionWeightLimit          spec="OPTIONAL DOUBLE"/>  <!-- minimum value of the weight for the quadrature node to actually do convection, scale this value up for higher number densities of population balance-->
         
         <!-- order these same as index moment order -->
         <InternalCoordinate             spec="MULTIPLE NO_DATA"

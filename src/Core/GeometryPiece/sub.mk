@@ -22,55 +22,52 @@
 #  IN THE SOFTWARE.
 # 
 # 
-# 
-# 
-# 
-# Makefile fragment for this subdirectory 
+#  Makefile fragment for this subdirectory 
+#
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Core/GeometryPiece
+SRCDIR := Core/GeometryPiece
 
-SRCS     += \
-	$(SRCDIR)/GeometryObject.cc \
-	$(SRCDIR)/GeometryPiece.cc \
-	$(SRCDIR)/SphereGeometryPiece.cc \
+SRCS += \
+	$(SRCDIR)/BoxGeometryPiece.cc            \
+	$(SRCDIR)/ConeGeometryPiece.cc           \
+	$(SRCDIR)/CylinderGeometryPiece.cc       \
+	$(SRCDIR)/CylinderShellPiece.cc          \
+	$(SRCDIR)/DifferenceGeometryPiece.cc     \
+	$(SRCDIR)/FileGeometryPiece.cc           \
+	$(SRCDIR)/GeometryObject.cc              \
+	$(SRCDIR)/GeometryPiece.cc               \
+	$(SRCDIR)/GeometryPieceFactory.cc        \
+	$(SRCDIR)/IntersectionGeometryPiece.cc   \
+	$(SRCDIR)/NaaBoxGeometryPiece.cc         \
+	$(SRCDIR)/NullGeometryPiece.cc           \
+	$(SRCDIR)/PlaneShellPiece.cc             \
+	$(SRCDIR)/ShellGeometryFactory.cc        \
+	$(SRCDIR)/ShellGeometryPiece.cc          \
+	$(SRCDIR)/SmoothCylGeomPiece.cc          \
+	$(SRCDIR)/SmoothGeomPiece.cc             \
+	$(SRCDIR)/SphereGeometryPiece.cc         \
 	$(SRCDIR)/SphereMembraneGeometryPiece.cc \
-	$(SRCDIR)/NaaBoxGeometryPiece.cc \
-	$(SRCDIR)/BoxGeometryPiece.cc \
-	$(SRCDIR)/CylinderGeometryPiece.cc \
-	$(SRCDIR)/TorusGeometryPiece.cc \
-	$(SRCDIR)/ConeGeometryPiece.cc \
-	$(SRCDIR)/TriGeometryPiece.cc \
-	$(SRCDIR)/UniformGrid.cc \
-	$(SRCDIR)/UnionGeometryPiece.cc \
-	$(SRCDIR)/DifferenceGeometryPiece.cc \
-	$(SRCDIR)/IntersectionGeometryPiece.cc \
-	$(SRCDIR)/FileGeometryPiece.cc \
-	$(SRCDIR)/NullGeometryPiece.cc \
-	$(SRCDIR)/GeometryPieceFactory.cc \
-	$(SRCDIR)/ShellGeometryPiece.cc \
-	$(SRCDIR)/ShellGeometryFactory.cc \
-	$(SRCDIR)/CylinderShellPiece.cc \
-	$(SRCDIR)/PlaneShellPiece.cc \
-	$(SRCDIR)/SphereShellPiece.cc \
-	$(SRCDIR)/SmoothGeomPiece.cc \
-	$(SRCDIR)/SmoothCylGeomPiece.cc \
-        $(SRCDIR)/EllipsoidGeometryPiece.cc 
-#	$(SRCDIR)/GUVSphereShellPiece.cc \
+	$(SRCDIR)/SphereShellPiece.cc            \
+	$(SRCDIR)/TorusGeometryPiece.cc          \
+	$(SRCDIR)/TriGeometryPiece.cc            \
+	$(SRCDIR)/UniformGrid.cc                 \
+	$(SRCDIR)/UnionGeometryPiece.cc          \
+        $(SRCDIR)/EllipsoidGeometryPiece.cc      
+
+#	$(SRCDIR)/GUVSphereShellPiece.cc         \
 
 PSELIBS := \
-	Core/Exceptions \
-	Core/Geometry   \
-	Core/Util       \
 	Core/Exceptions  \
+	Core/Geometry    \
 	Core/Grid        \
 	Core/Math        \
 	Core/Parallel    \
 	Core/ProblemSpec \
+        Core/Thread      \
+	Core/Util        
 
-
-
-LIBS       := $(M_LIBRARY)
+LIBS := $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

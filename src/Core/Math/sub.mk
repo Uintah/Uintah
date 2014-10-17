@@ -84,10 +84,6 @@ SRCS += \
         Core/Disclosure/TypeDescription.cc \
         Core/Disclosure/TypeUtils.cc 
 
-ifeq ($(IS_WIN),yes)
-  SRCS += $(SRCDIR)/Rand48.cc
-endif
-
 
 PSELIBS := \
 	Core/Exceptions Core/Containers \

@@ -709,7 +709,7 @@ namespace Wasatch {
     using namespace std;
     // loop over the material set
     BOOST_FOREACH( const Uintah::MaterialSubset* matSubSet, materials_->getVector() ) {
-
+      
       // loop over materials
       for( int im=0; im<matSubSet->size(); ++im ) {
         
@@ -717,7 +717,7 @@ namespace Wasatch {
         
         // loop over local patches
         BOOST_FOREACH( const Uintah::PatchSubset* const patches, localPatches_->getVector() ) {
-
+          
           // loop over every patch in the patch subset
           BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() ) {
             
@@ -731,7 +731,7 @@ namespace Wasatch {
             // loop over the physical boundaries of this patch. These are the LOGICAL boundaries
             // and do NOT include intrusions
             BOOST_FOREACH(const Uintah::Patch::FaceType face, bndFaces) {
-
+              
               // Get the number of "boundaries" (children) specified on this boundary face.
               // example: x- boundary face has a circle specified as inlet while the rest of the
               // face is specified as wall. This results in two "boundaries" or children.
@@ -747,7 +747,7 @@ namespace Wasatch {
               // now go over every child-boundary (sub-boundary) specified on this domain boundary face
               for( int chid = 0; chid<numChildren; ++chid ) {
                 DBGBC << " child ID = " << chid << std::endl;
-
+                
                 // here is where the fun starts. Now we can get information about this boundary condition.
                 // The BCDataArray stores information related to its children as BCGeomBase objects.
                 // Each child is associated with a BCGeomBase object. Grab that
@@ -756,7 +756,7 @@ namespace Wasatch {
                 if (bndName.compare("NotSet")==0) {
                   std::ostringstream msg;
                   msg << "ERROR: It looks like you have not set a name for one of your boundary conditions! "
-                      << "You MUST specify a name for your <Face> spec boundary condition. Please revise your input file." << std::endl;
+                  << "You MUST specify a name for your <Face> spec boundary condition. Please revise your input file." << std::endl;
                   throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
                 }
                 DBGBC << " boundary name = " << bndName << std::endl;
@@ -790,7 +790,7 @@ namespace Wasatch {
                   const BndCondTypeEnum atomBCTypeEnum = select_bc_type_enum(bndCondBase->getBCType());
                   
                   DBGBC << " bc variable = " << varName << std::endl
-                        << " bc type = "     << atomBCTypeEnum << std::endl;
+                  << " bc type = "     << atomBCTypeEnum << std::endl;
                   
                   double doubleVal=0.0;
                   std::string functorName="none";
@@ -809,7 +809,7 @@ namespace Wasatch {
                       const Uintah::BoundCond<std::string>* const new_bc = dynamic_cast<const Uintah::BoundCond<std::string>*>(bndCondBase);
                       functorName = new_bc->getValue();
                       bcValType = FUNCTOR_TYPE;
-                      DBGBC << " functor name = " << functorName << std::endl;                      
+                      DBGBC << " functor name = " << functorName << std::endl;
                       break;
                     }
                     case Uintah::BoundCondBase::VECTOR_TYPE: {
@@ -819,7 +819,7 @@ namespace Wasatch {
                     case Uintah::BoundCondBase::INT_TYPE: {
                       // do nothing here... this is added for RMCRT support
                       break;
-                    }                      
+                    }
                     default:
                     {
                       std::ostringstream msg;
@@ -834,6 +834,116 @@ namespace Wasatch {
                 }
               } // boundary child loop (note, a boundary child is what Wasatch thinks of as a boundary condition
             } // boundary faces loop
+            
+            
+            
+            // INTERIOR BOUNDARY CONDITIONS
+            if (patch->hasInteriorBoundaryFaces()) {
+              
+              for(Uintah::Patch::FaceType face_side = Uintah::Patch::startFace;
+                  face_side <= Uintah::Patch::endFace; face_side=Uintah::Patch::nextFace(face_side))
+              {
+                
+                // Get the number of "boundaries" (children) specified on this interior boundary face.
+                // example: x- boundary face has a circle specified as inlet while the rest of the
+                // face is specified as wall. This results in two "boundaries" or children.
+                // the BCDataArray will store this list of children
+                const Uintah::BCDataArray* bcDataArray = patch->getInteriorBndBCDataArray(face_side);
+                
+                // Grab the number of children on this boundary face
+                const int numChildren = bcDataArray->getNumberChildren(materialID);
+                                
+                // now go over every child-boundary (sub-boundary) specified on this domain boundary face
+                for( int chid = 0; chid<numChildren; ++chid ) {
+                  DBGBC << " child ID = " << chid << std::endl;
+                  
+                  // here is where the fun starts. Now we can get information about this boundary condition.
+                  // The BCDataArray stores information related to its children as BCGeomBase objects.
+                  // Each child is associated with a BCGeomBase object. Grab that
+                  Uintah::BCGeomBase* thisGeom = bcDataArray->getChild(materialID,chid);
+                  const std::string bndName = thisGeom->getBCName();
+                  if (bndName.compare("NotSet")==0) {
+                    std::ostringstream msg;
+                    msg << "ERROR: It looks like you have not set a name for one of your boundary conditions! "
+                    << "You MUST specify a name for your <Face> spec boundary condition. Please revise your input file." << std::endl;
+                    throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+                  }
+                  DBGBC << " boundary name = " << bndName << std::endl;
+                  DBGBC << " geom bndtype  = " << thisGeom->getBndType() << std::endl;
+                  BndTypeEnum bndType = select_bnd_type_enum(thisGeom->getBndType());
+                  add_boundary( bndName, face_side, bndType, patchID, thisGeom->getParticleBndSpec() );
+                  DBGBC << " boundary type = " << bndType << std::endl;
+                  
+                  //__________________________________________________________________________________
+                  Uintah::Iterator bndIter; // allocate iterator
+                  // get the iterator for the extracells for this child
+                  bcDataArray->getCellFaceIterator(materialID, bndIter, chid);
+                  
+                  BoundaryIterators myIters;
+                  DBGBC << " Size of uintah iterator for boundary: " << bndName << " = " << bndIter.size() << std::endl;
+                  pack_uintah_iterator_as_spatialops(face_side, patch, bndIter, myIters); // convert the Uintah iterator to a SpatialOps-friendly mask
+                  // store a pointer to the list of particle index that are near this boundary.
+                  myIters.particleIdx = Uintah::ParticlesHelper::get_boundary_particles(bndName,patchID);
+                  
+                  add_boundary_mask( myIters, bndName, patchID );
+                  
+                  //__________________________________________________________________________________
+                  // Now, each BCGeomObject has BCData associated with it. This BCData contains the list
+                  // of variables and types (Dirichlet, etc...), and values that the user specified
+                  // through the input file!
+                  Uintah::BCData bcData;
+                  thisGeom->getBCData(bcData);
+                  
+                  BOOST_FOREACH( Uintah::BoundCondBase* bndCondBase, bcData.getBCData() ) {
+                    const std::string varName     = bndCondBase->getBCVariable();
+                    const BndCondTypeEnum atomBCTypeEnum = select_bc_type_enum(bndCondBase->getBCType());
+                    
+                    DBGBC << " bc variable = " << varName << std::endl
+                    << " bc type = "     << atomBCTypeEnum << std::endl;
+                    
+                    double doubleVal=0.0;
+                    std::string functorName="none";
+                    BCValueTypeEnum bcValType=INVALID_TYPE;
+                    
+                    switch ( bndCondBase->getValueType() ) {
+                        
+                      case Uintah::BoundCondBase::DOUBLE_TYPE: {
+                        const Uintah::BoundCond<double>* const new_bc = dynamic_cast<const Uintah::BoundCond<double>*>(bndCondBase);
+                        doubleVal = new_bc->getValue();
+                        bcValType = DOUBLE_TYPE;
+                        break;
+                      }
+                        
+                      case Uintah::BoundCondBase::STRING_TYPE: {
+                        const Uintah::BoundCond<std::string>* const new_bc = dynamic_cast<const Uintah::BoundCond<std::string>*>(bndCondBase);
+                        functorName = new_bc->getValue();
+                        bcValType = FUNCTOR_TYPE;
+                        DBGBC << " functor name = " << functorName << std::endl;
+                        break;
+                      }
+                      case Uintah::BoundCondBase::VECTOR_TYPE: {
+                        // do nothing here... this is added for WARCHES support
+                        break;
+                      }
+                      case Uintah::BoundCondBase::INT_TYPE: {
+                        // do nothing here... this is added for RMCRT support
+                        break;
+                      }
+                      default:
+                      {
+                        std::ostringstream msg;
+                        msg << "ERROR: It looks like you have specified an unsupported datatype value for boundary " << bndName << ". "
+                        << "Supported datatypes are: double, vector, and string (i.e. functor name)." << std::endl;
+                        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+                      }
+                        break;
+                    }
+                    const BndCondSpec bndCondSpec = {varName, functorName, doubleVal, atomBCTypeEnum, bcValType};
+                    add_boundary_condition(bndName, bndCondSpec);
+                  }
+                } // boundary child loop (note, a boundary child is what Wasatch thinks of as a boundary condition
+              }
+            }
           } // patch loop
         } // patch subset loop
       } // material loop

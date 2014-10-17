@@ -93,6 +93,7 @@ private:
   const VarLabel* d_particle_temperature_label;
   const VarLabel* d_gas_temperature_label;
 
+  std::vector<double>  KobayashiSarofim_coefficients;  
   double A1;        ///< Pre-exponential factors for devolatilization rate constants
   double A2;        ///< Pre-exponential factors for devolatilization rate constants
   double E1;        ///< Activation energy for devolatilization rate constant
@@ -103,9 +104,10 @@ private:
   double k2;        ///< Rate constant for devolatilization reaction 2
   
   double R;         ///< Ideal gas constant
+  double pi;
   
   bool compute_part_temp; ///< Boolean: is particle temperature computed? 
-                          //   (if not, gas temp = particle temp)
+  bool part_temp_from_enth; ///< Boolean: is particle temperature computed? 
   bool compute_char_mass;
 
   double rateMax;

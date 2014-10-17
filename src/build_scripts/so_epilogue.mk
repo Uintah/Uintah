@@ -44,10 +44,7 @@ LIBNAME := $(LIBDIR)/lib$(subst /,_,$(SRCDIR)).$(SO_OR_A_FILE)
 # We always link against the internal Dataflow malloc
 ifneq ($(SRCDIR),Core/Malloc)
   ifeq ($(LARGESOS),yes)
-  else
-    ifneq ($(IS_WIN),yes)
-      PSELIBS := $(PSELIBS) $(MALLOCLIB)
-    endif
+    PSELIBS := $(PSELIBS) $(MALLOCLIB)
   endif
 endif
 
@@ -111,15 +108,11 @@ $(LIBNAME): $(OBJS) $(patsubst %,$(SCIRUN_LIBDIR)/%,$(CORE_PSELIBS)) $(patsubst 
 	$(CXX) $(SCI_THIRDPARTY_LIBRARY) -single_module $(LDFLAGS) $(SOFLAGS) -install_name $(SCIRUN_LIBDIR_ABS)/$(patsubst lib/%,%,$@) -o $@ $(SONAMEFLAG) $(filter %.$(OBJEXT),$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) ${COMMON_LIBS}
       endif
     else
-      ifeq ($(IS_WIN),yes)
-	$(CXX) -o $@ $(SONAMEFLAG) $(filter %.$(OBJEXT),$^) $(patsubst $(SCIRUN_LIBDIR)/%.$(SO_OR_A_FILE),%.lib,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) ${COMMON_LIBS} $(SOFLAGS) $(SCI_THIRDPARTY_LIBRARY) 
+      ifeq ($(SCI_MAKE_BE_QUIET),true)
+	    @echo "Linking:   $@"
+	    @$(CXX) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@ $(SONAMEFLAG) $(filter %.$(OBJEXT),$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) ${COMMON_LIBS}
       else
-        ifeq ($(SCI_MAKE_BE_QUIET),true)
-	@echo "Linking:   $@"
-	@$(CXX) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@ $(SONAMEFLAG) $(filter %.$(OBJEXT),$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) ${COMMON_LIBS}
-        else
-	$(CXX) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@ $(SONAMEFLAG) $(filter %.$(OBJEXT),$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) ${COMMON_LIBS}
-        endif
+	    $(CXX) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@ $(SONAMEFLAG) $(filter %.$(OBJEXT),$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) ${COMMON_LIBS}
       endif
     endif
   endif
@@ -132,14 +125,6 @@ CLEANLIBS := $(CLEANLIBS) $(LIBNAME)
 CLEANOBJS := $(CLEANOBJS) $(OBJS)
 ifneq ($(REPOSITORY_FLAGS),)
   ALL_LIB_ASSOCIATIONS := $(ALL_LIB_ASSOCIATIONS) $(patsubst %,$(SRCDIR)/ptrepository:%,$(patsubst ./%,%,$(OBJS)))
-endif
-
-ifeq ($(IS_WIN), yes)
-  # don't build Core/Malloc for now...
-  ifneq ($(LIBNAME),lib/libCore_Malloc.dll)
-    MAKE_WHAT:=LIB
-    include $(SCIRUN_SCRIPTS)/vcproj.mk
-  endif
 endif
 
 # Try to prevent user error

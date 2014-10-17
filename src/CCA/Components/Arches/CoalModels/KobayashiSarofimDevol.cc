@@ -46,34 +46,13 @@ KobayashiSarofimDevol::KobayashiSarofimDevol( std::string modelName,
                                               int qn ) 
 : Devolatilization(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
-  // Values from Ubhayakar (1976):
-  A1  =  3.7e5;       // [=] 1/s; k1 pre-exponential factor
-  A2  =  1.46e13;     // [=] 1/s; k2 pre-exponential factor
-  E1  =  17600;      // [=] kcal/kmol;  k1 activation energy
-  E2  =  60000;      // [=] kcal/kmol;  k2 activation energy
-
-  /*
-  // Values from Kobayashi (1976):
-  A1  =  2.0e5;       // [=] 1/s; pre-exponential factor for k1
-  A2  =  1.3e7;       // [=] 1/s; pre-exponential factor for k2
-  E1  =  -25000;      // [=] kcal/kmol;  k1 activation energy
-  E2  =  -40000;      // [=] kcal/kmol;  k2 activation energy
-  */
-
   R   =  1.987;       // [=] kcal/kmol; ideal gas constant
+  pi = 3.141592653589793;
 
-  // Y values from white book:
-  Y1_ = 0.3; // volatile fraction from proximate analysis
-  Y2_ = 1.0; // fraction devolatilized at higher temperatures
-
-  /*
-  // Y values from Ubhayakar (1976):
-  Y1_ = 0.39; // volatile fraction from proximate analysis
-  Y2_ = 0.80; // fraction devolatilized at higher temperatures
-  */
 
   compute_part_temp = false;
   compute_char_mass = false;
+  part_temp_from_enth = false;
 }
 
 KobayashiSarofimDevol::~KobayashiSarofimDevol()
@@ -125,6 +104,9 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
       } else if( role_name == "particle_temperature" ) {  
         LabelToRoleMap[temp_label_name] = role_name;
         compute_part_temp = true;
+      } else if( role_name == "particle_temperature_from_enthalpy" ) {
+        LabelToRoleMap[temp_label_name] = role_name;
+        part_temp_from_enth = true;
       } else if( role_name == "char_mass" ) {    
         LabelToRoleMap[temp_label_name] = role_name;        
         compute_char_mass = true;                           
@@ -155,41 +137,21 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
 
   // -----------------------------------------------------------------
   // Look for required scalars
-  //   ( Kobayashi-Sarofim model doesn't use any extra scalars (yet)
-  //     but if it did, this "for" loop would have to be un-commented )
-  /*
-  ProblemSpecP db_scalarvars = params->findBlock("scalarVars");
-  if (db_scalarvars) {
-    for( ProblemSpecP variable = db_scalarvars->findBlock("variable");
-         variable != 0; variable = variable->findNextBlock("variable") ) {
-
-      variable->getAttribute("label", label_name);
-      variable->getAttribute("role",  role_name);
-
-      temp_label_name = label_name;
-
-      std::stringstream out; 
-      out << qn;
-      string node = out.str();
-      temp_label_name += "_qn";
-      temp_label_name += node;
-
-      // user specifies "role" of each scalar
-      // if it isn't an internal coordinate or a scalar, it's required explicitly
-      // ( see comments in Arches::registerModels() for details )
-      if ( role_name == "raw_coal_mass") {
-        LabelToRoleMap[temp_label_name] = role_name;
-      } else if( role_name == "particle_temperature" ) {  
-        LabelToRoleMap[temp_label_name] = role_name;
-        compute_part_temp = true;
-      } else {
-        std::string errmsg;
-        errmsg = "Invalid variable role for Kobayashi Sarofim Devolatilization model: must be \"particle_temperature\" or \"raw_coal_mass\", you specified \"" + role_name + "\".";
-        throw InvalidValue(errmsg,__FILE__,__LINE__);
-      }
-    }
+  const ProblemSpecP params_root = db->getRootNode();
+  if (params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties")) {
+    ProblemSpecP db_coal = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties");
+    db_coal->require("KobayashiSarofim_coefficients", KobayashiSarofim_coefficients);
+    // Values from Ubhayakar (1976):
+    A1=KobayashiSarofim_coefficients[0];  // [=] 1/s; k1 pre-exponential factor
+    A2=KobayashiSarofim_coefficients[1];  // [=] 1/s; k2 pre-exponential factor
+    E1=KobayashiSarofim_coefficients[2];  // [=] kcal/kmol;  k1 activation energy
+    E2=KobayashiSarofim_coefficients[3];  // [=] kcal/kmol;  k2 activation energy
+    // Y values from white book:
+    Y1_=KobayashiSarofim_coefficients[4];  // volatile fraction from proximate analysis
+    Y2_=KobayashiSarofim_coefficients[5];  // fraction devolatilized at higher temperatures
+  } else {
+    throw InvalidValue("ERROR: KobayashiSarofimDevol: problemSetup(): Missing <Coal_Properties> section in input file!",__FILE__,__LINE__);
   }
-  */
 
   // fix the d_scalarLabels to point to the correct quadrature node (since there is 1 model per quad node)
   for ( vector<std::string>::iterator iString = d_scalarLabels.begin(); 
@@ -283,6 +245,12 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
           errmsg += "\" in EqnFactory or in DQMOMEqnFactory.";
           throw InvalidValue(errmsg,__FILE__,__LINE__);
         }
+
+
+      } else if ( iMap->second == "particle_temperature_from_enthalpy") {
+          d_particle_temperature_label = VarLabel::find(iMap->first);
+          d_pt_scaling_factor = 1;
+          tsk->requires(Task::OldDW, d_particle_temperature_label, Ghost::None, 0);
 
       } else if ( iMap->second == "raw_coal_mass") {
         if (dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
@@ -380,10 +348,12 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> temperature; // holds gas OR particle temperature...
     if (compute_part_temp) {
       old_dw->get( temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
-    } else {
-      old_dw->get( temperature, d_gas_temperature_label, matlIndex, patch, gac, 1 );
-    }
- 
+    }// else {
+     // old_dw->get( temperature, d_gas_temperature_label, matlIndex, patch, gac, 1 );
+    //}
+    if (part_temp_from_enth) {
+      old_dw->get( temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
+    }// else {
     constCCVariable<double> wa_raw_coal_mass;
     old_dw->get( wa_raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
 
@@ -444,19 +414,18 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
           if (compute_part_temp) {
             // particle temp
             unscaled_temperature = temperature[c]*d_pt_scaling_factor;
-          } else {
-            // gas temp
+          } else { 
             unscaled_temperature = temperature[c];
-          }
+          } 
         } else {
           unscaled_weight = weight[c]*d_w_scaling_factor;
           if (compute_part_temp) {
             // particle temp
             unscaled_temperature = temperature[c]*d_pt_scaling_factor/weight[c];
-          } else {
-            // gas temp
+          } else { 
             unscaled_temperature = temperature[c];
-          }
+            unscaled_temperature = max(273.0, min(unscaled_temperature,3000.0));
+          } 
           scaled_raw_coal_mass = wa_raw_coal_mass[c]/weight[c];
           unscaled_raw_coal_mass = scaled_raw_coal_mass*d_rc_scaling_factor;
 
@@ -524,6 +493,16 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
       //     << " unscaled_raw_coal_mass " << unscaled_raw_coal_mass << endl;
  
 
+      //proc0cout << "Verification error, Kobayashi-Sarofim Devolatilization model:   " << endl;
+      //  proc0cout << "temp: " << unscaled_temperature  << endl;
+      //  proc0cout << "E1: " << E1  << endl;
+      //  proc0cout << "E2: " << E1  << endl;
+      //  proc0cout << "A1: " << A1  << endl;
+      //  proc0cout << "A2: " << A2  << endl;
+      //  proc0cout << "R: " << R  << endl;
+      //  proc0cout << "k1: " << k1  << endl;
+      //  proc0cout << "k2: " << k2  << endl;
+      //  proc0cout << "****************************************************************" << endl;
 #if defined(VERIFY_KOBAYASHI_MODEL)
       proc0cout << "****************************************************************" << endl;
       proc0cout << "Verification error, Kobayashi-Sarofim Devolatilization model:   " << endl;

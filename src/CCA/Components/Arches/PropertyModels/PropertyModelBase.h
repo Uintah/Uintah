@@ -121,11 +121,7 @@ template <class phiT >
 void PropertyModelBase::base_initialize( const Patch* patch, phiT& phi ){
 
   std::string msg = "Initializing property models. ";
-  if (Uintah::Parallel::getNumThreads() > 1 ) {
-    proc0thread0cout << msg << std::endl;
-  } else {
-    proc0cout << msg << std::endl;
-  }
+  proc0cout << msg << std::endl;
 
   if ( _init_type == "constant" ) {
 

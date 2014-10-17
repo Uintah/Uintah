@@ -81,8 +81,15 @@ namespace Uintah {
                                            const std::string type,
                                            int ichild) const;
 
-     /// Determine the iterator limits.
+     /// Determine the iterator limits for domain boundaries.
      void determineIteratorLimits(Patch::FaceType face, const Patch* patch);
+     
+     /*
+      \author Tony Saad
+      \date   September 2014
+      \brief  Determine the iterator points associated with interior boundaries.
+      */
+     void determineInteriorBndIteratorLimits(Patch::FaceType face, const Patch* patch);
 
      /// Add boundary condition data
      void addBCData(int mat_id,BCGeomBase* bc);

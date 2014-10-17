@@ -83,6 +83,7 @@ namespace Wasatch{
     if     ( taskList == "initialization"   )   cat = INITIALIZATION;
     else if( taskList == "timestep_size"    )   cat = TIMESTEP_SELECTION;
     else if( taskList == "advance_solution" )   cat = ADVANCE_SOLUTION;
+    else if( taskList == "post_processing"  )   cat = POSTPROCESSING;
     else{
       std::ostringstream msg;
       msg << "ERROR: unsupported task list specified: '" << taskList << "'" << std::endl;

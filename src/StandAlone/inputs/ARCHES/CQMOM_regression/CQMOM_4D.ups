@@ -1165,7 +1165,6 @@
         <!-- base information-->
         <NumberInternalCoordinates> 4 </NumberInternalCoordinates>
         <QuadratureNodes> [2,2,2,2] </QuadratureNodes>
-        <HighestOrder> [3,3,3,3] </HighestOrder>
         <InternalCoordinate name="partUVel" type="uVel">
           <Clipping> 
             <high> 3.0 </high>

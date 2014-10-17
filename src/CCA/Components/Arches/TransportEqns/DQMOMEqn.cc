@@ -15,24 +15,34 @@ using namespace Uintah;
 // Builder:
 DQMOMEqnBuilder::DQMOMEqnBuilder( ArchesLabel* fieldLabels, 
                                   ExplicitTimeInt* timeIntegrator,
-                                  string eqnName ) : 
-DQMOMEqnBuilderBase( fieldLabels, timeIntegrator, eqnName )
+                                  string eqnName, 
+                                  string ic_name,
+                                  const int quadNode ) : 
+DQMOMEqnBuilderBase( fieldLabels, timeIntegrator, eqnName ), d_quadNode(quadNode)
+{
+  d_ic_name = ic_name; 
+}
+DQMOMEqnBuilder::~DQMOMEqnBuilder()
 {}
-DQMOMEqnBuilder::~DQMOMEqnBuilder(){}
 
 EqnBase*
 DQMOMEqnBuilder::build(){
-  return scinew DQMOMEqn(d_fieldLabels, d_timeIntegrator, d_eqnName);
+  return scinew DQMOMEqn(d_fieldLabels, d_timeIntegrator, d_eqnName, d_ic_name, d_quadNode);
 }
 // End Builder
 //---------------------------------------------------------------------------
 
-DQMOMEqn::DQMOMEqn( ArchesLabel* fieldLabels, ExplicitTimeInt* timeIntegrator, string eqnName )
+DQMOMEqn::DQMOMEqn( ArchesLabel* fieldLabels, ExplicitTimeInt* timeIntegrator, string eqnName, string ic_name, const int quadNode )
 : 
-EqnBase( fieldLabels, timeIntegrator, eqnName )
+EqnBase( fieldLabels, timeIntegrator, eqnName ), d_quadNode(quadNode)
 {
+  d_ic_name = ic_name; 
+  d_weight = false; 
   
-  string varname = eqnName+"_Fdiff"; 
+  std::string varname = eqnName;
+  d_transportVarLabel = VarLabel::create(varname,
+            CCVariable<double>::getTypeDescription());
+  varname = eqnName+"_Fdiff"; 
   d_FdiffLabel = VarLabel::create(varname, 
             CCVariable<double>::getTypeDescription());
   varname = eqnName+"_Fconv"; 
@@ -41,20 +51,18 @@ EqnBase( fieldLabels, timeIntegrator, eqnName )
   varname = eqnName+"_RHS";
   d_RHSLabel = VarLabel::create(varname, 
             CCVariable<double>::getTypeDescription());
-  varname = eqnName+"_old";
-  d_oldtransportVarLabel = VarLabel::create(varname,
-            CCVariable<double>::getTypeDescription());
-  varname = eqnName;
-  d_transportVarLabel = VarLabel::create(varname,
-            CCVariable<double>::getTypeDescription());
-  varname = eqnName+"_icv"; // icv = internal coordinate value (this is the unscaled/unweighted value)
-  d_icLabel = VarLabel::create(varname, 
-            CCVariable<double>::getTypeDescription());
   varname = eqnName+"_src";
   d_sourceLabel = VarLabel::create(varname, 
             CCVariable<double>::getTypeDescription());
 
-  d_weight = false; 
+  std::string node;
+  std::stringstream sqn;
+  sqn << d_quadNode; 
+  node = sqn.str(); 
+  varname = d_ic_name+"_"+node; 
+  d_icLabel = VarLabel::create(varname, 
+            CCVariable<double>::getTypeDescription());
+
 }
 
 DQMOMEqn::~DQMOMEqn()
@@ -64,18 +72,17 @@ DQMOMEqn::~DQMOMEqn()
   VarLabel::destroy(d_RHSLabel);    
   VarLabel::destroy(d_sourceLabel); 
   VarLabel::destroy(d_transportVarLabel);
-  VarLabel::destroy(d_oldtransportVarLabel);
   VarLabel::destroy(d_icLabel); 
 }
 //---------------------------------------------------------------------------
 // Method: Problem Setup 
 //---------------------------------------------------------------------------
 void
-DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
+DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
 {
+
   // NOTE: some of this may be better off in the EqnBase.cc class
   ProblemSpecP db = inputdb; 
-  d_quadNode = qn; 
 
   ProblemSpecP db_root = db->getRootNode();
   ProblemSpecP dqmom_db = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
@@ -176,7 +183,19 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
 
       } 
     }
-  } 
+  } else { 
+
+    // Actor to role matching: 
+    // Only needed for ICs
+    //std::string descriptor; 
+    //db->require( "ndf_descriptor", descriptor ); 
+
+    //DQMOMEqnFactory::NDF_DESCRIPTOR ndf_desc_enum = dqmomFactory.get_descriptor(descriptor); 
+
+    ////now register it
+    //dqmomFactory.assign_descriptor(d_ic_name, ndf_desc_enum);
+
+  }
 
   // Scaling information:
   db->require( "scaling_const", d_scalingConstant ); 
@@ -202,7 +221,6 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
   // There should be some mechanism to make sure that when environment-specific
   // initialization functions are used, ALL environments are specified
   // (Charles)
-
 
   // Initialization (new way):
   ProblemSpecP db_initialValue = db->findBlock("initialization");
@@ -246,7 +264,6 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
         if( i_tempQuadNode == d_quadNode )
           d_constant_init = constantValue / d_scalingConstant;
       }
- 
 
     // ------- (Environment & Uniform) Step initialization function ------------
     // NOTE: Right now the only environment-specific attribute of the step function
@@ -319,14 +336,6 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
 }
 
 //---------------------------------------------------------------------------
-// Method: Schedule clean up. 
-// Probably not needed for DQMOM
-//---------------------------------------------------------------------------
-void 
-DQMOMEqn::sched_cleanUp( const LevelP& level, SchedulerP& sched )
-{
-}
-//---------------------------------------------------------------------------
 // Method: Schedule the evaluation of the transport equation. 
 //---------------------------------------------------------------------------
 void
@@ -334,24 +343,14 @@ DQMOMEqn::sched_evalTransportEqn( const LevelP& level,
                                   SchedulerP& sched, int timeSubStep )
 {
 
-  if (timeSubStep == 0) 
+  if (timeSubStep == 0) {
     sched_initializeVariables( level, sched );
-
-#ifdef VERIFY_DQMOM_TRANSPORT
-  if (d_addExtraSources) { 
-    proc0cout << endl;
-    proc0cout << endl;
-    proc0cout << "NOTICE: You have verification turned ON in your DQMOMEqn.h " << endl;
-    proc0cout << "Equation " << d_eqnName << " reporting" << endl;
-    proc0cout << endl;
-    proc0cout << endl;
-
-    sched_computeSources( level, sched, timeSubStep ); 
   }
-#endif
+
   if (d_addExtraSources) {
     sched_computeSources( level, sched, timeSubStep );
   }
+
   sched_buildTransportEqn( level, sched, timeSubStep );
 
   sched_solveTransportEqn( level, sched, timeSubStep );
@@ -366,9 +365,9 @@ DQMOMEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
   string taskname = "DQMOMEqn::initializeVariables";
   Task* tsk = scinew Task(taskname, this, &DQMOMEqn::initializeVariables);
   Ghost::GhostType gn = Ghost::None;
+
   //New
   tsk->computes(d_transportVarLabel);
-  tsk->computes(d_oldtransportVarLabel); // for rk sub stepping 
   tsk->computes(d_icLabel); 
   tsk->computes(d_RHSLabel); 
   tsk->computes(d_FconvLabel);
@@ -382,10 +381,10 @@ DQMOMEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
 // Method: Actually initialize the variables. 
 //---------------------------------------------------------------------------
 void DQMOMEqn::initializeVariables( const ProcessorGroup* pc, 
-                              const PatchSubset* patches, 
-                              const MaterialSubset* matls, 
-                              DataWarehouse* old_dw, 
-                              DataWarehouse* new_dw )
+                                    const PatchSubset* patches, 
+                                    const MaterialSubset* matls, 
+                                    DataWarehouse* old_dw, 
+                                    DataWarehouse* new_dw )
 {
 
   //patch loop
@@ -398,21 +397,17 @@ void DQMOMEqn::initializeVariables( const ProcessorGroup* pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> newVar;
-    CCVariable<double> rkoldVar; 
     CCVariable<double> icValue; 
     constCCVariable<double> oldVar; 
     new_dw->allocateAndPut( newVar, d_transportVarLabel, matlIndex, patch );
-    new_dw->allocateAndPut( rkoldVar, d_oldtransportVarLabel, matlIndex, patch ); 
     new_dw->allocateAndPut( icValue , d_icLabel, matlIndex, patch );
     old_dw->get(oldVar, d_transportVarLabel, matlIndex, patch, gn, 0);
 
     newVar.initialize(  0.0);
-    rkoldVar.initialize(0.0);
     icValue.initialize( 0.0);
 
     // copy old into new
     newVar.copyData(oldVar);
-    rkoldVar.copyData(oldVar); 
 
     CCVariable<double> Fdiff; 
     CCVariable<double> Fconv; 
@@ -428,6 +423,7 @@ void DQMOMEqn::initializeVariables( const ProcessorGroup* pc,
 
     curr_time = d_fieldLabels->d_sharedState->getElapsedTime(); 
     curr_ssp_time = curr_time; 
+
   }
 }
 //---------------------------------------------------------------------------
@@ -451,15 +447,19 @@ DQMOMEqn::sched_computeSources( const LevelP& level, SchedulerP& sched, int time
 // Method: Schedule build the transport equation. 
 //---------------------------------------------------------------------------
 void
-DQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int timeSubStep )
+DQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, const int timeSubStep )
 {
+
   string taskname = "DQMOMEqn::buildTransportEqn"; 
 
-  Task* tsk = scinew Task(taskname, this, &DQMOMEqn::buildTransportEqn);
+  Task* tsk = scinew Task(taskname, this, &DQMOMEqn::buildTransportEqn, timeSubStep);
 
   //----NEW----
-  tsk->modifies(d_transportVarLabel);
-  tsk->requires(Task::NewDW, d_oldtransportVarLabel, Ghost::AroundCells, 2);
+  if ( timeSubStep == 0 ){ 
+    tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
+  } else { 
+    tsk->requires(Task::NewDW, d_transportVarLabel, Ghost::AroundCells, 2);
+  }
   tsk->modifies(d_FdiffLabel);
   tsk->modifies(d_FconvLabel);
   tsk->modifies(d_RHSLabel);
@@ -468,7 +468,6 @@ DQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int t
  
   //-----OLD-----
   tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 2); 
-  tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
   tsk->requires(Task::OldDW, d_fieldLabels->d_viscosityCTSLabel, Ghost::AroundCells, 1);
   tsk->requires(Task::OldDW, d_fieldLabels->d_uVelocitySPBCLabel, Ghost::AroundCells, 1);   
 #ifdef YDIM
@@ -507,10 +506,11 @@ DQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int t
 //---------------------------------------------------------------------------
 void 
 DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc, 
-                              const PatchSubset* patches, 
-                              const MaterialSubset* matls, 
-                              DataWarehouse* old_dw, 
-                              DataWarehouse* new_dw )
+                             const PatchSubset* patches, 
+                             const MaterialSubset* matls, 
+                             DataWarehouse* old_dw, 
+                             DataWarehouse* new_dw, 
+                             const int timeSubStep )
 {
 
   //patch loop
@@ -524,62 +524,57 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     Vector Dx = patch->dCell(); 
 
-    constCCVariable<double> oldPhi;
+    DataWarehouse* which_dw; 
+    if ( timeSubStep == 0 ){ 
+      which_dw = old_dw; 
+    } else { 
+      which_dw = new_dw; 
+    }
+
+    constCCVariable<double> phi;
     constCCVariable<double> mu_t;
-    constSFCXVariable<double> uVel; 
-    constSFCYVariable<double> vVel; 
-    constSFCZVariable<double> wVel; 
-    constCCVariable<double> src; //DQMOM_src from Ax=b
+    constCCVariable<double> src;       //DQMOM_src from Ax=b
     constCCVariable<double> extra_src; // Any additional source (eg, mms or unweighted abscissa src)  
     constCCVariable<Vector> partVel; 
     constCCVariable<Vector> areaFraction; 
 
-    CCVariable<double> phi;
     CCVariable<double> Fdiff; 
     CCVariable<double> Fconv; 
     CCVariable<double> RHS; 
 
-    new_dw->get(oldPhi, d_oldtransportVarLabel, matlIndex, patch, gac, 2);
-    if (new_dw->exists(d_sourceLabel, matlIndex, patch)) { 
-      new_dw->get(src, d_sourceLabel, matlIndex, patch, gn, 0); // only get new_dw value on rkstep > 0
-    } else {
-      old_dw->get(src, d_sourceLabel, matlIndex, patch, gn, 0); 
-    }
+    which_dw->get(phi, d_transportVarLabel, matlIndex, patch, gac, 2);
+    which_dw->get(src, d_sourceLabel, matlIndex, patch, gn, 0 ); 
 
-    old_dw->get(mu_t, d_fieldLabels->d_viscosityCTSLabel, matlIndex, patch, gac, 1); 
-    old_dw->get(uVel,   d_fieldLabels->d_uVelocitySPBCLabel, matlIndex, patch, gac, 1); 
-    old_dw->get(areaFraction, d_fieldLabels->d_areaFractionLabel, matlIndex, patch, gac, 2); 
+    old_dw->get(mu_t         , d_fieldLabels->d_viscosityCTSLabel  , matlIndex , patch , gac , 1);
+    old_dw->get(areaFraction , d_fieldLabels->d_areaFractionLabel  , matlIndex , patch , gac , 2);
     double vol = Dx.x();
 #ifdef YDIM
-    old_dw->get(vVel,   d_fieldLabels->d_vVelocitySPBCLabel, matlIndex, patch, gac, 1); 
     vol *= Dx.y(); 
 #endif
 #ifdef ZDIM
-    old_dw->get(wVel,   d_fieldLabels->d_wVelocitySPBCLabel, matlIndex, patch, gac, 1); 
     vol *= Dx.z(); 
 #endif
 
     ArchesLabel::PartVelMap::iterator iter = d_fieldLabels->partVel.find(d_quadNode);
     new_dw->get( partVel, iter->second, matlIndex, patch, gac, 1 ); 
 
-    new_dw->getModifiable(phi, d_transportVarLabel, matlIndex, patch);
     new_dw->getModifiable(Fdiff, d_FdiffLabel, matlIndex, patch);
     new_dw->getModifiable(Fconv, d_FconvLabel, matlIndex, patch); 
     new_dw->getModifiable(RHS, d_RHSLabel, matlIndex, patch);
     RHS.initialize(0.0); 
+    Fdiff.initialize(0.0);
     Fconv.initialize(0.0);
-    Fdiff.initialize(0.0); 
 
     constCCVariable<double> w;
     if(!d_weight){
       old_dw->get(w, d_weightLabel, matlIndex, patch, gn, 0);
     }
 
-    computeBCs( patch, d_eqnName, phi );
+    //computeBCs( patch, d_eqnName, phi ); add this elsewhere. 
 
     //----CONVECTION
     if (d_doConv){
-      d_disc->computeConv( patch, Fconv, oldPhi, uVel, vVel, wVel, partVel, areaFraction, d_convScheme ); 
+      d_disc->computeConv( patch, Fconv, phi, partVel, areaFraction, d_convScheme ); 
       // look for and add contribution from intrusions.
       if ( _using_new_intrusion ) { 
         _intrusions->addScalarRHS( patch, Dx, d_eqnName, RHS ); 
@@ -588,7 +583,7 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
   
     //----DIFFUSION
     if (d_doDiff)
-      d_disc->computeDiff( patch, Fdiff, oldPhi, mu_t, d_mol_diff, areaFraction, d_turbPrNo );
+      d_disc->computeDiff( patch, Fdiff, phi, mu_t, d_mol_diff, areaFraction, d_turbPrNo );
  
     //----SUM UP RHS
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
@@ -606,25 +601,6 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
           }
         }
  
-        //RHS[c] += src[c]*vol;
-#ifdef VERIFY_DQMOM_TRANSPORT
-        if (d_addExtraSources) { 
-          // Going to subtract out the src from the Ax=b solver
-          // This assumes that you don't care about the solution (for verification). 
-          RHS[c] -= src[c]*vol;
-
-          // Get the factory of source terms
-          SourceTermFactory& src_factory = SourceTermFactory::self(); 
-          for (vector<std::string>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
-           constCCVariable<double> extra_src;  // Outside of this scope src is no longer available 
-           SourceTermBase& temp_src = src_factory.retrieve_source_term( *src_iter ); 
-           new_dw->get(extra_src, temp_src.getSrcLabel(), matlIndex, patch, gn, 0);
-
-           // Add to the RHS
-           RHS[c] += extra_src[c]*vol; 
-          }            
-        }
-#endif
         if (d_addExtraSources) {
 
           // Get the factory of source terms
@@ -654,7 +630,6 @@ DQMOMEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int t
 
   //New
   tsk->modifies(d_transportVarLabel);
-  tsk->modifies(d_oldtransportVarLabel); 
   tsk->requires(Task::NewDW, d_RHSLabel, Ghost::None, 0);
   if( !d_weight ) 
       tsk->requires(Task::NewDW, d_weightLabel, Ghost::None, 0);
@@ -690,12 +665,10 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     double dt = DT; 
 
     CCVariable<double> phi;    // phi @ current sub-level 
-    CCVariable<double> oldphi; // phi @ last update for rk substeps
     constCCVariable<double> RHS; 
     constCCVariable<double> rk1_phi; // phi @ n for averaging 
 
     new_dw->getModifiable(phi, d_transportVarLabel, matlIndex, patch);
-    new_dw->getModifiable(oldphi, d_oldtransportVarLabel, matlIndex, patch); 
     new_dw->get(RHS, d_RHSLabel, matlIndex, patch, gn, 0);
     old_dw->get(rk1_phi, d_transportVarLabel, matlIndex, patch, gn, 0);
 
@@ -715,9 +688,6 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     //----BOUNDARY CONDITIONS
     // For first time step, bc's have been set in dqmomInit
     computeBCs( patch, d_eqnName, phi );
-
-    // copy averaged phi into oldphi
-    oldphi.copyData(phi);
 
   }
 }

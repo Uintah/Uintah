@@ -1017,6 +1017,14 @@ namespace Wasatch{
 
     if( isRestarting_ ){
       setup_patchinfo_map( level, sched );
+      
+      
+      if (doParticles_)
+      {
+          particlesHelper_->schedule_restart_initialize(level,sched);
+          particlesHelper_->schedule_find_boundary_particles(level,sched);
+      }
+
       //bcHelper_ = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
       bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     }
@@ -1147,9 +1155,6 @@ namespace Wasatch{
     // Uintah::Point whereas Wasatch uses x, y, and z variables, separately.
     if (doParticles_)
     {
-      if (isRestarting_) {
-        particlesHelper_->schedule_restart_initialize(level,sched);
-      }
       particlesHelper_->schedule_transfer_particle_ids(level,sched);
       particlesHelper_->schedule_sync_particle_position(level,sched);
       particlesHelper_->schedule_relocate_particles(level,sched);
