@@ -71,42 +71,44 @@ using namespace std;
 using namespace Uintah;
 
 bool verbose = false;
-bool quiet = false;
-bool pad = false;
+bool quiet   = false;
+bool pad     = false;
+
 bool d_printCell_coords = false;
   
 void
-usage(const std::string& badarg, const std::string& progname)
+usage( const std::string & badarg, const std::string & progname )
 {
-    if(badarg != "")
-        cerr << "Error parsing argument: " << badarg << endl;
-    cerr << "Usage: " << progname << " [options] "
-         << "-uda <archive file>\n\n";
-    cerr << "Valid options are:\n";
-    cerr << "  -h,        --help\n";
-    cerr << "  -v,        --variable:      <variable name>\n";
-    cerr << "  -m,        --material:      <material number> [defaults to 0]\n";
-    cerr << "  -tlow,     --timesteplow:   [int] (sets start output timestep to int) [defaults to 0]\n";
-    cerr << "  -thigh,    --timestephigh:  [int] (sets end output timestep to int) [defaults to last timestep]\n";
-    cerr << "  -timestep, --timestep:      [int] (only outputs from timestep int)  [defaults to 0]\n";
-    cerr << "  -istart,   --indexs:        <i> <j> <k> [ints] starting point cell index  [defaults to 0 0 0]\n";
-    cerr << "  -iend,     --indexe:        <i> <j> <k> [ints] end-point cell index [defaults to 0 0 0]\n";
-    cerr << "  -startPt                    <x> <y> <z> [doubles] starting point of line in physical coordinates\n";
-    cerr << "  -endPt                      <x> <y> <z> [doubles] end-point of line in physical coordinates\n";
-	  cerr << "  -pr,       --precision:     [int] (specify precision of output data) [defaults to 16. maximum 32]\n";  
-    cerr << "  -l,        --level:         [int] (level index to query range from) [defaults to 0]\n";
-    cerr << "  -o,        --out:           <outputfilename> [defaults to stdout]\n"; 
-    cerr << "  -vv,       --verbose:       (prints status of output)\n";
-    cerr << "  -q,        --quiet:         (only print data values)\n";
-    cerr << "  -pad,        --pad:         (print zero values for cell locations not currently in the specified level)\n";
-    cerr << "  -cellCoords:                (prints the cell centered coordinates on that level)\n";
-    cerr << "  --cellIndexFile:            <filename> (file that contains a list of cell indices)\n";
-    cerr << "                                   [int 100, 43, 0]\n";
-    cerr << "                                   [int 101, 43, 0]\n";
-    cerr << "                                   [int 102, 44, 0]\n";
-    cerr << "----------------------------------------------------------------------------------------\n";
-    cerr << " For particle variables the average over all particles in a cell is returned.\n";
-    exit(1);
+  if(badarg != "") {
+    cerr << "Error parsing argument: " << badarg << endl;
+  }
+  cerr << "Usage: " << progname << " [options] "
+       << "-uda <archive file>\n\n";
+  cerr << "Valid options are:\n";
+  cerr << "  -h,        --help\n";
+  cerr << "  -v,        --variable:      <variable name>\n";
+  cerr << "  -m,        --material:      <material number> [defaults to 0]\n";
+  cerr << "  -tlow,     --timesteplow:   [int] (sets start output timestep to int) [defaults to 0]\n";
+  cerr << "  -thigh,    --timestephigh:  [int] (sets end output timestep to int) [defaults to last timestep]\n";
+  cerr << "  -timestep, --timestep:      [int] (only outputs from timestep int)  [defaults to 0]\n";
+  cerr << "  -istart,   --indexs:        <i> <j> <k> [ints] starting point cell index  [defaults to 0 0 0]\n";
+  cerr << "  -iend,     --indexe:        <i> <j> <k> [ints] end-point cell index [defaults to 0 0 0]\n";
+  cerr << "  -startPt                    <x> <y> <z> [doubles] starting point of line in physical coordinates\n";
+  cerr << "  -endPt                      <x> <y> <z> [doubles] end-point of line in physical coordinates\n";
+  cerr << "  -pr,       --precision:     [int] (specify precision of output data) [defaults to 16. maximum 32]\n";  
+  cerr << "  -l,        --level:         [int] (level index to query range from) [defaults to 0]\n";
+  cerr << "  -o,        --out:           <outputfilename> [defaults to stdout]\n"; 
+  cerr << "  -vv,       --verbose:       (prints status of output)\n";
+  cerr << "  -q,        --quiet:         (only print data values)\n";
+  cerr << "  -pad,        --pad:         (print zero values for cell locations not currently in the specified level)\n";
+  cerr << "  -cellCoords:                (prints the cell centered coordinates on that level)\n";
+  cerr << "  --cellIndexFile:            <filename> (file that contains a list of cell indices)\n";
+  cerr << "                                   [int 100, 43, 0]\n";
+  cerr << "                                   [int 101, 43, 0]\n";
+  cerr << "                                   [int 102, 44, 0]\n";
+  cerr << "----------------------------------------------------------------------------------------\n";
+  cerr << " For particle variables the average over all particles in a cell is returned.\n";
+  exit(1);
 }
 
 // arguments are the dataarchive, the successive arguments are the same as 
@@ -117,19 +119,29 @@ usage(const std::string& badarg, const std::string& progname)
 //______________________________________________________________________
 //
 template<class T>
-void printData(DataArchive* archive, string& variable_name, const Uintah::TypeDescription* variable_type,
-               int material, const bool use_cellIndex_file, int levelIndex,
-               IntVector& var_start, IntVector& var_end, vector<IntVector> cells,
-               unsigned long time_start, unsigned long time_end, unsigned long output_precision, ostream& out) 
-
+void
+printData(       DataArchive             * archive,
+                 string                  & variable_name,
+           const Uintah::TypeDescription * variable_type,
+                 int                       material,
+           const bool                      use_cellIndex_file,
+                 int                       levelIndex,
+                 IntVector               & var_start,
+                 IntVector               & var_end,
+                 vector<IntVector>         cells,
+                 unsigned long             time_start,
+                 unsigned long             time_end,
+                 unsigned long             output_precision,
+                 ostream                 & out )
 {
-  // query time info from dataarchive
-  vector<int> index;
+  // Query time info from dataarchive.
+  vector<int>    index;
   vector<double> times;
 
   archive->queryTimesteps(index, times);
   ASSERTEQ(index.size(), times.size());
-  if (!quiet){
+
+  if( !quiet ){
     cout << "There are " << index.size() << " timesteps\n";
   }
   
@@ -389,11 +401,20 @@ void compute_ave(ParticleVariable<T>& var,
 //______________________________________________________________________
 // Used for Particle Variables
 template<class T>
-void printData_PV(DataArchive* archive, string& variable_name, const Uintah::TypeDescription* variable_type,
-               int material, const bool use_cellIndex_file, int levelIndex,
-               IntVector& var_start, IntVector& var_end, vector<IntVector> cells,
-               unsigned long time_start, unsigned long time_end, unsigned long output_precision, ostream& out) 
-
+void
+printData_PV(       DataArchive             * archive,
+                    string                  & variable_name,
+              const Uintah::TypeDescription * variable_type,
+                    int                       material,
+              const bool                      use_cellIndex_file,
+                    int                       levelIndex,
+                    IntVector               & var_start,
+                    IntVector               & var_end,
+                    vector<IntVector>         cells,
+                    unsigned long             time_start,
+                    unsigned long             time_end,
+                    unsigned long             output_precision,
+                    ostream                 & out )
 {
   // query time info from dataarchive
   vector<int> index;
@@ -571,7 +592,8 @@ void printData_PV(DataArchive* archive, string& variable_name, const Uintah::Typ
  Function:  readCellIndicies--
  Purpose: reads in a list of cell indicies
 _______________________________________________________________________ */
-void readCellIndicies(const string& filename, vector<IntVector>& cells)
+void
+readCellIndicies( const string& filename, vector<IntVector>& cells )
 { 
   // open the file
   ifstream fp(filename.c_str());
@@ -594,6 +616,39 @@ void readCellIndicies(const string& filename, vector<IntVector>& cells)
   //}
 }
 
+#ifdef __bgq__
+////////////////////////////////////////////////////////////////////////
+//
+// On BGQ machines (eg: vulcan@llnl), and on many other strange
+// architectures, static variables don't construct correctly. This is
+// a particular problem with our type system as the types are
+// registered when they are first constructed and then placed into a
+// lookup table.  The following hack just creates dummy variables of
+// the types that we need which forces the types to be registered.
+//
+const Uintah::TypeDescription *
+bgq_hack()
+{
+  SFCXVariable<float> sfcxvar;
+  SFCYVariable<float> sfcyvar;
+  SFCZVariable<float> sfczvar;
+  CCVariable<float>   ccfloatvar;
+  CCVariable<Vector>  ccvectorvar;
+
+  const Uintah::TypeDescription * td;
+
+  td = sfcxvar.getTypeDescription();
+  td = sfcyvar.getTypeDescription();
+  td = sfczvar.getTypeDescription();
+  td = ccfloatvar.getTypeDescription();
+  td = ccvectorvar.getTypeDescription();
+
+  return td;
+}
+#endif
+//
+////////////////////////////////////////////////////////////////////////
+
 //______________________________________________________________________
 //    Notes:
 // Now the material index is kind of a hard thing.  There is no way
@@ -604,35 +659,35 @@ void readCellIndicies(const string& filename, vector<IntVector>& cells)
 // an exception and exit gracefully.
 
 
-int main(int argc, char** argv)
+int
+main( int argc, char** argv )
 {
-
   //__________________________________
   //  Default Values
-  bool use_cellIndex_file = false;
-  bool findCellIndices = false;
+  bool              use_cellIndex_file = false;
+  bool              findCellIndices = false;
 
-  unsigned long time_start = 0;
-  unsigned long time_end = (unsigned long)-1;
-  unsigned long output_precision = 16;
-  string input_uda_name;  
-  string input_file_cellIndices;
-  string output_file_name("-");
-  IntVector var_start(0,0,0);
-  IntVector var_end(0,0,0);
-  Point     start_pt(-9,-9,-9);
-  Point     end_pt(-9,-9,-9);
-  int levelIndex = 0;
+  unsigned long     time_start = 0;
+  unsigned long     time_end = (unsigned long)-1;
+  unsigned long     output_precision = 16;
+  string            input_uda_name;  
+  string            input_file_cellIndices;
+  string            output_file_name("-");
+  IntVector         var_start(0,0,0);
+  IntVector         var_end(0,0,0);
+  Point             start_pt(-9,-9,-9);
+  Point             end_pt(-9,-9,-9);
+  int               levelIndex = 0;
   vector<IntVector> cells;
-  string variable_name;
+  string            variable_name;
 
-  int material = 0;
+  int               material = 0;
   
   //__________________________________
   // Parse arguments
 
-  for(int i=1;i<argc;i++){
-    string s=argv[i];
+  for( int i = 1; i < argc; i++ ){
+    const string s = argv[i];
     if(s == "-v" || s == "--variable") {
       variable_name = string(argv[++i]);
     } else if (s == "-m" || s == "--material") {
@@ -696,14 +751,18 @@ int main(int argc, char** argv)
     } else if (s == "--cellCoords" || s == "-cellCoords" ) {
       d_printCell_coords = true;
     }else {
-      usage(s, argv[0]);
+      usage( s, argv[0] );
     }
   }
   
-  if(input_uda_name == ""){
+  if( input_uda_name == "" ){
     cerr << "No archive file specified\n";
     usage("", argv[0]);
   }
+
+#ifdef __bgq__
+  bgq_hack();
+#endif
 
   try {
     DataArchive* archive = scinew DataArchive(input_uda_name);
@@ -711,26 +770,33 @@ int main(int argc, char** argv)
     vector<string> vars;
     vector<const Uintah::TypeDescription*> types;
 
-    archive->queryVariables(vars, types);
-    ASSERTEQ(vars.size(), types.size());
-    if (verbose) cout << "There are " << vars.size() << " variables:\n";
-    bool var_found = false;
-    unsigned int var_index = 0;
-    for (;var_index < vars.size(); var_index++) {
-      if (variable_name == vars[var_index]) {
-        var_found = true;
+    archive->queryVariables( vars, types );
+    ASSERTEQ( vars.size(), types.size() );
+
+    if (verbose) {
+      cout << "There are " << vars.size() << " variables registered with types:\n";
+      for( unsigned int index = 0; index < vars.size(); index++ ) {
+        cout << index << ": " << vars[ index ] << " - " << types[ index ]->getName() << "\n";
+      }
+    }
+
+    int var_index = -1;
+    
+    for( unsigned int index = 0; index < vars.size(); index++ ) {
+      if( variable_name == vars[ index ] ) {
+	var_index = index;
         break;
       }
     }
+
     //__________________________________
     // bulletproofing
-    if (!var_found) {
+    if( var_index == -1 ) {
       cerr << "Variable \"" << variable_name << "\" was not found.\n";
       cerr << "If a variable name was not specified try -var [name].\n";
       cerr << "Possible variable names are:\n";
-      var_index = 0;
-      for (;var_index < vars.size(); var_index++) {
-        cout << "vars[" << var_index << "] = " << vars[var_index] << endl;
+      for( unsigned int index = 0; index < vars.size(); index++ ) {
+        cout << "vars[" << index << "] = " << vars[ index ] << "\n";
       }
       cerr << "Aborting!!\n";
       exit(-1);
@@ -738,9 +804,26 @@ int main(int argc, char** argv)
 
     //__________________________________
     // get type and subtype of data
-    const Uintah::TypeDescription* td = types[var_index];
-    const Uintah::TypeDescription* subtype = td->getSubType();
+    const Uintah::TypeDescription * td      = types[var_index];
+    const Uintah::TypeDescription * subtype = td->getSubType();
      
+    if( subtype == NULL ) {
+      cout << "\n";
+      cout << "An ERROR occurred.  Subtype is NULL.  Most likely this means that the automatic\n";
+      cout << "type instantiation is not working... Are you running on a strange architecture?\n";
+      cout << "Types should be constructed when global static variables of each type are instantiated\n";
+      cout << "automatically when the program loads.  The registering of the types occurs in:\n";
+      cout << "src/Core/Disclosure/TypeDescription.cc in register_type() (called from the\n";
+      cout << "TypeDescription() constructor(s).  However, I'm not quite sure where the variables\n";
+      cout << "are initially (or in this case not initially) instantiated...  Need to track\n";
+      cout << "that down and force them to be created... Dd.\n";
+      cout << "\n";
+      cout << "NOTE: You can try adding the type of the variable you are trying to extract into\n";
+      cout << "      the bgq_hack() function in lineextract.cc.\n";
+      cout << "\n";
+      exit( 1 );
+    }
+
     //__________________________________
     // Open output file, call printData with it's ofstream
     // if no output file, call with cout
@@ -755,13 +838,11 @@ int main(int argc, char** argv)
         exit(1);
       }
       output_stream = output;
-    } else {
-      //output_stream = cout;
     }
     
     //__________________________________
     //  find the cell index
-    if(findCellIndices){
+    if( findCellIndices ){
       vector<int> index;
       vector<double> times;
       archive->queryTimesteps(index, times);
@@ -812,15 +893,15 @@ int main(int argc, char** argv)
                           time_start, time_end, output_precision, *output_stream);    
         break;
       case Uintah::TypeDescription::Matrix3:
-       printData<Matrix3>(archive, variable_name, td, material, use_cellIndex_file,
-                         levelIndex, var_start, var_end, cells,
-                         time_start, time_end, output_precision, *output_stream);    
+        printData<Matrix3>(archive, variable_name, td, material, use_cellIndex_file,
+                           levelIndex, var_start, var_end, cells,
+                           time_start, time_end, output_precision, *output_stream);    
         break;
       case Uintah::TypeDescription::Stencil7:
-          printData<Stencil7>(archive, variable_name, td, material, use_cellIndex_file,
+        printData<Stencil7>(archive, variable_name, td, material, use_cellIndex_file,
                             levelIndex, var_start, var_end, cells,
                             time_start, time_end, output_precision, *output_stream);    
-          break;
+        break;
         // don't break on else - flow to the error statement
       case Uintah::TypeDescription::bool_type:
       case Uintah::TypeDescription::short_int_type:
