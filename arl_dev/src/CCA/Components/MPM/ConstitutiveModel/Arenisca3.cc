@@ -1304,20 +1304,32 @@ int Arenisca3::computeSubstep(const Matrix3& d_e,       // Total strain incremen
 		goto failedSubstep;
 	}
 
+	// If there is no porosity (p3=0) and no fluid effects (Kf=0) then the nonhardening
+	// return will be the solution
+	if ( (d_cm.p3_crush_curve == 0.0)&&(d_cm.fluid_B0==0.0) ){
+        Zeta_new = Zeta_old,
+		X_new = X_old;
+		sigma_new = one_third*I1_0*Identity + S_0;
+		ep_new = ep_old + d_ep_0;
+		
+		goto successfulSubstep;
+	}
+	
     double d_evp_0 = d_ep_0.Trace();
-
+	
 // (6) Iterate to solve for plastic volumetric strain consistent with the updated
 //     values for the cap (X) and isotropic backstress (Zeta).  Use a bisection method
 //     based on the multiplier eta,  where  0<eta<1
+
     double eta_out = 1.0,
            eta_in = 0.0,
            eta_mid,
            d_evp;
     int i = 0,
         imax = 93;  // imax = ceil(-10.0*log(TOL)); // Update this if TOL changes
-
+	
     double dZetadevp = computedZetadevp(Zeta_old,evp_old);
-
+    
 // (7) Update Internal State Variables based on Last Non-Hardening Return:
 //
 updateISV:
@@ -1441,7 +1453,30 @@ updateISV:
     }
     goto updateISV;
   }
-// (12) Return updated values for successful/unsuccessful steps
+  
+// (12) Compute softening, collapse yield surface, and compute nonhardening return
+// to collapse yield surface.
+//
+// This is not rigorous, since the treatment of softening is not included as a 
+// hardenining mechanism in the computation of the increment in plastic strain.
+//
+// Figure out where to put this:
+// coher = max(coher - d_ep_new.Norm()/d_cm.failure_strain);
+//  //
+//  returnFlag = nonHardeningReturn(I1_trial,rJ2_trial,S_trial,
+//								  I1_old,rJ2_old,S_old,
+//								  d_e,X_new,Zeta_new,coher,bulk,shear,
+//								  I1_new,rJ2_new,S_new,d_ep_new);
+//  if (returnFlag!=0){
+//#ifdef MHdebug
+//	  cout << "1344: failed nonhardeningReturn in substep "<< endl;
+//#endif
+//	  goto failedSubstep;
+  
+  
+  
+// (13) Return updated values for successful/unsuccessful steps
+//
 successfulSubstep:
   substepFlag = 0;
   return substepFlag;
@@ -1467,6 +1502,7 @@ double Arenisca3::computeX(const double& evp,const double& P3)
   double p0  = d_cm.p0_crush_curve,
          p1  = d_cm.p1_crush_curve,
          X;
+  
 
   if(evp<=-P3) { // ------------Plastic strain exceeds allowable limit--------------------------
     // The plastic strain for this iteration has exceed the allowable
@@ -1970,7 +2006,7 @@ void Arenisca3::checkInputParameters(){
 	  warn << "p1 must be positive. p1 = "<<d_cm.p1_crush_curve<<endl;
 	  throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
-  if(d_cm.p3_crush_curve<=0.0){
+  if(d_cm.p3_crush_curve<0.0){
 	  ostringstream warn;
 	  warn << "p3 must be positive. p3 = "<<d_cm.p3_crush_curve<<endl;
 	  throw ProblemSetupException(warn.str(), __FILE__, __LINE__);

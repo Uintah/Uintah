@@ -29,7 +29,8 @@
 
 #include <expression/Expression.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-
+#include <spatialops/OperatorDatabase.h>
+#include <CCA/Components/Wasatch/PatchInfo.h>
 #include <limits>
 #include <iostream>
 #include <fstream>
@@ -175,6 +176,9 @@ public:
             const Expr::Tag& yTag,
             const Expr::Tag& zTag,
             const std::string fileName);
+    Builder(const Expr::Tag& result,
+            const std::string fileName);
+
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
@@ -184,6 +188,7 @@ public:
   
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
+  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 
 private:
@@ -195,7 +200,8 @@ private:
   const std::string filename_;  
   const FieldT* x_;
   const FieldT* y_;  
-  const FieldT* z_;    
+  const FieldT* z_;
+  Wasatch::UintahPatchContainer* patchContainer_;
 };
 
 //--------------------------------------------------------------------
@@ -222,7 +228,7 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( xtag_ );
   exprDeps.requires_expression( ytag_ );
-  exprDeps.requires_expression( ztag_ );  
+  exprDeps.requires_expression( ztag_ );
 }
 
 //--------------------------------------------------------------------
@@ -234,8 +240,18 @@ bind_fields( const Expr::FieldManagerList& fml )
 {
   const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
   x_ = &fm.field_ref( xtag_ );
-  y_ = &fm.field_ref( ytag_ );  
+  y_ = &fm.field_ref( ytag_ );
   z_ = &fm.field_ref( ztag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+ReadFromFileExpression<FieldT>::
+bind_operators( const SpatialOps::OperatorDatabase& opDB )
+{
+  patchContainer_ = opDB.retrieve_operator<Wasatch::UintahPatchContainer>();
 }
 
 //--------------------------------------------------------------------
@@ -267,6 +283,7 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& phi = this->value();
+  const Uintah::Patch* const patch = patchContainer_->get_uintah_patch();
   phi <<= 0.0;
 
   // use gzFile utilities as they can handle both gzip and ascii files.
@@ -278,38 +295,69 @@ evaluate()
     throw Uintah::ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   
-  const double xMax = field_max_interior(*x_);
-  const double xMin = field_min_interior(*x_);
-  const double yMax = field_max_interior(*y_);
-  const double yMin = field_min_interior(*y_);
-  const double zMax = field_max_interior(*z_);
-  const double zMin = field_min_interior(*z_);    
   typename FieldT::iterator phiiter = phi.interior_begin();
 
-  const double dx = (*x_)(IntVec(1,0,0)) - (*x_)(IntVec(0,0,0));
-  const double dy = (*y_)(IntVec(0,1,0)) - (*y_)(IntVec(0,0,0));
-  const double dz = (*z_)(IntVec(0,0,1)) - (*z_)(IntVec(0,0,0));
-  double x,y,z,val;
-  // to take care of comparing doubles, use a tolerance value for min & max (see below)
-  const double epsx = dx/2.0;
-  const double epsy = dy/2.0;
-  const double epsz = dz/2.0;
-  while ( !gzeof( inputFile ) ) { // check for end of file
-    x   = Uintah::getDouble(inputFile);
-    y   = Uintah::getDouble(inputFile);
-    z   = Uintah::getDouble(inputFile);
-    val = Uintah::getDouble(inputFile);
-
-    const bool containsValue =     x >= (xMin - epsx) && x <= (xMax + epsx)
-                                && y >= (yMin - epsy) && y <= (yMax + epsy)
-                                && z >= (zMin - epsz) && z <= (zMax + epsz);
+  double val;  
+  const std::string inputFormat = Uintah::getString(inputFile);
+  
+  if (inputFormat == "FLAT") {
+    int nx, ny, nz;
+    nx   = Uintah::getInt(inputFile);
+    ny   = Uintah::getInt(inputFile);
+    nz   = Uintah::getInt(inputFile);
+    for (int k=0; k<nz; k++) {
+      for (int j=0; j<ny; j++) {
+        for (int i=0; i<nx; i++) {
+          SCIRun::IntVector p(i,j,k);
+          val = Uintah::getDouble(inputFile);
+          const bool containsCell = patch->containsIndex(patch->getCellLowIndex(), patch->getCellHighIndex(), p);
+          if( containsCell && phiiter != phi.interior_end() ) {
+            // this assumes that the input file data is structured in the x, y, and z directions, respectively.
+            // Note also the assumption here that the memory layout of SpatialField iterators is also in x, y, and z
+            *phiiter = val;
+            ++phiiter;
+          }
+        }
+      }
+    }
+  } else if (inputFormat == "XYZ") {
+    const double xMax = field_max_interior(*x_);
+    const double xMin = field_min_interior(*x_);
+    const double yMax = field_max_interior(*y_);
+    const double yMin = field_min_interior(*y_);
+    const double zMax = field_max_interior(*z_);
+    const double zMin = field_min_interior(*z_);
+    typename FieldT::iterator phiiter = phi.interior_begin();
     
-    if( containsValue && phiiter != phi.interior_end() ){
-      // this assumes that the input file data is structured in the x, y, and z directions, respectively.
-      // Note also the assumption here that the memory layout of SpatialField iterators is also in x, y, and z
-      *phiiter = val;
-      ++phiiter;
-    }        
+    const double dx = (*x_)(IntVec(1,0,0)) - (*x_)(IntVec(0,0,0));
+    const double dy = (*y_)(IntVec(0,1,0)) - (*y_)(IntVec(0,0,0));
+    const double dz = (*z_)(IntVec(0,0,1)) - (*z_)(IntVec(0,0,0));
+    double x,y,z;
+    // to take care of comparing doubles, use a tolerance value for min & max (see below)
+    const double epsx = dx/2.0;
+    const double epsy = dy/2.0;
+    const double epsz = dz/2.0;
+    while ( !gzeof( inputFile ) ) { // check for end of file
+      x   = Uintah::getDouble(inputFile);
+      y   = Uintah::getDouble(inputFile);
+      z   = Uintah::getDouble(inputFile);
+      val = Uintah::getDouble(inputFile);
+      
+      const bool containsValue =     x >= (xMin - epsx) && x <= (xMax + epsx)
+      && y >= (yMin - epsy) && y <= (yMax + epsy)
+      && z >= (zMin - epsz) && z <= (zMax + epsz);
+      
+      if( containsValue && phiiter != phi.interior_end() ){
+        // this assumes that the input file data is structured in the x, y, and z directions, respectively.
+        // Note also the assumption here that the memory layout of SpatialField iterators is also in x, y, and z
+        *phiiter = val;
+        ++phiiter;
+      }
+    }
+  } else {
+    std::ostringstream warn;
+    warn << "ERROR: Wasatch::ReadFromFileExpresssion: \n unsupported file format. Supported file formats are FLAT and XYZ. You must include that in the first line of your data." << filename_;
+    throw Uintah::ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   gzclose( inputFile );
 }
@@ -328,6 +376,19 @@ Builder( const Expr::Tag& result,
   ytag_( yTag ),
   ztag_( zTag	),
   filename_(fileName)
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+ReadFromFileExpression<FieldT>::Builder::
+Builder( const Expr::Tag& result,
+        const std::string fileName )
+: ExpressionBuilder(result),
+xtag_( Expr::Tag() ),
+ytag_( Expr::Tag() ),
+ztag_( Expr::Tag()	),
+filename_(fileName)
 {}
 
 //--------------------------------------------------------------------

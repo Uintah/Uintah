@@ -264,7 +264,7 @@ namespace Wasatch{
   ScalabilityTestTransportEquation<FieldT>::
   initial_condition( Expr::ExpressionFactory& icFactory )
   {
-    return icFactory.get_id( solution_variable_tag() );
+    return icFactory.get_id( initial_condition_tag() );
   }
 
   //------------------------------------------------------------------

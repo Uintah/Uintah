@@ -1095,19 +1095,17 @@ cudaStream_t* DetailedTask::getCUDAStream() const
   return d_cudaStream;
 }
 
-void DetailedTask::setCUDAStream(cudaStream_t* s)
+void DetailedTask::setCUDAStream(cudaStream_t* stream)
 {
-  d_cudaStream = s;
+  d_cudaStream = stream;
 }
 
 bool DetailedTask::queryCUDAStreamCompletion()
 {
-  // sets the CUDA context, for the call to cudaEventQuery()
   cudaError_t retVal;
   CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(deviceNum_));
   retVal = cudaStreamQuery(*d_cudaStream);
   if (retVal == cudaSuccess) {
-//  cout << "checking cuda stream " << d_cudaStream << "ready" << endl;
     return true;
   }
   else if (retVal == cudaErrorNotReady ) { 
@@ -1317,9 +1315,11 @@ DetailedTask* DetailedTasks::getNextInitiallyReadyDeviceTask()
 {
   DetailedTask* nextTask = NULL;
   deviceReadyQueueLock_.writeLock();
-  if (!initiallyReadyDeviceTasks_.empty()) {
-    nextTask = initiallyReadyDeviceTasks_.top();
-    initiallyReadyDeviceTasks_.pop();
+  {
+    if (!initiallyReadyDeviceTasks_.empty()) {
+      nextTask = initiallyReadyDeviceTasks_.top();
+      initiallyReadyDeviceTasks_.pop();
+    }
   }
   deviceReadyQueueLock_.writeUnlock();
 
