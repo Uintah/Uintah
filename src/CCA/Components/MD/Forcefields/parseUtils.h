@@ -44,7 +44,7 @@ namespace Parse {
   inline void tokenizeAtMost(const std::string& str,
                              std::vector<std::string>& tokens,
                              const size_t numTokens = 0,
-                             const std::string& delimiters = " ")
+                             const std::string& delimiters = " \t")
   {
     // We parse tokens from left to right
     std::string::size_type left = 0;

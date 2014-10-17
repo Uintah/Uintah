@@ -211,7 +211,7 @@ void LucretiusForcefield::parseNonbondedPotentials(std::ifstream&       inStream
     size_t currentChargeSubindex = 0;
     NonbondedTwoBodyPotential* nonbondedHomoatomic;
     while (buffer[0] != '*') { // Parse until we hit a new comment section
-      if (buffer[0] != ' ') { // Found a nonbonded type
+      if (buffer[0] != ' ' && buffer[0] != '\t') { // Found a nonbonded type
         nonbondedHomoatomic = parseHomoatomicNonbonded(buffer, currentForcefieldType, currentMass);
         if (nonbondedHomoatomic) { // Created homoatomic potential
           ++numberNonbondedFound;

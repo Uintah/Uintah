@@ -250,6 +250,7 @@ void SPME::calculateCGrid(SimpleGrid<double>& CGrid,
   double PI2 = MDConstants::PI2;
   double invBeta2 = 1.0 / (d_ewaldBeta * d_ewaldBeta);
   double invVolFactor = 1.0 / (coordSys->getCellVolume() * MDConstants::PI);
+  double PI2OverBeta2 = PI2 * invBeta2;
 
 
 
@@ -261,8 +262,9 @@ void SPME::calculateCGrid(SimpleGrid<double>& CGrid,
           SCIRun::Vector m(mp1Chunk[kX], mp2Chunk[kY], mp3Chunk[kZ]);
           coordSys->toReduced(m,mReduced);
           double M2 = mReduced.length2();
-          double factor = PI2 * M2 * invBeta2;
+          double factor = M2 * PI2OverBeta2;
           CGrid(kX, kY, kZ) = invVolFactor * exp(-factor) / M2;
+//          std::cerr << "C(" << kX << "," << kY << "," << kZ << "): " << CGrid(kX, kY, kZ) << std::endl;
         }
       }
     }
@@ -701,11 +703,11 @@ void SPME::calculateInFourierSpace(const ProcessorGroup*    pg,
     }
 
   }  // end SPME Patch loop
-
+  double chargeUnitNorm = 332.063712;
   // put updated values for reduction variables into the DW
-  newDW->put(sum_vartype(0.5 * spmeFourierEnergy),
+  newDW->put(sum_vartype(0.5 * spmeFourierEnergy * chargeUnitNorm),
       label->electrostatic->rElectrostaticInverseEnergy);
-  newDW->put(matrix_sum(0.5 * spmeFourierStress),
+  newDW->put(matrix_sum(0.5 * spmeFourierStress * chargeUnitNorm),
       label->electrostatic->rElectrostaticInverseStress);
 
 }

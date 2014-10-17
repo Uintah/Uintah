@@ -167,6 +167,10 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
   // does.  If that's the case, we will fail to calculate the influence of that
   // target material type on all source material types in the patch, I believe.
   // This is important, and should be fixed!!!
+  //
+  // Maybe we can just grab a universal material subset for all materials and
+  // use that to pull neighbor information?
+  //
   // TODO FIXME (10/5/2014)
   double cutoff2 = d_nonbondedRadius * d_nonbondedRadius;
   TwoBodyForcefield* forcefield = dynamic_cast<TwoBodyForcefield*>
@@ -221,14 +225,10 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
         ParticleSubset* targetAtomSet;
         targetAtomSet = oldDW->getParticleSubset(targetAtomType,
                                                  currPatch
-                                                 );
-//                                                 ,Ghost::AroundNodes,
-//                                                 d_nonbondedGhostCells,
-//                                                 label->global->pX);
-//std::cout << "NonbondedGhostCells: " << d_nonbondedGhostCells << std::endl;
+                                                 ,Ghost::AroundNodes,
+                                                 d_nonbondedGhostCells,
+                                                 label->global->pX);
         size_t numTargetAtoms = targetAtomSet->numParticles();
-//        std::cout << "Source Type ("<< sourceAtomType << ") --> Target Atom Type ("
-//                  << targetAtomType << ") | Set Size: " << numTargetAtoms << std::endl;
         // Get atom ID and positions
         constParticleVariable<long64> targetID;
         oldDW->get(targetID, label->global->pID, targetAtomSet);
@@ -251,24 +251,10 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
           { // Loop over local plus nearby atoms
             if (sourceID[sourceAtom] != targetID[targetAtom])
             { // Ensure we're not working with the same particle
-              coordSys->minimumImageDistance(sourceX[sourceAtom],
-                                             targetX[targetAtom],
-                                             atomOffsetVector);
+              atomOffsetVector = targetX[targetAtom] - sourceX[sourceAtom];
 
               if (atomOffsetVector.length2() <= cutoff2)
               { // Interaction is within range
-                SCIRun::Vector test = targetX[targetAtom]-sourceX[sourceAtom];
-//                if (test != atomOffsetVector)
-//                {
-//                  std::cout << "SHOULD BE WRAPPED: " << std::setprecision(5) << std::right
-//                            << test << ": " << test.length() << std::endl
-//                            << sourceID[sourceAtom] << "--------->" << targetID[targetAtom]
-//                            << atomOffsetVector << ": " << atomOffsetVector.length() << std::endl
-//                            << "Patch: " << patchIndex << " | "
-//                            << "SourceIndex: " << sourceIndex << " | " << "TargetIndex" << targetIndex
-//                            << "SourceAtom: " << sourceID[sourceAtom] << " | TargetAtom: " << targetID[targetAtom]
-//                            << std::endl;
-//                }
                 SCIRun::Vector  tempForce;
                 double          tempEnergy;
                 currPotential->fillEnergyAndForce(tempForce,
@@ -278,13 +264,6 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
                 nbEnergy_patchLocal     +=  tempEnergy;
                 stressTensor_patchLocal +=  OuterProduct(atomOffsetVector,
                                                          tempForce);
-//                if ((sourceID[sourceAtom] == 1))
-//                //&& (targetID[targetAtom]%10 == 9))
-//                {
-//                  std::cout << std::setprecision(5) << std::setw(5) << targetID[targetAtom]
-//                            << test << "<->" << atomOffsetVector
-//                            << "--->" << tempForce << "  Total Force: " << pForce[sourceAtom] << std::endl;
-//                }
 
               }
             }  // IDs not the same
