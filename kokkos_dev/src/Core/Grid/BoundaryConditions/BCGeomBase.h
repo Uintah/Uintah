@@ -146,7 +146,7 @@ namespace Uintah {
 
     void getNodeFaceIterator(Iterator& b_ptr);
 
-    const bool hasIterator(){return (d_cells.size() > 0 && d_nodes.size() > 0);}
+    bool hasIterator(){return (d_cells.size() > 0 && d_nodes.size() > 0);}
 
     /// Determine if a point is inside the geometry where the boundary
     /// condition is applied.
@@ -161,6 +161,14 @@ namespace Uintah {
                                           const Patch              * patch, 
                                           const std::vector<Point> & test_pts );
     
+    /*
+     \Author  Tony Saad
+     \Date    September 2014
+     \brif    Determine the iterator associated with this geometry when it is used as an interior boundary.
+     */
+    virtual void determineInteriorBndIteratorLimits( const Patch::FaceType      face,
+                                         const Patch              * patch );
+
     /// Print out the iterators for the boundary.
     void printLimits() const;
 
@@ -173,12 +181,14 @@ namespace Uintah {
     std::string getBndType(){ return d_bndtype; }
     void setBndType( std::string bndType ){ d_bndtype = bndType; }
     
+    // Particle-related functionality
     ParticleBndSpec getParticleBndSpec(){return d_particleBndSpec;}
     void setParticleBndSpec(const ParticleBndSpec pBndSpec){ d_particleBndSpec = pBndSpec; }
     bool hasParticlesBoundary(){ return d_particleBndSpec.hasParticlesBoundary(); }
 
     double surfaceArea(){ return d_surfaceArea; }
-    
+    Point getOrigin() { return d_origin;}
+
   protected:
     Iterator          d_cells;
     Iterator          d_nodes;
@@ -186,6 +196,7 @@ namespace Uintah {
     std::string       d_bndtype;
     ParticleBndSpec   d_particleBndSpec;
     double            d_surfaceArea;
+    Point             d_origin;
   };
 
   template<class T> 

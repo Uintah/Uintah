@@ -122,7 +122,9 @@ CQMOMEqn::problemSetup(const ProblemSpecP& inputdb)
   if (epW > 1.0 )
     epW = 1.0;
   if (epW < 0.0 )
-    epW = 0.0;
+    epW = 1.0e-10;
+  
+  cqmom_db->getWithDefault("ConvectionWeightLimit",d_convWeightLimit, 1.0e-10);
   
   nNodes = 1;
   for (unsigned int i = 0; i<N_i.size(); i++) {
@@ -662,7 +664,7 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
         //that requires a new CQMOM inversion step in between.  Leaving this how it is to test it out, but using the full operator
         //splitting procedure will require putting each convective flux calculation to its own scheduler task
         if (uVelIndex > -1) {
-          d_cqmomConv->doConvX( patch, FconvX, d_convScheme, cqmomWeights,
+          d_cqmomConv->doConvX( patch, FconvX, d_convScheme, d_convWeightLimit, cqmomWeights,
                                cqmomAbscissas, M, nNodes, uVelIndex, momentIndex, cellType, epW );
           for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
             IntVector c = *iter;
@@ -671,7 +673,7 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
         }
 #ifdef YDIM
         if (vVelIndex > -1) {
-          d_cqmomConv->doConvY( patch, FconvY, d_convScheme, cqmomWeights,
+          d_cqmomConv->doConvY( patch, FconvY, d_convScheme, d_convWeightLimit, cqmomWeights,
                                cqmomAbscissas, M, nNodes, vVelIndex, momentIndex, cellType, epW );
           for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
             IntVector c = *iter;
@@ -681,7 +683,7 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
 #endif
 #ifdef ZDIM
         if (wVelIndex > -1) {
-          d_cqmomConv->doConvZ( patch, FconvZ, d_convScheme, cqmomWeights,
+          d_cqmomConv->doConvZ( patch, FconvZ, d_convScheme, d_convWeightLimit, cqmomWeights,
                                cqmomAbscissas, M, nNodes, wVelIndex, momentIndex, cellType, epW );
           for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
             IntVector c = *iter;
@@ -879,7 +881,7 @@ CQMOMEqn::buildXConvection( const ProcessorGroup* pc,
     std::cout << "===========================" << std::endl;
 #endif
 
-    d_cqmomConv->doConvX( patch, FconvX, d_convScheme, cqmomWeights,
+    d_cqmomConv->doConvX( patch, FconvX, d_convScheme, d_convWeightLimit, cqmomWeights,
                           cqmomAbscissas, M, nNodes, uVelIndex, momentIndex, cellType, epW );
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
@@ -978,7 +980,7 @@ CQMOMEqn::buildYConvection( const ProcessorGroup* pc,
     std::cout << "===========================" << std::endl;
 #endif
     
-    d_cqmomConv->doConvY( patch, FconvY, d_convScheme, cqmomWeights,
+    d_cqmomConv->doConvY( patch, FconvY, d_convScheme, d_convWeightLimit, cqmomWeights,
                            cqmomAbscissas, M, nNodes, vVelIndex, momentIndex, cellType, epW );
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
@@ -1076,7 +1078,7 @@ CQMOMEqn::buildZConvection( const ProcessorGroup* pc,
     std::cout << "===========================" << std::endl;
 #endif
     
-    d_cqmomConv->doConvZ( patch, FconvZ, d_convScheme, cqmomWeights,
+    d_cqmomConv->doConvZ( patch, FconvZ, d_convScheme, d_convWeightLimit, cqmomWeights,
                            cqmomAbscissas, M, nNodes, wVelIndex, momentIndex, cellType, epW );
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;

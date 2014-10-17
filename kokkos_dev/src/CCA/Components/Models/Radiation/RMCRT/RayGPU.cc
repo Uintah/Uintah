@@ -59,9 +59,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   if (event==Task::GPU) {
 #ifdef HAVE_CUDA
   
-  const Level* level = getLevel(patches);
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  if ( doCarryForward( timestep, radCalc_freq) ) {
+  if ( doCarryForward( radCalc_freq) ) {
     return;
   }
 

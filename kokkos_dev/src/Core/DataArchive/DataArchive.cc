@@ -487,15 +487,15 @@ DataArchive::queryLifetime( double& /*min*/, double& /*max*/,
 
 void
 DataArchive::queryVariables( vector<string>& names,
-                             vector<const Uintah::TypeDescription*>& types)
+                             vector<const Uintah::TypeDescription*>& types )
 {
   double start = Time::currentSeconds();
   d_lock.lock();
   ProblemSpecP vars = d_indexDoc->findBlock("variables");
-  if(vars == 0)
-    throw InternalError("DataArchive::queryVariables:variables section not found\n",
-                        __FILE__, __LINE__);
-  queryVariables(vars, names, types);
+  if(vars == 0) {
+    throw InternalError("DataArchive::queryVariables:variables section not found\n", __FILE__, __LINE__);
+  }
+  queryVariables( vars, names, types );
 
   d_lock.unlock();
   dbg << "DataArchive::queryVariables completed in " << Time::currentSeconds()-start << " seconds\n";
@@ -518,33 +518,36 @@ DataArchive::queryGlobals( vector<string>& names,
 }
 
 void
-DataArchive::queryVariables(ProblemSpecP vars, vector<string>& names,
-                            vector<const Uintah::TypeDescription*>& types)
+DataArchive::queryVariables( ProblemSpecP     vars,
+                             vector<string> & names,
+                             vector<const Uintah::TypeDescription*>& types )
 {
   for(ProblemSpecP n = vars->getFirstChild(); n != 0; n = n->getNextSibling()){
     if(n->getNodeName() == "variable") {
       map<string,string> attributes;
       n->getAttributes(attributes);
 
-      string type = attributes["type"];
-      if(type == "")
-        throw InternalError("DataArchive::queryVariables:Variable type not found",
-                            __FILE__, __LINE__);
-      const TypeDescription* td = TypeDescription::lookupType(type);
-      if(!td){
+      const string type = attributes["type"];
+
+      if(type == "") {
+        throw InternalError("DataArchive::queryVariables:Variable type not found", __FILE__, __LINE__);
+      }
+      const TypeDescription* td = TypeDescription::lookupType( type );
+
+      if( !td ){
         static TypeDescription* unknown_type = 0;
-        if(!unknown_type)
-          unknown_type = scinew TypeDescription(TypeDescription::Unknown,
-                                                "-- unknown type --",
-                                                false, MPI_Datatype(-1));
+        if( !unknown_type ) {
+          unknown_type = scinew TypeDescription( TypeDescription::Unknown, "-- unknown type --", false, MPI_Datatype(-1) );
+        }
         td = unknown_type;
       }
+
       types.push_back(td);
       string name = attributes["name"];
-      if(name == "")
-        throw InternalError("DataArchive::queryVariables:Variable name not found",
-                            __FILE__, __LINE__);
-      names.push_back(name);
+      if(name == "") {
+        throw InternalError("DataArchive::queryVariables:Variable name not found", __FILE__, __LINE__);
+      }
+      names.push_back( name );
     } else if(n->getNodeType() != ProblemSpec::TEXT_NODE){
       cerr << "DataArchive::queryVariables:WARNING: Unknown variable data: " << n->getNodeName() << '\n';
     }

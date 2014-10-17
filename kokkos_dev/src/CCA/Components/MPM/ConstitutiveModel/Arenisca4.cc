@@ -657,7 +657,7 @@ void Arenisca4::computeStressTensor(const PatchSubset* patches,
 		  cout<<"Resetting [F]=[I] for this step and deleting particle"<<endl;
 		  Identity.polarDecompositionRMB(tensorU, tensorR);
       }
-	  else if(pDefGrad[idx].Determinant()>1.0e2){
+	  else if(pDefGrad[idx].Determinant()>1.0e5){
 		  pLocalized_new[idx]=-999;
 		  cout<<"Large deformation gradient determinant: [F] = "<<pDefGrad[idx]<<endl;
 		  cout<<"Resetting [F]=[I] for this step and deleting particle"<<endl;
@@ -1018,11 +1018,11 @@ void Arenisca4::computeElasticProperties(double & bulk,
   // If the user has specified a nonzero G1 and G2, these are used to define a pressure
   // dependent poisson ratio, which is used to adjust the shear modulus along with the
   // bulk modulus.  The high pressure limit has nu=G1+G2;
-  if ((d_cm.G1!=0.0)&&(d_cm.G2!=0.0)){
-	  // High pressure bulk modulus:
-	  double nu = d_cm.G1+d_cm.G2;
-	  shear = 1.5*bulk*(1.0-2.0*nu)/(1.0+nu);
-  }
+  //if ((d_cm.G1!=0.0)&&(d_cm.G2!=0.0)){
+//	  // High pressure bulk modulus:
+//	  double nu = d_cm.G1+d_cm.G2;
+//	  shear = 1.5*bulk*(1.0-2.0*nu)/(1.0+nu);
+  //}
 } //===================================================================
 
 // [shear,bulk] = computeElasticProperties(stress, ep)
@@ -1171,7 +1171,7 @@ int Arenisca4::computeStepDivisions(const double& X,
   if (d_cm.STREN > 0.0){
 	  size = min(size,d_cm.STREN);
   }  
-  int n_yield = ceil(0.001*d_sigma.Norm()/size);
+  int n_yield = ceil(1.0e-5*d_sigma.Norm()/size);
 
   // nsub is the maximum of the two values.above.  If this exceeds allowable,
   // throw warning and delete particle.
@@ -1239,7 +1239,8 @@ int Arenisca4::computeSubstep(const Matrix3& d_e,       // Total strain incremen
 {
 // Computes the updated stress state for a substep that may be either elastic, plastic, or
 // partially elastic.   Returns an integer flag 0/1 for a good/bad update.
-  int     substepFlag;
+  int     returnFlag,
+		  substepFlag;
 
 // (1)  Compute the elastic properties based on the stress and plastic strain at
 // the start of the substep.  These will be constant over the step unless elastic-plastic
@@ -1284,11 +1285,16 @@ int Arenisca4::computeSubstep(const Matrix3& d_e,       // Total strain incremen
     
     // returnFlag would be != 0 if there was an error in the nonHardeningReturn call, but
     // there are currently no tests in that function that could detect such an error.
-    nonHardeningReturn(sigma_trial,
+    returnFlag = nonHardeningReturn(sigma_trial,
                        sigma_old,
                        d_e,X_old,Zeta_old,coher,bulk,shear,
                        sigma_0,d_ep_0);
-	
+	if (returnFlag!=0){
+#ifdef MHdebug
+		cout << "1344: failed nonhardeningReturn in substep "<< endl;
+#endif
+		goto failedSubstep;
+	}
 	//cout<<"\n First nonhardeningReturn() call"<<endl;
 	//cout<<"sigma_trial = "<<sigma_trial<<endl;
 	//cout<<"sigma_old = "<<sigma_old<<endl;
@@ -1356,11 +1362,16 @@ updateISV:
 //            ep_new    = ...,
 //    computeElasticProperties((sigma_old+sigma_new)/2,(ep_old+ep_new)/2,bulk,shear);
     Matrix3 d_ep_new;
-    nonHardeningReturn(sigma_trial,
+    returnFlag = nonHardeningReturn(sigma_trial,
                        sigma_old,
                        d_e,X_new,Zeta_new,coher,bulk,shear,
                        sigma_new,d_ep_new);
-	
+	if (returnFlag!=0){
+#ifdef MHdebug
+		cout << "1344: failed nonhardeningReturn in substep "<< endl;
+#endif
+		goto failedSubstep;
+	}	
 // (10) Check whether the isotropic component of the return has changed sign, as this
 //      would indicate that the cap apex has moved past the trial stress, indicating
 //      too much plastic strain in the return.
@@ -1528,7 +1539,7 @@ double Arenisca4::computePorePressure(const double ev)
 } //===================================================================
 
 // Compute nonhardening return from trial stress to some yield surface
-void Arenisca4::nonHardeningReturn(const Matrix3 & sigma_trial, // Trial Stress (untransformed)
+int Arenisca4::nonHardeningReturn(const Matrix3 & sigma_trial, // Trial Stress (untransformed)
                                    const Matrix3 & sigma_old,   // Stress at start of subtep (untransformed)
                                    const Matrix3& d_e,          // increment in total strain
                                    const double & X,            // cap position
@@ -1544,14 +1555,42 @@ void Arenisca4::nonHardeningReturn(const Matrix3 & sigma_trial, // Trial Stress 
   // and elastic properties.  Returns the updated stress and  the increment in plastic
   // strain corresponding to this return.
 	
+  int returnFlag = 0;
+  
 // (1) Transform sigma_trial and define interior point sigma_0.
   double S_to_S_star = d_cm.BETA_nonassociativity*sqrt(1.5*bulk/shear);
   double S_star_to_S = 1.0/S_to_S_star;
 	
   Matrix3 iso_sigma_trial = one_third*sigma_trial.Trace()*Identity;
-  Matrix3 sigma_trial_star = iso_sigma_trial + S_to_S_star*(sigma_trial - iso_sigma_trial);
+  Matrix3 S_trial = sigma_trial - iso_sigma_trial;
+  Matrix3 sigma_trial_star = iso_sigma_trial + S_to_S_star*S_trial;
   
-  Matrix3 sigma_0 = one_third*Zeta*Identity;
+  
+  double  I1_trial = sigma_trial.Trace(),
+		  rJ2_trial = S_trial.Norm(),
+		  I1_0,
+		  I1trialMinusZeta = I1_trial-Zeta;
+  
+  
+// It may be better to use an interior point at the center of the yield surface, rather than at zeta, in particular
+// when PEAKI1=0.  Picking the midpoint between PEAKI1 and X would be problematic when the user has specified
+// some no porosity condition (e.g. p0=-1e99)
+  if( I1trialMinusZeta>= coher*d_cm.PEAKI1 ){ // Trial is past vertex
+	  double lTrial = sqrt(I1trialMinusZeta*I1trialMinusZeta + rJ2_trial*rJ2_trial),
+			 lYield = 0.5*(coher*d_cm.PEAKI1 - X);
+	  I1_0 = Zeta + coher*d_cm.PEAKI1 - min(lTrial,lYield);
+  }
+  else if( (I1trialMinusZeta < coher*d_cm.PEAKI1)&&(I1trialMinusZeta > X) ){ // Trial is above yield surface
+	  I1_0 = I1_trial;
+  }
+  else if( I1trialMinusZeta <= X ){ // Trial is past X, use yield midpoint as interior point
+	  I1_0 = Zeta + 0.5*(coher*d_cm.PEAKI1 + X);
+  }
+  else { // Shouldn't get here
+	  I1_0 = Zeta;
+  }
+  
+  Matrix3 sigma_0 = one_third*I1_0*Identity;
    
 // (2) Convert 3x3 stresses to vectors of ordered eigenvalues and ordered eigen projectors:
   
@@ -1699,7 +1738,8 @@ double cosTheta[] = {1.,0.7572888982693721,0.1469729508840787,-0.534686930168567
 					 //-0.9781361661712315,-0.6049135585801836,0.06194752152044655,0.698737899225658,
 					 //0.9963453862468615,0.8103047004676575,0.2309241215124303,-0.4605521533397157};
 
-  while ( n < nmax ){
+	int k = 0;
+  while ( (n < nmax)&&(k<10*nmax) ){
     // transformed bisection to find a new interior point, just inside the boundary of the
     // yield surface.  This function overwrites the inputs for lambda_0
     transformedBisection(lambda_0,lambda_trial,X,Zeta,coher,limitParameters,S_star_to_S);
@@ -1716,6 +1756,7 @@ double cosTheta[] = {1.,0.7572888982693721,0.1469729508840787,-0.534686930168567
 	
     // (5) Test for convergence:
 	while ( (interior==0)&&(n < nmax) ){
+		k++;
       // To avoid the cost of computing pow() to get theta, and then sin(), cos(),
       // we use a lookup table defined above by sinV and cosV.
 	  // phi = pi_half*Pow(2.0,-0.25*n);
@@ -1735,6 +1776,13 @@ double cosTheta[] = {1.,0.7572888982693721,0.1469729508840787,-0.534686930168567
       else { n++; }
     }
   }
+  
+  if (k>=10*nmax){
+	  returnFlag = 1;
+#ifdef MHdebug
+	  cout<<"k >= 10*nmax, nonHardening return failed."<<endl;
+#endif
+  }
 
 // (6) Solution Converged, Compute Untransformed Updated Stress:
   Matrix3 sigma_new_star = lambda_0[0]*PL_trial + lambda_0[1]*PM_trial + lambda_0[2]*PH_trial;
@@ -1746,6 +1794,8 @@ double cosTheta[] = {1.,0.7572888982693721,0.1469729508840787,-0.534686930168567
 //  d_ep0 = d_e - [C]^-1:(sigma_new-sigma_old)
   Matrix3 d_ee    = 0.5*d_sigma/shear + (one_ninth/bulk - one_sixth/shear)*d_sigma.Trace()*Identity;
   d_ep_new        = d_e - d_ee;
+  
+  return returnFlag;
 
 } //===================================================================
 

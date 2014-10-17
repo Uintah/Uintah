@@ -42,10 +42,10 @@ CircleBCData::CircleBCData() : BCGeomBase()
   
 }
 
-
 CircleBCData::CircleBCData(Point& p, double radius)
-  : BCGeomBase(), d_radius(radius), d_origin(p)
+  : BCGeomBase(), d_radius(radius)
 {
+  d_origin = p;
 }
 
 CircleBCData::~CircleBCData()
@@ -91,9 +91,13 @@ bool CircleBCData::inside(const Point &p) const
 {
   Vector diff = p - d_origin;
   if (diff.length() > d_radius)
+  {
     return false;
+  }
   else
+  {
     return true;
+  }
 }
 
 void CircleBCData::print()

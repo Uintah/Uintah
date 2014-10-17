@@ -15,7 +15,7 @@
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi-scalar" state="STATE_DYNAMIC" />
+      <NameTag name="phi-scalar" state="STATE_NONE" />
       <LinearFunction slope="0.1" intercept="0.1">
         <NameTag name="XSVOL" state="STATE_NONE" />
       </LinearFunction>

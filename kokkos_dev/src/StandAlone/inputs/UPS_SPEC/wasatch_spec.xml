@@ -182,6 +182,9 @@
         <NameTag                spec="REQUIRED" />
       </WallDistanceFunction>
       
+      <!-- NOTE: the first line in the data file should indicate the format of the file. We currently support: FLAT and XYZ formats -->
+      <!-- FLAT format: values are directly specified in x, y, and z directions, respectively. -->
+      <!-- XYZ format: x, y, z, value -->
       <ReadFromFile     spec="OPTIONAL NO_DATA">
         <FileName       spec="REQUIRED STRING" />
       </ReadFromFile>
@@ -424,7 +427,7 @@
     <PostProcessingExpression spec="MULTIPLE NO_DATA"
                               attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
                               children1="ONE_OF(CHILD VelocityMagnitude Vorticity InterpolateExpression KineticEnergy)" >
-      <TaskList               spec="REQUIRED STRING 'initialization, advance_solution'" />
+      <TaskList               spec="REQUIRED STRING 'initialization, advance_solution, post_processing'" />
       <NameTag                spec="REQUIRED" />
 
       <VelocityMagnitude spec="OPTIONAL NO_DATA">

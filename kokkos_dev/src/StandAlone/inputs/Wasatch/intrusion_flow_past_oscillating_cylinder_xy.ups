@@ -78,20 +78,20 @@
     
     <BasicExpression type="SVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="pressure" state="STATE_DYNAMIC"/>
+       <NameTag name="pressure" state="STATE_NONE"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <!-- Set the initial condition expression for x-momentum -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="x-mom" state="STATE_DYNAMIC"/>
+       <NameTag name="x-mom" state="STATE_NONE"/>
        <Constant>0.1</Constant>
     </BasicExpression>
 
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="y-mom" state="STATE_DYNAMIC"/>
+       <NameTag name="y-mom" state="STATE_NONE"/>
        <Constant>0.0</Constant>
     </BasicExpression>
                

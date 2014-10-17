@@ -65,7 +65,10 @@ void CQMOM::problemSetup(const ProblemSpecP& params)
   int index_length = 0;
   db->get("NumberInternalCoordinates",M);   //get number of coordiantes
   db->get("QuadratureNodes",N_i);           //get vector of quad nodes per internal coordiante
-  db->get("HighestOrder",maxInd);           //vector of maxium moment order NOTE: this could be made automatic from indexes later
+  maxInd.resize(M);
+  for (int i = 0; i < M; i++) {
+    maxInd[i] = N_i[i]*2 - 1;
+  }
   db->getWithDefault("Adaptive",d_adaptive,false);   //use adaptive quadrature or not - NYI
   db->getWithDefault("CutOff",d_small,1.0e-10);      //value of moment 0 to fix weights and abscissas to 0
   db->getWithDefault("UseLapack",d_useLapack,false); //pick which linear solve to use
@@ -480,10 +483,11 @@ CQMOM::momentCorrection( const ProcessorGroup* pc,
             if (clipNodes[m].do_high ) {
               if ( (*cqmomAbscissas[z + m*nNodes])[c] > clipNodes[m].high - clipNodes[m].tol ) {
                 if ( !clipNodes[m].clip_to_zero ) {
-                  cout << "fix cell " << c << " a= " << (*cqmomAbscissas[z + m*nNodes])[c] << " to " << clipNodes[m].high << " w= " << (*cqmomWeights[z])[c] << endl;
+                  cout << "fix cell " << c << " IC# " << m << " a[" << z << "]= " << (*cqmomAbscissas[z + m*nNodes])[c] << " to " << clipNodes[m].high << " w= " << (*cqmomWeights[z])[c] << endl;
                   (*cqmomAbscissas[z + m*nNodes])[c] = clipNodes[m].high;
                 } else  {
-                  cout << "fix cell " << c << " a= " << (*cqmomAbscissas[z + m*nNodes])[c] << " to " << 0.0 << " w= " << (*cqmomWeights[z])[c] << endl;
+                  cout << "fix cell " << c << " IC# " << m << " a[" << z << "]= " << (*cqmomAbscissas[z + m*nNodes])[c] << " to " << 0.0 << " w= " << (*cqmomWeights[z])[c] << endl;
+                  cout << "M0 " << (*ccMoments[0])[c] << endl;
                   (*cqmomAbscissas[z + m*nNodes])[c] = 0.0;
                   if ((*cqmomWeights[z])[c] < clipNodes[m].weight_clip) {
                     (*cqmomWeights[z])[c] = 0.0;
@@ -496,10 +500,11 @@ CQMOM::momentCorrection( const ProcessorGroup* pc,
             if (clipNodes[m].do_low ) {
               if ( (*cqmomAbscissas[z + m*nNodes])[c] < clipNodes[m].low + clipNodes[m].tol ) {
                 if (!clipNodes[m].clip_to_zero ) {
-                  cout << "fix cell " << c << " a= " << (*cqmomAbscissas[z + m*nNodes])[c] << " to " << clipNodes[m].low  << " w= " << (*cqmomWeights[z])[c] << endl;
+                  cout << "fix cell " << c << " IC# " << m << " a[" << z << "]= " << (*cqmomAbscissas[z + m*nNodes])[c] << " to " << clipNodes[m].low  << " w= " << (*cqmomWeights[z])[c] << endl;
                   (*cqmomAbscissas[z + m*nNodes])[c] = clipNodes[m].low;
                 } else {
-                  cout << "fix cell " << c << " a= " << (*cqmomAbscissas[z + m*nNodes])[c] << " to " << 0.0 << " w= " << (*cqmomWeights[z])[c] << endl;
+                  cout << "fix cell " << c << " IC# " << m << " a[" << z << "]= " << (*cqmomAbscissas[z + m*nNodes])[c] << " to " << 0.0 << " w= " << (*cqmomWeights[z])[c] << endl;
+                  cout << "M0 " << (*ccMoments[0])[c] << endl;
                   (*cqmomAbscissas[z + m*nNodes])[c] = 0.0;
                   if ((*cqmomWeights[z])[c] < clipNodes[m].weight_clip) {
                     (*cqmomWeights[z])[c] = 0.0;

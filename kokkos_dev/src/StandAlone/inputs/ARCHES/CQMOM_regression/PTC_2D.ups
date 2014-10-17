@@ -365,7 +365,6 @@
         <!-- base information-->
         <NumberInternalCoordinates> 2 </NumberInternalCoordinates>
         <QuadratureNodes> [2,2] </QuadratureNodes>
-        <HighestOrder> [3,3] </HighestOrder>
         <CutOff> 1.0e-5 </CutOff>
         <Adaptive> true </Adaptive>
         <InternalCoordinate name="partUVel" type="uVel"/>

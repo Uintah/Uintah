@@ -67,21 +67,21 @@ namespace Uintah{
     
     /** @brief Computes the x-convection term. */
     template<class fT > void
-    doConvX( const Patch* p, fT& Fconv, const std::string d_convScheme,
+    doConvX( const Patch* p, fT& Fconv, const std::string d_convScheme, const double d_convWeightLimit,
              std::vector<constCCVarWrapper> weights, std::vector<constCCVarWrapper> abscissas,
              const int M, const int nNodes, const int uVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
              const double epW);
     
     /** @brief Computes the y-convection term. */
     template<class fT > void
-    doConvY( const Patch* p, fT& Fconv, const std::string d_convScheme,
+    doConvY( const Patch* p, fT& Fconv, const std::string d_convScheme, const double d_convWeightLimit,
              std::vector<constCCVarWrapper> weights, std::vector<constCCVarWrapper> abscissas,
              const int M, const int nNodes, const int yVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
              const double epW);
     
     /** @brief Computes the z-convection term. */
     template<class fT > void
-    doConvZ( const Patch* p, fT& Fconv, const std::string d_convScheme,
+    doConvZ( const Patch* p, fT& Fconv, const std::string d_convScheme, const double d_convWeightLimit,
              std::vector<constCCVarWrapper> weights, std::vector<constCCVarWrapper> abscissas,
              const int M, const int nNodes, const int wVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
              const double epW);
@@ -273,21 +273,20 @@ namespace Uintah{
     }
     
     inline cqFaceData1D sumNodes( std::vector<cqFaceData1D>& w, std::vector<cqFaceData1D>& a, const int& nNodes, const int& M,
-                                  const int& velIndex, const std::vector<int>& momentIndex )
+                                  const int& velIndex, const std::vector<int>& momentIndex, const double& weightLimit )
     {
       cqFaceData1D gPhi;
       double hPlus = 0.0, hMinus = 0.0;
-      double d_small = 1.0e-10;
       //plus cell face
       for (int i = 0; i < nNodes; i++) {
-        if (a[i + nNodes*velIndex].plus_left > 0.0 && w[i].plus_left > d_small) {
+        if (a[i + nNodes*velIndex].plus_left > 0.0 && w[i].plus_left > weightLimit) {
           double nodeVal = 1.0;
           for (int m = 0 ; m < M ; m++) {
             nodeVal *= pow( (a[i + nNodes*m].plus_left),momentIndex[m] );
           }
           hPlus += w[i].plus_left * a[i + nNodes*velIndex].plus_left * nodeVal; //add hplus
         }
-        if ( a[i + nNodes*velIndex].plus_right < 0.0 && w[i].plus_right > d_small) {
+        if ( a[i + nNodes*velIndex].plus_right < 0.0 && w[i].plus_right > weightLimit) {
           double nodeVal = 1.0;
           for (int m = 0 ; m < M ; m++) {
             nodeVal *= pow( (a[i + nNodes*m].plus_right),momentIndex[m] );
@@ -322,14 +321,14 @@ namespace Uintah{
       //minus cell face
       hPlus = 0.0; hMinus = 0.0;
       for (int i = 0; i < nNodes; i++) {
-        if (a[i + nNodes*velIndex].minus_left > 0.0 && w[i].minus_left > d_small) {
+        if (a[i + nNodes*velIndex].minus_left > 0.0 && w[i].minus_left > weightLimit) {
           double nodeVal = 1.0;
           for (int m = 0 ; m < M ; m++) {
             nodeVal *= pow( (a[i + nNodes*m].minus_left),momentIndex[m] );
           }
           hPlus += w[i].minus_left * a[i + nNodes*velIndex].minus_left * nodeVal; //add hplus
         }
-        if ( a[i + nNodes*velIndex].minus_right < 0.0 && w[i].minus_right > d_small) {
+        if ( a[i + nNodes*velIndex].minus_right < 0.0 && w[i].minus_right > weightLimit) {
           double nodeVal = 1.0;
           for (int m = 0 ; m < M ; m++) {
             nodeVal *= pow( (a[i + nNodes*m].minus_right),momentIndex[m] );
@@ -384,7 +383,7 @@ namespace Uintah{
       template<class fT>
       void do_convection( const Patch* p, fT& Fconv, std::vector<constCCVarWrapper> weights, std::vector<constCCVarWrapper> abscissas,
                          const int& M, const int& nNodes, const int& velIndex, const std::vector<int>& momentIndex, const int& dim,
-                         constCCVariable<int>& cellType, const double epW, Convection_CQMOM* D)
+                         constCCVariable<int>& cellType, const double epW, const double d_convWeightLimit, Convection_CQMOM* D)
       {
         //set conv direction
         IntVector coord = IntVector(0,0,0);
@@ -440,7 +439,7 @@ namespace Uintah{
           std::cout << "Cell location: " << c << " in dimension " << dim << std::endl;
           std::cout << "____________________________" << std::endl;
 #endif
-          gPhi     = D->sumNodes( faceWeights, faceAbscissas, nNodes, M, velIndex, momentIndex );
+          gPhi     = D->sumNodes( faceWeights, faceAbscissas, nNodes, M, velIndex, momentIndex, d_convWeightLimit );
           Fconv[c] = D->getFlux( area, gPhi, coord, c, cellType );
         }
  
@@ -497,7 +496,7 @@ namespace Uintah{
             std::cout << "Cell location: " << c << " in dimension " << dim << std::endl;
             std::cout << "____________________________" << std::endl;
 #endif
-            gPhi     = D->sumNodes( faceWeights, faceAbscissas, nNodes, M, velIndex, momentIndex );
+            gPhi     = D->sumNodes( faceWeights, faceAbscissas, nNodes, M, velIndex, momentIndex, d_convWeightLimit );
             Fconv[c] = D->getFlux( area,  gPhi, coord, c, cellType );
           }
         }
@@ -810,7 +809,7 @@ namespace Uintah{
 
   //x direction convection
   template<class fT > void
-  Convection_CQMOM::doConvX( const Patch* p, fT& Fconv, const std::string d_convScheme,
+  Convection_CQMOM::doConvX( const Patch* p, fT& Fconv, const std::string d_convScheme, const double d_convWeightLimit,
                              std::vector<constCCVarWrapper> weights, std::vector<constCCVarWrapper> abscissas,
                              const int M, const int nNodes, const int uVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
                              const double epW)
@@ -824,7 +823,7 @@ namespace Uintah{
       ConvHelper1<FirstOrderInterpolation<fT>, fT>* convection_helper =
       scinew ConvHelper1<FirstOrderInterpolation<fT>, fT>(the_interpolant, Fconv);
       
-      convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, uVelIndex, momentIndex, dim, cellType, epW, this );
+      convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, uVelIndex, momentIndex, dim, cellType, epW, d_convWeightLimit, this );
       
       delete convection_helper;
       delete the_interpolant;
@@ -835,7 +834,7 @@ namespace Uintah{
       ConvHelper1<SecondOrderInterpolation<fT>, fT>* convection_helper =
       scinew ConvHelper1<SecondOrderInterpolation<fT>, fT>(the_interpolant, Fconv);
       
-      convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, uVelIndex, momentIndex, dim, cellType, epW, this );
+      convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, uVelIndex, momentIndex, dim, cellType, epW, d_convWeightLimit, this );
       
       delete convection_helper;
       delete the_interpolant;
@@ -849,7 +848,7 @@ namespace Uintah{
   
   //y direction convection
   template<class fT> void
-  Convection_CQMOM::doConvY( const Patch* p, fT& Fconv, const std::string d_convScheme,
+  Convection_CQMOM::doConvY( const Patch* p, fT& Fconv, const std::string d_convScheme, const double d_convWeightLimit,
                             std::vector<constCCVarWrapper> weights, std::vector<constCCVarWrapper> abscissas,
                             const int M, const int nNodes, const int vVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
                             const double epW)
@@ -861,7 +860,7 @@ namespace Uintah{
       ConvHelper1<FirstOrderInterpolation<fT>, fT>* convection_helper =
       scinew ConvHelper1<FirstOrderInterpolation<fT>, fT>(the_interpolant, Fconv);
       
-      convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, vVelIndex, momentIndex, dim, cellType, epW, this );
+      convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, vVelIndex, momentIndex, dim, cellType, epW, d_convWeightLimit, this );
       
       delete convection_helper;
       delete the_interpolant;
@@ -872,7 +871,7 @@ namespace Uintah{
       ConvHelper1<SecondOrderInterpolation<fT>, fT>* convection_helper =
       scinew ConvHelper1<SecondOrderInterpolation<fT>, fT>(the_interpolant, Fconv);
       
-      convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, vVelIndex, momentIndex, dim, cellType, epW, this );
+      convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, vVelIndex, momentIndex, dim, cellType, epW, d_convWeightLimit, this );
       
       delete convection_helper;
       delete the_interpolant;
@@ -886,7 +885,7 @@ namespace Uintah{
   
   //z directino convection
   template<class fT> void
-  Convection_CQMOM::doConvZ( const Patch* p, fT& Fconv, const std::string d_convScheme,
+  Convection_CQMOM::doConvZ( const Patch* p, fT& Fconv, const std::string d_convScheme, const double d_convWeightLimit,
                             std::vector<constCCVarWrapper> weights, std::vector<constCCVarWrapper> abscissas,
                             const int M, const int nNodes, const int wVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
                             const double epW)
@@ -898,7 +897,7 @@ namespace Uintah{
       ConvHelper1<FirstOrderInterpolation<fT>, fT>* convection_helper =
       scinew ConvHelper1<FirstOrderInterpolation<fT>, fT>(the_interpolant, Fconv);
       
-      convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, wVelIndex, momentIndex, dim, cellType, epW, this );
+      convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, wVelIndex, momentIndex, dim, cellType, epW, d_convWeightLimit, this );
       
       delete convection_helper;
       delete the_interpolant;
@@ -909,7 +908,7 @@ namespace Uintah{
       ConvHelper1<SecondOrderInterpolation<fT>, fT>* convection_helper =
       scinew ConvHelper1<SecondOrderInterpolation<fT>, fT>(the_interpolant, Fconv);
       
-      convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, wVelIndex, momentIndex, dim, cellType, epW, this );
+      convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, wVelIndex, momentIndex, dim, cellType, epW, d_convWeightLimit, this );
       
       delete convection_helper;
       delete the_interpolant;

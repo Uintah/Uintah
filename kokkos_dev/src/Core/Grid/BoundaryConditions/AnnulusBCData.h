@@ -89,7 +89,6 @@ namespace Uintah {
     BCData d_bc;
     double d_innerRadius;
     double d_outerRadius;
-    Point  d_origin;
   };
   
 } // End namespace Uintah

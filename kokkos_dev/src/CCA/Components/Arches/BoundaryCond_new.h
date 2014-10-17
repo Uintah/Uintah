@@ -7,6 +7,7 @@
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
+#include <boost/shared_ptr.hpp>
 
 //===========================================================================
 
@@ -457,6 +458,16 @@ public:
   struct MaskContainer { 
 
     public: 
+      typedef std::map<BCMaskType, boost::shared_ptr<SpatialOps::SpatialMask<FieldT> > > MaskStorage; 
+
+      MaskContainer(){
+        _mask_storage.clear(); 
+      }
+
+      ~MaskContainer(){ 
+        _mask_storage.clear();
+      }
+
       /** @brief Create the mask.  Note the mask is a function of the num. of ghost cells...this is going to be tricky **/ 
       void create_mask( const Patch* patch, int nGhosts, const std::vector<SpatialOps::IntVec> ijk, BCMaskType bc_mask_type ){ 
         
@@ -469,9 +480,11 @@ public:
           SpatialOps::BoundaryCellInfo bcInfo = SpatialOps::BoundaryCellInfo::build<FieldT>(bcPlus);
           SpatialOps::GhostData gd(nGhosts); 
           const SpatialOps::MemoryWindow window = BoundaryCondition_new::get_mem_win_for_masks<FieldT>( patch, nGhosts );
-          SpatialOps::SpatialMask<FieldT>* mask = new SpatialOps::SpatialMask<FieldT>(window, bcInfo, gd, ijk);
-          
-          _mask_storage.insert(std::make_pair( bc_mask_type, mask ));
+          //SpatialOps::SpatialMask<FieldT>* mask = new SpatialOps::SpatialMask<FieldT>(window, bcInfo, gd, ijk);
+
+          boost::shared_ptr<SpatialOps::SpatialMask<FieldT> > ptr( new SpatialOps::SpatialMask<FieldT>(window, bcInfo, gd, ijk)); 
+         
+          _mask_storage.insert(std::make_pair( bc_mask_type, ptr)); 
 
         }
 
@@ -485,9 +498,6 @@ public:
         } 
         return iter->second; 
       }
-
-    protected: 
-      typedef std::map<BCMaskType, SpatialOps::SpatialMask<FieldT>* > MaskStorage; 
 
       MaskStorage _mask_storage; 
 

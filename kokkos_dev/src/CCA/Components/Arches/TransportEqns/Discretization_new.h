@@ -68,8 +68,7 @@ namespace Uintah{
        *         of the standard, face centered gas velocity.  */
       template <class fT, class oldPhiT> void 
         computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
-            constSFCXVariable<double>& uVel, constSFCYVariable<double>& vVel, 
-            constSFCZVariable<double>& wVel, constCCVariable<Vector>& partVel, 
+            constCCVariable<Vector>& partVel, 
             constCCVariable<Vector>& areaFraction, 
             std::string convScheme);
 
@@ -735,8 +734,8 @@ namespace Uintah{
           // Speicalized for dqmom 
           //
           /** @brief Actually computers the convection term without density rep. */ 
-          template <class uT, class vT, class wT, class fT> 
-          void do_convection( const Patch* p, fT& Fconv, uT& uVel, vT& vVel, wT& wVel, 
+          template <class fT> 
+          void do_convection( const Patch* p, fT& Fconv,
               constCCVariable<Vector>& partVel, 
               constCCVariable<Vector>& area_fraction, Discretization_new* D){
 
@@ -1649,8 +1648,7 @@ namespace Uintah{
   //---------------------------------------------------------------------------
   template <class fT, class oldPhiT> void 
     Discretization_new::computeConv( const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
-        constSFCXVariable<double>& uVel, constSFCYVariable<double>& vVel, 
-        constSFCZVariable<double>& wVel, constCCVariable<Vector>& partVel, 
+        constCCVariable<Vector>& partVel, 
         constCCVariable<Vector>& areaFraction, 
         std::string convScheme ) 
     {
@@ -1660,7 +1658,7 @@ namespace Uintah{
        ConvHelper1<UpwindInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
          scinew ConvHelper1<UpwindInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
-       convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, partVel, areaFraction, this ); 
+       convection_helper->do_convection( p, Fconv, partVel, areaFraction, this ); 
 
        delete convection_helper; 
        delete the_interpolant; 
@@ -1671,7 +1669,7 @@ namespace Uintah{
        ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
          scinew ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
  
-       convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, partVel,  areaFraction, this );
+       convection_helper->do_convection( p, Fconv, partVel,  areaFraction, this );
 
        delete convection_helper; 
        delete the_interpolant; 
@@ -1682,7 +1680,7 @@ namespace Uintah{
        ConvHelper1<CentralInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
          scinew ConvHelper1<CentralInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
-       convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, partVel, areaFraction, this ); 
+       convection_helper->do_convection( p, Fconv, partVel, areaFraction, this ); 
 
        delete convection_helper; 
        delete the_interpolant; 

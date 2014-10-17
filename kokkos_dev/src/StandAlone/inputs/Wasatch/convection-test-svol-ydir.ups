@@ -14,97 +14,97 @@
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_central" state="STATE_DYNAMIC" />
+      <NameTag name="phi_central" state="STATE_NONE"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="YSVOL" state="STATE_NONE" />
+         <NameTag name="YSVOL" state="STATE_NONE"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_upwind" state="STATE_DYNAMIC" />
+      <NameTag name="phi_upwind" state="STATE_NONE"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="YSVOL" state="STATE_NONE" />
+         <NameTag name="YSVOL" state="STATE_NONE"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_superbee" state="STATE_DYNAMIC" />
+      <NameTag name="phi_superbee" state="STATE_NONE"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="YSVOL" state="STATE_NONE" />
+         <NameTag name="YSVOL" state="STATE_NONE"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_charm" state="STATE_DYNAMIC" />
+      <NameTag name="phi_charm" state="STATE_NONE"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="YSVOL" state="STATE_NONE" />
+         <NameTag name="YSVOL" state="STATE_NONE"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_koren" state="STATE_DYNAMIC" />
+      <NameTag name="phi_koren" state="STATE_NONE"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="YSVOL" state="STATE_NONE" />
+         <NameTag name="YSVOL" state="STATE_NONE"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_mc" state="STATE_DYNAMIC" />
+      <NameTag name="phi_mc" state="STATE_NONE"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="YSVOL" state="STATE_NONE" />
+         <NameTag name="YSVOL" state="STATE_NONE"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_ospre" state="STATE_DYNAMIC" />
+      <NameTag name="phi_ospre" state="STATE_NONE"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="YSVOL" state="STATE_NONE" />
+         <NameTag name="YSVOL" state="STATE_NONE"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_smart" state="STATE_DYNAMIC" />
+      <NameTag name="phi_smart" state="STATE_NONE"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="YSVOL" state="STATE_NONE" />
+         <NameTag name="YSVOL" state="STATE_NONE"/>
        </SineFunction>
     </BasicExpression>
     
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_vanleer" state="STATE_DYNAMIC" />
+      <NameTag name="phi_vanleer" state="STATE_NONE"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="YSVOL" state="STATE_NONE" />
+         <NameTag name="YSVOL" state="STATE_NONE"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_hcus" state="STATE_DYNAMIC" />
+      <NameTag name="phi_hcus" state="STATE_NONE"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="YSVOL" state="STATE_NONE" />
+         <NameTag name="YSVOL" state="STATE_NONE"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_minmod" state="STATE_DYNAMIC" />
+      <NameTag name="phi_minmod" state="STATE_NONE"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="YSVOL" state="STATE_NONE" />
+         <NameTag name="YSVOL" state="STATE_NONE"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_hquick" state="STATE_DYNAMIC" />
+      <NameTag name="phi_hquick" state="STATE_NONE"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="YSVOL" state="STATE_NONE" />
+         <NameTag name="YSVOL" state="STATE_NONE"/>
        </SineFunction>
     </BasicExpression>
 
@@ -292,7 +292,7 @@
     <filebase>convection_test_svol_ydir.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.0001"/>
+    <checkpoint cycle="2" interval="0.0001"/>
     <compression>gzip</compression>
     <save label="phi_central"/>
     <save label="phi_upwind"/>

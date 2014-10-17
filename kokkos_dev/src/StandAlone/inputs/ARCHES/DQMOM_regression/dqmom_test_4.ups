@@ -34,15 +34,15 @@
 <!-- DQMOM Vars -->
     <save label="length_qn0"/>
     <save label="length_qn1"/>
-    <save label="length_qn0_icv"/>
+    <save label="length_0"/>
     <save label="length_qn0_src"/>
     <save label="mass_qn0"/>
     <save label="mass_qn1"/>
-    <save label="mass_qn1_icv"/>
+    <save label="mass_1"/>
     <save label="mass_qn1_src"/>
     <save label="temp_qn0"/>
     <save label="temp_qn1"/>
-    <save label="temp_qn1_icv"/>
+    <save label="temp_1"/>
     <save label="temp_qn1_src"/>
     <checkpoint cycle="2" interval="0.05"/>
     <compression>gzip</compression>

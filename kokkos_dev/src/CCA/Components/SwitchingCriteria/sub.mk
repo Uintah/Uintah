@@ -29,31 +29,29 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := CCA/Components/SwitchingCriteria
+SRCDIR := CCA/Components/SwitchingCriteria
 
-SRCS     += \
-	$(SRCDIR)/SwitchingCriteriaFactory.cc \
-	$(SRCDIR)/None.cc                     \
-	$(SRCDIR)/TimestepNumber.cc           \
-	$(SRCDIR)/SimpleBurn.cc               \
-	$(SRCDIR)/SteadyBurn.cc               \
-	$(SRCDIR)/SteadyState.cc              \
-       $(SRCDIR)/DDT1.cc                     
+SRCS += \
+        $(SRCDIR)/SwitchingCriteriaFactory.cc \
+        $(SRCDIR)/None.cc                     \
+        $(SRCDIR)/TimestepNumber.cc           \
+        $(SRCDIR)/SimpleBurn.cc               \
+        $(SRCDIR)/SteadyBurn.cc               \
+        $(SRCDIR)/SteadyState.cc              \
+        $(SRCDIR)/DDT1.cc                     
+
 PSELIBS := \
-	Core/Exceptions                  \
-	Core/Geometry                    \
-	Core/Util                        \
-	CCA/Ports        \
-	Core/Disclosure  \
-	Core/Exceptions  \
-	Core/Grid        \
-	Core/Parallel    \
-	Core/Labels      \
-	Core/Parallel    \
-	Core/Util        \
-	Core/ProblemSpec \
-	\
-	Core/Math
+        CCA/Ports        \
+        Core/Disclosure  \
+        Core/Exceptions  \
+        Core/Geometry    \
+        Core/Grid        \
+        Core/Labels      \
+        Core/Math        \
+        Core/Parallel    \
+        Core/ProblemSpec \
+        Core/Thread      \
+        Core/Util        
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY)
 

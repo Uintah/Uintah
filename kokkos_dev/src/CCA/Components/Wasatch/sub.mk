@@ -77,7 +77,7 @@ SRCS +=                                              \
 
 PSELIBS :=                        \
         CCA/Components/Schedulers \
-        CCA/Components/Models \
+        CCA/Components/Models     \
         CCA/Ports                 \
         Core/Disclosure           \
         Core/Exceptions           \
@@ -88,6 +88,7 @@ PSELIBS :=                        \
         Core/Math                 \
         Core/Parallel             \
         Core/ProblemSpec          \
+        Core/Thread               \
         Core/Util
 
 LIBS := $(Z_LIBRARY) $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)    \

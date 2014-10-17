@@ -39,10 +39,7 @@ using namespace std;
 using namespace SCIRun;
 
 class ParallelWorker {
-  WorkQueue work;
-  int * buffer;
-  int buff_size;
-  int np;
+
 public:
   ParallelWorker(): work(0), buffer(0), buff_size(0) {}
   ParallelWorker(int buff_size, int np, int granularity):
@@ -75,7 +72,7 @@ public:
 	buffer[start] = proc;
     }
 #endif
-  }
+  } 
 
   void print_test() {
     if (buff_size <= 0) {
@@ -89,12 +86,20 @@ public:
       if (prev != buffer[i]) {
 	prev = buffer[i];
 	cout << "buffer["<<i<<"] = "<<prev<<endl;
+
       }
     }
   }
+private:
+  WorkQueue   work;
+  int       * buffer;
+  int         buff_size;
+  int         np;
 };
 
-int main(int argc, char *argv[]) {
+int
+main(int argc, char *argv[])
+{
   int np = 1;
   int buff_size = 100;
   int granularity = 5;
@@ -124,7 +129,7 @@ int main(int argc, char *argv[]) {
   cout <<"np = "<<np<<", buff_size = "<<buff_size<<", granularity = "<<granularity<<endl;
   
   ParallelWorker worker(buff_size,np,granularity);
-  Parallel<ParallelWorker> phelper(&worker, &ParallelWorker::do_work);
+  ThreadNS::Parallel<ParallelWorker> phelper(&worker, &ParallelWorker::do_work);
   Thread::parallel(phelper, np, true);
 
   worker.print_test();

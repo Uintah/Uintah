@@ -253,8 +253,8 @@ namespace Wasatch {
    */
   //****************************************************************************      
   void update_poisson_matrix( const Expr::Tag& poissonTag,
-                           Uintah::CCVariable<Uintah::Stencil4>& poissonMatrix,
-                           const Uintah::Patch* patch,
+                              Uintah::CCVariable<Uintah::Stencil4>& poissonMatrix,
+                              const Uintah::Patch* patch,
                               const int material)
   {
     /*

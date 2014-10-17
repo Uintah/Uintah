@@ -66,7 +66,7 @@ using namespace std;
 using namespace Uintah;
 
 bool verbose = false;
-bool quiet = false;
+bool quiet   = false;
 
 void
 usage(const std::string& badarg, const std::string& progname)
@@ -301,12 +301,12 @@ main(int argc, char** argv)
       }
     }
       
-    if (!quiet){
-      cout << vars[var_index] << ": " << types[var_index]->getName() << " being extracted for material "<<material<<" at index "<<var_id<<endl;
+    if( !quiet ){
+      cout << vars[var_index] << ": " << types[var_index]->getName() << " being extracted for material " << material << " at index " << var_id << "\n";
     }
     
     // get type and subtype of data
-    const Uintah::TypeDescription* td = types[var_index];
+    const Uintah::TypeDescription* td      = types[var_index];
     const Uintah::TypeDescription* subtype = td->getSubType();
 
     if( subtype == NULL ) {

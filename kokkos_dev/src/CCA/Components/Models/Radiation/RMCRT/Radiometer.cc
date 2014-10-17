@@ -333,8 +333,12 @@ Radiometer::sched_radiometer( const LevelP& level,
   radiometerPatchSet->addAll( myPatches );
   
   tsk->modifies( d_VRFluxLabel );
+  
   sched->addTask( tsk, radiometerPatchSet, d_matlSet );
-  delete radiometerPatchSet;
+  
+  if( radiometerPatchSet && radiometerPatchSet->removeReference() ){ 
+    delete radiometerPatchSet;
+  }
 }
 
 //---------------------------------------------------------------------------

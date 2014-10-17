@@ -74,18 +74,6 @@ void cpdiInterpolator::findCellAndWeights(const Point& pos,
   Matrix3 dsize=defgrad*size;
   vector<Vector> relative_node_location(8,Vector(0.0,0.0,0.0));
 
-  relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
-                                   -dsize(1,0)-dsize(1,1)-dsize(1,2),
-                                   -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
-  relative_node_location[1]=Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
-                                    dsize(1,0)-dsize(1,1)-dsize(1,2),
-                                    dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
-  relative_node_location[2]=Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
-                                    dsize(1,0)+dsize(1,1)-dsize(1,2),
-                                    dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
-  relative_node_location[3]=Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
-                                   -dsize(1,0)+dsize(1,1)-dsize(1,2),
-                                   -dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
   relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
                                    -dsize(1,0)-dsize(1,1)+dsize(1,2),
                                    -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
@@ -162,13 +150,19 @@ void cpdiInterpolator::findCellAndWeights(const Point& pos,
     relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
                                      -dsize(1,0)+dsize(1,1)+dsize(1,2),
                                      -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
-
-//    for(int i = 0;i<8;i++){
-//      if(fabs(rln[i].length()-relative_node_location[i].length())>1.e-10){
-//        cout << "RLN = " << rln[i] << endl;
-//        cout << "rln = " << relative_node_location[i] << endl;
-//     }
-//    }
+  }else{ // Particle wasn't scaled, need to compute the RLN for the first 4 nodes
+    relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[1]=Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                      dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                      dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[2]=Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                      dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                      dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[3]=Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
   }
 
   Vector current_corner_pos;
@@ -180,7 +174,7 @@ void cpdiInterpolator::findCellAndWeights(const Point& pos,
   double fz1;
   int ix,iy,iz;
 
-  double one_over_8 = 1.0/(8.0);
+  double one_over_8 = .125;
   vector<double> phi(8);
 
  // now  we will loop over each of these "nodes" or corners and use the deformation gradient to find the current location: 
@@ -224,7 +218,7 @@ void cpdiInterpolator::findCellAndWeights(const Point& pos,
     phi[6] = fx *fy *fz;  // x1+r1x, y1+r2y, z1+r3z
     phi[7] = fx1*fy *fz;  // x1    , y1+r2y, z1+r3z
 
-    S[i8]   = one_over_8*phi[0];
+    S[i8]  = one_over_8*phi[0];
     S[i81] = one_over_8*phi[1];
     S[i82] = one_over_8*phi[2];
     S[i83] = one_over_8*phi[3];
@@ -246,18 +240,6 @@ void cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
   Matrix3 dsize=defgrad*size;
   vector<Vector> relative_node_location(8,Vector(0.0,0.0,0.0));
 
-  relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
-                                   -dsize(1,0)-dsize(1,1)-dsize(1,2),
-                                   -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
-  relative_node_location[1]=Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
-                                    dsize(1,0)-dsize(1,1)-dsize(1,2),
-                                    dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
-  relative_node_location[2]=Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
-                                    dsize(1,0)+dsize(1,1)-dsize(1,2),
-                                    dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
-  relative_node_location[3]=Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
-                                   -dsize(1,0)+dsize(1,1)-dsize(1,2),
-                                   -dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
   relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
                                    -dsize(1,0)-dsize(1,1)+dsize(1,2),
                                    -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
@@ -333,6 +315,19 @@ void cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
     relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
                                      -dsize(1,0)+dsize(1,1)+dsize(1,2),
                                      -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+  }else{ // Particle wasn't scaled, need to compute the RLN for the first 4 nodes
+    relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[1]=Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                      dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                      dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[2]=Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                      dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                      dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[3]=Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
   }
 
   int i;
@@ -475,18 +470,6 @@ void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
 
   vector<Vector> relative_node_location(8,Vector(0.0,0.0,0.0));
 
-  relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
-                                   -dsize(1,0)-dsize(1,1)-dsize(1,2),
-                                   -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
-  relative_node_location[1]=Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
-                                    dsize(1,0)-dsize(1,1)-dsize(1,2),
-                                    dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
-  relative_node_location[2]=Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
-                                    dsize(1,0)+dsize(1,1)-dsize(1,2),
-                                    dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
-  relative_node_location[3]=Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
-                                   -dsize(1,0)+dsize(1,1)-dsize(1,2),
-                                   -dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
   relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
                                    -dsize(1,0)-dsize(1,1)+dsize(1,2),
                                    -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
@@ -561,6 +544,19 @@ void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
     relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
                                      -dsize(1,0)+dsize(1,1)+dsize(1,2),
                                      -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+  }else{ // Particle wasn't scaled, need to compute the RLN for the first 4 nodes
+    relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[1]=Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                      dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                      dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[2]=Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                      dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                      dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+    relative_node_location[3]=Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
   }
 
   Vector current_corner_pos;
@@ -578,7 +574,7 @@ void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
   Vector r3=Vector(dsize(0,2),dsize(1,2),dsize(2,2));
   double volume = dsize.Determinant();
   double one_over_4V = 1.0/(4.0*volume);
-  double one_over_8 = 1.0/(8.0);
+  double one_over_8 = .125;
   vector<Vector> alpha(8,Vector(0.0,0.0,0.0));
   vector<double> phi(8);
   // conw we construct the vectors necessary for the gradient calculation:
@@ -655,7 +651,7 @@ void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
     phi[6] = fx *fy *fz;  // x1+r1x, y1+r2y, z1+r3z
     phi[7] = fx1*fy *fz;  // x1    , y1+r2y, z1+r3z
 
-    S[i8]   = one_over_8*phi[0];
+    S[i8]  = one_over_8*phi[0];
     S[i81] = one_over_8*phi[1];
     S[i82] = one_over_8*phi[2];
     S[i83] = one_over_8*phi[3];
