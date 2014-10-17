@@ -115,8 +115,8 @@ void OrthorhombicCoordinates::getInverseCell(Uintah::Matrix3& In) {
   In(0,2) = 0.0;
   In(1,0) = 0.0;
   In(1,2) = 0.0;
+  In(2,0) = 0.0;
   In(2,1) = 0.0;
-  In(1,2) = 0.0;
 
 }
 
