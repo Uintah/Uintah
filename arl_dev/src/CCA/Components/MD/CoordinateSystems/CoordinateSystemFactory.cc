@@ -78,7 +78,7 @@ CoordinateSystem* CoordinateSystemFactory::create(const ProblemSpecP&     ps,
     orthorhombic = true;
     coordinates = scinew OrthorhombicCoordinates(gridExtent, periodicVector, length, angles);
   }
-  else if ("Length-Angle" == unitCellType) {
+  else if ("LengthAngle" == unitCellType) {
     // Unit cell is entered as a vector of three basis vector lengths and a vector of three angles between basis vectors
     SCIRun::Vector lengths, angles;
     unitcell_ps->require("abc",lengths);

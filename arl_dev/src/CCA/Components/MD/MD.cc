@@ -42,6 +42,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Thread/Mutex.h>
+#include <Core/Math/Matrix3.h>
 
 #include <iostream>
 #include <iomanip>
@@ -85,6 +86,7 @@ MD::MD(const ProcessorGroup* myworld) :
   d_firstIntegration = true;
   d_secondIntegration = false;
   d_KineticBase = d_PotentialBase = d_referenceEnergy = 0.0;
+//  d_isoKineticMult = 1.0;
 }
 
 MD::~MD()
@@ -908,30 +910,44 @@ void MD::outputStatistics(const ProcessorGroup* pg,
     d_PotentialBase = potentialEnergy;
     d_referenceStored = true;
     d_referenceEnergy += d_PotentialBase;
-    std::cout << "Seeing me" << std::endl;
   }
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep()-1;
-  proc0cout << "  Step: " << std::setw(10) << std::left << timestep
-            << "  Potential:  " << std::setprecision(13) << std::setw(15) << std::right << potentialEnergy
-            << "  Kinetic:  " << std::setprecision(13) << std::setw(15) << std::right << kineticEnergy
-            << "  Total:  " << std::setprecision(13) << std::setw(15) << std::right << potentialEnergy + kineticEnergy;
+
+
+  proc0cout << "  Potential:  " << std::setprecision(4) << std::setw(12) << std::right << std::fixed << potentialEnergy
+            << "  Kinetic:  " << std::setprecision(4) << std::setw(12) << std::right << std::fixed << kineticEnergy
+            << "  Total:  " << std::setprecision(4) << std::setw(12) << std::right << std::fixed << potentialEnergy + kineticEnergy;
+
+  proc0cout << "  electrostaticInverse: " << std::setprecision(4) << std::setw(12) << std::right << std::fixed << electrostaticInverseEnergy
+            << "  electrostaticReal: " << std::setprecision(4) << std::setw(12) << std::right << std::fixed << electrostaticRealEnergy;
 
   if (d_referenceStored) {
-    proc0cout << "\t" << " Relative to reference (" << d_referenceEnergy << "): "
-              << std::setprecision(5) << std::setw(6) << std::right
+    proc0cout << "\t" << " Relative to reference: "
+              << std::setprecision(3) << std::setw(6) << std::right << std::fixed
               << (totalEnergy/d_referenceEnergy)*100.0 << "%";
   }
-  proc0cout << std::endl;
 
-//  if (!d_referenceStored && kineticEnergy != 0.0 && nonbondedEnergy != 0.0)
-//  {
-//    d_referenceEnergy = totalEnergy;
-//    d_referenceStored = true;
+  if (!d_referenceStored && kineticEnergy != 0.0 && nonbondedEnergy != 0.0)
+  {
+    d_referenceEnergy = totalEnergy;
+    d_referenceStored = true;
+  }
+
+//  // FIXME TODO This is a bit of a hack for a quick up and running issue
+//  double Temp = 2.0 * kineticEnergy / (3.0*(6192.0-(2.0*288.0)-1.0) * 1.98709e-3);
+//  if (Temp != 0.0) {
+//    d_isoKineticMult =  sqrt(11.89/Temp); // Set temp to 298.15
+//    if (d_isoKineticMult > 2.0) {
+//      d_isoKineticMult = 2.0;
+//    }
 //  }
-//
-//  proc0cout << std::endl;
-
-  if (NPT == d_system->getEnsemble()) {
+  int timestep = d_sharedState->getCurrentTopLevelTimeStep()-1;
+//  if (timestep%25 == 0) {
+//    proc0cout << "  Step: " << std::setw(10) << std::left << timestep
+//              << "\t" << "KE: " << kineticEnergy << " PE:" << potentialEnergy
+//              << " Total: " << totalEnergy << std::endl;
+//  }
+//  proc0cout << "Temperature: " << Temp << " Mult: " << d_isoKineticMult <<std::endl;
+    if (NPT == d_system->getEnsemble()) {
     oldDW->get(spmeFourierStress,
                 d_label->electrostatic->rElectrostaticInverseStress);
     oldDW->get(spmeRealStress,
@@ -1049,6 +1065,16 @@ void MD::initialize(const ProcessorGroup*   pg,
         // Loop over all atoms of material
         atomData*   currAtom        = (*currAtomList)[atomIndex];
         Point       currPosition    = currAtom->getPosition();
+
+        // TODO:  This is a good location to inject initial transformations of the as-read data
+//        // TODO FIXME Remove these comments once verified unbroken without VVVVV
+//        double boxX = 56.0114734706852;
+//        double numSteps = 20000;
+//        SCIRun::Vector xDimension = d_coordinate->getUnitCell().getColumn(0);
+//        xDimension -= boxX * MDConstants::V_X; // Get back to unmodified box
+//        currPosition += (xDimension/2.0); // Add 10% of X dimension as constant shift
+//        //d_xShift = 0.2*boxX/numSteps;
+//        d_xShift = MDConstants::V_X*5e-4;
 
         if (currPatch->containsPoint(currPosition))
         { // Atom is on this patch
@@ -1420,7 +1446,6 @@ void MD::newUpdatePosition(const ProcessorGroup* pg,
   oldDW->get(previousMomentum, d_label->global->rTotalMomentum);
   sum_vartype    previousMass;
   oldDW->get(previousMass, d_label->global->rTotalMass);
-
   sum_vartype    previousKE;
   oldDW->get(previousKE, d_label->global->rKineticEnergy);
 
@@ -1430,7 +1455,8 @@ void MD::newUpdatePosition(const ProcessorGroup* pg,
 
   totalMass = 0.0;
   SCIRun::Vector F_n;
-  SCIRun::Vector F_nPlus1, V_nPlusHalf;
+  SCIRun::Vector F_nPlus1;
+  //, V_nPlusHalf;
 
   int numPatches = patches->size();
   int numTypes   = localAtomTypes->size();
@@ -1445,7 +1471,63 @@ void MD::newUpdatePosition(const ProcessorGroup* pg,
   delt_vartype delT;
   oldDW->get(delT,  d_sharedState->get_delt_label(),  getLevel(patches));
   double dT = delT;
+  int timestep = d_sharedState->getCurrentTopLevelTimeStep()-1;
 
+  // TODO FIXME:  Remove these comments
+//  double appliedStressInAtm = 0.0;
+//  std::stringstream xyzName;
+//  xyzName << "periodicStrain_" << std::setprecision(5) << std::setw(7) << std::fixed
+//          << d_xShift.length() << ".xyz";
+//  bool outputXYZFile = true;
+//  std::string xyzOutFileName = xyzName.str();
+//  int xyzOutStep = 100;
+//  std::string coordOutFilename = "coords.out";
+//  int coordOutStep = 500;
+//
+//  std::ofstream coordOutFile;
+//  if (timestep%coordOutStep == 0) { // Write coords.out;
+//    coordOutFile.open(coordOutFilename.c_str(),
+//                      std::fstream::out | std::fstream::trunc);
+//    for (int header = 0; header < 2; ++header)
+//    {
+//      coordOutFile << "*" << std::endl;
+//    }
+//    coordOutFile << "*   Step:   " << timestep << "   Total Time:   "
+//                 << std::setprecision(4) << std::setw(12) << std::right
+//                 << timestep*dT << std::endl;
+//    for (int header = 0; header < 2; ++header)
+//    {
+//      coordOutFile << "*" << std::endl;
+//    }
+//  }
+//  if ((timestep%xyzOutStep == 0) && outputXYZFile) { // Write .xyz file header
+//    d_xyzOutFile.open(xyzOutFileName.c_str(),
+//                      std::fstream::out | std::fstream::app);
+//
+//    int numAtoms = 0;
+//    for (int patchNo = 0; patchNo < numPatches; ++patchNo )
+//    {
+//      const Patch* currPatch = patches->get(patchNo);
+//      for (int atomNo = 0; atomNo < numTypes; ++atomNo)
+//      {
+//        int atomType = localAtomTypes->get(atomNo);
+//        ParticleSubset* atomSet = oldDW->getParticleSubset(atomType, currPatch);
+//        numAtoms += static_cast<int> (atomSet->numParticles());
+//      }
+//    }
+//    d_xyzOutFile << numAtoms << "     " << std::endl;
+//    d_xyzOutFile << " Step: " << timestep << " Total Time: "
+//               << std::setprecision(2) << std::setw(12) << std::right
+//               << timestep*dT << std::endl;
+//  }
+
+//
+//
+//  int outputTarget = 1;
+  // FIXME TODO HACKY STUFF
+  int numXYZ = 6192;
+  std::vector<std::string> sortedAtomNames(numXYZ);
+  std::vector<Point> sortedAtomPositions(numXYZ);
   for (int patchIndex = 0; patchIndex < numPatches; ++patchIndex)
   {
     const Patch* currPatch = patches->get(patchIndex);
@@ -1459,6 +1541,8 @@ void MD::newUpdatePosition(const ProcessorGroup* pg,
 //      double            typeKinetic     = 0.0;
 //      Uintah::Matrix3   typeStress      = MDConstants::M3_0;
 //      SCIRun::Vector    typeMomentum    = MDConstants::V_ZERO;
+      std::string atomName = d_sharedState->getMDMaterial(atomType)->getMapLabel();
+      std::string atomLabel = d_sharedState->getMDMaterial(atomType)->getMaterialLabel();
 
       ParticleSubset* integrationSet = oldDW->getParticleSubset(atomType,
                                                                 currPatch);
@@ -1492,23 +1576,64 @@ void MD::newUpdatePosition(const ProcessorGroup* pg,
       int numAtoms = integrationSet->numParticles();
       for (int atom = 0; atom < numAtoms; ++atom)
       {
+//        if ((timestep%xyzOutStep == 0) && outputXYZFile)
+//        {
+//
+////          std::cout << pID_n[atom] << "/" << numAtoms << std::endl;
+//          sortedAtomNames[pID_n[atom]-1] = atomName;
+//          sortedAtomPositions[pID_n[atom]-1] = pX_n[atom];
+//        }
+
+
         F_n      = pF_nb_n[atom]     + pF_eReal_n[atom]      + pF_eInv_n[atom];
         F_nPlus1 = pF_nb_nPlus1[atom]+ pF_eReal_nPlus1[atom] + pF_eInv_nPlus1[atom];
 
-//        V_nPlusHalf = pV_n[atom];
-        pV_nPlus1[atom] = (pV_n[atom] - momentumFraction) + 0.5 * F_nPlus1 * dT * forceNorm * massInv;
-
+        // FIXME TODO YOU MORON isokinetic thermostat is hard coded in here!
+//          if (!d_firstIntegration) { d_isoKineticMult = 1.0; } // Only rescale temp on first step
+          pV_nPlus1[atom] = (pV_n[atom] - momentumFraction)
+//              * d_isoKineticMult
+                         + 0.5 * F_nPlus1 * dT * forceNorm * massInv;
+//        }
         kineticEnergy += atomMass * pV_nPlus1[atom].length2();
         totalMomentum += atomMass * pV_nPlus1[atom];
         totalMass += atomMass;
+//        if (timestep%coordOutStep == 0) { // Write coords.out;
+//          coordOutFile << std::setprecision(12) << std::setw(18) << std::right << std::fixed
+//                       << pX_n[atom].x() << "      "
+//                       << pX_n[atom].y() << "      "
+//                       << pX_n[atom].z() << "           "
+//                       << atomLabel << std::endl;
+//          coordOutFile << std::setprecision(12) << std::setw(18) << std::right << std::fixed
+//                       << "  "
+//                       << pV_nPlus1[atom].x() << "      "
+//                       << pV_nPlus1[atom].y() << "      "
+//                       << pV_nPlus1[atom].z() << "      "
+//                       << std::endl;
+//        }
+
 
         if (! d_firstIntegration) {
           pV_nPlus1[atom] = pV_nPlus1[atom] + 0.5 * F_nPlus1 * dT * forceNorm * massInv;
 
         }
+//        if (pID_n[atom] < 288) {
+//          pX_nPlus1[atom] = pX_n[atom] - d_xShift;
+//          pV_nPlus1[atom] = MDConstants::V_ZERO;
+//        }
+//        else if (pID_n[atom] >= 5904)
+//        {
+//          pX_nPlus1[atom] = pX_n[atom] + d_xShift;
+//          pV_nPlus1[atom] = MDConstants::V_ZERO;
+//        }
+//        else
+//        {
         pX_nPlus1[atom] = pX_n[atom] + dT * velocNorm * pV_nPlus1[atom];
+
+//        }
         pID_nPlus1[atom] = pID_n[atom];
       }
+
+//      (const_cast<Patch*> (currPatch))->getLevel(true)->setdCell(cellDimensions);
 
       ParticleSubset* delset = scinew ParticleSubset(0, atomType, currPatch);
       newDW->deleteParticles(delset);
@@ -1525,6 +1650,26 @@ void MD::newUpdatePosition(const ProcessorGroup* pg,
   newDW->put(sum_vartype(kineticEnergy),d_label->global->rKineticEnergy);
   newDW->put(sum_vartype(totalMass),d_label->global->rTotalMass);
   newDW->put(sumvec_vartype(totalMomentum),d_label->global->rTotalMomentum);
+//  if (outputXYZFile && (timestep%xyzOutStep == 0))
+//  {
+//    for (int xyzIndex = 0; xyzIndex < sortedAtomNames.size(); ++xyzIndex)
+//    {
+//      // Output to .xyz file
+//      d_xyzOutFile << sortedAtomNames[xyzIndex] << "\t"
+//                   << std::setprecision(15) << std::setw(21) << std::right
+//                   << std::fixed << sortedAtomPositions[xyzIndex].x()
+//                   << std::setprecision(15) << std::setw(21) << std::right
+//                   << std::fixed << sortedAtomPositions[xyzIndex].y()
+//                   << std::setprecision(15) << std::setw(21) << std::right
+//                   << std::fixed << sortedAtomPositions[xyzIndex].z()
+//                   << std::endl;
+//    }
+//
+//    d_xyzOutFile.close();
+//  }
+//  if (timestep%coordOutStep == 0) {
+//    coordOutFile.close();
+//  }
 
   if (mdFlowDebug.active()) {
     mdFlowDebug << flowLocation
@@ -1589,6 +1734,24 @@ void MD::updatePosition(const ProcessorGroup*   pg,
   double            kineticEnergy = 0.0;
   SCIRun::Vector    totalMomentum = MDConstants::V_ZERO;
   Uintah::Matrix3   kineticStress = MDConstants::M3_0;
+  int timestep = d_sharedState->getCurrentTopLevelTimeStep()-1;
+
+  delt_vartype delT;
+  oldDW->get(delT,  d_sharedState->get_delt_label(),  getLevel(patches));
+
+  bool outputXYZFile = true;
+  std::string xyzOutFileName = "crackTest.xyz";
+  int xyzOutStep = 25;
+  if ((timestep%xyzOutStep == 0) && outputXYZFile) { // Write .xyz file header
+    d_xyzOutFile.open(xyzOutFileName.c_str(),
+                      std::fstream::out | std::fstream::app);
+
+    d_xyzOutFile << d_system->getNumAtoms() << std::endl;
+    d_xyzOutFile << " Step: " << timestep << " Total Time: "
+               << std::setprecision(2) << std::setw(12) << std::right
+               << timestep*delT << std::endl;
+  }
+
   for (unsigned int p = 0; p < numPatches; ++p)
   {
     const Patch* patch = patches->get(p);
@@ -1601,6 +1764,8 @@ void MD::updatePosition(const ProcessorGroup*   pg,
       int    atomType = localAtomTypes->get(typeIndex);
       double atomMass = d_sharedState->getMDMaterial(atomType)->getMass();
       double massInv  = 1.0/atomMass;
+
+      std::string atomName = d_sharedState->getMDMaterial(atomType)->getMapLabel();
 
       ParticleSubset* pset = oldDW->getParticleSubset(atomType, patch);
       // Particle ID variables
@@ -1640,10 +1805,6 @@ void MD::updatePosition(const ProcessorGroup*   pg,
       newDW->get(F_eInv_nPlus1, d_label->electrostatic->pF_electroInverse_preReloc, pset);
       newDW->get(F_nb_nPlus1, d_label->nonbonded->pF_nonbonded_preReloc, pset);
 
-      // get timestep
-      delt_vartype delT;
-      oldDW->get(delT,  d_sharedState->get_delt_label(),  getLevel(patches));
-
       size_t numAtoms = pset->numParticles();
       totalMass     += numAtoms*atomMass;
 
@@ -1652,6 +1813,18 @@ void MD::updatePosition(const ProcessorGroup*   pg,
       std::cerr << " Timestep: " << delT << std::endl;
       for (size_t atom = 0; atom < numAtoms; ++atom)
       {
+
+        if ((timestep%xyzOutStep == 0) && outputXYZFile)
+        { // Output to .xyz file
+          d_xyzOutFile << atomName << "\t"
+                       << std::setprecision(15) << std::setw(21) << std::right
+                       << X_n[atom].x()
+                       << std::setprecision(15) << std::setw(21) << std::right
+                       << X_n[atom].y()
+                       << std::setprecision(15) << std::setw(21) << std::right
+                       << X_n[atom].z() << std::endl;
+        }
+
         F_n = F_eReal_n[atom] + F_eInv_n[atom] + F_nb_n[atom];
         A_n = F_n * massInv * 41.84;//1e-7;
         if (pID_n[atom] == tgt)
@@ -1722,6 +1895,11 @@ void MD::updatePosition(const ProcessorGroup*   pg,
   newDW->put(sum_vartype(totalMass), d_label->global->rTotalMass);
 //  calculateKineticEnergy()
   //d_coordinate->clearCellChanged();
+  if (outputXYZFile && (timestep%xyzOutStep == 0))
+  {
+    d_xyzOutFile.close();
+  }
+
   if (mdFlowDebug.active()) {
     mdFlowDebug << flowLocation
                 << "END"

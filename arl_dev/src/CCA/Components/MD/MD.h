@@ -44,6 +44,8 @@
 #include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
 
 #include <vector>
+#include <fstream>
+#include <iomanip>
 
 namespace Uintah {
 
@@ -435,6 +437,9 @@ namespace Uintah {
       bool d_secondIntegration;
       double d_KineticBase;
       double d_PotentialBase;
+      double d_isoKineticMult;
+      SCIRun::Vector d_xShift;
+      std::ofstream d_xyzOutFile;
   };
 
 }

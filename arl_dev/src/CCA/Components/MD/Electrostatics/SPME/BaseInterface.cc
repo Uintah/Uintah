@@ -655,7 +655,6 @@ void SPME::calculate(   const ProcessorGroup*   pg,
 
     }
   }
-
   // Dipoles have converged, calculate forces
   if (f_polarizable) {
     calculatePostTransformDipole(pg, perProcPatches, materials,
@@ -670,15 +669,15 @@ void SPME::calculate(   const ProcessorGroup*   pg,
 
 }
 
-void SPME::finalize(    const ProcessorGroup*   pg,
-                        const PatchSubset*      patches,
-                        const MaterialSubset*   materials,
-                        DataWarehouse*          oldDW,
-                        DataWarehouse*          newDW,
-                        const SimulationStateP* simState,
-                        MDSystem*               systemInfo,
-                        const MDLabel*          label,
-                        CoordinateSystem*       coordSys)
+void SPME::finalize(const ProcessorGroup*   pg,
+                    const PatchSubset*      patches,
+                    const MaterialSubset*   materials,
+                          DataWarehouse*    oldDW,
+                          DataWarehouse*    newDW,
+                    const SimulationStateP* simState,
+                          MDSystem*         systemInfo,
+                    const MDLabel*          label,
+                          CoordinateSystem* coordSys)
 {
   // Do something here?
   /*

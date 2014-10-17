@@ -55,7 +55,10 @@ lucretiusAtomData::lucretiusAtomData(const SCIRun::Point _X,
                                          d_forcefield(_ff) {
 
   if (_nbLabel.size() > 3) {
-    throw InvalidValue("ERROR:  Lucretius label should be 3 characters or less.", __FILE__, __LINE__);
+    std::stringstream errorMessage;
+    errorMessage << "ERROR:  Error parsing coords file - Lucretius label should be 3 characters or less." << std::endl
+                 << "  Saw \""<< _nbLabel << "\"" << std::endl;
+    throw InvalidValue(errorMessage.str(), __FILE__, __LINE__);
   }
   std::stringstream lucretiusLabel;
   std::string tempLabel(3,' ');
