@@ -152,7 +152,7 @@ WARNING
 
     void postH2DCopies(DetailedTask* dtask);
 
-    void createCudaStreams(int numStreams, int device);
+    void createCudaStreams(int device, int numStreams = 1);
 
     void reclaimCudaStreams(DetailedTask* dtask);
 

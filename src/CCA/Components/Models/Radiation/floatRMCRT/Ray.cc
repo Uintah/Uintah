@@ -187,9 +187,10 @@ floatRay::~floatRay()
 
 //______________________________________________________________________
 //  Logic for determing when to carry forward
-bool floatRay::doCarryForward( const int timestep,
-                          const int radCalc_freq){
+bool floatRay::doCarryForward( const int radCalc_freq ){
+  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
   bool test = (timestep%radCalc_freq != 0 && timestep != 1);
+  
   return test;
 }
 
@@ -199,7 +200,8 @@ bool floatRay::doCarryForward( const int timestep,
 void
 floatRay::problemSetup( const ProblemSpecP& prob_spec,
                    const ProblemSpecP& rmcrtps,
-                   SimulationStateP&   sharedState) 
+                   const GridP& grid,
+                   SimulationStateP&   sharedState)
 {
 
   d_sharedState = sharedState;
@@ -450,8 +452,7 @@ floatRay::sigmaT4( const ProcessorGroup*,
 {
   //__________________________________
   //  Carry Forward
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  if ( doCarryForward( timestep, radCalc_freq) ) {
+  if ( doCarryForward( radCalc_freq) ) {
     printTask( patches, patches->get(0), dbg, "Doing floatRay::sigmaT4 carryForward (sigmaT4)" );
     
     new_dw->transferFrom( old_dw, d_sigmaT4_label, patches, matls, true );
@@ -561,9 +562,8 @@ floatRay::rayTrace( const ProcessorGroup* pc,
 { 
 
   const Level* level = getLevel(patches);
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
   
-  if ( doCarryForward( timestep, radCalc_freq) ) {
+  if ( doCarryForward( radCalc_freq) ) {
     printTask(patches,patches->get(0), dbg,"Doing floatRay::rayTrace (carryForward)");
     bool replaceVar = true;
     new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls, replaceVar );
@@ -897,8 +897,7 @@ floatRay::rayTrace_dataOnion( const ProcessorGroup* pc,
   const Level* fineLevel = getLevel(finePatches);
    //__________________________________
   //  Carry Forward (old_dw -> new_dw)
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  if ( doCarryForward( timestep, radCalc_freq) ) {
+  if ( doCarryForward( radCalc_freq) ) {
     printTask( fineLevel->getPatch(0), dbg, "Coing floatRay::rayTrace_dataOnion carryForward ( divQ )" );
     
     new_dw->transferFrom( old_dw, d_divQLabel,          finePatches, matls, true );
@@ -1479,8 +1478,7 @@ floatRay::setBoundaryConditions( const ProcessorGroup*,
                             const bool backoutTemp )               
 {
   // Only run if it's time
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  if ( doCarryForward( timestep, radCalc_freq) ) {
+  if ( doCarryForward( radCalc_freq) ) {
     return;
   }
   
@@ -1713,8 +1711,7 @@ void floatRay::refine_Q(const ProcessorGroup*,
   
   //__________________________________
   //  Carry Forward (old_dw -> new_dw)
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  if ( doCarryForward( timestep, radCalc_freq) ) {
+  if ( doCarryForward( radCalc_freq) ) {
     printTask( fineLevel->getPatch(0), dbg, "Doing floatRay::refine_Q carryForward ( divQ )" );
     
     new_dw->transferFrom( old_dw, d_divQLabel, patches, matls, true );

@@ -972,17 +972,15 @@ MomentumSolver::sched_averageRKHatVelocities(SchedulerP& sched,
   Ghost::GhostType  gn = Ghost::None;
   Ghost::GhostType  gac = Ghost::AroundCells;
   
-  tsk->requires(Task::OldDW,   d_lab->d_uVelocitySPBCLabel,gn, 0);  
-  tsk->requires(Task::OldDW,   d_lab->d_vVelocitySPBCLabel,gn, 0);  
-  tsk->requires(Task::OldDW,   d_lab->d_wVelocitySPBCLabel,gn, 0);  
+  tsk->requires(Task::OldDW , d_lab->d_uVelocitySPBCLabel , gn  , 0);
+  tsk->requires(Task::OldDW , d_lab->d_vVelocitySPBCLabel , gn  , 0);
+  tsk->requires(Task::OldDW , d_lab->d_wVelocitySPBCLabel , gn  , 0);
   
-  tsk->requires(Task::OldDW,   d_lab->d_densityCPLabel,    gac,1);
-  tsk->requires(Task::NewDW,   d_lab->d_cellTypeLabel,     gn, 0);
+  tsk->requires(Task::OldDW , d_lab->d_densityCPLabel     , gac , 1);
+  tsk->requires(Task::NewDW , d_lab->d_cellTypeLabel      , gac , 1);
 
-  tsk->requires(Task::NewDW,   d_lab->d_densityTempLabel,  gac,1);
-  tsk->requires(Task::NewDW,   d_lab->d_densityCPLabel,    gac,1);
-
-  tsk->requires(Task::NewDW,   d_lab->d_volFractionLabel, gac, 1); 
+  tsk->requires(Task::NewDW , d_lab->d_densityTempLabel   , gac , 1);
+  tsk->requires(Task::NewDW , d_lab->d_densityCPLabel     , gac , 1);
 
   tsk->modifies(d_lab->d_uVelRhoHatLabel);
   tsk->modifies(d_lab->d_vVelRhoHatLabel);
@@ -1020,13 +1018,12 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
     SFCXVariable<double> new_uvel;
     SFCYVariable<double> new_vvel;
     SFCZVariable<double> new_wvel;
-    constCCVariable<double> vol_frac; 
 
     Ghost::GhostType  gn = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
     
     old_dw->get(old_density, d_lab->d_densityCPLabel, indx, patch, gac, 1);
-    new_dw->get(cellType,    d_lab->d_cellTypeLabel,  indx, patch, gn, 0);
+    new_dw->get(cellType,    d_lab->d_cellTypeLabel,  indx, patch, gac, 1);
 
     old_dw->get(old_uvel, d_lab->d_uVelocitySPBCLabel, indx, patch, gn, 0);  
     old_dw->get(old_vvel, d_lab->d_vVelocitySPBCLabel, indx, patch, gn, 0);  
@@ -1038,7 +1035,6 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
     new_dw->getModifiable(new_uvel, d_lab->d_uVelRhoHatLabel, indx, patch);
     new_dw->getModifiable(new_vvel, d_lab->d_vVelRhoHatLabel, indx, patch);
     new_dw->getModifiable(new_wvel, d_lab->d_wVelRhoHatLabel, indx, patch);
-    new_dw->get(vol_frac, d_lab->d_volFractionLabel, indx, patch, gac, 1 ); 
 
     double factor_old, factor_new, factor_divide;
     factor_old = timelabels->factor_old;
@@ -1048,17 +1044,24 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
     IntVector x_offset(1,0,0);
     IntVector y_offset(0,1,0);
     IntVector z_offset(0,0,1);
+
+    //At one point we tried using vol fraction here but that 
+    //causes problems with inlets because the volume fraction there
+    //is 1.0.  We don't want the inlet velocities to be changed 
+    //otherwise we lose the boundary condition information. 
     
     //__________________________________
     //  X  (This includes the extra cells)
     CellIterator SFCX_iter = patch->getSFCXIterator();
 
-    const double small = 1e-12; 
+    const double small = 1e-12;
+
+    const int flow = -1;
     
     for(; !SFCX_iter.done(); SFCX_iter++) {
       IntVector c = *SFCX_iter;
       IntVector L = c - x_offset;
-      if ( vol_frac[c] >= small && vol_frac[L] >= small ){ 
+      if ( cellType[c] == flow && cellType[L] == flow ){ 
         new_uvel[c] = (factor_old * old_uvel[c] * (old_density[c]  + old_density[L])
                     +  factor_new * new_uvel[c] * (temp_density[c] + temp_density[L]))/
                        (factor_divide * (new_density[c] + new_density[L]));
@@ -1071,7 +1074,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
     for(; !SFCY_iter.done(); SFCY_iter++) {
       IntVector c = *SFCY_iter;
       IntVector L = c - y_offset;
-      if ( vol_frac[c] >= small && vol_frac[L] >= small ){ 
+      if ( cellType[c] == flow && cellType[L] == flow ){ 
         new_vvel[c] = (factor_old * old_vvel[c] * (old_density[c]  + old_density[L])
                     +  factor_new * new_vvel[c] * (temp_density[c] + temp_density[L]))/
                        (factor_divide * (new_density[c] + new_density[L]));
@@ -1084,7 +1087,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
     for(; !SFCZ_iter.done(); SFCZ_iter++) {
       IntVector c = *SFCZ_iter;
       IntVector L = c - z_offset;
-      if ( vol_frac[c] >= small && vol_frac[L] >= small ){ 
+      if ( cellType[c] == flow && cellType[L] == flow ){ 
         new_wvel[c] = (factor_old * old_wvel[c] * (old_density[c]  + old_density[L])
                     +  factor_new * new_wvel[c] * (temp_density[c] + temp_density[L]))/
                        (factor_divide * (new_density[c] + new_density[L]));

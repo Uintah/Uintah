@@ -272,11 +272,11 @@ namespace Wasatch{
                                                                    ExprAlgbr::PRODUCT,
                                                                    true) );
       
-      factory.attach_modifier_expression( modifierTag, solution_variable_tag() );
+      factory.attach_modifier_expression( modifierTag, initial_condition_tag() );
     }
     
-    if( factory.have_entry(solution_variable_tag()) ){
-      bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
+    if( factory.have_entry(initial_condition_tag()) ){
+      bcHelper.apply_boundary_condition<FieldT>( initial_condition_tag(), taskCat );
     }
     
     if( !isConstDensity_ ){
@@ -410,11 +410,11 @@ namespace Wasatch{
       // register expression to calculate the initial condition of the solution variable from the initial
       // conditions on primitive variable and density in the cases that we are solving for e.g. rho*phi
       typedef ExprAlgebra<SVolField> ExprAlgbr;
-      return icFactory.register_expression( new typename ExprAlgbr::Builder( solution_variable_tag(),
+      return icFactory.register_expression( new typename ExprAlgbr::Builder( initial_condition_tag(),
                                                                              tag_list( primVarTag_, Expr::Tag(densityTag_.name(),Expr::STATE_NONE) ),
                                                                              ExprAlgbr::PRODUCT ) );
     }
-    return icFactory.get_id( solution_variable_tag() );
+    return icFactory.get_id( initial_condition_tag() );
   }
 
   //------------------------------------------------------------------

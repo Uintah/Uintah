@@ -1,4 +1,3 @@
-<?xml version="1.0"?>
 <Uintah_specification>
   <Meta>
     <title>Lid Driven Cavity Problem</title>
@@ -10,17 +9,17 @@
     <!-- Set the initial condition expression for x-momentum -->
     <BasicExpression type="XVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="x-mom" state="STATE_DYNAMIC"/>
+      <NameTag name="x-mom" state="STATE_NONE"/>
       <Constant>0.0</Constant>
     </BasicExpression>
     <BasicExpression type="YVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="y-mom" state="STATE_DYNAMIC"/>
+      <NameTag name="y-mom" state="STATE_NONE"/>
       <Constant>0.0</Constant>
     </BasicExpression>
     <BasicExpression type="ZVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="z-mom" state="STATE_DYNAMIC"/>
+      <NameTag name="z-mom" state="STATE_NONE"/>
       <Constant>0.0</Constant>
     </BasicExpression>
     <BasicExpression type="SVOL">
@@ -86,7 +85,7 @@
     </Density>
     <BasicExpression type="PARTICLE">
       <TaskList>initialization</TaskList>
-      <NameTag name="p.size" state="STATE_DYNAMIC"/>
+      <NameTag name="p.size" state="STATE_NONE"/>
       <RandomField low="1e-4" high="1e-2" seed="11"/>
     </BasicExpression>
     <BasicExpression type="PARTICLE">
@@ -114,7 +113,7 @@
     </CommonGeometry>
     <BasicExpression type="PARTICLE">
       <TaskList>initialization</TaskList>
-      <NameTag name="p.xw" state="STATE_DYNAMIC"/>
+      <NameTag name="p.xw" state="STATE_NONE"/>
       <ParticlePositionIC coordinate="X" bounds="PATCHBASED">
         <Geometry seed="1">
           <geom_object>
@@ -125,7 +124,7 @@
     </BasicExpression>
     <BasicExpression type="PARTICLE">
       <TaskList>initialization</TaskList>
-      <NameTag name="p.yw" state="STATE_DYNAMIC"/>
+      <NameTag name="p.yw" state="STATE_NONE"/>
       <ParticlePositionIC coordinate="Y" bounds="PATCHBASED">
         <Geometry seed="2">
           <geom_object>
@@ -136,7 +135,7 @@
     </BasicExpression>
     <BasicExpression type="PARTICLE">
       <TaskList>initialization</TaskList>
-      <NameTag name="p.zw" state="STATE_DYNAMIC"/>
+      <NameTag name="p.zw" state="STATE_NONE"/>
       <ParticlePositionIC coordinate="Z" bounds="PATCHBASED">
         <Geometry seed="3">
           <geom_object>
@@ -147,17 +146,17 @@
     </BasicExpression>
     <BasicExpression type="PARTICLE">
       <TaskList>initialization</TaskList>
-      <NameTag name="p.u" state="STATE_DYNAMIC"/>
+      <NameTag name="p.u" state="STATE_NONE"/>
       <Constant>0.0</Constant>
     </BasicExpression>
     <BasicExpression type="PARTICLE">
       <TaskList>initialization</TaskList>
-      <NameTag name="p.v" state="STATE_DYNAMIC"/>
+      <NameTag name="p.v" state="STATE_NONE"/>
       <Constant>0.0</Constant>
     </BasicExpression>
     <BasicExpression type="PARTICLE">
       <TaskList>initialization</TaskList>
-      <NameTag name="p.w" state="STATE_DYNAMIC"/>
+      <NameTag name="p.w" state="STATE_NONE"/>
       <Constant>0.0</Constant>
     </BasicExpression>
   </Wasatch>

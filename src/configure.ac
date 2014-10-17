@@ -436,6 +436,13 @@ SCI_ARG_WITH(gperftools,
   [with_gperftools="$withval"
    sci_required_gperftools=yes],
   [with_gperftools=""])
+
+SCI_ARG_WITH(ipm,
+  AC_HELP_STRING(--with-ipm=DIR,
+                 Use the ipm installation in DIR),
+  [with_ipm="$withval"
+   sci_required_ipm=yes],
+  [with_ipm=""])  
   
 SCI_ARG_WITH(magma,
   AC_HELP_STRING(--with-magma=DIR,
@@ -3772,6 +3779,51 @@ AC_SUBST(GPERFTOOLS_LIB_DIR_FLAG)
 AC_SUBST(GPERFTOOLS_LIB_FLAG)
 
 sci_defs_files="$sci_defs_files include/sci_defs/gperftools_testdefs.h"
+
+
+##  --  search for ipm stuff  -------------------------------------------
+_sci_lib=
+_sci_inc=
+_sci_optional=optional
+if test "$sci_required_ipm" = "yes"; then
+
+  if test "$static" != "yes"; then
+    AC_MSG_ERROR( [Only use \"--with-ipm\" for static builds. For dynamic usage use: \"LD_PRELOAD=/path/to/ipm/lib/libipm.so\" ] )
+  fi
+ 
+  if test "$with_ipm" = "yes"; then
+    _sci_optional=required
+  else
+    _sci_optional=specific
+    _sci_lib="$with_ipm"
+    BASE_LIB_PATH(_sci_lib,$_sci_lib)
+    _sci_inc="$with_ipm/include"
+  fi
+ 
+  AC_LANG(C++)
+  SCI_TRY_LINK(IPM,
+               IPM library,
+               ,
+               ,
+               ipm,
+               $_sci_lib,
+               ,
+               [],
+               $_sci_optional)
+  AC_LANG(C)     
+  
+  DEF_IPM="#define USE_IPM 1"
+
+fi #end sci_required_ipm
+
+# these are all defined after the call to SCI_COMPILE_LINK_TEST
+AC_SUBST(HAVE_IPM)
+AC_SUBST(DEF_IPM)
+AC_SUBST(INC_IPM_H)
+AC_SUBST(IPM_LIB_DIR_FLAG)
+AC_SUBST(IPM_LIB_FLAG)
+
+sci_defs_files="$sci_defs_files include/sci_defs/ipm_testdefs.h"
 
 
 ##  --  search for cuda stuff  ------------------------------------------

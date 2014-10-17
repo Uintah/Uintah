@@ -104,9 +104,9 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
   index_map[1][1] = 2; 
   index_map[1][2] = 0; 
   // z-direction
-  index_map[2][0] = 1;
-  index_map[2][1] = 2; 
-  index_map[2][2] = 0; 
+  index_map[2][0] = 2;
+  index_map[2][1] = 0; 
+  index_map[2][2] = 1; 
 
   d_radiation_temperature_label = VarLabel::create("radiation_temperature", CCVariable<double>::getTypeDescription()); 
 
@@ -2828,7 +2828,7 @@ void BoundaryCondition::setSwirl( const Patch* patch, const Patch::FaceType& fac
    denom = pow(denom,0.5); 
 
    double bc_v = -1.0 * z * swrl_no * ave_u /denom; 
-   vVel[c] = 2.0*vVel[cp] - bc_v;
+   vVel[c] = 2.0*bc_v - vVel[cp];
 
    y = my_p[index_map[dir][1]] + mDx.y()/2.0 - swrl_cent[index_map[dir][1]];
    z = my_p[index_map[dir][2]] - swrl_cent[index_map[dir][2]]; 
@@ -2837,8 +2837,7 @@ void BoundaryCondition::setSwirl( const Patch* patch, const Patch::FaceType& fac
    denom = pow(denom,0.5); 
 
    double bc_w = y * swrl_no * ave_u / denom;
-   wVel[c] = 2.0*wVel[cp] - bc_w;
-
+   wVel[c] = 2.0*bc_w -wVel[cp];
  }
 }
 

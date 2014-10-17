@@ -1,4 +1,3 @@
-<?xml version="1.0"?>
 <Uintah_specification>
   <Meta>
     <title>Test Interior Boundary Conditions</title>
@@ -11,7 +10,7 @@
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="f" state="STATE_DYNAMIC"/>
+      <NameTag name="f" state="STATE_NONE"/>
       <Constant>1.0</Constant>
     </BasicExpression>
     <!-- Build a cell-centered scalar transport equation -->
