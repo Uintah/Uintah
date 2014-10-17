@@ -297,9 +297,7 @@ evaluate()
   
   typename FieldT::iterator phiiter = phi.interior_begin();
 
-  double x,y,z,val;
-  int    i,j,k;
-  
+  double val;  
   const std::string inputFormat = Uintah::getString(inputFile);
   
   if (inputFormat == "FLAT") {
@@ -334,7 +332,7 @@ evaluate()
     const double dx = (*x_)(IntVec(1,0,0)) - (*x_)(IntVec(0,0,0));
     const double dy = (*y_)(IntVec(0,1,0)) - (*y_)(IntVec(0,0,0));
     const double dz = (*z_)(IntVec(0,0,1)) - (*z_)(IntVec(0,0,0));
-    double x,y,z,val;
+    double x,y,z;
     // to take care of comparing doubles, use a tolerance value for min & max (see below)
     const double epsx = dx/2.0;
     const double epsy = dy/2.0;
