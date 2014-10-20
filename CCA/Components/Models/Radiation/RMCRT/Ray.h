@@ -144,6 +144,10 @@ namespace Uintah{
       void sched_ROI_Extents ( const LevelP& level,
                                SchedulerP& scheduler );
                                
+      Radiometer* getRadiometer(){
+        return d_radiometer;
+      }
+                               
 
 
     //______________________________________________________________________
@@ -169,7 +173,6 @@ namespace Uintah{
       Point d_ROI_maxPt;
 
       // Radiometer parameters
-      const VarLabel* d_VRFluxLabel;
       Radiometer* d_radiometer;
 
       // Boundary flux constant variables  (consider using array container when C++ 11 is used)
