@@ -31,7 +31,7 @@
       <include href="RMCRT_radiometer.xml" section="Radiometer" />     
            
       <algorithm                spec="OPTIONAL NO_DATA" 
-                                    attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel singleLevel'">
+                                    attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel singleLevel radiometerOnly'">
                                     
         <orderOfInterpolation   spec="REQUIRED INTEGER 'positive'" need_applies_to="type RMCRT_coarseLevel" />
         <halo                   spec="REQUIRED VECTOR  'positive'" need_applies_to="type dataOnion" />
