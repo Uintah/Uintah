@@ -16,7 +16,7 @@
     <initTime>      0.0       </initTime>
     <delt_min>      0.00001   </delt_min>
     <delt_max>      1         </delt_max>
-    <max_Timesteps> 5         </max_Timesteps>
+    <max_Timesteps> 50         </max_Timesteps>
     <timestep_multiplier>  1  </timestep_multiplier>
   </Time>
 
@@ -97,19 +97,17 @@
       <Box label = "0">                              
          <lower>      [0,0,0]     </lower>         
          <upper>      [1, 1, 1]   </upper>         
-         <resolution> [21,21,21]  </resolution>    
-         <patches>    [2,2,2]     </patches> 
+         <resolution> [41,41,41]  </resolution>    
+         <patches>    [3,3,3]     </patches> 
          <extraCells> [1,1,1]     </extraCells>
-      </Box>
-      <periodic> [0,0,0] </periodic>                                     
+      </Box>                                 
     </Level>
   </Grid>
   <!--__________________________________-->
   <DataArchiver>
-  <filebase>rmcrt_VR.uda</filebase>
+  <filebase>radiometer.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
       <save label = "color"   />
-      <save label = "divQ"    />
       <save label = "abskg"   />
       <save label = "sigmaT4" />
       <save label = "VRFlux" />
@@ -117,29 +115,25 @@
   </DataArchiver>
 
   <!--__________________________________ -->
-  <!-- This computes the divQ over the entire domein -->
-  <!-- and the radiometer flux VRFlux    -->
-  <Temperature>       64.804        </Temperature>
-  <abskg>             999           </abskg>
-  <benchmark>         1             </benchmark>
-  <calc_frequency>    1          </calc_frequency>
+  <Temperature>       64.804         </Temperature>
+  <abskg>             999            </abskg>
+  <benchmark>         1              </benchmark>
+  <calc_frequency>    10             </calc_frequency>
       
+  <!--__________________________________-->
+  <!-- Only compute VRFlux at the radiometer locations -->    
   <RMCRT>
+     <algorithm type="radiometerOnly"/> 
     <randomSeed>        false       </randomSeed>
-    <nDivQRays>          3          </nDivQRays>
     <Threshold>         0.05        </Threshold>
-    <StefanBoltzmann>   5.67051e-8  </StefanBoltzmann>
-    <solveBoundaryFlux> false       </solveBoundaryFlux>
-    <CCRays>            false       </CCRays>
     <sigmaScat>         0           </sigmaScat>
-    <allowReflect>      true        </allowReflect>
 
     <Radiometer>
-      <VRViewAngle>       180         </VRViewAngle>
-      <VROrientation>     [-1,0,0]    </VROrientation>
-      <VRLocationsMin>    [0,0,0]     </VRLocationsMin>
-      <VRLocationsMax>    [1,1,1]     </VRLocationsMax>
-      <nRadRays>          10          </nRadRays>
+      <VRViewAngle>       3                   </VRViewAngle>
+      <VROrientation>     [-1,0,0]            </VROrientation>
+      <VRLocationsMin>    [0.999, 0.0, 0.5]   </VRLocationsMin>
+      <VRLocationsMax>    [1.0,   1.0, 0.52]  </VRLocationsMax>
+      <nRadRays>          50                  </nRadRays>
     </Radiometer>
     
   </RMCRT>
