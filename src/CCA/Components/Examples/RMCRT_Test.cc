@@ -23,6 +23,7 @@
  */
 #include <CCA/Components/Examples/ExamplesLabel.h>
 #include <CCA/Components/Examples/RMCRT_Test.h>
+#include <CCA/Components/Models/Radiation/RMCRT/Radiometer.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/DataArchive/DataArchive.h>
@@ -331,6 +332,8 @@ void RMCRT_Test::scheduleComputeStableTimestep ( const LevelP& level, SchedulerP
   scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
 }
 //______________________________________________________________________
+//
+//______________________________________________________________________
 void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
                                        SchedulerP& sched)
 {
@@ -350,6 +353,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     d_RMCRT->sched_CarryForward_Var( level, sched, d_abskgLabel );
   }
 
+  Radiometer* radiometer = d_RMCRT->getRadiometer();
 
   //______________________________________________________________________
   //   D A T A   O N I O N   A P P R O A C H
@@ -417,7 +421,11 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
         const bool backoutTemp    = true;
 
         d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, d_radCalc_freq, backoutTemp );
-
+        
+        if (radiometer ){
+          radiometer->sched_initializeRadVars( level, sched, d_radCalc_freq );
+        }
+        
         d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, d_radCalc_freq );
       }
     }
@@ -448,6 +456,10 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     const bool backoutTemp    = true;                                                                   
     
     d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, d_radCalc_freq, backoutTemp );
+    
+    if (radiometer ){
+      radiometer->sched_initializeRadVars( level, sched, d_radCalc_freq );
+    }
     
     d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, d_radCalc_freq ); 
   }
