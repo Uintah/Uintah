@@ -2796,6 +2796,9 @@ void BoundaryCondition::setSwirl( const Patch* patch, const Patch::FaceType& fac
  Vector mDx; //mapped dx 
  int dir = 0; 
 
+ int norm = getNormal(face); 
+ double pm = -1.0*insideCellDir[norm];
+
  //remap the dx's and vector values
  for (int i = 0; i < 3; i++ ){ 
   if ( insideCellDir[i] != 0 ) { 
@@ -2814,8 +2817,8 @@ void BoundaryCondition::setSwirl( const Patch* patch, const Patch::FaceType& fac
    IntVector c  = *bound_ptr; 
    IntVector cp = *bound_ptr - insideCellDir; 
 
-   uVel[c]  = bc_values.x();
-   uVel[cp] = bc_values.x();
+   uVel[c]  = pm * bc_values.x();
+   uVel[cp] = pm * bc_values.x();
 
    double ave_u = bc_values.x(); 
 
@@ -2841,7 +2844,7 @@ void BoundaryCondition::setSwirl( const Patch* patch, const Patch::FaceType& fac
    denom = pow(denom,0.5); 
 
    double bc_w = y * swrl_no * ave_u / denom;
-   wVel[c] = 2.0*bc_w -wVel[cp];
+   wVel[c] = 2.0*bc_w - wVel[cp];
  }
 }
 
