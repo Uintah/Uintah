@@ -783,9 +783,9 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     max_memuse = static_cast<unsigned long>(maxReduce[0].val);
     max_memuse_loc = maxReduce[0].loc;
 
-    if(highwater){
-      avg_highwater = avgReduce[avgReduce.size()-1];
-      max_highwater = static_cast<unsigned long>(maxReduce[maxReduce.size()-1].val);
+    if (highwater) {
+      avg_highwater = avgReduce[avgReduce.size() - 1];
+      max_highwater = static_cast<unsigned long>(maxReduce[maxReduce.size() - 1].val);
     }
     
     // Sum up the average times for simulation components.
@@ -812,7 +812,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
                  d_sharedState->taskExecTime +
                  d_sharedState->taskGlobalCommTime +
                  d_sharedState->taskLocalCommTime +
-                 d_sharedState->taskWaitCommTime;
+                 d_sharedState->taskWaitCommTime +
+                 d_sharedState->taskWaitThreadTime;
 
     // Sum up the average time for overhead related components.
     overhead_time = d_sharedState->compilationTime +
@@ -954,33 +955,43 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       dbgTime << left << showpoint << setprecision(3) << setw(4);
 
       if (realSecondsNow < SECONDS_PER_MINUTE) {
-	dbgTime << realSecondsNow << " seconds (now), ";
-      } else if ( realSecondsNow < SECONDS_PER_HOUR ) {
-	dbgTime << realSecondsNow/SECONDS_PER_MINUTE << " minutes (now), ";
-      } else if ( realSecondsNow < SECONDS_PER_DAY  ) {
-	dbgTime << realSecondsNow/SECONDS_PER_HOUR << " hours (now), ";
-      } else if ( realSecondsNow < SECONDS_PER_WEEK ) {
-	dbgTime << realSecondsNow/SECONDS_PER_DAY << " days (now), ";
-      } else if ( realSecondsNow < SECONDS_PER_YEAR ) {
-	dbgTime << realSecondsNow/SECONDS_PER_WEEK << " weeks (now), ";
-      } else {
-	dbgTime << realSecondsNow/SECONDS_PER_YEAR << " years (now), ";
+        dbgTime << realSecondsNow << " seconds (now), ";
+      }
+      else if (realSecondsNow < SECONDS_PER_HOUR) {
+        dbgTime << realSecondsNow / SECONDS_PER_MINUTE << " minutes (now), ";
+      }
+      else if (realSecondsNow < SECONDS_PER_DAY) {
+        dbgTime << realSecondsNow / SECONDS_PER_HOUR << " hours (now), ";
+      }
+      else if (realSecondsNow < SECONDS_PER_WEEK) {
+        dbgTime << realSecondsNow / SECONDS_PER_DAY << " days (now), ";
+      }
+      else if (realSecondsNow < SECONDS_PER_YEAR) {
+        dbgTime << realSecondsNow / SECONDS_PER_WEEK << " weeks (now), ";
+      }
+      else {
+        dbgTime << realSecondsNow / SECONDS_PER_YEAR << " years (now), ";
       }
 
       dbgTime << setw(4);
 
       if (realSecondsAvg < SECONDS_PER_MINUTE) {
-	dbgTime << realSecondsAvg << " seconds (avg) ";
-      } else if ( realSecondsAvg < SECONDS_PER_HOUR ) {
-	dbgTime << realSecondsAvg/SECONDS_PER_MINUTE << " minutes (avg) ";
-      } else if ( realSecondsAvg < SECONDS_PER_DAY  ) {
-	dbgTime << realSecondsAvg/SECONDS_PER_HOUR << " hours (avg) ";
-      } else if ( realSecondsAvg < SECONDS_PER_WEEK ) {
-	dbgTime << realSecondsAvg/SECONDS_PER_DAY << " days (avg) ";
-      } else if ( realSecondsAvg < SECONDS_PER_YEAR ) {
-	dbgTime << realSecondsAvg/SECONDS_PER_WEEK << " weeks (avg) ";
-      } else {
-	dbgTime << realSecondsAvg/SECONDS_PER_YEAR << " years (avg) ";
+        dbgTime << realSecondsAvg << " seconds (avg) ";
+      }
+      else if (realSecondsAvg < SECONDS_PER_HOUR) {
+        dbgTime << realSecondsAvg / SECONDS_PER_MINUTE << " minutes (avg) ";
+      }
+      else if (realSecondsAvg < SECONDS_PER_DAY) {
+        dbgTime << realSecondsAvg / SECONDS_PER_HOUR << " hours (avg) ";
+      }
+      else if (realSecondsAvg < SECONDS_PER_WEEK) {
+        dbgTime << realSecondsAvg / SECONDS_PER_DAY << " days (avg) ";
+      }
+      else if (realSecondsAvg < SECONDS_PER_YEAR) {
+        dbgTime << realSecondsAvg / SECONDS_PER_WEEK << " weeks (avg) ";
+      }
+      else {
+        dbgTime << realSecondsAvg / SECONDS_PER_YEAR << " years (avg) ";
       }
 
       dbgTime << "to calculate." << "\n";

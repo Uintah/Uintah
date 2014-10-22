@@ -176,7 +176,7 @@ WARNING
     double                      d_lasttime;
     std::vector<const char*>    d_labels;
     std::vector<double>         d_times;
-    std::ofstream               timingStats, avgStats, maxStats;
+    std::ofstream               timingStats, minStats, maxStats, avgStats;
 
     unsigned int                numMessages_;
     double                      messageVolume_;
