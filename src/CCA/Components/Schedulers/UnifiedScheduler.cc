@@ -90,7 +90,8 @@ UnifiedScheduler::UnifiedScheduler( const ProcessorGroup * myworld,
   d_nextmutex("next mutex"),
   dlbLock("loadbalancer lock"),
   schedulerLock("scheduler lock"),
-  recvLock("MPI receive Lock")
+  waittimesLock("waittimes lock"),
+  recvLock("MPI receive lock")
 #ifdef HAVE_CUDA
   ,
   idleStreamsLock_("CUDA streams lock"),
@@ -339,8 +340,10 @@ void UnifiedScheduler::runTask(DetailedTask * task,
   TAU_PROFILE("UnifiedScheduler::runTask()", " ", TAU_USER);
 
   if (waitout.active()) {
+    waittimesLock.lock();
     waittimes[task->getTask()->getName()] += CurrentWaitTime;
     CurrentWaitTime = 0;
+    waittimesLock.unlock();
   }
 
   double taskstart = Time::currentSeconds();
@@ -559,25 +562,23 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
     }
   }
 
-  if (timeout.active()) {
-    emitTime("MPI send time", mpi_info_.totalsendmpi);
-    emitTime("MPI Testsome time", mpi_info_.totaltestmpi);
-    emitTime("Total send time", mpi_info_.totalsend - mpi_info_.totalsendmpi - mpi_info_.totaltestmpi);
-    emitTime("MPI recv time", mpi_info_.totalrecvmpi);
-    emitTime("MPI wait time", mpi_info_.totalwaitmpi);
-    emitTime("Total recv time", mpi_info_.totalrecv - mpi_info_.totalrecvmpi - mpi_info_.totalwaitmpi);
-    emitTime("Total task time", mpi_info_.totaltask);
-    emitTime("Total MPI reduce time", mpi_info_.totalreducempi);
-    emitTime("Total reduction time", mpi_info_.totalreduce - mpi_info_.totalreducempi);
-    emitTime("Total comm time", mpi_info_.totalrecv + mpi_info_.totalsend + mpi_info_.totalreduce);
+  emitTime("MPI Send time", mpi_info_.totalsendmpi);
+  emitTime("MPI Recv time", mpi_info_.totalrecvmpi);
+  emitTime("MPI TestSome time", mpi_info_.totaltestmpi);
+  emitTime("MPI Wait time", mpi_info_.totalwaitmpi);
+  emitTime("MPI reduce time", mpi_info_.totalreducempi);
+  emitTime("Total send time", mpi_info_.totalsend - mpi_info_.totalsendmpi - mpi_info_.totaltestmpi);
+  emitTime("Total recv time", mpi_info_.totalrecv - mpi_info_.totalrecvmpi - mpi_info_.totalwaitmpi);
+  emitTime("Total task time", mpi_info_.totaltask);
+  emitTime("Total reduction time", mpi_info_.totalreduce - mpi_info_.totalreducempi);
+  emitTime("Total comm time", mpi_info_.totalrecv + mpi_info_.totalsend + mpi_info_.totalreduce);
 
-    double time = Time::currentSeconds();
-    double totalexec = time - d_lasttime;
-    d_lasttime = time;
+  double time = Time::currentSeconds();
+  double totalexec = time - d_lasttime;
+  d_lasttime = time;
 
-    emitTime("Other excution time",
-             totalexec - mpi_info_.totalsend - mpi_info_.totalrecv - mpi_info_.totaltask - mpi_info_.totalreduce);
-  }
+  emitTime("Other excution time",
+           totalexec - mpi_info_.totalsend - mpi_info_.totalrecv - mpi_info_.totaltask - mpi_info_.totalreduce);
 
   if (d_sharedState != 0) {  // subschedulers don't have a sharedState
     d_sharedState->taskExecTime += mpi_info_.totaltask - d_sharedState->outputTime;  // don't count output time...
@@ -632,12 +633,9 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
 
     // now collect timing info
     if (timeout.active()) {
-      d_labels.push_back("NumPatches");
-      d_labels.push_back("NumCells");
-      d_labels.push_back("NumParticles");
-      d_times.push_back(myPatches->size());
-      d_times.push_back(numCells);
-      d_times.push_back(numParticles);
+      emitTime("NumPatches", myPatches->size());
+      emitTime("NumCells", numCells);
+      emitTime("NumParticles", numParticles);
       vector<double> d_totaltimes(d_times.size());
       vector<double> d_mintimes(d_times.size());
       vector<double> d_maxtimes(d_times.size());
