@@ -80,11 +80,12 @@ static DebugStream affinity("CPUAffinity", true);
   static DebugStream gpu_stats("GPUStats", false);
          DebugStream use_single_device("SingleDevice", false);
 #endif
+
 //______________________________________________________________________
 //
-UnifiedScheduler::UnifiedScheduler( const ProcessorGroup * myworld,
-                                    const Output         * oport,
-                                    UnifiedScheduler     * parentScheduler ) :
+UnifiedScheduler::UnifiedScheduler( const ProcessorGroup* myworld,
+                                    const Output*         oport,
+                                    UnifiedScheduler*     parentScheduler ) :
   MPIScheduler(myworld, oport, parentScheduler),
   d_nextsignal("next condition"),
   d_nextmutex("next mutex"),
@@ -287,9 +288,25 @@ void UnifiedScheduler::verifyChecksum()
     //  - make a flag to turn this off
     //  - make the checksum more sophisticated
     int checksum = 0;
+    int numSpatialTasks = 0;
     for (unsigned i = 0; i < graphs.size(); i++) {
       checksum += graphs[i]->getTasks().size();
+
+      // This begins addressing the issue of making the global checksum more sophisticated:
+      //   check if any tasks were spatially scheduled - TaskType::Spatial, meaning no computes, requires or modifies
+      //     e.g. RMCRT radiometer task, which is not scheduled on all patches
+      //          these Spatial tasks won't count toward the global checksum
+      std::vector<Task*> tasks = graphs[i]->getTasks();
+      std::vector<Task*>::const_iterator tasks_iter = tasks.begin();
+      for ( ; tasks_iter != tasks.end(); ++tasks_iter ) {
+        Task* task = *tasks_iter;
+        if ( task->getType() == Task::Spatial ) {
+          numSpatialTasks++;
+        }
+      }
     }
+    // Spatial tasks don't count against the global checksum
+    checksum -= numSpatialTasks;
     
     if (mpidbg.active()) {
       coutLock.lock();
