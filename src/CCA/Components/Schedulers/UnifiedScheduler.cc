@@ -741,7 +741,7 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
         timeout << "  Avg.  vol: " << avgCell << ", max  vol: " << maxCell << " = " << (1 - avgCell / maxCell) * 100
                 << " load imbalance (theoretical)%\n";
       }
-    }
+    } // end timeout.active()
 
     double time = Time::currentSeconds();
     //double rtime=time-d_lasttime;
@@ -1289,6 +1289,7 @@ int UnifiedScheduler::pendingMPIRecvs()
   recvLock.readUnlock();
   return num;
 }
+
 //______________________________________________________________________
 //
 void UnifiedScheduler::processMPIRecvs(int how_much)
