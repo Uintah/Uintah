@@ -204,11 +204,8 @@ WARNING
     typedef std::map< std::string, std::list<int> > VarLabelMaterialMap;
     virtual VarLabelMaterialMap* makeVarLabelMaterialMap() = 0;
 
-    // TODO replace after DDT problem is debugged (APH - 05/22/14)
-    virtual int getMaxGhost() = 0;
-    virtual int getMaxLevelOffset() = 0;
-//    virtual const std::map<int, int>& getMaxGhostCells() = 0;
-//    virtual const std::map<int, int>& getMaxLevelOffsets() = 0;
+    virtual const std::map<int, int>& getMaxGhostCells() = 0;
+    virtual const std::map<int, int>& getMaxLevelOffsets() = 0;
 
     virtual bool isCopyDataTimestep() = 0;
     virtual void setInitTimestep(bool) = 0;
