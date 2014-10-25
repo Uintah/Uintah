@@ -50,12 +50,11 @@ void Solver::Solve(const int n, const double dt, const Output out, const int per
 {
 	cout << "INITIAL CONDITION: " << endl;
 	PrintParticleData();
-	int n_steps = 0;
+    n_steps = 0;
+    time = 0.0;
 	for(int i = 1; i <= n; i++)
 	{
         DoTimestep(dt);
-		time += dt;
-		n_steps++;
 		if(out == Output::TO_SCREEN && n_steps % per_n == 0)
 		{
 			cout << endl << "STEP " << i << endl;
@@ -66,10 +65,15 @@ void Solver::Solve(const int n, const double dt, const Output out, const int per
 	PrintParticleData();
 }
 
-void Solver::DoTimestep(const double dt)
+void Solver::DoTimestep(const double dt, bool amr)
 {
-    AdaptMesh();
-    UpdateMesh();
+    cout << "\nTime: " << time << " step: " << n_steps << endl;
+    //doing mesh adaptation only if amr flag is true
+    if(amr)
+    {
+        AdaptMesh();
+        UpdateMesh();
+    }
     //project from particles to nodes
     ProjectToNodes();
     //nodes have values now, change node display accordingly
@@ -79,6 +83,8 @@ void Solver::DoTimestep(const double dt)
     TimeIntegrateParticles(dt);
     //particle positions have been updated so we update particle images to reflect it
     UpdateParticleImages();
+    time += dt;
+    n_steps++;
 }
 
 void Solver::RefineElementByID(const unsigned int id)
@@ -120,8 +126,8 @@ void Solver::InitQtScene(QGraphicsScene *s)
 //////////////////////////////////// MESH ADAPTATION //////////////////////////////////////////////
 void Solver::AdaptMesh()
 {
-    //mesh->Adapt(particles);
-    //flags.MeshNeedsUpdate();
+    mesh->Adapt(particles);
+    flags.MeshNeedsUpdate();
 }
 
 
@@ -136,6 +142,8 @@ void Solver::Init(const BoundingBox& b, const int r)
 
     //setting time to zero
     time = 0.0;
+    //setting number of steps to zero
+    n_steps = 0;
     //mesh is not set up
     flags.solverInitialized = true;
 }
@@ -292,6 +300,11 @@ void Solver::UpdateQtScene()
             s_disp = GetSceneDisp(dv);
             e->SetImage( new QGraphicsRectItem( QRectF(s_coord[x1], s_coord[x2], s_disp[x1], s_disp[x2]) ) );
             scene->addItem( dynamic_cast<QGraphicsItem*>(e->GetImage()) );
+
+            QPen rect_pen;
+            rect_pen.setWidth(2);
+            e->GetImage()->setPen(rect_pen);
+            e->GetImage()->setZValue(0);
         }
     }
     //initializing particles
@@ -304,6 +317,7 @@ void Solver::UpdateQtScene()
             scene->addItem(dynamic_cast<QGraphicsItem*>(p->image));
             p->image->SetData(&(p->data));
             p->hasImage = true;
+            p->image->setZValue(2);
         }
     }
     //initializing nodes
@@ -314,6 +328,7 @@ void Solver::UpdateQtScene()
             s_coord = GetSceneCoord(n->data->pos);
             n->SetImage( new QNodeItem(s_coord[x1], s_coord[x2], 0) );
             scene->addItem(dynamic_cast<QGraphicsItem*>(n->GetImage()));
+            n->GetImage()->setZValue(1);
         }
     }
 }
@@ -328,84 +343,111 @@ void Solver::UpdateParticleMap()
 	p_map.clear();
 	for(Particle* p : particles)
 	{
-		ElementPtrList e;
+        ElementPtrList elements;
         //mesh->GetElementsContaining(e, p->data.pos);
-        mesh->GetActiveElementsContaining(e, p->data.pos);
-		assert(!e.empty());
-        unsigned int id = (*e.begin())->ID();
+        mesh->GetActiveElementsContaining(elements, p->data.pos);
+        assert(!elements.empty());
+
+        Element* cur_element = *elements.begin();
+        //if the particle is on the boundary of two elements we place it
+        //into the element that has more particles
+        if(elements.size() > 1)
+            for(Element* e : elements)
+                if(e->GetNParticles() > cur_element->GetNParticles())
+                    cur_element = e;
+        //adding the particle to the map
+        unsigned int id = cur_element->ID();
         p_map[id].push_back(p);
         p->data.e_id = id;
-        /*
-        if(p->data.id == 0)
+
+        //debug output
+        if(elements.size() > 1)
         {
-            cout << "\nParticle #0 belongs to elements: ";
-            for(Element* e_tmp : e)
-                cout << e_tmp->ID() << "\t";
-            cout << endl;
+            cout << "\nParticle #" << p->data.id << " is in more than one elements: ";
+            for(Element* e : elements)
+                cout << e->ID() << " ";
+            cout << endl << "We have placed it into element " << cur_element->ID() << endl;
         }
-        */
 	}
+    //once the map is created, we set the number of particles information to the elements
+    for(Element* e : elements)
+        e->SetNParticles(p_map[e->ID()].size());
+
 }
 
 void Solver::ProjectToNodes()
 {
-	//resetting node values
-	ResetNodes();
-	//going over the element to particle map and update node valuse in 
-	//those elements which has particles inside them
-	for(auto& kv : p_map)
-	{
-		//getting element id and particle list pointer from the key-value pair
-		int e_id = kv.first;
-		ParticlePtrList p_list = kv.second;
-		//getting element pointer by its id
-		Element *e = GetElementByID(e_id);
-		assert(e != nullptr);
-		//index of element nodes/bases
-        int ind[] = {_BL, _BR, _TR, _TL};
-        //for each particle in this element update node values
-
-        //going over element nodes
-        for(int i : ind)
+    //resetting node values
+    ResetNodes();
+    //going over the element to particle map and update node valuse in
+    //those elements which has particles inside them
+    for(auto& kv : p_map)
+    {
+        //getting element id and particle list pointer from the key-value pair
+        int e_id = kv.first;
+        ParticlePtrList p_list = kv.second;
+        if(p_list.size() != 0)
         {
-            //we doing the projection for all the nodes: regular and hanging alike:
-            //the data will either be used or owerwiritten during interpolation
-            Node *cur_node = e->GetNodes()[i];
-            NodeData *n_data = cur_node->data;
-            Basis *cur_basis = e->GetBasis()[i];
-            for(Particle* p : p_list)
+            //getting element pointer by its id
+            Element *e = GetElementByID(e_id);
+            assert(e != nullptr);
+            //index of element nodes/bases
+            int ind[] = {_BL, _BR, _TR, _TL};
+            //for each particle in this element update node values
+
+            //going over element nodes
+            for(int i : ind)
             {
-                //reference to particle data
-                //we don't need to modify particle data here so reference is const
-                const ParticleData &p_data = p->data;
+                //we doing the projection for all the nodes: regular and hanging alike:
+                //the data will either be used or owerwiritten during interpolation
+                Node *cur_node = e->GetNodes()[i];
+                NodeData *n_data = cur_node->data;
+                Basis *cur_basis = e->GetBasis()[i];
+                for(Particle* p : p_list)
+                {
+                    //reference to particle data
+                    //we don't need to modify particle data here so reference is const
+                    const ParticleData &p_data = p->data;
 
-                //evaluating current basis function at the particle position (phi_ip)
-                double p_val = cur_basis->Eval(p_data.pos);
+                    //evaluating current basis function at the particle position (phi_ip)
+                    double p_val = cur_basis->Eval(p_data.pos);
 
-                Vec2D grad = cur_basis->Grad(p_data.pos);
-                //momentum (check that right hand side works as intended)
-                //n_data->momentum[x1] += p_data.m * p_data.vel[x1] * p_val;
-                //n_data->momentum[x2] += p_data.m * p_data.vel[x2] * p_val;
-                n_data->momentum += p_data.m * p_data.vel * p_val;
-                //mass
-                n_data->mass += p_data.m * p_val;
-                //f_int (should invert it when the whole thing is assembled: the term has minus sign in formulation)
-                n_data->f_int[x1] += (p_data.sigma[a11]*grad[x1] + p_data.sigma[a12]*grad[x2])*p_data.V;
-                n_data->f_int[x2] += (p_data.sigma[a21]*grad[x1] + p_data.sigma[a22]*grad[x2])*p_data.V;
-                //f_ext
-                //same as for momentum: check that it is the same as
-                //n_data[x1]->f_ext += p_data.m * p_data.b[x1] * p_val;
-                //n_data[x2]->f_ext += p_data.m * p_data.b[x2] * p_val;
-                n_data->f_ext += p_data.m * p_data.b * p_val;
-                //values have been assigned to current node
-                cur_node->isActive = true;
+                    Vec2D grad = cur_basis->Grad(p_data.pos);
+                    //momentum (check that right hand side works as intended)
+                    //n_data->momentum[x1] += p_data.m * p_data.vel[x1] * p_val;
+                    //n_data->momentum[x2] += p_data.m * p_data.vel[x2] * p_val;
+                    n_data->momentum += p_data.m * p_data.vel * p_val;
+                    //mass
+                    n_data->mass += p_data.m * p_val;
+                    //f_int (should invert it when the whole thing is assembled: the term has minus sign in formulation)
+                    n_data->f_int[x1] += (p_data.sigma[a11]*grad[x1] + p_data.sigma[a12]*grad[x2])*p_data.V;
+                    n_data->f_int[x2] += (p_data.sigma[a21]*grad[x1] + p_data.sigma[a22]*grad[x2])*p_data.V;
+                    //f_ext
+                    //same as for momentum: check that it is the same as
+                    //n_data[x1]->f_ext += p_data.m * p_data.b[x1] * p_val;
+                    //n_data[x2]->f_ext += p_data.m * p_data.b[x2] * p_val;
+                    n_data->f_ext += p_data.m * p_data.b * p_val;
+                    //values have been assigned to current node
+                    cur_node->isActive = true;
+                }
+                //if the current node mass is exactly zero (e.g. one particle entering element and
+                //is exactly at the corner node)
+                if(n_data->mass == 0.0)
+                    cur_node->isActive = false;
+
+                //debug code, checks at which point the nonzero forcing appear at the nodes
+                if(n_data->f_int[x1] != 0.0 || n_data->f_int[x2] != 0.0)
+                {
+                    cout << "\nElement #" << e_id << endl;
+                    cout << "Particles: ";
+                    for(Particle* p : p_list)
+                    {
+                        cout << p->data.id << " ";
+                    }
+                    cout << endl << "Node #" << n_data->id << " has nonzero internal forcing" << endl;
+                }
             }
-            //if the current node mass is exactly zero (e.g. one particle entering element and
-            //is exactly at the corner node)
-            if(n_data->mass == 0.0)
-                cur_node->isActive = false;
         }
-
     }
 }
 
@@ -417,38 +459,18 @@ void Solver::TimeIntegrateNodes(const double dt)
 		//If the hanging node can be interpolated from two active nodes later,
 		//the values will be overwritten with the interpolant. But if not
 		//we will have hanging nodes already updated by the code below
-
-        //ISSUE: there is a possibility that the node is active but the mass is zero
-        //this can happen due to the algorithm that determines to which element particle
-        //belongs if it is exactly at the node shared by multiple elements
         if(n->isActive)
 		{
 			NodeData *n_data = n->data;
 			//compute acceleration
-            /*if(n_data->id == 23)
-            {
-                cout << "\nNode 23\nbefore update:";
-                n_data->Print();
-            }*/
-			n_data->accel = (n_data->f_int + n_data->f_ext)/n_data->mass;
-            /*if(n_data->id == 23)
-            {
-                cout << "\nNode 23\nafter accel computed:";
-                n_data->Print();
-            }*/
+            n_data->accel = (n_data->f_int + n_data->f_ext)/n_data->mass;
             //compute velocity from momentum
 			n_data->vel = n_data->momentum / n_data->mass;
-            /*if(n_data->id == 23)
-            {
-                cout << "\nNode 23\nafter vel computed:";
-                n_data->Print();
-            }*/
-			n_data->vel += n_data->accel*dt;
-            /*if(n_data->id == 23)
-            {
-                cout << "\nNode 23\nafter vel updated:";
-                n_data->Print();
-            }*/
+            /*if(n_data->vel[x1] == 0.0 && n_data->vel[x2] == 0.0)
+                cout << "\nNode #" << n_data->id << ": velocity is zero" << endl;*/
+            n_data->vel += n_data->accel*dt;
+            /*if(n_data->vel[x1] == 0.0 && n_data->vel[x2] == 0.0)
+                cout << "\nNode #" << n_data->id << ": velocity is zero again" << endl;*/
         }
 	}
 	//interpolating the values of the hanging nodes
@@ -492,16 +514,12 @@ void Solver::TimeIntegrateParticles(const double dt)
 				//computing velocity gradient (velocity component gradients form colums of this matrix: 
 				//need to check that this is a correct approach)
 				//also need to check that += operator works as intended
-                //if(p->data.id == 24)
-                //    cout << "Node " << i << endl << "Particle 24 before: velocity is: " << n_data->vel << " grad is " << p_data.grad_v << endl;
-				p_data.grad_v += {grad[x1]*n_data->vel[x1], grad[x1]*n_data->vel[x2], 
+                p_data.grad_v += {grad[x1]*n_data->vel[x1], grad[x1]*n_data->vel[x2],
 					grad[x2]*n_data->vel[x1], grad[x2]*n_data->vel[x2]};
 				//updating velocity
 				p_data.vel += p_val * n_data->accel * dt;
 				//updating displacement
 				p_data.disp += p_val * n_data->vel * dt;
-                //if(p->data.id == 24)
-                //    cout <<  "Particle 24 after: velocity is: " << n_data->vel << " grad is " << p_data.grad_v << endl;
 			}
 			//updating particle p_data
 			//updating F
@@ -514,7 +532,11 @@ void Solver::TimeIntegrateParticles(const double dt)
 			//after the position is updated, displacement is set to zero
             p_data.disp = {0.0, 0.0};
             //updating stress tensor
-            p_data.sigma = p_data.y_mod/2.0*(p_data.F - Mat2DInv(p_data.F));
+            //p_data.sigma = p_data.y_mod/2.0*(p_data.F - Mat2DInv(p_data.F));
+            //strain tensor E
+            Mat2D E = (p_data.F + Mat2DTransp(p_data.F))/2.0 - I;
+            double traceE = Mat2DTrace(E);
+            p_data.sigma = p_data.Lames_param * traceE * I + 2.0 * p_data.shear_mod * E;
 		}
 
 	}

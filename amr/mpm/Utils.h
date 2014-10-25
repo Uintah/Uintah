@@ -11,7 +11,7 @@ using namespace std;
 //constants
 const double TOL = 1e-15;
 //how many particles is "ideal" per element
-const unsigned int IDEAL_NP = 3;
+const unsigned int IDEAL_NP = 4;
 //enums
 enum class Output{NONE, TO_SCREEN, TO_FILE};
 enum class MeshAction{Refine, Keep, Coarsen};
@@ -35,9 +35,15 @@ Mat2D operator+(const Mat2D& a, const Mat2D& b);
 Mat2D operator-(const Mat2D& a, const Mat2D& b);
 Mat2D operator*(const Mat2D& a, const Mat2D& b);
 Mat2D operator*(const Mat2D& a, const double d);
+Mat2D operator/(const Mat2D& a, const double d);
 Mat2D operator*(const double d, const Mat2D& a);
 void operator+=(Mat2D& a, const Mat2D& b);
+//2x2 matrix inverse
 Mat2D Mat2DInv(const Mat2D& a);
+//2x2 matrix transpose
+Mat2D Mat2DTransp(const Mat2D& a);
+//trace of a 2x2 matrix
+double Mat2DTrace(const Mat2D& a);
 //vector-matrix multiplication
 Vec2D operator*(const Mat2D& a, const Vec2D& b);
 //setting values of vector

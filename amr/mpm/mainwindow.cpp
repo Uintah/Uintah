@@ -8,9 +8,11 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    //bu default AMR flag is set to true
+    AMR = true;
     Vec2D v1 = {0.0, 0.0};
     //Vec2D v2 = {12.0, 12.0};
-    Vec2D v2 = {24.0, 24.0};
+    Vec2D v2 = {100.0, 100.0};
     BoundingBox domain(v1, v2);
     /*
     mpm.SetDomain(domain, 1);
@@ -20,20 +22,23 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //refining 4 center elements
     mpm.SetDomain(domain, 2);
-    mpm.GenerateParticles(const_vel_gen);
-    mpm.RefineElementByID(7);
-    mpm.RefineElementByID(12);
-    mpm.RefineElementByID(13);
-    mpm.RefineElementByID(18);
-    mpm.ForceMeshUpdate();
-    mpm.RefineElementByID(21);
+    mpm.GenerateParticles(deformation_gen);
+    mpm.AdaptMesh();
+    //mpm.RefineElementByID(1);
+    //mpm.ForceMeshUpdate();
+    //mpm.RefineElementByID(5);
+    //mpm.ForceMeshUpdate();
+    //mpm.RefineElementByID(11);
+    //mpm.RefineElementByID(6);
+    //mpm.RefineElementByID(8);
+    //mpm.RefineElementByID(7);
 
     scene.setBackgroundBrush(QBrush(Qt::white));
     mpm.InitQtScene(&scene);
 
     ui->view->setScene(&scene);
     ui->view->scale(1.0,-1.0);
-    //ui->view->setAlignment(Qt::AlignLeft|Qt::AlignBottom);
+    ui->view->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
     ui->view->show();
 
     //timestep edit field
@@ -54,14 +59,15 @@ MainWindow::~MainWindow()
 
 void MainWindow::step()
 {
-    mpm.DoTimestep(ui->timestep->text().toDouble());
+    mpm.DoTimestep(ui->timestep->text().toDouble(), AMR);
     scene.update(scene.sceneRect());
 }
 
 void MainWindow::on_next_clicked()
 {
-    mpm.DoTimestep(ui->timestep->text().toDouble());
-    scene.update(scene.sceneRect());
+    step();
+    //mpm.DoTimestep(ui->timestep->text().toDouble(), AMR);
+    //scene.update(scene.sceneRect());
 }
 
 void MainWindow::on_run_toggled(bool checked)
@@ -75,5 +81,19 @@ void MainWindow::on_run_toggled(bool checked)
     {
         ui->run->setText("Stop");
         timer->start(ui->timer_step->text().toInt());
+    }
+}
+
+void MainWindow::on_amr_toggled(bool checked)
+{
+    if(!checked)
+    {
+        AMR = false;
+        ui->amr->setText("AMR: OFF");
+    }
+    else
+    {
+        AMR = true;
+        ui->amr->setText("AMR: ON");
     }
 }

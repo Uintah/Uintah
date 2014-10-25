@@ -53,10 +53,15 @@ void Node::Interpolate()
         //nodes from which we interpolate the values
         Node* n1 = interp[0];
         Node* n2 = interp[1];
-        //interpolating only from two active nodes
-        if(n1->isActive && n2->isActive && n1->isRegular && n2->isRegular)
+        //interpolating only from two active, regular nodes and only if the element containing hanging node
+        //has any particles in it
+        if(interp_el->GetNParticles() != 0 && (n1->isActive && n2->isActive && n1->isRegular && n2->isRegular))
         {
-            cout << "Interpolating node #" << data->id << " using nodes #" << n1->data->id << " and #" << n2->data->id << endl;
+            /*
+            cout << "\nNode " << data->id << " is interpolated from element " << interp_el->ID()
+                 << " that has " << interp_el->GetNParticles() << " particles "
+                 <<" using nodes #" << n1->data->id << " and #" << n2->data->id << endl;
+                 */
             NodeData* d1 = n1->data;
             NodeData* d2 = n2->data;
             //computing distances between node2 and node1
@@ -82,7 +87,9 @@ QNodeItem::QNodeItem(qreal x, qreal y, QGraphicsItem* parent, qreal norm):QGraph
     setAcceptHoverEvents(true);
     //setBrush(QBrush(Qt::black));
     setBrush(QBrush(Qt::white));
-    setPen(QPen(Qt::black));
+    QPen rect_pen(Qt::black);
+    rect_pen.setWidth(1.5);
+    setPen(rect_pen);
     setTransformOriginPoint(mapFromScene(x,y));
 }
 

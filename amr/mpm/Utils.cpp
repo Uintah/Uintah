@@ -112,6 +112,12 @@ Mat2D operator*(const Mat2D& a, const double d)
 	return result;
 }
 
+Mat2D operator/(const Mat2D& a, const double d)
+{
+    Mat2D result = {a[a11]/d, a[a12]/d, a[a21]/d, a[a22]/d};
+    return result;
+}
+
 Mat2D operator*(const double d, const Mat2D& a)
 {
 	Mat2D result = {a[a11]*d, a[a12]*d, a[a21]*d, a[a22]*d};
@@ -123,11 +129,26 @@ void operator+=(Mat2D& a, const Mat2D& b)
 	a = {a[a11] + b[a11], a[a12] + b[a12], a[a21] + b[a21], a[a22] + b[a22]};
 }
 
+//matrix inverse
 Mat2D Mat2DInv(const Mat2D& a)
 {
     double det = a[a11]*a[a22] - a[a12]*a[21];
     assert(det != 0.0);
     Mat2D result = {a[a22]/det,-a[a12]/det,-a[a21]/det,a[a11]/det};
+    return result;
+}
+
+//matrix transpose
+Mat2D Mat2DTransp(const Mat2D& a)
+{
+    Mat2D result = {a[a11],a[a21],a[a12],a[a22]};
+    return result;
+}
+
+//matrix trace
+double Mat2DTrace(const Mat2D& a)
+{
+    double result = a[a11] + a[a22];
     return result;
 }
 

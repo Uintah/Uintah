@@ -83,7 +83,11 @@ public:
     void SetActive(){flags.isActive = true; SetPassiveElements();}
     void SetPassive(){flags.isActive = false; RemoveImage();}
     //score related
-    int GetScore(){return score;}
+    double GetScore(){return score;}
+    double GetConcentration(){return concentration;}
+    //particle related
+    unsigned int GetNParticles() const{return n_particles;}
+    void SetNParticles(const unsigned int n){n_particles = n;}
     //graphics related
     QGraphicsRectItem* GetImage() {return image;}
     void SetImage(QGraphicsRectItem* i){image = i; flags.hasImage = true;}
@@ -93,11 +97,14 @@ protected:
     //mesh adaptation implementation
     //calculates score for an element
     //takes in a list of particle coordinates
-    void CalculateScore(const ParticlePtrList &p_list);
-    void SetActiveElements();
+    void UpdateMetrics(const ParticlePtrList &p_list);
+    void SetActiveElements(const bool enc_active = false);
     //sets all the elements below current element to be passive
     void SetPassiveElements();
-    int ChildrenAvgScore();
+    void ChildrenAvgMetrics(double& sc, double& conc);
+    //alternative score calculation based on concentration = volume of all particles / volume of element
+    void CalculateMetrics(const ParticlePtrList &p_list);
+    void UpdateConcentration(const ParticlePtrList &p_list);
 
     //removes element image from the scene
     void RemoveImage();
@@ -118,8 +125,15 @@ protected:
     static Mesh *root;
     //mesh action to be performed on the element: coarsen, keep, refine
     MeshAction action;
-    //score that determines whether element is a "good" one or not
-    int score;
+    //metrics that determine whether element is a "good" one or not
+    //score is num_particles / ideal_num_particles (~3-4)
+    //concentration is total particle volume / element area
+    double score;
+    double concentration;
+    //area of the element
+    double area;
+
+    unsigned int n_particles;
 
     //graphics related
     QGraphicsRectItem *image;

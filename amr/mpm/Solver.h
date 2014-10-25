@@ -73,7 +73,7 @@ class Solver
 		//not to output it. per_n indicates the number of timesteps the output is produced
 		void Solve(const int n, const double dt, const Output out = Output::NONE, const int per_n = 1);
 		//performs one timestep
-		void DoTimestep(const double dt);
+        void DoTimestep(const double dt, bool amr = true);
 
         void RefineElementByID(const unsigned int id);
 		
@@ -134,7 +134,8 @@ class Solver
         Mesh *mesh;
         //flags
         SolverFlags flags;
-
+        //number of steps that solver performed
+        unsigned int n_steps;
 		//current time
 		double time;
         //list of active (leaf-nodes of the tree) elements

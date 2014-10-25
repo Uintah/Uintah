@@ -66,6 +66,8 @@ struct Node
 
 	InterpolationData interp;
 
+    Element* interp_el;
+
     //graphical representation of node
     QNodeItem *image;
     bool hasImage;

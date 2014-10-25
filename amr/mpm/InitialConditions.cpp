@@ -24,7 +24,8 @@ void const_vel_gen(ParticleDataList& l, const BoundingBox& b)
             data.m = 1.0;
             data.V = area/(N*N);
             data.F = {1.0, 0.0, 0.0, 1.0};
-            data.y_mod = 0.0001;
+            data.Lames_param = 0.000875;
+            data.shear_mod = 0.000686;
             l.push_back(data);
             id++;
         }
@@ -36,12 +37,12 @@ void deformation_gen(ParticleDataList& l, const BoundingBox& b)
     //and half of the domain horizontally
     Vec2D domain_from = b.GetFrom();
     Vec2D domain_to = b.GetTo();
-    Vec2D p_to = {domain_from[x1] + (domain_to[x1] - domain_from[x1])/2.0, domain_from[x2] + (domain_to[x2] - domain_from[x2])/3.0*2.0};
-    Vec2D p_from = {domain_from[x1], domain_from[x2] + (domain_to[x2] - domain_from[x2])/3.0};
+    Vec2D p_to = {domain_from[x1] + (domain_to[x1] - domain_from[x1])/2.0, domain_from[x2] + (domain_to[x2] - domain_from[x2])/4.0*3.0};
+    Vec2D p_from = {domain_from[x1], domain_from[x2] + (domain_to[x2] - domain_from[x2])/4.0};
     Vec2D da = p_to - p_from;
     double area = da[x1]*da[x2];
     int Nx = 10;
-    int Ny = 8;
+    int Ny = 10;
     unsigned int id = 0;
     double dx = da[x1]/double(Nx+1);
     double dy = da[x2]/double(Ny+1);
@@ -55,9 +56,10 @@ void deformation_gen(ParticleDataList& l, const BoundingBox& b)
             data.m = 1.0;
             data.V = area/(Nx*Ny);
             data.F = {1.0, 0.0, 0.0, 1.0};
-            data.y_mod = 0.0001;
+            data.Lames_param = 0.000875;
+            data.shear_mod = 0.000686;
             //external force if applied to the last column of particles
-            if(i == Nx - 1 && j > Ny - 4)
+            if(i == Nx - 1) //&& j > Ny - 4)
             {
                 data.b = {-0.5, 0.0};
             }

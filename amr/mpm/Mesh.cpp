@@ -63,6 +63,8 @@ Element::Element(const int l, const BoundingBox& b, Element* p):
 	basis[_BR] = new Basis(br, -d[x1], d[x2]);
 	basis[_TR] = new Basis(tr, -d[x1], -d[x2]);
 	basis[_TL] = new Basis(tl, d[x1], -d[x2]);
+    //area of the element
+    area = d[x1]*d[x2];
 }
 
 //destructor
@@ -272,7 +274,7 @@ void Element::FillInterpolationNodes(Node* n)
 	}
 }
 
-void Element::CalculateScore(const ParticlePtrList& p_list)
+void Element::UpdateMetrics(const ParticlePtrList& p_list)
 {
     ParticlePtrList inside;
     for(Particle *p : p_list)
@@ -281,22 +283,31 @@ void Element::CalculateScore(const ParticlePtrList& p_list)
         if(bBox.Contains(p->data.pos))
             inside.push_back(p);
     }
-    unsigned int np = inside.size();
-    //if there are no particles in this element, setting score to zero
-    //and terminating the recursion
-    if(np == 0)
-    {
-        score = 0;
-        return;
-    }
-    //otherwise, assigning score to the current element and recursively calling
-    //CalculateScore for children elements
+    //setting score and concentration
+    CalculateMetrics(inside);
+    //if there are no particles in this element terminating recursion
+    if(inside.size() == 0) return;
+    //otherwise continue recursion
     else
     {
-        score = np - IDEAL_NP;
-        //if score is negative (fewer particle than would be "ideal") or zero (ideal) we
+        //when do we need to procede to child elements (create them if necessary)
+        //1) when current element is much bigger than the volume of particles (concentration < 1/k)
+        //2) when we have too many particles in current element (score > 1*k)
+        if(concentration < 0.5 || score > 1.5)
+        {
+            //if the element does not have children, we refine it
+            if(!HasChildren()) Refine(1);
+            //continuing the recursive scoring process
+            for(Element* ch : children)
+            {
+                ch->UpdateMetrics(inside);
+            }
+        }
+        else return;
+        /*
+        //if score is less than one (fewer particles than would be "ideal") or one (ideal) we
         //ternimate the recursion
-        if(score <= 0) return;
+        if(score <= 1.0) return;
         //if there are still too many particles per element
         else
         {
@@ -305,38 +316,47 @@ void Element::CalculateScore(const ParticlePtrList& p_list)
             //continuing the recursive scoring process
             for(Element* ch : children)
             {
-                ch->CalculateScore(inside);
+                ch->UpdateMetrics(inside);
             }
         }
+        */
     }
 }
 
-void Element::SetActiveElements()
+void Element::SetActiveElements(const bool enc_active)
 {
-    //if there are no child nodes or the score is zero, set active, terminate the recursion
-    if(score == 0 || !flags.hasChildren)
+    //if there are no child nodes or the score is zero (no particles), set active, terminate the recursion
+    if(score == 0.0 || !flags.hasChildren)
     {
         SetActive();
         return;
     }
     else
     {
-        int ch_score = ChildrenAvgScore();
-        //if avergage score for child elements is greater than zero (still too many particles per
-        //element) or if the average score is less that zero, but "better" than the current element score
-        //we continue the recursion
-        if(ch_score > 0)
+        //if the current element is active then for the following elements encoutered_active flag will
+        //be set to true. If not then the flag that was given as an argument will be passed along
+        bool active_flag = IsActive() ? true : enc_active;
+        //children average score
+        double ch_score, ch_conc;
+        ChildrenAvgMetrics(ch_score, ch_conc);
+        //if on average children are "better" than the current element (closer to one, but much smaller than one), we continue recursion
+        //additional condition being that the active elemenent was not encountered yet: this check is done in order to not coarsen
+        //elements excessively while there are still particles inside
+        if((ch_score >= 0.95 && ch_score < score)
+                || (ch_conc <= 0.5 && ch_conc > concentration)
+                || !active_flag)
         {
             SetPassive();
             for(Element* ch : children)
             {
-                ch->SetActiveElements();
+                ch->SetActiveElements(active_flag);
             }
         }
+        //if the children on average are "worse" than the current element
         else
         {
-            SetActive();
-            return;
+                SetActive();
+                return;
         }
     }
 }
@@ -355,19 +375,68 @@ void Element::SetPassiveElements()
     }
 }
 
-int Element::ChildrenAvgScore()
+void Element::ChildrenAvgMetrics(double &sc, double &conc)
 {
-    //average for now, which may not be a very good metric
-    int acc = 0;
-    int n_ch = children.size();
+    double sc_acc = 0.0;
+    double conc_acc = 0.0;
+    //int n_ch = children.size();
+    int nnz = 0;
     for(Element* ch : children)
     {
-        acc += ch->GetScore();
+        if(ch->GetScore() != 0.0)
+        {
+            nnz++;
+            sc_acc += ch->GetScore();
+            conc_acc += ch->GetConcentration();
+        }
     }
-    return acc/n_ch;
+    assert(nnz != 0);
+    sc = sc_acc/nnz;
+    conc = conc_acc/nnz;
+}
+///////////////////// ALTERNATIVE SCORE CALCULATION //////////////////////////////
+void Element::UpdateConcentration(const ParticlePtrList& p_list)
+{
+    ParticlePtrList inside;
+    for(Particle *p : p_list)
+    {
+        //we can also experiment with StrictlyContains
+        if(bBox.Contains(p->data.pos))
+            inside.push_back(p);
+    }
+    //setting concentration for current element
+    CalculateMetrics(inside);
+    //moving to children
+    if(HasChildren())
+    {
+        for(Element* ch : children)
+            ch->UpdateConcentration(inside);
+    }
+}
+
+void Element::CalculateMetrics(const ParticlePtrList& p_list)
+{
+    int np = p_list.size();
+    //if there are no particles, both metrics are zero
+    if(np == 0)
+    {
+        score = 0.0;
+        concentration = 0.0;
+    }
+    else
+    {
+        //computing total volume for all particles in current element
+        double acc = 0.0;
+        for(Particle* p : p_list)
+            acc += p->data.V;
+        //updating score and concentration
+        score = np/double(IDEAL_NP);
+        concentration = acc/area;
+    }
 }
 
 
+////////////////    GRAPHICS RELATED   ////////////////////////////////
 void Element::RemoveImage()
 {
     //checking if the element has image and passive
@@ -475,7 +544,7 @@ void Mesh::UpdateActiveElements()
 void Mesh::Adapt(const ParticlePtrList &p_list)
 {
     //computing score
-    CalculateScore(p_list);
+    UpdateMetrics(p_list);
     //marking active elements in the tree based on score
     SetActiveElements();
     //updating element and node lists
@@ -566,6 +635,8 @@ void Mesh::UpdateHangingNodes()
 			{
 				n->isRegular = false;
 				e->FillInterpolationNodes(n);
+                //initializing pointer to the element for which the node is on the side
+                n->interp_el = e;
 				break;
 			}
 			
