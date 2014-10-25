@@ -27,8 +27,11 @@ private slots:
 
     void step();
 
+    void on_amr_toggled(bool checked);
+
 private:
     Solver mpm;
+    bool AMR;
     Ui::MainWindow *ui;
     QGraphicsScene scene;
     QTimer *timer;

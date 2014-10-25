@@ -29,6 +29,8 @@ struct ParticleData
 	Mat2D F;     //deformation gradient
 	Mat2D sigma; //Cauchy stress tensor
     double y_mod; //Young's modulus
+    double Lames_param;//Lame's first parameter;
+    double shear_mod;//shear modulus (mu)
 };
 
 struct Particle

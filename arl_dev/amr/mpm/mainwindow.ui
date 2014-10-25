@@ -21,7 +21,7 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0" rowspan="3">
+    <item row="0" column="0" rowspan="6">
      <widget class="MPMView" name="view">
       <property name="foregroundBrush">
        <brush brushstyle="NoBrush">
@@ -73,20 +73,7 @@
       <widget class="QLineEdit" name="timer_step"/>
      </widget>
     </item>
-    <item row="1" column="1">
-     <spacer name="verticalSpacer">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>120</width>
-        <height>846</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item row="2" column="1">
+    <item row="5" column="1">
      <widget class="QSplitter" name="splitter_2">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
@@ -121,11 +108,41 @@
       </widget>
      </widget>
     </item>
+    <item row="3" column="1">
+     <spacer name="verticalSpacer">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>120</width>
+        <height>846</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item row="4" column="1">
+     <widget class="QPushButton" name="amr">
+      <property name="text">
+       <string>AMR: ON</string>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+      <property name="default">
+       <bool>false</bool>
+      </property>
+     </widget>
+    </item>
    </layout>
    <zorder>splitter</zorder>
    <zorder>splitter_2</zorder>
    <zorder>view</zorder>
    <zorder>verticalSpacer</zorder>
+   <zorder>amr</zorder>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
@@ -133,7 +150,7 @@
      <x>0</x>
      <y>0</y>
      <width>1332</width>
-     <height>22</height>
+     <height>25</height>
     </rect>
    </property>
   </widget>
