@@ -186,16 +186,16 @@ namespace Uintah {
         return found_match; 
       };
 
-     void sched_cellTypeInit__NEW(SchedulerP& sched,
-                                  const LevelP& level, 
-                                  const MaterialSet* matls);
+     void sched_cellTypeInit( SchedulerP& sched,
+                              const LevelP& level, 
+                              const MaterialSet* matls);
 
-     void cellTypeInit__NEW( const ProcessorGroup*,
-                             const PatchSubset* patches,
-                             const MaterialSubset*,
-                             DataWarehouse*,
-                             DataWarehouse* new_dw, 
-                             IntVector lo, IntVector hi);
+     void cellTypeInit( const ProcessorGroup*,
+                        const PatchSubset* patches,
+                        const MaterialSubset*,
+                        DataWarehouse*,
+                        DataWarehouse* new_dw, 
+                        IntVector lo, IntVector hi);
 
      void sched_computeBCArea__NEW( SchedulerP& sched,
                                     const LevelP& level, 
@@ -833,6 +833,8 @@ namespace Uintah {
       bool d_calcEnergyExchange;
       bool d_fixTemp;
       bool d_cutCells;
+
+      bool d_ignore_invalid_celltype; 
 
       IntrusionBC* _intrusionBC; 
       bool _using_new_intrusion; 

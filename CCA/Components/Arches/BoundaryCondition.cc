@@ -173,6 +173,11 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
        d_no_corner_recirc = true; 
      }
 
+     d_ignore_invalid_celltype = false; 
+     if ( db_params->findBlock("ignore_invalid_celltype")){ 
+       d_ignore_invalid_celltype = true; 
+     }
+
     // if multimaterial then add an id for multimaterial wall
     // trying to reduce all interior walls to type:INTRUSION
     d_mmWallID = INTRUSION;
@@ -2181,7 +2186,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
 // Set the cell Type
 //
 void 
-BoundaryCondition::sched_cellTypeInit__NEW(SchedulerP& sched,
+BoundaryCondition::sched_cellTypeInit(SchedulerP& sched,
                                            const LevelP& level, 
                                            const MaterialSet* matls)
 {
@@ -2189,8 +2194,8 @@ BoundaryCondition::sched_cellTypeInit__NEW(SchedulerP& sched,
   level->findInteriorCellIndexRange(lo,hi);
 
   // cell type initialization
-  Task* tsk = scinew Task("BoundaryCondition::cellTypeInit__NEW",
-                          this, &BoundaryCondition::cellTypeInit__NEW, lo, hi);
+  Task* tsk = scinew Task("BoundaryCondition::cellTypeInit",
+                          this, &BoundaryCondition::cellTypeInit, lo, hi);
 
   tsk->computes(d_lab->d_cellTypeLabel);
 
@@ -2198,12 +2203,12 @@ BoundaryCondition::sched_cellTypeInit__NEW(SchedulerP& sched,
 }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void 
-BoundaryCondition::cellTypeInit__NEW(const ProcessorGroup*,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset*,
-                                     DataWarehouse*,
-                                     DataWarehouse* new_dw, 
-                                     IntVector lo, IntVector hi)
+BoundaryCondition::cellTypeInit(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset*,
+                                DataWarehouse*,
+                                DataWarehouse* new_dw, 
+                                IntVector lo, IntVector hi)
 {
 
   for (int p = 0; p < patches->size(); p++) {
@@ -2321,6 +2326,18 @@ BoundaryCondition::cellTypeInit__NEW(const ProcessorGroup*,
             }
           }
         }
+      }
+    }
+
+    //Now, for this patch, check to make sure you have boundary conditions 
+    //specified everywhere. 
+    if ( !d_ignore_invalid_celltype ){ 
+      for ( CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++ ){
+
+        if ( cellType[*iter] == 999 ){ 
+          throw InvalidValue("Error: Patch found with an invalid cell type.", __FILE__, __LINE__);
+        }
+
       }
     }
   }
