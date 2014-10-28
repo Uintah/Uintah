@@ -1161,7 +1161,7 @@ Arches::scheduleInitialize(const LevelP& level,
   d_nlSolver->checkMomBCs( sched, level, matls ); 
 
   //initialize cell type
-  d_boundaryCondition->sched_cellTypeInit__NEW( sched, level, matls );
+  d_boundaryCondition->sched_cellTypeInit( sched, level, matls );
 
   // compute the cell area fraction
   d_boundaryCondition->sched_setAreaFraction( sched, level, matls, 0, true );
