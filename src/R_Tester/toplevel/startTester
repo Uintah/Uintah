@@ -23,6 +23,8 @@ VERBOSE="no"
 COMMON_GROUP=""
 CHECKPOINTS=""
 
+ID=`date +%m%d%y`
+
 #__________________________________
 # Machine specific variables
 
@@ -43,8 +45,8 @@ if [ "$MACHINE" == "rt" ]; then
   #          Memory/
   #          simRunTime/
   
-  HTMLLOG=/home/csafe-tester/public_html/SCIRun.${ID}.html
-  WEBLOG=http://www.uintah.utah.edu:8050/~csafe-tester/SCIRun.${ID}.html
+  HTMLLOG=/home/csafe-tester/public_html/Uintah.html
+  WEBLOG=http://155.98.58.231:8050/~csafe-tester/Uintah.html
 fi
 
 
@@ -60,7 +62,7 @@ if test "$MACHINE" = "albion" ; then
   export TEST_COMPONENTS=GPU             # only run gpu tests
   
   # Where the webpage will be, and init webpage.  (SEE above notes)
-  HTMLLOG=/home/rt/public_html/SCIRun.html
+  HTMLLOG=/home/rt/public_html/Uintah.html
   WEBLOG=NONE
 fi
 
@@ -173,7 +175,7 @@ if [ $show_help != "0" ]; then
             -opt_only:              Only run optimized tests.
             -no_compile:            Run the tests only; assume the build is already done.
             -verbose:               Display verbose output
-            -build_dir:             Change the directory where SCIRun is downloaded to.
+            -build_dir:             Change the directory where Uintah is downloaded to.
             -test_data:             Change the GoldStandard directory.
             -help:                  Display this option summary
 EOF
@@ -205,11 +207,8 @@ if [ $VERBOSE = "yes" ]; then
   date
 fi
 
-# find the ID to append to SCIRun based on time of run - i.e., SCIRun.080102
-ID=`date +%m%d%y`
-
 if [ $USE_TREE != "new" ]; then
-  # use the SCIRun specified on the command line
+  # use the Uintah specified on the command line
   cd "$USE_TREE"
   BUILDROOT=`pwd`
   cd ..
@@ -217,7 +216,7 @@ if [ $USE_TREE != "new" ]; then
   echo "$BUILDROOT" >> "$BUILDROOT"/log
   ID="$ID"-old
 elif [ $USE_PREVTREE = "yes" ]; then
-  # use the previous build of SCIRun
+  # use the previous build of Uintah
   if [ ! -d "${BUILD_DIR}/last_ran.lock" ]; then
       echo "No previous build found"
       echo "${BUILD_DIR}/last_ran.lock does not exist"
@@ -236,7 +235,7 @@ else
   fi
   cd "$BUILD_DIR"
 
-  BUILDROOT="${BUILD_DIR}/SCIRun.${ID}"
+  BUILDROOT="${BUILD_DIR}/Uintah.${ID}"
   if [ -d "$BUILDROOT" ]; then
     
     # don\t just set the ID directly, we have two different possibilities for ID
@@ -248,7 +247,7 @@ else
       ID="${ID}${NID}"
       BUILDROOT="${BUILDROOT}${NID}"
       if [ -d "$BUILDROOT" ]; then
-        echo "SCIRun.${ID} dir already exists"
+        echo "Uintah.${ID} dir already exists"
         exit -1
       fi
     fi
