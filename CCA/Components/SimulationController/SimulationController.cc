@@ -118,7 +118,7 @@ namespace Uintah {
      * report stats in printSimulationStats().
      *
      * NOTE:
-     * 		All desired events may not be supported for a particular architecture and bad things,
+     *          All desired events may not be supported for a particular architecture and bad things,
      *      happen, e.g. misaligned event value array indices when an event can be queried but
      *      not added to an event set, hence the PapiEvent struct, map and logic in printSimulationStats().
      *
@@ -181,7 +181,7 @@ namespace Uintah {
              << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
       }
       if (Parallel::getNumThreads() > 1) {
-      	throw PapiInitializationError("PAPI Pthread initialization error occurred. Check that your PAPI build supports Pthreads.", __FILE__, __LINE__);
+        throw PapiInitializationError("PAPI Pthread initialization error occurred. Check that your PAPI build supports Pthreads.", __FILE__, __LINE__);
       }
     }
 
@@ -190,8 +190,8 @@ namespace Uintah {
       retp = PAPI_query_event(iter->first);
       if (retp != PAPI_OK) {
         proc0cout << "WARNNING: Cannot query PAPI event: " << iter->second.name << "!" << endl
-            	    << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl
-           	    << "          No stats will be printed for " << iter->second.simStatName << endl;
+                    << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl
+                    << "          No stats will be printed for " << iter->second.simStatName << endl;
       } else {
         iter->second.isSupported = true;
       }
@@ -631,11 +631,11 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 
  
 #ifdef USE_PAPI_COUNTERS
-  double flop;				// total FLOPS
-  double vflop;				// total FLOPS optimized to additionally count scaled double precision vector operations
-  double l2_misses;			// total L2 cache misses
-  double l3_misses;			// total L3 cache misses
-  int retp = -1;			// return value for error checking
+  double flop;                          // total FLOPS
+  double vflop;                         // total FLOPS optimized to additionally count scaled double precision vector operations
+  double l2_misses;                     // total L2 cache misses
+  double l3_misses;                     // total L3 cache misses
+  int retp = -1;                        // return value for error checking
 
   retp = PAPI_read(d_eventSet, d_eventValues);
   if (retp != PAPI_OK) {
@@ -645,10 +645,10 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     }
     throw PapiInitializationError("PAPI read error. Unable to read hardware event set values.", __FILE__, __LINE__);
   } else {
-	  flop      = (double) d_eventValues[d_papiEvents.find(PAPI_FP_OPS)->second.eventValueIndex];
-	  vflop     = (double) d_eventValues[d_papiEvents.find(PAPI_DP_OPS)->second.eventValueIndex];
-	  l2_misses = (double) d_eventValues[d_papiEvents.find(PAPI_L2_TCM)->second.eventValueIndex];
-	  l3_misses = (double) d_eventValues[d_papiEvents.find(PAPI_L3_TCM)->second.eventValueIndex];
+          flop      = (double) d_eventValues[d_papiEvents.find(PAPI_FP_OPS)->second.eventValueIndex];
+          vflop     = (double) d_eventValues[d_papiEvents.find(PAPI_DP_OPS)->second.eventValueIndex];
+          l2_misses = (double) d_eventValues[d_papiEvents.find(PAPI_L2_TCM)->second.eventValueIndex];
+          l3_misses = (double) d_eventValues[d_papiEvents.find(PAPI_L3_TCM)->second.eventValueIndex];
   }
 
   // zero the values in the hardware counter event set array
@@ -710,20 +710,20 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   toReduceMax.push_back(double_int(d_sharedState->taskWaitThreadTime,rank));
 #ifdef USE_PAPI_COUNTERS
   if (d_papiEvents.find(PAPI_FP_OPS)->second.isSupported) {
-	  toReduce.push_back(flop);
-	  toReduceMax.push_back(double_int(flop, rank));
+          toReduce.push_back(flop);
+          toReduceMax.push_back(double_int(flop, rank));
   }
   if (d_papiEvents.find(PAPI_DP_OPS)->second.isSupported) {
-	  toReduce.push_back(vflop);
-	  toReduceMax.push_back(double_int(vflop, rank));
+          toReduce.push_back(vflop);
+          toReduceMax.push_back(double_int(vflop, rank));
   }
   if (d_papiEvents.find(PAPI_L2_TCM)->second.isSupported) {
-	  toReduce.push_back(l2_misses);
-	  toReduceMax.push_back(double_int(l2_misses, rank));
+          toReduce.push_back(l2_misses);
+          toReduceMax.push_back(double_int(l2_misses, rank));
   }
   if (d_papiEvents.find(PAPI_L3_TCM)->second.isSupported) {
-	  toReduce.push_back(l3_misses);
-	  toReduceMax.push_back(double_int(l3_misses, rank));
+          toReduce.push_back(l3_misses);
+          toReduceMax.push_back(double_int(l3_misses, rank));
   }
 #endif
   statLabels.push_back("Mem usage");
@@ -740,16 +740,16 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   statLabels.push_back("TaskWaitThreadTime");
 #ifdef USE_PAPI_COUNTERS
   if (d_papiEvents.find(PAPI_FP_OPS)->second.isSupported) {
-	  statLabels.push_back(d_papiEvents.find(PAPI_FP_OPS)->second.simStatName.c_str());
+          statLabels.push_back(d_papiEvents.find(PAPI_FP_OPS)->second.simStatName.c_str());
   }
   if (d_papiEvents.find(PAPI_DP_OPS)->second.isSupported) {
-	  statLabels.push_back(d_papiEvents.find(PAPI_DP_OPS)->second.simStatName.c_str());
+          statLabels.push_back(d_papiEvents.find(PAPI_DP_OPS)->second.simStatName.c_str());
   }
   if (d_papiEvents.find(PAPI_L2_TCM)->second.isSupported) {
-	  statLabels.push_back(d_papiEvents.find(PAPI_L2_TCM)->second.simStatName.c_str());
+          statLabels.push_back(d_papiEvents.find(PAPI_L2_TCM)->second.simStatName.c_str());
   }
   if (d_papiEvents.find(PAPI_L3_TCM)->second.isSupported) {
-	  statLabels.push_back(d_papiEvents.find(PAPI_L3_TCM)->second.simStatName.c_str());
+          statLabels.push_back(d_papiEvents.find(PAPI_L3_TCM)->second.simStatName.c_str());
   }
 #endif
 
@@ -881,7 +881,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   if (istats.active()) {
     for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
       if (toReduce[i] > 0)
-	istats << "rank: " << d_myworld->myrank() << " " << statLabels[i] << " avg: " << toReduce[i] << "\n";
+        istats << "rank: " << d_myworld->myrank() << " " << statLabels[i] << " avg: " << toReduce[i] << "\n";
     }
   } 
 
@@ -897,23 +897,23 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     ostringstream message;
 
     message << "Time="        << time
-	    << " (timestep "  << timestep 
-	    << "), delT="     << delt
-	    << walltime;
+            << " (timestep "  << timestep 
+            << "), delT="     << delt
+            << walltime;
     message << ", Memory Use = ";
     if (avg_memuse == max_memuse && avg_highwater == max_highwater) {
       message << ProcessInfo::toHumanUnits((unsigned long) avg_memuse);
       if(avg_highwater) {
-	message << "/" << ProcessInfo::toHumanUnits((unsigned long) avg_highwater);
+        message << "/" << ProcessInfo::toHumanUnits((unsigned long) avg_highwater);
       }
     } else {
       message << ProcessInfo::toHumanUnits((unsigned long) avg_memuse);
       if(avg_highwater) {
-	message << "/" << ProcessInfo::toHumanUnits((unsigned long)avg_highwater);
+        message << "/" << ProcessInfo::toHumanUnits((unsigned long)avg_highwater);
       }
       message << " (avg), " << ProcessInfo::toHumanUnits(max_memuse);
       if(max_highwater) {
-	message << "/" << ProcessInfo::toHumanUnits(max_highwater);
+        message << "/" << ProcessInfo::toHumanUnits(max_highwater);
       }
       message << " (max on rank:" << max_memuse_loc << ")";
     }
@@ -923,26 +923,32 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     cout.flush();
 
     if (stats.active()) {
-      if(d_myworld->size()>1)
-	{
-	  for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
-	    if (maxReduce[i].val > 0)
-	      stats << "  "<< left << setw(17)<< statLabels[i] << " avg: " << setw(10)<< avgReduce[i] 
-		    << " max: " << setw(10) <<maxReduce[i].val << " maxloc:" << maxReduce[i].loc
-		    << " LIB%: " << 100*(1-(avgReduce[i]/maxReduce[i].val)) << "\n";
-	  }
-	}
-      else //runing in serial
-	{
-	  for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
-	    if (toReduce[i] > 0)
-	      stats << statLabels[i] << " avg: " << toReduce[i] << " max: " << toReduce[i] << " maxloc:" << 0
-		    << " LIB%: " << 0 << "\n";
-	  }
+      stats << left << setw(17)  << "  Description       Ave time:     max Time:   mpi proc:  100*(1-ave/max) '% load imbalance'\n";
 
-	}
-      if(d_n>2 && !isnan(d_sharedState->overheadAvg))
-	stats << "  Percent Time in overhead:" << d_sharedState->overheadAvg*100 <<  "\n";
+      if(d_myworld->size()>1){
+        for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
+          if (maxReduce[i].val > 0) {
+            stats << "  "<< left << setw(17)<< statLabels[i] 
+                  << " : " << setw(10) << avgReduce[i] 
+                  << " : " << setw(10) << maxReduce[i].val 
+                  << " : " << setw(10)  << maxReduce[i].loc
+                  << " : " << setw(10)  << 100*(1-(avgReduce[i]/maxReduce[i].val)) << "\n";
+          }
+        }
+      }else {//runing in serial
+        for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
+          if (toReduce[i] > 0){
+            stats << "  "<< left << setw(17)<< statLabels[i] 
+                  << " : " << setw(10) << toReduce[i] 
+                  << " : " << setw(10) << toReduce[i] 
+                  << " : " << setw(10)  << 0
+                  << " : " << setw(10)  << 0 << "\n";
+          }
+        }
+      }
+      if(d_n>2 && !isnan(d_sharedState->overheadAvg)){
+        stats << "  Percent Time in overhead:" << d_sharedState->overheadAvg*100 <<  "\n";
+      }
     } 
 
 
