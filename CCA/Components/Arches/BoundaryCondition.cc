@@ -174,7 +174,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
      }
 
      d_ignore_invalid_celltype = false; 
-     if ( db_params->findBlock("ignore_invalid_celltype")){ 
+     if ( db->findBlock("ignore_invalid_celltype")){ 
        d_ignore_invalid_celltype = true; 
      }
 
@@ -2221,6 +2221,22 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
     new_dw->allocateAndPut(cellType, d_lab->d_cellTypeLabel, matl_index, patch);
     cellType.initialize(999);
 
+    //going to put "walls" in the corners, even though they aren't accessed:
+    for ( CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++ ){
+
+      IntVector c = *iter; 
+
+      bool is_corner = is_corner_cell(patch, c, lo, hi); 
+
+      if ( is_corner ){ 
+        cellType[c] = -1; 
+      }
+
+    }
+
+    const Level* level = patch->getLevel(); 
+    IntVector periodic = level->getPeriodicBoundaries(); 
+
     for ( CellIterator iter=patch->getCellIterator(); !iter.done(); iter++ ){
 
       // initialize all cells in the interior as flow
@@ -2329,15 +2345,18 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
       }
     }
 
-    //Now, for this patch, check to make sure you have boundary conditions 
+    //Now, for this patch, check to make sure you have valid cell types 
     //specified everywhere. 
     if ( !d_ignore_invalid_celltype ){ 
       for ( CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++ ){
 
-        if ( cellType[*iter] == 999 ){ 
-          throw InvalidValue("Error: Patch found with an invalid cell type.", __FILE__, __LINE__);
-        }
+        IntVector c = *iter; 
 
+        if ( cellType[c] == 999 ){ 
+
+          throw InvalidValue("Error: Patch found with an invalid cell type.", __FILE__, __LINE__);
+
+        }
       }
     }
   }
