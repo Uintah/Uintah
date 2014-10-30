@@ -153,6 +153,6 @@ endif
 
 #__________________________________
 # clean up
-rm -rf scraps
+/bin/rm -rf scraps
 
 exit(0)
