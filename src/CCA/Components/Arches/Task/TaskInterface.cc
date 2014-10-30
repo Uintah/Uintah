@@ -814,9 +814,10 @@ void TaskInterface::schedule_init( const LevelP& level,
 
     if ( var_count > 0 )
       sched->addTask( tsk, level->eachPatch(), matls );
+    else 
+      delete tsk;
 
   }
-
 }
 
 //====================================================================================
