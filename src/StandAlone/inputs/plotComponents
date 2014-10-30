@@ -191,6 +191,5 @@ endif
 # clean up
 
 /bin/rm -rf scraps
-#rm -f gp data LIBdata
 
 exit
