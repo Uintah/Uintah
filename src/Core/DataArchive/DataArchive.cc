@@ -908,10 +908,12 @@ DataArchive::restartInitialize(int index, const GridP& grid, DataWarehouse* dw,
 //  This method is a specialization of restartInitialize().
 //  It's only used by the reduceUda component
 void
-DataArchive::reduceUda_ReadUda(int timeIndex, 
+DataArchive::reduceUda_ReadUda(const ProcessorGroup* pg,
+                               int timeIndex, 
                                const GridP& grid,
                                const PatchSubset* patches,
-                               DataWarehouse* dw )
+                               DataWarehouse* dw,
+                               LoadBalancer* lb )
 {
   vector<int> timesteps;
   vector<double> times;
@@ -964,6 +966,13 @@ DataArchive::reduceUda_ReadUda(int timeIndex,
     VarLabel* label = varMap[key.name_];
 
     if (label == 0) {
+      continue;
+    }
+    
+    // If this proc does not own this patch
+    // then ignore the variable 
+    int proc = lb->getPatchwiseProcessorAssignment(patch);
+    if ( proc != pg->myrank() ) {
       continue;
     }
 
