@@ -26,9 +26,11 @@
 #define Interpolate_Expr_h
 
 #include <expression/Expression.h>
-#include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 #include <spatialops/OperatorDatabase.h>
+#include <spatialops/particles/ParticleOperators.h>
 #include <spatialops/structured/SpatialFieldStore.h>
+#include <spatialops/particles/ParticleFieldTypes.h>
+#include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 
 /**
  *  \class   InterpolateExpression
@@ -77,6 +79,63 @@ public:
   };
   
   ~InterpolateExpression();
+  
+  void advertise_dependents( Expr::ExprDeps& exprDeps );
+  void bind_fields( const Expr::FieldManagerList& fml );
+  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
+  void evaluate();
+};
+
+/**
+ *  \class   InterpolateParticleExpression
+ *  \author  Tony Saad
+ *  \date    October, 2014
+ *  \ingroup Expressions
+ *
+ *  \brief An expression computes Eulerian scalars from Lagrangian particle properties.
+ *  \tparam DestT: Destination field type - usually SVolField.
+ *
+ */
+template< typename DestT >
+class InterpolateParticleExpression
+: public Expr::Expression<DestT>
+{
+  const Expr::Tag srct_, pSizeTag_;
+  const Expr::TagList pPosTags_;
+  
+  typedef typename SpatialOps::Particle::ParticleToCell<DestT> P2CellOpT;
+  P2CellOpT* p2CellOp_; // particle to cell operator
+
+  typedef typename SpatialOps::Particle::ParticlesPerCell<DestT> PPerCellOpT;
+  PPerCellOpT* pPerCellOp_; // operator that counts the number of particles per cell
+
+  const ParticleField *src_, *psize_, *px_, *py_, *pz_;
+  
+  InterpolateParticleExpression( const Expr::Tag& srctag,
+                                 const Expr::Tag& particleSizeTag,
+                                 const Expr::TagList& particlePositionTags);
+  
+public:
+  class Builder : public Expr::ExpressionBuilder
+  {
+  public:
+    
+    /**
+     *  \param desttag Tag of the destination field
+     */
+    Builder( const Expr::Tag& result,
+            const Expr::Tag& srctag,
+            const Expr::Tag& particleSizeTag,
+            const Expr::TagList& particlePositionTags);
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
+    
+  private:
+    const Expr::Tag srct_, pSizeTag_;
+    const Expr::TagList pPosTags_;
+  };
+  
+  ~InterpolateParticleExpression();
   
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
