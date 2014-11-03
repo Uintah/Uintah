@@ -27,26 +27,27 @@
 
 #include <sci_defs/papi_defs.h> // for PAPI performance counters
 
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/SimulationState.h>
-#include <CCA/Ports/SchedulerP.h>
-#include <CCA/Ports/Scheduler.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
+#include <CCA/Ports/DataWarehouseP.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/SchedulerP.h>
 
 namespace Uintah {
 
-class SimulationInterface;
-class Output;
-class LoadBalancer;
+class  DataArchive;
+class  LoadBalancer;
+class  Output;
+class  Regridder;
+class  SimulationInterface;
 struct SimulationTime;
-class Regridder;
-class DataArchive;
+
 /**************************************
       
   CLASS
@@ -81,19 +82,21 @@ class DataArchive;
    //! entire simulation. 
    class SimulationController : public UintahParallelComponent {
    public:
-      SimulationController(const ProcessorGroup* myworld, bool doAMR, ProblemSpecP pspec);
+      SimulationController( const ProcessorGroup* myworld, bool doAMR, ProblemSpecP pspec );
       virtual ~SimulationController();
 
       //! Notifies (before calling run) the SimulationController
       //! that this is simulation is a restart.
-      void doRestart(std::string restartFromDir, int timestep,
-		     bool fromScratch, bool removeOldDir);
+      void doRestart( const std::string & restartFromDir,
+		            int           timestep,
+		            bool          fromScratch,
+                            bool          removeOldDir );
 
       //! Execute the simulation
       virtual void run() = 0;
 
       //  sets simulationController flags
-      void setReduceUdaFlags(std::string fromDir);
+      void setReduceUdaFlags( const std::string & fromDir );
      
    protected:
 
@@ -110,7 +113,7 @@ class DataArchive;
 
       //! adjust delt based on timeinfo and other parameters
       //    'first' is whether this is the first time adjustDelT is called.
-      void adjustDelT(double& delt, double prev_delt, bool first, double t);
+      void adjustDelT( double& delt, double prev_delt, bool first, double t );
       void initSimulationStatsVars ( void );
       void printSimulationStats    ( int timestep, double delt, double time );
 
@@ -150,21 +153,20 @@ class DataArchive;
       int                    d_eventSet;            // PAPI event set
       long long*             d_eventValues;         // PAPI event set values
       struct PapiEvent {
-    	  int    eventValueIndex;
-    	  string name;
-    	  string simStatName;
-    	  bool   isSupported;
-    	  PapiEvent(string _name, string _simStatName)
-    	  	  : name(_name), simStatName(_simStatName)
-    	  {
-    		  eventValueIndex = 0;
-    		  isSupported = false;
-    	  }
+	int         eventValueIndex;
+	std::string name;
+	string      simStatName;
+	bool        isSupported;
+	PapiEvent( const std::string & _name, const std::string & _simStatName )
+	  : name(_name), simStatName(_simStatName)
+	{
+	  eventValueIndex = 0;
+	  isSupported = false;
+	}
       };
-      std::map<int, PapiEvent> d_papiEvents;
-      std::map<int, string>    d_papiErrorCodes;
+      std::map<int, PapiEvent>   d_papiEvents;
+      std::map<int, std::string> d_papiErrorCodes;
 #endif
-
 
    private:
 
