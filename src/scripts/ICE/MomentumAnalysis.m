@@ -323,9 +323,12 @@ croppedTime   = [ t(lo)- t(1), t(length(t)) - t(hi)];
 croppedPoints = length(t) - hi;
 printf( "    - Now removing the leading (%i points, %4.3g sec) and trailing  (%i points, %4.3g sec) from data\n", lo, croppedTime(1), croppedPoints, croppedTime(2)  )
 
-t               = t( lo:hi );
-Mom_cv          = Mom_cv( lo:hi,: );
-Mom_netFaceFlux = Mom_netFaceFlux( lo:hi,: );
+t = t( lo:hi );
+Mom_cv              = Mom_cv( lo:hi,: );
+Mom_netFaceFlux     = Mom_netFaceFlux( lo:hi,: );
+Viscous_netFaceFlux = Viscous_netFaceFlux( lo:hi,: );
+surfacePressForce   = surfacePressForce( lo:hi,: );
+
 
 %__________________________________
 % Find the time rate of change of the momentum in the control volume (first order backward differenc)
@@ -352,8 +355,6 @@ printf( "    - Now computing moving averages of the momentum flux and momentum i
 [ ave.surfPressForce, size ]  = moveAve( surfacePressForce,    opt.window, t );
 
 
-t_crop = t(size);
-
 %__________________________________
 % compute force and dM/dt with the averaged quantities
 printf( "    - Now computing average quantities\n"   );
@@ -361,13 +362,18 @@ ave.dMdt  = zeros;
 ave.force = zeros;
 
 for i = 2:length( ave.Mom_cv )
-   ave.dMdt(i,1:3)  = ( ave.Mom_cv(i,:) - ave.Mom_cv(i-1,:) )./( t_crop(i) - t_crop(i-1) );
+   ave.dMdt(i,1:3)  = ( ave.Mom_cv(i,:) - ave.Mom_cv(i-1,:) )./( t(i) - t(i-1) );
    ave.force(i,1:3) =   ave.dMdt(i,:) + ave.Mom_netFaceFlux(i,:) + ave.Vis_netFaceFlux(i,:) + ave.surfPressForce(i,:);
 end
 
 meanForce = mean ( force );
+meanV_force = mean ( Viscous_netFaceFlux );
+meanP_force = mean ( surfacePressForce );
 printf( '______________________________________________________________________\n');
 printf( '  Mean force %e, %e, %e \n', meanForce(1), meanForce(2), meanForce(3) );
+printf( '\n  Mean forces on the control volume surfaces \n' );
+printf( '  viscous:  %e, %e, %e \n', meanV_force(1), meanV_force(2), meanV_force(3) );
+printf( '  pressure: %e, %e, %e \n', meanP_force(1), meanP_force(2), meanP_force(3) );
 printf( '______________________________________________________________________\n');
 
 
@@ -382,8 +388,8 @@ end
 
 fp = fopen ("aveForce.dat", "w");
 fprintf( fp, "# time             ave.force.x             aave.force.y             ave.force.z\n");
-for i = 1:length( t_crop )
-  fprintf( fp, "%15.14e, %15.14e, %15.14e, %15.14e\n", t_crop(i), ave.force( i,1 ), ave.force( i,2 ), ave.force( i,3 ) );
+for i = 1:length( t )
+  fprintf( fp, "%15.14e, %15.14e, %15.14e, %15.14e\n", t(i), ave.force( i,1 ), ave.force( i,2 ), ave.force( i,3 ) );
 end
 
 
@@ -409,7 +415,7 @@ if( opt.doPlots )
   %  Average
   subplot(2,1,2)
 
-  ax = plot( t_crop, ave.Mom_netFaceFlux );
+  ax = plot( t, ave.Mom_netFaceFlux );
 
   legend( "x", "y", "z" )
   xlabel( 'Time [s] ');
@@ -437,7 +443,7 @@ if( opt.doPlots )
 
   %  Average
   subplot( 2,1,2 )
-  ax = plot( t_crop, ave.Mom_cv );
+  ax = plot( t, ave.Mom_cv );
 
   legend( "x", "y", "z" )
   xlabel( 'Time [s] ');
@@ -465,7 +471,7 @@ if( opt.doPlots )
 
   %  Average
   subplot( 2,1,2 )
-  ax = plot( t_crop, ave.dMdt );
+  ax = plot( t, ave.dMdt );
 
   legend( "x", "y", "z" )
   xlabel( 'Time [s] ');
@@ -529,7 +535,7 @@ if( opt.doPlots )
 
 
   subplot( 2,1,2 )
-  ax = plot( t_crop, ave.force );
+  ax = plot( t, ave.force );
 
   legend( "x", "y", "z" )
   xlabel( 'Time [s] ');
@@ -543,7 +549,7 @@ if( opt.doPlots )
 endif
 
 %______________________________________________________________________
-[freq, amp] = plotFFT( t, force(:,1), "PowerSpectrum of forceX" );
+[freq, amp] = plotFFT( t, force(:,1), "PowerSpectrum of force in X dir" );
 
 
 
