@@ -114,7 +114,6 @@ InterpolateExpression<SrcT, DestT>::Builder::build() const
 
 //--------------------------------------------------------------------
 
-
 //==========================================================================
 // Explicit template instantiation for supported versions of this expression
 #include <spatialops/structured/FVStaggered.h>
@@ -165,4 +164,120 @@ template class InterpolateExpression< SpatialOps::ZVolField,
 
 template class InterpolateExpression< SpatialOps::ZVolField,
                                       SpatialOps::ZVolField >;
+//==========================================================================
+
+// ###################################################################
+//
+//               Implementation
+//
+// ###################################################################
+
+//--------------------------------------------------------------------
+
+template< typename DestT >
+InterpolateParticleExpression<DestT>::
+InterpolateParticleExpression( const Expr::Tag& srctag,
+                              const Expr::Tag& particleSizeTag,
+                              const Expr::TagList& particlePositionTags)
+: Expr::Expression<DestT>(),
+srct_( srctag ),
+pSizeTag_(particleSizeTag),
+pPosTags_(particlePositionTags)
+{
+  this->set_gpu_runnable( true );
+}
+
+//--------------------------------------------------------------------
+
+template< typename DestT >
+InterpolateParticleExpression<DestT>::
+~InterpolateParticleExpression()
+{}
+
+//--------------------------------------------------------------------
+
+template< typename DestT >
+void
+InterpolateParticleExpression<DestT>::
+advertise_dependents( Expr::ExprDeps& exprDeps )
+{
+  if( srct_ != Expr::Tag() )   exprDeps.requires_expression( srct_ );
+  exprDeps.requires_expression( pSizeTag_ );
+  exprDeps.requires_expression( pPosTags_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename DestT >
+void
+InterpolateParticleExpression<DestT>::
+bind_fields( const Expr::FieldManagerList& fml )
+{
+  const typename Expr::FieldMgrSelector<ParticleField>::type& pfm = fml.template field_manager<ParticleField>();
+  src_ = &pfm.field_ref( srct_ );
+  psize_ = &pfm.field_ref( pSizeTag_ );
+  px_ = &pfm.field_ref( pPosTags_[0] );
+  py_ = &pfm.field_ref( pPosTags_[1] );
+  pz_ = &pfm.field_ref( pPosTags_[2] );
+}
+
+//--------------------------------------------------------------------
+
+template< typename DestT >
+void
+InterpolateParticleExpression<DestT>::
+bind_operators( const SpatialOps::OperatorDatabase& opDB )
+{
+  p2CellOp_ = opDB.retrieve_operator<P2CellOpT>();
+  pPerCellOp_ = opDB.retrieve_operator<PPerCellOpT>();
+}
+
+//--------------------------------------------------------------------
+
+template< typename DestT >
+void
+InterpolateParticleExpression<DestT>::
+evaluate()
+{
+  using namespace SpatialOps;
+  
+  DestT& result = this->value();
+  SpatFldPtr<DestT> nParticlesPerCell = SpatialFieldStore::get<DestT>( result );
+  *nParticlesPerCell <<= 0.0;
+  pPerCellOp_->set_coordinate_information( px_,py_,pz_, psize_ );
+  pPerCellOp_->apply_to_field( *nParticlesPerCell );
+  
+  p2CellOp_->set_coordinate_information( px_,py_,pz_, psize_ );
+  p2CellOp_->apply_to_field( *src_, result );
+  result <<= cond( *nParticlesPerCell > 0.0, result/ *nParticlesPerCell )
+                 ( result );
+}
+
+//--------------------------------------------------------------------
+
+template<typename DestT >
+InterpolateParticleExpression<DestT>::
+Builder::Builder( const Expr::Tag& result,
+                 const Expr::Tag& srctag,
+                 const Expr::Tag& particleSizeTag,
+                 const Expr::TagList& particlePositionTags)
+: ExpressionBuilder(result),
+srct_( srctag ),
+pSizeTag_(particleSizeTag),
+pPosTags_(particlePositionTags)
+{}
+
+//--------------------------------------------------------------------
+
+template< typename DestT >
+Expr::ExpressionBase*
+InterpolateParticleExpression<DestT>::Builder::build() const
+{
+  return new InterpolateParticleExpression<DestT>( srct_, pSizeTag_, pPosTags_);
+}
+
+//--------------------------------------------------------------------
+
+template class InterpolateParticleExpression< SpatialOps::SVolField >;
+
 //==========================================================================
