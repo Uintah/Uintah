@@ -93,8 +93,8 @@ stdDeviation( double sum_of_x, double sum_of_x_squares, int n )
 }
 
 SimulationController::SimulationController( const ProcessorGroup * myworld,
-					          bool             doAMR,
-					          ProblemSpecP     pspec ) :
+                                                  bool             doAMR,
+                                                  ProblemSpecP     pspec ) :
   UintahParallelComponent(myworld), d_ups(pspec), d_doAMR(doAMR)
 {
   d_n = 0;
@@ -176,14 +176,14 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   retp = PAPI_library_init(PAPI_VER_CURRENT);
   if (retp != PAPI_VER_CURRENT) {
     proc0cout << "Error: Cannot initialize PAPI library!" << endl
-	      << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
+              << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
     throw PapiInitializationError("PAPI library initialization error occurred. Check that your PAPI library can be initialized correctly.", __FILE__, __LINE__);
   }
   retp = PAPI_thread_init(pthread_self);
   if (retp != PAPI_OK) {
     if (d_myworld->myrank() == 0) {
       cout << "Error: Cannot initialize PAPI thread support!" << endl
-	   << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
+           << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
     }
     if (Parallel::getNumThreads() > 1) {
       throw PapiInitializationError("PAPI Pthread initialization error occurred. Check that your PAPI build supports Pthreads.", __FILE__, __LINE__);
@@ -195,8 +195,8 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
     retp = PAPI_query_event(iter->first);
     if (retp != PAPI_OK) {
       proc0cout << "WARNNING: Cannot query PAPI event: " << iter->second.name << "!" << endl
-		<< "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl
-		<< "          No stats will be printed for " << iter->second.simStatName << endl;
+                << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl
+                << "          No stats will be printed for " << iter->second.simStatName << endl;
     } else {
       iter->second.isSupported = true;
     }
@@ -206,7 +206,7 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   retp = PAPI_create_eventset(&d_eventSet);
   if (retp != PAPI_OK) {
     proc0cout << "Error: Cannot create PAPI event set!" << endl
-	      << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
+              << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
     throw PapiInitializationError("PAPI event set creation error. Unable to create hardware counter event set.", __FILE__, __LINE__);
   }
 
@@ -219,15 +219,15 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
     if (iter->second.isSupported) {
       retp = PAPI_add_event(d_eventSet, iter->first);
       if (retp != PAPI_OK) { // this means the event queried OK but could not be added
-	if (d_myworld->myrank() == 0) {
-	  cout << "WARNNING: Cannot add PAPI event: " << iter->second.name << "!"  << endl
-	       << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl
-	       << "          No stats will be printed for " << iter->second.simStatName << endl;
-	}
-	iter->second.isSupported = false;
+        if (d_myworld->myrank() == 0) {
+          cout << "WARNNING: Cannot add PAPI event: " << iter->second.name << "!"  << endl
+               << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl
+               << "          No stats will be printed for " << iter->second.simStatName << endl;
+        }
+        iter->second.isSupported = false;
       } else {
-	iter->second.eventValueIndex = index;
-	index++;
+        iter->second.eventValueIndex = index;
+        index++;
       }
     }
   }
@@ -235,7 +235,7 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   retp = PAPI_start(d_eventSet);
   if (retp != PAPI_OK) {
     proc0cout << "WARNNING: Cannot start PAPI event set!"  << endl
-	      << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
+              << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
     throw PapiInitializationError("PAPI event set start error. Unable to start hardware counter event set.", __FILE__, __LINE__);
   }
 #endif
@@ -269,7 +269,7 @@ SimulationController::setReduceUdaFlags( const string & fromDir )
 
 void
 SimulationController::doRestart( const string & restartFromDir, int timestep,
-				 bool fromScratch, bool removeOldDir )
+                                 bool fromScratch, bool removeOldDir )
 {
   d_restarting          = true;
   d_fromDir             = restartFromDir;
@@ -325,7 +325,7 @@ SimulationController::gridSetup( void )
     Dir restartFromDir(d_fromDir);
     Dir checkpointRestartDir = restartFromDir.getSubdir("checkpoints");
     d_archive = scinew DataArchive(checkpointRestartDir.getName(),
-				   d_myworld->myrank(), d_myworld->size());
+                                   d_myworld->myrank(), d_myworld->size());
 
     vector<int> indices;
     vector<double> times;
@@ -357,10 +357,10 @@ SimulationController::gridSetup( void )
     }
     else {
       for (int index = 0; index < (int)indices.size(); index++)
-	if (indices[index] == d_restartTimestep) {
-	  d_restartIndex = index;
-	  break;
-	}
+        if (indices[index] == d_restartTimestep) {
+          d_restartIndex = index;
+          break;
+        }
     }
       
     if (d_restartIndex == (int) indices.size()) {
@@ -450,8 +450,8 @@ SimulationController::postGridSetup( GridP& grid, double& t )
     if (timeSpec) {
       d_sharedState->d_prev_delt = 0.0;
       if (!timeSpec->get("oldDelt", d_sharedState->d_prev_delt))
-	// the delt is deprecated since it is misleading, but older udas may have it...
-	timeSpec->get("delt", d_sharedState->d_prev_delt);
+        // the delt is deprecated since it is misleading, but older udas may have it...
+        timeSpec->get("delt", d_sharedState->d_prev_delt);
     }
 
     d_sharedState->setCurrentTopLevelTimeStep( d_restartTimestep );
@@ -464,17 +464,17 @@ SimulationController::postGridSetup( GridP& grid, double& t )
     if (d_timeinfo->override_restart_delt != 0) {
       double newdelt = d_timeinfo->override_restart_delt;
       if (d_myworld->myrank() == 0)
-	cout << "Overriding restart delt with " << newdelt << endl;
+        cout << "Overriding restart delt with " << newdelt << endl;
       d_scheduler->get_dw(1)->override(delt_vartype(newdelt), 
-				       d_sharedState->get_delt_label());
+                                       d_sharedState->get_delt_label());
       double delt_fine = newdelt;
       for(int i=0;i<grid->numLevels();i++){
-	const Level* level = grid->getLevel(i).get_rep();
-	if(i != 0 && !d_sharedState->isLockstepAMR()) {
-	  delt_fine /= level->getRefinementRatioMaxDim();
-	}
-	d_scheduler->get_dw(1)->override(delt_vartype(delt_fine), d_sharedState->get_delt_label(),
-					 level);
+        const Level* level = grid->getLevel(i).get_rep();
+        if(i != 0 && !d_sharedState->isLockstepAMR()) {
+          delt_fine /= level->getRefinementRatioMaxDim();
+        }
+        d_scheduler->get_dw(1)->override(delt_vartype(delt_fine), d_sharedState->get_delt_label(),
+                                         level);
       }
     }
     d_scheduler->get_dw(1)->finalize();
@@ -493,7 +493,7 @@ SimulationController::postGridSetup( GridP& grid, double& t )
   if (d_restarting) {
     Dir dir(d_fromDir);
     d_output->restartSetup(dir, 0, d_restartTimestep, t,
-			   d_restartFromScratch, d_restartRemoveOldDir);
+                           d_restartFromScratch, d_restartRemoveOldDir);
   }
 
 } // end postGridSetup()
@@ -523,7 +523,7 @@ SimulationController::adjustDelT( double& delt, double prev_delt, bool first, do
   if(delt < d_timeinfo->delt_min){
     if(d_myworld->myrank() == 0)
       cout << "WARNING: raising delt from " << delt
-	   << " to minimum: " << d_timeinfo->delt_min << '\n';
+           << " to minimum: " << d_timeinfo->delt_min << '\n';
     delt = d_timeinfo->delt_min;
   }
   if( !first && 
@@ -531,22 +531,22 @@ SimulationController::adjustDelT( double& delt, double prev_delt, bool first, do
       delt > (1+d_timeinfo->max_delt_increase)*prev_delt) {
     if(d_myworld->myrank() == 0)
       cout << "WARNING (a): lowering delt from " << delt 
-	   << " to maxmimum: " << (1+d_timeinfo->max_delt_increase)*prev_delt
-	   << " (maximum increase of " << d_timeinfo->max_delt_increase
-	   << ")\n";
+           << " to maxmimum: " << (1+d_timeinfo->max_delt_increase)*prev_delt
+           << " (maximum increase of " << d_timeinfo->max_delt_increase
+           << ")\n";
     delt = (1+d_timeinfo->max_delt_increase)*prev_delt;
   }
   if( t <= d_timeinfo->initial_delt_range && delt > d_timeinfo->max_initial_delt ) {
     if(d_myworld->myrank() == 0)
       cout << "WARNING (b): lowering delt from " << delt 
-	   << " to maximum: " << d_timeinfo->max_initial_delt
-	   << " (for initial timesteps)\n";
+           << " to maximum: " << d_timeinfo->max_initial_delt
+           << " (for initial timesteps)\n";
     delt = d_timeinfo->max_initial_delt;
   }
   if( delt > d_timeinfo->delt_max ) {
     if(d_myworld->myrank() == 0) {
       cout << "WARNING (c): lowering delt from " << delt 
-	   << " to maximum: " << d_timeinfo->delt_max << '\n';
+           << " to maximum: " << d_timeinfo->delt_max << '\n';
     }
     delt = d_timeinfo->delt_max;
   }
@@ -563,9 +563,9 @@ SimulationController::adjustDelT( double& delt, double prev_delt, bool first, do
     }
     if (delt != orig_delt) {
       if(d_myworld->myrank() == 0)
-	cout << "WARNING (d): lowering delt from " << orig_delt 
-	     << " to " << delt
-	     << " to line up with output/checkpoint time\n";
+        cout << "WARNING (d): lowering delt from " << orig_delt 
+             << " to " << delt
+             << " to line up with output/checkpoint time\n";
     }
   }
   if (d_timeinfo->end_on_max_time && t + delt > d_timeinfo->maxTime){
@@ -794,13 +794,13 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     // If AMR and using dynamic dilation use an allreduce.
     if(d_regridder && d_regridder->useDynamicDilation())
       {
-	MPI_Allreduce( &toReduce[0],    &avgReduce[0], toReduce.size(),    MPI_DOUBLE,     MPI_SUM,    d_myworld->getComm() );
-	MPI_Allreduce( &toReduceMax[0], &maxReduce[0], toReduceMax.size(), MPI_DOUBLE_INT, MPI_MAXLOC, d_myworld->getComm() );
+        MPI_Allreduce( &toReduce[0],    &avgReduce[0], toReduce.size(),    MPI_DOUBLE,     MPI_SUM,    d_myworld->getComm() );
+        MPI_Allreduce( &toReduceMax[0], &maxReduce[0], toReduceMax.size(), MPI_DOUBLE_INT, MPI_MAXLOC, d_myworld->getComm() );
       }
     else
       {
-	MPI_Reduce( &toReduce[0],    &avgReduce[0], toReduce.size(),    MPI_DOUBLE,     MPI_SUM,    0, d_myworld->getComm() );
-	MPI_Reduce( &toReduceMax[0], &maxReduce[0], toReduceMax.size(), MPI_DOUBLE_INT, MPI_MAXLOC, 0, d_myworld->getComm() );
+        MPI_Reduce( &toReduce[0],    &avgReduce[0], toReduce.size(),    MPI_DOUBLE,     MPI_SUM,    0, d_myworld->getComm() );
+        MPI_Reduce( &toReduceMax[0], &maxReduce[0], toReduceMax.size(), MPI_DOUBLE_INT, MPI_MAXLOC, 0, d_myworld->getComm() );
       }
 
     // make sums averages
@@ -835,22 +835,22 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     {
       // Sum up the times for simulation components.
       total_time = d_sharedState->compilationTime +
-	d_sharedState->regriddingTime +
-	d_sharedState->regriddingCompilationTime +
-	d_sharedState->regriddingCopyDataTime +
-	d_sharedState->loadbalancerTime +
-	d_sharedState->taskExecTime +
-	d_sharedState->taskGlobalCommTime +
-	d_sharedState->taskLocalCommTime +
-	d_sharedState->taskWaitCommTime +
-	d_sharedState->taskWaitThreadTime;
+        d_sharedState->regriddingTime +
+        d_sharedState->regriddingCompilationTime +
+        d_sharedState->regriddingCopyDataTime +
+        d_sharedState->loadbalancerTime +
+        d_sharedState->taskExecTime +
+        d_sharedState->taskGlobalCommTime +
+        d_sharedState->taskLocalCommTime +
+        d_sharedState->taskWaitCommTime +
+        d_sharedState->taskWaitThreadTime;
 
       // Sum up the average time for overhead related components.
       overhead_time = d_sharedState->compilationTime +
-	d_sharedState->regriddingTime +
-	d_sharedState->regriddingCompilationTime +
-	d_sharedState->regriddingCopyDataTime +
-	d_sharedState->loadbalancerTime;
+        d_sharedState->regriddingTime +
+        d_sharedState->regriddingCompilationTime +
+        d_sharedState->regriddingCopyDataTime +
+        d_sharedState->loadbalancerTime;
 
       // Calculate percentage of time spent in overhead.
       percent_overhead = overhead_time / total_time;
@@ -868,10 +868,10 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       int t=min(d_n-2,OVERHEAD_WINDOW);
       //calcualte total weight by incrementing through the overhead sample array backwards and multiplying samples by the weights
       for(int i=0;i<t;i++)
-	{
-	  overhead+=d_sharedState->overhead[(d_sharedState->overheadIndex+OVERHEAD_WINDOW-i)%OVERHEAD_WINDOW]*d_sharedState->overheadWeights[i];
-	  weight+=d_sharedState->overheadWeights[i];
-	}
+        {
+          overhead+=d_sharedState->overhead[(d_sharedState->overheadIndex+OVERHEAD_WINDOW-i)%OVERHEAD_WINDOW]*d_sharedState->overheadWeights[i];
+          weight+=d_sharedState->overheadWeights[i];
+        }
       d_sharedState->overheadAvg=overhead/weight; 
 
       d_sharedState->overheadIndex=(d_sharedState->overheadIndex+1)%OVERHEAD_WINDOW;
