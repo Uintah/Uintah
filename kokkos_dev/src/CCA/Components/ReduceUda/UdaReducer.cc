@@ -266,7 +266,7 @@ void UdaReducer::sched_readDataArchive(const LevelP& level,
 //______________________________________________________________________
 //  This task reads data from the dataArchive and 'puts' it into the data Warehouse
 //
-void UdaReducer::readDataArchive(const ProcessorGroup*,
+void UdaReducer::readDataArchive(const ProcessorGroup* pg,
                                  const PatchSubset* patches,
                                  const MaterialSubset* matls,
                                  DataWarehouse* old_dw,
@@ -275,9 +275,8 @@ void UdaReducer::readDataArchive(const ProcessorGroup*,
   double time = d_times[d_timeIndex];
   int timestep = d_timesteps[d_timeIndex];
   proc0cout << "*** working on timestep: " << timestep << " physical time: " << time << endl;
-
-
-  d_dataArchive->reduceUda_ReadUda(d_timeIndex, d_oldGrid, patches, new_dw );
+  
+  d_dataArchive->reduceUda_ReadUda(pg, d_timeIndex, d_oldGrid, patches, new_dw, d_lb);
   d_timeIndex++;
 }
 

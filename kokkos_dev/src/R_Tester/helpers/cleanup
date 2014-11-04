@@ -2,7 +2,7 @@
 
 #__________________________________
 #  This script is called as a cronjob before the startTester
-#  script and cleans up all previous SCI.* directories.
+#  script and cleans up all previous Uintah.* directories.
 #  It will send mail to the user if a file can't be removed.
 #
 
@@ -16,14 +16,14 @@ fi
 cd $BUILD_DIR
 
 #__________________________________
-# delete all SCIRun.* directories
+# delete all Uintah.* directories
 # First move them to the trash directory
 
 if [ ! -d "trash" ]; then
   mkdir trash
 fi
 
-mv SCIRun.* trash/.
+mv Uintah.* trash/.
 
 # delete whatever we own.  Note other users may have
 # compiled code or run tests in this directory, screwing up the 

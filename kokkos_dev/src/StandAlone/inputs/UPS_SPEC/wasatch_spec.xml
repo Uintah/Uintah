@@ -470,7 +470,13 @@
                         
       <!-- Interpolate fields from different locations -->
       <InterpolateExpression  spec="OPTIONAL NO_DATA"
-                              attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL">
+                              attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL, PARTICLE">
+          <ParticleInfo spec="OPTIONAL NO_DATA" need_applies_to="type PARTICLE"
+                        attribute1="size REQUIRED STRING"
+                        attribute2="px REQUIRED STRING"
+                        attribute3="py REQUIRED STRING"
+                        attribute4="pz REQUIRED STRING">
+          </ParticleInfo>                               
           <NameTag            spec="REQUIRED"/>
       </InterpolateExpression>
 

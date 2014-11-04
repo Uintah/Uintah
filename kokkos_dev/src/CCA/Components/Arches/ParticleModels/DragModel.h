@@ -165,7 +165,7 @@ namespace Uintah{
       db->findBlock("particle_density")->require("constant",_rho);
       constDensity = true;
     } else {
-      db->require("density_label",_base_density_name);
+      db->findBlock("particle_density")->require("density_label",_base_density_name);
       constDensity = false;
     }
     
@@ -174,7 +174,7 @@ namespace Uintah{
       db->findBlock("diameter")->require("constant",_d);
       constDiameter = true;
     } else {
-      db->require("diameter_label",_base_diameter_name);
+      db->findBlock("diameter")->require("diameter_label",_base_diameter_name);
       constDiameter = false;
     }
     

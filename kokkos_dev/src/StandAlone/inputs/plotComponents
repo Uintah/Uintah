@@ -1,5 +1,5 @@
-#!/bin/csh
-#__________________________________
+#!/bin/csh -f
+#______________________________________________________________________
 #  This script parses output from sus 
 #  and plots the various component times using gnuplot.
 #  Note you must have set the environmental variable:
@@ -7,22 +7,24 @@
 #  SCI_DEBUG ComponentTimings:+
 #
 #  Usage:
-#     plotComponents <sus output file> <dump postScript File (y/Y), default is no>
+#     plotComponents <sus output file> < output postScript and pdf files (y/Y), default is no>
 #
 #  This requires gnuplot 3.8 or greater.
-#__________________________________
+#______________________________________________________________________
 
 if( $#argv == 0 ) then
   echo "plotComponents <sus output file> <dump postScript File (y/Y), default is no>"
   exit(1)
 endif
+
 set out = $argv[1]
+
 if ( !(-e $out) ) then
     echo "Couldn't find your file $out"
   exit(1)
 endif
 
-grep -q TaskGlobalCom $out
+grep -q TaskExec $out
 if($status) then
   echo ""
   echo "ERROR:"
@@ -31,7 +33,8 @@ if($status) then
   echo ""
   echo "    SCI_DEBUG ComponentTimings:+"
   echo ""
-  echo " set when you run your simulation"
+  echo " set when you run your simulation and your simulatiion must be run on "
+  echo " more than 1 mpi process"
   exit
 endif
     
@@ -42,47 +45,49 @@ if ( $#argv == 2 ) then
 endif 
 
 unalias rm
-#__________________________________
-# remove your droppings and make a copy of the output file
-rm -f gp .data .tmp .data.sed
 
-cp $out .tmp
+#__________________________________
+# make a copy of the output file
+
+mkdir scraps >&/dev/null
+cp $out scraps/tmp
+
 #__________________________________
 # extract the average and maximum values data
+cd scraps
+
 echo "Now extracting the data"
 
-grep elap           .tmp | cut -d"=" -f4 | cut -d"," -f1 >& .elapsedTime
-grep TaskExec       .tmp | awk -F : '{print $2,$3}'| tr -d "[:alpha:]" >& .exec
-grep TaskGlobalComm .tmp | awk -F : '{print $2,$3}'| tr -d "[:alpha:]" >& .global
-grep TaskLocalComm  .tmp | awk -F : '{print $2,$3}'| tr -d "[:alpha:]" >& .local
-grep TaskWaitComm   .tmp | awk -F : '{print $2,$3}'| tr -d "[:alpha:]" >& .wait
+grep elap           tmp | cut -d"=" -f4 | cut -d"," -f1 >& elapsedTime
+grep TaskExec       tmp | awk -F : '{print $2,$3}'| tr -d "[:alpha:]" >& exec
+grep TaskGlobalComm tmp | awk -F : '{print $2,$3}'| tr -d "[:alpha:]" >& global
+grep TaskLocalComm  tmp | awk -F : '{print $2,$3}'| tr -d "[:alpha:]" >& local
+grep TaskWaitComm   tmp | awk -F : '{print $2,$3}'| tr -d "[:alpha:]" >& wait
 
-set procs   = `grep processors $out| cut -d" " -f 2`
-set machine = `grep Machine    $out | cut -d":" -f 2`
-set date    = `grep -m1 Date   $out | cut -d" " -f2-8,10`
+set procs   = `grep processors tmp| cut -d" " -f 2`
+set machine = `grep Machine    tmp | cut -d":" -f 2`
+set date    = `grep -m1 Date   tmp | cut -d" " -f2-8,10`
 
-paste -d "  " .elapsedTime .exec .global .local .wait>& .data
+paste -d "  " elapsedTime exec global local wait>& data
 
 
 #__________________________________
-# extract the average and maximum values data
+# extract the imbalance data
 echo "Now extracting the Load Imbalance data"
 
-grep elap           .tmp | cut -d"=" -f4 | cut -d"," -f1 >& .elapsedTime
-grep TaskExec       .tmp | awk -F : '{print $5}'| tr -d "[:alpha:]" >& .exec
-grep TaskGlobalComm .tmp | awk -F : '{print $5}'| tr -d "[:alpha:]" >& .global
-grep TaskLocalComm  .tmp | awk -F : '{print $5}'| tr -d "[:alpha:]" >& .local
-grep TaskWaitComm   .tmp | awk -F : '{print $5}'| tr -d "[:alpha:]" >& .wait
-paste -d "  " .elapsedTime .exec .global .local .wait>& .LIBdata
+grep TaskExec       tmp | awk -F : '{print $5}'| tr -d "[:alpha:]" >& exec
+grep TaskGlobalComm tmp | awk -F : '{print $5}'| tr -d "[:alpha:]" >& global
+grep TaskLocalComm  tmp | awk -F : '{print $5}'| tr -d "[:alpha:]" >& local
+grep TaskWaitComm   tmp | awk -F : '{print $5}'| tr -d "[:alpha:]" >& wait
+paste -d "  " elapsedTime exec global local wait>& LIBdata
 
 #__________________________________
 # bulletproofing
 # - delete any lines with alphabetical letters
 # - delete any line without 5 columns
-sed '/[:alpha:]/d' .data >& .data.sed
-awk 'NF == 9 {print $1, " ", $2, " ", $3, " ", $4, " ", $5, " ", $6, " ", $7, " ", $8, " ", $9}' .data.sed >& .data
+sed '/[:alpha:]/d' data >& data.sed
+awk 'NF == 9 {print $1, " ", $2, " ", $3, " ", $4, " ", $5, " ", $6, " ", $7, " ", $8, " ", $9}' data.sed >& data
 
-rm -f .elapsedTime .exec .global .local .wait .data.sed
 
 echo "Done extracting data"
 /bin/rm gp >& /dev/null
@@ -94,7 +99,7 @@ echo "Generating the postscript file plotComp.ps and plotComp.pdf"
 cat > gp << fin
 set terminal x11 1
 set terminal postscript color solid "Times-Roman" 12
-set output "plotComp.ps"
+set output "plotTaskComm.ps"
 fin
 else
 
@@ -106,9 +111,10 @@ endif
 #__________________________________
 # generate the  plot script
 cat >> gp << fin
+
 set multiplot
-set size 1.0,0.5 # for three plots
-set origin 0.0,0.5
+set size   1.0, 0.5 # for three plots
+set origin 0.0, 0.5
 set autoscale
 set pointsize 0.9
 
@@ -117,17 +123,17 @@ set title "$date : $machine : $procs Processors \n Summed over all processors"
 set xlabel 'Elaspsed Time'
 set ylabel 'Time'
 
-plot '.data' using 1:2 t 'Task Execution'       with linespoints,\
-     '.data' using 1:4 t 'Global Comm'          with linespoints,\
-     '.data' using 1:6 t 'Local Comm'           with linespoints,\
-     '.data' using 1:8 t 'Waiting Comm'         with linespoints 
+plot 'data' using 1:2 t 'Task Execution'       with linespoints,\
+     'data' using 1:4 t 'Global Comm'          with linespoints,\
+     'data' using 1:6 t 'Local Comm'           with linespoints,\
+     'data' using 1:8 t 'Waiting Comm'         with linespoints 
      
 set origin 0.0,0.0
 set title 'Maximum over all processors'
-plot '.data' using 1:3 t 'Task Execution'       with linespoints,\
-     '.data' using 1:5 t 'Global Comm'          with linespoints,\
-     '.data' using 1:7 t 'Local Comm'           with linespoints,\
-     '.data' using 1:9 t 'Waiting Comm'         with linespoints 
+plot 'data' using 1:3 t 'Task Execution'       with linespoints,\
+     'data' using 1:5 t 'Global Comm'          with linespoints,\
+     'data' using 1:7 t 'Local Comm'           with linespoints,\
+     'data' using 1:9 t 'Waiting Comm'         with linespoints 
 
 set nomultiplot
 
@@ -156,14 +162,14 @@ cat >> gp << fin
 set autoscale
 set size 1.0,1.0
 set grid xtics ytics
-set title "$date : $machine : $procs Processors \n Load Imbalance"
+set title "$date : $machine : $procs Processors \n 100*(1-maxTime)/aveTime"
 set xlabel 'Elaspsed Time'
 set ylabel 'Percentage'
 
-plot '.LIBdata' using 1:2 t 'Task Execution'        with linespoints,\
-     '.LIBdata' using 1:3 t 'Global Comm'           with linespoints,\
-     '.LIBdata' using 1:4 t 'Local Comm'            with linespoints,\
-     '.LIBdata' using 1:5 t 'Waiting Comm'          with linespoints
+plot 'LIBdata' using 1:2 t 'Task Execution'        with linespoints,\
+     'LIBdata' using 1:3 t 'Global Comm'           with linespoints,\
+     'LIBdata' using 1:4 t 'Local Comm'            with linespoints,\
+     'LIBdata' using 1:5 t 'Waiting Comm'          with linespoints
 fin
 
 if( $hardcopy == "n") then
@@ -176,12 +182,14 @@ gnuplot gp
 
 if($hardcopy == "y" || $hardcopy == "Y") then
   echo "converting PostScript files to PDF"
-  ps2pdf plotComp.ps
+  ps2pdf plotTaskComm.ps
   ps2pdf plotLoadImbalance.ps
+  mv *.pdf ../
+  
 endif
 #__________________________________
 # clean up
-chmod g+rw gp .data .LIBdata
-rm -f gp .data .LIBdata
+
+/bin/rm -rf scraps
 
 exit

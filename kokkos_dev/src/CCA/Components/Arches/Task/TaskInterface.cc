@@ -783,6 +783,8 @@ void TaskInterface::schedule_init( const LevelP& level,
 
     Task* tsk = scinew Task( _task_name+"_initialize", this, &TaskInterface::do_init, variable_registry ); 
 
+    int var_count = 0;
+
     BOOST_FOREACH( VariableInformation &ivar, variable_registry ){ 
 
       if ( ivar.dw == OLDDW ){ 
@@ -807,11 +809,15 @@ void TaskInterface::schedule_init( const LevelP& level,
           break; 
 
       }
+      var_count++; 
     }
 
-    sched->addTask( tsk, level->eachPatch(), matls );
-  }
+    if ( var_count > 0 )
+      sched->addTask( tsk, level->eachPatch(), matls );
+    else 
+      delete tsk;
 
+  }
 }
 
 //====================================================================================
