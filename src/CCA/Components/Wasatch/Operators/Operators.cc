@@ -80,9 +80,11 @@ namespace Wasatch{
 {                                                                                                       \
   typedef SpatialOps::Particle::CellToParticle<VOLT> C2P;                                               \
   typedef SpatialOps::Particle::ParticleToCell<VOLT> P2C;                                               \
+  typedef SpatialOps::Particle::ParticlesPerCell<VOLT> PPerC;                                               \
   const SCIRun::Point low = get_low_position<VOLT>(patch);                                               \
   opDB.register_new_operator<C2P>(scinew C2P(spacing[0], low.x(), spacing[1], low.y(), spacing[2], low.z()) );\
   opDB.register_new_operator<P2C>(scinew P2C(spacing[0], low.x(), spacing[1], low.y(), spacing[2], low.z()) );\
+  opDB.register_new_operator<PPerC>(scinew PPerC(spacing[0], low.x(), spacing[1], low.y(), spacing[2], low.z()) );\
 }
 
 #define BUILD_UPWIND( VOLT )                                            \

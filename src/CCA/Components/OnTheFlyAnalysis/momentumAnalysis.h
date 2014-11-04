@@ -204,6 +204,7 @@ WARNING
     ProblemSpecP d_prob_spec;
 
     MaterialSubset* d_zeroMatl;
+    MaterialSubset* d_pressMatl;
     MaterialSet* d_zeroMatlSet;
     PatchSet* d_zeroPatch;
 
@@ -211,7 +212,8 @@ WARNING
     double d_StartTime;
     double d_StopTime;
 
-    int d_matlIndx;
+    int d_matlIndx;                      // material index.
+    int d_pressIndx;                     // pressure matl index
     MaterialSet* d_matl_set;
 
   };

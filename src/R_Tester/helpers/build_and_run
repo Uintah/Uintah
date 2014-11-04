@@ -33,6 +33,13 @@ if [ "$COMPILE" = "yes" ]; then
   chmod -R g+rwX . 
 fi
 
+if [ "$COMPILE" = "no" ]; then
+  if [ -x ${BUILDROOT}/${mode}/StandAlone/sus ]; then
+    $didCompile=1
+  fi
+  
+fi
+
 # exit if compile failed or there no tests to run
 if [ "$didCompile" != "0" -a "$NOTESTS" = "0" ]; then
   exit $didCompile

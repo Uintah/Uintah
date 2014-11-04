@@ -186,16 +186,16 @@ namespace Uintah {
         return found_match; 
       };
 
-     void sched_cellTypeInit__NEW(SchedulerP& sched,
-                                  const LevelP& level, 
-                                  const MaterialSet* matls);
+     void sched_cellTypeInit( SchedulerP& sched,
+                              const LevelP& level, 
+                              const MaterialSet* matls);
 
-     void cellTypeInit__NEW( const ProcessorGroup*,
-                             const PatchSubset* patches,
-                             const MaterialSubset*,
-                             DataWarehouse*,
-                             DataWarehouse* new_dw, 
-                             IntVector lo, IntVector hi);
+     void cellTypeInit( const ProcessorGroup*,
+                        const PatchSubset* patches,
+                        const MaterialSubset*,
+                        DataWarehouse*,
+                        DataWarehouse* new_dw, 
+                        IntVector lo, IntVector hi);
 
      void sched_computeBCArea__NEW( SchedulerP& sched,
                                     const LevelP& level, 
@@ -834,6 +834,8 @@ namespace Uintah {
       bool d_fixTemp;
       bool d_cutCells;
 
+      bool d_ignore_invalid_celltype; 
+
       IntrusionBC* _intrusionBC; 
       bool _using_new_intrusion; 
 
@@ -903,6 +905,97 @@ namespace Uintah {
     }
     return the_norm; 
   };
+
+  /** @brief Will identify a cell as a corner if it is such. Should only use 
+   *         this function for setup type operations.  Could move the xminus, etc., 
+   *         determination outside the function for slightly better performance. **/  
+  bool inline is_corner_cell( const Patch* patch, IntVector c, 
+                              IntVector lo, IntVector hi ){ 
+
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus)  != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus)  != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus)  != Patch::Neighbor;
+
+    bool is_corner = false; 
+
+    if ( xminus && yminus ){ 
+      if ( c[0] == lo.x()-1 ){ 
+        is_corner = true; 
+      }
+    }
+
+    if ( xminus && yplus ){ 
+      if ( c[0] == lo.x()-1 ){ 
+        is_corner = true; 
+      }
+    }
+
+    if ( xplus && yminus ){ 
+      if ( c[0] == hi.x() ){ 
+        is_corner = true; 
+      }
+    }
+
+    if ( xplus && yplus ){ 
+      if ( c[0] == hi.x() ){ 
+        is_corner = true; 
+      }
+    }
+
+    if ( xminus && zminus ){ 
+      if ( c[0] == lo.x()-1 ){ 
+        is_corner = true; 
+      }
+    }
+
+    if ( xminus && zplus ){ 
+      if ( c[0] == lo.x()-1 ){ 
+        is_corner = true; 
+      }
+    }
+
+    if ( xplus && zminus ){ 
+      if ( c[0] == hi.x() ){ 
+        is_corner = true; 
+      }
+    }
+
+    if ( xplus && zplus ){ 
+      if ( c[0] == hi.x() ){ 
+        is_corner = true; 
+      }
+    }
+    //---
+    if ( yminus && zminus ){ 
+      if ( c[1] == lo.y()-1 ){ 
+        is_corner = true; 
+      }
+    }
+
+    if ( yminus && zplus ){ 
+      if ( c[1] == lo.y()-1 ){ 
+        is_corner = true; 
+      }
+    }
+
+    if ( yplus && zminus ){ 
+      if ( c[1] == hi.y() ){ 
+        is_corner = true; 
+      }
+    }
+
+    if ( yplus && zplus ){ 
+      if ( c[1] == hi.y() ){ 
+        is_corner = true; 
+      }
+    }
+
+    return is_corner; 
+
+  }
 
   }; // End of class BoundaryCondition
 

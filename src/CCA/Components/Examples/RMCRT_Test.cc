@@ -23,6 +23,7 @@
  */
 #include <CCA/Components/Examples/ExamplesLabel.h>
 #include <CCA/Components/Examples/RMCRT_Test.h>
+#include <CCA/Components/Models/Radiation/RMCRT/Radiometer.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/DataArchive/DataArchive.h>
@@ -118,6 +119,8 @@ RMCRT_Test::~RMCRT_Test ( void )
 }
 
 //______________________________________________________________________
+//
+//______________________________________________________________________
 void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
                               GridP& grid,
@@ -191,10 +194,12 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
               << " inside of the <AMR> section. \n";
           throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
         }
-      } else if ( type == "RMCRT_coarseLevel" ) {  // 2 Level
+      } else if ( type == "RMCRT_coarseLevel" ) {   // 2 Level
         d_whichAlgo = coarseLevel;
       } else if ( type == "singleLevel" ) {         // 1 LEVEL
         d_whichAlgo = singleLevel;
+      } else if ( type == "radiometerOnly" ) {      // Only when radiometer is used
+        d_whichAlgo = radiometerOnly;
       }
     }
   }
@@ -297,6 +302,8 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
 }
 
 //______________________________________________________________________
+//
+//______________________________________________________________________
 void RMCRT_Test::scheduleInitialize ( const LevelP& level,
                                       SchedulerP& sched )
 {
@@ -319,6 +326,8 @@ void RMCRT_Test::scheduleInitialize ( const LevelP& level,
 }
 
 //______________________________________________________________________
+//
+//______________________________________________________________________
 void RMCRT_Test::scheduleComputeStableTimestep ( const LevelP& level, SchedulerP& scheduler )
 {
   printSchedule(level,dbg,"RMCRT_Test::scheduleComputeStableTimestep");
@@ -330,6 +339,8 @@ void RMCRT_Test::scheduleComputeStableTimestep ( const LevelP& level, SchedulerP
 
   scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
 }
+//______________________________________________________________________
+//
 //______________________________________________________________________
 void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
                                        SchedulerP& sched)
@@ -350,6 +361,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     d_RMCRT->sched_CarryForward_Var( level, sched, d_abskgLabel );
   }
 
+  Radiometer* radiometer = d_RMCRT->getRadiometer();
 
   //______________________________________________________________________
   //   D A T A   O N I O N   A P P R O A C H
@@ -417,7 +429,11 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
         const bool backoutTemp    = true;
 
         d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, d_radCalc_freq, backoutTemp );
-
+        
+        if (radiometer ){
+          radiometer->sched_initializeRadVars( level, sched, d_radCalc_freq );
+        }
+        
         d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, d_radCalc_freq );
       }
     }
@@ -449,7 +465,35 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     
     d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, d_radCalc_freq, backoutTemp );
     
+    if (radiometer ){
+      radiometer->sched_initializeRadVars( level, sched, d_radCalc_freq );
+    }
+    
     d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, d_radCalc_freq ); 
+  }
+  
+  //______________________________________________________________________
+  //   R A D I O M E T E R  
+  //  No other calculations 
+  if( d_whichAlgo == radiometerOnly ){
+    
+    Task::WhichDW temp_dw     = Task::NewDW;
+    Task::WhichDW abskg_dw    = Task::NewDW;
+    Task::WhichDW sigmaT4_dw  = Task::NewDW;
+    Task::WhichDW celltype_dw = Task::NewDW;
+    const bool includeEC      = true;
+    const bool backoutTemp    = true;
+
+    sched_initProperties( level, sched, d_radCalc_freq );
+    
+    radiometer->sched_sigmaT4( level, sched, temp_dw, d_radCalc_freq, includeEC );
+    
+    d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, d_radCalc_freq, backoutTemp );
+    
+    radiometer->sched_initializeRadVars( level, sched, d_radCalc_freq );
+
+    radiometer->sched_radiometer( level, sched, abskg_dw, sigmaT4_dw, celltype_dw, d_radCalc_freq );
+
   }
 }
 
@@ -480,6 +524,9 @@ void RMCRT_Test::scheduleRefineInterface ( const LevelP&,
 }
 
 //______________________________________________________________________
+//
+//______________________________________________________________________
+
 void RMCRT_Test::initialize (const ProcessorGroup*,
                              const PatchSubset* patches,
                              const MaterialSubset* matls,
@@ -583,6 +630,7 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
 // initialize using data from a previously run uda.
 // Execute this tasks on all levels even though the Data-onion only needs
 // needs data from the finest levels.
+//______________________________________________________________________
 void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
                                     const PatchSubset* patches,
                                     const MaterialSubset* ,
@@ -707,6 +755,7 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
 }
 //______________________________________________________________________
 //
+//______________________________________________________________________
 void RMCRT_Test::sched_initProperties( const LevelP& level,
                                         SchedulerP& sched,
                                         const int radCalc_freq )
@@ -727,6 +776,7 @@ void RMCRT_Test::sched_initProperties( const LevelP& level,
 }
 //______________________________________________________________________
 //  Initialize the properties
+//______________________________________________________________________
 void RMCRT_Test::initProperties( const ProcessorGroup* pc,
                                  const PatchSubset* patches,
                                  const MaterialSubset* matls,
@@ -834,6 +884,8 @@ void RMCRT_Test::initProperties( const ProcessorGroup* pc,
 
 
 //______________________________________________________________________
+//
+//______________________________________________________________________
 void RMCRT_Test::computeStableTimestep (const ProcessorGroup*,
                                         const PatchSubset* patches,
                                         const MaterialSubset* /*matls*/,
@@ -848,6 +900,7 @@ void RMCRT_Test::computeStableTimestep (const ProcessorGroup*,
 //______________________________________________________________________
 //
 //  This is basically the == operator from Grid.h but slightly tweaked
+//______________________________________________________________________
 void RMCRT_Test::areGridsEqual( const GridP& uda_grid,
                                 const GridP& grid)
 {
