@@ -186,8 +186,17 @@ namespace Wasatch{
         convFluxParams=convFluxParams->findNextBlock("ConvectiveFlux") )
     {
       setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, "", factory, info );
+      
       if( !isConstDensity_ ){
+        std::string dir;
+        convFluxParams->getAttribute("direction",dir);
+        const TagNames& tagNames = TagNames::self();
+        Expr::Tag convFluxTag = Expr::Tag( solnVarName_ + tagNames.convectiveflux + dir, Expr::STATE_NONE );
+        factory.cleave_from_children( factory.get_id(convFluxTag) );
+
         setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, TagNames::self().star, factory, infoStar_ );
+        Expr::Tag convFluxStarTag = Expr::Tag( solnVarName_ + tagNames.star + tagNames.convectiveflux + dir, Expr::STATE_NONE );
+        factory.cleave_from_children( factory.get_id(convFluxStarTag) );
       }
     }
   }

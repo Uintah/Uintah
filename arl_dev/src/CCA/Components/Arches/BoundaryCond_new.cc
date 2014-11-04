@@ -983,7 +983,7 @@ BoundaryCondition_new::create_masks( const ProcessorGroup* pg,
         //mask_cont.create_mask( patch, 1, face_points, BoundaryCondition_new::FIRST_NORMAL_INTERIOR); 
         mask_cont.create_mask( patch, 1, extracell_points, BoundaryCondition_new::BOUNDARY_CELL ); 
 
-        svol_boundary_faces.insert(std::make_pair(child_name,mask_cont));
+        //svol_boundary_faces.insert(std::make_pair(child_name,mask_cont));
 
       }
     }

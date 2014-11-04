@@ -56,9 +56,10 @@ Relocate::Relocate()
 
 Relocate::~Relocate()
 {
-  if(reloc_matls && reloc_matls->removeReference())
+  if(reloc_matls && reloc_matls->removeReference()) {
     delete reloc_matls;
-  for (int p=0; p < destroyMe_.size(); p++) {
+  }
+  for (size_t p = 0; p < destroyMe_.size(); p++) {
     VarLabel::destroy(destroyMe_[p]);
   }
 }
@@ -194,10 +195,10 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   // create a vector of post relocation variables
   vector<vector<const VarLabel*> > postRelocOtherLabels;
   // fill the list of post relocation variables
-  for (int m =0; m<otherLabels.size(); m++) {
+  for (size_t m = 0; m < otherLabels.size(); m++) {
     vector<const VarLabel*> tmp;
     postRelocOtherLabels.push_back(tmp);
-    for (int p=0; p<otherLabels[m].size(); p++) {
+    for (size_t p = 0; p < otherLabels[m].size(); p++) {
       const VarLabel* pVarLabel = otherLabels[m][p];
       const std::string pPostRelocVarName = pVarLabel->getName() + "+";
       const VarLabel* pPostRelocVarLabel;
@@ -954,7 +955,7 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
       for(int m = 0; m < matls->size(); m++){
         int matl = matls->get(m);
         ParticleSubset* pset = old_dw->getParticleSubset(matl, patch);
-        int numParticles     = pset->numParticles();
+        unsigned int numParticles     = pset->numParticles();
         
         constParticleVariable<Point> px;
         new_dw->get(px, reloc_old_posLabel, pset);
@@ -1324,15 +1325,15 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
   }
   
   // Finally, copy the relocated variables back into the original variables :)
-  for(int p=0;p<patches->size();p++){
+  for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
-    for(int m = 0; m<matls->size(); m++){
+    for (int m = 0; m < matls->size(); m++) {
       const int matl = matls->get(m);
       ParticleVariableBase* pPos = new_dw->getParticleVariable(reloc_new_posLabel, matl, patch);
       new_dw->put(*pPos, reloc_old_posLabel, true);
 
       // go over the list of particle variables
-      for (int i=0; i< reloc_new_labels[m].size(); i++) {
+      for (size_t i = 0; i < reloc_new_labels[m].size(); i++) {
         const VarLabel* pVarLabel = reloc_old_labels[m][i];
         const VarLabel* relocVarLabel = reloc_new_labels[m][i];
         ParticleVariableBase* pvar = new_dw->getParticleVariable(relocVarLabel,matl, patch);
@@ -1396,7 +1397,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
       for(int m = 0; m < matls->size(); m++){
         int matl = matls->get(m);
         ParticleSubset* pset = old_dw->getParticleSubset(matl, patch);
-        int numParticles     = pset->numParticles();
+        unsigned int numParticles     = pset->numParticles();
         
         constParticleVariable<Point> px;
         new_dw->get(px, reloc_old_posLabel, pset);

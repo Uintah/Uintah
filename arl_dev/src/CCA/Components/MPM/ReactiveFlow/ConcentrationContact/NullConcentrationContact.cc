@@ -89,7 +89,7 @@ void NullConcentrationContact::initializeConcentrationContact(const Patch* /*pat
 {
 }
 
-void NullThermalContact::addComputesAndRequires(Task* t,
+void NullConcentrationContact::addComputesAndRequires(Task* t,
                                             const PatchSet*,
                                             const MaterialSet*) const
 {
