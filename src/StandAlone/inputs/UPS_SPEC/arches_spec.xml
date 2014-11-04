@@ -461,6 +461,10 @@
 
       <BoundaryConditions               spec="OPTIONAL NO_DATA" > 
 
+        <ignore_invalid_celltype        spec="OPTIONAL NO_DATA"/> <!-- If present, the code will not exit with error 
+                                                                       when a celltype of 999 (invalid) is present in 
+                                                                       the simulation -->
+
         <suppress_corner_recirculation  spec="OPTIONAL NO_DATA"/> <!-- This flag zeros out corner velocity cells to try 
                                                                        to discourage artificial recirculation caused by 
                                                                        pressure and outlet boundaries. Default = false. --> 

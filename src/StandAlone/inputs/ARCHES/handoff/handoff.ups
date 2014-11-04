@@ -125,7 +125,7 @@
         <BCType id="all" label="burner_inlet" var="VelocityFileInput">
           <value>inputs/ARCHES/handoff/input/ifrf_sources/velocity_0.dat</value>
           <relative_xyz>[0,0,0]</relative_xyz>
-          <default type="Dirichlet" value="0.0"/>
+          <default type="Dirichlet" velvalue="[1.0, 0, 0]"/>
         </BCType>
         <BCType id="all" label="enthalpy" var="FromFile">
           <value>inputs/ARCHES/handoff/input/ifrf_sources/enthalpy_0.dat</value>
