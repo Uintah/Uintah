@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+  <EOS type="Murnaghan">
+    <!-- PBX 9501 Parameters -->
+    <!-- This bulk Modulus is from Changwei Xiong's PhD Thesis --> 
+    <!-- It corresponds to a K=35.9 GPa  -->
+    <k>      2.78e-11 </k>
+    <n>         7.4   </n>
+    <P0>   101325.0   </P0>
+    <rho0>   1840.0   </rho0>
+  </EOS>
+</Uintah_Include>
