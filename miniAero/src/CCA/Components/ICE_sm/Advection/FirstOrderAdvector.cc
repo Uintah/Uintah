@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/ICE/Advection/FirstOrderAdvector.h>
+#include <CCA/Components/ICE_sm/Advection/FirstOrderAdvector.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Patch.h>
@@ -175,7 +175,7 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
   if (error && !bulletProof_test) {
     std::ostringstream mesg;
     std::cout << " WARNING: ICE Advection operator Influx/Outflux volume error:"
-         << " Patch " << patch->getID()
+              << " Patch " << patch->getID()
               << ", Level " << patch->getLevel()->getIndex()<< std::endl;
   }
 }

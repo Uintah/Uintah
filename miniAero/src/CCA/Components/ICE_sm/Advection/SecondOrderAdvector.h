@@ -25,9 +25,9 @@
 #ifndef UINTAH_SECOND_ORDER_ADVECTOR_H
 #define UINTAH_SECOND_ORDER_ADVECTOR_H
 
-#include <CCA/Components/ICE/Advection/Advector.h>
+#include <CCA/Components/ICE_sm/Advection/Advector.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Components/ICE/Advection/SecondOrderBase.h>
+#include <CCA/Components/ICE_sm/Advection/SecondOrderBase.h>
 #include <Core/Disclosure/TypeDescription.h>
 
 #include <Core/Containers/StaticArray.h>

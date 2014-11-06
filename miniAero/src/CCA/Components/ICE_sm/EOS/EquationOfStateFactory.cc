@@ -22,18 +22,18 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/ICE/EOS/EquationOfStateFactory.h>
-#include <CCA/Components/ICE/EOS/IdealGas.h>
-#include <CCA/Components/ICE/EOS/HardSphereGas.h>
-#include <CCA/Components/ICE/EOS/JWL.h>
-#include <CCA/Components/ICE/EOS/TST.h>
-#include <CCA/Components/ICE/EOS/JWLC.h>
-#include <CCA/Components/ICE/EOS/Murnaghan.h>
-#include <CCA/Components/ICE/EOS/BirchMurnaghan.h>
-#include <CCA/Components/ICE/EOS/KnaussSeaWater.h>
-#include <CCA/Components/ICE/EOS/Gruneisen.h>
-#include <CCA/Components/ICE/EOS/Tillotson.h>
-#include <CCA/Components/ICE/EOS/Thomsen_Hartka_water.h>
+#include <CCA/Components/ICE_sm/EOS/EquationOfStateFactory.h>
+#include <CCA/Components/ICE_sm/EOS/IdealGas.h>
+#include <CCA/Components/ICE_sm/EOS/HardSphereGas.h>
+#include <CCA/Components/ICE_sm/EOS/JWL.h>
+#include <CCA/Components/ICE_sm/EOS/TST.h>
+#include <CCA/Components/ICE_sm/EOS/JWLC.h>
+#include <CCA/Components/ICE_sm/EOS/Murnaghan.h>
+#include <CCA/Components/ICE_sm/EOS/BirchMurnaghan.h>
+#include <CCA/Components/ICE_sm/EOS/KnaussSeaWater.h>
+#include <CCA/Components/ICE_sm/EOS/Gruneisen.h>
+#include <CCA/Components/ICE_sm/EOS/Tillotson.h>
+#include <CCA/Components/ICE_sm/EOS/Thomsen_Hartka_water.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -67,7 +67,7 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
           << "  This will cause the Equilibration pressure calculation to fail\n"
           << "  under certain circumstances.\n"
           << "  Run the octave script: \n"
-          << "    src/CCA/Components/ICE/Matlab/Murnahan.m \n"
+          << "    src/CCA/Components/ICE_sm/Matlab/Murnahan.m \n"
           << "  to see the issue. \n"
           << "______________________________________________________\n" << endl;
   }

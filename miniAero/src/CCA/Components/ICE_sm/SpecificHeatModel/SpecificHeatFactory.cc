@@ -22,12 +22,12 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/ICE/SpecificHeatModel/SpecificHeatFactory.h>
-#include <CCA/Components/ICE/SpecificHeatModel/SpecificHeat.h>
-#include <CCA/Components/ICE/SpecificHeatModel/Debye.h>
-#include <CCA/Components/ICE/SpecificHeatModel/Component.h>
-#include <CCA/Components/ICE/SpecificHeatModel/NASAPolynomial.h>
-#include <CCA/Components/ICE/SpecificHeatModel/Polynomial.h>
+#include <CCA/Components/ICE_sm/SpecificHeatModel/SpecificHeatFactory.h>
+#include <CCA/Components/ICE_sm/SpecificHeatModel/SpecificHeat.h>
+#include <CCA/Components/ICE_sm/SpecificHeatModel/Debye.h>
+#include <CCA/Components/ICE_sm/SpecificHeatModel/Component.h>
+#include <CCA/Components/ICE_sm/SpecificHeatModel/NASAPolynomial.h>
+#include <CCA/Components/ICE_sm/SpecificHeatModel/Polynomial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>

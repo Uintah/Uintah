@@ -25,7 +25,7 @@
 #ifndef UINTAH_SECOND_ORDER_BASE_H
 #define UINTAH_SECOND_ORDER_BASE_H
 
-#include <CCA/Components/ICE/Advection/Advector.h>
+#include <CCA/Components/ICE_sm/Advection/Advector.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Exceptions/InternalError.h>

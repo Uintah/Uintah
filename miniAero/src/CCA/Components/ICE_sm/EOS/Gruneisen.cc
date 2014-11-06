@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/ICE/EOS/Gruneisen.h>
+#include <CCA/Components/ICE_sm/EOS/Gruneisen.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>

@@ -24,7 +24,7 @@
 
 #ifndef UINTAH_ADVECTOR_H
 #define UINTAH_ADVECTOR_H
-#include <CCA/Components/ICE/Advection/FluxDatatypes.h>
+#include <CCA/Components/ICE_sm/Advection/FluxDatatypes.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>

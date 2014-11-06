@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/ICE/EOS/EquationOfState.h>
+#include <CCA/Components/ICE_sm/EOS/EquationOfState.h>
 
 using namespace Uintah;
 

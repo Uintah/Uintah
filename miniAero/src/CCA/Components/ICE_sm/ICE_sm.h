@@ -86,85 +86,79 @@ namespace Uintah {
       virtual void scheduleFinalizeTimestep(const LevelP& level, SchedulerP&);
 
 
-      void scheduleComputePressure(SchedulerP&,
-                                   const PatchSet*,
-                                   const MaterialSubset*,
-                                   const MaterialSet*);
+      void sched_ComputePressure(SchedulerP&,
+                                 const PatchSet*,        
+                                 const MaterialSubset*,  
+                                 const MaterialSet*);    
 
-      void scheduleComputeVel_FC(SchedulerP&,
-                                      const PatchSet*,
-                                      const MaterialSubset*,
-                                      const MaterialSubset*,
-                                      const MaterialSet*);
+      void sched_ComputeVel_FC(SchedulerP&,
+                               const PatchSet*,
+                               const MaterialSubset*,
+                               const MaterialSubset*,
+                               const MaterialSet*);
 
 
-      void scheduleComputeDelPressAndUpdatePressCC(SchedulerP&,
+      void sched_ComputeDelPressAndUpdatePressCC(SchedulerP&,
+                                                 const PatchSet*,
+                                                 const MaterialSubset*,
+                                                 const MaterialSubset*,
+                                                 const MaterialSet*);
+
+      void sched_ComputePressFC(SchedulerP&,
+                                const PatchSet*,
+                                const MaterialSubset*,
+                                const MaterialSet*);
+
+      void sched_ComputeThermoTransportProperties(SchedulerP&,
+                                                  const LevelP& level,  
+                                                  const MaterialSet*);  
+
+      void sched_VelTau_CC( SchedulerP&,
+                            const PatchSet*,       
+                            const MaterialSet* );  
+
+      void sched_ViscousShearStress( SchedulerP&,
+                                     const PatchSet*,      
+                                     const MaterialSet*);  
+
+
+      void sched_AccumulateMomentumSourceSinks(SchedulerP&,
+                                               const PatchSet*,
+                                               const MaterialSubset*,
+                                               const MaterialSubset*,
+                                               const MaterialSet*);
+
+      void sched_AccumulateEnergySourceSinks(SchedulerP&,
                                              const PatchSet*,
                                              const MaterialSubset*,
                                              const MaterialSubset*,
                                              const MaterialSet*);
 
-      void scheduleAddExchangeContributionToFCVel(SchedulerP&,
-                                            const PatchSet*,
-                                            const MaterialSubset*,
-                                            const MaterialSet*,
-                                            bool);
+      void sched_ComputeLagrangianValues(SchedulerP&,
+                                         const PatchSet*,      
+                                         const MaterialSet*);  
 
-      void scheduleComputePressFC(SchedulerP&,
-                              const PatchSet*,
-                              const MaterialSubset*,
-                              const MaterialSet*);
+      void sched_ComputeLagrangianSpecificVolume(SchedulerP&,
+                                                 const PatchSet*,        
+                                                 const MaterialSubset*,  
+                                                 const MaterialSubset*,  
+                                                 const MaterialSet*);    
 
-      void scheduleComputeThermoTransportProperties(SchedulerP&,
-                                                    const LevelP& level,
-                                                    const MaterialSet*);
+      void sched_AdvectAndAdvanceInTime(SchedulerP&,
+                                        const PatchSet*,        
+                                        const MaterialSubset*,  
+                                        const MaterialSet*);    
 
-      void scheduleVelTau_CC( SchedulerP&,
-                              const PatchSet*,
-                              const MaterialSet* );
+      void sched_ConservedtoPrimitive_Vars(SchedulerP& sched,
+                                           const PatchSet* patch_set,          
+                                           const MaterialSubset* ice_matlsub,  
+                                           const MaterialSet* ice_matls,       
+                                           const std::string& where);          
 
-      void scheduleViscousShearStress( SchedulerP&,
-                                       const PatchSet*,
-                                       const MaterialSet*);
-
-
-      void scheduleAccumulateMomentumSourceSinks(SchedulerP&,
-                                            const PatchSet*,
-                                            const MaterialSubset*,
-                                            const MaterialSubset*,
-                                            const MaterialSet*);
-
-      void scheduleAccumulateEnergySourceSinks(SchedulerP&,
-                                            const PatchSet*,
-                                            const MaterialSubset*,
-                                            const MaterialSubset*,
-                                            const MaterialSet*);
-
-      void scheduleComputeLagrangianValues(SchedulerP&,
-                                           const PatchSet*,
-                                           const MaterialSet*);
-
-      void scheduleComputeLagrangianSpecificVolume(SchedulerP&,
-                                                   const PatchSet*,
-                                                   const MaterialSubset*,
-                                                   const MaterialSubset*,
-                                                   const MaterialSet*);
-
-      void scheduleAdvectAndAdvanceInTime(SchedulerP&,
-                                          const PatchSet*,
-                                          const MaterialSubset*,
-                                          const MaterialSet*);
-
-      void scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
-                                             const PatchSet* patch_set,
-                                             const MaterialSubset* ice_matlsub,
-                                             const MaterialSet* ice_matls,
-                                             const std::string& where);
-
-      void scheduleTestConservation(SchedulerP&,
-                                    const PatchSet*,
-                                    const MaterialSubset*,
-                                    const MaterialSet*);
+      void sched_TestConservation(SchedulerP&,
+                                  const PatchSet*,        
+                                  const MaterialSubset*,  
+                                  const MaterialSet*);    
 
     public:
 
@@ -288,11 +282,6 @@ namespace Uintah {
                                            DataWarehouse*,
                                            DataWarehouse*);
 
-      void addExchangeToMomentumAndEnergy_1matl(const ProcessorGroup*,
-                                                const PatchSubset* ,
-                                                const MaterialSubset*,
-                                                DataWarehouse* ,
-                                                DataWarehouse* );
 
       template< class V, class T>
       void update_q_CC(const std::string& desc,
@@ -342,8 +331,8 @@ namespace Uintah {
       // flags
       bool d_viscousFlow;
 
-    MaterialSubset* d_press_matl;
-    MaterialSet*    d_press_matlSet;
+      MaterialSubset* d_press_matl;
+      MaterialSet*    d_press_matlSet;
 
     private:
       ICELabel* lb;
@@ -370,7 +359,6 @@ namespace Uintah {
         bool mass;
         bool momentum;
         bool energy;
-        bool exchange;
        };
        conservationTest_flags* d_conservationTest;
 

@@ -68,11 +68,10 @@ using namespace std;
 using namespace Uintah;
 
 //__________________________________
-//  To turn on normal output
-//  setenv SCI_DEBUG "ICE_NORMAL_COUT:+,ICE_DOING_COUT:+"
-//  ICE_DOING_COUT:   dumps when tasks are scheduled and performed
-//  default is OF
-static DebugStream iceCout("ICE_SM_DOING_COUT", false);
+//  To turn on internal debugging code
+//  setenv SCI_DEBUG "ICE_SM_DOING_COUT:+"
+//  ICE_DOING_COUT:   output when tasks are scheduled and performed
+static DebugStream iceCout("ICE_SM", false);
 
 
 ICE_sm::ICE_sm(const ProcessorGroup* myworld, const bool doAMR) :
@@ -83,11 +82,11 @@ ICE_sm::ICE_sm(const ProcessorGroup* myworld, const bool doAMR) :
   d_useCompatibleFluxes   = true;
   d_viscousFlow           = false;
 
-  d_EVIL_NUM                = -9.99e30;
-  d_SMALL_NUM               = 1.0e-100;
-  d_clampSpecificVolume     = false;
+  d_EVIL_NUM              = -9.99e30;  
+  d_SMALL_NUM             = 1.0e-100;  
+  d_clampSpecificVolume   = false;     
 
-  d_conservationTest         = scinew conservationTest_flags();
+  d_conservationTest      = scinew conservationTest_flags();
   d_conservationTest->onOff = false;
   d_press_matl    = 0;
   d_press_matlSet = 0;
@@ -125,9 +124,9 @@ double ICE_sm::recomputeTimestep(double current_dt)
  Function~  ICE_sm::problemSetup--
 _____________________________________________________________________*/
 void ICE_sm::problemSetup(const ProblemSpecP& prob_spec,
-                       const ProblemSpecP& restart_prob_spec,
-                       GridP& grid,
-                       SimulationStateP&   sharedState)
+                          const ProblemSpecP& restart_prob_spec,
+                          GridP& grid,
+                          SimulationStateP&   sharedState)
 {
   iceCout << d_myworld->myrank() << " Doing ICE_sm::problemSetup " << "\t\t\t ICE" << endl;
   d_sharedState = sharedState;
@@ -174,8 +173,7 @@ void ICE_sm::problemSetup(const ProblemSpecP& prob_spec,
   if (prob_spec->findBlockWithOutAttribute("MaterialProperties")){
     mat_ps = prob_spec->findBlockWithOutAttribute("MaterialProperties");
   }else if (restart_prob_spec){
-    mat_ps =
-      restart_prob_spec->findBlockWithOutAttribute("MaterialProperties");
+    mat_ps =restart_prob_spec->findBlockWithOutAttribute("MaterialProperties");
   }
 
   ProblemSpecP ice_mat_ps   = mat_ps->findBlock("ICE");
@@ -249,10 +247,12 @@ void ICE_sm::outputProblemSpec(ProblemSpecP& root_ps)
   ProblemSpecP mat_ps = 0;
   mat_ps = root->findBlockWithOutAttribute("MaterialProperties");
 
-  if (mat_ps == 0)
+  if (mat_ps == 0){
     mat_ps = root->appendChild("MaterialProperties");
-
+  }
+  
   ProblemSpecP ice_ps = mat_ps->appendChild("ICE");
+  
   for (int i = 0; i < d_sharedState->getNumICEMatls();i++) {
     ICEMaterial* mat = d_sharedState->getICEMaterial(i);
     mat->outputProblemSpec(ice_ps);
@@ -265,27 +265,26 @@ void ICE_sm::outputProblemSpec(ProblemSpecP& root_ps)
 _____________________________________________________________________*/
 void ICE_sm::scheduleInitialize(const LevelP& level,SchedulerP& sched)
 {
-  iceCout << d_myworld->myrank() << " Doing ICE_sm::scheduleInitialize \t\t\t\tL-"
-             <<level->getIndex() << endl;
+  printSchedule(level,iceCout,"ICE_sm::actuallyInitialize");
 
   Task* t = scinew Task("ICE_sm::actuallyInitialize",
                   this, &ICE_sm::actuallyInitialize);
 
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
 
-  t->computes(lb->vel_CCLabel);
-  t->computes(lb->rho_CCLabel);
-  t->computes(lb->temp_CCLabel);
-  t->computes(lb->sp_vol_CCLabel);
-  t->computes(lb->vol_frac_CCLabel);
-  t->computes(lb->rho_micro_CCLabel);
-  t->computes(lb->speedSound_CCLabel);
-  t->computes(lb->thermalCondLabel);
-  t->computes(lb->viscosityLabel);
-  t->computes(lb->gammaLabel);
-  t->computes(lb->specific_heatLabel);
-  t->computes(lb->press_CCLabel,     d_press_matl, oims);
-  t->computes(lb->initialGuessLabel, d_press_matl, oims);
+  t->computes( lb->vel_CCLabel );
+  t->computes( lb->rho_CCLabel );
+  t->computes( lb->temp_CCLabel );
+  t->computes( lb->sp_vol_CCLabel );
+  t->computes( lb->vol_frac_CCLabel );
+  t->computes( lb->rho_micro_CCLabel );
+  t->computes( lb->speedSound_CCLabel );
+  t->computes( lb->thermalCondLabel );
+  t->computes( lb->viscosityLabel );
+  t->computes( lb->gammaLabel );
+  t->computes( lb->specific_heatLabel );
+  t->computes( lb->press_CCLabel,     d_press_matl, oims );
+  t->computes( lb->initialGuessLabel, d_press_matl, oims );
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
 
   sched->addTask(t, level->eachPatch(), ice_matls);
@@ -317,14 +316,12 @@ void ICE_sm::restartInitialize()
  Function~  ICE_sm::scheduleComputeStableTimestep--
 _____________________________________________________________________*/
 void ICE_sm::scheduleComputeStableTimestep(const LevelP& level,
-                                      SchedulerP& sched)
+                                           SchedulerP& sched)
 {
-  Task* t = 0;
-  iceCout << d_myworld->myrank() << " ICE_sm::scheduleComputeStableTimestep \t\t\t\tL-"
-             <<level->getIndex() << endl;
-
-  t = scinew Task("ICE_sm::actuallyComputeStableTimestep",
-            this, &ICE_sm::actuallyComputeStableTimestep);
+  printSchedule(level,iceCout,"ICE_sm::actuallyComputeStableTimestep");
+             
+  Task* t = scinew Task("ICE_sm::actuallyComputeStableTimestep",
+                   this, &ICE_sm::actuallyComputeStableTimestep);
 
 
   Ghost::GhostType  gac = Ghost::AroundCells;
@@ -349,58 +346,56 @@ void
 ICE_sm::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   MALLOC_TRACE_TAG_SCOPE("ICE_sm::scheduleTimeAdvance()");
-  // for AMR, we need to reset the initial Delt otherwise some unsuspecting level will
-  // get the init delt when it didn't compute delt on L0.
 
-  iceCout << d_myworld->myrank() << " --------------------------------------------------------L-"
-             <<level->getIndex()<< endl;
-  iceCout << d_myworld->myrank() << " ICE_sm::scheduleTimeAdvance\t\t\t\tL-" <<level->getIndex()<< endl;
+  iceCout << d_myworld->myrank() << " --------------------------------------------------------L-"<<level->getIndex()<< endl;
+  printSchedule(level,iceCout,"ICE_sm::scheduleTimeAdvance"); 
+  
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
   const MaterialSet* all_matls = d_sharedState->allMaterials();
 
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
 
-  scheduleComputeThermoTransportProperties(sched, level,  ice_matls);
+  sched_ComputeThermoTransportProperties(sched, level,  ice_matls);
 
-  scheduleComputePressure(                sched, patches, d_press_matl,
+  sched_ComputePressure(                sched, patches, d_press_matl,
                                                           all_matls);
 
-  scheduleComputeVel_FC(                   sched, patches,ice_matls_sub,
+  sched_ComputeVel_FC(                   sched, patches,ice_matls_sub,
                                                           d_press_matl,
                                                           all_matls);
 
-  scheduleComputeDelPressAndUpdatePressCC(sched, patches,d_press_matl,
+  sched_ComputeDelPressAndUpdatePressCC(sched, patches,  d_press_matl,
                                                            ice_matls_sub,
                                                            all_matls);
 
 
-  scheduleComputePressFC(                 sched, patches, d_press_matl,
+  sched_ComputePressFC(                 sched, patches, d_press_matl,
                                                           all_matls);
 
-  scheduleVelTau_CC(                      sched, patches, ice_matls);
+  sched_VelTau_CC(                      sched, patches, ice_matls);
 
-  scheduleViscousShearStress(             sched, patches, ice_matls);
+  sched_ViscousShearStress(             sched, patches, ice_matls);
 
-  scheduleAccumulateMomentumSourceSinks(  sched, patches, d_press_matl,
+  sched_AccumulateMomentumSourceSinks(  sched, patches, d_press_matl,
                                                           ice_matls_sub,
                                                           all_matls);
 
-  scheduleAccumulateEnergySourceSinks(    sched, patches, ice_matls_sub,
+  sched_AccumulateEnergySourceSinks(    sched, patches, ice_matls_sub,
                                                           d_press_matl,
                                                           all_matls);
 
-  scheduleComputeLagrangianValues(        sched, patches, all_matls);
+  sched_ComputeLagrangianValues(        sched, patches, all_matls);
 
 
-  scheduleComputeLagrangianSpecificVolume(sched, patches, ice_matls_sub,
+  sched_ComputeLagrangianSpecificVolume(sched, patches, ice_matls_sub,
                                                           d_press_matl,
                                                           all_matls);
 
-  scheduleAdvectAndAdvanceInTime(         sched, patches, ice_matls_sub,
+  sched_AdvectAndAdvanceInTime(         sched, patches, ice_matls_sub,
                                                           all_matls);
 
-  scheduleConservedtoPrimitive_Vars(      sched, patches, ice_matls_sub,
+  sched_ConservedtoPrimitive_Vars(      sched, patches, ice_matls_sub,
                                                           all_matls,
                                                           "afterAdvection");
 }
@@ -412,19 +407,20 @@ void
 ICE_sm::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
 {
   iceCout << "----------------------------"<<endl;
-  iceCout << d_myworld->myrank() << " ICE_sm::scheduleFinalizeTimestep\t\t\t\t\tL-" <<level->getIndex()<< endl;
+  printSchedule(level,iceCout,"ICE_sm::scheduleFinalizeTimestep");
+  
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
   const MaterialSet* all_matls = d_sharedState->allMaterials();
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
 
 
-  scheduleConservedtoPrimitive_Vars(      sched, patches, ice_matls_sub,
-                                                          all_matls,
-                                                          "finalizeTimestep");
+  sched_ConservedtoPrimitive_Vars(      sched, patches, ice_matls_sub,
+                                                        all_matls,
+                                                       "finalizeTimestep");
 
-  scheduleTestConservation(               sched, patches, ice_matls_sub,
-                                                          all_matls);
+  sched_TestConservation(               sched, patches, ice_matls_sub,
+                                                        all_matls);
 
   iceCout << "---------------------------------------------------------"<<endl;
 }
@@ -432,16 +428,15 @@ ICE_sm::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
 /* _____________________________________________________________________
  Function~  ICE_sm::scheduleComputeThermoTransportProperties--
 _____________________________________________________________________*/
-void ICE_sm::scheduleComputeThermoTransportProperties(SchedulerP& sched,
+void ICE_sm::sched_ComputeThermoTransportProperties(SchedulerP& sched,
                                 const LevelP& level,
                                 const MaterialSet* ice_matls)
 {
-  Task* t;
-  iceCout << d_myworld->myrank() << " ICE_sm::schedulecomputeThermoTransportProperties"
-             << "\t\t\tL-"<< level->getIndex()<< endl;
+  
+  printSchedule(level,iceCout,"sched_ComputeThermoTransportProperties");
 
-  t = scinew Task("ICE_sm::computeThermoTransportProperties",
-            this, &ICE_sm::computeThermoTransportProperties);
+  Task* t = scinew Task("ICE_sm::computeThermoTransportProperties",
+                  this, &ICE_sm::computeThermoTransportProperties);
 
   t->requires(Task::OldDW,lb->temp_CCLabel, ice_matls->getUnion(), Ghost::None, 0);
 
@@ -456,39 +451,36 @@ void ICE_sm::scheduleComputeThermoTransportProperties(SchedulerP& sched,
 /* _____________________________________________________________________
  Function~  ICE_sm::scheduleComputePressure--
 _____________________________________________________________________*/
-void ICE_sm::scheduleComputePressure(SchedulerP& sched,
+void ICE_sm::sched_ComputePressure(SchedulerP& sched,
                                   const PatchSet* patches,
                                   const MaterialSubset* press_matl,
                                   const MaterialSet* ice_matls)
 {
-  int levelIndex = getLevel(patches)->getIndex();
-  Task* t = 0;
+  printSchedule(patches,iceCout,"ICE_sm::sched_ComputePressure");
 
-  iceCout << d_myworld->myrank() << " ICE_sm::scheduleComputeEquilibrationPressure"
-             << "\t\t\tL-" << levelIndex<< endl;
-
-  t = scinew Task("ICE_sm::computeEquilPressure_1_matl",
-            this, &ICE_sm::computeEquilPressure_1_matl);
+  Task* t = scinew Task("ICE_sm::computeEquilPressure_1_matl",
+                 this, &ICE_sm::computeEquilPressure_1_matl);
 
 
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   Ghost::GhostType  gn = Ghost::None;
-  t->requires( Task::OldDW, lb->delTLabel, getLevel(patches));
-  t->requires( Task::OldDW, lb->press_CCLabel, press_matl, oims, gn);
-  t->requires( Task::OldDW, lb->rho_CCLabel,               gn);
-  t->requires( Task::OldDW, lb->temp_CCLabel,              gn);
-  t->requires( Task::OldDW, lb->sp_vol_CCLabel,            gn);
-  t->requires( Task::NewDW, lb->gammaLabel,                gn);
-  t->requires( Task::NewDW, lb->specific_heatLabel,        gn);
+  
+  t->requires( Task::OldDW, lb->delTLabel, getLevel(patches) );
+  t->requires( Task::OldDW, lb->press_CCLabel, press_matl, oims, gn );
+  t->requires( Task::OldDW, lb->rho_CCLabel,               gn );
+  t->requires( Task::OldDW, lb->temp_CCLabel,              gn );
+  t->requires( Task::OldDW, lb->sp_vol_CCLabel,            gn );
+  t->requires( Task::NewDW, lb->gammaLabel,                gn );
+  t->requires( Task::NewDW, lb->specific_heatLabel,        gn );
 
-  t->computes( lb->f_theta_CCLabel);
-  t->computes( lb->speedSound_CCLabel);
-  t->computes( lb->vol_frac_CCLabel);
-  t->computes( lb->sp_vol_CCLabel);
-  t->computes( lb->rho_CCLabel);
-  t->computes( lb->compressibilityLabel);
-  t->computes( lb->sumKappaLabel,        press_matl, oims);
-  t->computes( lb->press_equil_CCLabel,  press_matl, oims);
+  t->computes( lb->f_theta_CCLabel );
+  t->computes( lb->speedSound_CCLabel );
+  t->computes( lb->vol_frac_CCLabel );
+  t->computes( lb->sp_vol_CCLabel );
+  t->computes( lb->rho_CCLabel );
+  t->computes( lb->compressibilityLabel );
+  t->computes( lb->sumKappaLabel,        press_matl, oims );
+  t->computes( lb->press_equil_CCLabel,  press_matl, oims );
 
   sched->addTask(t, patches, ice_matls);
 }
@@ -496,35 +488,32 @@ void ICE_sm::scheduleComputePressure(SchedulerP& sched,
 /* _____________________________________________________________________
  Function~  ICE_sm::scheduleComputeVel_FC--
 _____________________________________________________________________*/
-void ICE_sm::scheduleComputeVel_FC(SchedulerP& sched,
+void ICE_sm::sched_ComputeVel_FC(SchedulerP& sched,
                                 const PatchSet* patches,
                                 const MaterialSubset* ice_matls,
                                 const MaterialSubset* press_matl,
                                 const MaterialSet* all_matls)
 {
-  int levelIndex = getLevel(patches)->getIndex();
-  Task* t = 0;
+  printSchedule(patches,iceCout,"ICE_sm::sched_ComputeVel_FC");
 
-  iceCout << d_myworld->myrank() << " ICE_sm::scheduleComputeVel_FC"
-             << "\t\t\t\t\tL-" << levelIndex<< endl;
-
-  t = scinew Task("ICE_sm::computeVel_FC",
-            this, &ICE_sm::computeVel_FC);
+  Task* t = scinew Task("ICE_sm::computeVel_FC", this, 
+                        &ICE_sm::computeVel_FC);
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
-  t->requires(Task::OldDW, lb->delTLabel, getLevel(patches));
-  t->requires(Task::NewDW, lb->press_equil_CCLabel, press_matl, oims, gac,1);
-  t->requires(Task::NewDW,lb->sp_vol_CCLabel,    /*all_matls*/ gac,1);
-  t->requires(Task::NewDW,lb->rho_CCLabel,       /*all_matls*/ gac,1);
-  t->requires(Task::OldDW,lb->vel_CCLabel,         ice_matls,  gac,1);
+  
+  t->requires( Task::OldDW, lb->delTLabel, getLevel(patches));
+  t->requires( Task::NewDW, lb->press_equil_CCLabel, press_matl, oims, gac,1);
+  t->requires( Task::NewDW,lb->sp_vol_CCLabel,    /*all_matls*/ gac,1);
+  t->requires( Task::NewDW,lb->rho_CCLabel,       /*all_matls*/ gac,1);
+  t->requires( Task::OldDW,lb->vel_CCLabel,         ice_matls,  gac,1);
 
-  t->computes(lb->uvel_FCLabel);
-  t->computes(lb->vvel_FCLabel);
-  t->computes(lb->wvel_FCLabel);
-  t->computes(lb->grad_P_XFCLabel);
-  t->computes(lb->grad_P_YFCLabel);
-  t->computes(lb->grad_P_ZFCLabel);
+  t->computes( lb->uvel_FCLabel );
+  t->computes( lb->vvel_FCLabel );
+  t->computes( lb->wvel_FCLabel );
+  t->computes( lb->grad_P_XFCLabel );
+  t->computes( lb->grad_P_YFCLabel );
+  t->computes( lb->grad_P_ZFCLabel );
   sched->addTask(t, patches, all_matls);
 }
 
@@ -532,19 +521,20 @@ void ICE_sm::scheduleComputeVel_FC(SchedulerP& sched,
 /* _____________________________________________________________________
  Function~  ICE_sm::scheduleComputeDelPressAndUpdatePressCC--
 _____________________________________________________________________*/
-void ICE_sm::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
+void ICE_sm::sched_ComputeDelPressAndUpdatePressCC(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSubset* press_matl,
                                             const MaterialSubset* ice_matls,
                                             const MaterialSet* matls)
 {
-  int levelIndex = getLevel(patches)->getIndex();
-  iceCout << d_myworld->myrank() << " ICE_sm::scheduleComputeDelPressAndUpdatePressCC"
-             << "\t\t\tL-"<< levelIndex<< endl;
-  Task *task = scinew Task("ICE_sm::computeDelPressAndUpdatePressCC",
-                            this, &ICE_sm::computeDelPressAndUpdatePressCC);
+  printSchedule(patches,iceCout, "ICE_sm::sched_ComputeDelPressAndUpdatePressCC");
+             
+  Task *task = scinew Task("ICE_sm::computeDelPressAndUpdatePressCC", this, 
+                           &ICE_sm::computeDelPressAndUpdatePressCC);
+                           
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn = Ghost::None;
+  
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   task->requires( Task::OldDW, lb->delTLabel,getLevel(patches));
   task->requires( Task::NewDW, lb->vol_frac_CCLabel,   gac,2);
@@ -556,6 +546,7 @@ void ICE_sm::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   task->requires( Task::NewDW, lb->speedSound_CCLabel, gn);
   task->requires( Task::NewDW, lb->sumKappaLabel,      press_matl,oims,gn);
   task->requires( Task::NewDW, lb->press_equil_CCLabel,press_matl,oims,gn);
+  
   //__________________________________
   task->computes(lb->press_CCLabel,        press_matl, oims);
   task->computes(lb->delP_DilatateLabel,   press_matl, oims);
@@ -573,14 +564,12 @@ void ICE_sm::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
 /* _____________________________________________________________________
  Function~  ICE_sm::scheduleComputePressFC--
 _____________________________________________________________________*/
-void ICE_sm::scheduleComputePressFC(SchedulerP& sched,
+void ICE_sm::sched_ComputePressFC(SchedulerP& sched,
                              const PatchSet* patches,
                              const MaterialSubset* press_matl,
                              const MaterialSet* matls)
 {
-  int levelIndex = getLevel(patches)->getIndex();
-  iceCout << d_myworld->myrank() << " ICE_sm::scheduleComputePressFC"
-             << "\t\t\t\t\tL-"<< levelIndex<< endl;
+  printSchedule(patches,iceCout, " ICE_sm::sched_ComputePressFC");
 
   Task* task = scinew Task("ICE_sm::computePressFC",
                      this, &ICE_sm::computePressFC);
@@ -600,14 +589,14 @@ void ICE_sm::scheduleComputePressFC(SchedulerP& sched,
 //______________________________________________________________________
 //
 
-void ICE_sm::scheduleVelTau_CC( SchedulerP& sched,
+void ICE_sm::sched_VelTau_CC( SchedulerP& sched,
                              const PatchSet* patches,
                              const MaterialSet* ice_matls )
 {
   if( !d_viscousFlow ){
     return;
   }
-  printSchedule(patches,iceCout,"ICE_sm::scheduleVelTau_CC");
+  printSchedule(patches,iceCout,"ICE_sm::sched_VelTau_CC");
 
   Task* t = scinew Task("ICE_sm::VelTau_CC",
                   this, &ICE_sm::VelTau_CC);
@@ -621,14 +610,12 @@ void ICE_sm::scheduleVelTau_CC( SchedulerP& sched,
 
 //______________________________________________________________________
 //
-void ICE_sm::scheduleViscousShearStress(SchedulerP& sched,
+void ICE_sm::sched_ViscousShearStress(SchedulerP& sched,
                                      const PatchSet* patches,
                                      const MaterialSet* ice_matls)
-{
-  int levelIndex = getLevel(patches)->getIndex();
-  iceCout << d_myworld->myrank() << " ICE_sm::scheduleViscousShearStress"
-             << "\t\t\t\t\tL-"<< levelIndex<< endl;
-
+{  
+  printSchedule(patches,iceCout,"ICE_sm::sched_ViscousShearStress");
+  
   Task* t = scinew Task("ICE_sm::viscousShearStress",
                   this, &ICE_sm::viscousShearStress);
 
@@ -654,25 +641,22 @@ void ICE_sm::scheduleViscousShearStress(SchedulerP& sched,
  Function~  ICE_sm::scheduleAccumulateMomentumSourceSinks--
 _____________________________________________________________________*/
 void
-ICE_sm::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
+ICE_sm::sched_AccumulateMomentumSourceSinks(SchedulerP& sched,
                                            const PatchSet* patches,
                                            const MaterialSubset* press_matl,
                                            const MaterialSubset* ice_matls,
                                            const MaterialSet* matls)
 {
-  int levelIndex = getLevel(patches)->getIndex();
-  Task* t;
-  iceCout << d_myworld->myrank() << " ICE_sm::scheduleAccumulateMomentumSourceSinks"
-             << "\t\t\tL-"<< levelIndex<< endl;
+  printSchedule(patches,iceCout,"ICE_sm::sched_AccumulateMomentumSourceSinks");
 
-  t = scinew Task("ICE_sm::accumulateMomentumSourceSinks",
-            this, &ICE_sm::accumulateMomentumSourceSinks);
+  Task* t = scinew Task("ICE_sm::accumulateMomentumSourceSinks",this, 
+                        &ICE_sm::accumulateMomentumSourceSinks);
 
-  t->requires(Task::OldDW, lb->delTLabel,getLevel(patches));
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn  = Ghost::None;
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
-
+  
+  t->requires(Task::OldDW, lb->delTLabel,getLevel(patches));
   t->requires( Task::NewDW, lb->pressX_FCLabel,   press_matl,    oims, gac, 1);
   t->requires( Task::NewDW, lb->pressY_FCLabel,   press_matl,    oims, gac, 1);
   t->requires( Task::NewDW, lb->pressZ_FCLabel,   press_matl,    oims, gac, 1);
@@ -681,31 +665,29 @@ ICE_sm::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
   t->requires( Task::NewDW, lb->vol_frac_CCLabel,    gn, 0);
 
   t->computes(lb->mom_source_CCLabel);
+  
   sched->addTask(t, patches, matls);
 }
 
 /* _____________________________________________________________________
  Function~  ICE_sm::scheduleAccumulateEnergySourceSinks--
 _____________________________________________________________________*/
-void ICE_sm::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
+void ICE_sm::sched_AccumulateEnergySourceSinks(SchedulerP& sched,
                                          const PatchSet* patches,
                                          const MaterialSubset* ice_matls,
                                          const MaterialSubset* press_matl,
                                          const MaterialSet* matls)
 
 {
-  int levelIndex = getLevel(patches)->getIndex();
-  Task* t;              // EQ
-  iceCout << d_myworld->myrank() << " ICE_sm::scheduleAccumulateEnergySourceSinks"
-             << "\t\t\tL-" << levelIndex << endl;
+  printSchedule(patches,iceCout,"ICE_sm::sched_AccumulateEnergySourceSinks");
 
-  t = scinew Task("ICE_sm::accumulateEnergySourceSinks",
-            this, &ICE_sm::accumulateEnergySourceSinks);
-
-
+  Task* t = scinew Task("ICE_sm::accumulateEnergySourceSinks",
+                  this, &ICE_sm::accumulateEnergySourceSinks);
+                  
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn  = Ghost::None;
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  
   t->requires(Task::OldDW, lb->delTLabel,getLevel(patches));
   t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims, gn);
   t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,oims, gn);
@@ -718,6 +700,7 @@ void ICE_sm::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
 
   t->computes(lb->int_eng_source_CCLabel);
   t->computes(lb->heatCond_src_CCLabel);
+  
   sched->addTask(t, patches, matls);
 }
 
@@ -725,13 +708,11 @@ void ICE_sm::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
  Function~  ICE_sm:: scheduleComputeLagrangianValues--
  Note:      Only loop over ICE materials
 _____________________________________________________________________*/
-void ICE_sm::scheduleComputeLagrangianValues(SchedulerP& sched,
+void ICE_sm::sched_ComputeLagrangianValues(SchedulerP& sched,
                                      const PatchSet* patches,
                                      const MaterialSet* ice_matls)
-{
-  int levelIndex = getLevel(patches)->getIndex();
-  iceCout << d_myworld->myrank() << " ICE_sm::scheduleComputeLagrangianValues"
-             << "\t\t\t\tL-"<< levelIndex<< endl;
+{           
+  printSchedule(patches,iceCout,"ICE_sm::sched_ComputeLagrangianValues");
 
   Task* t = scinew Task("ICE_sm::computeLagrangianValues", this,
                         &ICE_sm::computeLagrangianValues);
@@ -755,19 +736,18 @@ void ICE_sm::scheduleComputeLagrangianValues(SchedulerP& sched,
 }
 
 /* _____________________________________________________________________
- Function~  ICE_sm:: scheduleComputeLagrangianSpecificVolume--
+ Function~  ICE_sm:: sched_ComputeLagrangianSpecificVolume--
 _____________________________________________________________________*/
-void ICE_sm::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
+void ICE_sm::sched_ComputeLagrangianSpecificVolume(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSubset* ice_matls,
                                             const MaterialSubset* press_matl,
                                             const MaterialSet* matls)
 {
-  int levelIndex = getLevel(patches)->getIndex();
-  Task* t = 0;
-  iceCout << d_myworld->myrank() << " ICE_sm::scheduleComputeLagrangianSpecificVolume"
-             << "\t\t\tL-"<< levelIndex<< endl;
-  t = scinew Task("ICE_sm::computeLagrangianSpecificVolume",
+  printSchedule(patches,iceCout,"sched_ComputeLagrangianSpecificVolume");
+
+             
+  Task* t = scinew Task("ICE_sm::computeLagrangianSpecificVolume",
              this,&ICE_sm::computeLagrangianSpecificVolume);
 
   Ghost::GhostType  gn  = Ghost::None;
@@ -799,19 +779,19 @@ void ICE_sm::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
 /* _____________________________________________________________________
  Function~  ICE_sm::scheduleAdvectAndAdvanceInTime--
 _____________________________________________________________________*/
-void ICE_sm::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
+void ICE_sm::sched_AdvectAndAdvanceInTime(SchedulerP& sched,
                                     const PatchSet* patch_set,
                                     const MaterialSubset* ice_matlsub,
                                     const MaterialSet* ice_matls)
 {
-  int levelIndex = getLevel(patch_set)->getIndex();
-  iceCout << d_myworld->myrank() << " ICE_sm::scheduleAdvectAndAdvanceInTime"
-             << "\t\t\t\tL-"<< levelIndex << endl;
+  printSchedule(patch_set,iceCout,"sched_AdvectAndAdvanceInTime");
 
-  Task* task = scinew Task("ICE_sm::advectAndAdvanceInTime",
-                           this, &ICE_sm::advectAndAdvanceInTime);
+  Task* task = scinew Task("ICE_sm::advectAndAdvanceInTime",this, 
+                           &ICE_sm::advectAndAdvanceInTime);
+                           
   task->requires(Task::OldDW, lb->delTLabel,getLevel(patch_set));
   Ghost::GhostType  gac  = Ghost::AroundCells;
+  
   task->requires(Task::NewDW, lb->uvel_FCLabel,      gac,2);
   task->requires(Task::NewDW, lb->vvel_FCLabel,      gac,2);
   task->requires(Task::NewDW, lb->wvel_FCLabel,      gac,2);
@@ -832,7 +812,7 @@ void ICE_sm::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
 /* _____________________________________________________________________
  Function~  ICE_sm::scheduleConservedtoPrimitive_Vars--
 _____________________________________________________________________*/
-void ICE_sm::scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
+void ICE_sm::sched_ConservedtoPrimitive_Vars(SchedulerP& sched,
                                     const PatchSet* patch_set,
                                     const MaterialSubset* ice_matlsub,
                                     const MaterialSet* ice_matls,
@@ -858,14 +838,15 @@ void ICE_sm::scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
     fat = true;
 
   //---------------------------
-  iceCout << d_myworld->myrank() << " ICE_sm::scheduleConservedtoPrimitive_Vars"
-             << "\t\t\tL-"<< levelIndex << endl;
+  printSchedule(patch_set,iceCout,"sched_ConservedtoPrimitive_Vars");
 
   string name = "ICE_sm::conservedtoPrimitive_Vars:" + where;
 
   Task* task = scinew Task(name, this, &ICE_sm::conservedtoPrimitive_Vars);
+  
   task->requires(Task::OldDW, lb->delTLabel,getLevel(patch_set));
   Ghost::GhostType  gn   = Ghost::None;
+  
   task->requires(Task::NewDW, lb->mass_advLabel,      gn,0);
   task->requires(Task::NewDW, lb->mom_advLabel,       gn,0);
   task->requires(Task::NewDW, lb->eng_advLabel,       gn,0);
@@ -878,6 +859,7 @@ void ICE_sm::scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
 
   task->modifies(lb->rho_CCLabel,     fat);
   task->modifies(lb->sp_vol_CCLabel,  fat);
+  
   if( where == "afterAdvection"){
     task->computes(lb->temp_CCLabel);
     task->computes(lb->vel_CCLabel);
@@ -894,15 +876,15 @@ void ICE_sm::scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
 /* _____________________________________________________________________
  Function~  ICE_sm::scheduleTestConservation--
 _____________________________________________________________________*/
-void ICE_sm::scheduleTestConservation(SchedulerP& sched,
+void ICE_sm::sched_TestConservation(SchedulerP& sched,
                                    const PatchSet* patches,
                                    const MaterialSubset* ice_matls,
                                    const MaterialSet* all_matls)
 {
   int levelIndex = getLevel(patches)->getIndex();
   if(d_conservationTest->onOff && levelIndex == 0) {
-    iceCout << d_myworld->myrank() << " ICE_sm::scheduleTestConservation"
-               << "\t\t\t\t\tL-"<< levelIndex<< endl;
+  
+     printSchedule(patches,iceCout,"sched_ConservedtoPrimitive_Vars");
 
     Task* t= scinew Task("ICE_sm::TestConservation",
                    this, &ICE_sm::TestConservation);
@@ -947,8 +929,7 @@ void ICE_sm::actuallyComputeStableTimestep(const ProcessorGroup*,
   const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    iceCout << d_myworld->myrank() << " Doing Compute Stable Timestep on patch " << patch->getID()
-         << "\t\t ICE \tL-" <<level->getIndex()<< endl;
+    printTask(patches, patch, iceCout, "ICE_sm::actuallyComputeStableTimestep" );
 
     Vector dx = patch->dCell();
     double delX = dx.x();
@@ -960,6 +941,7 @@ void ICE_sm::actuallyComputeStableTimestep(const ProcessorGroup*,
     double inv_sum_invDelx_sqr = 1.0/( 1.0/(delX * delX)
                                      + 1.0/(delY * delY)
                                      + 1.0/(delZ * delZ) );
+                                     
     constCCVariable<double> speedSound, sp_vol_CC, thermalCond, viscosity;
     constCCVariable<double> cv, gamma;
     constCCVariable<Vector> vel_CC;
@@ -986,12 +968,11 @@ void ICE_sm::actuallyComputeStableTimestep(const ProcessorGroup*,
       for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;
         double speed_Sound = speedSound[c];
-        double A = d_CFL*delX/(speed_Sound +
-                                     fabs(vel_CC[c].x())+d_SMALL_NUM);
-        double B = d_CFL*delY/(speed_Sound +
-                                     fabs(vel_CC[c].y())+d_SMALL_NUM);
-        double C = d_CFL*delZ/(speed_Sound +
-                                     fabs(vel_CC[c].z())+d_SMALL_NUM);
+        
+        double A = d_CFL*delX/(speed_Sound + fabs(vel_CC[c].x())+d_SMALL_NUM);
+        double B = d_CFL*delY/(speed_Sound + fabs(vel_CC[c].y())+d_SMALL_NUM);
+        double C = d_CFL*delZ/(speed_Sound + fabs(vel_CC[c].z())+d_SMALL_NUM);
+        
         delt_CFL = std::min(A, delt_CFL);
         delt_CFL = std::min(B, delt_CFL);
         delt_CFL = std::min(C, delt_CFL);
@@ -1055,7 +1036,6 @@ void ICE_sm::actuallyInitialize(const ProcessorGroup*,
 {
   const Level* level = getLevel(patches);
   int L_indx = level->getIndex();
-
 
   //__________________________________
   // find max index of all the ICE matls
@@ -1639,7 +1619,6 @@ void ICE_sm::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     //__________________________________
     //  set boundary conditions
     setBC(press_CC, "Pressure", patch, 0, new_dw );
-
   }  // patch loop
 }
 
@@ -2361,81 +2340,6 @@ void ICE_sm::computeLagrangianSpecificVolume(const ProcessorGroup*,
     }  // end numALLMatl loop
   }  // patch loop
 
-}
-
-
-///______________________________________________________________________
-//   Single material version of momentum and heat exchange.
-//   It sets the boundary conditions.  Do this for speed
-void ICE_sm::addExchangeToMomentumAndEnergy_1matl(const ProcessorGroup*,
-                                               const PatchSubset* patches,
-                                               const MaterialSubset*,
-                                               DataWarehouse* old_dw,
-                                               DataWarehouse* new_dw)
-{
-  const Level* level = getLevel(patches);
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-
-    printTask(patches, patch, iceCout, "Doing ICE_sm::addExchangeToMomentumAndEnergy_1matl" );
-
-    delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label(),level);
-
-    CCVariable<double>  Temp_CC;
-    constCCVariable<double>  gamma;
-    constCCVariable<Vector>  mom_L;
-    constCCVariable<double>  int_eng_L;
-    constCCVariable<double>  cv;
-
-    // Create variables for the results
-    CCVariable<Vector>  mom_L_ME;
-    CCVariable<Vector>  vel_CC;
-    CCVariable<double>  int_eng_L_ME;
-    CCVariable<double>  Tdot;
-    constCCVariable<double>  mass_L;
-    constCCVariable<double>  old_temp;
-
-    Ghost::GhostType  gn = Ghost::None;
-    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(0);
-    int indx = ice_matl->getDWIndex();
-
-    old_dw->get(old_temp,  lb->temp_CCLabel,      indx, patch, gn, 0);
-    new_dw->get(cv,        lb->specific_heatLabel,indx, patch, gn, 0);
-    new_dw->get(gamma,     lb->gammaLabel,        indx, patch, gn, 0);
-    new_dw->get(mass_L,    lb->mass_L_CCLabel,    indx, patch, gn, 0);
-    new_dw->get(mom_L,     lb->mom_L_CCLabel,     indx, patch, gn, 0);
-    new_dw->get(int_eng_L, lb->int_eng_L_CCLabel, indx, patch, gn, 0);
-
-    new_dw->allocateAndPut(Tdot,        lb->Tdot_CCLabel,    indx,patch);
-    new_dw->allocateAndPut(mom_L_ME,    lb->mom_L_ME_CCLabel,indx,patch);
-    new_dw->allocateAndPut(int_eng_L_ME,lb->eng_L_ME_CCLabel,indx,patch);
-
-    new_dw->allocateTemporary(vel_CC,  patch);
-    new_dw->allocateTemporary(Temp_CC, patch);
-
-    //__________________________________
-    // Convert momenta to velocities and internal energy to Temp
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
-      IntVector c = *iter;
-      Temp_CC[c] = int_eng_L[c]/(mass_L[c]*cv[c]);
-      vel_CC[c]  = mom_L[c]/mass_L[c];
-    }
-
-    //__________________________________
-    //  Apply boundary conditions
-    setBC(vel_CC, "Velocity",   patch,             indx, new_dw);
-    setBC(Temp_CC,"Temperature",gamma, cv, patch,  indx, new_dw );
-
-    //__________________________________
-    // Convert vars. primitive-> flux
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
-      IntVector c = *iter;
-      int_eng_L_ME[c] = Temp_CC[c]*cv[c] * mass_L[c];
-      mom_L_ME[c]     = vel_CC[c]        * mass_L[c];
-      Tdot[c]         = (Temp_CC[c] - old_temp[c])/delT;
-    }
-  } //patches
 }
 
 
