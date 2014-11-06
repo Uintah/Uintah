@@ -63,6 +63,7 @@ SUBDIRS := \
         $(ARCHES)                      \
         $(MPMARCHES)                   \
         $(WASATCH)                     \
+        $(SRCDIR)/ICE_sm               \
         $(SRCDIR)/DataArchiver         \
         $(SRCDIR)/Examples             \
         $(SRCDIR)/LoadBalancers        \
