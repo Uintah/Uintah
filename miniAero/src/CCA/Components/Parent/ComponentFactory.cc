@@ -37,6 +37,7 @@
 #include <CCA/Components/ICE/AMRICE.h>
 #include <CCA/Components/ICE/ICE.h>
 #include <CCA/Components/ICE/impAMRICE.h>
+#include <CCA/Components/ICE_sm/ICE_sm.h>
 #include <CCA/Components/MPM/AMRMPM.h>
 #include <CCA/Components/MPM/ImpMPM.h>
 #include <CCA/Components/MPM/RigidMPM.h>
@@ -220,7 +221,10 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   } 
   if (sim_comp == "reduce_uda") {
     return scinew UdaReducer(world, uda);
-  } 
+  }
+  if (sim_comp == "ice_sm") {
+    return scinew ICE_sm(world);
+  }  
   throw ProblemSetupException("Unknown simulationComponent ('" + sim_comp + "'). Must specify -arches, -ice, -mpm, "
                               "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, -poisson3 or -benchmark.\n"
                               "Note: the following components were turned off at configure time: " + turned_off_options + "\n"

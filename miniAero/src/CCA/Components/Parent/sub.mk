@@ -54,6 +54,7 @@ PSELIBS := \
         $(ICE)                             \
         $(MPM)                             \
         $(MPMICE)                          \
+        $(COMPONENTS)/ICE_sm               \
         $(COMPONENTS)/Examples             \
         $(COMPONENTS)/ReduceUda            \
         $(COMPONENTS)/ProblemSpecification \
