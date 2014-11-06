@@ -21,8 +21,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-#include <CCA/Components/ICE/SpecificHeatModel/SpecificHeat.h>
-#include <CCA/Components/ICE/SpecificHeatModel/Debye.h>
+#include <CCA/Components/ICE_sm/SpecificHeatModel/SpecificHeat.h>
+#include <CCA/Components/ICE_sm/SpecificHeatModel/Debye.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>

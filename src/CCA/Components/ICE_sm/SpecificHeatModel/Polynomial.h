@@ -25,7 +25,7 @@
 #ifndef _POLYNOMIALSPECIFICHEAT_H_
 #define _POLYNOMIALSPECIFICHEAT_H_
 
-#include <CCA/Components/ICE/SpecificHeatModel/SpecificHeat.h>
+#include <CCA/Components/ICE_sm/SpecificHeatModel/SpecificHeat.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/SimulationStateP.h>
 

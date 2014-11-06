@@ -22,9 +22,9 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/ICE/Advection/AdvectionFactory.h>
-#include <CCA/Components/ICE/Advection/FirstOrderAdvector.h>
-#include <CCA/Components/ICE/Advection/SecondOrderAdvector.h>
+#include <CCA/Components/ICE_sm/Advection/AdvectionFactory.h>
+#include <CCA/Components/ICE_sm/Advection/FirstOrderAdvector.h>
+#include <CCA/Components/ICE_sm/Advection/SecondOrderAdvector.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>

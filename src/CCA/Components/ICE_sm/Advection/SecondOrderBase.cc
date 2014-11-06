@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/ICE/Advection/SecondOrderBase.h>
+#include <CCA/Components/ICE_sm/Advection/SecondOrderBase.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Patch.h>

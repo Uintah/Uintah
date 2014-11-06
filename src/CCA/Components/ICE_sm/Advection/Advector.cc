@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/ICE/Advection/Advector.h>
+#include <CCA/Components/ICE_sm/Advection/Advector.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Endian.h>
