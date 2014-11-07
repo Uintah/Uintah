@@ -47,6 +47,7 @@ using namespace SCIRun;
 class VarLabel;
 class Material; 
 class ICEMaterial;
+class oneICEMaterial;
 class MPMMaterial;
 class CZMaterial;
 class ArchesMaterial; 
@@ -121,6 +122,10 @@ public:
   void registerArchesMaterial(ArchesMaterial*);
   void registerICEMaterial(ICEMaterial*);
   void registerICEMaterial(ICEMaterial*,unsigned int index);
+  // single material ICE_sm
+  void registerOneICEMaterial(oneICEMaterial*);
+  void registerOneICEMaterial(oneICEMaterial*,unsigned int index);
+  
   void registerWasatchMaterial(WasatchMaterial*);
   void registerWasatchMaterial(WasatchMaterial*,unsigned int index);
 
@@ -160,6 +165,11 @@ public:
   ICEMaterial* getICEMaterial(int idx) const {
     return ice_matls[idx];
   }
+
+  oneICEMaterial* getOneICEMaterial(int idx) const {
+    return one_ice_matls[idx];
+  }
+  
   WasatchMaterial* getWasatchMaterial(int idx) const {
     return wasatch_matls[idx];
   }
@@ -288,6 +298,7 @@ private:
   std::vector<CZMaterial*>      cz_matls;
   std::vector<ArchesMaterial*>  arches_matls;
   std::vector<ICEMaterial*>     ice_matls;
+  std::vector<oneICEMaterial*>  one_ice_matls;
   std::vector<WasatchMaterial*> wasatch_matls;
   std::vector<SimpleMaterial*>  simple_matls;
 
