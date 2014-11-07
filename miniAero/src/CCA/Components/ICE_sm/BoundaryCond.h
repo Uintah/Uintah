@@ -101,7 +101,6 @@ namespace Uintah {
                    const Patch::FaceType face);
 
 /* --------------------------------------------------------------------- 
- Function~  setDirichletBC_FC--
  Purpose~   does the actual work of setting the BC for face-centered 
             velocities
  ---------------------------------------------------------------------  */
@@ -133,9 +132,8 @@ namespace Uintah {
 
 
 /* --------------------------------------------------------------------- 
- Function~  setBC--      
  Purpose~   Takes capre of face centered velocities
-            The normal components are computed in  AddExchangeContributionToFCVel.
+            The normal components are computed in  computeVel_FC
  ---------------------------------------------------------------------  */
  template<class T> 
 void setBC(T& vel_FC, 
@@ -144,7 +142,6 @@ void setBC(T& vel_FC,
            const int mat_id)      
 {
   ice_BC_FC << "--------setBCFC (SFCVariable) "<< desc<< " mat_id = " << mat_id <<std::endl;
-  Vector cell_dx = patch->dCell();
   std::string whichVel = "unknown";
   
   //__________________________________

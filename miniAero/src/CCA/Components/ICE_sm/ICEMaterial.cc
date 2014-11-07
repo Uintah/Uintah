@@ -130,7 +130,6 @@ ProblemSpecP oneICEMaterial::outputProblemSpec(ProblemSpecP& ps)
   }
   ice_ps->appendElement("dynamic_viscosity",   d_viscosity);
   ice_ps->appendElement("gamma",               d_gamma);
-  ice_ps->appendElement("includeFlowWork",     d_includeFlowWork);
   ice_ps->appendElement("tiny_rho",            d_tiny_rho);
     
   for (vector<GeometryObject*>::const_iterator it = d_geom_objs.begin();

@@ -65,11 +65,12 @@ ICE_sm::ICE_sm(const ProcessorGroup* myworld, const bool doAMR) :
 
   d_useCompatibleFluxes   = true;
   d_viscousFlow           = false;
-
+  d_gravity               = Vector(0,0,0);     // hardwired for mini app
   d_EVIL_NUM              = -9.99e30;  
   d_SMALL_NUM             = 1.0e-100;  
   d_clampSpecificVolume   = false;
-  d_matl                  = 0;         // ICE material index 
+  d_matl                  = 0;                 // ICE material index 
+        
 
   d_conservationTest      = scinew conservationTest_flags();
   d_conservationTest->onOff = false;
@@ -113,7 +114,6 @@ void ICE_sm::problemSetup(const ProblemSpecP& prob_spec,
   if(!dataArchiver){
     throw InternalError("ICE:couldn't get output port", __FILE__, __LINE__);
   }
-
 
   //__________________________________
   // Pull out from CFD-ICE section
@@ -253,8 +253,6 @@ ICE_sm::scheduleComputeStableTimestep(const LevelP& level,
   Task* t = scinew Task("ICE_sm::actuallyComputeStableTimestep",
                    this, &ICE_sm::actuallyComputeStableTimestep);
 
-
-  Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn = Ghost::None;
   const MaterialSet* ice_matls = d_sharedState->allICE_smMaterials();
 
@@ -847,7 +845,6 @@ void ICE_sm::actuallyComputeStableTimestep(const ProcessorGroup*,
     constCCVariable<double> cv, gamma;
     constCCVariable<Vector> vel_CC;
     Ghost::GhostType  gn  = Ghost::None;
-    Ghost::GhostType  gac = Ghost::AroundCells;
 
     IntVector badCell(0,0,0);
     delt_CFL  = 1000.0;
@@ -944,7 +941,6 @@ void ICE_sm::actuallyInitialize(const ProcessorGroup*,
 
     printTask(patches, patch, iceCout, "Doing ICE_sm::actuallyInitialize" );
 
-    Vector grav = getGravity();
     CCVariable<double>  rho_micro;
     CCVariable<double>  sp_vol_CC;
     CCVariable<double>  rho_CC;
@@ -955,7 +951,6 @@ void ICE_sm::actuallyInitialize(const ProcessorGroup*,
     CCVariable<double>  cv;
     CCVariable<double>  gamma;
     CCVariable<double>  press_CC, vol_frac_sum;
-
 
     new_dw->allocateTemporary(vol_frac_sum,patch);
     vol_frac_sum.initialize(0.0);
@@ -1205,15 +1200,9 @@ void ICE_sm::computeVelFace(int dir,
                             constCCVariable<Vector>& vel_CC,                     
                             constCCVariable<double>& press_CC,                   
                             T& vel_FC,                                           
-                            T& grad_P_FC,                                        
-                            bool include_acc)                                    
+                            T& grad_P_FC)                                    
 {
   double inv_dx = 1.0/dx;
-
-  double one_or_zero=1.;
-  if(!include_acc){
-    one_or_zero=0.0;
-  }
 
   for(;!it.done(); it++){
     IntVector R = *it;
@@ -1244,7 +1233,7 @@ void ICE_sm::computeVelFace(int dir,
     // gravity term
     double term3 =  delT * gravity;
 
-    vel_FC[R] = term1 - one_or_zero*term2 + one_or_zero*term3;
+    vel_FC[R] = term1 - term2 + term3;
   }
 }
 
@@ -1295,10 +1284,9 @@ void ICE_sm::computeVel_FC(const ProcessorGroup*,
     new_dw->allocateAndPut(grad_P_YFC, lb->grad_P_YFCLabel, indx, patch);
     new_dw->allocateAndPut(grad_P_ZFC, lb->grad_P_ZFCLabel, indx, patch);
 
-    IntVector lowIndex(patch->getExtraSFCXLowIndex());
-    uvel_FC.initialize(0.0, lowIndex,patch->getExtraSFCXHighIndex());
-    vvel_FC.initialize(0.0, lowIndex,patch->getExtraSFCYHighIndex());
-    wvel_FC.initialize(0.0, lowIndex,patch->getExtraSFCZHighIndex());
+    uvel_FC.initialize( 0.0);
+    vvel_FC.initialize( 0.0);
+    wvel_FC.initialize( 0.0);
 
     grad_P_XFC.initialize(0.0);
     grad_P_YFC.initialize(0.0);
@@ -1313,28 +1301,28 @@ void ICE_sm::computeVel_FC(const ProcessorGroup*,
     CellIterator YFC_iterator = patch->getSFCYIterator();
     CellIterator ZFC_iterator = patch->getSFCZIterator();
 
-    bool include_acc = true;
-
     //__________________________________
     //  Compute vel_FC for each face
     computeVelFace<SFCXVariable<double> >(0, XFC_iterator,
                                      adj_offset[0],dx[0],delT,gravity[0],
                                      rho_CC,sp_vol_CC,vel_CC,press_CC,
-                                     uvel_FC, grad_P_XFC, include_acc);
+                                     uvel_FC, grad_P_XFC );
 
     computeVelFace<SFCYVariable<double> >(1, YFC_iterator,
                                      adj_offset[1],dx[1],delT,gravity[1],
                                      rho_CC,sp_vol_CC,vel_CC,press_CC,
-                                     vvel_FC, grad_P_YFC, include_acc);
+                                     vvel_FC, grad_P_YFC );
 
     computeVelFace<SFCZVariable<double> >(2, ZFC_iterator,
                                      adj_offset[2],dx[2],delT,gravity[2],
                                      rho_CC,sp_vol_CC,vel_CC,press_CC,
-                                     wvel_FC, grad_P_ZFC, include_acc);
+                                     wvel_FC, grad_P_ZFC );
 
-    //__________________________________
-    // (*)vel_FC BC are updated in
-    // ICE_sm::addExchangeContributionToFCVel()
+    //________________________________
+    //  Boundary Conditons 
+    setBC<SFCXVariable<double> >(uvel_FC, "Velocity", patch, indx); 
+    setBC<SFCYVariable<double> >(vvel_FC, "Velocity", patch, indx);
+    setBC<SFCZVariable<double> >(wvel_FC, "Velocity", patch, indx);
   }  // patch loop
 }
 
@@ -1456,15 +1444,6 @@ void ICE_sm::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     }
     
     delete advector;
-
-    //__________________________________
-    //  add delP to press_equil
-    //  AMR:  hit the extra cells, BC aren't set an you need a valid pressure there
-    // THIS COULD BE TROUBLE
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) {
-      IntVector c = *iter;
-      press_CC[c] = press_equil[c];
-    }
 
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
