@@ -95,9 +95,6 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
                         advectVarBasket* VB)
 
 {
-
-
-  cout << "//__________________________________" << endl;
   Vector dx = patch->dCell();
   double vol = dx.x()*dx.y()*dx.z();
   double delY_top, delY_bottom,delX_right, delX_left, delZ_front, delZ_back;

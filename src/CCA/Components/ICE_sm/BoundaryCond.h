@@ -53,44 +53,27 @@ namespace Uintah {
   
   //__________________________________
   //  Temperature, pressure and other CCVariables
-   void setBC(CCVariable<double>& var,     
-                      const std::string& type,
-                      const CCVariable<double>&gamma,
-                      const CCVariable<double>&cv, 
-                      const Patch* patch,  
-                      const int mat_id,
-                      DataWarehouse* new_dw);
-            
-   void setBC(CCVariable<double>& var,     
-                      const std::string& type,     // stub function
-                      const Patch* patch,  
-                      const int mat_id,
-                      DataWarehouse* new_dw); 
-  //__________________________________
-  //  P R E S S U R E                     
-   void setBC(CCVariable<double>& press_CC,          
-                      const std::string& kind,       // stub function 
-                      const Patch* p, 
-                      const int mat_id, 
-                      DataWarehouse* new_dw);
+   void setBC( CCVariable<double>& var,     
+               const std::string& type,       
+               const Patch* patch,            
+               const int mat_id );            
              
   //__________________________________
   //    V E C T O R   
-   void setBC(CCVariable<Vector>& variable,
-              const std::string& type,
-              const Patch* patch,
-              const int mat_id,
-              DataWarehouse* new_dw);
+   void setBC( CCVariable<Vector>& variable,
+               const std::string& type,
+               const Patch* patch,
+               const int mat_id );
 
   //__________________________________
   //    SPECIFC VOLUME
    void setSpecificVolBC(CCVariable<double>& sp_vol,
-                                 const std::string& kind,
-                                 const bool isMassSp_vol,
-                                 constCCVariable<double> rho_CC,
-                                 constCCVariable<double> vol_frac,
-                                 const Patch* patch,
-                                 const int mat_id);
+                         const std::string& kind,                 
+                         const bool isMassSp_vol,                 
+                         constCCVariable<double> rho_CC,          
+                         constCCVariable<double> vol_frac,        
+                         const Patch* patch,                      
+                         const int mat_id);                       
   
   template<class T> 
   void setBC(T& variable, 
@@ -100,17 +83,17 @@ namespace Uintah {
              const int mat_id);
 
   int setSymmetryBC_CC( const Patch* patch,
-                       const Patch::FaceType face,
-                       CCVariable<Vector>& var_CC,               
-                       Iterator& bound_ptr);
+                        const Patch::FaceType face,
+                        CCVariable<Vector>& var_CC,               
+                        Iterator& bound_ptr);
 
   template<class T>
   int setDirichletBC_FC( const Patch* patch,
-                        const Patch::FaceType face,       
-                        T& vel_FC,                        
-                        Iterator& bound_ptr,                  
-                        double& value,          
-                        const std::string& whichVel);
+                         const Patch::FaceType face,       
+                         T& vel_FC,                        
+                         Iterator& bound_ptr,                  
+                         double& value,          
+                         const std::string& whichVel);
   
   
   int numFaceCells(const Patch* patch, 

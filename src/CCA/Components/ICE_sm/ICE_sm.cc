@@ -125,7 +125,6 @@ void ICE_sm::problemSetup(const ProblemSpecP& prob_spec,
   }
 
   cfd_ps->require("cfl",d_CFL);
-
   ProblemSpecP cfd_ice_ps = cfd_ps->findBlock("ICE");
   if(!cfd_ice_ps){
     throw ProblemSetupException(
@@ -204,7 +203,7 @@ _____________________________________________________________________*/
 void ICE_sm::scheduleInitialize(const LevelP& level,
                                  SchedulerP& sched)
 {
-  printSchedule(level,iceCout,"ICE_sm::actuallyInitialize");
+  printSchedule(level,iceCout,"actuallyInitialize");
 
   Task* t = scinew Task("ICE_sm::actuallyInitialize",
                   this, &ICE_sm::actuallyInitialize);
@@ -249,7 +248,7 @@ void
 ICE_sm::scheduleComputeStableTimestep(const LevelP& level,
                                       SchedulerP& sched)
 {
-  printSchedule(level,iceCout,"ICE_sm::actuallyComputeStableTimestep");
+  printSchedule(level,iceCout,"actuallyComputeStableTimestep");
              
   Task* t = scinew Task("ICE_sm::actuallyComputeStableTimestep",
                    this, &ICE_sm::actuallyComputeStableTimestep);
@@ -259,13 +258,13 @@ ICE_sm::scheduleComputeStableTimestep(const LevelP& level,
   Ghost::GhostType  gn = Ghost::None;
   const MaterialSet* ice_matls = d_sharedState->allICE_smMaterials();
 
-  t->requires(Task::NewDW, lb->vel_CCLabel,        gac );
-  t->requires(Task::NewDW, lb->speedSound_CCLabel, gac );
-  t->requires(Task::NewDW, lb->thermalCondLabel,   gn  );
-  t->requires(Task::NewDW, lb->gammaLabel,         gn  );
-  t->requires(Task::NewDW, lb->specific_heatLabel, gn  );
-  t->requires(Task::NewDW, lb->sp_vol_CCLabel,     gn  );
-  t->requires(Task::NewDW, lb->viscosityLabel,     gn  );
+  t->requires(Task::NewDW, lb->vel_CCLabel,        gn );
+  t->requires(Task::NewDW, lb->speedSound_CCLabel, gn );
+  t->requires(Task::NewDW, lb->thermalCondLabel,   gn ); 
+  t->requires(Task::NewDW, lb->gammaLabel,         gn ); 
+  t->requires(Task::NewDW, lb->specific_heatLabel, gn ); 
+  t->requires(Task::NewDW, lb->sp_vol_CCLabel,     gn ); 
+  t->requires(Task::NewDW, lb->viscosityLabel,     gn ); 
   
   cout << " ICE_MATLS: " << *ice_matls << endl;
 
@@ -283,7 +282,7 @@ ICE_sm::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   MALLOC_TRACE_TAG_SCOPE("ICE_sm::scheduleTimeAdvance()");
 
   iceCout << d_myworld->myrank() << " --------------------------------------------------------L-"<<level->getIndex()<< endl;
-  printSchedule(level,iceCout,"ICE_sm::scheduleTimeAdvance"); 
+  printSchedule(level,iceCout,"scheduleTimeAdvance"); 
   
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* ice_matls = d_sharedState->allICE_smMaterials();
@@ -325,7 +324,7 @@ void
 ICE_sm::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
 {
   iceCout << "----------------------------"<<endl;
-  printSchedule(level,iceCout,"ICE_sm::scheduleFinalizeTimestep");
+  printSchedule(level,iceCout,"scheduleFinalizeTimestep");
   
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* ice_matls = d_sharedState->allICE_smMaterials();
@@ -371,7 +370,7 @@ ICE_sm::sched_ComputePressure(SchedulerP& sched,
                               const PatchSet* patches,
                               const MaterialSet* ice_matls)
 {
-  printSchedule(patches,iceCout,"ICE_sm::sched_ComputePressure");
+  printSchedule(patches,iceCout,"sched_ComputePressure");
 
   Task* t = scinew Task("ICE_sm::computeEquilPressure_1_matl",
                  this, &ICE_sm::computeEquilPressure_1_matl);
@@ -408,7 +407,7 @@ ICE_sm::sched_ComputeVel_FC(SchedulerP& sched,
                             const PatchSet* patches,   
                             const MaterialSet* all_matls)        
 {
-  printSchedule(patches,iceCout,"ICE_sm::sched_ComputeVel_FC");
+  printSchedule(patches,iceCout,"sched_ComputeVel_FC");
 
   Task* t = scinew Task("ICE_sm::computeVel_FC", this, 
                         &ICE_sm::computeVel_FC);
@@ -440,7 +439,7 @@ ICE_sm::sched_ComputeDelPressAndUpdatePressCC(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls)
 {
-  printSchedule(patches,iceCout, "ICE_sm::sched_ComputeDelPressAndUpdatePressCC");
+  printSchedule(patches,iceCout, "sched_ComputeDelPressAndUpdatePressCC");
              
   Task *task = scinew Task("ICE_sm::computeDelPressAndUpdatePressCC", this, 
                            &ICE_sm::computeDelPressAndUpdatePressCC);
@@ -480,7 +479,7 @@ ICE_sm::sched_ComputePressFC(SchedulerP& sched,
                              const PatchSet* patches,
                              const MaterialSet* matls)
 {
-  printSchedule(patches,iceCout, " ICE_sm::sched_ComputePressFC");
+  printSchedule(patches,iceCout, "sched_ComputePressFC");
 
   Task* task = scinew Task("ICE_sm::computePressFC",
                      this, &ICE_sm::computePressFC);
@@ -508,7 +507,7 @@ ICE_sm::sched_VelTau_CC( SchedulerP& sched,
   if( !d_viscousFlow ){
     return;
   }
-  printSchedule(patches,iceCout,"ICE_sm::sched_VelTau_CC");
+  printSchedule(patches,iceCout,"sched_VelTau_CC");
 
   Task* t = scinew Task("ICE_sm::VelTau_CC",
                   this, &ICE_sm::VelTau_CC);
@@ -528,7 +527,7 @@ ICE_sm::sched_ViscousShearStress(SchedulerP& sched,
                                  const PatchSet* patches,         
                                  const MaterialSet* ice_matls)    
 {  
-  printSchedule(patches,iceCout,"ICE_sm::sched_ViscousShearStress");
+  printSchedule(patches,iceCout,"sched_ViscousShearStress");
   
   Task* t = scinew Task("ICE_sm::viscousShearStress",
                   this, &ICE_sm::viscousShearStress);
@@ -559,7 +558,7 @@ ICE_sm::sched_AccumulateMomentumSourceSinks(SchedulerP& sched,
                                            const PatchSet* patches,
                                            const MaterialSet* matls)
 {
-  printSchedule(patches,iceCout,"ICE_sm::sched_AccumulateMomentumSourceSinks");
+  printSchedule(patches,iceCout,"sched_AccumulateMomentumSourceSinks");
 
   Task* t = scinew Task("ICE_sm::accumulateMomentumSourceSinks",this, 
                         &ICE_sm::accumulateMomentumSourceSinks);
@@ -589,7 +588,7 @@ ICE_sm::sched_AccumulateEnergySourceSinks(SchedulerP& sched,
                                          const MaterialSet* matls)
 
 {
-  printSchedule(patches,iceCout,"ICE_sm::sched_AccumulateEnergySourceSinks");
+  printSchedule(patches,iceCout,"sched_AccumulateEnergySourceSinks");
 
   Task* t = scinew Task("ICE_sm::accumulateEnergySourceSinks",
                   this, &ICE_sm::accumulateEnergySourceSinks);
@@ -621,7 +620,7 @@ ICE_sm::sched_ComputeLagrangianValues(SchedulerP& sched,
                                      const PatchSet* patches,
                                      const MaterialSet* ice_matls)
 {           
-  printSchedule(patches,iceCout,"ICE_sm::sched_ComputeLagrangianValues");
+  printSchedule(patches,iceCout,"sched_ComputeLagrangianValues");
 
   Task* t = scinew Task("ICE_sm::computeLagrangianValues", this,
                         &ICE_sm::computeLagrangianValues);
@@ -858,13 +857,13 @@ void ICE_sm::actuallyComputeStableTimestep(const ProcessorGroup*,
     oneICEMaterial* ice_matl = d_sharedState->getOneICEMaterial( d_matl );
     int indx = ice_matl->getDWIndex();
     
-    new_dw->get(speedSound, lb->speedSound_CCLabel, indx,patch,gac, 1);
-    new_dw->get(vel_CC,     lb->vel_CCLabel,        indx,patch,gac, 1);
-    new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gn,  0);
-    new_dw->get(viscosity,  lb->viscosityLabel,     indx,patch,gn,  0);
-    new_dw->get(thermalCond,lb->thermalCondLabel,   indx,patch,gn,  0);
-    new_dw->get(gamma,      lb->gammaLabel,         indx,patch,gn,  0);
-    new_dw->get(cv,         lb->specific_heatLabel, indx,patch,gn,  0);
+    new_dw->get(speedSound, lb->speedSound_CCLabel, indx, patch, gn, 0);
+    new_dw->get(vel_CC,     lb->vel_CCLabel,        indx, patch, gn, 0);
+    new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx, patch, gn, 0); 
+    new_dw->get(viscosity,  lb->viscosityLabel,     indx, patch, gn, 0); 
+    new_dw->get(thermalCond,lb->thermalCondLabel,   indx, patch, gn, 0); 
+    new_dw->get(gamma,      lb->gammaLabel,         indx, patch, gn, 0); 
+    new_dw->get(cv,         lb->specific_heatLabel, indx, patch, gn, 0); 
 
     for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
@@ -887,7 +886,6 @@ void ICE_sm::actuallyComputeStableTimestep(const ProcessorGroup*,
       // cout << " Aggressive delT Based on currant number "<< delt_CFL << endl;
       //__________________________________
       // stability constraint due to diffusion
-      //  I C E  O N L Y
       double thermalCond_test = ice_matl->getThermalConductivity();
       double viscosity_test   = ice_matl->getViscosity();
       if (thermalCond_test !=0 || viscosity_test !=0) {
@@ -1003,12 +1001,12 @@ void ICE_sm::actuallyInitialize(const ProcessorGroup*,
                               vol_frac_CC, vel_CC,
                               press_CC, 1, patch, new_dw);
 
-    setBC( rho_CC,     "Density",     patch, indx, new_dw );
-    setBC( rho_micro,  "Density",     patch, indx, new_dw );
-    setBC( Temp_CC,    "Temperature", patch, indx, new_dw );
-    setBC( speedSound, "zeroNeumann", patch, indx, new_dw );
-    setBC( vel_CC,     "Velocity",    patch, indx, new_dw );
-    setBC( press_CC,   "Pressure",    patch, indx, new_dw );
+    setBC( rho_CC,     "Density",     patch, indx );
+    setBC( rho_micro,  "Density",     patch, indx );
+    setBC( Temp_CC,    "Temperature", patch, indx );
+    setBC( speedSound, "zeroNeumann", patch, indx );
+    setBC( vel_CC,     "Velocity",    patch, indx );
+    setBC( press_CC,   "Pressure",    patch, indx );
 
     SpecificHeat *cvModel = ice_matl->getSpecificHeatModel();
     if(cvModel != 0) {
@@ -1188,7 +1186,7 @@ void ICE_sm::computeEquilPressure_1_matl(const ProcessorGroup*,
     }
     //__________________________________
     // - apply Boundary conditions
-    setBC(press_eq, "Pressure", patch, 0, new_dw);
+    setBC(press_eq, "Pressure", patch, indx );
 
   }  // patch loop
 }
@@ -1478,7 +1476,7 @@ void ICE_sm::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
 
     //__________________________________
     //  set boundary conditions
-    setBC(press_CC, "Pressure", patch, 0, new_dw );
+    setBC(press_CC, "Pressure", patch, indx );
   }  // patch loop
 }
 
@@ -2382,9 +2380,9 @@ void ICE_sm::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
 
     //__________________________________
     // set the boundary conditions
-    setBC(rho_CC, "Density",                patch, indx, new_dw);
-    setBC(vel_CC, "Velocity",               patch, indx, new_dw);
-    setBC(temp_CC,"Temperature",gamma, cv,  patch, indx, new_dw );
+    setBC(rho_CC, "Density",     patch, indx );           
+    setBC(vel_CC, "Velocity",    patch, indx );           
+    setBC(temp_CC,"Temperature", patch, indx );
 
     setSpecificVolBC(sp_vol_CC, "SpecificVol", false,rho_CC,vol_frac, patch, indx);
 

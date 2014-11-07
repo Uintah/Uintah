@@ -84,6 +84,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   all_mpm_matls     = 0;
   all_cz_matls      = 0;
   all_ice_matls     = 0;
+  all_ice_sm_matls  = 0;
   all_wasatch_matls = 0;  
   all_arches_matls  = 0;
   all_matls         = 0;
@@ -201,16 +202,10 @@ void SimulationState::registerICEMaterial(ICEMaterial* matl,unsigned int index)
 //
 void SimulationState::registerOneICEMaterial(oneICEMaterial* matl)
 {
-   one_ice_matls.push_back(matl);
+   one_ice_matl.push_back(matl);
    registerMaterial(matl);
 }
-//__________________________________
-//
-void SimulationState::registerOneICEMaterial(oneICEMaterial* matl,unsigned int index)
-{
-   one_ice_matls.push_back(matl);
-   registerMaterial(matl,index);
-}
+
 //__________________________________
 //
 void SimulationState::registerWasatchMaterial(WasatchMaterial* matl)
@@ -293,12 +288,13 @@ void SimulationState::finalizeMaterials()
   if (all_ice_sm_matls && all_ice_sm_matls->removeReference()){
     delete all_ice_sm_matls;
   }
+  
   all_ice_sm_matls = scinew MaterialSet();
   all_ice_sm_matls->addReference();
-  vector<int> tmp_icesm_matls(one_ice_matls.size());
+  vector<int> tmp_icesm_matls(one_ice_matl.size());
   
-  for(int i=0;i<(int)one_ice_matls.size();i++) {
-    tmp_icesm_matls[i] = one_ice_matls[i]->getDWIndex();
+  for(int i=0;i<(int)one_ice_matl.size();i++) {
+    tmp_icesm_matls[i] = one_ice_matl[i]->getDWIndex();
   }
   all_ice_sm_matls->addAll(tmp_icesm_matls);
   
@@ -397,7 +393,7 @@ void SimulationState::clearMaterials()
   cz_matls.clear();
   arches_matls.clear();
   ice_matls.clear();
-  one_ice_matls.clear();
+  one_ice_matl.clear();
   wasatch_matls.clear();
   simple_matls.clear();
   named_matls.clear();
@@ -472,8 +468,8 @@ const MaterialSet* SimulationState::allICEMaterials() const
 //
 const MaterialSet* SimulationState::allICE_smMaterials() const
 {
-  ASSERT(all_ice_matls != 0);
-  return all_ice_matls;
+  ASSERT(all_ice_sm_matls != 0);
+  return all_ice_sm_matls;
 }
 //__________________________________
 //

@@ -167,7 +167,7 @@ public:
   }
 
   oneICEMaterial* getOneICEMaterial(int idx) const {
-    return one_ice_matls[idx];
+    return one_ice_matl[idx];
   }
   
   WasatchMaterial* getWasatchMaterial(int idx) const {
@@ -299,7 +299,7 @@ private:
   std::vector<CZMaterial*>      cz_matls;
   std::vector<ArchesMaterial*>  arches_matls;
   std::vector<ICEMaterial*>     ice_matls;
-  std::vector<oneICEMaterial*>  one_ice_matls;
+  std::vector<oneICEMaterial*>  one_ice_matl;
   std::vector<WasatchMaterial*> wasatch_matls;
   std::vector<SimpleMaterial*>  simple_matls;
 
