@@ -462,7 +462,8 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
 
 
 /* --------------------------------------------------------------------- 
- Function~  BC_bulletproofing--  
+ Purpose~  Examine the input file boundary condition section
+           and check that all variables have been set  
  ---------------------------------------------------------------------  */
 void BC_bulletproofing(const ProblemSpecP& prob_spec,
                        SimulationStateP& sharedState )
@@ -476,7 +477,6 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
   Vector tagFace_plus(0,0,0);
                                
   ProblemSpecP bc_ps  = grid_ps->findBlock("BoundaryConditions");
-  int numAllMatls = sharedState->getNumMatls();
   
   // If a face is periodic then is_press_BC_set = true
   map<string,int> is_press_BC_set;
@@ -542,7 +542,7 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
       }  
       
       // specified "all" for a 1 matl problem
-      if (bc_type["id"] == "all" && numAllMatls == 1){
+      if (bc_type["id"] == "all" ){
         ostringstream warn;
         warn <<"\n__________________________________\n"   
              << "ERROR: This is a single material problem and you've specified 'BCType id = all' \n"
@@ -550,19 +550,7 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
              << "setting the boundary conditions twice on each face.  Set BCType id = '0' \n" 
              << " Face:  " << face["side"] << " BCType " << bc_type["label"]<< endl;
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-      }
-      
-      // symmetric BCs
-      if ( bc_type["label"] == "Symmetric"){
-        if (numAllMatls > 1 &&  bc_type["id"] != "all") {
-          ostringstream warn;
-          warn <<"\n__________________________________\n"   
-             << "ERROR: This is a multimaterial problem with a symmetric boundary condition\n"
-             << "You must have the id = all instead of id = "<<bc_type["id"]<<"\n"
-             << "Face:  " << face["side"] << " BCType " << bc_type["label"]<< endl;
-          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-        }
-      }  // symmetric 
+      } 
       
       // All passed tests on this face set the flags to true
       if(bc_type["label"] == "Pressure" || bc_type["label"] == "Symmetric"){
