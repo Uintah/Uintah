@@ -95,6 +95,9 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
                         advectVarBasket* VB)
 
 {
+
+
+  cout << "//__________________________________" << endl;
   Vector dx = patch->dCell();
   double vol = dx.x()*dx.y()*dx.z();
   double delY_top, delY_bottom,delX_right, delX_left, delZ_front, delZ_back;
@@ -148,7 +151,9 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
   // -set the outflux slab vol in all cells = 0.0,
   // -request that the timestep be restarted.
   // -ignore if a timestep restart has already been requested
-  bool tsr = new_dw->timestepRestarted();
+  bool tsr = new_dw->timestepRestarted(); 
+  
+  cout <<" tsr: " << tsr << " bulletProof_test: " << bulletProof_test << " error" << error << endl;
   
   if (error && bulletProof_test && !tsr) {
     vector<IntVector> badCells;

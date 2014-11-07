@@ -22,12 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-#ifdef __APPLE__
-// This is a hack.  gcc 3.3 #undefs isnan in the cmath header, which
-// make the isnan function not work.  This define makes the cmath header
-// not get included since we do not need it anyway.
-#  define _CPP_CMATH
-#endif
 #include <CCA/Components/ICE_sm/ICE_sm.h>
 #include <CCA/Components/ICE_sm/ConservationTest.h>
 #include <CCA/Components/ICE_sm/Diffusion.h>
@@ -40,26 +34,16 @@
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/DbgOutput.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/SimulationTime.h>
-#include <Core/Grid/Task.h>
-#include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/BoundaryConditions/BCUtils.h>
 
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/InvalidValue.h>
+
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-
-#include <Core/Math/FastMatrix.h>
 #include <Core/Containers/StaticArray.h>
 #include <Core/Util/DebugStream.h>
 
-#include <vector>
 #include <sstream>
 #include <iostream>
 #include <cfloat>
@@ -109,19 +93,21 @@ ICE_sm::~ICE_sm()
     delete d_press_matlSet;
   }
 }
-
+//______________________________________________________________________
+//
 bool ICE_sm::restartableTimesteps()
 {
   return true;
 }
-
+//______________________________________________________________________
+//
 double ICE_sm::recomputeTimestep(double current_dt)
 {
   return current_dt * 0.75;
 }
 
 /* _____________________________________________________________________
- Function~  ICE_sm::problemSetup--
+  Purpose~  Read in the xml file and set global variables
 _____________________________________________________________________*/
 void ICE_sm::problemSetup(const ProblemSpecP& prob_spec,
                           const ProblemSpecP& restart_prob_spec,
@@ -235,8 +221,8 @@ void ICE_sm::problemSetup(const ProblemSpecP& prob_spec,
 }
 
 /*______________________________________________________________________
- Function~  ICE_sm::outputProblemSpec--
- Purpose~   outputs material state
+ Purpose~   outputs material state during a checkpoint.  The material
+            can change
  _____________________________________________________________________*/
 void ICE_sm::outputProblemSpec(ProblemSpecP& root_ps)
 {
@@ -260,10 +246,10 @@ void ICE_sm::outputProblemSpec(ProblemSpecP& root_ps)
 }
 
 /* _____________________________________________________________________
- Function~  ICE_sm::scheduleInitialize--
- Notes:     This task actually schedules several tasks.
+    Purpose~     initialize variables
 _____________________________________________________________________*/
-void ICE_sm::scheduleInitialize(const LevelP& level,SchedulerP& sched)
+void ICE_sm::scheduleInitialize(const LevelP& level,
+                                 SchedulerP& sched)
 {
   printSchedule(level,iceCout,"ICE_sm::actuallyInitialize");
 
@@ -291,9 +277,9 @@ void ICE_sm::scheduleInitialize(const LevelP& level,SchedulerP& sched)
 }
 
 /* _____________________________________________________________________
- Function~  ICE_sm::restartInitialize--
- Purpose:   Set variables that are normally set during the initialization
-            phase, but get wiped clean when you restart
+
+  Purpose~   Set variables that are normally set during the initialization
+             phase, but get wiped clean when you restart
 _____________________________________________________________________*/
 void ICE_sm::restartInitialize()
 {
@@ -313,10 +299,11 @@ void ICE_sm::restartInitialize()
 }
 
 /* _____________________________________________________________________
- Function~  ICE_sm::scheduleComputeStableTimestep--
+    Purpose~  Compute the timestep
 _____________________________________________________________________*/
-void ICE_sm::scheduleComputeStableTimestep(const LevelP& level,
-                                           SchedulerP& sched)
+void 
+ICE_sm::scheduleComputeStableTimestep(const LevelP& level,
+                                      SchedulerP& sched)
 {
   printSchedule(level,iceCout,"ICE_sm::actuallyComputeStableTimestep");
              
@@ -339,8 +326,10 @@ void ICE_sm::scheduleComputeStableTimestep(const LevelP& level,
   t->computes(d_sharedState->get_delt_label(),level.get_rep());
   sched->addTask(t,level->eachPatch(), ice_matls);
 }
+
+
 /* _____________________________________________________________________
- Function~  ICE_sm::scheduleTimeAdvance--
+    Purpose~  Specify the scheduling of tasks in a timestep
 _____________________________________________________________________*/
 void
 ICE_sm::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
@@ -400,8 +389,8 @@ ICE_sm::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
                                                           "afterAdvection");
 }
 /* _____________________________________________________________________
- Function~  ICE_sm::scheduleFinalizeTimestep--
-  This is called after scheduleTimeAdvance and the scheduleCoarsen
+  Purpose~ This is called after scheduleTimeAdvance and the scheduleCoarsen
+           convert the conserved quantites into primitive 
 _____________________________________________________________________*/
 void
 ICE_sm::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
@@ -426,11 +415,12 @@ ICE_sm::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
 }
 
 /* _____________________________________________________________________
- Function~  ICE_sm::scheduleComputeThermoTransportProperties--
+  Purpose~  Compute the thermodynamice and transport properties
 _____________________________________________________________________*/
-void ICE_sm::sched_ComputeThermoTransportProperties(SchedulerP& sched,
-                                const LevelP& level,
-                                const MaterialSet* ice_matls)
+void 
+ICE_sm::sched_ComputeThermoTransportProperties(SchedulerP& sched,
+                                               const LevelP& level,
+                                               const MaterialSet* ice_matls)
 {
   
   printSchedule(level,iceCout,"sched_ComputeThermoTransportProperties");
@@ -449,12 +439,13 @@ void ICE_sm::sched_ComputeThermoTransportProperties(SchedulerP& sched,
 }
 
 /* _____________________________________________________________________
- Function~  ICE_sm::scheduleComputePressure--
+  Purpose~  Compute the pressure based on a equation of state
 _____________________________________________________________________*/
-void ICE_sm::sched_ComputePressure(SchedulerP& sched,
-                                  const PatchSet* patches,
-                                  const MaterialSubset* press_matl,
-                                  const MaterialSet* ice_matls)
+void 
+ICE_sm::sched_ComputePressure(SchedulerP& sched,
+                              const PatchSet* patches,
+                              const MaterialSubset* press_matl,
+                              const MaterialSet* ice_matls)
 {
   printSchedule(patches,iceCout,"ICE_sm::sched_ComputePressure");
 
@@ -486,13 +477,15 @@ void ICE_sm::sched_ComputePressure(SchedulerP& sched,
 }
 
 /* _____________________________________________________________________
- Function~  ICE_sm::scheduleComputeVel_FC--
+  Purpose~  Compute the face-centered velocities
+            also compute gradient of P for diagnostics
 _____________________________________________________________________*/
-void ICE_sm::sched_ComputeVel_FC(SchedulerP& sched,
-                                const PatchSet* patches,
-                                const MaterialSubset* ice_matls,
-                                const MaterialSubset* press_matl,
-                                const MaterialSet* all_matls)
+void 
+ICE_sm::sched_ComputeVel_FC(SchedulerP& sched,
+                            const PatchSet* patches,             
+                            const MaterialSubset* ice_matls,     
+                            const MaterialSubset* press_matl,    
+                            const MaterialSet* all_matls)        
 {
   printSchedule(patches,iceCout,"ICE_sm::sched_ComputeVel_FC");
 
@@ -511,6 +504,8 @@ void ICE_sm::sched_ComputeVel_FC(SchedulerP& sched,
   t->computes( lb->uvel_FCLabel );
   t->computes( lb->vvel_FCLabel );
   t->computes( lb->wvel_FCLabel );
+  
+  // used for diagnostics
   t->computes( lb->grad_P_XFCLabel );
   t->computes( lb->grad_P_YFCLabel );
   t->computes( lb->grad_P_ZFCLabel );
@@ -519,9 +514,10 @@ void ICE_sm::sched_ComputeVel_FC(SchedulerP& sched,
 
 
 /* _____________________________________________________________________
- Function~  ICE_sm::scheduleComputeDelPressAndUpdatePressCC--
+  Purpose~  Compute change in pressure and update the pressure
 _____________________________________________________________________*/
-void ICE_sm::sched_ComputeDelPressAndUpdatePressCC(SchedulerP& sched,
+void 
+ICE_sm::sched_ComputeDelPressAndUpdatePressCC(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSubset* press_matl,
                                             const MaterialSubset* ice_matls,
@@ -550,7 +546,6 @@ void ICE_sm::sched_ComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   //__________________________________
   task->computes(lb->press_CCLabel,        press_matl, oims);
   task->computes(lb->delP_DilatateLabel,   press_matl, oims);
-  task->computes(lb->delP_MassXLabel,      press_matl, oims);
   task->computes(lb->term2Label,           press_matl, oims);
   task->computes(lb->sum_rho_CCLabel,      press_matl, oims);
   task->computes(lb->vol_fracX_FCLabel);
@@ -562,9 +557,10 @@ void ICE_sm::sched_ComputeDelPressAndUpdatePressCC(SchedulerP& sched,
 }
 
 /* _____________________________________________________________________
- Function~  ICE_sm::scheduleComputePressFC--
+  Purpose~  Compute face-centered pressure
 _____________________________________________________________________*/
-void ICE_sm::sched_ComputePressFC(SchedulerP& sched,
+void 
+ICE_sm::sched_ComputePressFC(SchedulerP& sched,
                              const PatchSet* patches,
                              const MaterialSubset* press_matl,
                              const MaterialSet* matls)
@@ -586,12 +582,14 @@ void ICE_sm::sched_ComputePressFC(SchedulerP& sched,
   sched->addTask(task, patches, matls);
 }
 
-//______________________________________________________________________
-//
-
-void ICE_sm::sched_VelTau_CC( SchedulerP& sched,
-                             const PatchSet* patches,
-                             const MaterialSet* ice_matls )
+/* _____________________________________________________________________
+  Purpose~  Compute a CC Velocity that is used to compute the viscous
+            fluxes
+_____________________________________________________________________*/
+void 
+ICE_sm::sched_VelTau_CC( SchedulerP& sched,
+                         const PatchSet* patches,
+                         const MaterialSet* ice_matls )
 {
   if( !d_viscousFlow ){
     return;
@@ -608,11 +606,13 @@ void ICE_sm::sched_VelTau_CC( SchedulerP& sched,
   sched->addTask(t, patches, ice_matls);
 }
 
-//______________________________________________________________________
-//
-void ICE_sm::sched_ViscousShearStress(SchedulerP& sched,
-                                     const PatchSet* patches,
-                                     const MaterialSet* ice_matls)
+/*_____________________________________________________________________
+  Purpose~  Compute the viscous stress terms on each cell face
+_____________________________________________________________________*/
+void 
+ICE_sm::sched_ViscousShearStress(SchedulerP& sched,
+                                 const PatchSet* patches,         
+                                 const MaterialSet* ice_matls)    
 {  
   printSchedule(patches,iceCout,"ICE_sm::sched_ViscousShearStress");
   
@@ -637,8 +637,8 @@ void ICE_sm::sched_ViscousShearStress(SchedulerP& sched,
 }
 
 
-/* _____________________________________________________________________
- Function~  ICE_sm::scheduleAccumulateMomentumSourceSinks--
+/*_____________________________________________________________________
+ Purpose~  Accumulate the sources/sinks of momentum or the RHS
 _____________________________________________________________________*/
 void
 ICE_sm::sched_AccumulateMomentumSourceSinks(SchedulerP& sched,
@@ -670,9 +670,10 @@ ICE_sm::sched_AccumulateMomentumSourceSinks(SchedulerP& sched,
 }
 
 /* _____________________________________________________________________
- Function~  ICE_sm::scheduleAccumulateEnergySourceSinks--
+ Purpose~  Accumulate the sources/sinks of internal energy or the RHS
 _____________________________________________________________________*/
-void ICE_sm::sched_AccumulateEnergySourceSinks(SchedulerP& sched,
+void 
+ICE_sm::sched_AccumulateEnergySourceSinks(SchedulerP& sched,
                                          const PatchSet* patches,
                                          const MaterialSubset* ice_matls,
                                          const MaterialSubset* press_matl,
@@ -705,10 +706,10 @@ void ICE_sm::sched_AccumulateEnergySourceSinks(SchedulerP& sched,
 }
 
 /* _____________________________________________________________________
- Function~  ICE_sm:: scheduleComputeLagrangianValues--
- Note:      Only loop over ICE materials
+ Purpose~  Add the sources/sinks of momenta and energy to the old values
 _____________________________________________________________________*/
-void ICE_sm::sched_ComputeLagrangianValues(SchedulerP& sched,
+void 
+ICE_sm::sched_ComputeLagrangianValues(SchedulerP& sched,
                                      const PatchSet* patches,
                                      const MaterialSet* ice_matls)
 {           
@@ -738,7 +739,8 @@ void ICE_sm::sched_ComputeLagrangianValues(SchedulerP& sched,
 /* _____________________________________________________________________
  Function~  ICE_sm:: sched_ComputeLagrangianSpecificVolume--
 _____________________________________________________________________*/
-void ICE_sm::sched_ComputeLagrangianSpecificVolume(SchedulerP& sched,
+void 
+ICE_sm::sched_ComputeLagrangianSpecificVolume(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSubset* ice_matls,
                                             const MaterialSubset* press_matl,
@@ -777,9 +779,10 @@ void ICE_sm::sched_ComputeLagrangianSpecificVolume(SchedulerP& sched,
 
 
 /* _____________________________________________________________________
- Function~  ICE_sm::scheduleAdvectAndAdvanceInTime--
+  Purpose~  Advect the conserved quantities and advance
 _____________________________________________________________________*/
-void ICE_sm::sched_AdvectAndAdvanceInTime(SchedulerP& sched,
+void 
+ICE_sm::sched_AdvectAndAdvanceInTime(SchedulerP& sched,
                                     const PatchSet* patch_set,
                                     const MaterialSubset* ice_matlsub,
                                     const MaterialSet* ice_matls)
@@ -810,9 +813,10 @@ void ICE_sm::sched_AdvectAndAdvanceInTime(SchedulerP& sched,
   sched->addTask(task, patch_set, ice_matls);
 }
 /* _____________________________________________________________________
- Function~  ICE_sm::scheduleConservedtoPrimitive_Vars--
+ Purpose~  compute primitive variables from conserved quantites
 _____________________________________________________________________*/
-void ICE_sm::sched_ConservedtoPrimitive_Vars(SchedulerP& sched,
+void 
+ICE_sm::sched_ConservedtoPrimitive_Vars(SchedulerP& sched,
                                     const PatchSet* patch_set,
                                     const MaterialSubset* ice_matlsub,
                                     const MaterialSet* ice_matls,
@@ -1194,12 +1198,11 @@ void ICE_sm::actuallyInitialize(const ProcessorGroup*,
 }
 
 /* _____________________________________________________________________
- Function~  ICE_sm::computeThermoTransportProperties
- Purpose~
+      Purpose~  Compute the thermodynamic and transport properties
  _____________________________________________________________________  */
 void ICE_sm::computeThermoTransportProperties(const ProcessorGroup*,
                                               const PatchSubset* patches,
-                                              const MaterialSubset* /*ice_matls*/,
+                                              const MaterialSubset*,
                                               DataWarehouse* old_dw,
                                               DataWarehouse* new_dw)
 {
@@ -1251,8 +1254,7 @@ void ICE_sm::computeThermoTransportProperties(const ProcessorGroup*,
 
 
 /* _____________________________________________________________________
- Function~  ICE_sm::computeEquilPressure_1_matl--
- Purpose~   Simple EOS evaluation
+ Purpose~   Compute the pressure using a equation of  state evaluation
 _____________________________________________________________________*/
 void ICE_sm::computeEquilPressure_1_matl(const ProcessorGroup*,
                                       const PatchSubset* patches,
@@ -1324,22 +1326,21 @@ void ICE_sm::computeEquilPressure_1_matl(const ProcessorGroup*,
 }
 
 /* _____________________________________________________________________
- Function~  ICE_sm::computeFaceCenteredVelocities--
- Purpose~   compute the face centered velocities minus the exchange
-            contribution.
+ Purpose~   compute the face centered velocities.
 _____________________________________________________________________*/
-template<class T> void ICE_sm::computeVelFace(int dir,
-                                              CellIterator it,
-                                              IntVector adj_offset,
-                                              double dx,
-                                              double delT, double gravity,
-                                              constCCVariable<double>& rho_CC,
-                                              constCCVariable<double>& sp_vol_CC,
-                                              constCCVariable<Vector>& vel_CC,
-                                              constCCVariable<double>& press_CC,
-                                              T& vel_FC,
-                                              T& grad_P_FC,
-                                              bool include_acc)
+template<class T> 
+void ICE_sm::computeVelFace(int dir,
+                            CellIterator it,                                     
+                            IntVector adj_offset,                                
+                            double dx,                                           
+                            double delT, double gravity,                         
+                            constCCVariable<double>& rho_CC,                     
+                            constCCVariable<double>& sp_vol_CC,                  
+                            constCCVariable<Vector>& vel_CC,                     
+                            constCCVariable<double>& press_CC,                   
+                            T& vel_FC,                                           
+                            T& grad_P_FC,                                        
+                            bool include_acc)                                    
 {
   double inv_dx = 1.0/dx;
 
@@ -1480,8 +1481,6 @@ void ICE_sm::computeVel_FC(const ProcessorGroup*,
  Function~  ICE_sm::computeDelPressAndUpdatePressCC--
  Purpose~
    This function calculates the change in pressure explicitly.
- Note:  Units of delp_Dilatate and delP_MassX are [Pa]
- Reference:  Multimaterial Formalism eq. 1.5
  _____________________________________________________________________  */
 void ICE_sm::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
                                           const PatchSubset* patches,
@@ -1504,7 +1503,6 @@ void ICE_sm::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
 
     CCVariable<double> q_advected;
     CCVariable<double> delP_Dilatate;
-    CCVariable<double> delP_MassX;
     CCVariable<double> sum_rho_CC;
     CCVariable<double> press_CC;
     CCVariable<double> term1, term2;
@@ -1520,7 +1518,6 @@ void ICE_sm::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     new_dw->get(press_equil,             lb->press_equil_CCLabel,0,patch,gn,0);
     new_dw->allocateAndPut( press_CC,    lb->press_CCLabel,      0, patch);
     new_dw->allocateAndPut(delP_Dilatate,lb->delP_DilatateLabel, 0, patch);
-    new_dw->allocateAndPut(delP_MassX,   lb->delP_MassXLabel,    0, patch);
     new_dw->allocateAndPut(term2,        lb->term2Label,         0, patch);
     new_dw->allocateAndPut(sum_rho_CC,   lb->sum_rho_CCLabel,    0, patch);
 
@@ -1531,7 +1528,6 @@ void ICE_sm::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     term2.initialize(0.);
     sum_rho_CC.initialize(0.0);
     delP_Dilatate.initialize(0.0);
-    delP_MassX.initialize(0.0);
 
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
@@ -1609,11 +1605,9 @@ void ICE_sm::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
       double inv_sumKappa = 1.0/sumKappa[c];
-      delP_MassX[c]    =  term1[c] * inv_sumKappa;
       delP_Dilatate[c] = -term2[c] * inv_sumKappa;
-      press_CC[c]      =  press_equil[c] + delP_MassX[c] + delP_Dilatate[c];
+      press_CC[c]      =  press_equil[c]  + delP_Dilatate[c];
       press_CC[c]      = max(1.0e-12, press_CC[c]);  // CLAMP
-//      delP_Dilatate[c] = press_CC[c] - delP_MassX[c] - press_equil[c];
     }
 
     //__________________________________
@@ -1623,17 +1617,17 @@ void ICE_sm::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
 }
 
 /* _____________________________________________________________________
- Function~  ICE_sm::computePressFC--
  Purpose~
     This function calculates the face centered pressure on each of the
     cell faces for every cell in the computational domain and a single
     layer of ghost cells.
   _____________________________________________________________________  */
-template <class T> void ICE_sm::computePressFace(CellIterator iter,
-                                              IntVector adj_offset,
-                                              constCCVariable<double>& sum_rho,
-                                              constCCVariable<double>& press_CC,
-                                              T& press_FC)
+template <class T> 
+void ICE_sm::computePressFace(CellIterator iter,
+                              IntVector adj_offset,                             
+                              constCCVariable<double>& sum_rho,                 
+                              constCCVariable<double>& press_CC,                
+                              T& press_FC)                                      
 {
   for(;!iter.done(); iter++){
     IntVector R = *iter;
@@ -1644,8 +1638,12 @@ template <class T> void ICE_sm::computePressFace(CellIterator iter,
   }
 }
 
-//______________________________________________________________________
-//
+/* _____________________________________________________________________
+ Purpose~
+    This task calculates the face centered pressure on each of the
+    cell faces for every cell in the computational domain and a single
+    layer of ghost cells.
+  _____________________________________________________________________  */
 void ICE_sm::computePressFC(const ProcessorGroup*,
                       const PatchSubset* patches,
                       const MaterialSubset* /*matls*/,
@@ -1807,11 +1805,12 @@ void ICE_sm::VelTau_CC(const ProcessorGroup*,
 
 
 
-//______________________________________________________________________
-//
+/* _____________________________________________________________________
+ Purpose~   This task computes the viscous shear stress terms
+ _____________________________________________________________________  */
 void ICE_sm::viscousShearStress(const ProcessorGroup*,
                              const PatchSubset* patches,
-                             const MaterialSubset* /*matls*/,
+                             const MaterialSubset*,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw)
 {
@@ -1926,7 +1925,7 @@ void ICE_sm::viscousShearStress(const ProcessorGroup*,
 
 
 /* _____________________________________________________________________
- Purpose~   accumulate all of the sources/sinks of momentum
+ Purpose~   This task accumulates all of the sources/sinks of momentum
  _____________________________________________________________________  */
 void ICE_sm::accumulateMomentumSourceSinks(const ProcessorGroup*,
                                         const PatchSubset* patches,
@@ -2025,9 +2024,8 @@ void ICE_sm::accumulateMomentumSourceSinks(const ProcessorGroup*,
 }
 
 /* _____________________________________________________________________
- Function~  ICE_sm::accumulateEnergySourceSinks--
- Purpose~   This function accumulates all of the sources/sinks of energy
- Currently the kinetic energy isn't included.
+ Purpose~   This task accumulates all of the sources/sinks of energy
+            Currently the kinetic energy isn't included.
  _____________________________________________________________________  */
 void ICE_sm::accumulateEnergySourceSinks(const ProcessorGroup*,
                                   const PatchSubset* patches,
@@ -2097,7 +2095,6 @@ void ICE_sm::accumulateEnergySourceSinks(const ProcessorGroup*,
 
       //__________________________________
       //   Compute source from volume dilatation
-      //   Exclude contribution from delP_MassX
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;
         double A = vol * vol_frac[c] * kappa[c] * press_CC[c];
@@ -2109,9 +2106,7 @@ void ICE_sm::accumulateEnergySourceSinks(const ProcessorGroup*,
 }
 
 /* _____________________________________________________________________
- Function~  ICE_sm::computeLagrangianValues--
- Computes lagrangian mass momentum and energy
- Note:    Only loop over ICE materials, mom_L, massL and int_eng_L
+ Purpose~ Computes lagrangian mass momentum and energy
  _____________________________________________________________________  */
 void ICE_sm::computeLagrangianValues(const ProcessorGroup*,
                                   const PatchSubset* patches,
@@ -2166,7 +2161,7 @@ void ICE_sm::computeLagrangianValues(const ProcessorGroup*,
 
         mass_L[c]    = mass;
         mom_L[c]     = vel_CC[c] * mass + mom_source[c];
-        int_eng_L[c] = mass*cv[c] * oldTemp_CC[c] + int_eng_source[c];
+        int_eng_L[c] = mass*  cv[c] * oldTemp_CC[c] + int_eng_source[c];
 
         double temp_CC =int_eng_L[c]/(mass_L[c]*cv[c]);
         Tdot[c]      = (temp_CC - oldTemp_CC[c])/delT;
@@ -2217,6 +2212,7 @@ void ICE_sm::computeLagrangianSpecificVolume(const ProcessorGroup*,
     StaticArray<constCCVariable<double> > vol_frac(numALLMatls);
     StaticArray<constCCVariable<double> > Temp_CC(numALLMatls);
     StaticArray<CCVariable<double> > alpha(numALLMatls);
+    
     constCCVariable<double> rho_CC, f_theta, sp_vol_CC, cv;
     constCCVariable<double> delP, P;
     constCCVariable<double> TMV_CC;
@@ -2344,7 +2340,6 @@ void ICE_sm::computeLagrangianSpecificVolume(const ProcessorGroup*,
 
 
 /* _____________________________________________________________________
- Function~  ICE_sm::advectAndAdvanceInTime--
  Purpose~
    This task calculates the The cell-centered, time n+1, mass, momentum
    internal energy, sp_vol
@@ -2473,8 +2468,8 @@ void ICE_sm::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
     delete advector;
   }  // patch loop
 }
-/* _____________________________________________________________________
- Function~  ICE_sm::conservedtoPrimitive_Vars
+/*_____________________________________________________________________
+
  Purpose~ This task computes the primitive variables (rho,T,vel,sp_vol,...)
           at time n+1, from the conserved variables mass, momentum, energy...
  _____________________________________________________________________  */
@@ -2585,9 +2580,7 @@ void ICE_sm::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
   }  // patch loop
 }
 /*_______________________________________________________________________
- Function:  TestConservation--
  Purpose:   Test for conservation of mass, momentum, energy.
-            Test to see if the exchange process is conserving
 _______________________________________________________________________ */
 void ICE_sm::TestConservation(const ProcessorGroup*,
                            const PatchSubset* patches,
@@ -2743,7 +2736,6 @@ void ICE_sm::TestConservation(const ProcessorGroup*,
 }
 
 /*_____________________________________________________________________
- Function~  ICE_sm::upwindCell--
  purpose:   find the upwind cell in each direction  This is a knock off
             of Bucky's logic
  _____________________________________________________________________  */

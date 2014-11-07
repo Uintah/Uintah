@@ -43,7 +43,6 @@ SUBDIRS := $(SRCDIR)/EOS \
 include $(SCIRUN_SCRIPTS)/recurse.mk          
 
 PSELIBS := \
-       CCA/Components/OnTheFlyAnalysis \
        CCA/Ports                       \
        Core/Disclosure                 \
        Core/Exceptions                 \
@@ -56,11 +55,7 @@ PSELIBS := \
        Core/Parallel                   \
        Core/ProblemSpec                \
        Core/Thread                     \
-       Core/Util                       
-
-ifeq ($(OS_NAME),Darwin)
-  PSELIBS += CCA/Components/MPM
-endif
+       Core/Util
 
 LIBS       := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
