@@ -149,9 +149,7 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
   // -request that the timestep be restarted.
   // -ignore if a timestep restart has already been requested
   bool tsr = new_dw->timestepRestarted(); 
-  
-  cout <<" tsr: " << tsr << " bulletProof_test: " << bulletProof_test << " error" << error << endl;
-  
+    
   if (error && bulletProof_test && !tsr) {
     vector<IntVector> badCells;
     vector<fflux>  badOutflux;

@@ -70,7 +70,6 @@ class oneICEMaterial : public Material {
     double getViscosity() const;
     double getSpeedOfSound() const;
     bool   isSurroundingMatl() const;
-    bool   getIncludeFlowWork() const;
     double getSpecificHeat() const;
     double getThermalConductivity() const;
     double getInitialDensity() const;
