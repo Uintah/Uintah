@@ -49,103 +49,13 @@ using namespace Uintah;
 namespace Uintah {
 
 
-
 /* --------------------------------------------------------------------- 
- Function~  setBC-- (pressure)
- ---------------------------------------------------------------------  */
-void setBC(CCVariable<double>& press_CC,
-           const string& kind, 
-           const Patch* patch, 
-           const int mat_id,
-           DataWarehouse* new_dw)
-{
-  if(patch->hasBoundaryFaces() == false){
-    return;
-  }
-  
-  ice_BC_CC << "-------- setBC (press_CC) \t"<< kind 
-            << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << endl;
-
-
-  //__________________________________
-  //  N O N  -  L O D I
-  //__________________________________
-  // Iterate over the faces encompassing the domain
-  vector<Patch::FaceType> bf;
-  patch->getBoundaryFaces(bf);
-  
-  for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
-    Patch::FaceType face = *iter;
-    string bc_kind = "NotSet";
-    int nCells     = 0;
-   
-    Vector cell_dx = patch->dCell();
-    int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
-
-    for (int child = 0;  child < numChildren; child++) {
-      double bc_value = -9;
-      Iterator bound_ptr;
-      
-      bool foundIterator = 
-        getIteratorBCValueBCKind<double>( patch, face, child, kind, mat_id,
-                                               bc_value, bound_ptr,bc_kind); 
-      
-      if(foundIterator) {                                            
-        //__________________________________
-        // Dirichlet
-        if(bc_kind == "Dirichlet"){
-           nCells += setDirichletBC_CC<double>( press_CC, bound_ptr, bc_value);
-        }
-        //__________________________________
-        // Neumann
-        else if(bc_kind == "Neumann"){
-           nCells += setNeumannBC_CC<double >( patch, face, press_CC, bound_ptr, bc_value, cell_dx);
-        } 
-        //__________________________________
-        //  Symmetry
-        else if ( bc_kind == "symmetry" || bc_kind == "zeroNeumann" ) {
-          bc_value = 0.0;
-          nCells += setNeumannBC_CC<double >( patch, face, press_CC, bound_ptr, bc_value, cell_dx);
-        }
-        //__________________________________
-        //  debugging
-        if( BC_dbg.active() ) {
-          bound_ptr.reset();
-          BC_dbg <<"Face: "<< patch->getFaceName(face) <<"\t numCellsTouched " << nCells
-               <<"\t child " << child  <<" NumChildren "<<numChildren 
-               <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-               <<"\t bound_ptr = "<< bound_ptr<< endl;
-        }
-      } 
-    }  // child loop
-    
-    ice_BC_CC << "      "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
-                        << " nCellsTouched: " << nCells << endl;
-    //__________________________________
-    //  bulletproofing   
-    Patch::FaceIteratorType type = Patch::ExtraPlusEdgeCells;
-    int nFaceCells = numFaceCells(patch,  type, face);
-    
-    if(nCells != nFaceCells ){
-      ostringstream warn;
-      warn << "ERROR: ICE: SetBC(press_CC) Boundary conditions were not set correctly ("
-           << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
-           << " nCells Touched: " << nCells << " nCells on boundary: "<< nFaceCells << ") " << endl;
-      throw InternalError(warn.str(), __FILE__, __LINE__);
-    }
-  }  // faces loop
-}
-/* --------------------------------------------------------------------- 
- Function~  setBC--
- Purpose~   Takes care any CCvariable<double>, except Pressure
+ Purpose~   Takes care any CCvariable<double>
  ---------------------------------------------------------------------  */
 void setBC(CCVariable<double>& var_CC,
            const string& desc,
-           const CCVariable<double>& gamma,
-           const CCVariable<double>& cv,
            const Patch* patch,
-           const int mat_id,
-           DataWarehouse*)
+           const int mat_id )
 {
 
   if(patch->hasBoundaryFaces() == false){
@@ -234,14 +144,12 @@ void setBC(CCVariable<double>& var_CC,
 }
 
 /* --------------------------------------------------------------------- 
- Function~  setBC--
  Purpose~   Takes care vector boundary condition
  ---------------------------------------------------------------------  */
 void setBC(CCVariable<Vector>& var_CC,
            const string& desc,
            const Patch* patch,
-           const int mat_id,
-           DataWarehouse* )
+           const int mat_id )
 {
  if(patch->hasBoundaryFaces() == false){
     return;
