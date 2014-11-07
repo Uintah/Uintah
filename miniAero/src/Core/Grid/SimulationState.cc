@@ -236,7 +236,8 @@ void SimulationState::registerSimpleMaterial(SimpleMaterial* matl)
 //
 void SimulationState::finalizeMaterials()
 {
-                                    // MPM
+  //__________________________________
+  //                                  MPM
   if (all_mpm_matls && all_mpm_matls->removeReference()){
     delete all_mpm_matls;
   }
@@ -248,7 +249,8 @@ void SimulationState::finalizeMaterials()
   }
   all_mpm_matls->addAll(tmp_mpm_matls);
   
-                                    // Cohesive Zone
+  //__________________________________
+  //                                  Cohesive Zone
   if (all_cz_matls && all_cz_matls->removeReference()){
     delete all_cz_matls;
   }
@@ -260,7 +262,8 @@ void SimulationState::finalizeMaterials()
   }
   all_cz_matls->addAll(tmp_cz_matls);
   
-                                    // Arches Matls
+  //__________________________________
+  //                                 Arches Matls
   if (all_arches_matls && all_arches_matls->removeReference()){
     delete all_arches_matls;
   }
@@ -272,7 +275,8 @@ void SimulationState::finalizeMaterials()
   }
   all_arches_matls->addAll(tmp_arches_matls);
 
-                                    // ICE Matls
+   //__________________________________
+   //                                  ICE Matls
   if (all_ice_matls && all_ice_matls->removeReference()){
     delete all_ice_matls;
   }
@@ -284,7 +288,22 @@ void SimulationState::finalizeMaterials()
   }
   all_ice_matls->addAll(tmp_ice_matls);
 
-                                    // Wasatch Matls
+   //__________________________________
+   //                                  ICE_sm Matls
+  if (all_ice_sm_matls && all_ice_sm_matls->removeReference()){
+    delete all_ice_sm_matls;
+  }
+  all_ice_sm_matls = scinew MaterialSet();
+  all_ice_sm_matls->addReference();
+  vector<int> tmp_icesm_matls(one_ice_matls.size());
+  
+  for(int i=0;i<(int)one_ice_matls.size();i++) {
+    tmp_icesm_matls[i] = one_ice_matls[i]->getDWIndex();
+  }
+  all_ice_sm_matls->addAll(tmp_icesm_matls);
+  
+   //__________________________________
+   //                                  Wasatch Matls
   if (all_wasatch_matls && all_wasatch_matls->removeReference()){
     delete all_wasatch_matls;
   }
@@ -297,7 +316,8 @@ void SimulationState::finalizeMaterials()
   }
   all_wasatch_matls->addAll(tmp_wasatch_matls);
   
-                                      // All Matls
+   //__________________________________
+   //                                    All Matls
   if (all_matls && all_matls->removeReference()){
     delete all_matls;
   }
@@ -360,6 +380,10 @@ void SimulationState::clearMaterials()
     delete all_ice_matls;
   }
   
+  if(all_ice_sm_matls && all_ice_sm_matls->removeReference()){
+    delete all_ice_sm_matls;
+  }
+  
   if(all_wasatch_matls && all_wasatch_matls->removeReference()){
     delete all_wasatch_matls;
   }
@@ -373,6 +397,7 @@ void SimulationState::clearMaterials()
   cz_matls.clear();
   arches_matls.clear();
   ice_matls.clear();
+  one_ice_matls.clear();
   wasatch_matls.clear();
   simple_matls.clear();
   named_matls.clear();
@@ -381,13 +406,14 @@ void SimulationState::clearMaterials()
   d_cohesiveZoneState.clear();
   d_cohesiveZoneState_preReloc.clear();
 
-  all_matls         = 0;
-  all_mpm_matls     = 0;
-  all_cz_matls      = 0;
-  all_arches_matls  = 0;
-  all_ice_matls     = 0;
-  all_wasatch_matls = 0;
-  allInOneMatl      = 0;
+  all_matls            = 0;
+  all_mpm_matls        = 0;
+  all_cz_matls         = 0;
+  all_arches_matls     = 0;
+  all_ice_matls        = 0;
+  all_ice_sm_matls     = 0;
+  all_wasatch_matls    = 0;
+  allInOneMatl         = 0;
 }
 //__________________________________
 //
@@ -438,6 +464,13 @@ const MaterialSet* SimulationState::allArchesMaterials() const
 //__________________________________
 //
 const MaterialSet* SimulationState::allICEMaterials() const
+{
+  ASSERT(all_ice_matls != 0);
+  return all_ice_matls;
+}
+//__________________________________
+//
+const MaterialSet* SimulationState::allICE_smMaterials() const
 {
   ASSERT(all_ice_matls != 0);
   return all_ice_matls;

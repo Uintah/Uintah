@@ -189,6 +189,7 @@ public:
   const MaterialSet* allCZMaterials() const;
   const MaterialSet* allArchesMaterials() const;
   const MaterialSet* allICEMaterials() const;
+  const MaterialSet* allICE_smMaterials() const;
   const MaterialSet* allWasatchMaterials() const;
   const MaterialSet* allMaterials() const;
   const MaterialSet* originalAllMaterials() const;
@@ -319,6 +320,7 @@ private:
   MaterialSet    * all_mpm_matls;
   MaterialSet    * all_cz_matls;
   MaterialSet    * all_ice_matls;
+  MaterialSet    * all_ice_sm_matls;
   MaterialSet    * all_wasatch_matls;  
   MaterialSet    * all_arches_matls;
   MaterialSet    * all_matls;
