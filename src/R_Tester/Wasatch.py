@@ -181,6 +181,7 @@ NIGHTLYTESTS = [
   ("turb-lid-driven-cavity-3D-WALE",   "turb-lid-driven-cavity-3D-WALE.ups",   8,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
   ("turb-lid-driven-cavity-3D-SMAGORINSKY",   "turb-lid-driven-cavity-3D-SMAGORINSKY.ups",   8,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
   ("turb-lid-driven-cavity-3D-scalar",   "turb-lid-driven-cavity-3D-SMAGORINSKY-scalar.ups",   8,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
+  ("varden-3D-lowres-jet-IMPULSE",                    "varden-3D-lowres-jet-IMPULSE.xml",   16,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
   ("varden-projection-mms",                    "varden-projection-mms.ups",   3,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
   ("varden-projection-advection-xdir",              "varden-projection-advection-xdir.ups",   3,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
   ("varden-projection-advection-ydir",              "varden-projection-advection-ydir.ups",   3,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
@@ -290,6 +291,7 @@ RKTESTS=[
 ]
 
 VARDENTESTS=[
+  ("varden-3D-lowres-jet-IMPULSE",                    "varden-3D-lowres-jet-IMPULSE.xml",   8,  "All",  ["exactComparison","no_restart"] ),
   ("varden-projection-mms",                    "varden-projection-mms.ups",   3,  "All",  ["exactComparison","no_restart"] ),
   ("varden-projection-advection-xdir",              "varden-projection-advection-xdir.ups",   3,  "All",  ["exactComparison","no_restart"] ),
   ("varden-projection-advection-ydir",              "varden-projection-advection-ydir.ups",   3,  "All",  ["exactComparison","no_restart"] ),
