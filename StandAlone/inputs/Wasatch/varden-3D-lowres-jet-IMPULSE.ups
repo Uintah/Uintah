@@ -139,16 +139,16 @@
     <initTime>0.0</initTime>
     <delt_min>1e-4</delt_min>
     <delt_max>1e-4</delt_max>
-    <max_Timesteps>5</max_Timesteps>
+    <max_Timesteps>15</max_Timesteps>
     <timestep_multiplier>1</timestep_multiplier>
   </Time>
 
 
   <DataArchiver>
     <filebase>varden-3d_lowres_jet-a_Imp-r5_16p.uda</filebase>
-    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputTimestepInterval>2</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle="2" timestepInterval="1"/>
+    <checkpoint cycle="2" timestepInterval="2"/>
     <save label="x-mom"/>
 <!--     <save label="x-mom_rhs"/> -->
     <save label="y-mom"/>
