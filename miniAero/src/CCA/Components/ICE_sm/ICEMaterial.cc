@@ -46,7 +46,7 @@ using namespace std;
 using namespace Uintah;
 
 // Constructor
-ICEMaterial::ICEMaterial(ProblemSpecP& ps,
+oneICEMaterial::oneICEMaterial(ProblemSpecP& ps,
                          SimulationStateP& sharedState): Material(ps)
 {
   //__________________________________
@@ -104,7 +104,7 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps,
 }
 //__________________________________
 // Destructor
-ICEMaterial::~ICEMaterial()
+oneICEMaterial::~oneICEMaterial()
 {
   delete d_eos;
   
@@ -118,7 +118,7 @@ ICEMaterial::~ICEMaterial()
 }
 //______________________________________________________________________
 //
-ProblemSpecP ICEMaterial::outputProblemSpec(ProblemSpecP& ps)
+ProblemSpecP oneICEMaterial::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP ice_ps = Material::outputProblemSpec(ps);
 
@@ -142,49 +142,49 @@ ProblemSpecP ICEMaterial::outputProblemSpec(ProblemSpecP& ps)
 }
 //__________________________________
 //
-EquationOfState * ICEMaterial::getEOS() const
+EquationOfState * oneICEMaterial::getEOS() const
 {
   return d_eos;
 }
 
-SpecificHeat *ICEMaterial::getSpecificHeatModel() const
+SpecificHeat *oneICEMaterial::getSpecificHeatModel() const
 {
   return d_cvModel;
 }
 
-double ICEMaterial::getGamma() const
+double oneICEMaterial::getGamma() const
 {
   return d_gamma;
 }
 
-double ICEMaterial::getTinyRho() const
+double oneICEMaterial::getTinyRho() const
 {
   return d_tiny_rho;
 }
 
-double ICEMaterial::getViscosity() const
+double oneICEMaterial::getViscosity() const
 {
   return d_viscosity;
 }
 
 
-double ICEMaterial::getSpecificHeat() const
+double oneICEMaterial::getSpecificHeat() const
 {
   return d_specificHeat;
 }
 
-double ICEMaterial::getThermalConductivity() const
+double oneICEMaterial::getThermalConductivity() const
 {
   return d_thermalConductivity;
 }
 
-double ICEMaterial::getInitialDensity() const
+double oneICEMaterial::getInitialDensity() const
 {
   return d_geom_objs[0]->getInitialData_double("density");
 }
 
 /* --------------------------------------------------------------------- 
- Function~  ICEMaterial::initializeCells--
+ Function~  oneICEMaterial::initializeCells--
  Purpose~ Initialize material dependent variables 
  Notes:  This is a tricky little routine.  ICE needs rho_micro, Temp_CC
  speedSound defined everywhere for all materials even if the mass is 0.0.
@@ -199,7 +199,7 @@ double ICEMaterial::getInitialDensity() const
  | 1  | 1  | 1  | 1  |          | 1  | 1  | 1  | 1  |
  |____|____|____|____|          |____|____|____|____|=
 _____________________________________________________________________*/
-void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
+void oneICEMaterial::initializeCells(CCVariable<double>& rho_micro,
                                   CCVariable<double>& rho_CC,
                                   CCVariable<double>& temp,
                                   CCVariable<double>& speedSound,

@@ -40,6 +40,7 @@ Advector* AdvectionFactory::create(ProblemSpecP& ps,
                                    bool& d_useCompatibleFluxes,
                                    int& d_OrderOfAdvection)
 {
+  cout << " USING ICE ADVECTION FACTORY" << endl;
   ProblemSpecP advect_ps = ps->findBlock("advection");
   if(!advect_ps){
     throw ProblemSetupException("Cannot find advection tag", __FILE__, __LINE__);

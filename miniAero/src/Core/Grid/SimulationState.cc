@@ -33,6 +33,7 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimpleMaterial.h>
 #include <CCA/Components/ICE/ICEMaterial.h>
+#include <CCA/Components/ICE_sm/ICEMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
@@ -194,6 +195,20 @@ void SimulationState::registerICEMaterial(ICEMaterial* matl)
 void SimulationState::registerICEMaterial(ICEMaterial* matl,unsigned int index)
 {
    ice_matls.push_back(matl);
+   registerMaterial(matl,index);
+}
+//__________________________________
+//
+void SimulationState::registerOneICEMaterial(oneICEMaterial* matl)
+{
+   one_ice_matls.push_back(matl);
+   registerMaterial(matl);
+}
+//__________________________________
+//
+void SimulationState::registerOneICEMaterial(oneICEMaterial* matl,unsigned int index)
+{
+   one_ice_matls.push_back(matl);
    registerMaterial(matl,index);
 }
 //__________________________________

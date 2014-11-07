@@ -30,7 +30,7 @@
 namespace Uintah {
 
   class Patch;
-  class ICEMaterial;
+  class oneICEMaterial;
 
 /**************************************
 

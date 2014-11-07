@@ -41,7 +41,7 @@ namespace Uintah {
 
 GENERAL INFORMATION
 
-   ICEMaterial.h
+   oneICEMaterial.h
 
    Steven G. Parker
    Department of Computer Science
@@ -50,12 +50,12 @@ GENERAL INFORMATION
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
 ****************************************/
  
-class ICEMaterial : public Material {
+class oneICEMaterial : public Material {
   public:
-    ICEMaterial(ProblemSpecP&, 
+    oneICEMaterial(ProblemSpecP&, 
                 SimulationStateP& sharedState);
 
-    ~ICEMaterial();
+    ~oneICEMaterial();
 
     virtual ProblemSpecP outputProblemSpec(ProblemSpecP& ps);
 
@@ -103,8 +103,8 @@ class ICEMaterial : public Material {
 
     // Prevent copying of this class
     // copy constructor
-    ICEMaterial(const ICEMaterial &icem);
-    ICEMaterial& operator=(const ICEMaterial &icem);        
+    oneICEMaterial(const oneICEMaterial &icem);
+    oneICEMaterial& operator=(const oneICEMaterial &icem);        
 
 };
 } // End namespace Uintah
