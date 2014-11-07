@@ -85,26 +85,20 @@ namespace Uintah {
 
 
       void sched_ComputePressure(SchedulerP&,
-                                 const PatchSet*,        
-                                 const MaterialSubset*,  
+                                 const PatchSet*, 
                                  const MaterialSet*);    
 
       void sched_ComputeVel_FC(SchedulerP&,
                                const PatchSet*,
-                               const MaterialSubset*,
-                               const MaterialSubset*,
                                const MaterialSet*);
 
 
       void sched_ComputeDelPressAndUpdatePressCC(SchedulerP&,
                                                  const PatchSet*,
-                                                 const MaterialSubset*,
-                                                 const MaterialSubset*,
                                                  const MaterialSet*);
 
       void sched_ComputePressFC(SchedulerP&,
                                 const PatchSet*,
-                                const MaterialSubset*,
                                 const MaterialSet*);
 
       void sched_ComputeThermoTransportProperties(SchedulerP&,
@@ -122,14 +116,10 @@ namespace Uintah {
 
       void sched_AccumulateMomentumSourceSinks(SchedulerP&,
                                                const PatchSet*,
-                                               const MaterialSubset*,
-                                               const MaterialSubset*,
                                                const MaterialSet*);
 
       void sched_AccumulateEnergySourceSinks(SchedulerP&,
                                              const PatchSet*,
-                                             const MaterialSubset*,
-                                             const MaterialSubset*,
                                              const MaterialSet*);
 
       void sched_ComputeLagrangianValues(SchedulerP&,
@@ -137,25 +127,20 @@ namespace Uintah {
                                          const MaterialSet*);  
 
       void sched_ComputeLagrangianSpecificVolume(SchedulerP&,
-                                                 const PatchSet*,        
-                                                 const MaterialSubset*,  
-                                                 const MaterialSubset*,  
+                                                 const PatchSet*,  
                                                  const MaterialSet*);    
 
       void sched_AdvectAndAdvanceInTime(SchedulerP&,
-                                        const PatchSet*,        
-                                        const MaterialSubset*,  
+                                        const PatchSet*,  
                                         const MaterialSet*);    
 
       void sched_ConservedtoPrimitive_Vars(SchedulerP& sched,
-                                           const PatchSet* patch_set,          
-                                           const MaterialSubset* ice_matlsub,  
+                                           const PatchSet* patch_set,   
                                            const MaterialSet* ice_matls,       
                                            const std::string& where);          
 
       void sched_TestConservation(SchedulerP&,
-                                  const PatchSet*,        
-                                  const MaterialSubset*,  
+                                  const PatchSet*,  
                                   const MaterialSet*);    
 
     public:
@@ -329,9 +314,6 @@ namespace Uintah {
       // flags
       int d_matl;              // ice material index
       bool d_viscousFlow;
-
-      MaterialSubset* d_press_matl;
-      MaterialSet*    d_press_matlSet;
 
     private:
       ICELabel* lb;
