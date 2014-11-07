@@ -29,6 +29,8 @@
 #include <CCA/Components/ICE_sm/Advection/Advector.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/SimulationInterface.h>
+#include <Core/Geometry/Vector.h>
+
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -41,14 +43,10 @@
 #include <Core/Labels/ICELabel.h>
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Math/FastMatrix.h>
 #include <Core/Math/UintahMiscMath.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Containers/StaticArray.h>
-#include <Core/Geometry/Vector.h>
+
 #include <vector>
 #include <string>
-#include <sci_defs/hypre_defs.h>
 
 #define MAX_MATLS 16
 

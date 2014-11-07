@@ -46,13 +46,13 @@ namespace Uintah {
      the volume fraction is include inside the gradient calculation.
  ---------------------------------------------------------------------  */
 void scalarDiffusionOperator(DataWarehouse* new_dw,
-                                  const Patch* patch,
-                                  const bool use_vol_frac,
-                                  const CCVariable<double>& q_CC,  
-                                  const CCVariable<double>& vol_frac_CC,
-                                  CCVariable<double>& q_diffusion_src,
-                                  const CCVariable<double>& diff_coeff,
-                                  const double delT)
+                             const Patch* patch,
+                             const bool use_vol_frac,
+                             const CCVariable<double>& q_CC,  
+                             const CCVariable<double>& vol_frac_CC,
+                             CCVariable<double>& q_diffusion_src,
+                             const CCVariable<double>& diff_coeff,
+                             const double delT)
 {
   //__________________________________
   //  bullet proofing against AMR
