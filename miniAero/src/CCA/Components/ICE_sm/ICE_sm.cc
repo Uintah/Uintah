@@ -68,7 +68,8 @@ ICE_sm::ICE_sm(const ProcessorGroup* myworld, const bool doAMR) :
 
   d_EVIL_NUM              = -9.99e30;  
   d_SMALL_NUM             = 1.0e-100;  
-  d_clampSpecificVolume   = false;     
+  d_clampSpecificVolume   = false;
+  d_matl                  = 0;         // ICE material index 
 
   d_conservationTest      = scinew conservationTest_flags();
   d_conservationTest->onOff = false;
@@ -270,7 +271,6 @@ void ICE_sm::scheduleInitialize(const LevelP& level,
   t->computes( lb->gammaLabel );
   t->computes( lb->specific_heatLabel );
   t->computes( lb->press_CCLabel,     d_press_matl, oims );
-  t->computes( lb->initialGuessLabel, d_press_matl, oims );
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
 
   sched->addTask(t, level->eachPatch(), ice_matls);
@@ -287,14 +287,9 @@ void ICE_sm::restartInitialize()
 
   //__________________________________
   // ICE: Material specific flags
-  int numMatls = d_sharedState->getNumICEMatls();
-  for (int m = 0; m < numMatls; m++ ) {
-    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-
-    if(ice_matl->getViscosity() > 0.0){
-      d_viscousFlow = true;
-    }
-
+  ICEMaterial* ice_matl = d_sharedState->getICEMaterial( d_matl );
+  if(ice_matl->getViscosity() > 0.0){
+    d_viscousFlow = true;
   }
 }
 
@@ -1044,63 +1039,44 @@ void ICE_sm::actuallyInitialize(const ProcessorGroup*,
   //__________________________________
   // find max index of all the ICE matls
   // you could have a 1 matl problem with a starting indx of 2
-  int max_indx = -100;
-
-  int numICEMatls = d_sharedState->getNumICEMatls();
-  for (int m = 0; m < numICEMatls; m++ ){
-    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-    int indx= ice_matl->getDWIndex();
-    max_indx = max(max_indx, indx);
-  }
-  d_max_iceMatl_indx = max_indx;
-  max_indx +=1;
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
     printTask(patches, patch, iceCout, "Doing ICE_sm::actuallyInitialize" );
 
-    int numMatls    = d_sharedState->getNumICEMatls();
-    int numALLMatls = d_sharedState->getNumMatls();
     Vector grav     = getGravity();
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial( d_matl );
+    CCVariable<double>  rho_micro;
+    CCVariable<double>  sp_vol_CC;
+    CCVariable<double>  rho_CC;
+    CCVariable<double>  Temp_CC;
+    CCVariable<double>  speedSound;
+    CCVariable<double>  vol_frac_CC;
+    CCVariable<Vector>  vel_CC;
+    CCVariable<double>  cv;
+    CCVariable<double>  gamma;
+    CCVariable<double>  press_CC, vol_frac_sum;
 
-    StaticArray<CCVariable<double>   > rho_micro(max_indx);
-    StaticArray<CCVariable<double>   > sp_vol_CC(max_indx);
-    StaticArray<CCVariable<double>   > rho_CC(max_indx);
-    StaticArray<CCVariable<double>   > Temp_CC(max_indx);
-    StaticArray<CCVariable<double>   > speedSound(max_indx);
-    StaticArray<CCVariable<double>   > vol_frac_CC(max_indx);
-    StaticArray<CCVariable<Vector>   > vel_CC(max_indx);
-    StaticArray<CCVariable<double>   > cv(max_indx);
-    StaticArray<CCVariable<double>   > gamma(max_indx);
-    CCVariable<double>    press_CC, imp_initialGuess, vol_frac_sum;
 
-    new_dw->allocateAndPut(press_CC,         lb->press_CCLabel,     0,patch);
-    new_dw->allocateAndPut(imp_initialGuess, lb->initialGuessLabel, 0,patch);
     new_dw->allocateTemporary(vol_frac_sum,patch);
-    imp_initialGuess.initialize(0.0);
     vol_frac_sum.initialize(0.0);
 
     //__________________________________
     //  Thermo and transport properties
-    for (int m = 0; m < numMatls; m++ ) {
-      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-      int indx= ice_matl->getDWIndex();
-      CCVariable<double> viscosity, thermalCond;
-      new_dw->allocateAndPut(viscosity,    lb->viscosityLabel,    indx,patch);
-      new_dw->allocateAndPut(thermalCond,  lb->thermalCondLabel,  indx,patch);
-      new_dw->allocateAndPut(cv[indx],     lb->specific_heatLabel,indx,patch);
-      new_dw->allocateAndPut(gamma[indx],  lb->gammaLabel,        indx,patch);
+    CCVariable<double> viscosity, thermalCond;
+    new_dw->allocateAndPut(viscosity,    lb->viscosityLabel,    d_matl, patch);
+    new_dw->allocateAndPut(thermalCond,  lb->thermalCondLabel,  d_matl, patch);
+    new_dw->allocateAndPut(cv,           lb->specific_heatLabel,d_matl, patch);
+    new_dw->allocateAndPut(gamma,        lb->gammaLabel,        d_matl, patch);
 
-      gamma[indx].initialize( ice_matl->getGamma());
-      cv[indx].initialize(    ice_matl->getSpecificHeat());
-      viscosity.initialize  ( ice_matl->getViscosity());
-      thermalCond.initialize( ice_matl->getThermalConductivity());
+    gamma.initialize(       ice_matl->getGamma());
+    cv.initialize(          ice_matl->getSpecificHeat());
+    viscosity.initialize  ( ice_matl->getViscosity());
+    thermalCond.initialize( ice_matl->getThermalConductivity());
 
-      if(ice_matl->getViscosity() > 0.0){
-        d_viscousFlow = true;
-      }
-
+    if(ice_matl->getViscosity() > 0.0){
+      d_viscousFlow = true;
     }
 
   //__________________________________
@@ -1108,82 +1084,75 @@ void ICE_sm::actuallyInitialize(const ProcessorGroup*,
   // The press_CC isn't material dependent even though
   // we loop over numMatls below. This is done so we don't need additional
   // machinery to grab the pressure inside a geom_object
-    for (int m = 0; m < numMatls; m++ ) {
-      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-      int indx= ice_matl->getDWIndex();
-      new_dw->allocateAndPut(rho_micro[indx],  lb->rho_micro_CCLabel, indx,patch);
-      new_dw->allocateAndPut(sp_vol_CC[indx],  lb->sp_vol_CCLabel,    indx,patch);
-      new_dw->allocateAndPut(rho_CC[indx],     lb->rho_CCLabel,       indx,patch);
-      new_dw->allocateAndPut(Temp_CC[indx],    lb->temp_CCLabel,      indx,patch);
-      new_dw->allocateAndPut(speedSound[indx], lb->speedSound_CCLabel,indx,patch);
-      new_dw->allocateAndPut(vol_frac_CC[indx],lb->vol_frac_CCLabel,  indx,patch);
-      new_dw->allocateAndPut(vel_CC[indx],     lb->vel_CCLabel,       indx,patch);
-    }
+    new_dw->allocateAndPut(press_CC,   lb->press_CCLabel,     d_matl, patch);
+    new_dw->allocateAndPut(rho_micro,  lb->rho_micro_CCLabel, d_matl, patch);
+    new_dw->allocateAndPut(sp_vol_CC,  lb->sp_vol_CCLabel,    d_matl, patch);
+    new_dw->allocateAndPut(rho_CC,     lb->rho_CCLabel,       d_matl, patch);
+    new_dw->allocateAndPut(Temp_CC,    lb->temp_CCLabel,      d_matl, patch);
+    new_dw->allocateAndPut(speedSound, lb->speedSound_CCLabel,d_matl, patch);
+    new_dw->allocateAndPut(vol_frac_CC,lb->vol_frac_CCLabel,  d_matl, patch);
+    new_dw->allocateAndPut(vel_CC,     lb->vel_CCLabel,       d_matl, patch);
 
     press_CC.initialize(0);
 
-    for (int m = 0; m < numMatls; m++ ) {
-      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-      int indx = ice_matl->getDWIndex();
-      ice_matl->initializeCells(rho_micro[indx],  rho_CC[indx],
-                                Temp_CC[indx],    speedSound[indx],
-                                vol_frac_CC[indx], vel_CC[indx],
-                                press_CC, numALLMatls, patch, new_dw);
+    ice_matl->initializeCells(rho_micro,  rho_CC,
+                              Temp_CC,    speedSound,
+                              vol_frac_CC, vel_CC,
+                              press_CC, 1, patch, new_dw);
 
-      setBC( rho_CC[indx],     "Density",     patch, indx, new_dw );
-      setBC( rho_micro[indx],  "Density",     patch, indx, new_dw );
-      setBC( Temp_CC[indx],    "Temperature", patch, indx, new_dw );
-      setBC( speedSound[indx], "zeroNeumann", patch, indx, new_dw );
-      setBC( vel_CC[indx],     "Velocity",    patch, indx, new_dw );
-      setBC( press_CC,         "Pressure",    patch, 0,    new_dw );
+    setBC( rho_CC,     "Density",     patch, d_matl, new_dw );
+    setBC( rho_micro,  "Density",     patch, d_matl, new_dw );
+    setBC( Temp_CC,    "Temperature", patch, d_matl, new_dw );
+    setBC( speedSound, "zeroNeumann", patch, d_matl, new_dw );
+    setBC( vel_CC,     "Velocity",    patch, d_matl, new_dw );
+    setBC( press_CC,   "Pressure",    patch, d_matl, new_dw );
 
-      SpecificHeat *cvModel = ice_matl->getSpecificHeatModel();
-      if(cvModel != 0) {
-        for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
-          IntVector c = *iter;
-          gamma[indx][c] = cvModel->getGamma(Temp_CC[indx][c]);
-          cv[indx][c]    = cvModel->getSpecificHeat(Temp_CC[indx][c]);
-        }
-      }
-
+    SpecificHeat *cvModel = ice_matl->getSpecificHeatModel();
+    if(cvModel != 0) {
       for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
-        sp_vol_CC[indx][c] = 1.0/rho_micro[indx][c];
+        gamma[c] = cvModel->getGamma(Temp_CC[c]);
+        cv[c]    = cvModel->getSpecificHeat(Temp_CC[c]);
+      }
+    }
 
-        //needed for LODI BCs
-        vol_frac_CC[indx][c] = rho_CC[indx][c]*sp_vol_CC[indx][c];
-        vol_frac_sum[c] += vol_frac_CC[indx][c];
+    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+      IntVector c = *iter;
+      sp_vol_CC[c] = 1.0/rho_micro[c];
 
-        double dp_drho, dp_de, c_2, press_tmp;
-        ice_matl->getEOS()->computePressEOS(rho_micro[indx][c],gamma[indx][c],
-                                          cv[indx][c], Temp_CC[indx][c], press_tmp,
-                                          dp_drho, dp_de);
+      //needed for LODI BCs
+      vol_frac_CC[c] = rho_CC[c]*sp_vol_CC[c];
+      vol_frac_sum[c] += vol_frac_CC[c];
 
-        c_2 = dp_drho + dp_de * press_CC[c]/(rho_micro[indx][c] * rho_micro[indx][c]);
-        speedSound[indx][c] = sqrt(c_2);
-      }
-      //____ B U L L E T   P R O O F I N G----
-      IntVector neg_cell;
-      ostringstream warn, base;
-      base <<"ERROR ICE:(L-"<<L_indx<<"):actuallyInitialize, mat "<< indx <<" cell ";
+      double dp_drho, dp_de, c_2, press_tmp;
+      ice_matl->getEOS()->computePressEOS(rho_micro[c],gamma[c],
+                                        cv[c], Temp_CC[c], press_tmp,
+                                        dp_drho, dp_de);
 
-      if( !areAllValuesPositive(press_CC, neg_cell) ) {
-        warn << base.str()<< neg_cell << " press_CC is negative\n";
-        throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
-      }
-      if( !areAllValuesPositive(rho_CC[indx], neg_cell) ) {
-        warn << base.str()<< neg_cell << " rho_CC is negative\n";
-        throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
-      }
-      if( !areAllValuesPositive(Temp_CC[indx], neg_cell) ) {
-        warn << base.str()<< neg_cell << " Temp_CC is negative\n";
-        throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
-      }
-      if( !areAllValuesPositive(sp_vol_CC[indx], neg_cell) ) {
-        warn << base.str()<< neg_cell << " sp_vol_CC is negative\n";
-        throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
-      }
-    }   // numMatls
+      c_2 = dp_drho + dp_de * press_CC[c]/(rho_micro[c] * rho_micro[c]);
+      speedSound[c] = sqrt(c_2);
+    }
+    //____ B U L L E T   P R O O F I N G----
+    IntVector neg_cell;
+    ostringstream warn, base;
+    base <<"ERROR ICE:(L-"<<L_indx<<"):actuallyInitialize, mat "<< d_matl <<" cell ";
+
+    if( !areAllValuesPositive(press_CC, neg_cell) ) {
+      warn << base.str()<< neg_cell << " press_CC is negative\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
+    }
+    if( !areAllValuesPositive(rho_CC, neg_cell) ) {
+      warn << base.str()<< neg_cell << " rho_CC is negative\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
+    }
+    if( !areAllValuesPositive(Temp_CC, neg_cell) ) {
+      warn << base.str()<< neg_cell << " Temp_CC is negative\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
+    }
+    if( !areAllValuesPositive(sp_vol_CC, neg_cell) ) {
+      warn << base.str()<< neg_cell << " sp_vol_CC is negative\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
+    }
 
     // make sure volume fractions sum to 1
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
@@ -1217,38 +1186,34 @@ void ICE_sm::computeThermoTransportProperties(const ProcessorGroup*,
     iceCout << " ---------------------------------------------- L-"<< levelIndex<< endl;
     printTask(patches, patch, iceCout, "Doing ICE_sm::computeThermoTransportProperties" );
 
-    int numMatls = d_sharedState->getNumICEMatls();
+    constCCVariable<double> temp_CC;
+    old_dw->get(temp_CC, lb->temp_CCLabel, d_matl, patch, Ghost::None,0);
 
-    for (int m = 0; m < numMatls; m++) {
-      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-      int indx = ice_matl->getDWIndex();
+    CCVariable<double> viscosity; 
+    CCVariable<double> thermalCond;
+    CCVariable<double> gamma;
+    CCVariable<double> cv;
 
-      constCCVariable<double> temp_CC;
-      old_dw->get(temp_CC, lb->temp_CCLabel, indx,patch,Ghost::None,0);
+    new_dw->allocateAndPut(thermalCond, lb->thermalCondLabel,  d_matl, patch);
+    new_dw->allocateAndPut(viscosity,   lb->viscosityLabel,    d_matl, patch);
+    new_dw->allocateAndPut(cv,          lb->specific_heatLabel,d_matl, patch);
+    new_dw->allocateAndPut(gamma,       lb->gammaLabel,        d_matl, patch);
+      
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial( d_matl );
+    viscosity.initialize  ( ice_matl->getViscosity());
+    thermalCond.initialize( ice_matl->getThermalConductivity());
+    gamma.initialize  (     ice_matl->getGamma());
+    cv.initialize(          ice_matl->getSpecificHeat());
+    SpecificHeat *cvModel = ice_matl->getSpecificHeatModel();
 
-      CCVariable<double> viscosity, thermalCond, gamma, cv;
-
-      new_dw->allocateAndPut(thermalCond, lb->thermalCondLabel,  indx, patch);
-      new_dw->allocateAndPut(viscosity,   lb->viscosityLabel,    indx, patch);
-      new_dw->allocateAndPut(cv,          lb->specific_heatLabel,indx, patch);
-      new_dw->allocateAndPut(gamma,       lb->gammaLabel,        indx, patch);
-
-      viscosity.initialize  ( ice_matl->getViscosity());
-      thermalCond.initialize( ice_matl->getThermalConductivity());
-      gamma.initialize  (     ice_matl->getGamma());
-      cv.initialize(          ice_matl->getSpecificHeat());
-      SpecificHeat *cvModel = ice_matl->getSpecificHeatModel();
-
-      if(cvModel != 0) {
-        // loop through cells and compute pointwise
-        for(CellIterator iter = patch->getCellIterator();!iter.done();iter++) {
-          IntVector c = *iter;
-          cv[c] = cvModel->getSpecificHeat(temp_CC[c]);
-          gamma[c] = cvModel->getGamma(temp_CC[c]);
-        }
+    if(cvModel != 0) {
+      // loop through cells and compute pointwise
+      for(CellIterator iter = patch->getCellIterator();!iter.done();iter++) {
+        IntVector c = *iter;
+        cv[c] = cvModel->getSpecificHeat(temp_CC[c]);
+        gamma[c] = cvModel->getGamma(temp_CC[c]);
       }
     }
-
   }
 }
 
@@ -1274,7 +1239,7 @@ void ICE_sm::computeEquilPressure_1_matl(const ProcessorGroup*,
     StaticArray<CCVariable<double> > rho_micro(1);
 
     Ghost::GhostType  gn = Ghost::None;
-    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(0);
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial( d_matl );
     int indx = ice_matl->getDWIndex();
 
     //__________________________________
@@ -1396,84 +1361,76 @@ void ICE_sm::computeVel_FC(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch, iceCout, "Doing ICE_sm::computeVel_FCVel" );
 
-    int numMatls = d_sharedState->getNumMatls();
-
     Vector dx      = patch->dCell();
     Vector gravity = getGravity();
-
-    constCCVariable<double> press_CC;
-    Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->get(press_CC,lb->press_equil_CCLabel, 0, patch,gac, 1);
-
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(),level);
 
     // Compute the face centered velocities
-    for(int m = 0; m < numMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
-      int indx = matl->getDWIndex();
-      constCCVariable<double> rho_CC, sp_vol_CC;
-      constCCVariable<Vector> vel_CC;
+    constCCVariable<double> press_CC;
+    constCCVariable<double> rho_CC;
+    constCCVariable<double> sp_vol_CC;
+    constCCVariable<Vector> vel_CC;
+    
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    new_dw->get(press_CC,   lb->press_equil_CCLabel, d_matl, patch, gac, 1);
+    new_dw->get(rho_CC,     lb->rho_CCLabel,         d_matl, patch, gac, 1);
+    old_dw->get(vel_CC,     lb->vel_CCLabel,         d_matl, patch, gac, 1);
+    new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,      d_matl, patch, gac, 1);
 
-      new_dw->get(rho_CC, lb->rho_CCLabel, indx, patch, gac, 1);
-      old_dw->get(vel_CC, lb->vel_CCLabel, indx, patch, gac, 1);
-      new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,indx,patch, gac, 1);
+    SFCXVariable<double> uvel_FC, grad_P_XFC;
+    SFCYVariable<double> vvel_FC, grad_P_YFC;
+    SFCZVariable<double> wvel_FC, grad_P_ZFC;
 
-      SFCXVariable<double> uvel_FC, grad_P_XFC;
-      SFCYVariable<double> vvel_FC, grad_P_YFC;
-      SFCZVariable<double> wvel_FC, grad_P_ZFC;
+    new_dw->allocateAndPut(uvel_FC, lb->uvel_FCLabel, d_matl, patch);
+    new_dw->allocateAndPut(vvel_FC, lb->vvel_FCLabel, d_matl, patch);
+    new_dw->allocateAndPut(wvel_FC, lb->wvel_FCLabel, d_matl, patch);
 
-      new_dw->allocateAndPut(uvel_FC, lb->uvel_FCLabel, indx, patch);
-      new_dw->allocateAndPut(vvel_FC, lb->vvel_FCLabel, indx, patch);
-      new_dw->allocateAndPut(wvel_FC, lb->wvel_FCLabel, indx, patch);
+    // debugging variables
+    new_dw->allocateAndPut(grad_P_XFC, lb->grad_P_XFCLabel, d_matl, patch);
+    new_dw->allocateAndPut(grad_P_YFC, lb->grad_P_YFCLabel, d_matl, patch);
+    new_dw->allocateAndPut(grad_P_ZFC, lb->grad_P_ZFCLabel, d_matl, patch);
 
-      // debugging variables
-      new_dw->allocateAndPut(grad_P_XFC, lb->grad_P_XFCLabel, indx, patch);
-      new_dw->allocateAndPut(grad_P_YFC, lb->grad_P_YFCLabel, indx, patch);
-      new_dw->allocateAndPut(grad_P_ZFC, lb->grad_P_ZFCLabel, indx, patch);
+    IntVector lowIndex(patch->getExtraSFCXLowIndex());
+    uvel_FC.initialize(0.0, lowIndex,patch->getExtraSFCXHighIndex());
+    vvel_FC.initialize(0.0, lowIndex,patch->getExtraSFCYHighIndex());
+    wvel_FC.initialize(0.0, lowIndex,patch->getExtraSFCZHighIndex());
 
-      IntVector lowIndex(patch->getExtraSFCXLowIndex());
-      uvel_FC.initialize(0.0, lowIndex,patch->getExtraSFCXHighIndex());
-      vvel_FC.initialize(0.0, lowIndex,patch->getExtraSFCYHighIndex());
-      wvel_FC.initialize(0.0, lowIndex,patch->getExtraSFCZHighIndex());
+    grad_P_XFC.initialize(0.0);
+    grad_P_YFC.initialize(0.0);
+    grad_P_ZFC.initialize(0.0);
 
-      grad_P_XFC.initialize(0.0);
-      grad_P_YFC.initialize(0.0);
-      grad_P_ZFC.initialize(0.0);
+    vector<IntVector> adj_offset(3);
+    adj_offset[0] = IntVector(-1, 0, 0);    // X faces
+    adj_offset[1] = IntVector(0, -1, 0);    // Y faces
+    adj_offset[2] = IntVector(0,  0, -1);   // Z faces
 
-      vector<IntVector> adj_offset(3);
-      adj_offset[0] = IntVector(-1, 0, 0);    // X faces
-      adj_offset[1] = IntVector(0, -1, 0);    // Y faces
-      adj_offset[2] = IntVector(0,  0, -1);   // Z faces
+    CellIterator XFC_iterator = patch->getSFCXIterator();
+    CellIterator YFC_iterator = patch->getSFCYIterator();
+    CellIterator ZFC_iterator = patch->getSFCZIterator();
 
-      CellIterator XFC_iterator = patch->getSFCXIterator();
-      CellIterator YFC_iterator = patch->getSFCYIterator();
-      CellIterator ZFC_iterator = patch->getSFCZIterator();
+    bool include_acc = true;
 
-      bool include_acc = true;
+    //__________________________________
+    //  Compute vel_FC for each face
+    computeVelFace<SFCXVariable<double> >(0, XFC_iterator,
+                                     adj_offset[0],dx[0],delT,gravity[0],
+                                     rho_CC,sp_vol_CC,vel_CC,press_CC,
+                                     uvel_FC, grad_P_XFC, include_acc);
 
-      //__________________________________
-      //  Compute vel_FC for each face
-      computeVelFace<SFCXVariable<double> >(0, XFC_iterator,
-                                       adj_offset[0],dx[0],delT,gravity[0],
-                                       rho_CC,sp_vol_CC,vel_CC,press_CC,
-                                       uvel_FC, grad_P_XFC, include_acc);
+    computeVelFace<SFCYVariable<double> >(1, YFC_iterator,
+                                     adj_offset[1],dx[1],delT,gravity[1],
+                                     rho_CC,sp_vol_CC,vel_CC,press_CC,
+                                     vvel_FC, grad_P_YFC, include_acc);
 
-      computeVelFace<SFCYVariable<double> >(1, YFC_iterator,
-                                       adj_offset[1],dx[1],delT,gravity[1],
-                                       rho_CC,sp_vol_CC,vel_CC,press_CC,
-                                       vvel_FC, grad_P_YFC, include_acc);
+    computeVelFace<SFCZVariable<double> >(2, ZFC_iterator,
+                                     adj_offset[2],dx[2],delT,gravity[2],
+                                     rho_CC,sp_vol_CC,vel_CC,press_CC,
+                                     wvel_FC, grad_P_ZFC, include_acc);
 
-      computeVelFace<SFCZVariable<double> >(2, ZFC_iterator,
-                                       adj_offset[2],dx[2],delT,gravity[2],
-                                       rho_CC,sp_vol_CC,vel_CC,press_CC,
-                                       wvel_FC, grad_P_ZFC, include_acc);
-
-      //__________________________________
-      // (*)vel_FC BC are updated in
-      // ICE_sm::addExchangeContributionToFCVel()
-
-    } // matls loop
+    //__________________________________
+    // (*)vel_FC BC are updated in
+    // ICE_sm::addExchangeContributionToFCVel()
   }  // patch loop
 }
 
@@ -1489,37 +1446,36 @@ void ICE_sm::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
                                           DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
+  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
     printTask(patches, patch, iceCout, "Doing ICE_sm::computeDelPressAndUpdatePressCC" );
 
-    int numMatls  = d_sharedState->getNumMatls();
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(),level);
-
+    
     bool newGrid = d_sharedState->isRegridTimestep();
     Advector* advector = d_advector->clone(new_dw,patch,newGrid );
 
+    //intermediate values
     CCVariable<double> q_advected;
     CCVariable<double> delP_Dilatate;
     CCVariable<double> sum_rho_CC;
     CCVariable<double> press_CC;
     CCVariable<double> term1, term2;
 
-    constCCVariable<double>sumKappa, press_equil;
+    SFCXVariable<double> vol_fracX_FC;
+    SFCYVariable<double> vol_fracY_FC;
+    SFCZVariable<double> vol_fracZ_FC;
 
-    StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
-
-    const IntVector gc(1,1,1);
-    Ghost::GhostType  gn  = Ghost::None;
-    Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->get(sumKappa,                lb->sumKappaLabel,      0,patch,gn,0);
-    new_dw->get(press_equil,             lb->press_equil_CCLabel,0,patch,gn,0);
-    new_dw->allocateAndPut( press_CC,    lb->press_CCLabel,      0, patch);
-    new_dw->allocateAndPut(delP_Dilatate,lb->delP_DilatateLabel, 0, patch);
-    new_dw->allocateAndPut(term2,        lb->term2Label,         0, patch);
-    new_dw->allocateAndPut(sum_rho_CC,   lb->sum_rho_CCLabel,    0, patch);
+    new_dw->allocateAndPut(vol_fracX_FC, lb->vol_fracX_FCLabel,  d_matl, patch);
+    new_dw->allocateAndPut(vol_fracY_FC, lb->vol_fracY_FCLabel,  d_matl, patch);
+    new_dw->allocateAndPut(vol_fracZ_FC, lb->vol_fracZ_FCLabel,  d_matl, patch);
+    new_dw->allocateAndPut( press_CC,    lb->press_CCLabel,      d_matl, patch);
+    new_dw->allocateAndPut(delP_Dilatate,lb->delP_DilatateLabel, d_matl, patch);
+    new_dw->allocateAndPut(term2,        lb->term2Label,         d_matl, patch);
+    new_dw->allocateAndPut(sum_rho_CC,   lb->sum_rho_CCLabel,    d_matl, patch);
 
     new_dw->allocateTemporary(q_advected, patch);
     new_dw->allocateTemporary(term1,      patch);
@@ -1528,69 +1484,70 @@ void ICE_sm::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     term2.initialize(0.);
     sum_rho_CC.initialize(0.0);
     delP_Dilatate.initialize(0.0);
+    
+    //__________________________________
+    //  Pull data from the DW
+    constCCVariable<double> speedSound;
+    constCCVariable<double> vol_frac;
+    constCCVariable<double> rho_CC;
+    constCCVariable<double> sumKappa;
+    constCCVariable<double> press_equil;
+    constCCVariable<double> sp_vol_CC;
+    
+    constSFCXVariable<double> uvel_FC;
+    constSFCYVariable<double> vvel_FC;
+    constSFCZVariable<double> wvel_FC;
+    
+    Ghost::GhostType  gn  = Ghost::None;
+    Ghost::GhostType  gac = Ghost::AroundCells;
 
-    for(int m = 0; m < numMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
-      int indx = matl->getDWIndex();
-      constCCVariable<double> speedSound;
-      constCCVariable<double> vol_frac;
-      constCCVariable<double> rho_CC;
-      constSFCXVariable<double> uvel_FC;
-      constSFCYVariable<double> vvel_FC;
-      constSFCZVariable<double> wvel_FC;
-
-      new_dw->get(uvel_FC,     lb->uvel_FCLabel,       indx,patch,gac, 2);
-      new_dw->get(vvel_FC,     lb->vvel_FCLabel,       indx,patch,gac, 2);
-      new_dw->get(wvel_FC,     lb->wvel_FCLabel,       indx,patch,gac, 2);
-      new_dw->get(vol_frac,    lb->vol_frac_CCLabel,   indx,patch,gac, 2);
-      new_dw->get(rho_CC,      lb->rho_CCLabel,        indx,patch,gn,0);
-      new_dw->get(sp_vol_CC[m],lb->sp_vol_CCLabel,     indx,patch,gn,0);
-      new_dw->get(speedSound,  lb->speedSound_CCLabel, indx,patch,gn,0);
-
-      SFCXVariable<double> vol_fracX_FC;
-      SFCYVariable<double> vol_fracY_FC;
-      SFCZVariable<double> vol_fracZ_FC;
-
-      new_dw->allocateAndPut(vol_fracX_FC, lb->vol_fracX_FCLabel,  indx,patch);
-      new_dw->allocateAndPut(vol_fracY_FC, lb->vol_fracY_FCLabel,  indx,patch);
-      new_dw->allocateAndPut(vol_fracZ_FC, lb->vol_fracZ_FCLabel,  indx,patch);
+    new_dw->get(uvel_FC,     lb->uvel_FCLabel,        d_matl, patch, gac, 2);
+    new_dw->get(vvel_FC,     lb->vvel_FCLabel,        d_matl, patch, gac, 2);
+    new_dw->get(wvel_FC,     lb->wvel_FCLabel,        d_matl, patch, gac, 2);
+    new_dw->get(vol_frac,    lb->vol_frac_CCLabel,    d_matl, patch, gac, 2);
+    
+    new_dw->get(rho_CC,      lb->rho_CCLabel,         d_matl, patch, gn, 0);
+    new_dw->get(sp_vol_CC,   lb->sp_vol_CCLabel,      d_matl, patch, gn, 0);
+    new_dw->get(speedSound,  lb->speedSound_CCLabel,  d_matl, patch, gn, 0);
+    new_dw->get(sumKappa,    lb->sumKappaLabel,       d_matl, patch, gn, 0);           
+    new_dw->get(press_equil, lb->press_equil_CCLabel, d_matl, patch, gn, 0);            
 
 
-      // lowIndex is the same for all vel_FC
-      IntVector lowIndex(patch->getExtraSFCXLowIndex());
-      double nan= getNan();
-      vol_fracX_FC.initialize(nan, lowIndex,patch->getExtraSFCXHighIndex());
-      vol_fracY_FC.initialize(nan, lowIndex,patch->getExtraSFCYHighIndex());
-      vol_fracZ_FC.initialize(nan, lowIndex,patch->getExtraSFCZHighIndex());
+    // lowIndex is the same for all vel_FC
+    IntVector lowIndex(patch->getExtraSFCXLowIndex());
+    double nan= getNan();
+    vol_fracX_FC.initialize(nan, lowIndex,patch->getExtraSFCXHighIndex());
+    vol_fracY_FC.initialize(nan, lowIndex,patch->getExtraSFCYHighIndex());
+    vol_fracZ_FC.initialize(nan, lowIndex,patch->getExtraSFCZHighIndex());
 
-      //__________________________________
-      // Advection preprocessing
-      // - divide vol_frac_cc/vol
-      bool bulletProof_test=true;
-      advectVarBasket* varBasket = scinew advectVarBasket();
+    //__________________________________
+    // Advection preprocessing
+    // - divide vol_frac_cc/vol
+    bool bulletProof_test=true;
+    advectVarBasket* varBasket = scinew advectVarBasket();
 
-      advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx,
-                                    bulletProof_test, new_dw, varBasket);
-      //__________________________________
-      //   advect vol_frac
-      varBasket->doRefluxing = false;  // don't need to reflux here
-      advector->advectQ(vol_frac, patch, q_advected, varBasket,
-                        vol_fracX_FC, vol_fracY_FC,  vol_fracZ_FC, new_dw);
+    advector->inFluxOutFluxVolume(uvel_FC, vvel_FC, wvel_FC, delT, patch, d_matl,
+                                  bulletProof_test, new_dw, varBasket);
+    //__________________________________
+    //   advect vol_frac
+    varBasket->doRefluxing = false;  // don't need to reflux here
+    advector->advectQ(vol_frac, patch, q_advected, varBasket,
+                      vol_fracX_FC, vol_fracY_FC,  vol_fracZ_FC, new_dw);
 
-      delete varBasket;
+    delete varBasket;
 
-      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
-        IntVector c = *iter;
-        term2[c] -= q_advected[c];
-      }
+    for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+      IntVector c = *iter;
+      term2[c] -= q_advected[c];
+    }
 
-      //__________________________________
-      //  compute sum_rho_CC used by press_FC
-      for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
-        IntVector c = *iter;
-        sum_rho_CC[c] += rho_CC[c];
-      }
-    }  //matl loop
+    //__________________________________
+    //  compute sum_rho_CC used by press_FC
+    for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
+      IntVector c = *iter;
+      sum_rho_CC[c] += rho_CC[c];
+    }
+    
     delete advector;
 
     //__________________________________
@@ -1756,50 +1713,48 @@ void ICE_sm::VelTau_CC(const ProcessorGroup*,
     int numMatls = d_sharedState->getNumICEMatls();
     Ghost::GhostType  gn  = Ghost::None;
 
-    for (int m = 0; m < numMatls; m++) {
-      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-      int indx = ice_matl->getDWIndex();
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(d_matl);
+    int indx = ice_matl->getDWIndex();
 
-      constCCVariable<Vector> vel_CC;
-      CCVariable<Vector>   velTau_CC;
-      old_dw->get(             vel_CC,    lb->vel_CCLabel,    indx, patch, gn, 0);
-      new_dw->allocateAndPut( velTau_CC,  lb->velTau_CCLabel, indx, patch);
+    constCCVariable<Vector> vel_CC;
+    CCVariable<Vector>   velTau_CC;
+    old_dw->get(             vel_CC,    lb->vel_CCLabel,    indx, patch, gn, 0);
+    new_dw->allocateAndPut( velTau_CC,  lb->velTau_CCLabel, indx, patch);
 
-      velTau_CC.copyData( vel_CC );           // copy interior values over
+    velTau_CC.copyData( vel_CC );           // copy interior values over
 
-      if( patch->hasBoundaryFaces() ){
+    if( patch->hasBoundaryFaces() ){
 
-        // Iterate over the faces encompassing the domain
-        vector<Patch::FaceType> bf;
-        patch->getBoundaryFaces(bf);
+      // Iterate over the faces encompassing the domain
+      vector<Patch::FaceType> bf;
+      patch->getBoundaryFaces(bf);
 
-        for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
-          Patch::FaceType face = *iter;
+      for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
+        Patch::FaceType face = *iter;
 
-          //__________________________________
-          //           X faces
-          if (face == Patch::xminus || face == Patch::xplus) {
-            computeVelTau_CCFace( patch, face, vel_CC, velTau_CC );
-            continue;
-          }
+        //__________________________________
+        //           X faces
+        if (face == Patch::xminus || face == Patch::xplus) {
+          computeVelTau_CCFace( patch, face, vel_CC, velTau_CC );
+          continue;
+        }
 
-          //__________________________________
-          //           Y faces
-          if (face == Patch::yminus || face == Patch::yplus) {
-            computeVelTau_CCFace( patch, face, vel_CC, velTau_CC );
-            continue;
-          }
+        //__________________________________
+        //           Y faces
+        if (face == Patch::yminus || face == Patch::yplus) {
+          computeVelTau_CCFace( patch, face, vel_CC, velTau_CC );
+          continue;
+        }
 
-          //__________________________________
-          //           Z faces
-          if (face == Patch::zminus || face == Patch::zplus) {
-            computeVelTau_CCFace( patch, face, vel_CC, velTau_CC );
-            continue;
-          }
+        //__________________________________
+        //           Z faces
+        if (face == Patch::zminus || face == Patch::zplus) {
+          computeVelTau_CCFace( patch, face, vel_CC, velTau_CC );
+          continue;
+        }
 
-        }  // face loop
-      }  // has boundary face
-    }  // matl loop
+      }  // face loop
+    }  // has boundary face
   }  // patch loop
 }
 
@@ -1826,100 +1781,95 @@ void ICE_sm::viscousShearStress(const ProcessorGroup*,
     double areaZ = dx.x() * dx.y();
 
     //__________________________________
-    //  Matl loop
-    int numMatls = d_sharedState->getNumICEMatls();
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(d_matl);
+    int indx = ice_matl->getDWIndex();
 
-    for (int m = 0; m < numMatls; m++) {
-      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-      int indx = ice_matl->getDWIndex();
+    CCVariable<Vector>   viscous_src;
+    new_dw->allocateAndPut( viscous_src,  lb->viscous_src_CCLabel,  indx, patch);
+    viscous_src.initialize( Vector(0.,0.,0.) );
 
-      CCVariable<Vector>   viscous_src;
-      new_dw->allocateAndPut( viscous_src,  lb->viscous_src_CCLabel,  indx, patch);
-      viscous_src.initialize( Vector(0.,0.,0.) );
+    //__________________________________
+    // Compute Viscous diffusion for this matl
+    if( d_viscousFlow ){
+      constCCVariable<double>   vol_frac;
+      constCCVariable<double>   rho_CC;
+
+      Ghost::GhostType  gac = Ghost::AroundCells;
+      new_dw->get(vol_frac,  lb->vol_frac_CCLabel, indx,patch,gac,2);
+      new_dw->get(rho_CC,    lb->rho_CCLabel,      indx,patch,gac,2);
+
+      SFCXVariable<Vector> tau_X_FC, Ttau_X_FC;
+      SFCYVariable<Vector> tau_Y_FC, Ttau_Y_FC;
+      SFCZVariable<Vector> tau_Z_FC, Ttau_Z_FC;
+
+      new_dw->allocateAndPut(tau_X_FC, lb->tau_X_FCLabel, indx,patch);
+      new_dw->allocateAndPut(tau_Y_FC, lb->tau_Y_FCLabel, indx,patch);
+      new_dw->allocateAndPut(tau_Z_FC, lb->tau_Z_FCLabel, indx,patch);
+
+      tau_X_FC.initialize( Vector(0.0) );  // DEFAULT VALUE
+      tau_Y_FC.initialize( Vector(0.0) );
+      tau_Z_FC.initialize( Vector(0.0) );
 
       //__________________________________
-      // Compute Viscous diffusion for this matl
-      if( d_viscousFlow ){
-        constCCVariable<double>   vol_frac;
-        constCCVariable<double>   rho_CC;
+      //  compute the shear stress terms
+      double viscosity_test = ice_matl->getViscosity();
+
+      if(viscosity_test != 0.0) {
+        CCVariable<double>        viscosity;
+        constCCVariable<double>   viscosity_org;
+        constCCVariable<Vector>   velTau_CC;
+
+        new_dw->get(viscosity_org, lb->viscosityLabel, indx, patch, gac,2);
+        new_dw->get(velTau_CC,        lb->velTau_CCLabel,    indx, patch, gac,2);
+
+        // don't alter the original value
+        new_dw->allocateTemporary(viscosity, patch, gac, 2);
+        viscosity.copyData(viscosity_org);
+
+        // Use temporary arrays to eliminate the communication of shear stress components
+        // across the network.  Normally you would compute them in a separate task and then
+        // require them with ghostCells to compute the divergence.
+        SFCXVariable<Vector> Ttau_X_FC;
+        SFCYVariable<Vector> Ttau_Y_FC;
+        SFCZVariable<Vector> Ttau_Z_FC;
 
         Ghost::GhostType  gac = Ghost::AroundCells;
-        new_dw->get(vol_frac,  lb->vol_frac_CCLabel, indx,patch,gac,2);
-        new_dw->get(rho_CC,    lb->rho_CCLabel,      indx,patch,gac,2);
+        new_dw->allocateTemporary(Ttau_X_FC, patch, gac, 1);
+        new_dw->allocateTemporary(Ttau_Y_FC, patch, gac, 1);
+        new_dw->allocateTemporary(Ttau_Z_FC, patch, gac, 1);
 
-        SFCXVariable<Vector> tau_X_FC, Ttau_X_FC;
-        SFCYVariable<Vector> tau_Y_FC, Ttau_Y_FC;
-        SFCZVariable<Vector> tau_Z_FC, Ttau_Z_FC;
+        Vector evilNum(-9e30);
+        Ttau_X_FC.initialize( evilNum );
+        Ttau_Y_FC.initialize( evilNum );
+        Ttau_Z_FC.initialize( evilNum );
 
-        new_dw->allocateAndPut(tau_X_FC, lb->tau_X_FCLabel, indx,patch);
-        new_dw->allocateAndPut(tau_Y_FC, lb->tau_Y_FCLabel, indx,patch);
-        new_dw->allocateAndPut(tau_Z_FC, lb->tau_Z_FCLabel, indx,patch);
+        computeTauComponents( patch, vol_frac, velTau_CC,viscosity, Ttau_X_FC, Ttau_Y_FC, Ttau_Z_FC);
 
-        tau_X_FC.initialize( Vector(0.0) );  // DEFAULT VALUE
-        tau_Y_FC.initialize( Vector(0.0) );
-        tau_Z_FC.initialize( Vector(0.0) );
+        for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
+          IntVector c = *iter;
+          right    = c + IntVector(1,0,0);    left     = c + IntVector(0,0,0);
+          top      = c + IntVector(0,1,0);    bottom   = c + IntVector(0,0,0);
+          front    = c + IntVector(0,0,1);    back     = c + IntVector(0,0,0);
 
-        //__________________________________
-        //  compute the shear stress terms
-        double viscosity_test = ice_matl->getViscosity();
+          viscous_src[c].x(  (Ttau_X_FC[right].x() - Ttau_X_FC[left].x())  * areaX +
+                             (Ttau_Y_FC[top].x()   - Ttau_Y_FC[bottom].x())* areaY +
+                             (Ttau_Z_FC[front].x() - Ttau_Z_FC[back].x())  * areaZ  );
 
-        if(viscosity_test != 0.0) {
-          CCVariable<double>        viscosity;
-          constCCVariable<double>   viscosity_org;
-          constCCVariable<Vector>   velTau_CC;
+          viscous_src[c].y(  (Ttau_X_FC[right].y() - Ttau_X_FC[left].y())  * areaX +
+                             (Ttau_Y_FC[top].y()   - Ttau_Y_FC[bottom].y())* areaY +
+                             (Ttau_Z_FC[front].y() - Ttau_Z_FC[back].y())  * areaZ  );
 
-          new_dw->get(viscosity_org, lb->viscosityLabel, indx, patch, gac,2);
-          new_dw->get(velTau_CC,        lb->velTau_CCLabel,    indx, patch, gac,2);
+          viscous_src[c].z(  (Ttau_X_FC[right].z() - Ttau_X_FC[left].z())  * areaX +
+                             (Ttau_Y_FC[top].z()   - Ttau_Y_FC[bottom].z())* areaY +
+                             (Ttau_Z_FC[front].z() - Ttau_Z_FC[back].z())  * areaZ  );
+        }
+        // copy the temporary data
+        tau_X_FC.copyPatch( Ttau_X_FC, tau_X_FC.getLowIndex(), tau_X_FC.getHighIndex() );
+        tau_Y_FC.copyPatch( Ttau_Y_FC, tau_Y_FC.getLowIndex(), tau_Y_FC.getHighIndex() );
+        tau_Z_FC.copyPatch( Ttau_Z_FC, tau_Z_FC.getLowIndex(), tau_Z_FC.getHighIndex() );
 
-          // don't alter the original value
-          new_dw->allocateTemporary(viscosity, patch, gac, 2);
-          viscosity.copyData(viscosity_org);
-
-          // Use temporary arrays to eliminate the communication of shear stress components
-          // across the network.  Normally you would compute them in a separate task and then
-          // require them with ghostCells to compute the divergence.
-          SFCXVariable<Vector> Ttau_X_FC;
-          SFCYVariable<Vector> Ttau_Y_FC;
-          SFCZVariable<Vector> Ttau_Z_FC;
-
-          Ghost::GhostType  gac = Ghost::AroundCells;
-          new_dw->allocateTemporary(Ttau_X_FC, patch, gac, 1);
-          new_dw->allocateTemporary(Ttau_Y_FC, patch, gac, 1);
-          new_dw->allocateTemporary(Ttau_Z_FC, patch, gac, 1);
-
-          Vector evilNum(-9e30);
-          Ttau_X_FC.initialize( evilNum );
-          Ttau_Y_FC.initialize( evilNum );
-          Ttau_Z_FC.initialize( evilNum );
-
-          computeTauComponents( patch, vol_frac, velTau_CC,viscosity, Ttau_X_FC, Ttau_Y_FC, Ttau_Z_FC);
-
-          for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
-            IntVector c = *iter;
-            right    = c + IntVector(1,0,0);    left     = c + IntVector(0,0,0);
-            top      = c + IntVector(0,1,0);    bottom   = c + IntVector(0,0,0);
-            front    = c + IntVector(0,0,1);    back     = c + IntVector(0,0,0);
-
-            viscous_src[c].x(  (Ttau_X_FC[right].x() - Ttau_X_FC[left].x())  * areaX +
-                               (Ttau_Y_FC[top].x()   - Ttau_Y_FC[bottom].x())* areaY +
-                               (Ttau_Z_FC[front].x() - Ttau_Z_FC[back].x())  * areaZ  );
-
-            viscous_src[c].y(  (Ttau_X_FC[right].y() - Ttau_X_FC[left].y())  * areaX +
-                               (Ttau_Y_FC[top].y()   - Ttau_Y_FC[bottom].y())* areaY +
-                               (Ttau_Z_FC[front].y() - Ttau_Z_FC[back].y())  * areaZ  );
-
-            viscous_src[c].z(  (Ttau_X_FC[right].z() - Ttau_X_FC[left].z())  * areaX +
-                               (Ttau_Y_FC[top].z()   - Ttau_Y_FC[bottom].z())* areaY +
-                               (Ttau_Z_FC[front].z() - Ttau_Z_FC[back].z())  * areaZ  );
-          }
-          // copy the temporary data
-          tau_X_FC.copyPatch( Ttau_X_FC, tau_X_FC.getLowIndex(), tau_X_FC.getHighIndex() );
-          tau_Y_FC.copyPatch( Ttau_Y_FC, tau_Y_FC.getLowIndex(), tau_Y_FC.getHighIndex() );
-          tau_Z_FC.copyPatch( Ttau_Z_FC, tau_Z_FC.getLowIndex(), tau_Z_FC.getHighIndex() );
-
-        }  // hasViscosity
-      }  // ice_matl
-    }  // matl loop
+      }  
+    }  // hasViscosity
   }  // patch loop
 }
 
@@ -1963,63 +1913,53 @@ void ICE_sm::accumulateMomentumSourceSinks(const ProcessorGroup*,
     new_dw->get(pressZ_FC,lb->pressZ_FCLabel, 0, patch, gac, 1);
 
     //__________________________________
-    //  Matl loop
-    int numMatls  = d_sharedState->getNumMatls();
-    for(int m = 0; m < numMatls; m++) {
-      Material* matl        = d_sharedState->getMaterial( m );
-      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-      int indx = matl->getDWIndex();
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial( d_matl );
+    int indx = ice_matl->getDWIndex();
 
-      constCCVariable<double>  vol_frac;
-      constCCVariable<double>  rho_CC;
-      CCVariable<Vector>   mom_source;
-      new_dw->get(vol_frac,  lb->vol_frac_CCLabel, indx,patch,gn,0);
-      new_dw->get(rho_CC,    lb->rho_CCLabel,      indx,patch,gn,0);
+    constCCVariable<double>  vol_frac;
+    constCCVariable<double>  rho_CC;
+    CCVariable<Vector>   mom_source;
+    new_dw->get(vol_frac,  lb->vol_frac_CCLabel, indx,patch,gn,0);
+    new_dw->get(rho_CC,    lb->rho_CCLabel,      indx,patch,gn,0);
 
-      new_dw->allocateAndPut(mom_source,  lb->mom_source_CCLabel,  indx, patch);
-      mom_source.initialize( Vector(0.,0.,0.) );
+    new_dw->allocateAndPut(mom_source,  lb->mom_source_CCLabel,  indx, patch);
+    mom_source.initialize( Vector(0.,0.,0.) );
 
-      //__________________________________
-      //  accumulate sources
-      for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
-        IntVector c = *iter;
+    //__________________________________
+    //  accumulate sources
+    for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
+      IntVector c = *iter;
 
-        right    = c + IntVector(1,0,0);    left     = c + IntVector(0,0,0);
-        top      = c + IntVector(0,1,0);    bottom   = c + IntVector(0,0,0);
-        front    = c + IntVector(0,0,1);    back     = c + IntVector(0,0,0);
+      right    = c + IntVector(1,0,0);    left     = c + IntVector(0,0,0);
+      top      = c + IntVector(0,1,0);    bottom   = c + IntVector(0,0,0);
+      front    = c + IntVector(0,0,1);    back     = c + IntVector(0,0,0);
 
-        double press_src_X = ( pressX_FC[right] - pressX_FC[left] )   * vol_frac[c];
-        double press_src_Y = ( pressY_FC[top]   - pressY_FC[bottom] ) * vol_frac[c];
-        double press_src_Z = ( pressZ_FC[front] - pressZ_FC[back] )   * vol_frac[c];
+      double press_src_X = ( pressX_FC[right] - pressX_FC[left] )   * vol_frac[c];
+      double press_src_Y = ( pressY_FC[top]   - pressY_FC[bottom] ) * vol_frac[c];
+      double press_src_Z = ( pressZ_FC[front] - pressZ_FC[back] )   * vol_frac[c];
 
-        mom_source[c].x( -press_src_X * areaX );
-        mom_source[c].y( -press_src_Y * areaY );
-        mom_source[c].z( -press_src_Z * areaZ );
-      }
+      mom_source[c].x( -press_src_X * areaX );
+      mom_source[c].y( -press_src_Y * areaY );
+      mom_source[c].z( -press_src_Z * areaZ );
+    }
 
-      //__________________________________
-      //  ICE _matls:
-      if(ice_matl){
-        constCCVariable<Vector> viscous_src;
-        new_dw->get(viscous_src, lb->viscous_src_CCLabel, indx, patch,gn,0);
+    //__________________________________
+    constCCVariable<Vector> viscous_src;
+    new_dw->get(viscous_src, lb->viscous_src_CCLabel, indx, patch,gn,0);
 
-        for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
-          IntVector c = *iter;
-          double mass = rho_CC[c] * vol;
+    for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
+      IntVector c = *iter;
+      double mass = rho_CC[c] * vol;
 
-          mom_source[c] = (mom_source[c] + viscous_src[c] + mass * gravity );
-        }
+      mom_source[c] = (mom_source[c] + viscous_src[c] + mass * gravity );
+    }
 
-      }  //ice_matl
-
-      //__________________________________
-      //  All Matls
-      for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
-        IntVector c = *iter;
-        mom_source[c] *= delT;
-      }
-
-    }  // matls loop
+    //__________________________________
+    //  All Matls
+    for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
+      IntVector c = *iter;
+      mom_source[c] *= delT;
+    }
   }  //patches
 }
 
@@ -2054,54 +1994,50 @@ void ICE_sm::accumulateEnergySourceSinks(const ProcessorGroup*,
     constCCVariable<double> matl_press;
     constCCVariable<double> rho_CC;
 
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial( d_matl );
+    int indx = ice_matl->getDWIndex();
+    
     Ghost::GhostType  gn  = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->get(press_CC,     lb->press_CCLabel,      0, patch,gn, 0);
-    new_dw->get(delP_Dilatate,lb->delP_DilatateLabel, 0, patch,gn, 0);
+    
+    new_dw->get(press_CC,     lb->press_CCLabel,        indx, patch, gn, 0);
+    new_dw->get(delP_Dilatate,lb->delP_DilatateLabel,   indx, patch, gn, 0);
+    new_dw->get(sp_vol_CC,    lb->sp_vol_CCLabel,       indx, patch, gac,1);
+    new_dw->get(rho_CC,       lb->rho_CCLabel,          indx, patch, gac,1);
+    new_dw->get(kappa,        lb->compressibilityLabel, indx, patch, gn, 0);
+    new_dw->get(vol_frac,     lb->vol_frac_CCLabel,     indx, patch, gac,1);
+    
+    CCVariable<double> int_eng_source;
+    CCVariable<double> heatCond_src;
+    new_dw->allocateAndPut(int_eng_source,  lb->int_eng_source_CCLabel,indx,patch);
+    new_dw->allocateAndPut(heatCond_src,    lb->heatCond_src_CCLabel,  indx,patch);
+    
+    int_eng_source.initialize(0.0);
+    heatCond_src.initialize(0.0);
 
-    for(int m = 0; m < numMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
-      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+    //__________________________________
+    //  Source due to conduction
+    double thermalCond_test = ice_matl->getThermalConductivity();
+    
+    if(thermalCond_test != 0.0 ){
+      constCCVariable<double> Temp_CC;
+      constCCVariable<double> thermalCond;
+      new_dw->get(thermalCond, lb->thermalCondLabel, indx,patch,gac,1);
+      old_dw->get(Temp_CC,     lb->temp_CCLabel,     indx,patch,gac,1);
 
-      int indx    = matl->getDWIndex();
-      CCVariable<double> int_eng_source;
-      CCVariable<double> heatCond_src;
+      bool use_vol_frac = true; // include vol_frac in diffusion calc.
 
-      new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,      indx,patch, gac,1);
-      new_dw->get(rho_CC,     lb->rho_CCLabel,         indx,patch, gac,1);
-      new_dw->get(kappa,      lb->compressibilityLabel,indx,patch, gn, 0);
-      new_dw->get(vol_frac,   lb->vol_frac_CCLabel,    indx,patch, gac,1);
+      scalarDiffusionOperator(new_dw, patch, use_vol_frac, Temp_CC,
+                              vol_frac, heatCond_src, thermalCond, delT);
+    }
 
-      new_dw->allocateAndPut(int_eng_source,  lb->int_eng_source_CCLabel,indx,patch);
-      new_dw->allocateAndPut(heatCond_src,    lb->heatCond_src_CCLabel,  indx,patch);
-      int_eng_source.initialize(0.0);
-      heatCond_src.initialize(0.0);
-
-      //__________________________________
-      //  Source due to conduction ICE only
-      if(ice_matl){
-        double thermalCond_test = ice_matl->getThermalConductivity();
-        if(thermalCond_test != 0.0 ){
-          constCCVariable<double> Temp_CC;
-          constCCVariable<double> thermalCond;
-          new_dw->get(thermalCond, lb->thermalCondLabel, indx,patch,gac,1);
-          old_dw->get(Temp_CC,     lb->temp_CCLabel,     indx,patch,gac,1);
-
-          bool use_vol_frac = true; // include vol_frac in diffusion calc.
-          scalarDiffusionOperator(new_dw, patch, use_vol_frac, Temp_CC,
-                                  vol_frac, heatCond_src, thermalCond, delT);
-        }
-      }
-
-      //__________________________________
-      //   Compute source from volume dilatation
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-        IntVector c = *iter;
-        double A = vol * vol_frac[c] * kappa[c] * press_CC[c];
-        int_eng_source[c] += A * delP_Dilatate[c] + heatCond_src[c];
-      }
-
-    }  // matl loop
+    //__________________________________
+    //   Compute source from volume dilatation
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
+      double A = vol * vol_frac[c] * kappa[c] * press_CC[c];
+      int_eng_source[c] += A * delP_Dilatate[c] + heatCond_src[c];
+    }
   }  // patch loop
 }
 
@@ -2122,65 +2058,61 @@ void ICE_sm::computeLagrangianValues(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     printTask(patches, patch, iceCout, "Doing ICE_sm::computeLagrangianValues" );
-
-    int numALLMatls = d_sharedState->getNumMatls();
     Vector  dx = patch->dCell();
     double vol = dx.x()*dx.y()*dx.z();
 
     //__________________________________
     //  Compute the Lagrangian quantities
-    for(int m = 0; m < numALLMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
-      int indx = matl->getDWIndex();
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial( d_matl );
+    int indx = ice_matl->getDWIndex();
 
-      CCVariable<Vector> mom_L;
-      CCVariable<double> int_eng_L;
-      CCVariable<double> mass_L;
-      CCVariable<double> Tdot;
+    CCVariable<Vector> mom_L;
+    CCVariable<double> int_eng_L;
+    CCVariable<double> mass_L;
+    CCVariable<double> Tdot;
 
-      constCCVariable<double> rho_CC, oldTemp_CC, cv, int_eng_source;
-      constCCVariable<Vector> vel_CC, mom_source;
+    constCCVariable<double> rho_CC, oldTemp_CC, cv, int_eng_source;
+    constCCVariable<Vector> vel_CC, mom_source;
 
-      Ghost::GhostType  gn = Ghost::None;
-      new_dw->get(cv,             lb->specific_heatLabel,    indx,patch,gn,0);
-      new_dw->get(rho_CC,         lb->rho_CCLabel,           indx,patch,gn,0);
-      old_dw->get(vel_CC,         lb->vel_CCLabel,           indx,patch,gn,0);
-      old_dw->get(oldTemp_CC,     lb->temp_CCLabel,          indx,patch,gn,0);
-      new_dw->get(mom_source,     lb->mom_source_CCLabel,    indx,patch,gn,0);
-      new_dw->get(int_eng_source, lb->int_eng_source_CCLabel,indx,patch,gn,0);
+    Ghost::GhostType  gn = Ghost::None;
+    new_dw->get(cv,             lb->specific_heatLabel,    indx,patch,gn,0);
+    new_dw->get(rho_CC,         lb->rho_CCLabel,           indx,patch,gn,0);
+    old_dw->get(vel_CC,         lb->vel_CCLabel,           indx,patch,gn,0);
+    old_dw->get(oldTemp_CC,     lb->temp_CCLabel,          indx,patch,gn,0);
+    new_dw->get(mom_source,     lb->mom_source_CCLabel,    indx,patch,gn,0);
+    new_dw->get(int_eng_source, lb->int_eng_source_CCLabel,indx,patch,gn,0);
 
-      new_dw->allocateAndPut(mom_L,     lb->mom_L_CCLabel,     indx,patch);
-      new_dw->allocateAndPut(int_eng_L, lb->int_eng_L_CCLabel, indx,patch);
-      new_dw->allocateAndPut(mass_L,    lb->mass_L_CCLabel,    indx,patch);
-      new_dw->allocateAndPut(Tdot,      lb->Tdot_CCLabel,      indx,patch);
+    new_dw->allocateAndPut(mom_L,     lb->mom_L_CCLabel,     indx,patch);
+    new_dw->allocateAndPut(int_eng_L, lb->int_eng_L_CCLabel, indx,patch);
+    new_dw->allocateAndPut(mass_L,    lb->mass_L_CCLabel,    indx,patch);
+    new_dw->allocateAndPut(Tdot,      lb->Tdot_CCLabel,      indx,patch);
 
-      //__________________________________
-      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) {
-       IntVector c = *iter;
-        double mass = rho_CC[c] * vol;
+    //__________________________________
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) {
+     IntVector c = *iter;
+      double mass = rho_CC[c] * vol;
 
-        mass_L[c]    = mass;
-        mom_L[c]     = vel_CC[c] * mass + mom_source[c];
-        int_eng_L[c] = mass*  cv[c] * oldTemp_CC[c] + int_eng_source[c];
+      mass_L[c]    = mass;
+      mom_L[c]     = vel_CC[c] * mass + mom_source[c];
+      int_eng_L[c] = mass*  cv[c] * oldTemp_CC[c] + int_eng_source[c];
 
-        double temp_CC =int_eng_L[c]/(mass_L[c]*cv[c]);
-        Tdot[c]      = (temp_CC - oldTemp_CC[c])/delT;
-      }
+      double temp_CC =int_eng_L[c]/(mass_L[c]*cv[c]);
+      Tdot[c]      = (temp_CC - oldTemp_CC[c])/delT;
+    }
 
-      //____ B U L L E T   P R O O F I N G----
-      // catch negative internal energies
-      // ignore BP if timestep restart has already been requested
-      IntVector neg_cell;
-      bool tsr = new_dw->timestepRestarted();
+    //____ B U L L E T   P R O O F I N G----
+    // catch negative internal energies
+    // ignore BP if timestep restart has already been requested
+    IntVector neg_cell;
+    bool tsr = new_dw->timestepRestarted();
 
-      if (!areAllValuesPositive(int_eng_L, neg_cell) && !tsr ) {
-       ostringstream warn;
-       int idx = level->getIndex();
-       warn<<"ICE:(L-"<<idx<<"):computeLagrangianValues, mat "<<indx<<" cell "
-           <<neg_cell<<" Negative int_eng_L: " << int_eng_L[neg_cell] <<  "\n";
-       throw InvalidValue(warn.str(), __FILE__, __LINE__);
-      }
-    }  // end numALLMatl loop
+    if (!areAllValuesPositive(int_eng_L, neg_cell) && !tsr ) {
+     ostringstream warn;
+     int idx = level->getIndex();
+     warn<<"ICE:(L-"<<idx<<"):computeLagrangianValues, mat "<<indx<<" cell "
+         <<neg_cell<<" Negative int_eng_L: " << int_eng_L[neg_cell] <<  "\n";
+     throw InvalidValue(warn.str(), __FILE__, __LINE__);
+    }
   }  // patch loop
 }
 /* _____________________________________________________________________
@@ -2222,7 +2154,9 @@ void ICE_sm::computeLagrangianSpecificVolume(const ProcessorGroup*,
     new_dw->get(delP, lb->delP_DilatateLabel, 0, patch,gn, 0);
     new_dw->get(P,    lb->press_CCLabel,      0, patch,gn, 0);
     sum_therm_exp.initialize(0.);
-
+    
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial( d_matl );
+    int indx = ice_matl->getDWIndex();
     for(int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
@@ -2372,99 +2306,101 @@ void ICE_sm::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
     CCVariable<Vector>  qV_advected;
     new_dw->allocateTemporary(q_advected,   patch);
     new_dw->allocateTemporary(qV_advected,  patch);
+      
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial( d_matl );
+    int indx = ice_matl->getDWIndex();
 
-    int numMatls = d_sharedState->getNumICEMatls();
+    CCVariable<double> mass_adv;
+    CCVariable<double> int_eng_adv;
+    CCVariable<double> sp_vol_adv;
+    CCVariable<Vector> mom_adv;
+    
+    constCCVariable<double>  int_eng_L;
+    constCCVariable<double>  mass_L;
+    constCCVariable<double>  sp_vol_L;
+    constCCVariable<Vector>  mom_L;
+    
+    constSFCXVariable<double > uvel_FC;
+    constSFCYVariable<double > vvel_FC;
+    constSFCZVariable<double > wvel_FC;
 
-    for (int m = 0; m < numMatls; m++ ) {
-      Material* matl = d_sharedState->getICEMaterial( m );
-      int indx = matl->getDWIndex();
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    new_dw->get(uvel_FC,     lb->uvel_FCLabel,          indx,patch,gac,2);
+    new_dw->get(vvel_FC,     lb->vvel_FCLabel,          indx,patch,gac,2);
+    new_dw->get(wvel_FC,     lb->wvel_FCLabel,          indx,patch,gac,2);
 
-      CCVariable<double> mass_adv, int_eng_adv, sp_vol_adv;
-      CCVariable<Vector> mom_adv;
-      constCCVariable<double> int_eng_L, mass_L, sp_vol_L;
-      constCCVariable<Vector> mom_L;
-      constSFCXVariable<double > uvel_FC;
-      constSFCYVariable<double > vvel_FC;
-      constSFCZVariable<double > wvel_FC;
+    new_dw->get(mass_L,      lb->mass_L_CCLabel,        indx,patch,gac,2);
+    new_dw->get(mom_L,       lb->mom_L_CCLabel,         indx,patch,gac,2);
+    new_dw->get(sp_vol_L,    lb->sp_vol_L_CCLabel,      indx,patch,gac,2);
+    new_dw->get(int_eng_L,   lb->int_eng_L_CCLabel,     indx,patch,gac,2);
 
-      Ghost::GhostType  gac = Ghost::AroundCells;
-      new_dw->get(uvel_FC,     lb->uvel_FCLabel,          indx,patch,gac,2);
-      new_dw->get(vvel_FC,     lb->vvel_FCLabel,          indx,patch,gac,2);
-      new_dw->get(wvel_FC,     lb->wvel_FCLabel,          indx,patch,gac,2);
+    new_dw->allocateAndPut(mass_adv,    lb->mass_advLabel,   indx,patch);
+    new_dw->allocateAndPut(mom_adv,     lb->mom_advLabel,    indx,patch);
+    new_dw->allocateAndPut(int_eng_adv, lb->eng_advLabel,    indx,patch);
+    new_dw->allocateAndPut(sp_vol_adv,  lb->sp_vol_advLabel, indx,patch);
 
-      new_dw->get(mass_L,      lb->mass_L_CCLabel,        indx,patch,gac,2);
-      new_dw->get(mom_L,       lb->mom_L_CCLabel,         indx,patch,gac,2);
-      new_dw->get(sp_vol_L,    lb->sp_vol_L_CCLabel,      indx,patch,gac,2);
-      new_dw->get(int_eng_L,   lb->int_eng_L_CCLabel,     indx,patch,gac,2);
+    mass_adv.initialize(0.0);
+    mom_adv.initialize(Vector(0.0,0.0,0.0));
+    int_eng_adv.initialize(0.0);
+    sp_vol_adv.initialize(0.0);
+    q_advected.initialize(0.0);
+    qV_advected.initialize(Vector(0.0,0.0,0.0));
 
-      new_dw->allocateAndPut(mass_adv,    lb->mass_advLabel,   indx,patch);
-      new_dw->allocateAndPut(mom_adv,     lb->mom_advLabel,    indx,patch);
-      new_dw->allocateAndPut(int_eng_adv, lb->eng_advLabel,    indx,patch);
-      new_dw->allocateAndPut(sp_vol_adv,  lb->sp_vol_advLabel, indx,patch);
+    //__________________________________
+    // common variables that get passed into the advection operators
+    advectVarBasket* varBasket = scinew advectVarBasket();
+    varBasket->new_dw = new_dw;
+    varBasket->old_dw = old_dw;
+    varBasket->indx   = indx;
+    varBasket->patch  = patch;
+    varBasket->level  = level;
+    varBasket->lb     = lb;
+    varBasket->useCompatibleFluxes = d_useCompatibleFluxes;
 
-      mass_adv.initialize(0.0);
-      mom_adv.initialize(Vector(0.0,0.0,0.0));
-      int_eng_adv.initialize(0.0);
-      sp_vol_adv.initialize(0.0);
-      q_advected.initialize(0.0);
-      qV_advected.initialize(Vector(0.0,0.0,0.0));
+    //__________________________________
+    //   Advection preprocessing
+    bool bulletProof_test=true;
+    advector->inFluxOutFluxVolume(uvel_FC, vvel_FC, wvel_FC, delT, patch,indx,
+                                  bulletProof_test, new_dw, varBasket);
+    //__________________________________
+    // mass
+    advector->advectMass(mass_L, q_advected,  varBasket);
 
-      //__________________________________
-      // common variables that get passed into the advection operators
-      advectVarBasket* varBasket = scinew advectVarBasket();
-      varBasket->new_dw = new_dw;
-      varBasket->old_dw = old_dw;
-      varBasket->indx   = indx;
-      varBasket->patch  = patch;
-      varBasket->level  = level;
-      varBasket->lb     = lb;
-      varBasket->useCompatibleFluxes = d_useCompatibleFluxes;
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      mass_adv[c]  = (mass_L[c] + q_advected[c]);
+    }
+    //__________________________________
+    // momentum
+    varBasket->is_Q_massSpecific   = true;
+    varBasket->desc = "mom";
+    advector->advectQ(mom_L, mass_L, qV_advected, varBasket);
 
-      //__________________________________
-      //   Advection preprocessing
-      bool bulletProof_test=true;
-      advector->inFluxOutFluxVolume(uvel_FC, vvel_FC, wvel_FC, delT, patch,indx,
-                                    bulletProof_test, new_dw, varBasket);
-      //__________________________________
-      // mass
-      advector->advectMass(mass_L, q_advected,  varBasket);
+    for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
+      IntVector c = *iter;
+      mom_adv[c] = (mom_L[c] + qV_advected[c]) ;
+    }
+    //__________________________________
+    // internal energy
+    varBasket->is_Q_massSpecific = true;
+    varBasket->desc = "int_eng";
+    advector->advectQ(int_eng_L, mass_L, q_advected, varBasket);
 
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
-        IntVector c = *iter;
-        mass_adv[c]  = (mass_L[c] + q_advected[c]);
-      }
-      //__________________________________
-      // momentum
-      varBasket->is_Q_massSpecific   = true;
-      varBasket->desc = "mom";
-      advector->advectQ(mom_L, mass_L, qV_advected, varBasket);
+    for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
+      IntVector c = *iter;
+      int_eng_adv[c] = (int_eng_L[c] + q_advected[c]) ;
+    }
+    //__________________________________
+    // sp_vol[m] * mass
+    varBasket->is_Q_massSpecific = true;
+    varBasket->desc = "sp_vol";
+    advector->advectQ(sp_vol_L,mass_L, q_advected, varBasket);
 
-      for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
-        IntVector c = *iter;
-        mom_adv[c] = (mom_L[c] + qV_advected[c]) ;
-      }
-      //__________________________________
-      // internal energy
-      varBasket->is_Q_massSpecific = true;
-      varBasket->desc = "int_eng";
-      advector->advectQ(int_eng_L, mass_L, q_advected, varBasket);
-
-      for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
-        IntVector c = *iter;
-        int_eng_adv[c] = (int_eng_L[c] + q_advected[c]) ;
-      }
-      //__________________________________
-      // sp_vol[m] * mass
-      varBasket->is_Q_massSpecific = true;
-      varBasket->desc = "sp_vol";
-      advector->advectQ(sp_vol_L,mass_L, q_advected, varBasket);
-
-      for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
-        IntVector c = *iter;
-        sp_vol_adv[c] = (sp_vol_L[c] + q_advected[c]) ;
-      }
-      delete varBasket;
-    }  // ice_matls loop
+    for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
+      IntVector c = *iter;
+      sp_vol_adv[c] = (sp_vol_L[c] + q_advected[c]) ;
+    }
+    delete varBasket;
     delete advector;
   }  // patch loop
 }
@@ -2490,95 +2426,94 @@ void ICE_sm::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
     Vector dx = patch->dCell();
     double invvol = 1.0/(dx.x()*dx.y()*dx.z());
     Ghost::GhostType  gn  = Ghost::None;
-    int numMatls = d_sharedState->getNumICEMatls();
+      
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial( d_matl );
+    int indx = ice_matl->getDWIndex();
 
-    for (int m = 0; m < numMatls; m++ ) {
-      Material* matl = d_sharedState->getICEMaterial( m );
-      int indx = matl->getDWIndex();
+    CCVariable<double> rho_CC, temp_CC, sp_vol_CC,mach;
+    CCVariable<Vector> vel_CC;
+    constCCVariable<double> int_eng_adv, mass_adv,sp_vol_adv,speedSound, cv;
+    constCCVariable<double> gamma, vol_frac;
+    constCCVariable<Vector> mom_adv;
 
-      CCVariable<double> rho_CC, temp_CC, sp_vol_CC,mach;
-      CCVariable<Vector> vel_CC;
-      constCCVariable<double> int_eng_adv, mass_adv,sp_vol_adv,speedSound, cv;
-      constCCVariable<double> gamma, vol_frac;
-      constCCVariable<Vector> mom_adv;
+    new_dw->get(gamma,       lb->gammaLabel,         indx, patch, gn, 0);
+    new_dw->get(speedSound,  lb->speedSound_CCLabel, indx, patch, gn, 0);
+    new_dw->get(vol_frac,    lb->vol_frac_CCLabel,   indx, patch, gn, 0);
+    new_dw->get(cv,          lb->specific_heatLabel, indx, patch, gn, 0);
 
-      new_dw->get(gamma,       lb->gammaLabel,         indx,patch,gn,0);
-      new_dw->get(speedSound,  lb->speedSound_CCLabel, indx,patch,gn,0);
-      new_dw->get(vol_frac,    lb->vol_frac_CCLabel,   indx,patch,gn,0);
-      new_dw->get(cv,          lb->specific_heatLabel, indx,patch,gn,0);
+    new_dw->get(mass_adv,    lb->mass_advLabel,      indx, patch, gn, 0);
+    new_dw->get(mom_adv,     lb->mom_advLabel,       indx, patch, gn, 0);
+    new_dw->get(sp_vol_adv,  lb->sp_vol_advLabel,    indx, patch, gn, 0);
+    new_dw->get(int_eng_adv, lb->eng_advLabel,       indx, patch, gn, 0);
 
-      new_dw->get(mass_adv,    lb->mass_advLabel,      indx,patch,gn,0);
-      new_dw->get(mom_adv,     lb->mom_advLabel,       indx,patch,gn,0);
-      new_dw->get(sp_vol_adv,  lb->sp_vol_advLabel,    indx,patch,gn,0);
-      new_dw->get(int_eng_adv, lb->eng_advLabel,       indx,patch,gn,0);
+    new_dw->getModifiable(sp_vol_CC, lb->sp_vol_CCLabel,indx,patch);
+    new_dw->getModifiable(rho_CC,    lb->rho_CCLabel,   indx,patch);
 
-      new_dw->getModifiable(sp_vol_CC, lb->sp_vol_CCLabel,indx,patch);
-      new_dw->getModifiable(rho_CC,    lb->rho_CCLabel,   indx,patch);
+    new_dw->allocateAndPut(temp_CC,lb->temp_CCLabel,  indx,patch);
+    new_dw->allocateAndPut(vel_CC, lb->vel_CCLabel,   indx,patch);
+    new_dw->allocateAndPut(mach,   lb->machLabel,     indx,patch);
 
-      new_dw->allocateAndPut(temp_CC,lb->temp_CCLabel,  indx,patch);
-      new_dw->allocateAndPut(vel_CC, lb->vel_CCLabel,   indx,patch);
-      new_dw->allocateAndPut(mach,   lb->machLabel,     indx,patch);
+    rho_CC.initialize(-d_EVIL_NUM);
+    temp_CC.initialize(-d_EVIL_NUM);
+    vel_CC.initialize(Vector(0.0,0.0,0.0));
 
-      rho_CC.initialize(-d_EVIL_NUM);
-      temp_CC.initialize(-d_EVIL_NUM);
-      vel_CC.initialize(Vector(0.0,0.0,0.0));
+    //__________________________________
+    // Backout primitive quantities from
+    // the conserved ones.
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      double inv_mass_adv = 1.0/mass_adv[c];
+      rho_CC[c]    = mass_adv[c] * invvol;
+      vel_CC[c]    = mom_adv[c]    * inv_mass_adv;
+      sp_vol_CC[c] = sp_vol_adv[c] * inv_mass_adv;
+    }
 
-      //__________________________________
-      // Backout primitive quantities from
-      // the conserved ones.
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
-        IntVector c = *iter;
-        double inv_mass_adv = 1.0/mass_adv[c];
-        rho_CC[c]    = mass_adv[c] * invvol;
-        vel_CC[c]    = mom_adv[c]    * inv_mass_adv;
-        sp_vol_CC[c] = sp_vol_adv[c] * inv_mass_adv;
-      }
+    //__________________________________
+    // Backout primitive quantities from
+    // the conserved ones.
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      temp_CC[c] = int_eng_adv[c]/ (mass_adv[c]*cv[c]);
+    }
 
-      //__________________________________
-      // Backout primitive quantities from
-      // the conserved ones.
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
-        IntVector c = *iter;
-        temp_CC[c] = int_eng_adv[c]/ (mass_adv[c]*cv[c]);
-      }
+    //__________________________________
+    // set the boundary conditions
+    setBC(rho_CC, "Density",                patch, indx, new_dw);
+    setBC(vel_CC, "Velocity",               patch, indx, new_dw);
+    setBC(temp_CC,"Temperature",gamma, cv,  patch, indx, new_dw );
 
-      //__________________________________
-      // set the boundary conditions
-      setBC(rho_CC, "Density",                patch, indx, new_dw);
-      setBC(vel_CC, "Velocity",               patch, indx, new_dw);
-      setBC(temp_CC,"Temperature",gamma, cv,  patch, indx, new_dw );
+    setSpecificVolBC(sp_vol_CC, "SpecificVol", false,rho_CC,vol_frac, patch, indx);
 
-      setSpecificVolBC(sp_vol_CC, "SpecificVol", false,rho_CC,vol_frac, patch, indx);
+    //__________________________________
+    // Compute Auxilary quantities
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
+      mach[c]  = vel_CC[c].length()/speedSound[c];
+    }
 
-      //__________________________________
-      // Compute Auxilary quantities
-      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
-        IntVector c = *iter;
-        mach[c]  = vel_CC[c].length()/speedSound[c];
-      }
+    //____ B U L L E T   P R O O F I N G----
+    // ignore BP if timestep restart has already been requested
+    IntVector neg_cell;
+    bool tsr = new_dw->timestepRestarted();
 
-      //____ B U L L E T   P R O O F I N G----
-      // ignore BP if timestep restart has already been requested
-      IntVector neg_cell;
-      bool tsr = new_dw->timestepRestarted();
-
-      ostringstream base, warn;
-      base <<"ERROR ICE:(L-"<<L_indx<<"):conservedtoPrimitive_Vars, mat "<< indx <<" cell ";
-      if (!areAllValuesPositive(rho_CC, neg_cell) && !tsr) {
-        warn << base.str() << neg_cell << " negative rho_CC\n ";
-        throw InvalidValue(warn.str(), __FILE__, __LINE__);
-      }
-      if (!areAllValuesPositive(temp_CC, neg_cell) && !tsr) {
-        warn << base.str() << neg_cell << " negative temp_CC\n ";
-        throw InvalidValue(warn.str(), __FILE__, __LINE__);
-      }
-      if (!areAllValuesPositive(sp_vol_CC, neg_cell) && !tsr) {
-       warn << base.str() << neg_cell << " negative sp_vol_CC\n ";
-       throw InvalidValue(warn.str(), __FILE__, __LINE__);
-      }
-    }  // ice_matls loop
+    ostringstream base, warn;
+    base <<"ERROR ICE:(L-"<<L_indx<<"):conservedtoPrimitive_Vars, mat "<< indx <<" cell ";
+    if (!areAllValuesPositive(rho_CC, neg_cell) && !tsr) {
+      warn << base.str() << neg_cell << " negative rho_CC\n ";
+      throw InvalidValue(warn.str(), __FILE__, __LINE__);
+    }
+    if (!areAllValuesPositive(temp_CC, neg_cell) && !tsr) {
+      warn << base.str() << neg_cell << " negative temp_CC\n ";
+      throw InvalidValue(warn.str(), __FILE__, __LINE__);
+    }
+    if (!areAllValuesPositive(sp_vol_CC, neg_cell) && !tsr) {
+     warn << base.str() << neg_cell << " negative sp_vol_CC\n ";
+     throw InvalidValue(warn.str(), __FILE__, __LINE__);
+    }
   }  // patch loop
 }
+
+
 /*_______________________________________________________________________
  Purpose:   Test for conservation of mass, momentum, energy.
 _______________________________________________________________________ */
@@ -2588,6 +2523,8 @@ void ICE_sm::TestConservation(const ProcessorGroup*,
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw)
 {
+
+#if 0
   const Level* level = getLevel(patches);
   delt_vartype delT;
   old_dw->get(delT, d_sharedState->get_delt_label(),level);
@@ -2605,46 +2542,28 @@ void ICE_sm::TestConservation(const ProcessorGroup*,
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
 
-    int numICEmatls = d_sharedState->getNumICEMatls();
     Ghost::GhostType  gn  = Ghost::None;
     //__________________________________
     // get face centered velocities to
     // to compute what's being fluxed through the domain
-    StaticArray<constSFCXVariable<double> >uvel_FC(numICEmatls);
-    StaticArray<constSFCYVariable<double> >vvel_FC(numICEmatls);
-    StaticArray<constSFCZVariable<double> >wvel_FC(numICEmatls);
-    for (int m = 0; m < numICEmatls; m++ ) {
-      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-      int indx = ice_matl->getDWIndex();
-      new_dw->get(uvel_FC[m], lb->uvel_FCLabel, indx,patch,gn,0);
-      new_dw->get(vvel_FC[m], lb->vvel_FCLabel, indx,patch,gn,0);
-      new_dw->get(wvel_FC[m], lb->wvel_FCLabel, indx,patch,gn,0);
-    }
+    constSFCXVariable<double> uvel_FC;
+    constSFCYVariable<double> vvel_FC;
+    constSFCZVariable<double> wvel_FC;
+    
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(d_matl);
+    int indx = ice_matl->getDWIndex();
+    new_dw->get(uvel_FC[m], lb->uvel_FCLabel, indx, patch, gn, 0);
+    new_dw->get(vvel_FC[m], lb->vvel_FCLabel, indx, patch, gn, 0);
+    new_dw->get(wvel_FC[m], lb->wvel_FCLabel, indx, patch, gn, 0);
 
     //__________________________________
     // conservation of mass
-    constCCVariable<double> rho_CC;
-    StaticArray<CCVariable<double> > mass(numICEmatls);
-    for (int m = 0; m < numICEmatls; m++ ) {
+    constCCVariable<double> rho_CC;    
+    new_dw->get(rho_CC, lb->rho_CCLabel,   indx, patch, gn,0);
 
-      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-      int indx = ice_matl->getDWIndex();
-      new_dw->allocateTemporary(mass[m],patch);
-      new_dw->get(rho_CC, lb->rho_CCLabel,   indx, patch, gn,0);
-
-      for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
-        IntVector c = *iter;
-        mass[m][c] = rho_CC[c] * cell_vol;
-      }
-    }
-
-    if(d_conservationTest->mass){
-      for (int m = 0; m < numICEmatls; m++ ) {
-        double mat_mass = 0;
-        conservationTest<double>(patch, delT, mass[m],
-                                 uvel_FC[m], vvel_FC[m], wvel_FC[m],mat_mass);
-        total_mass += mat_mass;
-      }
+    if(d_conservationTest->mass){                                                            
+      conservationTest<double>(patch, delT, mass, uvel_FC, vvel_FC, wvel_FC, total_mass);  
+      total_mass = total_mass * cell_vol;
     }
     //__________________________________
     // conservation of momentum
@@ -2693,7 +2612,7 @@ void ICE_sm::TestConservation(const ProcessorGroup*,
         double mat_int_eng(0);
 
         conservationTest<double>(patch, delT, int_eng,
-                                 uvel_FC[m],vvel_FC[m],wvel_FC[m], mat_int_eng);
+                                 uvel_FC, vvel_FC, wvel_FC, mat_int_eng);
         total_int_eng += mat_int_eng;
       }
     }
@@ -2718,7 +2637,7 @@ void ICE_sm::TestConservation(const ProcessorGroup*,
 
         double mat_KE(0);
         conservationTest<double>(patch, delT, KE,
-                                  uvel_FC[m],vvel_FC[m],wvel_FC[m], mat_KE);
+                                  uvel_FC, vvel_FC, wvel_FC, mat_KE);
         total_KE += mat_KE;
       }
     }
@@ -2733,6 +2652,7 @@ void ICE_sm::TestConservation(const ProcessorGroup*,
   if(d_conservationTest->momentum){
     new_dw->put(sumvec_vartype(total_mom),      lb->TotalMomentumLabel);
   }
+#endif
 }
 
 /*_____________________________________________________________________

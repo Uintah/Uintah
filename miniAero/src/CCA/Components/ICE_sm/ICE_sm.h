@@ -327,6 +327,7 @@ namespace Uintah {
       }
       
       // flags
+      int d_matl;              // ice material index
       bool d_viscousFlow;
 
       MaterialSubset* d_press_matl;
