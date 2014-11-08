@@ -232,7 +232,7 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   }
 
 #ifndef NO_MINIAERO
-  if (sim_comp == "miniAero") {
+  if (sim_comp == "miniaero") {
     return scinew MiniAero(world);
   }
 #else
