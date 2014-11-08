@@ -142,7 +142,8 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   d_papiEvents.insert(pair<int, PapiEvent>(PAPI_L2_TCM, PapiEvent("PAPI_L2_TCM", "L2CacheMisses")));
   d_papiEvents.insert(pair<int, PapiEvent>(PAPI_L3_TCM, PapiEvent("PAPI_L3_TCM", "L3CacheMisses")));
 
-  // For meaningful error reporting - PAPI Version: 4.2.0.0 has 25 error codes defined
+  // For meaningful error reporting - PAPI Version: 5.1.0 has 25 error return codes:
+  d_papiErrorCodes.insert(pair<int, string>( 0,  "No error"));
   d_papiErrorCodes.insert(pair<int, string>(-1,  "Invalid argument"));
   d_papiErrorCodes.insert(pair<int, string>(-2,  "Insufficient memory"));
   d_papiErrorCodes.insert(pair<int, string>(-3,  "A System/C library call failed"));
@@ -953,14 +954,14 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     cout.flush();
 
     if (stats.active()) {
-      stats << left << setw(17)  << "  Description       Ave time:     max Time:   mpi proc:  100*(1-ave/max) '% load imbalance'\n";
+      stats << left << setw(19)  << "  Description         Ave time:       max Time:     mpi proc:    100*(1-ave/max) '% load imbalance'\n";
 
       if(d_myworld->size()>1){
         for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
           if (maxReduce[i].val > 0) {
-            stats << "  "<< left << setw(17)<< statLabels[i] 
-                  << " : " << setw(10) << avgReduce[i] 
-                  << " : " << setw(10) << maxReduce[i].val 
+            stats << "  "<< left << setw(19)<< statLabels[i]
+                  << " : " << setw(12) << avgReduce[i]
+                  << " : " << setw(12) << maxReduce[i].val
                   << " : " << setw(10)  << maxReduce[i].loc
                   << " : " << setw(10)  << 100*(1-(avgReduce[i]/maxReduce[i].val)) << "\n";
           }
@@ -968,9 +969,9 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       }else {//runing in serial
         for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
           if (toReduce[i] > 0){
-            stats << "  "<< left << setw(17)<< statLabels[i] 
-                  << " : " << setw(10) << toReduce[i] 
-                  << " : " << setw(10) << toReduce[i] 
+            stats << "  "<< left << setw(19)<< statLabels[i]
+                  << " : " << setw(12) << toReduce[i]
+                  << " : " << setw(12) << toReduce[i]
                   << " : " << setw(10)  << 0
                   << " : " << setw(10)  << 0 << "\n";
           }
