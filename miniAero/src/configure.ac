@@ -671,6 +671,15 @@ SCI_ARG_ENABLE(ice,
   [BUILD_ICE="no"
    DEF_ICE=["#define NO_ICE"]])
 
+SCI_ARG_ENABLE(ice_sm,
+  AC_HELP_STRING(--enable-ice_sm,
+                 Turn on the Single Material ICE component.),
+  [BUILD_ICE_SM="yes"],
+  [BUILD_ICE_SM="no"
+   DEF_ICE_SM=["#define NO_ICE_SM"]])
+
+
+
 SCI_ARG_ENABLE(miniaero,
   AC_HELP_STRING(--enable-miniaero,
                  Turn on the MiniAero component.),
@@ -699,11 +708,13 @@ SCI_ARG_ENABLE(all_components,
   [use_all_components="yes"
    BUILD_ARCHES="yes"
    BUILD_ICE="yes"
+   BUILD_ICE_SM="yes"   
    BUILD_MINIAERO="yes"
    BUILD_MPM="yes"
    BUILD_WASATCH="yes"
    DEF_ARCHES=
    DEF_ICE=
+   DEF_ICE_SM=
    DEF_MINIAERO=
    DEF_MPM=
    DEF_WASATCH=
@@ -720,6 +731,7 @@ DEF_MODELS_RADIATION=
 if test "$use_all_components" = "yes" -a          \
         \( "$enable_arches"           = "yes" -o  \
            "$enable_ice"              = "yes" -o  \
+           "$enable_ice_sm"           = "yes" -o  \
            "$enable_miniaero"         = "yes" -o  \  
            "$enable_models_radiation" = "yes" -o  \
            "$enable_mpm"              = "yes" -o  \
@@ -728,6 +740,7 @@ if test "$use_all_components" = "yes" -a          \
 fi
 if test "$BUILD_ARCHES"  != "yes"              -a   \
         "$BUILD_ICE"     != "yes"              -a   \
+        "$BUILD_ICE_SM"  != "yes"              -a   \
         "$BUILD_MINIAERO" != "yes"             -a   \   
         "$BUILD_MPM"     != "yes"              -a   \
         "$BUILD_WASATCH" != "yes"; then
@@ -1205,7 +1218,9 @@ fi
 if test "$USE_ICE" != ""; then
    AC_MSG_ERROR( USE_ICE is deprecated.  Please use --enable-ice. )
 fi
-
+if test "$USE_ICE_SM" != ""; then
+   AC_MSG_ERROR( USE_ICE_SM is deprecated.  Please use --enable-ice_sm. )
+fi
 if test "$USE_MINIAERO" != ""; then
    AC_MSG_ERROR( USE_MINIAERO is deprecated.  Please use --enable-miniaero. )
 fi
@@ -1232,6 +1247,7 @@ fi
 
 AC_SUBST(BUILD_ARCHES)
 AC_SUBST(BUILD_ICE)
+AC_SUBST(BUILD_ICE_SM)
 AC_SUBST(BUILD_MINIAERO)
 AC_SUBST(BUILD_MODELS_RADIATION)
 AC_SUBST(BUILD_MPM)
@@ -1239,6 +1255,7 @@ AC_SUBST(BUILD_WASATCH)
 
 AC_SUBST(DEF_ARCHES)
 AC_SUBST(DEF_ICE)
+AC_SUBST(DEF_ICE_SM)
 AC_SUBST(DEF_MINIAERO)
 AC_SUBST(DEF_MPM)
 AC_SUBST(DEF_NO_FORTRAN)

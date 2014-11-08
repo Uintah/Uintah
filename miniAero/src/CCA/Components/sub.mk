@@ -50,6 +50,10 @@ ifeq ($(BUILD_ICE),yes)
   ICE      := $(SRCDIR)/ICE
 endif
 
+ifeq ($(BUILD_ICE_SM),yes)
+  ICE_SM      := $(SRCDIR)/ICE_sm
+endif
+
 ifeq ($(BUILD_MINIAERO),yes)
   MINIAERO := $(SRCDIR)/MiniAero
 endif
@@ -64,12 +68,12 @@ endif
 SUBDIRS := \
         $(MPM)                         \
         $(ICE)                         \
+        $(ICE_SM)                      \
         $(MPMICE)                      \
         $(ARCHES)                      \
         $(MPMARCHES)                   \
         $(WASATCH)                     \
         $(MINIAERO)                    \
-        $(SRCDIR)/ICE_sm               \
         $(SRCDIR)/DataArchiver         \
         $(SRCDIR)/Examples             \
         $(SRCDIR)/LoadBalancers        \

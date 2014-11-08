@@ -52,10 +52,10 @@ PSELIBS := \
         $(ARCHES)                          \
         $(MPMARCHES)                       \
         $(ICE)                             \
+	$(ICE_SM)                          \
         $(MPM)                             \
         $(MPMICE)                          \
         $(MINIAERO)		           \
-        $(COMPONENTS)/ICE_sm               \
         $(COMPONENTS)/Examples             \
         $(COMPONENTS)/ReduceUda            \
         $(COMPONENTS)/ProblemSpecification \
