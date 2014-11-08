@@ -1,6 +1,3 @@
-#ifndef UINTAH_DEFS_H
-#define UINTAH_DEFS_H
-
 /*
  * The MIT License
  *
@@ -25,32 +22,49 @@
  * IN THE SOFTWARE.
  */
 
-@DEF_ZOLTAN@
 
-@DEF_TABPROPS@
-@DEF_RADPROPS@
+#ifndef Packages_Uintah_CCA_Components_MiniAero_MiniAeroLabel_h
+#define Packages_Uintah_CCA_Components_MiniAero_MiniAeroLabel_h
 
-@DEF_ARCHES@
-@DEF_ICE@
-@DEF_MINIAERO@
-@DEF_MPM@
-@DEF_MODELS_RADIATION@
+#include <vector>
 
-@DEF_WASATCH@
-@DEF_WASATCH_IN_ARCHES@
 
-@DEF_NO_FORTRAN@
-@DEF_FORTRAN_UNDERSCORE@
+namespace Uintah {
+  class VarLabel;
+  class MiniAeroLabel {
+  public:
 
-@DEF_RAY_SCATTER@
+    // For SimpleCFD
+    const VarLabel* bctype;
+    const VarLabel* xvelocity;
+    const VarLabel* yvelocity;
+    const VarLabel* zvelocity;
+    const VarLabel* density;
+    const VarLabel* temperature;
+    const VarLabel* pressure;
+    const VarLabel* ccvelocity;
 
-#if !defined( FIX_NAME )
-#  if defined( FORTRAN_UNDERSCORE_END )
-     // This ## magic (apparently) concatenates the _ to the 'fun' varaible.
-#    define FIX_NAME(fun) fun ## _
-#  else // NONE
-#    define FIX_NAME(fun) fun
-#  endif
+    const VarLabel* xvelocity_matrix;
+    const VarLabel* xvelocity_rhs;
+    const VarLabel* yvelocity_matrix;
+    const VarLabel* yvelocity_rhs;
+    const VarLabel* zvelocity_matrix;
+    const VarLabel* zvelocity_rhs;
+    const VarLabel* density_matrix;
+    const VarLabel* density_rhs;
+    const VarLabel* pressure_matrix;
+    const VarLabel* pressure_rhs;
+    const VarLabel* temperature_matrix;
+    const VarLabel* temperature_rhs;
+
+    const VarLabel* ccvorticity;
+    const VarLabel* ccvorticitymag;
+    const VarLabel* vcforce;
+    const VarLabel* NN;
+
+    MiniAeroLabel();
+    ~MiniAeroLabel();
+  };
+}
+
 #endif
-
-#endif // UINTAH_DEFS_H
