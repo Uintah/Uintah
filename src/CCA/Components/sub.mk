@@ -68,8 +68,8 @@ SUBDIRS := \
         $(ARCHES)                      \
         $(MPMARCHES)                   \
         $(WASATCH)                     \
+        $(MINIAERO)                    \
         $(SRCDIR)/ICE_sm               \
-        $(SRCDIR)/MiniAero             \
         $(SRCDIR)/DataArchiver         \
         $(SRCDIR)/Examples             \
         $(SRCDIR)/LoadBalancers        \

@@ -38,7 +38,6 @@
 #include <CCA/Components/ICE/ICE.h>
 #include <CCA/Components/ICE/impAMRICE.h>
 #include <CCA/Components/ICE_sm/ICE_sm.h>
-#include <CCA/Components/MiniAero/MiniAero.h>
 
 #include <CCA/Components/MPM/AMRMPM.h>
 #include <CCA/Components/MPM/ImpMPM.h>
@@ -231,10 +230,7 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "ice_sm") {
     return scinew ICE_sm(world);
   }
-  if (sim_comp == "miniaero") {
-    return scinew MiniAero(world);
-  }
-  /*
+
 #ifndef NO_MINIAERO
   if (sim_comp == "miniAero") {
     return scinew MiniAero(world);
@@ -242,7 +238,7 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
 #else
   turned_off_options += "MINIAERO ";
 #endif
-  */
+
 
   throw ProblemSetupException("Unknown simulationComponent ('" + sim_comp + "'). Must specify -arches, -ice, -mpm, "
                               "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, -poisson3 or -benchmark.\n"

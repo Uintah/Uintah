@@ -54,8 +54,8 @@ PSELIBS := \
         $(ICE)                             \
         $(MPM)                             \
         $(MPMICE)                          \
+        $(MINIAERO)		           \
         $(COMPONENTS)/ICE_sm               \
-        $(COMPONENTS)/MiniAero             \
         $(COMPONENTS)/Examples             \
         $(COMPONENTS)/ReduceUda            \
         $(COMPONENTS)/ProblemSpecification \
