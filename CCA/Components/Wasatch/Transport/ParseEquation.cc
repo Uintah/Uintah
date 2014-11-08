@@ -407,9 +407,25 @@ namespace Wasatch{
     
     const Expr::Tag solnVarRHSTag     = Expr::Tag(solnVarName+"_rhs",Expr::STATE_NONE);
     const Expr::Tag solnVarRHSStarTag = tagNames.make_star_rhs(solnVarName);
+
+    std::string x1="X", x2="Y";
+    if (varDens2DMMSParams->findAttribute("x1"))
+      varDens2DMMSParams->getAttribute("x1",x1);
+    if (varDens2DMMSParams->findAttribute("x2"))
+      varDens2DMMSParams->getAttribute("x2",x2);
+
+    Expr::Tag x1Tag, x2Tag;
     
+    if      (x1 == "X")  x1Tag = tagNames.xsvolcoord;
+    else if (x1 == "Y")  x1Tag = tagNames.ysvolcoord;
+    else if (x1 == "Z")  x1Tag = tagNames.zsvolcoord;
+    
+    if      (x2 == "X")  x2Tag = tagNames.xsvolcoord;
+    else if (x2 == "Y")  x2Tag = tagNames.ysvolcoord;
+    else if (x2 == "Z")  x2Tag = tagNames.zsvolcoord;
+
     GraphHelper* const slngraphHelper = gc[ADVANCE_SOLUTION];
-    slngraphHelper->exprFactory->register_expression( new VarDenMMSOscillatingMixFracSrc<SVolField>::Builder(tagNames.mms_mixfracsrc, tagNames.xsvolcoord, tagNames.ysvolcoord, tagNames.time, rho0, rho1, d, w, k, uf, vf));
+    slngraphHelper->exprFactory->register_expression( new VarDenMMSOscillatingMixFracSrc<SVolField>::Builder(tagNames.mms_mixfracsrc, x1Tag, x2Tag, tagNames.time, rho0, rho1, d, w, k, uf, vf));
     
     slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_mixfracsrc, solnVarRHSTag);
     slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_mixfracsrc, solnVarRHSStarTag);
@@ -464,7 +480,7 @@ namespace Wasatch{
     VarDenParameters varDenParams;
     parse_varden_input(varDenModelParams, varDenParams);
 
-    slngraphHelper->exprFactory->register_expression( new VarDenMMSOscillatingContinuitySrc<SVolField>::Builder( tagNames.mms_continuitysrc, densityTag, densStarTag, dens2StarTag, velTags, velStarTags, rho0, rho1,w, k, uf, vf, tagNames.xsvolcoord, tagNames.ysvolcoord, tagNames.time, tagNames.dt, varDenParams));
+    slngraphHelper->exprFactory->register_expression( new VarDenMMSOscillatingContinuitySrc<SVolField>::Builder( tagNames.mms_continuitysrc, densityTag, densStarTag, dens2StarTag, velTags, velStarTags, rho0, rho1,w, k, uf, vf, x1Tag, x2Tag, tagNames.time, tagNames.dt, varDenParams));
     slngraphHelper->exprFactory->register_expression( new VarDen1DMMSPressureContSrc<SVolField>::Builder( tagNames.mms_pressurecontsrc, tagNames.mms_continuitysrc, tagNames.dt));
     
     slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_pressurecontsrc, tagNames.pressuresrc);
