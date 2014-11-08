@@ -166,13 +166,6 @@ namespace Uintah {
                          DataWarehouse*,
                          DataWarehouse*);
 
-      void updateVel_FC(const ProcessorGroup*,
-                        const PatchSubset*,
-                        const MaterialSubset*,
-                        DataWarehouse*,
-                        DataWarehouse*,
-                        bool);
-
       template<class T>
       void computeVelFace(int dir, CellIterator it,
                           IntVector adj_offset,double dx,
@@ -183,15 +176,6 @@ namespace Uintah {
                           constCCVariable<double>& press_CC,
                           T& vel_FC,
                           T& gradP_FC );
-
-      template<class T>
-      void updateVelFace(int dir, CellIterator it,
-                         IntVector adj_offset,double dx,
-                         double delT,
-                         constCCVariable<double>& sp_vol_CC,
-                         constCCVariable<double>& press_CC,
-                         T& vel_FC,
-                         T& grad_dp_FC);
 
       void computeDelPressAndUpdatePressCC(const ProcessorGroup*,
                                            const PatchSubset* patches,
@@ -254,16 +238,6 @@ namespace Uintah {
                                    DataWarehouse*,
                                    DataWarehouse*);
 
-
-      template< class V, class T>
-      void update_q_CC(const std::string& desc,
-                      CCVariable<T>& q_CC,
-                      V& q_Lagrangian,
-                      const CCVariable<T>& q_advected,
-                      const CCVariable<double>& mass_new,
-                      const CCVariable<double>& cv_new,
-                      const Patch* patch);
-
       void advectAndAdvanceInTime(const ProcessorGroup*,
                                   const PatchSubset* patches,
                                   const MaterialSubset* matls,
@@ -312,16 +286,13 @@ namespace Uintah {
       double d_EVIL_NUM;
       double d_SMALL_NUM;
       double d_CFL;
-      int    d_max_iceMatl_indx;
       Vector d_gravity;
-
 
       //__________________________________
       // Misc
       Advector* d_advector;
       int  d_OrderOfAdvection;
       bool d_useCompatibleFluxes;
-      bool d_clampSpecificVolume;
 
       // flags for the conservation test
        struct conservationTest_flags{
