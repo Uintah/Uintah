@@ -68,6 +68,10 @@
 #include <CCA/Components/MiniAero/MiniAero.h>
 #endif
 
+#ifndef NO_ICE_SM
+#include <CCA/Components/ICE_sm/ICE_sm.h>
+#endif
+
 #include <iosfwd>
 #include <string>
 
@@ -227,10 +231,14 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "reduce_uda") {
     return scinew UdaReducer(world, uda);
   }
+#ifndef NO_ICE_SM  
   if (sim_comp == "ice_sm") {
     return scinew ICE_sm(world);
   }
-
+#else
+  turned_off_options += "ICE_SM ";
+#endif
+  
 #ifndef NO_MINIAERO
   if (sim_comp == "miniaero") {
     return scinew MiniAero(world);

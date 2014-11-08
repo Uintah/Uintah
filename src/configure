@@ -856,12 +856,14 @@ DEF_MODELS_RADIATION
 DEF_NO_FORTRAN
 DEF_MPM
 DEF_MINIAERO
+DEF_ICE_SM
 DEF_ICE
 DEF_ARCHES
 BUILD_WASATCH
 BUILD_MPM
 BUILD_MODELS_RADIATION
 BUILD_MINIAERO
+BUILD_ICE_SM
 BUILD_ICE
 BUILD_ARCHES
 OGL_ERR_MACRO
@@ -1018,6 +1020,7 @@ enable_throw_level
 enable_rpath
 enable_arches
 enable_ice
+enable_ice_sm
 enable_miniaero
 enable_mpm
 enable_wasatch
@@ -1693,6 +1696,7 @@ Optional Features:
 --enable-rpath          Set a default runtime library search path
 --enable-arches         Turn on the Arches component - and Radiation Model.
 --enable-ice            Turn on the Ice component.
+--enable-ice_sm         Turn on the Single Material ICE component.
 --enable-miniaero       Turn on the MiniAero component.
 --enable-mpm            Turn on the Mpm component.
 --enable-wasatch        Turn on the Wasatch component.
@@ -4159,6 +4163,20 @@ fi
 
 
 
+  # Check whether --enable-ice_sm was given.
+if test "${enable_ice_sm+set}" = set; then :
+  enableval=$enable_ice_sm; BUILD_ICE_SM="yes"
+else
+  BUILD_ICE_SM="no"
+   DEF_ICE_SM="#define NO_ICE_SM"
+fi
+
+  sci_arg_enable_list="$sci_arg_enable_list --enable-ice_sm --disable-ice_sm"
+
+
+
+
+
   # Check whether --enable-miniaero was given.
 if test "${enable_miniaero+set}" = set; then :
   enableval=$enable_miniaero; BUILD_MINIAERO="yes"
@@ -4201,11 +4219,13 @@ if test "${enable_all_components+set}" = set; then :
   enableval=$enable_all_components; use_all_components="yes"
    BUILD_ARCHES="yes"
    BUILD_ICE="yes"
+   BUILD_ICE_SM="yes"
    BUILD_MINIAERO="yes"
    BUILD_MPM="yes"
    BUILD_WASATCH="yes"
    DEF_ARCHES=
    DEF_ICE=
+   DEF_ICE_SM=
    DEF_MINIAERO=
    DEF_MPM=
    DEF_WASATCH=
@@ -4227,6 +4247,7 @@ DEF_MODELS_RADIATION=
 if test "$use_all_components" = "yes" -a          \
         \( "$enable_arches"           = "yes" -o  \
            "$enable_ice"              = "yes" -o  \
+           "$enable_ice_sm"           = "yes" -o  \
            "$enable_miniaero"         = "yes" -o  \
            "$enable_models_radiation" = "yes" -o  \
            "$enable_mpm"              = "yes" -o  \
@@ -4235,6 +4256,7 @@ if test "$use_all_components" = "yes" -a          \
 fi
 if test "$BUILD_ARCHES"  != "yes"              -a   \
         "$BUILD_ICE"     != "yes"              -a   \
+        "$BUILD_ICE_SM"  != "yes"              -a   \
         "$BUILD_MINIAERO" != "yes"             -a   \
         "$BUILD_MPM"     != "yes"              -a   \
         "$BUILD_WASATCH" != "yes"; then
@@ -6797,7 +6819,9 @@ fi
 if test "$USE_ICE" != ""; then
    as_fn_error $? "USE_ICE is deprecated.  Please use --enable-ice. " "$LINENO" 5
 fi
-
+if test "$USE_ICE_SM" != ""; then
+   as_fn_error $? "USE_ICE_SM is deprecated.  Please use --enable-ice_sm. " "$LINENO" 5
+fi
 if test "$USE_MINIAERO" != ""; then
    as_fn_error $? "USE_MINIAERO is deprecated.  Please use --enable-miniaero. " "$LINENO" 5
 fi
@@ -6821,6 +6845,8 @@ if test "$with_fortran" = no; then
 fi
 
 # NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
+
+
 
 
 
