@@ -737,13 +737,13 @@ void ICE_sm::actuallyComputeStableTimestep(const ProcessorGroup*,
     oneICEMaterial* ice_matl = d_sharedState->getOneICEMaterial( d_matl );
     int indx = ice_matl->getDWIndex();
 
-    new_dw->get(speedSound, lb->speedSound_CCLabel, indx, patch, gn );
-    new_dw->get(vel_CC,     lb->vel_CCLabel,        indx, patch, gn );
-    new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx, patch, gn );
-    new_dw->get(viscosity,  lb->viscosityLabel,     indx, patch, gn );
-    new_dw->get(thermalCond,lb->thermalCondLabel,   indx, patch, gn );
-    new_dw->get(gamma,      lb->gammaLabel,         indx, patch, gn );
-    new_dw->get(cv,         lb->specific_heatLabel, indx, patch, gn );
+    new_dw->get(speedSound, lb->speedSound_CCLabel, indx, patch, gn, 0 );
+    new_dw->get(vel_CC,     lb->vel_CCLabel,        indx, patch, gn, 0 );
+    new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx, patch, gn, 0 );
+    new_dw->get(viscosity,  lb->viscosityLabel,     indx, patch, gn, 0 );
+    new_dw->get(thermalCond,lb->thermalCondLabel,   indx, patch, gn, 0 );
+    new_dw->get(gamma,      lb->gammaLabel,         indx, patch, gn, 0 );
+    new_dw->get(cv,         lb->specific_heatLabel, indx, patch, gn, 0 );
 
     for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
