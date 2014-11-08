@@ -278,14 +278,11 @@ void SecondOrderAdvector::advectMass( const CCVariable<double>& mass,
   qAverageFlux<double>( compatible, mass, d_notUsed_D, patch, d_mass_slabs, 
                         mass_grad_x, mass_grad_y, mass_grad_z);
 
-  advectSlabs<double>(d_mass_slabs, patch,mass, mass_advected, 
-                        d_notUsedX, d_notUsedY, d_notUsedZ, 
-                        ignore_q_FC_calc_D(), varBasket);
+  advectSlabs<double>(d_mass_slabs, patch,mass, mass_advected, varBasket);
                       
   // compute mass_CC/mass_vertex for each cell node                    
   mass_massVertex_ratio(mass, patch, mass_grad_x, mass_grad_y, mass_grad_z);
-  
-  q_FC_fluxes<double>(mass, d_mass_slabs,"mass", varBasket);
+
 }
 
 
@@ -342,11 +339,7 @@ void SecondOrderAdvector::advectQ( const CCVariable<double>& A_CC,
   qAverageFlux<double>( compatible, q_CC, mass, patch, q_OAFS, 
                         q_grad_x, q_grad_y, q_grad_z);
         
-  advectSlabs<double>(q_OAFS,patch,q_CC, q_advected, 
-                        d_notUsedX, d_notUsedY, d_notUsedZ, 
-                        ignore_q_FC_calc_D(), varBasket);
-                      
-  q_FC_fluxes<double>(q_CC, q_OAFS, varBasket->desc, varBasket);  
+  advectSlabs<double>(q_OAFS,patch,q_CC, q_advected, varBasket); 
 }
 //__________________________________
 //  S P E C I A L I Z E D   D O U B L E 
@@ -355,9 +348,6 @@ void SecondOrderAdvector::advectQ( const CCVariable<double>& q_CC,
                                    const Patch* patch,
                                    CCVariable<double>& q_advected,
                                    advectVarBasket* varBasket,
-                                   SFCXVariable<double>& q_XFC,
-                                   SFCYVariable<double>& q_YFC,
-                                   SFCZVariable<double>& q_ZFC,
                                    DataWarehouse* new_dw)
 {
   Ghost::GhostType  gac = Ghost::AroundCells;
@@ -374,8 +364,7 @@ void SecondOrderAdvector::advectQ( const CCVariable<double>& q_CC,
   bool compatible = false;
   
   // compute the limited gradients    
-  gradQ<double>(q_CC, patch, 
-                q_grad_x, q_grad_y, q_grad_z); 
+  gradQ<double>(q_CC, patch, q_grad_x, q_grad_y, q_grad_z); 
   
   Q_vertex<double>(compatible, q_CC, q_vertex, patch,
                     q_grad_x, q_grad_y,  q_grad_z); 
@@ -387,13 +376,7 @@ void SecondOrderAdvector::advectQ( const CCVariable<double>& q_CC,
   qAverageFlux<double>( compatible, q_CC, d_notUsed_D, patch, q_OAFS, 
                         q_grad_x, q_grad_y, q_grad_z);
         
-  advectSlabs<double>(q_OAFS,patch, q_CC, q_advected, 
-                      q_XFC, q_YFC, q_ZFC, save_q_FC(), varBasket);
-                      
-  q_FC_PlusFaces( q_OAFS, q_CC, patch, q_XFC, q_YFC, q_ZFC, varBasket);
-  
-  // fluxes on faces at the coarse fine interfaces                    
-  q_FC_fluxes<double>(q_CC, q_OAFS, "vol_frac", varBasket);
+  advectSlabs<double>(q_OAFS,patch, q_CC, q_advected, varBasket);
 }
 //__________________________________
 //     V E C T O R
@@ -440,25 +423,17 @@ void SecondOrderAdvector::advectQ(const CCVariable<Vector>& A_CC,
   qAverageFlux<Vector>( compatible, q_CC, mass, patch, q_OAFS, 
                         q_grad_x, q_grad_y, q_grad_z);
 
-  advectSlabs<Vector>(q_OAFS,patch, q_CC, q_advected, 
-                      d_notUsedX, d_notUsedY, d_notUsedZ, 
-                      ignore_q_FC_calc_V(), varBasket);
-
-  q_FC_fluxes<Vector>(q_CC, q_OAFS, varBasket->desc, varBasket);  
+  advectSlabs<Vector>(q_OAFS,patch, q_CC, q_advected, varBasket); 
 }
 
 /*_____________________________________________________________________
  Function~  Advect--  driver program that does the advection  
 _____________________________________________________________________*/
-template < class T, typename F>
+template < class T >
 void SecondOrderAdvector::advectSlabs( CCVariable<facedata<T> >& q_OAFS,
                                        const Patch* patch,
                                        const CCVariable<T>& q_CC,              
                                        CCVariable<T>& q_advected,
-                                       SFCXVariable<double>& q_XFC,
-                                       SFCYVariable<double>& q_YFC,
-                                       SFCZVariable<double>& q_ZFC,
-                                       F save_q_FC,
                                        advectVarBasket* VB)  // function is passed in
   
 {
@@ -489,11 +464,6 @@ void SecondOrderAdvector::advectSlabs( CCVariable<facedata<T> >& q_OAFS,
       sum_q_face_flux += q_faceFlux_tmp;
     }  
     q_advected[c] = sum_q_face_flux*invVol;
-    
-
-    //__________________________________
-    //  inline function to compute q_FC 
-    save_q_FC(c, q_XFC, q_YFC, q_ZFC, faceVol, q_face_flux, q_CC);
   }
 }
 //______________________________________________________________________

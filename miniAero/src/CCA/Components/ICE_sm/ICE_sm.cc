@@ -177,7 +177,7 @@ void ICE_sm::problemSetup(const ProblemSpecP& prob_spec,
 
 /*______________________________________________________________________
  Purpose~   outputs material state during a checkpoint.  The material
-            can change
+            state can change throughout the simulation
  _____________________________________________________________________*/
 void ICE_sm::outputProblemSpec(ProblemSpecP& root_ps)
 {
@@ -198,7 +198,7 @@ void ICE_sm::outputProblemSpec(ProblemSpecP& root_ps)
 }
 
 /* _____________________________________________________________________
-    Purpose~     initialize variables
+    Purpose~     initialize variables primitive variables
 _____________________________________________________________________*/
 void ICE_sm::scheduleInitialize(const LevelP& level,
                                  SchedulerP& sched)
@@ -461,9 +461,6 @@ ICE_sm::sched_ComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   task->computes(lb->delP_DilatateLabel);
   task->computes(lb->term2Label);
   task->computes(lb->sum_rho_CCLabel);
-  task->computes(lb->vol_fracX_FCLabel);
-  task->computes(lb->vol_fracY_FCLabel);
-  task->computes(lb->vol_fracZ_FCLabel);
 
   sched->setRestartable(true);
   sched->addTask(task, patches, matls);
@@ -536,7 +533,6 @@ ICE_sm::sched_ViscousShearStress(SchedulerP& sched,
     t->requires( Task::NewDW, lb->viscosityLabel,   gac, 2);
     t->requires( Task::NewDW, lb->velTau_CCLabel,   gac, 2);
     t->requires( Task::NewDW, lb->rho_CCLabel,      gac, 2);
-    t->requires( Task::NewDW, lb->vol_frac_CCLabel, gac, 2);
 
     t->computes( lb->tau_X_FCLabel );
     t->computes( lb->tau_Y_FCLabel );
@@ -570,7 +566,6 @@ ICE_sm::sched_AccumulateMomentumSourceSinks(SchedulerP& sched,
   t->requires( Task::NewDW, lb->pressZ_FCLabel,      gac, 1);
   t->requires( Task::NewDW, lb->viscous_src_CCLabel, gn, 0);
   t->requires( Task::NewDW, lb->rho_CCLabel,         gn, 0);
-  t->requires( Task::NewDW, lb->vol_frac_CCLabel,    gn, 0);
 
   t->computes(lb->mom_source_CCLabel);
   
@@ -601,8 +596,7 @@ ICE_sm::sched_AccumulateEnergySourceSinks(SchedulerP& sched,
   t->requires(Task::OldDW, lb->temp_CCLabel,         gac,1);
   t->requires(Task::NewDW, lb->thermalCondLabel,     gac,1);
   t->requires(Task::NewDW, lb->rho_CCLabel,          gac,1);        
-  t->requires(Task::NewDW, lb->sp_vol_CCLabel,       gac,1);        
-  t->requires(Task::NewDW, lb->vol_frac_CCLabel,     gac,1);        
+  t->requires(Task::NewDW, lb->sp_vol_CCLabel,       gac,1);            
 
   t->computes(lb->int_eng_source_CCLabel);
   t->computes(lb->heatCond_src_CCLabel);
@@ -1356,17 +1350,10 @@ void ICE_sm::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     CCVariable<double> sum_rho_CC;
     CCVariable<double> press_CC;
     CCVariable<double> term1, term2;
-
-    SFCXVariable<double> vol_fracX_FC;
-    SFCYVariable<double> vol_fracY_FC;
-    SFCZVariable<double> vol_fracZ_FC;
     
     oneICEMaterial* ice_matl = d_sharedState->getOneICEMaterial(d_matl);
     int indx = ice_matl->getDWIndex();
     
-    new_dw->allocateAndPut(vol_fracX_FC, lb->vol_fracX_FCLabel,  indx, patch);
-    new_dw->allocateAndPut(vol_fracY_FC, lb->vol_fracY_FCLabel,  indx, patch);
-    new_dw->allocateAndPut(vol_fracZ_FC, lb->vol_fracZ_FCLabel,  indx, patch);
     new_dw->allocateAndPut( press_CC,    lb->press_CCLabel,      indx, patch);
     new_dw->allocateAndPut(delP_Dilatate,lb->delP_DilatateLabel, indx, patch);
     new_dw->allocateAndPut(term2,        lb->term2Label,         indx, patch);
@@ -1407,14 +1394,6 @@ void ICE_sm::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     new_dw->get(sumKappa,    lb->sumKappaLabel,       indx, patch, gn, 0);           
     new_dw->get(press_equil, lb->press_equil_CCLabel, indx, patch, gn, 0);            
 
-
-    // lowIndex is the same for all vel_FC
-    IntVector lowIndex(patch->getExtraSFCXLowIndex());
-    double nan= getNan();
-    vol_fracX_FC.initialize(nan, lowIndex,patch->getExtraSFCXHighIndex());
-    vol_fracY_FC.initialize(nan, lowIndex,patch->getExtraSFCYHighIndex());
-    vol_fracZ_FC.initialize(nan, lowIndex,patch->getExtraSFCZHighIndex());
-
     //__________________________________
     // Advection preprocessing
     // - divide vol_frac_cc/vol
@@ -1426,8 +1405,7 @@ void ICE_sm::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     //__________________________________
     //   advect vol_frac
     varBasket->doRefluxing = false;  // don't need to reflux here
-    advector->advectQ(vol_frac, patch, q_advected, varBasket,
-                      vol_fracX_FC, vol_fracY_FC,  vol_fracZ_FC, new_dw);
+    advector->advectQ(vol_frac, patch, q_advected, varBasket, new_dw);
 
     delete varBasket;
 
@@ -1678,13 +1656,11 @@ void ICE_sm::viscousShearStress(const ProcessorGroup*,
     viscous_src.initialize( Vector(0.,0.,0.) );
 
     //__________________________________
-    // Compute Viscous diffusion for this matl
+    // Compute Viscous diffusion
     if( d_viscousFlow ){
-      constCCVariable<double>   vol_frac;
       constCCVariable<double>   rho_CC;
 
       Ghost::GhostType  gac = Ghost::AroundCells;
-      new_dw->get(vol_frac,  lb->vol_frac_CCLabel, indx,patch,gac,2);
       new_dw->get(rho_CC,    lb->rho_CCLabel,      indx,patch,gac,2);
 
       SFCXVariable<Vector> tau_X_FC, Ttau_X_FC;
@@ -1704,16 +1680,11 @@ void ICE_sm::viscousShearStress(const ProcessorGroup*,
       double viscosity_test = ice_matl->getViscosity();
 
       if(viscosity_test != 0.0) {
-        CCVariable<double>        viscosity;
-        constCCVariable<double>   viscosity_org;
+        constCCVariable<double>   viscosity;
         constCCVariable<Vector>   velTau_CC;
 
-        new_dw->get(viscosity_org, lb->viscosityLabel, indx, patch, gac,2);
-        new_dw->get(velTau_CC,     lb->velTau_CCLabel, indx, patch, gac,2);
-
-        // don't alter the original value
-        new_dw->allocateTemporary(viscosity, patch, gac, 2);
-        viscosity.copyData(viscosity_org);
+        new_dw->get(viscosity, lb->viscosityLabel, indx, patch, gac,2);
+        new_dw->get(velTau_CC, lb->velTau_CCLabel, indx, patch, gac,2);
 
         // Use temporary arrays to eliminate the communication of shear stress components
         // across the network.  Normally you would compute them in a separate task and then
@@ -1732,7 +1703,7 @@ void ICE_sm::viscousShearStress(const ProcessorGroup*,
         Ttau_Y_FC.initialize( evilNum );
         Ttau_Z_FC.initialize( evilNum );
 
-        computeTauComponents( patch, vol_frac, velTau_CC,viscosity, Ttau_X_FC, Ttau_Y_FC, Ttau_Z_FC);
+        computeTauComponents( patch, velTau_CC,viscosity, Ttau_X_FC, Ttau_Y_FC, Ttau_Z_FC);
 
         for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
           IntVector c = *iter;
@@ -1805,10 +1776,8 @@ void ICE_sm::accumulateMomentumSourceSinks(const ProcessorGroup*,
     new_dw->get(pressZ_FC,lb->pressZ_FCLabel, indx, patch, gac, 1);
 
     //__________________________________
-    constCCVariable<double>  vol_frac;
     constCCVariable<double>  rho_CC;
     CCVariable<Vector>   mom_source;
-    new_dw->get(vol_frac,  lb->vol_frac_CCLabel, indx,patch,gn,0);
     new_dw->get(rho_CC,    lb->rho_CCLabel,      indx,patch,gn,0);
 
     new_dw->allocateAndPut(mom_source,  lb->mom_source_CCLabel,  indx, patch);
@@ -1823,9 +1792,9 @@ void ICE_sm::accumulateMomentumSourceSinks(const ProcessorGroup*,
       top      = c + IntVector(0,1,0);    bottom   = c + IntVector(0,0,0);
       front    = c + IntVector(0,0,1);    back     = c + IntVector(0,0,0);
 
-      double press_src_X = ( pressX_FC[right] - pressX_FC[left] )   * vol_frac[c];
-      double press_src_Y = ( pressY_FC[top]   - pressY_FC[bottom] ) * vol_frac[c];
-      double press_src_Z = ( pressZ_FC[front] - pressZ_FC[back] )   * vol_frac[c];
+      double press_src_X = ( pressX_FC[right] - pressX_FC[left] );
+      double press_src_Y = ( pressY_FC[top]   - pressY_FC[bottom] );
+      double press_src_Z = ( pressZ_FC[front] - pressZ_FC[back] );
 
       mom_source[c].x( -press_src_X * areaX );
       mom_source[c].y( -press_src_Y * areaY );
@@ -1875,7 +1844,6 @@ void ICE_sm::accumulateEnergySourceSinks(const ProcessorGroup*,
 
     constCCVariable<double> sp_vol_CC;
     constCCVariable<double> kappa;
-    constCCVariable<double> vol_frac;
     constCCVariable<double> press_CC;
     constCCVariable<double> delP_Dilatate;
     constCCVariable<double> matl_press;
@@ -1892,7 +1860,6 @@ void ICE_sm::accumulateEnergySourceSinks(const ProcessorGroup*,
     new_dw->get(sp_vol_CC,    lb->sp_vol_CCLabel,       indx, patch, gac,1);
     new_dw->get(rho_CC,       lb->rho_CCLabel,          indx, patch, gac,1);
     new_dw->get(kappa,        lb->compressibilityLabel, indx, patch, gn, 0);
-    new_dw->get(vol_frac,     lb->vol_frac_CCLabel,     indx, patch, gac,1);
     
     CCVariable<double> int_eng_source;
     CCVariable<double> heatCond_src;
@@ -1912,17 +1879,14 @@ void ICE_sm::accumulateEnergySourceSinks(const ProcessorGroup*,
       new_dw->get(thermalCond, lb->thermalCondLabel, indx,patch,gac,1);
       old_dw->get(Temp_CC,     lb->temp_CCLabel,     indx,patch,gac,1);
 
-      bool use_vol_frac = true; // include vol_frac in diffusion calc.
-
-      scalarDiffusionOperator(new_dw, patch, use_vol_frac, Temp_CC,
-                              vol_frac, heatCond_src, thermalCond, delT);
+      scalarDiffusionOperator(new_dw, patch, Temp_CC, heatCond_src, thermalCond, delT);
     }
 
     //__________________________________
     //   Compute source from volume dilatation
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
-      double A = vol * vol_frac[c] * kappa[c] * press_CC[c];
+      double A = vol * kappa[c] * press_CC[c];
       int_eng_source[c] += A * delP_Dilatate[c] + heatCond_src[c];
     }
   }  // patch loop

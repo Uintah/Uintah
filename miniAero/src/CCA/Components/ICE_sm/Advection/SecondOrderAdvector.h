@@ -63,9 +63,6 @@ namespace Uintah {
                           const Patch* patch,
                           CCVariable<double>& q_advected,
                           advectVarBasket* varBasket,
-                          SFCXVariable<double>& q_XFC,
-                          SFCYVariable<double>& q_YFC,
-                          SFCZVariable<double>& q_ZFC,
                           DataWarehouse* /*new_dw*/);
 
     virtual void advectQ(const CCVariable<double>& q_CC,
@@ -96,15 +93,11 @@ namespace Uintah {
                         const CCVariable<T>& grad_y,
                         const CCVariable<T>& grad_z);
                                          
-    template<class T, typename F> 
+    template<class T> 
       void advectSlabs(CCVariable<facedata<T> >& q_OAFS,
                        const Patch* patch,
                        const CCVariable<T>& q_CC,
                        CCVariable<T>& q_advected,
-                       SFCXVariable<double>& q_XFC,
-                       SFCYVariable<double>& q_YFC,
-                       SFCZVariable<double>& q_ZFC,
-                       F save_q_FC,
                        advectVarBasket* varBasket);  // passed in function
                        
     template<class T>

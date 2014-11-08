@@ -189,12 +189,7 @@ void FirstOrderAdvector::advectMass(const CCVariable<double>& q_CC,
                                     advectVarBasket* varBasket)
 {
         
-  advectSlabs<double>(q_CC,varBasket->patch,q_advected, 
-                      d_notUsedX, d_notUsedY, d_notUsedZ, 
-                      ignore_q_FC_calc_D(), varBasket);
-                      
-  // fluxes on faces at the coarse fine interfaces                    
-  q_FC_fluxes<double>(q_CC, "mass", varBasket);                
+  advectSlabs<double>(q_CC,varBasket->patch,q_advected, varBasket);       
 }
 
 //__________________________________
@@ -205,12 +200,7 @@ void FirstOrderAdvector::advectQ(const CCVariable<double>& q_CC,
                                  CCVariable<double>& q_advected,
                                  advectVarBasket* varBasket)
 {                                 
-  advectSlabs<double>(q_CC,varBasket->patch,q_advected, 
-                      d_notUsedX, d_notUsedY, d_notUsedZ, 
-                      ignore_q_FC_calc_D(), varBasket);
-                      
-  // fluxes on faces at the coarse fine interfaces                    
-  q_FC_fluxes<double>(q_CC, varBasket->desc, varBasket);
+  advectSlabs<double>(q_CC,varBasket->patch,q_advected, varBasket);
 }
 
 //__________________________________
@@ -220,19 +210,9 @@ void FirstOrderAdvector::advectQ(const CCVariable<double>& q_CC,
                                  const Patch* patch,
                                  CCVariable<double>& q_advected,
                                  advectVarBasket* varBasket,
-                                 SFCXVariable<double>& q_XFC,
-                                 SFCYVariable<double>& q_YFC,
-                                 SFCZVariable<double>& q_ZFC,
-                                     DataWarehouse* /*new_dw*/)
+                                 DataWarehouse* /*new_dw*/)
 {
-  advectSlabs<double>(q_CC,patch,q_advected,  
-                      q_XFC, q_YFC, q_ZFC, save_q_FC(), varBasket);
-                      
-  // fluxes on faces at the coarse fine interfaces                    
-  q_FC_PlusFaces( q_CC, patch, q_XFC, q_YFC, q_ZFC, varBasket); 
-  
-  // fluxes on faces at the coarse fine interfaces                    
-  q_FC_fluxes<double>(q_CC, "vol_frac", varBasket);
+  advectSlabs<double>(q_CC,patch,q_advected,  varBasket);
 }
 //__________________________________
 //     V E C T O R  (momentum)
@@ -241,25 +221,17 @@ void FirstOrderAdvector::advectQ(const CCVariable<Vector>& q_CC,
                                  CCVariable<Vector>& q_advected,
                                  advectVarBasket* varBasket)
 {
-  advectSlabs<Vector>(q_CC,varBasket->patch,q_advected, 
-                      d_notUsedX, d_notUsedY, d_notUsedZ, 
-                      ignore_q_FC_calc_V(), varBasket);
+  advectSlabs<Vector>(q_CC,varBasket->patch,q_advected, varBasket);
                       
-  // fluxes on faces at the coarse fine interfaces
-  q_FC_fluxes<Vector>(q_CC, varBasket->desc, varBasket);
 } 
 
 /*_____________________________________________________________________
  Function~  Advect--  driver program that does the advection  
 _____________________________________________________________________*/
-template <class T, typename F> 
+template <class T> 
   void FirstOrderAdvector::advectSlabs(const CCVariable<T>& q_CC,
                                        const Patch* patch,                   
                                        CCVariable<T>& q_advected,
-                                       SFCXVariable<double>& q_XFC,
-                                       SFCYVariable<double>& q_YFC,
-                                       SFCZVariable<double>& q_ZFC,
-                                       F save_q_FC,
                                        advectVarBasket* VB) // function is passed in
 {                  
   Vector dx = patch->dCell();            
@@ -291,10 +263,6 @@ template <class T, typename F>
       sum_q_face_flux += q_faceFlux_tmp;
     }  
     q_advected[c] = sum_q_face_flux*invvol;
-    
-    //__________________________________
-    //  inline function to compute q_FC
-    save_q_FC(c, q_XFC, q_YFC, q_ZFC, faceVol, q_face_flux, q_CC); 
   }
 }
 /*_____________________________________________________________________
