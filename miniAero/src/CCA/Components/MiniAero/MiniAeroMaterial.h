@@ -1,6 +1,3 @@
-#ifndef UINTAH_DEFS_H
-#define UINTAH_DEFS_H
-
 /*
  * The MIT License
  *
@@ -25,32 +22,54 @@
  * IN THE SOFTWARE.
  */
 
-@DEF_ZOLTAN@
+#ifndef __MINI_AERO_MATERIAL_H__
+#define __MINI_AERO_MATERIAL_H__
 
-@DEF_TABPROPS@
-@DEF_RADPROPS@
 
-@DEF_ARCHES@
-@DEF_ICE@
-@DEF_MINIAERO@
-@DEF_MPM@
-@DEF_MODELS_RADIATION@
+#include <CCA/Ports/DataWarehouseP.h>
+#include <Core/Grid/Material.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
-@DEF_WASATCH@
-@DEF_WASATCH_IN_ARCHES@
+namespace Uintah {
+  using namespace SCIRun;
+  class EquationOfState;
+  class GeometryObject;
+ 
+ 
+class MiniAeroMaterial : public Material {
+  public:
+    MiniAeroMaterial(ProblemSpecP&, 
+                SimulationStateP& sharedState);
 
-@DEF_NO_FORTRAN@
-@DEF_FORTRAN_UNDERSCORE@
+    ~MiniAeroMaterial();
 
-@DEF_RAY_SCATTER@
+    virtual ProblemSpecP outputProblemSpec(ProblemSpecP& ps);
 
-#if !defined( FIX_NAME )
-#  if defined( FORTRAN_UNDERSCORE_END )
-     // This ## magic (apparently) concatenates the _ to the 'fun' varaible.
-#    define FIX_NAME(fun) fun ## _
-#  else // NONE
-#    define FIX_NAME(fun) fun
-#  endif
-#endif
 
-#endif // UINTAH_DEFS_H
+  private:
+
+    double d_viscosity;
+    double d_gamma;
+    bool d_isSurroundingMatl; // defines which matl is the background matl.
+    bool d_includeFlowWork;
+    double d_specificHeat;
+    double d_thermalConductivity;
+    double d_tiny_rho;
+
+    std::vector<GeometryObject*> d_geom_objs;
+
+    // Prevent copying of this class
+    // copy constructor
+    MiniAeroMaterial(const MiniAeroMaterial &miniaerom);
+    MiniAeroMaterial& operator=(const MiniAeroMaterial &miniaerom);        
+
+};
+} // End namespace Uintah
+
+#endif // __ICE_MATERIAL_H__
+
+
+
+
+
