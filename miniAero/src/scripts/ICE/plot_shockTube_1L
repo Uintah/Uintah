@@ -101,7 +101,7 @@ set origin 0.0,0.0
 set ylabel "Pressure"
 set y2tics
 set xrange [0:1]
-set pointsize 0.3
+set pointsize 0.5
 plot  '$uda/exactSolution.dat'     using 1:4 t 'exact' with lines, \
       '$uda/press.dat'             using 1:4 t 'simulation'
 

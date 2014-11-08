@@ -37,9 +37,9 @@ SecondOrderAdvector::SecondOrderAdvector(DataWarehouse* new_dw,
                                          const bool isNewGrid) 
 {
   Ghost::GhostType  gac = Ghost::AroundCells;
-  new_dw->allocateTemporary(r_out_x,       patch, gac, 1); 
-  new_dw->allocateTemporary(r_out_y,       patch, gac, 1); 
-  new_dw->allocateTemporary(r_out_z,       patch, gac, 1);
+  new_dw->allocateTemporary(r_out_x,           patch, gac, 1); 
+  new_dw->allocateTemporary(r_out_y,           patch, gac, 1); 
+  new_dw->allocateTemporary(r_out_z,           patch, gac, 1);
   new_dw->allocateTemporary(d_mass_massVertex, patch, gac, 1);
   new_dw->allocateTemporary(d_mass_slabs,      patch, gac, 1);
   
@@ -284,14 +284,6 @@ void SecondOrderAdvector::advectQ( const CCVariable<double>& A_CC,
   DataWarehouse* new_dw    = varBasket->new_dw;
   bool useCompatibleFluxes = varBasket->useCompatibleFluxes;
   bool is_Q_massSpecific   = varBasket ->is_Q_massSpecific;
-  
-  d_smokeOnOff = false;
-#if 0
-  if(varBasket->desc == "scalar-f"){
-    cout << " SCALAR-F--------------------------------- L-" <<patch->getLevel()->getIndex()<< endl;
-    d_smokeOnOff = true;
-  }
-#endif
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   CCVariable<facedata<double> > q_OAFS;

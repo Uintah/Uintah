@@ -48,8 +48,6 @@
 #include <vector>
 #include <string>
 
-#define MAX_MATLS 16
-
 namespace Uintah {
   using namespace SCIRun;
 
