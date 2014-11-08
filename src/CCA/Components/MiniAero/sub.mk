@@ -33,7 +33,7 @@ SRCDIR   := CCA/Components/MiniAero
 
 SRCS       += $(SRCDIR)/MiniAero.cc 
        
-include $(SCIRUN_SCRIPTS)/recurse.mk          
+#include $(SCIRUN_SCRIPTS)/recurse.mk          
 
 PSELIBS := \
        CCA/Components/OnTheFlyAnalysis \
