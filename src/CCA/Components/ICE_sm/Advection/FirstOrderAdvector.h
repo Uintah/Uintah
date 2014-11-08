@@ -60,9 +60,6 @@ namespace Uintah {
                           const Patch* patch,
                           CCVariable<double>& q_advected,
                           advectVarBasket* varBasket,
-                          SFCXVariable<double>& q_XFC,
-                          SFCYVariable<double>& q_YFC,
-                          SFCZVariable<double>& q_ZFC,
                           DataWarehouse* /*new_dw*/);
  
     virtual void advectQ(const CCVariable<double>& q_CC,
@@ -85,14 +82,10 @@ namespace Uintah {
 
   private:
  
-    template<class T, typename F> 
+    template<class T> 
       void advectSlabs(const CCVariable<T>& q_CC,
                        const Patch* patch,
                        CCVariable<T>& q_advected,
-                       SFCXVariable<double>& q_XFC,
-                       SFCYVariable<double>& q_YFC,
-                       SFCZVariable<double>& q_ZFC,
-                       F function,
                        advectVarBasket* VB); 
                                                        
     template<class T>

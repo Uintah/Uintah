@@ -33,20 +33,16 @@ namespace Uintah {
   class DataWarehouse;
   
   void q_flux_allFaces(DataWarehouse* new_dw,
-                       const Patch* patch,
-                       const bool use_vol_frac,                                
+                       const Patch* patch,                             
                        const CCVariable<double>& Temp_CC,          
                        const CCVariable<double>& diff_coeff,
-                       const CCVariable<double>& vol_frac_CC,                
                        SFCXVariable<double>& q_X_FC,               
                        SFCYVariable<double>& q_Y_FC,               
                        SFCZVariable<double>& q_Z_FC);
 
    void scalarDiffusionOperator(DataWarehouse* new_dw,
                          const Patch* patch,
-                         const bool use_vol_frac,
                          const CCVariable<double>& q_CC,
-                         const CCVariable<double>& vol_frac_CC,
                          CCVariable<double>& q_diffusion_src,
                          const CCVariable<double>& diff_coeff,
                          const double delT);            
@@ -62,7 +58,6 @@ namespace Uintah {
                  const bool use_vol_frac);
                  
    void computeTauComponents( const Patch* patch,
-                              constCCVariable<double>& vol_frac_CC,  
                               constCCVariable<Vector>& vel_CC,     
                               const CCVariable<double>& viscosity,                
                               SFCXVariable<Vector>& tau_X_FC, 
@@ -70,21 +65,18 @@ namespace Uintah {
                               SFCZVariable<Vector>& tau_Z_FC );
                      
     void computeTauX_driver( CellIterator iterLimits,
-                             constCCVariable<double>& vol_frac_CC,  
                              constCCVariable<Vector>& vel_CC,      
                              const CCVariable<double>& viscosity,                
                              const Vector dx,                       
                              SFCXVariable<Vector>& tau_X_FC );
 
-   void computeTauY_driver( CellIterator iterLimits,
-                            constCCVariable<double>& vol_frac_CC,  
+   void computeTauY_driver( CellIterator iterLimits, 
                             constCCVariable<Vector>& vel_CC,     
                             const CCVariable<double>& viscosity,              
                             const Vector dx,                      
                             SFCYVariable<Vector>& tau_Y_FC );      
 
    void computeTauZ_driver( CellIterator iterLimits,
-                            constCCVariable<double>& vol_frac_CC,  
                             constCCVariable<Vector>& vel_CC,     
                             const CCVariable<double>& viscosity,              
                             const Vector dx,                      
