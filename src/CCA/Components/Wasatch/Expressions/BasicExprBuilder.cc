@@ -1376,9 +1376,11 @@ namespace Wasatch{
       exprParams->getAttribute("w",w);
       exprParams->getAttribute("d",d);
       
-      std::string x1, x2;
-      exprParams->getWithDefault("x1",x1,"X");
-      exprParams->getWithDefault("x2",x2,"Y");
+      std::string x1="X", x2="Y";
+      if (exprParams->findAttribute("x1"))
+        exprParams->getAttribute("x1",x1);
+      if (exprParams->findAttribute("x2"))
+        exprParams->getAttribute("x2",x2);
 
       Expr::Tag x1Tag, x2Tag;
 
