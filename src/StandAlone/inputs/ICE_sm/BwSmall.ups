@@ -142,7 +142,7 @@
     <CFD>
          <cfl>0.2</cfl>
        <ICE>
-        <advection type = "SecondOrder" />
+        <advection type = "FirstOrder" />
       </ICE>        
     </CFD>
 
@@ -159,10 +159,8 @@
            <thermal_conductivity>   0.0                   </thermal_conductivity>
            <specific_heat>          652.9                 </specific_heat>
            <gamma>                  1.289                 </gamma>
-           <!--____________________________________ -->
-           <!-- How domain gets initialized         -->
-           <!--____________________________________ -->
-           <geom_object>
+ 
+            <geom_object>
              <difference>
                 <box label="Whole grid">
                     <min>[ -1.0, -1.0, -1.0 ]           </min>

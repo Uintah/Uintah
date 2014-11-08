@@ -475,7 +475,7 @@ ICE_sm::sched_VelTau_CC( SchedulerP& sched,
                   this, &ICE_sm::VelTau_CC);
 
   Ghost::GhostType  gn= Ghost::None;
-  t->requires( Task::OldDW, lb->vel_CCLabel, gn, 0 );
+  t->requires( Task::OldDW, lb->vel_CCLabel, gn );
   t->computes( lb->velTau_CCLabel );
 
   sched->addTask(t, patches, ice_matls);
@@ -497,9 +497,8 @@ ICE_sm::sched_ViscousShearStress(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
 
   if(d_viscousFlow){
-    t->requires( Task::NewDW, lb->viscosityLabel,   gac, 2);
-    t->requires( Task::NewDW, lb->velTau_CCLabel,   gac, 2);
-    t->requires( Task::OldDW, lb->rho_CCLabel,      gac, 2);
+    t->requires( Task::NewDW, lb->viscosityLabel, gac, 2);  
+    t->requires( Task::NewDW, lb->velTau_CCLabel, gac, 2);  
 
     t->computes( lb->tau_X_FCLabel );
     t->computes( lb->tau_Y_FCLabel );
@@ -531,8 +530,8 @@ ICE_sm::sched_AccumulateMomentumSourceSinks(SchedulerP& sched,
   t->requires( Task::NewDW, lb->pressX_FCLabel,      gac, 1);
   t->requires( Task::NewDW, lb->pressY_FCLabel,      gac, 1);
   t->requires( Task::NewDW, lb->pressZ_FCLabel,      gac, 1);
-  t->requires( Task::NewDW, lb->viscous_src_CCLabel, gn, 0);
-  t->requires( Task::OldDW, lb->rho_CCLabel,         gn, 0);
+  t->requires( Task::NewDW, lb->viscous_src_CCLabel, gn );
+  t->requires( Task::OldDW, lb->rho_CCLabel,         gn );
 
   t->computes(lb->mom_source_CCLabel);
 
@@ -613,7 +612,7 @@ ICE_sm::sched_AdvectAndAdvanceInTime(SchedulerP& sched,
 
   task->requires(Task::OldDW, lb->delTLabel,getLevel(patch_set));
   Ghost::GhostType  gac  = Ghost::AroundCells;
-
+  
   task->requires(Task::NewDW, lb->uvel_FCLabel,      gac,2);
   task->requires(Task::NewDW, lb->vvel_FCLabel,      gac,2);
   task->requires(Task::NewDW, lb->wvel_FCLabel,      gac,2);
@@ -645,12 +644,12 @@ ICE_sm::sched_ConservedtoPrimitive_Vars(SchedulerP& sched,
   task->requires(Task::OldDW, lb->delTLabel,getLevel(patch_set));
   Ghost::GhostType  gn   = Ghost::None;
 
-  task->requires(Task::NewDW, lb->mass_advLabel,      gn,0);
-  task->requires(Task::NewDW, lb->mom_advLabel,       gn,0);
-  task->requires(Task::NewDW, lb->eng_advLabel,       gn,0);
+  task->requires(Task::NewDW, lb->mass_advLabel,      gn );
+  task->requires(Task::NewDW, lb->mom_advLabel,       gn );
+  task->requires(Task::NewDW, lb->eng_advLabel,       gn );
 
-  task->requires(Task::NewDW, lb->specific_heatLabel, gn, 0);
-  task->requires(Task::NewDW, lb->speedSound_CCLabel, gn, 0);
+  task->requires(Task::NewDW, lb->specific_heatLabel, gn );
+  task->requires(Task::NewDW, lb->speedSound_CCLabel, gn );
 
   task->computes(lb->temp_CCLabel);
   task->computes(lb->vel_CCLabel);
@@ -738,13 +737,13 @@ void ICE_sm::actuallyComputeStableTimestep(const ProcessorGroup*,
     oneICEMaterial* ice_matl = d_sharedState->getOneICEMaterial( d_matl );
     int indx = ice_matl->getDWIndex();
 
-    new_dw->get(speedSound, lb->speedSound_CCLabel, indx, patch, gn, 0);
-    new_dw->get(vel_CC,     lb->vel_CCLabel,        indx, patch, gn, 0);
-    new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx, patch, gn, 0);
-    new_dw->get(viscosity,  lb->viscosityLabel,     indx, patch, gn, 0);
-    new_dw->get(thermalCond,lb->thermalCondLabel,   indx, patch, gn, 0);
-    new_dw->get(gamma,      lb->gammaLabel,         indx, patch, gn, 0);
-    new_dw->get(cv,         lb->specific_heatLabel, indx, patch, gn, 0);
+    new_dw->get(speedSound, lb->speedSound_CCLabel, indx, patch, gn );
+    new_dw->get(vel_CC,     lb->vel_CCLabel,        indx, patch, gn );
+    new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx, patch, gn );
+    new_dw->get(viscosity,  lb->viscosityLabel,     indx, patch, gn );
+    new_dw->get(thermalCond,lb->thermalCondLabel,   indx, patch, gn );
+    new_dw->get(gamma,      lb->gammaLabel,         indx, patch, gn );
+    new_dw->get(cv,         lb->specific_heatLabel, indx, patch, gn );
 
     for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
@@ -757,6 +756,7 @@ void ICE_sm::actuallyComputeStableTimestep(const ProcessorGroup*,
       delt_CFL = std::min(A, delt_CFL);
       delt_CFL = std::min(B, delt_CFL);
       delt_CFL = std::min(C, delt_CFL);
+      
       if (A < 1e-20 || B < 1e-20 || C < 1e-20) {
         if (badCell == IntVector(0,0,0)) {
           badCell = c;
@@ -777,7 +777,8 @@ void ICE_sm::actuallyComputeStableTimestep(const ProcessorGroup*,
           double inv_thermalDiffusivity = cp/(sp_vol_CC[c] * thermalCond[c]);
           double kinematicViscosity     = viscosity[c] * sp_vol_CC[c];
           double inv_diffusionCoeff     = min(inv_thermalDiffusivity, 1.0/kinematicViscosity);
-          double A = d_CFL * 0.5 * inv_sum_invDelx_sqr * inv_diffusionCoeff;
+          
+          double A  = d_CFL * 0.5 * inv_sum_invDelx_sqr * inv_diffusionCoeff;
           delt_diff = std::min(A, delt_diff);
           if (delt_diff < 1e-20 && badCell == IntVector(0,0,0)) {
             badCell = c;
@@ -868,9 +869,9 @@ void ICE_sm::actuallyInitialize(const ProcessorGroup*,
 
     ice_matl->initializeCells(rho_CC, Temp_CC, vel_CC,  patch, new_dw);
 
-    setBC( rho_CC,     "Density",     patch, indx );
-    setBC( Temp_CC,    "Temperature", patch, indx );
-    setBC( vel_CC,     "Velocity",    patch, indx );
+    setBC( rho_CC,   "Density",     patch, indx );  
+    setBC( Temp_CC,  "Temperature", patch, indx );  
+    setBC( vel_CC,   "Velocity",    patch, indx );  
 
     //__________________________________
     //  compute the speed of sound
@@ -939,7 +940,7 @@ void ICE_sm::computeThermoTransportProperties(const ProcessorGroup*,
     new_dw->allocateAndPut(cv,          lb->specific_heatLabel,indx, patch);
     new_dw->allocateAndPut(gamma,       lb->gammaLabel,        indx, patch);
 
-    // set to constant value
+    // set to a constant value
     viscosity.initialize  ( ice_matl->getViscosity());
     thermalCond.initialize( ice_matl->getThermalConductivity());
     gamma.initialize  (     ice_matl->getGamma());
@@ -1078,10 +1079,10 @@ void ICE_sm::computeVelFace(int dir,
 //______________________________________________________________________
 //
 void ICE_sm::computeVel_FC(const ProcessorGroup*,
-                        const PatchSubset* patches,
-                        const MaterialSubset* /*matls*/,
-                        DataWarehouse* old_dw,
-                        DataWarehouse* new_dw)
+                           const PatchSubset* patches,
+                           const MaterialSubset* /*matls*/,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
 
@@ -1170,10 +1171,10 @@ void ICE_sm::computeVel_FC(const ProcessorGroup*,
    This function calculates the change in pressure explicitly.
  _____________________________________________________________________  */
 void ICE_sm::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
-                                          const PatchSubset* patches,
-                                          const MaterialSubset* /*matls*/,
-                                          DataWarehouse* old_dw,
-                                          DataWarehouse* new_dw)
+                                             const PatchSubset* patches,
+                                             const MaterialSubset* /*matls*/,
+                                             DataWarehouse* old_dw,
+                                             DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
 
@@ -1395,10 +1396,10 @@ void ICE_sm::computeVelTau_CCFace( const Patch* patch,
 //  have been vel_CC[ec] in the old_dw.
 //______________________________________________________________________
 void ICE_sm::VelTau_CC(const ProcessorGroup*,
-                    const PatchSubset* patches,
-                    const MaterialSubset* /*matls*/,
-                    DataWarehouse* old_dw,
-                    DataWarehouse* new_dw)
+                       const PatchSubset* patches,
+                       const MaterialSubset* /*matls*/,
+                       DataWarehouse* old_dw,
+                       DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -1458,10 +1459,10 @@ void ICE_sm::VelTau_CC(const ProcessorGroup*,
  Purpose~   This task computes the viscous shear stress terms
  _____________________________________________________________________  */
 void ICE_sm::viscousShearStress(const ProcessorGroup*,
-                             const PatchSubset* patches,
-                             const MaterialSubset*,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw)
+                                const PatchSubset* patches,
+                                const MaterialSubset*,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -1485,10 +1486,7 @@ void ICE_sm::viscousShearStress(const ProcessorGroup*,
     //__________________________________
     // Compute Viscous diffusion
     if( d_viscousFlow ){
-      constCCVariable<double>   rho_CC;
-
       Ghost::GhostType  gac = Ghost::AroundCells;
-      old_dw->get(rho_CC,    lb->rho_CCLabel,      indx,patch,gac,2);
 
       SFCXVariable<Vector> tau_X_FC, Ttau_X_FC;
       SFCYVariable<Vector> tau_Y_FC, Ttau_Y_FC;
@@ -1565,10 +1563,10 @@ void ICE_sm::viscousShearStress(const ProcessorGroup*,
  Purpose~   This task accumulates all of the sources/sinks of momentum
  _____________________________________________________________________  */
 void ICE_sm::accumulateMomentumSourceSinks(const ProcessorGroup*,
-                                        const PatchSubset* patches,
-                                        const MaterialSubset* /*matls*/,
-                                        DataWarehouse* old_dw,
-                                        DataWarehouse* new_dw)
+                                           const PatchSubset* patches,
+                                           const MaterialSubset* /*matls*/,
+                                           DataWarehouse* old_dw,
+                                           DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
@@ -1652,10 +1650,10 @@ void ICE_sm::accumulateMomentumSourceSinks(const ProcessorGroup*,
             Currently the kinetic energy isn't included.
  _____________________________________________________________________  */
 void ICE_sm::accumulateEnergySourceSinks(const ProcessorGroup*,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset* /*matls*/,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw)
+                                         const PatchSubset* patches,
+                                         const MaterialSubset* /*matls*/,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
 
