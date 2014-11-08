@@ -6,21 +6,24 @@
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
    <Meta>
-       <title>Advection test</title>
+       <title>Rayleigh Problem</title>
    </Meta>
-   
-   <SimulationComponent type="ice_sm" />
 
+   <SimulationComponent type="ice_sm" />
+   
     <!--____________________________________________________________________-->
+    <!-- The Rayliegh problem tests the viscous shear stress terms          -->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.01        </maxTime>
-       <initTime>           0.0         </initTime>
-       <delt_min>           1e-5         </delt_min>
-       <delt_max>           1.0         </delt_max>
-       <delt_init>          1.0e-9      </delt_init>
-       <timestep_multiplier>1.0         </timestep_multiplier>
+       <maxTime>            1.0        </maxTime>
+       <initTime>           0.0        </initTime>
+       <delt_min>           0.0        </delt_min>
+       <delt_max>           0.00025    </delt_max> <!--- you MUST manually compute what this should be-->
+       <delt_init>          1.0e-5     </delt_init>
+       <max_delt_increase>  1.0        </max_delt_increase>
+       <max_Timesteps>      10000       </max_Timesteps>
+       <timestep_multiplier>1.0        </timestep_multiplier>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -42,7 +45,7 @@
         <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
         </BCType>
       </Face>
@@ -59,7 +62,7 @@
         <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
         </BCType>
       </Face>
@@ -67,8 +70,8 @@
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
         </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
+        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+                              <value> [10.,0.,0.] </value>
         </BCType>
         <BCType id = "0"   label = "Temperature"  var = "Neumann">
                               <value> 0.0 </value>
@@ -76,7 +79,7 @@
         <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
         </BCType>
       </Face>                  
@@ -93,76 +96,45 @@
         <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>       
         </BCType>
-        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
         </BCType>
       </Face>
       <Face side = "z-">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
-                              <value> 0. </value>
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
         </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "0"   label = "Temperature"  var = "Neumann">
-                              <value> 0.0 </value>
-        </BCType>
-        <BCType id = "0"   label = "Density"      var = "Neumann">
-                              <value> 0.0 </value>       
-        </BCType>
-        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
-                              <value> 0.0 </value>
-        </BCType>
-      </Face>
+      </Face> 
       <Face side = "z+">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
-                              <value> 0. </value>
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
         </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "0"   label = "Temperature"  var = "Neumann">
-                              <value> 0.0 </value>
-        </BCType>
-        <BCType id = "0"   label = "Density"      var = "Neumann">
-                              <value> 0.0 </value>       
-        </BCType>
-        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
-                              <value> 0.0 </value>
-        </BCType>
-      </Face>
+      </Face> 
     </BoundaryConditions>
        <Level>
            <Box label="1">
-              <lower>        [0,0,0]    </lower>
-              <upper>        [5,5,5]    </upper>
-              <extraCells>   [1,1,1]    </extraCells>
-              <patches>      [1,1,1]    </patches>
+              <lower>        [0,0,0]          </lower>
+              <upper>        [1,0.35,0.01]       </upper>
+              <resolution>   [50,50,1]      </resolution>
+              <extraCells>   [0,1,1]          </extraCells>
+              <patches>      [1,1,1]          </patches>
            </Box>
-           <spacing>         [1,1,1]    </spacing>
+           <periodic>       [1,0,0]           </periodic>
        </Level>
     </Grid>    
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>advect.uda</filebase>
-      <outputTimestepInterval>1</outputTimestepInterval>
-      <outputInitTimestep/>
+      <filebase>rayleigh.uda</filebase>
+      <outputInterval>.1</outputInterval>
       <save label="press_equil_CC"/>
-      
-      <save label="uvel_FC"/>
-      <save label="vvel_FC"/>
-      <save label="wvel_FC"/>
       <save label="delP_Dilatate"/>
+      <save label="delP_MassX"/>
       <save label="press_CC"/>
-      <save label="mom_L_CC"/>
+      <save label="mom_L_ME_CC"/>
+      <save label="mom_source_CC"/>
+      <save label="press_force"/>
       <save label="rho_CC"/>
-      <save label="vel_CC"/> 
-      <save label="temp_CC"/>   
-      <save label="KineticEnergy"/>
-      <save label="TotalIntEng"/>
-      <checkpoint interval="0.005" cycle="2"/>
+      <save label="vel_CC"/>      
    </DataArchiver>
 
     
@@ -170,9 +142,36 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-         <cfl>0.5</cfl>
+         <cfl>0.25</cfl>
        <ICE>
-        <advection type = "FirstOrder" />
+        <advection type = "SecondOrder" />
+   
+        <TimeStepControl>
+          <Scheme_for_delT_calc> conservative     </Scheme_for_delT_calc>
+          <knob_for_speedSound>  0.0            </knob_for_speedSound>
+        </TimeStepControl>
+        
+        <ImplicitSolver>
+           <max_outer_iterations>      20    </max_outer_iterations>
+           <outer_iteration_tolerance> 1e-8  </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 5 </iters_before_timestep_restart>
+           <Parameters variable="implicitPressure">
+            <!-- CGSolver options -->
+              <norm>     LInfinity  </norm>
+              <criteria> Absolute   </criteria>
+
+            <!-- Hypre options -->
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1.e-10  </tolerance>
+            <maxiterations>  7500    </maxiterations>
+            <npre>           1       </npre>
+            <npost>          1       </npost>
+            <skip>           0       </skip>
+            <jump>           0       </jump>
+           </Parameters>
+        </ImplicitSolver>
+    
       </ICE>        
     </CFD>
 
@@ -191,7 +190,7 @@
        <ICE>
          <material>
            <EOS type = "ideal_gas">                     </EOS>
-           <dynamic_viscosity>   0.0                    </dynamic_viscosity>
+           <dynamic_viscosity>   0.01                   </dynamic_viscosity>
            <thermal_conductivity>0.0                    </thermal_conductivity>
            <specific_heat>      716.0                   </specific_heat>
            <gamma>              1.4                     </gamma>
@@ -201,7 +200,7 @@
                     <max>       [ 6.0, 6.0, 6.0 ]       </max>
                 </box>
                <res>                 [2,2,2]            </res>
-               <velocity>      [1.,1.,1.]               </velocity>
+               <velocity>      [0.,0.,0.]               </velocity>
                <density>       1.1792946927374306000e+00</density>
                <pressure>      101325.0                 </pressure>     
                <temperature>   300.0                    </temperature>
