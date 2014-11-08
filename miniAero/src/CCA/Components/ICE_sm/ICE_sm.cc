@@ -307,8 +307,6 @@ ICE_sm::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   sched_ComputeLagrangianValues(        sched, patches,  ice_matls);
 
 
-  sched_ComputeLagrangianSpecificVolume(sched, patches,  ice_matls);
-
   sched_AdvectAndAdvanceInTime(         sched, patches,  ice_matls);
 
   sched_ConservedtoPrimitive_Vars(      sched, patches,  ice_matls,
@@ -618,57 +616,18 @@ ICE_sm::sched_ComputeLagrangianValues(SchedulerP& sched,
   Ghost::GhostType  gn  = Ghost::None;
   t->requires(Task::OldDW,  lb->delTLabel,getLevel(patches));
   t->requires(Task::NewDW,  lb->specific_heatLabel,    gn);
-  t->requires(Task::NewDW,  lb->gammaLabel,            gn);
   t->requires(Task::NewDW,  lb->rho_CCLabel,           gn);
   t->requires(Task::OldDW,  lb->vel_CCLabel,           gn);
   t->requires(Task::OldDW,  lb->temp_CCLabel,          gn);
   t->requires(Task::NewDW,  lb->mom_source_CCLabel,    gn);
   t->requires(Task::NewDW,  lb->int_eng_source_CCLabel,gn);
 
-  t->computes(lb->Tdot_CCLabel);
   t->computes(lb->mom_L_CCLabel);
   t->computes(lb->int_eng_L_CCLabel);
   t->computes(lb->mass_L_CCLabel);
 
   sched->addTask(t, patches, ice_matls);
 }
-
-/* _____________________________________________________________________
- Function~  ICE_sm:: sched_ComputeLagrangianSpecificVolume--
-_____________________________________________________________________*/
-void
-ICE_sm::sched_ComputeLagrangianSpecificVolume(SchedulerP& sched,
-                                            const PatchSet* patches,
-                                            const MaterialSet* matls)
-{
-  printSchedule(patches,iceCout,"sched_ComputeLagrangianSpecificVolume");
-
-
-  Task* t = scinew Task("ICE_sm::computeLagrangianSpecificVolume",
-             this,&ICE_sm::computeLagrangianSpecificVolume);
-
-  Ghost::GhostType  gn  = Ghost::None;
-  Ghost::GhostType  gac = Ghost::AroundCells;
-
-  t->requires(Task::OldDW, lb->delTLabel,getLevel(patches));
-  t->requires(Task::NewDW, lb->rho_CCLabel,           gn);
-  t->requires(Task::NewDW, lb->sp_vol_CCLabel,        gn);
-  t->requires(Task::NewDW, lb->Tdot_CCLabel,          gn);
-  t->requires(Task::NewDW, lb->f_theta_CCLabel,       gn);
-  t->requires(Task::NewDW, lb->compressibilityLabel,  gn);
-  t->requires(Task::NewDW, lb->vol_frac_CCLabel,      gac,1);
-  t->requires(Task::OldDW, lb->temp_CCLabel,          gn);
-  t->requires(Task::NewDW, lb->specific_heatLabel,    gn);
-  t->requires(Task::NewDW, lb->delP_DilatateLabel,    gn);
-  t->requires(Task::NewDW, lb->press_CCLabel,         gn);
-
-  t->computes(lb->sp_vol_L_CCLabel);
-  t->computes(lb->sp_vol_src_CCLabel);
-
-  sched->setRestartable(true);
-  sched->addTask(t, patches, matls);
-}
-
 
 /* _____________________________________________________________________
   Purpose~  Advect the conserved quantities and advance
@@ -693,12 +652,10 @@ ICE_sm::sched_AdvectAndAdvanceInTime(SchedulerP& sched,
   task->requires(Task::NewDW, lb->mom_L_CCLabel,     gac,2);
   task->requires(Task::NewDW, lb->mass_L_CCLabel,    gac,2);
   task->requires(Task::NewDW, lb->int_eng_L_CCLabel, gac,2);
-  task->requires(Task::NewDW, lb->sp_vol_L_CCLabel,  gac,2);
 
   task->computes(lb->mass_advLabel);
   task->computes(lb->mom_advLabel);
   task->computes(lb->eng_advLabel);
-  task->computes(lb->sp_vol_advLabel);
 
   sched->setRestartable(true);
   sched->addTask(task, patch_set, ice_matls);
@@ -744,15 +701,10 @@ ICE_sm::sched_ConservedtoPrimitive_Vars(SchedulerP& sched,
   task->requires(Task::NewDW, lb->mass_advLabel,      gn,0);
   task->requires(Task::NewDW, lb->mom_advLabel,       gn,0);
   task->requires(Task::NewDW, lb->eng_advLabel,       gn,0);
-  task->requires(Task::NewDW, lb->sp_vol_advLabel,    gn,0);
 
   task->requires(Task::NewDW, lb->specific_heatLabel, gn, 0, fat);
   task->requires(Task::NewDW, lb->speedSound_CCLabel, gn, 0, fat);
-  task->requires(Task::NewDW, lb->vol_frac_CCLabel,   gn, 0, fat);
-  task->requires(Task::NewDW, lb->gammaLabel,         gn, 0, fat);
-
   task->modifies(lb->rho_CCLabel,     fat);
-  task->modifies(lb->sp_vol_CCLabel,  fat);
 
   if( where == "afterAdvection"){
     task->computes(lb->temp_CCLabel);
@@ -1907,7 +1859,6 @@ void ICE_sm::computeLagrangianValues(const ProcessorGroup*,
     CCVariable<Vector> mom_L;
     CCVariable<double> int_eng_L;
     CCVariable<double> mass_L;
-    CCVariable<double> Tdot;
 
     constCCVariable<double> rho_CC, oldTemp_CC, cv, int_eng_source;
     constCCVariable<Vector> vel_CC, mom_source;
@@ -1923,7 +1874,6 @@ void ICE_sm::computeLagrangianValues(const ProcessorGroup*,
     new_dw->allocateAndPut(mom_L,     lb->mom_L_CCLabel,     indx, patch);
     new_dw->allocateAndPut(int_eng_L, lb->int_eng_L_CCLabel, indx, patch);
     new_dw->allocateAndPut(mass_L,    lb->mass_L_CCLabel,    indx, patch);
-    new_dw->allocateAndPut(Tdot,      lb->Tdot_CCLabel,      indx, patch);
 
     //__________________________________
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) {
@@ -1935,7 +1885,6 @@ void ICE_sm::computeLagrangianValues(const ProcessorGroup*,
       int_eng_L[c] = mass*  cv[c] * oldTemp_CC[c] + int_eng_source[c];
 
       double temp_CC =int_eng_L[c]/(mass_L[c]*cv[c]);
-      Tdot[c]      = (temp_CC - oldTemp_CC[c])/delT;
     }
 
     //____ B U L L E T   P R O O F I N G----
@@ -1953,152 +1902,6 @@ void ICE_sm::computeLagrangianValues(const ProcessorGroup*,
     }
   }  // patch loop
 }
-/* _____________________________________________________________________
- Function~  ICE_sm::computeLagrangianSpecificVolume--
- _____________________________________________________________________  */
-void ICE_sm::computeLagrangianSpecificVolume(const ProcessorGroup*,
-                                          const PatchSubset* patches,
-                                          const MaterialSubset* /*matls*/,
-                                          DataWarehouse* old_dw,
-                                          DataWarehouse* new_dw)
-{
-  const Level* level = getLevel(patches);
-
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-
-    printTask(patches, patch, iceCout, "Doing ICE_sm::computeLagrangianSpecificVolume" );
-
-    delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label(),level);
-
-    Vector  dx = patch->dCell();
-    double vol = dx.x()*dx.y()*dx.z();
-
-    constCCVariable<double> Tdot;
-    constCCVariable<double> vol_frac;
-    constCCVariable<double> Temp_CC;
-    constCCVariable<double> rho_CC;
-    constCCVariable<double> f_theta;
-    constCCVariable<double> sp_vol_CC;
-    constCCVariable<double> cv;
-    constCCVariable<double> delP;
-    constCCVariable<double> P;
-    constCCVariable<double> TMV_CC;
-
-    CCVariable<double> sum_therm_exp;
-    CCVariable<double>  alpha;
-
-    new_dw->allocateTemporary(sum_therm_exp,patch);
-    oneICEMaterial* ice_matl = d_sharedState->getOneICEMaterial( d_matl );
-    int indx = ice_matl->getDWIndex();
-    Ghost::GhostType  gn  = Ghost::None;
-    Ghost::GhostType  gac = Ghost::AroundCells;
-
-    new_dw->get(delP,     lb->delP_DilatateLabel, indx, patch, gn, 0);
-    new_dw->get(P,        lb->press_CCLabel,      indx, patch, gn, 0);
-    new_dw->get(Tdot,     lb->Tdot_CCLabel,       indx, patch, gn, 0);
-    new_dw->get(vol_frac, lb->vol_frac_CCLabel,   indx, patch, gac, 1);
-    old_dw->get(Temp_CC,  lb->temp_CCLabel,       indx, patch, gn, 0);
-
-    new_dw->allocateTemporary(alpha,patch);
-    sum_therm_exp.initialize(0.);
-
-    //__________________________________
-    // Sum of thermal expansion
-
-    new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,    indx,patch,gn, 0);
-    new_dw->get(cv,        lb->specific_heatLabel,indx,patch,gn, 0);
-
-    for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
-      IntVector c = *iter;
-      alpha[c] = ice_matl->getEOS()->getAlpha(Temp_CC[c],sp_vol_CC[c],P[c],cv[c]);
-      sum_therm_exp[c] += vol_frac[c]*alpha[c]*Tdot[c];
-    }
-
-    //__________________________________
-    CCVariable<double> sp_vol_L, sp_vol_src;
-    constCCVariable<double> kappa;
-
-    new_dw->allocateAndPut(sp_vol_L,  lb->sp_vol_L_CCLabel,   indx,patch);
-    new_dw->allocateAndPut(sp_vol_src,lb->sp_vol_src_CCLabel, indx,patch);
-    sp_vol_src.initialize(0.);
-    double tiny_rho = 1.e-12;
-
-    if (ice_matl) {
-      tiny_rho = ice_matl->getTinyRho();
-    }
-
-    new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx, patch, gn, 0);
-    new_dw->get(rho_CC,     lb->rho_CCLabel,        indx, patch, gn, 0);
-    new_dw->get(f_theta,    lb->f_theta_CCLabel,    indx, patch, gn, 0);
-    new_dw->get(kappa,      lb->compressibilityLabel,indx ,patch,gn, 0);
-
-    //__________________________________
-    //  compute sp_vol_L * mass
-    for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
-      IntVector c = *iter;
-      sp_vol_L[c] = (rho_CC[c] * vol)*sp_vol_CC[c];
-    }
-
-    //__________________________________
-    //  add the sources to sp_vol_L
-    for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
-      IntVector c = *iter;
-      //__________________________________
-      //  term1
-      double term1 = -vol_frac[c] * kappa[c] * vol * delP[c];
-      double term2 = delT * vol *
-                           (vol_frac[c] * alpha[c] * Tdot[c] -
-                                             f_theta[c] * sum_therm_exp[c]);
-
-      // This is actually mass * sp_vol
-      double src    = term1 + term2;
-      sp_vol_L[c]  += src;
-      sp_vol_src[c] = src/(rho_CC[c] * vol);
-    }
-
-    if(d_clampSpecificVolume){
-      for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
-        IntVector c = *iter;
-/*`==========TESTING==========*/
-        sp_vol_L[c] = max(sp_vol_L[c], tiny_rho * vol * sp_vol_CC[c]);
-/*==========TESTING==========`*/
-      }
-    }
-
-    //__________________________________
-    // Apply boundary conditions
-    setSpecificVolBC(sp_vol_L, "SpecificVol", true ,rho_CC,vol_frac, patch, indx);
-
-
-    //____ B U L L E T   P R O O F I N G----
-    // ignore BP if timestep restart has already been requested
-    IntVector neg_cell;
-    bool tsr = new_dw->timestepRestarted();
-
-    if (!areAllValuesPositive(sp_vol_L, neg_cell) && !tsr) {
-      cout << "\nICE:WARNING......Negative specific Volume"<< endl;
-      cout << "cell              "<< neg_cell << " level " <<  level->getIndex() << endl;
-      cout << "matl              "<< indx << endl;
-      cout << "sum_thermal_exp   "<< sum_therm_exp[neg_cell] << endl;
-      cout << "sp_vol_src        "<< sp_vol_src[neg_cell] << endl;
-      cout << "mass sp_vol_L     "<< sp_vol_L[neg_cell] << endl;
-      cout << "mass sp_vol_L_old "
-           << (rho_CC[neg_cell]*vol*sp_vol_CC[neg_cell]) << endl;
-      cout << "-----------------------------------"<<endl;
-//        ostringstream warn;
-//        int L = level->getIndex();
-//        warn<<"ERROR ICE:("<<L<<"):computeLagrangianSpecificVolumeRF, mat "<<indx
-//            << " cell " <<neg_cell << " sp_vol_L is negative\n";
-//        throw InvalidValue(warn.str(), __FILE__, __LINE__);
-      new_dw->abortTimestep();
-      new_dw->restartTimestep();
-   }
-  }  // patch loop
-
-}
-
 
 /* _____________________________________________________________________
  Purpose~
@@ -2139,12 +1942,10 @@ void ICE_sm::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
 
     CCVariable<double> mass_adv;
     CCVariable<double> int_eng_adv;
-    CCVariable<double> sp_vol_adv;
     CCVariable<Vector> mom_adv;
 
     constCCVariable<double>  int_eng_L;
     constCCVariable<double>  mass_L;
-    constCCVariable<double>  sp_vol_L;
     constCCVariable<Vector>  mom_L;
 
     constSFCXVariable<double > uvel_FC;
@@ -2158,18 +1959,15 @@ void ICE_sm::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
 
     new_dw->get(mass_L,      lb->mass_L_CCLabel,        indx, patch, gac, 2);
     new_dw->get(mom_L,       lb->mom_L_CCLabel,         indx, patch, gac, 2);
-    new_dw->get(sp_vol_L,    lb->sp_vol_L_CCLabel,      indx, patch, gac, 2);
     new_dw->get(int_eng_L,   lb->int_eng_L_CCLabel,     indx, patch, gac, 2);
 
     new_dw->allocateAndPut(mass_adv,    lb->mass_advLabel,   indx, patch);
     new_dw->allocateAndPut(mom_adv,     lb->mom_advLabel,    indx, patch);
     new_dw->allocateAndPut(int_eng_adv, lb->eng_advLabel,    indx, patch);
-    new_dw->allocateAndPut(sp_vol_adv,  lb->sp_vol_advLabel, indx, patch);
 
     mass_adv.initialize(0.0);
     mom_adv.initialize(Vector(0.0,0.0,0.0));
     int_eng_adv.initialize(0.0);
-    sp_vol_adv.initialize(0.0);
     q_advected.initialize(0.0);
     qV_advected.initialize(Vector(0.0,0.0,0.0));
 
@@ -2197,6 +1995,7 @@ void ICE_sm::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       IntVector c = *iter;
       mass_adv[c]  = (mass_L[c] + q_advected[c]);
     }
+    
     //__________________________________
     // momentum
     varBasket->is_Q_massSpecific   = true;
@@ -2207,6 +2006,7 @@ void ICE_sm::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       IntVector c = *iter;
       mom_adv[c] = (mom_L[c] + qV_advected[c]) ;
     }
+    
     //__________________________________
     // internal energy
     varBasket->is_Q_massSpecific = true;
@@ -2217,16 +2017,7 @@ void ICE_sm::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       IntVector c = *iter;
       int_eng_adv[c] = (int_eng_L[c] + q_advected[c]) ;
     }
-    //__________________________________
-    // sp_vol[m] * mass
-    varBasket->is_Q_massSpecific = true;
-    varBasket->desc = "sp_vol";
-    advector->advectQ(sp_vol_L,mass_L, q_advected, varBasket);
-
-    for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
-      IntVector c = *iter;
-      sp_vol_adv[c] = (sp_vol_L[c] + q_advected[c]) ;
-    }
+    
     delete varBasket;
     delete advector;
   }  // patch loop
@@ -2257,28 +2048,21 @@ void ICE_sm::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
     oneICEMaterial* ice_matl = d_sharedState->getOneICEMaterial( d_matl );
     int indx = ice_matl->getDWIndex();
 
-    CCVariable<double> rho_CC, temp_CC, sp_vol_CC,mach;
+    CCVariable<double> rho_CC, temp_CC, mach;
     CCVariable<Vector> vel_CC;
     constCCVariable<double> int_eng_adv;
     constCCVariable<double> mass_adv;
-    constCCVariable<double> sp_vol_adv;
     constCCVariable<double> speedSound;
     constCCVariable<double> cv;
-    constCCVariable<double> gamma;
-    constCCVariable<double> vol_frac;
     constCCVariable<Vector> mom_adv;
 
-    new_dw->get(gamma,       lb->gammaLabel,         indx, patch, gn, 0);
     new_dw->get(speedSound,  lb->speedSound_CCLabel, indx, patch, gn, 0);
-    new_dw->get(vol_frac,    lb->vol_frac_CCLabel,   indx, patch, gn, 0);
     new_dw->get(cv,          lb->specific_heatLabel, indx, patch, gn, 0);
 
     new_dw->get(mass_adv,    lb->mass_advLabel,      indx, patch, gn, 0);
     new_dw->get(mom_adv,     lb->mom_advLabel,       indx, patch, gn, 0);
-    new_dw->get(sp_vol_adv,  lb->sp_vol_advLabel,    indx, patch, gn, 0);
     new_dw->get(int_eng_adv, lb->eng_advLabel,       indx, patch, gn, 0);
 
-    new_dw->getModifiable(sp_vol_CC, lb->sp_vol_CCLabel,indx,patch);
     new_dw->getModifiable(rho_CC,    lb->rho_CCLabel,   indx,patch);
 
     new_dw->allocateAndPut(temp_CC,lb->temp_CCLabel,  indx,patch);
@@ -2296,8 +2080,7 @@ void ICE_sm::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
       IntVector c = *iter;
       double inv_mass_adv = 1.0/mass_adv[c];
       rho_CC[c]    = mass_adv[c] * invvol;
-      vel_CC[c]    = mom_adv[c]    * inv_mass_adv;
-      sp_vol_CC[c] = sp_vol_adv[c] * inv_mass_adv;
+      vel_CC[c]    = mom_adv[c]  * inv_mass_adv;
     }
 
     //__________________________________
@@ -2313,9 +2096,6 @@ void ICE_sm::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
     setBC(rho_CC, "Density",     patch, indx );
     setBC(vel_CC, "Velocity",    patch, indx );
     setBC(temp_CC,"Temperature", patch, indx );
-
-    setSpecificVolBC(sp_vol_CC, "SpecificVol", false,rho_CC,vol_frac, patch, indx);
-
     //__________________________________
     // Compute Auxilary quantities
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
@@ -2337,10 +2117,6 @@ void ICE_sm::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
     if (!areAllValuesPositive(temp_CC, neg_cell) && !tsr) {
       warn << base.str() << neg_cell << " negative temp_CC\n ";
       throw InvalidValue(warn.str(), __FILE__, __LINE__);
-    }
-    if (!areAllValuesPositive(sp_vol_CC, neg_cell) && !tsr) {
-     warn << base.str() << neg_cell << " negative sp_vol_CC\n ";
-     throw InvalidValue(warn.str(), __FILE__, __LINE__);
     }
   }  // patch loop
 }

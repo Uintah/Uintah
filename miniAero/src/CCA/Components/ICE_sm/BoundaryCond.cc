@@ -42,8 +42,6 @@
  // Note:  BC_dbg doesn't work if the iterator bound is
  //        not defined
 
-//#define TEST
-#undef TEST
 using namespace std;
 using namespace Uintah;
 namespace Uintah {
@@ -234,114 +232,6 @@ void setBC(CCVariable<Vector>& var_CC,
            << " nCells Touched: " << nCells << " nCells on boundary: "<< nFaceCells << ") " << endl;
       throw InternalError(warn.str(), __FILE__, __LINE__);
     }
-  }  // faces loop
-}
-/* --------------------------------------------------------------------- 
- Function~  setSpecificVolBC-- 
- ---------------------------------------------------------------------  */
-void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
-                      const string& desc,
-                      const bool isMassSp_vol,
-                      constCCVariable<double> rho_CC,
-                      constCCVariable<double> vol_frac,
-                      const Patch* patch,
-                      const int mat_id)
-{
-  if(patch->hasBoundaryFaces() == false){
-    return;
-  }
-  ice_BC_CC << "-------- setSpecificVolBC \t"<< desc <<" "
-             << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << endl;
-                
-  Vector dx = patch->dCell();
-  double cellVol = dx.x() * dx.y() * dx.z();
-                
-  // Iterate over the faces encompassing the domain
-  vector<Patch::FaceType> bf;
-  patch->getBoundaryFaces(bf);
-  
-  for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
-    Patch::FaceType face = *iter;
-    int nCells = 0;
-    string bc_kind = "NotSet";
-       
-    IntVector dir= patch->getFaceAxes(face);
-    Vector cell_dx = patch->dCell();
-    int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
-    
-    // iterate over each geometry object along that face
-    for (int child = 0;  child < numChildren; child++) {
-      double bc_value = -9;
-      Iterator bound_ptr;
-      
-      bool foundIterator = 
-        getIteratorBCValueBCKind<double>( patch, face, child, desc, mat_id,
-                                          bc_value, bound_ptr,bc_kind); 
-                                   
-      if(foundIterator) {
-
-        //__________________________________
-        // Dirichlet
-        if(bc_kind == "Dirichlet"){
-           nCells += setDirichletBC_CC<double>( sp_vol_CC, bound_ptr, bc_value);
-        }
-        //__________________________________
-        // Neumann
-        else if(bc_kind == "Neumann"){
-           nCells += setNeumannBC_CC<double >( patch, face, sp_vol_CC, bound_ptr, bc_value, cell_dx);
-        }                                   
-        //__________________________________
-        //  Symmetry
-        else if ( bc_kind == "symmetry" || bc_kind == "zeroNeumann" ) {
-          bc_value = 0.0;
-          nCells += setNeumannBC_CC<double >( patch, face, sp_vol_CC, bound_ptr, bc_value, cell_dx);
-        }
-        //__________________________________
-        //  Symmetry
-        else if(bc_kind == "computeFromDensity"){
-        
-          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-            IntVector c = *bound_ptr;
-            sp_vol_CC[c] = vol_frac[c]/rho_CC[c];
-          }
-          
-          if(isMassSp_vol){  // convert to mass * sp_vol
-            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-              IntVector c = *bound_ptr;
-              sp_vol_CC[c] = sp_vol_CC[c]*(rho_CC[c]*cellVol);
-            }
-          }
-          nCells += bound_ptr.size();
-        }
-
-        //__________________________________
-        //  debugging
-        if( BC_dbg.active() ) {
-          bound_ptr.reset();
-          BC_dbg <<"Face: "<< patch->getFaceName(face) <<"\t numCellsTouched " << nCells
-               <<"\t child " << child  <<" NumChildren "<<numChildren 
-               <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-               <<"\t bound limits = "<< bound_ptr << endl;
-        }
-      }  // if iterator found
-    }  // child loop
-    
-    ice_BC_CC << "      "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
-               << " nCellsTouched: " << nCells << endl;
-    //__________________________________
-    //  bulletproofing
-#if 0
-    Patch::FaceIteratorType type = Patch::ExtraPlusEdgeCells;
-    int nFaceCells = numFaceCells(patch,  type, face);
-                        
-    if(nCells != nFaceCells){
-      ostringstream warn;
-      warn << "ERROR: ICE: setSpecificVolBC Boundary conditions were not set correctly ("<< desc<< ", " 
-           << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
-           << " nCells Touched: " << nCells << " nCells on boundary: "<< nFaceCells<<") " << endl;
-      throw InternalError(warn.str(), __FILE__, __LINE__);
-    }
-#endif
   }  // faces loop
 }
 
