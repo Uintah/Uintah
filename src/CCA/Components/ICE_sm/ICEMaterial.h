@@ -68,21 +68,13 @@ class oneICEMaterial : public Material {
 
     double getGamma() const;
     double getViscosity() const;
-    double getSpeedOfSound() const;
-    bool   isSurroundingMatl() const;
     double getSpecificHeat() const;
     double getThermalConductivity() const;
     double getInitialDensity() const;
-    double getTinyRho() const;
 
-    void initializeCells(CCVariable<double>& rhom,
-                         CCVariable<double>& rhC,
-                         CCVariable<double>& temp, 
-                         CCVariable<double>& ss,
-                         CCVariable<double>& volf,  
-                         CCVariable<Vector>& vCC,
-                         CCVariable<double>& press,
-                         int numMatls,
+    void initializeCells(CCVariable<double>& rho_CC,
+                         CCVariable<double>& temp_CC,
+                         CCVariable<Vector>& vel_CC,
                          const Patch* patch, 
                          DataWarehouse* new_dw);
 
@@ -92,11 +84,8 @@ class oneICEMaterial : public Material {
 
     double d_viscosity;
     double d_gamma;
-    bool d_isSurroundingMatl; // defines which matl is the background matl.
-    bool d_includeFlowWork;
     double d_specificHeat;
     double d_thermalConductivity;
-    double d_tiny_rho;
 
     std::vector<GeometryObject*> d_geom_objs;
 

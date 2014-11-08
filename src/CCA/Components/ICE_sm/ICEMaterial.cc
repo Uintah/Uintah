@@ -40,14 +40,12 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
-//#define d_TINY_RHO 1.0e-12 // also defined ICE.cc and MPMMaterial.cc 
-
 using namespace std;
 using namespace Uintah;
 
 // Constructor
 oneICEMaterial::oneICEMaterial(ProblemSpecP& ps,
-                         SimulationStateP& sharedState): Material(ps)
+                               SimulationStateP& sharedState): Material(ps)
 {
   //__________________________________
   //  Create the different Models for this material
@@ -69,8 +67,6 @@ oneICEMaterial::oneICEMaterial(ProblemSpecP& ps,
   ps->require("specific_heat",       d_specificHeat);
   ps->require("dynamic_viscosity",   d_viscosity);
   ps->require("gamma",               d_gamma);
-  ps->getWithDefault("tiny_rho",     d_tiny_rho,1.e-12);
-
 
   //__________________________________
   // Loop through all of the pieces in this geometry object
@@ -125,12 +121,12 @@ ProblemSpecP oneICEMaterial::outputProblemSpec(ProblemSpecP& ps)
   d_eos->outputProblemSpec(ice_ps);
   ice_ps->appendElement("thermal_conductivity",d_thermalConductivity);
   ice_ps->appendElement("specific_heat",       d_specificHeat);
+  ice_ps->appendElement("dynamic_viscosity",   d_viscosity);
+  ice_ps->appendElement("gamma",               d_gamma);
+    
   if(d_cvModel != 0){
     d_cvModel->outputProblemSpec(ice_ps);
   }
-  ice_ps->appendElement("dynamic_viscosity",   d_viscosity);
-  ice_ps->appendElement("gamma",               d_gamma);
-  ice_ps->appendElement("tiny_rho",            d_tiny_rho);
     
   for (vector<GeometryObject*>::const_iterator it = d_geom_objs.begin();
        it != d_geom_objs.end(); it++) {
@@ -156,10 +152,6 @@ double oneICEMaterial::getGamma() const
   return d_gamma;
 }
 
-double oneICEMaterial::getTinyRho() const
-{
-  return d_tiny_rho;
-}
 
 double oneICEMaterial::getViscosity() const
 {
@@ -184,127 +176,52 @@ double oneICEMaterial::getInitialDensity() const
 
 /* --------------------------------------------------------------------- 
  Function~  oneICEMaterial::initializeCells--
- Purpose~ Initialize material dependent variables 
- Notes:  This is a tricky little routine.  ICE needs rho_micro, Temp_CC
- speedSound defined everywhere for all materials even if the mass is 0.0.
- 
- We need to accomodate the following scenarios where the number designates
- a material and * represents a high temperature
- ____________________           ____________________
- | 1  | 1  | 1  | 1  |          | 1  | 1  | 1  | 1  |
- |____|____|____|____|          |____|____|____|____|
- | 1  | 1  | 1* | 1  |          | 1  | 1  | 2* | 1  |
- |____|____|____|____|          |____|____|____|____|
- | 1  | 1  | 1  | 1  |          | 1  | 1  | 1  | 1  |
- |____|____|____|____|          |____|____|____|____|=
+ Purpose~ Initialize primitive variables
 _____________________________________________________________________*/
-void oneICEMaterial::initializeCells(CCVariable<double>& rho_micro,
-                                  CCVariable<double>& rho_CC,
-                                  CCVariable<double>& temp,
-                                  CCVariable<double>& speedSound,
-                                  CCVariable<double>& vol_frac_CC,
-                                  CCVariable<Vector>& vel_CC,
-                                  CCVariable<double>& press_CC,
-                                  int numMatls,
-                                  const Patch* patch,
-                                  DataWarehouse* new_dw)
+void oneICEMaterial::initializeCells(CCVariable<double>& rho_CC,
+                                     CCVariable<double>& temp_CC,
+                                     CCVariable<Vector>& vel_CC,
+                                     const Patch* patch,
+                                     DataWarehouse* new_dw)
 {
-  CCVariable<int> IveBeenHere;
-  new_dw->allocateTemporary(IveBeenHere, patch);
-  
-  // Zero the arrays so they don't get wacky values
+   
+  // Zero the 
   vel_CC.initialize(Vector(0.,0.,0.));
-  rho_micro.initialize(0.);
   rho_CC.initialize(0.);
-  temp.initialize(0.);
-  vol_frac_CC.initialize(0.);
-  speedSound.initialize(0.);
-  IveBeenHere.initialize(-9);
+  temp_CC.initialize(0.);
 
+  // Loop over geometry objects
   for(int obj=0; obj<(int)d_geom_objs.size(); obj++){
     GeometryPieceP piece = d_geom_objs[obj]->getPiece();
-    // Box b1 = piece->getBoundingBox();
-    // Box b2 = patch->getBox();
 
-    FileGeometryPiece *fgp = dynamic_cast<FileGeometryPiece*>(piece.get_rep());
+    IntVector ppc   = d_geom_objs[obj]->getInitialData_IntVector("res");
+    Vector dxpp     = patch->dCell()/ppc;
+    Vector dcorner  = dxpp*0.5;
 
-    if(fgp){
-      // For some reason, if I call readPoints here, I get two copies of the
-      // points, so evidently the fgp is being carried over from MPMMaterial
-  //    fgp->readPoints(patch->getID());
-      int numPts = fgp->returnPointCount();
-      vector<Point>* points = fgp->getPoints();
-      if(numMatls > 2)  {
-        cerr << "ERROR!!!\n";
-        cerr << "File Geometry Piece with ICE only supported for one ice matl.\n";
-        exit(1);
-      }
+    for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+      IntVector c = *iter;
+      Point lower = patch->nodePosition(c) + dcorner;
+      int count = 0;
 
-      // First initialize all variables everywhere.
-      for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
-        IntVector c = *iter;
-        vol_frac_CC[c]= 1.0;
-        press_CC[c]   = d_geom_objs[obj]->getInitialData_double("pressure");
-        vel_CC[c]     = d_geom_objs[obj]->getInitialData_Vector("velocity");
-        rho_micro[c]  = d_geom_objs[obj]->getInitialData_double("density");
-        rho_CC[c]     = rho_micro[*iter] + d_tiny_rho*rho_micro[*iter];
-        temp[c]       = d_geom_objs[obj]->getInitialData_double("temperature");
-        IveBeenHere[c]= 1;
-      }
+      for(int ix=0;ix < ppc.x(); ix++){
+        for(int iy=0;iy < ppc.y(); iy++){
+          for(int iz=0;iz < ppc.z(); iz++){
 
-      IntVector ppc = d_geom_objs[obj]->getInitialData_IntVector("res");
-      double ppc_tot = ppc.x()*ppc.y()*ppc.z();
-      cout << "ppc_tot = " << ppc_tot << endl;
-      cout << "numPts = " << numPts << endl;
-      IntVector cell_idx;
-      
-      for (int ii = 0; ii < numPts; ++ii) {
-        Point p = points->at(ii);
-        patch->findCell(p,cell_idx);
-        vol_frac_CC[cell_idx] -= 1./ppc_tot;
-        IveBeenHere[cell_idx]= obj;
-      }
-
-      for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
-        IntVector c = *iter;
-        rho_CC[c] = rho_micro[c] * vol_frac_CC[c] + d_tiny_rho*rho_micro[c];
-      }
-    } else {
-
-      IntVector ppc = d_geom_objs[obj]->getInitialData_IntVector("res");
-      Vector dxpp     = patch->dCell()/ppc;
-      Vector dcorner  = dxpp*0.5;
-      double totalppc = ppc.x()*ppc.y()*ppc.z();
-
-      for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
-        IntVector c = *iter;
-        Point lower = patch->nodePosition(c) + dcorner;
-        int count = 0;
-
-        for(int ix=0;ix < ppc.x(); ix++){
-          for(int iy=0;iy < ppc.y(); iy++){
-            for(int iz=0;iz < ppc.z(); iz++){
-
-              IntVector idx(ix, iy, iz);
-              Point p = lower + dxpp*idx;
-              if(piece->inside(p))
-                count++;
-            }
+            IntVector idx(ix, iy, iz);
+            Point p = lower + dxpp*idx;
+            if(piece->inside(p))
+              count++;
           }
         }
-        //__________________________________
-        // For single materials with more than one object 
-        if ( count > 0 ) {
-          vol_frac_CC[c]= 1.0;
-          press_CC[c]   = d_geom_objs[obj]->getInitialData_double("pressure");
-          vel_CC[c]     = d_geom_objs[obj]->getInitialData_Vector("velocity");
-          rho_micro[c]  = d_geom_objs[obj]->getInitialData_double("density");
-          rho_CC[c]     = rho_micro[c] + d_tiny_rho*rho_micro[c];
-          temp[c]       = d_geom_objs[obj]->getInitialData_double("temperature");
-          IveBeenHere[c]= 1;
-        }
-      }  // Loop over domain
-    }
+      }
+      //__________________________________
+      // For single materials with more than one object 
+      if ( count > 0 ) {
+        vel_CC[c]     = d_geom_objs[obj]->getInitialData_Vector("velocity");
+        rho_CC[c]     = d_geom_objs[obj]->getInitialData_double("density");
+        temp_CC[c]    = d_geom_objs[obj]->getInitialData_double("temperature");
+      }
+    }  // Loop over domain
   }  // Loop over geom_objects
 }
 

@@ -23,20 +23,6 @@
  */
 
 #include <CCA/Components/ICE_sm/Advection/SecondOrderAdvector.h>
-#include <CCA/Ports/DataWarehouse.h>
-#include <Core/Grid/Variables/VarLabel.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Grid/Level.h>
-#include <Core/Disclosure/TypeDescription.h>
-
-#include <Core/Geometry/IntVector.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Util/Endian.h>
-#include <iostream>
-
-//#define REFLUX_DBG
-#undef REFLUX_DBG
-#define is_rightFace_variable(face,var) ( ((face == "xminus" || face == "xplus") && var == "scalar-f") ?1:0  )
 
 using namespace Uintah;
 using namespace std;
