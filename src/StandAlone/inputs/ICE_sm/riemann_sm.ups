@@ -100,8 +100,7 @@
       <save label="rho_CC"/>
       <save label="vel_CC"/>
       <save label="temp_CC"/>
-      <save label="sp_vol_CC"/>  
-      <!-- needed for regression tester dat comparisons -->       
+      <save label="sp_vol_CC"/>   
       <save label="KineticEnergy"/>
       <save label="TotalIntEng"/>
       <checkpoint timestepInterval="75" cycle="2"/>

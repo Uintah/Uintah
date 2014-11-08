@@ -85,8 +85,8 @@ namespace Uintah {
 
 
       void sched_ComputePressure(SchedulerP&,
-                                 const PatchSet*, 
-                                 const MaterialSet*);    
+                                 const PatchSet*,
+                                 const MaterialSet*);
 
       void sched_ComputeVel_FC(SchedulerP&,
                                const PatchSet*,
@@ -102,16 +102,16 @@ namespace Uintah {
                                 const MaterialSet*);
 
       void sched_ComputeThermoTransportProperties(SchedulerP&,
-                                                  const LevelP& level,  
-                                                  const MaterialSet*);  
+                                                  const LevelP& level,
+                                                  const MaterialSet*);
 
       void sched_VelTau_CC( SchedulerP&,
-                            const PatchSet*,       
-                            const MaterialSet* );  
+                            const PatchSet*,
+                            const MaterialSet* );
 
       void sched_ViscousShearStress( SchedulerP&,
-                                     const PatchSet*,      
-                                     const MaterialSet*);  
+                                     const PatchSet*,
+                                     const MaterialSet*);
 
 
       void sched_AccumulateMomentumSourceSinks(SchedulerP&,
@@ -123,25 +123,21 @@ namespace Uintah {
                                              const MaterialSet*);
 
       void sched_ComputeLagrangianValues(SchedulerP&,
-                                         const PatchSet*,      
-                                         const MaterialSet*);  
-
-      void sched_ComputeLagrangianSpecificVolume(SchedulerP&,
-                                                 const PatchSet*,  
-                                                 const MaterialSet*);    
+                                         const PatchSet*,
+                                         const MaterialSet*);
 
       void sched_AdvectAndAdvanceInTime(SchedulerP&,
-                                        const PatchSet*,  
-                                        const MaterialSet*);    
+                                        const PatchSet*,
+                                        const MaterialSet*);
 
       void sched_ConservedtoPrimitive_Vars(SchedulerP& sched,
-                                           const PatchSet* patch_set,   
-                                           const MaterialSet* ice_matls,       
-                                           const std::string& where);          
+                                           const PatchSet* patch_set,
+                                           const MaterialSet* ice_matls,
+                                           const std::string& where);
 
       void sched_TestConservation(SchedulerP&,
-                                  const PatchSet*,  
-                                  const MaterialSet*);    
+                                  const PatchSet*,
+                                  const MaterialSet*);
 
     public:
 
@@ -177,25 +173,25 @@ namespace Uintah {
                         DataWarehouse*,
                         bool);
 
-      template<class T> 
+      template<class T>
       void computeVelFace(int dir, CellIterator it,
-                          IntVector adj_offset,double dx,                 
-                          double delT, double gravity,                    
-                          constCCVariable<double>& rho_CC,                
-                          constCCVariable<double>& sp_vol_CC,             
-                          constCCVariable<Vector>& vel_CC,                
-                          constCCVariable<double>& press_CC,              
-                          T& vel_FC,                                      
-                          T& gradP_FC );                              
+                          IntVector adj_offset,double dx,
+                          double delT, double gravity,
+                          constCCVariable<double>& rho_CC,
+                          constCCVariable<double>& sp_vol_CC,
+                          constCCVariable<Vector>& vel_CC,
+                          constCCVariable<double>& press_CC,
+                          T& vel_FC,
+                          T& gradP_FC );
 
-      template<class T> 
+      template<class T>
       void updateVelFace(int dir, CellIterator it,
-                         IntVector adj_offset,double dx,                  
-                         double delT,                                     
-                         constCCVariable<double>& sp_vol_CC,              
-                         constCCVariable<double>& press_CC,               
-                         T& vel_FC,                                       
-                         T& grad_dp_FC);                                  
+                         IntVector adj_offset,double dx,
+                         double delT,
+                         constCCVariable<double>& sp_vol_CC,
+                         constCCVariable<double>& press_CC,
+                         T& vel_FC,
+                         T& grad_dp_FC);
 
       void computeDelPressAndUpdatePressCC(const ProcessorGroup*,
                                            const PatchSubset* patches,
@@ -209,7 +205,7 @@ namespace Uintah {
                           DataWarehouse*,
                           DataWarehouse*);
 
-      template<class T> 
+      template<class T>
       void computePressFace(CellIterator it,
                             IntVector adj_offset,
                             constCCVariable<double>& sum_rho,
@@ -258,12 +254,6 @@ namespace Uintah {
                                    DataWarehouse*,
                                    DataWarehouse*);
 
-      void computeLagrangianSpecificVolume(const ProcessorGroup*,
-                                           const PatchSubset* patches,
-                                           const MaterialSubset* matls,
-                                           DataWarehouse*,
-                                           DataWarehouse*);
-
 
       template< class V, class T>
       void update_q_CC(const std::string& desc,
@@ -309,7 +299,7 @@ namespace Uintah {
       Vector getGravity() const {
         return d_gravity;
       }
-      
+
       // flags
       int d_matl;              // ice material index
       bool d_viscousFlow;

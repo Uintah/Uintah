@@ -158,7 +158,7 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-         <cfl>0.5</cfl>
+         <cfl>0.25</cfl>
        <ICE>
         <advection type = "SecondOrder" />
       </ICE>        
@@ -177,7 +177,7 @@
     <MaterialProperties>
        <ICE>
          <material>
-           <include href="inputs/ICE/EOSData/MurnaghanEOSANFO.xml"/>
+           <include href="inputs/ICE_sm/EOSData/MurnaghanEOSANFO.xml"/>
            <dynamic_viscosity>      0.0                 </dynamic_viscosity>
            <thermal_conductivity>   0.0                 </thermal_conductivity>
            <specific_heat>          544.96              </specific_heat>

@@ -63,17 +63,7 @@ namespace Uintah {
    void setBC( CCVariable<Vector>& variable,
                const std::string& type,
                const Patch* patch,
-               const int mat_id );
-
-  //__________________________________
-  //    SPECIFC VOLUME
-   void setSpecificVolBC(CCVariable<double>& sp_vol,
-                         const std::string& kind,                 
-                         const bool isMassSp_vol,                 
-                         constCCVariable<double> rho_CC,          
-                         constCCVariable<double> vol_frac,        
-                         const Patch* patch,                      
-                         const int mat_id);                       
+               const int mat_id );                      
   
   template<class T> 
   void setBC(T& variable, 
