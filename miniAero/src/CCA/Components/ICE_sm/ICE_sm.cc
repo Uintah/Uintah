@@ -68,7 +68,6 @@ ICE_sm::ICE_sm(const ProcessorGroup* myworld, const bool doAMR) :
   d_gravity               = Vector(0,0,0);     // hardwired for mini app
   d_EVIL_NUM              = -9.99e30;
   d_SMALL_NUM             = 1.0e-100;
-  d_clampSpecificVolume   = false;
   d_matl                  = 0;                 // ICE material index
 
 
@@ -130,8 +129,6 @@ void ICE_sm::problemSetup(const ProblemSpecP& prob_spec,
     throw ProblemSetupException(
      "\n Could not find the <CFD> <ICE> section in the input file\n",__FILE__, __LINE__);
   }
-
-  cfd_ice_ps->get("ClampSpecificVolume",        d_clampSpecificVolume);
 
   d_advector = AdvectionFactory::create(cfd_ice_ps, d_useCompatibleFluxes, d_OrderOfAdvection);
 
@@ -375,19 +372,15 @@ ICE_sm::sched_ComputePressure(SchedulerP& sched,
   Ghost::GhostType  gn = Ghost::None;
 
   t->requires( Task::OldDW, lb->delTLabel, getLevel(patches) );
-  t->requires( Task::OldDW, lb->press_CCLabel,      gn );
   t->requires( Task::OldDW, lb->rho_CCLabel,        gn );
   t->requires( Task::OldDW, lb->temp_CCLabel,       gn );
   t->requires( Task::NewDW, lb->gammaLabel,         gn );
   t->requires( Task::NewDW, lb->specific_heatLabel, gn );
 
-  t->computes( lb->f_theta_CCLabel );
   t->computes( lb->speedSound_CCLabel );
   t->computes( lb->vol_frac_CCLabel );
   t->computes( lb->sp_vol_CCLabel );
-  t->computes( lb->rho_CCLabel );
   t->computes( lb->compressibilityLabel );
-  t->computes( lb->sumKappaLabel );
   t->computes( lb->press_equil_CCLabel );
 
   sched->addTask(t, patches, ice_matls);
@@ -409,10 +402,10 @@ ICE_sm::sched_ComputeVel_FC(SchedulerP& sched,
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   t->requires( Task::OldDW, lb->delTLabel, getLevel(patches));
-  t->requires( Task::NewDW, lb->press_equil_CCLabel, gac,1);
-  t->requires( Task::NewDW,lb->sp_vol_CCLabel,       gac,1);
-  t->requires( Task::NewDW,lb->rho_CCLabel,          gac,1);
-  t->requires( Task::OldDW,lb->vel_CCLabel,          gac,1);
+  t->requires( Task::NewDW, lb->press_equil_CCLabel,  gac,1);
+  t->requires( Task::NewDW, lb->sp_vol_CCLabel,       gac,1);
+  t->requires( Task::OldDW, lb->rho_CCLabel,          gac,1);
+  t->requires( Task::OldDW, lb->vel_CCLabel,          gac,1);
 
   t->computes( lb->uvel_FCLabel );
   t->computes( lb->vvel_FCLabel );
@@ -443,13 +436,12 @@ ICE_sm::sched_ComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   Ghost::GhostType  gn = Ghost::None;
 
   task->requires( Task::OldDW, lb->delTLabel,getLevel(patches));
+  
   task->requires( Task::NewDW, lb->vol_frac_CCLabel,   gac,2);
   task->requires( Task::NewDW, lb->uvel_FCLabel,       gac,2);
   task->requires( Task::NewDW, lb->vvel_FCLabel,       gac,2);
   task->requires( Task::NewDW, lb->wvel_FCLabel,       gac,2);
 
-  task->requires( Task::NewDW, lb->rho_CCLabel,         gn);
-  task->requires( Task::NewDW, lb->speedSound_CCLabel,  gn);
   task->requires( Task::NewDW, lb->compressibilityLabel,gn);
   task->requires( Task::NewDW, lb->press_equil_CCLabel, gn);
 
@@ -457,7 +449,6 @@ ICE_sm::sched_ComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   task->computes(lb->press_CCLabel);
   task->computes(lb->delP_DilatateLabel);
   task->computes(lb->term2Label);
-  task->computes(lb->sum_rho_CCLabel);
 
   sched->setRestartable(true);
   sched->addTask(task, patches, matls);
@@ -478,7 +469,7 @@ ICE_sm::sched_ComputePressFC(SchedulerP& sched,
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   task->requires(Task::NewDW,lb->press_CCLabel,    gac,1);
-  task->requires(Task::NewDW,lb->sum_rho_CCLabel,  gac,1);
+  task->requires(Task::OldDW,lb->rho_CCLabel,      gac,1);
 
   task->computes( lb->pressX_FCLabel );
   task->computes( lb->pressY_FCLabel );
@@ -529,7 +520,7 @@ ICE_sm::sched_ViscousShearStress(SchedulerP& sched,
   if(d_viscousFlow){
     t->requires( Task::NewDW, lb->viscosityLabel,   gac, 2);
     t->requires( Task::NewDW, lb->velTau_CCLabel,   gac, 2);
-    t->requires( Task::NewDW, lb->rho_CCLabel,      gac, 2);
+    t->requires( Task::OldDW, lb->rho_CCLabel,      gac, 2);
 
     t->computes( lb->tau_X_FCLabel );
     t->computes( lb->tau_Y_FCLabel );
@@ -562,7 +553,7 @@ ICE_sm::sched_AccumulateMomentumSourceSinks(SchedulerP& sched,
   t->requires( Task::NewDW, lb->pressY_FCLabel,      gac, 1);
   t->requires( Task::NewDW, lb->pressZ_FCLabel,      gac, 1);
   t->requires( Task::NewDW, lb->viscous_src_CCLabel, gn, 0);
-  t->requires( Task::NewDW, lb->rho_CCLabel,         gn, 0);
+  t->requires( Task::OldDW, lb->rho_CCLabel,         gn, 0);
 
   t->computes(lb->mom_source_CCLabel);
 
@@ -592,7 +583,6 @@ ICE_sm::sched_AccumulateEnergySourceSinks(SchedulerP& sched,
   t->requires(Task::NewDW, lb->compressibilityLabel, gn);
   t->requires(Task::OldDW, lb->temp_CCLabel,         gac,1);
   t->requires(Task::NewDW, lb->thermalCondLabel,     gac,1);
-  t->requires(Task::NewDW, lb->rho_CCLabel,          gac,1);
 
   t->computes(lb->int_eng_source_CCLabel);
   t->computes(lb->heatCond_src_CCLabel);
@@ -616,7 +606,7 @@ ICE_sm::sched_ComputeLagrangianValues(SchedulerP& sched,
   Ghost::GhostType  gn  = Ghost::None;
   t->requires(Task::OldDW,  lb->delTLabel,getLevel(patches));
   t->requires(Task::NewDW,  lb->specific_heatLabel,    gn);
-  t->requires(Task::NewDW,  lb->rho_CCLabel,           gn);
+  t->requires(Task::OldDW,  lb->rho_CCLabel,           gn);
   t->requires(Task::OldDW,  lb->vel_CCLabel,           gn);
   t->requires(Task::OldDW,  lb->temp_CCLabel,          gn);
   t->requires(Task::NewDW,  lb->mom_source_CCLabel,    gn);
@@ -665,9 +655,9 @@ ICE_sm::sched_AdvectAndAdvanceInTime(SchedulerP& sched,
 _____________________________________________________________________*/
 void
 ICE_sm::sched_ConservedtoPrimitive_Vars(SchedulerP& sched,
-                                    const PatchSet* patch_set,
-                                    const MaterialSet* ice_matls,
-                                    const string& where)
+                                        const PatchSet* patch_set,
+                                        const MaterialSet* ice_matls,
+                                        const string& where)
 {
   ASSERT( where == "afterAdvection" || where == "finalizeTimestep");
 
@@ -704,16 +694,17 @@ ICE_sm::sched_ConservedtoPrimitive_Vars(SchedulerP& sched,
 
   task->requires(Task::NewDW, lb->specific_heatLabel, gn, 0, fat);
   task->requires(Task::NewDW, lb->speedSound_CCLabel, gn, 0, fat);
-  task->modifies(lb->rho_CCLabel,     fat);
 
   if( where == "afterAdvection"){
     task->computes(lb->temp_CCLabel);
     task->computes(lb->vel_CCLabel);
+    task->computes(lb->rho_CCLabel);
     task->computes(lb->machLabel);
   }
   if( where == "finalizeTimestep"){
     task->modifies(lb->temp_CCLabel,  fat);
     task->modifies(lb->vel_CCLabel,   fat);
+    task->modifies(lb->rho_CCLabel,   fat);
     task->modifies(lb->machLabel,     fat);
   }
 
@@ -1037,6 +1028,7 @@ void ICE_sm::computeThermoTransportProperties(const ProcessorGroup*,
     new_dw->allocateAndPut(cv,          lb->specific_heatLabel,indx, patch);
     new_dw->allocateAndPut(gamma,       lb->gammaLabel,        indx, patch);
 
+    // set to constant value
     viscosity.initialize  ( ice_matl->getViscosity());
     thermalCond.initialize( ice_matl->getThermalConductivity());
     gamma.initialize  (     ice_matl->getGamma());
@@ -1069,9 +1061,11 @@ void ICE_sm::computeEquilPressure_1_matl(const ProcessorGroup*,
 
     printTask(patches, patch, iceCout, "Doing ICE_sm::computeEquilPressure_1_matl" );
 
-    CCVariable<double> vol_frac, sp_vol_CC;
-    CCVariable<double> speedSound, f_theta, kappa;
-    CCVariable<double> press_eq, sumKappa, rho_CC_new;
+    CCVariable<double> vol_frac;
+    CCVariable<double> sp_vol_CC;
+    CCVariable<double> speedSound;
+    CCVariable<double> kappa;
+    CCVariable<double> press_eq;
     constCCVariable<double> Temp,rho_CC, cv, gamma;
     StaticArray<CCVariable<double> > rho_micro(1);
 
@@ -1091,17 +1085,15 @@ void ICE_sm::computeEquilPressure_1_matl(const ProcessorGroup*,
     new_dw->allocateAndPut(kappa,        lb->compressibilityLabel,indx, patch);
     new_dw->allocateAndPut(vol_frac,     lb->vol_frac_CCLabel,    indx, patch);
     new_dw->allocateAndPut(sp_vol_CC,    lb->sp_vol_CCLabel,      indx, patch);
-    new_dw->allocateAndPut(f_theta,      lb->f_theta_CCLabel,     indx, patch);
     new_dw->allocateAndPut(speedSound,   lb->speedSound_CCLabel,  indx, patch);
-    new_dw->allocateAndPut(rho_CC_new,   lb->rho_CCLabel,         indx, patch);
 
     //______________________________________________________________________
     //  Main loop
     for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++) {
       IntVector c = *iter;
       vol_frac[c]      = 1.0;
-      rho_micro[0][c]  = rho_CC_new[c] = rho_CC[c];
-      sp_vol_CC[c]    = 1.0/rho_CC[c];
+      rho_micro[0][c]  = rho_CC[c];
+      sp_vol_CC[c]     = 1.0/rho_CC[c];
       double dp_drho, dp_de, c_2;
       //__________________________________
       // evaluate EOS
@@ -1112,9 +1104,7 @@ void ICE_sm::computeEquilPressure_1_matl(const ProcessorGroup*,
       c_2 = dp_drho + dp_de * press_eq[c]/(rho_micro[0][c] * rho_micro[0][c]);
       speedSound[c] = sqrt(c_2);
 
-      //  compute f_theta
       kappa[c]    = sp_vol_CC[c]/(speedSound[c]*speedSound[c]);
-      f_theta[c]  = 1.0;
     }
     //__________________________________
     // - apply Boundary conditions
@@ -1203,23 +1193,23 @@ void ICE_sm::computeVel_FC(const ProcessorGroup*,
     oneICEMaterial* ice_matl = d_sharedState->getOneICEMaterial(d_matl);
     int indx = ice_matl->getDWIndex();
 
-    new_dw->get(press_CC,   lb->press_equil_CCLabel, indx, patch, gac, 1);
-    new_dw->get(rho_CC,     lb->rho_CCLabel,         indx, patch, gac, 1);
-    old_dw->get(vel_CC,     lb->vel_CCLabel,         indx, patch, gac, 1);
-    new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,      indx, patch, gac, 1);
+    new_dw->get( press_CC,   lb->press_equil_CCLabel, indx, patch, gac, 1 );
+    new_dw->get( sp_vol_CC,  lb->sp_vol_CCLabel,      indx, patch, gac, 1 );
+    old_dw->get( rho_CC,     lb->rho_CCLabel,         indx, patch, gac, 1 );
+    old_dw->get( vel_CC,     lb->vel_CCLabel,         indx, patch, gac, 1 );
 
     SFCXVariable<double> uvel_FC, grad_P_XFC;
     SFCYVariable<double> vvel_FC, grad_P_YFC;
     SFCZVariable<double> wvel_FC, grad_P_ZFC;
 
-    new_dw->allocateAndPut(uvel_FC, lb->uvel_FCLabel, indx, patch);
-    new_dw->allocateAndPut(vvel_FC, lb->vvel_FCLabel, indx, patch);
-    new_dw->allocateAndPut(wvel_FC, lb->wvel_FCLabel, indx, patch);
+    new_dw->allocateAndPut( uvel_FC, lb->uvel_FCLabel, indx, patch );
+    new_dw->allocateAndPut( vvel_FC, lb->vvel_FCLabel, indx, patch );
+    new_dw->allocateAndPut( wvel_FC, lb->wvel_FCLabel, indx, patch );
 
     // debugging variables
-    new_dw->allocateAndPut(grad_P_XFC, lb->grad_P_XFCLabel, indx, patch);
-    new_dw->allocateAndPut(grad_P_YFC, lb->grad_P_YFCLabel, indx, patch);
-    new_dw->allocateAndPut(grad_P_ZFC, lb->grad_P_ZFCLabel, indx, patch);
+    new_dw->allocateAndPut( grad_P_XFC, lb->grad_P_XFCLabel, indx, patch );
+    new_dw->allocateAndPut( grad_P_YFC, lb->grad_P_YFCLabel, indx, patch );
+    new_dw->allocateAndPut( grad_P_ZFC, lb->grad_P_ZFCLabel, indx, patch );
 
     uvel_FC.initialize( 0.0);
     vvel_FC.initialize( 0.0);
@@ -1257,9 +1247,9 @@ void ICE_sm::computeVel_FC(const ProcessorGroup*,
 
     //________________________________
     //  Boundary Conditons
-    setBC<SFCXVariable<double> >(uvel_FC, "Velocity", patch, indx);
-    setBC<SFCYVariable<double> >(vvel_FC, "Velocity", patch, indx);
-    setBC<SFCZVariable<double> >(wvel_FC, "Velocity", patch, indx);
+    setBC_FC<SFCXVariable<double> >(uvel_FC, "Velocity", patch, indx);
+    setBC_FC<SFCYVariable<double> >(vvel_FC, "Velocity", patch, indx);
+    setBC_FC<SFCZVariable<double> >(wvel_FC, "Velocity", patch, indx);
   }  // patch loop
 }
 
@@ -1290,7 +1280,6 @@ void ICE_sm::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     //intermediate values
     CCVariable<double> q_advected;
     CCVariable<double> delP_Dilatate;
-    CCVariable<double> sum_rho_CC;
     CCVariable<double> press_CC;
     CCVariable<double> term1, term2;
 
@@ -1300,24 +1289,20 @@ void ICE_sm::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     new_dw->allocateAndPut( press_CC,    lb->press_CCLabel,      indx, patch);
     new_dw->allocateAndPut(delP_Dilatate,lb->delP_DilatateLabel, indx, patch);
     new_dw->allocateAndPut(term2,        lb->term2Label,         indx, patch);
-    new_dw->allocateAndPut(sum_rho_CC,   lb->sum_rho_CCLabel,    indx, patch);
 
     new_dw->allocateTemporary(q_advected, patch);
     new_dw->allocateTemporary(term1,      patch);
 
     term1.initialize(0.);
     term2.initialize(0.);
-    sum_rho_CC.initialize(0.0);
     delP_Dilatate.initialize(0.0);
 
     //__________________________________
     //  Pull data from the DW
-    constCCVariable<double> speedSound;
     constCCVariable<double> vol_frac;
     constCCVariable<double> rho_CC;
     constCCVariable<double> Kappa;
     constCCVariable<double> press_equil;
-    constCCVariable<double> sp_vol_CC;
 
     constSFCXVariable<double> uvel_FC;
     constSFCYVariable<double> vvel_FC;
@@ -1331,8 +1316,6 @@ void ICE_sm::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     new_dw->get(wvel_FC,     lb->wvel_FCLabel,        indx, patch, gac, 2);
     new_dw->get(vol_frac,    lb->vol_frac_CCLabel,    indx, patch, gac, 2);
 
-    new_dw->get(rho_CC,      lb->rho_CCLabel,         indx, patch, gn, 0);
-    new_dw->get(speedSound,  lb->speedSound_CCLabel,  indx, patch, gn, 0);
     new_dw->get(Kappa,       lb->compressibilityLabel,indx, patch, gn, 0);
     new_dw->get(press_equil, lb->press_equil_CCLabel, indx, patch, gn, 0);
 
@@ -1354,13 +1337,6 @@ void ICE_sm::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
       IntVector c = *iter;
       term2[c] -= q_advected[c];
-    }
-
-    //__________________________________
-    //  compute sum_rho_CC used by press_FC
-    for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
-      IntVector c = *iter;
-      sum_rho_CC[c] += rho_CC[c];
     }
 
     delete advector;
@@ -1387,7 +1363,7 @@ void ICE_sm::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
 template <class T>
 void ICE_sm::computePressFace(CellIterator iter,
                               IntVector adj_offset,
-                              constCCVariable<double>& sum_rho,
+                              constCCVariable<double>& rho_CC,
                               constCCVariable<double>& press_CC,
                               T& press_FC)
 {
@@ -1395,8 +1371,8 @@ void ICE_sm::computePressFace(CellIterator iter,
     IntVector R = *iter;
     IntVector L = R + adj_offset;
 
-    press_FC[R] = (press_CC[R] * sum_rho[L] + press_CC[L] * sum_rho[R])/
-      (sum_rho[R] + sum_rho[L]);
+    press_FC[R] = (press_CC[R] * rho_CC[L] + press_CC[L] * rho_CC[R])/
+                  (rho_CC[R] + rho_CC[L]);
   }
 }
 
@@ -1409,7 +1385,7 @@ void ICE_sm::computePressFace(CellIterator iter,
 void ICE_sm::computePressFC(const ProcessorGroup*,
                       const PatchSubset* patches,
                       const MaterialSubset* /*matls*/,
-                      DataWarehouse*,
+                      DataWarehouse* old_dw,
                       DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
@@ -1421,12 +1397,12 @@ void ICE_sm::computePressFC(const ProcessorGroup*,
 
 
     constCCVariable<double> press_CC;
-    constCCVariable<double> sum_rho_CC;
+    constCCVariable<double> rho_CC;
     oneICEMaterial* ice_matl = d_sharedState->getOneICEMaterial(d_matl);
     int indx = ice_matl->getDWIndex();
 
     new_dw->get(press_CC,  lb->press_CCLabel,   indx, patch, gac, 1);
-    new_dw->get(sum_rho_CC,lb->sum_rho_CCLabel, indx, patch, gac, 1);
+    old_dw->get(rho_CC,    lb->rho_CCLabel,     indx, patch, gac, 1);
 
     SFCXVariable<double> pressX_FC;
     SFCYVariable<double> pressY_FC;
@@ -1443,15 +1419,15 @@ void ICE_sm::computePressFC(const ProcessorGroup*,
     //__________________________________
     //  For each face compute the pressure
     computePressFace<SFCXVariable<double> >(patch->getSFCXIterator(),
-                                       adj_offset[0], sum_rho_CC, press_CC,
+                                       adj_offset[0], rho_CC, press_CC,
                                        pressX_FC);
 
     computePressFace<SFCYVariable<double> >(patch->getSFCYIterator(),
-                                       adj_offset[1], sum_rho_CC, press_CC,
+                                       adj_offset[1], rho_CC, press_CC,
                                        pressY_FC);
 
     computePressFace<SFCZVariable<double> >(patch->getSFCZIterator(),
-                                       adj_offset[2], sum_rho_CC, press_CC,
+                                       adj_offset[2], rho_CC, press_CC,
                                        pressZ_FC);
   }  // patch loop
 }
@@ -1602,7 +1578,7 @@ void ICE_sm::viscousShearStress(const ProcessorGroup*,
       constCCVariable<double>   rho_CC;
 
       Ghost::GhostType  gac = Ghost::AroundCells;
-      new_dw->get(rho_CC,    lb->rho_CCLabel,      indx,patch,gac,2);
+      old_dw->get(rho_CC,    lb->rho_CCLabel,      indx,patch,gac,2);
 
       SFCXVariable<Vector> tau_X_FC, Ttau_X_FC;
       SFCYVariable<Vector> tau_Y_FC, Ttau_Y_FC;
@@ -1690,8 +1666,6 @@ void ICE_sm::accumulateMomentumSourceSinks(const ProcessorGroup*,
 
     printTask(patches, patch, iceCout, "Doing ICE_sm::accumulateMomentumSourceSinks" );
 
-    IntVector right, left, top, bottom, front, back;
-
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(),level);
 
@@ -1703,24 +1677,24 @@ void ICE_sm::accumulateMomentumSourceSinks(const ProcessorGroup*,
     double areaY = dx.x() * dx.z();
     double areaZ = dx.x() * dx.y();
 
+    //__________________________________
     constSFCXVariable<double> pressX_FC;
     constSFCYVariable<double> pressY_FC;
     constSFCZVariable<double> pressZ_FC;
-
+    constCCVariable<double>  rho_CC;
+    CCVariable<Vector>   mom_source;
+    
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn  = Ghost::None;
+    
     oneICEMaterial* ice_matl = d_sharedState->getOneICEMaterial(d_matl);
     int indx = ice_matl->getDWIndex();
 
-    new_dw->get(pressX_FC,lb->pressX_FCLabel, indx, patch, gac, 1);
-    new_dw->get(pressY_FC,lb->pressY_FCLabel, indx, patch, gac, 1);
-    new_dw->get(pressZ_FC,lb->pressZ_FCLabel, indx, patch, gac, 1);
-
-    //__________________________________
-    constCCVariable<double>  rho_CC;
-    CCVariable<Vector>   mom_source;
-    new_dw->get(rho_CC,    lb->rho_CCLabel,      indx,patch,gn,0);
-
+    new_dw->get(pressX_FC, lb->pressX_FCLabel, indx, patch, gac, 1);
+    new_dw->get(pressY_FC, lb->pressY_FCLabel, indx, patch, gac, 1);
+    new_dw->get(pressZ_FC, lb->pressZ_FCLabel, indx, patch, gac, 1);
+    old_dw->get(rho_CC,    lb->rho_CCLabel,    indx, patch, gn,  0);
+    
     new_dw->allocateAndPut(mom_source,  lb->mom_source_CCLabel,  indx, patch);
     mom_source.initialize( Vector(0.,0.,0.) );
 
@@ -1728,7 +1702,8 @@ void ICE_sm::accumulateMomentumSourceSinks(const ProcessorGroup*,
     //  accumulate sources
     for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
       IntVector c = *iter;
-
+      
+      IntVector right, left, top, bottom, front, back;
       right    = c + IntVector(1,0,0);    left     = c + IntVector(0,0,0);
       top      = c + IntVector(0,1,0);    bottom   = c + IntVector(0,0,0);
       front    = c + IntVector(0,0,1);    back     = c + IntVector(0,0,0);
@@ -1797,7 +1772,6 @@ void ICE_sm::accumulateEnergySourceSinks(const ProcessorGroup*,
 
     new_dw->get(press_CC,     lb->press_CCLabel,        indx, patch, gn, 0);
     new_dw->get(delP_Dilatate,lb->delP_DilatateLabel,   indx, patch, gn, 0);
-    new_dw->get(rho_CC,       lb->rho_CCLabel,          indx, patch, gac,1);
     new_dw->get(kappa,        lb->compressibilityLabel, indx, patch, gn, 0);
 
     CCVariable<double> int_eng_source;
@@ -1864,12 +1838,12 @@ void ICE_sm::computeLagrangianValues(const ProcessorGroup*,
     constCCVariable<Vector> vel_CC, mom_source;
 
     Ghost::GhostType  gn = Ghost::None;
-    new_dw->get(cv,             lb->specific_heatLabel,    indx, patch, gn, 0);
-    new_dw->get(rho_CC,         lb->rho_CCLabel,           indx, patch, gn, 0);
-    old_dw->get(vel_CC,         lb->vel_CCLabel,           indx, patch, gn, 0);
-    old_dw->get(oldTemp_CC,     lb->temp_CCLabel,          indx, patch, gn, 0);
-    new_dw->get(mom_source,     lb->mom_source_CCLabel,    indx, patch, gn, 0);
-    new_dw->get(int_eng_source, lb->int_eng_source_CCLabel,indx, patch, gn, 0);
+    new_dw->get(cv,             lb->specific_heatLabel,      indx, patch, gn, 0);
+    old_dw->get(rho_CC,         lb->rho_CCLabel,             indx, patch, gn, 0);
+    old_dw->get(vel_CC,         lb->vel_CCLabel,             indx, patch, gn, 0);
+    old_dw->get(oldTemp_CC,     lb->temp_CCLabel,            indx, patch, gn, 0);
+    new_dw->get(mom_source,     lb->mom_source_CCLabel,      indx, patch, gn, 0);
+    new_dw->get(int_eng_source, lb->int_eng_source_CCLabel,  indx, patch, gn, 0);
 
     new_dw->allocateAndPut(mom_L,     lb->mom_L_CCLabel,     indx, patch);
     new_dw->allocateAndPut(int_eng_L, lb->int_eng_L_CCLabel, indx, patch);
@@ -1883,8 +1857,6 @@ void ICE_sm::computeLagrangianValues(const ProcessorGroup*,
       mass_L[c]    = mass;
       mom_L[c]     = vel_CC[c] * mass + mom_source[c];
       int_eng_L[c] = mass*  cv[c] * oldTemp_CC[c] + int_eng_source[c];
-
-      double temp_CC =int_eng_L[c]/(mass_L[c]*cv[c]);
     }
 
     //____ B U L L E T   P R O O F I N G----
@@ -1909,10 +1881,10 @@ void ICE_sm::computeLagrangianValues(const ProcessorGroup*,
    internal energy, sp_vol
  _____________________________________________________________________  */
 void ICE_sm::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
-                                 const PatchSubset* patches,
-                                 const MaterialSubset* /*matls*/,
-                                 DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw)
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* /*matls*/,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
 
@@ -2028,10 +2000,10 @@ void ICE_sm::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
           at time n+1, from the conserved variables mass, momentum, energy...
  _____________________________________________________________________  */
 void ICE_sm::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
-                                    const PatchSubset* patches,
-                                    const MaterialSubset* /*matls*/,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw)
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* /*matls*/,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
   int L_indx = level->getIndex();
@@ -2056,18 +2028,17 @@ void ICE_sm::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
     constCCVariable<double> cv;
     constCCVariable<Vector> mom_adv;
 
-    new_dw->get(speedSound,  lb->speedSound_CCLabel, indx, patch, gn, 0);
-    new_dw->get(cv,          lb->specific_heatLabel, indx, patch, gn, 0);
+    new_dw->get( speedSound,  lb->speedSound_CCLabel, indx, patch, gn, 0 );
+    new_dw->get( cv,          lb->specific_heatLabel, indx, patch, gn, 0 );
 
-    new_dw->get(mass_adv,    lb->mass_advLabel,      indx, patch, gn, 0);
-    new_dw->get(mom_adv,     lb->mom_advLabel,       indx, patch, gn, 0);
-    new_dw->get(int_eng_adv, lb->eng_advLabel,       indx, patch, gn, 0);
+    new_dw->get( mass_adv,    lb->mass_advLabel,      indx, patch, gn, 0 );
+    new_dw->get( mom_adv,     lb->mom_advLabel,       indx, patch, gn, 0 );
+    new_dw->get( int_eng_adv, lb->eng_advLabel,       indx, patch, gn, 0 );
 
-    new_dw->getModifiable(rho_CC,    lb->rho_CCLabel,   indx,patch);
-
-    new_dw->allocateAndPut(temp_CC,lb->temp_CCLabel,  indx,patch);
-    new_dw->allocateAndPut(vel_CC, lb->vel_CCLabel,   indx,patch);
-    new_dw->allocateAndPut(mach,   lb->machLabel,     indx,patch);
+    new_dw->allocateAndPut( rho_CC, lb->rho_CCLabel,   indx,patch );
+    new_dw->allocateAndPut( temp_CC,lb->temp_CCLabel,  indx,patch );
+    new_dw->allocateAndPut( vel_CC, lb->vel_CCLabel,   indx,patch );
+    new_dw->allocateAndPut( mach,   lb->machLabel,     indx,patch );
 
     rho_CC.initialize(-d_EVIL_NUM);
     temp_CC.initialize(-d_EVIL_NUM);
@@ -2096,6 +2067,7 @@ void ICE_sm::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
     setBC(rho_CC, "Density",     patch, indx );
     setBC(vel_CC, "Velocity",    patch, indx );
     setBC(temp_CC,"Temperature", patch, indx );
+    
     //__________________________________
     // Compute Auxilary quantities
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){

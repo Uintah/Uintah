@@ -30,9 +30,6 @@
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/SFCXVariable.h>
-#include <Core/Grid/Variables/SFCYVariable.h>
-#include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Patch.h>
 

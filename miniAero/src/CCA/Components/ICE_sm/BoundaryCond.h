@@ -52,23 +52,10 @@ namespace Uintah {
                          SimulationStateP& sharedState );
   
   //__________________________________
-  //  Temperature, pressure and other CCVariables
-   void setBC( CCVariable<double>& var,     
-               const std::string& type,       
-               const Patch* patch,            
-               const int mat_id );            
-             
-  //__________________________________
-  //    V E C T O R   
-   void setBC( CCVariable<Vector>& variable,
-               const std::string& type,
-               const Patch* patch,
-               const int mat_id );                      
-  
+  // Main driver method for CCVariables
   template<class T> 
-  void setBC(T& variable, 
-             const std::string& kind,
-             const std::string& comp,
+  void setBC(CCVariable<T>& variable, 
+             const std::string& desc,
              const Patch* patch,    
              const int mat_id);
 
@@ -126,10 +113,10 @@ namespace Uintah {
             The normal components are computed in  computeVel_FC
  ---------------------------------------------------------------------  */
  template<class T> 
-void setBC(T& vel_FC, 
-           const std::string& desc,
-           const Patch* patch,    
-           const int mat_id)      
+void setBC_FC(T& vel_FC, 
+              const std::string& desc,
+              const Patch* patch,    
+              const int mat_id)      
 {
   ice_BC_FC << "--------setBCFC (SFCVariable) "<< desc<< " mat_id = " << mat_id <<std::endl;
   std::string whichVel = "unknown";
