@@ -122,7 +122,7 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-       <cfl>0.25</cfl>
+       <cfl>0.2</cfl>
        <ICE>
         <advection type = "SecondOrder" />
       </ICE>        

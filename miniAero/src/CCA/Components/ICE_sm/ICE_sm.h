@@ -81,9 +81,6 @@ namespace Uintah {
       virtual void scheduleTimeAdvance( const LevelP& level,
                                         SchedulerP&);
 
-      virtual void scheduleFinalizeTimestep(const LevelP& level, SchedulerP&);
-
-
       void sched_ComputePressure(SchedulerP&,
                                  const PatchSet*,
                                  const MaterialSet*);
@@ -132,8 +129,7 @@ namespace Uintah {
 
       void sched_ConservedtoPrimitive_Vars(SchedulerP& sched,
                                            const PatchSet* patch_set,
-                                           const MaterialSet* ice_matls,
-                                           const std::string& where);
+                                           const MaterialSet* ice_matls);
 
       void sched_TestConservation(SchedulerP&,
                                   const PatchSet*,
