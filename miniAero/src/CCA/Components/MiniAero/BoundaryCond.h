@@ -52,65 +52,25 @@ namespace Uintah {
                          SimulationStateP& sharedState );
   
   //__________________________________
-  //  Temperature, pressure and other CCVariables
-   void setBC(CCVariable<double>& var,     
-                      const std::string& type,
-                      const CCVariable<double>&gamma,
-                      const CCVariable<double>&cv, 
-                      const Patch* patch,  
-                      const int mat_id,
-                      DataWarehouse* new_dw);
-            
-   void setBC(CCVariable<double>& var,     
-                      const std::string& type,     // stub function
-                      const Patch* patch,  
-                      const int mat_id,
-                      DataWarehouse* new_dw); 
-  //__________________________________
-  //  P R E S S U R E                     
-   void setBC(CCVariable<double>& press_CC,          
-                      const std::string& kind,       // stub function 
-                      const Patch* p, 
-                      const int mat_id, 
-                      DataWarehouse* new_dw);
-             
-  //__________________________________
-  //    V E C T O R   
-   void setBC(CCVariable<Vector>& variable,
-              const std::string& type,
-              const Patch* patch,
-              const int mat_id,
-              DataWarehouse* new_dw);
-
-  //__________________________________
-  //    SPECIFC VOLUME
-   void setSpecificVolBC(CCVariable<double>& sp_vol,
-                                 const std::string& kind,
-                                 const bool isMassSp_vol,
-                                 constCCVariable<double> rho_CC,
-                                 constCCVariable<double> vol_frac,
-                                 const Patch* patch,
-                                 const int mat_id);
-  
+  // Main driver method for CCVariables
   template<class T> 
-  void setBC(T& variable, 
-             const std::string& kind,
-             const std::string& comp,
+  void setBC(CCVariable<T>& variable, 
+             const std::string& desc,
              const Patch* patch,    
              const int mat_id);
 
   int setSymmetryBC_CC( const Patch* patch,
-                       const Patch::FaceType face,
-                       CCVariable<Vector>& var_CC,               
-                       Iterator& bound_ptr);
+                        const Patch::FaceType face,
+                        CCVariable<Vector>& var_CC,               
+                        Iterator& bound_ptr);
 
   template<class T>
   int setDirichletBC_FC( const Patch* patch,
-                        const Patch::FaceType face,       
-                        T& vel_FC,                        
-                        Iterator& bound_ptr,                  
-                        double& value,          
-                        const std::string& whichVel);
+                         const Patch::FaceType face,       
+                         T& vel_FC,                        
+                         Iterator& bound_ptr,                  
+                         double& value,          
+                         const std::string& whichVel);
   
   
   int numFaceCells(const Patch* patch, 
@@ -118,7 +78,6 @@ namespace Uintah {
                    const Patch::FaceType face);
 
 /* --------------------------------------------------------------------- 
- Function~  setDirichletBC_FC--
  Purpose~   does the actual work of setting the BC for face-centered 
             velocities
  ---------------------------------------------------------------------  */
@@ -150,18 +109,16 @@ namespace Uintah {
 
 
 /* --------------------------------------------------------------------- 
- Function~  setBC--      
  Purpose~   Takes capre of face centered velocities
-            The normal components are computed in  AddExchangeContributionToFCVel.
+            The normal components are computed in  computeVel_FC
  ---------------------------------------------------------------------  */
  template<class T> 
-void setBC(T& vel_FC, 
-           const std::string& desc,
-           const Patch* patch,    
-           const int mat_id)      
+void setBC_FC(T& vel_FC, 
+              const std::string& desc,
+              const Patch* patch,    
+              const int mat_id)      
 {
   ice_BC_FC << "--------setBCFC (SFCVariable) "<< desc<< " mat_id = " << mat_id <<std::endl;
-  Vector cell_dx = patch->dCell();
   std::string whichVel = "unknown";
   
   //__________________________________

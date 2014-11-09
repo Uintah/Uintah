@@ -51,11 +51,8 @@ class MiniAeroMaterial : public Material {
 
     double d_viscosity;
     double d_gamma;
-    bool d_isSurroundingMatl;  // defines which matl is the background matl.
-    bool d_includeFlowWork;
     double d_specificHeat;
     double d_thermalConductivity;
-    double d_tiny_rho;
 
     std::vector<GeometryObject*> d_geom_objs;
 
