@@ -22,7 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-
 #include <CCA/Components/MiniAero/MiniAeroLabel.h>
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -41,65 +40,32 @@ namespace Uintah {
 MiniAeroLabel::MiniAeroLabel()
 {
   // For SimpleCFD
-  bctype = VarLabel::create("bctype",
-			    NCVariable<int>::getTypeDescription(),
-			    IntVector(1,1,1));
-  xvelocity = VarLabel::create("xvelocity",
-			       SFCXVariable<double>::getTypeDescription(),
-			       IntVector(1,1,1));
-  yvelocity = VarLabel::create("yvelocity",
-			       SFCYVariable<double>::getTypeDescription(),
-			       IntVector(1,1,1));
-  zvelocity = VarLabel::create("zvelocity",
-			       SFCZVariable<double>::getTypeDescription(),
-			       IntVector(1,1,1));
-  density = VarLabel::create("density",
-			     CCVariable<double>::getTypeDescription(),
-			     IntVector(1,1,1));
-  temperature = VarLabel::create("temperature",
-				 CCVariable<double>::getTypeDescription(),
-				 IntVector(1,1,1));
-  xvelocity_matrix = VarLabel::create("xvelocity_matrix",
-				      SFCXVariable<Stencil7>::getTypeDescription());
-  xvelocity_rhs = VarLabel::create("xvelocity_rhs",
-				   SFCXVariable<double>::getTypeDescription());
-  yvelocity_matrix = VarLabel::create("yvelocity_matrix",
-				      SFCYVariable<Stencil7>::getTypeDescription());
-  yvelocity_rhs = VarLabel::create("yvelocity_rhs",
-				   SFCYVariable<double>::getTypeDescription());
-  zvelocity_matrix = VarLabel::create("zvelocity_matrix",
-				      SFCZVariable<Stencil7>::getTypeDescription());
-  zvelocity_rhs = VarLabel::create("zvelocity_rhs",
-				   SFCZVariable<double>::getTypeDescription());
-  density_matrix = VarLabel::create("density_matrix",
-				    CCVariable<Stencil7>::getTypeDescription());
-  density_rhs = VarLabel::create("density_rhs",
-				 CCVariable<double>::getTypeDescription());
-  temperature_matrix = VarLabel::create("temperature_matrix",
-					CCVariable<Stencil7>::getTypeDescription());
-  temperature_rhs = VarLabel::create("temperature_rhs",
-				     CCVariable<double>::getTypeDescription());
+  bctype = VarLabel::create("bctype", NCVariable<int>::getTypeDescription(), IntVector(1, 1, 1));
+  xvelocity = VarLabel::create("xvelocity", SFCXVariable<double>::getTypeDescription(), IntVector(1, 1, 1));
+  yvelocity = VarLabel::create("yvelocity", SFCYVariable<double>::getTypeDescription(), IntVector(1, 1, 1));
+  zvelocity = VarLabel::create("zvelocity", SFCZVariable<double>::getTypeDescription(), IntVector(1, 1, 1));
+  density = VarLabel::create("density", CCVariable<double>::getTypeDescription(), IntVector(1, 1, 1));
+  temperature = VarLabel::create("temperature", CCVariable<double>::getTypeDescription(), IntVector(1, 1, 1));
+  xvelocity_matrix = VarLabel::create("xvelocity_matrix", SFCXVariable<Stencil7>::getTypeDescription());
+  xvelocity_rhs = VarLabel::create("xvelocity_rhs", SFCXVariable<double>::getTypeDescription());
+  yvelocity_matrix = VarLabel::create("yvelocity_matrix", SFCYVariable<Stencil7>::getTypeDescription());
+  yvelocity_rhs = VarLabel::create("yvelocity_rhs", SFCYVariable<double>::getTypeDescription());
+  zvelocity_matrix = VarLabel::create("zvelocity_matrix", SFCZVariable<Stencil7>::getTypeDescription());
+  zvelocity_rhs = VarLabel::create("zvelocity_rhs", SFCZVariable<double>::getTypeDescription());
+  density_matrix = VarLabel::create("density_matrix", CCVariable<Stencil7>::getTypeDescription());
+  density_rhs = VarLabel::create("density_rhs", CCVariable<double>::getTypeDescription());
+  temperature_matrix = VarLabel::create("temperature_matrix", CCVariable<Stencil7>::getTypeDescription());
+  temperature_rhs = VarLabel::create("temperature_rhs", CCVariable<double>::getTypeDescription());
 
-  pressure_matrix = VarLabel::create("pressure_matrix",
-				     CCVariable<Stencil7>::getTypeDescription());
-  pressure_rhs = VarLabel::create("pressure_rhs",
-				  CCVariable<double>::getTypeDescription());
-  pressure = VarLabel::create("pressure",
-			      CCVariable<double>::getTypeDescription());
+  pressure_matrix = VarLabel::create("pressure_matrix", CCVariable<Stencil7>::getTypeDescription());
+  pressure_rhs = VarLabel::create("pressure_rhs", CCVariable<double>::getTypeDescription());
+  pressure = VarLabel::create("pressure", CCVariable<double>::getTypeDescription());
 
-  ccvelocity = VarLabel::create("ccvelocity",
-				CCVariable<Vector>::getTypeDescription());
-  ccvorticity = VarLabel::create("ccvorticity",
-				 CCVariable<Vector>::getTypeDescription());
-  ccvorticitymag = VarLabel::create("ccvorticitymag",
-				    CCVariable<double>::getTypeDescription());
-  vcforce = VarLabel::create("vcforce",
-			     CCVariable<Vector>::getTypeDescription());
-  NN = VarLabel::create("N",
-			CCVariable<Vector>::getTypeDescription());
-
-
-
+  ccvelocity = VarLabel::create("ccvelocity", CCVariable<Vector>::getTypeDescription());
+  ccvorticity = VarLabel::create("ccvorticity", CCVariable<Vector>::getTypeDescription());
+  ccvorticitymag = VarLabel::create("ccvorticitymag", CCVariable<double>::getTypeDescription());
+  vcforce = VarLabel::create("vcforce", CCVariable<Vector>::getTypeDescription());
+  NN = VarLabel::create("N", CCVariable<Vector>::getTypeDescription());
 
 }
 
@@ -130,8 +96,7 @@ MiniAeroLabel::~MiniAeroLabel()
   VarLabel::destroy(vcforce);
   VarLabel::destroy(NN);
 
-  
 }
 
-} // end namespace uintah 
+}  // end namespace uintah
 

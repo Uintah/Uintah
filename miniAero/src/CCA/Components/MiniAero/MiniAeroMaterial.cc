@@ -22,7 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-
 #include <CCA/Components/MiniAero/MiniAeroMaterial.h>
 
 #include <CCA/Ports/DataWarehouse.h>
@@ -44,54 +43,56 @@ using namespace Uintah;
 
 // Constructor
 MiniAeroMaterial::MiniAeroMaterial(ProblemSpecP& ps,
-                         SimulationStateP& sharedState): Material(ps)
+                                   SimulationStateP& sharedState)
+    : Material(ps)
 {
   //__________________________________
   //  Create the different Models for this material
   d_eos = EquationOfStateFactory::create(ps);
-  if(!d_eos) {
+  if (!d_eos) {
     throw ParameterNotFound("ICE: No EOS specified", __FILE__, __LINE__);
   }
 
   ProblemSpecP cvModel_ps = ps->findBlock("SpecificHeatModel");
   d_cvModel = 0;
-  if(cvModel_ps != 0) {
+  if (cvModel_ps != 0) {
     proc0cout << "Creating Specific heat model." << endl;
     d_cvModel = SpecificHeatFactory::create(ps);
   }
-  
+
   //__________________________________
   // Thermodynamic Transport Properties
-  ps->require("thermal_conductivity",d_thermalConductivity);
-  ps->require("specific_heat",       d_specificHeat);
-  ps->require("dynamic_viscosity",   d_viscosity);
-  ps->require("gamma",               d_gamma);
-  ps->getWithDefault("tiny_rho",     d_tiny_rho,1.e-12);
-
+  ps->require("thermal_conductivity", d_thermalConductivity);
+  ps->require("specific_heat", d_specificHeat);
+  ps->require("dynamic_viscosity", d_viscosity);
+  ps->require("gamma", d_gamma);
+  ps->getWithDefault("tiny_rho", d_tiny_rho, 1.e-12);
 
   //__________________________________
   // Loop through all of the pieces in this geometry object
   int piece_num = 0;
 
   list<GeometryObject::DataItem> geom_obj_data;
-  geom_obj_data.push_back(GeometryObject::DataItem("res",        GeometryObject::IntVector));
-  geom_obj_data.push_back(GeometryObject::DataItem("temperature",GeometryObject::Double));
-  geom_obj_data.push_back(GeometryObject::DataItem("pressure",   GeometryObject::Double));
-  geom_obj_data.push_back(GeometryObject::DataItem("density",    GeometryObject::Double)); 
-  geom_obj_data.push_back(GeometryObject::DataItem("velocity",   GeometryObject::Vector));
+  geom_obj_data.push_back(GeometryObject::DataItem("res", GeometryObject::IntVector));
+  geom_obj_data.push_back(GeometryObject::DataItem("temperature", GeometryObject::Double));
+  geom_obj_data.push_back(GeometryObject::DataItem("pressure", GeometryObject::Double));
+  geom_obj_data.push_back(GeometryObject::DataItem("density", GeometryObject::Double));
+  geom_obj_data.push_back(GeometryObject::DataItem("velocity", GeometryObject::Vector));
 
-  for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");geom_obj_ps != 0;
-       geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+  for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object"); geom_obj_ps != 0;
+      geom_obj_ps = geom_obj_ps->findNextBlock("geom_object")) {
 
     vector<GeometryPieceP> pieces;
     GeometryPieceFactory::create(geom_obj_ps, pieces);
 
     GeometryPieceP mainpiece;
-    if(pieces.size() == 0){
+    if (pieces.size() == 0) {
       throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
-    } else if(pieces.size() > 1){
+    }
+    else if (pieces.size() > 1) {
       mainpiece = scinew UnionGeometryPiece(pieces);
-    } else {
+    }
+    else {
       mainpiece = pieces[0];
     }
 
@@ -99,20 +100,22 @@ MiniAeroMaterial::MiniAeroMaterial(ProblemSpecP& ps,
     d_geom_objs.push_back(scinew GeometryObject(mainpiece, geom_obj_ps, geom_obj_data));
   }
 }
+
 //__________________________________
 // Destructor
 MiniAeroMaterial::~MiniAeroMaterial()
 {
   delete d_eos;
-  
-  if( d_cvModel ){
+
+  if (d_cvModel) {
     delete d_cvModel;
   }
-  
-  for (int i = 0; i< (int)d_geom_objs.size(); i++) {
+
+  for (int i = 0; i < (int)d_geom_objs.size(); i++) {
     delete d_geom_objs[i];
   }
 }
+
 //______________________________________________________________________
 //
 ProblemSpecP MiniAeroMaterial::outputProblemSpec(ProblemSpecP& ps)
@@ -120,22 +123,20 @@ ProblemSpecP MiniAeroMaterial::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP ice_ps = Material::outputProblemSpec(ps);
 
   d_eos->outputProblemSpec(ice_ps);
-  ice_ps->appendElement("thermal_conductivity",d_thermalConductivity);
-  ice_ps->appendElement("specific_heat",       d_specificHeat);
-  if(d_cvModel != 0){
+  ice_ps->appendElement("thermal_conductivity", d_thermalConductivity);
+  ice_ps->appendElement("specific_heat", d_specificHeat);
+  if (d_cvModel != 0) {
     d_cvModel->outputProblemSpec(ice_ps);
   }
-  ice_ps->appendElement("dynamic_viscosity",   d_viscosity);
-  ice_ps->appendElement("gamma",               d_gamma);
-  ice_ps->appendElement("includeFlowWork",     d_includeFlowWork);
-  ice_ps->appendElement("tiny_rho",            d_tiny_rho);
-    
-  for (vector<GeometryObject*>::const_iterator it = d_geom_objs.begin();
-       it != d_geom_objs.end(); it++) {
+  ice_ps->appendElement("dynamic_viscosity", d_viscosity);
+  ice_ps->appendElement("gamma", d_gamma);
+  ice_ps->appendElement("includeFlowWork", d_includeFlowWork);
+  ice_ps->appendElement("tiny_rho", d_tiny_rho);
+
+  for (vector<GeometryObject*>::const_iterator it = d_geom_objs.begin(); it != d_geom_objs.end(); it++) {
     (*it)->outputProblemSpec(ice_ps);
   }
 
   return ice_ps;
 }
-
 

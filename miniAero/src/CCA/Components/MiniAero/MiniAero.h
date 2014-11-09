@@ -22,74 +22,81 @@
  * IN THE SOFTWARE.
  */
 
+#ifndef CCA_COMPONENTS_MINIAERO_H
+#define CCA_COMPONENTS_MINIAERO_H
 
-#ifndef Packages_Uintah_CCA_Components_Examples_MiniAero_h
-#define Packages_Uintah_CCA_Components_Examples_MiniAero_h
-
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/SimulationInterface.h>
+#include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
 
 namespace Uintah {
-  class SimpleMaterial;
+
+class SimpleMaterial;
 
 /**************************************
 
-CLASS
-   MiniAero
-   
-   MiniAero simulation
+ CLASS
+ MiniAero
 
-GENERAL INFORMATION
-
-   MiniAero.h
-
-   Nathan Lovell and Steven Parker
-   Department of Computer Science
-   University of Utah
-
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
-   
-KEYWORDS
-   MiniAero
-
-DESCRIPTION
-   2D implementation of MiniAero's Algorithm using Euler's method.
-   Independent study for CS3200
-  
-WARNING
-  
-****************************************/
+ MiniAero simulation
 
 
-  class MiniAero : public UintahParallelComponent, public SimulationInterface {
+ GENERAL INFORMATION
+
+ MiniAero.h
+
+
+ KEYWORDS
+ MiniAero
+
+
+ DESCRIPTION
+ 2D implementation of MiniAero's Algorithm using Euler's method.
+
+ ****************************************/
+
+class MiniAero : public UintahParallelComponent, public SimulationInterface {
+
   public:
+
     MiniAero(const ProcessorGroup* myworld);
+
     virtual ~MiniAero();
 
-    virtual void problemSetup(const ProblemSpecP& params, 
+    virtual void problemSetup(const ProblemSpecP& params,
                               const ProblemSpecP& restart_prob_spec,
-                              GridP& grid, SimulationStateP&);
+                              GridP& grid,
+                              SimulationStateP&);
+
     virtual void scheduleInitialize(const LevelP& level,
-				    SchedulerP& sched);
+                                    SchedulerP& sched);
+
     virtual void scheduleComputeStableTimestep(const LevelP& level,
-					       SchedulerP&);
-    virtual void scheduleTimeAdvance( const LevelP& level, 
-				      SchedulerP&);
+                                               SchedulerP&);
+
+    virtual void scheduleTimeAdvance(const LevelP& level,
+                                     SchedulerP&);
+
   private:
+
     void initialize(const ProcessorGroup*,
-		    const PatchSubset* patches, const MaterialSubset* matls,
-		    DataWarehouse* old_dw, DataWarehouse* new_dw);
+                    const PatchSubset* patches,
+                    const MaterialSubset* matls,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw);
+
     void computeStableTimestep(const ProcessorGroup*,
-			       const PatchSubset* patches,
-			       const MaterialSubset* matls,
-			       DataWarehouse* old_dw, DataWarehouse* new_dw);
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw);
+
     void timeAdvance(const ProcessorGroup*,
-		     const PatchSubset* patches,
-		     const MaterialSubset* matls,
-		     DataWarehouse* old_dw, DataWarehouse* new_dw);
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* old_dw,
+                     DataWarehouse* new_dw);
 
     const VarLabel* u_label;
     SimulationStateP sharedState_;
@@ -98,8 +105,9 @@ WARNING
 
     MiniAero(const MiniAero&);
     MiniAero& operator=(const MiniAero&);
-	 
-  };
-}
 
-#endif
+};  // end class MiniAero
+
+}  // end namespace Uintah
+
+#endif  // end CCA_COMPONENTS_MINIAERO_H

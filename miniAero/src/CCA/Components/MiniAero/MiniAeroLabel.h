@@ -23,8 +23,8 @@
  */
 
 
-#ifndef Packages_Uintah_CCA_Components_MiniAero_MiniAeroLabel_h
-#define Packages_Uintah_CCA_Components_MiniAero_MiniAeroLabel_h
+#ifndef CCA_CCOMPONENTS_MINIAERO_MINIAEROLABEL_H
+#define CCA_CCOMPONENTS_MINIAERO_MINIAEROLABEL_H
 
 #include <vector>
 
