@@ -362,7 +362,7 @@
       
     <SimulationComponent          spec="REQUIRED NO_DATA"
                                     attribute1="type REQUIRED STRING 'arches, burger, ice, ice_sm, impm, mpm, mpmarches, 
-                                                                      mpmf, mpmice, amrmpm, wasatch, reduce_uda,
+                                                                      miniaero, mpmf, mpmice, amrmpm, wasatch, reduce_uda,
                                                                       advectslabs, unifiedschedulertest, poissongpu1,
                                                                       poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, reduce_uda, 
                                                                       rmpmice, smpm, smpmice, switcher, wave, solvertest, RMCRT_Test particletest'" >
@@ -965,5 +965,10 @@
 
   <!-- Wasatch Component -->
   <include href="wasatch_spec.xml" section="" />
+  
+  <!-- MiniAero         -->
+  <MiniAero                     spec="OPTIONAL NO_DATA">
+    <delt                     spec="REQUIRED DOUBLE 'positive'" />
+  </MiniAero>
 
 </Uintah_specification>
