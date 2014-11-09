@@ -22,9 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef __MINI_AERO_MATERIAL_H__
-#define __MINI_AERO_MATERIAL_H__
-
+#ifndef CCA_COMPONENTS_MINIAERO_MINIAEROMATERIAL_H
+#define CCA_COMPONENTS_MINIAERO_MINIAEROMATERIAL_H
 
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Grid/Material.h>
@@ -32,26 +31,27 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
-  using namespace SCIRun;
-  class EquationOfState;
-  class GeometryObject;
- 
- 
+
+using namespace SCIRun;
+class EquationOfState;
+class GeometryObject;
+
 class MiniAeroMaterial : public Material {
+
   public:
-    MiniAeroMaterial(ProblemSpecP&, 
-                SimulationStateP& sharedState);
+
+    MiniAeroMaterial(ProblemSpecP&,
+                     SimulationStateP& sharedState);
 
     ~MiniAeroMaterial();
 
     virtual ProblemSpecP outputProblemSpec(ProblemSpecP& ps);
 
-
   private:
 
     double d_viscosity;
     double d_gamma;
-    bool d_isSurroundingMatl; // defines which matl is the background matl.
+    bool d_isSurroundingMatl;  // defines which matl is the background matl.
     bool d_includeFlowWork;
     double d_specificHeat;
     double d_thermalConductivity;
@@ -59,17 +59,13 @@ class MiniAeroMaterial : public Material {
 
     std::vector<GeometryObject*> d_geom_objs;
 
-    // Prevent copying of this class
-    // copy constructor
+    // Disable copy and assignment
     MiniAeroMaterial(const MiniAeroMaterial &miniaerom);
-    MiniAeroMaterial& operator=(const MiniAeroMaterial &miniaerom);        
+    MiniAeroMaterial& operator=(const MiniAeroMaterial &miniaerom);
 
 };
-} // End namespace Uintah
 
-#endif // __ICE_MATERIAL_H__
+}  // End namespace Uintah
 
-
-
-
+#endif // CCA_COMPONENTS_MINIAERO_MINIAEROMATERIAL_H
 

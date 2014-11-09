@@ -22,9 +22,9 @@
  * IN THE SOFTWARE.
  */
 
-
 #include <CCA/Components/MiniAero/MiniAero.h>
 #include <CCA/Components/Examples/ExamplesLabel.h>
+#include <CCA/Ports/Scheduler.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/NodeIterator.h>
@@ -33,18 +33,18 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimpleMaterial.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Parallel/ProcessorGroup.h>
-#include <CCA/Ports/Scheduler.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Malloc/Allocator.h>
 
 using namespace std;
 using namespace Uintah;
+
 //______________________________________________________________________
 //  Preliminary
 MiniAero::MiniAero(const ProcessorGroup* myworld)
-  : UintahParallelComponent(myworld)
+    : UintahParallelComponent(myworld)
 {
   u_label = VarLabel::create("u", NCVariable<double>::getTypeDescription());
 }
@@ -53,12 +53,13 @@ MiniAero::~MiniAero()
 {
   VarLabel::destroy(u_label);
 }
+
 //______________________________________________________________________
 //
-void MiniAero::problemSetup(const ProblemSpecP& params, 
-                          const ProblemSpecP& restart_prob_spec, 
-                          GridP& /*grid*/,  
-                          SimulationStateP& sharedState)
+void MiniAero::problemSetup(const ProblemSpecP& params,
+                            const ProblemSpecP& restart_prob_spec,
+                            GridP& /*grid*/,
+                            SimulationStateP& sharedState)
 {
   sharedState_ = sharedState;
   ProblemSpecP miniaero = params->findBlock("MiniAero");
@@ -66,39 +67,38 @@ void MiniAero::problemSetup(const ProblemSpecP& params,
   mymat_ = scinew SimpleMaterial();
   sharedState->registerSimpleMaterial(mymat_);
 }
- 
+
 //______________________________________________________________________
 // 
 void MiniAero::scheduleInitialize(const LevelP& level,
-                                   SchedulerP& sched)
+                                  SchedulerP& sched)
 {
-  Task* task = scinew Task("MiniAero::initialize",
-                     this, &MiniAero::initialize);
+  Task* task = scinew Task("MiniAero::initialize", this, &MiniAero::initialize);
   task->computes(u_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
+
 //______________________________________________________________________
 // 
 void MiniAero::scheduleComputeStableTimestep(const LevelP& level,
-                                          SchedulerP& sched)
+                                             SchedulerP& sched)
 {
-  Task* task = scinew Task("MiniAero::computeStableTimestep",
-                     this, &MiniAero::computeStableTimestep);
-                     
-  task->computes(sharedState_->get_delt_label(),level.get_rep());
+  Task* task = scinew Task("MiniAero::computeStableTimestep", this, &MiniAero::computeStableTimestep);
+
+  task->computes(sharedState_->get_delt_label(), level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
+
 //______________________________________________________________________
 //
-void  MiniAero::scheduleTimeAdvance( const LevelP& level, 
+void MiniAero::scheduleTimeAdvance(const LevelP& level,
                                    SchedulerP& sched)
 {
-  Task* task = scinew Task("MiniAero::timeAdvance",
-                     this, &MiniAero::timeAdvance);
-                     
+  Task* task = scinew Task("MiniAero::timeAdvance", this, &MiniAero::timeAdvance);
+
   task->requires(Task::OldDW, u_label, Ghost::AroundNodes, 1);
   task->requires(Task::OldDW, sharedState_->get_delt_label());
-  
+
   task->computes(u_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
@@ -106,38 +106,39 @@ void  MiniAero::scheduleTimeAdvance( const LevelP& level,
 //______________________________________________________________________
 //
 void MiniAero::computeStableTimestep(const ProcessorGroup*,
-                                   const PatchSubset* patches,
-                                   const MaterialSubset*,
-                                   DataWarehouse*, 
-                                   DataWarehouse* new_dw)
+                                     const PatchSubset* patches,
+                                     const MaterialSubset*,
+                                     DataWarehouse*,
+                                     DataWarehouse* new_dw)
 {
-  new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(),getLevel(patches));
+  new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(), getLevel(patches));
 }
 
 //______________________________________________________________________
 //
 void MiniAero::initialize(const ProcessorGroup*,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse*, 
-                        DataWarehouse* new_dw)
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse*,
+                          DataWarehouse* new_dw)
 {
   int matl = 0;
-  for(int p=0;p<patches->size();p++){
+  int size = patches->size();
+  for (int p = 0; p < size; p++) {
     const Patch* patch = patches->get(p);
 
     NCVariable<double> u;
     new_dw->allocateAndPut(u, u_label, matl, patch);
-    
+
     //Initialize
     // u = sin( pi*x ) + sin( pi*2*y ) + sin(pi*3z )
     IntVector l = patch->getNodeLowIndex();
     IntVector h = patch->getNodeHighIndex();
-    
-    for( NodeIterator iter=patch->getNodeIterator(); !iter.done(); iter++ ){
+
+    for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
       IntVector n = *iter;
       Point p = patch->nodePosition(n);
-      u[n] = sin( p.x() * 3.14159265358 ) + sin( p.y() * 2*3.14159265358)  +  sin( p.z() * 3*3.14159265358);
+      u[n] = sin(p.x() * 3.14159265358) + sin(p.y() * 2 * 3.14159265358) + sin(p.z() * 3 * 3.14159265358);
     }
   }
 }
@@ -145,16 +146,18 @@ void MiniAero::initialize(const ProcessorGroup*,
 //______________________________________________________________________
 //
 void MiniAero::timeAdvance(const ProcessorGroup*,
-                         const PatchSubset* patches,
-                         const MaterialSubset* matls,
-                         DataWarehouse* old_dw, 
-                         DataWarehouse* new_dw)
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw)
 {
   int matl = 0;
+
   //Loop for all patches on this processor
-  for(int p=0;p<patches->size();p++){
+  int size = patches->size();
+  for (int p = 0; p < size; p++) {
     const Patch* patch = patches->get(p);
-    
+
     //  Get data from the data warehouse including 1 layer of
     // "ghost" nodes from surrounding patches
     constNCVariable<double> u;
@@ -164,32 +167,32 @@ void MiniAero::timeAdvance(const ProcessorGroup*,
     Vector dx = patch->getLevel()->dCell();
     delt_vartype dt;
     old_dw->get(dt, sharedState_->get_delt_label());
-    
+
     // allocate memory
     NCVariable<double> new_u;
     new_dw->allocateAndPut(new_u, u_label, matl, patch);
-    
+
     // define iterator range
     IntVector l = patch->getNodeLowIndex();
     IntVector h = patch->getNodeHighIndex();
 
     //offset to prevent accessing memory out-of-bounds
-    l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1,
-                   patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1,
-                   patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1 );
-                   
-    h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor?0:1,
-                   patch->getBCType(Patch::yplus) == Patch::Neighbor?0:1,
-                   patch->getBCType(Patch::zplus) == Patch::Neighbor?0:1 );
-                   
+    l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
+                   patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
+                   patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
+
+    h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor ? 0 : 1,
+                   patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
+                   patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
+
     //Iterate through all the nodes
-    for(NodeIterator iter(l, h);!iter.done(); iter++){    
+    for (NodeIterator iter(l, h); !iter.done(); iter++) {
       IntVector n = *iter;
-      double dudx = (u[n+IntVector(1,0,0)] - u[n-IntVector(1,0,0)]) /(2.0 * dx.x());
-      double dudy = (u[n+IntVector(0,1,0)] - u[n-IntVector(0,1,0)]) /(2.0 * dx.y());
-      double dudz = (u[n+IntVector(0,0,1)] - u[n-IntVector(0,0,1)]) /(2.0 * dx.z());
-      double du = - u[n] * dt * (dudx + dudy + dudz);
-      new_u[n]= u[n] + du;
+      double dudx = (u[n + IntVector(1, 0, 0)] - u[n - IntVector(1, 0, 0)]) / (2.0 * dx.x());
+      double dudy = (u[n + IntVector(0, 1, 0)] - u[n - IntVector(0, 1, 0)]) / (2.0 * dx.y());
+      double dudz = (u[n + IntVector(0, 0, 1)] - u[n - IntVector(0, 0, 1)]) / (2.0 * dx.z());
+      double du = -u[n] * dt * (dudx + dudy + dudz);
+      new_u[n] = u[n] + du;
     }
 
     //__________________________________
@@ -198,22 +201,22 @@ void MiniAero::timeAdvance(const ProcessorGroup*,
     vector<Patch::FaceType>::const_iterator iter;
     vector<Patch::FaceType> bf;
     patch->getBoundaryFaces(bf);
-    for (iter  = bf.begin(); iter != bf.end(); ++iter){
+    for (iter = bf.begin(); iter != bf.end(); ++iter) {
       Patch::FaceType face = *iter;
 
       IntVector axes = patch->getFaceAxes(face);
-      int P_dir = axes[0]; // find the principal dir of that face
+      int P_dir = axes[0];  // find the principal dir of that face
 
-      IntVector offset(0,0,0);
-      if (face == Patch::xminus || face == Patch::yminus || face == Patch::zminus){
-        offset[P_dir] += 1; 
+      IntVector offset(0, 0, 0);
+      if (face == Patch::xminus || face == Patch::yminus || face == Patch::zminus) {
+        offset[P_dir] += 1;
       }
-      if (face == Patch::xplus || face == Patch::yplus || face == Patch::zplus){
+      if (face == Patch::xplus || face == Patch::yplus || face == Patch::zplus) {
         offset[P_dir] -= 1;
       }
 
       Patch::FaceIteratorType FN = Patch::FaceNodes;
-      for (CellIterator iter = patch->getFaceIterator(face,FN);!iter.done(); iter++){
+      for (CellIterator iter = patch->getFaceIterator(face, FN); !iter.done(); iter++) {
         IntVector n = *iter;
         new_u[n] = new_u[n + offset];
       }
