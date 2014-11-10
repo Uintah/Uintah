@@ -597,7 +597,6 @@
         <!-- base information-->
         <NumberInternalCoordinates> 3 </NumberInternalCoordinates>
         <QuadratureNodes> [2,2,2] </QuadratureNodes>
-        <HighestOrder> [3,3,3] </HighestOrder>
         <InternalCoordinate name="r1" type="scalar"/> 
         <InternalCoordinate name="r2" type="scalar"/> 
         <InternalCoordinate name="r3" type="scalar"/> 

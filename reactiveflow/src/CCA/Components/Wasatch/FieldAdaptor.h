@@ -263,6 +263,7 @@ namespace Wasatch{
     Uintah::DataWarehouse* const newDW;
     const int materialIndex;
     const Uintah::Patch* const patch;
+    Uintah::ParticleSubset* const pset;
     const Uintah::ProcessorGroup* const procgroup;
     const bool isGPUTask;
 
@@ -270,15 +271,33 @@ namespace Wasatch{
                Uintah::DataWarehouse* const newdw,
                const int matlIndex,
                const Uintah::Patch* p,
+               Uintah::ParticleSubset* particlesubset,
                const Uintah::ProcessorGroup* const pg,
                const bool isgpu=false )
     : oldDW( olddw ),
       newDW( newdw ),
       materialIndex( matlIndex ),
       patch( p ),
+      pset (particlesubset),
       procgroup( pg ),
       isGPUTask( isgpu )
     {}
+    
+    AllocInfo( Uintah::DataWarehouse* const olddw,
+              Uintah::DataWarehouse* const newdw,
+              const int matlIndex,
+              const Uintah::Patch* p,
+              const Uintah::ProcessorGroup* const pg,
+              const bool isgpu=false )
+    : oldDW( olddw ),
+    newDW( newdw ),
+    materialIndex( matlIndex ),
+    patch( p ),
+    pset (NULL),
+    procgroup( pg ),
+    isGPUTask( isgpu )
+    {}
+    
   };
 
 
@@ -307,8 +326,7 @@ namespace Wasatch{
                                    const AllocInfo& ainfo,
                                    const SpatialOps::GhostData ghostData,
                                    short int deviceIndex=CPU_INDEX,
-                                   double* uintahDeviceVar = NULL,
-                                   const bool isGPUTask = false )
+                                   double* uintahDeviceVar = NULL )
   {
     /*
      * NOTE: before changing things here, look at the line:
@@ -335,10 +353,11 @@ namespace Wasatch{
 
     double* fieldValues_ = NULL;
     FieldT* field;
-    if( isGPUTask && IS_GPU_INDEX(deviceIndex) ){ // homogeneous GPU task
-#     ifdef HAVE_CUDA
-      fieldValues_ = const_cast<double*>( uintahDeviceVar );
-#     endif
+    if( ainfo.isGPUTask && IS_GPU_INDEX(deviceIndex) ){ // homogeneous GPU task
+      assert( uintahDeviceVar != NULL );
+      fieldValues_ = uintahDeviceVar;
+      std::cout << "Wrapping field with size " << size << ", offset="
+                << offset << ", extent=" << extent << std::endl;
       field = new FieldT( so::MemoryWindow( size, offset, extent ),
                           so::BoundaryCellInfo::build<FieldT>(bcPlus),
                           ghostData,
@@ -371,8 +390,7 @@ namespace Wasatch{
       const AllocInfo& ainfo,
       const SpatialOps::GhostData ghostData,
       const short int deviceIndex,
-      double* uintahDeviceVar,
-      const bool isGPUTask ) // abhi : not being used yet)
+      double* uintahDeviceVar ) // abhi : not being used yet)
   {
     namespace so = SpatialOps;
     typedef ParticleField::value_type ValT;
@@ -406,8 +424,7 @@ namespace Wasatch{
       const AllocInfo& ainfo,
       const SpatialOps::GhostData ghostData,
       const short int deviceIndex,
-      double* uintahDeviceVar,
-      const bool isGPUTask ) // abhi : not being used yet)
+      double* uintahDeviceVar ) // abhi : not being used yet)
   {
     namespace so = SpatialOps;
     typedef ParticleField::value_type ValT;
@@ -446,8 +463,7 @@ namespace Wasatch{
       const AllocInfo& ainfo,
       const SpatialOps::GhostData ghostData,
       const short int deviceIndex,
-      double* uintahDeviceVar,
-      const bool isGPUTask ) // abhi : not being used yet
+      double* uintahDeviceVar ) // abhi : not being used yet
   {
     namespace so = SpatialOps;
     typedef so::SingleValueField FieldT;
@@ -470,8 +486,7 @@ namespace Wasatch{
       const AllocInfo& ainfo,
       const SpatialOps::GhostData ghostData,
       const short int deviceIndex,
-      double* uintahDeviceVar,
-      const bool isGPUTask ) // abhi : not being used yet
+      double* uintahDeviceVar ) // abhi : not being used yet
   {
     namespace so = SpatialOps;
     typedef so::SingleValueField FieldT;

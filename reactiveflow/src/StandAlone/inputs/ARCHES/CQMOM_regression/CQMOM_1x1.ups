@@ -239,7 +239,6 @@
         <!-- base information-->
         <NumberInternalCoordinates> 2 </NumberInternalCoordinates>
         <QuadratureNodes> [1,1] </QuadratureNodes>
-        <HighestOrder> [1,1] </HighestOrder>
         <InternalCoordinate name="r1" type="scalar"/>
         <InternalCoordinate name="r2" type="scalar"/>
 

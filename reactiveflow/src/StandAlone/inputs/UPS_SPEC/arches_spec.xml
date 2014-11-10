@@ -276,6 +276,7 @@
 
         <HHV                            spec="OPTIONAL DOUBLE" /> <!-- used in python script only -->
         <use_HHV_est                    spec="OPTIONAL STRING" /> <!-- used in python script only -->
+        <compute_scaling_const          spec="OPTIONAL STRING" /> <!-- used in python script only -->
         <particle_weights               spec="OPTIONAL MULTIPLE_DOUBLES" /> <!-- used in python script only -->
         <particle_temperature           spec="OPTIONAL DOUBLE" /> <!-- used in python script only -->
       </Coal_Properties>
@@ -459,6 +460,10 @@
       </Properties>
 
       <BoundaryConditions               spec="OPTIONAL NO_DATA" > 
+
+        <ignore_invalid_celltype        spec="OPTIONAL NO_DATA"/> <!-- If present, the code will not exit with error 
+                                                                       when a celltype of 999 (invalid) is present in 
+                                                                       the simulation -->
 
         <suppress_corner_recirculation  spec="OPTIONAL NO_DATA"/> <!-- This flag zeros out corner velocity cells to try 
                                                                        to discourage artificial recirculation caused by 
@@ -803,7 +808,7 @@
 
         <model                        spec="MULTIPLE NO_DATA"
                                       attribute1="label REQUIRED STRING"
-                                      attribute2="type REQUIRED STRING 'simple_rate, drag, gravity'">
+                                      attribute2="type REQUIRED STRING 'simple_rate, drag, gravity, constant'">
 
           <!-- Simple rate expression -->
             <grid                       spec="REQUIRED NO_DATA"
@@ -852,7 +857,8 @@
                                         need_applies_to="type drag"/>         <!-- base v velocity label for IC -->
             <w_velocity_label           spec="OPTIONAL STRING"
                                         need_applies_to="type drag"/>         <!-- base w velocity label for IC -->
-
+            <constant                   spec="REQUIRED DOUBLE"
+                                        need_applies_to="type constant"/>
         </model>
 
       </ParticleModels>
@@ -1295,7 +1301,7 @@
             <constant                   spec="OPTIONAL DOUBLE"/>
             <env_constant               spec="MULTIPLE NO_DATA"
                                         attribute1="qn REQUIRED INTEGER 'positive'"
-                                        attribute2="value REQUIRED DOUBLE" />
+                                        attribute2="value REQUIRED DOUBLE" /> <!-- this is the unscaled initial value for the weight -->
             <!-- step function initialization --> 
             <!-- Note: the only difference between 'step' and 'env_step' is the use of <step_value></step_value> or <env_step_value qn="" value=""/> -->
             <step_direction             spec="OPTIONAL STRING 'x,y,z'"/> <!-- direction in which the step occurs -->
@@ -1378,14 +1384,14 @@
         </Models>
         <NumberInternalCoordinates      spec="REQUIRED INTEGER"/>
         <QuadratureNodes                spec="REQUIRED MULTIPLE_INTEGERS"/> <!-- this is per direction -->
-        <HighestOrder                   spec="REQUIRED MULTIPLE_INTEGERS"/> <!-- this is per direction -->
         <CutOff                         spec="OPTIONAL DOUBLE"/>
         <Adaptive                       spec="OPTIONAL BOOLEAN"/>
         <UseLapack                      spec="OPTIONAL BOOLEAN"/>
-        <WeightRatio                    spec="OPTIONAL DOUBLE"/>
-        <AbscissaRatio                  spec="OPTIONAL DOUBLE"/>
+        <WeightRatio                    spec="OPTIONAL DOUBLE"/>  <!-- minimum ratio of maximum to minimum weight in adaptive method -->
+        <AbscissaRatio                  spec="OPTIONAL DOUBLE"/>  <!-- minimum ratio of difference between abscissas -->
         <OperatorSplitting              spec="OPTIONAL BOOLEAN"/> <!-- turn on operator splitting for convective fluxes -->
-        <RestitutionCoefficient         spec="OPTIONAL DOUBLE"/>
+        <RestitutionCoefficient         spec="OPTIONAL DOUBLE"/>  <!-- determines how much energy is lost in wall collision default = 1 - elastic-->
+        <ConvectionWeightLimit          spec="OPTIONAL DOUBLE"/>  <!-- minimum value of the weight for the quadrature node to actually do convection, scale this value up for higher number densities of population balance-->
         
         <!-- order these same as index moment order -->
         <InternalCoordinate             spec="MULTIPLE NO_DATA"

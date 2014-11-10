@@ -117,6 +117,8 @@
   </DataArchiver>
 
   <!--__________________________________ -->
+  <!-- This computes the divQ over the entire domein -->
+  <!-- and the radiometer flux VRFlux    -->
   <Temperature>       64.804        </Temperature>
   <abskg>             999           </abskg>
   <benchmark>         1             </benchmark>

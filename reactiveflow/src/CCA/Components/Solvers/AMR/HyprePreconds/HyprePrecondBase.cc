@@ -29,23 +29,30 @@
 // can work with the input interface. The actual precond setup/destroy is
 // done in the classes derived from HyprePrecondBase.
 //--------------------------------------------------------------------------
+
 #include <CCA/Components/Solvers/AMR/HyprePreconds/HyprePrecondBase.h>
-#include <CCA/Components/Solvers/AMR/HypreSolverParams.h>
-#include <CCA/Components/Solvers/AMR/HyprePreconds/HyprePrecondSMG.h>
-#include <CCA/Components/Solvers/AMR/HyprePreconds/HyprePrecondPFMG.h>
-#include <CCA/Components/Solvers/AMR/HyprePreconds/HyprePrecondSparseMSG.h>
-#include <CCA/Components/Solvers/AMR/HyprePreconds/HyprePrecondJacobi.h>
 #include <CCA/Components/Solvers/AMR/HyprePreconds/HyprePrecondDiagonal.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Parallel/ProcessorGroup.h>
+#include <CCA/Components/Solvers/AMR/HyprePreconds/HyprePrecondPFMG.h>
+#include <CCA/Components/Solvers/AMR/HyprePreconds/HyprePrecondJacobi.h>
+#include <CCA/Components/Solvers/AMR/HyprePreconds/HyprePrecondSMG.h>
+#include <CCA/Components/Solvers/AMR/HyprePreconds/HyprePrecondSparseMSG.h>
+#include <CCA/Components/Solvers/AMR/HypreSolverParams.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Math/MiscMath.h>
+
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Math/MinMax.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>
+
 #include <iomanip>
+#include <iostream>
+#include <string>
 
 using std::string;
+using std::ostringstream;
+
 using namespace Uintah;
 
 HyprePrecondBase::HyprePrecondBase(const Priorities& priority) :
@@ -75,11 +82,14 @@ namespace Uintah {
     case PrecondAMG:       break; // Not implemented yet
     case PrecondFAC:       break; // Not implemented yet
     default:
-      throw InternalError("Unknown preconditionertype in newHyprePrecond: "
-                          +precondType, __FILE__, __LINE__);
+      ostringstream msg;
+      msg << "Unknown preconditionertype in newHyprePrecond: " << precondType;
+      
+      throw InternalError( msg.str(), __FILE__, __LINE__ );
     }
-    throw InternalError("Preconditioner not yet implemented in newHyprePrecond: "
-                        +precondType, __FILE__, __LINE__);
+    ostringstream msg;
+    msg << "Preconditioner not yet implemented in newHyprePrecond: " << precondType;
+    throw InternalError( msg.str(), __FILE__, __LINE__ );
   } 
   
 /* Determine preconditioner type from title */

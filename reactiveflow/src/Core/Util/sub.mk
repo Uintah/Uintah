@@ -54,7 +54,7 @@ ifeq ($(HAVE_CUDA),yes)
   DLINK_FILES += Core/Util/GPU.o
 endif
 
-PSELIBS := Core/Containers Core/Exceptions Core/Thread
+PSELIBS := Core/Containers Core/Exceptions Core/Thread Core/Malloc
 
 LIBS := $(DL_LIBRARY) $(THREAD_LIBRARY) $(SOCKET_LIBRARY) $(CUDA_LIBRARY)
 

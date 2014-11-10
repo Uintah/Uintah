@@ -232,7 +232,7 @@ DESCRIPTION
         (ptr->*pmf)(0);
       }
       else {
-        Parallel<T> p(ptr, pmf);
+        ThreadNS::Parallel<T> p(ptr, pmf);
         parallel(p, numThreads, true);
       }
     }

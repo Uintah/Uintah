@@ -95,7 +95,7 @@ namespace Uintah {
 
     /// Print out the boundary condition geometry type.
     virtual void print();
-
+    
     /// Determine the cell and node centered iterators
     virtual void determineIteratorLimits(Patch::FaceType face,
                                          const Patch* patch, 
@@ -103,7 +103,6 @@ namespace Uintah {
     
   private:
     BCData d_bc;
-    Point  d_origin;
     double d_minorRadius;
     double d_majorRadius;
     double d_angleDegrees;

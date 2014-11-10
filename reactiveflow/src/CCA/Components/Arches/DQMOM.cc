@@ -1407,11 +1407,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 #endif
 
   string msg = "    Time for AX=B construction: ";
-  if (Uintah::Parallel::getNumThreads() > 1) {
-    proc0thread0cout << msg << total_AXBConstructionTime << " seconds\n";
-  } else {
-    proc0cout << msg << total_AXBConstructionTime << " seconds\n";
-  }
+  proc0cout << msg << total_AXBConstructionTime << " seconds\n";
 
   if( d_solverType == "Lapack-invert" ) { 
     proc0cout << "    Time for Lapack inversion-multiplication: " << total_SolveTime << " seconds\n";

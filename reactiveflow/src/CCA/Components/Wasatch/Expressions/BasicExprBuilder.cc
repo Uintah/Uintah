@@ -945,6 +945,27 @@ namespace Wasatch{
           builder = scinew Builder(tag, srcTag);
           break;
         }
+        case PARTICLE : {
+          typedef typename InterpolateParticleExpression<SVolField>::Builder Builder;
+          Uintah::ProblemSpecP pInfoSpec = valParams->findBlock("ParticleInfo");
+          std::string psize, px, py, pz;
+          
+          pInfoSpec->getAttribute("size",psize);
+          const Expr::Tag psizeTag(psize,Expr::STATE_NP1);
+          
+          pInfoSpec->getAttribute("px",px);
+          const Expr::Tag pxTag(px,Expr::STATE_NP1);
+          
+          pInfoSpec->getAttribute("py",py);
+          const Expr::Tag pyTag(py,Expr::STATE_NP1);
+
+          pInfoSpec->getAttribute("pz",pz);
+          const Expr::Tag pzTag(pz,Expr::STATE_NP1);
+          
+          const Expr::TagList pPosTags = tag_list(pxTag,pyTag,pzTag);
+          builder = scinew Builder(tag, srcTag, psizeTag, pPosTags );
+          break;
+        }
         default:
           std::ostringstream msg;
           msg << "ERROR: unsupported field type '" << srcFieldType << "'" << "while parsing an InterpolateExpression." << std::endl;
@@ -1410,7 +1431,7 @@ namespace Wasatch{
         double val = initialMoments[i];
         std::stringstream ss;
         ss << i;
-        Expr::Tag thisMomentTag("m_" + populationName + "_" + ss.str(), Expr::STATE_DYNAMIC);
+        Expr::Tag thisMomentTag("m_" + populationName + "_" + ss.str(), Expr::STATE_NONE);
         graphHelper->exprFactory->register_expression( scinew Builder( thisMomentTag, val ) );
       }
     }

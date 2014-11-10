@@ -133,7 +133,6 @@ using namespace std;
 
 // Used to sync cerr so it is readable when output by multiple threads
 extern Mutex cerrLock;
-extern Mutex cerrLock;
 
 static DebugStream stackDebug("ExceptionStack", true);
 static DebugStream dbgwait("WaitForDebugger", false);

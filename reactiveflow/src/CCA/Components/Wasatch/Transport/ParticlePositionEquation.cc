@@ -98,7 +98,7 @@ namespace Wasatch{
   ParticlePositionEquation::
   initial_condition( Expr::ExpressionFactory& exprFactory )
   {
-    return exprFactory.get_id( solution_variable_tag() );
+    return exprFactory.get_id( initial_condition_tag() );
   }
 
   //==================================================================

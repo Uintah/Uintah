@@ -61,7 +61,8 @@ void floatRay::rayTraceGPU(Task::CallBackEvent event,
   
   const Level* level = getLevel(patches);
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  if ( doCarryForward( timestep, radCalc_freq) ) {
+  //  if ( doCarryForward( timestep, radCalc_freq) ) {
+  if ( doCarryForward( timestep ) ) {
     return;
   }
 

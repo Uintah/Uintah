@@ -218,7 +218,6 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     d_radiometer = scinew Radiometer();
     bool getExtraInputs = false;
     d_radiometer->problemSetup( prob_spec, rad_ps, grid, sharedState, getExtraInputs );
-    d_VRFluxLabel = d_radiometer->getRadiometerLabel();
   }
 
   //__________________________________
@@ -383,11 +382,11 @@ Ray::sched_rayTrace( const LevelP& level,
   // THIS IS VERY EXPENSIVE.  THIS EXPENSE IS INCURRED ON NON-CALCULATION TIMESTEPS,
   // ONLY REQUIRE THESE VARIABLES ON A CALCULATION TIMESTEPS.
   //
-  // The taskgraph must be recompiled to detect a change in the conditional.
-  // The taskgraph recompilation is activated from RMCRTCommon:doRecompileTaskgraph()
+  // For temporal scheduling the taskgraph must be recompiled to detect a change in the conditional.
+  // The taskgraph recompilation is controlled with RMCRTCommon:doRecompileTaskgraph()
   if ( !doCarryForward( radCalc_freq) ) {
     Ghost::GhostType  gac  = Ghost::AroundCells;
-    dbg << "    sched_rayTrace: adding requires for all-to-all variables " << endl; 
+    dbg << "    sched_rayTrace: adding requires for all-to-all variables " << endl;
     tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
     tsk->requires( sigma_dw ,    d_sigmaT4_label,  gac, SHRT_MAX);
     tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
@@ -414,34 +413,16 @@ Ray::sched_rayTrace( const LevelP& level,
   //__________________________________
   // Radiometer
   if ( d_radiometer ){
-
-#if 0
-    PatchSet* radiometerPatchSet;
-    radiometerPatchSet = scinew PatchSet();
-    radiometerPatchSet->addReference();
-    vector<const Patch*> myPatches = d_radiometer->getPatchSet( sched, level );
-
-    radiometerPatchSet->addAll( myPatches );
-
-    
-    delete radiometerPatchSet;              // THIS PATCHSET IS NOT BEING USED BUT WILL BE IN THE FUTURE.
-
-    if( radiometerPatchSet && radiometerPatchSet->removeReference() ){ 
-      delete radiometerPatchSet;
-    }
- #endif 
+    const VarLabel* VRFluxLabel = d_radiometer->getRadiometerLabel();
     if (!(Uintah::Parallel::usingDevice())) {
       // needed for carry Forward                       CUDA HACK
-      tsk->requires(Task::OldDW, d_VRFluxLabel, d_gn, 0);
+      tsk->requires(Task::OldDW, VRFluxLabel, d_gn, 0);
     }
-
-    if( modifies_divQ ){
-      tsk->modifies( d_VRFluxLabel );
-    } else {
-      tsk->computes( d_VRFluxLabel );
-    }
+    
+    tsk->modifies( VRFluxLabel );
   }
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
+  
 }
 
 //---------------------------------------------------------------------------
@@ -462,7 +443,8 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
   const Level* level = getLevel(patches);
   
-  
+  // Control code to recompile the task graph
+  // This provides temporal scheduling mechanism
   doRecompileTaskgraph( radCalc_freq );
 
   if ( doCarryForward( radCalc_freq ) ) {
@@ -471,11 +453,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
     new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls, replaceVar );
     new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls, replaceVar );
     new_dw->transferFrom( old_dw, d_radiationVolqLabel, patches, matls, replaceVar );
-
-    if(d_radiometer){
-      new_dw->transferFrom( old_dw, d_VRFluxLabel,        patches, matls, replaceVar );
-    }
-
     return;
   }
 

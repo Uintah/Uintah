@@ -253,8 +253,8 @@ namespace Wasatch {
    */
   //****************************************************************************      
   void update_poisson_matrix( const Expr::Tag& poissonTag,
-                           Uintah::CCVariable<Uintah::Stencil4>& poissonMatrix,
-                           const Uintah::Patch* patch,
+                              Uintah::CCVariable<Uintah::Stencil4>& poissonMatrix,
+                              const Uintah::Patch* patch,
                               const int material)
   {
     /*
@@ -268,8 +268,8 @@ namespace Wasatch {
      */
     // get the dimensions of this patch
     using SpatialOps::IntVec;
-    const SCIRun::IntVector patchDim_ = patch->getCellHighIndex();
-    const IntVec patchDim(patchDim_[0],patchDim_[1],patchDim_[2]);
+    const SCIRun::IntVector uintahPatchDim = patch->getCellHighIndex();
+    const IntVec patchDim(uintahPatchDim[0],uintahPatchDim[1],uintahPatchDim[2]);
     const Uintah::Vector spacing = patch->dCell();
     const double dx = spacing[0];
     const double dy = spacing[1];
@@ -290,20 +290,19 @@ namespace Wasatch {
       const int numChildren = patch->getBCDataArray(face)->getNumberChildren(material);
 
       for( int child = 0; child<numChildren; ++child ){
-        Uintah::Iterator bound_ptr;
+        Uintah::Iterator boundPtr;
 
-        //
-        double bc_value;
-        std::string bc_kind;
-        std::string bc_name = "none";
-        std::string bc_functor_name = "none";        
+        double bcValue;
+        std::string bcKind;
+        std::string bcName = "none";
+        std::string bcFunctorName = "none";
         //get_iter_bcval_bckind_bcname( patch, face, child, poissonTag.name(), material, bc_value, bound_ptr, bc_kind, bc_name,bc_functor_name);
-        getBCKind(patch,face,child,poissonTag.name(), material, bc_kind, bc_name);
+        getBCKind(patch,face,child,poissonTag.name(), material, bcKind, bcName);
         
-        if (bc_kind.compare("Dirichlet")==0 || bc_kind.compare("Neumann")==0)
-          getBCValue( patch, face, child, poissonTag.name(), material, bc_value );
+        if( bcKind.compare("Dirichlet")==0 || bcKind.compare("Neumann")==0 )
+          getBCValue( patch, face, child, poissonTag.name(), material, bcValue );
         
-        patch->getBCDataArray(face)->getCellFaceIterator(material, bound_ptr, child);
+        patch->getBCDataArray(face)->getCellFaceIterator( material, boundPtr, child );
         
         SCIRun::IntVector insideCellDir = patch->faceDirection(face);
         const bool hasExtraCells = ( patch->getExtraCells() != SCIRun::IntVector(0,0,0) );
@@ -311,10 +310,10 @@ namespace Wasatch {
         // cell offset used to calculate local cell index with respect to patch.
         const SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0);
         
-        if (bc_kind == "Dirichlet") { // pressure Outlet BC. don't forget to update pressure_rhs also.
-          for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-            SCIRun::IntVector bc_point_indices(*bound_ptr);
-            Uintah::Stencil4& coefs = poissonMatrix[hasExtraCells ? bc_point_indices - insideCellDir : bc_point_indices];
+        if( bcKind == "Dirichlet" ){ // pressure Outlet BC. don't forget to update pressure_rhs also.
+          for( boundPtr.reset(); !boundPtr.done(); boundPtr++ ){
+            SCIRun::IntVector bcPointIndices(*boundPtr);
+            Uintah::Stencil4& coefs = poissonMatrix[hasExtraCells ? bcPointIndices - insideCellDir : bcPointIndices];
             
             switch(face){
               case Uintah::Patch::xminus: coefs.w = 0.0; coefs.p +=1.0/dx2; break;
@@ -326,11 +325,11 @@ namespace Wasatch {
               default:                                   break;
             }
           }
-        } else if (bc_kind == "Neumann") { // outflow bc
-          for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-            SCIRun::IntVector bc_point_indices(*bound_ptr);
+        } else if (bcKind == "Neumann") { // outflow bc
+          for( boundPtr.reset(); !boundPtr.done(); boundPtr++ ) {
+            SCIRun::IntVector bcPointIndices(*boundPtr);
             
-            Uintah::Stencil4& coefs = poissonMatrix[hasExtraCells ? bc_point_indices - insideCellDir : bc_point_indices];
+            Uintah::Stencil4& coefs = poissonMatrix[hasExtraCells ? bcPointIndices - insideCellDir : bcPointIndices];
             
             switch(face){
               case Uintah::Patch::xminus: coefs.w = 0.0; coefs.p -=1.0/dx2; break;
@@ -342,11 +341,11 @@ namespace Wasatch {
               default:                                                      break;
             }
           }
-        } else if (bc_kind == "OutletBC") { // outflow bc
-          for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-            SCIRun::IntVector bc_point_indices(*bound_ptr);
+        } else if (bcKind == "OutletBC") { // outflow bc
+          for( boundPtr.reset(); !boundPtr.done(); boundPtr++ ) {
+            SCIRun::IntVector bcPointIndices(*boundPtr);
             
-            Uintah::Stencil4& coefs = poissonMatrix[hasExtraCells ? bc_point_indices - insideCellDir : bc_point_indices];
+            Uintah::Stencil4& coefs = poissonMatrix[hasExtraCells ? bcPointIndices - insideCellDir : bcPointIndices];
             
             switch(face){
               case Uintah::Patch::xminus: coefs.w = 0.0; coefs.p += 1.0/dx2; break;
@@ -360,10 +359,10 @@ namespace Wasatch {
           }          
         } else { // when no pressure BC is specified, it implies that we have a wall/inlet.
                  // note that when the face is periodic, then bound_ptr is empty
-          for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-            SCIRun::IntVector bc_point_indices(*bound_ptr);
+          for( boundPtr.reset(); !boundPtr.done(); boundPtr++ ) {
+            SCIRun::IntVector bcPointIndices(*boundPtr);
             
-            Uintah::Stencil4& coefs = poissonMatrix[hasExtraCells ? bc_point_indices - insideCellDir : bc_point_indices];
+            Uintah::Stencil4& coefs = poissonMatrix[hasExtraCells ? bcPointIndices - insideCellDir : bcPointIndices];
             
             switch(face){
               case Uintah::Patch::xminus: coefs.w = 0.0; coefs.p -=1.0/dx2; break;
@@ -491,8 +490,8 @@ namespace Wasatch {
 //    if (patch->getBCType(Uintah::Patch::zplus)==Uintah::Patch::None) hasPlusFace[2]=true;
     // get the dimensions of this patch
     using SpatialOps::IntVec;
-    const SCIRun::IntVector patchDim_ = patch->getCellHighIndex();
-    const IntVec patchDim(patchDim_[0],patchDim_[1],patchDim_[2]);
+    const SCIRun::IntVector uintahPatchDim = patch->getCellHighIndex();
+    const IntVec patchDim( uintahPatchDim[0], uintahPatchDim[1], uintahPatchDim[2] );
     const Uintah::Vector spacing = patch->dCell();
     const double dx = spacing[0];
     const double dy = spacing[1];
@@ -514,13 +513,13 @@ namespace Wasatch {
       for( int child = 0; child<numChildren; ++child ){
         
         double bc_value = -9;
-        std::string bc_kind = "NotSet";
-        std::string bc_name = "none";
-        std::string bc_functor_name = "none";
-        Uintah::Iterator bound_ptr;
-        const bool foundIterator = get_iter_bcval_bckind_bcname( patch, face, child, phiName, material, bc_value, bound_ptr, bc_kind, bc_name,bc_functor_name);
+        std::string bcKind = "NotSet";
+        std::string bcName = "none";
+        std::string bcFunctorName = "none";
+        Uintah::Iterator boundPtr;
+        const bool foundIterator = get_iter_bcval_bckind_bcname( patch, face, child, phiName, material, bc_value, boundPtr, bcKind, bcName,bcFunctorName);
         
-        if (foundIterator) {
+        if( foundIterator ){
           
           SCIRun::IntVector insideCellDir = patch->faceDirection(face);
           const bool hasExtraCells = ( patch->getExtraCells() != SCIRun::IntVector(0,0,0) );
@@ -541,54 +540,54 @@ namespace Wasatch {
           // cell offset used to calculate local cell index with respect to patch.
           const SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0);
           
-          if (bc_kind=="Dirichlet") {
-            for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-              SCIRun::IntVector bc_point_indices(*bound_ptr);
+          if (bcKind=="Dirichlet") {
+            for( boundPtr.reset(); !boundPtr.done(); boundPtr++ ) {
+              SCIRun::IntVector bcPointIndices(*boundPtr);
 
-              bc_point_indices = bc_point_indices - patchCellOffset;
+              bcPointIndices = bcPointIndices - patchCellOffset;
               
-              const IntVec   intCellIJK( bc_point_indices[0],
-                                             bc_point_indices[1],
-                                             bc_point_indices[2] );
-              const IntVec ghostCellIJK( bc_point_indices[0]+bcPointGhostOffset[0],
-                                             bc_point_indices[1]+bcPointGhostOffset[1],
-                                             bc_point_indices[2]+bcPointGhostOffset[2] );
+              const IntVec   intCellIJK( bcPointIndices[0],
+                                         bcPointIndices[1],
+                                         bcPointIndices[2] );
+              const IntVec ghostCellIJK( bcPointIndices[0]+bcPointGhostOffset[0],
+                                         bcPointIndices[1]+bcPointGhostOffset[1],
+                                         bcPointIndices[2]+bcPointGhostOffset[2] );
 
               const int iInterior = poissonField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
               const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);              
               poissonField[iGhost] = 2.0*bc_value - poissonField[iInterior];              
             }
-          } else if (bc_kind=="Neumann") {
-            for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-              SCIRun::IntVector bc_point_indices(*bound_ptr);
+          } else if (bcKind=="Neumann") {
+            for( boundPtr.reset(); !boundPtr.done(); boundPtr++ ) {
+              SCIRun::IntVector bcPointIndices(*boundPtr);
 
-              bc_point_indices = bc_point_indices - patchCellOffset;
+              bcPointIndices = bcPointIndices - patchCellOffset;
 
-              const IntVec   intCellIJK( bc_point_indices[0],
-                                             bc_point_indices[1],
-                                             bc_point_indices[2] );
-              const IntVec ghostCellIJK( bc_point_indices[0]+bcPointGhostOffset[0],
-                                             bc_point_indices[1]+bcPointGhostOffset[1],
-                                             bc_point_indices[2]+bcPointGhostOffset[2] );
+              const IntVec   intCellIJK( bcPointIndices[0],
+                                         bcPointIndices[1],
+                                         bcPointIndices[2] );
+              const IntVec ghostCellIJK( bcPointIndices[0]+bcPointGhostOffset[0],
+                                         bcPointIndices[1]+bcPointGhostOffset[1],
+                                         bcPointIndices[2]+bcPointGhostOffset[2] );
 
               const int iInterior = poissonField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
               const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);              
               poissonField[iGhost] = spacing*bc_value + poissonField[iInterior];
             }
 
-          } else if (bc_kind=="OutletBC") {
-            for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-              SCIRun::IntVector bc_point_indices(*bound_ptr);
+          } else if (bcKind=="OutletBC") {
+            for( boundPtr.reset(); !boundPtr.done(); boundPtr++ ) {
+              SCIRun::IntVector bcPointIndices(*boundPtr);
 
-              bc_point_indices = bc_point_indices - patchCellOffset;
+              bcPointIndices = bcPointIndices - patchCellOffset;
 
-              const IntVec   intCellIJK( bc_point_indices[0],
-                                             bc_point_indices[1],
-                                             bc_point_indices[2] );
+              const IntVec   intCellIJK( bcPointIndices[0],
+                                         bcPointIndices[1],
+                                         bcPointIndices[2] );
 
-              const IntVec extraCellIJK( bc_point_indices[0] + bcPointGhostOffset[0],
-                                             bc_point_indices[1] + bcPointGhostOffset[1],
-                                             bc_point_indices[2] + bcPointGhostOffset[2] );
+              const IntVec extraCellIJK( bcPointIndices[0] + bcPointGhostOffset[0],
+                                         bcPointIndices[1] + bcPointGhostOffset[1],
+                                         bcPointIndices[2] + bcPointGhostOffset[2] );
               
               const int iInterior  = poissonField.window_without_ghost().flat_index( hasExtraCells? extraCellIJK : intCellIJK  );
               const int iGhost     = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : extraCellIJK);

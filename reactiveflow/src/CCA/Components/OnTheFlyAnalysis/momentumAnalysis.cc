@@ -54,7 +54,6 @@ using namespace std;
 //  This assumes that the control volume is cubic and aligned with the grid.
 //  The face centered velocities are used to compute the fluxes through
 //  the control surface.
-//  Need to add viscous and pressure forces on the faces
 //  This assumes that the variables all come from the new_dw
 //  This assumes the entire computational domain is being used as the control volume!!!         <<<<<<<<<<<<,
 
@@ -78,6 +77,12 @@ momentumAnalysis::momentumAnalysis(ProblemSpecP& module_spec,
   d_zeroMatlSet  = 0;
   d_zeroPatch    = 0;
   d_matlIndx     = -9;
+  d_pressIndx    = 0;              // For ICE/MPMICE it's always 0.
+  
+  d_pressMatl = scinew MaterialSubset();
+  d_pressMatl->add(0);
+  d_pressMatl->addReference();
+  
 
   labels = scinew MA_Labels();
 
@@ -105,6 +110,9 @@ momentumAnalysis::~momentumAnalysis()
   }
   if( d_matl_set && d_matl_set->removeReference() ) {
     delete d_matl_set;
+  }
+  if( d_pressMatl && d_pressMatl->removeReference() ) {
+    delete d_pressMatl;
   }
 
   VarLabel::destroy( labels->lastCompTime );
@@ -340,9 +348,9 @@ void momentumAnalysis::scheduleDoAnalysis(SchedulerP& sched,
   t0->requires( Task::NewDW, labels->vvel_FC,   matl_SS, gn );
   t0->requires( Task::NewDW, labels->wvel_FC,   matl_SS, gn );
 
-  t0->requires( Task::NewDW, labels->pressX_FC, matl_SS, gn );
-  t0->requires( Task::NewDW, labels->pressY_FC, matl_SS, gn );
-  t0->requires( Task::NewDW, labels->pressZ_FC, matl_SS, gn );
+  t0->requires( Task::NewDW, labels->pressX_FC, d_pressMatl, gn );
+  t0->requires( Task::NewDW, labels->pressY_FC, d_pressMatl, gn );
+  t0->requires( Task::NewDW, labels->pressZ_FC, d_pressMatl, gn );
 
   t0->requires( Task::NewDW, labels->tau_X_FC,  matl_SS, gn );
   t0->requires( Task::NewDW, labels->tau_Y_FC,  matl_SS, gn );
@@ -442,9 +450,9 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup* pg,
       new_dw->get(vvel_FC,   labels->vvel_FC,    d_matlIndx, patch, gn,0);
       new_dw->get(wvel_FC,   labels->wvel_FC,    d_matlIndx, patch, gn,0);
 
-      new_dw->get(pressX_FC, labels->pressX_FC,  d_matlIndx, patch, gn,0);
-      new_dw->get(pressY_FC, labels->pressY_FC,  d_matlIndx, patch, gn,0);
-      new_dw->get(pressZ_FC, labels->pressZ_FC,  d_matlIndx, patch, gn,0);
+      new_dw->get(pressX_FC, labels->pressX_FC,  d_pressIndx, patch, gn,0);
+      new_dw->get(pressY_FC, labels->pressY_FC,  d_pressIndx, patch, gn,0);
+      new_dw->get(pressZ_FC, labels->pressZ_FC,  d_pressIndx, patch, gn,0);
 
       new_dw->get(tau_X_FC,  labels->tau_X_FC,   d_matlIndx, patch, gn,0);
       new_dw->get(tau_Y_FC,  labels->tau_Y_FC,   d_matlIndx, patch, gn,0);

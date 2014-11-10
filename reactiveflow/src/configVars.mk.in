@@ -203,10 +203,13 @@ PAPI_LIBRARY     := @PAPI_LIB_DIR_FLAG@ @PAPI_LIB_FLAG@
 GPERFTOOLS_INCLUDE     := @INC_GPERFTOOLS_H@
 GPERFTOOLS_LIBRARY     := @GPERFTOOLS_LIB_DIR_FLAG@ @GPERFTOOLS_LIB_FLAG@
 
-# Always put $(TAU_LIBRARY) in front of $(MPI_LIBRARY) for the TAU_MPI wrapper
+# no include(s), either link with static build or LD_PRELOAD with shared
+HAVE_IPM         := @HAVE_IPM@
+IPM_LIBRARY      := @IPM_LIB_DIR_FLAG@ @IPM_LIB_FLAG@
 
-MPI_LIBRARY := $(TAU_LIBRARY) @MPI_LIB_DIR_FLAG@ @MPI_LIB_FLAG@
+# Always put $(TAU_LIBRARY) in front of $(MPI_LIBRARY) for the TAU_MPI wrapper
 MPI_INCLUDE := @INC_MPI_H@
+MPI_LIBRARY := $(TAU_LIBRARY) @MPI_LIB_DIR_FLAG@ @MPI_LIB_FLAG@
 
 # not blank.  Its "value" is not useful.
 HAVE_MPI := @HAVE_MPI@
@@ -329,9 +332,9 @@ CORE_STATIC_PSELIBS := \
     Core_Parallel Core_Math Core_Disclosure Core_Util Core_Thread Core_Persistent Core_Exceptions Core_Containers \
     Core_Malloc Core_IO Core_OS                             
 CORE_STATIC_LIBS := \
-    $(TEEM_LIBRARY) $(XML2_LIBRARY) $(Z_LIBRARY) $(PETSC_LIBRARY) $(HYPRE_LIBRARY) \
-    $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY) $(MPI_LIBRARY) $(THREAD_LIBRARY) $(X_LIBRARY) $(M_LIBRARY) \
-    $(DL_LIBRARY) $(CUDA_LIBRARY) $(MAGMA_LIBRARY) $(GPERFTOOLS_LIBRARY)
+    $(TEEM_LIBRARY) $(XML2_LIBRARY) $(Z_LIBRARY) $(PETSC_LIBRARY) $(HYPRE_LIBRARY) $(LAPACK_LIBRARY) \
+    $(BLAS_LIBRARY) $(F_LIBRARY) $(IPM_LIBRARY) $(MPI_LIBRARY) $(THREAD_LIBRARY) $(X_LIBRARY) $(M_LIBRARY) \
+    $(DL_LIBRARY) $(CUDA_LIBRARY) $(MAGMA_LIBRARY) $(PAPI_LIBRARY) $(GPERFTOOLS_LIBRARY)
 
 ################################################################
 # Auto dependency generation flags

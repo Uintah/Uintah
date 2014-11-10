@@ -57,11 +57,9 @@ UnionBCData::~UnionBCData()
 
 UnionBCData::UnionBCData(const UnionBCData& mybc): BCGeomBase(mybc)
 {
-
   vector<BCGeomBase*>::const_iterator itr;
   for (itr=mybc.child.begin(); itr != mybc.child.end(); ++itr)
     child.push_back((*itr)->clone());
-  
 }
 
 UnionBCData& UnionBCData::operator=(const UnionBCData& rhs)
@@ -99,13 +97,11 @@ bool UnionBCData::operator==(const BCGeomBase& rhs) const
 
     return equal(this->child.begin(),this->child.end(),p_rhs->child.begin());
   }
-
 }
 
 UnionBCData* UnionBCData::clone()
 {
   return scinew UnionBCData(*this);
-
 }
 
 void UnionBCData::addBCData(BCData& bc)
@@ -114,7 +110,6 @@ void UnionBCData::addBCData(BCData& bc)
 
 void UnionBCData::addBC(BoundCondBase* bc)
 {
-  
 }
 
 void UnionBCData::addBCData(BCGeomBase* bc)

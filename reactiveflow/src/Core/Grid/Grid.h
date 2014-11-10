@@ -79,7 +79,7 @@ WARNING
     
     //////////
     // Returns the number of levels in this grid.
-    int     numLevels() const;
+    int numLevels() const;
     
     //////////
     // Returns a "Handle" to the "idx"th level 
@@ -87,8 +87,8 @@ WARNING
     
     //////////
     // Adds a level to the grid.
-    Level* addLevel(const SCIRun::Point& anchor,
-                    const SCIRun::Vector& dcell, int id=-1);
+    Level* addLevel( const SCIRun::Point  & anchor,
+                     const SCIRun::Vector & dcell, int id = -1 );
    
     void performConsistencyCheck() const;
     void printStatistics() const;
@@ -123,9 +123,9 @@ WARNING
     //Assigns the boundary conditions to the grid
     void assignBCS( const ProblemSpecP &grid_ps, Uintah::LoadBalancer *lb );
 
-    void setExtraCells (IntVector ex);
+    void setExtraCells( const IntVector & ex );
            
-     friend std::ostream& operator<<(std::ostream& out, const Uintah::Grid& grid);
+    friend std::ostream& operator<<(std::ostream& out, const Uintah::Grid& grid);
 
     // Used in Level and Patch for stretched grids
     enum Axis {

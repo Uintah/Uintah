@@ -1566,7 +1566,7 @@ inline void Task::Dependency::addReq(Edge* edge)
 
 }  // End namespace Uintah
 
-// This mus tbe at the bottom
+// This must be at the bottom
 #include <CCA/Ports/DataWarehouse.h>
 
 #endif

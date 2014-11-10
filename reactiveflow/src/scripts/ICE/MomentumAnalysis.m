@@ -6,28 +6,22 @@ pkg load signal    %  needed for downsample
 % and calculates the forces on the the system.  
 
 % The file is assumed to have the following format:
-% # Definitions:
-% #    totalCVMomentum:  the total momentum in the control volume at that instant in time
-% #    netFlux:          the net flux of momentum through the control surfaces
-% #Time                      totalCVMomentum.x()         totalCVMomentum.y()         totalCVMomentum.z()         netFlux.x()                  netFlux.y()                  netFlux.z()
-% 0.000000000000000E+00,      1.827906773743646E+01,       1.827906773743646E+01,       1.827906773743646E+01,      3.558930927738402E-12,         3.556266392479301E-12,       3.556266392479301E-12
-% 1.000000000000000E-04,      1.827906773742449E+01,       1.827906773742449E+01,       1.827906773742449E+01,      -8.138619200792618E-08,       -8.138619200792618E-08,       -8.138619200792618E-08
-% 3.300003189645604E-04,      1.827906773743154E+01,       1.827906773743154E+01,       1.827906773743154E+01,      -3.498177267857727E-07,       -3.498177267857727E-07,       -3.498177258975943E-07
-% 5.600006379291208E-04,      1.827906773750070E+01,       1.827906773750069E+01,       1.827906773750069E+01,      -8.050327036102090E-07,       -8.050327053865658E-07,       -8.050327036102090E-07
-% 7.900009568936813E-04,      1.827906773767498E+01,       1.827906773767497E+01,       1.827906773767497E+01,      -1.446773100433063E-06,       -1.446773100433063E-06,       -1.446773095103993E-06
-% 1.020001275858242E-03,      1.827906773799733E+01,       1.827906773799733E+01,       1.827906773799733E+01,      -2.274781136790693E-06,       -2.274781136790693E-06,       -2.274781135014337E-06
-
+% #                                                 total momentum in the control volume                                          Net convective momentum flux                                               net viscous flux                                                             pressure force on control vol.
+% #Time                    CV_mom.x                 CV_mom.y                  CV_mom.z                  momFlux.x               momFlux.y                momFlux.z                 visFlux.x                 visFlux.y                visFlux.z                 pressForce.x              pressForce.y             pressForce.z
+% 0.000000000000000E+00,   5.000000001498741E-12,   0.000000000000000E+00,   0.000000000000000E+00,   -1.059955609614705E-16,   0.000000000000000E+00,   0.000000000000000E+00,   0.000000000000000E+00,   0.000000000000000E+00,   0.000000000000000E+00,   5.000000001302851E-03,   0.000000000000000E+00,   0.000000000000000E+00
+% 1.033217624577908E-02,   1.030545874978994E-04,   -9.182906439727312E-18,   0.000000000000000E+00,   -6.750499239012268E-07,   5.917735138002064E-19,   0.000000000000000E+00,   6.506779409128762E-04,   -2.725043702888364E-15,   0.000000000000000E+00,   9.976081673059412E-03,   0.000000000000000E+00,   0.000000000000000E+00
+% 2.066431568137475E-02,   1.975363171601296E-04,   -2.120405362516817E-17,   0.000000000000000E+00,   1.798595651158136E-06,   4.675240092628815E-18,   0.000000000000000E+00,   9.299633795377633E-04,   -1.565569555792368E-14,   0.000000000000000E+00,   9.986773074714961E-03,   -2.273736754432321E-13,   0.000000000000000E+00
+% 3.099645988997394E-02,   2.896522155858320E-04,   -9.492698005770271E-19,   0.000000000000000E+00,   -1.074383467203782E-06,   -1.088018360951892E-18,   0.000000000000000E+00,   1.142972503807601E-03,   1.127344720319106E-14,   0.000000000000000E+00,   9.947542064651316E-03,   0.000000000000000E+00,   0.000000000000000E+00
+% 4.132860237568741E-02,   3.797903764995445E-04,   -1.046402282171744E-17,   0.000000000000000E+00,   -1.288333479558374E-06,   6.562655332393807E-19,   0.000000000000000E+00,   1.323103564302538E-03,   -1.122311739220283E-14,   0.000000000000000E+00,   9.954688616019780E-03,   4.547473508864641E-13,   0.000000000000000E+00
+% 5.166074258976499E-02,   4.681608456181288E-04,   -1.047002793263888E-17,   0.000000000000000E+00,   2.792826493692855E-06,   -6.791419855725228E-18,   0.000000000000000E+00,   1.480952750495167E-03,   7.436454943832528E-15,   0.000000000000000E+00,   9.966911900662012E-03,   2.273736754432321E-13,   0.000000000000000E+00
+%
 % Below are inputfile specifications:
+% 
 %     <DataAnalysis>
 %       <Module name = "momentumAnalysis">
-%         <materialIndex> 1 </materialIndex>          <<< user defined
-%         <uvel_FC  label = "uvel_FCME"/>     
-%         <vvel_FC  label = "vvel_FCME"/>     
-%         <wvel_FC  label = "wvel_FCME"/>     
-%         <vel_CC   label = "vel_CC"/>        
-%         <rho_CC   label = "rho_CC"/>        
-%         
-%         <samplingFrequency> 1e4 </samplingFrequency>
+%         <materialIndex> 0 </materialIndex>       
+% 
+%         <samplingFrequency> 1e2 </samplingFrequency>
 %         <timeStart>          0   </timeStart>
 %         <timeStop>          100  </timeStop>
 %         <controlVolume>
@@ -38,7 +32,7 @@ pkg load signal    %  needed for downsample
 %           <Face side = "z+"  extents = "entireFace"/>
 %           <Face side = "z-"  extents = "entireFace"/>
 %         </controlVolume>
-%         
+%   
 %       </Module>
 %     </DataAnalysis>
 %______________________________________________________________________
@@ -50,6 +44,49 @@ close all;
 %______________________________________________________________________
 %                HELPER FUNCTIONS
 %______________________________________________________________________
+
+
+
+%______________________________________________________________________
+% This function computes the spectrum and plots the 
+% amplitute versus frequency
+
+function [freq, Amp] =  plotFFT( time, Q, desc )
+  %http://www.mathworks.com/help/matlab/ref/fft.html
+  r    = length( time );
+  NFFT = 2^nextpow2(r)          % Next por of 2 from length of r
+
+  % compute the spectrum
+  X    = abs( fft( Q, NFFT) );
+  Amp  = 2 * abs ( X(1:NFFT/2 + 1) );
+  
+  % compute a mean dt
+  for i = 2:length( time )
+    diff = abs( time(i) - time(i-1) );
+  end
+  dt = mean(diff);
+
+  % create frequency array
+  Fs = 1/dt;
+  freq = Fs/2 * linspace(0,1, NFFT/2+1);
+  
+  [maxAmp, index]  = max( Amp );  
+  printf(" max Amplitude at %e Hz, max Amplitude: %e\n",freq(index), Amp(index));
+
+  % plot the results
+  figure()
+  plot(freq, Amp);
+  legend ( desc );
+  grid   ( 'on');
+  title  ( 'Amplititude Spectrum' );
+  xlabel ( 'Frequency (Hz) ');
+  ylabel ( '|Y(f)|' );
+  xlim   ([0 10])
+  ylim   ([ 0 1e-4])
+  pause
+endfunction
+
+
 
 %__________________________________
 % compute a moving average of the quantity Q
@@ -234,7 +271,7 @@ while i <= length(args)
       opt.nPoints = str2num( value);
   case { "-file" }
       opt.datFile = value;
-  case { "-hardcopy" }
+  case { "-hardCopy" }
       opt.hardcopy = str2bool( value );
   case { "-createPlots" }
       opt.doPlots = str2bool( value );
@@ -270,9 +307,11 @@ data = dlmread( opt.datFile, ",", 4,0 );
 
 %__________________________________
 % downsample the data with every nth element
-t           = downsample( data(:,1),   opt.nPoints );  % column 1
-Mom_cv      = downsample( data(:,2:4), opt.nPoints );  % columns 2 - 4
-Mom_netFlux = downsample( data(:,5:7), opt.nPoints );  % columns 5 - 7
+t                     =   data(:,1);      % column 1                time
+Mom_cv                =   data(:,2:4);    % columns 2 - 4           control volume momentum
+Mom_netFaceFlux       =   data(:,5:7);    % columns 5 - 7           net convective momentum flux across faces 
+Viscous_netFaceFlux   =   data(:,8:10);   % columns 8 - 10          net viscous flux across faces
+surfacePressForce     =   data(:,11:13);  % columns 11 - 12         net pressure forces on faces
 
 %__________________________________
 %  Allow user to trim data between tmin and tmax
@@ -284,9 +323,12 @@ croppedTime   = [ t(lo)- t(1), t(length(t)) - t(hi)];
 croppedPoints = length(t) - hi;
 printf( "    - Now removing the leading (%i points, %4.3g sec) and trailing  (%i points, %4.3g sec) from data\n", lo, croppedTime(1), croppedPoints, croppedTime(2)  )
 
-t           = t( lo:hi );
-Mom_cv      = Mom_cv( lo:hi,: );
-Mom_netFlux = Mom_netFlux( lo:hi,: );
+t = t( lo:hi );
+Mom_cv              = Mom_cv( lo:hi,: );
+Mom_netFaceFlux     = Mom_netFaceFlux( lo:hi,: );
+Viscous_netFaceFlux = Viscous_netFaceFlux( lo:hi,: );
+surfacePressForce   = surfacePressForce( lo:hi,: );
+
 
 %__________________________________
 % Find the time rate of change of the momentum in the control volume (first order backward differenc)
@@ -299,16 +341,19 @@ for i = 2:length(t)
       printf(' %s detetected 0, t(i): %e, t(i-1), %e \n', uda{j}, t(i), t(i-1) );
       printf(' This is probably due to overlap in the data when a restart occurs');
     endif
-
-   force(i,1:3) = dMdt(i,:) + Mom_netFlux(i,:);
+    
+   force(i,1:3) = dMdt(i,:) + Mom_netFaceFlux(i,:) - Viscous_netFaceFlux(i,:) - surfacePressForce(i,:);
 end
 
 %__________________________________
 % Compute a moving average the variables
 % Useful if the data is noisy
 printf( "    - Now computing moving averages of the momentum flux and momentum in control volume\n"   );
-[ ave.Mom_netFlux, size ] = moveAve( Mom_netFlux, opt.window, t );
-[ ave.Mom_cv, size ]      = moveAve( Mom_cv,      opt.window, t );
+[ ave.Mom_netFaceFlux, size ] = moveAve( Mom_netFaceFlux,      opt.window, t );
+[ ave.Vis_netFaceFlux, size ] = moveAve( Viscous_netFaceFlux,  opt.window, t );
+[ ave.Mom_cv, size ]          = moveAve( Mom_cv,               opt.window, t );
+[ ave.surfPressForce, size ]  = moveAve( surfacePressForce,    opt.window, t );
+
 
 t_crop = t(size);
 
@@ -320,14 +365,17 @@ ave.force = zeros;
 
 for i = 2:length( ave.Mom_cv )
    ave.dMdt(i,1:3)  = ( ave.Mom_cv(i,:) - ave.Mom_cv(i-1,:) )./( t_crop(i) - t_crop(i-1) );
-   ave.force(i,1:3) =   ave.dMdt(i,:) + ave.Mom_netFlux(i,:);
+   ave.force(i,1:3) =   ave.dMdt(i,:) + ave.Mom_netFaceFlux(i,:) - ave.Vis_netFaceFlux(i,:) - ave.surfPressForce(i,:);
 end
 
-
-
 meanForce = mean ( force );
+meanV_force = mean ( Viscous_netFaceFlux );
+meanP_force = mean ( surfacePressForce );
 printf( '______________________________________________________________________\n');
 printf( '  Mean force %e, %e, %e \n', meanForce(1), meanForce(2), meanForce(3) );
+printf( '\n  Mean forces on the control volume surfaces \n' );
+printf( '  viscous:  %e, %e, %e \n', meanV_force(1), meanV_force(2), meanV_force(3) );
+printf( '  pressure: %e, %e, %e \n', meanP_force(1), meanP_force(2), meanP_force(3) );
 printf( '______________________________________________________________________\n');
 
 
@@ -357,7 +405,7 @@ if( opt.doPlots )
   graphics_toolkit("gnuplot")
   h = figure(1);
   subplot(2,1,1)
-  ax = plot(t, Mom_netFlux );
+  ax = plot(t, Mom_netFaceFlux );
 
   legend( "x", "y", "z" )
   title( opt.title );
@@ -369,7 +417,7 @@ if( opt.doPlots )
   %  Average
   subplot(2,1,2)
 
-  ax = plot( t_crop, ave.Mom_netFlux );
+  ax = plot( t_crop, ave.Mom_netFaceFlux );
 
   legend( "x", "y", "z" )
   xlabel( 'Time [s] ');
@@ -435,6 +483,42 @@ if( opt.doPlots )
   
   hardcopy(h, "dmomentum_dt.pdf", opt.hardcopy );
 
+
+  %__________________________________
+  %  viscous
+  %__________________________________
+
+  h = figure(4);
+
+  ax = plot( t, Viscous_netFaceFlux );
+
+  legend( "x", "y", "z" )
+  title( opt.title );
+  xlabel( 'Time [s] ');
+  ylabel( 'Net Viscous Surface Force ' )
+  xlim( [opt.tmin, opt.tmax] );
+  grid( 'on' );
+
+  hardcopy(h, "viscous.pdf", opt.hardcopy );
+  
+  %__________________________________
+  %  pressure forces
+  %__________________________________
+
+  h = figure(5);
+
+  ax = plot( t, surfacePressForce );
+
+  legend( "x", "y", "z" )
+  title( opt.title );
+  xlabel( 'Time [s] ');
+  ylabel( 'Net Surface Pressure Force ' )
+  xlim( [opt.tmin, opt.tmax] );
+  grid( 'on' );
+
+  hardcopy(h, "pressureForce.pdf", opt.hardcopy );
+
+
   %__________________________________
   %  Force
   %__________________________________
@@ -465,5 +549,10 @@ if( opt.doPlots )
   pause
 
 endif
+
+%______________________________________________________________________
+[freq, amp] = plotFFT( t, force(:,2), "PowerSpectrum of force in Y dir" );
+
+
 
 exit

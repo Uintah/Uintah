@@ -35,6 +35,7 @@
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/Variables/VarnameMatlPatch.h>
+#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/Handle.h>
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
@@ -212,10 +213,12 @@ namespace Uintah {
       //  This is used by reduceUda component
       //  it reads in the data and put it into the DW
       //  This is a specialization of restartInitialize()
-      void reduceUda_ReadUda( int timestep,
-                              const GridP  & grid,
+      void reduceUda_ReadUda( const ProcessorGroup* pg,
+                              int timestep,
+                              const GridP& grid,
                               const PatchSubset* patches,
-                              DataWarehouse* dw ); 
+                              DataWarehouse* dw,
+                              LoadBalancer* lb ); 
 
       inline ProblemSpecP getTimestepDoc(int index) { return getTimeData(index).d_tstop; }
 
