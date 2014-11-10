@@ -17,10 +17,12 @@
        <timestep_multiplier>1</timestep_multiplier>
    </Time>
    <DataArchiver>
-        <filebase>miniaero.uda</filebase>
+       <filebase>miniaero4Patch.uda</filebase>
        <outputInterval>1.e-2</outputInterval>
-       <checkpoint cycle = "2" interval = "1"/>
-       <save label = "u"/>
+      <checkpoint cycle = "2" interval = "1"/>
+      <save label = "velocity"/>
+      <save label = "pressure"/>
+      <save label = "density"/>
    </DataArchiver>
 
     <MiniAero>
