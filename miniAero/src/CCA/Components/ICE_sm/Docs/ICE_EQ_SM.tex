@@ -10,7 +10,8 @@
 
 %..............................
 % Alias commands
-%..............................    
+%..............................
+\newcommand{\nadv}      {\text{\tiny{n+1}}}
 \newcommand{\SUM}[1]    {\ensuremath{\sum \limits_{{#1}=1}^N }}
 \newcommand{\bigS}[1]   {\ensuremath{S_{#1}}  } 
 \newcommand{\B}[1]      {\biggr{#1}}            
@@ -23,6 +24,7 @@
 \newcommand{\sv}[1]     {\ensuremath{v^o_{{#1}} }} 
 \newcommand{\dpdrho}    {\ensuremath{ \frac{dP}{d\rhoM}} }
 \newcommand{\compute}   {\ensuremath{\quad{\text{compute}\rightarrow}\quad}}
+\newcommand{\ustar}     {\ensuremath{\vec{U}^{\nadv^{*^{f}}}}}
 
  %.....................................................
 % This command is necessary so that the subscripts, some of which are
@@ -31,7 +33,7 @@
 %______________________________________________________________________
 \begin{document}
 \setlength{\abovedisplayskip}{0.1in}
-\setlength{\mathindent}{0.0in}
+\setlength{\mathindent}{0.5in}
 \doublespacing
 \underline{ I C E, explicit pressure, single material  \hspace{ 0.5in}11/7/14}
 
@@ -61,7 +63,7 @@ $
    =\frac{(\rho \U)_{R} + (\rho \U)_{L}}{\rho_{R} + \rho_{L}}
    -\delt \frac{2.0 (\sv{L} \sv{R})}  {\sv{L} + \sv{R}}  \B{(} \frac{P_{eq_R} - P_{eq_L}}{\Delta x}\B{)}
    + \delt\vec{g} $ \\
-set boundary conditions on $\vec{U}^{*^{f}}$
+Set boundary conditions on $\vec{U}^{*^{f}}$
 %
 %__________________________________
 \item \underline{Compute the change in pressure $\Delta P$}  \\
@@ -69,7 +71,7 @@ $     \Delta P =
               \frac{  - \Delta{t} \overbrace{ \nabla \cdot \theta \vec{U}^{*^{f}} } ^{\text{Advection}(\theta, \vec{U}^{*^{f}}) } }
               {\kappa} $\\
 where $P^{n+1} = P_{eq} + \Delta{P}$ for a single material $\theta = 1.0$
-set boundary conditions on $P^{n+1}$
+Set boundary conditions on $P^{n+1}$
 %
 %__________________________________
 \item \underline{Compute the face centered pressure}\\
@@ -111,8 +113,70 @@ $ \rho^{n+1} =  m^{n+1}/V$\\
 %
 $\U^{n+1} = \frac{(m \U)^{n+1} }{ m^{n+1} }$\\
 %
-$T^{n+1} = \frac{(me)^{n+1} }{ m^{n+1} C_v }$ \\
+$T^{n+1} = \frac{(me)^{n+1} }{ m^{n+1} C_v }$
 
-set boundary conditions on the primitive variables $(\U, \rho, T)$.
+Set boundary conditions on the primitive variables $(\U, \rho, T)$.
 \end{enumerate}
+
+%  Advection
+%______________________________________________________________________
+\onehalfspacing
+\section*{\small{Advection Operator}}
+The governing equation for the advection of $q$ is
+ %
+\begin{equation*}
+    - \delt \text{Advection}((q), \ustar) = 
+-   \sum_{outflux} \langle{q}\rangle_o \Delta{V_o} 
++   \sum_{influx} \langle{q}\rangle_{in} \Delta{V_{in}},
+    \label{eq:advect.main}
+\end{equation*}
+%
+where $\Delta V$ are the fluxed volumes into and out of cell $i,j,k$.
+This fluxed volume is the volume of material which passes through each cell
+face in $\delt$. The quantity $q$ is $\rho$, $\rho \vec{u}$
+or $\rho c_v T$ and the fluxes of $q$ associated with fluxed volumes are
+determined using
+%
+\begin{equation}
+\label{eq:qoutflux}
+    \langle{q}\rangle = q_{ijk} + (\nabla q)_{ijk} \cdot \langle \mathbf{r_{v}} \rangle
+\end{equation}
+%
+where $\mathbf{\langle r_{v} \rangle}$ is the volume centroid of flux of volume
+$\Delta V$.  The angle brackets denote the average of the quantity over the
+fluxed volume at time $t$.  The gradients shown in Eq.(\ref{eq:qoutflux})
+are limited in a Van Leer fashion using  \\
+%
+%
+\begin{equation*}
+    (\nabla q)_{ijk} = \alpha_{ijk}(\nabla q)_{ijk},
+\end{equation*}
+%
+%
+\begin{equation*}
+    \alpha_{ijk} = min\biggl( 1, \alpha_{max}, \alpha_{min} \biggr),
+\end{equation*}
+%
+%
+\begin{equation*}
+    \alpha_{max} = max\biggl{(} 0, \frac{\bar{q}_{max} - q_{ijk}}{max[q^v] - q_{ijk}}\biggr{)},
+\end{equation*}
+%
+%
+\begin{equation*}
+    \alpha_{min} = max\biggl{(} 0, \frac{\bar{q}_{min} - q_{ijk}}{min[q^v] - q_{ijk}}\biggr{)},
+\end{equation*}
+%
+%
+where $\bar{q}_{max},~\bar{q}_{min}$ are the max. and min. values of the
+surrounding cell-centered data.  $q^v$ are the values of $q$ interpolated
+to the cell vertices using the linear expansion
+%
+%
+\begin{equation*}
+    \label{eq:vertex}
+    q^v = q_{ijk} + (\nabla q)_{ijk} \cdot  (\mathbf{r^{v} - r_{ijk}} ).
+\end{equation*}
+ %
+
 \end{document}
