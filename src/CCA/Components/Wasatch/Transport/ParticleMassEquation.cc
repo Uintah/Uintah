@@ -165,9 +165,11 @@ namespace Wasatch{
   {
     // register expression to calculate the momentum initial condition from the initial conditions on
     // velocity and density in the cases that we are initializing velocity in the input file
-    exprFactory.register_expression( new ParticleMassIC::Builder( solution_variable_tag(),
-                                                                  pRhoTag_,pSizeTag_ ) );
-    return exprFactory.get_id( solution_variable_tag() );
+    const Expr::Tag pRhoInit(pRhoTag_.name(), Expr::STATE_NONE);
+    const Expr::Tag pSizeInit(pSizeTag_.name(), Expr::STATE_NONE);
+    exprFactory.register_expression( new ParticleMassIC::Builder( initial_condition_tag(),
+                                                                  pRhoInit, pSizeInit ) );
+    return exprFactory.get_id( initial_condition_tag() );
   }
 
   //==================================================================

@@ -195,7 +195,7 @@ public:
   }
 
   /**
-   * Returns the cell area dx*dy*dz. This will not work for stretched grids.
+   * Returns the cell area dx*dy, dx*dz, or dy*dz. This will not work for stretched grids.
    */
   double cellArea(Vector unitNormal) const {
     if (isStretched()) {

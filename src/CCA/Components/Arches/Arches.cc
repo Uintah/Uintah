@@ -423,12 +423,19 @@ Arches::problemSetup(const ProblemSpecP& params,
   const std::string xMomName = d_lab->d_uMomLabel->getName();
   const std::string yMomName = d_lab->d_vMomLabel->getName();
   const std::string zMomName = d_lab->d_wMomLabel->getName();
-  const Expr::Tag xMomTagN(xMomName,Expr::STATE_DYNAMIC);
+  const Expr::Tag xMomTagN(xMomName,Expr::STATE_NONE);
   initgh->exprFactory->register_expression( new XVolExprT::Builder(xMomTagN));
-  const Expr::Tag yMomTagN(yMomName,Expr::STATE_DYNAMIC);
+  const Expr::Tag yMomTagN(yMomName,Expr::STATE_NONE);
   initgh->exprFactory->register_expression( new YVolExprT::Builder(yMomTagN));
-  const Expr::Tag zMomTagN( zMomName, Expr::STATE_DYNAMIC);
+  const Expr::Tag zMomTagN( zMomName, Expr::STATE_NONE);
   initgh->exprFactory->register_expression( new ZVolExprT::Builder(zMomTagN));
+
+  const Expr::Tag xMomTagDN(xMomName,Expr::STATE_DYNAMIC);
+  solngh->exprFactory->register_expression( new XVolExprT::Builder(xMomTagDN));
+  const Expr::Tag yMomTagDN(yMomName,Expr::STATE_DYNAMIC);
+  solngh->exprFactory->register_expression( new YVolExprT::Builder(yMomTagDN));
+  const Expr::Tag zMomTagDN( zMomName, Expr::STATE_DYNAMIC);
+  solngh->exprFactory->register_expression( new ZVolExprT::Builder(zMomTagDN));
 
   // construct the problemspec for the momentum equations. This includes the <MomentumEquations> block
   // as well a two <BasicExpression> blocks for viscosity (initialization, advance_solution) and finally,
@@ -1154,7 +1161,7 @@ Arches::scheduleInitialize(const LevelP& level,
   d_nlSolver->checkMomBCs( sched, level, matls ); 
 
   //initialize cell type
-  d_boundaryCondition->sched_cellTypeInit__NEW( sched, level, matls );
+  d_boundaryCondition->sched_cellTypeInit( sched, level, matls );
 
   // compute the cell area fraction
   d_boundaryCondition->sched_setAreaFraction( sched, level, matls, 0, true );
@@ -2184,11 +2191,7 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
   // ***************************************
 
   string msg = "Initializing all DQMOM weighted abscissa equations...";
-  if (Uintah::Parallel::getNumThreads() > 1) {
-    proc0thread0cout << msg << std::endl;
-  } else {
-    proc0cout << msg << std::endl;
-  }
+  proc0cout << msg << std::endl;
 
   for (int p = 0; p < patches->size(); p++){
     //assume only one material for now.

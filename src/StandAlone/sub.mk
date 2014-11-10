@@ -188,19 +188,19 @@ link_inputs:
                echo "Creating link to inputs directory." ; \
 	       ln -sf $(SRCTOP_ABS)/StandAlone/inputs StandAlone/inputs; \
 	   fi )
-	   
+
 link_scripts:
 	@( if ! test -L StandAlone/scripts; then \
                echo "Creating link to scripts directory." ; \
 	       ln -sf $(SRCTOP_ABS)/scripts StandAlone/scripts; \
 	   fi )
-	             
+
 link_orderAccuracy:
 	@( if ! test -L StandAlone/orderAccuracy; then \
                echo "Creating link to orderAccuracy directory." ; \
 	       ln -sf $(SRCTOP_ABS)/orderAccuracy StandAlone; \
 	   fi )          
-          
+
 link_tools:
 	@( if ! test -L StandAlone/puda; then \
                echo "Creating link to all the tools." ; \
@@ -215,6 +215,8 @@ link_localRT:
 	   fi )
 
 sus: prereqs StandAlone/sus
+
+$(OBJTOP)/StandAlone/sus.o : $(OBJTOP_ABS)/include/svn_info.h
 
 tools: puda dumpfields compare_uda compute_Lnorm_udas restart_merger partextract partvarRange selectpart async_mpi_test mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 rawToUniqueGrains timeextract faceextract lineextract compare_mms compare_scalar fsspeed
 

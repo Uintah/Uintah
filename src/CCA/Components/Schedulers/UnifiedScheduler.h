@@ -104,6 +104,7 @@ WARNING
     Thread*                  t_thread[MAX_THREADS];  // the threads themselves
     Mutex                    dlbLock;                // load balancer lock
     Mutex                    schedulerLock;          // scheduler lock (acquire and release quickly)
+    Mutex                    waittimesLock;               // miscellaneous lock
     mutable CrowdMonitor     recvLock;               // multiple reader, single writer lock (pthread_rwlock_t wrapper)
 
 #ifdef HAVE_CUDA
@@ -152,7 +153,7 @@ WARNING
 
     void postH2DCopies(DetailedTask* dtask);
 
-    void createCudaStreams(int numStreams, int device);
+    void createCudaStreams(int device, int numStreams = 1);
 
     void reclaimCudaStreams(DetailedTask* dtask);
 

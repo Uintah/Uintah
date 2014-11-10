@@ -657,7 +657,7 @@ void Arenisca4::computeStressTensor(const PatchSubset* patches,
 		  cout<<"Resetting [F]=[I] for this step and deleting particle"<<endl;
 		  Identity.polarDecompositionRMB(tensorU, tensorR);
       }
-	  else if(pDefGrad[idx].Determinant()>1.0e2){
+	  else if(pDefGrad[idx].Determinant()>1.0e5){
 		  pLocalized_new[idx]=-999;
 		  cout<<"Large deformation gradient determinant: [F] = "<<pDefGrad[idx]<<endl;
 		  cout<<"Resetting [F]=[I] for this step and deleting particle"<<endl;
@@ -1018,11 +1018,11 @@ void Arenisca4::computeElasticProperties(double & bulk,
   // If the user has specified a nonzero G1 and G2, these are used to define a pressure
   // dependent poisson ratio, which is used to adjust the shear modulus along with the
   // bulk modulus.  The high pressure limit has nu=G1+G2;
-  if ((d_cm.G1!=0.0)&&(d_cm.G2!=0.0)){
-	  // High pressure bulk modulus:
-	  double nu = d_cm.G1+d_cm.G2;
-	  shear = 1.5*bulk*(1.0-2.0*nu)/(1.0+nu);
-  }
+  //if ((d_cm.G1!=0.0)&&(d_cm.G2!=0.0)){
+//	  // High pressure bulk modulus:
+//	  double nu = d_cm.G1+d_cm.G2;
+//	  shear = 1.5*bulk*(1.0-2.0*nu)/(1.0+nu);
+  //}
 } //===================================================================
 
 // [shear,bulk] = computeElasticProperties(stress, ep)
@@ -1171,7 +1171,7 @@ int Arenisca4::computeStepDivisions(const double& X,
   if (d_cm.STREN > 0.0){
 	  size = min(size,d_cm.STREN);
   }  
-  int n_yield = ceil(0.001*d_sigma.Norm()/size);
+  int n_yield = ceil(1.0e-5*d_sigma.Norm()/size);
 
   // nsub is the maximum of the two values.above.  If this exceeds allowable,
   // throw warning and delete particle.
@@ -1562,9 +1562,35 @@ int Arenisca4::nonHardeningReturn(const Matrix3 & sigma_trial, // Trial Stress (
   double S_star_to_S = 1.0/S_to_S_star;
 	
   Matrix3 iso_sigma_trial = one_third*sigma_trial.Trace()*Identity;
-  Matrix3 sigma_trial_star = iso_sigma_trial + S_to_S_star*(sigma_trial - iso_sigma_trial);
+  Matrix3 S_trial = sigma_trial - iso_sigma_trial;
+  Matrix3 sigma_trial_star = iso_sigma_trial + S_to_S_star*S_trial;
   
-  Matrix3 sigma_0 = one_third*Zeta*Identity;
+  
+  double  I1_trial = sigma_trial.Trace(),
+		  rJ2_trial = S_trial.Norm(),
+		  I1_0,
+		  I1trialMinusZeta = I1_trial-Zeta;
+  
+  
+// It may be better to use an interior point at the center of the yield surface, rather than at zeta, in particular
+// when PEAKI1=0.  Picking the midpoint between PEAKI1 and X would be problematic when the user has specified
+// some no porosity condition (e.g. p0=-1e99)
+  if( I1trialMinusZeta>= coher*d_cm.PEAKI1 ){ // Trial is past vertex
+	  double lTrial = sqrt(I1trialMinusZeta*I1trialMinusZeta + rJ2_trial*rJ2_trial),
+			 lYield = 0.5*(coher*d_cm.PEAKI1 - X);
+	  I1_0 = Zeta + coher*d_cm.PEAKI1 - min(lTrial,lYield);
+  }
+  else if( (I1trialMinusZeta < coher*d_cm.PEAKI1)&&(I1trialMinusZeta > X) ){ // Trial is above yield surface
+	  I1_0 = I1_trial;
+  }
+  else if( I1trialMinusZeta <= X ){ // Trial is past X, use yield midpoint as interior point
+	  I1_0 = Zeta + 0.5*(coher*d_cm.PEAKI1 + X);
+  }
+  else { // Shouldn't get here
+	  I1_0 = Zeta;
+  }
+  
+  Matrix3 sigma_0 = one_third*I1_0*Identity;
    
 // (2) Convert 3x3 stresses to vectors of ordered eigenvalues and ordered eigen projectors:
   

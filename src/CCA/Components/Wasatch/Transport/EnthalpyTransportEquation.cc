@@ -111,9 +111,7 @@ namespace Wasatch {
     }
   };
 
-
   //===========================================================================
-
 
   EnthalpyTransportEquation::
   EnthalpyTransportEquation( const std::string enthalpyName,

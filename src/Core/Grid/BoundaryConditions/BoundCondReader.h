@@ -108,7 +108,7 @@ namespace Uintah {
     /// 
     /// 
 
-    void read(ProblemSpecP& ps,const ProblemSpecP& grid_ps );
+    void read(ProblemSpecP& ps,const ProblemSpecP& grid_ps, const Uintah::LevelP level );
 
     /// Read in the geometric tags: side, circle, and rectangle.  Performs
     /// error checking if the tag is not present or if the circle and rectangle
@@ -117,8 +117,27 @@ namespace Uintah {
                                             const ProblemSpecP& grid_ps,
                                             Patch::FaceType& face_side);
 
+    /*
+     \author  Tony Saad
+     \date    September 2014
+     \brief   Creates interior boundaries. Currently supported geometries are: rectangle, circle,
+     ellipse, and annulus.
+     
+     For a given grid resolution, the interior boundary is moved to the closest face. If the interior
+     boundary coincides with a cell center, then it is moved to the face side (minus/plus) that is 
+     specified through the input file. The face side (minus/plus) determines which cell iterator is
+     returned. For a minus boundary, the cells on the minus side are returned. For a plus boundary,
+     the cells on the plus side are returned. 
+     
+     \todo    Handle unions and differences.
+     */
+    BCGeomBase* createInteriorBndBoundaryConditionFace(ProblemSpecP& ps,
+                                            const ProblemSpecP& grid_ps,
+                                            Patch::FaceType& face_side,
+                                            const Uintah::LevelP level);
 
-    /// Combine the boundary conditions for a given face into union and 
+
+    /// Combine the boundary conditions for a given face into union and
     /// difference operations for the face.  Multiple circles and rectangles
     /// are stored in a union.  The resultant union is then subtracted from
     /// the side and stored as a difference bc.  This operation only happens
@@ -137,6 +156,10 @@ namespace Uintah {
     friend class Level;
     friend class Patch;
     std::map<Patch::FaceType,BCDataArray > d_BCReaderData;
+    std::map<Patch::FaceType,BCDataArray > d_interiorBndBCReaderData;
+    
+    void readDomainBCs(ProblemSpecP& ps,const ProblemSpecP& grid_ps );
+    void readInteriorBndBCs(ProblemSpecP& ps,const ProblemSpecP& grid_ps, const Uintah::LevelP level );
   };
 
   void print(BCGeomBase* p);

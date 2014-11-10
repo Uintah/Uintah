@@ -104,9 +104,9 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
   index_map[1][1] = 2; 
   index_map[1][2] = 0; 
   // z-direction
-  index_map[2][0] = 1;
-  index_map[2][1] = 2; 
-  index_map[2][2] = 0; 
+  index_map[2][0] = 2;
+  index_map[2][1] = 0; 
+  index_map[2][2] = 1; 
 
   d_radiation_temperature_label = VarLabel::create("radiation_temperature", CCVariable<double>::getTypeDescription()); 
 
@@ -173,6 +173,11 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
        d_no_corner_recirc = true; 
      }
 
+     d_ignore_invalid_celltype = false; 
+     if ( db->findBlock("ignore_invalid_celltype")){ 
+       d_ignore_invalid_celltype = true; 
+     }
+
     // if multimaterial then add an id for multimaterial wall
     // trying to reduce all interior walls to type:INTRUSION
     d_mmWallID = INTRUSION;
@@ -210,9 +215,13 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
             } 
 
             std::string default_type; 
-            double default_value; 
+            Vector default_value(9999,9999,9999); 
             db_BCType->findBlock("default")->getAttribute("type",default_type);
-            db_BCType->findBlock("default")->getAttribute("value",default_value);
+            db_BCType->findBlock("default")->getAttribute("velvalue",default_value);
+
+            if ( !db_BCType->findBlock("default")->findAttribute("velvalue") ){
+              throw ProblemSetupException("Error: The default for velocity handoff files must be specified using the \'velvalue\' attribute.", __FILE__, __LINE__);
+            }
 
             std::string file_name;
             db_BCType->require("value", file_name); 
@@ -223,9 +232,9 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
             readInputFile__NEW( file_name, u_info, 0 ); 
             u_info.relative_xyz = rel_xyz;
             u_info.default_type = default_type;
-            u_info.default_value = default_value;
+            u_info.default_value = default_value[0];
 
-            if ( default_type == "Neumann" && default_value != 0.0 ){ 
+            if ( default_type == "Neumann" && default_value[0] != 0.0 ){ 
               throw ProblemSetupException("Error: Sorry.  I currently cannot support non-zero Neumann default for handoff velocity at this time.", __FILE__, __LINE__);
             } 
 
@@ -241,9 +250,9 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
             readInputFile__NEW( file_name, v_info, 1 ); 
             v_info.relative_xyz = rel_xyz;
             v_info.default_type = default_type;
-            v_info.default_value = default_value;
+            v_info.default_value = default_value[1];
 
-            if ( default_type == "Neumann" && default_value != 0.0 ){ 
+            if ( default_type == "Neumann" && default_value[1] != 0.0 ){ 
               throw ProblemSetupException("Error: Sorry.  I currently cannot support non-zero Neumann default for handoff velocity at this time.", __FILE__, __LINE__);
             } 
 
@@ -259,9 +268,9 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
             readInputFile__NEW( file_name, w_info, 2 ); 
             w_info.relative_xyz = rel_xyz;
             w_info.default_type = default_type;
-            w_info.default_value = default_value;
+            w_info.default_value = default_value[2];
 
-            if ( default_type == "Neumann" && default_value != 0.0 ){ 
+            if ( default_type == "Neumann" && default_value[2] != 0.0 ){ 
               throw ProblemSetupException("Error: Sorry.  I currently cannot support non-zero Neumann default for handoff velocity at this time.", __FILE__, __LINE__);
             } 
 
@@ -2177,7 +2186,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
 // Set the cell Type
 //
 void 
-BoundaryCondition::sched_cellTypeInit__NEW(SchedulerP& sched,
+BoundaryCondition::sched_cellTypeInit(SchedulerP& sched,
                                            const LevelP& level, 
                                            const MaterialSet* matls)
 {
@@ -2185,8 +2194,8 @@ BoundaryCondition::sched_cellTypeInit__NEW(SchedulerP& sched,
   level->findInteriorCellIndexRange(lo,hi);
 
   // cell type initialization
-  Task* tsk = scinew Task("BoundaryCondition::cellTypeInit__NEW",
-                          this, &BoundaryCondition::cellTypeInit__NEW, lo, hi);
+  Task* tsk = scinew Task("BoundaryCondition::cellTypeInit",
+                          this, &BoundaryCondition::cellTypeInit, lo, hi);
 
   tsk->computes(d_lab->d_cellTypeLabel);
 
@@ -2194,12 +2203,12 @@ BoundaryCondition::sched_cellTypeInit__NEW(SchedulerP& sched,
 }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void 
-BoundaryCondition::cellTypeInit__NEW(const ProcessorGroup*,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset*,
-                                     DataWarehouse*,
-                                     DataWarehouse* new_dw, 
-                                     IntVector lo, IntVector hi)
+BoundaryCondition::cellTypeInit(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset*,
+                                DataWarehouse*,
+                                DataWarehouse* new_dw, 
+                                IntVector lo, IntVector hi)
 {
 
   for (int p = 0; p < patches->size(); p++) {
@@ -2211,6 +2220,22 @@ BoundaryCondition::cellTypeInit__NEW(const ProcessorGroup*,
     CCVariable<int> cellType;
     new_dw->allocateAndPut(cellType, d_lab->d_cellTypeLabel, matl_index, patch);
     cellType.initialize(999);
+
+    //going to put "walls" in the corners, even though they aren't accessed:
+    for ( CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++ ){
+
+      IntVector c = *iter; 
+
+      bool is_corner = is_corner_cell(patch, c, lo, hi); 
+
+      if ( is_corner ){ 
+        cellType[c] = -1; 
+      }
+
+    }
+
+    const Level* level = patch->getLevel(); 
+    IntVector periodic = level->getPeriodicBoundaries(); 
 
     for ( CellIterator iter=patch->getCellIterator(); !iter.done(); iter++ ){
 
@@ -2316,6 +2341,21 @@ BoundaryCondition::cellTypeInit__NEW(const ProcessorGroup*,
 
             }
           }
+        }
+      }
+    }
+
+    //Now, for this patch, check to make sure you have valid cell types 
+    //specified everywhere. 
+    if ( !d_ignore_invalid_celltype ){ 
+      for ( CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++ ){
+
+        IntVector c = *iter; 
+
+        if ( cellType[c] == 999 ){ 
+
+          throw InvalidValue("Error: Patch found with an invalid cell type.", __FILE__, __LINE__);
+
         }
       }
     }
@@ -2792,6 +2832,9 @@ void BoundaryCondition::setSwirl( const Patch* patch, const Patch::FaceType& fac
  Vector mDx; //mapped dx 
  int dir = 0; 
 
+ int norm = getNormal(face); 
+ double pm = -1.0*insideCellDir[norm];
+
  //remap the dx's and vector values
  for (int i = 0; i < 3; i++ ){ 
   if ( insideCellDir[i] != 0 ) { 
@@ -2810,8 +2853,8 @@ void BoundaryCondition::setSwirl( const Patch* patch, const Patch::FaceType& fac
    IntVector c  = *bound_ptr; 
    IntVector cp = *bound_ptr - insideCellDir; 
 
-   uVel[c]  = bc_values.x();
-   uVel[cp] = bc_values.x();
+   uVel[c]  = pm * bc_values.x();
+   uVel[cp] = pm * bc_values.x();
 
    double ave_u = bc_values.x(); 
 
@@ -2828,7 +2871,7 @@ void BoundaryCondition::setSwirl( const Patch* patch, const Patch::FaceType& fac
    denom = pow(denom,0.5); 
 
    double bc_v = -1.0 * z * swrl_no * ave_u /denom; 
-   vVel[c] = 2.0*vVel[cp] - bc_v;
+   vVel[c] = 2.0*bc_v - vVel[cp];
 
    y = my_p[index_map[dir][1]] + mDx.y()/2.0 - swrl_cent[index_map[dir][1]];
    z = my_p[index_map[dir][2]] - swrl_cent[index_map[dir][2]]; 
@@ -2837,8 +2880,7 @@ void BoundaryCondition::setSwirl( const Patch* patch, const Patch::FaceType& fac
    denom = pow(denom,0.5); 
 
    double bc_w = y * swrl_no * ave_u / denom;
-   wVel[c] = 2.0*wVel[cp] - bc_w;
-
+   wVel[c] = 2.0*bc_w - wVel[cp];
  }
 }
 
@@ -3253,7 +3295,7 @@ void BoundaryCondition::setVelFromExtraValue__NEW( const Patch* patch, const Pat
        IntVector c  = *bound_ptr; 
        IntVector cp = *bound_ptr - insideCellDir; 
 
-       uVel[cp] = uVel[c] * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+       uVel[cp] = uVel[c];
 
      }
 
@@ -3265,7 +3307,7 @@ void BoundaryCondition::setVelFromExtraValue__NEW( const Patch* patch, const Pat
        IntVector c  = *bound_ptr; 
        IntVector cp = *bound_ptr - insideCellDir; 
 
-       uVel[cp] = uVel[c] * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+       uVel[cp] = uVel[c];
 
      }
      break; 
@@ -3276,7 +3318,7 @@ void BoundaryCondition::setVelFromExtraValue__NEW( const Patch* patch, const Pat
        IntVector c  = *bound_ptr; 
        IntVector cp = *bound_ptr - insideCellDir; 
 
-       vVel[cp] = vVel[c] * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+       vVel[cp] = vVel[c];
 
      }
      break; 
@@ -3287,7 +3329,7 @@ void BoundaryCondition::setVelFromExtraValue__NEW( const Patch* patch, const Pat
        IntVector c  = *bound_ptr; 
        IntVector cp = *bound_ptr - insideCellDir; 
 
-       vVel[cp] = vVel[c] * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+       vVel[cp] = vVel[c];
 
      }
      break; 
@@ -3298,7 +3340,7 @@ void BoundaryCondition::setVelFromExtraValue__NEW( const Patch* patch, const Pat
        IntVector c  = *bound_ptr; 
        IntVector cp = *bound_ptr - insideCellDir; 
 
-       wVel[cp] = wVel[c] * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+       wVel[cp] = wVel[c];
 
      }
      break; 
@@ -3309,7 +3351,7 @@ void BoundaryCondition::setVelFromExtraValue__NEW( const Patch* patch, const Pat
        IntVector c  = *bound_ptr; 
        IntVector cp = *bound_ptr - insideCellDir; 
 
-       wVel[cp] = wVel[c] * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+       wVel[cp] = wVel[c];
 
      }
      break; 
@@ -4155,6 +4197,38 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
               //reassign the values now with the correct index for the face direction
               i_uvel_bc_storage->second.values = temp_map; 
 
+              temp_map.clear(); 
+              for ( CellToValue::iterator check_iter = i_vvel_bc_storage->second.values.begin(); check_iter != 
+                  i_vvel_bc_storage->second.values.end(); check_iter++ ){ 
+
+                //need to reset the values to get the right [index] int value for the face
+                double value = check_iter->second; 
+                IntVector location = check_iter->first;
+                location[index] = face_index_value; 
+
+                temp_map.insert(make_pair(location, value)); 
+
+              }
+
+              //reassign the values now with the correct index for the face direction
+              i_vvel_bc_storage->second.values = temp_map; 
+
+              temp_map.clear(); 
+              for ( CellToValue::iterator check_iter = i_wvel_bc_storage->second.values.begin(); check_iter != 
+                  i_wvel_bc_storage->second.values.end(); check_iter++ ){ 
+
+                //need to reset the values to get the right [index] int value for the face
+                double value = check_iter->second; 
+                IntVector location = check_iter->first;
+                location[index] = face_index_value; 
+
+                temp_map.insert(make_pair(location, value)); 
+
+              }
+
+              //reassign the values now with the correct index for the face direction
+              i_wvel_bc_storage->second.values = temp_map; 
+
               for ( CellToValue::iterator check_iter = i_uvel_bc_storage->second.values.begin(); check_iter != 
                   i_uvel_bc_storage->second.values.end(); check_iter++ ){ 
 
@@ -4198,6 +4272,38 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
               //reassign the values now with the correct index for the face direction
               i_vvel_bc_storage->second.values = temp_map; 
 
+              temp_map.clear(); 
+              for ( CellToValue::iterator check_iter = i_uvel_bc_storage->second.values.begin(); check_iter != 
+                  i_uvel_bc_storage->second.values.end(); check_iter++ ){ 
+
+                //need to reset the values to get the right [index] int value for the face
+                double value = check_iter->second; 
+                IntVector location = check_iter->first;
+                location[index] = face_index_value; 
+
+                temp_map.insert(make_pair(location, value)); 
+
+              }
+
+              //reassign 
+              i_uvel_bc_storage->second.values = temp_map; 
+
+              temp_map.clear(); 
+              for ( CellToValue::iterator check_iter = i_wvel_bc_storage->second.values.begin(); check_iter != 
+                  i_wvel_bc_storage->second.values.end(); check_iter++ ){ 
+
+                //need to reset the values to get the right [index] int value for the face
+                double value = check_iter->second; 
+                IntVector location = check_iter->first;
+                location[index] = face_index_value; 
+
+                temp_map.insert(make_pair(location, value)); 
+
+              }
+
+              //reassign 
+              i_wvel_bc_storage->second.values = temp_map; 
+
               for ( CellToValue::iterator check_iter = i_vvel_bc_storage->second.values.begin(); check_iter != 
                   i_vvel_bc_storage->second.values.end(); check_iter++ ){ 
 
@@ -4240,6 +4346,38 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
 
               //reassign the values now with the correct index for the face direction
               i_wvel_bc_storage->second.values = temp_map; 
+
+              temp_map.clear(); 
+              for ( CellToValue::iterator check_iter = i_uvel_bc_storage->second.values.begin(); check_iter != 
+                  i_uvel_bc_storage->second.values.end(); check_iter++ ){ 
+
+                //need to reset the values to get the right [index] int value for the face
+                double value = check_iter->second; 
+                IntVector location = check_iter->first;
+                location[index] = face_index_value; 
+
+                temp_map.insert(make_pair(location, value)); 
+
+              }
+
+              //reassign the values now with the correct index for the face direction
+              i_uvel_bc_storage->second.values = temp_map; 
+
+              temp_map.clear(); 
+              for ( CellToValue::iterator check_iter = i_vvel_bc_storage->second.values.begin(); check_iter != 
+                  i_vvel_bc_storage->second.values.end(); check_iter++ ){ 
+
+                //need to reset the values to get the right [index] int value for the face
+                double value = check_iter->second; 
+                IntVector location = check_iter->first;
+                location[index] = face_index_value; 
+
+                temp_map.insert(make_pair(location, value)); 
+
+              }
+
+              //reassign the values now with the correct index for the face direction
+              i_vvel_bc_storage->second.values = temp_map; 
 
               for ( CellToValue::iterator check_iter = i_wvel_bc_storage->second.values.begin(); check_iter != 
                   i_wvel_bc_storage->second.values.end(); check_iter++ ){ 

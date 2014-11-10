@@ -278,7 +278,9 @@ namespace Uintah {
     // this task will allocate a particle subset and create particle positions
     Uintah::Task* task = scinew Uintah::Task("restart initialize particles",
                                              this, &ParticlesHelper::restart_initialize);
+    task->requires(Task::OldDW, pIDLabel_, Uintah::Ghost::None, 0);
     sched->addTask(task, level->eachPatch(), materials_);
+    parse_boundary_conditions(level, sched);
   }
   
   //--------------------------------------------------------------------
@@ -289,20 +291,32 @@ namespace Uintah {
                                            Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw)
   {
     using namespace Uintah;
-    
-    if (!deleteSets_.empty())
-    {
-      return;
-    }
+    initialize_internal(matls->size());
     
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
-      std::map<int, ParticleSubset*> thisMaterialDeleteSet;
+      std::map<int,long64>& lastPIDPerPatch = lastPIDPerMaterialPerPatch_[m];
+      std::map<int,ParticleSubset*>& thisMaterialDeleteSet = deleteSets_[m];
       for(int p=0;p<patches->size();p++){
         const Patch* patch = patches->get(p);
-        thisMaterialDeleteSet.insert( std::pair<int, ParticleSubset*>(patch->getID(), scinew ParticleSubset(0,matl,patch)));
+        const int patchID = patch->getID();
+        
+        lastPIDPerPatch.insert( std::pair<int, long64>(patchID, 0 ) );
+        thisMaterialDeleteSet.insert( std::pair<int, ParticleSubset*>(patchID, scinew ParticleSubset(0,matl,patch)));
+        
+        ParticleSubset* pset = new_dw->haveParticleSubset(matl,patch) ? new_dw->getParticleSubset(matl, patch) : old_dw->getParticleSubset(matl, patch);
+        
+        constParticleVariable<long64> pids;
+        old_dw->get(pids, pIDLabel_, pset);
+        long64 largestPID = 0;
+        for( ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); ++iter ){
+          particleIndex idx = *iter;
+          if (largestPID < pids[idx]) {
+            largestPID = pids[idx];
+          }
+        }
+        lastPIDPerPatch[patchID] = largestPID;
       }
-      deleteSets_.push_back(thisMaterialDeleteSet);
     }
   }
   

@@ -259,34 +259,6 @@ namespace Wasatch{
 
   //==================================================================
 
-  template< typename FieldT> struct NormalFaceSelector;
-
-  template<> struct NormalFaceSelector<SpatialOps::XVolField>
-  {
-  private:
-    typedef SpatialOps::XVolField FieldT;
-  public:
-    typedef SpatialOps::FaceTypes<FieldT>::XFace NormalFace;
-  };
-
-  template<> struct NormalFaceSelector<SpatialOps::YVolField>
-  {
-  private:
-    typedef SpatialOps::YVolField FieldT;
-  public:
-    typedef SpatialOps::FaceTypes<FieldT>::YFace NormalFace;
-  };
-
-  template<> struct NormalFaceSelector<SpatialOps::ZVolField>
-  {
-  private:
-    typedef SpatialOps::ZVolField FieldT;
-  public:
-    typedef SpatialOps::FaceTypes<FieldT>::ZFace NormalFace;
-  };
-
-  //==================================================================
-
   Expr::Tag mom_tag( const std::string& momName )
   {
     return Expr::Tag( momName, Expr::STATE_DYNAMIC );
@@ -1157,7 +1129,7 @@ namespace Wasatch{
     // apply velocity boundary condition, if specified
     bcHelper.apply_boundary_condition<FieldT>(thisVelTag_, taskCat);
     // apply momentum boundary condition, if specified
-    bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
+    bcHelper.apply_boundary_condition<FieldT>( initial_condition_tag(), taskCat );
 
     if (!isConstDensity_) {
       const TagNames& tagNames = TagNames::self();
@@ -1217,9 +1189,8 @@ namespace Wasatch{
   initial_condition( Expr::ExpressionFactory& icFactory )
   {
     // register an initial condition for da pressure
-    Expr::Tag ptag(pressure_tag().name(), Expr::STATE_N);
-    if( !icFactory.have_entry( ptag ) ) {
-      icFactory.register_expression( new typename Expr::ConstantExpr<SVolField>::Builder(ptag, 0.0 ) );
+    if( !icFactory.have_entry( pressure_tag() ) ) {
+      icFactory.register_expression( new typename Expr::ConstantExpr<SVolField>::Builder(pressure_tag(), 0.0 ) );
     }
     
     if( icFactory.have_entry( thisVelTag_ ) ) {
@@ -1231,7 +1202,7 @@ namespace Wasatch{
       // velocity and density in the cases that we are initializing velocity in the input file
       typedef ExprAlgebra<FieldT> ExprAlgbr;
       const Expr::TagList theTagList( tag_list( thisVelTag_, interpolatedDensityTag ) );
-      icFactory.register_expression( new typename ExprAlgbr::Builder( solution_variable_tag(),
+      icFactory.register_expression( new typename ExprAlgbr::Builder( initial_condition_tag(),
                                                                       theTagList,
                                                                       ExprAlgbr::PRODUCT ) );
     }
@@ -1247,9 +1218,9 @@ namespace Wasatch{
                                                                       theTagList,
                                                                       ExprAlgbr::PRODUCT,
                                                                       true ) );
-      icFactory.attach_modifier_expression( modifierTag, solution_variable_tag() );
+      icFactory.attach_modifier_expression( modifierTag, initial_condition_tag() );
     }
-    return icFactory.get_id( solution_variable_tag() );
+    return icFactory.get_id( initial_condition_tag() );
   }
 
   //==================================================================
@@ -1260,25 +1231,25 @@ namespace Wasatch{
   template class MomentumTransportEquation< YVolField >;
   template class MomentumTransportEquation< ZVolField >;
   
-#define INSTANTIATE_SETUP_STRAIN(VOLT) \
-  template Expr::ExpressionID setup_strain< SpatialOps::FaceTypes<VOLT>::XFace > ( const Expr::Tag& strainTag, \
-                                                                                                const Expr::Tag& vel1Tag,\
-                                                                                                const Expr::Tag& vel2Tag,\
-                                                                                                const Expr::Tag& dilTag,\
-                                                                                                Expr::ExpressionFactory& factory ); \
-  template Expr::ExpressionID setup_strain< SpatialOps::FaceTypes<VOLT>::YFace > ( const Expr::Tag& strainTag, \
-                                                                                                const Expr::Tag& vel1Tag,\
-                                                                                                const Expr::Tag& vel2Tag,\
-                                                                                                const Expr::Tag& dilTag,\
-                                                                                                Expr::ExpressionFactory& factory ); \
-  template Expr::ExpressionID setup_strain< SpatialOps::FaceTypes<VOLT>::ZFace > ( const Expr::Tag& strainTag, \
-                                                                                                const Expr::Tag& vel1Tag,\
-                                                                                                const Expr::Tag& vel2Tag,\
-                                                                                                const Expr::Tag& dilTag,\
-                                                                                                Expr::ExpressionFactory& factory );
-  INSTANTIATE_SETUP_STRAIN(XVolField);
-  INSTANTIATE_SETUP_STRAIN(YVolField);
-  INSTANTIATE_SETUP_STRAIN(ZVolField);
+//#define INSTANTIATE_SETUP_STRAIN(VOLT) \
+//  template Expr::ExpressionID setup_strain< SpatialOps::FaceTypes<VOLT>::XFace > ( const Expr::Tag& strainTag,         \
+//                                                                                   const Expr::Tag& vel1Tag,           \
+//                                                                                   const Expr::Tag& vel2Tag,           \
+//                                                                                   const Expr::Tag& dilTag,            \
+//                                                                                   Expr::ExpressionFactory& factory ); \
+//  template Expr::ExpressionID setup_strain< SpatialOps::FaceTypes<VOLT>::YFace > ( const Expr::Tag& strainTag,         \
+//                                                                                   const Expr::Tag& vel1Tag,           \
+//                                                                                   const Expr::Tag& vel2Tag,           \
+//                                                                                   const Expr::Tag& dilTag,            \
+//                                                                                   Expr::ExpressionFactory& factory ); \
+//  template Expr::ExpressionID setup_strain< SpatialOps::FaceTypes<VOLT>::ZFace > ( const Expr::Tag& strainTag,         \
+//                                                                                   const Expr::Tag& vel1Tag,           \
+//                                                                                   const Expr::Tag& vel2Tag,           \
+//                                                                                   const Expr::Tag& dilTag,            \
+//                                                                                   Expr::ExpressionFactory& factory );
+//  INSTANTIATE_SETUP_STRAIN(XVolField);
+//  INSTANTIATE_SETUP_STRAIN(YVolField);
+//  INSTANTIATE_SETUP_STRAIN(ZVolField);
   //==================================================================
 
 } // namespace Wasatch
