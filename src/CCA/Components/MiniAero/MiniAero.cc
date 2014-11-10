@@ -33,6 +33,7 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimpleMaterial.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -46,12 +47,15 @@ using namespace Uintah;
 MiniAero::MiniAero(const ProcessorGroup* myworld)
     : UintahParallelComponent(myworld)
 {
-  u_label = VarLabel::create("u", CCVariable<double>::getTypeDescription());
+  conserved_label = VarLabel::create("conserved", CCVariable<Stencil7>::getTypeDescription());
+  rho_label = VarLabel::create("density", CCVariable<double>::getTypeDescription());
+  velocity_label = VarLabel::create("velocity", CCVariable<Vector>::getTypeDescription());
+  pressure_label = VarLabel::create("pressure", CCVariable<double>::getTypeDescription());
 }
 
 MiniAero::~MiniAero()
 {
-  VarLabel::destroy(u_label);
+  VarLabel::destroy(conserved_label);
 }
 
 //______________________________________________________________________
@@ -74,7 +78,7 @@ void MiniAero::scheduleInitialize(const LevelP& level,
                                   SchedulerP& sched)
 {
   Task* task = scinew Task("MiniAero::initialize", this, &MiniAero::initialize);
-  task->computes(u_label);
+  task->computes(conserved_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 
@@ -96,11 +100,31 @@ void MiniAero::scheduleTimeAdvance(const LevelP& level,
 {
   Task* task = scinew Task("MiniAero::timeAdvance", this, &MiniAero::timeAdvance);
 
-  task->requires(Task::OldDW, u_label, Ghost::AroundCells, 1);
+  task->requires(Task::OldDW, conserved_label, Ghost::AroundCells, 1);
   task->requires(Task::OldDW, sharedState_->get_delt_label());
 
-  task->computes(u_label);
+  task->computes(conserved_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+
+  schedConvertOutput(level,sched);
+}
+
+void MiniAero::schedConvertOutput(const LevelP& level,
+                                   SchedulerP& sched)
+{
+
+  Task* task = scinew Task("MiniAero::convertOutput", this, 
+                           &MiniAero::convertOutput);
+
+
+  task->requires(Task::NewDW, conserved_label,Ghost::None);
+
+  task->computes(rho_label);
+  task->computes(velocity_label);
+  task->computes(pressure_label);
+
+  sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
+
 }
 
 //______________________________________________________________________
@@ -127,17 +151,18 @@ void MiniAero::initialize(const ProcessorGroup*,
   for (int p = 0; p < size; p++) {
     const Patch* patch = patches->get(p);
 
-    CCVariable<double> u;
-    new_dw->allocateAndPut(u, u_label, matl, patch);
-    u.initialize(0.);
-
+    CCVariable<Stencil7> u;
+    new_dw->allocateAndPut(u, conserved_label, matl, patch);
+    
     //Initialize
-    // u = sin( pi*x ) + sin( pi*2*y ) + sin(pi*3z )
 
     for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
-      Point p = patch->cellPosition(c);
-      u[c] = sin(p.x() * 3.14159265358) + sin(p.y() * 2 * 3.14159265358) + sin(p.z() * 3 * 3.14159265358);
+      u[c][0]=1.;
+      u[c][1]=500.;
+      u[c][2]=0.;
+      u[c][3]=0.;
+      u[c][4]=100000.;
     }
   }
 }
@@ -159,8 +184,8 @@ void MiniAero::timeAdvance(const ProcessorGroup*,
     
     //  Get data from the data warehouse including 1 layer of
     // "ghost" cells from surrounding patches
-    constCCVariable<double> u;
-    old_dw->get(u, u_label, matl, patch, Ghost::AroundCells, 1);
+    constCCVariable<Stencil7> u;
+    old_dw->get(u, conserved_label, matl, patch, Ghost::AroundCells, 1);
 
     // dt, dx
     Vector dx = patch->getLevel()->dCell();
@@ -168,19 +193,17 @@ void MiniAero::timeAdvance(const ProcessorGroup*,
     old_dw->get(dt, sharedState_->get_delt_label());
 
     // allocate memory
-    CCVariable<double> new_u;
-    new_dw->allocateAndPut(new_u, u_label, matl, patch);
+    CCVariable<Stencil7> new_u;
+    new_dw->allocateAndPut(new_u, conserved_label, matl, patch);
 
     //Iterate through all the nodes
     for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
       IntVector c = *iter;
-
-      double dudx = (u[c + IntVector(1, 0, 0)] - u[c - IntVector(1, 0, 0)]) / (2.0 * dx.x());
-      double dudy = (u[c + IntVector(0, 1, 0)] - u[c - IntVector(0, 1, 0)]) / (2.0 * dx.y());
-      double dudz = (u[c + IntVector(0, 0, 1)] - u[c - IntVector(0, 0, 1)]) / (2.0 * dx.z());
-      double du = -u[c] * dt * (dudx + dudy + dudz);
-      new_u[c] = u[c] + du;
-      
+      new_u[c][0] = u[c][0];
+      new_u[c][1] = u[c][1] + 1.;
+      new_u[c][2] = u[c][2] ;
+      new_u[c][3] = u[c][3] ;
+      new_u[c][4] = u[c][4] ;      
     }
 
     //__________________________________
@@ -205,8 +228,50 @@ void MiniAero::timeAdvance(const ProcessorGroup*,
       Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
       for (CellIterator iter = patch->getFaceIterator(face, PEC); !iter.done(); iter++) {
         IntVector n = *iter;
-        new_u[n] = new_u[n + offset];
+        new_u[n][0] = new_u[n + offset][0];
+        new_u[n][1] = new_u[n + offset][1];
+        new_u[n][2] = new_u[n + offset][2];
+        new_u[n][3] = new_u[n + offset][3];
+        new_u[n][4] = new_u[n + offset][4];
       }
+    }
+  }
+}
+
+
+void MiniAero::convertOutput(const ProcessorGroup* /*pg*/,
+                             const PatchSubset* patches,
+                             const MaterialSubset* /*matls*/,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    Ghost::GhostType  gn  = Ghost::None;
+
+    
+    CCVariable<double> rho_CC, pressure_CC;
+    CCVariable<Vector> vel_CC;
+    constCCVariable<Stencil7> conserved;
+
+    new_dw->get( conserved,  conserved_label, 0, patch, gn, 0 );
+
+    new_dw->allocateAndPut( rho_CC, rho_label,   0,patch );
+    new_dw->allocateAndPut( vel_CC, velocity_label,   0,patch );
+    new_dw->allocateAndPut(pressure_CC,pressure_label,     0,patch );
+
+    //__________________________________
+    // Backout primitive quantities from
+    // the conserved ones.
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      rho_CC[c]    = conserved[c][0];
+      vel_CC[c].x(conserved[c][1]/rho_CC[c]);
+      vel_CC[c].y(conserved[c][2]/rho_CC[c]);
+      vel_CC[c].z(conserved[c][3]/rho_CC[c]);
+      pressure_CC[c]=conserved[c][4];
+      
     }
   }
 }
