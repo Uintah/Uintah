@@ -28,7 +28,7 @@
     <!--____________________________________________________________________-->
   <Grid>
   
-  <!-- <BoundaryConditions>
+  <BoundaryConditions>
       <Face side = "x-">
         <BCType id = "0"   label = "Pressure"     var = "Neumann"> 
                             <value> 0. </value> 
@@ -115,7 +115,7 @@
         </BCType>
       </Face> 
     </BoundaryConditions> 
-   -->
+   
        <Level>
            <Box label="1">
               <lower>        [0,0,0]    </lower>

@@ -23,6 +23,7 @@
  */
 
 #include <CCA/Components/MiniAero/MiniAero.h>
+#include <CCA/Components/MiniAero/BoundaryCond.h>
 #include <CCA/Components/Examples/ExamplesLabel.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -37,8 +38,6 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Grid/Variables/Stencil7.h>
-#include <Core/Grid/BoundaryConditions/BCDataArray.h>
-#include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Grid/DbgOutput.h>
@@ -314,9 +313,9 @@ void MiniAero::initialize(const ProcessorGroup*,
 
     initializeCells(rho_CC, Temp_CC, vel_CC,  patch, new_dw, d_geom_objs);
 
-    //setBC( rho_CC,   "Density",     patch, indx );
-    //setBC( Temp_CC,  "Temperature", patch, indx );
-    //setBC( vel_CC,   "Velocity",    patch, indx );
+    setBC( rho_CC,   "Density",     patch, indx );
+    setBC( Temp_CC,  "Temperature", patch, indx );
+    setBC( vel_CC,   "Velocity",    patch, indx );
 
 
     //__________________________________
