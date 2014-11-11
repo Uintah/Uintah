@@ -492,9 +492,9 @@ namespace Wasatch{
         case Expr::COMPUTES:
           dbg_fields << std::setw(10) << "COMPUTES";
           ASSERT( dw == Uintah::Task::NewDW );
-              task.computesWithScratchGhost( fieldInfo.varlabel,
-                                            materials, Uintah::Task::NormalDomain,
-                                            fieldInfo.ghostType, fieldInfo.nghost );
+          task.computesWithScratchGhost( fieldInfo.varlabel,
+                                         materials, Uintah::Task::NormalDomain,
+                                         fieldInfo.ghostType, fieldInfo.nghost );
 
           break;
 
@@ -511,9 +511,9 @@ namespace Wasatch{
           dbg_fields << std::setw(10) << "MODIFIES";
           ASSERT( dw == Uintah::Task::NewDW );
           task.modifiesWithScratchGhost( fieldInfo.varlabel,
-                         patches, Uintah::Task::ThisLevel,
-                         materials, Uintah::Task::NormalDomain,
-                         fieldInfo.ghostType, fieldInfo.nghost);
+                                         patches, Uintah::Task::ThisLevel,
+                                         materials, Uintah::Task::NormalDomain,
+                                         fieldInfo.ghostType, fieldInfo.nghost);
           break;
 
         } // switch
