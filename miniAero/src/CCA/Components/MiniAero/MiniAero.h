@@ -108,9 +108,10 @@ class MiniAero : public UintahParallelComponent, public SimulationInterface {
                      DataWarehouse* new_dw);
 
     const VarLabel* conserved_label;
-    const VarLabel* rho_label;
-    const VarLabel* velocity_label;
-    const VarLabel* pressure_label;
+    const VarLabel* rho_CClabel;
+    const VarLabel* vel_CClabel;
+    const VarLabel* press_CClabel;
+    const VarLabel* temp_CClabel;
     SimulationStateP sharedState_;
     double delt_;
     SimpleMaterial* mymat_;
