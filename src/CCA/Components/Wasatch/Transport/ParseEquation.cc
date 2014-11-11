@@ -161,7 +161,7 @@ namespace Wasatch{
     // set up initial conditions on this transport equation
     try{
       proc0cout << "Setting initial conditions for transport equation '" << solnVariable << "'" << std::endl;
-      GraphHelper* const icGraphHelper   = gc[INITIALIZATION  ];
+      GraphHelper* const icGraphHelper = gc[INITIALIZATION  ];
       icGraphHelper->rootIDs.insert( transeqn->initial_condition( *icGraphHelper->exprFactory ) );
     }
     catch( std::runtime_error& e ){
