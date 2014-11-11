@@ -664,6 +664,9 @@
 
   </CFD>
 
+
+   <include href="miniAero_spec.xml"/>
+
   <!--__________________________________-->
 
   <DataAnalysis                         spec="OPTIONAL NO_DATA" >
