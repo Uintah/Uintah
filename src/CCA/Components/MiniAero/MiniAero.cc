@@ -48,14 +48,19 @@ MiniAero::MiniAero(const ProcessorGroup* myworld)
     : UintahParallelComponent(myworld)
 {
   conserved_label = VarLabel::create("conserved", CCVariable<Stencil7>::getTypeDescription());
-  rho_label = VarLabel::create("density", CCVariable<double>::getTypeDescription());
-  velocity_label = VarLabel::create("velocity", CCVariable<Vector>::getTypeDescription());
-  pressure_label = VarLabel::create("pressure", CCVariable<double>::getTypeDescription());
+  rho_CClabel = VarLabel::create("density", CCVariable<double>::getTypeDescription());
+  vel_CClabel = VarLabel::create("velocity", CCVariable<Vector>::getTypeDescription());
+  press_CClabel = VarLabel::create("pressure", CCVariable<double>::getTypeDescription());
+  temp_CClabel = VarLabel::create("temperature", CCVariable<double>::getTypeDescription());
 }
 
 MiniAero::~MiniAero()
 {
   VarLabel::destroy(conserved_label);
+  VarLabel::destroy(rho_CClabel);
+  VarLabel::destroy(vel_CClabel);
+  VarLabel::destroy(press_CClabel);
+  VarLabel::destroy(temp_CClabel);
 }
 
 //______________________________________________________________________
@@ -77,9 +82,15 @@ void MiniAero::problemSetup(const ProblemSpecP& params,
 void MiniAero::scheduleInitialize(const LevelP& level,
                                   SchedulerP& sched)
 {
-  Task* task = scinew Task("MiniAero::initialize", this, &MiniAero::initialize);
-  task->computes(conserved_label);
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  Task* t = scinew Task("MiniAero::initialize", this, &MiniAero::initialize);
+  t->computes(conserved_label);
+
+  t->computes( vel_CClabel );
+  t->computes( rho_CClabel );
+  t->computes( press_CClabel );
+  t->computes( temp_CClabel );
+
+  sched->addTask(t, level->eachPatch(), sharedState_->allMaterials());
 }
 
 //______________________________________________________________________
@@ -119,9 +130,9 @@ void MiniAero::schedConvertOutput(const LevelP& level,
 
   task->requires(Task::NewDW, conserved_label,Ghost::None);
 
-  task->computes(rho_label);
-  task->computes(velocity_label);
-  task->computes(pressure_label);
+  task->computes(rho_CClabel);
+  task->computes(vel_CClabel);
+  task->computes(press_CClabel);
 
   sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
 
@@ -257,9 +268,9 @@ void MiniAero::convertOutput(const ProcessorGroup* /*pg*/,
 
     new_dw->get( conserved,  conserved_label, 0, patch, gn, 0 );
 
-    new_dw->allocateAndPut( rho_CC, rho_label,   0,patch );
-    new_dw->allocateAndPut( vel_CC, velocity_label,   0,patch );
-    new_dw->allocateAndPut(pressure_CC,pressure_label,     0,patch );
+    new_dw->allocateAndPut( rho_CC, rho_CClabel,   0,patch );
+    new_dw->allocateAndPut( vel_CC, vel_CClabel,   0,patch );
+    new_dw->allocateAndPut(pressure_CC,press_CClabel,     0,patch );
 
     //__________________________________
     // Backout primitive quantities from
