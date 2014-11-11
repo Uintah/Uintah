@@ -29,6 +29,11 @@
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/CCVariable.h>
+
+#include <Core/GeometryPiece/GeometryObject.h>
+#include <Core/GeometryPiece/GeometryPieceFactory.h>
+#include <Core/GeometryPiece/UnionGeometryPiece.h>
 
 namespace Uintah {
 
@@ -79,6 +84,16 @@ class MiniAero : public UintahParallelComponent, public SimulationInterface {
                                      SchedulerP&);
 
   private:
+
+    void getGeometryObjects(ProblemSpecP& ps, 
+                            std::vector<GeometryObject*>& geom_objs);
+
+    void initializeCells(CCVariable<double>& rho_CC,
+                         CCVariable<double>& temp_CC,
+                         CCVariable<Vector>& vel_CC,
+                         const Patch* patch,
+                         DataWarehouse* new_dw,
+                         std::vector<GeometryObject*>& geom_objs);
 
     void initialize(const ProcessorGroup*,
                     const PatchSubset* patches,
@@ -135,8 +150,6 @@ class MiniAero : public UintahParallelComponent, public SimulationInterface {
     const VarLabel* temp_CClabel;
     const VarLabel* viscosityLabel;
     const VarLabel* speedSound_CClabel;
-    double d_gamma;
-    double d_R;
     const VarLabel* flux_mass_CClabel;
     const VarLabel* flux_mom_CClabel;
     const VarLabel* flux_energy_CClabel;
@@ -153,10 +166,26 @@ class MiniAero : public UintahParallelComponent, public SimulationInterface {
 
     SimulationStateP sharedState_;
     double delt_;
+    double d_gamma;
+    double d_R;
+    double d_CFL;
+    bool d_viscousFlow;
     SimpleMaterial* mymat_;
+    std::vector<GeometryObject*> d_geom_objs;
 
     MiniAero(const MiniAero&);
     MiniAero& operator=(const MiniAero&);
+
+    double getViscosity(const double & temp) const
+    {
+      return 1.458E-6*pow(temp,1.5)/(temp+110.4);
+    }
+
+    double getGamma() const
+    {
+      return d_gamma;
+    }
+
 
 };  // end class MiniAero
 
