@@ -26,7 +26,6 @@
 #include <CCA/Components/Examples/ExamplesLabel.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
@@ -47,6 +46,7 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ParameterNotFound.h>
 
 using namespace std;
 using namespace Uintah;
@@ -65,10 +65,14 @@ MiniAero::MiniAero(const ProcessorGroup* myworld)
     : UintahParallelComponent(myworld)
 {
   conserved_label = VarLabel::create("conserved", CCVariable<Stencil7>::getTypeDescription());
+
   rho_CClabel = VarLabel::create("density", CCVariable<double>::getTypeDescription());
   vel_CClabel = VarLabel::create("velocity", CCVariable<Vector>::getTypeDescription());
   press_CClabel = VarLabel::create("pressure", CCVariable<double>::getTypeDescription());
   temp_CClabel = VarLabel::create("temperature", CCVariable<double>::getTypeDescription());
+  speedSound_CClabel = VarLabel::create("speedsound", CCVariable<double>::getTypeDescription());
+  viscosityLabel = VarLabel::create("viscosity", CCVariable<double>::getTypeDescription());
+
   flux_mass_CClabel = VarLabel::create("flux_mass", CCVariable<Vector>::getTypeDescription());
   flux_mom_CClabel = VarLabel::create("flux_mom", CCVariable<Matrix3>::getTypeDescription());
   flux_energy_CClabel = VarLabel::create("flux_energy", CCVariable<Vector>::getTypeDescription());
@@ -91,6 +95,7 @@ MiniAero::~MiniAero()
   VarLabel::destroy(vel_CClabel);
   VarLabel::destroy(press_CClabel);
   VarLabel::destroy(temp_CClabel);
+  VarLabel::destroy(speedSound_CClabel);
 }
 
 //______________________________________________________________________
@@ -101,10 +106,18 @@ void MiniAero::problemSetup(const ProblemSpecP& params,
                             SimulationStateP& sharedState)
 {
   sharedState_ = sharedState;
-  ProblemSpecP miniaero = params->findBlock("MiniAero");
-  miniaero->require("delt", delt_);
+  ProblemSpecP ps = params->findBlock("MiniAero");
   mymat_ = scinew SimpleMaterial();
   sharedState->registerSimpleMaterial(mymat_);
+  //__________________________________
+  // Thermodynamic Transport Properties
+  ps->require("gamma",               d_gamma);
+  ps->require("R",                   d_R);
+  ps->require("CFL",                 d_CFL);
+  ps->require("Is_visc_flow",         d_viscousFlow);
+   
+  //Getting geometry objects
+  getGeometryObjects( ps, d_geom_objs);
 }
 
 //______________________________________________________________________
@@ -119,6 +132,8 @@ void MiniAero::scheduleInitialize(const LevelP& level,
   t->computes( rho_CClabel );
   t->computes( press_CClabel );
   t->computes( temp_CClabel );
+  t->computes( speedSound_CClabel );
+  t->computes( viscosityLabel );
 
   sched->addTask(t, level->eachPatch(), sharedState_->allMaterials());
 }
@@ -166,6 +181,7 @@ void MiniAero::schedConvertOutput(const LevelP& level,
   task->computes(rho_CClabel);
   task->computes(vel_CClabel);
   task->computes(press_CClabel);
+  task->computes(temp_CClabel);
 
   sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
 
@@ -275,35 +291,33 @@ void MiniAero::initialize(const ProcessorGroup*,
 
     printTask(patches, patch, dbg, "Doing Miniaero::initialize" );
 
+    CCVariable<Stencil7> conserved_CC;
+
     CCVariable<double>  rho_CC;
     CCVariable<double>  Temp_CC;
+    CCVariable<double>  press_CC;
     CCVariable<Vector>  vel_CC;
     CCVariable<double>  speedSound;
-
-    //__________________________________
-    //  Thermo and transport properties
     CCVariable<double> viscosity;
     int indx = 0; 
 
-    new_dw->allocateAndPut(viscosity,    viscosityLabel,    indx, patch);
-
-    //viscosity.initialize  ( matls->getViscosity());
-
-    //if(matls->getViscosity() > 0.0){
-    //  d_viscousFlow = true;
-    //}
-
     //__________________________________
+    new_dw->allocateAndPut(conserved_CC,  conserved_label,  indx, patch);
+
     new_dw->allocateAndPut(rho_CC,     rho_CClabel,         indx, patch);
     new_dw->allocateAndPut(Temp_CC,    temp_CClabel,        indx, patch);
+    new_dw->allocateAndPut(press_CC,   press_CClabel,       indx, patch);
     new_dw->allocateAndPut(vel_CC,     vel_CClabel,         indx, patch);
     new_dw->allocateAndPut(speedSound, speedSound_CClabel, indx, patch);
+    new_dw->allocateAndPut(viscosity,    viscosityLabel,    indx, patch);
 
-    //matls->initializeCells(rho_CC, Temp_CC, vel_CC,  patch, new_dw);
+
+    initializeCells(rho_CC, Temp_CC, vel_CC,  patch, new_dw, d_geom_objs);
 
     //setBC( rho_CC,   "Density",     patch, indx );
     //setBC( Temp_CC,  "Temperature", patch, indx );
     //setBC( vel_CC,   "Velocity",    patch, indx );
+
 
     //__________________________________
     //  compute the speed of sound
@@ -311,6 +325,7 @@ void MiniAero::initialize(const ProcessorGroup*,
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       IntVector c = *iter;
 
+      viscosity[c] = getViscosity(Temp_CC[c]);
       speedSound[c] = sqrt(d_gamma*d_R*Temp_CC[c]);
     }
     //____ B U L L E T   P R O O F I N G----
@@ -328,6 +343,93 @@ void MiniAero::initialize(const ProcessorGroup*,
     }
   }  // patch loop
     
+}
+
+void MiniAero::getGeometryObjects(ProblemSpecP& ps , std::vector<GeometryObject*>& geom_objs)
+{
+  //__________________________________
+  // Loop through all of the pieces in this geometry object
+  int piece_num = 0;
+  
+  list<GeometryObject::DataItem> geom_obj_data;
+  geom_obj_data.push_back(GeometryObject::DataItem("res",        GeometryObject::IntVector));
+  geom_obj_data.push_back(GeometryObject::DataItem("temperature",GeometryObject::Double));
+  geom_obj_data.push_back(GeometryObject::DataItem("pressure",   GeometryObject::Double));
+  geom_obj_data.push_back(GeometryObject::DataItem("density",    GeometryObject::Double));
+  geom_obj_data.push_back(GeometryObject::DataItem("velocity",   GeometryObject::Vector));
+  
+  for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");geom_obj_ps != 0;
+       geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+       
+    vector<GeometryPieceP> pieces;
+    GeometryPieceFactory::create(geom_obj_ps, pieces);
+    
+    GeometryPieceP mainpiece;
+    if(pieces.size() == 0){
+      throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
+    } else if(pieces.size() > 1){ 
+      mainpiece = scinew UnionGeometryPiece(pieces);
+    } else {
+      mainpiece = pieces[0];
+    } 
+    
+    piece_num++;
+    geom_objs.push_back(scinew GeometryObject(mainpiece, geom_obj_ps, geom_obj_data));
+  } 
+
+
+}
+
+/* ---------------------------------------------------------------------
+ Purpose~ Initialize primitive variables
+_____________________________________________________________________*/
+void MiniAero::initializeCells(CCVariable<double>& rho_CC,
+                                     CCVariable<double>& temp_CC,
+                                     CCVariable<Vector>& vel_CC,
+                                     const Patch* patch,
+                                     DataWarehouse* new_dw,
+                                     std::vector<GeometryObject*>& geom_objs)
+{
+
+
+  // Zero the
+  vel_CC.initialize(Vector(0.,0.,0.));
+  rho_CC.initialize(0.);
+  temp_CC.initialize(0.);
+
+  // Loop over geometry objects
+  for(int obj=0; obj<(int)geom_objs.size(); obj++){
+    GeometryPieceP piece = geom_objs[obj]->getPiece();
+
+    IntVector ppc   = geom_objs[obj]->getInitialData_IntVector("res");
+    Vector dxpp     = patch->dCell()/ppc;
+    Vector dcorner  = dxpp*0.5;
+
+    for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+      IntVector c = *iter;
+      Point lower = patch->nodePosition(c) + dcorner;
+      int count = 0;
+
+      for(int ix=0;ix < ppc.x(); ix++){
+        for(int iy=0;iy < ppc.y(); iy++){
+          for(int iz=0;iz < ppc.z(); iz++){
+
+            IntVector idx(ix, iy, iz);
+            Point p = lower + dxpp*idx;
+            if(piece->inside(p))
+              count++;
+          }
+        }
+      }
+      //__________________________________
+      // For single materials with more than one object
+      if ( count > 0 ) {
+        vel_CC[c]     = geom_objs[obj]->getInitialData_Vector("velocity");
+        rho_CC[c]     = geom_objs[obj]->getInitialData_double("density");
+        temp_CC[c]    = geom_objs[obj]->getInitialData_double("temperature");
+      }
+    }  // Loop over domain
+  }  // Loop over geom_objects
 }
 
 //______________________________________________________________________
@@ -414,7 +516,7 @@ void MiniAero::convertOutput(const ProcessorGroup* /*pg*/,
     Ghost::GhostType  gn  = Ghost::None;
 
     
-    CCVariable<double> rho_CC, pressure_CC;
+    CCVariable<double> rho_CC, pressure_CC, Temp_CC;
     CCVariable<Vector> vel_CC;
     constCCVariable<Stencil7> conserved;
 
@@ -423,6 +525,7 @@ void MiniAero::convertOutput(const ProcessorGroup* /*pg*/,
     new_dw->allocateAndPut( rho_CC, rho_CClabel,   0,patch );
     new_dw->allocateAndPut( vel_CC, vel_CClabel,   0,patch );
     new_dw->allocateAndPut(pressure_CC,press_CClabel,     0,patch );
+    new_dw->allocateAndPut( Temp_CC, temp_CClabel, 0,patch);
 
     //__________________________________
     // Backout primitive quantities from
@@ -434,7 +537,7 @@ void MiniAero::convertOutput(const ProcessorGroup* /*pg*/,
       vel_CC[c].y(conserved[c][2]/rho_CC[c]);
       vel_CC[c].z(conserved[c][3]/rho_CC[c]);
       pressure_CC[c]=conserved[c][4];
-      
+      Temp_CC[c] = -1.0; //Ken: Fill this in 
     }
   }
 }

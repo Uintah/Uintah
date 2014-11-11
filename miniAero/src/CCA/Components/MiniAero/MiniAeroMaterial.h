@@ -47,13 +47,25 @@ class MiniAeroMaterial : public Material {
 
     virtual ProblemSpecP outputProblemSpec(ProblemSpecP& ps);
 
+    double getViscosity() const
+    {
+      return d_viscosity;
+    }
+
+    double getGamma() const
+    {
+      return d_gamma;
+    }
+
+
+
   private:
 
     double d_viscosity;
     double d_gamma;
     double d_specificHeat;
     double d_thermalConductivity;
-
+    double d_R;
     std::vector<GeometryObject*> d_geom_objs;
 
     // Disable copy and assignment
