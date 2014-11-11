@@ -107,18 +107,13 @@ class MiniAero : public UintahParallelComponent, public SimulationInterface {
                                DataWarehouse* old_dw,
                                DataWarehouse* new_dw);
 
-    void timeAdvance(const ProcessorGroup*,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse* old_dw,
-                     DataWarehouse* new_dw);
-
 
     void schedConvertOutput(const LevelP& level,SchedulerP& sched);
 
     void schedCellCenteredFlux(const LevelP& level,SchedulerP& sched);
     void schedFaceCenteredFlux(const LevelP& level,SchedulerP& sched);
     void schedUpdateResidual(const LevelP& level,SchedulerP& sched);
+    void schedUpdateState(const LevelP& level,SchedulerP& sched);
     
     void convertOutput(const ProcessorGroup*,
                      const PatchSubset* patches,
@@ -138,6 +133,11 @@ class MiniAero : public UintahParallelComponent, public SimulationInterface {
                      DataWarehouse* old_dw,
                      DataWarehouse* new_dw);
     void updateResidual(const ProcessorGroup*,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* old_dw,
+                     DataWarehouse* new_dw);
+    void updateState(const ProcessorGroup*,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse* old_dw,

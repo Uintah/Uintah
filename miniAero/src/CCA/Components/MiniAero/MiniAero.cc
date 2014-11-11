@@ -153,17 +153,12 @@ void MiniAero::scheduleComputeStableTimestep(const LevelP& level,
 void MiniAero::scheduleTimeAdvance(const LevelP& level,
                                    SchedulerP& sched)
 {
-  Task* task = scinew Task("MiniAero::timeAdvance", this, &MiniAero::timeAdvance);
 
-  task->requires(Task::OldDW, conserved_label, Ghost::AroundCells, 1);
-  task->requires(Task::OldDW, sharedState_->get_delt_label());
-
-  task->computes(conserved_label);
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
-
-  schedConvertOutput(level,sched);
   schedCellCenteredFlux(level, sched);
   schedFaceCenteredFlux(level, sched);
+  schedUpdateResidual(level, sched);
+  schedUpdateState(level, sched);
+  schedConvertOutput(level,sched);
 
 }
 
@@ -259,6 +254,24 @@ void MiniAero::schedUpdateResidual(const LevelP& level,
   task->requires(Task::NewDW,flux_energy_FCZlabel,Ghost::None);
 
   task->computes(residual_CClabel);
+
+  sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
+
+}
+
+void MiniAero::schedUpdateState(const LevelP& level,
+                                   SchedulerP& sched)
+{
+
+  Task* task = scinew Task("MiniAero::updateState", this, 
+                           &MiniAero::updateState);
+
+
+
+  task->requires(Task::OldDW,conserved_label,Ghost::None);
+  task->requires(Task::NewDW,residual_CClabel,Ghost::None);
+
+  task->computes(conserved_label);
 
   sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
 
@@ -433,75 +446,6 @@ void MiniAero::initializeCells(CCVariable<double>& rho_CC,
 
 //______________________________________________________________________
 //
-void MiniAero::timeAdvance(const ProcessorGroup*,
-                           const PatchSubset* patches,
-                           const MaterialSubset* matls,
-                           DataWarehouse* old_dw,
-                           DataWarehouse* new_dw)
-{
-  int matl = 0;
-
-  //Loop for all patches on this processor
-  int size = patches->size();
-  for (int p = 0; p < size; p++) {
-    const Patch* patch = patches->get(p);
-    
-    //  Get data from the data warehouse including 1 layer of
-    // "ghost" cells from surrounding patches
-    constCCVariable<Stencil7> u;
-    old_dw->get(u, conserved_label, matl, patch, Ghost::AroundCells, 1);
-
-    // dt, dx
-    Vector dx = patch->getLevel()->dCell();
-    delt_vartype dt;
-    old_dw->get(dt, sharedState_->get_delt_label());
-
-    // allocate memory
-    CCVariable<Stencil7> new_u;
-    new_dw->allocateAndPut(new_u, conserved_label, matl, patch);
-
-    //Iterate through all the nodes
-    for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
-      IntVector c = *iter;
-      new_u[c][0] = u[c][0];
-      new_u[c][1] = u[c][1] + 1.;
-      new_u[c][2] = u[c][2] ;
-      new_u[c][3] = u[c][3] ;
-      new_u[c][4] = u[c][4] ;      
-    }
-
-    //__________________________________
-    // Boundary conditions: Neumann
-    // Iterate over the faces encompassing the domain
-    vector<Patch::FaceType>::const_iterator iter;
-    vector<Patch::FaceType> bf;
-    patch->getBoundaryFaces(bf);
-    for (iter = bf.begin(); iter != bf.end(); ++iter) {
-      Patch::FaceType face = *iter;
-
-      IntVector axes = patch->getFaceAxes(face);
-      int P_dir = axes[0];  // find the principal dir of that face
-
-      IntVector offset(0, 0, 0);
-      if (face == Patch::xminus || face == Patch::yminus || face == Patch::zminus) {
-        offset[P_dir] += 1;
-      }
-      if (face == Patch::xplus || face == Patch::yplus || face == Patch::zplus) {
-        offset[P_dir] -= 1;
-      }
-      Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
-      for (CellIterator iter = patch->getFaceIterator(face, PEC); !iter.done(); iter++) {
-        IntVector n = *iter;
-        new_u[n][0] = new_u[n + offset][0];
-        new_u[n][1] = new_u[n + offset][1];
-        new_u[n][2] = new_u[n + offset][2];
-        new_u[n][3] = new_u[n + offset][3];
-        new_u[n][4] = new_u[n + offset][4];
-      }
-    }
-  }
-}
-
 
 void MiniAero::convertOutput(const ProcessorGroup* /*pg*/,
                              const PatchSubset* patches,
@@ -726,6 +670,40 @@ void MiniAero::updateResidual(const ProcessorGroup* /*pg*/,
 	residual_CC[c][idim + 1] =  (flux_mom_FCX[c + XOffset][idim]  - flux_mom_FCX[c][idim])*dy*dz + 
 	(flux_mom_FCY[c + YOffset][idim]  - flux_mom_FCY[c][idim])*dx*dz + 
 	(flux_mom_FCZ[c + ZOffset][idim]  - flux_mom_FCZ[c][idim])*dy*dx;
+      }
+
+    }
+  }
+}
+void MiniAero::updateState(const ProcessorGroup* /*pg*/,
+                             const PatchSubset* patches,
+                             const MaterialSubset* /*matls*/,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw)
+{
+
+  Ghost::GhostType  gn  = Ghost::None;
+  delt_vartype dt;
+  new_dw->get(dt, sharedState_->get_delt_label());
+
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    constCCVariable<Stencil7> residual_CC;
+    constCCVariable<Stencil7> oldState_CC;
+    CCVariable<Stencil7> newState_CC;
+
+    new_dw->get( residual_CC,  residual_CClabel, 0, patch, gn, 0);
+    new_dw->get( oldState_CC,  conserved_label, 0, patch, gn, 0);
+
+    new_dw->allocateAndPut( newState_CC, conserved_label,   0,patch );
+
+
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+  
+      for(unsigned k = 0; k < 5; k++) {
+	newState_CC[c][k] = dt*(oldState_CC[c][k] - residual_CC[c][k]);
       }
 
     }
