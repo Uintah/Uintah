@@ -27,6 +27,9 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Task.h>
@@ -69,6 +72,15 @@ MiniAero::MiniAero(const ProcessorGroup* myworld)
   flux_mass_CClabel = VarLabel::create("flux_mass", CCVariable<Vector>::getTypeDescription());
   flux_mom_CClabel = VarLabel::create("flux_mom", CCVariable<Matrix3>::getTypeDescription());
   flux_energy_CClabel = VarLabel::create("flux_energy", CCVariable<Vector>::getTypeDescription());
+  flux_mass_FCXlabel = VarLabel::create("faceX_flux_mass", SFCXVariable<Vector>::getTypeDescription());
+  flux_mom_FCXlabel = VarLabel::create("faceX_flux_mom", SFCXVariable<Vector>::getTypeDescription());
+  flux_energy_FCXlabel = VarLabel::create("faceX_flux_energy", SFCXVariable<Vector>::getTypeDescription());
+  flux_mass_FCYlabel = VarLabel::create("faceY_flux_mass", SFCYVariable<Vector>::getTypeDescription());
+  flux_mom_FCYlabel = VarLabel::create("faceY_flux_mom", SFCYVariable<Vector>::getTypeDescription());
+  flux_energy_FCYlabel = VarLabel::create("faceY_flux_energy", SFCYVariable<Vector>::getTypeDescription());
+  flux_mass_FCZlabel = VarLabel::create("faceZ_flux_mass", SFCZVariable<Vector>::getTypeDescription());
+  flux_mom_FCZlabel = VarLabel::create("faceZ_flux_mom", SFCZVariable<Vector>::getTypeDescription());
+  flux_energy_FCZlabel = VarLabel::create("faceZ_flux_energy", SFCZVariable<Vector>::getTypeDescription());
 }
 
 MiniAero::~MiniAero()
@@ -173,6 +185,35 @@ void MiniAero::schedCellCenteredFlux(const LevelP& level,
   task->computes(flux_mass_CClabel);
   task->computes(flux_mom_CClabel);
   task->computes(flux_energy_CClabel);
+
+  sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
+
+}
+
+//______________________________________________________________________
+//
+void MiniAero::schedFaceCenteredFlux(const LevelP& level,
+                                   SchedulerP& sched)
+{
+
+  Task* task = scinew Task("MiniAero::faceCenteredFlux", this, 
+                           &MiniAero::faceCenteredFlux);
+
+
+
+  task->requires(Task::NewDW,flux_mass_CClabel,Ghost::AroundCells, 1);
+  task->requires(Task::NewDW,flux_mom_CClabel,Ghost::AroundCells, 1);
+  task->requires(Task::NewDW,flux_energy_CClabel,Ghost::AroundCells, 1);
+
+  task->computes(flux_mass_FCXlabel);
+  task->computes(flux_mom_FCXlabel);
+  task->computes(flux_energy_FCXlabel);
+  task->computes(flux_mass_FCYlabel);
+  task->computes(flux_mom_FCYlabel);
+  task->computes(flux_energy_FCYlabel);
+  task->computes(flux_mass_FCZlabel);
+  task->computes(flux_mom_FCZlabel);
+  task->computes(flux_energy_FCZlabel);
 
   sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
 
@@ -412,6 +453,78 @@ void MiniAero::cellCenteredFlux(const ProcessorGroup* /*pg*/,
         flux_mom_CC[c](idim, idim)      += pressure_CC[c];
         flux_energy_CC[c][idim]            = KE + pressure_CC[c]*(d_gamma/(d_gamma-1) );
       }
+    }
+  }
+}
+
+void MiniAero::faceCenteredFlux(const ProcessorGroup* /*pg*/,
+                             const PatchSubset* patches,
+                             const MaterialSubset* /*matls*/,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    Ghost::GhostType  gac  = Ghost::AroundCells;
+
+    constCCVariable<Vector> flux_mass_CC;
+    constCCVariable<Matrix3> flux_mom_CC;
+    constCCVariable<Vector> flux_energy_CC;
+    SFCXVariable<double> flux_mass_FCX;
+    SFCXVariable<Vector> flux_mom_FCX;
+    SFCXVariable<double> flux_energy_FCX;
+    SFCYVariable<double> flux_mass_FCY;
+    SFCYVariable<Vector> flux_mom_FCY;
+    SFCYVariable<double> flux_energy_FCY;
+    SFCZVariable<double> flux_mass_FCZ;
+    SFCZVariable<Vector> flux_mom_FCZ;
+    SFCZVariable<double> flux_energy_FCZ;
+
+    new_dw->get( flux_mass_CC,  flux_mass_CClabel, 0, patch, gac, 1 );
+    new_dw->get( flux_mom_CC,  flux_mom_CClabel, 0, patch, gac, 1 );
+    new_dw->get( flux_energy_CC,  flux_energy_CClabel, 0, patch, gac, 1 );
+
+    new_dw->allocateAndPut( flux_mass_FCX, flux_mass_FCXlabel,   0,patch );
+    new_dw->allocateAndPut( flux_mom_FCX, flux_mom_FCXlabel,   0,patch );
+    new_dw->allocateAndPut( flux_energy_FCX, flux_energy_FCXlabel,   0,patch );
+
+    new_dw->allocateAndPut( flux_mass_FCY, flux_mass_FCYlabel,   0,patch );
+    new_dw->allocateAndPut( flux_mom_FCY, flux_mom_FCYlabel,   0,patch );
+    new_dw->allocateAndPut( flux_energy_FCY, flux_energy_FCYlabel,   0,patch );
+
+    new_dw->allocateAndPut( flux_mass_FCZ, flux_mass_FCZlabel,   0,patch );
+    new_dw->allocateAndPut( flux_mom_FCZ, flux_mom_FCZlabel,   0,patch );
+    new_dw->allocateAndPut( flux_energy_FCZ, flux_energy_FCZlabel,   0,patch );
+
+    //__________________________________
+    // Backout primitive quantities from
+    // the conserved ones.
+    for(CellIterator iter = patch->getSFCXIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      IntVector offset(-1,0,0);
+      flux_mass_FCX  [c]    = 0.5*(flux_mass_CC  [c][0]  +flux_mass_CC  [c+offset][0]);
+      flux_mom_FCX   [c][0] = 0.5*(flux_mom_CC   [c](0,0)+flux_mom_CC   [c+offset](0,0));
+      flux_mom_FCX   [c][1] = 0.5*(flux_mom_CC   [c](0,1)+flux_mom_CC   [c+offset](0,1));
+      flux_mom_FCX   [c][2] = 0.5*(flux_mom_CC   [c](0,2)+flux_mom_CC   [c+offset](0,2));
+      flux_energy_FCX[c]    = 0.5*(flux_energy_CC[c][0]  +flux_energy_CC[c+offset][0]);
+    }
+    for(CellIterator iter = patch->getSFCYIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      IntVector offset(0,-1,0);
+      flux_mass_FCY  [c]    = 0.5*(flux_mass_CC  [c][1]  +flux_mass_CC  [c+offset][1]);
+      flux_mom_FCY   [c][0] = 0.5*(flux_mom_CC   [c](1,0)+flux_mom_CC   [c+offset](1,0));
+      flux_mom_FCY   [c][1] = 0.5*(flux_mom_CC   [c](1,1)+flux_mom_CC   [c+offset](1,1));
+      flux_mom_FCY   [c][2] = 0.5*(flux_mom_CC   [c](1,2)+flux_mom_CC   [c+offset](1,2));
+      flux_energy_FCY[c]    = 0.5*(flux_energy_CC[c][1]  +flux_energy_CC[c+offset][1]);
+    }
+    for(CellIterator iter = patch->getSFCZIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      IntVector offset(0,0,-1);
+      flux_mass_FCZ  [c]    = 0.5*(flux_mass_CC  [c][2]  +flux_mass_CC  [c+offset][2]);
+      flux_mom_FCZ   [c][0] = 0.5*(flux_mom_CC   [c](2,0)+flux_mom_CC   [c+offset](2,0));
+      flux_mom_FCZ   [c][1] = 0.5*(flux_mom_CC   [c](2,1)+flux_mom_CC   [c+offset](2,1));
+      flux_mom_FCZ   [c][2] = 0.5*(flux_mom_CC   [c](2,2)+flux_mom_CC   [c+offset](2,2));
+      flux_energy_FCZ[c]    = 0.5*(flux_energy_CC[c][2]  +flux_energy_CC[c+offset][2]);
     }
   }
 }
