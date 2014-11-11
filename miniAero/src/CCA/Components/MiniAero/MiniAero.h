@@ -100,8 +100,16 @@ class MiniAero : public UintahParallelComponent, public SimulationInterface {
 
 
     void schedConvertOutput(const LevelP& level,SchedulerP& sched);
+
+    void schedCellCenteredFlux(const LevelP& level,SchedulerP& sched);
     
     void convertOutput(const ProcessorGroup*,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* old_dw,
+                     DataWarehouse* new_dw);
+
+    void cellCenteredFlux(const ProcessorGroup*,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse* old_dw,
@@ -112,6 +120,9 @@ class MiniAero : public UintahParallelComponent, public SimulationInterface {
     const VarLabel* vel_CClabel;
     const VarLabel* press_CClabel;
     const VarLabel* temp_CClabel;
+    const VarLabel* flux_mass_CClabel;
+    const VarLabel* flux_mom_CClabel;
+    const VarLabel* flux_energy_CClabel;
     SimulationStateP sharedState_;
     double delt_;
     SimpleMaterial* mymat_;
