@@ -33,6 +33,7 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimpleMaterial.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Math/Matrix3.h>
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
@@ -52,6 +53,9 @@ MiniAero::MiniAero(const ProcessorGroup* myworld)
   vel_CClabel = VarLabel::create("velocity", CCVariable<Vector>::getTypeDescription());
   press_CClabel = VarLabel::create("pressure", CCVariable<double>::getTypeDescription());
   temp_CClabel = VarLabel::create("temperature", CCVariable<double>::getTypeDescription());
+  flux_mass_CClabel = VarLabel::create("flux_mass", CCVariable<Vector>::getTypeDescription());
+  flux_mom_CClabel = VarLabel::create("flux_mom", CCVariable<Matrix3>::getTypeDescription());
+  flux_energy_CClabel = VarLabel::create("flux_energy", CCVariable<Vector>::getTypeDescription());
 }
 
 MiniAero::~MiniAero()
@@ -133,6 +137,29 @@ void MiniAero::schedConvertOutput(const LevelP& level,
   task->computes(rho_CClabel);
   task->computes(vel_CClabel);
   task->computes(press_CClabel);
+
+  sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
+
+}
+
+//______________________________________________________________________
+//
+void MiniAero::schedCellCenteredFlux(const LevelP& level,
+                                   SchedulerP& sched)
+{
+
+  Task* task = scinew Task("MiniAero::cellCenteredFlux", this, 
+                           &MiniAero::cellCenteredFlux);
+
+
+
+  task->requires(Task::NewDW,rho_CClabel,Ghost::None);
+  task->requires(Task::NewDW,vel_CClabel,Ghost::None);
+  task->requires(Task::NewDW,press_CClabel,Ghost::None);
+
+  task->computes(flux_mass_CClabel);
+  task->computes(flux_mom_CClabel);
+  task->computes(flux_energy_CClabel);
 
   sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
 
@@ -283,6 +310,53 @@ void MiniAero::convertOutput(const ProcessorGroup* /*pg*/,
       vel_CC[c].z(conserved[c][3]/rho_CC[c]);
       pressure_CC[c]=conserved[c][4];
       
+    }
+  }
+}
+
+
+void MiniAero::cellCenteredFlux(const ProcessorGroup* /*pg*/,
+                             const PatchSubset* patches,
+                             const MaterialSubset* /*matls*/,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    //FIXME
+    double d_gamma=1.4;
+    Ghost::GhostType  gn  = Ghost::None;
+
+    
+    constCCVariable<double> rho_CC, pressure_CC;
+    constCCVariable<Vector> vel_CC;
+    CCVariable<Vector> flux_mass_CC;
+    CCVariable<Matrix3> flux_mom_CC;
+    CCVariable<Vector> flux_energy_CC;
+
+    new_dw->get( rho_CC,  rho_CClabel, 0, patch, gn, 0 );
+    new_dw->get( vel_CC,  vel_CClabel, 0, patch, gn, 0 );
+    new_dw->get( pressure_CC,  press_CClabel, 0, patch, gn, 0 );
+
+    new_dw->allocateAndPut( flux_mass_CC, flux_mass_CClabel,   0,patch );
+    new_dw->allocateAndPut( flux_mom_CC, flux_mom_CClabel,   0,patch );
+    new_dw->allocateAndPut( flux_energy_CC, flux_energy_CClabel,   0,patch );
+
+    //__________________________________
+    // Backout primitive quantities from
+    // the conserved ones.
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      for (int idim=0; idim < 3; ++idim) {
+        flux_mass_CC[c][idim]            = rho_CC[c]*vel_CC[c][idim];
+        double KE=0;
+        for (int jdim=0; jdim < 3; ++jdim) {
+          KE += 0.5*rho_CC[c]*vel_CC[c][jdim]*vel_CC[c][jdim];
+          flux_mom_CC[c](idim,jdim)      = rho_CC[c]*vel_CC[c][idim]*vel_CC[c][jdim];
+        }
+        flux_mom_CC[c](idim, idim)      += pressure_CC[c];
+        flux_energy_CC[c][idim]            = KE + pressure_CC[c]*(d_gamma/(d_gamma-1) );
+      }
     }
   }
 }
