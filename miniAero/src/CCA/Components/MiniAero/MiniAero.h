@@ -120,6 +120,10 @@ class MiniAero : public UintahParallelComponent, public SimulationInterface {
     const VarLabel* vel_CClabel;
     const VarLabel* press_CClabel;
     const VarLabel* temp_CClabel;
+    const VarLabel* viscosityLabel;
+    const VarLabel* speedSound_CClabel;
+    double d_gamma;
+    double d_R;
     const VarLabel* flux_mass_CClabel;
     const VarLabel* flux_mom_CClabel;
     const VarLabel* flux_energy_CClabel;

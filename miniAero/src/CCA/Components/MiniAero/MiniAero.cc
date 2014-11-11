@@ -39,9 +39,22 @@
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Grid/DbgOutput.h>
+#include <Core/Grid/Variables/Utils.h>
+#include <Core/Util/DebugStream.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Exceptions/InvalidValue.h>
 
 using namespace std;
 using namespace Uintah;
+
+//__________________________________
+//  To turn on internal debugging code
+//  setenv SCI_DEBUG "MINIAERO:+"
+//  MINIAERO:   output when tasks are scheduled and performed
+static DebugStream dbg("MINIAERO", false);
+
+
 
 //______________________________________________________________________
 //  Preliminary
@@ -184,25 +197,67 @@ void MiniAero::initialize(const ProcessorGroup*,
                           DataWarehouse*,
                           DataWarehouse* new_dw)
 {
-  int matl = 0;
-  int size = patches->size();
-  for (int p = 0; p < size; p++) {
+  const Level* level = getLevel(patches);
+  int L_indx = level->getIndex();
+
+  for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    CCVariable<Stencil7> u;
-    new_dw->allocateAndPut(u, conserved_label, matl, patch);
-    
-    //Initialize
+    printTask(patches, patch, dbg, "Doing Miniaero::initialize" );
 
-    for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+    CCVariable<double>  rho_CC;
+    CCVariable<double>  Temp_CC;
+    CCVariable<Vector>  vel_CC;
+    CCVariable<double>  speedSound;
+
+    //__________________________________
+    //  Thermo and transport properties
+    CCVariable<double> viscosity;
+    int indx = 0; 
+
+    new_dw->allocateAndPut(viscosity,    viscosityLabel,    indx, patch);
+
+    //viscosity.initialize  ( matls->getViscosity());
+
+    //if(matls->getViscosity() > 0.0){
+    //  d_viscousFlow = true;
+    //}
+
+    //__________________________________
+    new_dw->allocateAndPut(rho_CC,     rho_CClabel,         indx, patch);
+    new_dw->allocateAndPut(Temp_CC,    temp_CClabel,        indx, patch);
+    new_dw->allocateAndPut(vel_CC,     vel_CClabel,         indx, patch);
+    new_dw->allocateAndPut(speedSound, speedSound_CClabel, indx, patch);
+
+    //matls->initializeCells(rho_CC, Temp_CC, vel_CC,  patch, new_dw);
+
+    //setBC( rho_CC,   "Density",     patch, indx );
+    //setBC( Temp_CC,  "Temperature", patch, indx );
+    //setBC( vel_CC,   "Velocity",    patch, indx );
+
+    //__________________________________
+    //  compute the speed of sound
+    // set sp_vol_CC
+    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       IntVector c = *iter;
-      u[c][0]=1.;
-      u[c][1]=500.;
-      u[c][2]=0.;
-      u[c][3]=0.;
-      u[c][4]=100000.;
+
+      speedSound[c] = sqrt(d_gamma*d_R*Temp_CC[c]);
     }
-  }
+    //____ B U L L E T   P R O O F I N G----
+    IntVector neg_cell;
+    ostringstream warn, base;
+    base <<"ERROR MINIAERO:(L-"<<L_indx<<"):initialize, mat cell ";
+
+    if( !areAllValuesPositive(rho_CC, neg_cell) ) {
+      warn << base.str()<< neg_cell << " rho_CC is negative\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
+    }
+    if( !areAllValuesPositive(Temp_CC, neg_cell) ) {
+      warn << base.str()<< neg_cell << " Temp_CC is negative\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
+    }
+  }  // patch loop
+    
 }
 
 //______________________________________________________________________
