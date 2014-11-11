@@ -81,6 +81,7 @@ MiniAero::MiniAero(const ProcessorGroup* myworld)
   flux_mass_FCZlabel = VarLabel::create("faceZ_flux_mass", SFCZVariable<Vector>::getTypeDescription());
   flux_mom_FCZlabel = VarLabel::create("faceZ_flux_mom", SFCZVariable<Vector>::getTypeDescription());
   flux_energy_FCZlabel = VarLabel::create("faceZ_flux_energy", SFCZVariable<Vector>::getTypeDescription());
+  residual_CClabel = VarLabel::create("residual", CCVariable<Stencil7>::getTypeDescription());
 }
 
 MiniAero::~MiniAero()
@@ -147,6 +148,9 @@ void MiniAero::scheduleTimeAdvance(const LevelP& level,
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 
   schedConvertOutput(level,sched);
+  schedCellCenteredFlux(level, sched);
+  schedFaceCenteredFlux(level, sched);
+
 }
 
 void MiniAero::schedConvertOutput(const LevelP& level,
@@ -219,6 +223,31 @@ void MiniAero::schedFaceCenteredFlux(const LevelP& level,
 
 }
 
+void MiniAero::schedUpdateResidual(const LevelP& level,
+				    SchedulerP& sched)
+{
+
+  Task* task = scinew Task("MiniAero::updateResidual", this, 
+                           &MiniAero::updateResidual);
+
+
+  task->requires(Task::NewDW,flux_mass_FCXlabel,Ghost::None);
+  task->requires(Task::NewDW,flux_mom_FCXlabel,Ghost::None);
+  task->requires(Task::NewDW,flux_energy_FCXlabel,Ghost::None);
+
+  task->requires(Task::NewDW,flux_mass_FCYlabel,Ghost::None);
+  task->requires(Task::NewDW,flux_mom_FCYlabel,Ghost::None);
+  task->requires(Task::NewDW,flux_energy_FCYlabel,Ghost::None);
+
+  task->requires(Task::NewDW,flux_mass_FCZlabel,Ghost::None);
+  task->requires(Task::NewDW,flux_mom_FCZlabel,Ghost::None);
+  task->requires(Task::NewDW,flux_energy_FCZlabel,Ghost::None);
+
+  task->computes(residual_CClabel);
+
+  sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
+
+}
 //______________________________________________________________________
 //
 void MiniAero::computeStableTimestep(const ProcessorGroup*,
@@ -525,6 +554,78 @@ void MiniAero::faceCenteredFlux(const ProcessorGroup* /*pg*/,
       flux_mom_FCZ   [c][1] = 0.5*(flux_mom_CC   [c](2,1)+flux_mom_CC   [c+offset](2,1));
       flux_mom_FCZ   [c][2] = 0.5*(flux_mom_CC   [c](2,2)+flux_mom_CC   [c+offset](2,2));
       flux_energy_FCZ[c]    = 0.5*(flux_energy_CC[c][2]  +flux_energy_CC[c+offset][2]);
+    }
+  }
+}
+void MiniAero::updateResidual(const ProcessorGroup* /*pg*/,
+                             const PatchSubset* patches,
+                             const MaterialSubset* /*matls*/,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw)
+{
+
+  Ghost::GhostType  gn  = Ghost::None;
+
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    constSFCXVariable<double> flux_mass_FCX;
+    constSFCXVariable<Vector> flux_mom_FCX;
+    constSFCXVariable<double> flux_energy_FCX;
+
+    constSFCYVariable<double> flux_mass_FCY;
+    constSFCYVariable<Vector> flux_mom_FCY;
+    constSFCYVariable<double> flux_energy_FCY;
+
+    constSFCZVariable<double> flux_mass_FCZ;
+    constSFCZVariable<Vector> flux_mom_FCZ;
+    constSFCZVariable<double> flux_energy_FCZ;
+
+    CCVariable<Stencil7> residual_CC;
+
+    new_dw->get( flux_mass_FCX,  flux_mass_FCXlabel, 0, patch, gn, 0);
+    new_dw->get( flux_mom_FCX,  flux_mom_FCXlabel, 0, patch, gn, 0);
+    new_dw->get( flux_energy_FCX,  flux_energy_FCXlabel, 0, patch, gn, 0);
+
+    new_dw->get( flux_mass_FCY,  flux_mass_FCYlabel, 0, patch, gn, 0);
+    new_dw->get( flux_mom_FCY,  flux_mom_FCYlabel, 0, patch, gn, 0);
+    new_dw->get( flux_energy_FCY,  flux_energy_FCYlabel, 0, patch, gn, 0);
+
+    new_dw->get( flux_mass_FCZ,  flux_mass_FCZlabel, 0, patch, gn, 0);
+    new_dw->get( flux_mom_FCZ,  flux_mom_FCZlabel, 0, patch, gn, 0);
+    new_dw->get( flux_energy_FCZ,  flux_energy_FCZlabel, 0, patch, gn, 0);
+
+    new_dw->allocateAndPut( residual_CC, residual_CClabel,   0,patch );
+
+    //__________________________________
+    // Backout primitive quantities from
+    // the conserved ones.
+
+    const Vector& cellSize = patch->getLevel()->dCell();
+    const double dx = cellSize[0];
+    const double dy = cellSize[1];
+    const double dz = cellSize[2];
+
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      IntVector XOffset(1,0,0);
+      IntVector YOffset(0,1,0);
+      IntVector ZOffset(0,0,1);
+
+      residual_CC[c][0] = (flux_mass_FCX[c + XOffset]  - flux_mass_FCX[c])*dy*dz + 
+	(flux_mass_FCY[c + YOffset]  - flux_mass_FCY[c])*dx*dz + 
+	(flux_mass_FCZ[c + ZOffset]  - flux_mass_FCZ[c])*dy*dx;
+
+      residual_CC[c][4] = (flux_energy_FCX[c + XOffset]  - flux_energy_FCX[c])*dy*dz + 
+	(flux_energy_FCY[c + YOffset]  - flux_energy_FCY[c])*dx*dz + 
+	(flux_energy_FCZ[c + ZOffset]  - flux_energy_FCZ[c])*dy*dx;
+
+      for(int idim = 0; idim < 3; ++idim) {
+	residual_CC[c][idim + 1] =  (flux_mom_FCX[c + XOffset][idim]  - flux_mom_FCX[c][idim])*dy*dz + 
+	(flux_mom_FCY[c + YOffset][idim]  - flux_mom_FCY[c][idim])*dx*dz + 
+	(flux_mom_FCZ[c + ZOffset][idim]  - flux_mom_FCZ[c][idim])*dy*dx;
+      }
+
     }
   }
 }
