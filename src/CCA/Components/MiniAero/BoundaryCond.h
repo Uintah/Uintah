@@ -42,9 +42,9 @@
 namespace Uintah {
   using namespace SCIRun;
   
-  static DebugStream BC_dbg("ICE_SM_BC_dbg", false);
-  static DebugStream ice_BC_CC("ICE_SM_BC_CC", false);
-  static DebugStream ice_BC_FC("ICE_SM_BC_FC", false);
+  static DebugStream BC_dbg("BC_dbg", false);
+  static DebugStream BC_CC("BC_CC", false);
+  static DebugStream BC_FC("BC_FC", false);
   
   class DataWarehouse;
  
@@ -118,7 +118,7 @@ void setBC_FC(T& vel_FC,
               const Patch* patch,    
               const int mat_id)      
 {
-  ice_BC_FC << "--------setBCFC (SFCVariable) "<< desc<< " mat_id = " << mat_id <<std::endl;
+  BC_FC << "--------setBCFC (SFCVariable) "<< desc<< " mat_id = " << mat_id <<std::endl;
   std::string whichVel = "unknown";
   
   //__________________________________
@@ -197,7 +197,7 @@ void setBC_FC(T& vel_FC,
           }              
         }  // Children loop
       }
-      ice_BC_FC << "               " << patch->getFaceName(face) << " \t " << whichVel << " \t" << bc_kind << "\t faceDir: " << faceDir << " numChildren: " << numChildren 
+      BC_FC << "               " << patch->getFaceName(face) << " \t " << whichVel << " \t" << bc_kind << "\t faceDir: " << faceDir << " numChildren: " << numChildren 
                  << " nCells: " << nCells << std::endl;
       //__________________________________
       //  bulletproofing
