@@ -56,8 +56,10 @@ using namespace Uintah;
 //  MINIAERO:   output when tasks are scheduled and performed
 static DebugStream dbg("MINIAERO", false);
 
-
-
+//TO DO: Clean up Stencil 7
+//TO DO: Add Riemann Solver to faceCenteredFlux
+//TO DO: Add 2nd order option to faceCenteredFlux
+//TO DO: Add tasks for computing Viscous Flux 
 //______________________________________________________________________
 //  Preliminary
 MiniAero::MiniAero(const ProcessorGroup* myworld)
@@ -275,7 +277,7 @@ void MiniAero::schedUpdateState(const LevelP& level,
                            &MiniAero::updateState);
 
 
-
+  task->requires(Task::OldDW,sharedState_->get_delt_label());
   task->requires(Task::OldDW,conserved_label,Ghost::None);
   task->requires(Task::NewDW,residual_CClabel,Ghost::None);
 
@@ -322,13 +324,14 @@ void MiniAero::computeStableTimestep(const ProcessorGroup*,
       IntVector c = *iter;
       double speed_Sound = speedSound[c];
 
-      double A = d_CFL*delX/(speed_Sound + fabs(vel_CC[c].x()) + d_SMALL_NUM);
-      double B = d_CFL*delY/(speed_Sound + fabs(vel_CC[c].y()) + d_SMALL_NUM);
-      double C = d_CFL*delZ/(speed_Sound + fabs(vel_CC[c].z()) + d_SMALL_NUM);
+      double A = d_CFL*delX/(speed_Sound + fabs(vel_CC[c].x()) ); 
+      double B = d_CFL*delY/(speed_Sound + fabs(vel_CC[c].y()) ); 
+      double C = d_CFL*delZ/(speed_Sound + fabs(vel_CC[c].z()) );
 
       delt_CFL = std::min(A, delt_CFL);
       delt_CFL = std::min(B, delt_CFL);
-      delt_CFL = std::min(C, delt_CFL);
+      delt     = std::min(C, delt_CFL);
+
 
       if (A < 1e-20 || B < 1e-20 || C < 1e-20) {
         if (badCell == IntVector(0,0,0)) {
@@ -337,7 +340,6 @@ void MiniAero::computeStableTimestep(const ProcessorGroup*,
         cout << d_myworld->myrank() << " Bad cell " << c << " (" << patch->getID() << "-" << level->getIndex() << "): " << vel_CC[c]<< endl;
       }
 
-      // cout << " Aggressive delT Based on currant number "<< delt_CFL << endl;
       //__________________________________
     }
     //__________________________________
@@ -391,19 +393,28 @@ void MiniAero::initialize(const ProcessorGroup*,
     new_dw->allocateAndPut(viscosity,    viscosityLabel,    indx, patch);
 
 
-    initializeCells(rho_CC, Temp_CC, vel_CC,  patch, new_dw, d_geom_objs);
+    initializeCells(rho_CC, Temp_CC, press_CC, vel_CC,  patch, new_dw, d_geom_objs);
 
     setBC( rho_CC,   "Density",     patch, indx );
     setBC( Temp_CC,  "Temperature", patch, indx );
     setBC( vel_CC,   "Velocity",    patch, indx );
-
+    setBC( press_CC, "Pressure",    patch, indx );
 
     //__________________________________
     //  compute the speed of sound
     // set sp_vol_CC
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       IntVector c = *iter;
-
+     
+      conserved_CC[c][0] = rho_CC[c];
+      conserved_CC[c][1] = rho_CC[c]*vel_CC[c].x();
+      conserved_CC[c][2] = rho_CC[c]*vel_CC[c].y(); 
+      conserved_CC[c][3] = rho_CC[c]*vel_CC[c].z();
+      conserved_CC[c][4] =  0.5*rho_CC[c]*(
+		vel_CC[c].x()*vel_CC[c].x()+
+		vel_CC[c].y()*vel_CC[c].y()+
+		vel_CC[c].z()*vel_CC[c].z())+
+		press_CC[c]/(d_gamma-1.);
       viscosity[c] = getViscosity(Temp_CC[c]);
       speedSound[c] = sqrt(d_gamma*d_R*Temp_CC[c]);
     }
@@ -464,6 +475,7 @@ void MiniAero::getGeometryObjects(ProblemSpecP& ps , std::vector<GeometryObject*
 _____________________________________________________________________*/
 void MiniAero::initializeCells(CCVariable<double>& rho_CC,
                                      CCVariable<double>& temp_CC,
+                                     CCVariable<double>& press_CC,
                                      CCVariable<Vector>& vel_CC,
                                      const Patch* patch,
                                      DataWarehouse* new_dw,
@@ -475,6 +487,7 @@ void MiniAero::initializeCells(CCVariable<double>& rho_CC,
   vel_CC.initialize(Vector(0.,0.,0.));
   rho_CC.initialize(0.);
   temp_CC.initialize(0.);
+  press_CC.initialize(d_EVIL_NUM);
 
   // Loop over geometry objects
   for(int obj=0; obj<(int)geom_objs.size(); obj++){
@@ -506,6 +519,7 @@ void MiniAero::initializeCells(CCVariable<double>& rho_CC,
         vel_CC[c]     = geom_objs[obj]->getInitialData_Vector("velocity");
         rho_CC[c]     = geom_objs[obj]->getInitialData_double("density");
         temp_CC[c]    = geom_objs[obj]->getInitialData_double("temperature");
+        press_CC[c]   = d_R*rho_CC[c]*temp_CC[c];
       }
     }  // Loop over domain
   }  // Loop over geom_objects
@@ -542,7 +556,7 @@ void MiniAero::Primitives(const ProcessorGroup* /*pg*/,
     //__________________________________
     // Backout primitive quantities from
     // the conserved ones.
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) {
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
       rho_CC[c]    = conserved[c][0];
       vel_CC[c].x(conserved[c][1]/rho_CC[c]);
@@ -551,10 +565,22 @@ void MiniAero::Primitives(const ProcessorGroup* /*pg*/,
       Temp_CC[c] = (d_gamma-1.)/d_R*(conserved[c][4]/conserved[c][0]
         -0.5*(vel_CC[c].x()*vel_CC[c].x()+vel_CC[c].y()*vel_CC[c].y()+vel_CC[c].z()*vel_CC[c].z()));
       pressure_CC[c]=rho_CC[c]*d_R*Temp_CC[c];
+    }
+  
+    setBC( rho_CC,   "Density",     patch, 0 );
+    setBC( Temp_CC,  "Temperature", patch, 0 );
+    setBC( vel_CC,   "Velocity",    patch, 0 );
+    setBC( pressure_CC, "Pressure",    patch, 0 );
+    //__________________________________
+    // Compute Speed of Sound and Mach
+    // This is done after BCs are set
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
       speedSound[c] = sqrt(d_gamma*d_R*Temp_CC[c]);
       mach[c] = vel_CC[c].length()/speedSound[c]; 
-    }
-  }
+    } 
+
+  }//Patch loop
 }
 
 
@@ -566,8 +592,6 @@ void MiniAero::cellCenteredFlux(const ProcessorGroup* /*pg*/,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    //FIXME
-    double d_gamma=1.4;
     Ghost::GhostType  gn  = Ghost::None;
 
     
@@ -588,7 +612,7 @@ void MiniAero::cellCenteredFlux(const ProcessorGroup* /*pg*/,
     //__________________________________
     // Backout primitive quantities from
     // the conserved ones.
-    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
       for (int idim=0; idim < 3; ++idim) {
         flux_mass_CC[c][idim]            = rho_CC[c]*vel_CC[c][idim];
@@ -644,8 +668,7 @@ void MiniAero::faceCenteredFlux(const ProcessorGroup* /*pg*/,
     new_dw->allocateAndPut( flux_energy_FCZ, flux_energy_FCZlabel,   0,patch );
 
     //__________________________________
-    // Backout primitive quantities from
-    // the conserved ones.
+    //Compute Face Centered Fluxes from Cell Centered
     for(CellIterator iter = patch->getSFCXIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
       IntVector offset(-1,0,0);
@@ -756,7 +779,7 @@ void MiniAero::updateState(const ProcessorGroup* /*pg*/,
 
   Ghost::GhostType  gn  = Ghost::None;
   delt_vartype dt;
-  new_dw->get(dt, sharedState_->get_delt_label());
+  old_dw->get(dt, sharedState_->get_delt_label());
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -766,7 +789,7 @@ void MiniAero::updateState(const ProcessorGroup* /*pg*/,
     CCVariable<Stencil7> newState_CC;
 
     new_dw->get( residual_CC,  residual_CClabel, 0, patch, gn, 0);
-    new_dw->get( oldState_CC,  conserved_label, 0, patch, gn, 0);
+    old_dw->get( oldState_CC,  conserved_label, 0, patch, gn, 0);
 
     new_dw->allocateAndPut( newState_CC, conserved_label,   0,patch );
 

@@ -132,12 +132,14 @@
    <DataArchiver>
       <filebase>advect.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
-      <outputInitTimestep/>
       
       <save label="velocity"/>
       <save label="temperature"/> 
       <save label="density"/>
       <save label="pressure"/>
+      <save label="flux_mass"/>
+      <save label="flux_mom"/>
+      <save label="flux_energy"/>
       <checkpoint interval="0.005" cycle="2"/> 
    </DataArchiver>
 

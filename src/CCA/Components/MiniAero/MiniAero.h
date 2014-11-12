@@ -90,6 +90,7 @@ class MiniAero : public UintahParallelComponent, public SimulationInterface {
 
     void initializeCells(CCVariable<double>& rho_CC,
                          CCVariable<double>& temp_CC,
+                         CCVariable<double>& press_CC,
                          CCVariable<Vector>& vel_CC,
                          const Patch* patch,
                          DataWarehouse* new_dw,
