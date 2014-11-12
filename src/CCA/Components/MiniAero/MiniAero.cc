@@ -548,8 +548,9 @@ void MiniAero::Primitives(const ProcessorGroup* /*pg*/,
       vel_CC[c].x(conserved[c][1]/rho_CC[c]);
       vel_CC[c].y(conserved[c][2]/rho_CC[c]);
       vel_CC[c].z(conserved[c][3]/rho_CC[c]);
-      pressure_CC[c]=conserved[c][4];
-      Temp_CC[c] = -1.0; //Ken: Fill this in
+      Temp_CC[c] = (d_gamma-1.)/d_R*(conserved[c][4]/conserved[c][0]
+        -0.5*(vel_CC[c].x()*vel_CC[c].x()+vel_CC[c].y()*vel_CC[c].y()+vel_CC[c].z()*vel_CC[c].z()));
+      pressure_CC[c]=rho_CC[c]*d_R*Temp_CC[c];
       speedSound[c] = sqrt(d_gamma*d_R*Temp_CC[c]);
       mach[c] = vel_CC[c].length()/speedSound[c]; 
     }
