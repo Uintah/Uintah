@@ -200,9 +200,9 @@ void MiniAero::schedCellCenteredFlux(const LevelP& level,
 
 
 
-  task->requires(Task::NewDW,rho_CClabel,Ghost::None);
-  task->requires(Task::NewDW,vel_CClabel,Ghost::None);
-  task->requires(Task::NewDW,press_CClabel,Ghost::None);
+  task->requires(Task::OldDW,rho_CClabel,Ghost::None);
+  task->requires(Task::OldDW,vel_CClabel,Ghost::None);
+  task->requires(Task::OldDW,press_CClabel,Ghost::None);
 
   task->computes(flux_mass_CClabel);
   task->computes(flux_mom_CClabel);
@@ -577,9 +577,9 @@ void MiniAero::cellCenteredFlux(const ProcessorGroup* /*pg*/,
     CCVariable<Matrix3> flux_mom_CC;
     CCVariable<Vector> flux_energy_CC;
 
-    new_dw->get( rho_CC,  rho_CClabel, 0, patch, gn, 0 );
-    new_dw->get( vel_CC,  vel_CClabel, 0, patch, gn, 0 );
-    new_dw->get( pressure_CC,  press_CClabel, 0, patch, gn, 0 );
+    old_dw->get( rho_CC,  rho_CClabel, 0, patch, gn, 0 );
+    old_dw->get( vel_CC,  vel_CClabel, 0, patch, gn, 0 );
+    old_dw->get( pressure_CC,  press_CClabel, 0, patch, gn, 0 );
 
     new_dw->allocateAndPut( flux_mass_CC, flux_mass_CClabel,   0,patch );
     new_dw->allocateAndPut( flux_mom_CC, flux_mom_CClabel,   0,patch );
