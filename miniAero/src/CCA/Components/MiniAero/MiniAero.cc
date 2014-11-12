@@ -71,6 +71,7 @@ MiniAero::MiniAero(const ProcessorGroup* myworld)
   temp_CClabel = VarLabel::create("temperature", CCVariable<double>::getTypeDescription());
   speedSound_CClabel = VarLabel::create("speedsound", CCVariable<double>::getTypeDescription());
   viscosityLabel = VarLabel::create("viscosity", CCVariable<double>::getTypeDescription());
+  machlabel = VarLabel::create("mach", CCVariable<double>::getTypeDescription());
 
   flux_mass_CClabel = VarLabel::create("flux_mass", CCVariable<Vector>::getTypeDescription());
   flux_mom_CClabel = VarLabel::create("flux_mom", CCVariable<Matrix3>::getTypeDescription());
@@ -144,6 +145,11 @@ void MiniAero::scheduleComputeStableTimestep(const LevelP& level,
 {
   Task* task = scinew Task("MiniAero::computeStableTimestep", this, &MiniAero::computeStableTimestep);
 
+  Ghost::GhostType  gn = Ghost::None;
+
+  task->requires(Task::NewDW, vel_CClabel,        gn );
+  task->requires(Task::NewDW, speedSound_CClabel, gn );
+
   task->computes(sharedState_->get_delt_label(), level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
@@ -158,16 +164,16 @@ void MiniAero::scheduleTimeAdvance(const LevelP& level,
   schedFaceCenteredFlux(level, sched);
   schedUpdateResidual(level, sched);
   schedUpdateState(level, sched);
-  schedConvertOutput(level,sched);
+  schedPrimitives(level,sched);
 
 }
 
-void MiniAero::schedConvertOutput(const LevelP& level,
+void MiniAero::schedPrimitives(const LevelP& level,
                                    SchedulerP& sched)
 {
 
-  Task* task = scinew Task("MiniAero::convertOutput", this, 
-                           &MiniAero::convertOutput);
+  Task* task = scinew Task("MiniAero::Primitives", this, 
+                           &MiniAero::Primitives);
 
 
   task->requires(Task::NewDW, conserved_label,Ghost::None);
@@ -176,6 +182,8 @@ void MiniAero::schedConvertOutput(const LevelP& level,
   task->computes(vel_CClabel);
   task->computes(press_CClabel);
   task->computes(temp_CClabel);
+  task->computes(speedSound_CClabel);
+  task->computes(machlabel);
 
   sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
 
@@ -284,7 +292,66 @@ void MiniAero::computeStableTimestep(const ProcessorGroup*,
                                      DataWarehouse*,
                                      DataWarehouse* new_dw)
 {
-  new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(), getLevel(patches));
+
+  const Level* level = getLevel(patches);
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch, dbg, "Doing MiniAero::computeStableTimestep" );
+
+    Vector dx = patch->dCell();
+    double delX = dx.x();
+    double delY = dx.y();
+    double delZ = dx.z();
+    double delt_CFL;
+    double delt;
+
+    constCCVariable<double> speedSound;
+    constCCVariable<Vector> vel_CC;
+    Ghost::GhostType  gn  = Ghost::None;
+
+    IntVector badCell(0,0,0);
+    delt_CFL  = 1000.0;
+    delt      = 1000;
+
+    int indx = 0; 
+
+    new_dw->get(speedSound, speedSound_CClabel, indx, patch, gn, 0 );
+    new_dw->get(vel_CC,     vel_CClabel,        indx, patch, gn, 0 );
+
+    for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
+      double speed_Sound = speedSound[c];
+
+      double A = d_CFL*delX/(speed_Sound + fabs(vel_CC[c].x()) + d_SMALL_NUM);
+      double B = d_CFL*delY/(speed_Sound + fabs(vel_CC[c].y()) + d_SMALL_NUM);
+      double C = d_CFL*delZ/(speed_Sound + fabs(vel_CC[c].z()) + d_SMALL_NUM);
+
+      delt_CFL = std::min(A, delt_CFL);
+      delt_CFL = std::min(B, delt_CFL);
+      delt_CFL = std::min(C, delt_CFL);
+
+      if (A < 1e-20 || B < 1e-20 || C < 1e-20) {
+        if (badCell == IntVector(0,0,0)) {
+          badCell = c;
+        }
+        cout << d_myworld->myrank() << " Bad cell " << c << " (" << patch->getID() << "-" << level->getIndex() << "): " << vel_CC[c]<< endl;
+      }
+
+      // cout << " Aggressive delT Based on currant number "<< delt_CFL << endl;
+      //__________________________________
+    }
+    //__________________________________
+    //  Bullet proofing
+    if(delt < 1e-20) {
+      ostringstream warn;
+      const Level* level = getLevel(patches);
+      warn << "ERROR MINIAERO:(L-"<< level->getIndex()
+           << "):ComputeStableTimestep: delT < 1e-20 on cell " << badCell;
+      throw InvalidValue(warn.str(), __FILE__, __LINE__);
+    }
+
+   new_dw->put(delt_vartype(delt), sharedState_->get_delt_label(), getLevel(patches));
+  } //Patch loop
 }
 
 //______________________________________________________________________
@@ -447,7 +514,7 @@ void MiniAero::initializeCells(CCVariable<double>& rho_CC,
 //______________________________________________________________________
 //
 
-void MiniAero::convertOutput(const ProcessorGroup* /*pg*/,
+void MiniAero::Primitives(const ProcessorGroup* /*pg*/,
                              const PatchSubset* patches,
                              const MaterialSubset* /*matls*/,
                              DataWarehouse* old_dw,
@@ -459,7 +526,7 @@ void MiniAero::convertOutput(const ProcessorGroup* /*pg*/,
     Ghost::GhostType  gn  = Ghost::None;
 
     
-    CCVariable<double> rho_CC, pressure_CC, Temp_CC;
+    CCVariable<double> rho_CC, pressure_CC, Temp_CC, speedSound, mach;
     CCVariable<Vector> vel_CC;
     constCCVariable<Stencil7> conserved;
 
@@ -469,6 +536,8 @@ void MiniAero::convertOutput(const ProcessorGroup* /*pg*/,
     new_dw->allocateAndPut( vel_CC, vel_CClabel,   0,patch );
     new_dw->allocateAndPut(pressure_CC,press_CClabel,     0,patch );
     new_dw->allocateAndPut( Temp_CC, temp_CClabel, 0,patch);
+    new_dw->allocateAndPut( speedSound, speedSound_CClabel, 0,patch);
+    new_dw->allocateAndPut( mach,  machlabel, 0, patch);
 
     //__________________________________
     // Backout primitive quantities from
@@ -480,7 +549,9 @@ void MiniAero::convertOutput(const ProcessorGroup* /*pg*/,
       vel_CC[c].y(conserved[c][2]/rho_CC[c]);
       vel_CC[c].z(conserved[c][3]/rho_CC[c]);
       pressure_CC[c]=conserved[c][4];
-      Temp_CC[c] = -1.0; //Ken: Fill this in 
+      Temp_CC[c] = -1.0; //Ken: Fill this in
+      speedSound[c] = sqrt(d_gamma*d_R*Temp_CC[c]);
+      mach[c] = vel_CC[c].length()/speedSound[c]; 
     }
   }
 }
