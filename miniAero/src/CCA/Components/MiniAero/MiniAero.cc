@@ -22,11 +22,16 @@
  * IN THE SOFTWARE.
  */
 
+#include <vector>
+#include <list>
+
 #include <CCA/Components/MiniAero/MiniAero.h>
 #include <CCA/Components/MiniAero/BoundaryCond.h>
 #include <CCA/Components/Examples/ExamplesLabel.h>
 #include <CCA/Ports/Scheduler.h>
+
 #include <Core/ProblemSpec/ProblemSpec.h>
+
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
@@ -36,18 +41,20 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimpleMaterial.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Math/Matrix3.h>
 #include <Core/Grid/Variables/Vector5.h>
-#include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/Utils.h>
+
+#include <Core/Math/Matrix3.h>
+
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
+
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 
-using namespace std;
 using namespace Uintah;
 
 //__________________________________
@@ -65,39 +72,64 @@ static DebugStream dbg("MINIAERO", false);
 MiniAero::MiniAero(const ProcessorGroup* myworld)
     : UintahParallelComponent(myworld)
 {
-  conserved_label = VarLabel::create("conserved", CCVariable<Vector5>::getTypeDescription());
+  conserved_label    = VarLabel::create("conserved",   CCVariable<Vector5>::getTypeDescription());
 
-  rho_CClabel = VarLabel::create("density", CCVariable<double>::getTypeDescription());
-  vel_CClabel = VarLabel::create("velocity", CCVariable<Vector>::getTypeDescription());
-  press_CClabel = VarLabel::create("pressure", CCVariable<double>::getTypeDescription());
-  temp_CClabel = VarLabel::create("temperature", CCVariable<double>::getTypeDescription());
-  speedSound_CClabel = VarLabel::create("speedsound", CCVariable<double>::getTypeDescription());
-  viscosityLabel = VarLabel::create("viscosity", CCVariable<double>::getTypeDescription());
-  machlabel = VarLabel::create("mach", CCVariable<double>::getTypeDescription());
+  rho_CClabel        = VarLabel::create("density",     CCVariable<double>::getTypeDescription());
+  vel_CClabel        = VarLabel::create("velocity",    CCVariable<Vector>::getTypeDescription());
+  press_CClabel      = VarLabel::create("pressure",    CCVariable<double>::getTypeDescription());
+  temp_CClabel       = VarLabel::create("temperature", CCVariable<double>::getTypeDescription());
+  speedSound_CClabel = VarLabel::create("speedsound",  CCVariable<double>::getTypeDescription());
+  viscosityLabel     = VarLabel::create("viscosity",   CCVariable<double>::getTypeDescription());
+  machlabel          = VarLabel::create("mach",        CCVariable<double>::getTypeDescription());
 
-  flux_mass_CClabel = VarLabel::create("flux_mass", CCVariable<Vector>::getTypeDescription());
-  flux_mom_CClabel = VarLabel::create("flux_mom", CCVariable<Matrix3>::getTypeDescription());
-  flux_energy_CClabel = VarLabel::create("flux_energy", CCVariable<Vector>::getTypeDescription());
-  flux_mass_FCXlabel = VarLabel::create("faceX_flux_mass", SFCXVariable<Vector>::getTypeDescription());
-  flux_mom_FCXlabel = VarLabel::create("faceX_flux_mom", SFCXVariable<Vector>::getTypeDescription());
+  flux_mass_CClabel    = VarLabel::create("flux_mass",         CCVariable<Vector>::getTypeDescription());
+  flux_mom_CClabel     = VarLabel::create("flux_mom",          CCVariable<Matrix3>::getTypeDescription());
+  flux_energy_CClabel  = VarLabel::create("flux_energy",       CCVariable<Vector>::getTypeDescription());
+
+  flux_mass_FCXlabel   = VarLabel::create("faceX_flux_mass",   SFCXVariable<Vector>::getTypeDescription());
+  flux_mom_FCXlabel    = VarLabel::create("faceX_flux_mom",    SFCXVariable<Vector>::getTypeDescription());
   flux_energy_FCXlabel = VarLabel::create("faceX_flux_energy", SFCXVariable<Vector>::getTypeDescription());
-  flux_mass_FCYlabel = VarLabel::create("faceY_flux_mass", SFCYVariable<Vector>::getTypeDescription());
-  flux_mom_FCYlabel = VarLabel::create("faceY_flux_mom", SFCYVariable<Vector>::getTypeDescription());
+
+  flux_mass_FCYlabel   = VarLabel::create("faceY_flux_mass",   SFCYVariable<Vector>::getTypeDescription());
+  flux_mom_FCYlabel    = VarLabel::create("faceY_flux_mom",    SFCYVariable<Vector>::getTypeDescription());
   flux_energy_FCYlabel = VarLabel::create("faceY_flux_energy", SFCYVariable<Vector>::getTypeDescription());
-  flux_mass_FCZlabel = VarLabel::create("faceZ_flux_mass", SFCZVariable<Vector>::getTypeDescription());
-  flux_mom_FCZlabel = VarLabel::create("faceZ_flux_mom", SFCZVariable<Vector>::getTypeDescription());
+
+  flux_mass_FCZlabel   = VarLabel::create("faceZ_flux_mass",   SFCZVariable<Vector>::getTypeDescription());
+  flux_mom_FCZlabel    = VarLabel::create("faceZ_flux_mom",    SFCZVariable<Vector>::getTypeDescription());
   flux_energy_FCZlabel = VarLabel::create("faceZ_flux_energy", SFCZVariable<Vector>::getTypeDescription());
+
   residual_CClabel = VarLabel::create("residual", CCVariable<Vector5>::getTypeDescription());
 }
 
 MiniAero::~MiniAero()
 {
   VarLabel::destroy(conserved_label);
+
   VarLabel::destroy(rho_CClabel);
   VarLabel::destroy(vel_CClabel);
   VarLabel::destroy(press_CClabel);
   VarLabel::destroy(temp_CClabel);
   VarLabel::destroy(speedSound_CClabel);
+  VarLabel::destroy(viscosityLabel);
+  VarLabel::destroy(machlabel);
+
+  VarLabel::destroy(flux_mass_CClabel);
+  VarLabel::destroy(flux_mom_CClabel);
+  VarLabel::destroy(flux_energy_CClabel);
+
+  VarLabel::destroy(flux_mass_FCXlabel);
+  VarLabel::destroy(flux_mom_FCXlabel);
+  VarLabel::destroy(flux_energy_FCXlabel);
+
+  VarLabel::destroy(flux_mass_FCYlabel);
+  VarLabel::destroy(flux_mom_FCYlabel);
+  VarLabel::destroy(flux_energy_FCYlabel);
+
+  VarLabel::destroy(flux_mass_FCZlabel);
+  VarLabel::destroy(flux_mom_FCZlabel);
+  VarLabel::destroy(flux_energy_FCZlabel);
+
+  VarLabel::destroy(residual_CClabel);
 }
 
 //______________________________________________________________________
@@ -108,18 +140,19 @@ void MiniAero::problemSetup(const ProblemSpecP& params,
                             SimulationStateP& sharedState)
 {
   sharedState_ = sharedState;
-  ProblemSpecP ps = params->findBlock("MiniAero");
   mymat_ = scinew SimpleMaterial();
-  sharedState->registerSimpleMaterial(mymat_);
+  sharedState_->registerSimpleMaterial(mymat_);
+
   //__________________________________
   // Thermodynamic Transport Properties
-  ps->require("gamma",               d_gamma);
-  ps->require("R",                   d_R);
-  ps->require("CFL",                 d_CFL);
-  ps->require("Is_visc_flow",         d_viscousFlow);
+  ProblemSpecP ps = params->findBlock("MiniAero");
+  ps->require("gamma",        d_gamma);
+  ps->require("R",            d_R);
+  ps->require("CFL",          d_CFL);
+  ps->require("Is_visc_flow", d_viscousFlow);
    
   //Getting geometry objects
-  getGeometryObjects( ps, d_geom_objs);
+  getGeometryObjects(ps, d_geom_objs);
 }
 
 //______________________________________________________________________
@@ -128,14 +161,15 @@ void MiniAero::scheduleInitialize(const LevelP& level,
                                   SchedulerP& sched)
 {
   Task* t = scinew Task("MiniAero::initialize", this, &MiniAero::initialize);
+
   t->computes(conserved_label);
 
-  t->computes( vel_CClabel );
-  t->computes( rho_CClabel );
-  t->computes( press_CClabel );
-  t->computes( temp_CClabel );
-  t->computes( speedSound_CClabel );
-  t->computes( viscosityLabel );
+  t->computes(vel_CClabel);
+  t->computes(rho_CClabel);
+  t->computes(press_CClabel);
+  t->computes(temp_CClabel);
+  t->computes(speedSound_CClabel);
+  t->computes(viscosityLabel);
 
   sched->addTask(t, level->eachPatch(), sharedState_->allMaterials());
 }
@@ -153,6 +187,7 @@ void MiniAero::scheduleComputeStableTimestep(const LevelP& level,
   task->requires(Task::NewDW, speedSound_CClabel, gn );
 
   task->computes(sharedState_->get_delt_label(), level.get_rep());
+
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 
@@ -161,22 +196,18 @@ void MiniAero::scheduleComputeStableTimestep(const LevelP& level,
 void MiniAero::scheduleTimeAdvance(const LevelP& level,
                                    SchedulerP& sched)
 {
-
   schedCellCenteredFlux(level, sched);
   schedFaceCenteredFlux(level, sched);
   schedUpdateResidual(level, sched);
   schedUpdateState(level, sched);
   schedPrimitives(level,sched);
-
 }
 
 void MiniAero::schedPrimitives(const LevelP& level,
-                                   SchedulerP& sched)
+                               SchedulerP& sched)
 {
-
   Task* task = scinew Task("MiniAero::Primitives", this, 
                            &MiniAero::Primitives);
-
 
   task->requires(Task::NewDW, conserved_label,Ghost::None);
 
@@ -188,19 +219,15 @@ void MiniAero::schedPrimitives(const LevelP& level,
   task->computes(machlabel);
 
   sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
-
 }
 
 //______________________________________________________________________
 //
 void MiniAero::schedCellCenteredFlux(const LevelP& level,
-                                   SchedulerP& sched)
+                                     SchedulerP& sched)
 {
-
   Task* task = scinew Task("MiniAero::cellCenteredFlux", this, 
                            &MiniAero::cellCenteredFlux);
-
-
 
   task->requires(Task::OldDW,rho_CClabel,Ghost::None);
   task->requires(Task::OldDW,vel_CClabel,Ghost::None);
@@ -211,19 +238,15 @@ void MiniAero::schedCellCenteredFlux(const LevelP& level,
   task->computes(flux_energy_CClabel);
 
   sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
-
 }
 
 //______________________________________________________________________
 //
 void MiniAero::schedFaceCenteredFlux(const LevelP& level,
-                                   SchedulerP& sched)
+                                     SchedulerP& sched)
 {
-
   Task* task = scinew Task("MiniAero::faceCenteredFlux", this, 
                            &MiniAero::faceCenteredFlux);
-
-
 
   task->requires(Task::NewDW,flux_mass_CClabel,Ghost::AroundCells, 1);
   task->requires(Task::NewDW,flux_mom_CClabel,Ghost::AroundCells, 1);
@@ -240,16 +263,13 @@ void MiniAero::schedFaceCenteredFlux(const LevelP& level,
   task->computes(flux_energy_FCZlabel);
 
   sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
-
 }
 
 void MiniAero::schedUpdateResidual(const LevelP& level,
-				    SchedulerP& sched)
+                                   SchedulerP& sched)
 {
-
   Task* task = scinew Task("MiniAero::updateResidual", this, 
                            &MiniAero::updateResidual);
-
 
   task->requires(Task::NewDW,flux_mass_FCXlabel,Ghost::None);
   task->requires(Task::NewDW,flux_mom_FCXlabel,Ghost::None);
@@ -266,16 +286,13 @@ void MiniAero::schedUpdateResidual(const LevelP& level,
   task->computes(residual_CClabel);
 
   sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
-
 }
 
 void MiniAero::schedUpdateState(const LevelP& level,
-                                   SchedulerP& sched)
+                                SchedulerP& sched)
 {
-
   Task* task = scinew Task("MiniAero::updateState", this, 
                            &MiniAero::updateState);
-
 
   task->requires(Task::OldDW,sharedState_->get_delt_label());
   task->requires(Task::OldDW,conserved_label,Ghost::None);
@@ -285,8 +302,8 @@ void MiniAero::schedUpdateState(const LevelP& level,
   task->computes(conserved_label);
 
   sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
-
 }
+
 //______________________________________________________________________
 //
 void MiniAero::computeStableTimestep(const ProcessorGroup*,
@@ -295,7 +312,6 @@ void MiniAero::computeStableTimestep(const ProcessorGroup*,
                                      DataWarehouse*,
                                      DataWarehouse* new_dw)
 {
-
   const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -305,19 +321,14 @@ void MiniAero::computeStableTimestep(const ProcessorGroup*,
     double delX = dx.x();
     double delY = dx.y();
     double delZ = dx.z();
-    double delt_CFL;
-    double delt;
-
-    constCCVariable<double> speedSound;
-    constCCVariable<Vector> vel_CC;
-    Ghost::GhostType  gn  = Ghost::None;
+    double delt = 1000.0;
 
     IntVector badCell(0,0,0);
-    delt_CFL  = 1000.0;
-    delt      = 1000;
-
     int indx = 0; 
 
+    Ghost::GhostType  gn  = Ghost::None;
+    constCCVariable<double> speedSound;
+    constCCVariable<Vector> vel_CC;
     new_dw->get(speedSound, speedSound_CClabel, indx, patch, gn, 0 );
     new_dw->get(vel_CC,     vel_CClabel,        indx, patch, gn, 0 );
 
@@ -329,16 +340,16 @@ void MiniAero::computeStableTimestep(const ProcessorGroup*,
       double B = d_CFL*delY/(speed_Sound + fabs(vel_CC[c].y()) ); 
       double C = d_CFL*delZ/(speed_Sound + fabs(vel_CC[c].z()) );
 
-      delt_CFL = std::min(A, delt_CFL);
-      delt_CFL = std::min(B, delt_CFL);
-      delt     = std::min(C, delt_CFL);
-
+      delt = std::min(A, delt);
+      delt = std::min(B, delt);
+      delt = std::min(C, delt);
 
       if (A < 1e-20 || B < 1e-20 || C < 1e-20) {
         if (badCell == IntVector(0,0,0)) {
           badCell = c;
         }
-        cout << d_myworld->myrank() << " Bad cell " << c << " (" << patch->getID() << "-" << level->getIndex() << "): " << vel_CC[c]<< endl;
+        std::cerr << d_myworld->myrank() << " Bad cell " << c << " (" << patch->getID()
+                  << "-" << level->getIndex() << "): " << vel_CC[c]<< std::endl;
       }
 
       //__________________________________
@@ -346,7 +357,7 @@ void MiniAero::computeStableTimestep(const ProcessorGroup*,
     //__________________________________
     //  Bullet proofing
     if(delt < 1e-20) {
-      ostringstream warn;
+      std::ostringstream warn;
       const Level* level = getLevel(patches);
       warn << "ERROR MINIAERO:(L-"<< level->getIndex()
            << "):ComputeStableTimestep: delT < 1e-20 on cell " << badCell;
@@ -380,19 +391,18 @@ void MiniAero::initialize(const ProcessorGroup*,
     CCVariable<double>  press_CC;
     CCVariable<Vector>  vel_CC;
     CCVariable<double>  speedSound;
-    CCVariable<double> viscosity;
+    CCVariable<double>  viscosity;
     int indx = 0; 
 
     //__________________________________
-    new_dw->allocateAndPut(conserved_CC,  conserved_label,  indx, patch);
+    new_dw->allocateAndPut(conserved_CC,  conserved_label, indx, patch);
 
-    new_dw->allocateAndPut(rho_CC,     rho_CClabel,         indx, patch);
-    new_dw->allocateAndPut(Temp_CC,    temp_CClabel,        indx, patch);
-    new_dw->allocateAndPut(press_CC,   press_CClabel,       indx, patch);
-    new_dw->allocateAndPut(vel_CC,     vel_CClabel,         indx, patch);
+    new_dw->allocateAndPut(rho_CC,     rho_CClabel,        indx, patch);
+    new_dw->allocateAndPut(Temp_CC,    temp_CClabel,       indx, patch);
+    new_dw->allocateAndPut(press_CC,   press_CClabel,      indx, patch);
+    new_dw->allocateAndPut(vel_CC,     vel_CClabel,        indx, patch);
     new_dw->allocateAndPut(speedSound, speedSound_CClabel, indx, patch);
-    new_dw->allocateAndPut(viscosity,    viscosityLabel,    indx, patch);
-
+    new_dw->allocateAndPut(viscosity,  viscosityLabel,     indx, patch);
 
     initializeCells(rho_CC, Temp_CC, press_CC, vel_CC,  patch, new_dw, d_geom_objs);
 
@@ -423,9 +433,10 @@ void MiniAero::initialize(const ProcessorGroup*,
       viscosity[c]  = getViscosity(Temp_CC[c]);
       speedSound[c] = sqrt( d_gamma * d_R * Temp_CC[c]);
     }
+
     //____ B U L L E T   P R O O F I N G----
     IntVector neg_cell;
-    ostringstream warn, base;
+    std::ostringstream warn, base;
     base <<"ERROR MINIAERO:(L-"<<L_indx<<"):initialize, mat cell ";
 
     if( !areAllValuesPositive(rho_CC, neg_cell) ) {
@@ -440,23 +451,25 @@ void MiniAero::initialize(const ProcessorGroup*,
     
 }
 
-void MiniAero::getGeometryObjects(ProblemSpecP& ps , std::vector<GeometryObject*>& geom_objs)
+void MiniAero::getGeometryObjects(ProblemSpecP& ps,
+                                  std::vector<GeometryObject*>& geom_objs)
 {
   //__________________________________
   // Loop through all of the pieces in this geometry object
   int piece_num = 0;
   
-  list<GeometryObject::DataItem> geom_obj_data;
+  std::list<GeometryObject::DataItem> geom_obj_data;
   geom_obj_data.push_back(GeometryObject::DataItem("res",        GeometryObject::IntVector));
   geom_obj_data.push_back(GeometryObject::DataItem("temperature",GeometryObject::Double));
   geom_obj_data.push_back(GeometryObject::DataItem("pressure",   GeometryObject::Double));
   geom_obj_data.push_back(GeometryObject::DataItem("density",    GeometryObject::Double));
   geom_obj_data.push_back(GeometryObject::DataItem("velocity",   GeometryObject::Vector));
   
-  for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");geom_obj_ps != 0;
+  for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
+       geom_obj_ps != 0;
        geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
        
-    vector<GeometryPieceP> pieces;
+    std::vector<GeometryPieceP> pieces;
     GeometryPieceFactory::create(geom_obj_ps, pieces);
     
     GeometryPieceP mainpiece;
@@ -471,27 +484,25 @@ void MiniAero::getGeometryObjects(ProblemSpecP& ps , std::vector<GeometryObject*
     piece_num++;
     geom_objs.push_back(scinew GeometryObject(mainpiece, geom_obj_ps, geom_obj_data));
   } 
-
-
 }
 
 /* ---------------------------------------------------------------------
  Purpose~ Initialize primitive variables
 _____________________________________________________________________*/
 void MiniAero::initializeCells(CCVariable<double>& rho_CC,
-                                     CCVariable<double>& temp_CC,
-                                     CCVariable<double>& press_CC,
-                                     CCVariable<Vector>& vel_CC,
-                                     const Patch* patch,
-                                     DataWarehouse* new_dw,
-                                     std::vector<GeometryObject*>& geom_objs)
+                               CCVariable<double>& temp_CC,
+                               CCVariable<double>& press_CC,
+                               CCVariable<Vector>& vel_CC,
+                               const Patch* patch,
+                               DataWarehouse* new_dw,
+                               std::vector<GeometryObject*>& geom_objs)
 {
-
-
-  // Zero the
-  vel_CC.initialize(Vector(0.,0.,0.));
-  rho_CC.initialize(0.);
-  temp_CC.initialize(0.);
+  // Initialize velocity, density, temperature, and pressure to "EVIL_NUM".
+  // If any of these variables stay at that value, the initialization
+  // is not done correctly.
+  vel_CC.initialize(Vector(d_EVIL_NUM,d_EVIL_NUM,d_EVIL_NUM));
+  rho_CC.initialize(d_EVIL_NUM);
+  temp_CC.initialize(d_EVIL_NUM);
   press_CC.initialize(d_EVIL_NUM);
 
   // Loop over geometry objects
@@ -505,22 +516,22 @@ void MiniAero::initializeCells(CCVariable<double>& rho_CC,
     for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       IntVector c = *iter;
       Point lower = patch->nodePosition(c) + dcorner;
-      int count = 0;
 
-      for(int ix=0;ix < ppc.x(); ix++){
-        for(int iy=0;iy < ppc.y(); iy++){
-          for(int iz=0;iz < ppc.z(); iz++){
+      bool inside = false;
+      for(int ix=0; !inside && ix < ppc.x(); ix++){
+        for(int iy=0; !inside && iy < ppc.y(); iy++){
+          for(int iz=0; !inside && iz < ppc.z(); iz++){
 
             IntVector idx(ix, iy, iz);
             Point p = lower + dxpp*idx;
             if(piece->inside(p))
-              count++;
+              inside = true;
           }
         }
       }
       //__________________________________
       // For single materials with more than one object
-      if ( count > 0 ) {
+      if (inside) {
         vel_CC[c]     = geom_objs[obj]->getInitialData_Vector("velocity");
         rho_CC[c]     = geom_objs[obj]->getInitialData_double("density");
         temp_CC[c]    = geom_objs[obj]->getInitialData_double("temperature");
@@ -532,55 +543,56 @@ void MiniAero::initializeCells(CCVariable<double>& rho_CC,
 
 //______________________________________________________________________
 //
-
 void MiniAero::Primitives(const ProcessorGroup* /*pg*/,
-                             const PatchSubset* patches,
-                             const MaterialSubset* /*matls*/,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw)
+                          const PatchSubset* patches,
+                          const MaterialSubset* /*matls*/,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
     Ghost::GhostType  gn  = Ghost::None;
 
-    
-    CCVariable<double> rho_CC, pressure_CC, Temp_CC, speedSound, mach;
-    CCVariable<Vector> vel_CC;
+    // Requires...
     constCCVariable<Vector5> conserved;
-
     new_dw->get( conserved,  conserved_label, 0, patch, gn, 0 );
 
-    new_dw->allocateAndPut( rho_CC, rho_CClabel,   0,patch );
+    // Provides...
+    CCVariable<double> rho_CC, pressure_CC, Temp_CC, speedSound, mach;
+    new_dw->allocateAndPut( rho_CC,      rho_CClabel,        0, patch );
+    new_dw->allocateAndPut( pressure_CC, press_CClabel,      0, patch );
+    new_dw->allocateAndPut( Temp_CC,     temp_CClabel,       0, patch );
+    new_dw->allocateAndPut( speedSound,  speedSound_CClabel, 0, patch );
+    new_dw->allocateAndPut( mach,        machlabel,          0, patch );
+
+    CCVariable<Vector> vel_CC;
     new_dw->allocateAndPut( vel_CC, vel_CClabel,   0,patch );
-    new_dw->allocateAndPut(pressure_CC,press_CClabel,     0,patch );
-    new_dw->allocateAndPut( Temp_CC, temp_CClabel, 0,patch);
-    new_dw->allocateAndPut( speedSound, speedSound_CClabel, 0,patch);
-    new_dw->allocateAndPut( mach,  machlabel, 0, patch);
 
     //__________________________________
     // Backout primitive quantities from
     // the conserved ones.
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
-      rho_CC[c]    = conserved[c].rho;
-      
+      rho_CC[c]  = conserved[c].rho;
+
       vel_CC[c].x( conserved[c].momX/rho_CC[c] );
       vel_CC[c].y( conserved[c].momY/rho_CC[c] );
       vel_CC[c].z( conserved[c].momZ/rho_CC[c] );
       
-      Temp_CC[c] = (d_gamma-1.)/d_R*( conserved[c].eng/conserved[c].rho - 0.5 * vel_CC[c].length2() );
+      Temp_CC[c] = (d_gamma-1.)/d_R*(conserved[c].eng/conserved[c].rho - 0.5*vel_CC[c].length2());
       
-      pressure_CC[c]=rho_CC[c]*d_R*Temp_CC[c];
+      pressure_CC[c] = rho_CC[c] * d_R * Temp_CC[c];
     }
   
-    MiniAeroNS::setBC( rho_CC,   "Density",     patch, 0 );
-    MiniAeroNS::setBC( Temp_CC,  "Temperature", patch, 0 );
-    MiniAeroNS::setBC( vel_CC,   "Velocity",    patch, 0 );
+    MiniAeroNS::setBC( rho_CC,      "Density",     patch, 0 );
+    MiniAeroNS::setBC( Temp_CC,     "Temperature", patch, 0 );
+    MiniAeroNS::setBC( vel_CC,      "Velocity",    patch, 0 );
     MiniAeroNS::setBC( pressure_CC, "Pressure",    patch, 0 );
+
     //__________________________________
     // Compute Speed of Sound and Mach
-    // This is done after BCs are set
+    // This must be done after BCs are set
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
       speedSound[c] = sqrt(d_gamma*d_R*Temp_CC[c]);
@@ -592,10 +604,10 @@ void MiniAero::Primitives(const ProcessorGroup* /*pg*/,
 
 
 void MiniAero::cellCenteredFlux(const ProcessorGroup* /*pg*/,
-                             const PatchSubset* patches,
-                             const MaterialSubset* /*matls*/,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw)
+                                const PatchSubset* patches,
+                                const MaterialSubset* /*matls*/,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -628,18 +640,18 @@ void MiniAero::cellCenteredFlux(const ProcessorGroup* /*pg*/,
           KE += 0.5*rho_CC[c]*vel_CC[c][jdim]*vel_CC[c][jdim];
           flux_mom_CC[c](idim,jdim)      = rho_CC[c]*vel_CC[c][idim]*vel_CC[c][jdim];
         }
-        flux_mom_CC[c](idim, idim)      += pressure_CC[c];
-        flux_energy_CC[c][idim]            = KE + pressure_CC[c]*(d_gamma/(d_gamma-1) );
+        flux_mom_CC[c](idim, idim) += pressure_CC[c];
+        flux_energy_CC[c][idim]     = KE + pressure_CC[c]*(d_gamma/(d_gamma-1));
       }
     }
   }
 }
 
 void MiniAero::faceCenteredFlux(const ProcessorGroup* /*pg*/,
-                             const PatchSubset* patches,
-                             const MaterialSubset* /*matls*/,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw)
+                                const PatchSubset* patches,
+                                const MaterialSubset* /*matls*/,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -706,12 +718,11 @@ void MiniAero::faceCenteredFlux(const ProcessorGroup* /*pg*/,
   }
 }
 void MiniAero::updateResidual(const ProcessorGroup* /*pg*/,
-                             const PatchSubset* patches,
-                             const MaterialSubset* /*matls*/,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw)
+                              const PatchSubset* patches,
+                              const MaterialSubset* /*matls*/,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw)
 {
-
   Ghost::GhostType  gn  = Ghost::None;
 
   for(int p=0;p<patches->size();p++){
@@ -761,27 +772,26 @@ void MiniAero::updateResidual(const ProcessorGroup* /*pg*/,
       IntVector ZOffset(0,0,1);
 
       residual_CC[c][0] = (flux_mass_FCX[c + XOffset]  - flux_mass_FCX[c])*dy*dz + 
-	(flux_mass_FCY[c + YOffset]  - flux_mass_FCY[c])*dx*dz + 
-	(flux_mass_FCZ[c + ZOffset]  - flux_mass_FCZ[c])*dy*dx;
+        (flux_mass_FCY[c + YOffset]  - flux_mass_FCY[c])*dx*dz + 
+        (flux_mass_FCZ[c + ZOffset]  - flux_mass_FCZ[c])*dy*dx;
 
       residual_CC[c][4] = (flux_energy_FCX[c + XOffset]  - flux_energy_FCX[c])*dy*dz + 
-	(flux_energy_FCY[c + YOffset]  - flux_energy_FCY[c])*dx*dz + 
-	(flux_energy_FCZ[c + ZOffset]  - flux_energy_FCZ[c])*dy*dx;
+        (flux_energy_FCY[c + YOffset]  - flux_energy_FCY[c])*dx*dz + 
+        (flux_energy_FCZ[c + ZOffset]  - flux_energy_FCZ[c])*dy*dx;
 
       for(int idim = 0; idim < 3; ++idim) {
-	residual_CC[c][idim + 1] =  (flux_mom_FCX[c + XOffset][idim]  - flux_mom_FCX[c][idim])*dy*dz + 
-	(flux_mom_FCY[c + YOffset][idim]  - flux_mom_FCY[c][idim])*dx*dz + 
-	(flux_mom_FCZ[c + ZOffset][idim]  - flux_mom_FCZ[c][idim])*dy*dx;
+        residual_CC[c][idim + 1] =  (flux_mom_FCX[c + XOffset][idim]  - flux_mom_FCX[c][idim])*dy*dz + 
+        (flux_mom_FCY[c + YOffset][idim]  - flux_mom_FCY[c][idim])*dx*dz + 
+        (flux_mom_FCZ[c + ZOffset][idim]  - flux_mom_FCZ[c][idim])*dy*dx;
       }
-
     }
   }
 }
 void MiniAero::updateState(const ProcessorGroup* /*pg*/,
-                             const PatchSubset* patches,
-                             const MaterialSubset* /*matls*/,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw)
+                           const PatchSubset* patches,
+                           const MaterialSubset* /*matls*/,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw)
 {
   Ghost::GhostType  gn  = Ghost::None;
   delt_vartype dt;
@@ -797,7 +807,7 @@ void MiniAero::updateState(const ProcessorGroup* /*pg*/,
     CCVariable<Vector5> newState_CC;
 
     new_dw->get( residual_CC,  residual_CClabel, 0, patch, gn, 0);
-    old_dw->get( oldState_CC,  conserved_label, 0, patch, gn, 0);
+    old_dw->get( oldState_CC,  conserved_label,  0, patch, gn, 0);
 
     new_dw->allocateAndPut( newState_CC, conserved_label,   0,patch );
 
@@ -806,7 +816,7 @@ void MiniAero::updateState(const ProcessorGroup* /*pg*/,
       IntVector c = *iter;
   
       for(unsigned k = 0; k < 5; k++) {
-	newState_CC[c][k] = oldState_CC[c][k] - dt*residual_CC[c][k]/(cell_volume);
+        newState_CC[c][k] = oldState_CC[c][k] - dt*residual_CC[c][k]/(cell_volume);
       }
     }
   }

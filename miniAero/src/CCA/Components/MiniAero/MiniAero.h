@@ -37,9 +37,9 @@
 
 namespace Uintah {
 
-class SimpleMaterial;
+  class SimpleMaterial;
 
-/**************************************
+  /**************************************
 
  CLASS
  MiniAero
@@ -57,11 +57,11 @@ class SimpleMaterial;
 
 
  DESCRIPTION
- 2D implementation of MiniAero's Algorithm using Euler's method.
+ 3D implementation of MiniAero's Algorithm using Euler's method.
 
- ****************************************/
+  ****************************************/
 
-class MiniAero : public UintahParallelComponent, public SimulationInterface {
+  class MiniAero : public UintahParallelComponent, public SimulationInterface {
 
   public:
 
@@ -78,10 +78,10 @@ class MiniAero : public UintahParallelComponent, public SimulationInterface {
                                     SchedulerP& sched);
 
     virtual void scheduleComputeStableTimestep(const LevelP& level,
-                                               SchedulerP&);
+                                               SchedulerP& sched);
 
     virtual void scheduleTimeAdvance(const LevelP& level,
-                                     SchedulerP&);
+                                     SchedulerP& sched);
 
   private:
 
@@ -117,27 +117,27 @@ class MiniAero : public UintahParallelComponent, public SimulationInterface {
     void schedUpdateState(const LevelP& level,SchedulerP& sched);
     
     void Primitives(const ProcessorGroup*,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse* old_dw,
-                     DataWarehouse* new_dw);
+                    const PatchSubset* patches,
+                    const MaterialSubset* matls,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw);
 
     void cellCenteredFlux(const ProcessorGroup*,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse* old_dw,
-                     DataWarehouse* new_dw);
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw);
 
     void faceCenteredFlux(const ProcessorGroup*,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse* old_dw,
-                     DataWarehouse* new_dw);
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw);
     void updateResidual(const ProcessorGroup*,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse* old_dw,
-                     DataWarehouse* new_dw);
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw);
     void updateState(const ProcessorGroup*,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
@@ -176,21 +176,15 @@ class MiniAero : public UintahParallelComponent, public SimulationInterface {
     SimpleMaterial* mymat_;
     std::vector<GeometryObject*> d_geom_objs;
 
+    // Do not implement...
     MiniAero(const MiniAero&);
     MiniAero& operator=(const MiniAero&);
 
-    double getViscosity(const double & temp) const
+    double getViscosity(double temp) const
     {
       return 1.458E-6*pow(temp,1.5)/(temp+110.4);
     }
-
-    double getGamma() const
-    {
-      return d_gamma;
-    }
-
-
-};  // end class MiniAero
+  };  // end class MiniAero
 
 }  // end namespace Uintah
 
