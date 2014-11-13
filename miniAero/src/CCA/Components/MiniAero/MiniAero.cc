@@ -280,6 +280,7 @@ void MiniAero::schedUpdateState(const LevelP& level,
   task->requires(Task::OldDW,sharedState_->get_delt_label());
   task->requires(Task::OldDW,conserved_label,Ghost::None);
   task->requires(Task::NewDW,residual_CClabel,Ghost::None);
+  task->requires(Task::OldDW, sharedState_->get_delt_label());
 
   task->computes(conserved_label);
 
