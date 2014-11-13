@@ -44,6 +44,7 @@ class  Short27;
 class  TypeDescription;
 struct Stencil7;
 struct Stencil4;
+struct Vector5;
 
 typedef int64_t long64;
 
@@ -71,6 +72,7 @@ typedef int64_t long64;
 
  const TypeDescription* fun_getTypeDescription(Stencil7*);
  const TypeDescription* fun_getTypeDescription(Stencil4*);
+ const TypeDescription* fun_getTypeDescription(Vector5*);
  
  const TypeDescription* fun_getTypeDescription(FILE**);
 

@@ -131,6 +131,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>advect.uda</filebase>
+      <outputInitTimestep/>
       <outputTimestepInterval>1</outputTimestepInterval>
       
       <save label="velocity"/>
