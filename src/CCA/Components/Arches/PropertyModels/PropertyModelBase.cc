@@ -80,20 +80,5 @@ PropertyModelBase::timeStepInit( const ProcessorGroup* pc,
                                  DataWarehouse* old_dw, 
                                  DataWarehouse* new_dw )
 {
-
-  for (int p=0; p < patches->size(); p++){
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
-
-    CCVariable<double> prop; 
-    constCCVariable<double> old_prop; 
-    new_dw->allocateAndPut( prop, _prop_label, matlIndex, patch ); 
-    old_dw->get(old_prop, _prop_label, matlIndex, patch, Ghost::None, 0); 
-
-
-    //value initialization should occur in the property implementation
-
-  }
+  new_dw->transferFrom(old_dw,_prop_label ,  patches, matls);
 }
