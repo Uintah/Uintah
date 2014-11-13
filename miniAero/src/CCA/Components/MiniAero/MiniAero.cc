@@ -783,13 +783,14 @@ void MiniAero::updateState(const ProcessorGroup* /*pg*/,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw)
 {
-
   Ghost::GhostType  gn  = Ghost::None;
   delt_vartype dt;
   old_dw->get(dt, sharedState_->get_delt_label());
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+    const Vector& cellSize = patch->getLevel()->dCell();
+    const double cell_volume = cellSize[0]*cellSize[1]*cellSize[2];
 
     constCCVariable<Vector5> residual_CC;
     constCCVariable<Vector5> oldState_CC;
@@ -805,9 +806,8 @@ void MiniAero::updateState(const ProcessorGroup* /*pg*/,
       IntVector c = *iter;
   
       for(unsigned k = 0; k < 5; k++) {
-	newState_CC[c][k] = dt*(oldState_CC[c][k] - residual_CC[c][k]);
+	newState_CC[c][k] = oldState_CC[c][k] - dt*residual_CC[c][k]/(cell_volume);
       }
-
     }
   }
 }
