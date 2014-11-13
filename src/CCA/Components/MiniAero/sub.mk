@@ -31,7 +31,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := CCA/Components/MiniAero
 
-SRCS       += $(SRCDIR)/MiniAero.cc 
+SRCS       += $(SRCDIR)/MiniAero.cc \
+              $(SRCDIR)/BoundaryCond.cc
        
 #include $(SCIRUN_SCRIPTS)/recurse.mk          
 
