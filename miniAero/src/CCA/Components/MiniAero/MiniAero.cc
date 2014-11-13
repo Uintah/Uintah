@@ -396,10 +396,10 @@ void MiniAero::initialize(const ProcessorGroup*,
 
     initializeCells(rho_CC, Temp_CC, press_CC, vel_CC,  patch, new_dw, d_geom_objs);
 
-    setBC( rho_CC,   "Density",     patch, indx );
-    setBC( Temp_CC,  "Temperature", patch, indx );
-    setBC( vel_CC,   "Velocity",    patch, indx );
-    setBC( press_CC, "Pressure",    patch, indx );
+    MiniAeroNS::setBC( rho_CC,   "Density",     patch, indx );
+    MiniAeroNS::setBC( Temp_CC,  "Temperature", patch, indx );
+    MiniAeroNS::setBC( vel_CC,   "Velocity",    patch, indx );
+    MiniAeroNS::setBC( press_CC, "Pressure",    patch, indx );
 
     //__________________________________
     //  compute the speed of sound
@@ -574,10 +574,10 @@ void MiniAero::Primitives(const ProcessorGroup* /*pg*/,
       pressure_CC[c]=rho_CC[c]*d_R*Temp_CC[c];
     }
   
-    setBC( rho_CC,   "Density",     patch, 0 );
-    setBC( Temp_CC,  "Temperature", patch, 0 );
-    setBC( vel_CC,   "Velocity",    patch, 0 );
-    setBC( pressure_CC, "Pressure",    patch, 0 );
+    MiniAeroNS::setBC( rho_CC,   "Density",     patch, 0 );
+    MiniAeroNS::setBC( Temp_CC,  "Temperature", patch, 0 );
+    MiniAeroNS::setBC( vel_CC,   "Velocity",    patch, 0 );
+    MiniAeroNS::setBC( pressure_CC, "Pressure",    patch, 0 );
     //__________________________________
     // Compute Speed of Sound and Mach
     // This is done after BCs are set

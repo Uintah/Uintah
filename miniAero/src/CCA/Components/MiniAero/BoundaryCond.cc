@@ -31,9 +31,15 @@
  //        not defined
 
 using namespace std;
-using namespace Uintah;
-namespace Uintah {
 
+namespace Uintah {
+namespace MiniAeroNS {
+
+// Note, these functions are named the same as the ones in ICE (and ICE-sm), and I believe
+// do the exact same thing.  They really should be moved up to a common library so that
+// ICE, ICE-sm, and MiniAero could all just use them and we would not have code duplication.
+// However, this will have to wait for another day.  For now, we are just putting them
+// in a "MiniAero" namespace to keep them from conflicting / being confused with their twins.
 
 /* --------------------------------------------------------------------- 
  Purpose~   Takes care any CCvariable< >
@@ -334,4 +340,5 @@ template void setBC(CCVariable<Vector>& variable, const std::string& desc,const 
 
 
 
+}  // using namespace MiniAeroNS
 }  // using namespace Uintah

@@ -40,6 +40,8 @@
 
 
 namespace Uintah {
+namespace MiniAeroNS {
+
   using namespace SCIRun;
   
   static DebugStream BC_dbg("BC_dbg", false);
@@ -214,5 +216,6 @@ void setBC_FC(T& vel_FC,
     }  // found iterator
   }  // face loop
 }
+} // End namespace MiniAeroNS
 } // End namespace Uintah
 #endif
