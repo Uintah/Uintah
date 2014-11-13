@@ -54,6 +54,7 @@ SRCS += \
         $(SRCDIR)/SoleVariableBase.cc           \
         $(SRCDIR)/Stencil7.cc                   \
         $(SRCDIR)/Stencil4.cc                   \
+        $(SRCDIR)/Vector5.cc                    \
         $(SRCDIR)/Utils.cc                      \
         $(SRCDIR)/ugc_templates.cc              \
         $(SRCDIR)/VarLabel.cc                   \

@@ -37,7 +37,7 @@
 #include <Core/Grid/SimpleMaterial.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Math/Matrix3.h>
-#include <Core/Grid/Variables/Stencil7.h>
+#include <Core/Grid/Variables/Vector5.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Grid/DbgOutput.h>
@@ -65,7 +65,7 @@ static DebugStream dbg("MINIAERO", false);
 MiniAero::MiniAero(const ProcessorGroup* myworld)
     : UintahParallelComponent(myworld)
 {
-  conserved_label = VarLabel::create("conserved", CCVariable<Stencil7>::getTypeDescription());
+  conserved_label = VarLabel::create("conserved", CCVariable<Vector5>::getTypeDescription());
 
   rho_CClabel = VarLabel::create("density", CCVariable<double>::getTypeDescription());
   vel_CClabel = VarLabel::create("velocity", CCVariable<Vector>::getTypeDescription());
@@ -87,7 +87,7 @@ MiniAero::MiniAero(const ProcessorGroup* myworld)
   flux_mass_FCZlabel = VarLabel::create("faceZ_flux_mass", SFCZVariable<Vector>::getTypeDescription());
   flux_mom_FCZlabel = VarLabel::create("faceZ_flux_mom", SFCZVariable<Vector>::getTypeDescription());
   flux_energy_FCZlabel = VarLabel::create("faceZ_flux_energy", SFCZVariable<Vector>::getTypeDescription());
-  residual_CClabel = VarLabel::create("residual", CCVariable<Stencil7>::getTypeDescription());
+  residual_CClabel = VarLabel::create("residual", CCVariable<Vector5>::getTypeDescription());
 }
 
 MiniAero::~MiniAero()
@@ -373,7 +373,7 @@ void MiniAero::initialize(const ProcessorGroup*,
 
     printTask(patches, patch, dbg, "Doing Miniaero::initialize" );
 
-    CCVariable<Stencil7> conserved_CC;
+    CCVariable<Vector5> conserved_CC;
 
     CCVariable<double>  rho_CC;
     CCVariable<double>  Temp_CC;
@@ -407,17 +407,21 @@ void MiniAero::initialize(const ProcessorGroup*,
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       IntVector c = *iter;
      
-      conserved_CC[c][0] = rho_CC[c];
-      conserved_CC[c][1] = rho_CC[c]*vel_CC[c].x();
-      conserved_CC[c][2] = rho_CC[c]*vel_CC[c].y(); 
-      conserved_CC[c][3] = rho_CC[c]*vel_CC[c].z();
-      conserved_CC[c][4] =  0.5*rho_CC[c]*(
-		vel_CC[c].x()*vel_CC[c].x()+
-		vel_CC[c].y()*vel_CC[c].y()+
-		vel_CC[c].z()*vel_CC[c].z())+
-		press_CC[c]/(d_gamma-1.);
-      viscosity[c] = getViscosity(Temp_CC[c]);
-      speedSound[c] = sqrt(d_gamma*d_R*Temp_CC[c]);
+      double velX  = vel_CC[c].x();    // for readability
+      double velY  = vel_CC[c].y();
+      double velZ  = vel_CC[c].z();
+      double rho   = rho_CC[c];
+      
+      conserved_CC[c].rho  = rho;
+      conserved_CC[c].momX = rho * velX;
+      conserved_CC[c].momY = rho * velY; 
+      conserved_CC[c].momZ = rho * velZ;
+      
+      conserved_CC[c].eng  =  0.5*rho*( velX*velX + velY*velY + velZ*velZ)
+                           +  press_CC[c]/(d_gamma-1.);
+                           
+      viscosity[c]  = getViscosity(Temp_CC[c]);
+      speedSound[c] = sqrt( d_gamma * d_R * Temp_CC[c]);
     }
     //____ B U L L E T   P R O O F I N G----
     IntVector neg_cell;
@@ -543,7 +547,7 @@ void MiniAero::Primitives(const ProcessorGroup* /*pg*/,
     
     CCVariable<double> rho_CC, pressure_CC, Temp_CC, speedSound, mach;
     CCVariable<Vector> vel_CC;
-    constCCVariable<Stencil7> conserved;
+    constCCVariable<Vector5> conserved;
 
     new_dw->get( conserved,  conserved_label, 0, patch, gn, 0 );
 
@@ -559,12 +563,14 @@ void MiniAero::Primitives(const ProcessorGroup* /*pg*/,
     // the conserved ones.
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
-      rho_CC[c]    = conserved[c][0];
-      vel_CC[c].x(conserved[c][1]/rho_CC[c]);
-      vel_CC[c].y(conserved[c][2]/rho_CC[c]);
-      vel_CC[c].z(conserved[c][3]/rho_CC[c]);
-      Temp_CC[c] = (d_gamma-1.)/d_R*(conserved[c][4]/conserved[c][0]
-        -0.5*(vel_CC[c].x()*vel_CC[c].x()+vel_CC[c].y()*vel_CC[c].y()+vel_CC[c].z()*vel_CC[c].z()));
+      rho_CC[c]    = conserved[c].rho;
+      
+      vel_CC[c].x( conserved[c].momX/rho_CC[c] );
+      vel_CC[c].y( conserved[c].momY/rho_CC[c] );
+      vel_CC[c].z( conserved[c].momZ/rho_CC[c] );
+      
+      Temp_CC[c] = (d_gamma-1.)/d_R*( conserved[c].eng/conserved[c].rho - 0.5 * vel_CC[c].length2() );
+      
       pressure_CC[c]=rho_CC[c]*d_R*Temp_CC[c];
     }
   
@@ -723,7 +729,7 @@ void MiniAero::updateResidual(const ProcessorGroup* /*pg*/,
     constSFCZVariable<Vector> flux_mom_FCZ;
     constSFCZVariable<double> flux_energy_FCZ;
 
-    CCVariable<Stencil7> residual_CC;
+    CCVariable<Vector5> residual_CC;
 
     new_dw->get( flux_mass_FCX,  flux_mass_FCXlabel, 0, patch, gn, 0);
     new_dw->get( flux_mom_FCX,  flux_mom_FCXlabel, 0, patch, gn, 0);
@@ -785,9 +791,9 @@ void MiniAero::updateState(const ProcessorGroup* /*pg*/,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    constCCVariable<Stencil7> residual_CC;
-    constCCVariable<Stencil7> oldState_CC;
-    CCVariable<Stencil7> newState_CC;
+    constCCVariable<Vector5> residual_CC;
+    constCCVariable<Vector5> oldState_CC;
+    CCVariable<Vector5> newState_CC;
 
     new_dw->get( residual_CC,  residual_CClabel, 0, patch, gn, 0);
     old_dw->get( oldState_CC,  conserved_label, 0, patch, gn, 0);
