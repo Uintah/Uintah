@@ -373,6 +373,7 @@ private:
   ArchesParticlesHelper* _particlesHelper; 
   bool _doLagrangianParticles; 
 
+  std::map<std::string, boost::shared_ptr<TaskFactoryBase> > _boost_factory_map; 
 
 }; // end class Arches
 
