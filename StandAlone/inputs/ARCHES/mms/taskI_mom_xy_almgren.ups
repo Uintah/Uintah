@@ -15,7 +15,7 @@
     <delt_min>0.00001</delt_min>
     <delt_max>5</delt_max>
     <timestep_multiplier>0.5</timestep_multiplier>
-    <max_Timesteps>200</max_Timesteps>
+    <max_Timesteps>5</max_Timesteps>
   </Time>
 
   <DataArchiver>
@@ -37,6 +37,11 @@
     <save label="arches_task_scalar_Fconv"/>
     <save label="arches_task_scalar_D"/>
     <save label="my_model_0"/>
+    <save label="umom"/>
+    <save label="uvelocity"/>
+    <save label="umom_RHS"/>
+    <save label="umom_Fconv"/>
+    <save label="umom_Sij"/>
     <checkpoint cycle="2" interval="0.05"/>
     <compression>gzip</compression>
   </DataArchiver>
@@ -46,7 +51,7 @@
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[1.0,1.0,1.0]</upper>
-        <resolution>[10,10,2]</resolution>
+        <resolution>[10,10,10]</resolution>
         <extraCells>[0,0,0]</extraCells>
         <patches>[1,1,1]</patches>
       </Box>
@@ -74,23 +79,34 @@
       <ScalarTransport>
         <eqn label="arches_task_scalar">
           <diffusion/>
-          <convection scheme="superbee"/>
-          <!--<convection scheme="minmod"/>-->
+          <!--<convection scheme="superbee"/>-->
+          <convection scheme="minmod"/>
         </eqn>
       </ScalarTransport>
 
+      <MomentumTransport>
+        <convection scheme="central"/>
+      </MomentumTransport>
+
       <Initialization>
         <task label="my_great_initializer" eqn="arches_task_scalar" type="wave">
-          <wave type="sine">
-            <grid dependent_type="svol" independent_type="svol"/>
-            <independent_variable label="gridX"/>
-            <sine A="1.0" f=".5" offset="0"/>
-          </wave>
-          <!--<wave type="square">-->
+          <!--<wave type="sine">-->
             <!--<grid dependent_type="svol" independent_type="svol"/>-->
             <!--<independent_variable label="gridX"/>-->
-            <!--<square min="0.0" max="1.0" f="1.0" offset="0.0"/>-->
+            <!--<sine A="1.0" f=".5" offset="0"/>-->
           <!--</wave>-->
+          <wave type="square">
+            <grid dependent_type="svol" independent_type="svol"/>
+            <independent_variable label="gridX"/>
+            <square min="0.0" max="1.0" f="1.0" offset="0.0"/>
+          </wave>
+        </task>
+        <task label="umom_initializer" eqn="umom" type="wave">
+          <wave type="square">
+            <grid dependent_type="xvol" independent_type="svol"/>
+            <independent_variable label="gridX"/>
+            <square min="0.0" max="1.0" f="1.0" offset="0.0"/>
+          </wave>
         </task>
       </Initialization>
 
