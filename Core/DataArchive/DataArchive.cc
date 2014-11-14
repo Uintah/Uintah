@@ -55,9 +55,10 @@ using namespace SCIRun;
 
 DebugStream DataArchive::dbg("DataArchive", false);
 
-DataArchive::DataArchive(const std::string& filebase,
-                         int processor /* = 0 */, int numProcessors /* = 1 */,
-                         bool verbose /* = true */ ) :
+DataArchive::DataArchive( const string & filebase,
+                                int      processor     /* = 0 */,
+                                int      numProcessors /* = 1 */,
+                                bool     verbose       /* = true */ ) :
   ref_cnt(0), lock("DataArchive ref_cnt lock"),
   timestep_cache_size(10), default_cache_size(10), 
   d_filebase(filebase), 
@@ -108,7 +109,6 @@ DataArchive::~DataArchive()
     VarLabel::destroy( vm_iter->second );
   }
 
-  //d_indexDoc->releaseDocument();
 }
 
 // static, so can be called from either DataArchive or TimeData
@@ -133,8 +133,8 @@ DataArchive::queryEndiannessAndBits( ProblemSpecP doc, string & endianness, int 
 }
 
 void
-DataArchive::queryTimesteps( std::vector<int>& index,
-                             std::vector<double>& times )
+DataArchive::queryTimesteps( vector<int>& index,
+                             vector<double>& times )
 {
   double start = Time::currentSeconds();
   if(d_timeData.size() == 0){
@@ -216,7 +216,7 @@ DataArchive::getTimeData(int index)
   if (!td.d_initialized)
     td.init();
 
-  list<int>::iterator is_cached = std::find(d_lastNtimesteps.begin(), d_lastNtimesteps.end(), index);
+  list<int>::iterator is_cached = find(d_lastNtimesteps.begin(), d_lastNtimesteps.end(), index);
   if (is_cached != d_lastNtimesteps.end()) {
     // It's in the list, so yank it in preperation for putting it at
     // the top of the list.
@@ -506,11 +506,14 @@ DataArchive::queryGlobals( vector<string>& names,
                            vector<const Uintah::TypeDescription*>& types)
 {
   double start = Time::currentSeconds();
+
   d_lock.lock();
+
   ProblemSpecP vars = d_indexDoc->findBlock("globals");
-  if(vars == 0)
+  if(vars == 0) {
     return;
-  queryVariables(vars, names, types);
+  }
+  queryVariables( vars, names, types );
 
   d_lock.unlock();
 
@@ -555,7 +558,7 @@ DataArchive::queryVariables( ProblemSpecP     vars,
 }
 
 void
-DataArchive::query( Variable& var, const std::string& name, int matlIndex, 
+DataArchive::query( Variable& var, const string & name, int matlIndex, 
                     const Patch* patch, int index, DataFileInfo* dfi /* = 0 */)
 {
   double tstart = Time::currentSeconds();

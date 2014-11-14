@@ -16,36 +16,36 @@ namespace Uintah{
   template <>
   struct MomHelper<SpatialOps::XVolField>{
 
-    typedef typename FaceTypes<SpatialOps::XVolField>::XFace XFaceT; 
-    typedef typename FaceTypes<SpatialOps::XVolField>::YFace YFaceT; 
-    typedef typename FaceTypes<SpatialOps::XVolField>::ZFace ZFaceT; 
+    typedef FaceTypes<SpatialOps::XVolField>::XFace XFaceT; 
+    typedef FaceTypes<SpatialOps::XVolField>::YFace YFaceT; 
+    typedef FaceTypes<SpatialOps::XVolField>::ZFace ZFaceT; 
 
-    typedef typename SpatialOps::YVolField VT; 
-    typedef typename SpatialOps::ZVolField WT; 
+    typedef SpatialOps::YVolField VT; 
+    typedef SpatialOps::ZVolField WT; 
 
   };
 
   template <>
   struct MomHelper<SpatialOps::YVolField>{
 
-    typedef typename FaceTypes<SpatialOps::YVolField>::YFace XFaceT; 
-    typedef typename FaceTypes<SpatialOps::YVolField>::ZFace YFaceT; 
-    typedef typename FaceTypes<SpatialOps::YVolField>::XFace ZFaceT; 
+    typedef FaceTypes<SpatialOps::YVolField>::YFace XFaceT; 
+    typedef FaceTypes<SpatialOps::YVolField>::ZFace YFaceT; 
+    typedef FaceTypes<SpatialOps::YVolField>::XFace ZFaceT; 
 
-    typedef typename SpatialOps::ZVolField VT; 
-    typedef typename SpatialOps::XVolField WT; 
+    typedef SpatialOps::ZVolField VT; 
+    typedef SpatialOps::XVolField WT; 
 
   };
 
   template <>
   struct MomHelper<SpatialOps::ZVolField>{
 
-    typedef typename FaceTypes<SpatialOps::ZVolField>::ZFace XFaceT; 
-    typedef typename FaceTypes<SpatialOps::ZVolField>::XFace YFaceT; 
-    typedef typename FaceTypes<SpatialOps::ZVolField>::YFace ZFaceT; 
+    typedef FaceTypes<SpatialOps::ZVolField>::ZFace XFaceT; 
+    typedef FaceTypes<SpatialOps::ZVolField>::XFace YFaceT; 
+    typedef FaceTypes<SpatialOps::ZVolField>::YFace ZFaceT; 
 
-    typedef typename SpatialOps::XVolField VT; 
-    typedef typename SpatialOps::YVolField WT; 
+    typedef SpatialOps::XVolField VT; 
+    typedef SpatialOps::YVolField WT; 
 
   };
 
