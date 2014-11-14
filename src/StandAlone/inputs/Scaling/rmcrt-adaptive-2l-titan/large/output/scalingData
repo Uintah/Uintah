@@ -1,0 +1,7 @@
+#file procs startTime endTime aveMean
+rmcrt.bm1.do.large.16.512.8192.out 8192  607.91  2057.02 207.016
+rmcrt.bm1.do.large.16.1024.16384.out 16384  311.86  1027.70 102.263
+rmcrt.bm1.do.large.16.2048.32768.out 32768  186.75  544.45 51.1
+rmcrt.bm1.do.large.16.4096.65536.out 65536  158.82  331.70 24.6971
+rmcrt.bm1.do.large.16.8192.131072.out 131072  260.12  355.95 13.69
+rmcrt.bm1.do.large.16.16384.262144.out 262144  658.18  720.99 8.97286
