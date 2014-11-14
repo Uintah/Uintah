@@ -65,6 +65,7 @@ protected:
 private:
 
     std::vector<std::string> _eqn_names; 
+    VAR_TYPE _mytype; 
 
   
   };
@@ -75,9 +76,8 @@ private:
   FEUpdate<T>::FEUpdate( std::string task_name, int matl_index, std::vector<std::string> eqn_names ) : 
   TaskInterface( task_name, matl_index ){
 
-    // This needs to be done to set the variable type 
-    // for this function. All templated tasks should do this. 
-    set_task_type<T>(); 
+    VarTypeHelper<T> helper; 
+    _mytype = helper.get_vartype(); 
 
     _eqn_names = eqn_names; 
   
