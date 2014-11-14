@@ -57,6 +57,10 @@
 #  include <CCA/Components/Examples/PoissonGPU1.h>
 #endif
 
+#if !defined(NO_ARCHES)
+#  include <CCA/Components/Arches/Arches.h>
+#endif
+
 #if !defined(NO_MPM) && !defined(NO_ARCHES)
 #  include <CCA/Components/MPMArches/MPMArches.h>
 #endif
