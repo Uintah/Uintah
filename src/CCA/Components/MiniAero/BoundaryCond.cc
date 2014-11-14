@@ -54,6 +54,7 @@ void setBC(CCVariable<T>& var_CC,
   if(patch->hasBoundaryFaces() == false){
     return;
   }
+
   BC_CC << "-------- setBC (double) \t"<< desc << " mat_id = " 
              << mat_id <<  ", Patch: "<< patch->getID() << endl;
   Vector cell_dx = patch->dCell();
@@ -107,7 +108,8 @@ void setBC(CCVariable<T>& var_CC,
     }  // child loop
     
     BC_CC << "      "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
-                        << " nCellsTouched: " << nCells << endl;
+	  << " nCellsTouched: " << nCells << endl;
+
     //__________________________________
     //  bulletproofing
     Patch::FaceIteratorType type = Patch::ExtraPlusEdgeCells;
@@ -124,7 +126,7 @@ void setBC(CCVariable<T>& var_CC,
    
     if(throwEx){
       ostringstream warn;
-      warn << "ERROR: MINIAERO: SetBC(CCVariable) Boundary conditions were not set correctly ("<< desc<< ", " 
+      warn << "ERROR: MiniAero: SetBC(CCVariable) Boundary conditions were not set correctly ("<< desc<< ", " 
            << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
            << " nCells Touched: " << nCells << " nCells on boundary: "<< nFaceCells << ") " << endl;
       throw InternalError(warn.str(), __FILE__, __LINE__);
