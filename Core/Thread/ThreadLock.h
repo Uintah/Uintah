@@ -1,6 +1,3 @@
-#ifndef SCIRun_Core_Thread_ThreadLock_h
-#define SCIRun_Core_Thread_ThreadLock_h
-
 /*
  * The MIT License
  *
@@ -24,6 +21,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
  
 /*
  *  ThreadLock.h:  
@@ -35,6 +33,9 @@
  *   August 1994
  *
  */
+
+#ifndef SCIRun_Core_Thread_ThreadLock_h
+#define SCIRun_Core_Thread_Threadlock_h
 
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
