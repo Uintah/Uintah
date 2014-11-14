@@ -311,8 +311,8 @@ namespace Wasatch{
 
       } // loop over persistent fields
 
-      // uncomment the next line to force Uintah to manage all fields:
-      if (lockAllFields) tree->lock_fields(*fml_);
+      // force Uintah to manage all fields:
+      if( lockAllFields ) tree->lock_fields(*fml_);
 
 #     ifdef HAVE_CUDA
       // For Heterogeneous case only
