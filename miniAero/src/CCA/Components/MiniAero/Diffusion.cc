@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/ICE_sm/Diffusion.h>
+#include <CCA/Components/MiniAero/Diffusion.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
@@ -56,7 +56,7 @@ void scalarDiffusionOperator(DataWarehouse* new_dw,
   //  bullet proofing against AMR
   const Level* level = patch->getLevel();
   if (level->getIndex() > 0) {
-    throw InternalError("AMRICE:scalarDiffusionOperator, computational footprint"
+    throw InternalError("MiniAero:scalarDiffusionOperator, computational footprint"
                         " has not been tested ", __FILE__, __LINE__ );
   }
   
@@ -197,7 +197,7 @@ void computeTauComponents( const Patch* patch,
   //  bullet proofing against AMR
   const Level* level = patch->getLevel();
   if (level->getIndex() > 0) {
-    throw InternalError("AMRICE:computeTauX, computational footprint "
+    throw InternalError("MiniAero:computeTauX, computational footprint "
                         " has not been tested ", __FILE__, __LINE__ );
   }
 

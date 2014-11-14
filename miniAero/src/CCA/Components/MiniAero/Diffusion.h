@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef __ICE_SM_DIFFUSION_H__
-#define __ICE_SM_DIFFUSION_H__
+#ifndef __MiniAero_SM_DIFFUSION_H__
+#define __MiniAero_SM_DIFFUSION_H__
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>

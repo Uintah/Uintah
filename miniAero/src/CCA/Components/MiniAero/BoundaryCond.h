@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef __ICE_SM_BOUNDARYCOND_H__
-#define __ICE_SM_BOUNDARYCOND_H__
+#ifndef __MiniAero_SM_BOUNDARYCOND_H__
+#define __MiniAero_SM_BOUNDARYCOND_H__
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/SimulationState.h>
@@ -208,7 +208,7 @@ void setBC_FC(T& vel_FC,
       
       if(nCells != nFaceCells &&  bc_kind != "Neumann"){
         std::ostringstream warn;
-        warn << "ERROR ICE: Boundary conditions were not set for ("<< whichVel << ", " 
+        warn << "ERROR MiniAero: Boundary conditions were not set for ("<< whichVel << ", " 
              << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
              << " nCells Touched: " << nCells << " nCells on boundary: "<< nFaceCells << ") " << std::endl;
         throw InternalError(warn.str(), __FILE__, __LINE__);
