@@ -1,6 +1,5 @@
 #include <CCA/Components/Arches/Transport/ScalarRHS.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
-#include <CCA/Components/Arches/TransportEqns/Discretization_new.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <spatialops/structured/FVStaggered.h>
 
@@ -38,13 +37,10 @@ TaskInterface( task_name, matl_index ) {
   _Fconv_name = task_name+"_Fconv"; 
   _Fdiff_name = task_name+"_Fdiff"; 
 
-  _disc = scinew Discretization_new(); 
-
 }
 
 ScalarRHS::~ScalarRHS(){ 
 
-  delete _disc; 
 }
 
 void 

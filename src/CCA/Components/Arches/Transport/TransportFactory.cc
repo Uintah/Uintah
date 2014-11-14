@@ -1,5 +1,6 @@
 #include <CCA/Components/Arches/Transport/TransportFactory.h>
 #include <CCA/Components/Arches/Transport/ScalarRHS.h>
+#include <CCA/Components/Arches/Transport/URHS.h>
 #include <CCA/Components/Arches/Transport/FEUpdate.h>
 #include <CCA/Components/Arches/Transport/SSPInt.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
@@ -69,6 +70,41 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     _active_tasks.push_back( ssp_task_name );  
   
   }
+
+  //Momentum: 
+  if ( db->findBlock("MomentumTransport")){ 
+
+    typedef SpatialOps::XVolField XVol;
+    typedef SpatialOps::YVolField YVol;
+    typedef SpatialOps::ZVolField ZVol;
+
+    //---u 
+    std::string u_name = "uvelocity"; 
+    std::string v_name = "vvelocity"; 
+    std::string w_name = "wvelocity"; 
+
+    std::string task_name = "umom";
+
+    TaskInterface::TaskBuilder* umom_tsk = scinew URHS<XVol>::Builder( task_name, 0, u_name, v_name, w_name );
+    register_task( task_name, umom_tsk ); 
+
+    _active_tasks.push_back(task_name); 
+
+    //---v
+    task_name = "vmom";
+    TaskInterface::TaskBuilder* vmom_tsk = scinew URHS<YVol>::Builder( task_name, 0, v_name, w_name, u_name );
+    register_task( task_name, vmom_tsk ); 
+
+    _active_tasks.push_back(task_name); 
+
+    //---w
+    task_name = "wmom";
+    TaskInterface::TaskBuilder* wmom_tsk = scinew URHS<ZVol>::Builder( task_name, 0, w_name, u_name, v_name );
+    register_task( task_name, wmom_tsk ); 
+
+    _active_tasks.push_back(task_name); 
+
+  }
 }
 
 void 
@@ -100,5 +136,23 @@ TransportFactory::build_all_tasks( ProblemSpecP& db )
 
     tsk->create_local_labels(); 
   
+  }
+
+  if ( db->findBlock("MomentumTransport")){ 
+
+    ProblemSpecP db_mt = db->findBlock("MomentumTransport"); 
+
+    TaskInterface* utsk = retrieve_task("umom"); 
+    utsk->problemSetup(db_mt); 
+    utsk->create_local_labels(); 
+
+    TaskInterface* vtsk = retrieve_task("vmom"); 
+    vtsk->problemSetup(db_mt); 
+    vtsk->create_local_labels(); 
+
+    TaskInterface* wtsk = retrieve_task("wmom"); 
+    wtsk->problemSetup(db_mt); 
+    wtsk->create_local_labels(); 
+
   }
 }
