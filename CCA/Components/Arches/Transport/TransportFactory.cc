@@ -69,7 +69,6 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     _active_tasks.push_back( ssp_task_name );  
   
   }
-
 }
 
 void 
