@@ -221,7 +221,7 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
   numThreads_ = Uintah::Parallel::getNumThreads() - 1;
   if (numThreads_ < 1 && (Uintah::Parallel::usingMPI() || Uintah::Parallel::usingDevice())) {
     if (d_myworld->myrank() == 0) {
-      cerr << "Error: no thread number specified" << std::endl;
+      cerr << "Error: no thread number specified for Unified Scheduler" << std::endl;
       throw ProblemSetupException(
           "This scheduler requires number of threads to be in the range [2, 64],\n.... please use -nthreads <num>, and -gpu if using GPUs",
           __FILE__,
