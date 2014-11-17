@@ -62,6 +62,8 @@ protected:
 
 private:
 
+    VAR_TYPE _mytype; 
+
   
   };
 
@@ -71,9 +73,8 @@ private:
   TemplatedSampleTask<T>::TemplatedSampleTask( std::string task_name, int matl_index ) : 
   TaskInterface( task_name, matl_index ){
 
-    // This needs to be done to set the variable type 
-    // for this function. All templated tasks should do this. 
-    set_task_type<T>(); 
+    VarTypeHelper<T> helper; 
+    _mytype = helper.get_vartype(); 
   
   }
 

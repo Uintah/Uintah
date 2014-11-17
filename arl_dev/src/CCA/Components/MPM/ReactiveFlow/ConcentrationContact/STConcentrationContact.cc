@@ -114,14 +114,14 @@ void STConcentrationContact::computeConcentrationExchange(const ProcessorGroup*,
       
       double contactConcentration = numerator/denominator;
 
-      for(int m = 0; m < numMatls; m++) {
-        concentrationContactConcentrationRate[m][c] =
-                                      (contactConcentration - gConc[m][c])/delT;
-        if (flag->d_fracture){
-          GconcentrationContactConcentrationRate[m][c] =
-                                      (contactConcentration - GConc[m][c])/delT;
-        }
-      }
+//      for(int m = 0; m < numMatls; m++) {
+//        concentrationContactConcentrationRate[m][c] =
+//                                      (contactConcentration - gConc[m][c])/delT;
+//        if (flag->d_fracture){
+//          GconcentrationContactConcentrationRate[m][c] =
+//                                      (contactConcentration - GConc[m][c])/delT;
+//        }
+//      }
     }
   }
 }

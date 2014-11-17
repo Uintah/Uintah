@@ -26,25 +26,31 @@
 #define UINTAH_HOMEBREW_BufferInfo_H
 #include <sci_defs/mpi_defs.h> // For mpi.h
 
-
 #include <vector>
 
 namespace Uintah {
 
-  class RefCounted;
-  class ProcessorGroup;
+class RefCounted;
+class ProcessorGroup;
 
-  class AfterCommunicationHandler {
+class AfterCommunicationHandler {
   public:
-    virtual ~AfterCommunicationHandler() {}
-    virtual void finishedCommunication(const ProcessorGroup*, MPI_Status &status) = 0;
-  };
+    virtual ~AfterCommunicationHandler()
+    {
+    }
 
-  class Sendlist : public AfterCommunicationHandler {
+    virtual void finishedCommunication(const ProcessorGroup*,
+                                       MPI_Status &status) = 0;
+};
+
+class Sendlist : public AfterCommunicationHandler {
+
   public:
-    Sendlist(Sendlist* next, RefCounted* obj)
-      : next(next), obj(obj)
-    {}
+    Sendlist(Sendlist* next,
+             RefCounted* obj)
+        : next(next), obj(obj)
+    {
+    }
     virtual ~Sendlist();
     Sendlist* next;
     RefCounted* obj;
@@ -52,22 +58,35 @@ namespace Uintah {
     // Sendlist is to be an AfterCommuncationHandler object for the
     // MPI_CommunicationRecord template in MPIScheduler.cc.  The only task
     // it needs to do to handle finished send requests is simply get deleted.
-    virtual void finishedCommunication(const ProcessorGroup*, MPI_Status &status) {}
+    virtual void finishedCommunication(const ProcessorGroup*,
+                                       MPI_Status &status)
+    {
+    }
 
-  };
+};
 
-  class BufferInfo {
+class BufferInfo {
+
   public:
     BufferInfo();
-    virtual ~BufferInfo();
-    int count() const;
-    void get_type(void*&, int&, MPI_Datatype&);
 
-    void add(void* startbuf, int count, MPI_Datatype datatype,
-	     bool free_datatype);
+    virtual ~BufferInfo();
+
+    int count() const;
+
+    void get_type(void*&,
+                  int&,
+                  MPI_Datatype&);
+
+    void add(void* startbuf,
+             int count,
+             MPI_Datatype datatype,
+             bool free_datatype);
 
     void addSendlist(RefCounted*);
+
     Sendlist* takeSendlist();
+
   private:
     BufferInfo(const BufferInfo&);
     BufferInfo& operator=(const BufferInfo&);
@@ -85,7 +104,7 @@ namespace Uintah {
 
     bool free_datatype;
     bool have_datatype;
-  };
+};
 }
 
 #endif

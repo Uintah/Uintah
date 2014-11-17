@@ -43,7 +43,6 @@
 #include <CCA/Components/MPM/RigidMPM.h>
 #include <CCA/Components/MPM/SerialMPM.h>
 #include <CCA/Components/MPM/ShellMPM.h>
-#include <CCA/Components/MPMArches/MPMArches.h>
 #include <CCA/Components/MPMICE/MPMICE.h>
 #include <CCA/Components/MD/MD.h>
 #include <CCA/Components/FVM/FVMDiffusion.h>
@@ -59,6 +58,14 @@
 #ifdef HAVE_CUDA
 #  include <CCA/Components/Examples/UnifiedSchedulerTest.h>
 #  include <CCA/Components/Examples/PoissonGPU1.h>
+#endif
+
+#if !defined(NO_ARCHES)
+#  include <CCA/Components/Arches/Arches.h>
+#endif
+
+#if !defined(NO_MPM) && !defined(NO_ARCHES)
+#  include <CCA/Components/MPMArches/MPMArches.h>
 #endif
 
 #ifndef NO_WASATCH

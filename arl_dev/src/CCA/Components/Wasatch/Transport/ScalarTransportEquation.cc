@@ -112,11 +112,11 @@ namespace Wasatch{
         msg << "ERROR: For solving the transport equations in weak form, the primitive variable will be the same as the solution variable. So, you don't need to specify it. Please remove the \"PrimitiveVariable\" block from the \"TransportEquation\" block in your input file." << endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-      }
+    }
     assert( primVarTag_ != Expr::Tag() );
 
     if( callSetup ) setup();
-    }
+  }
 
   //------------------------------------------------------------------
 
