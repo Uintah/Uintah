@@ -36,8 +36,6 @@ __________________________________
 SingleProcessor            SCI_DEBUG     Use SingleProcessorScheduler
 MPIScheduler               SCI_DEBUG     Use MPIScheduler - tasks are statically ordered
 DynamicMPIScheduler        SCI_DEBUG     Use DynamicMPIScheduler - uses out-of-order task execution
-ThreadedMPIScheduler       SCI_DEBUG     Use ThreadedMPIScheduler - Multi-threaded with centralized control thread
-ThreadedMPI2Scheduler      SCI_DEBUG     Use ThreadedMPI2Scheduler - De-centralized Multi-threaded (no control thread)
 UnifiedScheduler           SCI_DEBUG     Use UnifiedScheduler - De-centralized Multi-threaded, with GPU support
 
 
