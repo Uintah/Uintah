@@ -108,6 +108,15 @@ private:
   ExampleParticleModel<IT, DT>::ExampleParticleModel( std::string task_name, int matl_index, 
                                                       const std::string base_var_name, const int N ) : 
   _base_var_name(base_var_name), TaskInterface( task_name, matl_index ), _N(N){
+
+    //This sets the type of the independent and dependent variable types as needed by the variable 
+    //registration step. 
+    VarTypeHelper<DT> dhelper; 
+    _D_type = dhelper.get_vartype(); 
+
+    VarTypeHelper<IT> ihelper; 
+    _I_type = ihelper.get_vartype(); 
+
   }
 
   template <typename IT, typename DT>
@@ -119,14 +128,6 @@ private:
 
     _do_ts_init_task = false; 
     _do_bcs_task = false; 
-
-    //This sets the type of the independent and dependent variable types as needed by the variable 
-    //registration step. 
-    DT* d_test; 
-    IT* i_test; 
-
-    set_type(d_test, _D_type); 
-    set_type(i_test, _I_type); 
 
     db->require("A",_A); 
     db->require("ER",_ER); 

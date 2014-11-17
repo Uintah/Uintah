@@ -744,6 +744,14 @@
         </eqn>
       </ScalarTransport>
 
+      <!-- New Task interface for Momentum -->
+      <MomentumTransport                spec="OPTIONAL NO_DATA">
+
+        <convection                     spec="REQUIRED NO_DATA"
+                                        attribute1="scheme REQUIRED STRING 'central'"/>
+
+      </MomentumTransport>
+
       <!-- Initialization tasks -->
       <Initialization                   spec="OPTIONAL NO_DATA"> 
         <!-- label = unique label for this task 

@@ -140,7 +140,6 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
         std::string dependent_type;
         std::string independent_type;
         db_model->findBlock("grid")->getAttribute("dependent_type", dependent_type);
-        db_model->findBlock("grid")->getAttribute("independent_type", independent_type);
         
         if ( dependent_type == "svol" ){
           
@@ -149,7 +148,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
             std::string task_name = type + "_" + model_name;
             
             TaskInterface::TaskBuilder* tsk = scinew
-            Constant<SVol,SVol>::Builder(task_name, 0, model_name, N);
+            Constant<SVol>::Builder(task_name, 0, model_name, N);
             
             register_task( task_name, tsk );
             _active_tasks.push_back(task_name);

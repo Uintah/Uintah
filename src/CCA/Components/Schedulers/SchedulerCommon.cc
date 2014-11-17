@@ -688,20 +688,22 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
     // initialize or update max ghost cells for the current level
     std::map<int, int>::iterator mgc_iter;
     mgc_iter = maxGhostCells.find(levelIndex);
+    int taskMGC = task->maxGhostCells;
     if (mgc_iter == maxGhostCells.end()) {
-      maxGhostCells.insert(std::pair<int, int>(levelIndex, 0));
+      maxGhostCells.insert(std::pair<int, int>(levelIndex,(taskMGC > 0 ? taskMGC : 0)));
     }
-    else if (task->maxGhostCells > mgc_iter->second) {
+    else if (taskMGC > mgc_iter->second) {
       mgc_iter->second = task->maxGhostCells;
     }
 
     // initialize or update max level offset for the current level
     std::map<int, int>::iterator mlo_iter;
     mlo_iter = maxLevelOffsets.find(levelIndex);
+    int taskMLO = task->maxLevelOffset;
     if (mlo_iter == maxLevelOffsets.end()) {
-      maxLevelOffsets.insert(std::pair<int, int>(levelIndex, 0));
+      maxLevelOffsets.insert(std::pair<int, int>(levelIndex, (taskMLO > 0 ? taskMLO : 0)));
     }
-    else if (task->maxLevelOffset > mlo_iter->second) {
+    else if (taskMLO > mlo_iter->second) {
       mlo_iter->second = task->maxLevelOffset;
     }
   }

@@ -78,6 +78,26 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
 
           _active_tasks.push_back(task_name); 
 
+        } else if ( dependent_type == "xvol"){ 
+
+          if ( independent_type == "svol"){ 
+            TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<SVol, XVol>::Builder(task_name, 0, eqn_name); 
+            register_task( task_name, tsk ); 
+          } else if ( independent_type == "xvol"){ 
+            TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<XVol, XVol>::Builder(task_name, 0, eqn_name); 
+            register_task( task_name, tsk ); 
+          } else if ( independent_type == "yvol"){ 
+            TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<YVol, XVol>::Builder(task_name, 0, eqn_name); 
+            register_task( task_name, tsk ); 
+          } else if ( independent_type == "zvol"){ 
+            TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<ZVol, XVol>::Builder(task_name, 0, eqn_name); 
+            register_task( task_name, tsk ); 
+          } else { 
+            throw InvalidValue("Error: SpatalOps grid variable type not recognized for waveform.",__FILE__,__LINE__);
+          }
+
+          _active_tasks.push_back(task_name); 
+        
         } else { 
           throw InvalidValue("Error: Grid type not recognized (must be a SO field).",__FILE__,__LINE__);
         }
