@@ -97,7 +97,15 @@ MiniAero::MiniAero(const ProcessorGroup* myworld)
   flux_mass_FCZlabel   = VarLabel::create("faceZ_flux_mass",   SFCZVariable<Vector>::getTypeDescription());
   flux_mom_FCZlabel    = VarLabel::create("faceZ_flux_mom",    SFCZVariable<Vector>::getTypeDescription());
   flux_energy_FCZlabel = VarLabel::create("faceZ_flux_energy", SFCZVariable<Vector>::getTypeDescription());
-
+  dissipative_flux_mass_FCXlabel = VarLabel::create("faceX_diss_flux_mass", SFCXVariable<Vector>::getTypeDescription());
+  dissipative_flux_mom_FCXlabel = VarLabel::create("faceX_diss_flux_mom", SFCXVariable<Vector>::getTypeDescription());
+  dissipative_flux_energy_FCXlabel = VarLabel::create("faceX_diss_flux_energy", SFCXVariable<Vector>::getTypeDescription());
+  dissipative_flux_mass_FCYlabel = VarLabel::create("faceY_diss_flux_mass", SFCYVariable<Vector>::getTypeDescription());
+  dissipative_flux_mom_FCYlabel = VarLabel::create("faceY_diss_flux_mom", SFCYVariable<Vector>::getTypeDescription());
+  dissipative_flux_energy_FCYlabel = VarLabel::create("faceY_diss_flux_energy", SFCYVariable<Vector>::getTypeDescription());
+  dissipative_flux_mass_FCZlabel = VarLabel::create("faceZ_diss_flux_mass", SFCZVariable<Vector>::getTypeDescription());
+  dissipative_flux_mom_FCZlabel = VarLabel::create("faceZ_diss_flux_mom", SFCZVariable<Vector>::getTypeDescription());
+  dissipative_flux_energy_FCZlabel = VarLabel::create("faceZ_diss_flux_energy", SFCZVariable<Vector>::getTypeDescription());
   residual_CClabel = VarLabel::create("residual", CCVariable<Vector5>::getTypeDescription());
 }
 
@@ -198,6 +206,7 @@ void MiniAero::scheduleTimeAdvance(const LevelP& level,
 {
   schedCellCenteredFlux(level, sched);
   schedFaceCenteredFlux(level, sched);
+  schedDissipativeFaceFlux(level, sched);
   schedUpdateResidual(level, sched);
   schedUpdateState(level, sched);
   schedPrimitives(level,sched);
@@ -265,6 +274,31 @@ void MiniAero::schedFaceCenteredFlux(const LevelP& level,
   sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
 }
 
+void MiniAero::schedDissipativeFaceFlux(const LevelP& level,
+                                   SchedulerP& sched)
+{
+  Task* task = scinew Task("MiniAero::dissipativeFaceFlux", this, 
+                           &MiniAero::dissipativeFaceFlux);
+
+
+  task->requires(Task::OldDW,rho_CClabel,Ghost::AroundCells, 1);
+  task->requires(Task::OldDW,vel_CClabel,Ghost::AroundCells, 1);
+  task->requires(Task::OldDW,press_CClabel,Ghost::AroundCells, 1);
+
+  task->computes(dissipative_flux_mass_FCXlabel);
+  task->computes(dissipative_flux_mom_FCXlabel);
+  task->computes(dissipative_flux_energy_FCXlabel);
+  task->computes(dissipative_flux_mass_FCYlabel);
+  task->computes(dissipative_flux_mom_FCYlabel);
+  task->computes(dissipative_flux_energy_FCYlabel);
+  task->computes(dissipative_flux_mass_FCZlabel);
+  task->computes(dissipative_flux_mom_FCZlabel);
+  task->computes(dissipative_flux_energy_FCZlabel);
+
+  sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
+
+}
+
 void MiniAero::schedUpdateResidual(const LevelP& level,
                                    SchedulerP& sched)
 {
@@ -274,14 +308,23 @@ void MiniAero::schedUpdateResidual(const LevelP& level,
   task->requires(Task::NewDW,flux_mass_FCXlabel,Ghost::None);
   task->requires(Task::NewDW,flux_mom_FCXlabel,Ghost::None);
   task->requires(Task::NewDW,flux_energy_FCXlabel,Ghost::None);
+  task->requires(Task::NewDW,dissipative_flux_mass_FCXlabel,Ghost::None);
+  task->requires(Task::NewDW,dissipative_flux_mom_FCXlabel,Ghost::None);
+  task->requires(Task::NewDW,dissipative_flux_energy_FCXlabel,Ghost::None);
 
   task->requires(Task::NewDW,flux_mass_FCYlabel,Ghost::None);
   task->requires(Task::NewDW,flux_mom_FCYlabel,Ghost::None);
   task->requires(Task::NewDW,flux_energy_FCYlabel,Ghost::None);
+  task->requires(Task::NewDW,dissipative_flux_mass_FCYlabel,Ghost::None);
+  task->requires(Task::NewDW,dissipative_flux_mom_FCYlabel,Ghost::None);
+  task->requires(Task::NewDW,dissipative_flux_energy_FCYlabel,Ghost::None);
 
   task->requires(Task::NewDW,flux_mass_FCZlabel,Ghost::None);
   task->requires(Task::NewDW,flux_mom_FCZlabel,Ghost::None);
   task->requires(Task::NewDW,flux_energy_FCZlabel,Ghost::None);
+  task->requires(Task::NewDW,dissipative_flux_mass_FCZlabel,Ghost::None);
+  task->requires(Task::NewDW,dissipative_flux_mom_FCZlabel,Ghost::None);
+  task->requires(Task::NewDW,dissipative_flux_energy_FCZlabel,Ghost::None);
 
   task->computes(residual_CClabel);
 
@@ -670,6 +713,7 @@ void MiniAero::faceCenteredFlux(const ProcessorGroup* /*pg*/,
     SFCZVariable<Vector> flux_mom_FCZ;
     SFCZVariable<double> flux_energy_FCZ;
 
+
     new_dw->get( flux_mass_CC,  flux_mass_CClabel, 0, patch, gac, 1 );
     new_dw->get( flux_mom_CC,  flux_mom_CClabel, 0, patch, gac, 1 );
     new_dw->get( flux_energy_CC,  flux_energy_CClabel, 0, patch, gac, 1 );
@@ -717,6 +761,101 @@ void MiniAero::faceCenteredFlux(const ProcessorGroup* /*pg*/,
     }
   }
 }
+
+void MiniAero::dissipativeFaceFlux(const ProcessorGroup* /*pg*/,
+                             const PatchSubset* patches,
+                             const MaterialSubset* /*matls*/,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw)
+{
+  double diss_flux[5];
+  double primitives_l[5];
+  double primitives_r[5];
+
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    Ghost::GhostType  gac  = Ghost::AroundCells;
+
+    constCCVariable<double> rho_CC, pressure_CC;
+    constCCVariable<Vector> vel_CC;
+
+    SFCXVariable<double> diss_flux_mass_FCX;
+    SFCXVariable<Vector> diss_flux_mom_FCX;
+    SFCXVariable<double> diss_flux_energy_FCX;
+    SFCYVariable<double> diss_flux_mass_FCY;
+    SFCYVariable<Vector> diss_flux_mom_FCY;
+    SFCYVariable<double> diss_flux_energy_FCY;
+    SFCZVariable<double> diss_flux_mass_FCZ;
+    SFCZVariable<Vector> diss_flux_mom_FCZ;
+    SFCZVariable<double> diss_flux_energy_FCZ;
+
+
+    old_dw->get( rho_CC,  rho_CClabel, 0, patch, gac, 0 );
+    old_dw->get( vel_CC,  vel_CClabel, 0, patch, gac, 0 );
+    old_dw->get( pressure_CC,  press_CClabel, 0, patch, gac, 0 );
+
+    new_dw->allocateAndPut( diss_flux_mass_FCX, dissipative_flux_mass_FCXlabel,   0,patch );
+    new_dw->allocateAndPut( diss_flux_mom_FCX, dissipative_flux_mom_FCXlabel,   0,patch );
+    new_dw->allocateAndPut( diss_flux_energy_FCX, dissipative_flux_energy_FCXlabel,   0,patch );
+
+    new_dw->allocateAndPut( diss_flux_mass_FCY, dissipative_flux_mass_FCYlabel,   0,patch );
+    new_dw->allocateAndPut( diss_flux_mom_FCY, dissipative_flux_mom_FCYlabel,   0,patch );
+    new_dw->allocateAndPut( diss_flux_energy_FCY, dissipative_flux_energy_FCYlabel,   0,patch );
+
+    new_dw->allocateAndPut( diss_flux_mass_FCZ, dissipative_flux_mass_FCZlabel,   0,patch );
+    new_dw->allocateAndPut( diss_flux_mom_FCZ, dissipative_flux_mom_FCZlabel,   0,patch );
+    new_dw->allocateAndPut( diss_flux_energy_FCZ, dissipative_flux_energy_FCZlabel,   0,patch );
+
+    //__________________________________
+    //Compute Face Centered Fluxes from Cell Centered
+    for(CellIterator iter = patch->getSFCXIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      IntVector offset(-1,0,0);
+      primitives_l[0] = rho_CC[c]; 
+      primitives_l[1] = vel_CC[c][0]; 
+      primitives_l[2] = vel_CC[c][1]; 
+      primitives_l[3] = vel_CC[c][2]; 
+      primitives_l[4] = pressure_CC[c]; 
+      primitives_r[0] = rho_CC[c+offset]; 
+      primitives_r[1] = vel_CC[c+offset][0]; 
+      primitives_r[2] = vel_CC[c+offset][1]; 
+      primitives_r[3] = vel_CC[c+offset][2]; 
+      primitives_r[4] = pressure_CC[c+offset];
+      double normal[] = {1.0, 0.0, 0.0};
+      double tangent[] = {0.0, 1.0, 0.0};
+      double binormal[] = {0.0, 0.0, 1.0};
+      for(int i=0; i<5; ++i)
+	diss_flux[i] = 0.0;
+
+      compute_roe_dissipative_flux(primitives_l, primitives_r, diss_flux,
+	normal, binormal, tangent); 
+      diss_flux_mass_FCX  [c]    = -diss_flux[0];
+      diss_flux_mom_FCX   [c][0] = -diss_flux[1];
+      diss_flux_mom_FCX   [c][1] = -diss_flux[2];
+      diss_flux_mom_FCX   [c][2] = -diss_flux[3];
+      diss_flux_energy_FCX[c]    = -diss_flux[4];
+    }
+    for(CellIterator iter = patch->getSFCYIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      IntVector offset(0,-1,0);
+      diss_flux_mass_FCY  [c]    = 0.0; 
+      diss_flux_mom_FCY   [c][0] = 0.0;
+      diss_flux_mom_FCY   [c][1] = 0.0;
+      diss_flux_mom_FCY   [c][2] = 0.0;
+      diss_flux_energy_FCY[c]    = 0.0;
+    }
+    for(CellIterator iter = patch->getSFCZIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      IntVector offset(0,0,-1);
+      diss_flux_mass_FCZ  [c]    = 0.0; 
+      diss_flux_mom_FCZ   [c][0] = 0.0; 
+      diss_flux_mom_FCZ   [c][1] = 0.0; 
+      diss_flux_mom_FCZ   [c][2] = 0.0; 
+      diss_flux_energy_FCZ[c]    = 0.0; 
+    }
+  }
+}
+
 void MiniAero::updateResidual(const ProcessorGroup* /*pg*/,
                               const PatchSubset* patches,
                               const MaterialSubset* /*matls*/,
@@ -731,28 +870,46 @@ void MiniAero::updateResidual(const ProcessorGroup* /*pg*/,
     constSFCXVariable<double> flux_mass_FCX;
     constSFCXVariable<Vector> flux_mom_FCX;
     constSFCXVariable<double> flux_energy_FCX;
+    constSFCXVariable<double> diss_flux_mass_FCX;
+    constSFCXVariable<Vector> diss_flux_mom_FCX;
+    constSFCXVariable<double> diss_flux_energy_FCX;
 
     constSFCYVariable<double> flux_mass_FCY;
     constSFCYVariable<Vector> flux_mom_FCY;
     constSFCYVariable<double> flux_energy_FCY;
+    constSFCYVariable<double> diss_flux_mass_FCY;
+    constSFCYVariable<Vector> diss_flux_mom_FCY;
+    constSFCYVariable<double> diss_flux_energy_FCY;
 
     constSFCZVariable<double> flux_mass_FCZ;
     constSFCZVariable<Vector> flux_mom_FCZ;
     constSFCZVariable<double> flux_energy_FCZ;
+    constSFCZVariable<double> diss_flux_mass_FCZ;
+    constSFCZVariable<Vector> diss_flux_mom_FCZ;
+    constSFCZVariable<double> diss_flux_energy_FCZ;
 
     CCVariable<Vector5> residual_CC;
 
     new_dw->get( flux_mass_FCX,  flux_mass_FCXlabel, 0, patch, gn, 0);
     new_dw->get( flux_mom_FCX,  flux_mom_FCXlabel, 0, patch, gn, 0);
     new_dw->get( flux_energy_FCX,  flux_energy_FCXlabel, 0, patch, gn, 0);
+    new_dw->get( diss_flux_mass_FCX,  dissipative_flux_mass_FCXlabel, 0, patch, gn, 0);
+    new_dw->get( diss_flux_mom_FCX,  dissipative_flux_mom_FCXlabel, 0, patch, gn, 0);
+    new_dw->get( diss_flux_energy_FCX,  dissipative_flux_energy_FCXlabel, 0, patch, gn, 0);
 
     new_dw->get( flux_mass_FCY,  flux_mass_FCYlabel, 0, patch, gn, 0);
     new_dw->get( flux_mom_FCY,  flux_mom_FCYlabel, 0, patch, gn, 0);
     new_dw->get( flux_energy_FCY,  flux_energy_FCYlabel, 0, patch, gn, 0);
+    new_dw->get( diss_flux_mass_FCY,  dissipative_flux_mass_FCYlabel, 0, patch, gn, 0);
+    new_dw->get( diss_flux_mom_FCY,  dissipative_flux_mom_FCYlabel, 0, patch, gn, 0);
+    new_dw->get( diss_flux_energy_FCY,  dissipative_flux_energy_FCYlabel, 0, patch, gn, 0);
 
     new_dw->get( flux_mass_FCZ,  flux_mass_FCZlabel, 0, patch, gn, 0);
     new_dw->get( flux_mom_FCZ,  flux_mom_FCZlabel, 0, patch, gn, 0);
     new_dw->get( flux_energy_FCZ,  flux_energy_FCZlabel, 0, patch, gn, 0);
+    new_dw->get( diss_flux_mass_FCZ,  dissipative_flux_mass_FCZlabel, 0, patch, gn, 0);
+    new_dw->get( diss_flux_mom_FCZ,  dissipative_flux_mom_FCZlabel, 0, patch, gn, 0);
+    new_dw->get( diss_flux_energy_FCZ,  dissipative_flux_energy_FCZlabel, 0, patch, gn, 0);
 
     new_dw->allocateAndPut( residual_CC, residual_CClabel,   0,patch );
 
@@ -771,18 +928,27 @@ void MiniAero::updateResidual(const ProcessorGroup* /*pg*/,
       IntVector YOffset(0,1,0);
       IntVector ZOffset(0,0,1);
 
-      residual_CC[c][0] = (flux_mass_FCX[c + XOffset]  - flux_mass_FCX[c])*dy*dz + 
-        (flux_mass_FCY[c + YOffset]  - flux_mass_FCY[c])*dx*dz + 
-        (flux_mass_FCZ[c + ZOffset]  - flux_mass_FCZ[c])*dy*dx;
+      residual_CC[c][0] = (flux_mass_FCX[c + XOffset]  - flux_mass_FCX[c])*dy*dz+ 
+        (diss_flux_mass_FCX[c + XOffset]  - diss_flux_mass_FCX[c])*dy*dz + 
+	(flux_mass_FCY[c + YOffset]  - flux_mass_FCY[c])*dx*dz + 
+	(diss_flux_mass_FCY[c + YOffset]  - diss_flux_mass_FCY[c])*dx*dz + 
+	(flux_mass_FCZ[c + ZOffset]  - flux_mass_FCZ[c])*dy*dx +
+	(diss_flux_mass_FCZ[c + ZOffset]  - diss_flux_mass_FCZ[c])*dy*dx;
 
-      residual_CC[c][4] = (flux_energy_FCX[c + XOffset]  - flux_energy_FCX[c])*dy*dz + 
-        (flux_energy_FCY[c + YOffset]  - flux_energy_FCY[c])*dx*dz + 
-        (flux_energy_FCZ[c + ZOffset]  - flux_energy_FCZ[c])*dy*dx;
+      residual_CC[c][4] = (flux_energy_FCX[c + XOffset]  - flux_energy_FCX[c])*dy*dz +
+        (diss_flux_energy_FCX[c + XOffset]  - diss_flux_energy_FCX[c])*dy*dz +
+	(flux_energy_FCY[c + YOffset]  - flux_energy_FCY[c])*dx*dz + 
+	(diss_flux_energy_FCY[c + YOffset]  - diss_flux_energy_FCY[c])*dx*dz + 
+	(flux_energy_FCZ[c + ZOffset]  - flux_energy_FCZ[c])*dy*dx +
+	(diss_flux_energy_FCZ[c + ZOffset]  - diss_flux_energy_FCZ[c])*dy*dx;
 
       for(int idim = 0; idim < 3; ++idim) {
-        residual_CC[c][idim + 1] =  (flux_mom_FCX[c + XOffset][idim]  - flux_mom_FCX[c][idim])*dy*dz + 
-        (flux_mom_FCY[c + YOffset][idim]  - flux_mom_FCY[c][idim])*dx*dz + 
-        (flux_mom_FCZ[c + ZOffset][idim]  - flux_mom_FCZ[c][idim])*dy*dx;
+	residual_CC[c][idim + 1] =  (flux_mom_FCX[c + XOffset][idim]  - flux_mom_FCX[c][idim])*dy*dz +
+        (diss_flux_mom_FCX[c + XOffset][idim]  - diss_flux_mom_FCX[c][idim])*dy*dz + 
+	(flux_mom_FCY[c + YOffset][idim]  - flux_mom_FCY[c][idim])*dx*dz + 
+	(diss_flux_mom_FCY[c + YOffset][idim]  - diss_flux_mom_FCY[c][idim])*dx*dz + 
+	(flux_mom_FCZ[c + ZOffset][idim]  - flux_mom_FCZ[c][idim])*dy*dx +
+	(diss_flux_mom_FCZ[c + ZOffset][idim]  - diss_flux_mom_FCZ[c][idim])*dy*dx;
       }
     }
   }
@@ -820,4 +986,202 @@ void MiniAero::updateState(const ProcessorGroup* /*pg*/,
       }
     }
   }
+}
+
+
+void MiniAero::compute_roe_dissipative_flux(const double * primitives_left, const double * primitives_right,
+      double * flux, double * face_normal, double * face_tangent, double * face_binormal)
+{
+    //Eigenvalue fix constants.
+    const double efix_u = 0.1;
+    const double efix_c = 0.1;
+
+    const double gm1 = d_gamma-1.0;
+
+    // Left state
+    const double rho_left = primitives_left[0];
+    const double uvel_left = primitives_left[1];
+    const double vvel_left = primitives_left[2];
+    const double wvel_left = primitives_left[3];
+    const double pressure_left = primitives_left[4]; 
+    const double enthalpy_left = d_gamma/gm1*pressure_left/rho_left; 
+
+    const double total_enthalpy_left = enthalpy_left + 0.5 * (uvel_left * uvel_left + vvel_left * vvel_left + wvel_left * wvel_left);
+
+    // Right state
+    const double rho_right = primitives_right[0];
+    const double uvel_right = primitives_right[1];
+    const double vvel_right = primitives_right[2];
+    const double wvel_right = primitives_right[3];
+    const double pressure_right = primitives_right[4]; 
+    const double enthalpy_right = d_gamma/gm1*pressure_right/rho_right;
+
+    const double total_enthalpy_right = enthalpy_right + 0.5 * (uvel_right * uvel_right + vvel_right * vvel_right + wvel_right * wvel_right);
+
+    // Upwinded part
+    const double face_normal_norm = std::sqrt(face_normal[0] * face_normal[0] 
+      + face_normal[1] * face_normal[1] 
+      + face_normal[2] * face_normal[2]);
+    const double face_tangent_norm = std::sqrt(face_tangent[0] * face_tangent[0] 
+      + face_tangent[1] * face_tangent[1] 
+      + face_tangent[2] * face_tangent[2]);
+    const double face_binormal_norm = std::sqrt(face_binormal[0] * face_binormal[0] 
+      + face_binormal[1] * face_binormal[1] 
+      + face_binormal[2] * face_binormal[2]);
+
+    const double face_normal_unit[] = { face_normal[0] / face_normal_norm, face_normal[1] / face_normal_norm,
+        face_normal[2] / face_normal_norm };
+    const double face_tangent_unit[] = { face_tangent[0] / face_tangent_norm, face_tangent[1] / face_tangent_norm,
+        face_tangent[2] / face_tangent_norm };
+    const double face_binormal_unit[] = { face_binormal[0] / face_binormal_norm, face_binormal[1] / face_binormal_norm,
+        face_binormal[2] / face_binormal_norm };
+
+    const double denom = 1.0 / (std::sqrt(rho_left) + std::sqrt(rho_right));
+    const double alpha = sqrt(rho_left) * denom;
+    const double beta = 1.0 - alpha;
+
+    const double uvel_roe = alpha * uvel_left + beta * uvel_right;
+    const double vvel_roe = alpha * vvel_left + beta * vvel_right;
+    const double wvel_roe = alpha * wvel_left + beta * wvel_right;
+    const double enthalpy_roe = alpha * enthalpy_left + beta * enthalpy_right
+            + 0.5 * alpha * beta* (std::pow(uvel_right - uvel_left, 2) 
+                + std::pow(vvel_right - vvel_left, 2)
+                + std::pow(wvel_right - wvel_left, 2));
+    const double speed_sound_roe = std::sqrt(gm1 * enthalpy_roe);
+
+    // Compute flux matrices
+    double roe_mat_left_eigenvectors[25];
+    double roe_mat_right_eigenvectors[25];
+    const double normal_velocity = uvel_roe * face_normal_unit[0] + vvel_roe * face_normal_unit[1]
+        + wvel_roe * face_normal_unit[2];
+    const double tangent_velocity = uvel_roe * face_tangent_unit[0] + vvel_roe * face_tangent_unit[1]
+        + wvel_roe * face_tangent_unit[2];
+    const double binormal_velocity = uvel_roe * face_binormal_unit[0] + vvel_roe * face_binormal_unit[1]
+        + wvel_roe * face_binormal_unit[2];
+    const double kinetic_energy_roe = 0.5 * (uvel_roe * uvel_roe + vvel_roe * vvel_roe + wvel_roe * wvel_roe);
+    const double speed_sound_squared_inverse = 1.0 / (speed_sound_roe * speed_sound_roe);
+    const double half_speed_sound_squared_inverse = 0.5 * speed_sound_squared_inverse;
+
+    // Left matrix
+    roe_mat_left_eigenvectors[0] = gm1 * (kinetic_energy_roe - enthalpy_roe) + speed_sound_roe * (speed_sound_roe - normal_velocity);
+    roe_mat_left_eigenvectors[1] = speed_sound_roe * face_normal_unit[0] - gm1 * uvel_roe;
+    roe_mat_left_eigenvectors[2] = speed_sound_roe * face_normal_unit[1] - gm1 * vvel_roe;
+    roe_mat_left_eigenvectors[3] = speed_sound_roe * face_normal_unit[2] - gm1 * wvel_roe;
+    roe_mat_left_eigenvectors[4] = gm1;
+
+    roe_mat_left_eigenvectors[5] = gm1 * (kinetic_energy_roe - enthalpy_roe) + speed_sound_roe * (speed_sound_roe + normal_velocity);
+    roe_mat_left_eigenvectors[6] = -speed_sound_roe * face_normal_unit[0] - gm1 * uvel_roe;
+    roe_mat_left_eigenvectors[7] = -speed_sound_roe * face_normal_unit[1] - gm1 * vvel_roe;
+    roe_mat_left_eigenvectors[8] = -speed_sound_roe * face_normal_unit[2] - gm1 * wvel_roe;
+    roe_mat_left_eigenvectors[9] = gm1;
+
+    roe_mat_left_eigenvectors[10] = kinetic_energy_roe - enthalpy_roe;
+    roe_mat_left_eigenvectors[11] = -uvel_roe;
+    roe_mat_left_eigenvectors[12] = -vvel_roe;
+    roe_mat_left_eigenvectors[13] = -wvel_roe;
+    roe_mat_left_eigenvectors[14] = 1.0;
+
+    roe_mat_left_eigenvectors[15] = -tangent_velocity;
+    roe_mat_left_eigenvectors[16] = face_tangent_unit[0];
+    roe_mat_left_eigenvectors[17] = face_tangent_unit[1];
+    roe_mat_left_eigenvectors[18] = face_tangent_unit[2];
+    roe_mat_left_eigenvectors[19] = 0.0;
+
+    roe_mat_left_eigenvectors[20] = -binormal_velocity;
+    roe_mat_left_eigenvectors[21] = face_binormal_unit[0];
+    roe_mat_left_eigenvectors[22] = face_binormal_unit[1];
+    roe_mat_left_eigenvectors[23] = face_binormal_unit[2];
+    roe_mat_left_eigenvectors[24] = 0.0;
+
+    // Right matrix
+    roe_mat_right_eigenvectors[0] = half_speed_sound_squared_inverse;
+    roe_mat_right_eigenvectors[1] = half_speed_sound_squared_inverse;
+    roe_mat_right_eigenvectors[2] = -gm1 * speed_sound_squared_inverse;
+    roe_mat_right_eigenvectors[3] = 0.0;
+    roe_mat_right_eigenvectors[4] = 0.0;
+
+    roe_mat_right_eigenvectors[5] = (uvel_roe + face_normal_unit[0] * speed_sound_roe) * half_speed_sound_squared_inverse;
+    roe_mat_right_eigenvectors[6] = (uvel_roe - face_normal_unit[0] * speed_sound_roe) * half_speed_sound_squared_inverse;
+    roe_mat_right_eigenvectors[7] = -gm1 * uvel_roe * speed_sound_squared_inverse;
+    roe_mat_right_eigenvectors[8] = face_tangent_unit[0];
+    roe_mat_right_eigenvectors[9] = face_binormal_unit[0];
+
+    roe_mat_right_eigenvectors[10] = (vvel_roe + face_normal_unit[1] * speed_sound_roe) * half_speed_sound_squared_inverse;
+    roe_mat_right_eigenvectors[11] = (vvel_roe - face_normal_unit[1] * speed_sound_roe) * half_speed_sound_squared_inverse;
+    roe_mat_right_eigenvectors[12] = -gm1 * vvel_roe * speed_sound_squared_inverse;
+    roe_mat_right_eigenvectors[13] = face_tangent_unit[1];
+    roe_mat_right_eigenvectors[14] = face_binormal_unit[1];
+
+    roe_mat_right_eigenvectors[15] = (wvel_roe + face_normal_unit[2] * speed_sound_roe) * half_speed_sound_squared_inverse;
+    roe_mat_right_eigenvectors[16] = (wvel_roe - face_normal_unit[2] * speed_sound_roe) * half_speed_sound_squared_inverse;
+    roe_mat_right_eigenvectors[17] = -gm1 * wvel_roe * speed_sound_squared_inverse;
+    roe_mat_right_eigenvectors[18] = face_tangent_unit[2];
+    roe_mat_right_eigenvectors[19] = face_binormal_unit[2];
+
+    roe_mat_right_eigenvectors[20] = (enthalpy_roe + kinetic_energy_roe + speed_sound_roe * normal_velocity) * half_speed_sound_squared_inverse;
+    roe_mat_right_eigenvectors[21] = (enthalpy_roe + kinetic_energy_roe - speed_sound_roe * normal_velocity) * half_speed_sound_squared_inverse;
+    roe_mat_right_eigenvectors[22] = (speed_sound_roe * speed_sound_roe - gm1 * (enthalpy_roe + kinetic_energy_roe)) * speed_sound_squared_inverse;
+    roe_mat_right_eigenvectors[23] = tangent_velocity;
+    roe_mat_right_eigenvectors[24] = binormal_velocity;
+
+    // Conservative variable jumps
+    double conserved_jump[] = { 0.0, 0.0, 0.0, 0.0, 0.0 };
+    conserved_jump[0] = rho_right - rho_left;
+    conserved_jump[1] = rho_right * uvel_right - rho_left * uvel_left;
+    conserved_jump[2] = rho_right * vvel_right - rho_left * vvel_left;
+    conserved_jump[3] = rho_right * wvel_right - rho_left * wvel_left;
+    conserved_jump[4] = (rho_right * total_enthalpy_right - pressure_right) - (rho_left * total_enthalpy_left - pressure_left);
+
+    // Compute CFL number
+    const double cbar = speed_sound_roe * face_normal_norm;
+    const double ubar = uvel_roe * face_normal[0] + vvel_roe * face_normal[1] + wvel_roe * face_normal[2];
+    const double cfl = std::abs(ubar) + cbar;
+
+    // Eigenvalue fix
+    const double eig1 = ubar + cbar;
+    const double eig2 = ubar - cbar;
+    const double eig3 = ubar;
+
+    double abs_eig1 = std::abs(eig1);
+    double abs_eig2 = std::abs(eig2);
+    double abs_eig3 = std::abs(eig3);
+
+    const double epuc = efix_u * cfl;
+    const double epcc = efix_c * cfl;
+
+    // Original Roe eigenvalue fix
+    if (abs_eig1 < epcc) abs_eig1 = 0.5 * (eig1 * eig1 + epcc * epcc) / epcc;
+    if (abs_eig2 < epcc) abs_eig2 = 0.5 * (eig2 * eig2 + epcc * epcc) / epcc;
+    if (abs_eig3 < epuc) abs_eig3 = 0.5 * (eig3 * eig3 + epuc * epuc) / epuc;
+
+    double eigp[] = { 0.5 * (eig1 + abs_eig1), 0.5 * (eig2 + abs_eig2), 0.5
+        * (eig3 + abs_eig3), 0.0, 0.0 };
+    eigp[3] = eigp[4] = eigp[2];
+
+    double eigm[] = { 0.5 * (eig1 - abs_eig1), 0.5 * (eig2 - abs_eig2), 0.5
+        * (eig3 - abs_eig3), 0.0, 0.0 };
+    eigm[3] = eigm[4] = eigm[2];
+
+    // Compute upwind flux
+    double ldq[] = { 0, 0, 0, 0, 0 };
+    double lldq[] = { 0, 0, 0, 0, 0 };
+    double rlldq[] = { 0, 0, 0, 0, 0 };
+
+    for(int i=0; i < 5; ++i) {
+      for(int j=0; j < 5; ++j) {
+        ldq[i] += roe_mat_left_eigenvectors[5*i + j] * conserved_jump[j];
+      }
+    }
+
+    for (int j = 0; j < 5; ++j)
+      lldq[j] = (eigp[j] - eigm[j]) * ldq[j];
+
+    for(int i=0; i < 5; ++i) {
+      for(int j=0; j < 5; ++j) {
+        rlldq[i] += roe_mat_right_eigenvectors[5*i + j] * lldq[j];
+      }
+    }
+
+    for (int icomp = 0; icomp < 5; ++icomp)
+      flux[icomp] -= 0.5*rlldq[icomp];
 }

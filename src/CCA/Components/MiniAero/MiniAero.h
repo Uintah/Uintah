@@ -113,6 +113,7 @@ namespace Uintah {
 
     void schedCellCenteredFlux(const LevelP& level,SchedulerP& sched);
     void schedFaceCenteredFlux(const LevelP& level,SchedulerP& sched);
+    void schedDissipativeFaceFlux(const LevelP& level,SchedulerP& sched);
     void schedUpdateResidual(const LevelP& level,SchedulerP& sched);
     void schedUpdateState(const LevelP& level,SchedulerP& sched);
     
@@ -133,11 +134,19 @@ namespace Uintah {
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw);
+
+    void dissipativeFaceFlux(const ProcessorGroup*,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* old_dw,
+                     DataWarehouse* new_dw);
+
     void updateResidual(const ProcessorGroup*,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* old_dw,
                         DataWarehouse* new_dw);
+
     void updateState(const ProcessorGroup*,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
@@ -163,6 +172,15 @@ namespace Uintah {
     const VarLabel* flux_mass_FCZlabel;
     const VarLabel* flux_mom_FCZlabel;
     const VarLabel* flux_energy_FCZlabel;
+    const VarLabel* dissipative_flux_mass_FCXlabel;
+    const VarLabel* dissipative_flux_mom_FCXlabel;
+    const VarLabel* dissipative_flux_energy_FCXlabel;
+    const VarLabel* dissipative_flux_mass_FCYlabel;
+    const VarLabel* dissipative_flux_mom_FCYlabel;
+    const VarLabel* dissipative_flux_energy_FCYlabel;
+    const VarLabel* dissipative_flux_mass_FCZlabel;
+    const VarLabel* dissipative_flux_mom_FCZlabel;
+    const VarLabel* dissipative_flux_energy_FCZlabel;
     const VarLabel* residual_CClabel;
     const VarLabel* machlabel;
 
@@ -184,6 +202,13 @@ namespace Uintah {
     {
       return 1.458E-6*pow(temp,1.5)/(temp+110.4);
     }
+    double getGamma() const
+    {
+      return d_gamma;
+    }
+
+    void compute_roe_dissipative_flux(const double * primitives_left, const double * primitives_right,
+      double * flux, double * face_normal, double * face_tangent, double * face_binormal);
   };  // end class MiniAero
 
 }  // end namespace Uintah
