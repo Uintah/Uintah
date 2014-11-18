@@ -173,7 +173,25 @@ CQMOMEqn::problemSetup(const ProblemSpecP& inputdb)
       std::string model_name;
       std::string source_label;
       int nIC;
-      m_db->get("apply_to",nIC);
+      std::string ic_name;
+      m_db->get("IC",ic_name);
+      m = 0;
+      
+      for ( ProblemSpecP db_name = cqmom_db->findBlock("InternalCoordinate");
+           db_name != 0; db_name = db_name->findNextBlock("InternalCoordinate") ) {
+        std::string var_name;
+        db_name->getAttribute("name",var_name);
+        if ( var_name == ic_name) {
+          nIC = m;
+          break;
+        }
+        m++;
+        if ( m >= M ) { // occurs if ic not found
+          string err_msg = "Error: could not find internal coordiante '" + ic_name + "' in list of internal coordinates specified by CQMOM spec";
+          throw ProblemSetupException(err_msg,__FILE__,__LINE__);
+        }
+      }
+      
       m_db->getAttribute("label",model_name);
       source_label = d_eqnName + "_" + model_name + "_src";
       proc0cout << "Creating source label: " << source_label << endl;
