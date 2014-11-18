@@ -63,8 +63,6 @@ using namespace Uintah;
 //  MINIAERO:   output when tasks are scheduled and performed
 static DebugStream dbg("MINIAERO", false);
 
-//TO DO: Clean up Stencil 7
-//TO DO: Add Riemann Solver to faceCenteredFlux
 //TO DO: Add 2nd order option to faceCenteredFlux
 //TO DO: Add tasks for computing Viscous Flux 
 //______________________________________________________________________
@@ -86,26 +84,30 @@ MiniAero::MiniAero(const ProcessorGroup* myworld)
   flux_mom_CClabel     = VarLabel::create("flux_mom",          CCVariable<Matrix3>::getTypeDescription());
   flux_energy_CClabel  = VarLabel::create("flux_energy",       CCVariable<Vector>::getTypeDescription());
 
-  flux_mass_FCXlabel   = VarLabel::create("faceX_flux_mass",   SFCXVariable<Vector>::getTypeDescription());
+  flux_mass_FCXlabel   = VarLabel::create("faceX_flux_mass",   SFCXVariable<double>::getTypeDescription());
   flux_mom_FCXlabel    = VarLabel::create("faceX_flux_mom",    SFCXVariable<Vector>::getTypeDescription());
-  flux_energy_FCXlabel = VarLabel::create("faceX_flux_energy", SFCXVariable<Vector>::getTypeDescription());
+  flux_energy_FCXlabel = VarLabel::create("faceX_flux_energy", SFCXVariable<double>::getTypeDescription());
 
-  flux_mass_FCYlabel   = VarLabel::create("faceY_flux_mass",   SFCYVariable<Vector>::getTypeDescription());
+  flux_mass_FCYlabel   = VarLabel::create("faceY_flux_mass",   SFCYVariable<double>::getTypeDescription());
   flux_mom_FCYlabel    = VarLabel::create("faceY_flux_mom",    SFCYVariable<Vector>::getTypeDescription());
-  flux_energy_FCYlabel = VarLabel::create("faceY_flux_energy", SFCYVariable<Vector>::getTypeDescription());
+  flux_energy_FCYlabel = VarLabel::create("faceY_flux_energy", SFCYVariable<double>::getTypeDescription());
 
-  flux_mass_FCZlabel   = VarLabel::create("faceZ_flux_mass",   SFCZVariable<Vector>::getTypeDescription());
+  flux_mass_FCZlabel   = VarLabel::create("faceZ_flux_mass",   SFCZVariable<double>::getTypeDescription());
   flux_mom_FCZlabel    = VarLabel::create("faceZ_flux_mom",    SFCZVariable<Vector>::getTypeDescription());
-  flux_energy_FCZlabel = VarLabel::create("faceZ_flux_energy", SFCZVariable<Vector>::getTypeDescription());
-  dissipative_flux_mass_FCXlabel = VarLabel::create("faceX_diss_flux_mass", SFCXVariable<Vector>::getTypeDescription());
-  dissipative_flux_mom_FCXlabel = VarLabel::create("faceX_diss_flux_mom", SFCXVariable<Vector>::getTypeDescription());
-  dissipative_flux_energy_FCXlabel = VarLabel::create("faceX_diss_flux_energy", SFCXVariable<Vector>::getTypeDescription());
-  dissipative_flux_mass_FCYlabel = VarLabel::create("faceY_diss_flux_mass", SFCYVariable<Vector>::getTypeDescription());
-  dissipative_flux_mom_FCYlabel = VarLabel::create("faceY_diss_flux_mom", SFCYVariable<Vector>::getTypeDescription());
-  dissipative_flux_energy_FCYlabel = VarLabel::create("faceY_diss_flux_energy", SFCYVariable<Vector>::getTypeDescription());
-  dissipative_flux_mass_FCZlabel = VarLabel::create("faceZ_diss_flux_mass", SFCZVariable<Vector>::getTypeDescription());
-  dissipative_flux_mom_FCZlabel = VarLabel::create("faceZ_diss_flux_mom", SFCZVariable<Vector>::getTypeDescription());
-  dissipative_flux_energy_FCZlabel = VarLabel::create("faceZ_diss_flux_energy", SFCZVariable<Vector>::getTypeDescription());
+  flux_energy_FCZlabel = VarLabel::create("faceZ_flux_energy", SFCZVariable<double>::getTypeDescription());
+
+  dissipative_flux_mass_FCXlabel   = VarLabel::create("faceX_diss_flux_mass",   SFCXVariable<double>::getTypeDescription());
+  dissipative_flux_mom_FCXlabel    = VarLabel::create("faceX_diss_flux_mom",    SFCXVariable<Vector>::getTypeDescription());
+  dissipative_flux_energy_FCXlabel = VarLabel::create("faceX_diss_flux_energy", SFCXVariable<double>::getTypeDescription());
+
+  dissipative_flux_mass_FCYlabel   = VarLabel::create("faceY_diss_flux_mass",   SFCYVariable<double>::getTypeDescription());
+  dissipative_flux_mom_FCYlabel    = VarLabel::create("faceY_diss_flux_mom",    SFCYVariable<Vector>::getTypeDescription());
+  dissipative_flux_energy_FCYlabel = VarLabel::create("faceY_diss_flux_energy", SFCYVariable<double>::getTypeDescription());
+
+  dissipative_flux_mass_FCZlabel   = VarLabel::create("faceZ_diss_flux_mass",   SFCZVariable<double>::getTypeDescription());
+  dissipative_flux_mom_FCZlabel    = VarLabel::create("faceZ_diss_flux_mom",    SFCZVariable<Vector>::getTypeDescription());
+  dissipative_flux_energy_FCZlabel = VarLabel::create("faceZ_diss_flux_energy", SFCZVariable<double>::getTypeDescription());
+
   residual_CClabel = VarLabel::create("residual", CCVariable<Vector5>::getTypeDescription());
 }
 
@@ -171,7 +173,6 @@ void MiniAero::scheduleInitialize(const LevelP& level,
   Task* t = scinew Task("MiniAero::initialize", this, &MiniAero::initialize);
 
   t->computes(conserved_label);
-
   t->computes(vel_CClabel);
   t->computes(rho_CClabel);
   t->computes(press_CClabel);
@@ -684,7 +685,7 @@ void MiniAero::cellCenteredFlux(const ProcessorGroup* /*pg*/,
           flux_mom_CC[c](idim,jdim)      = rho_CC[c]*vel_CC[c][idim]*vel_CC[c][jdim];
         }
         flux_mom_CC[c](idim, idim) += pressure_CC[c];
-        flux_energy_CC[c][idim]     = KE + pressure_CC[c]*(d_gamma/(d_gamma-1));
+        flux_energy_CC[c][idim]     = vel_CC[c][idim]*(KE + pressure_CC[c]*(d_gamma/(d_gamma-1)));
       }
     }
   }
@@ -808,6 +809,9 @@ void MiniAero::dissipativeFaceFlux(const ProcessorGroup* /*pg*/,
 
     //__________________________________
     //Compute Face Centered Fluxes from Cell Centered
+
+    //This potentially could be separated to a different function or this
+    //function templated on the direction.
     for(CellIterator iter = patch->getSFCXIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
       IntVector offset(-1,0,0);
@@ -825,10 +829,10 @@ void MiniAero::dissipativeFaceFlux(const ProcessorGroup* /*pg*/,
       double tangent[] = {0.0, 1.0, 0.0};
       double binormal[] = {0.0, 0.0, 1.0};
       for(int i=0; i<5; ++i)
-	diss_flux[i] = 0.0;
+        diss_flux[i] = 0.0;
 
       compute_roe_dissipative_flux(primitives_l, primitives_r, diss_flux,
-	normal, binormal, tangent); 
+        normal, binormal, tangent); 
       diss_flux_mass_FCX  [c]    = -diss_flux[0];
       diss_flux_mom_FCX   [c][0] = -diss_flux[1];
       diss_flux_mom_FCX   [c][1] = -diss_flux[2];
@@ -838,20 +842,56 @@ void MiniAero::dissipativeFaceFlux(const ProcessorGroup* /*pg*/,
     for(CellIterator iter = patch->getSFCYIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
       IntVector offset(0,-1,0);
-      diss_flux_mass_FCY  [c]    = 0.0; 
-      diss_flux_mom_FCY   [c][0] = 0.0;
-      diss_flux_mom_FCY   [c][1] = 0.0;
-      diss_flux_mom_FCY   [c][2] = 0.0;
-      diss_flux_energy_FCY[c]    = 0.0;
+      primitives_l[0] = rho_CC[c]; 
+      primitives_l[1] = vel_CC[c][0]; 
+      primitives_l[2] = vel_CC[c][1]; 
+      primitives_l[3] = vel_CC[c][2]; 
+      primitives_l[4] = pressure_CC[c]; 
+      primitives_r[0] = rho_CC[c+offset]; 
+      primitives_r[1] = vel_CC[c+offset][0]; 
+      primitives_r[2] = vel_CC[c+offset][1]; 
+      primitives_r[3] = vel_CC[c+offset][2]; 
+      primitives_r[4] = pressure_CC[c+offset];
+      double normal[] = {0.0, 1.0, 0.0};
+      double tangent[] = {1.0, 0.0, 0.0};
+      double binormal[] = {0.0, 0.0, 1.0};
+      for(int i=0; i<5; ++i)
+        diss_flux[i] = 0.0;
+
+      compute_roe_dissipative_flux(primitives_l, primitives_r, diss_flux,
+        normal, binormal, tangent); 
+      diss_flux_mass_FCY  [c]    = -diss_flux[0]; 
+      diss_flux_mom_FCY   [c][0] = -diss_flux[1];
+      diss_flux_mom_FCY   [c][1] = -diss_flux[2];
+      diss_flux_mom_FCY   [c][2] = -diss_flux[3];
+      diss_flux_energy_FCY[c]    = -diss_flux[4];
     }
     for(CellIterator iter = patch->getSFCZIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
       IntVector offset(0,0,-1);
-      diss_flux_mass_FCZ  [c]    = 0.0; 
-      diss_flux_mom_FCZ   [c][0] = 0.0; 
-      diss_flux_mom_FCZ   [c][1] = 0.0; 
-      diss_flux_mom_FCZ   [c][2] = 0.0; 
-      diss_flux_energy_FCZ[c]    = 0.0; 
+      primitives_l[0] = rho_CC[c]; 
+      primitives_l[1] = vel_CC[c][0]; 
+      primitives_l[2] = vel_CC[c][1]; 
+      primitives_l[3] = vel_CC[c][2]; 
+      primitives_l[4] = pressure_CC[c]; 
+      primitives_r[0] = rho_CC[c+offset]; 
+      primitives_r[1] = vel_CC[c+offset][0]; 
+      primitives_r[2] = vel_CC[c+offset][1]; 
+      primitives_r[3] = vel_CC[c+offset][2]; 
+      primitives_r[4] = pressure_CC[c+offset];
+      double normal[] = {0.0, 0.0, 1.0};
+      double tangent[] = {1.0, 0.0, 0.0};
+      double binormal[] = {0.0, 1.0, 0.0};
+      for(int i=0; i<5; ++i)
+        diss_flux[i] = 0.0;
+
+      compute_roe_dissipative_flux(primitives_l, primitives_r, diss_flux,
+        normal, binormal, tangent); 
+      diss_flux_mass_FCZ  [c]    = -diss_flux[0]; 
+      diss_flux_mom_FCZ   [c][0] = -diss_flux[1]; 
+      diss_flux_mom_FCZ   [c][1] = -diss_flux[2]; 
+      diss_flux_mom_FCZ   [c][2] = -diss_flux[3]; 
+      diss_flux_energy_FCZ[c]    = -diss_flux[4]; 
     }
   }
 }
@@ -930,25 +970,25 @@ void MiniAero::updateResidual(const ProcessorGroup* /*pg*/,
 
       residual_CC[c][0] = (flux_mass_FCX[c + XOffset]  - flux_mass_FCX[c])*dy*dz+ 
         (diss_flux_mass_FCX[c + XOffset]  - diss_flux_mass_FCX[c])*dy*dz + 
-	(flux_mass_FCY[c + YOffset]  - flux_mass_FCY[c])*dx*dz + 
-	(diss_flux_mass_FCY[c + YOffset]  - diss_flux_mass_FCY[c])*dx*dz + 
-	(flux_mass_FCZ[c + ZOffset]  - flux_mass_FCZ[c])*dy*dx +
-	(diss_flux_mass_FCZ[c + ZOffset]  - diss_flux_mass_FCZ[c])*dy*dx;
+        (flux_mass_FCY[c + YOffset]  - flux_mass_FCY[c])*dx*dz + 
+        (diss_flux_mass_FCY[c + YOffset]  - diss_flux_mass_FCY[c])*dx*dz + 
+        (flux_mass_FCZ[c + ZOffset]  - flux_mass_FCZ[c])*dy*dx +
+        (diss_flux_mass_FCZ[c + ZOffset]  - diss_flux_mass_FCZ[c])*dy*dx;
 
       residual_CC[c][4] = (flux_energy_FCX[c + XOffset]  - flux_energy_FCX[c])*dy*dz +
-        (diss_flux_energy_FCX[c + XOffset]  - diss_flux_energy_FCX[c])*dy*dz +
-	(flux_energy_FCY[c + YOffset]  - flux_energy_FCY[c])*dx*dz + 
-	(diss_flux_energy_FCY[c + YOffset]  - diss_flux_energy_FCY[c])*dx*dz + 
-	(flux_energy_FCZ[c + ZOffset]  - flux_energy_FCZ[c])*dy*dx +
-	(diss_flux_energy_FCZ[c + ZOffset]  - diss_flux_energy_FCZ[c])*dy*dx;
+        (diss_flux_energy_FCX[c + XOffset]  - diss_flux_energy_FCX[c])*dy*dz+
+        (flux_energy_FCY[c + YOffset]  - flux_energy_FCY[c])*dx*dz + 
+        (diss_flux_energy_FCY[c + YOffset]  - diss_flux_energy_FCY[c])*dx*dz + 
+        (flux_energy_FCZ[c + ZOffset]  - flux_energy_FCZ[c])*dy*dx +
+        (diss_flux_energy_FCZ[c + ZOffset]  - diss_flux_energy_FCZ[c])*dy*dx;
 
       for(int idim = 0; idim < 3; ++idim) {
 	residual_CC[c][idim + 1] =  (flux_mom_FCX[c + XOffset][idim]  - flux_mom_FCX[c][idim])*dy*dz +
         (diss_flux_mom_FCX[c + XOffset][idim]  - diss_flux_mom_FCX[c][idim])*dy*dz + 
-	(flux_mom_FCY[c + YOffset][idim]  - flux_mom_FCY[c][idim])*dx*dz + 
-	(diss_flux_mom_FCY[c + YOffset][idim]  - diss_flux_mom_FCY[c][idim])*dx*dz + 
-	(flux_mom_FCZ[c + ZOffset][idim]  - flux_mom_FCZ[c][idim])*dy*dx +
-	(diss_flux_mom_FCZ[c + ZOffset][idim]  - diss_flux_mom_FCZ[c][idim])*dy*dx;
+        (flux_mom_FCY[c + YOffset][idim]  - flux_mom_FCY[c][idim])*dx*dz + 
+        (diss_flux_mom_FCY[c + YOffset][idim]  - diss_flux_mom_FCY[c][idim])*dx*dz + 
+        (flux_mom_FCZ[c + ZOffset][idim]  - flux_mom_FCZ[c][idim])*dy*dx +
+        (diss_flux_mom_FCZ[c + ZOffset][idim]  - diss_flux_mom_FCZ[c][idim])*dy*dx;
       }
     }
   }
@@ -1005,7 +1045,6 @@ void MiniAero::compute_roe_dissipative_flux(const double * primitives_left, cons
     const double wvel_left = primitives_left[3];
     const double pressure_left = primitives_left[4]; 
     const double enthalpy_left = d_gamma/gm1*pressure_left/rho_left; 
-
     const double total_enthalpy_left = enthalpy_left + 0.5 * (uvel_left * uvel_left + vvel_left * vvel_left + wvel_left * wvel_left);
 
     // Right state
@@ -1015,10 +1054,9 @@ void MiniAero::compute_roe_dissipative_flux(const double * primitives_left, cons
     const double wvel_right = primitives_right[3];
     const double pressure_right = primitives_right[4]; 
     const double enthalpy_right = d_gamma/gm1*pressure_right/rho_right;
-
     const double total_enthalpy_right = enthalpy_right + 0.5 * (uvel_right * uvel_right + vvel_right * vvel_right + wvel_right * wvel_right);
 
-    // Upwinded part
+    // Everything below is for Upwinded flux
     const double face_normal_norm = std::sqrt(face_normal[0] * face_normal[0] 
       + face_normal[1] * face_normal[1] 
       + face_normal[2] * face_normal[2]);
