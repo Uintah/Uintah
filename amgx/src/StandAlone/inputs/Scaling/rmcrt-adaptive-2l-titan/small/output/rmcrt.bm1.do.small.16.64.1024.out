@@ -1,0 +1,261 @@
+PE 0: MPICH processor detected:
+PE 0:   AuthenticAMD (21:1:2) (family:model:stepping)
+MPI VERSION : CRAY MPICH version 6.3.0 (ANL base 3.0.3)
+BUILD INFO  : Built Mon Mar 10 21:36:48 2014 (svn rev 10018) RT-G CPR-R
+PE 0: MPICH environment settings:
+PE 0:   MPICH_ENV_DISPLAY          = 1
+PE 0:   MPICH_VERSION_DISPLAY      = 1
+PE 0:   MPICH_ABORT_ON_ERROR       = 1
+PE 0:   MPICH_CPUMASK_DISPLAY      = 0
+PE 0:   MPICH_RANK_REORDER_METHOD  = 1
+PE 0:   MPICH_RANK_REORDER_DISPLAY = 0
+PE 0:   MPICH_MEMCPY_MEM_CHECK     = 0
+PE 0:   MPICH_USE_SYSTEM_MEMCPY    = 1
+PE 0:   MPICH_NO_BUFFER_ALIAS_CHECK= 0
+PE 0:   MPICH_COLL_SYNC            = 0
+PE 0:   MPICH_MSG_QUEUE_DBG        = 0
+PE 0: MPICH/GPU environment settings:
+PE 0:   MPICH_RDMA_ENABLED_CUDA    = 0
+PE 0:   MPICH_G2G_PIPELINE         = 0
+PE 0:   MPICH_NO_GPU_DIRECT        = 0
+PE 0: MPICH/MPMD environment settings:
+PE 0:   MPICH_DMAPP_APP_IS_WORLD   = 0
+PE 0: MPICH/SMP environment settings:
+PE 0:   MPICH_SMP_SINGLE_COPY_OFF  = 0
+PE 0:   MPICH_SMP_SINGLE_COPY_SIZE = 8192
+PE 0: MPICH/GNI environment settings:
+PE 0:           MPICH_GNI_RECV_CQ_SIZE = 40960
+PE 0:          MPICH_GNI_LOCAL_CQ_SIZE = 8192
+PE 0:            MPICH_GNI_DEBUG_LEVEL = 0
+PE 0:    MPICH_GNI_MAX_VSHORT_MSG_SIZE = 8144
+PE 0:     MPICH_GNI_MAX_EAGER_MSG_SIZE = 8192
+PE 0:               MPICH_GNI_NUM_BUFS = 64
+PE 0:             MPICH_GNI_NUM_MBOXES = -1
+PE 0:       MPICH_GNI_MBOXES_PER_BLOCK = 4096
+PE 0:         MPICH_GNI_RDMA_THRESHOLD = 1024
+PE 0:          MPICH_GNI_RCVCQ_PROCNUM = 1
+PE 0:    MPICH_GNI_NDREG_ENTRIES(req.) = 999
+PE 0:          MPICH_GNI_NDREG_MAXSIZE = 524288
+PE 0:        MPICH_GNI_MALLOC_FALLBACK = 0
+PE 0:          MPICH_GNI_NDREG_LAZYMEM = LAZY_ALL
+PE 0:          MPICH_GNI_DMAPP_INTEROP = 1
+PE 0:           MPICH_GNI_DYNAMIC_CONN = 1
+PE 0:        MPICH_GNI_MAX_NUM_RETRIES = 16
+PE 0:              MPICH_GNI_FORK_MODE = PARTCOPY
+PE 0:         MPICH_GNI_MBOX_PLACEMENT = DEFAULT
+PE 0:        MPICH_GNI_VC_MSG_PROTOCOL = MBOX
+PE 0:      MPICH_GNI_BTE_MULTI_CHANNEL = 1
+PE 0:           MPICH_GNI_LMT_GET_PATH = 1
+PE 0:               MPICH_GNI_LMT_PATH = 1
+PE 0:     MPICH_NEMESIS_ASYNC_PROGRESS = 0
+PE 0: MPICH_GNI_ASYNC_PROGRESS_TIMEOUT = -1
+PE 0:       MPICH_GNI_DATAGRAM_TIMEOUT = -1
+PE 0:            MPICH_GNI_FMA_SHARING = 0
+PE 0:          MPICH_GNI_USE_PCI_IOMMU = 0
+PE 0:            MPICH_GNI_CQE_BACKOFF = 0
+PE 0:    MPICH_GNI_USE_UNASSIGNED_CPUS = 1
+PE 0:        MPICH_GNI_MEM_DEBUG_FNAME = 
+PE 0: MPICH/COLLECTIVE environment settings:
+PE 0:   MPICH_COLL_OPT_OFF         = 0
+PE 0:   MPICH_COLL_BAL_INJECTION   = auto
+PE 0:   MPICH_USE_DMAPP_COLL       = 0
+PE 0:   MPICH_DMAPP_COLL_RADIX     = 64
+PE 0:   MPICH_DMAPP_A2A_SHORT_MSG  = 4096
+PE 0:   MPICH_DMAPP_A2A_USE_PUTS   = 0
+PE 0:   MPICH_DMAPP_A2A_SYMBUF_SIZE= 16384
+PE 0:   MPICH_BCAST_ONLY_TREE      = 1
+PE 0:   MPICH_ALLTOALL_SHORT_MSG   = 32-2048
+PE 0:   MPICH_ALLTOALLV_THROTTLE   = 1
+PE 0:   MPICH_ALLGATHER_VSHORT_MSG = 1024-8192
+PE 0:   MPICH_ALLGATHERV_VSHORT_MSG= 1024-8192
+PE 0:   MPICH_GATHERV_SHORT_MSG    = 16384
+PE 0:   MPICH_SCATTERV_SHORT_MSG   = 2048-8192
+PE 0:   MPICH_SCATTERV_SYNCHRONOUS = 0
+PE 0:   MPICH_ALLREDUCE_NO_SMP     = 0
+PE 0:   MPICH_REDUCE_NO_SMP        = 0
+PE 0: MPICH/MPIIO environment settings:
+PE 0:   MPICH_MPIIO_HINTS_DISPLAY  = 0
+PE 0:   MPICH_MPIIO_HINTS          = NULL
+PE 0:   MPICH_MPIIO_ABORT_ON_RW_ERROR = disable
+PE 0:   MPICH_MPIIO_CB_ALIGN       = 2
+PE 0: MPICH Thread Safety settings:
+PE 0:   MPICH_MAX_THREAD_SAFETY    = multiple
+PE 0:   rank 0 required = multiple, was provided = multiple
+Parallel: 64 processors (using MPI)
+Parallel: 16 threads per MPI process
+Parallel: MPI Level Required: 3, provided: 3
+
+WARNING: You have turned OFF .ups file validation... this may cause many unforeseen problems
+         with your simulation run.  It is strongly suggested that you leave validation on!
+
+Date:    Fri Oct 17 04:26:28 2014
+Machine: nid09092
+SVN: $Revision: 51394 $
+SVN: $Date: 2013-12-17 17:36:21 -0500 (Tue, 17 Dec 2013) $
+Assertion level: 0
+CFLAGS: -fPIC  -fopenmp -Wall -g -O2 -DNDEBUG 
+Implicit Solver: 	CGSolver
+Simulation Component: 	'RMCRT_Test'
+__________________________________ USING DOUBLE VERSION OF RMCRT
+Load Balancer: 		SimpleLoadBalancer
+Scheduler: 		UnifiedScheduler
+	Using "MostMessages" Algorithm
+	WARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, not all tasks are thread safe yet.
+	Creating 15 thread(s) for task execution.
+Next checkpoint time is 0
+Patch layout: 		(2,2,2)
+Patch layout: 		(16,8,8)
+Grid statistics:
+Number of levels:		2
+Level 0:
+  Number of patches:		8
+  Total number of cells:	39304 (4913 avg. per patch)
+Level 1:
+  Number of patches:		1024
+  Total number of cells:	2197000 (2145.51 avg. per patch)
+Total patches in grid:		1032
+Total cells in grid:		2236304 (2166.96 avg. per patch)
+
+__________________________________ USING DOUBLE VERSION OF RMCRT
+__________________________________ Reading in RMCRT section of ups file
+sigmaScat: 0
+RMCRT: WARNING: You have specified only 1 ray to compute radiative fluxes.
+For better accuracy and stability, specify nFluxRays greater than 2.
+Compiling initialization taskgraph...
+done taskgraph compile (0.006063 seconds)
+Compiling taskgraph...
+DONE TASKGRAPH RE-COMPILE (0.08765 seconds)
+Time=0 (timestep 0), delT=0.0078125, elap T = 0.10, Memory Use = 15.71 MBs (avg), 16.20 MBs (max on rank:0)
+  Recompile         avg: 0.0822548  max: 0.08765    maxloc:0 LIB%: 6.15536
+  TaskExec          avg: 0.0100287  max: 0.010638   maxloc:22 LIB%: 5.72755
+  TaskLocalComm     avg: 5.21875e-06 max: 1e-05      maxloc:37 LIB%: 47.8125
+
+ RMCRT REPORT: Patch 8
+ Used 37300 milliseconds of CPU time. 
+
+ Size: 11397157
+ Efficiency: 305554 steps per sec
+
+Time=0.0078125 (timestep 1), delT=0.0078125, elap T = 5.52, Memory Use = 25.28 MBs (avg), 42.31 MBs (max on rank:32)
+  TaskExec          avg: 43.9745    max: 46.4015    maxloc:33 LIB%: 5.23053
+  TaskLocalComm     avg: 0.671095   max: 1.14353    maxloc:56 LIB%: 41.3136
+  TaskWaitCommTime  avg: 1.02334    max: 2.67393    maxloc:7 LIB%: 61.7292
+  TaskWaitThreadTime avg: 0.000342828 max: 0.000378   maxloc:42 LIB%: 9.30473
+
+ RMCRT REPORT: Patch 8
+ Used 37280 milliseconds of CPU time. 
+
+ Size: 11431766
+ Efficiency: 306646 steps per sec
+
+Time=0.015625 (timestep 2), delT=0.0078125, elap T = 8.67, Memory Use = 30.04 MBs (avg), 62.80 MBs (max on rank:0)
+  TaskExec          avg: 42.2722    max: 43.7432    maxloc:33 LIB%: 3.36299
+  TaskLocalComm     avg: 0.27392    max: 1.15604    maxloc:16 LIB%: 76.3053
+  TaskWaitCommTime  avg: 0.336128   max: 0.461347   maxloc:3 LIB%: 27.1421
+  TaskWaitThreadTime avg: 0.000274313 max: 0.000339   maxloc:37 LIB%: 19.0819
+
+ RMCRT REPORT: Patch 8
+ Used 37190 milliseconds of CPU time. 
+
+ Size: 11383699
+ Efficiency: 306096 steps per sec
+
+Time=0.0234375 (timestep 3), delT=0.0078125, elap T = 11.84, Memory Use = 32.42 MBs (avg), 78.47 MBs (max on rank:32)
+  TaskExec          avg: 42.2359    max: 43.7202    maxloc:33 LIB%: 3.39503
+  TaskLocalComm     avg: 0.174338   max: 0.666397   maxloc:24 LIB%: 73.8387
+  TaskWaitCommTime  avg: 0.344875   max: 0.496373   maxloc:7 LIB%: 30.521
+  TaskWaitThreadTime avg: 0.000283797 max: 0.000332   maxloc:42 LIB%: 14.519
+  Percent Time in overhead:0
+
+ RMCRT REPORT: Patch 8
+ Used 37200 milliseconds of CPU time. 
+
+ Size: 11405924
+ Efficiency: 306611 steps per sec
+
+Time=0.03125 (timestep 4), delT=0.0078125, elap T = 14.97, mean: 3.15, Memory Use = 34.06 MBs (avg), 94.95 MBs (max on rank:32)
+  TaskExec          avg: 42.217     max: 43.7782    maxloc:30 LIB%: 3.5662
+  TaskLocalComm     avg: 0.151493   max: 0.649062   maxloc:32 LIB%: 76.6597
+  TaskWaitCommTime  avg: 0.322152   max: 0.462439   maxloc:7 LIB%: 30.3364
+  TaskWaitThreadTime avg: 0.000279453 max: 0.000332   maxloc:37 LIB%: 15.8274
+  Percent Time in overhead:0
+
+ RMCRT REPORT: Patch 8
+ Used 37470 milliseconds of CPU time. 
+
+ Size: 11428843
+ Efficiency: 305013 steps per sec
+
+Time=0.0390625 (timestep 5), delT=0.0078125, elap T = 18.29, mean: 3.23, Memory Use = 35.30 MBs (avg), 105.14 MBs (max on rank:0)
+  TaskExec          avg: 42.1994    max: 43.6466    maxloc:33 LIB%: 3.31553
+  TaskLocalComm     avg: 0.13934    max: 0.508381   maxloc:0 LIB%: 72.5914
+  TaskWaitCommTime  avg: 0.487534   max: 0.691022   maxloc:27 LIB%: 29.4473
+  TaskWaitThreadTime avg: 0.000289031 max: 0.00034    maxloc:43 LIB%: 14.9908
+  Percent Time in overhead:0
+
+ RMCRT REPORT: Patch 8
+ Used 37030 milliseconds of CPU time. 
+
+ Size: 11391616
+ Efficiency: 307632 steps per sec
+
+Time=0.046875 (timestep 6), delT=0.0078125, elap T = 21.34, mean: 3.16, Memory Use = 35.99 MBs (avg), 104.62 MBs (max on rank:0)
+  TaskExec          avg: 42.1824    max: 43.5338    maxloc:41 LIB%: 3.10425
+  TaskLocalComm     avg: 0.127411   max: 0.585179   maxloc:32 LIB%: 78.227
+  TaskWaitCommTime  avg: 0.251198   max: 0.372477   maxloc:3 LIB%: 32.56
+  TaskWaitThreadTime avg: 0.000286938 max: 0.000337   maxloc:45 LIB%: 14.8553
+  Percent Time in overhead:0
+
+ RMCRT REPORT: Patch 8
+ Used 37530 milliseconds of CPU time. 
+
+ Size: 11395730
+ Efficiency: 303643 steps per sec
+
+Time=0.0546875 (timestep 7), delT=0.0078125, elap T = 24.56, mean: 3.18, Memory Use = 37.00 MBs (avg), 115.77 MBs (max on rank:0)
+  TaskExec          avg: 42.1755    max: 43.468     maxloc:33 LIB%: 2.97342
+  TaskLocalComm     avg: 0.135713   max: 0.506258   maxloc:8 LIB%: 73.193
+  TaskWaitCommTime  avg: 0.370054   max: 0.559177   maxloc:3 LIB%: 33.8218
+  TaskWaitThreadTime avg: 0.000282422 max: 0.000337   maxloc:8 LIB%: 16.1953
+  Percent Time in overhead:0
+
+ RMCRT REPORT: Patch 8
+ Used 37130 milliseconds of CPU time. 
+
+ Size: 11405520
+ Efficiency: 307178 steps per sec
+
+Time=0.0625 (timestep 8), delT=0.0078125, elap T = 27.53, mean: 3.12, Memory Use = 37.99 MBs (avg), 116.69 MBs (max on rank:0)
+  TaskExec          avg: 42.1691    max: 43.5413    maxloc:37 LIB%: 3.15142
+  TaskLocalComm     avg: 0.123448   max: 0.410412   maxloc:8 LIB%: 69.921
+  TaskWaitCommTime  avg: 0.197657   max: 0.293577   maxloc:6 LIB%: 32.6728
+  TaskWaitThreadTime avg: 0.000294375 max: 0.000772   maxloc:0 LIB%: 61.8685
+  Percent Time in overhead:0
+
+ RMCRT REPORT: Patch 8
+ Used 37290 milliseconds of CPU time. 
+
+ Size: 11449882
+ Efficiency: 307050 steps per sec
+
+Time=0.0703125 (timestep 9), delT=0.0078125, elap T = 30.58, mean: 3.10, Memory Use = 38.67 MBs (avg), 130.17 MBs (max on rank:0)
+  TaskExec          avg: 42.1473    max: 43.4554    maxloc:37 LIB%: 3.01027
+  TaskLocalComm     avg: 0.132288   max: 0.497073   maxloc:16 LIB%: 73.3866
+  TaskWaitCommTime  avg: 0.265874   max: 0.367773   maxloc:7 LIB%: 27.7071
+  TaskWaitThreadTime avg: 0.000288109 max: 0.000324   maxloc:23 LIB%: 11.0774
+  Percent Time in overhead:0
+
+ RMCRT REPORT: Patch 8
+ Used 36890 milliseconds of CPU time. 
+
+ Size: 11404563
+ Efficiency: 309151 steps per sec
+
+Time=0.078125 (timestep 10), delT=0.0078125, elap T = 33.62, mean: 3.09, Memory Use = 39.15 MBs (avg), 118.54 MBs (max on rank:0)
+  TaskExec          avg: 42.1379    max: 43.4519    maxloc:33 LIB%: 3.02405
+  TaskLocalComm     avg: 0.128845   max: 0.521188   maxloc:16 LIB%: 75.2786
+  TaskWaitCommTime  avg: 0.239407   max: 0.362592   maxloc:7 LIB%: 33.9734
+  TaskWaitThreadTime avg: 0.000285469 max: 0.000335   maxloc:41 LIB%: 14.7854
+  Percent Time in overhead:0
+Sus: going down successfully
+Application 7859371 resources: utime ~27068s, stime ~672s, Rss ~131516, inblocks ~4059082, outblocks ~9659037
