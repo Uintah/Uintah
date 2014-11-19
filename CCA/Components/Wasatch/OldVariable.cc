@@ -79,7 +79,6 @@ namespace Wasatch {
 
     virtual ~VarHelperBase()
     {
-      std::cout << "*****************************&*&*&*&*&*&*&*\n";
       Uintah::VarLabel::destroy( oldVarLabel_ );
       if (needsNewVarLabel_) Uintah::VarLabel::destroy( varLabel_ );
     }
