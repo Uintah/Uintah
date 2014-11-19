@@ -345,6 +345,13 @@ SCI_ARG_WITH(hypre,
   [with_hypre="$withval"
    sci_required_hypre=yes],
   [with_hypre=""])
+
+SCI_ARG_WITH(amgx,
+  AC_HELP_STRING(--with-amgx=DIR,
+                 Use the amgx installation in DIR.  Set to 'built-in' if explicit linking of amgx is NOT required. ),
+  [with_amgx="$withval"
+   sci_required_amgx=yes],
+  [with_amgx=""])
   
 SCI_ARG_WITH(petsc,
   AC_HELP_STRING(--with-petsc=DIR,
@@ -4658,6 +4665,78 @@ AC_SUBST(HYPRE_LIB_FLAG)
 AC_SUBST(HYPRE_LIB_DIR_FLAG)
 
 sci_defs_files="$sci_defs_files include/sci_defs/hypre_testdefs.h"
+
+##  --  search for amgx stuff  ------------------------------------------
+
+_sci_lib=
+_sci_inc=
+_sci_optional=optional
+
+# Handle --without option
+if test "$with_amgx" = "no"; then
+   AC_MSG_WARN(AMGX is turned off.)
+else
+  if test "$with_amgx" = "built-in"; then
+     HAVE_AMGX="yes"
+     DEF_AMGX="#define HAVE_AMGX 1"
+     AC_MSG_WARN(Relying on a built-in version of Amgx)
+  else
+
+     if test "$with_amgx" = "yes"; then
+        _sci_optional=required
+     elif test "$with_amgx"; then
+        _sci_lib="$with_amgx/lib"
+        _sci_inc="$with_amgx/include"
+        _sci_optional=specific
+     fi
+
+     # # We used to also check for AMGX_blas, but amgx 1.9 doesn't have it,
+     # # so we aren't going to check for it in any version.  If the other 3
+     # # libs exist, we will assume that AMGX_blas is there if it is needed.
+     # SCI_TRY_LINK(AMGX,AMGX libraries and headers,AMGX.h,$_sci_inc,
+     #                          AMGX_struct_mv AMGX_struct_ls AMGX_sstruct_mv AMGX_sstruct_ls AMGX_LSI AMGX_superlu AMGX_utilities,
+     #                          $_sci_lib,-lm,,$_sci_optional)
+
+     # We should just be able to link vs. libAMGX.so...
+     #   Also, libAMGX has some C++ stuff in it, so we need to be in C++ mode...
+     AC_LANG([C++])
+     SCI_TRY_LINK(AMGX,AMGX libraries and headers,amgx_c.h,$_sci_inc,
+                        amgxsh,
+                        $_sci_lib,
+                        $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                        ,
+                        optional)
+
+     if test "$HAVE_AMGX" != "yes"; then
+        SCI_TRY_LINK(AMGX,AMGX libraries and headers,amgx_c.h,$_sci_inc,
+                           amgxsh,
+                           $_sci_lib,
+                           $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                           ,
+                           optional)
+     fi
+     AC_LANG([C])
+
+     if test "$HAVE_AMGX" = "yes" ; then
+        DEF_AMGX="#define HAVE_AMGX 1"
+     fi
+
+     if test "$with_amgx" && test ! "$DEF_AMGX"; then
+        echo
+        AC_MSG_ERROR(One or more of the AMGX components is missing.)
+     fi
+  fi
+fi
+
+AC_SUBST(HAVE_AMGX)
+AC_SUBST(DEF_AMGX)
+AC_SUBST(INC_AMGX_H)
+AC_SUBST(AMGX_LIB_FLAG)
+AC_SUBST(AMGX_LIB_DIR_FLAG)
+
+sci_defs_files="$sci_defs_files include/sci_defs/amgx_testdefs.h"
+
+
 
 ##  ---------------------------------------------------------------------
 ##  --------------------  Fix Frost config vars  ------------------------
