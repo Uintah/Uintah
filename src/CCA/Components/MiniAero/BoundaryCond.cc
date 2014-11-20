@@ -315,7 +315,7 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
       if( periodic[dir]==1 && ( tagFace_minus[dir] == 1 || tagFace_plus[dir] == 1)){
         ostringstream warn;
         warn <<"\n__________________________________\n "
-             << "ERROR: A periodic AND a normal boundary condition have been specifed for \n"
+             << "ERROR: A periodic AND a normal boundary condition have been specified for \n"
              << " direction: "<< dir << "  You can only have on or the other"<< endl;
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);   
       }
