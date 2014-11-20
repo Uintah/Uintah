@@ -523,7 +523,6 @@ namespace Wasatch{
       }
     }
     
-    //
     std::string timeIntName;
     wasatchSpec_->get("TimeIntegrator",timeIntName);
     TimeIntegrator timeInt(timeIntName);
@@ -671,6 +670,12 @@ namespace Wasatch{
       }
     }
     
+    if( wasatchSpec_->findBlock("Radiation") ){
+      parse_radiation_solver( wasatchSpec_->findBlock("Radiation"),
+                              *graphCategories_[ADVANCE_SOLUTION],
+                              *linSolver_, sharedState, locked_fields() );
+    }
+
     if( buildTimeIntegrator_ ){
       timeStepper_ = scinew TimeStepper( sharedState_, graphCategories_, timeInt );
     }    
