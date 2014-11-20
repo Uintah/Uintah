@@ -158,6 +158,9 @@ ifeq ($(HAVE_CUDA),yes)
   $(OBJTOP_ABS)/$(SRCDIR)/SetCurrentTime.cu : $(SRCTOP_ABS)/$(SRCDIR)/SetCurrentTime.cc
 	cp $< $@
 
+  $(OBJTOP_ABS)/$(SRCDIR)/SimpleEmission.cu : $(SRCTOP_ABS)/$(SRCDIR)/SimpleEmission.cc
+	cp $< $@
+
   $(OBJTOP_ABS)/$(SRCDIR)/SolnVarEst.cu : $(SRCTOP_ABS)/$(SRCDIR)/SolnVarEst.cc
 	cp $< $@
 
