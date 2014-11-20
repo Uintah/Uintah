@@ -52,6 +52,14 @@ else
   SRCS += $(SRCDIR)/FakePetscSolver.cc
 endif
 
+ifeq ($(HAVE_AMGX),yes)
+  SRCS += $(SRCDIR)/AmgxSolver.cc 
+  LIBS := $(LIBS) $(AMGX_LIBRARY) 
+  INCLUDES += $(AMGX_INCLUDE)
+else
+  SRCS += $(SRCDIR)/FakeAmgxSolver.cc
+endif
+
 SUBDIRS := \
 	$(SRCDIR)/ConstitutiveModel \
 	$(SRCDIR)/Contact           \
@@ -84,6 +92,10 @@ LIBS := $(XML2_LIBRARY) $(VT_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
 
 ifeq ($(HAVE_PETSC),yes)
   LIBS := $(LIBS) $(PETSC_LIBRARY) 
+endif
+
+ifeq ($(HAVE_AMGX),yes)
+  LIBS := $(LIBS) $(AMGX_LIBRARY) 
 endif
 
 ifneq ($(NO_FORTRAN),yes)
