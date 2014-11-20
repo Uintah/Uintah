@@ -153,6 +153,10 @@ namespace Wasatch{
   {
     Expr::ExpressionID densCalcID;  // BE SURE TO POPULATE THIS BELOW!
 
+    // Lock the density because on initialization this may be an intermediate
+    // quantity, but is always needed as a guess for the solver here.
+    lockedFields.insert( densityTag.name() );
+
     const std::string densTableName = "Density";
     if( !table.has_depvar(densTableName) ){
       throw Uintah::ProblemSetupException( "Table has no density entry in it, but density was requested through your input file!", __FILE__, __LINE__ );
