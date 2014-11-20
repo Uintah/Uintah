@@ -28,7 +28,7 @@
  *  \author "James C. Sutherland"
  */
 
-#include "SimpleEmission.h"
+#include <CCA/Components/Wasatch/Expressions/SimpleEmission.h>
 
 //--------------------------------------------------------------------
 

@@ -322,7 +322,7 @@ namespace Wasatch{
 
       const OrdinateDirections discOrd( order );
       Expr::TagList intensityTags;
-      for( int i=0; i< discOrd.number_of_directions(); ++i ){
+      for( size_t i=0; i< discOrd.number_of_directions(); ++i ){
         const OrdinateDirections::SVec& svec = discOrd.get_ordinate_information(i);
         const std::string intensity( "intensity_" + boost::lexical_cast<std::string>(i) );
         std::cout << "registering expression for " << intensity << std::endl;
