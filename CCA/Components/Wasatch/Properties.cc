@@ -316,7 +316,7 @@ namespace Wasatch{
       case SVOL: {
         typedef TabPropsEvaluator<SpatialOps::SVolField>::Builder PropEvaluator;
         gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, *interp, ivarNames ) );
-        if( dvarTableName=="Density" ){
+        if( doDenstPlus && dvarTableName=="Density" ){
           const Expr::Tag densStarTag ( dvarTag.name()+TagNames::self().star,       dvarTag.context() );
           const Expr::Tag densStar2Tag( dvarTag.name()+TagNames::self().doubleStar, dvarTag.context() );
           gh.rootIDs.insert( gh.exprFactory->register_expression( scinew PropEvaluator( densStarTag,  *interp, ivarNames ) ) );
@@ -397,6 +397,7 @@ namespace Wasatch{
 
   void
   parse_twostream_mixing( Uintah::ProblemSpecP params,
+                          const bool doDenstPlus,
                           GraphCategories& gc )
   {
     const Expr::Tag fTag    = parse_nametag( params->findBlock("MixtureFraction")->findBlock("NameTag") );
@@ -408,32 +409,35 @@ namespace Wasatch{
 
     // initial conditions for density
     {
-      const Expr::Tag icRhoTag     ( rhoTag.name(),                             Expr::STATE_NONE );
-      const Expr::Tag icRhoStarTag ( rhoTag.name()+TagNames::self().star,       Expr::STATE_NONE );
-      const Expr::Tag icRhoStar2Tag( rhoTag.name()+TagNames::self().doubleStar, Expr::STATE_NONE );
-
-      typedef TwoStreamDensFromMixfr<SVolField>::Builder ICDensExpr;
       GraphHelper& gh = *gc[INITIALIZATION];
-      gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(icRhoTag,     fTag,rho0,rho1) ) );
-      gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(icRhoStarTag, fTag,rho0,rho1) ) );
-      gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(icRhoStar2Tag,fTag,rho0,rho1) ) );
+      typedef TwoStreamDensFromMixfr<SVolField>::Builder ICDensExpr;
+      const Expr::Tag icRhoTag( rhoTag.name(), Expr::STATE_NONE );
+      gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(icRhoTag,fTag,rho0,rho1) ) );
+
+      if( doDenstPlus ){
+        const Expr::Tag icRhoStarTag ( rhoTag.name()+TagNames::self().star,       Expr::STATE_NONE );
+        const Expr::Tag icRhoStar2Tag( rhoTag.name()+TagNames::self().doubleStar, Expr::STATE_NONE );
+        gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(icRhoStarTag, fTag,rho0,rho1) ) );
+        gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(icRhoStar2Tag,fTag,rho0,rho1) ) );
+      }
     }
 
     typedef TwoStreamMixingDensity<SVolField>::Builder DensExpr;
     gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(rhoTag,rhofTag,rho0,rho1) );
 
-    const TagNames& names = TagNames::self();
+    if( doDenstPlus ){
+      const TagNames& names = TagNames::self();
 
-    Expr::Tag rhoStar ( rhoTag .name()+names.star, rhoTag.context() );
-    Expr::Tag rhofStar( rhofTag.name()+names.star, Expr::STATE_NONE );
-    const Expr::ExpressionID id1 = gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(rhoStar,rhofStar,rho0,rho1) );
+      Expr::Tag rhoStar ( rhoTag .name()+names.star, rhoTag.context() );
+      Expr::Tag rhofStar( rhofTag.name()+names.star, Expr::STATE_NONE );
+      const Expr::ExpressionID id1 = gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(rhoStar,rhofStar,rho0,rho1) );
 
-    rhoStar .name() = rhoTag.name()  + names.doubleStar;
-    rhofStar.name() = rhofTag.name() + names.doubleStar;
-    const Expr::ExpressionID id2 = gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(rhoStar,rhofStar,rho0,rho1) );
-
-    gc[ADVANCE_SOLUTION]->exprFactory->cleave_from_children(id1);
-    gc[ADVANCE_SOLUTION]->exprFactory->cleave_from_children(id2);
+      rhoStar .name() = rhoTag.name()  + names.doubleStar;
+      rhofStar.name() = rhofTag.name() + names.doubleStar;
+      const Expr::ExpressionID id2 = gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(rhoStar,rhofStar,rho0,rho1) );
+      gc[ADVANCE_SOLUTION]->exprFactory->cleave_from_children(id1);
+      gc[ADVANCE_SOLUTION]->exprFactory->cleave_from_children(id2);
+    }
   }
 
   //====================================================================
@@ -500,14 +504,14 @@ namespace Wasatch{
       parse_radprops( radPropsParams, *gc[ADVANCE_SOLUTION] );
     }
 
-    if( twoStreamParams ){
-      parse_twostream_mixing( twoStreamParams, gc );
-    }
-
     const bool isConstDensity = densityParams->findBlock("Constant");
     const bool doDenstPlus = !isConstDensity
                            && params->findBlock("MomentumEquations")
                            && params->findBlock("TransportEquation");
+
+    if( twoStreamParams ){
+      parse_twostream_mixing( twoStreamParams, doDenstPlus, gc );
+    }
 
     // TabProps
     for( Uintah::ProblemSpecP tabPropsParams = params->findBlock("TabProps");
