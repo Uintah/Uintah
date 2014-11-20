@@ -57,6 +57,9 @@
 #include <CCA/Components/Wasatch/Expressions/MMS/VardenMMS.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/Varden2DMMS.h>
 #include <CCA/Components/Wasatch/Expressions/Particles/ParticleGasMomentumSrc.h>
+#include <CCA/Components/Wasatch/Expressions/SimpleEmission.h>
+#include <CCA/Components/Wasatch/Expressions/DORadSolver.h>
+
 //-- Uintah includes --//
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -283,6 +286,60 @@ namespace Wasatch{
 
   //==================================================================
   
+  void parse_radiation_solver( Uintah::ProblemSpecP params,
+                               GraphHelper& gh,
+                               Uintah::SolverInterface& linSolver,
+                               Uintah::SimulationStateP& sharedState,
+                               std::set<std::string>& lockedFields )
+  {
+    const Expr::Tag tempTag = parse_nametag( params->findBlock("Temperature")->findBlock("NameTag") );
+    const Expr::Tag divQTag = parse_nametag( params->findBlock("DivQ")->findBlock("NameTag") );
+
+    Expr::Tag absCoefTag;
+    if( params->findBlock("AbsorptionCoefficient") )
+      absCoefTag = parse_nametag( params->findBlock("AbsorptionCoefficient")->findBlock("NameTag") );
+
+    if( params->findBlock("SimpleEmission") ){
+      Uintah::ProblemSpecP envTempParams = params->findBlock("SimpleEmission")->findBlock("EnvironmentTemperature");
+      if( envTempParams->findBlock("Constant") ){
+        double envTempVal = 0.0;
+        envTempParams->findBlock("Constant")->getAttribute( "value", envTempVal );
+        gh.exprFactory->register_expression( new SimpleEmission<SVolField>::Builder( divQTag, tempTag, envTempVal, absCoefTag ) );
+      }
+      else{
+        const Expr::Tag envTempTag = parse_nametag( envTempParams );
+        gh.exprFactory->register_expression( new SimpleEmission<SVolField>::Builder( divQTag, tempTag, envTempTag, absCoefTag ) );
+      }
+    }
+    else if( params->findBlock("DiscreteOrdinates") ){
+      Uintah::SolverParameters* sparams = linSolver.readParameters( params, "", sharedState );
+
+      int order = 2;
+      params->findBlock("DiscreteOrdinates")->getAttribute("order",order);
+
+      Expr::Tag scatCoef;  // currently we are not ready for scattering.
+//      if( params->findBlock("ScatteringCoefficient") ) parse_nametag( params->findBlock("ScatteringCoefficient") );
+
+      const OrdinateDirections discOrd( order );
+      Expr::TagList intensityTags;
+      for( int i=0; i< discOrd.number_of_directions(); ++i ){
+        const OrdinateDirections::SVec& svec = discOrd.get_ordinate_information(i);
+        const std::string intensity( "intensity_" + boost::lexical_cast<std::string>(i) );
+        std::cout << "registering expression for " << intensity << std::endl;
+        DORadSolver::Builder* radSolver = new DORadSolver::Builder( intensity, svec, absCoefTag, scatCoef, tempTag, *sparams, linSolver );
+        const Expr::ExpressionID id = gh.exprFactory->register_expression( radSolver );
+        gh.exprFactory->cleave_from_children( id );
+        gh.exprFactory->cleave_from_parents ( id );
+        BOOST_FOREACH( const Expr::Tag& tag, radSolver->get_tags() ){
+          lockedFields.insert( tag.name() );
+        }
+      }
+      gh.exprFactory->register_expression( new DORadSrc::Builder( divQTag, tempTag, absCoefTag, discOrd ) );
+    }
+  }
+
+  //==================================================================
+
   void parse_var_den_mms( Uintah::ProblemSpecP wasatchParams,
                           Uintah::ProblemSpecP varDensMMSParams,
                           const bool computeContinuityResidual,
