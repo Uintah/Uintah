@@ -4686,7 +4686,7 @@ else
         _sci_optional=required
      elif test "$with_amgx"; then
         _sci_lib="$with_amgx/lib"
-        _sci_inc="$with_amgx/include"
+        _sci_inc="$with_amgx/examples"
         _sci_optional=specific
      fi
 
@@ -4703,7 +4703,7 @@ else
      SCI_TRY_LINK(AMGX,AMGX libraries and headers,amgx_c.h,$_sci_inc,
                         amgxsh,
                         $_sci_lib,
-                        $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                        $CUDA_LIB_DIR_FLAG $CUDA_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $DL_LIB_FLAG,
                         ,
                         optional)
 
@@ -4711,7 +4711,7 @@ else
         SCI_TRY_LINK(AMGX,AMGX libraries and headers,amgx_c.h,$_sci_inc,
                            amgxsh,
                            $_sci_lib,
-                           $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                           $CUDA_LIB_DIR_FLAG $CUDA_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $DL_LIB_FLAG ,
                            ,
                            optional)
      fi
