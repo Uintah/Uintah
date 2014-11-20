@@ -1154,8 +1154,7 @@ namespace Wasatch{
     }
     else{ // build an expression for the diffusive flux.
 
-      for (std::string::iterator it = direction.begin(); it != direction.end(); ++it)
-      {
+      for( std::string::iterator it = direction.begin(); it != direction.end(); ++it ){
         std::string dir(1,*it);
         const TagNames& tagNames = TagNames::self();
         diffFluxTag = Expr::Tag( primVarName + suffix + tagNames.diffusiveflux + dir, Expr::STATE_NONE );
