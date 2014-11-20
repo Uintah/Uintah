@@ -337,7 +337,7 @@ namespace Wasatch {
           Uintah::Iterator nu;
           const Uintah::BoundCondBase* const bc = patch_->getArrayBCValues( face, materialID_, temperatureTag_.name(), boundPtr, nu, child );
 
-          const bool hasExtraCells = ( patch_->getExtraCells() != SCIRun::IntVector(0,0,0) );
+//          const bool hasExtraCells = ( patch_->getExtraCells() != SCIRun::IntVector(0,0,0) );
 
           // cell offset used to calculate local cell index with respect to patch.
           const SCIRun::IntVector patchCellOffset = patch_->getCellLowIndex(0);
