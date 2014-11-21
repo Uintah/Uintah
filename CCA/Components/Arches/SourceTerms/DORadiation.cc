@@ -125,7 +125,7 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   _IncidentIntensityLabels.push_back(  VarLabel::find("IncidentFluxB"));
   }
 
-   for( int ix=0;  ix<_IncidentIntensityLabels.size();ix++){
+   for(unsigned int ix=0;  ix<_IncidentIntensityLabels.size();ix++){  // using unsigned int removes warnings.
      _extra_local_labels.push_back(_IncidentIntensityLabels[ix]); 
    }
 
@@ -216,17 +216,17 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 
     if (do_radiation==false){
       if ( timeSubStep == 0 ) { 
-        for( int ix=0; ix< _IntensityLabels.size() ;ix++){
+        for(unsigned int ix=0; ix< _IntensityLabels.size() ;ix++){
           new_dw->transferFrom(old_dw,_IntensityLabels[ix],  patches, matls);
         }
-        for( int ix=0;  ix< _IncidentIntensityLabels.size() ;ix++){  
+        for(unsigned int ix=0;  ix< _IncidentIntensityLabels.size() ;ix++){  
           new_dw->transferFrom(old_dw, _IncidentIntensityLabels[ix],  patches, matls);
         }
       }
     }
     else{  
       if(_DO_model->DOSolveInitialGuessBool()==false){
-        for( int ix=0;  ix< _IntensityLabels.size();ix++){
+        for(unsigned int ix=0;  ix< _IntensityLabels.size();ix++){ 
           new_dw->transferFrom(old_dw,_IntensityLabels[ix],  patches, matls);
         }
       }
