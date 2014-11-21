@@ -45,6 +45,8 @@ void RadProperties::problemSetup( const ProblemSpecP& inputdb )
 {
   ProblemSpecP db = inputdb; 
 
+  commonProblemSetup(db);
+
   std::string calculator_type; 
   ProblemSpecP db_calc = db->findBlock("calculator"); 
   if ( db_calc ){ 

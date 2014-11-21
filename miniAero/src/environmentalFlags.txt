@@ -36,8 +36,6 @@ __________________________________
 SingleProcessor            SCI_DEBUG     Use SingleProcessorScheduler
 MPIScheduler               SCI_DEBUG     Use MPIScheduler - tasks are statically ordered
 DynamicMPIScheduler        SCI_DEBUG     Use DynamicMPIScheduler - uses out-of-order task execution
-ThreadedMPIScheduler       SCI_DEBUG     Use ThreadedMPIScheduler - Multi-threaded with centralized control thread
-ThreadedMPI2Scheduler      SCI_DEBUG     Use ThreadedMPI2Scheduler - De-centralized Multi-threaded (no control thread)
 UnifiedScheduler           SCI_DEBUG     Use UnifiedScheduler - De-centralized Multi-threaded, with GPU support
 
 
@@ -81,7 +79,7 @@ DBG_EqPress       SCI_DEBUG     Output debugging information if computeEquilibra
 
 WASATCH:
 __________________________________
-WASATCH_TASKS 				SCI_DEBUG			Outputs Wasatch task diagnostics. See TaskInterface.cc
-WASATCH_FIELDS 				SCI_DEBUG			Outputs information on Wasatch registered fields. See TaskInterface.cc
-WASATCH_REDUCTIONS 		SCI_DEBUG			Information about Wasatch's reduction tasks and related expressions. See ReductionBase.cc
-WASATCH_QMOM_DBG      SCI_DEBUG     Outputs full matricies that are consturcted during the product difference algorithm, and warning for moment reduction
+WASATCH_TASKS       SCI_DEBUG   Outputs Wasatch task diagnostics. See TaskInterface.cc
+WASATCH_FIELDS      SCI_DEBUG   Outputs information on Wasatch registered fields. See TaskInterface.cc
+WASATCH_REDUCTIONS 	SCI_DEBUG   Information about Wasatch's reduction tasks and related expressions. See ReductionBase.cc
+WASATCH_QMOM_DBG    SCI_DEBUG   Outputs full matrices that are constructed during the product difference algorithm, and warning for moment reduction

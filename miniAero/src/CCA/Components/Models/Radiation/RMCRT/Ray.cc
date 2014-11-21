@@ -1348,7 +1348,7 @@ void Ray::sched_Refine_Q(SchedulerP& sched,
     Task::MaterialDomainSpec  ND  = Task::NormalDomain;
     #define allPatches 0
     #define allMatls 0
-    task->requires(Task::NewDW, d_divQLabel, allPatches, Task::CoarseLevel, allMatls, ND, d_gn,0);
+    task->requires(Task::NewDW, d_divQLabel, allPatches, Task::CoarseLevel, allMatls, ND, d_gac,1);
 
     // when carryforward is needed
     task->requires( Task::OldDW, d_divQLabel, d_gn, 0 );
