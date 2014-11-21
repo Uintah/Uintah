@@ -20,8 +20,14 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
+   <property name="maximumSize">
+    <size>
+     <width>1332</width>
+     <height>1035</height>
+    </size>
+   </property>
    <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0" rowspan="6">
+    <item row="0" column="1">
      <widget class="MPMView" name="view">
       <property name="foregroundBrush">
        <brush brushstyle="NoBrush">
@@ -48,101 +54,117 @@
       </property>
      </widget>
     </item>
-    <item row="0" column="1">
-     <widget class="QSplitter" name="splitter">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>Timestep size</string>
-       </property>
-      </widget>
-      <widget class="QLineEdit" name="timestep"/>
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>Timer step (ms)</string>
-       </property>
-      </widget>
-      <widget class="QLineEdit" name="timer_step"/>
-     </widget>
-    </item>
-    <item row="5" column="1">
-     <widget class="QSplitter" name="splitter_2">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <widget class="QPushButton" name="run">
-       <property name="text">
-        <string>Run</string>
-       </property>
-       <property name="checkable">
-        <bool>true</bool>
-       </property>
-       <property name="autoDefault">
-        <bool>false</bool>
-       </property>
-       <property name="default">
-        <bool>false</bool>
-       </property>
-       <property name="flat">
-        <bool>false</bool>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="next">
-       <property name="text">
-        <string>Next</string>
-       </property>
-      </widget>
-     </widget>
-    </item>
-    <item row="3" column="1">
-     <spacer name="verticalSpacer">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>120</width>
-        <height>846</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item row="4" column="1">
-     <widget class="QPushButton" name="amr">
-      <property name="text">
-       <string>AMR: ON</string>
-      </property>
-      <property name="checkable">
-       <bool>true</bool>
-      </property>
-      <property name="checked">
-       <bool>true</bool>
-      </property>
-      <property name="default">
-       <bool>false</bool>
-      </property>
-     </widget>
+    <item row="0" column="2">
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <widget class="QSplitter" name="splitter">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Timestep size</string>
+         </property>
+        </widget>
+        <widget class="QLineEdit" name="timestep"/>
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Timer step (ms)</string>
+         </property>
+        </widget>
+        <widget class="QLineEdit" name="timer_step"/>
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>AMR parameters</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>N particles param:</string>
+         </property>
+        </widget>
+        <widget class="QLineEdit" name="lineEdit"/>
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>Volume param:</string>
+         </property>
+        </widget>
+        <widget class="QLineEdit" name="lineEdit_2"/>
+        <widget class="QLabel" name="label_6">
+         <property name="text">
+          <string>Initial condition</string>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="ic_box"/>
+       </widget>
+      </item>
+      <item>
+       <spacer name="verticalSpacer">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>157</width>
+          <height>618</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QSplitter" name="splitter_2">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <widget class="QPushButton" name="run">
+         <property name="text">
+          <string>Run</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <property name="autoDefault">
+          <bool>false</bool>
+         </property>
+         <property name="default">
+          <bool>false</bool>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="next">
+         <property name="text">
+          <string>Next</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="amr">
+         <property name="text">
+          <string>AMR: ON</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+         <property name="default">
+          <bool>false</bool>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="reset">
+         <property name="text">
+          <string>Reset</string>
+         </property>
+        </widget>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
-   <zorder>splitter</zorder>
-   <zorder>splitter_2</zorder>
-   <zorder>view</zorder>
-   <zorder>verticalSpacer</zorder>
-   <zorder>amr</zorder>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">

@@ -131,33 +131,6 @@ void Element::Refine(const unsigned int n)
 	}
 }
 
-void Element::FillElementList(ElementPtrList& e, const bool check_root)
-{
-	//performing that check_root is requred and that this node is indeed the root of the tree
-	assert(!(check_root && this != root));
-
-    if(flags.hasChildren)
-	{
-        //checking if the element is not a leaf node of the mesh tree, but has image (i.e. the element was refined)
-        //if this is the case, we removing the element's image from the scene
-        if(flags.hasImage)
-        {
-            root->GetScene()->removeItem(dynamic_cast<QGraphicsItem*>(image));
-            flags.hasImage = false;
-            delete image;
-        }
-        //proceeding to element's children
-        for(unsigned int i = 0; i < children.size(); i++)
-		{
-			children[i]->FillElementList(e, false);//not checking for root anymore
-		}
-	}
-	else
-	{
-		e.push_back(this);
-	}
-}
-
 void Element::FillActiveElementList(ElementPtrList& e, const bool check_root)
 {
     //performing that check_root is requred and that this node is indeed the root of the tree
@@ -179,32 +152,21 @@ void Element::FillActiveElementList(ElementPtrList& e, const bool check_root)
     }
 }
 
-void Element::GetElementsContaining(ElementPtrList& e, const Vec2D& v, const bool check_root)
-{
-	//performing that check_root is requred and that this node is indeed the root of the tree
-	assert(!(check_root && this != root));
-	assert(this->bBox.Contains(v));
-    if(flags.hasChildren)
-	{
-		for(Element* ch : children)
-		{
-			if(ch->bBox.Contains(v))
-			{
-				ch->GetElementsContaining(e, v, false);//not checking for root anymore
-			}
-		}
-	}
-	else
-	{
-		e.push_back(this);
-	}
-}
-
 void Element::GetActiveElementsContaining(ElementPtrList& e, const Vec2D& v, const bool check_root)
 {
     //performing that check_root is requred and that this node is indeed the root of the tree
-    assert(!(check_root && this != root));
-    assert(this->bBox.Contains(v));
+    if(check_root)
+    {
+        assert(this == root);
+        //if domain does not contain the point, throw an exception
+        if(!this->BBox().Contains(v))
+        {
+            cout << "\nVertex " << v << "is outside domain" << endl;
+            throw Error::P_OUTSIDE_DOMAIN;
+        }
+    }
+
+    //if has children, recurse down the tree
     if(!IsActive() && HasChildren())
     {
         for(Element* ch : children)
@@ -394,25 +356,6 @@ void Element::ChildrenAvgMetrics(double &sc, double &conc)
     sc = sc_acc/nnz;
     conc = conc_acc/nnz;
 }
-///////////////////// ALTERNATIVE SCORE CALCULATION //////////////////////////////
-void Element::UpdateConcentration(const ParticlePtrList& p_list)
-{
-    ParticlePtrList inside;
-    for(Particle *p : p_list)
-    {
-        //we can also experiment with StrictlyContains
-        if(bBox.Contains(p->data.pos))
-            inside.push_back(p);
-    }
-    //setting concentration for current element
-    CalculateMetrics(inside);
-    //moving to children
-    if(HasChildren())
-    {
-        for(Element* ch : children)
-            ch->UpdateConcentration(inside);
-    }
-}
 
 void Element::CalculateMetrics(const ParticlePtrList& p_list)
 {
@@ -524,15 +467,8 @@ unsigned int Mesh::GetNextID()
 
 void Mesh::Update()
 {
-    //UpdateElements();
     UpdateActiveElements();
     UpdateNodes();
-}
-
-void Mesh::UpdateElements()
-{
-	elements.clear();
-	FillElementList(elements);
 }
 
 void Mesh::UpdateActiveElements()

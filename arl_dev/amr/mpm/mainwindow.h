@@ -29,12 +29,17 @@ private slots:
 
     void on_amr_toggled(bool checked);
 
+    void on_ic_box_currentIndexChanged(int index);
+
+    void on_reset_clicked();
+
 private:
     Solver mpm;
     bool AMR;
     Ui::MainWindow *ui;
     QGraphicsScene scene;
     QTimer *timer;
+    ParticleGenerator p_gen;
 };
 
 #endif // MAINWINDOW_H

@@ -44,12 +44,10 @@ public:
     Element(const int l, const BoundingBox& b, Element* p);
     ~Element();
     void Refine(const unsigned int n);
-    void FillElementList(ElementPtrList& e, const bool check_root = true);
     void FillActiveElementList(ElementPtrList& e, const bool check_root = true);
     void FillInterpolationNodes(Node* n);
     //get a list of elements containing given point (element contains point if
     //it is on the boundary)
-    void GetElementsContaining(ElementPtrList& e, const Vec2D& v, const bool check_root = true);
     void GetActiveElementsContaining(ElementPtrList& e, const Vec2D& v, const bool check_root = true);
     //check if the given point is an element vertex
     //potentially can be rewritten to return more info: on the dege / vertex / inside
@@ -57,8 +55,6 @@ public:
     void AppendNodeCoords(CoordList& lst);
 
     //setters/getters
-    //setting action flag
-    void SetAction(MeshAction a){action = a;}
     //void SetRoot(const Element* r){root = r;}
     const Mesh* Root(){return root;}
     //void SetParent(const Element* p){parent = p;}
@@ -104,7 +100,6 @@ protected:
     void ChildrenAvgMetrics(double& sc, double& conc);
     //alternative score calculation based on concentration = volume of all particles / volume of element
     void CalculateMetrics(const ParticlePtrList &p_list);
-    void UpdateConcentration(const ParticlePtrList &p_list);
 
     //removes element image from the scene
     void RemoveImage();
@@ -160,10 +155,7 @@ public:
     //however, since node update is more involved, we allow
     //to call separate updates for elements and nodes
     void Update();
-    //collects all the active elements in the elements list
-    void UpdateElements();
-    //collects all the unique nodes
-    void UpdateNodes();
+
     unsigned int GetNextID();
     //fill the interpFrom array for a given node
     void FillInterpolationNodes(Node* n);
@@ -179,6 +171,7 @@ public:
     inline QGraphicsScene* GetScene(){return scene;}
 private:
     void UpdateActiveElements();
+    void UpdateNodes();
     void UpdateNodeList();
     void UpdateNodeNeighbors();
     void UpdateElementNodes();
