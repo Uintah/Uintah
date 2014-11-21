@@ -130,6 +130,8 @@ private:
   const VarLabel* _radiationFluxBLabel;
   const VarLabel* _radiationVolqLabel;
   const PatchSet* _perproc_patches;
+  std::vector< const VarLabel*> _IntensityLabels;
+  std::vector< const VarLabel*> _IncidentIntensityLabels;
 
 }; // end DORadiation
 } // end namespace Uintah

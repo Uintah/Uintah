@@ -72,6 +72,9 @@
         <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
           <value> 298.0 </value>
         </BCType>
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+                            <value> 1.0 </value>
+        </BCType>
       </Face>
       <Face circle="x-" origin="0 1.5 1.5" radius="0.5" name="main inlet">
         <BCType id="0" var="MassFlowInlet"  label="mass flow inlet">
@@ -91,6 +94,9 @@
         </BCType>
         <BCType id="all"  label = "radiation_temperature" var="Tabulated">
           <value>temperature</value>
+        </BCType>
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+                            <value> 1.0 </value>
         </BCType>
       </Face> 
       <Face side="x+">
@@ -112,6 +118,9 @@
         <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
           <value> 298.0 </value>
         </BCType>
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+                            <value> 1.0 </value>
+        </BCType>
       </Face>
       <Face side="y-">
         <BCType id="0" var="PressureBC"  label="y-pressure">
@@ -131,6 +140,9 @@
         </BCType>
         <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
           <value> 298.0 </value>
+        </BCType>
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+                            <value> 1.0 </value>
         </BCType>
       </Face>
       <Face side="y+">
@@ -152,6 +164,9 @@
         <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
           <value> 298.0 </value>
         </BCType>
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+                            <value> 1.0 </value>
+        </BCType>
       </Face>
       <Face side="z-">
         <BCType id="0" var="PressureBC"  label="z-pressure">
@@ -172,6 +187,9 @@
         <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
           <value> 298.0 </value>
         </BCType>
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+                            <value> 1.0 </value>
+        </BCType>
       </Face>
       <Face side="z+">
         <BCType id="0" var="PressureBC"  label="z+pressure">
@@ -191,6 +209,9 @@
         </BCType>
         <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
           <value> 298.0 </value>
+        </BCType>
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+                            <value> 1.0 </value>
         </BCType>
       </Face>
     </BoundaryConditions>
