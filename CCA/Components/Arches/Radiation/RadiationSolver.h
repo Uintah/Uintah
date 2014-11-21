@@ -32,6 +32,7 @@
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Components/Arches/ArchesVariables.h>
+#include <CCA/Components/Arches/ArchesConstVariables.h>
 
 #include <Core/Containers/Array1.h>
 
@@ -108,6 +109,7 @@ public:
    virtual void setMatrix(const ProcessorGroup* pc,
                             const Patch* patch,
                             ArchesVariables* vars,
+                            ArchesConstVariables* constvars,
                            bool plusX, bool plusY, bool plusZ,
                            CCVariable<double>& SU,
                            CCVariable<double>& AB,

@@ -232,6 +232,7 @@ void
 RadHypreSolver::setMatrix(const ProcessorGroup* pc,
                           const Patch* patch,
                           ArchesVariables* vars,
+                          ArchesConstVariables* constvars, 
                           bool plusX, bool plusY, bool plusZ,
                           CCVariable<double>& SU,
                           CCVariable<double>& AB,
@@ -330,7 +331,7 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        d_value[i] = vars->cenint[IntVector(colX, colY, colZ)];
+        d_value[i] = constvars->cenint[IntVector(colX, colY, colZ)];
         //cerr << "x0[" << i << "] =" << d_value[i] << endl;
         i++;;
       }
