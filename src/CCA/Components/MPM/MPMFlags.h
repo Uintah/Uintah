@@ -94,7 +94,6 @@ namespace Uintah {
     bool        d_doTransientImplicitHeatConduction;
     bool        d_doExplicitHeatConduction;
     bool        d_doPressureStabilization;
-    bool        d_doDefGradAveraging;      //Average deformation gradients within a cell
     bool        d_computeNodalHeatFlux;  // compute the auxilary nodal heat flux
     bool        d_computeScaleFactor;    // compute the scale factor for viz 
     bool        d_doGridReset;   // Default is true, standard MPM

@@ -46,6 +46,14 @@ namespace Wasatch {
 
   //==================================================================
 
+  /*
+   * \brief Helper function that creates the tag for an old variable
+  */
+  Expr::Tag create_old_var_tag(const Expr::Tag& varTag, const bool retainVarName)
+  {
+    return Expr::Tag( varTag.name() + ( (retainVarName) ? "" : "_old" ), Expr::STATE_NONE);
+  }
+  
   class OldVariable::VarHelperBase
   {
   protected:
@@ -62,7 +70,7 @@ namespace Wasatch {
                    const Uintah::TypeDescription* typeDesc,
                    Uintah::Ghost::GhostType ghostType)
     : name_( var ),
-      oldName_( var.name() + ( (retainName) ? "" : "_old" ), Expr::STATE_NONE ),
+      oldName_( create_old_var_tag(name_,retainName) ),
       needsNewVarLabel_ ( Uintah::VarLabel::find( name_.name() ) == NULL ),
       oldVarLabel_( Uintah::VarLabel::create( oldName_.name(), typeDesc ) ),
       varLabel_   ( needsNewVarLabel_ ? Uintah::VarLabel::create( name_.name(), typeDesc ) : Uintah::VarLabel::find( name_.name() ) ),
@@ -180,15 +188,18 @@ namespace Wasatch {
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
     assert( wasatch_ != NULL );
-    VarHelperBase* const vh = new VarHelper<T>(var, retainName);
-    typedef typename Expr::PlaceHolder<T>::Builder PlaceHolder;
-
-    Expr::ExpressionFactory& factory = *(wasatch_->graph_categories()[category]->exprFactory);
     
     // if this expression has already been registered, then return
-    if( factory.have_entry( vh->old_var_name() ) )
+    Expr::ExpressionFactory& factory = *(wasatch_->graph_categories()[category]->exprFactory);
+    const Expr::Tag oldVarTag = create_old_var_tag(var, retainName);
+    if( factory.have_entry( oldVarTag ) )
+    {
       return;
-      
+    }
+
+    VarHelperBase* const vh = new VarHelper<T>(var, retainName);
+    typedef typename Expr::PlaceHolder<T>::Builder PlaceHolder;
+    
     factory.register_expression( new PlaceHolder( vh->old_var_name() ), false );
 
     varHelpers_.push_back( vh );

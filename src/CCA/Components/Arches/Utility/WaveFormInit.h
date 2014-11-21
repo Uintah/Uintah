@@ -93,14 +93,15 @@ private:
   WaveFormInit<IT, DT>::WaveFormInit( std::string task_name, int matl_index, const std::string var_name ) : 
   _var_name(var_name), TaskInterface( task_name, matl_index ){
 
-    // This needs to be done to set the variable type 
-    // for this function. This comes in handy often for templated tasks. 
-    // In this specific function, we don't use it but rather look at the 
-    // dependent and indepenent variables and set separate types for them for 
-    // use in the variable registration. 
-    set_task_type<DT>(); 
-
     _two_pi = 2.0*acos(-1.0);
+
+    //This sets the type of the independent and dependent variable types as needed by the variable 
+    //registration step. 
+    VarTypeHelper<DT> dhelper; 
+    _D_type = dhelper.get_vartype(); 
+
+    VarTypeHelper<IT> ihelper; 
+    _I_type = ihelper.get_vartype(); 
   
   }
 
@@ -139,15 +140,6 @@ private:
       throw InvalidValue("Error: Wave type not recognized.",__FILE__,__LINE__);
 
     }
-
-    //This sets the type of the independent and dependent variable types as needed by the variable 
-    //registration step. 
-    DT* d_test; 
-    IT* i_test; 
-
-    set_type(d_test, _D_type); 
-    set_type(i_test, _I_type); 
-
   }
 
   template <typename IT, typename DT>

@@ -523,7 +523,6 @@ namespace Wasatch{
       }
     }
     
-    //
     std::string timeIntName;
     wasatchSpec_->get("TimeIntegrator",timeIntName);
     TimeIntegrator timeInt(timeIntName);
@@ -671,6 +670,12 @@ namespace Wasatch{
       }
     }
     
+    if( wasatchSpec_->findBlock("Radiation") ){
+      parse_radiation_solver( wasatchSpec_->findBlock("Radiation"),
+                              *graphCategories_[ADVANCE_SOLUTION],
+                              *linSolver_, sharedState, locked_fields() );
+    }
+
     if( buildTimeIntegrator_ ){
       timeStepper_ = scinew TimeStepper( sharedState_, graphCategories_, timeInt );
     }    
@@ -842,10 +847,10 @@ namespace Wasatch{
       // INITIAL BOUNDARY CONDITIONS TREATMENT
       // -----------------------------------------------------------------------
       typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
-      
-      proc0cout << "------------------------------------------------" << std::endl
-      << "SETTING INITIAL BOUNDARY CONDITIONS:" << std::endl;
-      proc0cout << "------------------------------------------------" << std::endl;
+
+      proc0cout << "------------------------------------------------\n"
+                << "SETTING INITIAL BOUNDARY CONDITIONS:\n"
+                << "------------------------------------------------\n";
 
       for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
         EqnTimestepAdaptorBase* const adaptor = *ia;
@@ -855,19 +860,16 @@ namespace Wasatch{
         // set up initial boundary conditions on this transport equation
         try{
           transEq->setup_boundary_conditions( *bcHelperMap_[level->getID()], graphCategories_);
-          proc0cout << "Setting Initial BCs for transport equation '" << eqnLabel << "'" << std::endl;
+          proc0cout << "Setting Initial BCs for transport equation '" << eqnLabel << "'\n";
           transEq->apply_initial_boundary_conditions( *icGraphHelper, *bcHelperMap_[level->getID()]);
         }
         catch( std::runtime_error& e ){
           std::ostringstream msg;
-          msg << e.what()
-          << std::endl
-          << "ERORR while setting initial boundary conditions on equation '" << eqnLabel << "'"
-          << std::endl;
+          msg << e.what() << "\nERORR while setting initial boundary conditions on equation '" << eqnLabel << "'\n";
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
       }
-      proc0cout << "------------------------------------------------" << std::endl;
+      proc0cout << "------------------------------------------------\n";
 
       // -----------------------------------------------------------------------
       try{

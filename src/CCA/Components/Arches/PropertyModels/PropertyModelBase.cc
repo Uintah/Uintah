@@ -69,6 +69,7 @@ PropertyModelBase::sched_timeStepInit( const LevelP& level, SchedulerP& sched )
   Task* tsk = scinew Task( "PropertyModelBase::timeStepInit", this, &PropertyModelBase::timeStepInit); 
 
   tsk->computes( _prop_label );   // 2nd compute for Julien_abskp
+  tsk->requires( Task::OldDW, _prop_label, Ghost::None, 0 );
   sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
 }
 
@@ -79,17 +80,5 @@ PropertyModelBase::timeStepInit( const ProcessorGroup* pc,
                                  DataWarehouse* old_dw, 
                                  DataWarehouse* new_dw )
 {
-
-  for (int p=0; p < patches->size(); p++){
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
-
-    CCVariable<double> prop; 
-    new_dw->allocateAndPut( prop, _prop_label, matlIndex, patch ); 
-
-    //value initialization should occur in the property implementation
-
-  }
+  new_dw->transferFrom(old_dw,_prop_label ,  patches, matls);
 }

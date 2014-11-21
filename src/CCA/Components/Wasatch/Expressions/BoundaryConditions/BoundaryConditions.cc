@@ -30,7 +30,7 @@
 if (this->setInExtraCellsOnly_)                                                             \
 {                                                                                           \
   SpatialMask<FieldT> mask(f, maskPoints);                                              \
-  f <<= cond( mask, bcValue_ )                                                              \
+  f <<= cond( mask, BCVALUE )                                                              \
             ( f              );                                                             \
 } else {                                                                                    \
   typedef Wasatch::BCOpTypeSelector<FieldT> OpT;                                            \
@@ -128,8 +128,6 @@ evaluate()
   FieldT& f = this->value();
   
   if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
-    std::vector<IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
-    std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
     
     std::vector<IntVec> maskPoints;
     this->build_mask_points(maskPoints);
@@ -183,20 +181,20 @@ evaluate()
   using namespace SpatialOps;
   
   FieldT& f = this->value();
-  const double ci = this->ci_;
-  const double cg = this->cg_;
   
   if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
-    std::vector<SpatialOps::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
-    std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
-    std::vector<IntVec> maskPoints;
-    this->build_mask_points(maskPoints);
     if( this->isStaggered_ ){
+      std::vector<IntVec> maskPoints;
+      this->build_mask_points(maskPoints);
       SpatialMask<FieldT> mask(f, maskPoints);
       f <<= cond( mask, a_ * *x_ + b_ )
                 ( f                   );
     }
     else{
+      const double ci = this->ci_;
+      const double cg = this->cg_;
+      std::vector<SpatialOps::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
+      std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
       for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
         f(*ig) = ( ( a_ * (*x_)(*ig) + b_ ) - ci*f(*ii) ) / cg;
       }
@@ -213,20 +211,20 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& f = this->value();
-  const double ci = this->ci_;
-  const double cg = this->cg_;
   
   if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
-    std::vector<IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
-    std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
-    std::vector<IntVec> maskPoints;
-    this->build_mask_points(maskPoints);
     if( this->isStaggered_ ){
+      std::vector<IntVec> maskPoints;
+      this->build_mask_points(maskPoints);
       SpatialMask<FieldT> mask(f, maskPoints);
       f <<= cond( mask, a_ * (*x_ - x0_)*(*x_ - x0_) + b_ * (*x_ - x0_) + c_ )
-                (f );
+                ( f );
     }
     else{
+      const double ci = this->ci_;
+      const double cg = this->cg_;
+      std::vector<IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
+      std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
       for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
         const double x = (*x_)(*ig) - x0_;
         f(*ig) = ( (a_ * x*x + b_ * x + c_) - ci*f(*ii) ) / cg;
@@ -244,20 +242,20 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& f = this->value();
-  const double ci = this->ci_;
-  const double cg = this->cg_;
   
   if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
-    std::vector<IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
-    std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
-    std::vector<IntVec> maskPoints;
-    this->build_mask_points(maskPoints);
     if(this->isStaggered_) {
+      std::vector<IntVec> maskPoints;
+      this->build_mask_points(maskPoints);
       SpatialMask<FieldT> mask(f, maskPoints);
       f <<= cond( mask, phic_ * pow( 1.0 - abs(*x_ - x0_) / R_ , 1.0/n_ ) )
-                (f                   );
+                ( f );
     }
     else{
+      const double ci = this->ci_;
+      const double cg = this->cg_;
+      std::vector<IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
+      std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
       for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
         const double bcVal = phic_ * std::pow( 1.0 - std::fabs( (*x_)(*ig) - x0_ ) / R_ , 1.0/n_ );
         f(*ig) = ( bcVal - ci*f(*ii) ) / cg;
@@ -276,19 +274,17 @@ evaluate()
   using namespace SpatialOps;
   FieldT& f = this->value();
   if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
-    std::vector<IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
-    std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
     std::vector<IntVec> maskPoints;
     this->build_mask_points(maskPoints);
     if( this->isStaggered_ ){
       SpatialMask<FieldT> mask(f, maskPoints);
       f <<= cond( mask, *src_)
-                (f           );
+                ( f          );
     }
     else{
       SpatialMask<FieldT> mask(f, * this->neboGhostPts_);
       f <<= cond( mask, *src_)
-                (f           );
+                ( f          );
     }
   }  
 }
