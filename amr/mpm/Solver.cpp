@@ -4,12 +4,6 @@
 // SOLVER CLASS
 ///////////////////////////////////////////////////////////////////////////////
 
-
-Solver::Solver(const BoundingBox& b, const int r)
-{
-    Init(b,r);
-}
-
 //default constructor: the domain/mesh are not initialized
 Solver::Solver(){};
 
@@ -20,30 +14,58 @@ Solver::~Solver()
     ClearParticles();
 }
 
-//if the default constructor was not called
-void Solver::SetDomain(const BoundingBox& b, const int r)
+void Solver::Initialize()
 {
-    if(!flags.solverInitialized)
-        Init(b,r);
-}
-
-void Solver::GenerateParticles(ParticleGenerator pg)
-{
-    ClearParticles();
-	ParticleDataList p_data;
-    pg(p_data, mesh->BBox());
-	for(ParticleData d : p_data)
-	{
-        Particle *p = new Particle(d);
-        particles.push_back(p);
-	}
-	UpdateParticleMap();
-}
-
-void Solver::ForceMeshUpdate()
-{
+    //checking if all the needed information is present
+    if(!flags.domainSet)
+    {
+        cout << "\nDomain is not set, aborting\n";
+        exit(1);
+    }
+    if(!flags.icSet)
+    {
+        cout << "\nInitial condition is not set, aborting\n";
+        exit(1);
+    }
+    if(!flags.sceneSet)
+    {
+        cout << "\nScene condition is not set, aborting\n";
+        exit(1);
+    }
+    //(re)Initializing solver
+    //if solver was already initialized, we need to reset the mesh object and delete particles
+    if(flags.solverInitialized)
+    {
+        delete mesh;
+        ClearParticles();
+    }
+    //creating new mesh object
+    mesh = new Mesh();
+    //setting domain and performing initial uniform refinement
+    mesh->SetDomain(domain);
+    mesh->RefineUniformly(initial_refinement);
+    //setting scene pointer
+    mesh->SetScene(scene);
+    flags.sceneInitialized = false;
+    //UPDATING MESH
     flags.MeshNeedsUpdate();
-    mesh->Update();
+    UpdateMesh();
+
+    //PARTICLES INITIALIZATION
+    GenerateParticles();
+
+    //SCENE INITIALIZATION
+    InitQtScene();
+    UpdateQtScene();
+
+    //SIMULATION RELATED DATA
+    //setting time to zero
+    time = 0.0;
+    //setting number of steps to zero
+    n_steps = 0;
+
+    //solver is now initialized
+    flags.solverInitialized = true;
 }
 
 void Solver::Solve(const int n, const double dt, const Output out, const int per_n)
@@ -95,13 +117,8 @@ void Solver::RefineElementByID(const unsigned int id)
 }
 
 //////////////////////////////////// QT VISUALIZATION	     //////////////////////////////////////////////
-void Solver::InitQtScene(QGraphicsScene *s)
+void Solver::InitQtScene()
 {
-    //saving scene pointer locally as well as providing it to the mesh class
-    scene = s;
-    mesh->SetScene(scene);
-    //in case the were some mesh changes performed
-    UpdateMesh();
     //clearing the scene (in case this is the reset of the simulation)
     scene->clear();
 	//Note: the QScene y-axis positive direction is downside, we'll need to invert y-coordinates
@@ -117,10 +134,6 @@ void Solver::InitQtScene(QGraphicsScene *s)
     scale_x = 0.9*s_size_x/dv[x1];
 	scale_y = 0.9*s_size_y/dv[x2];
     flags.sceneInitialized = true;
-
-    //after all the scaling factors are computed we are adding the qt objects
-    //that represent elements/particles/nodes to the scene
-    UpdateQtScene();
 }
 
 //////////////////////////////////// MESH ADAPTATION //////////////////////////////////////////////
@@ -132,20 +145,17 @@ void Solver::AdaptMesh()
 
 
 //////////////////////////////////// PRIVATE MEMBERS //////////////////////////////////////////////
-// mesh creation and update
-void Solver::Init(const BoundingBox& b, const int r)
+void Solver::GenerateParticles()
 {
-    mesh = new Mesh();
-    mesh->SetDomain(b);
-    mesh->RefineUniformly(r);
-    UpdateMesh();
-
-    //setting time to zero
-    time = 0.0;
-    //setting number of steps to zero
-    n_steps = 0;
-    //mesh is not set up
-    flags.solverInitialized = true;
+    ClearParticles();
+    ParticleDataList p_data;
+    ic(p_data, mesh->BBox());
+    for(ParticleData d : p_data)
+    {
+        Particle *p = new Particle(d);
+        particles.push_back(p);
+    }
+    UpdateParticleMap();
 }
 
 void Solver::UpdateMesh()
@@ -165,32 +175,6 @@ void Solver::UpdateMesh()
     }
 }
 
-void Solver::UpdateElements()
-{
-    if(!flags.elementsUpdated)
-    {
-        mesh->UpdateElements();
-        elements = mesh->Elements();
-        //since the mesh have changed we need to update particle positions with respect to it
-        UpdateParticleMap();
-        flags.elementsUpdated = true;
-        //since we updated elements, we now need to update nodes as well
-        //setting the corresponding flag
-        flags.nodesUpdated = false;
-    }
-}
-
-void Solver::UpdateNodes()
-{
-    if(!flags.nodesUpdated)
-    {
-        mesh->UpdateNodes();
-        nodes = mesh->Nodes();
-        flags.nodesUpdated = true;
-        //since the nodes updated after elements, the QtScene updated is checked here
-        if(flags.sceneInitialized) UpdateQtScene();
-    }
-}
 
 ////////////////////////////// Clean up / reset functionality ////////////////////////////////////
 

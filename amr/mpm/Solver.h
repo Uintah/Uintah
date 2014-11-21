@@ -25,6 +25,9 @@ struct SolverFlags
         elementsUpdated = false;
         nodesUpdated = false;
         particlesUpdated = false;
+        domainSet = false;
+        icSet = false;
+        sceneSet = false;
     }
     //has initial mesh been set up?
     bool solverInitialized;
@@ -33,6 +36,13 @@ struct SolverFlags
     //was mesh changed recently
     bool elementsUpdated;
     bool nodesUpdated;
+    //whether the domain is set
+    bool domainSet;
+    //whether initial condition (particle generating function) is set
+    bool icSet;
+    //whether the scene is set
+    bool sceneSet;
+
     bool MeshUpdated()
     {
         return elementsUpdated && nodesUpdated;
@@ -50,23 +60,16 @@ struct SolverFlags
 class Solver
 {
 	public:
-		//generation of initial uniform mesh, where b defines the domain and 
-		//r gives the number of times the refinement procedure is preformed
-		Solver(const BoundingBox& b, const int r = 0);
 		//empty constructor (does not setup the initial mesh)
 		Solver();
 		//destructor
 		~Solver();
-		//initialization if the class was already constructed
-		void SetDomain(const BoundingBox& b, const int r = 0);
-		//given list of particles fills the element id to particle map
-		void FillElementIDToParticleMap();
-        //generate particles: initial condition essentially
-		//for now will be hardcoded, but later will accept some sort of 
-		//generating function/class object
-		void GenerateParticles(ParticleGenerator pg);
-        //force mesh update
-        void ForceMeshUpdate();
+        //setting various general variables: domain, particle generator, scene pointer
+        void SetDomain(const BoundingBox& b, const int r = 0){domain = b; initial_refinement = r; flags.domainSet = true;}
+        void SetIC(ParticleGenerator pg){ic = pg; flags.icSet = true;}
+        void SetScene(QGraphicsScene *s){scene = s; flags.sceneSet = true;}
+        //initializing solver
+        void Initialize();
 
 		//solves the problem given number of timesteps and timestep size
 		//Output option indicates whther to output intermediate data to file, to screen or 
@@ -77,9 +80,6 @@ class Solver
 
         void RefineElementByID(const unsigned int id);
 		
-		//////////////// visualizing with qt ///////////////////////////////////
-        void InitQtScene(QGraphicsScene* s);
-
         /////////////// mesh adaptation ////////////////////////////////////////
         void AdaptMesh();
 
@@ -89,17 +89,13 @@ class Solver
 		void PrintParticleData();
 	private:
         ///////////////// mesh creation and initialization /////////////////////////
-        void Init(const BoundingBox& b, const int r = 0);
+        //generate particles: initial condition essentially
+        //for now will be hardcoded, but later will accept some sort of
+        //generating function/class object
+        void GenerateParticles();
         //updates the whole mesh: elements and nodes
         void UpdateMesh();
-        //the next two functions can be used separately: e.g. to make multiple mesh
-        //refinements checking certain particle density conditions and in the end
-        //nodes can be updated only once
-        //updates only elmenets
-        void UpdateElements();
-        //updates only nodes
-        void UpdateNodes();
-		///////////////// Clean up / reset functionality //////////////////////////
+        ///////////////// Clean up / reset functionality //////////////////////////
 		//resets the node data values to zero
 		void ResetNodes();
         //delete all the Particle objects (used in Solver class destructor to clean up memory)
@@ -116,6 +112,8 @@ class Solver
         void UpdateParticleImages();
         //setting size of the node images to visibly denote those with significant massUpdateParticleImages();
         void UpdateNodeImages();
+        //scene initialization
+        void InitQtScene();
         //if the mesh was changed we need to update QtScene (elements and nodes)
         void UpdateQtScene();
 		
@@ -130,7 +128,13 @@ class Solver
 		void TimeIntegrateParticles(const double dt);
 
 
-		//////////////// actual mesh/solver data /////////////////////////////////
+        //////////////// actual mesh/solver data /////////////////////////////////
+        //general settings: domain, refinement level, initial condition, scene
+        BoundingBox domain;
+        unsigned int initial_refinement;
+        ParticleGenerator ic;
+        QGraphicsScene *scene;
+        //mesh
         Mesh *mesh;
         //flags
         SolverFlags flags;
@@ -147,7 +151,6 @@ class Solver
 		//list of nodes
 		NodePtrList nodes;
 		//visualization related scaling/size parameters
-        QGraphicsScene *scene;
         double s_size_x, s_size_y, scale_x, scale_y, p_radius, n_radius;
 
 };
