@@ -285,7 +285,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   StaticArray< CCVariable<double> > IncidentFlux(_IncidentIntensityLabels.size());
   StaticArray< CCVariable<double> > IncidentFlux_old(6); // must always 6, even when reflections are off.
 
-    for (int i=0; i<  _IncidentIntensityLabels.size(); i++){
+    for (unsigned int i=0; i<  _IncidentIntensityLabels.size(); i++){
       constCCVariable<double>  IncidentFlux_temp;
       old_dw->get(IncidentFlux_temp,_IncidentIntensityLabels[i], matlIndex , patch,Ghost::None, 0  );
       new_dw->allocateAndPut(IncidentFlux[i],_IncidentIntensityLabels[i] , matlIndex, patch );
