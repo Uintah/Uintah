@@ -392,6 +392,7 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup* pg,
                                               DataWarehouse* old_dw,
                                               DataWarehouse* new_dw)
 {
+
   const Level* level = getLevel(patches);
   max_vartype analysisTime;
   delt_vartype delT;
@@ -403,7 +404,9 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup* pg,
   double nextCompTime = lastCompTime + 1.0/d_analysisFreq;
   double now = d_dataArchiver->getCurrentTime();
 
-  if( now < nextCompTime  ){
+  bool tsr = new_dw->timestepRestarted();  // ignore if a timestep restart has been requested.
+
+  if( now < nextCompTime  || tsr ){
     return;
   }
 
@@ -556,6 +559,13 @@ void momentumAnalysis::doAnalysis(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
+
+  // ignore task if a timestep restart has been requested upstream
+  bool tsr = new_dw->timestepRestarted();
+  if( tsr ){
+    return;
+  }
+
   max_vartype lastTime;
   old_dw->get( lastTime, labels->lastCompTime );
 
