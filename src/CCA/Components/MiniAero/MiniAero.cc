@@ -258,8 +258,8 @@ void MiniAero::schedFaceCenteredFlux(const LevelP& level,
   Task* task = scinew Task("MiniAero::faceCenteredFlux", this, 
                            &MiniAero::faceCenteredFlux);
 
-  task->requires(Task::NewDW,flux_mass_CClabel,Ghost::AroundCells, 1);
-  task->requires(Task::NewDW,flux_mom_CClabel,Ghost::AroundCells, 1);
+  task->requires(Task::NewDW,flux_mass_CClabel,  Ghost::AroundCells, 1);
+  task->requires(Task::NewDW,flux_mom_CClabel,   Ghost::AroundCells, 1);
   task->requires(Task::NewDW,flux_energy_CClabel,Ghost::AroundCells, 1);
 
   task->computes(flux_mass_FCXlabel);
@@ -275,6 +275,8 @@ void MiniAero::schedFaceCenteredFlux(const LevelP& level,
   sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
 }
 
+//______________________________________________________________________
+//
 void MiniAero::schedDissipativeFaceFlux(const LevelP& level,
                                    SchedulerP& sched)
 {
@@ -282,8 +284,8 @@ void MiniAero::schedDissipativeFaceFlux(const LevelP& level,
                            &MiniAero::dissipativeFaceFlux);
 
 
-  task->requires(Task::OldDW,rho_CClabel,Ghost::AroundCells, 1);
-  task->requires(Task::OldDW,vel_CClabel,Ghost::AroundCells, 1);
+  task->requires(Task::OldDW,rho_CClabel,  Ghost::AroundCells, 1);
+  task->requires(Task::OldDW,vel_CClabel,  Ghost::AroundCells, 1);
   task->requires(Task::OldDW,press_CClabel,Ghost::AroundCells, 1);
 
   task->computes(dissipative_flux_mass_FCXlabel);
@@ -299,39 +301,45 @@ void MiniAero::schedDissipativeFaceFlux(const LevelP& level,
   sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
 
 }
-
+//______________________________________________________________________
+//
 void MiniAero::schedUpdateResidual(const LevelP& level,
                                    SchedulerP& sched)
 {
   Task* task = scinew Task("MiniAero::updateResidual", this, 
                            &MiniAero::updateResidual);
 
-  task->requires(Task::NewDW,flux_mass_FCXlabel,Ghost::None);
-  task->requires(Task::NewDW,flux_mom_FCXlabel,Ghost::None);
-  task->requires(Task::NewDW,flux_energy_FCXlabel,Ghost::None);
-  task->requires(Task::NewDW,dissipative_flux_mass_FCXlabel,Ghost::None);
-  task->requires(Task::NewDW,dissipative_flux_mom_FCXlabel,Ghost::None);
-  task->requires(Task::NewDW,dissipative_flux_energy_FCXlabel,Ghost::None);
+  Ghost::GhostType  gac  = Ghost::AroundCells;
+  task->requires(Task::NewDW,flux_mass_FCXlabel,  gac, 1);
+  task->requires(Task::NewDW,flux_mom_FCXlabel,   gac, 1);
+  task->requires(Task::NewDW,flux_energy_FCXlabel,gac, 1);
+  
+  task->requires(Task::NewDW,dissipative_flux_mass_FCXlabel,  gac, 1);
+  task->requires(Task::NewDW,dissipative_flux_mom_FCXlabel,   gac, 1);
+  task->requires(Task::NewDW,dissipative_flux_energy_FCXlabel,gac, 1);
 
-  task->requires(Task::NewDW,flux_mass_FCYlabel,Ghost::None);
-  task->requires(Task::NewDW,flux_mom_FCYlabel,Ghost::None);
-  task->requires(Task::NewDW,flux_energy_FCYlabel,Ghost::None);
-  task->requires(Task::NewDW,dissipative_flux_mass_FCYlabel,Ghost::None);
-  task->requires(Task::NewDW,dissipative_flux_mom_FCYlabel,Ghost::None);
-  task->requires(Task::NewDW,dissipative_flux_energy_FCYlabel,Ghost::None);
+  task->requires(Task::NewDW,flux_mass_FCYlabel,  gac, 1);
+  task->requires(Task::NewDW,flux_mom_FCYlabel,   gac, 1);
+  task->requires(Task::NewDW,flux_energy_FCYlabel,gac, 1);
+  
+  task->requires(Task::NewDW,dissipative_flux_mass_FCYlabel,  gac, 1);
+  task->requires(Task::NewDW,dissipative_flux_mom_FCYlabel,   gac, 1);
+  task->requires(Task::NewDW,dissipative_flux_energy_FCYlabel,gac, 1);
 
-  task->requires(Task::NewDW,flux_mass_FCZlabel,Ghost::None);
-  task->requires(Task::NewDW,flux_mom_FCZlabel,Ghost::None);
-  task->requires(Task::NewDW,flux_energy_FCZlabel,Ghost::None);
-  task->requires(Task::NewDW,dissipative_flux_mass_FCZlabel,Ghost::None);
-  task->requires(Task::NewDW,dissipative_flux_mom_FCZlabel,Ghost::None);
-  task->requires(Task::NewDW,dissipative_flux_energy_FCZlabel,Ghost::None);
+  task->requires(Task::NewDW,flux_mass_FCZlabel,  gac, 1);
+  task->requires(Task::NewDW,flux_mom_FCZlabel,   gac, 1);
+  task->requires(Task::NewDW,flux_energy_FCZlabel,gac, 1);
+  
+  task->requires(Task::NewDW,dissipative_flux_mass_FCZlabel,  gac, 1);
+  task->requires(Task::NewDW,dissipative_flux_mom_FCZlabel,   gac, 1);
+  task->requires(Task::NewDW,dissipative_flux_energy_FCZlabel,gac, 1);
 
   task->computes(residual_CClabel);
 
   sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
 }
-
+//______________________________________________________________________
+//
 void MiniAero::schedUpdateState(const LevelP& level,
                                 SchedulerP& sched)
 {
@@ -761,7 +769,8 @@ void MiniAero::faceCenteredFlux(const ProcessorGroup* /*pg*/,
     }
   }
 }
-
+//______________________________________________________________________
+//
 void MiniAero::dissipativeFaceFlux(const ProcessorGroup* /*pg*/,
                              const PatchSubset* patches,
                              const MaterialSubset* /*matls*/,
@@ -782,29 +791,31 @@ void MiniAero::dissipativeFaceFlux(const ProcessorGroup* /*pg*/,
     SFCXVariable<double> diss_flux_mass_FCX;
     SFCXVariable<Vector> diss_flux_mom_FCX;
     SFCXVariable<double> diss_flux_energy_FCX;
+    
     SFCYVariable<double> diss_flux_mass_FCY;
     SFCYVariable<Vector> diss_flux_mom_FCY;
     SFCYVariable<double> diss_flux_energy_FCY;
+    
     SFCZVariable<double> diss_flux_mass_FCZ;
     SFCZVariable<Vector> diss_flux_mom_FCZ;
     SFCZVariable<double> diss_flux_energy_FCZ;
 
 
-    old_dw->get( rho_CC,  rho_CClabel, 0, patch, gac, 0 );
-    old_dw->get( vel_CC,  vel_CClabel, 0, patch, gac, 0 );
-    old_dw->get( pressure_CC,  press_CClabel, 0, patch, gac, 0 );
+    old_dw->get( rho_CC,       rho_CClabel,   0, patch, gac, 1 );
+    old_dw->get( vel_CC,       vel_CClabel,   0, patch, gac, 1 );
+    old_dw->get( pressure_CC,  press_CClabel, 0, patch, gac, 1 );
 
-    new_dw->allocateAndPut( diss_flux_mass_FCX, dissipative_flux_mass_FCXlabel,   0,patch );
-    new_dw->allocateAndPut( diss_flux_mom_FCX, dissipative_flux_mom_FCXlabel,   0,patch );
-    new_dw->allocateAndPut( diss_flux_energy_FCX, dissipative_flux_energy_FCXlabel,   0,patch );
+    new_dw->allocateAndPut( diss_flux_mass_FCX,   dissipative_flux_mass_FCXlabel,   0,patch );
+    new_dw->allocateAndPut( diss_flux_mom_FCX,    dissipative_flux_mom_FCXlabel,    0,patch );
+    new_dw->allocateAndPut( diss_flux_energy_FCX, dissipative_flux_energy_FCXlabel, 0,patch );
 
-    new_dw->allocateAndPut( diss_flux_mass_FCY, dissipative_flux_mass_FCYlabel,   0,patch );
-    new_dw->allocateAndPut( diss_flux_mom_FCY, dissipative_flux_mom_FCYlabel,   0,patch );
-    new_dw->allocateAndPut( diss_flux_energy_FCY, dissipative_flux_energy_FCYlabel,   0,patch );
+    new_dw->allocateAndPut( diss_flux_mass_FCY,   dissipative_flux_mass_FCYlabel,   0,patch );
+    new_dw->allocateAndPut( diss_flux_mom_FCY,    dissipative_flux_mom_FCYlabel,    0,patch );
+    new_dw->allocateAndPut( diss_flux_energy_FCY, dissipative_flux_energy_FCYlabel, 0,patch );
 
-    new_dw->allocateAndPut( diss_flux_mass_FCZ, dissipative_flux_mass_FCZlabel,   0,patch );
-    new_dw->allocateAndPut( diss_flux_mom_FCZ, dissipative_flux_mom_FCZlabel,   0,patch );
-    new_dw->allocateAndPut( diss_flux_energy_FCZ, dissipative_flux_energy_FCZlabel,   0,patch );
+    new_dw->allocateAndPut( diss_flux_mass_FCZ,   dissipative_flux_mass_FCZlabel,   0,patch );
+    new_dw->allocateAndPut( diss_flux_mom_FCZ,    dissipative_flux_mom_FCZlabel,    0,patch );
+    new_dw->allocateAndPut( diss_flux_energy_FCZ, dissipative_flux_energy_FCZlabel, 0,patch );
 
     //__________________________________
     //Compute Face Centered Fluxes from Cell Centered
@@ -894,15 +905,15 @@ void MiniAero::dissipativeFaceFlux(const ProcessorGroup* /*pg*/,
     }
   }
 }
-
+//______________________________________________________________________
+//
 void MiniAero::updateResidual(const ProcessorGroup* /*pg*/,
                               const PatchSubset* patches,
                               const MaterialSubset* /*matls*/,
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw)
 {
-  Ghost::GhostType  gn  = Ghost::None;
-
+  Ghost::GhostType  gac  = Ghost::AroundCells;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -929,26 +940,26 @@ void MiniAero::updateResidual(const ProcessorGroup* /*pg*/,
 
     CCVariable<Vector5> residual_CC;
 
-    new_dw->get( flux_mass_FCX,  flux_mass_FCXlabel, 0, patch, gn, 0);
-    new_dw->get( flux_mom_FCX,  flux_mom_FCXlabel, 0, patch, gn, 0);
-    new_dw->get( flux_energy_FCX,  flux_energy_FCXlabel, 0, patch, gn, 0);
-    new_dw->get( diss_flux_mass_FCX,  dissipative_flux_mass_FCXlabel, 0, patch, gn, 0);
-    new_dw->get( diss_flux_mom_FCX,  dissipative_flux_mom_FCXlabel, 0, patch, gn, 0);
-    new_dw->get( diss_flux_energy_FCX,  dissipative_flux_energy_FCXlabel, 0, patch, gn, 0);
+    new_dw->get( flux_mass_FCX,       flux_mass_FCXlabel,   0, patch, gac, 1);
+    new_dw->get( flux_mom_FCX,        flux_mom_FCXlabel,    0, patch, gac, 1);
+    new_dw->get( flux_energy_FCX,     flux_energy_FCXlabel, 0, patch, gac, 1);
+    new_dw->get( diss_flux_mass_FCX,  dissipative_flux_mass_FCXlabel,   0, patch, gac, 1);
+    new_dw->get( diss_flux_mom_FCX,   dissipative_flux_mom_FCXlabel,    0, patch, gac, 1);
+    new_dw->get( diss_flux_energy_FCX,dissipative_flux_energy_FCXlabel, 0, patch, gac, 1);
 
-    new_dw->get( flux_mass_FCY,  flux_mass_FCYlabel, 0, patch, gn, 0);
-    new_dw->get( flux_mom_FCY,  flux_mom_FCYlabel, 0, patch, gn, 0);
-    new_dw->get( flux_energy_FCY,  flux_energy_FCYlabel, 0, patch, gn, 0);
-    new_dw->get( diss_flux_mass_FCY,  dissipative_flux_mass_FCYlabel, 0, patch, gn, 0);
-    new_dw->get( diss_flux_mom_FCY,  dissipative_flux_mom_FCYlabel, 0, patch, gn, 0);
-    new_dw->get( diss_flux_energy_FCY,  dissipative_flux_energy_FCYlabel, 0, patch, gn, 0);
+    new_dw->get( flux_mass_FCY,       flux_mass_FCYlabel,   0, patch, gac, 1);
+    new_dw->get( flux_mom_FCY,        flux_mom_FCYlabel,    0, patch, gac, 1);
+    new_dw->get( flux_energy_FCY,     flux_energy_FCYlabel, 0, patch, gac, 1);
+    new_dw->get( diss_flux_mass_FCY,  dissipative_flux_mass_FCYlabel,   0, patch, gac, 1);
+    new_dw->get( diss_flux_mom_FCY,   dissipative_flux_mom_FCYlabel,    0, patch, gac, 1);
+    new_dw->get( diss_flux_energy_FCY,dissipative_flux_energy_FCYlabel, 0, patch, gac, 1);
 
-    new_dw->get( flux_mass_FCZ,  flux_mass_FCZlabel, 0, patch, gn, 0);
-    new_dw->get( flux_mom_FCZ,  flux_mom_FCZlabel, 0, patch, gn, 0);
-    new_dw->get( flux_energy_FCZ,  flux_energy_FCZlabel, 0, patch, gn, 0);
-    new_dw->get( diss_flux_mass_FCZ,  dissipative_flux_mass_FCZlabel, 0, patch, gn, 0);
-    new_dw->get( diss_flux_mom_FCZ,  dissipative_flux_mom_FCZlabel, 0, patch, gn, 0);
-    new_dw->get( diss_flux_energy_FCZ,  dissipative_flux_energy_FCZlabel, 0, patch, gn, 0);
+    new_dw->get( flux_mass_FCZ,       flux_mass_FCZlabel,   0, patch, gac, 1);
+    new_dw->get( flux_mom_FCZ,        flux_mom_FCZlabel,    0, patch, gac, 1);
+    new_dw->get( flux_energy_FCZ,     flux_energy_FCZlabel, 0, patch, gac, 1);
+    new_dw->get( diss_flux_mass_FCZ,  dissipative_flux_mass_FCZlabel,   0, patch, gac, 1);
+    new_dw->get( diss_flux_mom_FCZ,   dissipative_flux_mom_FCZlabel,    0, patch, gac, 1);
+    new_dw->get( diss_flux_energy_FCZ,dissipative_flux_energy_FCZlabel, 0, patch, gac, 1);
 
     new_dw->allocateAndPut( residual_CC, residual_CClabel,   0,patch );
 
@@ -957,41 +968,38 @@ void MiniAero::updateResidual(const ProcessorGroup* /*pg*/,
     // the conserved ones.
 
     const Vector& cellSize = patch->getLevel()->dCell();
-    const double dx = cellSize[0];
-    const double dy = cellSize[1];
-    const double dz = cellSize[2];
+    const double dxdz = cellSize[0] * cellSize[2];
+    const double dydz = cellSize[1] * cellSize[2];
+    const double dydx = cellSize[0] * cellSize[1];
 
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
-      IntVector XOffset(1,0,0);
-      IntVector YOffset(0,1,0);
-      IntVector ZOffset(0,0,1);
+      IntVector R = c + IntVector(1,0,0);   // Right
+      IntVector T = c + IntVector(0,1,0);   // Top
+      IntVector F = c + IntVector(0,0,1);   // Front
 
-      residual_CC[c][0] = (flux_mass_FCX[c + XOffset]  - flux_mass_FCX[c])*dy*dz+ 
-        (diss_flux_mass_FCX[c + XOffset]  - diss_flux_mass_FCX[c])*dy*dz + 
-        (flux_mass_FCY[c + YOffset]  - flux_mass_FCY[c])*dx*dz + 
-        (diss_flux_mass_FCY[c + YOffset]  - diss_flux_mass_FCY[c])*dx*dz + 
-        (flux_mass_FCZ[c + ZOffset]  - flux_mass_FCZ[c])*dy*dx +
-        (diss_flux_mass_FCZ[c + ZOffset]  - diss_flux_mass_FCZ[c])*dy*dx;
+      
+      residual_CC[c][0] = 
+        (flux_mass_FCX[R] - flux_mass_FCX[c])*dydz + (diss_flux_mass_FCX[R] - diss_flux_mass_FCX[c])*dydz + 
+        (flux_mass_FCY[T] - flux_mass_FCY[c])*dxdz + (diss_flux_mass_FCY[T] - diss_flux_mass_FCY[c])*dxdz + 
+        (flux_mass_FCZ[F] - flux_mass_FCZ[c])*dydx + (diss_flux_mass_FCZ[F] - diss_flux_mass_FCZ[c])*dydx;
 
-      residual_CC[c][4] = (flux_energy_FCX[c + XOffset]  - flux_energy_FCX[c])*dy*dz +
-        (diss_flux_energy_FCX[c + XOffset]  - diss_flux_energy_FCX[c])*dy*dz+
-        (flux_energy_FCY[c + YOffset]  - flux_energy_FCY[c])*dx*dz + 
-        (diss_flux_energy_FCY[c + YOffset]  - diss_flux_energy_FCY[c])*dx*dz + 
-        (flux_energy_FCZ[c + ZOffset]  - flux_energy_FCZ[c])*dy*dx +
-        (diss_flux_energy_FCZ[c + ZOffset]  - diss_flux_energy_FCZ[c])*dy*dx;
+      residual_CC[c][4] = 
+        (flux_energy_FCX[R] - flux_energy_FCX[c])*dydz + (diss_flux_energy_FCX[R] - diss_flux_energy_FCX[c])*dydz+
+        (flux_energy_FCY[T] - flux_energy_FCY[c])*dxdz + (diss_flux_energy_FCY[T] - diss_flux_energy_FCY[c])*dxdz + 
+        (flux_energy_FCZ[F] - flux_energy_FCZ[c])*dydx + (diss_flux_energy_FCZ[F] - diss_flux_energy_FCZ[c])*dydx;
 
       for(int idim = 0; idim < 3; ++idim) {
-	residual_CC[c][idim + 1] =  (flux_mom_FCX[c + XOffset][idim]  - flux_mom_FCX[c][idim])*dy*dz +
-        (diss_flux_mom_FCX[c + XOffset][idim]  - diss_flux_mom_FCX[c][idim])*dy*dz + 
-        (flux_mom_FCY[c + YOffset][idim]  - flux_mom_FCY[c][idim])*dx*dz + 
-        (diss_flux_mom_FCY[c + YOffset][idim]  - diss_flux_mom_FCY[c][idim])*dx*dz + 
-        (flux_mom_FCZ[c + ZOffset][idim]  - flux_mom_FCZ[c][idim])*dy*dx +
-        (diss_flux_mom_FCZ[c + ZOffset][idim]  - diss_flux_mom_FCZ[c][idim])*dy*dx;
+	residual_CC[c][idim + 1] =  
+        (flux_mom_FCX[R][idim] - flux_mom_FCX[c][idim])*dydz + (diss_flux_mom_FCX[R][idim] - diss_flux_mom_FCX[c][idim])*dydz + 
+        (flux_mom_FCY[T][idim] - flux_mom_FCY[c][idim])*dxdz + (diss_flux_mom_FCY[T][idim] - diss_flux_mom_FCY[c][idim])*dxdz + 
+        (flux_mom_FCZ[F][idim] - flux_mom_FCZ[c][idim])*dydx + (diss_flux_mom_FCZ[F][idim] - diss_flux_mom_FCZ[c][idim])*dydx;
       }
     }
   }
 }
+//______________________________________________________________________
+//
 void MiniAero::updateState(const ProcessorGroup* /*pg*/,
                            const PatchSubset* patches,
                            const MaterialSubset* /*matls*/,
