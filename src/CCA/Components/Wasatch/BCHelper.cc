@@ -1082,7 +1082,7 @@ namespace Wasatch {
               if( myBndCondSpec->is_functor() ) { // functor bc
                 modTag = Expr::Tag( myBndCondSpec->functorName, Expr::STATE_NONE );
               } else { // constant bc
-                modTag = Expr::Tag( fieldName + "_bc_" + myBndSpec.name + "_patch_" + strPatchID, Expr::STATE_NONE );
+                modTag = Expr::Tag( fieldName + "state_" + Expr::context2str(varTag.context()) + "_bc_" + myBndSpec.name + "_patch_" + strPatchID, Expr::STATE_NONE );
                 builder = new typename ConstantBC<FieldT>::Builder( modTag, myBndCondSpec->value );
                 factory.register_expression( builder, true );
               }

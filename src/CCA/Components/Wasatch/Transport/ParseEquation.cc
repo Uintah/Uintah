@@ -1043,8 +1043,7 @@ namespace Wasatch{
       // make new Tag for solnVar by adding the appropriate suffix ( "_*" or nothing ). This
       // is because we need the ScalarRHS at time step n+1 for our pressure projection method
       Expr::Tag solnVarCorrectedTag;
-      if (suffix=="") solnVarCorrectedTag = Expr::Tag(solnVarTag.name(),        Expr::STATE_DYNAMIC   );
-      else            solnVarCorrectedTag = Expr::Tag(solnVarTag.name()+suffix, Expr::STATE_NONE);
+      solnVarCorrectedTag = Expr::Tag(solnVarTag.name(),   suffix=="" ? Expr::STATE_DYNAMIC : Expr::STATE_NONE );
 
       Expr::ExpressionBuilder* builder = NULL;
 
