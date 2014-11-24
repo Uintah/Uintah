@@ -54,9 +54,8 @@
 using namespace std;
 using SCIRun::Point;
 using SCIRun::Vector;
-using SCIRun::DebugStream;
 
-static DebugStream dbg("RMCRT_Test", false);
+static SCIRun::DebugStream dbg("RMCRT_Test", false);
 
 
 namespace Uintah
