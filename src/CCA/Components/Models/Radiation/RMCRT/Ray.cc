@@ -103,8 +103,8 @@ static SCIRun::DebugStream dbg_BC("RAY_BC", false);
 // Class: Constructor.
 //---------------------------------------------------------------------------
 Ray::Ray() : RMCRTCommon()
-{
-  d_sigmaT4_label        = VarLabel::create( "sigmaT4",          CCVariable<double>::getTypeDescription() );
+{  
+
   d_mag_grad_abskgLabel  = VarLabel::create( "mag_grad_abskg",   CCVariable<double>::getTypeDescription() );
   d_mag_grad_sigmaT4Label= VarLabel::create( "mag_grad_sigmaT4", CCVariable<double>::getTypeDescription() );
   d_flaggedCellsLabel    = VarLabel::create( "flaggedCells",     CCVariable<int>::getTypeDescription() );
@@ -369,8 +369,14 @@ Ray::sched_rayTrace( const LevelP& level,
                            modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
     tsk->usesDevice(true);
   } else {
-    tsk = scinew Task( taskname, this, &Ray::rayTrace,
-                           modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
+  
+    if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
+      tsk = scinew Task( taskname, this, &Ray::rayTrace<double>,
+                          modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
+    } else {
+      tsk = scinew Task( taskname, this, &Ray::rayTrace<float>,
+                         modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
+    }
   }
 
   printSchedule(level,dbg,taskname);
@@ -427,6 +433,7 @@ Ray::sched_rayTrace( const LevelP& level,
 //---------------------------------------------------------------------------
 // Method: The actual work of the ray tracer
 //---------------------------------------------------------------------------
+template< class T >
 void
 Ray::rayTrace( const ProcessorGroup* pc,
                const PatchSubset* patches,
@@ -470,7 +477,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
   DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
   DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
 
-  constCCVariable<double> sigmaT4OverPi;
+  constCCVariable< T > sigmaT4OverPi;
   constCCVariable<double> abskg;
   constCCVariable<int>    celltype;
 
@@ -516,7 +523,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
     //______________________________________________________________________
 
     if (d_radiometer) {
-      d_radiometer->radiometerFlux( patch, level, new_dw, mTwister, sigmaT4OverPi, abskg, celltype, modifies_divQ );
+      d_radiometer->radiometerFlux< T >( patch, level, new_dw, mTwister, sigmaT4OverPi, abskg, celltype, modifies_divQ );
     }
 
     //______________________________________________________________________

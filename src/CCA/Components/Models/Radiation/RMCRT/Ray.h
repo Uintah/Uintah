@@ -157,7 +157,6 @@ namespace Uintah{
       int    d_nDivQRays;                    // number of rays per cell used to compute divQ
       int    d_nFluxRays;                    // number of rays per cell used to compute radiative flux
       int    d_orderOfInterpolation;         // Order of interpolation for interior fine patch
-
       IntVector d_halo;                      // number of cells surrounding a coarse patch on coarser levels
 
       bool d_solveBoundaryFlux;
@@ -192,6 +191,7 @@ namespace Uintah{
       const VarLabel* d_ROI_HiCellLabel;
 
       //__________________________________
+      template<class T>
       void rayTrace( const ProcessorGroup* pc,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,

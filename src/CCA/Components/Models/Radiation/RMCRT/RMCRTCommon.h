@@ -29,7 +29,7 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
-
+#include <Core/Disclosure/TypeDescription.h>
 #include <sci_defs/uintah_defs.h>
 
 #include <iostream>
@@ -69,11 +69,12 @@ namespace Uintah{
 
       //__________________________________
       // @brief Update the running total of the incident intensity */
+      template <class T>
       void  updateSumI ( Vector& ray_direction, // can change if scattering occurs
                          Vector& ray_location,
                          const IntVector& origin,
                          const Vector& Dx,
-                         constCCVariable<double>& sigmaT4Pi,
+                         constCCVariable< T >& sigmaT4Pi,
                          constCCVariable<double>& abskg,
                          constCCVariable<int>& celltype,
                          unsigned long int& size,
@@ -89,6 +90,7 @@ namespace Uintah{
                           const bool includeEC = true );
       //__________________________________
       //
+      template< class T>
       void sigmaT4( const ProcessorGroup* pc,
                     const PatchSubset* patches,
                     const MaterialSubset* matls,
@@ -160,21 +162,26 @@ namespace Uintah{
       Ghost::GhostType d_gac;
 
       SimulationStateP d_sharedState;
+      TypeDescription::Type d_FLT_DBL;       // Is algorithm based on doubles or floats
       
       // This will create only 1 instance for both Ray() and radiometer() classes to use
       static double d_threshold;
       static double d_sigma;
       static double d_sigmaScat;      
       static bool d_isSeedRandom;     
-      static bool d_allowReflect;                   // specify as false when doing DOM comparisons      
+      static bool d_allowReflect;                   // specify as false when doing DOM comparisons 
+           
       // These are initialized once in registerVarLabels().
       static int d_matl;      
-      static MaterialSet* d_matlSet;      
+      static MaterialSet* d_matlSet;
+      
       static const VarLabel* d_sigmaT4_label;
       static const VarLabel* d_abskgLabel;
       static const VarLabel* d_temperatureLabel;
       static const VarLabel* d_cellTypeLabel;
       static const VarLabel* d_divQLabel;
+
+
 
   }; // class RMCRTCommon
 
