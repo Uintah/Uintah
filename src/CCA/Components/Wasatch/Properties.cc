@@ -281,6 +281,11 @@ namespace Wasatch{
     Expr::TagList ivarNames;
     const Names& ivars = table.get_indepvar_names();
     for( Names::const_iterator inm=ivars.begin(); inm!=ivars.end(); ++inm ){
+      if( ivarMap.find(*inm) == ivarMap.end() ){
+        std::ostringstream msg;
+        msg << "ERROR: table variable '" << *inm << "' was not provided\n";
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
       ivarNames.push_back( ivarMap[*inm] );
     }
 
