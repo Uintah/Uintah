@@ -702,49 +702,14 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       }else if( b_simplest == true ){
    
 
-          ColumnMatrix* XX = scinew ColumnMatrix( dimension );
           double start_AXBConstructionTime = Time::currentSeconds();
 
-          construct_Simplest_XX( XX, models );
-          
           total_AXBConstructionTime += Time::currentSeconds() - start_AXBConstructionTime;
           double start_SolveTime = Time::currentSeconds(); //timing 
 
           total_SolveTime += (Time::currentSeconds() - start_SolveTime); //timing
           
           int z=0; // equation loop counter
-          
-#if defined(DEBUG_MATRICES)
-          
-          if( pc->myrank() == 0 ) {
-              if( b_writefile ) {
-                  char filename[28];
-                  int currentTimeStep;
-                  if( b_isFirstTimeStep ) {
-                      currentTimeStep = 0;
-                  } else {
-                      currentTimeStep = d_fieldLabels->d_sharedState->getCurrentTopLevelTimeStep();
-                  }
-                  int sizeofit;
-                  ofstream oStream;
-                  
-                  double start_FileWriteTime = Time::currentSeconds();
-                  
-                  // write X matrix
-                  sizeofit = sprintf( filename, "X_%.2d.mat", currentTimeStep );
-                  oStream.open(filename);
-                  for( int iRow = 0; iRow < dimension; ++iRow ) {
-                      oStream << scientific << setw(20) << setprecision(20) << " " << (*XX)[iRow] << endl;
-                  }
-                  oStream.close();
-                  
-                  
-                  total_FileWriteTime += Time::currentSeconds() - start_FileWriteTime;
-              }
-              b_writefile = false;
-          }
-          
-#endif
           
           // Weight equations:
           for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
@@ -755,10 +720,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
                   err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
                   throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
               } else {
-                (*(Source_weights_weightedAbscissas[z]))[c] = (*XX)[z];
-
+                (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
               }
-              ++z;
           }
           // Weighted abscissa equations:
           for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
@@ -770,12 +733,11 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
                   err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
                   throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
               } else {
-                (*(Source_weights_weightedAbscissas[z]))[c] = (*XX)[z];
+                (*(Source_weights_weightedAbscissas[z]))[c] = models[z];
               }
               ++z;
           }
           
-          delete XX;
       
       }else if( b_useLapack == false ) {
 
