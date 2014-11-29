@@ -219,6 +219,7 @@ namespace Uintah{
                         const int radCalc_freq);
 
       //__________________________________
+      template<class T>
       void rayTrace_dataOnion( const ProcessorGroup* pc,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
@@ -229,6 +230,7 @@ namespace Uintah{
                                Task::WhichDW whichd_sigmaT4_dw,
                                const int radCalc_freq );
       //__________________________________
+      template<class T>
       void  updateSumI_ML ( Vector& ray_direction,
                             Vector& ray_location,
                             const IntVector& origin,
@@ -242,7 +244,7 @@ namespace Uintah{
                             const IntVector& fineLevel_ROI_Hi,
                             std::vector<IntVector>& regionLo,
                             std::vector<IntVector>& regionHi,
-                            StaticArray< constCCVariable<double> >& sigmaT4Pi,
+                            StaticArray< constCCVariable< T > >& sigmaT4Pi,
                             StaticArray< constCCVariable<double> >& abskg,
                             unsigned long int& size,
                             double& sumI,

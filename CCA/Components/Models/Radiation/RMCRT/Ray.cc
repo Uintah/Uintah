@@ -567,7 +567,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
             rayLocation_cellFace( mTwister, origin, d_locationIndexOrder[RayFace], d_locationShift[RayFace],
                                   DyDx, DzDx, ray_location);
 
-            updateSumI( direction_vector, ray_location, origin, Dx, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
+            updateSumI<T>( direction_vector, ray_location, origin, Dx, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
 
             sumProjI += cosTheta * (sumI - sumI_prev);   // must subtract sumI_prev, since sumI accumulates intensity
 
@@ -608,7 +608,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
         Vector ray_location;
         rayLocation( mTwister, origin, DyDx,  DzDx, d_CCRays, ray_location);
 
-        updateSumI( direction_vector, ray_location, origin, Dx,  sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
+        updateSumI<T>( direction_vector, ray_location, origin, Dx,  sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
 
       }  // Ray loop
 
@@ -661,8 +661,22 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     return;
   }
   std::string taskname = "Ray::rayTrace_dataOnion";
+  
+#if 0  
   Task* tsk= scinew Task( taskname, this, &Ray::rayTrace_dataOnion,
                           modifies_divQ, abskg_dw, sigma_dw, radCalc_freq );
+
+#endif
+  Task* tsk;
+  
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
+    tsk = scinew Task( taskname, this, &Ray::rayTrace_dataOnion<double>,
+                        modifies_divQ, abskg_dw, sigma_dw, radCalc_freq );
+  } else {
+    tsk = scinew Task( taskname, this, &Ray::rayTrace_dataOnion<float>,
+                       modifies_divQ, abskg_dw, sigma_dw, radCalc_freq );
+  }
+
 
   printSchedule(level,dbg,taskname);
 
@@ -721,6 +735,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
 //---------------------------------------------------------------------------
 // Ray tracer using the multilevel "data onion" scheme
 //---------------------------------------------------------------------------
+template< class T>
 void
 Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
                          const PatchSubset* finePatches,
@@ -755,9 +770,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
   // retrieve the coarse level data
   // compute the level dependent variables that are constant
   StaticArray< constCCVariable<double> > abskg(maxLevels);
-  StaticArray< constCCVariable<double> >sigmaT4OverPi(maxLevels);
+  StaticArray< constCCVariable< T > >sigmaT4OverPi(maxLevels);
   constCCVariable<double> abskg_fine;
-  constCCVariable<double> sigmaT4OverPi_fine;
+  constCCVariable< T > sigmaT4OverPi_fine;
 
   DataWarehouse* abskg_dw   = new_dw->getOtherDataWarehouse(which_abskg_dw);
   DataWarehouse* sigmaT4_dw = new_dw->getOtherDataWarehouse(whichd_sigmaT4_dw);
@@ -878,7 +893,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
 
         Vector ray_direction = findRayDirection( mTwister,d_isSeedRandom, origin, iRay );
 
-        updateSumI_ML( ray_direction, ray_location, origin, Dx, domain_BB, maxLevels, fineLevel, DyDx,DzDx,
+        updateSumI_ML< T >( ray_direction, ray_location, origin, Dx, domain_BB, maxLevels, fineLevel, DyDx,DzDx,
                        fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo, regionHi, sigmaT4OverPi, abskg, nRaySteps, sumI, mTwister);
 
 
@@ -1605,6 +1620,7 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
 
 //______________________________________________________________________
 //  Multi-level
+ template< class T>
  void Ray::updateSumI_ML ( Vector& ray_direction,
                            Vector& ray_location,
                            const IntVector& origin,
@@ -1618,7 +1634,7 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
                            const IntVector& fineLevel_ROI_Hi,
                            vector<IntVector>& regionLo,
                            vector<IntVector>& regionHi,
-                           StaticArray< constCCVariable<double> >& sigmaT4OverPi,
+                           StaticArray< constCCVariable< T > >& sigmaT4OverPi,
                            StaticArray< constCCVariable<double> >& abskg,
                            unsigned long int& nRaySteps,
                            double& sumI,
@@ -1918,3 +1934,42 @@ Ray::filter( const ProcessorGroup*,
 
 template void Ray::setBC<int>(    CCVariable<int>&    Q_CC, const string& desc, const Patch* patch, const int mat_id);
 template void Ray::setBC<double>( CCVariable<double>& Q_CC, const string& desc, const Patch* patch, const int mat_id);
+
+
+template void  Ray::updateSumI_ML< double> ( Vector&,
+                                             Vector&,
+                                             const IntVector&,
+                                             const vector<Vector>&,
+                                             const BBox&,
+                                             const int,
+                                             const Level* ,
+                                             double DyDx[],
+                                             double DzDx[],
+                                             const IntVector&,
+                                             const IntVector&,
+                                             vector<IntVector>&,
+                                             vector<IntVector>&,
+                                             StaticArray< constCCVariable< double > >& sigmaT4OverPi,
+                                             StaticArray< constCCVariable<double> >& abskg,
+                                             unsigned long int& ,
+                                             double& ,
+                                             MTRand&);
+
+template void  Ray::updateSumI_ML< float> ( Vector&,
+                                             Vector&,
+                                             const IntVector&,
+                                             const vector<Vector>&,
+                                             const BBox&,
+                                             const int,
+                                             const Level* ,
+                                             double DyDx[],
+                                             double DzDx[],
+                                             const IntVector&,
+                                             const IntVector&,
+                                             vector<IntVector>&,
+                                             vector<IntVector>&,
+                                             StaticArray< constCCVariable< float > >& sigmaT4OverPi,
+                                             StaticArray< constCCVariable<double> >& abskg,
+                                             unsigned long int& ,
+                                             double& ,
+                                             MTRand&);
