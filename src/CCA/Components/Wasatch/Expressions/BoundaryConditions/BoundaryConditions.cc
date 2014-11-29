@@ -29,7 +29,7 @@
 {                                                                                           \
 if (this->setInExtraCellsOnly_)                                                             \
 {                                                                                           \
-  SpatialMask<FieldT> mask(f, maskPoints);                                              \
+  const SpatialMask<FieldT> mask(f, maskPoints);                                              \
   f <<= cond( mask, BCVALUE )                                                              \
             ( f              );                                                             \
 } else {                                                                                    \
@@ -42,7 +42,7 @@ if (this->setInExtraCellsOnly_)                                                 
         case Uintah::Patch::xplus:                                                          \
         {                                                                                   \
           typedef typename OpT::DirichletX::DestFieldType DesT;                             \
-          SpatialMask<DesT> mask = SpatialMask<DesT>::build(f, maskPoints);         \
+          const SpatialMask<DesT> mask = SpatialMask<DesT>::build(f, maskPoints);   \
           (*this->diriXOp_)(mask, f, BCVALUE, this->isMinusFace_);                          \
           break;                                                                            \
         }                                                                                   \
@@ -50,7 +50,7 @@ if (this->setInExtraCellsOnly_)                                                 
         case Uintah::Patch::yplus:                                                          \
         {                                                                                   \
           typedef typename OpT::DirichletY::DestFieldType DesT;                             \
-          SpatialMask<DesT> mask = SpatialMask<DesT>::build(f, maskPoints);         \
+          const SpatialMask<DesT> mask = SpatialMask<DesT>::build(f, maskPoints);   \
           (*this->diriYOp_)(mask, f, BCVALUE, this->isMinusFace_);                          \
           break;                                                                            \
         }                                                                                   \
@@ -58,7 +58,7 @@ if (this->setInExtraCellsOnly_)                                                 
         case Uintah::Patch::zplus:                                                          \
         {                                                                                   \
           typedef typename OpT::DirichletZ::DestFieldType DesT;                             \
-          SpatialMask<DesT> mask = SpatialMask<DesT>::build(f, maskPoints);         \
+          const SpatialMask<DesT> mask = SpatialMask<DesT>::build(f, maskPoints);   \
           (*this->diriZOp_)(mask, f, BCVALUE, this->isMinusFace_);                          \
           break;                                                                            \
         }                                                                                   \
@@ -76,7 +76,7 @@ if (this->setInExtraCellsOnly_)                                                 
         case Uintah::Patch::xplus:                                                          \
         {                                                                                   \
           typedef typename OpT::NeumannX::DestFieldType DesT;                               \
-          SpatialMask<DesT> mask = SpatialMask<DesT>::build(f, maskPoints);         \
+          const SpatialMask<DesT> mask = SpatialMask<DesT>::build(f, maskPoints);   \
           (*this->neumXOp_)(mask, f, BCVALUE, this->isMinusFace_);                          \
           break;                                                                            \
         }                                                                                   \
@@ -84,7 +84,7 @@ if (this->setInExtraCellsOnly_)                                                 
         case Uintah::Patch::yplus:                                                          \
         {                                                                                   \
           typedef typename OpT::NeumannY::DestFieldType DesT;                               \
-          SpatialMask<DesT> mask = SpatialMask<DesT>::build(f, maskPoints);         \
+          const SpatialMask<DesT> mask = SpatialMask<DesT>::build(f, maskPoints);   \
           (*this->neumYOp_)(mask, f, BCVALUE, this->isMinusFace_);                          \
           break;                                                                            \
         }                                                                                   \
@@ -92,7 +92,7 @@ if (this->setInExtraCellsOnly_)                                                 
         case Uintah::Patch::zplus:                                                          \
         {                                                                                   \
           typedef typename OpT::NeumannZ::DestFieldType DesT;                               \
-          SpatialMask<DesT> mask = SpatialMask<DesT>::build(f, maskPoints);         \
+          const SpatialMask<DesT> mask = SpatialMask<DesT>::build(f, maskPoints);   \
           (*this->neumZOp_)(mask, f, BCVALUE, this->isMinusFace_);                          \
           break;                                                                            \
         }                                                                                   \
@@ -133,7 +133,7 @@ evaluate()
     this->build_mask_points(maskPoints);
     
     if( this->isStaggered_ && this->bcTypeEnum_ != Wasatch::NEUMANN ){
-      SpatialMask<FieldT> mask(f, maskPoints);
+      const SpatialMask<FieldT> mask(f, maskPoints);
       masked_assign( mask, f, bcValue_ );
     }
     else{
@@ -186,7 +186,7 @@ evaluate()
     if( this->isStaggered_ ){
       std::vector<IntVec> maskPoints;
       this->build_mask_points(maskPoints);
-      SpatialMask<FieldT> mask(f, maskPoints);
+      const SpatialMask<FieldT> mask(f, maskPoints);
       f <<= cond( mask, a_ * *x_ + b_ )
                 ( f                   );
     }
@@ -216,7 +216,7 @@ evaluate()
     if( this->isStaggered_ ){
       std::vector<IntVec> maskPoints;
       this->build_mask_points(maskPoints);
-      SpatialMask<FieldT> mask(f, maskPoints);
+      const SpatialMask<FieldT> mask(f, maskPoints);
       f <<= cond( mask, a_ * (*x_ - x0_)*(*x_ - x0_) + b_ * (*x_ - x0_) + c_ )
                 ( f );
     }
@@ -247,7 +247,7 @@ evaluate()
     if(this->isStaggered_) {
       std::vector<IntVec> maskPoints;
       this->build_mask_points(maskPoints);
-      SpatialMask<FieldT> mask(f, maskPoints);
+      const SpatialMask<FieldT> mask(f, maskPoints);
       f <<= cond( mask, phic_ * pow( 1.0 - abs(*x_ - x0_) / R_ , 1.0/n_ ) )
                 ( f );
     }
@@ -277,12 +277,12 @@ evaluate()
     std::vector<IntVec> maskPoints;
     this->build_mask_points(maskPoints);
     if( this->isStaggered_ ){
-      SpatialMask<FieldT> mask(f, maskPoints);
+      const SpatialMask<FieldT> mask(f, maskPoints);
       f <<= cond( mask, *src_)
                 ( f          );
     }
     else{
-      SpatialMask<FieldT> mask(f, * this->neboGhostPts_);
+      const SpatialMask<FieldT> mask(f, * this->neboGhostPts_);
       f <<= cond( mask, *src_)
                 ( f          );
     }

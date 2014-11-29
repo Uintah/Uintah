@@ -40,7 +40,6 @@
 //-- SpatialOps includes --//
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/FVStaggered.h>
-#include <spatialops/structured/FVStaggeredBCTools.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
