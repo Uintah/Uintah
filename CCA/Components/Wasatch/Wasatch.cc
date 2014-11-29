@@ -48,7 +48,6 @@
 #include <CCA/Components/Wasatch/CoordinateHelper.h>
 
 #include <spatialops/structured/FVStaggered.h>
-#include <spatialops/structured/FVStaggeredBCTools.h>
 #ifdef ENABLE_THREADS
 #include <spatialops/SpatialOpsTools.h>
 #include <expression/SchedulerBase.h>
