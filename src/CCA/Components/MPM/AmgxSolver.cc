@@ -25,10 +25,10 @@
 //#define PETSC_USE_LOG
 
 #include <sci_defs/mpi_defs.h>
-#include <sci_defs/petsc_defs.h>
+#include <sci_defs/amgx_defs.h>
 
 #include <TauProfilerForSCIRun.h>
-#include <CCA/Components/MPM/PetscSolver.h>
+#include <CCA/Components/MPM/AmgxSolver.h>
 #include <Core/Exceptions/UintahPetscError.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
@@ -38,47 +38,62 @@
 #include <amgx_c.h>
 
 #include <vector>
+#include <map>
 #include <iostream>
 
-// If I'm not mistaken, this #define replaces the CHKERRQ() from PETSc itself...
-#undef CHKERRQ
-#define CHKERRQ(x) if(x) throw PetscError(x, __FILE__, __FILE__, __LINE__);
 
 using namespace Uintah;
 using namespace std;
 
-#undef LOG
-//#define LOG
-#undef DEBUG_PETSC
+#define AMGX_SAFE_CALL(rc) \
+{ \
+  AMGX_RC err;     \
+  char msg[4096];   \
+  switch(err = (rc)) {    \
+  case AMGX_RC_OK: \
+    break; \
+  default: \
+    fprintf(stderr, "AMGX ERROR: file %s line %6d\n", __FILE__, __LINE__); \
+    AMGX_get_error_string(err, msg, 4096);\
+    fprintf(stderr, "AMGX ERROR: %s\n", msg); \
+    AMGX_abort(NULL,1);\
+    break; \
+  } \
+}
 
-//#define USE_SPOOLES
-#undef  USE_SPOOLES
-
-//#define USE_SUPERLU
-#undef  USE_SUPERLU
-
-//#define OUTPUT_A_B  // output A matrix and B vector to files.
-#undef OUTPUT_A_B
+void print_callback(const char *msg, int length){
+  printf("%s", msg);
+} 
 
 MPMAmgxSolver::MPMAmgxSolver()
 {
-  d_A = 0;
-  d_B = 0;
-  d_diagonal = 0;
-  d_x = 0;
-  d_t = 0;
-  d_flux = 0;
-  d_iteration=0;
+  mode = AMGX_mode_dDDI;
+  AMGX_SAFE_CALL(AMGX_initialize());
+  AMGX_SAFE_CALL(AMGX_initialize_plugins());
+  AMGX_SAFE_CALL(AMGX_register_print_callback(&print_callback));
+  AMGX_SAFE_CALL(AMGX_install_signal_handler());
+  //Hard code in a amgx config file for now.
+  AMGX_SAFE_CALL(AMGX_config_create_from_file(&config, "/home/sci/mmath/Software/amgx_mpi/configs/AMGX_CLASSICAL_CG.json"));
+  //AMGX_SAFE_CALL(AMGX_config_add_parameters(&config, "exception_handling=1"));
+  AMGX_SAFE_CALL(AMGX_resources_create_simple(&rsrc, config));
 }
 
 MPMAmgxSolver::~MPMAmgxSolver()
 {
+  //Safely finalize amgx after this goes out of scope.
+  AMGX_SAFE_CALL(AMGX_resources_destroy(rsrc));
+  AMGX_SAFE_CALL(AMGX_config_destroy(config));
+  AMGX_SAFE_CALL(AMGX_finalize_plugins());
+  AMGX_SAFE_CALL(AMGX_finalize());
 }
 
 
 void MPMAmgxSolver::initialize()
 {
-  //Initialize MPI for AMGX
+  /*
+    We do our initialization in the constructor.
+   */
+  
 }
 /**************************************************************
  * Creates a mapping from nodal coordinates, IntVector(x,y,z), 
@@ -111,7 +126,6 @@ MPMAmgxSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
                                            const int DOFsPerNode,
                                            const int n8or27)
 {
-  TAU_PROFILE("MPMAmgxSolver::createLocalToGlobalMapping", " ", TAU_USER);
   int numProcessors = d_myworld->size();
   d_numNodes.resize(numProcessors, 0);
   d_startIndex.resize(numProcessors);
@@ -183,11 +197,6 @@ MPMAmgxSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
       IntVector dnodes = phigh-plow;
       IntVector start = low-plow;
 
-#if 0     
-      petscglobalIndex += start.z()*dnodes.x()*dnodes.y()*DOFsPerNode
-                       + start.y()*dnodes.x()*(DOFsPerNode-1) + start.x();
-#endif
-
       //compute the starting index by computing the starting node index and multiplying it by the degrees of freedom per node
       petscglobalIndex += (start.z()*dnodes.x()*dnodes.y()+ start.y()*dnodes.x()+ start.x())*DOFsPerNode; 
 
@@ -210,369 +219,166 @@ MPMAmgxSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
     d_petscLocalToGlobal[patch].copyPointer(l2g);
   }
   d_DOFsPerNode=DOFsPerNode;
+
+  numlrows = d_numNodes[d_myworld->myrank()];
+  numlcolumns = d_numNodes[d_myworld->myrank()];
+  d_B_Host.resize(numlrows);
+  d_diagonal_Host.resize(numlrows);
+}
+
+void MPMAmgxSolver::fromCOOtoCSR(vector<double> values,
+				 vector<int> row_ptrs,
+				 vector<int> col_inds){
+  row_ptrs.push_back(0);
+  int col_count = 0;
+  for (std::map<int, double>::iterator it = matrix_values.begin();
+       it != matrix_values.end();
+       ++it){
+    int i = it->first / numlrows;
+    int j = it->first % numlrows;
+
+    if (i == (int)row_ptrs.size()){
+      row_ptrs.push_back(col_count);
+    }
+    col_count++;
+    col_inds.push_back(j);
+    values.push_back(it->second);
+  }
 }
 
 void MPMAmgxSolver::solve(vector<double>& guess)
 {
-  TAU_PROFILE("MPMAmgxSolver::solve", " ", TAU_USER);
-  PC          precond;           
-  KSP         solver;
-#if 0
-  if(d_DOFsPerNode<3){
-    PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_ASCII_DENSE);
-    MatView(d_A,PETSC_VIEWER_STDOUT_WORLD);
+  //AMGX_SAFE_CALL(AMGX_vector_upload(d_flux, d_flux_Host.size(), 1, &d_flux_Host[0]));
+
+  //We have been storing our matrix representation in a std::map where an index corresponds to row * n + col
+  //we want to convert to a csr format that AMGX can read.
+  vector<double> values;
+  vector<int> row_ptrs;
+  vector<int> col_inds;
+
+  fromCOOtoCSR(values, row_ptrs, col_inds);
+
+  //Now we can upload everything to the GPU
+  AMGX_SAFE_CALL(AMGX_matrix_upload_all(d_A, numlrows, matrix_values.size(), 1, 1,
+					&(row_ptrs[0]), &(col_inds[0]), &(values[0]),
+					NULL));
+  AMGX_SAFE_CALL(AMGX_vector_upload(d_B, d_B_Host.size(), 1, &d_B_Host[0]));
+  AMGX_SAFE_CALL(AMGX_vector_upload(d_t, d_t_Host.size(), 1, &d_t_Host[0]));
+
+  if (!guess.empty()){
+    AMGX_SAFE_CALL(AMGX_vector_upload(d_x, guess.size(), 1, &(guess[0])));
   }
-#endif
 
-  KSPCreate(PETSC_COMM_WORLD,&solver);
-  KSPSetOperators(solver,d_A,d_A,DIFFERENT_NONZERO_PATTERN);
-  KSPGetPC(solver,&precond);
-
-#if defined(USE_SPOOLES) || defined(USE_SUPERLU)
-  KSPSetType(solver,KSPPREONLY);
-  KSPSetFromOptions(solver);
-  PCSetType(precond,PCLU);
-#else
-  KSPSetType(solver,KSPCG);
-  PCSetType(precond,PCJACOBI);
-#endif
-
-  KSPSetTolerances(solver,PETSC_DEFAULT,PETSC_DEFAULT,
-                          PETSC_DEFAULT,PETSC_DEFAULT);
-
-  if (!guess.empty()) {
-    KSPSetInitialGuessNonzero(solver,PETSC_TRUE);
-    for (int i = 0; i < (int) guess.size(); i++) {
-      VecSetValues(d_x,1,&i,&guess[i],INSERT_VALUES);
-    }
-
-  }
-  TAU_PROFILE_TIMER(solve, "Petsc:KPSolve()", "", TAU_USER);
-  TAU_PROFILE_START(solve);
-  KSPSolve(solver,d_B,d_x);
-  TAU_PROFILE_STOP(solve);
-#ifdef LOG
-  KSPView(solver,PETSC_VIEWER_STDOUT_WORLD);
-  int its;
-  KSPGetIterationNumber(solver,&its);
-  PetscPrintf(PETSC_COMM_WORLD,"Iterations %d\n",its);
-  VecView(d_x,PETSC_VIEWER_STDOUT_WORLD);
-#endif
-
-#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
-  KSPDestroy(&solver);
-#else
-  KSPDestroy(solver);
-#endif
+  //Now we can setup the solver and solve the matrix system
+  AMGX_SAFE_CALL(AMGX_solver_setup(solver, d_A));
+  AMGX_SAFE_CALL(AMGX_solver_solve(solver, d_B, d_x));
 }
 void MPMAmgxSolver::createMatrix(const ProcessorGroup* d_myworld,
                                   const map<int,int>& dof_diag)
 {
-  TAU_PROFILE("MPMAmgxSolver::createMatrix", " ", TAU_USER);
-  int me = d_myworld->myrank();
-  int numlrows = d_numNodes[me];
+  //Here we call all of our AMGX_blank_create functions
+  //d_B_Host.resize(numlrows);
+  d_B_Host.assign(numlrows, 0);
+  AMGX_SAFE_CALL(AMGX_matrix_create(&d_A, rsrc, mode));
+  AMGX_SAFE_CALL(AMGX_vector_create(&d_B, rsrc, mode));
+
+  AMGX_SAFE_CALL(AMGX_vector_create(&d_diagonal, rsrc, mode));
+  AMGX_SAFE_CALL(AMGX_vector_create(&d_x, rsrc, mode));
+  AMGX_SAFE_CALL(AMGX_vector_create(&d_t, rsrc, mode));
   
-  int numlcolumns = numlrows;
-  int globalrows = (int)d_totalNodes;
-  int globalcolumns = (int)d_totalNodes; 
-
-  int *diag, *onnz;
-  diag = scinew int[numlrows];
-  onnz = scinew int[numlrows];
-  for (int i = 0; i < numlrows; i++)
-    diag[i] = 1;
-
-  map<int,int>::const_iterator itr;
-  for (itr=dof_diag.begin(); itr != dof_diag.end(); itr++) {
-    ASSERTRANGE(itr->first,0,numlrows);
-    ASSERT(itr->second>0);
-    diag[itr->first] = itr->second;
-  }
-
-#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
-  PetscBool exists;
-#else
-  PetscTruth exists;
-#endif
-
-#if 0
-  cerr << "me = " << me << endl;
-  cerr << "numlrows = " << numlrows << endl;
-  cerr << "numlcolumns = " << numlcolumns << endl;
-  cerr << "globalrows = " << globalrows << endl;
-  cerr << "globalcolumns = " << globalcolumns << endl;
-  for (int i = 0; i < numlrows; i++) 
-    cerr << "diag[" << i << "] = " << diag[i] << endl;
-#endif
-
-#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
-  PetscClassId id;
-  if (d_A) {
-    PetscObjectGetClassId((PetscObject)d_A,&id);
-  }
-  if (id) {
-    exists = PETSC_TRUE;
-  } else {
-    exists = PETSC_FALSE;
-  }
-#elif ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 1))
-  PetscCookie cookie = 0;
-  if (d_A) {
-    PetscObjectGetCookie((PetscObject)d_A,&cookie);
-  }
-  if (cookie) {
-    exists = PETSC_TRUE;
-  } else {
-    exists = PETSC_FALSE;
-  }
-
-#else
-  PetscObjectExists((PetscObject)d_A, &exists);
-#endif
-
-#if 0
-    // This one works
-    MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
-                    globalcolumns, PETSC_DEFAULT, diag, 
-                    PETSC_DEFAULT,PETSC_NULL, &d_A);
-#endif
-
-    // This one is much faster
-    int ONNZ_MAX=57;
-    int DIAG_MAX=81;
-    if(d_DOFsPerNode==1){
-      ONNZ_MAX=19;
-      DIAG_MAX=27;
-    }
-
-    if (numlcolumns < ONNZ_MAX)
-      ONNZ_MAX = numlcolumns;
-
-    if (numlcolumns < DIAG_MAX)
-      DIAG_MAX = numlcolumns;
-
-    for (int i = 0; i < numlrows; i++){
-      ASSERT(diag[i]>0);
-      onnz[i]=ONNZ_MAX;
-      if(diag[i]==1){
-         onnz[i]=0;
-      }
-      diag[i]=min(diag[i],DIAG_MAX);
-    }
-
-#if defined(USE_SPOOLES) || defined(USE_SUPERLU)
-    PetscErrorCode ierr;
-    ierr = MatCreate(PETSC_COMM_WORLD, &d_A);CHKERRQ(ierr);
-    ierr = MatSetSizes(d_A,numlrows,numlcolumns,globalrows,globalcolumns);
-#ifdef USE_SPOOLES
-    ierr = MatSetType(d_A,MATAIJSPOOLES);
-#else
-    ierr = MatSetType(d_A,MATSUPERLU_DIST);CHKERRQ(ierr);
-#endif
-    ierr = MatMPIAIJSetPreallocation(d_A,PETSC_DEFAULT,diag,PETSC_DEFAULT,onnz);
-#else
-#if ((PETSC_VERSION_MAJOR == 3) && ((PETSC_VERSION_MINOR == 3) || (PETSC_VERSION_MINOR == 4)))
-    MatCreateAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
-                    globalcolumns, PETSC_DEFAULT, diag,
-                    PETSC_DEFAULT, onnz, &d_A);
-#else
-    MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
-                    globalcolumns, PETSC_DEFAULT, diag, 
-                    PETSC_DEFAULT, onnz, &d_A);
-#endif
-#endif
-  
-    //allocate the diagonal
-    int low,high;
-    MatGetOwnershipRange(d_A,&low,&high);
-    for(int i=low;i<high;i++) {
-      MatSetValue(d_A,i,i,0,ADD_VALUES);
-    }
-    flushMatrix();
-//    MatType type;
-//    MatGetType(d_A, &type);
-//    cout << "MatType = " << type << endl;
-
-    //set the initial stash size.
-    //for now set it to be 1M
-    //it should be counted and set dynamically
-    //the stash is used by nodes that neighbor my patches on the + faces.
-    MatStashSetInitialSize(d_A,1000000,0);
-    if(d_DOFsPerNode>=1){
-#if (PETSC_VERSION_MAJOR==3)
-      MatSetOption(d_A, MAT_USE_INODES, PETSC_TRUE);
-#else
-      MatSetOption(d_A, MAT_USE_INODES);
-#endif
-    }
-    
-#if (PETSC_VERSION_MAJOR==3)
-#if (PETSC_VERSION_MINOR >= 1)
-    MatSetOption(d_A,MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE);
-#else
-    MatSetOption(d_A, MAT_KEEP_ZEROED_ROWS, PETSC_TRUE);
-#endif
-    MatSetOption(d_A,MAT_IGNORE_ZERO_ENTRIES, PETSC_TRUE);
-#else
-    MatSetOption(d_A, MAT_KEEP_ZEROED_ROWS);
-    MatSetOption(d_A,MAT_IGNORE_ZERO_ENTRIES);
-#endif
-
-    // Create vectors.  Note that we form 1 vector from scratch and
-    // then duplicate as needed.
-#ifdef USE_SPOOLES
-    VecCreate(PETSC_COMM_WORLD,&d_B);
-    VecSetSizes(d_B,numlrows,globalrows);
-    ierr = VecSetFromOptions(d_B);
-#else
-    VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&d_B);
-#endif
-    VecDuplicate(d_B,&d_diagonal);
-    VecDuplicate(d_B,&d_x);
-    VecDuplicate(d_B,&d_t);
-    VecDuplicate(d_B,&d_flux);
-
-  delete[] diag;
-  delete[] onnz;
+  AMGX_SAFE_CALL(AMGX_vector_create(&d_flux, rsrc, mode));
 }
 
 void MPMAmgxSolver::destroyMatrix(bool recursion)
 {
-  TAU_PROFILE("MPMAmgxSolver::destroyMatrix", " ", TAU_USER);
-  if (recursion) {
-    MatZeroEntries(d_A);
-    PetscScalar zero = 0.;
-#if (PETSC_VERSION_MAJOR == 2 && PETSC_VERSION_MINOR == 2)
-      VecSet(&zero,d_B);
-      VecSet(&zero,d_diagonal);
-      VecSet(&zero,d_x);
-      VecSet(&zero,d_t);
-      VecSet(&zero,d_flux);
-#else 
-      VecSet(d_B,zero);
-      VecSet(d_diagonal,zero);
-      VecSet(d_x,zero);
-      VecSet(d_t,zero);
-      VecSet(d_flux,zero);
-#endif
-  } else {
-#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
-  PetscBool exists;
-#else
-  PetscTruth exists;
-#endif
-
-#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
-  PetscClassId id;
-  if (d_A) {
-    PetscObjectGetClassId((PetscObject)d_A,&id);
-  }
-  if (id) {
-    exists = PETSC_TRUE;
-  }
-  else {
-    exists = PETSC_FALSE;
-  }
-#elif ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 1))
-  PetscCookie cookie = 0;
-  if (d_A) {
-    PetscObjectGetCookie((PetscObject)d_A,&cookie);
-  }
-  if (cookie) {
-    exists = PETSC_TRUE;
-  } else {
-    exists = PETSC_FALSE;
-  }
-#else
-    PetscObjectExists((PetscObject)d_A,&exists);
-#endif
-    if (exists == PETSC_TRUE) {
-#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
-      MatDestroy(&d_A);
-      VecDestroy(&d_B);
-      VecDestroy(&d_diagonal);
-      VecDestroy(&d_x);
-      VecDestroy(&d_t);
-      VecDestroy(&d_flux);
-#else
-      MatDestroy(d_A);
-      VecDestroy(d_B);
-      VecDestroy(d_diagonal);
-      VecDestroy(d_x);
-      VecDestroy(d_t);
-      VecDestroy(d_flux);
-#endif
-    }
-  }
-  if (recursion == false) {
-    d_DOF.clear();
-    d_DOFFlux.clear();
-    d_DOFZero.clear();
-  }
+  //We have to destroy the solver first folowed by the matrix and then the vectors.
+  //Any other order will cause the program to explode.
+  AMGX_SAFE_CALL(AMGX_solver_destroy(solver));
+  AMGX_SAFE_CALL(AMGX_vector_destroy(d_diagonal));
+  AMGX_SAFE_CALL(AMGX_vector_destroy(d_x));
+  AMGX_SAFE_CALL(AMGX_vector_destroy(d_t));
+  AMGX_SAFE_CALL(AMGX_vector_destroy(d_flux));
 }
 
 void
 MPMAmgxSolver::flushMatrix()
-{
-  MatAssemblyBegin(d_A,MAT_FLUSH_ASSEMBLY);
-  MatAssemblyEnd(d_A,MAT_FLUSH_ASSEMBLY);
+{}
+
+void
+MPMAmgxSolver::fillMatrix(int numi, int i_indices[], int numj, int j_indices[], double value[]){
+  for (int i = 0; i < numi; i++){
+    for (int j = 0; j < numj; j++){
+      matrix_values.insert(pair<int, double>(i_indices[i] * numlcolumns + j_indices[j], value[i * d_totalNodes + j]));
+    }
+  }
 }
 
 void
 MPMAmgxSolver::fillVector(int i,double v,bool add)
 {
-  PetscScalar value = v;
+  //Write one element to the vector.
   if (add) {
-    VecSetValues(d_B,1,&i,&value,ADD_VALUES);
-  } 
-  else {
-    VecSetValues(d_B,1,&i,&value,INSERT_VALUES);
+    d_B_Host[i] += v;
+  } else {
+    d_B_Host[i] = v;
   }
 }
 
 void
 MPMAmgxSolver::fillTemporaryVector(int i,double v)
 {
-  PetscScalar value = v;
-  VecSetValues(d_t,1,&i,&value,INSERT_VALUES);
+  d_t_Host[i] = v;
 }
 
 void
 MPMAmgxSolver::fillFluxVector(int i,double v)
 {
-  PetscScalar value = v;
-  VecSetValues(d_flux,1,&i,&value,INSERT_VALUES);
+  d_flux_Host[i] = v;
 }
 
 void
 MPMAmgxSolver::assembleVector()
-{
-  VecAssemblyBegin(d_B);
-  VecAssemblyEnd(d_B);
-}
+{}
 
 void
-MPMAmgxSolver::assembleTemporaryVector()
-{
-  VecAssemblyBegin(d_t);
-  VecAssemblyEnd(d_t);
-}
+MPMAmgxSolver::assembleTemporaryVector()  
+{}
 
 
 void
 MPMAmgxSolver::assembleFluxVector()
-{
-  VecAssemblyBegin(d_flux);
-  VecAssemblyEnd(d_flux);
+{}
+
+
+void matrixMultAdd(vector<double> values,
+		   vector<int> col_inds,
+		   vector<int> row_ptrs, 
+		   vector<double> v1,
+		   vector<double> v2,
+		   vector<double> output){
+  //The matrix is in CSR format 
+  //For each row
+  int el = 0;
+  for (int i = 0; i < (int)row_ptrs.size() - 1; i++){
+    double tmp = v2[i];
+    //For each column index 
+    for (int j = row_ptrs[i]; j < row_ptrs[i + 1]; j++){
+      tmp += values[el] * v1[col_inds[j]];
+      el++;
+    }
+    output[i] = tmp;
+  }
 }
 
 void
 MPMAmgxSolver::applyBCSToRHS()
 {
-  int ierr = MatMultAdd(d_A,d_t,d_B,d_B);
-  if (ierr) {
-    throw UintahPetscError(ierr, "MatMultAdd", __FILE__, __LINE__);
-  }
+  vector<double> values;
+  vector<int> row_ptrs;
+  vector<int> col_inds;
+
+  fromCOOtoCSR(values, row_ptrs, col_inds);
+  matrixMultAdd(values, col_inds, row_ptrs, d_t_Host, d_B_Host, d_B_Host);
 }
 
 void
@@ -581,298 +387,116 @@ MPMAmgxSolver::copyL2G(Array3<int>& mapping,const Patch* patch)
   mapping.copy(d_petscLocalToGlobal[patch]);
 }
 
+
 void
 MPMAmgxSolver::removeFixedDOF()
 {
-  TAU_PROFILE("MPMAmgxSolver::removeFixedDOF", " ", TAU_USER);
-  flushMatrix();
-  IS is;
-  int* indices;
-  int in=0;
-  indices = scinew int[d_DOF.size()];
-  for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end();
+  //Set boundary elements diagonals to 1 and the corresponding vector elements to 0
+  for (set<int>::iterator iter = d_DOFZero.begin(); iter != d_DOFZero.end();
        iter++) {
-    indices[in++] = *iter;
-
-    // Take care of the d_B side
-    PetscScalar v = 0.;
-    const int index = *iter;
-      
-    VecSetValues(d_B,1,&index,&v,INSERT_VALUES);
-    MatSetValue(d_A,index,index,1.,INSERT_VALUES);
+    int j = *iter;
+    d_B_Host[j] = 0;
+    matrix_values.insert(pair<int, double>(j*d_B_Host.size() + j, 1.));
   }
 
-  finalizeMatrix();
-
-#if 0
-  MatTranspose(d_A,PETSC_NULL);
-  MatZeroRows(d_A,is,&one);
-  MatTranspose(d_A,PETSC_NULL);
-#endif
-  
-  PetscScalar one = 1.0;
-
-  // Make sure the nodes that are outside of the material have values 
-  // assigned and solved for.  The solutions will be 0.
-  int low=0,high=0;
-  MatGetOwnershipRange(d_A,&low,&high);
-  int size=high-low;
-
-  MatGetDiagonal(d_A,d_diagonal);
-  PetscScalar* diag;
-  VecGetArray(d_diagonal,&diag);
-  
-  for (int j = 0; j < size; j++) {
-    if (compare(diag[j],0.)) {
-      VecSetValues(d_diagonal,1,&j,&one,INSERT_VALUES);
-      PetscScalar v = 0.;
-      VecSetValues(d_B,1,&j,&v,INSERT_VALUES);
+  for (int i = 0; i < (int)d_B_Host.size(); i++){
+    map<int,double>::iterator diag_el = matrix_values.find(i * d_B_Host.size() + i);
+    if (matrix_values.end() ==  diag_el || diag_el->second == 0){
+      matrix_values.insert(make_pair(i * d_B_Host.size() + i, 1));
+      d_B_Host[i] = 0;
     }
   }
-  VecRestoreArray(d_diagonal,&diag);
 
-  VecAssemblyBegin(d_B);
-  VecAssemblyEnd(d_B);
-  VecAssemblyBegin(d_diagonal);
-  VecAssemblyEnd(d_diagonal);
-  MatDiagonalSet(d_A,d_diagonal,INSERT_VALUES);
+  //Now we zero out row elements
   
-#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
-  ISCreateGeneral(PETSC_COMM_SELF, d_DOF.size(), indices, PETSC_COPY_VALUES, &is);
-#else
-  ISCreateGeneral(PETSC_COMM_SELF, d_DOF.size(), indices, &is);
-#endif
-  delete[] indices;
+  for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); iter++){
 
-#if (PETSC_VERSION_MAJOR == 2 && PETSC_VERSION_MINOR == 2)
-  MatZeroRows(d_A,is,&one);
-#elif ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
-  MatZeroRowsIS(d_A, is, one, 0, 0);
-#else
-  MatZeroRowsIS(d_A,is,one);
-#endif
+    //Find the first nonzero element in the nodes row 
+    map<int, double>::iterator row_index = matrix_values.lower_bound((*iter) * d_B_Host.size());
+    
+    //Iterate through until we are in the next row setting all the elements to 0 except for the diagonal
+    for (; row_index->first / (int)d_B_Host.size() == *iter; row_index++){
+      if (row_index->first % (int)d_B_Host.size() != *iter)
+	row_index->second = 0;
+    }
+  }
 
-#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
-  ISDestroy(&is);
-#else
-  ISDestroy(is);
-#endif
-
-
-  //__________________________________
-  //  debugging
-#ifdef OUTPUT_A_B
-  char matfile[100],vecfile[100];
-  
-  PetscViewer matview, vecview;
-  sprintf(vecfile,"output/vector.%d.%d",Parallel::getMPISize(),d_iteration);
-  sprintf(matfile,"output/matrix.%d.%d",Parallel::getMPISize(),d_iteration);
-  
-  PetscViewerASCIIOpen(PETSC_COMM_WORLD,vecfile,&vecview);
-  VecView(d_B,vecview);
-  PetscViewerDestroy(vecview);
-  
-  PetscViewerASCIIOpen(PETSC_COMM_WORLD,matfile,&matview);
-  MatView(d_A,matview);
-  PetscViewerDestroy(matview);
-
-  d_iteration++;
-#endif
 }
+
 
 void MPMAmgxSolver::removeFixedDOFHeat()
 {
-  TAU_PROFILE("MPMAmgxSolver::removeFixedDOFHEAT", " ", TAU_USER);
-
-  //do matrix modifications first 
- 
+    //Set boundary elements diagonals to 1 and the corresponding vector elements to 0
   for (set<int>::iterator iter = d_DOFZero.begin(); iter != d_DOFZero.end();
        iter++) {
     int j = *iter;
 
-    PetscScalar v_zero = 0.;
-    //    VecSetValues(d_diagonal,1,&j,&v_one,INSERT_VALUES);
-    VecSetValues(d_B,1,&j,&v_zero,INSERT_VALUES);
-    MatSetValue(d_A,j,j,1.,INSERT_VALUES);
-
+    d_B_Host[j] = 0;
+    matrix_values.insert(pair<int, double>(j*d_B_Host.size() + j, 1.));
   }
-  
-  // Zero the rows/columns that contain the node numbers with BCs.
 
-  int* indices = scinew int[d_DOF.size()];  
-  int in = 0;
-  for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); 
-       iter++) {
-    indices[in++] = *iter;
-  }
 
   if( d_DOF.size() !=0)
   {
+    //For each of the boundary nodes we zero out the elements in its column
     // zeroing out the columns
-    for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); 
-       iter++) {
+    for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); iter++) {
       const int index = *iter;
       vector<int>& neighbors = d_DOFNeighbors[index];
 
       for (vector<int>::iterator n = neighbors.begin(); n != neighbors.end();
            n++) {
-        int ierr;
         // zero out the columns
-        ierr = MatSetValue(d_A,*n,index,0,INSERT_VALUES);
-        if (ierr)
-          cout << "MatSetValue error for " << index << "," << *n << endl;
+	matrix_values.insert(pair<int, double>(d_B_Host.size() * (*n) + index, 0));
       }
     }
   }
-  
-  finalizeMatrix();
 
-  if (d_DOF.size() != 0) {
-    cout << "Zeroing out rows" << endl;
-  }
-  IS is;
-#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
-  ISCreateGeneral(PETSC_COMM_SELF, d_DOF.size(), indices, PETSC_COPY_VALUES, &is);
-#else
-  ISCreateGeneral(PETSC_COMM_SELF, d_DOF.size(), indices, &is);
-#endif
+  //Now we zero out the elements other than the diagonal in the row
+  //Iterate over the boundary nodes
+  for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); iter++){
 
-  PetscScalar one = 1.0;
-#if (PETSC_VERSION_MAJOR == 2 && PETSC_VERSION_MINOR == 2)
-  MatZeroRows(d_A,is,&one);
-#elif ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
-  MatZeroRowsIS(d_A, is, one, 0, 0);
-#else
-  MatZeroRowsIS(d_A, is, one);
-#endif
+    //Find the first nonzero element in the nodes row 
+    map<int, double>::iterator row_index = matrix_values.lower_bound((*iter) * d_B_Host.size());
 
-#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
-  ISDestroy(&is);
-#else
-  ISDestroy(is);
-#endif
-
-  int* indices_flux = scinew int[d_DOFFlux.size()];
-  in = 0;
-  for (set<int>::iterator iter = d_DOFFlux.begin(); iter != d_DOFFlux.end();
-       iter++) {
-    indices_flux[in++] = *iter;
+    //Iterate through until we are in the next row setting all the elements to 0
+    for (; row_index->first / (int)d_B_Host.size() == *iter; row_index++){
+      if (row_index->first % (int)d_B_Host.size() != *iter)
+	row_index->second = 0.0;
+    }
   }
 
+  //Now we adjust the right hand side vector by replacing elements with the boundary values from
+  //the scaled temporary vector and then adding the flux vector values to specified indices.
 
-  //do vector modifications
-
-  PetscScalar* y = scinew PetscScalar[d_DOF.size()];
-  PetscScalar* y_flux = scinew PetscScalar[d_DOFFlux.size()];
-
-  assembleFluxVector();
-#if ( PETSC_VERSION_MAJOR==2 && PETSC_VERSION_MINOR == 2)
-  PetscInt nlocal_t,nlocal_flux;
-  PetscScalar minus_one = -1.;
-  VecScale(&minus_one,d_t);
-  PetscScalar* d_t_tmp;
-  PetscScalar* d_flux_tmp;
-  VecGetArray(d_t,&d_t_tmp);
-  VecGetArray(d_flux,&d_flux_tmp);
-  VecGetLocalSize(d_t,&nlocal_t);
-  VecGetLocalSize(d_flux,&nlocal_flux);
-  PetscInt low_t,high_t;
-  VecGetOwnershipRange(d_t,&low_t,&high_t);
-  PetscInt low_flux,high_flux;
-  VecGetOwnershipRange(d_flux,&low_flux,&high_flux);
-
-  for (int i = 0; i < (int) d_DOF.size();i++) {
-    int offset = indices[i] - low_t;
-    y[i] = d_t_tmp[offset];
+  for (int i = 0; i < (int)d_t_Host.size(); i++){
+    d_t_Host[i] = -1 * d_t_Host[i];
   }
-  for (int i = 0; i < (int) d_DOFFlux.size();i++) {
-    int offset = indices_flux[i] - low_flux;
-    y_flux[i] = d_flux_tmp[offset];
+
+  for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); iter++){
+    d_B_Host[*iter] = d_t_Host[*iter];
   }
-  VecRestoreArray(d_t,&d_t_tmp);
-  VecRestoreArray(d_flux,&d_flux_tmp);
-
-#else
-  VecScale(d_t,-1.);
-  VecGetValues(d_t,d_DOF.size(),indices,y);
-  VecGetValues(d_flux,d_DOFFlux.size(),indices_flux,y_flux);
-#endif
   
-  VecSetValues(d_B,d_DOF.size(),indices,y,INSERT_VALUES);
-  assembleVector();
-  VecSetValues(d_B,d_DOFFlux.size(),indices_flux,y_flux,ADD_VALUES);
-
-  delete[] y;
-  delete[] y_flux;
-
-  assembleFluxVector();
-  assembleVector();
-
-  delete[] indices;
-  delete[] indices_flux;
-
-
-#if 0
-  MatView(d_A,PETSC_VIEWER_STDOUT_WORLD);
-  VecView(d_B,PETSC_VIEWER_STDOUT_WORLD);
-#endif
-
-  //__________________________________
-  //  debugging
-#ifdef OUTPUT_A_B
-  char matfile[100],vecfile[100];
-  
-  PetscViewer matview, vecview;
-  sprintf(vecfile,"output/HeatVector.%d.%d",Parallel::getMPISize(),d_iteration);
-  sprintf(matfile,"output/HeatMatrix.%d.%d",Parallel::getMPISize(),d_iteration);
-  
-  PetscViewerASCIIOpen(PETSC_COMM_WORLD,vecfile,&vecview);
-  VecView(d_B,vecview);
-  PetscViewerDestroy(vecview);
-  
-  PetscViewerASCIIOpen(PETSC_COMM_WORLD,matfile,&matview);
-  MatView(d_A,matview);
-  PetscViewerDestroy(matview);
-
-  d_iteration++;
-#endif
-
+  for (set<int>::iterator iter = d_DOFFlux.begin(); iter != d_DOFFlux.end(); iter++){
+    d_B_Host[*iter] += d_flux_Host[*iter];
+  }
 }
 
 void MPMAmgxSolver::finalizeMatrix()
 {
-  MatAssemblyBegin(d_A,MAT_FINAL_ASSEMBLY);
-  MatAssemblyEnd(d_A,MAT_FINAL_ASSEMBLY);
+  
 }
 
 int MPMAmgxSolver::getSolution(vector<double>& xPetsc)
 {
-  int nlocal,ierr,begin,end;
-  double* x;
-  VecGetLocalSize(d_x,&nlocal);
-  VecGetOwnershipRange(d_x,&begin,&end);
-  ierr = VecGetArray(d_x,&x);
-  if (ierr)
-    cerr << "VecGetArray failed" << endl;
-  for (int ii = 0; ii < nlocal; ii++) {
-    xPetsc.push_back(x[ii]);
-  }
-  VecRestoreArray(d_x,&x);
-  return begin;
+  xPetsc.resize(d_x_Host.size());
+  AMGX_SAFE_CALL(AMGX_vector_download(d_x, &(xPetsc[0])));
+  return 0;
 }
 
 int MPMAmgxSolver::getRHS(vector<double>& QPetsc)
 {
-  int nlocal,ierr,begin,end;
-  double* q;
-  VecGetLocalSize(d_B,&nlocal);
-  VecGetOwnershipRange(d_B,&begin,&end);
-  ierr = VecGetArray(d_B,&q);
-  if (ierr)
-    cerr << "VecGetArray failed" << endl;
-  for (int ii = 0; ii < nlocal; ii++) {
-    QPetsc.push_back(q[ii]);
-  }
-  VecRestoreArray(d_B,&q);
-  return begin;
+  QPetsc.resize(d_B_Host.size());
+  std::copy(d_B_Host.begin(), d_B_Host.end(), QPetsc.begin());
+  return 0;
 }

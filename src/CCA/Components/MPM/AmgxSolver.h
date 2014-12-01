@@ -27,7 +27,8 @@
 #define MPM_AMGX_SOLVER_H
 
 #include <sci_defs/mpi_defs.h>
-#include <sci_defs/petsc_defs.h>  // Petsc uses mpi, so need to include mpi_defs.h
+#include <sci_defs/petsc_defs.h> 
+#include <sci_defs/amgx_defs.h>
 
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/Array3.h>
@@ -38,17 +39,10 @@
 #include <vector>
 #include <iostream>
 
-
-
-#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR < 4))
-extern "C" {
-#include "petscksp.h"
-#include "petscmat.h"
-}
-#else
-#include "petscksp.h"
-#include "petscmat.h"
+#ifdef HAVE_AMGX
+#include <amgx_c.h>
 #endif
+
 
 
 namespace Uintah {
@@ -76,7 +70,7 @@ namespace Uintah {
 
     void destroyMatrix(bool recursion);
 
-    inline void fillMatrix(int,int[],int,int j[],double v[]);
+    void fillMatrix(int,int[],int,int j[],double v[]);
 
     void fillVector(int, double,bool add = false);
 
@@ -105,9 +99,7 @@ namespace Uintah {
     void applyBCSToRHS();
 
   private:
-
     void assembleFluxVector();
-
     // Needed for the local to global mappings
     map<const Patch*, int> d_petscGlobalStart;
     map<const Patch*, Array3<int> > d_petscLocalToGlobal;
@@ -116,32 +108,40 @@ namespace Uintah {
     int d_DOFsPerNode;
     int d_iteration;
 
-    // Petsc matrix and vectors
+    int numlcolumns;
+    int numlrows;
+    void fromCOOtoCSR(vector<double>, vector<int>, vector<int>);
+    
 #ifdef HAVE_AMGX
-    Mat d_A,d_C;
-    Vec d_B;
-    Vec d_diagonal;
-    Vec d_x;
-    Vec d_t,d_flux;
+    //Use device memory with data in the form of double floating point
+    //on both the device and the host.
+    AMGX_Mode mode;
+    AMGX_config_handle config;
+    AMGX_resources_handle rsrc;
+    AMGX_solver_handle solver;
+    AMGX_matrix_handle d_A;
+    
+    AMGX_vector_handle d_B;
+    AMGX_vector_handle d_diagonal;
+    AMGX_vector_handle d_x;
+    AMGX_vector_handle d_t;
+    AMGX_vector_handle d_flux;
+
+
+    map<int, double> matrix_values;
+
+    //Each of the vectors will be stored host side before we write them to
+    // the amgx format
+    vector<double> d_B_Host;
+    vector<double> d_diagonal_Host;
+    vector<double> d_x_Host;
+    vector<double> d_t_Host;
+    vector<double> d_flux_Host;
+    
+    
 #endif
-
-    inline bool compare(double num1, double num2)
-      {
-        double EPSILON=1.e-16;
-        
-        return (fabs(num1-num2) <= EPSILON);
-      };
-
   };
 
-#ifdef HAVE_AMGX
-  inline void MPMAmgxSolver::fillMatrix(int numi,int i[],int numj,
-                                         int j[],double value[])
-  {
-    MatSetValues(d_A,numi,i,numj,j,value,ADD_VALUES);
-  }
-
-#endif
 
 }
 #endif
