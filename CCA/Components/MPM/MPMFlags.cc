@@ -31,8 +31,8 @@
 #include <Core/Grid/AxiGIMPInterpolator.h>
 #include <Core/Grid/cpdiInterpolator.h>
 #include <Core/Grid/axiCpdiInterpolator.h>
-//#include <Core/Grid/fastCpdiInterpolator.h>
-//#include <Core/Grid/fastAxiCpdiInterpolator.h>
+#include <Core/Grid/cptiInterpolator.h>
+#include <Core/Grid/axiCptiInterpolator.h>
 #include <Core/Grid/TOBSplineInterpolator.h>
 #include <Core/Grid/BSplineInterpolator.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -59,6 +59,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_artificialViscCoeff2 = 2.0;
   d_useLoadCurves = false;
   d_useCBDI = false;
+  d_useCPTI = false;
   d_useCohesiveZones = false;
   d_createNewParticles = false;
   d_with_color = false;
@@ -173,7 +174,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
      cerr << "nodes8or27 is deprecated, use " << endl;
      cerr << "<interpolator>type</interpolator>" << endl;
      cerr << "where type is one of the following:" << endl;
-     cerr << "linear, gimp, 3rdorderBS, cpdi" << endl;
+     cerr << "linear, gimp, 3rdorderBS, cpdi, cpti" << endl;
     exit(1);
   }
 
@@ -227,7 +228,10 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   }
 //MMS
   mpm_flag_ps->get("RunMMSProblem",d_mms_type);
-
+  // Flag for CPTI interpolator
+  if(d_interpolator_type=="cpti"){
+    d_useCPTI = true;
+  }
   mpm_flag_ps->get("InsertParticles",d_insertParticles);
   if(d_insertParticles){
     mpm_flag_ps->require("InsertParticlesFile",d_insertParticlesFile);
@@ -324,16 +328,14 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
       d_interpolator = scinew cpdiInterpolator();
       d_interpolator->setLcrit(d_cpdi_lcrit);
     }
-  }
-#if 0
- else if(d_interpolator_type=="fastcpdi"){
+  } else if(d_interpolator_type=="cpti"){
     if(d_axisymmetric){
-      d_interpolator = scinew fastAxiCpdiInterpolator();
+      d_interpolator = scinew axiCptiInterpolator();
     } else{
-      d_interpolator = scinew fastCpdiInterpolator();
+      d_interpolator = scinew cptiInterpolator();
+      d_interpolator->setLcrit(d_cpdi_lcrit);
     }
   }
-#endif
 else{
     ostringstream warn;
     warn << "ERROR:MPM: invalid interpolation type ("<<d_interpolator_type << ")"
@@ -341,6 +343,7 @@ else{
          << "linear\n"
          << "gimp\n"
          << "cpdi\n"
+         << "cpti\n"
          << "3rdorderBS\n"
          << "4thorderBS\n"<< endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
