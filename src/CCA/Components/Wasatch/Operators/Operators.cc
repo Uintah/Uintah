@@ -113,41 +113,6 @@ namespace Wasatch{
   opDB.register_new_operator<OpVol>( scinew OpVol(bcMinus, bcPlus) ); \
 }
 
-#define BUILD_NEBO_DIRICHLET_OPERATORS( VOLT )                                    \
-{                                                                     \
-  typedef Wasatch::BCOpTypeSelector<VOLT> OpT; \
-  typedef SpatialOps::NeboBoundaryConditionBuilder<OpT::DirichletX> OpX;    \
-  typedef SpatialOps::NeboBoundaryConditionBuilder<OpT::DirichletY> OpY;    \
-  typedef SpatialOps::NeboBoundaryConditionBuilder<OpT::DirichletZ> OpZ;    \
-  const OpT::DirichletX* const opx = opDB.retrieve_operator<OpT::DirichletX>(); \
-  const OpT::DirichletY* const opy = opDB.retrieve_operator<OpT::DirichletY>(); \
-  const OpT::DirichletZ* const opz = opDB.retrieve_operator<OpT::DirichletZ>(); \
-  opDB.register_new_operator<OpX>( scinew OpX(*opx) );          \
-  opDB.register_new_operator<OpY>( scinew OpY(*opy) );          \
-  opDB.register_new_operator<OpZ>( scinew OpZ(*opz) );          \
-}
-
-#define BUILD_NEBO_NEUMANN_OPERATORS( VOLT )                                    \
-{                                                                     \
-  typedef Wasatch::BCOpTypeSelector<VOLT> OpT; \
-  typedef SpatialOps::NeboBoundaryConditionBuilder<OpT::NeumannX> OpX;    \
-  typedef SpatialOps::NeboBoundaryConditionBuilder<OpT::NeumannY> OpY;    \
-  typedef SpatialOps::NeboBoundaryConditionBuilder<OpT::NeumannZ> OpZ;    \
-  const OpT::NeumannX* const opx = opDB.retrieve_operator<OpT::NeumannX>(); \
-  const OpT::NeumannY* const opy = opDB.retrieve_operator<OpT::NeumannY>(); \
-  const OpT::NeumannZ* const opz = opDB.retrieve_operator<OpT::NeumannZ>(); \
-  opDB.register_new_operator<OpX>( scinew OpX(*opx) );          \
-  opDB.register_new_operator<OpY>( scinew OpY(*opy) );          \
-  opDB.register_new_operator<OpZ>( scinew OpZ(*opz) );          \
-}
-
-#define BUILD_NEBO_BC_OPERATORS( VOLT )   \
-{                                         \
-  BUILD_NEBO_DIRICHLET_OPERATORS( VOLT )  \
-  BUILD_NEBO_NEUMANN_OPERATORS( VOLT )  \
-}
-
-
   void build_operators( const Uintah::Patch& patch,
                         SpatialOps::OperatorDatabase& opDB )
   {
@@ -193,11 +158,6 @@ namespace Wasatch{
     BUILD_UPWIND_LIMITER( XVolField )
     BUILD_UPWIND_LIMITER( YVolField )
     BUILD_UPWIND_LIMITER( ZVolField )
-    
-    BUILD_NEBO_BC_OPERATORS( SVolField )
-    BUILD_NEBO_BC_OPERATORS( XVolField )
-    BUILD_NEBO_BC_OPERATORS( YVolField )
-    BUILD_NEBO_BC_OPERATORS( ZVolField )
     
     //--------------------------------------------------------
     // Extrapolants

@@ -27,6 +27,7 @@
 
 #include <CCA/Components/Arches/Radiation/RadiationSolver.h>
 #include <CCA/Components/Arches/ArchesVariables.h>
+#include <CCA/Components/Arches/ArchesConstVariables.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Grid/LevelP.h>
@@ -109,6 +110,7 @@ public:
       void setMatrix(const ProcessorGroup* pc,
                      const Patch* patch,
                      ArchesVariables* vars,
+                     ArchesConstVariables* constvars, 
                      bool plusX, 
                      bool plusY,
                      bool plusZ,

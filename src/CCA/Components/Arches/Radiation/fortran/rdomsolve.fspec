@@ -21,4 +21,10 @@ void rdomsolve(IntVector idxlo, IntVector idxhi,
            CCVariable<double> at,
 	         bool plusX, bool plusY, bool plusZ,
            OffsetArray1<double> fraction,
-           int bands, double intrusion_abskg);
+           int bands, double intrusion_abskg,
+           CCVariable<double> IncidentFluxE,
+           CCVariable<double> IncidentFluxW,
+           CCVariable<double> IncidentFluxN,
+           CCVariable<double> IncidentFluxS,
+           CCVariable<double> IncidentFluxT,
+           CCVariable<double> IncidentFluxB);  

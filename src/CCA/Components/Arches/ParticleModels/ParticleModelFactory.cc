@@ -30,9 +30,23 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
 
    */
+  int N;
 
+  if (db->findBlock("CQMOM") ) {
+    std::vector<int> N_i;
+    db->findBlock("CQMOM")->require("QuadratureNodes",N_i);
+    N = 1;
+    std::cout << "N: " << N << std::endl;
+    for (unsigned int i = 0; i < N_i.size(); i++ ) {
+      
+      N *= N_i[i];
+      std::cout << "N: " << N << std::endl;
+    }
+  } else if (db->findBlock("DQMOM") ) {
+    db->findBlock("DQMOM")->require("number_quad_nodes",N);
+  }
 
-  if ( db->findBlock("ParticleModels")){ 
+  if ( db->findBlock("ParticleModels")){
 
     ProblemSpecP db_pm = db->findBlock("ParticleModels"); 
 
@@ -43,10 +57,6 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
       std::string type; 
       db_model->getAttribute("label",model_name ); 
       db_model->getAttribute("type", type ); 
-
-      //stub for number of environments
-      int N; 
-      db_model->require("N",N); 
 
       typedef SpatialOps::SVolField SVol;
 
@@ -140,7 +150,6 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
         std::string dependent_type;
         std::string independent_type;
         db_model->findBlock("grid")->getAttribute("dependent_type", dependent_type);
-        db_model->findBlock("grid")->getAttribute("independent_type", independent_type);
         
         if ( dependent_type == "svol" ){
           
@@ -149,7 +158,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
             std::string task_name = type + "_" + model_name;
             
             TaskInterface::TaskBuilder* tsk = scinew
-            Constant<SVol,SVol>::Builder(task_name, 0, model_name, N);
+            Constant<SVol>::Builder(task_name, 0, model_name, N);
             
             register_task( task_name, tsk );
             _active_tasks.push_back(task_name);

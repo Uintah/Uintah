@@ -42,11 +42,23 @@ namespace Uintah{
 
   class TaskInterface{ 
 
+
+
+
 public: 
 
     enum VAR_DEPEND { COMPUTES, MODIFIES, REQUIRES, LOCAL_COMPUTES };
     enum WHICH_DW { OLDDW, NEWDW, LATEST };
     enum VAR_TYPE { CC_INT, CC_DOUBLE, CC_VEC, FACEX, FACEY, FACEZ, SUM, MAX, MIN, PARTICLE };
+
+    template <typename FieldT>
+    struct VarTypeHelper{
+      VarTypeHelper(){ 
+        throw InvalidValue("Arches Task Error: Not able to deduce a type.", __FILE__, __LINE__); 
+      }
+      ~VarTypeHelper(){}
+    };
+
 
     /** @brief The variable registry information **/ 
     struct VariableInformation { 
@@ -73,48 +85,6 @@ public:
     /** @brief Print task name. **/ 
     void print_task_name(){ 
       std::cout << "Task: " << _task_name << std::endl; 
-    }
-
-    /** @brief Get the type for templated tasks **/ 
-    template <class T> 
-    void set_task_type(){
-
-      if ( typeid(T) == typeid(CCVariable<double>) ){
-        _mytype = CC_DOUBLE; 
-      } else if ( typeid(T) == typeid(SFCXVariable<double>)){ 
-        _mytype = FACEX; 
-      } else if ( typeid(T) == typeid(SFCYVariable<double>)){ 
-        _mytype = FACEY; 
-      } else if ( typeid(T) == typeid(SFCZVariable<double>)){ 
-        _mytype = FACEZ; 
-      } else if ( typeid(T) == typeid(SpatialOps::SVolField)){ 
-        _mytype = CC_DOUBLE; 
-      } else if ( typeid(T) == typeid(SpatialOps::XVolField)){ 
-        _mytype = FACEX; 
-      } else if ( typeid(T) == typeid(SpatialOps::YVolField)){ 
-        _mytype = FACEY; 
-      } else if ( typeid(T) == typeid(SpatialOps::ZVolField)){ 
-        _mytype = FACEZ; 
-      }
-
-    }
-
-    /** @brief Sets the enum for a particular variable type **/ 
-    template <class T> 
-    void set_type(T var, VAR_TYPE& type){
-      if ( typeid(var) == typeid(SpatialOps::SVolField*)){
-        type = CC_DOUBLE; 
-      } else if ( typeid(var) == typeid(SpatialOps::XVolField*)){
-        type = FACEX; 
-      } else if ( typeid(var) == typeid(SpatialOps::YVolField*)){
-        type = FACEY; 
-      } else if ( typeid(var) == typeid(SpatialOps::ZVolField*)){
-        type = FACEZ; 
-      } else if ( typeid(var) == typeid(ParticleField)){ 
-        type = PARTICLE; 
-      } else { 
-        throw InvalidValue("Arches Task Error: Not able to deduce a type.", __FILE__, __LINE__); 
-      }
     }
 
     /** @brief Input file interface **/ 
@@ -389,7 +359,6 @@ protected:
 
     std::string _task_name; 
     const int _matl_index; 
-    VAR_TYPE _mytype;
     std::vector<const VarLabel*> _local_labels;
     bool _do_init_task;                  ///< Should this task schedule the t=0 initialization. Default = true. 
     bool _do_bcs_task;                   ///< Should this task compute BCs. Default = true
@@ -457,6 +426,68 @@ private:
 
   
   };
+
+  template <>
+  struct
+  TaskInterface::VarTypeHelper<SpatialOps::SVolField>{ 
+    VarTypeHelper(){ _var_type = TaskInterface::CC_DOUBLE; }
+    TaskInterface::VAR_TYPE get_vartype(){ return _var_type; }
+    ~VarTypeHelper(){}
+
+    private: 
+    TaskInterface::VAR_TYPE _var_type; 
+  };
+  template <>
+  struct
+  TaskInterface::VarTypeHelper<CCVariable<double> >{ 
+    VarTypeHelper(){ _var_type = TaskInterface::CC_DOUBLE; }
+    TaskInterface::VAR_TYPE get_vartype(){ return _var_type; }
+    ~VarTypeHelper(){}
+
+    private: 
+    TaskInterface::VAR_TYPE _var_type; 
+  };
+  template <>
+  struct
+  TaskInterface::VarTypeHelper<SpatialOps::XVolField >{ 
+    VarTypeHelper(){ _var_type = TaskInterface::FACEX; }
+    TaskInterface::VAR_TYPE get_vartype(){ return _var_type; }
+    ~VarTypeHelper(){}
+
+    private: 
+    TaskInterface::VAR_TYPE _var_type; 
+  };
+  template <>
+  struct
+  TaskInterface::VarTypeHelper<SpatialOps::YVolField >{ 
+    VarTypeHelper(){ _var_type = TaskInterface::FACEY; }
+    TaskInterface::VAR_TYPE get_vartype(){ return _var_type; }
+    ~VarTypeHelper(){}
+
+    private: 
+    TaskInterface::VAR_TYPE _var_type; 
+  };
+  template <>
+  struct
+  TaskInterface::VarTypeHelper<SpatialOps::ZVolField >{ 
+    VarTypeHelper(){ _var_type = TaskInterface::FACEZ; }
+    TaskInterface::VAR_TYPE get_vartype(){ return _var_type; }
+    ~VarTypeHelper(){}
+
+    private: 
+    TaskInterface::VAR_TYPE _var_type; 
+  };
+  template <>
+  struct
+  TaskInterface::VarTypeHelper<ParticleField>{ 
+    VarTypeHelper(){ _var_type = TaskInterface::PARTICLE; }
+    TaskInterface::VAR_TYPE get_vartype(){ return _var_type; }
+    ~VarTypeHelper(){}
+
+    private: 
+    TaskInterface::VAR_TYPE _var_type; 
+  };
+
 }
 
 #endif 

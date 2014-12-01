@@ -232,7 +232,7 @@ public:
  *  \author James C. Sutherland
  *  \date   November, 2013
  *
- *  \brief Computes the density from the density-weighted mixture fraction given.
+ *  \brief Computes the density from the density-weighted mixture fraction.
  *
  *  Given the density of two streams 0 and 1, where the mixture fraction
  *  indicates the relative amount of stream 1 present (f=1 being  pure stream 1),

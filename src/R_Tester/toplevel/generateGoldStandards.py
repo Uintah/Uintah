@@ -3,6 +3,7 @@ import os
 import shutil
 import platform
 import socket
+import resource
 from optparse import OptionParser
 from sys import argv, exit
 from string import upper
@@ -34,7 +35,9 @@ no_sci_malloc = ""
                       # 1 for GPU RT machine (albion, aurora), 0 otherwise.
                       #   need to make this generic, perhaps pycuda?
 has_gpu       = 0 
-if socket.gethostname() == "albion" or socket.gethostname() == "aurora": 
+
+
+if socket.gethostname() == "albion" or socket.gethostname() == "aurora" or socket.gethostname() == "prism.crsim.utah.edu" or socket.gethostname() == "cyrus.mech.utah.edu": 
   has_gpu = 1
 ####################################################################################
 
@@ -154,6 +157,20 @@ def generateGS() :
         exit( 1 )
 
     validateArgs( options, leftover_args )
+    
+    #__________________________________
+    # define the maximum run time
+    Giga = 2**30
+    Kilo = 2**10
+    Mega = 2**20
+    #resource.setrlimit(resource.RLIMIT_AS, (90 * Mega,100*Mega) )  If we ever want to limit the memory
+
+    if debug_build :
+      maxAllowRunTime = 30*60   # 30 minutes
+    else:
+      maxAllowRunTime = 15*60   # 15 minutes
+
+    resource.setrlimit(resource.RLIMIT_CPU, (maxAllowRunTime,maxAllowRunTime) )
     
     #__________________________________
     # Does mpirun command exist or has the environmental variable been set?
@@ -379,7 +396,14 @@ def generateGS() :
 
             rc = os.system( command )
             
+            
+            print "\t*** Test return code %i" % rc
             # catch if sus doesn't run to completion
+            
+            if rc == 35072 or rc == 36608 :
+              print "\t*** Test exceeded maximum allowable run time ***"
+              print 
+            
             if rc != 0:
               print "\nERROR: %s: Test (%s) failed to complete\n" % (component,test)
             
