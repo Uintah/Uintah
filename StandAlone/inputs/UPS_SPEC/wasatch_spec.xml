@@ -737,7 +737,9 @@
     <!-- =========================================================================== -->
     <VariableDensity spec="OPTIONAL NO_DATA" 
                      attribute1="model REQUIRED STRING 'CONSTANT, IMPULSE, DYNAMIC'"
-                     attribute2="coefficient REQUIRED DOUBLE"/>
+                     attribute2="coefficient REQUIRED DOUBLE">
+      <UseOnePredictor spec="OPTIONAL NO_DATA"/>
+    </VariableDensity>
     
     <!-- ============================ -->
     <!-- Spec for a TransportEquation -->

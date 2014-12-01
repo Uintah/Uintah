@@ -82,7 +82,7 @@ if args.ups is not None:
   for i in range(0,nLevels):
     t = maxTimeSteps*dt0/refinement
     refinement *= 2
-    fExact = (5.0/(2.0*t + 5.0)) * np.exp(-5.0*(xsvol*xsvol)/(10.0+t))   
+    fExact = np.exp(-0.5*(xsvol - t)*(xsvol - t))   
     diff = fExact - fAll[i]
     ferr = np.linalg.norm(diff,2)
     tmp.append(ferr)

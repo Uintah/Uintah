@@ -237,7 +237,8 @@ VarDenMMSOscillatingContinuitySrc( const Expr::Tag densTag,
   tTag_( tTag ),
   timestepTag_( timestepTag ),
   a0_(varDenParams.alpha0),
-  model_(varDenParams.model)
+  model_(varDenParams.model),
+  useOnePredictor_(varDenParams.onePredictor)
 {
   this->set_gpu_runnable( true );
 }
@@ -267,7 +268,9 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
 
   exprDeps.requires_expression( denst_ );
   exprDeps.requires_expression( densStart_ );
-  exprDeps.requires_expression( dens2Start_ );
+  
+  // if we are using a single predictor, then we do not need rho**
+  if (!useOnePredictor_) exprDeps.requires_expression( dens2Start_ );
 
   exprDeps.requires_expression( xTag_ );
   exprDeps.requires_expression( yTag_ );
@@ -298,7 +301,8 @@ bind_fields( const Expr::FieldManagerList& fml )
   const typename Expr::FieldMgrSelector<SVolField>::type& scalarFM = fml.field_manager<SVolField>();
   dens_      = &scalarFM.field_ref( denst_ );
   densStar_  = &scalarFM.field_ref( densStart_ );
-  dens2Star_ = &scalarFM.field_ref( dens2Start_ );
+  // if we are using a single predictor, then we do not need rho**
+  if (!useOnePredictor_) dens2Star_ = &scalarFM.field_ref( dens2Start_ );
 
   const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.field_manager<FieldT>();
   x_ = &fm.field_ref( xTag_ );
@@ -347,7 +351,8 @@ evaluate()
   FieldT& result = this->value();
     
   SpatialOps::SpatFldPtr<SVolField> drhodtstar = SpatialOps::SpatialFieldStore::get<SVolField>( result );
-  *drhodtstar <<= (*dens2Star_ - *dens_)/(2. * *timestep_);
+  if   ( useOnePredictor_ ) *drhodtstar <<= (*densStar_ - *dens_)/(*timestep_);
+  else                      *drhodtstar <<= (*dens2Star_ - *dens_)/(2.0 * *timestep_);
   
   SpatialOps::SpatFldPtr<SVolField> divmomstar = SpatialOps::SpatialFieldStore::get<SVolField>( result );
   const bool is3d = doX_ && doY_ && doZ_;

@@ -53,6 +53,7 @@ namespace Wasatch{
 
     double alpha0;
     VariableDensityModels model;
+    bool onePredictor;
   };
   
   void parse_varden_input( Uintah::ProblemSpecP varDenSpec,
