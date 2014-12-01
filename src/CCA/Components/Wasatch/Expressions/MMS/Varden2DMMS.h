@@ -199,6 +199,7 @@ private:
   const Expr::Tag xTag_, yTag_, tTag_, timestepTag_;
   const double a0_;
   const Wasatch::VarDenParameters::VariableDensityModels model_;
+  const bool useOnePredictor_;
   const XVolField *uStar_, *xVel_;
   const YVolField *vStar_, *yVel_;
   const ZVolField *wStar_, *zVel_;

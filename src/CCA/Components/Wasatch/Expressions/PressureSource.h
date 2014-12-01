@@ -66,7 +66,7 @@ class PressureSource : public Expr::Expression<SVolField>
   const SVolField *dil_;
   const TimeField* timestep_;
   
-  const bool isConstDensity_, doX_, doY_, doZ_, is3d_;
+  const bool isConstDensity_, doX_, doY_, doZ_, is3d_, useOnePredictor_;
   
   const Expr::Tag xMomt_, yMomt_, zMomt_;
   const Expr::Tag xVelt_, yVelt_, zVelt_, xVelStart_, yVelStart_, zVelStart_, denst_, densStart_, dens2Start_, dilt_, timestept_, divmomstart_;

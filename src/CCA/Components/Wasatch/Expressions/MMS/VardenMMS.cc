@@ -138,6 +138,7 @@ VarDen1DMMSContinuitySrc<FieldT>::
 VarDen1DMMSContinuitySrc( const double rho0,
                           const double rho1,
                           const Expr::Tag densTag,
+                          const Expr::Tag densStarTag,
                           const Expr::Tag dens2StarTag,
                           const Expr::TagList& velTags,
                           const Expr::Tag& xTag,
@@ -148,6 +149,7 @@ VarDen1DMMSContinuitySrc( const double rho0,
   rho0_( rho0 ),
   rho1_( rho1 ),
   densTag_(densTag),
+  densStarTag_(densStarTag),
   dens2StarTag_(dens2StarTag),
   xTag_( xTag ),
   tTag_( tTag ),
@@ -160,7 +162,8 @@ VarDen1DMMSContinuitySrc( const double rho0,
   doZ_( velTags[2]!=Expr::Tag() ),
   is3d_( doX_ && doY_ && doZ_ ),
   a0_( varDenParams.alpha0 ),
-  model_( varDenParams.model )
+  model_( varDenParams.model ),
+  useOnePredictor_(varDenParams.onePredictor)
 {
   this->set_gpu_runnable( true );
 }
@@ -177,7 +180,7 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
   exprDeps.requires_expression( timestepTag_ );
   if (model_ != Wasatch::VarDenParameters::CONSTANT) {
     exprDeps.requires_expression( densTag_ );
-    exprDeps.requires_expression( dens2StarTag_ );
+    exprDeps.requires_expression( useOnePredictor_ ? densStarTag_ : dens2StarTag_ );
     if( doX_ ) exprDeps.requires_expression( xVelt_ );
     if( doY_ ) exprDeps.requires_expression( yVelt_ );
     if( doZ_ ) exprDeps.requires_expression( zVelt_ );
@@ -200,7 +203,10 @@ bind_fields( const Expr::FieldManagerList& fml )
   if (model_ != Wasatch::VarDenParameters::CONSTANT) {
     const typename Expr::FieldMgrSelector<SVolField>::type& sfm = fml.field_manager<SVolField>();
     dens_ = &sfm.field_ref( densTag_ );
-    dens2Star_ = &sfm.field_ref( dens2StarTag_ );
+    
+    if   (useOnePredictor_) densStar_  = &sfm.field_ref( densStarTag_ );
+    else                    dens2Star_ = &sfm.field_ref( dens2StarTag_ );
+    
     if( doX_ ) xVel_  = &fml.field_ref<XVolField>( xVelt_ );
     if( doY_ ) yVel_  = &fml.field_ref<YVolField>( yVelt_ );
     if( doZ_ ) zVel_  = &fml.field_ref<ZVolField>( zVelt_ );
@@ -251,7 +257,8 @@ evaluate()
     case Wasatch::VarDenParameters::IMPULSE:
     {
       SpatialOps::SpatFldPtr<SVolField> drhodtstar = SpatialOps::SpatialFieldStore::get<SVolField>( result );
-      *drhodtstar <<= (*dens2Star_ - *dens_)/(2. * *timestep_);
+      if (useOnePredictor_)  *drhodtstar <<= (*densStar_  - *dens_) / *timestep_;
+      else                   *drhodtstar <<= (*dens2Star_ - *dens_) / (2. * *timestep_);
       *alpha <<= cond(*drhodtstar == 0.0, 1.0)(a0_);
     }
       break;
@@ -259,7 +266,9 @@ evaluate()
     {
       SpatialOps::SpatFldPtr<SVolField> velDotDensGrad = SpatialOps::SpatialFieldStore::get<SVolField>( result );
       SpatialOps::SpatFldPtr<SVolField> drhodtstar = SpatialOps::SpatialFieldStore::get<SVolField>( result );
-      *drhodtstar <<= (*dens2Star_ - *dens_)/(2. * *timestep_);
+
+      if (useOnePredictor_)  *drhodtstar <<= (*densStar_  - *dens_) / *timestep_;
+      else                   *drhodtstar <<= (*dens2Star_ - *dens_) / (2. * *timestep_);
       
       if( is3d_ ){ // for 3D cases, inline the whole thing
         *velDotDensGrad <<= (*x2SInterpOp_)(*xVel_) * (*gradXOp_)(*dens_) + (*y2SInterpOp_)(*yVel_) * (*gradYOp_)(*dens_) + (*z2SInterpOp_)(*zVel_) * (*gradZOp_)(*dens_);
@@ -333,6 +342,7 @@ Builder( const Expr::Tag& result,
          const double rho0,
          const double rho1,
          const Expr::Tag densTag,
+         const Expr::Tag densStarTag,
          const Expr::Tag dens2StarTag,
          const Expr::TagList& velTags,
          const Expr::Tag& xTag,
@@ -344,6 +354,7 @@ rho0_( rho0 ),
 rho1_( rho1 ),
 velTs_( velTags ),
 densTag_(densTag),
+densStarTag_(densStarTag),
 dens2StarTag_(dens2StarTag),
 xTag_( xTag ),
 tTag_( tTag ),
@@ -358,7 +369,7 @@ Expr::ExpressionBase*
 VarDen1DMMSContinuitySrc<FieldT>::Builder::
 build() const
 {
-  return new VarDen1DMMSContinuitySrc<FieldT>( rho0_, rho1_, densTag_, dens2StarTag_, velTs_, xTag_, tTag_, timestepTag_, varDenParams_ );
+  return new VarDen1DMMSContinuitySrc<FieldT>( rho0_, rho1_, densTag_, densStarTag_, dens2StarTag_, velTs_, xTag_, tTag_, timestepTag_, varDenParams_ );
 }
 
 //--------------------------------------------------------------------

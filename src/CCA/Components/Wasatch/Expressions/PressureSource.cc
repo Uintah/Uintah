@@ -37,7 +37,8 @@ PressureSource::PressureSource( const Expr::TagList& momTags,
   timestept_  ( Wasatch::TagNames::self().dt ),
   divmomstart_( divmomstarTag ),
   a0_( varDenParams.alpha0),
-  model_(varDenParams.model)
+  model_(varDenParams.model),
+  useOnePredictor_(varDenParams.onePredictor)
 {
   set_gpu_runnable( true );
 }
@@ -72,7 +73,7 @@ void PressureSource::advertise_dependents( Expr::ExprDeps& exprDeps )
     }  
     
     exprDeps.requires_expression( densStart_ );
-    exprDeps.requires_expression( dens2Start_ );
+    if (!useOnePredictor_) exprDeps.requires_expression( dens2Start_ );
     exprDeps.requires_expression( divmomstart_ );
   }
   else {
@@ -113,7 +114,8 @@ void PressureSource::bind_fields( const Expr::FieldManagerList& fml )
     }
     
     densStar_ = &scalarFM.field_ref( densStart_ );
-    dens2Star_ = &scalarFM.field_ref( dens2Start_ );
+    // if we are using more than one predictor then we will need rho**
+    if (!useOnePredictor_) dens2Star_ = &scalarFM.field_ref( dens2Start_ );
     divmomstar_ = &scalarFM.field_ref( divmomstart_ );
   }
   else {
@@ -171,7 +173,8 @@ void PressureSource::evaluate()
 //    SVolField& beta       = *results[3];
     SVolField& drhodtstar = *results[4];
 
-    drhodtstar <<= (*dens2Star_ - *dens_)/(2. * *timestep_);
+    if (useOnePredictor_) drhodtstar <<= (*densStar_ - *dens_) / *timestep_;
+    else                  drhodtstar <<= (*dens2Star_ - *dens_) / (2.0 * *timestep_);
     
     // beta is the ratio of drhodt to div(mom*)
 //    beta  <<= cond (abs(drhodtstar - divmomstar) <= 1e-10, 1.0)

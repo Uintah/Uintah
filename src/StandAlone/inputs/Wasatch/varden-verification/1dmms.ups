@@ -9,7 +9,9 @@
   <Wasatch>
     <TimeIntegrator> FE </TimeIntegrator>    
 
-		<VariableDensity model="IMPULSE" coefficient="0.1"/>
+		<VariableDensity model="IMPULSE" coefficient="0.1">
+		<UseOnePredictor/>
+		</VariableDensity>
     <Density>
       <NameTag name="density" state="CARRY_FORWARD"/>
     </Density>
@@ -158,25 +160,24 @@
 
 
   <Time>
-    <maxTime>2.0</maxTime>
+    <maxTime>5.0</maxTime>
     <initTime>0.0</initTime>
     <delt_min>0.001</delt_min>
     <delt_max>0.001</delt_max>
-    <max_Timesteps> 10 </max_Timesteps>
+<!--     <max_Timesteps> 10 </max_Timesteps> -->
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
 
   <DataArchiver>
-    <filebase>varden-projection-1d-mms.uda</filebase>
-    <outputTimestepInterval>1</outputTimestepInterval>
+    <filebase>mms1d1predictor.uda</filebase>
+    <outputTimestepInterval>1000</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle="2" interval="0.001"/>
-    <compression>gzip</compression>
+    <checkpoint cycle="0" interval="0"/>
     <save label="density"/>
     <save label="u*"/>
     <save label="density*"/>
-    <save label="density**"/>
+
     <save label="x-mom"/>
     <save label="x-mom_rhs_partial"/>
     <save label="u"/>
@@ -223,7 +224,7 @@
         <lower>[-15,0,0]</lower>
         <upper>[15,1,1]</upper>
         <resolution>[256,2,2]</resolution>
-        <patches>[9,1,1]</patches>
+        <patches>[1,1,1]</patches>
       </Box>
       <periodic>[0,1,1]</periodic>
     </Level>
