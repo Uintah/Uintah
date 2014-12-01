@@ -14,7 +14,7 @@
  * @author   Alex Abboud
  * @date     October 2014
  *
- * @brief    This class sets a constnat source term for particles
+ * @brief    This class sets a constant source term for particles
  *
  * @details  A constant source term for easier debugging
  *
@@ -24,15 +24,14 @@
 
 namespace Uintah{
   
-  //IT is the independent variable type
-  //DT is the dependent variable type
-  template <typename IT, typename DT>
+  //T is the dependent variable type
+  template <typename T>
   class Constant : public TaskInterface {
     
   public:
     
-    Constant<IT, DT>( std::string task_name, int matl_index, const std::string var_name, const int N );
-    ~Constant<IT, DT>();
+    Constant<T>( std::string task_name, int matl_index, const std::string var_name, const int N );
+    ~Constant<T>();
     
     void problemSetup( ProblemSpecP& db );
     
@@ -47,7 +46,7 @@ namespace Uintah{
       ~Builder(){}
       
       Constant* build()
-      { return scinew Constant<IT, DT>( _task_name, _matl_index, _base_var_name, _N ); }
+      { return scinew Constant<T>( _task_name, _matl_index, _base_var_name, _N ); }
       
     private:
       
@@ -84,10 +83,9 @@ namespace Uintah{
     
     const std::string _base_var_name;
     VAR_TYPE _D_type;
-    VAR_TYPE _I_type;
     
-    const int _N;                 //<<< The number of "environments"
-    double _const;        //cosntant source value
+    const int _N;         //<<< The number of "environments"
+    double _const;        //<<< constant source value
     
     const std::string get_name(const int i, const std::string base_name){
       std::stringstream out;
@@ -101,44 +99,40 @@ namespace Uintah{
   
   //Function definitions:
   
-  template <typename IT, typename DT>
-  void Constant<IT,DT>::create_local_labels(){
+  template <typename T>
+  void Constant<T>::create_local_labels(){
     for ( int i = 0; i < _N; i++ ){
       const std::string name = get_name(i, _base_var_name);
       register_new_variable(name, _D_type);
     }
   }
   
-  template <typename IT, typename DT>
-  Constant<IT, DT>::Constant( std::string task_name, int matl_index,
+  template <typename T>
+  Constant<T>::Constant( std::string task_name, int matl_index,
                                const std::string base_var_name, const int N ) :
   _base_var_name(base_var_name), TaskInterface( task_name, matl_index ), _N(N){
+
+    VarTypeHelper<T> dhelper; 
+    _D_type = dhelper.get_vartype(); 
+
   }
   
-  template <typename IT, typename DT>
-  Constant<IT, DT>::~Constant()
+  template <typename T>
+  Constant<T>::~Constant()
   {}
   
-  template <typename IT, typename DT>
-  void Constant<IT, DT>::problemSetup( ProblemSpecP& db ){
+  template <typename T>
+  void Constant<T>::problemSetup( ProblemSpecP& db ){
     
     _do_ts_init_task = false;
     _do_bcs_task = false;
-    
-    //This sets the type of the independent and dependent variable types as needed by the variable
-    //registration step.
-    DT* d_test;
-    IT* i_test;
-    
-    set_type(d_test, _D_type);
-    set_type(i_test, _I_type);
     
     db->require("constant",_const);
   }
   
   //======INITIALIZATION:
-  template <typename IT, typename DT>
-  void Constant<IT, DT>::register_initialize( std::vector<VariableInformation>& variable_registry ){
+  template <typename T>
+  void Constant<T>::register_initialize( std::vector<VariableInformation>& variable_registry ){
     
     for ( int i = 0; i < _N; i++ ){
       const std::string name = get_name(i, _base_var_name);
@@ -148,35 +142,35 @@ namespace Uintah{
     }
   }
   
-  template <typename IT, typename DT>
-  void Constant<IT,DT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
+  template <typename T>
+  void Constant<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                                     SpatialOps::OperatorDatabase& opr ){
     
     using namespace SpatialOps;
     using SpatialOps::operator *;
-    typedef SpatialOps::SpatFldPtr<DT> DTptr;
+    typedef SpatialOps::SpatFldPtr<T> Tptr;
     
     for ( int i = 0; i < _N; i++ ){
       const std::string name = get_name(i, _base_var_name);
-      DTptr model_value = tsk_info->get_so_field<DT>(name);
+      Tptr model_value = tsk_info->get_so_field<T>(name);
       
       *model_value <<= 0.0;
     }
   }
   
   //======TIME STEP INITIALIZATION:
-  template <typename IT, typename DT>
-  void Constant<IT, DT>::register_timestep_init( std::vector<VariableInformation>& variable_registry ){
+  template <typename T>
+  void Constant<T>::register_timestep_init( std::vector<VariableInformation>& variable_registry ){
   }
   
-  template <typename IT, typename DT>
-  void Constant<IT,DT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
+  template <typename T>
+  void Constant<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                                        SpatialOps::OperatorDatabase& opr ){
   }
   
   //======TIME STEP EVALUATION:
-  template <typename IT, typename DT>
-  void Constant<IT, DT>::register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ){
+  template <typename T>
+  void Constant<T>::register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ){
     
     for ( int i = 0; i < _N; i++ ){
       //dependent variables(s) or model values
@@ -185,20 +179,17 @@ namespace Uintah{
     }
   }
   
-  template <typename IT, typename DT>
-  void Constant<IT,DT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
+  template <typename T>
+  void Constant<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                               SpatialOps::OperatorDatabase& opr ) {
     using namespace SpatialOps;
     using SpatialOps::operator *;
-    typedef SpatialOps::SpatFldPtr<DT> DTptr;
-    typedef SpatialOps::SpatFldPtr<IT> ITptr;
-    typedef typename OperatorTypeBuilder< SpatialOps::Interpolant, IT, DT >::type InterpT;
-    const InterpT* const interp = opr.retrieve_operator<InterpT>();
+    typedef SpatialOps::SpatFldPtr<T> Tptr;
 
     for ( int i = 0; i < _N; i++ ){
       
       const std::string name = get_name(i, _base_var_name);
-      DTptr model_value = tsk_info->get_so_field<DT>(name);
+      Tptr model_value = tsk_info->get_so_field<T>(name);
 
       *model_value <<= _const;
       

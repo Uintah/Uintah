@@ -744,6 +744,14 @@
         </eqn>
       </ScalarTransport>
 
+      <!-- New Task interface for Momentum -->
+      <MomentumTransport                spec="OPTIONAL NO_DATA">
+
+        <convection                     spec="REQUIRED NO_DATA"
+                                        attribute1="scheme REQUIRED STRING 'central'"/>
+
+      </MomentumTransport>
+
       <!-- Initialization tasks -->
       <Initialization                   spec="OPTIONAL NO_DATA"> 
         <!-- label = unique label for this task 
@@ -826,10 +834,8 @@
             <concentration              spec="REQUIRED NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         need_applies_to="type simple_rate"/>       <!-- label for the "concentration" -->
-            <N                          spec="REQUIRED INTEGER"
-                                        need_applies_to="type simple_rate, drag"/>       <!-- hack for now to deal with multiple environments -->
-                                        
-            <apply_to                   spec="OPTIONAL INTEGER"/> <!-- identify which IC this model affects -->
+            
+            <IC                         spec="REQUIRED STRING" />      <!-- base label for which internal coordiante this source affects -->
           <!-- drag model -->
             <particle_density           spec="REQUIRED NO_DATA"
                                         attribute1="type REQUIRED STRING 'constant, node_specific'"
@@ -1028,6 +1034,8 @@
                                                                                                                             includes the effect of the abskp. abskg = abskg(gas only) + abskp -->
             <DORadiationModel           spec="OPTIONAL NO_DATA" need_applies_to="type do_radiation" >
               <ordinates                  spec="OPTIONAL INTEGER" />                                   <!-- number of ordinants, default = 2 --> 
+              <ReflectOn                  spec="OPTIONAL BOOLEAN" /> <!-- reflections are off by default.-->
+              <usePrevInt                 spec="OPTIONAL BOOLEAN" /> <!-- using the previous solve as initial guess, is off by default -->
               <LinearSolver               spec="OPTIONAL NO_DATA"                                      
                                           attribute1="type REQUIRED STRING 'hypre, petsc'">
                 <res_tol                  spec="REQUIRED DOUBLE" />

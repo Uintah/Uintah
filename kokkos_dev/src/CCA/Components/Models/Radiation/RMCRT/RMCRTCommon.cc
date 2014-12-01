@@ -56,7 +56,9 @@ double RMCRTCommon::d_sigma;
 double RMCRTCommon::d_sigmaScat;            
 bool   RMCRTCommon::d_isSeedRandom;           
 bool   RMCRTCommon::d_allowReflect;           
-int    RMCRTCommon::RMCRTCommon::d_matl;    
+int    RMCRTCommon::d_matl; 
+
+//const TypeDescription::Type RMCRTCommon::d_FLT_DBL;
   
 MaterialSet* RMCRTCommon::d_matlSet = 0;
 const VarLabel* RMCRTCommon::d_sigmaT4_label;
@@ -71,7 +73,15 @@ const VarLabel* RMCRTCommon::d_divQLabel;
 //
 RMCRTCommon::RMCRTCommon()
 {
-  d_sigmaT4_label  = VarLabel::create( "sigmaT4",  CCVariable<double>::getTypeDescription() );                        
+ /*`==========TESTING==========*/               // HARDWIRED 
+  RMCRTCommon::d_FLT_DBL = TypeDescription::double_type; 
+/*===========TESTING==========`*/
+  if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type){
+    d_sigmaT4_label = VarLabel::create( "sigmaT4", CCVariable<double>::getTypeDescription() );
+  } else {
+    d_sigmaT4_label = VarLabel::create( "sigmaT4",  CCVariable<float>::getTypeDescription() );
+  }
+                      
   d_gac     = Ghost::AroundCells;      
   d_gn      = Ghost::None;             
 }
@@ -133,7 +143,13 @@ RMCRTCommon::sched_sigmaT4( const LevelP& level,
                            const bool includeEC )
 {
   std::string taskname = "RMCRTCommon::sigmaT4";
-  Task* tsk= scinew Task( taskname, this, &RMCRTCommon::sigmaT4, temp_dw, radCalc_freq, includeEC );
+  
+  Task* tsk;
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
+    tsk = scinew Task( taskname, this, &RMCRTCommon::sigmaT4<double>, temp_dw, radCalc_freq, includeEC );
+  } else {
+    tsk = scinew Task( taskname, this, &RMCRTCommon::sigmaT4<float>, temp_dw, radCalc_freq, includeEC );
+  }
 
   printSchedule(level,dbg,taskname);
   
@@ -146,6 +162,7 @@ RMCRTCommon::sched_sigmaT4( const LevelP& level,
 //______________________________________________________________________
 // Compute total intensity over all wave lengths (sigma * Temperature^4/pi)
 //______________________________________________________________________
+template< class T>
 void
 RMCRTCommon::sigmaT4( const ProcessorGroup*,
                      const PatchSubset* patches,           
@@ -175,7 +192,7 @@ RMCRTCommon::sigmaT4( const ProcessorGroup*,
     double sigma_over_pi = d_sigma/M_PI;
 
     constCCVariable<double> temp;
-    CCVariable<double> sigmaT4;             // sigma T ^4/pi
+    CCVariable< T > sigmaT4;             // sigma T ^4/pi
 
     DataWarehouse* temp_dw = new_dw->getOtherDataWarehouse(which_temp_dw);
     temp_dw->get(temp,              d_temperatureLabel,   d_matl, patch, Ghost::None, 0);
@@ -291,12 +308,13 @@ RMCRTCommon::reflect(double& fs,
 //______________________________________________________________________
 //    Core function:  Integrate the intensity
 //______________________________________________________________________
+template <class T >
 void 
 RMCRTCommon::updateSumI ( Vector& ray_direction,
                          Vector& ray_location,
                          const IntVector& origin,
                          const Vector& Dx,
-                         constCCVariable<double>& sigmaT4OverPi,
+                         constCCVariable< T >& sigmaT4OverPi,
                          constCCVariable<double>& abskg,
                          constCCVariable<int>& celltype,
                          unsigned long int& nRaySteps,
@@ -566,3 +584,16 @@ RMCRTCommon::doCarryForward( const int radCalc_freq ){
   
   return test;
 }
+
+
+//______________________________________________________________________
+//
+//______________________________________________________________________
+// Explicit template instantiations:
+
+template void 
+  RMCRTCommon::updateSumI ( Vector&, Vector&, const IntVector&, const Vector&, constCCVariable< double >&, constCCVariable<double>&, constCCVariable<int>&, unsigned long int&, double&, MTRand&);
+
+template void 
+  RMCRTCommon::updateSumI ( Vector&, Vector&, const IntVector&, const Vector&, constCCVariable< float >&, constCCVariable<double>&, constCCVariable<int>&, unsigned long int&, double&, MTRand&);
+

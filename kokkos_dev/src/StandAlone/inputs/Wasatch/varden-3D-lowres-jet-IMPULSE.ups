@@ -1,13 +1,6 @@
 <Uintah_specification>
- <!-- what works:
- The following settings work with high density ratios:
- 1. use alpha = 1
- 2. the momentum is well conserved but the velocities are large. the velocities are computed from moemntum
- which means that the densities are not high enough where momentum is high. this has to do
- with convection at the inlet boundary. it seems that SUPERBEE does a very good job at fixing this.
- -->
   <Meta>
-    <title>Variable density jet flow</title>
+    <title>Variable density annular jet flow</title>
   </Meta>
 
   <SimulationComponent type="wasatch"/>
@@ -146,54 +139,52 @@
     <initTime>0.0</initTime>
     <delt_min>1e-4</delt_min>
     <delt_max>1e-4</delt_max>
-    <!-- max_Timesteps>2</max_Timesteps -->
+    <max_Timesteps>15</max_Timesteps>
     <timestep_multiplier>1</timestep_multiplier>
   </Time>
 
 
   <DataArchiver>
-    <filebase>delme-jet_3d_varden-lowres-a_Imp-r5_16p.uda</filebase>
-    <outputTimestepInterval>1000</outputTimestepInterval>
+    <filebase>varden-3d_lowres_jet-a_Imp-r5_16p.uda</filebase>
+    <outputTimestepInterval>2</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle="2" timestepInterval="5000"/>
+    <checkpoint cycle="2" timestepInterval="2"/>
     <save label="x-mom"/>
 <!--     <save label="x-mom_rhs"/> -->
     <save label="y-mom"/>
 <!--     <save label="y-mom_rhs"/> -->
      <save label="f"/>
-     <save label="f*"/>
+     <!-- save label="f*"/>
      <save label="density*"/>
     <save label="density**"/>
     <save label="rhof*"/>
-    <save label="rhof**"/>
+    <save label="rhof**"/ -->
     <save label="density"/>
-    <save label="drhodt*"/>
+    <!-- save label="drhodt*"/>
     <save label="drhodt"/>
-    <save label="divmom*"/>
+    <save label="divmom*"/ -->
     <save label="rhof"/>
-    <save label="varden_beta"/>
     <save label="u"/>
     <save label="v"/>
     <save label="w"/>
-    <save label="u*"/>
-    <save label="v*"/>
-    <save label="w*"/>
     <save label="viscosity"/>
+    <!-- save label="u*"/>
+    <save label="v*"/>
+    <save label="w*"/ -->
     <save label="tau_xy"/>
     <save label="tau_yx"/>
     <save label="tau_zy"/>
     <save label="tau_yz"/>
     <save label="tau_xz"/>
     <save label="tau_zx"/>
-    <save label="ContinuityResidual"/>
-    <save label="varden_alpha"/>
-    <save label="varden_beta"/>
+    <!-- save label="ContinuityResidual"/>
+    <save label="varden_alpha"/ -->
     <save label="pressure"/>
     <save label="TurbulentDiffusivity"/>
-    <save label="pressure_old"/>
+    <!-- save label="pressure_old"/>
     <save label="pressure_rhs"/>
     <save label="pressure_src"/>
-    <save label="dilatation"/>
+    <save label="dilatation"/ -->
   </DataArchiver> 
 
   <Grid>
@@ -201,8 +192,6 @@
       
       <DefaultMaterial>all</DefaultMaterial>
       <Face circle="x-" origin="0 0.0 0.0" radius="0.05" name="circle-inlet" type="Velocity">
-<!--       <Face rectangle="x-" lower="0 -0.1 -1" upper = "0.0 0.1 1" name="circle-inlet" type="Velocity"> -->
-      <!-- Face rectangle="x-" lower="0 -0.1 -0.7" upper="0 0.1 0.7" name="planar-inlet" type="Velocity" -->
         <BCType label="x-mom" var="Dirichlet" value="5.0"/>
         <BCType label="y-mom" var="Dirichlet" value="0.0"/>
         <BCType label="z-mom" var="Dirichlet" value="0.0"/>
@@ -218,20 +207,6 @@
         <BCType label="rhof" var="Dirichlet" value="0.0"/>
         <BCType label="f" var="Dirichlet" value="0.0"/>
         <BCType label="density" var="Dirichlet" value="1.0"/>
-<!-- 
-        <BCType label="x-mom" var="Dirichlet" value="0.001"/>
-        <BCType label="y-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="z-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="u" var="Dirichlet" value="0.001"/>
-        <BCType label="u*" var="Dirichlet" value="0.001"/>
-        <BCType label="v" var="Dirichlet" value="0.0"/>
-        <BCType label="v*" var="Dirichlet" value="0.0"/>
-        <BCType label="w" var="Dirichlet" value="0.0"/>
-        <BCType label="w*" var="Dirichlet" value="0.0"/>
-        <BCType label="f" var="Dirichlet" value="0.0"/>
-        <BCType label="rhof" var="Dirichlet" value="0.0"/>
-        <BCType label="density" var="Dirichlet" value="1.0"/>
- -->
       </Face>
       
       <Face side="x+" name="outlet" type="Outflow">

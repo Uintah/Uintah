@@ -12,7 +12,7 @@ namespace Uintah{
 
 public: 
 
-    FEUpdate<T>( std::string task_name, int matl_index, std::vector<std::string> eqn_names ); 
+    FEUpdate<T>( std::string task_name, int matl_index, std::vector<std::string> eqn_names, bool divide_out_density ); 
     ~FEUpdate<T>(); 
 
     /** @brief Input file interface **/ 
@@ -25,18 +25,19 @@ public:
 
       public: 
 
-      Builder( std::string task_name, int matl_index, std::vector<std::string> eqn_names ) : 
-        _task_name(task_name), _matl_index(matl_index), _eqn_names(eqn_names){}
+      Builder( std::string task_name, int matl_index, std::vector<std::string> eqn_names, bool divide_out_density ) : 
+        _task_name(task_name), _matl_index(matl_index), _eqn_names(eqn_names), _div_density(divide_out_density){}
       ~Builder(){}
 
       FEUpdate* build()
-      { return scinew FEUpdate<T>( _task_name, _matl_index, _eqn_names ); }
+      { return scinew FEUpdate<T>( _task_name, _matl_index, _eqn_names, _div_density ); }
 
       private: 
 
       std::string _task_name; 
       int _matl_index; 
       std::vector<std::string> _eqn_names; 
+      bool _div_density; 
 
     };
 
@@ -65,6 +66,9 @@ protected:
 private:
 
     std::vector<std::string> _eqn_names; 
+    VAR_TYPE _mytype; 
+
+    bool _div_density; 
 
   
   };
@@ -72,14 +76,14 @@ private:
   //Function definitions: 
 
   template <typename T>
-  FEUpdate<T>::FEUpdate( std::string task_name, int matl_index, std::vector<std::string> eqn_names ) : 
+  FEUpdate<T>::FEUpdate( std::string task_name, int matl_index, std::vector<std::string> eqn_names, bool divide_out_density ) : 
   TaskInterface( task_name, matl_index ){
 
-    // This needs to be done to set the variable type 
-    // for this function. All templated tasks should do this. 
-    set_task_type<T>(); 
+    VarTypeHelper<T> helper; 
+    _mytype = helper.get_vartype(); 
 
     _eqn_names = eqn_names; 
+    _div_density = divide_out_density; 
   
   }
 
@@ -133,8 +137,12 @@ private:
     typedef SpatialOps::SVolField   SVolF;
     typedef SpatialOps::SpatFldPtr<SVolF> SVolFP; 
     typedef SpatialOps::SpatFldPtr<T> STFP; 
+    typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolF, T>::type I_svol_to_T;
 
     SVolFP const rho = tsk_info->get_const_so_field<SVolF>( "density" ); 
+
+    const I_svol_to_T* const interp_rho = opr.retrieve_operator<I_svol_to_T>(); 
+
     typedef std::vector<std::string> SV;
 
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){ 
@@ -143,7 +151,13 @@ private:
       STFP rhs = tsk_info->get_const_so_field<T>( *i+"_RHS" ); 
 
       //update: 
-      *phi <<= *rhs / *rho; 
+      if ( _div_density ){ 
+        //dividing out the density
+        *phi <<= *rhs / ((*interp_rho)(*rho)); 
+      } else { 
+        //solving for rho*phi
+        *phi <<= *rhs; 
+      }
 
     }
   }

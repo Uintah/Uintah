@@ -48,7 +48,6 @@
 #include <CCA/Components/Wasatch/CoordinateHelper.h>
 
 #include <spatialops/structured/FVStaggered.h>
-#include <spatialops/structured/FVStaggeredBCTools.h>
 #ifdef ENABLE_THREADS
 #include <spatialops/SpatialOpsTools.h>
 #include <expression/SchedulerBase.h>
@@ -101,7 +100,7 @@ namespace Wasatch{
       buildTimeIntegrator_ ( true ),
       buildWasatchMaterial_( true ),
       nRKStages_(1),
-      isPeriodic_( true ),
+      isPeriodic_ (true ),
       doRadiation_(false),
       doParticles_(false)
   {
@@ -117,9 +116,9 @@ namespace Wasatch{
               << "-------------------------------------------------------------" << std::endl
               << std::endl;
 
-    materials_     = NULL;
-    timeStepper_   = NULL;
-    linSolver_     = NULL;
+    materials_   = NULL;
+    timeStepper_ = NULL;
+    linSolver_   = NULL;
 
     cellType_ = scinew CellType();
     
@@ -162,14 +161,14 @@ namespace Wasatch{
       delete i->second;
     }
 
-    if (buildTimeIntegrator_) delete timeStepper_;
+    if( buildTimeIntegrator_ ) delete timeStepper_;
 
     for( GraphCategories::iterator igc=graphCategories_.begin(); igc!=graphCategories_.end(); ++igc ){
       delete igc->second->exprFactory;
       delete igc->second;
     }
     
-    for (BCHelperMapT::iterator it=bcHelperMap_.begin(); it != bcHelperMap_.end(); ++it) {
+    for( BCHelperMapT::iterator it=bcHelperMap_.begin(); it != bcHelperMap_.end(); ++it ){
       delete it->second;
     }
     delete cellType_;
@@ -183,8 +182,9 @@ namespace Wasatch{
   {    
     Expr::Tag exprtag;
     for( Expr::TagList::iterator exprtag=exprTagList.begin();
-        exprtag!=exprTagList.end();
-        ++exprtag ){
+         exprtag!=exprTagList.end();
+         ++exprtag )
+    {
       const Expr::ExpressionID exprID = graphHelper->exprFactory->get_id(*exprtag);
       graphHelper->rootIDs.insert( exprID );
     }    
@@ -196,8 +196,8 @@ namespace Wasatch{
                                    GraphHelper* const gh )
   {
     for( Uintah::ProblemSpecP exprParams = forceOnGraphParams->findBlock("NameTag");
-        exprParams != 0;
-        exprParams = exprParams->findNextBlock("NameTag") )
+         exprParams != 0;
+         exprParams = exprParams->findNextBlock("NameTag") )
     {
       const Expr::ExpressionID exprID = gh->exprFactory->get_id(parse_nametag(exprParams));
       gh->rootIDs.insert( exprID );
@@ -218,16 +218,17 @@ namespace Wasatch{
     bool foundExtraCells = false;
     Uintah::ProblemSpecP gridspec = params->findBlock("Grid");
     for( Uintah::ProblemSpecP level = gridspec->findBlock("Level");
-        level != 0;
-        level = gridspec->findNextBlock("Level") ) {
+         level != 0;
+         level = gridspec->findNextBlock("Level") ){
       nlevels++;
       Uintah::IntVector periodicDirs(0,0,0);
       level->get("periodic", periodicDirs);
       levelPeriodicityVectors.push_back(periodicDirs);
       
       for( Uintah::ProblemSpecP box = level->findBlock("Box");
-          box != 0;
-          box = level->findNextBlock("Box") ){
+           box != 0;
+           box = level->findNextBlock("Box") )
+      {
         // note that a [0,0,0] specification gets added by default,
         // so we will check to ensure that something other than
         // [0,0,0] has not been specified.
@@ -244,7 +245,7 @@ namespace Wasatch{
     // check for different periodicities on different levels
     std::vector<Uintah::IntVector>::iterator periodicityIter = levelPeriodicityVectors.begin();
     int xPeriodSum = 0, yPeriodSum = 0, zPeriodSum = 0;
-    while (periodicityIter != levelPeriodicityVectors.end()) {
+    while( periodicityIter != levelPeriodicityVectors.end() ){
       Uintah::IntVector& pvector = *periodicityIter;
       xPeriodSum += pvector.x();
       yPeriodSum += pvector.y();
@@ -252,9 +253,10 @@ namespace Wasatch{
       ++periodicityIter;
     }
     
-    if  ( ( xPeriodSum !=0 && xPeriodSum < nlevels ) ||
-          ( yPeriodSum !=0 && yPeriodSum < nlevels ) ||
-          ( zPeriodSum !=0 && zPeriodSum < nlevels ) ) {
+    if( ( xPeriodSum !=0 && xPeriodSum < nlevels ) ||
+        ( yPeriodSum !=0 && yPeriodSum < nlevels ) ||
+        ( zPeriodSum !=0 && zPeriodSum < nlevels ) )
+    {
       msg << endl
       << "  Specification of different periodicities for different levels is not supported in Wasatch." << endl
       << "  Please revise your input file." << endl
@@ -299,27 +301,28 @@ namespace Wasatch{
   
   void assign_unique_boundary_names( Uintah::ProblemSpecP bcProbSpec )
   {
-    if (!bcProbSpec) return;
+    if( !bcProbSpec ) return;
     int i=0;
     std::string strFaceID;
     std::set<std::string> faceNameSet;
-    for (Uintah::ProblemSpecP faceSpec = bcProbSpec->findBlock("Face");
-         faceSpec != 0; faceSpec=faceSpec->findNextBlock("Face"), i++) {
+    for( Uintah::ProblemSpecP faceSpec = bcProbSpec->findBlock("Face");
+         faceSpec != 0; faceSpec=faceSpec->findNextBlock("Face"), ++i ){
       
       std::string faceName = "none";
       faceSpec->getAttribute("name",faceName);
       
       strFaceID = number_to_string(i);
       
-      if (faceName=="none" || faceName=="") {
+      if( faceName=="none" || faceName=="" ){
         faceName ="Face_" + strFaceID;
         faceSpec->setAttribute("name",faceName);
-      } else {
-        if ( faceNameSet.find(faceName) != faceNameSet.end() ) {
+      }
+      else{
+        if( faceNameSet.find(faceName) != faceNameSet.end() ){
           bool fndInc = false;
           int j = 1;
-          while (!fndInc) {
-            if ( faceNameSet.find( faceName + "_" + number_to_string(j) ) != faceNameSet.end() )
+          while( !fndInc ){
+            if( faceNameSet.find( faceName + "_" + number_to_string(j) ) != faceNameSet.end() )
               j++;
             else
               fndInc = true;
@@ -355,18 +358,18 @@ namespace Wasatch{
                               Uintah::SimulationStateP& sharedState )
   {
     wasatchSpec_ = params->findBlock("Wasatch");
-    if (!wasatchSpec_) return;
+    if( !wasatchSpec_ ) return;
 
     //
     // Check whether we are solving for particles
     //
     doParticles_ = wasatchSpec_->findBlock("ParticleTransportEquations");
-    if (doParticles_) {
+    if( doParticles_ ){
       particlesHelper_->problem_setup(wasatchSpec_->findBlock("ParticleTransportEquations"), sharedState);
     }
 
     // setup names for all the boundary condition faces that do NOT have a name or that have duplicate names
-    if ( params->findBlock("Grid") ) {
+    if( params->findBlock("Grid") ){
       Uintah::ProblemSpecP bcProbSpec = params->findBlock("Grid")->findBlock("BoundaryConditions");
       assign_unique_boundary_names( bcProbSpec );
     }
@@ -418,10 +421,10 @@ namespace Wasatch{
     Expr::Tag densityTag = Expr::Tag();
     bool isConstDensity = true;
     {
-      Uintah::ProblemSpecP momEqnParams   = wasatchSpec_->findBlock("MomentumEquations");
-      Uintah::ProblemSpecP particleEqnParams   = wasatchSpec_->findBlock("ParticleTransportEquations");
-      Uintah::ProblemSpecP densityParams  = wasatchSpec_->findBlock("Density");
-      Uintah::ProblemSpecP transEqnParams = wasatchSpec_->findBlock("TransportEquation");
+      Uintah::ProblemSpecP momEqnParams      = wasatchSpec_->findBlock("MomentumEquations");
+      Uintah::ProblemSpecP particleEqnParams = wasatchSpec_->findBlock("ParticleTransportEquations");
+      Uintah::ProblemSpecP densityParams     = wasatchSpec_->findBlock("Density");
+      Uintah::ProblemSpecP transEqnParams    = wasatchSpec_->findBlock("TransportEquation");
       if( transEqnParams || momEqnParams || particleEqnParams ){
         if( !densityParams ) {
           std::ostringstream msg;
@@ -438,7 +441,7 @@ namespace Wasatch{
           constDensParam->getAttribute( "value", densVal );
           constDensParam->getAttribute( "name", densName );
           densityTag = Expr::Tag( densName, Expr::STATE_NONE );
-          graphCategories_[INITIALIZATION]->exprFactory->register_expression( new Expr::ConstantExpr<SVolField>::Builder(densityTag,densVal) );          
+          graphCategories_[INITIALIZATION  ]->exprFactory->register_expression( new Expr::ConstantExpr<SVolField>::Builder(densityTag,densVal) );
           graphCategories_[ADVANCE_SOLUTION]->exprFactory->register_expression( new Expr::ConstantExpr<SVolField>::Builder(densityTag,densVal) );
         }
       }
@@ -448,13 +451,13 @@ namespace Wasatch{
     Uintah::ProblemSpecP bcParams = params->findBlock("Grid")->findBlock("BoundaryConditions");
     if (bcParams) {
       for( Uintah::ProblemSpecP faceBCParams=bcParams->findBlock("Face");
-          faceBCParams != 0;
-          faceBCParams=faceBCParams->findNextBlock("Face") ){
-        
+           faceBCParams != 0;
+           faceBCParams=faceBCParams->findNextBlock("Face") )
+      {
         for( Uintah::ProblemSpecP bcTypeParams=faceBCParams->findBlock("BCType");
-            bcTypeParams != 0;
-            bcTypeParams=bcTypeParams->findNextBlock("BCType") ){
-          
+             bcTypeParams != 0;
+             bcTypeParams=bcTypeParams->findNextBlock("BCType") )
+        {
           std::string functorName;
           
           Uintah::ProblemSpecP valSpec = bcTypeParams->findBlock("value");
@@ -463,14 +466,14 @@ namespace Wasatch{
           
           Uintah::ProblemSpec::InputType theInputType = bcTypeParams->getInputType(functorName);
           // if the value of this bc is of type string, then it is a functor. add to the list of functors
-          if ( theInputType == Uintah::ProblemSpec::STRING_TYPE ) {
+          if( theInputType == Uintah::ProblemSpec::STRING_TYPE ){
             
             std::string phiName;
             bcTypeParams->getAttribute("label",phiName);
             
             BCFunctorMap::iterator iter = bcFunctorMap_.find(phiName);
             // check if we already have an entry for phiname
-            if ( iter != bcFunctorMap_.end() ) {
+            if( iter != bcFunctorMap_.end() ){
               (*iter).second.insert(functorName);
             }
             else{
@@ -486,8 +489,8 @@ namespace Wasatch{
     // PARSE IO FIELDS
     Uintah::ProblemSpecP archiverParams = params->findBlock("DataArchiver");
     for( Uintah::ProblemSpecP saveLabelParams=archiverParams->findBlock("save");
-        saveLabelParams != 0;
-        saveLabelParams=saveLabelParams->findNextBlock("save") )
+         saveLabelParams != 0;
+         saveLabelParams=saveLabelParams->findNextBlock("save") )
     {
       std::string saveTheLabel;
       saveLabelParams->getAttribute("label",saveTheLabel);
@@ -497,17 +500,17 @@ namespace Wasatch{
     //
     // Material
     //
-    if (buildWasatchMaterial_) {
+    if( buildWasatchMaterial_ ){
       Uintah::WasatchMaterial* mat= scinew Uintah::WasatchMaterial();
       sharedState->registerWasatchMaterial(mat);
     }
 
     // we are able to get the solver port from here
     linSolver_ = dynamic_cast<Uintah::SolverInterface*>(getPort("solver"));
-    if(!linSolver_) {
+    if( !linSolver_ ){
       throw Uintah::InternalError("Wasatch: couldn't get solver port", __FILE__, __LINE__);
     }
-    else if (linSolver_) {
+    else if( linSolver_ ){
       proc0cout << "Detected solver: " << linSolver_->getName() << std::endl;
       const bool needPressureSolve = wasatchSpec_->findBlock("MomentumEquations") && !(wasatchSpec_->findBlock("MomentumEquations")->findBlock("DisablePressureSolve"));
       if ( (linSolver_->getName()).compare("hypre") != 0 && needPressureSolve) {
@@ -519,7 +522,6 @@ namespace Wasatch{
       }
     }
     
-    //
     std::string timeIntName;
     wasatchSpec_->get("TimeIntegrator",timeIntName);
     TimeIntegrator timeInt(timeIntName);
@@ -558,7 +560,8 @@ namespace Wasatch{
     //
     for( Uintah::ProblemSpecP transEqnParams=wasatchSpec_->findBlock("TransportEquation");
          transEqnParams != 0;
-         transEqnParams=transEqnParams->findNextBlock("TransportEquation") ){
+         transEqnParams=transEqnParams->findNextBlock("TransportEquation") )
+    {
       adaptors_.push_back( parse_scalar_equation( transEqnParams, turbParams, densityTag, isConstDensity, graphCategories_ ) );
     }
 
@@ -566,8 +569,9 @@ namespace Wasatch{
     // Build coupled transport equations scalability test for wasatch.
     //
     for( Uintah::ProblemSpecP scalEqnParams=wasatchSpec_->findBlock("ScalabilityTest");
-        scalEqnParams != 0;
-        scalEqnParams=scalEqnParams->findNextBlock("ScalabilityTest") ) {
+         scalEqnParams != 0;
+         scalEqnParams=scalEqnParams->findNextBlock("ScalabilityTest") )
+    {
       try{
         // note - parse_scalability_test returns a vector of equation adaptors
         EquationAdaptors scalEqnAdaptors = parse_scalability_test( scalEqnParams, graphCategories_ );
@@ -587,8 +591,9 @@ namespace Wasatch{
     // required for solution of each momentum equation.
     //
     for( Uintah::ProblemSpecP momEqnParams=wasatchSpec_->findBlock("MomentumEquations");
-        momEqnParams != 0;
-        momEqnParams=momEqnParams->findNextBlock("MomentumEquations") ){
+         momEqnParams != 0;
+         momEqnParams=momEqnParams->findNextBlock("MomentumEquations") )
+    {
       try{
           // note - parse_momentum_equations returns a vector of equation adaptors
           const EquationAdaptors adaptors = parse_momentum_equations( momEqnParams,
@@ -625,8 +630,9 @@ namespace Wasatch{
     // required for solution of each momentum equation.
     //
     for( Uintah::ProblemSpecP momEqnParams=wasatchSpec_->findBlock("MomentTransportEquation");
-        momEqnParams != 0;
-        momEqnParams=momEqnParams->findNextBlock("MomentTransportEquation") ){
+         momEqnParams != 0;
+         momEqnParams=momEqnParams->findNextBlock("MomentTransportEquation") )
+    {
       // note - parse_moment_transport_equations returns a vector of equation adaptors
       try{
         //For the Multi-Environment mixing model, the entire Wasatch Block must be passed to find values for initial moments
@@ -647,8 +653,9 @@ namespace Wasatch{
     //
     // Build poisson equations
     for( Uintah::ProblemSpecP poissonEqnParams=wasatchSpec_->findBlock("PoissonEquation");
-        poissonEqnParams != 0;
-        poissonEqnParams=poissonEqnParams->findNextBlock("PoissonEquation") ){
+         poissonEqnParams != 0;
+         poissonEqnParams=poissonEqnParams->findNextBlock("PoissonEquation") )
+    {
       try{
         parse_poisson_equation( poissonEqnParams, graphCategories_,
                                 *linSolver_, sharedState );
@@ -662,6 +669,12 @@ namespace Wasatch{
       }
     }
     
+    if( wasatchSpec_->findBlock("Radiation") ){
+      parse_radiation_solver( wasatchSpec_->findBlock("Radiation"),
+                              *graphCategories_[ADVANCE_SOLUTION],
+                              *linSolver_, sharedState, locked_fields() );
+    }
+
     if( buildTimeIntegrator_ ){
       timeStepper_ = scinew TimeStepper( sharedState_, graphCategories_, timeInt );
     }    
@@ -670,8 +683,8 @@ namespace Wasatch{
     // force additional expressions on the graph
     //
     for( Uintah::ProblemSpecP forceOnGraphParams=wasatchSpec_->findBlock("ForceOnGraph");
-        forceOnGraphParams != 0;
-        forceOnGraphParams=forceOnGraphParams->findNextBlock("ForceOnGraph") )
+         forceOnGraphParams != 0;
+         forceOnGraphParams=forceOnGraphParams->findNextBlock("ForceOnGraph") )
     {
       std::vector<std::string> taskListNames;
       forceOnGraphParams->getAttribute("tasklist", taskListNames);
@@ -694,7 +707,7 @@ namespace Wasatch{
     }
     
     // radiation
-    if ( params->findBlock("RMCRT") ) {
+    if( params->findBlock("RMCRT") ){
       doRadiation_ = true;
       Uintah::ProblemSpecP radSpec = params->findBlock("RMCRT");
       Uintah::ProblemSpecP radPropsSpec=wasatchSpec_->findBlock("RadProps");
@@ -703,12 +716,13 @@ namespace Wasatch{
       Expr::Tag absorptionCoefTag;
       Expr::Tag temperatureTag;
       
-      if (radPropsSpec) {
+      if( radPropsSpec ){
         Uintah::ProblemSpecP greyGasSpec = radPropsSpec->findBlock("GreyGasAbsCoef");
         absorptionCoefTag = parse_nametag(greyGasSpec->findBlock("NameTag"));
         temperatureTag = parse_nametag(greyGasSpec->findBlock("Temperature")->findBlock("NameTag"));
         
-      } else if ( RMCRTBenchSpec ) {
+      }
+      else if( RMCRTBenchSpec ){
         
         const TagNames& tagNames = TagNames::self();
         
@@ -718,7 +732,7 @@ namespace Wasatch{
         // check which benchmark we are using:
         std::string benchName;
         RMCRTBenchSpec->getAttribute("benchmark", benchName);
-        if (benchName == "BurnsChriston") {
+        if( benchName == "BurnsChriston" ){
           // register constant temperature expression:
           graphCategories_[ADVANCE_SOLUTION]->exprFactory->register_expression(new Expr::ConstantExpr<SVolField>::Builder(temperatureTag,64.804));
           // register Burns-Christon trilinear abskg
@@ -726,17 +740,18 @@ namespace Wasatch{
         }
       }
       
-      const Expr::ExpressionID exprID = graphCategories_[ADVANCE_SOLUTION]->exprFactory->register_expression( new RadiationSource::Builder( tag_list( TagNames::self().radiationsource, TagNames::self().radvolq, TagNames::self().radvrflux ) ,
-                                                                                                                                           temperatureTag,
-                                                                                                                                           absorptionCoefTag,
-                                                                                                                                           TagNames::self().celltype,
-                                                                                                                                           radSpec,
-                                                                                                                                           sharedState_,
-                                                                                                                                           grid
-                                                                                                                                           )
-                                                                                                             );
-      graphCategories_[ADVANCE_SOLUTION]->exprFactory->cleave_from_parents(exprID);
-      graphCategories_[ADVANCE_SOLUTION]->exprFactory->cleave_from_children(exprID);
+      const Expr::ExpressionID exprID = graphCategories_[ADVANCE_SOLUTION]->exprFactory->
+          register_expression( new RadiationSource::Builder( tag_list( TagNames::self().radiationsource,
+                                                                       TagNames::self().radvolq,
+                                                                       TagNames::self().radvrflux ),
+                                                             temperatureTag,
+                                                             absorptionCoefTag,
+                                                             TagNames::self().celltype,
+                                                             radSpec,
+                                                             sharedState_,
+                                                             grid ) );
+      graphCategories_[ADVANCE_SOLUTION]->exprFactory->cleave_from_parents ( exprID );
+      graphCategories_[ADVANCE_SOLUTION]->exprFactory->cleave_from_children( exprID );
       graphCategories_[ADVANCE_SOLUTION]->rootIDs.insert( exprID );
     }
     //
@@ -746,11 +761,9 @@ namespace Wasatch{
     //
     Uintah::ProblemSpecP particleEqnSpec = wasatchSpec_->findBlock("ParticleTransportEquations");
     // note - parse_particle_transport_equations returns a vector of equation adaptors
-    if (particleEqnSpec) {
+    if( particleEqnSpec ){
       try{
-        const EquationAdaptors adaptors = parse_particle_transport_equations( particleEqnSpec,
-                                                                             wasatchSpec_,
-                                                                             graphCategories_);
+        const EquationAdaptors adaptors = parse_particle_transport_equations( particleEqnSpec, wasatchSpec_, graphCategories_);
         adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
       }
       catch( std::runtime_error& err ){
@@ -764,7 +777,7 @@ namespace Wasatch{
     //
     // process any reduction variables specified through the input file
     //
-    ReductionHelper::self().parse_reduction_spec(wasatchSpec_);
+    ReductionHelper::self().parse_reduction_spec( wasatchSpec_ );
   }
 
   //--------------------------------------------------------------------
@@ -776,14 +789,14 @@ namespace Wasatch{
     // problemSetup. The sharedstate class will create this material set
     // in postgridsetup, which is called after problemsetup. This is dictated
     // by Uintah.
-    if (buildWasatchMaterial_)
-    {
+    if( buildWasatchMaterial_ ){
       set_wasatch_materials(sharedState_->allWasatchMaterials());
-      if (doParticles_) {
+      if( doParticles_ ){
         particlesHelper_->set_materials(get_wasatch_materials());
       }
-    } else {
-      if (doParticles_) {
+    }
+    else{
+      if( doParticles_ ){
         particlesHelper_->set_materials(sharedState_->allMaterials());
       }
     }
@@ -804,7 +817,7 @@ namespace Wasatch{
 
     Expr::ExpressionFactory& exprFactory = *icGraphHelper->exprFactory;
 
-    if( doParticles_ ) {
+    if( doParticles_ ){
       particlesHelper_->schedule_initialize(level,sched);
     }
     
@@ -820,7 +833,7 @@ namespace Wasatch{
     // set the time
     Expr::TagList timeTags;
     timeTags.push_back( TagNames::self().time     );
-    timeTags.push_back( TagNames::self().dt     );
+    timeTags.push_back( TagNames::self().dt       );
     timeTags.push_back( TagNames::self().timestep );
     timeTags.push_back( TagNames::self().rkstage  );
     exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
@@ -833,10 +846,10 @@ namespace Wasatch{
       // INITIAL BOUNDARY CONDITIONS TREATMENT
       // -----------------------------------------------------------------------
       typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
-      
-      proc0cout << "------------------------------------------------" << std::endl
-      << "SETTING INITIAL BOUNDARY CONDITIONS:" << std::endl;
-      proc0cout << "------------------------------------------------" << std::endl;
+
+      proc0cout << "------------------------------------------------\n"
+                << "SETTING INITIAL BOUNDARY CONDITIONS:\n"
+                << "------------------------------------------------\n";
 
       for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
         EqnTimestepAdaptorBase* const adaptor = *ia;
@@ -846,19 +859,16 @@ namespace Wasatch{
         // set up initial boundary conditions on this transport equation
         try{
           transEq->setup_boundary_conditions( *bcHelperMap_[level->getID()], graphCategories_);
-          proc0cout << "Setting Initial BCs for transport equation '" << eqnLabel << "'" << std::endl;
+          proc0cout << "Setting Initial BCs for transport equation '" << eqnLabel << "'\n";
           transEq->apply_initial_boundary_conditions( *icGraphHelper, *bcHelperMap_[level->getID()]);
         }
         catch( std::runtime_error& e ){
           std::ostringstream msg;
-          msg << e.what()
-          << std::endl
-          << "ERORR while setting initial boundary conditions on equation '" << eqnLabel << "'"
-          << std::endl;
+          msg << e.what() << "\nERORR while setting initial boundary conditions on equation '" << eqnLabel << "'\n";
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
       }
-      proc0cout << "------------------------------------------------" << std::endl;
+      proc0cout << "------------------------------------------------\n";
 
       // -----------------------------------------------------------------------
       try{
@@ -888,12 +898,9 @@ namespace Wasatch{
     }
     
     // Compute the cell type only when radiation is present. This may change in the future.
-    if (doRadiation_)
-      cellType_->schedule_compute_celltype(allPatches,materials_,sched);
-    //
-    if (doParticles_){
-      particlesHelper_->schedule_sync_particle_position(level,sched,true);
-    }
+    if( doRadiation_ ) cellType_->schedule_compute_celltype( allPatches, materials_, sched );
+
+    if(doParticles_ ) particlesHelper_->schedule_sync_particle_position( level, sched, true );
     
     proc0cout << "Wasatch: done creating initialization task(s)" << std::endl;
   }
@@ -910,7 +917,7 @@ namespace Wasatch{
     // by Uintah.
     if( buildWasatchMaterial_ ){
       set_wasatch_materials( sharedState_->allWasatchMaterials() );
-      if (doParticles_) {
+      if( doParticles_ ){
         particlesHelper_->set_materials(get_wasatch_materials());
       }
     } 
@@ -993,8 +1000,8 @@ namespace Wasatch{
       const bool useStableDT = slnGraphHelper->exprFactory->have_entry( tagNames.stableTimestep );
       // since the StableDT expression is only registered on the time_advance graph,
       // make the necessary checks before adding a requires for that
-      if (sharedState_->getCurrentTopLevelTimeStep() > 0) {
-        if (useStableDT) {
+      if( sharedState_->getCurrentTopLevelTimeStep() > 0 ){
+        if( useStableDT ){
           task->requires(Uintah::Task::NewDW, Uintah::VarLabel::find(tagNames.stableTimestep.name()),  Uintah::Ghost::None, 0);
         }
       }
@@ -1019,17 +1026,16 @@ namespace Wasatch{
       setup_patchinfo_map( level, sched );
       
       
-      if (doParticles_)
-      {
-          particlesHelper_->schedule_restart_initialize(level,sched);
-          particlesHelper_->schedule_find_boundary_particles(level,sched);
+      if( doParticles_ ){
+        particlesHelper_->schedule_restart_initialize(level,sched);
+        particlesHelper_->schedule_find_boundary_particles(level,sched);
       }
 
       //bcHelper_ = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
       bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     }
     
-    if (doParticles_) {
+    if( doParticles_ ){
       particlesHelper_->schedule_find_boundary_particles(level,sched);
     }
     
@@ -1052,8 +1058,7 @@ namespace Wasatch{
       OldVariable::self().setup_tasks( allPatches, materials_, sched, iStage );
 
       // Compute the cell type only when radiation is present. This may change in the future.
-      if(doRadiation_)
-        cellType_->schedule_carry_forward(allPatches,materials_,sched);
+      if( doRadiation_ ) cellType_->schedule_carry_forward(allPatches,materials_,sched);
 
       // -----------------------------------------------------------------------
       // BOUNDARY CONDITIONS TREATMENT
@@ -1101,8 +1106,7 @@ namespace Wasatch{
       // post processing
       GraphHelper* const postProcGH = graphCategories_[ POSTPROCESSING ];
       Expr::ExpressionFactory& postProcFactory = *postProcGH->exprFactory;
-      if( !postProcGH->rootIDs.empty() )
-      {
+      if( !postProcGH->rootIDs.empty() ){
         TaskInterface* const task = scinew TaskInterface( postProcGH->rootIDs,
                                                          "postprocessing",
                                                           postProcFactory,
@@ -1123,7 +1127,7 @@ namespace Wasatch{
     }
     
     // ensure that any "CARRY_FORWARD" variable has an initialization provided for it.
-    if( buildTimeIntegrator_ ) { // make sure that we have a timestepper created - this is needed for wasatch-in-arches
+    if( buildTimeIntegrator_ ){ // make sure that we have a timestepper created - this is needed for wasatch-in-arches
       const Expr::ExpressionFactory* const icFactory = graphCategories_[INITIALIZATION]->exprFactory;
       typedef std::list< TaskInterface* > TIList;
       bool isOk = true;
@@ -1153,8 +1157,7 @@ namespace Wasatch{
     // to synchronize the Wasatch particle position varibles with Uintah's.
     // Recall that Uintah requires that particle position be specified as a
     // Uintah::Point whereas Wasatch uses x, y, and z variables, separately.
-    if (doParticles_)
-    {
+    if( doParticles_ ){
       particlesHelper_->schedule_transfer_particle_ids(level,sched);
       particlesHelper_->schedule_sync_particle_position(level,sched);
       particlesHelper_->schedule_relocate_particles(level,sched);
@@ -1189,13 +1192,14 @@ namespace Wasatch{
       timeTags.push_back( TagNames::self().timestep );
       timeTags.push_back( TagNames::self().rkstage  );
       timeID = exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
-    } else {
+    }
+    else{
       timeID = exprFactory.get_id(TagNames::self().time);
     }
 
     //___________________________________________
     // Plug in each equation that has been set up
-    if (rkStage==1) {
+    if( rkStage==1 ){
       for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
         const EqnTimestepAdaptorBase* const adaptor = *ia;
         try{
@@ -1237,8 +1241,8 @@ namespace Wasatch{
     const GraphHelper* slnGraphHelper = graphCategories_[ADVANCE_SOLUTION];
     const TagNames& tagNames = TagNames::self();
     const bool useStableDT = slnGraphHelper->exprFactory->have_entry( tagNames.stableTimestep );
-    if (sharedState_->getCurrentTopLevelTimeStep() > 0) {
-      if (useStableDT) {
+    if( sharedState_->getCurrentTopLevelTimeStep() > 0 ){
+      if( useStableDT ){
         //__________________
         // loop over patches
         for( int ip=0; ip<patches->size(); ++ip ){
@@ -1247,8 +1251,8 @@ namespace Wasatch{
           new_dw->get(tempDtP, Uintah::VarLabel::find(tagNames.stableTimestep.name()), 0, patches->get(ip));          
           val = std::min( val, *tempDtP );
         }
-
-      } else {
+      }
+      else {
         // FOR FIXED dt: (min = max in input file)
         // if this is not the first timestep, then grab dt from the olddw.
         // This will avoid Uintah's message that it is setting dt to max dt/min dt
@@ -1256,10 +1260,11 @@ namespace Wasatch{
       }
     }
     
-    if (useStableDT) {
+    if( useStableDT ){
       new_dw->put(Uintah::delt_vartype(val),sharedState_->get_delt_label(),
                   Uintah::getLevel(patches) );
-    } else {
+    }
+    else{
       new_dw->put( deltat,
                   sharedState_->get_delt_label(),
                   Uintah::getLevel(patches) );
@@ -1275,31 +1280,31 @@ namespace Wasatch{
   {
     switch ( pss ) {
 
-    case USE_FOR_TASKS:
-      // return sched->getLoadBalancer()->getPerProcessorPatchSet(level);
-      return level->eachPatch();
-      break;
+      case USE_FOR_TASKS:
+        // return sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+        return level->eachPatch();
+        break;
 
-    case USE_FOR_OPERATORS: {
-      const int levelID = level->getID();
-      const Uintah::PatchSet* const allPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
-      const Uintah::PatchSubset* const localPatches = allPatches->getSubset( d_myworld->myrank() );
+      case USE_FOR_OPERATORS: {
+        const int levelID = level->getID();
+        const Uintah::PatchSet* const allPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+        const Uintah::PatchSubset* const localPatches = allPatches->getSubset( d_myworld->myrank() );
 
-      std::map< int, const Uintah::PatchSet* >::iterator ip = patchesForOperators_.find( levelID );
+        std::map< int, const Uintah::PatchSet* >::iterator ip = patchesForOperators_.find( levelID );
 
-      if( ip != patchesForOperators_.end() ) return ip->second;
+        if( ip != patchesForOperators_.end() ) return ip->second;
 
-      Uintah::PatchSet* patches = new Uintah::PatchSet;
-      // jcs: this results in "normal" scheduling and WILL NOT WORK FOR LINEAR SOLVES
-      //      in that case, we need to use "gang" scheduling: addAll( localPatches )
-      patches->addEach( localPatches->getVector() );
-      //     const std::set<int>& procs = sched->getLoadBalancer()->getNeighborhoodProcessors();
-      //     for( std::set<int>::const_iterator ip=procs.begin(); ip!=procs.end(); ++ip ){
-      //       patches->addEach( allPatches->getSubset( *ip )->getVector() );
-      //     }
-      patchesForOperators_[levelID] = patches;
-      return patches;
-    }
+        Uintah::PatchSet* patches = new Uintah::PatchSet;
+        // jcs: this results in "normal" scheduling and WILL NOT WORK FOR LINEAR SOLVES
+        //      in that case, we need to use "gang" scheduling: addAll( localPatches )
+        patches->addEach( localPatches->getVector() );
+        //     const std::set<int>& procs = sched->getLoadBalancer()->getNeighborhoodProcessors();
+        //     for( std::set<int>::const_iterator ip=procs.begin(); ip!=procs.end(); ++ip ){
+        //       patches->addEach( allPatches->getSubset( *ip )->getVector() );
+        //     }
+        patchesForOperators_[levelID] = patches;
+        return patches;
+      }
     }
     return NULL;
   }

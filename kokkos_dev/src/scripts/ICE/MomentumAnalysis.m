@@ -81,7 +81,7 @@ function [freq, Amp] =  plotFFT( time, Q, desc )
   title  ( 'Amplititude Spectrum' );
   xlabel ( 'Frequency (Hz) ');
   ylabel ( '|Y(f)|' );
-  xlim   ([0 10])
+  xlim   ([0 100])
   ylim   ([ 0 1e-4])
   pause
 endfunction
@@ -124,6 +124,22 @@ function [lo, hi] = trim( t, tLo, tHi)
   hi = max( find( t<=tHi ) );
 endfunction
 
+%______________________________________________________________________
+% clean out duplicate entries
+
+function [cleanData] = removeDupes( data)
+
+t = data(:,1);
+count = 1;
+for i = 2:length( t )
+  if(  ( t(i) - t(i-1) ) != 0 )
+    cleanData(count,:) = data(i,:);
+    count += 1;
+  else
+    printf( ' detected duplicate entries at time %e, now removing them.\n', t(i) );
+  endif
+end
+endfunction
 
 %______________________________________________________________________
 %  convert string to bool
@@ -305,6 +321,10 @@ format long e
 %  in the control volume
 data = dlmread( opt.datFile, ",", 4,0 );
 
+
+% remove duplicate rows. 
+data = removeDupes( data );
+
 %__________________________________
 % downsample the data with every nth element
 t                     =   data(:,1);      % column 1                time
@@ -338,11 +358,11 @@ for i = 2:length(t)
     dMdt(i,1:3) = ( Mom_cv(i,:) - Mom_cv(i-1,:) )./( t(i) - t(i-1) );
 
     if(  ( t(i) - t(i-1) ) == 0 )
-      printf(' %s detetected 0, t(i): %e, t(i-1), %e \n', uda{j}, t(i), t(i-1) );
+      printf(' %s detetected 0, t(i): %e, t(i-1), %e \n', opt.datFile, t(i), t(i-1) );
       printf(' This is probably due to overlap in the data when a restart occurs');
     endif
     
-   force(i,1:3) = dMdt(i,:) + Mom_netFaceFlux(i,:) + Viscous_netFaceFlux(i,:) + surfacePressForce(i,:);
+   force(i,1:3) = dMdt(i,:) + Mom_netFaceFlux(i,:) - Viscous_netFaceFlux(i,:) - surfacePressForce(i,:);
 end
 
 %__________________________________
@@ -355,6 +375,8 @@ printf( "    - Now computing moving averages of the momentum flux and momentum i
 [ ave.surfPressForce, size ]  = moveAve( surfacePressForce,    opt.window, t );
 
 
+t_crop = t(size);
+
 %__________________________________
 % compute force and dM/dt with the averaged quantities
 printf( "    - Now computing average quantities\n"   );
@@ -362,8 +384,8 @@ ave.dMdt  = zeros;
 ave.force = zeros;
 
 for i = 2:length( ave.Mom_cv )
-   ave.dMdt(i,1:3)  = ( ave.Mom_cv(i,:) - ave.Mom_cv(i-1,:) )./( t(i) - t(i-1) );
-   ave.force(i,1:3) =   ave.dMdt(i,:) + ave.Mom_netFaceFlux(i,:) + ave.Vis_netFaceFlux(i,:) + ave.surfPressForce(i,:);
+   ave.dMdt(i,1:3)  = ( ave.Mom_cv(i,:) - ave.Mom_cv(i-1,:) )./( t_crop(i) - t_crop(i-1) );
+   ave.force(i,1:3) =   ave.dMdt(i,:) + ave.Mom_netFaceFlux(i,:) - ave.Vis_netFaceFlux(i,:) - ave.surfPressForce(i,:);
 end
 
 meanForce = mean ( force );
@@ -388,8 +410,8 @@ end
 
 fp = fopen ("aveForce.dat", "w");
 fprintf( fp, "# time             ave.force.x             aave.force.y             ave.force.z\n");
-for i = 1:length( t )
-  fprintf( fp, "%15.14e, %15.14e, %15.14e, %15.14e\n", t(i), ave.force( i,1 ), ave.force( i,2 ), ave.force( i,3 ) );
+for i = 1:length( t_crop )
+  fprintf( fp, "%15.14e, %15.14e, %15.14e, %15.14e\n", t_crop(i), ave.force( i,1 ), ave.force( i,2 ), ave.force( i,3 ) );
 end
 
 
@@ -415,7 +437,7 @@ if( opt.doPlots )
   %  Average
   subplot(2,1,2)
 
-  ax = plot( t, ave.Mom_netFaceFlux );
+  ax = plot( t_crop, ave.Mom_netFaceFlux );
 
   legend( "x", "y", "z" )
   xlabel( 'Time [s] ');
@@ -443,7 +465,7 @@ if( opt.doPlots )
 
   %  Average
   subplot( 2,1,2 )
-  ax = plot( t, ave.Mom_cv );
+  ax = plot( t_crop, ave.Mom_cv );
 
   legend( "x", "y", "z" )
   xlabel( 'Time [s] ');
@@ -471,7 +493,7 @@ if( opt.doPlots )
 
   %  Average
   subplot( 2,1,2 )
-  ax = plot( t, ave.dMdt );
+  ax = plot( t_crop, ave.dMdt );
 
   legend( "x", "y", "z" )
   xlabel( 'Time [s] ');
@@ -535,7 +557,7 @@ if( opt.doPlots )
 
 
   subplot( 2,1,2 )
-  ax = plot( t, ave.force );
+  ax = plot( t_crop, ave.force );
 
   legend( "x", "y", "z" )
   xlabel( 'Time [s] ');
@@ -549,7 +571,7 @@ if( opt.doPlots )
 endif
 
 %______________________________________________________________________
-[freq, amp] = plotFFT( t, force(:,1), "PowerSpectrum of force in X dir" );
+[freq, amp] = plotFFT( t, force(:,2), "PowerSpectrum of force in Y dir" );
 
 
 

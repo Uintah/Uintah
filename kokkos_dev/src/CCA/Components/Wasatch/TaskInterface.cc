@@ -53,6 +53,7 @@
 #include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
 #include <CCA/Components/Wasatch/Expressions/PoissonExpression.h>
 #include <CCA/Components/Wasatch/Expressions/Coordinate.h>
+#include <CCA/Components/Wasatch/Expressions/DORadSolver.h>
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/Expressions/RadiationSource.h>
 #include <CCA/Components/Wasatch/ReductionHelper.h>
@@ -84,13 +85,13 @@ typedef std::map<int,TreePtr> TreeMap;
   bash: export SCI_DEBUG=WASATCH_TASKS:-
 
  To enable multiple debug flags, use a comma to separate them
-  tcsh: setenv SCI_DEBUG WASATCH_TASKS:+, WASATCH_FIELDS:+
+  tcsh: setenv SCI_DEBUG WASATCH_TASKS:+ WASATCH_FIELDS:+
   bash: export SCI_DEBUG=WASATCH_TASKS:+, WASATCH_FIELDS:+
 
  To enable one flag and disable another that was previously enabled, either
  define a new flag excluding the unwanted flag, or redefine SCI_DEBUG with a -
  after the unwanted flag
-   tcsh: setenv SCI_DEBUG WASATCH_TASKS:-, WASATCH_FIELDS:+
+   tcsh: setenv SCI_DEBUG WASATCH_TASKS:- WASATCH_FIELDS:+
    bash: export SCI_DEBUG=WASATCH_TASKS:-, WASATCH_FIELDS:+
 
  */
@@ -311,8 +312,8 @@ namespace Wasatch{
 
       } // loop over persistent fields
 
-      // uncomment the next line to force Uintah to manage all fields:
-      if (lockAllFields) tree->lock_fields(*fml_);
+      // force Uintah to manage all fields:
+      if( lockAllFields ) tree->lock_fields(*fml_);
 
 #     ifdef HAVE_CUDA
       // For Heterogeneous case only
@@ -492,9 +493,9 @@ namespace Wasatch{
         case Expr::COMPUTES:
           dbg_fields << std::setw(10) << "COMPUTES";
           ASSERT( dw == Uintah::Task::NewDW );
-              task.computesWithScratchGhost( fieldInfo.varlabel,
-                                            materials, Uintah::Task::NormalDomain,
-                                            fieldInfo.ghostType, fieldInfo.nghost );
+          task.computesWithScratchGhost( fieldInfo.varlabel,
+                                         materials, Uintah::Task::NormalDomain,
+                                         fieldInfo.ghostType, fieldInfo.nghost );
 
           break;
 
@@ -511,9 +512,9 @@ namespace Wasatch{
           dbg_fields << std::setw(10) << "MODIFIES";
           ASSERT( dw == Uintah::Task::NewDW );
           task.modifiesWithScratchGhost( fieldInfo.varlabel,
-                         patches, Uintah::Task::ThisLevel,
-                         materials, Uintah::Task::NormalDomain,
-                         fieldInfo.ghostType, fieldInfo.nghost);
+                                         patches, Uintah::Task::ThisLevel,
+                                         materials, Uintah::Task::NormalDomain,
+                                         fieldInfo.ghostType, fieldInfo.nghost);
           break;
 
         } // switch
@@ -576,7 +577,7 @@ namespace Wasatch{
       pexpr.schedule_set_pressure_bcs( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
     }
 
-    if (tree->computes_field(TagNames::self().radiationsource)) {
+    if( tree->computes_field(TagNames::self().radiationsource) ){
       RadiationSource& radExpr = dynamic_cast<RadiationSource&>( factory.retrieve_expression(TagNames::self().radiationsource,patchID,true) );
       radExpr.schedule_ray_tracing( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
     }
@@ -590,6 +591,15 @@ namespace Wasatch{
         pexpr.declare_uintah_vars( *task, pss, mss, rkStage );
         pexpr.schedule_set_poisson_bcs( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
       }
+    }
+
+    BOOST_FOREACH( const Expr::Tag& tag, DORadSolver::intensityTags ){
+      if( !tree->computes_field(tag) ) continue;
+      std::cout << "preliminary stuff for " << tag << " ... " << std::flush;
+      DORadSolver& rad = dynamic_cast<DORadSolver&>( factory.retrieve_expression(tag,patchID,true) );
+      rad.schedule_solver( Uintah::getLevelP(pss), scheduler_, materials_, rkStage, tree->name()=="initialization" );
+      rad.declare_uintah_vars( *task, pss, mss, rkStage );
+      std::cout << "done" << std::endl;
     }
 
     // go through reduction variables that are computed in this Wasatch Task
@@ -684,34 +694,27 @@ namespace Wasatch{
               }
             }
 
-            // Pass patch information to the coordinate expressions
-            typedef std::map<Expr::Tag, std::string> CoordMapT;
-            // OldVariable& oldVar = OldVariable::self();
-            BOOST_FOREACH( const CoordMapT::value_type& coordPair, CoordinateNames::coordinate_map() ){
-              const Expr::Tag& coordTag = coordPair.first;
-              const std::string& coordFieldT = coordPair.second;
+            // In case we want to copy coordinates instead of recomputing them, uncomment the following lines
+//            OldVariable& oldVar = OldVariable::self();
+//            typedef std::map<Expr::Tag, std::string> CoordMapT;
+//            BOOST_FOREACH( const CoordMapT::value_type& coordPair, CoordinateNames::coordinate_map() ){
+//              const Expr::Tag& coordTag = coordPair.first;
+//              const std::string& coordFieldT = coordPair.second;
+//
+//              if( ! tree->computes_field(coordTag) ) continue;
+//
+//              if     ( coordFieldT == "SVOL" ) oldVar.add_variable<SVolField>( ADVANCE_SOLUTION, coordTag, true );
+//              else if( coordFieldT == "XVOL" ) oldVar.add_variable<XVolField>( ADVANCE_SOLUTION, coordTag, true );
+//              else if( coordFieldT == "YVOL" ) oldVar.add_variable<YVolField>( ADVANCE_SOLUTION, coordTag, true );
+//              else if( coordFieldT == "ZVOL" ) oldVar.add_variable<ZVolField>( ADVANCE_SOLUTION, coordTag, true );
+//            }
 
-              if( ! tree->computes_field(coordTag) ) continue;
-
-              if( coordFieldT == "SVOL"){
-                Coordinates<SVolField>& coordExpr = dynamic_cast<Coordinates<SVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
-                // In case we want to copy coordinates instead of recomputing them, uncomment the following line
-                // oldVar.add_variable<SVolField>( ADVANCE_SOLUTION, coordTag, true);
-              }
-              else if( coordFieldT == "XVOL" ){
-                Coordinates<XVolField>& coordExpr = dynamic_cast<Coordinates<XVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
-                // In case we want to copy coordinates instead of recomputing them, uncomment the following line
-                // oldVar.add_variable<XVolField>( ADVANCE_SOLUTION, coordTag, true);
-              }
-              else if( coordFieldT == "YVOL" ){
-                Coordinates<YVolField>& coordExpr = dynamic_cast<Coordinates<YVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
-                // In case we want to copy coordinates instead of recomputing them, uncomment the following line
-                // oldVar.add_variable<YVolField>( ADVANCE_SOLUTION, coordTag, true);
-              }
-              else if( coordFieldT == "ZVOL" ){
-                Coordinates<ZVolField>& coordExpr = dynamic_cast<Coordinates<ZVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
-                // In case we want to copy coordinates instead of recomputing them, uncomment the following line
-                // oldVar.add_variable<ZVolField>( ADVANCE_SOLUTION, coordTag, true);
+            BOOST_FOREACH( const Expr::Tag& tag, DORadSolver::intensityTags ){
+              if( tree->computes_field( tag ) ){
+                DORadSolver& rad = dynamic_cast<DORadSolver&>( factory.retrieve_expression(tag,patchID, true ) );
+                std::cout << "Binding vars for " << tag << " ..." << std::flush;
+                rad.bind_uintah_vars( newDW, patch, material, rkStage );
+                std::cout << "done\n";
               }
             }
 

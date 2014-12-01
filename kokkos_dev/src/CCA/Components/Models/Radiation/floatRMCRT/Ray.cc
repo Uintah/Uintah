@@ -36,7 +36,6 @@
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Math/MersenneTwister.h>
 
-
 #include <time.h>
 #include <fstream>
 
@@ -96,9 +95,9 @@ ______________________________________________________________________*/
 //
 using namespace Uintah;
 using namespace std;
-static DebugStream dbg("RAY",       false);
-static DebugStream dbg2("RAY_DEBUG",false);
-static DebugStream dbg_BC("RAY_BC", false);
+static SCIRun::DebugStream dbg("RAY",       false);
+static SCIRun::DebugStream dbg2("RAY_DEBUG",false);
+static SCIRun::DebugStream dbg_BC("RAY_BC", false);
 
 
 //---------------------------------------------------------------------------

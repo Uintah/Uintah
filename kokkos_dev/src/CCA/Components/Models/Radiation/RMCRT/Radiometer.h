@@ -76,11 +76,12 @@ namespace Uintah{
 
       //__________________________________
       //  FUNCTIONS
+      template< class T >
       void radiometerFlux(  const Patch* patch,
                             const Level* level,
                             DataWarehouse* new_dw,
                             MTRand& mTwister,
-                            constCCVariable<double> sigmaT4OverPi,
+                            constCCVariable< T > sigmaT4OverPi,
                             constCCVariable<double> abskg,
                             constCCVariable<int> celltype,
                             const bool modifiesFlux );
@@ -114,6 +115,7 @@ namespace Uintah{
 
       //__________________________________
       //
+      template< class T >
       void radiometer( const ProcessorGroup* pc,
                        const PatchSubset* patches,
                        const MaterialSubset* matls,
