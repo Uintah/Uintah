@@ -62,6 +62,8 @@ SRCS += \
         $(SRCDIR)/Task.cc                  \
         $(SRCDIR)/TOBSplineInterpolator.cc \
         $(SRCDIR)/UnknownVariable.cc       \
+        $(SRCDIR)/cptiInterpolator.cc      \
+        $(SRCDIR)/axiCptiInterpolator.cc   \
         $(SRCDIR)/cpdiInterpolator.cc      \
         $(SRCDIR)/axiCpdiInterpolator.cc
 
