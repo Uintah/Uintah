@@ -648,7 +648,7 @@ MPMPetscSolver::removeFixedDOF()
     // Take care of the d_B side
     PetscScalar v = 0.;
     const int index = *iter;
-
+      
     VecSetValues(d_B,1,&index,&v,INSERT_VALUES);
     MatSetValue(d_A,index,index,1.,INSERT_VALUES);
   }
