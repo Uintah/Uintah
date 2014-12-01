@@ -133,6 +133,9 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
     } else if ( use_abskp && !local_abskp ){ 
       tsk->requires( Task::OldDW, _calc->get_abskp_label(), Ghost::None, 0 );
     }
+    if ( _calc->use_scatkt()  ){ 
+      tsk->computes( _calc->get_scatkt_label() ); 
+    }
 
     //participating species from property calculator
     std::vector<std::string> part_sp = _calc->get_sp(); 
@@ -157,6 +160,9 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
     } else if ( use_abskp && !local_abskp ){ 
       tsk->requires( Task::NewDW, _calc->get_abskp_label(), Ghost::None, 0 );
     }
+    if (_calc->use_scatkt() ){ 
+      tsk->modifies( _calc->get_scatkt_label() ); 
+    }
 
     //participating species from property calculator
     std::vector<std::string> part_sp = _calc->get_sp(); 
@@ -169,14 +175,16 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
         throw ProblemSetupException("Error: Could not match species with varlabel: "+*iter,__FILE__, __LINE__);
       }
     }
-
   }
-
+ 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
 
 
   // Require DQMOM labels if needed 
-  if (  _calc->has_abskp_local() ){
+  if (  _calc->has_abskp_local() || _calc->use_scatkt()){
+    if( _nQn_part ==0){
+      throw ProblemSetupException("Error: DQMOM must be used in combination with radiation properties for particles. Zero quadrature nodes found." ,__FILE__, __LINE__);
+    }
     for ( int i = 0; i < _nQn_part; i++ ){
       std::string label_name_s = _base_size_label_name + "_qn"; 
       std::string label_name_t = _base_temperature_label_name + "_qn"; 
@@ -187,12 +195,14 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
       label_name_t += out.str();  // temperature
       label_name_w += out.str();  // weight
 
+
       tsk->requires( Task::OldDW, VarLabel::find( label_name_s ) , Ghost::None, 0 ); 
       tsk->requires( Task::OldDW, VarLabel::find( label_name_t ) , Ghost::None, 0 ); 
       tsk->requires( Task::OldDW, VarLabel::find( label_name_w ) , Ghost::None, 0 ); 
       tsk->requires( Task::NewDW, VarLabel::find( label_name_s ) , Ghost::None, 0 ); 
       tsk->requires( Task::NewDW, VarLabel::find( label_name_t ) , Ghost::None, 0 ); 
       tsk->requires( Task::NewDW, VarLabel::find( label_name_w ) , Ghost::None, 0 ); 
+
     }
   }
 }
@@ -226,9 +236,11 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
     
     const bool local_abskp = _calc->has_abskp_local();  
     const bool use_abskp   = _calc->use_abskp(); 
+    const bool use_scatkt  = _calc->use_scatkt();
 
     CCVariable<double> abskg; 
     CCVariable<double> abskp; 
+    CCVariable<double> scatkt; 
     constCCVariable<double> const_abskp; 
 
     if ( time_substep == 0 ) { 
@@ -253,6 +265,10 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
       new_dw->get( temperature, _temperature_label, matlIndex, patch, Ghost::None, 0 ); 
     }
 
+    if(use_scatkt){
+      new_dw->allocateAndPut( scatkt, _calc->get_scatkt_label(), matlIndex, patch );
+    }
+      
     //participating species from property calculator
     typedef std::vector<constCCVariable<double> > CCCV; 
     CCCV species; 
@@ -271,6 +287,8 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
       if ( use_abskp && local_abskp ){
         abskp.initialize(0.0); 
       }
+      if ( use_scatkt)
+         scatkt.initialize(0.0);
     }
 
     //actually compute the properties
@@ -280,9 +298,9 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
     absk_tot.copyData(abskg); 
 
     //sum in the particle contribution if needed
-    if ( use_abskp ){ 
+    if ( use_abskp || use_scatkt ){ 
 
-      if ( local_abskp ){ 
+      if ( local_abskp || use_scatkt){ 
       // Create containers to be passed to function that populates abskp
          DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self(); // DQMOM singleton object
          CCCV pWeight;      // particle weights
@@ -343,6 +361,14 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
             w_scaling_constant, pWeight, _nQn_part,  abskp);
 
         _calc->sum_abs( absk_tot, abskp, patch ); 
+
+        if (use_scatkt){
+          _calc->compute_scatkt( patch, vol_fraction, s_scaling_constant, pSize, pTemperature, 
+              w_scaling_constant, pWeight, _nQn_part,  scatkt);
+
+          _calc->sum_abs( absk_tot, scatkt, patch ); 
+        }
+
       } else { 
         _calc->sum_abs( absk_tot, const_abskp, patch ); 
       }
@@ -369,6 +395,11 @@ void RadProperties::sched_initialize( const LevelP& level, SchedulerP& sched )
   if ( use_abskp && local_abskp )
     tsk->computes( _calc->get_abskp_label() );      //particle only
 
+
+    if (_calc->use_scatkt() ){ 
+    tsk->computes( _calc->get_scatkt_label() );      //particle only
+   }
+
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
 }
 
@@ -391,6 +422,7 @@ void RadProperties::initialize( const ProcessorGroup* pc,
     CCVariable<double> prop; 
     CCVariable<double> abskg;
     CCVariable<double> abskp;
+    CCVariable<double> scatkt;
     const bool use_abskp   = _calc->use_abskp(); 
     const bool local_abskp = _calc->has_abskp_local();  
 
@@ -403,7 +435,12 @@ void RadProperties::initialize( const ProcessorGroup* pc,
       new_dw->allocateAndPut( abskp, _calc->get_abskp_label(), matlIndex, patch ); 
       abskp.initialize(0.0); 
     }
- 
+
+    if (_calc->use_scatkt() ){ 
+      new_dw->allocateAndPut( scatkt, _calc->get_scatkt_label(), matlIndex, patch ); 
+      scatkt.initialize(0.0); 
+}
+
     PropertyModelBase::base_initialize( patch, prop ); // generic initialization functionality 
 
     _boundaryCond->setScalarValueBC( pc, patch, prop, _prop_name );

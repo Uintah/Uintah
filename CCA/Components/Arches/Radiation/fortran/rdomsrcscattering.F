@@ -23,57 +23,27 @@ C IN THE SOFTWARE.
 C
 C 
 C 
-#include <CCA/Components/Arches/Radiation/fortran/rdomincident_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/rdomsrcscattering_fort.h>
+  
+
       integer i,j,k
 
+      double precision PI
+
+
+      pi = dacos(-1.0D0)
+c     calculate incident flux at cell centers and radiative source
+
       do 30 k=idxlo(3),idxhi(3)
-      do 20 j=idxlo(2),idxhi(2)
-      do 10 i=idxlo(1),idxhi(1)
+         do 20 j=idxlo(2),idxhi(2)
+            do 10 i=idxlo(1),idxhi(1)
 
-      if (plusX) then
+               src(i,j,k) =src(i,j,k)+(abskg(i,j,k) -scatkt(i,j,k)) 
+     &           * volq(i,j,k) - 4.0D0*PI * (esrcg(i,j,k))
 
-      gincidente(i,j,k) = gincidente(i,j,k) + wt(l) 
-     1                   * cenint(i,j,k)
-
-      else
-
-      gincidentw(i,j,k) = gincidentw(i,j,k) + wt(l) 
-     1                   * cenint(i,j,k)
-
-      endif
-
-      if (plusY) then
-
-      gincidentn(i,j,k) = gincidentn(i,j,k) + wt(l) 
-     1                   * cenint(i,j,k)
-
-      else
-
-      gincidents(i,j,k) = gincidents(i,j,k) + wt(l) 
-     1                   * cenint(i,j,k)
-
-      endif
-
-      if (plusZ) then
-
-      gincidentt(i,j,k) = gincidentt(i,j,k) + wt(l) 
-     1                   * cenint(i,j,k)
-
-      else
-
-      gincidentb(i,j,k) = gincidentb(i,j,k) + wt(l) 
-     1                   * cenint(i,j,k)
-
-      endif
-
-10    continue
-20    continue
-30    continue
+ 10         continue
+ 20      continue
+ 30   continue
 
       RETURN
       end
-
-
-
-
-

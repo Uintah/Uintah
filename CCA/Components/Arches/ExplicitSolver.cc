@@ -427,7 +427,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         prop_model->sched_timeStepInit( level, sched ); 
 
     }
-    
     if (d_doDQMOM) {
 
       CoalModelFactory& modelFactory = CoalModelFactory::self();
@@ -568,6 +567,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     //d_rad_prop_calc->sched_compute_radiation_properties( level, sched, matls, curr_level, false ); 
 
     SourceTermFactory& src_factory = SourceTermFactory::self();
+
     src_factory.sched_computeSources( level, sched, curr_level, 0 ); 
 
     sched_saveTempCopies(sched, patches, matls,d_timeIntegratorLabels[curr_level]);
@@ -605,6 +605,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     if ( hl_model != 0 )
       hl_model->sched_computeProp( level, sched, curr_level ); 
+
 
     //1st TABLE LOOKUP
     bool initialize_it  = false;
