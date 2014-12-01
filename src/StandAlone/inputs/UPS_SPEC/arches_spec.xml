@@ -1036,6 +1036,7 @@
               <ordinates                  spec="OPTIONAL INTEGER" />                                   <!-- number of ordinants, default = 2 --> 
               <ReflectOn                  spec="OPTIONAL BOOLEAN" /> <!-- reflections are off by default.-->
               <usePrevInt                 spec="OPTIONAL BOOLEAN" /> <!-- using the previous solve as initial guess, is off by default -->
+              <ScatteringOn               spec="OPTIONAL BOOLEAN" /> <!-- turn on scattering -->
               <LinearSolver               spec="OPTIONAL NO_DATA"                                      
                                           attribute1="type REQUIRED STRING 'hypre, petsc'">
                 <res_tol                  spec="REQUIRED DOUBLE" />
@@ -1081,6 +1082,7 @@
               <nRadRays                  spec="OPTIONAL INTEGER 'positive'"/>        
               <nFluxRays                 spec="OPTIONAL INTEGER 'positive'"/>        
               <halo                      spec="OPTIONAL VECTOR 'positive'"/>
+              <ScatteringOn              spec="OPTIONAL BOOLEAN" /> <!-- turn on scattering -->
               <allowReflect              spec="OPTIONAL BOOLEAN"/>
               <solveDivQ                 spec="OPTIONAL BOOLEAN"/>
               <applyFilter               spec="OPTIONAL BOOLEAN"/>

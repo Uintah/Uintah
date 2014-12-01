@@ -116,19 +116,9 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
      break;  // create labels for all intensities, otherwise only create 1 label
     }
   }
-   if(_DO_model->reflectionsBool()){
-  _IncidentIntensityLabels.push_back(  VarLabel::find("IncidentFluxE"));
-  _IncidentIntensityLabels.push_back(  VarLabel::find("IncidentFluxW"));
-  _IncidentIntensityLabels.push_back(  VarLabel::find("IncidentFluxN"));
-  _IncidentIntensityLabels.push_back(  VarLabel::find("IncidentFluxS"));
-  _IncidentIntensityLabels.push_back(  VarLabel::find("IncidentFluxT"));
-  _IncidentIntensityLabels.push_back(  VarLabel::find("IncidentFluxB"));
-  }
 
-   for(unsigned int ix=0;  ix<_IncidentIntensityLabels.size();ix++){  // using unsigned int removes warnings.
-     _extra_local_labels.push_back(_IncidentIntensityLabels[ix]); 
-   }
-
+  if (_DO_model->ScatteringOnBool())
+    _scatktLabel =  VarLabel::find("scatkt");
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the source term 
@@ -136,7 +126,6 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
 void 
 DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-
   std::string taskname = "DORadiation::computeSource";
   Task* tsk = scinew Task(taskname, this, &DORadiation::computeSource, timeSubStep);
 
@@ -161,6 +150,9 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
     tsk->computes(_src_label);
     tsk->requires( Task::NewDW, _T_label, gac, 1 ); 
     tsk->requires( Task::OldDW, _abskg_label, gn, 0 ); 
+
+  if (_DO_model->ScatteringOnBool())
+    tsk->requires( Task::OldDW, _scatktLabel, gn, 0 ); 
 
     for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
          iter != _extra_local_labels.end(); iter++){
@@ -201,7 +193,6 @@ DORadiation::computeSource( const ProcessorGroup* pc,
                    DataWarehouse* new_dw, 
                    int timeSubStep )
 {
-
   _DO_model->d_linearSolver->matrixCreate( _perproc_patches, patches );
 
     int timestep = _labels->d_sharedState->getCurrentTopLevelTimeStep(); 
@@ -218,9 +209,6 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       if ( timeSubStep == 0 ) { 
         for(unsigned int ix=0; ix< _IntensityLabels.size() ;ix++){
           new_dw->transferFrom(old_dw,_IntensityLabels[ix],  patches, matls);
-        }
-        for(unsigned int ix=0;  ix< _IncidentIntensityLabels.size() ;ix++){  
-          new_dw->transferFrom(old_dw, _IncidentIntensityLabels[ix],  patches, matls);
         }
       }
     }

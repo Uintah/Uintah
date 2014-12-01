@@ -54,6 +54,7 @@ GENERAL INFORMATION
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Containers/StaticArray.h>
 
 namespace Uintah {
 
@@ -96,6 +97,7 @@ public:
                
              bool DOSolveInitialGuessBool();
 
+             bool ScatteringOnBool();
 
 private:
 
@@ -134,10 +136,20 @@ private:
 
       bool d_print_all_info; 
       bool reflectionsTurnedOn;
+      bool ScatteringOn;
       bool usePreviousIntensity;
 
+      const VarLabel* _scatktLabel;
       std::vector< const VarLabel*> _IntensityLabels;
-      std::vector< const VarLabel*> _IncidentIntensityLabels;
+      std::vector< const VarLabel*> _radiationFluxLabels;
+      std::vector< std::vector < double > > phaseFunction;
+
+      void computeScatteringIntensities(int direction,
+                      constCCVariable<double> &scatkt,
+  StaticArray< constCCVariable<double> > &Intensities,
+              CCVariable<double> &scatIntensitySource,
+                                   const Patch* patch);
+
 
 }; // end class RadiationModel
 
