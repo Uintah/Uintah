@@ -183,7 +183,6 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
 
   if (ScatteringOn)
     _scatktLabel =  VarLabel::create("scatkt",CC_double);
-
 }
 //______________________________________________________________________
 //
@@ -211,7 +210,7 @@ DORadiationModel::computeOrdinatesOPL() {
     for (int i=0; i<d_totalOrds ; i++){
       for (int j=0; j<d_totalOrds ; j++){
         cosineTheta=oxi[j+1]*oxi[i+1]+oeta[j+1]*oeta[i+1]+omu[j+1]*omu[i+1];
-        phaseFunction[i][j] = (1.0 + asymmetryFactor*cosineTheta);
+        phaseFunction[i][j] = (1.0 + asymmetryFactor*cosineTheta)* wt[i+1]/(4.0 * M_PI);
       }
     }
 }
@@ -325,7 +324,6 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   constCCVariable<double> scatkt;   //total scattering coefficient
 
   scatIntensitySource.allocate(domLo,domHi);
-  scatIntensitySource.initialize(0.0); // needed for summation
 
 
   if(ScatteringOn){
@@ -387,8 +385,10 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       at.initialize(0.0);
       bool plusX, plusY, plusZ;
 
-      if(ScatteringOn)
+      if(ScatteringOn){
+        scatIntensitySource.initialize(0.0); // needed for summation
         computeScatteringIntensities(direcn, constvars->ABSKG, Intensities,scatIntensitySource, patch);
+      }
                                                          
 
       fort_rdomsolve( idxLo, idxHi, constvars->cellType, ffield, 
@@ -469,16 +469,15 @@ DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<do
       continue;
 
     for (int i=0; i < d_totalOrds ; i++) {                                    
-      scatIntensitySource[*iter]  +=phaseFunction[direction][i]*Intensities[i][*iter] * wt[i+1]; // wt could be comuted up with the phase function in the j loop
+      scatIntensitySource[*iter]  +=phaseFunction[direction][i]*Intensities[i][*iter] ; // wt could be comuted up with the phase function in the j loop
     }
 
   }
 
 
   for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-    scatIntensitySource[*iter] *= scatkt[*iter] / (4.0 * M_PI);
+    scatIntensitySource[*iter] *= scatkt[*iter]  ;
   }
-
 
   return;
 }
