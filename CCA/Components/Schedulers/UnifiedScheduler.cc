@@ -484,8 +484,9 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
     d_times.clear();
   }
 
-  // Do the work of the SingleProcessorScheduler and bail if not using MPI or GPU
-  if (!Uintah::Parallel::usingMPI() && !Uintah::Parallel::usingDevice()) {
+  // Do the work of the SingleProcessorScheduler and bail
+  //   if not using MPI or GPU, and also not using multiple threads
+  if (!Uintah::Parallel::usingMPI() && (numThreads_ < 0) && !Uintah::Parallel::usingDevice()) {
     for (int i = 0; i < ntasks; i++) {
       DetailedTask* dtask = dts->getTask(i);
       runTask(dtask, iteration, -1, Task::CPU);
