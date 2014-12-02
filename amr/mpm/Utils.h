@@ -13,7 +13,7 @@ const double TOL = 1e-15;
 //how many particles is "ideal" per element
 const unsigned int IDEAL_NP = 4;
 //enums
-enum class Error{P_OUTSIDE_DOMAIN};
+enum class ErrorU{P_OUTSIDE_DOMAIN};
 enum class Output{NONE, TO_SCREEN, TO_FILE};
 enum class MeshAction{Refine, Keep, Coarsen};
 enum vec_entries{x1=0, x2=1};

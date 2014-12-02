@@ -12,7 +12,7 @@
 #include"Particle.h"
 using namespace std;
 
-class NodeData;
+struct NodeData;
 
 class QNodeItem: public QGraphicsRectItem
 {

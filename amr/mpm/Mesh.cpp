@@ -266,22 +266,6 @@ void Element::UpdateMetrics(const ParticlePtrList& p_list)
             }
         }
         else return;
-        /*
-        //if score is less than one (fewer particles than would be "ideal") or one (ideal) we
-        //ternimate the recursion
-        if(score <= 1.0) return;
-        //if there are still too many particles per element
-        else
-        {
-            //if the element does not have children, we refine it
-            if(!HasChildren()) Refine(1);
-            //continuing the recursive scoring process
-            for(Element* ch : children)
-            {
-                ch->UpdateMetrics(inside);
-            }
-        }
-        */
     }
 }
 
