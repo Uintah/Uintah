@@ -81,7 +81,6 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_doImplicitHeatConduction = false;
   d_doExplicitHeatConduction = true;
   d_doPressureStabilization = false;
-  d_doDefGradAveraging = false;
   d_computeNodalHeatFlux = false;
   d_computeScaleFactor = false;
   d_doTransientImplicitHeatConduction = true;
@@ -216,7 +215,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("DoTransientImplicitHeatConduction", d_doTransientImplicitHeatConduction);
   mpm_flag_ps->get("DoExplicitHeatConduction", d_doExplicitHeatConduction);
   mpm_flag_ps->get("DoPressureStabilization", d_doPressureStabilization);
-  mpm_flag_ps->get("DoDefGradAveraging", d_doDefGradAveraging);
   mpm_flag_ps->get("DoThermalExpansion", d_doThermalExpansion);
   mpm_flag_ps->get("do_grid_reset",      d_doGridReset);
   mpm_flag_ps->get("minimum_particle_mass",    d_min_part_mass);

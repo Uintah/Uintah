@@ -81,13 +81,14 @@ struct SimulationTime;
 //! The main component that controls the execution of the 
 //! entire simulation. 
 class SimulationController : public UintahParallelComponent {
+
 public:
   SimulationController( const ProcessorGroup* myworld, bool doAMR, ProblemSpecP pspec );
   virtual ~SimulationController();
 
   //! Notifies (before calling run) the SimulationController
   //! that this is simulation is a restart.
-  void doRestart( const std::string & restartFromDir,
+  void doRestart( const std::string& restartFromDir,
                   int           timestep,
                   bool          fromScratch,
                   bool          removeOldDir );
@@ -96,7 +97,7 @@ public:
   virtual void run() = 0;
 
   //  sets simulationController flags
-  void setReduceUdaFlags( const std::string & fromDir );
+  void setReduceUdaFlags( const std::string& fromDir );
      
 protected:
 
@@ -155,9 +156,9 @@ protected:
   struct PapiEvent {
     int         eventValueIndex;
     std::string name;
-    string      simStatName;
+    std::string simStatName;
     bool        isSupported;
-    PapiEvent( const std::string & _name, const std::string & _simStatName )
+    PapiEvent( const std::string& _name, const std::string& _simStatName )
       : name(_name), simStatName(_simStatName)
     {
       eventValueIndex = 0;

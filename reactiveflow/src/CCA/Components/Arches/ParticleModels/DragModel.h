@@ -135,6 +135,13 @@ namespace Uintah{
   DragModel<IT, DT>::DragModel( std::string task_name, int matl_index,
                                 const std::string base_var_name, const int N ) :
   _base_var_name(base_var_name), TaskInterface( task_name, matl_index ), _N(N){
+
+    VarTypeHelper<DT> dhelper; 
+    _D_type = dhelper.get_vartype(); 
+
+    VarTypeHelper<IT> ihelper; 
+    _I_type = ihelper.get_vartype(); 
+
   }
   
   template <typename IT, typename DT>
@@ -146,14 +153,6 @@ namespace Uintah{
 
     _do_ts_init_task = false; 
     _do_bcs_task = false; 
-
-    //This sets the type of the independent and dependent variable types as needed by the variable
-    //registration step.
-    DT* d_test;
-    IT* i_test;
-    
-    set_type(d_test, _D_type);
-    set_type(i_test, _I_type);
     
     db->getWithDefault("u_velocity_label",_base_u_velocity_name,"none");
     db->getWithDefault("v_velocity_label",_base_v_velocity_name,"none");

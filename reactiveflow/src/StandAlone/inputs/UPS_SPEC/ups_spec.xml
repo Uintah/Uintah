@@ -793,7 +793,7 @@
   <!-- Scheduler Options -->
   
   <Scheduler              spec="OPTIONAL NO_DATA"
-                            attribute1="type OPTIONAL STRING 'MPI DynamicMPI Unified'">
+                            attribute1="type OPTIONAL STRING 'SingleProcessor MPI DynamicMPI Unified'">
     <small_messages       spec="OPTIONAL BOOLEAN" />
     <taskReadyQueueAlg    spec="OPTIONAL STRING 'MostChildren LeastChildren MostAllChildren LeastAllChildren MostL2Children LeastL2Children PatchOrder PatchOrderRandom MostMessages LeastMessages Random FCFS Stack'" />
     <VarTracker           spec="OPTIONAL NO_DATA">
@@ -937,6 +937,7 @@
     <integration              spec="OPTIONAL STRING" />
     <refine_threshold         spec="OPTIONAL INTEGER" />
   </Wave>
+  
   <!--  Solver Test  Component -->
   <SolverTest                 spec="OPTIONAL NO_DATA">
     <delt                     spec="REQUIRED DOUBLE 'positive'" />

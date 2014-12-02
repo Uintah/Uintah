@@ -1,3 +1,6 @@
+#ifndef Uintah_Component_Arches_Arches_h
+#define Uintah_Component_Arches_Arches_h
+
 /*
  * The MIT License
  *
@@ -34,12 +37,7 @@
  *
  */
 
-//----- Arches.h -----------------------------------------------
-
-#ifndef Uintah_Component_Arches_Arches_h
-#define Uintah_Component_Arches_Arches_h
-
-/**************************************
+/* ----- Arches.h -----------------------------------------------
 
 CLASS
    Arches
@@ -72,16 +70,21 @@ WARNING
 
 #include <sci_defs/petsc_defs.h>
 #include <sci_defs/uintah_defs.h>
+
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
 #include <CCA/Ports/SimulationInterface.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Util/Handle.h>
+
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Util/Handle.h>
+
 #include <string>
+
+#include <boost/shared_ptr.hpp>
 
 // Divergence constraint instead of drhodt in pressure equation
 //#define divergenceconstraint
@@ -373,6 +376,7 @@ private:
   ArchesParticlesHelper* _particlesHelper; 
   bool _doLagrangianParticles; 
 
+  std::map<std::string, boost::shared_ptr<TaskFactoryBase> > _boost_factory_map; 
 
 }; // end class Arches
 

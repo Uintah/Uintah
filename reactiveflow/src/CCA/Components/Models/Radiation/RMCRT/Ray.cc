@@ -36,7 +36,6 @@
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Math/MersenneTwister.h>
 
-
 #include <time.h>
 #include <fstream>
 
@@ -95,17 +94,17 @@ ______________________________________________________________________*/
 //
 using namespace Uintah;
 using namespace std;
-static DebugStream dbg("RAY",       false);
-static DebugStream dbg2("RAY_DEBUG",false);
-static DebugStream dbg_BC("RAY_BC", false);
+static SCIRun::DebugStream dbg("RAY",       false);
+static SCIRun::DebugStream dbg2("RAY_DEBUG",false);
+static SCIRun::DebugStream dbg_BC("RAY_BC", false);
 
 
 //---------------------------------------------------------------------------
 // Class: Constructor.
 //---------------------------------------------------------------------------
 Ray::Ray() : RMCRTCommon()
-{
-  d_sigmaT4_label        = VarLabel::create( "sigmaT4",          CCVariable<double>::getTypeDescription() );
+{  
+
   d_mag_grad_abskgLabel  = VarLabel::create( "mag_grad_abskg",   CCVariable<double>::getTypeDescription() );
   d_mag_grad_sigmaT4Label= VarLabel::create( "mag_grad_sigmaT4", CCVariable<double>::getTypeDescription() );
   d_flaggedCellsLabel    = VarLabel::create( "flaggedCells",     CCVariable<int>::getTypeDescription() );
@@ -370,8 +369,14 @@ Ray::sched_rayTrace( const LevelP& level,
                            modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
     tsk->usesDevice(true);
   } else {
-    tsk = scinew Task( taskname, this, &Ray::rayTrace,
-                           modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
+  
+    if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
+      tsk = scinew Task( taskname, this, &Ray::rayTrace<double>,
+                          modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
+    } else {
+      tsk = scinew Task( taskname, this, &Ray::rayTrace<float>,
+                         modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
+    }
   }
 
   printSchedule(level,dbg,taskname);
@@ -428,6 +433,7 @@ Ray::sched_rayTrace( const LevelP& level,
 //---------------------------------------------------------------------------
 // Method: The actual work of the ray tracer
 //---------------------------------------------------------------------------
+template< class T >
 void
 Ray::rayTrace( const ProcessorGroup* pc,
                const PatchSubset* patches,
@@ -471,7 +477,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
   DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
   DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
 
-  constCCVariable<double> sigmaT4OverPi;
+  constCCVariable< T > sigmaT4OverPi;
   constCCVariable<double> abskg;
   constCCVariable<int>    celltype;
 
@@ -517,7 +523,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
     //______________________________________________________________________
 
     if (d_radiometer) {
-      d_radiometer->radiometerFlux( patch, level, new_dw, mTwister, sigmaT4OverPi, abskg, celltype, modifies_divQ );
+      d_radiometer->radiometerFlux< T >( patch, level, new_dw, mTwister, sigmaT4OverPi, abskg, celltype, modifies_divQ );
     }
 
     //______________________________________________________________________
@@ -561,7 +567,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
             rayLocation_cellFace( mTwister, origin, d_locationIndexOrder[RayFace], d_locationShift[RayFace],
                                   DyDx, DzDx, ray_location);
 
-            updateSumI( direction_vector, ray_location, origin, Dx, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
+            updateSumI<T>( direction_vector, ray_location, origin, Dx, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
 
             sumProjI += cosTheta * (sumI - sumI_prev);   // must subtract sumI_prev, since sumI accumulates intensity
 
@@ -602,7 +608,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
         Vector ray_location;
         rayLocation( mTwister, origin, DyDx,  DzDx, d_CCRays, ray_location);
 
-        updateSumI( direction_vector, ray_location, origin, Dx,  sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
+        updateSumI<T>( direction_vector, ray_location, origin, Dx,  sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
 
       }  // Ray loop
 
@@ -655,8 +661,22 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     return;
   }
   std::string taskname = "Ray::rayTrace_dataOnion";
+  
+#if 0  
   Task* tsk= scinew Task( taskname, this, &Ray::rayTrace_dataOnion,
                           modifies_divQ, abskg_dw, sigma_dw, radCalc_freq );
+
+#endif
+  Task* tsk;
+  
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
+    tsk = scinew Task( taskname, this, &Ray::rayTrace_dataOnion<double>,
+                        modifies_divQ, abskg_dw, sigma_dw, radCalc_freq );
+  } else {
+    tsk = scinew Task( taskname, this, &Ray::rayTrace_dataOnion<float>,
+                       modifies_divQ, abskg_dw, sigma_dw, radCalc_freq );
+  }
+
 
   printSchedule(level,dbg,taskname);
 
@@ -715,6 +735,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
 //---------------------------------------------------------------------------
 // Ray tracer using the multilevel "data onion" scheme
 //---------------------------------------------------------------------------
+template< class T>
 void
 Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
                          const PatchSubset* finePatches,
@@ -749,9 +770,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
   // retrieve the coarse level data
   // compute the level dependent variables that are constant
   StaticArray< constCCVariable<double> > abskg(maxLevels);
-  StaticArray< constCCVariable<double> >sigmaT4OverPi(maxLevels);
+  StaticArray< constCCVariable< T > >sigmaT4OverPi(maxLevels);
   constCCVariable<double> abskg_fine;
-  constCCVariable<double> sigmaT4OverPi_fine;
+  constCCVariable< T > sigmaT4OverPi_fine;
 
   DataWarehouse* abskg_dw   = new_dw->getOtherDataWarehouse(which_abskg_dw);
   DataWarehouse* sigmaT4_dw = new_dw->getOtherDataWarehouse(whichd_sigmaT4_dw);
@@ -872,7 +893,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
 
         Vector ray_direction = findRayDirection( mTwister,d_isSeedRandom, origin, iRay );
 
-        updateSumI_ML( ray_direction, ray_location, origin, Dx, domain_BB, maxLevels, fineLevel, DyDx,DzDx,
+        updateSumI_ML< T >( ray_direction, ray_location, origin, Dx, domain_BB, maxLevels, fineLevel, DyDx,DzDx,
                        fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo, regionHi, sigmaT4OverPi, abskg, nRaySteps, sumI, mTwister);
 
 
@@ -1348,7 +1369,7 @@ void Ray::sched_Refine_Q(SchedulerP& sched,
     Task::MaterialDomainSpec  ND  = Task::NormalDomain;
     #define allPatches 0
     #define allMatls 0
-    task->requires(Task::NewDW, d_divQLabel, allPatches, Task::CoarseLevel, allMatls, ND, d_gn,0);
+    task->requires(Task::NewDW, d_divQLabel, allPatches, Task::CoarseLevel, allMatls, ND, d_gac,1);
 
     // when carryforward is needed
     task->requires( Task::OldDW, d_divQLabel, d_gn, 0 );
@@ -1599,6 +1620,7 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
 
 //______________________________________________________________________
 //  Multi-level
+ template< class T>
  void Ray::updateSumI_ML ( Vector& ray_direction,
                            Vector& ray_location,
                            const IntVector& origin,
@@ -1612,7 +1634,7 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
                            const IntVector& fineLevel_ROI_Hi,
                            vector<IntVector>& regionLo,
                            vector<IntVector>& regionHi,
-                           StaticArray< constCCVariable<double> >& sigmaT4OverPi,
+                           StaticArray< constCCVariable< T > >& sigmaT4OverPi,
                            StaticArray< constCCVariable<double> >& abskg,
                            unsigned long int& nRaySteps,
                            double& sumI,
@@ -1912,3 +1934,42 @@ Ray::filter( const ProcessorGroup*,
 
 template void Ray::setBC<int>(    CCVariable<int>&    Q_CC, const string& desc, const Patch* patch, const int mat_id);
 template void Ray::setBC<double>( CCVariable<double>& Q_CC, const string& desc, const Patch* patch, const int mat_id);
+
+
+template void  Ray::updateSumI_ML< double> ( Vector&,
+                                             Vector&,
+                                             const IntVector&,
+                                             const vector<Vector>&,
+                                             const BBox&,
+                                             const int,
+                                             const Level* ,
+                                             double DyDx[],
+                                             double DzDx[],
+                                             const IntVector&,
+                                             const IntVector&,
+                                             vector<IntVector>&,
+                                             vector<IntVector>&,
+                                             StaticArray< constCCVariable< double > >& sigmaT4OverPi,
+                                             StaticArray< constCCVariable<double> >& abskg,
+                                             unsigned long int& ,
+                                             double& ,
+                                             MTRand&);
+
+template void  Ray::updateSumI_ML< float> ( Vector&,
+                                             Vector&,
+                                             const IntVector&,
+                                             const vector<Vector>&,
+                                             const BBox&,
+                                             const int,
+                                             const Level* ,
+                                             double DyDx[],
+                                             double DzDx[],
+                                             const IntVector&,
+                                             const IntVector&,
+                                             vector<IntVector>&,
+                                             vector<IntVector>&,
+                                             StaticArray< constCCVariable< float > >& sigmaT4OverPi,
+                                             StaticArray< constCCVariable<double> >& abskg,
+                                             unsigned long int& ,
+                                             double& ,
+                                             MTRand&);

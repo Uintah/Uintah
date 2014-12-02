@@ -136,50 +136,17 @@ private:
 
   double pi;
 
-  Vector cart2sph( Vector X ) {
-    // converts cartesean to spherical coords
-    double mag   = pow( X.x(), 2.0 );
-    double magxy = mag;
-    double z = 0;
-    double y = 0;
+  double velMag( Vector& X ) {
+    double mag = X.x() * X.x();
 #ifdef YDIM
-    mag   += pow( X.y(), 2.0 );
-    magxy = mag;
-    y = X.y();
+    mag += X.y() * X.y();
 #endif
 #ifdef ZDIM
-    mag += pow( X.z(), 2.0 );
-    z = X.z();
+    mag += X.z() * X.z();
 #endif
-
-    mag   = pow(mag, 1./2.);
-    magxy = pow(magxy, 1./2.);
-
-    double elev = atan2( z, magxy );
-    double az   = atan2( y, X.x() );
-
-    Vector answer(az, elev, mag);
-    return answer;
-
-  };
-
-  Vector sph2cart( Vector X ) {
-    // converts spherical to cartesian coords
-    double x = 0.;
-    double y = 0.;
-    double z = 0.;
-
-    double rcoselev = X.z() * cos(X.y());
-    x = rcoselev * cos(X.x());
-#ifdef YDIM
-    y = rcoselev * sin(X.x());
-#endif
-#ifdef ZDIM
-    z = X.z()*sin(X.y());
-#endif
-    Vector answer(x,y,z);
-    return answer;
-  };
+    mag = sqrt( mag );
+    return mag;
+  }
 
 };
 } // end namespace Uintah

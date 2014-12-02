@@ -256,7 +256,7 @@ $(OBJTOP_ABS)/include/svn_info.h : .FORCE
             if test "$$?" -eq 0; then                                                            \
                rm $(OBJTOP_ABS)/include/svn_info.h.new;                                          \
             else                                                                                 \
-               echo "Creating .../<bin>/svn_info.h";                                             \
+               echo "Creating .../<bin>/include/svn_info.h";                                     \
                mv $(OBJTOP_ABS)/include/svn_info.h.new $(OBJTOP_ABS)/include/svn_info.h;         \
             fi                                                                                   \
          fi

@@ -49,6 +49,7 @@
 #include <Core/Thread/Time.h>
 #include <cmath>
 #include <sci_defs/hypre_defs.h>
+#include <iomanip>
 
 #ifdef HAVE_HYPRE
 #  include <CCA/Components/Arches/Radiation/RadHypreSolver.h>
@@ -62,7 +63,9 @@
 #include <CCA/Components/Arches/Radiation/fortran/rdomsolve_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rdomsrc_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rdomflux_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/rdomincident_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rdomvolq_fort.h>
+#include <Core/Containers/StaticArray.h>
 
 using namespace std;
 using namespace Uintah;
@@ -112,6 +115,12 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
 
   ProblemSpecP db = params->findBlock("DORadiationModel");
 
+  db->getWithDefault("ReflectOn",reflectionsTurnedOn,false);  //  reflections are off by default.
+
+  //db->getRootNode()->findBlock("Grid")->findBlock("BoundaryConditions") 
+
+  db->getWithDefault("usePrevInt",usePreviousIntensity,false); //  using the previous solve as initial guess, is off by default
+
   if (db) {
     db->getWithDefault("ordinates",d_sn,2);
     proc0cout << " Notice: No ordinate number specified.  Defaulting to 2." << endl;
@@ -154,6 +163,23 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
   //NOTE: Setting wall properties to 1.0 
   d_intrusion_abskg = 1.0;
 
+  const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
+  for( int ix=0;  ix<d_totalOrds ;ix++){
+    ostringstream my_stringstream_object;
+    my_stringstream_object << "Intensity" << setfill('0') << setw(4)<<  ix ;
+    _IntensityLabels.push_back(  VarLabel::create(my_stringstream_object.str(),  CC_double));
+    if(usePreviousIntensity==false){
+     break;  // gets labels for all intensities, otherwise only create 1 label
+    }
+  }
+   if( reflectionsTurnedOn){
+  _IncidentIntensityLabels.push_back(  VarLabel::create("IncidentFluxE",  CC_double));
+  _IncidentIntensityLabels.push_back(  VarLabel::create("IncidentFluxW",  CC_double));
+  _IncidentIntensityLabels.push_back(  VarLabel::create("IncidentFluxN",  CC_double));
+  _IncidentIntensityLabels.push_back(  VarLabel::create("IncidentFluxS",  CC_double));
+  _IncidentIntensityLabels.push_back(  VarLabel::create("IncidentFluxT",  CC_double));
+  _IncidentIntensityLabels.push_back(  VarLabel::create("IncidentFluxB",  CC_double));
+  }
 
 }
 //______________________________________________________________________
@@ -219,7 +245,9 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                                  ArchesVariables* vars,
                                  ArchesConstVariables* constvars, 
                                  CCVariable<double>& divQ,
-                                 int wall_type )
+                                 int wall_type, int matlIndex,  
+                                 DataWarehouse* new_dw, 
+                                 DataWarehouse* old_dw)
 {
 
   proc0cout << " Radiation Solve: " << endl;
@@ -240,7 +268,6 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   if (d_lambda > 1) {
     fort_radarray(rgamma, sd15, sd, sd7, sd3);
   }
-
   IntVector idxLo = patch->getFortranCellLowIndex();
   IntVector idxHi = patch->getFortranCellHighIndex();
   IntVector domLo = patch->getExtraCellLowIndex();
@@ -254,9 +281,32 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   CCVariable<double> at;
   CCVariable<double> ab;
   CCVariable<double> ap;
-  CCVariable<double> cenint;
+
+  StaticArray< CCVariable<double> > IncidentFlux(_IncidentIntensityLabels.size());
+  StaticArray< CCVariable<double> > IncidentFlux_old(6); // must always 6, even when reflections are off.
+
+    for (unsigned int i=0; i<  _IncidentIntensityLabels.size(); i++){
+      constCCVariable<double>  IncidentFlux_temp;
+      old_dw->get(IncidentFlux_temp,_IncidentIntensityLabels[i], matlIndex , patch,Ghost::None, 0  );
+      new_dw->allocateAndPut(IncidentFlux[i],_IncidentIntensityLabels[i] , matlIndex, patch );
+      IncidentFlux_old[i].allocate(domLo,domHi);
+      IncidentFlux_old[i].copyData(IncidentFlux_temp);
+      IncidentFlux[i].initialize(0.0);          // must be set to zero, for sum+
+    }
+
+    if(reflectionsTurnedOn==false){
+      for (int i=0; i<  6; i++){  // magic number cooresponds to number of labels tranported, when 
+        IncidentFlux_old[i].allocate(domLo,domHi);
+        IncidentFlux_old[i].initialize(0.0);      // for no reflections, this must be zero
+      }
+    }
   
-  vars->cenint.allocate(domLo,domHi);
+
+  if(usePreviousIntensity==false){
+    old_dw->get(constvars->cenint,_IntensityLabels[0], matlIndex , patch,Ghost::None, 0  );
+    new_dw->getModifiable(vars->cenint,_IntensityLabels[0] , matlIndex, patch ); // per the logic in sourceterms/doradiation, old and new dw are the same.
+  }
+
 
   su.allocate(domLo,domHi);
   ae.allocate(domLo,domHi);
@@ -274,7 +324,6 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   qfluxbbm.resize(domLo.x(),domHi.x());
   qfluxbbm.initialize(0.0);
 
-  vars->cenint.initialize(0.0);
   divQ.initialize(0.0);
   vars->qfluxe.initialize(0.0);
   vars->qfluxw.initialize(0.0);
@@ -286,14 +335,20 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 
   //__________________________________
   //begin discrete ordinates
-
   for (int bands =1; bands <=d_lambda; bands++){
 
     vars->volq.initialize(0.0);
 
     for (int direcn = 1; direcn <=d_totalOrds; direcn++){
+      if(usePreviousIntensity){
+        old_dw->get(constvars->cenint,_IntensityLabels[direcn-1], matlIndex , patch,Ghost::None, 0  );
+        new_dw->getModifiable(vars->cenint,_IntensityLabels[direcn-1] , matlIndex, patch );
+      }
+  
+    vars->cenint.initialize(0.0); // remove once RTs have been checked.
 
-      vars->cenint.initialize(0.0);
+
+      
       su.initialize(0.0);
       aw.initialize(0.0);
       as.initialize(0.0);
@@ -304,16 +359,20 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       at.initialize(0.0);
       bool plusX, plusY, plusZ;
 
-      
       fort_rdomsolve( idxLo, idxHi, constvars->cellType, ffield, 
                       cellinfo->sew, cellinfo->sns, cellinfo->stb, 
                       vars->ESRCG, direcn, oxi, omu,oeta, wt, 
                       constvars->temperature, constvars->ABSKG,
                       su, aw, as, ab, ap, ae, an, at,
                       plusX, plusY, plusZ, fraction, bands, 
-                      d_intrusion_abskg);
+                      d_intrusion_abskg,
+                      IncidentFlux_old[0] , IncidentFlux_old[1],
+                      IncidentFlux_old[2] , IncidentFlux_old[3],
+                      IncidentFlux_old[4] , IncidentFlux_old[5]);
 
-      d_linearSolver->setMatrix( pg ,patch, vars, plusX, plusY, plusZ, 
+
+
+      d_linearSolver->setMatrix( pg ,patch, vars, constvars, plusX, plusY, plusZ, 
                                  su, ab, as, aw, ap, ae, an, at, d_print_all_info );
                                 
       bool converged =  d_linearSolver->radLinearSolve( direcn, d_print_all_info );
@@ -326,13 +385,22 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       
       d_linearSolver->destroyMatrix();
 
-      fort_rdomvolq( idxLo, idxHi, direcn, wt, vars->cenint, vars->volq );
-      
+      fort_rdomvolq( idxLo, idxHi, direcn, wt, vars->cenint, vars->volq);
+
       fort_rdomflux( idxLo, idxHi, direcn, oxi, omu, oeta, wt, vars->cenint,
                      plusX, plusY, plusZ, 
                      vars->qfluxe, vars->qfluxw,
                      vars->qfluxn, vars->qfluxs,
                      vars->qfluxt, vars->qfluxb);
+                     
+
+      if(reflectionsTurnedOn){
+        fort_rdomincident( idxLo, idxHi, direcn, oxi, omu, oeta, wt, vars->cenint,
+            plusX, plusY, plusZ, 
+            IncidentFlux[0] , IncidentFlux[1],
+            IncidentFlux[2] , IncidentFlux[3],
+            IncidentFlux[4] , IncidentFlux[5]);
+      }
     }  // ordinate loop
 
     fort_rdomsrc( idxLo, idxHi, constvars->ABSKG, vars->ESRCG,vars->volq, divQ );
@@ -341,4 +409,19 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 
   proc0cout << "Total Radiation Solve Time: " << Time::currentSeconds()-solve_start << " seconds\n";
 
+}
+
+int 
+DORadiationModel::getIntOrdinates(){
+return d_totalOrds;
+}
+
+bool 
+DORadiationModel::reflectionsBool(){
+return reflectionsTurnedOn;
+}
+
+bool 
+DORadiationModel::DOSolveInitialGuessBool(){
+return usePreviousIntensity;
 }

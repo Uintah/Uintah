@@ -45,6 +45,8 @@ void RadProperties::problemSetup( const ProblemSpecP& inputdb )
 {
   ProblemSpecP db = inputdb; 
 
+  commonProblemSetup(db);
+
   std::string calculator_type; 
   ProblemSpecP db_calc = db->findBlock("calculator"); 
   if ( db_calc ){ 
@@ -401,8 +403,9 @@ void RadProperties::initialize( const ProcessorGroup* pc,
       new_dw->allocateAndPut( abskp, _calc->get_abskp_label(), matlIndex, patch ); 
       abskp.initialize(0.0); 
     }
-
+ 
     PropertyModelBase::base_initialize( patch, prop ); // generic initialization functionality 
 
+    _boundaryCond->setScalarValueBC( pc, patch, prop, _prop_name );
   }
 }

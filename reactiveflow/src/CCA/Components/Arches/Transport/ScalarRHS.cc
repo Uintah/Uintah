@@ -1,6 +1,5 @@
 #include <CCA/Components/Arches/Transport/ScalarRHS.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
-#include <CCA/Components/Arches/TransportEqns/Discretization_new.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <spatialops/structured/FVStaggered.h>
 
@@ -38,13 +37,10 @@ TaskInterface( task_name, matl_index ) {
   _Fconv_name = task_name+"_Fconv"; 
   _Fdiff_name = task_name+"_Fdiff"; 
 
-  _disc = scinew Discretization_new(); 
-
 }
 
 ScalarRHS::~ScalarRHS(){ 
 
-  delete _disc; 
 }
 
 void 
@@ -321,7 +317,42 @@ ScalarRHS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     *rhs <<= *rhs + dt * i->weight * *src;
 
   }
+}
 
+//
+//------------------------------------------------
+//------------- BOUNDARY CONDITIONS --------------
+//------------------------------------------------
+//
+
+void 
+ScalarRHS::register_compute_bcs( std::vector<VariableInformation>& variable_registry, const int time_substep ){ 
+}
+
+void 
+ScalarRHS::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
+                        SpatialOps::OperatorDatabase& opr ){ 
+
+
+  using namespace SpatialOps;
+  using SpatialOps::operator *; 
+
+}
+
+
+
+  //mask example
+  //std::vector<SpatialOps::IntVec> maskset;  
+
+  //for (int i = 0; i < 11; i++){ 
+    //maskset.push_back(SpatialOps::IntVec(4,i,1)); 
+  //}
+
+  //SpatialOps::SpatialMask<SpatialOps::SVolField> mask(*phi,maskset); 
+
+  //*Fdiff <<= cond( mask, 3.0 )
+                 //( *Fdiff ); 
+                 //
   //------------test run on new mask stuff-------------//
   ////create a base boundary object which holds the masks
   //BoundaryCondition_new::MaskContainer<SpatialOps::SVolField> bc; 
@@ -358,38 +389,3 @@ ScalarRHS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
   //----------end test run on new mask stuff-------------//
 
-}
-
-//
-//------------------------------------------------
-//------------- BOUNDARY CONDITIONS --------------
-//------------------------------------------------
-//
-
-void 
-ScalarRHS::register_compute_bcs( std::vector<VariableInformation>& variable_registry, const int time_substep ){ 
-}
-
-void 
-ScalarRHS::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
-                        SpatialOps::OperatorDatabase& opr ){ 
-
-
-  using namespace SpatialOps;
-  using SpatialOps::operator *; 
-
-}
-
-
-
-  //mask example
-  //std::vector<SpatialOps::IntVec> maskset;  
-
-  //for (int i = 0; i < 11; i++){ 
-    //maskset.push_back(SpatialOps::IntVec(4,i,1)); 
-  //}
-
-  //SpatialOps::SpatialMask<SpatialOps::SVolField> mask(*phi,maskset); 
-
-  //*Fdiff <<= cond( mask, 3.0 )
-                 //( *Fdiff ); 

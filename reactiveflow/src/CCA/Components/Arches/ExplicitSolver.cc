@@ -112,7 +112,7 @@ ExplicitSolver(ArchesLabel* label,
                ScaleSimilarityModel* scaleSimilarityModel,
                PhysicalConstants* physConst,
                RadPropertyCalculator* rad_properties, 
-               std::map<std::string, TaskFactoryBase*>* factory_map, 
+               std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& boost_fac_map, 
                const ProcessorGroup* myworld,
                SolverInterface* hypreSolver):
                NonlinearSolver(myworld),
@@ -121,9 +121,9 @@ ExplicitSolver(ArchesLabel* label,
                d_scaleSimilarityModel(scaleSimilarityModel),
                d_physicalConsts(physConst),
                d_hypreSolver(hypreSolver), 
-               d_rad_prop_calc(rad_properties)
+               d_rad_prop_calc(rad_properties),
+               _boost_fac_map(boost_fac_map)
 {
-  _factory_map = factory_map; 
   d_pressSolver = 0;
   d_momSolver = 0;
   nosolve_timelabels_allocated = false;
@@ -309,6 +309,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                    )
 {
 
+  typedef std::vector<std::string> SVec; 
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
   IntVector periodic_vector = level->getPeriodicBoundaries();
@@ -348,21 +349,24 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
   //========NEW STUFF =================================
   //TIMESTEP INIT: 
-  typedef std::map<std::string, TaskFactoryBase*> FACMAP; 
-  ////utility factory
-  FACMAP::iterator ifac = _factory_map->find("utility_factory"); 
-  TaskFactoryBase::TaskMap init_all_tasks = ifac->second->retrieve_all_tasks(); 
+  //UtilityFactory
+  typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
+  BFM::iterator i_util = _boost_fac_map.find("utility_factory"); 
+  TaskFactoryBase::TaskMap init_all_tasks = i_util->second->retrieve_all_tasks(); 
   for ( TaskFactoryBase::TaskMap::iterator i = init_all_tasks.begin(); i != init_all_tasks.end(); i++){ 
-    i->second->schedule_timestep_init(level, sched, matls ); 
+    i->second->schedule_timestep_init(level, sched, matls); 
   }
 
-  ////transport factory
-  ifac = _factory_map->find("transport_factory"); 
-  init_all_tasks = ifac->second->retrieve_all_tasks(); 
-  for ( TaskFactoryBase::TaskMap::iterator i = init_all_tasks.begin(); i != init_all_tasks.end(); i++){ 
-    if ( i->first != "scalar_fe_update" && i->first != "scalar_ssp_update") {
-      i->second->schedule_timestep_init(level, sched, matls ); 
-    }
+  BFM::iterator i_transport = _boost_fac_map.find("transport_factory"); 
+  SVec scalar_rhs_builders = i_transport->second->retrieve_task_subset("scalar_rhs_builders"); 
+  for ( SVec::iterator i = scalar_rhs_builders.begin(); i != scalar_rhs_builders.end(); i++){ 
+    TaskInterface* tsk = i_transport->second->retrieve_task(*i); 
+    tsk->schedule_timestep_init(level, sched, matls); 
+  }
+  SVec mom_rhs_builders = i_transport->second->retrieve_task_subset("mom_rhs_builders"); 
+  for ( SVec::iterator i = mom_rhs_builders.begin(); i != mom_rhs_builders.end(); i++){ 
+    TaskInterface* tsk = i_transport->second->retrieve_task(*i); 
+    tsk->schedule_timestep_init(level, sched, matls); 
   }
   //===================END NEW STUFF=======================
 
@@ -371,33 +375,44 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   {
 
     //================ NEW TASK STUFF============================= 
-    //
-    //utility factory
-    FACMAP::iterator ifac = _factory_map->find("utility_factory"); 
-    TaskFactoryBase::TaskMap all_tasks = ifac->second->retrieve_all_tasks(); 
-    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+   
+    //Build RHS
+    for ( TaskFactoryBase::TaskMap::iterator i = init_all_tasks.begin(); i != init_all_tasks.end(); i++){ 
       i->second->schedule_task(level, sched, matls, curr_level); 
     }
 
-    //transport factory
-    FACMAP::iterator itransport_factory = _factory_map->find("transport_factory"); 
-    TaskFactoryBase::TaskMap all_transport_tasks = itransport_factory->second->retrieve_all_tasks(); 
-    for ( TaskFactoryBase::TaskMap::iterator i = all_transport_tasks.begin(); i != all_transport_tasks.end(); i++){ 
-      if ( i->first != "scalar_fe_update" && i->first != "scalar_ssp_update") {
-        i->second->schedule_task(level, sched, matls, curr_level); 
-      }
+    //(scalars)
+    for ( SVec::iterator i = scalar_rhs_builders.begin(); i != scalar_rhs_builders.end(); i++){ 
+      TaskInterface* tsk = i_transport->second->retrieve_task(*i); 
+      tsk->schedule_task(level, sched, matls, curr_level); 
+    }
+    
+    //(momentum)
+    for ( SVec::iterator i = mom_rhs_builders.begin(); i != mom_rhs_builders.end(); i++){ 
+      TaskInterface* tsk = i_transport->second->retrieve_task(*i); 
+      tsk->schedule_task(level, sched, matls, curr_level); 
     }
 
-    //partcle model factory
-    ifac = _factory_map->find("particle_model_factory"); 
-    all_tasks = ifac->second->retrieve_all_tasks(); 
-    for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+    //Particle Models
+    BFM::iterator i_partmod_fac = _boost_fac_map.find("particle_model_factory"); 
+    TaskFactoryBase::TaskMap all_particle_models = i_partmod_fac->second->retrieve_all_tasks(); 
+    for ( TaskFactoryBase::TaskMap::iterator i = all_particle_models.begin(); 
+          i != all_particle_models.end(); i++){ 
       i->second->schedule_task(level, sched, matls, curr_level); 
     }
 
-    TaskFactoryBase::TaskMap::iterator i_fe_update = all_transport_tasks.find("scalar_fe_update");  
-    if ( i_fe_update != all_transport_tasks.end() )
-      i_fe_update->second->schedule_task( level, sched, matls, curr_level ); 
+    //FE update
+    SVec scalar_fe_up = i_transport->second->retrieve_task_subset("scalar_fe_update"); 
+    SVec mom_fe_up = i_transport->second->retrieve_task_subset("mom_fe_update"); 
+
+    for ( SVec::iterator i = scalar_fe_up.begin(); i != scalar_fe_up.end(); i++){ 
+      TaskInterface* tsk = i_transport->second->retrieve_task(*i); 
+      tsk->schedule_task(level, sched, matls, curr_level); 
+    }
+    for ( SVec::iterator i = mom_fe_up.begin(); i != mom_fe_up.end(); i++){ 
+      TaskInterface* tsk = i_transport->second->retrieve_task(*i); 
+      tsk->schedule_task(level, sched, matls, curr_level); 
+    }
     //============== END NEW TASK STUFF ==============================
 
     // Create this timestep labels for properties
@@ -600,11 +615,21 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
 
     //==================NEW TASK STUFF =========================
-    //uncomment to get this to work
     //this is updating the scalar with the latest density from the table lookup
-    TaskFactoryBase::TaskMap::iterator i_ssp_update = all_transport_tasks.find("scalar_ssp_update"); 
-    if ( i_ssp_update != all_transport_tasks.end() )
-      i_ssp_update->second->schedule_task( level, sched, matls, curr_level ); 
+    SVec scalar_ssp = i_transport->second->retrieve_task_subset("scalar_ssp"); 
+    SVec mom_ssp = i_transport->second->retrieve_task_subset("mom_ssp"); 
+
+    for ( SVec::iterator i = scalar_ssp.begin(); i != scalar_ssp.end(); i++){ 
+      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
+      if ( curr_level > 0 )
+        tsk->schedule_task( level, sched, matls, curr_level ); 
+    }
+
+    for ( SVec::iterator i = mom_ssp.begin(); i != mom_ssp.end(); i++){ 
+      TaskInterface* tsk = i_transport->second->retrieve_task(*i);
+      //if ( curr_level > 0 )
+      //  tsk->schedule_task( level, sched, matls, curr_level ); 
+    }
     //============= END NEW TASK STUFF===============================
 
 

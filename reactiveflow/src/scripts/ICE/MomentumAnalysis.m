@@ -81,7 +81,7 @@ function [freq, Amp] =  plotFFT( time, Q, desc )
   title  ( 'Amplititude Spectrum' );
   xlabel ( 'Frequency (Hz) ');
   ylabel ( '|Y(f)|' );
-  xlim   ([0 10])
+  xlim   ([0 100])
   ylim   ([ 0 1e-4])
   pause
 endfunction
@@ -124,6 +124,22 @@ function [lo, hi] = trim( t, tLo, tHi)
   hi = max( find( t<=tHi ) );
 endfunction
 
+%______________________________________________________________________
+% clean out duplicate entries
+
+function [cleanData] = removeDupes( data)
+
+t = data(:,1);
+count = 1;
+for i = 2:length( t )
+  if(  ( t(i) - t(i-1) ) != 0 )
+    cleanData(count,:) = data(i,:);
+    count += 1;
+  else
+    printf( ' detected duplicate entries at time %e, now removing them.\n', t(i) );
+  endif
+end
+endfunction
 
 %______________________________________________________________________
 %  convert string to bool
@@ -305,6 +321,10 @@ format long e
 %  in the control volume
 data = dlmread( opt.datFile, ",", 4,0 );
 
+
+% remove duplicate rows. 
+data = removeDupes( data );
+
 %__________________________________
 % downsample the data with every nth element
 t                     =   data(:,1);      % column 1                time
@@ -338,7 +358,7 @@ for i = 2:length(t)
     dMdt(i,1:3) = ( Mom_cv(i,:) - Mom_cv(i-1,:) )./( t(i) - t(i-1) );
 
     if(  ( t(i) - t(i-1) ) == 0 )
-      printf(' %s detetected 0, t(i): %e, t(i-1), %e \n', uda{j}, t(i), t(i-1) );
+      printf(' %s detetected 0, t(i): %e, t(i-1), %e \n', opt.datFile, t(i), t(i-1) );
       printf(' This is probably due to overlap in the data when a restart occurs');
     endif
     

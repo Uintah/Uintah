@@ -64,4 +64,6 @@ PSELIBS := \
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(BOOST_LIBRARY)
 
+INCLUDES := $(INCLUDES) $(BOOST_INCLUDE)
+
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

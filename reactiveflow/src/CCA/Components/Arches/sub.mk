@@ -32,6 +32,7 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/ArchesConstVariables.cc      \
         $(SRCDIR)/ArchesLabel.cc               \
         $(SRCDIR)/ArchesMaterial.cc            \
+        $(SRCDIR)/ArchesParticlesHelper.cc     \
         $(SRCDIR)/ArchesVariables.cc           \
         $(SRCDIR)/BoundaryCondition.cc         \
         $(SRCDIR)/BoundaryCond_new.cc          \
@@ -55,20 +56,13 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/SmagorinskyModel.cc          \
         $(SRCDIR)/Source.cc                    \
         $(SRCDIR)/TurbulenceModel.cc           \
-        $(SRCDIR)/TurbulenceModelPlaceholder.cc \
-				$(SRCDIR)/ArchesParticlesHelper.cc 
+        $(SRCDIR)/TurbulenceModelPlaceholder.cc 
         
 
 ifeq ($(HAVE_CUDA),yes)
   SRCS += $(SRCDIR)/constructLinearSystemKernel.cu
   DLINK_FILES := $(DLINK_FILES) $(SRCDIR)/constructLinearSystemKernel.o
 endif
-
-PSELIBS :=
-
-#ifeq ($(BUILD_WASATCH_IN_ARCHES),yes)
-#   PSELIBS := CCA/Components/Wasatch
-#endif
 
 PSELIBS := CCA/Components/Wasatch
 
@@ -108,27 +102,29 @@ LIBS := $(LIBS) $(XML2_LIBRARY) $(F_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
         $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) \
         $(RADPROPS_LIBRARY) $(TABPROPS_LIBRARY) \
         $(BOOST_LIBRARY) $(Z_LIBRARY) \
-				$(SPATIALOPS_LIBRARY)
+        $(SPATIALOPS_LIBRARY)
 
 INCLUDES := $(INCLUDES) $(BOOST_INCLUDE) $(TABPROPS_INCLUDE) $(RADPROPS_INCLUDE) $(SPATIALOPS_INCLUDE)
 
 #### Handle subdirs (These files are just 'included' into the build of libCCA_Components_Arches.so)
-SUBDIRS := $(SRCDIR)/ChemMix            \
-           $(SRCDIR)/WallHTModels       \
-           $(SRCDIR)/CoalModels         \
-           $(SRCDIR)/CoalModels/fortran \
-           $(SRCDIR)/DigitalFilter      \
-           $(SRCDIR)/PropertyModels     \
-           $(SRCDIR)/Radiation          \
-           $(SRCDIR)/Radiation/fortran  \
-           $(SRCDIR)/SourceTerms        \
-           $(SRCDIR)/TransportEqns      \
-					 $(SRCDIR)/Task               \
-					 $(SRCDIR)/Utility 						\
-					 $(SRCDIR)/ParticleModels     \
-					 $(SRCDIR)/Transport 					\
-					 $(SRCDIR)/LagrangianParticles \
-					 $(SRCDIR)/Operators
+
+SUBDIRS := $(SRCDIR)/ChemMix             \
+           $(SRCDIR)/CoalModels          \
+           $(SRCDIR)/CoalModels/fortran  \
+           $(SRCDIR)/DigitalFilter       \
+           $(SRCDIR)/LagrangianParticles \
+           $(SRCDIR)/Operators           \
+           $(SRCDIR)/ParticleModels      \
+           $(SRCDIR)/PropertyModels      \
+           $(SRCDIR)/Radiation           \
+           $(SRCDIR)/Radiation/fortran   \
+           $(SRCDIR)/SourceTerms         \
+           $(SRCDIR)/Task                \
+           $(SRCDIR)/Transport           \
+           $(SRCDIR)/TransportEqns       \
+           $(SRCDIR)/Utility             \
+           $(SRCDIR)/WallHTModels        
+
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 #### End handle subdirs

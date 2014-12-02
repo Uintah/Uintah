@@ -179,6 +179,7 @@ void
 RadPetscSolver::setMatrix(const ProcessorGroup* ,
                            const Patch* patch,
                            ArchesVariables* vars,
+                           ArchesConstVariables* constvars,
                            bool plusX, bool plusY, bool plusZ,
                            CCVariable<double>& SU,
                            CCVariable<double>& AB,

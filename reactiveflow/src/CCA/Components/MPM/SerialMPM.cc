@@ -3440,56 +3440,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         partvoldef += pvolume[idx];
       }
 
-      // The following is used only for deformation gradient averaging
-      CCVariable<Matrix3> F_CC;
-      new_dw->allocateTemporary(F_CC,       patch);
-
-      if(flags->d_doDefGradAveraging) {
-        CCVariable<double> vol_0_CC;
-        new_dw->allocateTemporary(vol_0_CC, patch);
-        
-	//initialize cell centered, CC, values
-        for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++){
-          F_CC[*iter].set(0.);
-        }
-        vol_0_CC.initialize(0.);
-
-        //loop over particles and add information to CC values 
-        for(ParticleSubset::iterator iter = pset->begin();
-            iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-          
-          // get the volumetric part of the deformation
-          double J = pFNew[idx].Determinant();
-          
-          IntVector cell_index,temp_cell_index;
-          patch->findCell(px[idx],cell_index);
-          
-          F_CC[cell_index] += pFNew[idx]*pvolume[idx]/J;
-          vol_0_CC[cell_index]+=pvolume[idx]/J;
-        }
-        
-        //loop over cells and determine cell based F average
-        for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++){
-          IntVector c = *iter;
-          if(vol_0_CC[c]!=0)
-            F_CC[c]=F_CC[c]/vol_0_CC[c];
-        }
-        
-        //loop over particles and set F values to F average
-        for(ParticleSubset::iterator iter = pset->begin();
-        iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-          IntVector cell_index;
-          patch->findCell(px[idx],cell_index);
-          
-          pFNew[idx]=F_CC[cell_index];
-          
-          //T2D: Fix this for consistancy
-          pVelGrad[idx]=pVelGrad[idx];
-        }
-      } //end of deformation gradient averaging at the patch level
-        
       // The following is used only for pressure stabilization
       CCVariable<double> J_CC;
       new_dw->allocateTemporary(J_CC,       patch);

@@ -250,7 +250,7 @@
       <PropertyModels>
         <model type="radiation_properties" label="abskg">
           <initialization type="constant">
-            <constant>0.0</constant>
+            <constant>1.0</constant>
           </initialization>
           <calculator type="burns_christon">
             <abskg label="gas_abskg"/>

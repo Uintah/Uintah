@@ -67,6 +67,7 @@ namespace Wasatch{
                                   params,
                                   get_staggered_location<FieldT>(),
                                   isConstDensity ),
+      hasConvection_( params_->findBlock("ConvectiveFlux") ),
       densityTag_( densityTag ),
       enableTurbulence_( !params->findBlock("DisableTurbulenceModel") && (turbulenceParams.turbModelName != TurbulenceParameters::NOTURBULENCE) )
   {
@@ -112,11 +113,11 @@ namespace Wasatch{
         msg << "ERROR: For solving the transport equations in weak form, the primitive variable will be the same as the solution variable. So, you don't need to specify it. Please remove the \"PrimitiveVariable\" block from the \"TransportEquation\" block in your input file." << endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-      }
+    }
     assert( primVarTag_ != Expr::Tag() );
 
     if( callSetup ) setup();
-    }
+  }
 
   //------------------------------------------------------------------
 
@@ -233,13 +234,12 @@ namespace Wasatch{
     if( !isConstDensity_ || !isStrong_ ){
       factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarTag_, solnVarTag_, densityTag_) );
 
-      const bool hasConvection_ = params_->findBlock("ConvectiveFlux");
       if( hasConvection_ ){
-        const Expr::Tag rhsStarTag = tagNames.make_star_rhs(solnVarName_);
+        const Expr::Tag rhsStarTag     = tagNames.make_star_rhs(solnVarName_);
         const Expr::Tag densityStarTag = tagNames.make_star(densityTag_, Expr::CARRY_FORWARD);
         const Expr::Tag primVarStarTag = tagNames.make_star(primVarTag_);
         const Expr::Tag solnVarStarTag = tagNames.make_star(solnVarName_);
-        infoStar_[PRIMITIVE_VARIABLE] = primVarStarTag;
+        infoStar_[PRIMITIVE_VARIABLE]  = primVarStarTag;
         
         EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
         if( vNames.has_embedded_geometry() ){
@@ -248,7 +248,8 @@ namespace Wasatch{
           infoStar_[AREA_FRAC_Y] = vNames.vol_frac_tag<YVolField>();
           infoStar_[AREA_FRAC_Z] = vNames.vol_frac_tag<ZVolField>();
         }
-        factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarStarTag, solnVarStarTag, densityStarTag ) );
+        const Expr::Tag solnVarTagNp1(solnVarTag_.name(), Expr::STATE_NONE);
+        factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarStarTag, solnVarTagNp1, densityStarTag ) );
         factory.register_expression( scinew RHSBuilder( rhsStarTag, infoStar_, srcTags, densityStarTag, isConstDensity_, isStrong_, tagNames.drhodtstar ) );
       }
     }
@@ -304,72 +305,40 @@ namespace Wasatch{
     const TagNames& tagNames = TagNames::self();
     const Expr::Tag rhsStarTag = tagNames.make_star_rhs( this->solution_variable_tag() );
   
-    // add dummy functors on ALL patches
-    if (!isConstDensity_)
-    {
-      const Expr::Tag solnVarStarTag = tagNames.make_star(this->solution_variable_name());
-      bcHelper.create_dummy_dependency<FieldT>(solnVarStarTag, tag_list(solution_variable_tag()), ADVANCE_SOLUTION);
-    }
-    
     // make logical decisions based on the specified boundary types
-    BOOST_FOREACH( BndMapT::value_type& bndPair, bcHelper.get_boundary_information() )
-    {
+    BOOST_FOREACH( BndMapT::value_type& bndPair, bcHelper.get_boundary_information() ){
       const std::string& bndName = bndPair.first;
       BndSpec& myBndSpec = bndPair.second;
-                  
+      
       if (!isConstDensity_) {
-        // set bcs for solnVar_*
-        const Expr::Tag solnVarStarTag = tagNames.make_star(this->solution_variable_name());
-        
-        // check if this boundary has the solution variable specification on it. it better have!
-        if (myBndSpec.has_field(solution_variable_name())) {
-          // grab the bc specification of the solution variable on this boundary. Note that here we
-          // should guarantee that the spec is found!
-          const BndCondSpec* phiBCSpec = myBndSpec.find(solution_variable_name());
-          assert(phiBCSpec);
-
-          if (!phiBCSpec->is_functor() ) {
-            // if the boundary condition is not a functor (i.e. a constant value), then simply
-            // copy that value into a new BCSpec for the solution variable estimate (rhof*)
-            BndCondSpec phiStarBCSpec = *phiBCSpec; // copy the spec from the velocity
-            phiStarBCSpec.varName = solnVarStarTag.name(); // change the name to the starred velocity
-            bcHelper.add_boundary_condition(bndName, phiStarBCSpec);
-          } else {
-            // if it is a functor type, then create a BCCopier
-            // create tagname for the bc copier
-            const Expr::Tag solnVarStarBCTag( solnVarStarTag.name() + "_" + bndName + "_bccopier",Expr::STATE_NONE);
-            // create and register the BCCopier
-            typedef typename BCCopier<FieldT>::Builder Copier;
-            advSlnFactory.register_expression(scinew Copier(solnVarStarBCTag,solution_variable_tag()));
-            // specify the bc on rhof* using the bc copier functor
-            BndCondSpec phiStarBCSpec = {solnVarStarTag.name(), solnVarStarBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
-            // add it to the boundary conditions!
-            bcHelper.add_boundary_condition(bndName, phiStarBCSpec);
-          }
+        // for variable density problems, we must ALWAYS guarantee proper boundary conditions for
+        // rhof_{n+1}. Since we apply bcs on rhof at the bottom of the graph, we can't apply
+        // the same bcs on rhof (time advanced). Hence, we set rhof_rhs to zero always :)
+        if( !myBndSpec.has_field(rhs_name()) ){
+          BndCondSpec rhsBCSpec = {rhs_name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE };
+          bcHelper.add_boundary_condition(bndName, rhsBCSpec);
         }
       }
       
-      switch (myBndSpec.type) {
+      switch ( myBndSpec.type ){
         case WALL:
         case VELOCITY:
         case OUTFLOW:
         case OPEN:{
-          // first check if the user specified boundary conditions at the wall
-          if( myBndSpec.has_field(rhs_name()) || myBndSpec.has_field(rhsStarTag.name()) ){
-            std::ostringstream msg;
-            msg << "ERROR: You cannot specify scalar rhs boundary conditions unless you specify USER "
-                << "as the type for the boundary condition. Please revise your input file. "
-                << "This error occured while trying to analyze boundary " << bndName
-                << std::endl;
-            throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-          }
-          
-          BndCondSpec rhsBCSpec = {rhs_name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE };
-          bcHelper.add_boundary_condition(bndName, rhsBCSpec);
-          
-          if (!isConstDensity_) {
-            BndCondSpec rhsStarBCSpec = {rhsStarTag.name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE };
-            bcHelper.add_boundary_condition(bndName, rhsStarBCSpec);
+          // for constant density problems, on all types of boundary conditions, set the scalar rhs
+          // to zero. The variable density case requires setting the scalar rhs to zero ALL the time
+          // and is handled in the code above.
+          if (isConstDensity_) {
+            if( myBndSpec.has_field(rhs_name()) ){
+              std::ostringstream msg;
+              msg << "ERROR: You cannot specify scalar rhs boundary conditions unless you specify USER "
+              << "as the type for the boundary condition. Please revise your input file. "
+              << "This error occured while trying to analyze boundary " << bndName
+              << std::endl;
+              throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+            }
+            BndCondSpec rhsBCSpec = {rhs_name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE };
+            bcHelper.add_boundary_condition(bndName, rhsBCSpec);
           }
           
           break;
@@ -394,16 +363,15 @@ namespace Wasatch{
                              BCHelper& bcHelper )
   {            
     const Category taskCat = ADVANCE_SOLUTION;
-    bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );    
-    
+    bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
     bcHelper.apply_boundary_condition<FieldT>( rhs_tag(), taskCat, true ); // apply the rhs bc directly inside the extra cell
   
-    if( !isConstDensity_ ){
+    if( !isConstDensity_ && hasConvection_ ){
       // set bcs for solnVar_*
       const TagNames& tagNames = TagNames::self();
       const Expr::Tag solnVarStarTag = tagNames.make_star(this->solution_variable_name());
-      bcHelper.apply_boundary_condition<FieldT>( solnVarStarTag, taskCat );
-      bcHelper.apply_boundary_condition<FieldT>( Expr::Tag(rhs_tag().name() + tagNames.star, Expr::STATE_NONE), taskCat, true );
+      //bcHelper.apply_boundary_condition<FieldT>( solnVarStarTag, taskCat );
+      //bcHelper.apply_boundary_condition<FieldT>( Expr::Tag(rhs_tag().name() + tagNames.star, Expr::STATE_NONE), taskCat, true );
       bcHelper.apply_boundary_condition<FieldT>( primVarTag_, taskCat );
     }
   }

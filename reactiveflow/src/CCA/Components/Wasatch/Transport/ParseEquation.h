@@ -143,7 +143,13 @@ namespace Wasatch{
   void parse_poisson_equation( Uintah::ProblemSpecP params,
                                GraphCategories& gc,
                                Uintah::SolverInterface& linSolver,
-                               Uintah::SimulationStateP& sharedState);
+                               Uintah::SimulationStateP& sharedState );
+
+  void parse_radiation_solver( Uintah::ProblemSpecP params,
+                               GraphHelper& gh,
+                               Uintah::SolverInterface& linSolver,
+                               Uintah::SimulationStateP& sharedState,
+                               std::set<std::string>& lockedFields );
 
 
   /**
@@ -161,9 +167,9 @@ namespace Wasatch{
    *  \param gc The GraphCategories.
    */
   void parse_var_den_mms( Uintah::ProblemSpecP wasatchParams,
-                           Uintah::ProblemSpecP varDensMMSParams,
-                           const bool computeContinuityResidual,
-                           GraphCategories& gc);
+                          Uintah::ProblemSpecP varDensMMSParams,
+                          const bool computeContinuityResidual,
+                          GraphCategories& gc);
   
   
   /**

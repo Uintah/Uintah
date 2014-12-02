@@ -717,7 +717,11 @@ void TaskInterface::schedule_bcs( const LevelP& level,
 
     Task* tsk = scinew Task( _task_name, this, &TaskInterface::do_task, variable_registry, time_substep ); 
 
+    int counter = 0; 
+
     BOOST_FOREACH( VariableInformation &ivar, variable_registry ){ 
+
+      counter++; 
 
       switch(ivar.depend){
 
@@ -762,7 +766,10 @@ void TaskInterface::schedule_bcs( const LevelP& level,
     //other variables: 
     tsk->requires(Task::OldDW, VarLabel::find("delT")); 
 
-    sched->addTask( tsk, level->eachPatch(), matls );
+    if ( counter > 0 )
+      sched->addTask( tsk, level->eachPatch(), matls );
+    else 
+      delete tsk; 
   }
 
 }
@@ -783,9 +790,11 @@ void TaskInterface::schedule_init( const LevelP& level,
 
     Task* tsk = scinew Task( _task_name+"_initialize", this, &TaskInterface::do_init, variable_registry ); 
 
-    int var_count = 0;
+    int counter = 0;
 
     BOOST_FOREACH( VariableInformation &ivar, variable_registry ){ 
+
+      counter++; 
 
       if ( ivar.dw == OLDDW ){ 
         throw InvalidValue("Arches Task Error: Cannot use OLDDW for initialization task: "+_task_name, __FILE__, __LINE__); 
@@ -812,7 +821,7 @@ void TaskInterface::schedule_init( const LevelP& level,
       var_count++; 
     }
 
-    if ( var_count > 0 )
+    if ( counter > 0 )
       sched->addTask( tsk, level->eachPatch(), matls );
     else 
       delete tsk;
@@ -828,6 +837,7 @@ void TaskInterface::schedule_timestep_init( const LevelP& level,
                                             const MaterialSet* matls ){ 
 
   if ( _do_ts_init_task ){ 
+
     std::vector<VariableInformation> variable_registry; 
 
     register_timestep_init( variable_registry ); 
@@ -836,7 +846,11 @@ void TaskInterface::schedule_timestep_init( const LevelP& level,
 
     Task* tsk = scinew Task( _task_name+"_timestep_initialize", this, &TaskInterface::do_timestep_init, variable_registry ); 
 
+    int counter = 0; 
+
     BOOST_FOREACH( VariableInformation &ivar, variable_registry ){ 
+
+      counter++; 
 
       switch(ivar.depend){
 
@@ -866,7 +880,11 @@ void TaskInterface::schedule_timestep_init( const LevelP& level,
       }
     }
 
-    sched->addTask( tsk, level->eachPatch(), matls );
+    if ( counter > 0 )
+      sched->addTask( tsk, level->eachPatch(), matls );
+    else 
+      delete tsk; 
+
   }
 
 }

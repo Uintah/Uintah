@@ -419,7 +419,7 @@
       <PropertyModels>
         <model type="radiation_properties" label="gas_abskg">
           <initialization type="constant">
-            <constant>0.0</constant>
+            <constant>1.0</constant>
           </initialization>
           <calculator type="hottel_sarofim">
             <opl>3.0</opl>

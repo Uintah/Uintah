@@ -35,7 +35,12 @@ CQMOMSourceWrapper::problemSetup(const ProblemSpecP& inputdb)
   ProblemSpecP cqmom_db = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("CQMOM");
 
   cqmom_db->get("NumberInternalCoordinates",M);
-  db->get("N", _N ); //total number of nodes
+  std::vector<int> N_i;
+  cqmom_db->get("QuadratureNodes",N_i);
+  _N = 1;
+  for (int i = 0; i < M; i++) {
+    _N *= N_i[i];
+  }
   
   inputdb->getAttribute("label",model_name);
   

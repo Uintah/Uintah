@@ -57,6 +57,9 @@
 #include <CCA/Components/Wasatch/Expressions/MMS/VardenMMS.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/Varden2DMMS.h>
 #include <CCA/Components/Wasatch/Expressions/Particles/ParticleGasMomentumSrc.h>
+#include <CCA/Components/Wasatch/Expressions/SimpleEmission.h>
+#include <CCA/Components/Wasatch/Expressions/DORadSolver.h>
+
 //-- Uintah includes --//
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -161,7 +164,7 @@ namespace Wasatch{
     // set up initial conditions on this transport equation
     try{
       proc0cout << "Setting initial conditions for transport equation '" << solnVariable << "'" << std::endl;
-      GraphHelper* const icGraphHelper   = gc[INITIALIZATION  ];
+      GraphHelper* const icGraphHelper = gc[INITIALIZATION  ];
       icGraphHelper->rootIDs.insert( transeqn->initial_condition( *icGraphHelper->exprFactory ) );
     }
     catch( std::runtime_error& e ){
@@ -283,6 +286,60 @@ namespace Wasatch{
 
   //==================================================================
   
+  void parse_radiation_solver( Uintah::ProblemSpecP params,
+                               GraphHelper& gh,
+                               Uintah::SolverInterface& linSolver,
+                               Uintah::SimulationStateP& sharedState,
+                               std::set<std::string>& lockedFields )
+  {
+    const Expr::Tag tempTag = parse_nametag( params->findBlock("Temperature")->findBlock("NameTag") );
+    const Expr::Tag divQTag = parse_nametag( params->findBlock("DivQ")->findBlock("NameTag") );
+
+    Expr::Tag absCoefTag;
+    if( params->findBlock("AbsorptionCoefficient") )
+      absCoefTag = parse_nametag( params->findBlock("AbsorptionCoefficient")->findBlock("NameTag") );
+
+    if( params->findBlock("SimpleEmission") ){
+      Uintah::ProblemSpecP envTempParams = params->findBlock("SimpleEmission")->findBlock("EnvironmentTemperature");
+      if( envTempParams->findBlock("Constant") ){
+        double envTempVal = 0.0;
+        envTempParams->findBlock("Constant")->getAttribute( "value", envTempVal );
+        gh.exprFactory->register_expression( new SimpleEmission<SVolField>::Builder( divQTag, tempTag, envTempVal, absCoefTag ) );
+      }
+      else{
+        const Expr::Tag envTempTag = parse_nametag( envTempParams );
+        gh.exprFactory->register_expression( new SimpleEmission<SVolField>::Builder( divQTag, tempTag, envTempTag, absCoefTag ) );
+      }
+    }
+    else if( params->findBlock("DiscreteOrdinates") ){
+      Uintah::SolverParameters* sparams = linSolver.readParameters( params, "", sharedState );
+
+      int order = 2;
+      params->findBlock("DiscreteOrdinates")->getAttribute("order",order);
+
+      Expr::Tag scatCoef;  // currently we are not ready for scattering.
+//      if( params->findBlock("ScatteringCoefficient") ) parse_nametag( params->findBlock("ScatteringCoefficient") );
+
+      const OrdinateDirections discOrd( order );
+      Expr::TagList intensityTags;
+      for( size_t i=0; i< discOrd.number_of_directions(); ++i ){
+        const OrdinateDirections::SVec& svec = discOrd.get_ordinate_information(i);
+        const std::string intensity( "intensity_" + boost::lexical_cast<std::string>(i) );
+        std::cout << "registering expression for " << intensity << std::endl;
+        DORadSolver::Builder* radSolver = new DORadSolver::Builder( intensity, svec, absCoefTag, scatCoef, tempTag, *sparams, linSolver );
+        const Expr::ExpressionID id = gh.exprFactory->register_expression( radSolver );
+        gh.exprFactory->cleave_from_children( id );
+        gh.exprFactory->cleave_from_parents ( id );
+        BOOST_FOREACH( const Expr::Tag& tag, radSolver->get_tags() ){
+          lockedFields.insert( tag.name() );
+        }
+      }
+      gh.exprFactory->register_expression( new DORadSrc::Builder( divQTag, tempTag, absCoefTag, discOrd ) );
+    }
+  }
+
+  //==================================================================
+
   void parse_var_den_mms( Uintah::ProblemSpecP wasatchParams,
                           Uintah::ProblemSpecP varDensMMSParams,
                           const bool computeContinuityResidual,
@@ -352,6 +409,7 @@ namespace Wasatch{
     Uintah::ProblemSpecP densityParams  = wasatchParams->findBlock("Density");
     Uintah::ProblemSpecP momEqnParams  = wasatchParams->findBlock("MomentumEquations");
     Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
+    Expr::Tag densStarTag = tagNames.make_star(densityTag, Expr::CARRY_FORWARD);
     Expr::Tag dens2StarTag = tagNames.make_double_star(densityTag, Expr::CARRY_FORWARD);
     
     std::string xvelname, yvelname, zvelname;
@@ -372,7 +430,7 @@ namespace Wasatch{
     VarDenParameters varDenParams;
     parse_varden_input(varDenModelParams, varDenParams);
     
-    slngraphHelper->exprFactory->register_expression( new VarDen1DMMSContinuitySrc<SVolField>::Builder( tagNames.mms_continuitysrc, rho0, rho1, densityTag, dens2StarTag, velTags, tagNames.xsvolcoord, tagNames.time, tagNames.dt, varDenParams));
+    slngraphHelper->exprFactory->register_expression( new VarDen1DMMSContinuitySrc<SVolField>::Builder( tagNames.mms_continuitysrc, rho0, rho1, densityTag, densStarTag, dens2StarTag, velTags, tagNames.xsvolcoord, tagNames.time, tagNames.dt, varDenParams));
     slngraphHelper->exprFactory->register_expression( new VarDen1DMMSPressureContSrc<SVolField>::Builder( tagNames.mms_pressurecontsrc, tagNames.mms_continuitysrc, tagNames.dt));
     
     slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_pressurecontsrc, tagNames.pressuresrc);
@@ -407,9 +465,25 @@ namespace Wasatch{
     
     const Expr::Tag solnVarRHSTag     = Expr::Tag(solnVarName+"_rhs",Expr::STATE_NONE);
     const Expr::Tag solnVarRHSStarTag = tagNames.make_star_rhs(solnVarName);
+
+    std::string x1="X", x2="Y";
+    if (varDens2DMMSParams->findAttribute("x1"))
+      varDens2DMMSParams->getAttribute("x1",x1);
+    if (varDens2DMMSParams->findAttribute("x2"))
+      varDens2DMMSParams->getAttribute("x2",x2);
+
+    Expr::Tag x1Tag, x2Tag;
     
+    if      (x1 == "X")  x1Tag = tagNames.xsvolcoord;
+    else if (x1 == "Y")  x1Tag = tagNames.ysvolcoord;
+    else if (x1 == "Z")  x1Tag = tagNames.zsvolcoord;
+    
+    if      (x2 == "X")  x2Tag = tagNames.xsvolcoord;
+    else if (x2 == "Y")  x2Tag = tagNames.ysvolcoord;
+    else if (x2 == "Z")  x2Tag = tagNames.zsvolcoord;
+
     GraphHelper* const slngraphHelper = gc[ADVANCE_SOLUTION];
-    slngraphHelper->exprFactory->register_expression( new VarDenMMSOscillatingMixFracSrc<SVolField>::Builder(tagNames.mms_mixfracsrc, tagNames.xsvolcoord, tagNames.ysvolcoord, tagNames.time, rho0, rho1, d, w, k, uf, vf));
+    slngraphHelper->exprFactory->register_expression( new VarDenMMSOscillatingMixFracSrc<SVolField>::Builder(tagNames.mms_mixfracsrc, x1Tag, x2Tag, tagNames.time, rho0, rho1, d, w, k, uf, vf));
     
     slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_mixfracsrc, solnVarRHSTag);
     slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_mixfracsrc, solnVarRHSStarTag);
@@ -464,7 +538,7 @@ namespace Wasatch{
     VarDenParameters varDenParams;
     parse_varden_input(varDenModelParams, varDenParams);
 
-    slngraphHelper->exprFactory->register_expression( new VarDenMMSOscillatingContinuitySrc<SVolField>::Builder( tagNames.mms_continuitysrc, densityTag, densStarTag, dens2StarTag, velTags, velStarTags, rho0, rho1,w, k, uf, vf, tagNames.xsvolcoord, tagNames.ysvolcoord, tagNames.time, tagNames.dt, varDenParams));
+    slngraphHelper->exprFactory->register_expression( new VarDenMMSOscillatingContinuitySrc<SVolField>::Builder( tagNames.mms_continuitysrc, densityTag, densStarTag, dens2StarTag, velTags, velStarTags, rho0, rho1,w, k, uf, vf, x1Tag, x2Tag, tagNames.time, tagNames.dt, varDenParams));
     slngraphHelper->exprFactory->register_expression( new VarDen1DMMSPressureContSrc<SVolField>::Builder( tagNames.mms_pressurecontsrc, tagNames.mms_continuitysrc, tagNames.dt));
     
     slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_pressurecontsrc, tagNames.pressuresrc);
@@ -970,8 +1044,7 @@ namespace Wasatch{
       // make new Tag for solnVar by adding the appropriate suffix ( "_*" or nothing ). This
       // is because we need the ScalarRHS at time step n+1 for our pressure projection method
       Expr::Tag solnVarCorrectedTag;
-      if (suffix=="") solnVarCorrectedTag = Expr::Tag(solnVarTag.name(),        Expr::STATE_DYNAMIC   );
-      else            solnVarCorrectedTag = Expr::Tag(solnVarTag.name()+suffix, Expr::STATE_NONE);
+      solnVarCorrectedTag = Expr::Tag(solnVarTag.name(),   suffix=="" ? Expr::STATE_DYNAMIC : Expr::STATE_NONE );
 
       Expr::ExpressionBuilder* builder = NULL;
 
@@ -1138,8 +1211,7 @@ namespace Wasatch{
     }
     else{ // build an expression for the diffusive flux.
 
-      for (std::string::iterator it = direction.begin(); it != direction.end(); ++it)
-      {
+      for( std::string::iterator it = direction.begin(); it != direction.end(); ++it ){
         std::string dir(1,*it);
         const TagNames& tagNames = TagNames::self();
         diffFluxTag = Expr::Tag( primVarName + suffix + tagNames.diffusiveflux + dir, Expr::STATE_NONE );
