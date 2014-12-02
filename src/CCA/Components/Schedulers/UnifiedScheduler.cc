@@ -35,6 +35,7 @@
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Thread.h>
+#include <Core/Thread/ThreadGroup.h>
 #include <Core/Thread/Mutex.h>
 
 #ifdef HAVE_CUDA
@@ -248,10 +249,10 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
   // Create the UnifiedWorkers here
   char name[1024];
   for (int i = 0; i < numThreads_; i++) {
-    UnifiedSchedulerWorker * worker = scinew UnifiedSchedulerWorker(this, i);
+    UnifiedSchedulerWorker* worker = scinew UnifiedSchedulerWorker(this, i);
     t_worker[i] = worker;
     sprintf(name, "Computing Worker %d-%d", Parallel::getRootProcessorGroup()->myrank(), i);
-    Thread * t = scinew Thread(worker, name);
+    Thread* t = scinew Thread(worker, name);
     t_thread[i] = t;
   }
 
@@ -266,12 +267,35 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
 //
 SchedulerP UnifiedScheduler::createSubScheduler()
 {
-  UnifiedScheduler* newsched = scinew UnifiedScheduler(d_myworld, m_outPort, this);
-  newsched->d_sharedState = d_sharedState;
+  UnifiedScheduler* subsched = scinew UnifiedScheduler(d_myworld, m_outPort, this);
   UintahParallelPort* lbp = getPort("load balancer");
-  newsched->attachPort("load balancer", lbp);
-  newsched->d_sharedState = d_sharedState;
-  return newsched;
+  subsched->attachPort("load balancer", lbp);
+  subsched->d_sharedState = d_sharedState;
+
+  subsched->numThreads_ = Uintah::Parallel::getNumThreads() - 1;
+
+  // create subscheduler task execution threads
+  if (subsched->numThreads_ > 0) {
+    std::cout << std::endl
+              << "\tUsing EXPERIMENTAL Multi-threaded sub-scheduler" << std::endl
+              << "\tCreating " << subsched->numThreads_
+              << " subscheduler threads for task execution."
+              << std::endl << std::endl;
+
+    char name[1024];
+
+    // Create UnifiedWorker threads for the subscheduler
+    ThreadGroup* subGroup = new ThreadGroup("subscheduler-group", 0);  // 0 is main/parent thread group
+    for (int i = 0; i < subsched->numThreads_; i++) {
+      UnifiedSchedulerWorker* worker = scinew UnifiedSchedulerWorker(subsched, i + subsched->numThreads_);
+      subsched->t_worker[i] = worker;
+      sprintf(name, "Task Compute Thread ID: %d", i + subsched->numThreads_);
+      Thread* t = scinew Thread(worker, name, subGroup);
+      subsched->t_thread[i] = t;
+    }
+  }
+
+  return subsched;
 }
 
 //______________________________________________________________________
@@ -486,13 +510,20 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
 
   // Do the work of the SingleProcessorScheduler and bail
   //   if not using MPI or GPU, and also not using multiple threads
-  if (!Uintah::Parallel::usingMPI() && (numThreads_ < 0) && !Uintah::Parallel::usingDevice()) {
-    for (int i = 0; i < ntasks; i++) {
-      DetailedTask* dtask = dts->getTask(i);
-      runTask(dtask, iteration, -1, Task::CPU);
+  if (!Uintah::Parallel::usingMPI() && !Uintah::Parallel::usingDevice()) {
+    if (numThreads_ < 0) {
+      for (int i = 0; i < ntasks; i++) {
+        DetailedTask* dtask = dts->getTask(i);
+        runTask(dtask, iteration, -1, Task::CPU);
+      }
+      finalizeTimestep();
+      return;
     }
-    finalizeTimestep();
-    return;
+    else {
+      throw ProblemSetupException(
+          "MPI runtime not initialized. You must  use '-mpi' command line option in conjunction with '-nthreads'",
+          __FILE__, __LINE__);
+    }
   }
 
   int me = d_myworld->myrank();
