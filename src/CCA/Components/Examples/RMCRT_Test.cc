@@ -54,9 +54,8 @@
 using namespace std;
 using SCIRun::Point;
 using SCIRun::Vector;
-using SCIRun::DebugStream;
 
-static DebugStream dbg("RMCRT_Test", false);
+static SCIRun::DebugStream dbg("RMCRT_Test", false);
 
 
 namespace Uintah
@@ -439,8 +438,8 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     }
 
     //__________________________________
-    // push divQ  to the coarser levels
-    for (int l = 0; l < maxLevels; l++) {
+    // interpolate divQ on coarse level -> fine level
+    for (int l = 1; l < maxLevels; l++) {
       const LevelP& level = grid->getLevel(l);
       const PatchSet* patches = level->eachPatch();
       d_RMCRT->sched_Refine_Q (sched,  patches, matls, d_radCalc_freq);

@@ -89,7 +89,13 @@ public:
                                   ArchesVariables* vars,
                                   ArchesConstVariables* constvars, 
                                   CCVariable<double>& divQ,
-                                  int wall_type);
+                                  int wall_type, int matlIndex, DataWarehouse* new_dw, DataWarehouse* old_dw);
+             int getIntOrdinates();
+
+             bool reflectionsBool();
+               
+             bool DOSolveInitialGuessBool();
+
 
 private:
 
@@ -103,7 +109,6 @@ private:
       int d_sn, d_totalOrds; // totalOrdinates = sn*(sn+2)
 
       void computeOrdinatesOPL();
-      
       int d_lambda;
       int ffield;
 
@@ -128,6 +133,11 @@ private:
       OffsetArray1<double> qfluxbbm;
 
       bool d_print_all_info; 
+      bool reflectionsTurnedOn;
+      bool usePreviousIntensity;
+
+      std::vector< const VarLabel*> _IntensityLabels;
+      std::vector< const VarLabel*> _IncidentIntensityLabels;
 
 }; // end class RadiationModel
 

@@ -925,7 +925,9 @@ AC_DEFUN(SCI_CHECK_VERSION,
     _CUR_1_=""
     _CUR_2_=""
 
-    AC_MSG_CHECKING(for `basename $1` version $3)
+    eval _NAME_=`basename $1`
+
+    AC_MSG_CHECKING(for $_NAME_ version $3)
 
     if test "$4"; then
       _SCI_CORRECT_='$4'
@@ -941,8 +943,9 @@ AC_DEFUN(SCI_CHECK_VERSION,
       _SCI_COMP_="-gt"
     fi
 
-    eval "$1 $2 2> conftest.out >> conftest.out"
-    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[[^0-9\. ]]*%%g;s%^[ ]*%%' | cut -f1 -d' ' `"
+    eval "$1 $2 &> conftest.out"
+
+    _SCI_REPORT_="`cat conftest.out | grep -v Configure | head -n 1 | sed 's%[[^0-9\. ]]*%%g;s%^[ ]*%%' | cut -f1 -d' ' `"
     _SCI_VER_1_="$_SCI_REPORT_"
 
     _SCI_BIGGER_=yes
@@ -959,7 +962,7 @@ AC_DEFUN(SCI_CHECK_VERSION,
       if test "$_CUR_2_" $_SCI_COMP_ "$_CUR_1_"; then
         _SCI_BIGGER_=no
         break
-      elif test $_CUR_1_ -gt $_CUR_2_; then
+      elif test "$_CUR_1_" -gt "$_CUR_2_"; then
         break
       fi
     done
@@ -1136,7 +1139,7 @@ AC_DEFUN(SCI_CHECK_VAR_VERSION,
       if test "$_CUR_2_" $_SCI_COMP_ "$_CUR_1_"; then
         _SCI_BIGGER_=no
         break
-      elif test $_CUR_1_ -gt $_CUR_2_; then
+      elif test "$_CUR_1_" -gt "$_CUR_2_"; then
         break
       fi
     done
@@ -1204,7 +1207,7 @@ AC_DEFUN(SCI_CHECK_OS_VERSION,
       if test "$_CUR_2_" $_SCI_COMP_ "$_CUR_1_"; then
         _SCI_BIGGER_=no
         break
-      elif test $_CUR_1_ -gt $_CUR_2_; then
+      elif test "$_CUR_1_" -gt "$_CUR_2_"; then
         break
       fi
     done

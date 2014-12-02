@@ -1036,11 +1036,18 @@ case $host in
      *-darwin*)
         # New Mac Clang comiler does not support the -faltivec flag...
         altivec="-faltivec"
-        $CC --version | grep -q -i clang > /dev/null 2>&1
+        ($CC --version | grep -q -i clang) &> /dev/null
         if test $? = 0; then
            altivec="" 
         fi
+
+        uname -r | grep "14\." &> /dev/null
+        if test $? = 0; then
+           yosemite=yes
+        fi
+
 	SO_OR_ARCHIVE_EXTENSION=dylib
+
         if test "$enable_sci_malloc" = "yes"; then
            AC_MSG_ERROR(sci_malloc does not work under mac osx. Though you can try to use: --enable-sci-malloc=force)
            enable_sci_malloc="no"
@@ -2927,17 +2934,6 @@ if test ! "$HAVE_BLAS"; then
   fi
 
   case $host in
-    *-darwin*)
-       if test "$with_atlas" && test "$with_atlas" != yes ; then
-         AC_MSG_ERROR(Don't specify a path for atlas when on a Mac (we use vecLib by default.))
-       fi
-       SCI_TRY_LINK(BLAS,atlas version of libraries and headers (OSX),vecLib/cblas.h,
-                    $altivec,,,-framework vecLib,[
-                                                   float x[]={0.7f};
-                                                   float y[]={0.8f};
-                                                   float test=cblas_sdsdot(1,0.0,x,1,y,-1); 
-                                                   ],$_sci_optional)
-       ;;
      *)
        SCI_TRY_LINK(BLAS,atlas version of libraries and headers,cblas.h,
                     $_sci_inc,cblas f77blas atlas,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,[
@@ -2968,6 +2964,7 @@ _sci_lib=
 _sci_inc=
 
 if test "$HAVE_BLAS" != "yes"; then
+
   # if HAVE_BLAS is yes at this point, then atlas has been found and we
   # don't want to check for blas.
 
@@ -2978,6 +2975,35 @@ if test "$HAVE_BLAS" != "yes"; then
   fi
   
   case $host in
+    *-darwin*)
+       if test "$yosemite" = yes; then
+          SCI_TRY_LINK(BLAS,blas and cblas libraries-darwin-yosemite,Accelerate/Accelerate.h,
+                       $_sci_inc,cblas blas,$_sci_lib,-framework Accelerate $F_LIB_DIR_FLAG $F_LIB_FLAG,[
+                                                                                float x[]={0.7f};
+                                                                                float y[]={0.8f};
+                                                                                float test=cblas_sdsdot(1,0.0,x,1,y,-1); 
+                                                                                ],optional)
+          if test "$HAVE_BLAS" = yes ; then
+             BLAS_LIB_FLAG="-framework Accelerate"
+             CBLAS_H="Accelerate/Accelerate.h"
+             HAVE_CBLAS=yes
+             DEF_CBLAS="#define HAVE_CBLAS 1"
+          fi
+       else
+          SCI_TRY_LINK(BLAS,blas and cblas libraries-darwin,vecLib/cblas.h,
+                       $_sci_inc,cblas blas,$_sci_lib,-framework vecLib $F_LIB_DIR_FLAG $F_LIB_FLAG,[
+                                                                                float x[]={0.7f};
+                                                                                float y[]={0.8f};
+                                                                                float test=cblas_sdsdot(1,0.0,x,1,y,-1); 
+                                                                                ],optional)
+          if test "$HAVE_BLAS" = yes ; then
+             BLAS_LIB_FLAG="-framework vecLib"
+             CBLAS_H="vecLib/cblas.h"
+             HAVE_CBLAS=yes
+             DEF_CBLAS="#define HAVE_CBLAS 1"
+          fi
+       fi
+       ;;
     *dec*)
        SCI_TRY_LINK(BLAS,cxml library,,,
                       cxml,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,required)
@@ -3073,10 +3099,19 @@ if test "$HAVE_LAPACK" != "yes"; then
 
   case $host in
     *-darwin*)
-       SCI_TRY_LINK(LAPACK,lapack version oflibraries and headers,
-                    vecLib/clapack.h,,,,$altivec -framework vecLib,,optional)
-       if test "$HAVE_LAPACK" = yes ; then
-          LAPACK_LIB_FLAG="$altivec -framework vecLib"
+
+       if test "$yosemite" = yes; then
+          SCI_TRY_LINK(LAPACK,Mac Accelerate lapack version of libraries and headers,
+                       Accelerate/Accelerate.h,,,,-framework Accelerate,,optional)
+          if test "$HAVE_LAPACK" = yes ; then
+             LAPACK_LIB_FLAG="-framework Accelerate"
+          fi
+       else
+          SCI_TRY_LINK(LAPACK,Old Mac lapack version of libraries and headers,
+                       vecLib/clapack.h,,,,$altivec -framework vecLib,,optional)
+          if test "$HAVE_LAPACK" = yes ; then
+             LAPACK_LIB_FLAG="$altivec -framework vecLib"
+          fi
        fi
        ;;
      *)

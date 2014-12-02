@@ -34,6 +34,7 @@
     <save label="arches_task_scalar"/>
     <save label="arches_task_scalar_RHS"/>
     <save label="arches_task_scalar_Fdiff"/>
+    <save label="arches_task_scalar_Fconv"/>
     <save label="arches_task_scalar_D"/>
     <save label="my_model_0"/>
     <checkpoint cycle="2" interval="0.05"/>
@@ -73,23 +74,23 @@
       <ScalarTransport>
         <eqn label="arches_task_scalar">
           <diffusion/>
-          <!--<convection scheme="superbee"/>-->
-          <convection scheme="minmod"/>
+          <convection scheme="superbee"/>
+          <!--<convection scheme="minmod"/>-->
         </eqn>
       </ScalarTransport>
 
       <Initialization>
         <task label="my_great_initializer" eqn="arches_task_scalar" type="wave">
-          <!--<wave type="sine">-->
-            <!--<grid dependent_type="svol" independent_type="svol"/>-->
-            <!--<independent_variable label="gridX"/>-->
-            <!--<sine A="1.0" f=".5" offset="0"/>-->
-          <!--</wave>-->
-          <wave type="square">
+          <wave type="sine">
             <grid dependent_type="svol" independent_type="svol"/>
             <independent_variable label="gridX"/>
-            <square min="0.0" max="1.0" f="1.0" offset="0.0"/>
+            <sine A="1.0" f=".5" offset="0"/>
           </wave>
+          <!--<wave type="square">-->
+            <!--<grid dependent_type="svol" independent_type="svol"/>-->
+            <!--<independent_variable label="gridX"/>-->
+            <!--<square min="0.0" max="1.0" f="1.0" offset="0.0"/>-->
+          <!--</wave>-->
         </task>
       </Initialization>
 

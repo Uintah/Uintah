@@ -1,0 +1,13 @@
+---------------------------------
+Thu Oct 16 23:43:44 EDT 2014
+SCRIPT_DIR=/lustre/atlas/proj-shared/cmb109/alan/rmcrt-adaptive-2l-scaling/medium
+ups=1024.ups
+procs=1024
+size=16384
+threads=16
+way=1
+nodes=1024
+pwd=/lustre/atlas/proj-shared/cmb109/alan/rmcrt-adaptive-2l-scaling/medium/output
+---------------------------------
+/lustre/atlas/proj-shared/cmb109/alan/rmcrt-adaptive-2l-scaling/medium/output
+aprun -n 1024 -N 1 -d 16 ../../sus -mpi -do_not_validate -nthreads 16 ../tmp/1024.ups &> rmcrt.bm1.do.med.16.1024.16384.out

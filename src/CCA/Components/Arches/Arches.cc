@@ -287,11 +287,6 @@ Arches::~Arches()
   delete d_wasatch;
 #endif // WASATCH_IN_ARCHES
 
-  typedef std::map<std::string, TaskFactoryBase*> FM;  
-  for (FM::iterator i = _factory_map.begin(); i != _factory_map.end(); i++){ 
-    delete i->second; 
-  }
-
   delete _particlesHelper; 
 
 }
@@ -304,6 +299,7 @@ Arches::problemSetup(const ProblemSpecP& params,
                      const ProblemSpecP& materials_ps,
                      GridP& grid, SimulationStateP& sharedState)
 {
+
   d_sharedState= sharedState;
   d_lab->setSharedState(sharedState);
   ArchesMaterial* mat= scinew ArchesMaterial();
@@ -314,36 +310,38 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   //==============NEW TASK STUFF
   //build the factories
-  UtilityFactory* utility_factory = scinew UtilityFactory(); 
-  TransportFactory* transport_factory = scinew TransportFactory(); 
-  InitializeFactory* init_factory = scinew InitializeFactory(); 
-  ParticleModelFactory* particle_model_factory = scinew ParticleModelFactory(); 
-  LagrangianParticleFactory* lagrangian_particle_factory = scinew LagrangianParticleFactory(); 
-  lagrangian_particle_factory->set_particle_helper(_particlesHelper); 
-  //SampleFactory* sample_factory = scinew SampleFactory(); 
+  boost::shared_ptr<UtilityFactory> UtilF(scinew UtilityFactory()); 
+  boost::shared_ptr<TransportFactory> TransF(scinew TransportFactory()); 
+  boost::shared_ptr<InitializeFactory> InitF(scinew InitializeFactory()); 
+  boost::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory()); 
+  boost::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory()); 
 
-  //insert the factories into a map
-  _factory_map.clear(); 
-  _factory_map.insert(std::make_pair("utility_factory",utility_factory));
-  _factory_map.insert(std::make_pair("transport_factory",transport_factory)); 
-  _factory_map.insert(std::make_pair("init_factory",init_factory)); 
-  _factory_map.insert(std::make_pair("particle_model_factory",particle_model_factory));
-  _factory_map.insert(std::make_pair("lagrangian_particle_factory",lagrangian_particle_factory));
-  //_factory_map.insert(std::make_pair("sample_factory",sample_factory)); 
+  _boost_factory_map.clear(); 
+  _boost_factory_map.insert(std::make_pair("utility_factory",UtilF)); 
+  _boost_factory_map.insert(std::make_pair("transport_factory",TransF)); 
+  _boost_factory_map.insert(std::make_pair("initialize_factory",InitF)); 
+  _boost_factory_map.insert(std::make_pair("particle_model_factory",PartModF)); 
+  _boost_factory_map.insert(std::make_pair("lagrangian_factory",LagF)); 
 
-  typedef std::map<std::string, TaskFactoryBase*>::iterator iFACMAP; 
-  //registering tasks: 
-  for ( iFACMAP i = _factory_map.begin(); i != _factory_map.end(); i++ ){ 
-    i->second->register_all_tasks( db ); 
+  typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
+  std::cout << "\n Registering Tasks For: " << std::endl;
+  for ( BFM::iterator i = _boost_factory_map.begin(); i != _boost_factory_map.end(); i++ ){ 
+
+    std::cout << "   " << i->first << std::endl;
+    i->second->register_all_tasks(db); 
+
   }
-    
-  //building tasks (includes calling problemSetup)
-  for ( iFACMAP i = _factory_map.begin(); i != _factory_map.end(); i++ ){ 
-    i->second->build_all_tasks( db ); 
+  std::cout << "\n Building Tasks For: " << std::endl;
+  for ( BFM::iterator i = _boost_factory_map.begin(); i != _boost_factory_map.end(); i++ ){ 
+
+    std::cout << "   " << i->first << std::endl;
+    i->second->build_all_tasks(db); 
+
   }
+  std::cout << endl;
   //===================END NEW TASK STUFF
 
-  //Checking for lagrangian particles: 
+  //Checking for lagrangian particles:
   _doLagrangianParticles = _arches_spec->findBlock("LagrangianParticles"); 
   if ( _doLagrangianParticles ){ 
     _particlesHelper->problem_setup(_arches_spec->findBlock("LagrangianParticles"), sharedState);
@@ -812,7 +810,7 @@ Arches::problemSetup(const ProblemSpecP& params,
                                        d_turbModel, d_scaleSimilarityModel,
                                        d_physicalConsts, 
                                        d_rad_prop_calc, 
-                                       &_factory_map, 
+                                       _boost_factory_map,
                                        d_myworld,
                                        hypreSolver);
 
@@ -1175,76 +1173,57 @@ Arches::scheduleInitialize(const LevelP& level,
   d_turbModel->sched_computeFilterVol( sched, level, matls ); 
 
   //=========== NEW TASK INTERFACE ==============================
-  // why not put this in a loop? 
-  typedef std::map<std::string, TaskFactoryBase*> FACMAP; 
+  typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
+  BFM::iterator i_util_fac = _boost_factory_map.find("utility_factory"); 
+  BFM::iterator i_trans_fac = _boost_factory_map.find("transport_factory"); 
+  BFM::iterator i_init_fac = _boost_factory_map.find("initialize_factory"); 
+  BFM::iterator i_partmod_fac = _boost_factory_map.find("particle_model_factory"); 
+  BFM::iterator i_lag_fac = _boost_factory_map.find("lagrangian_factory"); 
+
   //utility factory
-  FACMAP::iterator ifac = _factory_map.find("utility_factory"); 
-  TaskFactoryBase::TaskMap all_tasks = ifac->second->retrieve_all_tasks(); 
+  TaskFactoryBase::TaskMap all_tasks = i_util_fac->second->retrieve_all_tasks(); 
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
     i->second->schedule_init(level, sched, matls); 
   }
 
   //transport factory
-  ifac = _factory_map.find("transport_factory"); 
-  all_tasks = ifac->second->retrieve_all_tasks(); 
+  all_tasks.clear();
+  all_tasks = i_trans_fac->second->retrieve_all_tasks(); 
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
-    i->second->schedule_init(level, sched, matls ); 
+    i->second->schedule_init(level, sched, matls); 
   }
 
-  //initialize 
-  ifac = _factory_map.find("init_factory"); 
-  all_tasks = ifac->second->retrieve_all_tasks(); 
-
-  bool break_it = false; 
-
-  //this is a hack to get the particle stuff going in the correct order.  Not sure why the 
-  //framework isn't ordering these tasks based on the dependencies.: 
+  //initialize factory
+  all_tasks.clear();
+  all_tasks = i_init_fac->second->retrieve_all_tasks(); 
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
-
-    if ( break_it ){ 
-      i->second->schedule_init(level, sched, matls ); 
+    if ( i->first == "Lx" || i->first == "Lvel" || i->first == "Ld"){ 
+      std::cout << "Delaying particle calc..." << std::endl;
     } else { 
-      if ( i->first == "Lx" || i->first == "Lvel" || i->first == "Ld"){ 
-        std::cout << " Delaying task schedule.." << std::endl;
-      } else { 
-        i->second->schedule_init(level, sched, matls ); 
-      }
+      i->second->schedule_init(level, sched, matls); 
     }
-
   }
-
-  if ( !break_it ){ 
- 
-    TaskFactoryBase::TaskMap::iterator iLX = all_tasks.find("Lx");
-    if ( iLX != all_tasks.end() ) iLX->second->schedule_init(level, sched, matls); 
-    TaskFactoryBase::TaskMap::iterator iLD = all_tasks.find("Ld"); 
-    if ( iLD != all_tasks.end() ) iLD->second->schedule_init(level, sched, matls); 
-    TaskFactoryBase::TaskMap::iterator iLV = all_tasks.find("Lvel");
-    if ( iLV != all_tasks.end() ) iLV->second->schedule_init(level, sched, matls); 
-
-  }
+  //have to delay and order these specific tasks...clean this up later...
+  TaskFactoryBase::TaskMap::iterator iLX = all_tasks.find("Lx");
+  if ( iLX != all_tasks.end() ) iLX->second->schedule_init(level, sched, matls); 
+  TaskFactoryBase::TaskMap::iterator iLD = all_tasks.find("Ld"); 
+  if ( iLD != all_tasks.end() ) iLD->second->schedule_init(level, sched, matls); 
+  TaskFactoryBase::TaskMap::iterator iLV = all_tasks.find("Lvel");
+  if ( iLV != all_tasks.end() ) iLV->second->schedule_init(level, sched, matls); 
 
   //particle models
-  ifac = _factory_map.find("particle_model_factory"); 
-  all_tasks = ifac->second->retrieve_all_tasks(); 
+  all_tasks.clear(); 
+  all_tasks = i_partmod_fac->second->retrieve_all_tasks(); 
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
     i->second->schedule_init(level, sched, matls ); 
   }
 
   //lagrangian particles
-  ifac = _factory_map.find("lagrangian_particle_factory"); 
-  all_tasks = ifac->second->retrieve_all_tasks(); 
+  all_tasks.clear();
+  all_tasks = i_lag_fac->second->retrieve_all_tasks(); 
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
     i->second->schedule_init(level, sched, matls ); 
   }
-
-  //sample factory
-  //ifac = _factory_map.find("sample_factory"); 
-  //all_tasks = ifac->second->retrieve_all_tasks(); 
-  //for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
-  //  i->second->schedule_init(level, sched, matls); 
-  //}
-
   //===============================================================
 
   // base initialization of all scalars
@@ -1870,9 +1849,9 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 
   if ( _doLagrangianParticles ){ 
 
-    typedef std::map<std::string, TaskFactoryBase*> FACMAP; 
-    FACMAP::iterator ifac = _factory_map.find("lagrangian_particle_factory"); 
-    TaskFactoryBase::TaskMap all_tasks = ifac->second->retrieve_all_tasks(); 
+    typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
+    BFM::iterator i_lag_fac = _boost_factory_map.find("lagrangian_factory"); 
+    TaskFactoryBase::TaskMap all_tasks = i_lag_fac->second->retrieve_all_tasks(); 
 
     TaskFactoryBase::TaskMap::iterator i_part_size_update = all_tasks.find("update_particle_size");  
     TaskFactoryBase::TaskMap::iterator i_part_pos_update = all_tasks.find("update_particle_position");  

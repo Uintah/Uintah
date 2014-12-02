@@ -737,7 +737,9 @@
     <!-- =========================================================================== -->
     <VariableDensity spec="OPTIONAL NO_DATA" 
                      attribute1="model REQUIRED STRING 'CONSTANT, IMPULSE, DYNAMIC'"
-                     attribute2="coefficient REQUIRED DOUBLE"/>
+                     attribute2="coefficient REQUIRED DOUBLE">
+      <UseOnePredictor spec="OPTIONAL NO_DATA"/>
+    </VariableDensity>
     
     <!-- ============================ -->
     <!-- Spec for a TransportEquation -->
@@ -785,6 +787,54 @@
 
     </TransportEquation>
 
+    <!-- Radiation model -->
+    <Radiation      spec="OPTIONAL NO_DATA"
+                    children1="ONE_OF( CHILD SimpleEmission, DiscreteOrdinates )" >
+
+      <!-- name for the divergence of the radiative heat flux -->      
+      <DivQ      spec="REQUIRED NO_DATA">
+        <NameTag spec="REQUIRED"/>
+      </DivQ>
+            
+      <Temperature  spec="REQUIRED NO_DATA">
+        <NameTag    spec="REQUIRED"/>
+      </Temperature>
+      
+      <AbsorptionCoefficient spec="OPTIONAL NO_DATA"> <!-- if omitted, 1.0 is assumed -->
+        <NameTag             spec="REQUIRED"/>
+      </AbsorptionCoefficient>
+
+      <SimpleEmission spec="OPTIONAL NO_DATA"> <!-- sigma * epsilon * (T^4 - Tenv^4) -->
+        <EnvironmentTemperature spec="REQUIRED NO_DATA"
+                                children1="ONE_OF( CHILD NameTag, Constant )">
+          <NameTag  spec="OPTIONAL"/>
+          <Constant spec="OPTIONAL NO_DATA" attribute1="value OPTIONAL DOUBLE"/>
+        </EnvironmentTemperature>
+      </SimpleEmission>
+      
+      <DiscreteOrdinates spec="OPTIONAL NO_DATA" attribute1="order REQUIRED INTEGER"><!-- '2, 4,6 , 8'"-->
+      
+        <Parameters         spec="REQUIRED NO_DATA">      
+          <criteria         spec="OPTIONAL STRING 'Absolute absolute Relative relative'" />                     
+          <jump             spec="OPTIONAL INTEGER" />                                        
+          <logging          spec="OPTIONAL INTEGER 'positive'" />                             
+          <maxiterations    spec="OPTIONAL INTEGER 'positive'" />                             
+          <norm             spec="OPTIONAL STRING 'LInfinity linfinity L1 l1 L2 l2'" />       
+          <npost            spec="OPTIONAL INTEGER" />                                        
+          <npre             spec="OPTIONAL INTEGER" />                                        
+          <preconditioner   spec="REQUIRED STRING 'none, pfmg, smg, jacobi'" />                            
+          <outputEquations  spec="OPTIONAL BOOLEAN" />                                        
+          <skip             spec="OPTIONAL INTEGER" />                                        
+          <setupFrequency   spec="OPTIONAL INTEGER" />                                        
+          <solver           spec="REQUIRED STRING 'smg, SMG, PFMG, pfmg, SparseMSG, sparsemsg, CG, cg, Hybrid, hybrid, GMRES, gmres amg'" />                               
+          <tolerance        spec="REQUIRED DOUBLE" />                                         
+          <relax_type       spec="OPTIONAL INTEGER '0,3'"/> <!-- 0=jacobi,1=weighted jacobi,2=rb symmetric,3=rb non-symmetric --> 
+        </Parameters>
+        
+      </DiscreteOrdinates>
+      
+    </Radiation>
+    
     <ScalabilityTest spec="OPTIONAL NO_DATA">
         <MonolithicRHS      spec="OPTIONAL BOOLEAN"/>
         <SolutionVariable   spec="REQUIRED STRING" />

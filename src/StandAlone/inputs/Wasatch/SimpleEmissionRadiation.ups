@@ -1,0 +1,179 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Test simple emission radiation with reaction model</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+  
+  <Wasatch>
+
+    <Density>
+      <NameTag name="density" state="CARRY_FORWARD" />
+    </Density>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="mixture fraction" state="STATE_NONE"/>
+      <GaussianFunction amplitude="0.90" deviation="0.25" mean="0.0" baseline="0.1">
+        <NameTag name="XSVOL" state="STATE_NONE"/>
+      </GaussianFunction> 
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="HeatLoss" state="STATE_NONE"/>
+      <Constant>0.0</Constant> 
+    </BasicExpression>
+
+    <!-- Set up a tabular property evaluation -->
+    <TabProps>
+      <FileNamePrefix>inputs/Wasatch/h2_equil</FileNamePrefix>
+      <TaskList>initialization</TaskList>
+      <IndependentVariable>
+        <NameTag name="mixture fraction" state="STATE_NONE"/>
+        <NameInTable>MixtureFraction</NameInTable>
+      </IndependentVariable>
+      <IndependentVariable>
+        <NameTag name="HeatLoss" state="STATE_NONE"/>
+        <NameInTable>HeatLoss</NameInTable>
+      </IndependentVariable>
+      <ExtractVariable>
+        <NameInTable>Enthalpy</NameInTable>
+        <NameTag name="h" state="STATE_NONE"/>
+      </ExtractVariable>
+      <ExtractVariable>
+        <NameInTable>Density</NameInTable>
+        <NameTag name="density" state="STATE_NONE"/>
+      </ExtractVariable>
+    </TabProps>
+
+    <TabProps>
+      <FileNamePrefix>inputs/Wasatch/h2_equil</FileNamePrefix>
+      <TaskList>advance_solution</TaskList>
+      <IndependentVariable>
+        <NameTag name="mixture fraction" state="STATE_NONE"/>
+        <NameInTable>MixtureFraction</NameInTable>
+      </IndependentVariable>
+      <IndependentVariable>
+        <NameTag name="HeatLoss" state="CARRY_FORWARD"/>
+        <NameInTable>HeatLoss</NameInTable>
+      </IndependentVariable>
+      <ExtractVariable>
+        <NameInTable>Temperature</NameInTable>
+        <NameTag name="temperature" state="STATE_NONE"/>
+        <Type>SVOL</Type>
+      </ExtractVariable>
+      <ExtractVariable>
+        <NameInTable>SpecificHeat</NameInTable>
+        <NameTag name="cp" state="STATE_NONE"/>
+      </ExtractVariable>
+      <ExtractVariable>
+        <NameInTable>H2O</NameInTable>
+        <NameTag name="H2O" state="STATE_NONE"/>
+      </ExtractVariable>
+
+      <ExtractVariable>
+        <NameInTable>Conductivity</NameInTable>
+        <NameTag name="lambda" state="STATE_NONE"/>
+      </ExtractVariable>
+      
+      <ExtractDensity>
+        <NameTag name="density" state="CARRY_FORWARD"/>
+        <ModelBasedOnMixtureFractionAndHeatLoss>
+          <DensityWeightedMixtureFraction>
+            <NameTag name="rhof" state="STATE_DYNAMIC"/>
+          </DensityWeightedMixtureFraction>       
+          <DensityWeightedEnthalpy>
+            <NameTag name="rhoh" state="STATE_DYNAMIC"/>
+          </DensityWeightedEnthalpy>
+          <HeatLoss><NameTag name="HeatLoss" state="CARRY_FORWARD"/></HeatLoss>
+        </ModelBasedOnMixtureFractionAndHeatLoss>
+      </ExtractDensity>
+    </TabProps>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="CO2" state="STATE_NONE"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    
+    <RadProps>
+      <GreyGasAbsCoef>
+        <FileName>inputs/Wasatch/AbsCoefCH4.txt</FileName>
+        <NameTag name="AbsCoef" state="STATE_NONE"/>
+        <SpeciesMoleFraction name="CO2"><NameTag name="CO2" state="STATE_NONE"/></SpeciesMoleFraction>    
+        <SpeciesMoleFraction name="H2O"><NameTag name="H2O" state="STATE_NONE"/></SpeciesMoleFraction>
+        <Temperature><NameTag name="temperature" state="STATE_NONE"/></Temperature>    
+      </GreyGasAbsCoef>  
+    </RadProps>
+
+    <!-- Build a scalar transport equation -->
+    <TransportEquation equation="generic">
+      <SolutionVariable>rhof</SolutionVariable>
+      <PrimitiveVariable>mixture fraction</PrimitiveVariable>
+      <DiffusiveFlux direction="X" coefficient="0.025"/>
+    </TransportEquation>
+    
+    <TransportEquation equation="enthalpy">
+      <SolutionVariable>rhoh</SolutionVariable>
+      <PrimitiveVariable>h</PrimitiveVariable>
+      <ThermalConductivity><NameTag name="lambda" state="STATE_NONE"/></ThermalConductivity>
+      <HeatCapacity>       <NameTag name="cp"     state="STATE_NONE"/></HeatCapacity>
+      <RadiativeSourceTerm><NameTag name="DivQ"   state="STATE_NONE"/></RadiativeSourceTerm>
+    </TransportEquation>
+    
+    <Radiation>
+      <AbsorptionCoefficient><NameTag name="AbsCoef"     state="STATE_NONE"/></AbsorptionCoefficient>
+      <Temperature>          <NameTag name="temperature" state="STATE_NONE"/></Temperature>
+      <DivQ>                 <NameTag name="DivQ"        state="STATE_NONE"/></DivQ>
+      <SimpleEmission>
+        <EnvironmentTemperature>
+          <Constant value="300.0" />
+        </EnvironmentTemperature>
+      </SimpleEmission>      
+    </Radiation>
+    
+  </Wasatch>
+
+  <Time>
+    <maxTime>0.50</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.05</delt_min>
+    <delt_max>0.05</delt_max>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>emission-test.uda</filebase>
+    <outputTimestepInterval>2</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="1.0"/>
+    <compression>gzip</compression>
+    <save label="mixture fraction"/>
+    <save label="mixture fraction_diffFlux_X"/>
+    <save label="temperature"/>    
+    <save label="AbsCoef"/>
+    <save label="CO2"/>        
+    <save label="H2O"/>            
+    <save label="DivQ"/>
+    <save label="HeatLoss"/>
+    <save label="density"/>
+    <save label="rhof"/>
+    <save label="rhoh"/>
+    <save label="h"/>
+  </DataArchiver>
+
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[-5,-1,-1]</lower>
+        <upper>[5,1,1]</upper>
+        <resolution>[128,2,2]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

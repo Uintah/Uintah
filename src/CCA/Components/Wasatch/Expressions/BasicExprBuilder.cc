@@ -1078,8 +1078,8 @@ namespace Wasatch{
       
       typedef VarDen1DMMSVelocity<FieldT> VarDenMMSVExpr;
       SpatialOps::BCSide bcSide;
-      if      (side == "PLUS" ) bcSide = SpatialOps::PLUS_SIDE;
-      else if (side == "MINUS"  ) bcSide = SpatialOps::MINUS_SIDE;
+      if      (side == "PLUS"  ) bcSide = SpatialOps::PLUS_SIDE;
+      else if (side == "MINUS" ) bcSide = SpatialOps::MINUS_SIDE;
       else {
         std::ostringstream msg;
         msg << __FILE__ << " : " << __LINE__ << std::endl
@@ -1099,8 +1099,8 @@ namespace Wasatch{
       valParams->get("rho1",rho1);
       typedef VarDen1DMMSMomentum<FieldT> VarDenMMSMomExpr;
       SpatialOps::BCSide bcSide;
-      if      (side == "PLUS" ) bcSide = SpatialOps::PLUS_SIDE;
-      else if (side == "MINUS"  ) bcSide = SpatialOps::MINUS_SIDE;
+      if      (side == "PLUS"  ) bcSide = SpatialOps::PLUS_SIDE;
+      else if (side == "MINUS" ) bcSide = SpatialOps::MINUS_SIDE;
       else {
         std::ostringstream msg;
         msg << __FILE__ << " : " << __LINE__ << std::endl
@@ -1376,9 +1376,11 @@ namespace Wasatch{
       exprParams->getAttribute("w",w);
       exprParams->getAttribute("d",d);
       
-      std::string x1, x2;
-      exprParams->getWithDefault("x1",x1,"X");
-      exprParams->getWithDefault("x2",x2,"Y");
+      std::string x1="X", x2="Y";
+      if (exprParams->findAttribute("x1"))
+        exprParams->getAttribute("x1",x1);
+      if (exprParams->findAttribute("x2"))
+        exprParams->getAttribute("x2",x2);
 
       Expr::Tag x1Tag, x2Tag;
 

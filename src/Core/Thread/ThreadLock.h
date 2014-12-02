@@ -1,3 +1,6 @@
+#ifndef SCIRun_Core_Thread_ThreadLock_h
+#define SCIRun_Core_Thread_ThreadLock_h
+
 /*
  * The MIT License
  *
@@ -22,20 +25,16 @@
  * IN THE SOFTWARE.
  */
 
- 
 /*
  *  ThreadLock.h:  
  *     Mutex that is lockable multiple times within the same thread
- *  Written by:
- *   McKay Davis / Steven G. Parker
- *   Department of Computer Science
- *   University of Utah
- *   August 1994
  *
+ *  Written by:
+ *     McKay Davis / Steven G. Parker
+ *     Department of Computer Science
+ *     University of Utah
+ *     August 1994
  */
-
-#ifndef SCIRun_Core_Thread_ThreadLock_h
-#define SCIRun_Core_Thread_Threadlock_h
 
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
@@ -45,18 +44,17 @@ namespace SCIRun {
 class ThreadLock {
 
   public:
-    ThreadLock(const char *);
+    ThreadLock( const char * );
     void lock();
     int try_lock();
     void unlock();
 
   private:
-    Mutex mutex_;
+    Mutex    mutex_;
     Thread * owner_;
-    int count_;
+    int      count_;
 };
 
 }  // End namespace SCIRun
 
-
-#endif
+#endif // SCIRun_Core_Thread_ThreadLock_h

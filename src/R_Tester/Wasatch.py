@@ -128,6 +128,7 @@ DEBUGTESTS = [
 NIGHTLYTESTS = [
 #   ("scalar-transport-equation_perf",    scalarequationperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),
 #	("particle-test-driven-cavity-upper-half-IC", "particle-test-driven-cavity-upper-half-IC.ups",   4,  "Linux",   ["exactComparison","no_memoryTest"] ),
+  ("varden-projection-mms-analytic",                         "varden-projection-mms-analytic.ups",              3,  "All",  ["exactComparison","no_restart","do_not_validate"] ),
 	("particle-test-interpolate-to-mesh.ups", "particle-test-interpolate-to-mesh.ups",  4,  "All",   ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
 	("interior-bc-test", "interior-bc-test.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
 	("particle-test-injection-multiple", "particle-test-injection-multiple.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
@@ -181,7 +182,11 @@ NIGHTLYTESTS = [
   ("turb-lid-driven-cavity-3D-WALE",   "turb-lid-driven-cavity-3D-WALE.ups",   8,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
   ("turb-lid-driven-cavity-3D-SMAGORINSKY",   "turb-lid-driven-cavity-3D-SMAGORINSKY.ups",   8,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
   ("turb-lid-driven-cavity-3D-scalar",   "turb-lid-driven-cavity-3D-SMAGORINSKY-scalar.ups",   8,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
-  ("varden-projection-mms",                    "varden-projection-mms.ups",   3,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
+  ("varden-3D-lowres-jet-IMPULSE",                  "varden-3D-lowres-jet-IMPULSE.ups",       8,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
+  ("varden-projection-mms",                         "varden-projection-mms.ups",              3,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
+  ("varden-projection-2d-oscillating-periodic-mms-xy", "varden-projection-2d-oscillating-periodic-mms-xy.ups", 4,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
+  ("varden-projection-2d-oscillating-periodic-mms-xz", "varden-projection-2d-oscillating-periodic-mms-xz.ups", 4,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
+  ("varden-projection-2d-oscillating-periodic-mms-yz", "varden-projection-2d-oscillating-periodic-mms-yz.ups", 4,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
   ("varden-projection-advection-xdir",              "varden-projection-advection-xdir.ups",   3,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
   ("varden-projection-advection-ydir",              "varden-projection-advection-ydir.ups",   3,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
   ("varden-projection-advection-zdir",              "varden-projection-advection-zdir.ups",   3,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
@@ -290,7 +295,12 @@ RKTESTS=[
 ]
 
 VARDENTESTS=[
+  ("varden-projection-mms-analytic",                         "varden-projection-mms-analytic.ups",              3,  "All",  ["exactComparison","no_restart","do_not_validate"] ),
+  ("varden-3D-lowres-jet-IMPULSE",                    "varden-3D-lowres-jet-IMPULSE.ups",   8,  "All",  ["exactComparison","no_restart"] ),
   ("varden-projection-mms",                    "varden-projection-mms.ups",   3,  "All",  ["exactComparison","no_restart"] ),
+  ("varden-projection-2d-oscillating-periodic-mms-xy", "varden-projection-2d-oscillating-periodic-mms-xy.ups",   4,  "All",  ["exactComparison","no_restart"] ),
+  ("varden-projection-2d-oscillating-periodic-mms-xz", "varden-projection-2d-oscillating-periodic-mms-xz.ups",   4,  "All",  ["exactComparison","no_restart"] ),
+  ("varden-projection-2d-oscillating-periodic-mms-yz", "varden-projection-2d-oscillating-periodic-mms-yz.ups",   4,  "All",  ["exactComparison","no_restart"] ),
   ("varden-projection-advection-xdir",              "varden-projection-advection-xdir.ups",   3,  "All",  ["exactComparison","no_restart"] ),
   ("varden-projection-advection-ydir",              "varden-projection-advection-ydir.ups",   3,  "All",  ["exactComparison","no_restart"] ),
   ("varden-projection-advection-zdir",              "varden-projection-advection-zdir.ups",   3,  "All",  ["exactComparison","no_restart"] ),

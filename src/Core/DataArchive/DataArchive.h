@@ -389,10 +389,10 @@ namespace Uintah {
       void queryVariables( const ProblemSpecP vars, std::vector<std::string>& names,
           std::vector<const TypeDescription*>& types);
 
-      std::string d_filebase;  
+      std::string  d_filebase;
       ProblemSpecP d_indexDoc;
       ProblemSpecP d_restartTimestepDoc;
-      std::string d_restartTimestepURL;
+      std::string  d_restartTimestepURL;
 
       bool d_simRestart;
       Vector d_cell_scale; //used for scaling the physical data size

@@ -1,4 +1,5 @@
 #include <CCA/Components/Arches/Task/TaskFactoryBase.h>
+#include <CCA/Components/Arches/ArchesParticlesHelper.h>
 
 using namespace Uintah; 
 
@@ -47,7 +48,11 @@ TaskFactoryBase::retrieve_task( const std::string task_name ){
 
     _tasks.insert(std::make_pair(task_name,t)); 
 
-    return t; 
+    TaskMap::iterator itsk = _tasks.find(task_name); 
+
+    //don't return t. must return the element in the map to 
+    //have the correct object intitiated
+    return itsk->second; 
   
   } else { 
 

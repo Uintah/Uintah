@@ -108,6 +108,7 @@ public:
              const double rho0,
              const double rho1,
              const Expr::Tag densTag,
+             const Expr::Tag densStarTag,
              const Expr::Tag dens2StarTag,
              const Expr::TagList& velTags,
              const Expr::Tag& xTag,
@@ -119,7 +120,7 @@ public:
   private:
     const double rho0_, rho1_;
     const Expr::TagList velTs_;
-    const Expr::Tag densTag_, dens2StarTag_, xTag_, tTag_, timestepTag_;
+    const Expr::Tag densTag_, densStarTag_, dens2StarTag_, xTag_, tTag_, timestepTag_;
     const Wasatch::VarDenParameters varDenParams_;
   };
   
@@ -142,6 +143,7 @@ private:
   VarDen1DMMSContinuitySrc( const double rho0,
                             const double rho1,
                             const Expr::Tag densTag,
+                            const Expr::Tag densStarTag,
                             const Expr::Tag dens2StarTag,
                             const Expr::TagList& velTags,
                             const Expr::Tag& xTag,
@@ -149,16 +151,18 @@ private:
                             const Expr::Tag& timestepTag,
                             const Wasatch::VarDenParameters varDenParams);
   const double rho0_, rho1_;
-  const Expr::Tag densTag_, dens2StarTag_, xTag_, tTag_, timestepTag_;
+  const Expr::Tag densTag_, densStarTag_, dens2StarTag_, xTag_, tTag_, timestepTag_;
   const Expr::Tag xVelt_, yVelt_, zVelt_;
   const bool doX_, doY_, doZ_, is3d_;
   const double a0_;
   const Wasatch::VarDenParameters::VariableDensityModels model_;
+  const bool useOnePredictor_;
+  
   const FieldT* x_;
   const XVolField *xVel_;
   const YVolField *yVel_;
   const ZVolField *zVel_;
-  const SVolField *dens_, *dens2Star_;
+  const SVolField *dens_, *densStar_, *dens2Star_;
   const TimeField *t_, *timestep_;
   
   const GradXT* gradXOp_;

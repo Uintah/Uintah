@@ -93,7 +93,7 @@ public:
                  ScaleSimilarityModel* scaleSimilarityModel,
                  PhysicalConstants* physConst, 
                  RadPropertyCalculator* rad_properties, 
-                 std::map<std::string, TaskFactoryBase*>* factory_map,
+                 std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& boost_fac_map, 
                  const ProcessorGroup* myworld,
                  SolverInterface* hypreSolver);
 
@@ -381,7 +381,7 @@ private:
   double d_ke_limit; 
 
   //NEW TASK INTERFACE STUFF: 
-  std::map<std::string, TaskFactoryBase*>* _factory_map; 
+  std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& _boost_fac_map; 
 
 }; // End class ExplicitSolver
 } // End namespace Uintah

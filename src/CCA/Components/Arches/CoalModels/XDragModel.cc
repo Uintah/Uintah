@@ -429,25 +429,19 @@ XDragModel::computeModel( const ProcessorGroup* pc,
         // KLUDGE: implicit clipping
         //length = max(min(length,1e-3),1e-6);
 
-        Vector sphGas = Vector(0.,0.,0.);
         Vector cartGas = gasVel[c];
-
-        Vector sphPart = Vector(0.,0.,0.);
         Vector cartPart = partVel[c];
-
-        sphGas = cart2sph( cartGas );
-        sphPart = cart2sph( cartPart );
-
-        double diff = sphGas.z() - sphPart.z(); // z is the velocity magnitude, not the z-veloctiy component
+        double gasVelMag = velMag( cartGas );
+        double partVelMag = velMag( cartPart );
+ 
+        double diff = gasVelMag - partVelMag;
         double Re  = std::abs(diff)*length/(kvisc/den[c]);  
         double phi;
-
-        if(Re < 1.0) {
-          phi = 1.0;
-        } else if(Re>1000.0) {
-          phi = 0.0183*Re;
+        
+        if(Re < 994.0) {
+          phi = 1.0 + 0.15*pow(Re, 0.687);
         } else {
-          phi = 1. + .15*pow(Re, 0.687);
+          phi = 0.0183*Re;
         }
 
         double rho_factor = (char_mass+rc_mass+ash_mass_init[d_quadNode])/(rc_mass_init[d_quadNode]+ash_mass_init[d_quadNode]);

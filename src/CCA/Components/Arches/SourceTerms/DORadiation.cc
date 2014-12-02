@@ -11,6 +11,7 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
+#include <iomanip>
 
 using namespace std;
 using namespace Uintah; 
@@ -106,6 +107,28 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   _DO_model = scinew DORadiationModel( _labels, _MAlab, _bc, _my_world ); 
   _DO_model->problemSetup( db ); 
 
+  for( int ix=0;  ix< _DO_model->getIntOrdinates();ix++){
+    ostringstream my_stringstream_object;
+    my_stringstream_object << "Intensity" << setfill('0') << setw(4)<<  ix ;
+    _IntensityLabels.push_back(  VarLabel::find(my_stringstream_object.str()));
+    _extra_local_labels.push_back(_IntensityLabels[ix]); 
+    if(_DO_model->DOSolveInitialGuessBool()==false){
+     break;  // create labels for all intensities, otherwise only create 1 label
+    }
+  }
+   if(_DO_model->reflectionsBool()){
+  _IncidentIntensityLabels.push_back(  VarLabel::find("IncidentFluxE"));
+  _IncidentIntensityLabels.push_back(  VarLabel::find("IncidentFluxW"));
+  _IncidentIntensityLabels.push_back(  VarLabel::find("IncidentFluxN"));
+  _IncidentIntensityLabels.push_back(  VarLabel::find("IncidentFluxS"));
+  _IncidentIntensityLabels.push_back(  VarLabel::find("IncidentFluxT"));
+  _IncidentIntensityLabels.push_back(  VarLabel::find("IncidentFluxB"));
+  }
+
+   for(unsigned int ix=0;  ix<_IncidentIntensityLabels.size();ix++){  // using unsigned int removes warnings.
+     _extra_local_labels.push_back(_IncidentIntensityLabels[ix]); 
+   }
+
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the source term 
@@ -113,6 +136,7 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
 void 
 DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
+
   std::string taskname = "DORadiation::computeSource";
   Task* tsk = scinew Task(taskname, this, &DORadiation::computeSource, timeSubStep);
 
@@ -180,20 +204,7 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 
   _DO_model->d_linearSolver->matrixCreate( _perproc_patches, patches );
 
-  //patch loop
-  for (int p=0; p < patches->size(); p++){
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0;
-    int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     int timestep = _labels->d_sharedState->getCurrentTopLevelTimeStep(); 
-
-    PerPatch<CellInformationP> cellInfoP;
-    new_dw->get(cellInfoP, _labels->d_cellInfoLabel, matlIndex, patch);
-    CellInformation* cellinfo = cellInfoP.get().get_rep();
-
-    CCVariable<double> divQ; 
-
     bool do_radiation = false; 
     if ( timestep%_radiation_calc_freq == 0 ) { 
       if ( _all_rk ) { 
@@ -202,6 +213,39 @@ DORadiation::computeSource( const ProcessorGroup* pc,
         do_radiation = true; 
       } 
     } 
+
+    if (do_radiation==false){
+      if ( timeSubStep == 0 ) { 
+        for(unsigned int ix=0; ix< _IntensityLabels.size() ;ix++){
+          new_dw->transferFrom(old_dw,_IntensityLabels[ix],  patches, matls);
+        }
+        for(unsigned int ix=0;  ix< _IncidentIntensityLabels.size() ;ix++){  
+          new_dw->transferFrom(old_dw, _IncidentIntensityLabels[ix],  patches, matls);
+        }
+      }
+    }
+    else{  
+      if(_DO_model->DOSolveInitialGuessBool()==false){
+        for(unsigned int ix=0;  ix< _IntensityLabels.size();ix++){ 
+          new_dw->transferFrom(old_dw,_IntensityLabels[ix],  patches, matls);
+        }
+      }
+    }
+
+
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    PerPatch<CellInformationP> cellInfoP;
+    new_dw->get(cellInfoP, _labels->d_cellInfoLabel, matlIndex, patch);
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+
+    CCVariable<double> divQ; 
+
 
     ArchesVariables radiation_vars; 
     ArchesConstVariables const_radiation_vars;
@@ -260,10 +304,18 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 
     if ( do_radiation ){ 
 
+
       if ( timeSubStep == 0 ) {
 
+      if(_DO_model->DOSolveInitialGuessBool()){
+        for( int ix=0;  ix< _DO_model->getIntOrdinates();ix++){
+          CCVariable<double> cenint;
+          new_dw->allocateAndPut(cenint,_IntensityLabels[ix] , matlIndex, patch );
+        }
+       }
+
         //Note: The final divQ is initialized (to zero) and set after the solve in the intensity solve itself.
-        _DO_model->intensitysolve( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars, divQ, BoundaryCondition::WALL ); 
+        _DO_model->intensitysolve( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars, divQ, BoundaryCondition::WALL, matlIndex, new_dw, old_dw ); 
 
       }
     }

@@ -304,7 +304,13 @@ Radiometer::sched_radiometer( const LevelP& level,
 
   std::string taskname = "Radiometer::radiometer";
   Task *tsk;
-  tsk = scinew Task( taskname, this, &Radiometer::radiometer, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
+  
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
+    tsk = scinew Task( taskname, this, &Radiometer::radiometer< double >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
+  } else {
+    tsk = scinew Task( taskname, this, &Radiometer::radiometer< float >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
+  }
+  
   tsk->setType(Task::Spatial);
 
   printSchedule( level,dbg,"Radiometer::sched_radiometer" );
@@ -341,9 +347,10 @@ Radiometer::sched_radiometer( const LevelP& level,
   }
 }
 
-//---------------------------------------------------------------------------
+//______________________________________________________________________
 // Method: The actual work of the ray tracer
 //______________________________________________________________________
+template < class T >
 void
 Radiometer::radiometer( const ProcessorGroup* pc,
                         const PatchSubset* patches,
@@ -378,7 +385,7 @@ Radiometer::radiometer( const ProcessorGroup* pc,
   DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(whichd_sigmaT4_dw);
   DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
 
-  constCCVariable<double> sigmaT4OverPi;
+  constCCVariable< T > sigmaT4OverPi;
   constCCVariable<double> abskg;
   constCCVariable<int>    celltype;
 
@@ -394,7 +401,7 @@ Radiometer::radiometer( const ProcessorGroup* pc,
     printTask(patches,patch,dbg,"Doing Radiometer::radiometer");
 
     bool modifiesFlux= true;
-    radiometerFlux( patch, level, new_dw, mTwister, sigmaT4OverPi, abskg, celltype, modifiesFlux );
+    radiometerFlux < T > ( patch, level, new_dw, mTwister, sigmaT4OverPi, abskg, celltype, modifiesFlux );
 
   }  // end patch loop
 }  // end radiometer
@@ -402,12 +409,13 @@ Radiometer::radiometer( const ProcessorGroup* pc,
 //______________________________________________________________________
 //    Compute the radiometer flux.
 //______________________________________________________________________
+template< class T >
 void
 Radiometer::radiometerFlux( const Patch* patch,
                             const Level* level,
                             DataWarehouse* new_dw,
                             MTRand& mTwister,
-                            constCCVariable<double> sigmaT4OverPi,
+                            constCCVariable< T > sigmaT4OverPi,
                             constCCVariable<double> abskg,
                             constCCVariable<int> celltype,
                             const bool modifiesFlux )
@@ -417,7 +425,7 @@ Radiometer::radiometerFlux( const Patch* patch,
     printTask(patch, dbg,"Doing Radiometer::radiometerFlux");
   }
 
-  CCVariable<double> VRFlux;
+  CCVariable< T > VRFlux;
   if( modifiesFlux ){
     new_dw->getModifiable( VRFlux,  d_VRFluxLabel,  d_matl, patch );
   }else{
@@ -463,7 +471,7 @@ Radiometer::radiometerFlux( const Patch* patch,
         rayDirection_VR( mTwister, c, iRay, d_VR, DyDx, DzDx, direction_vector, cosVRTheta);
 
         // get the intensity for this ray
-        updateSumI( direction_vector, ray_location, c, Dx, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
+        updateSumI< T >( direction_vector, ray_location, c, Dx, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
 
         sumProjI += cosVRTheta * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
                                                      // from all the rays up to that point
@@ -572,3 +580,14 @@ Radiometer::getPatchSet( SchedulerP& sched,
   
   return myPatches;
 }
+//______________________________________________________________________
+// Explicit template instantiations:
+
+template void
+Radiometer::radiometerFlux( const Patch*, const Level*, DataWarehouse*, MTRand&,
+                            constCCVariable< double >, constCCVariable<double>, constCCVariable<int>,
+                            const bool );
+template void
+Radiometer::radiometerFlux( const Patch*, const Level*, DataWarehouse*, MTRand&,
+                            constCCVariable< float >, constCCVariable<double>, constCCVariable<int>,
+                            const bool );
