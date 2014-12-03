@@ -273,22 +273,51 @@ void PressureSource::evaluate()
 
     drhodt <<= alpha * drhodtstar - (1.0 - alpha) * *divmomstar_;
     
+    SpatFldPtr<SVolField> divmomlatest_ = SpatialFieldStore::get<SVolField>( psrc );
+    SVolField& divmomlatest = *divmomlatest_;
+    
     if( is3d_ ){ // for 3D cases, inline the whole thing
-      psrc <<=    (*gradXOp_)(*xMom_) + (*gradYOp_)(*yMom_) + (*gradZOp_)(*zMom_) ;
+      // always add the divergence of momentum from the old timestep div(r u)^n
+      psrc <<= (*gradXOp_)(*xMomOld_) + (*gradYOp_)(*yMomOld_) + (*gradZOp_)(*zMomOld_);
+      // if we are at an rkstage > 1, then add the divergence of the most recent momentum
+      psrc <<= cond( *rkStage_ == 1.0,                  psrc                                                             )
+                   ( *rkStage_ == 2.0, a2* psrc + b2 * ((*gradXOp_)(*xMom_) + (*gradYOp_)(*yMom_) + (*gradZOp_)(*zMom_)) )
+                   ( *rkStage_ == 3.0, a3* psrc + b3 * ((*gradXOp_)(*xMom_) + (*gradYOp_)(*yMom_) + (*gradZOp_)(*zMom_)) )
+                   ( 0.0 ); // should never get here.
+
     } else {
       // for 1D and 2D cases, we are not as efficient - add terms as needed...
-      if( doX_ ) psrc <<=        (*gradXOp_)( (*xMom_) );
+      if( doX_ ) {
+        // always add the divergence of momentum from the old timestep div(r u)^n
+        psrc <<= (*gradXOp_)( (*xMomOld_) );
+        if (timeIntInfo_->nStages > 1) divmomlatest <<= (*gradXOp_)(*xMom_);
+      }
       else       psrc <<= 0.0;
-      if( doY_ ) psrc <<= psrc + (*gradYOp_)( (*yMom_) );
-      if( doZ_ ) psrc <<= psrc + (*gradZOp_)( (*zMom_) );
+      if( doY_ )
+      {
+        psrc <<= psrc + (*gradYOp_)( (*yMomOld_) );
+        if (timeIntInfo_->nStages > 1) divmomlatest <<= divmomlatest + (*gradYOp_)(*yMom_);
+      }
+      if( doZ_ )
+      {
+        psrc <<= psrc + (*gradZOp_)( (*zMomOld_) );
+        if (timeIntInfo_->nStages > 1) divmomlatest <<= divmomlatest + (*gradZOp_)(*zMom_);
+      }
+      
+      psrc <<= cond( *rkStage_ == 1.0,                  psrc         )
+                   ( *rkStage_ == 2.0, a2* psrc + b2 * divmomlatest  )
+                   ( *rkStage_ == 3.0, a3* psrc + b3 * divmomlatest  )
+                   ( 0.0 ); // should never get here.
+      
     } // 1D, 2D cases
-    
-    psrc <<= (psrc + drhodt)/ *timestep_;  // P_src = ( div(mom) + drhodt ) / dt
+
+    //
+    psrc <<= cond( *rkStage_ == 1.0, (psrc + drhodt)  / dt       )
+                 ( *rkStage_ == 2.0, (psrc + drhodt) / (b2 * dt) )
+                 ( *rkStage_ == 3.0, (psrc + drhodt) / (b3 * dt) )
+                 ( 0.0 ); // should never get here.
+
   } // Variable density
-//  int count=1;
-//  for( SVolField::interior_iterator iStrTsr= psrc.begin(); iStrTsr!=psrc.end(); ++iStrTsr, ++count)
-//  std::cout <<count << " : Psource: " << *iStrTsr << std::endl;
-  
 }
 
 //------------------------------------------------------------------
