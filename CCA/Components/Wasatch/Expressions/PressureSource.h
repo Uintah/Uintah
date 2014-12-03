@@ -8,11 +8,13 @@
 
 #include <spatialops/structured/FVStaggered.h>
 #include <CCA/Components/Wasatch/VardenParameters.h>
-
+#include <CCA/Components/Wasatch/TimeIntegratorTools.h>
 /**
  *  \ingroup WasatchExpressions
  *  \class  PressureSource
  *  \author Amir Biglari
+ *  \author Tony Saad
+ *  \author James C. Sutherland
  *  \date	July, 2011
  *
  *  \brief Calculates the source term for the pressure equation ( i.e. the second
@@ -59,18 +61,20 @@ class PressureSource : public Expr::Expression<SVolField>
   typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientY, SVolField, SVolField >::type GradYST;
   typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientZ, SVolField, SVolField >::type GradZST;
 
-  const XVolField *xMom_, *uStar_, *xVel_;
-  const YVolField *yMom_, *vStar_, *yVel_;
-  const ZVolField *zMom_, *wStar_, *zVel_;
+  const XVolField *xMom_, *xMomOld_, *uStar_, *xVel_;
+  const YVolField *yMom_, *yMomOld_, *vStar_, *yVel_;
+  const ZVolField *zMom_, *zMomOld_, *wStar_, *zVel_;
   const SVolField *dens_, *densStar_, *dens2Star_, *divmomstar_;
   const SVolField *dil_;
-  const TimeField* timestep_;
+  const TimeField *timestep_, *rkStage_;
   
   const bool isConstDensity_, doX_, doY_, doZ_, is3d_, useOnePredictor_;
   
-  const Expr::Tag xMomt_, yMomt_, zMomt_;
-  const Expr::Tag xVelt_, yVelt_, zVelt_, xVelStart_, yVelStart_, zVelStart_, denst_, densStart_, dens2Start_, dilt_, timestept_, divmomstart_;
+  const Expr::Tag xMomt_, yMomt_, zMomt_, xMomOldt_, yMomOldt_, zMomOldt_;
+  const Expr::Tag xVelt_, yVelt_, zVelt_, xVelStart_, yVelStart_, zVelStart_, denst_, densStart_, dens2Start_, dilt_, timestept_,rkstaget_, divmomstart_;
   
+  const Wasatch::TimeIntegrator* timeIntInfo_;
+
   const double a0_;
   const Wasatch::VarDenParameters::VariableDensityModels model_;
   
@@ -88,6 +92,7 @@ class PressureSource : public Expr::Expression<SVolField>
   const Z2SInterpOpT* z2SInterpOp_;
   
   PressureSource( const Expr::TagList& momTags,
+                  const Expr::TagList& oldMomTags,
                   const Expr::TagList& velTags,
                   const Expr::TagList& velStarTags,
                   const bool isConstDensity,
@@ -129,6 +134,7 @@ public:
      */
     Builder( const Expr::TagList& results,
              const Expr::TagList& momTags,
+             const Expr::TagList& oldMomTags,
              const Expr::TagList& velTags,
              const Expr::TagList& velStarTags,
              const bool isConstDensity,
@@ -144,7 +150,7 @@ public:
     
   private:
     const bool isConstDens_;
-    const Expr::TagList momTs_, velTs_, velStarTs_;
+    const Expr::TagList momTs_, oldMomTags_, velTs_, velStarTs_;
     const Expr::Tag denst_, densStart_, dens2Start_, divmomstart_;
     const Wasatch::VarDenParameters varDenParams_;
   };
