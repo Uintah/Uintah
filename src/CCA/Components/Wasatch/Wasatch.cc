@@ -102,7 +102,8 @@ namespace Wasatch{
       nRKStages_(1),
       isPeriodic_ (true ),
       doRadiation_(false),
-      doParticles_(false)
+      doParticles_(false),
+      timeIntegrator_(TimeIntegrator("FE"))
   {
     proc0cout << std::endl
               << "-------------------------------------------------------------" << std::endl
@@ -524,8 +525,8 @@ namespace Wasatch{
     
     std::string timeIntName;
     wasatchSpec_->get("TimeIntegrator",timeIntName);
-    TimeIntegrator timeInt(timeIntName);
-    nRKStages_ = timeInt.nStages;
+    timeIntegrator_ = TimeIntegrator(timeIntName);
+    nRKStages_ = timeIntegrator_.nStages;
 
     //
     //  Parse geometry pieces. NOTE: This must take place before create_expressions_from_input
@@ -676,7 +677,7 @@ namespace Wasatch{
     }
 
     if( buildTimeIntegrator_ ){
-      timeStepper_ = scinew TimeStepper( sharedState_, graphCategories_, timeInt );
+      timeStepper_ = scinew TimeStepper( sharedState_, graphCategories_, timeIntegrator_ );
     }    
     
     //
@@ -948,6 +949,8 @@ namespace Wasatch{
         // inside of an expression.
         opdb->register_new_operator<UintahPatchContainer>(scinew UintahPatchContainer(patch) );
         
+        opdb->register_new_operator<TimeIntegrator>(scinew TimeIntegrator(timeIntegrator_.name) );
+        
         build_operators( *patch, *opdb );
         PatchInfo& pi = patchInfoMap_[patch->getID()];
         pi.operators = opdb;
@@ -1103,29 +1106,30 @@ namespace Wasatch{
 
       proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
       
-      // post processing
-      GraphHelper* const postProcGH = graphCategories_[ POSTPROCESSING ];
-      Expr::ExpressionFactory& postProcFactory = *postProcGH->exprFactory;
-      if( !postProcGH->rootIDs.empty() ){
-        TaskInterface* const task = scinew TaskInterface( postProcGH->rootIDs,
-                                                         "postprocessing",
-                                                          postProcFactory,
-                                                          level, sched,
-                                                          allPatches,
-                                                          materials_,
-                                                          patchInfoMap_,
-                                                          iStage,
-                                                          sharedState_,
-                                                          lockedFields_ );
-        task->schedule(iStage);
-        taskInterfaceList_.push_back( task );
-      }
-      proc0cout << "Wasatch: done creating post-processing task(s)" << std::endl;
-      
       // pass the bc Helper to pressure expressions on all patches
       bcHelperMap_[level->getID()]->synchronize_pressure_expression();
     }
+
     
+    // post processing
+    GraphHelper* const postProcGH = graphCategories_[ POSTPROCESSING ];
+    Expr::ExpressionFactory& postProcFactory = *postProcGH->exprFactory;
+    if( !postProcGH->rootIDs.empty() ){
+      TaskInterface* const task = scinew TaskInterface( postProcGH->rootIDs,
+                                                       "postprocessing",
+                                                       postProcFactory,
+                                                       level, sched,
+                                                       allPatches,
+                                                       materials_,
+                                                       patchInfoMap_,
+                                                       1,
+                                                       sharedState_,
+                                                       lockedFields_ );
+      task->schedule(1);
+      taskInterfaceList_.push_back( task );
+    }
+    proc0cout << "Wasatch: done creating post-processing task(s)" << std::endl;
+
     // ensure that any "CARRY_FORWARD" variable has an initialization provided for it.
     if( buildTimeIntegrator_ ){ // make sure that we have a timestepper created - this is needed for wasatch-in-arches
       const Expr::ExpressionFactory* const icFactory = graphCategories_[INITIALIZATION]->exprFactory;
