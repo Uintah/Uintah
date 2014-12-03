@@ -118,7 +118,7 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
 
   //db->getRootNode()->findBlock("Grid")->findBlock("BoundaryConditions") 
 
-  db->getWithDefault("usePrevInt",usePreviousIntensity,true); //  using the previous solve as initial guess, is off by default
+  db->getWithDefault("usePrevInt",usePreviousIntensity,false); //  using the previous solve as initial guess, is off by default
 
   db->getWithDefault("ScatteringOn",ScatteringOn,false); //  using the previous solve as initial guess, is off by default
 
@@ -324,6 +324,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   constCCVariable<double> scatkt;   //total scattering coefficient
 
   scatIntensitySource.allocate(domLo,domHi);
+  scatIntensitySource.initialize(0.0); // needed for non-scattering cases
 
 
   if(ScatteringOn){
@@ -357,7 +358,6 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   vars->qfluxs.initialize(0.0);
   vars->qfluxt.initialize(0.0);
   vars->qfluxb.initialize(0.0);
-
 
   //__________________________________
   //begin discrete ordinates
@@ -427,7 +427,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                      vars->qfluxt, vars->qfluxb);
                      
     }  // ordinate loop
-
+ 
   if(ScatteringOn)
     fort_rdomsrcscattering( idxLo, idxHi, constvars->ABSKG, vars->ESRCG,vars->volq, divQ, scatkt); 
   else
