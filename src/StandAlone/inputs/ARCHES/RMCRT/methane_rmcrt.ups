@@ -422,6 +422,7 @@
             <constant>1.0</constant>
           </initialization>
           <calculator type="hottel_sarofim">
+            <abskg label="abskg"/>
             <opl>3.0</opl>
           </calculator>
         </model>
