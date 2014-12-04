@@ -31,6 +31,7 @@
 #include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <CCA/Components/MPM/PetscSolver.h>
+#include <CCA/Components/MPM/AmgxSolver.h>
 #include <CCA/Components/MPM/SimpleSolver.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/MPMLabel.h>
@@ -94,7 +95,7 @@ void ImplicitHeatConduction::problemSetup(string solver_type)
   if (solver_type == "petsc") {
     d_HC_solver = scinew MPMPetscSolver();
     d_HC_solver->initialize();
-  }
+  }  
   else {
     d_HC_solver=scinew SimpleSolver();
     d_HC_solver->initialize();

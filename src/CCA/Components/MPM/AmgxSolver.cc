@@ -34,10 +34,12 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
+#include <fstream>
 
 #include <amgx_c.h>
 
 #include <vector>
+#include <algorithm>
 #include <map>
 #include <iostream>
 
@@ -65,17 +67,18 @@ void print_callback(const char *msg, int length){
   printf("%s", msg);
 } 
 
-MPMAmgxSolver::MPMAmgxSolver()
+MPMAmgxSolver::MPMAmgxSolver(string& amgx_config_string)
 {
   mode = AMGX_mode_dDDI;
   AMGX_SAFE_CALL(AMGX_initialize());
   AMGX_SAFE_CALL(AMGX_initialize_plugins());
   AMGX_SAFE_CALL(AMGX_register_print_callback(&print_callback));
   AMGX_SAFE_CALL(AMGX_install_signal_handler());
-  //Hard code in a amgx config file for now.
-  AMGX_SAFE_CALL(AMGX_config_create_from_file(&config, "/home/sci/mmath/Software/amgx_mpi/configs/AMGX_CLASSICAL_CG.json"));
+
+  AMGX_SAFE_CALL(AMGX_config_create_from_file(&config, amgx_config_string.c_str()));
   //AMGX_SAFE_CALL(AMGX_config_add_parameters(&config, "exception_handling=1"));
   AMGX_SAFE_CALL(AMGX_resources_create_simple(&rsrc, config));
+  matrix_created = false;
 }
 
 MPMAmgxSolver::~MPMAmgxSolver()
@@ -226,9 +229,9 @@ MPMAmgxSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
   d_diagonal_Host.resize(numlrows);
 }
 
-void MPMAmgxSolver::fromCOOtoCSR(vector<double> values,
-				 vector<int> row_ptrs,
-				 vector<int> col_inds){
+void MPMAmgxSolver::fromCOOtoCSR(vector<double>& values,
+				 vector<int>& row_ptrs,
+				 vector<int>& col_inds){
   row_ptrs.push_back(0);
   int col_count = 0;
   for (std::map<int, double>::iterator it = matrix_values.begin();
@@ -236,15 +239,18 @@ void MPMAmgxSolver::fromCOOtoCSR(vector<double> values,
        ++it){
     int i = it->first / numlrows;
     int j = it->first % numlrows;
-
     if (i == (int)row_ptrs.size()){
-      row_ptrs.push_back(col_count);
+      row_ptrs.push_back(col_count + row_ptrs[row_ptrs.size() - 1]);
+      col_count = 0;
     }
     col_count++;
     col_inds.push_back(j);
     values.push_back(it->second);
   }
+  row_ptrs.push_back(col_count + row_ptrs[row_ptrs.size() - 1]);
 }
+
+
 
 void MPMAmgxSolver::solve(vector<double>& guess)
 {
@@ -255,30 +261,36 @@ void MPMAmgxSolver::solve(vector<double>& guess)
   vector<double> values;
   vector<int> row_ptrs;
   vector<int> col_inds;
-
+  
   fromCOOtoCSR(values, row_ptrs, col_inds);
 
-  //Now we can upload everything to the GPU
-  AMGX_SAFE_CALL(AMGX_matrix_upload_all(d_A, numlrows, matrix_values.size(), 1, 1,
-					&(row_ptrs[0]), &(col_inds[0]), &(values[0]),
-					NULL));
-  AMGX_SAFE_CALL(AMGX_vector_upload(d_B, d_B_Host.size(), 1, &d_B_Host[0]));
-  AMGX_SAFE_CALL(AMGX_vector_upload(d_t, d_t_Host.size(), 1, &d_t_Host[0]));
-
-  if (!guess.empty()){
-    AMGX_SAFE_CALL(AMGX_vector_upload(d_x, guess.size(), 1, &(guess[0])));
+  ofstream myFile;
+  myFile.open("MPMmatrix.dat");
+    
+  for (std::map<int, double>::iterator it = matrix_values.begin();
+       it != matrix_values.end();
+       ++it){
+    int i = it->first / numlrows;
+    int j = it->first % numlrows;
+    myFile << i << " " << j << " " << it->second << endl;
   }
+  myFile.close();
+  
+  const vector<int>::iterator mx = max_element(col_inds.begin(), col_inds.end());
+  const vector<int>::iterator mn = min_element(col_inds.begin(), col_inds.end());
 
-  //Now we can setup the solver and solve the matrix system
-  AMGX_SAFE_CALL(AMGX_solver_setup(solver, d_A));
-  AMGX_SAFE_CALL(AMGX_solver_solve(solver, d_B, d_x));
-}
-void MPMAmgxSolver::createMatrix(const ProcessorGroup* d_myworld,
-                                  const map<int,int>& dof_diag)
-{
-  //Here we call all of our AMGX_blank_create functions
-  //d_B_Host.resize(numlrows);
-  d_B_Host.assign(numlrows, 0);
+  
+  if ((*mx - *mn + 1) != numlrows) {
+    cout << "Matrix is not square" << endl;
+    cout << "Matrix dim=" << (*mx - *mn + 1) << ", " << numlrows << endl;
+  }
+  cout << "Row pointer size: " << row_ptrs.size() << endl;
+  cout << "Row pointer end: " << row_ptrs[row_ptrs.size() - 1] << endl;
+  cout << "Column inds size: " << col_inds.size() << endl;
+  cout << "Values size: " << col_inds.size() << endl;
+
+  AMGX_SAFE_CALL(AMGX_solver_create(&solver, rsrc, mode, config));
+  cout << "Matrix Created" << endl;
   AMGX_SAFE_CALL(AMGX_matrix_create(&d_A, rsrc, mode));
   AMGX_SAFE_CALL(AMGX_vector_create(&d_B, rsrc, mode));
 
@@ -287,17 +299,50 @@ void MPMAmgxSolver::createMatrix(const ProcessorGroup* d_myworld,
   AMGX_SAFE_CALL(AMGX_vector_create(&d_t, rsrc, mode));
   
   AMGX_SAFE_CALL(AMGX_vector_create(&d_flux, rsrc, mode));
-}
 
-void MPMAmgxSolver::destroyMatrix(bool recursion)
-{
-  //We have to destroy the solver first folowed by the matrix and then the vectors.
-  //Any other order will cause the program to explode.
+  //Now we can upload everything to the GPU
+  AMGX_SAFE_CALL(AMGX_matrix_upload_all(d_A, numlrows, matrix_values.size(), 1, 1,
+					&(row_ptrs[0]), &(col_inds[0]), &(values[0]),
+					NULL));
+  AMGX_SAFE_CALL(AMGX_vector_upload(d_B, d_B_Host.size(), 1, &d_B_Host[0]));
+  //AMGX_SAFE_CALL(AMGX_vector_upload(d_t, d_t_Host.size(), 1, &d_t_Host[0]));
+
+  if (!guess.empty()){
+    AMGX_SAFE_CALL(AMGX_vector_upload(d_x, guess.size(), 1, &(guess[0])));
+  } else {
+    AMGX_SAFE_CALL(AMGX_vector_set_zero(d_x, numlrows, 1));
+  }
+  
+  //Now we can setup the solver and solve the matrix system
+  AMGX_SAFE_CALL(AMGX_solver_setup(solver, d_A));
+  AMGX_SAFE_CALL(AMGX_solver_solve(solver, d_B, d_x));
+
+  AMGX_SAFE_CALL(AMGX_vector_download(d_x, &d_x_Host[0]));
+
   AMGX_SAFE_CALL(AMGX_solver_destroy(solver));
+  cout << "Matrix Destroyed" << endl;
+  AMGX_SAFE_CALL(AMGX_matrix_destroy(d_A));
   AMGX_SAFE_CALL(AMGX_vector_destroy(d_diagonal));
   AMGX_SAFE_CALL(AMGX_vector_destroy(d_x));
   AMGX_SAFE_CALL(AMGX_vector_destroy(d_t));
   AMGX_SAFE_CALL(AMGX_vector_destroy(d_flux));
+
+}
+void MPMAmgxSolver::createMatrix(const ProcessorGroup* d_myworld,
+                                  const map<int,int>& dof_diag)
+{
+  //Here we call all of our AMGX_blank_create functions
+  //d_B_Host.resize(numlrows);
+  d_B_Host.assign(numlrows, 0);
+}
+
+void MPMAmgxSolver::destroyMatrix(bool recursion)
+{
+  if (matrix_created) {
+    //We have to destroy the solver first folowed by the matrix and then the vectors.
+    //Any other order will cause the program to explode.
+    matrix_created = false;
+  }
 }
 
 void
@@ -308,7 +353,7 @@ void
 MPMAmgxSolver::fillMatrix(int numi, int i_indices[], int numj, int j_indices[], double value[]){
   for (int i = 0; i < numi; i++){
     for (int j = 0; j < numj; j++){
-      matrix_values.insert(pair<int, double>(i_indices[i] * numlcolumns + j_indices[j], value[i * d_totalNodes + j]));
+      matrix_values.insert(pair<int, double>(i_indices[i] * numlcolumns + j_indices[j], value[i * numj + j]));
     }
   }
 }
@@ -490,7 +535,7 @@ void MPMAmgxSolver::finalizeMatrix()
 int MPMAmgxSolver::getSolution(vector<double>& xPetsc)
 {
   xPetsc.resize(d_x_Host.size());
-  AMGX_SAFE_CALL(AMGX_vector_download(d_x, &(xPetsc[0])));
+  copy(d_x_Host.begin(), d_x_Host.end(), xPetsc.begin());
   return 0;
 }
 
