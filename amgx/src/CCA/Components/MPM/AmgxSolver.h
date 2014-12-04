@@ -38,6 +38,7 @@
 #include <map>
 #include <vector>
 #include <iostream>
+#include <string>
 
 #ifdef HAVE_AMGX
 #include <amgx_c.h>
@@ -53,7 +54,8 @@ namespace Uintah {
   class MPMAmgxSolver : public Solver {
     
   public:
-    MPMAmgxSolver();
+    
+    MPMAmgxSolver(std::string& config_name);
     ~MPMAmgxSolver();
     
     void initialize();
@@ -110,7 +112,7 @@ namespace Uintah {
 
     int numlcolumns;
     int numlrows;
-    void fromCOOtoCSR(vector<double>, vector<int>, vector<int>);
+    void fromCOOtoCSR(vector<double>&, vector<int>&, vector<int>&);
     
 #ifdef HAVE_AMGX
     //Use device memory with data in the form of double floating point
@@ -127,7 +129,7 @@ namespace Uintah {
     AMGX_vector_handle d_t;
     AMGX_vector_handle d_flux;
 
-
+    bool matrix_created;
     map<int, double> matrix_values;
 
     //Each of the vectors will be stored host side before we write them to

@@ -81,6 +81,7 @@ ImpMPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
                               d_delT_increase_factor, 2);
   
   mpm_flag_ps->get("solver",d_solver_type);
+  mpm_flag_ps->get("amgx_config_path",d_amgx_config);
   mpm_flag_ps->get("temperature_solve",d_temp_solve);
   mpm_flag_ps->get("interpolateParticleTempToGridEveryStep",
                   d_interpolateParticleTempToGridEveryStep);

@@ -55,7 +55,8 @@
     
       <!-- FIXME:  THE FOLLOW APPLY ONLY TO THE IMPLICIT MPM CODE -->
       <dynamic                            spec="OPTIONAL BOOLEAN" />
-      <solver                             spec="OPTIONAL STRING 'petsc, simple'" />
+      <solver                             spec="OPTIONAL STRING 'petsc, simple, amgx'" />
+      <amgx_config_path                   spec="OPTIONAL STRING" />
       <convergence_criteria_disp          spec="OPTIONAL DOUBLE 'positive'"/>
       <convergence_criteria_energy        spec="OPTIONAL DOUBLE 'positive'"/>
       <DoImplicitHeatConduction           spec="OPTIONAL BOOLEAN" />

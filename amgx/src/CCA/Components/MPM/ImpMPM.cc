@@ -77,6 +77,7 @@
 #include <CCA/Components/MPM/SimpleSolver.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <CCA/Components/MPM/AmgxSolver.h>
 #include <Core/Math/FastMatrix.h>
 #include <set>
 #include <map>
@@ -259,6 +260,12 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
    
    if (flags->d_solver_type == "petsc") {
      d_solver = scinew MPMPetscSolver();
+   }
+   else if (flags->d_solver_type == "amgx") {
+     if (flags->d_amgx_config == "") {
+       throw ProblemSetupException("No amgx config file provided", __FILE__, __LINE__);
+     }
+     d_solver = scinew MPMAmgxSolver(flags->d_amgx_config);
    } else {
      d_solver = scinew SimpleSolver();
    }
