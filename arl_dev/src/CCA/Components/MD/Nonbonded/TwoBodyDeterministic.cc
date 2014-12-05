@@ -65,7 +65,6 @@ void TwoBodyDeterministic::initialize(const ProcessorGroup*     pg,
                                       CoordinateSystem*         coordSys)
 {
   // Do nothing
-  std::cout << " TwoBodyDeterministic::Initialize" << std::endl;
 
   size_t numPatches     =   patches->size();
   size_t numAtomTypes   =   materials->size();
@@ -127,7 +126,7 @@ void TwoBodyDeterministic::addCalculateRequirements(Task* task,
                                                     MDLabel* label) const {
 
   int CUTOFF_CELLS = this->requiredGhostCells();
-  std::cout << "Registering for " << CUTOFF_CELLS << " ghost cells required." << std::endl;
+  proc0cout << "Registering for " << CUTOFF_CELLS << " ghost cells required." << std::endl;
   task->requires(Task::OldDW,
                  label->global->pX,
                  Ghost::AroundNodes,
