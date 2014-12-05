@@ -164,10 +164,10 @@ ParticleRadProps<FieldT>::
 ParticleRadProps( const ParticleRadProp prop,
                   const Expr::Tag& tempTag,
                   const Expr::Tag& pRadiusTag,
-                  const std::complex<double> refIndex )
+                  const std::complex<double>& refIndex )
   : Expr::Expression<FieldT>(),
     props_( new ParticleRadCoeffs(refIndex) ),
-    prop_( prop ),
+    prop_      ( prop       ),
     tempTag_   ( tempTag    ),
     pRadiusTag_( pRadiusTag )
 {}

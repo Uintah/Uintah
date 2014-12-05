@@ -32,6 +32,10 @@ StrainTensorBase( const Expr::TagList& velTags )
   doY_  ( velTags[1] != Expr::Tag() ),
   doZ_  ( velTags[2] != Expr::Tag() )
 {
+  vel1_ = NULL;
+  vel2_ = NULL;
+  vel3_ = NULL;
+
   if (!(doX_ && doY_ && doZ_)) {
     std::ostringstream msg;
     msg << "WARNING: You cannot use the Dynamic Smagorinsky Model in one or two dimensions. Please revise your input file and make sure that you specify all three velocity/momentum components." << std::endl;
