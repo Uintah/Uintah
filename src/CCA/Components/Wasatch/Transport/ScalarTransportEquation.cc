@@ -300,8 +300,6 @@ namespace Wasatch{
   setup_boundary_conditions( BCHelper& bcHelper,
                              GraphCategories& graphCat )
   {
-    Expr::ExpressionFactory& advSlnFactory = *(graphCat[ADVANCE_SOLUTION]->exprFactory);
-
     const TagNames& tagNames = TagNames::self();
     const Expr::Tag rhsStarTag = tagNames.make_star_rhs( this->solution_variable_tag() );
   

@@ -258,9 +258,8 @@ namespace Wasatch{
     const std::set<std::string>& locked_fields() const{ return lockedFields_; }
     std::set<std::string>& locked_fields(){ return lockedFields_; }
     
-    void lock_field( const std::string fieldName )
-    {
-      if ( lockedFields_.find(fieldName) == lockedFields_.end() ) lockedFields_.insert(fieldName);
+    void lock_field( const std::string& fieldName ){
+      if( lockedFields_.find(fieldName) == lockedFields_.end() ) lockedFields_.insert(fieldName);
     }
     
     void set_wasatch_materials( const Uintah::MaterialSet* const materials ) { materials_ = materials; }
