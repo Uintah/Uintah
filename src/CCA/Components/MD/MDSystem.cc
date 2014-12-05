@@ -44,7 +44,7 @@
 
 namespace Uintah {
 
-  static DebugStream mdSystemDebug("MDSystemDebug", true);
+  static DebugStream mdSystemDebug("MDSystemDebug", false);
 
   MDSystem::MDSystem()
   {

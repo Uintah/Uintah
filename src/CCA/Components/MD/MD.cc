@@ -1193,7 +1193,7 @@ void MD::initialize(const ProcessorGroup*   pg,
     SCIRun::IntVector   lowCellBoundary     =   currPatch->getCellLowIndex();
     SCIRun::IntVector   highCellBoundary    =   currPatch->getCellHighIndex();
 
-    std::cerr << "Current Cell Dimensions: " << cellDimensions << std::endl;
+//    std::cerr << "Current Cell Dimensions: " << cellDimensions << std::endl;
     (const_cast<Patch*> (currPatch))->getLevel(true)->setdCell(cellDimensions);
 
     double          atomTypeVelocitySquared     = 0.0;

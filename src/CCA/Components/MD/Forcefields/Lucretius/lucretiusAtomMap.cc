@@ -14,6 +14,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Parallel/Parallel.h>
 
 #include <sstream>
 #include <iomanip>
@@ -433,7 +434,7 @@ void lucretiusAtomMap::outputStatistics() const {
   // Quick parse pass to see what we ended up with.
   size_t numAtomTypes=0;
   numAtomTypes = this->getNumberAtomTypes();
-  std::cerr << "Constructed a Lucretius atom map with " << numAtomTypes << " atom types reported." << std::endl;
+  proc0cout << "Constructed a Lucretius atom map with " << numAtomTypes << " atom types reported." << std::endl;
   size_t totalAtomCount = 0;
   std::vector<std::string> typeLabel;
   std::vector<size_t> numPerType;
@@ -444,13 +445,13 @@ void lucretiusAtomMap::outputStatistics() const {
     typeLabel.push_back(it->first);
   }
   if (numPerType.size() != typeLabel.size()) {
-    std::cerr << "Something's wrong here.  We have a mismatched number of sizes and labels!" << std::endl;
+    proc0cerr << "Something's wrong here.  We have a mismatched number of sizes and labels!" << std::endl;
   }
   else {
     for (size_t idx=0; idx < typeLabel.size(); ++idx) {
-      std::cerr << "Stored " << std::setw(5) << std::right << numPerType[idx] << " atoms with the label: \"" << typeLabel[idx] << "\"" << std::endl;
+      proc0cout << "Stored " << std::setw(5) << std::right << numPerType[idx] << " atoms with the label: \"" << typeLabel[idx] << "\"" << std::endl;
     }
-    std::cerr << "Total atoms added: " << totalAtomCount << std::endl;
+    proc0cout << "Total atoms added: " << totalAtomCount << std::endl;
   }
 
 }
