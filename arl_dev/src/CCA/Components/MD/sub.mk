@@ -36,13 +36,15 @@ SRCS += $(SRCDIR)/MD.cc                           \
         $(SRCDIR)/MDLabel.cc                      \
         $(SRCDIR)/MDMaterial.cc                   \
         $(SRCDIR)/MDSystem.cc                     \
+        $(SRCDIR)/MDSubordinate.cc                \
         $(SRCDIR)/SimpleGrid.cc                   \
         $(SRCDIR)/atomFactory.cc
 
-SUBDIRS := $(SRCDIR)/Potentials  \
-           $(SRCDIR)/Forcefields \
-           $(SRCDIR)/Electrostatics \
-           $(SRCDIR)/Nonbonded     \
+SUBDIRS := $(SRCDIR)/Potentials         \
+           $(SRCDIR)/Forcefields        \
+           $(SRCDIR)/Electrostatics     \
+           $(SRCDIR)/Nonbonded          \
+           $(SRCDIR)/Integrators        \
            $(SRCDIR)/CoordinateSystems
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

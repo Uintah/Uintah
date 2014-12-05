@@ -1,0 +1,89 @@
+From AMRSimulationController.cc
+
+On AMRSimulationController::Run (called from sus.cc) the following happens:
+
+preGridSetup() (L::line 133) (Code in SimulationController.cc)
+  creates a new simulation state
+  extracts and stores the output port of the simulation to d_output
+  extracts the simulation's scheduler
+  runs scheduler's problemSetup
+  stores scheduler in d_scheduler
+  checks to ensure output port is present
+  checks for multipleTaskGraphing in AMR section and if so sets flag
+  initializes simulation time tracking
+  
+gridSetup()    (L::line136)  (Code in SimulationController.cc)
+  if restarting, locate the proper index for restart and read grid from there
+  if not restarting, create a new grid
+  call the simulations preGridProblemSetup method (if it exists)
+  call the grid's problemSetup method (including doAMR flag) << Need to understand this better>>
+  ensure grid has at least one level
+  set problem dimensions in d_sharedState
+  
+// Initialize the scheduler  
+d_scheduler->initialize(1, 1);
+d_scheduler->advanceDataWarehouse(currengGrid, true);
+d_scheduler->setInitTimestep(true);
+ 
+postGridSetup() (L::line146) (Code in SimulationController.cc)
+  set up regridder with initial grid info
+  initialize load balancer
+  call simulation's problemSetup
+  if restarting, do a lot of stuff << Need to understand this better>>
+  d_sharedState->finalizeMaterials(); // Gets all the materials fully set up
+  d_output->initializeOutput(d_ups);
+  if restarting, do restart specific setup stuff for output
+  
+calculateStartTime for this run
+// setup, compile, and run the taskgraph for initialization
+doInitialTimestep (currentGrid, time); (L::Line166)
+setStartSimTime(time);
+initSimulationStatsVars();  // Both of these are time tracking related
+
+d_lb->resetCostForceaster(); // Initialize the load balancer
+d_scheduler->setInitTimestep(false); // Prepare for running of sim loop
+
+while (time < maxTime) && (iterations < maxIterations) && wall_time < maxWallTime) 
+{  // Main simulation loop
+
+  if (have a regridder and doRegridOnce && isAdapatic)
+  { // L(L::line219)
+    regrid
+  }
+  
+  if (have a regridder && needsToRegrid && (!firstTimestep || restarting))
+  { // (L::line227)
+    regrid
+  }
+  
+  get previousTimestep (L::line240)
+  adjustTimeStep to comply with constraints (L::line251)
+  put adjustedTimestep into del_t	(L::line252)
+  
+  advanceDataWarehouse (L::line283)
+  put time into shared state (L::line288)
+  increment current timestep (L::line289)
+  
+  check for recompile of taskgraph (L::line303)
+  set timesteps for AMR (L::line336) << Need to understand this better>>
+  update outputInterval if necessary (L::line359)
+  update checkpoint interval if necessary (L::line368)
+  
+  reset the first timestep flag if it's set (L::line377)
+  
+  calculateCurrentWalltime (L::line381)
+  print Simulation Stats (L::line383)
+  
+  execute current Timesetp (L::line387)
+  
+  update profiler weights (L::line397)
+  
+  do output if necessary (L::line416)
+} // end main sime loop
+
+output the final timestep (L::line433)
+  
+  
+  
+  
+  

@@ -17,14 +17,10 @@
 #include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
 
 namespace Uintah {
+
   enum interactionModel { Deterministic, Stochastic, Mixed };
-
-  enum MDIntegrator {
-    velocityVerlet
-  };
-
-
   class Integrator {
+
     public:
       Integrator();
       virtual ~Integrator();
@@ -69,13 +65,14 @@ namespace Uintah {
                             const MDLabel*              label,
                                   CoordinateSystem*     coordSys) = 0;
 
-      virtual void advanceTime() const = 0;
-      virtual std::string getType() const = 0;
+//      virtual void advanceTime() const = 0;
+      virtual std::string       getType()               const = 0;
+      virtual interactionModel  getInteractionModel()   const = 0;
     private:
       // Forbid implicit instantiation and/or copy
       Integrator(const Integrator&);
       Integrator& operator=(const Integrator&);
-      MDIntegrator type;
+//      MDIntegrator type;
   };
 }
 
