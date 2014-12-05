@@ -16,7 +16,8 @@ namespace Uintah {
   class IntegratorFactory {
     public:
       static Integrator* create(const ProblemSpecP& ps,
-                                MDSystem* system);
+                                      MDSystem*     system,
+                                const VarLabel*     del_time);
   };
 }  // namespace Uintah
 

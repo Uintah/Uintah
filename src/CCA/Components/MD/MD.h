@@ -47,7 +47,28 @@
 #include <fstream>
 #include <iomanip>
 
+// Original
+#define isPrincipleThread (   Uintah::Parallel::getMPIRank() == 0              \
+                           &&(                                                 \
+                                (  Uintah::Parallel::getNumThreads() > 1       \
+                                 && SCIRun::Thread::self()->myid() == 0 )      \
+                              ||(  Uintah::Parallel::getNumThreads() <= 1 )    \
+                             )                                                 \
+                          )
+
+//#define isPrincipleThread (   Uintah::Parallel::getMPIRank() == 0              \
+//                           &&(  (Uintah::Parallel::getNumThreads() <= 1)       \
+//                              ||  (SCIRun::Thread::self()->myid() == 0)        \
+//                             )                                                 \
+//                          )
+
 namespace Uintah {
+
+  static DebugStream md_dbg("MDDebug", false);
+  static DebugStream md_cout("MDCout", false);
+  static DebugStream particleDebug("MDParticleVariableDebug", false);
+  static DebugStream electrostaticDebug("MDElectrostaticDebug", false);
+  static DebugStream mdFlowDebug("MDLogicFlowDebug", false);
 
   class SimpleMaterial;
   class SPME;
@@ -214,6 +235,27 @@ namespace Uintah {
                                           const MaterialSet* matls,
                                           const LevelP& level);
 
+      void scheduleIntegratorInitialize(      SchedulerP&   sched,
+                                        const PatchSet*     patches,
+                                        const MaterialSet*  matls,
+                                        const LevelP&       level);
+
+      void scheduleIntegratorSetup(           SchedulerP&   sched,
+                                        const PatchSet*     patches,
+                                        const MaterialSet*  matls,
+                                        const LevelP&       level);
+
+      void scheduleIntegratorCalculate(       SchedulerP&   sched,
+                                        const PatchSet*     patches,
+                                        const MaterialSet*  matls,
+                                        const LevelP&       level);
+
+      void scheduleIntegratorFinalize(        SchedulerP&   sched,
+                                        const PatchSet*     patches,
+                                        const MaterialSet*  matls,
+                                        const LevelP&       level);
+
+
       /**
        * @brief
        * @param
@@ -237,15 +279,15 @@ namespace Uintah {
        * @param
        * @return
        */
-      void scheduleUpdatePosition(SchedulerP& sched,
-                                  const PatchSet* patches,
-                                  const MaterialSet* matls,
-                                  const LevelP& level);
-
-      void scheduleNewUpdatePosition(      SchedulerP&  sched,
-                                     const PatchSet*    patches,
-                                     const MaterialSet* atomTypes,
-                                     const LevelP&      level);
+//      void scheduleUpdatePosition(SchedulerP& sched,
+//                                  const PatchSet* patches,
+//                                  const MaterialSet* matls,
+//                                  const LevelP& level);
+//
+//      void scheduleNewUpdatePosition(      SchedulerP&  sched,
+//                                     const PatchSet*    patches,
+//                                     const MaterialSet* atomTypes,
+//                                     const LevelP&      level);
 
     private:
 
@@ -376,16 +418,41 @@ namespace Uintah {
                              const MaterialSubset*  atomTypes,
                                    DataWarehouse*   oldDW,
                                    DataWarehouse*   newDW);
+
+      void integratorInitialize(const ProcessorGroup*   pg,
+                                const PatchSubset*      patches,
+                                const MaterialSubset*   atomTypes,
+                                      DataWarehouse*    oldDW,
+                                      DataWarehouse*    newDW);
+
+      void integratorSetup(     const ProcessorGroup*   pg,
+                                const PatchSubset*      patches,
+                                const MaterialSubset*   atomTypes,
+                                      DataWarehouse*    oldDW,
+                                      DataWarehouse*    newDW);
+
+      void integratorCalculate( const ProcessorGroup*   pg,
+                                const PatchSubset*      patches,
+                                const MaterialSubset*   atomTypes,
+                                      DataWarehouse*    oldDW,
+                                      DataWarehouse*    newDW);
+
+      void integratorFinalize(  const ProcessorGroup*   pg,
+                                const PatchSubset*      patches,
+                                const MaterialSubset*   atomTypes,
+                                      DataWarehouse*    oldDW,
+                                      DataWarehouse*    newDW);
+
       /**
        * @brief
        * @param
        * @return
        */
-      void updatePosition(const ProcessorGroup* pg,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw);
+//      void updatePosition(const ProcessorGroup* pg,
+//                          const PatchSubset* patches,
+//                          const MaterialSubset* matls,
+//                          DataWarehouse* old_dw,
+//                          DataWarehouse* new_dw);
 
        void createBasePermanentParticleState();
 
@@ -429,17 +496,17 @@ namespace Uintah {
       MD(const MD&);
       MD& operator=(const MD&);
 
+//      bool isPrincipleThread;
+
       double d_referenceEnergy;
       double d_baseTimeStep;
       bool d_referenceStored;
+
 
       bool d_firstIntegration;
       bool d_secondIntegration;
       double d_KineticBase;
       double d_PotentialBase;
-      double d_isoKineticMult;
-      SCIRun::Vector d_xShift;
-      std::ofstream d_xyzOutFile;
   };
 
 }

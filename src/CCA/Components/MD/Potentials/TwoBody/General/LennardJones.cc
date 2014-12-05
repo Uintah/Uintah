@@ -98,6 +98,8 @@ namespace Uintah {
 
     double r_to_m = RToPower(r, r2, m);
     double r_to_n = RToPower(r, r2, n);
+//    double r_to_m = pow(r,m);
+//    double r_to_n = pow(r,n);
     double mTerm = A/r_to_m;
     double nTerm = C/r_to_n;
 
