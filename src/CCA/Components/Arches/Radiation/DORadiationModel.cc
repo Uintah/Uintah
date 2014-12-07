@@ -62,10 +62,9 @@
 #include <CCA/Components/Arches/Radiation/fortran/radcal_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rdomsolve_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rdomsrc_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/rdomsrcscattering_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rdomflux_fort.h>
-#include <CCA/Components/Arches/Radiation/fortran/rdomincident_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rdomvolq_fort.h>
-#include <Core/Containers/StaticArray.h>
 
 using namespace std;
 using namespace Uintah;
@@ -121,6 +120,8 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
 
   db->getWithDefault("usePrevInt",usePreviousIntensity,false); //  using the previous solve as initial guess, is off by default
 
+  db->getWithDefault("ScatteringOn",ScatteringOn,false); //  using the previous solve as initial guess, is off by default
+
   if (db) {
     db->getWithDefault("ordinates",d_sn,2);
     proc0cout << " Notice: No ordinate number specified.  Defaulting to 2." << endl;
@@ -168,19 +169,20 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
     ostringstream my_stringstream_object;
     my_stringstream_object << "Intensity" << setfill('0') << setw(4)<<  ix ;
     _IntensityLabels.push_back(  VarLabel::create(my_stringstream_object.str(),  CC_double));
-    if(usePreviousIntensity==false){
+    if(DOSolveInitialGuessBool()== false){
      break;  // gets labels for all intensities, otherwise only create 1 label
     }
   }
-   if( reflectionsTurnedOn){
-  _IncidentIntensityLabels.push_back(  VarLabel::create("IncidentFluxE",  CC_double));
-  _IncidentIntensityLabels.push_back(  VarLabel::create("IncidentFluxW",  CC_double));
-  _IncidentIntensityLabels.push_back(  VarLabel::create("IncidentFluxN",  CC_double));
-  _IncidentIntensityLabels.push_back(  VarLabel::create("IncidentFluxS",  CC_double));
-  _IncidentIntensityLabels.push_back(  VarLabel::create("IncidentFluxT",  CC_double));
-  _IncidentIntensityLabels.push_back(  VarLabel::create("IncidentFluxB",  CC_double));
-  }
 
+  _radiationFluxLabels.push_back(  VarLabel::find("radiationFluxE"));
+  _radiationFluxLabels.push_back(  VarLabel::find("radiationFluxW"));
+  _radiationFluxLabels.push_back(  VarLabel::find("radiationFluxN"));
+  _radiationFluxLabels.push_back(  VarLabel::find("radiationFluxS"));
+  _radiationFluxLabels.push_back(  VarLabel::find("radiationFluxT"));
+  _radiationFluxLabels.push_back(  VarLabel::find("radiationFluxB"));
+
+  if (ScatteringOn)
+    _scatktLabel =  VarLabel::create("scatkt",CC_double);
 }
 //______________________________________________________________________
 //
@@ -201,6 +203,16 @@ DORadiationModel::computeOrdinatesOPL() {
 
   fort_rordr(d_sn, oxi, omu, oeta, wt);
 
+  double  cosineTheta;
+  double  asymmetryFactor = 1.0;
+  phaseFunction  = vector<vector< double > > (d_totalOrds,vector<double>(d_totalOrds,0.0));
+
+    for (int i=0; i<d_totalOrds ; i++){
+      for (int j=0; j<d_totalOrds ; j++){
+        cosineTheta=oxi[j+1]*oxi[i+1]+oeta[j+1]*oeta[i+1]+omu[j+1]*omu[i+1];
+        phaseFunction[i][j] = (1.0 + asymmetryFactor*cosineTheta)* wt[i+1]/(4.0 * M_PI);
+      }
+    }
 }
 
 //***************************************************************************
@@ -282,30 +294,46 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   CCVariable<double> ab;
   CCVariable<double> ap;
 
-  StaticArray< CCVariable<double> > IncidentFlux(_IncidentIntensityLabels.size());
-  StaticArray< CCVariable<double> > IncidentFlux_old(6); // must always 6, even when reflections are off.
+  StaticArray< CCVariable<double> > radiationFlux_old(_radiationFluxLabels.size()); // must always 6, even when reflections are off.
 
-    for (unsigned int i=0; i<  _IncidentIntensityLabels.size(); i++){
-      constCCVariable<double>  IncidentFlux_temp;
-      old_dw->get(IncidentFlux_temp,_IncidentIntensityLabels[i], matlIndex , patch,Ghost::None, 0  );
-      new_dw->allocateAndPut(IncidentFlux[i],_IncidentIntensityLabels[i] , matlIndex, patch );
-      IncidentFlux_old[i].allocate(domLo,domHi);
-      IncidentFlux_old[i].copyData(IncidentFlux_temp);
-      IncidentFlux[i].initialize(0.0);          // must be set to zero, for sum+
+  if(reflectionsTurnedOn){
+    for (unsigned int i=0; i<  _radiationFluxLabels.size(); i++){
+      constCCVariable<double>  radiationFlux_temp;
+      old_dw->get(radiationFlux_temp,_radiationFluxLabels[i], matlIndex , patch,Ghost::None, 0  );
+      radiationFlux_old[i].allocate(domLo,domHi);
+      radiationFlux_old[i].copyData(radiationFlux_temp);
     }
-
-    if(reflectionsTurnedOn==false){
-      for (int i=0; i<  6; i++){  // magic number cooresponds to number of labels tranported, when 
-        IncidentFlux_old[i].allocate(domLo,domHi);
-        IncidentFlux_old[i].initialize(0.0);      // for no reflections, this must be zero
-      }
+  }
+  else{
+    for (unsigned int i=0; i<  _radiationFluxLabels.size(); i++){  // magic number cooresponds to number of labels tranported, when 
+      radiationFlux_old[i].allocate(domLo,domHi);
+      radiationFlux_old[i].initialize(0.0);      // for no reflections, this must be zero
     }
+  }
+  }
   
 
   if(usePreviousIntensity==false){
     old_dw->get(constvars->cenint,_IntensityLabels[0], matlIndex , patch,Ghost::None, 0  );
     new_dw->getModifiable(vars->cenint,_IntensityLabels[0] , matlIndex, patch ); // per the logic in sourceterms/doradiation, old and new dw are the same.
   }
+
+
+  StaticArray< constCCVariable<double> > Intensities(ScatteringOn ? d_totalOrds : 0);
+
+  CCVariable<double> scatIntensitySource;  
+  constCCVariable<double> scatkt;   //total scattering coefficient
+
+  scatIntensitySource.allocate(domLo,domHi);
+  scatIntensitySource.initialize(0.0); // needed for non-scattering cases
+
+
+  if(ScatteringOn){
+    for( int ix=0;  ix<d_totalOrds ;ix++)
+      old_dw->get(Intensities[ix],_IntensityLabels[ix], matlIndex , patch,Ghost::None, 0  );
+       // get scattering coefficient here!
+      old_dw->get(scatkt,_scatktLabel, matlIndex , patch,Ghost::None, 0);
+    }
 
 
   su.allocate(domLo,domHi);
@@ -331,7 +359,6 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   vars->qfluxs.initialize(0.0);
   vars->qfluxt.initialize(0.0);
   vars->qfluxb.initialize(0.0);
-
 
   //__________________________________
   //begin discrete ordinates
@@ -359,6 +386,12 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       at.initialize(0.0);
       bool plusX, plusY, plusZ;
 
+      if(ScatteringOn){
+        scatIntensitySource.initialize(0.0); // needed for summation
+        computeScatteringIntensities(direcn, constvars->ABSKG, Intensities,scatIntensitySource, patch);
+      }
+                                                         
+
       fort_rdomsolve( idxLo, idxHi, constvars->cellType, ffield, 
                       cellinfo->sew, cellinfo->sns, cellinfo->stb, 
                       vars->ESRCG, direcn, oxi, omu,oeta, wt, 
@@ -366,9 +399,10 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                       su, aw, as, ab, ap, ae, an, at,
                       plusX, plusY, plusZ, fraction, bands, 
                       d_intrusion_abskg,
-                      IncidentFlux_old[0] , IncidentFlux_old[1],
-                      IncidentFlux_old[2] , IncidentFlux_old[3],
-                      IncidentFlux_old[4] , IncidentFlux_old[5]);
+                      radiationFlux_old[0] , radiationFlux_old[1],
+                      radiationFlux_old[2] , radiationFlux_old[3],
+                      radiationFlux_old[4] , radiationFlux_old[5],
+                      scatIntensitySource); //  this term needed for scattering
 
 
 
@@ -393,17 +427,13 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                      vars->qfluxn, vars->qfluxs,
                      vars->qfluxt, vars->qfluxb);
                      
-
-      if(reflectionsTurnedOn){
-        fort_rdomincident( idxLo, idxHi, direcn, oxi, omu, oeta, wt, vars->cenint,
-            plusX, plusY, plusZ, 
-            IncidentFlux[0] , IncidentFlux[1],
-            IncidentFlux[2] , IncidentFlux[3],
-            IncidentFlux[4] , IncidentFlux[5]);
-      }
     }  // ordinate loop
+ 
+  if(ScatteringOn)
+    fort_rdomsrcscattering( idxLo, idxHi, constvars->ABSKG, vars->ESRCG,vars->volq, divQ, scatkt); 
+  else
+    fort_rdomsrc( idxLo, idxHi, constvars->ABSKG, vars->ESRCG,vars->volq, divQ); 
 
-    fort_rdomsrc( idxLo, idxHi, constvars->ABSKG, vars->ESRCG,vars->volq, divQ );
 
   }  // bands loop
 
@@ -423,5 +453,32 @@ return reflectionsTurnedOn;
 
 bool 
 DORadiationModel::DOSolveInitialGuessBool(){
-return usePreviousIntensity;
+return usePreviousIntensity || ScatteringOn  ;
+}
+
+bool 
+DORadiationModel::ScatteringOnBool(){
+return ScatteringOn;
+}
+
+void
+DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<double> &scatkt, StaticArray < constCCVariable<double> > &Intensities, CCVariable<double> &scatIntensitySource, const Patch* patch ){
+  direction -=1;   // change from fortran vector to c++ vector
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
+    if (scatkt[*iter] < 1e-6) // intended to increase speed! 
+      continue;
+
+    for (int i=0; i < d_totalOrds ; i++) {                                    
+      scatIntensitySource[*iter]  +=phaseFunction[direction][i]*Intensities[i][*iter] ; // wt could be comuted up with the phase function in the j loop
+    }
+
+  }
+
+
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+    scatIntensitySource[*iter] *= scatkt[*iter]  ;
+  }
+
+  return;
 }

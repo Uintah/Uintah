@@ -121,11 +121,15 @@ namespace Uintah {
 
   //------------------------------------------------------------------
   
-  ParticlesHelper::ParticlesHelper() :
-  isValidState_(false),
-  pPerCell_(0.0),
-  maxParticles_(0x10000u) // 2^32 ~ 4.3 billion particles per patch - maximum
+  ParticlesHelper::ParticlesHelper()
+    : isValidState_(false),
+      pPerCell_(0.0),
+      maxParticles_(0x10000u) // 2^32 ~ 4.3 billion particles per patch - maximum
   {
+    pXLabel_ = NULL;
+    pYLabel_ = NULL;
+    pZLabel_ = NULL;
+    materials_ = NULL;
     pPosLabel_ = VarLabel::create("p.x",
                                   ParticleVariable<Uintah::Point>::getTypeDescription(),
                                   SCIRun::IntVector(0,0,0),
@@ -894,7 +898,6 @@ namespace Uintah {
 
                 //__________________________________________________________________________________
                 Uintah::Iterator bndIter; // allocate iterator
-                std::vector<int> childBndParticles;
                 // get the iterator for the extracells for this child
                 bcDataArray->getCellFaceIterator(matl, bndIter, chid);
                 if( bndIter.done() ) continue; // go to the next child if this iterator is empty

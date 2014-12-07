@@ -324,21 +324,21 @@ Arches::problemSetup(const ProblemSpecP& params,
   _boost_factory_map.insert(std::make_pair("lagrangian_factory",LagF)); 
 
   typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
-  std::cout << "\n Registering Tasks For: " << std::endl;
+  proc0cout << "\n Registering Tasks For: " << std::endl;
   for ( BFM::iterator i = _boost_factory_map.begin(); i != _boost_factory_map.end(); i++ ){ 
 
-    std::cout << "   " << i->first << std::endl;
+    proc0cout << "   " << i->first << std::endl;
     i->second->register_all_tasks(db); 
 
   }
-  std::cout << "\n Building Tasks For: " << std::endl;
+  proc0cout << "\n Building Tasks For: " << std::endl;
   for ( BFM::iterator i = _boost_factory_map.begin(); i != _boost_factory_map.end(); i++ ){ 
 
-    std::cout << "   " << i->first << std::endl;
+    proc0cout << "   " << i->first << std::endl;
     i->second->build_all_tasks(db); 
 
   }
-  std::cout << endl;
+  proc0cout << endl;
   //===================END NEW TASK STUFF
 
   //Checking for lagrangian particles:

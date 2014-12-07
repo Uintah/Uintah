@@ -195,7 +195,6 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   // refined if the grid has not been setup manually
   bool manualGrid;
   mpm_ps->getWithDefault("manualGrid", manualGrid, false);
-	cout << "manualGrid: " << manualGrid << endl;
   
   if(!manualGrid){
     ProblemSpecP refine_ps = mpm_ps->findBlock("Refine_Regions");

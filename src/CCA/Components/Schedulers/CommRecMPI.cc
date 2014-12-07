@@ -70,9 +70,7 @@ void CommRecMPI::add(MPI_Request id,
     ++(countIter->second);
   }
 }
-//______________________________________________________________________
-//
-//______________________________________________________________________
+
 //______________________________________________________________________
 //
 //______________________________________________________________________
@@ -93,8 +91,6 @@ bool CommRecMPI::waitsome(const ProcessorGroup* pg,
     return false;  // no more to test
   }
 
-  }
-  
   statii.resize(ids.size());
   indices.resize(ids.size());
 
@@ -156,8 +152,7 @@ bool CommRecMPI::waitsome(const ProcessorGroup* pg,
 //    cout << "Size: " << size << ", thissize: " << ids.size() << ", crsize: " << cr.ids.size() << ", combinedsize: "
 //         << combinedIDs.size() << endl;
 //  }
-  //__________________________________
-  // debugging output
+
   //__________________________________
   // debugging output
   int me = pg->myrank();
@@ -217,7 +212,6 @@ bool CommRecMPI::testsome(const ProcessorGroup* pg,
   if (ids.size() == 0) {
     return false;  // no more to test
   }
-  }
   statii.resize(ids.size());
   indices.resize(ids.size());
   int me = pg->myrank();
@@ -269,14 +263,13 @@ bool CommRecMPI::donesome(const ProcessorGroup* pg,
       handlers[idx]->finishedCommunication(pg, statii[i]);
       ASSERT(handlers[idx] != 0);
 
-      
       delete handlers[idx];
       handlers[idx] = 0;
     }
 
     numReceived++;
     volReceived += byteCounts[idx];
-    ids[idx]     =  MPI_REQUEST_NULL;
+    ids[idx] = MPI_REQUEST_NULL;
     totalBytes_ -= byteCounts[idx];
     byteCounts[idx] = 0;
     int groupID = groupIDs[idx];
@@ -316,12 +309,12 @@ bool CommRecMPI::donesome(const ProcessorGroup* pg,
   int j = 0;
   for (int i = 0; i < (int)ids.size(); i++) {
     if (ids[i] != MPI_REQUEST_NULL) {
-      ids[j]            = ids[i];
-      groupIDs[j]       = groupIDs[i];
-      handlers[j]       = handlers[i];
-      byteCounts[j]     = byteCounts[i];
-      messageNums[j]    = messageNums[i];
-      vars[j]           = vars[i];
+      ids[j] = ids[i];
+      groupIDs[j] = groupIDs[i];
+      handlers[j] = handlers[i];
+      byteCounts[j] = byteCounts[i];
+      messageNums[j] = messageNums[i];
+      vars[j] = vars[i];
       ++j;
     }
   }
@@ -336,9 +329,7 @@ bool CommRecMPI::donesome(const ProcessorGroup* pg,
 
   return !anyFinished;  // keep waiting until something finished
 }
-//______________________________________________________________________
-//
-//______________________________________________________________________
+
 //______________________________________________________________________
 //
 //______________________________________________________________________
@@ -352,9 +343,7 @@ void CommRecMPI::waitall(const ProcessorGroup* pg)
 //    mixedDebug << me << " Calling waitall with " << ids.size() << " waiters\n";
   clock_t start = clock();
 
-  
-  MPI_Waitall( (int)ids.size(), &ids[0], &statii[0] );
-  
+  MPI_Waitall((int)ids.size(), &ids[0], &statii[0]);
 
   WaitTimePerMessage = (clock() - start) / (double)CLOCKS_PER_SEC / ids.size();
   //  mixedDebug << me << " Done calling waitall with " << ids.size() << " waiters\n";

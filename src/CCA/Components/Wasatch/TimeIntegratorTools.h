@@ -52,6 +52,7 @@ namespace Wasatch{
    */
   struct TimeIntegrator {
     TimeIntegratorEnum timeIntEnum;
+    std::string name;
     int nStages;
     double alpha[3];
     double beta[3];
@@ -63,7 +64,8 @@ namespace Wasatch{
     }
 
     TimeIntegrator(const std::string& timeIntName)
-    : timeIntEnum( (timeIntName == "RK2SSP") ? RK2SSP : ( (timeIntName == "RK3SSP") ? RK3SSP : FE ) )
+    : timeIntEnum( (timeIntName == "RK2SSP") ? RK2SSP : ( (timeIntName == "RK3SSP") ? RK3SSP : FE ) ),
+      name(timeIntName)
     {
       initialize();
     }

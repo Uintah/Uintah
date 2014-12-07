@@ -259,8 +259,10 @@ namespace Wasatch{
 
   //==================================================================
 
-  Expr::Tag mom_tag( const std::string& momName )
+  Expr::Tag mom_tag( const std::string& momName, const bool old = false )
   {
+    if (old) return Expr::Tag( momName, Expr::STATE_N );
+    if (old) return Expr::Tag( momName, Expr::STATE_N );
     return Expr::Tag( momName, Expr::STATE_DYNAMIC );
   }
 
@@ -311,18 +313,19 @@ namespace Wasatch{
   //==================================================================
   
   void set_mom_tags( Uintah::ProblemSpecP params,
-                     Expr::TagList& momTags )
+                     Expr::TagList& momTags,
+                     const bool old=false)
   {
     std::string xmomname, ymomname, zmomname;
     Uintah::ProblemSpecP doxmom,doymom,dozmom;
     doxmom = params->get( "X-Momentum", xmomname );
     doymom = params->get( "Y-Momentum", ymomname );
     dozmom = params->get( "Z-Momentum", zmomname );
-    if( doxmom ) momTags.push_back( mom_tag(xmomname) );
+    if( doxmom ) momTags.push_back( mom_tag(xmomname, old) );
     else         momTags.push_back( Expr::Tag() );
-    if( doymom ) momTags.push_back( mom_tag(ymomname) );
+    if( doymom ) momTags.push_back( mom_tag(ymomname, old) );
     else         momTags.push_back( Expr::Tag() );
-    if( dozmom ) momTags.push_back( mom_tag(zmomname) );
+    if( dozmom ) momTags.push_back( mom_tag(zmomname, old) );
     else         momTags.push_back( Expr::Tag() );
   }
   
@@ -701,7 +704,7 @@ namespace Wasatch{
       
       set_vel_star_tags( velTags_, velStarTags );
       set_mom_tags( params, momTags_ );
-      
+      set_mom_tags( params, oldMomTags_, true );
         // register the expression for pressure source term
         Expr::TagList psrcTagList;
         psrcTagList.push_back(tagNames.pressuresrc);
@@ -713,7 +716,7 @@ namespace Wasatch{
           psrcTagList.push_back(tagNames.drhodtstar );
         }
       factory.register_expression( new typename DivmomStar::Builder( tagNames.divmomstar, velStarTags, densStarTag ) );
-      factory.register_expression( new typename PressureSource::Builder( psrcTagList, momTags_, velTags_, velStarTags, isConstDensity, densTag, densStarTag, dens2StarTag, varDenParams, tagNames.divmomstar ) );
+      factory.register_expression( new typename PressureSource::Builder( psrcTagList, momTags_, oldMomTags_, velTags_, velStarTags, isConstDensity, densTag, densStarTag, dens2StarTag, varDenParams, tagNames.divmomstar ) );
     }
     
     //__________________

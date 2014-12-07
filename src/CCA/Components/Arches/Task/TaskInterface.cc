@@ -818,7 +818,6 @@ void TaskInterface::schedule_init( const LevelP& level,
           break; 
 
       }
-      var_count++; 
     }
 
     if ( counter > 0 )
