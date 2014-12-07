@@ -45,7 +45,7 @@ SmoothGeomPiece::~SmoothGeomPiece()
 }
 
 //////////////////////////////////////////////////////////////////////
-/* Returns the vector containing the set of particle locations */
+/* Returns the vector containing the set of particle locations      */
 //////////////////////////////////////////////////////////////////////
 vector<Point>* 
 SmoothGeomPiece::getPoints()
@@ -54,7 +54,7 @@ SmoothGeomPiece::getPoints()
 }
 
 //////////////////////////////////////////////////////////////////////
-/* Returns the vector containing the set of particle volumes */
+/* Returns the vector containing the set of particle volumes        */
 //////////////////////////////////////////////////////////////////////
 vector<double>* 
 SmoothGeomPiece::getVolume()
@@ -63,7 +63,7 @@ SmoothGeomPiece::getVolume()
 }
 
 //////////////////////////////////////////////////////////////////////
-/* Returns the vector containing the set of particle temperatures */
+/* Returns the vector containing the set of particle temperatures   */
 //////////////////////////////////////////////////////////////////////
 vector<double>* 
 SmoothGeomPiece::getTemperature()
@@ -71,7 +71,7 @@ SmoothGeomPiece::getTemperature()
   return &d_temperature;
 }
 //////////////////////////////////////////////////////////////////////
-/* Returns the vector containing the set of particle color*/
+/* Returns the vector containing the set of particle color          */
 //////////////////////////////////////////////////////////////////////
 vector<double>* 
 SmoothGeomPiece::getColors()
@@ -80,7 +80,7 @@ SmoothGeomPiece::getColors()
 }
 
 //////////////////////////////////////////////////////////////////////
-/* Returns the vector containing the set of particle forces */
+/* Returns the vector containing the set of particle forces         */
 //////////////////////////////////////////////////////////////////////
 vector<Vector>* 
 SmoothGeomPiece::getForces()
@@ -89,7 +89,7 @@ SmoothGeomPiece::getForces()
 }
 
 //////////////////////////////////////////////////////////////////////
-/* Returns the vector containing the set of particle fiber directions */
+/* Returns the vector containing the particle fiber directions      */
 //////////////////////////////////////////////////////////////////////
 vector<Vector>* 
 SmoothGeomPiece::getFiberDirs()
@@ -97,17 +97,36 @@ SmoothGeomPiece::getFiberDirs()
   return &d_fiberdirs;
 }
 
-////////////////////////////////////////////////////////////////////// // gcd adds
-/* Returns the vector containing the set of particle velocity components */
+//////////////////////////////////////////////////////////////////////
+/* Returns the vectors containing the CPDI or CPTI R-vectors        */
+//////////////////////////////////////////////////////////////////////
+vector<Vector>* 
+SmoothGeomPiece::getRvec1()
+{
+  return &d_rvec1;
+}
+vector<Vector>* 
+SmoothGeomPiece::getRvec2()
+{
+  return &d_rvec2;
+}
+vector<Vector>* 
+SmoothGeomPiece::getRvec3()
+{
+  return &d_rvec3;
+}
+                                                           // gcd adds
+//////////////////////////////////////////////////////////////////////
+/* Returns the vector containing the particle velocity components   */
 //////////////////////////////////////////////////////////////////////
 vector<Vector>* 
 SmoothGeomPiece::getVelocity()
 {
   return &d_velocity;
-}                                                  // end gcd add
+}                                                       // end gcd add
 
 //////////////////////////////////////////////////////////////////////
-/* Returns the vector containing the set of particle size tensor */
+/* Returns the vector containing the set ofparticle size tensors    */
 //////////////////////////////////////////////////////////////////////
 vector<Matrix3>* 
 SmoothGeomPiece::getSize()
@@ -116,7 +135,7 @@ SmoothGeomPiece::getSize()
 }
 
 //////////////////////////////////////////////////////////////////////
-/* Deletes the vector containing the set of particle locations */
+/* Deletes the vector containing the set of particle locations      */
 //////////////////////////////////////////////////////////////////////
 void 
 SmoothGeomPiece::deletePoints()
@@ -125,7 +144,7 @@ SmoothGeomPiece::deletePoints()
 }
 
 //////////////////////////////////////////////////////////////////////
-/* Deletes the vector containing the set of particle volumes */
+/* Deletes the vector containing the set of particle volumes        */
 //////////////////////////////////////////////////////////////////////
 void 
 SmoothGeomPiece::deleteVolume()
@@ -134,7 +153,7 @@ SmoothGeomPiece::deleteVolume()
 }
 
 //////////////////////////////////////////////////////////////////////
-/* Deletes the vector containing the set of particle sizes */
+/* Deletes the vector containing the set of particle sizes          */
 //////////////////////////////////////////////////////////////////////
 void 
 SmoothGeomPiece::deleteSizes()
@@ -143,7 +162,7 @@ SmoothGeomPiece::deleteSizes()
 }
 
 //////////////////////////////////////////////////////////////////////
-/* Deletes the vector containing the set of particle temperatures */
+/* Deletes the vector containing the set of particle temperatures   */
 //////////////////////////////////////////////////////////////////////
 void 
 SmoothGeomPiece::deleteTemperature()

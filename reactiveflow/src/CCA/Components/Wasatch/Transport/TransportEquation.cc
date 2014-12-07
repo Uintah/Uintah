@@ -39,7 +39,7 @@ namespace Wasatch{
 
   TransportEquation::
   TransportEquation( GraphCategories& gc,
-                     const std::string solnVarName,
+                     const std::string& solnVarName,
                      Uintah::ProblemSpecP params,
                      const Direction stagLoc,
                      const bool isConstDensity )

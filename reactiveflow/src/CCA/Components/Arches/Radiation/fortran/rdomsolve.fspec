@@ -27,4 +27,5 @@ void rdomsolve(IntVector idxlo, IntVector idxhi,
            CCVariable<double> IncidentFluxN,
            CCVariable<double> IncidentFluxS,
            CCVariable<double> IncidentFluxT,
-           CCVariable<double> IncidentFluxB);  
+           CCVariable<double> IncidentFluxB,  
+           CCVariable<double> scat_source);  

@@ -112,8 +112,8 @@ public:
    *  \param hasMinusBoundary true if a physical boundary is present on the (-) side of the patch.
    */
   FluxLimiterInterpolant( const std::vector<int>& dim,
-                          const std::vector<bool> hasPlusFace,
-                          const std::vector<bool> hasMinusBoundary);
+                          const std::vector<bool>& hasPlusFace,
+                          const std::vector<bool>& hasMinusBoundary);
   
   /**
    *  \brief Destructor for flux limiter interpolant.

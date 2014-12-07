@@ -236,7 +236,6 @@ namespace Wasatch {
             msg << "ERROR: An invalid uintah face has been specified when tyring to apply bc on "
                 << myBndCondSpec.varName << std::endl;
             throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-            break;
           }
         }
         break; // DIRICHLET
@@ -287,7 +286,6 @@ namespace Wasatch {
             msg << "ERROR: An invalid uintah face has been specified when tyring to apply bc on "
             << myBndCondSpec.varName << std::endl;
             throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-            break;
           }
         }
         break; // NEUMANN
@@ -299,7 +297,6 @@ namespace Wasatch {
         msg << "ERROR: It looks like you have specified an UNSUPPORTED basic boundary Type!"
         << "Basic boundary types can only be either DIRICHLET or NEUMANN. Please revise your input file." << std::endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-        break;
       }
     }
   }
@@ -726,7 +723,6 @@ namespace Wasatch {
             
             std::vector<Uintah::Patch::FaceType> bndFaces;
             patch->getBoundaryFaces(bndFaces);
-            std::vector<Uintah::Patch::FaceType>::const_iterator faceIterator = bndFaces.begin();
             
             // loop over the physical boundaries of this patch. These are the LOGICAL boundaries
             // and do NOT include intrusions
@@ -1076,15 +1072,14 @@ namespace Wasatch {
               const string strPatchID = number_to_string(patchID);
               
               Expr::Tag modTag;
-              Expr::ExpressionBuilder* builder = NULL;
               
               // create bc expressions. These are not created from the input file.
               if( myBndCondSpec->is_functor() ) { // functor bc
                 modTag = Expr::Tag( myBndCondSpec->functorName, Expr::STATE_NONE );
-              } else { // constant bc
+              }
+              else{ // constant bc
                 modTag = Expr::Tag( fieldName + "state_" + Expr::context2str(varTag.context()) + "_bc_" + myBndSpec.name + "_patch_" + strPatchID, Expr::STATE_NONE );
-                builder = new typename ConstantBC<FieldT>::Builder( modTag, myBndCondSpec->value );
-                factory.register_expression( builder, true );
+                factory.register_expression( new typename ConstantBC<FieldT>::Builder( modTag, myBndCondSpec->value ), true );
               }
               
               // attach the modifier expression to the target expression

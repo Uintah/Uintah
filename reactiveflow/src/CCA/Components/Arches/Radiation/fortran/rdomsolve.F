@@ -38,14 +38,13 @@ C
       pi = dacos(-1.0D0)
       PI1 = intrusion_abskg / PI
 
-
-      diffuse_reflection = 1 / 2.0d0 / pi
+c     wall is a perfectly diffuse reflector
+      diffuse_reflection = 1.0d0  / pi
 
       do 30 k=idxlo(3),idxhi(3)
       do 20 j=idxlo(2),idxhi(2)
       do 10 i=idxlo(1),idxhi(1)
 
-c     blackbody emmissive flux
       esrcg(i,j,k) = SIG/pi*abskg(i,j,k)*tg(i,j,k)**4
 
       if (omu(l).gt.0) then
@@ -90,21 +89,24 @@ c     blackbody emmissive flux
          
       end if
 
-      volume = sew(ii) * sns(jj) * stb(kk)
-      su(ii,jj,kk) = esrcg(ii,jj,kk)*volume
-
-      areaew = sns(jj) * stb(kk)
-      arean  = sew(ii) * stb(kk)                 
-      areatb = sew(ii) * sns(jj)
       
       if (pcell(ii,jj,kk).ne.ffield) then
-c  call fixval assume abskg to be one but change it in props calculation
+c  if non-flow cell, then set LHS to 1*I and RHS to sigma*T^4/pi 
 
          val = abs(fraction(bands))*SIG*PI1*tg(ii,jj,kk)**4
          factor = 1.d0
          call fixradval(val,aw(ii,jj,kk),as(ii,jj,kk),ab(ii,jj,kk),
      $                  ap(ii,jj,kk),su(ii,jj,kk),factor)
       else
+
+c  if flow cell, populate corresponding elements in arrays 
+      volume = sew(ii) * sns(jj) * stb(kk)
+      su(ii,jj,kk) = (esrcg(ii,jj,kk) + scat_source(ii,jj,kk)) *volume
+
+      areaew = sns(jj) * stb(kk)
+      arean  = sew(ii) * stb(kk)                 
+      areatb = sew(ii) * sns(jj)
+
          if (plusX) then          
             if (pcell(ii-1,jj,kk).eq.ffield) then
                aw(ii,jj,kk) = abs(omu(l))*areaew

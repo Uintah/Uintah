@@ -276,7 +276,6 @@ namespace Wasatch {
     const double dx2 = dx*dx;
     const double dy2 = dy*dy;
     const double dz2 = dz*dz;
-    const std::string phiName = poissonTag.name();
 
     std::vector<Uintah::Patch::FaceType> bndFaces;
     patch->getBoundaryFaces(bndFaces);
@@ -294,9 +293,8 @@ namespace Wasatch {
         double bcValue;
         std::string bcKind;
         std::string bcName = "none";
-        std::string bcFunctorName = "none";
         //get_iter_bcval_bckind_bcname( patch, face, child, poissonTag.name(), material, bc_value, bound_ptr, bc_kind, bc_name,bc_functor_name);
-        getBCKind(patch,face,child,poissonTag.name(), material, bcKind, bcName);
+        getBCKind( patch, face, child, poissonTag.name(), material, bcKind, bcName );
         
         if( bcKind.compare("Dirichlet")==0 || bcKind.compare("Neumann")==0 )
           getBCValue( patch, face, child, poissonTag.name(), material, bcValue );

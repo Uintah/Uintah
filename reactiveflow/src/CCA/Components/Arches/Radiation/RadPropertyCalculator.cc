@@ -302,6 +302,18 @@ bool RadPropertyCalculator::ConstantProperties::problemSetup( const ProblemSpecP
     _abskg_name = "abskg"; 
   }
 
+  //------------ check to see if scattering is turned on --//
+  std::string radiation_model;
+  db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src")->getAttribute("type",radiation_model) ; 
+
+  if (radiation_model == "do_radiation"){
+    db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src")->findBlock("DORadiationModel")->getWithDefault("ScatteringOn" ,_use_scatkt,false) ; 
+  }
+  else if ( radiation_model == "rmcrt_radiation"){
+    db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src")->findBlock("RMCRT")->getWithDefault("ScatteringOn" ,_use_scatkt,false) ; 
+  }
+  //-------------------------------------------------------//
+
   //Create the particle absorption coeff as a <PropertyModel>
 
   const VarLabel* test_label = VarLabel::find(_abskg_name); 
@@ -328,6 +340,14 @@ void RadPropertyCalculator::ConstantProperties::compute_abskg( const Patch* patc
 void RadPropertyCalculator::ConstantProperties::compute_abskp( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
                                     double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
                                     const int Nqn,   CCVariable<double>& abskp ){
+
+  throw InvalidValue( "Error: No particle properties implemented for constant radiation properties.",__FILE__,__LINE__);
+
+}
+
+void RadPropertyCalculator::ConstantProperties::compute_scatkt( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
+                                    double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
+                                    const int Nqn,   CCVariable<double>& scatkt ){
 
   throw InvalidValue( "Error: No particle properties implemented for constant radiation properties.",__FILE__,__LINE__);
 
@@ -365,6 +385,18 @@ bool RadPropertyCalculator::BurnsChriston::problemSetup( const ProblemSpecP& db 
   } else { 
     _abskg_name = "abskg"; 
   }
+
+  //------------ check to see if scattering is turned on --//
+  std::string radiation_model;
+  db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src")->getAttribute("type",radiation_model) ; 
+
+  if (radiation_model == "do_radiation"){
+    db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src")->findBlock("DORadiationModel")->getWithDefault("ScatteringOn" ,_use_scatkt,false) ; 
+  }
+  else if ( radiation_model == "rmcrt_radiation"){
+    db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src")->findBlock("RMCRT")->getWithDefault("ScatteringOn" ,_use_scatkt,false) ; 
+  }
+  //-------------------------------------------------------//
 
   //no abskp
   _abskp_name = "NA"; 
@@ -416,6 +448,13 @@ void RadPropertyCalculator::BurnsChriston::compute_abskp( const Patch* patch,  c
   throw InvalidValue( "Error: No particle properties implemented for Burns/Christon radiation properties.",__FILE__,__LINE__);
 }
 
+void RadPropertyCalculator::BurnsChriston::compute_scatkt( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
+                                    double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
+                                    const int Nqn,   CCVariable<double>& scatkt ){
+
+  throw InvalidValue( "Error: No particle properties implemented for Burns/Christon radiation properties.",__FILE__,__LINE__);
+}
+
 /// --------------------------------------
 //  Hottel/Sarofim 
 // ---------------------------------------
@@ -460,6 +499,18 @@ RadPropertyCalculator::HottelSarofim::problemSetup( const ProblemSpecP& db ) {
     _use_abskp = true; 
   }
 
+  //------------ check to see if scattering is turned on --//
+  std::string radiation_model;
+  db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src")->getAttribute("type",radiation_model) ; 
+
+  if (radiation_model == "do_radiation"){
+    db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src")->findBlock("DORadiationModel")->getWithDefault("ScatteringOn" ,_use_scatkt,false) ; 
+  }
+  else if ( radiation_model == "rmcrt_radiation"){
+    db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src")->findBlock("RMCRT")->getWithDefault("ScatteringOn" ,_use_scatkt,false) ; 
+  }
+  //-------------------------------------------------------//
+
   bool property_on = true;
   return property_on; 
 
@@ -484,7 +535,16 @@ RadPropertyCalculator::HottelSarofim::compute_abskp( const Patch* patch,  constC
                                     double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
                                     const int Nqn,   CCVariable<double>& abskp ){
 
-  throw InvalidValue( "Error: No particle properties implemented for constant radiation properties.",__FILE__,__LINE__);
+  throw InvalidValue( "Error: No particle properties implemented for Hottel-Sarofim radiation properties.",__FILE__,__LINE__);
+
+}
+
+void 
+RadPropertyCalculator::HottelSarofim::compute_scatkt( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
+                                    double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
+                                    const int Nqn,   CCVariable<double>& scatkt ){
+
+  throw InvalidValue( "Error: No particle properties implemented for Hottel-Sarofim radiation properties.",__FILE__,__LINE__);
 
 }
 
@@ -583,6 +643,27 @@ bool RadPropertyCalculator::RadPropsInterface::problemSetup( const ProblemSpecP&
     db->findBlock("abskp")->getAttribute("label",_abskp_name); 
     _use_abskp = true; 
   }
+
+  //------------ check to see if scattering is turned on --//
+  std::string radiation_model;
+  db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src")->getAttribute("type",radiation_model) ; 
+
+  if (radiation_model == "do_radiation"){
+    db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src")->findBlock("DORadiationModel")->getWithDefault("ScatteringOn" ,_use_scatkt,false) ; 
+  }
+  else if ( radiation_model == "rmcrt_radiation"){
+    db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src")->findBlock("RMCRT")->getWithDefault("ScatteringOn" ,_use_scatkt,false) ; 
+  }
+  //-------------------------------------------------------//
+  
+  if (_use_scatkt){
+    _scatkt_name = "scatkt";
+      _scatkt_label = VarLabel::find(_scatkt_name); 
+    if ( _scatkt_label == 0 ){ 
+      throw ProblemSetupException("Error: scatkt label not found! This label should be created in the Radiation model!"+_scatkt_name,__FILE__, __LINE__);
+    } 
+  }
+
 
   const VarLabel* test_label = VarLabel::find(_abskg_name); 
   if ( test_label == 0 ){ 
@@ -723,5 +804,56 @@ void RadPropertyCalculator::RadPropsInterface::compute_abskp( const Patch* patch
     }
   }
 }
+
+
+void RadPropertyCalculator::RadPropsInterface::compute_scatkt( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
+                                    double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
+                                    const int Nqn, CCVariable<double>& scatkt ){
+
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
+    IntVector c = *iter; 
+
+    double plankCff = 0.0;
+    double rossCff  = 0.0; 
+    double effCff   = 0.0; 
+    double VolFraction = VolFractionBC[c];
+    double unscaled_weight;
+    double unscaled_size;
+
+
+    if ( VolFraction > 1.e-16 ){
+
+
+    
+      //now compute the particle values: 
+      scatkt[c] = 0.0; 
+      for ( int i = 0; i < Nqn; i++ ){ 
+
+        unscaled_weight = (weights[i])[c]*weights_scaling_constant;
+        unscaled_size = (size[i])[c]*size_scaling_constant/(weights[i])[c];
+
+        if ( _p_planck_abskp ){ 
+
+          double scatkt_i = _part_radprops->planck_sca_coeff( unscaled_size, (pT[i])[c] );
+          scatkt[c] += scatkt_i * unscaled_weight; 
+          
+        } else if ( _p_ros_abskp ){ 
+
+          double scatkt_i =  _part_radprops->ross_sca_coeff( unscaled_size, (pT[i])[c] );
+          scatkt[c] += scatkt_i * unscaled_weight; 
+
+        } 
+      }
+
+
+    }else{    
+
+      scatkt[c] = 0.0;
+
+    }
+  }
+}
+
 #endif 
 

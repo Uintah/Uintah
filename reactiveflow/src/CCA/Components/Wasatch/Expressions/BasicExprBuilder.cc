@@ -919,10 +919,8 @@ namespace Wasatch{
     else if( params->findBlock("InterpolateExpression") ){
       Uintah::ProblemSpecP valParams = params->findBlock("InterpolateExpression");
       std::string srcFieldType;
-      std::string destFieldType;
       valParams->getAttribute("type",srcFieldType);
-      Expr::Tag srcTag = Expr::Tag();
-      srcTag = parse_nametag( valParams->findBlock("NameTag") );
+      const Expr::Tag srcTag = parse_nametag( valParams->findBlock("NameTag") );
       
       switch( get_field_type(srcFieldType) ){
         case SVOL : {
@@ -1032,7 +1030,7 @@ namespace Wasatch{
     }
     
     else if ( params->findBlock("ParabolicFunction") ) {
-      double a=0.0, b=0.0, c=0.0, x0=0.0, f0=0.0, h=0.0;
+      double a=0.0, b=0.0, c=0.0, x0=0.0, h=0.0;
       Uintah::ProblemSpecP valParams = params->findBlock("ParabolicFunction");
       
       const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
@@ -1041,6 +1039,7 @@ namespace Wasatch{
       valParams->getAttribute("type", parabolaType);
       
       if (parabolaType.compare("CENTERED") == 0) {
+        double f0 = 0.0;
         valParams = valParams->findBlock("Centered");
         valParams->getAttribute("x0",x0);
         valParams->getAttribute("f0",f0);
@@ -1323,7 +1322,7 @@ namespace Wasatch{
         exprParams != 0;
         exprParams = exprParams->findNextBlock("TurbulentInlet") ) {
       
-      std::string inputFileName, velDir, baseName;
+      std::string inputFileName, baseName;
       int period=1;
       double timePeriod;
       exprParams->get("InputFile",inputFileName);
