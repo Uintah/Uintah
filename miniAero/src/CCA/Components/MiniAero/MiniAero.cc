@@ -55,6 +55,8 @@
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 
+#include <iostream>
+
 using namespace Uintah;
 
 //__________________________________
@@ -168,6 +170,37 @@ void MiniAero::problemSetup(const ProblemSpecP& params,
    
   //Getting geometry objects
   getGeometryObjects(ps, d_geom_objs);
+
+  //__________________________________
+  //  Define Runge-Kutta coefficients
+  if (d_RKSteps == 0){
+    
+    d_alpha[0] = 0.0;
+    d_alpha[1] = 0.0;
+    d_alpha[2] = 0.0;
+
+    d_beta[0]  = 1.0;
+    d_beta[1]  = 0.0;
+    d_beta[2]  = 0.0;
+  } else if (d_RKSteps == 1) {
+
+    d_alpha[0]= 0.0;
+    d_alpha[1]= 0.5;
+    d_alpha[2]= 0.0;
+
+    d_beta[0]  = 1.0;
+    d_beta[1]  = 0.5;
+    d_beta[2]  = 0.0;
+  } else if (d_RKSteps == 2) {
+    d_alpha[0] = 0.0;
+    d_alpha[1] = 0.75;
+    d_alpha[2] = 1.0/3.0;
+
+    d_beta[0]  = 1.0;
+    d_beta[1]  = 0.25;
+    d_beta[2]  = 2.0/3.0;
+
+  }
 }
 
 //______________________________________________________________________
@@ -195,8 +228,9 @@ void MiniAero::scheduleComputeStableTimestep(const LevelP& level,
 {
   Task* task = scinew Task("MiniAero::computeStableTimestep", this, &MiniAero::computeStableTimestep);
 
+  printSchedule(level,dbg,"scheduleComputeStableTimestep");
+  
   Ghost::GhostType  gn = Ghost::None;
-
   task->requires(Task::NewDW, vel_CClabel,        gn );
   task->requires(Task::NewDW, speedSound_CClabel, gn );
 
@@ -211,11 +245,15 @@ void MiniAero::scheduleTimeAdvance(const LevelP& level,
                                    SchedulerP& sched)
 {
   for(int k=0; k<d_RKSteps; k++ ){
+    std::ostringstream message;
+    message << "__________________________________scheduleTimeAdvance  RK step:" << k << std::endl;
+    printSchedule(level,dbg, message.str() );
+    
     schedCellCenteredFlux(level, sched);
     schedFaceCenteredFlux(level, sched);
     schedDissipativeFaceFlux(level, sched);
     schedUpdateResidual(level, sched);
-    schedUpdateState(level, sched);
+    schedUpdateState(level, sched, k);
   }  
   schedPrimitives(level,sched);
 }
@@ -227,6 +265,8 @@ void MiniAero::schedPrimitives(const LevelP& level,
 {
   Task* task = scinew Task("MiniAero::Primitives", this, 
                            &MiniAero::Primitives);
+                           
+  printSchedule(level,dbg,"schedPrimitives");
 
   task->requires(Task::NewDW, conserved_label,Ghost::None);
 
@@ -248,6 +288,8 @@ void MiniAero::schedCellCenteredFlux(const LevelP& level,
   Task* task = scinew Task("MiniAero::cellCenteredFlux", this, 
                            &MiniAero::cellCenteredFlux);
 
+  printSchedule(level,dbg,"schedCellCenteredFlux");
+   
   task->requires(Task::OldDW,rho_CClabel,Ghost::None);
   task->requires(Task::OldDW,vel_CClabel,Ghost::None);
   task->requires(Task::OldDW,press_CClabel,Ghost::None);
@@ -267,6 +309,8 @@ void MiniAero::schedFaceCenteredFlux(const LevelP& level,
   Task* task = scinew Task("MiniAero::faceCenteredFlux", this, 
                            &MiniAero::faceCenteredFlux);
 
+   printSchedule(level,dbg,"schedFaceCenteredFlux");
+   
   task->requires(Task::NewDW,flux_mass_CClabel,  Ghost::AroundCells, 1);
   task->requires(Task::NewDW,flux_mom_CClabel,   Ghost::AroundCells, 1);
   task->requires(Task::NewDW,flux_energy_CClabel,Ghost::AroundCells, 1);
@@ -292,7 +336,8 @@ void MiniAero::schedDissipativeFaceFlux(const LevelP& level,
   Task* task = scinew Task("MiniAero::dissipativeFaceFlux", this, 
                            &MiniAero::dissipativeFaceFlux);
 
-
+  printSchedule(level,dbg,"schedDissipativeFaceFlux");
+   
   task->requires(Task::OldDW,rho_CClabel,  Ghost::AroundCells, 1);
   task->requires(Task::OldDW,vel_CClabel,  Ghost::AroundCells, 1);
   task->requires(Task::OldDW,press_CClabel,Ghost::AroundCells, 1);
@@ -318,6 +363,8 @@ void MiniAero::schedUpdateResidual(const LevelP& level,
   Task* task = scinew Task("MiniAero::updateResidual", this, 
                            &MiniAero::updateResidual);
 
+  
+  printSchedule(level,dbg,"updateResidual");
   Ghost::GhostType  gac  = Ghost::AroundCells;
   task->requires(Task::NewDW,flux_mass_FCXlabel,  gac, 1);
   task->requires(Task::NewDW,flux_mom_FCXlabel,   gac, 1);
@@ -350,17 +397,24 @@ void MiniAero::schedUpdateResidual(const LevelP& level,
 //______________________________________________________________________
 //
 void MiniAero::schedUpdateState(const LevelP& level,
-                                SchedulerP& sched)
+                                SchedulerP& sched,
+                                const int RK_step)
 {
   Task* task = scinew Task("MiniAero::updateState", this, 
-                           &MiniAero::updateState);
+                           &MiniAero::updateState, RK_step);
 
+  printSchedule(level,dbg,"schedUpdateState");
   task->requires(Task::OldDW,sharedState_->get_delt_label());
-  task->requires(Task::OldDW,conserved_label,Ghost::None);
+  task->requires(Task::OldDW,conserved_label, Ghost::None);
   task->requires(Task::NewDW,residual_CClabel,Ghost::None);
 
-  task->computes(conserved_label);
-
+  if(RK_step == 0){
+    task->computes(conserved_label);
+  } else {
+    task->modifies(conserved_label);
+  }
+  
+  
   sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
 }
 
@@ -612,11 +666,11 @@ void MiniAero::Primitives(const ProcessorGroup* /*pg*/,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
-    Ghost::GhostType  gn  = Ghost::None;
-
+    printTask(patches, patch, dbg, "Doing MiniAero::Primitives" );
+    
     // Requires...
     constCCVariable<Vector5> conserved;
+    Ghost::GhostType  gn  = Ghost::None;
     new_dw->get( conserved,  conserved_label, 0, patch, gn, 0 );
 
     // Provides...
@@ -673,9 +727,9 @@ void MiniAero::cellCenteredFlux(const ProcessorGroup* /*pg*/,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    Ghost::GhostType  gn  = Ghost::None;
-
+    printTask(patches, patch, dbg, "Doing MiniAero::cellCenteredFlux" );
     
+    Ghost::GhostType  gn  = Ghost::None;
     constCCVariable<double> rho_CC, pressure_CC;
     constCCVariable<Vector> vel_CC;
     CCVariable<Vector> flux_mass_CC;
@@ -686,9 +740,9 @@ void MiniAero::cellCenteredFlux(const ProcessorGroup* /*pg*/,
     old_dw->get( vel_CC,  vel_CClabel, 0, patch, gn, 0 );
     old_dw->get( pressure_CC,  press_CClabel, 0, patch, gn, 0 );
 
-    new_dw->allocateAndPut( flux_mass_CC, flux_mass_CClabel,   0,patch );
-    new_dw->allocateAndPut( flux_mom_CC, flux_mom_CClabel,   0,patch );
-    new_dw->allocateAndPut( flux_energy_CC, flux_energy_CClabel,   0,patch );
+    new_dw->allocateAndPut( flux_mass_CC, flux_mass_CClabel,     0,patch );
+    new_dw->allocateAndPut( flux_mom_CC, flux_mom_CClabel,       0,patch );
+    new_dw->allocateAndPut( flux_energy_CC, flux_energy_CClabel, 0,patch );
 
     //__________________________________
     // Backout primitive quantities from
@@ -718,6 +772,8 @@ void MiniAero::faceCenteredFlux(const ProcessorGroup* /*pg*/,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+    printTask(patches, patch, dbg, "Doing MiniAero::faceCenteredFlux" );
+    
     Ghost::GhostType  gac  = Ghost::AroundCells;
 
     constCCVariable<Vector> flux_mass_CC;
@@ -795,6 +851,8 @@ void MiniAero::dissipativeFaceFlux(const ProcessorGroup* /*pg*/,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+    printTask(patches, patch, dbg, "Doing MiniAero::dissipativeFaceFlux" );
+    
     Ghost::GhostType  gac  = Ghost::AroundCells;
 
     constCCVariable<double> rho_CC, pressure_CC;
@@ -928,6 +986,7 @@ void MiniAero::updateResidual(const ProcessorGroup* /*pg*/,
   Ghost::GhostType  gac  = Ghost::AroundCells;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+    printTask(patches, patch, dbg, "Doing MiniAero::updateResidual" );
 
     constSFCXVariable<double> flux_mass_FCX;
     constSFCXVariable<Vector> flux_mom_FCX;
@@ -1016,35 +1075,56 @@ void MiniAero::updateState(const ProcessorGroup* /*pg*/,
                            const PatchSubset* patches,
                            const MaterialSubset* /*matls*/,
                            DataWarehouse* old_dw,
-                           DataWarehouse* new_dw)
+                           DataWarehouse* new_dw,
+                           const int RK_step)
 {
   Ghost::GhostType  gn  = Ghost::None;
   delt_vartype dt;
   old_dw->get(dt, sharedState_->get_delt_label());
   
+  dbg << "MiniAero::updateState RK stage: " << RK_step << std::endl; 
   
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    const Vector& cellSize = patch->getLevel()->dCell();
-    const double cell_volume = cellSize[0]*cellSize[1]*cellSize[2];
+    printTask(patches, patch, dbg, "MiniAero::updateState" );
+    
+    const double cell_volume = patch->cellVolume();
     const double dtVol = dt/cell_volume;
+    
+    const double alpha = d_alpha[RK_step];  // for readability
+    const double beta  = d_beta[RK_step];
+    
     
     constCCVariable<Vector5> residual_CC;
     constCCVariable<Vector5> oldState_CC;
-    CCVariable<Vector5> newState_CC;
-
+    CCVariable<Vector5> state_CC;
+    CCVariable<double> intermediateState;
+    new_dw->allocateTemporary( intermediateState, patch);
     new_dw->get( residual_CC,  residual_CClabel, 0, patch, gn, 0);
     old_dw->get( oldState_CC,  conserved_label,  0, patch, gn, 0);
 
-    new_dw->allocateAndPut( newState_CC, conserved_label,   0,patch );
-
-
+    if( RK_step == 0 ){
+      new_dw->allocateAndPut( state_CC, conserved_label, 0,patch );
+      
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) {
+        IntVector c = *iter;
+        state_CC[c] = oldState_CC[c];
+      }
+    } else {
+      new_dw->getModifiable(  state_CC, conserved_label, 0,patch );  
+    }
+    
+    
+    
+    
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
   
       for(unsigned k = 0; k < 5; k++) {
-        newState_CC[c][k] = oldState_CC[c][k] - dtVol*residual_CC[c][k];
+        intermediateState[c] = state_CC[c][k] - dtVol*residual_CC[c][k];
+        
+        state_CC[c][k] = alpha *  oldState_CC[c][k] + beta * intermediateState[c];
       }
     }
   }
