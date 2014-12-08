@@ -300,6 +300,12 @@ void MPMPetscSolver::solve(vector<double>& guess)
   }
   TAU_PROFILE_TIMER(solve, "Petsc:KPSolve()", "", TAU_USER);
   TAU_PROFILE_START(solve);
+
+  
+  PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_ASCII_MATLAB);
+  MatView(d_A, PETSC_VIEWER_STDOUT_WORLD);
+  throw 0;
+  
   KSPSolve(solver,d_B,d_x);
   TAU_PROFILE_STOP(solve);
 #ifdef LOG
@@ -346,15 +352,13 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
   PetscTruth exists;
 #endif
 
-#if 0
+
   cerr << "me = " << me << endl;
   cerr << "numlrows = " << numlrows << endl;
   cerr << "numlcolumns = " << numlcolumns << endl;
   cerr << "globalrows = " << globalrows << endl;
   cerr << "globalcolumns = " << globalcolumns << endl;
-  for (int i = 0; i < numlrows; i++) 
-    cerr << "diag[" << i << "] = " << diag[i] << endl;
-#endif
+
 
 #if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
   PetscClassId id;
