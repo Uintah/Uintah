@@ -112,10 +112,14 @@ namespace Uintah {
     void schedPrimitives(const LevelP& level,SchedulerP& sched);
 
     void schedCellCenteredFlux(const LevelP& level,SchedulerP& sched);
+    
     void schedFaceCenteredFlux(const LevelP& level,SchedulerP& sched);
+    
     void schedDissipativeFaceFlux(const LevelP& level,SchedulerP& sched);
+    
     void schedUpdateResidual(const LevelP& level,SchedulerP& sched);
-    void schedUpdateState(const LevelP& level,SchedulerP& sched);
+    
+    void schedUpdateState(const LevelP& level, SchedulerP& sched, const int RK_step);
     
     void Primitives(const ProcessorGroup*,
                     const PatchSubset* patches,
@@ -151,7 +155,15 @@ namespace Uintah {
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse* old_dw,
-                     DataWarehouse* new_dw);
+                     DataWarehouse* new_dw,
+                     const int RK_step);
+                     
+    void compute_roe_dissipative_flux(const double * primitives_left, 
+                                      const double * primitives_right,
+                                      double * flux, 
+                                      double * face_normal, 
+                                      double * face_tangent, 
+                                      double * face_binormal);
 
     const VarLabel* conserved_label;
     const VarLabel* rho_CClabel;
@@ -185,13 +197,20 @@ namespace Uintah {
     const VarLabel* machlabel;
 
     SimulationStateP sharedState_;
-    int d_RKSteps;               // number of RK steps
+    
     double d_gamma;
     double d_R;
     double d_CFL;
     double d_EVIL_NUM;
     double d_SMALL_NUM;
     bool d_viscousFlow;
+    
+    // For Runge-Kutta
+    int d_RKSteps;                    // number or RK stages
+    double d_alpha[3];
+    double d_beta[3];
+    double d_time_factor[3];
+        
     SimpleMaterial* mymat_;
     std::vector<GeometryObject*> d_geom_objs;
 
@@ -208,8 +227,6 @@ namespace Uintah {
       return d_gamma;
     }
 
-    void compute_roe_dissipative_flux(const double * primitives_left, const double * primitives_right,
-      double * flux, double * face_normal, double * face_tangent, double * face_binormal);
   };  // end class MiniAero
 
 }  // end namespace Uintah
