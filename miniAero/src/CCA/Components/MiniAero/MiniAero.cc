@@ -160,6 +160,11 @@ void MiniAero::problemSetup(const ProblemSpecP& params,
   ps->require("R",            d_R);
   ps->require("CFL",          d_CFL);
   ps->require("Is_visc_flow", d_viscousFlow);
+  ps->require("RKSteps",      d_RKSteps);
+  
+  if(d_RKSteps > 1){
+    throw ProblemSetupException("\nERROR: Currently only RKStep = 1 works\n",__FILE__, __LINE__);
+  }
    
   //Getting geometry objects
   getGeometryObjects(ps, d_geom_objs);
@@ -205,14 +210,18 @@ void MiniAero::scheduleComputeStableTimestep(const LevelP& level,
 void MiniAero::scheduleTimeAdvance(const LevelP& level,
                                    SchedulerP& sched)
 {
-  schedCellCenteredFlux(level, sched);
-  schedFaceCenteredFlux(level, sched);
-  schedDissipativeFaceFlux(level, sched);
-  schedUpdateResidual(level, sched);
-  schedUpdateState(level, sched);
+  for(int k=0; k<d_RKSteps; k++ ){
+    schedCellCenteredFlux(level, sched);
+    schedFaceCenteredFlux(level, sched);
+    schedDissipativeFaceFlux(level, sched);
+    schedUpdateResidual(level, sched);
+    schedUpdateState(level, sched);
+  }  
   schedPrimitives(level,sched);
 }
 
+//______________________________________________________________________
+//
 void MiniAero::schedPrimitives(const LevelP& level,
                                SchedulerP& sched)
 {
@@ -501,7 +510,8 @@ void MiniAero::initialize(const ProcessorGroup*,
   }  // patch loop
     
 }
-
+//______________________________________________________________________
+//
 void MiniAero::getGeometryObjects(ProblemSpecP& ps,
                                   std::vector<GeometryObject*>& geom_objs)
 {
@@ -653,7 +663,8 @@ void MiniAero::Primitives(const ProcessorGroup* /*pg*/,
   }//Patch loop
 }
 
-
+//______________________________________________________________________
+//
 void MiniAero::cellCenteredFlux(const ProcessorGroup* /*pg*/,
                                 const PatchSubset* patches,
                                 const MaterialSubset* /*matls*/,
@@ -697,7 +708,8 @@ void MiniAero::cellCenteredFlux(const ProcessorGroup* /*pg*/,
     }
   }
 }
-
+//______________________________________________________________________
+//
 void MiniAero::faceCenteredFlux(const ProcessorGroup* /*pg*/,
                                 const PatchSubset* patches,
                                 const MaterialSubset* /*matls*/,
@@ -1009,12 +1021,15 @@ void MiniAero::updateState(const ProcessorGroup* /*pg*/,
   Ghost::GhostType  gn  = Ghost::None;
   delt_vartype dt;
   old_dw->get(dt, sharedState_->get_delt_label());
+  
+  
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     const Vector& cellSize = patch->getLevel()->dCell();
     const double cell_volume = cellSize[0]*cellSize[1]*cellSize[2];
-
+    const double dtVol = dt/cell_volume;
+    
     constCCVariable<Vector5> residual_CC;
     constCCVariable<Vector5> oldState_CC;
     CCVariable<Vector5> newState_CC;
@@ -1029,15 +1044,20 @@ void MiniAero::updateState(const ProcessorGroup* /*pg*/,
       IntVector c = *iter;
   
       for(unsigned k = 0; k < 5; k++) {
-        newState_CC[c][k] = oldState_CC[c][k] - dt*residual_CC[c][k]/(cell_volume);
+        newState_CC[c][k] = oldState_CC[c][k] - dtVol*residual_CC[c][k];
       }
     }
   }
 }
 
-
-void MiniAero::compute_roe_dissipative_flux(const double * primitives_left, const double * primitives_right,
-      double * flux, double * face_normal, double * face_tangent, double * face_binormal)
+//______________________________________________________________________
+//
+void MiniAero::compute_roe_dissipative_flux(const double * primitives_left,
+                                            const double * primitives_right,
+                                            double * flux, 
+                                            double * face_normal, 
+                                            double * face_tangent, 
+                                            double * face_binormal)
 {
     //Eigenvalue fix constants.
     const double efix_u = 0.1;
