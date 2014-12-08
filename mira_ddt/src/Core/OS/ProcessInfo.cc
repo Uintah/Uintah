@@ -117,9 +117,9 @@ namespace SCIRun {
 	}
       }
     }
-  }
+  
 
-    return 0;
+  return 0;
 
 #elif defined( __sgi ) || defined( __alpha )
 
