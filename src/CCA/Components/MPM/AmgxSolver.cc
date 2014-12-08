@@ -76,9 +76,8 @@ MPMAmgxSolver::MPMAmgxSolver(string& amgx_config_string)
   AMGX_SAFE_CALL(AMGX_install_signal_handler());
 
   AMGX_SAFE_CALL(AMGX_config_create_from_file(&config, amgx_config_string.c_str()));
-  //AMGX_SAFE_CALL(AMGX_config_add_parameters(&config, "exception_handling=1"));
+  AMGX_SAFE_CALL(AMGX_config_add_parameters(&config, "exception_handling=1"));
   AMGX_SAFE_CALL(AMGX_resources_create_simple(&rsrc, config));
-  matrix_created = false;
 }
 
 MPMAmgxSolver::~MPMAmgxSolver()
@@ -226,7 +225,6 @@ MPMAmgxSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
   numlrows = d_numNodes[d_myworld->myrank()];
   numlcolumns = d_numNodes[d_myworld->myrank()];
   d_B_Host.resize(numlrows);
-  d_diagonal_Host.resize(numlrows);
 }
 
 void MPMAmgxSolver::fromCOOtoCSR(vector<double>& values,
@@ -234,18 +232,20 @@ void MPMAmgxSolver::fromCOOtoCSR(vector<double>& values,
 				 vector<int>& col_inds){
   row_ptrs.push_back(0);
   int col_count = 0;
-  for (std::map<int, double>::iterator it = matrix_values.begin();
-       it != matrix_values.end();
-       ++it){
-    int i = it->first / numlrows;
-    int j = it->first % numlrows;
-    if (i == (int)row_ptrs.size()){
-      row_ptrs.push_back(col_count + row_ptrs[row_ptrs.size() - 1]);
-      col_count = 0;
+  for (std::map<int, double>::iterator it = matrix_values.begin(); it != matrix_values.end(); ++it){
+    //Only add if the value is non-zero
+    if (!compare(it->second, 0.0)) {
+      int i = it->first / numlrows;
+      int j = it->first % numlrows;
+    
+      if (i == (int)row_ptrs.size()){
+	row_ptrs.push_back(col_count + row_ptrs[row_ptrs.size() - 1]);
+	col_count = 0;
+      }
+      col_count++;
+      col_inds.push_back(j);
+      values.push_back(it->second);
     }
-    col_count++;
-    col_inds.push_back(j);
-    values.push_back(it->second);
   }
   row_ptrs.push_back(col_count + row_ptrs[row_ptrs.size() - 1]);
 }
@@ -254,7 +254,6 @@ void MPMAmgxSolver::fromCOOtoCSR(vector<double>& values,
 
 void MPMAmgxSolver::solve(vector<double>& guess)
 {
-  //AMGX_SAFE_CALL(AMGX_vector_upload(d_flux, d_flux_Host.size(), 1, &d_flux_Host[0]));
 
   //We have been storing our matrix representation in a std::map where an index corresponds to row * n + col
   //we want to convert to a csr format that AMGX can read.
@@ -263,19 +262,27 @@ void MPMAmgxSolver::solve(vector<double>& guess)
   vector<int> col_inds;
   
   fromCOOtoCSR(values, row_ptrs, col_inds);
-
+  /*
   ofstream myFile;
-  myFile.open("MPMmatrix.dat");
-    
-  for (std::map<int, double>::iterator it = matrix_values.begin();
-       it != matrix_values.end();
-       ++it){
-    int i = it->first / numlrows;
-    int j = it->first % numlrows;
-    myFile << i << " " << j << " " << it->second << endl;
+  myFile.open("A.dat");
+
+  int el = 0;
+  for (int i = 0; i < row_ptrs.size(); i++){
+    for (int j = row_ptrs[i]; j < row_ptrs[i + 1]; j++){
+      int row = i;
+      int col = col_inds[j];
+      myFile << row << " " << col << " " << values[el++] << endl;
+    }
   }
   myFile.close();
+
+  myFile.open("b.dat");
   
+  for (int i = 0; i < numlrows; i++){
+    myFile << i << " " << d_B_Host[i] << endl;
+  }
+  myFile.close();
+  */
   const vector<int>::iterator mx = max_element(col_inds.begin(), col_inds.end());
   const vector<int>::iterator mn = min_element(col_inds.begin(), col_inds.end());
 
@@ -288,24 +295,19 @@ void MPMAmgxSolver::solve(vector<double>& guess)
   cout << "Row pointer end: " << row_ptrs[row_ptrs.size() - 1] << endl;
   cout << "Column inds size: " << col_inds.size() << endl;
   cout << "Values size: " << col_inds.size() << endl;
-
+  
   AMGX_SAFE_CALL(AMGX_solver_create(&solver, rsrc, mode, config));
-  cout << "Matrix Created" << endl;
   AMGX_SAFE_CALL(AMGX_matrix_create(&d_A, rsrc, mode));
   AMGX_SAFE_CALL(AMGX_vector_create(&d_B, rsrc, mode));
 
-  AMGX_SAFE_CALL(AMGX_vector_create(&d_diagonal, rsrc, mode));
   AMGX_SAFE_CALL(AMGX_vector_create(&d_x, rsrc, mode));
-  AMGX_SAFE_CALL(AMGX_vector_create(&d_t, rsrc, mode));
-  
-  AMGX_SAFE_CALL(AMGX_vector_create(&d_flux, rsrc, mode));
+
 
   //Now we can upload everything to the GPU
   AMGX_SAFE_CALL(AMGX_matrix_upload_all(d_A, numlrows, matrix_values.size(), 1, 1,
 					&(row_ptrs[0]), &(col_inds[0]), &(values[0]),
 					NULL));
-  AMGX_SAFE_CALL(AMGX_vector_upload(d_B, d_B_Host.size(), 1, &d_B_Host[0]));
-  //AMGX_SAFE_CALL(AMGX_vector_upload(d_t, d_t_Host.size(), 1, &d_t_Host[0]));
+  AMGX_SAFE_CALL(AMGX_vector_upload(d_B, numlrows, 1, &d_B_Host[0]));
 
   if (!guess.empty()){
     AMGX_SAFE_CALL(AMGX_vector_upload(d_x, guess.size(), 1, &(guess[0])));
@@ -317,31 +319,40 @@ void MPMAmgxSolver::solve(vector<double>& guess)
   AMGX_SAFE_CALL(AMGX_solver_setup(solver, d_A));
   AMGX_SAFE_CALL(AMGX_solver_solve(solver, d_B, d_x));
 
+  d_x_Host.resize(numlrows);
   AMGX_SAFE_CALL(AMGX_vector_download(d_x, &d_x_Host[0]));
 
-  AMGX_SAFE_CALL(AMGX_solver_destroy(solver));
-  cout << "Matrix Destroyed" << endl;
-  AMGX_SAFE_CALL(AMGX_matrix_destroy(d_A));
-  AMGX_SAFE_CALL(AMGX_vector_destroy(d_diagonal));
-  AMGX_SAFE_CALL(AMGX_vector_destroy(d_x));
-  AMGX_SAFE_CALL(AMGX_vector_destroy(d_t));
-  AMGX_SAFE_CALL(AMGX_vector_destroy(d_flux));
+  /*
+  myFile.open("x.dat");
 
+  for (int i = 0; i < numlrows; i++){
+    myFile << i << " " << d_x_Host[i] << endl;
+  }
+  myFile.close();
+  */
+  
+  //exit(0);
+  AMGX_SAFE_CALL(AMGX_solver_destroy(solver));
+  AMGX_SAFE_CALL(AMGX_matrix_destroy(d_A));
+  AMGX_SAFE_CALL(AMGX_vector_destroy(d_x));
 }
 void MPMAmgxSolver::createMatrix(const ProcessorGroup* d_myworld,
                                   const map<int,int>& dof_diag)
 {
   //Here we call all of our AMGX_blank_create functions
-  //d_B_Host.resize(numlrows);
+  d_flux.assign(numlrows, 0);
+  d_t.assign(numlrows, 0);
   d_B_Host.assign(numlrows, 0);
 }
 
 void MPMAmgxSolver::destroyMatrix(bool recursion)
 {
-  if (matrix_created) {
-    //We have to destroy the solver first folowed by the matrix and then the vectors.
-    //Any other order will cause the program to explode.
-    matrix_created = false;
+  cout << "Destroy Matrix" << endl;
+  matrix_values.clear();
+  if (recursion == false){
+    d_DOF.clear();
+    d_DOFFlux.clear();
+    d_DOFZero.clear();
   }
 }
 
@@ -353,7 +364,14 @@ void
 MPMAmgxSolver::fillMatrix(int numi, int i_indices[], int numj, int j_indices[], double value[]){
   for (int i = 0; i < numi; i++){
     for (int j = 0; j < numj; j++){
-      matrix_values.insert(pair<int, double>(i_indices[i] * numlcolumns + j_indices[j], value[i * numj + j]));
+      
+      map<int, double>::iterator it = matrix_values.find(i_indices[i] * numlcolumns + j_indices[j]);
+      if (it == matrix_values.end()){
+	matrix_values[i_indices[i] * d_totalNodes + j_indices[j]] =  value[i * numj + j];	
+      } else {
+	double new_val = it->second + value[i * numj + j];
+	matrix_values[i_indices[i] * d_totalNodes + j_indices[j]] =  new_val;
+      }
     }
   }
 }
@@ -362,23 +380,22 @@ void
 MPMAmgxSolver::fillVector(int i,double v,bool add)
 {
   //Write one element to the vector.
-  if (add) {
+  if (add)
     d_B_Host[i] += v;
-  } else {
+  else 
     d_B_Host[i] = v;
-  }
 }
 
 void
 MPMAmgxSolver::fillTemporaryVector(int i,double v)
 {
-  d_t_Host[i] = v;
+  d_t[i] = v;
 }
 
 void
 MPMAmgxSolver::fillFluxVector(int i,double v)
 {
-  d_flux_Host[i] = v;
+  d_flux[i] = v;
 }
 
 void
@@ -421,9 +438,8 @@ MPMAmgxSolver::applyBCSToRHS()
   vector<double> values;
   vector<int> row_ptrs;
   vector<int> col_inds;
-
   fromCOOtoCSR(values, row_ptrs, col_inds);
-  matrixMultAdd(values, col_inds, row_ptrs, d_t_Host, d_B_Host, d_B_Host);
+  matrixMultAdd(values, col_inds, row_ptrs, d_t, d_B_Host, d_B_Host);
 }
 
 void
@@ -437,47 +453,47 @@ void
 MPMAmgxSolver::removeFixedDOF()
 {
   //Set boundary elements diagonals to 1 and the corresponding vector elements to 0
-  for (set<int>::iterator iter = d_DOFZero.begin(); iter != d_DOFZero.end();
+  for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end();
        iter++) {
     int j = *iter;
     d_B_Host[j] = 0;
-    matrix_values.insert(pair<int, double>(j*d_B_Host.size() + j, 1.));
+    matrix_values[j*numlrows + j] = 1.0;
   }
 
   for (int i = 0; i < (int)d_B_Host.size(); i++){
     map<int,double>::iterator diag_el = matrix_values.find(i * d_B_Host.size() + i);
-    if (matrix_values.end() ==  diag_el || diag_el->second == 0){
-      matrix_values.insert(make_pair(i * d_B_Host.size() + i, 1));
+    if ((matrix_values.end() ==  diag_el) || compare(diag_el->second, 0)){
+      matrix_values[i * numlrows + i] =  1.0;
       d_B_Host[i] = 0;
     }
   }
 
   //Now we zero out row elements
-  
   for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); iter++){
 
     //Find the first nonzero element in the nodes row 
-    map<int, double>::iterator row_index = matrix_values.lower_bound((*iter) * d_B_Host.size());
+    map<int, double>::iterator row_index = matrix_values.lower_bound((*iter) * numlrows);
     
     //Iterate through until we are in the next row setting all the elements to 0 except for the diagonal
-    for (; row_index->first / (int)d_B_Host.size() == *iter; row_index++){
-      if (row_index->first % (int)d_B_Host.size() != *iter)
-	row_index->second = 0;
+    for (; (int)row_index->first / (int)d_B_Host.size() == *iter; row_index++){
+      row_index->second = 0;
     }
+    //Set diagonal to 1
+    matrix_values[*iter * numlrows + *iter] = 1.0;
   }
-
 }
 
 
 void MPMAmgxSolver::removeFixedDOFHeat()
 {
-    //Set boundary elements diagonals to 1 and the corresponding vector elements to 0
+  cout << "RemoveFixedDOFHeat" << endl;
+  //Set boundary elements diagonals to 1 and the corresponding vector elements to 0
   for (set<int>::iterator iter = d_DOFZero.begin(); iter != d_DOFZero.end();
        iter++) {
     int j = *iter;
 
     d_B_Host[j] = 0;
-    matrix_values.insert(pair<int, double>(j*d_B_Host.size() + j, 1.));
+    matrix_values[j * d_B_Host.size() + j] =  1.0;
   }
 
 
@@ -492,7 +508,7 @@ void MPMAmgxSolver::removeFixedDOFHeat()
       for (vector<int>::iterator n = neighbors.begin(); n != neighbors.end();
            n++) {
         // zero out the columns
-	matrix_values.insert(pair<int, double>(d_B_Host.size() * (*n) + index, 0));
+	matrix_values[d_B_Host.size() * (*n) + index] =  0.0;
       }
     }
   }
@@ -514,16 +530,16 @@ void MPMAmgxSolver::removeFixedDOFHeat()
   //Now we adjust the right hand side vector by replacing elements with the boundary values from
   //the scaled temporary vector and then adding the flux vector values to specified indices.
 
-  for (int i = 0; i < (int)d_t_Host.size(); i++){
-    d_t_Host[i] = -1 * d_t_Host[i];
+  for (int i = 0; i < (int)d_t.size(); i++){
+    d_t[i] = -1 * d_t[i];
   }
 
   for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); iter++){
-    d_B_Host[*iter] = d_t_Host[*iter];
+    d_B_Host[*iter] = d_t[*iter];
   }
   
   for (set<int>::iterator iter = d_DOFFlux.begin(); iter != d_DOFFlux.end(); iter++){
-    d_B_Host[*iter] += d_flux_Host[*iter];
+    d_B_Host[*iter] += d_flux[*iter];
   }
 }
 
@@ -534,6 +550,7 @@ void MPMAmgxSolver::finalizeMatrix()
 
 int MPMAmgxSolver::getSolution(vector<double>& xPetsc)
 {
+  cout << "Get Solution" << endl;
   xPetsc.resize(d_x_Host.size());
   copy(d_x_Host.begin(), d_x_Host.end(), xPetsc.begin());
   return 0;

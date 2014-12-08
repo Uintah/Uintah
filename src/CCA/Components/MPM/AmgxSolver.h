@@ -124,10 +124,7 @@ namespace Uintah {
     AMGX_matrix_handle d_A;
     
     AMGX_vector_handle d_B;
-    AMGX_vector_handle d_diagonal;
     AMGX_vector_handle d_x;
-    AMGX_vector_handle d_t;
-    AMGX_vector_handle d_flux;
 
     bool matrix_created;
     map<int, double> matrix_values;
@@ -137,9 +134,16 @@ namespace Uintah {
     vector<double> d_B_Host;
     vector<double> d_diagonal_Host;
     vector<double> d_x_Host;
-    vector<double> d_t_Host;
-    vector<double> d_flux_Host;
-    
+    vector<double> d_t;
+    vector<double> d_flux;
+
+    inline bool compare(double num1, double num2)
+      {
+        double EPSILON=1.e-16;
+        
+        return (fabs(num1-num2) <= EPSILON);
+      };
+
     
 #endif
   };
