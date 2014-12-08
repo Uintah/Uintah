@@ -835,7 +835,7 @@
                                         attribute1="label REQUIRED STRING"
                                         need_applies_to="type simple_rate"/>       <!-- label for the "concentration" -->
             
-            <IC                         spec="REQUIRED STRING" />      <!-- base label for which internal coordiante this source affects -->
+            <IC                         spec="OPTIONAL STRING" />      <!-- base label for which internal coordiante this source affects -->
           <!-- drag model -->
             <particle_density           spec="REQUIRED NO_DATA"
                                         attribute1="type REQUIRED STRING 'constant, node_specific'"
