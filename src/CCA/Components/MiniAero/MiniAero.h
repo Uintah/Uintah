@@ -185,6 +185,7 @@ namespace Uintah {
     const VarLabel* machlabel;
 
     SimulationStateP sharedState_;
+    int d_RKSteps;               // number of RK steps
     double d_gamma;
     double d_R;
     double d_CFL;
