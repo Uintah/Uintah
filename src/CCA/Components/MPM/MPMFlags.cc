@@ -110,6 +110,9 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_reductionVars->volDeformed      = false;
   d_reductionVars->centerOfMass     = false;
 
+  d_doScalarDiffusion = false; //for diffusion component found in ReactiveFlow
+  d_scalarDiffusion_type = "temperature";
+
 // MMS
 if(d_mms_type=="AxisAligned"){
     d_mms_type = "AxisAligned";
@@ -249,6 +252,11 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
    }
 
   mpm_flag_ps->get("delete_rogue_particles",  d_deleteRogueParticles);
+
+  // Setting Scalar Diffusion
+  if(mpm_flag_ps->get("scalar_diffusion", d_scalarDiffusion_type)){
+    d_doScalarDiffusion = true;
+  }
   
   // d_doComputeHeatFlux:
   // set to true if the label g.HeatFlux is saved or 
