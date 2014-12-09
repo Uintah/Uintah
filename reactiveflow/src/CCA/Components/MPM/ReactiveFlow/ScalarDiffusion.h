@@ -35,12 +35,14 @@ namespace Uintah {
   class MPMFlags;
   class DataWarehouse;
   class ProcessorGroup;
+	class VarLabel;
   
   class ScalarDiffusion {
   public:
     
     ScalarDiffusion(SimulationStateP& ss, MPMFlags* mflags);
     ~ScalarDiffusion();
+    const VarLabel* get_pConcentrationLabel();
 
   private:
     ReactiveFlowLabel* d_lb;

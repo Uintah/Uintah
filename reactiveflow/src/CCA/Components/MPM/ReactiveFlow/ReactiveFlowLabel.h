@@ -36,7 +36,6 @@ namespace Uintah {
     ~ReactiveFlowLabel();
 
     const VarLabel* pConcentrationLabel;
-    
   };
   
 } // end namespace Uintah
