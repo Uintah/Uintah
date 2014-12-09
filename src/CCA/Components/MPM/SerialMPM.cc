@@ -245,7 +245,9 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   cohesiveZoneProblemSetup(restart_mat_ps, d_sharedState,flags);
   
   // ScalarDiffusion subcomponent setup
-  scalarDiffusionModel = scinew ScalarDiffusion(sharedState, flags);
+	if(flags->d_doScalarDiffusion){
+    scalarDiffusionModel = scinew ScalarDiffusion(sharedState, flags);
+	}
 
 
   //__________________________________
@@ -366,6 +368,10 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     t->computes(lb->p_qLabel);
   }
 
+	if (flags->d_doScalarDiffusion){
+		t->computes(scalarDiffusionModel->get_pConcentrationLabel());
+	}
+
   // artificial damping coeff initialized to 0.0
   if (cout_dbg.active())
     cout_dbg << "Artificial Damping Coeff = " << flags->d_artificialDampCoeff 
@@ -390,6 +396,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     // Schedule the initialization of pressure BCs per particle
     scheduleInitializePressureBCs(level, sched);
   }
+
 
   // dataAnalysis 
   if(d_analysisModules.size() != 0){

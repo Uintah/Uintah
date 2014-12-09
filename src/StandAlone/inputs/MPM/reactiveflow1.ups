@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+   <Meta>
+       <title>Reactive Flow test 1</title>
+   </Meta>
+
+   <SimulationComponent type="mpm" />
+    
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            3.00       </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          1.0e-4      </delt_init>
+       <timestep_multiplier>0.8         </timestep_multiplier>
+			 <max_Timesteps> 2 </max_Timesteps>
+   </Time>
+   
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Dirichlet">
+                              <value> 300.0  </value>
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>                  
+      <Face side = "z+">
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+       <Level>
+           <Box label="1">
+              <lower>       [0,0,0]          </lower>
+              <upper>       [1.0,0.75,1.00]  </upper>
+           		<resolution>  [20,20,20]     </resolution>
+              <extraCells> [1,1,1]            </extraCells>
+              <patches>    [1,1,1]            </patches>
+           </Box>
+       </Level>
+    </Grid>
+   
+    <!--____________________________________________________________________-->
+    <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>reactiveflow2.uda</filebase>
+      <outputTimestepInterval>1</outputTimestepInterval>
+      <save label="p.x"/>
+      <save label="p.volume"/>
+      <save label="p.velocity"/>
+			<save label="p.temperature" />
+      <checkpoint interval="0.005" cycle="2"/>
+   </DataArchiver>
+
+
+    <MPM>
+        <time_integrator>explicit</time_integrator>
+        <interpolator>gimp</interpolator>
+				<scalar_diffusion>concentration</scalar_diffusion>
+    </MPM>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+    </PhysicalConstants>
+
+
+    <!--____________________________________________________________________-->
+    <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <MPM>
+         <material name="pillar">
+              <density>             1000.0           </density>
+              <constitutive_model type = "reactive_flow2">
+                  <bulk_modulus>      3.50e7        </bulk_modulus>
+                  <shear_modulus>     8.40e7        </shear_modulus>
+              </constitutive_model>
+              <!--<thermal_conductivity>  427.0  </thermal_conductivity>-->
+              <thermal_conductivity>  3427.0  </thermal_conductivity>
+              <specific_heat>         234.0  </specific_heat>
+              <geom_object>
+                <box label="gpmpm">
+                  <min>           [0.25,0.00,0.25]   </min>
+                  <max>           [0.75,0.50,0.75]   </max>
+                 </box>
+                 <res>               [2,2,2]         </res>
+                 <velocity>          [0.0,0.0,0.0]   </velocity>
+                 <temperature>       0               </temperature>
+              </geom_object>
+         </material>
+
+         <contact>
+           <type>null</type>
+           <materials>              [0]         </materials>
+         </contact>
+       </MPM>
+    </MaterialProperties>
+</Uintah_specification>

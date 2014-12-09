@@ -33,6 +33,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/VarLabel.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Util/DebugStream.h>
@@ -41,8 +42,7 @@ using namespace std;
 using namespace Uintah;
 
 
-ScalarDiffusion::ScalarDiffusion(SimulationStateP& sS, MPMFlags* flags)
-{
+ScalarDiffusion::ScalarDiffusion(SimulationStateP& sS, MPMFlags* flags) {
   d_lb = scinew ReactiveFlowLabel;
   d_flag = flags;
   d_sharedState = sS;
@@ -56,7 +56,10 @@ ScalarDiffusion::ScalarDiffusion(SimulationStateP& sS, MPMFlags* flags)
   }
 }
 
-ScalarDiffusion::~ScalarDiffusion()
-{
+ScalarDiffusion::~ScalarDiffusion() {
   delete d_lb;
+}
+
+const VarLabel* ScalarDiffusion::get_pConcentrationLabel(){
+  return d_lb->pConcentrationLabel;
 }

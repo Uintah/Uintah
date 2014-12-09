@@ -30,13 +30,11 @@ using namespace std;
 using namespace Uintah;
 
 
-ReactiveFlowLabel::ReactiveFlowLabel()
-{
-   pConcentrationLabel = VarLabel::create( "p.concentration",
-			ParticleVariable<double>::getTypeDescription() );
+ReactiveFlowLabel::ReactiveFlowLabel() {
+  pConcentrationLabel = VarLabel::create( "p.concentration",
+                         ParticleVariable<double>::getTypeDescription() );
 }
 
-ReactiveFlowLabel::~ReactiveFlowLabel()
-{
+ReactiveFlowLabel::~ReactiveFlowLabel() {
   VarLabel::destroy(pConcentrationLabel);
 }
