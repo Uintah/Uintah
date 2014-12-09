@@ -27,6 +27,7 @@
 #include <CCA/Components/MPM/Contact/ContactFactory.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <CCA/Components/MPM/HeatConduction/HeatConduction.h>
+#include <CCA/Components/MPM/ReactiveFlow/ScalarDiffusion.h>
 #include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
@@ -129,6 +130,7 @@ SerialMPM::~SerialMPM()
   delete contactModel;
   delete thermalContactModel;
   delete heatConductionModel;
+  delete scalarDiffusionModel;
   MPMPhysicalBCFactory::clean();
   
   if(d_analysisModules.size() != 0){
@@ -242,6 +244,10 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   cohesiveZoneProblemSetup(restart_mat_ps, d_sharedState,flags);
   
+  // ScalarDiffusion subcomponent setup
+  scalarDiffusionModel = scinew ScalarDiffusion(sharedState, flags);
+
+
   //__________________________________
   //  create analysis modules
   // call problemSetup  

@@ -56,6 +56,7 @@ using namespace SCIRun;
 class ThermalContact;
 class HeatConduction;
 class AnalysisModule;
+class ScalarDiffusion;
 
 /**************************************
 
@@ -93,6 +94,7 @@ public:
   Contact*         contactModel;
   ThermalContact*  thermalContactModel;
   HeatConduction* heatConductionModel;
+  ScalarDiffusion* scalarDiffusionModel;
  
   //////////
   // Insert Documentation Here:
