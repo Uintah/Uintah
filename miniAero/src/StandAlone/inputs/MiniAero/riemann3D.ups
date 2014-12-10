@@ -20,7 +20,7 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.25      </maxTime>
+       <maxTime>            0.25        </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
@@ -162,7 +162,7 @@
        <MiniAero>
            <gamma>                  1.4                 </gamma>
            <R>                287.0                     </R>
-           <CFL>                0.5                     </CFL>
+           <CFL>                0.25                    </CFL>
            <Is_visc_flow>      false                    </Is_visc_flow>
            <RKSteps>            1                       </RKSteps>
            
