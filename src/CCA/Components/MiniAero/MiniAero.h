@@ -195,6 +195,15 @@ namespace Uintah {
     const VarLabel* dissipative_flux_energy_FCZlabel;
     const VarLabel* residual_CClabel;
     const VarLabel* machlabel;
+    const VarLabel* grad_rho_CClabel;
+    const Varlabel* grad_vel_CClabel;
+    const Varlabel* grad_temp_CClabel;
+    const VarLabel* viscous_flux_mom_FCXlabel;
+    const VarLabel* viscous_flux_energy_FCXlabel;
+    const VarLabel* viscous_flux_mom_FCYlabel;
+    const VarLabel* viscous_flux_energy_FCYlabel;
+    const VarLabel* viscous_flux_mom_FCZlabel;
+    const VarLabel* viscous_flux_energy_FCZlabel;
 
     SimulationStateP sharedState_;
     
