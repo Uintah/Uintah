@@ -166,7 +166,7 @@
        <MiniAero>
            <gamma>                  1.4                 </gamma>
            <R>                287.0                     </R>
-           <CFL>                0.5                     </CFL>
+           <CFL>                0.25                    </CFL>
            <Is_visc_flow>      false                    </Is_visc_flow>
            <RKSteps>            1                       </RKSteps>
            
