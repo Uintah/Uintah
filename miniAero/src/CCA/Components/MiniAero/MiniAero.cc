@@ -82,6 +82,10 @@ MiniAero::MiniAero(const ProcessorGroup* myworld)
   viscosityLabel     = VarLabel::create("viscosity",   CCVariable<double>::getTypeDescription());
   machlabel          = VarLabel::create("mach",        CCVariable<double>::getTypeDescription());
 
+  grad_rho_CClabel   = VarLabel::create("rho_grad",    CCVariable<Vector>::getTypeDescription());
+  grad_vel_CClabel   = VarLabel::create("vel_grad",    CCVariable<Matrix3>::getTypeDescription());
+  grad_temp_CClabel  = VarLabel::create("tempr_grad",  CCVariable<Vector>::getTypeDescription());
+
   flux_mass_CClabel    = VarLabel::create("flux_mass",         CCVariable<Vector>::getTypeDescription());
   flux_mom_CClabel     = VarLabel::create("flux_mom",          CCVariable<Matrix3>::getTypeDescription());
   flux_energy_CClabel  = VarLabel::create("flux_energy",       CCVariable<Vector>::getTypeDescription());
@@ -110,6 +114,15 @@ MiniAero::MiniAero(const ProcessorGroup* myworld)
   dissipative_flux_mom_FCZlabel    = VarLabel::create("faceZ_diss_flux_mom",    SFCZVariable<Vector>::getTypeDescription());
   dissipative_flux_energy_FCZlabel = VarLabel::create("faceZ_diss_flux_energy", SFCZVariable<double>::getTypeDescription());
 
+  viscous_flux_mom_FCXlabel    = VarLabel::create("faceX_visc_flux_mom",    SFCXVariable<Vector>::getTypeDescription());
+  viscous_flux_energy_FCXlabel = VarLabel::create("faceX_visc_flux_energy", SFCXVariable<double>::getTypeDescription());
+
+  viscous_flux_mom_FCYlabel    = VarLabel::create("faceY_visc_flux_mom",    SFCYVariable<Vector>::getTypeDescription());
+  viscous_flux_energy_FCYlabel = VarLabel::create("faceY_visc_flux_energy", SFCYVariable<double>::getTypeDescription());
+
+  viscous_flux_mom_FCZlabel    = VarLabel::create("faceZ_visc_flux_mom",    SFCZVariable<Vector>::getTypeDescription());
+  viscous_flux_energy_FCZlabel = VarLabel::create("faceZ_visc_flux_energy", SFCZVariable<double>::getTypeDescription());
+
   residual_CClabel = VarLabel::create("residual", CCVariable<Vector5>::getTypeDescription());
 }
 
@@ -124,6 +137,10 @@ MiniAero::~MiniAero()
   VarLabel::destroy(speedSound_CClabel);
   VarLabel::destroy(viscosityLabel);
   VarLabel::destroy(machlabel);
+
+  VarLabel::destroy(grad_rho_CClabel);
+  VarLabel::destroy(grad_vel_CClabel);
+  VarLabel::destroy(grad_temp_CClabel);
 
   VarLabel::destroy(flux_mass_CClabel);
   VarLabel::destroy(flux_mom_CClabel);
@@ -140,6 +157,13 @@ MiniAero::~MiniAero()
   VarLabel::destroy(flux_mass_FCZlabel);
   VarLabel::destroy(flux_mom_FCZlabel);
   VarLabel::destroy(flux_energy_FCZlabel);
+
+  VarLabel::destroy(viscous_flux_mom_FCXlabel);
+  VarLabel::destroy(viscous_flux_energy_FCXlabel);
+  VarLabel::destory(viscous_flux_mom_FCYlabel);
+  VarLabel::destroy(viscous_flux_energy_FCYlabel);
+  VarLabel::destroy(viscous_flux_mom_FCZlabel);
+  VarLabel::destroy(viscous_flux_energy_FCZlabel);
 
   VarLabel::destroy(residual_CClabel);
 }
