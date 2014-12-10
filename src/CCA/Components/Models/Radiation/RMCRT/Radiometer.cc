@@ -31,6 +31,7 @@
 #include <Core/Geometry/BBox.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Math/MersenneTwister.h>
 #include <time.h>
 #include <fstream>
@@ -283,6 +284,68 @@ Radiometer::initializeRadVars( const ProcessorGroup*,
   }
 }
 
+
+//______________________________________________________________________
+// Method: Schedule the virtual radiometer.  Only use temporal scheduling 
+//  This is a HACK until spatial scheduling working.  Each patch is 
+//  performing all-to-all communication even if they don't have
+//  radiometers.
+//______________________________________________________________________
+void
+Radiometer::sched_radiometer( const LevelP& level,
+                              SchedulerP& sched,
+                              Task::WhichDW abskg_dw,
+                              Task::WhichDW sigma_dw,
+                              Task::WhichDW celltype_dw,
+                              const int radCalc_freq )
+{
+  // return if it's a carryforward timestep
+  // Temporal task scheduling
+  if ( doCarryForward( radCalc_freq) ) {
+    return;
+  }
+  
+  vector<const Patch*> myPatches = getPatchSet( sched, level );
+  bool hasRadiometers = false;
+  int nGhostCells = SHRT_MAX;
+  
+  //__________________________________
+  //  If this processor owns any patches with radiometers
+  if( myPatches.size() !=  0 ){
+    hasRadiometers = true;
+    nGhostCells = SHRT_MAX; 
+  }
+  
+  std::string taskname = "Radiometer::radiometer";
+  Task *tsk;
+
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
+    tsk = scinew Task( taskname, this, &Radiometer::radiometer< double >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq, hasRadiometers );
+  } else {
+    tsk = scinew Task( taskname, this, &Radiometer::radiometer< float >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq, hasRadiometers );
+  }
+
+  printSchedule( level,dbg,"Radiometer::sched_radiometer" );
+
+  //__________________________________
+  // Require an infinite number of ghost cells so you can access the entire domain.
+  //
+  // THIS IS VERY EXPENSIVE.  THIS EXPENSE IS INCURRED ON NON-CALCULATION TIMESTEPS,
+  // ONLY REQUIRE THESE VARIABLES ON A CALCULATION TIMESTEPS.
+  //
+  // The taskgraph must be recompiled to detect a change in the conditional.
+  // The taskgraph recompilation is activated from RMCRTCommon:doRecompileTaskgraph()
+  Ghost::GhostType  gac  = Ghost::AroundCells;
+  tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
+  tsk->requires( sigma_dw ,    d_sigmaT4_label,  gac, SHRT_MAX);
+  tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
+
+  tsk->modifies( d_VRFluxLabel );
+
+  sched->addTask( tsk, level->eachPatch(), d_matlSet );
+}
+
+#if 0
 //______________________________________________________________________
 // Method: Schedule the virtual radiometer.  This task has both 
 // temporal and spatial scheduling.
@@ -302,13 +365,22 @@ Radiometer::sched_radiometer( const LevelP& level,
     return;
   }
 
+  vector<const Patch*> myPatches = getPatchSet( sched, level );
+  bool hasRadiometers = false;
+  
+  //__________________________________
+  //  If this processor owns any patches with radiometers
+  if( myPatches.size() !=  0 ){
+    hasRadiometers = true;
+  }
+
   std::string taskname = "Radiometer::radiometer";
   Task *tsk;
   
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
-    tsk = scinew Task( taskname, this, &Radiometer::radiometer< double >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
+    tsk = scinew Task( taskname, this, &Radiometer::radiometer< double >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq, hasRadiometers );
   } else {
-    tsk = scinew Task( taskname, this, &Radiometer::radiometer< float >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
+    tsk = scinew Task( taskname, this, &Radiometer::radiometer< float >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq, hasRadiometers );
   }
   
   tsk->setType(Task::Spatial);
@@ -328,17 +400,16 @@ Radiometer::sched_radiometer( const LevelP& level,
   tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
   tsk->requires( sigma_dw ,    d_sigmaT4_label,  gac, SHRT_MAX);
   tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
+  
+  tsk->modifies( d_VRFluxLabel );
 
   // only schedule on the patches that contain radiometers
   // Spatial task scheduling
   PatchSet* radiometerPatchSet;
   radiometerPatchSet = scinew PatchSet();
   radiometerPatchSet->addReference();
-  vector<const Patch*> myPatches = getPatchSet( sched, level );
 
   radiometerPatchSet->addAll( myPatches );
-  
-  tsk->modifies( d_VRFluxLabel );
   
   sched->addTask( tsk, radiometerPatchSet, d_matlSet );
   
@@ -347,12 +418,14 @@ Radiometer::sched_radiometer( const LevelP& level,
   }
 }
 
+#endif
+
 //______________________________________________________________________
 // Method: The actual work of the ray tracer
 //______________________________________________________________________
 template < class T >
 void
-Radiometer::radiometer( const ProcessorGroup* pc,
+Radiometer::radiometer( const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* old_dw,
@@ -360,16 +433,17 @@ Radiometer::radiometer( const ProcessorGroup* pc,
                         Task::WhichDW which_abskg_dw,
                         Task::WhichDW whichd_sigmaT4_dw,
                         Task::WhichDW which_celltype_dw,
-                        const int radCalc_freq )
+                        const int radCalc_freq,
+                        const bool hasRadiometers )
 {
-
-  // return if it's a carryforward timestep
-  if ( doCarryForward( radCalc_freq) ) {
+  // return if it's a carryforward timestep or there are no
+  // radiometers.
+  if ( doCarryForward( radCalc_freq) || hasRadiometers == false) {
     return;
   }
 
   const Level* level = getLevel(patches);
-
+  
   //__________________________________
   //
   MTRand mTwister;

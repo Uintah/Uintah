@@ -124,7 +124,8 @@ namespace Uintah{
                        Task::WhichDW which_abskg_dw,
                        Task::WhichDW whichd_sigmaT4_dw,
                        Task::WhichDW which_celltype_dw,
-                       const int radCalc_freq );
+                       const int radCalc_freq,
+                       const bool hasRadiometers );
 
       //__________________________________
       //
