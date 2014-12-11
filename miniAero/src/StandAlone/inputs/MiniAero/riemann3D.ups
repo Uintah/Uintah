@@ -149,6 +149,7 @@
       <save label="flux_mom"/>
       <save label="flux_energy"/>
       <save label="speedsound"/>
+      <checkpoint interval="0.0125"  cycle="2"/>
    </DataArchiver>
 
 
