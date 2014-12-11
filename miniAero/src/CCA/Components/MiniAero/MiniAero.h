@@ -120,6 +120,10 @@ namespace Uintah {
     void schedUpdateResidual(const LevelP& level,SchedulerP& sched);
     
     void schedUpdateState(const LevelP& level, SchedulerP& sched, const int RK_step);
+
+    void schedGradients(const LevelP& level,SchedulerP& sched);
+
+    void schedViscousFaceFlux(const LevelP& level,SchedulerP& sched);
     
     void Primitives(const ProcessorGroup*,
                     const PatchSubset* patches,
@@ -157,6 +161,18 @@ namespace Uintah {
                      DataWarehouse* old_dw,
                      DataWarehouse* new_dw,
                      const int RK_step);
+
+    void Gradients(const ProcessorGroup*,
+                    const PatchSubset* patches,
+                    const MaterialSubset* matls,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw);
+
+    void viscousFaceFlux(const ProcessorGroup*,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* old_dw,
+                     DataWarehouse* new_dw);
                      
     void compute_roe_dissipative_flux(const double * primitives_left, 
                                       const double * primitives_right,
@@ -235,7 +251,10 @@ namespace Uintah {
     {
       return d_gamma;
     }
-
+    double getConductivity(double viscosity) const
+    {
+      return viscosity*1006.0/0.71;
+    }
   };  // end class MiniAero
 
 }  // end namespace Uintah
