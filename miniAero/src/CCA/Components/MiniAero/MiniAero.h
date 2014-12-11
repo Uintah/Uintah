@@ -212,8 +212,8 @@ namespace Uintah {
     const VarLabel* residual_CClabel;
     const VarLabel* machlabel;
     const VarLabel* grad_rho_CClabel;
-    const Varlabel* grad_vel_CClabel;
-    const Varlabel* grad_temp_CClabel;
+    const VarLabel* grad_vel_CClabel;
+    const VarLabel* grad_temp_CClabel;
     const VarLabel* viscous_flux_mom_FCXlabel;
     const VarLabel* viscous_flux_energy_FCXlabel;
     const VarLabel* viscous_flux_mom_FCYlabel;
