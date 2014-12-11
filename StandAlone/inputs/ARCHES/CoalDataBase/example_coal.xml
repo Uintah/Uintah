@@ -20,5 +20,13 @@
     <!-- OPTIONAL INPUTS -->
     <ksi>0.5</ksi><!-- Optional Fraction of the heat released by char oxidation that goes to the particle (default=1.0) -->
 
+    <!--optical properties of the coal, the complext index of refraction of the Raw coal and ash respectively-->
+    <optics>
+      <RawCoal_real>2.0</RawCoal_real>
+      <RawCoal_imag>-0.6</RawCoal_imag>
+      <Ash_real>1.0</Ash_real>
+      <Ash_imag>-0.01</Ash_imag>
+    </optics>
+
   </Coal_Properties>
 </Uintah_Include>

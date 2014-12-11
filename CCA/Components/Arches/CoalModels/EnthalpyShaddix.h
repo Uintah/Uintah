@@ -167,7 +167,7 @@ private:
   const VarLabel* d_particle_length_label;      ///< Label for particle length
   const VarLabel* d_weight_label;               ///< Weight label
 
-  const VarLabel* d_abskp;  ///< Label for thermal conductivity (of the particles, I think???)
+  const VarLabel* d_abskp;                    ///< Label for particle absorption coefficient
   const VarLabel* d_volq_label;
   const VarLabel* d_abskg_label;
 

@@ -101,7 +101,7 @@ c  if non-flow cell, then set LHS to 1*I and RHS to sigma*T^4/pi
 
 c  if flow cell, populate corresponding elements in arrays 
       volume = sew(ii) * sns(jj) * stb(kk)
-      su(ii,jj,kk) = (esrcg(ii,jj,kk) + scat_source(ii,jj,kk)) *volume
+      su(ii,jj,kk)=(esrcg(ii,jj,kk) + scat_source(ii,jj,kk)) *volume
 
       areaew = sns(jj) * stb(kk)
       arean  = sew(ii) * stb(kk)                 

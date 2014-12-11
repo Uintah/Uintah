@@ -72,6 +72,7 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
 {
   HeatTransfer::problemSetup( params, qn );
 
+
   ProblemSpecP db = params; 
  
   if ( d_radiation ){
@@ -344,14 +345,12 @@ EnthalpyShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched, int
 
     tsk->computes(d_modelLabel);
     tsk->computes(d_gasLabel); 
-    tsk->computes(d_abskpLabel); 
     tsk->computes(d_qconvLabel);
     tsk->computes(d_qradLabel);
     tsk->computes(d_pTLabel);
   } else {
     tsk->modifies(d_modelLabel);
     tsk->modifies(d_gasLabel);  
-    tsk->modifies(d_abskpLabel); 
     tsk->modifies(d_qconvLabel);
     tsk->modifies(d_qradLabel);
     tsk->modifies(d_pTLabel);
@@ -409,9 +408,14 @@ EnthalpyShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched, int
   }
   tsk->requires(Task::OldDW, d_gas_cp_label, Ghost::None, 0);
  
-  if ( d_radiation ) {
+  if (  d_radiation ) {
     tsk->requires(Task::OldDW, d_abskg_label,  Ghost::None, 0);   
     tsk->requires(Task::OldDW, d_volq_label, Ghost::None, 0);
+    if(d_timeSubStep ==0) {
+      tsk->requires(Task::OldDW,d_abskpLabel, Ghost::None, 0);
+    }else{
+      tsk->requires(Task::NewDW,d_abskpLabel, Ghost::None, 0); 
+    }
   }
 
   // always require the gas-phase temperature
@@ -537,13 +541,6 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
       gas_heat_rate.initialize(0.0);
     }
     
-    CCVariable<double> abskp; 
-    if( new_dw->exists( d_abskpLabel, matlIndex, patch) ) {
-      new_dw->getModifiable( abskp, d_abskpLabel, matlIndex, patch ); 
-    } else {
-      new_dw->allocateAndPut( abskp, d_abskpLabel, matlIndex, patch );
-      abskp.initialize(0.0);
-    }
     
     CCVariable<double> qconv;
     if( new_dw->exists( d_qconvLabel, matlIndex, patch) ) {
@@ -590,9 +587,15 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> abskgIN;
     constCCVariable<double> radiationVolqIN;
 
+    constCCVariable<double> abskp; 
     if ( d_radiation ) {
       old_dw->get(abskgIN, d_abskg_label, matlIndex, patch, gn, 0);
       old_dw->get(radiationVolqIN, d_volq_label, matlIndex, patch, gn, 0);
+    if( new_dw->exists( d_abskpLabel, matlIndex, patch) ) {
+      new_dw->get( abskp, d_abskpLabel, matlIndex, patch, gn, 0); 
+    } else {
+      old_dw->get( abskp, d_abskpLabel, matlIndex, patch, gn, 0); 
+    }
     }
 
     constCCVariable<double> temperature;
@@ -656,7 +659,6 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
 
       double heat_rate_ = 0;
       double gas_heat_rate_ = 0;
-      double abskp_ = 0;
 
       // intermediate calculation values
       double Re;
@@ -669,7 +671,6 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
       if (weight_is_small && !d_unweighted) {
         heat_rate_ = 0.0;
         gas_heat_rate_ = 0.0;
-        abskp_ = 0.0;
         Q_convection = 0.0;
         Q_radiation = 0.0;
         particle_temperature = 0.0;
@@ -748,27 +749,13 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
         Q_convection = Nu*pi*blow*rkg*unscaled_length*(gas_temperature - particle_temperature);
 
         // Radiation part: -------------------------
-        bool DO_NEW_ABSKP = false;
         Q_radiation = 0.0;
-        if ( d_radiation  && DO_NEW_ABSKP){ 
-          // New Glacier Code for ABSKP: 
-          double qabs = 0.0; 
-          double qsca = 0.0; 
-          double init_ash_frac = 0.0; // THIS NEEDS TO BE FIXED!
-          fort_rqpart( unscaled_length, particle_temperature, unscaled_ash_mass, init_ash_frac, qabs, qsca ); 
-
-          //what goes next?!
-        } else if ( d_radiation && !DO_NEW_ABSKP ) { 
-          double Qabs = 0.8;
-          double Apsc = (pi/4.0)*Qabs*pow(unscaled_length,2.0);
-          //          double Eb = 4.0*sigma*pow(particle_temperature,4.0);
+        if ( d_radiation) { 
+          double Apsc = abskp[c];
           double Eb = 4.0*sigma*pow(gas_temperature,4.0);
           FSum = radiationVolqIN[c];    
           Q_radiation = Apsc*(FSum - Eb);
-          abskp_ = pi/4.0*Qabs*unscaled_weight*pow(unscaled_length,2.0);  // Derek
-        } else {
-          abskp_ = 0.0;
-        }
+        } 
 
         double hc = get_hc(particle_temperature);
         double hh = get_hh(particle_temperature);
@@ -785,7 +772,6 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
   
       heat_rate[c] = heat_rate_;
       gas_heat_rate[c] = gas_heat_rate_;
-      abskp[c] = abskp_;
       qconv[c] = Q_convection;
       qrad[c] = Q_radiation;
       pT[c] = particle_temperature;

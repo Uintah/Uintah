@@ -112,13 +112,11 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
     my_stringstream_object << "Intensity" << setfill('0') << setw(4)<<  ix ;
     _IntensityLabels.push_back(  VarLabel::find(my_stringstream_object.str()));
     _extra_local_labels.push_back(_IntensityLabels[ix]); 
-    if(_DO_model->DOSolveInitialGuessBool()==false){
+    if(_DO_model->needIntensitiesBool()==false){
      break;  // create labels for all intensities, otherwise only create 1 label
     }
   }
 
-  if (_DO_model->ScatteringOnBool())
-    _scatktLabel =  VarLabel::find("scatkt");
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the source term 
@@ -151,11 +149,25 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
     tsk->requires( Task::NewDW, _T_label, gac, 1 ); 
     tsk->requires( Task::OldDW, _abskg_label, gn, 0 ); 
 
-  if (_DO_model->ScatteringOnBool())
-    tsk->requires( Task::OldDW, _scatktLabel, gn, 0 ); 
+
+    if (_DO_model->ScatteringOnBool()){
+      _scatktLabel =  VarLabel::find("scatkt");
+      _asymmetryLabel= VarLabel::find("asymmetryParam"); 
+      if ( _scatktLabel == 0 ){ 
+        throw ProblemSetupException("Error: scatkt label not found! This label should be created in the Radiation property calculator!",__FILE__, __LINE__);
+      } 
+      if (_asymmetryLabel == 0 ){ 
+        throw ProblemSetupException("Error: asymmetry label not found! This label should be created in the Radiation property calculator!",__FILE__, __LINE__);
+      } 
+
+      _DO_model->setLabels();
+
+      tsk->requires( Task::OldDW, _scatktLabel, gn, 0 ); 
+      tsk->requires( Task::OldDW,_asymmetryLabel, gn, 0 ); 
+    }
 
     for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
-         iter != _extra_local_labels.end(); iter++){
+        iter != _extra_local_labels.end(); iter++){
 
       tsk->requires( Task::OldDW, *iter, gn, 0 ); 
       tsk->computes( *iter ); 
@@ -213,7 +225,7 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       }
     }
     else{  
-      if(_DO_model->DOSolveInitialGuessBool()==false){
+      if(_DO_model->needIntensitiesBool()==false ){
         for(unsigned int ix=0;  ix< _IntensityLabels.size();ix++){ 
           new_dw->transferFrom(old_dw,_IntensityLabels[ix],  patches, matls);
         }
@@ -295,12 +307,12 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 
       if ( timeSubStep == 0 ) {
 
-      if(_DO_model->DOSolveInitialGuessBool()){
-        for( int ix=0;  ix< _DO_model->getIntOrdinates();ix++){
-          CCVariable<double> cenint;
-          new_dw->allocateAndPut(cenint,_IntensityLabels[ix] , matlIndex, patch );
+        if(_DO_model->needIntensitiesBool()){
+          for( int ix=0;  ix< _DO_model->getIntOrdinates();ix++){
+            CCVariable<double> cenint;
+            new_dw->allocateAndPut(cenint,_IntensityLabels[ix] , matlIndex, patch );
+          }
         }
-       }
 
         //Note: The final divQ is initialized (to zero) and set after the solve in the intensity solve itself.
         _DO_model->intensitysolve( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars, divQ, BoundaryCondition::WALL, matlIndex, new_dw, old_dw ); 

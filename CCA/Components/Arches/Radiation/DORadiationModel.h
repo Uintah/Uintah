@@ -95,9 +95,11 @@ public:
 
              bool reflectionsBool();
                
-             bool DOSolveInitialGuessBool();
+             bool needIntensitiesBool();
 
              bool ScatteringOnBool();
+
+             void setLabels() ;
 
 private:
 
@@ -136,18 +138,23 @@ private:
 
       bool d_print_all_info; 
       bool reflectionsTurnedOn;
-      bool ScatteringOn;
+      bool _scatteringOn;
       bool usePreviousIntensity;
 
       const VarLabel* _scatktLabel;
+      const VarLabel* _asymmetryLabel;
+
       std::vector< const VarLabel*> _IntensityLabels;
       std::vector< const VarLabel*> _radiationFluxLabels;
-      std::vector< std::vector < double > > phaseFunction;
+
+      std::vector< std::vector < double > > cosineTheta;
+      std::vector< std::vector < double > > solidAngleQuad;
 
       void computeScatteringIntensities(int direction,
                       constCCVariable<double> &scatkt,
   StaticArray< constCCVariable<double> > &Intensities,
               CCVariable<double> &scatIntensitySource,
+              constCCVariable<double> &asymmetryFactor,
                                    const Patch* patch);
 
 
