@@ -160,7 +160,7 @@ MiniAero::~MiniAero()
 
   VarLabel::destroy(viscous_flux_mom_FCXlabel);
   VarLabel::destroy(viscous_flux_energy_FCXlabel);
-  VarLabel::destory(viscous_flux_mom_FCYlabel);
+  VarLabel::destroy(viscous_flux_mom_FCYlabel);
   VarLabel::destroy(viscous_flux_energy_FCYlabel);
   VarLabel::destroy(viscous_flux_mom_FCZlabel);
   VarLabel::destroy(viscous_flux_energy_FCZlabel);
@@ -834,15 +834,15 @@ void MiniAero::Gradients(const ProcessorGroup* /*pg*/,
     // Requires...
     constCCVariable<double> rho, temp;
     constCCVariable<Vector> vel;
-    Ghost::GhostType  gn  = Ghost::None;
+    Ghost::GhostType  gac  = Ghost::AroundCells;
     old_dw->get( rho,  rho_CClabel, 0, patch, gac, 1 );
     old_dw->get( vel,  vel_CClabel, 0, patch, gac, 1 );
     old_dw->get( temp, temp_CClabel,0, patch, gac, 1 );
 
     // Provides...
-    CCVariable<Vector> grad_rho_CC, grad_Temp_CC;
+    CCVariable<Vector> grad_rho_CC, grad_temp_CC;
     new_dw->allocateAndPut( grad_rho_CC,  grad_rho_CClabel,   0, patch );
-    new_dw->allocateAndPut( grad_Temp_CC, grad_temp_CClabel,       0, patch );
+    new_dw->allocateAndPut( grad_temp_CC, grad_temp_CClabel,       0, patch );
  
     CCVariable<Matrix3> grad_vel_CC;
     new_dw->allocateAndPut( grad_vel_CC, grad_vel_CClabel,   0,patch );
