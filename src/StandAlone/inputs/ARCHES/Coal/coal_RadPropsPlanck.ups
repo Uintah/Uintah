@@ -911,8 +911,8 @@
           <calculator type="radprops">
           <opl>0.3</opl>
           <abskg label = "abskg"/>
-          <abskp label = "abskp"/>
-            <particles>
+            <particles type="coal">
+            <abskp label = "abskp"/>
               <model_type>planck</model_type> 
               <!--<model_type>rossland</model_type> -->
               <complex_ir_real>2</complex_ir_real>    

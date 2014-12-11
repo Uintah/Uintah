@@ -916,13 +916,12 @@
           <calculator type="hottel_sarofim">
             <opl>.432</opl>
             <abskg label="gas_abskg"/>
-            <abskp label="Julien_abskp"/>
+            <particles type="basic">
+              <abskp label="Julien_abskp"/>
+              <part_temp_label>heat_pT</part_temp_label>
+              <part_size_label>length</part_size_label>
+            </particles>
           </calculator>
-        </model>
-        <model label="Julien_abskp" type="particle_absorption_coefficient">
-          <initialization type="constant">
-            <constant>0.0</constant>
-          </initialization>
         </model>
         <model type="heat_loss" label="heat_loss">
           <initialization type="constant">

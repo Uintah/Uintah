@@ -2,6 +2,7 @@
 #include <CCA/Components/Arches/Radiation/RadPropertyCalculator.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
+#include <Core/Containers/StaticArray.h>
 using namespace Uintah; 
 
 //---------------------------------------------------------------------------
@@ -28,9 +29,10 @@ RadProperties::~RadProperties( )
 {
   // Destroying all local VarLabels stored in _extra_local_labels: 
   for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
-
     VarLabel::destroy( *iter ); 
-
+  }
+  if(_particlesOn){
+    delete _ocalc;  
   }
 
   delete _boundaryCond;
@@ -77,18 +79,51 @@ void RadProperties::problemSetup( const ProblemSpecP& inputdb )
     _temperature_name = "temperature"; 
   }
 
+ _particlesOn = db_calc->findBlock("particles");
+
   bool complete; 
   complete = _calc->problemSetup( db_calc );
+  if ( _particlesOn ){ 
+    //------------ check to see if scattering is turned on --//
+    std::string radiation_model;
+    db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src")->getAttribute("type",radiation_model) ; 
+
+    if (radiation_model == "do_radiation"){
+      db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src")->findBlock("DORadiationModel")->getWithDefault("ScatteringOn" ,_scatteringOn,false) ; 
+    }
+    else if ( radiation_model == "rmcrt_radiation"){
+      db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src")->findBlock("RMCRT")->getWithDefault("ScatteringOn" ,_scatteringOn,false) ; 
+    }
+    //-------------------------------------------------------//
+    
+
+    std::string particle_calculator_type; 
+    db_calc->findBlock("particles")->getAttribute("type",particle_calculator_type); 
+    if(particle_calculator_type == "basic"){
+      _ocalc = scinew RadPropertyCalculator::basic(db_calc,_scatteringOn); 
+    }else if(particle_calculator_type == "coal"){
+      _ocalc = scinew RadPropertyCalculator::coalOptics(db_calc,_scatteringOn); 
+    }else{
+      throw InvalidValue("Particle radiative property model not found!! Name:"+particle_calculator_type,__FILE__, __LINE__); 
+    }
+
+    if (_ocalc->construction_success== false)
+      throw InvalidValue("Error: Unable to setup optical radiation property calculator needed for scattering and absorption coefficients!",__FILE__, __LINE__); 
+  }
 
   _nQn_part = 0;
-  if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM") && _calc->has_abskp_local() ){
+  if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM") && _particlesOn ){
     db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->require( "number_quad_nodes", _nQn_part ); 
     db->findBlock("calculator")->findBlock("particles")->getWithDefault( "part_temp_label", _base_temperature_label_name, "heat_pT" ); 
     db->findBlock("calculator")->findBlock("particles")->getWithDefault( "part_size_label", _base_size_label_name, "length" ); 
   }
+  else if ( _particlesOn){
+    throw InvalidValue("Error: No particle models found (DQMOM CQMOM Lagrangian?) ",__FILE__, __LINE__); 
+  }
 
   if ( !complete )
     throw InvalidValue("Error: Unable to setup radiation property calculator: "+calculator_type,__FILE__, __LINE__); 
+
 
   if ( _prop_name == _calc->get_abskg_name()){ 
     std::ostringstream msg; 
@@ -106,15 +141,10 @@ void RadProperties::problemSetup( const ProblemSpecP& inputdb )
 void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, int time_substep )
 {
 
+
   std::string taskname = "RadProperties::computeProp"; 
   Task* tsk = scinew Task( taskname, this, &RadProperties::computeProp, 
                            time_substep ); 
-
-  const bool local_abskp = _calc->has_abskp_local();  
-  const bool use_abskp   = _calc->use_abskp(); 
-
-  //need to resolve labels first
-  _calc->resolve_labels(); 
 
   _temperature_label = VarLabel::find(_temperature_name); 
   if ( _temperature_label == 0 ){ 
@@ -122,20 +152,24 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
   }
   tsk->requires( Task::NewDW, VarLabel::find("volFraction"), Ghost::None, 0 ); 
 
+
   if ( time_substep == 0 ){ 
 
     tsk->modifies( _prop_label ); 
     tsk->computes( _calc->get_abskg_label() );
     tsk->requires( Task::OldDW, VarLabel::find(_temperature_name), Ghost::None, 0);
 
-    if ( use_abskp && local_abskp ){ 
-      tsk->computes( _calc->get_abskp_label() ); 
-    } else if ( use_abskp && !local_abskp ){ 
-      tsk->requires( Task::OldDW, _calc->get_abskp_label(), Ghost::None, 0 );
-    }
-    if ( _calc->use_scatkt()  ){ 
-      tsk->computes( _calc->get_scatkt_label() ); 
-    }
+    if ( _particlesOn ){ 
+      tsk->computes( _ocalc->get_abskp_label() ); 
+      for( int i=0; i< _nQn_part; i++){
+        tsk->computes( _ocalc->get_abskp_label_vector()[i] ); 
+      }
+      if ( _scatteringOn  ){
+        tsk->computes( _ocalc->get_scatkt_label() ); 
+      }
+    } 
+
+
 
     //participating species from property calculator
     std::vector<std::string> part_sp = _calc->get_sp(); 
@@ -143,7 +177,7 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
     for ( std::vector<std::string>::iterator iter = part_sp.begin(); iter != part_sp.end(); iter++){
       const VarLabel* label = VarLabel::find(*iter);
       if ( label != 0 ){ 
-        tsk->requires( Task::OldDW, label, Ghost::None, 0 ); 
+        tsk->requires(Task::OldDW, label, Ghost::None, 0 ); 
       } else { 
         throw ProblemSetupException("Error: Could not match species with varlabel: "+*iter,__FILE__, __LINE__);
       }
@@ -155,14 +189,17 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
     tsk->modifies( _calc->get_abskg_label() );
     tsk->requires( Task::NewDW, VarLabel::find(_temperature_name), Ghost::None, 0);
 
-    if ( use_abskp && local_abskp ){ 
-      tsk->modifies( _calc->get_abskp_label() ); 
-    } else if ( use_abskp && !local_abskp ){ 
-      tsk->requires( Task::NewDW, _calc->get_abskp_label(), Ghost::None, 0 );
-    }
-    if (_calc->use_scatkt() ){ 
-      tsk->modifies( _calc->get_scatkt_label() ); 
-    }
+    if ( _particlesOn ){ 
+      tsk->modifies( _ocalc->get_abskp_label() ); 
+      for( int i=0; i< _nQn_part; i++){
+        tsk->modifies( _ocalc->get_abskp_label_vector()[i] ); 
+      }
+      if ( _scatteringOn  ){ 
+        tsk->modifies( _ocalc->get_scatkt_label() ); 
+      }
+    } 
+      
+    
 
     //participating species from property calculator
     std::vector<std::string> part_sp = _calc->get_sp(); 
@@ -181,7 +218,7 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
 
 
   // Require DQMOM labels if needed 
-  if (  _calc->has_abskp_local() || _calc->use_scatkt()){
+  if (  _particlesOn){
     if( _nQn_part ==0){
       throw ProblemSetupException("Error: DQMOM must be used in combination with radiation properties for particles. Zero quadrature nodes found." ,__FILE__, __LINE__);
     }
@@ -204,6 +241,9 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
       tsk->requires( Task::NewDW, VarLabel::find( label_name_w ) , Ghost::None, 0 ); 
 
     }
+
+    if (_particlesOn )  
+      _ocalc->problemSetup(tsk, time_substep);
   }
 }
 
@@ -234,40 +274,37 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
 
     DataWarehouse* which_dw; 
     
-    const bool local_abskp = _calc->has_abskp_local();  
-    const bool use_abskp   = _calc->use_abskp(); 
-    const bool use_scatkt  = _calc->use_scatkt();
 
     CCVariable<double> abskg; 
-    CCVariable<double> abskp; 
+    CCVariable<double> abskpt; 
     CCVariable<double> scatkt; 
-    constCCVariable<double> const_abskp; 
+    StaticArray< CCVariable<double> > abskp(_nQn_part); 
 
     if ( time_substep == 0 ) { 
       which_dw = old_dw; 
       new_dw->getModifiable( absk_tot, _prop_label, matlIndex, patch ); 
       new_dw->allocateAndPut( abskg, _calc->get_abskg_label(), matlIndex, patch );
-      if ( use_abskp && local_abskp ){ 
-        new_dw->allocateAndPut( abskp, _calc->get_abskp_label(), matlIndex, patch );
-      } else if ( use_abskp && !local_abskp ){ 
-        old_dw->get( const_abskp, _calc->get_abskp_label(), matlIndex, patch, Ghost::None, 0 ); 
-      }
+      if ( _particlesOn ){ 
+        new_dw->allocateAndPut( abskpt, _ocalc->get_abskp_label(), matlIndex, patch );
+        for( int i=0; i< _nQn_part; i++){
+          new_dw->allocateAndPut( abskp[i], _ocalc->get_abskp_label_vector()[i], matlIndex, patch );
+        }
+      } 
       old_dw->get( temperature, _temperature_label, matlIndex, patch, Ghost::None, 0 ); 
     } else { 
       which_dw = new_dw; 
       new_dw->getModifiable( absk_tot, _prop_label, matlIndex, patch ); 
       new_dw->getModifiable( abskg, _calc->get_abskg_label(), matlIndex, patch );
-      if ( use_abskp && local_abskp ){ 
-        new_dw->getModifiable( abskp, _calc->get_abskp_label(), matlIndex, patch );
-      } else if ( use_abskp && !local_abskp ){ 
-        new_dw->get( const_abskp, _calc->get_abskp_label(), matlIndex, patch, Ghost::None, 0 ); 
-      }
+      if ( _particlesOn ){ 
+        new_dw->getModifiable( abskpt, _ocalc->get_abskp_label(), matlIndex, patch );
+        for( int i=0; i< _nQn_part; i++){
+          new_dw->getModifiable( abskp[i], _ocalc->get_abskp_label_vector()[i], matlIndex, patch );
+        }
+      }  
       new_dw->get( temperature, _temperature_label, matlIndex, patch, Ghost::None, 0 ); 
     }
 
-    if(use_scatkt){
-      new_dw->allocateAndPut( scatkt, _calc->get_scatkt_label(), matlIndex, patch );
-    }
+
       
     //participating species from property calculator
     typedef std::vector<constCCVariable<double> > CCCV; 
@@ -284,11 +321,9 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
     //initializing properties here.  This needs to be made consistent with BCs
     if ( time_substep == 0 ){ 
       abskg.initialize(1.0);           //walls, bcs, etc, are fulling absorbing 
-      if ( use_abskp && local_abskp ){
-        abskp.initialize(0.0); 
+      if ( _particlesOn ){
+        abskpt.initialize(0.0); 
       }
-      if ( use_scatkt)
-         scatkt.initialize(0.0);
     }
 
     //actually compute the properties
@@ -298,44 +333,43 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
     absk_tot.copyData(abskg); 
 
     //sum in the particle contribution if needed
-    if ( use_abskp || use_scatkt ){ 
 
-      if ( local_abskp || use_scatkt){ 
-      // Create containers to be passed to function that populates abskp
-         DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self(); // DQMOM singleton object
-         CCCV pWeight;      // particle weights
-         CCCV pSize;        // particle sizes
-         CCCV pTemperature; // particle Temperatures
-         typedef std::vector<const VarLabel*> CCCVL; // object used for iterating over quadrature nodes
+      if ( _particlesOn){ 
+        // Create containers to be passed to function that populates abskp
+        DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self(); // DQMOM singleton object
+        CCCV pWeight;      // particle weights
+        CCCV pSize;        // particle sizes
+        CCCV pTemperature; // particle Temperatures
+        typedef std::vector<const VarLabel*> CCCVL; // object used for iterating over quadrature nodes
 
 
-         // Get labels and scaling constants for DQMOM size, temperature and weights
-         std::vector<const VarLabel*> s_varlabels;     // DQMOM size label
-         std::vector<const VarLabel*> w_varlabels;     // DQMOM weight label
-         std::vector<const VarLabel*> t_varlabels;     // DQMOM Temperature label
-         s_varlabels.resize(0);
-         w_varlabels.resize(0);
-         t_varlabels.resize(0);
-         double s_scaling_constant; // scaling constant for sizes
-         double w_scaling_constant; // scaling constant for weights
+        // Get labels and scaling constants for DQMOM size, temperature and weights
+        std::vector<const VarLabel*> s_varlabels;     // DQMOM size label
+        std::vector<const VarLabel*> w_varlabels;     // DQMOM weight label
+        std::vector<const VarLabel*> t_varlabels;     // DQMOM Temperature label
+        s_varlabels.resize(0);
+        w_varlabels.resize(0);
+        t_varlabels.resize(0);
+        double s_scaling_constant; // scaling constant for sizes
+        double w_scaling_constant; // scaling constant for weights
 
-         for ( int i = 0; i < _nQn_part; i++ ){
-           std::string label_name_s = _base_size_label_name + "_qn"; 
-           std::string label_name_t = _base_temperature_label_name + "_qn"; 
-           std::string label_name_w =   "w_qn"; 
-           std::stringstream out; 
-           out << i; 
-           label_name_s += out.str(); 
-           label_name_t += out.str(); 
-           label_name_w += out.str(); 
-           if (i == 0){
-             s_scaling_constant = dqmom_eqn_factory.retrieve_scalar_eqn(label_name_s).getScalingConstant();
-             w_scaling_constant = dqmom_eqn_factory.retrieve_scalar_eqn(label_name_w).getScalingConstant();
-           }
-           s_varlabels.push_back(VarLabel::find( label_name_s ));
-           t_varlabels.push_back(VarLabel::find( label_name_t ) );
-           w_varlabels.push_back(VarLabel::find( label_name_w ) );
-         }
+        for ( int i = 0; i < _nQn_part; i++ ){
+          std::string label_name_s = _base_size_label_name + "_qn"; 
+          std::string label_name_t = _base_temperature_label_name + "_qn"; 
+          std::string label_name_w =   "w_qn"; 
+          std::stringstream out; 
+          out << i; 
+          label_name_s += out.str(); 
+          label_name_t += out.str(); 
+          label_name_w += out.str(); 
+          if (i == 0){
+            s_scaling_constant = dqmom_eqn_factory.retrieve_scalar_eqn(label_name_s).getScalingConstant();
+            w_scaling_constant = dqmom_eqn_factory.retrieve_scalar_eqn(label_name_w).getScalingConstant();
+          }
+          s_varlabels.push_back(VarLabel::find( label_name_s ));
+          t_varlabels.push_back(VarLabel::find( label_name_t ) );
+          w_varlabels.push_back(VarLabel::find( label_name_w ) );
+        }
 
         ////size
         for ( CCCVL::iterator iterx = s_varlabels.begin(); iterx != s_varlabels.end(); iterx++ ){ 
@@ -357,23 +391,63 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
           pWeight.push_back( var ); 
         } 
 
-        _calc->compute_abskp( patch, vol_fraction, s_scaling_constant, pSize, pTemperature, 
-            w_scaling_constant, pWeight, _nQn_part,  abskp);
+        /////--Other required scalars needed to compute optical props
+        std::vector< const VarLabel*> requiredLabels;
+        requiredLabels =  _ocalc->getRequiresLabels();  
+        StaticArray< constCCVariable<double> > RequiredScalars(requiredLabels.size());
+        for (unsigned int i=0; i<requiredLabels.size(); i++){ // unsigned avoids compiler warning
+          new_dw->get( RequiredScalars[i] , requiredLabels[i], matlIndex,patch, Ghost::None, 0);// This should be WhichDW, but I'm getting an error BEN??
+        }
+          ////--compute the complex index of refraction
+          StaticArray<CCVariable<double> >complexIndexReal(_nQn_part);
+          if(_ocalc->get_complexIndexBool()){
+            if(time_substep==0) {
+              for ( int i=0; i<_nQn_part; i++){ 
+                new_dw->allocateAndPut(complexIndexReal[i], _ocalc->get_complexIndexReal_label()[i], matlIndex,patch);
+                complexIndexReal[i].initialize(0.0);
+              }
+            }
+            else{
 
-        _calc->sum_abs( absk_tot, abskp, patch ); 
+              for ( int i=0; i<_nQn_part; i++){ 
+                new_dw->getModifiable(complexIndexReal[i], _ocalc->get_complexIndexReal_label()[i], matlIndex,patch);
+              }
+            }
+          }
 
-        if (use_scatkt){
-          _calc->compute_scatkt( patch, vol_fraction, s_scaling_constant, pSize, pTemperature, 
-              w_scaling_constant, pWeight, _nQn_part,  scatkt);
+
+
+          _ocalc->computeComplexIndex(patch, vol_fraction,RequiredScalars, complexIndexReal);
+
+        _ocalc->compute_abskp( patch, vol_fraction, s_scaling_constant, pSize, pTemperature, 
+            w_scaling_constant, pWeight, _nQn_part,  abskpt,abskp, complexIndexReal);
+
+        _calc->sum_abs( absk_tot, abskpt, patch ); 
+
+        if (_scatteringOn){
+          //-----------------scattering props---------//
+          StaticArray<CCVariable<double> >scatktQuad(_nQn_part);
+          CCVariable<double> asymmetryParam;
+          if(time_substep==0) {
+            new_dw->allocateAndPut( scatkt, _ocalc->get_scatkt_label(), matlIndex, patch );
+            new_dw->allocateAndPut(asymmetryParam  , _ocalc->get_asymmetryParam_label()  , matlIndex,patch);
+            scatkt.initialize(0.0);  
+            asymmetryParam.initialize(0.0);  
+          }
+          else{
+            new_dw->getModifiable( scatkt, _ocalc->get_scatkt_label(), matlIndex, patch );
+            new_dw->getModifiable(asymmetryParam  , _ocalc->get_asymmetryParam_label()  , matlIndex,patch);
+          }
+          _ocalc->compute_scatkt( patch, vol_fraction, s_scaling_constant, pSize, pTemperature, 
+              w_scaling_constant, pWeight, _nQn_part,  scatkt, scatktQuad, complexIndexReal);
+
+          _ocalc->computeAsymmetryFactor(patch,vol_fraction, scatktQuad, RequiredScalars, scatkt, asymmetryParam);
 
           _calc->sum_abs( absk_tot, scatkt, patch ); 
+  //----------end of scattering props----------//
         }
-
-      } else { 
-        _calc->sum_abs( absk_tot, const_abskp, patch ); 
       }
 
-    }
     // update absk_tot at the walls
     _boundaryCond->setScalarValueBC( pc, patch, absk_tot, _prop_name );
   }
@@ -384,21 +458,26 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
 //---------------------------------------------------------------------------
 void RadProperties::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
+
   std::string taskname = "RadProperties::initialize"; 
-  const bool use_abskp   = _calc->use_abskp(); 
-  const bool local_abskp = _calc->has_abskp_local();  
 
   Task* tsk = scinew Task(taskname, this, &RadProperties::initialize);
 
   tsk->computes(_prop_label);                     //the total 
   tsk->computes( _calc->get_abskg_label() );      //gas only
-  if ( use_abskp && local_abskp )
-    tsk->computes( _calc->get_abskp_label() );      //particle only
+
+  if ( _particlesOn ){
+    tsk->computes( _ocalc->get_abskp_label() );      //particle only
+    for( int i=0; i< _nQn_part; i++){
+      tsk->computes( _ocalc->get_abskp_label_vector()[i] ); 
+    }
+    if (_scatteringOn ){ 
+      tsk->computes( _ocalc->get_scatkt_label() );      
+      tsk->computes( _ocalc->get_asymmetryParam_label() );      
+    }
+  }
 
 
-    if (_calc->use_scatkt() ){ 
-    tsk->computes( _calc->get_scatkt_label() );      //particle only
-   }
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
 }
@@ -421,25 +500,33 @@ void RadProperties::initialize( const ProcessorGroup* pc,
 
     CCVariable<double> prop; 
     CCVariable<double> abskg;
-    CCVariable<double> abskp;
-    CCVariable<double> scatkt;
-    const bool use_abskp   = _calc->use_abskp(); 
-    const bool local_abskp = _calc->has_abskp_local();  
 
     new_dw->allocateAndPut( prop, _prop_label, matlIndex, patch ); 
+
+
     new_dw->allocateAndPut( abskg, _calc->get_abskg_label(), matlIndex, patch ); 
     prop.initialize(0.0); 
     abskg.initialize(0.0); 
 
-    if ( use_abskp && local_abskp ){ 
-      new_dw->allocateAndPut( abskp, _calc->get_abskp_label(), matlIndex, patch ); 
-      abskp.initialize(0.0); 
+    if ( _particlesOn ){ 
+      CCVariable<double> abskpt;
+      new_dw->allocateAndPut( abskpt, _ocalc->get_abskp_label(), matlIndex, patch ); 
+      abskpt.initialize(0.0); 
+      StaticArray< CCVariable<double> >abskp(_nQn_part);
+      for( int i=0; i< _nQn_part; i++){
+        new_dw->allocateAndPut( abskp[i], _ocalc->get_abskp_label_vector()[i], matlIndex, patch ); 
+        abskp[i].initialize(0.0); 
+      }
+      if (_scatteringOn ){ 
+        CCVariable<double> scatkt;
+        CCVariable<double> asymmetryParam;
+        new_dw->allocateAndPut( scatkt, _ocalc->get_scatkt_label(), matlIndex, patch ); 
+        scatkt.initialize(0.0); 
+        new_dw->allocateAndPut( asymmetryParam, _ocalc->get_asymmetryParam_label(), matlIndex, patch ); 
+        asymmetryParam.initialize(0.0); 
+      }
     }
 
-    if (_calc->use_scatkt() ){ 
-      new_dw->allocateAndPut( scatkt, _calc->get_scatkt_label(), matlIndex, patch ); 
-      scatkt.initialize(0.0); 
-}
 
     PropertyModelBase::base_initialize( patch, prop ); // generic initialization functionality 
 

@@ -119,8 +119,9 @@ private:
   std::vector<const VarLabel*> _w_varlabels; 
   std::vector<const VarLabel*> _T_varlabels; 
 
-  const VarLabel* _T_label; 
   const VarLabel* _scatktLabel;
+  const VarLabel* _asymmetryLabel;
+  const VarLabel* _T_label; 
   const VarLabel* _abskg_label;
   const VarLabel* _radiationSRCLabel;
   const VarLabel* _radiationFluxELabel;

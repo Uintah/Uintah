@@ -120,7 +120,7 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
 
   db->getWithDefault("usePrevInt",usePreviousIntensity,false); //  using the previous solve as initial guess, is off by default
 
-  db->getWithDefault("ScatteringOn",ScatteringOn,false); //  using the previous solve as initial guess, is off by default
+  db->getWithDefault("ScatteringOn",_scatteringOn,false); //  using the previous solve as initial guess, is off by default
 
   if (db) {
     db->getWithDefault("ordinates",d_sn,2);
@@ -169,7 +169,7 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
     ostringstream my_stringstream_object;
     my_stringstream_object << "Intensity" << setfill('0') << setw(4)<<  ix ;
     _IntensityLabels.push_back(  VarLabel::create(my_stringstream_object.str(),  CC_double));
-    if(DOSolveInitialGuessBool()== false){
+    if(needIntensitiesBool()== false){
      break;  // gets labels for all intensities, otherwise only create 1 label
     }
   }
@@ -181,8 +181,7 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
   _radiationFluxLabels.push_back(  VarLabel::find("radiationFluxT"));
   _radiationFluxLabels.push_back(  VarLabel::find("radiationFluxB"));
 
-  if (ScatteringOn)
-    _scatktLabel =  VarLabel::create("scatkt",CC_double);
+
 }
 //______________________________________________________________________
 //
@@ -203,16 +202,17 @@ DORadiationModel::computeOrdinatesOPL() {
 
   fort_rordr(d_sn, oxi, omu, oeta, wt);
 
-  double  cosineTheta;
-  double  asymmetryFactor = 1.0;
-  phaseFunction  = vector<vector< double > > (d_totalOrds,vector<double>(d_totalOrds,0.0));
+  if (_scatteringOn){
+    cosineTheta    = vector<vector< double > > (d_totalOrds,vector<double>(d_totalOrds,0.0));
+    solidAngleQuad = vector<vector< double > > (d_totalOrds,vector<double>(d_totalOrds,0.0));
 
     for (int i=0; i<d_totalOrds ; i++){
       for (int j=0; j<d_totalOrds ; j++){
-        cosineTheta=oxi[j+1]*oxi[i+1]+oeta[j+1]*oeta[i+1]+omu[j+1]*omu[i+1];
-        phaseFunction[i][j] = (1.0 + asymmetryFactor*cosineTheta)* wt[i+1]/(4.0 * M_PI);
+        cosineTheta[i][j]=oxi[j+1]*oxi[i+1]+oeta[j+1]*oeta[i+1]+omu[j+1]*omu[i+1];
+        solidAngleQuad[i][j]=  wt[i+1]/(4.0 * M_PI);
       }
     }
+  }
 }
 
 //***************************************************************************
@@ -318,19 +318,20 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   }
 
 
-  StaticArray< constCCVariable<double> > Intensities(ScatteringOn ? d_totalOrds : 0);
+  StaticArray< constCCVariable<double> > Intensities(_scatteringOn ? d_totalOrds : 0);
 
   CCVariable<double> scatIntensitySource;  
   constCCVariable<double> scatkt;   //total scattering coefficient
+  constCCVariable<double> asymmetryParam;   //total scattering coefficient
 
   scatIntensitySource.allocate(domLo,domHi);
   scatIntensitySource.initialize(0.0); // needed for non-scattering cases
 
 
-  if(ScatteringOn){
+  if(_scatteringOn){
     for( int ix=0;  ix<d_totalOrds ;ix++)
       old_dw->get(Intensities[ix],_IntensityLabels[ix], matlIndex , patch,Ghost::None, 0  );
-       // get scattering coefficient here!
+      old_dw->get(asymmetryParam,_asymmetryLabel, matlIndex , patch,Ghost::None, 0);
       old_dw->get(scatkt,_scatktLabel, matlIndex , patch,Ghost::None, 0);
     }
 
@@ -366,10 +367,13 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
     vars->volq.initialize(0.0);
 
     for (int direcn = 1; direcn <=d_totalOrds; direcn++){
-      if(usePreviousIntensity){
+      if(usePreviousIntensity ){
         old_dw->get(constvars->cenint,_IntensityLabels[direcn-1], matlIndex , patch,Ghost::None, 0  );
         new_dw->getModifiable(vars->cenint,_IntensityLabels[direcn-1] , matlIndex, patch );
       }
+      else if ( _scatteringOn){
+        new_dw->getModifiable(vars->cenint,_IntensityLabels[direcn-1] , matlIndex, patch );
+       }
   
     vars->cenint.initialize(0.0); // remove once RTs have been checked.
 
@@ -385,9 +389,9 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       at.initialize(0.0);
       bool plusX, plusY, plusZ;
 
-      if(ScatteringOn){
+      if(_scatteringOn){
         scatIntensitySource.initialize(0.0); // needed for summation
-        computeScatteringIntensities(direcn, constvars->ABSKG, Intensities,scatIntensitySource, patch);
+        computeScatteringIntensities(direcn, constvars->ABSKG, Intensities,scatIntensitySource,asymmetryParam, patch);
       }
                                                          
 
@@ -428,7 +432,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                      
     }  // ordinate loop
  
-  if(ScatteringOn)
+  if(_scatteringOn)
     fort_rdomsrcscattering( idxLo, idxHi, constvars->ABSKG, vars->ESRCG,vars->volq, divQ, scatkt); 
   else
     fort_rdomsrc( idxLo, idxHi, constvars->ABSKG, vars->ESRCG,vars->volq, divQ); 
@@ -439,29 +443,41 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   proc0cout << "Total Radiation Solve Time: " << Time::currentSeconds()-solve_start << " seconds\n";
 
 }
-
+// returns the total number of directions, sn*(sn+2)
 int 
 DORadiationModel::getIntOrdinates(){
 return d_totalOrds;
 }
 
+// Do the walls reflect? (should only be off if emissivity of walls = 1.0)
 bool 
 DORadiationModel::reflectionsBool(){
 return reflectionsTurnedOn;
 }
 
+// Do the Intensities need to be saved from the previous solve?
+// Yes, if we are using the previous intensity as our initial guess in the linear solve.
+// Yes, if we modeling scattering physics, by lagging the scattering source term.
 bool 
-DORadiationModel::DOSolveInitialGuessBool(){
-return usePreviousIntensity || ScatteringOn  ;
+DORadiationModel::needIntensitiesBool(){
+return usePreviousIntensity || _scatteringOn  ;
 }
 
+// Model scattering physics of particles?
 bool 
 DORadiationModel::ScatteringOnBool(){
-return ScatteringOn;
+return _scatteringOn;
 }
 
 void
-DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<double> &scatkt, StaticArray < constCCVariable<double> > &Intensities, CCVariable<double> &scatIntensitySource, const Patch* patch ){
+DORadiationModel::setLabels(){
+   _scatktLabel= VarLabel::find("scatkt");
+   _asymmetryLabel=VarLabel::find("asymmetryParam"); 
+return ;
+}
+
+void
+DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<double> &scatkt, StaticArray < constCCVariable<double> > &Intensities, CCVariable<double> &scatIntensitySource,constCCVariable<double> &asymmetryFactor , const Patch* patch ){
   direction -=1;   // change from fortran vector to c++ vector
   for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
@@ -469,11 +485,12 @@ DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<do
       continue;
 
     for (int i=0; i < d_totalOrds ; i++) {                                    
-      scatIntensitySource[*iter]  +=phaseFunction[direction][i]*Intensities[i][*iter] ; // wt could be comuted up with the phase function in the j loop
+ double phaseFunction = (1.0 + asymmetryFactor[*iter]*cosineTheta[direction][i])* solidAngleQuad[direction][i];      
+      scatIntensitySource[*iter]  +=phaseFunction*Intensities[i][*iter] ; // wt could be comuted up with the phase function in the j loop
+
     }
 
   }
-
 
   for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     scatIntensitySource[*iter] *= scatkt[*iter]  ;

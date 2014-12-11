@@ -59,7 +59,6 @@
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
 #include <CCA/Components/Arches/PropertyModels/ConstProperty.h>
-#include <CCA/Components/Arches/PropertyModels/ABSKP.h>
 #include <CCA/Components/Arches/PropertyModels/ExtentRxn.h>
 #include <CCA/Components/Arches/PropertyModels/TabStripFactor.h>
 #include <CCA/Components/Arches/PropertyModels/EmpSoot.h>
@@ -1246,7 +1245,6 @@ Arches::scheduleInitialize(const LevelP& level,
 
     PropertyModelBase* prop_model = iprop->second;
     prop_model->sched_initialize( level, sched );
-
   }
 
   // Table Lookup
@@ -2761,13 +2759,7 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
         PropertyModelBase::Builder* the_builder = new ConstProperty<CCVariable<double>, constCCVariable<double> >::Builder( prop_name, d_sharedState );
         prop_factory.register_property_model( prop_name, the_builder );
 
-      } else if ( prop_type == "particle_absorption_coefficient" ) {
-
-        // Coal particles absorption coefficient rate calculation
-        PropertyModelBase::Builder* the_builder = new ABSKP::Builder( prop_name, d_sharedState );
-        prop_factory.register_property_model( prop_name, the_builder );
-
-      } else if ( prop_type == "extent_rxn" ) {
+      }  else if ( prop_type == "extent_rxn" ) {
 
         // Scalar dissipation rate calculation
         PropertyModelBase::Builder* the_builder = new ExtentRxn::Builder( prop_name, d_sharedState );
